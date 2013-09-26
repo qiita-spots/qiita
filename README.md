@@ -6,10 +6,10 @@ Welcome to QiiTa, the QIIME databasing effort to enable rapid analysis of microb
 Dependencies
 ------------
 
-* PostgresSQL 9.3
-* Psycopg 2.5.1
-* Python 2.7 or Python 3.3
-* pyqi 0.3
+* PostgresSQL 9.3, [link](http://www.postgresql.org/download/)
+* Psycopg 2.5.1, [link](http://initd.org/psycopg/download/)
+* Python 2.7 or Python 3.3, [link](http://www.python.org)
+* pyqi 0.3, [link](https://github.com/bipy/pyqi)
 
 Install
 -------
