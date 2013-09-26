@@ -19,6 +19,16 @@ __email__ = "mcdonadt@colorado.edu"
 
 from distutils.core import setup
 
+try:
+    import pyqi
+except ImportError:
+    raise ImportError("pyqi cannot be found. Can't continue")
+
+try:
+    import psycopg2
+except ImportError:
+    raise ImportError("psycopg2 cannot be found. Can't continue")
+
 setup(name='Distutils',
       version=__version__,
       description='QiiTa',
