@@ -35,5 +35,9 @@ setup(name='Distutils',
       author=__maintainer__,
       author_email=__email__,
       url='http://qiime.github.io/QiiTa',
-      packages=['qiita']
+      packages=['qiita',
+                'qiita/commands',
+                'qiita/interfaces',
+                'qiita/interfaces/argparse',
+                'qiita/interfaces/argparse/config']
      )
