@@ -16,8 +16,8 @@ Install
 
 To get started, clone the repository, install and populate the database with the QiiTa schema:
 
-$ git clone git@github.com:qiime/QiiTa.git
-$ cd QiiTa
-$ python setup.py build
-$ python setup.py install
-$ qiita create-database
+    $ git clone git@github.com:qiime/QiiTa.git
+    $ cd QiiTa
+    $ python setup.py build
+    $ python setup.py install
+    $ qiita create-database
