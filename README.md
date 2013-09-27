@@ -8,6 +8,7 @@ Dependencies
 
 * PostgresSQL 9.3, [link](http://www.postgresql.org/download/)
 * Psycopg 2.5.1, [link](http://initd.org/psycopg/download/)
+* pgbounder 1.5.4, [link](http://pgfoundry.org/projects/pgbouncer)
 * Python 2.7 or Python 3.3, [link](http://www.python.org)
 * pyqi 0.3, [link](https://github.com/bipy/pyqi)
 
