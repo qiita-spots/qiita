@@ -1,0 +1,12 @@
+#!/bin/sh
+
+# __author__ = "Daniel McDonald"
+# __copyright__ = "Copyright 2013, The QiiTa project"
+# __credits__ = ["Daniel McDonald", "Adam Robbins-Pianka", "Antonio Gonzalez",
+#                "Yoshiki Vazquez Baeza"]
+# __license__ = "BSD"
+# __version__ = "0.1.0-dev"
+# __maintainer__ = "Daniel McDonald"
+# __email__ = "mcdonadt@colorado.edu"
+
+exec pyqi --driver-name qiita --command-config-module qiita.interfaces.optparse.config -- "$@"
