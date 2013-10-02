@@ -29,7 +29,16 @@ try:
 except ImportError:
     raise ImportError("psycopg2 cannot be found. Can't continue")
 
-setup(name='Distutils',
+# from https://wiki.python.org/moin/PortingPythonToPy3k
+try:
+    # python 3.x
+    from distutils.command.build_py import build_py_2to3 as build_py
+except ImportError:
+    # python 2.x
+    from distutils.command.build_py import build_py
+
+setup(name='QiiTa',
+      cmdclass={'build_py':build_py},
       version=__version__,
       description='QiiTa',
       author=__maintainer__,
