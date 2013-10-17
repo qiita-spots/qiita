@@ -1,0 +1,11 @@
+Prior to install, you must download and setup Postgres(9.3) and Mongodb(2.4.6). 
+For Postgres, if operating on OS X, it is advised to use Postgres.app for 
+simplicity.
+
+Python level requirements can be found in requirements.txt. When creating a new
+virtualenv, you should be able to just use the requirements file:
+
+mkvirtualenv --no-site-packages -r requirements.txt monogoproto
+
+Currently no cross script imports are happening, so paths do not need to be
+manipulated
