@@ -1,0 +1,43 @@
+Rapid prototyping of a possible QiiTa mongodb + postgres solution where the 
+specific goals are:
+
+- speed
+- can run on a laptop
+- simple
+- anyone with python experience can use (at least for determining samples)
+
+On testing, this setup should allow the full qiime database (as of 10/16/13)
+to be placed on a laptop with the expectation of maintaining performance.
+
+Sequence data unsurprisingly take up the bulk of the space. Current projections
+are around 125GB for the full database.
+
+Sequence loading is slow, on the order of 60,000 sequences per second. The
+likely cause of this performance hit is either python string processing or
+the md5 hashing being performed. This block of the code can always be gutted.
+
+Parallel loads are not supported in the present model as locks are set on the
+central sequence hash table, and data are not partitioned by study.
+
+The current model does not allow for queries on lines of "what sequences are
+associated with sample/observation XYZ" as bulk OTU maps were not immediately
+present when testing. 
+
+To load:
+
+$ tar xzf study_1479_split_library_seqs_and_mapping.tgz
+$ ./dropall.sh
+$ python load_study.py study_1479_split_library_seqs_and_mapping
+... load other studies, expects qiimedb filenames, supports fna.gz...
+
+To fetch a biom table, edit fetch_samples.py (yes, ghetto, but this is a 
+prototype), and change the query in main to get_metadata. The structure is:
+
+ids, recs = get_metadata(mongo_db, {'COLUMN_OF_INTEREST':'VALUE'})
+
+or
+
+ids, recs = get_metadata(mongo_db, {'COLUMN_OF_INTEREST':{"$lt":'VALUE', "$gt":'VALUE'})
+
+Much more complex queries are readily supported but the proper exploration to
+generalize has not been started.
