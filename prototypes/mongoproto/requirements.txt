@@ -1,0 +1,4 @@
+cogent==1.5.3
+numpy==1.7.1
+psycopg2==2.5.1
+pymongo==2.6.3
