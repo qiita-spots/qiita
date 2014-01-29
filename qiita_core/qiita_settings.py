@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 __author__ = "Jose Antonio Navas Molina"
-__copyright__ = "Copyright 2013, The QiiTa Project"
+__copyright__ = "Copyright 2013, The Qiita Project"
 __credits__ = ["Jose Antonio Navas Molina", "Joshua Shorenstein"]
 __license__ = "BSD"
 __version__ = "0.1.0-dev"

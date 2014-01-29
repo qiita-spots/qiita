@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 __author__ = "Jose Antonio Navas Molina"
-__copyright__ = "Copyright 2013, The QiiTa Project"
+__copyright__ = "Copyright 2013, The Qiita Project"
 __credits__ = ["Jose Antonio Navas Molina"]
 __license__ = "BSD"
 __version__ = "0.1.0-dev"
@@ -10,36 +10,36 @@ __email__ = "josenavasmolina@gmail.edu"
 __status__ = "Development"
 
 
-class QiiTaError(Exception):
-    """Base clase for all QiiTa exceptions"""
+class QiitaError(Exception):
+    """Base clase for all Qiita exceptions"""
     pass
 
 
-class IncompetentQiiTaDeveloper(QiiTaError):
+class IncompetentQiitaDeveloper(QiitaError):
     """Exception for developer errors"""
     pass
 
 
-class QiiTaSearchError(QiiTaError):
+class QiitaSearchError(QiitaError):
     """Exception for errors when using search objects"""
     pass
 
 
-class QiiTaUserError(QiiTaError):
+class QiitaUserError(QiitaError):
     """Exception for error when handling with user objects"""
     pass
 
 
-class QiiTaAnalysisError(QiiTaError):
+class QiitaAnalysisError(QiitaError):
     """Exception for error when handling with analysis objects"""
     pass
 
 
-class QiitaJobError(QiiTaError):
+class QiitaJobError(QiitaError):
     """Exception for error when handling with job objects"""
     pass
 
 
-class QiiTaStudyError(QiiTaError):
+class QiitaStudyError(QiitaError):
     """Exception for error when handling with study objects"""
     pass

@@ -9,7 +9,7 @@
 #-----------------------------------------------------------------------------
 
 __author__ = "Daniel McDonald"
-__copyright__ = "Copyright 2013, The QiiTa project"
+__copyright__ = "Copyright 2013, The Qiita project"
 __credits__ = ["Daniel McDonald", "Adam Robbins-Pianka", "Antonio Gonzalez",
                "Yoshiki Vazquez Baeza"]
 __license__ = "BSD"

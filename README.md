@@ -1,7 +1,7 @@
-QiiTa
+Qiita
 =====
 
-Welcome to QiiTa, the QIIME databasing effort to enable rapid analysis of microbial ecology datasets. The QiiTa repository is responsible for defining the data model and the Python API for interacting with a QiiTa database.
+Welcome to Qiita, the QIIME databasing effort to enable rapid analysis of microbial ecology datasets. The Qiita repository is responsible for defining the data model and the Python API for interacting with a Qiita database.
 
 Dependencies
 ------------
@@ -15,7 +15,7 @@ Dependencies
 Install
 -------
 
-To get started, clone the repository, install and populate the database with the QiiTa schema:
+To get started, clone the repository, install and populate the database with the Qiita schema:
 
     $ git clone git@github.com:qiime/QiiTa.git
     $ cd QiiTa

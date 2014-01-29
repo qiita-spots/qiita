@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 __author__ = "Jose Antonio Navas Molina"
-__copyright__ = "Copyright 2013, The QiiTa Project"
+__copyright__ = "Copyright 2013, The Qiita Project"
 __credits__ = ["Jose Antonio Navas Molina", "Joshua Shorenstein"]
 __license__ = "BSD"
 __version__ = "0.1.0-dev"
@@ -11,7 +11,7 @@ __status__ = "Development"
 
 
 class BaseStorageAPI(object):
-    """Base class for the Storage API objects for the QiiTa-db backends"""
+    """Base class for the Storage API objects for the Qiita-db backends"""
 
     def __init__(self):
         """Initializes the object"""

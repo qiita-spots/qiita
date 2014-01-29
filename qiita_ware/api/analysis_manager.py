@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 __author__ = "Jose Antonio Navas Molina"
-__copyright__ = "Copyright 2013, The QiiTa Project"
+__copyright__ = "Copyright 2013, The Qiita Project"
 __credits__ = ["Jose Antonio Navas Molina", "Joshua Shorenstein"]
 __license__ = "BSD"
 __version__ = "0.1.0-dev"
@@ -11,14 +11,14 @@ __status__ = "Development"
 
 
 def create_analysis(analysis_name, **kwargs):
-    """ Adds a new QiiTa analysis to the system
+    """ Adds a new Qiita analysis to the system
 
     Inputs:
         analysis_name: the name of the new analysis
         kwargs: extra analysis information
 
     Returns:
-        The new QiiTaAnalysis object
+        The new QiitaAnalysis object
 
     Checks:
         - Valid analysis_name
@@ -33,14 +33,14 @@ def update_analysis(analysis):
     """ Updates the analysis information in the system
 
     Inputs:
-        analysis: a QiiTaAnalysis object
+        analysis: a QiitaAnalysis object
 
     Checks:
         - Analysis is mutable - double checked, should be embedded on the
-            QiiTaAnalysis object
+            QiitaAnalysis object
 
     Does not perform any data content check - assumed to be included on the
-        QiiTaAnalysis obj
+        QiitaAnalysis obj
     Raises an error if something went wrong
     """
     raise NotImplementedError("qiita_ware.api.analysis_manager: "
@@ -48,7 +48,7 @@ def update_analysis(analysis):
 
 
 def delete_analysis(analysis_id):
-    """ Deletes the QiiTaAnalysis analysis_id from the system
+    """ Deletes the QiitaAnalysis analysis_id from the system
 
     Inputs:
         analysis_id: the analysis id to remove
@@ -71,7 +71,7 @@ def get_analysis(analysis_id):
         analysis_id: the id of the analysis to retrieve
 
     Returns:
-        The QiiTaAnalysis object
+        The QiitaAnalysis object
 
     Raises an error if something went wrong
     """
@@ -87,7 +87,7 @@ def search_analyses(analysis_name_hint, **kwargs):
         **kwargs: extra analysis information
 
     Returns:
-        A list with all the QiiTaAnalysis objects that match the search query
+        A list with all the QiitaAnalysis objects that match the search query
             that are visible by the user_id
     """
     raise NotImplementedError("qiita_ware.api.analysis_manager: "
@@ -119,8 +119,8 @@ def publish_analysis(analysis_id):
 ##############################################
 
 
-def submit_analysis_to_QiiTaMain(analysis_id, **kwargs):
-    """ Submits anlysis_id to the QiiTa Main repository hosted in the
+def submit_analysis_to_QiitaMain(analysis_id, **kwargs):
+    """ Submits anlysis_id to the Qiita Main repository hosted in the
             Knight Lab
 
         Inputs:
@@ -128,11 +128,11 @@ def submit_analysis_to_QiiTaMain(analysis_id, **kwargs):
             kwargs: TBD
     """
     raise NotImplementedError("qiita_ware.api.analysis_manager: "
-                              "submit_analysis_to_QiiTaMain")
+                              "submit_analysis_to_QiitaMain")
 
 ############################################
 #                                          #
-# Functions only need if using QiiTa-pet   #
+# Functions only need if using Qiita-pet   #
 # as a front-end. Otherwise, there is no   #
 # notion of users.                         #
 #                                          #
@@ -146,7 +146,7 @@ def get_all_visible_analyses(user_id):
         user_id: the user id
 
     Returns:
-        A list with all QiiTaAnalysis objs that are visible by user_id
+        A list with all QiitaAnalysis objs that are visible by user_id
     """
     raise NotImplementedError("qiita_ware.api.analysis_manager: "
                               "get_all_visible_analyses")
@@ -159,7 +159,7 @@ def get_running_analyses(user_id):
         user_id: the user id
 
     Returns:
-        A list with all QiiTaAnalysis objs that are running and visible
+        A list with all QiitaAnalysis objs that are running and visible
             by user_id
     """
     raise NotImplementedError("qiita_ware.api.analysis_manager: "
@@ -173,7 +173,7 @@ def get_completed_analyses(user_id):
         user_id: the user id
 
     Returns:
-        A list with all QiiTaAnalysis objs that are completed and visible
+        A list with all QiitaAnalysis objs that are completed and visible
             by user_id
     """
     raise NotImplementedError("qiita_ware.api.analysis_manager: "

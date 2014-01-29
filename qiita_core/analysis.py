@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 __author__ = "Jose Antonio Navas Molina"
-__copyright__ = "Copyright 2013, The QiiTa Project"
+__copyright__ = "Copyright 2013, The Qiita Project"
 __credits__ = ["Jose Antonio Navas Molina", "Joshua Shorenstein"]
 __license__ = "BSD"
 __version__ = "0.1.0-dev"
@@ -9,18 +9,18 @@ __maintainer__ = "Jose Antonio Navas Molina"
 __email__ = "josenavasmolina@gmail.edu"
 __status__ = "Development"
 
-from qiita_core.job import QiiTaJob
-from qiita_core.exceptions import QiiTaAnalysisError, IncompetentQiiTaDeveloper
+from qiita_core.job import QiitaJob
+from qiita_core.exceptions import QiitaAnalysisError, IncompetentQiitaDeveloper
 
 STATUS = ["construction", "running", "completed", "lock"]
 
 
-class QiiTaAnalysis(object):
-    """Models an analysis of QiiTa"""
+class QiitaAnalysis(object):
+    """Models an analysis of Qiita"""
 
     def __init__(self, name, a_id=None, biom_table=None,
                  jobs=None, status=None, info=None):
-        """Initializes the QiiTaAnalysis object
+        """Initializes the QiitaAnalysis object
 
         Inputs:
             name: name of the analysis
@@ -30,7 +30,7 @@ class QiiTaAnalysis(object):
             status: current stats of the analysis
             info: a dictionary with any extra information
 
-        Raise a IncompetentQiiTaDeveloper in any of the following cases:
+        Raise a IncompetentQiitaDeveloper in any of the following cases:
             - jobs is provided and it is not a list
             - status is provided and it is not a recognized status
             - info is provided and it is not a dictionary
@@ -40,16 +40,16 @@ class QiiTaAnalysis(object):
         self._biom_table = biom_table
         # If jobs is provided, check that it is a list
         if jobs and type(jobs) is not list:
-            raise QiiTaAnalysisError("jobs should be a list. %s found"
+            raise QiitaAnalysisError("jobs should be a list. %s found"
                                      % type(jobs))
         self._jobs = jobs if jobs else []
         # Check that the status provided is a known status
         if status and status not in STATUS:
-            raise QiiTaAnalysisError("Status not recognized %s" % status)
+            raise QiitaAnalysisError("Status not recognized %s" % status)
         self._status = status if status else "construction"
         # Check that info is a dictionary
         if info and type(info) is not dict:
-            raise QiiTaAnalysisError("info should be a dictionary. %s found"
+            raise QiitaAnalysisError("info should be a dictionary. %s found"
                                      % type(info))
         self._info = info if info else {}
 
@@ -81,8 +81,8 @@ class QiiTaAnalysis(object):
 
     # Set functions
     def set_id(self, a_id):
-        """Raises a QiiTaAnalysisError, the analysis id can't be changed"""
-        raise QiiTaAnalysisError("The id of an object can't be changed")
+        """Raises a QiitaAnalysisError, the analysis id can't be changed"""
+        raise QiitaAnalysisError("The id of an object can't be changed")
 
     def set_name(self, name):
         """Sets the name of the analysis to 'name'
@@ -90,10 +90,10 @@ class QiiTaAnalysis(object):
         Inputs:
             name: the new name for the analysis
 
-        Raises a QiiTaAnalysisError if the analysis is locked
+        Raises a QiitaAnalysisError if the analysis is locked
         """
         if self._status == "lock":
-            raise QiiTaAnalysisError("analysis can't be changed. It's locked")
+            raise QiitaAnalysisError("analysis can't be changed. It's locked")
         self._name = name
 
     def set_biom_table(self, biom_table):
@@ -102,8 +102,8 @@ class QiiTaAnalysis(object):
         Inputs:
             biom_table: the new biom-table
 
-        Raises a QiiTaAnalysisError if the analysis is locked
-        Raises a IncompetentQiiTaDeveloper if biom_table is not a biom-table
+        Raises a QiitaAnalysisError if the analysis is locked
+        Raises a IncompetentQiitaDeveloper if biom_table is not a biom-table
         """
         self._biom_table = biom_table
 
@@ -113,13 +113,13 @@ class QiiTaAnalysis(object):
         Inputs:
             status: the new status of the analysis
 
-        Raises a QiiTaAnalysisError if the analysis is locked
-        Raises a IncompetentQiiTaDeveloper if status is not a recognized status
+        Raises a QiitaAnalysisError if the analysis is locked
+        Raises a IncompetentQiitaDeveloper if status is not a recognized status
         """
         if self._status == "lock":
-            raise QiiTaAnalysisError("analysis can't be changed. It's locked")
+            raise QiitaAnalysisError("analysis can't be changed. It's locked")
         if status not in STATUS:
-            raise IncompetentQiiTaDeveloper("Status not recognized %s" %
+            raise IncompetentQiitaDeveloper("Status not recognized %s" %
                                             status)
         self._status = status
 
@@ -129,13 +129,13 @@ class QiiTaAnalysis(object):
         Inputs:
             info: the dictionary with the analysis info
 
-        Raises a QiiTaAnalysisError if the analysis is locked
-        Raises a IncompetentQiiTaDeveloper if info is not a dictionary
+        Raises a QiitaAnalysisError if the analysis is locked
+        Raises a IncompetentQiitaDeveloper if info is not a dictionary
         """
         if self._status == "lock":
-            raise QiiTaAnalysisError("analysis can't be changed. It's locked")
+            raise QiitaAnalysisError("analysis can't be changed. It's locked")
         if type(info) is not dict:
-            raise IncompetentQiiTaDeveloper("info should be a dictionary. %s "
+            raise IncompetentQiitaDeveloper("info should be a dictionary. %s "
                                             "found" % type(info))
 
     # Add/remove functions for the list attributes
@@ -143,15 +143,15 @@ class QiiTaAnalysis(object):
         """Adds a job to the analysis
 
         Input:
-            job: a QiiTaJob object
+            job: a QiitaJob object
 
-        Raises a QiiTaAnalysisError if the analysis is locked
-        Raises a IncompetentQiiTaDeveloper if job is not a QiiTaJob object
+        Raises a QiitaAnalysisError if the analysis is locked
+        Raises a IncompetentQiitaDeveloper if job is not a QiitaJob object
         """
         if self._status == "lock":
-            raise QiiTaAnalysisError("analysis can't be changed. It's locked")
-        if type(job) is not QiiTaJob:
-            IncompetentQiiTaDeveloper("job should be a QiiTaJob: %s found" %
+            raise QiitaAnalysisError("analysis can't be changed. It's locked")
+        if type(job) is not QiitaJob:
+            IncompetentQiitaDeveloper("job should be a QiitaJob: %s found" %
                                       type(job))
         self._jobs.append(job)
 
@@ -159,16 +159,16 @@ class QiiTaAnalysis(object):
         """Removes a job from the analysis
 
         Input:
-            job: a QiiTaJob object
+            job: a QiitaJob object
 
-        Raises a QiiTaAnalysisError if:
+        Raises a QiitaAnalysisError if:
             - the analysis is locked
             - the analysis does not have the given job
         """
         if self._status == "lock":
-            raise QiiTaAnalysisError("analysis can't be changed. It's locked")
+            raise QiitaAnalysisError("analysis can't be changed. It's locked")
         try:
             self._jobs.remove(job)
         except ValueError, e:
-            raise QiiTaAnalysisError("The analysis does not contain job: %s"
+            raise QiitaAnalysisError("The analysis does not contain job: %s"
                                      % job)
