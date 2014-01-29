@@ -1,0 +1,56 @@
+{% extends sitebase.html %}
+{%block content %}
+<table width='100%'>
+  <tr>
+    <td width=180 valign='top'>
+      1) Choose studies<br />
+      <b>2) Select analyses</b><br />
+      3) Set analysis options<br />
+      4) Review analysis<br />
+      5) Running analysis<br />
+      6) Analysis results<br />
+    </td>
+    <td>
+    
+    </br>
+    <input type="button" value="Check all" onclick="var cbs = document.getElementsByTagName('input'); for(var i=0; i < cbs.length; i++) if(cbs[i].type == 'checkbox') cbs[i].checked = true;">
+    &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+    <input type="button" value="Uncheck all" onclick="var cbs = document.getElementsByTagName('input'); for(var i=0; i < cbs.length; i++) if(cbs[i].type == 'checkbox') cbs[i].checked = false;">
+    </br></br>
+        
+    <form action="/meta/3" method="post" id="meta2_form" onsubmit="var check_count=0; var cbs = document.getElementsByTagName('input'); for(var i=0; i < cbs.length; i++) { if (cbs[i].type == 'checkbox' && cbs[i].checked) { check_count++; } }; if (check_count<1) { alert('You need to select some kind of processing.') ; return false; }">
+      {% for type in datatypes %}
+      <fieldset style="border: 1px;">
+        <legend>{{type}}</legend>
+        <!-- 
+        <input type='checkbox' name='{{type}}' id='{{type}}_OTU_Table' value='OTU_Table' disabled checked>
+        <label for='{{type}}_OTU_Table'>OTU_Table</label><br />
+        -->
+        <!-- Need the hidden to actually submit the OTU_Table value-->
+        <!-- 
+        <input type="hidden" name='{{type}}' id='{{type}}_OTU_Table' value='OTU_Table' />
+        --> 
+        
+        {% if type == 'Combined' %}
+          {% for c in combined %}
+            <input type='checkbox' name='{{type}}' id='{{type}}_{{c}}' value='{{c}}'>
+            <label for='{{type}}_{{c}}'>{{c}}</label><br />
+          {% end %}
+        {% else %}
+          {% for s in single %}
+            <input type='checkbox' name='{{type}}' id='{{type}}_{{s}}' value='{{s}}'>
+            <label for='{{type}}_{{s}}'>{{s}}</label><br />
+          {% end %}
+        {% end %}
+        </select>
+      </fieldset>
+      {% end %}
+      <p>
+      <input id="back-btn"type="submit" value="Back" tabindex="3" disabled> 
+      <input id="continue-btn"type="submit" value="Continue" tabindex="3">
+      </p>
+    </form>
+    </td>
+  </tr>
+</table>
+{% end %}
