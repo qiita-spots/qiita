@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 __author__ = "Jose Antonio Navas Molina"
-__copyright__ = "Copyright 2013, The QiiTa Project"
+__copyright__ = "Copyright 2013, The Qiita Project"
 __credits__ = ["Jose Antonio Navas Molina", "Joshua Shorenstein"]
 __license__ = "BSD"
 __version__ = "0.1.0-dev"
@@ -19,7 +19,7 @@ def create_user(email, password, **kwargs):
         kwargs: extra user information
 
     Returns:
-        The new QiiTaUser object
+        The new QiitaUser object
 
     Checks:
         - Valid user_id
@@ -36,9 +36,9 @@ def update_user(user):
     """ Updates the user information in the system
 
     Inputs:
-        user: a QiiTaUser object
+        user: a QiitaUser object
 
-    Does not perform any check - assumed to be included on the QiiTaUser obj
+    Does not perform any check - assumed to be included on the QiitaUser obj
     Raises an error if something went wrong
     """
     raise NotImplementedError("qiita_ware.api.user_manager: update_user")
@@ -68,13 +68,13 @@ def delete_user(user_id, password, rm_shared_analysis=False,
 
 
 def get_user(user_id):
-    """ Retrieves the QiiTaUser object for the user_id
+    """ Retrieves the QiitaUser object for the user_id
 
     Inputs:
-        user_id: the user_id of the QiiTaUser object to be retrieved
+        user_id: the user_id of the QiitaUser object to be retrieved
 
     Returns:
-        The QiiTaUser object for the user user_id
+        The QiitaUser object for the user user_id
 
     Raises a UserNotExistsError if user_id is not in the system
     """
@@ -87,7 +87,7 @@ def get_all_users():
     Inputs: None
 
     Result:
-        A list with the QiiTaUser obj of all users in the system
+        A list with the QiitaUser obj of all users in the system
 
     Raises an error if something went wrong
     """
@@ -102,7 +102,7 @@ def search_users(user_id_hint, **kwargs):
         kwargs: extra user information
 
     Returns:
-        A list with the QiiTaUser obj of all users in the system that match
+        A list with the QiitaUser obj of all users in the system that match
             the search query
 
     Raises an error if something went wrong

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 __author__ = "Jose Antonio Navas Molina"
-__copyright__ = "Copyright 2013, The QiiTa Project"
+__copyright__ = "Copyright 2013, The Qiita Project"
 __credits__ = ["Jose Antonio Navas Molina", "Joshua Shorenstein"]
 __license__ = "BSD"
 __version__ = "0.1.0-dev"
@@ -10,32 +10,32 @@ __email__ = "josenavasmolina@gmail.edu"
 __status__ = "Development"
 
 
-from qiita.core.exceptions import QiiTaUserError, IncompetentQiiTaDeveloper
+from qiita.core.exceptions import QiitaUserError, IncompetentQiitaDeveloper
 
 LEVELS = ['admin', 'dev', 'superuser', 'regular', 'guest']
 
 
-class QiiTaUser(object):
-    """Models an user of QiiTa"""
+class QiitaUser(object):
+    """Models an user of Qiita"""
 
     def __init__(self, email, level, info=None):
-        """Initializes the QiiTaUser object
+        """Initializes the QiitaUser object
 
         Inputs:
             email: the email (also username) of the user
             level: the level of the user
             info: attached information to the user
 
-        Raises an IncompetentQiiTaDeveloper if:
+        Raises an IncompetentQiitaDeveloper if:
             - level is not recognized
             = info is provided and is not a dictionary
         """
         self._email = email
         if level and level not in LEVELS:
-            raise IncompetentQiiTaDeveloper("level not recognized: %s" % level)
+            raise IncompetentQiitaDeveloper("level not recognized: %s" % level)
         self._level = level
         if info and type(info) is not dict:
-            raise IncompetentQiiTaDeveloper("info should be a dictionary. %s "
+            raise IncompetentQiitaDeveloper("info should be a dictionary. %s "
                                             "found" % type(info))
         self._info = info if info else {}
         self._analyses = None
@@ -46,7 +46,7 @@ class QiiTaUser(object):
     def check_password(self, check_pwd):
         """Checks that check_pwd is the user's password"""
         # We may want to check this on the DB
-        raise NotImplementedError("QiiTaUser.check_password")
+        raise NotImplementedError("QiitaUser.check_password")
 
     # Get functions
     def get_email(self):
@@ -59,8 +59,8 @@ class QiiTaUser(object):
 
     # Set functions
     def set_email(self, email):
-        """Raises a QiiTaUserError. The email can't be changed"""
-        raise QiiTaUserError("The email of a user can't be changed")
+        """Raises a QiitaUserError. The email can't be changed"""
+        raise QiitaUserError("The email of a user can't be changed")
 
     def set_level(self, level):
         """Sets the level of the user"""
@@ -106,12 +106,12 @@ class QiiTaUser(object):
         Inputs:
             analysis_id: the id of the analysis
 
-        Raises a QiiTaUserError if analysis_id is not own by the user
+        Raises a QiitaUserError if analysis_id is not own by the user
         """
         try:
             self._analyses.remove(analysis_id)
         except ValueError, e:
-            raise QiiTaUserError("User does not own analysis %s" % analysis_id)
+            raise QiitaUserError("User does not own analysis %s" % analysis_id)
 
     def remove_shared_analysis(self, analysis_id):
         """Removes the given analysis from the user shared list
@@ -119,12 +119,12 @@ class QiiTaUser(object):
         Inputs:
             analysis_id: the id of the analysis
 
-        Raises a QiiTaUserError if analysis_id is not shared with the user
+        Raises a QiitaUserError if analysis_id is not shared with the user
         """
         try:
             self._shared_analyses.remove(analysis_id)
         except ValueError, e:
-            raise QiiTaUserError("User does not have analysis %s shared"
+            raise QiitaUserError("User does not have analysis %s shared"
                                  % analysis_id)
 
     def remove_study(self, study_id):
@@ -133,12 +133,12 @@ class QiiTaUser(object):
         Inputs:
             study_id: the study id
 
-        Raises a QiiTaUserError if study_id is not own by the user
+        Raises a QiitaUserError if study_id is not own by the user
         """
         try:
             self._studies.remove(study_id)
         except ValueError, e:
-            raise QiiTaUserError("User does not own study %s" % study_id)
+            raise QiitaUserError("User does not own study %s" % study_id)
 
     def remove_shared_study(self, study_id):
         """Removes the given study from the user shared list
@@ -146,10 +146,10 @@ class QiiTaUser(object):
         Inputs:
             study_id: the study id
 
-        Raises a QiiTaUserError if study_idis not shared with the user
+        Raises a QiitaUserError if study_idis not shared with the user
         """
         try:
             self._shared_studies.remove(study)
         except ValueError, e:
-            raise QiiTaUserError("User does not have study %s shared"
+            raise QiitaUserError("User does not have study %s shared"
                                  % study_id)

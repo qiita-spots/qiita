@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 __author__ = "Jose Antonio Navas Molina"
-__copyright__ = "Copyright 2013, The QiiTa Project"
+__copyright__ = "Copyright 2013, The Qiita Project"
 __credits__ = ["Jose Antonio Navas Molina", "Joshua Shorenstein"]
 __license__ = "BSD"
 __version__ = "0.1.0-dev"
@@ -11,10 +11,10 @@ __status__ = "Development"
 
 QUERY_TYPES = ["includes", "exact", "starts_with", "ends_with"]
 
-from qiita_core.exceptions import QiiTaSearchError
+from qiita_core.exceptions import QiitaSearchError
 
 
-class QiiTaSearchCriterion(object):
+class QiitaSearchCriterion(object):
     """Models a search criterion"""
 
     def __init__(self, field, query_type, query):
@@ -25,10 +25,10 @@ class QiiTaSearchCriterion(object):
             query_type: the type of query of the criterion
             query: the actual string containing the query
 
-        Raises a QiiTaSearchError if the query type is not recognized
+        Raises a QiitaSearchError if the query type is not recognized
         """
         if query_type not in QUERY_TYPES:
-            raise QiiTaSearchError("Query type not recognized: %s" %
+            raise QiitaSearchError("Query type not recognized: %s" %
                                    query_type)
         self.field = field
         self.query_type = query_type
@@ -39,7 +39,7 @@ class QiiTaSearchCriterion(object):
         raise NotImplementedError("")
 
 
-class QiiTaSearch(object):
+class QiitaSearch(object):
     """Models a search query"""
 
     def __init__(self, fields, criterion):
@@ -49,11 +49,11 @@ class QiiTaSearch(object):
             fields: the fields in which the search can apply
             criterion: the first criterion of the search
 
-        Raises a QiiTaSearchError if the criterion does not apply to the given
+        Raises a QiitaSearchError if the criterion does not apply to the given
             search fields
         """
         if criterion.field not in fields:
-            raise QiiTaSearchError("Field not recognized")
+            raise QiitaSearchError("Field not recognized")
         self._fields = fields
         self._criteria = [criterion]
         self._operators = []
