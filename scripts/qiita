@@ -9,4 +9,4 @@
 # __maintainer__ = "Daniel McDonald"
 # __email__ = "mcdonadt@colorado.edu"
 
-exec pyqi --driver-name qiita --command-config-module qiita.interfaces.optparse.config -- "$@"
+exec pyqi --driver-name qiita --command-config-module qiita_core.interfaces.optparse.config -- "$@"
