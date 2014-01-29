@@ -1,0 +1,24 @@
+{% extends sitebase.html %}
+{% autoescape None %}
+{%block content %}
+<table width='100%'>
+  <tr>
+    <td width=180 valign='top'>
+      1) Choose studies<br />
+      2) Select analyses<br />
+      3) Set analysis options<br />
+      <b>4) Review analysis</b><br />
+      5) Running analysis<br />
+      6) Analysis results<br />
+    </td>
+    <td>
+      <h1>Review Meta-analysis</h1>
+      <h2>Analysis "{% raw analysisinfo.get_job() %}"</h2>
+      {% raw analysisinfo.html() %}
+      <p><form action="/waiting/" method="post" id="job_form">
+    <input id="run-btn" class="btn btn-blue" type="submit" value="Run Job" tabindex="3">
+</form></p>
+    </td>
+  </tr>
+</table>
+{% end %}

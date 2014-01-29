@@ -1,0 +1,33 @@
+{% extends sitebase.html %}
+{% autoescape None %}
+{%block content %}
+<table width='100%'>
+  <tr>
+    <td width=180 valign='top'>
+      1) Choose studies<br />
+      2) Select analyses<br />
+      <b>3) Set analysis options</b><br />
+      4) Review analysis<br />
+      5) Running analysis<br />
+      6) Analysis results<br />
+    </td>
+    <td>
+      <p><input id="populate-btn"type="button" value="Copy Settings" tabindex="3" disabled></p>
+    <form action="/meta/4" method="post" id="meta3_form">
+      {% for type in analysisinfo.get_datatypes() %}
+      <fieldset style="border: 1px;">
+        <h1>{{type}}</h1>
+          {% for analysis in analysisinfo.get_analyses(type) %}
+            {% module Template('meta_opts/'+analysis+'.html', type=type) %}
+          {% end %}
+      </fieldset>
+      {% end %}
+      <p>
+      <input id="back-btn"type="submit" value="Back" tabindex="3" disabled> 
+      <input id="continue-btn"type="submit" value="Continue" tabindex="3">
+      </p>
+    </form>
+    </td>
+  </tr>
+</table>
+{% end %}

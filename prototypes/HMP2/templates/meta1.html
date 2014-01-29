@@ -1,0 +1,216 @@
+{% extends sitebase.html %}
+{%block head %}
+<script type="text/javascript">
+function listbox_moveacross(sourceID, destID) {
+    var src = document.getElementById(sourceID);
+    var dest = document.getElementById(destID);
+ 
+    for(var count=0; count < src.options.length; count++) {
+ 
+        if(src.options[count].selected == true) {
+                var option = src.options[count];
+ 
+                var newOption = document.createElement("option");
+                newOption.value = option.value;
+                newOption.text = option.text;
+                newOption.selected = true;
+                try {
+                         dest.add(newOption, null); //Standard
+                         src.remove(count, null);
+                 }catch(error) {
+                         dest.add(newOption); // IE only
+                         src.remove(count);
+                 }
+                count--;
+        }
+    }
+}
+
+function selectAll(name) { 
+  selElement = document.getElementById(name);
+  for (var i = 0; i < selectBox.options.length; i++) { 
+       selElement.options[i].selected = true; 
+  } 
+}
+
+function countSelected(name) {
+  count = 0;
+  element = document.getElementById(name);
+  for (var i=0; i < element.length; i++) {
+    if (element[i].selected) {count++;}
+  }
+  return count;
+}
+
+function validateForm() {
+  if(document.getElementById('jobname').value == '') { 
+    document.getElementById('jobError').innerHTML = 'You must name your study!<br />';
+    return false; 
+  }
+  else { document.getElementById('studyError').innerHTML = '' }
+  if(countSelected('studiesView') == 0) { 
+    document.getElementById('studyError').innerHTML = 'You must select at least one study!<br />';
+    return false; 
+  }
+  else { document.getElementById('studyError').innerHTML = '' }
+  if(countSelected('datatypeView') == 0) { 
+    document.getElementById('datatypeError').innerHTML = 'You must select at least one datatype!<br />';
+    return false; 
+  }
+  else { document.getElementById('datatypeError').innerHTML = '' }
+  if(countSelected('metadataUse') == 0) { 
+    document.getElementById('metadataError').innerHTML = 'You must select at least one metadata field!<br />'; 
+    return false; 
+  }
+  else { document.getElementById('metadataError').innerHTML = '' }
+  return true;
+}
+</script>
+{% end %}
+
+{%block content %}
+<table width='100%'>
+  <tr>
+    <td width=180 valign='top'>
+      <b>1) Choose studies</b><br />
+      2) Select analyses<br />
+      3) Set analysis options<br />
+      4) Review analysis<br />
+      5) Running analysis<br />
+      6) Analysis results<br />
+    </td>
+    <td>
+    <form action="/meta/2" method="post" id="meta1_form" onsubmit="return(validateForm());">
+      <table width="70%" border="0">
+        <tr>
+           <td width="45%">
+        <fieldset>
+          <legend>Job Name</legend>
+          <span id="jobError" style="color:red"></span>
+          <input type='textbox' id='jobname' name='jobname'>
+        </fieldset>
+           </td>
+           <td width="10%"></td>
+           <td width="45%"></td>
+        </tr>
+        <tr>
+           <td width="45%">
+        <fieldset>
+        <legend>Select Studies</legend>
+        <span id="studyError" style="color:red"></span>
+        <!--
+        <label for="studyType">Search:</label>
+        <select id="studiesType">
+          <option value="all">All</option>
+          <option value="EMP">Metadata</option>
+          <option value="qiime">Study Name</option>
+          <option value="seqs">Other Thing</option>
+        </select>
+        <input type="textbox" id="searchstudy">
+        <br />
+        -->
+        <select id="studiesView" name="studiesView" multiple="multiple" style="height:110px;width:300px;">
+          <option value="IBD Swedish Project">IBD Swedish Project</option>
+        </select>
+      </fieldset>
+           </td>
+           <td width="10%"></td>
+           <td width="45%">
+      <fieldset>
+        <legend>Data Type</legend>
+        <span id="datatypeError" style="color:red"></span>
+        <select id="datatypeView" name="datatypeView" multiple="multiple" style="height:110px;width:300px;">
+          <option value="16S">16S</option>
+          <option value="Metabolites">Metabolites</option>
+          <option value="Metagenomes">Metagenomes</option>
+          <option value="Metaproteomes isolates">Metaproteomes isolates</option>
+          <option value="Combined">** Combine previous datasets **</option>
+        </select>
+      </fieldset>
+           </td>
+        </tr>
+        <tr>
+           <td width="45%">
+      <fieldset>
+        <legend>Available Metadata Fields</legend>
+        <!--
+        <label for="common_fields">Show Common Fields Only:</label>
+        <input id="common_fields" name="common_fields" type="checkbox" /><br />
+        <label for="select_fields1">Select Metadata Fields:</label>
+        <select id="select_fields1">
+          <option value=""></option>
+          <option value="all">All</option>
+          <option value="none">None</option>
+          <option value="inverted">Inverted</option>
+        </select>
+        <br />
+        -->
+        <select id="metadataAll" multiple="multiple" style="height:145px;width:300px;">
+          <option value="SampleID">SampleID</option>
+          <option value="BarcodeSequence">BarcodeSequence</option>
+          <option value="SampleName">SampleName</option>
+          <option value="DISEASE_STAT2">DISEASE_STAT2</option>
+          <option value="RUN_PREFIX">RUN_PREFIX</option>
+          <option value="AGE">AGE</option>
+          <option value="HOST_COMMON_NAME">HOST_COMMON_NAME</option>
+          <option value="HOST_TAXID">HOST_TAXID</option>
+          <option value="COLLECTION_DATE">COLLECTION_DATE</option>
+          <option value="SEX">SEX</option>
+          <option value="HOST_SUBJECT_ID">HOST_SUBJECT_ID</option>
+          <option value="ANONYMIZED_NAME">ANONYMIZED_NAME</option>
+          <option value="AGE_UNIT">AGE_UNIT</option>
+          <option value="Description_duplicate">Description_duplicate</option>
+          <option value="RUN_DATE">RUN_DATE</option>
+          <option value="DISEASE_STAT">DISEASE_STAT</option>
+          <option value="AGE_IN_YEARS">AGE_IN_YEARS</option>
+          <option value="YEAR_OF_BIRTH">YEAR_OF_BIRTH</option>
+          <option value="PAIR_NUMBER">PAIR_NUMBER</option>
+          <option value="Description">Description</option>
+        </select>
+      </fieldset>
+           </td>
+           <td width="10%">
+      <fieldset style='vertical-align: middle; text-align:center;'>
+        <input id="btnRight" type="button" value=">>>" tabindex="3" onclick='listbox_moveacross("metadataAll", "metadataUse")'><br />
+        <input id="btnLeft" type="button" value="<<<" tabindex="3" onclick='listbox_moveacross("metadataUse", "metadataAll")'>
+      </fieldset>
+           </td>
+           <td width="45%">
+      <fieldset>
+        <legend>Selected Metadata Fields</legend>
+        <span id="metadataError" style="color:red"></span>
+        <!--
+        &nbsp;<br />
+        <label for="select_fields2">Select Metadata Fields:</label>
+        <select id="select_fields2">
+          <option value=""></option>
+          <option value="all">All</option>
+          <option value="none">None</option>
+          <option value="inverted">Inverted</option>
+        </select>
+        <br />
+        -->
+        <select id="metadataUse" name="metadataUse" multiple="multiple" style="height:145px;width:300px;"></select>
+      </fieldset>
+
+           </td>
+        </tr>
+        <tr>
+           <td width="45%"></td>
+           <td width="10%"></td>
+           <td width="45%"></td>
+        </tr>
+        <tr>
+           <td width="45%"></td>
+           <td width="10%"></td>
+           <td width="45%"></td>
+        </tr>
+      </table>
+      
+      <span id="error" style="display:none">There were errors. Please review your selections.</span>
+      <input id="continue-btn"type="submit" value="Continue" tabindex="3">
+    </form>
+    </td>
+  </tr>
+</table>
+{% end %}
