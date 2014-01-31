@@ -9,9 +9,10 @@
 #-----------------------------------------------------------------------------
 
 __author__ = "Daniel McDonald"
-__copyright__ = "Copyright 2013, The QiiTa project"
-__credits__ = ["Daniel McDonald", "Adam Robbins-Pianka", 
-               "Antonio Gonzalez Pena"," Yoshiki Vazquez Baeza"]
+__copyright__ = "Copyright 2013, The Qiita project"
+__credits__ = ["Daniel McDonald", "Adam Robbins-Pianka",
+               "Antonio Gonzalez Pena", " Yoshiki Vazquez Baeza",
+               "Jose Antonio Navas Molina"]
 __license__ = "BSD"
 __version__ = "0.1.0-dev"
 __maintainer__ = "Daniel McDonald"
@@ -37,10 +38,10 @@ except ImportError:
     # python 2.x
     from distutils.command.build_py import build_py
 
-setup(name='QiiTa',
-      cmdclass={'build_py':build_py},
+setup(name='Qiita',
+      cmdclass={'build_py': build_py},
       version=__version__,
-      description='QiiTa',
+      description='Qiita',
       author=__maintainer__,
       author_email=__email__,
       url='http://qiime.github.io/QiiTa',
@@ -49,4 +50,4 @@ setup(name='QiiTa',
                 'qiita/interfaces',
                 'qiita/interfaces/argparse',
                 'qiita/interfaces/argparse/config']
-     )
+      )

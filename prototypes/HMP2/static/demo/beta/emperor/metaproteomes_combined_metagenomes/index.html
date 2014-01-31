@@ -1,0 +1,271 @@
+<!--
+*Summary of Emperor's Information*
+Command executed on January 02, 2014 at 07:48:00
+Emperor Version: 0.9.2-dev, master@7228fca
+QIIME Version: 1.8.0-dev, master@3f16b2b
+HostName: Antonios-MacBook-Pro.local
+Metadata: /Users/antoniog/Downloads/IBD_Swedish/reduced_mapping_file_with_replicates.txt
+Coordinates: /Users/antoniog/Downloads/IBD_Swedish/beta/pcoa/pcoa_bray_curtis_metaproteomes_combined_metagenomes_otu_table_even.txt
+Command: /Users/antoniog/svn_programs/emperor/scripts/make_emperor.py -m reduced_mapping_file_with_replicates.txt -i beta/pcoa/pcoa_bray_curtis_metaproteomes_combined_metagenomes_otu_table_even.txt -o beta/emperor/metaproteomes_combined_metagenomes
+-->
+<!doctype html>
+<html lang="en">
+
+<head>
+    <title>Emperor</title>
+    <meta charset="utf-8">
+    <link rel="shortcut icon" href="emperor_required_resources/img/favicon.ico" />
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+    <link rel="stylesheet" type="text/css" href="emperor_required_resources/emperor/css/emperor.css">
+    <link rel="stylesheet" type="text/css" href="emperor_required_resources/css/jquery-ui2.css">
+    <link rel="stylesheet" type="text/css" href="emperor_required_resources/css/colorPicker.css">
+    <link rel="stylesheet" type="text/css" href="emperor_required_resources/css/spectrum.css">
+    <link rel="stylesheet" type="text/css" href="emperor_required_resources/css/d3.parcoords.css">
+    <table id="logotable" style="vertical-align:middle;text-align:center;height:100%;width:100%;margin:0;padding:0;border:0;">
+        <tr><td><img src="emperor_required_resources/img/emperor.png" alt="Emperor" id="logo"/></td></tr>
+    </table>
+    <script type="text/javascript" src="emperor_required_resources/js/d3.v3.min.js"></script>
+    <script type="text/javascript" src="emperor_required_resources/js/d3.parcoords.js"></script>
+    <script type="text/javascript" src="emperor_required_resources/js/jquery-1.7.1.min.js"></script>
+    <script type="text/javascript" src="emperor_required_resources/js/jquery-ui-1.8.17.custom.min.js"></script>
+    <script src="emperor_required_resources/js/jquery.colorPicker.js"></script>
+    <script src="emperor_required_resources/js/spectrum.js"></script>
+
+    <script src="emperor_required_resources/js/Three.js"></script>
+    <script src="emperor_required_resources/js/js/Detector.js"></script>
+    <script src="emperor_required_resources/js/js/RequestAnimationFrame.js"></script>
+    <script src="emperor_required_resources/emperor/js/emperor.js"></script>
+    <script type="text/javascript" src="emperor_required_resources/js/THREEx.screenshot.js"></script>
+    <script type="text/javascript" src="emperor_required_resources/js/FileSaver.min.js"></script>
+    
+    <script type="text/javascript">
+    
+var g_mappingFileHeaders = ['SampleID','BarcodeSequence','SampleName','DISEASE_STAT2','RUN_PREFIX','REPLICATE','AGE','HOST_COMMON_NAME','HOST_TAXID','COLLECTION_DATE','SEX','HOST_SUBJECT_ID','ANONYMIZED_NAME','AGE_UNIT','Description_duplicate','RUN_DATE','DISEASE_STAT','AGE_IN_YEARS','YEAR_OF_BIRTH','PAIR_NUMBER','Description'];
+var g_mappingFileData = { '10b_rep': ['10b_rep','CATG','ICD.p10.f18.446085','ileal Crohns disease','EYG96GT01','Y','None','None','None','2007','female','None','ICD.p10.f18','unknown','ileal Crohns disease, pair 10, fecal','5/11/07','None','None','1962','10','A_pyrosequencing_study_in_twins_shows_that_gastrointestinal_microbial_profiles_vary_with_inflammatory_bowel_disease_phenotypes'],'9a': ['9a','CGTA','CCD.p9.f20.446011','colonic Crohns disease','EYG96GT01','N','None','None','None','2007','male','None','CCD.p9.f20','unknown','colonic Crohns disease, pair 9','5/11/07','None','None','1947','9','A_pyrosequencing_study_in_twins_shows_that_gastrointestinal_microbial_profiles_vary_with_inflammatory_bowel_disease_phenotypes'],'9b': ['9b','CGAT','CCD.p9.f17.446027','colonic Crohns disease','EYG96GT01','N','None','None','None','2007','male','None','CCD.p9.f17','unknown','colonic Crohns disease, pair 9, fecal','5/11/07','None','None','1947','9','A_pyrosequencing_study_in_twins_shows_that_gastrointestinal_microbial_profiles_vary_with_inflammatory_bowel_disease_phenotypes'],'16a': ['16a','CTGA','ICD.p16.f31.446054','ileal Crohns disease','EYG96GT04','N','53','human','496922','2007','female','31','ICD.p16.f31','years','ileal Crohns disease, pair 16','5/11/07','healthy','53','1954','16','A_pyrosequencing_study_in_twins_shows_that_gastrointestinal_microbial_profiles_vary_with_inflammatory_bowel_disease_phenotypes'],'16b': ['16b','CTGA','H.p16.f35.446041','healthy','EYG96GT05','N','53','prairie dog flea','496922','2007','female','35','H.p16.f35','years','healthy, pair 16','5/11/07','ileal Crohns disease','53','1954','16','A_pyrosequencing_study_in_twins_shows_that_gastrointestinal_microbial_profiles_vary_with_inflammatory_bowel_disease_phenotypes'],'9a_rep': ['9a_rep','CGTA','CCD.p9.f20.446011','colonic Crohns disease','EYG96GT01','Y','None','None','None','2007','male','None','CCD.p9.f20','unknown','colonic Crohns disease, pair 9','5/11/07','None','None','1947','9','A_pyrosequencing_study_in_twins_shows_that_gastrointestinal_microbial_profiles_vary_with_inflammatory_bowel_disease_phenotypes'],'6a_rep': ['6a_rep','CTGA','H.p6.f11.446043','healthy','FBJN19415','Y','None','None','None','2008','female','None','H.p6.f11','unknown','healthy, pair 6, fecal','6/3/08','None','None','1951','6','A_pyrosequencing_study_in_twins_shows_that_gastrointestinal_microbial_profiles_vary_with_inflammatory_bowel_disease_phenotypes'],'18a_rep': ['18a_rep','CGAT','ICD.p18.f33.446006','ileal Crohns disease','EYG96GT05','Y','54','human','496922','2007','male','33','ICD.p18.f33','years','ileal Crohns disease, pair 18','5/11/07','healthy','54','1953','18','A_pyrosequencing_study_in_twins_shows_that_gastrointestinal_microbial_profiles_vary_with_inflammatory_bowel_disease_phenotypes'],'10b': ['10b','CATG','ICD.p10.f18.446085','ileal Crohns disease','EYG96GT01','N','None','None','None','2007','female','None','ICD.p10.f18','unknown','ileal Crohns disease, pair 10, fecal','5/11/07','None','None','1962','10','A_pyrosequencing_study_in_twins_shows_that_gastrointestinal_microbial_profiles_vary_with_inflammatory_bowel_disease_phenotypes'],'15b_rep': ['15b_rep','CGAT','ICD.p15.f29.445999','ileal Crohns disease','EYG96GT04','Y','54','human','496922','2007','male','29','ICD.p15.f29','years','ileal Crohns disease, pair 15','5/11/07','healthy','54','1953','15','A_pyrosequencing_study_in_twins_shows_that_gastrointestinal_microbial_profiles_vary_with_inflammatory_bowel_disease_phenotypes'],'6a': ['6a','CTGA','H.p6.f11.446043','healthy','FBJN19415','N','None','None','None','2008','female','None','H.p6.f11','unknown','healthy, pair 6, fecal','6/3/08','None','None','1951','6','A_pyrosequencing_study_in_twins_shows_that_gastrointestinal_microbial_profiles_vary_with_inflammatory_bowel_disease_phenotypes'],'6b': ['6b','CGTA','H.p6.f12.446024','healthy','FBJN19415','N','None','None','None','2008','female','None','H.p6.f12','unknown','healthy, pair 6, fecal','6/3/08','None','None','1951','6','A_pyrosequencing_study_in_twins_shows_that_gastrointestinal_microbial_profiles_vary_with_inflammatory_bowel_disease_phenotypes'],'10a': ['10a','CGAT','ICD.p10.f21.445991','ileal Crohns disease','EYG96GT02','N','None','None','None','2007','female','None','ICD.p10.f21','unknown','ileal Crohns disease, pair 10','5/11/07','None','None','1962','10','A_pyrosequencing_study_in_twins_shows_that_gastrointestinal_microbial_profiles_vary_with_inflammatory_bowel_disease_phenotypes'],'10a_rep': ['10a_rep','CGAT','ICD.p10.f21.445991','ileal Crohns disease','EYG96GT02','Y','None','None','None','2007','female','None','ICD.p10.f21','unknown','ileal Crohns disease, pair 10','5/11/07','None','None','1962','10','A_pyrosequencing_study_in_twins_shows_that_gastrointestinal_microbial_profiles_vary_with_inflammatory_bowel_disease_phenotypes'],'6b_rep': ['6b_rep','CGTA','H.p6.f12.446024','healthy','FBJN19415','Y','None','None','None','2008','female','None','H.p6.f12','unknown','healthy, pair 6, fecal','6/3/08','None','None','1951','6','A_pyrosequencing_study_in_twins_shows_that_gastrointestinal_microbial_profiles_vary_with_inflammatory_bowel_disease_phenotypes'],'15a': ['15a','CATG','ICD.p15.f30.446076','ileal Crohns disease','EYG96GT04','N','54','human','496922','2007','male','30','ICD.p15.f30','years','ileal Crohns disease, pair 15','5/11/07','None','54','1953','15','A_pyrosequencing_study_in_twins_shows_that_gastrointestinal_microbial_profiles_vary_with_inflammatory_bowel_disease_phenotypes'],'16a_rep': ['16a_rep','CTGA','ICD.p16.f31.446054','ileal Crohns disease','EYG96GT04','Y','53','human','496922','2007','female','31','ICD.p16.f31','years','ileal Crohns disease, pair 16','5/11/07','healthy','53','1954','16','A_pyrosequencing_study_in_twins_shows_that_gastrointestinal_microbial_profiles_vary_with_inflammatory_bowel_disease_phenotypes'],'15b': ['15b','CGAT','ICD.p15.f29.445999','ileal Crohns disease','EYG96GT04','N','54','human','496922','2007','male','29','ICD.p15.f29','years','ileal Crohns disease, pair 15','5/11/07','healthy','54','1953','15','A_pyrosequencing_study_in_twins_shows_that_gastrointestinal_microbial_profiles_vary_with_inflammatory_bowel_disease_phenotypes'],'18b_rep': ['18b_rep','CGTA','H.p18.f36.445998','healthy','EYG96GT05','Y','54','human','496922','2007','male','36','H.p18.f36','years','healthy, pair 18','5/11/07','ileal Crohns disease','54','1953','18','A_pyrosequencing_study_in_twins_shows_that_gastrointestinal_microbial_profiles_vary_with_inflammatory_bowel_disease_phenotypes'],'15a_rep': ['15a_rep','CATG','ICD.p15.f30.446076','ileal Crohns disease','EYG96GT04','Y','54','human','496922','2007','male','30','ICD.p15.f30','years','ileal Crohns disease, pair 15','5/11/07','None','54','1953','15','A_pyrosequencing_study_in_twins_shows_that_gastrointestinal_microbial_profiles_vary_with_inflammatory_bowel_disease_phenotypes'],'18b': ['18b','CGTA','H.p18.f36.445998','healthy','EYG96GT05','N','54','human','496922','2007','male','36','H.p18.f36','years','healthy, pair 18','5/11/07','ileal Crohns disease','54','1953','18','A_pyrosequencing_study_in_twins_shows_that_gastrointestinal_microbial_profiles_vary_with_inflammatory_bowel_disease_phenotypes'],'18a': ['18a','CGAT','ICD.p18.f33.446006','ileal Crohns disease','EYG96GT05','N','54','human','496922','2007','male','33','ICD.p18.f33','years','ileal Crohns disease, pair 18','5/11/07','healthy','54','1953','18','A_pyrosequencing_study_in_twins_shows_that_gastrointestinal_microbial_profiles_vary_with_inflammatory_bowel_disease_phenotypes'],'9b_rep': ['9b_rep','CGAT','CCD.p9.f17.446027','colonic Crohns disease','EYG96GT01','Y','None','None','None','2007','male','None','CCD.p9.f17','unknown','colonic Crohns disease, pair 9, fecal','5/11/07','None','None','1947','9','A_pyrosequencing_study_in_twins_shows_that_gastrointestinal_microbial_profiles_vary_with_inflammatory_bowel_disease_phenotypes'],'16b_rep': ['16b_rep','CTGA','H.p16.f35.446041','healthy','EYG96GT05','Y','53','prairie dog flea','496922','2007','female','35','H.p16.f35','years','healthy, pair 16','5/11/07','ileal Crohns disease','53','1954','16','A_pyrosequencing_study_in_twins_shows_that_gastrointestinal_microbial_profiles_vary_with_inflammatory_bowel_disease_phenotypes'] };
+
+var g_spherePositions = new Array();
+g_spherePositions['16a'] = { 'name': '16a', 'color': 0, 'x': -0.265365, 'y': 0.276497, 'z': 0.049897, 'P1': -0.265365, 'P2': 0.276497, 'P3': 0.049897, 'P4': -0.149157, 'P5': 0.027992, 'P6': -0.122980, 'P7': 0.155362, 'P8': -0.036974, 'P9': 0.082814, 'P10': -0.010072 };
+g_spherePositions['18a_rep'] = { 'name': '18a_rep', 'color': 0, 'x': -0.270538, 'y': -0.260819, 'z': -0.212453, 'P1': -0.270538, 'P2': -0.260819, 'P3': -0.212453, 'P4': -0.201432, 'P5': 0.045788, 'P6': -0.011358, 'P7': -0.111686, 'P8': 0.012181, 'P9': 0.000173, 'P10': 0.040956 };
+g_spherePositions['18a'] = { 'name': '18a', 'color': 0, 'x': -0.284901, 'y': -0.260312, 'z': -0.217180, 'P1': -0.284901, 'P2': -0.260312, 'P3': -0.217180, 'P4': -0.204041, 'P5': 0.030292, 'P6': -0.010932, 'P7': -0.098518, 'P8': 0.012064, 'P9': 0.003246, 'P10': 0.038401 };
+g_spherePositions['16a_rep'] = { 'name': '16a_rep', 'color': 0, 'x': -0.263798, 'y': 0.279011, 'z': 0.049781, 'P1': -0.263798, 'P2': 0.279011, 'P3': 0.049781, 'P4': -0.141946, 'P5': 0.029023, 'P6': -0.123999, 'P7': 0.148209, 'P8': -0.056992, 'P9': 0.083673, 'P10': -0.008092 };
+g_spherePositions['10b_rep'] = { 'name': '10b_rep', 'color': 0, 'x': -0.061794, 'y': 0.308559, 'z': 0.087047, 'P1': -0.061794, 'P2': 0.308559, 'P3': 0.087047, 'P4': -0.013840, 'P5': -0.069134, 'P6': 0.059284, 'P7': -0.212102, 'P8': 0.106629, 'P9': -0.011011, 'P10': 0.069634 };
+g_spherePositions['10b'] = { 'name': '10b', 'color': 0, 'x': -0.063333, 'y': 0.313357, 'z': 0.083679, 'P1': -0.063333, 'P2': 0.313357, 'P3': 0.083679, 'P4': -0.008425, 'P5': -0.053844, 'P6': 0.052222, 'P7': -0.197414, 'P8': 0.096043, 'P9': -0.021800, 'P10': 0.077785 };
+g_spherePositions['6a'] = { 'name': '6a', 'color': 0, 'x': 0.149617, 'y': -0.022037, 'z': -0.063830, 'P1': 0.149617, 'P2': -0.022037, 'P3': -0.063830, 'P4': -0.064765, 'P5': -0.022751, 'P6': 0.108452, 'P7': 0.196090, 'P8': 0.121383, 'P9': -0.124791, 'P10': 0.138821 };
+g_spherePositions['9b_rep'] = { 'name': '9b_rep', 'color': 0, 'x': 0.202823, 'y': -0.000393, 'z': -0.064545, 'P1': 0.202823, 'P2': -0.000393, 'P3': -0.064545, 'P4': -0.053475, 'P5': -0.124020, 'P6': 0.184075, 'P7': 0.009799, 'P8': -0.037550, 'P9': 0.184505, 'P10': -0.090225 };
+g_spherePositions['9b'] = { 'name': '9b', 'color': 0, 'x': 0.210342, 'y': 0.004775, 'z': -0.073871, 'P1': 0.210342, 'P2': 0.004775, 'P3': -0.073871, 'P4': -0.049283, 'P5': -0.122211, 'P6': 0.180054, 'P7': 0.014320, 'P8': -0.025527, 'P9': 0.160046, 'P10': -0.106239 };
+g_spherePositions['6a_rep'] = { 'name': '6a_rep', 'color': 0, 'x': 0.144320, 'y': -0.011725, 'z': -0.053636, 'P1': 0.144320, 'P2': -0.011725, 'P3': -0.053636, 'P4': -0.040884, 'P5': -0.046123, 'P6': 0.105121, 'P7': 0.188783, 'P8': 0.102584, 'P9': -0.097597, 'P10': 0.096223 };
+g_spherePositions['15b_rep'] = { 'name': '15b_rep', 'color': 0, 'x': -0.191605, 'y': -0.117081, 'z': 0.131061, 'P1': -0.191605, 'P2': -0.117081, 'P3': 0.131061, 'P4': 0.180554, 'P5': 0.077866, 'P6': 0.083758, 'P7': 0.013542, 'P8': -0.093323, 'P9': 0.052531, 'P10': 0.146439 };
+g_spherePositions['15b'] = { 'name': '15b', 'color': 0, 'x': -0.177486, 'y': -0.106928, 'z': 0.137249, 'P1': -0.177486, 'P2': -0.106928, 'P3': 0.137249, 'P4': 0.186178, 'P5': 0.062541, 'P6': 0.096726, 'P7': 0.019522, 'P8': -0.080084, 'P9': 0.069678, 'P10': 0.130831 };
+g_spherePositions['18b_rep'] = { 'name': '18b_rep', 'color': 0, 'x': 0.265197, 'y': -0.004919, 'z': -0.010692, 'P1': 0.265197, 'P2': -0.004919, 'P3': -0.010692, 'P4': 0.020013, 'P5': 0.025034, 'P6': -0.136002, 'P7': -0.018690, 'P8': 0.127518, 'P9': -0.041949, 'P10': -0.050449 };
+g_spherePositions['18b'] = { 'name': '18b', 'color': 0, 'x': 0.259282, 'y': -0.016664, 'z': -0.002746, 'P1': 0.259282, 'P2': -0.016664, 'P3': -0.002746, 'P4': 0.036154, 'P5': 0.019283, 'P6': -0.108551, 'P7': -0.009846, 'P8': 0.119612, 'P9': -0.029287, 'P10': -0.031507 };
+g_spherePositions['15a'] = { 'name': '15a', 'color': 0, 'x': -0.301309, 'y': -0.002799, 'z': -0.161720, 'P1': -0.301309, 'P2': -0.002799, 'P3': -0.161720, 'P4': 0.238905, 'P5': -0.126796, 'P6': -0.042746, 'P7': 0.018021, 'P8': 0.040698, 'P9': -0.042710, 'P10': -0.086681 };
+g_spherePositions['9a_rep'] = { 'name': '9a_rep', 'color': 0, 'x': 0.251448, 'y': 0.041094, 'z': -0.062836, 'P1': 0.251448, 'P2': 0.041094, 'P3': -0.062836, 'P4': -0.007439, 'P5': -0.104007, 'P6': -0.076308, 'P7': -0.044215, 'P8': -0.240364, 'P9': -0.099155, 'P10': 0.039850 };
+g_spherePositions['9a'] = { 'name': '9a', 'color': 0, 'x': 0.257069, 'y': 0.038378, 'z': -0.064392, 'P1': 0.257069, 'P2': 0.038378, 'P3': -0.064392, 'P4': -0.010143, 'P5': -0.108417, 'P6': -0.094938, 'P7': -0.041310, 'P8': -0.224130, 'P9': -0.102800, 'P10': 0.057037 };
+g_spherePositions['6b'] = { 'name': '6b', 'color': 0, 'x': 0.007612, 'y': 0.085559, 'z': -0.003271, 'P1': 0.007612, 'P2': 0.085559, 'P3': -0.003271, 'P4': -0.006363, 'P5': 0.238911, 'P6': 0.126103, 'P7': -0.012576, 'P8': -0.048541, 'P9': -0.112943, 'P10': -0.141968 };
+g_spherePositions['6b_rep'] = { 'name': '6b_rep', 'color': 0, 'x': 0.003309, 'y': 0.080766, 'z': 0.011658, 'P1': 0.003309, 'P2': 0.080766, 'P3': 0.011658, 'P4': 0.015716, 'P5': 0.246541, 'P6': 0.108505, 'P7': -0.016860, 'P8': -0.061379, 'P9': -0.115309, 'P10': -0.127181 };
+g_spherePositions['15a_rep'] = { 'name': '15a_rep', 'color': 0, 'x': -0.299332, 'y': -0.002885, 'z': -0.164167, 'P1': -0.299332, 'P2': -0.002885, 'P3': -0.164167, 'P4': 0.247856, 'P5': -0.124745, 'P6': -0.052244, 'P7': 0.046567, 'P8': 0.039732, 'P9': -0.037595, 'P10': -0.101526 };
+g_spherePositions['10a_rep'] = { 'name': '10a_rep', 'color': 0, 'x': -0.042227, 'y': -0.247251, 'z': 0.348241, 'P1': -0.042227, 'P2': -0.247251, 'P3': 0.348241, 'P4': -0.076739, 'P5': -0.088426, 'P6': -0.045576, 'P7': 0.005001, 'P8': 0.023576, 'P9': -0.034539, 'P10': -0.076165 };
+g_spherePositions['16b'] = { 'name': '16b', 'color': 0, 'x': 0.252025, 'y': -0.067251, 'z': -0.041281, 'P1': 0.252025, 'P2': -0.067251, 'P3': -0.041281, 'P4': 0.089532, 'P5': 0.144412, 'P6': -0.113727, 'P7': -0.018441, 'P8': 0.040061, 'P9': 0.137783, 'P10': 0.030178 };
+g_spherePositions['16b_rep'] = { 'name': '16b_rep', 'color': 0, 'x': 0.262664, 'y': -0.066472, 'z': -0.034763, 'P1': 0.262664, 'P2': -0.066472, 'P3': -0.034763, 'P4': 0.078701, 'P5': 0.134729, 'P6': -0.132073, 'P7': -0.022637, 'P8': 0.045972, 'P9': 0.138077, 'P10': 0.042916 };
+g_spherePositions['10a'] = { 'name': '10a', 'color': 0, 'x': -0.044021, 'y': -0.240460, 'z': 0.332768, 'P1': -0.044021, 'P2': -0.240460, 'P3': 0.332768, 'P4': -0.065679, 'P5': -0.091936, 'P6': -0.032864, 'P7': -0.010921, 'P8': 0.016810, 'P9': -0.041040, 'P10': -0.078966 };
+
+var g_ellipsesDimensions = new Array();
+var g_segments = 8, g_rings = 8, g_radius = 0.006798;
+var g_xAxisLength = 0.566506;
+var g_yAxisLength = 0.574176;
+var g_zAxisLength = 0.565421;
+var g_xMaximumValue = 0.265197;
+var g_yMaximumValue = 0.313357;
+var g_zMaximumValue = 0.348241;
+var g_xMinimumValue = -0.301309;
+var g_yMinimumValue = -0.260819;
+var g_zMinimumValue = -0.217180;
+var g_maximum = 0.348241;
+var g_pc1Label = "PC1 (22 %)";
+var g_pc2Label = "PC2 (14 %)";
+var g_pc3Label = "PC3 (10 %)";
+var g_number_of_custom_axes = 0;
+var g_fractionExplained = [0.223969, 0.135408, 0.095340, 0.072071, 0.058674, 0.052417, 0.048668, 0.045606, 0.041392, 0.036838];
+var g_fractionExplainedRounded = [22, 14, 10, 7, 6, 5, 5, 5, 4, 4];
+
+var g_taxaPositions = new Array();
+
+
+var g_vectorPositions = new Array();
+
+var g_comparisonPositions = new Array();
+var g_isSerialComparisonPlot = true;
+document.getElementById("logo").style.display = 'none';
+document.getElementById("logotable").style.display = 'none';
+
+ </script>
+</head>
+
+<body>
+
+<div id="plotToggle">
+    <form>
+      <div id="plottype">
+        <input id="pcoa" type="radio" id="pcoa" name="plottype" checked="checked" /><label for="pcoa">PCoA</label>
+        <input id="parallel" type="radio" id="parallel" name="plottype" /><label for="parallel">Parallel</label>
+      </div>
+    </form>
+</div>
+<div id="pcoaPlotWrapper" class="plotWrapper">
+    <label id="pointCount" class="ontop">
+    </label>
+
+    <div id="finder" class="arrow-right">
+    </div>
+
+    <div id="labels" class="unselectable">
+    </div>
+
+    <div id="taxalabels" class="unselectable">
+    </div>
+
+    <div id="axislabels" class="axislabels">
+    </div>
+
+    <div id="main_plot">
+    </div>
+</div>
+
+<div id="parallelPlotWrapper" class="plotWrapper">
+</div>
+
+<div class="separator" ondblclick="separatorDoubleClick()"></div>
+
+<div id="menu">
+    <div id="menutabs">
+        <ul>
+            <li><a href="#keytab">Key</a></li>
+            <li><a href="#colorby">Colors</a></li>
+            <li><a href="#showby">Visibility</a></li>
+            <li><a href="#scalingby">Scaling</a></li>
+            <li><a href="#labelby">Labels</a></li>
+            <li><a href="#axes">Axes</a></li>
+            <li><a href="#options">Options</a></li>
+        </ul>
+        <div id="keytab">
+            <form name="keyFilter">
+            <label>Filter  </label><input name="filterBox" id="searchBox" type="text" onkeyup="filterKey()"></input>
+            </form>
+            <div id="key">
+            </div>
+        </div>
+        <div id="colorby">
+            <br>
+            <input type="checkbox" onchange="toggleContinuousAndDiscreteColors(this)" id="discreteorcontinuouscolors" name="discreteorcontinuouscolors">  Use gradient colors</input>
+            <br><br>
+            <select id="colorbycombo" onchange="colorByMenuChanged()" size="3">
+            </select>
+            <div class="list" id="colorbylist">
+            </div>
+        </div>
+        <div id="showby" align="center">
+            <table width="100%">
+                <tr>
+                    <td align="center">
+                        <select id="showbycombo" onchange="showByMenuChanged()">
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <div class="list" id="showbylist" style="height:100%;width:100%">
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding-left: 12px; padding-right:12px;">
+                        <br>
+                        <label for="sphereopacity" class="text">Global Sphere Opacity</label>
+                        <label id="sphereopacity" class="slidervalue"></label>
+                        <div id="sopacityslider" class="slider-range-max"></div>
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <div id="scalingby" align="center">
+            <table width="100%">
+                <tr>
+                    <td align="center">
+                        <select id="scalingbycombo" onchange="scalingByMenuChanged()">
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <div class="list" id="scalingbylist" style="height:100%;width:100%">
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding-left: 12px; padding-right:12px;">
+                        <br>
+                        <label for="sphereradius" class="text">Global Sphere Scale</label>
+                        <label id="sphereradius" class="slidervalue"></label>
+                        <div id="sradiusslider" class="slider-range-max"></div>
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <div id="labelby">
+        <div id="labelsTop">
+            <form name="plotoptions">
+            <input type="checkbox" onClick="toggleLabels()">Samples Label Visibility</input>
+            </form>
+            <br>
+            <label for="labelopacity" class="text">Label Opacity</label>
+            <label id="labelopacity" class="slidervalue"></label>
+            <div id="lopacityslider" class="slider-range-max"></div>
+            <div id="labelColorHolder clearfix">
+            <table>
+                <tr><td><div id="labelColor" class="colorbox"></div></td><td><label>Master Label Color</label></td></tr>
+            </table></div>
+        </div>
+            <br>
+            <select id="labelcombo" onchange="labelMenuChanged()">
+            </select>
+            <div class="list" id="labellist">
+            </div>
+        </div>
+        <div id="axes">
+            <div id="pcoaaxes">
+                <div class="list" id="axeslist">
+                </div>
+            </div>
+        </div>
+        <div id="options">
+            <table>
+                <tr><td><div id="axeslabelscolor" class="colorbox" name="axeslabelscolor"></div></td><td title="Axes Labels Color">Axes Labels Color</td></tr>
+                <tr><td><div id="axescolor" class="colorbox" name="axescolor"></div></td><td title="Axes Color Title">Axes Color</td></tr>
+                <tr><td><div id="rendererbackgroundcolor" class="colorbox" name="rendererbackgroundcolor"></div></td><td title="Background Color Title">Background Color</td></tr>
+            </table>
+            <div id="pcoaviewoptions" class="">
+                <form name="settingsoptionscolor">
+                </form>
+                <div id="pcoaoptions" class="">
+                    <form name="settingsoptions">
+                        <input type="checkbox" onchange="toggleScaleCoordinates(this)" id="scale_checkbox" name="scale_checkbox">Scale coords by percent explained</input>
+                    </form>
+                </div>
+                <br><input id="reset" class="button" type="submit" value="Recenter Camera" style="" onClick="resetCamera()">
+                <br><br>
+                <hr class='section-break'>
+                <br>Filename <small>(only letters, numbers, ., - and _)</small>:
+                <br><input name="saveas_name" id="saveas_name" value="screenshot" type="text"/>
+                <br><input id="saveas_legends" class="checkbox" type="checkbox" style=""> Create legend
+                <input id="saveas" class="button" type="submit" value="Save as SVG" style="" onClick="saveSVG()"/>
+                <br><br>For a PNG, simply press 'ctrl+p'.
+                <div id="paralleloptions" class="">
+                </div>
+            </div>
+            <br>
+        </div>
+    </div>  
+</div>
+</body>
+
+</html>

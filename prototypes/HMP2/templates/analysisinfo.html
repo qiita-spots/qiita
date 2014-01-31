@@ -1,0 +1,26 @@
+{% extends sitebase.html %}
+
+{%block content %}
+    <h1>Analysis {{analysis}}</h1>  
+    <table style="table-layout:fixed;width:100%;height:100%;">
+    <tr><td style="width:100%;height:100%;" valign='top'>
+    {% for astep in analysisinfo %}
+        {{astep['job_datatype']}} - {{astep['job_type']}}<br />
+        {% if astep['job_error'] %}
+            <span color='Red'>JOB FINISHED WITH ERROR!</span>
+        {% else %}
+            {% if astep['job_results'] != None %}
+                {% for i,file in enumerate(astep['job_results']) %}
+                    <a class="link" href="../{{file}}" target="_blank">Plot {{ i+1 }}</a>
+                    <br \> 
+                {% end %}
+            {% end %}
+        {% end %}
+        <br \>
+    {% end %}
+    </td><td style="height:100%;">
+    <iframe id="result" name="result" src="about:blank" frameborder="0" height="100%" width="100%">
+        Your browser does not support iFrames. Please update your browser to one that does.
+    </iframe>
+    </td></tr></table>
+{% end %}
