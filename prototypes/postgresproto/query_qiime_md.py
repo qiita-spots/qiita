@@ -43,12 +43,10 @@ def parse_query(q):
     operator = results.group(2)
     rhs = results.group(3)
 
-    try:
-        float(rhs)
+    if rhs.replace('.','',1).isdigit():
         datatype = 'numerical'
-    except ValueError:
-        # assume the RHS is a string
-        datatype = 'string'
+    else:
+        datatype='string'
 
     if operator not in ('=', '<=', '>=', '<', '>'):
         raise ValueError("Unknown operator: %s" % operator)
@@ -91,8 +89,7 @@ def get_all_samples(conn, lhs, operator, rhs, datatype, common_only=True):
             # if the set is empty, this is the first table, so just add all the
             # columns
             if not common_columns:
-                for col_and_type in columns:
-                    common_columns.add(col_and_type)
+                common_columns.update(set([col_and_type in columns]))
             # otherwise, intersect the current set of columns with the growing
             # set of columns
             else:
@@ -101,6 +98,7 @@ def get_all_samples(conn, lhs, operator, rhs, datatype, common_only=True):
         # make the set a list so that we have a consistent ordering
         common_columns_list = list(common_columns)
         common_columns_list = [x[0] for x in common_columns_list]
+        common_columns_list.sort()
         # generate the list of columns to fetch in the query
         columns_part = ', '.join([x for x in common_columns_list])
 

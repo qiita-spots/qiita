@@ -93,6 +93,9 @@ def parse_mapping_file_to_dicts(mapping_file):
         - The datatypes of the columns, automatically determined to be varchar,
           int, or float
     """
+    # might as well do this to avoid attribute lookups
+    isdigit = str.isdigit
+
     # Find first non-comment line, assume the previous line (i.e., the last
     # comment line at the top of the file) is the headers
     headers = []
@@ -117,7 +120,7 @@ def parse_mapping_file_to_dicts(mapping_file):
     for line in mapping_file:
         if line.startswith('#'):
             continue
-        elements = line.strip().split('\t')
+        elements = [e.strip() for e in line.split('\t')]
         sample_id, data = elements[0], elements[1:]
         data = dict(zip(headers, data))
         mapping[sample_id] = data
@@ -128,23 +131,12 @@ def parse_mapping_file_to_dicts(mapping_file):
     for header in headers:
         column_data = [mapping[sample_id][header] for sample_id in sample_ids]
 
-        # default type is varchar
-        datatype = map(str_or_none, column_data)
-        datatype = 'varchar'
-
-        # check of all values in the column can be converted to either a float
-        # or an int
-        try:
-            datatype = map(float_or_none, column_data)
-            datatype = 'float'
-        except ValueError:
-            pass
-
-        try:
-            datatype = map(int_or_none, column_data)
+        if all([isdigit(c) for c in column_data]):
             datatype = 'int'
-        except ValueError:
-            pass
+        elif all([isdigit(c.replace('.','',1)) for c in column_data]):
+            datatype = 'float'
+        else:
+            datatype = 'varchar'
 
         types.append(datatype)
 
@@ -158,7 +150,7 @@ def main():
 
     # Might as well do this to avoid the attribute lookup... probably not
     # a huge amount of speedup, but I'm never using any other kind of "lower"
-    # function...
+    # or "isdigit" function...
     lower = str.lower
 
     if not exists(mapping_fp):
@@ -215,7 +207,7 @@ def main():
     mapping, headers, datatypes = \
         parse_mapping_file_to_dicts(open(mapping_fp, 'U'))
 
-    sql_safe_column_names = map(quote_column_name, headers)
+    sql_safe_column_names = [quote_column_name(h) for h in headers]
 
     # create a table for the study
     if verbose:
@@ -243,8 +235,8 @@ def main():
 
     if verbose:
         print "Adding rows to column_tables..."
-    lc_headers = map(lower, headers)
-    quoted_lc_headers = map(quote_data_value, lc_headers)
+    lc_headers = [lower(h) for h in headers]
+    quoted_lc_headers = [quote_data_value(h) for h in lc_headers]
     for column_name, datatype in izip(quoted_lc_headers, datatypes):
         cur.execute(column_tables_sql_template % (column_name, datatype))
     conn.commit()
