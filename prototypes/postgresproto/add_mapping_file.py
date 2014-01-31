@@ -41,7 +41,7 @@ def scrub_data(s):
     return ret
 
 def quote_column_name(c):
-    """Puts double quotes around a string
+    """Lowercases the string and puts double quotes around it
     """
     return '"%s"' % c.lower()
 
@@ -96,13 +96,13 @@ def parse_mapping_file_to_dicts(mapping_file):
     # Find first non-comment line, assume the previous line (i.e., the last
     # comment line at the top of the file) is the headers
     headers = []
-    lastline = ''
+    prev_line = ''
     for line in mapping_file:
         if line.startswith('#'):
-            lastline = line
+            prev_line = line
             continue
         else:
-            headers = lastline.strip().split('\t')[1:]
+            headers = prev_line.strip().split('\t')[1:]
             num_columns = len(headers)
             break
 
@@ -156,6 +156,11 @@ def main():
     clear = args.clear_tables
     verbose = args.verbose
 
+    # Might as well do this to avoid the attribute lookup... probably not
+    # a huge amount of speedup, but I'm never using any other kind of "lower"
+    # function...
+    lower = str.lower
+
     if not exists(mapping_fp):
         raise IOError("Could not find file: %s" % mapping_fp)
 
@@ -163,6 +168,7 @@ def main():
     study_id = search('study_(\d+)_mapping_file.txt', mapping_fp)
     if study_id:
         study_id = study_id.group(1)
+        table_name = 'study_%s' % study_id
     else:
         raise IOError("Could not parse study id from filename: %s" %
                       mapping_fp)
@@ -180,8 +186,8 @@ def main():
     # delete the rows for that table from the column_tables table
     if clear:
         if verbose:
-            print "dropping table study_%s" % study_id
-        drop_sql = 'drop table study_%s' % study_id
+            print "dropping table %s" % table_name
+        drop_sql = 'drop table %s' % table_name
         try:
             cur.execute(drop_sql)
             if verbose:
@@ -196,7 +202,10 @@ def main():
         if verbose:
             print "Deleting rows from column_tables for study %s..." % study_id
         delete_sql = ("delete from column_tables where "
-                      "table_name = 'study_%s'" % study_id)
+                      "table_name = '%s'" % table_name)
+        # Do not need try/except here because the above query should never
+        # fail; even when there are no rows for this study, the query will
+        # do nothing but complete successfully
         cur.execute(delete_sql)
         if verbose:
             print "Deleted!"
@@ -208,54 +217,36 @@ def main():
 
     sql_safe_column_names = map(quote_column_name, headers)
 
-    # we don't know what size varchars to use a priori, so we have to determine
-    # this information for each column
-    sample_ids = mapping.keys()
-    column_lengths = []
-    for header in headers:
-        lengths = [len(mapping[sample_id][header]) for sample_id in sample_ids]
-
-        if lengths:
-            column_lengths.append(int(max(lengths) * 1.25))
-        else:
-            column_lengths.append(255)
-
     # create a table for the study
     if verbose:
-        print "Creating table study_%s..." % study_id
-    create_table_sql = 'create table study_%s (SampleID varchar(256), ' % \
-        study_id
+        print "Creating table %s..." % table_name
+    create_table_sql = 'create table %s (sampleid varchar, ' % table_name
 
     columns = []
-    for column_name, column_length, datatype in izip(sql_safe_column_names,
-            column_lengths, datatypes):
-        if datatype == 'varchar':
-            columns.append('%s varchar(%d)' % (column_name, column_length))
-        elif datatype == 'int':
-            columns.append('%s int' % column_name)
-        elif datatype == 'float':
-            columns.append('%s float' % column_name)
+    for column_name, datatype in izip(sql_safe_column_names,
+            datatypes):
+        columns.append('%s %s' % (column_name, datatype))
 
     columns = ', '.join(columns)
     create_table_sql  += columns + ')'
     cur.execute(create_table_sql)
-    #print create_table_sql
     conn.commit()
     if verbose:
         print "Created!"
 
     # add rows to the column_tables table
+    lc_table_name = lower(table_name)
+    quoted_lc_table_name = quote_data_value(lc_table_name)
     column_tables_sql_template = ("insert into column_tables (column_name, "
-                                  "table_name, datatype) values (%s, ")
-    column_tables_sql_template += "'study_%s', " % study_id
-    column_tables_sql_template += "'%s')"
+                                  "table_name, datatype) values (%s, " +
+                                  quoted_lc_table_name+", '%s')")
 
     if verbose:
         print "Adding rows to column_tables..."
-    for column_name, datatype in izip(map(quote_data_value, headers),
-            datatypes):
+    lc_headers = map(lower, headers)
+    quoted_lc_headers = map(quote_data_value, lc_headers)
+    for column_name, datatype in izip(quoted_lc_headers, datatypes):
         cur.execute(column_tables_sql_template % (column_name, datatype))
-        #print column_tables_sql_template % (column_name, datatype)
     conn.commit()
     if verbose:
         print "Added!"
@@ -263,9 +254,9 @@ def main():
     # add rows into the study table
     if verbose:
         print "Inserting rows into table study_%s..." % study_id
-    insert_sql_template = 'insert into study_%s (sampleid, ' % study_id
     columns = ', '.join(sql_safe_column_names)
-    insert_sql_template += columns + ') values (%s)'
+    insert_sql_template = ('insert into '+table_name+' (sampleid, '+
+                           columns+') values (%s)')
 
     for sample_id, data in mapping.iteritems():
         values = [quote_data_value(scrub_data(sample_id))]
@@ -273,10 +264,12 @@ def main():
                    for header in headers]
 
         values = ', '.join(values)
+
+        # Replace 'None' with null. This might be dangerous if a mapping file
+        # actually has None as a valid data value!
         values = values.replace(", 'None'", ", null")
 
         cur.execute(insert_sql_template % values)
-        #print insert_sql_template % values
 
     if verbose:
         print "Inserted rows!"
