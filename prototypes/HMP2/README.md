@@ -24,7 +24,7 @@ Python libraries
 >
 > psycopg2 2.5.1
 
-RUNING THE EXAMPLE
+RUNNING THE EXAMPLE
 =================
 Start the background daemons for redis-server, postgreSQL, and celery
 >For celery, run the following from the base folder: celery -A app worker --concurrency 4
