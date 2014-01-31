@@ -10,7 +10,8 @@ __email__ = "josenavasmolina@gmail.edu"
 __status__ = "Development"
 
 
-from qiita.core.exceptions import QiitaUserError, IncompetentQiitaDeveloper
+from qiita.core.exceptions import (QiitaUserError,
+                                   IncompetentQiitaDeveloperError)
 
 LEVELS = ['admin', 'dev', 'superuser', 'regular', 'guest']
 
@@ -26,17 +27,18 @@ class QiitaUser(object):
             level: the level of the user
             info: attached information to the user
 
-        Raises an IncompetentQiitaDeveloper if:
+        Raises an IncompetentQiitaDeveloperError if:
             - level is not recognized
             = info is provided and is not a dictionary
         """
         self._email = email
         if level and level not in LEVELS:
-            raise IncompetentQiitaDeveloper("level not recognized: %s" % level)
+            raise IncompetentQiitaDeveloperError("level not recognized: %s"
+                                                 % level)
         self._level = level
         if info and type(info) is not dict:
-            raise IncompetentQiitaDeveloper("info should be a dictionary. %s "
-                                            "found" % type(info))
+            raise IncompetentQiitaDeveloperError("info should be a dictionary."
+                                                 " %s found" % type(info))
         self._info = info if info else {}
         self._analyses = None
         self._studies = None

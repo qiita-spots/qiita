@@ -10,7 +10,8 @@ __email__ = "josenavasmolina@gmail.edu"
 __status__ = "Development"
 
 from qiita_core.job import QiitaJob
-from qiita_core.exceptions import QiitaAnalysisError, IncompetentQiitaDeveloper
+from qiita_core.exceptions import (QiitaAnalysisError,
+                                   IncompetentQiitaDeveloperError)
 
 STATUS = ["construction", "running", "completed", "lock"]
 
@@ -30,7 +31,7 @@ class QiitaAnalysis(object):
             status: current stats of the analysis
             info: a dictionary with any extra information
 
-        Raise a IncompetentQiitaDeveloper in any of the following cases:
+        Raise a IncompetentQiitaDeveloperError in any of the following cases:
             - jobs is provided and it is not a list
             - status is provided and it is not a recognized status
             - info is provided and it is not a dictionary
@@ -103,7 +104,8 @@ class QiitaAnalysis(object):
             biom_table: the new biom-table
 
         Raises a QiitaAnalysisError if the analysis is locked
-        Raises a IncompetentQiitaDeveloper if biom_table is not a biom-table
+        Raises a IncompetentQiitaDeveloperError if biom_table is not a
+            biom-table
         """
         self._biom_table = biom_table
 
@@ -114,13 +116,14 @@ class QiitaAnalysis(object):
             status: the new status of the analysis
 
         Raises a QiitaAnalysisError if the analysis is locked
-        Raises a IncompetentQiitaDeveloper if status is not a recognized status
+        Raises a IncompetentQiitaDeveloperError if status is not a recognized
+            status
         """
         if self._status == "lock":
             raise QiitaAnalysisError("analysis can't be changed. It's locked")
         if status not in STATUS:
-            raise IncompetentQiitaDeveloper("Status not recognized %s" %
-                                            status)
+            raise IncompetentQiitaDeveloperError("Status not recognized %s" %
+                                                 status)
         self._status = status
 
     def set_info(self, info):
@@ -130,13 +133,13 @@ class QiitaAnalysis(object):
             info: the dictionary with the analysis info
 
         Raises a QiitaAnalysisError if the analysis is locked
-        Raises a IncompetentQiitaDeveloper if info is not a dictionary
+        Raises a IncompetentQiitaDeveloperError if info is not a dictionary
         """
         if self._status == "lock":
             raise QiitaAnalysisError("analysis can't be changed. It's locked")
         if type(info) is not dict:
-            raise IncompetentQiitaDeveloper("info should be a dictionary. %s "
-                                            "found" % type(info))
+            raise IncompetentQiitaDeveloperError("info should be a dictionary."
+                                                 " %s found" % type(info))
 
     # Add/remove functions for the list attributes
     def add_job(self, job):
@@ -146,13 +149,13 @@ class QiitaAnalysis(object):
             job: a QiitaJob object
 
         Raises a QiitaAnalysisError if the analysis is locked
-        Raises a IncompetentQiitaDeveloper if job is not a QiitaJob object
+        Raises a IncompetentQiitaDeveloperError if job is not a QiitaJob object
         """
         if self._status == "lock":
             raise QiitaAnalysisError("analysis can't be changed. It's locked")
         if type(job) is not QiitaJob:
-            IncompetentQiitaDeveloper("job should be a QiitaJob: %s found" %
-                                      type(job))
+            IncompetentQiitaDeveloperError("job should be a QiitaJob: %s "
+                                           "found" % type(job))
         self._jobs.append(job)
 
     def remove_job(self, job):

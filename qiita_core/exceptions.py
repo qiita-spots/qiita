@@ -15,7 +15,7 @@ class QiitaError(Exception):
     pass
 
 
-class IncompetentQiitaDeveloper(QiitaError):
+class IncompetentQiitaDeveloperError(QiitaError):
     """Exception for developer errors"""
     pass
 
