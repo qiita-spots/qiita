@@ -17,21 +17,21 @@ class QiitaWareError(QiitaError):
     pass
 
 
-class UserNotExistsError(QiitaWareError):
+class UserDoesNotExistsError(QiitaWareError):
     """Error used when a user does not exist"""
     pass
 
 
-class AnalysisNotExistsError(QiitaWareError):
+class AnalysisDoesNotExistsError(QiitaWareError):
     """Error used when an analysis does not exist"""
     pass
 
 
-class JobNotExistsError(QiitaWareError):
+class JobDoesNotExistsError(QiitaWareError):
     """Error used when a job does not exist"""
     pass
 
 
-class StudyNotExistsError(QiitaWareError):
+class StudyDoesNotExistsError(QiitaWareError):
     """Error used when a study does not exist"""
     pass

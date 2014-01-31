@@ -76,7 +76,7 @@ def get_user(user_id):
     Returns:
         The QiitaUser object for the user user_id
 
-    Raises a UserNotExistsError if user_id is not in the system
+    Raises a UserDoesNotExistsError if user_id is not in the system
     """
     raise NotImplementedError("qiita_ware.api.user_manager: get_user")
 
@@ -120,7 +120,7 @@ def check_password(user_id, password):
     Returns:
         Bool: the password is correct or not
 
-    Raises a UserNotExistsError if user_id is not in the system
+    Raises a UserDoesNotExistsError if user_id is not in the system
     """
     raise NotImplementedError("qiita_ware.api.user_manager: check_password")
 
@@ -148,7 +148,7 @@ def reset_password(user_id):
     Inputs:
         user_id: the user_id of the user to reset the password
 
-    Raises a UserNotExistsError if user_id is not in the system
+    Raises a UserDoesNotExistsError if user_id is not in the system
     Raises an error if something went wrong
     """
     raise NotImplementedError("qiita_ware.api.user_manager: reset_password")
