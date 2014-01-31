@@ -24,6 +24,15 @@ parser.add_argument(
 )
 
 def parse_query(q):
+    """Parses a query of the form lefthand-side, operator, righthand-side
+
+    Returns LHS, operator, RHS, and datatype. Datatype is determined to be
+    either numerical (if casting RHS to a float is successful) or string.
+
+    Currently supported operators: <, >, <=, >=, =
+
+    Only the = operator is suppoted for RHS type string
+    """
     pat = '(\w+?)([<>=]+?)([^<>=]+)'
     results = match(pat, q)
 
@@ -92,8 +101,7 @@ def get_all_samples(conn, lhs, operator, rhs, datatype, common_only=True):
         # make the set a list so that we have a consistent ordering
         common_columns_list = list(common_columns)
         common_columns_list = [x[0] for x in common_columns_list]
-        # join the list to get the part of the query that describes what columns
-        # to fetch
+        # generate the list of columns to fetch in the query
         columns_part = ', '.join([x for x in common_columns_list])
 
         query_part_template = ("select "+columns_part+" from {0} where "+
@@ -128,7 +136,7 @@ def main():
     for row in get_all_samples(conn, lhs, operator, rhs, datatype,
             common_only):
         print row
-        print "\n\n\n"
+        print "\n"
 
 if __name__ == '__main__':
     main()
