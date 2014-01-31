@@ -1,0 +1,56 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en-US">
+<head>
+  <title>QIIME meta-analyis Page Mockup</title>
+  <link rel="stylesheet" href="{{ static_url("style.css") }}" type="text/css">
+  <link rel="stylesheet" href="{{ static_url("qiita.css") }}" type="text/css">
+  {% block head %}{% end %}
+</head>
+<body>
+
+<table width='100%' border="0" style="background:#A7A9AC">
+   <tr style="padding-top:3px; padding-bottom:3px; padding-right:3px; padding-left:3px;">
+       <td width="15%"><img src="{{ static_url("img/logo.png") }}"></td>
+       <td width="60%" style="text-align:center;">
+		<nav>     
+		<ul>
+			<li><a href="/">Home</a></li>
+			{% if user != '' %}
+			<li>
+				<a href="/meta/1" target="_parent">Meta Analysis</a>
+				<ul>
+					<li><a href="/meta/1" target="_parent">New Meta-Analysis</a></li>
+					<li><a href="/running/" target="_parent">Running Meta-Analyses</a></li>
+				</ul>
+			</li>
+			<!--
+			<li>
+				<a href="" target="_parent">Tools</a>
+			</li>
+			-->
+			{% end %}
+			<li><a href="mailto:qiita.help@gmail.com" target="_blank">Help</a></li>
+		</ul>
+		</nav>
+	  </td>
+	  <td width="25%" id="study_info">
+      {% if user != '' %}
+       Logged in as {{user}}
+       <br />
+       <a class="link" href="/auth/logout/">Logout</a>
+      {% else %}
+        Please Log In
+      {% end %}	  
+	  </td>
+   </tr>
+</table>
+
+<div id="content">
+  {% block content %}{% end %}
+</div>
+
+<div id="footer">
+</div>
+
+</body>
+</html>

@@ -1,0 +1,259 @@
+<!--
+*Summary of Emperor's Information*
+Command executed on January 02, 2014 at 07:48:00
+Emperor Version: 0.9.2-dev, master@7228fca
+QIIME Version: 1.8.0-dev, master@3f16b2b
+HostName: Antonios-MacBook-Pro.local
+Metadata: /Users/antoniog/Downloads/IBD_Swedish/reduced_mapping_file_with_replicates.txt
+Coordinates: /Users/antoniog/Downloads/IBD_Swedish/beta/pcoa/pcoa_bray_curtis_metagenome_annotations_otu_table_even.txt
+Command: /Users/antoniog/svn_programs/emperor/scripts/make_emperor.py -m reduced_mapping_file_with_replicates.txt -i beta/pcoa/pcoa_bray_curtis_metagenome_annotations_otu_table_even.txt -o beta/emperor/metagenome_annotations
+-->
+<!doctype html>
+<html lang="en">
+
+<head>
+    <title>Emperor</title>
+    <meta charset="utf-8">
+    <link rel="shortcut icon" href="emperor_required_resources/img/favicon.ico" />
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+    <link rel="stylesheet" type="text/css" href="emperor_required_resources/emperor/css/emperor.css">
+    <link rel="stylesheet" type="text/css" href="emperor_required_resources/css/jquery-ui2.css">
+    <link rel="stylesheet" type="text/css" href="emperor_required_resources/css/colorPicker.css">
+    <link rel="stylesheet" type="text/css" href="emperor_required_resources/css/spectrum.css">
+    <link rel="stylesheet" type="text/css" href="emperor_required_resources/css/d3.parcoords.css">
+    <table id="logotable" style="vertical-align:middle;text-align:center;height:100%;width:100%;margin:0;padding:0;border:0;">
+        <tr><td><img src="emperor_required_resources/img/emperor.png" alt="Emperor" id="logo"/></td></tr>
+    </table>
+    <script type="text/javascript" src="emperor_required_resources/js/d3.v3.min.js"></script>
+    <script type="text/javascript" src="emperor_required_resources/js/d3.parcoords.js"></script>
+    <script type="text/javascript" src="emperor_required_resources/js/jquery-1.7.1.min.js"></script>
+    <script type="text/javascript" src="emperor_required_resources/js/jquery-ui-1.8.17.custom.min.js"></script>
+    <script src="emperor_required_resources/js/jquery.colorPicker.js"></script>
+    <script src="emperor_required_resources/js/spectrum.js"></script>
+
+    <script src="emperor_required_resources/js/Three.js"></script>
+    <script src="emperor_required_resources/js/js/Detector.js"></script>
+    <script src="emperor_required_resources/js/js/RequestAnimationFrame.js"></script>
+    <script src="emperor_required_resources/emperor/js/emperor.js"></script>
+    <script type="text/javascript" src="emperor_required_resources/js/THREEx.screenshot.js"></script>
+    <script type="text/javascript" src="emperor_required_resources/js/FileSaver.min.js"></script>
+    
+    <script type="text/javascript">
+    
+var g_mappingFileHeaders = ['SampleID','BarcodeSequence','DISEASE_STAT2','RUN_PREFIX','REPLICATE','AGE','HOST_COMMON_NAME','HOST_TAXID','COLLECTION_DATE','SEX','HOST_SUBJECT_ID','AGE_UNIT','Description_duplicate','RUN_DATE','DISEASE_STAT','AGE_IN_YEARS','YEAR_OF_BIRTH','PAIR_NUMBER','Description'];
+var g_mappingFileData = { '18b': ['18b','CGTA','healthy','EYG96GT05','N','54','human','496922','2007','male','36','years','healthy, pair 18','5/11/07','ileal Crohns disease','54','1953','18','A_pyrosequencing_study_in_twins_shows_that_gastrointestinal_microbial_profiles_vary_with_inflammatory_bowel_disease_phenotypes'],'6a': ['6a','CTGA','healthy','FBJN19415','N','None','None','None','2008','female','None','unknown','healthy, pair 6, fecal','6/3/08','None','None','1951','6','A_pyrosequencing_study_in_twins_shows_that_gastrointestinal_microbial_profiles_vary_with_inflammatory_bowel_disease_phenotypes'],'6b': ['6b','CGTA','healthy','FBJN19415','N','None','None','None','2008','female','None','unknown','healthy, pair 6, fecal','6/3/08','None','None','1951','6','A_pyrosequencing_study_in_twins_shows_that_gastrointestinal_microbial_profiles_vary_with_inflammatory_bowel_disease_phenotypes'],'9b': ['9b','CGAT','colonic Crohns disease','EYG96GT01','N','None','None','None','2007','male','None','unknown','colonic Crohns disease, pair 9, fecal','5/11/07','None','None','1947','9','A_pyrosequencing_study_in_twins_shows_that_gastrointestinal_microbial_profiles_vary_with_inflammatory_bowel_disease_phenotypes'],'9a': ['9a','CGTA','colonic Crohns disease','EYG96GT01','N','None','None','None','2007','male','None','unknown','colonic Crohns disease, pair 9','5/11/07','None','None','1947','9','A_pyrosequencing_study_in_twins_shows_that_gastrointestinal_microbial_profiles_vary_with_inflammatory_bowel_disease_phenotypes'],'10a': ['10a','CGAT','ileal Crohns disease','EYG96GT02','N','None','None','None','2007','female','None','unknown','ileal Crohns disease, pair 10','5/11/07','None','None','1962','10','A_pyrosequencing_study_in_twins_shows_that_gastrointestinal_microbial_profiles_vary_with_inflammatory_bowel_disease_phenotypes'],'16a': ['16a','CTGA','ileal Crohns disease','EYG96GT04','N','53','human','496922','2007','female','31','years','ileal Crohns disease, pair 16','5/11/07','healthy','53','1954','16','A_pyrosequencing_study_in_twins_shows_that_gastrointestinal_microbial_profiles_vary_with_inflammatory_bowel_disease_phenotypes'],'16b': ['16b','CTGA','healthy','EYG96GT05','N','53','prairie dog flea','496922','2007','female','35','years','healthy, pair 16','5/11/07','ileal Crohns disease','53','1954','16','A_pyrosequencing_study_in_twins_shows_that_gastrointestinal_microbial_profiles_vary_with_inflammatory_bowel_disease_phenotypes'],'15a': ['15a','CATG','ileal Crohns disease','EYG96GT04','N','54','human','496922','2007','male','30','years','ileal Crohns disease, pair 15','5/11/07','None','54','1953','15','A_pyrosequencing_study_in_twins_shows_that_gastrointestinal_microbial_profiles_vary_with_inflammatory_bowel_disease_phenotypes'],'10b': ['10b','CATG','ileal Crohns disease','EYG96GT01','N','None','None','None','2007','female','None','unknown','ileal Crohns disease, pair 10, fecal','5/11/07','None','None','1962','10','A_pyrosequencing_study_in_twins_shows_that_gastrointestinal_microbial_profiles_vary_with_inflammatory_bowel_disease_phenotypes'],'15b': ['15b','CGAT','ileal Crohns disease','EYG96GT04','N','54','human','496922','2007','male','29','years','ileal Crohns disease, pair 15','5/11/07','healthy','54','1953','15','A_pyrosequencing_study_in_twins_shows_that_gastrointestinal_microbial_profiles_vary_with_inflammatory_bowel_disease_phenotypes'],'18a': ['18a','CGAT','ileal Crohns disease','EYG96GT05','N','54','human','496922','2007','male','33','years','ileal Crohns disease, pair 18','5/11/07','healthy','54','1953','18','A_pyrosequencing_study_in_twins_shows_that_gastrointestinal_microbial_profiles_vary_with_inflammatory_bowel_disease_phenotypes'] };
+
+var g_spherePositions = new Array();
+g_spherePositions['10a'] = { 'name': '10a', 'color': 0, 'x': 0.251934, 'y': 0.000699, 'z': -0.049098, 'P1': 0.251934, 'P2': 0.000699, 'P3': -0.049098, 'P4': -0.005275, 'P5': 0.010641, 'P6': -0.028731, 'P7': 0.030416, 'P8': -0.028243, 'P9': -0.009473, 'P10': -0.007168 };
+g_spherePositions['10b'] = { 'name': '10b', 'color': 0, 'x': 0.240811, 'y': 0.006400, 'z': -0.010868, 'P1': 0.240811, 'P2': 0.006400, 'P3': -0.010868, 'P4': 0.019870, 'P5': -0.021158, 'P6': -0.135830, 'P7': -0.025035, 'P8': -0.025623, 'P9': 0.006888, 'P10': 0.003090 };
+g_spherePositions['15a'] = { 'name': '15a', 'color': 0, 'x': -0.061587, 'y': 0.043875, 'z': 0.083816, 'P1': -0.061587, 'P2': 0.043875, 'P3': 0.083816, 'P4': -0.112667, 'P5': 0.054370, 'P6': 0.015043, 'P7': 0.027861, 'P8': -0.060296, 'P9': 0.064176, 'P10': -0.038922 };
+g_spherePositions['15b'] = { 'name': '15b', 'color': 0, 'x': -0.306197, 'y': 0.039182, 'z': -0.076592, 'P1': -0.306197, 'P2': 0.039182, 'P3': -0.076592, 'P4': -0.034122, 'P5': 0.003072, 'P6': -0.011742, 'P7': 0.017101, 'P8': -0.011676, 'P9': 0.021896, 'P10': 0.097576 };
+g_spherePositions['16a'] = { 'name': '16a', 'color': 0, 'x': -0.313453, 'y': 0.050893, 'z': -0.113846, 'P1': -0.313453, 'P2': 0.050893, 'P3': -0.113846, 'P4': -0.016338, 'P5': 0.008234, 'P6': -0.010693, 'P7': -0.009022, 'P8': 0.002238, 'P9': -0.059122, 'P10': -0.069780 };
+g_spherePositions['16b'] = { 'name': '16b', 'color': 0, 'x': -0.097193, 'y': 0.043548, 'z': 0.070868, 'P1': -0.097193, 'P2': 0.043548, 'P3': 0.070868, 'P4': 0.093887, 'P5': 0.037675, 'P6': 0.024674, 'P7': -0.121848, 'P8': -0.027145, 'P9': 0.001078, 'P10': 0.007510 };
+g_spherePositions['18a'] = { 'name': '18a', 'color': 0, 'x': -0.053684, 'y': -0.179716, 'z': 0.059791, 'P1': -0.053684, 'P2': -0.179716, 'P3': 0.059791, 'P4': -0.080440, 'P5': 0.059752, 'P6': -0.019075, 'P7': -0.020693, 'P8': 0.051201, 'P9': -0.040811, 'P10': 0.012663 };
+g_spherePositions['18b'] = { 'name': '18b', 'color': 0, 'x': -0.143546, 'y': -0.142880, 'z': 0.003748, 'P1': -0.143546, 'P2': -0.142880, 'P3': 0.003748, 'P4': 0.061792, 'P5': -0.124704, 'P6': 0.028846, 'P7': 0.021198, 'P8': -0.045397, 'P9': 0.026553, 'P10': -0.017074 };
+g_spherePositions['6a'] = { 'name': '6a', 'color': 0, 'x': 0.121602, 'y': 0.077094, 'z': 0.097196, 'P1': 0.121602, 'P2': 0.077094, 'P3': 0.097196, 'P4': 0.004292, 'P5': -0.037791, 'P6': 0.041133, 'P7': 0.053396, 'P8': -0.024675, 'P9': -0.087836, 'P10': 0.026446 };
+g_spherePositions['6b'] = { 'name': '6b', 'color': 0, 'x': -0.119216, 'y': 0.060428, 'z': 0.069215, 'P1': -0.119216, 'P2': 0.060428, 'P3': 0.069215, 'P4': 0.077733, 'P5': -0.005584, 'P6': -0.031618, 'P7': 0.054391, 'P8': 0.105540, 'P9': 0.036732, 'P10': -0.016358 };
+g_spherePositions['9a'] = { 'name': '9a', 'color': 0, 'x': 0.248477, 'y': 0.044345, 'z': -0.047022, 'P1': 0.248477, 'P2': 0.044345, 'P3': -0.047022, 'P4': -0.092263, 'P5': -0.086001, 'P6': 0.059027, 'P7': -0.060074, 'P8': 0.061282, 'P9': 0.022827, 'P10': -0.000359 };
+g_spherePositions['9b'] = { 'name': '9b', 'color': 0, 'x': 0.232052, 'y': -0.043868, 'z': -0.087209, 'P1': 0.232052, 'P2': -0.043868, 'P3': -0.087209, 'P4': 0.083531, 'P5': 0.101495, 'P6': 0.068966, 'P7': 0.032310, 'P8': 0.002793, 'P9': 0.017093, 'P10': 0.002376 };
+
+var g_ellipsesDimensions = new Array();
+var g_segments = 8, g_rings = 8, g_radius = 0.006785;
+var g_xAxisLength = 0.565387;
+var g_yAxisLength = 0.256810;
+var g_zAxisLength = 0.211042;
+var g_xMaximumValue = 0.251934;
+var g_yMaximumValue = 0.077094;
+var g_zMaximumValue = 0.097196;
+var g_xMinimumValue = -0.313453;
+var g_yMinimumValue = -0.179716;
+var g_zMinimumValue = -0.113846;
+var g_maximum = 0.313453;
+var g_pc1Label = "PC1 (57 %)";
+var g_pc2Label = "PC2 (9 %)";
+var g_pc3Label = "PC3 (7 %)";
+var g_number_of_custom_axes = 0;
+var g_fractionExplained = [0.569039, 0.085320, 0.070208, 0.063486, 0.049789, 0.037367, 0.033224, 0.030087, 0.023553, 0.020065];
+var g_fractionExplainedRounded = [57, 9, 7, 6, 5, 4, 3, 3, 2, 2];
+
+var g_taxaPositions = new Array();
+
+
+var g_vectorPositions = new Array();
+
+var g_comparisonPositions = new Array();
+var g_isSerialComparisonPlot = true;
+document.getElementById("logo").style.display = 'none';
+document.getElementById("logotable").style.display = 'none';
+
+ </script>
+</head>
+
+<body>
+
+<div id="plotToggle">
+    <form>
+      <div id="plottype">
+        <input id="pcoa" type="radio" id="pcoa" name="plottype" checked="checked" /><label for="pcoa">PCoA</label>
+        <input id="parallel" type="radio" id="parallel" name="plottype" /><label for="parallel">Parallel</label>
+      </div>
+    </form>
+</div>
+<div id="pcoaPlotWrapper" class="plotWrapper">
+    <label id="pointCount" class="ontop">
+    </label>
+
+    <div id="finder" class="arrow-right">
+    </div>
+
+    <div id="labels" class="unselectable">
+    </div>
+
+    <div id="taxalabels" class="unselectable">
+    </div>
+
+    <div id="axislabels" class="axislabels">
+    </div>
+
+    <div id="main_plot">
+    </div>
+</div>
+
+<div id="parallelPlotWrapper" class="plotWrapper">
+</div>
+
+<div class="separator" ondblclick="separatorDoubleClick()"></div>
+
+<div id="menu">
+    <div id="menutabs">
+        <ul>
+            <li><a href="#keytab">Key</a></li>
+            <li><a href="#colorby">Colors</a></li>
+            <li><a href="#showby">Visibility</a></li>
+            <li><a href="#scalingby">Scaling</a></li>
+            <li><a href="#labelby">Labels</a></li>
+            <li><a href="#axes">Axes</a></li>
+            <li><a href="#options">Options</a></li>
+        </ul>
+        <div id="keytab">
+            <form name="keyFilter">
+            <label>Filter  </label><input name="filterBox" id="searchBox" type="text" onkeyup="filterKey()"></input>
+            </form>
+            <div id="key">
+            </div>
+        </div>
+        <div id="colorby">
+            <br>
+            <input type="checkbox" onchange="toggleContinuousAndDiscreteColors(this)" id="discreteorcontinuouscolors" name="discreteorcontinuouscolors">  Use gradient colors</input>
+            <br><br>
+            <select id="colorbycombo" onchange="colorByMenuChanged()" size="3">
+            </select>
+            <div class="list" id="colorbylist">
+            </div>
+        </div>
+        <div id="showby" align="center">
+            <table width="100%">
+                <tr>
+                    <td align="center">
+                        <select id="showbycombo" onchange="showByMenuChanged()">
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <div class="list" id="showbylist" style="height:100%;width:100%">
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding-left: 12px; padding-right:12px;">
+                        <br>
+                        <label for="sphereopacity" class="text">Global Sphere Opacity</label>
+                        <label id="sphereopacity" class="slidervalue"></label>
+                        <div id="sopacityslider" class="slider-range-max"></div>
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <div id="scalingby" align="center">
+            <table width="100%">
+                <tr>
+                    <td align="center">
+                        <select id="scalingbycombo" onchange="scalingByMenuChanged()">
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <div class="list" id="scalingbylist" style="height:100%;width:100%">
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding-left: 12px; padding-right:12px;">
+                        <br>
+                        <label for="sphereradius" class="text">Global Sphere Scale</label>
+                        <label id="sphereradius" class="slidervalue"></label>
+                        <div id="sradiusslider" class="slider-range-max"></div>
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <div id="labelby">
+        <div id="labelsTop">
+            <form name="plotoptions">
+            <input type="checkbox" onClick="toggleLabels()">Samples Label Visibility</input>
+            </form>
+            <br>
+            <label for="labelopacity" class="text">Label Opacity</label>
+            <label id="labelopacity" class="slidervalue"></label>
+            <div id="lopacityslider" class="slider-range-max"></div>
+            <div id="labelColorHolder clearfix">
+            <table>
+                <tr><td><div id="labelColor" class="colorbox"></div></td><td><label>Master Label Color</label></td></tr>
+            </table></div>
+        </div>
+            <br>
+            <select id="labelcombo" onchange="labelMenuChanged()">
+            </select>
+            <div class="list" id="labellist">
+            </div>
+        </div>
+        <div id="axes">
+            <div id="pcoaaxes">
+                <div class="list" id="axeslist">
+                </div>
+            </div>
+        </div>
+        <div id="options">
+            <table>
+                <tr><td><div id="axeslabelscolor" class="colorbox" name="axeslabelscolor"></div></td><td title="Axes Labels Color">Axes Labels Color</td></tr>
+                <tr><td><div id="axescolor" class="colorbox" name="axescolor"></div></td><td title="Axes Color Title">Axes Color</td></tr>
+                <tr><td><div id="rendererbackgroundcolor" class="colorbox" name="rendererbackgroundcolor"></div></td><td title="Background Color Title">Background Color</td></tr>
+            </table>
+            <div id="pcoaviewoptions" class="">
+                <form name="settingsoptionscolor">
+                </form>
+                <div id="pcoaoptions" class="">
+                    <form name="settingsoptions">
+                        <input type="checkbox" onchange="toggleScaleCoordinates(this)" id="scale_checkbox" name="scale_checkbox">Scale coords by percent explained</input>
+                    </form>
+                </div>
+                <br><input id="reset" class="button" type="submit" value="Recenter Camera" style="" onClick="resetCamera()">
+                <br><br>
+                <hr class='section-break'>
+                <br>Filename <small>(only letters, numbers, ., - and _)</small>:
+                <br><input name="saveas_name" id="saveas_name" value="screenshot" type="text"/>
+                <br><input id="saveas_legends" class="checkbox" type="checkbox" style=""> Create legend
+                <input id="saveas" class="button" type="submit" value="Save as SVG" style="" onClick="saveSVG()"/>
+                <br><br>For a PNG, simply press 'ctrl+p'.
+                <div id="paralleloptions" class="">
+                </div>
+            </div>
+            <br>
+        </div>
+    </div>  
+</div>
+</body>
+
+</html>
