@@ -15,6 +15,8 @@ from qiita_db.backends.fs import FSUser, FSAnalysis, FSStudy, FSSample, FSJob
 from qiita_db.backends.dev import (DEVUser, DEVAnalysis, DEVStudy, DEVSample,
                                    DEVJob)
 
+BACKEND = "SQL"
+
 if BACKEND == "SQL":
     UserStorage = SQLUser
     AnalysisStorage = SQLAnalysis
