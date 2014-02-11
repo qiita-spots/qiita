@@ -12,4 +12,5 @@ __email__ = "josenavasmolina@gmail.com"
 from qiita_db.backends.sql.add_mapping_file import (add_mapping_file as
                                                     sql_add_mapping_file)
 
+# Here we should support different backends
 add_mapping_file = sql_add_mapping_file

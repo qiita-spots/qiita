@@ -7,7 +7,7 @@ __maintainer__ = "Jose Antonio Navas Molina"
 __email__ = "josenavasmolina@gmail.com"
 
 from qiita_db.backends.sql.parse import parse_mapping_file_to_dicts
-from qiita_db.backends.sql.exceptions import QiitaBDSQLParseError
+from qiita_db.backends.sql.exceptions import QiitaDBSQLParseError
 from re import search
 
 
@@ -31,7 +31,7 @@ def load_mapping_file(mapping_fp):
     if study_id:
         study_id = study_id.group(1)
     else:
-        raise QiitaBDSQLParseError("Could not parse study id from filename: %s"
+        raise QiitaDBSQLParseError("Could not parse study id from filename: %s"
                                    % mapping_fp)
 
     return (study_id, mapping, headers, datatypes)

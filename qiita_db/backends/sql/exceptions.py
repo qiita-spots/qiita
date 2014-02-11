@@ -19,6 +19,6 @@ class QiitaDBSQLExecutionError(QiitaDBSQLError):
     pass
 
 
-class QiitaBDSQLParseError(QiitaDBError):
+class QiitaDBSQLParseError(QiitaDBError):
     """Exception for error when parsing files"""
     pass
