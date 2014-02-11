@@ -155,5 +155,4 @@ def add_mapping_file(study_id, mapping, headers, datatypes, clear_tables):
         values = values.replace(", 'None'", ", null")
         sql_execute(cur, insert_sql_template % values, None)
 
-    # sql_executemany(cur, insert_sql_template, sql_args_list)
     cur.close()
