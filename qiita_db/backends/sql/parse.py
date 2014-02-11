@@ -6,7 +6,7 @@ __version__ = "0.1.0-dev"
 __maintainer__ = "Jose Antonio Navas Molina"
 __email__ = "josenavasmolina@gmail.com"
 
-from qiita_db.backends.sql.exceptions import QiitaBDSQLParseError
+from qiita_db.backends.sql.exceptions import QiitaDBSQLParseError
 
 
 def parse_mapping_file_to_dicts(lines):
@@ -40,7 +40,7 @@ def parse_mapping_file_to_dicts(lines):
 
     # if we get here and don't have headers, abort
     if not headers:
-        raise QiitaBDSQLParseError("Empty mapping file! Aborting.")
+        raise QiitaDBSQLParseError("Empty mapping file! Aborting.")
 
     # seek back to the beginning of the file, and read in the data (skip
     # comment lines)

@@ -130,7 +130,7 @@ def add_mapping_file(study_id, mapping, headers, datatypes, clear_tables):
     quoted_lc_table_name = quote_data_value(lc_table_name)
     column_tables_sql_template = ("insert into column_tables (column_name, "
                                   "table_name, datatype) values (%s, " +
-                                  quoted_lc_table_name+", %s)")
+                                  quoted_lc_table_name + ", %s)")
     lc_headers = [lower(h) for h in headers]
     quoted_lc_headers = [quote_data_value(h) for h in lc_headers]
     sql_args_list = [(column_name, datatype) for column_name, datatype in
@@ -139,8 +139,8 @@ def add_mapping_file(study_id, mapping, headers, datatypes, clear_tables):
 
     # Add rows into the study table
     columns = ', '.join(sql_safe_column_names)
-    insert_sql_template = ('insert into '+table_name+' (sampleid, ' +
-                           columns+') values (%s)')
+    insert_sql_template = ('insert into ' + table_name + ' (sampleid, ' +
+                           columns + ') values (%s)')
 
     sql_args_list = []
     for sample_id, data in mapping.iteritems():
