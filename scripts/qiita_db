@@ -1,0 +1,12 @@
+#!/bin/sh
+
+# __author__ = "Jose Antonio Navas Molina"
+# __copyright__ = "Copyright 2013, The Qiita project"
+# __credits__ = ["Daniel McDonald", "Adam Robbins-Pianka", "Antonio Gonzalez",
+#                "Yoshiki Vazquez Baeza", "Jose Antonio Navas Molina"]
+# __license__ = "BSD"
+# __version__ = "0.1.0-dev"
+# __maintainer__ = "Jose Antonio Navas Molina"
+# __email__ = "josenavasmolina@gmail.com"
+
+exec pyqi --driver-name qiita_db --command-config-module qiita_db.interfaces.optparse.config -- "$@"

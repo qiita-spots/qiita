@@ -9,8 +9,8 @@ __maintainer__ = "Jose Antonio Navas Molina"
 __email__ = "josenavasmolina@gmail.edu"
 __status__ = "Development"
 
-from qiita_db.backends.dev.user_storage.py import UserStorage as DEVUser
-from qiita_db.backends.dev.analysis_storage.py import AnalysisStorage as DEVAnalysis
-from qiita_db.backends.dev.study_storage.py import StudyStorage as DEVStudy
-from qiita_db.backends.dev.sample_storage.py import SampleStorage as DEVSample
-from qiita_db.backends.dev.job_storage.py import JobStorage as DEVJob
+from qiita_db.backends.dev.user_storage import UserStorage as DEVUser
+from qiita_db.backends.dev.analysis_storage import AnalysisStorage as DEVAnalysis
+from qiita_db.backends.dev.study_storage import StudyStorage as DEVStudy
+from qiita_db.backends.dev.sample_storage import SampleStorage as DEVSample
+from qiita_db.backends.dev.job_storage import JobStorage as DEVJob
