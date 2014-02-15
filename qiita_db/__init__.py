@@ -12,7 +12,6 @@ __status__ = "Development"
 from .backends.sql import (SQLUser, SQLAnalysis, SQLStudy, SQLSample, SQLJob,
                            SQLMetadataMap)
 from .backends.fs import FSUser, FSAnalysis, FSStudy, FSSample, FSJob
-from .backends.dev import DEVUser, DEVAnalysis, DEVStudy, DEVSample, DEVJob
 from qiita_db.config import qiita_db_config
 
 
@@ -29,11 +28,5 @@ elif qiita_db_config.backend == "FS":
     StudyStorage = FSStudy
     SampleStorage = FSSample
     JobStorage = FSJob
-elif qiita_db_config.backend == "DEV":
-    UserStorage = DEVUser
-    AnalysisStorage = DEVAnalysis
-    StudyStorage = DEVStudy
-    SampleStorage = DEVSample
-    JobStorage = DEVJob
 else:
     raise ValueError("Backend not recognized: %s" % qiita_db_config.backend)
