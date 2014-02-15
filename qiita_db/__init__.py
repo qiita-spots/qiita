@@ -9,31 +9,31 @@ __maintainer__ = "Jose Antonio Navas Molina"
 __email__ = "josenavasmolina@gmail.edu"
 __status__ = "Development"
 
-from qiita_db.backends.sql import (SQLUser, SQLAnalysis, SQLStudy, SQLSample,
-                                   SQLJob)
-from qiita_db.backends.fs import FSUser, FSAnalysis, FSStudy, FSSample, FSJob
-from qiita_db.backends.dev import (DEVUser, DEVAnalysis, DEVStudy, DEVSample,
-                                   DEVJob)
+from .backends.sql import (SQLUser, SQLAnalysis, SQLStudy, SQLSample, SQLJob,
+                           SQLMetadataMap)
+from .backends.fs import FSUser, FSAnalysis, FSStudy, FSSample, FSJob
+from .backends.dev import DEVUser, DEVAnalysis, DEVStudy, DEVSample, DEVJob
+from qiita_db.config import qiita_db_config
 
-BACKEND = "SQL"
 
-if BACKEND == "SQL":
+if qiita_db_config.backend == "SQL":
     UserStorage = SQLUser
     AnalysisStorage = SQLAnalysis
     StudyStorage = SQLStudy
     SampleStorage = SQLSample
     JobStorage = SQLJob
-elif BACKEND == "FS":
+    MetadataMapStorage = SQLMetadataMap
+elif qiita_db_config.backend == "FS":
     UserStorage = FSUser
     AnalysisStorage = FSAnalysis
     StudyStorage = FSStudy
     SampleStorage = FSSample
     JobStorage = FSJob
-elif BACKEND == "DEV":
+elif qiita_db_config.backend == "DEV":
     UserStorage = DEVUser
     AnalysisStorage = DEVAnalysis
     StudyStorage = DEVStudy
     SampleStorage = DEVSample
     JobStorage = DEVJob
 else:
-    raise ValueError("Backend not recognized: %s" % BACKEND)
+    raise ValueError("Backend not recognized: %s" % qiita_db_config.backend)

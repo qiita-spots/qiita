@@ -9,13 +9,12 @@ __maintainer__ = ""
 __email__ = ""
 __status__ = "Development"
 
-from qiita_db.backends.sql.base_sql import BaseSQLStorageAPI
+from qiita_db.core.base_api import BaseStorageAPI
+from qiita_db.backends.sql.sql_connection import SQLConnectionHandler
 
 
-class AnalysisStorage(BaseSQLStorageAPI):
+class BaseSQLStorageAPI(BaseStorageAPI):
     """"""
-
     def __init__(self):
         """"""
-        super(AnalysisStorage, self).__init__()
-        
+        self.conn_handler = SQLConnectionHandler()
