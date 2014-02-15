@@ -47,7 +47,7 @@ inputs = [
                    # Default=False, # implied by Parameter
                    # DefaultDescription=None, # implied by Parameter
                    ),
-    OptparseOption(Parameter=cmd_in_lookup('mapping_file_info'),
+    OptparseOption(Parameter=cmd_in_lookup('metadata_map'),
                    Type='existing_filepath',
                    Action='store',
                    Handler=load_mapping_file,

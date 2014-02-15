@@ -12,14 +12,16 @@ __email__ = "josenavasmolina@gmail.com"
 from pyqi.core.command import (Command, CommandIn, CommandOut,
                                ParameterCollection)
 from pyqi.core.exception import CommandError
-from qiita_db.add_mapping_file import add_mapping_file
+
+from qiita_db import MetadataMapStorage
+from qiita_core.metadata_map import MetadataMap
 
 
 class MappingFileAdder(Command):
     BriefDescription = "Adds the mapping file information to the storage"
     LongDescription = "Adds the mapping file information to the storage"
     CommandIns = ParameterCollection([
-        CommandIn(Name='mapping_file_info', DataType=tuple,
+        CommandIn(Name='metadata_map', DataType=MetadataMap,
                   Description="Mapping information to add to the storage. "
                   "Format is (study id, dict of dicts, list of column headers,"
                   " columns datatypes)", Required=True),
@@ -31,15 +33,16 @@ class MappingFileAdder(Command):
 
     def run(self, **kwargs):
         # Get parameters
-        mapping_file_info = kwargs['mapping_file_info']
+        metadata_map = kwargs['metadata_map']
         clear_tables = kwargs['clear_tables']
-        # Extract mapping file information
-        try:
-            study_id, mapping, headers, datatypes = mapping_file_info
-        except ValueError, e:
-            raise CommandError("Wrong mapping file information format")
 
-        add_mapping_file(study_id, mapping, headers, datatypes, clear_tables)
+        metadata_map_stg = MetadataMapStorage()
+
+        if clear_tables:
+            metadata_map_stg.delete(metadata_map.id_)
+
+        metadata_map_stg.insert(metadata_map)
+
         return {}
 
 CommandConstructor = MappingFileAdder

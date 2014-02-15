@@ -22,3 +22,8 @@ class QiitaDBSQLExecutionError(QiitaDBSQLError):
 class QiitaDBSQLParseError(QiitaDBError):
     """Exception for error when parsing files"""
     pass
+
+
+class QiitaDBSQLConnectionError(QiitaDBError):
+    """Exception for error when connecting to the db"""
+    pass
