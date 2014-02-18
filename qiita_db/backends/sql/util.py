@@ -22,7 +22,10 @@ def quote_data_value(c):
 
 
 def get_datatypes(metadata_map):
-    """"""
+    """Infers datatypes for columns in a metadata_map object
+
+    Input is a qiita_core.metadata_map.MetadataMap object
+    """
     isdigit = str.isdigit
     datatypes = []
     for header in metadata_map.CategoryNames():
