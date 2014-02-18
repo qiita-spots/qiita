@@ -40,24 +40,13 @@ inputs = [
                    Action='store_true',
                    Handler=None,
                    ShortName='d',
-                   # Name='clear_tables', # implied by Parameter
-                   # Required=False, # implied by Parameter
-                   # Help='Deletes all rows from column_tables for this study,
-                   #       and drops the study's table', # implied by Parameter
-                   # Default=False, # implied by Parameter
-                   # DefaultDescription=None, # implied by Parameter
                    ),
     OptparseOption(Parameter=cmd_in_lookup('metadata_map'),
                    Type='existing_filepath',
                    Action='store',
                    Handler=load_mapping_file,
                    ShortName='m',
-                   # Name='mapping_file_info', # implied by Parameter
-                   # Required=True, # implied by Parameter
-                   # Help='Mapping information to add to the storage. Format
-                   #       is (study id, dict of dicts, list of column headers,
-                   #       columns datatypes)', # implied by Parameter
-                   ),
+                   )
 ]
 
 outputs = []
