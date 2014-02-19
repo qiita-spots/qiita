@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 #-----------------------------------------------------------------------------
-# Copyright (c) 2013, The QIIME Development Team.
+# Copyright (c) 2013, The Qiita Development Team.
 #
 # Distributed under the terms of the BSD 3-clause License.
 #
