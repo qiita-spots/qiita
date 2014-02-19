@@ -15,7 +15,7 @@ from qiime.util import MetadataMap as QiimeMetadataMap
 class MetadataMap(QiimeMetadataMap):
     """Extends the MetadataMap to include the id_ attribute"""
 
-    def __init__(self, **kwargs):
+    def __init__(self, id, **kwargs):
         super(MetadataMap, self).__init__(kwargs)
         self._id = None
 

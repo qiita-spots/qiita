@@ -54,110 +54,99 @@ class QiitaAnalysis(object):
                                      % type(info))
         self._info = info if info else {}
 
+    #decorators
+    class verify_not_status(object):
+        def __init__(self, status):
+            self.status = status
+
+        def __call__(self, f):
+            def decorator(dec_self, *args, **kwargs):
+                if dec_self._status != self.status:
+                    # bail
+                    raise QiitaAnalysisError("Analysis is locked!")
+                return f(*args, **kwargs)
+            return decorator
+
     # Get functions
-    def get_id(self):
+    @property
+    def id(self):
         """Retrieves the analysis id"""
         return self._id
 
-    def get_name(self):
+    @property
+    def name(self):
         """Retrieves the analysis name"""
         return self._name
+    @name.setter
+    @verify_not_status("lock")
+    def name(self, name):
+        self._name = name
 
-    def get_biom_table(self):
+    @property
+    def biom_table(self):
         """Retrieves the biom table used in the analysis"""
         return self._biom_table
+    @biom_table.setter
+    @verify_not_status("lock")
+    def biom_table(self, biom_table):
+        self._biom_table = biom_table
 
-    def get_jobs(self):
+    @property
+    def jobs(self):
         """Retrieves the jobs that build up the analysis"""
         for job in self._jobs:
             yield job
+    @jobs.setter
+    @verify_not_status("locked")
+    def jobs(self, jobs):
+        self._jobs = jobs
 
-    def get_status(self):
+    @property
+    def status(self):
         """Retrieves the status of the analysis"""
         return self._status
-
-    def get_info(self):
-        """Retrieves the information attached to the analysis"""
-        return self._info
-
-    # Set functions
-    def set_id(self, a_id):
-        """Raises a QiitaAnalysisError, the analysis id can't be changed"""
-        raise QiitaAnalysisError("The id of an object can't be changed")
-
-    def set_name(self, name):
-        """Sets the name of the analysis to 'name'
-
-        Inputs:
-            name: the new name for the analysis
-
-        Raises a QiitaAnalysisError if the analysis is locked
-        """
-        if self._status == "lock":
-            raise QiitaAnalysisError("analysis can't be changed. It's locked")
-        self._name = name
-
-    def set_biom_table(self, biom_table):
-        """Sets the biom table of the analysis
-
-        Inputs:
-            biom_table: the new biom-table
-
-        Raises a QiitaAnalysisError if the analysis is locked
-        Raises a IncompetentQiitaDeveloperError if biom_table is not a
-            biom-table
-        """
-        self._biom_table = biom_table
-
-    def set_status(self, status):
+    @status.setter
+    @verify_not_status("lock")
+    def status(self, status):
         """ Sets the status of the analysis
-
-        Inputs:
-            status: the new status of the analysis
-
         Raises a QiitaAnalysisError if the analysis is locked
         Raises a IncompetentQiitaDeveloperError if status is not a recognized
             status
         """
-        if self._status == "lock":
-            raise QiitaAnalysisError("analysis can't be changed. It's locked")
         if status not in STATUS:
             raise IncompetentQiitaDeveloperError("Status not recognized %s" %
                                                  status)
         self._status = status
 
-    def set_info(self, info):
+    @property
+    def info(self):
+        """Retrieves the information attached to the analysis"""
+        return self._info
+    @info.setter
+    @verify_not_status("lock")
+    def info(self, info):
         """Sets the information of the analysis
-
-        Inputs:
-            info: the dictionary with the analysis info
-
         Raises a QiitaAnalysisError if the analysis is locked
         Raises a IncompetentQiitaDeveloperError if info is not a dictionary
         """
-        if self._status == "lock":
-            raise QiitaAnalysisError("analysis can't be changed. It's locked")
         if type(info) is not dict:
             raise IncompetentQiitaDeveloperError("info should be a dictionary."
                                                  " %s found" % type(info))
+        self._info = info
 
     # Add/remove functions for the list attributes
+    @verify_not_status("lock")
     def add_job(self, job):
         """Adds a job to the analysis
-
-        Input:
-            job: a QiitaJob object
-
         Raises a QiitaAnalysisError if the analysis is locked
         Raises a IncompetentQiitaDeveloperError if job is not a QiitaJob object
         """
-        if self._status == "lock":
-            raise QiitaAnalysisError("analysis can't be changed. It's locked")
         if type(job) is not QiitaJob:
             IncompetentQiitaDeveloperError("job should be a QiitaJob: %s "
                                            "found" % type(job))
         self._jobs.append(job)
 
+    @verify_not_status("lock")
     def remove_job(self, job):
         """Removes a job from the analysis
 

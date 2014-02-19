@@ -13,7 +13,7 @@ __status__ = "Development"
 from qiita.core.exceptions import (QiitaUserError,
                                    IncompetentQiitaDeveloperError)
 
-LEVELS = ['admin', 'dev', 'superuser', 'regular', 'guest']
+LEVELS = ['admin', 'dev', 'superuser', 'user', 'guest']
 
 
 class QiitaUser(object):
