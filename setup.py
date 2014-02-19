@@ -36,7 +36,7 @@ classes = """
     Operating System :: MacOS :: MacOS X
 """
 
-long_description = """QiiTa is a databasing and UI effort for qiime"""
+long_description = """QiiTa is a databasing and UI effort for QIIME"""
 
 classifiers = [s.strip() for s in classes.split('\n') if s]
 
@@ -78,8 +78,8 @@ setup(name='qiita',
                 ],
       scripts=glob('scripts/*'),
       install_requires=['tornado == 3.1.1', 'redis == 2.8.0',
-                        'tornado-redis == 2.4.15', 'psycopg == 2.5.1',
-                        'pgbouncer == 1.5.4', 'pyqi == 0.3' ,'ipython',
+                        'tornado-redis == 2.4.15', 'psycopg2',
+                        'pgbouncer', 'pyqi == 0.3' ,'ipython[all]',
                         'qiime == 1.8.0'],
       classifiers=classifiers
             )
