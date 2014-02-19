@@ -36,7 +36,7 @@ classes = """
     Operating System :: MacOS :: MacOS X
 """
 
-long_description = """QiiTa is a databasing and UI effort for QIIME"""
+long_description = """Qiita is a databasing and UI effort for QIIME"""
 
 classifiers = [s.strip() for s in classes.split('\n') if s]
 
