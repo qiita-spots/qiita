@@ -3,6 +3,7 @@ python:
   - "2.7"
 install:
   - pip install numpy
+  - pip install sphinx
   - pip install cogent
   - pip install .
   # To install packages using apt-get
