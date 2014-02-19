@@ -9,4 +9,4 @@ __email__ = "josenavasmolina@gmail.com"
 from psycopg2 import connect
 
 # Connect to the database
-postgres = connect(user='defaultuser', database='qiime_md', host='localhost')
+postgres = connect(user='postgres', database='qiita_test', host='127.0.0.1')
