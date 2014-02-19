@@ -1,0 +1,14 @@
+include README.md
+include INSTALL.md
+include LICENSE
+
+graft qiita_core
+graft qiita_db
+graft qiita_pet
+graft qitta_ware
+graft scripts
+
+global-exclude *.pyc
+global-exclude *.pyo
+global-exclude .git
+global-exclude *~
