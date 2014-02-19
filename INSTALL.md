@@ -1,7 +1,7 @@
 Dependencies
 ------------
 
-Qiita depends on the following python libraries (all of them can be installed using pip):
+Qiita is a python package, with support for python 2.7 and 3.2, that depends on the following python libraries (all of them can be installed using pip):
 
 * [tornado 3.1.1](http://www.tornadoweb.org/en/stable/)
 * [redis 2.8.0](https://pypi.python.org/pypi/redis/)
