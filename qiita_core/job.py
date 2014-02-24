@@ -9,11 +9,11 @@ __maintainer__ = "Jose Antonio Navas Molina"
 __email__ = "josenavasmolina@gmail.edu"
 __status__ = "Development"
 
-from qiita_core.exceptions import QiitaJobError
+from qiita_core.exceptions import QiitaJobError, IncompetentQiitaDeveloperError
 from qiita_core.qiita_settings import DATATYPES, FUNCTIONS
 
-STATUS = ["construction", "running", "completed", "internal_error",
-          "user_error"]
+STATUS = ("construction", "running", "completed", "internal_error",
+          "user_error")
 
 
 # Details are TBD - function? options?
@@ -26,17 +26,59 @@ class QiitaJob(object):
         self._id = j_id
         if datatype not in DATATYPES:
             raise QiitaJobError("datatype not recognized: %s" % datatype)
-        self.datatype = datatype
+        self._datatype = datatype
         # Maybe options are going to be included on function (pyqi)
         # TODO sanitize options
         if function not in FUNCTIONS:
             raise QiitaJobError("function not recognized: %s" % function)
+        self._function = function
         # They might be object - default to a empty dict for lazyness
-        self._options = options if options else {}
-        self._results = results if results else []
+        self.options = options if options else {}
+        self.results = results if results else []
         self._status = status if status else "construction"
-        self._error_msg = error_msg
+        self.error_msg = error_msg
 
-    # define get and set, and add/remove for results and update option
-    # check status before setting
-    # define __eq__ __neq__
+    #override functions
+    def __eq__(self, other):
+        if not isinstance(other, QiitaJob):
+            return False
+        if (self.datatype == other.datatype
+           and self.function == other.function
+           and self.options == other.options):
+            return True
+        return False
+
+    def __ne__(self, other):
+        if not isinstance(other, QiitaJob):
+            return True
+        if (self.datatype == other.datatype
+           and self.function == other.function
+           and self.options == other.options):
+            return False
+        return True
+
+    #def __hash__(self):
+    #    ???????
+
+    #define property for member variables that are immutable/need sanity checks
+    @property
+    def id(self):
+        return self._id
+
+    @property
+    def datatype(self):
+        return self._datatype
+
+    @property
+    def function(self):
+        return self._function
+
+    @property
+    def status(self):
+        return self._status
+    @status.setter
+    def status(self, status):
+        if status not in STATUS:
+            raise IncompetentQiitaDeveloperError("Status not allowable: %s" %
+                                                 status)
+        self._status = status

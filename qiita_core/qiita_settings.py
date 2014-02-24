@@ -9,6 +9,6 @@ __maintainer__ = "Jose Antonio Navas Molina"
 __email__ = "josenavasmolina@gmail.edu"
 __status__ = "Development"
 
-DATATYPES = ["16S", "18S", "Metabolites", "Metagenomes", "Metaproteomes"]
+DATATYPES = ("16S", "18S", "Metabolites", "Metagenomes", "Metaproteomes")
 # This is going to be dynamically filled, hardcoding now for development
-FUNCTIONS = ["Alpha_Diversity", "Beta_Diversity", "Procrustes"]
+FUNCTIONS = ("Alpha_Diversity", "Beta_Diversity", "Procrustes")
