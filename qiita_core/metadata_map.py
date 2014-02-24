@@ -15,14 +15,11 @@ from qiime.util import MetadataMap as QiimeMetadataMap
 class MetadataMap(QiimeMetadataMap):
     """Extends the MetadataMap to include the id_ attribute"""
 
-    def __init__(self, id, **kwargs):
+    def __init__(self, m_id, **kwargs):
         super(MetadataMap, self).__init__(kwargs)
-        self._id = None
+        self._id = m_id
 
-    def set_id(self, study_id, num):
-        """Set the MetadataMap id"""
-        self._id = (study_id, num)
-
-    def get_id(self):
-        """Returns the id of the MetadataMap"""
+    #id is imutable
+    @property
+    def id(self):
         return self._id

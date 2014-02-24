@@ -13,13 +13,13 @@ __status__ = "Development"
 from qiita.core.exceptions import (QiitaUserError,
                                    IncompetentQiitaDeveloperError)
 
-LEVELS = ['admin', 'dev', 'superuser', 'user', 'guest']
+LEVELS = ('admin', 'dev', 'superuser', 'user', 'guest')
 
 
 class QiitaUser(object):
     """Models an user of Qiita"""
 
-    def __init__(self, email, level, info=None):
+    def __init__(self, email, level, info=None, **kwargs):
         """Initializes the QiitaUser object
 
         Inputs:
@@ -31,44 +31,39 @@ class QiitaUser(object):
             - level is not recognized
             = info is provided and is not a dictionary
         """
-        self._email = email
+        self.email = email
         if level and level not in LEVELS:
             raise IncompetentQiitaDeveloperError("level not recognized: %s"
                                                  % level)
         self._level = level
-        if info and type(info) is not dict:
+        if not isinstance(info, dict):
             raise IncompetentQiitaDeveloperError("info should be a dictionary."
                                                  " %s found" % type(info))
-        self._info = info if info else {}
-        self._analyses = None
-        self._studies = None
-        self._shared_analyses = None
-        self._shared_studies = None
+        self.info = info if info else {}
+        self._analyses = kwargs.get("analyses", [])
+        self._studies = kwargs.get("studies",  [])
+        self._shared_analyses = kwargs.get("shared_analyses",  [])
+        self._shared_studies = kwargs.get("shared_studies",  [])
 
+    #properties for enum-type variables
+    @property
+    def level(self):
+        return self._level
+
+    @level.setter
+    def level(self, level):
+        if level not in LEVELS:
+            raise IncompetentQiitaDeveloperError("Level not recognised: %s" %
+                                                 level)
+        self._level = level
+
+    #helper functions attached to object
     def check_password(self, check_pwd):
         """Checks that check_pwd is the user's password"""
         # We may want to check this on the DB
         raise NotImplementedError("QiitaUser.check_password")
 
-    # Get functions
-    def get_email(self):
-        """Retrieves the user email"""
-        return self._email
-
-    def get_level(self):
-        """Retrieves the user level"""
-        return self._level
-
-    # Set functions
-    def set_email(self, email):
-        """Raises a QiitaUserError. The email can't be changed"""
-        raise QiitaUserError("The email of a user can't be changed")
-
-    def set_level(self, level):
-        """Sets the level of the user"""
-        self._level = level
-
-    # Add functions
+    # Functions for list type objects
     def add_analysis(self, analysis_id):
         """Adds an analysis to the user list
 
@@ -112,7 +107,7 @@ class QiitaUser(object):
         """
         try:
             self._analyses.remove(analysis_id)
-        except ValueError, e:
+        except ValueError:
             raise QiitaUserError("User does not own analysis %s" % analysis_id)
 
     def remove_shared_analysis(self, analysis_id):
@@ -125,7 +120,7 @@ class QiitaUser(object):
         """
         try:
             self._shared_analyses.remove(analysis_id)
-        except ValueError, e:
+        except ValueError:
             raise QiitaUserError("User does not have analysis %s shared"
                                  % analysis_id)
 
@@ -139,7 +134,7 @@ class QiitaUser(object):
         """
         try:
             self._studies.remove(study_id)
-        except ValueError, e:
+        except ValueError:
             raise QiitaUserError("User does not own study %s" % study_id)
 
     def remove_shared_study(self, study_id):
@@ -151,7 +146,36 @@ class QiitaUser(object):
         Raises a QiitaUserError if study_idis not shared with the user
         """
         try:
-            self._shared_studies.remove(study)
-        except ValueError, e:
+            self._shared_studies.remove(study_id)
+        except ValueError:
             raise QiitaUserError("User does not have study %s shared"
                                  % study_id)
+
+    def get_analysis(self, ):
+        """Gets an analysis to the user list
+
+        Inputs:
+            analysis: the id of the analysis
+        """
+        self._analyses.append()
+
+    def get_shared_analysis(self, ):
+        """Gets a shared analysis to the user list
+        """
+        self._shared_analyses.append()
+
+    def get_study(self, study_id):
+        """Gets a study to the user list
+
+        Inputs:
+            study_id: the id of the study
+        """
+        self._studies.append(study_id)
+
+    def get_shared_study(self, study_id):
+        """Gets a shared study to the user list
+
+        Inputs:
+            study_id: the id of the study
+        """
+        self._shared_studies.append(study_id)

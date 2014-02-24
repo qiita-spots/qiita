@@ -33,108 +33,52 @@ class QiitaJob(object):
             raise QiitaJobError("function not recognized: %s" % function)
         self._function = function
         # They might be object - default to a empty dict for lazyness
-        self._options = options if options else {}
-        self._results = results if results else []
+        self.options = options if options else {}
+        self.results = results if results else []
         self._status = status if status else "construction"
-        self._error_msg = error_msg
-
-    #decorators
-    class verify_not_status(object):
-        def __init__(self, statuses):
-            if isinstance(statuses, list):
-                self.statuses = statuses
-            else:
-                self.statuses = [statuses]
-
-        def __call__(self, f):
-            def decorator(dec_self, *args, **kwargs):
-                if dec_self._status in self.statuses:
-                    # bail
-                    raise QiitaJobError("Job can't be changed. %s" %
-                                        dec_self._status)
-                return f(*args, **kwargs)
-            return decorator
+        self.error_msg = error_msg
 
     #override functions
     def __eq__(self, other):
-        if type(other) != QiitaJob:
+        if not isinstance(other, QiitaJob):
             return False
         if (self.datatype == other.datatype
            and self.function == other.function
-           and self._options == other._options
-           and self._status == other._status
-           and self._results == other._results
-           and self._error_msg == other._error_msg):
+           and self.options == other.options):
             return True
         return False
 
-    def __neq__(self, other):
-        if type(other) != QiitaJob:
+    def __ne__(self, other):
+        if not isinstance(other, QiitaJob):
             return True
         if (self.datatype == other.datatype
            and self.function == other.function
-           and self._options == other._options
-           and self._status == other._status
-           and self._results == other._results
-           and self._error_msg == other._error_msg):
+           and self.options == other.options):
             return False
         return True
 
-    # define get and set, and add/remove for results and update option
+    #def __hash__(self):
+    #    ???????
+
+    #define property for member variables that are immutable/need sanity checks
     @property
     def id(self):
-        """  """
         return self._id
 
     @property
     def datatype(self):
-        """  """
         return self._datatype
 
     @property
     def function(self):
-        """  """
         return self._function
 
     @property
-    def options(self):
-        """  """
-        return self._options
-    @options.setter
-    @verify_not_status(["completed", "user_error", "internal_error"])
-    def options(self, opts):
-        """  """
-        self._options = opts
-
-    @property
-    def results(self):
-        """  """
-        return self._results
-    @results.setter
-    @verify_not_status(["completed", "user_error", "internal_error"])
-    def results(self, results):
-        """  """
-        self._results = results
-
-    @property
     def status(self):
-        """  """
         return self._status
     @status.setter
-    @verify_not_status(["completed", "user_error", "internal_error"])
     def status(self, status):
-        """  """
         if status not in STATUS:
             raise IncompetentQiitaDeveloperError("Status not allowable: %s" %
                                                  status)
         self._status = status
-
-    @property
-    def error_msg(self):
-        """  """
-        return self._error_msg
-    @error_msg.setter
-    @verify_not_status(["completed", "user_error", "internal_error"])
-    def error_msg(self, error_msg):
-        """  """
-        self._error_msg = error_msg

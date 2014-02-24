@@ -9,11 +9,12 @@ __maintainer__ = "Jose Antonio Navas Molina"
 __email__ = "josenavasmolina@gmail.edu"
 __status__ = "Development"
 
-QUERY_TYPES = ["includes", "exact", "starts_with", "ends_with"]
 from json import dumps, loads
 
 from qiita_core.exceptions import QiitaSearchError
-OPERATORS = []
+OPERATORS = ("AND", "OR", "NOT")
+QUERY_TYPES = ("includes", "exact", "starts_with", "ends_with")
+
 
 class QiitaSearchCriterion(object):
     """Models a search criterion"""
@@ -37,19 +38,17 @@ class QiitaSearchCriterion(object):
 
     def __str__(self):
         """Returns the criterion in a human-readable string"""
-        return self.field, self.query_type, self.query
+        return ' '.join([self.field, self.query_type, self.query])
 
-    def to_json_dict(self, operator=None):
+    def dict(self, operator=None):
         """Returns a dictionary ready for serializing into json
-        Inputs:
-            operator: optional operator (AND, OR, etc) that goes with criterion
+        Input:
+            operator: (optional) The operator associated with the criterion
         """
-         return {
-           "operator": operator,
-           "field": self.field,
-           "query_type": self.query_type,
-           "query": self.query
-        }
+        return {"operator": operator,
+                "field": self.field,
+                "query_type": self.query_type,
+                "query": self.query}
 
 
 class QiitaSearch(object):
@@ -73,11 +72,12 @@ class QiitaSearch(object):
 
     def __str__(self):
         """Returns the search string in a human readable way"""
-        outstr = self._criteria[0]
-        for pos in range(1, len(self._criteria)):
-            outstr = ' '.join(["\n", outstr, self._operators[pos-1].__str__,
-                               self._criteria[pos].__str__])
-        return outstr
+        outstr = [str(self._criteria[0])]
+        for op, crit in zip(self._operators, self._criteria[1:]):
+            outstr.append(op)
+            outstr.append(str(crit))
+            outstr.append('\n')
+        return ' '.join(outstr)
 
     def add_criterion(self, criterion, operator):
         """Adds a new criterion to the search
@@ -121,9 +121,9 @@ class QiitaSearch(object):
         """"""
         json = [self.criterion[0].to_json_str()]
         for pos, criterion in enumerate(self._criteria[1:]):
-            json.append(criterion.to_json_dict(self._operators[pos]))
+            json.append(criterion.dict(self._operators[pos]))
         #dump in compact mode because could be sending over internet
-        return dumps(json, , separators=(',', ':'))
+        return dumps(json, separators=(',', ':'))
 
     def load_from_json(self, jsonstr):
         """Loads search criterion from json and adds to existing ones
@@ -135,8 +135,8 @@ class QiitaSearch(object):
             criterion = QiitaSearchCriterion(crit["field"], crit["query_type"],
                                              crit["query"])
             self._criteria.append(criterion)
-        if crit["operator"] is None and len(self._operators) != 0:
-            #assume it's an AND when adding first item
-            self._operators.append("AND")
-        elif crit["operator"] is not None:
-            self._operators.append(crit["operator"])
+            if crit["operator"] is None and len(self._operators) != 0:
+                #assume it's an AND when adding first item
+                self._operators.append("AND")
+            elif crit["operator"] is not None:
+                self._operators.append(crit["operator"])
