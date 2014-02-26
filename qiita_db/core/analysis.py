@@ -12,6 +12,7 @@ Classes
 -------
 - `QiitaAnalysis` -- A Qiita Analysis class
 """
+
 __author__ = "Jose Antonio Navas Molina"
 __copyright__ = "Copyright 2013, The Qiita Project"
 __credits__ = ["Jose Antonio Navas Molina", "Joshua Shorenstein"]
@@ -21,7 +22,7 @@ __maintainer__ = "Jose Antonio Navas Molina"
 __email__ = "josenavasmolina@gmail.edu"
 __status__ = "Development"
 
-from .base_object import QiitaStatusObject
+from .base import QiitaStatusObject
 from .exceptions import QiitaDBNotImplementedError
 
 
