@@ -21,7 +21,7 @@ __maintainer__ = "Jose Antonio Navas Molina"
 __email__ = "josenavasmolina@gmail.edu"
 __status__ = "Development"
 
-from .base_object import QiitaStatusObject
+from .base import QiitaStatusObject
 from .exceptions import QiitaDBNotImplementedError
 
 
