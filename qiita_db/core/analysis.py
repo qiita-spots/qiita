@@ -21,11 +21,11 @@ __maintainer__ = "Jose Antonio Navas Molina"
 __email__ = "josenavasmolina@gmail.edu"
 __status__ = "Development"
 
-from .base_object import QiitaObject
+from .base_object import QiitaStatusObject
 from .exceptions import QiitaDBNotImplementedError
 
 
-class QiitaAnalysis(QiitaObject):
+class QiitaAnalysis(QiitaStatusObject):
     """
     Base analysis object to access to the Qiita Analysis information
 
@@ -40,7 +40,6 @@ class QiitaAnalysis(QiitaObject):
     ----------
     biom_table
     jobs
-    status
     info
 
     Methods
@@ -61,27 +60,6 @@ class QiitaAnalysis(QiitaObject):
     @property
     def jobs(self):
         """A list of jobs included in the analysis"""
-        raise QiitaDBNotImplementedError()
-
-    @jobs.setter
-    def jobs(self, jobs):
-        """Sets the initial list of jobs to the analysis
-
-        Raises
-        ------
-        QiitaDBOperationNotPermitedError
-            If the analysis already has jobs attached to it
-        """
-        raise QiitaDBNotImplementedError()
-
-    @property
-    def status(self):
-        """String with the current status of the analysis"""
-        raise QiitaDBNotImplementedError()
-
-    @status.setter
-    def status(self, status):
-        """Change the status of the analysis"""
         raise QiitaDBNotImplementedError()
 
     @property
