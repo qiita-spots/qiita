@@ -12,3 +12,13 @@ from qiita_core.exceptions import QiitaError
 class QiitaDBError(QiitaError):
     """Base class for all Qiita-db exceptions"""
     pass
+
+
+class QiitaDBNotImplementedError(QiitaDBError):
+    """"""
+    pass
+
+
+class QiitaDBOperationNotPermitedError(QiitaDBError):
+    """"""
+    pass
