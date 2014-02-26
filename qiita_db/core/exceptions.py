@@ -17,8 +17,3 @@ class QiitaDBError(QiitaError):
 class QiitaDBNotImplementedError(QiitaDBError):
     """"""
     pass
-
-
-class QiitaDBOperationNotPermitedError(QiitaDBError):
-    """"""
-    pass

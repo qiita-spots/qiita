@@ -18,7 +18,7 @@ class QiitaObject(object):
 
         Parameters
         ----------
-        _id: the object identifier
+        id_: the object identifier
         """
         self._id = id_
 
@@ -26,3 +26,23 @@ class QiitaObject(object):
     def id(self):
         """The id of the analysis in the storage system"""
         return self.id_
+
+
+class QiitaStatusObject(QiitaObject):
+    """Models an object of Qiita with a status property"""
+
+    @property
+    def status(self):
+        """String with the current status of the analysis"""
+        raise QiitaDBNotImplementedError()
+
+    @status.setter
+    def status(self, status):
+        """Change the status of the analysis
+
+        Parameters
+        ----------
+        status: String
+            The new object status
+        """
+        raise QiitaDBNotImplementedError()
