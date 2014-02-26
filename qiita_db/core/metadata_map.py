@@ -27,7 +27,7 @@ from .exceptions import QiitaDBNotImplementedError
 
 class QiitaMetadataMap(QiitaStatusObject):
     """
-    Base analysis object to access to the Qiita metadata map information
+    Base metadata map object to access to the Qiita metadata map information
 
     Standardizes the QiitaMetadataMap interface for all the back-ends.
 
