@@ -39,9 +39,9 @@ class QiitaAnalysis(QiitaStatusObject):
 
     Attributes
     ----------
-    biom_table
-    jobs
-    info
+    BiomTable
+    Jobs
+    Info
 
     Methods
     -------
@@ -54,22 +54,32 @@ class QiitaAnalysis(QiitaStatusObject):
     """
 
     @property
-    def biom_table(self):
+    def BiomTable(self):
         """The biom table of the analysis"""
         raise QiitaDBNotImplementedError()
 
+    @BiomTable.setter
+    def BiomTable(self, biom_table):
+        """Updates the biom table used in the analysis
+
+        Parameters
+        ----------
+            biom_table :
+        """
+        raise QiitaDBNotImplementedError()
+
     @property
-    def jobs(self):
+    def Jobs(self):
         """A list of jobs included in the analysis"""
         raise QiitaDBNotImplementedError()
 
     @property
-    def info(self):
+    def Info(self):
         """Dict with any other information attached to the analysis"""
         raise QiitaDBNotImplementedError()
 
-    @info.setter
-    def info(self, info):
+    @Info.setter
+    def Info(self, info):
         """Updates the information attached to the analysis
 
         Parameters
