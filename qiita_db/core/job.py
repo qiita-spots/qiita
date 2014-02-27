@@ -38,11 +38,11 @@ class QiitaJob(QiitaStatusObject):
 
     Attributes
     ----------
-    datatype
-    function
-    options
-    results
-    error_msg
+    Datatype
+    Function
+    Options
+    Results
+    ErrorMsg
 
     Methods
     -------
@@ -54,22 +54,42 @@ class QiitaJob(QiitaStatusObject):
     """
 
     @property
-    def datatype(self):
+    def Datatype(self):
         """The datatype of the job"""
         raise QiitaDBNotImplementedError()
 
+    @Datatype.setter
+    def Datatype(self, datatype):
+        """Updates the datatype of the job
+
+        Parameters
+        ----------
+            datatype :
+        """
+        raise QiitaDBNotImplementedError()
+
     @property
-    def function(self):
+    def Function(self):
         """The function the job executes"""
         raise QiitaDBNotImplementedError()
 
+    @Function.setter
+    def Function(self, function):
+        """Updates the function used in the job
+
+        Parameters
+        ----------
+            function :
+        """
+        raise QiitaDBNotImplementedError()
+
     @property
-    def options(self):
+    def Options(self):
         """List of options used in the job"""
         raise QiitaDBNotImplementedError()
 
-    @options.setter
-    def options(self, options):
+    @Options.setter
+    def Options(self, options):
         """Updates the options used in the job
 
         Parameters
@@ -79,17 +99,17 @@ class QiitaJob(QiitaStatusObject):
         raise QiitaDBNotImplementedError()
 
     @property
-    def results(self):
+    def Results(self):
         """List of job results"""
         raise QiitaDBNotImplementedError()
 
     @property
-    def error_msg(self):
+    def ErrorMsg(self):
         """String with an error message, if the job failed"""
         raise QiitaDBNotImplementedError()
 
-    @error_msg.setter
-    def error_msg(self, msg):
+    @ErrorMsg.setter
+    def ErrorMsg(self, msg):
         """String with an error message, if the job failed
 
         Parameters

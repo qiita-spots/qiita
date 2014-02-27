@@ -77,7 +77,8 @@ class QiitaStatusObject(QiitaObject):
 
     Attributes
     ----------
-    Status
+    Status :
+        The current status of the object
     """
 
     @property

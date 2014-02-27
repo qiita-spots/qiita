@@ -40,6 +40,7 @@ class QittaStudy(QiitaStatusObject):
     ----------
     Name
     SampleIds
+    Info
 
     Methods
     -------
@@ -71,6 +72,21 @@ class QittaStudy(QiitaStatusObject):
         """Returns the IDs of all samples in study
 
         The sample IDs are returned as a list of strings in alphabetical order.
+        """
+        raise QiitaDBNotImplementedError()
+
+    @property
+    def Info(self):
+        """Dict with any other information attached to the study"""
+        raise QiitaDBNotImplementedError()
+
+    @Info.setter
+    def Info(self, info):
+        """Updates the information attached to the study
+
+        Parameters
+        ----------
+            info : dict
         """
         raise QiitaDBNotImplementedError()
 
