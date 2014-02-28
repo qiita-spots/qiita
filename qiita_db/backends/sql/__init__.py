@@ -9,9 +9,9 @@ __maintainer__ = "Jose Antonio Navas Molina"
 __email__ = "josenavasmolina@gmail.edu"
 __status__ = "Development"
 
-from .user_storage import UserStorage as SQLUser
-from .analysis_storage import AnalysisStorage as SQLAnalysis
-from .study_storage import StudyStorage as SQLStudy
-from .sample_storage import SampleStorage as SQLSample
-from .job_storage import JobStorage as SQLJob
-from .metadata_map_storage import MetadataMapStorage as SQLMetadataMap
+from .user import User as SQLUser
+from .analysis import Analysis as SQLAnalysis
+from .study import Study as SQLStudy
+from .sample import Sample as SQLSample
+from .job import Job as SQLJob
+from .metadata_map import MetadataMap as SQLMetadataMap
