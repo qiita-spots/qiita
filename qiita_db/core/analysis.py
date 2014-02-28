@@ -32,11 +32,6 @@ class QiitaAnalysis(QiitaStatusObject):
 
     Standardizes the QiitaAnalysis interface for all the back-ends.
 
-    Parameters
-    ----------
-    id:
-        The analysis identifier
-
     Attributes
     ----------
     BiomTable

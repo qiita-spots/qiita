@@ -31,11 +31,6 @@ class QiitaJob(QiitaStatusObject):
 
     Standardizes the QiitaJob interface for all the back-ends.
 
-    Parameters
-    ----------
-    id:
-        The job identifier
-
     Attributes
     ----------
     Datatype

@@ -31,11 +31,6 @@ class QiitaMetadataMap(QiitaStatusObject):
 
     Standardizes the QiitaMetadataMap interface for all the back-ends.
 
-    Parameters
-    ----------
-    id:
-        The MetadataMap identifier
-
     Attributes
     ----------
     SampleIds

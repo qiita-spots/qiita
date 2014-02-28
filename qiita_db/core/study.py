@@ -31,11 +31,6 @@ class QittaStudy(QiitaStatusObject):
 
     Standardizes the QittaStudy interface for all the back-ends.
 
-    Parameters
-    ----------
-    id:
-        The Study identifier
-
     Attributes
     ----------
     Name

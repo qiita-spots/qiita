@@ -29,14 +29,9 @@ LEVELS = ('admin', 'dev', 'superuser', 'user', 'guest')
 
 class QiitaUser(QiitaObject):
     """
-    Base analysis object to access to the Qiita user information
+    Base user object to access to the Qiita user information
 
     Standardizes the QiitaUser interface for all the back-ends.
-
-    Parameters
-    ----------
-    id:
-        The user identifier
 
     Attributes
     ----------
@@ -78,7 +73,7 @@ class QiitaUser(QiitaObject):
     @property
     def Email(self):
         """The email of the user"""
-        return self.id
+        return self.Id
 
     @property
     def Level(self):

@@ -37,8 +37,8 @@ class QiitaObject(object):
     create()
         Creates a new object with a new id on the storage system
 
-    delete(id)
-        Deletes the object `id` from the storage system
+    delete(id_)
+        Deletes the object `id_` from the storage system
     """
 
     @staticmethod
