@@ -27,3 +27,4 @@ class QiitaDBSQLParseError(QiitaDBError):
 class QiitaDBSQLConnectionError(QiitaDBError):
     """Exception for error when connecting to the db"""
     pass
+   

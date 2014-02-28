@@ -16,17 +16,17 @@ from qiita_db.config import qiita_db_config
 
 
 if qiita_db_config.backend == "SQL":
-    UserStorage = SQLUser
-    AnalysisStorage = SQLAnalysis
-    StudyStorage = SQLStudy
-    SampleStorage = SQLSample
-    JobStorage = SQLJob
-    MetadataMapStorage = SQLMetadataMap
+    User = SQLUser
+    Analysis = SQLAnalysis
+    Study = SQLStudy
+    Sample = SQLSample
+    Job = SQLJob
+    MetadataMap = SQLMetadataMap
 elif qiita_db_config.backend == "FS":
-    UserStorage = FSUser
-    AnalysisStorage = FSAnalysis
-    StudyStorage = FSStudy
-    SampleStorage = FSSample
-    JobStorage = FSJob
+    User = FSUser
+    Analysis = FSAnalysis
+    Study = FSStudy
+    Sample = FSSample
+    Job = FSJob
 else:
     raise ValueError("Backend not recognized: %s" % qiita_db_config.backend)

@@ -13,35 +13,44 @@ from pyqi.core.command import (Command, CommandIn, CommandOut,
                                ParameterCollection)
 from pyqi.core.exception import CommandError
 
-from qiita_db import MetadataMapStorage
-from qiita_core.metadata_map import MetadataMap
+from qiita_db import MetadataMap
+from qiime.util import MetadataMap as QiimeMetadataMap
 
 
 class MappingFileAdder(Command):
     BriefDescription = "Adds the mapping file information to the storage"
     LongDescription = "Adds the mapping file information to the storage"
     CommandIns = ParameterCollection([
-        CommandIn(Name='metadata_map', DataType=MetadataMap,
-                  Description="Mapping information to add to the storage. "
-                  "Format is (study id, dict of dicts, list of column headers,"
-                  " columns datatypes)", Required=True),
-        CommandIn(Name='clear_tables', DataType=bool,
-                  Description="Deletes all rows from column_tables for this "
-                  "study, and drops the study's table", Required=False,
-                  Default=False)
+        CommandIn(Name='metadata_map', DataType=QiimeMetadataMap,
+                  Description="Mapping information to add to the storage.",
+                  Required=True),
+        CommandIn(Name='study_id', DataType=str,
+                  Description="The study storage identifier to which the "
+                  "metadata map belongs to.",
+                  Required=True),
+        CommandIn(Name='idx', DataType=int, Description="Metadata map index",
+                  Required=False, Default=None),
+        CommandIn(Name='clear', DataType=bool,
+                  Description="In case that the metadata already exists on "
+                  "the system, remove the old one before the new one is added",
+                  Required=False, Default=False)
     ])
 
     def run(self, **kwargs):
         # Get parameters
         metadata_map = kwargs['metadata_map']
-        clear_tables = kwargs['clear_tables']
+        study_id = kwargs['study_id']
+        idx = kwargs['idx']
+        clear = kwargs['clear']
 
-        metadata_map_stg = MetadataMapStorage()
+        if clear:
+            if idx is None:
+                raise CommandError("metadata map index missing - needed for"
+                                   "clear up before inserting")
+            metadata_map_id = (study_id, idx)
+            MetadataMap.delete(metadata_map_id)
 
-        if clear_tables:
-            metadata_map_stg.delete(metadata_map.id_)
-
-        metadata_map_stg.insert(metadata_map)
+        md_map = MetadataMap.create(metadata_map, study_id, idx)
 
         return {}
 

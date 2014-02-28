@@ -35,7 +35,6 @@ class QiitaMetadataMap(QiitaStatusObject):
     ----------
     SampleIds
     CategoryNames
-    Comments
     Metadata
 
     Methods
@@ -59,6 +58,11 @@ class QiitaMetadataMap(QiitaStatusObject):
         Returns True if the category's values are all the same
     """
 
+    @staticmethod
+    def create(md_map, study_id, idx=None):
+        """Creates a new metadata map with a new id on the storage system"""
+        raise QiitaDBNotImplementedError()
+
     @property
     def SampleIds(self):
         """Returns the IDs of all samples in the metadata map.
@@ -77,42 +81,11 @@ class QiitaMetadataMap(QiitaStatusObject):
         raise QiitaDBNotImplementedError()
 
     @property
-    def Comments(self):
-        """List of strings for the comments in the mapping file.
-
-        Can be an empty list
-        """
-        raise QiitaDBNotImplementedError()
-
-    @Comments.setter
-    def Comments(self, comments):
-        """Sets the comments of the metadata map
-
-        Parameters
-        ----------
-            comments : list of strings
-                The new comments to be attached to the metadata map
-        """
-        raise QiitaDBNotImplementedError()
-
-    @property
     def Metadata(self):
         """A python dict of dicts
 
         The top-level key is sample ID, and the inner dict maps category name
         to category value
-        """
-        raise QiitaDBNotImplementedError()
-
-    @Metadata.setter
-    def Metadata(self, metadata_map):
-        """Sets the metadata dictionary
-
-        Parameters
-        ----------
-            metadata_map : dict of dicts
-                The top-level key is sample ID, and the inner dict maps
-                category name to category value
         """
         raise QiitaDBNotImplementedError()
 

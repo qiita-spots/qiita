@@ -9,7 +9,6 @@ __email__ = "josenavasmolina@gmail.com"
 
 from psycopg2 import connect, Error as PostgresError
 
-from .connections import postgres
 from .exceptions import QiitaDBSQLExecutionError, QiitaDBSQLConnectionError
 from qiita_db.config import qiita_db_config
 
@@ -21,7 +20,7 @@ class SQLConnectionHandler(object):
                                    database=qiita_db_config.database,
                                    host=qiita_db_config.host,
                                    port=qiita_db_config.port)
-        self._dflt_cursor = self.connection.cursor()
+        self._dflt_cursor = self._connection.cursor()
         self._cursors = []
 
     def __del__(self):
@@ -85,14 +84,14 @@ class SQLConnectionHandler(object):
         if not pgcursor:
             pgcursor = self._dflt_cursor
         # Check that sql arguments have the correct type
-        _check_sql_args(sql_args)
+        self._check_sql_args(sql_args)
         # Execute the query
         try:
             pgcursor.execute(sql, sql_args)
             result = pgcursor.fetchall()
-            postgres.commit()
+            self._connection.commit()
         except PostgresError, e:
-            postgres.rollback()
+            self._connection.rollback()
             raise QiitaDBSQLExecutionError("Error running SQL query: %s", e)
         return result
 
@@ -118,14 +117,14 @@ class SQLConnectionHandler(object):
         if not pgcursor:
                 pgcursor = self._dflt_cursor
         # Check that sql arguments have the correct type
-        _check_sql_args(sql_args)
+        self._check_sql_args(sql_args)
         # Execute the query
         try:
             pgcursor.execute(sql, sql_args)
             result = pgcursor.fetchone()
-            postgres.commit()
+            self._connection.commit()
         except PostgresError, e:
-            postgres.rollback()
+            self._connection.rollback()
             raise QiitaDBSQLExecutionError("Error running SQL query: %s", e)
         return result
 
@@ -148,13 +147,13 @@ class SQLConnectionHandler(object):
         if not pgcursor:
             pgcursor = self._dflt_cursor
         # Check that sql arguments have the correct type
-        _check_sql_args(sql_args)
+        self._check_sql_args(sql_args)
         # Execute the query
         try:
             pgcursor.execute(sql, sql_args)
-            postgres.commit()
+            self._connection.commit()
         except PostgresError, e:
-            postgres.rollback()
+            self._connection.rollback()
             raise QiitaDBSQLExecutionError("Error running SQL query: %s", e)
 
     def executemany(self, sql, sql_args_list, pgcursor=None):
@@ -178,11 +177,11 @@ class SQLConnectionHandler(object):
             pgcursor = self._dflt_cursor
         # Check that sql arguments have the correct type
         for sql_args in sql_args_list:
-            _check_sql_args(sql_args)
+            self._check_sql_args(sql_args)
         # Execute the query
         try:
             pgcursor.executemany(sql, sql_args_list)
-            postgres.commit()
+            self._connection.commit()
         except PostgresError, e:
-            postgres.rollback()
+            self._connection.rollback()
             raise QiitaDBSQLExecutionError("Error running SQL query: %s", e)
