@@ -9,9 +9,11 @@ __maintainer__ = "Jose Antonio Navas Molina"
 __email__ = "josenavasmolina@gmail.edu"
 __status__ = "Development"
 
-QUERY_TYPES = ["includes", "exact", "starts_with", "ends_with"]
+from json import dumps, loads
 
 from qiita_core.exceptions import QiitaSearchError
+OPERATORS = ("AND", "OR", "NOT")
+QUERY_TYPES = ("includes", "exact", "starts_with", "ends_with")
 
 
 class QiitaSearchCriterion(object):
@@ -36,7 +38,17 @@ class QiitaSearchCriterion(object):
 
     def __str__(self):
         """Returns the criterion in a human-readable string"""
-        raise NotImplementedError("")
+        return ' '.join([self.field, self.query_type, self.query])
+
+    def dict(self, operator=None):
+        """Returns a dictionary ready for serializing into json
+        Input:
+            operator: (optional) The operator associated with the criterion
+        """
+        return {"operator": operator,
+                "field": self.field,
+                "query_type": self.query_type,
+                "query": self.query}
 
 
 class QiitaSearch(object):
@@ -59,8 +71,13 @@ class QiitaSearch(object):
         self._operators = []
 
     def __str__(self):
-        """Returns the search string in a json string"""
-        raise NotImplementedError("")
+        """Returns the search string in a human readable way"""
+        outstr = [str(self._criteria[0])]
+        for op, crit in zip(self._operators, self._criteria[1:]):
+            outstr.append(op)
+            outstr.append(str(crit))
+            outstr.append('\n')
+        return ' '.join(outstr)
 
     def add_criterion(self, criterion, operator):
         """Adds a new criterion to the search
@@ -69,7 +86,11 @@ class QiitaSearch(object):
             criterion: the new criterion to be added to the search
             operator: the operator used in the added criterion
         """
-        raise NotImplementedError("")
+        if operator not in OPERATORS:
+                raise QiitaSearchError("Operator not recognised: %s" %
+                                       operator)
+        self._operators.append(operator)
+        self._criteria.append(criterion)
 
     def remove_criterion(self, criterion):
         """Removes a given criterion from the search
@@ -77,7 +98,13 @@ class QiitaSearch(object):
         Inputs:
             criterion: the criterion to be removed
         """
-        raise NotImplementedError("")
+        if criterion not in self._criteria:
+            raise QiitaSearchError("Criterion not found in criteria!")
+        #need to remove both criterion and operator, if aplicable
+        pos = self._criteria.index(criterion)
+        self._criteria.remove(criterion)
+        if pos > 0:
+            del self._operators[pos-1]
 
     def get_criteria(self):
         """Iterator to loop through all the criterion on the search
@@ -92,8 +119,24 @@ class QiitaSearch(object):
 
     def to_json_str(self):
         """"""
-        pass
+        json = [self.criterion[0].to_json_str()]
+        for pos, criterion in enumerate(self._criteria[1:]):
+            json.append(criterion.dict(self._operators[pos]))
+        #dump in compact mode because could be sending over internet
+        return dumps(json, separators=(',', ':'))
 
-    def load_from_json(self):
-        """"""
-        pass
+    def load_from_json(self, jsonstr):
+        """Loads search criterion from json and adds to existing ones
+        Input:
+            jsonstr: json sring formatted by to_json_str function
+        """
+        json = loads(jsonstr)
+        for crit in json:
+            criterion = QiitaSearchCriterion(crit["field"], crit["query_type"],
+                                             crit["query"])
+            self._criteria.append(criterion)
+            if crit["operator"] is None and len(self._operators) != 0:
+                #assume it's an AND when adding first item
+                self._operators.append("AND")
+            elif crit["operator"] is not None:
+                self._operators.append(crit["operator"])
