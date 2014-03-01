@@ -1,12 +1,8 @@
 """
-Objects for dealing with Qiita studies
+Objects for dealing with study objects within an SQL backend
 
-This module provides the base object for dealing with Qiita studies.
-It standardizes the Qiita interface and all the different Qiita-db
-backends should inherit from it in order to implement the Study object.
-
-The subclasses implementing this object should not provide any extra
-public function in order to maintain back-end independence.
+This module provides the implementation for the QiitaStudy base class using an
+SQL backend.
 
 Classes
 -------
@@ -21,11 +17,11 @@ __maintainer__ = "Jose Antonio Navas Molina"
 __email__ = "josenavasmolina@gmail.edu"
 __status__ = "Development"
 
-from .base import QiitaStatusObject
-from .exceptions import QiitaDBNotImplementedError
+from ...core.study import QiitaStudy
+from ...core.exceptions import QiitaDBNotImplementedError
 
 
-class QiitaStudy(QiitaStatusObject):
+class Study(QiitaStudy):
     """
     Base study object to access to the Qiita study information
 

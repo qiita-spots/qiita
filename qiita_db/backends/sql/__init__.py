@@ -12,6 +12,5 @@ __status__ = "Development"
 from .user import User as SQLUser
 from .analysis import Analysis as SQLAnalysis
 from .study import Study as SQLStudy
-from .sample import Sample as SQLSample
 from .job import Job as SQLJob
 from .metadata_map import MetadataMap as SQLMetadataMap
