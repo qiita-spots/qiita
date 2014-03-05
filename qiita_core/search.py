@@ -87,8 +87,8 @@ class QiitaSearch(object):
             operator: the operator used in the added criterion
         """
         if operator not in OPERATORS:
-                raise QiitaSearchError("Operator not recognised: %s" %
-                                       operator)
+            raise QiitaSearchError("Operator not recognised: %s" %
+                                   operator)
         self._operators.append(operator)
         self._criteria.append(criterion)
 
