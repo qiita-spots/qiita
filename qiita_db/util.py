@@ -38,6 +38,7 @@ def get_datatypes(metadata_map):
 
     return datatypes
 
+
 def scrub_data(s):
     """Scrubs data fields of characters not allowed by PostgreSQL
 

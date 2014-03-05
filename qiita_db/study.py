@@ -1,8 +1,9 @@
 """
-Objects for dealing with study objects within an SQL backend
+Objects for dealing with Qiita studies
 
-This module provides the implementation for the QiitaStudy base class using an
-SQL backend.
+This module provides the implementation of the Study class, which allows to
+interact with the SQL backend
+
 
 Classes
 -------
@@ -17,15 +18,13 @@ __maintainer__ = "Jose Antonio Navas Molina"
 __email__ = "josenavasmolina@gmail.edu"
 __status__ = "Development"
 
-from ...core.study import QiitaStudy
-from ...core.exceptions import QiitaDBNotImplementedError
+from .base import QiitaStatusObject
+from .exceptions import QiitaDBNotImplementedError
 
 
-class Study(QiitaStudy):
+class Study(QiitaStatusObject):
     """
-    Base study object to access to the Qiita study information
-
-    Standardizes the QittaStudy interface for all the back-ends.
+    Study object to access to the Qiita Study information
 
     Attributes
     ----------
@@ -41,6 +40,28 @@ class Study(QiitaStudy):
     remove_samples(samples)
         Removes the samples listed in `samples` from the study
     """
+
+    @staticmethod
+    def create(owner):
+        """Creates a new study on the storage system
+
+        Parameters
+        ----------
+        owner : string
+            the user id of the study' owner
+        """
+        raise QiitaDBNotImplementedError()
+
+    @staticmethod
+    def delete(id_):
+        """Deletes the study `id_` from the storage system
+
+        Parameters
+        ----------
+        id_ :
+            The object identifier
+        """
+        raise QiitaDBNotImplementedError()
 
     @property
     def Name(self):

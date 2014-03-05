@@ -1,12 +1,12 @@
 """
-Objects for dealing with user objects within an SQL backend
+Objects for dealing with Qiita users
 
-This module provides the implementation for the QiitaUser base class using an
-SQL backend.
+This modules provides the implementation of the User class, which allows to
+interact with the SQL backend
 
 Classes
 -------
-- `QiitaUser` -- A Qiita user class
+- `User` -- A Qiita user class
 """
 __author__ = "Jose Antonio Navas Molina"
 __copyright__ = "Copyright 2013, The Qiita Project"
@@ -17,17 +17,15 @@ __maintainer__ = "Jose Antonio Navas Molina"
 __email__ = "josenavasmolina@gmail.edu"
 __status__ = "Development"
 
-from ...core.user import QiitaUser
-from ...core.exceptions import QiitaDBNotImplementedError
+from .base import QiitaObject
+from .exceptions import QiitaDBNotImplementedError
 
 LEVELS = ('admin', 'dev', 'superuser', 'user', 'guest')
 
 
-class User(QiitaUser):
+class User(QiitaObject):
     """
-    Base user object to access to the Qiita user information
-
-    Standardizes the QiitaUser interface for all the back-ends.
+    User object to access to the Qiita user information
 
     Attributes
     ----------
@@ -65,6 +63,30 @@ class User(QiitaUser):
     remove_shared_analysis(analysis)
         Removes a shared analysis from the user
     """
+
+    @staticmethod
+    def create(email, password):
+        """Creates a new user on the storage system
+
+        Parameters
+        ----------
+        email : string
+            the email of the user - used for log in
+        password :
+            the password of the user
+        """
+        raise QiitaDBNotImplementedError()
+
+    @staticmethod
+    def delete(id_):
+        """Deletes the user `id` from the storage system
+
+        Parameters
+        ----------
+        id_ :
+            The object identifier
+        """
+        raise QiitaDBNotImplementedError()
 
     @property
     def Email(self):

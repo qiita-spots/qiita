@@ -1,17 +1,14 @@
 """
 Objects for dealing with Qiita metadata maps
 
-This module provides the base object for dealing with Qiita metadata maps.
-It standardizes the metadata map interface and all the different Qiita-db
-backends should inherit from it in order to implement the job object.
-
-The subclasses implementing this object should not provide any extra
-public function in order to maintain back-end independence.
+This module provides the implementation for the QiitaMetadataMap base class
+using an SQL backend.
 
 Classes
 -------
-- `QiitaMetadataMap` -- A Qiita Metadata map class
+- `MetadataMap` -- A Qiita Metadata map class
 """
+
 __author__ = "Jose Antonio Navas Molina"
 __copyright__ = "Copyright 2013, The Qiita Project"
 __credits__ = ["Jose Antonio Navas Molina", "Joshua Shorenstein"]
@@ -21,15 +18,19 @@ __maintainer__ = "Jose Antonio Navas Molina"
 __email__ = "josenavasmolina@gmail.edu"
 __status__ = "Development"
 
+from itertools import izip
+from string import lower
+
 from .base import QiitaStatusObject
 from .exceptions import QiitaDBNotImplementedError
+from .sql_connection import SQLConnectionHandler
+from .util import (quote_column_name, quote_data_value, get_datatypes,
+                   scrub_data)
 
 
-class QiitaMetadataMap(QiitaStatusObject):
+class MetadataMap(QiitaStatusObject):
     """
-    Base metadata map object to access to the Qiita metadata map information
-
-    Standardizes the QiitaMetadataMap interface for all the back-ends.
+    Metadata map object that accesses an SQL backend to get the information
 
     Attributes
     ----------
@@ -60,8 +61,90 @@ class QiitaMetadataMap(QiitaStatusObject):
 
     @staticmethod
     def create(md_map, study_id, idx=None):
-        """Creates a new metadata map with a new id on the storage system"""
-        raise QiitaDBNotImplementedError()
+        """Creates a new object with a new id on the storage system
+
+        Parameters
+        ----------
+        md_map : qiime.util.MetadataMap
+            The mapping file contents
+        study_id :
+            The study identifier
+        idx : int
+            The mapping file index
+        """
+        if idx is None:
+            # If idx is not defined, generate one automatically
+            # from the database
+            raise QiitaDBNotImplementedError()
+
+        # Create the MetadataMap table on the SQL system
+        conn_handler = SQLConnectionHandler()
+        # Get the table name
+        table_name = "study_%s_%s" % (study_id, idx)
+        headers = md_map.CategoryNames
+        datatypes = get_datatypes(md_map)
+
+        # Get the columns names in SQL safe
+        sql_safe_column_names = [quote_column_name(h) for h in headers]
+
+        # Get the column names paired with its datatype for SQL
+        columns = []
+        for column_name, datatype in izip(sql_safe_column_names, datatypes):
+            columns.append('%s %s' % (column_name, datatype))
+        # Get the columns in a comma-separated string
+        columns = ", ".join(columns)
+        # Create a table for the study
+        conn_handler.execute("create table %s (sampleid varchar, %s)" %
+                             (table_name, columns))
+
+        # Add rows to the column_tables table
+        lc_table_name = lower(table_name)
+        quoted_lc_table_name = quote_data_value(lc_table_name)
+        column_tables_sql_template = ("insert into column_tables (column_name,"
+                                      " table_name, datatype) values (%s, " +
+                                      quoted_lc_table_name + ", %s)")
+        # The column names should be lowercase and quoted
+        quoted_lc_headers = [quote_data_value(lower(h)) for h in headers]
+        # Pair up the column names with its datatype
+        sql_args_list = [(column_name, datatype) for column_name, datatype in
+                         izip(quoted_lc_headers, datatypes)]
+        conn_handler.executemany(column_tables_sql_template,
+                                 sql_args_list)
+
+        # Add rows into the study table
+        columns = ', '.join(sql_safe_column_names)
+        insert_sql_template = ('insert into ' + table_name + ' (sampleid, ' +
+                               columns + ') values (%s' +
+                               ', %s' * len(sql_safe_column_names) + ' )')
+
+        sql_args_list = []
+        for sample_id in md_map.SampleIds:
+            data = md_map.getSampleMetadata(sample_id)
+            values = [scrub_data(sample_id)]
+            values += [scrub_data(data[header]) for header in headers]
+            sql_args_list.append(values)
+
+        conn_handler.executemany(insert_sql_template, sql_args_list)
+        return MetadataMap((study_id, idx))
+
+    @staticmethod
+    def delete(id_):
+        """Deletes the object `id` on the storage system
+
+        Parameters
+        ----------
+        id_ :
+            The object identifier
+        """
+        table_name = "study_%s_%s" % id_
+        conn_handler = SQLConnectionHandler()
+        # Dropping table
+        conn_handler.execute('drop table %s' % table_name)
+        # Deleting rows from column_tables for the study
+        # The query should never fail; even when there are no rows for this
+        # study, the query will do nothing but complete successfully
+        conn_handler.execute("delete from column_tables where "
+                             "table_name = %s", (table_name,))
 
     @property
     def SampleIds(self):
