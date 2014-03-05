@@ -13,7 +13,7 @@ from pyqi.core.command import (Command, CommandIn, CommandOut,
                                ParameterCollection)
 from pyqi.core.exception import CommandError
 
-from qiita_db import MetadataMap
+from qiita_db.metadata_map import MetadataMap
 from qiime.util import MetadataMap as QiimeMetadataMap
 
 

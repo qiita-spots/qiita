@@ -1,16 +1,12 @@
 """
 Objects for dealing with Qiita analyses
 
-This module provides the base object for dealing with Qiita Analysis.
-It standardizes the Analysis interface and all the different Qiita-db
-backends should inherit from it in order to implement the analysis object.
-
-The subclasses implementing this object should not provide any extra
-public function in order to maintain back-end independence.
+This module provides the implementation of the Analysis class, which
+allows to interact with the SQL backend.
 
 Classes
 -------
-- `QiitaAnalysis` -- A Qiita Analysis class
+- `Analysis` -- A Qiita Analysis class
 """
 
 __author__ = "Jose Antonio Navas Molina"
@@ -26,11 +22,9 @@ from .base import QiitaStatusObject
 from .exceptions import QiitaDBNotImplementedError
 
 
-class QiitaAnalysis(QiitaStatusObject):
+class Analysis(QiitaStatusObject):
     """
-    Base analysis object to access to the Qiita Analysis information
-
-    Standardizes the QiitaAnalysis interface for all the back-ends.
+    Analysis object to access to the Qiita Analysis information
 
     Attributes
     ----------
@@ -47,6 +41,28 @@ class QiitaAnalysis(QiitaStatusObject):
         Removes a list of jobs from the analysis
 
     """
+
+    @staticmethod
+    def create(owner):
+        """Creates a new analysis on the storage system
+
+        Parameters
+        ----------
+        owner : string
+            the user id of the analysis' owner
+        """
+        raise QiitaDBNotImplementedError()
+
+    @staticmethod
+    def delete(id_):
+        """Deletes the analysis `id` from the storage system
+
+        Parameters
+        ----------
+        id_ :
+            The analysis identifier
+        """
+        raise QiitaDBNotImplementedError()
 
     @property
     def BiomTable(self):
@@ -88,7 +104,7 @@ class QiitaAnalysis(QiitaStatusObject):
 
         Parameters
         ----------
-            jobs : list of QiitaJob
+            jobs : list of Job objects
         """
         raise QiitaDBNotImplementedError()
 
@@ -97,6 +113,6 @@ class QiitaAnalysis(QiitaStatusObject):
 
         Parameters
         ----------
-            jobs : list of QiitaJob
+            jobs : list of Job objects
         """
         raise QiitaDBNotImplementedError()

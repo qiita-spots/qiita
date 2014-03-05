@@ -9,9 +9,6 @@ __maintainer__ = "Jose Antonio Navas Molina"
 __email__ = "josenavasmolina@gmail.edu"
 __status__ = "Development"
 
-# List of available backends
-BACKENDS = ["SQL", "FS"]
-
 
 # Values hard-coded from now - refactor!
 class ConfigurationManager(object):

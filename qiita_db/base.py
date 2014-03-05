@@ -48,7 +48,7 @@ class QiitaObject(object):
 
     @staticmethod
     def delete(id_):
-        """Deletes the object `id` on the storage system
+        """Deletes the object `id` from the storage system
 
         Parameters
         ----------

@@ -17,3 +17,13 @@ class QiitaDBError(QiitaError):
 class QiitaDBNotImplementedError(QiitaDBError):
     """"""
     pass
+
+
+class QiitaDBExecutionError(QiitaDBError):
+    """Exception for error when executing SQL queries"""
+    pass
+
+
+class QiitaDBConnectionError(QiitaDBError):
+    """Exception for error when connecting to the db"""
+    pass

@@ -9,7 +9,7 @@ __email__ = "josenavasmolina@gmail.com"
 
 from psycopg2 import connect, Error as PostgresError
 
-from .exceptions import QiitaDBSQLExecutionError, QiitaDBSQLConnectionError
+from .exceptions import QiitaDBExecutionError, QiitaDBConnectionError
 from qiita_db.config import qiita_db_config
 
 
@@ -43,8 +43,8 @@ class SQLConnectionHandler(object):
         try:
             pgcursor = self.connection.cursor()
         except PostgresError, e:
-            raise QiitaDBSQLConnectionError("Cannot get postgres cursor! %s"
-                                            % e)
+            raise QiitaDBConnectionError("Cannot get postgres cursor! %s"
+                                         % e)
         self._cursors.append(pgcursor)
         return pgcursor
 
@@ -73,7 +73,7 @@ class SQLConnectionHandler(object):
         Returns:
             The results of the fetchall query as a list of tuples
 
-        Raises a QiitaDBSQLExecutionError if there is some error executing the
+        Raises a QiitaDBExecutionError if there is some error executing the
             SQL query
 
         Note: from psycopg2 documentation, only variable values should be bound
@@ -92,7 +92,7 @@ class SQLConnectionHandler(object):
             self._connection.commit()
         except PostgresError, e:
             self._connection.rollback()
-            raise QiitaDBSQLExecutionError("Error running SQL query: %s", e)
+            raise QiitaDBExecutionError("Error running SQL query: %s", e)
         return result
 
     def execute_fetchone(self, sql, sql_args=None, pgcursor=None):
@@ -106,7 +106,7 @@ class SQLConnectionHandler(object):
         Returns:
             The results of the fetchone query as a tuple
 
-        Raises a QiitaDBSQLExecutionError if there is some error executing the
+        Raises a QiitaDBExecutionError if there is some error executing the
             SQL query
 
         Note: from psycopg2 documentation, only variable values should be bound
@@ -125,7 +125,7 @@ class SQLConnectionHandler(object):
             self._connection.commit()
         except PostgresError, e:
             self._connection.rollback()
-            raise QiitaDBSQLExecutionError("Error running SQL query: %s", e)
+            raise QiitaDBExecutionError("Error running SQL query: %s", e)
         return result
 
     def execute(self, sql, sql_args=None, pgcursor=None):
@@ -136,7 +136,7 @@ class SQLConnectionHandler(object):
             sql: string with the SQL query
             sql_args: tuple with the arguments for the SQL query
 
-        Raises a QiitaDBSQLExecutionError if there is some error executing the
+        Raises a QiitaDBExecutionError if there is some error executing the
             SQL query
 
         Note: from psycopg2 documentation, only variable values should be bound
@@ -154,7 +154,7 @@ class SQLConnectionHandler(object):
             self._connection.commit()
         except PostgresError, e:
             self._connection.rollback()
-            raise QiitaDBSQLExecutionError("Error running SQL query: %s", e)
+            raise QiitaDBExecutionError("Error running SQL query: %s", e)
 
     def executemany(self, sql, sql_args_list, pgcursor=None):
         """ Executes an executemany SQL query with no results
@@ -165,7 +165,7 @@ class SQLConnectionHandler(object):
             sql_args_list: list with tuples with the arguments for the SQL
                 query
 
-        Raises a QiitaDBSQLExecutionError if there is some error executing the
+        Raises a QiitaDBExecutionError if there is some error executing the
             SQL query
 
         Note: from psycopg2 documentation, only variable values should be bound
@@ -184,4 +184,4 @@ class SQLConnectionHandler(object):
             self._connection.commit()
         except PostgresError, e:
             self._connection.rollback()
-            raise QiitaDBSQLExecutionError("Error running SQL query: %s", e)
+            raise QiitaDBExecutionError("Error running SQL query: %s", e)

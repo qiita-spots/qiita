@@ -1,16 +1,12 @@
 """
 Objects for dealing with Qiita jobs
 
-This module provides the base object for dealing with Qiita jobs.
-It standardizes the Jobs interface and all the different Qiita-db
-backends should inherit from it in order to implement the job object.
-
-The subclasses implementing this object should not provide any extra
-public function in order to maintain back-end independence.
+This module provides the implementation of the Job class, which allows
+to interact with the SQL backend
 
 Classes
 -------
-- `QiitaJob` -- A Qiita Job class
+- `Job` -- A Qiita Job class
 """
 __author__ = "Jose Antonio Navas Molina"
 __copyright__ = "Copyright 2013, The Qiita Project"
@@ -25,11 +21,9 @@ from .base import QiitaStatusObject
 from .exceptions import QiitaDBNotImplementedError
 
 
-class QiitaJob(QiitaStatusObject):
+class Job(QiitaStatusObject):
     """
-    Base analysis object to access to the Qiita Job information
-
-    Standardizes the QiitaJob interface for all the back-ends.
+    Job object to access to the Qiita Job information
 
     Attributes
     ----------
@@ -48,34 +42,40 @@ class QiitaJob(QiitaStatusObject):
         Removes a list of results from the results
     """
 
+    @staticmethod
+    def create(datatype, function, analysis):
+        """Creates a new job on the storage system
+
+        Parameters
+        ----------
+        datatype : string
+            The datatype in which this job applies
+        function : string
+            The identifier of the function executed in this job
+        analysis : string
+            The analysis which this job belongs to
+        """
+        raise QiitaDBNotImplementedError()
+
+    @staticmethod
+    def delete(id_):
+        """Deletes the object `id` from the storage system
+
+        Parameters
+        ----------
+        id_ :
+            The object identifier
+        """
+        raise QiitaDBNotImplementedError()
+
     @property
     def Datatype(self):
         """The datatype of the job"""
         raise QiitaDBNotImplementedError()
 
-    @Datatype.setter
-    def Datatype(self, datatype):
-        """Updates the datatype of the job
-
-        Parameters
-        ----------
-            datatype :
-        """
-        raise QiitaDBNotImplementedError()
-
     @property
     def Function(self):
         """The function the job executes"""
-        raise QiitaDBNotImplementedError()
-
-    @Function.setter
-    def Function(self, function):
-        """Updates the function used in the job
-
-        Parameters
-        ----------
-            function :
-        """
         raise QiitaDBNotImplementedError()
 
     @property
