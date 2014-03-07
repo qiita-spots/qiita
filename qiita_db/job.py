@@ -27,11 +27,11 @@ class Job(QiitaStatusObject):
 
     Attributes
     ----------
-    Datatype
-    Function
-    Options
-    Results
-    ErrorMsg
+    datatype
+    function
+    options
+    results
+    error_msg
 
     Methods
     -------
@@ -69,22 +69,22 @@ class Job(QiitaStatusObject):
         raise QiitaDBNotImplementedError()
 
     @property
-    def Datatype(self):
+    def datatype(self):
         """The datatype of the job"""
         raise QiitaDBNotImplementedError()
 
     @property
-    def Function(self):
+    def function(self):
         """The function the job executes"""
         raise QiitaDBNotImplementedError()
 
     @property
-    def Options(self):
+    def options(self):
         """List of options used in the job"""
         raise QiitaDBNotImplementedError()
 
-    @Options.setter
-    def Options(self, options):
+    @options.setter
+    def options(self, options):
         """Updates the options used in the job
 
         Parameters
@@ -94,17 +94,17 @@ class Job(QiitaStatusObject):
         raise QiitaDBNotImplementedError()
 
     @property
-    def Results(self):
+    def results(self):
         """List of job results"""
         raise QiitaDBNotImplementedError()
 
     @property
-    def ErrorMsg(self):
+    def error_msg(self):
         """String with an error message, if the job failed"""
         raise QiitaDBNotImplementedError()
 
-    @ErrorMsg.setter
-    def ErrorMsg(self, msg):
+    @error_msg.setter
+    def error_msg(self, msg):
         """String with an error message, if the job failed
 
         Parameters

@@ -29,13 +29,13 @@ class User(QiitaObject):
 
     Attributes
     ----------
-    Email
-    Level
-    Info
-    PrivateStudies
-    SharedStudies
-    PrivateAnalyses
-    SharedAnalyses
+    email
+    level
+    info
+    private_studies
+    shared_studies
+    private_analyses
+    shared_analyses
 
     Methods
     -------
@@ -89,17 +89,17 @@ class User(QiitaObject):
         raise QiitaDBNotImplementedError()
 
     @property
-    def Email(self):
+    def email(self):
         """The email of the user"""
         return self.Id
 
     @property
-    def Level(self):
+    def level(self):
         """The level of privileges of the user"""
         raise QiitaDBNotImplementedError()
 
-    @Level.setter
-    def Level(self, level):
+    @level.setter
+    def level(self, level):
         """ Sets the level of privileges of the user
 
         Parameters
@@ -110,12 +110,12 @@ class User(QiitaObject):
         raise QiitaDBNotImplementedError()
 
     @property
-    def Info(self):
+    def info(self):
         """Dict with any other information attached to the user"""
         raise QiitaDBNotImplementedError()
 
-    @Info.setter
-    def Info(self, info):
+    @info.setter
+    def info(self, info):
         """Updates the information attached to the user
 
         Parameters
@@ -125,22 +125,22 @@ class User(QiitaObject):
         raise QiitaDBNotImplementedError()
 
     @property
-    def PrivateStudies(self):
+    def private_studies(self):
         """Returns a list of private studies owned by the user"""
         raise QiitaDBNotImplementedError()
 
     @property
-    def SharedStudies(self):
+    def shared_studies(self):
         """Returns a list of studies shared with the user"""
         raise QiitaDBNotImplementedError()
 
     @property
-    def PrivateAnalyses(self):
+    def private_analyses(self):
         """Returns a list of private analyses owned by the user"""
         raise QiitaDBNotImplementedError()
 
     @property
-    def SharedAnalyses(self):
+    def shared_analyses(self):
         """Returns a list of analyses shared with the user"""
         raise QiitaDBNotImplementedError()
 

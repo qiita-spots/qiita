@@ -28,9 +28,9 @@ class Study(QiitaStatusObject):
 
     Attributes
     ----------
-    Name
-    SampleIds
-    Info
+    name
+    sample_ids
+    info
 
     Methods
     -------
@@ -64,12 +64,12 @@ class Study(QiitaStatusObject):
         raise QiitaDBNotImplementedError()
 
     @property
-    def Name(self):
+    def name(self):
         """Returns the name of the study"""
         raise QiitaDBNotImplementedError()
 
-    @Name.setter
-    def Name(self, name):
+    @name.setter
+    def name(self, name):
         """Sets the name of the study
 
         Parameters
@@ -80,7 +80,7 @@ class Study(QiitaStatusObject):
         raise QiitaDBNotImplementedError()
 
     @property
-    def SampleIds(self):
+    def sample_ids(self):
         """Returns the IDs of all samples in study
 
         The sample IDs are returned as a list of strings in alphabetical order.
@@ -88,12 +88,12 @@ class Study(QiitaStatusObject):
         raise QiitaDBNotImplementedError()
 
     @property
-    def Info(self):
+    def info(self):
         """Dict with any other information attached to the study"""
         raise QiitaDBNotImplementedError()
 
-    @Info.setter
-    def Info(self, info):
+    @info.setter
+    def info(self, info):
         """Updates the information attached to the study
 
         Parameters
