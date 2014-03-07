@@ -34,28 +34,28 @@ class MetadataMap(QiitaStatusObject):
 
     Attributes
     ----------
-    SampleIds
-    CategoryNames
-    Metadata
+    sample_ids
+    category_names
+    metadata
 
     Methods
     -------
-    getSampleMetadata(sample_id):
+    get_sample_metadata(sample_id):
         Returns the metadata associated with a particular sample
 
-    getCategoryValue(sample_id, category)
+    get_category_value(sample_id, category)
         Returns the category value associated with a sample's category
 
-    getCategoryValues(sample_ids, category)
+    get_category_values(sample_ids, category)
         Returns all the values of a given category.
 
-    isNumericCategory(category)
+    is_numerical_category(category)
         Returns True if the category is numeric and False otherwise
 
-    hasUniqueCategoryValues(category)
+    has_unique_category_values(category)
         Returns True if the category's values are all unique
 
-    hasSingleCategoryValue(category)
+    has_single_category_values(category)
         Returns True if the category's values are all the same
     """
 
@@ -147,7 +147,7 @@ class MetadataMap(QiitaStatusObject):
                              "table_name = %s", (table_name,))
 
     @property
-    def SampleIds(self):
+    def sample_ids(self):
         """Returns the IDs of all samples in the metadata map.
 
         The sample IDs are returned as a list of strings in alphabetical order.
@@ -155,7 +155,7 @@ class MetadataMap(QiitaStatusObject):
         raise QiitaDBNotImplementedError()
 
     @property
-    def CategoryNames(self):
+    def category_names(self):
         """Returns the names of all categories in the metadata map.
 
         The category names are returned as a list of strings in alphabetical
@@ -164,7 +164,7 @@ class MetadataMap(QiitaStatusObject):
         raise QiitaDBNotImplementedError()
 
     @property
-    def Metadata(self):
+    def metadata(self):
         """A python dict of dicts
 
         The top-level key is sample ID, and the inner dict maps category name
@@ -172,7 +172,7 @@ class MetadataMap(QiitaStatusObject):
         """
         raise QiitaDBNotImplementedError()
 
-    def getSampleMetadata(self, sample_id):
+    def get_sample_metadata(self, sample_id):
         """Returns the metadata associated with a particular sample.
 
         The metadata will be returned as a dict mapping category name to
@@ -185,7 +185,7 @@ class MetadataMap(QiitaStatusObject):
         """
         raise QiitaDBNotImplementedError()
 
-    def getCategoryValue(self, sample_id, category):
+    def get_category_value(self, sample_id, category):
         """Returns the category value associated with a sample's category.
 
         The returned category value will be a string.
@@ -199,7 +199,7 @@ class MetadataMap(QiitaStatusObject):
         """
         raise QiitaDBNotImplementedError()
 
-    def getCategoryValues(self, sample_ids, category):
+    def get_category_values(self, sample_ids, category):
         """Returns all the values of a given category.
 
         The return categories will be a list.
@@ -213,7 +213,7 @@ class MetadataMap(QiitaStatusObject):
         """
         raise QiitaDBNotImplementedError()
 
-    def isNumericCategory(self, category):
+    def is_numerical_category(self, category):
         """Returns True if the category is numeric and False otherwise.
 
         A category is numeric if all values within the category can be
@@ -226,7 +226,7 @@ class MetadataMap(QiitaStatusObject):
         """
         raise QiitaDBNotImplementedError()
 
-    def hasUniqueCategoryValues(self, category):
+    def has_unique_category_values(self, category):
         """Returns True if the category's values are all unique.
 
         Parameters
@@ -236,7 +236,7 @@ class MetadataMap(QiitaStatusObject):
         """
         raise QiitaDBNotImplementedError()
 
-    def hasSingleCategoryValue(self, category):
+    def has_single_category_values(self, category):
         """Returns True if the category's values are all the same.
 
         For example, the category 'Treatment' only has values 'Control' for the

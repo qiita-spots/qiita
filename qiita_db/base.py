@@ -19,6 +19,8 @@ __maintainer__ = "Jose Antonio Navas Molina"
 __email__ = "josenavasmolina@gmail.edu"
 __status__ = "Development"
 
+from .exceptions import QiitaDBNotImplementedError
+
 
 class QiitaObject(object):
     """Base class for any Qiita-db object
@@ -30,7 +32,7 @@ class QiitaObject(object):
 
     Attributes
     ----------
-    Id
+    id_
 
     Methods
     -------
@@ -67,7 +69,7 @@ class QiitaObject(object):
         self._id = id_
 
     @property
-    def Id(self):
+    def id_(self):
         """The object id on the storage system"""
         return self._id
 
@@ -77,17 +79,17 @@ class QiitaStatusObject(QiitaObject):
 
     Attributes
     ----------
-    Status :
+    status :
         The current status of the object
     """
 
     @property
-    def Status(self):
+    def status(self):
         """String with the current status of the analysis"""
         raise QiitaDBNotImplementedError()
 
-    @Status.setter
-    def Status(self, status):
+    @status.setter
+    def status(self, status):
         """Change the status of the analysis
 
         Parameters
