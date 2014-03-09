@@ -1,0 +1,42 @@
+{% extends sitebase.html %}
+{% block head %}
+<script type="text/javascript">
+function shuntSubmit(value) {
+  if(value == 'Get Job') {
+    document.analysis_form.action = "/completed/";
+    document.analysis_form.submit();
+  }
+  else if(value == 'Del Job' && confirm('Really delete meta-analysis?')) {
+    document.analysis_form.action ="/del/";
+    document.analysis_form.submit();
+  }
+}
+</script>
+{% end %}
+
+{%block content %}
+<h2>Welcome to QiiTa.</h2>
+ <h3>Completed meta-analyses:</h3>
+    <form method="post" name='analysis_form' id='analysis_form'>
+    <select name='analysis' id='analysis' form='analysis_form' required>
+    {% for analysis in analyses %}
+        <option value='{{analysis[1]}}'>{{analysis[0]}}</option>
+    {% end %}
+    </select>
+    <input type="button" value="Get Job" onclick="return shuntSubmit('Get Job');">
+    <input type="button" value="Del Job" onclick="return shuntSubmit('Del Job');">
+</form>
+    <!-- <h3>File Upload Test</h3>
+    <form enctype="multipart/form-data" action="/fileupload/" method="post">
+        File: <input type="file" name="file"><br />
+        New filename (NO EXTENSION): <br />
+        <input type='text' name='filename'><br />
+        <input type="submit" value="Upload">
+    </form>
+    <p><div id="logout">
+        <a class="link" href="/auth/logout/">Logout</a>
+    </div></p>
+     -->
+</div>
+</div>
+{% end %}
