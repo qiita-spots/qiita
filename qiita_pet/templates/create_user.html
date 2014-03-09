@@ -1,0 +1,23 @@
+{% extends sitebase.html %}
+{%block content %}
+<div id="create-form">
+    <form action="/auth/create/" method="post" id="login_form">
+        <fieldset>
+            <label for="username">Username</label>
+            <input autocapitalize="off" autocorrect="off" class="text-input" id="username" name="username" tabindex="1" type="text" value="">
+        </fieldset><br />
+
+        <fieldset>
+            <label for="password">Password</label>
+            <input class="text-input" id="password" name="password" tabindex="2" type="password" value="">
+        </fieldset><br />
+        <fieldset>
+            <span class="errormessage">{{errormessage}}</span>
+        </fieldset>
+
+        <div id="form_btn">
+            <input id="signin-btn" type="submit" value="Create" tabindex="3">
+        </div>
+    </form>
+</div>
+{% end %}

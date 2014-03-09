@@ -1,0 +1,32 @@
+{% extends sitebase.html %}
+{% block head %}
+<link rel="stylesheet" type="text/css" href="/static/multivis/style/multivis.css">
+<link rel="stylesheet" type="text/css" href="/static/multivis/style/abundance.css">
+<link rel="stylesheet" href="http://code.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.css" />
+<script src="http://code.jquery.com/jquery-1.9.1.js"></script>
+<script src="http://code.jquery.com/ui/1.10.3/jquery-ui.js"></script>
+<script src="http://d3js.org/d3.v3.min.js"></script>
+<script src="http://d3js.org/queue.v1.min.js"></script>
+<script src="/static/multivis/js/rainbowvis.js"></script>
+<script src="/static/multivis/js/jquery.xcolor.js"></script>
+<script src="/static/multivis/stacked/js/stacked.js"></script>
+<script src="/static/multivis/stacked/js/normStacked.js"></script>
+<script src="/static/multivis/grouped/js/grouped.js"></script>
+<script src="/static/multivis/js/multivis.js"></script>
+<script>
+$(document).ready(function() {stackedBar(document.getElementById('biom').value);});
+</script>
+{% end %}
+{%block content %}
+<div id="controls" style="float:left;">
+<select id="biom" onchange="stackedBar(document.getElementById('biom').value)">
+<option value='/results/data/rich_sparse_otu_table.biom'>Multivis Demo Biom</option>
+<option value='/results/data/AGbigmeta.biom'>AG Big Meta Biom</option>
+<option value='/results/demo/biom/metabolite_otu_table.biom'>metabolite Biom</option>
+</select><br />
+<input type="button" value="Stacked Bar" onclick="stackedBar(document.getElementById('biom').value)"/><br />
+<input type="button" value="Normalized Stacked Bar" onclick="normStackedBar(document.getElementById('biom').value)"/><br />
+<input type="button" value="Grouped Bar" onclick="groupedBar(document.getElementById('biom').value)"/><br />
+</div>
+<div id="visWrapper" style="float: right;"></div>
+{% end %}

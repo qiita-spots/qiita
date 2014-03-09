@@ -1,0 +1,227 @@
+{% extends sitebase.html %}
+{%block head %}
+<link href="/static/js/jquery/jquery-ui-1.10.4.min.css" media="screen" rel="stylesheet" type="text/css">
+  <link href="/static/js/multi-select/css/multi-select.min.css" media="screen" rel="stylesheet" type="text/css">
+
+    <script src="/static/js/jquery/jquery-1.10.2.min.js" type="text/javascript"></script>
+    <script src="/static/js/jquery/jquery-ui-1.10.4.min.js" type="text/javascript"></script>
+    <script src="/static/js/quicksearch/jquery.quicksearch.min.js" type="text/javascript"></script>
+  <script src="/static/js/multi-select/js/jquery.multi-select.min.js" type="text/javascript"></script>
+<style>
+iframe{
+  width:100%;
+  height:280px;
+  border:0;
+  overflow: hidden;
+}
+html, body{
+   min-width:900px;
+   min-height: 100%;
+}
+#progressbar .ui-progressbar-value {
+background-color: #ccc;
+}
+</style>
+
+<script type="text/javascript">
+
+
+function validateForm() {
+  if(document.getElementById('analysisname').value == '') { 
+    document.getElementById('anError').innerHTML = 'You must name your study!<br />';
+    return false; 
+  }
+  else { document.getElementById('studyError').innerHTML = '' }
+  if(countSelected('studiesView') == 0) { 
+    document.getElementById('studyError').innerHTML = 'You must select at least one study!<br />';
+    return false; 
+  }
+  else { document.getElementById('studyError').innerHTML = '' }
+  if(countSelected('datatypeView') == 0) { 
+    document.getElementById('datatypeError').innerHTML = 'You must select at least one datatype!<br />';
+    return false; 
+  }
+  else { document.getElementById('datatypeError').innerHTML = '' }
+}
+
+(function($){
+  $(function(){
+    //set default name of analysis
+    var d = new Date();
+    var dd = d.getDate().toString()
+    if (dd < 10) {dd = "0" + dd}
+    var mo = d.getMonth().toString()
+    if (mo < 10) {mo = "0" + mo}
+    var yyyy = d.getFullYear()
+    var hh = (d.getHours() + 1).toString()
+    if (hh < 10) {hh = "0" + hh}
+    var mm = (d.getMinutes() + 1).toString()
+    if (mm < 10) {mm = "0" + mm}
+    var ss = (d.getSeconds() + 1).toString()
+    if (ss < 10) {ss = "0" + ss}
+    var date = mo+"."+dd+"."+yyyy+" "+hh+":"+mm+":"+ss
+    document.getElementById("analysisname").value="{{user}} "+date
+
+    //jquery multiselect setup
+    function initStudies(){
+        var that = this,
+            $selectableSearch = that.$selectableUl.prev(),
+            $selectionSearch = that.$selectionUl.prev(),
+            selectableSearchString = '#'+that.$container.attr('id')+' .ms-elem-selectable:not(.ms-selected)',
+            selectionSearchString = '#'+that.$container.attr('id')+' .ms-elem-selection.ms-selected';
+
+        that.qs1 = $selectableSearch.quicksearch(selectableSearchString)
+        .on('keydown', function(e){
+          if (e.which === 40){
+            that.$selectableUl.focus();
+            return false;
+          }
+        });
+
+        that.qs2 = $selectionSearch.quicksearch(selectionSearchString)
+        .on('keydown', function(e){
+          if (e.which == 40){
+            that.$selectionUl.focus();
+            return false;
+          }
+        });
+      }
+
+    $('#studies').multiSelect({
+      keepOrder: true, 
+      dblClick: true,
+      selectableHeader: "Available Studies:<br \><input type='text' class='search-input' autocomplete='off' placeholder='Search study names'>",
+      selectionHeader: "Selected Studies:<br \><input type='text' class='search-input' autocomplete='off' placeholder='Search study names'>",
+      afterInit: initStudies(),
+      afterSelect: function(){
+        this.qs1.cache();
+        this.qs2.cache();
+      },
+      afterDeselect: function(){
+        this.qs1.cache();
+        this.qs2.cache();
+      },
+      afterClick: function(value) {
+        document.getElementById("studyinfo").contentWindow.location.replace("/minstudy/"+value)
+      }
+    });
+
+    $('#select-all').click(function(){
+      $('#studies').multiSelect('select_all');
+      return false;
+    });
+    $('#deselect-all').click(function(){
+      $('#studies').multiSelect('deselect_all');
+      return false;
+    });
+  });
+})(jQuery);
+
+//websocket for search
+function connect() {
+  var host = 'ws://' + getBaseURL() + 'searchws/';
+  var websocket = new WebSocket(host);
+  var SELECTED = "";
+
+  websocket.onopen = function() {
+      console.log("Connected to " + host);
+  };
+  websocket.onmessage = function(evt) {
+      console.log("recieved: " + evt.data);
+      message = JSON.parse(evt.data);
+      document.getElementById("searchdone").innerHTML = "Search parsed as: " + message["query"];
+
+      //load search results into selection box 
+      document.getElementById("studies_span").innerHTML = "<select id='studies' multiple='multiple' class='multiselect'>";
+      var study, id;
+      for(i=0;i<message["results"].length;i++){
+        study = message["results"][i][0];
+        id = message["results"][i][1];
+        document.getElementById("studies_span").innerHTML += "<option value='" + id + "'>" + study + "</option>";
+      }
+      document.getElementById("studies_span").innerHTML  += "</select>"
+
+      //refresh selection box
+      $('#studies').multiSelect({'select': SELECTED});
+      initStudies()
+  };
+
+  websocket.onerror = function(evt) { 
+    console.log("ERROR: " + evt.data);
+  };
+
+  $("#search").onclick = function() {
+    searchtext = document.getElementById('searchtext').value;
+    jsontext = JSON.stringify({'type':study, 'query':searchtext});
+    SELECTED = document.getElementById("studies").selected;
+    document.getElementById("studies_span").innerHTML = "<img src='/static/img/waiting.gif' />";
+    console.log("sent: " + jsontext);
+    websocket.send(jsontext);
+  };
+}
+
+window.onload = function() {
+  connect();
+};
+
+function getBaseURL () {
+   return location.hostname + (location.port && ":" + location.port) + "/";
+}
+</script>
+{% end %}
+
+{%block content %}
+<table width='100%'>
+  <tr>
+    <td width=200 valign='top'>
+      <b>1) Choose studies</b><br />
+      2) Select QiiTa analyses<br />
+      3) Set QiiTa analysis options<br />
+      4) Review meta-analysis<br />
+      5) Running meta-analysis<br />
+      6) Meta-analysis results<br />
+    </td>
+    <td>
+    <div id="genError" style="color:red">{{error}}</div>
+    <form action="/meta/2" method="post" id="meta1_form" onsubmit="return(validateForm());">
+        <p><fieldset>
+          <legend><b>Meta-analysis Name</b></legend>
+          <div id="anError" style="color:red"></div>
+          <input type='text' id='searchtext' name='searchtext' size=30>
+        </fieldset>
+        </p>
+        <p>
+        <h3>Search Studies</h3>
+        <div id="search">
+        <input type="text" size=90><br/>
+        <div id="searchdone"></div>
+        <input type="button" value="search" id="search">
+        <a href="#" onClick="MyWindow=window.open('/help/study_search/','MyWindow',width=600,height=300); return false;">Search help</a>
+        </div>
+        </p>
+        <p>
+        <h3>Studies</h3><p>
+        Click a study to view study information.<br />
+        Double click a study to select or deselect it.</p>
+        <table style="width:100%;height:290px"><tr><td width="400">
+        <p><a href='#' id='select-all'>select all</a> / <a href='#' id='deselect-all'>deselect all</a></p>
+        <span id="studies_span">
+        <select id='studies' multiple='multiple' class="multiselect">
+        {% for i in range(1, 1001) %}
+          <option value='elem_{{i}}'>elem {{i}}</option>
+        {%end%}
+        </select>
+        </span>
+      </td><td width="100%">
+      <h3>Study information</h3>
+      <iframe id="studyinfo" src="about:blank"></iframe>
+      </td></tr></table>
+      <p>
+      <div id="error" style="display:none">There were errors. Please review your selections.</div>
+      <input id="continue-btn"type="submit" value="Continue" tabindex="3"> <div id="progressbar"></div>
+      </p>
+    </form>
+    </td>
+  </tr>
+</table>
+{% end %}
