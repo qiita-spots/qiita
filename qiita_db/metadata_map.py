@@ -20,12 +20,15 @@ __status__ = "Development"
 
 from itertools import izip
 from string import lower
+from collections import namedtuple
 
 from .base import QiitaStatusObject
 from .exceptions import QiitaDBNotImplementedError
 from .sql_connection import SQLConnectionHandler
 from .util import (quote_column_name, quote_data_value, get_datatypes,
                    scrub_data)
+
+MetadataMapId = namedtuple('MetadataMapId', ('study', 'idx'))
 
 
 class MetadataMap(QiitaStatusObject):
@@ -60,27 +63,24 @@ class MetadataMap(QiitaStatusObject):
     """
 
     @staticmethod
-    def create(md_map, study_id, idx=None):
+    def create(md_map, md_map_id):
         """Creates a new object with a new id on the storage system
 
         Parameters
         ----------
         md_map : qiime.util.MetadataMap
             The mapping file contents
-        study_id :
-            The study identifier
-        idx : int
-            The mapping file index
+        md_map_id : MetadataMapId
+            The metadata map identifier
         """
-        if idx is None:
+        if md_map_id.idx is None:
             # If idx is not defined, generate one automatically
             # from the database
             raise QiitaDBNotImplementedError()
-
         # Create the MetadataMap table on the SQL system
         conn_handler = SQLConnectionHandler()
         # Get the table name
-        table_name = "study_%s_%s" % (study_id, idx)
+        table_name = "study_%s_%s" % md_map_id
         headers = md_map.CategoryNames
         datatypes = get_datatypes(md_map)
 
@@ -125,7 +125,7 @@ class MetadataMap(QiitaStatusObject):
             sql_args_list.append(values)
 
         conn_handler.executemany(insert_sql_template, sql_args_list)
-        return MetadataMap((study_id, idx))
+        return MetadataMap(md_map_id)
 
     @staticmethod
     def delete(id_):
@@ -133,8 +133,8 @@ class MetadataMap(QiitaStatusObject):
 
         Parameters
         ----------
-        id_ :
-            The object identifier
+        id_ : MetadataMapId
+            The metadata map identifier
         """
         table_name = "study_%s_%s" % id_
         conn_handler = SQLConnectionHandler()
