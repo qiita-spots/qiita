@@ -9,11 +9,10 @@ __version__ = "0.1.0-dev"
 __maintainer__ = "Jose Antonio Navas Molina"
 __email__ = "josenavasmolina@gmail.com"
 
-from pyqi.core.command import (Command, CommandIn, CommandOut,
-                               ParameterCollection)
+from pyqi.core.command import Command, CommandIn, ParameterCollection
 from pyqi.core.exception import CommandError
 
-from qiita_db.metadata_map import MetadataMap
+from qiita_db.metadata_map import MetadataMap, MetadataMapId
 from qiime.util import MetadataMap as QiimeMetadataMap
 
 
@@ -43,14 +42,17 @@ class MappingFileAdder(Command):
         idx = kwargs['idx']
         clear = kwargs['clear']
 
+        # Build the Metadata Map identifier
+        md_map_id = MetadataMapId(study_id, idx)
+
         if clear:
-            if idx is None:
+            if md_map_id.idx is None:
                 raise CommandError("metadata map index missing - needed for"
                                    "clear up before inserting")
-            metadata_map_id = (study_id, idx)
-            MetadataMap.delete(metadata_map_id)
+            md_map_id = MetadataMapId(study_id, idx)
+            MetadataMap.delete(md_map_id)
 
-        md_map = MetadataMap.create(metadata_map, study_id, idx)
+        md_map = MetadataMap.create(metadata_map, md_map_id)
 
         return {}
 
