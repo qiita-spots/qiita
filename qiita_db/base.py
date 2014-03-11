@@ -69,7 +69,7 @@ class QiitaObject(object):
         self._id = id_
 
     @property
-    def id_(self):
+    def id(self):
         """The object id on the storage system"""
         return self._id
 
