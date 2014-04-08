@@ -69,7 +69,7 @@ CREATE TABLE qiita.mixs_field_description (
  );
 
 CREATE TABLE qiita.ontology ( 
-	id_ontology          bigserial  NOT NULL,
+	ontology_id          bigserial  NOT NULL,
 	shortname            varchar(100)  NOT NULL,
 	fully_loaded         bool  NOT NULL,
 	fullname             varchar(255)  ,
@@ -78,7 +78,7 @@ CREATE TABLE qiita.ontology (
 	definition           text  ,
 	load_date            date  NOT NULL,
 	version              varchar(128)  ,
-	CONSTRAINT pk_ontology PRIMARY KEY ( id_ontology )
+	CONSTRAINT pk_ontology PRIMARY KEY ( ontology_id )
  );
 
 CREATE TABLE qiita.picking_params ( 
@@ -87,6 +87,41 @@ CREATE TABLE qiita.picking_params (
 	picking_type         float8  NOT NULL,
 	CONSTRAINT pk_picking_params PRIMARY KEY ( picking_params_id )
  );
+
+CREATE TABLE qiita.preprocessed_sequence_454_params ( 
+	preprocessed_params_id bigserial  NOT NULL,
+	trim_length          integer  NOT NULL,
+	CONSTRAINT pk_preprocessed_sequence_454_params PRIMARY KEY ( preprocessed_params_id )
+ );
+
+COMMENT ON TABLE qiita.preprocessed_sequence_454_params IS 'Parameters used for processing sequence data.';
+
+CREATE TABLE qiita.preprocessed_sequence_illumina_params ( 
+	preprocessed_params_id bigserial  NOT NULL,
+	trim_length          integer  NOT NULL,
+	max_bad_run_length   integer DEFAULT 3 NOT NULL,
+	min_per_read_length_fraction real DEFAULT 0.75 NOT NULL,
+	sequence_max_n       integer DEFAULT 0 NOT NULL,
+	CONSTRAINT pk_preprocessed_sequence_illumina_params PRIMARY KEY ( preprocessed_params_id )
+ );
+
+COMMENT ON TABLE qiita.preprocessed_sequence_illumina_params IS 'Parameters used for processing illumina sequence data.';
+
+CREATE TABLE qiita.preprocessed_spectra_params ( 
+	preprocessed_params_id bigserial  NOT NULL,
+	col                  varchar  ,
+	CONSTRAINT pk_preprocessed_spectra_params PRIMARY KEY ( preprocessed_params_id )
+ );
+
+COMMENT ON TABLE qiita.preprocessed_spectra_params IS 'Parameters used for processing spectra data.';
+
+CREATE TABLE qiita.processed_params_uclust ( 
+	processed_params_id  bigserial  NOT NULL,
+	col                  bigserial  ,
+	CONSTRAINT pk_processed_params_uclust PRIMARY KEY ( processed_params_id )
+ );
+
+COMMENT ON TABLE qiita.processed_params_uclust IS 'Parameters used for processing data using method x';
 
 CREATE TABLE qiita.raw_data ( 
 	raw_data_id          bigserial  NOT NULL,
@@ -114,9 +149,9 @@ CREATE INDEX idx_prep_columns ON qiita.raw_data_prep_columns ( raw_data_id );
 COMMENT ON TABLE qiita.raw_data_prep_columns IS 'Holds the columns available for a given raw data prep';
 
 CREATE TABLE qiita.relationship_type ( 
-	id_relationship_type bigserial  NOT NULL,
+	relationship_type_id bigserial  NOT NULL,
 	relationship_type    varchar(128)  ,
-	CONSTRAINT pk_relationship_type PRIMARY KEY ( id_relationship_type )
+	CONSTRAINT pk_relationship_type PRIMARY KEY ( relationship_type_id )
  );
 
 CREATE TABLE qiita.required_prep_info ( 
@@ -133,8 +168,8 @@ CREATE TABLE qiita.required_prep_info (
 CREATE INDEX idx_required_prep_info ON qiita.required_prep_info ( raw_data_id );
 
 CREATE TABLE qiita.term ( 
-	id_term              bigserial  NOT NULL,
-	id_ontology          bigint  NOT NULL,
+	term_id              bigserial  NOT NULL,
+	ontology_id          bigint  NOT NULL,
 	term_name            varchar(255)  NOT NULL,
 	identifier           varchar(255)  ,
 	definition           text  ,
@@ -142,61 +177,61 @@ CREATE TABLE qiita.term (
 	is_obsolete          bool DEFAULT 'false' NOT NULL,
 	is_root_term         bool  NOT NULL,
 	is_leaf              bool  NOT NULL,
-	CONSTRAINT pk_term PRIMARY KEY ( id_term ),
-	CONSTRAINT fk_term_ontology FOREIGN KEY ( id_ontology ) REFERENCES qiita.ontology( id_ontology )    
+	CONSTRAINT pk_term PRIMARY KEY ( term_id ),
+	CONSTRAINT fk_term_ontology FOREIGN KEY ( ontology_id ) REFERENCES qiita.ontology( ontology_id )    
  );
 
-CREATE INDEX idx_term ON qiita.term ( id_ontology );
+CREATE INDEX idx_term ON qiita.term ( ontology_id );
 
 CREATE TABLE qiita.term_path ( 
-	id_term_path         bigserial  NOT NULL,
-	id_subject_term      bigint  NOT NULL,
-	id_predicate_term    bigint  NOT NULL,
-	id_object_term       bigint  NOT NULL,
-	id_ontology          bigint  NOT NULL,
-	id_relationship_type integer  NOT NULL,
+	term_path_id         bigserial  NOT NULL,
+	subject_term_id      bigint  NOT NULL,
+	predicate_term_id    bigint  NOT NULL,
+	object_term_id       bigint  NOT NULL,
+	ontology_id          bigint  NOT NULL,
+	relationship_type_id integer  NOT NULL,
 	distance             integer  ,
-	CONSTRAINT pk_term_path PRIMARY KEY ( id_term_path ),
-	CONSTRAINT fk_term_path_ontology FOREIGN KEY ( id_ontology ) REFERENCES qiita.ontology( id_ontology )    ,
-	CONSTRAINT fk_term_path_relationship_type FOREIGN KEY ( id_relationship_type ) REFERENCES qiita.relationship_type( id_relationship_type )    
+	CONSTRAINT pk_term_path PRIMARY KEY ( term_path_id ),
+	CONSTRAINT fk_term_path_ontology FOREIGN KEY ( ontology_id ) REFERENCES qiita.ontology( ontology_id )    ,
+	CONSTRAINT fk_term_path_relationship_type FOREIGN KEY ( relationship_type_id ) REFERENCES qiita.relationship_type( relationship_type_id )    
  );
 
-CREATE INDEX idx_term_path ON qiita.term_path ( id_ontology );
+CREATE INDEX idx_term_path ON qiita.term_path ( ontology_id );
 
-CREATE INDEX idx_term_path_0 ON qiita.term_path ( id_relationship_type );
+CREATE INDEX idx_term_path_0 ON qiita.term_path ( relationship_type_id );
 
 CREATE TABLE qiita.term_relationship ( 
-	id_term_relationship bigserial  NOT NULL,
-	id_subject_term      bigint  NOT NULL,
-	id_predicate_term    bigint  NOT NULL,
-	id_object_term       bigint  NOT NULL,
-	id_ontology          bigint  NOT NULL,
-	CONSTRAINT pk_term_relationship PRIMARY KEY ( id_term_relationship ),
-	CONSTRAINT fk_term_relationship_subj_term FOREIGN KEY ( id_subject_term ) REFERENCES qiita.term( id_term )    ,
-	CONSTRAINT fk_term_relationship_pred_term FOREIGN KEY ( id_predicate_term ) REFERENCES qiita.term( id_term )    ,
-	CONSTRAINT fk_term_relationship_obj_term FOREIGN KEY ( id_object_term ) REFERENCES qiita.term( id_term )    ,
-	CONSTRAINT fk_term_relationship_ontology FOREIGN KEY ( id_ontology ) REFERENCES qiita.ontology( id_ontology )    
+	term_relationship_id bigserial  NOT NULL,
+	subject_term_id      bigint  NOT NULL,
+	predicate_term_id    bigint  NOT NULL,
+	object_term_id       bigint  NOT NULL,
+	ontology_id          bigint  NOT NULL,
+	CONSTRAINT pk_term_relationship PRIMARY KEY ( term_relationship_id ),
+	CONSTRAINT fk_term_relationship_subj_term FOREIGN KEY ( subject_term_id ) REFERENCES qiita.term( term_id )    ,
+	CONSTRAINT fk_term_relationship_pred_term FOREIGN KEY ( predicate_term_id ) REFERENCES qiita.term( term_id )    ,
+	CONSTRAINT fk_term_relationship_obj_term FOREIGN KEY ( object_term_id ) REFERENCES qiita.term( term_id )    ,
+	CONSTRAINT fk_term_relationship_ontology FOREIGN KEY ( ontology_id ) REFERENCES qiita.ontology( ontology_id )    
  );
 
-CREATE INDEX idx_term_relationship ON qiita.term_relationship ( id_subject_term );
+CREATE INDEX idx_term_relationship ON qiita.term_relationship ( subject_term_id );
 
-CREATE INDEX idx_term_relationship ON qiita.term_relationship ( id_predicate_term );
+CREATE INDEX idx_term_relationship ON qiita.term_relationship ( predicate_term_id );
 
-CREATE INDEX idx_term_relationship ON qiita.term_relationship ( id_object_term );
+CREATE INDEX idx_term_relationship ON qiita.term_relationship ( object_term_id );
 
-CREATE INDEX idx_term_relationship ON qiita.term_relationship ( id_ontology );
+CREATE INDEX idx_term_relationship ON qiita.term_relationship ( ontology_id );
 
 CREATE TABLE qiita.term_synonym ( 
-	id_synonym           bigserial  NOT NULL,
-	id_term              bigint  NOT NULL,
+	synonym_id           bigserial  NOT NULL,
+	term_id              bigint  NOT NULL,
 	synonym_value        varchar(100)  NOT NULL,
-	id_synonym_type      bigint  NOT NULL,
-	CONSTRAINT pk_term_synonym PRIMARY KEY ( id_synonym ),
-	CONSTRAINT fk_term_synonym_term FOREIGN KEY ( id_term ) REFERENCES qiita.term( id_term )    ,
-	CONSTRAINT fk_term_synonym_type_term FOREIGN KEY ( id_synonym ) REFERENCES qiita.term( id_term )    
+	synonym_type_id      bigint  NOT NULL,
+	CONSTRAINT pk_term_synonym PRIMARY KEY ( synonym_id ),
+	CONSTRAINT fk_term_synonym_term FOREIGN KEY ( term_id ) REFERENCES qiita.term( term_id )    ,
+	CONSTRAINT fk_term_synonym_type_term FOREIGN KEY ( synonym_id ) REFERENCES qiita.term( term_id )    
  );
 
-CREATE INDEX idx_term_synonym ON qiita.term_synonym ( id_term );
+CREATE INDEX idx_term_synonym ON qiita.term_synonym ( term_id );
 
 CREATE TABLE qiita.user_level ( 
 	id_user_level        smallint  NOT NULL,
@@ -210,28 +245,28 @@ COMMENT ON TABLE qiita.user_level IS 'Holds restricted text for user levels';
 COMMENT ON COLUMN qiita.user_level.name IS 'One of the user levels (admin, user, guest, etc)';
 
 CREATE TABLE qiita.annotation ( 
-	id_annotation        bigserial  NOT NULL,
-	id_term              bigint  NOT NULL,
+	annotation_id        bigserial  NOT NULL,
+	term_id              bigint  NOT NULL,
 	annotation_name      varchar(255)  NOT NULL,
 	annotation_num_value float8  ,
 	annotation_str_value varchar(255)  ,
-	CONSTRAINT pk_annotation PRIMARY KEY ( id_annotation ),
-	CONSTRAINT fk_annotation_term FOREIGN KEY ( id_term ) REFERENCES qiita.term( id_term )    
+	CONSTRAINT pk_annotation PRIMARY KEY ( annotation_id ),
+	CONSTRAINT fk_annotation_term FOREIGN KEY ( term_id ) REFERENCES qiita.term( term_id )    
  );
 
-CREATE INDEX idx_annotation ON qiita.annotation ( id_term );
+CREATE INDEX idx_annotation ON qiita.annotation ( term_id );
 
 CREATE TABLE qiita.column_controlled_vocabularies ( 
-	id_controlled_vocab  bigserial  NOT NULL,
+	controlled_vocab_id  bigserial  NOT NULL,
 	column_name          varchar(100)  NOT NULL,
-	CONSTRAINT idx_column_controlled_vocabularies PRIMARY KEY ( id_controlled_vocab, column_name ),
+	CONSTRAINT idx_column_controlled_vocabularies PRIMARY KEY ( controlled_vocab_id, column_name ),
 	CONSTRAINT fk_column_controlled_vocabularies FOREIGN KEY ( column_name ) REFERENCES qiita.mixs_field_description( column_name )    ,
-	CONSTRAINT fk_column_controlled_vocab2 FOREIGN KEY ( id_controlled_vocab ) REFERENCES qiita.controlled_vocabularies( controlled_vocab_id )    
+	CONSTRAINT fk_column_controlled_vocab2 FOREIGN KEY ( controlled_vocab_id ) REFERENCES qiita.controlled_vocabularies( controlled_vocab_id )    
  );
 
 CREATE INDEX idx_column_controlled_vocabularies_0 ON qiita.column_controlled_vocabularies ( column_name );
 
-CREATE INDEX idx_column_controlled_vocabularies_1 ON qiita.column_controlled_vocabularies ( id_controlled_vocab );
+CREATE INDEX idx_column_controlled_vocabularies_1 ON qiita.column_controlled_vocabularies ( controlled_vocab_id );
 
 CREATE TABLE qiita.column_ontology ( 
 	column_name          varchar(200)  NOT NULL,
@@ -245,29 +280,29 @@ CREATE TABLE qiita.column_ontology (
 CREATE INDEX idx_column_ontology_0 ON qiita.column_ontology ( column_name );
 
 CREATE TABLE qiita.controlled_vocab_values ( 
-	id_vocab_value       bigserial  NOT NULL,
-	id_controlled_vocab  bigint  NOT NULL,
+	vocab_value_id       bigserial  NOT NULL,
+	controlled_vocab_id  bigint  NOT NULL,
 	term                 varchar  NOT NULL,
 	order_by             varchar  NOT NULL,
 	default_item         varchar  ,
-	CONSTRAINT pk_controlled_vocab_values PRIMARY KEY ( id_vocab_value ),
-	CONSTRAINT fk_controlled_vocab_values FOREIGN KEY ( id_controlled_vocab ) REFERENCES qiita.controlled_vocabularies( controlled_vocab_id ) ON DELETE CASCADE ON UPDATE CASCADE
+	CONSTRAINT pk_controlled_vocab_values PRIMARY KEY ( vocab_value_id ),
+	CONSTRAINT fk_controlled_vocab_values FOREIGN KEY ( controlled_vocab_id ) REFERENCES qiita.controlled_vocabularies( controlled_vocab_id ) ON DELETE CASCADE ON UPDATE CASCADE
  );
 
-CREATE INDEX idx_controlled_vocab_values ON qiita.controlled_vocab_values ( id_controlled_vocab );
+CREATE INDEX idx_controlled_vocab_values ON qiita.controlled_vocab_values ( controlled_vocab_id );
 
 CREATE TABLE qiita.dbxref ( 
-	id_dbxref            bigserial  NOT NULL,
-	id_term              bigint  NOT NULL,
+	dbxref_id            bigserial  NOT NULL,
+	term_id              bigint  NOT NULL,
 	dbname               varchar(100)  NOT NULL,
 	accession            varchar(255)  NOT NULL,
 	description          text  NOT NULL,
 	xref_type            text  NOT NULL,
-	CONSTRAINT pk_dbxref PRIMARY KEY ( id_dbxref ),
-	CONSTRAINT fk_dbxref_term FOREIGN KEY ( id_term ) REFERENCES qiita.term( id_term )    
+	CONSTRAINT pk_dbxref PRIMARY KEY ( dbxref_id ),
+	CONSTRAINT fk_dbxref_term FOREIGN KEY ( term_id ) REFERENCES qiita.term( term_id )    
  );
 
-CREATE INDEX idx_dbxref ON qiita.dbxref ( id_term );
+CREATE INDEX idx_dbxref ON qiita.dbxref ( term_id );
 
 CREATE TABLE qiita.job ( 
 	job_id               bigserial  NOT NULL,
