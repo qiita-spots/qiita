@@ -21,7 +21,7 @@ COMMENT ON COLUMN qiita.command.command IS 'What command to call to run this fun
 
 CREATE TABLE qiita.controlled_vocabularies ( 
 	controlled_vocab_id  bigserial  NOT NULL,
-	vocab_name           varchar(100)  NOT NULL,
+	vocab_name           varchar  NOT NULL,
 	CONSTRAINT pk_controlled_vocabularies PRIMARY KEY ( controlled_vocab_id )
  );
 
@@ -77,14 +77,14 @@ CREATE TABLE qiita.mixs_field_description (
 
 CREATE TABLE qiita.ontology ( 
 	ontology_id          bigserial  NOT NULL,
-	shortname            varchar(100)  NOT NULL,
+	shortname            varchar  NOT NULL,
 	fully_loaded         bool  NOT NULL,
-	fullname             varchar(255)  ,
-	query_url            varchar(255)  ,
-	source_url           varchar(255)  ,
+	fullname             varchar  ,
+	query_url            varchar  ,
+	source_url           varchar  ,
 	definition           text  ,
 	load_date            date  NOT NULL,
-	version              varchar(128)  ,
+	version              varchar  ,
 	CONSTRAINT pk_ontology PRIMARY KEY ( ontology_id )
  );
 
@@ -173,18 +173,17 @@ CREATE INDEX idx_required_prep_info_0 ON qiita.required_prep_info ( emp_status_i
 CREATE TABLE qiita.term ( 
 	term_id              bigserial  NOT NULL,
 	ontology_id          bigint  NOT NULL,
-	term_name            varchar(255)  NOT NULL,
-	identifier           varchar(255)  ,
-	definition           text  ,
-	namespace            varchar(255)  ,
+	term_name            varchar  NOT NULL,
+	identifier           varchar  ,
+	definition           varchar  ,
+	namespace            varchar  ,
 	is_obsolete          bool DEFAULT 'false' NOT NULL,
 	is_root_term         bool  NOT NULL,
 	is_leaf              bool  NOT NULL,
 	CONSTRAINT pk_term PRIMARY KEY ( term_id ),
+	CONSTRAINT idx_term UNIQUE ( ontology_id ) ,
 	CONSTRAINT fk_term_ontology FOREIGN KEY ( ontology_id ) REFERENCES qiita.ontology( ontology_id )    
  );
-
-CREATE INDEX idx_term ON qiita.term ( ontology_id );
 
 CREATE TABLE qiita.term_path ( 
 	term_path_id         bigserial  NOT NULL,
@@ -196,12 +195,21 @@ CREATE TABLE qiita.term_path (
 	distance             integer  ,
 	CONSTRAINT pk_term_path PRIMARY KEY ( term_path_id ),
 	CONSTRAINT fk_term_path_ontology FOREIGN KEY ( ontology_id ) REFERENCES qiita.ontology( ontology_id )    ,
-	CONSTRAINT fk_term_path_relationship_type FOREIGN KEY ( relationship_type_id ) REFERENCES qiita.relationship_type( relationship_type_id )    
+	CONSTRAINT fk_term_path_relationship_type FOREIGN KEY ( relationship_type_id ) REFERENCES qiita.relationship_type( relationship_type_id )    ,
+	CONSTRAINT fk_term_path_term_subject FOREIGN KEY ( subject_term_id ) REFERENCES qiita.term( term_id )    ,
+	CONSTRAINT fk_term_path_term_predicate FOREIGN KEY ( predicate_term_id ) REFERENCES qiita.term( term_id )    ,
+	CONSTRAINT fk_term_path_term_object FOREIGN KEY ( object_term_id ) REFERENCES qiita.term( term_id )    
  );
 
 CREATE INDEX idx_term_path ON qiita.term_path ( ontology_id );
 
-CREATE INDEX idx_term_path_0 ON qiita.term_path ( relationship_type_id );
+CREATE INDEX idx_term_path_relatonship ON qiita.term_path ( relationship_type_id );
+
+CREATE INDEX idx_term_path_subject ON qiita.term_path ( subject_term_id );
+
+CREATE INDEX idx_term_path_predicate ON qiita.term_path ( predicate_term_id );
+
+CREATE INDEX idx_term_path_object ON qiita.term_path ( object_term_id );
 
 CREATE TABLE qiita.term_relationship ( 
 	term_relationship_id bigserial  NOT NULL,
@@ -216,18 +224,18 @@ CREATE TABLE qiita.term_relationship (
 	CONSTRAINT fk_term_relationship_ontology FOREIGN KEY ( ontology_id ) REFERENCES qiita.ontology( ontology_id )    
  );
 
-CREATE INDEX idx_term_relationship ON qiita.term_relationship ( subject_term_id );
+CREATE INDEX idx_term_relationship_subject ON qiita.term_relationship ( subject_term_id );
 
-CREATE INDEX idx_term_relationship ON qiita.term_relationship ( predicate_term_id );
+CREATE INDEX idx_term_relationship_predicate ON qiita.term_relationship ( predicate_term_id );
 
-CREATE INDEX idx_term_relationship ON qiita.term_relationship ( object_term_id );
+CREATE INDEX idx_term_relationship_object ON qiita.term_relationship ( object_term_id );
 
-CREATE INDEX idx_term_relationship ON qiita.term_relationship ( ontology_id );
+CREATE INDEX idx_term_relationship_ontology ON qiita.term_relationship ( ontology_id );
 
 CREATE TABLE qiita.term_synonym ( 
 	synonym_id           bigserial  NOT NULL,
 	term_id              bigint  NOT NULL,
-	synonym_value        varchar(100)  NOT NULL,
+	synonym_value        varchar  NOT NULL,
 	synonym_type_id      bigint  NOT NULL,
 	CONSTRAINT pk_term_synonym PRIMARY KEY ( synonym_id ),
 	CONSTRAINT fk_term_synonym_term FOREIGN KEY ( term_id ) REFERENCES qiita.term( term_id )    ,
@@ -237,7 +245,7 @@ CREATE TABLE qiita.term_synonym (
 CREATE INDEX idx_term_synonym ON qiita.term_synonym ( term_id );
 
 CREATE TABLE qiita.user_level ( 
-	user_level_id        smallint  NOT NULL,
+	user_level_id        serial  NOT NULL,
 	name                 varchar  NOT NULL,
 	description          text  NOT NULL,
 	CONSTRAINT pk_user_level PRIMARY KEY ( user_level_id )
@@ -250,9 +258,9 @@ COMMENT ON COLUMN qiita.user_level.name IS 'One of the user levels (admin, user,
 CREATE TABLE qiita.annotation ( 
 	annotation_id        bigserial  NOT NULL,
 	term_id              bigint  NOT NULL,
-	annotation_name      varchar(255)  NOT NULL,
+	annotation_name      varchar  NOT NULL,
 	annotation_num_value bigint  ,
-	annotation_str_value varchar(255)  ,
+	annotation_str_value varchar  ,
 	CONSTRAINT pk_annotation PRIMARY KEY ( annotation_id ),
 	CONSTRAINT fk_annotation_term FOREIGN KEY ( term_id ) REFERENCES qiita.term( term_id )    
  );
@@ -261,7 +269,7 @@ CREATE INDEX idx_annotation ON qiita.annotation ( term_id );
 
 CREATE TABLE qiita.column_controlled_vocabularies ( 
 	controlled_vocab_id  bigserial  NOT NULL,
-	column_name          varchar(100)  NOT NULL,
+	column_name          varchar  NOT NULL,
 	CONSTRAINT idx_column_controlled_vocabularies PRIMARY KEY ( controlled_vocab_id, column_name ),
 	CONSTRAINT fk_column_controlled_vocabularies FOREIGN KEY ( column_name ) REFERENCES qiita.mixs_field_description( column_name )    ,
 	CONSTRAINT fk_column_controlled_vocab2 FOREIGN KEY ( controlled_vocab_id ) REFERENCES qiita.controlled_vocabularies( controlled_vocab_id )    
@@ -274,8 +282,8 @@ CREATE INDEX idx_column_controlled_vocabularies_1 ON qiita.column_controlled_voc
 COMMENT ON TABLE qiita.column_controlled_vocabularies IS 'Table relates a column with a controlled vocabulary.';
 
 CREATE TABLE qiita.column_ontology ( 
-	column_name          varchar(200)  NOT NULL,
-	ontology_short_name  varchar(50)  NOT NULL,
+	column_name          varchar  NOT NULL,
+	ontology_short_name  varchar  NOT NULL,
 	bioportal_id         integer  NOT NULL,
 	ontology_branch_id   integer  NOT NULL,
 	CONSTRAINT idx_column_ontology PRIMARY KEY ( column_name, ontology_short_name ),
@@ -301,10 +309,10 @@ CREATE INDEX idx_controlled_vocab_values ON qiita.controlled_vocab_values ( cont
 CREATE TABLE qiita.dbxref ( 
 	dbxref_id            bigserial  NOT NULL,
 	term_id              bigint  NOT NULL,
-	dbname               varchar(100)  NOT NULL,
-	accession            varchar(255)  NOT NULL,
-	description          text  NOT NULL,
-	xref_type            text  NOT NULL,
+	dbname               varchar  NOT NULL,
+	accession            varchar  NOT NULL,
+	description          varchar  NOT NULL,
+	xref_type            varchar  NOT NULL,
 	CONSTRAINT pk_dbxref PRIMARY KEY ( dbxref_id ),
 	CONSTRAINT fk_dbxref_term FOREIGN KEY ( term_id ) REFERENCES qiita.term( term_id )    
  );
@@ -325,11 +333,11 @@ CREATE TABLE qiita.job (
 	CONSTRAINT fk_job_data_type FOREIGN KEY ( data_type_id ) REFERENCES qiita.data_type( data_type_id )    
  );
 
-CREATE INDEX idx_job ON qiita.job ( command_id );
+CREATE INDEX idx_job_command ON qiita.job ( command_id );
 
-CREATE INDEX idx_job ON qiita.job ( job_status_id );
+CREATE INDEX idx_job_status ON qiita.job ( job_status_id );
 
-CREATE INDEX idx_job ON qiita.job ( data_type_id );
+CREATE INDEX idx_job_type ON qiita.job ( data_type_id );
 
 COMMENT ON COLUMN qiita.job.job_id IS 'Unique identifier for job';
 
@@ -466,7 +474,7 @@ CREATE TABLE qiita.study_sample_columns (
 CREATE INDEX idx_study_mapping_columns ON qiita.study_sample_columns ( study_id );
 
 CREATE TABLE qiita.study_users ( 
-	study_id             bigserial  NOT NULL,
+	study_id             bigint  NOT NULL,
 	email                varchar  NOT NULL,
 	CONSTRAINT idx_study_users PRIMARY KEY ( study_id, email ),
 	CONSTRAINT fk_study_users_study FOREIGN KEY ( study_id ) REFERENCES qiita.study( study_id )    ,
@@ -477,7 +485,7 @@ CREATE INDEX idx_study_users_0 ON qiita.study_users ( study_id );
 
 CREATE INDEX idx_study_users_1 ON qiita.study_users ( email );
 
-COMMENT ON TABLE qiita.study_users IS 'links shared studies to users they are shared with';
+COMMENT ON TABLE qiita.study_users IS 'Links shared studies to users they are shared with';
 
 CREATE TABLE qiita.analysis ( 
 	analysis_id          bigserial  NOT NULL,
@@ -486,7 +494,7 @@ CREATE TABLE qiita.analysis (
 	description          varchar  NOT NULL,
 	analysis_status_id   bigint  NOT NULL,
 	biom_table_filepath  varchar  NOT NULL,
-	pmid                 integer  ,
+	pmid                 varchar  ,
 	CONSTRAINT pk_analysis PRIMARY KEY ( analysis_id ),
 	CONSTRAINT fk_analysis_user FOREIGN KEY ( email ) REFERENCES qiita.qiita_user( email )    ,
 	CONSTRAINT fk_analysis_analysis_status FOREIGN KEY ( analysis_status_id ) REFERENCES qiita.analysis_status( analysis_status_id )    
@@ -544,9 +552,9 @@ CREATE TABLE qiita.analysis_users (
 	CONSTRAINT fk_analysis_users_user FOREIGN KEY ( email ) REFERENCES qiita.qiita_user( email ) ON DELETE CASCADE ON UPDATE CASCADE
  );
 
-CREATE INDEX idx_analysis_users ON qiita.analysis_users ( analysis_id );
+CREATE INDEX idx_analysis_users_analysis ON qiita.analysis_users ( analysis_id );
 
-CREATE INDEX idx_analysis_users ON qiita.analysis_users ( email );
+CREATE INDEX idx_analysis_users_email ON qiita.analysis_users ( email );
 
 COMMENT ON TABLE qiita.analysis_users IS 'Links analyses to the users they are shared with';
 
@@ -558,9 +566,9 @@ CREATE TABLE qiita.investigation_study (
 	CONSTRAINT fk_investigation_study_study FOREIGN KEY ( study_id ) REFERENCES qiita.study( study_id )    
  );
 
-CREATE INDEX idx_investigation_study ON qiita.investigation_study ( investigation_id );
+CREATE INDEX idx_investigation_study_investigation ON qiita.investigation_study ( investigation_id );
 
-CREATE INDEX idx_investigation_study ON qiita.investigation_study ( study_id );
+CREATE INDEX idx_investigation_study_study ON qiita.investigation_study ( study_id );
 
 CREATE TABLE qiita.required_sample_info ( 
 	study_id             bigint  NOT NULL,
