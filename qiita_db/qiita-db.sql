@@ -170,6 +170,12 @@ CREATE INDEX idx_required_prep_info ON qiita.required_prep_info ( raw_data_id );
 
 CREATE INDEX idx_required_prep_info_0 ON qiita.required_prep_info ( emp_status_id );
 
+CREATE TABLE qiita.severity ( 
+	severity_id          serial  NOT NULL,
+	severity             varchar  NOT NULL,
+	CONSTRAINT pk_severity PRIMARY KEY ( severity_id )
+ );
+
 CREATE TABLE qiita.term ( 
 	term_id              bigserial  NOT NULL,
 	ontology_id          bigint  NOT NULL,
@@ -376,13 +382,15 @@ COMMENT ON COLUMN qiita.processed_data.processed_params_id IS 'Link to a table w
 
 CREATE TABLE qiita.qiita_user ( 
 	email                varchar  NOT NULL,
-	user_level_id        smallint  NOT NULL,
+	user_level_id        integer  NOT NULL,
 	password             varchar  NOT NULL,
 	name                 varchar  ,
 	affiliation          varchar  ,
 	address              varchar  ,
 	phone                varchar  ,
 	salt                 varchar  NOT NULL,
+	pass_reset_code      varchar  ,
+	pass_reset_timestamp timestamp  ,
 	CONSTRAINT pk_user PRIMARY KEY ( email ),
 	CONSTRAINT fk_user_user_level FOREIGN KEY ( user_level_id ) REFERENCES qiita.user_level( user_level_id )   ON UPDATE RESTRICT
  );
@@ -392,6 +400,10 @@ CREATE INDEX idx_user ON qiita.qiita_user ( user_level_id );
 COMMENT ON TABLE qiita.qiita_user IS 'Holds all user information';
 
 COMMENT ON COLUMN qiita.qiita_user.user_level_id IS 'user level';
+
+COMMENT ON COLUMN qiita.qiita_user.pass_reset_code IS 'Randomly generated code for password reset';
+
+COMMENT ON COLUMN qiita.qiita_user.pass_reset_timestamp IS 'Time the reset code was generated';
 
 CREATE TABLE qiita.study ( 
 	study_id             bigserial  NOT NULL,
@@ -569,6 +581,28 @@ CREATE TABLE qiita.investigation_study (
 CREATE INDEX idx_investigation_study_investigation ON qiita.investigation_study ( investigation_id );
 
 CREATE INDEX idx_investigation_study_study ON qiita.investigation_study ( study_id );
+
+CREATE TABLE qiita.logging ( 
+	log_id               bigserial  NOT NULL,
+	time                 timestamp  NOT NULL,
+	user_id              varchar  NOT NULL,
+	severity_id          integer  NOT NULL,
+	task                 varchar  NOT NULL,
+	msg                  varchar  NOT NULL,
+	CONSTRAINT pk_logging PRIMARY KEY ( log_id ),
+	CONSTRAINT fk_logging_qiita_user FOREIGN KEY ( user_id ) REFERENCES qiita.qiita_user( email )    ,
+	CONSTRAINT fk_logging_severity FOREIGN KEY ( severity_id ) REFERENCES qiita.severity( severity_id )    
+ );
+
+CREATE INDEX idx_logging ON qiita.logging ( user_id );
+
+CREATE INDEX idx_logging_0 ON qiita.logging ( severity_id );
+
+COMMENT ON COLUMN qiita.logging.time IS 'Time the error was thrown';
+
+COMMENT ON COLUMN qiita.logging.task IS 'What process threw the error';
+
+COMMENT ON COLUMN qiita.logging.msg IS 'Error message thrown';
 
 CREATE TABLE qiita.required_sample_info ( 
 	study_id             bigint  NOT NULL,
