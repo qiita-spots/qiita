@@ -389,6 +389,7 @@ CREATE TABLE qiita.qiita_user (
 	address              varchar  ,
 	phone                varchar  ,
 	salt                 varchar  NOT NULL,
+	user_verify_code     varchar  NOT NULL,
 	pass_reset_code      varchar  ,
 	pass_reset_timestamp timestamp  ,
 	CONSTRAINT pk_user PRIMARY KEY ( email ),
@@ -400,6 +401,8 @@ CREATE INDEX idx_user ON qiita.qiita_user ( user_level_id );
 COMMENT ON TABLE qiita.qiita_user IS 'Holds all user information';
 
 COMMENT ON COLUMN qiita.qiita_user.user_level_id IS 'user level';
+
+COMMENT ON COLUMN qiita.qiita_user.user_verify_code IS 'Code for initial user email verification';
 
 COMMENT ON COLUMN qiita.qiita_user.pass_reset_code IS 'Randomly generated code for password reset';
 
