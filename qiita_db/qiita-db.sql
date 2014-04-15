@@ -389,6 +389,7 @@ CREATE TABLE qiita.qiita_user (
 	address              varchar  ,
 	phone                varchar  ,
 	salt                 varchar  NOT NULL,
+	user_verify_code     varchar  ,
 	pass_reset_code      varchar  ,
 	pass_reset_timestamp timestamp  ,
 	CONSTRAINT pk_user PRIMARY KEY ( email ),
