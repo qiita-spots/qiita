@@ -389,7 +389,7 @@ CREATE TABLE qiita.qiita_user (
 	address              varchar  ,
 	phone                varchar  ,
 	salt                 varchar  NOT NULL,
-	user_verify_code     varchar  NOT NULL,
+	user_verify_code     varchar  ,
 	pass_reset_code      varchar  ,
 	pass_reset_timestamp timestamp  ,
 	CONSTRAINT pk_user PRIMARY KEY ( email ),
@@ -486,7 +486,7 @@ CREATE TABLE qiita.study_sample_columns (
 	CONSTRAINT fk_study_mapping_columns_study FOREIGN KEY ( study_id ) REFERENCES qiita.study( study_id )    
  );
 
-CREATE INDEX idx_study_mapping_columns ON qiita.study_sample_columns ( study_id );
+CREATE INDEX idx_study_mapping_columns_study_id ON qiita.study_sample_columns ( study_id );
 
 CREATE TABLE qiita.study_users ( 
 	study_id             bigint  NOT NULL,
@@ -515,9 +515,9 @@ CREATE TABLE qiita.analysis (
 	CONSTRAINT fk_analysis_analysis_status FOREIGN KEY ( analysis_status_id ) REFERENCES qiita.analysis_status( analysis_status_id )    
  );
 
-CREATE INDEX idx_analysis ON qiita.analysis ( email );
+CREATE INDEX idx_analysis_email ON qiita.analysis ( email );
 
-CREATE INDEX idx_analysis ON qiita.analysis ( analysis_status_id );
+CREATE INDEX idx_analysis_status_id ON qiita.analysis ( analysis_status_id );
 
 COMMENT ON TABLE qiita.analysis IS 'hHolds analysis information';
 
