@@ -21,6 +21,5 @@ class ConfigurationManager(object):
         self.database = 'qiime_md'
         self.host = 'localhost'
         self.port = 5432
-        self.backend = "SQL"
 
 qiita_db_config = ConfigurationManager()
