@@ -1,12 +1,12 @@
 """
-Objects for dealing with Qiita metadata maps
+Objects for dealing with Qiita metadata templates
 
-This module provides the implementation for the QiitaMetadataMap base class
+This module provides the implementation for the MetadataTemplate base class
 using an SQL backend.
 
 Classes
 -------
-- `MetadataMap` -- A Qiita Metadata map class
+- `MetadataTemplate` -- A Qiita Metadata template class
 """
 
 __author__ = "Jose Antonio Navas Molina"
@@ -20,7 +20,6 @@ __status__ = "Development"
 
 from itertools import izip
 from string import lower
-from collections import namedtuple
 
 from .base import QiitaStatusObject
 from .exceptions import QiitaDBNotImplementedError
@@ -28,10 +27,8 @@ from .sql_connection import SQLConnectionHandler
 from .util import (quote_column_name, quote_data_value, get_datatypes,
                    scrub_data)
 
-MetadataMapId = namedtuple('MetadataMapId', ('study', 'idx'))
 
-
-class MetadataMap(QiitaStatusObject):
+class MetadataTemplate(QiitaStatusObject):
     """
     Metadata map object that accesses an SQL backend to get the information
 
@@ -62,27 +59,37 @@ class MetadataMap(QiitaStatusObject):
         Returns True if the category's values are all the same
     """
 
+    # Used to find the right SQL tables - should be defined on the classes that
+    # instantiate this base class
+    _table_prefix = None
+    _column_table = None
+
     @staticmethod
-    def create(md_map, md_map_id):
+    def _get_table_name(cls, study_id):
+        """"""
+        if not cls._table_prefix:
+            raise QiitaDBNotImplementedError('_table_prefix should be defined '
+                                             'in the classes that implement '
+                                             'MetadataTemplate!')
+        return "%s%d" % (cls._table_prefix, study_id)
+
+    @staticmethod
+    def create(cls, md_template, study_id):
         """Creates a new object with a new id on the storage system
 
         Parameters
         ----------
-        md_map : qiime.util.MetadataMap
-            The mapping file contents
-        md_map_id : MetadataMapId
-            The metadata map identifier
+        md_template : qiime.util.MetadataMap
+            The template file contents
+        study_id : int
+            The study identifier to which the metadata template belongs to
         """
-        if md_map_id.idx is None:
-            # If idx is not defined, generate one automatically
-            # from the database
-            raise QiitaDBNotImplementedError()
-        # Create the MetadataMap table on the SQL system
+        # Create the MetadataTemplate table on the SQL system
         conn_handler = SQLConnectionHandler()
         # Get the table name
-        table_name = "study_%s_%s" % md_map_id
-        headers = md_map.CategoryNames
-        datatypes = get_datatypes(md_map)
+        table_name = cls._get_table_name(study_id)
+        headers = md_template.CategoryNames
+        datatypes = get_datatypes(md_template)
 
         # Get the columns names in SQL safe
         sql_safe_column_names = [quote_column_name(h) for h in headers]
@@ -97,12 +104,13 @@ class MetadataMap(QiitaStatusObject):
         conn_handler.execute("create table %s (sampleid varchar, %s)" %
                              (table_name, columns))
 
-        # Add rows to the column_tables table
+        # Add rows to the column_table table
         lc_table_name = lower(table_name)
         quoted_lc_table_name = quote_data_value(lc_table_name)
-        column_tables_sql_template = ("insert into column_tables (column_name,"
-                                      " table_name, datatype) values (%s, " +
-                                      quoted_lc_table_name + ", %s)")
+        column_tables_sql_template = ("insert into " + cls._column_table +
+                                      " (column_name, table_name, datatype) "
+                                      "values (%s, " + quoted_lc_table_name +
+                                      ", %s)")
         # The column names should be lowercase and quoted
         quoted_lc_headers = [quote_data_value(lower(h)) for h in headers]
         # Pair up the column names with its datatype
@@ -118,32 +126,33 @@ class MetadataMap(QiitaStatusObject):
                                ', %s' * len(sql_safe_column_names) + ' )')
 
         sql_args_list = []
-        for sample_id in md_map.SampleIds:
-            data = md_map.getSampleMetadata(sample_id)
+        for sample_id in md_template.SampleIds:
+            data = md_template.getSampleMetadata(sample_id)
             values = [scrub_data(sample_id)]
             values += [scrub_data(data[header]) for header in headers]
             sql_args_list.append(values)
 
         conn_handler.executemany(insert_sql_template, sql_args_list)
-        return MetadataMap(md_map_id)
+        return MetadataTemplate(study_id)
 
     @staticmethod
-    def delete(id_):
-        """Deletes the object `id` on the storage system
+    def delete(cls, study_id):
+        """Deletes the metadata template attached to the study `id` from the
+        storage system
 
         Parameters
         ----------
-        id_ : MetadataMapId
-            The metadata map identifier
+        study_id : int
+            The study identifier
         """
-        table_name = "study_%s_%s" % id_
+        table_name = cls._get_table_name(study_id)
         conn_handler = SQLConnectionHandler()
         # Dropping table
         conn_handler.execute('drop table %s' % table_name)
         # Deleting rows from column_tables for the study
         # The query should never fail; even when there are no rows for this
         # study, the query will do nothing but complete successfully
-        conn_handler.execute("delete from column_tables where "
+        conn_handler.execute("delete from " + cls._column_table + " where "
                              "table_name = %s", (table_name,))
 
     @property
@@ -248,3 +257,15 @@ class MetadataMap(QiitaStatusObject):
                 the category that will be checked
         """
         raise QiitaDBNotImplementedError()
+
+
+class SampleTemplate(MetadataTemplate):
+    """"""
+    _table_prefix = "sample_"
+    _column_table = "study_sample_columns"
+
+
+class PrepTemplate(MetadataTemplate):
+    """"""
+    _table_prefix = "prep_"
+    _column_table = "raw_data_prep_columns"
