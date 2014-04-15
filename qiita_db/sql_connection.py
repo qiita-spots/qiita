@@ -22,6 +22,8 @@ class SQLConnectionHandler(object):
                                    port=qiita_db_config.port)
         self._dflt_cursor = self._connection.cursor()
         self._cursors = []
+        self.execute("SET search_path TO %s,public;" %
+                     qiita_db_config.schema)
 
     def __del__(self):
         """"""

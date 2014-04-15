@@ -10,10 +10,10 @@ __maintainer__ = "Jose Antonio Navas Molina"
 __email__ = "josenavasmolina@gmail.com"
 
 from pyqi.core.interfaces.optparse import (OptparseUsageExample,
-                                           OptparseOption, OptparseResult)
+                                           OptparseOption)
 from pyqi.core.command import (make_command_in_collection_lookup_f,
                                make_command_out_collection_lookup_f)
-from qiita_db.commands.mapping_file_adder import CommandConstructor
+from qiita_db.commands.sample_template_adder import CommandConstructor
 from qiita_db.interfaces.optparse.input_handler import load_mapping_file
 
 # Convenience function for looking up parameters by name.
@@ -23,21 +23,15 @@ cmd_out_lookup = make_command_out_collection_lookup_f(CommandConstructor)
 # Examples of how the command can be used from the command line using an
 # optparse interface.
 usage_examples = [
-    OptparseUsageExample(ShortDesc="Add a mapping file to the storage",
-                         LongDesc="Add a mapping file to the storage, allowing"
-                                  " the storage system to automatically "
-                                  "generate a metadata map number.",
-                         Ex="%prog -m study_1_mapping_file.txt -s 1"),
-    OptparseUsageExample(ShortDesc="Add a mapping file to the storage",
-                         LongDesc="Add a mapping file to the storage, "
-                                  "specifying the  metadata map number.",
-                         Ex="%prog -m study_1_mapping_file.txt -s 1 -n 1"),
+    OptparseUsageExample(ShortDesc="Add a sample template file to the storage",
+                         LongDesc="Add a sample template file to the storage",
+                         Ex="%prog -i study_1_mapping_file.txt -s 1"),
     OptparseUsageExample(ShortDesc="Add a mapping file to the storage, "
                                    "clearing the previous stored data",
                          LongDesc="If the mapping file already exists in the "
                                    "storage, passing '-c' will delete it "
                                    "before adding the new mapping information",
-                         Ex="%prog -m study_1_mapping_file.txt -s 1 -n 1 -c")
+                         Ex="%prog -i study_1_mapping_file.txt -s 1 -c")
 ]
 
 inputs = [
@@ -47,11 +41,11 @@ inputs = [
                    Handler=None,
                    ShortName='c',
                    ),
-    OptparseOption(Parameter=cmd_in_lookup('metadata_map'),
+    OptparseOption(Parameter=cmd_in_lookup('sample_template'),
                    Type='existing_filepath',
                    Action='store',
                    Handler=load_mapping_file,
-                   ShortName='m',
+                   ShortName='i',
                    ),
     OptparseOption(Parameter=cmd_in_lookup('study_id'),
                    Type=int,
@@ -59,12 +53,6 @@ inputs = [
                    Handler=None,
                    ShortName='s',
                    ),
-    OptparseOption(Parameter=cmd_in_lookup('idx'),
-                   Type=int,
-                   Action='store',
-                   Handler=None,
-                   ShortName='n',
-                   )
 ]
 
 outputs = []

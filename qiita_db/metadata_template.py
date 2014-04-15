@@ -64,7 +64,7 @@ class MetadataTemplate(QiitaStatusObject):
     _table_prefix = None
     _column_table = None
 
-    @staticmethod
+    @classmethod
     def _get_table_name(cls, study_id):
         """"""
         if not cls._table_prefix:
@@ -73,7 +73,7 @@ class MetadataTemplate(QiitaStatusObject):
                                              'MetadataTemplate!')
         return "%s%d" % (cls._table_prefix, study_id)
 
-    @staticmethod
+    @classmethod
     def create(cls, md_template, study_id):
         """Creates a new object with a new id on the storage system
 
@@ -101,16 +101,14 @@ class MetadataTemplate(QiitaStatusObject):
         # Get the columns in a comma-separated string
         columns = ", ".join(columns)
         # Create a table for the study
-        conn_handler.execute("create table %s (sampleid varchar, %s)" %
+        conn_handler.execute("create table qiita.%s (sampleid varchar, %s)" %
                              (table_name, columns))
 
         # Add rows to the column_table table
-        lc_table_name = lower(table_name)
-        quoted_lc_table_name = quote_data_value(lc_table_name)
-        column_tables_sql_template = ("insert into " + cls._column_table +
-                                      " (column_name, table_name, datatype) "
-                                      "values (%s, " + quoted_lc_table_name +
-                                      ", %s)")
+        column_tables_sql_template = ("insert into qiita." + cls._column_table
+                                      + " (study_id, column_name, column_type)"
+                                      " values ('" + str(study_id) +
+                                      "', %s, %s)")
         # The column names should be lowercase and quoted
         quoted_lc_headers = [quote_data_value(lower(h)) for h in headers]
         # Pair up the column names with its datatype
@@ -121,8 +119,8 @@ class MetadataTemplate(QiitaStatusObject):
 
         # Add rows into the study table
         columns = ', '.join(sql_safe_column_names)
-        insert_sql_template = ('insert into ' + table_name + ' (sampleid, ' +
-                               columns + ') values (%s' +
+        insert_sql_template = ('insert into qiita.' + table_name +
+                               ' (sampleid, ' + columns + ') values (%s' +
                                ', %s' * len(sql_safe_column_names) + ' )')
 
         sql_args_list = []
@@ -135,7 +133,7 @@ class MetadataTemplate(QiitaStatusObject):
         conn_handler.executemany(insert_sql_template, sql_args_list)
         return MetadataTemplate(study_id)
 
-    @staticmethod
+    @classmethod
     def delete(cls, study_id):
         """Deletes the metadata template attached to the study `id` from the
         storage system
@@ -148,12 +146,12 @@ class MetadataTemplate(QiitaStatusObject):
         table_name = cls._get_table_name(study_id)
         conn_handler = SQLConnectionHandler()
         # Dropping table
-        conn_handler.execute('drop table %s' % table_name)
+        conn_handler.execute('drop table qiita.%s' % table_name)
         # Deleting rows from column_tables for the study
         # The query should never fail; even when there are no rows for this
         # study, the query will do nothing but complete successfully
-        conn_handler.execute("delete from " + cls._column_table + " where "
-                             "table_name = %s", (table_name,))
+        conn_handler.execute("delete from qiita." + cls._column_table +
+                             " where study_id = %s", (study_id,))
 
     @property
     def sample_ids(self):

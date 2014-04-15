@@ -14,10 +14,11 @@ __status__ = "Development"
 class ConfigurationManager(object):
     """"""
     def __init__(self):
-        self.user = 'defaultuser'
-        self.database = 'qiime_md'
+        self.user = 'jose'
+        self.database = 'qiita'
         self.host = 'localhost'
         self.port = 5432
         self.backend = "SQL"
+        self.schema = "qiita"
 
 qiita_db_config = ConfigurationManager()
