@@ -4,8 +4,7 @@ from __future__ import division
 """
 Objects for dealing with Qiita analyses
 
-This module provides the implementation of the Analysis class, which
-allows to interact with the SQL backend.
+This module provides the implementation of the Analysis class.
 
 Classes
 -------

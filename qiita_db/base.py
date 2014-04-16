@@ -97,7 +97,7 @@ class QiitaStatusObject(QiitaObject):
 
         Parameters
         ----------
-        status: String
+        status: str
             The new object status
         """
         raise QiitaDBNotImplementedError()

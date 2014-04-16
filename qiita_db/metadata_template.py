@@ -4,12 +4,14 @@ from __future__ import division
 """
 Objects for dealing with Qiita metadata templates
 
-This module provides the implementation for the MetadataTemplate base class
-using an SQL backend.
+This module provides the MetadataTemplate base class and the classes
+SampleTemplate and PrepTemplate that implement MetadataTemplate.
 
 Classes
 -------
-- `MetadataTemplate` -- A Qiita Metadata template class
+- `MetadataTemplate` -- A Qiita Metadata template base class
+- `SampleTemplate` -- A Qiita Sample template class
+- `PrepTemplate` -- A Qiita Prep template class
 """
 
 __author__ = "Jose Antonio Navas Molina"
@@ -33,7 +35,7 @@ from .util import (quote_column_name, quote_data_value, get_datatypes,
 
 class MetadataTemplate(QiitaStatusObject):
     """
-    Metadata map object that accesses an SQL backend to get the information
+    Metadata map object that accesses the db to get the information
 
     Attributes
     ----------

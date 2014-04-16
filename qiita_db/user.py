@@ -4,8 +4,7 @@ from __future__ import division
 """
 Objects for dealing with Qiita users
 
-This modules provides the implementation of the User class, which allows to
-interact with the SQL backend
+This modules provides the implementation of the User class.
 
 Classes
 -------
