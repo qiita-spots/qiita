@@ -13,7 +13,7 @@ from qiita_core.exceptions import QiitaError
 
 
 class QiitaDBError(QiitaError):
-    """Base class for all Qiita-db exceptions"""
+    """Base class for all qiita_db exceptions"""
     pass
 
 

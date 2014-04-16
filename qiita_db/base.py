@@ -2,9 +2,9 @@
 from __future__ import division
 
 """
-Objects for dealing with Qiita-db objects
+Objects for dealing with qiita_db objects
 
-This module provides base objects for dealing with any qiita-db object that
+This module provides base objects for dealing with any qiita_db object that
 needs to be stored.
 
 Classes
@@ -26,7 +26,7 @@ from .exceptions import QiitaDBNotImplementedError
 
 
 class QiitaObject(object):
-    """Base class for any Qiita-db object
+    """Base class for any qiita_db object
 
     Parameters
     ----------
@@ -78,7 +78,7 @@ class QiitaObject(object):
 
 
 class QiitaStatusObject(QiitaObject):
-    """Base class for any Qiita-db object with a status property
+    """Base class for any qiita_db object with a status property
 
     Attributes
     ----------
