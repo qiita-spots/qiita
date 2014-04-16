@@ -12,7 +12,7 @@ Classes
 """
 
 # -----------------------------------------------------------------------------
-# Copyright (c) 2014, The Qiita Development Team.
+# Copyright (c) 2014--, The Qiita Development Team.
 #
 # Distributed under the terms of the BSD 3-clause License.
 #
@@ -45,7 +45,7 @@ class Analysis(QiitaStatusObject):
 
     @staticmethod
     def create(owner):
-        """Creates a new analysis on the storage system
+        """Creates a new analysis on the database
 
         Parameters
         ----------
@@ -56,7 +56,7 @@ class Analysis(QiitaStatusObject):
 
     @staticmethod
     def delete(id_):
-        """Deletes the analysis `id` from the storage system
+        """Deletes the analysis `id` from the database
 
         Parameters
         ----------
