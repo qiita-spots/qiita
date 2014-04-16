@@ -23,13 +23,13 @@ cmd_out_lookup = make_command_out_collection_lookup_f(CommandConstructor)
 # Examples of how the command can be used from the command line using an
 # optparse interface.
 usage_examples = [
-    OptparseUsageExample(ShortDesc="Add a sample template file to the storage",
-                         LongDesc="Add a sample template file to the storage",
+    OptparseUsageExample(ShortDesc="Add a sample template file to the db",
+                         LongDesc="Add a sample template file to the db",
                          Ex="%prog -i study_1_mapping_file.txt -s 1"),
-    OptparseUsageExample(ShortDesc="Add a mapping file to the storage, "
+    OptparseUsageExample(ShortDesc="Add a mapping file to the db, "
                                    "clearing the previous stored data",
                          LongDesc="If the mapping file already exists in the "
-                                   "storage, passing '-c' will delete it "
+                                   "db, passing '-c' will delete it "
                                    "before adding the new mapping information",
                          Ex="%prog -i study_1_mapping_file.txt -s 1 -c")
 ]

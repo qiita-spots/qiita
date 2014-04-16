@@ -4,8 +4,7 @@ from __future__ import division
 """
 Objects for dealing with Qiita studies
 
-This module provides the implementation of the Study class, which allows to
-interact with the SQL backend
+This module provides the implementation of the Study class.
 
 
 Classes
