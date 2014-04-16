@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from __future__ import division
 
 #-----------------------------------------------------------------------------
 # Copyright (c) 2013, The QIIME Development Team.
