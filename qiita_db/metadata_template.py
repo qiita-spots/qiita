@@ -15,7 +15,7 @@ Classes
 """
 
 # -----------------------------------------------------------------------------
-# Copyright (c) 2014, The Qiita Development Team.
+# Copyright (c) 2014--, The Qiita Development Team.
 #
 # Distributed under the terms of the BSD 3-clause License.
 #
@@ -79,7 +79,7 @@ class MetadataTemplate(QiitaStatusObject):
 
     @classmethod
     def create(cls, md_template, study_id):
-        """Creates a new object with a new id on the storage system
+        """Creates a new object with a new id on the database
 
         Parameters
         ----------
@@ -140,7 +140,7 @@ class MetadataTemplate(QiitaStatusObject):
     @classmethod
     def delete(cls, study_id):
         """Deletes the metadata template attached to the study `id` from the
-        storage system
+        database
 
         Parameters
         ----------

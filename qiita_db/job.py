@@ -11,7 +11,7 @@ Classes
 - `Job` -- A Qiita Job class
 """
 # -----------------------------------------------------------------------------
-# Copyright (c) 2014, The Qiita Development Team.
+# Copyright (c) 2014--, The Qiita Development Team.
 #
 # Distributed under the terms of the BSD 3-clause License.
 #
@@ -45,7 +45,7 @@ class Job(QiitaStatusObject):
 
     @staticmethod
     def create(datatype, function, analysis):
-        """Creates a new job on the storage system
+        """Creates a new job on the database
 
         Parameters
         ----------
@@ -60,7 +60,7 @@ class Job(QiitaStatusObject):
 
     @staticmethod
     def delete(id_):
-        """Deletes the object `id` from the storage system
+        """Deletes the object `id` from the database
 
         Parameters
         ----------

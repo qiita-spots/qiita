@@ -11,7 +11,7 @@ Classes
 - `User` -- A Qiita user class
 """
 # -----------------------------------------------------------------------------
-# Copyright (c) 2014, The Qiita Development Team.
+# Copyright (c) 2014--, The Qiita Development Team.
 #
 # Distributed under the terms of the BSD 3-clause License.
 #
@@ -67,7 +67,7 @@ class User(QiitaObject):
 
     @staticmethod
     def create(email, password):
-        """Creates a new user on the storage system
+        """Creates a new user on the database
 
         Parameters
         ----------
@@ -80,7 +80,7 @@ class User(QiitaObject):
 
     @staticmethod
     def delete(id_):
-        """Deletes the user `id` from the storage system
+        """Deletes the user `id` from the database
 
         Parameters
         ----------

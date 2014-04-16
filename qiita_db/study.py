@@ -12,7 +12,7 @@ Classes
 - `QittaStudy` -- A Qiita study class
 """
 # -----------------------------------------------------------------------------
-# Copyright (c) 2014, The Qiita Development Team.
+# Copyright (c) 2014--, The Qiita Development Team.
 #
 # Distributed under the terms of the BSD 3-clause License.
 #
@@ -44,7 +44,7 @@ class Study(QiitaStatusObject):
 
     @staticmethod
     def create(owner):
-        """Creates a new study on the storage system
+        """Creates a new study on the database
 
         Parameters
         ----------
@@ -55,7 +55,7 @@ class Study(QiitaStatusObject):
 
     @staticmethod
     def delete(id_):
-        """Deletes the study `id_` from the storage system
+        """Deletes the study `id_` from the database
 
         Parameters
         ----------

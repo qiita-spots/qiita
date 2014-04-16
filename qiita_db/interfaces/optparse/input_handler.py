@@ -2,14 +2,14 @@
 from __future__ import division
 
 # -----------------------------------------------------------------------------
-# Copyright (c) 2014, The Qiita Development Team.
+# Copyright (c) 2014--, The Qiita Development Team.
 #
 # Distributed under the terms of the BSD 3-clause License.
 #
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
-from qiime.util import MetadataMap as QiimeMetadataMap
+from qiime.util import MetadataMap
 
 
 def load_mapping_file(mapping_fp):
@@ -20,4 +20,4 @@ def load_mapping_file(mapping_fp):
     """
     # Parse the mapping file contents
     with open(mapping_fp, 'U') as map_lines:
-        return QiimeMetadataMap.parseMetadataMap(map_lines)
+        return MetadataMap.parseMetadataMap(map_lines)

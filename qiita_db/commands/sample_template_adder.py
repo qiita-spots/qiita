@@ -2,7 +2,7 @@
 from __future__ import division
 
 # -----------------------------------------------------------------------------
-# Copyright (c) 2014, The Qiita Development Team.
+# Copyright (c) 2014--, The Qiita Development Team.
 #
 # Distributed under the terms of the BSD 3-clause License.
 #
@@ -16,20 +16,21 @@ from qiime.util import MetadataMap
 
 
 class SampleTemplateAdder(Command):
-    BriefDescription = "Adds the sample template information to the storage"
-    LongDescription = "Adds sample template information to the storage"
+    BriefDescription = "Adds the sample template information to the database"
+    LongDescription = "Adds sample template information to the database"
     CommandIns = ParameterCollection([
         CommandIn(Name='sample_template', DataType=MetadataMap,
                   Description="Sample template information to add to the "
-                              "storage.",
+                              "database.",
                   Required=True),
         CommandIn(Name='study_id', DataType=str,
-                  Description="The study storage identifier to which the "
+                  Description="The study database identifier to which the "
                   "sample template belongs to.",
                   Required=True),
         CommandIn(Name='clear', DataType=bool,
                   Description="In case that the metadata already exists on "
-                  "the system, remove the old one before the new one is added",
+                  "the database, remove the old one before the new one "
+                  "is added",
                   Required=False, Default=False)
     ])
 
