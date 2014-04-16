@@ -22,7 +22,7 @@ __status__ = "Development"
 from .base import QiitaObject
 from .exceptions import QiitaDBNotImplementedError
 
-LEVELS = ('admin', 'dev', 'superuser', 'user', 'guest')
+LEVELS = {'admin', 'dev', 'superuser', 'user', 'guest'}
 
 
 class User(QiitaObject):
