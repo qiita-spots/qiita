@@ -49,11 +49,11 @@ class Job(QiitaStatusObject):
 
         Parameters
         ----------
-        datatype : string
+        datatype : str
             The datatype in which this job applies
-        function : string
+        function : str
             The identifier of the function executed in this job
-        analysis : string
+        analysis : str
             The analysis which this job belongs to
         """
         raise QiitaDBNotImplementedError()
@@ -110,7 +110,7 @@ class Job(QiitaStatusObject):
 
         Parameters
         ----------
-            msg : String
+            msg : str
                 Error message
         """
         raise QiitaDBNotImplementedError()

@@ -191,8 +191,8 @@ class MetadataTemplate(QiitaStatusObject):
 
         Parameters
         ----------
-            sample_id : string
-                the sample ID to retrieve metadata for
+        sample_id : str
+            the sample ID to retrieve metadata for
         """
         raise QiitaDBNotImplementedError()
 
@@ -203,10 +203,10 @@ class MetadataTemplate(QiitaStatusObject):
 
         Parameters
         ----------
-            sample_id : string
-                the sample ID to retrieve category information for
-            category : string
-                the category name whose value will be returned
+        sample_id : str
+            the sample ID to retrieve category information for
+        category : str
+            the category name whose value will be returned
         """
         raise QiitaDBNotImplementedError()
 
@@ -217,10 +217,10 @@ class MetadataTemplate(QiitaStatusObject):
 
         Parameters
         ----------
-            sample_ids : list of strings
-                An ordered list of sample IDs
-            category : string
-                the category name whose values will be returned
+        sample_ids : list of str
+            An ordered list of sample IDs
+        category : str
+            the category name whose values will be returned
         """
         raise QiitaDBNotImplementedError()
 
@@ -232,8 +232,8 @@ class MetadataTemplate(QiitaStatusObject):
 
         Parameters
         ----------
-            category : string
-                the category that will be checked
+        category : str
+            the category that will be checked
         """
         raise QiitaDBNotImplementedError()
 
@@ -242,8 +242,8 @@ class MetadataTemplate(QiitaStatusObject):
 
         Parameters
         ----------
-            category : string
-                the category that will be checked for uniqueness
+        category : str
+            the category that will be checked for uniqueness
         """
         raise QiitaDBNotImplementedError()
 
@@ -255,8 +255,8 @@ class MetadataTemplate(QiitaStatusObject):
 
         Parameters
         ----------
-            category : string
-                the category that will be checked
+        category : str
+            the category that will be checked
         """
         raise QiitaDBNotImplementedError()
 

@@ -71,7 +71,7 @@ class User(QiitaObject):
 
         Parameters
         ----------
-        email : string
+        email : str
             the email of the user - used for log in
         password :
             the password of the user
