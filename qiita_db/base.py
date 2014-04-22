@@ -29,7 +29,7 @@ class QiitaObject(object):
 
     Parameters
     ----------
-    id_:
+    id_: object
         The object id on the storage system
 
     Attributes
@@ -52,7 +52,7 @@ class QiitaObject(object):
 
     @staticmethod
     def delete(id_):
-        """Deletes the object `id` from the storage system
+        """Deletes the object `id_` from the storage system
 
         Parameters
         ----------

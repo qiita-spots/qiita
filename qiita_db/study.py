@@ -48,7 +48,7 @@ class Study(QiitaStatusObject):
 
         Parameters
         ----------
-        owner : string
+        owner : str
             the user id of the study' owner
         """
         raise QiitaDBNotImplementedError()
@@ -75,7 +75,7 @@ class Study(QiitaStatusObject):
 
         Parameters
         ----------
-            name : string
+            name : str
                 The new study name
         """
         raise QiitaDBNotImplementedError()

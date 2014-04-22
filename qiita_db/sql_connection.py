@@ -9,6 +9,8 @@ from __future__ import division
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
+# from contextlib import contextmanager
+
 from psycopg2 import connect, Error as PostgresError
 
 from .exceptions import QiitaDBExecutionError, QiitaDBConnectionError
@@ -24,8 +26,6 @@ class SQLConnectionHandler(object):
                                    port=qiita_db_config.port)
         self._dflt_cursor = self._connection.cursor()
         self._cursors = []
-        self.execute("SET search_path TO %s,public;" %
-                     qiita_db_config.schema)
 
     def __del__(self):
         """"""
@@ -33,6 +33,11 @@ class SQLConnectionHandler(object):
         for cur in self._cursors:
             if not cur.closed:
                 cur.close()
+
+    # @contextmanager
+    # def _sql_executor(self):
+    #     """Executes an SQL instruction"""
+
 
     def get_postgres_cursor(self):
         """ Returns a Postgres cursor

@@ -49,7 +49,7 @@ class Analysis(QiitaStatusObject):
 
         Parameters
         ----------
-        owner : string
+        owner : str
             the user id of the analysis' owner
         """
         raise QiitaDBNotImplementedError()
@@ -76,7 +76,7 @@ class Analysis(QiitaStatusObject):
 
         Parameters
         ----------
-            biom_table :
+            biom_table : biom.table.Table
         """
         raise QiitaDBNotImplementedError()
 
