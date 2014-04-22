@@ -46,4 +46,5 @@ def scrub_data(s):
         '
     """
     ret = s.replace("'", "")
+    ret = ret.replace(";", "")
     return ret
