@@ -105,8 +105,8 @@ class User(QiitaObject):
 
         Parameters
         ----------
-            level : {'admin', 'dev', 'superuser', 'user', 'guest'}
-                The new level of the user
+        level : {'admin', 'dev', 'superuser', 'user', 'guest'}
+            The new level of the user
         """
         raise QiitaDBNotImplementedError()
 
@@ -121,7 +121,7 @@ class User(QiitaObject):
 
         Parameters
         ----------
-            info : dict
+        info : dict
         """
         raise QiitaDBNotImplementedError()
 
@@ -150,8 +150,8 @@ class User(QiitaObject):
 
         Parameters
         ----------
-            study :
-                The study to be added to the private list
+        study :
+            The study to be added to the private list
         """
         raise QiitaDBNotImplementedError()
 
@@ -160,8 +160,8 @@ class User(QiitaObject):
 
         Parameters
         ----------
-            study :
-                The study to be removed from the private list
+        study :
+            The study to be removed from the private list
         """
         raise QiitaDBNotImplementedError()
 
@@ -170,8 +170,8 @@ class User(QiitaObject):
 
         Parameters
         ----------
-            study :
-                The study to be added to the shared list
+        study :
+            The study to be added to the shared list
         """
         raise QiitaDBNotImplementedError()
 
@@ -180,8 +180,8 @@ class User(QiitaObject):
 
         Parameters
         ----------
-            study :
-                The study to be removed from the shared list
+        study :
+            The study to be removed from the shared list
         """
         raise QiitaDBNotImplementedError()
 
@@ -190,8 +190,8 @@ class User(QiitaObject):
 
         Parameters
         ----------
-            analysis :
-                The analysis to be added to the private list
+        analysis :
+            The analysis to be added to the private list
         """
         raise QiitaDBNotImplementedError()
 
@@ -200,8 +200,8 @@ class User(QiitaObject):
 
         Parameters
         ----------
-            analysis :
-                The analysis to be removed from the private list
+        analysis :
+            The analysis to be removed from the private list
         """
         raise QiitaDBNotImplementedError()
 
@@ -210,8 +210,8 @@ class User(QiitaObject):
 
         Parameters
         ----------
-            analysis :
-                The analysis to be added to the shared list
+        analysis :
+            The analysis to be added to the shared list
         """
         raise QiitaDBNotImplementedError()
 
@@ -220,7 +220,7 @@ class User(QiitaObject):
 
         Parameters
         ----------
-            analysis :
-                The analysis to be removed from the shared list
+        analysis :
+            The analysis to be removed from the shared list
         """
         raise QiitaDBNotImplementedError()
