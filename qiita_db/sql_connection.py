@@ -9,7 +9,7 @@ from __future__ import division
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
-# from contextlib import contextmanager
+from contextlib import contextmanager
 
 from psycopg2 import connect, Error as PostgresError
 
@@ -24,38 +24,22 @@ class SQLConnectionHandler(object):
                                    database=qiita_db_config.database,
                                    host=qiita_db_config.host,
                                    port=qiita_db_config.port)
-        self._dflt_cursor = self._connection.cursor()
-        self._cursors = []
 
-    def __del__(self):
-        """"""
-        self._dflt_cursor.close()
-        for cur in self._cursors:
-            if not cur.closed:
-                cur.close()
-
-    # @contextmanager
-    # def _sql_executor(self):
-    #     """Executes an SQL instruction"""
-
-
+    @contextmanager
     def get_postgres_cursor(self):
         """ Returns a Postgres cursor
 
-        Inputs: None
+        Returns
+        -------
+        pgcursor : psycopg2.cursor
 
-        Returns:
-            pgcursor: the postgres.cursor()
-
-        Raises a RuntimeError if the cursor cannot be created
+        Raises a QiitaDBConnectionError if the cursor cannot be created
         """
         try:
-            pgcursor = self.connection.cursor()
+            with self._connection.cursor() as cur:
+                yield cur
         except PostgresError, e:
-            raise QiitaDBConnectionError("Cannot get postgres cursor! %s"
-                                         % e)
-        self._cursors.append(pgcursor)
-        return pgcursor
+            raise QiitaDBConnectionError("Cannot get postgres cursor! %s" % e)
 
     def _check_sql_args(self, sql_args):
         """ Checks that sql_args have the correct type
@@ -71,126 +55,149 @@ class SQLConnectionHandler(object):
             raise TypeError("sql_args should be tuple or list. Found %s " %
                             type(sql_args))
 
-    def execute_fetchall(self, sql, sql_args=None, pgcursor=None):
+    @contextmanager
+    def _sql_executor(self, sql, sql_args=None, many=False):
+        """Executes an SQL query
+
+        Parameters
+        ----------
+        sql: str
+            The SQL query
+        sql_args: tuple or list, optional
+            The arguments for the SQL query
+        many: bool, optional
+            If true, performs an execute many call
+
+        Returns
+        -------
+        pgcursor : psycopg2.cursor
+            The cursor in which the SQL query was executed
+
+        Raises
+        ------
+        QiitaDBExecutionError
+            If there is some error executing the SQL query
+        """
+        # Check that sql arguments have the correct type
+        if many:
+            for args in sql_args:
+                self._check_sql_args(args)
+        else:
+            self._check_sql_args(sql_args)
+
+        # Execute the query
+        with self.get_postgres_cursor() as cur:
+            try:
+                if many:
+                    cur.executemany(sql, sql_args)
+                else:
+                    cur.execute(sql, sql_args)
+                yield cur
+                self._connection.commit()
+            except PostgresError, e:
+                self._connection.rollback()
+                raise QiitaDBExecutionError("Error running SQL query: %s", e)
+
+    def execute_fetchall(self, sql, sql_args=None):
         """ Executes a fetchall SQL query
 
-        Inputs:
-            sql: string with the SQL query
-            sql_args: tuple with the arguments for the SQL query
-            pgcursor: the postgres cursor
+        Parameters
+        ----------
+        sql: str
+            The SQL query
+        sql_args: tuple or list, optional
+            The arguments for the SQL query
 
-        Returns:
-            The results of the fetchall query as a list of tuples
+        Returns
+        ------
+        list of tuples
+            The results of the fetchall query
 
-        Raises a QiitaDBExecutionError if there is some error executing the
-            SQL query
+        Raises
+        ------
+        QiitaDBExecutionError
+            If there is some error executing the SQL query
 
         Note: from psycopg2 documentation, only variable values should be bound
             via sql_args, it shouldn't be used to set table or field names. For
             those elements, ordinary string formatting should be used before
             running execute.
         """
-        if not pgcursor:
-            pgcursor = self._dflt_cursor
-        # Check that sql arguments have the correct type
-        self._check_sql_args(sql_args)
-        # Execute the query
-        try:
-            pgcursor.execute(sql, sql_args)
+        with self._sql_executor(sql, sql_args) as pgcursor:
             result = pgcursor.fetchall()
-            self._connection.commit()
-        except PostgresError, e:
-            self._connection.rollback()
-            raise QiitaDBExecutionError("Error running SQL query: %s", e)
         return result
 
-    def execute_fetchone(self, sql, sql_args=None, pgcursor=None):
+    def execute_fetchone(self, sql, sql_args=None):
         """ Executes a fetchone SQL query
 
-        Inputs:
-            pgcursor: the postgres cursor
-            sql: string with the SQL query
-            sql_args: tuple with the arguments for the SQL query
+        Parameters
+        ----------
+        sql: str
+            The SQL query
+        sql_args: tuple or list, optional
+            The arguments for the SQL query
 
-        Returns:
-            The results of the fetchone query as a tuple
+        Returns
+        -------
+        Tuple
+            The results of the fetchone query
 
-        Raises a QiitaDBExecutionError if there is some error executing the
-            SQL query
+        Raises
+        ------
+        QiitaDBExecutionError
+            if there is some error executing the SQL query
 
         Note: from psycopg2 documentation, only variable values should be bound
             via sql_args, it shouldn't be used to set table or field names. For
             those elements, ordinary string formatting should be used before
             running execute.
         """
-        if not pgcursor:
-                pgcursor = self._dflt_cursor
-        # Check that sql arguments have the correct type
-        self._check_sql_args(sql_args)
-        # Execute the query
-        try:
-            pgcursor.execute(sql, sql_args)
+        with self._sql_executor(sql, sql_args) as pgcursor:
             result = pgcursor.fetchone()
-            self._connection.commit()
-        except PostgresError, e:
-            self._connection.rollback()
-            raise QiitaDBExecutionError("Error running SQL query: %s", e)
         return result
 
-    def execute(self, sql, sql_args=None, pgcursor=None):
+    def execute(self, sql, sql_args=None):
         """ Executes an SQL query with no results
 
-        Inputs:
-            pgcursor: the postgres cursor
-            sql: string with the SQL query
-            sql_args: tuple with the arguments for the SQL query
+        Parameters
+        ----------
+        sql: str
+            The SQL query
+        sql_args: tuple or list, optional
+            The arguments for the SQL query
 
-        Raises a QiitaDBExecutionError if there is some error executing the
-            SQL query
+        Raises
+        ------
+        QiitaDBExecutionError
+            if there is some error executing the SQL query
 
         Note: from psycopg2 documentation, only variable values should be bound
             via sql_args, it shouldn't be used to set table or field names. For
             those elements, ordinary string formatting should be used before
             running execute.
         """
-        if not pgcursor:
-            pgcursor = self._dflt_cursor
-        # Check that sql arguments have the correct type
-        self._check_sql_args(sql_args)
-        # Execute the query
-        try:
-            pgcursor.execute(sql, sql_args)
-            self._connection.commit()
-        except PostgresError, e:
-            self._connection.rollback()
-            raise QiitaDBExecutionError("Error running SQL query: %s", e)
+        with self._sql_executor(sql, sql_args):
+            pass
 
-    def executemany(self, sql, sql_args_list, pgcursor=None):
+    def executemany(self, sql, sql_args_list):
         """ Executes an executemany SQL query with no results
 
-        Inputs:
-            pgcursor: the postgres cursor
-            sql: string with the SQL query
-            sql_args_list: list with tuples with the arguments for the SQL
-                query
+        Parameters
+        ----------
+        sql: str
+            The SQL query
+        sql_args: list of tuples
+            The arguments for the SQL query
 
-        Raises a QiitaDBExecutionError if there is some error executing the
-            SQL query
+        Raises
+        ------
+        QiitaDBExecutionError
+            If there is some error executing the SQL query
 
         Note: from psycopg2 documentation, only variable values should be bound
             via sql_args, it shouldn't be used to set table or field names. For
             those elements, ordinary string formatting should be used before
             running execute.
         """
-        if not pgcursor:
-            pgcursor = self._dflt_cursor
-        # Check that sql arguments have the correct type
-        for sql_args in sql_args_list:
-            self._check_sql_args(sql_args)
-        # Execute the query
-        try:
-            pgcursor.executemany(sql, sql_args_list)
-            self._connection.commit()
-        except PostgresError, e:
-            self._connection.rollback()
-            raise QiitaDBExecutionError("Error running SQL query: %s", e)
+        with self._sql_executor(sql, sql_args_list, True):
+            pass

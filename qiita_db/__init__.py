@@ -8,3 +8,5 @@ from __future__ import division
 #
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
+
+__version__ = "0.0.1-dev"
