@@ -75,8 +75,8 @@ class Study(QiitaStatusObject):
 
         Parameters
         ----------
-            name : str
-                The new study name
+        name : str
+            The new study name
         """
         raise QiitaDBNotImplementedError()
 
@@ -99,7 +99,7 @@ class Study(QiitaStatusObject):
 
         Parameters
         ----------
-            info : dict
+        info : dict
         """
         raise QiitaDBNotImplementedError()
 
@@ -107,8 +107,8 @@ class Study(QiitaStatusObject):
         """Adds the samples listed in `samples` to the study
         Parameters
         ----------
-            samples : list of strings
-                The sample Ids to be added to the study
+        samples : list of strings
+            The sample Ids to be added to the study
         """
         raise QiitaDBNotImplementedError()
 
@@ -116,7 +116,7 @@ class Study(QiitaStatusObject):
         """Removes the samples listed in `samples` from the study
         Parameters
         ----------
-            samples : list of strings
-                The sample Ids to be removed from the study
+        samples : list of strings
+            The sample Ids to be removed from the study
         """
         raise QiitaDBNotImplementedError()
