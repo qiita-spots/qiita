@@ -9,15 +9,24 @@ from __future__ import division
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
+from qiita_core.exceptions import QiitaError
 
-# Values hard-coded from now - refactor!
-class ConfigurationManager(object):
+
+class QiitaDBError(QiitaError):
+    """Base class for all qiita_db exceptions"""
+    pass
+
+
+class QiitaDBNotImplementedError(QiitaDBError):
     """"""
-    def __init__(self):
-        self.user = 'defaultuser'
-        self.database = 'qiita'
-        self.host = 'localhost'
-        self.port = 5432
-        self.schema = "qiita"
+    pass
 
-qiita_db_config = ConfigurationManager()
+
+class QiitaDBExecutionError(QiitaDBError):
+    """Exception for error when executing SQL queries"""
+    pass
+
+
+class QiitaDBConnectionError(QiitaDBError):
+    """Exception for error when connecting to the db"""
+    pass
