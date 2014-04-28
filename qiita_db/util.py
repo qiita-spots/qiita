@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 from __future__ import division
 
-__author__ = "Jose Antonio Navas Molina"
-__copyright__ = "Copyright 2013, The Qiita project"
-__credits__ = ["Jose Antonio Navas Molina", "Adam Robbins-Pianka"]
-__license__ = "BSD"
-__version__ = "0.1.0-dev"
-__maintainer__ = "Jose Antonio Navas Molina"
-__email__ = "josenavasmolina@gmail.com"
+# -----------------------------------------------------------------------------
+# Copyright (c) 2014--, The Qiita Development Team.
+#
+# Distributed under the terms of the BSD 3-clause License.
+#
+# The full license is in the file LICENSE, distributed with this software.
+# -----------------------------------------------------------------------------
 
 
 def quote_column_name(c):
@@ -25,9 +25,9 @@ def get_datatypes(metadata_map):
     """"""
     isdigit = str.isdigit
     datatypes = []
-    for header in metadata_map.CategoryNames():
+    for header in metadata_map.CategoryNames:
         column_data = [metadata_map.getCategoryValue(sample_id, header)
-                       for sample_id in metadata_map.SampleIds()]
+                       for sample_id in metadata_map.SampleIds]
 
         if all([isdigit(c) for c in column_data]):
             datatypes.append('int')
@@ -37,3 +37,14 @@ def get_datatypes(metadata_map):
             datatypes.append('varchar')
 
     return datatypes
+
+
+def scrub_data(s):
+    """Scrubs data fields of characters not allowed by PostgreSQL
+
+    disallowed characters:
+        '   ;
+    """
+    ret = s.replace("'", "")
+    ret = ret.replace(";", "")
+    return ret
