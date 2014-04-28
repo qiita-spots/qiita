@@ -43,7 +43,7 @@ def scrub_data(s):
     """Scrubs data fields of characters not allowed by PostgreSQL
 
     disallowed characters:
-        '
+        '   ;
     """
     ret = s.replace("'", "")
     ret = ret.replace(";", "")
