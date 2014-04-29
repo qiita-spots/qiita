@@ -440,8 +440,8 @@ COMMENT ON COLUMN qiita.qiita_user.pass_reset_timestamp IS 'Time the reset code 
 CREATE TABLE qiita.study ( 
 	study_id             bigserial  NOT NULL,
 	email                varchar  NOT NULL,
-	status               varchar  NOT NULL,
-	emp_person           bigint  ,
+	study_status_id      varchar  NOT NULL,
+	emp_person_id        bigint  ,
 	first_contact        varchar  NOT NULL,
 	funding              varchar  ,
 	timeseries_type_id   bigint  NOT NULL,
@@ -462,8 +462,8 @@ CREATE TABLE qiita.study (
 	vamps_id             varchar  ,
 	CONSTRAINT pk_study PRIMARY KEY ( study_id ),
 	CONSTRAINT fk_study_user FOREIGN KEY ( email ) REFERENCES qiita.qiita_user( email )    ,
-	CONSTRAINT fk_study_study_status FOREIGN KEY ( status ) REFERENCES qiita.study_status( study_status_id )    ,
-	CONSTRAINT fk_study_study_emp_person FOREIGN KEY ( emp_person ) REFERENCES qiita.study_person( study_person_id )    ,
+	CONSTRAINT fk_study_study_status FOREIGN KEY ( study_status_id ) REFERENCES qiita.study_status( study_status_id )    ,
+	CONSTRAINT fk_study_study_emp_person FOREIGN KEY ( emp_person_id ) REFERENCES qiita.study_person( study_person_id )    ,
 	CONSTRAINT fk_study_study_lab_person FOREIGN KEY ( lab_person_id ) REFERENCES qiita.study_person( study_person_id )    ,
 	CONSTRAINT fk_study_study_pi_person FOREIGN KEY ( principal_investigator_id ) REFERENCES qiita.study_person( study_person_id )    ,
 	CONSTRAINT fk_study_timeseries_type FOREIGN KEY ( timeseries_type_id ) REFERENCES qiita.timeseries_type( timeseries_type_id )    
@@ -471,9 +471,9 @@ CREATE TABLE qiita.study (
 
 CREATE INDEX idx_study ON qiita.study ( email );
 
-CREATE INDEX idx_study_0 ON qiita.study ( status );
+CREATE INDEX idx_study_0 ON qiita.study ( study_status_id );
 
-CREATE INDEX idx_study_1 ON qiita.study ( emp_person );
+CREATE INDEX idx_study_1 ON qiita.study ( emp_person_id );
 
 CREATE INDEX idx_study_2 ON qiita.study ( lab_person_id );
 
