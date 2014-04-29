@@ -47,17 +47,7 @@ CREATE TABLE qiita.filetype (
 	CONSTRAINT pk_filetype PRIMARY KEY ( filetype_id )
  );
 
-CREATE TABLE qiita.investigation ( 
-	investigation_id     bigserial  NOT NULL,
-	description          varchar  NOT NULL,
-	contact_person_id    bigint  ,
-	CONSTRAINT pk_investigation PRIMARY KEY ( investigation_id )
- );
-
-COMMENT ON TABLE qiita.investigation IS 'Overarching investigation information.
-An investigation comprises one or more individual studies.';
-
-COMMENT ON COLUMN qiita.investigation.description IS 'Describes the overarching goal of the investigation';
+COMMENT ON TABLE qiita.filetype IS 'Type of file (FASTA, FASTQ, SPECTRA, etc)';
 
 CREATE TABLE qiita.job_status ( 
 	job_status_id        bigserial  NOT NULL,
@@ -176,6 +166,24 @@ CREATE TABLE qiita.severity (
 	CONSTRAINT pk_severity PRIMARY KEY ( severity_id )
  );
 
+CREATE TABLE qiita.study_person ( 
+	study_person_id      bigserial  NOT NULL,
+	name                 varchar  NOT NULL,
+	email                varchar  NOT NULL,
+	address              varchar(100)  ,
+	phone                varchar  ,
+	CONSTRAINT pk_study_person PRIMARY KEY ( study_person_id )
+ );
+
+COMMENT ON TABLE qiita.study_person IS 'Contact information for the various people involved in a study';
+
+CREATE TABLE qiita.study_status ( 
+	study_status_id      bigserial  NOT NULL,
+	study_status         varchar  NOT NULL,
+	description          varchar  NOT NULL,
+	CONSTRAINT pk_study_status PRIMARY KEY ( study_status_id )
+ );
+
 CREATE TABLE qiita.term ( 
 	term_id              bigserial  NOT NULL,
 	ontology_id          bigint  NOT NULL,
@@ -249,6 +257,12 @@ CREATE TABLE qiita.term_synonym (
  );
 
 CREATE INDEX idx_term_synonym ON qiita.term_synonym ( term_id );
+
+CREATE TABLE qiita.timeseries_type ( 
+	timeseries_type_id   bigserial  NOT NULL,
+	timeseries_type      bigserial  ,
+	CONSTRAINT pk_timeseries_type PRIMARY KEY ( timeseries_type_id )
+ );
 
 CREATE TABLE qiita.user_level ( 
 	user_level_id        serial  NOT NULL,
@@ -325,6 +339,22 @@ CREATE TABLE qiita.dbxref (
 
 CREATE INDEX idx_dbxref ON qiita.dbxref ( term_id );
 
+CREATE TABLE qiita.investigation ( 
+	investigation_id     bigserial  NOT NULL,
+	name                 varchar  NOT NULL,
+	description          varchar  NOT NULL,
+	contact_person_id    bigint  ,
+	CONSTRAINT pk_investigation PRIMARY KEY ( investigation_id ),
+	CONSTRAINT fk_investigation_study_person FOREIGN KEY ( contact_person_id ) REFERENCES qiita.study_person( study_person_id )    
+ );
+
+CREATE INDEX idx_investigation ON qiita.investigation ( contact_person_id );
+
+COMMENT ON TABLE qiita.investigation IS 'Overarching investigation information.
+An investigation comprises one or more individual studies.';
+
+COMMENT ON COLUMN qiita.investigation.description IS 'Describes the overarching goal of the investigation';
+
 CREATE TABLE qiita.job ( 
 	job_id               bigserial  NOT NULL,
 	data_type_id         bigint  NOT NULL,
@@ -382,13 +412,12 @@ COMMENT ON COLUMN qiita.processed_data.processed_params_id IS 'Link to a table w
 
 CREATE TABLE qiita.qiita_user ( 
 	email                varchar  NOT NULL,
-	user_level_id        integer  NOT NULL,
+	user_level_id        integer DEFAULT 5 NOT NULL,
 	password             varchar  NOT NULL,
 	name                 varchar  ,
 	affiliation          varchar  ,
 	address              varchar  ,
 	phone                varchar  ,
-	salt                 varchar  NOT NULL,
 	user_verify_code     varchar  ,
 	pass_reset_code      varchar  ,
 	pass_reset_timestamp timestamp  ,
@@ -411,8 +440,8 @@ COMMENT ON COLUMN qiita.qiita_user.pass_reset_timestamp IS 'Time the reset code 
 CREATE TABLE qiita.study ( 
 	study_id             bigserial  NOT NULL,
 	email                varchar  NOT NULL,
-	status               varchar  NOT NULL,
-	emp_person           varchar  ,
+	study_status_id      varchar  NOT NULL,
+	emp_person_id        bigint  ,
 	first_contact        varchar  NOT NULL,
 	funding              varchar  ,
 	timeseries_type_id   bigint  NOT NULL,
@@ -432,10 +461,25 @@ CREATE TABLE qiita.study (
 	study_abstract       text  NOT NULL,
 	vamps_id             varchar  ,
 	CONSTRAINT pk_study PRIMARY KEY ( study_id ),
-	CONSTRAINT fk_study_user FOREIGN KEY ( email ) REFERENCES qiita.qiita_user( email )    
+	CONSTRAINT fk_study_user FOREIGN KEY ( email ) REFERENCES qiita.qiita_user( email )    ,
+	CONSTRAINT fk_study_study_status FOREIGN KEY ( study_status_id ) REFERENCES qiita.study_status( study_status_id )    ,
+	CONSTRAINT fk_study_study_emp_person FOREIGN KEY ( emp_person_id ) REFERENCES qiita.study_person( study_person_id )    ,
+	CONSTRAINT fk_study_study_lab_person FOREIGN KEY ( lab_person_id ) REFERENCES qiita.study_person( study_person_id )    ,
+	CONSTRAINT fk_study_study_pi_person FOREIGN KEY ( principal_investigator_id ) REFERENCES qiita.study_person( study_person_id )    ,
+	CONSTRAINT fk_study_timeseries_type FOREIGN KEY ( timeseries_type_id ) REFERENCES qiita.timeseries_type( timeseries_type_id )    
  );
 
 CREATE INDEX idx_study ON qiita.study ( email );
+
+CREATE INDEX idx_study_0 ON qiita.study ( study_status_id );
+
+CREATE INDEX idx_study_1 ON qiita.study ( emp_person_id );
+
+CREATE INDEX idx_study_2 ON qiita.study ( lab_person_id );
+
+CREATE INDEX idx_study_3 ON qiita.study ( principal_investigator_id );
+
+CREATE INDEX idx_study_4 ON qiita.study ( timeseries_type_id );
 
 COMMENT ON COLUMN qiita.study.study_id IS 'Unique name for study';
 
