@@ -85,9 +85,9 @@ class Study(QiitaStatusObject):
 
         conn_handler = SQLConnectionHandler()
         # make sure dictionary only has keys for available columns in db
-        sql = ("select column_name from information_schema.columns where "
-               "table_name='study'")
-        cols = set(conn_handler.fetchone(sql))
+        sql = ("SELECT column_name FROM information_schema.columns WHERE "
+               "table_name = %s")
+        cols = set(conn_handler.fetchone(sql, ("study", )))
         if len(set(info).difference(cols)) > 0:
             raise QiitaDBExecutionError("Non-database keys found: %s" %
                                         set(info).difference(cols))
@@ -120,6 +120,8 @@ class Study(QiitaStatusObject):
                    "study_id) VALUES (%s, %s)")
             conn_handler.execute(sql, (inv_id, study_id))
 
+        return Study(study_id)
+
     @staticmethod
     def delete(id_):
         """Deletes the study `id_` from the database
@@ -134,7 +136,6 @@ class Study(QiitaStatusObject):
     @property
     def name(self):
         """Returns the name of the study"""
-        raise QiitaDBNotImplementedError()
 
     @name.setter
     def name(self, name):
