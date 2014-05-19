@@ -33,3 +33,9 @@ nosetests.xml
 .mr.developer.cfg
 .project
 .pydevproject
+
+# Config files
+config.py
+
+# OSX files
+.DS_Store
