@@ -78,6 +78,15 @@ CREATE TABLE qiita.ontology (
 	CONSTRAINT pk_ontology PRIMARY KEY ( ontology_id )
  );
 
+CREATE TABLE qiita.portal_type ( 
+	portal_type_id       bigserial  NOT NULL,
+	portal               varchar  NOT NULL,
+	description          varchar  NOT NULL,
+	CONSTRAINT pk_portal_type PRIMARY KEY ( portal_type_id )
+ );
+
+COMMENT ON TABLE qiita.portal_type IS 'What portals are available to show a study in';
+
 CREATE TABLE qiita.preprocessed_sequence_454_params ( 
 	preprocessed_params_id bigserial  NOT NULL,
 	trim_length          integer  NOT NULL,
@@ -438,7 +447,7 @@ CREATE TABLE qiita.study (
 	most_recent_contact  varchar  ,
 	number_samples_collected integer  NOT NULL,
 	number_samples_promised integer  NOT NULL,
-	portal_type          varchar  NOT NULL,
+	portal_type_id       bigint  NOT NULL,
 	principal_investigator_id bigint  NOT NULL,
 	reprocess            bool  NOT NULL,
 	spatial_series       bool  ,
@@ -453,7 +462,8 @@ CREATE TABLE qiita.study (
 	CONSTRAINT fk_study_study_emp_person FOREIGN KEY ( emp_person_id ) REFERENCES qiita.study_person( study_person_id )    ,
 	CONSTRAINT fk_study_study_lab_person FOREIGN KEY ( lab_person_id ) REFERENCES qiita.study_person( study_person_id )    ,
 	CONSTRAINT fk_study_study_pi_person FOREIGN KEY ( principal_investigator_id ) REFERENCES qiita.study_person( study_person_id )    ,
-	CONSTRAINT fk_study_timeseries_type FOREIGN KEY ( timeseries_type_id ) REFERENCES qiita.timeseries_type( timeseries_type_id )    
+	CONSTRAINT fk_study_timeseries_type FOREIGN KEY ( timeseries_type_id ) REFERENCES qiita.timeseries_type( timeseries_type_id )    ,
+	CONSTRAINT fk_study FOREIGN KEY ( portal_type_id ) REFERENCES qiita.portal_type( portal_type_id )    
  );
 
 CREATE INDEX idx_study ON qiita.study ( email );
@@ -467,6 +477,8 @@ CREATE INDEX idx_study_2 ON qiita.study ( lab_person_id );
 CREATE INDEX idx_study_3 ON qiita.study ( principal_investigator_id );
 
 CREATE INDEX idx_study_4 ON qiita.study ( timeseries_type_id );
+
+CREATE INDEX idx_study_5 ON qiita.study ( portal_type_id );
 
 COMMENT ON COLUMN qiita.study.study_id IS 'Unique name for study';
 
