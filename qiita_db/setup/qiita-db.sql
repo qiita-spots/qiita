@@ -78,15 +78,6 @@ CREATE TABLE qiita.ontology (
 	CONSTRAINT pk_ontology PRIMARY KEY ( ontology_id )
  );
 
-CREATE TABLE qiita.prep_y ( 
-	data                 bigint  
- );
-
-COMMENT ON TABLE qiita.prep_y IS 'Information on how raw data y was prepared (prep template)
-Linked by y being raw_data_id from raw data table.';
-
-COMMENT ON COLUMN qiita.prep_y.data IS 'STUFFFFF';
-
 CREATE TABLE qiita.preprocessed_sequence_454_params ( 
 	preprocessed_params_id bigserial  NOT NULL,
 	trim_length          integer  NOT NULL,
@@ -168,18 +159,6 @@ CREATE TABLE qiita.required_prep_info (
 CREATE INDEX idx_required_prep_info ON qiita.required_prep_info ( raw_data_id );
 
 CREATE INDEX idx_required_prep_info_0 ON qiita.required_prep_info ( emp_status_id );
-
-CREATE TABLE qiita.sample_x ( 
-	sample_id            varchar  NOT NULL,
-	description          varchar  NOT NULL,
-	other_mapping_columns varchar  ,
-	CONSTRAINT pk_study_x_y PRIMARY KEY ( sample_id )
- );
-
-COMMENT ON TABLE qiita.sample_x IS 'data for samples in study x (sample template)
-x is the study_id from study table';
-
-COMMENT ON COLUMN qiita.sample_x.other_mapping_columns IS 'Represents whatever other columns go with this study';
 
 CREATE TABLE qiita.severity ( 
 	severity_id          serial  NOT NULL,
@@ -425,6 +404,7 @@ CREATE TABLE qiita.qiita_user (
 	affiliation          varchar  ,
 	address              varchar  ,
 	phone                varchar  ,
+	salt                 varchar  NOT NULL,
 	user_verify_code     varchar  ,
 	pass_reset_code      varchar  ,
 	pass_reset_timestamp timestamp  ,
