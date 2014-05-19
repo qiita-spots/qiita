@@ -661,6 +661,9 @@ CREATE TABLE qiita.required_sample_info (
 	has_extracted_data   bool  NOT NULL,
 	sample_type          varchar  NOT NULL,
 	sample_status_id     bigint  NOT NULL,
+	collection_date      date  NOT NULL,
+	host_subject_id      varchar  NOT NULL,
+	description          varchar  NOT NULL,
 	CONSTRAINT idx_common_sample_information PRIMARY KEY ( study_id, sample_id ),
 	CONSTRAINT fk_required_sample_info_study FOREIGN KEY ( study_id ) REFERENCES qiita.study( study_id )    ,
 	CONSTRAINT fk_required_sample_info FOREIGN KEY ( sample_status_id ) REFERENCES qiita.sample_status( sample_status_id )    
