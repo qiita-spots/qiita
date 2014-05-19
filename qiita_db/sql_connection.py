@@ -12,6 +12,7 @@ from __future__ import division
 from contextlib import contextmanager
 
 from psycopg2 import connect, Error as PostgresError
+from psycopg2.extras import DictCursor
 
 from .exceptions import QiitaDBExecutionError, QiitaDBConnectionError
 from qiita_db.config import qiita_db_config
@@ -21,6 +22,7 @@ class SQLConnectionHandler(object):
     """Encapsulates the DB connection with the Postgres DB"""
     def __init__(self):
         self._connection = connect(user=qiita_db_config.user,
+                                   password=qiita_db_config.password,
                                    database=qiita_db_config.database,
                                    host=qiita_db_config.host,
                                    port=qiita_db_config.port)
@@ -36,7 +38,7 @@ class SQLConnectionHandler(object):
         Raises a QiitaDBConnectionError if the cursor cannot be created
         """
         try:
-            with self._connection.cursor() as cur:
+            with self._connection.cursor(cursor_factory=DictCursor) as cur:
                 yield cur
         except PostgresError, e:
             raise QiitaDBConnectionError("Cannot get postgres cursor! %s" % e)
