@@ -169,6 +169,12 @@ CREATE INDEX idx_required_prep_info ON qiita.required_prep_info ( raw_data_id );
 
 CREATE INDEX idx_required_prep_info_0 ON qiita.required_prep_info ( emp_status_id );
 
+CREATE TABLE qiita.sample_status ( 
+	sample_status_id     bigserial  NOT NULL,
+	status               integer  ,
+	CONSTRAINT pk_sample_status PRIMARY KEY ( sample_status_id )
+ );
+
 CREATE TABLE qiita.severity ( 
 	severity_id          serial  NOT NULL,
 	severity             varchar  NOT NULL,
@@ -531,6 +537,8 @@ CREATE TABLE qiita.study_sample_columns (
 
 CREATE INDEX idx_study_mapping_columns_study_id ON qiita.study_sample_columns ( study_id );
 
+COMMENT ON TABLE qiita.study_sample_columns IS 'Holds information on which metadata columns are available for the study sample template';
+
 CREATE TABLE qiita.study_users ( 
 	study_id             bigint  NOT NULL,
 	email                varchar  NOT NULL,
@@ -652,13 +660,25 @@ CREATE TABLE qiita.required_sample_info (
 	has_physical_specimen bool  NOT NULL,
 	has_extracted_data   bool  NOT NULL,
 	sample_type          varchar  NOT NULL,
+	sample_status_id     bigint  NOT NULL,
 	CONSTRAINT idx_common_sample_information PRIMARY KEY ( study_id, sample_id ),
-	CONSTRAINT fk_required_sample_info_study FOREIGN KEY ( study_id ) REFERENCES qiita.study( study_id )    
+	CONSTRAINT fk_required_sample_info_study FOREIGN KEY ( study_id ) REFERENCES qiita.study( study_id )    ,
+	CONSTRAINT fk_required_sample_info FOREIGN KEY ( sample_status_id ) REFERENCES qiita.sample_status( sample_status_id )    
  );
 
 CREATE INDEX idx_required_sample_info ON qiita.required_sample_info ( study_id );
 
+CREATE INDEX idx_required_sample_info_0 ON qiita.required_sample_info ( sample_status_id );
+
+COMMENT ON TABLE qiita.required_sample_info IS 'Required info for each sample. One row is one sample.';
+
+COMMENT ON COLUMN qiita.required_sample_info.physical_location IS 'Where the sample itself is stored';
+
+COMMENT ON COLUMN qiita.required_sample_info.has_physical_specimen IS 'Whether we have the full speciment or just DNA';
+
 COMMENT ON COLUMN qiita.required_sample_info.sample_type IS 'Controlled vocabulary of sample types';
+
+COMMENT ON COLUMN qiita.required_sample_info.sample_status_id IS 'What step of the pipeline the samples are in';
 
 CREATE TABLE qiita.analysis_job ( 
 	analysis_id          bigint  NOT NULL,
