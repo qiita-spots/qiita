@@ -78,6 +78,15 @@ CREATE TABLE qiita.ontology (
 	CONSTRAINT pk_ontology PRIMARY KEY ( ontology_id )
  );
 
+CREATE TABLE qiita.prep_y ( 
+	data                 bigint  
+ );
+
+COMMENT ON TABLE qiita.prep_y IS 'Information on how raw data y was prepared (prep template)
+Linked by y being raw_data_id from raw data table.';
+
+COMMENT ON COLUMN qiita.prep_y.data IS 'STUFFFFF';
+
 CREATE TABLE qiita.preprocessed_sequence_454_params ( 
 	preprocessed_params_id bigserial  NOT NULL,
 	trim_length          integer  NOT NULL,
@@ -159,6 +168,18 @@ CREATE TABLE qiita.required_prep_info (
 CREATE INDEX idx_required_prep_info ON qiita.required_prep_info ( raw_data_id );
 
 CREATE INDEX idx_required_prep_info_0 ON qiita.required_prep_info ( emp_status_id );
+
+CREATE TABLE qiita.sample_x ( 
+	sample_id            varchar  NOT NULL,
+	description          varchar  NOT NULL,
+	other_mapping_columns varchar  ,
+	CONSTRAINT pk_study_x_y PRIMARY KEY ( sample_id )
+ );
+
+COMMENT ON TABLE qiita.sample_x IS 'data for samples in study x (sample template)
+x is the study_id from study table';
+
+COMMENT ON COLUMN qiita.sample_x.other_mapping_columns IS 'Represents whatever other columns go with this study';
 
 CREATE TABLE qiita.severity ( 
 	severity_id          serial  NOT NULL,
@@ -260,7 +281,7 @@ CREATE INDEX idx_term_synonym ON qiita.term_synonym ( term_id );
 
 CREATE TABLE qiita.timeseries_type ( 
 	timeseries_type_id   bigserial  NOT NULL,
-	timeseries_type      bigserial  ,
+	timeseries_type      varchar  NOT NULL,
 	CONSTRAINT pk_timeseries_type PRIMARY KEY ( timeseries_type_id )
  );
 
@@ -355,37 +376,23 @@ An investigation comprises one or more individual studies.';
 
 COMMENT ON COLUMN qiita.investigation.description IS 'Describes the overarching goal of the investigation';
 
-CREATE TABLE qiita.job ( 
-	job_id               bigserial  NOT NULL,
-	data_type_id         bigint  NOT NULL,
-	job_status_id        bigint  NOT NULL,
-	command_id           bigint  NOT NULL,
-	options              varchar  ,
-	results              varchar  ,
-	error_msg_text       varchar  ,
-	CONSTRAINT pk_job PRIMARY KEY ( job_id ),
-	CONSTRAINT fk_job_function FOREIGN KEY ( command_id ) REFERENCES qiita.command( command_id )    ,
-	CONSTRAINT fk_job_job_status_id FOREIGN KEY ( job_status_id ) REFERENCES qiita.job_status( job_status_id )    ,
-	CONSTRAINT fk_job_data_type FOREIGN KEY ( data_type_id ) REFERENCES qiita.data_type( data_type_id )    
+CREATE TABLE qiita.logging ( 
+	log_id               bigserial  NOT NULL,
+	time                 timestamp  NOT NULL,
+	severity_id          integer  NOT NULL,
+	msg                  varchar  NOT NULL,
+	information          varchar  ,
+	CONSTRAINT pk_logging PRIMARY KEY ( log_id ),
+	CONSTRAINT fk_logging_severity FOREIGN KEY ( severity_id ) REFERENCES qiita.severity( severity_id )    
  );
 
-CREATE INDEX idx_job_command ON qiita.job ( command_id );
+CREATE INDEX idx_logging_0 ON qiita.logging ( severity_id );
 
-CREATE INDEX idx_job_status ON qiita.job ( job_status_id );
+COMMENT ON COLUMN qiita.logging.time IS 'Time the error was thrown';
 
-CREATE INDEX idx_job_type ON qiita.job ( data_type_id );
+COMMENT ON COLUMN qiita.logging.msg IS 'Error message thrown';
 
-COMMENT ON COLUMN qiita.job.job_id IS 'Unique identifier for job';
-
-COMMENT ON COLUMN qiita.job.data_type_id IS 'What datatype (16s, metabolome, etc) job is run on.';
-
-COMMENT ON COLUMN qiita.job.command_id IS 'The Qiime or other function being run (alpha diversity, etc)';
-
-COMMENT ON COLUMN qiita.job.options IS 'Holds all options set for the job as a json string';
-
-COMMENT ON COLUMN qiita.job.results IS 'List of filepaths to result files for job';
-
-COMMENT ON COLUMN qiita.job.error_msg_text IS 'Holds error message if generated';
+COMMENT ON COLUMN qiita.logging.information IS 'Other applicable information (depending on error)';
 
 CREATE TABLE qiita.preprocessed_data ( 
 	preprocessed_data_id bigserial  NOT NULL,
@@ -440,7 +447,7 @@ COMMENT ON COLUMN qiita.qiita_user.pass_reset_timestamp IS 'Time the reset code 
 CREATE TABLE qiita.study ( 
 	study_id             bigserial  NOT NULL,
 	email                varchar  NOT NULL,
-	study_status_id      varchar  NOT NULL,
+	study_status_id      bigint  NOT NULL,
 	emp_person_id        bigint  ,
 	first_contact        varchar  NOT NULL,
 	funding              varchar  ,
@@ -573,24 +580,6 @@ COMMENT ON COLUMN qiita.analysis.name IS 'Name of the analysis';
 
 COMMENT ON COLUMN qiita.analysis.pmid IS 'PMID of paper from the analysis';
 
-CREATE TABLE qiita.analysis_job ( 
-	analysis_id          bigint  NOT NULL,
-	job_id               bigint  NOT NULL,
-	CONSTRAINT idx_analysis_jobs PRIMARY KEY ( analysis_id, job_id ),
-	CONSTRAINT fk_analysis_job_analysis FOREIGN KEY ( analysis_id ) REFERENCES qiita.analysis( analysis_id ) ON DELETE CASCADE ON UPDATE CASCADE,
-	CONSTRAINT fk_analysis_job_job FOREIGN KEY ( job_id ) REFERENCES qiita.job( job_id )    
- );
-
-CREATE INDEX idx_analysis_job ON qiita.analysis_job ( analysis_id );
-
-CREATE INDEX idx_analysis_job_0 ON qiita.analysis_job ( job_id );
-
-COMMENT ON TABLE qiita.analysis_job IS 'Holds information for a one-to-many relation of analysis to the jobs in it';
-
-COMMENT ON COLUMN qiita.analysis_job.analysis_id IS 'Id of the analysis';
-
-COMMENT ON COLUMN qiita.analysis_job.job_id IS 'Id for a job that is part of the analysis';
-
 CREATE TABLE qiita.analysis_sample ( 
 	analysis_id          bigint  NOT NULL,
 	processed_data_id    bigint  NOT NULL,
@@ -629,27 +618,40 @@ CREATE INDEX idx_investigation_study_investigation ON qiita.investigation_study 
 
 CREATE INDEX idx_investigation_study_study ON qiita.investigation_study ( study_id );
 
-CREATE TABLE qiita.logging ( 
-	log_id               bigserial  NOT NULL,
-	time                 timestamp  NOT NULL,
-	user_id              varchar  NOT NULL,
-	severity_id          integer  NOT NULL,
-	task                 varchar  NOT NULL,
-	msg                  varchar  NOT NULL,
-	CONSTRAINT pk_logging PRIMARY KEY ( log_id ),
-	CONSTRAINT fk_logging_qiita_user FOREIGN KEY ( user_id ) REFERENCES qiita.qiita_user( email )    ,
-	CONSTRAINT fk_logging_severity FOREIGN KEY ( severity_id ) REFERENCES qiita.severity( severity_id )    
+CREATE TABLE qiita.job ( 
+	job_id               bigserial  NOT NULL,
+	data_type_id         bigint  NOT NULL,
+	job_status_id        bigint  NOT NULL,
+	command_id           bigint  NOT NULL,
+	options              varchar  ,
+	results              varchar  ,
+	log_id               bigint  ,
+	CONSTRAINT pk_job PRIMARY KEY ( job_id ),
+	CONSTRAINT fk_job_function FOREIGN KEY ( command_id ) REFERENCES qiita.command( command_id )    ,
+	CONSTRAINT fk_job_job_status_id FOREIGN KEY ( job_status_id ) REFERENCES qiita.job_status( job_status_id )    ,
+	CONSTRAINT fk_job_data_type FOREIGN KEY ( data_type_id ) REFERENCES qiita.data_type( data_type_id )    ,
+	CONSTRAINT fk_job FOREIGN KEY ( log_id ) REFERENCES qiita.logging( log_id )    
  );
 
-CREATE INDEX idx_logging ON qiita.logging ( user_id );
+CREATE INDEX idx_job_command ON qiita.job ( command_id );
 
-CREATE INDEX idx_logging_0 ON qiita.logging ( severity_id );
+CREATE INDEX idx_job_status ON qiita.job ( job_status_id );
 
-COMMENT ON COLUMN qiita.logging.time IS 'Time the error was thrown';
+CREATE INDEX idx_job_type ON qiita.job ( data_type_id );
 
-COMMENT ON COLUMN qiita.logging.task IS 'What process threw the error';
+CREATE INDEX idx_job ON qiita.job ( log_id );
 
-COMMENT ON COLUMN qiita.logging.msg IS 'Error message thrown';
+COMMENT ON COLUMN qiita.job.job_id IS 'Unique identifier for job';
+
+COMMENT ON COLUMN qiita.job.data_type_id IS 'What datatype (16s, metabolome, etc) job is run on.';
+
+COMMENT ON COLUMN qiita.job.command_id IS 'The Qiime or other function being run (alpha diversity, etc)';
+
+COMMENT ON COLUMN qiita.job.options IS 'Holds all options set for the job as a json string';
+
+COMMENT ON COLUMN qiita.job.results IS 'List of filepaths to result files for job';
+
+COMMENT ON COLUMN qiita.job.log_id IS 'Reference to error if status is error';
 
 CREATE TABLE qiita.required_sample_info ( 
 	study_id             bigint  NOT NULL,
@@ -665,4 +667,22 @@ CREATE TABLE qiita.required_sample_info (
 CREATE INDEX idx_required_sample_info ON qiita.required_sample_info ( study_id );
 
 COMMENT ON COLUMN qiita.required_sample_info.sample_type IS 'Controlled vocabulary of sample types';
+
+CREATE TABLE qiita.analysis_job ( 
+	analysis_id          bigint  NOT NULL,
+	job_id               bigint  NOT NULL,
+	CONSTRAINT idx_analysis_jobs PRIMARY KEY ( analysis_id, job_id ),
+	CONSTRAINT fk_analysis_job_analysis FOREIGN KEY ( analysis_id ) REFERENCES qiita.analysis( analysis_id ) ON DELETE CASCADE ON UPDATE CASCADE,
+	CONSTRAINT fk_analysis_job_job FOREIGN KEY ( job_id ) REFERENCES qiita.job( job_id )    
+ );
+
+CREATE INDEX idx_analysis_job ON qiita.analysis_job ( analysis_id );
+
+CREATE INDEX idx_analysis_job_0 ON qiita.analysis_job ( job_id );
+
+COMMENT ON TABLE qiita.analysis_job IS 'Holds information for a one-to-many relation of analysis to the jobs in it';
+
+COMMENT ON COLUMN qiita.analysis_job.analysis_id IS 'Id of the analysis';
+
+COMMENT ON COLUMN qiita.analysis_job.job_id IS 'Id for a job that is part of the analysis';
 
