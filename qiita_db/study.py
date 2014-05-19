@@ -80,7 +80,7 @@ class Study(QiitaStatusObject):
         "contact_person_id"
         """
         # make sure required keys are in the info dict
-        check_required(info, REQUIRED_KEYS) 
+        check_required(info, REQUIRED_KEYS)
 
         conn_handler = SQLConnectionHandler()
         # make sure dictionary only has keys for available columns in db
@@ -143,7 +143,9 @@ class Study(QiitaStatusObject):
         name : str
             The new study name
         """
-        raise QiitaDBNotImplementedError()
+        conn_handler = SQLConnectionHandler()
+        sql = "UPDATE qiita.study SET name = %s WHERE study_id = %s"
+        return conn_handler.execute(sql, (name, self.id_))
 
     @property
     def sample_ids(self):
@@ -151,12 +153,17 @@ class Study(QiitaStatusObject):
 
         The sample IDs are returned as a list of strings in alphabetical order.
         """
-        raise QiitaDBNotImplementedError()
+        conn_handler = SQLConnectionHandler()
+        sql = ("SELECT sample_id FROM qiita.required_sample_info WHERE "
+               "study_id = %s ORDER BY sample_id")
+        return conn_handler.execute_fetchone(sql, self.id_)
 
     @property
     def info(self):
         """Dict with any other information attached to the study"""
-        raise QiitaDBNotImplementedError()
+        conn_handler = SQLConnectionHandler()
+        sql = "SELECT * FROM qiita.study WHERE study_id = %s"
+        return conn_handler.execute_fetchone(sql, self.id_)
 
     @info.setter
     def info(self, info):
@@ -166,7 +173,20 @@ class Study(QiitaStatusObject):
         ----------
         info : dict
         """
-        raise QiitaDBNotImplementedError()
+        conn_handler = SQLConnectionHandler()
+        check_table_cols(conn_handler, info, "study")
+
+        data = []
+        sql = "UPDATE qiita.study SET "
+        # items() used for py3 compatability
+        # build query with data values in correct order for SQL statement
+        for key, val in info.items():
+            sql = ' '.join((sql, key, "=", "%s,"))
+            data.append(val)
+        sql = ' '.join((sql[-1], "WHERE study_id = %s"))
+        data.append(self.id_)
+
+        conn_handler.execute(sql, data)
 
     def add_samples(self, samples):
         """Adds the samples listed in `samples` to the study
