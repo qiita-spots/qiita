@@ -22,15 +22,16 @@ Classes
 from datetime import date
 
 from .base import QiitaStatusObject
+from .util import check_required, check_table_cols
 from .exceptions import QiitaDBNotImplementedError, QiitaDBExecutionError
 from .sql_connection import SQLConnectionHandler
 
 
-REQUIRED_KEYS = set(("timeseries_type_id", "lab_person_id", "mixs_compliant",
-                     "metadata_complete", "number_samples_collected",
-                     "number_samples_promised", "portal_type",
-                     "principal_investigator_id", "study_title", "study_alias",
-                     "study_description", "study_abstract"))
+REQUIRED_KEYS = {"timeseries_type_id", "lab_person_id", "mixs_compliant",
+                 "metadata_complete", "number_samples_collected",
+                 "number_samples_promised", "portal_type",
+                 "principal_investigator_id", "study_title", "study_alias",
+                 "study_description", "study_abstract"}
 
 
 class Study(QiitaStatusObject):
@@ -79,28 +80,21 @@ class Study(QiitaStatusObject):
         "contact_person_id"
         """
         # make sure required keys are in the info dict
-        if len(REQUIRED_KEYS.difference(set(info))) > 0:
-            raise QiitaDBExecutionError("Required keys missing: %s" %
-                                        REQUIRED_KEYS.difference(set(info)))
+        check_required(info, REQUIRED_KEYS) 
 
         conn_handler = SQLConnectionHandler()
         # make sure dictionary only has keys for available columns in db
-        sql = ("SELECT column_name FROM information_schema.columns WHERE "
-               "table_name = %s")
-        cols = set(conn_handler.fetchone(sql, ("study", )))
-        if len(set(info).difference(cols)) > 0:
-            raise QiitaDBExecutionError("Non-database keys found: %s" %
-                                        set(info).difference(cols))
+        check_table_cols(conn_handler, info, "study")
 
         # Insert study into database
         sql = ("INSERT INTO qiita.study (email,study_status_id,first_contact,"
                "%s) VALUES (%s) RETURNING study_id" % (','.join(info.keys()),
                                                        '%s' * (len(info)+3)))
-        data = [owner, 1, date.today().strftime("%B %d, %Y")]
         # make sure data in same order as sql column names
+        data = [owner, 1, date.today().strftime("%B %d, %Y")]
         for col in info.keys():
             data.append(info[col])
-        study_id = conn_handler.fetchone(sql, data)[0]
+        study_id = conn_handler.execute_fetchone(sql, data)[0]
 
         # Insert investigation information if necessary
         if investigation:
@@ -114,7 +108,7 @@ class Study(QiitaStatusObject):
                        "investigation_id")
                 data = (investigation["name"], investigation["description"],
                         investigation["contact_person_id"])
-                inv_id = conn_handler.fetchone(sql, data)[0]
+                inv_id = conn_handler.execute_fetchone(sql, data)[0]
             # add study to investigation
             sql = ("INSERT INTO qiita.investigation_study (investigation_id, "
                    "study_id) VALUES (%s, %s)")
@@ -136,6 +130,9 @@ class Study(QiitaStatusObject):
     @property
     def name(self):
         """Returns the name of the study"""
+        conn_handler = SQLConnectionHandler()
+        sql = "SELECT name FROM qiita.study WHERE study_id = %s"
+        return conn_handler.execute_fetchone(sql, self.id_)[0]
 
     @name.setter
     def name(self, name):
