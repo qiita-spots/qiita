@@ -11,5 +11,5 @@ services:
 before_script:
   # For PostgreSQL, from http://docs.travis-ci.com/user/database-setup/#PostgreSQL
   - psql -c 'create database qiita_test;' -U postgres
-  - psql -d qiita_test -U postgres -f qiita_db/qiita-db.sql
-  - psql -d qiita_test -U postgres -f qiita_db/initialize.sql
+  - psql -d qiita_test -U postgres -f qiita_db/setup/qiita-db.sql
+  - psql -d qiita_test -U postgres -f qiita_db/setup/initialize.sql
