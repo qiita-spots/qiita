@@ -247,12 +247,7 @@
 	raw_data references filetype ( filetype_id )</title>
 </path>
 <text x='688' y='390' transform='rotate(90 688,390)' title='Foreign Key fk_raw_data_filetype
-	raw_data references filetype ( filetype_id )' style='fill:#a1a0a0;'>filetype_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1605 465 L 1560,465' >
-	<title>Foreign Key fk_required_sample_info_study
-	required_sample_info references study ( study_id )</title>
-</path>
-<text x='1561' y='460' transform='rotate(0 1561,460)' title='Foreign Key fk_required_sample_info_study
-	required_sample_info references study ( study_id )' style='fill:#a1a0a0;'>study_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 150 315 L 210,315' >
+	raw_data references filetype ( filetype_id )' style='fill:#a1a0a0;'>filetype_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 150 315 L 210,315' >
 	<title>Foreign Key fk_analysis_job_analysis
 	analysis_job references analysis ( analysis_id )</title>
 </path>
@@ -407,37 +402,7 @@
 	processed_data references preprocessed_data ( preprocessed_data_id )</title>
 </path>
 <text x='1068' y='295' transform='rotate(0 1068,295)' title='Foreign Key fk_processed_data
-	processed_data references preprocessed_data ( preprocessed_data_id )' style='fill:#a1a0a0;'>preprocessed_data_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1365 180 L 847,180 Q 840,180 840,172 L 840,82 Q 840,75 832,75 L 540,75' >
-	<title>Foreign Key fk_study_user
-	study references qiita_user ( email )</title>
-</path>
-<text x='1339' y='175' transform='rotate(0 1339,175)' title='Foreign Key fk_study_user
-	study references qiita_user ( email )' style='fill:#a1a0a0;'>email</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1560 195 L 1582,195 Q 1590,195 1590,187 L 1590,142 Q 1590,135 1597,135 L 1605,135' >
-	<title>Foreign Key fk_study_study_status
-	study references study_status ( study_status_id )</title>
-</path>
-<text x='1567' y='190' transform='rotate(0 1567,190)' title='Foreign Key fk_study_study_status
-	study references study_status ( study_status_id )' style='fill:#a1a0a0;'>study_status_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'  style='stroke-dasharray:4,2;'  d='M 1365 495 L 1305,495' >
-	<title>Foreign Key fk_study_study_emp_person
-	study references study_person ( emp_person_id -> study_person_id )</title>
-</path>
-<text x='1284' y='490' transform='rotate(0 1284,490)' title='Foreign Key fk_study_study_emp_person
-	study references study_person ( emp_person_id -> study_person_id )' style='fill:#a1a0a0;'>emp_person_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'  style='stroke-dasharray:4,2;'  d='M 1365 510 L 1305,510' >
-	<title>Foreign Key fk_study_study_lab_person
-	study references study_person ( lab_person_id -> study_person_id )</title>
-</path>
-<text x='1291' y='505' transform='rotate(0 1291,505)' title='Foreign Key fk_study_study_lab_person
-	study references study_person ( lab_person_id -> study_person_id )' style='fill:#a1a0a0;'>lab_person_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1365 450 L 1297,450 Q 1290,450 1290,457 L 1290,465' >
-	<title>Foreign Key fk_study_study_pi_person
-	study references study_person ( principal_investigator_id -> study_person_id )</title>
-</path>
-<text x='1234' y='445' transform='rotate(0 1234,445)' title='Foreign Key fk_study_study_pi_person
-	study references study_person ( principal_investigator_id -> study_person_id )' style='fill:#a1a0a0;'>principal_investigator_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1470 540 L 1470,555' >
-	<title>Foreign Key fk_study_timeseries_type
-	study references timeseries_type ( timeseries_type_id )</title>
-</path>
-<text x='1483' y='540' transform='rotate(90 1483,540)' title='Foreign Key fk_study_timeseries_type
-	study references timeseries_type ( timeseries_type_id )' style='fill:#a1a0a0;'>timeseries_type_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 645 600 L 645,577 Q 645,570 637,570 L 622,570 Q 615,570 615,562 L 615,367 Q 615,360 622,360 L 630,360' >
+	processed_data references preprocessed_data ( preprocessed_data_id )' style='fill:#a1a0a0;'>preprocessed_data_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 645 600 L 645,577 Q 645,570 637,570 L 622,570 Q 615,570 615,562 L 615,367 Q 615,360 622,360 L 630,360' >
 	<title>Foreign Key fk_required_prep_info_raw_data
 	required_prep_info references raw_data ( raw_data_id )</title>
 </path>
@@ -477,7 +442,47 @@
 	qiita_user references user_level ( user_level_id )</title>
 </path>
 <text x='307' y='55' transform='rotate(0 307,55)' title='Foreign Key fk_user_user_level
-	qiita_user references user_level ( user_level_id )' style='fill:#a1a0a0;'>user_level_id</text><!-- ============= Table 'job_status' ============= -->
+	qiita_user references user_level ( user_level_id )' style='fill:#a1a0a0;'>user_level_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1365 180 L 847,180 Q 840,180 840,172 L 840,82 Q 840,75 832,75 L 540,75' >
+	<title>Foreign Key fk_study_user
+	study references qiita_user ( email )</title>
+</path>
+<text x='1339' y='175' transform='rotate(0 1339,175)' title='Foreign Key fk_study_user
+	study references qiita_user ( email )' style='fill:#a1a0a0;'>email</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1560 195 L 1582,195 Q 1590,195 1590,187 L 1590,142 Q 1590,135 1597,135 L 1605,135' >
+	<title>Foreign Key fk_study_study_status
+	study references study_status ( study_status_id )</title>
+</path>
+<text x='1567' y='190' transform='rotate(0 1567,190)' title='Foreign Key fk_study_study_status
+	study references study_status ( study_status_id )' style='fill:#a1a0a0;'>study_status_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'  style='stroke-dasharray:4,2;'  d='M 1365 495 L 1305,495' >
+	<title>Foreign Key fk_study_study_emp_person
+	study references study_person ( emp_person_id -> study_person_id )</title>
+</path>
+<text x='1284' y='490' transform='rotate(0 1284,490)' title='Foreign Key fk_study_study_emp_person
+	study references study_person ( emp_person_id -> study_person_id )' style='fill:#a1a0a0;'>emp_person_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'  style='stroke-dasharray:4,2;'  d='M 1365 510 L 1305,510' >
+	<title>Foreign Key fk_study_study_lab_person
+	study references study_person ( lab_person_id -> study_person_id )</title>
+</path>
+<text x='1291' y='505' transform='rotate(0 1291,505)' title='Foreign Key fk_study_study_lab_person
+	study references study_person ( lab_person_id -> study_person_id )' style='fill:#a1a0a0;'>lab_person_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1365 450 L 1297,450 Q 1290,450 1290,457 L 1290,465' >
+	<title>Foreign Key fk_study_study_pi_person
+	study references study_person ( principal_investigator_id -> study_person_id )</title>
+</path>
+<text x='1234' y='445' transform='rotate(0 1234,445)' title='Foreign Key fk_study_study_pi_person
+	study references study_person ( principal_investigator_id -> study_person_id )' style='fill:#a1a0a0;'>principal_investigator_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1470 540 L 1470,555' >
+	<title>Foreign Key fk_study_timeseries_type
+	study references timeseries_type ( timeseries_type_id )</title>
+</path>
+<text x='1483' y='540' transform='rotate(90 1483,540)' title='Foreign Key fk_study_timeseries_type
+	study references timeseries_type ( timeseries_type_id )' style='fill:#a1a0a0;'>timeseries_type_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1560 435 L 1605,435' >
+	<title>Foreign Key fk_study
+	study references portal_type ( portal_type_id )</title>
+</path>
+<text x='1567' y='430' transform='rotate(0 1567,430)' title='Foreign Key fk_study
+	study references portal_type ( portal_type_id )' style='fill:#a1a0a0;'>portal_type_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1605 540 L 1582,540 Q 1575,540 1575,532 L 1575,532 Q 1575,525 1567,525 L 1560,525' >
+	<title>Foreign Key fk_required_sample_info_study
+	required_sample_info references study ( study_id )</title>
+</path>
+<text x='1561' y='535' transform='rotate(0 1561,535)' title='Foreign Key fk_required_sample_info_study
+	required_sample_info references study ( study_id )' style='fill:#a1a0a0;'>study_id</text><!-- ============= Table 'job_status' ============= -->
 <rect class='table' x='225' y='548' width='105' height='75' rx='7' ry='7' />
 <path d='M 225.50 574.50 L 225.50 555.50 Q 225.50 548.50 232.50 548.50 L 322.50 548.50 Q 329.50 548.50 329.50 555.50 L 329.50 574.50 L225.50 574.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
 <a xlink:href='#job_status'><text x='249' y='562' class='tableTitle'>job_status</text><title>Table qiita.job_status</title></a>
@@ -635,21 +640,6 @@ Unique identifier for function</title></a>
   <use id='nn' x='227' y='492' xlink:href='#nn'/><a xlink:href='#name'><text x='243' y='502'>name</text><title>name varchar not null</title></a>
   <use id='nn' x='227' y='507' xlink:href='#nn'/><a xlink:href='#command'><text x='243' y='517'>command</text><title>command varchar not null
 What command to call to run this function</title></a>
-
-<!-- ============= Table 'required_sample_info' ============= -->
-<rect class='table' x='1620' y='458' width='165' height='135' rx='7' ry='7' />
-<path d='M 1620.50 484.50 L 1620.50 465.50 Q 1620.50 458.50 1627.50 458.50 L 1777.50 458.50 Q 1784.50 458.50 1784.50 465.50 L 1784.50 484.50 L1620.50 484.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
-<a xlink:href='#required_sample_info'><text x='1644' y='472' class='tableTitle'>required_sample_info</text><title>Table qiita.required_sample_info</title></a>
-  <use id='nn' x='1622' y='492' xlink:href='#nn'/><a xlink:href='#study_id'><use id='pk' x='1622' y='491' xlink:href='#pk'/><title>Primary Key  ( study_id, sample_id ) Index  ( study_id ) </title></a>
-<a xlink:href='#study_id'><text x='1638' y='502'>study_id</text><title>study_id bigint not null</title></a>
-<a xlink:href='#study_id'><use id='fk' x='1773' y='491' xlink:href='#fk'/><title>References study ( study_id ) </title></a>
-  <use id='nn' x='1622' y='507' xlink:href='#nn'/><a xlink:href='#sample_id'><use id='pk' x='1622' y='506' xlink:href='#pk'/><title>Primary Key  ( study_id, sample_id ) </title></a>
-<a xlink:href='#sample_id'><text x='1638' y='517'>sample_id</text><title>sample_id bigint not null</title></a>
-  <use id='nn' x='1622' y='522' xlink:href='#nn'/><a xlink:href='#physical_location'><text x='1638' y='532'>physical_location</text><title>physical_location varchar not null</title></a>
-  <use id='nn' x='1622' y='537' xlink:href='#nn'/><a xlink:href='#has_physical_specimen'><text x='1638' y='547'>has_physical_specimen</text><title>has_physical_specimen bool not null</title></a>
-  <use id='nn' x='1622' y='552' xlink:href='#nn'/><a xlink:href='#has_extracted_data'><text x='1638' y='562'>has_extracted_data</text><title>has_extracted_data bool not null</title></a>
-  <use id='nn' x='1622' y='567' xlink:href='#nn'/><a xlink:href='#sample_type'><text x='1638' y='577'>sample_type</text><title>sample_type varchar not null
-Controlled vocabulary of sample types</title></a>
 
 <!-- ============= Table 'analysis_job' ============= -->
 <rect class='table' x='60' y='293' width='90' height='75' rx='7' ry='7' />
@@ -1050,56 +1040,6 @@ Referred by study ( principal_investigator_id -> study_person_id ) </title></a>
   <a xlink:href='#address'><text x='1203' y='562'>address</text><title>address varchar&#040;100&#041;</title></a>
   <a xlink:href='#phone'><text x='1203' y='577'>phone</text><title>phone varchar</title></a>
 
-<!-- ============= Table 'study' ============= -->
-<rect class='table' x='1380' y='158' width='180' height='375' rx='7' ry='7' />
-<path d='M 1380.50 184.50 L 1380.50 165.50 Q 1380.50 158.50 1387.50 158.50 L 1552.50 158.50 Q 1559.50 158.50 1559.50 165.50 L 1559.50 184.50 L1380.50 184.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
-<a xlink:href='#study'><text x='1455' y='172' class='tableTitle'>study</text><title>Table qiita.study</title></a>
-  <use id='nn' x='1382' y='192' xlink:href='#nn'/><a xlink:href='#study_id'><use id='pk' x='1382' y='191' xlink:href='#pk'/><title>Primary Key  ( study_id ) </title></a>
-<a xlink:href='#study_id'><text x='1398' y='202'>study_id</text><title>study_id bigserial not null
-Unique name for study</title></a>
-<a xlink:href='#study_id'><use id='ref' x='1548' y='191' xlink:href='#ref'/><title>Referred by investigation_study ( study_id ) 
-Referred by required_sample_info ( study_id ) 
-Referred by study_experimental_factor ( study_id ) 
-Referred by study_pmid ( study_id ) 
-Referred by study_raw_data ( study_id ) 
-Referred by study_sample_columns ( study_id ) 
-Referred by study_users ( study_id ) </title></a>
-  <use id='nn' x='1382' y='207' xlink:href='#nn'/><a xlink:href='#email'><use id='idx' x='1382' y='206' xlink:href='#idx'/><title>Index  ( email ) </title></a>
-<a xlink:href='#email'><text x='1398' y='217'>email</text><title>email varchar not null
-Email of study owner</title></a>
-<a xlink:href='#email'><use id='fk' x='1548' y='206' xlink:href='#fk'/><title>References qiita_user ( email ) </title></a>
-  <use id='nn' x='1382' y='222' xlink:href='#nn'/><a xlink:href='#study_status_id'><use id='idx' x='1382' y='221' xlink:href='#idx'/><title>Index  ( study_status_id ) </title></a>
-<a xlink:href='#study_status_id'><text x='1398' y='232'>study_status_id</text><title>study_status_id bigint not null</title></a>
-<a xlink:href='#study_status_id'><use id='fk' x='1548' y='221' xlink:href='#fk'/><title>References study_status ( study_status_id ) </title></a>
-  <a xlink:href='#emp_person_id'><use id='idx' x='1382' y='236' xlink:href='#idx'/><title>Index  ( emp_person_id ) </title></a>
-<a xlink:href='#emp_person_id'><text x='1398' y='247'>emp_person_id</text><title>emp_person_id bigint</title></a>
-<a xlink:href='#emp_person_id'><use id='fk' x='1548' y='236' xlink:href='#fk'/><title>References study_person ( emp_person_id -> study_person_id ) </title></a>
-  <use id='nn' x='1382' y='252' xlink:href='#nn'/><a xlink:href='#first_contact'><text x='1398' y='262'>first_contact</text><title>first_contact varchar not null</title></a>
-  <a xlink:href='#funding'><text x='1398' y='277'>funding</text><title>funding varchar</title></a>
-  <use id='nn' x='1382' y='282' xlink:href='#nn'/><a xlink:href='#timeseries_type_id'><use id='idx' x='1382' y='281' xlink:href='#idx'/><title>Index  ( timeseries_type_id ) </title></a>
-<a xlink:href='#timeseries_type_id'><text x='1398' y='292'>timeseries_type_id</text><title>timeseries_type_id bigint not null
-What type of timeseries this study is &#040;or is not&#041;<br>Controlled Vocabulary</title></a>
-<a xlink:href='#timeseries_type_id'><use id='fk' x='1548' y='281' xlink:href='#fk'/><title>References timeseries_type ( timeseries_type_id ) </title></a>
-  <a xlink:href='#lab_person_id'><use id='idx' x='1382' y='296' xlink:href='#idx'/><title>Index  ( lab_person_id ) </title></a>
-<a xlink:href='#lab_person_id'><text x='1398' y='307'>lab_person_id</text><title>lab_person_id bigint</title></a>
-<a xlink:href='#lab_person_id'><use id='fk' x='1548' y='296' xlink:href='#fk'/><title>References study_person ( lab_person_id -> study_person_id ) </title></a>
-  <use id='nn' x='1382' y='312' xlink:href='#nn'/><a xlink:href='#metadata_complete'><text x='1398' y='322'>metadata_complete</text><title>metadata_complete bool not null</title></a>
-  <use id='nn' x='1382' y='327' xlink:href='#nn'/><a xlink:href='#mixs_compliant'><text x='1398' y='337'>mixs_compliant</text><title>mixs_compliant bool not null</title></a>
-  <a xlink:href='#most_recent_contact'><text x='1398' y='352'>most_recent_contact</text><title>most_recent_contact varchar</title></a>
-  <use id='nn' x='1382' y='357' xlink:href='#nn'/><a xlink:href='#number_samples_collected'><text x='1398' y='367'>number_samples_collected</text><title>number_samples_collected integer not null</title></a>
-  <use id='nn' x='1382' y='372' xlink:href='#nn'/><a xlink:href='#number_samples_promised'><text x='1398' y='382'>number_samples_promised</text><title>number_samples_promised integer not null</title></a>
-  <use id='nn' x='1382' y='387' xlink:href='#nn'/><a xlink:href='#portal_type'><text x='1398' y='397'>portal_type</text><title>portal_type varchar not null</title></a>
-  <use id='nn' x='1382' y='402' xlink:href='#nn'/><a xlink:href='#principal_investigator_id'><use id='idx' x='1382' y='401' xlink:href='#idx'/><title>Index  ( principal_investigator_id ) </title></a>
-<a xlink:href='#principal_investigator_id'><text x='1398' y='412'>principal_investigator_id</text><title>principal_investigator_id bigint not null</title></a>
-<a xlink:href='#principal_investigator_id'><use id='fk' x='1548' y='401' xlink:href='#fk'/><title>References study_person ( principal_investigator_id -> study_person_id ) </title></a>
-  <use id='nn' x='1382' y='417' xlink:href='#nn'/><a xlink:href='#reprocess'><text x='1398' y='427'>reprocess</text><title>reprocess bool not null</title></a>
-  <a xlink:href='#spatial_series'><text x='1398' y='442'>spatial_series</text><title>spatial_series bool</title></a>
-  <use id='nn' x='1382' y='447' xlink:href='#nn'/><a xlink:href='#study_title'><text x='1398' y='457'>study_title</text><title>study_title varchar not null</title></a>
-  <use id='nn' x='1382' y='462' xlink:href='#nn'/><a xlink:href='#study_alias'><text x='1398' y='472'>study_alias</text><title>study_alias varchar not null</title></a>
-  <use id='nn' x='1382' y='477' xlink:href='#nn'/><a xlink:href='#study_description'><text x='1398' y='487'>study_description</text><title>study_description text not null</title></a>
-  <use id='nn' x='1382' y='492' xlink:href='#nn'/><a xlink:href='#study_abstract'><text x='1398' y='502'>study_abstract</text><title>study_abstract text not null</title></a>
-  <a xlink:href='#vamps_id'><text x='1398' y='517'>vamps_id</text><title>vamps_id varchar</title></a>
-
 <!-- ============= Table 'study_status' ============= -->
 <rect class='table' x='1620' y='68' width='120' height='90' rx='7' ry='7' />
 <path d='M 1620.50 94.50 L 1620.50 75.50 Q 1620.50 68.50 1627.50 68.50 L 1732.50 68.50 Q 1739.50 68.50 1739.50 75.50 L 1739.50 94.50 L1620.50 94.50 ' style='fill:url(#tableHeaderGradient1); stroke:none;' />
@@ -1207,6 +1147,85 @@ Code for initial user email verification</title></a>
 Randomly generated code for password reset</title></a>
   <a xlink:href='#pass_reset_timestamp'><text x='408' y='232'>pass_reset_timestamp</text><title>pass_reset_timestamp timestamp
 Time the reset code was generated</title></a>
+
+<!-- ============= Table 'study' ============= -->
+<rect class='table' x='1380' y='158' width='180' height='375' rx='7' ry='7' />
+<path d='M 1380.50 184.50 L 1380.50 165.50 Q 1380.50 158.50 1387.50 158.50 L 1552.50 158.50 Q 1559.50 158.50 1559.50 165.50 L 1559.50 184.50 L1380.50 184.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
+<a xlink:href='#study'><text x='1455' y='172' class='tableTitle'>study</text><title>Table qiita.study</title></a>
+  <use id='nn' x='1382' y='192' xlink:href='#nn'/><a xlink:href='#study_id'><use id='pk' x='1382' y='191' xlink:href='#pk'/><title>Primary Key  ( study_id ) </title></a>
+<a xlink:href='#study_id'><text x='1398' y='202'>study_id</text><title>study_id bigserial not null
+Unique name for study</title></a>
+<a xlink:href='#study_id'><use id='ref' x='1548' y='191' xlink:href='#ref'/><title>Referred by investigation_study ( study_id ) 
+Referred by required_sample_info ( study_id ) 
+Referred by study_experimental_factor ( study_id ) 
+Referred by study_pmid ( study_id ) 
+Referred by study_raw_data ( study_id ) 
+Referred by study_sample_columns ( study_id ) 
+Referred by study_users ( study_id ) </title></a>
+  <use id='nn' x='1382' y='207' xlink:href='#nn'/><a xlink:href='#email'><use id='idx' x='1382' y='206' xlink:href='#idx'/><title>Index  ( email ) </title></a>
+<a xlink:href='#email'><text x='1398' y='217'>email</text><title>email varchar not null
+Email of study owner</title></a>
+<a xlink:href='#email'><use id='fk' x='1548' y='206' xlink:href='#fk'/><title>References qiita_user ( email ) </title></a>
+  <use id='nn' x='1382' y='222' xlink:href='#nn'/><a xlink:href='#study_status_id'><use id='idx' x='1382' y='221' xlink:href='#idx'/><title>Index  ( study_status_id ) </title></a>
+<a xlink:href='#study_status_id'><text x='1398' y='232'>study_status_id</text><title>study_status_id bigint not null</title></a>
+<a xlink:href='#study_status_id'><use id='fk' x='1548' y='221' xlink:href='#fk'/><title>References study_status ( study_status_id ) </title></a>
+  <a xlink:href='#emp_person_id'><use id='idx' x='1382' y='236' xlink:href='#idx'/><title>Index  ( emp_person_id ) </title></a>
+<a xlink:href='#emp_person_id'><text x='1398' y='247'>emp_person_id</text><title>emp_person_id bigint</title></a>
+<a xlink:href='#emp_person_id'><use id='fk' x='1548' y='236' xlink:href='#fk'/><title>References study_person ( emp_person_id -> study_person_id ) </title></a>
+  <use id='nn' x='1382' y='252' xlink:href='#nn'/><a xlink:href='#first_contact'><text x='1398' y='262'>first_contact</text><title>first_contact varchar not null</title></a>
+  <a xlink:href='#funding'><text x='1398' y='277'>funding</text><title>funding varchar</title></a>
+  <use id='nn' x='1382' y='282' xlink:href='#nn'/><a xlink:href='#timeseries_type_id'><use id='idx' x='1382' y='281' xlink:href='#idx'/><title>Index  ( timeseries_type_id ) </title></a>
+<a xlink:href='#timeseries_type_id'><text x='1398' y='292'>timeseries_type_id</text><title>timeseries_type_id bigint not null
+What type of timeseries this study is &#040;or is not&#041;<br>Controlled Vocabulary</title></a>
+<a xlink:href='#timeseries_type_id'><use id='fk' x='1548' y='281' xlink:href='#fk'/><title>References timeseries_type ( timeseries_type_id ) </title></a>
+  <a xlink:href='#lab_person_id'><use id='idx' x='1382' y='296' xlink:href='#idx'/><title>Index  ( lab_person_id ) </title></a>
+<a xlink:href='#lab_person_id'><text x='1398' y='307'>lab_person_id</text><title>lab_person_id bigint</title></a>
+<a xlink:href='#lab_person_id'><use id='fk' x='1548' y='296' xlink:href='#fk'/><title>References study_person ( lab_person_id -> study_person_id ) </title></a>
+  <use id='nn' x='1382' y='312' xlink:href='#nn'/><a xlink:href='#metadata_complete'><text x='1398' y='322'>metadata_complete</text><title>metadata_complete bool not null</title></a>
+  <use id='nn' x='1382' y='327' xlink:href='#nn'/><a xlink:href='#mixs_compliant'><text x='1398' y='337'>mixs_compliant</text><title>mixs_compliant bool not null</title></a>
+  <a xlink:href='#most_recent_contact'><text x='1398' y='352'>most_recent_contact</text><title>most_recent_contact varchar</title></a>
+  <use id='nn' x='1382' y='357' xlink:href='#nn'/><a xlink:href='#number_samples_collected'><text x='1398' y='367'>number_samples_collected</text><title>number_samples_collected integer not null</title></a>
+  <use id='nn' x='1382' y='372' xlink:href='#nn'/><a xlink:href='#number_samples_promised'><text x='1398' y='382'>number_samples_promised</text><title>number_samples_promised integer not null</title></a>
+  <use id='nn' x='1382' y='387' xlink:href='#nn'/><a xlink:href='#portal_type_id'><use id='idx' x='1382' y='386' xlink:href='#idx'/><title>Index  ( portal_type_id ) </title></a>
+<a xlink:href='#portal_type_id'><text x='1398' y='397'>portal_type_id</text><title>portal_type_id bigint not null</title></a>
+<a xlink:href='#portal_type_id'><use id='fk' x='1548' y='386' xlink:href='#fk'/><title>References portal_type ( portal_type_id ) </title></a>
+  <use id='nn' x='1382' y='402' xlink:href='#nn'/><a xlink:href='#principal_investigator_id'><use id='idx' x='1382' y='401' xlink:href='#idx'/><title>Index  ( principal_investigator_id ) </title></a>
+<a xlink:href='#principal_investigator_id'><text x='1398' y='412'>principal_investigator_id</text><title>principal_investigator_id bigint not null</title></a>
+<a xlink:href='#principal_investigator_id'><use id='fk' x='1548' y='401' xlink:href='#fk'/><title>References study_person ( principal_investigator_id -> study_person_id ) </title></a>
+  <use id='nn' x='1382' y='417' xlink:href='#nn'/><a xlink:href='#reprocess'><text x='1398' y='427'>reprocess</text><title>reprocess bool not null</title></a>
+  <a xlink:href='#spatial_series'><text x='1398' y='442'>spatial_series</text><title>spatial_series bool</title></a>
+  <use id='nn' x='1382' y='447' xlink:href='#nn'/><a xlink:href='#study_title'><text x='1398' y='457'>study_title</text><title>study_title varchar not null</title></a>
+  <use id='nn' x='1382' y='462' xlink:href='#nn'/><a xlink:href='#study_alias'><text x='1398' y='472'>study_alias</text><title>study_alias varchar not null</title></a>
+  <use id='nn' x='1382' y='477' xlink:href='#nn'/><a xlink:href='#study_description'><text x='1398' y='487'>study_description</text><title>study_description text not null</title></a>
+  <use id='nn' x='1382' y='492' xlink:href='#nn'/><a xlink:href='#study_abstract'><text x='1398' y='502'>study_abstract</text><title>study_abstract text not null</title></a>
+  <a xlink:href='#vamps_id'><text x='1398' y='517'>vamps_id</text><title>vamps_id varchar</title></a>
+
+<!-- ============= Table 'required_sample_info' ============= -->
+<rect class='table' x='1620' y='533' width='165' height='135' rx='7' ry='7' />
+<path d='M 1620.50 559.50 L 1620.50 540.50 Q 1620.50 533.50 1627.50 533.50 L 1777.50 533.50 Q 1784.50 533.50 1784.50 540.50 L 1784.50 559.50 L1620.50 559.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
+<a xlink:href='#required_sample_info'><text x='1644' y='547' class='tableTitle'>required_sample_info</text><title>Table qiita.required_sample_info</title></a>
+  <use id='nn' x='1622' y='567' xlink:href='#nn'/><a xlink:href='#study_id'><use id='pk' x='1622' y='566' xlink:href='#pk'/><title>Primary Key  ( study_id, sample_id ) Index  ( study_id ) </title></a>
+<a xlink:href='#study_id'><text x='1638' y='577'>study_id</text><title>study_id bigint not null</title></a>
+<a xlink:href='#study_id'><use id='fk' x='1773' y='566' xlink:href='#fk'/><title>References study ( study_id ) </title></a>
+  <use id='nn' x='1622' y='582' xlink:href='#nn'/><a xlink:href='#sample_id'><use id='pk' x='1622' y='581' xlink:href='#pk'/><title>Primary Key  ( study_id, sample_id ) </title></a>
+<a xlink:href='#sample_id'><text x='1638' y='592'>sample_id</text><title>sample_id bigint not null</title></a>
+  <use id='nn' x='1622' y='597' xlink:href='#nn'/><a xlink:href='#physical_location'><text x='1638' y='607'>physical_location</text><title>physical_location varchar not null</title></a>
+  <use id='nn' x='1622' y='612' xlink:href='#nn'/><a xlink:href='#has_physical_specimen'><text x='1638' y='622'>has_physical_specimen</text><title>has_physical_specimen bool not null</title></a>
+  <use id='nn' x='1622' y='627' xlink:href='#nn'/><a xlink:href='#has_extracted_data'><text x='1638' y='637'>has_extracted_data</text><title>has_extracted_data bool not null</title></a>
+  <use id='nn' x='1622' y='642' xlink:href='#nn'/><a xlink:href='#sample_type'><text x='1638' y='652'>sample_type</text><title>sample_type varchar not null
+Controlled vocabulary of sample types</title></a>
+
+<!-- ============= Table 'portal_type' ============= -->
+<rect class='table' x='1620' y='428' width='120' height='90' rx='7' ry='7' />
+<path d='M 1620.50 454.50 L 1620.50 435.50 Q 1620.50 428.50 1627.50 428.50 L 1732.50 428.50 Q 1739.50 428.50 1739.50 435.50 L 1739.50 454.50 L1620.50 454.50 ' style='fill:url(#tableHeaderGradient1); stroke:none;' />
+<a xlink:href='#portal_type'><text x='1649' y='442' class='tableTitle'>portal_type</text><title>Table qiita.portal_type
+What portals are available to show a study in</title></a>
+  <use id='nn' x='1622' y='462' xlink:href='#nn'/><a xlink:href='#portal_type_id'><use id='pk' x='1622' y='461' xlink:href='#pk'/><title>Primary Key  ( portal_type_id ) </title></a>
+<a xlink:href='#portal_type_id'><text x='1638' y='472'>portal_type_id</text><title>portal_type_id bigserial not null</title></a>
+<a xlink:href='#portal_type_id'><use id='ref' x='1728' y='461' xlink:href='#ref'/><title>Referred by study ( portal_type_id ) 
+Referred by study ( portal_type_id ) </title></a>
+  <use id='nn' x='1622' y='477' xlink:href='#nn'/><a xlink:href='#portal'><text x='1638' y='487'>portal</text><title>portal varchar not null</title></a>
+  <use id='nn' x='1622' y='492' xlink:href='#nn'/><a xlink:href='#description'><text x='1638' y='502'>description</text><title>description varchar not null</title></a>
 
 </g></svg>
 
@@ -1669,60 +1688,6 @@ Time the reset code was generated</title></a>
 <tr><td colspan='3' class='subpart'><b>Indexes</b></td></tr>
 	<tr>		<td>pk&#095;function primary key</td>
 		<td> ON command&#095;id</td>
-		<td>  </td>
-	</tr>
-</tbody>
-</table>
-
-<br/><br/>
-<table id='dbs' >
-<thead>
-<tr><th colspan='3'><a name='required_sample_info'>required_sample_info</a></th></tr>
-</thead>
-<tbody>
-	<tr>
-		<td><a name='study_id'>study&#095;id</a></td>
-		<td width='40%'> bigint  NOT NULL  </td>
-		<td width='99%'>  </td>
-	</tr>
-	<tr>
-		<td><a name='sample_id'>sample&#095;id</a></td>
-		<td width='40%'> bigint  NOT NULL  </td>
-		<td width='99%'>  </td>
-	</tr>
-	<tr>
-		<td><a name='physical_location'>physical&#095;location</a></td>
-		<td width='40%'> varchar  NOT NULL  </td>
-		<td width='99%'>  </td>
-	</tr>
-	<tr>
-		<td><a name='has_physical_specimen'>has&#095;physical&#095;specimen</a></td>
-		<td width='40%'> bool  NOT NULL  </td>
-		<td width='99%'>  </td>
-	</tr>
-	<tr>
-		<td><a name='has_extracted_data'>has&#095;extracted&#095;data</a></td>
-		<td width='40%'> bool  NOT NULL  </td>
-		<td width='99%'>  </td>
-	</tr>
-	<tr>
-		<td><a name='sample_type'>sample&#095;type</a></td>
-		<td width='40%'> varchar  NOT NULL  </td>
-		<td width='99%'> Controlled vocabulary of sample types </td>
-	</tr>
-<tr><td colspan='3' class='subpart'><b>Indexes</b></td></tr>
-	<tr>		<td>idx&#095;common&#095;sample&#095;information primary key</td>
-		<td> ON study&#095;id&#044; sample&#095;id</td>
-		<td>  </td>
-	</tr>
-	<tr>		<td>idx&#095;required&#095;sample&#095;info </td>
-		<td> ON study&#095;id</td>
-		<td>  </td>
-	</tr>
-<tr><td colspan='3' class='subpart'><b>Foreign Keys</b></td></tr>
-	<tr>
-		<td>fk_required_sample_info_study</td>
-		<td > ( study&#095;id ) ref <a href='#study'>study</a> (study&#095;id) </td>
 		<td>  </td>
 	</tr>
 </tbody>
@@ -3012,186 +2977,6 @@ An investigation comprises one or more individual studies&#046; </td></tr>
 <br/><br/>
 <table id='dbs' >
 <thead>
-<tr><th colspan='3'><a name='study'>study</a></th></tr>
-</thead>
-<tbody>
-	<tr>
-		<td><a name='study_id'>study&#095;id</a></td>
-		<td width='40%'> bigserial  NOT NULL  </td>
-		<td width='99%'> Unique name for study </td>
-	</tr>
-	<tr>
-		<td><a name='email'>email</a></td>
-		<td width='40%'> varchar  NOT NULL  </td>
-		<td width='99%'> Email of study owner </td>
-	</tr>
-	<tr>
-		<td><a name='study_status_id'>study&#095;status&#095;id</a></td>
-		<td width='40%'> bigint  NOT NULL  </td>
-		<td width='99%'>  </td>
-	</tr>
-	<tr>
-		<td><a name='emp_person_id'>emp&#095;person&#095;id</a></td>
-		<td width='40%'> bigint   </td>
-		<td width='99%'>  </td>
-	</tr>
-	<tr>
-		<td><a name='first_contact'>first&#095;contact</a></td>
-		<td width='40%'> varchar  NOT NULL  </td>
-		<td width='99%'>  </td>
-	</tr>
-	<tr>
-		<td><a name='funding'>funding</a></td>
-		<td width='40%'> varchar   </td>
-		<td width='99%'>  </td>
-	</tr>
-	<tr>
-		<td><a name='timeseries_type_id'>timeseries&#095;type&#095;id</a></td>
-		<td width='40%'> bigint  NOT NULL  </td>
-		<td width='99%'> What type of timeseries this study is &#040;or is not&#041;
-Controlled Vocabulary </td>
-	</tr>
-	<tr>
-		<td><a name='lab_person_id'>lab&#095;person&#095;id</a></td>
-		<td width='40%'> bigint   </td>
-		<td width='99%'>  </td>
-	</tr>
-	<tr>
-		<td><a name='metadata_complete'>metadata&#095;complete</a></td>
-		<td width='40%'> bool  NOT NULL  </td>
-		<td width='99%'>  </td>
-	</tr>
-	<tr>
-		<td><a name='mixs_compliant'>mixs&#095;compliant</a></td>
-		<td width='40%'> bool  NOT NULL  </td>
-		<td width='99%'>  </td>
-	</tr>
-	<tr>
-		<td><a name='most_recent_contact'>most&#095;recent&#095;contact</a></td>
-		<td width='40%'> varchar   </td>
-		<td width='99%'>  </td>
-	</tr>
-	<tr>
-		<td><a name='number_samples_collected'>number&#095;samples&#095;collected</a></td>
-		<td width='40%'> integer  NOT NULL  </td>
-		<td width='99%'>  </td>
-	</tr>
-	<tr>
-		<td><a name='number_samples_promised'>number&#095;samples&#095;promised</a></td>
-		<td width='40%'> integer  NOT NULL  </td>
-		<td width='99%'>  </td>
-	</tr>
-	<tr>
-		<td><a name='portal_type'>portal&#095;type</a></td>
-		<td width='40%'> varchar  NOT NULL  </td>
-		<td width='99%'>  </td>
-	</tr>
-	<tr>
-		<td><a name='principal_investigator_id'>principal&#095;investigator&#095;id</a></td>
-		<td width='40%'> bigint  NOT NULL  </td>
-		<td width='99%'>  </td>
-	</tr>
-	<tr>
-		<td><a name='reprocess'>reprocess</a></td>
-		<td width='40%'> bool  NOT NULL  </td>
-		<td width='99%'>  </td>
-	</tr>
-	<tr>
-		<td><a name='spatial_series'>spatial&#095;series</a></td>
-		<td width='40%'> bool   </td>
-		<td width='99%'>  </td>
-	</tr>
-	<tr>
-		<td><a name='study_title'>study&#095;title</a></td>
-		<td width='40%'> varchar  NOT NULL  </td>
-		<td width='99%'>  </td>
-	</tr>
-	<tr>
-		<td><a name='study_alias'>study&#095;alias</a></td>
-		<td width='40%'> varchar  NOT NULL  </td>
-		<td width='99%'>  </td>
-	</tr>
-	<tr>
-		<td><a name='study_description'>study&#095;description</a></td>
-		<td width='40%'> text  NOT NULL  </td>
-		<td width='99%'>  </td>
-	</tr>
-	<tr>
-		<td><a name='study_abstract'>study&#095;abstract</a></td>
-		<td width='40%'> text  NOT NULL  </td>
-		<td width='99%'>  </td>
-	</tr>
-	<tr>
-		<td><a name='vamps_id'>vamps&#095;id</a></td>
-		<td width='40%'> varchar   </td>
-		<td width='99%'>  </td>
-	</tr>
-<tr><td colspan='3' class='subpart'><b>Indexes</b></td></tr>
-	<tr>		<td>pk&#095;study primary key</td>
-		<td> ON study&#095;id</td>
-		<td>  </td>
-	</tr>
-	<tr>		<td>idx&#095;study </td>
-		<td> ON email</td>
-		<td>  </td>
-	</tr>
-	<tr>		<td>idx&#095;study&#095;0 </td>
-		<td> ON study&#095;status&#095;id</td>
-		<td>  </td>
-	</tr>
-	<tr>		<td>idx&#095;study&#095;1 </td>
-		<td> ON emp&#095;person&#095;id</td>
-		<td>  </td>
-	</tr>
-	<tr>		<td>idx&#095;study&#095;2 </td>
-		<td> ON lab&#095;person&#095;id</td>
-		<td>  </td>
-	</tr>
-	<tr>		<td>idx&#095;study&#095;3 </td>
-		<td> ON principal&#095;investigator&#095;id</td>
-		<td>  </td>
-	</tr>
-	<tr>		<td>idx&#095;study&#095;4 </td>
-		<td> ON timeseries&#095;type&#095;id</td>
-		<td>  </td>
-	</tr>
-<tr><td colspan='3' class='subpart'><b>Foreign Keys</b></td></tr>
-	<tr>
-		<td>fk_study_user</td>
-		<td > ( email ) ref <a href='#qiita&#095;user'>qiita&#095;user</a> (email) </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>fk_study_study_status</td>
-		<td > ( study&#095;status&#095;id ) ref <a href='#study&#095;status'>study&#095;status</a> (study&#095;status&#095;id) </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>fk_study_study_emp_person</td>
-		<td > ( emp&#095;person&#095;id ) ref <a href='#study&#095;person'>study&#095;person</a> (study&#095;person&#095;id) </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>fk_study_study_lab_person</td>
-		<td > ( lab&#095;person&#095;id ) ref <a href='#study&#095;person'>study&#095;person</a> (study&#095;person&#095;id) </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>fk_study_study_pi_person</td>
-		<td > ( principal&#095;investigator&#095;id ) ref <a href='#study&#095;person'>study&#095;person</a> (study&#095;person&#095;id) </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>fk_study_timeseries_type</td>
-		<td > ( timeseries&#095;type&#095;id ) ref <a href='#timeseries&#095;type'>timeseries&#095;type</a> (timeseries&#095;type&#095;id) </td>
-		<td>  </td>
-	</tr>
-</tbody>
-</table>
-
-<br/><br/>
-<table id='dbs' >
-<thead>
 <tr><th colspan='3'><a name='study_status'>study_status</a></th></tr>
 </thead>
 <tbody>
@@ -3516,6 +3301,279 @@ Controlled Vocabulary </td>
 	<tr>
 		<td>fk_user_user_level</td>
 		<td > ( user&#095;level&#095;id ) ref <a href='#user&#095;level'>user&#095;level</a> (user&#095;level&#095;id) </td>
+		<td>  </td>
+	</tr>
+</tbody>
+</table>
+
+<br/><br/>
+<table id='dbs' >
+<thead>
+<tr><th colspan='3'><a name='study'>study</a></th></tr>
+</thead>
+<tbody>
+	<tr>
+		<td><a name='study_id'>study&#095;id</a></td>
+		<td width='40%'> bigserial  NOT NULL  </td>
+		<td width='99%'> Unique name for study </td>
+	</tr>
+	<tr>
+		<td><a name='email'>email</a></td>
+		<td width='40%'> varchar  NOT NULL  </td>
+		<td width='99%'> Email of study owner </td>
+	</tr>
+	<tr>
+		<td><a name='study_status_id'>study&#095;status&#095;id</a></td>
+		<td width='40%'> bigint  NOT NULL  </td>
+		<td width='99%'>  </td>
+	</tr>
+	<tr>
+		<td><a name='emp_person_id'>emp&#095;person&#095;id</a></td>
+		<td width='40%'> bigint   </td>
+		<td width='99%'>  </td>
+	</tr>
+	<tr>
+		<td><a name='first_contact'>first&#095;contact</a></td>
+		<td width='40%'> varchar  NOT NULL  </td>
+		<td width='99%'>  </td>
+	</tr>
+	<tr>
+		<td><a name='funding'>funding</a></td>
+		<td width='40%'> varchar   </td>
+		<td width='99%'>  </td>
+	</tr>
+	<tr>
+		<td><a name='timeseries_type_id'>timeseries&#095;type&#095;id</a></td>
+		<td width='40%'> bigint  NOT NULL  </td>
+		<td width='99%'> What type of timeseries this study is &#040;or is not&#041;
+Controlled Vocabulary </td>
+	</tr>
+	<tr>
+		<td><a name='lab_person_id'>lab&#095;person&#095;id</a></td>
+		<td width='40%'> bigint   </td>
+		<td width='99%'>  </td>
+	</tr>
+	<tr>
+		<td><a name='metadata_complete'>metadata&#095;complete</a></td>
+		<td width='40%'> bool  NOT NULL  </td>
+		<td width='99%'>  </td>
+	</tr>
+	<tr>
+		<td><a name='mixs_compliant'>mixs&#095;compliant</a></td>
+		<td width='40%'> bool  NOT NULL  </td>
+		<td width='99%'>  </td>
+	</tr>
+	<tr>
+		<td><a name='most_recent_contact'>most&#095;recent&#095;contact</a></td>
+		<td width='40%'> varchar   </td>
+		<td width='99%'>  </td>
+	</tr>
+	<tr>
+		<td><a name='number_samples_collected'>number&#095;samples&#095;collected</a></td>
+		<td width='40%'> integer  NOT NULL  </td>
+		<td width='99%'>  </td>
+	</tr>
+	<tr>
+		<td><a name='number_samples_promised'>number&#095;samples&#095;promised</a></td>
+		<td width='40%'> integer  NOT NULL  </td>
+		<td width='99%'>  </td>
+	</tr>
+	<tr>
+		<td><a name='portal_type_id'>portal&#095;type&#095;id</a></td>
+		<td width='40%'> bigint  NOT NULL  </td>
+		<td width='99%'>  </td>
+	</tr>
+	<tr>
+		<td><a name='principal_investigator_id'>principal&#095;investigator&#095;id</a></td>
+		<td width='40%'> bigint  NOT NULL  </td>
+		<td width='99%'>  </td>
+	</tr>
+	<tr>
+		<td><a name='reprocess'>reprocess</a></td>
+		<td width='40%'> bool  NOT NULL  </td>
+		<td width='99%'>  </td>
+	</tr>
+	<tr>
+		<td><a name='spatial_series'>spatial&#095;series</a></td>
+		<td width='40%'> bool   </td>
+		<td width='99%'>  </td>
+	</tr>
+	<tr>
+		<td><a name='study_title'>study&#095;title</a></td>
+		<td width='40%'> varchar  NOT NULL  </td>
+		<td width='99%'>  </td>
+	</tr>
+	<tr>
+		<td><a name='study_alias'>study&#095;alias</a></td>
+		<td width='40%'> varchar  NOT NULL  </td>
+		<td width='99%'>  </td>
+	</tr>
+	<tr>
+		<td><a name='study_description'>study&#095;description</a></td>
+		<td width='40%'> text  NOT NULL  </td>
+		<td width='99%'>  </td>
+	</tr>
+	<tr>
+		<td><a name='study_abstract'>study&#095;abstract</a></td>
+		<td width='40%'> text  NOT NULL  </td>
+		<td width='99%'>  </td>
+	</tr>
+	<tr>
+		<td><a name='vamps_id'>vamps&#095;id</a></td>
+		<td width='40%'> varchar   </td>
+		<td width='99%'>  </td>
+	</tr>
+<tr><td colspan='3' class='subpart'><b>Indexes</b></td></tr>
+	<tr>		<td>pk&#095;study primary key</td>
+		<td> ON study&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>idx&#095;study </td>
+		<td> ON email</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>idx&#095;study&#095;0 </td>
+		<td> ON study&#095;status&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>idx&#095;study&#095;1 </td>
+		<td> ON emp&#095;person&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>idx&#095;study&#095;2 </td>
+		<td> ON lab&#095;person&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>idx&#095;study&#095;3 </td>
+		<td> ON principal&#095;investigator&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>idx&#095;study&#095;4 </td>
+		<td> ON timeseries&#095;type&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>idx&#095;study&#095;5 </td>
+		<td> ON portal&#095;type&#095;id</td>
+		<td>  </td>
+	</tr>
+<tr><td colspan='3' class='subpart'><b>Foreign Keys</b></td></tr>
+	<tr>
+		<td>fk_study_user</td>
+		<td > ( email ) ref <a href='#qiita&#095;user'>qiita&#095;user</a> (email) </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>fk_study_study_status</td>
+		<td > ( study&#095;status&#095;id ) ref <a href='#study&#095;status'>study&#095;status</a> (study&#095;status&#095;id) </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>fk_study_study_emp_person</td>
+		<td > ( emp&#095;person&#095;id ) ref <a href='#study&#095;person'>study&#095;person</a> (study&#095;person&#095;id) </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>fk_study_study_lab_person</td>
+		<td > ( lab&#095;person&#095;id ) ref <a href='#study&#095;person'>study&#095;person</a> (study&#095;person&#095;id) </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>fk_study_study_pi_person</td>
+		<td > ( principal&#095;investigator&#095;id ) ref <a href='#study&#095;person'>study&#095;person</a> (study&#095;person&#095;id) </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>fk_study_timeseries_type</td>
+		<td > ( timeseries&#095;type&#095;id ) ref <a href='#timeseries&#095;type'>timeseries&#095;type</a> (timeseries&#095;type&#095;id) </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>fk_study</td>
+		<td > ( portal&#095;type&#095;id ) ref <a href='#portal&#095;type'>portal&#095;type</a> (portal&#095;type&#095;id) </td>
+		<td>  </td>
+	</tr>
+</tbody>
+</table>
+
+<br/><br/>
+<table id='dbs' >
+<thead>
+<tr><th colspan='3'><a name='required_sample_info'>required_sample_info</a></th></tr>
+</thead>
+<tbody>
+	<tr>
+		<td><a name='study_id'>study&#095;id</a></td>
+		<td width='40%'> bigint  NOT NULL  </td>
+		<td width='99%'>  </td>
+	</tr>
+	<tr>
+		<td><a name='sample_id'>sample&#095;id</a></td>
+		<td width='40%'> bigint  NOT NULL  </td>
+		<td width='99%'>  </td>
+	</tr>
+	<tr>
+		<td><a name='physical_location'>physical&#095;location</a></td>
+		<td width='40%'> varchar  NOT NULL  </td>
+		<td width='99%'>  </td>
+	</tr>
+	<tr>
+		<td><a name='has_physical_specimen'>has&#095;physical&#095;specimen</a></td>
+		<td width='40%'> bool  NOT NULL  </td>
+		<td width='99%'>  </td>
+	</tr>
+	<tr>
+		<td><a name='has_extracted_data'>has&#095;extracted&#095;data</a></td>
+		<td width='40%'> bool  NOT NULL  </td>
+		<td width='99%'>  </td>
+	</tr>
+	<tr>
+		<td><a name='sample_type'>sample&#095;type</a></td>
+		<td width='40%'> varchar  NOT NULL  </td>
+		<td width='99%'> Controlled vocabulary of sample types </td>
+	</tr>
+<tr><td colspan='3' class='subpart'><b>Indexes</b></td></tr>
+	<tr>		<td>idx&#095;common&#095;sample&#095;information primary key</td>
+		<td> ON study&#095;id&#044; sample&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>idx&#095;required&#095;sample&#095;info </td>
+		<td> ON study&#095;id</td>
+		<td>  </td>
+	</tr>
+<tr><td colspan='3' class='subpart'><b>Foreign Keys</b></td></tr>
+	<tr>
+		<td>fk_required_sample_info_study</td>
+		<td > ( study&#095;id ) ref <a href='#study'>study</a> (study&#095;id) </td>
+		<td>  </td>
+	</tr>
+</tbody>
+</table>
+
+<br/><br/>
+<table id='dbs' >
+<thead>
+<tr><th colspan='3'><a name='portal_type'>portal_type</a></th></tr>
+<tr><td colspan='3'>What portals are available to show a study in </td></tr>
+</thead>
+<tbody>
+	<tr>
+		<td><a name='portal_type_id'>portal&#095;type&#095;id</a></td>
+		<td width='40%'> bigserial  NOT NULL  </td>
+		<td width='99%'>  </td>
+	</tr>
+	<tr>
+		<td><a name='portal'>portal</a></td>
+		<td width='40%'> varchar  NOT NULL  </td>
+		<td width='99%'>  </td>
+	</tr>
+	<tr>
+		<td><a name='description'>description</a></td>
+		<td width='40%'> varchar  NOT NULL  </td>
+		<td width='99%'>  </td>
+	</tr>
+<tr><td colspan='3' class='subpart'><b>Indexes</b></td></tr>
+	<tr>		<td>pk&#095;portal&#095;type primary key</td>
+		<td> ON portal&#095;type&#095;id</td>
 		<td>  </td>
 	</tr>
 </tbody>
