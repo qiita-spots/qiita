@@ -153,22 +153,6 @@ CREATE TABLE qiita.relationship_type (
 	CONSTRAINT pk_relationship_type PRIMARY KEY ( relationship_type_id )
  );
 
-CREATE TABLE qiita.required_prep_info ( 
-	raw_data_id          bigserial  NOT NULL,
-	center_name          varchar  NOT NULL,
-	center_project_name  varchar  NOT NULL,
-	ebi_submission_accession varchar  NOT NULL,
-	ebi_study_accession  varchar  NOT NULL,
-	emp_status_id        bigint  NOT NULL,
-	investigation_type   varchar  NOT NULL,
-	CONSTRAINT fk_required_prep_info_raw_data FOREIGN KEY ( raw_data_id ) REFERENCES qiita.raw_data( raw_data_id )    ,
-	CONSTRAINT fk_required_prep_info_emp_status FOREIGN KEY ( emp_status_id ) REFERENCES qiita.emp_status( emp_status_id )    
- );
-
-CREATE INDEX idx_required_prep_info ON qiita.required_prep_info ( raw_data_id );
-
-CREATE INDEX idx_required_prep_info_0 ON qiita.required_prep_info ( emp_status_id );
-
 CREATE TABLE qiita.sample_status ( 
 	sample_status_id     bigserial  NOT NULL,
 	status               integer  ,
@@ -392,6 +376,7 @@ CREATE TABLE qiita.preprocessed_data (
 	preprocessed_data_id bigserial  NOT NULL,
 	raw_data_id          integer  ,
 	filepath             varchar  NOT NULL,
+	preprocessed_params_table varchar  NOT NULL,
 	preprocessed_params_id bigint  NOT NULL,
 	CONSTRAINT pk_preprocessed_data PRIMARY KEY ( preprocessed_data_id ),
 	CONSTRAINT fk_preprocessed_data_raw_data FOREIGN KEY ( raw_data_id ) REFERENCES qiita.raw_data( raw_data_id )    
@@ -399,15 +384,20 @@ CREATE TABLE qiita.preprocessed_data (
 
 CREATE INDEX idx_preprocessed_data ON qiita.preprocessed_data ( raw_data_id );
 
+COMMENT ON COLUMN qiita.preprocessed_data.preprocessed_params_table IS 'Name of table holding the params';
+
 CREATE TABLE qiita.processed_data ( 
 	processed_data_id    bigserial  NOT NULL,
 	preprocessed_data_id bigint  NOT NULL,
 	processed_data_filepath varchar  NOT NULL,
-	processed_params_id  varchar  NOT NULL,
+	processed_params_table varchar  NOT NULL,
+	processed_params_id  bigint  NOT NULL,
 	processed_date       date  NOT NULL,
 	CONSTRAINT pk_processed_data PRIMARY KEY ( processed_data_id ),
 	CONSTRAINT fk_processed_data FOREIGN KEY ( preprocessed_data_id ) REFERENCES qiita.preprocessed_data( preprocessed_data_id )    
  );
+
+COMMENT ON COLUMN qiita.processed_data.processed_params_table IS 'Name of table holding processing params';
 
 COMMENT ON COLUMN qiita.processed_data.processed_params_id IS 'Link to a table with the parameters used to generate processed data';
 
@@ -665,6 +655,7 @@ CREATE TABLE qiita.required_sample_info (
 	host_subject_id      varchar  NOT NULL,
 	description          varchar  NOT NULL,
 	CONSTRAINT idx_common_sample_information PRIMARY KEY ( study_id, sample_id ),
+	CONSTRAINT pk_required_sample_info UNIQUE ( sample_id ) ,
 	CONSTRAINT fk_required_sample_info_study FOREIGN KEY ( study_id ) REFERENCES qiita.study( study_id )    ,
 	CONSTRAINT fk_required_sample_info FOREIGN KEY ( sample_status_id ) REFERENCES qiita.sample_status( sample_status_id )    
  );
@@ -700,4 +691,28 @@ COMMENT ON TABLE qiita.analysis_job IS 'Holds information for a one-to-many rela
 COMMENT ON COLUMN qiita.analysis_job.analysis_id IS 'Id of the analysis';
 
 COMMENT ON COLUMN qiita.analysis_job.job_id IS 'Id for a job that is part of the analysis';
+
+CREATE TABLE qiita.common_prep_info ( 
+	raw_data_id          bigserial  NOT NULL,
+	sample_id            bigint  NOT NULL,
+	center_name          varchar  ,
+	center_project_name  varchar  ,
+	ebi_submission_accession varchar  ,
+	ebi_study_accession  varchar  ,
+	emp_status_id        bigint  NOT NULL,
+	data_type_id         bigint  NOT NULL,
+	CONSTRAINT idx_required_prep_info_1 PRIMARY KEY ( raw_data_id, sample_id ),
+	CONSTRAINT fk_required_prep_info_raw_data FOREIGN KEY ( raw_data_id ) REFERENCES qiita.raw_data( raw_data_id )    ,
+	CONSTRAINT fk_required_prep_info_emp_status FOREIGN KEY ( emp_status_id ) REFERENCES qiita.emp_status( emp_status_id )    ,
+	CONSTRAINT fk_required_prep_info FOREIGN KEY ( sample_id ) REFERENCES qiita.required_sample_info( sample_id )    ,
+	CONSTRAINT fk_required_prep_info_0 FOREIGN KEY ( data_type_id ) REFERENCES qiita.data_type( data_type_id )    
+ );
+
+CREATE INDEX idx_required_prep_info ON qiita.common_prep_info ( raw_data_id );
+
+CREATE INDEX idx_required_prep_info_0 ON qiita.common_prep_info ( emp_status_id );
+
+CREATE INDEX idx_required_prep_info_2 ON qiita.common_prep_info ( sample_id );
+
+CREATE INDEX idx_required_prep_info_3 ON qiita.common_prep_info ( data_type_id );
 
