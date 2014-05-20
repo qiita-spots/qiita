@@ -426,7 +426,7 @@ COMMENT ON COLUMN qiita.processed_data.processed_params_table IS 'Name of table 
 
 COMMENT ON COLUMN qiita.processed_data.processed_params_id IS 'Link to a table with the parameters used to generate processed data';
 
-CREATE TABLE qiita.processed_data_filepath ( 
+CREATE TABLE qiita.processed_filepath ( 
 	processed_data_id    bigint  NOT NULL,
 	filepath_id          bigint  NOT NULL,
 	CONSTRAINT pk_processed_data_filepath UNIQUE ( processed_data_id ) ,
@@ -434,7 +434,7 @@ CREATE TABLE qiita.processed_data_filepath (
 	CONSTRAINT fk_processed_data_filepath_0 FOREIGN KEY ( filepath_id ) REFERENCES qiita.filepath( filepath_id )    
  );
 
-CREATE INDEX idx_processed_data_filepath ON qiita.processed_data_filepath ( filepath_id );
+CREATE INDEX idx_processed_data_filepath ON qiita.processed_filepath ( filepath_id );
 
 CREATE TABLE qiita.processed_params_uclust ( 
 	processed_params_id  bigserial  NOT NULL,
