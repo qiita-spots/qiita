@@ -570,10 +570,10 @@ Linked by y being raw_data_id from raw data table.</comment>
 				<defo>0.97</defo>
 			</column>
 			<column name="enable_rev_strand_match" type="bool" jt="-7" mandatory="y" >
-				<defo>1</defo>
+				<defo>TRUE</defo>
 			</column>
 			<column name="suppress_new_clusters" type="bool" jt="-7" mandatory="y" >
-				<defo>0</defo>
+				<defo>TRUE</defo>
 			</column>
 			<index name="pk_processed_params_uclust" unique="PRIMARY_KEY" >
 				<column name="processed_params_id" />
@@ -621,7 +621,7 @@ Linked by y being raw_data_id from raw data table.</comment>
 			<column name="raw_data_id" type="bigserial" jt="-5" mandatory="y" />
 			<column name="filetype_id" type="bigint" jt="-5" mandatory="y" />
 			<column name="submitted_to_insdc" type="bool" jt="-7" mandatory="y" >
-				<defo>0</defo>
+				<defo>FALSE</defo>
 			</column>
 			<index name="pk_raw_data" unique="UNIQUE" >
 				<column name="raw_data_id" />
@@ -1123,7 +1123,6 @@ Controlled Vocabulary]]></comment>
 		<entity schema="qiita" name="preprocessed_filepath" color="c0d4f3" x="900" y="270" />
 		<entity schema="qiita" name="filepath_type" color="c0d4f3" x="885" y="75" />
 		<entity schema="qiita" name="filepath" color="c0d4f3" x="915" y="165" />
-		<entity schema="qiita" name="raw_data" color="d0def5" x="630" y="360" />
 		<entity schema="qiita" name="study_status" color="c0d4f3" x="1605" y="135" />
 		<entity schema="qiita" name="study_pmid" color="c0d4f3" x="1605" y="330" />
 		<entity schema="qiita" name="preprocessed_spectra_params" color="d0def5" x="915" y="675" />
@@ -1132,6 +1131,7 @@ Controlled Vocabulary]]></comment>
 		<entity schema="qiita" name="prep_y" color="d0def5" x="1335" y="825" />
 		<entity schema="qiita" name="study_person" color="c0d4f3" x="1305" y="690" />
 		<entity schema="qiita" name="reference" color="c0d4f3" x="1170" y="555" />
+		<entity schema="qiita" name="raw_data" color="d0def5" x="630" y="360" />
 		<entity schema="qiita" name="processed_params_uclust" color="d0def5" x="1170" y="435" />
 		<group name="Group_analyses" color="c4e0f9" >
 			<comment>analysis tables</comment>

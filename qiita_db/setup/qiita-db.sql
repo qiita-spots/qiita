@@ -123,7 +123,7 @@ COMMENT ON TABLE qiita.preprocessed_spectra_params IS 'Parameters used for proce
 CREATE TABLE qiita.raw_data ( 
 	raw_data_id          bigserial  NOT NULL,
 	filetype_id          bigint  NOT NULL,
-	submitted_to_insdc   bool DEFAULT 0 NOT NULL,
+	submitted_to_insdc   bool DEFAULT FALSE NOT NULL,
 	CONSTRAINT pk_raw_data UNIQUE ( raw_data_id ) ,
 	CONSTRAINT fk_raw_data_filetype FOREIGN KEY ( filetype_id ) REFERENCES qiita.filetype( filetype_id )    
  );
@@ -440,8 +440,8 @@ CREATE TABLE qiita.processed_params_uclust (
 	processed_params_id  bigserial  NOT NULL,
 	reference_id         bigint  NOT NULL,
 	similarity           float8 DEFAULT 0.97 NOT NULL,
-	enable_rev_strand_match bool DEFAULT 1 NOT NULL,
-	suppress_new_clusters bool DEFAULT 0 NOT NULL,
+	enable_rev_strand_match bool DEFAULT TRUE NOT NULL,
+	suppress_new_clusters bool DEFAULT TRUE NOT NULL,
 	CONSTRAINT pk_processed_params_uclust PRIMARY KEY ( processed_params_id ),
 	CONSTRAINT fk_processed_params_uclust FOREIGN KEY ( reference_id ) REFERENCES qiita.reference( reference_id )    
  );
