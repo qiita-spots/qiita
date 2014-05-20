@@ -18,7 +18,7 @@ INSERT INTO qiita.qiita_user (email, user_level_id, password, name,
 INSERT INTO qiita.study_person (name, email, address, phone) VALUES
 	('LabDude', 'lab_dude@foo.bar', '123 lab street', NULL),
 	('empDude', 'emp_dude@foo.bar', '123 emp street', NULL),
-	('PIDude', 'PI_dude@foo.bar', '123 PI street', NULL),;
+	('PIDude', 'PI_dude@foo.bar', '123 PI street', NULL);
 
 -- Insert a study: EMP 1001
 INSERT INTO qiita.study (email, study_status_id, emp_person_id, first_contact,
@@ -27,8 +27,8 @@ INSERT INTO qiita.study (email, study_status_id, emp_person_id, first_contact,
 	number_samples_promised, portal_type_id, principal_investigator_id, reprocess,
 	spatial_series, study_title, study_alias, study_description,
 	study_abstract, vamps_id) VALUES
-	('test@foo.bar', 1, 1, '2014-05-19 16:10', NULL, 0, 0, 1, 1,
-	'2014-05-19 16:11', 27, 27, 1, 2, 0, 0,
+	('test@foo.bar', 1, 1, '2014-05-19 16:10', NULL, 0, 0, TRUE, TRUE,
+	'2014-05-19 16:11', 27, 27, 1, 2, FALSE, FALSE,
 	'Identification of the Microbiomes for Cannabis Soils', 'Cannabis Soils', 'Analysis of the Cannabis Plant Microbiome',
 	'This is a preliminary study to examine the microbiota associated with the Cannabis plant. Soils samples from the bulk soil, soil associated with the roots, and the rhizosphere were extracted and the DNA sequenced. Roots from three independent plants of different strains were examined. These roots were obtained November 11, 2011 from plants that had been harvested in the summer. Future studies will attempt to analyze the soils and rhizospheres from the same location at different time points in the plant lifecycle.',
 	NULL);
