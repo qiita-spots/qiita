@@ -14,7 +14,8 @@ from __future__ import division
 class ConfigurationManager(object):
     """"""
     def __init__(self):
-        self.user = 'defaultuser'
+        self.user = 'user'
+        self.password = 'pass'
         self.database = 'qiita'
         self.host = 'localhost'
         self.port = 5432
