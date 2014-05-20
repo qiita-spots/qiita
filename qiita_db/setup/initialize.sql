@@ -28,5 +28,8 @@ INSERT INTO qiita.severity (severity) VALUES ('Warning'), ('Runtime'), ('Fatal')
 -- Populate portal_type table
 INSERT INTO qiita.portal_type (portal, description) VALUES ('QIIME', 'QIIME portal'), ('EMP', 'EMP portal'), ('QIIME_EMP', 'QIIME and EMP portals');
 
--- Populate sample_status
+-- Populate sample_status table
 INSERT INTO qiita.sample_status (status) VALUES ('received'), ('in_preparation'), ('running'), ('completed');
+
+-- Populate filepath_type table
+INSERT INTO qiita.filepath_type (filepath_type) VALUES ('raw_sequences'), ('raw_barcodes'), ('raw_spectra'), ('preprocessed_sequences'), ('preprocessed_sequences_qual'), ('biom');
