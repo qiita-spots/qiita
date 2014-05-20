@@ -14,3 +14,4 @@ before_script:
   - psql -d qiita_test -U postgres -f qiita_db/setup/qiita-db.sql
   - psql -d qiita_test -U postgres -f qiita_db/setup/initialize.sql
   - export QIITA_TEST_FOLDER=$PWD/test_data
+  - cp qiita_db/config.py.example qiita_db/config.py
