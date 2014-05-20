@@ -984,15 +984,6 @@ Holds information on which metadata columns are available for the study sample t
   <use id='nn' x='1607' y='462' xlink:href='#nn'/><a xlink:href='#column_type'><use id='pk' x='1607' y='461' xlink:href='#pk'/><title>Primary Key  ( study_id, column_name, column_type ) </title></a>
 <a xlink:href='#column_type'><text x='1623' y='472'>column_type</text><title>column_type varchar not null</title></a>
 
-<!-- ============= Table 'sample_status' ============= -->
-<rect class='table' x='1605' y='818' width='135' height='75' rx='7' ry='7' />
-<path d='M 1605.50 844.50 L 1605.50 825.50 Q 1605.50 818.50 1612.50 818.50 L 1732.50 818.50 Q 1739.50 818.50 1739.50 825.50 L 1739.50 844.50 L1605.50 844.50 ' style='fill:url(#tableHeaderGradient1); stroke:none;' />
-<a xlink:href='#sample_status'><text x='1634' y='832' class='tableTitle'>sample_status</text><title>Table qiita.sample_status</title></a>
-  <use id='nn' x='1607' y='852' xlink:href='#nn'/><a xlink:href='#sample_status_id'><use id='pk' x='1607' y='851' xlink:href='#pk'/><title>Primary Key  ( sample_status_id ) </title></a>
-<a xlink:href='#sample_status_id'><text x='1623' y='862'>sample_status_id</text><title>sample_status_id bigserial not null</title></a>
-<a xlink:href='#sample_status_id'><use id='ref' x='1728' y='851' xlink:href='#ref'/><title>Referred by required_sample_info ( sample_status_id ) </title></a>
-  <a xlink:href='#status'><text x='1623' y='877'>status</text><title>status integer</title></a>
-
 <!-- ============= Table 'timeseries_type' ============= -->
 <rect class='table' x='1440' y='638' width='135' height='75' rx='7' ry='7' />
 <path d='M 1440.50 664.50 L 1440.50 645.50 Q 1440.50 638.50 1447.50 638.50 L 1567.50 638.50 Q 1574.50 638.50 1574.50 645.50 L 1574.50 664.50 L1440.50 664.50 ' style='fill:url(#tableHeaderGradient1); stroke:none;' />
@@ -1382,6 +1373,15 @@ What version of reference or type of reference used</title></a>
   <use id='nn' x='1172' y='492' xlink:href='#nn'/><a xlink:href='#similarity'><text x='1188' y='502'>similarity</text><title>similarity float8 not null default 0&#046;97</title></a>
   <use id='nn' x='1172' y='507' xlink:href='#nn'/><a xlink:href='#enable_rev_strand_match'><text x='1188' y='517'>enable_rev_strand_match</text><title>enable_rev_strand_match bool not null default TRUE</title></a>
   <use id='nn' x='1172' y='522' xlink:href='#nn'/><a xlink:href='#suppress_new_clusters'><text x='1188' y='532'>suppress_new_clusters</text><title>suppress_new_clusters bool not null default TRUE</title></a>
+
+<!-- ============= Table 'sample_status' ============= -->
+<rect class='table' x='1605' y='818' width='135' height='75' rx='7' ry='7' />
+<path d='M 1605.50 844.50 L 1605.50 825.50 Q 1605.50 818.50 1612.50 818.50 L 1732.50 818.50 Q 1739.50 818.50 1739.50 825.50 L 1739.50 844.50 L1605.50 844.50 ' style='fill:url(#tableHeaderGradient1); stroke:none;' />
+<a xlink:href='#sample_status'><text x='1634' y='832' class='tableTitle'>sample_status</text><title>Table qiita.sample_status</title></a>
+  <use id='nn' x='1607' y='852' xlink:href='#nn'/><a xlink:href='#sample_status_id'><use id='pk' x='1607' y='851' xlink:href='#pk'/><title>Primary Key  ( sample_status_id ) </title></a>
+<a xlink:href='#sample_status_id'><text x='1623' y='862'>sample_status_id</text><title>sample_status_id bigserial not null</title></a>
+<a xlink:href='#sample_status_id'><use id='ref' x='1728' y='851' xlink:href='#ref'/><title>Referred by required_sample_info ( sample_status_id ) </title></a>
+  <a xlink:href='#status'><text x='1623' y='877'>status</text><title>status varchar</title></a>
 
 </g></svg>
 
@@ -2869,30 +2869,6 @@ Controlled Vocabulary </td>
 <br/><br/>
 <table id='dbs' >
 <thead>
-<tr><th colspan='3'><a name='sample_status'>sample_status</a></th></tr>
-</thead>
-<tbody>
-	<tr>
-		<td><a name='sample_status_id'>sample&#095;status&#095;id</a></td>
-		<td width='40%'> bigserial  NOT NULL  </td>
-		<td width='99%'>  </td>
-	</tr>
-	<tr>
-		<td><a name='status'>status</a></td>
-		<td width='40%'> integer   </td>
-		<td width='99%'>  </td>
-	</tr>
-<tr><td colspan='3' class='subpart'><b>Indexes</b></td></tr>
-	<tr>		<td>pk&#095;sample&#095;status primary key</td>
-		<td> ON sample&#095;status&#095;id</td>
-		<td>  </td>
-	</tr>
-</tbody>
-</table>
-
-<br/><br/>
-<table id='dbs' >
-<thead>
 <tr><th colspan='3'><a name='timeseries_type'>timeseries_type</a></th></tr>
 </thead>
 <tbody>
@@ -4080,6 +4056,30 @@ Linked by y being raw&#095;data&#095;id from raw data table&#046; </td></tr>
 	<tr>
 		<td>fk_processed_params_uclust</td>
 		<td > ( reference&#095;id ) ref <a href='#reference'>reference</a> (reference&#095;id) </td>
+		<td>  </td>
+	</tr>
+</tbody>
+</table>
+
+<br/><br/>
+<table id='dbs' >
+<thead>
+<tr><th colspan='3'><a name='sample_status'>sample_status</a></th></tr>
+</thead>
+<tbody>
+	<tr>
+		<td><a name='sample_status_id'>sample&#095;status&#095;id</a></td>
+		<td width='40%'> bigserial  NOT NULL  </td>
+		<td width='99%'>  </td>
+	</tr>
+	<tr>
+		<td><a name='status'>status</a></td>
+		<td width='40%'> varchar   </td>
+		<td width='99%'>  </td>
+	</tr>
+<tr><td colspan='3' class='subpart'><b>Indexes</b></td></tr>
+	<tr>		<td>pk&#095;sample&#095;status primary key</td>
+		<td> ON sample&#095;status&#095;id</td>
 		<td>  </td>
 	</tr>
 </tbody>

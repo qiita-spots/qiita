@@ -160,7 +160,7 @@ CREATE TABLE qiita.relationship_type (
 
 CREATE TABLE qiita.sample_status ( 
 	sample_status_id     bigserial  NOT NULL,
-	status               integer  ,
+	status               varchar  ,
 	CONSTRAINT pk_sample_status PRIMARY KEY ( sample_status_id )
  );
 
