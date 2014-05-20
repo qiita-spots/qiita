@@ -14,9 +14,9 @@ from __future__ import division
 class ConfigurationManager(object):
     """"""
     def __init__(self):
-        self.user = 'user'
-        self.password = 'pass'
-        self.database = 'qiita'
+        self.user = 'postgres'
+        self.password = None
+        self.database = 'qiita_test'
         self.host = 'localhost'
         self.port = 5432
         self.schema = "qiita"

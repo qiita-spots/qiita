@@ -13,6 +13,6 @@ before_script:
   - psql -c 'create database qiita_test;' -U postgres
   - psql -d qiita_test -U postgres -f qiita_db/setup/qiita-db.sql
   - psql -d qiita_test -U postgres -f qiita_db/setup/initialize.sql
-  - pwd
-  - ls
-  - which qiita_db
+  - psql -d qiita_test -U postgres -f qiita_db/setup/initialize_test.sql
+  - export QIITA_TEST_FOLDER=$PWD/test_data
+  - cp qiita_db/config.py.example qiita_db/config.py
