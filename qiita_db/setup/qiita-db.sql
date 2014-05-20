@@ -120,14 +120,6 @@ CREATE TABLE qiita.preprocessed_spectra_params (
 
 COMMENT ON TABLE qiita.preprocessed_spectra_params IS 'Parameters used for processing spectra data.';
 
-CREATE TABLE qiita.processed_params_uclust ( 
-	processed_params_id  bigserial  NOT NULL,
-	col                  bigserial  ,
-	CONSTRAINT pk_processed_params_uclust PRIMARY KEY ( processed_params_id )
- );
-
-COMMENT ON TABLE qiita.processed_params_uclust IS 'Parameters used for processing data using method x';
-
 CREATE TABLE qiita.raw_data ( 
 	raw_data_id          bigserial  NOT NULL,
 	filetype_id          bigint  NOT NULL,
@@ -149,6 +141,16 @@ CREATE TABLE qiita.raw_data_prep_columns (
 CREATE INDEX idx_prep_columns ON qiita.raw_data_prep_columns ( raw_data_id );
 
 COMMENT ON TABLE qiita.raw_data_prep_columns IS 'Holds the columns available for a given raw data prep';
+
+CREATE TABLE qiita.reference ( 
+	reference_id         bigserial  NOT NULL,
+	reference_name       varchar  NOT NULL,
+	reference_version    varchar  ,
+	sequence_filepath    varchar  NOT NULL,
+	taxonomy_filepath    varchar  ,
+	tree_filepath        varchar  ,
+	CONSTRAINT pk_reference PRIMARY KEY ( reference_id )
+ );
 
 CREATE TABLE qiita.relationship_type ( 
 	relationship_type_id bigserial  NOT NULL,
@@ -433,6 +435,22 @@ CREATE TABLE qiita.processed_data_filepath (
  );
 
 CREATE INDEX idx_processed_data_filepath ON qiita.processed_data_filepath ( filepath_id );
+
+CREATE TABLE qiita.processed_params_uclust ( 
+	processed_params_id  bigserial  NOT NULL,
+	reference_id         bigint  NOT NULL,
+	similarity           float8 DEFAULT 0.97 NOT NULL,
+	enable_rev_strand_match bool DEFAULT 1 NOT NULL,
+	suppress_new_clusters bool DEFAULT 0 NOT NULL,
+	CONSTRAINT pk_processed_params_uclust PRIMARY KEY ( processed_params_id ),
+	CONSTRAINT fk_processed_params_uclust FOREIGN KEY ( reference_id ) REFERENCES qiita.reference( reference_id )    
+ );
+
+CREATE INDEX idx_processed_params_uclust ON qiita.processed_params_uclust ( reference_id );
+
+COMMENT ON TABLE qiita.processed_params_uclust IS 'Parameters used for processing data using method uclust';
+
+COMMENT ON COLUMN qiita.processed_params_uclust.reference_id IS 'What version of reference or type of reference used';
 
 CREATE TABLE qiita.qiita_user ( 
 	email                varchar  NOT NULL,
