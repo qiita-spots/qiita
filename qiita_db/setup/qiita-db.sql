@@ -10,7 +10,7 @@ CREATE TABLE qiita.command (
 	command_id           bigserial  NOT NULL,
 	name                 varchar  NOT NULL,
 	command              varchar  NOT NULL,
-	CONSTRAINT pk_function PRIMARY KEY ( command_id )
+	CONSTRAINT pk_command PRIMARY KEY ( command_id )
  );
 
 COMMENT ON TABLE qiita.command IS 'Available commands for jobs';
@@ -40,6 +40,12 @@ CREATE TABLE qiita.emp_status (
  );
 
 COMMENT ON TABLE qiita.emp_status IS 'All possible statuses for projects relating to EMP. Whether they are part of, processed in accordance to, or not part of EMP.';
+
+CREATE TABLE qiita.filepath_type ( 
+	filepath_type_id     bigserial  NOT NULL,
+	filepath_type        varchar  ,
+	CONSTRAINT pk_filepath_type PRIMARY KEY ( filepath_type_id )
+ );
 
 CREATE TABLE qiita.filetype ( 
 	filetype_id          bigserial  NOT NULL,
@@ -125,15 +131,12 @@ COMMENT ON TABLE qiita.processed_params_uclust IS 'Parameters used for processin
 CREATE TABLE qiita.raw_data ( 
 	raw_data_id          bigserial  NOT NULL,
 	filetype_id          bigint  NOT NULL,
-	filepath             varchar  NOT NULL,
-	submitted_to_insdc   bool  NOT NULL,
+	submitted_to_insdc   bool DEFAULT 0 NOT NULL,
 	CONSTRAINT pk_raw_data UNIQUE ( raw_data_id ) ,
 	CONSTRAINT fk_raw_data_filetype FOREIGN KEY ( filetype_id ) REFERENCES qiita.filetype( filetype_id )    
  );
 
 CREATE INDEX idx_raw_data ON qiita.raw_data ( filetype_id );
-
-COMMENT ON COLUMN qiita.raw_data.filepath IS 'Filepath to raw data (fastq, fasta, sff, etc)';
 
 CREATE TABLE qiita.raw_data_prep_columns ( 
 	raw_data_id          bigint  NOT NULL,
@@ -338,6 +341,16 @@ CREATE TABLE qiita.dbxref (
 
 CREATE INDEX idx_dbxref ON qiita.dbxref ( term_id );
 
+CREATE TABLE qiita.filepath ( 
+	filepath_id          bigserial  NOT NULL,
+	filepath             varchar  NOT NULL,
+	filepath_type_id     bigint  NOT NULL,
+	CONSTRAINT pk_filepath PRIMARY KEY ( filepath_id ),
+	CONSTRAINT fk_filepath FOREIGN KEY ( filepath_type_id ) REFERENCES qiita.filepath_type( filepath_type_id )    
+ );
+
+CREATE INDEX idx_filepath ON qiita.filepath ( filepath_type_id );
+
 CREATE TABLE qiita.investigation ( 
 	investigation_id     bigserial  NOT NULL,
 	name                 varchar  NOT NULL,
@@ -375,7 +388,6 @@ COMMENT ON COLUMN qiita.logging.information IS 'Other applicable information (de
 CREATE TABLE qiita.preprocessed_data ( 
 	preprocessed_data_id bigserial  NOT NULL,
 	raw_data_id          integer  ,
-	filepath             varchar  NOT NULL,
 	preprocessed_params_table varchar  NOT NULL,
 	preprocessed_params_id bigint  NOT NULL,
 	CONSTRAINT pk_preprocessed_data PRIMARY KEY ( preprocessed_data_id ),
@@ -386,10 +398,21 @@ CREATE INDEX idx_preprocessed_data ON qiita.preprocessed_data ( raw_data_id );
 
 COMMENT ON COLUMN qiita.preprocessed_data.preprocessed_params_table IS 'Name of table holding the params';
 
+CREATE TABLE qiita.preprocessed_filepath ( 
+	preprocessed_data_id bigint  NOT NULL,
+	filepath_id          bigint  NOT NULL,
+	CONSTRAINT idx_preprocessed_filepath PRIMARY KEY ( preprocessed_data_id, filepath_id ),
+	CONSTRAINT fk_preprocessed_filepath FOREIGN KEY ( preprocessed_data_id ) REFERENCES qiita.preprocessed_data( preprocessed_data_id )    ,
+	CONSTRAINT fk_preprocessed_filepath_0 FOREIGN KEY ( filepath_id ) REFERENCES qiita.filepath( filepath_id )    
+ );
+
+CREATE INDEX idx_preprocessed_filepath_0 ON qiita.preprocessed_filepath ( preprocessed_data_id );
+
+CREATE INDEX idx_preprocessed_filepath_1 ON qiita.preprocessed_filepath ( filepath_id );
+
 CREATE TABLE qiita.processed_data ( 
 	processed_data_id    bigserial  NOT NULL,
 	preprocessed_data_id bigint  NOT NULL,
-	processed_data_filepath varchar  NOT NULL,
 	processed_params_table varchar  NOT NULL,
 	processed_params_id  bigint  NOT NULL,
 	processed_date       date  NOT NULL,
@@ -400,6 +423,16 @@ CREATE TABLE qiita.processed_data (
 COMMENT ON COLUMN qiita.processed_data.processed_params_table IS 'Name of table holding processing params';
 
 COMMENT ON COLUMN qiita.processed_data.processed_params_id IS 'Link to a table with the parameters used to generate processed data';
+
+CREATE TABLE qiita.processed_data_filepath ( 
+	processed_data_id    bigint  NOT NULL,
+	filepath_id          bigint  NOT NULL,
+	CONSTRAINT pk_processed_data_filepath UNIQUE ( processed_data_id ) ,
+	CONSTRAINT fk_processed_data_filepath FOREIGN KEY ( processed_data_id ) REFERENCES qiita.processed_data( processed_data_id )    ,
+	CONSTRAINT fk_processed_data_filepath_0 FOREIGN KEY ( filepath_id ) REFERENCES qiita.filepath( filepath_id )    
+ );
+
+CREATE INDEX idx_processed_data_filepath ON qiita.processed_data_filepath ( filepath_id );
 
 CREATE TABLE qiita.qiita_user ( 
 	email                varchar  NOT NULL,
@@ -428,6 +461,18 @@ COMMENT ON COLUMN qiita.qiita_user.user_verify_code IS 'Code for initial user em
 COMMENT ON COLUMN qiita.qiita_user.pass_reset_code IS 'Randomly generated code for password reset';
 
 COMMENT ON COLUMN qiita.qiita_user.pass_reset_timestamp IS 'Time the reset code was generated';
+
+CREATE TABLE qiita.raw_filepath ( 
+	raw_data_id          bigint  NOT NULL,
+	filepath_id          bigint  NOT NULL,
+	CONSTRAINT idx_raw_filepath PRIMARY KEY ( raw_data_id, filepath_id ),
+	CONSTRAINT fk_raw_filepath FOREIGN KEY ( filepath_id ) REFERENCES qiita.filepath( filepath_id )    ,
+	CONSTRAINT fk_raw_filepath_0 FOREIGN KEY ( raw_data_id ) REFERENCES qiita.raw_data( raw_data_id )    
+ );
+
+CREATE INDEX idx_raw_filepath_0 ON qiita.raw_filepath ( filepath_id );
+
+CREATE INDEX idx_raw_filepath_1 ON qiita.raw_filepath ( raw_data_id );
 
 CREATE TABLE qiita.study ( 
 	study_id             bigserial  NOT NULL,
@@ -645,7 +690,7 @@ COMMENT ON COLUMN qiita.job.log_id IS 'Reference to error if status is error';
 
 CREATE TABLE qiita.required_sample_info ( 
 	study_id             bigint  NOT NULL,
-	sample_id            bigint  NOT NULL,
+	sample_id            varchar  NOT NULL,
 	physical_location    varchar  NOT NULL,
 	has_physical_specimen bool  NOT NULL,
 	has_extracted_data   bool  NOT NULL,
@@ -694,7 +739,7 @@ COMMENT ON COLUMN qiita.analysis_job.job_id IS 'Id for a job that is part of the
 
 CREATE TABLE qiita.common_prep_info ( 
 	raw_data_id          bigserial  NOT NULL,
-	sample_id            bigint  NOT NULL,
+	sample_id            varchar  NOT NULL,
 	center_name          varchar  ,
 	center_project_name  varchar  ,
 	ebi_submission_accession varchar  ,
