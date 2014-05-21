@@ -164,6 +164,11 @@ CREATE TABLE qiita.sample_status (
 	CONSTRAINT pk_sample_status PRIMARY KEY ( sample_status_id )
  );
 
+CREATE TABLE qiita.settings ( 
+	test                 bool DEFAULT TRUE NOT NULL,
+	base_data_folder     varchar  NOT NULL
+ );
+
 CREATE TABLE qiita.severity ( 
 	severity_id          serial  NOT NULL,
 	severity             varchar  NOT NULL,
