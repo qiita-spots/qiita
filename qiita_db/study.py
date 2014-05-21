@@ -73,7 +73,7 @@ class Study(QiitaStatusObject):
     """
 
     @staticmethod
-    def create(owner, info, investigation=None):
+    def create(owner, info, investigation_id=None):
         """Creates a new study on the database
 
         Parameters
@@ -82,9 +82,8 @@ class Study(QiitaStatusObject):
             the user id of the study' owner
         info: dict
             the information attached to the study
-        investigation: dict
-            if the study is part of an investigation, the information needed to
-            create the investigation or add study to investigation
+        investigation_id: int
+            if the study is part of an investigation, the id to associate with
 
         Raises
         ------
@@ -114,24 +113,12 @@ class Study(QiitaStatusObject):
         for col in info.keys():
             data.append(info[col])
         study_id = conn_handler.execute_fetchone(sql, data)[0]
-
-        # Insert investigation information if necessary
-        if investigation:
-            if "investigation_id" in investigation:
-                # investigation already exists
-                inv_id = investigation["investigation_id"]
-            else:
-                # investigation does not exist in db so create it and add study
-                sql = ("INSERT INTO qiita.investigation(name, description,"
-                       "contact_person_id) VALUES (%s,%s,%s) RETURNING "
-                       "investigation_id")
-                data = (investigation["name"], investigation["description"],
-                        investigation["contact_person_id"])
-                inv_id = conn_handler.execute_fetchone(sql, data)[0]
-            # add study to investigation
+                
+        # add study to investigation if necessary
+        if investigation_id:
             sql = ("INSERT INTO qiita.investigation_study (investigation_id, "
                    "study_id) VALUES (%s, %s)")
-            conn_handler.execute(sql, (inv_id, study_id))
+            conn_handler.execute(sql, (investigation_id, study_id))
 
         return Study(study_id)
 
@@ -203,6 +190,13 @@ class Study(QiitaStatusObject):
         conn_handler = SQLConnectionHandler()
         sql = "SELECT study_status_id FROM qiita.study WHERE study_id = %s "
         return conn_handler.execute_fetchone(sql, self.id_)[0]
+
+    @status.setter
+    def status(self, status_id):
+        """Sets the study_status_id for the study"""
+        conn_handler = SQLConnectionHandler()
+        sql = "UPDATE qiita.study SET study_status_id = %s WHERE study_id = %s"
+        return conn_handler.execute_fetchone(sql, (status_id, self.id_))[0]
 
     @property
     def sample_ids(self):

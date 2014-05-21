@@ -52,14 +52,15 @@ def scrub_data(s):
     ret = ret.replace(";", "")
     return ret
 
+
 def clean_sql_result(results):
-    """ removes single value list of lists from psycopg2 and returns list of 
+    """Parses single value list of lists from psycopg2 and returns list of
     items
 
     Parameters
     ----------
     results: list of lists
-        list from psycopg2 in the form [[item1], [item2], [item3], ...]
+        list in the form [[item1], [item2], [item3], ...]
 
     Returns
     -------
