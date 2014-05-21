@@ -40,17 +40,25 @@ class Study(QiitaStatusObject):
 
     Attributes
     ----------
-    name
-    info
-    status
-    sample_ids
-    shared_with
-    pmids
-    investigations
-    metadata
-    raw_data
-    preprocessed_data
-    processed_data
+    name: str
+        name of the study
+    info: dict
+        Major information about the study, keyed by db column name
+    status: int
+        Status of the study
+    sample_ids: list of str
+        All sample_ids associated with the study
+    shared_with: list of str
+        Emails of users the study is shared with
+    pmids: list of str
+        PMIDs assiciated with the study
+    investigations: list of int
+        Investigation ids of all investigations study is part of
+    metadata: list of str
+        Metadata column names available from study
+    raw_data: list of data objects
+    preprocessed_data: list of data objects
+    processed_data: list of data objects
 
     Methods
     -------
