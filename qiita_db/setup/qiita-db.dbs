@@ -1,6 +1,14 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <project name="qiita" id="Project669804" database="PostgreSQL" >
 	<comment>Qiita-DB layout</comment>
+	<schema name="public" schemaname="public" >
+		<table name="settings" >
+			<column name="test" type="bool" jt="-7" mandatory="y" >
+				<defo>True</defo>
+			</column>
+			<column name="base_data_folder" type="varchar" jt="12" mandatory="y" />
+		</table>
+	</schema>
 	<schema name="qiita" schemaname="qiita" defo="y" >
 		<table name="analysis" >
 			<comment>hHolds analysis information</comment>
@@ -749,12 +757,6 @@ MAKE SURE sample_id IS FK TO sample_id IN required_sample_info TABLE</comment>
 				<column name="sample_id" />
 			</index>
 		</table>
-		<table name="settings" >
-			<column name="test" type="bool" jt="-7" mandatory="y" >
-				<defo>TRUE</defo>
-			</column>
-			<column name="base_data_folder" type="varchar" jt="12" mandatory="y" />
-		</table>
 		<table name="severity" >
 			<column name="severity_id" type="serial" jt="4" mandatory="y" />
 			<column name="severity" type="varchar" jt="12" mandatory="y" />
@@ -1101,7 +1103,6 @@ Controlled Vocabulary]]></comment>
 		<entity schema="qiita" name="term_path" color="d0def5" x="765" y="990" />
 		<entity schema="qiita" name="term_relationship" color="d0def5" x="765" y="1350" />
 		<entity schema="qiita" name="analysis_users" color="d0def5" x="420" y="525" />
-		<entity schema="qiita" name="user_level" color="d0def5" x="210" y="120" />
 		<entity schema="qiita" name="severity" color="c0d4f3" x="1110" y="990" />
 		<entity schema="qiita" name="analysis" color="d0def5" x="240" y="390" />
 		<entity schema="qiita" name="job" color="d0def5" x="75" y="525" />
@@ -1139,7 +1140,8 @@ Controlled Vocabulary]]></comment>
 		<entity schema="qiita" name="processed_params_uclust" color="d0def5" x="1200" y="435" />
 		<entity schema="qiita" name="sample_status" color="c0d4f3" x="1635" y="825" />
 		<entity schema="qiita" name="processed_filepath" color="c0d4f3" x="1185" y="195" />
-		<entity schema="qiita" name="settings" color="c0d4f3" x="45" y="90" />
+		<entity schema="qiita" name="user_level" color="d0def5" x="210" y="120" />
+		<entity schema="public" name="settings" color="c0d4f3" x="45" y="90" />
 		<group name="Group_analyses" color="c4e0f9" >
 			<comment>analysis tables</comment>
 			<entity schema="qiita" name="analysis" />

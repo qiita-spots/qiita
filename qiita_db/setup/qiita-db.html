@@ -817,18 +817,6 @@ Links analyses to the users they are shared with</title></a>
 <a xlink:href='#email'><text x='438' y='577'>email</text><title>email varchar not null</title></a>
 <a xlink:href='#email'><use id='fk' x='498' y='566' xlink:href='#fk'/><title>References qiita_user ( email ) </title></a>
 
-<!-- ============= Table 'user_level' ============= -->
-<rect class='table' x='210' y='113' width='105' height='90' rx='7' ry='7' />
-<path d='M 210.50 139.50 L 210.50 120.50 Q 210.50 113.50 217.50 113.50 L 307.50 113.50 Q 314.50 113.50 314.50 120.50 L 314.50 139.50 L210.50 139.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
-<a xlink:href='#user_level'><text x='235' y='127' class='tableTitle'>user_level</text><title>Table qiita.user_level
-Holds available user levels</title></a>
-  <use id='nn' x='212' y='147' xlink:href='#nn'/><a xlink:href='#user_level_id'><use id='pk' x='212' y='146' xlink:href='#pk'/><title>Primary Key  ( user_level_id ) </title></a>
-<a xlink:href='#user_level_id'><text x='228' y='157'>user_level_id</text><title>user_level_id serial not null</title></a>
-<a xlink:href='#user_level_id'><use id='ref' x='303' y='146' xlink:href='#ref'/><title>Referred by qiita_user ( user_level_id ) </title></a>
-  <use id='nn' x='212' y='162' xlink:href='#nn'/><a xlink:href='#name'><text x='228' y='172'>name</text><title>name varchar not null
-One of the user levels &#040;admin&#044; user&#044; guest&#044; etc&#041;</title></a>
-  <use id='nn' x='212' y='177' xlink:href='#nn'/><a xlink:href='#description'><text x='228' y='187'>description</text><title>description text not null</title></a>
-
 <!-- ============= Table 'severity' ============= -->
 <rect class='table' x='1110' y='983' width='90' height='75' rx='7' ry='7' />
 <path d='M 1110.50 1009.50 L 1110.50 990.50 Q 1110.50 983.50 1117.50 983.50 L 1192.50 983.50 Q 1199.50 983.50 1199.50 990.50 L 1199.50 1009.50 L1110.50 1009.50 ' style='fill:url(#tableHeaderGradient1); stroke:none;' />
@@ -1383,11 +1371,23 @@ What version of reference or type of reference used</title></a>
 <a xlink:href='#filepath_id'><text x='1203' y='247'>filepath_id</text><title>filepath_id bigint not null</title></a>
 <a xlink:href='#filepath_id'><use id='fk' x='1308' y='236' xlink:href='#fk'/><title>References filepath ( filepath_id ) </title></a>
 
+<!-- ============= Table 'user_level' ============= -->
+<rect class='table' x='210' y='113' width='105' height='90' rx='7' ry='7' />
+<path d='M 210.50 139.50 L 210.50 120.50 Q 210.50 113.50 217.50 113.50 L 307.50 113.50 Q 314.50 113.50 314.50 120.50 L 314.50 139.50 L210.50 139.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
+<a xlink:href='#user_level'><text x='235' y='127' class='tableTitle'>user_level</text><title>Table qiita.user_level
+Holds available user levels</title></a>
+  <use id='nn' x='212' y='147' xlink:href='#nn'/><a xlink:href='#user_level_id'><use id='pk' x='212' y='146' xlink:href='#pk'/><title>Primary Key  ( user_level_id ) </title></a>
+<a xlink:href='#user_level_id'><text x='228' y='157'>user_level_id</text><title>user_level_id serial not null</title></a>
+<a xlink:href='#user_level_id'><use id='ref' x='303' y='146' xlink:href='#ref'/><title>Referred by qiita_user ( user_level_id ) </title></a>
+  <use id='nn' x='212' y='162' xlink:href='#nn'/><a xlink:href='#name'><text x='228' y='172'>name</text><title>name varchar not null
+One of the user levels &#040;admin&#044; user&#044; guest&#044; etc&#041;</title></a>
+  <use id='nn' x='212' y='177' xlink:href='#nn'/><a xlink:href='#description'><text x='228' y='187'>description</text><title>description text not null</title></a>
+
 <!-- ============= Table 'settings' ============= -->
 <rect class='table' x='45' y='83' width='135' height='75' rx='7' ry='7' />
 <path d='M 45.50 109.50 L 45.50 90.50 Q 45.50 83.50 52.50 83.50 L 172.50 83.50 Q 179.50 83.50 179.50 90.50 L 179.50 109.50 L45.50 109.50 ' style='fill:url(#tableHeaderGradient1); stroke:none;' />
-<a xlink:href='#settings'><text x='91' y='97' class='tableTitle'>settings</text><title>Table qiita.settings</title></a>
-  <use id='nn' x='47' y='117' xlink:href='#nn'/><a xlink:href='#test'><text x='63' y='127'>test</text><title>test bool not null default TRUE</title></a>
+<a xlink:href='#settings'><text x='91' y='97' class='tableTitle'>settings</text><title>Table public.settings</title></a>
+  <use id='nn' x='47' y='117' xlink:href='#nn'/><a xlink:href='#test'><text x='63' y='127'>test</text><title>test bool not null default True</title></a>
   <use id='nn' x='47' y='132' xlink:href='#nn'/><a xlink:href='#base_data_folder'><text x='63' y='142'>base_data_folder</text><title>base_data_folder varchar not null</title></a>
 
 </g></svg>
@@ -2351,36 +2351,6 @@ What version of reference or type of reference used</title></a>
 	<tr>
 		<td>fk_analysis_users_user</td>
 		<td > ( email ) ref <a href='#qiita&#095;user'>qiita&#095;user</a> (email) </td>
-		<td>  </td>
-	</tr>
-</tbody>
-</table>
-
-<br/><br/>
-<table id='dbs' >
-<thead>
-<tr><th colspan='3'><a name='user_level'>user_level</a></th></tr>
-<tr><td colspan='3'>Holds available user levels </td></tr>
-</thead>
-<tbody>
-	<tr>
-		<td><a name='user_level_id'>user&#095;level&#095;id</a></td>
-		<td width='40%'> serial  NOT NULL  </td>
-		<td width='99%'>  </td>
-	</tr>
-	<tr>
-		<td><a name='name'>name</a></td>
-		<td width='40%'> varchar  NOT NULL  </td>
-		<td width='99%'> One of the user levels &#040;admin&#044; user&#044; guest&#044; etc&#041; </td>
-	</tr>
-	<tr>
-		<td><a name='description'>description</a></td>
-		<td width='40%'> text  NOT NULL  </td>
-		<td width='99%'>  </td>
-	</tr>
-<tr><td colspan='3' class='subpart'><b>Indexes</b></td></tr>
-	<tr>		<td>pk&#095;user&#095;level primary key</td>
-		<td> ON user&#095;level&#095;id</td>
 		<td>  </td>
 	</tr>
 </tbody>
@@ -4095,12 +4065,42 @@ Linked by y being raw&#095;data&#095;id from raw data table&#046; </td></tr>
 <br/><br/>
 <table id='dbs' >
 <thead>
+<tr><th colspan='3'><a name='user_level'>user_level</a></th></tr>
+<tr><td colspan='3'>Holds available user levels </td></tr>
+</thead>
+<tbody>
+	<tr>
+		<td><a name='user_level_id'>user&#095;level&#095;id</a></td>
+		<td width='40%'> serial  NOT NULL  </td>
+		<td width='99%'>  </td>
+	</tr>
+	<tr>
+		<td><a name='name'>name</a></td>
+		<td width='40%'> varchar  NOT NULL  </td>
+		<td width='99%'> One of the user levels &#040;admin&#044; user&#044; guest&#044; etc&#041; </td>
+	</tr>
+	<tr>
+		<td><a name='description'>description</a></td>
+		<td width='40%'> text  NOT NULL  </td>
+		<td width='99%'>  </td>
+	</tr>
+<tr><td colspan='3' class='subpart'><b>Indexes</b></td></tr>
+	<tr>		<td>pk&#095;user&#095;level primary key</td>
+		<td> ON user&#095;level&#095;id</td>
+		<td>  </td>
+	</tr>
+</tbody>
+</table>
+
+<br/><br/>
+<table id='dbs' >
+<thead>
 <tr><th colspan='3'><a name='settings'>settings</a></th></tr>
 </thead>
 <tbody>
 	<tr>
 		<td><a name='test'>test</a></td>
-		<td width='40%'> bool  NOT NULL  DEFO TRUE </td>
+		<td width='40%'> bool  NOT NULL  DEFO True </td>
 		<td width='99%'>  </td>
 	</tr>
 	<tr>
