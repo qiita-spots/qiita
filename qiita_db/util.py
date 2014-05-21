@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 from __future__ import division
+from os.path import abspath, dirname, join
 
 from .exceptions import QiitaDBExecutionError
 
@@ -70,7 +71,7 @@ def check_required(keys, required):
     if not isinstance(required, set):
         raise ValueError("required keys list must be set type object")
     if len(required.difference(set(keys))) > 0:
-            raise QiitaDBExecutionError("Required keys missing: %s" %
+            raise RuntimeError("Required keys missing: %s" %
                                         required.difference(set(keys)))
 
 
@@ -92,10 +93,63 @@ def check_table_cols(conn_handler, keys, table):
         If keys exist that are not in the table
     """
     sql = ("SELECT column_name FROM information_schema.columns WHERE "
-               "table_name = %s")
+           "table_name = %s")
     cols = conn_handler.execute_fetchone(sql, (table, ))
     if len(cols) == 0:
         raise RuntimeError("Unable to fetch column names for table %s" % table)
     if len(set(keys).difference(cols)) > 0:
         raise QiitaDBExecutionError("Non-database keys found: %s" %
                                     set(keys).difference(cols))
+
+
+
+def populate_test_db(conn_handler, schemapath=None, initpath=None,
+                     testdatapath=None):
+    """Populates the test database using the file initialzie_test.sql
+
+    Parameters
+    ----------
+    conn_handler: SQLConnectionHandler object
+        Previously opened conection to the database
+    schemapath: str, optional
+        Path to the test database schema sql file (default qiita.sql)
+    testdatapath: str, optional
+        Path to the test database setup sql file (default initialize.sql)
+    testdatapath: str, optional
+        Path to the test database data sql file (default initialize_test.sql)
+    """
+    # make sure we are on test database
+    if not conn_handler.execute_fetchone("SELECT test FROM settings")[0]:
+        raise IOError("Trying to test using non-test database!")
+
+    if testdatapath is None:
+        path = dirname(abspath(__file__))
+        testdatapath = join((path, "setup/initialize_test.sql"))
+    if initpath is None:
+        path = dirname(abspath(__file__))
+        initpath = join((path, "setup/initialize.sql"))
+    if schemapath is None:
+        path = dirname(abspath(__file__))
+        schemapath = join((path, "setup/qiita.sql"))
+    # build schema, then populate it
+    with open(schemapath) as fin:
+        conn_handler.execute(fin.read())
+    with open(initpath) as fin:
+        conn_handler.execute(fin.read())
+    with open(testdatapath) as fin:
+        conn_handler.execute(fin.read())
+
+
+
+def teardown_qiita_schema(conn_handler):
+    """removes qiita schema from test database
+
+    Parameters
+    ----------
+    conn_handler: SQLConnectionHandler object
+        Previously opened conection to the database
+    """
+    # make sure we are on test database
+    if not conn_handler.execute_fetchone("SELECT test FROM settings")[0]:
+        raise IOError("Trying to test using non-test database!")
+    conn_handler.execute("DROP SCHEMA qiita CASCADE")
