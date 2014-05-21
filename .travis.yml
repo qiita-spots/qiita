@@ -7,8 +7,7 @@ install:
   - pip install coveralls
   - pip install .
 script:
-  - nosetests
-  - coverage run --source=qiita setup.py test
+  - nosetests --with-coverage --cover-package=coveralls
 services:
   - redis-server
 before_script:
