@@ -22,8 +22,8 @@ Classes
 from datetime import date
 
 from .base import QiitaStatusObject
-from .util import check_required, check_table_cols
-from .exceptions import QiitaDBNotImplementedError, QiitaDBExecutionError
+from .util import check_required, check_table_cols, clean_sql_result
+from .exceptions import QiitaDBNotImplementedError
 from .sql_connection import SQLConnectionHandler
 
 
@@ -41,16 +41,27 @@ class Study(QiitaStatusObject):
     Attributes
     ----------
     name
-    sample_ids
     info
+    status
+    sample_ids
+    shared_with
+    pmids
+    investigations
+    metadata
+    raw_data
+    preprocessed_data
+    processed_data
 
     Methods
     -------
-    add_samples(samples)
-        Adds the samples listed in `samples` to the study
+    share_with(email)
+        Shares the study with given user
 
-    remove_samples(samples)
-        Removes the samples listed in `samples` from the study
+     def add_raw_data(raw_data_id):
+        Associates raw data with the study
+
+    add_pmid(self, pmid):
+        Adds PMID to study
     """
 
     @staticmethod
@@ -127,6 +138,7 @@ class Study(QiitaStatusObject):
         """
         raise QiitaDBNotImplementedError()
 
+# --- Attributes ---
     @property
     def name(self):
         """Returns the name of the study"""
@@ -148,22 +160,11 @@ class Study(QiitaStatusObject):
         return conn_handler.execute(sql, (name, self.id_))
 
     @property
-    def sample_ids(self):
-        """Returns the IDs of all samples in study
-
-        The sample IDs are returned as a list of strings in alphabetical order.
-        """
-        conn_handler = SQLConnectionHandler()
-        sql = ("SELECT sample_id FROM qiita.required_sample_info WHERE "
-               "study_id = %s ORDER BY sample_id")
-        return conn_handler.execute_fetchone(sql, self.id_)
-
-    @property
     def info(self):
         """Dict with any other information attached to the study"""
         conn_handler = SQLConnectionHandler()
         sql = "SELECT * FROM qiita.study WHERE study_id = %s"
-        return conn_handler.execute_fetchone(sql, self.id_)
+        return dict(conn_handler.execute_fetchone(sql, self.id_))
 
     @info.setter
     def info(self, info):
@@ -188,20 +189,105 @@ class Study(QiitaStatusObject):
 
         conn_handler.execute(sql, data)
 
-    def add_samples(self, samples):
-        """Adds the samples listed in `samples` to the study
-        Parameters
-        ----------
-        samples : list of strings
-            The sample Ids to be added to the study
-        """
-        raise QiitaDBNotImplementedError()
+    @property
+    def status(self):
+        """Returns the study_status_id for the study"""
+        conn_handler = SQLConnectionHandler()
+        sql = "SELECT study_status_id FROM qiita.study WHERE study_id = %s "
+        return conn_handler.execute_fetchone(sql, self.id_)[0]
 
-    def remove_samples(self, samples):
-        """Removes the samples listed in `samples` from the study
+    @property
+    def sample_ids(self):
+        """Returns the IDs of all samples in study
+
+        The sample IDs are returned as a list of strings in alphabetical order.
+        """
+        conn_handler = SQLConnectionHandler()
+        sql = ("SELECT sample_id FROM qiita.required_sample_info WHERE "
+               "study_id = %s ORDER BY sample_id")
+        return conn_handler.execute_fetchone(sql, self.id_)
+
+    @property
+    def shared_with(self):
+        """list of users the study is shared with"""
+        conn_handler = SQLConnectionHandler()
+        sql = "SELECT * FROM qiita.study_users WHERE study_id = %s"
+        return list(conn_handler.execute_fetchone(sql, self.id_))
+
+    @property
+    def pmids(self):
+        """ Returns list of paper PMIDs from this study """
+        conn_handler = SQLConnectionHandler()
+        sql = "SELECT pmid FROM qiita.study_pmid WHERE study_id = %s"
+        return clean_sql_result(conn_handler.execute_fetchall(sql, self.id_))
+
+    @property
+    def investigations(self):
+        """ Returns list of investigation_id this study is part of """
+        conn_handler = SQLConnectionHandler()
+        sql = ("SELECT investigation_id FROM qiita.investigation_study WHERE "
+               "study_id = %s")
+        return clean_sql_result(conn_handler.execute_fetchall(sql, self.id_))
+
+    @property
+    def metadata(self):
+        """ Returns list of metadata columns """
+        conn_handler = SQLConnectionHandler()
+        sql = ("SELECT column_name FROM qiita.study_sample_columns WHERE "
+               "study_id = %s")
+        return clean_sql_result(conn_handler.execute_fetchall(sql, self.id_))
+
+    @property
+    def raw_data(self):
+        """ Returns list of data objects with raw data info """
+        raise NotImplementedError(Study.raw_data)
+
+    @property
+    def preprocessed_data(self):
+        """ Returns list of data objects with preprocessed data info """
+        raise NotImplementedError(Study.preprocessed_data)
+
+
+    @property
+    def processed_data(self):
+        """ Returns list of data objects with processed data info """
+        raise NotImplementedError(Study.processed_data)
+
+# --- methods ---
+    def share_with(self, email):
+        """Shares the study with given user
+
         Parameters
         ----------
-        samples : list of strings
-            The sample Ids to be removed from the study
+        email: str
+            email of the user to share with
         """
-        raise QiitaDBNotImplementedError()
+        conn_handler = SQLConnectionHandler()
+        sql = ("INSERT INTO qiita.study_users (study_id, email) VALUES "
+               "(%s, %s)")
+        conn_handler.execute_fetchone(sql, (self.id_, email))
+
+    def add_raw_data(self, raw_data_id):
+        """Associates raw data with the study
+
+        Parameters
+        ----------
+        raw_data_id: int
+            ID of the raw data to associate with study
+        """
+        conn_handler = SQLConnectionHandler()
+        sql = ("INSERT INTO qiita.study_raw_data (study_id, raw_data_id) "
+               "VALUES (%s, %s)")
+        conn_handler.execute_fetchone(sql, (self.id_, raw_data_id))
+
+    def add_pmid(self, pmid):
+        """Adds PMID to study
+
+        Parameters
+        ----------
+        pmid: int
+            pmid to associate with study
+        """
+        conn_handler = SQLConnectionHandler()
+        sql = "INSERT INTO qiita.study_pmid (study_id, pmid) VALUES (%s, %s)"
+        conn_handler.execute_fetchone(sql, (self.id_, pmid))

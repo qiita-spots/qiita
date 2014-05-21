@@ -1,6 +1,7 @@
 from unittest import TestCase, main
 
 from ..qiita_db.study import Study
+from qiita_db.util import populate_test_db, teardown_qiita_schema
 from ..exceptions import QiitaDBExecutionError, QiitaDBConnectionError
 from ..sql_connection import SQLConnectionHandler
 
@@ -13,16 +14,20 @@ from ..sql_connection import SQLConnectionHandler
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
-#ASSUMING EMPTY DATABASE ALREADY MADE
+
+# ALL TESTS ASSUME EMPTY qiita DATABASE EXISTS
 class TestStudy(TestCase):
     def SetUp(self):
         conn = SQLConnectionHandler()
         populate_test_db(conn)
 
     def TearDown(self):
-        pass
+        conn = SQLConnectionHandler()
+        teardown_qiita_schema(conn)
 
     def test_create_study():
+        """Insert a study into the database"""
+        Study.create('qiita@foo.bar', )
 
 
 if __name__ == "__main__":
