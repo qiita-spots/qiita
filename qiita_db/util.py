@@ -72,7 +72,7 @@ def check_required(keys, required):
         raise ValueError("required keys list must be set type object")
     if len(required.difference(set(keys))) > 0:
             raise RuntimeError("Required keys missing: %s" %
-                                        required.difference(set(keys)))
+                               required.difference(set(keys)))
 
 
 def check_table_cols(conn_handler, keys, table):
@@ -100,7 +100,6 @@ def check_table_cols(conn_handler, keys, table):
     if len(set(keys).difference(cols)) > 0:
         raise QiitaDBExecutionError("Non-database keys found: %s" %
                                     set(keys).difference(cols))
-
 
 
 def populate_test_db(conn_handler, schemapath=None, initpath=None,
@@ -138,7 +137,6 @@ def populate_test_db(conn_handler, schemapath=None, initpath=None,
         conn_handler.execute(fin.read())
     with open(testdatapath) as fin:
         conn_handler.execute(fin.read())
-
 
 
 def teardown_qiita_schema(conn_handler):
