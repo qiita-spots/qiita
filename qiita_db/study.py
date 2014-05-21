@@ -249,7 +249,6 @@ class Study(QiitaStatusObject):
         """ Returns list of data objects with preprocessed data info """
         raise NotImplementedError(Study.preprocessed_data)
 
-
     @property
     def processed_data(self):
         """ Returns list of data objects with processed data info """

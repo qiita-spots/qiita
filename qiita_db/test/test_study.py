@@ -22,14 +22,30 @@ class TestStudy(TestCase):
         populate_test_db(conn)
 
         self.info = {
-
+            "name": "Chickens",
+            "emp_person_id": 2,
+            "first_contact": "2014-05-21",
+            "timeseries_type_id": 0,
+            "lab_person_id": 0,
+            "metadata_complete": True,
+            "mixs_compliant": True,
+            "number_samples_collected": 25,
+            "number_samples_promised": 28,
+            "portal_type_id": 3,
+            "principal_investigator_id": 3,
+            "study_title": "Fried chicken microbiome",
+            "study_alias": "FCM",
+            "study_description": ("Microbiome of people who eat nothing but "
+                                  "fried chicken"),
+            "study_abstract": ("We wanted to see if we could get funding for "
+                               "giving people heart attacks")
         }
 
     def TearDown(self):
         conn = SQLConnectionHandler()
         teardown_qiita_schema(conn)
 
-    def test_create_study():
+    def test_create_study(self):
         """Insert a study into the database"""
         Study.create('test@foo.bar', self.info)
 
