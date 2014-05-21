@@ -52,6 +52,21 @@ def scrub_data(s):
     ret = ret.replace(";", "")
     return ret
 
+def clean_sql_result(results):
+    """ removes single value list of lists from psycopg2 and returns list of 
+    items
+
+    Parameters
+    ----------
+    results: list of lists
+        list from psycopg2 in the form [[item1], [item2], [item3], ...]
+
+    Returns
+    -------
+    list: [item1, item2, item3, ...]
+    """
+    return [i[0] for i in results]
+
 
 def check_required(keys, required):
     """Makes sure all required columns are in a list
@@ -100,54 +115,3 @@ def check_table_cols(conn_handler, keys, table):
     if len(set(keys).difference(cols)) > 0:
         raise QiitaDBExecutionError("Non-database keys found: %s" %
                                     set(keys).difference(cols))
-
-
-def populate_test_db(conn_handler, schemapath=None, initpath=None,
-                     testdatapath=None):
-    """Populates the test database using the file initialzie_test.sql
-
-    Parameters
-    ----------
-    conn_handler: SQLConnectionHandler object
-        Previously opened conection to the database
-    schemapath: str, optional
-        Path to the test database schema sql file (default qiita.sql)
-    testdatapath: str, optional
-        Path to the test database setup sql file (default initialize.sql)
-    testdatapath: str, optional
-        Path to the test database data sql file (default initialize_test.sql)
-    """
-    # make sure we are on test database
-    if not conn_handler.execute_fetchone("SELECT test FROM settings")[0]:
-        raise IOError("Trying to test using non-test database!")
-
-    if testdatapath is None:
-        path = dirname(abspath(__file__))
-        testdatapath = join((path, "setup/initialize_test.sql"))
-    if initpath is None:
-        path = dirname(abspath(__file__))
-        initpath = join((path, "setup/initialize.sql"))
-    if schemapath is None:
-        path = dirname(abspath(__file__))
-        schemapath = join((path, "setup/qiita.sql"))
-    # build schema, then populate it
-    with open(schemapath) as fin:
-        conn_handler.execute(fin.read())
-    with open(initpath) as fin:
-        conn_handler.execute(fin.read())
-    with open(testdatapath) as fin:
-        conn_handler.execute(fin.read())
-
-
-def teardown_qiita_schema(conn_handler):
-    """removes qiita schema from test database
-
-    Parameters
-    ----------
-    conn_handler: SQLConnectionHandler object
-        Previously opened conection to the database
-    """
-    # make sure we are on test database
-    if not conn_handler.execute_fetchone("SELECT test FROM settings")[0]:
-        raise IOError("Trying to test using non-test database!")
-    conn_handler.execute("DROP SCHEMA qiita CASCADE")
