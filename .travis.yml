@@ -4,11 +4,15 @@ python:
 install:
   - pip install numpy
   - pip install cogent
+  - pip install coveralls
   - pip install .
 script:
   - nosetests
+  - coverage run --source=qiita setup.py test
 services:
   - redis-server
 before_script:
   # For PostgreSQL, from http://docs.travis-ci.com/user/database-setup/#PostgreSQL
   - psql -c 'create database qiita_test;' -U postgres
+after_success:
+  - coveralls
