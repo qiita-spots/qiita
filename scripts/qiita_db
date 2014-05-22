@@ -25,16 +25,15 @@ def qiita_db():
               help="The folder where the test data files are stored")
 @click.option('--user', default='postgres',
               help="The database user to connect to the database")
-@click.password_option()
 @click.option('--host', default='localhost',
               help='The host where the database lives')
-def make_test_env(base_data_folder, user, password, host):
+def make_test_env(base_data_folder, user, host):
     """Creates a test database environment.
 
     Creates a new database called `qiita_test` tailored for testing purposes
     and initializes the `settings` table of such database
     """
-    make_test_environment(base_data_folder, user, password, host)
+    make_test_environment(base_data_folder, user, None, host)
 
 
 @click.command()
