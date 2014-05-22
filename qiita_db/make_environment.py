@@ -21,7 +21,7 @@ POPULATE_FP = join(dirname(abspath(__file__)),
                    'support_files/populate_test_db.sql')
 
 
-def make_test_environment(base_data_folder, user, password, host):
+def make_test_environment(base_data_dir, user, password, host):
     """Creates a test database environment.
 
     Creates a new database called `qiita_test` tailored for testing purposes
@@ -29,7 +29,7 @@ def make_test_environment(base_data_folder, user, password, host):
 
     Parameters
     ----------
-    base_data_folder : str
+    base_data_dir : str
     """
     # Connect to the postgres server
     conn = connect(user=user, host=host, password=password)
@@ -52,8 +52,8 @@ def make_test_environment(base_data_folder, user, password, host):
         cur.execute(f.read())
 
     # Insert the settings values to the database
-    cur.execute("INSERT INTO settings (test, base_data_folder) VALUES "
-                "(TRUE, '%s')" % base_data_folder)
+    cur.execute("INSERT INTO settings (test, base_data_dir) VALUES "
+                "(TRUE, '%s')" % base_data_dir)
 
     conn.commit()
     cur.close()

@@ -9,10 +9,6 @@ from __future__ import division
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
-DATATYPES = ["16S", "18S", "Metabolites", "Metagenomes", "Metaproteomes"]
-# This is going to be dynamically filled, hardcoding now for development
-FUNCTIONS = ["Alpha_Diversity", "Beta_Diversity", "Procrustes"]
-
 from qiita_core.configuration_manager import ConfigurationManager
 
 qiita_config = ConfigurationManager()

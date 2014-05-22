@@ -15,8 +15,8 @@
 # Change to FALSE in a production system
 TEST_ENVIRONMENT = TRUE
 
-# Path to the base folder where the data files are going to be stored, uncomment to set
-# BASE_DATA_FOLDER = /path/to/base/folder
+# Path to the base directory where the data files are going to be stored, uncomment to set
+# BASE_DATA_DIR = /path/to/base/directory
 
 # ----------------------------- IPython settings ------------------------------
 [ipython]
@@ -28,9 +28,6 @@ TEST_ENVIRONMENT = TRUE
 [postgres]
 # The user name to connect to the database
 USER = postgres
-
-# The password of the user, uncomment to set (default None)
-# PASSWORD = aLongStringWithSomeNumb3ersToMakeItHardToGuess
 
 # The database to connect to
 DATABASE = qiita_test

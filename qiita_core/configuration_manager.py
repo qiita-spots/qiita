@@ -22,8 +22,8 @@ class ConfigurationManager(object):
     ----------
     test_environment : bool
         If true, we are in a test environment.
-    base_data_folder : str
-        Path to the base folder where all data file are stored
+    base_data_dir : str
+        Path to the base directorys where all data file are stored
     user : str
         The postgres user
     password : str
@@ -43,16 +43,17 @@ class ConfigurationManager(object):
 
         # Parse the configuration file
         config = ConfigParser()
-        config.readfp(open(conf_fp, 'U'))
+        with open(conf_fp, 'U') as conf_file:
+            config.readfp(conf_file)
 
         # Get the configuration of the main section
         self.test_environment = config.getboolean('main', 'TEST_ENVIRONMENT')
         try:
-            self.base_data_folder = config.get('main', 'BASE_DATA_FOLDER')
+            self.base_data_dir = config.get('main', 'BASE_DATA_DIR')
         except NoOptionError as e:
             if self.test_environment:
-                self.base_data_folder = join(dirname(abspath(__file__)),
-                                             '../test_data')
+                self.base_data_dir = join(dirname(abspath(__file__)),
+                                          '../test_data')
             else:
                 raise e
 
