@@ -49,22 +49,22 @@ class ConfigurationManager(object):
         self.test_environment = config.getboolean('main', 'TEST_ENVIRONMENT')
         try:
             self.base_data_folder = config.get('main', 'BASE_DATA_FOLDER')
-        except NoOptionError, e:
+        except NoOptionError as e:
             if self.test_environment:
                 self.base_data_folder = join(dirname(abspath(__file__)),
                                              '../test_data')
             else:
-                raise NoOptionError(e)
+                raise e
 
         # Get the configuration of the postgres section
         self.user = config.get('postgres', 'USER')
         try:
             self.password = config.get('postgres', 'PASSWORD')
-        except NoOptionError, e:
+        except NoOptionError as e:
             if self.test_environment:
                 self.password = None
             else:
-                raise NoOptionError(e)
+                raise e
         self.database = config.get('postgres', 'DATABASE')
         self.host = config.get('postgres', 'HOST')
         self.port = config.getint('postgres', 'PORT')

@@ -1,11 +1,71 @@
-#!/bin/sh
+#!/usr/bin/env python
 
-# -----------------------------------------------------------------------------
-# Copyright (c) 2014--, The Qiita Development Team.
-#
-# Distributed under the terms of the BSD 3-clause License.
-#
-# The full license is in the file LICENSE, distributed with this software.
-# -----------------------------------------------------------------------------
+from os.path import abspath, dirname, join
 
-exec pyqi --driver-name qiita_db --command-config-module qiita_db.interfaces.optparse.config -- "$@"
+import click
+from psycopg2 import connect
+from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
+
+
+@click.group()
+def qiita_db():
+    pass
+
+
+@click.command()
+@click.option('--base_data_folder',
+              default=join(dirname(abspath(__file__)), '../test_data'),
+              help="The folder where the test data files are stored")
+@click.option('--user', default='postgres',
+              help="The database user to connect to the database")
+@click.option('--password', default=None,
+              help='The password to connect to the database')
+@click.option('--host', default='localhost',
+              help='The host where the database lives')
+def make_test_env(base_data_folder, user, password, host):
+    """Creates a test database environment.
+
+    Creates a new database called `qiita_test` tailored for testing purposes
+    and initializes the `settings` table of such database
+    """
+    # Connect to the postgres server
+    conn = connect(user=user, host=host, password=password)
+    # Set the isolation level to AUTOCOMMIT so we can execute a
+    # create database sql query
+    conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
+    # Create the database
+    cur = conn.cursor()
+    cur.execute('CREATE DATABASE qiita_test')
+    cur.close()
+    conn.close()
+
+    # Connect to the postgres server, but this time to the just created db
+    conn = connect(user=user, host=host, password=password,
+                   database='qiita_test')
+    cur = conn.cursor()
+
+    # Build the SQL layout into the database
+    layout_fp = join(dirname(abspath(__file__)),
+                     '../qiita_db/setup/qiita-db-settings.sql')
+    with open(layout_fp, 'U') as f:
+        cur.execute(f.read())
+
+    # Insert the settings values to the database
+    cur.execute("INSERT INTO settings (test, base_data_folder) VALUES "
+                "(TRUE, '%s')" % base_data_folder)
+
+    conn.commit()
+    cur.close()
+    conn.close()
+
+
+@click.command()
+def make_production_env():
+    """TODO: Not implemented"""
+    raise NotImplementedError()
+
+qiita_db.add_command(make_test_env)
+qiita_db.add_command(make_production_env)
+
+if __name__ == '__main__':
+    qiita_db()

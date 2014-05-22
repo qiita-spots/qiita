@@ -71,6 +71,7 @@ setup(name='qiita',
       scripts=glob('scripts/*'),
       install_requires=['tornado == 3.1.1', 'redis == 2.8.0',
                         'tornado-redis == 2.4.15', 'psycopg2',
-                        'pgbouncer', 'pyqi == 0.3.2', 'ipython[all]'],
+                        'pgbouncer', 'pyqi == 0.3.2', 'ipython[all]',
+                        'click == 1.0'],
       classifiers=classifiers
       )

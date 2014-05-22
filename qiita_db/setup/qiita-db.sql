@@ -1,11 +1,4 @@
-CREATE SCHEMA public;
-
 CREATE SCHEMA qiita;
-
-CREATE TABLE settings ( 
-	test                 bool DEFAULT True NOT NULL,
-	base_data_folder     varchar  NOT NULL
- );
 
 CREATE TABLE qiita.analysis_status ( 
 	analysis_status_id   bigserial  NOT NULL,
