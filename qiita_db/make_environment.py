@@ -48,7 +48,7 @@ def make_test_environment(base_data_folder, user, password, host):
     cur = conn.cursor()
 
     # Build the SQL layout into the database
-    with open(LAYOUT_FP, 'U') as f:
+    with open(SETTINGS_FP, 'U') as f:
         cur.execute(f.read())
 
     # Insert the settings values to the database
