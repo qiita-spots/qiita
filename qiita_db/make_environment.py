@@ -7,18 +7,18 @@
 # -----------------------------------------------------------------------------
 
 from os.path import abspath, dirname, join
+from functools import partial
 from psycopg2 import connect
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 
-DFLT_BASE_DATA_FOLDER = join(dirname(abspath(__file__)),
-                             'support_files/test_data')
-SETTINGS_FP = join(dirname(abspath(__file__)),
-                   'support_files/qiita-db-settings.sql')
-LAYOUT_FP = join(dirname(abspath(__file__)), 'support_files/qiita-db.sql')
-INITIALIZE_FP = join(dirname(abspath(__file__)),
-                     'support_files/initialize.sql')
-POPULATE_FP = join(dirname(abspath(__file__)),
-                   'support_files/populate_test_db.sql')
+get_support_file = partial(join, join(dirname(abspath(__file__)),
+                                      'support_files'))
+
+DFLT_BASE_DATA_FOLDER = get_support_file('test_data')
+SETTINGS_FP = get_support_file('qiita-db-settings.sql')
+LAYOUT_FP = get_support_file('qiita-db.sql')
+INITIALIZE_FP = get_support_file('initialize.sql')
+POPULATE_FP = get_support_file('populate_test_db.sql')
 
 
 def make_test_environment(base_data_dir, user, password, host):
