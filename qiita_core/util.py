@@ -8,7 +8,7 @@
 
 from qiita_db.sql_connection import SQLConnectionHandler
 from qiita_db.make_environment import (LAYOUT_FP, INITIALIZE_FP, POPULATE_FP)
-from qiita_core.config import qiita_config
+from qiita_core.qiita_settings import qiita_config
 
 
 def build_test_database(setup_fn):

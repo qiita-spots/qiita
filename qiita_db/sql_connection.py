@@ -15,7 +15,7 @@ from psycopg2 import connect, Error as PostgresError
 from psycopg2.extras import DictCursor
 
 from .exceptions import QiitaDBExecutionError, QiitaDBConnectionError
-from qiita_core.config import qiita_config
+from qiita_core.qiita_settings import qiita_config
 
 
 class SQLConnectionHandler(object):
