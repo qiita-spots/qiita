@@ -6,9 +6,8 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
-from os.path import abspath, dirname, join
-
 from qiita_db.sql_connection import SQLConnectionHandler
+from qiita_db.make_environment import (LAYOUT_FP, INITIALIZE_FP, POPULATE_FP)
 from qiita_core.config import qiita_config
 
 
@@ -20,20 +19,16 @@ def build_test_database(setup_fn):
 
     # Get the paths to the SQL files with the schema layout, the database
     # initialization and the test data
-    setup_dp = join(dirname(abspath(__file__)), '../qiita_db/setup')
-    layout_fp = join(setup_dp, 'qiita-db.sql')
-    init_fp = join(setup_dp, 'initialize.sql')
-    populate_fp = join(setup_dp, 'populate_test_db.sql')
 
     def decorated_setup_fn(*args, **kwargs):
         # Create the schema
-        with open(layout_fp, 'U') as f:
+        with open(LAYOUT_FP, 'U') as f:
             conn_handler.execute(f.read())
         # Initialize the database
-        with open(init_fp, 'U') as f:
+        with open(INITIALIZE_FP, 'U') as f:
             conn_handler.execute(f.read())
         # Populate the database
-        with open(populate_fp, 'U') as f:
+        with open(POPULATE_FP, 'U') as f:
             conn_handler.execute(f.read())
         # Execute the setup function
         return setup_fn(*args, **kwargs)
