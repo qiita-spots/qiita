@@ -1,24 +1,17 @@
 #!/usr/bin/env python
 
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # Copyright (c) 2013, The Qiita Development Team.
 #
 # Distributed under the terms of the BSD 3-clause License.
 #
 # The full license is in the file LICENSE, distributed with this software.
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
-__author__ = "Daniel McDonald"
-__copyright__ = "Copyright 2013, The Qiita project"
-__credits__ = ["Daniel McDonald", "Adam Robbins-Pianka",
-               "Antonio Gonzalez Pena", " Yoshiki Vazquez Baeza",
-               "Jose Antonio Navas Molina", "Emily TerAvest"]
-__license__ = "BSD"
 __version__ = "0.1.0-dev"
-__maintainer__ = "Daniel McDonald"
-__email__ = "mcdonadt@colorado.edu"
 
 from distutils.core import setup
+from setuptools import find_packages
 from glob import glob
 
 
@@ -40,34 +33,26 @@ long_description = """Qiita is a databasing and UI effort for QIIME"""
 
 classifiers = [s.strip() for s in classes.split('\n') if s]
 
-# from https://wiki.python.org/moin/PortingPythonToPy3k
-try:
-    # python 3.x
-    from distutils.command.build_py import build_py_2to3 as build_py
-except ImportError:
-    # python 2.x
-    from distutils.command.build_py import build_py
-
 setup(name='qiita',
-      cmdclass={'build_py': build_py},
       version=__version__,
       long_description=long_description,
-      license=__license__,
+      license="BSD",
       description='Qiita',
-      author=__maintainer__,
-      author_email=__email__,
+      author="Qiita development team",
+      author_email="mcdonadt@colorado.edu",
       url='http://biocore.github.io/qiita',
-      packages=['qiita_core',
-                'qiita_db',
-                'qiita_db/commands',
-                'qiita_db/interfaces',
-                'qiita_db/interfaces/optparse',
-                'qiita_db/interfaces/optparse/config',
-                'qiita_pet',
-                'qiita_ware',
-                'qiita_ware/core',
-                'qiita_ware/api'
-                ],
+      packages=find_packages(),
+      # ['qiita_core',
+      #           'qiita_db',
+      #           'qiita_db/commands',
+      #           'qiita_db/interfaces',
+      #           'qiita_db/interfaces/optparse',
+      #           'qiita_db/interfaces/optparse/config',
+      #           'qiita_pet',
+      #           'qiita_ware',
+      #           'qiita_ware/core',
+      #           'qiita_ware/api'
+      #           ],
       package_data={'qiita_core': ['support_files/config_test.txt'],
                     'qiita_db': ['support_files/*sql',
                                  'support_files/test_data/*']},
