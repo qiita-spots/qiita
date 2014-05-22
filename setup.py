@@ -11,7 +11,6 @@
 __version__ = "0.1.0-dev"
 
 from distutils.core import setup
-from setuptools import find_packages
 from glob import glob
 
 
@@ -41,18 +40,17 @@ setup(name='qiita',
       author="Qiita development team",
       author_email="mcdonadt@colorado.edu",
       url='http://biocore.github.io/qiita',
-      packages=find_packages(),
-      # ['qiita_core',
-      #           'qiita_db',
-      #           'qiita_db/commands',
-      #           'qiita_db/interfaces',
-      #           'qiita_db/interfaces/optparse',
-      #           'qiita_db/interfaces/optparse/config',
-      #           'qiita_pet',
-      #           'qiita_ware',
-      #           'qiita_ware/core',
-      #           'qiita_ware/api'
-      #           ],
+      packages=['qiita_core',
+                'qiita_db',
+                'qiita_db/commands',
+                'qiita_db/interfaces',
+                'qiita_db/interfaces/optparse',
+                'qiita_db/interfaces/optparse/config',
+                'qiita_pet',
+                'qiita_ware',
+                'qiita_ware/core',
+                'qiita_ware/api'
+                ],
       package_data={'qiita_core': ['support_files/config_test.txt'],
                     'qiita_db': ['support_files/*sql',
                                  'support_files/test_data/*']},
