@@ -53,7 +53,7 @@ def make_test_environment(base_data_dir, user, password, host):
 
     # Insert the settings values to the database
     cur.execute("INSERT INTO settings (test, base_data_dir) VALUES "
-                "(TRUE, '%s')" % base_data_dir)
+                "(TRUE, %(path)s)", {'path': base_data_dir})
 
     conn.commit()
     cur.close()
