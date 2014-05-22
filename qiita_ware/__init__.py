@@ -8,17 +8,3 @@ from __future__ import division
 #
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
-
-
-# Values hard-coded from now - refactor!
-class ConfigurationManager(object):
-    """"""
-    def __init__(self):
-        self.user = 'user'
-        self.password = 'pass'
-        self.database = 'qiita'
-        self.host = 'localhost'
-        self.port = 5432
-        self.schema = "qiita"
-
-qiita_db_config = ConfigurationManager()

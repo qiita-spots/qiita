@@ -9,6 +9,4 @@ from __future__ import division
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
-from qiita_core.configuration_manager import ConfigurationManager
-
-qiita_config = ConfigurationManager()
+__version__ = "0.0.1-dev"

@@ -1,0 +1,39 @@
+# WARNING!!!! DO NOT MODIFY THIS FILE
+# IF YOU NEED TO PROVIDE YOUR OWN CONFIGURATION, COPY THIS FILE TO A NEW
+# LOCATION AND EDIT THE COPY
+
+# -----------------------------------------------------------------------------
+# Copyright (c) 2014--, The Qiita Development Team.
+#
+# Distributed under the terms of the BSD 3-clause License.
+#
+# The full license is in the file LICENSE, distributed with this software.
+# -----------------------------------------------------------------------------
+
+# ------------------------------ Main settings --------------------------------
+[main]
+# Change to FALSE in a production system
+TEST_ENVIRONMENT = TRUE
+
+# Path to the base directory where the data files are going to be stored, uncomment to set
+# BASE_DATA_DIR = /path/to/base/directory
+
+# ----------------------------- IPython settings ------------------------------
+[ipython]
+
+# ----------------------------- Redis settings --------------------------------
+[redis]
+
+# ----------------------------- Postgres settings -----------------------------
+[postgres]
+# The user name to connect to the database
+USER = postgres
+
+# The database to connect to
+DATABASE = qiita_test
+
+# The host where the database lives on
+HOST = localhost
+
+# The port to connect to the database
+PORT = 5432
