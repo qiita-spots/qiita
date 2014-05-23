@@ -110,7 +110,7 @@ def check_table_cols(conn_handler, keys, table):
     """
     sql = ("SELECT column_name FROM information_schema.columns WHERE "
            "table_name = %s")
-    cols = conn_handler.execute_fetchone(sql, (table, ))
+    cols = clean_sql_result(conn_handler.execute_fetchall(sql, (table, )))
     if len(cols) == 0:
         raise RuntimeError("Unable to fetch column names for table %s" % table)
     if len(set(keys).difference(cols)) > 0:
