@@ -73,7 +73,7 @@ class Study(QiitaStatusObject):
     """
 
     @staticmethod
-    def create(owner, info, investigation_id=None):
+    def create(cls, owner, info, investigation_id=None):
         """Creates a new study on the database
 
         Parameters
@@ -134,7 +134,7 @@ class Study(QiitaStatusObject):
                    "study_id) VALUES (%s, %s)")
             conn_handler.execute(sql, (investigation_id, study_id))
 
-        return Study(study_id)
+        return cls(study_id)
 
     @staticmethod
     def delete(id_):
@@ -149,31 +149,34 @@ class Study(QiitaStatusObject):
 
 # --- Attributes ---
     @property
-    def name(self):
-        """Returns the name of the study"""
+    def title(self):
+        """Returns the title of the study"""
         conn_handler = SQLConnectionHandler()
-        sql = "SELECT name FROM qiita.study WHERE study_id = %s"
-        return conn_handler.execute_fetchone(sql, self.id_)[0]
+        sql = "SELECT study_title FROM qiita.study WHERE study_id = %s"
+        return conn_handler.execute_fetchone(sql, (self._id, ))[0]
 
-    @name.setter
-    def name(self, name):
-        """Sets the name of the study
+    @title.setter
+    def title(self, title):
+        """Sets the title of the study
 
         Parameters
         ----------
-        name : str
-            The new study name
+        title : str
+            The new study title
         """
         conn_handler = SQLConnectionHandler()
-        sql = "UPDATE qiita.study SET name = %s WHERE study_id = %s"
-        return conn_handler.execute(sql, (name, self.id_))
+        sql = "UPDATE qiita.study SET study_title = %s WHERE study_id = %s"
+        return conn_handler.execute(sql, (title, self._id))
 
     @property
     def info(self):
-        """Dict with any other information attached to the study"""
+        """Dict with all information attached to the study"""
         conn_handler = SQLConnectionHandler()
         sql = "SELECT * FROM qiita.study WHERE study_id = %s"
-        return dict(conn_handler.execute_fetchone(sql, self.id_))
+        info = conn_handler.execute_fetchone(sql, self._id)
+        efo = clean_sql_result(conn_handler.execute_fetchall(sql, self._id))
+        info["study_experimental_factor"] = efo
+        return info
 
     @info.setter
     def info(self, info):
@@ -186,6 +189,14 @@ class Study(QiitaStatusObject):
         conn_handler = SQLConnectionHandler()
         check_table_cols(conn_handler, info, "study")
 
+        # Save study_experimental_factor data for insertion
+        efo = None
+        if "study_experimental_factor" in info:
+            efo = info["study_experimental_factor"]
+            if not isinstance(efo, list) and not isinstance(efo, tuple):
+                efo = [efo]
+            info.pop("study_experimental_factor")
+
         data = []
         sql = "UPDATE qiita.study SET "
         # items() used for py3 compatability
@@ -194,8 +205,13 @@ class Study(QiitaStatusObject):
             sql = ' '.join((sql, key, "=", "%s,"))
             data.append(val)
         sql = ' '.join((sql[-1], "WHERE study_id = %s"))
-        data.append(self.id_)
+        data.append(self._id)
 
+        if efo:
+            # insert efo information into database
+            sql = ("INSERT INTO qiita.study_experimental_factor (study_id, "
+                   "efo_id) VALUES (%s, %s)")
+            conn_handler.executemany(sql, zip([self._id] * len(efo), efo))
         conn_handler.execute(sql, data)
 
     @property
@@ -203,14 +219,14 @@ class Study(QiitaStatusObject):
         """Returns the study_status_id for the study"""
         conn_handler = SQLConnectionHandler()
         sql = "SELECT study_status_id FROM qiita.study WHERE study_id = %s "
-        return conn_handler.execute_fetchone(sql, self.id_)[0]
+        return conn_handler.execute_fetchone(sql, self._id)[0]
 
     @status.setter
     def status(self, status_id):
         """Sets the study_status_id for the study"""
         conn_handler = SQLConnectionHandler()
         sql = "UPDATE qiita.study SET study_status_id = %s WHERE study_id = %s"
-        return conn_handler.execute_fetchone(sql, (status_id, self.id_))[0]
+        return conn_handler.execute_fetchone(sql, (status_id, self._id))[0]
 
     @property
     def sample_ids(self):
@@ -221,21 +237,21 @@ class Study(QiitaStatusObject):
         conn_handler = SQLConnectionHandler()
         sql = ("SELECT sample_id FROM qiita.required_sample_info WHERE "
                "study_id = %s ORDER BY sample_id")
-        return conn_handler.execute_fetchone(sql, self.id_)
+        return conn_handler.execute_fetchone(sql, self._id)
 
     @property
     def shared_with(self):
         """list of users the study is shared with"""
         conn_handler = SQLConnectionHandler()
         sql = "SELECT * FROM qiita.study_users WHERE study_id = %s"
-        return list(conn_handler.execute_fetchone(sql, self.id_))
+        return list(conn_handler.execute_fetchone(sql, self._id))
 
     @property
     def pmids(self):
         """ Returns list of paper PMIDs from this study """
         conn_handler = SQLConnectionHandler()
         sql = "SELECT pmid FROM qiita.study_pmid WHERE study_id = %s"
-        return clean_sql_result(conn_handler.execute_fetchall(sql, self.id_))
+        return clean_sql_result(conn_handler.execute_fetchall(sql, self._id))
 
     @property
     def investigations(self):
@@ -243,7 +259,7 @@ class Study(QiitaStatusObject):
         conn_handler = SQLConnectionHandler()
         sql = ("SELECT investigation_id FROM qiita.investigation_study WHERE "
                "study_id = %s")
-        return clean_sql_result(conn_handler.execute_fetchall(sql, self.id_))
+        return clean_sql_result(conn_handler.execute_fetchall(sql, self._id))
 
     @property
     def metadata(self):
@@ -251,7 +267,7 @@ class Study(QiitaStatusObject):
         conn_handler = SQLConnectionHandler()
         sql = ("SELECT column_name FROM qiita.study_sample_columns WHERE "
                "study_id = %s")
-        return clean_sql_result(conn_handler.execute_fetchall(sql, self.id_))
+        return clean_sql_result(conn_handler.execute_fetchall(sql, self._id))
 
     @property
     def raw_data(self):
@@ -280,7 +296,7 @@ class Study(QiitaStatusObject):
         conn_handler = SQLConnectionHandler()
         sql = ("INSERT INTO qiita.study_users (study_id, email) VALUES "
                "(%s, %s)")
-        conn_handler.execute_fetchone(sql, (self.id_, email))
+        conn_handler.execute_fetchone(sql, (self._id, email))
 
     def add_raw_data(self, raw_data_id):
         """Associates raw data with the study
@@ -293,7 +309,7 @@ class Study(QiitaStatusObject):
         conn_handler = SQLConnectionHandler()
         sql = ("INSERT INTO qiita.study_raw_data (study_id, raw_data_id) "
                "VALUES (%s, %s)")
-        conn_handler.execute_fetchone(sql, (self.id_, raw_data_id))
+        conn_handler.execute_fetchone(sql, (self._id, raw_data_id))
 
     def add_pmid(self, pmid):
         """Adds PMID to study
@@ -305,4 +321,4 @@ class Study(QiitaStatusObject):
         """
         conn_handler = SQLConnectionHandler()
         sql = "INSERT INTO qiita.study_pmid (study_id, pmid) VALUES (%s, %s)"
-        conn_handler.execute_fetchone(sql, (self.id_, pmid))
+        conn_handler.execute_fetchone(sql, (self._id, pmid))

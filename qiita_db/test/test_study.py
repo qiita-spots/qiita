@@ -2,8 +2,6 @@ from unittest import TestCase, main
 
 from qiita_db.study import Study
 from qiita_core.util import qiita_test_checker
-from qiita_db.exceptions import QiitaDBExecutionError, QiitaDBConnectionError
-from qiita_db.sql_connection import SQLConnectionHandler
 
 
 # -----------------------------------------------------------------------------
@@ -18,6 +16,7 @@ from qiita_db.sql_connection import SQLConnectionHandler
 @qiita_test_checker()
 class TestStudy(TestCase):
     def setUp(self):
+        self.study = Study(1)
 
         self.info = {
             "emp_person_id": 2,
@@ -63,16 +62,21 @@ class TestStudy(TestCase):
         self.assertRaises(RuntimeError, Study.create, 'test@foo.bar',
                           self.info)
 
-    def test_retrieve_name(self):
-        raise NotImplementedError()
+    def test_retrieve_title(self):
+        self.assertEqual(self.study.title, ('Identification of the Microbiomes'
+                                            ' for Cannabis Soils'))
 
-    def test_set_name(self):
-        raise NotImplementedError()
+    def test_set_title(self):
+        self.study.title = "Weed Soils"
+        self.assertEqual(self.study.title, "Weed Soils")
 
     def test_retrieve_info(self):
         raise NotImplementedError()
 
     def test_set_info(self):
+        raise NotImplementedError()
+
+    def test_set_info_with_env_factors(self):
         raise NotImplementedError()
 
     def test_retrieve_status(self):
