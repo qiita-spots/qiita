@@ -1,7 +1,7 @@
 from unittest import TestCase, main
 
 from qiita_db.study import Study
-from qiita_db.util import populate_test_db, teardown_qiita_schema
+from qiita_core.util import qiita_test_checker
 from qiita_db.exceptions import QiitaDBExecutionError, QiitaDBConnectionError
 from qiita_db.sql_connection import SQLConnectionHandler
 
@@ -15,11 +15,9 @@ from qiita_db.sql_connection import SQLConnectionHandler
 # -----------------------------------------------------------------------------
 
 
-# ALL TESTS ASSUME EMPTY qiita DATABASE EXISTS
+@qiita_test_checker()
 class TestStudy(TestCase):
     def setUp(self):
-        conn = SQLConnectionHandler()
-        populate_test_db(conn)
 
         self.info = {
             "name": "Chickens",
@@ -40,10 +38,6 @@ class TestStudy(TestCase):
             "study_abstract": ("We wanted to see if we could get funding for "
                                "giving people heart attacks")
         }
-
-    def tearDown(self):
-        conn = SQLConnectionHandler()
-        teardown_qiita_schema(conn)
 
     def test_create_study(self):
         """Insert a study into the database"""

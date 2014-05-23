@@ -100,6 +100,14 @@ class Study(QiitaStatusObject):
         # make sure required keys are in the info dict
         check_required(info, REQUIRED_KEYS)
 
+        # Save study_experimental_factor data for insertion
+        efo = None
+        if "study_experimental_factor" in info:
+            efo = info["study_experimental_factor"]
+            if not isinstance(efo, list) or not isinstance(efo, tuple):
+                efo = [efo]
+            info.pop("study_experimental_factor")
+
         conn_handler = SQLConnectionHandler()
         # make sure dictionary only has keys for available columns in db
         check_table_cols(conn_handler, info, "study")
@@ -113,7 +121,13 @@ class Study(QiitaStatusObject):
         for col in info.keys():
             data.append(info[col])
         study_id = conn_handler.execute_fetchone(sql, data)[0]
-                
+
+        if efo:
+            # insert efo information into database
+            sql = ("INSERT INTO forge.study_experimental_factor (study_id, "
+                   "efo_id) VALUES (%s, %s)")
+            conn_handler.executemany(sql, zip([study_id] * len(efo), efo))
+
         # add study to investigation if necessary
         if investigation_id:
             sql = ("INSERT INTO qiita.investigation_study (investigation_id, "
