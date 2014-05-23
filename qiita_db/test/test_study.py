@@ -52,11 +52,16 @@ class TestStudy(TestCase):
 
     def test_insert_missing_requred(self):
         """ Insert a study that is missing a required info key"""
-        raise NotImplementedError()
+        self.info.pop("study_title")
+        self.assertRaises(RuntimeError, Study.create, 'test@foo.bar',
+                          self.info)
 
     def test_insert_unknown_db_col(self):
         """ Insert a study with an info key not in the database"""
         raise NotImplementedError()
+        self.info["SHOULDNOTBEHERE"] = "BWAHAHAHAHAHA"
+        self.assertRaises(RuntimeError, Study.create, 'test@foo.bar',
+                          self.info)
 
     def test_retrieve_name(self):
         raise NotImplementedError()
