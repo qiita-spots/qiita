@@ -35,7 +35,7 @@ def get_datatypes(metadata_map):
         if all([isdigit(c) for c in column_data]):
             datatypes.append('int')
         elif all([isdigit(c.replace('.', '', 1)) for c in column_data]):
-            datatypes.append('float')
+            datatypes.append('float8')
         else:
             datatypes.append('varchar')
 

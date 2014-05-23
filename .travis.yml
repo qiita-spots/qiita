@@ -3,12 +3,9 @@ python:
   - "2.7"
 install:
   - pip install numpy
-  - pip install cogent
   - pip install .
 script:
+  - qiita_db make_test_env
   - nosetests
 services:
   - redis-server
-before_script:
-  # For PostgreSQL, from http://docs.travis-ci.com/user/database-setup/#PostgreSQL
-  - psql -c 'create database qiita_test;' -U postgres
