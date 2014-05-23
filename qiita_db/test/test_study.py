@@ -20,11 +20,9 @@ class TestStudy(TestCase):
     def setUp(self):
 
         self.info = {
-            "name": "Chickens",
             "emp_person_id": 2,
-            "first_contact": "2014-05-21",
-            "timeseries_type_id": 0,
-            "lab_person_id": 0,
+            "timeseries_type_id": 1,
+            "lab_person_id": 1,
             "metadata_complete": True,
             "mixs_compliant": True,
             "number_samples_collected": 25,
@@ -44,8 +42,13 @@ class TestStudy(TestCase):
         Study.create('test@foo.bar', self.info)
 
     def test_create_study_with_investigation(self):
-        """Insert a study into the database"""
+        """Insert a study into the database with an investingation"""
         Study.create('test@foo.bar', self.info, 0)
+
+    def test_create_study_with_efo(self):
+        """Insert a study into the database with efo information"""
+        self.info["study_experimental_factor"] = [1, 2]
+        Study.create('test@foo.bar', self.info)
 
     def test_insert_missing_requred(self):
         """ Insert a study that is missing a required info key"""

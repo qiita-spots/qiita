@@ -29,7 +29,7 @@ from .sql_connection import SQLConnectionHandler
 
 REQUIRED_KEYS = {"timeseries_type_id", "lab_person_id", "mixs_compliant",
                  "metadata_complete", "number_samples_collected",
-                 "number_samples_promised", "portal_type",
+                 "number_samples_promised", "portal_type_id",
                  "principal_investigator_id", "study_title", "study_alias",
                  "study_description", "study_abstract"}
 
@@ -104,7 +104,7 @@ class Study(QiitaStatusObject):
         efo = None
         if "study_experimental_factor" in info:
             efo = info["study_experimental_factor"]
-            if not isinstance(efo, list) or not isinstance(efo, tuple):
+            if not isinstance(efo, list) and not isinstance(efo, tuple):
                 efo = [efo]
             info.pop("study_experimental_factor")
 
@@ -114,17 +114,17 @@ class Study(QiitaStatusObject):
 
         # Insert study into database
         sql = ("INSERT INTO qiita.study (email,study_status_id,first_contact,"
-               "%s) VALUES (%s) RETURNING study_id" % (','.join(info.keys()),
-                                                       '%s' * (len(info)+3)))
+               "reprocess, %s) VALUES (%s) RETURNING study_id" %
+               (','.join(info.keys()), ','.join(['%s'] * (len(info)+4))))
         # make sure data in same order as sql column names
-        data = [owner, 1, date.today().strftime("%B %d, %Y")]
+        data = [owner, 1, date.today().strftime("%B %d, %Y"), 'FALSE']
         for col in info.keys():
             data.append(info[col])
         study_id = conn_handler.execute_fetchone(sql, data)[0]
 
         if efo:
             # insert efo information into database
-            sql = ("INSERT INTO forge.study_experimental_factor (study_id, "
+            sql = ("INSERT INTO qiita.study_experimental_factor (study_id, "
                    "efo_id) VALUES (%s, %s)")
             conn_handler.executemany(sql, zip([study_id] * len(efo), efo))
 
