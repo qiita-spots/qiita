@@ -117,10 +117,13 @@ class Study(QiitaStatusObject):
         sql = ("INSERT INTO qiita.study (email,study_status_id,first_contact,"
                "reprocess, %s) VALUES (%s) RETURNING study_id" %
                (','.join(info.keys()), ','.join(['%s'] * (len(info)+4))))
-        # make sure data in same order as sql column names
+        # make sure data in same order as sql column names, and ids are used
         data = [owner, 1, date.today().strftime("%B %d, %Y"), 'FALSE']
-        for col in info.keys():
-            data.append(info[col])
+        for col, val in info.items():
+            if isinstance(val, QiitaObject):
+                data.append(val.id_)
+            else:
+                data.append(val)
         study_id = conn_handler.execute_fetchone(sql, data)[0]
 
         if efo:
@@ -206,7 +209,10 @@ class Study(QiitaStatusObject):
         # build query with data values in correct order for SQL statement
         for key, val in info.items():
             sql = ' '.join((sql, key, "=", "%s,"))
-            data.append(val)
+            if isinstance(val, QiitaObject):
+                data.append(val.id_)
+            else:
+                data.append(val)
         sql = ' '.join((sql[-1], "WHERE study_id = %s"))
         data.append(self._id)
 
