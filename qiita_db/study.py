@@ -21,10 +21,11 @@ Classes
 
 from datetime import date
 
-from .base import QiitaStatusObject
+from .base import QiitaStatusObject, QiitaObject
 from .util import check_required, check_table_cols, clean_sql_result
 from .exceptions import QiitaDBNotImplementedError
 from .sql_connection import SQLConnectionHandler
+from qiita_core.exceptions import QiitaStudyError
 
 
 REQUIRED_KEYS = {"timeseries_type_id", "lab_person_id", "mixs_compliant",
@@ -127,6 +128,8 @@ class Study(QiitaStatusObject):
             sql = ("INSERT INTO qiita.study_experimental_factor (study_id, "
                    "efo_id) VALUES (%s, %s)")
             conn_handler.executemany(sql, zip([study_id] * len(efo), efo))
+        else:
+            raise QiitaStudyError("EFO information is required!")
 
         # add study to investigation if necessary
         if investigation_id:
@@ -322,3 +325,93 @@ class Study(QiitaStatusObject):
         conn_handler = SQLConnectionHandler()
         sql = "INSERT INTO qiita.study_pmid (study_id, pmid) VALUES (%s, %s)"
         conn_handler.execute_fetchone(sql, (self._id, pmid))
+
+
+class StudyPerson(QiitaObject):
+    """Object handling information pertaining to people involved in a study
+
+    Attributes
+    ----------
+    name: str
+        name of the person
+    email: str
+        email of the person
+    address: str, optional
+        address of the person
+    phone: str, optional
+        phone number of the person
+    """
+    @staticmethod
+    def create(cls, name, email, address=None, phone=None):
+        # Make sure person doesn't already exist
+        conn_handler = SQLConnectionHandler()
+        sql = ("SELECT study_person_id FROM qiita.study WHERE name = %s AND "
+               "email = %s")
+        spid = conn_handler.execute_fetchone(sql, (name, email))[0]
+        if spid:
+            return StudyPerson(spid)
+
+        # Doesn't exist so insert new person
+        sql = ("INSERT INTO qiita.study_person (name, email, address, phone) "
+               "VALUES (%s, %s, %s, %s) RETURNING study_person_id")
+        spid = conn_handler.execute_fetchone(sql, (name, email, address,
+                                                   phone))[0]
+        return StudyPerson(spid)
+
+    @staticmethod
+    def delete(self):
+        raise NotImplementedError()
+
+    # Properties
+    @property
+    def name(self):
+        conn_handler = SQLConnectionHandler()
+        sql = "SELECT name FROM qiita.study_person WHERE study_person_id = %s"
+        return conn_handler.execute_fetchone(sql, (self._id, ))[0]
+
+    @name.setter
+    def name(self, value):
+        conn_handler = SQLConnectionHandler()
+        sql = ("UPDATE qiita.study_person SET name = %s WHERE "
+               "study_person_id = %s")
+        conn_handler.execute(sql, (value, self._id))
+
+    @property
+    def email(self):
+        conn_handler = SQLConnectionHandler()
+        sql = "SELECT email FROM qiita.study_person WHERE study_person_id = %s"
+        return conn_handler.execute_fetchone(sql, (self._id, ))[0]
+
+    @email.setter
+    def email(self, value):
+        conn_handler = SQLConnectionHandler()
+        sql = ("UPDATE qiita.study_person SET email = %s WHERE "
+               "study_person_id = %s")
+        conn_handler.execute(sql, (value, self._id))
+
+    @property
+    def address(self):
+        conn_handler = SQLConnectionHandler()
+        sql = ("SELECT address FROM qiita.study_person WHERE study_person_id ="
+               " %s")
+        return conn_handler.execute_fetchone(sql, (self._id, ))[0]
+
+    @address.setter
+    def address(self, value):
+        conn_handler = SQLConnectionHandler()
+        sql = ("UPDATE qiita.study_person SET address = %s WHERE "
+               "study_person_id = %s")
+        conn_handler.execute(sql, (value, self._id))
+
+    @property
+    def phone(self):
+        conn_handler = SQLConnectionHandler()
+        sql = "SELECT phone FROM qiita.study_person WHERE study_person_id = %s"
+        return conn_handler.execute_fetchone(sql, (self._id, ))[0]
+
+    @phone.setter
+    def phone(self, value):
+        conn_handler = SQLConnectionHandler()
+        sql = ("UPDATE qiita.study_person SET phone = %s WHERE "
+               "study_person_id = %s")
+        conn_handler.execute(sql, (value, self._id))
