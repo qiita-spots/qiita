@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 from __future__ import division
 
+from .sql_connection import SQLConnectionHandler
+
 """
 Objects for dealing with qiita_db objects
 
@@ -44,6 +46,8 @@ class QiitaObject(object):
     delete(id_)
         Deletes the object `id_` from the storage system
     """
+
+    _table = None
 
     @staticmethod
     def create():
@@ -100,3 +104,45 @@ class QiitaStatusObject(QiitaObject):
             The new object status
         """
         raise QiitaDBNotImplementedError()
+
+    def check_status(self, status, not_state=False):
+        """Decorator: checks status of object, allowing function to run if
+        conditions met.
+
+        Parameters
+        ----------
+        status: str
+            Status to check against
+        not_state: bool, optional
+            If True, will check that status is NOT equal to the one in the db.
+            Default False.
+
+        Notes
+        -----
+        This assumes the following database setup is in place: For a given
+        cls._table setting, such as "table", there is a corresponding table
+        with the name "table_status" holding the status entries allowed. This
+        table has a column called "status" that holds the values corresponding
+        to what is passed as status in this function and a column
+        "table_status_id" corresponding to the column of the same name in
+        "table".
+
+        Example:
+        foo: foo_status_id  ----> foo_status: foo_status_id, status
+        """
+        def wrap(f):
+            sql = ("SELECT status FROM qiita.{0}_status WHERE {0}_status_id = "
+                       "(SELECT {0}_status_id FROM qiita.{0} WHERE "
+                       "{0}_id = %s)").format(self._table)
+            conn = SQLConnectionHandler()
+            dbstatus = conn.execute_fetchone(sql, (self._id, ))[0]
+            def wrapped_f(*args):
+                if not_state and dbstatus != status:
+                    return f(*args)
+                elif dbstatus == status:
+                    return f(*args)
+                else:
+                    raise ValueError("Trying to run function with disallowed "
+                                     "status: %s" % status)
+            return wrapped_f
+        return wrap
