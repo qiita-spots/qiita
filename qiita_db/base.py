@@ -105,17 +105,17 @@ class QiitaStatusObject(QiitaObject):
         """
         raise QiitaDBNotImplementedError()
 
-    def check_status(self, status, not_state=False):
+    def check_status(self, status, exclude=False):
         """Decorator: checks status of object, allowing function to run if
         conditions met.
 
         Parameters
         ----------
-        status: str
-            Status to check against
-        not_state: bool, optional
-            If True, will check that status is NOT equal to the one in the db.
-            Default False.
+        status: str or list or set or tuple
+            Single status or list of statuses to check against.
+        exclude: bool, optional
+            If True, will check that database status is NOT one of the statuses
+            passed. Default False.
 
         Notes
         -----
@@ -130,19 +130,23 @@ class QiitaStatusObject(QiitaObject):
         Example:
         foo: foo_status_id  ----> foo_status: foo_status_id, status
         """
+        if isinstance(status, str):
+                status = [status]
+
         def wrap(f):
             sql = ("SELECT status FROM qiita.{0}_status WHERE {0}_status_id = "
-                       "(SELECT {0}_status_id FROM qiita.{0} WHERE "
-                       "{0}_id = %s)").format(self._table)
+                   "(SELECT {0}_status_id FROM qiita.{0} WHERE "
+                   "{0}_id = %s)").format(self._table)
             conn = SQLConnectionHandler()
             dbstatus = conn.execute_fetchone(sql, (self._id, ))[0]
+
             def wrapped_f(*args):
-                if not_state and dbstatus != status:
+                if exclude and dbstatus not in status:
                     return f(*args)
-                elif dbstatus == status:
+                elif not exclude and dbstatus in status:
                     return f(*args)
                 else:
                     raise ValueError("Trying to run function with disallowed "
-                                     "status: %s" % status)
+                                     "status(es): %s" % str(status))
             return wrapped_f
         return wrap

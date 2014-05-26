@@ -12,7 +12,7 @@ class QiitaStatusDecoratorTest(TestCase):
         self.tester = QiitaStatusObject(1)
         self.tester._table = "study"
 
-    def test_check_status(self):
+    def test_check_status_single(self):
         @self.tester.check_status("public")
         def tf(string):
             return string
@@ -20,33 +20,63 @@ class QiitaStatusDecoratorTest(TestCase):
         obs = tf("Ran")
         self.assertEqual(obs, "Ran")
 
-    def test_check_status_not_state(self):
-        @self.tester.check_status("private", not_state=True)
+    def test_check_status_exclude_single(self):
+        @self.tester.check_status("private", exclude=True)
         def tf(string):
             return string
+
+    def test_check_status_list(self):
+        @self.tester.check_status(("public", "waiting_approval"))
+        def tf(string):
+            return string
+
+        obs = tf("Ran")
+        self.assertEqual(obs, "Ran")
+
+    def test_check_status_exclude_list(self):
+        @self.tester.check_status(("private", "waiting_approval"),
+                                  exclude=True)
+        def tf(string):
+            return string
+
 
         obs = tf("Ran again")
         self.assertEqual(obs, "Ran again")
 
-    def test_check_status_stops_run(self):
+    def test_check_status_stops_run_single(self):
         with self.assertRaises(ValueError):
             @self.tester.check_status("waiting_approval")
-            def testfunc1():
-                return "Ran"
-            testfunc1()
+            def tf(string):
+                return string
+            tf("FAIL")
 
-    def test_check_status_not_state_stops_run(self):
-        @self.tester.check_status("public", not_state=True)
-        def testfunc2():
-            return "Ran"
-        testfunc2()
+    def test_check_status_exclude_stops_run_single(self):
+        with self.assertRaises(ValueError):
+            @self.tester.check_status("public", exclude=True)
+            def tf(string):
+                return string
+            tf("FAIL")
+
+    def test_check_status_stops_run_list(self):
+        with self.assertRaises(ValueError):
+            @self.tester.check_status(("waiting_approval", "private"))
+            def tf(string):
+                return string
+            tf("FAIL")
+
+    def test_check_status_exclude_stops_run_list(self):
+        with self.assertRaises(ValueError):
+            @self.tester.check_status(("public", "private"), exclude=True)
+            def tf(string):
+                return string
+            tf("FAIL")
 
     def test_check_status_unknown_status(self):
         with self.assertRaises(ValueError):
             @self.tester.check_status("football")
-            def testfunc3():
-                return "Ran"
-            testfunc3()
+            def tf(string):
+                return string
+            tf("FAIL")
 
 if __name__ == '__main__':
     main()
