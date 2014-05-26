@@ -15,17 +15,17 @@ from psycopg2 import connect, Error as PostgresError
 from psycopg2.extras import DictCursor
 
 from .exceptions import QiitaDBExecutionError, QiitaDBConnectionError
-from qiita_db.config import qiita_db_config
+from qiita_core.qiita_settings import qiita_config
 
 
 class SQLConnectionHandler(object):
     """Encapsulates the DB connection with the Postgres DB"""
     def __init__(self):
-        self._connection = connect(user=qiita_db_config.user,
-                                   password=qiita_db_config.password,
-                                   database=qiita_db_config.database,
-                                   host=qiita_db_config.host,
-                                   port=qiita_db_config.port)
+        self._connection = connect(user=qiita_config.user,
+                                   password=qiita_config.password,
+                                   database=qiita_config.database,
+                                   host=qiita_config.host,
+                                   port=qiita_config.port)
 
     @contextmanager
     def get_postgres_cursor(self):

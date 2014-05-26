@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env python
 
 # -----------------------------------------------------------------------------
 # Copyright (c) 2014--, The Qiita Development Team.
@@ -8,4 +8,41 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
-exec pyqi --driver-name qiita_db --command-config-module qiita_db.interfaces.optparse.config -- "$@"
+import click
+
+from qiita_db.make_environment import (make_test_environment,
+                                       make_production_environment,
+                                       DFLT_BASE_DATA_FOLDER)
+
+
+@click.group()
+def qiita_db():
+    pass
+
+
+@click.command()
+@click.option('--base_data_folder', default=DFLT_BASE_DATA_FOLDER,
+              help="The folder where the test data files are stored")
+@click.option('--user', default='postgres',
+              help="The database user to connect to the database")
+@click.option('--host', default='localhost',
+              help='The host where the database lives')
+def make_test_env(base_data_folder, user, host):
+    """Creates a test database environment.
+
+    Creates a new database called `qiita_test` tailored for testing purposes
+    and initializes the `settings` table of such database
+    """
+    make_test_environment(base_data_folder, user, None, host)
+
+
+@click.command()
+def make_production_env():
+    """TODO: Not implemented"""
+    make_production_environment()
+
+qiita_db.add_command(make_test_env)
+qiita_db.add_command(make_production_env)
+
+if __name__ == '__main__':
+    qiita_db()
