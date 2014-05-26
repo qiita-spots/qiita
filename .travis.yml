@@ -11,8 +11,5 @@ script:
   - nosetests --with-coverage --cover-package=coveralls
 services:
   - redis-server
-before_script:
-  # For PostgreSQL, from http://docs.travis-ci.com/user/database-setup/#PostgreSQL
-  - psql -c 'create database qiita_test;' -U postgres
 after_success:
   - coveralls
