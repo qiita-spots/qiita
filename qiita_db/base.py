@@ -111,8 +111,8 @@ class QiitaStatusObject(QiitaObject):
 
         Parameters
         ----------
-        status: str or list or set or tuple
-            Single status or list of statuses to check against.
+        status: str or iterable
+            Single status or iterable of statuses to check against.
         exclude: bool, optional
             If True, will check that database status is NOT one of the statuses
             passed. Default False.
@@ -141,12 +141,12 @@ class QiitaStatusObject(QiitaObject):
             dbstatus = conn.execute_fetchone(sql, (self._id, ))[0]
 
             def wrapped_f(*args):
-                if exclude and dbstatus not in status:
-                    return f(*args)
-                elif not exclude and dbstatus in status:
+                if (exclude and dbstatus not in status)or(not exclude and
+                                                          dbstatus in status):
                     return f(*args)
                 else:
-                    raise ValueError("Trying to run function with disallowed "
-                                     "status(es): %s" % str(status))
+                    n = '' if exclude else 'not'
+                    raise ValueError("DB status %s %s in %s" % (dbstatus, n,
+                                                                str(status)))
             return wrapped_f
         return wrap

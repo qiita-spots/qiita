@@ -4,6 +4,14 @@ from qiita_core.util import qiita_test_checker
 from qiita_db.base import QiitaStatusObject
 
 
+# -----------------------------------------------------------------------------
+# Copyright (c) 2014--, The Qiita Development Team.
+#
+# Distributed under the terms of the BSD 3-clause License.
+#
+# The full license is in the file LICENSE, distributed with this software.
+# -----------------------------------------------------------------------------
+
 @qiita_test_checker()
 class QiitaStatusDecoratorTest(TestCase):
     """Tests that the test database have been successfully populated"""
@@ -39,43 +47,42 @@ class QiitaStatusDecoratorTest(TestCase):
         def tf(string):
             return string
 
-
         obs = tf("Ran again")
         self.assertEqual(obs, "Ran again")
 
     def test_check_status_stops_run_single(self):
+        @self.tester.check_status("waiting_approval")
+        def tf(string):
+            return string
         with self.assertRaises(ValueError):
-            @self.tester.check_status("waiting_approval")
-            def tf(string):
-                return string
             tf("FAIL")
 
     def test_check_status_exclude_stops_run_single(self):
+        @self.tester.check_status("public", exclude=True)
+        def tf(string):
+            return string
         with self.assertRaises(ValueError):
-            @self.tester.check_status("public", exclude=True)
-            def tf(string):
-                return string
             tf("FAIL")
 
     def test_check_status_stops_run_list(self):
+        @self.tester.check_status(("waiting_approval", "private"))
+        def tf(string):
+            return string
         with self.assertRaises(ValueError):
-            @self.tester.check_status(("waiting_approval", "private"))
-            def tf(string):
-                return string
             tf("FAIL")
 
     def test_check_status_exclude_stops_run_list(self):
+        @self.tester.check_status(("public", "private"), exclude=True)
+        def tf(string):
+            return string
         with self.assertRaises(ValueError):
-            @self.tester.check_status(("public", "private"), exclude=True)
-            def tf(string):
-                return string
             tf("FAIL")
 
     def test_check_status_unknown_status(self):
+        @self.tester.check_status("football")
+        def tf(string):
+            return string
         with self.assertRaises(ValueError):
-            @self.tester.check_status("football")
-            def tf(string):
-                return string
             tf("FAIL")
 
 if __name__ == '__main__':
