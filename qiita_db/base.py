@@ -23,7 +23,7 @@ Classes
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
-from .exceptions import QiitaDBNotImplementedError
+from .exceptions import QiitaDBNotImplementedError, QiitaDBStatusError
 
 
 class QiitaObject(object):
@@ -133,27 +133,34 @@ class QiitaStatusObject(QiitaObject):
         if isinstance(status, str):
                 status = [status]
 
-        # Wrapper function that gets the db status and func to wrap
+        # get the DB status of the object
         sql = ("SELECT status FROM qiita.{0}_status WHERE {0}_status_id = "
                "(SELECT {0}_status_id FROM qiita.{0} WHERE "
                "{0}_id = %s)").format(self._table)
         conn = SQLConnectionHandler()
         dbstatus = conn.execute_fetchone(sql, (self._id, ))[0]
 
+        # get all available statuses
+        sql = "SELECT DISTINCT status FROM qiita.%s_status" % self._table
+        statuses = [x[0] for x in conn.execute_fetchall(sql, (self._id, ))]
+
         def wrap(f):
             # Wrap needed to get function to wrap with this decorator
             def wrapped_f(*args):
                 # Wrapped_f function needed to get func args
+                for s in status:
+                    if s not in statuses:
+                        raise ValueError("%s is not a valid status" % status)
                 if exclude:
                     if dbstatus not in status:
                         return f(*args)
                     else:
-                        raise ValueError("DB status %s in %s" % (dbstatus,
-                                                                 str(status)))
+                        raise QiitaDBStatusError(("DB status %s in %s" %
+                                                  (dbstatus, str(status))))
                 elif dbstatus in status:
                     return f(*args)
                 else:
-                    raise ValueError("DB status %s not in %s" % (dbstatus,
-                                                             str(status)))
+                    raise QiitaDBStatusError(("DB status %s not in %s" %
+                                              (dbstatus, str(status))))
             return wrapped_f
         return wrap

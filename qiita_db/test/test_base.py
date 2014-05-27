@@ -2,6 +2,7 @@ from unittest import TestCase, main
 
 from qiita_core.util import qiita_test_checker
 from qiita_db.base import QiitaStatusObject
+from qiita_db.exceptions import QiitaDBStatusError
 
 
 # -----------------------------------------------------------------------------
@@ -54,28 +55,28 @@ class QiitaStatusDecoratorTest(TestCase):
         @self.tester.check_status("waiting_approval")
         def tf(string):
             return string
-        with self.assertRaises(ValueError):
+        with self.assertRaises(QiitaDBStatusError):
             tf("FAIL")
 
     def test_check_status_exclude_stops_run_single(self):
         @self.tester.check_status("public", exclude=True)
         def tf(string):
             return string
-        with self.assertRaises(ValueError):
+        with self.assertRaises(QiitaDBStatusError):
             tf("FAIL")
 
     def test_check_status_stops_run_list(self):
         @self.tester.check_status(("waiting_approval", "private"))
         def tf(string):
             return string
-        with self.assertRaises(ValueError):
+        with self.assertRaises(QiitaDBStatusError):
             tf("FAIL")
 
     def test_check_status_exclude_stops_run_list(self):
         @self.tester.check_status(("public", "private"), exclude=True)
         def tf(string):
             return string
-        with self.assertRaises(ValueError):
+        with self.assertRaises(QiitaDBStatusError):
             tf("FAIL")
 
     def test_check_status_unknown_status(self):
