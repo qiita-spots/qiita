@@ -87,6 +87,7 @@ class SQLConnectionHandler(object):
         else:
             self._check_sql_args(sql_args)
 
+
         # Execute the query
         with self.get_postgres_cursor() as cur:
             try:
@@ -98,7 +99,12 @@ class SQLConnectionHandler(object):
                 self._connection.commit()
             except PostgresError, e:
                 self._connection.rollback()
-                raise QiitaDBExecutionError("Error running SQL query: %s", e)
+                try:
+                    err_sql = cur.mogrify(sql, sql_args)
+                except IndexError:
+                    err_sql = sql
+                raise QiitaDBExecutionError(("\nError running SQL query: %s"
+                                             "\nError: %s" % (err_sql, e)))
 
     def execute_fetchall(self, sql, sql_args=None):
         """ Executes a fetchall SQL query

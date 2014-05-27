@@ -17,7 +17,7 @@ INSERT INTO qiita.filetype (type) VALUES ('FASTA'), ('FASTQ'), ('SPECTRA');
 INSERT INTO qiita.emp_status (emp_status) VALUES ('EMP'), ('EMP_Processed'), ('NOT_EMP');
 
 -- Populate study_status table
-INSERT INTO qiita.study_status (study_status, description) VALUES ('waiting_approval', 'Awaiting approval of metadata'), ('public', 'Anyone can see this study'), ('private', 'Only owner and shared users can see this study');
+INSERT INTO qiita.study_status (status, description) VALUES ('waiting_approval', 'Awaiting approval of metadata'), ('public', 'Anyone can see this study'), ('private', 'Only owner and shared users can see this study');
 
 -- Populate timeseries_type table
 INSERT INTO qiita.timeseries_type (timeseries_type) VALUES ('NOT_TIMESERIES'), ('TIMESERIES_1'), ('TIMESERIES_2');
@@ -29,7 +29,7 @@ INSERT INTO qiita.severity (severity) VALUES ('Warning'), ('Runtime'), ('Fatal')
 INSERT INTO qiita.portal_type (portal, description) VALUES ('QIIME', 'QIIME portal'), ('EMP', 'EMP portal'), ('QIIME_EMP', 'QIIME and EMP portals');
 
 -- Populate sample_status table
-INSERT INTO qiita.sample_status (status) VALUES ('received'), ('in_preparation'), ('running'), ('completed');
+INSERT INTO qiita.required_sample_info_status (status) VALUES ('received'), ('in_preparation'), ('running'), ('completed');
 
 -- Populate filepath_type table
 INSERT INTO qiita.filepath_type (filepath_type) VALUES ('raw_sequences'), ('raw_barcodes'), ('raw_spectra'), ('preprocessed_sequences'), ('preprocessed_sequences_qual'), ('biom');

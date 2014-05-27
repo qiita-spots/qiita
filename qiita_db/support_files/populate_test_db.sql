@@ -59,7 +59,7 @@ INSERT INTO qiita.raw_filepath (raw_data_id, filepath_id) VALUES (1, 1), (1, 2);
 INSERT INTO qiita.study_raw_data (study_id, raw_data_id) VALUES (1, 1);
 
 -- Add the required_sample_info for study 1
-INSERT INTO qiita.required_sample_info (study_id, sample_id, physical_location, has_physical_specimen, has_extracted_data, sample_type, sample_status_id, collection_date, host_subject_id, description) VALUES
+INSERT INTO qiita.required_sample_info (study_id, sample_id, physical_location, has_physical_specimen, has_extracted_data, sample_type, required_sample_info_status_id, collection_date, host_subject_id, description) VALUES
 	(1, 'SKB8.640193', 'ANL', TRUE, TRUE, 'ENVO:soil', 4, '2011-11-11', '1001:M7', 'Cannabis Soil Microbiome'),
 	(1, 'SKD8.640184', 'ANL', TRUE, TRUE, 'ENVO:soil', 4, '2011-11-11', '1001:D9', 'Cannabis Soil Microbiome'),
 	(1, 'SKB7.640196', 'ANL', TRUE, TRUE, 'ENVO:soil', 4, '2011-11-11', '1001:M8', 'Cannabis Soil Microbiome'),

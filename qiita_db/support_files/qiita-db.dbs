@@ -1,14 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <project name="qiita" id="Project669804" database="PostgreSQL" >
 	<comment>Qiita-DB layout</comment>
-	<schema name="public" schemaname="public" >
-		<table name="settings" >
-			<column name="test" type="bool" jt="-7" mandatory="y" >
-				<defo>True</defo>
-			</column>
-			<column name="base_data_folder" type="varchar" jt="12" mandatory="y" />
-		</table>
-	</schema>
 	<schema name="qiita" schemaname="qiita" defo="y" >
 		<table name="analysis" >
 			<comment>hHolds analysis information</comment>
@@ -710,7 +702,7 @@ Linked by y being raw_data_id from raw data table.</comment>
 			<column name="sample_type" type="varchar" jt="12" mandatory="y" >
 				<comment><![CDATA[Controlled vocabulary of sample types]]></comment>
 			</column>
-			<column name="sample_status_id" type="bigint" jt="-5" mandatory="y" >
+			<column name="required_sample_info_status_id" type="bigint" jt="-5" mandatory="y" >
 				<comment><![CDATA[What step of the pipeline the samples are in]]></comment>
 			</column>
 			<column name="collection_date" type="date" jt="91" mandatory="y" />
@@ -724,7 +716,7 @@ Linked by y being raw_data_id from raw data table.</comment>
 				<column name="study_id" />
 			</index>
 			<index name="idx_required_sample_info_0" unique="NORMAL" >
-				<column name="sample_status_id" />
+				<column name="required_sample_info_status_id" />
 			</index>
 			<index name="pk_required_sample_info" unique="UNIQUE" >
 				<column name="sample_id" />
@@ -732,15 +724,15 @@ Linked by y being raw_data_id from raw data table.</comment>
 			<fk name="fk_required_sample_info_study" to_schema="qiita" to_table="study" >
 				<fk_column name="study_id" pk="study_id" />
 			</fk>
-			<fk name="fk_required_sample_info" to_schema="qiita" to_table="sample_status" >
-				<fk_column name="sample_status_id" pk="sample_status_id" />
+			<fk name="fk_required_sample_info" to_schema="qiita" to_table="required_sample_info_status" >
+				<fk_column name="required_sample_info_status_id" pk="required_sample_info_status_id" />
 			</fk>
 		</table>
-		<table name="sample_status" >
-			<column name="sample_status_id" type="bigserial" jt="-5" mandatory="y" />
+		<table name="required_sample_info_status" >
+			<column name="required_sample_info_status_id" type="bigserial" jt="-5" mandatory="y" />
 			<column name="status" type="varchar" jt="12" />
 			<index name="pk_sample_status" unique="PRIMARY_KEY" >
-				<column name="sample_status_id" />
+				<column name="required_sample_info_status_id" />
 			</index>
 		</table>
 		<table name="sample_x" >
@@ -918,7 +910,7 @@ Controlled Vocabulary]]></comment>
 		</table>
 		<table name="study_status" >
 			<column name="study_status_id" type="bigserial" jt="-5" mandatory="y" />
-			<column name="study_status" type="varchar" jt="12" mandatory="y" />
+			<column name="status" type="varchar" jt="12" mandatory="y" />
 			<column name="description" type="varchar" jt="12" mandatory="y" />
 			<index name="pk_study_status" unique="PRIMARY_KEY" >
 				<column name="study_status_id" />
@@ -1082,66 +1074,65 @@ Controlled Vocabulary]]></comment>
 	</schema>
 	<connector name="PostgreSQL" database="PostgreSQL" driver_class="org.postgresql.Driver" driver_jar="postgresql-9.2-1003.jdbc3.jar" host="localhost" port="5432" instance="qiita" user="defaultuser" passwd="ZGVmYXVsdHBhc3N3b3Jk" schema_mapping="" />
 	<layout id="Layout669806" name="qiita" show_relation_columns="y" >
-		<entity schema="qiita" name="job_status" color="d0def5" x="240" y="645" />
-		<entity schema="qiita" name="analysis_status" color="d0def5" x="420" y="420" />
-		<entity schema="qiita" name="analysis_sample" color="d0def5" x="390" y="630" />
-		<entity schema="qiita" name="study_experimental_factor" color="c0d4f3" x="1635" y="240" />
-		<entity schema="qiita" name="preprocessed_sequence_454_params" color="c0d4f3" x="945" y="600" />
-		<entity schema="qiita" name="analysis_job" color="d0def5" x="75" y="390" />
-		<entity schema="qiita" name="ontology" color="d0def5" x="495" y="990" />
-		<entity schema="qiita" name="relationship_type" color="d0def5" x="765" y="1260" />
-		<entity schema="qiita" name="term" color="d0def5" x="510" y="1260" />
-		<entity schema="qiita" name="annotation" color="d0def5" x="765" y="1530" />
-		<entity schema="qiita" name="dbxref" color="d0def5" x="660" y="1515" />
-		<entity schema="qiita" name="term_synonym" color="d0def5" x="510" y="1545" />
-		<entity schema="qiita" name="controlled_vocab_values" color="d0def5" x="75" y="1200" />
-		<entity schema="qiita" name="mixs_field_description" color="d0def5" x="255" y="1155" />
-		<entity schema="qiita" name="column_ontology" color="d0def5" x="255" y="1380" />
-		<entity schema="qiita" name="column_controlled_vocabularies" color="d0def5" x="240" y="990" />
-		<entity schema="qiita" name="controlled_vocabularies" color="d0def5" x="75" y="990" />
-		<entity schema="qiita" name="investigation_study" color="c0d4f3" x="1425" y="120" />
-		<entity schema="qiita" name="term_path" color="d0def5" x="765" y="990" />
-		<entity schema="qiita" name="term_relationship" color="d0def5" x="765" y="1350" />
-		<entity schema="qiita" name="analysis_users" color="d0def5" x="420" y="525" />
-		<entity schema="qiita" name="severity" color="c0d4f3" x="1110" y="990" />
-		<entity schema="qiita" name="analysis" color="d0def5" x="240" y="390" />
-		<entity schema="qiita" name="job" color="d0def5" x="75" y="525" />
-		<entity schema="qiita" name="logging" color="c0d4f3" x="975" y="990" />
-		<entity schema="qiita" name="portal_type" color="c0d4f3" x="1635" y="525" />
-		<entity schema="qiita" name="study" color="d0def5" x="1395" y="240" />
-		<entity schema="qiita" name="study_sample_columns" color="d0def5" x="1635" y="405" />
-		<entity schema="qiita" name="timeseries_type" color="c0d4f3" x="1470" y="645" />
-		<entity schema="qiita" name="data_type" color="d0def5" x="465" y="765" />
-		<entity schema="qiita" name="emp_status" color="c0d4f3" x="855" y="765" />
-		<entity schema="qiita" name="raw_data_prep_columns" color="d0def5" x="780" y="540" />
-		<entity schema="qiita" name="qiita_user" color="d0def5" x="375" y="120" />
-		<entity schema="qiita" name="command" color="d0def5" x="240" y="540" />
-		<entity schema="qiita" name="required_sample_info" color="d0def5" x="1635" y="615" />
-		<entity schema="qiita" name="common_prep_info" color="d0def5" x="645" y="690" />
-		<entity schema="qiita" name="filetype" color="d0def5" x="675" y="540" />
-		<entity schema="qiita" name="preprocessed_data" color="c0d4f3" x="915" y="360" />
-		<entity schema="qiita" name="processed_data" color="d0def5" x="1215" y="300" />
-		<entity schema="qiita" name="investigation" color="c0d4f3" x="1230" y="45" />
-		<entity schema="qiita" name="study_users" color="d0def5" x="660" y="45" />
-		<entity schema="qiita" name="study_raw_data" color="d0def5" x="660" y="135" />
-		<entity schema="qiita" name="raw_filepath" color="c0d4f3" x="735" y="255" />
-		<entity schema="qiita" name="preprocessed_filepath" color="c0d4f3" x="930" y="270" />
-		<entity schema="qiita" name="filepath_type" color="c0d4f3" x="915" y="75" />
-		<entity schema="qiita" name="filepath" color="c0d4f3" x="945" y="165" />
-		<entity schema="qiita" name="study_status" color="c0d4f3" x="1635" y="135" />
-		<entity schema="qiita" name="study_pmid" color="c0d4f3" x="1635" y="330" />
-		<entity schema="qiita" name="preprocessed_spectra_params" color="d0def5" x="945" y="675" />
-		<entity schema="qiita" name="preprocessed_sequence_illumina_params" color="d0def5" x="945" y="480" />
-		<entity schema="qiita" name="sample_x" color="d0def5" x="1455" y="810" />
-		<entity schema="qiita" name="prep_y" color="d0def5" x="1365" y="825" />
-		<entity schema="qiita" name="study_person" color="c0d4f3" x="1335" y="690" />
-		<entity schema="qiita" name="reference" color="c0d4f3" x="1200" y="555" />
-		<entity schema="qiita" name="raw_data" color="d0def5" x="660" y="360" />
-		<entity schema="qiita" name="processed_params_uclust" color="d0def5" x="1200" y="435" />
-		<entity schema="qiita" name="sample_status" color="c0d4f3" x="1635" y="825" />
-		<entity schema="qiita" name="processed_filepath" color="c0d4f3" x="1185" y="195" />
-		<entity schema="qiita" name="user_level" color="d0def5" x="210" y="120" />
-		<entity schema="public" name="settings" color="c0d4f3" x="45" y="90" />
+		<entity schema="qiita" name="job_status" color="d0def5" x="210" y="645" />
+		<entity schema="qiita" name="analysis_status" color="d0def5" x="390" y="420" />
+		<entity schema="qiita" name="analysis_sample" color="d0def5" x="360" y="630" />
+		<entity schema="qiita" name="study_experimental_factor" color="c0d4f3" x="1605" y="240" />
+		<entity schema="qiita" name="preprocessed_sequence_454_params" color="c0d4f3" x="915" y="600" />
+		<entity schema="qiita" name="analysis_job" color="d0def5" x="45" y="390" />
+		<entity schema="qiita" name="ontology" color="d0def5" x="465" y="990" />
+		<entity schema="qiita" name="relationship_type" color="d0def5" x="735" y="1260" />
+		<entity schema="qiita" name="term" color="d0def5" x="480" y="1260" />
+		<entity schema="qiita" name="annotation" color="d0def5" x="735" y="1530" />
+		<entity schema="qiita" name="dbxref" color="d0def5" x="630" y="1515" />
+		<entity schema="qiita" name="term_synonym" color="d0def5" x="480" y="1545" />
+		<entity schema="qiita" name="controlled_vocab_values" color="d0def5" x="45" y="1200" />
+		<entity schema="qiita" name="mixs_field_description" color="d0def5" x="225" y="1155" />
+		<entity schema="qiita" name="column_ontology" color="d0def5" x="225" y="1380" />
+		<entity schema="qiita" name="column_controlled_vocabularies" color="d0def5" x="210" y="990" />
+		<entity schema="qiita" name="controlled_vocabularies" color="d0def5" x="45" y="990" />
+		<entity schema="qiita" name="investigation_study" color="c0d4f3" x="1395" y="120" />
+		<entity schema="qiita" name="term_path" color="d0def5" x="735" y="990" />
+		<entity schema="qiita" name="term_relationship" color="d0def5" x="735" y="1350" />
+		<entity schema="qiita" name="analysis_users" color="d0def5" x="390" y="525" />
+		<entity schema="qiita" name="severity" color="c0d4f3" x="1080" y="990" />
+		<entity schema="qiita" name="analysis" color="d0def5" x="210" y="390" />
+		<entity schema="qiita" name="job" color="d0def5" x="45" y="525" />
+		<entity schema="qiita" name="logging" color="c0d4f3" x="945" y="990" />
+		<entity schema="qiita" name="portal_type" color="c0d4f3" x="1605" y="525" />
+		<entity schema="qiita" name="study" color="d0def5" x="1365" y="240" />
+		<entity schema="qiita" name="study_sample_columns" color="d0def5" x="1605" y="405" />
+		<entity schema="qiita" name="timeseries_type" color="c0d4f3" x="1440" y="645" />
+		<entity schema="qiita" name="data_type" color="d0def5" x="435" y="765" />
+		<entity schema="qiita" name="emp_status" color="c0d4f3" x="825" y="765" />
+		<entity schema="qiita" name="raw_data_prep_columns" color="d0def5" x="750" y="540" />
+		<entity schema="qiita" name="qiita_user" color="d0def5" x="345" y="120" />
+		<entity schema="qiita" name="command" color="d0def5" x="210" y="540" />
+		<entity schema="qiita" name="common_prep_info" color="d0def5" x="615" y="690" />
+		<entity schema="qiita" name="filetype" color="d0def5" x="645" y="540" />
+		<entity schema="qiita" name="preprocessed_data" color="c0d4f3" x="885" y="360" />
+		<entity schema="qiita" name="processed_data" color="d0def5" x="1185" y="300" />
+		<entity schema="qiita" name="investigation" color="c0d4f3" x="1200" y="45" />
+		<entity schema="qiita" name="study_users" color="d0def5" x="630" y="45" />
+		<entity schema="qiita" name="study_raw_data" color="d0def5" x="630" y="135" />
+		<entity schema="qiita" name="raw_filepath" color="c0d4f3" x="705" y="255" />
+		<entity schema="qiita" name="preprocessed_filepath" color="c0d4f3" x="900" y="270" />
+		<entity schema="qiita" name="filepath_type" color="c0d4f3" x="885" y="75" />
+		<entity schema="qiita" name="filepath" color="c0d4f3" x="915" y="165" />
+		<entity schema="qiita" name="study_pmid" color="c0d4f3" x="1605" y="330" />
+		<entity schema="qiita" name="preprocessed_spectra_params" color="d0def5" x="915" y="675" />
+		<entity schema="qiita" name="preprocessed_sequence_illumina_params" color="d0def5" x="915" y="480" />
+		<entity schema="qiita" name="sample_x" color="d0def5" x="1425" y="810" />
+		<entity schema="qiita" name="prep_y" color="d0def5" x="1335" y="825" />
+		<entity schema="qiita" name="study_person" color="c0d4f3" x="1305" y="690" />
+		<entity schema="qiita" name="reference" color="c0d4f3" x="1170" y="555" />
+		<entity schema="qiita" name="raw_data" color="d0def5" x="630" y="360" />
+		<entity schema="qiita" name="processed_params_uclust" color="d0def5" x="1170" y="435" />
+		<entity schema="qiita" name="processed_filepath" color="c0d4f3" x="1155" y="195" />
+		<entity schema="qiita" name="user_level" color="d0def5" x="180" y="120" />
+		<entity schema="qiita" name="study_status" color="c0d4f3" x="1605" y="135" />
+		<entity schema="qiita" name="required_sample_info_status" color="c0d4f3" x="1605" y="825" />
+		<entity schema="qiita" name="required_sample_info" color="d0def5" x="1605" y="615" />
 		<group name="Group_analyses" color="c4e0f9" >
 			<comment>analysis tables</comment>
 			<entity schema="qiita" name="analysis" />
@@ -1183,7 +1174,7 @@ Controlled Vocabulary]]></comment>
 			<entity schema="qiita" name="study_status" />
 			<entity schema="qiita" name="study_person" />
 			<entity schema="qiita" name="timeseries_type" />
-			<entity schema="qiita" name="sample_status" />
+			<entity schema="qiita" name="required_sample_info_status" />
 			<entity schema="qiita" name="filepath_type" />
 			<entity schema="qiita" name="filepath" />
 			<entity schema="qiita" name="preprocessed_filepath" />

@@ -158,10 +158,10 @@ CREATE TABLE qiita.relationship_type (
 	CONSTRAINT pk_relationship_type PRIMARY KEY ( relationship_type_id )
  );
 
-CREATE TABLE qiita.sample_status ( 
-	sample_status_id     bigserial  NOT NULL,
+CREATE TABLE qiita.required_sample_info_status ( 
+	required_sample_info_status_id bigserial  NOT NULL,
 	status               varchar  ,
-	CONSTRAINT pk_sample_status PRIMARY KEY ( sample_status_id )
+	CONSTRAINT pk_sample_status PRIMARY KEY ( required_sample_info_status_id )
  );
 
 CREATE TABLE qiita.severity ( 
@@ -183,7 +183,7 @@ COMMENT ON TABLE qiita.study_person IS 'Contact information for the various peop
 
 CREATE TABLE qiita.study_status ( 
 	study_status_id      bigserial  NOT NULL,
-	study_status         varchar  NOT NULL,
+	status               varchar  NOT NULL,
 	description          varchar  NOT NULL,
 	CONSTRAINT pk_study_status PRIMARY KEY ( study_status_id )
  );
@@ -713,19 +713,19 @@ CREATE TABLE qiita.required_sample_info (
 	has_physical_specimen bool  NOT NULL,
 	has_extracted_data   bool  NOT NULL,
 	sample_type          varchar  NOT NULL,
-	sample_status_id     bigint  NOT NULL,
+	required_sample_info_status_id bigint  NOT NULL,
 	collection_date      date  NOT NULL,
 	host_subject_id      varchar  NOT NULL,
 	description          varchar  NOT NULL,
 	CONSTRAINT idx_common_sample_information PRIMARY KEY ( study_id, sample_id ),
 	CONSTRAINT pk_required_sample_info UNIQUE ( sample_id ) ,
 	CONSTRAINT fk_required_sample_info_study FOREIGN KEY ( study_id ) REFERENCES qiita.study( study_id )    ,
-	CONSTRAINT fk_required_sample_info FOREIGN KEY ( sample_status_id ) REFERENCES qiita.sample_status( sample_status_id )    
+	CONSTRAINT fk_required_sample_info FOREIGN KEY ( required_sample_info_status_id ) REFERENCES qiita.required_sample_info_status( required_sample_info_status_id )    
  );
 
 CREATE INDEX idx_required_sample_info ON qiita.required_sample_info ( study_id );
 
-CREATE INDEX idx_required_sample_info_0 ON qiita.required_sample_info ( sample_status_id );
+CREATE INDEX idx_required_sample_info_0 ON qiita.required_sample_info ( required_sample_info_status_id );
 
 COMMENT ON TABLE qiita.required_sample_info IS 'Required info for each sample. One row is one sample.';
 
@@ -735,7 +735,7 @@ COMMENT ON COLUMN qiita.required_sample_info.has_physical_specimen IS 'Whether w
 
 COMMENT ON COLUMN qiita.required_sample_info.sample_type IS 'Controlled vocabulary of sample types';
 
-COMMENT ON COLUMN qiita.required_sample_info.sample_status_id IS 'What step of the pipeline the samples are in';
+COMMENT ON COLUMN qiita.required_sample_info.required_sample_info_status_id IS 'What step of the pipeline the samples are in';
 
 CREATE TABLE qiita.analysis_job ( 
 	analysis_id          bigint  NOT NULL,

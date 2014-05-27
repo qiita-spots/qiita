@@ -6,7 +6,10 @@ install:
   - pip install .
 script:
   - qiita_db make_test_env
-  - nosetests --with-coverage --cover-package=coveralls
+  - nosetests
+  # we need to run the test suite from setup.py for coveralls to grab the info
+  - coverage run setup.py test
+  - coverage report -m
 services:
   - redis-server
 after_success:
