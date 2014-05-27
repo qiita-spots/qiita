@@ -10,7 +10,7 @@
 
 __version__ = "0.1.0-dev"
 
-from distutils.core import setup
+from setuptools import setup
 from glob import glob
 
 
@@ -56,6 +56,8 @@ setup(name='qiita',
                     'qiita_db': ['support_files/*sql',
                                  'support_files/test_data/*']},
       scripts=glob('scripts/*'),
+      extras_require={'test': ["nose >= 0.10.1", "pep8"],
+                      'doc': ["Sphinx >= 1.2.2", "sphinx-bootstrap-theme"]},
       install_requires=['tornado == 3.1.1', 'redis == 2.8.0',
                         'tornado-redis == 2.4.15', 'psycopg2',
                         'pgbouncer', 'pyqi == 0.3.2', 'ipython[all]',
