@@ -1,9 +1,4 @@
-from unittest import TestCase, main
-
-from qiita_core.util import qiita_test_checker
-from qiita_db.base import QiitaStatusObject
-from qiita_db.exceptions import QiitaDBStatusError
-
+#!/usr/bin/env python
 
 # -----------------------------------------------------------------------------
 # Copyright (c) 2014--, The Qiita Development Team.
@@ -12,6 +7,13 @@ from qiita_db.exceptions import QiitaDBStatusError
 #
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
+
+from unittest import TestCase, main
+
+from qiita_core.util import qiita_test_checker
+from qiita_db.base import QiitaStatusObject
+from qiita_db.exceptions import QiitaDBStatusError
+
 
 @qiita_test_checker()
 class QiitaStatusDecoratorTest(TestCase):
