@@ -127,26 +127,33 @@ class QiitaStatusObject(QiitaObject):
         "table_status_id" corresponding to the column of the same name in
         "table".
 
-        Example:
+        Table setup:
         foo: foo_status_id  ----> foo_status: foo_status_id, status
         """
         if isinstance(status, str):
                 status = [status]
 
-        def wrap(f):
-            sql = ("SELECT status FROM qiita.{0}_status WHERE {0}_status_id = "
-                   "(SELECT {0}_status_id FROM qiita.{0} WHERE "
-                   "{0}_id = %s)").format(self._table)
-            conn = SQLConnectionHandler()
-            dbstatus = conn.execute_fetchone(sql, (self._id, ))[0]
+        # Wrapper function that gets the db status and func to wrap
+        sql = ("SELECT status FROM qiita.{0}_status WHERE {0}_status_id = "
+               "(SELECT {0}_status_id FROM qiita.{0} WHERE "
+               "{0}_id = %s)").format(self._table)
+        conn = SQLConnectionHandler()
+        dbstatus = conn.execute_fetchone(sql, (self._id, ))[0]
 
+        def wrap(f):
+            # Wrap needed to get function to wrap with this decorator
             def wrapped_f(*args):
-                if (exclude and dbstatus not in status)or(not exclude and
-                                                          dbstatus in status):
+                # Wrapped_f function needed to get func args
+                if exclude:
+                    if dbstatus not in status:
+                        return f(*args)
+                    else:
+                        raise ValueError("DB status %s in %s" % (dbstatus,
+                                                                 str(status)))
+                elif dbstatus in status:
                     return f(*args)
                 else:
-                    n = '' if exclude else 'not'
-                    raise ValueError("DB status %s %s in %s" % (dbstatus, n,
-                                                                str(status)))
+                    raise ValueError("DB status %s not in %s" % (dbstatus,
+                                                             str(status)))
             return wrapped_f
         return wrap
