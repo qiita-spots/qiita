@@ -2,10 +2,12 @@ language: python
 python:
   - "2.7"
 install:
-  - pip install numpy
+  - pip install coveralls
   - pip install .
 script:
   - qiita_db make_test_env
-  - nosetests
+  - nosetests --with-coverage --cover-package=coveralls
 services:
   - redis-server
+after_success:
+  - coveralls
