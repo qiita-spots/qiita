@@ -48,6 +48,9 @@ class DBUtilTests(TestCase):
             "preprocessed_foo_params", "preprocessed_", "_params",
             self.conn_handler))
         self.assertFalse(exists_dynamic_table(
+            "preprocessed__params", "preprocessed_", "_params",
+            self.conn_handler))
+        self.assertFalse(exists_dynamic_table(
             "foo_params", "preprocessed_", "_params",
             self.conn_handler))
         self.assertFalse(exists_dynamic_table(
