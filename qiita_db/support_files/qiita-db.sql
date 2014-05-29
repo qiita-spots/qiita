@@ -417,7 +417,7 @@ CREATE TABLE qiita.processed_data (
 	preprocessed_data_id bigint  NOT NULL,
 	processed_params_table varchar  NOT NULL,
 	processed_params_id  bigint  NOT NULL,
-	processed_date       date  NOT NULL,
+	processed_date       timestamp  NOT NULL,
 	CONSTRAINT pk_processed_data PRIMARY KEY ( processed_data_id ),
 	CONSTRAINT fk_processed_data FOREIGN KEY ( preprocessed_data_id ) REFERENCES qiita.preprocessed_data( preprocessed_data_id )    
  );
@@ -460,7 +460,6 @@ CREATE TABLE qiita.qiita_user (
 	affiliation          varchar  ,
 	address              varchar  ,
 	phone                varchar  ,
-	salt                 varchar  NOT NULL,
 	user_verify_code     varchar  ,
 	pass_reset_code      varchar  ,
 	pass_reset_timestamp timestamp  ,
