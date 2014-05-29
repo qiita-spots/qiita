@@ -135,7 +135,7 @@ CREATE TABLE qiita.raw_data_prep_columns (
 	column_name          varchar  NOT NULL,
 	column_type          varchar  NOT NULL,
 	CONSTRAINT idx_raw_data_prep_columns PRIMARY KEY ( raw_data_id, column_name, column_type ),
-	CONSTRAINT fk_prep_columns_raw_data FOREIGN KEY ( raw_data_id ) REFERENCES qiita.raw_data( raw_data_id )    
+	CONSTRAINT fk_prep_columns_raw_data FOREIGN KEY ( raw_data_id ) REFERENCES qiita.raw_data( raw_data_id ) ON DELETE CASCADE  
  );
 
 CREATE INDEX idx_prep_columns ON qiita.raw_data_prep_columns ( raw_data_id );
@@ -348,7 +348,7 @@ CREATE TABLE qiita.filepath (
 	filepath             varchar  NOT NULL,
 	filepath_type_id     bigint  NOT NULL,
 	CONSTRAINT pk_filepath PRIMARY KEY ( filepath_id ),
-	CONSTRAINT fk_filepath FOREIGN KEY ( filepath_type_id ) REFERENCES qiita.filepath_type( filepath_type_id )    
+	CONSTRAINT fk_filepath FOREIGN KEY ( filepath_type_id ) REFERENCES qiita.filepath_type( filepath_type_id ) ON DELETE CASCADE  
  );
 
 CREATE INDEX idx_filepath ON qiita.filepath ( filepath_type_id );
@@ -393,7 +393,7 @@ CREATE TABLE qiita.preprocessed_data (
 	preprocessed_params_table varchar  NOT NULL,
 	preprocessed_params_id bigint  NOT NULL,
 	CONSTRAINT pk_preprocessed_data PRIMARY KEY ( preprocessed_data_id ),
-	CONSTRAINT fk_preprocessed_data_raw_data FOREIGN KEY ( raw_data_id ) REFERENCES qiita.raw_data( raw_data_id )    
+	CONSTRAINT fk_preprocessed_data_raw_data FOREIGN KEY ( raw_data_id ) REFERENCES qiita.raw_data( raw_data_id ) ON DELETE CASCADE  
  );
 
 CREATE INDEX idx_preprocessed_data ON qiita.preprocessed_data ( raw_data_id );
@@ -404,8 +404,8 @@ CREATE TABLE qiita.preprocessed_filepath (
 	preprocessed_data_id bigint  NOT NULL,
 	filepath_id          bigint  NOT NULL,
 	CONSTRAINT idx_preprocessed_filepath PRIMARY KEY ( preprocessed_data_id, filepath_id ),
-	CONSTRAINT fk_preprocessed_filepath FOREIGN KEY ( preprocessed_data_id ) REFERENCES qiita.preprocessed_data( preprocessed_data_id )    ,
-	CONSTRAINT fk_preprocessed_filepath_0 FOREIGN KEY ( filepath_id ) REFERENCES qiita.filepath( filepath_id )    
+	CONSTRAINT fk_preprocessed_filepath FOREIGN KEY ( preprocessed_data_id ) REFERENCES qiita.preprocessed_data( preprocessed_data_id ) ON DELETE CASCADE  ,
+	CONSTRAINT fk_preprocessed_filepath_0 FOREIGN KEY ( filepath_id ) REFERENCES qiita.filepath( filepath_id ) ON DELETE CASCADE  
  );
 
 CREATE INDEX idx_preprocessed_filepath_0 ON qiita.preprocessed_filepath ( preprocessed_data_id );
@@ -419,7 +419,7 @@ CREATE TABLE qiita.processed_data (
 	processed_params_id  bigint  NOT NULL,
 	processed_date       date  NOT NULL,
 	CONSTRAINT pk_processed_data PRIMARY KEY ( processed_data_id ),
-	CONSTRAINT fk_processed_data FOREIGN KEY ( preprocessed_data_id ) REFERENCES qiita.preprocessed_data( preprocessed_data_id )    
+	CONSTRAINT fk_processed_data FOREIGN KEY ( preprocessed_data_id ) REFERENCES qiita.preprocessed_data( preprocessed_data_id ) ON DELETE CASCADE  
  );
 
 COMMENT ON COLUMN qiita.processed_data.processed_params_table IS 'Name of table holding processing params';
@@ -430,8 +430,8 @@ CREATE TABLE qiita.processed_filepath (
 	processed_data_id    bigint  NOT NULL,
 	filepath_id          bigint  NOT NULL,
 	CONSTRAINT pk_processed_data_filepath UNIQUE ( processed_data_id ) ,
-	CONSTRAINT fk_processed_data_filepath FOREIGN KEY ( processed_data_id ) REFERENCES qiita.processed_data( processed_data_id )    ,
-	CONSTRAINT fk_processed_data_filepath_0 FOREIGN KEY ( filepath_id ) REFERENCES qiita.filepath( filepath_id )    
+	CONSTRAINT fk_processed_data_filepath FOREIGN KEY ( processed_data_id ) REFERENCES qiita.processed_data( processed_data_id ) ON DELETE CASCADE  ,
+	CONSTRAINT fk_processed_data_filepath_0 FOREIGN KEY ( filepath_id ) REFERENCES qiita.filepath( filepath_id ) ON DELETE CASCADE  
  );
 
 CREATE INDEX idx_processed_data_filepath ON qiita.processed_filepath ( filepath_id );
@@ -484,8 +484,8 @@ CREATE TABLE qiita.raw_filepath (
 	raw_data_id          bigint  NOT NULL,
 	filepath_id          bigint  NOT NULL,
 	CONSTRAINT idx_raw_filepath PRIMARY KEY ( raw_data_id, filepath_id ),
-	CONSTRAINT fk_raw_filepath FOREIGN KEY ( filepath_id ) REFERENCES qiita.filepath( filepath_id )    ,
-	CONSTRAINT fk_raw_filepath_0 FOREIGN KEY ( raw_data_id ) REFERENCES qiita.raw_data( raw_data_id )    
+	CONSTRAINT fk_raw_filepath FOREIGN KEY ( filepath_id ) REFERENCES qiita.filepath( filepath_id ) ON DELETE CASCADE  ,
+	CONSTRAINT fk_raw_filepath_0 FOREIGN KEY ( raw_data_id ) REFERENCES qiita.raw_data( raw_data_id ) ON DELETE CASCADE  
  );
 
 CREATE INDEX idx_raw_filepath_0 ON qiita.raw_filepath ( filepath_id );
@@ -516,7 +516,7 @@ CREATE TABLE qiita.study (
 	study_abstract       text  NOT NULL,
 	vamps_id             varchar  ,
 	CONSTRAINT pk_study PRIMARY KEY ( study_id ),
-	CONSTRAINT fk_study_user FOREIGN KEY ( email ) REFERENCES qiita.qiita_user( email )    ,
+	CONSTRAINT fk_study_user FOREIGN KEY ( email ) REFERENCES qiita.qiita_user( email ) ON DELETE CASCADE  ,
 	CONSTRAINT fk_study_study_status FOREIGN KEY ( study_status_id ) REFERENCES qiita.study_status( study_status_id )    ,
 	CONSTRAINT fk_study_study_emp_person FOREIGN KEY ( emp_person_id ) REFERENCES qiita.study_person( study_person_id )    ,
 	CONSTRAINT fk_study_study_lab_person FOREIGN KEY ( lab_person_id ) REFERENCES qiita.study_person( study_person_id )    ,
@@ -550,7 +550,7 @@ CREATE TABLE qiita.study_experimental_factor (
 	study_id             bigint  NOT NULL,
 	efo_id               bigint  NOT NULL,
 	CONSTRAINT idx_study_experimental_factor PRIMARY KEY ( study_id, efo_id ),
-	CONSTRAINT fk_study_experimental_factor FOREIGN KEY ( study_id ) REFERENCES qiita.study( study_id )    
+	CONSTRAINT fk_study_experimental_factor FOREIGN KEY ( study_id ) REFERENCES qiita.study( study_id ) ON DELETE CASCADE  
  );
 
 CREATE INDEX idx_study_experimental_factor_0 ON qiita.study_experimental_factor ( study_id );
@@ -561,7 +561,7 @@ CREATE TABLE qiita.study_pmid (
 	study_id             bigint  NOT NULL,
 	pmid                 varchar  NOT NULL,
 	CONSTRAINT idx_study_pmid PRIMARY KEY ( study_id, pmid ),
-	CONSTRAINT fk_study_pmid_study FOREIGN KEY ( study_id ) REFERENCES qiita.study( study_id )    
+	CONSTRAINT fk_study_pmid_study FOREIGN KEY ( study_id ) REFERENCES qiita.study( study_id ) ON DELETE CASCADE  
  );
 
 CREATE INDEX idx_study_pmid_0 ON qiita.study_pmid ( study_id );
@@ -572,8 +572,8 @@ CREATE TABLE qiita.study_raw_data (
 	study_id             bigint  NOT NULL,
 	raw_data_id          bigint  NOT NULL,
 	CONSTRAINT idx_study_raw_data_0 PRIMARY KEY ( study_id, raw_data_id ),
-	CONSTRAINT fk_study_raw_data_study FOREIGN KEY ( study_id ) REFERENCES qiita.study( study_id )    ,
-	CONSTRAINT fk_study_raw_data_raw_data FOREIGN KEY ( raw_data_id ) REFERENCES qiita.raw_data( raw_data_id )    
+	CONSTRAINT fk_study_raw_data_study FOREIGN KEY ( study_id ) REFERENCES qiita.study( study_id ) ON DELETE CASCADE  ,
+	CONSTRAINT fk_study_raw_data_raw_data FOREIGN KEY ( raw_data_id ) REFERENCES qiita.raw_data( raw_data_id ) ON DELETE CASCADE  
  );
 
 CREATE INDEX idx_study_raw_data ON qiita.study_raw_data ( study_id );
@@ -585,7 +585,7 @@ CREATE TABLE qiita.study_sample_columns (
 	column_name          varchar(100)  NOT NULL,
 	column_type          varchar  NOT NULL,
 	CONSTRAINT idx_study_mapping_columns PRIMARY KEY ( study_id, column_name, column_type ),
-	CONSTRAINT fk_study_mapping_columns_study FOREIGN KEY ( study_id ) REFERENCES qiita.study( study_id )    
+	CONSTRAINT fk_study_mapping_columns_study FOREIGN KEY ( study_id ) REFERENCES qiita.study( study_id ) ON DELETE CASCADE  
  );
 
 CREATE INDEX idx_study_mapping_columns_study_id ON qiita.study_sample_columns ( study_id );
@@ -596,8 +596,8 @@ CREATE TABLE qiita.study_users (
 	study_id             bigint  NOT NULL,
 	email                varchar  NOT NULL,
 	CONSTRAINT idx_study_users PRIMARY KEY ( study_id, email ),
-	CONSTRAINT fk_study_users_study FOREIGN KEY ( study_id ) REFERENCES qiita.study( study_id )    ,
-	CONSTRAINT fk_study_users_user FOREIGN KEY ( email ) REFERENCES qiita.qiita_user( email )    
+	CONSTRAINT fk_study_users_study FOREIGN KEY ( study_id ) REFERENCES qiita.study( study_id ) ON DELETE CASCADE  ,
+	CONSTRAINT fk_study_users_user FOREIGN KEY ( email ) REFERENCES qiita.qiita_user( email ) ON DELETE CASCADE  
  );
 
 CREATE INDEX idx_study_users_0 ON qiita.study_users ( study_id );
@@ -608,26 +608,24 @@ COMMENT ON TABLE qiita.study_users IS 'Links shared studies to users they are sh
 
 CREATE TABLE qiita.analysis ( 
 	analysis_id          bigserial  NOT NULL,
-	email                varchar  NOT NULL,
 	name                 varchar  NOT NULL,
+	email                varchar  NOT NULL,
 	description          varchar  NOT NULL,
 	analysis_status_id   bigint  NOT NULL,
 	biom_table_filepath  varchar  NOT NULL,
 	pmid                 varchar  ,
 	CONSTRAINT pk_analysis PRIMARY KEY ( analysis_id ),
-	CONSTRAINT fk_analysis_user FOREIGN KEY ( email ) REFERENCES qiita.qiita_user( email )    ,
-	CONSTRAINT fk_analysis_analysis_status FOREIGN KEY ( analysis_status_id ) REFERENCES qiita.analysis_status( analysis_status_id )    
+	CONSTRAINT fk_analysis_analysis_status FOREIGN KEY ( analysis_status_id ) REFERENCES qiita.analysis_status( analysis_status_id )    ,
+	CONSTRAINT fk_analysis_email FOREIGN KEY ( email ) REFERENCES qiita.qiita_user( email )    
  );
 
-CREATE INDEX idx_analysis_email ON qiita.analysis ( email );
-
 CREATE INDEX idx_analysis_status_id ON qiita.analysis ( analysis_status_id );
+
+CREATE INDEX idx_analysis ON qiita.analysis ( email );
 
 COMMENT ON TABLE qiita.analysis IS 'hHolds analysis information';
 
 COMMENT ON COLUMN qiita.analysis.analysis_id IS 'Unique identifier for analysis';
-
-COMMENT ON COLUMN qiita.analysis.email IS 'Email for user who owns the analysis';
 
 COMMENT ON COLUMN qiita.analysis.name IS 'Name of the analysis';
 
@@ -664,7 +662,7 @@ CREATE TABLE qiita.investigation_study (
 	study_id             bigint  NOT NULL,
 	CONSTRAINT idx_investigation_study PRIMARY KEY ( investigation_id, study_id ),
 	CONSTRAINT fk_investigation_study FOREIGN KEY ( investigation_id ) REFERENCES qiita.investigation( investigation_id )    ,
-	CONSTRAINT fk_investigation_study_study FOREIGN KEY ( study_id ) REFERENCES qiita.study( study_id )    
+	CONSTRAINT fk_investigation_study_study FOREIGN KEY ( study_id ) REFERENCES qiita.study( study_id ) ON DELETE CASCADE  
  );
 
 CREATE INDEX idx_investigation_study_investigation ON qiita.investigation_study ( investigation_id );
@@ -719,7 +717,7 @@ CREATE TABLE qiita.required_sample_info (
 	description          varchar  NOT NULL,
 	CONSTRAINT idx_common_sample_information PRIMARY KEY ( study_id, sample_id ),
 	CONSTRAINT pk_required_sample_info UNIQUE ( sample_id ) ,
-	CONSTRAINT fk_required_sample_info_study FOREIGN KEY ( study_id ) REFERENCES qiita.study( study_id )    ,
+	CONSTRAINT fk_required_sample_info_study FOREIGN KEY ( study_id ) REFERENCES qiita.study( study_id ) ON DELETE CASCADE  ,
 	CONSTRAINT fk_required_sample_info FOREIGN KEY ( required_sample_info_status_id ) REFERENCES qiita.required_sample_info_status( required_sample_info_status_id )    
  );
 
@@ -765,7 +763,7 @@ CREATE TABLE qiita.common_prep_info (
 	emp_status_id        bigint  NOT NULL,
 	data_type_id         bigint  NOT NULL,
 	CONSTRAINT idx_required_prep_info_1 PRIMARY KEY ( raw_data_id, sample_id ),
-	CONSTRAINT fk_required_prep_info_raw_data FOREIGN KEY ( raw_data_id ) REFERENCES qiita.raw_data( raw_data_id )    ,
+	CONSTRAINT fk_required_prep_info_raw_data FOREIGN KEY ( raw_data_id ) REFERENCES qiita.raw_data( raw_data_id ) ON DELETE CASCADE  ,
 	CONSTRAINT fk_required_prep_info_emp_status FOREIGN KEY ( emp_status_id ) REFERENCES qiita.emp_status( emp_status_id )    ,
 	CONSTRAINT fk_required_prep_info FOREIGN KEY ( sample_id ) REFERENCES qiita.required_sample_info( sample_id )    ,
 	CONSTRAINT fk_required_prep_info_0 FOREIGN KEY ( data_type_id ) REFERENCES qiita.data_type( data_type_id )    

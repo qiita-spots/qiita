@@ -7,12 +7,10 @@
 			<column name="analysis_id" type="bigserial" jt="-5" mandatory="y" >
 				<comment><![CDATA[Unique identifier for analysis]]></comment>
 			</column>
-			<column name="email" type="varchar" jt="12" mandatory="y" >
-				<comment><![CDATA[Email for user who owns the analysis]]></comment>
-			</column>
 			<column name="name" type="varchar" jt="12" mandatory="y" >
 				<comment><![CDATA[Name of the analysis]]></comment>
 			</column>
+			<column name="email" type="varchar" jt="12" mandatory="y" />
 			<column name="description" type="varchar" jt="12" mandatory="y" />
 			<column name="analysis_status_id" type="bigint" jt="-5" mandatory="y" />
 			<column name="biom_table_filepath" type="varchar" jt="12" mandatory="y" />
@@ -22,17 +20,17 @@
 			<index name="pk_analysis" unique="PRIMARY_KEY" >
 				<column name="analysis_id" />
 			</index>
-			<index name="idx_analysis_email" unique="NORMAL" >
-				<column name="email" />
-			</index>
 			<index name="idx_analysis_status_id" unique="NORMAL" >
 				<column name="analysis_status_id" />
 			</index>
-			<fk name="fk_analysis_user" to_schema="qiita" to_table="qiita_user" >
-				<fk_column name="email" pk="email" />
-			</fk>
+			<index name="idx_analysis" unique="NORMAL" >
+				<column name="email" />
+			</index>
 			<fk name="fk_analysis_analysis_status" to_schema="qiita" to_table="analysis_status" >
 				<fk_column name="analysis_status_id" pk="analysis_status_id" />
+			</fk>
+			<fk name="fk_analysis_email" to_schema="qiita" to_table="qiita_user" >
+				<fk_column name="email" pk="email" />
 			</fk>
 		</table>
 		<table name="analysis_job" >
@@ -197,7 +195,7 @@
 			<index name="idx_required_prep_info_3" unique="NORMAL" >
 				<column name="data_type_id" />
 			</index>
-			<fk name="fk_required_prep_info_raw_data" to_schema="qiita" to_table="raw_data" >
+			<fk name="fk_required_prep_info_raw_data" to_schema="qiita" to_table="raw_data" delete_action="cascade" >
 				<fk_column name="raw_data_id" pk="raw_data_id" />
 			</fk>
 			<fk name="fk_required_prep_info_emp_status" to_schema="qiita" to_table="emp_status" >
@@ -277,7 +275,7 @@
 			<index name="idx_filepath" unique="NORMAL" >
 				<column name="filepath_type_id" />
 			</index>
-			<fk name="fk_filepath" to_schema="qiita" to_table="filepath_type" >
+			<fk name="fk_filepath" to_schema="qiita" to_table="filepath_type" delete_action="cascade" >
 				<fk_column name="filepath_type_id" pk="filepath_type_id" />
 			</fk>
 		</table>
@@ -331,7 +329,7 @@ An investigation comprises one or more individual studies.</comment>
 			<fk name="fk_investigation_study" to_schema="qiita" to_table="investigation" >
 				<fk_column name="investigation_id" pk="investigation_id" />
 			</fk>
-			<fk name="fk_investigation_study_study" to_schema="qiita" to_table="study" >
+			<fk name="fk_investigation_study_study" to_schema="qiita" to_table="study" delete_action="cascade" >
 				<fk_column name="study_id" pk="study_id" />
 			</fk>
 		</table>
@@ -470,7 +468,7 @@ Linked by y being raw_data_id from raw data table.</comment>
 			<index name="idx_preprocessed_data" unique="NORMAL" >
 				<column name="raw_data_id" />
 			</index>
-			<fk name="fk_preprocessed_data_raw_data" to_schema="qiita" to_table="raw_data" >
+			<fk name="fk_preprocessed_data_raw_data" to_schema="qiita" to_table="raw_data" delete_action="cascade" >
 				<fk_column name="raw_data_id" pk="raw_data_id" />
 			</fk>
 		</table>
@@ -487,10 +485,10 @@ Linked by y being raw_data_id from raw data table.</comment>
 			<index name="idx_preprocessed_filepath_1" unique="NORMAL" >
 				<column name="filepath_id" />
 			</index>
-			<fk name="fk_preprocessed_filepath" to_schema="qiita" to_table="preprocessed_data" >
+			<fk name="fk_preprocessed_filepath" to_schema="qiita" to_table="preprocessed_data" delete_action="cascade" >
 				<fk_column name="preprocessed_data_id" pk="preprocessed_data_id" />
 			</fk>
-			<fk name="fk_preprocessed_filepath_0" to_schema="qiita" to_table="filepath" >
+			<fk name="fk_preprocessed_filepath_0" to_schema="qiita" to_table="filepath" delete_action="cascade" >
 				<fk_column name="filepath_id" pk="filepath_id" />
 			</fk>
 		</table>
@@ -540,7 +538,7 @@ Linked by y being raw_data_id from raw data table.</comment>
 			<index name="pk_processed_data" unique="PRIMARY_KEY" >
 				<column name="processed_data_id" />
 			</index>
-			<fk name="fk_processed_data" to_schema="qiita" to_table="preprocessed_data" >
+			<fk name="fk_processed_data" to_schema="qiita" to_table="preprocessed_data" delete_action="cascade" >
 				<fk_column name="preprocessed_data_id" pk="preprocessed_data_id" />
 			</fk>
 		</table>
@@ -553,10 +551,10 @@ Linked by y being raw_data_id from raw data table.</comment>
 			<index name="idx_processed_data_filepath" unique="NORMAL" >
 				<column name="filepath_id" />
 			</index>
-			<fk name="fk_processed_data_filepath" to_schema="qiita" to_table="processed_data" >
+			<fk name="fk_processed_data_filepath" to_schema="qiita" to_table="processed_data" delete_action="cascade" >
 				<fk_column name="processed_data_id" pk="processed_data_id" />
 			</fk>
-			<fk name="fk_processed_data_filepath_0" to_schema="qiita" to_table="filepath" >
+			<fk name="fk_processed_data_filepath_0" to_schema="qiita" to_table="filepath" delete_action="cascade" >
 				<fk_column name="filepath_id" pk="filepath_id" />
 			</fk>
 		</table>
@@ -646,7 +644,7 @@ Linked by y being raw_data_id from raw data table.</comment>
 			<index name="idx_prep_columns" unique="NORMAL" >
 				<column name="raw_data_id" />
 			</index>
-			<fk name="fk_prep_columns_raw_data" to_schema="qiita" to_table="raw_data" >
+			<fk name="fk_prep_columns_raw_data" to_schema="qiita" to_table="raw_data" delete_action="cascade" >
 				<fk_column name="raw_data_id" pk="raw_data_id" />
 			</fk>
 		</table>
@@ -663,10 +661,10 @@ Linked by y being raw_data_id from raw data table.</comment>
 			<index name="idx_raw_filepath_1" unique="NORMAL" >
 				<column name="raw_data_id" />
 			</index>
-			<fk name="fk_raw_filepath" to_schema="qiita" to_table="filepath" >
+			<fk name="fk_raw_filepath" to_schema="qiita" to_table="filepath" delete_action="cascade" >
 				<fk_column name="filepath_id" pk="filepath_id" />
 			</fk>
-			<fk name="fk_raw_filepath_0" to_schema="qiita" to_table="raw_data" >
+			<fk name="fk_raw_filepath_0" to_schema="qiita" to_table="raw_data" delete_action="cascade" >
 				<fk_column name="raw_data_id" pk="raw_data_id" />
 			</fk>
 		</table>
@@ -721,7 +719,7 @@ Linked by y being raw_data_id from raw data table.</comment>
 			<index name="pk_required_sample_info" unique="UNIQUE" >
 				<column name="sample_id" />
 			</index>
-			<fk name="fk_required_sample_info_study" to_schema="qiita" to_table="study" >
+			<fk name="fk_required_sample_info_study" to_schema="qiita" to_table="study" delete_action="cascade" >
 				<fk_column name="study_id" pk="study_id" />
 			</fk>
 			<fk name="fk_required_sample_info" to_schema="qiita" to_table="required_sample_info_status" >
@@ -810,7 +808,7 @@ Controlled Vocabulary]]></comment>
 			<index name="idx_study_5" unique="NORMAL" >
 				<column name="portal_type_id" />
 			</index>
-			<fk name="fk_study_user" to_schema="qiita" to_table="qiita_user" >
+			<fk name="fk_study_user" to_schema="qiita" to_table="qiita_user" delete_action="cascade" >
 				<fk_column name="email" pk="email" />
 			</fk>
 			<fk name="fk_study_study_status" to_schema="qiita" to_table="study_status" >
@@ -843,7 +841,7 @@ Controlled Vocabulary]]></comment>
 			<index name="idx_study_experimental_factor_0" unique="NORMAL" >
 				<column name="study_id" />
 			</index>
-			<fk name="fk_study_experimental_factor" to_schema="qiita" to_table="study" >
+			<fk name="fk_study_experimental_factor" to_schema="qiita" to_table="study" delete_action="cascade" >
 				<fk_column name="study_id" pk="study_id" />
 			</fk>
 		</table>
@@ -869,7 +867,7 @@ Controlled Vocabulary]]></comment>
 			<index name="idx_study_pmid_0" unique="NORMAL" >
 				<column name="study_id" />
 			</index>
-			<fk name="fk_study_pmid_study" to_schema="qiita" to_table="study" >
+			<fk name="fk_study_pmid_study" to_schema="qiita" to_table="study" delete_action="cascade" >
 				<fk_column name="study_id" pk="study_id" />
 			</fk>
 		</table>
@@ -884,10 +882,10 @@ Controlled Vocabulary]]></comment>
 				<column name="study_id" />
 				<column name="raw_data_id" />
 			</index>
-			<fk name="fk_study_raw_data_study" to_schema="qiita" to_table="study" >
+			<fk name="fk_study_raw_data_study" to_schema="qiita" to_table="study" delete_action="cascade" >
 				<fk_column name="study_id" pk="study_id" />
 			</fk>
-			<fk name="fk_study_raw_data_raw_data" to_schema="qiita" to_table="raw_data" >
+			<fk name="fk_study_raw_data_raw_data" to_schema="qiita" to_table="raw_data" delete_action="cascade" >
 				<fk_column name="raw_data_id" pk="raw_data_id" />
 			</fk>
 		</table>
@@ -904,7 +902,7 @@ Controlled Vocabulary]]></comment>
 			<index name="idx_study_mapping_columns_study_id" unique="NORMAL" >
 				<column name="study_id" />
 			</index>
-			<fk name="fk_study_mapping_columns_study" to_schema="qiita" to_table="study" >
+			<fk name="fk_study_mapping_columns_study" to_schema="qiita" to_table="study" delete_action="cascade" >
 				<fk_column name="study_id" pk="study_id" />
 			</fk>
 		</table>
@@ -930,10 +928,10 @@ Controlled Vocabulary]]></comment>
 			<index name="idx_study_users_1" unique="NORMAL" >
 				<column name="email" />
 			</index>
-			<fk name="fk_study_users_study" to_schema="qiita" to_table="study" >
+			<fk name="fk_study_users_study" to_schema="qiita" to_table="study" delete_action="cascade" >
 				<fk_column name="study_id" pk="study_id" />
 			</fk>
-			<fk name="fk_study_users_user" to_schema="qiita" to_table="qiita_user" >
+			<fk name="fk_study_users_user" to_schema="qiita" to_table="qiita_user" delete_action="cascade" >
 				<fk_column name="email" pk="email" />
 			</fk>
 		</table>
@@ -1075,9 +1073,7 @@ Controlled Vocabulary]]></comment>
 	<connector name="PostgreSQL" database="PostgreSQL" driver_class="org.postgresql.Driver" driver_jar="postgresql-9.2-1003.jdbc3.jar" host="localhost" port="5432" instance="qiita" user="defaultuser" passwd="ZGVmYXVsdHBhc3N3b3Jk" schema_mapping="" />
 	<layout id="Layout669806" name="qiita" show_relation_columns="y" >
 		<entity schema="qiita" name="job_status" color="d0def5" x="210" y="645" />
-		<entity schema="qiita" name="analysis_status" color="d0def5" x="390" y="420" />
 		<entity schema="qiita" name="analysis_sample" color="d0def5" x="360" y="630" />
-		<entity schema="qiita" name="study_experimental_factor" color="c0d4f3" x="1605" y="240" />
 		<entity schema="qiita" name="preprocessed_sequence_454_params" color="c0d4f3" x="915" y="600" />
 		<entity schema="qiita" name="analysis_job" color="d0def5" x="45" y="390" />
 		<entity schema="qiita" name="ontology" color="d0def5" x="465" y="990" />
@@ -1091,48 +1087,50 @@ Controlled Vocabulary]]></comment>
 		<entity schema="qiita" name="column_ontology" color="d0def5" x="225" y="1380" />
 		<entity schema="qiita" name="column_controlled_vocabularies" color="d0def5" x="210" y="990" />
 		<entity schema="qiita" name="controlled_vocabularies" color="d0def5" x="45" y="990" />
-		<entity schema="qiita" name="investigation_study" color="c0d4f3" x="1395" y="120" />
 		<entity schema="qiita" name="term_path" color="d0def5" x="735" y="990" />
 		<entity schema="qiita" name="term_relationship" color="d0def5" x="735" y="1350" />
-		<entity schema="qiita" name="analysis_users" color="d0def5" x="390" y="525" />
 		<entity schema="qiita" name="severity" color="c0d4f3" x="1080" y="990" />
-		<entity schema="qiita" name="analysis" color="d0def5" x="210" y="390" />
 		<entity schema="qiita" name="job" color="d0def5" x="45" y="525" />
 		<entity schema="qiita" name="logging" color="c0d4f3" x="945" y="990" />
-		<entity schema="qiita" name="portal_type" color="c0d4f3" x="1605" y="525" />
-		<entity schema="qiita" name="study" color="d0def5" x="1365" y="240" />
-		<entity schema="qiita" name="study_sample_columns" color="d0def5" x="1605" y="405" />
 		<entity schema="qiita" name="timeseries_type" color="c0d4f3" x="1440" y="645" />
 		<entity schema="qiita" name="data_type" color="d0def5" x="435" y="765" />
 		<entity schema="qiita" name="emp_status" color="c0d4f3" x="825" y="765" />
-		<entity schema="qiita" name="raw_data_prep_columns" color="d0def5" x="750" y="540" />
 		<entity schema="qiita" name="qiita_user" color="d0def5" x="345" y="120" />
 		<entity schema="qiita" name="command" color="d0def5" x="210" y="540" />
-		<entity schema="qiita" name="common_prep_info" color="d0def5" x="615" y="690" />
 		<entity schema="qiita" name="filetype" color="d0def5" x="645" y="540" />
-		<entity schema="qiita" name="preprocessed_data" color="c0d4f3" x="885" y="360" />
-		<entity schema="qiita" name="processed_data" color="d0def5" x="1185" y="300" />
 		<entity schema="qiita" name="investigation" color="c0d4f3" x="1200" y="45" />
-		<entity schema="qiita" name="study_users" color="d0def5" x="630" y="45" />
-		<entity schema="qiita" name="study_raw_data" color="d0def5" x="630" y="135" />
-		<entity schema="qiita" name="raw_filepath" color="c0d4f3" x="705" y="255" />
-		<entity schema="qiita" name="preprocessed_filepath" color="c0d4f3" x="900" y="270" />
 		<entity schema="qiita" name="filepath_type" color="c0d4f3" x="885" y="75" />
-		<entity schema="qiita" name="filepath" color="c0d4f3" x="915" y="165" />
-		<entity schema="qiita" name="study_pmid" color="c0d4f3" x="1605" y="330" />
 		<entity schema="qiita" name="preprocessed_spectra_params" color="d0def5" x="915" y="675" />
 		<entity schema="qiita" name="preprocessed_sequence_illumina_params" color="d0def5" x="915" y="480" />
 		<entity schema="qiita" name="sample_x" color="d0def5" x="1425" y="810" />
 		<entity schema="qiita" name="prep_y" color="d0def5" x="1335" y="825" />
 		<entity schema="qiita" name="study_person" color="c0d4f3" x="1305" y="690" />
 		<entity schema="qiita" name="reference" color="c0d4f3" x="1170" y="555" />
-		<entity schema="qiita" name="raw_data" color="d0def5" x="630" y="360" />
 		<entity schema="qiita" name="processed_params_uclust" color="d0def5" x="1170" y="435" />
-		<entity schema="qiita" name="processed_filepath" color="c0d4f3" x="1155" y="195" />
 		<entity schema="qiita" name="user_level" color="d0def5" x="180" y="120" />
 		<entity schema="qiita" name="study_status" color="c0d4f3" x="1605" y="135" />
-		<entity schema="qiita" name="required_sample_info_status" color="c0d4f3" x="1605" y="825" />
+		<entity schema="qiita" name="study_experimental_factor" color="c0d4f3" x="1605" y="240" />
+		<entity schema="qiita" name="study_pmid" color="c0d4f3" x="1605" y="330" />
+		<entity schema="qiita" name="study_sample_columns" color="d0def5" x="1605" y="405" />
 		<entity schema="qiita" name="required_sample_info" color="d0def5" x="1605" y="615" />
+		<entity schema="qiita" name="required_sample_info_status" color="c0d4f3" x="1605" y="825" />
+		<entity schema="qiita" name="raw_data" color="d0def5" x="630" y="360" />
+		<entity schema="qiita" name="preprocessed_data" color="c0d4f3" x="885" y="360" />
+		<entity schema="qiita" name="processed_data" color="d0def5" x="1185" y="300" />
+		<entity schema="qiita" name="raw_filepath" color="c0d4f3" x="705" y="255" />
+		<entity schema="qiita" name="preprocessed_filepath" color="c0d4f3" x="900" y="270" />
+		<entity schema="qiita" name="processed_filepath" color="c0d4f3" x="1155" y="195" />
+		<entity schema="qiita" name="investigation_study" color="c0d4f3" x="1395" y="120" />
+		<entity schema="qiita" name="portal_type" color="c0d4f3" x="1605" y="525" />
+		<entity schema="qiita" name="study_raw_data" color="d0def5" x="630" y="135" />
+		<entity schema="qiita" name="study" color="d0def5" x="1365" y="240" />
+		<entity schema="qiita" name="filepath" color="c0d4f3" x="915" y="165" />
+		<entity schema="qiita" name="raw_data_prep_columns" color="d0def5" x="750" y="540" />
+		<entity schema="qiita" name="common_prep_info" color="d0def5" x="615" y="690" />
+		<entity schema="qiita" name="analysis_status" color="d0def5" x="390" y="525" />
+		<entity schema="qiita" name="analysis_users" color="d0def5" x="435" y="390" />
+		<entity schema="qiita" name="analysis" color="d0def5" x="210" y="390" />
+		<entity schema="qiita" name="study_users" color="d0def5" x="630" y="45" />
 		<group name="Group_analyses" color="c4e0f9" >
 			<comment>analysis tables</comment>
 			<entity schema="qiita" name="analysis" />
