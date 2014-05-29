@@ -73,7 +73,7 @@ class Study(QiitaStatusObject):
         Adds PMID to study
     """
 
-    @staticmethod
+    @classmethod
     def create(cls, owner, info, investigation_id=None):
         """Creates a new study on the database
 
@@ -105,7 +105,7 @@ class Study(QiitaStatusObject):
         efo = None
         if "study_experimental_factor" in info:
             efo = info["study_experimental_factor"]
-            if not isinstance(efo, list) and not isinstance(efo, tuple):
+            if isinstance(efo, str):
                 efo = [efo]
             info.pop("study_experimental_factor")
 
@@ -140,9 +140,10 @@ class Study(QiitaStatusObject):
                    "study_id) VALUES (%s, %s)")
             conn_handler.execute(sql, (investigation_id, study_id))
 
+        cls._table = "study"
         return cls(study_id)
 
-    @staticmethod
+    @classmethod
     def delete(id_):
         """Deletes the study `id_` from the database
 
@@ -179,8 +180,8 @@ class Study(QiitaStatusObject):
         """Dict with all information attached to the study"""
         conn_handler = SQLConnectionHandler()
         sql = "SELECT * FROM qiita.study WHERE study_id = %s"
-        info = conn_handler.execute_fetchone(sql, self._id)
-        efo = clean_sql_result(conn_handler.execute_fetchall(sql, self._id))
+        info = dict(conn_handler.execute_fetchone(sql, (self._id, )))
+        efo = clean_sql_result(conn_handler.execute_fetchall(sql, (self._id,)))
         info["study_experimental_factor"] = efo
         return info
 
@@ -228,14 +229,14 @@ class Study(QiitaStatusObject):
         """Returns the study_status_id for the study"""
         conn_handler = SQLConnectionHandler()
         sql = "SELECT study_status_id FROM qiita.study WHERE study_id = %s "
-        return conn_handler.execute_fetchone(sql, self._id)[0]
+        return conn_handler.execute_fetchone(sql, (self._id, ))[0]
 
     @status.setter
     def status(self, status_id):
         """Sets the study_status_id for the study"""
         conn_handler = SQLConnectionHandler()
         sql = "UPDATE qiita.study SET study_status_id = %s WHERE study_id = %s"
-        return conn_handler.execute_fetchone(sql, (status_id, self._id))[0]
+        conn_handler.execute(sql, (status_id, self._id))
 
     @property
     def sample_ids(self):
@@ -246,21 +247,24 @@ class Study(QiitaStatusObject):
         conn_handler = SQLConnectionHandler()
         sql = ("SELECT sample_id FROM qiita.required_sample_info WHERE "
                "study_id = %s ORDER BY sample_id")
-        return conn_handler.execute_fetchone(sql, self._id)
+        return clean_sql_result(conn_handler.execute_fetchall(sql,
+                                                              (self._id, )))
 
     @property
     def shared_with(self):
         """list of users the study is shared with"""
         conn_handler = SQLConnectionHandler()
-        sql = "SELECT * FROM qiita.study_users WHERE study_id = %s"
-        return list(conn_handler.execute_fetchone(sql, self._id))
+        sql = "SELECT email FROM qiita.study_users WHERE study_id = %s"
+        return clean_sql_result(conn_handler.execute_fetchall(sql,
+                                                              (self._id, )))
 
     @property
     def pmids(self):
         """ Returns list of paper PMIDs from this study """
         conn_handler = SQLConnectionHandler()
         sql = "SELECT pmid FROM qiita.study_pmid WHERE study_id = %s"
-        return clean_sql_result(conn_handler.execute_fetchall(sql, self._id))
+        return clean_sql_result(conn_handler.execute_fetchall(sql,
+                                                              (self._id, )))
 
     @property
     def investigations(self):
@@ -268,7 +272,8 @@ class Study(QiitaStatusObject):
         conn_handler = SQLConnectionHandler()
         sql = ("SELECT investigation_id FROM qiita.investigation_study WHERE "
                "study_id = %s")
-        return clean_sql_result(conn_handler.execute_fetchall(sql, self._id))
+        return clean_sql_result(conn_handler.execute_fetchall(sql,
+                                                              (self._id, )))
 
     @property
     def metadata(self):
@@ -276,22 +281,47 @@ class Study(QiitaStatusObject):
         conn_handler = SQLConnectionHandler()
         sql = ("SELECT column_name FROM qiita.study_sample_columns WHERE "
                "study_id = %s")
-        return clean_sql_result(conn_handler.execute_fetchall(sql, self._id))
+        return clean_sql_result(conn_handler.execute_fetchall(sql,
+                                                              (self._id, )))
 
     @property
     def raw_data(self):
         """ Returns list of data objects with raw data info """
-        raise NotImplementedError(Study.raw_data)
+        conn_handler = SQLConnectionHandler()
+        sql = ("SELECT raw_data_id FROM qiita.study_raw_data WHERE "
+               "study_id = %s")
+        raw_ids = clean_sql_result(conn_handler.execute_fetchall(sql,
+                                                                 (self._id, )))
+        raw_data = []
+        for rid in raw_ids:
+            raw_data.append(RawData(rid))
+        return raw_data
 
     @property
     def preprocessed_data(self):
         """ Returns list of data objects with preprocessed data info """
-        raise NotImplementedError(Study.preprocessed_data)
+        conn_handler = SQLConnectionHandler()
+        sql = ("SELECT preprocessed_data_id FROM qiita.study_preprocessed_data"
+               " WHERE study_id = %s")
+        pre_ids = clean_sql_result(conn_handler.execute_fetchall(sql,
+                                                                 (self._id, )))
+        preprocessed_data = []
+        for pid in pre_ids:
+            preprocessed_data.append(PreprocessedData(pid))
+        return preprocessed_data
 
     @property
     def processed_data(self):
         """ Returns list of data objects with processed data info """
-        raise NotImplementedError(Study.processed_data)
+        conn_handler = SQLConnectionHandler()
+        sql = ("SELECT processed_data_id FROM qiita.study_processed_data"
+               " WHERE study_id = %s")
+        pro_ids = clean_sql_result(conn_handler.execute_fetchall(sql,
+                                                                 (self._id, )))
+        processed_data = []
+        for pid in pro_ids:
+            processed_data.append(ProcessedData(pid))
+        return processed_data
 
 # --- methods ---
     def share_with(self, email):
@@ -305,20 +335,7 @@ class Study(QiitaStatusObject):
         conn_handler = SQLConnectionHandler()
         sql = ("INSERT INTO qiita.study_users (study_id, email) VALUES "
                "(%s, %s)")
-        conn_handler.execute_fetchone(sql, (self._id, email))
-
-    def add_raw_data(self, raw_data_id):
-        """Associates raw data with the study
-
-        Parameters
-        ----------
-        raw_data_id: int
-            ID of the raw data to associate with study
-        """
-        conn_handler = SQLConnectionHandler()
-        sql = ("INSERT INTO qiita.study_raw_data (study_id, raw_data_id) "
-               "VALUES (%s, %s)")
-        conn_handler.execute_fetchone(sql, (self._id, raw_data_id))
+        conn_handler.execute(sql, (self._id, email))
 
     def add_pmid(self, pmid):
         """Adds PMID to study
@@ -330,7 +347,7 @@ class Study(QiitaStatusObject):
         """
         conn_handler = SQLConnectionHandler()
         sql = "INSERT INTO qiita.study_pmid (study_id, pmid) VALUES (%s, %s)"
-        conn_handler.execute_fetchone(sql, (self._id, pmid))
+        conn_handler.execute(sql, (self._id, pmid))
 
 
 class StudyPerson(QiitaObject):
@@ -347,7 +364,7 @@ class StudyPerson(QiitaObject):
     phone: str, optional
         phone number of the person
     """
-    @staticmethod
+    @classmethod
     def create(cls, name, email, address=None, phone=None):
         # Make sure person doesn't already exist
         conn_handler = SQLConnectionHandler()
@@ -364,7 +381,7 @@ class StudyPerson(QiitaObject):
                                                    phone))[0]
         return StudyPerson(spid)
 
-    @staticmethod
+    @classmethod
     def delete(self):
         raise NotImplementedError()
 
