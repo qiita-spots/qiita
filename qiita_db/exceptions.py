@@ -27,6 +27,11 @@ class QiitaDBExecutionError(QiitaDBError):
     pass
 
 
+class QiitaDBStatusError(QiitaDBError):
+    """Exception for error when trying to run dissalowed functions"""
+    pass
+
+
 class QiitaDBConnectionError(QiitaDBError):
     """Exception for error when connecting to the db"""
     pass

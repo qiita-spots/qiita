@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 from __future__ import division
 
+from .sql_connection import SQLConnectionHandler
+
 """
 Objects for dealing with qiita_db objects
 
@@ -21,7 +23,7 @@ Classes
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
-from .exceptions import QiitaDBNotImplementedError
+from .exceptions import QiitaDBNotImplementedError, QiitaDBStatusError
 
 
 class QiitaObject(object):
@@ -44,6 +46,8 @@ class QiitaObject(object):
     delete(id_)
         Deletes the object `id_` from the storage system
     """
+
+    _table = None
 
     @staticmethod
     def create():
@@ -100,3 +104,63 @@ class QiitaStatusObject(QiitaObject):
             The new object status
         """
         raise QiitaDBNotImplementedError()
+
+    def check_status(self, status, exclude=False):
+        """Decorator: checks status of object, allowing function to run if
+        conditions met.
+
+        Parameters
+        ----------
+        status: str or iterable
+            Single status or iterable of statuses to check against.
+        exclude: bool, optional
+            If True, will check that database status is NOT one of the statuses
+            passed. Default False.
+
+        Notes
+        -----
+        This assumes the following database setup is in place: For a given
+        cls._table setting, such as "table", there is a corresponding table
+        with the name "table_status" holding the status entries allowed. This
+        table has a column called "status" that holds the values corresponding
+        to what is passed as status in this function and a column
+        "table_status_id" corresponding to the column of the same name in
+        "table".
+
+        Table setup:
+        foo: foo_status_id  ----> foo_status: foo_status_id, status
+        """
+        if isinstance(status, str):
+                status = [status]
+
+        # get the DB status of the object
+        sql = ("SELECT status FROM qiita.{0}_status WHERE {0}_status_id = "
+               "(SELECT {0}_status_id FROM qiita.{0} WHERE "
+               "{0}_id = %s)").format(self._table)
+        conn = SQLConnectionHandler()
+        dbstatus = conn.execute_fetchone(sql, (self._id, ))[0]
+
+        # get all available statuses
+        sql = "SELECT DISTINCT status FROM qiita.%s_status" % self._table
+        statuses = [x[0] for x in conn.execute_fetchall(sql, (self._id, ))]
+
+        def wrap(f):
+            # Wrap needed to get function to wrap with this decorator
+            def wrapped_f(*args):
+                # Wrapped_f function needed to get func args
+                for s in status:
+                    if s not in statuses:
+                        raise ValueError("%s is not a valid status" % status)
+                if exclude:
+                    if dbstatus not in status:
+                        return f(*args)
+                    else:
+                        raise QiitaDBStatusError(("DB status %s in %s" %
+                                                  (dbstatus, str(status))))
+                elif dbstatus in status:
+                    return f(*args)
+                else:
+                    raise QiitaDBStatusError(("DB status %s not in %s" %
+                                              (dbstatus, str(status))))
+            return wrapped_f
+        return wrap
