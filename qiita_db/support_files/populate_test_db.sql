@@ -1,18 +1,18 @@
 -- Insert some users in the system. Passwords are 'password' for all users
 INSERT INTO qiita.qiita_user (email, user_level_id, password, name,
-	affiliation, address, phone, salt) VALUES
+	affiliation, address, phone) VALUES
 	('test@foo.bar', 4,
 	'$2a$12$gnUi8Qg.0tvW243v889BhOBhWLIHyIJjjgaG6dxuRJkUM8nXG9Efe', 'Dude',
 	'Nowhere University', '123 fake st, Apt 0, Faketown, CO 80302',
-	'111-222-3344', '$2a$12$VEcWB1J9BbMZvoNOZXaBwu'),
+	'111-222-3344'),
 	('shared@foo.bar', 4,
 	'$2a$12$gnUi8Qg.0tvW243v889BhOBhWLIHyIJjjgaG6dxuRJkUM8nXG9Efe', 'Shared',
 	'Nowhere University', '123 fake st, Apt 0, Faketown, CO 80302',
-	'111-222-3344', '$2a$12$VEcWB1J9BbMZvoNOZXaBwu'),
+	'111-222-3344'),
 	('admin@foo.bar', 4,
 	'$2a$12$gnUi8Qg.0tvW243v889BhOBhWLIHyIJjjgaG6dxuRJkUM8nXG9Efe', 'Admin',
 	'Owner University', '312 noname st, Apt K, Nonexistantown, CO 80302',
-	'222-444-6789', '$2a$12$VEcWB1J9BbMZvoNOZXaBwu');
+	'222-444-6789');
 
 -- Insert some study persons
 INSERT INTO qiita.study_person (name, email, address, phone) VALUES
@@ -293,7 +293,7 @@ INSERT INTO qiita.preprocessed_filepath (preprocessed_data_id, filepath_id) VALU
 INSERT INTO qiita.preprocessed_sequence_illumina_params (trim_length) VALUES (151);
 
 -- Insert processed information for study 0 and processed data 1
-INSERT INTO qiita.processed_data (preprocessed_data_id, processed_params_table, processed_params_id, processed_date) VALUES (1, 'processed_params_uclust', 1, '2012-10-01');
+INSERT INTO qiita.processed_data (preprocessed_data_id, processed_params_table, processed_params_id, processed_date) VALUES (1, 'processed_params_uclust', 1, 'Mon Oct 1 09:30:27 2012');
 
 -- Populate the reference table
 INSERT INTO qiita.reference (reference_name, reference_version, sequence_filepath, taxonomy_filepath, tree_filepath) VALUES ('GreenGenes', '4feb2011', '$QIITA_TEST_FOLDER/gg_97_otus_4feb2011.fasta', '$QIITA_TEST_FOLDER/greengenes_tax.txt', '$QIITA_TEST_FOLDER/gg_97_otus_4feb2011.tre');
