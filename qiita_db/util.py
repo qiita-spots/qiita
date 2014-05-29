@@ -48,3 +48,38 @@ def scrub_data(s):
     ret = s.replace("'", "")
     ret = ret.replace(";", "")
     return ret
+
+
+def exists_table(table, conn_handler):
+    """Checks if `table` exists on the database connected through
+    `conn_handler`
+
+    Parameters
+    ----------
+    table : str
+        The table name to check if exists
+    conn_handler : SQLConnectionHandler
+        The connection handler object connected to the DB
+    """
+    return conn_handler.execute_fetchone(
+        "SELECT exists(SELECT * FROM information_schema.tables WHERE "
+        "table_name=%s)", (table,))[0]
+
+
+def exists_dynamic_table(table, prefix, suffix, conn_handler):
+    """Checks if the dynamic`table` exists on the database connected through
+    `conn_handler`, and its name starts with prefix and ends with suffix
+
+    Parameters
+    ----------
+    table : str
+        The table name to check if exists
+    prefix : str
+        The table name prefix
+    suffix : str
+        The table name suffix
+    conn_handler : SQLConnectionHandler
+        The connection handler object connected to the DB
+    """
+    return (table.startswith(prefix) and table.endswith(suffix) and
+            exists_table(table, conn_handler))
