@@ -293,7 +293,7 @@ INSERT INTO qiita.preprocessed_filepath (preprocessed_data_id, filepath_id) VALU
 INSERT INTO qiita.preprocessed_sequence_illumina_params (trim_length) VALUES (151);
 
 -- Insert processed information for study 0 and processed data 1
-INSERT INTO qiita.processed_data (preprocessed_data_id, processed_params_table, processed_params_id, processed_date) VALUES (1, 'processed_params_uclust', 1, '2012-10-01');
+INSERT INTO qiita.processed_data (preprocessed_data_id, processed_params_table, processed_params_id, processed_date) VALUES (1, 'processed_params_uclust', 1, 'Mon Oct 1 09:30:27 2012');
 
 -- Populate the reference table
 INSERT INTO qiita.reference (reference_name, reference_version, sequence_filepath, taxonomy_filepath, tree_filepath) VALUES ('GreenGenes', '4feb2011', '$QIITA_TEST_FOLDER/gg_97_otus_4feb2011.fasta', '$QIITA_TEST_FOLDER/greengenes_tax.txt', '$QIITA_TEST_FOLDER/gg_97_otus_4feb2011.tre');
