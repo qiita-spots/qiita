@@ -183,7 +183,7 @@
 <rect style='fill:url(#groupUnderTitleLine); stroke-width:2;' x='40' y='373' width='490' height='2' />
 
 <!-- ============= Group 'Group_users' ============= -->
-<rect class='grp' style='fill:url(#groupGradient3);;' x='164' y='85' width='347' height='260' />
+<rect class='grp' style='fill:url(#groupGradient3);;' x='164' y='85' width='347' height='245' />
 <text x='175' y='100'>Group_users</text>
 <rect style='fill:url(#groupUnderTitleLine); stroke-width:2;' x='175' y='103' width='325' height='2' />
 
@@ -332,12 +332,12 @@
 	analysis_users references analysis ( analysis_id )</title>
 </path>
 <text x='318' y='520' transform='rotate(0 318,520)' title='Foreign Key fk_analysis_users_analysis
-	analysis_users references analysis ( analysis_id )' style='fill:#a1a0a0;'>analysis_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 375 540 L 367,540 Q 360,540 360,532 L 360,330' >
+	analysis_users references analysis ( analysis_id )' style='fill:#a1a0a0;'>analysis_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 375 540 L 367,540 Q 360,540 360,532 L 360,315' >
 	<title>Foreign Key fk_analysis_users_user
 	analysis_users references qiita_user ( email )</title>
 </path>
 <text x='349' y='535' transform='rotate(0 349,535)' title='Foreign Key fk_analysis_users_user
-	analysis_users references qiita_user ( email )' style='fill:#a1a0a0;'>email</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 315 375 L 315,307 Q 315,300 322,300 L 330,300' >
+	analysis_users references qiita_user ( email )' style='fill:#a1a0a0;'>email</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 315 375 L 315,292 Q 315,285 322,285 L 330,285' >
 	<title>Foreign Key fk_analysis_user
 	analysis references qiita_user ( email )</title>
 </path>
@@ -417,12 +417,7 @@
 	raw_data_prep_columns references raw_data ( raw_data_id )</title>
 </path>
 <text x='782' y='520' transform='rotate(270 782,520)' title='Foreign Key fk_prep_columns_raw_data
-	raw_data_prep_columns references raw_data ( raw_data_id )' style='fill:#a1a0a0;'>raw_data_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 330 135 L 285,135' >
-	<title>Foreign Key fk_user_user_level
-	qiita_user references user_level ( user_level_id )</title>
-</path>
-<text x='262' y='130' transform='rotate(0 262,130)' title='Foreign Key fk_user_user_level
-	qiita_user references user_level ( user_level_id )' style='fill:#a1a0a0;'>user_level_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 630 675 L 630,637 Q 630,630 622,630 L 607,630 Q 600,630 600,622 L 600,427 Q 600,420 607,420 L 615,420' >
+	raw_data_prep_columns references raw_data ( raw_data_id )' style='fill:#a1a0a0;'>raw_data_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 630 675 L 630,637 Q 630,630 622,630 L 607,630 Q 600,630 600,622 L 600,427 Q 600,420 607,420 L 615,420' >
 	<title>Foreign Key fk_required_prep_info_raw_data
 	common_prep_info references raw_data ( raw_data_id )</title>
 </path>
@@ -447,12 +442,7 @@
 	preprocessed_data references raw_data ( raw_data_id )</title>
 </path>
 <text x='808' y='370' transform='rotate(0 808,370)' title='Foreign Key fk_preprocessed_data_raw_data
-	preprocessed_data references raw_data ( raw_data_id )' style='fill:#a1a0a0;'>raw_data_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1170 375 L 1080,375' >
-	<title>Foreign Key fk_processed_data
-	processed_data references preprocessed_data ( preprocessed_data_id )</title>
-</path>
-<text x='1053' y='370' transform='rotate(0 1053,370)' title='Foreign Key fk_processed_data
-	processed_data references preprocessed_data ( preprocessed_data_id )' style='fill:#a1a0a0;'>preprocessed_data_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 720 60 L 832,60 Q 840,60 840,52 L 840,7 Q 840,0 847,0 L 1552,0 Q 1560,0 1560,7 L 1560,262 Q 1560,270 1552,270 L 1545,270' >
+	preprocessed_data references raw_data ( raw_data_id )' style='fill:#a1a0a0;'>raw_data_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 720 60 L 832,60 Q 840,60 840,52 L 840,7 Q 840,0 847,0 L 1552,0 Q 1560,0 1560,7 L 1560,262 Q 1560,270 1552,270 L 1545,270' >
 	<title>Foreign Key fk_study_users_study
 	study_users references study ( study_id )</title>
 </path>
@@ -527,7 +517,17 @@
 	required_sample_info references study ( study_id )</title>
 </path>
 <text x='1546' y='610' transform='rotate(0 1546,610)' title='Foreign Key fk_required_sample_info_study
-	required_sample_info references study ( study_id )' style='fill:#a1a0a0;'>study_id</text><!-- ============= Table 'job_status' ============= -->
+	required_sample_info references study ( study_id )' style='fill:#a1a0a0;'>study_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1170 375 L 1080,375' >
+	<title>Foreign Key fk_processed_data
+	processed_data references preprocessed_data ( preprocessed_data_id )</title>
+</path>
+<text x='1053' y='370' transform='rotate(0 1053,370)' title='Foreign Key fk_processed_data
+	processed_data references preprocessed_data ( preprocessed_data_id )' style='fill:#a1a0a0;'>preprocessed_data_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 330 135 L 285,135' >
+	<title>Foreign Key fk_user_user_level
+	qiita_user references user_level ( user_level_id )</title>
+</path>
+<text x='262' y='130' transform='rotate(0 262,130)' title='Foreign Key fk_user_user_level
+	qiita_user references user_level ( user_level_id )' style='fill:#a1a0a0;'>user_level_id</text><!-- ============= Table 'job_status' ============= -->
 <rect class='table' x='210' y='638' width='105' height='75' rx='7' ry='7' />
 <path d='M 210.50 664.50 L 210.50 645.50 Q 210.50 638.50 217.50 638.50 L 307.50 638.50 Q 314.50 638.50 314.50 645.50 L 314.50 664.50 L210.50 664.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
 <a xlink:href='#job_status'><text x='234' y='652' class='tableTitle'>job_status</text><title>Table qiita.job_status</title></a>
@@ -1010,34 +1010,6 @@ Holds the columns available for a given raw data prep</title></a>
   <use id='nn' x='752' y='597' xlink:href='#nn'/><a xlink:href='#column_type'><use id='pk' x='752' y='596' xlink:href='#pk'/><title>Primary Key  ( raw_data_id, column_name, column_type ) </title></a>
 <a xlink:href='#column_type'><text x='768' y='607'>column_type</text><title>column_type varchar not null</title></a>
 
-<!-- ============= Table 'qiita_user' ============= -->
-<rect class='table' x='345' y='113' width='150' height='210' rx='7' ry='7' />
-<path d='M 345.50 139.50 L 345.50 120.50 Q 345.50 113.50 352.50 113.50 L 487.50 113.50 Q 494.50 113.50 494.50 120.50 L 494.50 139.50 L345.50 139.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
-<a xlink:href='#qiita_user'><text x='393' y='127' class='tableTitle'>qiita_user</text><title>Table qiita.qiita_user
-Holds all user information</title></a>
-  <use id='nn' x='347' y='147' xlink:href='#nn'/><a xlink:href='#email'><use id='pk' x='347' y='146' xlink:href='#pk'/><title>Primary Key  ( email ) </title></a>
-<a xlink:href='#email'><text x='363' y='157'>email</text><title>email varchar not null</title></a>
-<a xlink:href='#email'><use id='ref' x='483' y='146' xlink:href='#ref'/><title>Referred by analysis ( email ) 
-Referred by analysis_users ( email ) 
-Referred by study ( email ) 
-Referred by study_users ( email ) </title></a>
-  <use id='nn' x='347' y='162' xlink:href='#nn'/><a xlink:href='#user_level_id'><use id='idx' x='347' y='161' xlink:href='#idx'/><title>Index  ( user_level_id ) </title></a>
-<a xlink:href='#user_level_id'><text x='363' y='172'>user_level_id</text><title>user_level_id integer not null default 5
-user level</title></a>
-<a xlink:href='#user_level_id'><use id='fk' x='483' y='161' xlink:href='#fk'/><title>References user_level ( user_level_id ) </title></a>
-  <use id='nn' x='347' y='177' xlink:href='#nn'/><a xlink:href='#password'><text x='363' y='187'>password</text><title>password varchar not null</title></a>
-  <a xlink:href='#name'><text x='363' y='202'>name</text><title>name varchar</title></a>
-  <a xlink:href='#affiliation'><text x='363' y='217'>affiliation</text><title>affiliation varchar</title></a>
-  <a xlink:href='#address'><text x='363' y='232'>address</text><title>address varchar</title></a>
-  <a xlink:href='#phone'><text x='363' y='247'>phone</text><title>phone varchar</title></a>
-  <use id='nn' x='347' y='252' xlink:href='#nn'/><a xlink:href='#salt'><text x='363' y='262'>salt</text><title>salt varchar not null</title></a>
-  <a xlink:href='#user_verify_code'><text x='363' y='277'>user_verify_code</text><title>user_verify_code varchar
-Code for initial user email verification</title></a>
-  <a xlink:href='#pass_reset_code'><text x='363' y='292'>pass_reset_code</text><title>pass_reset_code varchar
-Randomly generated code for password reset</title></a>
-  <a xlink:href='#pass_reset_timestamp'><text x='363' y='307'>pass_reset_timestamp</text><title>pass_reset_timestamp timestamp
-Time the reset code was generated</title></a>
-
 <!-- ============= Table 'command' ============= -->
 <rect class='table' x='210' y='533' width='105' height='90' rx='7' ry='7' />
 <path d='M 210.50 559.50 L 210.50 540.50 Q 210.50 533.50 217.50 533.50 L 307.50 533.50 Q 314.50 533.50 314.50 540.50 L 314.50 559.50 L210.50 559.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
@@ -1096,22 +1068,6 @@ Referred by processed_data ( preprocessed_data_id ) </title></a>
   <use id='nn' x='887' y='417' xlink:href='#nn'/><a xlink:href='#preprocessed_params_table'><text x='903' y='427'>preprocessed_params_table</text><title>preprocessed_params_table varchar not null
 Name of table holding the params</title></a>
   <use id='nn' x='887' y='432' xlink:href='#nn'/><a xlink:href='#preprocessed_params_id'><text x='903' y='442'>preprocessed_params_id</text><title>preprocessed_params_id bigint not null</title></a>
-
-<!-- ============= Table 'processed_data' ============= -->
-<rect class='table' x='1185' y='293' width='165' height='120' rx='7' ry='7' />
-<path d='M 1185.50 319.50 L 1185.50 300.50 Q 1185.50 293.50 1192.50 293.50 L 1342.50 293.50 Q 1349.50 293.50 1349.50 300.50 L 1349.50 319.50 L1185.50 319.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
-<a xlink:href='#processed_data'><text x='1225' y='307' class='tableTitle'>processed_data</text><title>Table qiita.processed_data</title></a>
-  <use id='nn' x='1187' y='327' xlink:href='#nn'/><a xlink:href='#processed_data_id'><use id='pk' x='1187' y='326' xlink:href='#pk'/><title>Primary Key  ( processed_data_id ) </title></a>
-<a xlink:href='#processed_data_id'><text x='1203' y='337'>processed_data_id</text><title>processed_data_id bigserial not null</title></a>
-<a xlink:href='#processed_data_id'><use id='ref' x='1338' y='326' xlink:href='#ref'/><title>Referred by analysis_sample ( processed_data_id ) 
-Referred by processed_filepath ( processed_data_id ) </title></a>
-  <use id='nn' x='1187' y='342' xlink:href='#nn'/><a xlink:href='#preprocessed_data_id'><text x='1203' y='352'>preprocessed_data_id</text><title>preprocessed_data_id bigint not null</title></a>
-<a xlink:href='#preprocessed_data_id'><use id='fk' x='1338' y='341' xlink:href='#fk'/><title>References preprocessed_data ( preprocessed_data_id ) </title></a>
-  <use id='nn' x='1187' y='357' xlink:href='#nn'/><a xlink:href='#processed_params_table'><text x='1203' y='367'>processed_params_table</text><title>processed_params_table varchar not null
-Name of table holding processing params</title></a>
-  <use id='nn' x='1187' y='372' xlink:href='#nn'/><a xlink:href='#processed_params_id'><text x='1203' y='382'>processed_params_id</text><title>processed_params_id bigint not null
-Link to a table with the parameters used to generate processed data</title></a>
-  <use id='nn' x='1187' y='387' xlink:href='#nn'/><a xlink:href='#processed_date'><text x='1203' y='397'>processed_date</text><title>processed_date date not null</title></a>
 
 <!-- ============= Table 'investigation' ============= -->
 <rect class='table' x='1200' y='38' width='135' height='105' rx='7' ry='7' />
@@ -1377,6 +1333,49 @@ What step of the pipeline the samples are in</title></a>
   <use id='nn' x='1607' y='747' xlink:href='#nn'/><a xlink:href='#collection_date'><text x='1623' y='757'>collection_date</text><title>collection_date date not null</title></a>
   <use id='nn' x='1607' y='762' xlink:href='#nn'/><a xlink:href='#host_subject_id'><text x='1623' y='772'>host_subject_id</text><title>host_subject_id varchar not null</title></a>
   <use id='nn' x='1607' y='777' xlink:href='#nn'/><a xlink:href='#description'><text x='1623' y='787'>description</text><title>description varchar not null</title></a>
+
+<!-- ============= Table 'processed_data' ============= -->
+<rect class='table' x='1185' y='293' width='165' height='120' rx='7' ry='7' />
+<path d='M 1185.50 319.50 L 1185.50 300.50 Q 1185.50 293.50 1192.50 293.50 L 1342.50 293.50 Q 1349.50 293.50 1349.50 300.50 L 1349.50 319.50 L1185.50 319.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
+<a xlink:href='#processed_data'><text x='1225' y='307' class='tableTitle'>processed_data</text><title>Table qiita.processed_data</title></a>
+  <use id='nn' x='1187' y='327' xlink:href='#nn'/><a xlink:href='#processed_data_id'><use id='pk' x='1187' y='326' xlink:href='#pk'/><title>Primary Key  ( processed_data_id ) </title></a>
+<a xlink:href='#processed_data_id'><text x='1203' y='337'>processed_data_id</text><title>processed_data_id bigserial not null</title></a>
+<a xlink:href='#processed_data_id'><use id='ref' x='1338' y='326' xlink:href='#ref'/><title>Referred by analysis_sample ( processed_data_id ) 
+Referred by processed_filepath ( processed_data_id ) </title></a>
+  <use id='nn' x='1187' y='342' xlink:href='#nn'/><a xlink:href='#preprocessed_data_id'><text x='1203' y='352'>preprocessed_data_id</text><title>preprocessed_data_id bigint not null</title></a>
+<a xlink:href='#preprocessed_data_id'><use id='fk' x='1338' y='341' xlink:href='#fk'/><title>References preprocessed_data ( preprocessed_data_id ) </title></a>
+  <use id='nn' x='1187' y='357' xlink:href='#nn'/><a xlink:href='#processed_params_table'><text x='1203' y='367'>processed_params_table</text><title>processed_params_table varchar not null
+Name of table holding processing params</title></a>
+  <use id='nn' x='1187' y='372' xlink:href='#nn'/><a xlink:href='#processed_params_id'><text x='1203' y='382'>processed_params_id</text><title>processed_params_id bigint not null
+Link to a table with the parameters used to generate processed data</title></a>
+  <use id='nn' x='1187' y='387' xlink:href='#nn'/><a xlink:href='#processed_date'><text x='1203' y='397'>processed_date</text><title>processed_date timestamp not null</title></a>
+
+<!-- ============= Table 'qiita_user' ============= -->
+<rect class='table' x='345' y='113' width='150' height='195' rx='7' ry='7' />
+<path d='M 345.50 139.50 L 345.50 120.50 Q 345.50 113.50 352.50 113.50 L 487.50 113.50 Q 494.50 113.50 494.50 120.50 L 494.50 139.50 L345.50 139.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
+<a xlink:href='#qiita_user'><text x='393' y='127' class='tableTitle'>qiita_user</text><title>Table qiita.qiita_user
+Holds all user information</title></a>
+  <use id='nn' x='347' y='147' xlink:href='#nn'/><a xlink:href='#email'><use id='pk' x='347' y='146' xlink:href='#pk'/><title>Primary Key  ( email ) </title></a>
+<a xlink:href='#email'><text x='363' y='157'>email</text><title>email varchar not null</title></a>
+<a xlink:href='#email'><use id='ref' x='483' y='146' xlink:href='#ref'/><title>Referred by analysis ( email ) 
+Referred by analysis_users ( email ) 
+Referred by study ( email ) 
+Referred by study_users ( email ) </title></a>
+  <use id='nn' x='347' y='162' xlink:href='#nn'/><a xlink:href='#user_level_id'><use id='idx' x='347' y='161' xlink:href='#idx'/><title>Index  ( user_level_id ) </title></a>
+<a xlink:href='#user_level_id'><text x='363' y='172'>user_level_id</text><title>user_level_id integer not null default 5
+user level</title></a>
+<a xlink:href='#user_level_id'><use id='fk' x='483' y='161' xlink:href='#fk'/><title>References user_level ( user_level_id ) </title></a>
+  <use id='nn' x='347' y='177' xlink:href='#nn'/><a xlink:href='#password'><text x='363' y='187'>password</text><title>password varchar not null</title></a>
+  <a xlink:href='#name'><text x='363' y='202'>name</text><title>name varchar</title></a>
+  <a xlink:href='#affiliation'><text x='363' y='217'>affiliation</text><title>affiliation varchar</title></a>
+  <a xlink:href='#address'><text x='363' y='232'>address</text><title>address varchar</title></a>
+  <a xlink:href='#phone'><text x='363' y='247'>phone</text><title>phone varchar</title></a>
+  <a xlink:href='#user_verify_code'><text x='363' y='262'>user_verify_code</text><title>user_verify_code varchar
+Code for initial user email verification</title></a>
+  <a xlink:href='#pass_reset_code'><text x='363' y='277'>pass_reset_code</text><title>pass_reset_code varchar
+Randomly generated code for password reset</title></a>
+  <a xlink:href='#pass_reset_timestamp'><text x='363' y='292'>pass_reset_timestamp</text><title>pass_reset_timestamp timestamp
+Time the reset code was generated</title></a>
 
 </g></svg>
 
@@ -2947,86 +2946,6 @@ Controlled Vocabulary </td>
 <br/><br/>
 <table id='dbs' >
 <thead>
-<tr><th colspan='3'><a name='qiita_user'>qiita_user</a></th></tr>
-<tr><td colspan='3'>Holds all user information </td></tr>
-</thead>
-<tbody>
-	<tr>
-		<td><a name='email'>email</a></td>
-		<td width='40%'> varchar  NOT NULL  </td>
-		<td width='99%'>  </td>
-	</tr>
-	<tr>
-		<td><a name='user_level_id'>user&#095;level&#095;id</a></td>
-		<td width='40%'> integer  NOT NULL  DEFO 5 </td>
-		<td width='99%'> user level </td>
-	</tr>
-	<tr>
-		<td><a name='password'>password</a></td>
-		<td width='40%'> varchar  NOT NULL  </td>
-		<td width='99%'>  </td>
-	</tr>
-	<tr>
-		<td><a name='name'>name</a></td>
-		<td width='40%'> varchar   </td>
-		<td width='99%'>  </td>
-	</tr>
-	<tr>
-		<td><a name='affiliation'>affiliation</a></td>
-		<td width='40%'> varchar   </td>
-		<td width='99%'>  </td>
-	</tr>
-	<tr>
-		<td><a name='address'>address</a></td>
-		<td width='40%'> varchar   </td>
-		<td width='99%'>  </td>
-	</tr>
-	<tr>
-		<td><a name='phone'>phone</a></td>
-		<td width='40%'> varchar   </td>
-		<td width='99%'>  </td>
-	</tr>
-	<tr>
-		<td><a name='salt'>salt</a></td>
-		<td width='40%'> varchar  NOT NULL  </td>
-		<td width='99%'>  </td>
-	</tr>
-	<tr>
-		<td><a name='user_verify_code'>user&#095;verify&#095;code</a></td>
-		<td width='40%'> varchar   </td>
-		<td width='99%'> Code for initial user email verification </td>
-	</tr>
-	<tr>
-		<td><a name='pass_reset_code'>pass&#095;reset&#095;code</a></td>
-		<td width='40%'> varchar   </td>
-		<td width='99%'> Randomly generated code for password reset </td>
-	</tr>
-	<tr>
-		<td><a name='pass_reset_timestamp'>pass&#095;reset&#095;timestamp</a></td>
-		<td width='40%'> timestamp   </td>
-		<td width='99%'> Time the reset code was generated </td>
-	</tr>
-<tr><td colspan='3' class='subpart'><b>Indexes</b></td></tr>
-	<tr>		<td>pk&#095;user primary key</td>
-		<td> ON email</td>
-		<td>  </td>
-	</tr>
-	<tr>		<td>idx&#095;user </td>
-		<td> ON user&#095;level&#095;id</td>
-		<td>  </td>
-	</tr>
-<tr><td colspan='3' class='subpart'><b>Foreign Keys</b></td></tr>
-	<tr>
-		<td>fk_user_user_level</td>
-		<td > ( user&#095;level&#095;id ) ref <a href='#user&#095;level'>user&#095;level</a> (user&#095;level&#095;id) </td>
-		<td>  </td>
-	</tr>
-</tbody>
-</table>
-
-<br/><br/>
-<table id='dbs' >
-<thead>
 <tr><th colspan='3'><a name='command'>command</a></th></tr>
 <tr><td colspan='3'>Available commands for jobs </td></tr>
 </thead>
@@ -3209,51 +3128,6 @@ Controlled Vocabulary </td>
 	<tr>
 		<td>fk_preprocessed_data_raw_data</td>
 		<td > ( raw&#095;data&#095;id ) ref <a href='#raw&#095;data'>raw&#095;data</a> (raw&#095;data&#095;id) </td>
-		<td>  </td>
-	</tr>
-</tbody>
-</table>
-
-<br/><br/>
-<table id='dbs' >
-<thead>
-<tr><th colspan='3'><a name='processed_data'>processed_data</a></th></tr>
-</thead>
-<tbody>
-	<tr>
-		<td><a name='processed_data_id'>processed&#095;data&#095;id</a></td>
-		<td width='40%'> bigserial  NOT NULL  </td>
-		<td width='99%'>  </td>
-	</tr>
-	<tr>
-		<td><a name='preprocessed_data_id'>preprocessed&#095;data&#095;id</a></td>
-		<td width='40%'> bigint  NOT NULL  </td>
-		<td width='99%'>  </td>
-	</tr>
-	<tr>
-		<td><a name='processed_params_table'>processed&#095;params&#095;table</a></td>
-		<td width='40%'> varchar  NOT NULL  </td>
-		<td width='99%'> Name of table holding processing params </td>
-	</tr>
-	<tr>
-		<td><a name='processed_params_id'>processed&#095;params&#095;id</a></td>
-		<td width='40%'> bigint  NOT NULL  </td>
-		<td width='99%'> Link to a table with the parameters used to generate processed data </td>
-	</tr>
-	<tr>
-		<td><a name='processed_date'>processed&#095;date</a></td>
-		<td width='40%'> date  NOT NULL  </td>
-		<td width='99%'>  </td>
-	</tr>
-<tr><td colspan='3' class='subpart'><b>Indexes</b></td></tr>
-	<tr>		<td>pk&#095;processed&#095;data primary key</td>
-		<td> ON processed&#095;data&#095;id</td>
-		<td>  </td>
-	</tr>
-<tr><td colspan='3' class='subpart'><b>Foreign Keys</b></td></tr>
-	<tr>
-		<td>fk_processed_data</td>
-		<td > ( preprocessed&#095;data&#095;id ) ref <a href='#preprocessed&#095;data'>preprocessed&#095;data</a> (preprocessed&#095;data&#095;id) </td>
 		<td>  </td>
 	</tr>
 </tbody>
@@ -4075,6 +3949,126 @@ Linked by y being raw&#095;data&#095;id from raw data table&#046; </td></tr>
 	<tr>
 		<td>fk_required_sample_info</td>
 		<td > ( required&#095;sample&#095;info&#095;status&#095;id ) ref <a href='#required&#095;sample&#095;info&#095;status'>required&#095;sample&#095;info&#095;status</a> (required&#095;sample&#095;info&#095;status&#095;id) </td>
+		<td>  </td>
+	</tr>
+</tbody>
+</table>
+
+<br/><br/>
+<table id='dbs' >
+<thead>
+<tr><th colspan='3'><a name='processed_data'>processed_data</a></th></tr>
+</thead>
+<tbody>
+	<tr>
+		<td><a name='processed_data_id'>processed&#095;data&#095;id</a></td>
+		<td width='40%'> bigserial  NOT NULL  </td>
+		<td width='99%'>  </td>
+	</tr>
+	<tr>
+		<td><a name='preprocessed_data_id'>preprocessed&#095;data&#095;id</a></td>
+		<td width='40%'> bigint  NOT NULL  </td>
+		<td width='99%'>  </td>
+	</tr>
+	<tr>
+		<td><a name='processed_params_table'>processed&#095;params&#095;table</a></td>
+		<td width='40%'> varchar  NOT NULL  </td>
+		<td width='99%'> Name of table holding processing params </td>
+	</tr>
+	<tr>
+		<td><a name='processed_params_id'>processed&#095;params&#095;id</a></td>
+		<td width='40%'> bigint  NOT NULL  </td>
+		<td width='99%'> Link to a table with the parameters used to generate processed data </td>
+	</tr>
+	<tr>
+		<td><a name='processed_date'>processed&#095;date</a></td>
+		<td width='40%'> timestamp  NOT NULL  </td>
+		<td width='99%'>  </td>
+	</tr>
+<tr><td colspan='3' class='subpart'><b>Indexes</b></td></tr>
+	<tr>		<td>pk&#095;processed&#095;data primary key</td>
+		<td> ON processed&#095;data&#095;id</td>
+		<td>  </td>
+	</tr>
+<tr><td colspan='3' class='subpart'><b>Foreign Keys</b></td></tr>
+	<tr>
+		<td>fk_processed_data</td>
+		<td > ( preprocessed&#095;data&#095;id ) ref <a href='#preprocessed&#095;data'>preprocessed&#095;data</a> (preprocessed&#095;data&#095;id) </td>
+		<td>  </td>
+	</tr>
+</tbody>
+</table>
+
+<br/><br/>
+<table id='dbs' >
+<thead>
+<tr><th colspan='3'><a name='qiita_user'>qiita_user</a></th></tr>
+<tr><td colspan='3'>Holds all user information </td></tr>
+</thead>
+<tbody>
+	<tr>
+		<td><a name='email'>email</a></td>
+		<td width='40%'> varchar  NOT NULL  </td>
+		<td width='99%'>  </td>
+	</tr>
+	<tr>
+		<td><a name='user_level_id'>user&#095;level&#095;id</a></td>
+		<td width='40%'> integer  NOT NULL  DEFO 5 </td>
+		<td width='99%'> user level </td>
+	</tr>
+	<tr>
+		<td><a name='password'>password</a></td>
+		<td width='40%'> varchar  NOT NULL  </td>
+		<td width='99%'>  </td>
+	</tr>
+	<tr>
+		<td><a name='name'>name</a></td>
+		<td width='40%'> varchar   </td>
+		<td width='99%'>  </td>
+	</tr>
+	<tr>
+		<td><a name='affiliation'>affiliation</a></td>
+		<td width='40%'> varchar   </td>
+		<td width='99%'>  </td>
+	</tr>
+	<tr>
+		<td><a name='address'>address</a></td>
+		<td width='40%'> varchar   </td>
+		<td width='99%'>  </td>
+	</tr>
+	<tr>
+		<td><a name='phone'>phone</a></td>
+		<td width='40%'> varchar   </td>
+		<td width='99%'>  </td>
+	</tr>
+	<tr>
+		<td><a name='user_verify_code'>user&#095;verify&#095;code</a></td>
+		<td width='40%'> varchar   </td>
+		<td width='99%'> Code for initial user email verification </td>
+	</tr>
+	<tr>
+		<td><a name='pass_reset_code'>pass&#095;reset&#095;code</a></td>
+		<td width='40%'> varchar   </td>
+		<td width='99%'> Randomly generated code for password reset </td>
+	</tr>
+	<tr>
+		<td><a name='pass_reset_timestamp'>pass&#095;reset&#095;timestamp</a></td>
+		<td width='40%'> timestamp   </td>
+		<td width='99%'> Time the reset code was generated </td>
+	</tr>
+<tr><td colspan='3' class='subpart'><b>Indexes</b></td></tr>
+	<tr>		<td>pk&#095;user primary key</td>
+		<td> ON email</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>idx&#095;user </td>
+		<td> ON user&#095;level&#095;id</td>
+		<td>  </td>
+	</tr>
+<tr><td colspan='3' class='subpart'><b>Foreign Keys</b></td></tr>
+	<tr>
+		<td>fk_user_user_level</td>
+		<td > ( user&#095;level&#095;id ) ref <a href='#user&#095;level'>user&#095;level</a> (user&#095;level&#095;id) </td>
 		<td>  </td>
 	</tr>
 </tbody>

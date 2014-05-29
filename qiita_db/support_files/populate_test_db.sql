@@ -1,18 +1,18 @@
 -- Insert some users in the system. Passwords are 'password' for all users
 INSERT INTO qiita.qiita_user (email, user_level_id, password, name,
-	affiliation, address, phone, salt) VALUES
+	affiliation, address, phone) VALUES
 	('test@foo.bar', 4,
 	'$2a$12$gnUi8Qg.0tvW243v889BhOBhWLIHyIJjjgaG6dxuRJkUM8nXG9Efe', 'Dude',
 	'Nowhere University', '123 fake st, Apt 0, Faketown, CO 80302',
-	'111-222-3344', '$2a$12$VEcWB1J9BbMZvoNOZXaBwu'),
+	'111-222-3344'),
 	('shared@foo.bar', 4,
 	'$2a$12$gnUi8Qg.0tvW243v889BhOBhWLIHyIJjjgaG6dxuRJkUM8nXG9Efe', 'Shared',
 	'Nowhere University', '123 fake st, Apt 0, Faketown, CO 80302',
-	'111-222-3344', '$2a$12$VEcWB1J9BbMZvoNOZXaBwu'),
+	'111-222-3344'),
 	('admin@foo.bar', 4,
 	'$2a$12$gnUi8Qg.0tvW243v889BhOBhWLIHyIJjjgaG6dxuRJkUM8nXG9Efe', 'Admin',
 	'Owner University', '312 noname st, Apt K, Nonexistantown, CO 80302',
-	'222-444-6789', '$2a$12$VEcWB1J9BbMZvoNOZXaBwu');
+	'222-444-6789');
 
 -- Insert some study persons
 INSERT INTO qiita.study_person (name, email, address, phone) VALUES
