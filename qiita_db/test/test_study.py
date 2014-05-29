@@ -40,11 +40,13 @@ class TestStudy(TestCase):
 
     def test_create_study(self):
         """Insert a study into the database"""
-        Study.create('test@foo.bar', self.info)
+        obs = Study.create('test@foo.bar', self.info)
+        self.assertEqual(obs.id, 2)
 
     def test_create_study_with_investigation(self):
         """Insert a study into the database with an investingation"""
         Study.create('test@foo.bar', self.info, 1)
+        self.assertEqual(obs.id, 2)
 
     def test_delete(self):
         raise NotImplementedError()

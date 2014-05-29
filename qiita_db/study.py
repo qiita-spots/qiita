@@ -22,6 +22,7 @@ Classes
 from datetime import date
 
 from .base import QiitaStatusObject, QiitaObject
+# from .data import RawData, PreprocessedData, ProcessedData
 from .util import check_required, check_table_cols, clean_sql_result
 from .exceptions import QiitaDBNotImplementedError
 from .sql_connection import SQLConnectionHandler
@@ -183,6 +184,8 @@ class Study(QiitaStatusObject):
         info = dict(conn_handler.execute_fetchone(sql, (self._id, )))
         efo = clean_sql_result(conn_handler.execute_fetchall(sql, (self._id,)))
         info["study_experimental_factor"] = efo
+
+        #TODO: Convert everythin from ids to objects
         return info
 
     @info.setter
