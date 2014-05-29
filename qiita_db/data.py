@@ -18,9 +18,10 @@ Classes
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
+from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from .base import QiitaObject
 from .sql_connection import SQLConnectionHandler
-from qiita_core.exceptions import IncompetentQiitaDeveloperError
+from .util import exists_dynamic_table
 
 
 class BaseData(QiitaObject):
@@ -39,7 +40,7 @@ class BaseData(QiitaObject):
         ----------
         filepaths : iterable of tuples (str, int)
             The list of paths to the raw files and its fileapth type identifier
-        conn_handler : qiita_db.SQLConnectionHandler
+        conn_handler : SQLConnectionHandler
             The connection handler object connected to the DB
 
         Returns
@@ -69,7 +70,7 @@ class BaseData(QiitaObject):
             The data identifier
         fp_ids : list of ints
             The filepaths ids to connect the data
-        conn_handler : qiita_db.SQLConnectionHandler
+        conn_handler : SQLConnectionHandler
             The connection handler object connected to the DB
 
         Raises
@@ -102,17 +103,17 @@ class RawData(BaseData):
     _study_raw_table = "study_raw_data"
 
     @classmethod
-    def create(cls, filetype, filepaths, study_id, submitted_to_insdc=False):
+    def create(cls, filetype, filepaths, study, submitted_to_insdc=False):
         """Creates a new object with a new id on the storage system
 
         Parameters
         ----------
         filetype : int
             The filetype identifier
-        filepath : iterable of tuples (str, int)
-            The list of paths to the raw files and its fileapth type identifier
-        study_id : int
-            The study identifier to which the raw data belongs to
+        filepaths : iterable of tuples (str, int)
+            The list of paths to the raw files and its filepath type identifier
+        study : Study
+            The Study object to which the raw data belongs to
         submitted_to_insdc : bool
             If true, the raw data files have been submitted to insdc
 
@@ -130,9 +131,9 @@ class RawData(BaseData):
 
         # Connect the raw data with its study
         conn_handler.execute(
-            "INSERT INTO qiita." + cls._study_raw_table + " (study_id, "
-            "raw_data_id) VALUES (%(study_id)s, %(raw_id)s)",
-            {'study_id': study_id, 'raw_id': rd_id})
+            "INSERT INTO qiita.{0} (study_id, raw_data_id) VALUES "
+            "(%(study_id)s, %(raw_id)s)".format(cls._study_raw_table),
+            {'study_id': study.id, 'raw_id': rd_id})
 
         # Add the filepaths to the database
         fp_ids = cls.insert_filepaths(filepaths, conn_handler)
@@ -144,15 +145,23 @@ class RawData(BaseData):
 
     @classmethod
     def delete(cls, id_):
-        """Deletes the object `id_` from the storage system
+        """Deletes the RawData `id_` from the database.
 
         Parameters
         ----------
         id_ :
             The object identifier
+
+        Notes
+        -----
+        Deletes the raw data, its filepaths, and all the preprocessed data
+        that was based on this raw data.
         """
-        # Remove
-        raise NotImplementedError()
+        # conn_handler = SQLConnectionHandler()
+        # Remove the row from raw_data
+        # conn_handler.execute(
+        #     "DELETE FROM qiita.{0} WHERE raw_data_id=%s".format(cls._table),
+        #     id_)
 
     def is_submitted_to_insdc(self):
         """Tells if the raw data has been submitted to insdc"""
@@ -162,53 +171,50 @@ class RawData(BaseData):
             "WHERE raw_data_id=%s".format(self._table), [self.id])[0]
 
 
+class PreprocessedData(BaseData):
+    """"""
+    _table = "preprocessed_data"
+    _data_filepath_table = "preprocessed_filepath"
+    _data_filepath_column = "preprocessed_data_id"
 
-# class PreprocessedData(BaseData):
-#     """"""
-#     _table = "preprocessed_data"
-#     _data_filepath_table = "preprocessed_filepath"
-#     _data_filepath_column = "preprocessed_data_id"
+    @classmethod
+    def create(cls, raw_data, preprocessed_params_table,
+               preprocessed_params_id, filepaths):
+        """Creates a new object with a new id on the storage system
 
-#     @classmethod
-#     def create(cls, raw_data_id, preprocessed_params_table,
-#                preprocessed_params_id):
-#         """Creates a new object with a new id on the storage system
+        Parameters
+        ----------
+        raw_data : RawData
+            The RawData object used as base to this preprocessed data
+        preprocessed_params_table : str
+            Name of the table that holds the preprocessing parameters used
+        preprocessed_params_id : int
+            Identifier from the parameters from the `preprocessed_params_table`
+            table used
+        filepaths : iterable of tuples (str, int)
+            The list of paths to the preprocessed files and its filepath type
+            identifier
+        """
+        conn_handler = SQLConnectionHandler()
+        # We first check that the preprocessed_params_table exists
+        if not exists_dynamic_table(preprocessed_params_table, "preprocessed_",
+                                    "_params", conn_handler):
+            raise IncompetentQiitaDeveloperError(
+                "Preprocessed params table '%s' does not exists!"
+                % preprocessed_params_table)
+        # Add the preprocessed data to the database,
+        # and get the preprocessed data id back
+        ppd_id = conn_handler.execute_fetchone(
+            "INSERT INTO qiita.{0} (raw_data_id, preprocessed_params_table, "
+            "preprocessed_params_id) VALUES (%(raw_id)s, %(param_table)s, "
+            "%(param_id)s) RETURNING raw_data_id".format(cls._table),
+            {'raw_id': raw_data.id, 'param_table': preprocessed_params_table,
+             'param_id': preprocessed_params_id})[0]
 
-#         Parameters
-#         ----------
-#         raw_data_id : int
-#         preprocessed_params_table : str
-#         preprocessed_params_id : int
-#         """
-#         conn_handler = SQLConnectionHandler()
-#         # Add the raw data to the database, and get the raw data id back
-#         rd_id = conn_handler.execute_fetchone(
-#             "INSERT INTO qiita." + cls._table + " (filetype_id, "
-#             "submitted_to_insdc) VALUES (%(type_id)s, %(insdc)s) "
-#             "RETURNING raw_data_id", {'type_id': filetype,
-#                                       'insdc': submitted_to_insdc})[0]
+        # Add the filepaths to the database
+        fp_ids = cls.insert_filepaths(filepaths, conn_handler)
 
-#         # Connect the raw data with its study
-#         conn_handler.execute(
-#             "INSERT INTO qiita." + cls._study_raw_table + " (study_id, "
-#             "raw_data_id) VALUES (%(study_id)s, %(raw_id)s)",
-#             {'study_id': study_id, 'raw_id': rd_id})
+        # Connect the raw data with its filepaths
+        cls.link_data_filepaths(ppd_id, fp_ids, conn_handler)
 
-#         # Add the filepaths to the database
-#         fp_ids = cls.insert_filepaths(filepaths, conn_handler)
-
-#         # Connect the raw data with its filepaths
-#         cls.link_data_filepaths(rd_id, fp_ids, conn_handler)
-
-#         return cls(rd_id)
-
-#     @classmethod
-#     def delete(id_):
-#         """Deletes the object `id_` from the storage system
-
-#         Parameters
-#         ----------
-#         id_ :
-#             The object identifier
-#         """
-#         raise NotImplementedError()
+        return cls(ppd_id)
