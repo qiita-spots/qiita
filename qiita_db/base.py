@@ -49,13 +49,13 @@ class QiitaObject(object):
 
     _table = None
 
-    @staticmethod
-    def create():
+    @classmethod
+    def create(cls):
         """Creates a new object with a new id on the storage system"""
         raise QiitaDBNotImplementedError()
 
-    @staticmethod
-    def delete(id_):
+    @classmethod
+    def delete(cls, id_):
         """Deletes the object `id_` from the storage system
 
         Parameters
