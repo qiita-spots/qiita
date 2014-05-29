@@ -53,9 +53,9 @@ class SQLConnectionHandler(object):
             otherwise it just returns the execution to the caller
         """
         # Check that sql arguments have the correct type
-        if sql_args and type(sql_args) not in [tuple, list]:
-            raise TypeError("sql_args should be tuple or list. Found %s " %
-                            type(sql_args))
+        if sql_args and type(sql_args) not in [tuple, list, dict]:
+            raise TypeError("sql_args should be tuple, list or dict. Found %s "
+                            % type(sql_args))
 
     @contextmanager
     def _sql_executor(self, sql, sql_args=None, many=False):
@@ -86,7 +86,6 @@ class SQLConnectionHandler(object):
                 self._check_sql_args(args)
         else:
             self._check_sql_args(sql_args)
-
 
         # Execute the query
         with self.get_postgres_cursor() as cur:
