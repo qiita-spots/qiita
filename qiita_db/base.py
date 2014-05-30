@@ -65,6 +65,11 @@ class QiitaObject(object):
         """
         raise QiitaDBNotImplementedError()
 
+    @classmethod
+    def exists(cls):
+        """Checks if a given object info is already present on the DB"""
+        raise QiitaDBNotImplementedError()
+
     def __init__(self, id_):
         """Initializes the object
 
