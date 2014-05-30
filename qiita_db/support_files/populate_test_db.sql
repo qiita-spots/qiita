@@ -47,7 +47,7 @@ INSERT INTO qiita.investigation_study (investigation_id, study_id) VALUES (1, 1)
 INSERT INTO qiita.study_experimental_factor (study_id, efo_id) VALUES (1, 1);
 
 -- Insert the raw data filepaths for study 1
-INSERT INTO qiita.filepath (filepath, filepath_type_id) VALUES ('$QIITA_TEST_FOLDER/s_G1_L001_sequences.fastq.gz', 1), ('$QIITA_TEST_FOLDER/s_G1_L001_sequences_barcodes.fastq.gz', 2);
+INSERT INTO qiita.filepath (filepath, filepath_type_id) VALUES ('s_G1_L001_sequences.fastq.gz', 1), ('s_G1_L001_sequences_barcodes.fastq.gz', 2);
 
 -- Insert the raw data information for study 1
 INSERT INTO qiita.raw_data (filetype_id, submitted_to_insdc) VALUES (2, FALSE);
@@ -284,7 +284,7 @@ INSERT INTO qiita.prep_1 (sample_id, BarcodeSequence, LIBRARY_CONSTRUCTION_PROTO
 INSERT INTO qiita.preprocessed_data (raw_data_id, preprocessed_params_table, preprocessed_params_id) VALUES (1, 'preprocessed_sequence_illumina_params', 1);
 
 -- Insert the preprocessed filepath for raw data 1
-INSERT INTO qiita.filepath (filepath, filepath_type_id) VALUES ('$QIITA_TEST_FOLDER/seqs.fna', 4), ('$QIITA_TEST_FOLDER/seqs.qual', 5);
+INSERT INTO qiita.filepath (filepath, filepath_type_id) VALUES ('seqs.fna', 4), ('seqs.qual', 5);
 
 -- Insert (link) the preprocessed data with the preprocessed filepaths
 INSERT INTO qiita.preprocessed_filepath (preprocessed_data_id, filepath_id) VALUES (1, 3), (1, 4);
@@ -302,7 +302,7 @@ INSERT INTO qiita.reference (reference_name, reference_version, sequence_filepat
 INSERT INTO qiita.processed_params_uclust (similarity, enable_rev_strand_match, suppress_new_clusters, reference_id) VALUES (0.97, TRUE, TRUE, 1);
 
 -- Insert the biom table filepath for processed data 1
-INSERT INTO qiita.filepath (filepath, filepath_type_id) VALUES ('$QIITA_TEST_FOLDER/study_1001_closed_reference_otu_table.biom', 6);
+INSERT INTO qiita.filepath (filepath, filepath_type_id) VALUES ('study_1001_closed_reference_otu_table.biom', 6);
 
 -- Insert (link) the processed data with the processed filepath
 INSERT INTO qiita.processed_filepath (processed_data_id, filepath_id) VALUES (1, 5);

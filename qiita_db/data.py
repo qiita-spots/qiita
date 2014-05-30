@@ -18,6 +18,8 @@ Classes
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
+from datetime import datetime
+
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from .base import QiitaObject
 from .sql_connection import SQLConnectionHandler
@@ -31,6 +33,15 @@ class BaseData(QiitaObject):
     # These variables should be defined in the subclasses
     _data_filepath_table = None
     _data_filepath_column = None
+
+    @classmethod
+    def check_data_filepath_attributes(cls):
+        """"""
+        if (cls._data_filepath_table is None) or \
+                (cls._data_filepath_column is None):
+            raise IncompetentQiitaDeveloperError(
+                "_data_filepath_table and _data_filepath_column should be "
+                "defined in the classes that implement BaseData!")
 
     @classmethod
     def insert_filepaths(cls, filepaths, conn_handler):
@@ -80,11 +91,9 @@ class BaseData(QiitaObject):
             not define the class attributes _data_filepath_table and
             _data_filepath_column
         """
-        if (cls._data_filepath_table is None) or \
-                (cls._data_filepath_column is None):
-            raise IncompetentQiitaDeveloperError(
-                "_data_filepath_table and _data_filepath_column should be "
-                "defined in the classes that implement BaseData!")
+        # First check that the internal attributes have been defined, so this
+        # function have been actually called from a subclass
+        cls.check_data_filepath_attributes()
 
         values = [(data_id, fp_id) for fp_id in fp_ids]
         conn_handler.executemany(
@@ -92,6 +101,21 @@ class BaseData(QiitaObject):
             "VALUES (%s, %s)".format(cls._data_filepath_table,
                                      cls._data_filepath_column),
             values)
+
+    def get_filepaths(self):
+        """"""
+        # First check that the internal attributes have been defined, so this
+        # function have been actually called from a subclass
+        self.check_data_filepath_attributes()
+        conn_handler = SQLConnectionHandler()
+        filepaths = conn_handler.execute_fetchall(
+            "SELECT filepath, filepath_type_id FROM qiita.{0} WHERE "
+            "filepath_id IN (SELECT filepath_id FROM qiita.{1} WHERE "
+            "{2}=%(id)s)".format(self._filepath_table,
+                                 self._data_filepath_table,
+                                 self._data_filepath_column),
+            {'id': self.id})
+        return filepaths
 
 
 class RawData(BaseData):
@@ -157,6 +181,9 @@ class RawData(BaseData):
         Deletes the raw data, its filepaths, and all the preprocessed data
         that was based on this raw data.
         """
+        # TODO: Check that the study is not public
+        # TODO: Drop the prep_x table
+        # TODO: Remove row (it should cascade to everything else)
         # conn_handler = SQLConnectionHandler()
         # Remove the row from raw_data
         # conn_handler.execute(
@@ -189,11 +216,16 @@ class PreprocessedData(BaseData):
         preprocessed_params_table : str
             Name of the table that holds the preprocessing parameters used
         preprocessed_params_id : int
-            Identifier from the parameters from the `preprocessed_params_table`
+            Identifier of the parameters from the `preprocessed_params_table`
             table used
         filepaths : iterable of tuples (str, int)
             The list of paths to the preprocessed files and its filepath type
             identifier
+
+        Raises
+        ------
+        IncompetentQiitaDeveloperError
+            If the table `preprocessed_params_table` does not exists
         """
         conn_handler = SQLConnectionHandler()
         # We first check that the preprocessed_params_table exists
@@ -207,14 +239,79 @@ class PreprocessedData(BaseData):
         ppd_id = conn_handler.execute_fetchone(
             "INSERT INTO qiita.{0} (raw_data_id, preprocessed_params_table, "
             "preprocessed_params_id) VALUES (%(raw_id)s, %(param_table)s, "
-            "%(param_id)s) RETURNING raw_data_id".format(cls._table),
+            "%(param_id)s) RETURNING preprocessed_data_id".format(cls._table),
             {'raw_id': raw_data.id, 'param_table': preprocessed_params_table,
              'param_id': preprocessed_params_id})[0]
 
         # Add the filepaths to the database
         fp_ids = cls.insert_filepaths(filepaths, conn_handler)
 
-        # Connect the raw data with its filepaths
+        # Connect the preprocessed data with its filepaths
         cls.link_data_filepaths(ppd_id, fp_ids, conn_handler)
 
         return cls(ppd_id)
+
+
+class ProcessedData(BaseData):
+    """"""
+    _table = "processed_data"
+    _data_filepath_table = "processed_filepath"
+    _data_filepath_column = "processed_data_id"
+
+    @classmethod
+    def create(cls, preprocessed_data, processed_params_table,
+               processed_params_id, filepaths, processed_date=None):
+        """
+        Parameters
+        ----------
+        preprocessed_data : PreprocessedData
+            The PreprocessedData object used as base to this processed data
+        processed_params_table : str
+            Name of the table that holds the preprocessing parameters used
+        processed_params_id : int
+            Identifier of the parameters from the `processed_params_table`
+            table used
+        filepaths : iterable of tuples (str, int)
+            The list of paths to the processed files and its filepath type
+            identifier
+        processed_date : datetime, optional
+            Date in which the data have been processed. Default: now
+
+        Raises
+        ------
+        IncompetentQiitaDeveloperError
+            If the table `processed_params_table` does not exists
+        """
+        conn_handler = SQLConnectionHandler()
+        # We first check that the processed_params_table exists
+        if not exists_dynamic_table(processed_params_table,
+                                    "processed_params_", "", conn_handler):
+            raise IncompetentQiitaDeveloperError(
+                "Processed params table %s does not exists!"
+                % processed_params_table)
+
+        # Check if we have received a date:
+        if processed_date is None:
+            processed_date = datetime.now()
+
+        # Add the processed data to the database,
+        # and get the processed data id back
+        pd_id = conn_handler.execute_fetchone(
+            "INSERT INTO qiita.{0} (preprocessed_data_id, "
+            "processed_params_table, processed_params_id, processed_date) "
+            "VALUES (%(prep_data_id)s, %(param_table)s, %(param_id)s, "
+            "%(date)s) RETURNING processed_data_id".format(cls._table),
+            {'prep_data_id': preprocessed_data.id,
+             'param_table': processed_params_table,
+             'param_id': processed_params_id,
+             'date': processed_date})[0]
+
+        # Add the filepaths to the database
+        fp_ids = cls.insert_filepaths(filepaths, conn_handler)
+
+        # Connect the processed data with its filepaths
+        cls.link_data_filepaths(pd_id, fp_ids, conn_handler)
+
+        return cls(pd_id)
+
+    # TODO: delete analysis
