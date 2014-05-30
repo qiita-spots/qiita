@@ -89,6 +89,12 @@ class User(QiitaObject):
         """
         raise QiitaDBNotImplementedError()
 
+    def __eq__(self, other):
+        return other.id == self.id
+
+    def __ne__(self, other):
+        return other.id == self.id
+
     @property
     def email(self):
         """The email of the user"""
