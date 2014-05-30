@@ -18,16 +18,7 @@ Classes
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
-from datetime import date
-
-from .base import QiitaStatusObject, QiitaObject
-# from .data import RawData, PreprocessedData, ProcessedData
-from .user import User
-
-from .util import check_required, check_table_cols, clean_sql_result
-from .sql_connection import SQLConnectionHandler
-from qiita_db.study import StudyPerson
-
+from .base import QiitaStatusObject
 
 REQUIRED_KEYS = {"name", "description", "contact_person"}
 
@@ -51,7 +42,7 @@ class Investigation(QiitaStatusObject):
     add_study
         Adds a study to the investigation
     """
-    _table = "study"
+    _table = "investigation"
 
     @classmethod
     def create(cls, owner, info, investigation=None):
