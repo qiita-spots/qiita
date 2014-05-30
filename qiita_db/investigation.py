@@ -63,12 +63,6 @@ class Investigation(QiitaStatusObject):
         """Deletes an investigation on the database"""
         raise NotImplementedError()
 
-    def __eq__(self, other):
-        return other._id == self._id
-
-    def __ne__(self, other):
-        return other._id != self._id
-
     @property
     def name(self):
         raise NotImplementedError()
