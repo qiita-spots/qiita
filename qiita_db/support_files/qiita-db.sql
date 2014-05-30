@@ -567,6 +567,18 @@ CREATE INDEX idx_study_pmid_0 ON qiita.study_pmid ( study_id );
 
 COMMENT ON TABLE qiita.study_pmid IS 'Links a study to all PMIDs for papers created from study';
 
+CREATE TABLE qiita.study_preprocessed_data ( 
+	study_id             bigint  NOT NULL,
+	preprocessed_data_id bigint  NOT NULL,
+	CONSTRAINT idx_study_preprocessed_data PRIMARY KEY ( study_id, preprocessed_data_id ),
+	CONSTRAINT fk_study_preprocessed_data FOREIGN KEY ( study_id ) REFERENCES qiita.study( study_id )    ,
+	CONSTRAINT fk_study_preprocessed_data_0 FOREIGN KEY ( preprocessed_data_id ) REFERENCES qiita.preprocessed_data( preprocessed_data_id )    
+ );
+
+CREATE INDEX idx_study_preprocessed_data_0 ON qiita.study_preprocessed_data ( study_id );
+
+CREATE INDEX idx_study_preprocessed_data_1 ON qiita.study_preprocessed_data ( preprocessed_data_id );
+
 CREATE TABLE qiita.study_raw_data ( 
 	study_id             bigint  NOT NULL,
 	raw_data_id          bigint  NOT NULL,
@@ -611,7 +623,6 @@ CREATE TABLE qiita.analysis (
 	name                 varchar  NOT NULL,
 	description          varchar  NOT NULL,
 	analysis_status_id   bigint  NOT NULL,
-	biom_table_filepath  varchar  NOT NULL,
 	pmid                 varchar  ,
 	CONSTRAINT pk_analysis PRIMARY KEY ( analysis_id ),
 	CONSTRAINT fk_analysis_user FOREIGN KEY ( email ) REFERENCES qiita.qiita_user( email )    ,
@@ -632,17 +643,34 @@ COMMENT ON COLUMN qiita.analysis.name IS 'Name of the analysis';
 
 COMMENT ON COLUMN qiita.analysis.pmid IS 'PMID of paper from the analysis';
 
-CREATE TABLE qiita.analysis_sample ( 
-	analysis_id          bigint  NOT NULL,
-	processed_data_id    bigint  NOT NULL,
-	sample_id            bigint  NOT NULL,
-	CONSTRAINT fk_analysis_sample_analysis FOREIGN KEY ( analysis_id ) REFERENCES qiita.analysis( analysis_id )    ,
-	CONSTRAINT fk_analysis_sample FOREIGN KEY ( processed_data_id ) REFERENCES qiita.processed_data( processed_data_id )    
+CREATE TABLE qiita.analysis_chain ( 
+	parent_id            bigint  NOT NULL,
+	child_id             bigint  NOT NULL,
+	CONSTRAINT idx_analysis_chain_1 PRIMARY KEY ( parent_id, child_id ),
+	CONSTRAINT fk_analysis_chain FOREIGN KEY ( parent_id ) REFERENCES qiita.analysis( analysis_id )    ,
+	CONSTRAINT fk_analysis_chain_0 FOREIGN KEY ( child_id ) REFERENCES qiita.analysis( analysis_id )    
  );
 
-CREATE INDEX idx_analysis_sample ON qiita.analysis_sample ( analysis_id );
+CREATE INDEX idx_analysis_chain ON qiita.analysis_chain ( parent_id );
 
-CREATE INDEX idx_analysis_sample_0 ON qiita.analysis_sample ( processed_data_id );
+CREATE INDEX idx_analysis_chain_0 ON qiita.analysis_chain ( child_id );
+
+COMMENT ON TABLE qiita.analysis_chain IS 'Keeps track of the chain of analysis edits. Tracks what previous analysis a given analysis came from.
+If a given analysis is not in child_id, it is the root of the chain. ';
+
+CREATE TABLE qiita.analysis_filepath ( 
+	analysis_id          bigint  NOT NULL,
+	filepath_id          bigint  NOT NULL,
+	CONSTRAINT idx_analysis_filepath_1 PRIMARY KEY ( analysis_id, filepath_id ),
+	CONSTRAINT fk_analysis_filepath FOREIGN KEY ( analysis_id ) REFERENCES qiita.analysis( analysis_id )    ,
+	CONSTRAINT fk_analysis_filepath_0 FOREIGN KEY ( filepath_id ) REFERENCES qiita.filepath( filepath_id )    
+ );
+
+CREATE INDEX idx_analysis_filepath ON qiita.analysis_filepath ( analysis_id );
+
+CREATE INDEX idx_analysis_filepath_0 ON qiita.analysis_filepath ( filepath_id );
+
+COMMENT ON TABLE qiita.analysis_filepath IS 'Stores link between analysis and the data file used for the analysis.';
 
 CREATE TABLE qiita.analysis_users ( 
 	analysis_id          bigint  NOT NULL,
@@ -676,7 +704,6 @@ CREATE TABLE qiita.job (
 	job_status_id        bigint  NOT NULL,
 	command_id           bigint  NOT NULL,
 	options              varchar  ,
-	results              varchar  ,
 	log_id               bigint  ,
 	CONSTRAINT pk_job PRIMARY KEY ( job_id ),
 	CONSTRAINT fk_job_function FOREIGN KEY ( command_id ) REFERENCES qiita.command( command_id )    ,
@@ -701,9 +728,21 @@ COMMENT ON COLUMN qiita.job.command_id IS 'The Qiime or other function being run
 
 COMMENT ON COLUMN qiita.job.options IS 'Holds all options set for the job as a json string';
 
-COMMENT ON COLUMN qiita.job.results IS 'List of filepaths to result files for job';
-
 COMMENT ON COLUMN qiita.job.log_id IS 'Reference to error if status is error';
+
+CREATE TABLE qiita.job_results_filepath ( 
+	job_id               bigint  NOT NULL,
+	filepath_id          bigint  NOT NULL,
+	CONSTRAINT idx_job_results_filepath PRIMARY KEY ( job_id, filepath_id ),
+	CONSTRAINT fk_job_results_filepath FOREIGN KEY ( job_id ) REFERENCES qiita.job( job_id )    ,
+	CONSTRAINT fk_job_results_filepath_0 FOREIGN KEY ( filepath_id ) REFERENCES qiita.filepath( filepath_id )    
+ );
+
+CREATE INDEX idx_job_results_filepath_0 ON qiita.job_results_filepath ( job_id );
+
+CREATE INDEX idx_job_results_filepath_1 ON qiita.job_results_filepath ( filepath_id );
+
+COMMENT ON TABLE qiita.job_results_filepath IS 'Holds connection between jobs and the result filepaths';
 
 CREATE TABLE qiita.required_sample_info ( 
 	study_id             bigint  NOT NULL,
@@ -753,6 +792,21 @@ COMMENT ON TABLE qiita.analysis_job IS 'Holds information for a one-to-many rela
 COMMENT ON COLUMN qiita.analysis_job.analysis_id IS 'Id of the analysis';
 
 COMMENT ON COLUMN qiita.analysis_job.job_id IS 'Id for a job that is part of the analysis';
+
+CREATE TABLE qiita.analysis_sample ( 
+	analysis_id          bigint  NOT NULL,
+	processed_data_id    bigint  NOT NULL,
+	sample_id            bigint  NOT NULL,
+	CONSTRAINT fk_analysis_sample_analysis FOREIGN KEY ( analysis_id ) REFERENCES qiita.analysis( analysis_id )    ,
+	CONSTRAINT fk_analysis_sample FOREIGN KEY ( processed_data_id ) REFERENCES qiita.processed_data( processed_data_id )    ,
+	CONSTRAINT fk_analysis_sample_0 FOREIGN KEY ( sample_id ) REFERENCES qiita.required_sample_info( sample_id )    
+ );
+
+CREATE INDEX idx_analysis_sample ON qiita.analysis_sample ( analysis_id );
+
+CREATE INDEX idx_analysis_sample_0 ON qiita.analysis_sample ( processed_data_id );
+
+CREATE INDEX idx_analysis_sample_1 ON qiita.analysis_sample ( sample_id );
 
 CREATE TABLE qiita.common_prep_info ( 
 	raw_data_id          bigserial  NOT NULL,
