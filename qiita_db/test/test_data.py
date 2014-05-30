@@ -234,7 +234,7 @@ class ProcessedDataTests(TestCase):
             ProcessedData.create(self.preprocessed_data, "processed_params_",
                                  self.params_id, self.filepaths)
 
-    def test_fet_filepath(self):
+    def test_get_filepath(self):
         """Correctly return the filepaths to the preprocessed files"""
         # check the test data
         pd = ProcessedData(1)
