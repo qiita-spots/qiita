@@ -79,6 +79,12 @@ class QiitaObject(object):
         """
         self._id = id_
 
+    def __eq__(self, other):
+        return other._id == self._id
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
     @property
     def id(self):
         """The object id on the storage system"""
