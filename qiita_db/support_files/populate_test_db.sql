@@ -16,7 +16,7 @@ INSERT INTO qiita.qiita_user (email, user_level_id, password, name,
 
 -- Insert some study persons
 INSERT INTO qiita.study_person (name, email, address, phone) VALUES
-	('LabDude', 'lab_dude@foo.bar', '123 lab street', NULL),
+	('LabDude', 'lab_dude@foo.bar', '123 lab street', '121-222-3333'),
 	('empDude', 'emp_dude@foo.bar', '123 emp street', NULL),
 	('PIDude', 'PI_dude@foo.bar', '123 PI street', NULL);
 
@@ -35,6 +35,9 @@ INSERT INTO qiita.study (email, study_status_id, emp_person_id, first_contact,
 
 -- Insert study_users (share study 1 with shared user)
 INSERT INTO qiita.study_users (study_id, email) VALUES (1, 'shared@foo.bar');
+
+-- Insert PMIDs for study
+INSERT INTO qiita.study_pmid (study_id, pmid) VALUES (1, '123456'), (1, '7891011');
 
 -- Insert an investigation
 INSERT INTO qiita.investigation (name, description, contact_person_id) VALUES
