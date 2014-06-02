@@ -92,8 +92,7 @@ REQUIRED_KEYS = {"timeseries_type_id", "lab_person_id", "mixs_compliant",
 
 
 class Study(QiitaStatusObject):
-    """
-    Study object to access to the Qiita Study information
+    r"""Study object to access to the Qiita Study information
 
     Attributes
     ----------
@@ -484,7 +483,7 @@ class Study(QiitaStatusObject):
 
 
 class StudyPerson(QiitaObject):
-    """Object handling information pertaining to people involved in a study
+    r"""Object handling information pertaining to people involved in a study
 
     Attributes
     ----------
@@ -591,7 +590,9 @@ class StudyPerson(QiitaObject):
     def address(self):
         """Returns the address of the person
 
-        Returns: str or None
+        Returns
+        -------
+        str or None
             address or None if no address in database
         """
         conn_handler = SQLConnectionHandler()
@@ -620,7 +621,9 @@ class StudyPerson(QiitaObject):
     def phone(self):
         """Returns the phone number of the person
 
-        Returns: str or None
+        Returns
+        -------
+         str or None
             phone or None if no address in database
         """
         conn_handler = SQLConnectionHandler()
