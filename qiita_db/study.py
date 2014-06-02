@@ -105,7 +105,7 @@ class Study(QiitaStatusObject):
         efo = None
         if "study_experimental_factor" in info:
             efo = info["study_experimental_factor"]
-            if isinstance(efo, str):
+            if isinstance(efo, int):
                 efo = [efo]
             info.pop("study_experimental_factor")
         else:
@@ -217,7 +217,7 @@ class Study(QiitaStatusObject):
         efo = None
         if "study_experimental_factor" in info:
             efo = info["study_experimental_factor"]
-            if not isinstance(efo, list) and not isinstance(efo, tuple):
+            if isinstance(efo, int):
                 efo = [efo]
             info.pop("study_experimental_factor")
 
@@ -402,16 +402,6 @@ class StudyPerson(QiitaObject):
             spid = conn_handler.execute_fetchone(sql, (name, email, address,
                                                        phone))
         return cls(spid[0])
-
-    @classmethod
-    def delete(cls, self):
-        raise NotImplementedError()
-
-    def __eq__(self, other):
-        return other._id == self._id
-
-    def __ne__(self, other):
-        return other._id != self._id
 
     # Properties
     @property

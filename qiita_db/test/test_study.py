@@ -9,7 +9,7 @@ from qiita_db.user import User
 from qiita_core.util import qiita_test_checker
 from qiita_db.exceptions import QiitaDBExecutionError
 from qiita_db.sql_connection import SQLConnectionHandler
-
+from qiita_core.exceptions import QiitaStudyError
 
 # -----------------------------------------------------------------------------
 # Copyright (c) 2014--, The Qiita Development Team.
@@ -85,7 +85,7 @@ class TestStudy(TestCase):
 
         self.info = {
             "timeseries_type_id": 1,
-            "study_experimental_factor": [1, 2],
+            "study_experimental_factor": 1,
             "metadata_complete": True,
             "mixs_compliant": True,
             "number_samples_collected": 25,
@@ -131,7 +131,7 @@ class TestStudy(TestCase):
                                     "qiita.study_experimental_factor WHERE "
                                     "study_id = 2")
         obsefo = [x[0] for x in efo]
-        self.assertEqual(obsefo, [1, 2])
+        self.assertEqual(obsefo, [1])
 
     def test_create_study_with_investigation(self):
         """Insert a study into the database with an investigation"""
@@ -181,15 +181,27 @@ class TestStudy(TestCase):
                                     "qiita.study_experimental_factor WHERE "
                                     "study_id = 2")
         obsefo = [x[0] for x in efo]
-        self.assertEqual(obsefo, [1, 2])
+        self.assertEqual(obsefo, [1])
 
-    def test_insert_missing_requred(self):
+    def test_create_missing_requred(self):
         """ Insert a study that is missing a required info key"""
         self.info.pop("study_title")
         self.assertRaises(RuntimeError, Study.create, 'test@foo.bar',
                           self.info)
 
-    def test_insert_unknown_db_col(self):
+    def test_create_study_id(self):
+        """Insert a study with study_id present"""
+        self.info.update({"study_id": 1})
+        self.assertRaises(QiitaStudyError, Study.create, 'test@foo.bar',
+                          self.info)
+
+    def test_create_no_efo(self):
+        """Insert a study no experimental factors passed"""
+        self.info.pop("study_experimental_factor")
+        self.assertRaises(QiitaStudyError, Study.create, 'test@foo.bar',
+                          self.info)
+
+    def test_create_unknown_db_col(self):
         """ Insert a study with an info key not in the database"""
         self.info["SHOULDNOTBEHERE"] = "BWAHAHAHAHAHA"
         self.assertRaises(QiitaDBExecutionError, Study.create, 'test@foo.bar',
