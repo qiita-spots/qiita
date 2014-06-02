@@ -14,7 +14,7 @@ from qiita_db.exceptions import QiitaDBStatusError
 
 
 class QiitaBaseTest(TestCase):
-    """Tests that the test database have been successfully populated"""
+    """Tests that the base class functions act correctly"""
 
     def setUp(self):
         self.tester = QiitaObject(1)
@@ -37,7 +37,7 @@ class QiitaBaseTest(TestCase):
 
 @qiita_test_checker()
 class QiitaStatusDecoratorTest(TestCase):
-    """Tests that the test database have been successfully populated"""
+    """Tests that the status decorator works correctly"""
 
     def setUp(self):
         self.tester = QiitaStatusObject(1)
