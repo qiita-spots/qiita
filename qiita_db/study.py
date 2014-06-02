@@ -1,15 +1,24 @@
 from __future__ import division
 
-"""
-Objects for dealing with Qiita studies
+"""Objects for dealing with Qiita studies
 
-This module provides the implementation of the Study class.
+This module provides the implementation of the Study class. It allows access to
+all basic information including name and pmids associated with the study, as
+well as returning objects for the data, metadata, owner, and shared users. It
+is the central hub for creating, deleting, and accessing a study in the
+database.
 
 
 Classes
 -------
-- `QittaStudy` -- A Qiita study class
+
+.. autosummary::
+   :toctree: generated/
+
+   Study
+   StudyPerson
 """
+
 # -----------------------------------------------------------------------------
 # Copyright (c) 2014--, The Qiita Development Team.
 #
@@ -85,7 +94,7 @@ class Study(QiitaStatusObject):
         owner : User object
             the user id of the study' owner
         info: dict
-            the information attached to the study
+            the information attached to the study.
         investigation_id: Investigation object
             if the study is part of an investigation, the id to associate with
 
@@ -93,6 +102,12 @@ class Study(QiitaStatusObject):
         ------
         QiitaDBExecutionError
             All required keys not passed or non-db columns in info dictionary
+
+        Notes
+        -----
+        All keys in info, except the efo, must be equal to columns in the
+        database. EFO information is stored as a list under the key
+        'study_experimental_factor', the name of the table it is stored in.
         """
         # make sure not passing a study id in the info dict
         if "study_id" in info:
