@@ -21,7 +21,7 @@ Classes
 from datetime import date
 
 from .base import QiitaStatusObject, QiitaObject
-# from .data import RawData, PreprocessedData, ProcessedData
+from .data import RawData, PreprocessedData, ProcessedData
 from .user import User
 
 from .util import check_required, check_table_cols, clean_sql_result
@@ -93,7 +93,7 @@ class Study(QiitaStatusObject):
         QiitaDBExecutionError
             All required keys not passed or non-db columns in info dictionary
         """
-        #make sure not passing a study id in the info dict
+        # make sure not passing a study id in the info dict
         if "study_id" in info:
             raise QiitaStudyError("Can't pass study_id in info dict!")
 
@@ -153,12 +153,6 @@ class Study(QiitaStatusObject):
         # delete raw data
         # drop sample_x dynamic table
         # delete study row from study table (cascades to everything else)
-
-    def __eq__(self, other):
-        return other._id == self._id
-
-    def __ne__(self, other):
-        return other._id != self._id
 
 # --- Attributes ---
     @property
@@ -237,15 +231,15 @@ class Study(QiitaStatusObject):
                 data.append(val.id)
             else:
                 data.append(val)
-        sql = ' '.join((sql[-1], "WHERE study_id = %s"))
+        sql = ' '.join((sql[:-1], "WHERE study_id = %s"))
         data.append(self._id)
+        conn_handler.execute(sql, data)
 
         if efo:
             # insert efo information into database
             sql = ("INSERT INTO qiita.{0}_experimental_factor (study_id, "
                    "efo_id) VALUES (%s, %s)".format(self._table))
             conn_handler.executemany(sql, zip([self._id] * len(efo), efo))
-        conn_handler.execute(sql, data)
 
     @property
     def status(self):

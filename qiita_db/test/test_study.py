@@ -3,6 +3,7 @@ from datetime import date
 
 from qiita_db.study import Study, StudyPerson
 from qiita_db.investigation import Investigation
+from qiita_db.data import PreprocessedData, RawData, ProcessedData
 from qiita_db.user import User
 from qiita_core.util import qiita_test_checker
 from qiita_db.exceptions import QiitaDBExecutionError
@@ -46,9 +47,6 @@ class TestStudyPerson(TestCase):
         self.assertEqual(obs["name"], 'LabDude')
         self.assertEqual(obs["address"], '123 lab street')
         self.assertEqual(obs["phone"], '121-222-3333')
-
-    def test_delete_studyperson(self):
-        raise NotImplementedError()
 
     def test_retrieve_name(self):
         self.assertEqual(self.studyperson.name, 'LabDude')
@@ -124,39 +122,6 @@ class TestStudy(TestCase):
                'number_samples_collected': 25}
         conn = SQLConnectionHandler()
         obsins = dict(conn.execute_fetchone("SELECT * FROM qiita.study WHERE "
-                                         "study_id = 2"))
-        self.assertEqual(obsins, exp)
-
-        #make sure EFO went in to table correctly
-        efo = conn.execute_fetchall("SELECT efo_id FROM "
-                                    "qiita.study_experimental_factor WHERE "
-                                    "study_id = 2")
-        obsefo = [x[0] for x in efo]
-        self.assertEqual(obsefo, [1, 2])
-
-    def test_create_study_with_investigation(self):
-        """Insert a study into the database with an investigation"""
-        obs = Study.create(User('test@foo.bar'), self.info, Investigation(1))
-        self.assertEqual(obs.id, 2)
-        exp = {'mixs_compliant': True, 'metadata_complete': True,
-               'reprocess': False, 'study_status_id': 1,
-               'number_samples_promised': 28, 'emp_person_id': 2,
-               'funding': None, 'vamps_id': None,
-               'first_contact': date.today().strftime("%B %d, %Y"),
-               'principal_investigator_id': 3, 'timeseries_type_id': 1,
-               'study_abstract': ('We wanted to see if we could get funding '
-                                  'for giving people heart attacks'),
-               'email': 'test@foo.bar', 'spatial_series': None,
-               'study_description': ('Microbiome of people who eat nothing but'
-                                     ' fried chicken'),
-               'portal_type_id': 3, 'study_alias': 'FCM', 'study_id': 2,
-               'most_recent_contact': None, 'lab_person_id': 1,
-               'study_title': 'Fried chicken microbiome',
-               'number_samples_collected': 25}
-
-        # make sure study inserted correctly
-        conn = SQLConnectionHandler()
-        obsins = dict(conn.execute_fetchone("SELECT * FROM qiita.study WHERE "
                                             "study_id = 2"))
         self.assertEqual(obsins, exp)
 
@@ -167,7 +132,12 @@ class TestStudy(TestCase):
         obsefo = [x[0] for x in efo]
         self.assertEqual(obsefo, [1, 2])
 
+    def test_create_study_with_investigation(self):
+        """Insert a study into the database with an investigation"""
+        obs = Study.create(User('test@foo.bar'), self.info, Investigation(1))
+        self.assertEqual(obs.id, 2)
         # check the investigation was assigned
+        conn = SQLConnectionHandler()
         obs3 = conn.execute_fetchall("SELECT * from qiita.investigation_study "
                                      "WHERE study_id = 2")
         self.assertEqual(obs3, [[1, 2]])
@@ -187,7 +157,7 @@ class TestStudy(TestCase):
                'number_samples_promised': 28, 'emp_person_id': 2,
                'funding': 'FundAgency', 'vamps_id': '1111111',
                'first_contact': 'May 30, 2014',
-               'principal_investigator_id': 3,'timeseries_type_id': 1,
+               'principal_investigator_id': 3, 'timeseries_type_id': 1,
                'study_abstract': ('We wanted to see if we could get funding '
                                   'for giving people heart attacks'),
                'email': 'test@foo.bar', 'spatial_series': True,
@@ -199,10 +169,10 @@ class TestStudy(TestCase):
                'number_samples_collected': 25}
         conn = SQLConnectionHandler()
         obsins = dict(conn.execute_fetchone("SELECT * FROM qiita.study WHERE "
-                                         "study_id = 2"))
+                                            "study_id = 2"))
         self.assertEqual(obsins, exp)
 
-        #make sure EFO went in to table correctly
+        # make sure EFO went in to table correctly
         efo = conn.execute_fetchall("SELECT efo_id FROM "
                                     "qiita.study_experimental_factor WHERE "
                                     "study_id = 2")
@@ -306,7 +276,6 @@ class TestStudy(TestCase):
         self.study.info = newinfo
         self.assertEqual(self.study.info, exp)
 
-
     def test_retrieve_status(self):
         self.assertEqual(self.study.status, 2)
 
@@ -345,13 +314,13 @@ class TestStudy(TestCase):
         self.assertEqual(self.study.metadata, exp)
 
     def test_retrieve_raw_data(self):
-        raise NotImplementedError()
+        self.assertEqual(self.raw_data, [RawData(1)])
 
     def test_retrieve_preprocessed_data(self):
-        raise NotImplementedError()
+        self.assertEqual(self.preprocessed_data, [PreprocessedData(1)])
 
     def test_retrieve_processed_data(self):
-        raise NotImplementedError()
+        self.assertEqual(self.processed_data, [ProcessedData(1)])
 
     def test_share_with(self):
         self.study.share_with('admin@foo.bar')
