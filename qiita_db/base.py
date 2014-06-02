@@ -80,7 +80,10 @@ class QiitaObject(object):
         self._id = id_
 
     def __eq__(self, other):
-        return other._id == self._id and type(self) == type(other)
+        if other._id == self._id:
+            if type(self) == type(other):
+                return True
+        return False
 
     def __ne__(self, other):
         return not self.__eq__(other)
