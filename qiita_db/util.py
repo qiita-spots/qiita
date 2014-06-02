@@ -53,22 +53,6 @@ def scrub_data(s):
     return ret
 
 
-def clean_sql_result(results):
-    """Parses single value list of lists from psycopg2 and returns list of
-    items
-
-    Parameters
-    ----------
-    results: list of lists
-        list in the form [[item1], [item2], [item3], ...]
-
-    Returns
-    -------
-    list: [item1, item2, item3, ...]
-    """
-    return [i[0] for i in results]
-
-
 def check_required(keys, required):
     """Makes sure all required columns are in a list
 
@@ -110,7 +94,7 @@ def check_table_cols(conn_handler, keys, table):
     """
     sql = ("SELECT column_name FROM information_schema.columns WHERE "
            "table_name = %s")
-    cols = clean_sql_result(conn_handler.execute_fetchall(sql, (table, )))
+    cols = [x[0] for x in conn_handler.execute_fetchall(sql, (table, ))]
     if len(cols) == 0:
         raise RuntimeError("Unable to fetch column names for table %s" % table)
     if len(set(keys).difference(cols)) > 0:

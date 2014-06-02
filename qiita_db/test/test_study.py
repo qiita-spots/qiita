@@ -314,14 +314,14 @@ class TestStudy(TestCase):
         self.assertEqual(obs, exp)
 
     def test_retrieve_shared_with(self):
-        self.assertEqual(self.study.shared_with, ['shared@foo.bar'])
+        self.assertEqual(self.study.shared_with, [User('shared@foo.bar')])
 
     def test_retrieve_pmids(self):
         exp = ['123456', '7891011']
         self.assertEqual(self.study.pmids, exp)
 
     def test_retrieve_investigations(self):
-        self.assertEqual(self.study.investigations, [1])
+        self.assertEqual(self.study.investigations, [Investigation(1)])
 
     def test_retrieve_metadata(self):
         self.assertEqual(self.study.metadata, SampleTemplate(1))
@@ -336,9 +336,9 @@ class TestStudy(TestCase):
         self.assertEqual(self.study.processed_data, [ProcessedData(1)])
 
     def test_share_with(self):
-        self.study.share_with('admin@foo.bar')
-        self.assertEqual(self.study.shared_with, ['shared@foo.bar',
-                                                  'admin@foo.bar'])
+        self.study.share_with(User('admin@foo.bar'))
+        self.assertEqual(self.study.shared_with, [User('shared@foo.bar'),
+                                                  User('admin@foo.bar')])
 
     def test_add_pmid(self):
         self.study.add_pmid("4544444")
