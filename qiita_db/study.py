@@ -4,7 +4,7 @@ r"""
 Study and StudyPerson objects (:mod:`qiita_db.study`)
 ================================================================
 
-.. currentmodule:: skbio.core.distance
+.. currentmodule:: qiita_db.study
 
 This module provides the implementation of the Study class. It allows access to
 all basic information including name and pmids associated with the study, as
