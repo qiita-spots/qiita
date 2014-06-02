@@ -4,6 +4,7 @@ from datetime import date
 from qiita_db.study import Study, StudyPerson
 from qiita_db.investigation import Investigation
 from qiita_db.data import PreprocessedData, RawData, ProcessedData
+from qiita_db.metadata_template import SampleTemplate
 from qiita_db.user import User
 from qiita_core.util import qiita_test_checker
 from qiita_db.exceptions import QiitaDBExecutionError
@@ -156,7 +157,7 @@ class TestStudy(TestCase):
                'reprocess': False, 'study_status_id': 1,
                'number_samples_promised': 28, 'emp_person_id': 2,
                'funding': 'FundAgency', 'vamps_id': '1111111',
-               'first_contact': 'May 30, 2014',
+               'first_contact': date.today().strftime("%B %d, %Y"),
                'principal_investigator_id': 3, 'timeseries_type_id': 1,
                'study_abstract': ('We wanted to see if we could get funding '
                                   'for giving people heart attacks'),
@@ -170,6 +171,9 @@ class TestStudy(TestCase):
         conn = SQLConnectionHandler()
         obsins = dict(conn.execute_fetchone("SELECT * FROM qiita.study WHERE "
                                             "study_id = 2"))
+        for thing, val in exp.iteritems():
+            if val != obsins[thing]:
+                print thing, val, obsins[thing]
         self.assertEqual(obsins, exp)
 
         # make sure EFO went in to table correctly
@@ -178,9 +182,6 @@ class TestStudy(TestCase):
                                     "study_id = 2")
         obsefo = [x[0] for x in efo]
         self.assertEqual(obsefo, [1, 2])
-
-    def test_delete_study(self):
-        raise NotImplementedError()
 
     def test_insert_missing_requred(self):
         """ Insert a study that is missing a required info key"""
@@ -240,38 +241,44 @@ class TestStudy(TestCase):
             "study_experimental_factor": [3, 4],
             "metadata_complete": False,
             "number_samples_collected": 28,
-            "lab_person_id": StudyPerson(2)
+            "lab_person_id": StudyPerson(2),
+            "vamps_id": 111222
         }
 
         exp = {
-            'mixs_compliant': True, 'metadata_complete': False,
-            'reprocess': False, 'study_status_id': 2,
-            'number_samples_promised': 27, 'emp_person_id': StudyPerson(2),
-            'funding': None, 'vamps_id': None,
-            'first_contact': '2014-05-19 16:10',
-            'principal_investigator_id': StudyPerson(3),
-            'timeseries_type_id': 1,
-            'study_abstract': ("This is a preliminary study to examine the "
-                               "microbiota associated with the Cannabis plant."
-                               " Soils samples from the bulk soil, soil "
-                               "associated with the roots, and the rhizosphere"
-                               " were extracted and the DNA sequenced. Roots "
-                               "from three independent plants of different "
-                               "strains were examined. These roots were "
-                               "obtained November 11, 2011 from plants that "
-                               "had been harvested in the summer. Future "
-                               "studies will attempt to analyze the soils and "
-                               "rhizospheres from the same location at diff"
-                               "erent time points in the plant lifecycle."),
-            'email': User('test@foo.bar'), 'spatial_series': False,
-            'study_description': ('Analysis of the Cannabis Plant Microbiome'),
-            'study_experimental_factor': [1, 3, 4], 'portal_type_id': 2,
-            'study_alias': 'Cannabis Soils',
-            'most_recent_contact': '2014-05-19 16:11',
-            'lab_person_id': StudyPerson(2),
-            'study_title': ('Identification of the Microbiomes for Cannabis '
-                            'Soils'),
-            'number_samples_collected': 28}
+          'mixs_compliant': True,
+          'metadata_complete': False,
+          'reprocess': False,
+          'study_status_id': 2,
+          'number_samples_promised': 27,
+          'emp_person_id': StudyPerson(2),
+          'funding': None,
+          'vamps_id': '111222',
+          'first_contact': '2014-05-19 16:10',
+          'principal_investigator_id': StudyPerson(3),
+          'timeseries_type_id': 2,
+          'study_abstract': ('This is a preliminary study to examine the '
+                             'microbiota associated with the Cannabis plant. '
+                             'Soils samples from the bulk soil, soil '
+                             'associated with the roots, and the rhizosphere '
+                             'were extracted and the DNA sequenced. Roots from'
+                             ' three independent plants of different strains '
+                             'were examined. These roots were obtained '
+                             'November 11, 2011 from plants that had been '
+                             'harvested in the summer. Future studies will '
+                             'attempt to analyze the soils and rhizospheres '
+                             'from the same location at different time points '
+                             'in the plant lifecycle.'),
+          'email': User('test@foo.bar'),
+          'spatial_series': False,
+          'study_description': 'Analysis of the Cannabis Plant Microbiome',
+          'study_experimental_factor': [1],
+          'portal_type_id': 2,
+          'study_alias': 'Cannabis Soils',
+          'most_recent_contact': '2014-05-19 16:11',
+          'lab_person_id': StudyPerson(2),
+          'study_title':'Identification of the Microbiomes for Cannabis Soils',
+          'number_samples_collected': 28}
 
         self.study.info = newinfo
         self.assertEqual(self.study.info, exp)
@@ -305,22 +312,16 @@ class TestStudy(TestCase):
         self.assertEqual(self.study.investigations, [1])
 
     def test_retrieve_metadata(self):
-        exp = ['LATITUDE', 'ENV_FEATURE', 'Description_duplicate', 'LONGITUDE',
-               'TOT_ORG_CARB', 'ANONYMIZED_NAME', 'PH', 'COUNTRY', 'ENV_BIOME',
-               'ALTITUDE', 'SAMP_SALINITY', 'TOT_NITRO', 'TEMP', 'ELEVATION',
-               'WATER_CONTENT_SOIL', 'COMMON_NAME', 'HOST_TAXID', 'DEPTH',
-               'TAXON_ID', 'TEXTURE', 'ASSIGNED_FROM_GEO',
-               'SEASON_ENVIRONMENT', 'sample_id']
-        self.assertEqual(self.study.metadata, exp)
+        self.assertEqual(self.study.metadata, SampleTemplate(1))
 
     def test_retrieve_raw_data(self):
-        self.assertEqual(self.raw_data, [RawData(1)])
+        self.assertEqual(self.study.raw_data, [RawData(1)])
 
     def test_retrieve_preprocessed_data(self):
-        self.assertEqual(self.preprocessed_data, [PreprocessedData(1)])
+        self.assertEqual(self.study.preprocessed_data, [PreprocessedData(1)])
 
     def test_retrieve_processed_data(self):
-        self.assertEqual(self.processed_data, [ProcessedData(1)])
+        self.assertEqual(self.study.processed_data, [ProcessedData(1)])
 
     def test_share_with(self):
         self.study.share_with('admin@foo.bar')

@@ -25,6 +25,7 @@ from .data import RawData, PreprocessedData, ProcessedData
 from .user import User
 
 from .util import check_required, check_table_cols, clean_sql_result
+from .metadata_template import SampleTemplate
 from .sql_connection import SQLConnectionHandler
 from qiita_core.exceptions import QiitaStudyError
 
@@ -152,7 +153,8 @@ class Study(QiitaStatusObject):
         """
         # delete raw data
         # drop sample_x dynamic table
-        # delete study row from study table (cascades to everything else)
+        # delete study row from study table (and cascade to satelite tables)
+        raise NotImplementedError()
 
 # --- Attributes ---
     @property
@@ -299,11 +301,7 @@ class Study(QiitaStatusObject):
     @property
     def metadata(self):
         """ Returns list of metadata columns """
-        conn_handler = SQLConnectionHandler()
-        sql = ("SELECT column_name FROM qiita.{0}_sample_columns WHERE "
-               "study_id = %s".format(self._table))
-        return clean_sql_result(conn_handler.execute_fetchall(sql,
-                                                              (self._id, )))
+        return SampleTemplate(self._id)
 
     @property
     def raw_data(self):
@@ -335,8 +333,9 @@ class Study(QiitaStatusObject):
     def processed_data(self):
         """ Returns list of data objects with processed data info """
         conn_handler = SQLConnectionHandler()
-        sql = ("SELECT processed_data_id FROM qiita.study_processed_data"
-               " WHERE study_id = %s")
+        sql = ("SELECT processed_data_id FROM qiita.processed_data WHERE "
+               "preprocessed_data_id IN (SELECT preprocessed_data_id FROM "
+               "qiita.study_preprocessed_data where study_id = %s)")
         pro_ids = clean_sql_result(conn_handler.execute_fetchall(sql,
                                                                  (self._id, )))
         processed_data = []
