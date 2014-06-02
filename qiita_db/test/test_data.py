@@ -83,11 +83,6 @@ class RawDataTests(TestCase):
         # raw_data_id, filepath_id
         self.assertEqual(obs, [[2, 6], [2, 7]])
 
-    def test_delete(self):
-        """Correctly removes the RawData row from the DB"""
-        # RawData.delete(1)
-        pass
-
     def test_is_submitted_to_insdc(self):
         """is_submitted_to_insdc works correctly"""
         # False case

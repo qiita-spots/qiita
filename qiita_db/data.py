@@ -70,15 +70,6 @@ class BaseData(QiitaObject):
         return [id[0] for id in ids]
 
     @classmethod
-    def delete_filepaths(cls, conn_handler):
-        """
-        Parameters
-        ----------
-        conn_handler : SQLConnectionHandler
-            The connection handler object connected to the DB
-        """
-
-    @classmethod
     def link_data_filepaths(cls, data_id, fp_ids, conn_handler):
         """Links the data `data_id` with its filepaths `fp_ids` in the DB
         connected with `conn_handler`
@@ -175,29 +166,6 @@ class RawData(BaseData):
 
         return cls(rd_id)
 
-    @classmethod
-    def delete(cls, id_):
-        """Deletes the RawData `id_` from the database.
-
-        Parameters
-        ----------
-        id_ :
-            The object identifier
-
-        Notes
-        -----
-        Deletes the raw data, its filepaths, and all the preprocessed data
-        that was based on this raw data.
-        """
-        # TODO: Check that the study is not public
-        # TODO: Drop the prep_x table
-        # TODO: Remove row (it should cascade to everything else)
-        # conn_handler = SQLConnectionHandler()
-        # Remove the row from raw_data
-        # conn_handler.execute(
-        #     "DELETE FROM qiita.{0} WHERE raw_data_id=%s".format(cls._table),
-        #     id_)
-
     def is_submitted_to_insdc(self):
         """Tells if the raw data has been submitted to insdc"""
         conn_handler = SQLConnectionHandler()
@@ -258,22 +226,6 @@ class PreprocessedData(BaseData):
         cls.link_data_filepaths(ppd_id, fp_ids, conn_handler)
 
         return cls(ppd_id)
-
-    @classmethod
-    def delete(cls, id_):
-        """Deletes the RawData `id_` from the database.
-
-        Parameters
-        ----------
-        id_ :
-            The object identifier
-
-        Notes
-        -----
-        Deletes the raw data, its filepaths, and all the preprocessed data
-        that was based on this raw data.
-        """
-        # conn_handler = SQLConnectionHandler()
 
 
 class ProcessedData(BaseData):
@@ -337,21 +289,3 @@ class ProcessedData(BaseData):
         cls.link_data_filepaths(pd_id, fp_ids, conn_handler)
 
         return cls(pd_id)
-
-    @classmethod
-    def delete(cls, id_):
-        """Deletes the RawData `id_` from the database.
-
-        Parameters
-        ----------
-        id_ :
-            The object identifier
-
-        Notes
-        -----
-        Deletes the raw data, its filepaths, and all the preprocessed data
-        that was based on this raw data.
-        """
-        conn_handler = SQLConnectionHandler()
-        # TODO: Remove filepaths
-        # TODO: delete analysis
