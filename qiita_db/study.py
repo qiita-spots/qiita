@@ -535,7 +535,12 @@ class StudyPerson(QiitaObject):
     # Properties
     @property
     def name(self):
-        """Returns the name of the person"""
+        """Returns the name of the person
+
+        Returns
+        -------
+        str: name of person
+        """
         conn_handler = SQLConnectionHandler()
         sql = ("SELECT name FROM qiita.{0} WHERE "
                "study_person_id = %s".format(self._table))
@@ -543,7 +548,13 @@ class StudyPerson(QiitaObject):
 
     @name.setter
     def name(self, value):
-        """Changes the name of the person"""
+        """Changes the name of the person
+
+        Parameters
+        ----------
+        value: str
+            New name for person
+        """
         conn_handler = SQLConnectionHandler()
         sql = ("UPDATE qiita.{0} SET name = %s WHERE "
                "study_person_id = %s".format(self._table))
@@ -551,7 +562,12 @@ class StudyPerson(QiitaObject):
 
     @property
     def email(self):
-        """Returns the email of the person"""
+        """Returns the email of the person
+
+        Returns
+        -------
+        str: email of person
+        """
         conn_handler = SQLConnectionHandler()
         sql = ("SELECT email FROM qiita.{0} WHERE "
                "study_person_id = %s".format(self._table))
@@ -559,7 +575,13 @@ class StudyPerson(QiitaObject):
 
     @email.setter
     def email(self, value):
-        """Changes the name of the person"""
+        """Changes the name of the person
+
+        Parameters
+        ----------
+        value: str
+            New email for person
+        """
         conn_handler = SQLConnectionHandler()
         sql = ("UPDATE qiita.{0} SET email = %s WHERE "
                "study_person_id = %s".format(self._table))
@@ -582,7 +604,13 @@ class StudyPerson(QiitaObject):
 
     @address.setter
     def address(self, value):
-        """Set/update the address of the person"""
+        """Set/update the address of the person
+
+        Parameters
+        ----------
+        value: str
+            New address for person
+        """
         conn_handler = SQLConnectionHandler()
         sql = ("UPDATE qiita.{0} SET address = %s WHERE "
                "study_person_id = %s".format(self._table))
@@ -602,7 +630,13 @@ class StudyPerson(QiitaObject):
 
     @phone.setter
     def phone(self, value):
-        """Set/update the address of the person"""
+        """Set/update the phone number of the person
+
+        Parameters
+        ----------
+        value: str
+            New phone number for person
+        """
         conn_handler = SQLConnectionHandler()
         sql = ("UPDATE qiita.{0} SET phone = %s WHERE "
                "study_person_id = %s".format(self._table))
