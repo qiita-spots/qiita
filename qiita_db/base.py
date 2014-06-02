@@ -79,9 +79,9 @@ class QiitaObject(object):
         self._id = id_
 
     def __eq__(self, other):
-        if other._id != self._id:
-            return False
         if type(self) != type(other):
+            return False
+        if other._id != self._id:
             return False
         return True
 
