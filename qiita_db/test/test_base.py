@@ -9,13 +9,35 @@
 from unittest import TestCase, main
 
 from qiita_core.util import qiita_test_checker
-from qiita_db.base import QiitaStatusObject
+from qiita_db.base import QiitaStatusObject, QiitaObject
 from qiita_db.exceptions import QiitaDBStatusError
+
+
+class QiitaBaseTest(TestCase):
+    """Tests that the base class functions act correctly"""
+
+    def setUp(self):
+        self.tester = QiitaObject(1)
+
+    def test_equal_self(self):
+        self.assertEqual(self.tester, self.tester)
+
+    def test_equal(self):
+        new = QiitaObject(1)
+        self.assertEqual(self.tester, new)
+
+    def test_not_equal(self):
+        new = QiitaObject(3)
+        self.assertNotEqual(self.tester, new)
+
+    def test_not_equal_type(self):
+        new = QiitaStatusObject(1)
+        self.assertNotEqual(self.tester, new)
 
 
 @qiita_test_checker()
 class QiitaStatusDecoratorTest(TestCase):
-    """Tests that the test database have been successfully populated"""
+    """Tests that the status decorator works correctly"""
 
     def setUp(self):
         self.tester = QiitaStatusObject(1)

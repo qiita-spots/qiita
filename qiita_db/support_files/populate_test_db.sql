@@ -283,6 +283,9 @@ INSERT INTO qiita.prep_1 (sample_id, BarcodeSequence, LIBRARY_CONSTRUCTION_PROTO
 -- Insert preprocessed information for raw data 1
 INSERT INTO qiita.preprocessed_data (raw_data_id, preprocessed_params_table, preprocessed_params_id) VALUES (1, 'preprocessed_sequence_illumina_params', 1);
 
+-- Insert (link) preprocessed information to study 1
+INSERT INTO qiita.study_preprocessed_data (preprocessed_data_id, study_id) VALUES (1, 1);
+
 -- Insert the preprocessed filepath for raw data 1
 INSERT INTO qiita.filepath (filepath, filepath_type_id) VALUES ('seqs.fna', 4), ('seqs.qual', 5);
 

@@ -79,6 +79,9 @@ class SetupTest(TestCase):
     def test_preprocessed_data(self):
         self._check_count("qiita.preprocessed_data", 1)
 
+    def test_study_preprocessed_data(self):
+        self._check_count("qiita.study_preprocessed_data", 1)
+
     def test_preprocessed_filepath(self):
         self._check_count("qiita.preprocessed_filepath", 2)
 

@@ -54,8 +54,7 @@ class QiitaObject(object):
         """Creates a new object with a new id on the storage system"""
         raise QiitaDBNotImplementedError()
 
-    @classmethod
-    def delete(cls, id_):
+    def delete(id_):
         """Deletes the object `id_` from the storage system
 
         Parameters
@@ -78,6 +77,16 @@ class QiitaObject(object):
         id_: the object identifier
         """
         self._id = id_
+
+    def __eq__(self, other):
+        if type(self) != type(other):
+            return False
+        if other._id != self._id:
+            return False
+        return True
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
 
     @property
     def id(self):
