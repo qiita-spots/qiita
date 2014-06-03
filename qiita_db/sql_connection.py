@@ -87,7 +87,6 @@ class SQLConnectionHandler(object):
         else:
             self._check_sql_args(sql_args)
 
-
         # Execute the query
         with self.get_postgres_cursor() as cur:
             try:
