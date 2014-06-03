@@ -7,7 +7,13 @@
 # -----------------------------------------------------------------------------
 
 from os.path import join, dirname, abspath
-from ConfigParser import ConfigParser, NoOptionError
+
+try:
+    # Python 2
+    from ConfigParser import ConfigParser, NoOptionError
+except ImportError:
+    # Python 3
+    from configparser import ConfigParser, NoOptionError
 
 
 class ConfigurationManager(object):
