@@ -43,7 +43,7 @@ class DBUtilTests(TestCase):
         self.required.append('BADTHINGNOINHERE')
         with self.assertRaises(QiitaDBColumnError):
             check_table_cols(self.conn_handler, self.required,
-                                   self.table)
+                             self.table)
 
 if __name__ == "__main__":
     main()

@@ -1,8 +1,7 @@
 from unittest import TestCase, main
 from datetime import date
 
-from qiita_core.exceptions import (QiitaStudyError,
-                                   IncompetentQiitaDeveloperError)
+from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_core.util import qiita_test_checker
 from qiita_db.study import Study, StudyPerson
 from qiita_db.investigation import Investigation

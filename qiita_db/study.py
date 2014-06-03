@@ -104,8 +104,7 @@ object while creating the study.
 from future_builtins import zip
 from datetime import date
 
-from qiita_core.exceptions import (QiitaStudyError,
-                                   IncompetentQiitaDeveloperError)
+from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from .base import QiitaStatusObject, QiitaObject
 from .exceptions import (QiitaDBColumnError, QiitaDBNotImplementedError,
                          QiitaDBExecutionError)
@@ -451,7 +450,7 @@ class Study(QiitaStatusObject):
 
     @property
     def raw_data(self):
-        """ Returns list of data objects with raw data info 
+        """ Returns list of data objects with raw data info
 
         Returns
         -------
@@ -465,7 +464,7 @@ class Study(QiitaStatusObject):
 
     @property
     def preprocessed_data(self):
-        """ Returns list of data objects with preprocessed data info 
+        """ Returns list of data objects with preprocessed data info
 
         Returns
         -------
@@ -583,7 +582,7 @@ class StudyPerson(QiitaObject):
         """
         if cls.exists(name, email):
             raise QiitaDBExecutionError("StudyPerson already exists!")
-        
+
         # Doesn't exist so insert new person
         sql = ("INSERT INTO qiita.{0} (name, email, address, phone) VALUES"
                " (%s, %s, %s, %s) RETURNING "
