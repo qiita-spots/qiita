@@ -26,24 +26,25 @@ class BaseDataTests(TestCase):
 
     def test_insert_filepath(self):
         """Correctly inserts the data on the DB and returns the id"""
-        obs = BaseData.insert_filepaths(self.filepaths, self.conn_handler)
+        obs = BaseData._insert_filepaths(self.filepaths, self.conn_handler)
         exp = [6, 7]
         self.assertEqual(obs, exp)
 
     def test_link_data_filepaths(self):
         """It should raise an error if called from the base class"""
         with self.assertRaises(IncompetentQiitaDeveloperError):
-            BaseData.link_data_filepaths(1, [1, 2, 3], self.conn_handler)
+            BaseData._link_data_filepaths(1, [1, 2, 3], self.conn_handler)
 
     def tesst_check_data_filepath_attributes(self):
         """It should raise an error if called from the base class"""
         with self.assertRaises(IncompetentQiitaDeveloperError):
-            BaseData.check_data_filepath_attributes()
+            BaseData._check_data_filepath_attributes()
 
     def test_get_filepaths(self):
         """It should raise an error if called from the base class"""
+        bd = BaseData(1)
         with self.assertRaises(IncompetentQiitaDeveloperError):
-            BaseData.check_data_filepath_attributes()
+            bd.get_filepaths()
 
 
 @qiita_test_checker()

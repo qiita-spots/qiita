@@ -1,12 +1,79 @@
-"""
+r"""
+Data objects (:mod: `qiita_db.data`)
+====================================
+
+..currentmodule:: qiita_db.data
+
+
+This module provides functionality for inserting, querying and deleting
+data stored in the database. There are three data classes available: `RawData`,
+`PreprocessedData` and `ProcessedData`.
+
 Objects for dealing with Qiita raw and (pre)processed data files
 
 Classes
 -------
-- `BaseData` -- A Qiita data base class
-- `RawData`
-- `PreprocessedData`
-- `ProcessedData`
+
+..autosummary::
+    :toctree: generated/
+
+    BaseData
+    RawData
+    PreprocessedData
+    ProcessedData
+
+Examples
+--------
+Assume we have a raw data instance composed by two fastq files (the sequence
+file 'seqs.fastq' and the barcodes file 'barcodes.fastq') that belongs to
+study 1.
+
+Inserting the raw data into the database:
+
+>>> from qiita_db.data import RawData
+>>> from qiita_db.study import Study
+>>> study = Study(1)
+>>> filepaths = [('seqs.fastq', 1), ('barcodes.fastq', 2)]
+>>> rd = RawData.create(2, filepaths, study) # doctest: +SKIP
+>>> print rd.id # doctest: +SKIP
+2
+
+Retrieve if the raw data files have been submitted to insdc
+
+>>> rd.is_submitted_to_insdc() # doctest: +SKIP
+False
+
+Retrieve the filepaths associated with the raw data
+
+>>> rd.get_filepaths() # doctest: +SKIP
+[('seqs.fastq', 1), ('barcodes.fastq', 2)]
+
+Assume we have preprocessed the previous raw data files using the parameters
+under the first row in the 'preprocessed_sequence_illumina_params', and we
+obtained to files: a fasta file 'seqs.fna' and a qual file 'seqs.qual'.
+
+Inserting the preprocessed data into the database
+
+>>> from qiita_db.data import PreprocessedData
+>>> filepaths = [('seqs.fna', 4), ('seqs.qual', 5)]
+>>> ppd = PreprocessedData.create(rd, "preprocessed_sequence_illumina_params",
+...                               1, filepaths) # doctest: +SKIP
+>>> print ppd.id # doctest: +SKIP
+2
+
+Assume we have processed the previous preprocessed data on June 2nd 2014 at 5pm
+using uclust and the first set of parameters, and we obtained a BIOM table.
+
+Inserting the processed data into the database:
+
+>>> from qiita_db.data import ProcessedData
+>>> from datetime import datetime
+>>> filepaths = [('foo/table.biom', 6)]
+>>> date = datetime(2014, 6, 2, 5, 0, 0)
+>>> pd = ProcessedData(ppd, "processed_params_uclust", 1,
+...                    filepaths, date) # doctest: +SKIP
+>>> print pd.id # doctest: +SKIP
+2
 """
 from __future__ import division
 # -----------------------------------------------------------------------------
@@ -29,13 +96,16 @@ class BaseData(QiitaObject):
     """Base class for the raw and (pre)processed data objects"""
     _filepath_table = "filepath"
 
-    # These variables should be defined in the subclasses
+    # These variables should be defined in the subclasses. They are useful in
+    # order to avoid code replication and be able to generalize the functions
+    # included in this BaseClass
     _data_filepath_table = None
     _data_filepath_column = None
 
     @classmethod
-    def check_data_filepath_attributes(cls):
-        """"""
+    def _check_data_filepath_attributes(cls):
+        """Checks if _data_filepath_table and _data_filepath_column have been
+        defined, so this function is actually called from a subclass"""
         if (cls._data_filepath_table is None) or \
                 (cls._data_filepath_column is None):
             raise IncompetentQiitaDeveloperError(
@@ -43,13 +113,13 @@ class BaseData(QiitaObject):
                 "defined in the classes that implement BaseData!")
 
     @classmethod
-    def insert_filepaths(cls, filepaths, conn_handler):
+    def _insert_filepaths(cls, filepaths, conn_handler):
         """Inserts `filepaths` in the DB connected with `conn_handler`
 
         Parameters
         ----------
         filepaths : iterable of tuples (str, int)
-            The list of paths to the raw files and its fileapth type identifier
+            The list of paths to the raw files and its filepath type identifier
         conn_handler : SQLConnectionHandler
             The connection handler object connected to the DB
 
@@ -70,7 +140,7 @@ class BaseData(QiitaObject):
         return [id[0] for id in ids]
 
     @classmethod
-    def link_data_filepaths(cls, data_id, fp_ids, conn_handler):
+    def _link_data_filepaths(cls, data_id, fp_ids, conn_handler):
         """Links the data `data_id` with its filepaths `fp_ids` in the DB
         connected with `conn_handler`
 
@@ -92,29 +162,40 @@ class BaseData(QiitaObject):
         """
         # First check that the internal attributes have been defined, so this
         # function have been actually called from a subclass
-        cls.check_data_filepath_attributes()
+        cls._check_data_filepath_attributes()
 
+        # Create the list of SQL values to add
         values = [(data_id, fp_id) for fp_id in fp_ids]
+        # Add all rows at once
         conn_handler.executemany(
             "INSERT INTO qiita.{0} ({1}, filepath_id) "
             "VALUES (%s, %s)".format(cls._data_filepath_table,
-                                     cls._data_filepath_column),
-            values)
+                                     cls._data_filepath_column), values)
 
     def get_filepaths(self):
-        """"""
+        """
+        Returns
+        -------
+        list of tuples
+            A list of (path, filetype id) with all the paths associated with
+            the current data
+        """
         # First check that the internal attributes have been defined, so this
         # function have been actually called from a subclass
-        self.check_data_filepath_attributes()
+        self._check_data_filepath_attributes()
+        # We need a connection handler to the database
         conn_handler = SQLConnectionHandler()
-        filepaths = conn_handler.execute_fetchall(
+        # Retrieve all the (path, id) tuples related with the current data
+        # object and return them. We need to first check the
+        # _data_filepath_table to get the filepath ids of the filepath
+        # associated with the current data object. We then can query the
+        # filepath table to get those paths/
+        return conn_handler.execute_fetchall(
             "SELECT filepath, filepath_type_id FROM qiita.{0} WHERE "
             "filepath_id IN (SELECT filepath_id FROM qiita.{1} WHERE "
             "{2}=%(id)s)".format(self._filepath_table,
                                  self._data_filepath_table,
-                                 self._data_filepath_column),
-            {'id': self.id})
-        return filepaths
+                                 self._data_filepath_column), {'id': self.id})
 
 
 class RawData(BaseData):
@@ -159,10 +240,10 @@ class RawData(BaseData):
             {'study_id': study.id, 'raw_id': rd_id})
 
         # Add the filepaths to the database
-        fp_ids = cls.insert_filepaths(filepaths, conn_handler)
+        fp_ids = cls._insert_filepaths(filepaths, conn_handler)
 
         # Connect the raw data with its filepaths
-        cls.link_data_filepaths(rd_id, fp_ids, conn_handler)
+        cls._link_data_filepaths(rd_id, fp_ids, conn_handler)
 
         return cls(rd_id)
 
@@ -220,10 +301,10 @@ class PreprocessedData(BaseData):
              'param_id': preprocessed_params_id})[0]
 
         # Add the filepaths to the database
-        fp_ids = cls.insert_filepaths(filepaths, conn_handler)
+        fp_ids = cls._insert_filepaths(filepaths, conn_handler)
 
         # Connect the preprocessed data with its filepaths
-        cls.link_data_filepaths(ppd_id, fp_ids, conn_handler)
+        cls._link_data_filepaths(ppd_id, fp_ids, conn_handler)
 
         return cls(ppd_id)
 
@@ -283,9 +364,9 @@ class ProcessedData(BaseData):
              'date': processed_date})[0]
 
         # Add the filepaths to the database
-        fp_ids = cls.insert_filepaths(filepaths, conn_handler)
+        fp_ids = cls._insert_filepaths(filepaths, conn_handler)
 
         # Connect the processed data with its filepaths
-        cls.link_data_filepaths(pd_id, fp_ids, conn_handler)
+        cls._link_data_filepaths(pd_id, fp_ids, conn_handler)
 
         return cls(pd_id)
