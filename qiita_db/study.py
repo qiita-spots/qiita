@@ -6,12 +6,15 @@ Study and StudyPerson objects (:mod:`qiita_db.study`)
 
 .. currentmodule:: qiita_db.study
 
-This module provides the implementation of the Study class. It allows access to
-all basic information including name and pmids associated with the study, as
-well as returning objects for the data, metadata, owner, and shared users. It
-is the central hub for creating, deleting, and accessing a study in the
-database.
+This module provides the implementation of the Study and StudyPerson classes.
+The study class allows access to all basic information including name and
+pmids associated with the study, as well as returning objects for the data,
+metadata, owner, and shared users. It is the central hub for creating,
+deleting, and accessing a study in the database.
 
+Contacts are taken care of by the StudyPerson class. This holds the contact's
+name, email, address, and phone of the various persons in a study, e.g. The PI
+or lab contact.
 
 Classes
 -------
@@ -46,7 +49,6 @@ must be passed as StudyPerson objects and the owner as a User object.
 
 >>> from qiita_db.study import Study # doctest: +SKIP
 >>> from qiita_db.user import User # doctest: +SKIP
->>> from qiita_db.study import Investigation # doctest: +SKIP
 >>> info = {
 ...     "timeseries_type_id": 1,
 ...     "study_experimental_factor": 1,
@@ -68,6 +70,25 @@ must be passed as StudyPerson objects and the owner as a User object.
 You can also add a study to an investigation by passing the investigation
 object while creating the study.
 
+>>> from qiita_db.study import Study # doctest: +SKIP
+>>> from qiita_db.user import User # doctest: +SKIP
+>>> from qiita_db.study import Investigation # doctest: +SKIP
+>>> info = {
+...     "timeseries_type_id": 1,
+...     "study_experimental_factor": 1,
+...     "metadata_complete": True,
+...     "mixs_compliant": True,
+...     "number_samples_collected": 25,
+...     "number_samples_promised": 28,
+...     "portal_type_id": 3,
+...     "study_title": "Study Title",
+...     "study_alias": "TST",
+...     "study_description": ("Some description of the study goes here"),
+...     "study_abstract": ("Some abstract goes here"),
+...     "emp_person_id": StudyPerson(2),
+...     "principal_investigator_id": StudyPerson(3),
+...     "lab_person_id": StudyPerson(1)} # doctest: +SKIP
+>>> owner = User('owner@foo.bar') # doctest: +SKIP
 >>> investigation = Investigation(1) # doctest: +SKIP
 >>> Study(owner, info, investigation) # doctest: +SKIP
 """
