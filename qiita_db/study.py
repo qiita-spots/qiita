@@ -2,7 +2,7 @@ from __future__ import division
 
 r"""
 Study and StudyPerson objects (:mod:`qiita_db.study`)
-================================================================
+=====================================================
 
 .. currentmodule:: qiita_db.study
 
@@ -24,11 +24,14 @@ Classes
 
 Examples
 --------
-Studdies are attached to people. These people have names, emails, addresses,
-and phone numbers. The email and name are the minimum required information.
+Studies contain contact people (PIs, Lab members, and EBI contacts). These
+people have names, emails, addresses, and phone numbers. The email and name are
+the minimum required information.
+
+>>> from qiita_db.study import StudyPerson # doctest: +SKIP
 >>> person = StudyPerson.create('Some Dude', 'somedude@foo.bar',
-                                address='111 fake street',
-                                phone='111-121-1313') # doctest: +SKIP
+...                             address='111 fake street',
+...                             phone='111-121-1313') # doctest: +SKIP
 >>> person.name # doctest: +SKIP
 Some dude
 >>> person.email # doctest: +SKIP
@@ -40,6 +43,10 @@ somedude@foobar
 
 A study requres a minimum of information to be created. Note that the people
 must be passed as StudyPerson objects and the owner as a User object.
+
+>>> from qiita_db.study import Study # doctest: +SKIP
+>>> from qiita_db.user import User # doctest: +SKIP
+>>> from qiita_db.study import Investigation # doctest: +SKIP
 >>> info = {
 ...     "timeseries_type_id": 1,
 ...     "study_experimental_factor": 1,
@@ -60,6 +67,7 @@ must be passed as StudyPerson objects and the owner as a User object.
 
 You can also add a study to an investigation by passing the investigation
 object while creating the study.
+
 >>> investigation = Investigation(1) # doctest: +SKIP
 >>> Study(owner, info, investigation) # doctest: +SKIP
 """
@@ -72,23 +80,20 @@ object while creating the study.
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
+from future_builtins import zip
 from datetime import date
 
+from qiita_core.exceptions import (QiitaStudyError,
+                                   IncompetentQiitaDeveloperError)
 from .base import QiitaStatusObject, QiitaObject
+from .exceptions import (QiitaDBColumnError, QiitaDBNotImplementedError,
+                         QiitaDBExecutionError)
 from .data import RawData, PreprocessedData, ProcessedData
 from .user import User
 from .investigation import Investigation
-from .util import check_required, check_table_cols
+from .util import check_required_columns, check_table_cols
 from .metadata_template import SampleTemplate
 from .sql_connection import SQLConnectionHandler
-from qiita_core.exceptions import QiitaStudyError
-
-
-REQUIRED_KEYS = {"timeseries_type_id", "lab_person_id", "mixs_compliant",
-                 "metadata_complete", "number_samples_collected",
-                 "number_samples_promised", "portal_type_id",
-                 "principal_investigator_id", "study_title", "study_alias",
-                 "study_description", "study_abstract"}
 
 
 class Study(QiitaStatusObject):
@@ -102,14 +107,12 @@ class Study(QiitaStatusObject):
         Major information about the study, keyed by db column name
     status: int
         Status of the study
-    sample_ids: list of str
-        All sample_ids associated with the study
     shared_with: list of User objects
         Emails of users the study is shared with
     pmids: list of str
         PMIDs assiciated with the study
-    investigations: list of Investigation objects
-        All investigations study is part of
+    investigation: Investigation object
+        Investigation the study is part of
     metadata: Metadata object
         Metadata object tied to this study
     raw_data: list of RawData objects
@@ -121,11 +124,8 @@ class Study(QiitaStatusObject):
 
     Methods
     -------
-    share_with(User_obj)
-        Shares the study with given user
-
-    add_pmid(self, pmid):
-        Adds PMID to study
+    share_with
+    add_pmid
     """
     _table = "study"
 
@@ -144,8 +144,13 @@ class Study(QiitaStatusObject):
 
         Raises
         ------
-        QiitaDBExecutionError
-            All required keys not passed or non-db columns in info dictionary
+        QiitaDBColumnError
+            Non-db columns in info dictionary
+            All required keys not passed
+        QiitaStudyError
+            Study already exists
+        IncompetentQiitaDeveloperError
+            study_id or status passed as a key
 
         Notes
         -----
@@ -156,10 +161,11 @@ class Study(QiitaStatusObject):
         """
         # make sure not passing a study id in the info dict
         if "study_id" in info:
-            raise QiitaStudyError("Can't pass study_id in info dict!")
-
-        # make sure required keys are in the info dict
-        check_required(info, REQUIRED_KEYS)
+            raise IncompetentQiitaDeveloperError("Can't pass study_id in info "
+                                                 "dict!")
+        if "study_status_id" in info:
+            raise IncompetentQiitaDeveloperError("Can't pass status in info "
+                                                 "dict!")
 
         # Save study_experimental_factor data for insertion
         efo = None
@@ -169,30 +175,38 @@ class Study(QiitaStatusObject):
                 efo = [efo]
             info.pop("study_experimental_factor")
         else:
-            raise QiitaStudyError("EFO information is required!")
+            raise QiitaDBColumnError("EFO info not passed!")
+
+        # add default values to info
+        info['email'] = owner.id
+        info['reprocess'] = False
+        info['first_contact'] = date.today().strftime("%B %d, %Y")
+        info['study_status_id'] = 1
 
         conn_handler = SQLConnectionHandler()
         # make sure dictionary only has keys for available columns in db
         check_table_cols(conn_handler, info, "study")
+        # make sure reqired columns in dictionary
+        check_required_columns(conn_handler, info, "study")
 
         # Insert study into database
-        sql = ("INSERT INTO qiita.{0} (email,study_status_id,first_contact,"
-               "reprocess, %s) VALUES (%s) RETURNING "
-               "study_id".format(cls._table) %
-               (','.join(info.keys()), ','.join(['%s'] * (len(info)+4))))
+        keys = info.keys()
+        sql = ("INSERT INTO qiita.{0} ({1}) VALUES ({2}) RETURNING "
+               "study_id".format(cls._table, ','.join(keys),
+                                 ','.join(['%s'] * len(info))))
         # make sure data in same order as sql column names, and ids are used
-        data = [owner.id, 1, date.today().strftime("%B %d, %Y"), 'FALSE']
-        for col, val in info.items():
-            if isinstance(val, QiitaObject):
-                data.append(val.id)
+        data = []
+        for col in keys:
+            if isinstance(info[col], QiitaObject):
+                data.append(info[col].id)
             else:
-                data.append(val)
+                data.append(info[col])
         study_id = conn_handler.execute_fetchone(sql, data)[0]
 
         # insert efo information into database
         sql = ("INSERT INTO qiita.{0}_experimental_factor (study_id, "
                "efo_id) VALUES (%s, %s)".format(cls._table))
-        conn_handler.executemany(sql, zip([study_id] * len(efo), efo))
+        conn_handler.executemany(sql, list(zip([study_id] * len(efo), efo)))
 
         # add study to investigation if necessary
         if investigation:
@@ -214,7 +228,7 @@ class Study(QiitaStatusObject):
         # delete raw data
         # drop sample_x dynamic table
         # delete study row from study table (and cascade to satelite tables)
-        raise NotImplementedError()
+        raise QiitaDBNotImplementedError()
 
 # --- Attributes ---
     @property
@@ -223,7 +237,8 @@ class Study(QiitaStatusObject):
 
         Returns
         -------
-        str: title of study
+        str
+            Title of study
         """
         conn_handler = SQLConnectionHandler()
         sql = ("SELECT study_title FROM qiita.{0} WHERE "
@@ -250,12 +265,15 @@ class Study(QiitaStatusObject):
 
         Returns
         -------
-        dict: info of study keyed to column names
+        dict
+            info of study keyed to column names
         """
         conn_handler = SQLConnectionHandler()
         sql = "SELECT * FROM qiita.{0} WHERE study_id = %s".format(self._table)
         info = dict(conn_handler.execute_fetchone(sql, (self._id, )))
-        efo = [x[0] for x in conn_handler.execute_fetchall(sql, (self._id,))]
+        sql = ("SELECT efo_id FROM qiita.{0}_experimental_factor WHERE "
+               "study_id = %s".format(self._table))
+        efo = [x[0] for x in conn_handler.execute_fetchall(sql, (self._id, ))]
         info["study_experimental_factor"] = efo
 
         # Convert everything from ids to objects
@@ -269,8 +287,9 @@ class Study(QiitaStatusObject):
         if info['emp_person_id'] is not None:
             info['emp_person_id'] = StudyPerson(
                 info['emp_person_id'])
-        # remove id since not needed
+        # remove id and status since not needed
         info.pop("study_id")
+        info.pop("study_status_id")
         return info
 
     @info.setter
@@ -281,7 +300,17 @@ class Study(QiitaStatusObject):
         ----------
         info : dict
             information to change/update for the study, keyed to column name
+
+        Raises
+        ------
+        IncompetentQiitaDeveloperError
+            Empty dict passed
+        QiitaDBColumnError
+            Unknown column names passed
         """
+        if len(info) < 1:
+            raise IncompetentQiitaDeveloperError("Need entries in info dict!")
+
         conn_handler = SQLConnectionHandler()
 
         # Save study_experimental_factor data for insertion
@@ -294,25 +323,28 @@ class Study(QiitaStatusObject):
 
         check_table_cols(conn_handler, info, "study")
 
+        sql_vals = []
         data = []
-        sql = "UPDATE qiita.{0} SET ".format(self._table)
         # items() used for py3 compatability
         # build query with data values in correct order for SQL statement
         for key, val in info.items():
-            sql = ' '.join((sql, key, "=", "%s,"))
+            sql_vals.extend((key, "=", "%s,"))
             if isinstance(val, QiitaObject):
                 data.append(val.id)
             else:
                 data.append(val)
-        sql = ' '.join((sql[:-1], "WHERE study_id = %s"))
         data.append(self._id)
+
+        sql = ("UPDATE qiita.{0} SET {1} WHERE "
+               "study_id = %s".format(self._table, ' '.join(sql_vals)[:-1]))
         conn_handler.execute(sql, data)
 
         if efo:
             # insert efo information into database
             sql = ("INSERT INTO qiita.{0}_experimental_factor (study_id, "
                    "efo_id) VALUES (%s, %s)".format(self._table))
-            conn_handler.executemany(sql, zip([self._id] * len(efo), efo))
+            conn_handler.executemany(sql,
+                                     list(zip([self._id] * len(efo), efo)))
 
     @property
     def status(self):
@@ -340,20 +372,6 @@ class Study(QiitaStatusObject):
         sql = ("UPDATE qiita.{0} SET study_status_id = %s WHERE "
                "study_id = %s".format(self._table))
         conn_handler.execute(sql, (status_id, self._id))
-
-    @property
-    def sample_ids(self):
-        """Returns the IDs of all samples in study
-
-        Returns
-        -------
-        list of str
-            The sample IDs in alphabetical order.
-        """
-        conn_handler = SQLConnectionHandler()
-        sql = ("SELECT sample_id FROM qiita.required_sample_info WHERE "
-               "study_id = %s ORDER BY sample_id".format(self._table))
-        return [x[0] for x in conn_handler.execute_fetchall(sql, (self._id, ))]
 
     @property
     def shared_with(self):
@@ -385,18 +403,20 @@ class Study(QiitaStatusObject):
         return [x[0] for x in conn_handler.execute_fetchall(sql, (self._id, ))]
 
     @property
-    def investigations(self):
-        """ Returns list of investigations this study is part of 
+    def investigation(self):
+        """ Returns Investigation this study is part of
 
         Returns
         -------
-        list of Investigation objects
+        Investigation object
         """
         conn_handler = SQLConnectionHandler()
         sql = ("SELECT investigation_id FROM qiita.investigation_study WHERE "
                "study_id = %s")
-        invs = conn_handler.execute_fetchall(sql, (self._id, ))
-        return [Investigation(inv[0]) for inv in invs]
+        inv = conn_handler.execute_fetchone(sql, (self._id, ))
+        if inv is None:
+            return None
+        return Investigation(inv[0])
 
     @property
     def metadata(self):
@@ -419,9 +439,8 @@ class Study(QiitaStatusObject):
         conn_handler = SQLConnectionHandler()
         sql = ("SELECT raw_data_id FROM qiita.study_raw_data WHERE "
                "study_id = %s")
-        raw_ids = [x[0] for x in conn_handler.execute_fetchall(sql,
-                                                               (self._id, ))]
-        return [RawData(rid) for rid in raw_ids]
+        return [RawData(x[0]) for x in
+                conn_handler.execute_fetchall(sql, (self._id,))]
 
     @property
     def preprocessed_data(self):
@@ -434,9 +453,8 @@ class Study(QiitaStatusObject):
         conn_handler = SQLConnectionHandler()
         sql = ("SELECT preprocessed_data_id FROM qiita.study_preprocessed_data"
                " WHERE study_id = %s")
-        pre_ids = [x[0] for x in conn_handler.execute_fetchall(sql,
-                                                               (self._id,))]
-        return [PreprocessedData(pid) for pid in pre_ids]
+        return [PreprocessedData(x[0]) for x in
+                conn_handler.execute_fetchall(sql, (self._id,))]
 
     @property
     def processed_data(self):
@@ -450,9 +468,8 @@ class Study(QiitaStatusObject):
         sql = ("SELECT processed_data_id FROM qiita.processed_data WHERE "
                "preprocessed_data_id IN (SELECT preprocessed_data_id FROM "
                "qiita.study_preprocessed_data where study_id = %s)")
-        pro_ids = [x[0] for x in conn_handler.execute_fetchall(sql,
-                                                               (self._id,))]
-        return [ProcessedData(pid) for pid in pro_ids]
+        return [ProcessedData(x[0]) for x in
+                conn_handler.execute_fetchall(sql, (self._id,))]
 
 # --- methods ---
     def share_with(self, user):
@@ -460,8 +477,8 @@ class Study(QiitaStatusObject):
 
         Parameters
         ----------
-        email: str
-            email of the user to share with
+        email: User object
+            The user to share with
         """
         conn_handler = SQLConnectionHandler()
         sql = ("INSERT INTO qiita.study_users (study_id, email) VALUES "
@@ -473,7 +490,7 @@ class Study(QiitaStatusObject):
 
         Parameters
         ----------
-        pmid: int
+        pmid: str
             pmid to associate with study
         """
         conn_handler = SQLConnectionHandler()
@@ -491,12 +508,33 @@ class StudyPerson(QiitaObject):
         name of the person
     email: str
         email of the person
-    address: str, optional
+    address: str or None
         address of the person
-    phone: str, optional
+    phone: str or None
         phone number of the person
     """
     _table = "study_person"
+
+    @classmethod
+    def exists(cls, name, email):
+        """Checks if a person exists
+
+        Parameters
+        ----------
+        name: str
+            Name of the person
+        email: str
+            Email of the person
+
+        Returns
+        -------
+        bool
+            True if person exists else false
+        """
+        conn_handler = SQLConnectionHandler()
+        sql = ("SELECT count(1) FROM qiita.{0} WHERE name = %s AND "
+               "email = %s".format(cls._table))
+        return bool(conn_handler.execute_fetchone(sql, (name, email))[0])
 
     @classmethod
     def create(cls, name, email, address=None, phone=None):
@@ -516,19 +554,22 @@ class StudyPerson(QiitaObject):
         Returns
         -------
         New StudyPerson object
+
+        Raises
+        ------
+        QiitaDBExecutionError
+            Person already exists
         """
-        # Make sure person doesn't already exist
+        if cls.exists(name, email):
+            raise QiitaDBExecutionError("StudyPerson already exists!")
+        
+        # Doesn't exist so insert new person
+        sql = ("INSERT INTO qiita.{0} (name, email, address, phone) VALUES"
+               " (%s, %s, %s, %s) RETURNING "
+               "study_person_id".format(cls._table))
         conn_handler = SQLConnectionHandler()
-        sql = ("SELECT study_person_id FROM qiita.{0} WHERE name = %s AND "
-               "email = %s".format(cls._table))
-        spid = conn_handler.execute_fetchone(sql, (name, email))
-        if spid is None:
-            # Doesn't exist so insert new person
-            sql = ("INSERT INTO qiita.{0} (name, email, address, phone) VALUES"
-                   " (%s, %s, %s, %s) RETURNING "
-                   "study_person_id".format(cls._table))
-            spid = conn_handler.execute_fetchone(sql, (name, email, address,
-                                                       phone))
+        spid = conn_handler.execute_fetchone(sql, (name, email, address,
+                                                   phone))
         return cls(spid[0])
 
     # Properties
@@ -545,20 +586,6 @@ class StudyPerson(QiitaObject):
                "study_person_id = %s".format(self._table))
         return conn_handler.execute_fetchone(sql, (self._id, ))[0]
 
-    @name.setter
-    def name(self, value):
-        """Changes the name of the person
-
-        Parameters
-        ----------
-        value: str
-            New name for person
-        """
-        conn_handler = SQLConnectionHandler()
-        sql = ("UPDATE qiita.{0} SET name = %s WHERE "
-               "study_person_id = %s".format(self._table))
-        conn_handler.execute(sql, (value, self._id))
-
     @property
     def email(self):
         """Returns the email of the person
@@ -572,20 +599,6 @@ class StudyPerson(QiitaObject):
                "study_person_id = %s".format(self._table))
         return conn_handler.execute_fetchone(sql, (self._id, ))[0]
 
-    @email.setter
-    def email(self, value):
-        """Changes the name of the person
-
-        Parameters
-        ----------
-        value: str
-            New email for person
-        """
-        conn_handler = SQLConnectionHandler()
-        sql = ("UPDATE qiita.{0} SET email = %s WHERE "
-               "study_person_id = %s".format(self._table))
-        conn_handler.execute(sql, (value, self._id))
-
     @property
     def address(self):
         """Returns the address of the person
@@ -598,10 +611,7 @@ class StudyPerson(QiitaObject):
         conn_handler = SQLConnectionHandler()
         sql = ("SELECT address FROM qiita.{0} WHERE study_person_id ="
                " %s".format(self._table))
-        address = conn_handler.execute_fetchone(sql, (self._id, ))
-        if address is not None:
-            return address[0]
-        return None
+        return conn_handler.execute_fetchone(sql, (self._id, ))[0]
 
     @address.setter
     def address(self, value):

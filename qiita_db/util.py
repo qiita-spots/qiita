@@ -1,8 +1,7 @@
 #!/usr/bin/env python
 from __future__ import division
-from os.path import abspath, dirname, join
 
-from .exceptions import QiitaDBExecutionError
+from .exceptions import QiitaDBColumnError
 
 # -----------------------------------------------------------------------------
 # Copyright (c) 2014--, The Qiita Development Team.
@@ -53,50 +52,66 @@ def scrub_data(s):
     return ret
 
 
-def check_required(keys, required):
-    """Makes sure all required columns are in a list
-
-    Parameters
-    ----------
-    keys: iterable
-        list, set, or other iterable holding the keys in the dictionary
-    required: set
-        set of column names required for a table
-
-    Raises
-    ------
-    QiitaDBExecutionError
-        If not all required keys are in keys
-    """
-    if not isinstance(required, set):
-        raise ValueError("required keys list must be set type object")
-    if len(required.difference(set(keys))) > 0:
-            raise RuntimeError("Required keys missing: %s" %
-                               required.difference(set(keys)))
-
-
-def check_table_cols(conn_handler, keys, table):
-    """Makes sure all keys correspond to coumn headers in a table
+def check_required_columns(conn_handler, keys, table):
+    """Makes sure all required columns in database table are in keys
 
     Parameters
     ----------
     conn_handler: SQLConnectionHandler object
-        Previously opened conection to the database
+        Previously opened connection to the database
     keys: iterable
-        list, set, or other iterable holding the keys in the dictionary
+        Holds the keys in the dictionary
+    table: str
+        name of the table to check required columns
+
+    Raises
+    ------
+    QiitaDBColumnError
+        If keys exist that are not in the table
+    RuntimeError
+        Unable to get columns from database
+    """
+    sql = ("SELECT is_nullable, column_name FROM information_schema.columns "
+           "WHERE table_name = %s")
+    cols = conn_handler.execute_fetchall(sql, (table, ))
+    # Test needed because a user with certain permissions can query without
+    # error but be unable to get the column names
+    if len(cols) == 0:
+        raise RuntimeError("Unable to fetch column names for table %s" % table)
+    required = set(x[1] for x in cols if x[0] == 'NO')
+    # remove the table id column as required
+    required.remove("%s_id" % table)
+    if len(required.difference(keys)) > 0:
+        raise QiitaDBColumnError("Required keys missing: %s" %
+                                 required.difference(keys))
+
+
+def check_table_cols(conn_handler, keys, table):
+    """Makes sure all keys correspond to column headers in a table
+
+    Parameters
+    ----------
+    conn_handler: SQLConnectionHandler object
+        Previously opened connection to the database
+    keys: iterable
+        Holds the keys in the dictionary
     table: str
         name of the table to check column names
 
     Raises
     ------
-    QiitaDBExecutionError
-        If keys exist that are not in the table
+    QiitaDBColumnError
+        If a key is found that is not in table columns
+    RuntimeError
+        Unable to get columns from database
     """
     sql = ("SELECT column_name FROM information_schema.columns WHERE "
            "table_name = %s")
     cols = [x[0] for x in conn_handler.execute_fetchall(sql, (table, ))]
+    # Test needed because a user with certain permissions can query without
+    # error but be unable to get the column names
     if len(cols) == 0:
         raise RuntimeError("Unable to fetch column names for table %s" % table)
     if len(set(keys).difference(cols)) > 0:
-        raise QiitaDBExecutionError("Non-database keys found: %s" %
-                                    set(keys).difference(cols))
+        raise QiitaDBColumnError("Non-database keys found: %s" %
+                                 set(keys).difference(cols))

@@ -17,7 +17,7 @@ INSERT INTO qiita.qiita_user (email, user_level_id, password, name,
 -- Insert some study persons
 INSERT INTO qiita.study_person (name, email, address, phone) VALUES
 	('LabDude', 'lab_dude@foo.bar', '123 lab street', '121-222-3333'),
-	('empDude', 'emp_dude@foo.bar', '123 emp street', NULL),
+	('empDude', 'emp_dude@foo.bar', NULL, '444-222-3333'),
 	('PIDude', 'PI_dude@foo.bar', '123 PI street', NULL);
 
 -- Insert a study: EMP 1001

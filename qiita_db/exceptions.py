@@ -35,3 +35,7 @@ class QiitaDBStatusError(QiitaDBError):
 class QiitaDBConnectionError(QiitaDBError):
     """Exception for error when connecting to the db"""
     pass
+
+class QiitaDBColumnError(QiitaDBError):
+    """Exception when missing table information or excess information passed"""
+    pass
