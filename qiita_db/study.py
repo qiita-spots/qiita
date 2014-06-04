@@ -163,7 +163,7 @@ class Study(QiitaStatusObject):
             the user id of the study' owner
         info: dict
             the information attached to the study.
-        investigation_id: Investigation object
+        investigation: Investigation object
             if the study is part of an investigation, the id to associate with
 
         Raises
