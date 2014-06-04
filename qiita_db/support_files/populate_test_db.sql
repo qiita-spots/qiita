@@ -47,16 +47,16 @@ INSERT INTO qiita.investigation_study (investigation_id, study_id) VALUES (1, 1)
 INSERT INTO qiita.study_experimental_factor (study_id, efo_id) VALUES (1, 1);
 
 -- Insert the raw data filepaths for study 1
-INSERT INTO qiita.filepath (filepath, filepath_type_id) VALUES ('$QIITA_TEST_FOLDER/s_G1_L001_sequences.fastq.gz', 1), ('$QIITA_TEST_FOLDER/s_G1_L001_sequences_barcodes.fastq.gz', 2);
+INSERT INTO qiita.filepath (filepath, filepath_type_id) VALUES ('s_G1_L001_sequences.fastq.gz', 1), ('s_G1_L001_sequences_barcodes.fastq.gz', 2), ('sequences.fastq.gz', 1), ('sequences_barcodes.fastq.gz', 2);
 
 -- Insert the raw data information for study 1
-INSERT INTO qiita.raw_data (filetype_id, submitted_to_insdc) VALUES (2, FALSE);
+INSERT INTO qiita.raw_data (filetype_id, submitted_to_insdc) VALUES (2, FALSE), (2, TRUE);
 
 -- Insert (link) the raw data with the raw filepaths
-INSERT INTO qiita.raw_filepath (raw_data_id, filepath_id) VALUES (1, 1), (1, 2);
+INSERT INTO qiita.raw_filepath (raw_data_id, filepath_id) VALUES (1, 1), (1, 2), (1, 3), (1, 4);
 
 -- Insert (link) the study with the raw data
-INSERT INTO qiita.study_raw_data (study_id, raw_data_id) VALUES (1, 1);
+INSERT INTO qiita.study_raw_data (study_id, raw_data_id) VALUES (1, 1), (1, 2);
 
 -- Add the required_sample_info for study 1
 INSERT INTO qiita.required_sample_info (study_id, sample_id, physical_location, has_physical_specimen, has_extracted_data, sample_type, required_sample_info_status_id, collection_date, host_subject_id, description) VALUES
@@ -281,31 +281,31 @@ INSERT INTO qiita.prep_1 (sample_id, BarcodeSequence, LIBRARY_CONSTRUCTION_PROTO
 	('SKM9.640192', 'AGCAGGCACGAA', 'This analysis was done as in Caporaso et al 2011 Genome research. The PCR primers (F515/R806) were developed against the V4 region of the 16S rRNA (both bacteria and archaea), which we determined would yield optimal community clustering with reads of this length using a procedure similar to that of ref. 15. [For reference, this primer pair amplifies the region 533_786 in the Escherichia coli strain 83972 sequence (greengenes accession no. prokMSA_id:470367).] The reverse PCR primer is barcoded with a 12-base error-correcting Golay code to facilitate multiplexing of up to Ê1,500 samples per lane, and both PCR primers contain sequencer adapter regions.', 'GTGCCAGCMGCCGCGGTAA', 'V4', '16S rRNA', 'ANL', 's_G1_L001_sequences', '8/1/12', 'ANL', 'micro biome of soil and rhizosphere of cannabis plants from CA', 'Cannabis Soil Microbiome', 'Illumina', '.25,g', 'Sequencing by synthesis', 'MiSeq', 'ANL', 'FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT', 'CCME');
 
 -- Insert preprocessed information for raw data 1
-INSERT INTO qiita.preprocessed_data (raw_data_id, preprocessed_params_table, preprocessed_params_id) VALUES (1, 'preprocessed_sequence_illumina_params', 1);
+INSERT INTO qiita.preprocessed_data (raw_data_id, preprocessed_params_table, preprocessed_params_id) VALUES (1, 'preprocessed_sequence_illumina_params', 1), (1, 'preprocessed_sequence_illumina_params', 2);
 
 -- Insert (link) preprocessed information to study 1
-INSERT INTO qiita.study_preprocessed_data (preprocessed_data_id, study_id) VALUES (1, 1);
+INSERT INTO qiita.study_preprocessed_data (preprocessed_data_id, study_id) VALUES (1, 1), (2, 1);
 
 -- Insert the preprocessed filepath for raw data 1
-INSERT INTO qiita.filepath (filepath, filepath_type_id) VALUES ('$QIITA_TEST_FOLDER/seqs.fna', 4), ('$QIITA_TEST_FOLDER/seqs.qual', 5);
+INSERT INTO qiita.filepath (filepath, filepath_type_id) VALUES ('seqs.fna', 4), ('seqs.qual', 5);
 
 -- Insert (link) the preprocessed data with the preprocessed filepaths
 INSERT INTO qiita.preprocessed_filepath (preprocessed_data_id, filepath_id) VALUES (1, 3), (1, 4);
 
 -- Insert the preprocessed illumina params used for raw data 1
-INSERT INTO qiita.preprocessed_sequence_illumina_params (trim_length) VALUES (151);
+INSERT INTO qiita.preprocessed_sequence_illumina_params (trim_length) VALUES (151), (100);
 
 -- Insert processed information for study 0 and processed data 1
 INSERT INTO qiita.processed_data (preprocessed_data_id, processed_params_table, processed_params_id, processed_date) VALUES (1, 'processed_params_uclust', 1, 'Mon Oct 1 09:30:27 2012');
 
 -- Populate the reference table
-INSERT INTO qiita.reference (reference_name, reference_version, sequence_filepath, taxonomy_filepath, tree_filepath) VALUES ('GreenGenes', '4feb2011', '$QIITA_TEST_FOLDER/gg_97_otus_4feb2011.fasta', '$QIITA_TEST_FOLDER/greengenes_tax.txt', '$QIITA_TEST_FOLDER/gg_97_otus_4feb2011.tre');
+INSERT INTO qiita.reference (reference_name, reference_version, sequence_filepath, taxonomy_filepath, tree_filepath) VALUES ('GreenGenes', '4feb2011', 'gg_97_otus_4feb2011.fasta', 'greengenes_tax.txt', 'gg_97_otus_4feb2011.tre');
 
 -- Insert the processed params uclust used for preprocessed data 1
 INSERT INTO qiita.processed_params_uclust (similarity, enable_rev_strand_match, suppress_new_clusters, reference_id) VALUES (0.97, TRUE, TRUE, 1);
 
 -- Insert the biom table filepath for processed data 1
-INSERT INTO qiita.filepath (filepath, filepath_type_id) VALUES ('$QIITA_TEST_FOLDER/study_1001_closed_reference_otu_table.biom', 6);
+INSERT INTO qiita.filepath (filepath, filepath_type_id) VALUES ('study_1001_closed_reference_otu_table.biom', 6);
 
 -- Insert (link) the processed data with the processed filepath
 INSERT INTO qiita.processed_filepath (processed_data_id, filepath_id) VALUES (1, 5);
