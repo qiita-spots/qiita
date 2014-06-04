@@ -341,7 +341,7 @@ class Study(QiitaStatusObject):
         # items() used for py3 compatability
         # build query with data values in correct order for SQL statement
         for key, val in info.items():
-            sql_vals.extend((key, "=", "%s,"))
+            sql_vals.append("{0} = %s".format(key))
             if isinstance(val, QiitaObject):
                 data.append(val.id)
             else:
@@ -349,7 +349,7 @@ class Study(QiitaStatusObject):
         data.append(self._id)
 
         sql = ("UPDATE qiita.{0} SET {1} WHERE "
-               "study_id = %s".format(self._table, ' '.join(sql_vals)[:-1]))
+               "study_id = %s".format(self._table, ','.join(sql_vals)))
         conn_handler.execute(sql, data)
 
         if efo is not None:
