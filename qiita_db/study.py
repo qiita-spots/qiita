@@ -1,5 +1,3 @@
-from __future__ import division
-
 r"""
 Study and StudyPerson objects (:mod:`qiita_db.study`)
 =====================================================
@@ -101,6 +99,7 @@ object while creating the study.
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
+from __future__ import division
 from future.builtins import zip
 from datetime import date
 
