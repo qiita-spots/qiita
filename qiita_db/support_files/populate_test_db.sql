@@ -53,7 +53,7 @@ INSERT INTO qiita.filepath (filepath, filepath_type_id) VALUES ('s_G1_L001_seque
 INSERT INTO qiita.raw_data (filetype_id, submitted_to_insdc) VALUES (2, FALSE), (2, TRUE);
 
 -- Insert (link) the raw data with the raw filepaths
-INSERT INTO qiita.raw_filepath (raw_data_id, filepath_id) VALUES (1, 1), (1, 2), (1, 3), (1, 4);
+INSERT INTO qiita.raw_filepath (raw_data_id, filepath_id) VALUES (1, 1), (1, 2), (2, 3), (2, 4);
 
 -- Insert (link) the study with the raw data
 INSERT INTO qiita.study_raw_data (study_id, raw_data_id) VALUES (1, 1), (1, 2);
@@ -290,7 +290,7 @@ INSERT INTO qiita.study_preprocessed_data (preprocessed_data_id, study_id) VALUE
 INSERT INTO qiita.filepath (filepath, filepath_type_id) VALUES ('seqs.fna', 4), ('seqs.qual', 5);
 
 -- Insert (link) the preprocessed data with the preprocessed filepaths
-INSERT INTO qiita.preprocessed_filepath (preprocessed_data_id, filepath_id) VALUES (1, 3), (1, 4);
+INSERT INTO qiita.preprocessed_filepath (preprocessed_data_id, filepath_id) VALUES (1, 5), (1, 6);
 
 -- Insert the preprocessed illumina params used for raw data 1
 INSERT INTO qiita.preprocessed_sequence_illumina_params (trim_length) VALUES (151), (100);
@@ -308,4 +308,4 @@ INSERT INTO qiita.processed_params_uclust (similarity, enable_rev_strand_match, 
 INSERT INTO qiita.filepath (filepath, filepath_type_id) VALUES ('study_1001_closed_reference_otu_table.biom', 6);
 
 -- Insert (link) the processed data with the processed filepath
-INSERT INTO qiita.processed_filepath (processed_data_id, filepath_id) VALUES (1, 5);
+INSERT INTO qiita.processed_filepath (processed_data_id, filepath_id) VALUES (1, 7);

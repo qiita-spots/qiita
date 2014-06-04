@@ -25,9 +25,9 @@ class BaseDataTests(TestCase):
         self.conn_handler = SQLConnectionHandler()
 
     def test_insert_filepath(self):
-        """Correctly inserts the data on the DB and returns the id"""
+        """Correctly inserts the filepaths on the DB and returns the id"""
         obs = BaseData._insert_filepaths(self.filepaths, self.conn_handler)
-        exp = [6, 7]
+        exp = [8, 9]
         self.assertEqual(obs, exp)
 
     def test_link_data_filepaths(self):
@@ -60,38 +60,42 @@ class RawDataTests(TestCase):
         """Correctly creates all the rows in the DB for the raw data"""
         # Check that the returned object has the correct id
         obs = RawData.create(self.filetype, self.filepaths, self.study)
-        self.assertEqual(obs.id, 2)
+        self.assertEqual(obs.id, 3)
         # Check that the raw data have been correctly added to the DB
         obs = self.conn_handler.execute_fetchone(
-            "SELECT * FROM qiita.raw_data WHERE raw_data_id=2")
+            "SELECT * FROM qiita.raw_data WHERE raw_data_id=3")
         # raw_data_id, filetype, submitted_to_insdc
-        self.assertEqual(obs, [2, 2, False])
+        self.assertEqual(obs, [3, 2, False])
         # Check that the raw data have been correctly linked with the study
         obs = self.conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.study_raw_data WHERE raw_data_id=2")
+            "SELECT * FROM qiita.study_raw_data WHERE raw_data_id=3")
         # study_id , raw_data_id
-        self.assertEqual(obs, [[1, 2]])
+        self.assertEqual(obs, [[1, 3]])
         # Check that the filepaths have been correctly added to the DB
         obs = self.conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.filepath WHERE filepath_id=6 or "
-            "filepath_id=7")
+            "SELECT * FROM qiita.filepath WHERE filepath_id=8 or "
+            "filepath_id=9")
         # filepath_id, path, filepath_type_id
-        exp = [[6, 'foo/seq.fastq', 1], [7, 'foo/bar.fastq', 2]]
+        exp = [[8, 'foo/seq.fastq', 1], [9, 'foo/bar.fastq', 2]]
         self.assertEqual(obs, exp)
         # Check that the raw data have been correctly linked with the filepaths
         obs = self.conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.raw_filepath WHERE raw_data_id=2")
+            "SELECT * FROM qiita.raw_filepath WHERE raw_data_id=3")
         # raw_data_id, filepath_id
-        self.assertEqual(obs, [[2, 6], [2, 7]])
+        self.assertEqual(obs, [[3, 8], [3, 9]])
 
     def test_is_submitted_to_insdc(self):
         """is_submitted_to_insdc works correctly"""
         # False case
         rd = RawData.create(self.filetype, self.filepaths, self.study)
         self.assertFalse(rd.is_submitted_to_insdc())
+        rd = RawData(1)
+        self.assertFalse(rd.is_submitted_to_insdc())
         # True case
         rd = RawData.create(self.filetype, self.filepaths, self.study,
                             submitted_to_insdc=True)
+        self.assertTrue(rd.is_submitted_to_insdc())
+        rd = RawData(2)
         self.assertTrue(rd.is_submitted_to_insdc())
 
     def test_get_filepaths(self):
@@ -121,34 +125,33 @@ class PreprocessedDataTests(TestCase):
         self.filepaths = [('foo/seq.fna', 4), ('foo/bar.qual', 5)]
 
     def test_create(self):
-        """Correctly creates all the rows in the DB for the preprocessed
-        data"""
+        """Correctly creates all the rows in the DB for preprocessed data"""
         # Check that the returned object has the correct id
         obs = PreprocessedData.create(self.raw_data, self.params_table,
                                       self.params_id, self.filepaths)
-        self.assertEqual(obs.id, 2)
+        self.assertEqual(obs.id, 3)
         # Check that the preprocessed data have been correctly added to the DB
         obs = self.conn_handler.execute_fetchone(
             "SELECT * FROM qiita.preprocessed_data WHERE "
-            "preprocessed_data_id=2")
+            "preprocessed_data_id=3")
         # preprocessed_data_id, raw_data_id, preprocessed_params_tables,
         # preprocessed_params_id
-        exp = [2, 1, "preprocessed_sequence_illumina_params", 1]
+        exp = [3, 1, "preprocessed_sequence_illumina_params", 1]
         self.assertEqual(obs, exp)
         # Check that the filepaths have been correctly added to the DB
         obs = self.conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.filepath WHERE filepath_id=6 or "
-            "filepath_id=7")
+            "SELECT * FROM qiita.filepath WHERE filepath_id=8 or "
+            "filepath_id=9")
         # filepath_id, path, filepath_type_id
-        exp = [[6, 'foo/seq.fna', 4], [7, 'foo/bar.qual', 5]]
+        exp = [[8, 'foo/seq.fna', 4], [9, 'foo/bar.qual', 5]]
         self.assertEqual(obs, exp)
         # Check that the preprocessed data have been correctly
         # linked with the filepaths
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.preprocessed_filepath WHERE "
-            "preprocessed_data_id=2")
+            "preprocessed_data_id=3")
         # preprocessed_data_id, filepath_id
-        self.assertEqual(obs, [[2, 6], [2, 7]])
+        self.assertEqual(obs, [[3, 8], [3, 9]])
 
     def test_create_error(self):
         """Raises an error if the preprocessed_params_table does not exists"""
@@ -206,16 +209,16 @@ class ProcessedDataTests(TestCase):
         self.assertEqual(obs, exp)
         # Check that the filepaths have been correctly added to the DB
         obs = self.conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.filepath WHERE filepath_id=6")
+            "SELECT * FROM qiita.filepath WHERE filepath_id=8")
         # Filepath_id, path, filepath_type_id
-        exp = [[6, 'foo/table.biom', 6]]
+        exp = [[8, 'foo/table.biom', 6]]
         self.assertEqual(obs, exp)
         # Check that the processed data have been correctly linked
         # with the fileapths
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.processed_filepath WHERE processed_data_id=2")
         # processed_data_id, filepath_id
-        self.assertTrue(obs, [[2, 6]])
+        self.assertTrue(obs, [[2, 8]])
 
     def test_create_params_table_error(self):
         """Raises an error ig the processed_params_table does not exists"""
@@ -231,7 +234,7 @@ class ProcessedDataTests(TestCase):
                                  self.params_id, self.filepaths)
 
     def test_get_filepath(self):
-        """Correctly return the filepaths to the preprocessed files"""
+        """Correctly returns the filepaths to the processed files"""
         # check the test data
         pd = ProcessedData(1)
         obs = pd.get_filepaths()
