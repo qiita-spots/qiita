@@ -100,8 +100,10 @@ object while creating the study.
 #
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
-
-from future_builtins import zip
+try:
+    from itertools import izip as zip
+except ImportError:  # Python 3 so ignore
+    pass
 from datetime import date
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
