@@ -16,7 +16,6 @@ from qiita_db.exceptions import QiitaDBColumnError
 
 @qiita_test_checker()
 class DBUtilTests(TestCase):
-
     def setUp(self):
         self.conn_handler = SQLConnectionHandler()
         self.table = 'study'
