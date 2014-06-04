@@ -148,8 +148,8 @@ class Study(QiitaStatusObject):
 
     Notes
     -----
-    All setters raise QiitaDBStatusError if trying to change a public study. You
-    should not be doing that.
+    All setters raise QiitaDBStatusError if trying to change a public study.
+    You should not be doing that.
     """
     _table = "study"
 
