@@ -23,7 +23,6 @@ Classes
 # -----------------------------------------------------------------------------
 
 from future.builtins import zip
-from string import lower
 
 from .base import QiitaStatusObject
 from .exceptions import QiitaDBNotImplementedError
@@ -114,7 +113,7 @@ class MetadataTemplate(QiitaStatusObject):
                                       " values ('" + str(study_id) +
                                       "', %s, %s)")
         # The column names should be lowercase and quoted
-        quoted_lc_headers = [quote_data_value(lower(h)) for h in headers]
+        quoted_lc_headers = [quote_data_value(h.lower()) for h in headers]
         # Pair up the column names with its datatype
         sql_args_list = [(column_name, datatype) for column_name, datatype in
                          zip(quoted_lc_headers, datatypes)]
