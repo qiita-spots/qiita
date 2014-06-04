@@ -45,8 +45,16 @@ class TestStudyPerson(TestCase):
     def test_retrieve_name(self):
         self.assertEqual(self.studyperson.name, 'LabDude')
 
+    def test_set_name_fail(self):
+        with self.assertRaises(AttributeError):
+            self.studyperson.name = 'Fail Dude'
+
     def test_retrieve_email(self):
         self.assertEqual(self.studyperson.email, 'lab_dude@foo.bar')
+
+    def test_set_email_fail(self):
+        with self.assertRaises(AttributeError):
+            self.studyperson.email = 'faildude@foo.bar'
 
     def test_retrieve_address(self):
         self.assertEqual(self.studyperson.address, '123 lab street')
@@ -88,8 +96,8 @@ class TestStudy(TestCase):
             "study_alias": "FCM",
             "study_description": ("Microbiome of people who eat nothing but "
                                   "fried chicken"),
-            "study_abstract": ("We wanted to see if we could get funding for "
-                               "giving people heart attacks"),
+            "study_abstract": ("Exploring how a high fat diet changes the "
+                               "gut microbiome"),
             "emp_person_id": StudyPerson(2),
             "principal_investigator_id": StudyPerson(3),
             "lab_person_id": StudyPerson(1)
@@ -140,8 +148,8 @@ class TestStudy(TestCase):
                'funding': None, 'vamps_id': None,
                'first_contact': date.today().strftime("%B %d, %Y"),
                'principal_investigator_id': 3, 'timeseries_type_id': 1,
-               'study_abstract': ('We wanted to see if we could get funding '
-                                  'for giving people heart attacks'),
+               'study_abstract': ('Exploring how a high fat diet changes the '
+                                  'gut microbiome'),
                'email': 'test@foo.bar', 'spatial_series': None,
                'study_description': ('Microbiome of people who eat nothing but'
                                      ' fried chicken'),
@@ -187,8 +195,8 @@ class TestStudy(TestCase):
                'funding': 'FundAgency', 'vamps_id': 'MBE_1111111',
                'first_contact': date.today().strftime("%B %d, %Y"),
                'principal_investigator_id': 3, 'timeseries_type_id': 1,
-               'study_abstract': ('We wanted to see if we could get funding '
-                                  'for giving people heart attacks'),
+               'study_abstract': ('Exploring how a high fat diet changes the '
+                                  'gut microbiome'),
                'email': 'test@foo.bar', 'spatial_series': True,
                'study_description': ('Microbiome of people who eat nothing '
                                      'but fried chicken'),
@@ -199,47 +207,43 @@ class TestStudy(TestCase):
         conn = SQLConnectionHandler()
         obsins = dict(conn.execute_fetchone("SELECT * FROM qiita.study WHERE "
                                             "study_id = 2"))
-        for thing, val in exp.iteritems():
-            if val != obsins[thing]:
-                print thing, val, obsins[thing]
         self.assertEqual(obsins, exp)
 
         # make sure EFO went in to table correctly
-        efo = conn.execute_fetchall("SELECT efo_id FROM "
-                                    "qiita.study_experimental_factor WHERE "
-                                    "study_id = 2")
-        obsefo = [x[0] for x in efo]
-        self.assertEqual(obsefo, [1])
+        obsefo = conn.execute_fetchall("SELECT efo_id FROM "
+                                       "qiita.study_experimental_factor WHERE "
+                                       "study_id = 2")
+        self.assertEqual(obsefo, [[1]])
 
     def test_create_missing_requred(self):
         """ Insert a study that is missing a required info key"""
         self.info.pop("study_title")
-        self.assertRaises(QiitaDBColumnError, Study.create,
-                          User('test@foo.bar'), self.info)
+        with self.assertRaises(QiitaDBColumnError):
+            Study.create(User('test@foo.bar'), self.info)
 
     def test_create_study_id(self):
         """Insert a study with study_id present"""
         self.info.update({"study_id": 1})
-        self.assertRaises(IncompetentQiitaDeveloperError, Study.create,
-                          User('test@foo.bar'), self.info)
+        with self.assertRaises(IncompetentQiitaDeveloperError):
+            Study.create(User('test@foo.bar'), self.info)
 
     def test_create_study_status(self):
         """Insert a study with status present"""
         self.info.update({"study_status_id": 1})
-        self.assertRaises(IncompetentQiitaDeveloperError, Study.create,
-                          User('test@foo.bar'), self.info)
+        with self.assertRaises(IncompetentQiitaDeveloperError):
+            Study.create(User('test@foo.bar'), self.info)
 
     def test_create_no_efo(self):
         """Insert a study no experimental factors passed"""
         self.info.pop("study_experimental_factor")
-        self.assertRaises(QiitaDBColumnError, Study.create, 'test@foo.bar',
-                          self.info)
+        with self.assertRaises(QiitaDBColumnError):
+            Study.create('test@foo.bar', self.info)
 
     def test_create_unknown_db_col(self):
         """ Insert a study with an info key not in the database"""
         self.info["SHOULDNOTBEHERE"] = "BWAHAHAHAHAHA"
-        self.assertRaises(QiitaDBColumnError, Study.create,
-                          User('test@foo.bar'), self.info)
+        with self.assertRaises(QiitaDBColumnError):
+            Study.create(User('test@foo.bar'), self.info)
 
     def test_retrieve_title(self):
         self.assertEqual(self.study.title, 'Identification of the Microbiomes'

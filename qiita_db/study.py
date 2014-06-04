@@ -297,15 +297,9 @@ class Study(QiitaStatusObject):
 
         # Convert everything from ids to objects
         info['email'] = User(info['email'])
-        if info['principal_investigator_id'] is not None:
-            info['principal_investigator_id'] = StudyPerson(
-                info['principal_investigator_id'])
-        if info['lab_person_id'] is not None:
-            info['lab_person_id'] = StudyPerson(
-                info['lab_person_id'])
-        if info['emp_person_id'] is not None:
-            info['emp_person_id'] = StudyPerson(
-                info['emp_person_id'])
+        info.update({k: StudyPerson(info[k]) for k in
+                    ['principal_investigator_id', 'lab_person_id',
+                    'emp_person_id'] if info[k] is not None})
         # remove id and status since not needed
         info.pop("study_id")
         info.pop("study_status_id")
@@ -358,7 +352,7 @@ class Study(QiitaStatusObject):
                "study_id = %s".format(self._table, ' '.join(sql_vals)[:-1]))
         conn_handler.execute(sql, data)
 
-        if efo:
+        if efo is not None:
             # insert efo information into database
             sql = ("INSERT INTO qiita.{0}_experimental_factor (study_id, "
                    "efo_id) VALUES (%s, %s)".format(self._table))
