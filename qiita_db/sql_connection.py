@@ -40,7 +40,7 @@ class SQLConnectionHandler(object):
         try:
             with self._connection.cursor(cursor_factory=DictCursor) as cur:
                 yield cur
-        except PostgresError, e:
+        except PostgresError as e:
             raise QiitaDBConnectionError("Cannot get postgres cursor! %s" % e)
 
     def _check_sql_args(self, sql_args):
@@ -96,7 +96,7 @@ class SQLConnectionHandler(object):
                     cur.execute(sql, sql_args)
                 yield cur
                 self._connection.commit()
-            except PostgresError, e:
+            except PostgresError as e:
                 self._connection.rollback()
                 try:
                     err_sql = cur.mogrify(sql, sql_args)

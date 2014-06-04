@@ -1,12 +1,24 @@
 language: python
-python:
-  - "2.7"
+env:
+  - PYTHON_VERSION=3.4
+  - PYTHON_VERSION=2.7
+before_install:
+  - wget http://repo.continuum.io/miniconda/Miniconda-2.2.2-Linux-x86_64.sh -O miniconda.sh
+  - chmod +x miniconda.sh
+  - ./miniconda.sh -b
+  - export PATH=/home/travis/anaconda/bin:$PATH
+  # Update conda itself
+  - conda update --yes conda
 install:
+  - conda create --yes -n env_name python=$PYTHON_VERSION pip nose pep8
+  - source activate env_name
+  - pip 
   - pip install coveralls
   - pip install .
 script:
   - qiita_db make_test_env
-  - nosetests
+  - nosetests --with-doctest
+  - pep8 qiita_db qiita_core qiita_pet setup.py
   # we need to run the test suite from setup.py for coveralls to grab the info
   - coverage run setup.py test
   - coverage report -m

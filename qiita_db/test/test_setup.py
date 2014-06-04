@@ -47,16 +47,16 @@ class SetupTest(TestCase):
         self._check_count("qiita.study_experimental_factor", 1)
 
     def test_filepath(self):
-        self._check_count("qiita.filepath", 5)
+        self._check_count("qiita.filepath", 7)
 
     def test_raw_data(self):
-        self._check_count("qiita.raw_data", 1)
+        self._check_count("qiita.raw_data", 2)
 
     def test_raw_filepath(self):
-        self._check_count("qiita.raw_filepath", 2)
+        self._check_count("qiita.raw_filepath", 4)
 
     def test_study_raw_data(self):
-        self._check_count("qiita.study_raw_data", 1)
+        self._check_count("qiita.study_raw_data", 2)
 
     def test_required_sample_info(self):
         self._check_count("qiita.required_sample_info", 27)
@@ -77,16 +77,16 @@ class SetupTest(TestCase):
         self._check_count("qiita.prep_1", 27)
 
     def test_preprocessed_data(self):
-        self._check_count("qiita.preprocessed_data", 1)
+        self._check_count("qiita.preprocessed_data", 2)
 
     def test_study_preprocessed_data(self):
-        self._check_count("qiita.study_preprocessed_data", 1)
+        self._check_count("qiita.study_preprocessed_data", 2)
 
     def test_preprocessed_filepath(self):
         self._check_count("qiita.preprocessed_filepath", 2)
 
     def test_preprocessed_sequence_illumina_params(self):
-        self._check_count("qiita.preprocessed_sequence_illumina_params", 1)
+        self._check_count("qiita.preprocessed_sequence_illumina_params", 2)
 
     def test_processed_data(self):
         self._check_count("qiita.processed_data", 1)

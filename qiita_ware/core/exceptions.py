@@ -9,7 +9,7 @@ from __future__ import division
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
-from qiita.core.exceptions import QiitaError
+from qiita_core.exceptions import QiitaError
 
 
 class QiitaWareError(QiitaError):
