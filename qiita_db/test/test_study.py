@@ -330,10 +330,11 @@ class TestStudy(TestCase):
         self.assertEqual(self.study.metadata, SampleTemplate(1))
 
     def test_retrieve_raw_data(self):
-        self.assertEqual(self.study.raw_data, [RawData(1)])
+        self.assertEqual(self.study.raw_data, [RawData(1), RawData(2)])
 
     def test_retrieve_preprocessed_data(self):
-        self.assertEqual(self.study.preprocessed_data, [PreprocessedData(1)])
+        self.assertEqual(self.study.preprocessed_data, [PreprocessedData(1),
+                                                        PreprocessedData(2)])
 
     def test_retrieve_processed_data(self):
         self.assertEqual(self.study.processed_data, [ProcessedData(1)])
