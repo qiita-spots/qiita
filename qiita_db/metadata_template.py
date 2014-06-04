@@ -22,8 +22,7 @@ Classes
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
-from itertools import izip
-from string import lower
+from future.builtins import zip
 
 from .base import QiitaStatusObject
 from .exceptions import QiitaDBNotImplementedError
@@ -100,7 +99,7 @@ class MetadataTemplate(QiitaStatusObject):
 
         # Get the column names paired with its datatype for SQL
         columns = []
-        for column_name, datatype in izip(sql_safe_column_names, datatypes):
+        for column_name, datatype in zip(sql_safe_column_names, datatypes):
             columns.append('%s %s' % (column_name, datatype))
         # Get the columns in a comma-separated string
         columns = ", ".join(columns)
@@ -114,10 +113,10 @@ class MetadataTemplate(QiitaStatusObject):
                                       " values ('" + str(study_id) +
                                       "', %s, %s)")
         # The column names should be lowercase and quoted
-        quoted_lc_headers = [quote_data_value(lower(h)) for h in headers]
+        quoted_lc_headers = [quote_data_value(h.lower()) for h in headers]
         # Pair up the column names with its datatype
         sql_args_list = [(column_name, datatype) for column_name, datatype in
-                         izip(quoted_lc_headers, datatypes)]
+                         zip(quoted_lc_headers, datatypes)]
         conn_handler.executemany(column_tables_sql_template,
                                  sql_args_list)
 
