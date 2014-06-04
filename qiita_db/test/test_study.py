@@ -8,7 +8,8 @@ from qiita_db.investigation import Investigation
 from qiita_db.data import PreprocessedData, RawData, ProcessedData
 from qiita_db.metadata_template import SampleTemplate
 from qiita_db.user import User
-from qiita_db.exceptions import QiitaDBExecutionError, QiitaDBColumnError
+from qiita_db.exceptions import (QiitaDBExecutionError, QiitaDBColumnError,
+                                 QiitaDBStatusError)
 from qiita_db.sql_connection import SQLConnectionHandler
 
 # -----------------------------------------------------------------------------
@@ -250,8 +251,14 @@ class TestStudy(TestCase):
                          ' for Cannabis Soils')
 
     def test_set_title(self):
+        self.study.status = 1
         self.study.title = "Weed Soils"
         self.assertEqual(self.study.title, "Weed Soils")
+
+    def test_set_title_public(self):
+        """Tests for fail if editing title of a public study"""
+        with self.assertRaises(QiitaDBStatusError):
+            self.study.title = "Weed Soils"
 
     def test_retrieve_info(self):
         self.assertEqual(self.study.info, self.weedexp)
@@ -270,8 +277,14 @@ class TestStudy(TestCase):
         self.weedexp.update(newinfo)
         # Fix study_experimental_factor since update wipes out the 1
         self.weedexp['study_experimental_factor'] = [1, 3]
+        self.study.status = 1
         self.study.info = newinfo
         self.assertEqual(self.study.info, self.weedexp)
+
+    def test_set_tinfo_public(self):
+        """Tests for fail if editing info of a public study"""
+        with self.assertRaises(QiitaDBStatusError):
+            self.study.title = "Weed Soils"
 
     def test_set_info_efo_list(self):
         """Set info with list efo_id"""
@@ -287,10 +300,12 @@ class TestStudy(TestCase):
         self.weedexp.update(newinfo)
         # Fix study_experimental_factor since update wipes out the 1
         self.weedexp['study_experimental_factor'] = [1, 3, 4]
+        self.study.status = 1
         self.study.info = newinfo
         self.assertEqual(self.study.info, self.weedexp)
 
     def test_info_empty(self):
+        self.study.status = 1
         with self.assertRaises(IncompetentQiitaDeveloperError):
             self.study.info = {}
 

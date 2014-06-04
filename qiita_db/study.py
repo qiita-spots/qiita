@@ -106,7 +106,7 @@ from datetime import date
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from .base import QiitaStatusObject, QiitaObject
 from .exceptions import (QiitaDBColumnError, QiitaDBNotImplementedError,
-                         QiitaDBExecutionError)
+                         QiitaDBExecutionError, QiitaDBStatusError)
 from .data import RawData, PreprocessedData, ProcessedData
 from .user import User
 from .investigation import Investigation
@@ -145,6 +145,11 @@ class Study(QiitaStatusObject):
     -------
     share_with
     add_pmid
+
+    Notes
+    -----
+    All setters raise QiitaDBStatusError if trying to change a public study. You
+    should not be doing that.
     """
     _table = "study"
 
@@ -250,6 +255,17 @@ class Study(QiitaStatusObject):
         raise QiitaDBNotImplementedError()
 
 # --- Attributes ---
+    def _lock_public(self):
+        """Locks a study if it is public
+
+        Raises
+        ------
+        QiitaDBStatusError
+            study is public
+        """
+        if self.status == 2:
+            raise QiitaDBStatusError("Can't edit public study!")
+
     @property
     def title(self):
         """Returns the title of the study
@@ -273,6 +289,7 @@ class Study(QiitaStatusObject):
         title : str
             The new study title
         """
+        self._lock_public()
         conn_handler = SQLConnectionHandler()
         sql = ("UPDATE qiita.{0} SET study_title = %s WHERE "
                "study_id = %s".format(self._table))
@@ -321,6 +338,7 @@ class Study(QiitaStatusObject):
         QiitaDBColumnError
             Unknown column names passed
         """
+        self._lock_public()
         if len(info) < 1:
             raise IncompetentQiitaDeveloperError("Need entries in info dict!")
 
@@ -380,6 +398,10 @@ class Study(QiitaStatusObject):
         ----------
         status_id: int
             ID for the new status
+
+        Notes
+        -----
+        You can still change this even when a study is public. BE CAREFUL!
         """
         conn_handler = SQLConnectionHandler()
         sql = ("UPDATE qiita.{0} SET study_status_id = %s WHERE "
@@ -398,8 +420,8 @@ class Study(QiitaStatusObject):
         conn_handler = SQLConnectionHandler()
         sql = ("SELECT email FROM qiita.{0}_users WHERE "
                "study_id = %s".format(self._table))
-        users = [x[0] for x in conn_handler.execute_fetchall(sql, (self._id,))]
-        return [User(email) for email in users]
+        return [User(x[0]) for x in conn_handler.execute_fetchall(sql,
+                                                                  (self._id,))]
 
     @property
     def pmids(self):
