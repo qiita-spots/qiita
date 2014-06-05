@@ -64,7 +64,7 @@ class QiitaObject(object):
 
     @classmethod
     def create(cls):
-        """Creates a new object with a new id on the storage system
+        r"""Creates a new object with a new id on the storage system
 
         Raises
         ------
@@ -74,7 +74,7 @@ class QiitaObject(object):
         raise QiitaDBNotImplementedError()
 
     def delete(id_):
-        """Deletes the object `id_` from the storage system
+        r"""Deletes the object `id_` from the storage system
 
         Parameters
         ----------
@@ -90,7 +90,7 @@ class QiitaObject(object):
 
     @classmethod
     def exists(cls):
-        """Checks if a given object info is already present on the DB
+        r"""Checks if a given object info is already present on the DB
 
         Raises
         ------
@@ -100,7 +100,7 @@ class QiitaObject(object):
         raise QiitaDBNotImplementedError()
 
     def _check_subclass(self):
-        """Check that we are not calling a function that needs to access the
+        r"""Check that we are not calling a function that needs to access the
         database from the base class
 
         Raises
@@ -113,7 +113,7 @@ class QiitaObject(object):
                 "Could not instantiate an object of the base class")
 
     def _check_id(self, id_, conn_handler=None):
-        """Check that the provided ID actually exists on the database
+        r"""Check that the provided ID actually exists on the database
 
         Parameters
         ----------
@@ -139,7 +139,7 @@ class QiitaObject(object):
             "{0}_id=%s)".format(self._table), (id_, ))[0]
 
     def __init__(self, id_):
-        """Initializes the object
+        r"""Initializes the object
 
         Parameters
         ----------
@@ -156,7 +156,7 @@ class QiitaObject(object):
         self._id = id_
 
     def __eq__(self, other):
-        """Self and other are equal based on type and database id"""
+        r"""Self and other are equal based on type and database id"""
         if type(self) != type(other):
             return False
         if other._id != self._id:
@@ -164,17 +164,17 @@ class QiitaObject(object):
         return True
 
     def __ne__(self, other):
-        """Self and other are not equal based on type and database id"""
+        r"""Self and other are not equal based on type and database id"""
         return not self.__eq__(other)
 
     @property
     def id(self):
-        """The object id on the storage system"""
+        r"""The object id on the storage system"""
         return self._id
 
 
 class QiitaStatusObject(QiitaObject):
-    """Base class for any qiita_db object with a status property
+    r"""Base class for any qiita_db object with a status property
 
     Attributes
     ----------
@@ -188,7 +188,7 @@ class QiitaStatusObject(QiitaObject):
 
     @property
     def status(self):
-        """String with the current status of the analysis"""
+        r"""String with the current status of the analysis"""
         # Check that self._table is actually defined
         self._check_subclass()
 
@@ -201,14 +201,14 @@ class QiitaStatusObject(QiitaObject):
             (self._id, ))[0]
 
     def _status_setter_checks(self):
-        """Perform any extra checks that needed to be done before setting the
+        r"""Perform any extra checks that needed to be done before setting the
         object status on the database. Should be overwritten by the subclasses
         """
         raise QiitaDBNotImplementedError()
 
     @status.setter
     def status(self, status):
-        """Change the status of the analysis
+        r"""Change the status of the analysis
 
         Parameters
         ----------
@@ -229,7 +229,7 @@ class QiitaStatusObject(QiitaObject):
             "WHERE {0}_id = %s".format(self._table), (status, self._id))
 
     def check_status(self, status, exclude=False, conn_handler=None):
-        """Checks status of object.
+        r"""Checks status of object.
 
         Parameters
         ----------
