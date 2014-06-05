@@ -1,6 +1,3 @@
-#!/usr/bin/env python
-from __future__ import division
-
 # -----------------------------------------------------------------------------
 # Copyright (c) 2014--, The Qiita Development Team.
 #
@@ -8,6 +5,10 @@ from __future__ import division
 #
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
+
+from __future__ import division
+
+from qiita_db.sql_connection import SQLConnectionHandler
 
 
 def quote_column_name(c):
@@ -83,3 +84,17 @@ def exists_dynamic_table(table, prefix, suffix, conn_handler):
     """
     return (table.startswith(prefix) and table.endswith(suffix) and
             exists_table(table, conn_handler))
+
+
+def get_db_files_base_dir(conn_handler=None):
+    """Returns the path to the base directory of all db files
+
+    Returns
+    -------
+    str
+        The path to the base directory of all db files
+    """
+    conn_handler = (conn_handler if conn_handler is not None
+                    else SQLConnectionHandler())
+    return conn_handler.execute_fetchone(
+        "SELECT base_data_dir FROM settings")[0]

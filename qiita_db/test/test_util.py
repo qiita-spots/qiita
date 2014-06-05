@@ -7,10 +7,12 @@
 # -----------------------------------------------------------------------------
 
 from unittest import TestCase, main
+from os.path import dirname, abspath, join
 
 from qiita_core.util import qiita_test_checker
-from qiita_db.util import exists_table, exists_dynamic_table
 from qiita_db.sql_connection import SQLConnectionHandler
+from qiita_db.util import (exists_table, exists_dynamic_table,
+                           get_db_files_base_dir)
 
 
 @qiita_test_checker()
@@ -59,6 +61,14 @@ class DBUtilTests(TestCase):
         self.assertFalse(exists_dynamic_table(
             "foo", "preprocessed_", "_params",
             self.conn_handler))
+
+    def test_get_db_files_base_dir(self):
+        """Correctly returns the base directory of all db files"""
+        exp = join(dirname(dirname(abspath(__file__))),
+                   'support_files', 'test_data')
+        self.assertEqual(get_db_files_base_dir(), exp)
+        self.assertEqual(get_db_files_base_dir(conn_handler=self.conn_handler),
+                         exp)
 
 if __name__ == '__main__':
     main()
