@@ -8,105 +8,167 @@
 
 from unittest import TestCase, main
 
+from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_core.util import qiita_test_checker
-from qiita_db.base import QiitaStatusObject, QiitaObject
-from qiita_db.exceptions import QiitaDBStatusError
+from qiita_db.base import QiitaObject, QiitaStatusObject
+from qiita_db.exceptions import QiitaDBObjectDoesNotExistsError
+from qiita_db.data import RawData
+from qiita_db.study import Study
+from qiita_db.sql_connection import SQLConnectionHandler
 
 
+@qiita_test_checker()
 class QiitaBaseTest(TestCase):
     """Tests that the base class functions act correctly"""
 
     def setUp(self):
-        self.tester = QiitaObject(1)
+        # We need an actual subclass in order to test the equality functions
+        self.tester = RawData(1)
+
+    def test_init_base_error(self):
+        """Raises an error when instantiating a base class directly"""
+        with self.assertRaises(IncompetentQiitaDeveloperError):
+            QiitaObject(1)
+
+    def test_init_error_inexistent(self):
+        """Raises an error when instantiating an object that does not exists"""
+        with self.assertRaises(QiitaDBObjectDoesNotExistsError):
+            RawData(10)
+
+    def test_check_subclass(self):
+        """Nothing happens if check_subclass called from a subclass"""
+        self.tester._check_subclass()
+
+    def test_check_subclass_error(self):
+        """check_subclass raises an error if called from a base class"""
+        # Checked through the __init__ call
+        with self.assertRaises(IncompetentQiitaDeveloperError):
+            QiitaObject(1)
+        with self.assertRaises(IncompetentQiitaDeveloperError):
+            QiitaStatusObject(1)
+
+    def test_check_id(self):
+        """Correctly checks if an id exists on the database"""
+        self.assertTrue(self.tester._check_id(1))
+        self.assertFalse(self.tester._check_id(100))
 
     def test_equal_self(self):
+        """Equality works with the same object"""
         self.assertEqual(self.tester, self.tester)
 
     def test_equal(self):
-        new = QiitaObject(1)
+        """Equality works with two objects pointing to the same instance"""
+        new = RawData(1)
         self.assertEqual(self.tester, new)
 
     def test_not_equal(self):
-        new = QiitaObject(3)
+        """Not equals works with object of the same type"""
+        new = RawData(2)
         self.assertNotEqual(self.tester, new)
 
     def test_not_equal_type(self):
-        new = QiitaStatusObject(1)
+        """Not equals works with object of different type"""
+        new = Study(1)
         self.assertNotEqual(self.tester, new)
 
 
 @qiita_test_checker()
-class QiitaStatusDecoratorTest(TestCase):
-    """Tests that the status decorator works correctly"""
+class QiitaStatusObjectTest(TestCase):
+    """Tests that the QittaStatusObject class functions act correctly"""
 
     def setUp(self):
-        self.tester = QiitaStatusObject(1)
-        self.tester._table = "study"
+        # We need an actual subclass in order to test the equality functions
+        self.tester = Study(1)
+        self.conn_handler = SQLConnectionHandler()
+
+    def test_status(self):
+        """Correctly returns the status of the object"""
+        self.assertEqual(self.tester.status, "public")
 
     def test_check_status_single(self):
-        @self.tester.check_status("public")
-        def tf(string):
-            return string
-
-        obs = tf("Ran")
-        self.assertEqual(obs, "Ran")
+        """check_status works passing a single status"""
+        self.assertTrue(self.tester.check_status(["public"]))
+        self.assertTrue(self.tester.check_status(["public"],
+                        conn_handler=self.conn_handler))
+        self.assertFalse(self.tester.check_status(["private"]))
+        self.assertFalse(self.tester.check_status(["private"],
+                         conn_handler=self.conn_handler))
 
     def test_check_status_exclude_single(self):
-        @self.tester.check_status("private", exclude=True)
-        def tf(string):
-            return string
+        """check_status works passing a single status and the exclude flag"""
+        self.assertTrue(self.tester.check_status(["private"], exclude=True))
+        self.assertTrue(self.tester.check_status(["private"], exclude=True,
+                        conn_handler=self.conn_handler))
+        self.assertFalse(self.tester.check_status(["public"], exclude=True))
+        self.assertFalse(self.tester.check_status(["public"], exclude=True,
+                         conn_handler=self.conn_handler))
 
     def test_check_status_list(self):
-        @self.tester.check_status(("public", "waiting_approval"))
-        def tf(string):
-            return string
-
-        obs = tf("Ran")
-        self.assertEqual(obs, "Ran")
+        """check_status work passing a list of status"""
+        self.assertTrue(self.tester.check_status(
+            ["public", "waiting_approval"]))
+        self.assertTrue(self.tester.check_status(
+            ["public", "waiting_approval"], conn_handler=self.conn_handler))
+        self.assertFalse(self.tester.check_status(
+            ["private", "waiting_approval"]))
+        self.assertFalse(self.tester.check_status(
+            ["private", "waiting_approval"], conn_handler=self.conn_handler))
 
     def test_check_status_exclude_list(self):
-        @self.tester.check_status(("private", "waiting_approval"),
-                                  exclude=True)
-        def tf(string):
-            return string
-
-        obs = tf("Ran again")
-        self.assertEqual(obs, "Ran again")
-
-    def test_check_status_stops_run_single(self):
-        @self.tester.check_status("waiting_approval")
-        def tf(string):
-            return string
-        with self.assertRaises(QiitaDBStatusError):
-            tf("FAIL")
-
-    def test_check_status_exclude_stops_run_single(self):
-        @self.tester.check_status("public", exclude=True)
-        def tf(string):
-            return string
-        with self.assertRaises(QiitaDBStatusError):
-            tf("FAIL")
-
-    def test_check_status_stops_run_list(self):
-        @self.tester.check_status(("waiting_approval", "private"))
-        def tf(string):
-            return string
-        with self.assertRaises(QiitaDBStatusError):
-            tf("FAIL")
-
-    def test_check_status_exclude_stops_run_list(self):
-        @self.tester.check_status(("public", "private"), exclude=True)
-        def tf(string):
-            return string
-        with self.assertRaises(QiitaDBStatusError):
-            tf("FAIL")
+        """check_status work passing a list of status and the exclude flag"""
+        self.assertTrue(self.tester.check_status(
+            ["private", "waiting_approval"], exclude=True))
+        self.assertTrue(self.tester.check_status(
+            ["private", "waiting_approval"], exclude=True,
+            conn_handler=self.conn_handler))
+        self.assertFalse(self.tester.check_status(
+            ["public", "waiting_approval"], exclude=True))
+        self.assertFalse(self.tester.check_status(
+            ["public", "waiting_approval"], exclude=True,
+            conn_handler=self.conn_handler))
 
     def test_check_status_unknown_status(self):
-        @self.tester.check_status("football")
-        def tf(string):
-            return string
+        """check_status raises an error if an invalid status is provided"""
         with self.assertRaises(ValueError):
-            tf("FAIL")
+            self.tester.check_status(["foo"])
+
+        with self.assertRaises(ValueError):
+            self.tester.check_status(["foo"], exclude=True)
+
+        with self.assertRaises(ValueError):
+            self.tester.check_status(["foo"], conn_handler=self.conn_handler)
+
+        with self.assertRaises(ValueError):
+            self.tester.check_status(["foo"], exclude=True,
+                                     conn_handler=self.conn_handler)
+
+        with self.assertRaises(ValueError):
+            self.tester.check_status(["foo", "public"])
+
+        with self.assertRaises(ValueError):
+            self.tester.check_status(["foo", "public"], exclude=True)
+
+        with self.assertRaises(ValueError):
+            self.tester.check_status(["foo", "public"],
+                                     conn_handler=self.conn_handler)
+
+        with self.assertRaises(ValueError):
+            self.tester.check_status(["foo", "public"], exclude=True,
+                                     conn_handler=self.conn_handler)
+
+        with self.assertRaises(ValueError):
+            self.tester.check_status(["foo", "bar"])
+
+        with self.assertRaises(ValueError):
+            self.tester.check_status(["foo", "bar"], exclude=True)
+
+        with self.assertRaises(ValueError):
+            self.tester.check_status(["foo", "bar"],
+                                     conn_handler=self.conn_handler)
+
+        with self.assertRaises(ValueError):
+            self.tester.check_status(["foo", "bar"], exclude=True,
+                                     conn_handler=self.conn_handler)
 
 if __name__ == '__main__':
     main()

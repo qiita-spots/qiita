@@ -2,7 +2,7 @@ from .base import QiitaStatusObject
 
 
 class RawData(QiitaStatusObject):
-    pass
+    _table = "raw_data"
 
 
 class PreprocessedData(QiitaStatusObject):

@@ -1,18 +1,20 @@
-#!/usr/bin/env python
-from __future__ import division
+r"""
+Base objects (:mod: `qiita_db.base`)
+====================================
 
-from .sql_connection import SQLConnectionHandler
-
-"""
-Objects for dealing with qiita_db objects
+..currentmodule:: qiita_db.base
 
 This module provides base objects for dealing with any qiita_db object that
-needs to be stored.
+needs to be stored on the database.
 
 Classes
 -------
-- `QiitaObject` -- A Qiita object class with a storage id
-- `QiitaStatusObject` -- A Qiita object class with a storage id and status
+
+..autosummary::
+    :toctree: generated/
+
+    QiitaObject
+    QiitaStatusObject
 """
 
 # -----------------------------------------------------------------------------
@@ -23,11 +25,15 @@ Classes
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
-from .exceptions import QiitaDBNotImplementedError, QiitaDBStatusError
+from __future__ import division
+from qiita_core.exceptions import IncompetentQiitaDeveloperError
+from .sql_connection import SQLConnectionHandler
+from .exceptions import (QiitaDBNotImplementedError,
+                         QiitaDBObjectDoesNotExistsError)
 
 
 class QiitaObject(object):
-    """Base class for any qiita_db object
+    r"""Base class for any qiita_db object
 
     Parameters
     ----------
@@ -36,22 +42,35 @@ class QiitaObject(object):
 
     Attributes
     ----------
-    id_
+    id
 
     Methods
     -------
-    create()
-        Creates a new object with a new id on the storage system
+    create
+    delete
+    exists
+    _check_subclass
+    _check_id
+    __eq__
+    __neq__
 
-    delete(id_)
-        Deletes the object `id_` from the storage system
+    Raises
+    ------
+    IncompetentQiitaDeveloperError
+        If trying to instantiate the base class directly
     """
 
     _table = None
 
     @classmethod
     def create(cls):
-        """Creates a new object with a new id on the storage system"""
+        """Creates a new object with a new id on the storage system
+
+        Raises
+        ------
+        QiitaDBNotImplementedError
+            If the method is not overwritten by a subclass
+        """
         raise QiitaDBNotImplementedError()
 
     def delete(id_):
@@ -59,15 +78,65 @@ class QiitaObject(object):
 
         Parameters
         ----------
-        id_ :
+        id_ : object
             The object identifier
+
+        Raises
+        ------
+        QiitaDBNotImplementedError
+            If the method is not overwritten by a subclass
         """
         raise QiitaDBNotImplementedError()
 
     @classmethod
     def exists(cls):
-        """Checks if a given object info is already present on the DB"""
+        """Checks if a given object info is already present on the DB
+
+        Raises
+        ------
+        QiitaDBNotImplementedError
+            If the method is not overwritten by a subclass
+        """
         raise QiitaDBNotImplementedError()
+
+    def _check_subclass(self):
+        """Check that we are not calling a function that needs to access the
+        database from the base class
+
+        Raises
+        ------
+        IncompetentQiitaDeveloperError
+            If its called directly from a base class
+        """
+        if self._table is None:
+            raise IncompetentQiitaDeveloperError(
+                "Could not instantiate an object of the base class")
+
+    def _check_id(self, id_, conn_handler=None):
+        """Check that the provided ID actually exists on the database
+
+        Parameters
+        ----------
+        id_ : object
+            The ID to test
+        conn_handler : SQLConnectionHandler
+            The connection handler object connected to the DB
+
+        Notes
+        -----
+        This function does not work for the User class. The problem is
+        that the User sql layout doesn't follow the same conventions done in
+        the other classes. However, still defining here as there is only one
+        subclass that doesn't follow this convention and it can override this.
+        """
+        self._check_subclass()
+
+        conn_handler = (conn_handler if conn_handler is not None
+                        else SQLConnectionHandler())
+
+        return conn_handler.execute_fetchone(
+            "SELECT EXISTS(SELECT * FROM qiita.{0} WHERE "
+            "{0}_id=%s)".format(self._table), (id_, ))[0]
 
     def __init__(self, id_):
         """Initializes the object
@@ -75,10 +144,19 @@ class QiitaObject(object):
         Parameters
         ----------
         id_: the object identifier
+
+        Raises
+        ------
+        QiitaDBObjectDoesNotExistsError
+            If `id_` does not correspond to any object
         """
+        if not self._check_id(id_):
+            raise QiitaDBObjectDoesNotExistsError(id_, self._table)
+
         self._id = id_
 
     def __eq__(self, other):
+        """Self and other are equal based on type and database id"""
         if type(self) != type(other):
             return False
         if other._id != self._id:
@@ -86,6 +164,7 @@ class QiitaObject(object):
         return True
 
     def __ne__(self, other):
+        """Self and other are not equal based on type and database id"""
         return not self.__eq__(other)
 
     @property
@@ -99,13 +178,32 @@ class QiitaStatusObject(QiitaObject):
 
     Attributes
     ----------
-    status :
-        The current status of the object
+    status
+
+    Methods
+    -------
+    check_status
+    _status_setter_checks
     """
 
     @property
     def status(self):
         """String with the current status of the analysis"""
+        # Check that self._table is actually defined
+        self._check_subclass()
+
+        # Get the DB status of the object
+        conn_handler = SQLConnectionHandler()
+        return conn_handler.execute_fetchone(
+            "SELECT status FROM qiita.{0}_status WHERE {0}_status_id = "
+            "(SELECT {0}_status_id FROM qiita.{0} WHERE "
+            "{0}_id = %s)".format(self._table),
+            (self._id, ))[0]
+
+    def _status_setter_checks(self):
+        """Perform any extra checks that needed to be done before setting the
+        object status on the database. Should be overwritten by the subclasses
+        """
         raise QiitaDBNotImplementedError()
 
     @status.setter
@@ -117,19 +215,37 @@ class QiitaStatusObject(QiitaObject):
         status: str
             The new object status
         """
-        raise QiitaDBNotImplementedError()
+        # Check that self._table is actually defined
+        self._check_subclass()
 
-    def check_status(self, status, exclude=False):
-        """Decorator: checks status of object, allowing function to run if
-        conditions met.
+        # Perform any extra checks needed before we update the status in the DB
+        self._status_setter_checks()
+
+        # Update the status of the object
+        conn_handler = SQLConnectionHandler()
+        conn_handler.execute(
+            "UPDATE qiita.{0} SET {0}_status_id = "
+            "(SELECT {0}_status_id FROM qiita.{0}_status WHERE status = %s) "
+            "WHERE {0}_id = %s".format(self._table), (status, self._id))
+
+    def check_status(self, status, exclude=False, conn_handler=None):
+        """Checks status of object.
 
         Parameters
         ----------
-        status: str or iterable
-            Single status or iterable of statuses to check against.
+        status: iterable
+            Iterable of statuses to check against.
         exclude: bool, optional
             If True, will check that database status is NOT one of the statuses
             passed. Default False.
+        conn_handler: SQLConnectionHandler, optional
+            The connection handler object connected to the DB
+
+        Returns
+        -------
+        bool
+            True if the object status is in the desired set of statuses. False
+            otherwise.
 
         Notes
         -----
@@ -144,37 +260,21 @@ class QiitaStatusObject(QiitaObject):
         Table setup:
         foo: foo_status_id  ----> foo_status: foo_status_id, status
         """
-        if isinstance(status, str):
-                status = [status]
+        # Check that self._table is actually defined
+        self._check_subclass()
 
-        # get the DB status of the object
-        sql = ("SELECT status FROM qiita.{0}_status WHERE {0}_status_id = "
-               "(SELECT {0}_status_id FROM qiita.{0} WHERE "
-               "{0}_id = %s)").format(self._table)
-        conn = SQLConnectionHandler()
-        dbstatus = conn.execute_fetchone(sql, (self._id, ))[0]
+        # Get all available statuses
+        conn_handler = (conn_handler if conn_handler is not None
+                        else SQLConnectionHandler())
+        statuses = [x[0] for x in conn_handler.execute_fetchall(
+            "SELECT DISTINCT status FROM qiita.{0}_status".format(self._table),
+            (self._id, ))]
 
-        # get all available statuses
-        sql = "SELECT DISTINCT status FROM qiita.%s_status" % self._table
-        statuses = [x[0] for x in conn.execute_fetchall(sql, (self._id, ))]
+        # Check that all the provided statuses are valid statuses
+        if set(status).difference(statuses):
+            raise ValueError("%s are not valid status values"
+                             % set(status).difference(statuses))
 
-        def wrap(f):
-            # Wrap needed to get function to wrap with this decorator
-            def wrapped_f(*args):
-                # Wrapped_f function needed to get func args
-                for s in status:
-                    if s not in statuses:
-                        raise ValueError("%s is not a valid status" % status)
-                if exclude:
-                    if dbstatus not in status:
-                        return f(*args)
-                    else:
-                        raise QiitaDBStatusError(("DB status %s in %s" %
-                                                  (dbstatus, str(status))))
-                elif dbstatus in status:
-                    return f(*args)
-                else:
-                    raise QiitaDBStatusError(("DB status %s not in %s" %
-                                              (dbstatus, str(status))))
-            return wrapped_f
-        return wrap
+        # Get the DB status of the object
+        dbstatus = self.status
+        return dbstatus not in status if exclude else dbstatus in status

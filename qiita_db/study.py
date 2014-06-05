@@ -41,6 +41,7 @@ class Study(QiitaStatusObject):
     remove_samples(samples)
         Removes the samples listed in `samples` from the study
     """
+    _table = "study"
 
     @staticmethod
     def create(owner):
