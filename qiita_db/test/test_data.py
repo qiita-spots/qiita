@@ -221,69 +221,80 @@ class PreprocessedDataTests(TestCase):
         self.assertEqual(obs, exp)
 
 
-# @qiita_test_checker()
-# class ProcessedDataTests(TestCase):
-#     """Tests the ProcessedData class"""
-#     def setUp(self):
-#         self.conn_handler = SQLConnectionHandler()
-#         self.preprocessed_data = PreprocessedData(1)
-#         self.params_table = "processed_params_uclust"
-#         self.params_id = 1
-#         self.filepaths = [('foo/table.biom', 6)]
-#         self.date = datetime(2014, 5, 29, 12, 24, 51)
+@qiita_test_checker()
+class ProcessedDataTests(TestCase):
+    """Tests the ProcessedData class"""
+    def setUp(self):
+        self.conn_handler = SQLConnectionHandler()
+        self.preprocessed_data = PreprocessedData(1)
+        self.params_table = "processed_params_uclust"
+        self.params_id = 1
+        fd, self.biom_fp = mkstemp(suffix='_table.biom')
+        close(fd)
+        self.filepaths = [(self.biom_fp, 6)]
+        self.date = datetime(2014, 5, 29, 12, 24, 51)
+        self.db_test_pd_dir = join(get_db_files_base_dir(), 'processed_data')
+        self._clean_up_files = [self.biom_fp]
 
-#     def test_create(self):
-#         """Correctly creates all the rows in the DB for the processed data"""
-#         # Check that the returned object has the correct id
-#         obs = ProcessedData.create(self.preprocessed_data, self.params_table,
-#                                    self.params_id, self.filepaths, self.date)
-#         self.assertEqual(obs.id, 2)
-#         # Check that the processed data have been correctly added to the DB
-#         obs = self.conn_handler.execute_fetchone(
-#             "SELECT * FROM qiita.processed_data WHERE processed_data_id=2")
-#         # processed_data_id, preprocessed_data_id, processed_params_table,
-#         # processed_params_id, processed_date
-#         exp = [2, 1, "processed_params_uclust", 1, self.date]
-#         self.assertEqual(obs, exp)
-#         # Check that the filepaths have been correctly added to the DB
-#         obs = self.conn_handler.execute_fetchall(
-#             "SELECT * FROM qiita.filepath WHERE filepath_id=8")
-#         # Filepath_id, path, filepath_type_id
-#         exp = [[8, 'foo/table.biom', 6]]
-#         self.assertEqual(obs, exp)
-#         # Check that the processed data have been correctly linked
-#         # with the fileapths
-#         obs = self.conn_handler.execute_fetchall(
-#             "SELECT * FROM qiita.processed_filepath WHERE processed_data_id=2")
-#         # processed_data_id, filepath_id
-#         self.assertTrue(obs, [[2, 8]])
+    def tearDown(self):
+        map(remove, self._clean_up_files)
 
-#     def test_create_params_table_error(self):
-#         """Raises an error ig the processed_params_table does not exists"""
-#         with self.assertRaises(IncompetentQiitaDeveloperError):
-#             ProcessedData.create(self.preprocessed_data, "foo", self.params_id,
-#                                  self.filepaths)
-#         with self.assertRaises(IncompetentQiitaDeveloperError):
-#             ProcessedData.create(self.preprocessed_data,
-#                                  "processed_params_foo", self.params_id,
-#                                  self.filepaths)
-#         with self.assertRaises(IncompetentQiitaDeveloperError):
-#             ProcessedData.create(self.preprocessed_data, "processed_params_",
-#                                  self.params_id, self.filepaths)
+    def test_create(self):
+        """Correctly creates all the rows in the DB for the processed data"""
+        # Check that the returned object has the correct id
+        obs = ProcessedData.create(self.preprocessed_data, self.params_table,
+                                   self.params_id, self.filepaths, self.date)
+        self.assertEqual(obs.id, 2)
 
-#     def test_get_filepath(self):
-#         """Correctly returns the filepaths to the processed files"""
-#         # check the test data
-#         pd = ProcessedData(1)
-#         obs = pd.get_filepaths()
-#         exp = [['study_1001_closed_reference_otu_table.biom', 6]]
-#         self.assertEqual(obs, exp)
-#         # Check with a new added processed data
-#         pd = ProcessedData.create(self.preprocessed_data, self.params_table,
-#                                   self.params_id, self.filepaths, self.date)
-#         obs = pd.get_filepaths()
-#         exp = [['foo/table.biom', 6]]
-#         self.assertEqual(obs, exp)
+        # Check that the processed data have been correctly added to the DB
+        obs = self.conn_handler.execute_fetchone(
+            "SELECT * FROM qiita.processed_data WHERE processed_data_id=2")
+        # processed_data_id, preprocessed_data_id, processed_params_table,
+        # processed_params_id, processed_date
+        exp = [2, 1, "processed_params_uclust", 1, self.date]
+        self.assertEqual(obs, exp)
+
+        # Check that the files have been copied to right location
+        exp_biom_fp = join(self.db_test_pd_dir,
+                           "2_%s" % basename(self.biom_fp))
+        self.assertTrue(exists(exp_biom_fp))
+        self._clean_up_files.append(exp_biom_fp)
+
+        # Check that the filepaths have been correctly added to the DB
+        obs = self.conn_handler.execute_fetchall(
+            "SELECT * FROM qiita.filepath WHERE filepath_id=8")
+        # Filepath_id, path, filepath_type_id
+        exp = [[8, exp_biom_fp, 6]]
+        self.assertEqual(obs, exp)
+
+        # Check that the processed data have been correctly linked
+        # with the fileapths
+        obs = self.conn_handler.execute_fetchall(
+            "SELECT * FROM qiita.processed_filepath WHERE processed_data_id=2")
+        # processed_data_id, filepath_id
+        self.assertTrue(obs, [[2, 8]])
+
+    def test_create_params_table_error(self):
+        """Raises an error ig the processed_params_table does not exists"""
+        with self.assertRaises(IncompetentQiitaDeveloperError):
+            ProcessedData.create(self.preprocessed_data, "foo", self.params_id,
+                                 self.filepaths)
+        with self.assertRaises(IncompetentQiitaDeveloperError):
+            ProcessedData.create(self.preprocessed_data,
+                                 "processed_params_foo", self.params_id,
+                                 self.filepaths)
+        with self.assertRaises(IncompetentQiitaDeveloperError):
+            ProcessedData.create(self.preprocessed_data, "processed_params_",
+                                 self.params_id, self.filepaths)
+
+    def test_get_filepath(self):
+        """Correctly returns the filepaths to the processed files"""
+        # check the test data
+        pd = ProcessedData(1)
+        obs = pd.get_filepaths()
+        exp = [(join(self.db_test_pd_dir,
+                     '1_study_1001_closed_reference_otu_table.biom'), 6)]
+        self.assertEqual(obs, exp)
 
 
 if __name__ == '__main__':
