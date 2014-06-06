@@ -287,7 +287,7 @@ INSERT INTO qiita.preprocessed_data (raw_data_id, preprocessed_params_table, pre
 INSERT INTO qiita.study_preprocessed_data (preprocessed_data_id, study_id) VALUES (1, 1), (2, 1);
 
 -- Insert the preprocessed filepath for raw data 1
-INSERT INTO qiita.filepath (filepath, filepath_type_id) VALUES ('seqs.fna', 4), ('seqs.qual', 5);
+INSERT INTO qiita.filepath (filepath, filepath_type_id) VALUES ('1_seqs.fna', 4), ('1_seqs.qual', 5);
 
 -- Insert (link) the preprocessed data with the preprocessed filepaths
 INSERT INTO qiita.preprocessed_filepath (preprocessed_data_id, filepath_id) VALUES (1, 5), (1, 6);
@@ -305,7 +305,7 @@ INSERT INTO qiita.reference (reference_name, reference_version, sequence_filepat
 INSERT INTO qiita.processed_params_uclust (similarity, enable_rev_strand_match, suppress_new_clusters, reference_id) VALUES (0.97, TRUE, TRUE, 1);
 
 -- Insert the biom table filepath for processed data 1
-INSERT INTO qiita.filepath (filepath, filepath_type_id) VALUES ('study_1001_closed_reference_otu_table.biom', 6);
+INSERT INTO qiita.filepath (filepath, filepath_type_id) VALUES ('1_study_1001_closed_reference_otu_table.biom', 6);
 
 -- Insert (link) the processed data with the processed filepath
 INSERT INTO qiita.processed_filepath (processed_data_id, filepath_id) VALUES (1, 7);
