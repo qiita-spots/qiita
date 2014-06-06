@@ -142,20 +142,9 @@ class QiitaStatusObjectTest(TestCase):
             self.tester.check_status(["foo"], exclude=True,
                                      conn_handler=self.conn_handler)
 
-        with self.assertRaises(ValueError):
-            self.tester.check_status(["foo", "public"])
-
-        with self.assertRaises(ValueError):
-            self.tester.check_status(["foo", "public"], exclude=True)
-
-        with self.assertRaises(ValueError):
-            self.tester.check_status(["foo", "public"],
-                                     conn_handler=self.conn_handler)
-
-        with self.assertRaises(ValueError):
-            self.tester.check_status(["foo", "public"], exclude=True,
-                                     conn_handler=self.conn_handler)
-
+    def test_check_status_unknown_status_list(self):
+        """check_status raises an error if an invalid status list is provided
+        """
         with self.assertRaises(ValueError):
             self.tester.check_status(["foo", "bar"])
 
