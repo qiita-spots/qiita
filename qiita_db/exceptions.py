@@ -32,9 +32,9 @@ class QiitaDBConnectionError(QiitaDBError):
     pass
 
 
-class QiitaDBObjectDoesNotExistsError(QiitaDBError):
+class QiitaDBUnknownIDError(QiitaDBError):
     """Exception for error when an object does not exists in the DB"""
     def __init__(self, missing_id, table):
-        super(QiitaDBObjectDoesNotExistsError, self).__init__()
+        super(QiitaDBUnknownIDError, self).__init__()
         self.args = ("The object with ID '%s' does not exists in table '%s"
                      % (missing_id, table))

@@ -28,8 +28,7 @@ Classes
 from __future__ import division
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from .sql_connection import SQLConnectionHandler
-from .exceptions import (QiitaDBNotImplementedError,
-                         QiitaDBObjectDoesNotExistsError)
+from .exceptions import QiitaDBNotImplementedError, QiitaDBUnknownIDError
 
 
 class QiitaObject(object):
@@ -147,11 +146,11 @@ class QiitaObject(object):
 
         Raises
         ------
-        QiitaDBObjectDoesNotExistsError
+        QiitaDBUnknownIDError
             If `id_` does not correspond to any object
         """
         if not self._check_id(id_):
-            raise QiitaDBObjectDoesNotExistsError(id_, self._table)
+            raise QiitaDBUnknownIDError(id_, self._table)
 
         self._id = id_
 

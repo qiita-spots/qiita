@@ -11,7 +11,7 @@ from unittest import TestCase, main
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_core.util import qiita_test_checker
 from qiita_db.base import QiitaObject, QiitaStatusObject
-from qiita_db.exceptions import QiitaDBObjectDoesNotExistsError
+from qiita_db.exceptions import QiitaDBUnknownIDError
 from qiita_db.data import RawData
 from qiita_db.study import Study
 from qiita_db.sql_connection import SQLConnectionHandler
@@ -32,7 +32,7 @@ class QiitaBaseTest(TestCase):
 
     def test_init_error_inexistent(self):
         """Raises an error when instantiating an object that does not exists"""
-        with self.assertRaises(QiitaDBObjectDoesNotExistsError):
+        with self.assertRaises(QiitaDBUnknownIDError):
             RawData(10)
 
     def test_check_subclass(self):
