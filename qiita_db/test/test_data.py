@@ -17,37 +17,17 @@ from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_db.sql_connection import SQLConnectionHandler
 from qiita_db.study import Study
 from qiita_db.util import get_db_files_base_dir
-from qiita_db.data import RawData, PreprocessedData, ProcessedData
+from qiita_db.data import BaseData, RawData, PreprocessedData, ProcessedData
 
-# @qiita_test_checker()
-# class BaseDataTests(TestCase):
-#     """Tests the BaseData class"""
 
-#     def setUp(self):
-#         self.filepaths = [('foo/bar.fna', 1), ('bar/foo.fna', 1)]
-#         self.conn_handler = SQLConnectionHandler()
+@qiita_test_checker()
+class BaseDataTests(TestCase):
+    """Tests the BaseData class"""
 
-#     def test_insert_filepath(self):
-#         """Correctly inserts the filepaths on the DB and returns the id"""
-#         obs = BaseData._insert_filepaths(self.filepaths, self.conn_handler)
-#         exp = [8, 9]
-#         self.assertEqual(obs, exp)
-
-#     def test_link_data_filepaths(self):
-#         """It should raise an error if called from the base class"""
-#         with self.assertRaises(IncompetentQiitaDeveloperError):
-#             BaseData._link_data_filepaths(1, [1, 2, 3], self.conn_handler)
-
-#     def tesst_check_data_filepath_attributes(self):
-#         """It should raise an error if called from the base class"""
-#         with self.assertRaises(IncompetentQiitaDeveloperError):
-#             BaseData._check_data_filepath_attributes()
-
-#     def test_get_filepaths(self):
-#         """It should raise an error if called from the base class"""
-#         bd = BaseData(1)
-#         with self.assertRaises(IncompetentQiitaDeveloperError):
-#             bd.get_filepaths()
+    def test_init(self):
+        """Raises an error if trying to instantiate the base data"""
+        with self.assertRaises(IncompetentQiitaDeveloperError):
+            BaseData(1)
 
 
 @qiita_test_checker()
@@ -195,6 +175,9 @@ class PreprocessedDataTests(TestCase):
             "preprocessed_data_id=3")
         # preprocessed_data_id, filepath_id
         self.assertEqual(obs, [[3, 8], [3, 9]])
+
+    def test_create_no_date(self):
+        """Correctly adds a processed data with no date on it"""
 
     def test_create_error(self):
         """Raises an error if the preprocessed_params_table does not exists"""
