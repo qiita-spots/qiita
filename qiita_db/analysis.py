@@ -43,6 +43,8 @@ class Analysis(QiitaStatusObject):
 
     """
 
+    _table = "analysis"
+
     @staticmethod
     def create(owner):
         """Creates a new analysis on the database
