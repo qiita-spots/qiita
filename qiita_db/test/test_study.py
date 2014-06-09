@@ -177,7 +177,7 @@ class TestStudy(TestCase):
         # check the investigation was assigned
         conn = SQLConnectionHandler()
         obs = conn.execute_fetchall("SELECT * from qiita.investigation_study "
-                                     "WHERE study_id = 2")
+                                    "WHERE study_id = 2")
         self.assertEqual(obs, [[1, 2]])
 
     def test_create_study_all_data(self):

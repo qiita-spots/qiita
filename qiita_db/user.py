@@ -20,6 +20,7 @@ Classes
 
 from .base import QiitaObject
 from .exceptions import QiitaDBNotImplementedError
+from .sql_connection import SQLConnectionHandler
 
 LEVELS = {'admin', 'dev', 'superuser', 'user', 'guest'}
 
@@ -65,7 +66,34 @@ class User(QiitaObject):
         Removes a shared analysis from the user
     """
 
-    @staticmethod
+    _table = "qiita_user"
+
+    def _check_id(self, id_, conn_handler=None):
+        r"""Check that the provided ID actually exists on the database
+
+        Parameters
+        ----------
+        id_ : object
+            The ID to test
+        conn_handler : SQLConnectionHandler
+            The connection handler object connected to the DB
+
+        Notes
+        -----
+        This functionoverwrites the base function, as sql layout doesn't follow
+        the same conventions done in the other classes.
+        """
+        self._check_subclass()
+
+        conn_handler = (conn_handler if conn_handler is not None
+                        else SQLConnectionHandler())
+        print ("SELECT EXISTS(SELECT * FROM qiita.qiita_user WHERE "
+               "email = %s)" % id_)
+        return conn_handler.execute_fetchone(
+            "SELECT EXISTS(SELECT * FROM qiita.qiita_user WHERE "
+            "email = %s)", (id_, ))[0]
+
+    @classmethod
     def create(email, password):
         """Creates a new user on the database
 
@@ -78,7 +106,7 @@ class User(QiitaObject):
         """
         raise QiitaDBNotImplementedError()
 
-    @staticmethod
+    @classmethod
     def delete(id_):
         """Deletes the user `id` from the database
 

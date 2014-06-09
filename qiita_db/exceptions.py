@@ -42,6 +42,10 @@ class QiitaDBDuplicateError(QiitaDBError):
     pass
 
 
+class QiitaDBStatusError(QiitaDBError):
+    """Exception when editing is done with an unallowed status"""
+    pass
+
 class QiitaDBUnknownIDError(QiitaDBError):
     """Exception for error when an object does not exists in the DB"""
     def __init__(self, missing_id, table):
