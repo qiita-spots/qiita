@@ -178,7 +178,6 @@ class User(QiitaObject):
         """
         raise QiitaDBNotImplementedError()
 
-
     def _check_id(self, id_, conn_handler=None):
         r"""Check that the provided ID actually exists on the database
 
@@ -301,7 +300,11 @@ class User(QiitaObject):
     @property
     def private_analyses(self):
         """Returns a list of private analyses owned by the user"""
-        raise QiitaDBNotImplementedError()
+        sql = ("Select analysis_id from qiita.analysis WHERE email = %s AND "
+               "analysis_status_id <> 6")
+        conn_handler = SQLConnectionHandler()
+        analyses = conn_handler.execute_fetchall(sql, (self._id, ))
+        return [Analysis(a[0]) for a in analyses]
 
     @property
     def shared_analyses(self):

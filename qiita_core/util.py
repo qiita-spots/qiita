@@ -11,6 +11,7 @@ from qiita_db.sql_connection import SQLConnectionHandler
 from qiita_db.make_environment import (LAYOUT_FP, INITIALIZE_FP, POPULATE_FP)
 from qiita_core.qiita_settings import qiita_config
 
+
 def hash_pw(password, hashedpw=None):
         """ Hashes password
 
@@ -36,6 +37,7 @@ def hash_pw(password, hashedpw=None):
         if hashedpw is None:
             hashedpw = gensalt()
         return hashpw(password, hashedpw)
+
 
 def build_test_database(setup_fn):
     """Decorator that initializes the test database with the schema and initial
