@@ -265,7 +265,12 @@ class ProcessedDataTests(TestCase):
         obs = self.conn_handler.execute_fetchone(
             "SELECT processed_date FROM qiita.processed_data WHERE "
             "processed_data_id=2")[0]
-        print obs
+
+        # Make sure that we clean up the environment
+        exp_biom_fp = join(self.db_test_pd_dir,
+                           "2_%s" % basename(self.biom_fp))
+        self._clean_up_files.append(exp_biom_fp)
+
         self.assertTrue(before <= obs <= after)
 
     def test_create_params_table_error(self):
