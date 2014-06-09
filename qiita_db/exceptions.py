@@ -32,6 +32,16 @@ class QiitaDBConnectionError(QiitaDBError):
     pass
 
 
+class QiitaDBDuplicateError(QiitaDBError):
+    """Exception when duplicating something in the database"""
+    pass
+
+
+class QiitaDBColumnError(QiitaDBError):
+    """Exception when database column info missing or incorrect"""
+    pass
+
+
 class QiitaDBUnknownIDError(QiitaDBError):
     """Exception for error when an object does not exists in the DB"""
     def __init__(self, missing_id, table):
