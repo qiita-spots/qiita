@@ -115,15 +115,6 @@ class BaseData(QiitaObject):
     _data_filepath_table = None
     _data_filepath_column = None
 
-    def _check_data_filepath_attributes(self):
-        """Checks if _data_filepath_table and _data_filepath_column have been
-        defined, so this function is actually called from a subclass"""
-        if (self._data_filepath_table is None) or \
-                (self._data_filepath_column is None):
-            raise IncompetentQiitaDeveloperError(
-                "_data_filepath_table and _data_filepath_column should be "
-                "defined in the classes that implement BaseData!")
-
     def _insert_filepaths(self, filepaths, conn_handler):
         """Inserts `filepaths` in the DB connected with `conn_handler`. Since
         the files live outside the database, the directory in which the files
@@ -193,9 +184,7 @@ class BaseData(QiitaObject):
 
     def _add_filepaths(self, filepaths, conn_handler):
         """"""
-        # First check that the internal attributes have been defined, so this
-        # function have been actually called from a subclass
-        self._check_data_filepath_attributes()
+        self._check_subclass()
 
         # Add the filepaths to the database
         fp_ids = self._insert_filepaths(filepaths, conn_handler)
@@ -212,9 +201,7 @@ class BaseData(QiitaObject):
             A list of (path, filetype id) with all the paths associated with
             the current data
         """
-        # First check that the internal attributes have been defined, so this
-        # function have been actually called from a subclass
-        self._check_data_filepath_attributes()
+        self._check_subclass()
         # We need a connection handler to the database
         conn_handler = SQLConnectionHandler()
         # Retrieve all the (path, id) tuples related with the current data

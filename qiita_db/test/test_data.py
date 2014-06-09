@@ -176,9 +176,6 @@ class PreprocessedDataTests(TestCase):
         # preprocessed_data_id, filepath_id
         self.assertEqual(obs, [[3, 8], [3, 9]])
 
-    def test_create_no_date(self):
-        """Correctly adds a processed data with no date on it"""
-
     def test_create_error(self):
         """Raises an error if the preprocessed_params_table does not exists"""
         with self.assertRaises(IncompetentQiitaDeveloperError):
@@ -256,6 +253,20 @@ class ProcessedDataTests(TestCase):
             "SELECT * FROM qiita.processed_filepath WHERE processed_data_id=2")
         # processed_data_id, filepath_id
         self.assertTrue(obs, [[2, 8]])
+
+    def test_create_no_date(self):
+        """Correctly adds a processed data with no date on it"""
+        # All the other settings have been already tested on test_create
+        # here we will only check that the code added a good date
+        before = datetime.now()
+        ProcessedData.create(self.preprocessed_data, self.params_table,
+                             self.params_id, self.filepaths)
+        after = datetime.now()
+        obs = self.conn_handler.execute_fetchone(
+            "SELECT processed_date FROM qiita.processed_data WHERE "
+            "processed_data_id=2")[0]
+        print obs
+        self.assertTrue(before <= obs <= after)
 
     def test_create_params_table_error(self):
         """Raises an error ig the processed_params_table does not exists"""
