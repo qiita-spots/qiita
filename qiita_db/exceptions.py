@@ -27,11 +27,6 @@ class QiitaDBExecutionError(QiitaDBError):
     pass
 
 
-class QiitaDBStatusError(QiitaDBError):
-    """Exception for error when trying to run dissalowed functions"""
-    pass
-
-
 class QiitaDBConnectionError(QiitaDBError):
     """Exception for error when connecting to the db"""
     pass
@@ -45,3 +40,11 @@ class QiitaDBColumnError(QiitaDBError):
 class QiitaDBDuplicateError(QiitaDBError):
     """Exception when duplicating something in the database"""
     pass
+
+
+class QiitaDBUnknownIDError(QiitaDBError):
+    """Exception for error when an object does not exists in the DB"""
+    def __init__(self, missing_id, table):
+        super(QiitaDBUnknownIDError, self).__init__()
+        self.args = ("The object with ID '%s' does not exists in table '%s"
+                     % (missing_id, table))
