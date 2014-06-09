@@ -5,11 +5,37 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
+from bcrypt import hashpw, gensalt
 
 from qiita_db.sql_connection import SQLConnectionHandler
 from qiita_db.make_environment import (LAYOUT_FP, INITIALIZE_FP, POPULATE_FP)
 from qiita_core.qiita_settings import qiita_config
 
+def hash_pw(password, hashedpw=None):
+        """ Hashes password
+
+        Parameters
+        ----------
+        password: str
+            Plaintext password
+        hashedpw: str, optional
+            Previously hashed password for bcrypt to pull salt from. If not
+            given, salt generated before hash
+
+        Returns
+        -------
+        str
+            Hashed password
+
+        Notes
+        -----
+        Relies on bcrypt library to hash passwords, which stores the salt as
+        part of the hashed password. Don't need to actually store the salt
+        because of this.
+        """
+        if hashedpw is None:
+            hashedpw = gensalt()
+        return hashpw(password, hashedpw)
 
 def build_test_database(setup_fn):
     """Decorator that initializes the test database with the schema and initial
