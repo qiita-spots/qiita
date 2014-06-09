@@ -103,13 +103,19 @@ class RawDataTests(TestCase):
 
     def test_get_filepaths(self):
         """Correctly returns the filepaths to the raw files"""
-        # Check test data
         rd = RawData(1)
         obs = rd.get_filepaths()
         exp = [
             (join(self.db_test_raw_dir, '1_s_G1_L001_sequences.fastq.gz'), 1),
             (join(self.db_test_raw_dir,
                   '1_s_G1_L001_sequences_barcodes.fastq.gz'), 2)]
+        self.assertEqual(obs, exp)
+
+    def test_studies(self):
+        """Correctly returns the study the objects"""
+        rd = RawData(1)
+        obs = rd.studies
+        exp = [Study(1)]
         self.assertEqual(obs, exp)
 
 
@@ -193,7 +199,6 @@ class PreprocessedDataTests(TestCase):
 
     def test_get_filepaths(self):
         """Correctly returns the filepaths to the preprocessed files"""
-        # Check test data
         ppd = PreprocessedData(1)
         obs = ppd.get_filepaths()
         exp = [(join(self.db_test_ppd_dir, '1_seqs.fna'), 4),

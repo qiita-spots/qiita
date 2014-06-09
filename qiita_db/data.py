@@ -90,6 +90,7 @@ from functools import partial
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from .base import QiitaObject
+from .study import Study
 from .sql_connection import SQLConnectionHandler
 from .util import exists_dynamic_table, get_db_files_base_dir
 
@@ -284,9 +285,25 @@ class RawData(BaseData):
             "SELECT submitted_to_insdc FROM qiita.{0} "
             "WHERE raw_data_id=%s".format(self._table), [self.id])[0]
 
+    @property
+    def studies(self):
+        """The list of Study objects to which the raw data belongs to"""
+        conn_handler = SQLConnectionHandler()
+        ids = conn_handler.execute_fetchall(
+            "SELECT study_id FROM qiita.{0} WHERE "
+            "raw_data_id=%s".format(self._study_raw_table),
+            [self._id])
+        return [Study(id[0]) for id in ids]
+
 
 class PreprocessedData(BaseData):
-    """"""
+    """
+
+    See Also
+    --------
+    BaseData
+    """
+    # Override the class variables defined in the base classes
     _table = "preprocessed_data"
     _data_filepath_table = "preprocessed_filepath"
     _data_filepath_column = "preprocessed_data_id"
@@ -336,7 +353,13 @@ class PreprocessedData(BaseData):
 
 
 class ProcessedData(BaseData):
-    """"""
+    """
+
+    See Also
+    --------
+    BaseData
+    """
+    # Override the class variables defined in the base classes
     _table = "processed_data"
     _data_filepath_table = "processed_filepath"
     _data_filepath_column = "processed_data_id"
