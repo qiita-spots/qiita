@@ -49,7 +49,6 @@ must be passed as StudyPerson objects and the owner as a User object.
 >>> from qiita_db.user import User # doctest: +SKIP
 >>> info = {
 ...     "timeseries_type_id": 1,
-...     "study_experimental_factor": 1,
 ...     "metadata_complete": True,
 ...     "mixs_compliant": True,
 ...     "number_samples_collected": 25,
@@ -57,13 +56,13 @@ must be passed as StudyPerson objects and the owner as a User object.
 ...     "portal_type_id": 3,
 ...     "study_title": "Study Title",
 ...     "study_alias": "TST",
-...     "study_description": ("Some description of the study goes here"),
-...     "study_abstract": ("Some abstract goes here"),
+...     "study_description": "Some description of the study goes here",
+...     "study_abstract": "Some abstract goes here",
 ...     "emp_person_id": StudyPerson(2),
 ...     "principal_investigator_id": StudyPerson(3),
 ...     "lab_person_id": StudyPerson(1)} # doctest: +SKIP
 >>> owner = User('owner@foo.bar') # doctest: +SKIP
->>> Study(owner, info) # doctest: +SKIP
+>>> Study(owner, 1, info) # doctest: +SKIP
 
 You can also add a study to an investigation by passing the investigation
 object while creating the study.
@@ -73,7 +72,6 @@ object while creating the study.
 >>> from qiita_db.study import Investigation # doctest: +SKIP
 >>> info = {
 ...     "timeseries_type_id": 1,
-...     "study_experimental_factor": 1,
 ...     "metadata_complete": True,
 ...     "mixs_compliant": True,
 ...     "number_samples_collected": 25,
@@ -81,14 +79,14 @@ object while creating the study.
 ...     "portal_type_id": 3,
 ...     "study_title": "Study Title",
 ...     "study_alias": "TST",
-...     "study_description": ("Some description of the study goes here"),
-...     "study_abstract": ("Some abstract goes here"),
+...     "study_description": "Some description of the study goes here",
+...     "study_abstract": "Some abstract goes here",
 ...     "emp_person_id": StudyPerson(2),
 ...     "principal_investigator_id": StudyPerson(3),
 ...     "lab_person_id": StudyPerson(1)} # doctest: +SKIP
 >>> owner = User('owner@foo.bar') # doctest: +SKIP
 >>> investigation = Investigation(1) # doctest: +SKIP
->>> Study(owner, info, investigation) # doctest: +SKIP
+>>> Study(owner, 1, info, investigation) # doctest: +SKIP
 """
 
 # -----------------------------------------------------------------------------
@@ -105,8 +103,8 @@ from datetime import date
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from .base import QiitaStatusObject, QiitaObject
-from .exceptions import (QiitaDBColumnError, QiitaDBNotImplementedError,
-                         QiitaDBExecutionError, QiitaDBStatusError)
+from .exceptions import (QiitaDBDuplicateError, QiitaDBNotImplementedError,
+                         QiitaDBExecutionError, QiitaDBStatusError,)
 from .data import RawData, PreprocessedData, ProcessedData
 from .user import User
 from .investigation import Investigation
@@ -126,6 +124,8 @@ class Study(QiitaStatusObject):
         Major information about the study, keyed by db column name
     status: int
         Status of the study
+    efo: list of int
+        list of Experimental Factor Ontology ids for the study
     shared_with: list of User objects
         Emails of users the study is shared with
     pmids: list of str
@@ -143,7 +143,7 @@ class Study(QiitaStatusObject):
 
     Methods
     -------
-    share_with
+    share
     add_pmid
 
     Notes
@@ -154,7 +154,7 @@ class Study(QiitaStatusObject):
     _table = "study"
 
     @classmethod
-    def create(cls, owner, info, investigation=None):
+    def create(cls, owner, efo, info, investigation=None):
         """Creates a new study on the database
 
         Parameters
@@ -163,6 +163,8 @@ class Study(QiitaStatusObject):
             the user id of the study' owner
         info: dict
             the information attached to the study.
+        efo: int or list
+            Experimental Factor Ontology or -ies for the study
         investigation: Investigation object
             if the study is part of an investigation, the id to associate with
 
@@ -171,15 +173,13 @@ class Study(QiitaStatusObject):
         QiitaDBColumnError
             Non-db columns in info dictionary
             All required keys not passed
-        QiitaStudyError
-            Study already exists
         IncompetentQiitaDeveloperError
-            study_id or status passed as a key
+            study_id or study_status_id passed as a key
 
         Notes
         -----
-        All keys in info, except the efo, must be equal to columns in the
-        forge.study table in the database. EFO information is stored as a list
+        All keys in info, except the efo, must be equal to columns in
+        qiita.study table in the database. EFO information is stored as a list
         under the key 'study_experimental_factor', the name of the table it is
         stored in.
         """
@@ -191,27 +191,18 @@ class Study(QiitaStatusObject):
             raise IncompetentQiitaDeveloperError("Can't pass status in info "
                                                  "dict!")
 
-        # Save study_experimental_factor data for insertion
-        efo = None
-        if "study_experimental_factor" in info:
-            efo = info["study_experimental_factor"]
-            if isinstance(efo, int):
-                efo = [efo]
-            info.pop("study_experimental_factor")
-        else:
-            raise QiitaDBColumnError("EFO info not passed!")
-
         # add default values to info
         info['email'] = owner.id
         info['reprocess'] = False
         info['first_contact'] = date.today().strftime("%B %d, %Y")
+        # default to waiting_approval status
         info['study_status_id'] = 1
 
         conn_handler = SQLConnectionHandler()
         # make sure dictionary only has keys for available columns in db
-        check_table_cols(conn_handler, info, "study")
+        check_table_cols(conn_handler, info, cls._table)
         # make sure reqired columns in dictionary
-        check_required_columns(conn_handler, info, "study")
+        check_required_columns(conn_handler, info, cls._table)
 
         # Insert study into database
         keys = info.keys()
@@ -228,6 +219,8 @@ class Study(QiitaStatusObject):
         study_id = conn_handler.execute_fetchone(sql, data)[0]
 
         # insert efo information into database
+        if isinstance(efo, int):
+                efo = [efo]
         sql = ("INSERT INTO qiita.{0}_experimental_factor (study_id, "
                "efo_id) VALUES (%s, %s)".format(cls._table))
         conn_handler.executemany(sql, list(zip([study_id] * len(efo), efo)))
@@ -307,10 +300,6 @@ class Study(QiitaStatusObject):
         conn_handler = SQLConnectionHandler()
         sql = "SELECT * FROM qiita.{0} WHERE study_id = %s".format(self._table)
         info = dict(conn_handler.execute_fetchone(sql, (self._id, )))
-        sql = ("SELECT efo_id FROM qiita.{0}_experimental_factor WHERE "
-               "study_id = %s".format(self._table))
-        efo = [x[0] for x in conn_handler.execute_fetchall(sql, (self._id, ))]
-        info["study_experimental_factor"] = efo
 
         # Convert everything from ids to objects
         info['email'] = User(info['email'])
@@ -339,20 +328,12 @@ class Study(QiitaStatusObject):
             Unknown column names passed
         """
         self._lock_public()
-        if len(info) < 1:
+        if not info:
             raise IncompetentQiitaDeveloperError("Need entries in info dict!")
 
         conn_handler = SQLConnectionHandler()
-
-        # Save study_experimental_factor data for insertion
-        efo = None
-        if "study_experimental_factor" in info:
-            efo = info["study_experimental_factor"]
-            if isinstance(efo, int):
-                efo = [efo]
-            info.pop("study_experimental_factor")
-
-        check_table_cols(conn_handler, info, "study")
+        # make sure dictionary only has keys for available columns in db
+        check_table_cols(conn_handler, info, self._table)
 
         sql_vals = []
         data = []
@@ -369,13 +350,6 @@ class Study(QiitaStatusObject):
         sql = ("UPDATE qiita.{0} SET {1} WHERE "
                "study_id = %s".format(self._table, ','.join(sql_vals)))
         conn_handler.execute(sql, data)
-
-        if efo is not None:
-            # insert efo information into database
-            sql = ("INSERT INTO qiita.{0}_experimental_factor (study_id, "
-                   "efo_id) VALUES (%s, %s)".format(self._table))
-            conn_handler.executemany(sql,
-                                     list(zip([self._id] * len(efo), efo)))
 
     @property
     def status(self):
@@ -398,15 +372,42 @@ class Study(QiitaStatusObject):
         ----------
         status_id: int
             ID for the new status
-
-        Notes
-        -----
-        You can still change this even when a study is public. BE CAREFUL!
         """
+        self._lock_public()
         conn_handler = SQLConnectionHandler()
         sql = ("UPDATE qiita.{0} SET study_status_id = %s WHERE "
                "study_id = %s".format(self._table))
         conn_handler.execute(sql, (status_id, self._id))
+
+    @property
+    def efo(self):
+        conn_handler = SQLConnectionHandler()
+        sql = ("SELECT efo_id FROM qiita.{0}_experimental_factor WHERE "
+               "study_id = %s".format(self._table))
+        return [x[0] for x in conn_handler.execute_fetchall(sql, (self._id, ))]
+
+    @efo.setter
+    def efo(self, efo_vals):
+        """Sets the efo for the study
+
+        Parameters
+        ----------
+        status_id: int
+            ID for the new status
+        """
+        self._lock_public()
+        if isinstance(efo_vals, int):
+                efo_vals = [efo_vals]
+        # wipe out any EFOs currently attached to study
+        conn_handler = SQLConnectionHandler()
+        sql = ("DELETE FROM qiita.{0}_experimental_factor WHERE "
+               "study_id = %s".format(self._table))
+        conn_handler.execute(sql, (self._id, ))
+        # insert new EFO information into database
+        sql = ("INSERT INTO qiita.{0}_experimental_factor (study_id, "
+               "efo_id) VALUES (%s, %s)".format(self._table))
+        conn_handler.executemany(sql, list(zip([self._id] * len(efo_vals),
+                                           efo_vals)))
 
     @property
     def shared_with(self):
@@ -449,9 +450,7 @@ class Study(QiitaStatusObject):
         sql = ("SELECT investigation_id FROM qiita.investigation_study WHERE "
                "study_id = %s")
         inv = conn_handler.execute_fetchone(sql, (self._id, ))
-        if inv is None:
-            return None
-        return Investigation(inv[0])
+        return Investigation(inv[0]) if inv is not None else inv
 
     @property
     def metadata(self):
@@ -507,12 +506,12 @@ class Study(QiitaStatusObject):
                 conn_handler.execute_fetchall(sql, (self._id,))]
 
 # --- methods ---
-    def share_with(self, user):
+    def share(self, user):
         """Shares the study with given user
 
         Parameters
         ----------
-        email: User object
+        user: User object
             The user to share with
         """
         conn_handler = SQLConnectionHandler()
@@ -567,9 +566,9 @@ class StudyPerson(QiitaObject):
             True if person exists else false
         """
         conn_handler = SQLConnectionHandler()
-        sql = ("SELECT count(1) FROM qiita.{0} WHERE name = %s AND "
-               "email = %s".format(cls._table))
-        return bool(conn_handler.execute_fetchone(sql, (name, email))[0])
+        sql = ("SELECT exists(SELECT * FROM qiita.{0} WHERE "
+               "name = %s AND email = %s)".format(cls._table))
+        return conn_handler.execute_fetchone(sql, (name, email))[0]
 
     @classmethod
     def create(cls, name, email, address=None, phone=None):
@@ -596,7 +595,7 @@ class StudyPerson(QiitaObject):
             Person already exists
         """
         if cls.exists(name, email):
-            raise QiitaDBExecutionError("StudyPerson already exists!")
+            raise QiitaDBDuplicateError("StudyPerson already exists!")
 
         # Doesn't exist so insert new person
         sql = ("INSERT INTO qiita.{0} (name, email, address, phone) VALUES"

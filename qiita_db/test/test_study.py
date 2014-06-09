@@ -8,7 +8,7 @@ from qiita_db.investigation import Investigation
 from qiita_db.data import PreprocessedData, RawData, ProcessedData
 from qiita_db.metadata_template import SampleTemplate
 from qiita_db.user import User
-from qiita_db.exceptions import (QiitaDBExecutionError, QiitaDBColumnError,
+from qiita_db.exceptions import (QiitaDBDuplicateError, QiitaDBColumnError,
                                  QiitaDBStatusError)
 from qiita_db.sql_connection import SQLConnectionHandler
 
@@ -40,7 +40,7 @@ class TestStudyPerson(TestCase):
         self.assertEqual(obs["phone"], '111-121-1313')
 
     def test_create_studyperson_already_exists(self):
-        with self.assertRaises(QiitaDBExecutionError):
+        with self.assertRaises(QiitaDBDuplicateError):
             new = StudyPerson.create('LabDude', 'lab_dude@foo.bar')
 
     def test_retrieve_name(self):
@@ -87,7 +87,6 @@ class TestStudy(TestCase):
 
         self.info = {
             "timeseries_type_id": 1,
-            "study_experimental_factor": 1,
             "metadata_complete": True,
             "mixs_compliant": True,
             "number_samples_collected": 25,
@@ -104,7 +103,7 @@ class TestStudy(TestCase):
             "lab_person_id": StudyPerson(1)
         }
 
-        self.weedexp = {
+        self.existingexp = {
             'mixs_compliant': True,
             'metadata_complete': True,
             'reprocess': False,
@@ -129,8 +128,7 @@ class TestStudy(TestCase):
                                "erent time points in the plant lifecycle."),
             'email': User('test@foo.bar'),
             'spatial_series': False,
-            'study_description': ('Analysis of the Cannabis Plant Microbiome'),
-            'study_experimental_factor': [1],
+            'study_description': 'Analysis of the Cannabis Plant Microbiome',
             'portal_type_id': 2,
             'study_alias': 'Cannabis Soils',
             'most_recent_contact': '2014-05-19 16:11',
@@ -141,14 +139,15 @@ class TestStudy(TestCase):
 
     def test_create_study_min_data(self):
         """Insert a study into the database"""
-        obs = Study.create(User('test@foo.bar'), self.info)
+        obs = Study.create(User('test@foo.bar'), 1, self.info)
         self.assertEqual(obs.id, 2)
         exp = {'mixs_compliant': True, 'metadata_complete': True,
                'reprocess': False, 'study_status_id': 1,
                'number_samples_promised': 28, 'emp_person_id': 2,
                'funding': None, 'vamps_id': None,
                'first_contact': date.today().strftime("%B %d, %Y"),
-               'principal_investigator_id': 3, 'timeseries_type_id': 1,
+               'principal_investigator_id': 3,
+               'timeseries_type_id': 1,
                'study_abstract': ('Exploring how a high fat diet changes the '
                                   'gut microbiome'),
                'email': 'test@foo.bar', 'spatial_series': None,
@@ -172,13 +171,14 @@ class TestStudy(TestCase):
 
     def test_create_study_with_investigation(self):
         """Insert a study into the database with an investigation"""
-        obs = Study.create(User('test@foo.bar'), self.info, Investigation(1))
+        obs = Study.create(User('test@foo.bar'), 1, self.info,
+                           Investigation(1))
         self.assertEqual(obs.id, 2)
         # check the investigation was assigned
         conn = SQLConnectionHandler()
-        obs3 = conn.execute_fetchall("SELECT * from qiita.investigation_study "
+        obs = conn.execute_fetchall("SELECT * from qiita.investigation_study "
                                      "WHERE study_id = 2")
-        self.assertEqual(obs3, [[1, 2]])
+        self.assertEqual(obs, [[1, 2]])
 
     def test_create_study_all_data(self):
         """Insert a study into the database with every info field"""
@@ -188,7 +188,7 @@ class TestStudy(TestCase):
             'spatial_series': True,
             'metadata_complete': False,
             })
-        obs = Study.create(User('test@foo.bar'), self.info)
+        obs = Study.create(User('test@foo.bar'), 1, self.info)
         self.assertEqual(obs.id, 2)
         exp = {'mixs_compliant': True, 'metadata_complete': False,
                'reprocess': False, 'study_status_id': 1,
@@ -216,105 +216,104 @@ class TestStudy(TestCase):
                                        "study_id = 2")
         self.assertEqual(obsefo, [[1]])
 
-    def test_create_missing_requred(self):
+    def test_create_missing_required(self):
         """ Insert a study that is missing a required info key"""
         self.info.pop("study_title")
         with self.assertRaises(QiitaDBColumnError):
-            Study.create(User('test@foo.bar'), self.info)
+            Study.create(User('test@foo.bar'), 1, self.info)
 
     def test_create_study_id(self):
         """Insert a study with study_id present"""
         self.info.update({"study_id": 1})
         with self.assertRaises(IncompetentQiitaDeveloperError):
-            Study.create(User('test@foo.bar'), self.info)
+            Study.create(User('test@foo.bar'), 1, self.info)
 
     def test_create_study_status(self):
         """Insert a study with status present"""
         self.info.update({"study_status_id": 1})
         with self.assertRaises(IncompetentQiitaDeveloperError):
-            Study.create(User('test@foo.bar'), self.info)
-
-    def test_create_no_efo(self):
-        """Insert a study no experimental factors passed"""
-        self.info.pop("study_experimental_factor")
-        with self.assertRaises(QiitaDBColumnError):
-            Study.create('test@foo.bar', self.info)
+            Study.create(User('test@foo.bar'), 1, self.info)
 
     def test_create_unknown_db_col(self):
         """ Insert a study with an info key not in the database"""
         self.info["SHOULDNOTBEHERE"] = "BWAHAHAHAHAHA"
         with self.assertRaises(QiitaDBColumnError):
-            Study.create(User('test@foo.bar'), self.info)
+            Study.create(User('test@foo.bar'), 1, self.info)
 
     def test_retrieve_title(self):
         self.assertEqual(self.study.title, 'Identification of the Microbiomes'
                          ' for Cannabis Soils')
 
     def test_set_title(self):
-        self.study.status = 1
-        self.study.title = "Weed Soils"
-        self.assertEqual(self.study.title, "Weed Soils")
+        new = Study.create(User('test@foo.bar'), 1, self.info)
+        new.title = "Cannabis soils"
+        self.assertEqual(new.title, "Cannabis soils")
 
     def test_set_title_public(self):
         """Tests for fail if editing title of a public study"""
         with self.assertRaises(QiitaDBStatusError):
-            self.study.title = "Weed Soils"
+            self.study.title = "FAILBOAT"
+
+    def test_get_efo(self):
+        self.assertEqual(self.study.efo, [1])
+
+    def test_set_efo_list(self):
+        """Set efo with list efo_id"""
+        new = Study.create(User("test@foo.bar"), 1, self.info)
+        new.efo = [3, 4]
+        self.assertEqual(new.efo, [3, 4])
+
+    def test_set_efo_int(self):
+        """Set efo with int efo_id"""
+        new = Study.create(User("test@foo.bar"), 1, self.info)
+        new.efo = 5
+        self.assertEqual(new.efo, [5])
+
+    def test_set_efo_public(self):
+        """Set efo on a public study"""
+        with self.assertRaises(QiitaDBStatusError):
+            self.study.efo = 6
 
     def test_retrieve_info(self):
-        self.assertEqual(self.study.info, self.weedexp)
+        self.assertEqual(self.study.info, self.existingexp)
 
     def test_set_info(self):
-        """Set info with integer efo_id"""
+        """Set info in a study"""
         newinfo = {
             "timeseries_type_id": 2,
-            "study_experimental_factor": 3,
             "metadata_complete": False,
             "number_samples_collected": 28,
             "lab_person_id": StudyPerson(2),
             "vamps_id": 'MBE_111222'
         }
+        new = Study.create(User('test@foo.bar'), 1, self.info)
+        self.info.update(newinfo)
+        new.info = newinfo
+        # add missing table cols
+        self.info["funding"] = None
+        self.info["spatial_series"] = False
+        for key, val in new.info.iteritems():
+            if val != self.info[key]:
+                print key, val, self.info[key]
+        self.assertEqual(new.info, self.info)
 
-        self.weedexp.update(newinfo)
-        # Fix study_experimental_factor since update wipes out the 1
-        self.weedexp['study_experimental_factor'] = [1, 3]
-        self.study.status = 1
-        self.study.info = newinfo
-        self.assertEqual(self.study.info, self.weedexp)
-
-    def test_set_tinfo_public(self):
+    def test_set_info_public(self):
         """Tests for fail if editing info of a public study"""
         with self.assertRaises(QiitaDBStatusError):
-            self.study.title = "Weed Soils"
-
-    def test_set_info_efo_list(self):
-        """Set info with list efo_id"""
-        newinfo = {
-            "timeseries_type_id": 2,
-            "study_experimental_factor": [3, 4],
-            "metadata_complete": False,
-            "number_samples_collected": 28,
-            "lab_person_id": StudyPerson(2),
-            "vamps_id": 'MBE_111222'
-        }
-
-        self.weedexp.update(newinfo)
-        # Fix study_experimental_factor since update wipes out the 1
-        self.weedexp['study_experimental_factor'] = [1, 3, 4]
-        self.study.status = 1
-        self.study.info = newinfo
-        self.assertEqual(self.study.info, self.weedexp)
+            self.study.info = {"vamps_id": "12321312"}
 
     def test_info_empty(self):
-        self.study.status = 1
+        new = Study.create(User('test@foo.bar'), 1, self.info)
         with self.assertRaises(IncompetentQiitaDeveloperError):
-            self.study.info = {}
+            new.info = {}
 
     def test_retrieve_status(self):
         self.assertEqual(self.study.status, 2)
 
     def test_set_status(self):
-        self.study.status = 1
-        self.assertEqual(self.study.status, 1)
+        new = Study.create(User('test@foo.bar'), 1, self.info)
+        new.status = 3
+        self.assertEqual(new.status, 3)
 
     def test_retrieve_shared_with(self):
         self.assertEqual(self.study.shared_with, [User('shared@foo.bar')])
@@ -332,15 +331,27 @@ class TestStudy(TestCase):
     def test_retrieve_raw_data(self):
         self.assertEqual(self.study.raw_data, [RawData(1), RawData(2)])
 
+    def test_retrieve_raw_data_none(self):
+        new = Study.create(User('test@foo.bar'), 1, self.info)
+        self.assertEqual(new.raw_data, [])
+
     def test_retrieve_preprocessed_data(self):
         self.assertEqual(self.study.preprocessed_data, [PreprocessedData(1),
                                                         PreprocessedData(2)])
 
+    def test_retrieve_preprocessed_data_none(self):
+        new = Study.create(User('test@foo.bar'), 1, self.info)
+        self.assertEqual(new.preprocessed_data, [])
+
     def test_retrieve_processed_data(self):
         self.assertEqual(self.study.processed_data, [ProcessedData(1)])
 
-    def test_share_with(self):
-        self.study.share_with(User('admin@foo.bar'))
+    def test_retrieve_processed_data_none(self):
+        new = Study.create(User('test@foo.bar'), 1, self.info)
+        self.assertEqual(new.processed_data, [])
+
+    def test_share(self):
+        self.study.share(User('admin@foo.bar'))
         self.assertEqual(self.study.shared_with, [User('shared@foo.bar'),
                                                   User('admin@foo.bar')])
 

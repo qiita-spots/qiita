@@ -40,3 +40,8 @@ class QiitaDBConnectionError(QiitaDBError):
 class QiitaDBColumnError(QiitaDBError):
     """Exception when missing table information or excess information passed"""
     pass
+
+
+class QiitaDBDuplicateError(QiitaDBError):
+    """Exception when duplicating something in the database"""
+    pass

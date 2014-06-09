@@ -27,6 +27,7 @@ class DBUtilTests(TestCase):
             'principal_investigator_id', 'email', 'number_samples_collected']
 
     def test_check_required_columns(self):
+        # Doesn't do anything if correct info passed, only errors if wrong info
         check_required_columns(self.conn_handler, self.required, self.table)
 
     def test_check_required_columns_fail(self):
@@ -36,6 +37,7 @@ class DBUtilTests(TestCase):
                                    self.table)
 
     def test_check_table_cols(self):
+        # Doesn't do anything if correct info passed, only errors if wrong info
         check_table_cols(self.conn_handler, self.required, self.table)
 
     def test_check_table_cols_fail(self):
