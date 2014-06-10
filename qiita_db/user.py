@@ -45,12 +45,6 @@ class User(QiitaObject):
 
     Methods
     -------
-    add_private_study(study)
-        Adds a new private study to the user
-
-    remove_private_study(study)
-        Removes a private study from the user
-
     add_shared_study(study)
         Adds a new shared study to the user
 
@@ -316,35 +310,17 @@ class User(QiitaObject):
         return [Analysis(a[0]) for a in analyses]
 
     # ---Functions---
-    def add_private_study(self, study):
-        """Adds a new private study to the user
-
-        Parameters
-        ----------
-        study :
-            The study to be added to the private list
-        """
-        raise QiitaDBNotImplementedError()
-
-    def remove_private_study(self, study):
-        """Removes a private study from the user
-
-        Parameters
-        ----------
-        study :
-            The study to be removed from the private list
-        """
-        raise QiitaDBNotImplementedError()
-
     def add_shared_study(self, study):
         """Adds a new shared study to the user
 
         Parameters
         ----------
-        study :
+        study : Study object
             The study to be added to the shared list
         """
-        raise QiitaDBNotImplementedError()
+        sql = "INSERT INTO qiita.study_users (email, study_id) VALUES (%s, %s)"
+        conn_handler = SQLConnectionHandler()
+        conn_handler.execute(sql, (self._id, study.id))
 
     def remove_shared_study(self, study):
         """Removes a shared study from the user
@@ -354,37 +330,22 @@ class User(QiitaObject):
         study :
             The study to be removed from the shared list
         """
-        raise QiitaDBNotImplementedError()
-
-    def add_private_analysis(self, analysis):
-        """Adds a new private analysis to the user
-
-        Parameters
-        ----------
-        analysis :
-            The analysis to be added to the private list
-        """
-        raise QiitaDBNotImplementedError()
-
-    def remove_private_analysis(self, analysis):
-        """Removes a private analysis from the user
-
-        Parameters
-        ----------
-        analysis :
-            The analysis to be removed from the private list
-        """
-        raise QiitaDBNotImplementedError()
+        sql = ("DELETE FROM qiita.study_users WHERE  email = %s")
+        conn_handler = SQLConnectionHandler()
+        conn_handler.execute(sql, (self._id, ))
 
     def add_shared_analysis(self, analysis):
         """Adds a new shared analysis to the user
 
         Parameters
         ----------
-        analysis :
+        analysis : Analysis object
             The analysis to be added to the shared list
         """
-        raise QiitaDBNotImplementedError()
+        sql = ("INSERT INTO qiita.analysis_users (email, study_id) VALUES "
+               "(%s, %s)")
+        conn_handler = SQLConnectionHandler()
+        conn_handler.execute(sql, (self._id, analysis.id))
 
     def remove_shared_analysis(self, analysis):
         """Removes a shared analysis from the user
@@ -394,4 +355,6 @@ class User(QiitaObject):
         analysis :
             The analysis to be removed from the shared list
         """
-        raise QiitaDBNotImplementedError()
+        sql = ("DELETE FROM qiita.analysis_users WHERE  email = %s")
+        conn_handler = SQLConnectionHandler()
+        conn_handler.execute(sql, (self._id, ))
