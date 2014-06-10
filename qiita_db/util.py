@@ -3,6 +3,8 @@ from __future__ import division
 from random import choice
 from string import ascii_letters, digits, punctuation
 
+from bcrypt import hashpw, gensalt
+
 from .exceptions import QiitaDBColumnError
 
 # -----------------------------------------------------------------------------
@@ -66,7 +68,34 @@ def create_rand_string(length, punct=True):
         chars = ''.join((ascii_letters, digits))
         if punct:
             chars = ''.join((chars, punctuation))
-        return ''.join(choice(chars) for i in xrange(length+1))
+        return ''.join(choice(chars) for i in xrange(length))
+
+
+def hash_pw(password, hashedpw=None):
+        """ Hashes password
+
+        Parameters
+        ----------
+        password: str
+            Plaintext password
+        hashedpw: str, optional
+            Previously hashed password for bcrypt to pull salt from. If not
+            given, salt generated before hash
+
+        Returns
+        -------
+        str
+            Hashed password
+
+        Notes
+        -----
+        Relies on bcrypt library to hash passwords, which stores the salt as
+        part of the hashed password. Don't need to actually store the salt
+        because of this.
+        """
+        if hashedpw is None:
+            hashedpw = gensalt()
+        return hashpw(password, hashedpw)
 
 
 def check_required_columns(conn_handler, keys, table):

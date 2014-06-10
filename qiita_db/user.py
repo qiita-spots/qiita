@@ -1,14 +1,31 @@
 #!/usr/bin/env python
 from __future__ import division
 
-"""
-Objects for dealing with Qiita users
+r"""
+User object (:mod:`qiita_db.user`)
+=====================================================
 
-This modules provides the implementation of the User class.
+.. currentmodule:: qiita_db.user
+
+This modules provides the implementation of the User class. This is used for
+handling creation, deletion, and login of users, as well as retrieval of all
+studies and analyses that are owned by or shared with the user.
 
 Classes
 -------
-- `User` -- A Qiita user class
+
+.. autosummary::
+   :toctree: generated/
+
+   User
+
+
+Examples
+--------
+A user is created using an email and password.
+
+>>> user = User('email@test.com', 'password')
+
 """
 # -----------------------------------------------------------------------------
 # Copyright (c) 2014--, The Qiita Development Team.
@@ -19,9 +36,9 @@ Classes
 # -----------------------------------------------------------------------------
 from .base import QiitaObject
 
-from ..qiita_core.util import hash_pw
+from .util import hash_pw
+from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from .exceptions import (QiitaDBNotImplementedError,
-                         IncompetentQiitaDeveloperError,
                          QiitaDBDuplicateError, QiitaDBColumnError)
 from .sql_connection import SQLConnectionHandler
 from .util import create_rand_string, check_table_cols
@@ -137,16 +154,19 @@ class User(QiitaObject):
             raise QiitaDBDuplicateError("User %s already exists" % email)
 
         # make sure non-info columns arent passed in info dict
-        for key in info:
-            if key in cls._non_info:
-                raise QiitaDBColumnError("%s should not be passed in info!" %
-                                         key)
+        if info:
+            for key in info:
+                if key in cls._non_info:
+                    raise QiitaDBColumnError("%s should not be passed in info!"
+                                             % key)
+        else:
+            info = {}
 
         # create email verification code and hashed password to insert
         # add values to info
         info["email"] = email
         info["password"] = hash_pw(password)
-        info["verify_code"] = create_rand_string(20, punct=False)
+        info["user_verify_code"] = create_rand_string(20, punct=False)
 
         # make sure keys in info correspond to columns in table
         conn_handler = SQLConnectionHandler()
@@ -155,22 +175,12 @@ class User(QiitaObject):
         # build info to insert making sure columns and data are in same order
         # for sql insertion
         columns = info.keys()
-        values = (info[col] for col in columns)
+        values = [info[col] for col in columns]
 
         sql = ("INSERT INTO qiita.%s (%s) VALUES (%s)" %
                (cls._table, ','.join(columns), ','.join(['%s'] * len(values))))
         conn_handler.execute(sql, values)
-
-    @classmethod
-    def delete(cls, id_):
-        """Deletes the user `id` from the database
-
-        Parameters
-        ----------
-        id_ :
-            The object identifier
-        """
-        raise QiitaDBNotImplementedError()
+        return cls(email)
 
     def _check_id(self, id_, conn_handler=None):
         r"""Check that the provided ID actually exists on the database
@@ -190,8 +200,6 @@ class User(QiitaObject):
 
         conn_handler = (conn_handler if conn_handler is not None
                         else SQLConnectionHandler())
-        print ("SELECT EXISTS(SELECT * FROM qiita.qiita_user WHERE "
-               "email = %s)" % id_)
         return conn_handler.execute_fetchone(
             "SELECT EXISTS(SELECT * FROM qiita.qiita_user WHERE "
             "email = %s)", (id_, ))[0]
@@ -236,7 +244,7 @@ class User(QiitaObject):
         conn_handler = SQLConnectionHandler()
         sql = "SELECT * from qiita.{0} WHERE email = %s".format(self._table)
         # Need direct typecast from psycopg2 dict to standard dict
-        info = dict(conn_handler.execute_fetchall(sql, (self._id, )))
+        info = dict(conn_handler.execute_fetchone(sql, (self._id, )))
         # Remove non-info columns
         for col in self._non_info:
             info.pop(col)
@@ -276,8 +284,8 @@ class User(QiitaObject):
     @property
     def private_studies(self):
         """Returns a list of private studies owned by the user"""
-        sql = ("SELECT study_id FROM qiita.study WHERE study_status_id = 3 AND"
-               " email = %s".format(self._table))
+        sql = ("SELECT study_id FROM qiita.study WHERE "
+               "email = %s".format(self._table))
         conn_handler = SQLConnectionHandler()
         studies = conn_handler.execute_fetchall(sql, (self._id, ))
         return [Study(s[0]) for s in studies]
