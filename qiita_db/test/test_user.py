@@ -12,6 +12,7 @@ from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_core.util import qiita_test_checker
 from qiita_db.user import User
 from qiita_db.study import Study
+from qiita_db.analysis import Analysis
 from qiita_db.sql_connection import SQLConnectionHandler
 from qiita_db.exceptions import QiitaDBDuplicateError, QiitaDBColumnError
 
@@ -153,12 +154,12 @@ class SetupTest(TestCase):
     def test_set_info_not_info(self):
         self.userinfo["email"] = "FAIL"
         with self.assertRaises(QiitaDBColumnError):
-            self.user = self.userinfo
+            self.user.info = self.userinfo
 
     def test_set_info_bad_info(self):
         self.userinfo["BADTHING"] = "FAIL"
         with self.assertRaises(QiitaDBColumnError):
-            self.user = self.userinfo
+            self.user.info = self.userinfo
 
     def test_get_private_studies(self):
         user = User('test@foo.bar')
@@ -182,6 +183,15 @@ class SetupTest(TestCase):
         user = User('shared@foo.bar')
         user.remove_shared_study(Study(1))
         self.assertEqual(user.shared_studies, [])
+
+    def test_add_shared_analysis(self):
+        self.user.add_shared_analysis(Analysis(1))
+        self.assertEqual(self.user.shared_analyses, [Analysis(1)])
+
+    def test_remove_shared_analysis(self):
+        user = User('shared@foo.bar')
+        user.remove_shared_analysis(Analysis(1))
+        self.assertEqual(user.shared_analyses, [])
 
 
     # TODO test analysis functions and the get/set analyses properly

@@ -350,7 +350,7 @@ class User(QiitaObject):
         analysis : Analysis object
             The analysis to be added to the shared list
         """
-        sql = ("INSERT INTO qiita.analysis_users (email, study_id) VALUES "
+        sql = ("INSERT INTO qiita.analysis_users (email, analysis_id) VALUES "
                "(%s, %s)")
         conn_handler = SQLConnectionHandler()
         conn_handler.execute(sql, (self._id, analysis.id))
