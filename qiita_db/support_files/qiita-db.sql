@@ -6,6 +6,12 @@ CREATE TABLE qiita.analysis_status (
 	CONSTRAINT pk_analysis_status PRIMARY KEY ( analysis_status_id )
  );
 
+CREATE TABLE qiita.checksum_algorithm ( 
+	checksum_algorithm_id bigserial  NOT NULL,
+	name                 varchar  NOT NULL,
+	CONSTRAINT pk_checksum_algorithm PRIMARY KEY ( checksum_algorithm_id )
+ );
+
 CREATE TABLE qiita.command ( 
 	command_id           bigserial  NOT NULL,
 	name                 varchar  NOT NULL,
@@ -347,11 +353,16 @@ CREATE TABLE qiita.filepath (
 	filepath_id          bigserial  NOT NULL,
 	filepath             varchar  NOT NULL,
 	filepath_type_id     bigint  NOT NULL,
+	checksum             varchar  NOT NULL,
+	checksum_algorithm_id bigint  NOT NULL,
 	CONSTRAINT pk_filepath PRIMARY KEY ( filepath_id ),
-	CONSTRAINT fk_filepath FOREIGN KEY ( filepath_type_id ) REFERENCES qiita.filepath_type( filepath_type_id )    
+	CONSTRAINT fk_filepath FOREIGN KEY ( filepath_type_id ) REFERENCES qiita.filepath_type( filepath_type_id )    ,
+	CONSTRAINT fk_filepath_0 FOREIGN KEY ( checksum_algorithm_id ) REFERENCES qiita.checksum_algorithm( checksum_algorithm_id )    
  );
 
 CREATE INDEX idx_filepath ON qiita.filepath ( filepath_type_id );
+
+CREATE INDEX idx_filepath_0 ON qiita.filepath ( checksum_algorithm_id );
 
 CREATE TABLE qiita.investigation ( 
 	investigation_id     bigserial  NOT NULL,
