@@ -95,7 +95,7 @@ def hash_pw(password, hashedpw=None):
         """
         if hashedpw is None:
             hashedpw = gensalt()
-        return hashpw(password, hashedpw)
+        return hashpw(password.encode('utf-8'), hashedpw.encode('utf-8'))
 
 
 def check_required_columns(conn_handler, keys, table):
