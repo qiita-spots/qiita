@@ -47,7 +47,7 @@ class SetupTest(TestCase):
         self._check_count("qiita.study_experimental_factor", 1)
 
     def test_filepath(self):
-        self._check_count("qiita.filepath", 10)
+        self._check_count("qiita.filepath", 9)
 
     def test_raw_data(self):
         self._check_count("qiita.raw_data", 2)
