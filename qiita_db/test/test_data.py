@@ -46,6 +46,11 @@ class RawDataTests(TestCase):
         self.db_test_raw_dir = join(get_db_files_base_dir(), 'raw_data')
         self._clean_up_files = [self.seqs_fp, self.barcodes_fp]
 
+        with open(self.seqs_fp, "w") as f:
+            f.write("\n")
+        with open(self.barcodes_fp, "w") as f:
+            f.write("\n")
+
     def tearDown(self):
         map(remove, self._clean_up_files)
 
@@ -83,7 +88,8 @@ class RawDataTests(TestCase):
             "SELECT * FROM qiita.filepath WHERE filepath_id=8 or "
             "filepath_id=9")
         # filepath_id, path, filepath_type_id
-        exp = [[8, exp_seqs_fp, 1], [9, exp_bc_fp, 2]]
+        exp = [[8, exp_seqs_fp, 1, '852952723', 1],
+               [9, exp_bc_fp, 2, '852952723', 1]]
         self.assertEqual(obs, exp)
 
         # Check that the raw data have been correctly linked with the filepaths
@@ -137,6 +143,11 @@ class PreprocessedDataTests(TestCase):
                                     'preprocessed_data')
         self._clean_up_files = [self.fna_fp, self.qual_fp]
 
+        with open(self.fna_fp, "w") as f:
+            f.write("\n")
+        with open(self.qual_fp, "w") as f:
+            f.write("\n")
+
     def tearDown(self):
         map(remove, self._clean_up_files)
 
@@ -180,7 +191,8 @@ class PreprocessedDataTests(TestCase):
             "SELECT * FROM qiita.filepath WHERE filepath_id=8 or "
             "filepath_id=9")
         # filepath_id, path, filepath_type_id
-        exp = [[8, exp_fna_fp, 4], [9, exp_qual_fp, 5]]
+        exp = [[8, exp_fna_fp, 4, '852952723', 1],
+               [9, exp_qual_fp, 5, '852952723', 1]]
         self.assertEqual(obs, exp)
 
         # Check that the preprocessed data have been correctly
@@ -246,6 +258,9 @@ class ProcessedDataTests(TestCase):
         self.db_test_pd_dir = join(get_db_files_base_dir(), 'processed_data')
         self._clean_up_files = [self.biom_fp]
 
+        with open(self.biom_fp, "w") as f:
+            f.write("\n")
+
     def tearDown(self):
         map(remove, self._clean_up_files)
 
@@ -274,7 +289,7 @@ class ProcessedDataTests(TestCase):
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.filepath WHERE filepath_id=8")
         # Filepath_id, path, filepath_type_id
-        exp = [[8, exp_biom_fp, 6]]
+        exp = [[8, exp_biom_fp, 6, '852952723', 1]]
         self.assertEqual(obs, exp)
 
         # Check that the processed data have been correctly linked

@@ -7,16 +7,19 @@
 # -----------------------------------------------------------------------------
 
 from unittest import TestCase, main
+from tempfile import mkstemp
 from os.path import dirname, abspath, join
+from os import close
 
 from qiita_core.util import qiita_test_checker
 from qiita_db.sql_connection import SQLConnectionHandler
 from qiita_db.util import (exists_table, exists_dynamic_table,
-                           get_db_files_base_dir)
+                           get_db_files_base_dir, compute_checksum)
 
 
 @qiita_test_checker()
 class DBUtilTests(TestCase):
+    """Tests for the util functions that need to access the DB"""
 
     def setUp(self):
         self.conn_handler = SQLConnectionHandler()
@@ -69,6 +72,22 @@ class DBUtilTests(TestCase):
         self.assertEqual(get_db_files_base_dir(), exp)
         self.assertEqual(get_db_files_base_dir(conn_handler=self.conn_handler),
                          exp)
+
+
+class UtilTests(TestCase):
+    """Tests for the util functions that do not need to access the DB"""
+
+    def setUp(self):
+        fh, self.filepath = mkstemp()
+        close(fh)
+        with open(self.filepath, "w") as f:
+            f.write("Some text so we can actually compute a checksum")
+
+    def test_compute_checksum(self):
+        """Correctly returns the file checksum"""
+        obs = compute_checksum(self.filepath)
+        exp = 1719580229
+        self.assertEqual(obs, exp)
 
 if __name__ == '__main__':
     main()

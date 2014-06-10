@@ -7,6 +7,7 @@
 # -----------------------------------------------------------------------------
 
 from __future__ import division
+from binascii import crc32
 
 from qiita_db.sql_connection import SQLConnectionHandler
 
@@ -98,3 +99,29 @@ def get_db_files_base_dir(conn_handler=None):
                     else SQLConnectionHandler())
     return conn_handler.execute_fetchone(
         "SELECT base_data_dir FROM settings")[0]
+
+
+def compute_checksum(filepath):
+    """Returns the checksum of the file pointed by filepath
+
+    Parameters
+    ----------
+    filepath : str
+        The path to the file
+
+    Returns
+    -------
+    int
+        The file checksum
+    """
+    crc = None
+    with open(filepath, "U") as f:
+        # Go line by line so we don't need to load the entire file in memory
+        for line in f:
+            if crc is None:
+                crc = crc32(line)
+            else:
+                crc = crc32(line, crc)
+    # We need the & 0xffffffff in order to get the same numeric value across
+    # all python versions and platforms
+    return crc & 0xffffffff

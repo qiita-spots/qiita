@@ -92,7 +92,7 @@ from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from .base import QiitaObject
 from .study import Study
 from .sql_connection import SQLConnectionHandler
-from .util import exists_dynamic_table, get_db_files_base_dir
+from .util import exists_dynamic_table, get_db_files_base_dir, compute_checksum
 
 
 class BaseData(QiitaObject):
@@ -140,19 +140,26 @@ class BaseData(QiitaObject):
         # Keeping the original name is useful for checking if the RawData
         # alrady exists on the DB
         db_path = partial(join, base_data_dir)
-        new_filepaths = [(db_path("%s_%s" % (self.id, basename(path))), id)
-                         for path, id in filepaths]
+        new_filepaths = [
+            (db_path("%s_%s" % (self.id, basename(path))), id)
+            for path, id in filepaths]
         # Copy the original files to the controlled DB directory
         for old_fp, new_fp in zip(filepaths, new_filepaths):
             copy(old_fp[0], new_fp[0])
 
+        paths_w_checksum = [(path, id, compute_checksum(path))
+                            for path, id in new_filepaths]
+
         # Create the list of SQL values to add
-        values = ["('%s', %s)" % (path, id) for path, id in new_filepaths]
+        values = ["('%s', %s, '%s', %s)" % (path, id, checksum, 1)
+                  for path, id, checksum in paths_w_checksum]
         # Insert all the filepaths at once and get the filepath_id back
         ids = conn_handler.execute_fetchall(
-            "INSERT INTO qiita.{0} (filepath, filepath_type_id) VALUES {1} "
+            "INSERT INTO qiita.{0} (filepath, filepath_type_id, checksum, "
+            "checksum_algorithm_id) VALUES {1} "
             "RETURNING filepath_id".format(self._filepath_table,
                                            ', '.join(values)))
+
         # we will receive a list of lists with a single element on it (the id),
         # transform it to a list of ids
         return [id[0] for id in ids]
