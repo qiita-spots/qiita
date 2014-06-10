@@ -96,7 +96,7 @@ from .util import exists_dynamic_table, get_db_files_base_dir
 
 
 class BaseData(QiitaObject):
-    """Base class for the raw, preprocessed and processed data objects.
+    r"""Base class for the raw, preprocessed and processed data objects.
 
     Methods
     -------
@@ -117,7 +117,7 @@ class BaseData(QiitaObject):
     _data_filepath_column = None
 
     def _insert_filepaths(self, filepaths, conn_handler):
-        """Inserts `filepaths` in the DB connected with `conn_handler`. Since
+        r"""Inserts `filepaths` in the DB connected with `conn_handler`. Since
         the files live outside the database, the directory in which the files
         lives is controlled by the database, so it copies the filepaths from
         its original location to the controlled directory.
@@ -158,7 +158,7 @@ class BaseData(QiitaObject):
         return [id[0] for id in ids]
 
     def _link_data_filepaths(self, fp_ids, conn_handler):
-        """Links the data `data_id` with its filepaths `fp_ids` in the DB
+        r"""Links the data `data_id` with its filepaths `fp_ids` in the DB
         connected with `conn_handler`
 
         Parameters
@@ -184,7 +184,7 @@ class BaseData(QiitaObject):
                                      self._data_filepath_column), values)
 
     def _add_filepaths(self, filepaths, conn_handler):
-        """"""
+        r""""""
         self._check_subclass()
 
         # Add the filepaths to the database
@@ -194,7 +194,7 @@ class BaseData(QiitaObject):
         self._link_data_filepaths(fp_ids, conn_handler)
 
     def get_filepaths(self):
-        """Returns the filepath associated with the data object
+        r"""Returns the filepath associated with the data object
 
         Returns
         -------
@@ -220,7 +220,7 @@ class BaseData(QiitaObject):
 
 
 class RawData(BaseData):
-    """
+    r"""
 
     See Also
     --------
@@ -236,7 +236,7 @@ class RawData(BaseData):
 
     @classmethod
     def create(cls, filetype, filepaths, studies, submitted_to_insdc=False):
-        """Creates a new object with a new id on the storage system
+        r"""Creates a new object with a new id on the storage system
 
         Parameters
         ----------
@@ -273,7 +273,7 @@ class RawData(BaseData):
         return rd
 
     def is_submitted_to_insdc(self):
-        """Tells if the raw data has been submitted to insdc
+        r"""Tells if the raw data has been submitted to insdc
 
         Returns
         -------
@@ -287,7 +287,7 @@ class RawData(BaseData):
 
     @property
     def studies(self):
-        """The list of Study objects to which the raw data belongs to"""
+        r"""The list of Study objects to which the raw data belongs to"""
         conn_handler = SQLConnectionHandler()
         ids = conn_handler.execute_fetchall(
             "SELECT study_id FROM qiita.{0} WHERE "
@@ -297,7 +297,7 @@ class RawData(BaseData):
 
 
 class PreprocessedData(BaseData):
-    """
+    r"""
 
     See Also
     --------
@@ -311,7 +311,7 @@ class PreprocessedData(BaseData):
     @classmethod
     def create(cls, raw_data, preprocessed_params_table,
                preprocessed_params_id, filepaths):
-        """Creates a new object with a new id on the storage system
+        r"""Creates a new object with a new id on the storage system
 
         Parameters
         ----------
@@ -353,7 +353,7 @@ class PreprocessedData(BaseData):
 
 
 class ProcessedData(BaseData):
-    """
+    r"""
 
     See Also
     --------
@@ -367,7 +367,7 @@ class ProcessedData(BaseData):
     @classmethod
     def create(cls, preprocessed_data, processed_params_table,
                processed_params_id, filepaths, processed_date=None):
-        """
+        r"""
         Parameters
         ----------
         preprocessed_data : PreprocessedData
