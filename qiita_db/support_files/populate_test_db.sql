@@ -309,3 +309,27 @@ INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum, checksum_algor
 
 -- Insert (link) the processed data with the processed filepath
 INSERT INTO qiita.processed_filepath (processed_data_id, filepath_id) VALUES (1, 5);
+
+-- Insert filepath for analysis biom file and job results files
+INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum, checksum_algorithm_id) VALUES ('firstanalysis.biom', 1, '852952723', 1), ('job1result.txt', 1, '852952723', 1), ('job2result.txt', 1, '852952723', 1);
+
+-- Insert jobs
+INSERT INTO qiita.job (data_type_id, job_status_id, command_id, options) VALUES (1, 3, 1, 'options1'), (1, 3, 2, 'options2');
+
+-- Insert Analysis
+INSERT INTO qiita.analysis (email, name, description, analysis_status_id, pmid) VALUES ('test@foo.bar', 'SomeAnalysis', 'A test analysis', 4, '121112');
+
+-- Attach jobs to analysis
+INSERT INTO qiita.analysis_job (analysis_id, job_id) VALUES (1, 1), (1, 2);
+
+-- Attach filepath to analysis
+INSERT INTO qiita.analysis_filepath (analysis_id, filepath_id) VALUES (1, 8);
+
+-- Attach samples to analysis
+INSERT INTO qiita.analysis_sample (analysis_id, processed_data_id, sample_id) VALUES (1,1,'SKB8.640193'), (1,1,'SKD8.640184'), (1,1,'SKB7.640196'), (1,1,'SKM9.640192'), (1,1,'SKM4.640180');
+
+--Share analysis with shared user
+INSERT INTO qiita.analysis_users (analysis_id, email) VALUES (1, 'shared@foo.bar');
+
+-- Add job results
+INSERT INTO qiita.job_results_filepath (job_id, filepath_id) VALUES (1, 9), (2, 10);

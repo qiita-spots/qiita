@@ -47,7 +47,7 @@ class SetupTest(TestCase):
         self._check_count("qiita.study_experimental_factor", 1)
 
     def test_filepath(self):
-        self._check_count("qiita.filepath", 7)
+        self._check_count("qiita.filepath", 10)
 
     def test_raw_data(self):
         self._check_count("qiita.raw_data", 2)
@@ -100,6 +100,26 @@ class SetupTest(TestCase):
     def test_processed_filepath(self):
         self._check_count("qiita.processed_filepath", 1)
 
+    def test_job(self):
+        self._check_count("qiita.job", 2)
+
+    def test_analysis(self):
+        self._check_count("qiita.analysis", 1)
+
+    def test_analysis_job(self):
+        self._check_count("qiita.analysis_job", 2)
+
+    def test_analysis_filepath(self):
+        self._check_count("qiita.analysis_filepath", 1)
+
+    def test_analysis_sample(self):
+        self._check_count("qiita.analysis_sample", 5)
+
+    def test_analysis_users(self):
+        self._check_count("qiita.analysis_users", 1)
+
+    def test_job_results_filepath(self):
+        self._check_count("qiita.job_results_filepath", 2)
 
 if __name__ == '__main__':
     main()
