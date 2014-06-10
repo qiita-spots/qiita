@@ -184,12 +184,11 @@ class BaseData(QiitaObject):
                                      self._data_filepath_column), values)
 
     def _add_filepaths(self, filepaths, conn_handler):
-        r""""""
+        r"""Populates the DB tables for storing the filepaths and connects the
+        `self` objects with these filepaths"""
         self._check_subclass()
-
         # Add the filepaths to the database
         fp_ids = self._insert_filepaths(filepaths, conn_handler)
-
         # Connect the raw data with its filepaths
         self._link_data_filepaths(fp_ids, conn_handler)
 
@@ -220,7 +219,16 @@ class BaseData(QiitaObject):
 
 
 class RawData(BaseData):
-    r"""
+    r"""Object for dealing with raw data
+
+    Attributes
+    ----------
+    studies
+
+    Methods
+    -------
+    create
+    is_submitted_to_insdc
 
     See Also
     --------
@@ -262,7 +270,7 @@ class RawData(BaseData):
                                                'insdc': submitted_to_insdc})[0]
         rd = cls(rd_id)
 
-        # Connect the raw data with its study
+        # Connect the raw data with its studies
         values = [(study.id, rd_id) for study in studies]
         conn_handler.executemany(
             "INSERT INTO qiita.{0} (study_id, raw_data_id) VALUES "
@@ -287,7 +295,12 @@ class RawData(BaseData):
 
     @property
     def studies(self):
-        r"""The list of Study objects to which the raw data belongs to"""
+        r"""The list of Study objects to which the raw data belongs to
+
+        Returns
+        -------
+        list of Study
+            The list of Study objects to which the raw data belongs to"""
         conn_handler = SQLConnectionHandler()
         ids = conn_handler.execute_fetchall(
             "SELECT study_id FROM qiita.{0} WHERE "
@@ -297,7 +310,16 @@ class RawData(BaseData):
 
 
 class PreprocessedData(BaseData):
-    r"""
+    r"""Object for dealing with preprocessed data
+
+    Attributes
+    ----------
+    raw_data
+    study
+
+    Methods
+    -------
+    create
 
     See Also
     --------
@@ -307,9 +329,10 @@ class PreprocessedData(BaseData):
     _table = "preprocessed_data"
     _data_filepath_table = "preprocessed_filepath"
     _data_filepath_column = "preprocessed_data_id"
+    _study_preprocessed_table = "study_preprocessed_data"
 
     @classmethod
-    def create(cls, raw_data, preprocessed_params_table,
+    def create(cls, raw_data, study, preprocessed_params_table,
                preprocessed_params_id, filepaths):
         r"""Creates a new object with a new id on the storage system
 
@@ -317,6 +340,8 @@ class PreprocessedData(BaseData):
         ----------
         raw_data : RawData
             The RawData object used as base to this preprocessed data
+        study_id : Study
+            The study to which this preprocessed data belongs to
         preprocessed_params_table : str
             Name of the table that holds the preprocessing parameters used
         preprocessed_params_id : int
@@ -346,14 +371,48 @@ class PreprocessedData(BaseData):
             "%(param_id)s) RETURNING preprocessed_data_id".format(cls._table),
             {'raw_id': raw_data.id, 'param_table': preprocessed_params_table,
              'param_id': preprocessed_params_id})[0]
-
         ppd = cls(ppd_id)
+
+        # Connect the preprocessed data with its study
+        conn_handler.execute(
+            "INSERT INTO qiita.{0} (study_id, preprocessed_data_id) "
+            "VALUES (%s, %s)".format(ppd._study_preprocessed_table),
+            (study.id, ppd.id))
+
         ppd._add_filepaths(filepaths, conn_handler)
         return ppd
 
+    @property
+    def raw_data(self):
+        r"""The raw data object used to generate the preprocessed data"""
+        conn_handler = SQLConnectionHandler()
+        rd_id = conn_handler.execute_fetchone(
+            "SELECT raw_data_id FROM qiita.{0} WHERE "
+            "preprocessed_data_id=%s".format(self._table),
+            [self._id])[0]
+        return RawData(rd_id)
+
+    @property
+    def study(self):
+        r"""The study to which this preprocessed data belongs to"""
+        conn_handler = SQLConnectionHandler()
+        study_id = conn_handler.execute_fetchone(
+            "SELECT study_id FROM qiita.{0} WHERE "
+            "preprocessed_data_id=%s".format(self._study_preprocessed_table),
+            [self._id])[0]
+        return Study(study_id)
+
 
 class ProcessedData(BaseData):
-    r"""
+    r"""Object for dealing with processed data
+
+    Attributes
+    ----------
+    preprocessed_data
+
+    Methods
+    -------
+    create
 
     See Also
     --------
@@ -415,3 +474,13 @@ class ProcessedData(BaseData):
         pd = cls(pd_id)
         pd._add_filepaths(filepaths, conn_handler)
         return cls(pd_id)
+
+    @property
+    def preprocessed_data(self):
+        r"""The preprocessed data object used to generate the processed data"""
+        conn_handler = SQLConnectionHandler()
+        ppd_id = conn_handler.execute_fetchone(
+            "SELECT preprocessed_data_id FROM qiita.{0} WHERE "
+            "processed_data_id=%s".format(self._table),
+            [self._id])[0]
+        return PreprocessedData(ppd_id)

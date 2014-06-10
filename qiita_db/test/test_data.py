@@ -125,6 +125,7 @@ class PreprocessedDataTests(TestCase):
     def setUp(self):
         self.conn_handler = SQLConnectionHandler()
         self.raw_data = RawData(1)
+        self.study = Study(1)
         self.params_table = "preprocessed_sequence_illumina_params"
         self.params_id = 1
         fd, self.fna_fp = mkstemp(suffix='_seqs.fna')
@@ -142,8 +143,9 @@ class PreprocessedDataTests(TestCase):
     def test_create(self):
         """Correctly creates all the rows in the DB for preprocessed data"""
         # Check that the returned object has the correct id
-        obs = PreprocessedData.create(self.raw_data, self.params_table,
-                                      self.params_id, self.filepaths)
+        obs = PreprocessedData.create(self.raw_data, self.study,
+                                      self.params_table, self.params_id,
+                                      self.filepaths)
         self.assertEqual(obs.id, 3)
 
         # Check that the preprocessed data have been correctly added to the DB
@@ -153,6 +155,13 @@ class PreprocessedDataTests(TestCase):
         # preprocessed_data_id, raw_data_id, preprocessed_params_tables,
         # preprocessed_params_id
         exp = [3, 1, "preprocessed_sequence_illumina_params", 1]
+        self.assertEqual(obs, exp)
+
+        # Check that the preprocessed data has been linked with its study
+        obs = self.conn_handler.execute_fetchall(
+            "SELECT * FROM qiita.study_preprocessed_data WHERE "
+            "preprocessed_data_id=3")
+        exp = [[1, 3]]
         self.assertEqual(obs, exp)
 
         # Check that the files have been copied to right location
@@ -185,17 +194,19 @@ class PreprocessedDataTests(TestCase):
     def test_create_error(self):
         """Raises an error if the preprocessed_params_table does not exists"""
         with self.assertRaises(IncompetentQiitaDeveloperError):
-            PreprocessedData.create(self.raw_data, "foo", self.params_id,
+            PreprocessedData.create(self.raw_data, self.study, "foo",
+                                    self.params_id, self.filepaths)
+        with self.assertRaises(IncompetentQiitaDeveloperError):
+            PreprocessedData.create(self.raw_data, self.study,
+                                    "preprocessed_foo", self.params_id,
                                     self.filepaths)
         with self.assertRaises(IncompetentQiitaDeveloperError):
-            PreprocessedData.create(self.raw_data, "preprocessed_foo",
+            PreprocessedData.create(self.raw_data, self.study, "foo_params",
                                     self.params_id, self.filepaths)
         with self.assertRaises(IncompetentQiitaDeveloperError):
-            PreprocessedData.create(self.raw_data, "foo_params",
-                                    self.params_id, self.filepaths)
-        with self.assertRaises(IncompetentQiitaDeveloperError):
-            PreprocessedData.create(self.raw_data, "preprocessed_foo_params",
-                                    self.params_id, self.filepaths)
+            PreprocessedData.create(self.raw_data, self.study,
+                                    "preprocessed_foo_params", self.params_id,
+                                    self.filepaths)
 
     def test_get_filepaths(self):
         """Correctly returns the filepaths to the preprocessed files"""
@@ -203,6 +214,20 @@ class PreprocessedDataTests(TestCase):
         obs = ppd.get_filepaths()
         exp = [(join(self.db_test_ppd_dir, '1_seqs.fna'), 4),
                (join(self.db_test_ppd_dir, '1_seqs.qual'), 5)]
+        self.assertEqual(obs, exp)
+
+    def test_raw_data(self):
+        """Correctly returns the raw data"""
+        ppd = PreprocessedData(1)
+        obs = ppd.raw_data
+        exp = RawData(1)
+        self.assertEqual(obs, exp)
+
+    def test_study(self):
+        """Correctly returns the study"""
+        ppd = PreprocessedData(1)
+        obs = ppd.study
+        exp = Study(1)
         self.assertEqual(obs, exp)
 
 
@@ -298,6 +323,13 @@ class ProcessedDataTests(TestCase):
         obs = pd.get_filepaths()
         exp = [(join(self.db_test_pd_dir,
                      '1_study_1001_closed_reference_otu_table.biom'), 6)]
+        self.assertEqual(obs, exp)
+
+    def test_preprocessed_data(self):
+        """Correctly returns the preprocessed_data"""
+        pd = ProcessedData(1)
+        obs = pd.preprocessed_data
+        exp = PreprocessedData(1)
         self.assertEqual(obs, exp)
 
 
