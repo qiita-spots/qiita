@@ -362,8 +362,6 @@ CREATE TABLE qiita.filepath (
 
 CREATE INDEX idx_filepath ON qiita.filepath ( filepath_type_id );
 
-CREATE INDEX idx_filepath_0 ON qiita.filepath ( checksum_algorithm_id );
-
 CREATE TABLE qiita.investigation ( 
 	investigation_id     bigserial  NOT NULL,
 	name                 varchar  NOT NULL,

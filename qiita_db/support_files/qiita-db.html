@@ -477,17 +477,7 @@ table {
 	processed_params_uclust references reference ( reference_id )</title>
 </path>
 <text x='1612' y='850' transform='rotate(0 1612,850)' title='Foreign Key fk_processed_params_uclust
-	processed_params_uclust references reference ( reference_id )' style='fill:#a1a0a0;'>reference_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 690 780 L 690,855' >
-	<title>Foreign Key fk_filepath
-	filepath references filepath_type ( filepath_type_id )</title>
-</path>
-<text x='703' y='780' transform='rotate(90 703,780)' title='Foreign Key fk_filepath
-	filepath references filepath_type ( filepath_type_id )' style='fill:#a1a0a0;'>filepath_type_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 765 780 L 765,855' >
-	<title>Foreign Key fk_filepath_0
-	filepath references checksum_algorithm ( checksum_algorithm_id )</title>
-</path>
-<text x='778' y='780' transform='rotate(90 778,780)' title='Foreign Key fk_filepath_0
-	filepath references checksum_algorithm ( checksum_algorithm_id )' style='fill:#a1a0a0;'>checksum_algorithm_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 345 675 L 345,255' >
+	processed_params_uclust references reference ( reference_id )' style='fill:#a1a0a0;'>reference_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 345 675 L 345,255' >
 	<title>Foreign Key fk_analysis_user
 	analysis references qiita_user ( email )</title>
 </path>
@@ -672,7 +662,17 @@ table {
 	required_sample_info references required_sample_info_status ( required_sample_info_status_id )</title>
 </path>
 <text x='1528' y='345' transform='rotate(90 1528,345)' title='Foreign Key fk_required_sample_info
-	required_sample_info references required_sample_info_status ( required_sample_info_status_id )' style='fill:#a1a0a0;'>required_sample_info_status_id</text><!-- ============= Table 'term_synonym' ============= -->
+	required_sample_info references required_sample_info_status ( required_sample_info_status_id )' style='fill:#a1a0a0;'>required_sample_info_status_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 690 780 L 690,855' >
+	<title>Foreign Key fk_filepath
+	filepath references filepath_type ( filepath_type_id )</title>
+</path>
+<text x='703' y='780' transform='rotate(90 703,780)' title='Foreign Key fk_filepath
+	filepath references filepath_type ( filepath_type_id )' style='fill:#a1a0a0;'>filepath_type_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 765 780 L 765,855' >
+	<title>Foreign Key fk_filepath_0
+	filepath references checksum_algorithm ( checksum_algorithm_id )</title>
+</path>
+<text x='778' y='780' transform='rotate(90 778,780)' title='Foreign Key fk_filepath_0
+	filepath references checksum_algorithm ( checksum_algorithm_id )' style='fill:#a1a0a0;'>checksum_algorithm_id</text><!-- ============= Table 'term_synonym' ============= -->
 <rect class='table' x='525' y='1853' width='135' height='105' rx='7' ry='7' />
 <path d='M 525.50 1879.50 L 525.50 1860.50 Q 525.50 1853.50 532.50 1853.50 L 652.50 1853.50 Q 659.50 1853.50 659.50 1860.50 L 659.50 1879.50 L525.50 1879.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
 <a xlink:href='#term_synonym'><text x='552' y='1867' class='tableTitle'>term_synonym</text><title>Table qiita.term_synonym</title></a>
@@ -1122,26 +1122,6 @@ Parameters used for processing spectra data&#046;</title></a>
   <use id='nn' x='1757' y='1032' xlink:href='#nn'/><a xlink:href='#preprocessed_spectra_params.preprocessed_params_id'><use id='pk' x='1757' y='1031' xlink:href='#pk'/><title>Primary Key  ( preprocessed_params_id ) </title></a>
 <a xlink:href='#preprocessed_spectra_params.preprocessed_params_id'><text x='1773' y='1042'>preprocessed_params_id</text><title>preprocessed_params_id bigserial not null</title></a>
   <a xlink:href='#preprocessed_spectra_params.col'><text x='1773' y='1057'>col</text><title>col varchar</title></a>
-
-<!-- ============= Table 'filepath' ============= -->
-<rect class='table' x='660' y='653' width='165' height='120' rx='7' ry='7' />
-<path d='M 660.50 679.50 L 660.50 660.50 Q 660.50 653.50 667.50 653.50 L 817.50 653.50 Q 824.50 653.50 824.50 660.50 L 824.50 679.50 L660.50 679.50 ' style='fill:url(#tableHeaderGradient1); stroke:none;' />
-<a xlink:href='#filepath'><text x='722' y='667' class='tableTitle'>filepath</text><title>Table qiita.filepath</title></a>
-  <use id='nn' x='662' y='687' xlink:href='#nn'/><a xlink:href='#filepath.filepath_id'><use id='pk' x='662' y='686' xlink:href='#pk'/><title>Primary Key  ( filepath_id ) </title></a>
-<a xlink:href='#filepath.filepath_id'><text x='678' y='697'>filepath_id</text><title>filepath_id bigserial not null</title></a>
-<a xlink:href='#filepath.filepath_id'><use id='ref' x='813' y='686' xlink:href='#ref'/><title>Referred by analysis_filepath ( filepath_id ) 
-Referred by job_results_filepath ( filepath_id ) 
-Referred by preprocessed_filepath ( filepath_id ) 
-Referred by processed_filepath ( filepath_id ) 
-Referred by raw_filepath ( filepath_id ) </title></a>
-  <use id='nn' x='662' y='702' xlink:href='#nn'/><a xlink:href='#filepath.filepath'><text x='678' y='712'>filepath</text><title>filepath varchar not null</title></a>
-  <use id='nn' x='662' y='717' xlink:href='#nn'/><a xlink:href='#filepath.filepath_type_id'><use id='idx' x='662' y='716' xlink:href='#idx'/><title>Index  ( filepath_type_id ) </title></a>
-<a xlink:href='#filepath.filepath_type_id'><text x='678' y='727'>filepath_type_id</text><title>filepath_type_id bigint not null</title></a>
-<a xlink:href='#filepath.filepath_type_id'><use id='fk' x='813' y='716' xlink:href='#fk'/><title>References filepath_type ( filepath_type_id ) </title></a>
-  <use id='nn' x='662' y='732' xlink:href='#nn'/><a xlink:href='#filepath.checksum'><text x='678' y='742'>checksum</text><title>checksum varchar not null</title></a>
-  <use id='nn' x='662' y='747' xlink:href='#nn'/><a xlink:href='#filepath.checksum_algorithm_id'><use id='idx' x='662' y='746' xlink:href='#idx'/><title>Index  ( checksum_algorithm_id ) </title></a>
-<a xlink:href='#filepath.checksum_algorithm_id'><text x='678' y='757'>checksum_algorithm_id</text><title>checksum_algorithm_id bigint not null</title></a>
-<a xlink:href='#filepath.checksum_algorithm_id'><use id='fk' x='813' y='746' xlink:href='#fk'/><title>References checksum_algorithm ( checksum_algorithm_id ) </title></a>
 
 <!-- ============= Table 'analysis_status' ============= -->
 <rect class='table' x='45' y='788' width='135' height='75' rx='7' ry='7' />
@@ -1596,6 +1576,25 @@ Represents whatever other columns go with this study</title></a>
 Referred by job ( data_type_id ) </title></a>
   <use id='nn' x='692' y='1032' xlink:href='#nn'/><a xlink:href='#data_type.data_type'><text x='708' y='1042'>data_type</text><title>data_type varchar not null
 Data type &#040;16S&#044; metabolome&#044; etc&#041; the job will use</title></a>
+
+<!-- ============= Table 'filepath' ============= -->
+<rect class='table' x='660' y='653' width='165' height='120' rx='7' ry='7' />
+<path d='M 660.50 679.50 L 660.50 660.50 Q 660.50 653.50 667.50 653.50 L 817.50 653.50 Q 824.50 653.50 824.50 660.50 L 824.50 679.50 L660.50 679.50 ' style='fill:url(#tableHeaderGradient1); stroke:none;' />
+<a xlink:href='#filepath'><text x='722' y='667' class='tableTitle'>filepath</text><title>Table qiita.filepath</title></a>
+  <use id='nn' x='662' y='687' xlink:href='#nn'/><a xlink:href='#filepath.filepath_id'><use id='pk' x='662' y='686' xlink:href='#pk'/><title>Primary Key  ( filepath_id ) </title></a>
+<a xlink:href='#filepath.filepath_id'><text x='678' y='697'>filepath_id</text><title>filepath_id bigserial not null</title></a>
+<a xlink:href='#filepath.filepath_id'><use id='ref' x='813' y='686' xlink:href='#ref'/><title>Referred by analysis_filepath ( filepath_id ) 
+Referred by job_results_filepath ( filepath_id ) 
+Referred by preprocessed_filepath ( filepath_id ) 
+Referred by processed_filepath ( filepath_id ) 
+Referred by raw_filepath ( filepath_id ) </title></a>
+  <use id='nn' x='662' y='702' xlink:href='#nn'/><a xlink:href='#filepath.filepath'><text x='678' y='712'>filepath</text><title>filepath varchar not null</title></a>
+  <use id='nn' x='662' y='717' xlink:href='#nn'/><a xlink:href='#filepath.filepath_type_id'><use id='idx' x='662' y='716' xlink:href='#idx'/><title>Index  ( filepath_type_id ) </title></a>
+<a xlink:href='#filepath.filepath_type_id'><text x='678' y='727'>filepath_type_id</text><title>filepath_type_id bigint not null</title></a>
+<a xlink:href='#filepath.filepath_type_id'><use id='fk' x='813' y='716' xlink:href='#fk'/><title>References filepath_type ( filepath_type_id ) </title></a>
+  <use id='nn' x='662' y='732' xlink:href='#nn'/><a xlink:href='#filepath.checksum'><text x='678' y='742'>checksum</text><title>checksum varchar not null</title></a>
+  <use id='nn' x='662' y='747' xlink:href='#nn'/><a xlink:href='#filepath.checksum_algorithm_id'><text x='678' y='757'>checksum_algorithm_id</text><title>checksum_algorithm_id bigint not null</title></a>
+<a xlink:href='#filepath.checksum_algorithm_id'><use id='fk' x='813' y='746' xlink:href='#fk'/><title>References checksum_algorithm ( checksum_algorithm_id ) </title></a>
 
 </g></svg>
 
@@ -3052,64 +3051,6 @@ An investigation comprises one or more individual studies&#046; </td></tr>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='3'><a name='filepath'>Table filepath</a></th></tr>
-</thead>
-<tbody>
-	<tr>
-		<td><a name='filepath.filepath_id'>filepath&#095;id</a></td>
-		<td> bigserial  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='filepath.filepath'>filepath</a></td>
-		<td> varchar  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='filepath.filepath_type_id'>filepath&#095;type&#095;id</a></td>
-		<td> bigint  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='filepath.checksum'>checksum</a></td>
-		<td> varchar  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='filepath.checksum_algorithm_id'>checksum&#095;algorithm&#095;id</a></td>
-		<td> bigint  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-<tr><th colspan='3'><b>Indexes</b></th></tr>
-	<tr>		<td>pk&#095;filepath primary key</td>
-		<td> ON filepath&#095;id</td>
-		<td>  </td>
-	</tr>
-	<tr>		<td>idx&#095;filepath </td>
-		<td> ON filepath&#095;type&#095;id</td>
-		<td>  </td>
-	</tr>
-	<tr>		<td>idx&#095;filepath&#095;0 </td>
-		<td> ON checksum&#095;algorithm&#095;id</td>
-		<td>  </td>
-	</tr>
-<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
-	<tr>
-		<td>fk_filepath</td>
-		<td > ( filepath&#095;type&#095;id ) ref <a href='#filepath&#095;type'>filepath&#095;type</a> (filepath&#095;type&#095;id) </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>fk_filepath_0</td>
-		<td > ( checksum&#095;algorithm&#095;id ) ref <a href='#checksum&#095;algorithm'>checksum&#095;algorithm</a> (checksum&#095;algorithm&#095;id) </td>
-		<td>  </td>
-	</tr>
-</tbody>
-</table>
-
-<br/><br/>
-<table class='bordered'>
-<thead>
 <tr><th colspan='3'><a name='analysis_status'>Table analysis_status</a></th></tr>
 </thead>
 <tbody>
@@ -4507,6 +4448,60 @@ MAKE SURE sample&#095;id IS FK TO sample&#095;id IN required&#095;sample&#095;in
 <tr><th colspan='3'><b>Indexes</b></th></tr>
 	<tr>		<td>pk&#095;data&#095;type primary key</td>
 		<td> ON data&#095;type&#095;id</td>
+		<td>  </td>
+	</tr>
+</tbody>
+</table>
+
+<br/><br/>
+<table class='bordered'>
+<thead>
+<tr><th colspan='3'><a name='filepath'>Table filepath</a></th></tr>
+</thead>
+<tbody>
+	<tr>
+		<td><a name='filepath.filepath_id'>filepath&#095;id</a></td>
+		<td> bigserial  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='filepath.filepath'>filepath</a></td>
+		<td> varchar  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='filepath.filepath_type_id'>filepath&#095;type&#095;id</a></td>
+		<td> bigint  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='filepath.checksum'>checksum</a></td>
+		<td> varchar  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='filepath.checksum_algorithm_id'>checksum&#095;algorithm&#095;id</a></td>
+		<td> bigint  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;filepath primary key</td>
+		<td> ON filepath&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>idx&#095;filepath </td>
+		<td> ON filepath&#095;type&#095;id</td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
+	<tr>
+		<td>fk_filepath</td>
+		<td > ( filepath&#095;type&#095;id ) ref <a href='#filepath&#095;type'>filepath&#095;type</a> (filepath&#095;type&#095;id) </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>fk_filepath_0</td>
+		<td > ( checksum&#095;algorithm&#095;id ) ref <a href='#checksum&#095;algorithm'>checksum&#095;algorithm</a> (checksum&#095;algorithm&#095;id) </td>
 		<td>  </td>
 	</tr>
 </tbody>
