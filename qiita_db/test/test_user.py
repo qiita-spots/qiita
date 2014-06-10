@@ -194,7 +194,5 @@ class SetupTest(TestCase):
         self.assertEqual(user.shared_analyses, [])
 
 
-    # TODO test analysis functions and the get/set analyses properly
-
 if __name__ == "__main__":
     main()
