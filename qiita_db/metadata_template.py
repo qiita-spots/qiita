@@ -1,6 +1,3 @@
-#!/usr/bin/env python
-from __future__ import division
-
 """
 Objects for dealing with Qiita metadata templates
 
@@ -22,8 +19,10 @@ Classes
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
+from __future__ import division
 from future.builtins import zip
 
+from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from .base import QiitaStatusObject
 from .exceptions import QiitaDBNotImplementedError
 from .sql_connection import SQLConnectionHandler
@@ -32,7 +31,7 @@ from .util import (quote_column_name, quote_data_value, get_datatypes,
 
 
 class MetadataTemplate(QiitaStatusObject):
-    """
+    r"""
     Metadata map object that accesses the db to get the information
 
     Attributes
@@ -62,35 +61,33 @@ class MetadataTemplate(QiitaStatusObject):
         Returns True if the category's values are all the same
     """
 
-    # Used to find the right SQL tables - should be defined on the classes that
-    # instantiate this base class
+    # Used to find the right SQL tables - should be defined on the subclasses
     _table_prefix = None
     _column_table = None
 
     @classmethod
     def _get_table_name(cls, study_id):
-        """"""
+        r""""""
         if not cls._table_prefix:
-            raise QiitaDBNotImplementedError('_table_prefix should be defined '
-                                             'in the classes that implement '
-                                             'MetadataTemplate!')
+            raise IncompetentQiitaDeveloperError(
+                "_table_prefix should be defined in the subclasses")
         return "%s%d" % (cls._table_prefix, study_id)
 
     @classmethod
-    def create(cls, md_template, study_id):
-        """Creates a new object with a new id on the database
+    def create(cls, md_template, study):
+        r"""Creates the metadata template in the database
 
         Parameters
         ----------
-        md_template : qiime.util.MetadataMap
+        md_template : DataFrame
             The template file contents
-        study_id : int
-            The study identifier to which the metadata template belongs to
+        study : Study
+            The study to which the metadata template belongs to
         """
-        # Create the MetadataTemplate table on the SQL system
         conn_handler = SQLConnectionHandler()
+        # Create the MetadataTemplate table on the SQL system
         # Get the table name
-        table_name = cls._get_table_name(study_id)
+        table_name = cls._get_table_name(study.id)
         headers = md_template.CategoryNames
         datatypes = get_datatypes(md_template)
 
@@ -138,7 +135,7 @@ class MetadataTemplate(QiitaStatusObject):
 
     @classmethod
     def delete(cls, study_id):
-        """Deletes the metadata template attached to the study `id` from the
+        r"""Deletes the metadata template attached to the study `id` from the
         database
 
         Parameters
@@ -158,7 +155,7 @@ class MetadataTemplate(QiitaStatusObject):
 
     @property
     def sample_ids(self):
-        """Returns the IDs of all samples in the metadata map.
+        r"""Returns the IDs of all samples in the metadata map.
 
         The sample IDs are returned as a list of strings in alphabetical order.
         """
@@ -166,7 +163,7 @@ class MetadataTemplate(QiitaStatusObject):
 
     @property
     def category_names(self):
-        """Returns the names of all categories in the metadata map.
+        r"""Returns the names of all categories in the metadata map.
 
         The category names are returned as a list of strings in alphabetical
         order.
@@ -175,7 +172,7 @@ class MetadataTemplate(QiitaStatusObject):
 
     @property
     def metadata(self):
-        """A python dict of dicts
+        r"""A python dict of dicts
 
         The top-level key is sample ID, and the inner dict maps category name
         to category value
@@ -183,7 +180,7 @@ class MetadataTemplate(QiitaStatusObject):
         raise QiitaDBNotImplementedError()
 
     def get_sample_metadata(self, sample_id):
-        """Returns the metadata associated with a particular sample.
+        r"""Returns the metadata associated with a particular sample.
 
         The metadata will be returned as a dict mapping category name to
         category value.
@@ -196,7 +193,7 @@ class MetadataTemplate(QiitaStatusObject):
         raise QiitaDBNotImplementedError()
 
     def get_category_value(self, sample_id, category):
-        """Returns the category value associated with a sample's category.
+        r"""Returns the category value associated with a sample's category.
 
         The returned category value will be a string.
 
@@ -262,11 +259,13 @@ class MetadataTemplate(QiitaStatusObject):
 
 class SampleTemplate(MetadataTemplate):
     """"""
+    _table = "required_sample_info"
     _table_prefix = "sample_"
     _column_table = "study_sample_columns"
 
 
 class PrepTemplate(MetadataTemplate):
     """"""
+    _table = "common_prep_infp"
     _table_prefix = "prep_"
     _column_table = "raw_data_prep_columns"
