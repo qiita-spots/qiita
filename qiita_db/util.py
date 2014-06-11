@@ -1,3 +1,27 @@
+r"""
+Util functions (:mod: `qiita_db.util`)
+======================================
+
+..currentmodule:: qiita_db.util
+
+This module provides different util functions.
+
+Methods
+-------
+
+..autosummary::
+    :toctree: generated/
+
+    quote_column_name
+    quote_data_value
+    get_datatypes
+    scrub_data
+    exists_table
+    exists_dynamic_table
+    get_db_files_base_dir
+    compute_checksum
+
+"""
 # -----------------------------------------------------------------------------
 # Copyright (c) 2014--, The Qiita Development Team.
 #
@@ -42,10 +66,20 @@ def get_datatypes(metadata_map):
 
 
 def scrub_data(s):
-    """Scrubs data fields of characters not allowed by PostgreSQL
+    r"""Scrubs data fields of characters not allowed by PostgreSQL
 
     disallowed characters:
         '   ;
+
+    Parameters
+    ----------
+    s : str
+        The string to clean up
+
+    Returns
+    -------
+    str
+        The scrubbed string
     """
     ret = s.replace("'", "")
     ret = ret.replace(";", "")
@@ -53,7 +87,7 @@ def scrub_data(s):
 
 
 def exists_table(table, conn_handler):
-    """Checks if `table` exists on the database connected through
+    r"""Checks if `table` exists on the database connected through
     `conn_handler`
 
     Parameters
@@ -69,7 +103,7 @@ def exists_table(table, conn_handler):
 
 
 def exists_dynamic_table(table, prefix, suffix, conn_handler):
-    """Checks if the dynamic`table` exists on the database connected through
+    r"""Checks if the dynamic`table` exists on the database connected through
     `conn_handler`, and its name starts with prefix and ends with suffix
 
     Parameters
@@ -88,7 +122,7 @@ def exists_dynamic_table(table, prefix, suffix, conn_handler):
 
 
 def get_db_files_base_dir(conn_handler=None):
-    """Returns the path to the base directory of all db files
+    r"""Returns the path to the base directory of all db files
 
     Returns
     -------
@@ -102,7 +136,7 @@ def get_db_files_base_dir(conn_handler=None):
 
 
 def compute_checksum(filepath):
-    """Returns the checksum of the file pointed by filepath
+    r"""Returns the checksum of the file pointed by filepath
 
     Parameters
     ----------

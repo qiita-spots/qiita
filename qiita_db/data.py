@@ -92,7 +92,8 @@ from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from .base import QiitaObject
 from .study import Study
 from .sql_connection import SQLConnectionHandler
-from .util import exists_dynamic_table, get_db_files_base_dir, compute_checksum
+from .util import (exists_dynamic_table, get_db_files_base_dir, scrub_data,
+                   compute_checksum)
 
 
 class BaseData(QiitaObject):
@@ -151,7 +152,7 @@ class BaseData(QiitaObject):
                             for path, id in new_filepaths]
 
         # Create the list of SQL values to add
-        values = ["('%s', %s, '%s', %s)" % (path, id, checksum, 1)
+        values = ["('%s', %s, '%s', %s)" % (scrub_data(path), id, checksum, 1)
                   for path, id, checksum in paths_w_checksum]
         # Insert all the filepaths at once and get the filepath_id back
         ids = conn_handler.execute_fetchall(

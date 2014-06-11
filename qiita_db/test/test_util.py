@@ -8,14 +8,12 @@
 
 from unittest import TestCase, main
 from tempfile import mkstemp
-from os.path import dirname, abspath, join
 from os import close
 
 from qiita_core.util import qiita_test_checker
 from qiita_db.sql_connection import SQLConnectionHandler
-from qiita_db.util import (exists_table, exists_dynamic_table,
-                           get_db_files_base_dir, compute_checksum,
-                           __file__ as util_file)
+from qiita_db.util import (exists_table, exists_dynamic_table, scrub_data,
+                           compute_checksum)
 
 
 @qiita_test_checker()
@@ -81,6 +79,18 @@ class UtilTests(TestCase):
         obs = compute_checksum(self.filepath)
         exp = 1719580229
         self.assertEqual(obs, exp)
+
+    def test_scrub_data_nothing(self):
+        """Returns the same string without changes"""
+        self.assertEqual(scrub_data("nothing_changes"), "nothing_changes")
+
+    def test_scrub_data_semicolon(self):
+        """Correctly removes the semicolon from the string"""
+        self.assertEqual(scrub_data("remove_;_char"), "remove__char")
+
+    def test_scrub_data_single_quote(self):
+        """Correctly removes single quotes from the string"""
+        self.assertEqual(scrub_data("'quotes'"), "quotes")
 
 if __name__ == '__main__':
     main()
