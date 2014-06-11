@@ -204,7 +204,7 @@ class PreprocessedDataTests(TestCase):
         self.assertEqual(obs, [[3, 8], [3, 9]])
 
     def test_create_error(self):
-        """Raises an error if the preprocessed_params_table does not exists"""
+        """Raises an error if the preprocessed_params_table does not exist"""
         with self.assertRaises(IncompetentQiitaDeveloperError):
             PreprocessedData.create(self.raw_data, self.study, "foo",
                                     self.params_id, self.filepaths)
