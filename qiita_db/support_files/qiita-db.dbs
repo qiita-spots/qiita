@@ -782,7 +782,7 @@ Linked by y being raw_data_id from raw data table.</comment>
 			<column name="required_sample_info_status_id" type="bigint" jt="-5" mandatory="y" >
 				<comment><![CDATA[What step of the pipeline the samples are in]]></comment>
 			</column>
-			<column name="collection_date" type="date" jt="91" mandatory="y" />
+			<column name="collection_timestamp" type="timestamp" jt="93" mandatory="y" />
 			<column name="host_subject_id" type="varchar" jt="12" mandatory="y" />
 			<column name="description" type="varchar" jt="12" mandatory="y" />
 			<index name="idx_common_sample_information" unique="PRIMARY_KEY" >
@@ -1229,12 +1229,12 @@ Controlled Vocabulary]]></comment>
 		<entity schema="qiita" name="qiita_user" color="d0def5" x="330" y="60" />
 		<entity schema="qiita" name="prep_y" color="d0def5" x="1020" y="285" />
 		<entity schema="qiita" name="emp_status" color="c0d4f3" x="1185" y="285" />
-		<entity schema="qiita" name="required_sample_info" color="d0def5" x="1350" y="150" />
 		<entity schema="qiita" name="sample_x" color="d0def5" x="1575" y="225" />
 		<entity schema="qiita" name="filepath_type" color="c0d4f3" x="600" y="870" />
 		<entity schema="qiita" name="checksum_algorithm" color="b2cdf7" x="750" y="870" />
 		<entity schema="qiita" name="data_type" color="d0def5" x="690" y="990" />
 		<entity schema="qiita" name="filepath" color="c0d4f3" x="660" y="660" />
+		<entity schema="qiita" name="required_sample_info" color="d0def5" x="1350" y="150" />
 		<group name="Group_analyses" color="c4e0f9" >
 			<comment>analysis tables</comment>
 			<entity schema="qiita" name="analysis" />
