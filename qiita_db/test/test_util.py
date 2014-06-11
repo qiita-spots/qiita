@@ -18,7 +18,6 @@ from tempfile import mkstemp
 from os import close
 
 
-
 @qiita_test_checker()
 class DBUtilTests(TestCase):
     def setUp(self):
