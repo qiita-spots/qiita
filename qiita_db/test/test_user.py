@@ -90,7 +90,7 @@ class UserTest(TestCase):
         with self.assertRaises(QiitaDBColumnError):
             User.create('new@test.bar', 'password', self.userinfo)
 
-    def test_create_user_not_info(self):
+    def test_create_user_non_existent_column(self):
         self.userinfo["BADTHING"] = "FAIL"
         with self.assertRaises(QiitaDBColumnError):
             User.create('new@test.bar', 'password', self.userinfo)
