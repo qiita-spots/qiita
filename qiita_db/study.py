@@ -104,7 +104,7 @@ from datetime import date
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from .base import QiitaStatusObject, QiitaObject
 from .exceptions import (QiitaDBDuplicateError, QiitaDBNotImplementedError,
-                         QiitaDBExecutionError, QiitaDBStatusError,)
+                         QiitaDBStatusError)
 from .data import RawData, PreprocessedData, ProcessedData
 from .user import User
 from .investigation import Investigation
@@ -144,6 +144,7 @@ class Study(QiitaStatusObject):
     Methods
     -------
     share
+    unshare
     add_pmid
 
     Notes
@@ -152,6 +153,19 @@ class Study(QiitaStatusObject):
     You should not be doing that.
     """
     _table = "study"
+
+    def _lock_public(self, conn_handler):
+        """Raises QiitaDBStatusError if study is public"""
+        sql = ("SELECT study_status_id FROM qiita.{0} WHERE "
+               "{0}_id = %s".format(self._table))
+        if conn_handler.execute_fetchone(sql, (self._id, ))[0] == 2:
+            raise QiitaDBStatusError("Can't change status of public study!")
+
+    def _status_setter_checks(self, conn_handler):
+        r"""Perform any extra checks that needed to be done before setting the
+        object status on the database. Should be overwritten by the subclasses
+        """
+        self._lock_public(conn_handler)
 
     @classmethod
     def create(cls, owner, efo, info, investigation=None):
@@ -248,17 +262,6 @@ class Study(QiitaStatusObject):
         raise QiitaDBNotImplementedError()
 
 # --- Attributes ---
-    def _lock_public(self):
-        """Locks a study if it is public
-
-        Raises
-        ------
-        QiitaDBStatusError
-            study is public
-        """
-        if self.status == 2:
-            raise QiitaDBStatusError("Can't edit public study!")
-
     @property
     def title(self):
         """Returns the title of the study
@@ -282,8 +285,8 @@ class Study(QiitaStatusObject):
         title : str
             The new study title
         """
-        self._lock_public()
         conn_handler = SQLConnectionHandler()
+        self._lock_public(conn_handler)
         sql = ("UPDATE qiita.{0} SET study_title = %s WHERE "
                "study_id = %s".format(self._table))
         return conn_handler.execute(sql, (title, self._id))
@@ -327,11 +330,11 @@ class Study(QiitaStatusObject):
         QiitaDBColumnError
             Unknown column names passed
         """
-        self._lock_public()
+        conn_handler = SQLConnectionHandler()
+        self._lock_public(conn_handler)
         if not info:
             raise IncompetentQiitaDeveloperError("Need entries in info dict!")
 
-        conn_handler = SQLConnectionHandler()
         # make sure dictionary only has keys for available columns in db
         check_table_cols(conn_handler, info, self._table)
 
@@ -352,34 +355,6 @@ class Study(QiitaStatusObject):
         conn_handler.execute(sql, data)
 
     @property
-    def status(self):
-        """Returns the study_status_id for the study
-
-        Returns
-        -------
-        int: status of study
-        """
-        conn_handler = SQLConnectionHandler()
-        sql = ("SELECT study_status_id FROM qiita.{0} WHERE "
-               "study_id = %s".format(self._table))
-        return conn_handler.execute_fetchone(sql, (self._id, ))[0]
-
-    @status.setter
-    def status(self, status_id):
-        """Sets the study_status_id for the study
-
-        Parameters
-        ----------
-        status_id: int
-            ID for the new status
-        """
-        self._lock_public()
-        conn_handler = SQLConnectionHandler()
-        sql = ("UPDATE qiita.{0} SET study_status_id = %s WHERE "
-               "study_id = %s".format(self._table))
-        conn_handler.execute(sql, (status_id, self._id))
-
-    @property
     def efo(self):
         conn_handler = SQLConnectionHandler()
         sql = ("SELECT efo_id FROM qiita.{0}_experimental_factor WHERE "
@@ -395,11 +370,11 @@ class Study(QiitaStatusObject):
         status_id: int
             ID for the new status
         """
-        self._lock_public()
+        conn_handler = SQLConnectionHandler()
+        self._lock_public(conn_handler)
         if isinstance(efo_vals, int):
                 efo_vals = [efo_vals]
         # wipe out any EFOs currently attached to study
-        conn_handler = SQLConnectionHandler()
         sql = ("DELETE FROM qiita.{0}_experimental_factor WHERE "
                "study_id = %s".format(self._table))
         conn_handler.execute(sql, (self._id, ))

@@ -31,17 +31,14 @@ class TestStudyPerson(TestCase):
                                  '111 fake street', '111-121-1313')
         self.assertEqual(new.id, 4)
         conn = SQLConnectionHandler()
-        obs = conn.execute_fetchone("SELECT * FROM qiita.study_person WHERE "
+        obs = conn.execute_fetchall("SELECT * FROM qiita.study_person WHERE "
                                     "study_person_id = 4")
-        self.assertEqual(obs["study_person_id"], 4)
-        self.assertEqual(obs["email"], 'somedude@foo.bar')
-        self.assertEqual(obs["name"], 'SomeDude')
-        self.assertEqual(obs["address"], '111 fake street')
-        self.assertEqual(obs["phone"], '111-121-1313')
+        self.assertEqual(obs, [[4, 'SomeDude', 'somedude@foo.bar',
+                         '111 fake street', '111-121-1313']])
 
     def test_create_studyperson_already_exists(self):
         with self.assertRaises(QiitaDBDuplicateError):
-            new = StudyPerson.create('LabDude', 'lab_dude@foo.bar')
+            StudyPerson.create('LabDude', 'lab_dude@foo.bar')
 
     def test_retrieve_name(self):
         self.assertEqual(self.studyperson.name, 'LabDude')
@@ -159,8 +156,10 @@ class TestStudy(TestCase):
                'number_samples_collected': 25}
 
         conn = SQLConnectionHandler()
-        obsins = dict(conn.execute_fetchone("SELECT * FROM qiita.study WHERE "
+        obsins = dict(conn.execute_fetchall("SELECT * FROM qiita.study WHERE "
                                             "study_id = 2"))
+        self.assertEqual(len(obsins), 1)
+        obsins = obsins[0]
         self.assertEqual(obsins, exp)
 
         # make sure EFO went in to table correctly
@@ -206,8 +205,10 @@ class TestStudy(TestCase):
                'study_title': 'Fried chicken microbiome',
                'number_samples_collected': 25}
         conn = SQLConnectionHandler()
-        obsins = dict(conn.execute_fetchone("SELECT * FROM qiita.study WHERE "
-                                            "study_id = 2"))
+        obsins = conn.execute_fetchall("SELECT * FROM qiita.study WHERE "
+                                       "study_id = 2")
+        self.assertEqual(len(obsins), 1)
+        obsins = dict(obsins[0])
         self.assertEqual(obsins, exp)
 
         # make sure EFO went in to table correctly
@@ -292,9 +293,6 @@ class TestStudy(TestCase):
         # add missing table cols
         self.info["funding"] = None
         self.info["spatial_series"] = False
-        for key, val in new.info.iteritems():
-            if val != self.info[key]:
-                print key, val, self.info[key]
         self.assertEqual(new.info, self.info)
 
     def test_set_info_public(self):
@@ -308,12 +306,12 @@ class TestStudy(TestCase):
             new.info = {}
 
     def test_retrieve_status(self):
-        self.assertEqual(self.study.status, 2)
+        self.assertEqual(self.study.status, "public")
 
     def test_set_status(self):
         new = Study.create(User('test@foo.bar'), 1, self.info)
-        new.status = 3
-        self.assertEqual(new.status, 3)
+        new.status = "private"
+        self.assertEqual(new.status, "private")
 
     def test_retrieve_shared_with(self):
         self.assertEqual(self.study.shared_with, [User('shared@foo.bar')])

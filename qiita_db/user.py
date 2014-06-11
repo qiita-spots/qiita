@@ -87,8 +87,6 @@ class User(QiitaObject):
 
         conn_handler = (conn_handler if conn_handler is not None
                         else SQLConnectionHandler())
-        print ("SELECT EXISTS(SELECT * FROM qiita.qiita_user WHERE "
-               "email = %s)" % id_)
         return conn_handler.execute_fetchone(
             "SELECT EXISTS(SELECT * FROM qiita.qiita_user WHERE "
             "email = %s)", (id_, ))[0]
