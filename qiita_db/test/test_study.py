@@ -319,9 +319,6 @@ class TestStudy(TestCase):
         self.infoexp["most_recent_contact"] = None
         self.infoexp["reprocess"] = False
         self.infoexp["lab_person_id"] = 2
-        for key, val in new.info.iteritems():
-            if val != self.infoexp[key]:
-                print key, val, self.infoexp[key]
         self.assertEqual(new.info, self.infoexp)
 
     def test_set_info_public(self):
