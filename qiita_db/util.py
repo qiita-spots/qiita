@@ -1,12 +1,3 @@
-#!/usr/bin/env python
-from __future__ import division
-from random import choice
-from string import ascii_letters, digits, punctuation
-
-from bcrypt import hashpw, gensalt
-
-from .exceptions import QiitaDBColumnError
-
 # -----------------------------------------------------------------------------
 # Copyright (c) 2014--, The Qiita Development Team.
 #
@@ -14,6 +5,14 @@ from .exceptions import QiitaDBColumnError
 #
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
+
+from __future__ import division
+from random import choice
+from string import ascii_letters, digits, punctuation
+
+from bcrypt import hashpw, gensalt
+
+from .exceptions import QiitaDBColumnError
 
 
 def quote_column_name(c):
@@ -59,7 +58,8 @@ def scrub_data(s):
 def create_rand_string(length, punct=True):
         """Returns a string of random ascii characters
 
-        Parameters:
+        Parameters
+        ----------
         length: int
             Length of string to return
         punct: bool, optional
@@ -71,7 +71,7 @@ def create_rand_string(length, punct=True):
         return ''.join(choice(chars) for i in range(length))
 
 
-def hash_pw(password, hashedpw=None):
+def hash_password(password, hashedpw=None):
         """ Hashes password
 
         Parameters

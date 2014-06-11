@@ -28,14 +28,13 @@ TODO
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 from __future__ import division
-from re import match, escape
+from re import match
 
 from .base import QiitaObject
 
-from .util import hash_pw
-from qiita_core.exceptions import (IncompetentQiitaDeveloperError,
-                                   IncorrectEmailError, IncorrectPasswordError)
+from qiita_core.exceptions import IncorrectEmailError, IncorrectPasswordError
 from .exceptions import QiitaDBDuplicateError, QiitaDBColumnError
+from .util import hash_password
 from .sql_connection import SQLConnectionHandler
 from .util import create_rand_string, check_table_cols
 from .study import Study
@@ -67,6 +66,7 @@ class User(QiitaObject):
     """
 
     _table = "qiita_user"
+    # The following columns are considered not part of the user info
     _non_info = {"email", "user_level_id", "password", "user_verify_code",
                  "pass_reset_code", "pass_reset_timestamp"}
 
@@ -83,13 +83,20 @@ class User(QiitaObject):
 
         Returns
         -------
-        User object or None
+        User object
             Returns the User object corresponding to the login information
-            or None if incorrect login information
+            if correct login information
+
+        Raises
+        ------
+        IncorrectEmailError
+            Email passed is not a valid email
+        IncorrectPasswordError
+            Password passed is not correct for user
         """
         # see if user exists
         if not cls.exists(email):
-            raise IncorrectEmailError()
+            raise IncorrectEmailError("Email not valid: %s" % email)
 
         if not validate_password(password):
             raise IncorrectPasswordError("Password not valid!")
@@ -101,7 +108,7 @@ class User(QiitaObject):
         dbpass = conn_handler.execute_fetchone(sql, (email, ))[0]
 
         # verify password
-        hashed = hash_pw(password, dbpass)
+        hashed = hash_password(password, dbpass)
         if hashed == dbpass:
             return cls(email)
         else:
@@ -135,13 +142,22 @@ class User(QiitaObject):
         password :
             The plaintext password of the user
         info: dict
-            other information for the user keyed to table column name
+            Other information for the user keyed to table column name
+
+        Raises
+        ------
+        IncorrectPasswordError
+            Password string given is not proper format
+        IncorrectEmailError
+            Email string given is not a valid email
+        QiitaDBDuplicateError
+            User already exists
         """
         # validate email and password for new user
         if not validate_email(email):
             raise IncorrectEmailError("Bad email given: %s" % email)
         if not validate_password(password):
-            raise IncorrectPasswordError("Bad password given: %s" % password)
+            raise IncorrectPasswordError("Bad password given!")
 
         # make sure user does not already exist
         if cls.exists(email):
@@ -150,14 +166,15 @@ class User(QiitaObject):
         # make sure non-info columns aren't passed in info dict
         if info:
             if cls._non_info.intersection(info):
-                raise QiitaDBColumnError("non info keys passed!")
+                raise QiitaDBColumnError("non info keys passed: %s" %
+                                         cls._non_info.intersection(info))
         else:
             info = {}
 
         # create email verification code and hashed password to insert
         # add values to info
         info["email"] = email
-        info["password"] = hash_pw(password)
+        info["password"] = hash_password(password)
         info["user_verify_code"] = create_rand_string(20, punct=False)
 
         # make sure keys in info correspond to columns in table
@@ -209,24 +226,6 @@ class User(QiitaObject):
                "(SELECT user_level_id from qiita.{0} WHERE "
                "email = %s)".format(self._table))
         return conn_handler.execute_fetchone(sql, (self._id, ))[0]
-
-    @level.setter
-    def level(self, level):
-        """ Sets the level of privileges of the user
-
-        Parameters
-        ----------
-        level : {'admin', 'dev', 'superuser', 'user', 'guest'}
-            The new level of the user
-        """
-        if level not in {'admin', 'dev', 'superuser', 'user', 'guest'}:
-            raise IncompetentQiitaDeveloperError("Unknown level given: %s" %
-                                                 level)
-        conn_handler = SQLConnectionHandler()
-        sql = ("UPDATE qiita.{0} SET user_level_id = (SELECT user_level_id "
-               "from qiita.user_level WHERE name = %s) WHERE "
-               "email = %s".format(self._table))
-        conn_handler.execute(sql, (level, self._id))
 
     @property
     def info(self):

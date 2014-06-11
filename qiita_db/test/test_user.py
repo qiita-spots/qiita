@@ -20,7 +20,7 @@ from qiita_db.exceptions import QiitaDBDuplicateError, QiitaDBColumnError
 
 @qiita_test_checker()
 class UserTest(TestCase):
-    """Tests the Uer object and all properties/methods"""
+    """Tests the User object and all properties/methods"""
 
     def setUp(self):
         self.conn = SQLConnectionHandler()
@@ -34,6 +34,7 @@ class UserTest(TestCase):
         }
 
     def _check_correct_info(self, obs, exp):
+        self.assertEqual(set(exp.keys()), set(obs.keys()))
         for key in exp:
             # user_verify_code and password seed randomly generated so just
             # making sure they exist and is correct length
@@ -62,8 +63,6 @@ class UserTest(TestCase):
             'address': None,
             'user_level_id': 5,
             'email': 'new@test.bar'}
-        # explicit list needed for py3
-        self.assertEqual(list(exp.keys()).sort(), list(obs.keys()).sort())
         self._check_correct_info(obs, exp)
 
     def test_create_user_info(self):
@@ -84,11 +83,9 @@ class UserTest(TestCase):
             'user_verify_code': '',
             'user_level_id': 5,
             'email': 'new@test.bar'}
-        # explicit list needed for py3
-        self.assertEqual(list(exp.keys()).sort(), list(obs.keys()).sort())
         self._check_correct_info(obs, exp)
 
-    def test_create_user_bad_info(self):
+    def test_create_user_column_not_allowed(self):
         self.userinfo["pass_reset_code"] = "FAIL"
         with self.assertRaises(QiitaDBColumnError):
             User.create('new@test.bar', 'password', self.userinfo)
@@ -141,14 +138,6 @@ class UserTest(TestCase):
 
     def test_get_level(self):
         self.assertEqual(self.user.level, "user")
-
-    def test_set_level(self):
-        self.user.level = "admin"
-        self.assertEqual(self.user.level, "admin")
-
-    def test_set_level_unknown(self):
-        with self.assertRaises(IncompetentQiitaDeveloperError):
-            self.user.level = "FAAAAAKE"
 
     def test_get_info(self):
         expinfo = {
