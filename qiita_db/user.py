@@ -38,8 +38,7 @@ from .base import QiitaObject
 
 from .util import hash_pw
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
-from .exceptions import (QiitaDBNotImplementedError,
-                         QiitaDBDuplicateError, QiitaDBColumnError)
+from .exceptions import QiitaDBDuplicateError, QiitaDBColumnError
 from .sql_connection import SQLConnectionHandler
 from .util import create_rand_string, check_table_cols
 from .study import Study

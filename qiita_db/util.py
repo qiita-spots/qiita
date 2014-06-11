@@ -68,7 +68,7 @@ def create_rand_string(length, punct=True):
         chars = ''.join((ascii_letters, digits))
         if punct:
             chars = ''.join((chars, punctuation))
-        return ''.join(choice(chars) for i in xrange(length))
+        return ''.join(choice(chars) for i in range(length))
 
 
 def hash_pw(password, hashedpw=None):
@@ -93,14 +93,16 @@ def hash_pw(password, hashedpw=None):
         part of the hashed password. Don't need to actually store the salt
         because of this.
         """
+        # all the encode/decode as a python 3 workaround for bcrypt
         if hashedpw is None:
             hashedpw = gensalt()
-            #python 3 workaround for bcrypt
-        if isinstance(password, bytes):
-            password = password.decode('utf-8')
-        if isinstance(hashedpw, bytes):
-            hashedpw = hashedpw.decode('utf-8')
-        return hashpw(password, hashedpw)
+        else:
+            hashedpw = hashedpw.encode('utf-8')
+        password = password.encode('utf-8')
+        output = hashpw(password, hashedpw)
+        if isinstance(output, bytes):
+            output = output.decode("utf-8")
+        return output
 
 
 def check_required_columns(conn_handler, keys, table):
