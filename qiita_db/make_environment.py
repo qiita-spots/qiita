@@ -31,7 +31,6 @@ def make_test_environment(base_data_dir, user, password, host):
     ----------
     base_data_dir : str
     """
-    print(base_data_dir)
     # Connect to the postgres server
     conn = connect(user=user, host=host, password=password)
     # Set the isolation level to AUTOCOMMIT so we can execute a
