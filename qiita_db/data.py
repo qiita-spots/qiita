@@ -348,7 +348,7 @@ class PreprocessedData(BaseData):
         ----------
         raw_data : RawData
             The RawData object used as base to this preprocessed data
-        study_id : Study
+        study : Study
             The study to which this preprocessed data belongs to
         preprocessed_params_table : str
             Name of the table that holds the preprocessing parameters used

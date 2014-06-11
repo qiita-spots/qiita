@@ -61,10 +61,10 @@ class RawDataTests(TestCase):
         self.assertEqual(obs.id, 3)
 
         # Check that the raw data have been correctly added to the DB
-        obs = self.conn_handler.execute_fetchone(
+        obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.raw_data WHERE raw_data_id=3")
         # raw_data_id, filetype, submitted_to_insdc
-        self.assertEqual(obs, [3, 2, False])
+        self.assertEqual(obs, [[3, 2, False]])
 
         # Check that the raw data have been correctly linked with the study
         obs = self.conn_handler.execute_fetchall(
@@ -118,7 +118,7 @@ class RawDataTests(TestCase):
         self.assertEqual(obs, exp)
 
     def test_studies(self):
-        """Correctly returns the study the objects"""
+        """Correctly returns the study objects"""
         rd = RawData(1)
         obs = rd.studies
         exp = [Study(1)]
@@ -160,12 +160,12 @@ class PreprocessedDataTests(TestCase):
         self.assertEqual(obs.id, 3)
 
         # Check that the preprocessed data have been correctly added to the DB
-        obs = self.conn_handler.execute_fetchone(
+        obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.preprocessed_data WHERE "
             "preprocessed_data_id=3")
         # preprocessed_data_id, raw_data_id, preprocessed_params_tables,
         # preprocessed_params_id
-        exp = [3, 1, "preprocessed_sequence_illumina_params", 1]
+        exp = [[3, 1, "preprocessed_sequence_illumina_params", 1]]
         self.assertEqual(obs, exp)
 
         # Check that the preprocessed data has been linked with its study
@@ -272,11 +272,11 @@ class ProcessedDataTests(TestCase):
         self.assertEqual(obs.id, 2)
 
         # Check that the processed data have been correctly added to the DB
-        obs = self.conn_handler.execute_fetchone(
+        obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.processed_data WHERE processed_data_id=2")
         # processed_data_id, preprocessed_data_id, processed_params_table,
         # processed_params_id, processed_date
-        exp = [2, 1, "processed_params_uclust", 1, self.date]
+        exp = [[2, 1, "processed_params_uclust", 1, self.date]]
         self.assertEqual(obs, exp)
 
         # Check that the files have been copied to right location
