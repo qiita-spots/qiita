@@ -118,7 +118,7 @@ class RawDataTests(TestCase):
         self.assertEqual(obs, exp)
 
     def test_studies(self):
-        """Correctly returns the study objects"""
+        """Correctly returns the study ids"""
         rd = RawData(1)
         self.assertEqual(rd.studies, [1])
 
