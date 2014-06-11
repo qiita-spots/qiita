@@ -104,11 +104,7 @@ from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from .base import QiitaStatusObject, QiitaObject
 from .exceptions import (QiitaDBDuplicateError, QiitaDBNotImplementedError,
                          QiitaDBStatusError, QiitaDBColumnError)
-from .data import RawData, PreprocessedData, ProcessedData
-from .user import User
-from .investigation import Investigation
 from .util import check_required_columns, check_table_cols
-from .metadata_template import SampleTemplate
 from .sql_connection import SQLConnectionHandler
 
 
@@ -163,14 +159,15 @@ class Study(QiitaStatusObject):
 
         Parameters
         ----------
-        owner : User object
-            the user id of the study' owner
+        owner : User object 
+            the study' owner
         title: str
             Title of the study
         efo: int or list
             Experimental Factor Ontology or -ies for the study
         info: dict
-            the information attached to the study.
+            the information attached to the study. All "*_id" keys must pass
+            the objects associated with them.
         investigation: Investigation object
             if the study is part of an investigation, the id to associate with
 
@@ -185,9 +182,7 @@ class Study(QiitaStatusObject):
         Notes
         -----
         All keys in info, except the efo, must be equal to columns in
-        qiita.study table in the database. EFO information is stored as a list
-        under the key 'study_experimental_factor', the name of the table it is
-        stored in.
+        qiita.study table in the database. 
         """
         # make sure not passing non-info columns in the info dict
         if cls._non_info.intersection(info):
@@ -295,13 +290,7 @@ class Study(QiitaStatusObject):
         conn_handler = SQLConnectionHandler()
         sql = "SELECT * FROM qiita.{0} WHERE study_id = %s".format(self._table)
         info = dict(conn_handler.execute_fetchone(sql, (self._id, )))
-
-        # Convert everything from ids to objects
-        info['email'] = User(info['email'])
-        info.update({k: StudyPerson(info[k]) for k in
-                    ['principal_investigator_id', 'lab_person_id',
-                    'emp_person_id'] if info[k] is not None})
-        # remove items from info
+        # remove non-info items from info
         for item in self._non_info:
             info.pop(item)
         return info
@@ -387,14 +376,13 @@ class Study(QiitaStatusObject):
 
         Returns
         -------
-        list of User objects
+        list of User ids
             Users the study is shared with
         """
         conn_handler = SQLConnectionHandler()
         sql = ("SELECT email FROM qiita.{0}_users WHERE "
                "study_id = %s".format(self._table))
-        return [User(x[0]) for x in conn_handler.execute_fetchall(sql,
-                                                                  (self._id,))]
+        return [x[0] for x in conn_handler.execute_fetchall(sql, (self._id,))]
 
     @property
     def pmids(self):
@@ -416,66 +404,63 @@ class Study(QiitaStatusObject):
 
         Returns
         -------
-        Investigation object
+        Investigation id
         """
         conn_handler = SQLConnectionHandler()
         sql = ("SELECT investigation_id FROM qiita.investigation_study WHERE "
                "study_id = %s")
         inv = conn_handler.execute_fetchone(sql, (self._id, ))
-        return Investigation(inv[0]) if inv is not None else inv
+        return inv[0] if inv is not None else inv
 
     @property
     def metadata(self):
-        """ Returns list of metadata columns
+        """ Returns metadata information id
 
         Returns
         -------
-        SampleTemplate object
+        SampleTemplate id
         """
-        return SampleTemplate(self._id)
+        return self._id
 
     @property
     def raw_data(self):
-        """ Returns list of data objects with raw data info
+        """ Returns list of data ids for raw data info
 
         Returns
         -------
-        list of RawData objects
+        list of RawData ids
         """
         conn_handler = SQLConnectionHandler()
         sql = ("SELECT raw_data_id FROM qiita.study_raw_data WHERE "
                "study_id = %s")
-        return [RawData(x[0]) for x in
-                conn_handler.execute_fetchall(sql, (self._id,))]
+        return [x[0] for x in conn_handler.execute_fetchall(sql, (self._id,))]
 
     @property
     def preprocessed_data(self):
-        """ Returns list of data objects with preprocessed data info
+        """ Returns list of data ids for preprocessed data info
 
         Returns
         -------
-        list of PreprocessedData objects
+        list of PreprocessedData ids
         """
         conn_handler = SQLConnectionHandler()
         sql = ("SELECT preprocessed_data_id FROM qiita.study_preprocessed_data"
                " WHERE study_id = %s")
-        return [PreprocessedData(x[0]) for x in
-                conn_handler.execute_fetchall(sql, (self._id,))]
+        return [x[0] for x in conn_handler.execute_fetchall(sql, (self._id,))]
 
     @property
     def processed_data(self):
-        """ Returns list of data objects with processed data info
+        """ Returns list of data ids for processed data info
 
         Returns
         -------
-        list of ProcessedData objects
+        list of ProcessedData ids
         """
         conn_handler = SQLConnectionHandler()
         sql = ("SELECT processed_data_id FROM qiita.processed_data WHERE "
                "preprocessed_data_id IN (SELECT preprocessed_data_id FROM "
                "qiita.study_preprocessed_data where study_id = %s)")
-        return [ProcessedData(x[0]) for x in
-                conn_handler.execute_fetchall(sql, (self._id,))]
+        return [x[0] for x in conn_handler.execute_fetchall(sql, (self._id,))]
 
 # --- methods ---
     def share(self, user):
@@ -489,6 +474,19 @@ class Study(QiitaStatusObject):
         conn_handler = SQLConnectionHandler()
         sql = ("INSERT INTO qiita.study_users (study_id, email) VALUES "
                "(%s, %s)")
+        conn_handler.execute(sql, (self._id, user.id))
+
+    def unshare(self, user):
+        """Unshares the study with given user
+
+        Parameters
+        ----------
+        user: User object
+            The user to unshare with
+        """
+        conn_handler = SQLConnectionHandler()
+        sql = ("DELETE FROM qiita.study_users WHERE study_id = %s AND "
+               "email = %s")
         conn_handler.execute(sql, (self._id, user.id))
 
     def add_pmid(self, pmid):

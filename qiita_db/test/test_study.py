@@ -3,10 +3,9 @@ from datetime import date
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_core.util import qiita_test_checker
+from qiita_db.base import QiitaObject
 from qiita_db.study import Study, StudyPerson
 from qiita_db.investigation import Investigation
-from qiita_db.data import PreprocessedData, RawData, ProcessedData
-from qiita_db.metadata_template import SampleTemplate
 from qiita_db.user import User
 from qiita_db.exceptions import (QiitaDBDuplicateError, QiitaDBColumnError,
                                  QiitaDBStatusError)
@@ -98,6 +97,24 @@ class TestStudy(TestCase):
             "emp_person_id": StudyPerson(2),
             "principal_investigator_id": StudyPerson(3),
             "lab_person_id": StudyPerson(1)
+        }
+
+        self.infoexp = {
+            "timeseries_type_id": 1,
+            "metadata_complete": True,
+            "mixs_compliant": True,
+            "email": 'test@foo.bar',
+            "number_samples_collected": 25,
+            "number_samples_promised": 28,
+            "portal_type_id": 3,
+            "study_alias": "FCM",
+            "study_description": ("Microbiome of people who eat nothing but "
+                                  "fried chicken"),
+            "study_abstract": ("Exploring how a high fat diet changes the "
+                               "gut microbiome"),
+            "emp_person_id": 2,
+            "principal_investigator_id": 3,
+            "lab_person_id": 1
         }
 
         self.existingexp = {
@@ -277,6 +294,9 @@ class TestStudy(TestCase):
             self.study.efo = 6
 
     def test_retrieve_info(self):
+        for key, val in self.existingexp.items():
+            if isinstance(val, QiitaObject):
+                self.existingexp[key] = val.id
         self.assertEqual(self.study.info, self.existingexp)
 
     def test_set_info(self):
@@ -291,14 +311,18 @@ class TestStudy(TestCase):
         }
         new = Study.create(User('test@foo.bar'), 'Identification of the '
                            'Microbiomes for Cannabis Soils', 1, self.info)
-        self.info.update(newinfo)
+        self.infoexp.update(newinfo)
         new.info = newinfo
         # add missing table cols
-        self.info["funding"] = None
-        self.info["spatial_series"] = None
-        self.info["most_recent_contact"] = None
-        self.info["reprocess"] = False
-        self.assertEqual(new.info, self.info)
+        self.infoexp["funding"] = None
+        self.infoexp["spatial_series"] = None
+        self.infoexp["most_recent_contact"] = None
+        self.infoexp["reprocess"] = False
+        self.infoexp["lab_person_id"] = 2
+        for key, val in new.info.iteritems():
+            if val != self.infoexp[key]:
+                print key, val, self.infoexp[key]
+        self.assertEqual(new.info, self.infoexp)
 
     def test_set_info_public(self):
         """Tests for fail if editing info of a public study"""
@@ -321,20 +345,20 @@ class TestStudy(TestCase):
         self.assertEqual(new.status, "private")
 
     def test_retrieve_shared_with(self):
-        self.assertEqual(self.study.shared_with, [User('shared@foo.bar')])
+        self.assertEqual(self.study.shared_with, ['shared@foo.bar'])
 
     def test_retrieve_pmids(self):
         exp = ['123456', '7891011']
         self.assertEqual(self.study.pmids, exp)
 
     def test_retrieve_investigation(self):
-        self.assertEqual(self.study.investigation, Investigation(1))
+        self.assertEqual(self.study.investigation, 1)
 
     def test_retrieve_metadata(self):
-        self.assertEqual(self.study.metadata, SampleTemplate(1))
+        self.assertEqual(self.study.metadata, 1)
 
     def test_retrieve_raw_data(self):
-        self.assertEqual(self.study.raw_data, [RawData(1), RawData(2)])
+        self.assertEqual(self.study.raw_data, [1, 2])
 
     def test_retrieve_raw_data_none(self):
         new = Study.create(User('test@foo.bar'), 'Identification of the '
@@ -342,8 +366,7 @@ class TestStudy(TestCase):
         self.assertEqual(new.raw_data, [])
 
     def test_retrieve_preprocessed_data(self):
-        self.assertEqual(self.study.preprocessed_data, [PreprocessedData(1),
-                                                        PreprocessedData(2)])
+        self.assertEqual(self.study.preprocessed_data, [1, 2])
 
     def test_retrieve_preprocessed_data_none(self):
         new = Study.create(User('test@foo.bar'), 'Identification of the '
@@ -351,7 +374,7 @@ class TestStudy(TestCase):
         self.assertEqual(new.preprocessed_data, [])
 
     def test_retrieve_processed_data(self):
-        self.assertEqual(self.study.processed_data, [ProcessedData(1)])
+        self.assertEqual(self.study.processed_data, [1])
 
     def test_retrieve_processed_data_none(self):
         new = Study.create(User('test@foo.bar'), 'Identification of the '
@@ -360,8 +383,12 @@ class TestStudy(TestCase):
 
     def test_share(self):
         self.study.share(User('admin@foo.bar'))
-        self.assertEqual(self.study.shared_with, [User('shared@foo.bar'),
-                                                  User('admin@foo.bar')])
+        self.assertEqual(self.study.shared_with, ['shared@foo.bar',
+                                                  'admin@foo.bar'])
+
+    def test_unshare(self):
+        self.study.unshare(User('shared@foo.bar'))
+        self.assertEqual(self.study.shared_with, [])
 
     def test_add_pmid(self):
         self.study.add_pmid('4544444')
