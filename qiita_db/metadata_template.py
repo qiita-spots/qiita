@@ -30,14 +30,18 @@ from __future__ import division
 from future.builtins import zip
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
-from .base import QiitaStatusObject
+from .base import QiitaObject
 from .exceptions import QiitaDBNotImplementedError
 from .sql_connection import SQLConnectionHandler
 from .util import (quote_column_name, quote_data_value, get_datatypes,
                    scrub_data)
 
 
-class MetadataTemplate(QiitaStatusObject):
+class Sample(QiitaObject):
+    r""""""
+
+
+class MetadataTemplate(QiitaObject):
     r"""Metadata map object that accesses the db to get the sample/prep
     template information
 
@@ -65,6 +69,17 @@ class MetadataTemplate(QiitaStatusObject):
     # Used to find the right SQL tables - should be defined on the subclasses
     _table_prefix = None
     _column_table = None
+    _id_column = None
+
+    def _check_id(self, id_, conn_handler=None):
+        r""""""
+        self._check_subclass()
+        conn_handler = (conn_handler if conn_handler is not None
+                        else SQLConnectionHandler())
+        return conn_handler.execute_fetchone(
+            "SELECT EXISTS(SELECT * FROM qiita.{0} WHERE "
+            "{1}=%s)".format(self._table, self._id_column),
+            (id_, ))[0]
 
     @classmethod
     def _table_name(cls, study_id):
@@ -263,6 +278,7 @@ class SampleTemplate(MetadataTemplate):
     _table = "required_sample_info"
     _table_prefix = "sample_"
     _column_table = "study_sample_columns"
+    _id_column = "study_id"
 
 
 class PrepTemplate(MetadataTemplate):
@@ -270,3 +286,4 @@ class PrepTemplate(MetadataTemplate):
     _table = "common_prep_infp"
     _table_prefix = "prep_"
     _column_table = "raw_data_prep_columns"
+    _id_column = "raw_data_id"
