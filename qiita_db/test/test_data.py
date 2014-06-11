@@ -118,11 +118,9 @@ class RawDataTests(TestCase):
         self.assertEqual(obs, exp)
 
     def test_studies(self):
-        """Correctly returns the study objects"""
+        """Correctly returns the study ids"""
         rd = RawData(1)
-        obs = rd.studies
-        exp = [Study(1)]
-        self.assertEqual(obs, exp)
+        self.assertEqual(rd.studies, [1])
 
 
 @qiita_test_checker()
@@ -231,16 +229,12 @@ class PreprocessedDataTests(TestCase):
     def test_raw_data(self):
         """Correctly returns the raw data"""
         ppd = PreprocessedData(1)
-        obs = ppd.raw_data
-        exp = RawData(1)
-        self.assertEqual(obs, exp)
+        self.assertEqual(ppd.raw_data, 1)
 
     def test_study(self):
         """Correctly returns the study"""
         ppd = PreprocessedData(1)
-        obs = ppd.study
-        exp = Study(1)
-        self.assertEqual(obs, exp)
+        self.assertEqual(ppd.study, 1)
 
 
 @qiita_test_checker()
@@ -343,9 +337,7 @@ class ProcessedDataTests(TestCase):
     def test_preprocessed_data(self):
         """Correctly returns the preprocessed_data"""
         pd = ProcessedData(1)
-        obs = pd.preprocessed_data
-        exp = PreprocessedData(1)
-        self.assertEqual(obs, exp)
+        self.assertEqual(pd.preprocessed_data, 1)
 
 
 if __name__ == '__main__':
