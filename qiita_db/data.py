@@ -29,7 +29,7 @@ Inserting the raw data into the database:
 
 >>> from qiita_db.data import RawData
 >>> from qiita_db.study import Study
->>> study = Study(1)
+>>> study = Study(1) # doctest: +SKIP
 >>> filepaths = [('seqs.fastq', 1), ('barcodes.fastq', 2)]
 >>> rd = RawData.create(2, filepaths, study) # doctest: +SKIP
 >>> print rd.id # doctest: +SKIP
