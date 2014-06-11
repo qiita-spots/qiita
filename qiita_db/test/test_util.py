@@ -14,7 +14,8 @@ from os import close
 from qiita_core.util import qiita_test_checker
 from qiita_db.sql_connection import SQLConnectionHandler
 from qiita_db.util import (exists_table, exists_dynamic_table,
-                           get_db_files_base_dir, compute_checksum)
+                           get_db_files_base_dir, compute_checksum,
+                           __file__ as util_file)
 
 
 @qiita_test_checker()
@@ -67,8 +68,7 @@ class DBUtilTests(TestCase):
 
     def test_get_db_files_base_dir(self):
         """Correctly returns the base directory of all db files"""
-        exp = join(dirname(dirname(abspath(__file__))),
-                   'support_files', 'test_data')
+        exp = join(dirname(abspath(util_file)), 'support_files', 'test_data')
         self.assertEqual(get_db_files_base_dir(), exp)
         self.assertEqual(get_db_files_base_dir(conn_handler=self.conn_handler),
                          exp)
