@@ -196,8 +196,9 @@ class User(QiitaObject):
 
         Parameters
         ----------
-        id_ : object
+        id_ : str
             The ID to test
+        conn_handler
             The connection handler object connected to the DB
 
         Notes
@@ -270,39 +271,39 @@ class User(QiitaObject):
 
     @property
     def private_studies(self):
-        """Returns a list of private studies owned by the user"""
+        """Returns a list of private study ids owned by the user"""
         sql = ("SELECT study_id FROM qiita.study WHERE "
                "email = %s".format(self._table))
         conn_handler = SQLConnectionHandler()
         study_ids = conn_handler.execute_fetchall(sql, (self._id, ))
-        return [Study(s[0]) for s in study_ids]
+        return [s[0] for s in study_ids]
 
     @property
     def shared_studies(self):
-        """Returns a list of studies shared with the user"""
+        """Returns a list of study ids shared with the user"""
         sql = ("SELECT study_id FROM qiita.study_users WHERE "
                "email = %s".format(self._table))
         conn_handler = SQLConnectionHandler()
         study_ids = conn_handler.execute_fetchall(sql, (self._id, ))
-        return [Study(s[0]) for s in study_ids]
+        return [s[0] for s in study_ids]
 
     @property
     def private_analyses(self):
-        """Returns a list of private analyses owned by the user"""
+        """Returns a list of private analysis ids owned by the user"""
         sql = ("Select analysis_id from qiita.analysis WHERE email = %s AND "
                "analysis_status_id <> 6")
         conn_handler = SQLConnectionHandler()
         analysis_ids = conn_handler.execute_fetchall(sql, (self._id, ))
-        return [Analysis(a[0]) for a in analysis_ids]
+        return [a[0] for a in analysis_ids]
 
     @property
     def shared_analyses(self):
-        """Returns a list of analyses shared with the user"""
+        """Returns a list of analysis ids shared with the user"""
         sql = ("SELECT analysis_id FROM qiita.analysis_users WHERE "
                "email = %s".format(self._table))
         conn_handler = SQLConnectionHandler()
         analysis_ids = conn_handler.execute_fetchall(sql, (self._id, ))
-        return [Analysis(a[0]) for a in analysis_ids]
+        return [a[0] for a in analysis_ids]
 
 
 def validate_email(email):

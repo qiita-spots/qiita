@@ -12,8 +12,6 @@ from qiita_core.exceptions import (IncompetentQiitaDeveloperError,
                                    IncorrectEmailError, IncorrectPasswordError)
 from qiita_core.util import qiita_test_checker
 from qiita_db.user import User
-from qiita_db.study import Study
-from qiita_db.analysis import Analysis
 from qiita_db.sql_connection import SQLConnectionHandler
 from qiita_db.exceptions import QiitaDBDuplicateError, QiitaDBColumnError
 
@@ -166,11 +164,11 @@ class UserTest(TestCase):
 
     def test_get_private_studies(self):
         user = User('test@foo.bar')
-        self.assertEqual(user.private_studies, [Study(1)])
+        self.assertEqual(user.private_studies, [1])
 
     def test_get_shared_studies(self):
         user = User('shared@foo.bar')
-        self.assertEqual(user.shared_studies, [Study(1)])
+        self.assertEqual(user.shared_studies, [1])
 
     def test_get_private_analyses(self):
         self.assertEqual(self.user.private_analyses, [])
