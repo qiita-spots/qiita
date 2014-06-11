@@ -487,7 +487,7 @@ class ProcessedData(BaseData):
 
     @property
     def preprocessed_data(self):
-        r"""The preprocessed data object used to generate the processed data"""
+        r"""The preprocessed data id used to generate the processed data"""
         conn_handler = SQLConnectionHandler()
         return conn_handler.execute_fetchone(
             "SELECT preprocessed_data_id FROM qiita.{0} WHERE "
