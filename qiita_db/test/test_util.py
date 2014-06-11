@@ -69,6 +69,7 @@ class DBUtilTests(TestCase):
     def test_get_db_files_base_dir(self):
         """Correctly returns the base directory of all db files"""
         exp = join(dirname(abspath(util_file)), 'support_files', 'test_data')
+        print exp
         self.assertEqual(get_db_files_base_dir(), exp)
         self.assertEqual(get_db_files_base_dir(conn_handler=self.conn_handler),
                          exp)
