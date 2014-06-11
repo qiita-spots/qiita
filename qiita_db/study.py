@@ -54,7 +54,6 @@ must be passed as StudyPerson objects and the owner as a User object.
 ...     "number_samples_collected": 25,
 ...     "number_samples_promised": 28,
 ...     "portal_type_id": 3,
-...     "study_title": "Study Title",
 ...     "study_alias": "TST",
 ...     "study_description": "Some description of the study goes here",
 ...     "study_abstract": "Some abstract goes here",
@@ -62,7 +61,7 @@ must be passed as StudyPerson objects and the owner as a User object.
 ...     "principal_investigator_id": StudyPerson(3),
 ...     "lab_person_id": StudyPerson(1)} # doctest: +SKIP
 >>> owner = User('owner@foo.bar') # doctest: +SKIP
->>> Study(owner, 1, info) # doctest: +SKIP
+>>> Study(owner, "New Study Title", 1, info) # doctest: +SKIP
 
 You can also add a study to an investigation by passing the investigation
 object while creating the study.
@@ -77,7 +76,6 @@ object while creating the study.
 ...     "number_samples_collected": 25,
 ...     "number_samples_promised": 28,
 ...     "portal_type_id": 3,
-...     "study_title": "Study Title",
 ...     "study_alias": "TST",
 ...     "study_description": "Some description of the study goes here",
 ...     "study_abstract": "Some abstract goes here",
@@ -86,7 +84,7 @@ object while creating the study.
 ...     "lab_person_id": StudyPerson(1)} # doctest: +SKIP
 >>> owner = User('owner@foo.bar') # doctest: +SKIP
 >>> investigation = Investigation(1) # doctest: +SKIP
->>> Study(owner, 1, info, investigation) # doctest: +SKIP
+>>> Study(owner, "New Study Title", 1, info, investigation) # doctest: +SKIP
 """
 
 # -----------------------------------------------------------------------------
@@ -100,11 +98,12 @@ object while creating the study.
 from __future__ import division
 from future.builtins import zip
 from datetime import date
+from copy import deepcopy
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from .base import QiitaStatusObject, QiitaObject
 from .exceptions import (QiitaDBDuplicateError, QiitaDBNotImplementedError,
-                         QiitaDBStatusError)
+                         QiitaDBStatusError, QiitaDBColumnError)
 from .data import RawData, PreprocessedData, ProcessedData
 from .user import User
 from .investigation import Investigation
@@ -118,28 +117,17 @@ class Study(QiitaStatusObject):
 
     Attributes
     ----------
-    name: str
-        name of the study
-    info: dict
-        Major information about the study, keyed by db column name
-    status: int
-        Status of the study
-    efo: list of int
-        list of Experimental Factor Ontology ids for the study
-    shared_with: list of User objects
-        Emails of users the study is shared with
-    pmids: list of str
-        PMIDs assiciated with the study
-    investigation: Investigation object
-        Investigation the study is part of
-    metadata: Metadata object
-        Metadata object tied to this study
-    raw_data: list of RawData objects
-        All raw data attached to the study
-    preprocessed_data: list of PreprocessedData objects
-        All preprocessed data attached to the study
-    processed_data: list of ProcessedData objects
-        All processed data attached to the study
+    name
+    info
+    status
+    efo
+    shared_with
+    pmids
+    investigation
+    metadata
+    raw_data
+    preprocessed_data
+    processed_data
 
     Methods
     -------
@@ -153,6 +141,8 @@ class Study(QiitaStatusObject):
     You should not be doing that.
     """
     _table = "study"
+    # The following columns are considered not part of the user info
+    _non_info = {"study_id", "study_status_id", "study_title"}
 
     def _lock_public(self, conn_handler):
         """Raises QiitaDBStatusError if study is public"""
@@ -168,17 +158,19 @@ class Study(QiitaStatusObject):
         self._lock_public(conn_handler)
 
     @classmethod
-    def create(cls, owner, efo, info, investigation=None):
+    def create(cls, owner, title, efo, info, investigation=None):
         """Creates a new study on the database
 
         Parameters
         ----------
         owner : User object
             the user id of the study' owner
-        info: dict
-            the information attached to the study.
+        title: str
+            Title of the study
         efo: int or list
             Experimental Factor Ontology or -ies for the study
+        info: dict
+            the information attached to the study.
         investigation: Investigation object
             if the study is part of an investigation, the id to associate with
 
@@ -197,39 +189,39 @@ class Study(QiitaStatusObject):
         under the key 'study_experimental_factor', the name of the table it is
         stored in.
         """
-        # make sure not passing a study id in the info dict
-        if "study_id" in info:
-            raise IncompetentQiitaDeveloperError("Can't pass study_id in info "
-                                                 "dict!")
-        if "study_status_id" in info:
-            raise IncompetentQiitaDeveloperError("Can't pass status in info "
-                                                 "dict!")
+        # make sure not passing non-info columns in the info dict
+        if cls._non_info.intersection(info):
+                raise QiitaDBColumnError("non info keys passed: %s" %
+                                         cls._non_info.intersection(info))
 
         # add default values to info
-        info['email'] = owner.id
-        info['reprocess'] = False
-        info['first_contact'] = date.today().strftime("%B %d, %Y")
+        insertdict = deepcopy(info)
+        if "first_contact" not in insertdict:
+            insertdict['first_contact'] = date.today().strftime("%B %d, %Y")
+        insertdict['email'] = owner.id
+        insertdict['study_title'] = title
+        insertdict['reprocess'] = False
         # default to waiting_approval status
-        info['study_status_id'] = 1
+        insertdict['study_status_id'] = 1
 
         conn_handler = SQLConnectionHandler()
         # make sure dictionary only has keys for available columns in db
-        check_table_cols(conn_handler, info, cls._table)
+        check_table_cols(conn_handler, insertdict, cls._table)
         # make sure reqired columns in dictionary
-        check_required_columns(conn_handler, info, cls._table)
+        check_required_columns(conn_handler, insertdict, cls._table)
 
         # Insert study into database
-        keys = info.keys()
+        keys = insertdict.keys()
         sql = ("INSERT INTO qiita.{0} ({1}) VALUES ({2}) RETURNING "
                "study_id".format(cls._table, ','.join(keys),
-                                 ','.join(['%s'] * len(info))))
+                                 ','.join(['%s'] * len(insertdict))))
         # make sure data in same order as sql column names, and ids are used
         data = []
         for col in keys:
-            if isinstance(info[col], QiitaObject):
-                data.append(info[col].id)
+            if isinstance(insertdict[col], QiitaObject):
+                data.append(insertdict[col].id)
             else:
-                data.append(info[col])
+                data.append(insertdict[col])
         study_id = conn_handler.execute_fetchone(sql, data)[0]
 
         # insert efo information into database
@@ -309,9 +301,9 @@ class Study(QiitaStatusObject):
         info.update({k: StudyPerson(info[k]) for k in
                     ['principal_investigator_id', 'lab_person_id',
                     'emp_person_id'] if info[k] is not None})
-        # remove id and status since not needed
-        info.pop("study_id")
-        info.pop("study_status_id")
+        # remove items from info
+        for item in self._non_info:
+            info.pop(item)
         return info
 
     @info.setter
@@ -330,10 +322,15 @@ class Study(QiitaStatusObject):
         QiitaDBColumnError
             Unknown column names passed
         """
-        conn_handler = SQLConnectionHandler()
-        self._lock_public(conn_handler)
         if not info:
             raise IncompetentQiitaDeveloperError("Need entries in info dict!")
+
+        if self._non_info.intersection(info):
+                raise QiitaDBColumnError("non info keys passed: %s" %
+                                         self._non_info.intersection(info))
+
+        conn_handler = SQLConnectionHandler()
+        self._lock_public(conn_handler)
 
         # make sure dictionary only has keys for available columns in db
         check_table_cols(conn_handler, info, self._table)

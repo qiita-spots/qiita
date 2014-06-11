@@ -86,10 +86,10 @@ class TestStudy(TestCase):
             "timeseries_type_id": 1,
             "metadata_complete": True,
             "mixs_compliant": True,
+            "email": User('test@foo.bar'),
             "number_samples_collected": 25,
             "number_samples_promised": 28,
             "portal_type_id": 3,
-            "study_title": "Fried chicken microbiome",
             "study_alias": "FCM",
             "study_description": ("Microbiome of people who eat nothing but "
                                   "fried chicken"),
@@ -130,13 +130,12 @@ class TestStudy(TestCase):
             'study_alias': 'Cannabis Soils',
             'most_recent_contact': '2014-05-19 16:11',
             'lab_person_id': StudyPerson(1),
-            'study_title': ('Identification of the Microbiomes for Cannabis '
-                            'Soils'),
             'number_samples_collected': 27}
 
     def test_create_study_min_data(self):
         """Insert a study into the database"""
-        obs = Study.create(User('test@foo.bar'), 1, self.info)
+        obs = Study.create(User('test@foo.bar'), "Fried chicken microbiome",
+                           1, self.info)
         self.assertEqual(obs.id, 2)
         exp = {'mixs_compliant': True, 'metadata_complete': True,
                'reprocess': False, 'study_status_id': 1,
@@ -156,10 +155,10 @@ class TestStudy(TestCase):
                'number_samples_collected': 25}
 
         conn = SQLConnectionHandler()
-        obsins = dict(conn.execute_fetchall("SELECT * FROM qiita.study WHERE "
-                                            "study_id = 2"))
+        obsins = conn.execute_fetchall("SELECT * FROM qiita.study WHERE "
+                                       "study_id = 2")
         self.assertEqual(len(obsins), 1)
-        obsins = obsins[0]
+        obsins = dict(obsins[0])
         self.assertEqual(obsins, exp)
 
         # make sure EFO went in to table correctly
@@ -170,7 +169,8 @@ class TestStudy(TestCase):
 
     def test_create_study_with_investigation(self):
         """Insert a study into the database with an investigation"""
-        obs = Study.create(User('test@foo.bar'), 1, self.info,
+        obs = Study.create(User('test@foo.bar'), "Fried chicken microbiome",
+                           1, self.info,
                            Investigation(1))
         self.assertEqual(obs.id, 2)
         # check the investigation was assigned
@@ -187,7 +187,8 @@ class TestStudy(TestCase):
             'spatial_series': True,
             'metadata_complete': False,
             })
-        obs = Study.create(User('test@foo.bar'), 1, self.info)
+        obs = Study.create(User('test@foo.bar'), "Fried chicken microbiome",
+                           1, self.info)
         self.assertEqual(obs.id, 2)
         exp = {'mixs_compliant': True, 'metadata_complete': False,
                'reprocess': False, 'study_status_id': 1,
@@ -219,34 +220,32 @@ class TestStudy(TestCase):
 
     def test_create_missing_required(self):
         """ Insert a study that is missing a required info key"""
-        self.info.pop("study_title")
+        self.info.pop("study_alias")
         with self.assertRaises(QiitaDBColumnError):
-            Study.create(User('test@foo.bar'), 1, self.info)
+            Study.create(User('test@foo.bar'), "Fried Chicken Microbiome",
+                         1, self.info)
 
-    def test_create_study_id(self):
-        """Insert a study with study_id present"""
+    def test_create_study_with_not_allowed_key(self):
+        """Insert a study with key from _non_info present"""
         self.info.update({"study_id": 1})
-        with self.assertRaises(IncompetentQiitaDeveloperError):
-            Study.create(User('test@foo.bar'), 1, self.info)
-
-    def test_create_study_status(self):
-        """Insert a study with status present"""
-        self.info.update({"study_status_id": 1})
-        with self.assertRaises(IncompetentQiitaDeveloperError):
-            Study.create(User('test@foo.bar'), 1, self.info)
+        with self.assertRaises(QiitaDBColumnError):
+            Study.create(User('test@foo.bar'), "Fried Chicken Microbiome",
+                         1, self.info)
 
     def test_create_unknown_db_col(self):
         """ Insert a study with an info key not in the database"""
         self.info["SHOULDNOTBEHERE"] = "BWAHAHAHAHAHA"
         with self.assertRaises(QiitaDBColumnError):
-            Study.create(User('test@foo.bar'), 1, self.info)
+            Study.create(User('test@foo.bar'), "Fried Chicken Microbiome",
+                         1, self.info)
 
     def test_retrieve_title(self):
         self.assertEqual(self.study.title, 'Identification of the Microbiomes'
                          ' for Cannabis Soils')
 
     def test_set_title(self):
-        new = Study.create(User('test@foo.bar'), 1, self.info)
+        new = Study.create(User('test@foo.bar'), 'Identification of the '
+                           'Microbiomes for Cannabis Soils', 1, self.info)
         new.title = "Cannabis soils"
         self.assertEqual(new.title, "Cannabis soils")
 
@@ -260,13 +259,15 @@ class TestStudy(TestCase):
 
     def test_set_efo_list(self):
         """Set efo with list efo_id"""
-        new = Study.create(User("test@foo.bar"), 1, self.info)
+        new = Study.create(User('test@foo.bar'), 'Identification of the '
+                           'Microbiomes for Cannabis Soils', 1, self.info)
         new.efo = [3, 4]
         self.assertEqual(new.efo, [3, 4])
 
     def test_set_efo_int(self):
         """Set efo with int efo_id"""
-        new = Study.create(User("test@foo.bar"), 1, self.info)
+        new = Study.create(User('test@foo.bar'), 'Identification of the '
+                           'Microbiomes for Cannabis Soils', 1, self.info)
         new.efo = 5
         self.assertEqual(new.efo, [5])
 
@@ -285,14 +286,18 @@ class TestStudy(TestCase):
             "metadata_complete": False,
             "number_samples_collected": 28,
             "lab_person_id": StudyPerson(2),
-            "vamps_id": 'MBE_111222'
+            "vamps_id": 'MBE_111222',
+            "first_contact": "June 11, 2014"
         }
-        new = Study.create(User('test@foo.bar'), 1, self.info)
+        new = Study.create(User('test@foo.bar'), 'Identification of the '
+                           'Microbiomes for Cannabis Soils', 1, self.info)
         self.info.update(newinfo)
         new.info = newinfo
         # add missing table cols
         self.info["funding"] = None
-        self.info["spatial_series"] = False
+        self.info["spatial_series"] = None
+        self.info["most_recent_contact"] = None
+        self.info["reprocess"] = False
         self.assertEqual(new.info, self.info)
 
     def test_set_info_public(self):
@@ -301,7 +306,8 @@ class TestStudy(TestCase):
             self.study.info = {"vamps_id": "12321312"}
 
     def test_info_empty(self):
-        new = Study.create(User('test@foo.bar'), 1, self.info)
+        new = Study.create(User('test@foo.bar'), 'Identification of the '
+                           'Microbiomes for Cannabis Soils', 1, self.info)
         with self.assertRaises(IncompetentQiitaDeveloperError):
             new.info = {}
 
@@ -309,7 +315,8 @@ class TestStudy(TestCase):
         self.assertEqual(self.study.status, "public")
 
     def test_set_status(self):
-        new = Study.create(User('test@foo.bar'), 1, self.info)
+        new = Study.create(User('test@foo.bar'), 'Identification of the '
+                           'Microbiomes for Cannabis Soils', 1, self.info)
         new.status = "private"
         self.assertEqual(new.status, "private")
 
@@ -330,7 +337,8 @@ class TestStudy(TestCase):
         self.assertEqual(self.study.raw_data, [RawData(1), RawData(2)])
 
     def test_retrieve_raw_data_none(self):
-        new = Study.create(User('test@foo.bar'), 1, self.info)
+        new = Study.create(User('test@foo.bar'), 'Identification of the '
+                           'Microbiomes for Cannabis Soils', 1, self.info)
         self.assertEqual(new.raw_data, [])
 
     def test_retrieve_preprocessed_data(self):
@@ -338,14 +346,16 @@ class TestStudy(TestCase):
                                                         PreprocessedData(2)])
 
     def test_retrieve_preprocessed_data_none(self):
-        new = Study.create(User('test@foo.bar'), 1, self.info)
+        new = Study.create(User('test@foo.bar'), 'Identification of the '
+                           'Microbiomes for Cannabis Soils', 1, self.info)
         self.assertEqual(new.preprocessed_data, [])
 
     def test_retrieve_processed_data(self):
         self.assertEqual(self.study.processed_data, [ProcessedData(1)])
 
     def test_retrieve_processed_data_none(self):
-        new = Study.create(User('test@foo.bar'), 1, self.info)
+        new = Study.create(User('test@foo.bar'), 'Identification of the '
+                           'Microbiomes for Cannabis Soils', 1, self.info)
         self.assertEqual(new.processed_data, [])
 
     def test_share(self):
