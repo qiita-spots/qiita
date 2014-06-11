@@ -95,7 +95,12 @@ def hash_pw(password, hashedpw=None):
         """
         if hashedpw is None:
             hashedpw = gensalt()
-        return hashpw(password.encode('utf-8'), hashedpw.encode('utf-8'))
+            #python 3 workaround for bcrypt
+        if isinstance(password, bytes):
+            password = password.decode('utf-8')
+        if isinstance(hashedpw, bytes):
+            hashedpw = hashedpw.decode('utf-8')
+        return hashpw(password, hashedpw)
 
 
 def check_required_columns(conn_handler, keys, table):
