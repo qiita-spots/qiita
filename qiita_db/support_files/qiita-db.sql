@@ -761,7 +761,7 @@ CREATE TABLE qiita.required_sample_info (
 	has_extracted_data   bool  NOT NULL,
 	sample_type          varchar  NOT NULL,
 	required_sample_info_status_id bigint  NOT NULL,
-	collection_date      date  NOT NULL,
+	collection_timestamp timestamp  NOT NULL,
 	host_subject_id      varchar  NOT NULL,
 	description          varchar  NOT NULL,
 	CONSTRAINT idx_common_sample_information PRIMARY KEY ( study_id, sample_id ),
