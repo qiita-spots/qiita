@@ -159,7 +159,7 @@ class Study(QiitaStatusObject):
 
         Parameters
         ----------
-        owner : User object 
+        owner : User object
             the study' owner
         title: str
             Title of the study
@@ -182,7 +182,7 @@ class Study(QiitaStatusObject):
         Notes
         -----
         All keys in info, except the efo, must be equal to columns in
-        qiita.study table in the database. 
+        qiita.study table in the database.
         """
         # make sure not passing non-info columns in the info dict
         if cls._non_info.intersection(info):
