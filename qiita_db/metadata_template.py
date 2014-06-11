@@ -82,12 +82,12 @@ class MetadataTemplate(QiitaObject):
             (id_, ))[0]
 
     @classmethod
-    def _table_name(cls, study_id):
+    def _table_name(cls, study):
         r""""""
         if not cls._table_prefix:
             raise IncompetentQiitaDeveloperError(
                 "_table_prefix should be defined in the subclasses")
-        return "%s%d" % (cls._table_prefix, study_id)
+        return "%s%d" % (cls._table_prefix, study.id)
 
     @classmethod
     def create(cls, md_template, study):
@@ -96,14 +96,14 @@ class MetadataTemplate(QiitaObject):
         Parameters
         ----------
         md_template : DataFrame
-            The template file contents
+            The metadata template file contents
         study : Study
             The study to which the metadata template belongs to
         """
         conn_handler = SQLConnectionHandler()
         # Create the MetadataTemplate table on the SQL system
         # Get the table name
-        table_name = cls._get_table_name(study.id)
+        table_name = cls._table_name(study)
         headers = md_template.CategoryNames
         datatypes = get_datatypes(md_template)
 
@@ -123,7 +123,7 @@ class MetadataTemplate(QiitaObject):
         # Add rows to the column_table table
         column_tables_sql_template = ("insert into qiita." + cls._column_table
                                       + " (study_id, column_name, column_type)"
-                                      " values ('" + str(study_id) +
+                                      " values ('" + str(study.id) +
                                       "', %s, %s)")
         # The column names should be lowercase and quoted
         quoted_lc_headers = [quote_data_value(h.lower()) for h in headers]
@@ -147,7 +147,7 @@ class MetadataTemplate(QiitaObject):
             sql_args_list.append(values)
 
         conn_handler.executemany(insert_sql_template, sql_args_list)
-        return MetadataTemplate(study_id)
+        return MetadataTemplate(study.id)
 
     @classmethod
     def delete(cls, study_id):
@@ -169,112 +169,113 @@ class MetadataTemplate(QiitaObject):
         conn_handler.execute("delete from qiita." + cls._column_table +
                              " where study_id = %s", (study_id,))
 
-    @property
-    def sample_ids(self):
-        r"""Returns the IDs of all samples in the metadata map.
+    # @property
+    # def sample_ids(self):
+    #     r"""Returns the IDs of all samples in the metadata map.
 
-        The sample IDs are returned as a list of strings in alphabetical order.
-        """
-        raise QiitaDBNotImplementedError()
+    #     The sample IDs are returned as a list of strings in alphabetical order.
+    #     """
+    #     raise QiitaDBNotImplementedError()
 
-    @property
-    def category_names(self):
-        r"""Returns the names of all categories in the metadata map.
+    # @property
+    # def category_names(self):
+    #     r"""Returns the names of all categories in the metadata map.
 
-        The category names are returned as a list of strings in alphabetical
-        order.
-        """
-        raise QiitaDBNotImplementedError()
+    #     The category names are returned as a list of strings in alphabetical
+    #     order.
+    #     """
+    #     raise QiitaDBNotImplementedError()
 
-    @property
-    def metadata(self):
-        r"""A python dict of dicts
+    # @property
+    # def metadata(self):
+    #     r"""A python dict of dicts
 
-        The top-level key is sample ID, and the inner dict maps category name
-        to category value
-        """
-        raise QiitaDBNotImplementedError()
+    #     The top-level key is sample ID, and the inner dict maps category name
+    #     to category value
+    #     """
+    #     raise QiitaDBNotImplementedError()
 
-    def get_sample_metadata(self, sample_id):
-        r"""Returns the metadata associated with a particular sample.
+    # def get_sample_metadata(self, sample_id):
+    #     r"""Returns the metadata associated with a particular sample.
 
-        The metadata will be returned as a dict mapping category name to
-        category value.
+    #     The metadata will be returned as a dict mapping category name to
+    #     category value.
 
-        Parameters
-        ----------
-        sample_id : str
-            the sample ID to retrieve metadata for
-        """
-        raise QiitaDBNotImplementedError()
+    #     Parameters
+    #     ----------
+    #     sample_id : str
+    #         the sample ID to retrieve metadata for
+    #     """
+    #     raise QiitaDBNotImplementedError()
 
-    def get_category_value(self, sample_id, category):
-        r"""Returns the category value associated with a sample's category.
+    # def get_category_value(self, sample_id, category):
+    #     r"""Returns the category value associated with a sample's category.
 
-        The returned category value will be a string.
+    #     The returned category value will be a string.
 
-        Parameters
-        ----------
-        sample_id : str
-            the sample ID to retrieve category information for
-        category : str
-            the category name whose value will be returned
-        """
-        raise QiitaDBNotImplementedError()
+    #     Parameters
+    #     ----------
+    #     sample_id : str
+    #         the sample ID to retrieve category information for
+    #     category : str
+    #         the category name whose value will be returned
+    #     """
+    #     raise QiitaDBNotImplementedError()
 
-    def get_category_values(self, sample_ids, category):
-        """Returns all the values of a given category.
+    # def get_category_values(self, sample_ids, category):
+    #     """Returns all the values of a given category.
 
-        The return categories will be a list.
+    #     The return categories will be a list.
 
-        Parameters
-        ----------
-        sample_ids : list of str
-            An ordered list of sample IDs
-        category : str
-            the category name whose values will be returned
-        """
-        raise QiitaDBNotImplementedError()
+    #     Parameters
+    #     ----------
+    #     sample_ids : list of str
+    #         An ordered list of sample IDs
+    #     category : str
+    #         the category name whose values will be returned
+    #     """
+    #     raise QiitaDBNotImplementedError()
 
-    def is_numerical_category(self, category):
-        """Returns True if the category is numeric and False otherwise.
+    # def is_numerical_category(self, category):
+    #     """Returns True if the category is numeric and False otherwise.
 
-        A category is numeric if all values within the category can be
-        converted to a float.
+    #     A category is numeric if all values within the category can be
+    #     converted to a float.
 
-        Parameters
-        ----------
-        category : str
-            the category that will be checked
-        """
-        raise QiitaDBNotImplementedError()
+    #     Parameters
+    #     ----------
+    #     category : str
+    #         the category that will be checked
+    #     """
+    #     raise QiitaDBNotImplementedError()
 
-    def has_unique_category_values(self, category):
-        """Returns True if the category's values are all unique.
+    # def has_unique_category_values(self, category):
+    #     """Returns True if the category's values are all unique.
 
-        Parameters
-        ----------
-        category : str
-            the category that will be checked for uniqueness
-        """
-        raise QiitaDBNotImplementedError()
+    #     Parameters
+    #     ----------
+    #     category : str
+    #         the category that will be checked for uniqueness
+    #     """
+    #     raise QiitaDBNotImplementedError()
 
-    def has_single_category_values(self, category):
-        """Returns True if the category's values are all the same.
+    # def has_single_category_values(self, category):
+    #     """Returns True if the category's values are all the same.
 
-        For example, the category 'Treatment' only has values 'Control' for the
-        entire column.
+    #     For example, the category 'Treatment' only has values 'Control' for the
+    #     entire column.
 
-        Parameters
-        ----------
-        category : str
-            the category that will be checked
-        """
-        raise QiitaDBNotImplementedError()
+    #     Parameters
+    #     ----------
+    #     category : str
+    #         the category that will be checked
+    #     """
+    #     raise QiitaDBNotImplementedError()
 
 
 class SampleTemplate(MetadataTemplate):
-    """"""
+    """
+    """
     _table = "required_sample_info"
     _table_prefix = "sample_"
     _column_table = "study_sample_columns"
@@ -282,7 +283,8 @@ class SampleTemplate(MetadataTemplate):
 
 
 class PrepTemplate(MetadataTemplate):
-    """"""
+    """
+    """
     _table = "common_prep_infp"
     _table_prefix = "prep_"
     _column_table = "raw_data_prep_columns"
