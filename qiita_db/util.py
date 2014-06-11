@@ -115,7 +115,7 @@ def compute_checksum(filepath):
         The file checksum
     """
     crc = None
-    with open(filepath, "U") as f:
+    with open(filepath, "Ub") as f:
         # Go line by line so we don't need to load the entire file in memory
         for line in f:
             if crc is None:
