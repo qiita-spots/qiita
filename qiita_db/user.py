@@ -124,7 +124,7 @@ class User(QiitaObject):
             the email of the user
         """
         if not validate_email(email):
-            raise IncorrectEmailError()
+            raise IncorrectEmailError("Email string not valid: %s" % email)
         conn_handler = SQLConnectionHandler()
 
         return conn_handler.execute_fetchone(
