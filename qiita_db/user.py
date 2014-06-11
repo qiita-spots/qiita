@@ -1,9 +1,6 @@
-#!/usr/bin/env python
-from __future__ import division
-
 r"""
 User object (:mod:`qiita_db.user`)
-=====================================================
+==================================
 
 .. currentmodule:: qiita_db.user
 
@@ -19,13 +16,9 @@ Classes
 
    User
 
-
 Examples
 --------
-A user is created using an email and password.
-
->>> user = User('email@test.com', 'password')
-
+TODO
 """
 # -----------------------------------------------------------------------------
 # Copyright (c) 2014--, The Qiita Development Team.
@@ -34,10 +27,14 @@ A user is created using an email and password.
 #
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
+from __future__ import division
+from re import match, escape
+
 from .base import QiitaObject
 
 from .util import hash_pw
-from qiita_core.exceptions import IncompetentQiitaDeveloperError
+from qiita_core.exceptions import (IncompetentQiitaDeveloperError,
+                                   IncorrectEmailError, IncorrectPasswordError)
 from .exceptions import QiitaDBDuplicateError, QiitaDBColumnError
 from .sql_connection import SQLConnectionHandler
 from .util import create_rand_string, check_table_cols
@@ -61,23 +58,12 @@ class User(QiitaObject):
 
     Methods
     -------
-    add_shared_study(study)
-        Adds a new shared study to the user
-
-    remove_shared_study(study)
-        Removes a shared study from the user
-
-    add_private_analysis(analysis)
-        Adds a new private analysis to the user
-
-    remove_private_analysis(analysis)
-        Removes a private analysis from the user
-
-    add_shared_analysis(analysis)
-        Adds a new shared analysis to the user
-
-    remove_shared_analysis(analysis)
-        Removes a shared analysis from the user
+    add_shared_study
+    remove_shared_study
+    add_private_analysis
+    remove_private_analysis
+    add_shared_analysis
+    remove_shared_analysis
     """
 
     _table = "qiita_user"
@@ -103,7 +89,10 @@ class User(QiitaObject):
         """
         # see if user exists
         if not cls.exists(email):
-            return None
+            raise IncorrectEmailError()
+
+        if not validate_password(password):
+            raise IncorrectPasswordError("Password not valid!")
 
         # pull password out of database
         conn_handler = SQLConnectionHandler()
@@ -113,7 +102,10 @@ class User(QiitaObject):
 
         # verify password
         hashed = hash_pw(password, dbpass)
-        return cls(email) if hashed == dbpass else None
+        if hashed == dbpass:
+            return cls(email)
+        else:
+            raise IncorrectPasswordError("Password not valid!")
 
     @classmethod
     def exists(cls, email):
@@ -124,6 +116,8 @@ class User(QiitaObject):
         email : str
             the email of the user
         """
+        if not validate_email(email):
+            raise IncorrectEmailError()
         conn_handler = SQLConnectionHandler()
 
         return conn_handler.execute_fetchone(
@@ -143,21 +137,20 @@ class User(QiitaObject):
         info: dict
             other information for the user keyed to table column name
         """
-        if email == "":
-            raise IncompetentQiitaDeveloperError("Blank username given!")
-        if password == "":
-            raise IncompetentQiitaDeveloperError("Blank password given!")
+        # validate email and password for new user
+        if not validate_email(email):
+            raise IncorrectEmailError("Bad email given: %s" % email)
+        if not validate_password(password):
+            raise IncorrectPasswordError("Bad password given: %s" % password)
 
         # make sure user does not already exist
         if cls.exists(email):
             raise QiitaDBDuplicateError("User %s already exists" % email)
 
-        # make sure non-info columns arent passed in info dict
+        # make sure non-info columns aren't passed in info dict
         if info:
-            for key in info:
-                if key in cls._non_info:
-                    raise QiitaDBColumnError("%s should not be passed in info!"
-                                             % key)
+            if cls._non_info.intersection(info):
+                raise QiitaDBColumnError("non info keys passed!")
         else:
             info = {}
 
@@ -195,8 +188,6 @@ class User(QiitaObject):
         This function overwrites the base function, as sql layout doesn't
         follow the same conventions done in the other tables.
         """
-        self._check_subclass()
-
         conn_handler = (conn_handler if conn_handler is not None
                         else SQLConnectionHandler())
         return conn_handler.execute_fetchone(
@@ -214,8 +205,9 @@ class User(QiitaObject):
     def level(self):
         """The level of privileges of the user"""
         conn_handler = SQLConnectionHandler()
-        sql = ("SELECT user_level_id from qiita.{0} WHERE "
-               "email = %s".format(self._table))
+        sql = ("SELECT name from qiita.user_level WHERE user_level_id = "
+               "(SELECT user_level_id from qiita.{0} WHERE "
+               "email = %s)".format(self._table))
         return conn_handler.execute_fetchone(sql, (self._id, ))[0]
 
     @level.setter
@@ -224,16 +216,15 @@ class User(QiitaObject):
 
         Parameters
         ----------
-        level : int
+        level : {'admin', 'dev', 'superuser', 'user', 'guest'}
             The new level of the user
-
-        Notes
-        -----
-        the ints correspond to {1: 'admin', 2: 'dev', 3: 'superuser',
-        4: 'user', 5: 'unverified', 6: 'guest'}
         """
+        if level not in {'admin', 'dev', 'superuser', 'user', 'guest'}:
+            raise IncompetentQiitaDeveloperError("Unknown level given: %s" %
+                                                 level)
         conn_handler = SQLConnectionHandler()
-        sql = ("UPDATE qiita.qiita_user SET user_level_id = %s WHERE "
+        sql = ("UPDATE qiita.{0} SET user_level_id = (SELECT user_level_id "
+               "from qiita.user_level WHERE name = %s) WHERE "
                "email = %s".format(self._table))
         conn_handler.execute(sql, (level, self._id))
 
@@ -258,10 +249,8 @@ class User(QiitaObject):
         info : dict
         """
         # make sure non-info columns aren't passed in info dict
-        for key in info:
-            if key in self._non_info:
-                raise QiitaDBColumnError("%s should not be passed in info!" %
-                                         key)
+        if self._non_info.intersection(info):
+            raise QiitaDBColumnError("non info keys passed!")
 
         # make sure keys in info correspond to columns in table
         conn_handler = SQLConnectionHandler()
@@ -286,8 +275,8 @@ class User(QiitaObject):
         sql = ("SELECT study_id FROM qiita.study WHERE "
                "email = %s".format(self._table))
         conn_handler = SQLConnectionHandler()
-        studies = conn_handler.execute_fetchall(sql, (self._id, ))
-        return [Study(s[0]) for s in studies]
+        study_ids = conn_handler.execute_fetchall(sql, (self._id, ))
+        return [Study(s[0]) for s in study_ids]
 
     @property
     def shared_studies(self):
@@ -295,8 +284,8 @@ class User(QiitaObject):
         sql = ("SELECT study_id FROM qiita.study_users WHERE "
                "email = %s".format(self._table))
         conn_handler = SQLConnectionHandler()
-        studies = conn_handler.execute_fetchall(sql, (self._id, ))
-        return [Study(s[0]) for s in studies]
+        study_ids = conn_handler.execute_fetchall(sql, (self._id, ))
+        return [Study(s[0]) for s in study_ids]
 
     @property
     def private_analyses(self):
@@ -304,8 +293,8 @@ class User(QiitaObject):
         sql = ("Select analysis_id from qiita.analysis WHERE email = %s AND "
                "analysis_status_id <> 6")
         conn_handler = SQLConnectionHandler()
-        analyses = conn_handler.execute_fetchall(sql, (self._id, ))
-        return [Analysis(a[0]) for a in analyses]
+        analysis_ids = conn_handler.execute_fetchall(sql, (self._id, ))
+        return [Analysis(a[0]) for a in analysis_ids]
 
     @property
     def shared_analyses(self):
@@ -313,55 +302,42 @@ class User(QiitaObject):
         sql = ("SELECT analysis_id FROM qiita.analysis_users WHERE "
                "email = %s".format(self._table))
         conn_handler = SQLConnectionHandler()
-        analyses = conn_handler.execute_fetchall(sql, (self._id, ))
-        return [Analysis(a[0]) for a in analyses]
+        analysis_ids = conn_handler.execute_fetchall(sql, (self._id, ))
+        return [Analysis(a[0]) for a in analysis_ids]
 
-    # ---Functions---
-    def add_shared_study(self, study):
-        """Adds a new shared study to the user
 
-        Parameters
-        ----------
-        study : Study object
-            The study to be added to the shared list
-        """
-        sql = "INSERT INTO qiita.study_users (email, study_id) VALUES (%s, %s)"
-        conn_handler = SQLConnectionHandler()
-        conn_handler.execute(sql, (self._id, study.id))
+def validate_email(email):
+    """Makes sure email string has one @ and a period after the @
 
-    def remove_shared_study(self, study):
-        """Removes a shared study from the user
+    Parameters
+    ----------
+    email: str
+        email to validate
 
-        Parameters
-        ----------
-        study :
-            The study to be removed from the shared list
-        """
-        sql = ("DELETE FROM qiita.study_users WHERE  email = %s")
-        conn_handler = SQLConnectionHandler()
-        conn_handler.execute(sql, (self._id, ))
+    Returns
+    -------
+    bool
+        Whether or not the email is valid
+    """
+    return True if match(r"[^@]+@[^@]+\.[^@]+", email) else False
 
-    def add_shared_analysis(self, analysis):
-        """Adds a new shared analysis to the user
 
-        Parameters
-        ----------
-        analysis : Analysis object
-            The analysis to be added to the shared list
-        """
-        sql = ("INSERT INTO qiita.analysis_users (email, analysis_id) VALUES "
-               "(%s, %s)")
-        conn_handler = SQLConnectionHandler()
-        conn_handler.execute(sql, (self._id, analysis.id))
+def validate_password(password):
+    """Validates a password is only ascii letters, numbers, or characters and
+    at least 8 characters
 
-    def remove_shared_analysis(self, analysis):
-        """Removes a shared analysis from the user
+    Parameters
+    ----------
+    password: str
+        Password to validate
 
-        Parameters
-        ----------
-        analysis :
-            The analysis to be removed from the shared list
-        """
-        sql = ("DELETE FROM qiita.analysis_users WHERE  email = %s")
-        conn_handler = SQLConnectionHandler()
-        conn_handler.execute(sql, (self._id, ))
+    Returns
+    -------
+    bool
+        Whether or not the password is valid
+
+    References
+    -----
+    http://stackoverflow.com/questions/2990654/how-to-test-a-regex-password-in-python
+    """
+    return True if match(r'[A-Za-z0-9@#$%^&+=]{8,}', password) else False

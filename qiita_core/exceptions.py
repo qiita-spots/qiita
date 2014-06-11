@@ -43,3 +43,13 @@ class QiitaJobError(QiitaError):
 class QiitaStudyError(QiitaError):
     """Exception for error when handling with study objects"""
     pass
+
+
+class IncorrectPasswordError(QiitaError):
+    """User passes wrong password"""
+    pass
+
+
+class IncorrectEmailError(QiitaError):
+    """Email fails validation"""
+    pass

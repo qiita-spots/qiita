@@ -8,7 +8,8 @@
 
 from unittest import TestCase, main
 
-from qiita_core.exceptions import IncompetentQiitaDeveloperError
+from qiita_core.exceptions import (IncompetentQiitaDeveloperError,
+                                   IncorrectEmailError, IncorrectPasswordError)
 from qiita_core.util import qiita_test_checker
 from qiita_db.user import User
 from qiita_db.study import Study
@@ -18,8 +19,8 @@ from qiita_db.exceptions import QiitaDBDuplicateError, QiitaDBColumnError
 
 
 @qiita_test_checker()
-class SetupTest(TestCase):
-    """Tests that the test database have been successfully populated"""
+class UserTest(TestCase):
+    """Tests the Uer object and all properties/methods"""
 
     def setUp(self):
         self.conn = SQLConnectionHandler()
@@ -31,6 +32,17 @@ class SetupTest(TestCase):
             'address': '123 fake st, Apt 0, Faketown, CO 80302',
             'phone': '111-222-3344'
         }
+
+    def _check_correct_info(self, obs, exp):
+        for key in exp:
+            # user_verify_code and password seed randomly generated so just
+            # making sure they exist and is correct length
+            if key == 'user_verify_code':
+                self.assertEqual(len(obs[key]), 20)
+            elif key == "password":
+                self.assertEqual(len(obs[key]), 60)
+            else:
+                self.assertEqual(obs[key], exp[key])
 
     def test_create_user(self):
         user = User.create('new@test.bar', 'password')
@@ -50,15 +62,9 @@ class SetupTest(TestCase):
             'address': None,
             'user_level_id': 5,
             'email': 'new@test.bar'}
-        for key in exp:
-            # user_verify_code and password seed randomly generated so just
-            # making sure they exist and is correct length
-            if key == 'user_verify_code':
-                self.assertEqual(len(obs[key]), 20)
-            elif key == "password":
-                self.assertEqual(len(obs[key]), 60)
-            else:
-                self.assertEqual(obs[key], exp[key])
+        # explicit list needed for py3
+        self.assertEqual(list(exp.keys()).sort(), list(obs.keys()).sort())
+        self._check_correct_info(obs, exp)
 
     def test_create_user_info(self):
         user = User.create('new@test.bar', 'password', self.userinfo)
@@ -78,15 +84,9 @@ class SetupTest(TestCase):
             'user_verify_code': '',
             'user_level_id': 5,
             'email': 'new@test.bar'}
-        for key in exp:
-            # user_verify_code and password seed randomly generated so just
-            # making sure they exist and is correct length
-            if key == 'user_verify_code':
-                self.assertEqual(len(obs[key]), 20)
-            elif key == "password":
-                self.assertEqual(len(obs[key]), 60)
-            else:
-                self.assertEqual(obs[key], exp[key])
+        # explicit list needed for py3
+        self.assertEqual(list(exp.keys()).sort(), list(obs.keys()).sort())
+        self._check_correct_info(obs, exp)
 
     def test_create_user_bad_info(self):
         self.userinfo["pass_reset_code"] = "FAIL"
@@ -102,12 +102,12 @@ class SetupTest(TestCase):
         with self.assertRaises(QiitaDBDuplicateError):
             User.create('test@foo.bar', 'password')
 
-    def test_create_user_blank_email(self):
-        with self.assertRaises(IncompetentQiitaDeveloperError):
-            User.create('', 'password')
+    def test_create_user_bad_email(self):
+        with self.assertRaises(IncorrectEmailError):
+            User.create('notanemail', 'password')
 
-    def test_create_user_blank_password(self):
-        with self.assertRaises(IncompetentQiitaDeveloperError):
+    def test_create_user_bad_password(self):
+        with self.assertRaises(IncorrectPasswordError):
             User.create('new@test.com', '')
 
     def test_login(self):
@@ -115,28 +115,40 @@ class SetupTest(TestCase):
                          User("test@foo.bar"))
 
     def test_login_incorrect_user(self):
-        self.assertEqual(User.login("notexist@foo.bar", "password"),
-                         None)
+        with self.assertRaises(IncorrectEmailError):
+            User.login("notexist@foo.bar", "password")
 
     def test_login_incorrect_password(self):
-        self.assertEqual(User.login("test@foo.bar", "WRONG"),
-                         None)
+        with self.assertRaises(IncorrectPasswordError):
+            User.login("test@foo.bar", "WRONGPASSWORD")
+
+    def test_login_invalid_password(self):
+        with self.assertRaises(IncorrectPasswordError):
+            User.login("test@foo.bar", "SHORT")
 
     def test_exists(self):
-        self.assertEqual(User.exists("test@foo.bar"), True)
+        self.assertTrue(User.exists("test@foo.bar"))
 
     def test_exists_notindb(self):
-        self.assertEqual(User.exists("notexist@foo.bar"), False)
+        self.assertFalse(User.exists("notexist@foo.bar"))
+
+    def test_exists_invaid_email(self):
+        with self.assertRaises(IncorrectEmailError):
+            User.exists("notanemail@badformat")
 
     def test_get_email(self):
         self.assertEqual(self.user.email, 'admin@foo.bar')
 
     def test_get_level(self):
-        self.assertEqual(self.user.level, 4)
+        self.assertEqual(self.user.level, "user")
 
     def test_set_level(self):
-        self.user.level = 2
-        self.assertEqual(self.user.level, 2)
+        self.user.level = "admin"
+        self.assertEqual(self.user.level, "admin")
+
+    def test_set_level_unknown(self):
+        with self.assertRaises(IncompetentQiitaDeveloperError):
+            self.user.level = "FAAAAAKE"
 
     def test_get_info(self):
         expinfo = {
@@ -152,11 +164,13 @@ class SetupTest(TestCase):
         self.assertEqual(self.user.info, self.userinfo)
 
     def test_set_info_not_info(self):
+        """Tests setting info with a non-allowed column"""
         self.userinfo["email"] = "FAIL"
         with self.assertRaises(QiitaDBColumnError):
             self.user.info = self.userinfo
 
     def test_set_info_bad_info(self):
+        """Test setting info with a key not in the table"""
         self.userinfo["BADTHING"] = "FAIL"
         with self.assertRaises(QiitaDBColumnError):
             self.user.info = self.userinfo
@@ -174,24 +188,6 @@ class SetupTest(TestCase):
 
     def test_get_shared_analyses(self):
         self.assertEqual(self.user.shared_analyses, [])
-
-    def test_add_shared_study(self):
-        self.user.add_shared_study(Study(1))
-        self.assertEqual(self.user.shared_studies, [Study(1)])
-
-    def test_remove_shared_study(self):
-        user = User('shared@foo.bar')
-        user.remove_shared_study(Study(1))
-        self.assertEqual(user.shared_studies, [])
-
-    def test_add_shared_analysis(self):
-        self.user.add_shared_analysis(Analysis(1))
-        self.assertEqual(self.user.shared_analyses, [Analysis(1)])
-
-    def test_remove_shared_analysis(self):
-        user = User('shared@foo.bar')
-        user.remove_shared_analysis(Analysis(1))
-        self.assertEqual(user.shared_analyses, [])
 
 
 if __name__ == "__main__":
