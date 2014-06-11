@@ -1,14 +1,21 @@
-"""
-Objects for dealing with Qiita metadata templates
+r"""
+Metadata template objects (:mod: `qiita_db.metadata_template)
+=============================================================
 
-This module provides the MetadataTemplate base class and the classes
-SampleTemplate and PrepTemplate that implement MetadataTemplate.
+..currentmodule:: qiita_db.metadata_template
+
+This module provides the MetadataTemplate base class and the subclasses
+SampleTemplate and PrepTemplate.
 
 Classes
 -------
-- `MetadataTemplate` -- A Qiita Metadata template base class
-- `SampleTemplate` -- A Qiita Sample template class
-- `PrepTemplate` -- A Qiita Prep template class
+
+..autosummary::
+    :toctree: generated/
+
+    MetadataTemplate
+    SampleTemplate
+    PrepTemplate
 """
 
 # -----------------------------------------------------------------------------
@@ -31,8 +38,8 @@ from .util import (quote_column_name, quote_data_value, get_datatypes,
 
 
 class MetadataTemplate(QiitaStatusObject):
-    r"""
-    Metadata map object that accesses the db to get the information
+    r"""Metadata map object that accesses the db to get the sample/prep
+    template information
 
     Attributes
     ----------
@@ -42,23 +49,17 @@ class MetadataTemplate(QiitaStatusObject):
 
     Methods
     -------
-    get_sample_metadata(sample_id):
-        Returns the metadata associated with a particular sample
+    get_sample_metadata
+    get_category_value
+    get_category_values
+    is_numerical_category
+    has_unique_category_values
+    has_single_category_values
 
-    get_category_value(sample_id, category)
-        Returns the category value associated with a sample's category
-
-    get_category_values(sample_ids, category)
-        Returns all the values of a given category.
-
-    is_numerical_category(category)
-        Returns True if the category is numeric and False otherwise
-
-    has_unique_category_values(category)
-        Returns True if the category's values are all unique
-
-    has_single_category_values(category)
-        Returns True if the category's values are all the same
+    See Also
+    --------
+    SampleTemplate
+    PrepTemplate
     """
 
     # Used to find the right SQL tables - should be defined on the subclasses
@@ -66,7 +67,7 @@ class MetadataTemplate(QiitaStatusObject):
     _column_table = None
 
     @classmethod
-    def _get_table_name(cls, study_id):
+    def _table_name(cls, study_id):
         r""""""
         if not cls._table_prefix:
             raise IncompetentQiitaDeveloperError(
