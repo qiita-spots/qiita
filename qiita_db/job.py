@@ -18,15 +18,16 @@ from __future__ import division
 from json import dumps
 from os import remove
 from os.path import basename, join
+from shutil import copy
 from time import strftime
 import date
-from tarfile import TarFile, extractall, open as taropen
+from tarfile import open as taropen
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from .base import QiitaStatusObject
 from .util import insert_filepaths
 from .make_environment import DFLT_BASE_WORK_FOLDER
-from .exceptions import QiitaDBDuplicateError, QiitaDBNotImplementedError
+from .exceptions import QiitaDBDuplicateError
 from .sql_connection import SQLConnectionHandler
 
 
@@ -46,7 +47,6 @@ class Job(QiitaStatusObject):
     -------
     set_error
     add_results
-    remove_results
     """
 
     _table = "job"
@@ -176,7 +176,23 @@ class Job(QiitaStatusObject):
         """List of job result filepaths"""
         # tar = 7
         # Copy files to working dir, untar if necessary, then return filepaths
-        raise QiitaDBNotImplementedError()
+        sql = ("SELECT filepath, filepath_type_id FROM qiita.filepath WHERE "
+               "filepath_id IN (SELECT filepath_id FROM "
+               "qiita.job_results_filepath WHERE job_id = %s)")
+        conn_handler = SQLConnectionHandler()
+        results = conn_handler.execute_fetchall(sql, (self._id, ))
+        results_untar = []
+        for fp, fp_type in results:
+            outpath = join(DFLT_BASE_WORK_FOLDER, basename(fp))
+            if fp_type == 7:
+                #untar to work directory
+                with taropen(fp) as tar:
+                    tar.extractall(path=outpath)
+            else:
+                #copy to work directory
+                copy(fp, outpath)
+            results_untar.append(outpath)
+        return results_untar
 
     @property
     def error_msg(self):
@@ -256,17 +272,3 @@ class Job(QiitaStatusObject):
         # clean up the created tars from the working directory
         for path in cleanup:
             remove(path)
-
-    def remove_results(self, results):
-        """Removes a list of results from the results
-
-        Parameters
-        ----------
-            results : list
-                filepath ids to be removed from the job
-        """
-        sql = ("DELETE FROM qiita.filepath WHERE filepath_id IN (SELECT "
-               "filepath_id FROM qiita.{0}_results_filepath WHERE "
-               "job_id = %s".format(self._table))
-        conn_handler = SQLConnectionHandler()
-        conn_handler.execute(sql, (self._id, ))
