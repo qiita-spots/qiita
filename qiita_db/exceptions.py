@@ -1,6 +1,3 @@
-#!/usr/bin/env python
-from __future__ import division
-
 # -----------------------------------------------------------------------------
 # Copyright (c) 2014--, The Qiita Development Team.
 #
@@ -9,6 +6,7 @@ from __future__ import division
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
+from __future__ import division
 from qiita_core.exceptions import QiitaError
 
 
@@ -32,12 +30,9 @@ class QiitaDBConnectionError(QiitaDBError):
     pass
 
 
-class QiitaDBUnknownIDError(QiitaDBError):
-    """Exception for error when an object does not exists in the DB"""
-    def __init__(self, missing_id, table):
-        super(QiitaDBUnknownIDError, self).__init__()
-        self.args = ("The object with ID '%s' does not exists in table '%s'"
-                     % (missing_id, table),)
+class QiitaDBColumnError(QiitaDBError):
+    """Exception when missing table information or excess information passed"""
+    pass
 
 
 class QiitaDBDuplicateError(QiitaDBError):
@@ -46,3 +41,16 @@ class QiitaDBDuplicateError(QiitaDBError):
         super(QiitaDBDuplicateError, self).__init__()
         self.args = ("The '%s' with ID '%s' already exists."
                      % (obj_name, existent_id),)
+
+
+class QiitaDBStatusError(QiitaDBError):
+    """Exception when editing is done with an unallowed status"""
+    pass
+
+
+class QiitaDBUnknownIDError(QiitaDBError):
+    """Exception for error when an object does not exists in the DB"""
+    def __init__(self, missing_id, table):
+        super(QiitaDBUnknownIDError, self).__init__()
+        self.args = ("The object with ID '%s' does not exists in table '%s'"
+                     % (missing_id, table),)

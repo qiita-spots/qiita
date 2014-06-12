@@ -34,7 +34,7 @@ from .exceptions import QiitaDBDuplicateError
 from .base import QiitaObject
 # from .exceptions import QiitaDBNotImplementedError
 from .sql_connection import SQLConnectionHandler
-from .util import quote_column_name, quote_data_value, scrub_data, exists_table
+from .util import scrub_data, exists_table
 
 
 def _get_datatypes(metadata_map):
@@ -113,8 +113,13 @@ class MetadataTemplate(QiitaObject):
             (id_, ))[0]
 
     @classmethod
-    def _table_name(cls, study):
+    def _table_name(cls, obj):
         r"""Returns the dynamic table name
+
+        Parameters
+        ----------
+        obj : Study or RawData
+            The obj to which the metadata template belongs to.
 
         Returns
         -------
@@ -129,7 +134,7 @@ class MetadataTemplate(QiitaObject):
         if not cls._table_prefix:
             raise IncompetentQiitaDeveloperError(
                 "_table_prefix should be defined in the subclasses")
-        return "%s%d" % (cls._table_prefix, study.id)
+        return "%s%d" % (cls._table_prefix, obj.id)
 
     @classmethod
     def create(cls, md_template, obj):
@@ -139,8 +144,9 @@ class MetadataTemplate(QiitaObject):
         ----------
         md_template : DataFrame
             The metadata template file contents indexed by samples Ids
-        obj : QiitaObject
-            The obj to which the metadata template belongs to
+        obj : Study or RawData
+            The obj to which the metadata template belongs to. Study in case
+            of SampleTemplate and RawData in case of PrepTemplate
         """
         # Check that we don't have a MetadataTemplate for obj
         if cls.exists(obj):
@@ -148,29 +154,28 @@ class MetadataTemplate(QiitaObject):
 
         # Get the table name
         table_name = cls._table_name(obj)
-
-        conn_handler = SQLConnectionHandler()
-
+        # Get the column headers
         headers = md_template.keys()
-        datatypes = get_datatypes(md_template)
-
+        # Get the data type of each column
+        datatypes = _get_datatypes(md_template)
         # Get the columns names in SQL safe
-        sql_safe_column_names = [quote_column_name(h) for h in headers]
+        sql_safe_column_names = ['"%s"' % h.lower() for h in headers]
 
         # Get the column names paired with its datatype for SQL
-        columns = []
-        for column_name, datatype in zip(sql_safe_column_names, datatypes):
-            columns.append('%s %s' % (column_name, datatype))
+        columns = ['%s %s' % (cn, dt)
+                   for cn, dt in zip(sql_safe_column_names, datatypes)]
         # Get the columns in a comma-separated string
         columns = ", ".join(columns)
         # Create a table for the study
-        conn_handler.execute("create table qiita.%s (sampleid varchar, %s)" %
-                             (table_name, columns))
+        conn_handler = SQLConnectionHandler()
+        conn_handler.execute(
+            "create table qiita.%s (sampleid varchar, %s)" %
+            (table_name, columns))
 
         # Add rows to the column_table table
         column_tables_sql_template = ("insert into qiita." + cls._column_table
                                       + " (study_id, column_name, column_type)"
-                                      " values ('" + str(study.id) +
+                                      " values ('" + str(obj.id) +
                                       "', %s, %s)")
         # The column names should be lowercase and quoted
         quoted_lc_headers = [quote_data_value(h.lower()) for h in headers]

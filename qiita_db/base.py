@@ -200,7 +200,7 @@ class QiitaStatusObject(QiitaObject):
             "{0}_id = %s)".format(self._table),
             (self._id, ))[0]
 
-    def _status_setter_checks(self):
+    def _status_setter_checks(self, conn_handler):
         r"""Perform any extra checks that needed to be done before setting the
         object status on the database. Should be overwritten by the subclasses
         """
@@ -219,10 +219,10 @@ class QiitaStatusObject(QiitaObject):
         self._check_subclass()
 
         # Perform any extra checks needed before we update the status in the DB
-        self._status_setter_checks()
+        conn_handler = SQLConnectionHandler()
+        self._status_setter_checks(conn_handler)
 
         # Update the status of the object
-        conn_handler = SQLConnectionHandler()
         conn_handler.execute(
             "UPDATE qiita.{0} SET {0}_status_id = "
             "(SELECT {0}_status_id FROM qiita.{0}_status WHERE status = %s) "
