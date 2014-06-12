@@ -12,7 +12,8 @@ import click
 
 from qiita_db.make_environment import (make_test_environment,
                                        make_production_environment,
-                                       DFLT_BASE_DATA_FOLDER)
+                                       DFLT_BASE_DATA_FOLDER,
+                                       DFLT_BASE_WORK_FOLDER)
 
 
 @click.group()
@@ -23,17 +24,19 @@ def qiita_db():
 @click.command()
 @click.option('--base_data_folder', default=DFLT_BASE_DATA_FOLDER,
               help="The folder where the test data files are stored")
+@click.option('--base_work_folder', default=DFLT_BASE_WORK_FOLDER,
+              help="The folder where the actively worked on files are stored")
 @click.option('--user', default='postgres',
               help="The database user to connect to the database")
 @click.option('--host', default='localhost',
               help='The host where the database lives')
-def make_test_env(base_data_folder, user, host):
+def make_test_env(base_data_folder, base_work_folder, user, host):
     """Creates a test database environment.
 
     Creates a new database called `qiita_test` tailored for testing purposes
     and initializes the `settings` table of such database
     """
-    make_test_environment(base_data_folder, user, None, host)
+    make_test_environment(base_data_folder, base_work_folder, user, None, host)
 
 
 @click.command()

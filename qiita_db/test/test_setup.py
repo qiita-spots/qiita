@@ -49,6 +49,9 @@ class SetupTest(TestCase):
     def test_filepath(self):
         self._check_count("qiita.filepath", 9)
 
+    def test_filepath_id(self):
+        self._check_count("qiita.filepath_id", 8)
+
     def test_raw_data(self):
         self._check_count("qiita.raw_data", 2)
 
