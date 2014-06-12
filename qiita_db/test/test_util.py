@@ -9,9 +9,9 @@
 from unittest import TestCase, main
 
 from qiita_core.util import qiita_test_checker
-from qiita_db.util import (check_table_cols, check_required_columns,
-                           exists_table, exists_dynamic_table, scrub_data,
-                           compute_checksum)
+from qiita_db.util import (exists_table, exists_dynamic_table, scrub_data,
+                           compute_checksum, check_table_cols,
+                           check_required_columns)
 from qiita_db.sql_connection import SQLConnectionHandler
 from qiita_db.exceptions import QiitaDBColumnError
 from tempfile import mkstemp

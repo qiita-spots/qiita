@@ -360,8 +360,8 @@ class TestStudy(TestCase):
                            'Microbiomes for Cannabis Soils', 1, self.info)
         self.assertEqual(new.investigation, None)
 
-    def test_retrieve_metadata(self):
-        self.assertEqual(self.study.metadata, 1)
+    def test_retrieve_sample_template(self):
+        self.assertEqual(self.study.sample_template, 1)
 
     def test_retrieve_raw_data(self):
         self.assertEqual(self.study.raw_data, [1, 2])

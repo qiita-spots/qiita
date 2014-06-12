@@ -32,10 +32,13 @@ Methods
 # -----------------------------------------------------------------------------
 
 from __future__ import division
+from random import choice
+from string import ascii_letters, digits, punctuation
 from binascii import crc32
+from bcrypt import hashpw, gensalt
 
-from qiita_db.sql_connection import SQLConnectionHandler
 from .exceptions import QiitaDBColumnError
+from qiita_db.sql_connection import SQLConnectionHandler
 
 
 def quote_column_name(c):
@@ -86,6 +89,56 @@ def scrub_data(s):
     ret = s.replace("'", "")
     ret = ret.replace(";", "")
     return ret
+
+
+def create_rand_string(length, punct=True):
+        """Returns a string of random ascii characters
+
+        Parameters
+        ----------
+        length: int
+            Length of string to return
+        punct: bool, optional
+            Include punctiation as well as letters and numbers. Default True.
+        """
+        chars = ''.join((ascii_letters, digits))
+        if punct:
+            chars = ''.join((chars, punctuation))
+        return ''.join(choice(chars) for i in range(length))
+
+
+def hash_password(password, hashedpw=None):
+        """ Hashes password
+
+        Parameters
+        ----------
+        password: str
+            Plaintext password
+        hashedpw: str, optional
+            Previously hashed password for bcrypt to pull salt from. If not
+            given, salt generated before hash
+
+        Returns
+        -------
+        str
+            Hashed password
+
+        Notes
+        -----
+        Relies on bcrypt library to hash passwords, which stores the salt as
+        part of the hashed password. Don't need to actually store the salt
+        because of this.
+        """
+        # all the encode/decode as a python 3 workaround for bcrypt
+        if hashedpw is None:
+            hashedpw = gensalt()
+        else:
+            hashedpw = hashedpw.encode('utf-8')
+        password = password.encode('utf-8')
+        output = hashpw(password, hashedpw)
+        if isinstance(output, bytes):
+            output = output.decode("utf-8")
+        return output
 
 
 def check_required_columns(conn_handler, keys, table):

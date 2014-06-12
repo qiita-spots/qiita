@@ -1,5 +1,3 @@
-from __future__ import division
-
 # -----------------------------------------------------------------------------
 # Copyright (c) 2014--, The Qiita Development Team.
 #
@@ -8,6 +6,7 @@ from __future__ import division
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
+from __future__ import division
 from qiita_core.exceptions import QiitaError
 
 
