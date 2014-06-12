@@ -31,6 +31,8 @@ from __future__ import division
 from re import match
 
 from .base import QiitaObject
+from .exceptions import QiitaDBNotImplementedError
+from .sql_connection import SQLConnectionHandler
 
 from qiita_core.exceptions import IncorrectEmailError, IncorrectPasswordError
 from .exceptions import QiitaDBDuplicateError, QiitaDBColumnError
@@ -69,6 +71,29 @@ class User(QiitaObject):
     # The following columns are considered not part of the user info
     _non_info = {"email", "user_level_id", "password", "user_verify_code",
                  "pass_reset_code", "pass_reset_timestamp"}
+
+    def _check_id(self, id_, conn_handler=None):
+        r"""Check that the provided ID actually exists in the database
+
+        Parameters
+        ----------
+        id_ : object
+            The ID to test
+        conn_handler : SQLConnectionHandler
+            The connection handler object connected to the DB
+
+        Notes
+        -----
+        This function overwrites the base function, as sql layout doesn't
+        follow the same conventions done in the other classes.
+        """
+        self._check_subclass()
+
+        conn_handler = (conn_handler if conn_handler is not None
+                        else SQLConnectionHandler())
+        return conn_handler.execute_fetchone(
+            "SELECT EXISTS(SELECT * FROM qiita.qiita_user WHERE "
+            "email = %s)", (id_, ))[0]
 
     @classmethod
     def login(cls, email, password):
@@ -190,27 +215,6 @@ class User(QiitaObject):
                (cls._table, ','.join(columns), ','.join(['%s'] * len(values))))
         conn_handler.execute(sql, values)
         return cls(email)
-
-    def _check_id(self, id_, conn_handler=None):
-        r"""Check that the provided ID actually exists on the database
-
-        Parameters
-        ----------
-        id_ : str
-            The ID to test
-        conn_handler
-            The connection handler object connected to the DB
-
-        Notes
-        -----
-        This function overwrites the base function, as sql layout doesn't
-        follow the same conventions done in the other tables.
-        """
-        conn_handler = (conn_handler if conn_handler is not None
-                        else SQLConnectionHandler())
-        return conn_handler.execute_fetchone(
-            "SELECT EXISTS(SELECT * FROM qiita.qiita_user WHERE "
-            "email = %s)", (id_, ))[0]
 
     # ---properties---
 
