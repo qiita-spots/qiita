@@ -216,27 +216,6 @@ class User(QiitaObject):
         conn_handler.execute(sql, values)
         return cls(email)
 
-    def _check_id(self, id_, conn_handler=None):
-        r"""Check that the provided ID actually exists on the database
-
-        Parameters
-        ----------
-        id_ : str
-            The ID to test
-        conn_handler
-            The connection handler object connected to the DB
-
-        Notes
-        -----
-        This function overwrites the base function, as sql layout doesn't
-        follow the same conventions done in the other tables.
-        """
-        conn_handler = (conn_handler if conn_handler is not None
-                        else SQLConnectionHandler())
-        return conn_handler.execute_fetchone(
-            "SELECT EXISTS(SELECT * FROM qiita.qiita_user WHERE "
-            "email = %s)", (id_, ))[0]
-
     # ---properties---
 
     @property
