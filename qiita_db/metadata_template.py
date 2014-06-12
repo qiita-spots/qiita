@@ -30,15 +30,46 @@ from __future__ import division
 from future.builtins import zip
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
+from .exceptions import QiitaDBDuplicateError
 from .base import QiitaObject
-from .exceptions import QiitaDBNotImplementedError
+# from .exceptions import QiitaDBNotImplementedError
 from .sql_connection import SQLConnectionHandler
-from .util import (quote_column_name, quote_data_value, get_datatypes,
-                   scrub_data)
+from .util import quote_column_name, quote_data_value, scrub_data, exists_table
+
+
+def _get_datatypes(metadata_map):
+    """Returns the datatype of each metadata_map column
+
+    Parameters
+    ----------
+    metadata_map : DataFrame
+        The MetadataTemplate contents
+
+    Returns
+    -------
+    list of str
+        The SQL datatypes for each column, in column order
+    """
+    isdigit = str.isdigit
+    datatypes = []
+
+    for header in metadata_map.CategoryNames:
+        column_data = [metadata_map.getCategoryValue(sample_id, header)
+                       for sample_id in metadata_map.SampleIds]
+
+        if all([isdigit(c) for c in column_data]):
+            datatypes.append('int')
+        elif all([isdigit(c.replace('.', '', 1)) for c in column_data]):
+            datatypes.append('float8')
+        else:
+            datatypes.append('varchar')
+
+    return datatypes
 
 
 class Sample(QiitaObject):
-    r""""""
+    r"""Models a sample object in the database"""
+    pass
 
 
 class MetadataTemplate(QiitaObject):
@@ -83,28 +114,44 @@ class MetadataTemplate(QiitaObject):
 
     @classmethod
     def _table_name(cls, study):
-        r""""""
+        r"""Returns the dynamic table name
+
+        Returns
+        -------
+        str
+            The table name
+
+        Raises
+        ------
+        IncompetentQiitaDeveloperError
+            If called from the base class directly
+        """
         if not cls._table_prefix:
             raise IncompetentQiitaDeveloperError(
                 "_table_prefix should be defined in the subclasses")
         return "%s%d" % (cls._table_prefix, study.id)
 
     @classmethod
-    def create(cls, md_template, study):
+    def create(cls, md_template, obj):
         r"""Creates the metadata template in the database
 
         Parameters
         ----------
         md_template : DataFrame
-            The metadata template file contents
-        study : Study
-            The study to which the metadata template belongs to
+            The metadata template file contents indexed by samples Ids
+        obj : QiitaObject
+            The obj to which the metadata template belongs to
         """
-        conn_handler = SQLConnectionHandler()
-        # Create the MetadataTemplate table on the SQL system
+        # Check that we don't have a MetadataTemplate for obj
+        if cls.exists(obj):
+            raise QiitaDBDuplicateError(cls.__name__, obj.id)
+
         # Get the table name
-        table_name = cls._table_name(study)
-        headers = md_template.CategoryNames
+        table_name = cls._table_name(obj)
+
+        conn_handler = SQLConnectionHandler()
+
+        headers = md_template.keys()
         datatypes = get_datatypes(md_template)
 
         # Get the columns names in SQL safe
@@ -150,24 +197,21 @@ class MetadataTemplate(QiitaObject):
         return MetadataTemplate(study.id)
 
     @classmethod
-    def delete(cls, study_id):
-        r"""Deletes the metadata template attached to the study `id` from the
-        database
+    def exists(cls, obj):
+        r"""Checks if already exists a MetadataTemplate for the provided object
 
         Parameters
         ----------
-        study_id : int
-            The study identifier
+        obj : QiitaObject
+            The object to test if a MetadataTemplate exists for
+
+        Returns
+        -------
+        bool
+            True if already exists. False otherwise.
         """
-        table_name = cls._get_table_name(study_id)
-        conn_handler = SQLConnectionHandler()
-        # Dropping table
-        conn_handler.execute('drop table qiita.%s' % table_name)
-        # Deleting rows from column_tables for the study
-        # The query should never fail; even when there are no rows for this
-        # study, the query will do nothing but complete successfully
-        conn_handler.execute("delete from qiita." + cls._column_table +
-                             " where study_id = %s", (study_id,))
+        cls._check_subclass()
+        return exists_table(cls._table_name(obj), SQLConnectionHandler())
 
     # @property
     # def sample_ids(self):
@@ -285,7 +329,7 @@ class SampleTemplate(MetadataTemplate):
 class PrepTemplate(MetadataTemplate):
     """
     """
-    _table = "common_prep_infp"
+    _table = "common_prep_info"
     _table_prefix = "prep_"
     _column_table = "raw_data_prep_columns"
     _id_column = "raw_data_id"

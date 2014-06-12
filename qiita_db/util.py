@@ -47,24 +47,6 @@ def quote_data_value(c):
     return "'%s'" % c
 
 
-def get_datatypes(metadata_map):
-    """"""
-    isdigit = str.isdigit
-    datatypes = []
-    for header in metadata_map.CategoryNames:
-        column_data = [metadata_map.getCategoryValue(sample_id, header)
-                       for sample_id in metadata_map.SampleIds]
-
-        if all([isdigit(c) for c in column_data]):
-            datatypes.append('int')
-        elif all([isdigit(c.replace('.', '', 1)) for c in column_data]):
-            datatypes.append('float8')
-        else:
-            datatypes.append('varchar')
-
-    return datatypes
-
-
 def scrub_data(s):
     r"""Scrubs data fields of characters not allowed by PostgreSQL
 
