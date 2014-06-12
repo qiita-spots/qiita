@@ -174,6 +174,7 @@ class Study(QiitaStatusObject):
             All required keys not passed
         IncompetentQiitaDeveloperError
             email, study_id, study_status_id, or study_title passed as a key
+            empty efo list passed
 
         Notes
         -----
@@ -216,6 +217,8 @@ class Study(QiitaStatusObject):
         study_id = conn_handler.execute_fetchone(sql, data)[0]
 
         # insert efo information into database
+        if efo == []:
+            raise IncompetentQiitaDeveloperError("Need EFO information!")
         sql = ("INSERT INTO qiita.{0}_experimental_factor (study_id, "
                "efo_id) VALUES (%s, %s)".format(cls._table))
         conn_handler.executemany(sql, [(study_id, e) for e in efo])
@@ -334,7 +337,14 @@ class Study(QiitaStatusObject):
         ----------
         efo_vals : list
             Id(s) for the new efo values
+
+        Raises
+        ------
+        IncompetentQiitaDeveloperError
+            Empty efo list passed
         """
+        if efo_vals == []:
+            raise IncompetentQiitaDeveloperError("Need EFO information!")
         conn_handler = SQLConnectionHandler()
         self._lock_public(conn_handler)
         # wipe out any EFOs currently attached to study

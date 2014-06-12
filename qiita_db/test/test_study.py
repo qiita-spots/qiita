@@ -239,21 +239,27 @@ class TestStudy(TestCase):
         self.info.pop("study_alias")
         with self.assertRaises(QiitaDBColumnError):
             Study.create(User('test@foo.bar'), "Fried Chicken Microbiome",
-                         1, self.info)
+                         [1], self.info)
+
+    def test_create_empty_efo(self):
+        """ Insert a study that is missing a required info key"""
+        with self.assertRaises(IncompetentQiitaDeveloperError):
+            Study.create(User('test@foo.bar'), "Fried Chicken Microbiome",
+                         [], self.info)
 
     def test_create_study_with_not_allowed_key(self):
         """Insert a study with key from _non_info present"""
         self.info.update({"study_id": 1})
         with self.assertRaises(QiitaDBColumnError):
             Study.create(User('test@foo.bar'), "Fried Chicken Microbiome",
-                         1, self.info)
+                         [1], self.info)
 
     def test_create_unknown_db_col(self):
         """ Insert a study with an info key not in the database"""
         self.info["SHOULDNOTBEHERE"] = "BWAHAHAHAHAHA"
         with self.assertRaises(QiitaDBColumnError):
             Study.create(User('test@foo.bar'), "Fried Chicken Microbiome",
-                         1, self.info)
+                         [1], self.info)
 
     def test_retrieve_title(self):
         self.assertEqual(self.study.title, 'Identification of the Microbiomes'
@@ -279,6 +285,13 @@ class TestStudy(TestCase):
                            'Microbiomes for Cannabis Soils', [1], self.info)
         new.efo = [3, 4]
         self.assertEqual(new.efo, [3, 4])
+
+    def test_set_efo_empty(self):
+        """Set efo with list efo_id"""
+        new = Study.create(User('test@foo.bar'), 'Identification of the '
+                           'Microbiomes for Cannabis Soils', [1], self.info)
+        with self.assertRaises(IncompetentQiitaDeveloperError):
+            new.efo = []
 
     def test_set_efo_public(self):
         """Set efo on a public study"""
