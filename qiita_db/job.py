@@ -16,9 +16,16 @@ Classes
 # -----------------------------------------------------------------------------
 from __future__ import division
 from json import dumps
+from os import remove
+from os.path import basename, join
+from time import strftime
+import date
+from tarfile import TarFile, extractall, open as taropen
 
-from .base import QiitaStatusObject
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
+from .base import QiitaStatusObject
+from .util import insert_filepaths
+from .make_environment import DFLT_BASE_WORK_FOLDER
 from .exceptions import QiitaDBDuplicateError, QiitaDBNotImplementedError
 from .sql_connection import SQLConnectionHandler
 
@@ -167,9 +174,8 @@ class Job(QiitaStatusObject):
     @property
     def results(self):
         """List of job result filepaths"""
-        # plain_text = 8
         # tar = 7
-        # biom = 6
+        # Copy files to working dir, untar if necessary, then return filepaths
         raise QiitaDBNotImplementedError()
 
     @property
@@ -181,18 +187,75 @@ class Job(QiitaStatusObject):
         return conn_handler.execute_fetchone(sql, (self._id, ))[0]
 
 # --- Functions ---
-    def set_error(self):
-        raise QiitaDBNotImplementedError()
+    def set_error(self, msg, severity):
+        """Logs an error for the job
+
+        Parameters
+        ----------
+        msg : str
+            Error message/stacktrace if available
+        severity: int
+            Severity code of error
+        """
+        # insert the error into the logging table
+        errtime = ' '.join((date.Today().isoformat(), strftime("%H:%M:%S")))
+        sql = ("INSERT INTO qiita.logger VALUES (time, severity, msg) VALUES"
+               "(%s, %s, %s) RETURNING log_id")
+        conn_handler = SQLConnectionHandler()
+        logid = conn_handler.execute_fetchone(sql, (errtime, severity, msg))
+
+        # attach the error to the job
+        sql = ("UPDATE qiita.{0} SET log_id = %s WHERE "
+               "job_id = %s".format(self._table))
+        conn_handler.execute(sql, (logid, self._id))
 
     def add_results(self, results):
         """Adds a list of results to the results
 
         Parameters
         ----------
-            results : list
-                results to be added to the job
+            results : list of tuples
+                filepath information to add to job, in format
+                [(filepath, type_id), ...]
+                Where type_id is the filepath type id of the filepath passed
+
+        Notes
+        -----
+        If your results are a folder of files, pass the base folder as the
+        filepath and the type_id as 7 (tar). This function will automatically
+        tar the folder before adding it.
+
+        Reference
+        ---------
+        [1] http://stackoverflow.com/questions/2032403/
+            how-to-create-full-compressed-tar-file-using-python
         """
-        raise QiitaDBNotImplementedError()
+        # go though the list and tar any folders if necessary
+        cleanup = []
+        addpaths = []
+        for fp, fp_type in results:
+            outpath = join(DFLT_BASE_WORK_FOLDER, basename(fp))
+            if fp_type == 7:
+                with taropen(outpath, "w") as tar:
+                    tar.add(fp, arcname=basename(fp))
+                addpaths.append((outpath, 7))
+                cleanup.append(outpath)
+            else:
+                addpaths.append((fp, fp_type))
+
+        # add filepaths to the job
+        conn_handler = SQLConnectionHandler()
+        file_ids = insert_filepaths(addpaths, self._id, "job",
+                                    "filepath", conn_handler)
+
+        # associate filepaths with job
+        sql = ("INSERT INTO qiita.{0}_results_fileapth (job_id, filepath_id"
+               "VALUES (%s, %s)".format(self._table))
+        conn_handler.execute_many(sql, [(self._id, fid) for fid in file_ids])
+
+        # clean up the created tars from the working directory
+        for path in cleanup:
+            remove(path)
 
     def remove_results(self, results):
         """Removes a list of results from the results
@@ -200,6 +263,10 @@ class Job(QiitaStatusObject):
         Parameters
         ----------
             results : list
-                results to be removed from the job
+                filepath ids to be removed from the job
         """
-        raise QiitaDBNotImplementedError()
+        sql = ("DELETE FROM qiita.filepath WHERE filepath_id IN (SELECT "
+               "filepath_id FROM qiita.{0}_results_filepath WHERE "
+               "job_id = %s".format(self._table))
+        conn_handler = SQLConnectionHandler()
+        conn_handler.execute(sql, (self._id, ))
