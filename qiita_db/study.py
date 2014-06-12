@@ -186,6 +186,10 @@ class Study(QiitaStatusObject):
             raise QiitaDBColumnError("non info keys passed: %s" %
                                      cls._non_info.intersection(info))
 
+        # make sure efo info passed
+        if not efo:
+            raise IncompetentQiitaDeveloperError("Need EFO information!")
+
         # add default values to info
         insertdict = deepcopy(info)
         if "first_contact" not in insertdict:
@@ -217,8 +221,6 @@ class Study(QiitaStatusObject):
         study_id = conn_handler.execute_fetchone(sql, data)[0]
 
         # insert efo information into database
-        if efo == []:
-            raise IncompetentQiitaDeveloperError("Need EFO information!")
         sql = ("INSERT INTO qiita.{0}_experimental_factor (study_id, "
                "efo_id) VALUES (%s, %s)".format(cls._table))
         conn_handler.executemany(sql, [(study_id, e) for e in efo])
@@ -343,7 +345,7 @@ class Study(QiitaStatusObject):
         IncompetentQiitaDeveloperError
             Empty efo list passed
         """
-        if efo_vals == []:
+        if not efo_vals:
             raise IncompetentQiitaDeveloperError("Need EFO information!")
         conn_handler = SQLConnectionHandler()
         self._lock_public(conn_handler)
