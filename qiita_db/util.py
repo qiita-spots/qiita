@@ -31,8 +31,12 @@ Methods
 # -----------------------------------------------------------------------------
 
 from __future__ import division
+from random import choice
+from string import ascii_letters, digits, punctuation
 from binascii import crc32
+from bcrypt import hashpw, gensalt
 
+from .exceptions import QiitaDBColumnError
 from qiita_db.sql_connection import SQLConnectionHandler
 
 
@@ -84,6 +88,121 @@ def scrub_data(s):
     ret = s.replace("'", "")
     ret = ret.replace(";", "")
     return ret
+
+
+def create_rand_string(length, punct=True):
+        """Returns a string of random ascii characters
+
+        Parameters
+        ----------
+        length: int
+            Length of string to return
+        punct: bool, optional
+            Include punctiation as well as letters and numbers. Default True.
+        """
+        chars = ''.join((ascii_letters, digits))
+        if punct:
+            chars = ''.join((chars, punctuation))
+        return ''.join(choice(chars) for i in range(length))
+
+
+def hash_password(password, hashedpw=None):
+        """ Hashes password
+
+        Parameters
+        ----------
+        password: str
+            Plaintext password
+        hashedpw: str, optional
+            Previously hashed password for bcrypt to pull salt from. If not
+            given, salt generated before hash
+
+        Returns
+        -------
+        str
+            Hashed password
+
+        Notes
+        -----
+        Relies on bcrypt library to hash passwords, which stores the salt as
+        part of the hashed password. Don't need to actually store the salt
+        because of this.
+        """
+        # all the encode/decode as a python 3 workaround for bcrypt
+        if hashedpw is None:
+            hashedpw = gensalt()
+        else:
+            hashedpw = hashedpw.encode('utf-8')
+        password = password.encode('utf-8')
+        output = hashpw(password, hashedpw)
+        if isinstance(output, bytes):
+            output = output.decode("utf-8")
+        return output
+
+
+def check_required_columns(conn_handler, keys, table):
+    """Makes sure all required columns in database table are in keys
+
+    Parameters
+    ----------
+    conn_handler: SQLConnectionHandler object
+        Previously opened connection to the database
+    keys: iterable
+        Holds the keys in the dictionary
+    table: str
+        name of the table to check required columns
+
+    Raises
+    ------
+    QiitaDBColumnError
+        If keys exist that are not in the table
+    RuntimeError
+        Unable to get columns from database
+    """
+    sql = ("SELECT is_nullable, column_name FROM information_schema.columns "
+           "WHERE table_name = %s")
+    cols = conn_handler.execute_fetchall(sql, (table, ))
+    # Test needed because a user with certain permissions can query without
+    # error but be unable to get the column names
+    if len(cols) == 0:
+        raise RuntimeError("Unable to fetch column names for table %s" % table)
+    required = set(x[1] for x in cols if x[0] == 'NO')
+    # remove the table id column as required
+    required.remove("%s_id" % table)
+    if len(required.difference(keys)) > 0:
+        raise QiitaDBColumnError("Required keys missing: %s" %
+                                 required.difference(keys))
+
+
+def check_table_cols(conn_handler, keys, table):
+    """Makes sure all keys correspond to column headers in a table
+
+    Parameters
+    ----------
+    conn_handler: SQLConnectionHandler object
+        Previously opened connection to the database
+    keys: iterable
+        Holds the keys in the dictionary
+    table: str
+        name of the table to check column names
+
+    Raises
+    ------
+    QiitaDBColumnError
+        If a key is found that is not in table columns
+    RuntimeError
+        Unable to get columns from database
+    """
+    sql = ("SELECT column_name FROM information_schema.columns WHERE "
+           "table_name = %s")
+    cols = [x[0] for x in conn_handler.execute_fetchall(sql, (table, ))]
+    # Test needed because a user with certain permissions can query without
+    # error but be unable to get the column names
+    if len(cols) == 0:
+        raise RuntimeError("Unable to fetch column names for table %s" % table)
+    if len(set(keys).difference(cols)) > 0:
+        raise QiitaDBColumnError("Non-database keys found: %s" %
+                                 set(keys).difference(cols))
 
 
 def exists_table(table, conn_handler):

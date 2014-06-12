@@ -2,7 +2,7 @@
 INSERT INTO qiita.user_level (name, description) VALUES ('admin', 'Can access and do all the things'), ('dev', 'Can access all data and info about errors'), ('superuser', 'Can see all studies, can run analyses'), ('user', 'Can see own and public data, can run analyses'), ('unverified', 'Email not verified'), ('guest', 'Can view & download public data');
 
 -- Populate analysis_status table
-INSERT INTO qiita.analysis_status (status) VALUES ('in_construction'), ('queued'), ('running'), ('completed'), ('error');
+INSERT INTO qiita.analysis_status (status) VALUES ('in_construction'), ('queued'), ('running'), ('completed'), ('error'), ('public');
 
 -- Populate job_status table
 INSERT INTO qiita.job_status (status) VALUES ('queued'), ('running'), ('completed'), ('error');
@@ -35,4 +35,7 @@ INSERT INTO qiita.required_sample_info_status (status) VALUES ('received'), ('in
 INSERT INTO qiita.filepath_type (filepath_type) VALUES ('raw_sequences'), ('raw_barcodes'), ('raw_spectra'), ('preprocessed_sequences'), ('preprocessed_sequences_qual'), ('biom');
 
 -- Populate checksum_algorithm table
-INSERT INTO qiita.checksum_algorithm (name) VALUES ('crc32')
+INSERT INTO qiita.checksum_algorithm (name) VALUES ('crc32');
+
+-- Populate commands available
+INSERT INTO qiita.command (name, command) VALUES ('Summarize taxa through plots', 'summarize_taxa_through_plots.py'), ('Beta diversity through plots', 'beta_diversity_through_plots.py');

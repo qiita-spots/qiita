@@ -1,6 +1,3 @@
-#!/usr/bin/env python
-from __future__ import division
-
 # -----------------------------------------------------------------------------
 # Copyright (c) 2014--, The Qiita Development Team.
 #
@@ -9,6 +6,7 @@ from __future__ import division
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
+from __future__ import division
 from qiita_core.exceptions import QiitaError
 
 
@@ -29,6 +27,16 @@ class QiitaDBExecutionError(QiitaDBError):
 
 class QiitaDBConnectionError(QiitaDBError):
     """Exception for error when connecting to the db"""
+    pass
+
+
+class QiitaDBDuplicateError(QiitaDBError):
+    """Exception when duplicating something in the database"""
+    pass
+
+
+class QiitaDBColumnError(QiitaDBError):
+    """Exception when database column info missing or incorrect"""
     pass
 
 

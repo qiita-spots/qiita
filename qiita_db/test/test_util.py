@@ -7,21 +7,48 @@
 # -----------------------------------------------------------------------------
 
 from unittest import TestCase, main
-from tempfile import mkstemp
-from os import close
 
 from qiita_core.util import qiita_test_checker
-from qiita_db.sql_connection import SQLConnectionHandler
 from qiita_db.util import (exists_table, exists_dynamic_table, scrub_data,
-                           compute_checksum)
+                           compute_checksum, check_table_cols,
+                           check_required_columns)
+from qiita_db.sql_connection import SQLConnectionHandler
+from qiita_db.exceptions import QiitaDBColumnError
+from tempfile import mkstemp
+from os import close
 
 
 @qiita_test_checker()
 class DBUtilTests(TestCase):
-    """Tests for the util functions that need to access the DB"""
-
     def setUp(self):
         self.conn_handler = SQLConnectionHandler()
+        self.table = 'study'
+        self.required = [
+            'number_samples_promised', 'study_title', 'mixs_compliant',
+            'metadata_complete', 'study_description', 'first_contact',
+            'reprocess', 'study_status_id', 'portal_type_id',
+            'timeseries_type_id', 'study_alias', 'study_abstract',
+            'principal_investigator_id', 'email', 'number_samples_collected']
+
+    def test_check_required_columns(self):
+        # Doesn't do anything if correct info passed, only errors if wrong info
+        check_required_columns(self.conn_handler, self.required, self.table)
+
+    def test_check_required_columns_fail(self):
+        self.required.remove('study_title')
+        with self.assertRaises(QiitaDBColumnError):
+            check_required_columns(self.conn_handler, self.required,
+                                   self.table)
+
+    def test_check_table_cols(self):
+        # Doesn't do anything if correct info passed, only errors if wrong info
+        check_table_cols(self.conn_handler, self.required, self.table)
+
+    def test_check_table_cols_fail(self):
+        self.required.append('BADTHINGNOINHERE')
+        with self.assertRaises(QiitaDBColumnError):
+            check_table_cols(self.conn_handler, self.required,
+                             self.table)
 
     def test_exists_table(self):
         """Correctly checks if a table exists"""
