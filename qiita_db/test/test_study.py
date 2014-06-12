@@ -1,6 +1,8 @@
 from unittest import TestCase, main
 from datetime import date
 
+from future.utils import viewitems
+
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_core.util import qiita_test_checker
 from qiita_db.base import QiitaObject
@@ -154,7 +156,7 @@ class TestStudy(TestCase):
                'reprocess': False, 'study_status_id': 1,
                'number_samples_promised': 28, 'emp_person_id': 2,
                'funding': None, 'vamps_id': None,
-               'first_contact': date.today().strftime("%B %d, %Y"),
+               'first_contact': date.today().isoformat(),
                'principal_investigator_id': 3,
                'timeseries_type_id': 1,
                'study_abstract': 'Exploring how a high fat diet changes the '
@@ -291,7 +293,7 @@ class TestStudy(TestCase):
             self.study.efo = 6
 
     def test_retrieve_info(self):
-        for key, val in self.existingexp.items():
+        for key, val in viewitems(self.existingexp):
             if isinstance(val, QiitaObject):
                 self.existingexp[key] = val.id
         self.assertEqual(self.study.info, self.existingexp)

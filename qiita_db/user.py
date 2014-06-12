@@ -73,7 +73,7 @@ class User(QiitaObject):
                  "pass_reset_code", "pass_reset_timestamp"}
 
     def _check_id(self, id_, conn_handler=None):
-        r"""Check that the provided ID actually exists on the database
+        r"""Check that the provided ID actually exists in the database
 
         Parameters
         ----------
@@ -84,8 +84,8 @@ class User(QiitaObject):
 
         Notes
         -----
-        This functionoverwrites the base function, as sql layout doesn't follow
-        the same conventions done in the other classes.
+        This function overwrites the base function, as sql layout doesn't
+        follow the same conventions done in the other classes.
         """
         self._check_subclass()
 

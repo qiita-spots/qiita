@@ -97,6 +97,7 @@ object while creating the study.
 
 from __future__ import division
 from future.builtins import zip
+from future.utils import viewitems
 from datetime import date
 from copy import deepcopy
 
@@ -157,15 +158,15 @@ class Study(QiitaStatusObject):
         ----------
         owner : User object
             the study' owner
-        title: str
+        title : str
             Title of the study
-        efo: int or list
+        efo : int or list
             Experimental Factor Ontology or -ies for the study
-        info: dict
+        info : dict
             the information attached to the study. All "*_id" keys must pass
             the objects associated with them.
-        investigation: Investigation object
-            if the study is part of an investigation, the id to associate with
+        investigation : Investigation object, optional
+            If passed, the investigation to associate with. Defaults to None.
 
         Raises
         ------
@@ -182,13 +183,13 @@ class Study(QiitaStatusObject):
         """
         # make sure not passing non-info columns in the info dict
         if cls._non_info.intersection(info):
-                raise QiitaDBColumnError("non info keys passed: %s" %
-                                         cls._non_info.intersection(info))
+            raise QiitaDBColumnError("non info keys passed: %s" %
+                                     cls._non_info.intersection(info))
 
         # add default values to info
         insertdict = deepcopy(info)
         if "first_contact" not in insertdict:
-            insertdict['first_contact'] = date.today().strftime("%B %d, %Y")
+            insertdict['first_contact'] = date.today().isoformat()
         insertdict['email'] = owner.id
         insertdict['study_title'] = title
         if "reprocess" not in insertdict:
@@ -203,13 +204,12 @@ class Study(QiitaStatusObject):
         check_required_columns(conn_handler, insertdict, cls._table)
 
         # Insert study into database
-        keys = insertdict.keys()
         sql = ("INSERT INTO qiita.{0} ({1}) VALUES ({2}) RETURNING "
-               "study_id".format(cls._table, ','.join(keys),
+               "study_id".format(cls._table, ','.join(insertdict),
                                  ','.join(['%s'] * len(insertdict))))
         # make sure data in same order as sql column names, and ids are used
         data = []
-        for col in keys:
+        for col in insertdict:
             if isinstance(insertdict[col], QiitaObject):
                 data.append(insertdict[col].id)
             else:
@@ -218,7 +218,7 @@ class Study(QiitaStatusObject):
 
         # insert efo information into database
         if isinstance(efo, int):
-                efo = [efo]
+            efo = [efo]
         sql = ("INSERT INTO qiita.{0}_experimental_factor (study_id, "
                "efo_id) VALUES (%s, %s)".format(cls._table))
         conn_handler.executemany(sql, list(zip([study_id] * len(efo), efo)))
@@ -309,9 +309,8 @@ class Study(QiitaStatusObject):
 
         sql_vals = []
         data = []
-        # items() used for py3 compatability
         # build query with data values in correct order for SQL statement
-        for key, val in info.items():
+        for key, val in viewitems(info):
             sql_vals.append("{0} = %s".format(key))
             if isinstance(val, QiitaObject):
                 data.append(val.id)
@@ -336,13 +335,13 @@ class Study(QiitaStatusObject):
 
         Parameters
         ----------
-        status_id: int
+        status_id : int
             ID for the new status
         """
         conn_handler = SQLConnectionHandler()
         self._lock_public(conn_handler)
         if isinstance(efo_vals, int):
-                efo_vals = [efo_vals]
+            efo_vals = [efo_vals]
         # wipe out any EFOs currently attached to study
         sql = ("DELETE FROM qiita.{0}_experimental_factor WHERE "
                "study_id = %s".format(self._table))
@@ -351,7 +350,7 @@ class Study(QiitaStatusObject):
         sql = ("INSERT INTO qiita.{0}_experimental_factor (study_id, "
                "efo_id) VALUES (%s, %s)".format(self._table))
         conn_handler.executemany(sql, list(zip([self._id] * len(efo_vals),
-                                           efo_vals)))
+                                 efo_vals)))
 
     @property
     def shared_with(self):
@@ -451,7 +450,7 @@ class Study(QiitaStatusObject):
 
         Parameters
         ----------
-        pmid: str
+        pmid : str
             pmid to associate with study
         """
         conn_handler = SQLConnectionHandler()
@@ -465,13 +464,13 @@ class StudyPerson(QiitaObject):
 
     Attributes
     ----------
-    name: str
+    name : str
         name of the person
-    email: str
+    email : str
         email of the person
-    address: str or None
+    address : str or None
         address of the person
-    phone: str or None
+    phone : str or None
         phone number of the person
     """
     _table = "study_person"
@@ -503,13 +502,13 @@ class StudyPerson(QiitaObject):
 
         Parameters
         ----------
-        name: str
+        name : str
             name of person
-        email: str
+        email : str
             email of person
-        address: str, optional
+        address : str, optional
             address of person
-        phone: str, optional
+        phone : str, optional
             phone number of person
 
         Returns
@@ -582,7 +581,7 @@ class StudyPerson(QiitaObject):
 
         Parameters
         ----------
-        value: str
+        value : str
             New address for person
         """
         conn_handler = SQLConnectionHandler()
@@ -610,7 +609,7 @@ class StudyPerson(QiitaObject):
 
         Parameters
         ----------
-        value: str
+        value : str
             New phone number for person
         """
         conn_handler = SQLConnectionHandler()
