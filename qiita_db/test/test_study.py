@@ -352,6 +352,11 @@ class TestStudy(TestCase):
         exp = ['123456', '7891011']
         self.assertEqual(self.study.pmids, exp)
 
+    def test_retrieve_pmids_empty(self):
+        new = Study.create(User('test@foo.bar'), 'Identification of the '
+                           'Microbiomes for Cannabis Soils', 1, self.info)
+        self.assertEqual(new.pmids, [])
+
     def test_retrieve_investigation(self):
         self.assertEqual(self.study.investigation, 1)
 
