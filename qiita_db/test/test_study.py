@@ -150,7 +150,7 @@ class TestStudy(TestCase):
     def test_create_study_min_data(self):
         """Insert a study into the database"""
         obs = Study.create(User('test@foo.bar'), "Fried chicken microbiome",
-                           1, self.info)
+                           [1], self.info)
         self.assertEqual(obs.id, 2)
         exp = {'mixs_compliant': True, 'metadata_complete': True,
                'reprocess': False, 'study_status_id': 1,
@@ -185,7 +185,7 @@ class TestStudy(TestCase):
     def test_create_study_with_investigation(self):
         """Insert a study into the database with an investigation"""
         obs = Study.create(User('test@foo.bar'), "Fried chicken microbiome",
-                           1, self.info, Investigation(1))
+                           [1], self.info, Investigation(1))
         self.assertEqual(obs.id, 2)
         # check the investigation was assigned
         conn = SQLConnectionHandler()
@@ -204,7 +204,7 @@ class TestStudy(TestCase):
             'first_contact': "Today"
             })
         obs = Study.create(User('test@foo.bar'), "Fried chicken microbiome",
-                           1, self.info)
+                           [1], self.info)
         self.assertEqual(obs.id, 2)
         exp = {'mixs_compliant': True, 'metadata_complete': False,
                'reprocess': True, 'study_status_id': 1,
@@ -261,7 +261,7 @@ class TestStudy(TestCase):
 
     def test_set_title(self):
         new = Study.create(User('test@foo.bar'), 'Identification of the '
-                           'Microbiomes for Cannabis Soils', 1, self.info)
+                           'Microbiomes for Cannabis Soils', [1], self.info)
         new.title = "Cannabis soils"
         self.assertEqual(new.title, "Cannabis soils")
 
@@ -273,19 +273,12 @@ class TestStudy(TestCase):
     def test_get_efo(self):
         self.assertEqual(self.study.efo, [1])
 
-    def test_set_efo_list(self):
+    def test_set_efo(self):
         """Set efo with list efo_id"""
         new = Study.create(User('test@foo.bar'), 'Identification of the '
-                           'Microbiomes for Cannabis Soils', 1, self.info)
+                           'Microbiomes for Cannabis Soils', [1], self.info)
         new.efo = [3, 4]
         self.assertEqual(new.efo, [3, 4])
-
-    def test_set_efo_int(self):
-        """Set efo with int efo_id"""
-        new = Study.create(User('test@foo.bar'), 'Identification of the '
-                           'Microbiomes for Cannabis Soils', 1, self.info)
-        new.efo = 5
-        self.assertEqual(new.efo, [5])
 
     def test_set_efo_public(self):
         """Set efo on a public study"""
@@ -309,7 +302,7 @@ class TestStudy(TestCase):
             "first_contact": "June 11, 2014"
         }
         new = Study.create(User('test@foo.bar'), 'Identification of the '
-                           'Microbiomes for Cannabis Soils', 1, self.info)
+                           'Microbiomes for Cannabis Soils', [1], self.info)
         self.infoexp.update(newinfo)
         new.info = newinfo
         # add missing table cols
@@ -328,13 +321,13 @@ class TestStudy(TestCase):
     def test_set_info_disallowed_keys(self):
         """Tests for fail if sending non-info keys in info dict"""
         new = Study.create(User('test@foo.bar'), 'Identification of the '
-                           'Microbiomes for Cannabis Soils', 1, self.info)
+                           'Microbiomes for Cannabis Soils', [1], self.info)
         with self.assertRaises(QiitaDBColumnError):
             new.info = {"email": "fail@fail.com"}
 
     def test_info_empty(self):
         new = Study.create(User('test@foo.bar'), 'Identification of the '
-                           'Microbiomes for Cannabis Soils', 1, self.info)
+                           'Microbiomes for Cannabis Soils', [1], self.info)
         with self.assertRaises(IncompetentQiitaDeveloperError):
             new.info = {}
 
@@ -343,7 +336,7 @@ class TestStudy(TestCase):
 
     def test_set_status(self):
         new = Study.create(User('test@foo.bar'), 'Identification of the '
-                           'Microbiomes for Cannabis Soils', 1, self.info)
+                           'Microbiomes for Cannabis Soils', [1], self.info)
         new.status = "private"
         self.assertEqual(new.status, "private")
 
@@ -356,7 +349,7 @@ class TestStudy(TestCase):
 
     def test_retrieve_pmids_empty(self):
         new = Study.create(User('test@foo.bar'), 'Identification of the '
-                           'Microbiomes for Cannabis Soils', 1, self.info)
+                           'Microbiomes for Cannabis Soils', [1], self.info)
         self.assertEqual(new.pmids, [])
 
     def test_retrieve_investigation(self):
@@ -364,7 +357,7 @@ class TestStudy(TestCase):
 
     def test_retrieve_investigation_empty(self):
         new = Study.create(User('test@foo.bar'), 'Identification of the '
-                           'Microbiomes for Cannabis Soils', 1, self.info)
+                           'Microbiomes for Cannabis Soils', [1], self.info)
         self.assertEqual(new.investigation, None)
 
     def test_retrieve_sample_template(self):
@@ -375,7 +368,7 @@ class TestStudy(TestCase):
 
     def test_retrieve_raw_data_none(self):
         new = Study.create(User('test@foo.bar'), 'Identification of the '
-                           'Microbiomes for Cannabis Soils', 1, self.info)
+                           'Microbiomes for Cannabis Soils', [1], self.info)
         self.assertEqual(new.raw_data, [])
 
     def test_retrieve_preprocessed_data(self):
@@ -383,7 +376,7 @@ class TestStudy(TestCase):
 
     def test_retrieve_preprocessed_data_none(self):
         new = Study.create(User('test@foo.bar'), 'Identification of the '
-                           'Microbiomes for Cannabis Soils', 1, self.info)
+                           'Microbiomes for Cannabis Soils', [1], self.info)
         self.assertEqual(new.preprocessed_data, [])
 
     def test_retrieve_processed_data(self):
@@ -391,7 +384,7 @@ class TestStudy(TestCase):
 
     def test_retrieve_processed_data_none(self):
         new = Study.create(User('test@foo.bar'), 'Identification of the '
-                           'Microbiomes for Cannabis Soils', 1, self.info)
+                           'Microbiomes for Cannabis Soils', [1], self.info)
         self.assertEqual(new.processed_data, [])
 
     def test_add_pmid(self):

@@ -145,8 +145,7 @@ class Study(QiitaStatusObject):
             raise QiitaDBStatusError("Can't change status of public study!")
 
     def _status_setter_checks(self, conn_handler):
-        r"""Perform any extra checks that needed to be done before setting the
-        object status on the database. Should be overwritten by the subclasses
+        r"""Perform a check to make sure not setting status away from public
         """
         self._lock_public(conn_handler)
 
@@ -157,11 +156,11 @@ class Study(QiitaStatusObject):
         Parameters
         ----------
         owner : User object
-            the study' owner
+            the study's owner
         title : str
             Title of the study
-        efo : int or list
-            Experimental Factor Ontology or -ies for the study
+        efo : list
+            Experimental Factor Ontology id(s) for the study
         info : dict
             the information attached to the study. All "*_id" keys must pass
             the objects associated with them.
@@ -217,11 +216,9 @@ class Study(QiitaStatusObject):
         study_id = conn_handler.execute_fetchone(sql, data)[0]
 
         # insert efo information into database
-        if isinstance(efo, int):
-            efo = [efo]
         sql = ("INSERT INTO qiita.{0}_experimental_factor (study_id, "
                "efo_id) VALUES (%s, %s)".format(cls._table))
-        conn_handler.executemany(sql, list(zip([study_id] * len(efo), efo)))
+        conn_handler.executemany(sql, [(study_id, e) for e in efo])
 
         # add study to investigation if necessary
         if investigation:
@@ -335,13 +332,11 @@ class Study(QiitaStatusObject):
 
         Parameters
         ----------
-        status_id : int
-            ID for the new status
+        efo_vals : list
+            Id(s) for the new efo values
         """
         conn_handler = SQLConnectionHandler()
         self._lock_public(conn_handler)
-        if isinstance(efo_vals, int):
-            efo_vals = [efo_vals]
         # wipe out any EFOs currently attached to study
         sql = ("DELETE FROM qiita.{0}_experimental_factor WHERE "
                "study_id = %s".format(self._table))
@@ -349,8 +344,7 @@ class Study(QiitaStatusObject):
         # insert new EFO information into database
         sql = ("INSERT INTO qiita.{0}_experimental_factor (study_id, "
                "efo_id) VALUES (%s, %s)".format(self._table))
-        conn_handler.executemany(sql, list(zip([self._id] * len(efo_vals),
-                                 efo_vals)))
+        conn_handler.executemany(sql, [(self._id, efo) for efo in efo_vals])
 
     @property
     def shared_with(self):
@@ -517,7 +511,7 @@ class StudyPerson(QiitaObject):
 
         Raises
         ------
-        QiitaDBExecutionError
+        QiitaDBDuplicateError
             Person already exists
         """
         if cls.exists(name, email):
