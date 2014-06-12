@@ -85,15 +85,14 @@ class TestStudy(TestCase):
             "timeseries_type_id": 1,
             "metadata_complete": True,
             "mixs_compliant": True,
-            "email": User('test@foo.bar'),
             "number_samples_collected": 25,
             "number_samples_promised": 28,
             "portal_type_id": 3,
             "study_alias": "FCM",
-            "study_description": ("Microbiome of people who eat nothing but "
-                                  "fried chicken"),
-            "study_abstract": ("Exploring how a high fat diet changes the "
-                               "gut microbiome"),
+            "study_description": "Microbiome of people who eat nothing but "
+                                 "fried chicken",
+            "study_abstract": "Exploring how a high fat diet changes the "
+                              "gut microbiome",
             "emp_person_id": StudyPerson(2),
             "principal_investigator_id": StudyPerson(3),
             "lab_person_id": StudyPerson(1)
@@ -103,15 +102,14 @@ class TestStudy(TestCase):
             "timeseries_type_id": 1,
             "metadata_complete": True,
             "mixs_compliant": True,
-            "email": 'test@foo.bar',
             "number_samples_collected": 25,
             "number_samples_promised": 28,
             "portal_type_id": 3,
             "study_alias": "FCM",
-            "study_description": ("Microbiome of people who eat nothing but "
-                                  "fried chicken"),
-            "study_abstract": ("Exploring how a high fat diet changes the "
-                               "gut microbiome"),
+            "study_description": "Microbiome of people who eat nothing but "
+                                 "fried chicken",
+            "study_abstract": "Exploring how a high fat diet changes the "
+                              "gut microbiome",
             "emp_person_id": 2,
             "principal_investigator_id": 3,
             "lab_person_id": 1
@@ -128,19 +126,17 @@ class TestStudy(TestCase):
             'first_contact': '2014-05-19 16:10',
             'principal_investigator_id': StudyPerson(3),
             'timeseries_type_id': 1,
-            'study_abstract': ("This is a preliminary study to examine the "
-                               "microbiota associated with the Cannabis plant."
-                               " Soils samples from the bulk soil, soil "
-                               "associated with the roots, and the rhizosphere"
-                               " were extracted and the DNA sequenced. Roots "
-                               "from three independent plants of different "
-                               "strains were examined. These roots were "
-                               "obtained November 11, 2011 from plants that "
-                               "had been harvested in the summer. Future "
-                               "studies will attempt to analyze the soils and "
-                               "rhizospheres from the same location at diff"
-                               "erent time points in the plant lifecycle."),
-            'email': User('test@foo.bar'),
+            'study_abstract':
+                "This is a preliminary study to examine the "
+                "microbiota associated with the Cannabis plant. Soils samples "
+                "from the bulk soil, soil associated with the roots, and the "
+                "rhizosphere were extracted and the DNA sequenced. Roots "
+                "from three independent plants of different strains were "
+                "examined. These roots were obtained November 11, 2011 from "
+                "plants that had been harvested in the summer. Future "
+                "studies will attempt to analyze the soils and rhizospheres "
+                "from the same location at different time points in the plant "
+                "lifecycle.",
             'spatial_series': False,
             'study_description': 'Analysis of the Cannabis Plant Microbiome',
             'portal_type_id': 2,
@@ -161,11 +157,11 @@ class TestStudy(TestCase):
                'first_contact': date.today().strftime("%B %d, %Y"),
                'principal_investigator_id': 3,
                'timeseries_type_id': 1,
-               'study_abstract': ('Exploring how a high fat diet changes the '
-                                  'gut microbiome'),
+               'study_abstract': 'Exploring how a high fat diet changes the '
+                                 'gut microbiome',
                'email': 'test@foo.bar', 'spatial_series': None,
-               'study_description': ('Microbiome of people who eat nothing but'
-                                     ' fried chicken'),
+               'study_description': 'Microbiome of people who eat nothing but'
+                                    ' fried chicken',
                'portal_type_id': 3, 'study_alias': 'FCM', 'study_id': 2,
                'most_recent_contact': None, 'lab_person_id': 1,
                'study_title': 'Fried chicken microbiome',
@@ -203,21 +199,23 @@ class TestStudy(TestCase):
             'funding': 'FundAgency',
             'spatial_series': True,
             'metadata_complete': False,
+            'reprocess': True,
+            'first_contact': "Today"
             })
         obs = Study.create(User('test@foo.bar'), "Fried chicken microbiome",
                            1, self.info)
         self.assertEqual(obs.id, 2)
         exp = {'mixs_compliant': True, 'metadata_complete': False,
-               'reprocess': False, 'study_status_id': 1,
+               'reprocess': True, 'study_status_id': 1,
                'number_samples_promised': 28, 'emp_person_id': 2,
                'funding': 'FundAgency', 'vamps_id': 'MBE_1111111',
-               'first_contact': date.today().strftime("%B %d, %Y"),
+               'first_contact': "Today",
                'principal_investigator_id': 3, 'timeseries_type_id': 1,
-               'study_abstract': ('Exploring how a high fat diet changes the '
-                                  'gut microbiome'),
+               'study_abstract': 'Exploring how a high fat diet changes the '
+                                 'gut microbiome',
                'email': 'test@foo.bar', 'spatial_series': True,
-               'study_description': ('Microbiome of people who eat nothing '
-                                     'but fried chicken'),
+               'study_description': 'Microbiome of people who eat nothing '
+                                    'but fried chicken',
                'portal_type_id': 3, 'study_alias': 'FCM', 'study_id': 2,
                'most_recent_contact': None, 'lab_person_id': 1,
                'study_title': 'Fried chicken microbiome',
@@ -326,6 +324,13 @@ class TestStudy(TestCase):
         with self.assertRaises(QiitaDBStatusError):
             self.study.info = {"vamps_id": "12321312"}
 
+    def test_set_info_disallowed_keys(self):
+        """Tests for fail if sending non-info keys in info dict"""
+        new = Study.create(User('test@foo.bar'), 'Identification of the '
+                           'Microbiomes for Cannabis Soils', 1, self.info)
+        with self.assertRaises(QiitaDBColumnError):
+            new.info = {"email": "fail@fail.com"}
+
     def test_info_empty(self):
         new = Study.create(User('test@foo.bar'), 'Identification of the '
                            'Microbiomes for Cannabis Soils', 1, self.info)
@@ -350,6 +355,11 @@ class TestStudy(TestCase):
 
     def test_retrieve_investigation(self):
         self.assertEqual(self.study.investigation, 1)
+
+    def test_retrieve_investigation_empty(self):
+        new = Study.create(User('test@foo.bar'), 'Identification of the '
+                           'Microbiomes for Cannabis Soils', 1, self.info)
+        self.assertEqual(new.investigation, None)
 
     def test_retrieve_metadata(self):
         self.assertEqual(self.study.metadata, 1)
@@ -377,15 +387,6 @@ class TestStudy(TestCase):
         new = Study.create(User('test@foo.bar'), 'Identification of the '
                            'Microbiomes for Cannabis Soils', 1, self.info)
         self.assertEqual(new.processed_data, [])
-
-    def test_share(self):
-        self.study.share(User('admin@foo.bar'))
-        self.assertEqual(self.study.shared_with, ['shared@foo.bar',
-                                                  'admin@foo.bar'])
-
-    def test_unshare(self):
-        self.study.unshare(User('shared@foo.bar'))
-        self.assertEqual(self.study.shared_with, [])
 
     def test_add_pmid(self):
         self.study.add_pmid('4544444')

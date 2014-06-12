@@ -9,10 +9,6 @@ This module provides different util functions.
 Methods
 -------
 
-<<<<<<< HEAD
-from .exceptions import QiitaDBColumnError
-
-=======
 ..autosummary::
     :toctree: generated/
 

@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 from __future__ import division
 
 # -----------------------------------------------------------------------------
@@ -52,4 +51,4 @@ class QiitaDBUnknownIDError(QiitaDBError):
     def __init__(self, missing_id, table):
         super(QiitaDBUnknownIDError, self).__init__()
         self.args = ("The object with ID '%s' does not exists in table '%s"
-                     % (missing_id, table))
+                     % (missing_id, table),)

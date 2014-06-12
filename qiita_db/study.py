@@ -6,7 +6,7 @@ Study and StudyPerson objects (:mod:`qiita_db.study`)
 
 This module provides the implementation of the Study and StudyPerson classes.
 The study class allows access to all basic information including name and
-pmids associated with the study, as well as returning objects for the data,
+pmids associated with the study, as well as returning ids for the data,
 metadata, owner, and shared users. It is the central hub for creating,
 deleting, and accessing a study in the database.
 
@@ -102,8 +102,8 @@ from copy import deepcopy
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from .base import QiitaStatusObject, QiitaObject
-from .exceptions import (QiitaDBDuplicateError, QiitaDBNotImplementedError,
-                         QiitaDBStatusError, QiitaDBColumnError)
+from .exceptions import (QiitaDBDuplicateError, QiitaDBStatusError,
+                         QiitaDBColumnError)
 from .util import check_required_columns, check_table_cols
 from .sql_connection import SQLConnectionHandler
 
@@ -127,8 +127,6 @@ class Study(QiitaStatusObject):
 
     Methods
     -------
-    share
-    unshare
     add_pmid
 
     Notes
@@ -137,14 +135,12 @@ class Study(QiitaStatusObject):
     You should not be doing that.
     """
     _table = "study"
-    # The following columns are considered not part of the user info
-    _non_info = {"study_id", "study_status_id", "study_title"}
+    # The following columns are considered not part of the study info
+    _non_info = {"email", "study_id", "study_status_id", "study_title"}
 
     def _lock_public(self, conn_handler):
         """Raises QiitaDBStatusError if study is public"""
-        sql = ("SELECT study_status_id FROM qiita.{0} WHERE "
-               "{0}_id = %s".format(self._table))
-        if conn_handler.execute_fetchone(sql, (self._id, ))[0] == 2:
+        if self.check_status(("public", )):
             raise QiitaDBStatusError("Can't change status of public study!")
 
     def _status_setter_checks(self, conn_handler):
@@ -177,7 +173,7 @@ class Study(QiitaStatusObject):
             Non-db columns in info dictionary
             All required keys not passed
         IncompetentQiitaDeveloperError
-            study_id or study_status_id passed as a key
+            study_id, study_status_id, or study_title passed as a key
 
         Notes
         -----
@@ -195,7 +191,8 @@ class Study(QiitaStatusObject):
             insertdict['first_contact'] = date.today().strftime("%B %d, %Y")
         insertdict['email'] = owner.id
         insertdict['study_title'] = title
-        insertdict['reprocess'] = False
+        if "reprocess" not in insertdict:
+            insertdict['reprocess'] = False
         # default to waiting_approval status
         insertdict['study_status_id'] = 1
 
@@ -233,20 +230,6 @@ class Study(QiitaStatusObject):
             conn_handler.execute(sql, (investigation.id, study_id))
 
         return cls(study_id)
-
-    @classmethod
-    def delete(cls, id_):
-        """Deletes the study `id_` from the database
-
-        Parameters
-        ----------
-        id_ :
-            The object identifier
-        """
-        # delete raw data
-        # drop sample_x dynamic table
-        # delete study row from study table (and cascade to satelite tables)
-        raise QiitaDBNotImplementedError()
 
 # --- Attributes ---
     @property
@@ -315,8 +298,8 @@ class Study(QiitaStatusObject):
             raise IncompetentQiitaDeveloperError("Need entries in info dict!")
 
         if self._non_info.intersection(info):
-                raise QiitaDBColumnError("non info keys passed: %s" %
-                                         self._non_info.intersection(info))
+            raise QiitaDBColumnError("non info keys passed: %s" %
+                                     self._non_info.intersection(info))
 
         conn_handler = SQLConnectionHandler()
         self._lock_public(conn_handler)
@@ -463,32 +446,6 @@ class Study(QiitaStatusObject):
         return [x[0] for x in conn_handler.execute_fetchall(sql, (self._id,))]
 
 # --- methods ---
-    def share(self, user):
-        """Shares the study with given user
-
-        Parameters
-        ----------
-        user: User object
-            The user to share with
-        """
-        conn_handler = SQLConnectionHandler()
-        sql = ("INSERT INTO qiita.study_users (study_id, email) VALUES "
-               "(%s, %s)")
-        conn_handler.execute(sql, (self._id, user.id))
-
-    def unshare(self, user):
-        """Unshares the study with given user
-
-        Parameters
-        ----------
-        user: User object
-            The user to unshare with
-        """
-        conn_handler = SQLConnectionHandler()
-        sql = ("DELETE FROM qiita.study_users WHERE study_id = %s AND "
-               "email = %s")
-        conn_handler.execute(sql, (self._id, user.id))
-
     def add_pmid(self, pmid):
         """Adds PMID to study
 
@@ -583,7 +540,8 @@ class StudyPerson(QiitaObject):
 
         Returns
         -------
-        str: name of person
+        str
+            Name of person
         """
         conn_handler = SQLConnectionHandler()
         sql = ("SELECT name FROM qiita.{0} WHERE "
@@ -596,7 +554,8 @@ class StudyPerson(QiitaObject):
 
         Returns
         -------
-        str: email of person
+        str
+            Email of person
         """
         conn_handler = SQLConnectionHandler()
         sql = ("SELECT email FROM qiita.{0} WHERE "
