@@ -30,13 +30,18 @@ class QiitaDBConnectionError(QiitaDBError):
     pass
 
 
+class QiitaDBColumnError(QiitaDBError):
+    """Exception when missing table information or excess information passed"""
+    pass
+
+
 class QiitaDBDuplicateError(QiitaDBError):
     """Exception when duplicating something in the database"""
     pass
 
 
-class QiitaDBColumnError(QiitaDBError):
-    """Exception when database column info missing or incorrect"""
+class QiitaDBStatusError(QiitaDBError):
+    """Exception when editing is done with an unallowed status"""
     pass
 
 
@@ -45,4 +50,4 @@ class QiitaDBUnknownIDError(QiitaDBError):
     def __init__(self, missing_id, table):
         super(QiitaDBUnknownIDError, self).__init__()
         self.args = ("The object with ID '%s' does not exists in table '%s"
-                     % (missing_id, table))
+                     % (missing_id, table),)

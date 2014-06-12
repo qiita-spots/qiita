@@ -8,12 +8,12 @@
 
 from unittest import TestCase, main
 
-from qiita_core.exceptions import (IncompetentQiitaDeveloperError,
-                                   IncorrectEmailError, IncorrectPasswordError)
+from qiita_core.exceptions import IncorrectEmailError, IncorrectPasswordError
 from qiita_core.util import qiita_test_checker
 from qiita_db.user import User
 from qiita_db.sql_connection import SQLConnectionHandler
-from qiita_db.exceptions import QiitaDBDuplicateError, QiitaDBColumnError
+from qiita_db.exceptions import (QiitaDBDuplicateError, QiitaDBColumnError,
+                                 QiitaDBUnknownIDError)
 
 
 @qiita_test_checker()
@@ -30,6 +30,13 @@ class UserTest(TestCase):
             'address': '123 fake st, Apt 0, Faketown, CO 80302',
             'phone': '111-222-3344'
         }
+
+    def test_instantiate_user(self):
+        User('admin@foo.bar')
+
+    def test_instantiate_unknown_user(self):
+        with self.assertRaises(QiitaDBUnknownIDError):
+            User('FAIL@OMG.bar')
 
     def _check_correct_info(self, obs, exp):
         self.assertEqual(set(exp.keys()), set(obs.keys()))

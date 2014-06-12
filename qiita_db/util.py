@@ -21,7 +21,8 @@ Methods
     get_db_files_base_dir
     compute_checksum
     insert_filepaths
-
+    check_table_cols
+    check_required_columns
 """
 # -----------------------------------------------------------------------------
 # Copyright (c) 2014--, The Qiita Development Team.
