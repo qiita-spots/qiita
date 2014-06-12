@@ -7,7 +7,7 @@ Study and StudyPerson objects (:mod:`qiita_db.study`)
 This module provides the implementation of the Study and StudyPerson classes.
 The study class allows access to all basic information including name and
 pmids associated with the study, as well as returning ids for the data,
-metadata, owner, and shared users. It is the central hub for creating,
+sample template, owner, and shared users. It is the central hub for creating,
 deleting, and accessing a study in the database.
 
 Contacts are taken care of by the StudyPerson class. This holds the contact's
@@ -120,7 +120,7 @@ class Study(QiitaStatusObject):
     shared_with
     pmids
     investigation
-    metadata
+    sample_template
     raw_data
     preprocessed_data
     processed_data
@@ -173,7 +173,7 @@ class Study(QiitaStatusObject):
             Non-db columns in info dictionary
             All required keys not passed
         IncompetentQiitaDeveloperError
-            study_id, study_status_id, or study_title passed as a key
+            email, study_id, study_status_id, or study_title passed as a key
 
         Notes
         -----
@@ -396,8 +396,8 @@ class Study(QiitaStatusObject):
         return inv[0] if inv is not None else inv
 
     @property
-    def metadata(self):
-        """ Returns metadata information id
+    def sample_template(self):
+        """ Returns sample_template information id
 
         Returns
         -------

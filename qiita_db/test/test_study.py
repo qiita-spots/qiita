@@ -183,8 +183,7 @@ class TestStudy(TestCase):
     def test_create_study_with_investigation(self):
         """Insert a study into the database with an investigation"""
         obs = Study.create(User('test@foo.bar'), "Fried chicken microbiome",
-                           1, self.info,
-                           Investigation(1))
+                           1, self.info, Investigation(1))
         self.assertEqual(obs.id, 2)
         # check the investigation was assigned
         conn = SQLConnectionHandler()
