@@ -299,7 +299,7 @@ class Job(QiitaStatusObject):
         addpaths = []
         for fp, fp_type in results:
             if fp_type == 7:
-                outpath = join("/tmp",''.join((basename(fp), ".tar")))
+                outpath = join("/tmp", ''.join((basename(fp), ".tar")))
                 with taropen(outpath, "w") as tar:
                     tar.add(fp)
                 addpaths.append((outpath, 7))
