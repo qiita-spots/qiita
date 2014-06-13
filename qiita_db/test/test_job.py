@@ -7,7 +7,7 @@
 # -----------------------------------------------------------------------------
 
 from unittest import TestCase, main
-from os import remove
+from os import remove, makedirs
 from os.path import exists, join
 from shutil import rmtree
 from datetime import datetime
@@ -157,13 +157,22 @@ class JobTest(TestCase):
         self.assertEqual(obs, [[1, 8], [1, 10]])
 
     def test_add_results_tar(self):
-        self.job.add_results([(join(get_work_base_dir(),
-                                    "tar_folder"), 7)])
-        # make sure file copied correctly
+        # make test directory to tar, inclluding internal file
+        basedir = "/tmp/tar_folder"
         self.delete = [join(get_db_files_base_dir(), "job",
-                            "1_tar_folder.tar")]
+                            "1_tar_folder.tar"), basedir]
+        makedirs(basedir)
+        with open(join(basedir, "tar_data.txt"), 'w'):
+            pass
+
+        # add folder to job
+        self.job.add_results([(basedir, 7)])
+        # make sure tar file copied correctly
         self.assertTrue(exists(join(get_db_files_base_dir(), "job",
                                     "1_tar_folder.tar")))
+
+        # make sure temp tar files cleaned up properly
+        self.assertFalse(exists("/tmp/1_tar_folder.tar"))
 
         # make sure files attached to job properly
         conn_handler = SQLConnectionHandler()

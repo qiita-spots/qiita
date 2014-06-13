@@ -299,8 +299,7 @@ class Job(QiitaStatusObject):
         addpaths = []
         for fp, fp_type in results:
             if fp_type == 7:
-                outpath = join(get_work_base_dir(),
-                               ''.join((basename(fp), ".tar")))
+                outpath = join("/tmp",''.join((basename(fp), ".tar")))
                 with taropen(outpath, "w") as tar:
                     tar.add(fp)
                 addpaths.append((outpath, 7))
@@ -318,6 +317,6 @@ class Job(QiitaStatusObject):
                "VALUES (%s, %s)".format(self._table))
         conn_handler.executemany(sql, [(self._id, fid) for fid in file_ids])
 
-        # clean up the created tars from the working directory
+        # clean up the created tars from the temp directory
         for path in cleanup:
             remove(path)
