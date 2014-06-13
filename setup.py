@@ -54,7 +54,7 @@ setup(name='qiita',
                                  'support_files/test_data/processed_data/*',
                                  'support_files/test_data/raw_data/*',
                                  'support_files/test_data/reference/*',
-                                 'support_files/test_data/job/*'
+                                 'support_files/test_data/job/*',
                                  'support_files/work_data/*']},
       scripts=glob('scripts/*'),
       extras_require={'test': ["nose >= 0.10.1", "pep8"],
