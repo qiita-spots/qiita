@@ -260,6 +260,20 @@ def get_db_files_base_dir(conn_handler=None):
         "SELECT base_data_dir FROM settings")[0]
 
 
+def get_work_base_dir(conn_handler=None):
+    r"""Returns the path to the base directory of all db files
+
+    Returns
+    -------
+    str
+        The path to the base directory of all db files
+    """
+    conn_handler = (conn_handler if conn_handler is not None
+                    else SQLConnectionHandler())
+    return conn_handler.execute_fetchone(
+        "SELECT base_work_dir FROM settings")[0]
+
+
 def compute_checksum(filepath):
     r"""Returns the checksum of the file pointed by filepath
 
