@@ -28,23 +28,12 @@ class JobTest(TestCase):
     def setUp(self):
         self.job = Job(1)
         self.options = {"option1": False, "option2": 25, "option3": "NEW"}
-        self.delete = []
+        self._delete_path = []
+        self._delete_dir = []
 
     def tearDown(self):
-        for f in self.delete:
-            try:
-                remove(f)
-            except:
-                rmtree(f)
-
-    def test_convert_to_id(self):
-        """Tests that ids are returned correctly"""
-        self.assertEqual(Job._convert_to_id("tar", "filepath_type"), 7)
-
-    def test_convert_to_id_bad_value(self):
-        """Tests that ids are returned correctly"""
-        with self.assertRaises(IncompetentQiitaDeveloperError):
-            Job._convert_to_id("FAKE", "filepath_type")
+        map(remove, self._delete_path)
+        map(rmtree, self._delete_dir)
 
     def test_exists(self):
         """tests that existing job returns true"""
@@ -98,7 +87,7 @@ class JobTest(TestCase):
 
     def test_retrieve_results(self):
         obs = self.job.results
-        self.delete = obs
+        self._delete_path = obs
 
         self.assertEqual(self.job.results, [join(get_work_base_dir(),
                                                  "job1result.txt")])
@@ -109,12 +98,12 @@ class JobTest(TestCase):
         new = Job.create("18S", "beta_diversity_through_plots.py",
                          self.options, Analysis(1))
         obs = new.results
-        self.delete = obs
+        self._delete_path = obs
         self.assertEqual(obs, [])
 
     def test_retrieve_results_tar(self):
         obs = Job(2).results
-        self.delete = obs
+        self._delete_dir = obs
         self.assertEqual(obs, [join(get_work_base_dir(), "test_folder")])
         # make sure files copied correctly
         self.assertTrue(exists(join(get_work_base_dir(), "test_folder")))
@@ -144,8 +133,8 @@ class JobTest(TestCase):
         self.job.add_results([(join(get_work_base_dir(),
                                     "placeholder.txt"), 8)])
         # make sure file copied correctly
-        self.delete = [join(get_db_files_base_dir(), "job",
-                            "1_placeholder.txt")]
+        self._delete_path = [join(get_db_files_base_dir(), "job",
+                             "1_placeholder.txt")]
         self.assertTrue(exists(join(get_db_files_base_dir(), "job",
                                     "1_placeholder.txt")))
 
@@ -159,8 +148,8 @@ class JobTest(TestCase):
     def test_add_results_tar(self):
         # make test directory to tar, inclluding internal file
         basedir = "/tmp/tar_folder"
-        self.delete = [join(get_db_files_base_dir(), "job",
-                            "1_tar_folder.tar"), basedir]
+        self._delete_path = [join(get_db_files_base_dir(), "job",
+                             "1_tar_folder.tar"), basedir]
         makedirs(basedir)
         with open(join(basedir, "tar_data.txt"), 'w'):
             pass

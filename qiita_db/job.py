@@ -23,9 +23,9 @@ from time import strftime
 from datetime import date
 from tarfile import open as taropen
 
-from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from .base import QiitaStatusObject
-from .util import insert_filepaths, get_db_files_base_dir, get_work_base_dir
+from .util import (insert_filepaths, get_db_files_base_dir, get_work_base_dir,
+                   convert_to_id)
 from .exceptions import QiitaDBDuplicateError
 from .sql_connection import SQLConnectionHandler
 
@@ -50,38 +50,6 @@ class Job(QiitaStatusObject):
 
     _table = "job"
 
-    @staticmethod
-    def _convert_to_id(value, table, conn_handler=None):
-        """Converts a string value to it's corresponding table identifier
-
-        Parameters
-        ----------
-        value : str
-            The string value to convert
-        table : str
-            The table that has the conversion
-        conn_handler : SQLConnectionHandler, optional
-            The sql connection object
-
-        Returns
-        -------
-        int
-            The id correspinding to the string
-
-        Raises
-        ------
-        IncompetentQiitaDeveloperError
-            The passed string has no associated id
-        """
-        conn_handler = conn_handler if conn_handler else SQLConnectionHandler()
-        _id = conn_handler.execute_fetchone(
-            "SELECT {0}_id FROM qiita.{0} WHERE {0} = %s".format(table),
-            (value, ))
-        if _id is None:
-            raise IncompetentQiitaDeveloperError("%s not valid for table %s"
-                                                 % (value, table))
-        return _id[0]
-
     @classmethod
     def exists(cls, datatype, command, options):
         """Checks if the given job already exists
@@ -91,9 +59,9 @@ class Job(QiitaStatusObject):
         datatype : str
             Datatype the job is operating on
         command : str
-            The Qiime or other command run on the data
+            The command run on the data
         options : dict
-            Options in the format {option: setting}
+            Options for the command in the format {option: value}
 
         Returns
         -------
@@ -103,12 +71,11 @@ class Job(QiitaStatusObject):
         sql = ("SELECT EXISTS(SELECT * FROM  qiita.{0} WHERE data_type_id = %s"
                " AND command_id = %s AND options = %s)".format(cls._table))
         conn_handler = SQLConnectionHandler()
-        datatype_id = cls._convert_to_id(datatype, "data_type", conn_handler)
-        command_id = cls._convert_to_id(command, "command", conn_handler)
+        datatype_id = convert_to_id(datatype, "data_type", conn_handler)
+        command_id = convert_to_id(command, "command", conn_handler)
         opts_json = dumps(options, sort_keys=True, separators=(',', ':'))
-        return conn_handler.execute_fetchone(sql,
-                                             (datatype_id,
-                                              command_id, opts_json))[0]
+        return conn_handler.execute_fetchone(
+            sql, (datatype_id, command_id, opts_json))[0]
 
     @classmethod
     def create(cls, datatype, command, options, analysis):
@@ -135,8 +102,8 @@ class Job(QiitaStatusObject):
 
         # Get the datatype and command ids from the strings
         conn_handler = SQLConnectionHandler()
-        datatype_id = cls._convert_to_id(datatype, "data_type", conn_handler)
-        command_id = cls._convert_to_id(command, "command", conn_handler)
+        datatype_id = convert_to_id(datatype, "data_type", conn_handler)
+        command_id = convert_to_id(command, "command", conn_handler)
 
         # JSON the options dictionary
         opts_json = dumps(options, sort_keys=True, separators=(',', ':'))
@@ -205,9 +172,14 @@ class Job(QiitaStatusObject):
         Returns
         -------
         list
-            filepaths to the working directory, includes untaring of files
+            Filepaths to the result files
+
+        Notes
+        -----
+        All files are automatically copied into the working directory and
+        untar-ed if necessary. The filepaths point to these files/folders in
+        the working directory.
         """
-        # tar = 7
         # Copy files to working dir, untar if necessary, then return filepaths
         sql = ("SELECT filepath, filepath_type_id FROM qiita.filepath WHERE "
                "filepath_id IN (SELECT filepath_id FROM "
@@ -278,10 +250,10 @@ class Job(QiitaStatusObject):
 
         Parameters
         ----------
-            results : list of tuples
-                filepath information to add to job, in format
-                [(filepath, type_id), ...]
-                Where type_id is the filepath type id of the filepath passed
+        results : list of tuples
+            filepath information to add to job, in format
+            [(filepath, type_id), ...]
+            Where type_id is the filepath type id of the filepath passed
 
         Notes
         -----
@@ -309,7 +281,7 @@ class Job(QiitaStatusObject):
 
         # add filepaths to the job
         conn_handler = SQLConnectionHandler()
-        file_ids = insert_filepaths(addpaths, self._id, "job",
+        file_ids = insert_filepaths(addpaths, self._id, self._table,
                                     "filepath", conn_handler)
 
         # associate filepaths with job
@@ -318,5 +290,4 @@ class Job(QiitaStatusObject):
         conn_handler.executemany(sql, [(self._id, fid) for fid in file_ids])
 
         # clean up the created tars from the temp directory
-        for path in cleanup:
-            remove(path)
+        map(remove, cleanup)

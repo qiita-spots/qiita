@@ -42,6 +42,7 @@ from functools import partial
 from os.path import join, basename
 from shutil import copy
 
+from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from .exceptions import QiitaDBColumnError
 from qiita_db.sql_connection import SQLConnectionHandler
 
@@ -353,3 +354,35 @@ def insert_filepaths(filepaths, obj_id, table, filepath_table, conn_handler):
         # we will receive a list of lists with a single element on it (the id),
         # transform it to a list of ids
         return [id[0] for id in ids]
+
+
+def convert_to_id(value, table, conn_handler=None):
+        """Converts a string value to it's corresponding table identifier
+
+        Parameters
+        ----------
+        value : str
+            The string value to convert
+        table : str
+            The table that has the conversion
+        conn_handler : SQLConnectionHandler, optional
+            The sql connection object
+
+        Returns
+        -------
+        int
+            The id correspinding to the string
+
+        Raises
+        ------
+        IncompetentQiitaDeveloperError
+            The passed string has no associated id
+        """
+        conn_handler = conn_handler if conn_handler else SQLConnectionHandler()
+        _id = conn_handler.execute_fetchone(
+            "SELECT {0}_id FROM qiita.{0} WHERE {0} = %s".format(table),
+            (value, ))
+        if _id is None:
+            raise IncompetentQiitaDeveloperError("%s not valid for table %s"
+                                                 % (value, table))
+        return _id[0]
