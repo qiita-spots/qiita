@@ -148,6 +148,7 @@ class JobTest(TestCase):
     def test_add_results_tar(self):
         # make test directory to tar, inclluding internal file
         basedir = "/tmp/tar_folder"
+        self._delete_dir = ["/tmp/tar_folder"]
         self._delete_path = [join(get_db_files_base_dir(), "job",
                              "1_tar_folder.tar"), basedir]
         makedirs(basedir)
