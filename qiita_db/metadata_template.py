@@ -66,6 +66,18 @@ class MetadataTemplate(QiitaStatusObject):
     # instantiate this base class
     _table_prefix = None
     _column_table = None
+    _id_column = None
+
+    def _check_id(self, id_, conn_handler=None):
+        # PLACEHOLDER SO TESTS PASS. Jose will rewrite for metadata pr
+        r""""""
+        self._check_subclass()
+        conn_handler = (conn_handler if conn_handler is not None
+                        else SQLConnectionHandler())
+        return conn_handler.execute_fetchone(
+            "SELECT EXISTS(SELECT * FROM qiita.{0} WHERE "
+            "{1}=%s)".format(self._table, self._id_column),
+            (id_, ))[0]
 
     @classmethod
     def _get_table_name(cls, study_id):
@@ -262,8 +274,10 @@ class MetadataTemplate(QiitaStatusObject):
 
 class SampleTemplate(MetadataTemplate):
     """"""
+    _table = "required_sample_info"
     _table_prefix = "sample_"
     _column_table = "study_sample_columns"
+    _id_column = "study_id"
 
 
 class PrepTemplate(MetadataTemplate):

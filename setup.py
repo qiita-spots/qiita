@@ -57,6 +57,6 @@ setup(name='qiita',
       scripts=glob('scripts/*'),
       extras_require={'test': ["nose >= 0.10.1", "pep8"],
                       'doc': ["Sphinx >= 1.2.2", "sphinx-bootstrap-theme"]},
-      install_requires=['psycopg2', 'click == 1.0', 'future'],
+      install_requires=['psycopg2', 'click == 1.0', 'future', 'bcrypt'],
       classifiers=classifiers
       )

@@ -85,18 +85,18 @@ class RawDataTests(TestCase):
 
         # Check that the filepaths have been correctly added to the DB
         obs = self.conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.filepath WHERE filepath_id=8 or "
-            "filepath_id=9")
+            "SELECT * FROM qiita.filepath WHERE filepath_id=10 or "
+            "filepath_id=11")
         # filepath_id, path, filepath_type_id
-        exp = [[8, exp_seqs_fp, 1, '852952723', 1],
-               [9, exp_bc_fp, 2, '852952723', 1]]
+        exp = [[10, exp_seqs_fp, 1, '852952723', 1],
+               [11, exp_bc_fp, 2, '852952723', 1]]
         self.assertEqual(obs, exp)
 
         # Check that the raw data have been correctly linked with the filepaths
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.raw_filepath WHERE raw_data_id=3")
         # raw_data_id, filepath_id
-        self.assertEqual(obs, [[3, 8], [3, 9]])
+        self.assertEqual(obs, [[3, 10], [3, 11]])
 
     def test_is_submitted_to_insdc(self):
         """is_submitted_to_insdc works correctly"""
@@ -118,11 +118,9 @@ class RawDataTests(TestCase):
         self.assertEqual(obs, exp)
 
     def test_studies(self):
-        """Correctly returns the study objects"""
+        """Correctly returns the study ids"""
         rd = RawData(1)
-        obs = rd.studies
-        exp = [Study(1)]
-        self.assertEqual(obs, exp)
+        self.assertEqual(rd.studies, [1])
 
 
 @qiita_test_checker()
@@ -188,11 +186,11 @@ class PreprocessedDataTests(TestCase):
 
         # Check that the filepaths have been correctly added to the DB
         obs = self.conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.filepath WHERE filepath_id=8 or "
-            "filepath_id=9")
+            "SELECT * FROM qiita.filepath WHERE filepath_id=10 or "
+            "filepath_id=11")
         # filepath_id, path, filepath_type_id
-        exp = [[8, exp_fna_fp, 4, '852952723', 1],
-               [9, exp_qual_fp, 5, '852952723', 1]]
+        exp = [[10, exp_fna_fp, 4, '852952723', 1],
+               [11, exp_qual_fp, 5, '852952723', 1]]
         self.assertEqual(obs, exp)
 
         # Check that the preprocessed data have been correctly
@@ -201,7 +199,7 @@ class PreprocessedDataTests(TestCase):
             "SELECT * FROM qiita.preprocessed_filepath WHERE "
             "preprocessed_data_id=3")
         # preprocessed_data_id, filepath_id
-        self.assertEqual(obs, [[3, 8], [3, 9]])
+        self.assertEqual(obs, [[3, 10], [3, 11]])
 
     def test_create_error(self):
         """Raises an error if the preprocessed_params_table does not exist"""
@@ -231,16 +229,12 @@ class PreprocessedDataTests(TestCase):
     def test_raw_data(self):
         """Correctly returns the raw data"""
         ppd = PreprocessedData(1)
-        obs = ppd.raw_data
-        exp = RawData(1)
-        self.assertEqual(obs, exp)
+        self.assertEqual(ppd.raw_data, 1)
 
     def test_study(self):
         """Correctly returns the study"""
         ppd = PreprocessedData(1)
-        obs = ppd.study
-        exp = Study(1)
-        self.assertEqual(obs, exp)
+        self.assertEqual(ppd.study, 1)
 
 
 @qiita_test_checker()
@@ -287,9 +281,9 @@ class ProcessedDataTests(TestCase):
 
         # Check that the filepaths have been correctly added to the DB
         obs = self.conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.filepath WHERE filepath_id=8")
+            "SELECT * FROM qiita.filepath WHERE filepath_id=10")
         # Filepath_id, path, filepath_type_id
-        exp = [[8, exp_biom_fp, 6, '852952723', 1]]
+        exp = [[10, exp_biom_fp, 6, '852952723', 1]]
         self.assertEqual(obs, exp)
 
         # Check that the processed data have been correctly linked
@@ -297,7 +291,7 @@ class ProcessedDataTests(TestCase):
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.processed_filepath WHERE processed_data_id=2")
         # processed_data_id, filepath_id
-        self.assertTrue(obs, [[2, 8]])
+        self.assertTrue(obs, [[2, 10]])
 
     def test_create_no_date(self):
         """Correctly adds a processed data with no date on it"""
@@ -343,9 +337,7 @@ class ProcessedDataTests(TestCase):
     def test_preprocessed_data(self):
         """Correctly returns the preprocessed_data"""
         pd = ProcessedData(1)
-        obs = pd.preprocessed_data
-        exp = PreprocessedData(1)
-        self.assertEqual(obs, exp)
+        self.assertEqual(pd.preprocessed_data, 1)
 
 
 if __name__ == '__main__':

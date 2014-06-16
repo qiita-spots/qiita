@@ -5,7 +5,6 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
-
 from qiita_db.sql_connection import SQLConnectionHandler
 from qiita_db.make_environment import (LAYOUT_FP, INITIALIZE_FP, POPULATE_FP)
 from qiita_core.qiita_settings import qiita_config

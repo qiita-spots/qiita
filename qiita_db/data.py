@@ -90,7 +90,6 @@ from functools import partial
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from .base import QiitaObject
-from .study import Study
 from .sql_connection import SQLConnectionHandler
 from .util import (exists_dynamic_table, get_db_files_base_dir, scrub_data,
                    compute_checksum)
@@ -303,18 +302,18 @@ class RawData(BaseData):
 
     @property
     def studies(self):
-        r"""The list of Study objects to which the raw data belongs to
+        r"""The list of study ids to which the raw data belongs to
 
         Returns
         -------
-        list of Study
-            The list of Study objects to which the raw data belongs to"""
+        list of int
+            The list of study ids to which the raw data belongs to"""
         conn_handler = SQLConnectionHandler()
         ids = conn_handler.execute_fetchall(
             "SELECT study_id FROM qiita.{0} WHERE "
             "raw_data_id=%s".format(self._study_raw_table),
             [self._id])
-        return [Study(id[0]) for id in ids]
+        return [id[0] for id in ids]
 
 
 class PreprocessedData(BaseData):
@@ -392,23 +391,26 @@ class PreprocessedData(BaseData):
 
     @property
     def raw_data(self):
-        r"""The raw data object used to generate the preprocessed data"""
+        r"""The raw data id used to generate the preprocessed data"""
         conn_handler = SQLConnectionHandler()
-        rd_id = conn_handler.execute_fetchone(
+        return conn_handler.execute_fetchone(
             "SELECT raw_data_id FROM qiita.{0} WHERE "
             "preprocessed_data_id=%s".format(self._table),
             [self._id])[0]
-        return RawData(rd_id)
 
     @property
     def study(self):
-        r"""The study to which this preprocessed data belongs to"""
+        r"""The study id to which this preprocessed data belongs to
+
+        Returns
+        -------
+        int
+            The study id to which this preprocessed data belongs to"""
         conn_handler = SQLConnectionHandler()
-        study_id = conn_handler.execute_fetchone(
+        return conn_handler.execute_fetchone(
             "SELECT study_id FROM qiita.{0} WHERE "
             "preprocessed_data_id=%s".format(self._study_preprocessed_table),
             [self._id])[0]
-        return Study(study_id)
 
 
 class ProcessedData(BaseData):
@@ -485,10 +487,9 @@ class ProcessedData(BaseData):
 
     @property
     def preprocessed_data(self):
-        r"""The preprocessed data object used to generate the processed data"""
+        r"""The preprocessed data id used to generate the processed data"""
         conn_handler = SQLConnectionHandler()
-        ppd_id = conn_handler.execute_fetchone(
+        return conn_handler.execute_fetchone(
             "SELECT preprocessed_data_id FROM qiita.{0} WHERE "
             "processed_data_id=%s".format(self._table),
             [self._id])[0]
-        return PreprocessedData(ppd_id)
