@@ -32,7 +32,7 @@ class Analysis(QiitaStatusObject):
     owner
     name
     description
-    biom_table
+    biom_tables
     shared_with
     jobs
     pmid
@@ -169,21 +169,21 @@ class Analysis(QiitaStatusObject):
         return [u[0] for u in conn_handler.execute_fetchall(sql, (self._id, ))]
 
     @property
-    def biom_table(self):
-        """The biom table of the analysis
+    def biom_tables(self):
+        """The biom tables of the analysis
 
         Returns
         -------
-        int or None
-            ProcessedData id of the biom table or None if table not generated
+        list of int or None
+            ProcessedData ids of the biom tables or None if no tables generated
         """
         conn_handler = SQLConnectionHandler()
         sql = ("SELECT filepath_id FROM qiita.analysis_filepath WHERE "
                "analysis_id = %s")
-        table = conn_handler.execute_fetchone(sql, (self._id, ))
-        if table is None:
+        tables = conn_handler.execute_fetchone(sql, (self._id, ))
+        if tables is None:
             return None
-        return table[0]
+        return [table[0] for table in tables]
 
     @property
     def jobs(self):
