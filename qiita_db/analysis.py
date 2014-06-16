@@ -39,6 +39,8 @@ class Analysis(QiitaStatusObject):
 
     Methods
     -------
+    add_samples
+    remove_samples
     add_jobs
     """
 
@@ -59,25 +61,37 @@ class Analysis(QiitaStatusObject):
         self._lock_public(conn_handler)
 
     @classmethod
-    def create(cls, owner, title, description, sample_processed_ids,
-               parent=None):
+    def create(cls, owner, name, description, parent=None):
         """Creates a new analysis on the database
 
         Parameters
         ----------
-        owner : str
-            The user id of the analysis' owner
-        title : str
-            Title of the analysis
+        owner : User object
+            The analysis' owner
+        name : str
+            Name of the analysis
         description : str
             Description of the analysis
-        sample_processed_ids : list of tuples
-            samples and the processed data id they come from in form
-            (sample_id, processed_data_id)
         parent : Analysis object, optional
             The analysis this one was forked from
         """
-        raise QiitaDBNotImplementedError()
+        conn_handler = SQLConnectionHandler()
+        # TODO after demo: if exists()
+
+        # insert analysis information into table with "in construction" status
+        sql = ("INSERT INTO qiita.{0} (email, name, description, "
+               "analysis_status_id) VALUES (%s, %s, %s, 1) "
+               "RETURNING analysis_id".format(cls._table))
+        a_id = conn_handler.execute_fetchone(
+            sql, (owner.id, name, description))[0]
+
+        # add parent if necessary
+        if parent:
+            sql = ("INSERT INTO qiita.analysis_chain (parent, child) VALUES "
+                   "(%s, %s)")
+            conn_handler.execute(sql, (parent, a_id))
+
+        return cls(a_id)
 
     # ---- Properties ----
     @property
@@ -203,6 +217,40 @@ class Analysis(QiitaStatusObject):
         return QiitaDBNotImplementedError()
 
     # ---- Functions ----
+
+    def add_samples(self, samples):
+        """Adds samples to the analysis
+
+        Parameters
+        ----------
+        samples : list of tuples
+            samples and the processed data id they come from in form
+            [(processed_data_id, sample_id), ...]
+        """
+        conn_handler = SQLConnectionHandler()
+        self._lock_public(conn_handler)
+
+        sql = ("INSERT INTO qiita.study_samples (analysis_id, sample_id, "
+               "processed_data_id) VALUES (%s, %s, %s)")
+        conn_handler.executemany(sql, [(self._id, s[1], s[0])
+                                       for s in samples])
+
+    def remove_samples(self, samples):
+        """Removes samples from the analysis
+
+        Parameters
+        ----------
+        samples : list of tuples
+            samples and the processed data id they come from in form
+            [(processed_data_id, sample_id), ...]
+        """
+        conn_handler = SQLConnectionHandler()
+        self._lock_public(conn_handler)
+
+        sql = ("DELETE FROM qiita.study_samples WHERE (analysis_id =%s AND "
+               "sample_id = %s AND processed_data_id = %s ")
+        conn_handler.executemany(sql, [(self._id, s[1], s[0])
+                                       for s in samples])
 
     def add_jobs(self, jobs):
         """Adds a list of jobs to the analysis
