@@ -28,17 +28,21 @@ Classes
 
 from __future__ import division
 from future.builtins import zip
+from copy import deepcopy
+
+import pandas as pd
+import numpy as np
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
-from .exceptions import QiitaDBDuplicateError
+from .exceptions import (QiitaDBDuplicateError, QiitaDBColumnError,
+                         QiitaDBUnknownIDError, QiitaDBNotImplementedError)
 from .base import QiitaObject
-# from .exceptions import QiitaDBNotImplementedError
 from .sql_connection import SQLConnectionHandler
-from .util import scrub_data, exists_table
+from .util import exists_table, get_table_cols
 
 
 def _get_datatypes(metadata_map):
-    """Returns the datatype of each metadata_map column
+    r"""Returns the datatype of each metadata_map column
 
     Parameters
     ----------
@@ -50,26 +54,305 @@ def _get_datatypes(metadata_map):
     list of str
         The SQL datatypes for each column, in column order
     """
-    isdigit = str.isdigit
     datatypes = []
-
-    for header in metadata_map.CategoryNames:
-        column_data = [metadata_map.getCategoryValue(sample_id, header)
-                       for sample_id in metadata_map.SampleIds]
-
-        if all([isdigit(c) for c in column_data]):
-            datatypes.append('int')
-        elif all([isdigit(c.replace('.', '', 1)) for c in column_data]):
+    for dtype in metadata_map.dtypes:
+        if dtype in [np.int8, np.int16, np.int32, np.int64]:
+            datatypes.append('integer')
+        elif dtype in [np.float16, np.float32, np.float64]:
             datatypes.append('float8')
         else:
             datatypes.append('varchar')
-
     return datatypes
 
 
-class Sample(QiitaObject):
+def _as_python_types(metadata_map, headers):
+    r"""Converts the values of metadata_map pointed by headers from numpy types
+    to python types.
+
+    Psycopg2 does not support the numpy types, so we should cast them to the
+    closest python type
+
+    Parameters
+    ----------
+    metadata_map : DataFrame
+        The MetadataTemplate contents
+    headers : list of str
+        The headers of the columns of metadata_map that needs to be converted
+        to a python type
+
+    Returns
+    -------
+    list of lists
+        The values of the columns in metadata_map pointed by headers casted to
+        python types.
+    """
+    values = []
+    for h in headers:
+        if isinstance(metadata_map[h][0], np.generic):
+            values.append(map(np.asscalar, metadata_map[h]))
+        else:
+            values.append(list(metadata_map[h]))
+    return values
+
+
+class BaseSample(QiitaObject):
     r"""Models a sample object in the database"""
-    pass
+    # Used to find the right SQL tables - should be defined on the subclasses
+    _table_prefix = None
+    _column_table = None
+    _id_column = None
+
+    def __init__(self, sample_id, md_template):
+        r"""Initializes the object
+
+        Parameters
+        ----------
+        sample_id : str
+            The sample id
+        md_template : MetadataTemplate
+            The metadata template in which the sample is present
+
+        Raises
+        ------
+        QiitaDBUnknownIDError
+            If `sample_id` does not correspond to any sample in md_template
+        """
+        # Check that we are not instantiating the base class
+        self._check_subclass()
+        # Check if the sample id is present on the passed metadata template
+        # This test will check that the sample id is actually present on the db
+        if sample_id not in md_template:
+            raise QiitaDBUnknownIDError(self.__name__, sample_id)
+        # Assign private attributes
+        self._id = sample_id
+        self._md_template = md_template
+        self._table_name = "%s%d" % (self._table_prefix, self._md_template.id)
+
+    def __eq__(self, other):
+        r"""Self and other are equal based on type and ids"""
+        if type(self) != type(other):
+            return False
+        if other._id != self.id:
+            return False
+        if other._md_template != self._md_template:
+            return False
+        return True
+
+    @classmethod
+    def exists(cls, sample_id, md_template):
+        r"""Checks if already exists a MetadataTemplate for the provided object
+
+        Parameters
+        ----------
+        sample_id : str
+            The sample id
+        md_template : MetadataTemplate
+            The metadata template to which the sample belongs to
+
+        Returns
+        -------
+        bool
+            True if already exists. False otherwise.
+        """
+        cls._check_subclass()
+        conn_handler = SQLConnectionHandler()
+        return conn_handler.execute_fetchone(
+            "SELECT EXISTS(SELECT * FROM qiita.{0} WHERE sample_id=%s AND "
+            "{1}=%s)".format(cls._table, cls._id_column),
+            (sample_id, md_template.id))[0]
+
+    def _get_categories(self, conn_handler):
+        r"""Returns all the available metadata categories for the sample
+
+        Parameters
+        ----------
+        conn_handler : SQLConnectionHandler
+            The connection handler object connected to the DB
+
+        Returns
+        -------
+        set of str
+            The set of all available metadata categories
+        """
+        # Get all the required columns
+        required_cols = get_table_cols(self._table, conn_handler)
+        # Get all the the columns in the dynamic table
+        dynamic_cols = get_table_cols(self._table_name, conn_handler)
+        # Get the union of the two previous lists
+        cols = set(required_cols).union(dynamic_cols)
+        # Remove the sample_id column and the study_id/raw_data_id columns,
+        # as this columns are used internally for data storage and they don't
+        # actually belong to the metadata
+        cols.remove('sample_id')
+        cols.remove(self._id_column)
+        return cols
+
+    def __len__(self):
+        r"""Returns the number of metadata categories
+
+        Returns
+        -------
+        int
+            The number of metadata categories
+        """
+        conn_handler = SQLConnectionHandler()
+        # return the number of columns
+        return len(self._get_categories(conn_handler))
+
+    def __getitem__(self, key):
+        r"""Returns the value of the metadata category `key`
+
+        Parameters
+        ----------
+        key : str
+            The metadata category
+
+        Returns
+        -------
+        obj
+            The value of the metadata category `key`
+
+        Raises
+        ------
+        KeyError
+            If the metadata category `key` does not exists
+
+        See Also
+        --------
+        get
+        """
+        conn_handler = SQLConnectionHandler()
+        if key in self._get_categories(conn_handler):
+            # Check if we have either to query the table with required columns
+            # or the dynamic table
+            table = (self._table if key in get_table_cols(self._table,
+                                                          conn_handler)
+                     else self._table_name)
+            # Return the value - psycopg2 will take care of the type
+            return conn_handler.execute_fetchone(
+                "SELECT {0} FROM qiita.{1} WHERE {2}=%s AND "
+                "sample_id=%s".format(key, table, self._id_column),
+                (self._md_template.id, self._id))[0]
+        else:
+            # The key is not available for the sample, so raise a KeyError
+            raise KeyError("Metadata category %s does not exists for sample %s"
+                           " in template %d" %
+                           (key, self._id, self._md_template.id))
+
+    def __setitem__(self, key, value):
+        r"""Sets the metadata value for the category `key`
+
+        Parameters
+        ----------
+        key : str
+            The metadata category
+        value : obj
+            The new value for the category
+        """
+        raise QiitaDBNotImplementedError()
+
+    def __delitem__(self, key):
+        r"""Removes the sample with sample id `key` from the database
+
+        Parameters
+        ----------
+        key : str
+            The sample id
+        """
+        raise QiitaDBNotImplementedError()
+
+    def __iter__(self):
+        r"""Iterator over the sorted sample ids
+
+        Returns
+        -------
+        Iterator
+            Iterator over the sample ids
+
+        See Also
+        --------
+        keys
+        """
+        pass
+
+    def __contains__(self, key):
+        r"""Checks if the sample id `key` is present in the metadata template
+
+        Parameters
+        ----------
+        key : str
+            The sample id
+
+        Returns
+        -------
+        bool
+            True if the sample id `key` is in the metadata template, false
+            otherwise
+        """
+        pass
+
+    def keys(self):
+        r"""Iterator over the sorted sample ids
+
+        Returns
+        -------
+        Iterator
+            Iterator over the sample ids
+
+        See Also
+        --------
+        __iter__
+        """
+        pass
+
+    def values(self):
+        r"""Iterator over the metadata values, in sample id order
+
+        Returns
+        -------
+        Iterator
+            Iterator over Sample obj
+        """
+        pass
+
+    def items(self):
+        r"""Iterator over (sample_id, values) tuples, in sample id order
+
+        Returns
+        -------
+        Iterator
+            Iterator over (sample_ids, values) tuples
+        """
+        pass
+
+    def get(self, key):
+        r"""Returns the metadata values for sample id `key`, or None if the
+        sample id `key` is not present in the metadata map
+
+        Parameters
+        ----------
+        key : str
+            The sample id
+
+        Returns
+        -------
+        Sample or None
+            The sample object for the sample id `key`, or None if it is not
+            present
+
+        See Also
+        --------
+        __getitem__
+        """
+        pass
+
+
+class PrepSample(BaseSample):
+    """"""
+
+
+class Sample(BaseSample):
+    """"""
 
 
 class MetadataTemplate(QiitaObject):
@@ -78,9 +361,7 @@ class MetadataTemplate(QiitaObject):
 
     Attributes
     ----------
-    sample_ids
-    category_names
-    metadata
+    id
 
     Methods
     -------
@@ -93,6 +374,7 @@ class MetadataTemplate(QiitaObject):
 
     See Also
     --------
+    QiitaObject
     SampleTemplate
     PrepTemplate
     """
@@ -101,9 +383,10 @@ class MetadataTemplate(QiitaObject):
     _table_prefix = None
     _column_table = None
     _id_column = None
+    _strict = True
 
     def _check_id(self, id_, conn_handler=None):
-        r""""""
+        r"""Checks that the MetadataTemplate id_ exists on the database"""
         self._check_subclass()
         conn_handler = (conn_handler if conn_handler is not None
                         else SQLConnectionHandler())
@@ -152,54 +435,67 @@ class MetadataTemplate(QiitaObject):
         if cls.exists(obj):
             raise QiitaDBDuplicateError(cls.__name__, obj.id)
 
-        # Get the table name
-        table_name = cls._table_name(obj)
-        # Get the column headers
-        headers = md_template.keys()
-        # Get the data type of each column
-        datatypes = _get_datatypes(md_template)
-        # Get the columns names in SQL safe
-        sql_safe_column_names = ['"%s"' % h.lower() for h in headers]
+        # We are going to modify the md_template. We create a copy so
+        # we don't modify the user one
+        md_template = deepcopy(md_template)
 
-        # Get the column names paired with its datatype for SQL
-        columns = ['%s %s' % (cn, dt)
-                   for cn, dt in zip(sql_safe_column_names, datatypes)]
-        # Get the columns in a comma-separated string
-        columns = ", ".join(columns)
-        # Create a table for the study
         conn_handler = SQLConnectionHandler()
+        # Check that md_template have the required columns
+        db_cols = get_table_cols(cls._table, conn_handler)
+        # Remove the sample_id and study_id columns
+        db_cols.remove('sample_id')
+        db_cols.remove('study_id')
+        headers = list(md_template.keys())
+        sample_ids = list(md_template.index)
+        num_samples = len(sample_ids)
+        remaining = set(db_cols).difference(headers)
+        if remaining:
+            # If strict, raise an error, else default to None
+            if cls._strict:
+                raise QiitaDBColumnError("Missing columns: %s" % remaining)
+            else:
+                for col in remaining:
+                    md_template[col] = pd.Series([None] * num_samples,
+                                                 index=sample_ids)
+        # Insert values on required columns
+        values = _as_python_types(md_template, db_cols)
+        values.insert(0, sample_ids)
+        values.insert(0, [obj.id] * num_samples)
+        values = [v for v in zip(*values)]
+        conn_handler.executemany(
+            "INSERT INTO qiita.{0} (study_id, sample_id, {1}) "
+            "VALUES (%s, %s, {2})".format(cls._table, ', '.join(db_cols),
+                                          ', '.join(['%s'] * len(db_cols))),
+            values)
+
+        # Insert rows on *_columns table
+        headers = list(set(headers).difference(db_cols))
+        datatypes = _get_datatypes(md_template.ix[:, headers])
+        values = [v for v in zip([obj.id] * len(headers), headers, datatypes)]
+        conn_handler.executemany(
+            "INSERT INTO qiita.{0} (study_id, column_name, column_type) "
+            "VALUES (%s, %s, %s)".format(cls._column_table),
+            values)
+
+        # Create table with custom columns
+        table_name = cls._table_name(obj)
+        column_datatype = ["%s %s" % (col, dtype)
+                           for col, dtype in zip(headers, datatypes)]
         conn_handler.execute(
-            "create table qiita.%s (sampleid varchar, %s)" %
-            (table_name, columns))
+            "CREATE TABLE qiita.{0} (sample_id varchar, {1})".format(
+                table_name, ', '.join(column_datatype)))
 
-        # Add rows to the column_table table
-        column_tables_sql_template = ("insert into qiita." + cls._column_table
-                                      + " (study_id, column_name, column_type)"
-                                      " values ('" + str(obj.id) +
-                                      "', %s, %s)")
-        # The column names should be lowercase and quoted
-        quoted_lc_headers = [quote_data_value(h.lower()) for h in headers]
-        # Pair up the column names with its datatype
-        sql_args_list = [(column_name, datatype) for column_name, datatype in
-                         zip(quoted_lc_headers, datatypes)]
-        conn_handler.executemany(column_tables_sql_template,
-                                 sql_args_list)
+        # Insert values on custom table
+        values = _as_python_types(md_template, headers)
+        values.insert(0, sample_ids)
+        values = [v for v in zip(*values)]
+        conn_handler.executemany(
+            "INSERT INTO qiita.{0} (sample_id, {1}) "
+            "VALUES (%s, {2})".format(table_name, ", ".join(headers),
+                                      ', '.join(["%s"] * len(headers))),
+            values)
 
-        # Add rows into the study table
-        columns = ', '.join(sql_safe_column_names)
-        insert_sql_template = ('insert into qiita.' + table_name +
-                               ' (sampleid, ' + columns + ') values (%s' +
-                               ', %s' * len(sql_safe_column_names) + ' )')
-
-        sql_args_list = []
-        for sample_id in md_template.SampleIds:
-            data = md_template.getSampleMetadata(sample_id)
-            values = [scrub_data(sample_id)]
-            values += [scrub_data(data[header]) for header in headers]
-            sql_args_list.append(values)
-
-        conn_handler.executemany(insert_sql_template, sql_args_list)
-        return MetadataTemplate(study.id)
+        return cls(obj.id)
 
     @classmethod
     def exists(cls, obj):
@@ -218,108 +514,146 @@ class MetadataTemplate(QiitaObject):
         cls._check_subclass()
         return exists_table(cls._table_name(obj), SQLConnectionHandler())
 
-    # @property
-    # def sample_ids(self):
-    #     r"""Returns the IDs of all samples in the metadata map.
+    def __len__(self):
+        r"""Returns the number of samples in the metadata template
 
-    #     The sample IDs are returned as a list of strings in alphabetical order.
-    #     """
-    #     raise QiitaDBNotImplementedError()
+        Returns
+        -------
+        int
+            The number of samples in the metadata template
+        """
+        pass
 
-    # @property
-    # def category_names(self):
-    #     r"""Returns the names of all categories in the metadata map.
+    def __getitem__(self, key):
+        r"""Returns the metadata values for sample id `key`
 
-    #     The category names are returned as a list of strings in alphabetical
-    #     order.
-    #     """
-    #     raise QiitaDBNotImplementedError()
+        Parameters
+        ----------
+        key : str
+            The sample id
 
-    # @property
-    # def metadata(self):
-    #     r"""A python dict of dicts
+        Returns
+        -------
+        Sample
+            The sample object for the sample id `key`
 
-    #     The top-level key is sample ID, and the inner dict maps category name
-    #     to category value
-    #     """
-    #     raise QiitaDBNotImplementedError()
+        Raises
+        ------
+        KeyError
+            If the sample id `key` is not present in the metadata template
 
-    # def get_sample_metadata(self, sample_id):
-    #     r"""Returns the metadata associated with a particular sample.
+        See Also
+        --------
+        get
+        """
+        pass
 
-    #     The metadata will be returned as a dict mapping category name to
-    #     category value.
+    def __setitem__(self, key, value):
+        r"""Sets the metadata values for sample id `key`
 
-    #     Parameters
-    #     ----------
-    #     sample_id : str
-    #         the sample ID to retrieve metadata for
-    #     """
-    #     raise QiitaDBNotImplementedError()
+        Parameters
+        ----------
+        key : str
+            The sample id
+        value : Sample
+            The sample obj holding the new sample values
+        """
+        pass
 
-    # def get_category_value(self, sample_id, category):
-    #     r"""Returns the category value associated with a sample's category.
+    def __delitem__(self, key):
+        r"""Removes the sample with sample id `key` from the database
 
-    #     The returned category value will be a string.
+        Parameters
+        ----------
+        key : str
+            The sample id
+        """
+        pass
 
-    #     Parameters
-    #     ----------
-    #     sample_id : str
-    #         the sample ID to retrieve category information for
-    #     category : str
-    #         the category name whose value will be returned
-    #     """
-    #     raise QiitaDBNotImplementedError()
+    def __iter__(self):
+        r"""Iterator over the sorted sample ids
 
-    # def get_category_values(self, sample_ids, category):
-    #     """Returns all the values of a given category.
+        Returns
+        -------
+        Iterator
+            Iterator over the sample ids
 
-    #     The return categories will be a list.
+        See Also
+        --------
+        keys
+        """
+        pass
 
-    #     Parameters
-    #     ----------
-    #     sample_ids : list of str
-    #         An ordered list of sample IDs
-    #     category : str
-    #         the category name whose values will be returned
-    #     """
-    #     raise QiitaDBNotImplementedError()
+    def __contains__(self, key):
+        r"""Checks if the sample id `key` is present in the metadata template
 
-    # def is_numerical_category(self, category):
-    #     """Returns True if the category is numeric and False otherwise.
+        Parameters
+        ----------
+        key : str
+            The sample id
 
-    #     A category is numeric if all values within the category can be
-    #     converted to a float.
+        Returns
+        -------
+        bool
+            True if the sample id `key` is in the metadata template, false
+            otherwise
+        """
+        pass
 
-    #     Parameters
-    #     ----------
-    #     category : str
-    #         the category that will be checked
-    #     """
-    #     raise QiitaDBNotImplementedError()
+    def keys(self):
+        r"""Iterator over the sorted sample ids
 
-    # def has_unique_category_values(self, category):
-    #     """Returns True if the category's values are all unique.
+        Returns
+        -------
+        Iterator
+            Iterator over the sample ids
 
-    #     Parameters
-    #     ----------
-    #     category : str
-    #         the category that will be checked for uniqueness
-    #     """
-    #     raise QiitaDBNotImplementedError()
+        See Also
+        --------
+        __iter__
+        """
+        pass
 
-    # def has_single_category_values(self, category):
-    #     """Returns True if the category's values are all the same.
+    def values(self):
+        r"""Iterator over the metadata values, in sample id order
 
-    #     For example, the category 'Treatment' only has values 'Control' for the
-    #     entire column.
+        Returns
+        -------
+        Iterator
+            Iterator over Sample obj
+        """
+        pass
 
-    #     Parameters
-    #     ----------
-    #     category : str
-    #         the category that will be checked
-    #     """
-    #     raise QiitaDBNotImplementedError()
+    def items(self):
+        r"""Iterator over (sample_id, values) tuples, in sample id order
+
+        Returns
+        -------
+        Iterator
+            Iterator over (sample_ids, values) tuples
+        """
+        pass
+
+    def get(self, key):
+        r"""Returns the metadata values for sample id `key`, or None if the
+        sample id `key` is not present in the metadata map
+
+        Parameters
+        ----------
+        key : str
+            The sample id
+
+        Returns
+        -------
+        Sample or None
+            The sample object for the sample id `key`, or None if it is not
+            present
+
+        See Also
+        --------
+        __getitem__
+        """
+        pass
 
 
 class SampleTemplate(MetadataTemplate):
@@ -338,3 +672,4 @@ class PrepTemplate(MetadataTemplate):
     _table_prefix = "prep_"
     _column_table = "raw_data_prep_columns"
     _id_column = "raw_data_id"
+    _strict = False
