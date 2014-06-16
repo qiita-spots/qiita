@@ -29,9 +29,11 @@ class Analysis(QiitaStatusObject):
 
     Attributes
     ----------
+    owner
     name
     description
     biom_table
+    shared_with
     jobs
     pmid
     parent
@@ -42,6 +44,8 @@ class Analysis(QiitaStatusObject):
     add_samples
     remove_samples
     add_jobs
+    share
+    unshare
     """
 
     _table = "analysis"
@@ -95,6 +99,20 @@ class Analysis(QiitaStatusObject):
 
     # ---- Properties ----
     @property
+    def owner(self):
+        """The owner of the analysis
+
+        Returns
+        -------
+        str
+            Name of the Analysis
+        """
+        conn_handler = SQLConnectionHandler()
+        sql = ("SELECT email FROM qiita.{0} WHERE "
+               "analysis_id = %s".format(self._table))
+        return conn_handler.execute_fetchone(sql, (self._id, ))[0]
+
+    @property
     def name(self):
         """The name of the analysis
 
@@ -137,19 +155,35 @@ class Analysis(QiitaStatusObject):
         conn_handler.execute(sql, (description, self._id))
 
     @property
+    def shared_with(self):
+        """The user the analysis is shared with
+
+        Returns
+        -------
+        list of int
+            User ids analysis is shared with
+        """
+        conn_handler = SQLConnectionHandler()
+        sql = ("SELECT email FROM qiita.analysis_users WHERE "
+               "analysis_id = %s")
+        return [u[0] for u in conn_handler.execute_fetchall(sql, (self._id, ))]
+
+    @property
     def biom_table(self):
         """The biom table of the analysis
 
         Returns
         -------
-        int
-            ProcessedData id of the biom table
+        int or None
+            ProcessedData id of the biom table or None if table not generated
         """
         conn_handler = SQLConnectionHandler()
         sql = ("SELECT filepath_id FROM qiita.analysis_filepath WHERE "
                "analysis_id = %s")
-        return [file_id[0] for file_id in
-                conn_handler.execute_fetchall(sql, (self._id, ))]
+        table = conn_handler.execute_fetchone(sql, (self._id, ))
+        if table is None:
+            return None
+        return table[0]
 
     @property
     def jobs(self):
@@ -217,6 +251,35 @@ class Analysis(QiitaStatusObject):
         return QiitaDBNotImplementedError()
 
     # ---- Functions ----
+    def share(self, user):
+        """Share the analysis with another user
+
+        Parameters
+        ----------
+        user: User object
+            The user to share the study with
+        """
+        conn_handler = SQLConnectionHandler()
+        self._lock_public(conn_handler)
+
+        sql = ("INSERT INTO qiita.analysis_users (analysis_id, email) VALUES "
+               "(%s, %s)")
+        conn_handler.execute(sql, (self._id. user.id))
+
+    def unshare(self, user):
+        """Unshare the analysis with another user
+
+        Parameters
+        ----------
+        user: User object
+            The user to unshare the study with
+        """
+        conn_handler = SQLConnectionHandler()
+        self._lock_public(conn_handler)
+
+        sql = ("DELETE FROM qiita.analysis_users WHERE analysis_id = %s AND "
+               "email = %s")
+        conn_handler.execute(sql, (self._id. user.id))
 
     def add_samples(self, samples):
         """Adds samples to the analysis
@@ -247,7 +310,7 @@ class Analysis(QiitaStatusObject):
         conn_handler = SQLConnectionHandler()
         self._lock_public(conn_handler)
 
-        sql = ("DELETE FROM qiita.study_samples WHERE (analysis_id =%s AND "
+        sql = ("DELETE FROM qiita.analysis_samples WHERE (analysis_id =%s AND "
                "sample_id = %s AND processed_data_id = %s ")
         conn_handler.executemany(sql, [(self._id, s[1], s[0])
                                        for s in samples])
