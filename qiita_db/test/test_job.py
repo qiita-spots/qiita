@@ -56,14 +56,15 @@ class JobTest(TestCase):
                          self.options, Analysis(1))
         self.assertEqual(new.id, 3)
         # make sure job inserted correctly
-        obs = self.conn_handler.execute_fetchall("SELECT * FROM qiita.job WHERE "
-                                            "job_id = 3")
+        obs = self.conn_handler.execute_fetchall("SELECT * FROM qiita.job "
+                                                 "WHERE job_id = 3")
         exp = [[3, 2, 2, 1, '{"option1":false,"option2":25,"option3":"NEW"}',
                 None]]
         self.assertEqual(obs, exp)
         # make sure job added to analysis correctly
-        obs = self.conn_handler.execute_fetchall("SELECT * FROM qiita.analysis_job "
-                                            "WHERE job_id = 3")
+        obs = self.conn_handler.execute_fetchall("SELECT * FROM "
+                                                 "qiita.analysis_job WHERE "
+                                                 "job_id = 3")
         exp = [[1, 3]]
         self.assertEqual(obs, exp)
 
@@ -140,8 +141,8 @@ class JobTest(TestCase):
 
         # make sure files attached to job properly
         obs = self.conn_handler.execute_fetchall("SELECT * FROM "
-                                            "qiita.job_results_filepath "
-                                            "WHERE job_id = 1")
+                                                 "qiita.job_results_filepath "
+                                                 "WHERE job_id = 1")
         self.assertEqual(obs, [[1, 8], [1, 10]])
 
     def test_add_results_tar(self):
@@ -165,8 +166,8 @@ class JobTest(TestCase):
 
         # make sure files attached to job properly
         obs = self.conn_handler.execute_fetchall("SELECT * FROM "
-                                            "qiita.job_results_filepath "
-                                            "WHERE job_id = 1")
+                                                 "qiita.job_results_filepath "
+                                                 "WHERE job_id = 1")
         self.assertEqual(obs, [[1, 8], [1, 10]])
 
 
