@@ -131,7 +131,11 @@ class Analysis(QiitaStatusObject):
         int
             ProcessedData id of the biom table
         """
-        raise QiitaDBNotImplementedError()
+        conn_handler = SQLConnectionHandler()
+        sql = ("SELECT filepath_id FROM qiita.analysis_filepath WHERE "
+               "analysis_id = %s")
+        return [file_id[0] for file_id in
+                conn_handler.execute_fetchall(sql, (self._id, ))]
 
     @property
     def jobs(self):
