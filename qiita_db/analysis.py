@@ -43,6 +43,8 @@ class Analysis(QiitaStatusObject):
     -------
     add_samples
     remove_samples
+    add_biom_tables
+    remove_biom_tables
     add_jobs
     share
     unshare
@@ -52,12 +54,8 @@ class Analysis(QiitaStatusObject):
 
     def _lock_public(self, conn_handler):
         """Raises QiitaDBStatusError if analysis is public"""
-        sql = ("SELECT qiita.{0}_status_id FROM qiita.{0} WHERE "
-               "analysis_id = %s".format(self._table))
-        dbid = conn_handler.execute(sql, (self._id, ))
-        if convert_to_id("public", "%s_status" % self._table,
-                         conn_handler) == dbid:
-            raise QiitaDBStatusError("Cannot edit public sanalysis!")
+        if self.check_status({"public", "running"}):
+            raise QiitaDBStatusError("Analysis is locked!")
 
     def _status_setter_checks(self, conn_handler):
         r"""Perform a check to make sure not setting status away from public
