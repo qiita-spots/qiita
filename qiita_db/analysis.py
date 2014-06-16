@@ -17,8 +17,10 @@ Classes
 # -----------------------------------------------------------------------------
 from __future__ import division
 
+from .sql_connection import SQLConnectionHandler
 from .base import QiitaStatusObject
-from .exceptions import QiitaDBNotImplementedError
+from .exceptions import QiitaDBNotImplementedError, QiitaDBStatusError
+from .util import convert_to_id
 
 
 class Analysis(QiitaStatusObject):
@@ -42,8 +44,23 @@ class Analysis(QiitaStatusObject):
 
     _table = "analysis"
 
+    def _lock_public(self, conn_handler):
+        """Raises QiitaDBStatusError if analysis is public"""
+        sql = ("SELECT qiita.{0}_status_id FROM qiita.{0} WHERE "
+               "analysis_id = %s".format(self._table))
+        dbid = conn_handler.execute(sql, (self._id, ))
+        if convert_to_id("public", "%s_status" % self._table,
+                         conn_handler) == dbid:
+            raise QiitaDBStatusError("Cannot edit public sanalysis!")
+
+    def _status_setter_checks(self, conn_handler):
+        r"""Perform a check to make sure not setting status away from public
+        """
+        self._lock_public(conn_handler)
+
     @classmethod
-    def create(owner, title, description, sample_processed_ids, parent=None):
+    def create(cls, owner, title, description, sample_processed_ids,
+               parent=None):
         """Creates a new analysis on the database
 
         Parameters
@@ -72,12 +89,18 @@ class Analysis(QiitaStatusObject):
         str
             Name of the Analysis
         """
-        raise QiitaDBNotImplementedError()
+        conn_handler = SQLConnectionHandler()
+        sql = ("SELECT name FROM qiita.{0} WHERE "
+               "analysis_id = %s".format(self._table))
+        return conn_handler.execute_fetchone(sql, (self._id, ))[0]
 
     @property
     def description(self):
         """Returns the description of the analysis"""
-        raise QiitaDBNotImplementedError()
+        conn_handler = SQLConnectionHandler()
+        sql = ("SELECT description FROM qiita.{0} WHERE "
+               "analysis_id = %s".format(self._table))
+        return conn_handler.execute_fetchone(sql, (self._id, ))[0]
 
     @description.setter
     def description(self, description):
@@ -93,7 +116,11 @@ class Analysis(QiitaStatusObject):
         QiitaDBStatusError
             Analysis is public
         """
-        raise QiitaDBNotImplementedError()
+        conn_handler = SQLConnectionHandler()
+        self._lock_public(conn_handler)
+        sql = ("UPDATE qiita.{0} SET description = %s WHERE "
+               "analysis_id = %s".format(self._table))
+        conn_handler.execute(sql, (description, self._id))
 
     @property
     def biom_table(self):
@@ -115,7 +142,11 @@ class Analysis(QiitaStatusObject):
         list of ints
             Job ids for jobs in analysis
         """
-        raise QiitaDBNotImplementedError()
+        conn_handler = SQLConnectionHandler()
+        sql = ("SELECT job_id FROM qiita.analysis_job WHERE "
+               "analysis_id = %s".format(self._table))
+        return [job_id[0] for job_id in
+                conn_handler.execute_fetchall(sql, (self._id, ))]
 
     @property
     def pmid(self):
@@ -123,9 +154,16 @@ class Analysis(QiitaStatusObject):
 
         Returns
         -------
-        str
+        str or None
+            returns the PMID or None if none is attached
         """
-        raise QiitaDBNotImplementedError()
+        conn_handler = SQLConnectionHandler()
+        sql = ("SELECT pmid FROM qiita.{0} WHERE "
+               "analysis_id = %s".format(self._table))
+        pmid = conn_handler.execute_fetchone(sql, (self._id, ))
+        if pmid is None:
+            return None
+        return pmid[0]
 
     @pmid.setter
     def pmid(self, pmid):
@@ -145,7 +183,20 @@ class Analysis(QiitaStatusObject):
         -----
         An analysis should only ever have one PMID attached to it.
         """
-        raise QiitaDBNotImplementedError()
+        conn_handler = SQLConnectionHandler()
+        self._lock_public(conn_handler)
+        sql = ("UPDATE qiita.{0} SET pmid = %s WHERE "
+               "analysis_id = %s".format(self._table))
+        conn_handler.execute(sql, (pmid, self._id))
+
+    @property
+    def parent(self):
+        """Returns the id of the parent analysis this was forked from"""
+        return QiitaDBNotImplementedError()
+
+    @property
+    def children(self):
+        return QiitaDBNotImplementedError()
 
     # ---- Functions ----
 
@@ -156,4 +207,8 @@ class Analysis(QiitaStatusObject):
         ----------
             jobs : list of Job objects
         """
-        raise QiitaDBNotImplementedError()
+        conn_handler = SQLConnectionHandler()
+        self._lock_public(conn_handler)
+        sql = ("INSERT INTO qiita.analysis_job (analysis_id, job_id) "
+               "VALUES (%s, %s)")
+        conn_handler.executemany(sql, [(self._id, job.id) for job in jobs])
