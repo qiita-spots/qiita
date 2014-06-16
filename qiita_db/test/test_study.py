@@ -11,7 +11,6 @@ from qiita_db.investigation import Investigation
 from qiita_db.user import User
 from qiita_db.exceptions import (QiitaDBDuplicateError, QiitaDBColumnError,
                                  QiitaDBStatusError)
-from qiita_db.sql_connection import SQLConnectionHandler
 
 # -----------------------------------------------------------------------------
 # Copyright (c) 2014--, The Qiita Development Team.
@@ -31,9 +30,8 @@ class TestStudyPerson(TestCase):
         new = StudyPerson.create('SomeDude', 'somedude@foo.bar',
                                  '111 fake street', '111-121-1313')
         self.assertEqual(new.id, 4)
-        conn = SQLConnectionHandler()
-        obs = conn.execute_fetchall("SELECT * FROM qiita.study_person WHERE "
-                                    "study_person_id = 4")
+        obs = self.conn_handler.execute_fetchall(
+            "SELECT * FROM qiita.study_person WHERE study_person_id = 4")
         self.assertEqual(obs, [[4, 'SomeDude', 'somedude@foo.bar',
                          '111 fake street', '111-121-1313']])
 
@@ -169,17 +167,16 @@ class TestStudy(TestCase):
                'study_title': 'Fried chicken microbiome',
                'number_samples_collected': 25}
 
-        conn = SQLConnectionHandler()
-        obsins = conn.execute_fetchall("SELECT * FROM qiita.study WHERE "
-                                       "study_id = 2")
+        obsins = self.conn_handler.execute_fetchall(
+            "SELECT * FROM qiita.study WHERE study_id = 2")
         self.assertEqual(len(obsins), 1)
         obsins = dict(obsins[0])
         self.assertEqual(obsins, exp)
 
         # make sure EFO went in to table correctly
-        efo = conn.execute_fetchall("SELECT efo_id FROM "
-                                    "qiita.study_experimental_factor WHERE "
-                                    "study_id = 2")
+        efo = self.conn_handler.execute_fetchall(
+            "SELECT efo_id FROM qiita.study_experimental_factor "
+            "WHERE study_id = 2")
         self.assertEqual(efo, [[1]])
 
     def test_create_study_with_investigation(self):
@@ -188,9 +185,8 @@ class TestStudy(TestCase):
                            [1], self.info, Investigation(1))
         self.assertEqual(obs.id, 2)
         # check the investigation was assigned
-        conn = SQLConnectionHandler()
-        obs = conn.execute_fetchall("SELECT * from qiita.investigation_study "
-                                    "WHERE study_id = 2")
+        obs = self.conn_handler.execute_fetchall(
+            "SELECT * from qiita.investigation_study WHERE study_id = 2")
         self.assertEqual(obs, [[1, 2]])
 
     def test_create_study_all_data(self):
@@ -221,17 +217,16 @@ class TestStudy(TestCase):
                'most_recent_contact': None, 'lab_person_id': 1,
                'study_title': 'Fried chicken microbiome',
                'number_samples_collected': 25}
-        conn = SQLConnectionHandler()
-        obsins = conn.execute_fetchall("SELECT * FROM qiita.study WHERE "
-                                       "study_id = 2")
+        obsins = self.conn_handler.execute_fetchall(
+            "SELECT * FROM qiita.study WHERE study_id = 2")
         self.assertEqual(len(obsins), 1)
         obsins = dict(obsins[0])
         self.assertEqual(obsins, exp)
 
         # make sure EFO went in to table correctly
-        obsefo = conn.execute_fetchall("SELECT efo_id FROM "
-                                       "qiita.study_experimental_factor WHERE "
-                                       "study_id = 2")
+        obsefo = self.conn_handler.execute_fetchall(
+            "SELECT efo_id FROM qiita.study_experimental_factor "
+            "WHERE study_id = 2")
         self.assertEqual(obsefo, [[1]])
 
     def test_create_missing_required(self):

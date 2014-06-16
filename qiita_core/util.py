@@ -77,10 +77,12 @@ def qiita_test_checker():
             @build_test_database
             def setUp(self):
                 super(DecoratedClass, self).setUp()
+                self.conn_handler = SQLConnectionHandler()
 
             @drop_test_database
             def tearDown(self):
                 super(DecoratedClass, self).tearDown()
+                del self.conn_handler
 
         return DecoratedClass
     return class_modifier
