@@ -10,19 +10,14 @@ from unittest import TestCase, main
 
 from qiita_core.util import qiita_test_checker
 
-from qiita_db.sql_connection import SQLConnectionHandler
-
 
 @qiita_test_checker()
 class SetupTest(TestCase):
     """Tests that the test database have been successfully populated"""
 
-    def setUp(self):
-        self.conn = SQLConnectionHandler()
-
     def _check_count(self, table, exp_count):
         sql = "SELECT count(1) FROM %s" % table
-        obs_count = self.conn.execute_fetchone(sql)[0]
+        obs_count = self.conn_handler.execute_fetchone(sql)[0]
         self.assertEqual(obs_count, exp_count)
 
     def test_qitta_user(self):

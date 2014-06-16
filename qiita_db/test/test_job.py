@@ -17,7 +17,6 @@ from qiita_db.job import Job
 from qiita_db.util import get_db_files_base_dir, get_work_base_dir
 from qiita_db.analysis import Analysis
 from qiita_db.exceptions import QiitaDBDuplicateError
-from qiita_db.sql_connection import SQLConnectionHandler
 
 
 @qiita_test_checker()
@@ -35,10 +34,8 @@ class JobTest(TestCase):
         # rmtree for python3
         for item in self._delete_path:
             remove(item)
-            print(item)
         for item in self._delete_dir:
             rmtree(item)
-            print(item)
 
     def test_exists(self):
         """tests that existing job returns true"""
@@ -58,15 +55,14 @@ class JobTest(TestCase):
         new = Job.create("18S", "beta_diversity_through_plots.py",
                          self.options, Analysis(1))
         self.assertEqual(new.id, 3)
-        conn_handler = SQLConnectionHandler()
         # make sure job inserted correctly
-        obs = conn_handler.execute_fetchall("SELECT * FROM qiita.job WHERE "
+        obs = self.conn_handler.execute_fetchall("SELECT * FROM qiita.job WHERE "
                                             "job_id = 3")
         exp = [[3, 2, 2, 1, '{"option1":false,"option2":25,"option3":"NEW"}',
                 None]]
         self.assertEqual(obs, exp)
         # make sure job added to analysis correctly
-        obs = conn_handler.execute_fetchall("SELECT * FROM qiita.analysis_job "
+        obs = self.conn_handler.execute_fetchall("SELECT * FROM qiita.analysis_job "
                                             "WHERE job_id = 3")
         exp = [[1, 3]]
         self.assertEqual(obs, exp)
@@ -123,8 +119,7 @@ class JobTest(TestCase):
         # make sure logging table correct
         sql = ("SELECT * FROM qiita.logging WHERE log_id = (SELECT log_id FROM"
                " qiita.job WHERE job_id = 1)")
-        conn_handler = SQLConnectionHandler()
-        log = conn_handler.execute_fetchall(sql)
+        log = self.conn_handler.execute_fetchall(sql)
         self.assertEqual(log, [[1, timestamp, 1, 'TESTERROR', None]])
 
     def test_retrieve_error_msg_blank(self):
@@ -144,8 +139,7 @@ class JobTest(TestCase):
                                     "1_placeholder.txt")))
 
         # make sure files attached to job properly
-        conn_handler = SQLConnectionHandler()
-        obs = conn_handler.execute_fetchall("SELECT * FROM "
+        obs = self.conn_handler.execute_fetchall("SELECT * FROM "
                                             "qiita.job_results_filepath "
                                             "WHERE job_id = 1")
         self.assertEqual(obs, [[1, 8], [1, 10]])
@@ -170,8 +164,7 @@ class JobTest(TestCase):
         self.assertFalse(exists("/tmp/1_tar_folder.tar"))
 
         # make sure files attached to job properly
-        conn_handler = SQLConnectionHandler()
-        obs = conn_handler.execute_fetchall("SELECT * FROM "
+        obs = self.conn_handler.execute_fetchall("SELECT * FROM "
                                             "qiita.job_results_filepath "
                                             "WHERE job_id = 1")
         self.assertEqual(obs, [[1, 8], [1, 10]])
