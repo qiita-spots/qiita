@@ -13,7 +13,6 @@ from shutil import rmtree
 from datetime import datetime
 
 from qiita_core.util import qiita_test_checker
-from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_db.job import Job
 from qiita_db.util import get_db_files_base_dir, get_work_base_dir
 from qiita_db.analysis import Analysis
@@ -32,8 +31,14 @@ class JobTest(TestCase):
         self._delete_dir = []
 
     def tearDown(self):
-        map(remove, self._delete_path)
-        map(rmtree, self._delete_dir)
+        # needs to be this way because map does not play well with remove and
+        # rmtree for python3
+        for item in self._delete_path:
+            remove(item)
+            print(item)
+        for item in self._delete_dir:
+            rmtree(item)
+            print(item)
 
     def test_exists(self):
         """tests that existing job returns true"""
