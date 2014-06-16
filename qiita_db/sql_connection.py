@@ -27,6 +27,9 @@ class SQLConnectionHandler(object):
                                    host=qiita_config.host,
                                    port=qiita_config.port)
 
+    def __del__(self):
+        self._connection.close()
+
     @contextmanager
     def get_postgres_cursor(self):
         """ Returns a Postgres cursor

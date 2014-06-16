@@ -12,7 +12,6 @@ from qiita_core.util import qiita_test_checker
 from qiita_db.util import (exists_table, exists_dynamic_table, scrub_data,
                            compute_checksum, check_table_cols,
                            check_required_columns)
-from qiita_db.sql_connection import SQLConnectionHandler
 from qiita_db.exceptions import QiitaDBColumnError
 from tempfile import mkstemp
 from os import close
@@ -21,7 +20,6 @@ from os import close
 @qiita_test_checker()
 class DBUtilTests(TestCase):
     def setUp(self):
-        self.conn_handler = SQLConnectionHandler()
         self.table = 'study'
         self.required = [
             'number_samples_promised', 'study_title', 'mixs_compliant',
