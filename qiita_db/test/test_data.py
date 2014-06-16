@@ -14,7 +14,6 @@ from tempfile import mkstemp
 
 from qiita_core.util import qiita_test_checker
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
-from qiita_db.sql_connection import SQLConnectionHandler
 from qiita_db.study import Study
 from qiita_db.util import get_db_files_base_dir
 from qiita_db.data import BaseData, RawData, PreprocessedData, ProcessedData
@@ -42,7 +41,6 @@ class RawDataTests(TestCase):
         self.filetype = 2
         self.filepaths = [(self.seqs_fp, 1), (self.barcodes_fp, 2)]
         self.studies = [Study(1)]
-        self.conn_handler = SQLConnectionHandler()
         self.db_test_raw_dir = join(get_db_files_base_dir(), 'raw_data')
         self._clean_up_files = [self.seqs_fp, self.barcodes_fp]
 
@@ -127,7 +125,6 @@ class RawDataTests(TestCase):
 class PreprocessedDataTests(TestCase):
     """Tests the PreprocessedData class"""
     def setUp(self):
-        self.conn_handler = SQLConnectionHandler()
         self.raw_data = RawData(1)
         self.study = Study(1)
         self.params_table = "preprocessed_sequence_illumina_params"
@@ -241,7 +238,6 @@ class PreprocessedDataTests(TestCase):
 class ProcessedDataTests(TestCase):
     """Tests the ProcessedData class"""
     def setUp(self):
-        self.conn_handler = SQLConnectionHandler()
         self.preprocessed_data = PreprocessedData(1)
         self.params_table = "processed_params_uclust"
         self.params_id = 1
