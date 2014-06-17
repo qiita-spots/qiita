@@ -96,7 +96,6 @@ object while creating the study.
 # -----------------------------------------------------------------------------
 
 from __future__ import division
-from future.builtins import zip
 from future.utils import viewitems
 from datetime import date
 from copy import deepcopy
@@ -105,7 +104,7 @@ from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from .base import QiitaStatusObject, QiitaObject
 from .exceptions import (QiitaDBDuplicateError, QiitaDBStatusError,
                          QiitaDBColumnError)
-from .util import check_required_columns, check_table_cols
+from .util import check_required_columns, check_table_cols, convert_to_id
 from .sql_connection import SQLConnectionHandler
 
 
@@ -148,6 +147,23 @@ class Study(QiitaStatusObject):
         r"""Perform a check to make sure not setting status away from public
         """
         self._lock_public(conn_handler)
+
+    @classmethod
+    def get_public(cls):
+        """Returns study for all public Studies
+
+        Returns
+        -------
+        list of Study objects
+            All public studies in the database
+        """
+        conn_handler = SQLConnectionHandler()
+        sql = ("SELECT study_id FROM qiita.{0} WHERE "
+               "{0}_status_id = %s".format(cls._table))
+        # MAGIC NUMBER 2: status id for a public study
+        return [cls(x[0]) for x in
+                conn_handler.execute_fetchall(sql, (2,))]
+
 
     @classmethod
     def create(cls, owner, title, efo, info, investigation=None):
