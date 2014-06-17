@@ -30,14 +30,13 @@ TODO
 from __future__ import division
 from re import match
 
-from .base import QiitaObject
-from .sql_connection import SQLConnectionHandler
-
 from qiita_core.exceptions import (IncorrectEmailError, IncorrectPasswordError,
                                    IncompetentQiitaDeveloperError)
 from .exceptions import QiitaDBDuplicateError, QiitaDBColumnError
 from .util import hash_password
 from .util import create_rand_string, check_table_cols
+from .base import QiitaObject
+from .sql_connection import SQLConnectionHandler
 
 
 class User(QiitaObject):
@@ -234,27 +233,19 @@ class User(QiitaObject):
         IncompentQiitaDeveloper
             code_type is not create or reset
         """
-        conn_handler = SQLConnectionHandler()
         if code_type == 'create':
-            sql = ("SELECT user_verify_code from qiita.%s where email = '%s'" %
-                  (cls._table, email))
-            db_code = conn_handler.execute_fetchone(sql)[0]
-            if db_code == code:
-                return True
-            else:
-                return False
+            column = 'user_verify_code'
         elif code_type == 'reset':
-            sql = ("SELECT pass_reset_code from qiita.%s where email = '%s'" %
-                  (cls._table, email))
-            db_code = conn_handler.execute_fetchone(sql)[0]
-            if db_code == code:
-                return True
-            else:
-                return False
+            column = 'pass_reset_code'
         else:
             raise IncompetentQiitaDeveloperError("code_type must be 'create'"
                                                  " or 'reset' Uknown type "
                                                  "%s" % code_type)
+        sql = ("SELECT {1} from qiita.{0} where email"
+               " = %s".format(cls._table, column))
+        conn_handler = SQLConnectionHandler()
+        db_code = conn_handler.execute_fetchone(sql, (email,))[0]
+        return db_code == code
 
     # ---properties---
     @property
