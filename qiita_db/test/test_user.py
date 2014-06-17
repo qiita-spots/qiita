@@ -199,6 +199,5 @@ class UserTest(TestCase):
             User.verify_code('test@user.com', 'fakecode', 'badtype')
 
 
-
 if __name__ == "__main__":
     main()

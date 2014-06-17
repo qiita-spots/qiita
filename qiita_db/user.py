@@ -372,6 +372,7 @@ def validate_password(password):
 
     References
     -----
-    http://stackoverflow.com/questions/2990654/how-to-test-a-regex-password-in-python
+    http://stackoverflow.com/questions/2990654/how-to-test-a-regex-
+    password-in-python
     """
     return True if match(r'[A-Za-z0-9@#$%^&+=]{8,}', password) else False
