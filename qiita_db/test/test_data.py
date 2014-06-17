@@ -330,6 +330,10 @@ class ProcessedDataTests(TestCase):
                      '1_study_1001_closed_reference_otu_table.biom'), 6)]
         self.assertEqual(obs, exp)
 
+    def test_get_filepath_ids(self):
+        pd = ProcessedData(1)
+        self.assertEqual(pd.get_filepath_ids(), [7])
+
     def test_preprocessed_data(self):
         """Correctly returns the preprocessed_data"""
         pd = ProcessedData(1)
