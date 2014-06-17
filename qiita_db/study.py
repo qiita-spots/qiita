@@ -164,7 +164,6 @@ class Study(QiitaStatusObject):
         return [cls(x[0]) for x in
                 conn_handler.execute_fetchall(sql, (2,))]
 
-
     @classmethod
     def create(cls, owner, title, efo, info, investigation=None):
         """Creates a new study on the database
