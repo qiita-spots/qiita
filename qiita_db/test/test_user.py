@@ -8,7 +8,8 @@
 
 from unittest import TestCase, main
 
-from qiita_core.exceptions import IncorrectEmailError, IncorrectPasswordError
+from qiita_core.exceptions import (IncorrectEmailError, IncorrectPasswordError,
+                                   IncompetentQiitaDeveloperError)
 from qiita_core.util import qiita_test_checker
 from qiita_db.user import User
 from qiita_db.exceptions import (QiitaDBDuplicateError, QiitaDBColumnError,
@@ -180,6 +181,23 @@ class UserTest(TestCase):
 
     def test_get_shared_analyses(self):
         self.assertEqual(self.user.shared_analyses, [])
+
+    def test_verify_code(self):
+        sql = ("insert into qiita.qiita_user values ('test@user.com', '1', "
+               "'testtest', 'testuser', '', '', '', 'verifycode', 'resetcode'"
+               ",null)")
+        self.conn_handler.execute(sql)
+        self.assertTrue(User.verify_code('test@user.com', 'verifycode',
+                                         'create'))
+        self.assertTrue(User.verify_code('test@user.com', 'resetcode',
+                                         'reset'))
+        self.assertFalse(User.verify_code('test@user.com', 'wrongcode',
+                                          'create'))
+        self.assertFalse(User.verify_code('test@user.com', 'wrongcode',
+                                          'reset'))
+        with self.assertRaises(IncompetentQiitaDeveloperError):
+            User.verify_code('test@user.com', 'fakecode', 'badtype')
+
 
 
 if __name__ == "__main__":

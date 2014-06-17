@@ -31,16 +31,13 @@ from __future__ import division
 from re import match
 
 from .base import QiitaObject
-from .exceptions import QiitaDBNotImplementedError
 from .sql_connection import SQLConnectionHandler
 
-from qiita_core.exceptions import IncorrectEmailError, IncorrectPasswordError
+from qiita_core.exceptions import (IncorrectEmailError, IncorrectPasswordError,
+                                   IncompetentQiitaDeveloperError)
 from .exceptions import QiitaDBDuplicateError, QiitaDBColumnError
 from .util import hash_password
-from .sql_connection import SQLConnectionHandler
 from .util import create_rand_string, check_table_cols
-from .study import Study
-from .analysis import Analysis
 
 
 class User(QiitaObject):
@@ -216,8 +213,50 @@ class User(QiitaObject):
         conn_handler.execute(sql, values)
         return cls(email)
 
-    # ---properties---
+    @classmethod
+    def verify_code(cls, email, code, code_type):
+        """Verify that a code and email match
 
+        Parameters
+        ----------
+        email : str
+            email address of the user
+        code : str
+            code to verify
+        code_type : {'create' or 'reset'}
+
+        Returns
+        -------
+        bool
+
+        Raises
+        ------
+        IncompentQiitaDeveloper
+            code_type is not create or reset
+        """
+        conn_handler = SQLConnectionHandler()
+        if code_type == 'create':
+            sql = ("SELECT user_verify_code from qiita.%s where email = '%s'" %
+                  (cls._table, email))
+            db_code = conn_handler.execute_fetchone(sql)[0]
+            if db_code == code:
+                return True
+            else:
+                return False
+        elif code_type == 'reset':
+            sql = ("SELECT pass_reset_code from qiita.%s where email = '%s'" %
+                  (cls._table, email))
+            db_code = conn_handler.execute_fetchone(sql)[0]
+            if db_code == code:
+                return True
+            else:
+                return False
+        else:
+            raise IncompetentQiitaDeveloperError("code_type must be 'create'"
+                                                 " or 'reset' Uknown type "
+                                                 "%s" % code_type)
+
+    # ---properties---
     @property
     def email(self):
         """The email of the user"""
