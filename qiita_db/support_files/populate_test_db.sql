@@ -314,10 +314,10 @@ INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum, checksum_algor
 INSERT INTO qiita.processed_filepath (processed_data_id, filepath_id) VALUES (1, 7);
 
 -- Insert filepath for job results files
-INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum, checksum_algorithm_id) VALUES ('job1result.txt', 1, '852952723', 1), ('job2result.txt', 1, '852952723', 1);
+INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum, checksum_algorithm_id) VALUES ('job1result.txt', 8, '852952723', 1), ('job2tar.tar', 7, '852952723', 1);
 
 -- Insert jobs
-INSERT INTO qiita.job (data_type_id, job_status_id, command_id, options) VALUES (1, 3, 1, 'options1'), (1, 3, 2, 'options2');
+INSERT INTO qiita.job (data_type_id, job_status_id, command_id, options) VALUES (1, 3, 1, '{"option1":true,"option2":12,"option3":"FCM"}'), (1, 3, 2, 'options2');
 
 -- Insert Analysis
 INSERT INTO qiita.analysis (email, name, description, analysis_status_id, pmid) VALUES ('test@foo.bar', 'SomeAnalysis', 'A test analysis', 4, '121112');

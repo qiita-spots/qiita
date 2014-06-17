@@ -15,13 +15,14 @@ get_support_file = partial(join, join(dirname(abspath(__file__)),
                                       'support_files'))
 
 DFLT_BASE_DATA_FOLDER = get_support_file('test_data')
+DFLT_BASE_WORK_FOLDER = get_support_file('work_data')
 SETTINGS_FP = get_support_file('qiita-db-settings.sql')
 LAYOUT_FP = get_support_file('qiita-db.sql')
 INITIALIZE_FP = get_support_file('initialize.sql')
 POPULATE_FP = get_support_file('populate_test_db.sql')
 
 
-def make_test_environment(base_data_dir, user, password, host):
+def make_test_environment(base_data_dir, base_work_dir, user, password, host):
     """Creates a test database environment.
 
     Creates a new database called `qiita_test` tailored for testing purposes
@@ -30,6 +31,7 @@ def make_test_environment(base_data_dir, user, password, host):
     Parameters
     ----------
     base_data_dir : str
+    base_work_dir : str
     """
     # Connect to the postgres server
     conn = connect(user=user, host=host, password=password)
@@ -52,8 +54,8 @@ def make_test_environment(base_data_dir, user, password, host):
         cur.execute(f.read())
 
     # Insert the settings values to the database
-    cur.execute("INSERT INTO settings (test, base_data_dir) VALUES "
-                "(TRUE, %(path)s)", {'path': base_data_dir})
+    cur.execute("INSERT INTO settings (test, base_data_dir, base_work_dir) "
+                "VALUES (TRUE, '%s', '%s')" % (base_data_dir, base_work_dir))
 
     conn.commit()
     cur.close()

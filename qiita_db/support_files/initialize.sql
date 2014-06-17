@@ -32,7 +32,7 @@ INSERT INTO qiita.portal_type (portal, description) VALUES ('QIIME', 'QIIME port
 INSERT INTO qiita.required_sample_info_status (status) VALUES ('received'), ('in_preparation'), ('running'), ('completed');
 
 -- Populate filepath_type table
-INSERT INTO qiita.filepath_type (filepath_type) VALUES ('raw_sequences'), ('raw_barcodes'), ('raw_spectra'), ('preprocessed_sequences'), ('preprocessed_sequences_qual'), ('biom');
+INSERT INTO qiita.filepath_type (filepath_type) VALUES ('raw_sequences'), ('raw_barcodes'), ('raw_spectra'), ('preprocessed_sequences'), ('preprocessed_sequences_qual'), ('biom'), ('tar'), ('plain_text');
 
 -- Populate checksum_algorithm table
 INSERT INTO qiita.checksum_algorithm (name) VALUES ('crc32');
