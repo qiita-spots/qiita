@@ -42,6 +42,7 @@ class Job(QiitaStatusObject):
     remove_results(results)
         Removes a list of results from the results
     """
+    _table = "job"
 
     @staticmethod
     def create(datatype, function, analysis):

@@ -37,8 +37,9 @@ from string import ascii_letters, digits, punctuation
 from binascii import crc32
 from bcrypt import hashpw, gensalt
 
+from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from .exceptions import QiitaDBColumnError
-from qiita_db.sql_connection import SQLConnectionHandler
+from .sql_connection import SQLConnectionHandler
 
 
 def quote_column_name(c):
@@ -279,3 +280,35 @@ def compute_checksum(filepath):
     # We need the & 0xffffffff in order to get the same numeric value across
     # all python versions and platforms
     return crc & 0xffffffff
+
+
+def convert_to_id(value, table, conn_handler=None):
+        """Converts a string value to it's corresponding table identifier
+
+        Parameters
+        ----------
+        value : str
+            The string value to convert
+        table : str
+            The table that has the conversion
+        conn_handler : SQLConnectionHandler, optional
+            The sql connection object
+
+        Returns
+        -------
+        int
+            The id correspinding to the string
+
+        Raises
+        ------
+        IncompetentQiitaDeveloperError
+            The passed string has no associated id
+        """
+        conn_handler = conn_handler if conn_handler else SQLConnectionHandler()
+        _id = conn_handler.execute_fetchone(
+            "SELECT {0}_id FROM qiita.{0} WHERE {0} = %s".format(table),
+            (value, ))
+        if _id is None:
+            raise IncompetentQiitaDeveloperError("%s not valid for table %s"
+                                                 % (value, table))
+        return _id[0]
