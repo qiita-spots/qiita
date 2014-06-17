@@ -47,6 +47,7 @@ class Job(QiitaStatusObject):
     set_error
     add_results
     """
+    _table = "job"
 
     _table = "job"
 

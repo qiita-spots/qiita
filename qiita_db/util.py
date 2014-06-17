@@ -23,6 +23,7 @@ Methods
     insert_filepaths
     check_table_cols
     check_required_columns
+    convert_to_id
 """
 # -----------------------------------------------------------------------------
 # Copyright (c) 2014--, The Qiita Development Team.
@@ -44,7 +45,7 @@ from shutil import copy
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from .exceptions import QiitaDBColumnError
-from qiita_db.sql_connection import SQLConnectionHandler
+from .sql_connection import SQLConnectionHandler
 
 
 def quote_column_name(c):

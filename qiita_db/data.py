@@ -176,6 +176,14 @@ class BaseData(QiitaObject):
         base_fp = partial(join, join(get_db_files_base_dir(), self._table))
         return [(base_fp(fp), id) for fp, id in db_paths]
 
+    def get_filepath_ids(self):
+        conn_handler = SQLConnectionHandler()
+        db_ids = conn_handler.execute_fetchall(
+            "SELECT filepath_id FROM qiita.{0} WHERE "
+            "{1}=%(id)s".format(self._data_filepath_table,
+                                self._data_filepath_column), {'id': self.id})
+        return [fp_id[0] for fp_id in db_ids]
+
 
 class RawData(BaseData):
     r"""Object for dealing with raw data
