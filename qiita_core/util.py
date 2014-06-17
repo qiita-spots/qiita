@@ -9,7 +9,7 @@ from smtplib import SMTP, SMTP_SSL, SMTPException
 try:
     from email.MIMEMultipart import MIMEMultipart
     from email.MIMEText import MIMEText
-except ImportError:  #python3
+except ImportError:  # python3
     from email.mime.multipart import MIMEMultipart
     from email.mime.text import MIMEText
 

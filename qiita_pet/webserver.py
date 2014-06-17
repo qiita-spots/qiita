@@ -1,4 +1,4 @@
-#login code modified from https://gist.github.com/guillaumevincent/4771570
+# login code modified from https://gist.github.com/guillaumevincent/4771570
 
 import tornado.auth
 import tornado.escape
