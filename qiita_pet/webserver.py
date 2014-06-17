@@ -18,6 +18,7 @@ from qiita_pet.handlers.auth_handlers import (AuthCreateHandler,
                                               AuthLoginHandler,
                                               AuthLogoutHandler,
                                               AuthVerifyHandler)
+from qiita_pet.handlers.analysis_handlers import CreateAnalysisHandler
 
 define("port", default=8888, help="run on the given port", type=int)
 
@@ -40,6 +41,7 @@ class Application(tornado.web.Application):
              {"path": RES_PATH}),
             (r"/static/(.*)", tornado.web.StaticFileHandler,
              {"path": STATIC_PATH}),
+            (r"/analysis/1", CreateAnalysisHandler),
             (r"/mockup/", MockupHandler),
             # 404 PAGE MUST BE LAST IN THIS LIST!
             (r".*", NoPageHandler)

@@ -2,11 +2,9 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en-US">
 <head>
   <title>Qiita</title>
-  <link rel="stylesheet" href="/static/vendor/css/jquery.qtip.min.css" type="text/css">
   <link rel="stylesheet" href="/static/vendor/css/bootstrap.min.css" type="text/css">
   <link rel="stylesheet" href="/static/vendor/css/bootstrap-theme.min.css" type="text/css">
   <link rel="stylesheet" href="/static/css/style.css" type="text/css">
-  <link rel="stylesheet" href="/static/css/qiita.css" type="text/css">
 
   <script src="/static/vendor/js/jquery-2.1.0.min.js"></script>
   <script src="/static/vendor/js/bootstrap.min.js"></script>
@@ -25,9 +23,9 @@
 			<li><a href="/">Home</a></li>
 			{% if user != '' %}
 			<li>
-				<a href="/meta/1" target="_parent">Meta Analysis</a>
+				<a href="/analysis/1" target="_parent">Meta Analysis</a>
 				<ul>
-					<li><a href="/meta/1" target="_parent">New Meta-Analysis</a></li>
+					<li><a href="/analysis/1" target="_parent">New Meta-Analysis</a></li>
 					<li><a href="/running/" target="_parent">Running Meta-Analyses</a></li>
 				</ul>
 			</li>
@@ -77,7 +75,7 @@
    </tr>
 </table>
 
-<div id="content">
+<div id="template-content">
   {% block content %}{% end %}
 </div>
 

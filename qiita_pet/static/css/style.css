@@ -1,31 +1,5 @@
-html, body, iframe {
-    margin: 0; 
-    padding: 0;
-    font: 15px normal Arial, Helvetica, sans-serif;
-    background: #FFF;
-    height:100%;
-}
-
-fieldset {
-    display:inline;
-    border:none;
-    vertical-align: top;
-    height:100%;
-}
-
-#content {
-    height:100%;
-    width:100%;
-}
-
-#sidemenu {
-    display:block;
-    float:left;
-    width:200px;
-    margin:2px;
-    padding:2px;
-    height:100%;
-
+#template-content{
+  padding: 20px;
 }
 
 /* navbar code from http://line25.com/tutorials/how-to-create-a-pure-css-dropdown-menu */
