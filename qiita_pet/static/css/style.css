@@ -1,0 +1,102 @@
+html, body, iframe {
+    margin: 0; 
+    padding: 0;
+    font: 15px normal Arial, Helvetica, sans-serif;
+    background: #FFF;
+    height:100%;
+}
+
+fieldset {
+    display:inline;
+    border:none;
+    vertical-align: top;
+    height:100%;
+}
+
+#content {
+    height:100%;
+    width:100%;
+}
+
+#sidemenu {
+    display:block;
+    float:left;
+    width:200px;
+    margin:2px;
+    padding:2px;
+    height:100%;
+
+}
+
+/* navbar code from http://line25.com/tutorials/how-to-create-a-pure-css-dropdown-menu */
+nav {
+    padding: 0px;
+    margin: 0px;
+    font-size: 18px;
+    text-align: center;
+}
+
+nav ul ul {
+    display: none;
+}
+
+nav ul li:hover > ul {
+    display: block;
+}
+
+
+nav ul {
+    background: #A7A9AC; 
+    padding: 0 20px; 
+    list-style: none;
+    position: relative;
+}
+    nav ul:after {
+        content: ""; 
+        clear: both; 
+        display: block;
+    }
+
+    nav ul li {
+        float: left;
+    }
+        nav ul li:hover {
+            background: #999;
+        }
+            nav ul li:hover a {
+                color: #000;
+            }
+        
+        nav ul li a {
+            display: block; 
+            padding: 10px 10px;
+            color: #000; 
+            text-decoration: none;
+            
+        }
+            
+        
+    nav ul ul {
+        background: #999; 
+        border-radius: 0px; 
+        padding: 0;
+        position: absolute; top: 100%;
+    }
+        nav ul ul li {
+            float: none; 
+            border-top: 1px solid #999;
+            border-bottom: 1px solid #999; 
+            position: relative;
+        }
+            nav ul ul li a {
+                padding: 10px 10px;
+                color: #000;
+            }   
+                nav ul ul li a:hover {
+                    background: #888;
+                }
+        
+    nav ul ul ul {
+        position: absolute; left: 100%; 
+        top:0;
+    }
