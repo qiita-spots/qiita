@@ -16,7 +16,7 @@ class AuthCreateHandler(BaseHandler):
         try:
             error_message = self.get_argument("error")
         # Tornado can raise an Exception directly, not a defined type
-        except Exception:
+        except:
             error_message = ""
         self.render("create_user.html", user=self.get_current_user(),
                     error=error_message)
@@ -30,7 +30,7 @@ class AuthCreateHandler(BaseHandler):
             if hold:
                 info[info_column] = hold
 
-        created, msg = User.create(username, password, info)
+        created = User.create(username, password, info)
 
         if created:
             send_email(username, "FORGE: Verify Email Address", "Please click "
@@ -47,7 +47,7 @@ class AuthVerifyHandler(BaseHandler):
         email = self.get_argument("email")
         code = self.get_argument("code")
         try:
-            User(email).status = 3
+            User(email).level = 3
             msg = "Successfully verified user!"
         except QiitaDBUnknownIDError:
             msg = "Code not valid!"
@@ -60,9 +60,9 @@ class AuthLoginHandler(BaseHandler):
     def post(self):
         username = self.get_argument("username", "")
         passwd = self.get_argument("password", "")
-        # check the user status
+        # check the user level
         try:
-            if User(username).status == 4:  # 4 is id for unverified
+            if User(username).level == 4:  # 4 is id for unverified
                 # email not verified so dont log in
                 msg = "Email not verified"
         except QiitaDBUnknownIDError:

@@ -26,7 +26,7 @@ STATIC_PATH = join(DIRNAME, "static")
 TEMPLATE_PATH = join(DIRNAME, "templates")  # base folder for webpages
 RES_PATH = join(DIRNAME, "results")
 COOKIE_SECRET = b64encode(uuid4().bytes + uuid4().bytes)
-DEBUG = False
+DEBUG = True
 
 
 class Application(tornado.web.Application):
