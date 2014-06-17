@@ -89,9 +89,9 @@ class Analysis(QiitaStatusObject):
 
         # add parent if necessary
         if parent:
-            sql = ("INSERT INTO qiita.analysis_chain (parent, child) VALUES "
-                   "(%s, %s)")
-            conn_handler.execute(sql, (parent, a_id))
+            sql = ("INSERT INTO qiita.analysis_chain (parent_id, child_id) "
+                   "VALUES (%s, %s)")
+            conn_handler.execute(sql, (parent.id, a_id))
 
         return cls(a_id)
 
@@ -178,8 +178,8 @@ class Analysis(QiitaStatusObject):
         conn_handler = SQLConnectionHandler()
         sql = ("SELECT filepath_id FROM qiita.analysis_filepath WHERE "
                "analysis_id = %s")
-        tables = conn_handler.execute_fetchone(sql, (self._id, ))
-        if tables is None:
+        tables = conn_handler.execute_fetchall(sql, (self._id, ))
+        if tables == []:
             return None
         return [table[0] for table in tables]
 
@@ -195,8 +195,10 @@ class Analysis(QiitaStatusObject):
         conn_handler = SQLConnectionHandler()
         sql = ("SELECT job_id FROM qiita.analysis_job WHERE "
                "analysis_id = %s".format(self._table))
-        return [job_id[0] for job_id in
-                conn_handler.execute_fetchall(sql, (self._id, ))]
+        job_ids = conn_handler.execute_fetchall(sql, (self._id, ))
+        if job_ids == []:
+            return None
+        return [job_id[0] for job_id in job_ids]
 
     @property
     def pmid(self):
@@ -262,7 +264,7 @@ class Analysis(QiitaStatusObject):
 
         sql = ("INSERT INTO qiita.analysis_users (analysis_id, email) VALUES "
                "(%s, %s)")
-        conn_handler.execute(sql, (self._id. user.id))
+        conn_handler.execute(sql, (self._id, user.id))
 
     def unshare(self, user):
         """Unshare the analysis with another user
@@ -277,7 +279,7 @@ class Analysis(QiitaStatusObject):
 
         sql = ("DELETE FROM qiita.analysis_users WHERE analysis_id = %s AND "
                "email = %s")
-        conn_handler.execute(sql, (self._id. user.id))
+        conn_handler.execute(sql, (self._id, user.id))
 
     def add_samples(self, samples):
         """Adds samples to the analysis
@@ -291,7 +293,7 @@ class Analysis(QiitaStatusObject):
         conn_handler = SQLConnectionHandler()
         self._lock_public(conn_handler)
 
-        sql = ("INSERT INTO qiita.study_samples (analysis_id, sample_id, "
+        sql = ("INSERT INTO qiita.analysis_sample (analysis_id, sample_id, "
                "processed_data_id) VALUES (%s, %s, %s)")
         conn_handler.executemany(sql, [(self._id, s[1], s[0])
                                        for s in samples])
@@ -308,10 +310,44 @@ class Analysis(QiitaStatusObject):
         conn_handler = SQLConnectionHandler()
         self._lock_public(conn_handler)
 
-        sql = ("DELETE FROM qiita.analysis_samples WHERE (analysis_id =%s AND "
-               "sample_id = %s AND processed_data_id = %s ")
+        sql = ("DELETE FROM qiita.analysis_sample WHERE analysis_id = %s AND "
+               "sample_id = %s AND processed_data_id = %s")
         conn_handler.executemany(sql, [(self._id, s[1], s[0])
                                        for s in samples])
+
+    def add_biom_tables(self, tables):
+        """Adds biom tables to the analysis
+
+        Parameters
+        ----------
+        tables : list of ProcessedData objects
+            Biom tables to add
+        """
+        conn_handler = SQLConnectionHandler()
+        self._lock_public(conn_handler)
+        file_ids = []
+        for table in tables:
+            file_ids.extend(table.get_filepath_ids())
+        sql = ("INSERT INTO qiita.analysis_filepath (analysis_id, filepath_id)"
+               " VALUES (%s, %s)")
+        conn_handler.executemany(sql, [(self._id, f) for f in file_ids])
+
+    def remove_biom_tables(self, tables):
+        """Removes biom tables from the analysis
+
+        Parameters
+        ----------
+        tables : list of ProcessedData objects
+            Biom tables to remove
+        """
+        conn_handler = SQLConnectionHandler()
+        self._lock_public(conn_handler)
+        file_ids = []
+        for table in tables:
+            file_ids.extend(table.get_filepath_ids())
+        sql = ("DELETE FROM qiita.analysis_filepath WHERE analysis_id = %s "
+               "AND filepath_id = %s")
+        conn_handler.executemany(sql, [(self._id, f) for f in file_ids])
 
     def add_jobs(self, jobs):
         """Adds a list of jobs to the analysis
