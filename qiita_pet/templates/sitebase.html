@@ -1,0 +1,88 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en-US">
+<head>
+  <title>Qiita</title>
+  <link rel="stylesheet" href="/static/vendor/css/jquery.qtip.min.css" type="text/css">
+  <link rel="stylesheet" href="/static/vendor/css/bootstrap.min.css" type="text/css">
+  <link rel="stylesheet" href="/static/vendor/css/bootstrap-theme.min.css" type="text/css">
+  <link rel="stylesheet" href="/static/css/style.css" type="text/css">
+  <link rel="stylesheet" href="/static/css/qiita.css" type="text/css">
+
+  <script src="/static/vendor/js/jquery-2.1.0.min.js"></script>
+  <script src="/static/vendor/js/bootstrap.min.js"></script>
+  <script src="/static/vendor/js/dropdown.min.js"></script>
+
+  {% block head %}{% end %}
+</head>
+<body>
+
+<table width='100%' border="0" style="background:#A7A9AC">
+   <tr style="padding-top:3px; padding-bottom:3px; padding-right:3px; padding-left:3px;">
+       <td width="15%"><img src="/static/img/logo.png"></td>
+       <td width="60%" style="text-align:center;">
+		<nav>
+		<ul>
+			<li><a href="/">Home</a></li>
+			{% if user != '' %}
+			<li>
+				<a href="/meta/1" target="_parent">Meta Analysis</a>
+				<ul>
+					<li><a href="/meta/1" target="_parent">New Meta-Analysis</a></li>
+					<li><a href="/running/" target="_parent">Running Meta-Analyses</a></li>
+				</ul>
+			</li>
+			<!--
+			<li>
+				<a href="" target="_parent">Tools</a>
+			</li>
+			-->
+			{% end %}
+			<li><a href="mailto:qiita.help@gmail.com" target="_blank">Help</a></li>
+		</ul>
+		</nav>
+	  </td>
+	  <td width="45%" id="study_info">
+      {% if user %}
+        <div class="nav navbar-nav navbar-right" style="color: white;">Welcome <a href="/profile/">{{user}}</a> | <a href="/auth/logout/">Log Out</a></div>
+      {% else %}
+        <div class="nav">
+      {% try %}
+        <span style="color: red;">{{loginerror}}</span>  
+       {% except %}
+       </span>
+       {% end %}
+       <form class="navbar-form" role="form" action="/auth/login/" method="post">
+       <table width="100%">
+       <tr>
+       <td>
+        <div class="form-group">
+          <input type="text" id="username" name="username" placeholder="Email" class="form-control">
+        </div>
+        </td>
+        <td>
+        <div class="form-group">
+          <input type="password" id="password" name="password" placeholder="Password" class="form-control">
+        </div>
+        </td>
+        <td>
+        <button type="submit" class="btn btn-success">Sign in</button>
+      </td>
+      </tr>
+      </table>
+      </form>
+      <a href="/auth/create/">New User</a> | <a href="/forgot/">Forgot Password</a>
+      </div>
+      {%end%}  
+	  </td>
+   </tr>
+</table>
+
+<div id="content">
+  {% block content %}{% end %}
+</div>
+
+<div id="footer">
+</div>
+
+</body>
+</html>
