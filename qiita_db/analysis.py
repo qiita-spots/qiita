@@ -212,10 +212,8 @@ class Analysis(QiitaStatusObject):
         conn_handler = SQLConnectionHandler()
         sql = ("SELECT pmid FROM qiita.{0} WHERE "
                "analysis_id = %s".format(self._table))
-        pmid = conn_handler.execute_fetchone(sql, (self._id, ))
-        if pmid is None:
-            return None
-        return pmid[0]
+        pmid = conn_handler.execute_fetchone(sql, (self._id, ))[0]
+        return pmid
 
     @pmid.setter
     def pmid(self, pmid):
@@ -241,14 +239,14 @@ class Analysis(QiitaStatusObject):
                "analysis_id = %s".format(self._table))
         conn_handler.execute(sql, (pmid, self._id))
 
-    @property
-    def parent(self):
-        """Returns the id of the parent analysis this was forked from"""
-        return QiitaDBNotImplementedError()
+    # @property
+    # def parent(self):
+    #     """Returns the id of the parent analysis this was forked from"""
+    #     return QiitaDBNotImplementedError()
 
-    @property
-    def children(self):
-        return QiitaDBNotImplementedError()
+    # @property
+    # def children(self):
+    #     return QiitaDBNotImplementedError()
 
     # ---- Functions ----
     def share(self, user):
