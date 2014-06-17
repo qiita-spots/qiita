@@ -6,8 +6,12 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 from smtplib import SMTP, SMTP_SSL, SMTPException
-from email.MIMEMultipart import MIMEMultipart
-from email.MIMEText import MIMEText
+try:
+    from email.MIMEMultipart import MIMEMultipart
+    from email.MIMEText import MIMEText
+except ImportError:  #python3
+    from email.mime.multipart import MIMEMultipart
+    from email.mime.text import MIMEText
 
 from qiita_core.qiita_settings import qiita_config
 from qiita_db.sql_connection import SQLConnectionHandler
@@ -42,8 +46,8 @@ def send_email(to, subject, body):
     # send email
     try:
         smtp.sendmail(qiita_config.smtp_email, to, msg.as_string())
-    except Exception, e:
-        raise RuntimeError("Can't send email! %s" % str(e))
+    except Exception:
+        raise RuntimeError("Can't send email!")
     finally:
         smtp.close()
 

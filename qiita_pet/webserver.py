@@ -57,7 +57,7 @@ def main():
     tornado.options.parse_command_line()
     http_server = tornado.httpserver.HTTPServer(Application())
     http_server.listen(options.port)
-    print "Tornado started on port", options.port
+    print("Tornado started on port", options.port)
     tornado.ioloop.IOLoop.instance().start()
 
 if __name__ == "__main__":
