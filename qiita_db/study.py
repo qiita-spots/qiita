@@ -426,6 +426,21 @@ class Study(QiitaStatusObject):
         return self._id
 
     @property
+    def data_types(self):
+        """Returns list of the data types for this study
+
+        Returns
+        -------
+        list of str
+        """
+        conn_handler = SQLConnectionHandler()
+        sql = ("SELECT DISTINCT DT.data_type FROM qiita.study_raw_data SRD "
+               "JOIN qiita.common_prep_info CPI ON SRD.raw_data_id = "
+               "CPI.raw_data_id JOIN qiita.data_type DT ON CPI.data_type_id = "
+               "DT.data_type_id WHERE SRD.study_id = %s")
+        return [x[0] for x in conn_handler.execute_fetchall(sql, (self._id,))]
+
+    @property
     def raw_data(self):
         """ Returns list of data ids for raw data info
 
