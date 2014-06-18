@@ -16,7 +16,8 @@ from qiita_db.environment_manager import (make_test_environment,
                                           clean_test_environment,
                                           DFLT_BASE_DATA_FOLDER,
                                           DFLT_BASE_WORK_FOLDER)
-
+from qiita_db.util import get_filetypes
+from qiita_db.data import load_raw, load_preprocessed, load_processed
 
 @click.group()
 def qiita_db():
@@ -74,10 +75,26 @@ def make_production_env():
     """TODO: Not implemented"""
     make_production_environment()
 
+@click.command()
+@click.option('--fp', required=True, type=click.Path, exists=True,
+              readable=True, resolve_path=True, multiple=True,
+              help='Path to the raw data file. This option can be used '
+              'multiple times if there are multiple raw data files.')
+@click.option('--filetype', require=True,
+              type=click.Choice(get_filetypes().keys()),
+              help='The type of data')
+@click.option('--study', required=True, multiple=True, help='Associate the '
+              'data with this study. This option can be used multiple times '
+              'if the data should be associated with multiple studies')
+def load_raw_data(fp, filetype, study):
+    data.load_raw(fp, filetype, study)
+
+
 qiita_db.add_command(make_test_env)
 qiita_db.add_command(clean_test_env)
 qiita_db.add_command(drop_test_env)
 qiita_db.add_command(make_production_env)
+qiita_db.add_command(load_raw_data)
 
 if __name__ == '__main__':
     qiita_db()
