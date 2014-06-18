@@ -92,7 +92,7 @@ def _as_python_types(metadata_map, headers):
     values = []
     for h in headers:
         if isinstance(metadata_map[h][0], np.generic):
-            values.append(map(np.asscalar, metadata_map[h]))
+            values.append(list(map(np.asscalar, metadata_map[h])))
         else:
             values.append(list(metadata_map[h]))
     return values
@@ -179,6 +179,10 @@ class BaseSample(QiitaObject):
         self._md_template = md_template
         self._dynamic_table = "%s%d" % (self._table_prefix,
                                         self._md_template.id)
+
+    def __hash__(self):
+        r"""Defines the hash function so samples are hashable"""
+        return hash(self._id)
 
     def __eq__(self, other):
         r"""Self and other are equal based on type and ids"""
