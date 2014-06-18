@@ -10,10 +10,11 @@
 
 import click
 
-from qiita_db.make_environment import (make_test_environment,
-                                       make_production_environment,
-                                       DFLT_BASE_DATA_FOLDER,
-                                       DFLT_BASE_WORK_FOLDER)
+from qiita_db.environment_manager import (make_test_environment,
+                                          make_production_environment,
+                                          clean_test_environment,
+                                          DFLT_BASE_DATA_FOLDER,
+                                          DFLT_BASE_WORK_FOLDER)
 
 
 @click.group()
@@ -37,6 +38,20 @@ def make_test_env(base_data_folder, base_work_folder, user, host):
     and initializes the `settings` table of such database
     """
     make_test_environment(base_data_folder, base_work_folder, user, None, host)
+
+
+@click.command()
+@click.option('--user', default='postgres',
+              help="The database user to connect to the database")
+@click.option('--host', default='localhost',
+              help='The host where the database lives')
+def clean_test_env(user, host):
+    """Cleans the test database environment.
+
+    In case that the `tearDown` function of a unit test fails and leaves the
+    test database dirty, this cleans it up.
+    """
+    clean_test_environment(user, None, host)
 
 
 @click.command()

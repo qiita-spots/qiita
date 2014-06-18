@@ -23,7 +23,7 @@ POPULATE_FP = get_support_file('populate_test_db.sql')
 
 
 def make_test_environment(base_data_dir, base_work_dir, user, password, host):
-    """Creates a test database environment.
+    r"""Creates a test database environment.
 
     Creates a new database called `qiita_test` tailored for testing purposes
     and initializes the `settings` table of such database
@@ -57,6 +57,31 @@ def make_test_environment(base_data_dir, base_work_dir, user, password, host):
     cur.execute("INSERT INTO settings (test, base_data_dir, base_work_dir) "
                 "VALUES (TRUE, '%s', '%s')" % (base_data_dir, base_work_dir))
 
+    conn.commit()
+    cur.close()
+    conn.close()
+
+
+def clean_test_environment(user, password, host):
+    r"""Cleans the test database environment after a test failure
+
+    In case that the `tearDown` function of a unit test fails and leaves the
+    test database dirty, this cleans it up.
+
+    Parameters
+    ----------
+    user : str
+        The postgres user to connect to the server
+    password : str
+        The password of the user
+    host : str
+        The host where the postgres server is running
+    """
+    # Connect to the postgres server
+    conn = connect(user=user, host=host, password=password,
+                   database='qiita_test')
+    cur = conn.cursor()
+    cur.execute("DROP SCHEMA qiita CASCADE")
     conn.commit()
     cur.close()
     conn.close()
