@@ -74,6 +74,10 @@ def make_production_env():
     """TODO: Not implemented"""
     make_production_environment()
 
+@click.command()
+def add_sample_template():
+
+
 qiita_db.add_command(make_test_env)
 qiita_db.add_command(clean_test_env)
 qiita_db.add_command(drop_test_env)
