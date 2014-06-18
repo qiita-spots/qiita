@@ -186,7 +186,7 @@ class BaseSample(QiitaObject):
 
     def __eq__(self, other):
         r"""Self and other are equal based on type and ids"""
-        if type(self) != type(other):
+        if isinstance(other, type(self)):
             return False
         if other._id != self.id:
             return False
@@ -616,6 +616,10 @@ class MetadataTemplate(QiitaObject):
         # Insert rows on *_columns table
         headers = list(set(headers).difference(db_cols))
         datatypes = _get_datatypes(md_template.ix[:, headers])
+        # psycopg2 requires a list of tuples, in which each tuple is a set
+        # of values to use in the string formatting of the query. We have all
+        # the values in different lists (but in the same order) so use zip
+        # to create the list of tuples that psycopg2 requires.
         values = [v for v in zip([obj.id] * len(headers), headers, datatypes)]
         conn_handler.executemany(
             "INSERT INTO qiita.{0} ({1}, column_name, column_type) "
