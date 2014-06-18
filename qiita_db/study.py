@@ -557,7 +557,8 @@ class StudyPerson(QiitaObject):
             Person already exists
         """
         if cls.exists(name, email):
-            raise QiitaDBDuplicateError("StudyPerson already exists!")
+            raise QiitaDBDuplicateError(
+                "StudyPerson", "name: %s, email: %s" % (name, email))
 
         # Doesn't exist so insert new person
         sql = ("INSERT INTO qiita.{0} (name, email, address, phone) VALUES"

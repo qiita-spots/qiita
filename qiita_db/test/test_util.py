@@ -7,15 +7,16 @@
 # -----------------------------------------------------------------------------
 
 from unittest import TestCase, main
+from tempfile import mkstemp
+from os import close
 
 from qiita_core.util import qiita_test_checker
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
+from qiita_db.exceptions import QiitaDBColumnError
 from qiita_db.util import (exists_table, exists_dynamic_table, scrub_data,
                            compute_checksum, check_table_cols,
-                           check_required_columns, convert_to_id)
-from qiita_db.exceptions import QiitaDBColumnError
-from tempfile import mkstemp
-from os import close
+                           check_required_columns, convert_to_id,
+                           get_table_cols)
 
 
 @qiita_test_checker()
@@ -48,6 +49,13 @@ class DBUtilTests(TestCase):
         with self.assertRaises(QiitaDBColumnError):
             check_table_cols(self.conn_handler, self.required,
                              self.table)
+
+    def test_get_table_cols(self):
+        obs = get_table_cols("qiita_user", self.conn_handler)
+        exp = {"email", "user_level_id", "password", "name", "affiliation",
+               "address", "phone", "user_verify_code", "pass_reset_code",
+               "pass_reset_timestamp"}
+        self.assertEqual(set(obs), exp)
 
     def test_exists_table(self):
         """Correctly checks if a table exists"""

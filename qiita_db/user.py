@@ -32,11 +32,10 @@ from re import match
 
 from qiita_core.exceptions import (IncorrectEmailError, IncorrectPasswordError,
                                    IncompetentQiitaDeveloperError)
-from .exceptions import QiitaDBDuplicateError, QiitaDBColumnError
-from .util import hash_password
-from .util import create_rand_string, check_table_cols
 from .base import QiitaObject
 from .sql_connection import SQLConnectionHandler
+from .util import create_rand_string, check_table_cols, hash_password
+from .exceptions import (QiitaDBColumnError, QiitaDBDuplicateError)
 
 
 class User(QiitaObject):
@@ -182,7 +181,7 @@ class User(QiitaObject):
 
         # make sure user does not already exist
         if cls.exists(email):
-            raise QiitaDBDuplicateError("User %s already exists" % email)
+            raise QiitaDBDuplicateError("User", "email: %s" % email)
 
         # make sure non-info columns aren't passed in info dict
         if info:
