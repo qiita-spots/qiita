@@ -12,9 +12,7 @@ Methods
 ..autosummary::
     :toctree: generated/
 
-    quote_column_name
     quote_data_value
-    get_datatypes
     scrub_data
     exists_table
     exists_dynamic_table
@@ -46,35 +44,6 @@ from shutil import copy
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from .exceptions import QiitaDBColumnError
 from .sql_connection import SQLConnectionHandler
-
-
-def quote_column_name(c):
-    """Lowercases the string and puts double quotes around it
-    """
-    return '"%s"' % c.lower()
-
-
-def quote_data_value(c):
-    """Puts single quotes around a string"""
-    return "'%s'" % c
-
-
-def get_datatypes(metadata_map):
-    """"""
-    isdigit = str.isdigit
-    datatypes = []
-    for header in metadata_map.CategoryNames:
-        column_data = [metadata_map.getCategoryValue(sample_id, header)
-                       for sample_id in metadata_map.SampleIds]
-
-        if all([isdigit(c) for c in column_data]):
-            datatypes.append('int')
-        elif all([isdigit(c.replace('.', '', 1)) for c in column_data]):
-            datatypes.append('float8')
-        else:
-            datatypes.append('varchar')
-
-    return datatypes
 
 
 def scrub_data(s):
@@ -211,6 +180,27 @@ def check_table_cols(conn_handler, keys, table):
     if len(set(keys).difference(cols)) > 0:
         raise QiitaDBColumnError("Non-database keys found: %s" %
                                  set(keys).difference(cols))
+
+
+def get_table_cols(table, conn_handler):
+    """Returns the column headers of table
+
+    Parameters
+    ----------
+    table : str
+        The table name
+    conn_handler : SQLConnectionHandler
+        The connection handler object connected to the DB
+
+    Returns
+    -------
+    list of str
+        The column headers of `table`
+    """
+    headers = conn_handler.execute_fetchall(
+        "SELECT column_name FROM information_schema.columns WHERE "
+        "table_name=%s", (table, ))
+    return [h[0] for h in headers]
 
 
 def exists_table(table, conn_handler):

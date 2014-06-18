@@ -49,8 +49,6 @@ class Job(QiitaStatusObject):
     """
     _table = "job"
 
-    _table = "job"
-
     @classmethod
     def exists(cls, datatype, command, options):
         """Checks if the given job already exists
@@ -99,7 +97,9 @@ class Job(QiitaStatusObject):
             The newly created job
         """
         if cls.exists(datatype, command, options):
-            raise QiitaDBDuplicateError("Job already exists!")
+            raise QiitaDBDuplicateError(
+                "Job", "datatype: %s, command: %s, options: %s"
+                % (datatype, command, options))
 
         # Get the datatype and command ids from the strings
         conn_handler = SQLConnectionHandler()

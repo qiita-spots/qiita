@@ -98,7 +98,8 @@ class QiitaObject(object):
         """
         raise QiitaDBNotImplementedError()
 
-    def _check_subclass(self):
+    @classmethod
+    def _check_subclass(cls):
         r"""Check that we are not calling a function that needs to access the
         database from the base class
 
@@ -107,7 +108,7 @@ class QiitaObject(object):
         IncompetentQiitaDeveloperError
             If its called directly from a base class
         """
-        if self._table is None:
+        if cls._table is None:
             raise IncompetentQiitaDeveloperError(
                 "Could not instantiate an object of the base class")
 

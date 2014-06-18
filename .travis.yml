@@ -10,7 +10,7 @@ before_install:
   # Update conda itself
   - conda update --yes conda
 install:
-  - conda create --yes -n env_name python=$PYTHON_VERSION pip nose pep8
+  - conda create --yes -n env_name python=$PYTHON_VERSION pip nose pep8 openpyxl=1.8.2
   - source activate env_name
   - pip 
   - pip install coveralls
