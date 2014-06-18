@@ -371,6 +371,14 @@ class TestStudy(TestCase):
     def test_retrieve_sample_template(self):
         self.assertEqual(self.study.sample_template, 1)
 
+    def test_retrieve_data_types(self):
+        self.assertEqual(self.study.data_types, ['18S'])
+
+    def test_retrieve_data_types_none(self):
+        new = Study.create(User('test@foo.bar'), 'Identification of the '
+                           'Microbiomes for Cannabis Soils', [1], self.info)
+        self.assertEqual(new.data_types, [])
+
     def test_retrieve_raw_data(self):
         self.assertEqual(self.study.raw_data, [1, 2])
 
