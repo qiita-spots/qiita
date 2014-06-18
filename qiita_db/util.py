@@ -67,6 +67,32 @@ def scrub_data(s):
     return ret
 
 
+def get_filetypes(key='type'):
+    """Gets the list of possible filetypes from the filetype table
+
+    Parameters
+    ----------
+    key : {'type', 'filetype_id'}
+        Defaults to "type". Determines the format of the returned dict.
+
+    Returns
+    -------
+    dict
+        If `key` is "type", dict is of the form {type: filetype_id}
+        If `key` is "filetype_id", dict is of the form {filetype_id: type}
+    """
+    con = SQLConnectionHandler()
+    if key == 'type':
+        cols = 'type, filetype_id'
+    elif key == 'filetype_id':
+        cols = 'filetype_id, type'
+    else:
+        raise QiitaDBColumnError("Unknown key. Pass either 'type' or "
+                                 "'filetype_id'.")
+
+    return dict(con.exectue_fetchall('select {} from filetype'.format(cols)))
+
+
 def create_rand_string(length, punct=True):
         """Returns a string of random ascii characters
 
