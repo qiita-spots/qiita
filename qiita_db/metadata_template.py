@@ -13,6 +13,9 @@ Classes
 ..autosummary::
     :toctree: generated/
 
+    BaseSample
+    Sample
+    PrepSample
     MetadataTemplate
     SampleTemplate
     PrepTemplate
@@ -96,11 +99,57 @@ def _as_python_types(metadata_map, headers):
 
 
 class BaseSample(QiitaObject):
-    r"""Models a sample object in the database"""
+    r"""Sample object that accesses the db to get the information of a sample
+    belonging to a PrepTemplate or a SampleTemplate.
+
+    Parameters
+    ----------
+    sample_id : str
+        The sample id
+    md_template : MetadataTemplate
+        The metadata template obj to which the sample belongs to
+
+    Methods
+    -------
+    __eq__
+    __len__
+    __getitem__
+    __setitem__
+    __delitem__
+    __iter__
+    __contains__
+    exists
+    keys
+    values
+    items
+    get
+
+    See Also
+    --------
+    QiitaObject
+    Sample
+    PrepSample
+    """
     # Used to find the right SQL tables - should be defined on the subclasses
     _table_prefix = None
     _column_table = None
     _id_column = None
+
+    def _check_template_class(self, md_template):
+        r"""Checks that md_template is of the correct type
+
+        Parameters
+        ----------
+        md_template : MetadataTemplate
+            The metadata template
+
+        Raises
+        ------
+        IncompetentQiitaDeveloperError
+            If its call directly from the Base class
+            If `md_template` doesn't have the correct type
+        """
+        raise IncompetentQiitaDeveloperError()
 
     def __init__(self, sample_id, md_template):
         r"""Initializes the object
@@ -119,14 +168,17 @@ class BaseSample(QiitaObject):
         """
         # Check that we are not instantiating the base class
         self._check_subclass()
+        # Check that the md_template is of the correct type
+        self._check_template_class(md_template)
         # Check if the sample id is present on the passed metadata template
         # This test will check that the sample id is actually present on the db
         if sample_id not in md_template:
-            raise QiitaDBUnknownIDError(self.__name__, sample_id)
+            raise QiitaDBUnknownIDError(sample_id, self.__class__.__name__)
         # Assign private attributes
         self._id = sample_id
         self._md_template = md_template
-        self._table_name = "%s%d" % (self._table_prefix, self._md_template.id)
+        self._dynamic_table = "%s%d" % (self._table_prefix,
+                                        self._md_template.id)
 
     def __eq__(self, other):
         r"""Self and other are equal based on type and ids"""
@@ -177,7 +229,7 @@ class BaseSample(QiitaObject):
         # Get all the required columns
         required_cols = get_table_cols(self._table, conn_handler)
         # Get all the the columns in the dynamic table
-        dynamic_cols = get_table_cols(self._table_name, conn_handler)
+        dynamic_cols = get_table_cols(self._dynamic_table, conn_handler)
         # Get the union of the two previous lists
         cols = set(required_cols).union(dynamic_cols)
         # Remove the sample_id column and the study_id/raw_data_id columns,
@@ -222,17 +274,20 @@ class BaseSample(QiitaObject):
         get
         """
         conn_handler = SQLConnectionHandler()
+        key = key.lower()
         if key in self._get_categories(conn_handler):
             # Check if we have either to query the table with required columns
             # or the dynamic table
-            table = (self._table if key in get_table_cols(self._table,
-                                                          conn_handler)
-                     else self._table_name)
-            # Return the value - psycopg2 will take care of the type
-            return conn_handler.execute_fetchone(
-                "SELECT {0} FROM qiita.{1} WHERE {2}=%s AND "
-                "sample_id=%s".format(key, table, self._id_column),
-                (self._md_template.id, self._id))[0]
+            if key in get_table_cols(self._table, conn_handler):
+                return conn_handler.execute_fetchone(
+                    "SELECT {0} FROM qiita.{1} WHERE {2}=%s AND "
+                    "sample_id=%s".format(key, self._table, self._id_column),
+                    (self._md_template.id, self._id))[0]
+            else:
+                return conn_handler.execute_fetchone(
+                    "SELECT {0} FROM qiita.{1} WHERE "
+                    "sample_id=%s".format(key, self._dynamic_table),
+                    (self._id, ))[0]
         else:
             # The key is not available for the sample, so raise a KeyError
             raise KeyError("Metadata category %s does not exists for sample %s"
@@ -262,7 +317,7 @@ class BaseSample(QiitaObject):
         raise QiitaDBNotImplementedError()
 
     def __iter__(self):
-        r"""Iterator over the sorted sample ids
+        r"""Iterator over the metadata keys
 
         Returns
         -------
@@ -273,10 +328,11 @@ class BaseSample(QiitaObject):
         --------
         keys
         """
-        pass
+        conn_handler = SQLConnectionHandler()
+        return iter(self._get_categories(conn_handler))
 
     def __contains__(self, key):
-        r"""Checks if the sample id `key` is present in the metadata template
+        r"""Checks if the metadata category `key` is present
 
         Parameters
         ----------
@@ -286,13 +342,13 @@ class BaseSample(QiitaObject):
         Returns
         -------
         bool
-            True if the sample id `key` is in the metadata template, false
-            otherwise
+            True if the metadata category `key` is present, false otherwise
         """
-        pass
+        conn_handler = SQLConnectionHandler()
+        return key.lower() in self._get_categories(conn_handler)
 
     def keys(self):
-        r"""Iterator over the sorted sample ids
+        r"""Iterator over the metadata categories
 
         Returns
         -------
@@ -303,56 +359,133 @@ class BaseSample(QiitaObject):
         --------
         __iter__
         """
-        pass
+        return self.__iter__()
 
     def values(self):
-        r"""Iterator over the metadata values, in sample id order
+        r"""Iterator over the metadata values, in metadata category order
 
         Returns
         -------
         Iterator
-            Iterator over Sample obj
+            Iterator over metadata values
         """
-        pass
+        conn_handler = SQLConnectionHandler()
+        values = conn_handler.execute_fetchone(
+            "SELECT * FROM qiita.{0} WHERE {1}=%s AND "
+            "sample_id=%s".format(self._table, self._id_column),
+            (self._md_template.id, self._id))[2:]
+        dynamic_values = conn_handler.execute_fetchone(
+            "SELECT * from qiita.{0} WHERE "
+            "sample_id=%s".format(self._dynamic_table),
+            (self._id, ))[1:]
+        values.extend(dynamic_values)
+        return iter(values)
 
     def items(self):
-        r"""Iterator over (sample_id, values) tuples, in sample id order
+        r"""Iterator over (category, value) tuples
 
         Returns
         -------
         Iterator
-            Iterator over (sample_ids, values) tuples
+            Iterator over (category, value) tuples
         """
-        pass
+        conn_handler = SQLConnectionHandler()
+        values = dict(conn_handler.execute_fetchone(
+            "SELECT * FROM qiita.{0} WHERE {1}=%s AND "
+            "sample_id=%s".format(self._table, self._id_column),
+            (self._md_template.id, self._id)))
+        dynamic_values = dict(conn_handler.execute_fetchone(
+            "SELECT * from qiita.{0} WHERE "
+            "sample_id=%s".format(self._dynamic_table),
+            (self._id, )))
+        values.update(dynamic_values)
+        del values['sample_id']
+        del values[self._id_column]
+        return values.items()
 
     def get(self, key):
-        r"""Returns the metadata values for sample id `key`, or None if the
-        sample id `key` is not present in the metadata map
+        r"""Returns the metadata value for category `key`, or None if the
+        category `key` is not present
 
         Parameters
         ----------
         key : str
-            The sample id
+            The metadata category
 
         Returns
         -------
-        Sample or None
-            The sample object for the sample id `key`, or None if it is not
+        Obj or None
+            The value object for the category `key`, or None if it is not
             present
 
         See Also
         --------
         __getitem__
         """
-        pass
+        try:
+            return self[key]
+        except KeyError:
+            return None
 
 
 class PrepSample(BaseSample):
-    """"""
+    r"""Class that models a sample present in a PrepTemplate.
+
+    See Also
+    --------
+    BaseSample
+    Sample
+    """
+    _table = "common_prep_info"
+    _table_prefix = "prep_"
+    _column_table = "raw_data_prep_columns"
+    _id_column = "raw_data_id"
+
+    def _check_template_class(self, md_template):
+        r"""Checks that md_template is of the correct type
+
+        Parameters
+        ----------
+        md_template : PrepTemplate
+            The metadata template
+
+        Raises
+        ------
+        IncompetentQiitaDeveloperError
+            If `md_template` is not a PrepTemplate object
+        """
+        if not isinstance(md_template, PrepTemplate):
+            raise IncompetentQiitaDeveloperError()
 
 
 class Sample(BaseSample):
-    """"""
+    r"""Class that models a sample present in a SampleTemplate.
+
+    See Also
+    --------
+    BaseSample
+    PrepSample
+    """
+    _table = "required_sample_info"
+    _table_prefix = "sample_"
+    _column_table = "study_sample_columns"
+    _id_column = "study_id"
+
+    def _check_template_class(self, md_template):
+        r"""Checks that md_template is of the correct type
+
+        Parameters
+        ----------
+        md_template : SampleTemplate
+            The metadata template
+
+        Raises
+        ------
+        IncompetentQiitaDeveloperError
+            If `md_template` is not a SampleTemplate object
+        """
+        if not isinstance(md_template, SampleTemplate):
+            raise IncompetentQiitaDeveloperError()
 
 
 class MetadataTemplate(QiitaObject):
@@ -365,12 +498,18 @@ class MetadataTemplate(QiitaObject):
 
     Methods
     -------
-    get_sample_metadata
-    get_category_value
-    get_category_values
-    is_numerical_category
-    has_unique_category_values
-    has_single_category_values
+    create
+    exists
+    __len__
+    __getitem__
+    __setitem__
+    __delitem__
+    __iter__
+    __contains__
+    keys
+    values
+    items
+    get
 
     See Also
     --------
@@ -384,6 +523,7 @@ class MetadataTemplate(QiitaObject):
     _column_table = None
     _id_column = None
     _strict = True
+    _sample_cls = None
 
     def _check_id(self, id_, conn_handler=None):
         r"""Checks that the MetadataTemplate id_ exists on the database"""
@@ -444,7 +584,7 @@ class MetadataTemplate(QiitaObject):
         db_cols = get_table_cols(cls._table, conn_handler)
         # Remove the sample_id and study_id columns
         db_cols.remove('sample_id')
-        db_cols.remove('study_id')
+        db_cols.remove(cls._id_column)
         headers = list(md_template.keys())
         sample_ids = list(md_template.index)
         num_samples = len(sample_ids)
@@ -463,8 +603,9 @@ class MetadataTemplate(QiitaObject):
         values.insert(0, [obj.id] * num_samples)
         values = [v for v in zip(*values)]
         conn_handler.executemany(
-            "INSERT INTO qiita.{0} (study_id, sample_id, {1}) "
-            "VALUES (%s, %s, {2})".format(cls._table, ', '.join(db_cols),
+            "INSERT INTO qiita.{0} ({1}, sample_id, {2}) "
+            "VALUES (%s, %s, {3})".format(cls._table, cls._id_column,
+                                          ', '.join(db_cols),
                                           ', '.join(['%s'] * len(db_cols))),
             values)
 
@@ -473,8 +614,8 @@ class MetadataTemplate(QiitaObject):
         datatypes = _get_datatypes(md_template.ix[:, headers])
         values = [v for v in zip([obj.id] * len(headers), headers, datatypes)]
         conn_handler.executemany(
-            "INSERT INTO qiita.{0} (study_id, column_name, column_type) "
-            "VALUES (%s, %s, %s)".format(cls._column_table),
+            "INSERT INTO qiita.{0} ({1}, column_name, column_type) "
+            "VALUES (%s, %s, %s)".format(cls._column_table, cls._id_column),
             values)
 
         # Create table with custom columns
@@ -514,6 +655,25 @@ class MetadataTemplate(QiitaObject):
         cls._check_subclass()
         return exists_table(cls._table_name(obj), SQLConnectionHandler())
 
+    def _get_sample_ids(self, conn_handler):
+        r"""Returns all the available samples for the metadata template
+
+        Parameters
+        ----------
+        conn_handler : SQLConnectionHandler
+            The connection handler object connected to the DB
+
+        Returns
+        -------
+        set of str
+            The set of all available sample ids
+        """
+        sample_ids = conn_handler.execute_fetchall(
+            "SELECT sample_id FROM qiita.{0} WHERE "
+            "{1}=%s".format(self._table, self._id_column),
+            (self._id, ))
+        return set(sample_id[0] for sample_id in sample_ids)
+
     def __len__(self):
         r"""Returns the number of samples in the metadata template
 
@@ -522,7 +682,8 @@ class MetadataTemplate(QiitaObject):
         int
             The number of samples in the metadata template
         """
-        pass
+        conn_handler = SQLConnectionHandler()
+        return len(self._get_sample_ids(conn_handler))
 
     def __getitem__(self, key):
         r"""Returns the metadata values for sample id `key`
@@ -546,7 +707,11 @@ class MetadataTemplate(QiitaObject):
         --------
         get
         """
-        pass
+        if key in self:
+            return self._sample_cls(key, self)
+        else:
+            raise KeyError("Sample id %s does not exists in template %d"
+                           % (key, self._id))
 
     def __setitem__(self, key, value):
         r"""Sets the metadata values for sample id `key`
@@ -558,7 +723,7 @@ class MetadataTemplate(QiitaObject):
         value : Sample
             The sample obj holding the new sample values
         """
-        pass
+        raise QiitaDBNotImplementedError()
 
     def __delitem__(self, key):
         r"""Removes the sample with sample id `key` from the database
@@ -568,10 +733,10 @@ class MetadataTemplate(QiitaObject):
         key : str
             The sample id
         """
-        pass
+        raise QiitaDBNotImplementedError()
 
     def __iter__(self):
-        r"""Iterator over the sorted sample ids
+        r"""Iterator over the sample ids
 
         Returns
         -------
@@ -582,7 +747,8 @@ class MetadataTemplate(QiitaObject):
         --------
         keys
         """
-        pass
+        conn_handler = SQLConnectionHandler()
+        return iter(self._get_sample_ids(conn_handler))
 
     def __contains__(self, key):
         r"""Checks if the sample id `key` is present in the metadata template
@@ -598,7 +764,8 @@ class MetadataTemplate(QiitaObject):
             True if the sample id `key` is in the metadata template, false
             otherwise
         """
-        pass
+        conn_handler = SQLConnectionHandler()
+        return key in self._get_sample_ids(conn_handler)
 
     def keys(self):
         r"""Iterator over the sorted sample ids
@@ -612,17 +779,19 @@ class MetadataTemplate(QiitaObject):
         --------
         __iter__
         """
-        pass
+        return self.__iter__()
 
     def values(self):
-        r"""Iterator over the metadata values, in sample id order
+        r"""Iterator over the metadata values
 
         Returns
         -------
         Iterator
             Iterator over Sample obj
         """
-        pass
+        conn_handler = SQLConnectionHandler()
+        return iter(self._sample_cls(sample_id, self)
+                    for sample_id in self._get_sample_ids(conn_handler))
 
     def items(self):
         r"""Iterator over (sample_id, values) tuples, in sample id order
@@ -632,7 +801,9 @@ class MetadataTemplate(QiitaObject):
         Iterator
             Iterator over (sample_ids, values) tuples
         """
-        pass
+        conn_handler = SQLConnectionHandler()
+        return iter((sample_id, self._sample_cls(sample_id, self))
+                    for sample_id in self._get_sample_ids(conn_handler))
 
     def get(self, key):
         r"""Returns the metadata values for sample id `key`, or None if the
@@ -653,23 +824,40 @@ class MetadataTemplate(QiitaObject):
         --------
         __getitem__
         """
-        pass
+        try:
+            return self[key]
+        except KeyError:
+            return None
 
 
 class SampleTemplate(MetadataTemplate):
-    """
+    r"""Represent the SampleTemplate of a study. Provides access to the
+    tables in the DB that holds the sample metadata information.
+
+    See Also
+    --------
+    MetadataTemplate
+    PrepTemplate
     """
     _table = "required_sample_info"
     _table_prefix = "sample_"
     _column_table = "study_sample_columns"
     _id_column = "study_id"
+    _sample_cls = Sample
 
 
 class PrepTemplate(MetadataTemplate):
-    """
+    r"""Represent the PrepTemplate of a raw dat. Provides access to the
+    tables in the DB that holds the sample preparation information.
+
+    See Also
+    --------
+    MetadataTemplate
+    SampleTemplate
     """
     _table = "common_prep_info"
     _table_prefix = "prep_"
     _column_table = "raw_data_prep_columns"
     _id_column = "raw_data_id"
     _strict = False
+    _sample_cls = PrepSample

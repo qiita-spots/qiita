@@ -11,7 +11,6 @@ from unittest import TestCase, main
 from qiita_core.exceptions import IncorrectEmailError, IncorrectPasswordError
 from qiita_core.util import qiita_test_checker
 from qiita_db.user import User
-from qiita_db.sql_connection import SQLConnectionHandler
 from qiita_db.exceptions import (QiitaDBDuplicateError, QiitaDBColumnError,
                                  QiitaDBUnknownIDError)
 
@@ -21,7 +20,6 @@ class UserTest(TestCase):
     """Tests the User object and all properties/methods"""
 
     def setUp(self):
-        self.conn = SQLConnectionHandler()
         self.user = User('admin@foo.bar')
 
         self.userinfo = {
@@ -54,7 +52,7 @@ class UserTest(TestCase):
         user = User.create('new@test.bar', 'password')
         self.assertEqual(user.id, 'new@test.bar')
         sql = "SELECT * from qiita.qiita_user WHERE email = 'new@test.bar'"
-        obs = self.conn.execute_fetchall(sql)
+        obs = self.conn_handler.execute_fetchall(sql)
         self.assertEqual(len(obs), 1)
         obs = dict(obs[0])
         exp = {
@@ -74,7 +72,7 @@ class UserTest(TestCase):
         user = User.create('new@test.bar', 'password', self.userinfo)
         self.assertEqual(user.id, 'new@test.bar')
         sql = "SELECT * from qiita.qiita_user WHERE email = 'new@test.bar'"
-        obs = self.conn.execute_fetchall(sql)
+        obs = self.conn_handler.execute_fetchall(sql)
         self.assertEqual(len(obs), 1)
         obs = dict(obs[0])
         exp = {

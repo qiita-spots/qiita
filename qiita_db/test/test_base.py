@@ -14,7 +14,6 @@ from qiita_db.base import QiitaObject, QiitaStatusObject
 from qiita_db.exceptions import QiitaDBUnknownIDError
 from qiita_db.data import RawData
 from qiita_db.study import Study
-from qiita_db.sql_connection import SQLConnectionHandler
 
 
 @qiita_test_checker()
@@ -79,7 +78,6 @@ class QiitaStatusObjectTest(TestCase):
     def setUp(self):
         # We need an actual subclass in order to test the equality functions
         self.tester = Study(1)
-        self.conn_handler = SQLConnectionHandler()
 
     def test_status(self):
         """Correctly returns the status of the object"""
