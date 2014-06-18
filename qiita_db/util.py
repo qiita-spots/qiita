@@ -89,8 +89,8 @@ def get_filetypes(key='type'):
     else:
         raise QiitaDBColumnError("Unknown key. Pass either 'type' or "
                                  "'filetype_id'.")
-
-    return dict(con.exectue_fetchall('select {} from filetype'.format(cols)))
+    sql = 'select {} from qiita.filetype'.format(cols)
+    return dict(con.execute_fetchall(sql))
 
 
 def create_rand_string(length, punct=True):
