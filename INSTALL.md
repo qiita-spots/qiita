@@ -36,7 +36,7 @@ pip install https://github.com/biocore/qiita/archive/master.zip
 export QIITA_CONFIG_FP=/qiita/installation/dir/qiita_core/support_files/config_demo.txt
 qiita_db make_demo_env
 ```
-# If using other operating systems that are not Ubuntu
+## If using other operating systems that are not Ubuntu
 
 You will need to add the postgres user to the database. In order to do this, run:
 
