@@ -60,6 +60,7 @@ def make_production_env():
     make_production_environment()
 
 qiita_db.add_command(make_test_env)
+qiita_db.add_command(clean_test_env)
 qiita_db.add_command(make_production_env)
 
 if __name__ == '__main__':
