@@ -23,7 +23,7 @@ POPULATE_FP = get_support_file('populate_test_db.sql')
 
 
 def make_test_environment(base_data_dir, base_work_dir, user, password, host):
-    """Creates a test database environment.
+    r"""Creates a test database environment.
 
     Creates a new database called `qiita_test` tailored for testing purposes
     and initializes the `settings` table of such database
@@ -58,6 +58,63 @@ def make_test_environment(base_data_dir, base_work_dir, user, password, host):
                 "VALUES (TRUE, '%s', '%s')" % (base_data_dir, base_work_dir))
 
     conn.commit()
+    cur.close()
+    conn.close()
+
+
+def clean_test_environment(user, password, host):
+    r"""Cleans the test database environment.
+
+    In case that the test database is dirty (i.e. the 'qiita' schema is
+    present), this cleans it up by dropping the 'qiita' schema.
+
+    Parameters
+    ----------
+    user : str
+        The postgres user to connect to the server
+    password : str
+        The password of the user
+    host : str
+        The host where the postgres server is running
+    """
+    # Connect to the postgres server
+    conn = connect(user=user, host=host, password=password,
+                   database='qiita_test')
+    # Get the cursor
+    cur = conn.cursor()
+    # Drop the qiita schema
+    cur.execute("DROP SCHEMA qiita CASCADE")
+    # Commit the changes
+    conn.commit()
+    # Close cursor and connections
+    cur.close()
+    conn.close()
+
+
+def drop_test_environment(user, password, host):
+    r"""Drops the test environment.
+
+    If the `settings` table is modified, the test database environment should
+    be rebuilt. This command allows to drop the old one.
+
+    Parameters
+    ----------
+    user : str
+        The postgres user to connect to the server
+    password : str
+        The password of the user
+    host : str
+        The host where the postgres server is running
+    """
+    # Connect to the postgres server
+    conn = connect(user=user, host=host, password=password)
+    # Set the isolation level to AUTOCOMMIT so we can execute a
+    # drop database sql query
+    conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
+    # Drop the database
+    cur = conn.cursor()
+    cur.execute('DROP DATABASE qiita_test')
+    # Close cursor and connection
     cur.close()
     conn.close()
 
