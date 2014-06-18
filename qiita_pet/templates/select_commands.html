@@ -19,27 +19,30 @@
   {% end %}
 </ul>
 
-<div class="tab-content" style="height:300px">
-  {% for data_type in data_types %}
-    <div class="tab-pane" id="{{ data_type }}">
-          <table class="table">
-            <tr>
-              <th style="width:20px;"></th>
-              <th>Command</th>
-            </tr>
-            {% for command in commands[data_type] %}
+<form role="form" action="/analysis/wait/" method="post">
+  <input type="hidden" name="analysis-id" value="{{aid}}">
+  <div class="tab-content" style="height:300px">
+    {% for data_type in data_types %}
+      <div class="tab-pane" id="{{ data_type }}">
+            <table class="table">
               <tr>
-                <td style="width:20px;">
-                  <input id="{{data_type}}#{{command}}" type="checkbox" name="commands" value="{{data_type}}#{{command}}">
-                </td>
-                <td>
-                  <label style="font-weight:normal;" for="{{data_type}}#{{command}}">{{command}}</label>
-                </td>
+                <th style="width:20px;"></th>
+                <th>Command</th>
               </tr>
-            {% end %}
-          </table>
-    </div>
-  {% end %}
-</div>
-<button type="submit" class="btn btn-default">Start Processing</button>
+              {% for command in commands[data_type] %}
+                <tr>
+                  <td style="width:20px;">
+                    <input id="{{data_type}}#{{command}}" type="checkbox" name="commands" value="{{data_type}}#{{command}}">
+                  </td>
+                  <td>
+                    <label style="font-weight:normal;" for="{{data_type}}#{{command}}">{{command}}</label>
+                  </td>
+                </tr>
+              {% end %}
+            </table>
+      </div>
+    {% end %}
+  </div>
+  <button type="submit" class="btn btn-default">Start Processing</button>
+</form>
 {% end %}

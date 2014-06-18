@@ -66,7 +66,7 @@ class SelectCommandsHandler(BaseHandler):
                     'Metabolomic' : ['Summarize Taxa']}
 
         self.render('select_commands.html', user=self.get_current_user(),
-                    commands=commands, data_types=data_types)
+                    commands=commands, data_types=data_types, aid=analysis_id)
 
         analysis = Analysis(analysis_id)
 
