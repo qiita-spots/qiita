@@ -15,7 +15,8 @@ except ImportError:  # python3
 
 from qiita_core.qiita_settings import qiita_config
 from qiita_db.sql_connection import SQLConnectionHandler
-from qiita_db.make_environment import (LAYOUT_FP, INITIALIZE_FP, POPULATE_FP)
+from qiita_db.environment_manager import (LAYOUT_FP, INITIALIZE_FP,
+                                          POPULATE_FP)
 
 
 def send_email(to, subject, body):
