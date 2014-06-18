@@ -107,6 +107,23 @@ class DBUtilTests(TestCase):
         with self.assertRaises(IncompetentQiitaDeveloperError):
             convert_to_id("FAKE", "filepath_type")
 
+    def test_get_filetypes(self):
+        """Tests that get_filetypes works with valid arguments"""
+        conn_handler.execute("insert into filetype (filetype_id, type) values "
+                             "(1, 'fastq'), (2, 'fasta')")
+        obs = get_filetypes()
+        exp = {'fastq': 1, 'fasta': 2}
+        self.assertItemsEqual(obs, exp)
+
+        obs = get_filetypes(key='filetype_id')
+        exp = {1: 'fastq', 2: 'fasta'}
+        self.assertItemsEqual(obs, exp)
+
+    def test_get_filetypes_fail(self):
+        """Tests that get_Filetypes fails with invalid argument"""
+        with self.assertRaises(QiitaDBColumnError):
+            get_filetypes(key='invalid')
+
 
 class UtilTests(TestCase):
     """Tests for the util functions that do not need to access the DB"""

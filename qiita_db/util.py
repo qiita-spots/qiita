@@ -72,7 +72,7 @@ def get_filetypes(key='type'):
 
     Parameters
     ----------
-    key : {'type', 'filetype_id'}
+    key : {'type', 'filetype_id'}, optional
         Defaults to "type". Determines the format of the returned dict.
 
     Returns
