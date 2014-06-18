@@ -27,20 +27,22 @@ And on the following packages:
 Install
 -------
 
-Once you have Postgres and redis installed (we recommend to follow the instruction on their web page), you can install Qiita by running the following commands:
+Once you have [PostgresSQL](http://www.postgresql.org/download/) and [redis](https://pypi.python.org/pypi/redis/) installed (follow the instruction on their web site), simply run these commands to install qiita and configure the demo environment 
+(Note that if you are not using Ubuntu you might need to follow the instructions in the next section):
 
 ```bash
 pip install https://github.com/biocore/qiita/archive/master.zip
+qiita_db make_demo_env
 ```
+# If using other operating systems that are not Ubuntu
 
-In MacOS X, you will need to add the postgres user to the database, since it is not added by default, and grant him all privileges. In order to do that, you can execute:
+You will need to add the postgres user to the database. In order to do this, run:
 
 ```bash
 createuser -s postgres -d
 ```
 
-Then, in order to setup the environment, run:
-
+If you receive the following error, you can ignore this step and continue with the qiita installation:
 ```bash
-qiita_db make_demo_env
+createuser: creation of new role failed: ERROR:  role "postgres" already exists
 ```
