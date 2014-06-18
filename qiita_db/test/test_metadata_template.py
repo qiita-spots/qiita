@@ -11,6 +11,7 @@ from unittest import TestCase, main
 from datetime import datetime
 from tempfile import mkstemp
 from os import close, remove
+from os.path import join, basename
 from collections import Iterable
 
 import pandas as pd
@@ -22,7 +23,7 @@ from qiita_db.exceptions import (QiitaDBDuplicateError, QiitaDBUnknownIDError,
 from qiita_db.study import Study, StudyPerson
 from qiita_db.user import User
 from qiita_db.data import RawData
-from qiita_db.util import exists_table
+from qiita_db.util import exists_table, get_db_files_base_dir
 from qiita_db.metadata_template import (_get_datatypes, _as_python_types,
                                         MetadataTemplate, SampleTemplate,
                                         PrepTemplate, BaseSample, PrepSample,
@@ -780,7 +781,11 @@ class TestPrepTemplate(TestCase):
         with open(barcodes_fp, "w") as f:
             f.write("\n")
         self.new_raw_data = RawData.create(2, filepaths, [Study(1)])
-        self._clean_up_files = [seqs_fp, barcodes_fp]
+        db_test_raw_dir = join(get_db_files_base_dir(), 'raw_data')
+        db_seqs_fp = join(db_test_raw_dir, "3_%s" % basename(seqs_fp))
+        db_barcodes_fp = join(db_test_raw_dir, "3_%s" % basename(barcodes_fp))
+        self._clean_up_files = [seqs_fp, barcodes_fp, db_seqs_fp,
+                                db_barcodes_fp]
 
         self.tester = PrepTemplate(1)
         self.exp_sample_ids = {'SKB1.640202', 'SKB2.640194', 'SKB3.640195',
@@ -794,7 +799,8 @@ class TestPrepTemplate(TestCase):
                                'SKM7.640188', 'SKM8.640201', 'SKM9.640192'}
 
     def tearDown(self):
-        map(remove, self._clean_up_files)
+        for f in self._clean_up_files:
+            remove(f)
 
     def test_init_unknown_error(self):
         """Init raises an error if the id is not known"""
