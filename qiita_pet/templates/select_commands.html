@@ -1,0 +1,45 @@
+{% extends sitebase.html %}
+{% autoescape None %}
+
+{%block head%}
+<script>
+  $(function () {
+    $('#data-types-tabs a:first').tab('show')
+  })
+</script>
+{%end%}
+
+{%block content %}
+
+<h1>Select Commands</h1>
+
+<ul class="nav nav-tabs" id="data-types-tabs">
+  {% for data_type in data_types %}
+    <li><a href="#{{ data_type }}" data-toggle="tab">{{ data_type }}</a></li>
+  {% end %}
+</ul>
+
+<div class="tab-content" style="height:300px">
+  {% for data_type in data_types %}
+    <div class="tab-pane" id="{{ data_type }}">
+          <table class="table">
+            <tr>
+              <th style="width:20px;"></th>
+              <th>Command</th>
+            </tr>
+            {% for command in commands[data_type] %}
+              <tr>
+                <td style="width:20px;">
+                  <input id="{{data_type}}#{{command}}" type="checkbox" name="commands" value="{{data_type}}#{{command}}">
+                </td>
+                <td>
+                  <label style="font-weight:normal;" for="{{data_type}}#{{command}}">{{command}}</label>
+                </td>
+              </tr>
+            {% end %}
+          </table>
+    </div>
+  {% end %}
+</div>
+<button type="submit" class="btn btn-default">Start Processing</button>
+{% end %}

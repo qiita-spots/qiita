@@ -32,3 +32,25 @@ class SelectStudiesHandler(BaseHandler):
 
         self.render('select_studies.html', user=user, aid=analysis.id,
                     studies=studies)
+
+
+class SelectCommandsHandler(BaseHandler):
+    """Select commands to be executed"""
+    @authenticated
+    def post(self):
+        analysis_id = self.get_argument('analysis-id')
+        studies = self.get_arguments('studies')
+
+        # make sure the data types are unique
+        data_types = list({x.split('#')[1] for x in studies})
+        data_types.sort()
+
+        commands = {'16S' : ['Alpha Diversity', 'Beta Diversity',
+                             'Summarize Taxa'],
+                    '18S' : ['Alpha Diversity', 'Beta Diversity',
+                             'Summarize Taxa'],
+                    'Metabolomic' : ['Summarize Taxa']}
+
+        self.render('select_commands.html', user=self.get_current_user(),
+                    commands=commands, data_types=data_types)
+
