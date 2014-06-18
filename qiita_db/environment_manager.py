@@ -119,6 +119,78 @@ def drop_test_environment(user, password, host):
     conn.close()
 
 
+def make_demo_environment(base_data_dir, base_work_dir, user, password, host):
+    r"""Creates a demo database environment.
+
+    Creates a new database called `qiita` tailored for the HMP2 demo.
+    """
+    # Connect to the postgres server
+    conn = connect(user=user, host=host, password=password)
+    # Set the isolation level to AUTOCOMMIT so we can execute a
+    # create database sql query
+    conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
+    # Create the database
+    cur = conn.cursor()
+    cur.execute('CREATE DATABASE qiita')
+    cur.close()
+    conn.close()
+
+    # Connect to the postgres server, but this time to the just created db
+    conn = connect(user=user, host=host, password=password,
+                   database='qiita')
+    cur = conn.cursor()
+
+    # Build the SQL layout into the database
+    with open(SETTINGS_FP, 'U') as f:
+        cur.execute(f.read())
+
+    # Insert the settings values to the database
+    cur.execute("INSERT INTO settings (test, base_data_dir, base_work_dir) "
+                "VALUES (TRUE, '%s', '%s')" % (base_data_dir, base_work_dir))
+
+    # Create the schema
+    with open(LAYOUT_FP, 'U') as f:
+        cur.execute(f.read())
+
+    # Initialize the database
+    with open(INITIALIZE_FP, 'U') as f:
+        cur.execute(f.read())
+
+    # Populate the database
+    with open(POPULATE_FP, 'U') as f:
+        cur.execute(f.read())
+
+    # Commit all the changes and close the connections
+    conn.commit()
+    cur.close()
+    conn.close()
+
+
+def drop_demo_environment(user, password, host):
+    r"""Drops the demo environment.
+
+    Parameters
+    ----------
+    user : str
+        The postgres user to connect to the server
+    password : str
+        The password of the user
+    host : str
+        The host where the postgres server is running
+    """
+    # Connect to the postgres server
+    conn = connect(user=user, host=host, password=password)
+    # Set the isolation level to AUTOCOMMIT so we can execute a
+    # drop database sql query
+    conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
+    # Drop the database
+    cur = conn.cursor()
+    cur.execute('DROP DATABASE qiita')
+    # Close cursor and connection
+    cur.close()
+    conn.close()
+
+
 def make_production_environment():
     """TODO: Not implemented"""
     raise NotImplementedError()
