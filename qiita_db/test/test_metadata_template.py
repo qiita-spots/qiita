@@ -781,7 +781,6 @@ class TestPrepTemplate(TestCase):
             f.write("\n")
         self.new_raw_data = RawData.create(2, filepaths, [Study(1)])
         self._clean_up_files = [seqs_fp, barcodes_fp]
-        self._clean_up_files = []
 
         self.tester = PrepTemplate(1)
         self.exp_sample_ids = {'SKB1.640202', 'SKB2.640194', 'SKB3.640195',
