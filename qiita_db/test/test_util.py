@@ -16,7 +16,7 @@ from qiita_db.exceptions import QiitaDBColumnError
 from qiita_db.util import (exists_table, exists_dynamic_table, scrub_data,
                            compute_checksum, check_table_cols,
                            check_required_columns, convert_to_id,
-                           get_table_cols)
+                           get_table_cols, get_filetypes)
 
 
 @qiita_test_checker()
@@ -109,14 +109,13 @@ class DBUtilTests(TestCase):
 
     def test_get_filetypes(self):
         """Tests that get_filetypes works with valid arguments"""
-        conn_handler.execute("insert into filetype (filetype_id, type) values "
-                             "(1, 'fastq'), (2, 'fasta')")
+
         obs = get_filetypes()
-        exp = {'fastq': 1, 'fasta': 2}
+        exp = {'FASTA': 1, 'FASTQ': 2, 'SPECTRA': 3}
         self.assertItemsEqual(obs, exp)
 
         obs = get_filetypes(key='filetype_id')
-        exp = {1: 'fastq', 2: 'fasta'}
+        exp = {1: 'FASTA', 2: 'FASTQ', 3: 'SPECTRA'}
         self.assertItemsEqual(obs, exp)
 
     def test_get_filetypes_fail(self):
