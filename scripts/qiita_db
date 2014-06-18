@@ -16,6 +16,7 @@ from qiita_db.environment_manager import (make_test_environment,
                                           clean_test_environment,
                                           DFLT_BASE_DATA_FOLDER,
                                           DFLT_BASE_WORK_FOLDER)
+from qiita_db.commands import sample_template_adder
 
 
 @click.group()
@@ -74,8 +75,11 @@ def make_production_env():
     """TODO: Not implemented"""
     make_production_environment()
 
+
 @click.command()
 def add_sample_template():
+    """Adds a sample template to the database"""
+    sample_template_adder()
 
 
 qiita_db.add_command(make_test_env)

@@ -19,6 +19,14 @@ Classes
     MetadataTemplate
     SampleTemplate
     PrepTemplate
+
+Methods
+-------
+
+..autosummary::
+    :toctree: generated/
+
+    sample_template_adder
 """
 
 # -----------------------------------------------------------------------------
