@@ -7,8 +7,7 @@
 # -----------------------------------------------------------------------------
 
 from unittest import TestCase, main
-from tempfile import mkstemp
-from os import close, remove
+from os.path import join, dirname
 
 from qiita_core.util import qiita_test_checker
 from qiita_db.study import Study, StudyPerson
@@ -23,22 +22,8 @@ class SampleTemplateAdderTests(TestCase):
     def setUp(self):
         """"""
         # Create a sample template file
-        fd, self.samp_temp_path = mkstemp(suffix='_sample_temp.txt')
-        close(fd)
-        with open(self.samp_temp_path, 'U') as f:
-            f.write(
-                "#SampleID\tBarcodeSequence\tLinkerPrimerSequence\tTreatment\t"
-                "DOB\tDescription\n#Example mapping file for Qiita.  These 4 "
-                "samples are from a study of the effects of exercise and diet "
-                "on mouse cardiac physiology (Crawford, et al, PNAS, 2009).\n"
-                "PC.354\tAGCACGAGCCTA\tYATGCTGCCTCCCGTAGGAGT\tControl\t"
-                "20061218\tControl_mouse_I.D._354\nPC.355\tAACTCGTCGATG\t"
-                "YATGCTGCCTCCCGTAGGAGT\tControl\t20061218\t"
-                "Control_mouse_I.D._355\nPC.635\tACCGCAGAGTCA\t"
-                "YATGCTGCCTCCCGTAGGAGT\tFast\t20080116\tFasting_mouse_I.D._635"
-                "\nPC.636\tACGGTGAGTGTC\tYATGCTGCCTCCCGTAGGAGT\tFast\t20080116"
-                "\tFasting_mouse_I.D._636\n")
-        self._clean_up_files = [self.samp_temp_path]
+        self.samp_temp_path = join(dirname(__file__), 'test_data',
+                                   'sample_template.txt')
 
         # create a new study to attach the sample template
         info = {
@@ -48,27 +33,20 @@ class SampleTemplateAdderTests(TestCase):
             "number_samples_collected": 4,
             "number_samples_promised": 4,
             "portal_type_id": 3,
-            "study_alias": "CrawfordPNAS2009",
-            "study_description": "More info at Crawford, et al, PNAS, 2009",
-            "study_abstract": "Example mapping file for Qiita.  These 4 "
-                              "samples are from a study of the effects of "
-                              "exercise and diet on mouse cardiac physiology "
-                              "(Crawford, et al, PNAS, 2009).",
+            "study_alias": "TestStudy",
+            "study_description": "Description of a test study",
+            "study_abstract": "No abstract right now...",
             "emp_person_id": StudyPerson(2),
             "principal_investigator_id": StudyPerson(3),
             "lab_person_id": StudyPerson(1)
         }
-        self.study_id = Study.create(User('test@foo.bar'),
-                                     "Fried Chicken Microbiome", [1], info)
-
-    def tearDown(self):
-        for f in self._clean_up_files:
-            remove(f)
+        self.study = Study.create(User('test@foo.bar'),
+                                  "Test study", [1], info)
 
     def test_sample_template_adder(self):
         """Correctly adds a sample template to the DB"""
-        st = sample_template_adder(self.samp_temp_path, self.study_id)
-        self.assertEqual(st.id, self.study_id)
+        st = sample_template_adder(self.samp_temp_path, self.study.id)
+        self.assertEqual(st.id, self.study.id)
 
 
 if __name__ == '__main__':
