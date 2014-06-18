@@ -10,10 +10,12 @@
 
 import click
 
-from qiita_db.make_environment import (make_test_environment,
-                                       make_production_environment,
-                                       DFLT_BASE_DATA_FOLDER,
-                                       DFLT_BASE_WORK_FOLDER)
+from qiita_db.environment_manager import (make_test_environment,
+                                          make_production_environment,
+                                          drop_test_environment,
+                                          clean_test_environment,
+                                          DFLT_BASE_DATA_FOLDER,
+                                          DFLT_BASE_WORK_FOLDER)
 
 
 @click.group()
@@ -40,11 +42,41 @@ def make_test_env(base_data_folder, base_work_folder, user, host):
 
 
 @click.command()
+@click.option('--user', default='postgres',
+              help="The database user to connect to the database")
+@click.option('--host', default='localhost',
+              help='The host where the database lives')
+def clean_test_env(user, host):
+    """Cleans the test database environment.
+
+    In case that the test database is dirty (i.e. the 'qiita' schema is
+    present), this cleans it up by dropping the 'qiita' schema.
+    """
+    clean_test_environment(user, None, host)
+
+
+@click.command()
+@click.option('--user', default='postgres',
+              help="The database user to connect to the database")
+@click.option('--host', default='localhost',
+              help='The host where the database lives')
+def drop_test_env(user, host):
+    """Drops the test database environment.
+
+    If the `settings` table is modified, the test database environment should
+    be rebuilt. This command allows to drop the old one.
+    """
+    drop_test_environment(user, None, host)
+
+
+@click.command()
 def make_production_env():
     """TODO: Not implemented"""
     make_production_environment()
 
 qiita_db.add_command(make_test_env)
+qiita_db.add_command(clean_test_env)
+qiita_db.add_command(drop_test_env)
 qiita_db.add_command(make_production_env)
 
 if __name__ == '__main__':

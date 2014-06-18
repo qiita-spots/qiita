@@ -1,0 +1,21 @@
+{% extends sitebase.html%}
+
+{%block head%}
+
+{% end %}
+
+{% block content %}
+<div style="width:400px; vertical-align:middle;">
+  <form role="form" action="/analysis/2" method="post">
+  <div class="form-group">
+    <label for="name">Analysis name</label>
+    <input type="text" class="form-control" id="name" name="name" placeholder="Analysis name">
+  </div>
+  <div class="form-group">
+    <label for="description">Description</label>
+    <input type="text" class="form-control" id="description" name="description" placeholder="Short description">
+  </div>
+  <button type="submit" class="btn btn-default">Create analysis</button>
+  </form>
+</div>
+{% end %}
