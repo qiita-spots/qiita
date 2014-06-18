@@ -6,14 +6,14 @@ Qiita is a python package, with support for python 2.7 and 3.2, that depends on 
 <!--
 * [pgbouncer](http://pgfoundry.org/projects/pgbouncer)
 * [IPython](https://github.com/ipython/ipython)
-* [QIIME](https://github.com/qiime/qiime)
 -->
 
 * [tornado 3.1.1](http://www.tornadoweb.org/en/stable/)
 * [tornado-redis](https://pypi.python.org/pypi/tornado-redis)
 * [Psycopg2](http://initd.org/psycopg/download/)
-* [pyqi 0.3](https://github.com/bipy/pyqi)
+* [click](http://click.pocoo.org/)
 * [NumPy](https://github.com/numpy/numpy)
+* [QIIME development version](https://github.com/biocore/qiime)
 
 And on the following packages:
 
