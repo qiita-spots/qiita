@@ -1,7 +1,7 @@
 Dependencies
 ------------
 
-Qiita is a python package, with support for python 2.7 and 3.2, that depends on the following python libraries:
+Qiita is a python package, with support for python 2.7 and 3.2, that depends on the following python libraries (all of them can be installed using pip):
 
 <!--
 * [pgbouncer](http://pgfoundry.org/projects/pgbouncer)
@@ -13,6 +13,7 @@ Qiita is a python package, with support for python 2.7 and 3.2, that depends on 
 * [Psycopg2](http://initd.org/psycopg/download/)
 * [click](http://click.pocoo.org/)
 * [NumPy](https://github.com/numpy/numpy)
+* [Pandas](http://pandas.pydata.org/)
 * [QIIME development version](https://github.com/biocore/qiime)
 
 And on the following packages:
@@ -32,6 +33,7 @@ Once you have [PostgresSQL](http://www.postgresql.org/download/) and [redis](htt
 
 ```bash
 pip install https://github.com/biocore/qiita/archive/master.zip
+export QIITA_CONFIG_FP=/qiita/installation/dir/qiita_core/support_files/config_demo.txt
 qiita_db make_demo_env
 ```
 # If using other operating systems that are not Ubuntu

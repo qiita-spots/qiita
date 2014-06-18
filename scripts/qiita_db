@@ -89,7 +89,7 @@ def make_production_env():
 @click.option('--base_data_folder', default=DFLT_BASE_DATA_FOLDER,
               help="The folder where the test data files are stored")
 @click.option('--base_work_folder', default=DFLT_BASE_WORK_FOLDER,
-              help="The folder where the actively worked on files are stored")
+              help="The folder where the jobs perform the I/O")
 @click.option('--user', default='postgres',
               help="The database user to connect to the database")
 @click.option('--host', default='localhost',

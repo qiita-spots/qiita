@@ -131,13 +131,13 @@ def make_demo_environment(base_data_dir, base_work_dir, user, password, host):
     conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
     # Create the database
     cur = conn.cursor()
-    cur.execute('CREATE DATABASE qiita')
+    cur.execute('CREATE DATABASE qiita_demo')
     cur.close()
     conn.close()
 
     # Connect to the postgres server, but this time to the just created db
     conn = connect(user=user, host=host, password=password,
-                   database='qiita')
+                   database='qiita_demo')
     cur = conn.cursor()
 
     # Build the SQL layout into the database
@@ -146,7 +146,7 @@ def make_demo_environment(base_data_dir, base_work_dir, user, password, host):
 
     # Insert the settings values to the database
     cur.execute("INSERT INTO settings (test, base_data_dir, base_work_dir) "
-                "VALUES (TRUE, '%s', '%s')" % (base_data_dir, base_work_dir))
+                "VALUES (FALSE, '%s', '%s')" % (base_data_dir, base_work_dir))
 
     # Create the schema
     with open(LAYOUT_FP, 'U') as f:
@@ -185,7 +185,7 @@ def drop_demo_environment(user, password, host):
     conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
     # Drop the database
     cur = conn.cursor()
-    cur.execute('DROP DATABASE qiita')
+    cur.execute('DROP DATABASE qiita_demo')
     # Close cursor and connection
     cur.close()
     conn.close()
