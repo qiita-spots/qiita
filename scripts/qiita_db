@@ -17,7 +17,7 @@ from qiita_db.environment_manager import (make_test_environment,
                                           DFLT_BASE_DATA_FOLDER,
                                           DFLT_BASE_WORK_FOLDER)
 from qiita_db.util import get_filetypes
-from qiita_db.data import load_raw, load_preprocessed, load_processed
+from qiita_db.data import load_raw
 
 @click.group()
 def qiita_db():
