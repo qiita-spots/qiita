@@ -453,3 +453,16 @@ class ProcessedData(BaseData):
             "SELECT preprocessed_data_id FROM qiita.{0} WHERE "
             "processed_data_id=%s".format(self._table),
             [self._id])[0]
+
+    @property
+    def data_type(self):
+        r"""The data_type of the data used"""
+        conn_handler = SQLConnectionHandler()
+        sql = ("SELECT DISTINCT DT.data_type FROM qiita.processed_data PD "
+               "JOIN qiita.preprocessed_data PPD on PD.preprocessed_data_id "
+               "= PPD.preprocessed_data_id JOIN qiita.raw_data RD on "
+               "PPD.raw_data_id = RD.raw_data_id "
+               "JOIN qiita.common_prep_info CPI ON RD.raw_data_id = "
+               "CPI.raw_data_id JOIN qiita.data_type DT ON CPI.data_type_id = "
+               "DT.data_type_id WHERE PD.processed_data_id = %s")
+        return conn_handler.execute_fetchone(sql, [self._id])[0]
