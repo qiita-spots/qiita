@@ -9,8 +9,7 @@ from qiita_db.base import QiitaObject
 from qiita_db.study import Study, StudyPerson
 from qiita_db.investigation import Investigation
 from qiita_db.user import User
-from qiita_db.exceptions import (QiitaDBDuplicateError, QiitaDBColumnError,
-                                 QiitaDBStatusError)
+from qiita_db.exceptions import QiitaDBColumnError, QiitaDBStatusError
 
 # -----------------------------------------------------------------------------
 # Copyright (c) 2014--, The Qiita Development Team.
@@ -36,8 +35,9 @@ class TestStudyPerson(TestCase):
                          '111 fake street', '111-121-1313']])
 
     def test_create_studyperson_already_exists(self):
-        with self.assertRaises(QiitaDBDuplicateError):
-            StudyPerson.create('LabDude', 'lab_dude@foo.bar')
+            obs = StudyPerson.create('LabDude', 'lab_dude@foo.bar')
+            self.assertEqual(obs.name, 'LabDude')
+            self.assertEqual(obs.email, 'lab_dude@foo.bar')
 
     def test_retrieve_name(self):
         self.assertEqual(self.studyperson.name, 'LabDude')
