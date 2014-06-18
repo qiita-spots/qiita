@@ -1,0 +1,12 @@
+{% extends sitebase.html %}
+{% autoescape None %}
+{% block content%}
+    <h1>AN ERROR HAS OCCURED!</h1>
+    <p>Please copy the following into an email and send this information, along with the url you were trying to access, to <a href="mailto:qiita.help@gmail.com">qiita.help@gmail.com</a></p>
+    <h2>Error</h2>
+    <p>{{error}}</p>
+    <h2>Traceback</h2>
+    <p>{{trace_info}}</p>
+    <h2>Request Info</h2>
+    <p>{{request_info}}</p>
+{% end %}

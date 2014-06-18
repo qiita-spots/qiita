@@ -60,6 +60,7 @@ setup(name='qiita',
       extras_require={'test': ["nose >= 0.10.1", "pep8"],
                       'doc': ["Sphinx >= 1.2.2", "sphinx-bootstrap-theme"]},
       install_requires=['psycopg2', 'click == 1.0', 'future', 'bcrypt',
-                        'pandas', 'numpy >= 1.7'],
+                        'pandas', 'numpy >= 1.7', 'tornado==3.1.1',
+                        'tornado_redis', 'redis'],
       classifiers=classifiers
       )
