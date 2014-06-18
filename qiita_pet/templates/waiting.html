@@ -1,0 +1,75 @@
+{% extends sitebase.html%}
+
+{%block head%}
+<script type="text/javascript">
+
+    function connect() {
+        var host = 'ws://' + getBaseURL() + 'consumer/';
+        var websocket = new WebSocket(host);
+        noerror = true;
+
+        websocket.onopen = function() {
+            websocket.send(JSON.stringify({'msg': 'user:{{user}}'}));
+            console.log(JSON.stringify({'msg': 'user:{{user}}'}));
+        };
+        websocket.onmessage = function(evt) {
+            console.log(evt.data);
+            message = JSON.parse(evt.data);
+            if(message.job == '{{job}}') {
+                if(noerror && message.msg == 'allcomplete') { 
+                    window.location.replace("/completed/{{job}}");
+                }
+                list = document.getElementById(message.analysis);
+                if(message.msg.indexOf("ERROR") != -1) {
+                  list.style.color="Red";
+                  noerror=false;
+                }
+                else if(message.done == '1') {
+                  list.style.color="Green";
+                }
+                else {
+                  list.style.color="Blue"; 
+                }
+                list.innerHTML = message.msg + '<br />';
+                for(var i=0; i<message.results.length; i++) {
+                    list.innerHTML += '<a class="link" target="_blank" href="../' + 
+                    message.results[i] + '">Plot ' + (i+1) + '</a><br />';
+                }
+            }
+        };
+        websocket.onerror = function(evt) { };
+    }
+
+    window.onload = function() {
+  connect();
+};
+
+function getBaseURL () {
+   return location.hostname + (location.port && ":" + location.port) + "/";
+}
+
+</script>
+{% end %}
+
+{% block content %}
+<table width='100%'>
+  <tr>
+    <td width=180 valign='top'>
+      1) Choose studies<br />
+      2) Select analyses<br />
+      3) Set analysis options<br />
+      4) Review analysis<br />
+      <b>5) Running analysis</b><br />
+      6) Analysis results<br />
+    </td>
+    <td>
+<h1>Analysis {{job}}</h1>
+  {% for analysis in analyses %}
+    <p>
+    {{analysis}}: <span id='{{analysis}}'>Queued</span>
+    </p>
+  {% end %}
+</td></tr></table>
+<div id='error'></div>
+
+{% end %}
