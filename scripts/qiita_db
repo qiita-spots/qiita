@@ -49,8 +49,8 @@ def make_test_env(base_data_folder, base_work_folder, user, host):
 def clean_test_env(user, host):
     """Cleans the test database environment.
 
-    In case that the `tearDown` function of a unit test fails and leaves the
-    test database dirty, this cleans it up.
+    In case that the test database is dirty (i.e. the 'qiita' schema is
+    present), this cleans it up by dropping the 'qiita' schema.
     """
     clean_test_environment(user, None, host)
 
