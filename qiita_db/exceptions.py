@@ -37,10 +37,10 @@ class QiitaDBColumnError(QiitaDBError):
 
 class QiitaDBDuplicateError(QiitaDBError):
     """Exception when duplicating something in the database"""
-    def __init__(self, obj_name, existent_id):
+    def __init__(self, obj_name, attributes):
         super(QiitaDBDuplicateError, self).__init__()
-        self.args = ("The '%s' with ID '%s' already exists."
-                     % (obj_name, existent_id),)
+        self.args = ("The '%s' object with attributes (%s) already exists."
+                     % (obj_name, attributes),)
 
 
 class QiitaDBStatusError(QiitaDBError):

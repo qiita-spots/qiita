@@ -11,10 +11,12 @@ from tempfile import mkstemp
 from os import close
 
 from qiita_core.util import qiita_test_checker
+from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_db.exceptions import QiitaDBColumnError
 from qiita_db.util import (exists_table, exists_dynamic_table, scrub_data,
                            compute_checksum, check_table_cols,
-                           check_required_columns, get_table_cols)
+                           check_required_columns, convert_to_id,
+                           get_table_cols)
 
 
 @qiita_test_checker()
@@ -95,6 +97,15 @@ class DBUtilTests(TestCase):
         self.assertFalse(exists_dynamic_table(
             "foo", "preprocessed_", "_params",
             self.conn_handler))
+
+    def test_convert_to_id(self):
+        """Tests that ids are returned correctly"""
+        self.assertEqual(convert_to_id("tar", "filepath_type"), 7)
+
+    def test_convert_to_id_bad_value(self):
+        """Tests that ids are returned correctly"""
+        with self.assertRaises(IncompetentQiitaDeveloperError):
+            convert_to_id("FAKE", "filepath_type")
 
 
 class UtilTests(TestCase):

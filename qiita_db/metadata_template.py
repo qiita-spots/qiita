@@ -573,7 +573,7 @@ class MetadataTemplate(QiitaObject):
         """
         # Check that we don't have a MetadataTemplate for obj
         if cls.exists(obj):
-            raise QiitaDBDuplicateError(cls.__name__, obj.id)
+            raise QiitaDBDuplicateError(cls.__name__, 'id: %d' % obj.id)
 
         # We are going to modify the md_template. We create a copy so
         # we don't modify the user one

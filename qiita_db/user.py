@@ -30,12 +30,12 @@ TODO
 from __future__ import division
 from re import match
 
-from qiita_core.exceptions import IncorrectEmailError, IncorrectPasswordError
+from qiita_core.exceptions import (IncorrectEmailError, IncorrectPasswordError,
+                                   IncompetentQiitaDeveloperError)
 from .base import QiitaObject
 from .sql_connection import SQLConnectionHandler
-from .exceptions import QiitaDBDuplicateError, QiitaDBColumnError
-from .util import hash_password
-from .util import create_rand_string, check_table_cols
+from .util import create_rand_string, check_table_cols, hash_password
+from .exceptions import (QiitaDBColumnError, QiitaDBDuplicateError)
 
 
 class User(QiitaObject):
@@ -181,7 +181,7 @@ class User(QiitaObject):
 
         # make sure user does not already exist
         if cls.exists(email):
-            raise QiitaDBDuplicateError("User", email)
+            raise QiitaDBDuplicateError("User", "email: %s" % email)
 
         # make sure non-info columns aren't passed in info dict
         if info:
@@ -211,8 +211,42 @@ class User(QiitaObject):
         conn_handler.execute(sql, values)
         return cls(email)
 
-    # ---properties---
+    @classmethod
+    def verify_code(cls, email, code, code_type):
+        """Verify that a code and email match
 
+        Parameters
+        ----------
+        email : str
+            email address of the user
+        code : str
+            code to verify
+        code_type : {'create' or 'reset'}
+
+        Returns
+        -------
+        bool
+
+        Raises
+        ------
+        IncompentQiitaDeveloper
+            code_type is not create or reset
+        """
+        if code_type == 'create':
+            column = 'user_verify_code'
+        elif code_type == 'reset':
+            column = 'pass_reset_code'
+        else:
+            raise IncompetentQiitaDeveloperError("code_type must be 'create'"
+                                                 " or 'reset' Uknown type "
+                                                 "%s" % code_type)
+        sql = ("SELECT {1} from qiita.{0} where email"
+               " = %s".format(cls._table, column))
+        conn_handler = SQLConnectionHandler()
+        db_code = conn_handler.execute_fetchone(sql, (email,))[0]
+        return db_code == code
+
+    # ---properties---
     @property
     def email(self):
         """The email of the user"""
@@ -337,6 +371,7 @@ def validate_password(password):
 
     References
     -----
-    http://stackoverflow.com/questions/2990654/how-to-test-a-regex-password-in-python
+    http://stackoverflow.com/questions/2990654/how-to-test-a-regex-
+    password-in-python
     """
     return True if match(r'[A-Za-z0-9@#$%^&+=]{8,}', password) else False

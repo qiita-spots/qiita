@@ -1,0 +1,142 @@
+from unittest import TestCase, main
+
+from qiita_core.exceptions import IncompetentQiitaDeveloperError
+from qiita_core.util import qiita_test_checker
+from qiita_db.analysis import Analysis
+from qiita_db.job import Job
+from qiita_db.user import User
+from qiita_db.data import ProcessedData
+from qiita_db.exceptions import (QiitaDBDuplicateError, QiitaDBColumnError,
+                                 QiitaDBStatusError)
+# -----------------------------------------------------------------------------
+# Copyright (c) 2014--, The Qiita Development Team.
+#
+# Distributed under the terms of the BSD 3-clause License.
+#
+# The full license is in the file LICENSE, distributed with this software.
+# -----------------------------------------------------------------------------
+
+
+@qiita_test_checker()
+class TestAnalysis(TestCase):
+    def setUp(self):
+        self.analysis = Analysis(1)
+
+    def test_lock_public(self):
+        self.analysis.status = "public"
+        with self.assertRaises(QiitaDBStatusError):
+            self.analysis._lock_public(self.conn_handler)
+
+    def test_lock_public_running(self):
+        self.analysis.status = "running"
+        with self.assertRaises(QiitaDBStatusError):
+            self.analysis._lock_public(self.conn_handler)
+
+    def test_create(self):
+        new = Analysis.create(User("admin@foo.bar"), "newAnalysis",
+                              "A New Analysis")
+        self.assertEqual(new.id, 2)
+        sql = "SELECT * FROM qiita.analysis WHERE analysis_id = 2"
+        obs = self.conn_handler.execute_fetchall(sql)
+        self.assertEqual(obs, [[2, 'admin@foo.bar', 'newAnalysis',
+                                'A New Analysis', 1, None]])
+
+    def test_create_parent(self):
+        new = Analysis.create(User("admin@foo.bar"), "newAnalysis",
+                              "A New Analysis", Analysis(1))
+        self.assertEqual(new.id, 2)
+        sql = "SELECT * FROM qiita.analysis WHERE analysis_id = 2"
+        obs = self.conn_handler.execute_fetchall(sql)
+        self.assertEqual(obs, [[2, 'admin@foo.bar', 'newAnalysis',
+                                'A New Analysis', 1, None]])
+
+        sql = "SELECT * FROM qiita.analysis_chain WHERE child_id = 2"
+        obs = self.conn_handler.execute_fetchall(sql)
+        self.assertEqual(obs, [[1, 2]])
+
+    def test_retrieve_owner(self):
+        self.assertEqual(self.analysis.owner, "test@foo.bar")
+
+    def test_retrieve_name(self):
+        self.assertEqual(self.analysis.name, "SomeAnalysis")
+
+    def test_retrieve_description(self):
+        self.assertEqual(self.analysis.description, "A test analysis")
+
+    def test_set_description(self):
+        self.analysis.description = "New description"
+        self.assertEqual(self.analysis.description, "New description")
+
+    def test_retrieve_shared_with(self):
+        self.assertEqual(self.analysis.shared_with, ["shared@foo.bar"])
+
+    def test_retrieve_biom_tables(self):
+        self.assertEqual(self.analysis.biom_tables, [7])
+
+    def test_retrieve_biom_tables_none(self):
+        new = Analysis.create(User("admin@foo.bar"), "newAnalysis",
+                              "A New Analysis", Analysis(1))
+        self.assertEqual(new.biom_tables, None)
+
+    def test_retrieve_jobs(self):
+        self.assertEqual(self.analysis.jobs, [1, 2])
+
+    def test_retrieve_jobs_none(self):
+        new = Analysis.create(User("admin@foo.bar"), "newAnalysis",
+                              "A New Analysis", Analysis(1))
+        self.assertEqual(new.jobs, None)
+
+    def test_retrieve_pmid(self):
+        self.assertEqual(self.analysis.pmid, "121112")
+
+    def test_retrieve_pmid_none(self):
+        new = Analysis.create(User("admin@foo.bar"), "newAnalysis",
+                              "A New Analysis", Analysis(1))
+        self.assertEqual(new.pmid, None)
+
+    def test_set_pmid(self):
+        self.analysis.pmid = "11211221212213"
+        self.assertEqual(self.analysis.pmid, "11211221212213")
+
+    # def test_get_parent(self):
+    #     raise NotImplementedError()
+
+    # def test_get_children(self):
+    #     raise NotImplementedError()
+
+    def test_add_samples(self):
+        new = Analysis.create(User("admin@foo.bar"), "newAnalysis",
+                              "A New Analysis")
+        new.add_samples([(1, 'SKB8.640193')])
+
+    def test_remove_samples(self):
+        self.analysis.remove_samples([(1, 'SKB8.640193'), (1, 'SKD8.640184')])
+
+    def test_add_biom_tables(self):
+        new = Analysis.create(User("admin@foo.bar"), "newAnalysis",
+                              "A New Analysis")
+        new.add_biom_tables([ProcessedData(1)])
+        self.assertEqual(new.biom_tables, [7])
+
+    def test_remove_biom_tables(self):
+        self.analysis.remove_biom_tables([ProcessedData(1)])
+        self.assertEqual(self.analysis.biom_tables, None)
+
+    def test_add_jobs(self):
+        new = Analysis.create(User("admin@foo.bar"), "newAnalysis",
+                              "A New Analysis")
+        new.add_jobs([Job(1)])
+        self.assertEqual(new.jobs, [1])
+
+    def test_share(self):
+        self.analysis.share(User("admin@foo.bar"))
+        self.assertEqual(self.analysis.shared_with, ["shared@foo.bar",
+                                                     "admin@foo.bar"])
+
+    def test_unshare(self):
+        self.analysis.unshare(User("shared@foo.bar"))
+        self.assertEqual(self.analysis.shared_with, [])
+
+
+if __name__ == "__main__":
+    main()
