@@ -186,9 +186,9 @@ class BaseSample(QiitaObject):
 
     def __eq__(self, other):
         r"""Self and other are equal based on type and ids"""
-        if isinstance(other, type(self)):
+        if not isinstance(other, type(self)):
             return False
-        if other._id != self.id:
+        if other._id != self._id:
             return False
         if other._md_template != self._md_template:
             return False
