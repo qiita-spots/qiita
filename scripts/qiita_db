@@ -14,9 +14,11 @@ from qiita_db.environment_manager import (make_test_environment,
                                           make_production_environment,
                                           drop_test_environment,
                                           clean_test_environment,
+                                          make_demo_environment,
+                                          drop_demo_environment,
                                           DFLT_BASE_DATA_FOLDER,
                                           DFLT_BASE_WORK_FOLDER)
-from qiita_db.study import make_study_from_cmd
+from qiita_db.commands import make_study_from_cmd
 
 
 @click.group()
@@ -71,6 +73,14 @@ def drop_test_env(user, host):
 
 
 @click.command()
+@click.option('--base_data_folder', default=DFLT_BASE_DATA_FOLDER,
+              help="The folder where the demo data files are stored")
+@click.option('--base_work_folder', default=DFLT_BASE_WORK_FOLDER,
+              help="The folder where the actively worked on files are stored")
+@click.option('--user', default='postgres',
+              help="The database user to connect to the database")
+@click.option('--host', default='localhost',
+              help='The host where the database lives')
 def make_production_env():
     """TODO: Not implemented"""
     make_production_environment()
@@ -79,17 +89,43 @@ def make_production_env():
 @click.command()
 @click.option('--owner', help="The email address of the ower of the study")
 @click.option('--title', help="The title of the study")
-@click.option('--info', type=click.File,
+@click.option('--info', type=click.File(mode='r'),
               help="filepath of file with study information in python"
               "config file format")
 def insert_study_to_db(owner, title, info):
     make_study_from_cmd(owner, title, info)
 
 
+@click.command()
+@click.option('--base_data_folder', default=DFLT_BASE_DATA_FOLDER,
+              help="The folder where the test data files are stored")
+@click.option('--base_work_folder', default=DFLT_BASE_WORK_FOLDER,
+              help="The folder where the jobs perform the I/O")
+@click.option('--user', default='postgres',
+              help="The database user to connect to the database")
+@click.option('--host', default='localhost',
+              help='The host where the database lives')
+def make_demo_env(base_data_folder, base_work_folder, user, host):
+    """Creates a demo database environment"""
+    make_demo_environment(base_data_folder, base_work_folder, user, None, host)
+
+
+@click.command()
+@click.option('--user', default='postgres',
+              help="The database user to connect to the database")
+@click.option('--host', default='localhost',
+              help='The host where the database lives')
+def drop_demo_env(user, host):
+    """Drops the demo database environment."""
+    drop_demo_environment(user, None, host)
+
 qiita_db.add_command(make_test_env)
 qiita_db.add_command(clean_test_env)
 qiita_db.add_command(drop_test_env)
 qiita_db.add_command(make_production_env)
+qiita_db.add_command(make_demo_env)
+qiita_db.add_command(drop_demo_env)
+qiita_db.add_command(insert_study_to_db)
 
 if __name__ == '__main__':
     qiita_db()
