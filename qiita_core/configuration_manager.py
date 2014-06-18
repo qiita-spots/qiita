@@ -7,6 +7,7 @@
 # -----------------------------------------------------------------------------
 
 from os.path import join, dirname, abspath
+from os import environ
 
 try:
     # Python 2
@@ -41,9 +42,11 @@ class ConfigurationManager(object):
     port : int
         The port used to connect to the postgres database in the previous host
     """
-    def __init__(self, conf_fp=None):
+    def __init__(self):
         # If conf_fp is None, we default to the test configuration file
-        if conf_fp is None:
+        try:
+            conf_fp = environ['QIITA_CONFIG_FP']
+        except KeyError:
             conf_fp = join(dirname(abspath(__file__)),
                            'support_files/config_test.txt')
 
