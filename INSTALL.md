@@ -29,11 +29,12 @@ Install
 -------
 
 Once you have [PostgresSQL](http://www.postgresql.org/download/) and [redis](https://pypi.python.org/pypi/redis/) installed (follow the instruction on their web site), simply run these commands to install qiita and configure the demo environment 
-(Note that if you are not using Ubuntu you might need to follow the instructions in the next section):
+(note that if you are not using Ubuntu you might need to follow the instructions in the next section):
 
 ```bash
+echo "export QIITA_CONFIG_FP=/qiita/installation/dir/qiita_core/support_files/config_demo.txt" >> ~/.bashrc
+source ~/.bashrc
 pip install https://github.com/biocore/qiita/archive/master.zip
-export QIITA_CONFIG_FP=/qiita/installation/dir/qiita_core/support_files/config_demo.txt
 qiita_db make_demo_env
 ```
 ## If using other operating systems that are not Ubuntu
