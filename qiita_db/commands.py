@@ -44,8 +44,6 @@ def make_study_from_cmd(owner, title, info):
     lab_name_email = get_optional('lab_person')
     if lab_name_email is not None:
         lab_name, lab_email = lab_name_email.split(',')
-        print lab_name
-        print lab_email
         infodict['lab_person_id'] = StudyPerson.create(lab_name.strip(),
                                                        lab_email.strip())
     pi_name_email = get_required('principal_investigator')
