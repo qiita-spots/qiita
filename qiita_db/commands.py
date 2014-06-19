@@ -55,3 +55,9 @@ def make_study_from_cmd(owner, title, info):
     efo_ids = [x.strip() for x in efo_ids.split(',')]
 
     Study.create(User(owner), title, efo_ids, infodict)
+
+
+def import_preprossed_data(study_id, raw_data_id, filedir, filetype,
+                           params_table, params_file):
+    pass
+

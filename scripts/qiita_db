@@ -119,6 +119,10 @@ def drop_demo_env(user, host):
     """Drops the demo database environment."""
     drop_demo_environment(user, None, host)
 
+
+@click.command()
+@click.option('--study_id', help="The study id the raw data is "
+              "associated with")
 qiita_db.add_command(make_test_env)
 qiita_db.add_command(clean_test_env)
 qiita_db.add_command(drop_test_env)
