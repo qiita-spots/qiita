@@ -1,5 +1,5 @@
 from unittest import TestCase, main
-from StringIO import StringIO
+from future.utils.six import StringIO
 try:
     # Python 2
     from ConfigParser import NoOptionError
