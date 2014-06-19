@@ -55,3 +55,17 @@ def make_study_from_cmd(owner, title, info):
     efo_ids = [x.strip() for x in efo_ids.split(',')]
 
     Study.create(User(owner), title, efo_ids, infodict)
+
+
+def load_raw_data_cmd(filepaths, filetype, studies):
+    """Add new raw data by populating the relevant tables
+
+    Parameters
+    ----------
+    filepaths : iterable of str
+    filetype : str
+    studies : iterable of int
+    """
+    filetypes = get_filetypes()
+    filetype_id = filetypes[filetype]
+    RawData.create(filetype_id, filepaths, studies)
