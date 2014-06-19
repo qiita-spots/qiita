@@ -1,4 +1,15 @@
-from os.path import basename
+r"""
+Qitta analysis handlers for the Tornado webserver.
+
+"""
+# -----------------------------------------------------------------------------
+# Copyright (c) 2014--, The Qiita Development Team.
+#
+# Distributed under the terms of the BSD 3-clause License.
+#
+# The full license is in the file LICENSE, distributed with this software.
+# -----------------------------------------------------------------------------
+from __future__ import division
 
 from tornado.web import authenticated
 from collections import defaultdict
@@ -104,10 +115,7 @@ class AnalysisWaitHandler(BaseHandler):
 
         commands = []
         for data_type, command in split:
-            print "INPUT: ", data_type, command
             job = Job.create(data_type, command, {}, analysis)
-            print "INPUT2: ", data_type, command
-            print "JOB %s %s:%s" % (job.id, job.datatype, job.command[0])
             commands.append("%s:%s" % (data_type, command))
 
         self.render("analysis_waiting.html", user=self.get_current_user(),

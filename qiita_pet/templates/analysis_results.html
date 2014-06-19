@@ -11,27 +11,27 @@
 <h1>Analysis {{aname}}</h1>
 </div>
   <div class="row">
-      <div class="col-md-2">
-        <div class="panel-group" id="accordion">
-          {% for data_type, jobs in jobres.items() %}
-            <div class="panel panel-default">
-              <div class="panel-heading">
-                <h3 class="panel-title"><a data-toggle="collapse" data-parent="#accordion" href="#{{data_type}}">{{data_type}}</a></h3>
-              </div>
-                <div id="{{data_type}}" class="panel-collapse collapse">
-                {% for job, result in jobs%}
-                  <div class="panel-body">
-                    <a href="/results/{{result}}" target="resframe">{{job}}</a>
-                  </div>
-                {% end %} 
-                </div>
+    <div class="col-md-2">
+      <div class="panel-group" id="accordion">
+        {% for data_type, jobs in jobres.items() %}
+          <div class="panel panel-default">
+            <div class="panel-heading">
+              <h3 class="panel-title"><a data-toggle="collapse" data-parent="#accordion" href="#{{data_type}}">{{data_type}}</a></h3>
             </div>
-          {% end %}
-        </div>
+            <div id="{{data_type}}" class="panel-collapse collapse">
+              {% for job, result in jobs%}
+                <div class="panel-body">
+                  <a href="/results/{{result}}" target="resframe">{{job}}</a>
+                </div>
+              {% end %}
+            </div>
+          </div>
+        {% end %}
       </div>
-      <div class="col-md-10">
-          <iframe id="resframe" name="resframe" width="100%" height="900" frameBorder=0></iframe>
-      </div>
+    </div>
+    <div class="col-md-10">
+        <iframe id="resframe" name="resframe" width="100%" height="900" frameBorder=0></iframe>
+    </div>
   </div>
 </div>
 {%end%}
