@@ -11,8 +11,7 @@
 import click
 
 from qiita_db.util import get_filetypes, get_filepath_types
-from qiita_db.data import load_raw
-from qiita_db.commands import make_study_from_cmd
+from qiita_db.commands import make_study_from_cmd, load_raw_data_cmd
 
 
 @click.group()
@@ -21,21 +20,24 @@ def qiita_db():
 
 
 @qiita_db.command()
-@click.option('--fp', required=True, type=click.Path, exists=True,
-              readable=True, resolve_path=True, multiple=True,
+@click.option('--fp', required=True, type=click.Path(resolve_path=True,
+              readable=True, exists=True), multiple=True,
               help='Path to the raw data file. This option can be used '
               'multiple times if there are multiple raw data files.')
-@click.option('--filetype', require=True,
+@click.option('--fp_type', required=True, multiple=True, help='Describes the '
+              'contents of the file. Pass one fp_type per fp.',
+              type=click.Choice(get_filepath_types().keys()))
+@click.option('--filetype', required=True,
               type=click.Choice(get_filetypes().keys()),
               help='The type of data')
-@click.option('--study', required=True, multiple=True, help='Associate the '
-              'data with this study. This option can be used multiple times '
-              'if the data should be associated with multiple studies')
+@click.option('--study', multiple=True, help='Associate the data with this '
+              'study. This option can be used multiple times if the data '
+              'should be associated with multiple studies')
 def load_raw_data(fp, filetype, study):
-    data.load_raw(fp, filetype, study)
+    data.load_raw_cmd(fp, filetype, study)
 
 
-@click.command()
+@qiita_db.command()
 @click.option('--owner', help="The email address of the owner of the study")
 @click.option('--title', help="The title of the study")
 @click.option('--info', type=click.File(mode='r'),
