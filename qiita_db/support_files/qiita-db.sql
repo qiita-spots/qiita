@@ -103,6 +103,7 @@ CREATE TABLE qiita.preprocessed_data (
 	preprocessed_data_id bigserial  NOT NULL,
 	preprocessed_params_table varchar  NOT NULL,
 	preprocessed_params_id bigint  NOT NULL,
+	submitted_to_insdc   bool  NOT NULL,
 	CONSTRAINT pk_preprocessed_data PRIMARY KEY ( preprocessed_data_id )
  );
 
@@ -150,7 +151,6 @@ COMMENT ON COLUMN qiita.processed_data.processed_params_id IS 'Link to a table w
 CREATE TABLE qiita.raw_data ( 
 	raw_data_id          bigserial  NOT NULL,
 	filetype_id          bigint  NOT NULL,
-	submitted_to_insdc   bool DEFAULT FALSE NOT NULL,
 	CONSTRAINT pk_raw_data UNIQUE ( raw_data_id ) ,
 	CONSTRAINT fk_raw_data_filetype FOREIGN KEY ( filetype_id ) REFERENCES qiita.filetype( filetype_id )    
  );

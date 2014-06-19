@@ -102,9 +102,8 @@ from copy import deepcopy
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from .base import QiitaStatusObject, QiitaObject
-from .exceptions import (QiitaDBDuplicateError, QiitaDBStatusError,
-                         QiitaDBColumnError)
-from .util import check_required_columns, check_table_cols, convert_to_id
+from .exceptions import (QiitaDBStatusError, QiitaDBColumnError)
+from .util import check_required_columns, check_table_cols
 from .sql_connection import SQLConnectionHandler
 
 
@@ -475,7 +474,8 @@ class Study(QiitaStatusObject):
         list of ProcessedData ids
         """
         conn_handler = SQLConnectionHandler()
-        sql = ("SELECT processed_data_id FROM qiita.processed_data WHERE "
+        sql = ("SELECT processed_data_id FROM "
+               "qiita.preprocessed_processed_data WHERE "
                "preprocessed_data_id IN (SELECT preprocessed_data_id FROM "
                "qiita.study_preprocessed_data where study_id = %s)")
         return [x[0] for x in conn_handler.execute_fetchall(sql, (self._id,))]

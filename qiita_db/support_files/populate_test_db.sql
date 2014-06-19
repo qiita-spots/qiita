@@ -53,7 +53,7 @@ INSERT INTO qiita.study_experimental_factor (study_id, efo_id) VALUES (1, 1);
 INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum, checksum_algorithm_id) VALUES ('1_s_G1_L001_sequences.fastq.gz', 1, '852952723', 1), ('1_s_G1_L001_sequences_barcodes.fastq.gz', 2, '852952723', 1), ('2_sequences.fastq.gz', 1, '852952723', 1), ('2_sequences_barcodes.fastq.gz', 2, '852952723', 1);
 
 -- Insert the raw data information for study 1
-INSERT INTO qiita.raw_data (filetype_id, submitted_to_insdc) VALUES (2, FALSE), (2, TRUE);
+INSERT INTO qiita.raw_data (filetype_id) VALUES (2), (2);
 
 -- Insert (link) the raw data with the raw filepaths
 INSERT INTO qiita.raw_filepath (raw_data_id, filepath_id) VALUES (1, 1), (1, 2), (2, 3), (2, 4);
@@ -284,7 +284,10 @@ INSERT INTO qiita.prep_1 (sample_id, BarcodeSequence, LIBRARY_CONSTRUCTION_PROTO
 	('SKM9.640192', 'AGCAGGCACGAA', 'This analysis was done as in Caporaso et al 2011 Genome research. The PCR primers (F515/R806) were developed against the V4 region of the 16S rRNA (both bacteria and archaea), which we determined would yield optimal community clustering with reads of this length using a procedure similar to that of ref. 15. [For reference, this primer pair amplifies the region 533_786 in the Escherichia coli strain 83972 sequence (greengenes accession no. prokMSA_id:470367).] The reverse PCR primer is barcoded with a 12-base error-correcting Golay code to facilitate multiplexing of up to 1,500 samples per lane, and both PCR primers contain sequencer adapter regions.', 'GTGCCAGCMGCCGCGGTAA', 'V4', '16S rRNA', 'ANL', 's_G1_L001_sequences', '8/1/12', 'ANL', 'micro biome of soil and rhizosphere of cannabis plants from CA', 'Cannabis Soil Microbiome', 'Illumina', '.25,g', 'Sequencing by synthesis', 'MiSeq', 'ANL', 'FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT', 'CCME');
 
 -- Insert preprocessed information for raw data 1
-INSERT INTO qiita.preprocessed_data (raw_data_id, preprocessed_params_table, preprocessed_params_id) VALUES (1, 'preprocessed_sequence_illumina_params', 1), (1, 'preprocessed_sequence_illumina_params', 2);
+INSERT INTO qiita.preprocessed_data (preprocessed_params_table, preprocessed_params_id, submitted_to_insdc) VALUES ('preprocessed_sequence_illumina_params', 1, TRUE), ('preprocessed_sequence_illumina_params', 2, FALSE);
+
+-- Link the new preprocessed data with the raw data
+INSERT INTO qiita.raw_preprocessed_data (raw_data_id, preprocessed_data_id) VALUES (1, 1), (1, 2);
 
 -- Insert (link) preprocessed information to study 1
 INSERT INTO qiita.study_preprocessed_data (preprocessed_data_id, study_id) VALUES (1, 1), (2, 1);
@@ -299,7 +302,10 @@ INSERT INTO qiita.preprocessed_filepath (preprocessed_data_id, filepath_id) VALU
 INSERT INTO qiita.preprocessed_sequence_illumina_params (trim_length) VALUES (151), (100);
 
 -- Insert processed information for study 0 and processed data 1
-INSERT INTO qiita.processed_data (preprocessed_data_id, processed_params_table, processed_params_id, processed_date) VALUES (1, 'processed_params_uclust', 1, 'Mon Oct 1 09:30:27 2012');
+INSERT INTO qiita.processed_data (processed_params_table, processed_params_id, processed_date) VALUES ('processed_params_uclust', 1, 'Mon Oct 1 09:30:27 2012');
+
+-- Link the processed data with the preprocessed data
+INSERT INTO qiita.preprocessed_processed_data (preprocessed_data_id, processed_data_id) VALUES (1, 1);
 
 -- Populate the reference table
 INSERT INTO qiita.reference (reference_name, reference_version, sequence_filepath, taxonomy_filepath, tree_filepath) VALUES ('GreenGenes', '4feb2011', 'gg_97_otus_4feb2011.fasta', 'greengenes_tax.txt', 'gg_97_otus_4feb2011.tre');
