@@ -19,7 +19,8 @@ import pandas as pd
 from qiita_core.util import qiita_test_checker
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_db.exceptions import (QiitaDBDuplicateError, QiitaDBUnknownIDError,
-                                 QiitaDBNotImplementedError)
+                                 QiitaDBNotImplementedError,
+                                 QiitaDBDuplicateHeaderError)
 from qiita_db.study import Study, StudyPerson
 from qiita_db.user import User
 from qiita_db.data import RawData
@@ -556,6 +557,13 @@ class TestSampleTemplate(TestCase):
         with self.assertRaises(QiitaDBDuplicateError):
             SampleTemplate.create(self.metadata, self.test_study)
 
+    def test_create_duplicate_header(self):
+        """Create raises an error when duplicate headers are present"""
+        self.metadata['STR_COLUMN'] = pd.Series(['', '', ''],
+                                                index=self.metadata.index)
+        with self.assertRaises(QiitaDBDuplicateHeaderError):
+            SampleTemplate.create(self.metadata, self.new_study)
+
     def test_create(self):
         """Creates a new SampleTemplate"""
         st = SampleTemplate.create(self.metadata, self.new_study)
@@ -821,6 +829,13 @@ class TestPrepTemplate(TestCase):
         """Create raises an error when creating a duplicated PrepTemplate"""
         with self.assertRaises(QiitaDBDuplicateError):
             PrepTemplate.create(self.metadata, self.test_raw_data)
+
+    def test_create_duplicate_header(self):
+        """Create raises an error when duplicate headers are present"""
+        self.metadata['STR_COLUMN'] = pd.Series(['', '', ''],
+                                                index=self.metadata.index)
+        with self.assertRaises(QiitaDBDuplicateHeaderError):
+            PrepTemplate.create(self.metadata, self.new_raw_data)
 
     def test_create(self):
         """Creates a new PrepTemplate"""

@@ -38,7 +38,8 @@ import numpy as np
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from .exceptions import (QiitaDBDuplicateError, QiitaDBColumnError,
-                         QiitaDBUnknownIDError, QiitaDBNotImplementedError)
+                         QiitaDBUnknownIDError, QiitaDBNotImplementedError,
+                         QiitaDBDuplicateHeaderError)
 from .base import QiitaObject
 from .sql_connection import SQLConnectionHandler
 from .util import exists_table, get_table_cols
@@ -584,6 +585,10 @@ class MetadataTemplate(QiitaObject):
         md_template = deepcopy(md_template)
         # In the database, all the column headers are lowercase
         md_template.columns = [c.lower() for c in md_template.columns]
+
+        # Check that we don't have duplicate columns
+        if len(set(md_template.columns)) != len(md_template.columns):
+            raise QiitaDBDuplicateHeaderError()
 
         conn_handler = SQLConnectionHandler()
         # Check that md_template have the required columns
