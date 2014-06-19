@@ -16,6 +16,7 @@ Classes
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 from __future__ import division
+from collections import defaultdict
 
 from .sql_connection import SQLConnectionHandler
 from .base import QiitaStatusObject
@@ -32,6 +33,7 @@ class Analysis(QiitaStatusObject):
     owner
     name
     description
+    samples
     biom_tables
     shared_with
     jobs
@@ -151,6 +153,24 @@ class Analysis(QiitaStatusObject):
         sql = ("UPDATE qiita.{0} SET description = %s WHERE "
                "analysis_id = %s".format(self._table))
         conn_handler.execute(sql, (description, self._id))
+
+    @property
+    def samples(self):
+        """The processed data and samples attached to the analysis
+
+        Returns
+        -------
+        dict
+            Format is {processed_data_id: [sample_id, sample_id, ...]}
+        """
+        conn_handler = SQLConnectionHandler()
+        sql = ("SELECT processed_data_id, sample_id FROM qiita.analysis_sample"
+               " WHERE analysis_id = %s ORDER BY processed_data_id")
+        ret_samples = defaultdict(list)
+        # turn into dict of samples keyed to processed_data_id
+        for pid, sample in conn_handler.execute_fetchall(sql, (self._id, )):
+            ret_samples[pid].append(sample)
+        return ret_samples
 
     @property
     def shared_with(self):

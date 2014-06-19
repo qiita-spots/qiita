@@ -10,15 +10,9 @@
 
 import click
 
-from qiita_db.environment_manager import (make_test_environment,
-                                          make_production_environment,
-                                          drop_test_environment,
-                                          clean_test_environment,
-                                          make_demo_environment,
-                                          drop_demo_environment,
-                                          DFLT_BASE_DATA_FOLDER,
-                                          DFLT_BASE_WORK_FOLDER)
-from qiita_db.commands import sample_template_adder, make_study_from_cmd
+from qiita_db.util import get_filetypes, get_filepath_types
+from qiita_db.commands import (sample_template_adder, make_study_from_cmd,
+                               load_raw_data_cmd)
 
 
 @click.group()
@@ -26,67 +20,26 @@ def qiita_db():
     pass
 
 
-@click.command()
-@click.option('--base_data_folder', default=DFLT_BASE_DATA_FOLDER,
-              help="The folder where the test data files are stored")
-@click.option('--base_work_folder', default=DFLT_BASE_WORK_FOLDER,
-              help="The folder where the actively worked on files are stored")
-@click.option('--user', default='postgres',
-              help="The database user to connect to the database")
-@click.option('--host', default='localhost',
-              help='The host where the database lives')
-def make_test_env(base_data_folder, base_work_folder, user, host):
-    """Creates a test database environment.
-
-    Creates a new database called `qiita_test` tailored for testing purposes
-    and initializes the `settings` table of such database
-    """
-    make_test_environment(base_data_folder, base_work_folder, user, None, host)
-
-
-@click.command()
-@click.option('--user', default='postgres',
-              help="The database user to connect to the database")
-@click.option('--host', default='localhost',
-              help='The host where the database lives')
-def clean_test_env(user, host):
-    """Cleans the test database environment.
-
-    In case that the test database is dirty (i.e. the 'qiita' schema is
-    present), this cleans it up by dropping the 'qiita' schema.
-    """
-    clean_test_environment(user, None, host)
+@qiita_db.command()
+@click.option('--fp', required=True, type=click.Path(resolve_path=True,
+              readable=True, exists=True), multiple=True,
+              help='Path to the raw data file. This option can be used '
+              'multiple times if there are multiple raw data files.')
+@click.option('--fp_type', required=True, multiple=True, help='Describes the '
+              'contents of the file. Pass one fp_type per fp.',
+              type=click.Choice(get_filepath_types().keys()))
+@click.option('--filetype', required=True,
+              type=click.Choice(get_filetypes().keys()),
+              help='The type of data')
+@click.option('--study', multiple=True, help='Associate the data with this '
+              'study. This option can be used multiple times if the data '
+              'should be associated with multiple studies', type=int,
+              required=True)
+def load_raw_data(fp, fp_type, filetype, study):
+    load_raw_data_cmd(fp, fp_type, filetype, study)
 
 
-@click.command()
-@click.option('--user', default='postgres',
-              help="The database user to connect to the database")
-@click.option('--host', default='localhost',
-              help='The host where the database lives')
-def drop_test_env(user, host):
-    """Drops the test database environment.
-
-    If the `settings` table is modified, the test database environment should
-    be rebuilt. This command allows to drop the old one.
-    """
-    drop_test_environment(user, None, host)
-
-
-@click.command()
-@click.option('--base_data_folder', default=DFLT_BASE_DATA_FOLDER,
-              help="The folder where the demo data files are stored")
-@click.option('--base_work_folder', default=DFLT_BASE_WORK_FOLDER,
-              help="The folder where the actively worked on files are stored")
-@click.option('--user', default='postgres',
-              help="The database user to connect to the database")
-@click.option('--host', default='localhost',
-              help='The host where the database lives')
-def make_production_env():
-    """TODO: Not implemented"""
-    make_production_environment()
-
-
-@click.command()
+@qiita_db.command()
 @click.option('--owner', help="The email address of the owner of the study")
 @click.option('--title', help="The title of the study")
 @click.option('--info', type=click.File(mode='r'),
@@ -96,43 +49,17 @@ def insert_study_to_db(owner, title, info):
     make_study_from_cmd(owner, title, info)
 
 
-@click.command()
-@click.option('--base_data_folder', default=DFLT_BASE_DATA_FOLDER,
-              help="The folder where the test data files are stored")
-@click.option('--base_work_folder', default=DFLT_BASE_WORK_FOLDER,
-              help="The folder where the jobs perform the I/O")
-@click.option('--user', default='postgres',
-              help="The database user to connect to the database")
-@click.option('--host', default='localhost',
-              help='The host where the database lives')
-def make_demo_env(base_data_folder, base_work_folder, user, host):
-    """Creates a demo database environment"""
-    make_demo_environment(base_data_folder, base_work_folder, user, None, host)
-
-
-@click.command()
-@click.option('--user', default='postgres',
-              help="The database user to connect to the database")
-@click.option('--host', default='localhost',
-              help='The host where the database lives')
-def drop_demo_env(user, host):
-    """Drops the demo database environment."""
-    drop_demo_environment(user, None, host)
-
-
-@click.command()
-def add_sample_template():
+@qiita_db.command()
+@click.option('--fp', required=True,
+              type=click.Path(resolve_path=True, readable=True, exists=True),
+              help='Path to the tab delimited file holding the sample '
+                   'template information')
+@click.option('--study', required=True, type=int,
+              help='Associate the sample template with this study')
+def add_sample_template(fp, study):
     """Adds a sample template to the database"""
-    sample_template_adder()
+    sample_template_adder(fp, study)
 
-
-qiita_db.add_command(make_test_env)
-qiita_db.add_command(clean_test_env)
-qiita_db.add_command(drop_test_env)
-qiita_db.add_command(make_production_env)
-qiita_db.add_command(make_demo_env)
-qiita_db.add_command(drop_demo_env)
-qiita_db.add_command(insert_study_to_db)
 
 if __name__ == '__main__':
     qiita_db()
