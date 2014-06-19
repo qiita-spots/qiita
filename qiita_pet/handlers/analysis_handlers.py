@@ -120,14 +120,11 @@ class AnalysisResultsHandler(BaseHandler):
     @authenticated
     def get(self, aid):
         analysis = Analysis(aid)
-        jobres = {}
+        jobres = defaultdict(list)
         for job in analysis.jobs:
             jobject = Job(job)
-            print "JOB %s %s:%s" % (job, jobject.datatype, jobject.command[0])
-            jobres["%s:%s" % (jobject.datatype,
-                              jobject.command[0])] = jobject.results
-
-        print jobres
+            jobres[jobject.datatype].append((jobject.command[0],
+                                             jobject.results))
 
         self.render("analysis_results.html", user=self.get_current_user(),
                     jobres=jobres, aname=analysis.name)
