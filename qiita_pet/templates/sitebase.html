@@ -19,21 +19,22 @@
           <img src="/static/img/logo.png">
         </td>
         <td width="60%" style="text-align:center;">
-         <nav>
-           <ul>
-             <li><a href="/">Home</a></li>
-             {% if user != '' %}
-             <li>
-               <a href="/analysis/1" target="_parent">Meta Analysis</a>
-               <ul>
-                 <li><a href="/analysis/1" target="_parent">New Meta-Analysis</a></li>
-               <li><a href="/running/" target="_parent">Running Meta-Analyses</a></li>
-               </ul>
-             </li>
-             {% end %}
-             <li><a href="mailto:qiita.help@gmail.com" target="_blank">Help</a></li>
-           </ul>
-         </nav>
+          <nav>
+            <ul>
+              <li><a href="/">Home</a></li>
+              {% if user != '' %}
+              <li>
+                <a href="/analysis/1" target="_parent">Meta Analysis</a>
+                <ul>
+                  <li>
+                    <a href="/analysis/1" target="_parent">New Meta-Analysis</a></li>
+                  <li><a href="/running/" target="_parent">Running Meta-Analyses</a></li>
+                </ul>
+              </li>
+              {% end %}
+              <li><a href="mailto:qiita.help@gmail.com" target="_blank">Help</a></li>
+            </ul>
+          </nav>
         </td>
         <td width="45%" id="study_info">
           {% if user %}
