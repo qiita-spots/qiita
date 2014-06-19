@@ -551,22 +551,21 @@ class StudyPerson(QiitaObject):
         -------
         New StudyPerson object
 
-        Raises
-        ------
-        QiitaDBDuplicateError
-            Person already exists
         """
         if cls.exists(name, email):
-            raise QiitaDBDuplicateError(
-                "StudyPerson", "name: %s, email: %s" % (name, email))
+            sql = ("SELECT study_person_id from qiita.{0} WHERE name = %s and"
+                   " email = %s".format(cls._table))
+            conn_handler = SQLConnectionHandler()
+            spid = conn_handler.execute_fetchone(sql, (name, email))
 
         # Doesn't exist so insert new person
-        sql = ("INSERT INTO qiita.{0} (name, email, address, phone) VALUES"
-               " (%s, %s, %s, %s) RETURNING "
-               "study_person_id".format(cls._table))
-        conn_handler = SQLConnectionHandler()
-        spid = conn_handler.execute_fetchone(sql, (name, email, address,
-                                                   phone))
+        else:
+            sql = ("INSERT INTO qiita.{0} (name, email, address, phone) VALUES"
+                   " (%s, %s, %s, %s) RETURNING "
+                   "study_person_id".format(cls._table))
+            conn_handler = SQLConnectionHandler()
+            spid = conn_handler.execute_fetchone(sql, (name, email, address,
+                                                       phone))
         return cls(spid[0])
 
     # Properties
