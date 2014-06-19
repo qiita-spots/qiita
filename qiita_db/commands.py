@@ -19,23 +19,22 @@ def make_study_from_cmd(owner, title, info):
     optional = dict(config.items('optional'))
     get_optional = lambda name: optional.get(name, None)
     get_required = partial(config.get, 'required')
+    required_fields = ['timeseries_type_id', 'mixs_compliant',
+                       'number_samples_collected', 'number_samples_promised',
+                       'portal_type_id', 'reprocess', 'study_alias',
+                       'study_description', 'study_abstract',
+                       'metadata_complete']
+    optional_fields = ['funding', 'most_recent_contact', 'spatial_series',
+                       'vamps_id']
     infodict = {}
-    infodict['funding'] = get_optional('funding')
-    infodict['timeseries_type_id'] = get_required('timeseries_type_id')
-    infodict['metadata_complete'] = get_required('metadata_complete')
-    infodict['mixs_compliant'] = get_required('mixs_compliant')
-    infodict['most_recent_contact'] = get_optional('most_recent_contact')
-    infodict['number_samples_collected'] = get_required(
-        'number_samples_collected')
-    infodict['number_samples_promised'] = get_required(
-        'number_samples_promised')
-    infodict['portal_type_id'] = get_required('portal_type_id')
-    infodict['reprocess'] = get_required('reprocess')
-    infodict['spatial_series'] = get_optional('spatial_series')
-    infodict['study_alias'] = get_required('study_alias')
-    infodict['study_description'] = get_required('study_description')
-    infodict['study_abstract'] = get_required('study_abstract')
-    infodict['vamps_id'] = get_optional('vamps_id')
+    for value in required_fields:
+        infodict[value] = get_required(value)
+
+    for value in optional_fields:
+        optvalue = get_optional(value)
+        if optvalue is not None:
+            infodict[value] = optvalue
+
     emp_person_name_email = get_optional('emp_person_name')
     if emp_person_name_email is not None:
         emp_name, emp_email = emp_person_name_email.split(',')
