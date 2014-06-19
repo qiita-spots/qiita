@@ -57,9 +57,9 @@ class SelectCommandsHandler(BaseHandler):
         data_types = sorted(list(data_types))
 
         # FIXME: Pull out from the database, see #111
-        commands = {'16S': ['Alpha Diversity', 'Beta Diversity',
+        commands = {'16S': ['Alpha Rarefaction', 'Beta Diversity',
                             'Summarize Taxa'],
-                    '18S': ['Alpha Diversity', 'Beta Diversity',
+                    '18S': ['Alpha Rarefaction', 'Beta Diversity',
                             'Summarize Taxa'],
                     'Metabolomic': ['Summarize Taxa']}
 
