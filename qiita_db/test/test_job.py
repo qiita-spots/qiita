@@ -52,7 +52,7 @@ class JobTest(TestCase):
 
     def test_create(self):
         """Makes sure creation works as expected"""
-        #make first job
+        # make first job
         new = Job.create("18S", "Alpha Diversity",
                          self.options, Analysis(1))
         self.assertEqual(new.id, 3)
