@@ -113,11 +113,11 @@ class DBUtilTests(TestCase):
 
         obs = get_filetypes()
         exp = {'FASTA': 1, 'FASTQ': 2, 'SPECTRA': 3}
-        self.assertItemsEqual(obs, exp)
+        self.assertEqual(obs, exp)
 
         obs = get_filetypes(key='filetype_id')
         exp = {v: k for k, v in exp.items()}
-        self.assertItemsEqual(obs, exp)
+        self.assertEqual(obs, exp)
 
     def test_get_filetypes_fail(self):
         """Tests that get_Filetypes fails with invalid argument"""
@@ -130,11 +130,11 @@ class DBUtilTests(TestCase):
         exp = {'raw_sequences': 1, 'raw_barcodes': 2, 'raw_spectra': 3,
                'preprocessed_sequences': 4, 'preprocessed_sequences_qual': 5,
                'biom': 6, 'tar': 7, 'plain_text': 8}
-        self.assertItemsEqual(obs, exp)
+        self.assertEqual(obs, exp)
 
         obs = get_filepath_types(key='filepath_type_id')
         exp = {v: k for k, v in exp.items()}
-        self.assertItemsEqual(obs, exp)
+        self.assertEqual(obs, exp)
 
     def test_get_filepath_types_fail(self):
         """Tests that get_Filetypes fails with invalid argument"""
