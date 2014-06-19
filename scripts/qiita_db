@@ -12,6 +12,8 @@ import click
 
 from qiita_db.util import get_filetypes
 from qiita_db.data import load_raw
+from qiita_db.commands import make_study_from_cmd
+
 
 @click.group()
 def qiita_db():
@@ -32,6 +34,24 @@ def qiita_db():
 def load_raw_data(fp, filetype, study):
     data.load_raw(fp, filetype, study)
 
+
+@click.command()
+@click.option('--owner', help="The email address of the owner of the study")
+@click.option('--title', help="The title of the study")
+@click.option('--info', type=click.File(mode='r'),
+              help="filepath of file with study information in python"
+              "config file format")
+def insert_study_to_db(owner, title, info):
+    make_study_from_cmd(owner, title, info)
+
+
+qiita_db.add_command(make_test_env)
+qiita_db.add_command(clean_test_env)
+qiita_db.add_command(drop_test_env)
+qiita_db.add_command(make_production_env)
+qiita_db.add_command(make_demo_env)
+qiita_db.add_command(drop_demo_env)
+qiita_db.add_command(insert_study_to_db)
 
 if __name__ == '__main__':
     qiita_db()
