@@ -35,9 +35,9 @@ class TestStudyPerson(TestCase):
                          '111 fake street', '111-121-1313']])
 
     def test_create_studyperson_already_exists(self):
-            obs = StudyPerson.create('LabDude', 'lab_dude@foo.bar')
-            self.assertEqual(obs.name, 'LabDude')
-            self.assertEqual(obs.email, 'lab_dude@foo.bar')
+        obs = StudyPerson.create('LabDude', 'lab_dude@foo.bar')
+        self.assertEqual(obs.name, 'LabDude')
+        self.assertEqual(obs.email, 'lab_dude@foo.bar')
 
     def test_retrieve_name(self):
         self.assertEqual(self.studyperson.name, 'LabDude')
