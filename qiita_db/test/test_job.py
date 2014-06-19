@@ -39,20 +39,20 @@ class JobTest(TestCase):
 
     def test_exists(self):
         """tests that existing job returns true"""
-        self.assertTrue(Job.exists("16S", "summarize_taxa_through_plots.py",
+        self.assertTrue(Job.exists("16S", "Summarize Taxa",
                                    {'option1': True, 'option2': 12,
                                     'option3': 'FCM'}))
 
     def test_exists_not_there(self):
         """tests that non-existant job returns false"""
         self.assertFalse(Job.exists("Metabolomic",
-                                    "summarize_taxa_through_plots.py",
+                                    "Summarize Taxa",
                                     {'option1': "Nope", 'option2': 10,
                                      'option3': 'FCM'}))
 
     def test_create(self):
         """Makes sure creation works as expected"""
-        new = Job.create("18S", "beta_diversity_through_plots.py",
+        new = Job.create("18S", "Beta Diversity",
                          self.options, Analysis(1))
         self.assertEqual(new.id, 3)
         # make sure job inserted correctly
@@ -71,7 +71,7 @@ class JobTest(TestCase):
     def test_create_exists(self):
         """Makes sure creation doesn't duplicate a job"""
         with self.assertRaises(QiitaDBDuplicateError):
-            Job.create("16S", "summarize_taxa_through_plots.py",
+            Job.create("16S", "Summarize Taxa",
                        {'option1': True, 'option2': 12, 'option3': 'FCM'},
                        Analysis(1))
 
@@ -98,7 +98,7 @@ class JobTest(TestCase):
         self.assertTrue(exists(join(get_work_base_dir(), "job1result.txt")))
 
     def test_retrieve_results_blank(self):
-        new = Job.create("18S", "beta_diversity_through_plots.py",
+        new = Job.create("18S", "Beta Diversity",
                          self.options, Analysis(1))
         obs = new.results
         self._delete_path = obs
