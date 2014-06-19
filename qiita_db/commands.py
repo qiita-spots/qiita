@@ -81,4 +81,5 @@ def load_raw_data_cmd(filepaths, filepath_types, filetype, study_ids):
 
     studies = [Study(x) for x in study_ids]
 
-    return RawData.create(filetype_id, zip(filepaths, filepath_types), studies)
+    return RawData.create(filetype_id, list(zip(filepaths, filepath_types)),
+                          studies)
