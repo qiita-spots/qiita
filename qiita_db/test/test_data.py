@@ -50,7 +50,8 @@ class RawDataTests(TestCase):
             f.write("\n")
 
     def tearDown(self):
-        map(remove, self._clean_up_files)
+        for f in self._clean_up_files:
+            remove(f)
 
     def test_create(self):
         """Correctly creates all the rows in the DB for the raw data"""
@@ -144,7 +145,8 @@ class PreprocessedDataTests(TestCase):
             f.write("\n")
 
     def tearDown(self):
-        map(remove, self._clean_up_files)
+        for f in self._clean_up_files:
+            remove(f)
 
     def test_create(self):
         """Correctly creates all the rows in the DB for preprocessed data"""
@@ -252,7 +254,8 @@ class ProcessedDataTests(TestCase):
             f.write("\n")
 
     def tearDown(self):
-        map(remove, self._clean_up_files)
+        for f in self._clean_up_files:
+            remove(f)
 
     def test_create(self):
         """Correctly creates all the rows in the DB for the processed data"""

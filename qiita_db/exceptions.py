@@ -54,3 +54,11 @@ class QiitaDBUnknownIDError(QiitaDBError):
         super(QiitaDBUnknownIDError, self).__init__()
         self.args = ("The object with ID '%s' does not exists in table '%s'"
                      % (missing_id, table),)
+
+
+class QiitaDBDuplicateHeaderError(QiitaDBError):
+    """Exception for error when a MetadataTemplate has duplicate columns"""
+    def __init__(self):
+        super(QiitaDBDuplicateHeaderError, self).__init__()
+        self.args = ("Duplicate headers found in MetadataTemplate. Note "
+                     "that the headers are not case-sensitive",)
