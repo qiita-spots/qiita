@@ -102,6 +102,12 @@ class TestLoadRawDataFromCmd(TestCase):
         self.assertTrue(check_count('qiita.study_raw_data',
                                     initial_raw_count + 1))
 
+        # Ensure that the ValueError is raised when a filepath_type is not
+        # provided for each and every filepath
+        with self.assertRaises(ValueError):
+            load_raw_data_cmd(filepaths, filepath_types[:-1], filetype,
+                              study_ids)
+
 
 CONFIG_1 = """[required]
 timeseries_type_id = 1
