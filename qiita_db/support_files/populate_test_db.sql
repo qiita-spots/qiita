@@ -323,19 +323,19 @@ INSERT INTO qiita.processed_filepath (processed_data_id, filepath_id) VALUES (1,
 INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum, checksum_algorithm_id) VALUES ('job1result.txt', 8, '852952723', 1), ('job2tar.tar', 7, '852952723', 1);
 
 -- Insert jobs
-INSERT INTO qiita.job (data_type_id, job_status_id, command_id, options) VALUES (1, 3, 1, '{"option1":true,"option2":12,"option3":"FCM"}'), (1, 3, 2, 'options2');
+INSERT INTO qiita.job (data_type_id, job_status_id, command_id, options) VALUES (1, 1, 1, '{"option1":true,"option2":12,"option3":"FCM"}'), (1, 3, 2, 'options2'), (1, 1, 2, '{"option1":true,"option2":12,"option3":"FCM"}');
 
 -- Insert Analysis
-INSERT INTO qiita.analysis (email, name, description, analysis_status_id, pmid) VALUES ('test@foo.bar', 'SomeAnalysis', 'A test analysis', 4, '121112');
+INSERT INTO qiita.analysis (email, name, description, analysis_status_id, pmid) VALUES ('test@foo.bar', 'SomeAnalysis', 'A test analysis', 4, '121112'), ('test@foo.bar', 'SomeSecondAnalysis', 'Another test analysis', 1, '22221112');
 
 -- Attach jobs to analysis
-INSERT INTO qiita.analysis_job (analysis_id, job_id) VALUES (1, 1), (1, 2);
+INSERT INTO qiita.analysis_job (analysis_id, job_id) VALUES (1, 1), (1, 2), (2, 3);
 
 -- Attach filepath to analysis
 INSERT INTO qiita.analysis_filepath (analysis_id, filepath_id) VALUES (1, 7);
 
 -- Attach samples to analysis
-INSERT INTO qiita.analysis_sample (analysis_id, processed_data_id, sample_id) VALUES (1,1,'SKB8.640193'), (1,1,'SKD8.640184'), (1,1,'SKB7.640196'), (1,1,'SKM9.640192'), (1,1,'SKM4.640180');
+INSERT INTO qiita.analysis_sample (analysis_id, processed_data_id, sample_id) VALUES (1,1,'SKB8.640193'), (1,1,'SKD8.640184'), (1,1,'SKB7.640196'), (1,1,'SKM9.640192'), (1,1,'SKM4.640180'), (2,1,'SKB8.640193'), (2,1,'SKD8.640184'), (2,1,'SKB7.640196');
 
 --Share analysis with shared user
 INSERT INTO qiita.analysis_users (analysis_id, email) VALUES (1, 'shared@foo.bar');

@@ -105,19 +105,19 @@ class SetupTest(TestCase):
         self._check_count("qiita.processed_filepath", 1)
 
     def test_job(self):
-        self._check_count("qiita.job", 2)
+        self._check_count("qiita.job", 3)
 
     def test_analysis(self):
-        self._check_count("qiita.analysis", 1)
+        self._check_count("qiita.analysis", 2)
 
     def test_analysis_job(self):
-        self._check_count("qiita.analysis_job", 2)
+        self._check_count("qiita.analysis_job", 3)
 
     def test_analysis_filepath(self):
         self._check_count("qiita.analysis_filepath", 1)
 
     def test_analysis_sample(self):
-        self._check_count("qiita.analysis_sample", 5)
+        self._check_count("qiita.analysis_sample", 8)
 
     def test_analysis_users(self):
         self._check_count("qiita.analysis_users", 1)
