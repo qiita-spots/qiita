@@ -6,8 +6,10 @@ except ImportError:
     # Python 3
     from configparser import ConfigParser
 
-from qiita_db.study import Study, StudyPerson
-from qiita_db.user import User
+from .study import Study, StudyPerson
+from .user import User
+from .util import get_filetypes, get_filepath_types
+from .data import RawData
 
 
 def make_study_from_cmd(owner, title, info):
@@ -55,3 +57,29 @@ def make_study_from_cmd(owner, title, info):
     efo_ids = [x.strip() for x in efo_ids.split(',')]
 
     Study.create(User(owner), title, efo_ids, infodict)
+
+
+def load_raw_data_cmd(filepaths, filepath_types, filetype, study_ids):
+    """Add new raw data by populating the relevant tables
+
+    Parameters
+    ----------
+    filepaths : iterable of str
+    filepath_types : iterable of str
+    filetype : str
+    study_ids : iterable of int
+    """
+    if len(filepaths) != len(filepath_types):
+        raise ValueError("Please pass exactly one filepath_type for each "
+                         "and every filepath")
+
+    filetypes_dict = get_filetypes()
+    filetype_id = filetypes_dict[filetype]
+
+    filepath_types_dict = get_filepath_types()
+    filepath_types = [filepath_types_dict[x] for x in filepath_types]
+
+    studies = [Study(x) for x in study_ids]
+
+    return RawData.create(filetype_id, list(zip(filepaths, filepath_types)),
+                          studies)
