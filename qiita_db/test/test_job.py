@@ -54,18 +54,18 @@ class JobTest(TestCase):
         """Makes sure creation works as expected"""
         new = Job.create("18S", "Beta Diversity",
                          self.options, Analysis(1))
-        self.assertEqual(new.id, 3)
+        self.assertEqual(new.id, 4)
         # make sure job inserted correctly
         obs = self.conn_handler.execute_fetchall("SELECT * FROM qiita.job "
-                                                 "WHERE job_id = 3")
-        exp = [[3, 2, 2, 1, '{"option1":false,"option2":25,"option3":"NEW"}',
+                                                 "WHERE job_id = 4")
+        exp = [[4, 2, 2, 1, '{"option1":false,"option2":25,"option3":"NEW"}',
                 None]]
         self.assertEqual(obs, exp)
         # make sure job added to analysis correctly
         obs = self.conn_handler.execute_fetchall("SELECT * FROM "
                                                  "qiita.analysis_job WHERE "
-                                                 "job_id = 3")
-        exp = [[1, 3]]
+                                                 "job_id = 4")
+        exp = [[1, 4]]
         self.assertEqual(obs, exp)
 
     def test_create_exists(self):
