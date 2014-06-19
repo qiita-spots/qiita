@@ -582,6 +582,8 @@ class MetadataTemplate(QiitaObject):
         # We are going to modify the md_template. We create a copy so
         # we don't modify the user one
         md_template = deepcopy(md_template)
+        # In the database, all the column headers are lowercase
+        md_template.columns = [c.lower() for c in md_template.columns]
 
         conn_handler = SQLConnectionHandler()
         # Check that md_template have the required columns
