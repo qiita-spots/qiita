@@ -45,7 +45,6 @@ class SelectCommandsHandler(BaseHandler):
         study_args = self.get_arguments('studies')
         split = [x.split("#") for x in study_args]
 
-
         # build dictionary of studies and datatypes selected
         # as well a set of unique datatypes selected
         study_dts = defaultdict(list)
@@ -55,15 +54,14 @@ class SelectCommandsHandler(BaseHandler):
             data_types.add(data_type)
 
         # make sure the data types are unique
-        data_types = list(data_types)
-        data_types.sort()
+        data_types = sorted(list(data_types))
 
         # FIXME: Pull out from the database!!
-        commands = {'16S' : ['Alpha Diversity', 'Beta Diversity',
-                             'Summarize Taxa'],
-                    '18S' : ['Alpha Diversity', 'Beta Diversity',
-                             'Summarize Taxa'],
-                    'Metabolomic' : ['Summarize Taxa']}
+        commands = {'16S': ['Alpha Diversity', 'Beta Diversity',
+                            'Summarize Taxa'],
+                    '18S': ['Alpha Diversity', 'Beta Diversity',
+                            'Summarize Taxa'],
+                    'Metabolomic': ['Summarize Taxa']}
 
         self.render('select_commands.html', user=self.get_current_user(),
                     commands=commands, data_types=data_types, aid=analysis_id)
@@ -80,4 +78,3 @@ class SelectCommandsHandler(BaseHandler):
                 samples = [(processed_data[data_type], sid) for sid in
                            sample_ids]
                 analysis.add_samples(samples)
-
