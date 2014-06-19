@@ -1,25 +1,22 @@
 # adapted from
 # https://github.com/leporo/tornado-redis/blob/master/demos/websockets
+from time import sleep
 
-from redis import Redis
-from tornadoredis import Client
 from tornado.websocket import WebSocketHandler
-import tornado.gen
+from tornado.gen import engine, Task
 from json import loads
 
 # all messages are in json format. They must have the following format:
-# 'job': jobname
+# 'analysis': analysis_id
 # 'msg': message to print
-# 'analysis': what analysis this is from in format datatype:analysis
-# 'results': list of files created if any
+# 'command': what command this is from in format datatype#command
 
 
 class MessageHandler(WebSocketHandler):
     def __init__(self, *args, **kwargs):
         super(MessageHandler, self).__init__(*args, **kwargs)
-        self.r_server = Redis()
-        self.redis = Client()
-        self.redis.connect()
+        # self.redis = Client()
+        # self.redis.connect()
 
     def get_current_user(self):
         user = self.get_secure_cookie("user")
@@ -32,33 +29,22 @@ class MessageHandler(WebSocketHandler):
         msginfo = loads(msg)
         # listens for handshake from page
         if "user:" in msginfo['msg']:
-            self.channel = msginfo['msg'].split(':')[1]
+            self.aid = msginfo['msg'].split()[0]
+            self.channel = msginfo['msg'].split()[1].split(':')[1]
             # need to split the rest off to new func so it can be asynchronous
             self.listen()
 
     # decorator turns the function into an asynchronous generator object
-    @tornado.gen.engine
+    @engine
     def listen(self):
-        # runs task given, with the yield required to get returned value
-        # equivalent of callback/wait pairing from tornado.gen
-        yield tornado.gen.Task(self.redis.subscribe, self.channel)
-        if not self.redis.subscribed:
-            self.write_message('ERROR IN SUBSCRIPTION')
-        # listen from tornadoredis makes the listen object asynchronous
-        # if using standard redis lib, it blocks while listening
-        self.redis.listen(self.callback)
-        # fight race condition by loading from redis after listen started
-        # need to use std redis lib because tornadoredis is in subscribed state
-        oldmessages = self.r_server.lrange(self.channel + ':messages', 0, -1)
-        if oldmessages is not None:
-            for message in oldmessages:
-                self.write_message(message)
+        sleep(5)
+        self.write_message({"analysis": self.aid, "msg": "allcomplete"})
 
     def callback(self, msg):
         if msg.kind == 'message':
             self.write_message(str(msg.body))
 
-    @tornado.gen.engine
+    @engine
     def on_close(self):
-        yield tornado.gen.Task(self.redis.unsubscribe, self.channel)
+        yield Task(self.redis.unsubscribe, self.channel)
         self.redis.disconnect()

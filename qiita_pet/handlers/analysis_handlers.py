@@ -1,3 +1,5 @@
+from os.path import basename
+
 from tornado.web import authenticated
 from collections import defaultdict
 
@@ -7,6 +9,7 @@ from qiita_db.analysis import Analysis
 from qiita_db.study import Study
 from qiita_db.data import ProcessedData
 from qiita_db.metadata_template import SampleTemplate
+from qiita_db.job import Job
 # login code modified from https://gist.github.com/guillaumevincent/4771570
 
 
@@ -78,3 +81,50 @@ class SelectCommandsHandler(BaseHandler):
                 samples = [(processed_data[data_type], sid) for sid in
                            sample_ids]
                 analysis.add_samples(samples)
+
+
+class AnalysisWaitHandler(BaseHandler):
+    @authenticated
+    def get(self, analysis_id):
+        analysis = Analysis(analysis_id)
+        commands = []
+        for job in analysis.jobs:
+            jobject = Job(job)
+            commands.append("%s:%s" % (jobject.datatype, jobject.command[0]))
+
+        self.render("analysis_waiting.html", user=self.get_current_user(),
+                    aid=analysis_id, aname=analysis.name,
+                    commands=commands)
+
+    @authenticated
+    def post(self, analysis_id):
+        command_args = self.get_arguments("commands")
+        split = [x.split("#") for x in command_args]
+        analysis = Analysis(analysis_id)
+
+        commands = []
+        for data_type, command in split:
+            print "INPUT: ", data_type, command
+            job = Job.create(data_type, command, {}, analysis)
+            print "INPUT2: ", data_type, command
+            print "JOB %s %s:%s" % (job.id, job.datatype, job.command[0])
+            commands.append("%s:%s" % (data_type, command))
+
+        self.render("analysis_waiting.html", user=self.get_current_user(),
+                    aid=analysis_id, aname=analysis.name,
+                    commands=commands)
+        # fire off analysis run here
+
+
+class AnalysisResultsHandler(BaseHandler):
+    @authenticated
+    def get(self, aid):
+        analysis = Analysis(aid)
+        jobres = defaultdict(list)
+        for job in analysis.jobs:
+            jobject = Job(job)
+            jobres[jobject.datatype].append((jobject.command[0],
+                                             jobject.results))
+
+        self.render("analysis_results.html", user=self.get_current_user(),
+                    jobres=jobres, aname=analysis.name)
