@@ -432,3 +432,38 @@ def convert_to_id(value, table, conn_handler=None):
             raise IncompetentQiitaDeveloperError("%s not valid for table %s"
                                                  % (value, table))
         return _id[0]
+
+
+def get_count(table):
+    """Counts the number of rows in a table
+
+    Parameters
+    ----------
+    table : str
+        The name of the table of which to count the rows
+
+    Returns
+    -------
+    int
+    """
+    conn = SQLConnectionHandler()
+    sql = "SELECT count(1) FROM %s" % table
+    return conn.execute_fetchone(sql)[0]
+
+
+def check_count(table, exp_count):
+    """Checks that the number of rows in a table equals the expected count
+
+    Parameters
+    ----------
+    table : str
+        The name of the table of which to count the rows
+    exp_count : int
+        The expected number of rows in the table
+
+    Returns
+    -------
+    bool
+    """
+    obs_count = get_count(table)
+    return obs_count == exp_count

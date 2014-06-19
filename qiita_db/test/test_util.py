@@ -16,7 +16,8 @@ from qiita_db.exceptions import QiitaDBColumnError
 from qiita_db.util import (exists_table, exists_dynamic_table, scrub_data,
                            compute_checksum, check_table_cols,
                            check_required_columns, convert_to_id,
-                           get_table_cols, get_filetypes, get_filepath_types)
+                           get_table_cols, get_filetypes, get_filepath_types,
+                           get_count, check_count)
 
 
 @qiita_test_checker()
@@ -139,6 +140,15 @@ class DBUtilTests(TestCase):
         """Tests that get_Filetypes fails with invalid argument"""
         with self.assertRaises(QiitaDBColumnError):
             get_filepath_types(key='invalid')
+
+    def test_get_count(self):
+        """Checks that get_count retrieves proper count"""
+        self.assertEqual(get_count('qiita.study_person'), 3)
+
+    def test_check_count(self):
+        """Checks that check_count returns True and False appropriately"""
+        self.assertTrue(check_count('qiita.study_person', 3))
+        self.assertFalse(check_count('qiita.study_person', 2))
 
 
 class UtilTests(TestCase):
