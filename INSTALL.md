@@ -15,6 +15,9 @@ Qiita is a python package, with support for python 2.7 and 3.2, that depends on 
 * [NumPy](https://github.com/numpy/numpy)
 * [Pandas](http://pandas.pydata.org/)
 * [QIIME development version](https://github.com/biocore/qiime)
+* [future](http://python-future.org/)
+* [bcrypt](https://github.com/pyca/bcrypt/)
+* [redis](https://github.com/andymccurdy/redis-py)
 
 And on the following packages:
 
