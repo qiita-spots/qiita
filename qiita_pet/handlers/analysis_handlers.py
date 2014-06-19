@@ -136,3 +136,15 @@ class AnalysisResultsHandler(BaseHandler):
 
         self.render("analysis_results.html", user=self.get_current_user(),
                     jobres=jobres, aname=analysis.name)
+
+
+class ShowAnalysesHandler(BaseHandler):
+    """Shows the user's analyses"""
+    def get(self):
+        user_id = self.get_current_user()
+        user = User(user_id)
+
+        analyses = [Analysis(a) for a in user.private_analyses]
+        analyses.extend([Analysis(a) for a in user.shared_analyses])
+
+        self.render("show_analyses.html", user=user_id, analyses=analyses)
