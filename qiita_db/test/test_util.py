@@ -16,7 +16,7 @@ from qiita_db.exceptions import QiitaDBColumnError
 from qiita_db.util import (exists_table, exists_dynamic_table, scrub_data,
                            compute_checksum, check_table_cols,
                            check_required_columns, convert_to_id,
-                           get_table_cols, get_filetypes)
+                           get_table_cols, get_filetypes, get_filepath_types)
 
 
 @qiita_test_checker()
@@ -115,13 +115,30 @@ class DBUtilTests(TestCase):
         self.assertItemsEqual(obs, exp)
 
         obs = get_filetypes(key='filetype_id')
-        exp = {1: 'FASTA', 2: 'FASTQ', 3: 'SPECTRA'}
+        exp = {v: k for k, v in exp.items()}
         self.assertItemsEqual(obs, exp)
 
     def test_get_filetypes_fail(self):
         """Tests that get_Filetypes fails with invalid argument"""
         with self.assertRaises(QiitaDBColumnError):
             get_filetypes(key='invalid')
+
+    def test_get_filepath_types(self):
+        """Tests that get_filepath_types works with valid arguments"""
+        obs = get_filepath_types()
+        exp = {'raw_sequences': 1, 'raw_barcodes': 2, 'raw_spectra': 3,
+               'preprocessed_sequences': 4, 'preprocessed_sequences_qual': 5,
+               'biom': 6, 'tar': 7, 'plain_text': 8}
+        self.assertItemsEqual(obs, exp)
+
+        obs = get_filepath_types(key='filepath_type_id')
+        exp = {v: k for k, v in exp.items()}
+        self.assertItemsEqual(obs, exp)
+
+    def test_get_filepath_types_fail(self):
+        """Tests that get_Filetypes fails with invalid argument"""
+        with self.assertRaises(QiitaDBColumnError):
+            get_filepath_types(key='invalid')
 
 
 class UtilTests(TestCase):

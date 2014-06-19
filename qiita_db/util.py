@@ -93,6 +93,35 @@ def get_filetypes(key='type'):
     return dict(con.execute_fetchall(sql))
 
 
+def get_filepath_types(key='filepath_type'):
+    """Gets the list of possible filepath types from the filetype table
+
+    Parameters
+    ----------
+    key : {'filepath_type', 'filepath_type_id'}, optional
+        Defaults to "filepath_type". Determines the format of the returned
+        dict.
+
+    Returns
+    -------
+    dict
+        - If `key` is "filepath_type", dict is of the form
+          {filepath_type: filepath_type_id}
+        - If `key` is "filepath_type_id", dict is of the form
+          {filepath_type_id: filepath_type}
+    """
+    con = SQLConnectionHandler()
+    if key == 'filepath_type':
+        cols = 'filepath_type, filepath_type_id'
+    elif key == 'filepath_type_id':
+        cols = 'filepath_type_id, filepath_type'
+    else:
+        raise QiitaDBColumnError("Unknown key. Pass either 'filepath_type' or "
+                                 "'filepath_type_id'.")
+    sql = 'select {} from qiita.filepath_type'.format(cols)
+    return dict(con.execute_fetchall(sql))
+
+
 def create_rand_string(length, punct=True):
         """Returns a string of random ascii characters
 
