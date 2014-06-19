@@ -86,13 +86,13 @@ class TestLoadRawDataFromCmd(TestCase):
         raw_data_id = new.id
         self.files_to_remove.append(
             join(self.db_test_raw_dir,
-            '%d_%s' % (raw_data_id, basename(self.forward_fp))))
+                 '%d_%s' % (raw_data_id, basename(self.forward_fp))))
         self.files_to_remove.append(
             join(self.db_test_raw_dir,
-            '%d_%s' % (raw_data_id, basename(self.reverse_fp))))
+                 '%d_%s' % (raw_data_id, basename(self.reverse_fp))))
         self.files_to_remove.append(
             join(self.db_test_raw_dir,
-            '%d_%s' % (raw_data_id, basename(self.barcodes_fp))))
+                 '%d_%s' % (raw_data_id, basename(self.barcodes_fp))))
 
         self.assertTrue(check_count('qiita.raw_data', initial_raw_count + 1))
         self.assertTrue(check_count('qiita.filepath',
