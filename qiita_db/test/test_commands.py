@@ -8,7 +8,6 @@
 
 from unittest import TestCase, main
 from future.utils.six import StringIO
-from os.path import join, dirname
 try:
     # Python 2
     from ConfigParser import NoOptionError
@@ -47,13 +46,9 @@ class TestMakeStudyFromCmd(TestCase):
 
 @qiita_test_checker()
 class SampleTemplateAdderTests(TestCase):
-    """"""
-
     def setUp(self):
-        """"""
         # Create a sample template file
-        self.samp_temp_path = join(dirname(__file__), 'test_data',
-                                   'sample_template.txt')
+        self.st_contents = SAMPLE_TEMPLATE
 
         # create a new study to attach the sample template
         info = {
@@ -75,7 +70,8 @@ class SampleTemplateAdderTests(TestCase):
 
     def test_sample_template_adder(self):
         """Correctly adds a sample template to the DB"""
-        st = sample_template_adder(self.samp_temp_path, self.study.id)
+        fh = StringIO(self.st_contents)
+        st = sample_template_adder(fh, self.study.id)
         self.assertEqual(st.id, self.study.id)
 
 
@@ -115,6 +111,19 @@ lab_person = SomeDude, somedude@foo.bar
 funding = 'funding source'
 vamps_id = vamps_id
 """
+
+SAMPLE_TEMPLATE = (
+    "#SampleID\trequired_sample_info_status_id\tcollection_timestamp\t"
+    "sample_type\thas_physical_specimen\tphysical_location\thas_extracted_data"
+    "\thost_subject_id\tTreatment\tDOB\tDescription\n"
+    "PC.354\t1\t2014-06-18 16:44\ttype_1\tTrue\tLocation_1\tTrue\tHS_ID_PC.354"
+    "\tControl\t20061218\tControl_mouse_I.D._354\n"
+    "PC.593\t1\t2014-06-18 16:44\ttype_1\tTrue\tLocation_1\tTrue\tHS_ID_PC.593"
+    "\tControl\t20071210\tControl_mouse_I.D._593\n"
+    "PC.607\t1\t2014-06-18 16:44\ttype_1\tTrue\tLocation_1\tTrue\tHS_ID_PC.607"
+    "\tFast\t20071112\tFasting_mouse_I.D._607\n"
+    "PC.636\t1\t2014-06-18 16:44\ttype_1\tTrue\tLocation_1\tTrue\tHS_ID_PC.636"
+    "\tFast\t20080116\tFasting_mouse_I.D._636")
 
 if __name__ == "__main__":
     main()
