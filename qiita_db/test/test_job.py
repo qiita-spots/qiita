@@ -52,13 +52,14 @@ class JobTest(TestCase):
 
     def test_create(self):
         """Makes sure creation works as expected"""
-        new = Job.create("18S", "Beta Diversity",
+        #make first job
+        new = Job.create("18S", "Alpha Diversity",
                          self.options, Analysis(1))
         self.assertEqual(new.id, 3)
         # make sure job inserted correctly
         obs = self.conn_handler.execute_fetchall("SELECT * FROM qiita.job "
                                                  "WHERE job_id = 3")
-        exp = [[3, 2, 1, 2, '{"option1":false,"option2":25,"option3":"NEW"}',
+        exp = [[3, 2, 1, 3, '{"option1":false,"option2":25,"option3":"NEW"}',
                 None]]
         self.assertEqual(obs, exp)
         # make sure job added to analysis correctly
@@ -66,6 +67,23 @@ class JobTest(TestCase):
                                                  "qiita.analysis_job WHERE "
                                                  "job_id = 3")
         exp = [[1, 3]]
+        self.assertEqual(obs, exp)
+
+        # make second job with diff datatype and command to test column insert
+        new = Job.create("16S", "Beta Diversity",
+                         self.options, Analysis(1))
+        self.assertEqual(new.id, 4)
+        # make sure job inserted correctly
+        obs = self.conn_handler.execute_fetchall("SELECT * FROM qiita.job "
+                                                 "WHERE job_id = 4")
+        exp = [[4, 1, 1, 2, '{"option1":false,"option2":25,"option3":"NEW"}',
+                None]]
+        self.assertEqual(obs, exp)
+        # make sure job added to analysis correctly
+        obs = self.conn_handler.execute_fetchall("SELECT * FROM "
+                                                 "qiita.analysis_job WHERE "
+                                                 "job_id = 4")
+        exp = [[1, 4]]
         self.assertEqual(obs, exp)
 
     # def test_create_exists(self):
