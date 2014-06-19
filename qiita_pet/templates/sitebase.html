@@ -8,76 +8,79 @@
 
     <script src="/static/vendor/js/jquery-2.1.0.min.js"></script>
     <script src="/static/vendor/js/bootstrap.min.js"></script>
-    <script src="/static/vendor/js/dropdown.min.js"></script>
 
     {% block head %}{% end %}
   </head>
-  <body>
-    <table width='100%' style="background:#A7A9AC">
-      <tr style="padding-top:3px; padding-bottom:3px; padding-right:3px; padding-left:3px;">
-        <td width="15%">
-          <img src="/static/img/logo.png">
-        </td>
-        <td width="60%" style="text-align:center;">
-          <nav>
-            <ul>
-              <li><a href="/">Home</a></li>
-              {% if user != '' %}
-              <li>
-                <a href="/analysis/1" target="_parent">Meta Analysis</a>
-                <ul>
-                  <li>
-                    <a href="/analysis/1" target="_parent">New Meta-Analysis</a></li>
-                  <li><a href="/running/" target="_parent">Running Meta-Analyses</a></li>
-                </ul>
-              </li>
-              {% end %}
-              <li><a href="mailto:qiita.help@gmail.com" target="_blank">Help</a></li>
-            </ul>
-          </nav>
-        </td>
-        <td width="45%" id="study_info">
+  <body style="padding-top: 65px;">
+    <div class="navbar navbar-default navbar-fixed-top" role="navigation">
+      <div class="container">
+        <div class="navbar-header">
+          <!-- button that appears if the window is re-sized to a smaller size -->
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+        </div>
+
+        <div class="navbar-collapse collapse">
+          <ul class="nav navbar-nav">
+            <li>
+              <!-- qiita logo -->
+              <a class="navbar-brand" rel="home" href="/" title="Qiita">
+                <img style="max-width:100px; margin-top: -7px;" src="/static/img/logo.png">
+              </a>
+            </li>
+            <!-- meta-analysis menu -->
+            {% if user != '' %}
+            <li class="dropdown">
+              <a href="/analysis/1" data-toggle="dropdown" class="dropdown-toggle">Meta Analysis<b class="caret"></b></a>
+              <ul class="dropdown-menu">
+                <li><a href="/analysis/1">Create Meta Analysis</a></li>
+                <li><a href="#">See Running Analyses</a></li>
+                <li><a href="#">See Old Analyses</a>
+              </ul>
+            </li>
+            {% end %}
+            <!-- generic elements -->
+            <li>
+              <a href="#">Help</a>
+            </li>
+          </ul>
+          <!-- show user name and logout button if there's a user logged in -->
           {% if user %}
-            <font color="white">Welcome </font><a href="/profile/">{{user}}</a> | <a href="/auth/logout/">Log Out</a>
+          <ul class="nav navbar-nav pull-right">
+            <li>
+              <a href="/profile/">Welcome {{user}}</a>
+            </li>
+            <li class="pull-right">
+              <a href="/auth/logout/">Log Out</a>
+            </li>
+          </ul>
+          <!-- otherwise show the login form -->
           {% else %}
-            <div class="nav">
             {% try %}
               <span style="color: red;">{{loginerror}}</span>
             {% except %}
               </span>
             {% end %}
-              <form class="navbar-form" role="form" action="/auth/login/" method="post">
-                <table width="100%">
-                  <tr>
-                    <td>
-                      <div class="form-group">
-                        <input type="text" id="username" name="username" placeholder="Email" class="form-control">
-                      </div>
-                    </td>
-                    <td>
-                      <div class="form-group">
-                        <input type="password" id="password" name="password" placeholder="Password" class="form-control">
-                      </div>
-                    </td>
-                    <td>
-                      <button type="submit" class="btn btn-success">Sign in</button>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td colspan="3" align="right">
-                      <a href="/auth/create/">New User</a> | <a href="/forgot/">Forgot Password</a>
-                    </td>
-                  </tr>
-                </table>
-              </form>
+          <form class="navbar-form navbar-right" role="form" action="/auth/login/" method="post">
+            <div class="form-group">
+              <input type="text" id="username" name="username" placeholder="Email" class="form-control">
             </div>
-          {%end%}
-        </td>
-      </tr>
-    </table>
+            <div class="form-group">
+              <input type="password" id="password" name="password" placeholder="Password" class="form-control">
+            </div>
+            <button type="submit" class="btn btn-success">Sign in</button>
+          </form>
+          {% end %}
+        </div><!--/.navbar-collapse -->
+      </div>
+    </div> <!--/.main nav-bar -->
 
     <!-- all templates should override this portion to present their main content -->
-    <div id="template-content">
+    <div id="template-content" class="container">
       {% block content %}{% end %}
     </div>
 
