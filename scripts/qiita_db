@@ -10,7 +10,7 @@
 
 import click
 
-from qiita_db.util import get_filetypes
+from qiita_db.util import get_filetypes, get_filepath_types
 from qiita_db.data import load_raw
 from qiita_db.commands import make_study_from_cmd
 
@@ -44,14 +44,6 @@ def load_raw_data(fp, filetype, study):
 def insert_study_to_db(owner, title, info):
     make_study_from_cmd(owner, title, info)
 
-
-qiita_db.add_command(make_test_env)
-qiita_db.add_command(clean_test_env)
-qiita_db.add_command(drop_test_env)
-qiita_db.add_command(make_production_env)
-qiita_db.add_command(make_demo_env)
-qiita_db.add_command(drop_demo_env)
-qiita_db.add_command(insert_study_to_db)
 
 if __name__ == '__main__':
     qiita_db()
