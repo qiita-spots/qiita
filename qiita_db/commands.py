@@ -8,6 +8,7 @@ except ImportError:
 
 from qiita_db.study import Study, StudyPerson
 from qiita_db.user import User
+from .util import get_filetypes
 
 
 def make_study_from_cmd(owner, title, info):

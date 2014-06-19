@@ -91,7 +91,7 @@ from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from .base import QiitaObject
 from .sql_connection import SQLConnectionHandler
 from .util import (exists_dynamic_table, get_db_files_base_dir,
-                   compute_checksum, insert_filepaths, get_filetypes)
+                   compute_checksum, insert_filepaths)
 
 
 class BaseData(QiitaObject):
@@ -466,17 +466,3 @@ class ProcessedData(BaseData):
                "CPI.raw_data_id JOIN qiita.data_type DT ON CPI.data_type_id = "
                "DT.data_type_id WHERE PD.processed_data_id = %s")
         return conn_handler.execute_fetchone(sql, [self._id])[0]
-
-
-def load_raw(filepaths, filetype, studies):
-    """Add new raw data by populating the relevant tables
-
-    Parameters
-    ----------
-    filepaths : iterable of str
-    filetype : str
-    studies : iterable of int
-    """
-    filetypes = get_filetypes()
-    filetype_id = filetypes[filetype]
-    RawData.create(filetype_id, filepaths, studies)
