@@ -38,4 +38,4 @@ INSERT INTO qiita.filepath_type (filepath_type) VALUES ('raw_sequences'), ('raw_
 INSERT INTO qiita.checksum_algorithm (name) VALUES ('crc32');
 
 -- Populate commands available
-INSERT INTO qiita.command (name, command) VALUES ('Summarize Taxa', 'summarize_taxa_through_plots.py'), ('Beta Diversity', 'beta_diversity_through_plots.py'), ('Alpha Diversity', 'alpha_diversity_through_plots.py');
+INSERT INTO qiita.command (name, command) VALUES ('Summarize Taxa', 'summarize_taxa_through_plots.py'), ('Beta Diversity', 'beta_diversity_through_plots.py'), ('Alpha Diversity', 'alpha_rarefaction_through_plots.py');
