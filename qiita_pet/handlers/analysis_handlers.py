@@ -1,3 +1,5 @@
+from os.path import basename
+
 from tornado.web import authenticated
 from collections import defaultdict
 
@@ -100,10 +102,12 @@ class AnalysisWaitHandler(BaseHandler):
         split = [x.split("#") for x in command_args]
         analysis = Analysis(analysis_id)
 
-        jobs = []
         commands = []
         for data_type, command in split:
-            jobs.append(Job.create(data_type, command, {}, analysis))
+            print "INPUT: ", data_type, command
+            job = Job.create(data_type, command, {}, analysis)
+            print "INPUT2: ", data_type, command
+            print "JOB %s %s:%s" % (job.id, job.datatype, job.command[0])
             commands.append("%s:%s" % (data_type, command))
 
         self.render("analysis_waiting.html", user=self.get_current_user(),
@@ -115,8 +119,15 @@ class AnalysisWaitHandler(BaseHandler):
 class AnalysisResultsHandler(BaseHandler):
     @authenticated
     def get(self, aid):
-        self.render("analysis_results.html", user=self.get_current_user())
+        analysis = Analysis(aid)
+        jobres = {}
+        for job in analysis.jobs:
+            jobject = Job(job)
+            print "JOB %s %s:%s" % (job, jobject.datatype, jobject.command[0])
+            jobres["%s:%s" % (jobject.datatype,
+                              jobject.command[0])] = jobject.results
 
-    @authenticated
-    def post(self, ignore):
-        pass
+        print jobres
+
+        self.render("analysis_results.html", user=self.get_current_user(),
+                    jobres=jobres, aname=analysis.name)

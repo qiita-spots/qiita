@@ -1,5 +1,21 @@
 {% extends sitebase.html%}
 
 {%block content%}
-RESULTS
+<div class="row">
+<h1>Analysis {{aname}}</h1>
+</div>
+<div class="row">
+<div class="col-lg-2">
+{%for job in jobres %}
+  <strong>{{job}}</strong><p>
+  {% for num, res in enumerate(jobres[job]) %}
+    <a href='/results/{{res}}' target='resframe'>Result {{num}}</a><br />
+  {% end %}
+  </p>
+{% end %}
+</div>
+<div class="col-lg-10" height="100%">
+<iframe id="resframe" name="resframe" width="100%" height="100%"></iframe>
+</div>
+</div>
 {%end%}
