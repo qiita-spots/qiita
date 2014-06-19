@@ -33,7 +33,7 @@ def qiita_db():
 @click.option('--study', multiple=True, help='Associate the data with this '
               'study. This option can be used multiple times if the data '
               'should be associated with multiple studies')
-def load_raw_data(fp, filetype, study):
+def load_raw_data(fp, fp_type, filetype, study):
     data.load_raw_cmd(fp, filetype, study)
 
 
