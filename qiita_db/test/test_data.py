@@ -339,6 +339,10 @@ class ProcessedDataTests(TestCase):
         pd = ProcessedData(1)
         self.assertEqual(pd.preprocessed_data, 1)
 
+    def test_data_type(self):
+        pd = ProcessedData(1)
+        self.assertEqual(pd.data_type, "18S")
+
 
 if __name__ == '__main__':
     main()
