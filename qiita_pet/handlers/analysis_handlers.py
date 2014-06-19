@@ -1,9 +1,12 @@
 from tornado.web import authenticated
+from collections import defaultdict
 
 from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_db.user import User
 from qiita_db.analysis import Analysis
 from qiita_db.study import Study
+from qiita_db.data import ProcessedData
+from qiita_db.metadata_template import SampleTemplate
 # login code modified from https://gist.github.com/guillaumevincent/4771570
 
 
@@ -32,3 +35,46 @@ class SelectStudiesHandler(BaseHandler):
 
         self.render('select_studies.html', user=user, aid=analysis.id,
                     studies=studies)
+
+
+class SelectCommandsHandler(BaseHandler):
+    """Select commands to be executed"""
+    @authenticated
+    def post(self):
+        analysis_id = self.get_argument('analysis-id')
+        study_args = self.get_arguments('studies')
+        split = [x.split("#") for x in study_args]
+
+        # build dictionary of studies and datatypes selected
+        # as well a set of unique datatypes selected
+        study_dts = defaultdict(list)
+        data_types = set()
+        for study_id, data_type in split:
+            study_dts[study_id].append(data_type)
+            data_types.add(data_type)
+
+        # sort the elements to have 16S be the first tho show on the tabs
+        data_types = sorted(list(data_types))
+
+        # FIXME: Pull out from the database, see #111
+        commands = {'16S': ['Alpha Diversity', 'Beta Diversity',
+                            'Summarize Taxa'],
+                    '18S': ['Alpha Diversity', 'Beta Diversity',
+                            'Summarize Taxa'],
+                    'Metabolomic': ['Summarize Taxa']}
+
+        self.render('select_commands.html', user=self.get_current_user(),
+                    commands=commands, data_types=data_types, aid=analysis_id)
+
+        analysis = Analysis(analysis_id)
+
+        for study_id in study_dts:
+            study = Study(study_id)
+            processed_data = {ProcessedData(pid).data_type: pid for pid in
+                              study.processed_data}
+
+            sample_ids = SampleTemplate(study.id).keys()
+            for data_type in study_dts[study.id]:
+                samples = [(processed_data[data_type], sid) for sid in
+                           sample_ids]
+                analysis.add_samples(samples)
