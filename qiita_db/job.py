@@ -97,10 +97,11 @@ class Job(QiitaStatusObject):
         Job object
             The newly created job
         """
-        if cls.exists(datatype, command, options):
-            raise QiitaDBDuplicateError(
-                "Job", "datatype: %s, command: %s, options: %s"
-                % (datatype, command, options))
+        # IGNORING EXISTS FOR DEMO
+        # if cls.exists(datatype, command, options):
+        #     raise QiitaDBDuplicateError(
+        #         "Job", "datatype: %s, command: %s, options: %s"
+        #         % (datatype, command, options))
 
         # Get the datatype and command ids from the strings
         conn_handler = SQLConnectionHandler()
@@ -114,8 +115,8 @@ class Job(QiitaStatusObject):
         sql = ("INSERT INTO qiita.{0} (data_type_id, job_status_id, "
                "command_id, options) VALUES "
                "(%s, %s, %s, %s) RETURNING job_id").format(cls._table)
-        job_id = conn_handler.execute_fetchone(sql, (datatype_id, command_id,
-                                               1, opts_json))[0]
+        job_id = conn_handler.execute_fetchone(sql, (datatype_id, 1,
+                                               command_id, opts_json))[0]
 
         # add job to analysis
         sql = ("INSERT INTO qiita.analysis_job (analysis_id, job_id) VALUES "
