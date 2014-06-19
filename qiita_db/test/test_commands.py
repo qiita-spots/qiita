@@ -1,5 +1,5 @@
 from os import remove, close
-from os.path import exists, abspath, join
+from os.path import exists, abspath, join, basename
 from tempfile import mkstemp
 from unittest import TestCase, main
 from future.utils.six import StringIO
@@ -84,12 +84,15 @@ class TestLoadRawDataFromCmd(TestCase):
         new = load_raw_data_cmd(filepaths, filepath_types, filetype,
                                 study_ids)
         raw_data_id = new.id
-        self.files_to_remove.append(join(self.db_test_raw_dir,
-                                    '%d_%s' % (raw_data_id, self.forward_fp)))
-        self.files_to_remove.append(join(self.db_test_raw_dir,
-                                    '%d_%s' % (raw_data_id, self.reverse_fp)))
-        self.files_to_remove.append(join(self.db_test_raw_dir,
-                                    '%d_%s' % (raw_data_id, self.barcodes_fp)))
+        self.files_to_remove.append(
+            join(self.db_test_raw_dir,
+            '%d_%s' % (raw_data_id, basename(self.forward_fp))))
+        self.files_to_remove.append(
+            join(self.db_test_raw_dir,
+            '%d_%s' % (raw_data_id, basename(self.reverse_fp))))
+        self.files_to_remove.append(
+            join(self.db_test_raw_dir,
+            '%d_%s' % (raw_data_id, basename(self.barcodes_fp))))
 
         self.assertTrue(check_count('qiita.raw_data', initial_raw_count + 1))
         self.assertTrue(check_count('qiita.filepath',
