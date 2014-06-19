@@ -101,13 +101,13 @@ class SetupTest(TestCase):
         check_count("qiita.analysis", 1)
 
     def test_analysis_job(self):
-        check_count("qiita.analysis_job", 2)
+        check_count("qiita.analysis_job", 3)
 
     def test_analysis_filepath(self):
         check_count("qiita.analysis_filepath", 1)
 
     def test_analysis_sample(self):
-        check_count("qiita.analysis_sample", 5)
+        check_count("qiita.analysis_sample", 8)
 
     def test_analysis_users(self):
         check_count("qiita.analysis_users", 1)

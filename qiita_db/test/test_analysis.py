@@ -35,24 +35,24 @@ class TestAnalysis(TestCase):
     def test_create(self):
         new = Analysis.create(User("admin@foo.bar"), "newAnalysis",
                               "A New Analysis")
-        self.assertEqual(new.id, 2)
-        sql = "SELECT * FROM qiita.analysis WHERE analysis_id = 2"
+        self.assertEqual(new.id, 3)
+        sql = "SELECT * FROM qiita.analysis WHERE analysis_id = 3"
         obs = self.conn_handler.execute_fetchall(sql)
-        self.assertEqual(obs, [[2, 'admin@foo.bar', 'newAnalysis',
+        self.assertEqual(obs, [[3, 'admin@foo.bar', 'newAnalysis',
                                 'A New Analysis', 1, None]])
 
     def test_create_parent(self):
         new = Analysis.create(User("admin@foo.bar"), "newAnalysis",
                               "A New Analysis", Analysis(1))
-        self.assertEqual(new.id, 2)
-        sql = "SELECT * FROM qiita.analysis WHERE analysis_id = 2"
+        self.assertEqual(new.id, 3)
+        sql = "SELECT * FROM qiita.analysis WHERE analysis_id = 3"
         obs = self.conn_handler.execute_fetchall(sql)
-        self.assertEqual(obs, [[2, 'admin@foo.bar', 'newAnalysis',
+        self.assertEqual(obs, [[3, 'admin@foo.bar', 'newAnalysis',
                                 'A New Analysis', 1, None]])
 
-        sql = "SELECT * FROM qiita.analysis_chain WHERE child_id = 2"
+        sql = "SELECT * FROM qiita.analysis_chain WHERE child_id = 3"
         obs = self.conn_handler.execute_fetchall(sql)
-        self.assertEqual(obs, [[1, 2]])
+        self.assertEqual(obs, [[1, 3]])
 
     def test_retrieve_owner(self):
         self.assertEqual(self.analysis.owner, "test@foo.bar")
@@ -66,6 +66,11 @@ class TestAnalysis(TestCase):
     def test_set_description(self):
         self.analysis.description = "New description"
         self.assertEqual(self.analysis.description, "New description")
+
+    def test_retrieve_samples(self):
+        exp = {1: ['SKB8.640193', 'SKD8.640184', 'SKB7.640196',
+                   'SKM9.640192', 'SKM4.640180']}
+        self.assertEqual(self.analysis.samples, exp)
 
     def test_retrieve_shared_with(self):
         self.assertEqual(self.analysis.shared_with, ["shared@foo.bar"])
