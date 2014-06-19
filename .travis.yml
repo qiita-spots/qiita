@@ -17,11 +17,8 @@ install:
   - pip install .
 script:
   - qiita_env make_test_env
-  - nosetests --with-doctest
+  - nosetests --with-doctest --with-coverage --cover-package=coveralls
   - pep8 qiita_db qiita_core qiita_pet setup.py
-  # we need to run the test suite from setup.py for coveralls to grab the info
-  - coverage run setup.py test
-  - coverage report -m
 services:
   - redis-server
 after_success:
