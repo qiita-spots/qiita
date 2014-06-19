@@ -39,26 +39,27 @@ class JobTest(TestCase):
 
     def test_exists(self):
         """tests that existing job returns true"""
-        self.assertTrue(Job.exists("16S", "summarize_taxa_through_plots.py",
+        self.assertTrue(Job.exists("16S", "Summarize Taxa",
                                    {'option1': True, 'option2': 12,
                                     'option3': 'FCM'}))
 
     def test_exists_not_there(self):
         """tests that non-existant job returns false"""
         self.assertFalse(Job.exists("Metabolomic",
-                                    "summarize_taxa_through_plots.py",
+                                    "Summarize Taxa",
                                     {'option1': "Nope", 'option2': 10,
                                      'option3': 'FCM'}))
 
     def test_create(self):
         """Makes sure creation works as expected"""
-        new = Job.create("18S", "beta_diversity_through_plots.py",
+        # make first job
+        new = Job.create("18S", "Alpha Diversity",
                          self.options, Analysis(1))
         self.assertEqual(new.id, 3)
         # make sure job inserted correctly
         obs = self.conn_handler.execute_fetchall("SELECT * FROM qiita.job "
                                                  "WHERE job_id = 3")
-        exp = [[3, 2, 2, 1, '{"option1":false,"option2":25,"option3":"NEW"}',
+        exp = [[3, 2, 1, 3, '{"option1":false,"option2":25,"option3":"NEW"}',
                 None]]
         self.assertEqual(obs, exp)
         # make sure job added to analysis correctly
@@ -68,12 +69,29 @@ class JobTest(TestCase):
         exp = [[1, 3]]
         self.assertEqual(obs, exp)
 
-    def test_create_exists(self):
-        """Makes sure creation doesn't duplicate a job"""
-        with self.assertRaises(QiitaDBDuplicateError):
-            Job.create("16S", "summarize_taxa_through_plots.py",
-                       {'option1': True, 'option2': 12, 'option3': 'FCM'},
-                       Analysis(1))
+        # make second job with diff datatype and command to test column insert
+        new = Job.create("16S", "Beta Diversity",
+                         self.options, Analysis(1))
+        self.assertEqual(new.id, 4)
+        # make sure job inserted correctly
+        obs = self.conn_handler.execute_fetchall("SELECT * FROM qiita.job "
+                                                 "WHERE job_id = 4")
+        exp = [[4, 1, 1, 2, '{"option1":false,"option2":25,"option3":"NEW"}',
+                None]]
+        self.assertEqual(obs, exp)
+        # make sure job added to analysis correctly
+        obs = self.conn_handler.execute_fetchall("SELECT * FROM "
+                                                 "qiita.analysis_job WHERE "
+                                                 "job_id = 4")
+        exp = [[1, 4]]
+        self.assertEqual(obs, exp)
+
+    # def test_create_exists(self):
+    #     """Makes sure creation doesn't duplicate a job"""
+    #     with self.assertRaises(QiitaDBDuplicateError):
+    #         Job.create("16S", "Summarize Taxa",
+    #                    {'option1': True, 'option2': 12, 'option3': 'FCM'},
+    #                    Analysis(1))
 
     def test_retrieve_datatype(self):
         """Makes sure datatype retriveal is correct"""
@@ -81,7 +99,8 @@ class JobTest(TestCase):
 
     def test_retrieve_command(self):
         """Makes sure command retriveal is correct"""
-        self.assertEqual(self.job.command, 'summarize_taxa_through_plots.py')
+        self.assertEqual(self.job.command, ['Summarize Taxa',
+                                            'summarize_taxa_through_plots.py'])
 
     def test_retrieve_options(self):
         self.assertEqual(self.job.options, {'option1': True, 'option2': 12,
@@ -97,7 +116,7 @@ class JobTest(TestCase):
         self.assertTrue(exists(join(get_work_base_dir(), "job1result.txt")))
 
     def test_retrieve_results_blank(self):
-        new = Job.create("18S", "beta_diversity_through_plots.py",
+        new = Job.create("18S", "Beta Diversity",
                          self.options, Analysis(1))
         obs = new.results
         self._delete_path = obs

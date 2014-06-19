@@ -16,15 +16,20 @@
     <input type="hidden" name="analysis-id" value="{{aid}}">
       <table class="table table-hover">
         <tr>
-          <th> </th>
+          <th>Data Types</th>
           <th>Study Name</th>
           <th>Description</th>
         </tr>
         {% for study in studies %}
         <tr>
-          <td><input type="checkbox" name="studies" value="{{study.id}}"></td>
-          <td>{{study.title}}</td>
-          <td>{{study.info["study_description"]}}</td>
+          <td>
+          {% for data_type in study.data_types %}
+              <input type="checkbox" name="studies" value="{{study.id}}#{{data_type}}">{{data_type}}
+              <br />
+          {% end %}
+          </td>
+          <td style="vertical-align:middle;">{{study.title}}</td>
+          <td style="vertical-align:middle;">{{study.info["study_description"]}}</td>
         </tr>
         {% end %}
       </table>

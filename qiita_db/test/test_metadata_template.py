@@ -19,7 +19,8 @@ import pandas as pd
 from qiita_core.util import qiita_test_checker
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_db.exceptions import (QiitaDBDuplicateError, QiitaDBUnknownIDError,
-                                 QiitaDBNotImplementedError)
+                                 QiitaDBNotImplementedError,
+                                 QiitaDBDuplicateHeaderError)
 from qiita_db.study import Study, StudyPerson
 from qiita_db.user import User
 from qiita_db.data import RawData
@@ -481,7 +482,7 @@ class TestSampleTemplate(TestCase):
                         'collection_timestamp':
                         datetime(2014, 5, 29, 12, 24, 51),
                         'host_subject_id': 'NotIdentified',
-                        'description': 'Test Sample 1',
+                        'Description': 'Test Sample 1',
                         'str_column': 'Value for sample 1'},
             'Sample2': {'physical_location': 'location1',
                         'has_physical_specimen': True,
@@ -491,7 +492,7 @@ class TestSampleTemplate(TestCase):
                         'collection_timestamp':
                         datetime(2014, 5, 29, 12, 24, 51),
                         'host_subject_id': 'NotIdentified',
-                        'description': 'Test Sample 2',
+                        'Description': 'Test Sample 2',
                         'str_column': 'Value for sample 2'},
             'Sample3': {'physical_location': 'location1',
                         'has_physical_specimen': True,
@@ -501,7 +502,7 @@ class TestSampleTemplate(TestCase):
                         'collection_timestamp':
                         datetime(2014, 5, 29, 12, 24, 51),
                         'host_subject_id': 'NotIdentified',
-                        'description': 'Test Sample 3',
+                        'Description': 'Test Sample 3',
                         'str_column': 'Value for sample 3'}
             }
         self.metadata = pd.DataFrame.from_dict(metadata_dict, orient='index')
@@ -556,7 +557,14 @@ class TestSampleTemplate(TestCase):
         with self.assertRaises(QiitaDBDuplicateError):
             SampleTemplate.create(self.metadata, self.test_study)
 
-    def test_create_(self):
+    def test_create_duplicate_header(self):
+        """Create raises an error when duplicate headers are present"""
+        self.metadata['STR_COLUMN'] = pd.Series(['', '', ''],
+                                                index=self.metadata.index)
+        with self.assertRaises(QiitaDBDuplicateHeaderError):
+            SampleTemplate.create(self.metadata, self.new_study)
+
+    def test_create(self):
         """Creates a new SampleTemplate"""
         st = SampleTemplate.create(self.metadata, self.new_study)
         # The returned object has the correct id
@@ -750,21 +758,21 @@ class TestPrepTemplate(TestCase):
                             'center_project_name': 'Test Project',
                             'ebi_submission_accession': None,
                             'ebi_study_accession': None,
-                            'emp_status_id': 1,
+                            'EMP_status_id': 1,
                             'data_type_id': 2,
                             'str_column': 'Value for sample 1'},
             'SKD8.640184': {'center_name': 'ANL',
                             'center_project_name': 'Test Project',
                             'ebi_submission_accession': None,
                             'ebi_study_accession': None,
-                            'emp_status_id': 1,
+                            'EMP_status_id': 1,
                             'data_type_id': 2,
                             'str_column': 'Value for sample 2'},
             'SKB7.640196': {'center_name': 'ANL',
                             'center_project_name': 'Test Project',
                             'ebi_submission_accession': None,
                             'ebi_study_accession': None,
-                            'emp_status_id': 1,
+                            'EMP_status_id': 1,
                             'data_type_id': 2,
                             'str_column': 'Value for sample 3'}
             }
@@ -821,6 +829,13 @@ class TestPrepTemplate(TestCase):
         """Create raises an error when creating a duplicated PrepTemplate"""
         with self.assertRaises(QiitaDBDuplicateError):
             PrepTemplate.create(self.metadata, self.test_raw_data)
+
+    def test_create_duplicate_header(self):
+        """Create raises an error when duplicate headers are present"""
+        self.metadata['STR_COLUMN'] = pd.Series(['', '', ''],
+                                                index=self.metadata.index)
+        with self.assertRaises(QiitaDBDuplicateHeaderError):
+            PrepTemplate.create(self.metadata, self.new_raw_data)
 
     def test_create(self):
         """Creates a new PrepTemplate"""

@@ -16,7 +16,7 @@ install:
   - pip install coveralls
   - pip install .
 script:
-  - qiita_db make_test_env
+  - qiita_env make_test_env
   - nosetests --with-doctest
   - pep8 qiita_db qiita_core qiita_pet setup.py
   # we need to run the test suite from setup.py for coveralls to grab the info

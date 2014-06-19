@@ -10,12 +10,7 @@
 
 import click
 
-from qiita_db.environment_manager import (make_test_environment,
-                                          make_production_environment,
-                                          drop_test_environment,
-                                          clean_test_environment,
-                                          DFLT_BASE_DATA_FOLDER,
-                                          DFLT_BASE_WORK_FOLDER)
+from qiita_db.commands import make_study_from_cmd
 
 
 @click.group()
@@ -23,61 +18,15 @@ def qiita_db():
     pass
 
 
-@click.command()
-@click.option('--base_data_folder', default=DFLT_BASE_DATA_FOLDER,
-              help="The folder where the test data files are stored")
-@click.option('--base_work_folder', default=DFLT_BASE_WORK_FOLDER,
-              help="The folder where the actively worked on files are stored")
-@click.option('--user', default='postgres',
-              help="The database user to connect to the database")
-@click.option('--host', default='localhost',
-              help='The host where the database lives')
-def make_test_env(base_data_folder, base_work_folder, user, host):
-    """Creates a test database environment.
+@qiita_db.command()
+@click.option('--owner', help="The email address of the owner of the study")
+@click.option('--title', help="The title of the study")
+@click.option('--info', type=click.File(mode='r'),
+              help="filepath of file with study information in python"
+              "config file format")
+def insert_study_to_db(owner, title, info):
+    make_study_from_cmd(owner, title, info)
 
-    Creates a new database called `qiita_test` tailored for testing purposes
-    and initializes the `settings` table of such database
-    """
-    make_test_environment(base_data_folder, base_work_folder, user, None, host)
-
-
-@click.command()
-@click.option('--user', default='postgres',
-              help="The database user to connect to the database")
-@click.option('--host', default='localhost',
-              help='The host where the database lives')
-def clean_test_env(user, host):
-    """Cleans the test database environment.
-
-    In case that the test database is dirty (i.e. the 'qiita' schema is
-    present), this cleans it up by dropping the 'qiita' schema.
-    """
-    clean_test_environment(user, None, host)
-
-
-@click.command()
-@click.option('--user', default='postgres',
-              help="The database user to connect to the database")
-@click.option('--host', default='localhost',
-              help='The host where the database lives')
-def drop_test_env(user, host):
-    """Drops the test database environment.
-
-    If the `settings` table is modified, the test database environment should
-    be rebuilt. This command allows to drop the old one.
-    """
-    drop_test_environment(user, None, host)
-
-
-@click.command()
-def make_production_env():
-    """TODO: Not implemented"""
-    make_production_environment()
-
-qiita_db.add_command(make_test_env)
-qiita_db.add_command(clean_test_env)
-qiita_db.add_command(drop_test_env)
-qiita_db.add_command(make_production_env)
 
 if __name__ == '__main__':
     qiita_db()

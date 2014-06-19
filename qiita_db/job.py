@@ -58,7 +58,7 @@ class Job(QiitaStatusObject):
         datatype : str
             Datatype the job is operating on
         command : str
-            The command run on the data
+            The name of the command run on the data
         options : dict
             Options for the command in the format {option: value}
 
@@ -67,12 +67,13 @@ class Job(QiitaStatusObject):
         bool
             Whether the job exists or not
         """
-        sql = ("SELECT EXISTS(SELECT * FROM  qiita.{0} WHERE data_type_id = %s"
-               " AND command_id = %s AND options = %s)".format(cls._table))
         conn_handler = SQLConnectionHandler()
         datatype_id = convert_to_id(datatype, "data_type", conn_handler)
-        command_id = convert_to_id(command, "command", conn_handler)
+        sql = "SELECT command_id FROM qiita.command WHERE name = %s"
+        command_id = conn_handler.execute_fetchone(sql, (command, ))[0]
         opts_json = dumps(options, sort_keys=True, separators=(',', ':'))
+        sql = ("SELECT EXISTS(SELECT * FROM  qiita.{0} WHERE data_type_id = %s"
+               " AND command_id = %s AND options = %s)".format(cls._table))
         return conn_handler.execute_fetchone(
             sql, (datatype_id, command_id, opts_json))[0]
 
@@ -96,15 +97,17 @@ class Job(QiitaStatusObject):
         Job object
             The newly created job
         """
-        if cls.exists(datatype, command, options):
-            raise QiitaDBDuplicateError(
-                "Job", "datatype: %s, command: %s, options: %s"
-                % (datatype, command, options))
+        # IGNORING EXISTS FOR DEMO
+        # if cls.exists(datatype, command, options):
+        #     raise QiitaDBDuplicateError(
+        #         "Job", "datatype: %s, command: %s, options: %s"
+        #         % (datatype, command, options))
 
         # Get the datatype and command ids from the strings
         conn_handler = SQLConnectionHandler()
         datatype_id = convert_to_id(datatype, "data_type", conn_handler)
-        command_id = convert_to_id(command, "command", conn_handler)
+        sql = "SELECT command_id FROM qiita.command WHERE name = %s"
+        command_id = conn_handler.execute_fetchone(sql, (command, ))[0]
 
         # JSON the options dictionary
         opts_json = dumps(options, sort_keys=True, separators=(',', ':'))
@@ -112,8 +115,8 @@ class Job(QiitaStatusObject):
         sql = ("INSERT INTO qiita.{0} (data_type_id, job_status_id, "
                "command_id, options) VALUES "
                "(%s, %s, %s, %s) RETURNING job_id").format(cls._table)
-        job_id = conn_handler.execute_fetchone(sql, (datatype_id, command_id,
-                                               1, opts_json))[0]
+        job_id = conn_handler.execute_fetchone(sql, (datatype_id, 1,
+                                               command_id, opts_json))[0]
 
         # add job to analysis
         sql = ("INSERT INTO qiita.analysis_job (analysis_id, job_id) VALUES "
@@ -139,18 +142,18 @@ class Job(QiitaStatusObject):
 
     @property
     def command(self):
-        """Returns the command of the job
+        """Returns the command of the job as (name, command)
 
         Returns
         -------
         str
             command run by the job
         """
-        sql = ("SELECT command from qiita.command WHERE command_id = "
+        sql = ("SELECT name, command from qiita.command WHERE command_id = "
                "(SELECT command_id from qiita.{0} WHERE "
                "job_id = %s)".format(self._table))
         conn_handler = SQLConnectionHandler()
-        return conn_handler.execute_fetchone(sql, (self._id, ))[0]
+        return conn_handler.execute_fetchone(sql, (self._id, ))
 
     @property
     def options(self):
