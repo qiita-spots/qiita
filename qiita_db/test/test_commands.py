@@ -1,5 +1,6 @@
 from unittest import TestCase, main
 from future.utils.six import StringIO
+from tempfile import mkstemp, mkdtemp
 try:
     # Python 2
     from ConfigParser import NoOptionError
@@ -7,7 +8,7 @@ except ImportError:
     # Python 3
     from configparser import NoOptionError
 
-from qiita_db.commands import make_study_from_cmd
+from qiita_db.commands import make_study_from_cmd, import_preprocessed_data
 from qiita_db.study import StudyPerson
 from qiita_db.user import User
 from qiita_core.util import qiita_test_checker
@@ -34,6 +35,34 @@ class TestMakeStudyFromCmd(TestCase):
         fh2 = StringIO(self.config2)
         with self.assertRaises(NoOptionError):
             make_study_from_cmd('test@test.com', 'newstudy2', fh2)
+
+
+@qiita_test_checker()
+class TestImportPreprocessedData(TestCase):
+    def setUp(self):
+        self.tmpdir = mkdtemp()
+        fd, file1 = mkstemp(dir=self.tmpdir)
+        fd.close()
+        fd, file2 = mkstemp(dir=self.tmpdir)
+        fd.close()
+        fd, file3 = mkstemp(dir=self.tmpdir)
+        fd.close()
+        with open(file1, "w") as f:
+            f.write("\n")
+        with open(file2, "w") as f:
+            f.write("\n")
+
+    def test_import_preprocessed_data(self):
+
+        import_preprocessed_data(1, self.tmpdir, 1,
+                                 'preprocessed_sequence_illumina_params',
+                                 1, False)
+        sql = ("select preprocessed_data_id from qitta.preprocessed_data"
+               "where study_id = %s and preprocessed_params_table = %s")
+        study_ids = self.conn_handler.execute_fetchall(
+            sql, ('1', 'preprocessed_sequence_illumina_params'))
+        self.assertEqual(len(study_ids), 2)
+
 
 CONFIG_1 = """[required]
 timeseries_type_id = 1

@@ -10,7 +10,7 @@
 
 import click
 
-from qiita_db.commands import make_study_from_cmd
+from qiita_db.commands import make_study_from_cmd, import_preprocessed_data
 
 
 @click.group()
@@ -28,5 +28,18 @@ def insert_study_to_db(owner, title, info):
     make_study_from_cmd(owner, title, info)
 
 
+@qiita_db.command()
+@click.option('--study_id', help="Study id associated with data")
+@click.option('--params_table', help="Name of the paramaters table for the"
+              "preprocessed dtata")
+@click.option('--filedir', help="Directory containing preprocessed data")
+@click.option('--filetype', help="Filepath_type_id of the files")
+@click.option('--params_id',
+              help="id in the paramater table associated with the parameters")
+@click.option('--submit_to_insdc', help="True means submitted to insdc")
+def insert_preprocessed_data(study_id, filedir, filetype, params_table,
+                             params_id, submit_to_insdc):
+    import_preprocessed_data(study_id, filedir, filetype,
+                             params_table, params_id, submit_to_insdc)
 if __name__ == '__main__':
     qiita_db()
