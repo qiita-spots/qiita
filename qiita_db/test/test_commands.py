@@ -1,3 +1,6 @@
+from os import remove, close
+from os.path import exists, abspath, join
+from tempfile import mkstemp
 from unittest import TestCase, main
 from future.utils.six import StringIO
 try:
@@ -7,9 +10,10 @@ except ImportError:
     # Python 3
     from configparser import NoOptionError
 
-from qiita_db.commands import make_study_from_cmd
+from qiita_db.commands import make_study_from_cmd, load_raw_data_cmd
 from qiita_db.study import StudyPerson
 from qiita_db.user import User
+from qiita_db.util import get_count, check_count, get_db_files_base_dir
 from qiita_core.util import qiita_test_checker
 
 
@@ -34,6 +38,67 @@ class TestMakeStudyFromCmd(TestCase):
         fh2 = StringIO(self.config2)
         with self.assertRaises(NoOptionError):
             make_study_from_cmd('test@test.com', 'newstudy2', fh2)
+
+
+@qiita_test_checker()
+class TestLoadRawDataFromCmd(TestCase):
+    def setUp(self):
+        fd, self.forward_fp = mkstemp(suffix='_forward.fastq.gz')
+        close(fd)
+        fd, self.reverse_fp = mkstemp(suffix='_reverse.fastq.gz')
+        close(fd)
+        fd, self.barcodes_fp = mkstemp(suffix='_barcodes.fastq.gz')
+        close(fd)
+
+        with open(self.forward_fp, "w") as f:
+            f.write("\n")
+        with open(self.reverse_fp, "w") as f:
+            f.write("\n")
+        with open(self.barcodes_fp, "w") as f:
+            f.write("\n")
+
+        self.files_to_remove = []
+        self.files_to_remove.append(self.forward_fp)
+        self.files_to_remove.append(self.reverse_fp)
+        self.files_to_remove.append(self.barcodes_fp)
+
+        self.db_test_raw_dir = join(get_db_files_base_dir(), 'raw_data')
+
+    def tearDown(self):
+        for fp in self.files_to_remove:
+            if exists(fp):
+                remove(fp)
+
+    def test_load_data_from_cmd(self):
+        filepaths = [self.forward_fp, self.reverse_fp, self.barcodes_fp]
+        filepath_types = ['raw_sequences', 'raw_sequences', 'raw_barcodes']
+
+        filetype = 'FASTQ'
+        study_ids = [1]
+
+        initial_raw_count = get_count('qiita.raw_data')
+        initial_fp_count = get_count('qiita.filepath')
+        initial_raw_fp_count = get_count('qiita.raw_filepath')
+        initial_study_raw_data_count = get_count('qiita.study_raw_data')
+
+        new = load_raw_data_cmd(filepaths, filepath_types, filetype,
+                                study_ids)
+        raw_data_id = new.id
+        self.files_to_remove.append(join(self.db_test_raw_dir,
+                                    '%d_%s' % (raw_data_id, self.forward_fp)))
+        self.files_to_remove.append(join(self.db_test_raw_dir,
+                                    '%d_%s' % (raw_data_id, self.reverse_fp)))
+        self.files_to_remove.append(join(self.db_test_raw_dir,
+                                    '%d_%s' % (raw_data_id, self.barcodes_fp)))
+
+        self.assertTrue(check_count('qiita.raw_data', initial_raw_count + 1))
+        self.assertTrue(check_count('qiita.filepath',
+                                    initial_fp_count + 3))
+        self.assertTrue(check_count('qiita.raw_filepath',
+                                    initial_raw_fp_count + 3))
+        self.assertTrue(check_count('qiita.study_raw_data',
+                                    initial_raw_count + 1))
+
 
 CONFIG_1 = """[required]
 timeseries_type_id = 1
