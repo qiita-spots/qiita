@@ -81,7 +81,8 @@ class JobTest(TestCase):
 
     def test_retrieve_command(self):
         """Makes sure command retriveal is correct"""
-        self.assertEqual(self.job.command, 'summarize_taxa_through_plots.py')
+        self.assertEqual(self.job.command, ['Summarize Taxa',
+                                            'summarize_taxa_through_plots.py'])
 
     def test_retrieve_options(self):
         self.assertEqual(self.job.options, {'option1': True, 'option2': 12,

@@ -139,18 +139,18 @@ class Job(QiitaStatusObject):
 
     @property
     def command(self):
-        """Returns the command of the job
+        """Returns the command of the job as (name, command)
 
         Returns
         -------
         str
             command run by the job
         """
-        sql = ("SELECT command from qiita.command WHERE command_id = "
+        sql = ("SELECT name, command from qiita.command WHERE command_id = "
                "(SELECT command_id from qiita.{0} WHERE "
                "job_id = %s)".format(self._table))
         conn_handler = SQLConnectionHandler()
-        return conn_handler.execute_fetchone(sql, (self._id, ))[0]
+        return conn_handler.execute_fetchone(sql, (self._id, ))
 
     @property
     def options(self):
