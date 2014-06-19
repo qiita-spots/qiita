@@ -35,7 +35,7 @@ def qiita_db():
               'should be associated with multiple studies', type=int,
               required=True)
 def load_raw_data(fp, fp_type, filetype, study):
-    data.load_raw_cmd(fp, filetype, study)
+    load_raw_data_cmd(fp, fp_type, filetype, study)
 
 
 @qiita_db.command()
