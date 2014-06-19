@@ -15,9 +15,9 @@
         websocket.onmessage = function(evt) {
             console.log(evt.data);
             message = JSON.parse(evt.data);
-            if(message.job == '{{job}}') {
+            if(message.analysis == '{{aid}}') {
                 if(noerror && message.msg == 'allcomplete') { 
-                    window.location.replace("/completed/{{job}}");
+                    window.location.replace("/completed/{{aid}}");
                 }
                 list = document.getElementById(message.analysis);
                 if(message.msg.indexOf("ERROR") != -1) {
@@ -30,11 +30,7 @@
                 else {
                   list.style.color="Blue"; 
                 }
-                list.innerHTML = message.msg + '<br />';
-                for(var i=0; i<message.results.length; i++) {
-                    list.innerHTML += '<a class="link" target="_blank" href="../' + 
-                    message.results[i] + '">Plot ' + (i+1) + '</a><br />';
-                }
+                list.innerHTML = message.msg;
             }
         };
         websocket.onerror = function(evt) { };
@@ -52,24 +48,12 @@ function getBaseURL () {
 {% end %}
 
 {% block content %}
-<table width='100%'>
-  <tr>
-    <td width=180 valign='top'>
-      1) Choose studies<br />
-      2) Select analyses<br />
-      3) Set analysis options<br />
-      4) Review analysis<br />
-      <b>5) Running analysis</b><br />
-      6) Analysis results<br />
-    </td>
-    <td>
-<h1>Analysis {{job}}</h1>
-  {% for analysis in analyses %}
+<h1>Analysis {{aname}}</h1>
+  {% for command in commands%}
     <p>
-    {{analysis}}: <span id='{{analysis}}'>Queued</span>
+    {{command}}: <span id='{{command}}'>Queued</span>
     </p>
   {% end %}
-</td></tr></table>
 <div id='error'></div>
 
 {% end %}

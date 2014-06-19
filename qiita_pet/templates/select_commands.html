@@ -19,8 +19,7 @@
   {% end %}
 </ul>
 
-<form role="form" action="/analysis/wait/" method="post">
-  <input type="hidden" name="analysis-id" value="{{aid}}">
+<form role="form" action="/analysis/wait/{{aid}}" method="post">
   <div class="tab-content" style="height:300px">
     {% for data_type in data_types %}
       <div class="tab-pane" id="{{ data_type }}">

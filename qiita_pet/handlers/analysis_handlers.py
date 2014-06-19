@@ -7,6 +7,7 @@ from qiita_db.analysis import Analysis
 from qiita_db.study import Study
 from qiita_db.data import ProcessedData
 from qiita_db.metadata_template import SampleTemplate
+from qiita_db.job import Job
 # login code modified from https://gist.github.com/guillaumevincent/4771570
 
 
@@ -45,7 +46,6 @@ class SelectCommandsHandler(BaseHandler):
         study_args = self.get_arguments('studies')
         split = [x.split("#") for x in study_args]
 
-
         # build dictionary of studies and datatypes selected
         # as well a set of unique datatypes selected
         study_dts = defaultdict(list)
@@ -59,11 +59,11 @@ class SelectCommandsHandler(BaseHandler):
         data_types.sort()
 
         # FIXME: Pull out from the database!!
-        commands = {'16S' : ['Alpha Diversity', 'Beta Diversity',
-                             'Summarize Taxa'],
-                    '18S' : ['Alpha Diversity', 'Beta Diversity',
-                             'Summarize Taxa'],
-                    'Metabolomic' : ['Summarize Taxa']}
+        commands = {'16S': ['Alpha Diversity', 'Beta Diversity',
+                            'Summarize Taxa'],
+                    '18S': ['Alpha Diversity', 'Beta Diversity',
+                            'Summarize Taxa'],
+                    'Metabolomic': ['Summarize Taxa']}
 
         self.render('select_commands.html', user=self.get_current_user(),
                     commands=commands, data_types=data_types, aid=analysis_id)
@@ -81,3 +81,39 @@ class SelectCommandsHandler(BaseHandler):
                            sample_ids]
                 analysis.add_samples(samples)
 
+
+class AnalysisWaitHandler(BaseHandler):
+    def get(self, analysis_id):
+        analysis = Analysis(analysis_id)
+        commands = []
+        for job in analysis.jobs:
+            jobject = Job(job)
+            commands.append("%s:%s" % (jobject.data_type, jobject.command[0]))
+
+        self.render("analysis_waiting.html", user=self.get_current_user(),
+                    aid=analysis_id, aname=analysis.name,
+                    commands=commands)
+
+    def post(self, analysis_id):
+        command_args = self.get_arguments("commands")
+        split = [x.split("#") for x in command_args]
+        analysis = Analysis(analysis_id)
+
+        jobs = []
+        commands = []
+        for data_type, command in split:
+            jobs.append(Job.create(data_type, command, {}, analysis))
+            commands.append("%s:%s" % (data_type, command))
+
+        self.render("analysis_waiting.html", user=self.get_current_user(),
+                    aid=analysis_id, aname=analysis.name,
+                    commands=commands)
+        # fire off analysis run here
+
+
+class AnalysisResultsHandler(BaseHandler):
+    def get(self, aid):
+        pass
+
+    def post(self, ignore):
+        pass
