@@ -29,7 +29,8 @@ class MessageHandler(WebSocketHandler):
         msginfo = loads(msg)
         # listens for handshake from page
         if "user:" in msginfo['msg']:
-            self.channel = msginfo['msg'].split(':')[1]
+            self.aid = msginfo['msg'].split()[0]
+            self.channel = msginfo['msg'].split()[1].split(':')[1]
             # need to split the rest off to new func so it can be asynchronous
             self.listen()
 
@@ -37,7 +38,7 @@ class MessageHandler(WebSocketHandler):
     @engine
     def listen(self):
         sleep(5)
-        self.write_message({"msg": "allcomplete"})
+        self.write_message({"analysis": self.aid, "msg": "allcomplete"})
 
     def callback(self, msg):
         if msg.kind == 'message':

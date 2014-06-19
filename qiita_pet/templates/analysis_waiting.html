@@ -9,15 +9,15 @@
         noerror = true;
 
         websocket.onopen = function() {
-            websocket.send(JSON.stringify({'msg': 'user:{{user}}'}));
-            console.log(JSON.stringify({'msg': 'user:{{user}}'}));
+            websocket.send(JSON.stringify({'msg': '{{aid}} user:{{user}}'}));
+            console.log(JSON.stringify({'msg':'{{aid}} user:{{user}}'}));
         };
         websocket.onmessage = function(evt) {
             console.log(evt.data);
             message = JSON.parse(evt.data);
             if(message.analysis == '{{aid}}') {
                 if(noerror && message.msg == 'allcomplete') { 
-                    window.location.replace("/completed/{{aid}}");
+                    window.location.replace("/analysis/results/{{aid}}");
                 }
                 list = document.getElementById(message.analysis);
                 if(message.msg.indexOf("ERROR") != -1) {

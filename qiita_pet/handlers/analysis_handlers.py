@@ -83,17 +83,19 @@ class SelectCommandsHandler(BaseHandler):
 
 
 class AnalysisWaitHandler(BaseHandler):
+    @authenticated
     def get(self, analysis_id):
         analysis = Analysis(analysis_id)
         commands = []
         for job in analysis.jobs:
             jobject = Job(job)
-            commands.append("%s:%s" % (jobject.data_type, jobject.command[0]))
+            commands.append("%s:%s" % (jobject.datatype, jobject.command[0]))
 
         self.render("analysis_waiting.html", user=self.get_current_user(),
                     aid=analysis_id, aname=analysis.name,
                     commands=commands)
 
+    @authenticated
     def post(self, analysis_id):
         command_args = self.get_arguments("commands")
         split = [x.split("#") for x in command_args]
@@ -112,8 +114,10 @@ class AnalysisWaitHandler(BaseHandler):
 
 
 class AnalysisResultsHandler(BaseHandler):
+    @authenticated
     def get(self, aid):
-        pass
+        self.render("analysis_results.html", user=self.get_current_user())
 
+    @authenticated
     def post(self, ignore):
         pass

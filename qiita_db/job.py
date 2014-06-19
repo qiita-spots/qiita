@@ -97,10 +97,10 @@ class Job(QiitaStatusObject):
         Job object
             The newly created job
         """
-        if cls.exists(datatype, command, options):
-            raise QiitaDBDuplicateError(
-                "Job", "datatype: %s, command: %s, options: %s"
-                % (datatype, command, options))
+        # if cls.exists(datatype, command, options):
+        #     raise QiitaDBDuplicateError(
+        #         "Job", "datatype: %s, command: %s, options: %s"
+        #         % (datatype, command, options))
 
         # Get the datatype and command ids from the strings
         conn_handler = SQLConnectionHandler()
