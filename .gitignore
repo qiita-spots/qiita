@@ -39,3 +39,8 @@ config.py
 
 # OSX files
 .DS_Store
+
+# vi swap and temp files
+*.swp
+*.swo
+*~

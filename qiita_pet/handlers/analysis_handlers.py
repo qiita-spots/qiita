@@ -54,11 +54,10 @@ class SelectCommandsHandler(BaseHandler):
             study_dts[study_id].append(data_type)
             data_types.add(data_type)
 
-        # make sure the data types are unique
-        data_types = list(data_types)
-        data_types.sort()
+        # sort the elements to have 16S be the first tho show on the tabs
+        data_types = sorted(list(data_types))
 
-        # FIXME: Pull out from the database!!
+        # FIXME: Pull out from the database, see #111
         commands = {'16S': ['Alpha Diversity', 'Beta Diversity',
                             'Summarize Taxa'],
                     '18S': ['Alpha Diversity', 'Beta Diversity',
