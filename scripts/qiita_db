@@ -87,7 +87,7 @@ def make_production_env():
 
 
 @click.command()
-@click.option('--owner', help="The email address of the ower of the study")
+@click.option('--owner', help="The email address of the owner of the study")
 @click.option('--title', help="The title of the study")
 @click.option('--info', type=click.File(mode='r'),
               help="filepath of file with study information in python"
