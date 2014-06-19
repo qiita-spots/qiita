@@ -15,6 +15,9 @@ Qiita is a python package, with support for python 2.7 and 3.2, that depends on 
 * [NumPy](https://github.com/numpy/numpy)
 * [Pandas](http://pandas.pydata.org/)
 * [QIIME development version](https://github.com/biocore/qiime)
+* [future](http://python-future.org/)
+* [bcrypt](https://github.com/pyca/bcrypt/)
+* [redis](https://github.com/andymccurdy/redis-py)
 
 And on the following packages:
 
@@ -35,7 +38,7 @@ Once you have [PostgresSQL](http://www.postgresql.org/download/) and [redis](htt
 echo "export QIITA_CONFIG_FP=$QIITA_DIR/qiita_core/support_files/config_demo.txt" >> ~/.bashrc
 source ~/.bashrc
 pip install https://github.com/biocore/qiita/archive/master.zip
-qiita_db make_demo_env
+qiita_env make_demo_env
 ```
 ## If using other operating systems that are not Ubuntu
 
