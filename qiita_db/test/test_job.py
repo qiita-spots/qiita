@@ -159,9 +159,9 @@ class JobTest(TestCase):
                                     "1_placeholder.txt")))
 
         # make sure files attached to job properly
-        obs = self.conn_handler.execute_fetchall("SELECT * FROM "
-                                                 "qiita.job_results_filepath "
-                                                 "WHERE job_id = 1")
+        obs = self.conn_handler.execute_fetchall(
+            "SELECT * FROM qiita.job_results_filepath WHERE job_id = 1")
+
         self.assertEqual(obs, [[1, 8], [1, 10]])
 
     def test_add_results_dir(self):
