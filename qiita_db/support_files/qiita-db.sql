@@ -604,6 +604,17 @@ CREATE INDEX idx_study_preprocessed_data_0 ON qiita.study_preprocessed_data ( st
 
 CREATE INDEX idx_study_preprocessed_data_1 ON qiita.study_preprocessed_data ( preprocessed_data_id );
 
+CREATE TABLE qiita.study_processed_data ( 
+	study_id             bigint  NOT NULL,
+	processed_data_id    bigint  NOT NULL,
+	CONSTRAINT idx_study_processed_data PRIMARY KEY ( study_id, processed_data_id ),
+	CONSTRAINT pk_study_processed_data UNIQUE ( processed_data_id ) ,
+	CONSTRAINT fk_study_processed_data FOREIGN KEY ( study_id ) REFERENCES qiita.study( study_id )    ,
+	CONSTRAINT fk_study_processed_data_0 FOREIGN KEY ( processed_data_id ) REFERENCES qiita.processed_data( processed_data_id )    
+ );
+
+CREATE INDEX idx_study_processed_data_0 ON qiita.study_processed_data ( study_id );
+
 CREATE TABLE qiita.study_raw_data ( 
 	study_id             bigint  NOT NULL,
 	raw_data_id          bigint  NOT NULL,
