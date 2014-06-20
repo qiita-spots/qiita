@@ -74,18 +74,18 @@ class TestImportPreprocessedData(TestCase):
                 remove(fp)
         for dp in self.dirs_to_remove:
             if exists(dp):
-                remove(dp)
+                rmtree(dp)
 
     def test_import_preprocessed_data(self):
-
-        import_preprocessed_data(1, self.tmpdir, 1,
-                                 'preprocessed_sequence_illumina_params',
-                                 1, False)
-        sql = ("select preprocessed_data_id from qitta.preprocessed_data"
-               "where study_id = %s and preprocessed_params_table = %s")
-        ppd_ids = self.conn_handler.execute_fetchall(
-            sql, ('1', 'preprocessed_sequence_illumina_params'))
-        self.assertEqual(len(ppd_ids), 2)
+        initial_ppd_count = get_count('qiita.preprocessed_data')
+        initial_fp_count = get_count('qiita.filepath')
+        ppd = import_preprocessed_data(1, self.tmpdir, 1,
+                                       'preprocessed_sequence_illumina_params',
+                                       1, False)
+        self.assertEqual(ppd.id, 3)
+        self.assertTrue(check_count('qiita.preprocessed_data',
+                                    initial_ppd_count + 1))
+        self.assertTrue(check_count('qiita.filepath', initial_fp_count+2))
 
 
 @qiita_test_checker()
