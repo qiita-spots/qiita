@@ -8,11 +8,15 @@
 from tempfile import mkdtemp
 from tarfile import open as taropen
 from gzip import open as gzopen
-from urllib import urlretrieve
 from os import remove
 from os.path import abspath, dirname, join
 from shutil import rmtree, move
 from functools import partial
+try:
+    from urllib import urlretrieve
+except ImportError:  # python3
+    from urllib.request import urlretrieve
+
 from psycopg2 import connect
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 
