@@ -107,20 +107,14 @@ class JobTest(TestCase):
                                             'option3': 'FCM'})
 
     def test_retrieve_results(self):
-        self.assertEqual(self.job.results, ["job/1_job_result.txt"])
+        self.assertEqual(self.job.results, [join("job", "1_job_result.txt")])
 
     def test_retrieve_results_empty(self):
         new = Job.create("18S", "Beta Diversity", self.options, Analysis(1))
         self.assertEqual(new.results, [])
 
-    def test_retrieve_results_tar(self):
-        obs = Job(2).results
-        self._delete_dir = obs
-        self.assertEqual(obs, [join(get_work_base_dir(), "test_folder")])
-        # make sure files copied correctly
-        self.assertTrue(exists(join(get_work_base_dir(), "test_folder")))
-        self.assertTrue(exists(join(get_work_base_dir(),
-                        "test_folder/testfile.txt")))
+    def test_retrieve_results_dir(self):
+        self.assertEqual(Job(2).results, [join("job", "2_test_folder")])
 
     def test_set_error(self):
         timestamp = datetime(2014, 6, 13, 14, 19, 25)
