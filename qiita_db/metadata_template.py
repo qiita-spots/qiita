@@ -523,6 +523,7 @@ class MetadataTemplate(QiitaObject):
     values
     items
     get
+    to_file
 
     See Also
     --------
@@ -851,6 +852,62 @@ class MetadataTemplate(QiitaObject):
             return self[key]
         except KeyError:
             return None
+
+    def _transform_to_dict(self, values):
+        r"""Transforms `values` to a dict keyed by sample id
+
+        Parameters
+        ----------
+        values : object
+            The object returned from a execute_fetchall call
+
+        Returns
+        -------
+        dict
+        """
+        result = {}
+        for row in values:
+            # Transform the row to a dictionary
+            values_dict = dict(row)
+            # Get the sample id of this row
+            sid = values_dict['sample_id']
+            del values_dict['sample_id']
+            # Remove _id_column from this row (if present)
+            if self._id_column in values_dict:
+                del values_dict[self._id_column]
+            result[sid] = values_dict
+
+        return result
+
+    def to_file(self, fp):
+        r"""Writes the MetadataTemplate to the file `fp` in tab-delimited
+        format
+
+        Parameters
+        ----------
+        fp : str
+            Path to the output file
+        """
+        conn_handler = SQLConnectionHandler()
+        metadata_map = self._transform_to_dict(conn_handler.execute_fetchall(
+            "SELECT * FROM qiita.{0} WHERE {1}=%s".format(self._table,
+                                                          self._id_column),
+            (self.id,)))
+        dyn_vals = self._transform_to_dict(conn_handler.execute_fetchall(
+            "SELECT * FROM qiita.{0}".format(self._table_name(self))))
+
+        for k in metadata_map:
+            metadata_map[k].update(dyn_vals[k])
+
+        headers = sorted(metadata_map.values()[0].keys())
+        with open(fp, 'w') as f:
+            # First write the headers
+            f.write("#SampleID\t%s\n" % '\t'.join(headers))
+            # Write the values for each sample id
+            for sid, d in sorted(metadata_map.items()):
+                values = [str(d[h]) for h in headers]
+                values.insert(0, sid)
+                f.write("%s\n" % '\t'.join(values))
 
 
 class SampleTemplate(MetadataTemplate):

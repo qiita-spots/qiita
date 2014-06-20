@@ -536,6 +536,11 @@ class TestSampleTemplate(TestCase):
                                'SKM1.640183', 'SKM2.640199', 'SKM3.640197',
                                'SKM4.640180', 'SKM5.640177', 'SKM6.640187',
                                'SKM7.640188', 'SKM8.640201', 'SKM9.640192'}
+        self._clean_up_files = []
+
+    def tearDown(self):
+        for f in self._clean_up_files:
+            remove(f)
 
     def test_init_unknown_error(self):
         """Init raises an error if the id is not known"""
@@ -746,6 +751,17 @@ class TestSampleTemplate(TestCase):
     def test_get_none(self):
         """get returns none if the sample id is not present"""
         self.assertTrue(self.tester.get('Not_a_Sample') is None)
+
+    def test_to_file(self):
+        """to file writes a tab delimited file with all the metadata"""
+        fd, fp = mkstemp()
+        close(fd)
+        st = SampleTemplate.create(self.metadata, self.new_study)
+        st.to_file(fp)
+        self._clean_up_files.append(fp)
+        with open(fp, 'U') as f:
+            obs = f.read()
+        self.assertEqual(obs, EXP_SAMPLE_TEMPLATE)
 
 
 @qiita_test_checker()
@@ -1013,6 +1029,35 @@ class TestPrepTemplate(TestCase):
     def test_get_none(self):
         """get returns none if the sample id is not present"""
         self.assertTrue(self.tester.get('Not_a_Sample') is None)
+
+    def test_to_file(self):
+        """to file writes a tab delimited file with all the metadata"""
+        fd, fp = mkstemp()
+        close(fd)
+        pt = PrepTemplate.create(self.metadata, self.new_raw_data)
+        pt.to_file(fp)
+        self._clean_up_files.append(fp)
+        with open(fp, 'U') as f:
+            obs = f.read()
+        print obs
+        self.assertEqual(obs, EXP_PREP_TEMPLATE)
+
+EXP_SAMPLE_TEMPLATE = (
+    "#SampleID\tcollection_timestamp\tdescription\thas_extracted_data\t"
+    "has_physical_specimen\thost_subject_id\tphysical_location\t"
+    "required_sample_info_status_id\tsample_type\tstr_column\nSample1\t"
+    "2014-05-29 12:24:51\tTest Sample 1\tTrue\tTrue\tNotIdentified\tlocation1"
+    "\t1\ttype1\tValue for sample 1\nSample2\t2014-05-29 12:24:51\t"
+    "Test Sample 2\tTrue\tTrue\tNotIdentified\tlocation1\t1\ttype1\t"
+    "Value for sample 2\nSample3\t2014-05-29 12:24:51\tTest Sample 3\tTrue\t"
+    "True\tNotIdentified\tlocation1\t1\ttype1\tValue for sample 3\n")
+
+EXP_PREP_TEMPLATE = (
+    "#SampleID\tcenter_name\tcenter_project_name\tdata_type_id\t"
+    "ebi_study_accession\tebi_submission_accession\temp_status_id\tstr_column"
+    "\nSKB7.640196\tANL\tTest Project\t2\tNone\tNone\t1\tValue for sample 3\n"
+    "SKB8.640193\tANL\tTest Project\t2\tNone\tNone\t1\tValue for sample 1\n"
+    "SKD8.640184\tANL\tTest Project\t2\tNone\tNone\t1\tValue for sample 2\n")
 
 if __name__ == '__main__':
     main()
