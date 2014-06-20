@@ -107,4 +107,5 @@ class ClusterDispatch(object):
 
         return result
 
+# likely want this in qiita_ware.__init__
 qiita_compute = ClusterDispatch()
