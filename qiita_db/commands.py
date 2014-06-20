@@ -7,8 +7,6 @@
 # -----------------------------------------------------------------------------
 
 from dateutil.parser import parse
-import pandas as pd
-from functools import partial
 from os import listdir
 from os.path import join
 try:
@@ -17,6 +15,9 @@ try:
 except ImportError:
     # Python 3
     from configparser import ConfigParser
+
+import pandas as pd
+from functools import partial
 
 from .study import Study, StudyPerson
 from .user import User
@@ -120,7 +121,7 @@ def sample_template_adder(sample_temp_path, study_id):
     sample_temp_path : str
         Path to the sample template file
     study_id : int
-        The study id to which the sample template belongs to
+        The study id to which the sample template belongs
     """
     sample_temp = pd.DataFrame.from_csv(sample_temp_path, sep='\t',
                                         infer_datetime_format=True)
