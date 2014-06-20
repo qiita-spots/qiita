@@ -19,9 +19,12 @@
               <h3 class="panel-title"><a data-toggle="collapse" data-parent="#accordion" href="#{{data_type}}">{{data_type}}</a></h3>
             </div>
             <div id="{{data_type}}" class="panel-collapse collapse">
-              {% for job, result in jobs%}
+              {% for job, results in jobs%}
                 <div class="panel-body">
-                  <a href="/results/{{result}}" target="resframe">{{job}}</a>
+                  {{job}}<br />
+                  {%for result in results%}
+                    <a href="/results/{{result}}" target="resframe">{{result}}</a><br />
+                  {% end %}
                 </div>
               {% end %}
             </div>

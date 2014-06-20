@@ -20,13 +20,14 @@ from qiita_pet.handlers.analysis_handlers import (
     CreateAnalysisHandler, SelectStudiesHandler, SelectCommandsHandler,
     AnalysisWaitHandler, AnalysisResultsHandler, ShowAnalysesHandler)
 from qiita_pet.handlers.websocket_handlers import MessageHandler
+from qiita_db.util import get_db_files_base_dir
 
 define("port", default=8888, help="run on the given port", type=int)
 
 DIRNAME = dirname(__file__)
 STATIC_PATH = join(DIRNAME, "static")
 TEMPLATE_PATH = join(DIRNAME, "templates")  # base folder for webpages
-RES_PATH = join(DIRNAME, "results")
+RES_PATH = get_db_files_base_dir()
 COOKIE_SECRET = b64encode(uuid4().bytes + uuid4().bytes)
 DEBUG = True
 

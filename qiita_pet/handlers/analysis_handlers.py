@@ -115,7 +115,7 @@ class AnalysisWaitHandler(BaseHandler):
 
         commands = []
         for data_type, command in split:
-            job = Job.create(data_type, command, {}, analysis)
+            Job.create(data_type, command, {}, analysis)
             commands.append("%s:%s" % (data_type, command))
 
         self.render("analysis_waiting.html", user=self.get_current_user(),
