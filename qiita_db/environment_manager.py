@@ -5,11 +5,18 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
-
+from tempfile import mkdtemp
+from tarfile import open as taropen
+from gzip import open as gzopen
+from urllib import urlretrieve
 from os.path import abspath, dirname, join
+from shutil import rmtree
 from functools import partial
 from psycopg2 import connect
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
+
+from qiita_db.study import Study
+from qiita_db.data import PreprocessedData, ProcessedData
 
 get_support_file = partial(join, join(dirname(abspath(__file__)),
                                       'support_files'))
@@ -164,6 +171,41 @@ def make_demo_environment(base_data_dir, base_work_dir, user, password, host):
     conn.commit()
     cur.close()
     conn.close()
+
+    # download files from thebeast
+    url = ("ftp://thebeast.colorado.edu/pub/QIIME_DB_Public_Studies/study_1001"
+           "_split_library_seqs_and_mapping.tgz")
+    outdir = mkdtemp()
+    try:
+        urlretrieve(url, join(outdir, "study_1001.tar.gz"))
+    except Exception, e:
+        raise("Error: DOWNLOAD FAILED", e)
+        rmtree(outdir)
+
+    # untar the files
+    with taropen(join(outdir, "study_1001.tar.gz")) as tar:
+        tar.extractall(outdir)
+    # un-gzip sequence file
+    with gzopen(join(outdir, "study_1001_split_library_seqs_and_mapping/"
+                     "study_1001_split_library_seqs.fna.gz")) as gz:
+        with open(join(outdir, "study_1001_split_library_seqs_and_mapping/"
+                       "study_1001_split_library_seqs.fna"), 'w') as fout:
+            fout.write(gz.read())
+
+    # add the preprocessed and procesed data to the study
+    preproc = PreprocessedData.create(
+        Study(1), "preprocessed_sequence_illumina_params", 1,
+        [(join(outdir, "study_1001_split_library_seqs_and_mapping/"
+                       "study_1001_split_library_seqs.fna"), 4)])
+
+    ProcessedData.create(
+        "processed_params_uclust", 1,
+        [(join(outdir, "study_1001_split_library_seqs_and_mapping/study_1001_"
+                       "closed_reference_otu_table.biom"), 6)],
+        preprocessed_data=preproc)
+
+    # clean up after ourselves
+    rmtree(outdir)
 
 
 def drop_demo_environment(user, password, host):
