@@ -16,17 +16,12 @@ Classes
 # -----------------------------------------------------------------------------
 from __future__ import division
 from json import dumps, loads
-from os import remove
-from os.path import basename, join, commonprefix
-from shutil import copy
+from os.path import join
 from time import strftime
 from datetime import date
-from tarfile import open as taropen
 
 from .base import QiitaStatusObject
-from .util import (insert_filepaths, get_db_files_base_dir, get_work_base_dir,
-                   convert_to_id)
-from .exceptions import QiitaDBDuplicateError
+from .util import insert_filepaths, convert_to_id
 from .sql_connection import SQLConnectionHandler
 
 
@@ -177,35 +172,16 @@ class Job(QiitaStatusObject):
         -------
         list
             Filepaths to the result files
-
-        Notes
-        -----
-        All files are automatically copied into the working directory and
-        untar-ed if necessary. The filepaths point to these files/folders in
-        the working directory.
         """
         # Copy files to working dir, untar if necessary, then return filepaths
-        sql = ("SELECT filepath, filepath_type_id FROM qiita.filepath WHERE "
-               "filepath_id IN (SELECT filepath_id FROM "
-               "qiita.job_results_filepath WHERE job_id = %s)")
         conn_handler = SQLConnectionHandler()
-        results = conn_handler.execute_fetchall(sql, (self._id, ))
-        # create new list, untaring as necessary
-        results_untar = []
-        outpath = get_work_base_dir()
-        for fp, fp_type in results:
-            if fp_type == 7:
-                # untar to work directory
-                with taropen(join(get_db_files_base_dir(),
-                                  self._table, fp)) as tar:
-                    base = commonprefix(tar.getnames())
-                    tar.extractall(path=outpath)
-            else:
-                # copy to work directory
-                copy(join(get_db_files_base_dir(), self._table, fp), outpath)
-                base = fp
-            results_untar.append(join(outpath, base))
-        return results_untar
+        results = conn_handler.execute_fetchall(
+            "SELECT filepath FROM qiita.filepath WHERE filepath_id IN "
+            "(SELECT filepath_id FROM qiita.job_results_filepath "
+            "WHERE job_id = %s)",
+            (self._id, ))
+        # create new list, with relative paths from db base
+        return [join("job", fp[0]) for fp in results]
 
     @property
     def error_msg(self):
@@ -270,28 +246,12 @@ class Job(QiitaStatusObject):
         [1] http://stackoverflow.com/questions/2032403/
             how-to-create-full-compressed-tar-file-using-python
         """
-        # go though the list and tar any folders if necessary
-        cleanup = []
-        addpaths = []
-        for fp, fp_type in results:
-            if fp_type == 7:
-                outpath = join("/tmp", ''.join((basename(fp), ".tar")))
-                with taropen(outpath, "w") as tar:
-                    tar.add(fp)
-                addpaths.append((outpath, 7))
-                cleanup.append(outpath)
-            else:
-                addpaths.append((fp, fp_type))
-
         # add filepaths to the job
         conn_handler = SQLConnectionHandler()
-        file_ids = insert_filepaths(addpaths, self._id, self._table,
+        file_ids = insert_filepaths(results, self._id, self._table,
                                     "filepath", conn_handler)
 
         # associate filepaths with job
         sql = ("INSERT INTO qiita.{0}_results_filepath (job_id, filepath_id) "
                "VALUES (%s, %s)".format(self._table))
         conn_handler.executemany(sql, [(self._id, fid) for fid in file_ids])
-
-        # clean up the created tars from the temp directory
-        map(remove, cleanup)

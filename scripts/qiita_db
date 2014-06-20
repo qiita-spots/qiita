@@ -11,9 +11,11 @@
 import click
 
 from qiita_db.util import (get_filetypes, get_filepath_types,
-                           get_processed_params_tables)
-from qiita_db.commands import (sample_template_adder, make_study_from_cmd,
-                               load_raw_data_cmd, load_processed_data_cmd)
+                           get_processed_params_tables,
+                           get_preprocessed_params_tables)
+from qiita_db.commands import (sample_template_adder, load_study_from_cmd,
+                               load_raw_data_cmd, load_processed_data_cmd,
+                               load_preprocessed_data_from_cmd)
 
 
 @click.group()
@@ -62,8 +64,8 @@ def load_raw_data(fp, fp_type, filetype, study):
               'interpretable  as a datetime. If None, then the current date '
               'and time will be used.')
 def load_processed_data(fp, fp_type, processed_params_table,
-                       processed_params_id, preprocessed_data_id,
-                       processed_date):
+                        processed_params_id, preprocessed_data_id,
+                        processed_date):
     load_processed_data_cmd(fp, fp_type, processed_params_table,
                             processed_params_id, preprocessed_data_id,
                             processed_date)
@@ -75,8 +77,31 @@ def load_processed_data(fp, fp_type, processed_params_table,
 @click.option('--info', type=click.File(mode='r'),
               help="filepath of file with study information in python"
               "config file format")
-def insert_study_to_db(owner, title, info):
-    make_study_from_cmd(owner, title, info)
+def load_study(owner, title, info):
+    load_study_from_cmd(owner, title, info)
+
+
+@qiita_db.command()
+@click.option('--study_id', help="Study id associated with data",
+              required=True)
+@click.option('--params_table', help="Name of the paramaters table for the "
+              "preprocessed data", required=True,
+              type=click.Choice(get_preprocessed_params_tables()))
+@click.option('--filedir', help="Directory containing preprocessed data",
+              required=True)
+@click.option('--filepathtype', help="Describes the contents of the input "
+              "files", required=True,
+              type=click.Choice(get_filepath_types().keys()))
+@click.option('--params_id', required=True,
+              help="id in the paramater table associated with the parameters")
+@click.option('--submitted_to_insdc', is_flag=True,
+              help="If provided, the preprocessed data have been submitted"
+                   " to insdc", required=True)
+def load_preprocessed_data(study_id, filedir, filepathtype,
+                           params_table_name, params_id, submitted_to_insdc):
+    load_preprocessed_data_from_cmd(study_id, filedir, filepathtype,
+                                    params_table_name,
+                                    params_id, submitted_to_insdc)
 
 
 @qiita_db.command()
