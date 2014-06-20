@@ -212,12 +212,7 @@
 	controlled_vocab_values references controlled_vocabularies ( controlled_vocab_id )</title>
 </path>
 <text x='62' y='1510' transform='rotate(270 62,1510)' title='Foreign Key fk_controlled_vocab_values
-	controlled_vocab_values references controlled_vocabularies ( controlled_vocab_id )' style='fill:#a1a0a0;'>controlled_vocab_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1470 1215 L 1485,1215' >
-	<title>Foreign Key fk_logging_severity
-	logging references severity ( severity_id )</title>
-</path>
-<text x='1477' y='1210' transform='rotate(0 1477,1210)' title='Foreign Key fk_logging_severity
-	logging references severity ( severity_id )' style='fill:#a1a0a0;'>severity_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'  style='stroke-dasharray:4,2;'  d='M 2055 225 L 2055,210' >
+	controlled_vocab_values references controlled_vocabularies ( controlled_vocab_id )' style='fill:#a1a0a0;'>controlled_vocab_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'  style='stroke-dasharray:4,2;'  d='M 2055 225 L 2055,210' >
 	<title>Foreign Key fk_investigation_study_person
 	investigation references study_person ( contact_person_id -> study_person_id )</title>
 </path>
@@ -289,10 +284,10 @@
 <text x='517' y='1000' transform='rotate(0 517,1000)' title='Foreign Key fk_job_data_type
 	job references data_type ( data_type_id )' style='fill:#a1a0a0;'>data_type_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'  style='stroke-dasharray:4,2;'  d='M 510 1110 L 1372,1110 Q 1380,1110 1380,1117 L 1380,1185' >
 	<title>Foreign Key fk_job
-	job references logging ( log_id )</title>
+	job references logging ( log_id -> logging_id )</title>
 </path>
 <text x='517' y='1105' transform='rotate(0 517,1105)' title='Foreign Key fk_job
-	job references logging ( log_id )' style='fill:#a1a0a0;'>log_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 300 900 L 300,840' >
+	job references logging ( log_id -> logging_id )' style='fill:#a1a0a0;'>log_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 300 900 L 300,840' >
 	<title>Foreign Key fk_analysis_job_analysis
 	analysis_job references analysis ( analysis_id )</title>
 </path>
@@ -592,7 +587,12 @@
 	processed_filepath references filepath ( filepath_id )</title>
 </path>
 <text x='936' y='925' transform='rotate(0 936,925)' title='Foreign Key fk_processed_data_filepath_0
-	processed_filepath references filepath ( filepath_id )' style='fill:#a1a0a0;'>filepath_id</text><!-- ============= Table 'term_synonym' ============= -->
+	processed_filepath references filepath ( filepath_id )' style='fill:#a1a0a0;'>filepath_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1470 1215 L 1485,1215' >
+	<title>Foreign Key fk_logging_severity
+	logging references severity ( severity_id )</title>
+</path>
+<text x='1477' y='1210' transform='rotate(0 1477,1210)' title='Foreign Key fk_logging_severity
+	logging references severity ( severity_id )' style='fill:#a1a0a0;'>severity_id</text><!-- ============= Table 'term_synonym' ============= -->
 <rect class='table' x='525' y='1868' width='135' height='105' rx='7' ry='7' />
 <path d='M 525.50 1894.50 L 525.50 1875.50 Q 525.50 1868.50 532.50 1868.50 L 652.50 1868.50 Q 659.50 1868.50 659.50 1875.50 L 659.50 1894.50 L525.50 1894.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
 <a xlink:href='#term_synonym'><text x='552' y='1882' class='tableTitle'>term_synonym</text><title>Table qiita.term_synonym</title></a>
@@ -636,23 +636,6 @@ Referred by controlled_vocab_values ( controlled_vocab_id ) </title></a>
 <a xlink:href='#severity_id'><text x='1518' y='1237'>severity_id</text><title>severity_id serial not null</title></a>
 <a xlink:href='#severity_id'><use id='ref' x='1578' y='1226' xlink:href='#ref'/><title>Referred by logging ( severity_id ) </title></a>
   <use id='nn' x='1502' y='1242' xlink:href='#nn'/><a xlink:href='#severity'><text x='1518' y='1252'>severity</text><title>severity varchar not null</title></a>
-
-<!-- ============= Table 'logging' ============= -->
-<rect class='table' x='1365' y='1193' width='105' height='120' rx='7' ry='7' />
-<path d='M 1365.50 1219.50 L 1365.50 1200.50 Q 1365.50 1193.50 1372.50 1193.50 L 1462.50 1193.50 Q 1469.50 1193.50 1469.50 1200.50 L 1469.50 1219.50 L1365.50 1219.50 ' style='fill:url(#tableHeaderGradient1); stroke:none;' />
-<a xlink:href='#logging'><text x='1397' y='1207' class='tableTitle'>logging</text><title>Table qiita.logging</title></a>
-  <use id='nn' x='1367' y='1227' xlink:href='#nn'/><a xlink:href='#log_id'><use id='pk' x='1367' y='1226' xlink:href='#pk'/><title>Primary Key  ( log_id ) </title></a>
-<a xlink:href='#log_id'><text x='1383' y='1237'>log_id</text><title>log_id bigserial not null</title></a>
-<a xlink:href='#log_id'><use id='ref' x='1458' y='1226' xlink:href='#ref'/><title>Referred by job ( log_id ) </title></a>
-  <use id='nn' x='1367' y='1242' xlink:href='#nn'/><a xlink:href='#time'><text x='1383' y='1252'>time</text><title>time timestamp not null
-Time the error was thrown</title></a>
-  <use id='nn' x='1367' y='1257' xlink:href='#nn'/><a xlink:href='#severity_id'><use id='idx' x='1367' y='1256' xlink:href='#idx'/><title>Index  ( severity_id ) </title></a>
-<a xlink:href='#severity_id'><text x='1383' y='1267'>severity_id</text><title>severity_id integer not null</title></a>
-<a xlink:href='#severity_id'><use id='fk' x='1458' y='1256' xlink:href='#fk'/><title>References severity ( severity_id ) </title></a>
-  <use id='nn' x='1367' y='1272' xlink:href='#nn'/><a xlink:href='#msg'><text x='1383' y='1282'>msg</text><title>msg varchar not null
-Error message thrown</title></a>
-  <a xlink:href='#information'><text x='1383' y='1297'>information</text><title>information varchar
-Other applicable information &#040;depending on error&#041;</title></a>
 
 <!-- ============= Table 'study_person' ============= -->
 <rect class='table' x='2040' y='83' width='120' height='120' rx='7' ry='7' />
@@ -813,7 +796,7 @@ Holds all options set for the job as a json string</title></a>
   <a xlink:href='#log_id'><use id='idx' x='407' y='1091' xlink:href='#idx'/><title>Index  ( log_id ) </title></a>
 <a xlink:href='#log_id'><text x='423' y='1102'>log_id</text><title>log_id bigint
 Reference to error if status is error</title></a>
-<a xlink:href='#log_id'><use id='fk' x='498' y='1091' xlink:href='#fk'/><title>References logging ( log_id ) </title></a>
+<a xlink:href='#log_id'><use id='fk' x='498' y='1091' xlink:href='#fk'/><title>References logging ( log_id -> logging_id ) </title></a>
 
 <!-- ============= Table 'analysis_job' ============= -->
 <rect class='table' x='285' y='908' width='90' height='75' rx='7' ry='7' />
@@ -1528,6 +1511,23 @@ Name of table holding the params</title></a>
 <a xlink:href='#filepath_id'><text x='1023' y='982'>filepath_id</text><title>filepath_id bigint not null</title></a>
 <a xlink:href='#filepath_id'><use id='fk' x='1128' y='971' xlink:href='#fk'/><title>References filepath ( filepath_id ) </title></a>
 
+<!-- ============= Table 'logging' ============= -->
+<rect class='table' x='1365' y='1193' width='105' height='120' rx='7' ry='7' />
+<path d='M 1365.50 1219.50 L 1365.50 1200.50 Q 1365.50 1193.50 1372.50 1193.50 L 1462.50 1193.50 Q 1469.50 1193.50 1469.50 1200.50 L 1469.50 1219.50 L1365.50 1219.50 ' style='fill:url(#tableHeaderGradient1); stroke:none;' />
+<a xlink:href='#logging'><text x='1397' y='1207' class='tableTitle'>logging</text><title>Table qiita.logging</title></a>
+  <use id='nn' x='1367' y='1227' xlink:href='#nn'/><a xlink:href='#logging_id'><use id='pk' x='1367' y='1226' xlink:href='#pk'/><title>Primary Key  ( logging_id ) </title></a>
+<a xlink:href='#logging_id'><text x='1383' y='1237'>logging_id</text><title>logging_id bigserial not null</title></a>
+<a xlink:href='#logging_id'><use id='ref' x='1458' y='1226' xlink:href='#ref'/><title>Referred by job ( log_id -> logging_id ) </title></a>
+  <use id='nn' x='1367' y='1242' xlink:href='#nn'/><a xlink:href='#time'><text x='1383' y='1252'>time</text><title>time timestamp not null
+Time the error was thrown</title></a>
+  <use id='nn' x='1367' y='1257' xlink:href='#nn'/><a xlink:href='#severity_id'><use id='idx' x='1367' y='1256' xlink:href='#idx'/><title>Index  ( severity_id ) </title></a>
+<a xlink:href='#severity_id'><text x='1383' y='1267'>severity_id</text><title>severity_id integer not null</title></a>
+<a xlink:href='#severity_id'><use id='fk' x='1458' y='1256' xlink:href='#fk'/><title>References severity ( severity_id ) </title></a>
+  <use id='nn' x='1367' y='1272' xlink:href='#nn'/><a xlink:href='#msg'><text x='1383' y='1282'>msg</text><title>msg varchar not null
+Error message thrown</title></a>
+  <a xlink:href='#information'><text x='1383' y='1297'>information</text><title>information varchar
+Other applicable information &#040;depending on error&#041;</title></a>
+
 </g></svg>
 
 <br/><br/>
@@ -1671,55 +1671,6 @@ Name of table holding the params</title></a>
 <tr><td colspan='3' class='subpart'><b>Indexes</b></td></tr>
 	<tr>		<td>pk&#095;severity primary key</td>
 		<td> ON severity&#095;id</td>
-		<td>  </td>
-	</tr>
-</tbody>
-</table>
-
-<br/><br/>
-<table id='dbs' >
-<thead>
-<tr><th colspan='3'><a name='logging'>logging</a></th></tr>
-</thead>
-<tbody>
-	<tr>
-		<td><a name='log_id'>log&#095;id</a></td>
-		<td width='40%'> bigserial  NOT NULL  </td>
-		<td width='99%'>  </td>
-	</tr>
-	<tr>
-		<td><a name='time'>time</a></td>
-		<td width='40%'> timestamp  NOT NULL  </td>
-		<td width='99%'> Time the error was thrown </td>
-	</tr>
-	<tr>
-		<td><a name='severity_id'>severity&#095;id</a></td>
-		<td width='40%'> integer  NOT NULL  </td>
-		<td width='99%'>  </td>
-	</tr>
-	<tr>
-		<td><a name='msg'>msg</a></td>
-		<td width='40%'> varchar  NOT NULL  </td>
-		<td width='99%'> Error message thrown </td>
-	</tr>
-	<tr>
-		<td><a name='information'>information</a></td>
-		<td width='40%'> varchar   </td>
-		<td width='99%'> Other applicable information &#040;depending on error&#041; </td>
-	</tr>
-<tr><td colspan='3' class='subpart'><b>Indexes</b></td></tr>
-	<tr>		<td>pk&#095;logging primary key</td>
-		<td> ON log&#095;id</td>
-		<td>  </td>
-	</tr>
-	<tr>		<td>idx&#095;logging&#095;0 </td>
-		<td> ON severity&#095;id</td>
-		<td>  </td>
-	</tr>
-<tr><td colspan='3' class='subpart'><b>Foreign Keys</b></td></tr>
-	<tr>
-		<td>fk_logging_severity</td>
-		<td > ( severity&#095;id ) ref <a href='#severity'>severity</a> (severity&#095;id) </td>
 		<td>  </td>
 	</tr>
 </tbody>
@@ -2204,7 +2155,7 @@ An investigation comprises one or more individual studies&#046; </td></tr>
 	</tr>
 	<tr>
 		<td>fk_job</td>
-		<td > ( log&#095;id ) ref <a href='#logging'>logging</a> (log&#095;id) </td>
+		<td > ( log&#095;id ) ref <a href='#logging'>logging</a> (logging&#095;id) </td>
 		<td>  </td>
 	</tr>
 </tbody>
@@ -4490,6 +4441,55 @@ Linked by y being raw&#095;data&#095;id from raw data table&#046; </td></tr>
 	<tr>
 		<td>fk_processed_data_filepath_0</td>
 		<td > ( filepath&#095;id ) ref <a href='#filepath'>filepath</a> (filepath&#095;id) </td>
+		<td>  </td>
+	</tr>
+</tbody>
+</table>
+
+<br/><br/>
+<table id='dbs' >
+<thead>
+<tr><th colspan='3'><a name='logging'>logging</a></th></tr>
+</thead>
+<tbody>
+	<tr>
+		<td><a name='logging_id'>logging&#095;id</a></td>
+		<td width='40%'> bigserial  NOT NULL  </td>
+		<td width='99%'>  </td>
+	</tr>
+	<tr>
+		<td><a name='time'>time</a></td>
+		<td width='40%'> timestamp  NOT NULL  </td>
+		<td width='99%'> Time the error was thrown </td>
+	</tr>
+	<tr>
+		<td><a name='severity_id'>severity&#095;id</a></td>
+		<td width='40%'> integer  NOT NULL  </td>
+		<td width='99%'>  </td>
+	</tr>
+	<tr>
+		<td><a name='msg'>msg</a></td>
+		<td width='40%'> varchar  NOT NULL  </td>
+		<td width='99%'> Error message thrown </td>
+	</tr>
+	<tr>
+		<td><a name='information'>information</a></td>
+		<td width='40%'> varchar   </td>
+		<td width='99%'> Other applicable information &#040;depending on error&#041; </td>
+	</tr>
+<tr><td colspan='3' class='subpart'><b>Indexes</b></td></tr>
+	<tr>		<td>idx&#095;logging&#095;0 </td>
+		<td> ON severity&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>pk&#095;logging primary key</td>
+		<td> ON logging&#095;id</td>
+		<td>  </td>
+	</tr>
+<tr><td colspan='3' class='subpart'><b>Foreign Keys</b></td></tr>
+	<tr>
+		<td>fk_logging_severity</td>
+		<td > ( severity&#095;id ) ref <a href='#severity'>severity</a> (severity&#095;id) </td>
 		<td>  </td>
 	</tr>
 </tbody>
