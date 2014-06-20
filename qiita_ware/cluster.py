@@ -1,14 +1,35 @@
+from subprocess import Popen, PIPE
+
 from IPython.parallel import Client
 
-from qiime.util import qiime_system_call
 from qiita_ware.exceptions import ComputeError
 
 
-def system_call(cmd, *args, **kwargs):
-    stdout, stderr, exit_status = qiime_system_call(cmd)
-    if exit_status != 0:
+def pyqi_system_call(cmd):
+    """Call cmd and return (stdout, stderr, return_value).
+
+    cmd: can be either a string containing the command to be run, or a
+     sequence of strings that are the tokens of the command.
+
+    This function is ported from QIIME (http://www.qiime.org), previously
+    named qiime_system_call. QIIME is a GPL project, but we obtained permission
+    from the authors of this function to port it to pyqi (and keep it under
+    pyqi's BSD license).
+    """
+    proc = Popen(cmd,
+                 universal_newlines=True,
+                 stdout=PIPE,
+                 stderr=PIPE)
+    # communicate pulls all stdout/stderr from the PIPEs to
+    # avoid blocking -- don't remove this line!
+    stdout, stderr = proc.communicate()
+    return_value = proc.returncode
+
+    if return_value != 0:
         raise ComputeError("Failed to execute: %s\nstdout: %s\nstderr: %s" %
                            (cmd, stdout, stderr))
+
+    return stdout, stderr, return_value
 
 
 class ClusterDispatch(object):
