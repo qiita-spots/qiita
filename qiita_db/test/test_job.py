@@ -177,9 +177,11 @@ class JobTest(TestCase):
         # add folder to job
         self.job.add_results([(test_dir, 7)])
 
-        # check that the files was copied correctly
-        self.assertTrue(exists(join(get_db_files_base_dir(), "job",
-                                    "1_%s" % basename(test_file))))
+        # check that the directory was copied correctly
+        db_path = join(get_db_files_base_dir(), "job",
+                       "1_%s" % basename(test_dir))
+        self._delete_dir.append(db_path)
+        self.assertTrue(exists(db_path))
 
         # make sure files attached to job properly
         obs = self.conn_handler.execute_fetchall(
