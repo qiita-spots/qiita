@@ -467,3 +467,17 @@ def check_count(table, exp_count):
     """
     obs_count = get_count(table)
     return obs_count == exp_count
+
+
+def get_processed_params_tables():
+    """Returns a list of all tables starting with "processed_params_"
+
+    Returns
+    -------
+    list of str
+    """
+    sql = ("SELECT * FROM information_schema.tables WHERE table_schema = "
+           "'qiita' AND SUBSTR(table_name, 1, 17) = 'processed_params_'")
+
+    conn = SQLConnectionHandler()
+    return [x[2] for x in conn.execute_fetchall(sql)]

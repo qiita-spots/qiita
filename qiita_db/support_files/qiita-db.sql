@@ -456,12 +456,10 @@ CREATE INDEX idx_preprocessed_processed_data_1 ON qiita.preprocessed_processed_d
 CREATE TABLE qiita.processed_filepath ( 
 	processed_data_id    bigint  NOT NULL,
 	filepath_id          bigint  NOT NULL,
-	CONSTRAINT pk_processed_data_filepath UNIQUE ( processed_data_id ) ,
+	CONSTRAINT idx_processed_filepath PRIMARY KEY ( processed_data_id, filepath_id ),
 	CONSTRAINT fk_processed_data_filepath FOREIGN KEY ( processed_data_id ) REFERENCES qiita.processed_data( processed_data_id )    ,
 	CONSTRAINT fk_processed_data_filepath_0 FOREIGN KEY ( filepath_id ) REFERENCES qiita.filepath( filepath_id )    
  );
-
-CREATE INDEX idx_processed_data_filepath ON qiita.processed_filepath ( filepath_id );
 
 CREATE TABLE qiita.processed_params_uclust ( 
 	processed_params_id  bigserial  NOT NULL,
