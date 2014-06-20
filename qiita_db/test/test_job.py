@@ -7,16 +7,16 @@
 # -----------------------------------------------------------------------------
 
 from unittest import TestCase, main
-from os import remove, makedirs
-from os.path import exists, join
+from os import remove, close
+from os.path import exists, join, basename
 from shutil import rmtree
 from datetime import datetime
+from tempfile import mkdtemp, mkstemp
 
 from qiita_core.util import qiita_test_checker
 from qiita_db.job import Job
 from qiita_db.util import get_db_files_base_dir, get_work_base_dir
 from qiita_db.analysis import Analysis
-from qiita_db.exceptions import QiitaDBDuplicateError
 
 
 @qiita_test_checker()
@@ -164,29 +164,26 @@ class JobTest(TestCase):
                                                  "WHERE job_id = 1")
         self.assertEqual(obs, [[1, 8], [1, 10]])
 
-    def test_add_results_tar(self):
-        # make test directory to tar, inclluding internal file
-        basedir = join(get_work_base_dir(), "tar_folder")
-        self._delete_dir = [basedir]
-        self._delete_path = [join(get_db_files_base_dir(), "job",
-                             "1_tar_folder.tar")]
-        makedirs(basedir)
-        with open(join(basedir, "tar_data.txt"), 'w'):
-            pass
+    def test_add_results_dir(self):
+        # Create a test directory
+        test_dir = mkdtemp(dir=get_work_base_dir())
+        self._delete_dir.append(test_dir)
+        fd, test_file = mkstemp(dir=test_dir, suffix='.txt')
+        close(fd)
+        with open(test_file, "w") as f:
+            f.write('\n')
+        self._delete_path.append(test_file)
 
         # add folder to job
-        self.job.add_results([(basedir, 7)])
-        # make sure tar file copied correctly
-        self.assertTrue(exists(join(get_db_files_base_dir(), "job",
-                                    "1_tar_folder.tar")))
+        self.job.add_results([(test_dir, 7)])
 
-        # make sure temp tar files cleaned up properly
-        self.assertFalse(exists("/tmp/1_tar_folder.tar"))
+        # check that the files was copied correctly
+        self.assertTrue(exists(join(get_db_files_base_dir(), "job",
+                                    "1_%s" % basename(test_file))))
 
         # make sure files attached to job properly
-        obs = self.conn_handler.execute_fetchall("SELECT * FROM "
-                                                 "qiita.job_results_filepath "
-                                                 "WHERE job_id = 1")
+        obs = self.conn_handler.execute_fetchall(
+            "SELECT * FROM qiita.job_results_filepath WHERE job_id = 1")
         self.assertEqual(obs, [[1, 8], [1, 10]])
 
 
