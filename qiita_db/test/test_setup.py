@@ -21,7 +21,7 @@ class SetupTest(TestCase):
         self.assertEqual(obs_count, exp_count)
 
     def test_qitta_user(self):
-        self._check_count("qiita.qiita_user", 3)
+        self._check_count("qiita.qiita_user", 4)
 
     def test_study_person(self):
         self._check_count("qiita.study_person", 3)
@@ -30,7 +30,7 @@ class SetupTest(TestCase):
         self._check_count("qiita.study", 1)
 
     def test_study_users(self):
-        self._check_count("qiita.study_users", 1)
+        self._check_count("qiita.study_users", 2)
 
     def test_investigation(self):
         self._check_count("qiita.investigation", 1)
