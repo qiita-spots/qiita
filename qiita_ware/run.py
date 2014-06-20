@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 from __future__ import division
 
-from subprocess import Popen
-from tempfile import mkstemp
+from tempfile import mkdtemp
 
 from qiita_db.analysis import Analysis
 from qiita_db.job import Job
 
-from qiita_core.exceptions import IncompetentQiitaDeveloperError
+from qiita_ware.cluster import qiita_compute
+from qiita_ware.exceptions import ComputeError
 
 
 # -----------------------------------------------------------------------------
@@ -18,16 +18,29 @@ from qiita_core.exceptions import IncompetentQiitaDeveloperError
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
+
 def run_analysis(analysis):
-    """ Run the commands within an Analsis object"""
+    """Run the commands within an Analysis object"""
+    for job_id in analysis.jobs:
+        job = Job(job_id)
+        if job.status == 'queued':
+            name, command = job.command
+            options = job.options
+            options['--output_dir']
 
-    output_folder = mkstemp()
-    for j in analysis.jobs:
-        job = Job(j)
-        if job.command == 'beta_diversity_through_plots.py':
-        elif job.command == 'transform_coordinate_matrices.py':
-        else:
-            raise IncompetentQiitaDeveloperError("that command doesn't exist")
+            o_fmt = ' '.join(['%s %s' % (k, v) for k, v in options.items()])
+            c_fmt = "%s %s" % (command, o_fmt)
+
+            try:
+                job.status = 'running'
+                result = qiita_compute.submit_sync(c_fmt)
+                job.result = output_path
+            except:
+                job.status = 'error'
+                raise ComputeError("Failed compute on job id %d" % job_id)
+            else:
+                job.status = 'completed'
 
 
-        print job.command, job.results, job.status
+a = Analysis(2)
+run_analysis(a)

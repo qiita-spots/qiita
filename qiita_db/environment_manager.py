@@ -22,6 +22,7 @@ INITIALIZE_FP = get_support_file('initialize.sql')
 POPULATE_FP = get_support_file('populate_test_db.sql')
 
 
+
 def make_test_environment(base_data_dir, base_work_dir, user, password, host):
     r"""Creates a test database environment.
 

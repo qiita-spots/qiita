@@ -19,6 +19,8 @@ from qiita_db.environment_manager import (make_test_environment,
                                           drop_demo_environment,
                                           DFLT_BASE_DATA_FOLDER,
                                           DFLT_BASE_WORK_FOLDER)
+from qiita_core.environment_manager import (start_cluster as _start_cluster,
+                                            stop_cluster as _stop_cluster)
 
 
 _CONFIG = ConfigurationManager()
@@ -27,6 +29,30 @@ _CONFIG = ConfigurationManager()
 @click.group()
 def qiita_env():
     pass
+
+
+@qiita_env.command()
+@click.option('--cluster', required=True,
+              type=click.Choice(['demo', 'reserved', 'general']))
+def start_cluster(cluster):
+    if cluster == 'demo':
+        _start_cluster(_CONFIG.ipyc_demo, _CONFIG.ipyc_demo_n)
+    elif cluster == 'reserved':
+        _start_cluster(_CONFIG.ipyc_reserved, _CONFIG.ipyc_reserved_n)
+    elif cluster == 'general':
+        _start_cluster(_CONFIG.ipyc_general, _CONFIG.ipyc_general_n)
+
+
+@qiita_env.command()
+@click.option('--cluster', required=True,
+              type=click.Choice(['demo', 'reserved', 'general']))
+def stop_cluster(cluster):
+    if cluster == 'demo':
+        _stop_cluster(_CONFIG.ipyc_demo)
+    elif cluster == 'reserved':
+        _stop_cluster(_CONFIG.ipyc_reserved)
+    elif cluster == 'general':
+        _stop_cluster(_CONFIG.ipyc_general)
 
 
 @qiita_env.command()

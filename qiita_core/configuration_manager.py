@@ -45,15 +45,15 @@ class ConfigurationManager(object):
     port : int
         The port used to connect to the postgres database in the previous host
     ipyc_demo : str
-        The file path to the IPython demo cluster profile
+        The IPython demo cluster profile
     ipyc_demo_n : int
         The size of the demo cluster
     ipyc_reserved : str
-        The file path to the IPython reserved cluster profile
+        The IPython reserved cluster profile
     ipyc_reserved_n : int
         The size of the reserved cluster
     ipyc_general : str
-        The file path to the IPython general cluster profile
+        The IPython general cluster profile
     ipyc_general_n : int
         The size of the general cluster
     """
@@ -112,17 +112,12 @@ class ConfigurationManager(object):
 
     def _get_ipython(self, config):
         """Get the configuration of the ipython section"""
-        from IPython.utils.path import locate_profile
         sec_get = partial(config.get, 'ipython')
         sec_getint = partial(config.getint, 'ipython')
 
-        demo_profile = sec_get('DEMO_CLUSTER')
-        reserved_profile = sec_get('RESERVED_CLUSTER')
-        general_profile = sec_get('GENERAL_CLUSTER')
-
-        self.ipyc_demo = locate_profile(demo_profile)
-        self.ipyc_reserved = locate_profile(reserved_profile)
-        self.ipyc_general = locate_profile(general_profile)
+        self.ipyc_demo = sec_get('DEMO_CLUSTER')
+        self.ipyc_reserved = sec_get('RESERVED_CLUSTER')
+        self.ipyc_general = sec_get('GENERAL_CLUSTER')
 
         self.ipyc_demo_n = sec_getint('DEMO_CLUSTER_SIZE')
         self.ipyc_reserved_n = sec_getint('RESERVED_CLUSTER_SIZE')
