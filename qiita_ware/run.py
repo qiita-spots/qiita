@@ -3,7 +3,6 @@ from __future__ import division
 
 from tempfile import mkdtemp
 
-from qiita_db.analysis import Analysis
 from qiita_db.job import Job
 
 from qiita_ware.cluster import qiita_compute
@@ -26,21 +25,18 @@ def run_analysis(analysis):
         if job.status == 'queued':
             name, command = job.command
             options = job.options
-            options['--output_dir']
+
+            options['--output_dir'] = mkdtemp()
 
             o_fmt = ' '.join(['%s %s' % (k, v) for k, v in options.items()])
-            c_fmt = "%s %s" % (command, o_fmt)
+            c_fmt = str("echo %s %s" % (command, o_fmt))
 
             try:
                 job.status = 'running'
-                result = qiita_compute.submit_sync(c_fmt)
-                job.result = output_path
+                qiita_compute.submit_sync(c_fmt)
+                job.add_results([(options['--output_dir'], 7)])
             except:
                 job.status = 'error'
                 raise ComputeError("Failed compute on job id %d" % job_id)
             else:
                 job.status = 'completed'
-
-
-a = Analysis(2)
-run_analysis(a)
