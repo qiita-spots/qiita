@@ -107,15 +107,9 @@ class JobTest(TestCase):
                                             'option3': 'FCM'})
 
     def test_retrieve_results(self):
-        obs = self.job.results
-        self._delete_path = obs
+        self.assertEqual(self.job.results, ["job/1_job_result.txt"])
 
-        self.assertEqual(self.job.results, [join(get_work_base_dir(),
-                                                 "job1result.txt")])
-        # make sure files copied correctly
-        self.assertTrue(exists(join(get_work_base_dir(), "job1result.txt")))
-
-    def test_retrieve_results_blank(self):
+    def test_retrieve_results_empty(self):
         new = Job.create("18S", "Beta Diversity",
                          self.options, Analysis(1))
         obs = new.results

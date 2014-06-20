@@ -16,15 +16,12 @@ Classes
 # -----------------------------------------------------------------------------
 from __future__ import division
 from json import dumps, loads
-from os import remove
-from os.path import basename, join, commonprefix, relpath
-from shutil import copy
+from os.path import join
 from time import strftime
 from datetime import date
 
 from .base import QiitaStatusObject
-from .util import (insert_filepaths, get_db_files_base_dir, get_work_base_dir,
-                   convert_to_id)
+from .util import insert_filepaths, convert_to_id
 from .sql_connection import SQLConnectionHandler
 
 
@@ -175,22 +172,16 @@ class Job(QiitaStatusObject):
         -------
         list
             Filepaths to the result files
-
-        Notes
-        -----
-        All files are automatically copied into the working directory and
-        untar-ed if necessary. The filepaths point to these files/folders in
-        the working directory.
         """
         # Copy files to working dir, untar if necessary, then return filepaths
-        sql = ("SELECT filepath, filepath_type_id FROM qiita.filepath WHERE "
-               "filepath_id IN (SELECT filepath_id FROM "
-               "qiita.job_results_filepath WHERE job_id = %s)")
         conn_handler = SQLConnectionHandler()
-        basepath = get_db_files_base_dir(conn_handler)
-        results = conn_handler.execute_fetchall(sql, (self._id, ))
+        results = conn_handler.execute_fetchall(
+            "SELECT filepath FROM qiita.filepath WHERE filepath_id IN "
+            "(SELECT filepath_id FROM qiita.job_results_filepath "
+            "WHERE job_id = %s)",
+            (self._id, ))
         # create new list, with relative paths from db base
-        return [relpath(fp, basepath) for fp, fp_type in results]
+        return [join("job", fp[0]) for fp in results]
 
     @property
     def error_msg(self):

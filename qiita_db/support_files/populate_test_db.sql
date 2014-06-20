@@ -320,7 +320,7 @@ INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum, checksum_algor
 INSERT INTO qiita.processed_filepath (processed_data_id, filepath_id) VALUES (1, 7);
 
 -- Insert filepath for job results files
-INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum, checksum_algorithm_id) VALUES ('job1result.txt', 8, '852952723', 1), ('job2tar.tar', 7, '852952723', 1);
+INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum, checksum_algorithm_id) VALUES ('1_job_result.txt', 8, '852952723', 1), ('2_test_folder', 7, '852952723', 1);
 
 -- Insert jobs
 INSERT INTO qiita.job (data_type_id, job_status_id, command_id, options) VALUES (1, 1, 1, '{"option1":true,"option2":12,"option3":"FCM"}'), (1, 3, 2, 'options2'), (1, 1, 2, '{"option1":true,"option2":12,"option3":"FCM"}');
