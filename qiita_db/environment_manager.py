@@ -20,8 +20,6 @@ except ImportError:  # python3
 from psycopg2 import connect
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 
-from qiita_db.study import Study
-from qiita_db.data import PreprocessedData, ProcessedData
 from qiita_db.util import get_db_files_base_dir
 
 get_support_file = partial(join, join(dirname(abspath(__file__)),
