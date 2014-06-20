@@ -9,14 +9,16 @@ from tempfile import mkdtemp
 from tarfile import open as taropen
 from gzip import open as gzopen
 from urllib import urlretrieve
+from os import remove
 from os.path import abspath, dirname, join
-from shutil import rmtree
+from shutil import rmtree, move
 from functools import partial
 from psycopg2 import connect
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 
 from qiita_db.study import Study
 from qiita_db.data import PreprocessedData, ProcessedData
+from qiita_db.util import get_db_files_base_dir
 
 get_support_file = partial(join, join(dirname(abspath(__file__)),
                                       'support_files'))
@@ -176,6 +178,7 @@ def make_demo_environment(base_data_dir, base_work_dir, user, password, host):
     url = ("ftp://thebeast.colorado.edu/pub/QIIME_DB_Public_Studies/study_1001"
            "_split_library_seqs_and_mapping.tgz")
     outdir = mkdtemp()
+    basedir = join(outdir, "study_1001_split_library_seqs_and_mapping/")
     try:
         urlretrieve(url, join(outdir, "study_1001.tar.gz"))
     except Exception, e:
@@ -186,23 +189,18 @@ def make_demo_environment(base_data_dir, base_work_dir, user, password, host):
     with taropen(join(outdir, "study_1001.tar.gz")) as tar:
         tar.extractall(outdir)
     # un-gzip sequence file
-    with gzopen(join(outdir, "study_1001_split_library_seqs_and_mapping/"
-                     "study_1001_split_library_seqs.fna.gz")) as gz:
-        with open(join(outdir, "study_1001_split_library_seqs_and_mapping/"
-                       "study_1001_split_library_seqs.fna"), 'w') as fout:
+    with gzopen(join(basedir, "study_1001_split_library_seqs.fna.gz")) as gz:
+        with open(join(basedir, "seqs.fna"), 'w') as fout:
             fout.write(gz.read())
 
-    # add the preprocessed and procesed data to the study
-    preproc = PreprocessedData.create(
-        Study(1), "preprocessed_sequence_illumina_params", 1,
-        [(join(outdir, "study_1001_split_library_seqs_and_mapping/"
-                       "study_1001_split_library_seqs.fna"), 4)])
-
-    ProcessedData.create(
-        "processed_params_uclust", 1,
-        [(join(outdir, "study_1001_split_library_seqs_and_mapping/study_1001_"
-                       "closed_reference_otu_table.biom"), 6)],
-        preprocessed_data=preproc)
+    # copy the preprocessed and procesed data to the study
+    dbbase = get_db_files_base_dir()
+    remove(join(dbbase, "processed_data/study_1001_closed_reference_otu"
+           "_table.biom"))
+    remove(join(dbbase, "preprocessed_data/seqs.fna"))
+    move(join(basedir, "study_1001_closed_reference_otu_table.biom"),
+         join(dbbase, "processed_data"))
+    move(join(basedir, "seqs.fna"), join(dbbase, "preprocessed_data"))
 
     # clean up after ourselves
     rmtree(outdir)
@@ -231,6 +229,14 @@ def drop_demo_environment(user, password, host):
     # Close cursor and connection
     cur.close()
     conn.close()
+
+    # wipe the overwriiten test files so empty as on repo
+    base = get_db_files_base_dir()
+    with open(join(base, "preprocessed_data/seqs.fna")) as fout:
+        fout.write("")
+    with open(join(base, "processed_data/study_1001_closed_reference_otu_"
+              "table.biom")) as fout:
+        fout.write("")
 
 
 def make_production_environment():
