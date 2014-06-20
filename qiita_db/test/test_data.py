@@ -312,7 +312,7 @@ class ProcessedDataTests(TestCase):
         self.assertTrue(before <= obs <= after)
 
     def test_create_params_table_error(self):
-        """Raises an error if the processed_params_table does not exists"""
+        """Raises an error if the processed_params_table does not exist"""
         with self.assertRaises(IncompetentQiitaDeveloperError):
             ProcessedData.create("foo", self.params_id, self.filepaths,
                                  preprocessed_data=self.preprocessed_data)
