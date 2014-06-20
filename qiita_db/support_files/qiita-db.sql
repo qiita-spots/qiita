@@ -99,17 +99,6 @@ CREATE TABLE qiita.portal_type (
 
 COMMENT ON TABLE qiita.portal_type IS 'What portals are available to show a study in';
 
-CREATE TABLE qiita.prep_y ( 
-	sample_id            varchar  NOT NULL,
-	data                 bigint  ,
-	CONSTRAINT pk_prep_y PRIMARY KEY ( sample_id )
- );
-
-COMMENT ON TABLE qiita.prep_y IS 'Information on how raw data y was prepared (prep template)
-Linked by y being raw_data_id from raw data table.';
-
-COMMENT ON COLUMN qiita.prep_y.data IS 'STUFFFFF';
-
 CREATE TABLE qiita.preprocessed_data ( 
 	preprocessed_data_id bigserial  NOT NULL,
 	preprocessed_params_table varchar  NOT NULL,
@@ -213,20 +202,6 @@ CREATE TABLE qiita.required_sample_info_status (
 	status               varchar  ,
 	CONSTRAINT pk_sample_status PRIMARY KEY ( required_sample_info_status_id )
  );
-
-CREATE TABLE qiita.sample_x ( 
-	sample_id            varchar  NOT NULL,
-	description          varchar  NOT NULL,
-	other_mapping_columns varchar  ,
-	CONSTRAINT pk_study_x_y PRIMARY KEY ( sample_id )
- );
-
-COMMENT ON TABLE qiita.sample_x IS 'data for samples in study x (sample template)
-x is the study_id from study table
-
-MAKE SURE sample_id IS FK TO sample_id IN required_sample_info TABLE';
-
-COMMENT ON COLUMN qiita.sample_x.other_mapping_columns IS 'Represents whatever other columns go with this study';
 
 CREATE TABLE qiita.severity ( 
 	severity_id          serial  NOT NULL,
