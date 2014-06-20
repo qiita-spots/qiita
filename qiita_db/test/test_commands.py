@@ -19,10 +19,11 @@ except ImportError:
     from configparser import NoOptionError
 
 from qiita_db.commands import (make_study_from_cmd, load_raw_data_cmd,
-                               sample_template_adder)
+                               sample_template_adder, load_processed_data_cmd)
 from qiita_db.study import Study, StudyPerson
 from qiita_db.user import User
 from qiita_db.util import get_count, check_count, get_db_files_base_dir
+from qiita_db.data import PreprocessedData
 from qiita_core.util import qiita_test_checker
 
 
@@ -146,6 +147,55 @@ class TestLoadRawDataFromCmd(TestCase):
         with self.assertRaises(ValueError):
             load_raw_data_cmd(filepaths, filepath_types[:-1], filetype,
                               study_ids)
+
+
+@qiita_test_checker()
+class TestLoadProcessedDataFromCmd(TestCase):
+    def setUp(self):
+        fd, self.otu_table_fp = mkstemp(suffix='_otu_table.biom')
+        close(fd)
+
+        with open(self.otu_table_fp, "w") as f:
+            f.write("\n")
+
+        self.files_to_remove = []
+        self.files_to_remove.append(self.otu_table_fp)
+
+        self.db_test_processed_data_dir = join(get_db_files_base_dir(),
+                                               'processed_data')
+
+    def tearDown(self):
+        for fp in self.files_to_remove:
+            if exists(fp):
+                remove(fp)
+
+    def test_load_processed_data_from_cmd(self):
+        filepaths = [self.otu_table_fp]
+        filepath_types = ['biom']
+
+        initial_processed_data_count = get_count('qiita.processed_data')
+        initial_processed_fp_count = get_count('qiita.processed_filepath')
+        initial_fp_count = get_count('qiita.filepath')
+
+        new = load_processed_data_cmd(filepaths, filepath_types,
+                                      'processed_params_uclust', 1, 1, None)
+        processed_data_id = new.id
+        self.files_to_remove.append(
+            join(self.db_test_processed_data_dir,
+                 '%d_%s' % (processed_data_id, basename(self.otu_table_fp))))
+
+        self.assertTrue(check_count('qiita.processed_data',
+                                    initial_processed_data_count + 1))
+        self.assertTrue(check_count('qiita.processed_filepath',
+                                    initial_processed_fp_count + 1))
+        self.assertTrue(check_count('qiita.filepath',
+                                    initial_fp_count + 1))
+
+        # Ensure that the ValueError is raised when a filepath_type is not
+        # provided for each and every filepath
+        with self.assertRaises(ValueError):
+            load_processed_data_cmd(filepaths, [], 'processed_params_uclust',
+                                    1, 1, None)
 
 
 CONFIG_1 = """[required]

@@ -18,7 +18,7 @@ except ImportError:
 from .study import Study, StudyPerson
 from .user import User
 from .util import get_filetypes, get_filepath_types
-from .data import RawData
+from .data import RawData, PreprocessedData, ProcessedData
 from .metadata_template import SampleTemplate
 
 
@@ -108,3 +108,44 @@ def load_raw_data_cmd(filepaths, filepath_types, filetype, study_ids):
 
     return RawData.create(filetype_id, list(zip(filepaths, filepath_types)),
                           studies)
+
+
+def load_processed_data_cmd(fps, fp_types, processed_params_table_name,
+                            processed_params_id, preprocessed_data_id=None,
+                            processed_date=None):
+    """Add a new processed data entry
+
+    Parameters
+    ----------
+    fps : list of str
+        Paths to the processed data files to associate with the ProcessedData
+        object
+    fp_types: list of str
+        The types of files, one per fp
+    processed_params_table_name : str
+        The name of the processed_params_ table to use
+    processed_params_id : int
+        The ID of the row in the processed_params_ table
+    preprocessed_data_id : int, optional
+        Defaults to ``None``. The ID of the row in the preprocessed_data table.
+    processed_date : datetime, optional
+        Defaults to ``None``. The date and time to use as the processing date.
+
+    Returns
+    -------
+    qiita_db.ProcessedData
+        The newly created `qiita_db.ProcessedData` object
+    """
+    if len(fps) != len(fp_types):
+        raise ValueError("Please pass exactly one fp_type for each "
+                         "and every fp")
+
+    fp_types_dict = get_filepath_types()
+    fp_types = [fp_types_dict[x] for x in fp_types]
+
+    if preprocessed_data_id is not None:
+        preprocessed_data = PreprocessedData(preprocessed_data_id)
+
+    return ProcessedData.create(processed_params_table_name,
+                                processed_params_id, list(zip(fps, fp_types)),
+                                preprocessed_data, processed_date)
