@@ -181,8 +181,8 @@ def make_demo_environment(base_data_dir, base_work_dir, user, password, host):
     basedir = join(outdir, "study_1001_split_library_seqs_and_mapping/")
     try:
         urlretrieve(url, join(outdir, "study_1001.tar.gz"))
-    except Exception, e:
-        raise("Error: DOWNLOAD FAILED", e)
+    except:
+        raise IOError("Error: DOWNLOAD FAILED")
         rmtree(outdir)
 
     # untar the files
