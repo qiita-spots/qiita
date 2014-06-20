@@ -33,6 +33,7 @@ from .sql_connection import SQLConnectionHandler
 from .exceptions import QiitaDBNotImplementedError, QiitaDBUnknownIDError
 from .base import QiitaObject
 
+
 class LogEntry(QiitaObject):
     """
     Attributes
@@ -80,8 +81,8 @@ class LogEntry(QiitaObject):
         sql = ("INSERT INTO qiita.{} (time, severity_id, msg, information) "
                "VALUES (%s, %s, %s, %s) "
                "RETURNING logging_id".format(cls._table))
-        id_ = conn_handler.execute_fetchone(sql, (datetime.now(), severity_id, msg,
-                                            info))[0]
+        id_ = conn_handler.execute_fetchone(sql, (datetime.now(), severity_id,
+                                                  msg, info))[0]
 
         return cls(id_)
 
@@ -112,7 +113,7 @@ class LogEntry(QiitaObject):
         sql = ("SELECT time FROM qiita.{} "
                "WHERE logging_id = %s".format(self._table))
         timestamp = conn_handler.execute_fetchone(sql, (self.id,))[0]
-        
+
         return timestamp
 
     @property
