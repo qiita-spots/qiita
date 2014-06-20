@@ -12,7 +12,10 @@ INSERT INTO qiita.qiita_user (email, user_level_id, password, name,
 	('admin@foo.bar', 4,
 	'$2a$12$gnUi8Qg.0tvW243v889BhOBhWLIHyIJjjgaG6dxuRJkUM8nXG9Efe', 'Admin',
 	'Owner University', '312 noname st, Apt K, Nonexistantown, CO 80302',
-	'222-444-6789');
+	'222-444-6789'),
+	('demo@microbio.me', 4,
+	'$2a$12$gnUi8Qg.0tvW243v889BhOBhWLIHyIJjjgaG6dxuRJkUM8nXG9Efe', 'Demo',
+	'Qitta Dev', '1345 Colorado Avenue', '303-492-1984');
 
 -- Insert some study persons
 INSERT INTO qiita.study_person (name, email, address, phone) VALUES
@@ -35,6 +38,7 @@ INSERT INTO qiita.study (email, study_status_id, emp_person_id, first_contact,
 
 -- Insert study_users (share study 1 with shared user)
 INSERT INTO qiita.study_users (study_id, email) VALUES (1, 'shared@foo.bar');
+INSERT INTO qiita.study_users (study_id, email) VALUES (1, 'demo@microbio.me');
 
 -- Insert PMIDs for study
 INSERT INTO qiita.study_pmid (study_id, pmid) VALUES (1, '123456'), (1, '7891011');

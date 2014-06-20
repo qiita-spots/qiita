@@ -6,7 +6,9 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
-import pandas as pd
+from dateutil.parser import parse
+from os import listdir
+from os.path import join
 from functools import partial
 try:
     # Python 2
@@ -15,15 +17,28 @@ except ImportError:
     # Python 3
     from configparser import ConfigParser
 
+import pandas as pd
+
 from .study import Study, StudyPerson
 from .user import User
 from .util import get_filetypes, get_filepath_types
-from .data import RawData
+from .data import RawData, PreprocessedData, ProcessedData
 from .metadata_template import SampleTemplate
 
 
-def make_study_from_cmd(owner, title, info):
+def load_study_from_cmd(owner, title, info):
+    r"""Adds a study to the database
 
+    Parameters
+    ----------
+    owner : str
+        The email address of the owner of the study_abstract
+    title : str
+        The title of the study_abstract
+    info : file-like object
+        File-like object containing study information
+
+    """
     # Parse the configuration file
     config = ConfigParser()
     config.readfp(info)
@@ -69,6 +84,35 @@ def make_study_from_cmd(owner, title, info):
     Study.create(User(owner), title, efo_ids, infodict)
 
 
+def load_preprocessed_data_from_cmd(study_id, filedir, filepathtype,
+                                    params_table, params_id,
+                                    submitted_to_insdc):
+    r"""Adds preprocessed data to the database
+
+    Parameters
+    ----------
+    study_id : int
+        The study id to which the preprocessed data belongs
+    filedir : str
+        Directory path of the preprocessed data
+    filepathtype: str
+        The filepath_type of the preprecessed data
+    params_table_name : str
+        The name of the table which contains the parameters of the
+        preprocessing
+    params_id : int
+        The id of parameters int the params_table
+    submitted_to_insdc : bool
+        Has the data been submitted to insdc
+    """
+    fp_types_dict = get_filepath_types()
+    fp_type = fp_types_dict[filepathtype]
+    filepaths = [(join(filedir, fp), fp_type) for fp in listdir(filedir)]
+    return PreprocessedData.create(Study(study_id), params_table, params_id,
+                                   filepaths,
+                                   submitted_to_insdc=submitted_to_insdc)
+
+
 def sample_template_adder(sample_temp_path, study_id):
     r"""Adds a sample template to the database
 
@@ -77,7 +121,7 @@ def sample_template_adder(sample_temp_path, study_id):
     sample_temp_path : str
         Path to the sample template file
     study_id : int
-        The study id to wich the sample template belongs to
+        The study id to which the sample template belongs
     """
     sample_temp = pd.DataFrame.from_csv(sample_temp_path, sep='\t',
                                         infer_datetime_format=True)
@@ -90,9 +134,18 @@ def load_raw_data_cmd(filepaths, filepath_types, filetype, study_ids):
     Parameters
     ----------
     filepaths : iterable of str
+        Paths to the raw data files
     filepath_types : iterable of str
+        Describes the contents of the files.
     filetype : str
+        The type of file being loaded
     study_ids : iterable of int
+        The IDs of the studies with which to associate this raw data
+
+    Returns
+    -------
+    qiita_db.RawData
+        The newly created `qiita_db.RawData` object
     """
     if len(filepaths) != len(filepath_types):
         raise ValueError("Please pass exactly one filepath_type for each "
@@ -108,3 +161,50 @@ def load_raw_data_cmd(filepaths, filepath_types, filetype, study_ids):
 
     return RawData.create(filetype_id, list(zip(filepaths, filepath_types)),
                           studies)
+
+
+def load_processed_data_cmd(fps, fp_types, processed_params_table_name,
+                            processed_params_id, preprocessed_data_id=None,
+                            processed_date=None):
+    """Add a new processed data entry
+
+    Parameters
+    ----------
+    fps : list of str
+        Paths to the processed data files to associate with the ProcessedData
+        object
+    fp_types: list of str
+        The types of files, one per fp
+    processed_params_table_name : str
+        The name of the processed_params_ table to use
+    processed_params_id : int
+        The ID of the row in the processed_params_ table
+    preprocessed_data_id : int, optional
+        Defaults to ``None``. The ID of the row in the preprocessed_data table.
+    processed_date : str, optional
+        Defaults to ``None``. The date and time to use as the processing date.
+        Must be interpretable as a datetime object
+
+    Returns
+    -------
+    qiita_db.ProcessedData
+        The newly created `qiita_db.ProcessedData` object
+    """
+    if len(fps) != len(fp_types):
+        raise ValueError("Please pass exactly one fp_type for each "
+                         "and every fp")
+
+    fp_types_dict = get_filepath_types()
+    fp_types = [fp_types_dict[x] for x in fp_types]
+
+    if preprocessed_data_id is not None:
+        preprocessed_data = PreprocessedData(preprocessed_data_id)
+    else:
+        preprocessed_data = None
+
+    if processed_date is not None:
+        processed_date = parse(processed_date)
+
+    return ProcessedData.create(processed_params_table_name,
+                                processed_params_id, list(zip(fps, fp_types)),
+                                preprocessed_data, processed_date)
