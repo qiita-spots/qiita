@@ -1,3 +1,12 @@
+# -----------------------------------------------------------------------------
+# Copyright (c) 2014--, The Qiita Development Team.
+#
+# Distributed under the terms of the BSD 3-clause License.
+#
+# The full license is in the file LICENSE, distributed with this software.
+# -----------------------------------------------------------------------------
+
+import pandas as pd
 from functools import partial
 try:
     # Python 2
@@ -10,6 +19,7 @@ from .study import Study, StudyPerson
 from .user import User
 from .util import get_filetypes, get_filepath_types
 from .data import RawData
+from .metadata_template import SampleTemplate
 
 
 def make_study_from_cmd(owner, title, info):
@@ -57,6 +67,21 @@ def make_study_from_cmd(owner, title, info):
     efo_ids = [x.strip() for x in efo_ids.split(',')]
 
     Study.create(User(owner), title, efo_ids, infodict)
+
+
+def sample_template_adder(sample_temp_path, study_id):
+    r"""Adds a sample template to the database
+
+    Parameters
+    ----------
+    sample_temp_path : str
+        Path to the sample template file
+    study_id : int
+        The study id to wich the sample template belongs to
+    """
+    sample_temp = pd.DataFrame.from_csv(sample_temp_path, sep='\t',
+                                        infer_datetime_format=True)
+    return SampleTemplate.create(sample_temp, Study(study_id))
 
 
 def load_raw_data_cmd(filepaths, filepath_types, filetype, study_ids):
