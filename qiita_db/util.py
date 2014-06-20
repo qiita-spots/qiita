@@ -38,8 +38,9 @@ from string import ascii_letters, digits, punctuation
 from binascii import crc32
 from bcrypt import hashpw, gensalt
 from functools import partial
-from os.path import join, basename
-from shutil import copy
+from os.path import join, basename, isdir
+from os import walk
+from shutil import copy, copytree
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from .exceptions import QiitaDBColumnError
@@ -321,13 +322,13 @@ def get_work_base_dir(conn_handler=None):
         "SELECT base_work_dir FROM settings")[0]
 
 
-def compute_checksum(filepath):
-    r"""Returns the checksum of the file pointed by filepath
+def compute_checksum(path):
+    r"""Returns the checksum of the file pointed by path
 
     Parameters
     ----------
-    filepath : str
-        The path to the file
+    path : str
+        The path to compute the checksum
 
     Returns
     -------
@@ -335,13 +336,22 @@ def compute_checksum(filepath):
         The file checksum
     """
     crc = None
-    with open(filepath, "Ub") as f:
-        # Go line by line so we don't need to load the entire file in memory
-        for line in f:
-            if crc is None:
-                crc = crc32(line)
-            else:
-                crc = crc32(line, crc)
+    filepaths = []
+    if isdir(path):
+        for name, dirs, files in walk(path):
+            join_f = partial(join, name)
+            filepaths.extend(list(map(join_f, files)))
+    else:
+        filepaths.append(path)
+
+    for fp in filepaths:
+        with open(fp, "Ub") as f:
+            # Go line by line so we don't need to load the entire file
+            for line in f:
+                if crc is None:
+                    crc = crc32(line)
+                else:
+                    crc = crc32(line, crc)
     # We need the & 0xffffffff in order to get the same numeric value across
     # all python versions and platforms
     return crc & 0xffffffff
@@ -382,7 +392,11 @@ def insert_filepaths(filepaths, obj_id, table, filepath_table, conn_handler):
             for path, id in filepaths]
         # Copy the original files to the controlled DB directory
         for old_fp, new_fp in zip(filepaths, new_filepaths):
-            copy(old_fp[0], new_fp[0])
+            # 7 means a directory, so we need to actually copy the dir
+            if old_fp[1] == 7:
+                copytree(old_fp[0], new_fp[0])
+            else:
+                copy(old_fp[0], new_fp[0])
 
         paths_w_checksum = [(path, id, compute_checksum(path))
                             for path, id in new_filepaths]

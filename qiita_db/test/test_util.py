@@ -101,7 +101,7 @@ class DBUtilTests(TestCase):
 
     def test_convert_to_id(self):
         """Tests that ids are returned correctly"""
-        self.assertEqual(convert_to_id("tar", "filepath_type"), 7)
+        self.assertEqual(convert_to_id("directory", "filepath_type"), 7)
 
     def test_convert_to_id_bad_value(self):
         """Tests that ids are returned correctly"""
@@ -129,7 +129,7 @@ class DBUtilTests(TestCase):
         obs = get_filepath_types()
         exp = {'raw_sequences': 1, 'raw_barcodes': 2, 'raw_spectra': 3,
                'preprocessed_sequences': 4, 'preprocessed_sequences_qual': 5,
-               'biom': 6, 'tar': 7, 'plain_text': 8}
+               'biom': 6, 'directory': 7, 'plain_text': 8}
         self.assertEqual(obs, exp)
 
         obs = get_filepath_types(key='filepath_type_id')
