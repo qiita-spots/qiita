@@ -136,18 +136,6 @@ CREATE TABLE qiita.preprocessed_spectra_params (
 
 COMMENT ON TABLE qiita.preprocessed_spectra_params IS 'Parameters used for processing spectra data.';
 
-CREATE TABLE qiita.processed_data ( 
-	processed_data_id    bigserial  NOT NULL,
-	processed_params_table varchar  NOT NULL,
-	processed_params_id  bigint  NOT NULL,
-	processed_date       timestamp  NOT NULL,
-	CONSTRAINT pk_processed_data PRIMARY KEY ( processed_data_id )
- );
-
-COMMENT ON COLUMN qiita.processed_data.processed_params_table IS 'Name of table holding processing params';
-
-COMMENT ON COLUMN qiita.processed_data.processed_params_id IS 'Link to a table with the parameters used to generate processed data';
-
 CREATE TABLE qiita.raw_data ( 
 	raw_data_id          bigserial  NOT NULL,
 	filetype_id          bigint  NOT NULL,
@@ -441,26 +429,6 @@ CREATE INDEX idx_preprocessed_filepath_0 ON qiita.preprocessed_filepath ( prepro
 
 CREATE INDEX idx_preprocessed_filepath_1 ON qiita.preprocessed_filepath ( filepath_id );
 
-CREATE TABLE qiita.preprocessed_processed_data ( 
-	preprocessed_data_id bigint  NOT NULL,
-	processed_data_id    bigint  NOT NULL,
-	CONSTRAINT idx_preprocessed_processed_data PRIMARY KEY ( preprocessed_data_id, processed_data_id ),
-	CONSTRAINT fk_preprocessed_processed_data FOREIGN KEY ( preprocessed_data_id ) REFERENCES qiita.preprocessed_data( preprocessed_data_id )    ,
-	CONSTRAINT fk_preprocessed_processed_data_0 FOREIGN KEY ( processed_data_id ) REFERENCES qiita.processed_data( processed_data_id )    
- );
-
-CREATE INDEX idx_preprocessed_processed_data_0 ON qiita.preprocessed_processed_data ( preprocessed_data_id );
-
-CREATE INDEX idx_preprocessed_processed_data_1 ON qiita.preprocessed_processed_data ( processed_data_id );
-
-CREATE TABLE qiita.processed_filepath ( 
-	processed_data_id    bigint  NOT NULL,
-	filepath_id          bigint  NOT NULL,
-	CONSTRAINT idx_processed_filepath PRIMARY KEY ( processed_data_id, filepath_id ),
-	CONSTRAINT fk_processed_data_filepath FOREIGN KEY ( processed_data_id ) REFERENCES qiita.processed_data( processed_data_id )    ,
-	CONSTRAINT fk_processed_data_filepath_0 FOREIGN KEY ( filepath_id ) REFERENCES qiita.filepath( filepath_id )    
- );
-
 CREATE TABLE qiita.processed_params_uclust ( 
 	processed_params_id  bigserial  NOT NULL,
 	reference_id         bigint  NOT NULL,
@@ -603,6 +571,16 @@ CREATE TABLE qiita.study_preprocessed_data (
 CREATE INDEX idx_study_preprocessed_data_0 ON qiita.study_preprocessed_data ( study_id );
 
 CREATE INDEX idx_study_preprocessed_data_1 ON qiita.study_preprocessed_data ( preprocessed_data_id );
+
+CREATE TABLE qiita.study_processed_data ( 
+	study_id             bigint  NOT NULL,
+	processed_data_id    bigint  NOT NULL,
+	CONSTRAINT idx_study_processed_data PRIMARY KEY ( study_id, processed_data_id ),
+	CONSTRAINT pk_study_processed_data UNIQUE ( processed_data_id ) ,
+	CONSTRAINT fk_study_processed_data FOREIGN KEY ( study_id ) REFERENCES qiita.study( study_id )    
+ );
+
+CREATE INDEX idx_study_processed_data_0 ON qiita.study_processed_data ( study_id );
 
 CREATE TABLE qiita.study_raw_data ( 
 	study_id             bigint  NOT NULL,
@@ -769,6 +747,27 @@ CREATE INDEX idx_job_results_filepath_1 ON qiita.job_results_filepath ( filepath
 
 COMMENT ON TABLE qiita.job_results_filepath IS 'Holds connection between jobs and the result filepaths';
 
+CREATE TABLE qiita.processed_data ( 
+	processed_data_id    bigserial  NOT NULL,
+	processed_params_table varchar  NOT NULL,
+	processed_params_id  bigint  NOT NULL,
+	processed_date       timestamp  NOT NULL,
+	CONSTRAINT pk_processed_data PRIMARY KEY ( processed_data_id ),
+	CONSTRAINT fk_processed_data FOREIGN KEY ( processed_data_id ) REFERENCES qiita.study_processed_data( processed_data_id )    
+ );
+
+COMMENT ON COLUMN qiita.processed_data.processed_params_table IS 'Name of table holding processing params';
+
+COMMENT ON COLUMN qiita.processed_data.processed_params_id IS 'Link to a table with the parameters used to generate processed data';
+
+CREATE TABLE qiita.processed_filepath ( 
+	processed_data_id    bigint  NOT NULL,
+	filepath_id          bigint  NOT NULL,
+	CONSTRAINT idx_processed_filepath PRIMARY KEY ( processed_data_id, filepath_id ),
+	CONSTRAINT fk_processed_data_filepath FOREIGN KEY ( processed_data_id ) REFERENCES qiita.processed_data( processed_data_id )    ,
+	CONSTRAINT fk_processed_data_filepath_0 FOREIGN KEY ( filepath_id ) REFERENCES qiita.filepath( filepath_id )    
+ );
+
 CREATE TABLE qiita.required_sample_info ( 
 	study_id             bigint  NOT NULL,
 	sample_id            varchar  NOT NULL,
@@ -856,4 +855,16 @@ CREATE INDEX idx_required_prep_info_0 ON qiita.common_prep_info ( emp_status_id 
 CREATE INDEX idx_required_prep_info_2 ON qiita.common_prep_info ( sample_id );
 
 CREATE INDEX idx_required_prep_info_3 ON qiita.common_prep_info ( data_type_id );
+
+CREATE TABLE qiita.preprocessed_processed_data ( 
+	preprocessed_data_id bigint  NOT NULL,
+	processed_data_id    bigint  NOT NULL,
+	CONSTRAINT idx_preprocessed_processed_data PRIMARY KEY ( preprocessed_data_id, processed_data_id ),
+	CONSTRAINT fk_preprocessed_processed_data FOREIGN KEY ( preprocessed_data_id ) REFERENCES qiita.preprocessed_data( preprocessed_data_id )    ,
+	CONSTRAINT fk_preprocessed_processed_data_0 FOREIGN KEY ( processed_data_id ) REFERENCES qiita.processed_data( processed_data_id )    
+ );
+
+CREATE INDEX idx_preprocessed_processed_data_0 ON qiita.preprocessed_processed_data ( preprocessed_data_id );
+
+CREATE INDEX idx_preprocessed_processed_data_1 ON qiita.preprocessed_processed_data ( processed_data_id );
 
