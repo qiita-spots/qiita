@@ -63,7 +63,7 @@ class RawDataTests(TestCase):
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.raw_data WHERE raw_data_id=3")
         # raw_data_id, filetype, submitted_to_insdc
-        self.assertEqual(obs, [[3, 2, False]])
+        self.assertEqual(obs, [[3, 2]])
 
         # Check that the raw data have been correctly linked with the study
         obs = self.conn_handler.execute_fetchall(
@@ -96,15 +96,6 @@ class RawDataTests(TestCase):
             "SELECT * FROM qiita.raw_filepath WHERE raw_data_id=3")
         # raw_data_id, filepath_id
         self.assertEqual(obs, [[3, 10], [3, 11]])
-
-    def test_is_submitted_to_insdc(self):
-        """is_submitted_to_insdc works correctly"""
-        # False case
-        rd = RawData(1)
-        self.assertFalse(rd.is_submitted_to_insdc())
-        # True case
-        rd = RawData(2)
-        self.assertTrue(rd.is_submitted_to_insdc())
 
     def test_get_filepaths(self):
         """Correctly returns the filepaths to the raw files"""
@@ -151,9 +142,9 @@ class PreprocessedDataTests(TestCase):
     def test_create(self):
         """Correctly creates all the rows in the DB for preprocessed data"""
         # Check that the returned object has the correct id
-        obs = PreprocessedData.create(self.raw_data, self.study,
-                                      self.params_table, self.params_id,
-                                      self.filepaths)
+        obs = PreprocessedData.create(self.study, self.params_table,
+                                      self.params_id, self.filepaths,
+                                      raw_data=self.raw_data)
         self.assertEqual(obs.id, 3)
 
         # Check that the preprocessed data have been correctly added to the DB
@@ -162,7 +153,7 @@ class PreprocessedDataTests(TestCase):
             "preprocessed_data_id=3")
         # preprocessed_data_id, raw_data_id, preprocessed_params_tables,
         # preprocessed_params_id
-        exp = [[3, 1, "preprocessed_sequence_illumina_params", 1]]
+        exp = [[3, "preprocessed_sequence_illumina_params", 1, False]]
         self.assertEqual(obs, exp)
 
         # Check that the preprocessed data has been linked with its study
@@ -203,19 +194,17 @@ class PreprocessedDataTests(TestCase):
     def test_create_error(self):
         """Raises an error if the preprocessed_params_table does not exist"""
         with self.assertRaises(IncompetentQiitaDeveloperError):
-            PreprocessedData.create(self.raw_data, self.study, "foo",
-                                    self.params_id, self.filepaths)
-        with self.assertRaises(IncompetentQiitaDeveloperError):
-            PreprocessedData.create(self.raw_data, self.study,
-                                    "preprocessed_foo", self.params_id,
+            PreprocessedData.create(self.study, "foo", self.params_id,
                                     self.filepaths)
         with self.assertRaises(IncompetentQiitaDeveloperError):
-            PreprocessedData.create(self.raw_data, self.study, "foo_params",
+            PreprocessedData.create(self.study, "preprocessed_foo",
                                     self.params_id, self.filepaths)
         with self.assertRaises(IncompetentQiitaDeveloperError):
-            PreprocessedData.create(self.raw_data, self.study,
-                                    "preprocessed_foo_params", self.params_id,
+            PreprocessedData.create(self.study, "foo_params", self.params_id,
                                     self.filepaths)
+        with self.assertRaises(IncompetentQiitaDeveloperError):
+            PreprocessedData.create(self.study, "preprocessed_foo_params",
+                                    self.params_id, self.filepaths)
 
     def test_get_filepaths(self):
         """Correctly returns the filepaths to the preprocessed files"""
@@ -234,6 +223,15 @@ class PreprocessedDataTests(TestCase):
         """Correctly returns the study"""
         ppd = PreprocessedData(1)
         self.assertEqual(ppd.study, 1)
+
+    def test_is_submitted_to_insdc(self):
+        """is_submitted_to_insdc works correctly"""
+        # False case
+        pd = PreprocessedData(1)
+        self.assertTrue(pd.is_submitted_to_insdc())
+        # True case
+        pd = PreprocessedData(2)
+        self.assertFalse(pd.is_submitted_to_insdc())
 
 
 @qiita_test_checker()
@@ -260,8 +258,10 @@ class ProcessedDataTests(TestCase):
     def test_create(self):
         """Correctly creates all the rows in the DB for the processed data"""
         # Check that the returned object has the correct id
-        obs = ProcessedData.create(self.preprocessed_data, self.params_table,
-                                   self.params_id, self.filepaths, self.date)
+        obs = ProcessedData.create(self.params_table, self.params_id,
+                                   self.filepaths,
+                                   preprocessed_data=self.preprocessed_data,
+                                   processed_date=self.date)
         self.assertEqual(obs.id, 2)
 
         # Check that the processed data have been correctly added to the DB
@@ -269,7 +269,7 @@ class ProcessedDataTests(TestCase):
             "SELECT * FROM qiita.processed_data WHERE processed_data_id=2")
         # processed_data_id, preprocessed_data_id, processed_params_table,
         # processed_params_id, processed_date
-        exp = [[2, 1, "processed_params_uclust", 1, self.date]]
+        exp = [[2, "processed_params_uclust", 1, self.date]]
         self.assertEqual(obs, exp)
 
         # Check that the files have been copied to right location
@@ -297,8 +297,8 @@ class ProcessedDataTests(TestCase):
         # All the other settings have been already tested on test_create
         # here we will only check that the code added a good date
         before = datetime.now()
-        ProcessedData.create(self.preprocessed_data, self.params_table,
-                             self.params_id, self.filepaths)
+        ProcessedData.create(self.params_table, self.params_id, self.filepaths,
+                             preprocessed_data=self.preprocessed_data)
         after = datetime.now()
         obs = self.conn_handler.execute_fetchone(
             "SELECT processed_date FROM qiita.processed_data WHERE "
@@ -312,17 +312,18 @@ class ProcessedDataTests(TestCase):
         self.assertTrue(before <= obs <= after)
 
     def test_create_params_table_error(self):
-        """Raises an error ig the processed_params_table does not exists"""
+        """Raises an error if the processed_params_table does not exist"""
         with self.assertRaises(IncompetentQiitaDeveloperError):
-            ProcessedData.create(self.preprocessed_data, "foo", self.params_id,
-                                 self.filepaths)
+            ProcessedData.create("foo", self.params_id, self.filepaths,
+                                 preprocessed_data=self.preprocessed_data)
         with self.assertRaises(IncompetentQiitaDeveloperError):
-            ProcessedData.create(self.preprocessed_data,
-                                 "processed_params_foo", self.params_id,
-                                 self.filepaths)
+            ProcessedData.create("processed_params_foo", self.params_id,
+                                 self.filepaths,
+                                 preprocessed_data=self.preprocessed_data)
         with self.assertRaises(IncompetentQiitaDeveloperError):
-            ProcessedData.create(self.preprocessed_data, "processed_params_",
-                                 self.params_id, self.filepaths)
+            ProcessedData.create("processed_params_", self.params_id,
+                                 self.filepaths,
+                                 preprocessed_data=self.preprocessed_data)
 
     def test_get_filepath(self):
         """Correctly returns the filepaths to the processed files"""

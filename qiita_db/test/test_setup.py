@@ -73,6 +73,9 @@ class SetupTest(TestCase):
     def test_preprocessed_data(self):
         check_count("qiita.preprocessed_data", 2)
 
+    def test_raw_preprocessed_data(self):
+        check_count("qiita.raw_preprocessed_data", 2)
+
     def test_study_preprocessed_data(self):
         check_count("qiita.study_preprocessed_data", 2)
 
@@ -84,6 +87,9 @@ class SetupTest(TestCase):
 
     def test_processed_data(self):
         check_count("qiita.processed_data", 1)
+
+    def test_preprocessed_processed_data(self):
+        check_count("qiita.preprocessed_processed_data", 1)
 
     def test_reference(self):
         check_count("qiita.reference", 1)
