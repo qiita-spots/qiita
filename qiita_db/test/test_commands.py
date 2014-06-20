@@ -54,19 +54,20 @@ class TestMakeStudyFromCmd(TestCase):
 class TestImportPreprocessedData(TestCase):
     def setUp(self):
         self.tmpdir = mkdtemp()
-        fd, file1 = mkstemp(dir=self.tmpdir)
+        fd, self.file1 = mkstemp(dir=self.tmpdir)
         close(fd)
-        fd, file2 = mkstemp(dir=self.tmpdir)
+        fd, self.file2 = mkstemp(dir=self.tmpdir)
         close(fd)
-        with open(file1, "w") as f:
+        with open(self.file1, "w") as f:
             f.write("\n")
-        with open(file2, "w") as f:
+        with open(self.file2, "w") as f:
             f.write("\n")
 
-        self.files_to_remove = [file1, file2]
+        self.files_to_remove = [self.file1, self.file2]
         self.dirs_to_remove = [self.tmpdir]
 
-        self.db_test_raw_dir = join(get_db_files_base_dir(), 'raw_data')
+        self.db_test_ppd_dir = join(get_db_files_base_dir(),
+                                    'preprocessed_data')
 
     def tearDown(self):
         for fp in self.files_to_remove:
@@ -82,6 +83,12 @@ class TestImportPreprocessedData(TestCase):
         ppd = import_preprocessed_data(1, self.tmpdir, 1,
                                        'preprocessed_sequence_illumina_params',
                                        1, False)
+        self.files_to_remove.append(
+            join(self.db_test_ppd_dir,
+                 '%d_%s' % (ppd.id, basename(self.file1))))
+        self.files_to_remove.append(
+            join(self.db_test_ppd_dir,
+                 '%d_%s' % (ppd.id, basename(self.file2))))
         self.assertEqual(ppd.id, 3)
         self.assertTrue(check_count('qiita.preprocessed_data',
                                     initial_ppd_count + 1))
