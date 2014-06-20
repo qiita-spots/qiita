@@ -144,7 +144,7 @@ class ShowAnalysesHandler(BaseHandler):
         user_id = self.get_current_user()
         user = User(user_id)
 
-        analyses = [Analysis(a) for a in \
-            user.shared_analyses + user.private_analyses]
+        analyses = [Analysis(a) for a in
+                    user.shared_analyses + user.private_analyses]
 
         self.render("show_analyses.html", user=user_id, analyses=analyses)
