@@ -476,8 +476,8 @@ def get_processed_params_tables():
     -------
     list of str
     """
-    sql = ("select * from information_schema.tables where table_schema = "
-           "'qiita' and substr(table_name, 1, 17) = 'processed_params_'")
+    sql = ("SELECT * FROM information_schema.tables WHERE table_schema = "
+           "'qiita' AND SUBSTR(table_name, 1, 17) = 'processed_params_'")
 
     conn = SQLConnectionHandler()
     return [x[2] for x in conn.execute_fetchall(sql)]
