@@ -6,8 +6,6 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
-from dateutil.parser import parse
-import pandas as pd
 from functools import partial
 try:
     # Python 2
@@ -15,6 +13,9 @@ try:
 except ImportError:
     # Python 3
     from configparser import ConfigParser
+
+import pandas as pd
+from dateutil.parser import parse
 
 from .study import Study, StudyPerson
 from .user import User
