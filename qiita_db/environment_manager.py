@@ -218,6 +218,7 @@ def drop_demo_environment(user, password, host):
     host : str
         The host where the postgres server is running
     """
+    base = get_db_files_base_dir()
     # Connect to the postgres server
     conn = connect(user=user, host=host, password=password)
     # Set the isolation level to AUTOCOMMIT so we can execute a
@@ -231,12 +232,11 @@ def drop_demo_environment(user, password, host):
     conn.close()
 
     # wipe the overwriiten test files so empty as on repo
-    base = get_db_files_base_dir()
-    with open(join(base, "preprocessed_data/seqs.fna")) as fout:
-        fout.write("")
+    with open(join(base, "preprocessed_data/seqs.fna"), 'w') as fout:
+        fout.write("\n")
     with open(join(base, "processed_data/study_1001_closed_reference_otu_"
-              "table.biom")) as fout:
-        fout.write("")
+              "table.biom"), 'w') as fout:
+        fout.write("\n")
 
 
 def make_production_environment():
