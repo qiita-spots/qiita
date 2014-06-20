@@ -37,8 +37,9 @@ class MessageHandler(WebSocketHandler):
     # decorator turns the function into an asynchronous generator object
     @engine
     def listen(self):
-        sleep(5)
-        self.write_message({"analysis": self.aid, "msg": "allcomplete"})
+        # sleep(5)
+        # self.write_message({"analysis": self.aid, "msg": "allcomplete"})
+        pass
 
     def callback(self, msg):
         if msg.kind == 'message':
@@ -46,5 +47,6 @@ class MessageHandler(WebSocketHandler):
 
     @engine
     def on_close(self):
-        yield Task(self.redis.unsubscribe, self.channel)
-        self.redis.disconnect()
+        # yield Task(self.redis.unsubscribe, self.channel)
+        # self.redis.disconnect()
+        pass
