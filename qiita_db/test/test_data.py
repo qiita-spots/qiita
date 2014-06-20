@@ -290,7 +290,23 @@ class ProcessedDataTests(TestCase):
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.processed_filepath WHERE processed_data_id=2")
         # processed_data_id, filepath_id
-        self.assertTrue(obs, [[2, 10]])
+        self.assertEqual(obs, [[2, 10]])
+
+        # Check that the processed data have been correctly linked with the
+        # study
+        obs = self.conn_handler.execute_fetchall(
+            "SELECT * FROM qiita.study_processed_data WHERE "
+            "processed_data_id=2")
+        # study_id, processed_data
+        self.assertEqual(obs, [[1, 2]])
+
+        # Check that the processed data have been correctly linked with the
+        # preprocessed data
+        obs = self.conn_handler.execute_fetchall(
+            "SELECT * FROM qiita.preprocessed_processed_data WHERE "
+            "processed_data_id=2")
+        # preprocessed_data_id, processed_Data_id
+        self.assertEqual(obs, [[1, 2]])
 
     def test_create_no_date(self):
         """Correctly adds a processed data with no date on it"""
@@ -311,6 +327,48 @@ class ProcessedDataTests(TestCase):
 
         self.assertTrue(before <= obs <= after)
 
+    def test_create_w_study(self):
+        """Correctly adds a processed data passing a study"""
+        obs = ProcessedData.create(self.params_table, self.params_id,
+                                   self.filepaths, study=Study(1),
+                                   processed_date=self.date)
+
+        # Check that the processed data have been correctly added to the DB
+        obs = self.conn_handler.execute_fetchall(
+            "SELECT * FROM qiita.processed_data WHERE processed_data_id=2")
+        # processed_data_id, preprocessed_data_id, processed_params_table,
+        # processed_params_id, processed_date
+        exp = [[2, "processed_params_uclust", 1, self.date]]
+        self.assertEqual(obs, exp)
+
+        # Check that the files have been copied to right location
+        exp_biom_fp = join(self.db_test_pd_dir,
+                           "2_%s" % basename(self.biom_fp))
+        self.assertTrue(exists(exp_biom_fp))
+        self._clean_up_files.append(exp_biom_fp)
+
+        # Check that the filepaths have been correctly added to the DB
+        obs = self.conn_handler.execute_fetchall(
+            "SELECT * FROM qiita.filepath WHERE filepath_id=10")
+        # Filepath_id, path, filepath_type_id
+        exp = [[10, exp_biom_fp, 6, '852952723', 1]]
+        self.assertEqual(obs, exp)
+
+        # Check that the processed data have been correctly linked
+        # with the fileapths
+        obs = self.conn_handler.execute_fetchall(
+            "SELECT * FROM qiita.processed_filepath WHERE processed_data_id=2")
+        # processed_data_id, filepath_id
+        self.assertTrue(obs, [[2, 10]])
+
+        # Check that the processed data have been correctly linked with the
+        # study
+        obs = self.conn_handler.execute_fetchall(
+            "SELECT * FROM qiita.study_processed_data WHERE "
+            "processed_data_id=2")
+        # study_id, processed_data
+        self.assertEqual(obs, [[1, 2]])
+
     def test_create_params_table_error(self):
         """Raises an error if the processed_params_table does not exist"""
         with self.assertRaises(IncompetentQiitaDeveloperError):
@@ -324,6 +382,18 @@ class ProcessedDataTests(TestCase):
             ProcessedData.create("processed_params_", self.params_id,
                                  self.filepaths,
                                  preprocessed_data=self.preprocessed_data)
+
+    def test_create_no_preprocessed_no_study_error(self):
+        with self.assertRaises(IncompetentQiitaDeveloperError):
+            ProcessedData.create(self.params_table, self.params_id,
+                                 self.filepaths)
+
+    def test_create_preprocessed_and_study_error(self):
+        with self.assertRaises(IncompetentQiitaDeveloperError):
+            ProcessedData.create(self.params_table, self.params_id,
+                                 self.filepaths,
+                                 preprocessed_data=self.preprocessed_data,
+                                 study=Study(1))
 
     def test_get_filepath(self):
         """Correctly returns the filepaths to the processed files"""
