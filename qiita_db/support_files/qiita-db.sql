@@ -99,6 +99,16 @@ CREATE TABLE qiita.portal_type (
 
 COMMENT ON TABLE qiita.portal_type IS 'What portals are available to show a study in';
 
+CREATE TABLE qiita.preprocessed_data ( 
+	preprocessed_data_id bigserial  NOT NULL,
+	preprocessed_params_table varchar  NOT NULL,
+	preprocessed_params_id bigint  NOT NULL,
+	submitted_to_insdc   bool  NOT NULL,
+	CONSTRAINT pk_preprocessed_data PRIMARY KEY ( preprocessed_data_id )
+ );
+
+COMMENT ON COLUMN qiita.preprocessed_data.preprocessed_params_table IS 'Name of table holding the params';
+
 CREATE TABLE qiita.preprocessed_sequence_454_params ( 
 	preprocessed_params_id bigserial  NOT NULL,
 	trim_length          integer  NOT NULL,
@@ -126,10 +136,21 @@ CREATE TABLE qiita.preprocessed_spectra_params (
 
 COMMENT ON TABLE qiita.preprocessed_spectra_params IS 'Parameters used for processing spectra data.';
 
+CREATE TABLE qiita.processed_data ( 
+	processed_data_id    bigserial  NOT NULL,
+	processed_params_table varchar  NOT NULL,
+	processed_params_id  bigint  NOT NULL,
+	processed_date       timestamp  NOT NULL,
+	CONSTRAINT pk_processed_data PRIMARY KEY ( processed_data_id )
+ );
+
+COMMENT ON COLUMN qiita.processed_data.processed_params_table IS 'Name of table holding processing params';
+
+COMMENT ON COLUMN qiita.processed_data.processed_params_id IS 'Link to a table with the parameters used to generate processed data';
+
 CREATE TABLE qiita.raw_data ( 
 	raw_data_id          bigserial  NOT NULL,
 	filetype_id          bigint  NOT NULL,
-	submitted_to_insdc   bool DEFAULT FALSE NOT NULL,
 	CONSTRAINT pk_raw_data UNIQUE ( raw_data_id ) ,
 	CONSTRAINT fk_raw_data_filetype FOREIGN KEY ( filetype_id ) REFERENCES qiita.filetype( filetype_id )    
  );
@@ -147,6 +168,18 @@ CREATE TABLE qiita.raw_data_prep_columns (
 CREATE INDEX idx_prep_columns ON qiita.raw_data_prep_columns ( raw_data_id );
 
 COMMENT ON TABLE qiita.raw_data_prep_columns IS 'Holds the columns available for a given raw data prep';
+
+CREATE TABLE qiita.raw_preprocessed_data ( 
+	raw_data_id          bigint  NOT NULL,
+	preprocessed_data_id bigint  NOT NULL,
+	CONSTRAINT idx_raw_preprocessed_data PRIMARY KEY ( raw_data_id, preprocessed_data_id ),
+	CONSTRAINT fk_raw_preprocessed_data FOREIGN KEY ( raw_data_id ) REFERENCES qiita.raw_data( raw_data_id )    ,
+	CONSTRAINT fk_raw_preprocessed_data_0 FOREIGN KEY ( preprocessed_data_id ) REFERENCES qiita.preprocessed_data( preprocessed_data_id )    
+ );
+
+CREATE INDEX idx_raw_preprocessed_data_0 ON qiita.raw_preprocessed_data ( raw_data_id );
+
+CREATE INDEX idx_raw_preprocessed_data_1 ON qiita.raw_preprocessed_data ( preprocessed_data_id );
 
 CREATE TABLE qiita.reference ( 
 	reference_id         bigserial  NOT NULL,
@@ -396,19 +429,6 @@ COMMENT ON COLUMN qiita.logging.msg IS 'Error message thrown';
 
 COMMENT ON COLUMN qiita.logging.information IS 'Other applicable information (depending on error)';
 
-CREATE TABLE qiita.preprocessed_data ( 
-	preprocessed_data_id bigserial  NOT NULL,
-	raw_data_id          integer  ,
-	preprocessed_params_table varchar  NOT NULL,
-	preprocessed_params_id bigint  NOT NULL,
-	CONSTRAINT pk_preprocessed_data PRIMARY KEY ( preprocessed_data_id ),
-	CONSTRAINT fk_preprocessed_data_raw_data FOREIGN KEY ( raw_data_id ) REFERENCES qiita.raw_data( raw_data_id )    
- );
-
-CREATE INDEX idx_preprocessed_data ON qiita.preprocessed_data ( raw_data_id );
-
-COMMENT ON COLUMN qiita.preprocessed_data.preprocessed_params_table IS 'Name of table holding the params';
-
 CREATE TABLE qiita.preprocessed_filepath ( 
 	preprocessed_data_id bigint  NOT NULL,
 	filepath_id          bigint  NOT NULL,
@@ -421,29 +441,25 @@ CREATE INDEX idx_preprocessed_filepath_0 ON qiita.preprocessed_filepath ( prepro
 
 CREATE INDEX idx_preprocessed_filepath_1 ON qiita.preprocessed_filepath ( filepath_id );
 
-CREATE TABLE qiita.processed_data ( 
-	processed_data_id    bigserial  NOT NULL,
+CREATE TABLE qiita.preprocessed_processed_data ( 
 	preprocessed_data_id bigint  NOT NULL,
-	processed_params_table varchar  NOT NULL,
-	processed_params_id  bigint  NOT NULL,
-	processed_date       timestamp  NOT NULL,
-	CONSTRAINT pk_processed_data PRIMARY KEY ( processed_data_id ),
-	CONSTRAINT fk_processed_data FOREIGN KEY ( preprocessed_data_id ) REFERENCES qiita.preprocessed_data( preprocessed_data_id )    
+	processed_data_id    bigint  NOT NULL,
+	CONSTRAINT idx_preprocessed_processed_data PRIMARY KEY ( preprocessed_data_id, processed_data_id ),
+	CONSTRAINT fk_preprocessed_processed_data FOREIGN KEY ( preprocessed_data_id ) REFERENCES qiita.preprocessed_data( preprocessed_data_id )    ,
+	CONSTRAINT fk_preprocessed_processed_data_0 FOREIGN KEY ( processed_data_id ) REFERENCES qiita.processed_data( processed_data_id )    
  );
 
-COMMENT ON COLUMN qiita.processed_data.processed_params_table IS 'Name of table holding processing params';
+CREATE INDEX idx_preprocessed_processed_data_0 ON qiita.preprocessed_processed_data ( preprocessed_data_id );
 
-COMMENT ON COLUMN qiita.processed_data.processed_params_id IS 'Link to a table with the parameters used to generate processed data';
+CREATE INDEX idx_preprocessed_processed_data_1 ON qiita.preprocessed_processed_data ( processed_data_id );
 
 CREATE TABLE qiita.processed_filepath ( 
 	processed_data_id    bigint  NOT NULL,
 	filepath_id          bigint  NOT NULL,
-	CONSTRAINT pk_processed_data_filepath UNIQUE ( processed_data_id ) ,
+	CONSTRAINT idx_processed_filepath PRIMARY KEY ( processed_data_id, filepath_id ),
 	CONSTRAINT fk_processed_data_filepath FOREIGN KEY ( processed_data_id ) REFERENCES qiita.processed_data( processed_data_id )    ,
 	CONSTRAINT fk_processed_data_filepath_0 FOREIGN KEY ( filepath_id ) REFERENCES qiita.filepath( filepath_id )    
  );
-
-CREATE INDEX idx_processed_data_filepath ON qiita.processed_filepath ( filepath_id );
 
 CREATE TABLE qiita.processed_params_uclust ( 
 	processed_params_id  bigserial  NOT NULL,

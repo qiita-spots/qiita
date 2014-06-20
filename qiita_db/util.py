@@ -67,6 +67,61 @@ def scrub_data(s):
     return ret
 
 
+def get_filetypes(key='type'):
+    """Gets the list of possible filetypes from the filetype table
+
+    Parameters
+    ----------
+    key : {'type', 'filetype_id'}, optional
+        Defaults to "type". Determines the format of the returned dict.
+
+    Returns
+    -------
+    dict
+        If `key` is "type", dict is of the form {type: filetype_id}
+        If `key` is "filetype_id", dict is of the form {filetype_id: type}
+    """
+    con = SQLConnectionHandler()
+    if key == 'type':
+        cols = 'type, filetype_id'
+    elif key == 'filetype_id':
+        cols = 'filetype_id, type'
+    else:
+        raise QiitaDBColumnError("Unknown key. Pass either 'type' or "
+                                 "'filetype_id'.")
+    sql = 'select {} from qiita.filetype'.format(cols)
+    return dict(con.execute_fetchall(sql))
+
+
+def get_filepath_types(key='filepath_type'):
+    """Gets the list of possible filepath types from the filetype table
+
+    Parameters
+    ----------
+    key : {'filepath_type', 'filepath_type_id'}, optional
+        Defaults to "filepath_type". Determines the format of the returned
+        dict.
+
+    Returns
+    -------
+    dict
+        - If `key` is "filepath_type", dict is of the form
+          {filepath_type: filepath_type_id}
+        - If `key` is "filepath_type_id", dict is of the form
+          {filepath_type_id: filepath_type}
+    """
+    con = SQLConnectionHandler()
+    if key == 'filepath_type':
+        cols = 'filepath_type, filepath_type_id'
+    elif key == 'filepath_type_id':
+        cols = 'filepath_type_id, filepath_type'
+    else:
+        raise QiitaDBColumnError("Unknown key. Pass either 'filepath_type' or "
+                                 "'filepath_type_id'.")
+    sql = 'select {} from qiita.filepath_type'.format(cols)
+    return dict(con.execute_fetchall(sql))
+
+
 def create_rand_string(length, punct=True):
         """Returns a string of random ascii characters
 
@@ -377,3 +432,65 @@ def convert_to_id(value, table, conn_handler=None):
             raise IncompetentQiitaDeveloperError("%s not valid for table %s"
                                                  % (value, table))
         return _id[0]
+
+
+def get_count(table):
+    """Counts the number of rows in a table
+
+    Parameters
+    ----------
+    table : str
+        The name of the table of which to count the rows
+
+    Returns
+    -------
+    int
+    """
+    conn = SQLConnectionHandler()
+    sql = "SELECT count(1) FROM %s" % table
+    return conn.execute_fetchone(sql)[0]
+
+
+def check_count(table, exp_count):
+    """Checks that the number of rows in a table equals the expected count
+
+    Parameters
+    ----------
+    table : str
+        The name of the table of which to count the rows
+    exp_count : int
+        The expected number of rows in the table
+
+    Returns
+    -------
+    bool
+    """
+    obs_count = get_count(table)
+    return obs_count == exp_count
+
+
+def get_preprocessed_params_tables():
+    """returns a list of preprocessed parmaeter tables
+
+    Returns
+    -------
+    list or str
+    """
+    sql = ("SELECT * FROM information_schema.tables WHERE table_schema = "
+           "'qiita' AND SUBSTR(table_name, 1, 13) = 'preprocessed_'")
+    conn = SQLConnectionHandler()
+    return [x[2] for x in conn.execute_fetchall(sql)]
+
+
+def get_processed_params_tables():
+    """Returns a list of all tables starting with "processed_params_"
+
+    Returns
+    -------
+    list of str
+    """
+    sql = ("SELECT * FROM information_schema.tables WHERE table_schema = "
+           "'qiita' AND SUBSTR(table_name, 1, 17) = 'processed_params_'")
+
+    conn = SQLConnectionHandler()
+    return [x[2] for x in conn.execute_fetchall(sql)]
