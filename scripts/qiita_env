@@ -35,6 +35,7 @@ def qiita_env():
 @click.option('--cluster', required=True,
               type=click.Choice(['demo', 'reserved', 'general']))
 def start_cluster(cluster):
+    """Start a compute environment"""
     if cluster == 'demo':
         _start_cluster(_CONFIG.ipyc_demo, _CONFIG.ipyc_demo_n)
     elif cluster == 'reserved':
@@ -47,6 +48,7 @@ def start_cluster(cluster):
 @click.option('--cluster', required=True,
               type=click.Choice(['demo', 'reserved', 'general']))
 def stop_cluster(cluster):
+    """Stop a compute environment"""
     if cluster == 'demo':
         _stop_cluster(_CONFIG.ipyc_demo)
     elif cluster == 'reserved':
