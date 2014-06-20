@@ -632,7 +632,7 @@ table {
 	preprocessed_processed_data references processed_data ( processed_data_id )</title>
 </path>
 <text x='1243' y='900' transform='rotate(90 1243,900)' title='Foreign Key fk_preprocessed_processed_data_0
-	preprocessed_processed_data references processed_data ( processed_data_id )' style='fill:#a1a0a0;'>processed_data_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1620 510 L 1777,510 Q 1785,510 1785,502 L 1785,420' >
+	preprocessed_processed_data references processed_data ( processed_data_id )' style='fill:#a1a0a0;'>processed_data_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1620 510 L 1792,510 Q 1800,510 1800,502 L 1800,420' >
 	<title>Foreign Key fk_study_raw_data_study
 	study_raw_data references study ( study_id )</title>
 </path>
@@ -677,22 +677,22 @@ table {
 	processed_filepath references filepath ( filepath_id )</title>
 </path>
 <text x='936' y='925' transform='rotate(0 936,925)' title='Foreign Key fk_processed_data_filepath_0
-	processed_filepath references filepath ( filepath_id )' style='fill:#a1a0a0;'>filepath_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1380 945 L 1440,945' >
-	<title>Foreign Key fk_processed_data
-	processed_data references study_processed_data ( processed_data_id )</title>
-</path>
-<text x='1387' y='940' transform='rotate(0 1387,940)' title='Foreign Key fk_processed_data
-	processed_data references study_processed_data ( processed_data_id )' style='fill:#a1a0a0;'>processed_data_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1590 945 L 1777,945 Q 1785,945 1785,937 L 1785,532 Q 1785,525 1792,525 L 1792,525 Q 1800,525 1800,517 L 1800,420' >
-	<title>Foreign Key fk_study_processed_data
-	study_processed_data references study ( study_id )</title>
-</path>
-<text x='1597' y='940' transform='rotate(0 1597,940)' title='Foreign Key fk_study_processed_data
-	study_processed_data references study ( study_id )' style='fill:#a1a0a0;'>study_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 2085 915 L 2085,930' >
+	processed_filepath references filepath ( filepath_id )' style='fill:#a1a0a0;'>filepath_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 2085 915 L 2085,930' >
 	<title>Foreign Key fk_processed_params_uclust
 	processed_params_uclust references reference ( reference_id )</title>
 </path>
 <text x='2098' y='915' transform='rotate(90 2098,915)' title='Foreign Key fk_processed_params_uclust
-	processed_params_uclust references reference ( reference_id )' style='fill:#a1a0a0;'>reference_id</text><!-- ============= Table 'term_synonym' ============= -->
+	processed_params_uclust references reference ( reference_id )' style='fill:#a1a0a0;'>reference_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1590 945 L 1777,945 Q 1785,945 1785,937 L 1785,420' >
+	<title>Foreign Key fk_study_processed_data
+	study_processed_data references study ( study_id )</title>
+</path>
+<text x='1597' y='940' transform='rotate(0 1597,940)' title='Foreign Key fk_study_processed_data
+	study_processed_data references study ( study_id )' style='fill:#a1a0a0;'>study_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1440 945 L 1380,945' >
+	<title>Foreign Key fk_study_processed_data_0
+	study_processed_data references processed_data ( processed_data_id )</title>
+</path>
+<text x='1341' y='940' transform='rotate(0 1341,940)' title='Foreign Key fk_study_processed_data_0
+	study_processed_data references processed_data ( processed_data_id )' style='fill:#a1a0a0;'>processed_data_id</text><!-- ============= Table 'term_synonym' ============= -->
 <rect class='table' x='525' y='1868' width='135' height='105' rx='7' ry='7' />
 <path d='M 525.50 1894.50 L 525.50 1875.50 Q 525.50 1868.50 532.50 1868.50 L 652.50 1868.50 Q 659.50 1868.50 659.50 1875.50 L 659.50 1894.50 L525.50 1894.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
 <a xlink:href='#term_synonym'><text x='552' y='1882' class='tableTitle'>term_synonym</text><title>Table qiita.term_synonym</title></a>
@@ -1263,11 +1263,10 @@ Referred by required_sample_info ( study_id )
 Referred by study_experimental_factor ( study_id ) 
 Referred by study_pmid ( study_id ) 
 Referred by study_preprocessed_data ( study_id ) 
+Referred by study_processed_data ( study_id ) 
 Referred by study_raw_data ( study_id ) 
 Referred by study_sample_columns ( study_id ) 
-Referred by study_users ( study_id ) 
-Referred by study_processed_data ( study_id ) 
-Referred by study_processed_data ( study_id ) </title></a>
+Referred by study_users ( study_id ) </title></a>
   <use id='nn' x='1757' y='87' xlink:href='#nn'/><a xlink:href='#study.email'><use id='idx' x='1757' y='86' xlink:href='#idx'/><title>Index  ( email ) </title></a>
 <a xlink:href='#study.email'><text x='1773' y='97'>email</text><title>email varchar not null
 Email of study owner</title></a>
@@ -1564,34 +1563,6 @@ Name of table holding the params</title></a>
 <a xlink:href='#processed_filepath.filepath_id'><text x='1023' y='982'>filepath_id</text><title>filepath_id bigint not null</title></a>
 <a xlink:href='#processed_filepath.filepath_id'><use id='fk' x='1128' y='971' xlink:href='#fk'/><title>References filepath ( filepath_id ) </title></a>
 
-<!-- ============= Table 'processed_data' ============= -->
-<rect class='table' x='1215' y='923' width='165' height='105' rx='7' ry='7' />
-<path d='M 1215.50 949.50 L 1215.50 930.50 Q 1215.50 923.50 1222.50 923.50 L 1372.50 923.50 Q 1379.50 923.50 1379.50 930.50 L 1379.50 949.50 L1215.50 949.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
-<a xlink:href='#processed_data'><text x='1255' y='937' class='tableTitle'>processed_data</text><title>Table qiita.processed_data</title></a>
-  <use id='nn' x='1217' y='957' xlink:href='#nn'/><a xlink:href='#processed_data.processed_data_id'><use id='pk' x='1217' y='956' xlink:href='#pk'/><title>Primary Key  ( processed_data_id ) </title></a>
-<a xlink:href='#processed_data.processed_data_id'><text x='1233' y='967'>processed_data_id</text><title>processed_data_id bigserial not null</title></a>
-<a xlink:href='#processed_data.processed_data_id'><use id='fk' x='1368' y='956' xlink:href='#fk'/><title>References study_processed_data ( processed_data_id ) 
-Referred by analysis_sample ( processed_data_id ) 
-Referred by preprocessed_processed_data ( processed_data_id ) 
-Referred by processed_filepath ( processed_data_id ) </title></a>
-  <use id='nn' x='1217' y='972' xlink:href='#nn'/><a xlink:href='#processed_data.processed_params_table'><text x='1233' y='982'>processed_params_table</text><title>processed_params_table varchar not null
-Name of table holding processing params</title></a>
-  <use id='nn' x='1217' y='987' xlink:href='#nn'/><a xlink:href='#processed_data.processed_params_id'><text x='1233' y='997'>processed_params_id</text><title>processed_params_id bigint not null
-Link to a table with the parameters used to generate processed data</title></a>
-  <use id='nn' x='1217' y='1002' xlink:href='#nn'/><a xlink:href='#processed_data.processed_date'><text x='1233' y='1012'>processed_date</text><title>processed_date timestamp not null</title></a>
-
-<!-- ============= Table 'study_processed_data' ============= -->
-<rect class='table' x='1455' y='923' width='135' height='75' rx='7' ry='7' />
-<path d='M 1455.50 949.50 L 1455.50 930.50 Q 1455.50 923.50 1462.50 923.50 L 1582.50 923.50 Q 1589.50 923.50 1589.50 930.50 L 1589.50 949.50 L1455.50 949.50 ' style='fill:url(#tableHeaderGradient2); stroke:none;' />
-<a xlink:href='#study_processed_data'><text x='1462' y='937' class='tableTitle'>study_processed_data</text><title>Table qiita.study_processed_data</title></a>
-  <use id='nn' x='1457' y='957' xlink:href='#nn'/><a xlink:href='#study_processed_data.study_id'><use id='pk' x='1457' y='956' xlink:href='#pk'/><title>Primary Key  ( study_id, processed_data_id ) Index  ( study_id ) </title></a>
-<a xlink:href='#study_processed_data.study_id'><text x='1473' y='967'>study_id</text><title>study_id bigint not null</title></a>
-<a xlink:href='#study_processed_data.study_id'><use id='fk' x='1578' y='956' xlink:href='#fk'/><title>References study ( study_id ) </title></a>
-  <use id='nn' x='1457' y='972' xlink:href='#nn'/><a xlink:href='#study_processed_data.processed_data_id'><use id='pk' x='1457' y='971' xlink:href='#pk'/><title>Primary Key  ( study_id, processed_data_id ) Unique Index  ( processed_data_id ) </title></a>
-<a xlink:href='#study_processed_data.processed_data_id'><text x='1473' y='982'>processed_data_id</text><title>processed_data_id bigint not null</title></a>
-<a xlink:href='#study_processed_data.processed_data_id'><use id='ref' x='1578' y='971' xlink:href='#ref'/><title>Referred by processed_data ( processed_data_id ) 
-Referred by processed_data ( processed_data_id ) </title></a>
-
 <!-- ============= Table 'processed_params_uclust' ============= -->
 <rect class='table' x='2025' y='788' width='180' height='120' rx='7' ry='7' />
 <path d='M 2025.50 814.50 L 2025.50 795.50 Q 2025.50 788.50 2032.50 788.50 L 2197.50 788.50 Q 2204.50 788.50 2204.50 795.50 L 2204.50 814.50 L2025.50 814.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
@@ -1649,6 +1620,34 @@ Parameters used for processing illumina sequence data&#046;</title></a>
   <use id='nn' x='1802' y='1062' xlink:href='#nn'/><a xlink:href='#preprocessed_sequence_illumina_params.max_bad_run_length'><text x='1818' y='1072'>max_bad_run_length</text><title>max_bad_run_length integer not null default 3</title></a>
   <use id='nn' x='1802' y='1077' xlink:href='#nn'/><a xlink:href='#preprocessed_sequence_illumina_params.min_per_read_length_fraction'><text x='1818' y='1087'>min_per_read_length_fraction</text><title>min_per_read_length_fraction real not null default 0&#046;75</title></a>
   <use id='nn' x='1802' y='1092' xlink:href='#nn'/><a xlink:href='#preprocessed_sequence_illumina_params.sequence_max_n'><text x='1818' y='1102'>sequence_max_n</text><title>sequence_max_n integer not null default 0</title></a>
+
+<!-- ============= Table 'processed_data' ============= -->
+<rect class='table' x='1215' y='923' width='165' height='105' rx='7' ry='7' />
+<path d='M 1215.50 949.50 L 1215.50 930.50 Q 1215.50 923.50 1222.50 923.50 L 1372.50 923.50 Q 1379.50 923.50 1379.50 930.50 L 1379.50 949.50 L1215.50 949.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
+<a xlink:href='#processed_data'><text x='1255' y='937' class='tableTitle'>processed_data</text><title>Table qiita.processed_data</title></a>
+  <use id='nn' x='1217' y='957' xlink:href='#nn'/><a xlink:href='#processed_data.processed_data_id'><use id='pk' x='1217' y='956' xlink:href='#pk'/><title>Primary Key  ( processed_data_id ) </title></a>
+<a xlink:href='#processed_data.processed_data_id'><text x='1233' y='967'>processed_data_id</text><title>processed_data_id bigserial not null</title></a>
+<a xlink:href='#processed_data.processed_data_id'><use id='ref' x='1368' y='956' xlink:href='#ref'/><title>Referred by analysis_sample ( processed_data_id ) 
+Referred by preprocessed_processed_data ( processed_data_id ) 
+Referred by processed_filepath ( processed_data_id ) 
+Referred by study_processed_data ( processed_data_id ) 
+Referred by study_processed_data ( processed_data_id ) </title></a>
+  <use id='nn' x='1217' y='972' xlink:href='#nn'/><a xlink:href='#processed_data.processed_params_table'><text x='1233' y='982'>processed_params_table</text><title>processed_params_table varchar not null
+Name of table holding processing params</title></a>
+  <use id='nn' x='1217' y='987' xlink:href='#nn'/><a xlink:href='#processed_data.processed_params_id'><text x='1233' y='997'>processed_params_id</text><title>processed_params_id bigint not null
+Link to a table with the parameters used to generate processed data</title></a>
+  <use id='nn' x='1217' y='1002' xlink:href='#nn'/><a xlink:href='#processed_data.processed_date'><text x='1233' y='1012'>processed_date</text><title>processed_date timestamp not null</title></a>
+
+<!-- ============= Table 'study_processed_data' ============= -->
+<rect class='table' x='1455' y='923' width='135' height='75' rx='7' ry='7' />
+<path d='M 1455.50 949.50 L 1455.50 930.50 Q 1455.50 923.50 1462.50 923.50 L 1582.50 923.50 Q 1589.50 923.50 1589.50 930.50 L 1589.50 949.50 L1455.50 949.50 ' style='fill:url(#tableHeaderGradient2); stroke:none;' />
+<a xlink:href='#study_processed_data'><text x='1462' y='937' class='tableTitle'>study_processed_data</text><title>Table qiita.study_processed_data</title></a>
+  <use id='nn' x='1457' y='957' xlink:href='#nn'/><a xlink:href='#study_processed_data.study_id'><use id='pk' x='1457' y='956' xlink:href='#pk'/><title>Primary Key  ( study_id, processed_data_id ) Index  ( study_id ) </title></a>
+<a xlink:href='#study_processed_data.study_id'><text x='1473' y='967'>study_id</text><title>study_id bigint not null</title></a>
+<a xlink:href='#study_processed_data.study_id'><use id='fk' x='1578' y='956' xlink:href='#fk'/><title>References study ( study_id ) </title></a>
+  <use id='nn' x='1457' y='972' xlink:href='#nn'/><a xlink:href='#study_processed_data.processed_data_id'><use id='pk' x='1457' y='971' xlink:href='#pk'/><title>Primary Key  ( study_id, processed_data_id ) Unique Index  ( processed_data_id ) </title></a>
+<a xlink:href='#study_processed_data.processed_data_id'><text x='1473' y='982'>processed_data_id</text><title>processed_data_id bigint not null</title></a>
+<a xlink:href='#study_processed_data.processed_data_id'><use id='fk' x='1578' y='971' xlink:href='#fk'/><title>References processed_data ( processed_data_id ) </title></a>
 
 </g></svg>
 
@@ -4402,84 +4401,6 @@ Linked by y being raw&#095;data&#095;id from raw data table&#046; </td></tr>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='3'><a name='processed_data'>Table processed_data</a></th></tr>
-</thead>
-<tbody>
-	<tr>
-		<td><a name='processed_data.processed_data_id'>processed&#095;data&#095;id</a></td>
-		<td> bigserial  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='processed_data.processed_params_table'>processed&#095;params&#095;table</a></td>
-		<td> varchar  NOT NULL  </td>
-		<td> Name of table holding processing params </td>
-	</tr>
-	<tr>
-		<td><a name='processed_data.processed_params_id'>processed&#095;params&#095;id</a></td>
-		<td> bigint  NOT NULL  </td>
-		<td> Link to a table with the parameters used to generate processed data </td>
-	</tr>
-	<tr>
-		<td><a name='processed_data.processed_date'>processed&#095;date</a></td>
-		<td> timestamp  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-<tr><th colspan='3'><b>Indexes</b></th></tr>
-	<tr>		<td>pk&#095;processed&#095;data primary key</td>
-		<td> ON processed&#095;data&#095;id</td>
-		<td>  </td>
-	</tr>
-<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
-	<tr>
-		<td>fk_processed_data</td>
-		<td > ( processed&#095;data&#095;id ) ref <a href='#study&#095;processed&#095;data'>study&#095;processed&#095;data</a> (processed&#095;data&#095;id) </td>
-		<td>  </td>
-	</tr>
-</tbody>
-</table>
-
-<br/><br/>
-<table class='bordered'>
-<thead>
-<tr><th colspan='3'><a name='study_processed_data'>Table study_processed_data</a></th></tr>
-</thead>
-<tbody>
-	<tr>
-		<td><a name='study_processed_data.study_id'>study&#095;id</a></td>
-		<td> bigint  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='study_processed_data.processed_data_id'>processed&#095;data&#095;id</a></td>
-		<td> bigint  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-<tr><th colspan='3'><b>Indexes</b></th></tr>
-	<tr>		<td>idx&#095;study&#095;processed&#095;data primary key</td>
-		<td> ON study&#095;id&#044; processed&#095;data&#095;id</td>
-		<td>  </td>
-	</tr>
-	<tr>		<td>idx&#095;study&#095;processed&#095;data&#095;0 </td>
-		<td> ON study&#095;id</td>
-		<td>  </td>
-	</tr>
-	<tr>		<td>pk&#095;study&#095;processed&#095;data unique</td>
-		<td> ON processed&#095;data&#095;id</td>
-		<td>  </td>
-	</tr>
-<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
-	<tr>
-		<td>fk_study_processed_data</td>
-		<td > ( study&#095;id ) ref <a href='#study'>study</a> (study&#095;id) </td>
-		<td>  </td>
-	</tr>
-</tbody>
-</table>
-
-<br/><br/>
-<table class='bordered'>
-<thead>
 <tr><th colspan='3'><a name='processed_params_uclust'>Table processed_params_uclust</a></th></tr>
 <tr><td colspan='3'>Parameters used for processing data using method uclust </td></tr>
 </thead>
@@ -4656,6 +4577,83 @@ Linked by y being raw&#095;data&#095;id from raw data table&#046; </td></tr>
 <tr><th colspan='3'><b>Indexes</b></th></tr>
 	<tr>		<td>pk&#095;preprocessed&#095;sequence&#095;illumina&#095;params primary key</td>
 		<td> ON preprocessed&#095;params&#095;id</td>
+		<td>  </td>
+	</tr>
+</tbody>
+</table>
+
+<br/><br/>
+<table class='bordered'>
+<thead>
+<tr><th colspan='3'><a name='processed_data'>Table processed_data</a></th></tr>
+</thead>
+<tbody>
+	<tr>
+		<td><a name='processed_data.processed_data_id'>processed&#095;data&#095;id</a></td>
+		<td> bigserial  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='processed_data.processed_params_table'>processed&#095;params&#095;table</a></td>
+		<td> varchar  NOT NULL  </td>
+		<td> Name of table holding processing params </td>
+	</tr>
+	<tr>
+		<td><a name='processed_data.processed_params_id'>processed&#095;params&#095;id</a></td>
+		<td> bigint  NOT NULL  </td>
+		<td> Link to a table with the parameters used to generate processed data </td>
+	</tr>
+	<tr>
+		<td><a name='processed_data.processed_date'>processed&#095;date</a></td>
+		<td> timestamp  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;processed&#095;data primary key</td>
+		<td> ON processed&#095;data&#095;id</td>
+		<td>  </td>
+	</tr>
+</tbody>
+</table>
+
+<br/><br/>
+<table class='bordered'>
+<thead>
+<tr><th colspan='3'><a name='study_processed_data'>Table study_processed_data</a></th></tr>
+</thead>
+<tbody>
+	<tr>
+		<td><a name='study_processed_data.study_id'>study&#095;id</a></td>
+		<td> bigint  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='study_processed_data.processed_data_id'>processed&#095;data&#095;id</a></td>
+		<td> bigint  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>idx&#095;study&#095;processed&#095;data primary key</td>
+		<td> ON study&#095;id&#044; processed&#095;data&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>idx&#095;study&#095;processed&#095;data&#095;0 </td>
+		<td> ON study&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>pk&#095;study&#095;processed&#095;data unique</td>
+		<td> ON processed&#095;data&#095;id</td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
+	<tr>
+		<td>fk_study_processed_data</td>
+		<td > ( study&#095;id ) ref <a href='#study'>study</a> (study&#095;id) </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>fk_study_processed_data_0</td>
+		<td > ( processed&#095;data&#095;id ) ref <a href='#processed&#095;data'>processed&#095;data</a> (processed&#095;data&#095;id) </td>
 		<td>  </td>
 	</tr>
 </tbody>
