@@ -145,6 +145,8 @@ def load_processed_data_cmd(fps, fp_types, processed_params_table_name,
 
     if preprocessed_data_id is not None:
         preprocessed_data = PreprocessedData(preprocessed_data_id)
+    else:
+        preprocessed_data = None
 
     return ProcessedData.create(processed_params_table_name,
                                 processed_params_id, list(zip(fps, fp_types)),
