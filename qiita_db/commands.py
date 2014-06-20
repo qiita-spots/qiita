@@ -6,8 +6,6 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
-from dateutil.parser import parse
-import pandas as pd
 from functools import partial
 try:
     # Python 2
@@ -15,6 +13,9 @@ try:
 except ImportError:
     # Python 3
     from configparser import ConfigParser
+
+import pandas as pd
+from dateutil.parser import parse
 
 from .study import Study, StudyPerson
 from .user import User
@@ -91,9 +92,18 @@ def load_raw_data_cmd(filepaths, filepath_types, filetype, study_ids):
     Parameters
     ----------
     filepaths : iterable of str
+        Paths to the raw data files
     filepath_types : iterable of str
+        Describes the contents of the files.
     filetype : str
+        The type of file being loaded
     study_ids : iterable of int
+        The IDs of the studies with which to associate this raw data
+
+    Returns
+    -------
+    qiita_db.RawData
+        The newly created `qiita_db.RawData` object
     """
     if len(filepaths) != len(filepath_types):
         raise ValueError("Please pass exactly one filepath_type for each "
