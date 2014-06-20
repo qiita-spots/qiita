@@ -45,8 +45,6 @@ setup(name='qiita',
                 'qiita_db',
                 'qiita_pet',
                 'qiita_ware',
-                'qiita_ware/core',
-                'qiita_ware/api'
                 ],
       package_data={'qiita_core': ['support_files/config_test.txt'],
                     'qiita_db': ['support_files/*sql',
