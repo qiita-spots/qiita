@@ -467,3 +467,13 @@ def check_count(table, exp_count):
     """
     obs_count = get_count(table)
     return obs_count == exp_count
+
+
+def get_preprocessed_params_tables():
+    """returns a list of preprocessed parmaeter tables
+
+    Returns
+    -------
+    list or str
+    """
+    sql = ("SELECT * FROM information_schema"
