@@ -7,6 +7,8 @@
 # -----------------------------------------------------------------------------
 
 from functools import partial
+from os import listdir
+from os.path import join
 try:
     # Python 2
     from ConfigParser import ConfigParser
@@ -17,7 +19,7 @@ except ImportError:
 from .study import Study, StudyPerson
 from .user import User
 from .util import get_filetypes, get_filepath_types
-from .data import RawData
+from .data import RawData, PreprocessedData
 
 
 def make_study_from_cmd(owner, title, info):
@@ -66,9 +68,12 @@ def make_study_from_cmd(owner, title, info):
     Study.create(User(owner), title, efo_ids, infodict)
 
 
-def import_preprossed_data(study_id, filedir, filetype,
-                           params_table, params_file):
-    pass
+def import_preprossed_data(study_id, filedir, filetype, params_table,
+                           params_id, submitted_to_insdc):
+    filepaths = [(join(filedir, fp), filetype) for fp in listdir(filedir)]
+    return PreprocessedData.create(Study(study_id), params_table, params_id,
+                                   filepaths,
+                                   submitted_to_insdc=submitted_to_insdc)
 
 
 def load_raw_data_cmd(filepaths, filepath_types, filetype, study_ids):

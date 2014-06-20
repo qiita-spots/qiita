@@ -57,11 +57,13 @@ def insert_study_to_db(owner, title, info):
 @click.option('--filetype', help="Filepath_type_id of the files")
 @click.option('--params_id',
               help="id in the paramater table associated with the parameters")
-@click.option('--submit_to_insdc', help="True means submitted to insdc")
+@click.option('--submitted_to_insdc', is_flag=True,
+              help="If provided, the preprocessed data have been submitted"
+                   " to insdc")
 def insert_preprocessed_data(study_id, filedir, filetype, params_table,
-                             params_id, submit_to_insdc):
-    import_preprocessed_data(study_id, filedir, filetype,
-                             params_table, params_id, submit_to_insdc)
+                             params_id, submitted_to_insdc):
+    import_preprocessed_data(study_id, filedir, filetype, params_table,
+                             params_id, submitted_to_insdc)
 
 
 if __name__ == '__main__':
