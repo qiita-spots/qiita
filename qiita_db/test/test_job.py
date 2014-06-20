@@ -17,6 +17,7 @@ from qiita_db.job import Job
 from qiita_db.util import get_db_files_base_dir, get_work_base_dir
 from qiita_db.analysis import Analysis
 from qiita_db.exceptions import QiitaDBDuplicateError
+from qiita_db.logger import LogEntry
 
 
 @qiita_test_checker()
@@ -132,22 +133,23 @@ class JobTest(TestCase):
                         "test_folder/testfile.txt")))
 
     def test_set_error(self):
-        timestamp = datetime(2014, 6, 13, 14, 19, 25)
-        self.job._log_error("TESTERROR", 1, timestamp)
+        before = datetime.now()
+        self.job.set_error("TESTERROR", 1)
+        after = datetime.now()
         self.assertEqual(self.job.status, "error")
 
-        # make sure logging table correct
-        sql = ("SELECT * FROM qiita.logging WHERE log_id = (SELECT log_id FROM"
-               " qiita.job WHERE job_id = 1)")
-        log = self.conn_handler.execute_fetchall(sql)
-        self.assertEqual(log, [[1, timestamp, 1, 'TESTERROR', None]])
+        error = self.job.error
 
-    def test_retrieve_error_msg_blank(self):
-        self.assertEqual(self.job.error_msg, None)
+        self.assertEqual(error.severity, 1)
+        self.assertEqual(error.msg, 'TESTERROR')
+        self.assertTrue(before < error.time < after)
 
-    def test_retrieve_error_msg_exists(self):
+    def test_retrieve_error_blank(self):
+        self.assertEqual(self.job.error, None)
+
+    def test_retrieve_error_exists(self):
         self.job.set_error("TESTERROR", 1)
-        self.assertEqual(self.job.error_msg, "TESTERROR")
+        self.assertEqual(self.job.error.msg, "TESTERROR")
 
     def test_add_results(self):
         self.job.add_results([(join(get_work_base_dir(),
