@@ -11,13 +11,19 @@ from datetime import datetime
 
 from qiita_core.util import qiita_test_checker
 from qiita_db.logger import LogEntry
+from qiita_db.exceptions import QiitaDBExecutionError
 
 
 @qiita_test_checker()
 class LoggerTests(TestCase):
     def test_create_log_entry(self):
         """"""
-        pass
+        log_entry = LogEntry.create(2, 'runtime message')
+        log_entry = LogEntry.create(3, 'fatal message', info={1: 2})
+        log_entry = LogEntry.create(1, 'warning message', info={9: 0})
+        with self.assertRaises(QiitaDBExecutionError):
+            # This severity level does not exist in the test schema
+            log_entry = LogEntry.create(4, 'warning message', info={9: 0})
 
     def test_severity_property(self):
         """"""
