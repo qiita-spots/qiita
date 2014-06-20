@@ -17,7 +17,7 @@ from qiita_db.util import (exists_table, exists_dynamic_table, scrub_data,
                            compute_checksum, check_table_cols,
                            check_required_columns, convert_to_id,
                            get_table_cols, get_filetypes, get_filepath_types,
-                           get_count, check_count)
+                           get_count, check_count, get_processed_params_tables)
 
 
 @qiita_test_checker()
@@ -101,7 +101,7 @@ class DBUtilTests(TestCase):
 
     def test_convert_to_id(self):
         """Tests that ids are returned correctly"""
-        self.assertEqual(convert_to_id("tar", "filepath_type"), 7)
+        self.assertEqual(convert_to_id("directory", "filepath_type"), 7)
 
     def test_convert_to_id_bad_value(self):
         """Tests that ids are returned correctly"""
@@ -129,7 +129,7 @@ class DBUtilTests(TestCase):
         obs = get_filepath_types()
         exp = {'raw_sequences': 1, 'raw_barcodes': 2, 'raw_spectra': 3,
                'preprocessed_sequences': 4, 'preprocessed_sequences_qual': 5,
-               'biom': 6, 'tar': 7, 'plain_text': 8}
+               'biom': 6, 'directory': 7, 'plain_text': 8}
         self.assertEqual(obs, exp)
 
         obs = get_filepath_types(key='filepath_type_id')
@@ -149,6 +149,10 @@ class DBUtilTests(TestCase):
         """Checks that check_count returns True and False appropriately"""
         self.assertTrue(check_count('qiita.study_person', 3))
         self.assertFalse(check_count('qiita.study_person', 2))
+
+    def test_get_processed_params_tables(self):
+        obs = get_processed_params_tables()
+        self.assertEqual(obs, ['processed_params_uclust'])
 
 
 class UtilTests(TestCase):

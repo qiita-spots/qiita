@@ -17,7 +17,7 @@ class SetupTest(TestCase):
     """Tests that the test database have been successfully populated"""
 
     def test_qitta_user(self):
-        check_count("qiita.qiita_user", 3)
+        check_count("qiita.qiita_user", 4)
 
     def test_study_person(self):
         check_count("qiita.study_person", 3)
@@ -26,7 +26,7 @@ class SetupTest(TestCase):
         check_count("qiita.study", 1)
 
     def test_study_users(self):
-        check_count("qiita.study_users", 1)
+        check_count("qiita.study_users", 2)
 
     def test_investigation(self):
         check_count("qiita.investigation", 1)

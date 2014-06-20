@@ -8,7 +8,8 @@
 
 from os import remove, close
 from os.path import exists, join, basename
-from tempfile import mkstemp
+from tempfile import mkstemp, mkdtemp
+from shutil import rmtree
 from unittest import TestCase, main
 from future.utils.six import StringIO
 try:
@@ -18,8 +19,9 @@ except ImportError:
     # Python 3
     from configparser import NoOptionError
 
-from qiita_db.commands import (make_study_from_cmd, load_raw_data_cmd,
-                               sample_template_adder)
+from qiita_db.commands import (load_study_from_cmd, load_raw_data_cmd,
+                               sample_template_adder, load_processed_data_cmd,
+                               load_preprocessed_data_from_cmd)
 from qiita_db.study import Study, StudyPerson
 from qiita_db.user import User
 from qiita_db.util import get_count, check_count, get_db_files_base_dir
@@ -37,7 +39,7 @@ class TestMakeStudyFromCmd(TestCase):
 
     def test_make_study_from_cmd(self):
         fh = StringIO(self.config1)
-        make_study_from_cmd('test@test.com', 'newstudy', fh)
+        load_study_from_cmd('test@test.com', 'newstudy', fh)
         sql = ("select study_id from qiita.study where email = %s and "
                "study_title = %s")
         study_id = self.conn_handler.execute_fetchone(sql, ('test@test.com',
@@ -46,7 +48,53 @@ class TestMakeStudyFromCmd(TestCase):
 
         fh2 = StringIO(self.config2)
         with self.assertRaises(NoOptionError):
-            make_study_from_cmd('test@test.com', 'newstudy2', fh2)
+            load_study_from_cmd('test@test.com', 'newstudy2', fh2)
+
+
+@qiita_test_checker()
+class TestImportPreprocessedData(TestCase):
+    def setUp(self):
+        self.tmpdir = mkdtemp()
+        fd, self.file1 = mkstemp(dir=self.tmpdir)
+        close(fd)
+        fd, self.file2 = mkstemp(dir=self.tmpdir)
+        close(fd)
+        with open(self.file1, "w") as f:
+            f.write("\n")
+        with open(self.file2, "w") as f:
+            f.write("\n")
+
+        self.files_to_remove = [self.file1, self.file2]
+        self.dirs_to_remove = [self.tmpdir]
+
+        self.db_test_ppd_dir = join(get_db_files_base_dir(),
+                                    'preprocessed_data')
+
+    def tearDown(self):
+        for fp in self.files_to_remove:
+            if exists(fp):
+                remove(fp)
+        for dp in self.dirs_to_remove:
+            if exists(dp):
+                rmtree(dp)
+
+    def test_import_preprocessed_data(self):
+        initial_ppd_count = get_count('qiita.preprocessed_data')
+        initial_fp_count = get_count('qiita.filepath')
+        ppd = load_preprocessed_data_from_cmd(
+            1, self.tmpdir, 'preprocessed_sequences',
+            'preprocessed_sequence_illumina_params',
+            1, False)
+        self.files_to_remove.append(
+            join(self.db_test_ppd_dir,
+                 '%d_%s' % (ppd.id, basename(self.file1))))
+        self.files_to_remove.append(
+            join(self.db_test_ppd_dir,
+                 '%d_%s' % (ppd.id, basename(self.file2))))
+        self.assertEqual(ppd.id, 3)
+        self.assertTrue(check_count('qiita.preprocessed_data',
+                                    initial_ppd_count + 1))
+        self.assertTrue(check_count('qiita.filepath', initial_fp_count+2))
 
 
 @qiita_test_checker()
@@ -146,6 +194,64 @@ class TestLoadRawDataFromCmd(TestCase):
         with self.assertRaises(ValueError):
             load_raw_data_cmd(filepaths, filepath_types[:-1], filetype,
                               study_ids)
+
+
+@qiita_test_checker()
+class TestLoadProcessedDataFromCmd(TestCase):
+    def setUp(self):
+        fd, self.otu_table_fp = mkstemp(suffix='_otu_table.biom')
+        close(fd)
+        fd, self.otu_table_2_fp = mkstemp(suffix='_otu_table2.biom')
+        close(fd)
+
+        with open(self.otu_table_fp, "w") as f:
+            f.write("\n")
+        with open(self.otu_table_2_fp, "w") as f:
+            f.write("\n")
+
+        self.files_to_remove = []
+        self.files_to_remove.append(self.otu_table_fp)
+        self.files_to_remove.append(self.otu_table_2_fp)
+
+        self.db_test_processed_data_dir = join(get_db_files_base_dir(),
+                                               'processed_data')
+
+    def tearDown(self):
+        for fp in self.files_to_remove:
+            if exists(fp):
+                remove(fp)
+
+    def test_load_processed_data_from_cmd(self):
+        filepaths = [self.otu_table_fp, self.otu_table_2_fp]
+        filepath_types = ['biom', 'biom']
+
+        initial_processed_data_count = get_count('qiita.processed_data')
+        initial_processed_fp_count = get_count('qiita.processed_filepath')
+        initial_fp_count = get_count('qiita.filepath')
+
+        new = load_processed_data_cmd(filepaths, filepath_types,
+                                      'processed_params_uclust', 1, 1, None)
+        processed_data_id = new.id
+        self.files_to_remove.append(
+            join(self.db_test_processed_data_dir,
+                 '%d_%s' % (processed_data_id, basename(self.otu_table_fp))))
+        self.files_to_remove.append(
+            join(self.db_test_processed_data_dir,
+                 '%d_%s' % (processed_data_id,
+                            basename(self.otu_table_2_fp))))
+
+        self.assertTrue(check_count('qiita.processed_data',
+                                    initial_processed_data_count + 1))
+        self.assertTrue(check_count('qiita.processed_filepath',
+                                    initial_processed_fp_count + 2))
+        self.assertTrue(check_count('qiita.filepath',
+                                    initial_fp_count + 2))
+
+        # Ensure that the ValueError is raised when a filepath_type is not
+        # provided for each and every filepath
+        with self.assertRaises(ValueError):
+            load_processed_data_cmd(filepaths, filepath_types[:-1],
+                                    'processed_params_uclust', 1, 1, None)
 
 
 CONFIG_1 = """[required]
