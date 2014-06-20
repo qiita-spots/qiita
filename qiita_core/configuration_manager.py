@@ -11,10 +11,12 @@ from os import environ
 
 try:
     # Python 2
-    from ConfigParser import ConfigParser, NoOptionError
+    from ConfigParser import (ConfigParser, NoOptionError,
+                              MissingSectionHeaderError)
 except ImportError:
     # Python 3
-    from configparser import ConfigParser, NoOptionError
+    from configparser import (ConfigParser, NoOptionError,
+                              MissingSectionHeaderError)
 
 
 class ConfigurationManager(object):
@@ -55,6 +57,17 @@ class ConfigurationManager(object):
         with open(conf_fp, 'U') as conf_file:
             config.readfp(conf_file)
 
+        _expected_sections = set(['main', 'ipython', 'redis', 'postgres'])
+        if set(config.sections) != _expected_sections:
+            missing = _expected_sections - set(config.sections)
+            raise MissingSectionHeaderError("Missing: %r" % missing)
+
+        self._get_main(config)
+        self._get_postgres(config)
+        self._get_redis(config)
+        self._get_ipython(config)
+
+    def _get_main(self, config):
         # Get the configuration of the main section
         self.test_environment = config.getboolean('main', 'TEST_ENVIRONMENT')
         try:
@@ -66,6 +79,7 @@ class ConfigurationManager(object):
             else:
                 raise e
 
+    def _get_postgres(self, config):
         # Get the configuration of the postgres section
         self.user = config.get('postgres', 'USER')
         try:
@@ -78,3 +92,9 @@ class ConfigurationManager(object):
         self.database = config.get('postgres', 'DATABASE')
         self.host = config.get('postgres', 'HOST')
         self.port = config.getint('postgres', 'PORT')
+
+    def _get_redis(self, config):
+        pass
+
+    def _get_ipython(self, config):
+        pass
