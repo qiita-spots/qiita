@@ -17,7 +17,7 @@ from qiita_db.util import (exists_table, exists_dynamic_table, scrub_data,
                            compute_checksum, check_table_cols,
                            check_required_columns, convert_to_id,
                            get_table_cols, get_filetypes, get_filepath_types,
-                           get_count, check_count)
+                           get_count, check_count, get_processed_params_tables)
 
 
 @qiita_test_checker()
@@ -149,6 +149,10 @@ class DBUtilTests(TestCase):
         """Checks that check_count returns True and False appropriately"""
         self.assertTrue(check_count('qiita.study_person', 3))
         self.assertFalse(check_count('qiita.study_person', 2))
+
+    def test_get_processed_params_tables(self):
+        obs = get_processed_params_tables()
+        self.assertEqual(obs, ['processed_params_uclust'])
 
 
 class UtilTests(TestCase):
