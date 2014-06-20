@@ -425,18 +425,18 @@ class ProcessedData(BaseData):
         ------
         IncompetentQiitaDeveloperError
             If the table `processed_params_table` does not exists
-        ValueError
             If `preprocessed_data` and `study` are provided at the same time
             If `preprocessed_data` and `study` are not provided
         """
         if preprocessed_data is not None:
             if study is not None:
-                raise ValueError("You should provide either preprocessed_data "
-                                 "or study, but not both")
+                raise IncompetentQiitaDeveloperError(
+                    "You should provide either preprocessed_data or study, "
+                    "but not both")
         else:
             if study is None:
-                raise ValueError("You should provide either a "
-                                 "preprocessed_data or a study")
+                raise IncompetentQiitaDeveloperError(
+                    "You should provide either a preprocessed_data or a study")
 
         conn_handler = SQLConnectionHandler()
         # We first check that the processed_params_table exists

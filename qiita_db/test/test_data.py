@@ -383,6 +383,18 @@ class ProcessedDataTests(TestCase):
                                  self.filepaths,
                                  preprocessed_data=self.preprocessed_data)
 
+    def test_create_no_preprocessed_no_study_error(self):
+        with self.assertRaises(IncompetentQiitaDeveloperError):
+            ProcessedData.create(self.params_table, self.params_id,
+                                 self.filepaths)
+
+    def test_create_preprocessed_and_study_error(self):
+        with self.assertRaises(IncompetentQiitaDeveloperError):
+            ProcessedData.create(self.params_table, self.params_id,
+                                 self.filepaths,
+                                 preprocessed_data=self.preprocessed_data,
+                                 study=Study(1))
+
     def test_get_filepath(self):
         """Correctly returns the filepaths to the processed files"""
         # check the test data

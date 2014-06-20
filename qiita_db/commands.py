@@ -165,7 +165,7 @@ def load_raw_data_cmd(filepaths, filepath_types, filetype, study_ids):
 
 def load_processed_data_cmd(fps, fp_types, processed_params_table_name,
                             processed_params_id, preprocessed_data_id=None,
-                            processed_date=None):
+                            study_id=None, processed_date=None):
     """Add a new processed data entry
 
     Parameters
@@ -202,9 +202,14 @@ def load_processed_data_cmd(fps, fp_types, processed_params_table_name,
     else:
         preprocessed_data = None
 
+    if study_id is not None:
+        study = Study(study_id)
+    else:
+        study = None
+
     if processed_date is not None:
         processed_date = parse(processed_date)
 
     return ProcessedData.create(processed_params_table_name,
                                 processed_params_id, list(zip(fps, fp_types)),
-                                preprocessed_data, processed_date)
+                                preprocessed_data, study, processed_date)
