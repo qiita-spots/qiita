@@ -292,6 +292,14 @@ class ProcessedDataTests(TestCase):
         # processed_data_id, filepath_id
         self.assertTrue(obs, [[2, 10]])
 
+        # Check that the processed data have been correctly linked with the
+        # study
+        obs = self.conn_handler.execute_fetchall(
+            "SELECT * FROM qiita.study_processed_data WHERE "
+            "processed_data_id=2")
+        # study_id, processed_data
+        self.assertEqual(obs, [[1, 2]])
+
     def test_create_no_date(self):
         """Correctly adds a processed data with no date on it"""
         # All the other settings have been already tested on test_create
