@@ -9,6 +9,7 @@
 from os import remove, close
 from os.path import exists, join, basename
 from tempfile import mkstemp, mkdtemp
+from shutil import rmtree
 from unittest import TestCase, main
 from future.utils.six import StringIO
 try:
@@ -19,11 +20,11 @@ except ImportError:
     from configparser import NoOptionError
 
 from qiita_core.util import qiita_test_checker
-from qiita_db.study import StudyPerson
+from qiita_db.study import Study, StudyPerson
 from qiita_db.user import User
 from qiita_db.util import get_count, check_count, get_db_files_base_dir
 from qiita_db.commands import (make_study_from_cmd, import_preprocessed_data,
-                               load_raw_data_cmd)
+                               load_raw_data_cmd, sample_template_adder)
 
 
 @qiita_test_checker()
@@ -54,15 +55,26 @@ class TestImportPreprocessedData(TestCase):
     def setUp(self):
         self.tmpdir = mkdtemp()
         fd, file1 = mkstemp(dir=self.tmpdir)
-        fd.close()
+        close(fd)
         fd, file2 = mkstemp(dir=self.tmpdir)
-        fd.close()
-        fd, file3 = mkstemp(dir=self.tmpdir)
-        fd.close()
+        close(fd)
         with open(file1, "w") as f:
             f.write("\n")
         with open(file2, "w") as f:
             f.write("\n")
+
+        self.files_to_remove = [file1, file2]
+        self.dirs_to_remove = [self.tmpdir]
+
+        self.db_test_raw_dir = join(get_db_files_base_dir(), 'raw_data')
+
+    def tearDown(self):
+        for fp in self.files_to_remove:
+            if exists(fp):
+                remove(fp)
+        for dp in self.dirs_to_remove:
+            if exists(dp):
+                remove(dp)
 
     def test_import_preprocessed_data(self):
 
@@ -71,9 +83,40 @@ class TestImportPreprocessedData(TestCase):
                                  1, False)
         sql = ("select preprocessed_data_id from qitta.preprocessed_data"
                "where study_id = %s and preprocessed_params_table = %s")
-        study_ids = self.conn_handler.execute_fetchall(
+        ppd_ids = self.conn_handler.execute_fetchall(
             sql, ('1', 'preprocessed_sequence_illumina_params'))
-        self.assertEqual(len(study_ids), 2)
+        self.assertEqual(len(ppd_ids), 2)
+
+
+@qiita_test_checker()
+class SampleTemplateAdderTests(TestCase):
+    def setUp(self):
+        # Create a sample template file
+        self.st_contents = SAMPLE_TEMPLATE
+
+        # create a new study to attach the sample template
+        info = {
+            "timeseries_type_id": 1,
+            "metadata_complete": True,
+            "mixs_compliant": True,
+            "number_samples_collected": 4,
+            "number_samples_promised": 4,
+            "portal_type_id": 3,
+            "study_alias": "TestStudy",
+            "study_description": "Description of a test study",
+            "study_abstract": "No abstract right now...",
+            "emp_person_id": StudyPerson(2),
+            "principal_investigator_id": StudyPerson(3),
+            "lab_person_id": StudyPerson(1)
+        }
+        self.study = Study.create(User('test@foo.bar'),
+                                  "Test study", [1], info)
+
+    def test_sample_template_adder(self):
+        """Correctly adds a sample template to the DB"""
+        fh = StringIO(self.st_contents)
+        st = sample_template_adder(fh, self.study.id)
+        self.assertEqual(st.id, self.study.id)
 
 
 @qiita_test_checker()
@@ -180,6 +223,19 @@ lab_person = SomeDude, somedude@foo.bar
 funding = 'funding source'
 vamps_id = vamps_id
 """
+
+SAMPLE_TEMPLATE = (
+    "#SampleID\trequired_sample_info_status_id\tcollection_timestamp\t"
+    "sample_type\thas_physical_specimen\tphysical_location\thas_extracted_data"
+    "\thost_subject_id\tTreatment\tDOB\tDescription\n"
+    "PC.354\t1\t2014-06-18 16:44\ttype_1\tTrue\tLocation_1\tTrue\tHS_ID_PC.354"
+    "\tControl\t20061218\tControl_mouse_I.D._354\n"
+    "PC.593\t1\t2014-06-18 16:44\ttype_1\tTrue\tLocation_1\tTrue\tHS_ID_PC.593"
+    "\tControl\t20071210\tControl_mouse_I.D._593\n"
+    "PC.607\t1\t2014-06-18 16:44\ttype_1\tTrue\tLocation_1\tTrue\tHS_ID_PC.607"
+    "\tFast\t20071112\tFasting_mouse_I.D._607\n"
+    "PC.636\t1\t2014-06-18 16:44\ttype_1\tTrue\tLocation_1\tTrue\tHS_ID_PC.636"
+    "\tFast\t20080116\tFasting_mouse_I.D._636")
 
 if __name__ == "__main__":
     main()

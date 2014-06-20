@@ -11,8 +11,8 @@
 import click
 
 from qiita_db.util import get_filetypes, get_filepath_types
-from qiita_db.commands import (make_study_from_cmd, import_preprocessed_data,
-                               load_raw_data_cmd)
+from qiita_db.commands import (sample_template_adder, make_study_from_cmd,
+                               load_raw_data_cmd, import_preprocessed_data)
 
 
 @click.group()
@@ -64,6 +64,18 @@ def insert_preprocessed_data(study_id, filedir, filetype, params_table,
                              params_id, submitted_to_insdc):
     import_preprocessed_data(study_id, filedir, filetype, params_table,
                              params_id, submitted_to_insdc)
+
+
+@qiita_db.command()
+@click.option('--fp', required=True,
+              type=click.Path(resolve_path=True, readable=True, exists=True),
+              help='Path to the tab delimited file holding the sample '
+                   'template information')
+@click.option('--study', required=True, type=int,
+              help='Associate the sample template with this study')
+def add_sample_template(fp, study):
+    """Adds a sample template to the database"""
+    sample_template_adder(fp, study)
 
 
 if __name__ == '__main__':

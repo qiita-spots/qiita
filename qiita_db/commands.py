@@ -6,6 +6,7 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
+import pandas as pd
 from functools import partial
 from os import listdir
 from os.path import join
@@ -20,6 +21,7 @@ from .study import Study, StudyPerson
 from .user import User
 from .util import get_filetypes, get_filepath_types
 from .data import RawData, PreprocessedData
+from .metadata_template import SampleTemplate
 
 
 def make_study_from_cmd(owner, title, info):
@@ -68,12 +70,27 @@ def make_study_from_cmd(owner, title, info):
     Study.create(User(owner), title, efo_ids, infodict)
 
 
-def import_preprossed_data(study_id, filedir, filetype, params_table,
-                           params_id, submitted_to_insdc):
+def import_preprocessed_data(study_id, filedir, filetype, params_table,
+                             params_id, submitted_to_insdc):
     filepaths = [(join(filedir, fp), filetype) for fp in listdir(filedir)]
     return PreprocessedData.create(Study(study_id), params_table, params_id,
                                    filepaths,
                                    submitted_to_insdc=submitted_to_insdc)
+
+
+def sample_template_adder(sample_temp_path, study_id):
+    r"""Adds a sample template to the database
+
+    Parameters
+    ----------
+    sample_temp_path : str
+        Path to the sample template file
+    study_id : int
+        The study id to wich the sample template belongs to
+    """
+    sample_temp = pd.DataFrame.from_csv(sample_temp_path, sep='\t',
+                                        infer_datetime_format=True)
+    return SampleTemplate.create(sample_temp, Study(study_id))
 
 
 def load_raw_data_cmd(filepaths, filepath_types, filetype, study_ids):
