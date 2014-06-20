@@ -10,12 +10,32 @@
 
 import click
 
-from qiita_db.commands import make_study_from_cmd
+from qiita_db.util import get_filetypes, get_filepath_types
+from qiita_db.commands import make_study_from_cmd, load_raw_data_cmd
 
 
 @click.group()
 def qiita_db():
     pass
+
+
+@qiita_db.command()
+@click.option('--fp', required=True, type=click.Path(resolve_path=True,
+              readable=True, exists=True), multiple=True,
+              help='Path to the raw data file. This option can be used '
+              'multiple times if there are multiple raw data files.')
+@click.option('--fp_type', required=True, multiple=True, help='Describes the '
+              'contents of the file. Pass one fp_type per fp.',
+              type=click.Choice(get_filepath_types().keys()))
+@click.option('--filetype', required=True,
+              type=click.Choice(get_filetypes().keys()),
+              help='The type of data')
+@click.option('--study', multiple=True, help='Associate the data with this '
+              'study. This option can be used multiple times if the data '
+              'should be associated with multiple studies', type=int,
+              required=True)
+def load_raw_data(fp, fp_type, filetype, study):
+    load_raw_data_cmd(fp, fp_type, filetype, study)
 
 
 @qiita_db.command()

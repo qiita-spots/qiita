@@ -1,0 +1,41 @@
+{% extends sitebase.html %}
+{%block content %}
+<table class="table">
+  <tr>
+    <th>
+      Analysis Name
+    </th><th>
+      Analysis Description
+    </th><th>
+      Status
+    </th>
+  </tr>
+  {% for analysis in analyses %}
+  {% set status = analysis.status%}
+    {% if status == "running" %}
+      <tr class="active">
+        <td>
+          <a href="/analysis/waiting/{{analysis.id}}">{{analysis.name}}</a>
+    {% elif status == "completed" %}
+      <tr class="success">
+        <td>
+          <a href="/analysis/results/{{analysis.id}}">{{analysis.name}}</a>
+    {% elif status == "error" %}
+      <tr class="danger">
+        <td>
+          <a href="/analysis/results/{{analysis.id}}">{{analysis.name}}</a>
+    {% else %}
+      <tr class="active">
+        <td>
+          {{analysis.name}}
+    {% end %}
+        </td>
+      <td>
+        {{analysis.description}}
+      </td>
+      <td>
+        {{status}}
+      </td>
+    </tr>
+  {% end %}
+{% end %}
