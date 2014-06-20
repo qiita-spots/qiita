@@ -10,6 +10,7 @@
 
 import click
 
+from qiita_core.configuration_manager import ConfigurationManager
 from qiita_db.environment_manager import (make_test_environment,
                                           make_production_environment,
                                           drop_test_environment,
@@ -18,6 +19,9 @@ from qiita_db.environment_manager import (make_test_environment,
                                           drop_demo_environment,
                                           DFLT_BASE_DATA_FOLDER,
                                           DFLT_BASE_WORK_FOLDER)
+
+
+_CONFIG = ConfigurationManager()
 
 
 @click.group()
