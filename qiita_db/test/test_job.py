@@ -17,6 +17,7 @@ from qiita_core.util import qiita_test_checker
 from qiita_db.job import Job
 from qiita_db.util import get_db_files_base_dir, get_work_base_dir
 from qiita_db.analysis import Analysis
+from qiita_db.exceptions import QiitaDBStatusError
 
 
 @qiita_test_checker()
@@ -127,6 +128,12 @@ class JobTest(TestCase):
         log = self.conn_handler.execute_fetchall(sql)
         self.assertEqual(log, [[1, timestamp, 1, 'TESTERROR', None]])
 
+    def test_set_error_completed(self):
+        timestamp = datetime(2014, 6, 13, 14, 19, 25)
+        self.job.status = "error"
+        with self.assertRaises(QiitaDBStatusError):
+            self.job._log_error("TESTERROR", 1, timestamp)
+
     def test_retrieve_error_msg_blank(self):
         self.assertEqual(self.job.error_msg, None)
 
@@ -172,6 +179,11 @@ class JobTest(TestCase):
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.job_results_filepath WHERE job_id = 1")
         self.assertEqual(obs, [[1, 8], [1, 10]])
+
+    def test_add_results_completed(self):
+        self.job.status = "completed"
+        with self.assertRaises(QiitaDBStatusError):
+            self.job.add_results([("/fake/dir/", 7)])
 
 
 if __name__ == "__main__":

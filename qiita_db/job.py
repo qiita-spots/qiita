@@ -23,6 +23,7 @@ from datetime import date
 from .base import QiitaStatusObject
 from .util import insert_filepaths, convert_to_id
 from .sql_connection import SQLConnectionHandler
+from .exceptions import QiitaDBStatusError
 
 
 class Job(QiitaStatusObject):
@@ -43,6 +44,17 @@ class Job(QiitaStatusObject):
     add_results
     """
     _table = "job"
+
+    def _lock_job(self, conn_handler):
+        """Raises QiitaDBStatusError if study is public"""
+        if self.check_status(("completed", "error")):
+            raise QiitaDBStatusError("Can't change status of finished job!")
+
+    def _status_setter_checks(self, conn_handler):
+        r"""Perform a check to make sure not setting status away from completed
+        or errored
+        """
+        self._lock_job(conn_handler)
 
     @classmethod
     def exists(cls, datatype, command, options):
@@ -217,6 +229,7 @@ class Job(QiitaStatusObject):
         sql = ("INSERT INTO qiita.logging (time, severity_id, msg) VALUES "
                "(%s, %s, %s) RETURNING log_id")
         conn_handler = SQLConnectionHandler()
+        self._lock_job(conn_handler)
         logid = conn_handler.execute_fetchone(sql, (timestamp,
                                                     severity, msg))[0]
 
@@ -248,6 +261,7 @@ class Job(QiitaStatusObject):
         """
         # add filepaths to the job
         conn_handler = SQLConnectionHandler()
+        self._lock_job(conn_handler)
         file_ids = insert_filepaths(results, self._id, self._table,
                                     "filepath", conn_handler)
 
