@@ -355,7 +355,8 @@ class TestStudy(TestCase):
         self.assertEqual(new.status, "private")
 
     def test_retrieve_shared_with(self):
-        self.assertEqual(self.study.shared_with, ['shared@foo.bar'])
+        self.assertEqual(self.study.shared_with, ['shared@foo.bar',
+                         'demo@microbio.me'])
 
     def test_retrieve_pmids(self):
         exp = ['123456', '7891011']
