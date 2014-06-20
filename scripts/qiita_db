@@ -9,7 +9,6 @@
 # -----------------------------------------------------------------------------
 
 import click
-from datetime import datetime
 
 from qiita_db.util import (get_filetypes, get_filepath_types,
                            get_processed_params_tables)
@@ -58,9 +57,10 @@ def load_raw_data(fp, fp_type, filetype, study):
 @click.option('--preprocessed_data_id', type=int, default=None, help='The '
               'ID of the row in the preprocessed_data table from which '
               'this processed data was created')
-@click.option('--processed_date', type=datetime, default=None,
-              help='The date to use as the processed_date. If None, then '
-              'the current date and time will be used.')
+@click.option('--processed_date', type=str, default=None,
+              help='The date to use as the processed_date. Must be '
+              'interpretable  as a datetime. If None, then the current date '
+              'and time will be used.')
 def load_processed_data(fp, fp_type, processed_params_table,
                        processed_params_id, preprocessed_data_id,
                        processed_date):

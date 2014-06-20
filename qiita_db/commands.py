@@ -6,6 +6,7 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
+from dateutil.parser import parse
 import pandas as pd
 from functools import partial
 try:
@@ -128,8 +129,9 @@ def load_processed_data_cmd(fps, fp_types, processed_params_table_name,
         The ID of the row in the processed_params_ table
     preprocessed_data_id : int, optional
         Defaults to ``None``. The ID of the row in the preprocessed_data table.
-    processed_date : datetime, optional
+    processed_date : str, optional
         Defaults to ``None``. The date and time to use as the processing date.
+        Must be interpretable as a datetime object
 
     Returns
     -------
@@ -147,6 +149,9 @@ def load_processed_data_cmd(fps, fp_types, processed_params_table_name,
         preprocessed_data = PreprocessedData(preprocessed_data_id)
     else:
         preprocessed_data = None
+
+    if processed_date is not None:
+        processed_date = parse(processed_date)
 
     return ProcessedData.create(processed_params_table_name,
                                 processed_params_id, list(zip(fps, fp_types)),
