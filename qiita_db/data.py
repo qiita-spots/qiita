@@ -35,11 +35,6 @@ Inserting the raw data into the database:
 >>> print rd.id # doctest: +SKIP
 2
 
-Retrieve if the raw data files have been submitted to insdc
-
->>> rd.is_submitted_to_insdc() # doctest: +SKIP
-False
-
 Retrieve the filepaths associated with the raw data
 
 >>> rd.get_filepaths() # doctest: +SKIP
@@ -91,7 +86,7 @@ from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from .base import QiitaObject
 from .sql_connection import SQLConnectionHandler
 from .util import (exists_dynamic_table, get_db_files_base_dir,
-                   compute_checksum, insert_filepaths)
+                   insert_filepaths)
 
 
 class BaseData(QiitaObject):
@@ -195,7 +190,6 @@ class RawData(BaseData):
     Methods
     -------
     create
-    is_submitted_to_insdc
 
     See Also
     --------
@@ -210,7 +204,7 @@ class RawData(BaseData):
     _study_raw_table = "study_raw_data"
 
     @classmethod
-    def create(cls, filetype, filepaths, studies, submitted_to_insdc=False):
+    def create(cls, filetype, filepaths, studies):
         r"""Creates a new object with a new id on the storage system
 
         Parameters
@@ -221,8 +215,6 @@ class RawData(BaseData):
             The list of paths to the raw files and its filepath type identifier
         studies : list of Study
             The list of Study objects to which the raw data belongs to
-        submitted_to_insdc : bool
-            If true, the raw data files have been submitted to insdc
 
         Returns
         -------
@@ -231,10 +223,9 @@ class RawData(BaseData):
         # Add the raw data to the database, and get the raw data id back
         conn_handler = SQLConnectionHandler()
         rd_id = conn_handler.execute_fetchone(
-            "INSERT INTO qiita.{0} (filetype_id, submitted_to_insdc) VALUES "
-            "(%(type_id)s, %(insdc)s) RETURNING "
-            "raw_data_id".format(cls._table), {'type_id': filetype,
-                                               'insdc': submitted_to_insdc})[0]
+            "INSERT INTO qiita.{0} (filetype_id) VALUES (%s) RETURNING "
+            "raw_data_id".format(cls._table),
+            (filetype, ))[0]
         rd = cls(rd_id)
 
         # Connect the raw data with its studies
@@ -246,19 +237,6 @@ class RawData(BaseData):
         rd._add_filepaths(filepaths, conn_handler)
 
         return rd
-
-    def is_submitted_to_insdc(self):
-        r"""Tells if the raw data has been submitted to insdc
-
-        Returns
-        -------
-        bool
-            True if the raw data have been submitted to insdc. False otherwise
-        """
-        conn_handler = SQLConnectionHandler()
-        return conn_handler.execute_fetchone(
-            "SELECT submitted_to_insdc FROM qiita.{0} "
-            "WHERE raw_data_id=%s".format(self._table), [self.id])[0]
 
     @property
     def studies(self):
@@ -287,6 +265,7 @@ class PreprocessedData(BaseData):
     Methods
     -------
     create
+    is_submitted_to_insdc
 
     See Also
     --------
@@ -297,16 +276,15 @@ class PreprocessedData(BaseData):
     _data_filepath_table = "preprocessed_filepath"
     _data_filepath_column = "preprocessed_data_id"
     _study_preprocessed_table = "study_preprocessed_data"
+    _raw_preprocessed_table = "raw_preprocessed_data"
 
     @classmethod
-    def create(cls, raw_data, study, preprocessed_params_table,
-               preprocessed_params_id, filepaths):
+    def create(cls, study, preprocessed_params_table, preprocessed_params_id,
+               filepaths, raw_data=None, submitted_to_insdc=False):
         r"""Creates a new object with a new id on the storage system
 
         Parameters
         ----------
-        raw_data : RawData
-            The RawData object used as base to this preprocessed data
         study : Study
             The study to which this preprocessed data belongs to
         preprocessed_params_table : str
@@ -317,6 +295,10 @@ class PreprocessedData(BaseData):
         filepaths : iterable of tuples (str, int)
             The list of paths to the preprocessed files and its filepath type
             identifier
+        submitted_to_insdc : bool, optional
+            If true, the raw data files have been submitted to insdc
+        raw_data : RawData, optional
+            The RawData object used as base to this preprocessed data
 
         Raises
         ------
@@ -333,11 +315,13 @@ class PreprocessedData(BaseData):
         # Add the preprocessed data to the database,
         # and get the preprocessed data id back
         ppd_id = conn_handler.execute_fetchone(
-            "INSERT INTO qiita.{0} (raw_data_id, preprocessed_params_table, "
-            "preprocessed_params_id) VALUES (%(raw_id)s, %(param_table)s, "
-            "%(param_id)s) RETURNING preprocessed_data_id".format(cls._table),
-            {'raw_id': raw_data.id, 'param_table': preprocessed_params_table,
-             'param_id': preprocessed_params_id})[0]
+            "INSERT INTO qiita.{0} (preprocessed_params_table, "
+            "preprocessed_params_id, submitted_to_insdc) VALUES "
+            "(%(param_table)s, %(param_id)s, %(insdc)s) "
+            "RETURNING preprocessed_data_id".format(cls._table),
+            {'param_table': preprocessed_params_table,
+             'param_id': preprocessed_params_id,
+             'insdc': submitted_to_insdc})[0]
         ppd = cls(ppd_id)
 
         # Connect the preprocessed data with its study
@@ -345,6 +329,13 @@ class PreprocessedData(BaseData):
             "INSERT INTO qiita.{0} (study_id, preprocessed_data_id) "
             "VALUES (%s, %s)".format(ppd._study_preprocessed_table),
             (study.id, ppd.id))
+
+        if raw_data is not None:
+            # Connect the preprocessed data with the raw data
+            conn_handler.execute(
+                "INSERT INTO qiita.{0} (raw_data_id, preprocessed_data_id) "
+                "VALUES (%s, %s)".format(cls._raw_preprocessed_table),
+                (raw_data.id, ppd_id))
 
         ppd._add_filepaths(filepaths, conn_handler)
         return ppd
@@ -355,7 +346,7 @@ class PreprocessedData(BaseData):
         conn_handler = SQLConnectionHandler()
         return conn_handler.execute_fetchone(
             "SELECT raw_data_id FROM qiita.{0} WHERE "
-            "preprocessed_data_id=%s".format(self._table),
+            "preprocessed_data_id=%s".format(self._raw_preprocessed_table),
             [self._id])[0]
 
     @property
@@ -371,6 +362,19 @@ class PreprocessedData(BaseData):
             "SELECT study_id FROM qiita.{0} WHERE "
             "preprocessed_data_id=%s".format(self._study_preprocessed_table),
             [self._id])[0]
+
+    def is_submitted_to_insdc(self):
+        r"""Tells if the raw data has been submitted to insdc
+
+        Returns
+        -------
+        bool
+            True if the raw data have been submitted to insdc. False otherwise
+        """
+        conn_handler = SQLConnectionHandler()
+        return conn_handler.execute_fetchone(
+            "SELECT submitted_to_insdc FROM qiita.{0} "
+            "WHERE preprocessed_data_id=%s".format(self._table), (self.id,))[0]
 
 
 class ProcessedData(BaseData):
@@ -392,15 +396,14 @@ class ProcessedData(BaseData):
     _table = "processed_data"
     _data_filepath_table = "processed_filepath"
     _data_filepath_column = "processed_data_id"
+    _preprocessed_processed_table = "preprocessed_processed_data"
 
     @classmethod
-    def create(cls, preprocessed_data, processed_params_table,
-               processed_params_id, filepaths, processed_date=None):
+    def create(cls, processed_params_table, processed_params_id, filepaths,
+               preprocessed_data=None, processed_date=None):
         r"""
         Parameters
         ----------
-        preprocessed_data : PreprocessedData
-            The PreprocessedData object used as base to this processed data
         processed_params_table : str
             Name of the table that holds the preprocessing parameters used
         processed_params_id : int
@@ -409,6 +412,8 @@ class ProcessedData(BaseData):
         filepaths : iterable of tuples (str, int)
             The list of paths to the processed files and its filepath type
             identifier
+        preprocessed_data : PreprocessedData, optional
+            The PreprocessedData object used as base to this processed data
         processed_date : datetime, optional
             Date in which the data have been processed. Default: now
 
@@ -432,16 +437,22 @@ class ProcessedData(BaseData):
         # Add the processed data to the database,
         # and get the processed data id back
         pd_id = conn_handler.execute_fetchone(
-            "INSERT INTO qiita.{0} (preprocessed_data_id, "
-            "processed_params_table, processed_params_id, processed_date) "
-            "VALUES (%(prep_data_id)s, %(param_table)s, %(param_id)s, "
-            "%(date)s) RETURNING processed_data_id".format(cls._table),
-            {'prep_data_id': preprocessed_data.id,
-             'param_table': processed_params_table,
+            "INSERT INTO qiita.{0} (processed_params_table, "
+            "processed_params_id, processed_date) VALUES (%(param_table)s, "
+            "%(param_id)s, %(date)s) RETURNING "
+            "processed_data_id".format(cls._table),
+            {'param_table': processed_params_table,
              'param_id': processed_params_id,
              'date': processed_date})[0]
 
         pd = cls(pd_id)
+
+        if preprocessed_data is not None:
+            conn_handler.execute(
+                "INSERT INTO qiita.{0} (preprocessed_data_id, "
+                "processed_data_id) VALUES "
+                "(%s, %s)".format(cls._preprocessed_processed_table),
+                (preprocessed_data.id, pd_id))
         pd._add_filepaths(filepaths, conn_handler)
         return cls(pd_id)
 
@@ -451,18 +462,18 @@ class ProcessedData(BaseData):
         conn_handler = SQLConnectionHandler()
         return conn_handler.execute_fetchone(
             "SELECT preprocessed_data_id FROM qiita.{0} WHERE "
-            "processed_data_id=%s".format(self._table),
+            "processed_data_id=%s".format(self._preprocessed_processed_table),
             [self._id])[0]
 
     @property
     def data_type(self):
         r"""The data_type of the data used"""
         conn_handler = SQLConnectionHandler()
-        sql = ("SELECT DISTINCT DT.data_type FROM qiita.processed_data PD "
-               "JOIN qiita.preprocessed_data PPD on PD.preprocessed_data_id "
-               "= PPD.preprocessed_data_id JOIN qiita.raw_data RD on "
-               "PPD.raw_data_id = RD.raw_data_id "
-               "JOIN qiita.common_prep_info CPI ON RD.raw_data_id = "
-               "CPI.raw_data_id JOIN qiita.data_type DT ON CPI.data_type_id = "
-               "DT.data_type_id WHERE PD.processed_data_id = %s")
+        sql = ("SELECT DISTINCT DT.data_type FROM "
+               "qiita.preprocessed_processed_data PPD JOIN "
+               "qiita.raw_preprocessed_data RPD on PPD.preprocessed_data_id = "
+               "RPD.preprocessed_data_id JOIN qiita.common_prep_info CPI ON "
+               "RPD.raw_data_id = CPI.raw_data_id JOIN qiita.data_type DT ON "
+               "CPI.data_type_id = DT.data_type_id WHERE "
+               "PPD.processed_data_id = %s")
         return conn_handler.execute_fetchone(sql, [self._id])[0]
