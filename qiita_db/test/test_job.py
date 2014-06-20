@@ -110,11 +110,8 @@ class JobTest(TestCase):
         self.assertEqual(self.job.results, ["job/1_job_result.txt"])
 
     def test_retrieve_results_empty(self):
-        new = Job.create("18S", "Beta Diversity",
-                         self.options, Analysis(1))
-        obs = new.results
-        self._delete_path = obs
-        self.assertEqual(obs, [])
+        new = Job.create("18S", "Beta Diversity", self.options, Analysis(1))
+        self.assertEqual(new.results, [])
 
     def test_retrieve_results_tar(self):
         obs = Job(2).results
