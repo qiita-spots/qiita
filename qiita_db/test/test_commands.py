@@ -82,7 +82,7 @@ class TestImportPreprocessedData(TestCase):
         initial_ppd_count = get_count('qiita.preprocessed_data')
         initial_fp_count = get_count('qiita.filepath')
         ppd = load_preprocessed_data_from_cmd(
-            1, self.tmpdir, 1, 'preprocessed_sequence_illumina_params',
+            1, self.tmpdir, 'tar', 'preprocessed_sequence_illumina_params',
             1, False)
         self.files_to_remove.append(
             join(self.db_test_ppd_dir,

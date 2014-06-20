@@ -94,8 +94,8 @@ def load_preprocessed_data_from_cmd(study_id, filedir, filepathtype,
         The study id to which the preprocessed data belongs
     filedir : str
         Directory path of the preprocessed data
-    filepathtype: int
-        The filepath_type_id of the preprecessed data
+    filepathtype: str
+        The filepath_type of the preprecessed data
     params_table_name : str
         The name of the table which contains the parameters of the
         preprocessing
@@ -104,7 +104,9 @@ def load_preprocessed_data_from_cmd(study_id, filedir, filepathtype,
     submitted_to_insdc : bool
         Has the data been submitted to insdc
     """
-    filepaths = [(join(filedir, fp), filepathtype) for fp in listdir(filedir)]
+    fp_types_dict = get_filepath_types()
+    fp_type = fp_types_dict[filepathtype]
+    filepaths = [(join(filedir, fp), fp_type) for fp in listdir(filedir)]
     return PreprocessedData.create(Study(study_id), params_table, params_id,
                                    filepaths,
                                    submitted_to_insdc=submitted_to_insdc)
