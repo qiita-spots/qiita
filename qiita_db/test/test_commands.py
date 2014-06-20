@@ -154,12 +154,17 @@ class TestLoadProcessedDataFromCmd(TestCase):
     def setUp(self):
         fd, self.otu_table_fp = mkstemp(suffix='_otu_table.biom')
         close(fd)
+        fd, self.otu_table_2_fp = mkstemp(suffix='_otu_table2.biom')
+        close(fd)
 
         with open(self.otu_table_fp, "w") as f:
+            f.write("\n")
+        with open(self.otu_table_2_fp, "w") as f:
             f.write("\n")
 
         self.files_to_remove = []
         self.files_to_remove.append(self.otu_table_fp)
+        self.files_to_remove.append(self.otu_table_2_fp)
 
         self.db_test_processed_data_dir = join(get_db_files_base_dir(),
                                                'processed_data')
@@ -170,8 +175,8 @@ class TestLoadProcessedDataFromCmd(TestCase):
                 remove(fp)
 
     def test_load_processed_data_from_cmd(self):
-        filepaths = [self.otu_table_fp]
-        filepath_types = ['biom']
+        filepaths = [self.otu_table_fp, self.otu_table_2_fp]
+        filepath_types = ['biom', 'biom']
 
         initial_processed_data_count = get_count('qiita.processed_data')
         initial_processed_fp_count = get_count('qiita.processed_filepath')
@@ -183,19 +188,23 @@ class TestLoadProcessedDataFromCmd(TestCase):
         self.files_to_remove.append(
             join(self.db_test_processed_data_dir,
                  '%d_%s' % (processed_data_id, basename(self.otu_table_fp))))
+        self.files_to_remove.append(
+            join(self.db_test_processed_data_dir,
+                 '%d_%s' % (processed_data_id,
+                            basename(self.otu_table_2_fp))))
 
         self.assertTrue(check_count('qiita.processed_data',
                                     initial_processed_data_count + 1))
         self.assertTrue(check_count('qiita.processed_filepath',
-                                    initial_processed_fp_count + 1))
+                                    initial_processed_fp_count + 2))
         self.assertTrue(check_count('qiita.filepath',
-                                    initial_fp_count + 1))
+                                    initial_fp_count + 2))
 
         # Ensure that the ValueError is raised when a filepath_type is not
         # provided for each and every filepath
         with self.assertRaises(ValueError):
-            load_processed_data_cmd(filepaths, [], 'processed_params_uclust',
-                                    1, 1, None)
+            load_processed_data_cmd(filepaths, filepath_types[:-1],
+                                    'processed_params_uclust', 1, 1, None)
 
 
 CONFIG_1 = """[required]
