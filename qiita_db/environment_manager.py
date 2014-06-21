@@ -109,10 +109,11 @@ def make_environment(env, base_data_dir, base_work_dir, user, password, host):
             with open(INITIALIZE_FP, 'U') as f:
                 cur.execute(f.read())
 
-            print('Populating database with demo data (1/2)')
-            # Populate the database
-            with open(POPULATE_FP, 'U') as f:
-                cur.execute(f.read())
+            # Commenting out right now - probably will ad later
+            # print('Populating database with demo data (1/2)')
+            # # Populate the database
+            # with open(POPULATE_FP, 'U') as f:
+            #     cur.execute(f.read())
 
             # Commit all the changes and close the connections
             conn.commit()
@@ -142,7 +143,7 @@ def make_environment(env, base_data_dir, base_work_dir, user, password, host):
                 with open(join(basedir, "seqs.fna"), 'w') as fout:
                     fout.write(str(gz.read()))
 
-            print('Populating database with demo data (2/2)')
+            print('Populating database with demo data')
             # copy the preprocessed and procesed data to the study
             remove(join(base_data_dir,
                         "processed_data/"
