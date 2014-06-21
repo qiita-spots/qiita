@@ -13,7 +13,8 @@ import click
 from qiita_db.util import (get_filetypes, get_filepath_types,
                            get_processed_params_tables,
                            get_preprocessed_params_tables)
-from qiita_db.commands import (sample_template_adder, load_study_from_cmd,
+from qiita_db.commands import (load_sample_template_from_cmd,
+                               load_study_from_cmd,
                                load_raw_data_cmd, load_processed_data_cmd,
                                load_preprocessed_data_from_cmd)
 
@@ -21,6 +22,19 @@ from qiita_db.commands import (sample_template_adder, load_study_from_cmd,
 @click.group()
 def qiita_db():
     pass
+
+
+@qiita_db.command()
+@click.option('--owner', required=True,
+              help="The email address of the owner of the study")
+@click.option('--title', help="The title of the study", required=True)
+@click.option('--info', type=click.File(mode='r'), required=True,
+              help="filepath of file with study information in python "
+              "config file format")
+def load_study(owner, title, info):
+    """Loads a study to the database"""
+    study = load_study_from_cmd(owner, title, info)
+    print("Study successfully added to the database with id %s" % study.id)
 
 
 @qiita_db.command()
@@ -39,7 +53,35 @@ def qiita_db():
               'should be associated with multiple studies', type=int,
               required=True)
 def load_raw_data(fp, fp_type, filetype, study):
-    load_raw_data_cmd(fp, fp_type, filetype, study)
+    """Loads a raw data to the database"""
+    raw_data = load_raw_data_cmd(fp, fp_type, filetype, study)
+    print("Raw data successfully added to the database with id %s" % raw_data)
+
+
+@qiita_db.command()
+@click.option('--study_id', help="Study id associated with data",
+              required=True)
+@click.option('--params_table', help="Name of the paramaters table for the "
+              "preprocessed data", required=True,
+              type=click.Choice(get_preprocessed_params_tables()))
+@click.option('--filedir', help="Directory containing preprocessed data",
+              required=True)
+@click.option('--filepathtype', help="Describes the contents of the input "
+              "files", required=True,
+              type=click.Choice(get_filepath_types().keys()))
+@click.option('--params_id', required=True,
+              help="id in the paramater table associated with the parameters")
+@click.option('--submitted_to_insdc', is_flag=True,
+              help="If provided, the preprocessed data have been submitted"
+                   " to insdc", required=True)
+def load_preprocessed_data(study_id, filedir, filepathtype,
+                           params_table_name, params_id, submitted_to_insdc):
+    """Loads a preprocessed data to the database"""
+    preproc_data = load_preprocessed_data_from_cmd(
+        study_id, filedir, filepathtype, params_table_name,
+        params_id, submitted_to_insdc)
+    print("Preprocessed data successfully added to the database with id %s"
+          % preproc_data.id)
 
 
 @qiita_db.command()
@@ -69,42 +111,13 @@ def load_raw_data(fp, fp_type, filetype, study):
 def load_processed_data(fp, fp_type, processed_params_table,
                         processed_params_id, preprocessed_data_id, study_id,
                         processed_date):
-    load_processed_data_cmd(fp, fp_type, processed_params_table,
-                            processed_params_id, preprocessed_data_id,
-                            study_id, processed_date)
-
-
-@qiita_db.command()
-@click.option('--owner', help="The email address of the owner of the study")
-@click.option('--title', help="The title of the study")
-@click.option('--info', type=click.File(mode='r'),
-              help="filepath of file with study information in python"
-              "config file format")
-def load_study(owner, title, info):
-    load_study_from_cmd(owner, title, info)
-
-
-@qiita_db.command()
-@click.option('--study_id', help="Study id associated with data",
-              required=True)
-@click.option('--params_table', help="Name of the paramaters table for the "
-              "preprocessed data", required=True,
-              type=click.Choice(get_preprocessed_params_tables()))
-@click.option('--filedir', help="Directory containing preprocessed data",
-              required=True)
-@click.option('--filepathtype', help="Describes the contents of the input "
-              "files", required=True,
-              type=click.Choice(get_filepath_types().keys()))
-@click.option('--params_id', required=True,
-              help="id in the paramater table associated with the parameters")
-@click.option('--submitted_to_insdc', is_flag=True,
-              help="If provided, the preprocessed data have been submitted"
-                   " to insdc", required=True)
-def load_preprocessed_data(study_id, filedir, filepathtype,
-                           params_table_name, params_id, submitted_to_insdc):
-    load_preprocessed_data_from_cmd(study_id, filedir, filepathtype,
-                                    params_table_name,
-                                    params_id, submitted_to_insdc)
+    """Loads a processed data to the database"""
+    proc_data = load_processed_data_cmd(fp, fp_type, processed_params_table,
+                                        processed_params_id,
+                                        preprocessed_data_id, study_id,
+                                        processed_date)
+    print("Processed data successfully added to the database with id %s"
+          % proc_data.id)
 
 
 @qiita_db.command()
@@ -114,9 +127,11 @@ def load_preprocessed_data(study_id, filedir, filepathtype,
                    'template information')
 @click.option('--study', required=True, type=int,
               help='Associate the sample template with this study')
-def add_sample_template(fp, study):
-    """Adds a sample template to the database"""
-    sample_template_adder(fp, study)
+def load_sample_template(fp, study):
+    """Loads a sample template to the database"""
+    sample_temp = load_sample_template_from_cmd(fp, study)
+    print("Sample template successfully added to the database with id %s"
+          % sample_temp.id)
 
 
 if __name__ == '__main__':

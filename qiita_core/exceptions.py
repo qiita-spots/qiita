@@ -53,3 +53,8 @@ class IncorrectPasswordError(QiitaError):
 class IncorrectEmailError(QiitaError):
     """Email fails validation"""
     pass
+
+
+class QiitaEnvironmentError(QiitaError):
+    """Exception for error when dealing with the environment"""
+    pass
