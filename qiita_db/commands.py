@@ -83,7 +83,7 @@ def load_study_from_cmd(owner, title, info):
 
 def load_preprocessed_data_from_cmd(study_id, filedir, filepathtype,
                                     params_table, params_id,
-                                    submitted_to_insdc):
+                                    submitted_to_insdc, raw_data_id):
     r"""Adds preprocessed data to the database
 
     Parameters
@@ -101,12 +101,15 @@ def load_preprocessed_data_from_cmd(study_id, filedir, filepathtype,
         The id of parameters int the params_table
     submitted_to_insdc : bool
         Has the data been submitted to insdc
+    raw_data_id : int
+        Raw data id associated with data
     """
     fp_types_dict = get_filepath_types()
     fp_type = fp_types_dict[filepathtype]
     filepaths = [(join(filedir, fp), fp_type) for fp in listdir(filedir)]
+    raw_data = None if raw_data_id is None else RawData(raw_data_id)
     return PreprocessedData.create(Study(study_id), params_table, params_id,
-                                   filepaths,
+                                   filepaths, raw_data=raw_data,
                                    submitted_to_insdc=submitted_to_insdc)
 
 

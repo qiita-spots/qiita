@@ -85,7 +85,7 @@ class TestImportPreprocessedData(TestCase):
         ppd = load_preprocessed_data_from_cmd(
             1, self.tmpdir, 'preprocessed_sequences',
             'preprocessed_sequence_illumina_params',
-            1, False)
+            1, False, 1)
         self.files_to_remove.append(
             join(self.db_test_ppd_dir,
                  '%d_%s' % (ppd.id, basename(self.file1))))
