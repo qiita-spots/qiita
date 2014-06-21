@@ -899,7 +899,7 @@ class MetadataTemplate(QiitaObject):
         for k in metadata_map:
             metadata_map[k].update(dyn_vals[k])
 
-        headers = sorted(metadata_map.values()[0].keys())
+        headers = sorted(list(metadata_map.values())[0].keys())
         with open(fp, 'w') as f:
             # First write the headers
             f.write("#SampleID\t%s\n" % '\t'.join(headers))
