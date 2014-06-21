@@ -56,7 +56,8 @@ def load_study(owner, title, info):
 def load_raw_data(fp, fp_type, filetype, study):
     """Loads a raw data to the database"""
     raw_data = load_raw_data_cmd(fp, fp_type, filetype, study)
-    print("Raw data successfully added to the database with id %s" % raw_data)
+    print("Raw data successfully added to the database with id %s"
+          % raw_data.id)
 
 
 @qiita_db.command()

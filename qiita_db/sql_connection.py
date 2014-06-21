@@ -10,6 +10,7 @@ from __future__ import division
 # -----------------------------------------------------------------------------
 
 from contextlib import contextmanager
+from collections import Iterable
 
 from psycopg2 import connect, Error as PostgresError
 from psycopg2.extras import DictCursor
@@ -102,7 +103,10 @@ class SQLConnectionHandler(object):
             except PostgresError as e:
                 self._connection.rollback()
                 try:
-                    err_sql = cur.mogrify(sql, sql_args)
+                    if not isinstance(sql_args, Iterable):
+                        err_sql = cur.mogrify(sql, sql_args)
+                    else:
+                        err_sql = cur.mogrify(sql, sql_args[0])
                 except IndexError:
                     err_sql = sql
                 raise QiitaDBExecutionError(("\nError running SQL query: %s"
