@@ -412,12 +412,12 @@ An investigation comprises one or more individual studies.';
 COMMENT ON COLUMN qiita.investigation.description IS 'Describes the overarching goal of the investigation';
 
 CREATE TABLE qiita.logging ( 
-	log_id               bigserial  NOT NULL,
+	logging_id           bigserial  NOT NULL,
 	time                 timestamp  NOT NULL,
 	severity_id          integer  NOT NULL,
 	msg                  varchar  NOT NULL,
 	information          varchar  ,
-	CONSTRAINT pk_logging PRIMARY KEY ( log_id ),
+	CONSTRAINT pk_logging PRIMARY KEY ( logging_id ),
 	CONSTRAINT fk_logging_severity FOREIGN KEY ( severity_id ) REFERENCES qiita.severity( severity_id )    
  );
 
@@ -745,7 +745,7 @@ CREATE TABLE qiita.job (
 	CONSTRAINT fk_job_function FOREIGN KEY ( command_id ) REFERENCES qiita.command( command_id )    ,
 	CONSTRAINT fk_job_job_status_id FOREIGN KEY ( job_status_id ) REFERENCES qiita.job_status( job_status_id )    ,
 	CONSTRAINT fk_job_data_type FOREIGN KEY ( data_type_id ) REFERENCES qiita.data_type( data_type_id )    ,
-	CONSTRAINT fk_job FOREIGN KEY ( log_id ) REFERENCES qiita.logging( log_id )    
+	CONSTRAINT fk_job FOREIGN KEY ( log_id ) REFERENCES qiita.logging( logging_id )    
  );
 
 CREATE INDEX idx_job_command ON qiita.job ( command_id );
