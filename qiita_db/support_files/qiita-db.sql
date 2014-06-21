@@ -16,6 +16,10 @@ CREATE TABLE qiita.command (
 	command_id           bigserial  NOT NULL,
 	name                 varchar  NOT NULL,
 	command              varchar  NOT NULL,
+	input                varchar  NOT NULL,
+	required             varchar  NOT NULL,
+	optional             varchar  NOT NULL,
+	output               varchar  NOT NULL,
 	CONSTRAINT pk_command PRIMARY KEY ( command_id )
  );
 
@@ -24,6 +28,14 @@ COMMENT ON TABLE qiita.command IS 'Available commands for jobs';
 COMMENT ON COLUMN qiita.command.command_id IS 'Unique identifier for function';
 
 COMMENT ON COLUMN qiita.command.command IS 'What command to call to run this function';
+
+COMMENT ON COLUMN qiita.command.input IS 'JSON of input options for the command';
+
+COMMENT ON COLUMN qiita.command.required IS 'JSON of required options for the command';
+
+COMMENT ON COLUMN qiita.command.optional IS 'JSON of optional options for command';
+
+COMMENT ON COLUMN qiita.command.output IS 'JSON of output options for the command';
 
 CREATE TABLE qiita.controlled_vocabularies ( 
 	controlled_vocab_id  bigserial  NOT NULL,
