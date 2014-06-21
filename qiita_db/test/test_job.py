@@ -13,7 +13,7 @@ from shutil import rmtree
 from datetime import datetime
 
 from qiita_core.util import qiita_test_checker
-from qiita_db.job import Job
+from qiita_db.job import Job, Command
 from qiita_db.util import get_db_files_base_dir
 from qiita_db.analysis import Analysis
 from qiita_db.exceptions import QiitaDBDuplicateError, QiitaDBStatusError
@@ -51,6 +51,25 @@ class JobTest(TestCase):
     #                                 "Summarize Taxa",
     #                                 {'option1': "Nope", 'option2': 10,
     #                                  'option3': 'FCM'}))
+
+    def test_get_commands(self):
+        exp = [
+            Command('Summarize Taxa', 'summarize_taxa_through_plots.py',
+                    '{"--otu_table_fp":null}', '{}',
+                    '{"--mapping_category":null, "--mapping_fp":null,'
+                    '"--sort":null}', '{"--output_dir":null}'),
+            Command('Beta Diversity', 'beta_diversity_through_plots.py',
+                    '{"--otu_table_fp":null,"--mapping_fp":null}', '{}',
+                    '{"--tree_fp":null,"--color_by_all_fields":null,'
+                    '"--seqs_per_sample":null}', '{"--output_dir":null}'),
+            Command('Alpha Rarefaction', 'alpha_rarefaction.py',
+                    '{"--otu_table_fp":null,"--mapping_fp":null}', '{}',
+                    '{"--tree_fp":null,"--num_steps":null,''"--min_rare_depth"'
+                    ':null,"--max_rare_depth":null,'
+                    '"--retain_intermediate_files":false}',
+                    '{"--output_dir":null}')
+            ]
+        self.assertEqual(Job.get_commands(), exp)
 
     def test_create(self):
         """Makes sure creation works as expected"""

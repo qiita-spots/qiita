@@ -60,6 +60,16 @@ class Job(QiitaStatusObject):
         """
         self._lock_job(conn_handler)
 
+    @staticmethod
+    def get_commands():
+        """returns commands available with the options as well
+
+        Returns
+        -------
+        list of command objects
+        """
+        return Command.create_list()
+
     @classmethod
     def exists(cls, datatype, command, options):
         """Checks if the given job already exists
@@ -275,3 +285,79 @@ class Job(QiitaStatusObject):
         sql = ("INSERT INTO qiita.{0}_results_filepath (job_id, filepath_id) "
                "VALUES (%s, %s)".format(self._table))
         conn_handler.executemany(sql, [(self._id, fid) for fid in file_ids])
+
+
+class Command(object):
+    """Holds all information on the commands available
+
+    This will be an in-memory representation because the command table is
+    considerably more static than other objects tables, changing only with new
+    QIIME releases.
+
+    Attributes
+    ----------
+    name
+    command
+    input_opts
+    required_opts
+    optional_opts
+    output_opts
+    """
+    @classmethod
+    def create_list(cls):
+        """Creates list of all available commands
+
+        Returns
+        -------
+        list of Command objects
+        """
+        conn_handler = SQLConnectionHandler()
+        commands = conn_handler.execute_fetchall("SELECT * FROM qiita.command")
+        # create the list of command objects
+        return [cls(c["name"], c["command"], c["input"], c["required"],
+                c["optional"], c["output"]) for c in commands]
+
+    def __eq__(self, other):
+        if type(self) != type(other):
+            return False
+        if self.name != other.name:
+            return False
+        if self.command != other.command:
+            return False
+        if self.input_opts != other.input_opts:
+            return False
+        if self.output_opts != other.output_opts:
+            return False
+        if self.required_opts != other.required_opts:
+            return False
+        if self.optional_opts != other.optional_opts:
+            return False
+        return True
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+    def __init__(self, name, command, input_opts, required_opts,
+                 optional_opts, output_opts):
+        """Creates the command object
+
+        Parameters:
+        name : str
+            Name of the command
+        command: str
+            python command to run
+        input_opts : str
+            JSON of input options for the command
+        required_opts : str
+            JSON of required options for the command
+        optional_opts : str
+            JSON of optional options for the command
+        output_opts : str
+            JSON of output options for the command
+        """
+        self.name = name
+        self.command = command
+        self.input_opts = dumps(input_opts)
+        self.required_opts = dumps(required_opts)
+        self.optional_opts = dumps(optional_opts)
+        self.output_opts = dumps(output_opts)
