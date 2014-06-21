@@ -5,7 +5,7 @@ from IPython.parallel import Client
 from qiita_ware.exceptions import ComputeError
 
 
-def pyqi_system_call(cmd):
+def system_call(cmd):
     """Call cmd and return (stdout, stderr, return_value).
 
     cmd: can be either a string containing the command to be run, or a
@@ -65,7 +65,7 @@ class ClusterDispatch(object):
 
     def _stage_imports(self, cluster):
         with cluster[:].sync_imports(quiet=True):
-            from qiita_core.cluster import system_call
+            from qiita_ware.cluster import system_call
 
     def sync(self, data):
         """Sync data to engines
