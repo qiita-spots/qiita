@@ -35,3 +35,8 @@ class JobDoesNotExistsError(QiitaWareError):
 class StudyDoesNotExistsError(QiitaWareError):
     """Error used when a study does not exist"""
     pass
+
+
+class ComputeError(QiitaWareError):
+    """A compute error happened"""
+    pass

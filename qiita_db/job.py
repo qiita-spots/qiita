@@ -20,6 +20,8 @@ from os.path import join
 from time import strftime
 from datetime import date
 
+from qiita_core.exceptions import IncompetentQiitaDeveloperError
+
 from .base import QiitaStatusObject
 from .util import insert_filepaths, convert_to_id
 from .sql_connection import SQLConnectionHandler
@@ -175,7 +177,14 @@ class Job(QiitaStatusObject):
         sql = ("SELECT options FROM qiita.{0} WHERE "
                "job_id = %s".format(self._table))
         conn_handler = SQLConnectionHandler()
-        return loads(conn_handler.execute_fetchone(sql, (self._id, ))[0])
+
+        json = conn_handler.execute_fetchone(sql, (self._id, ))[0]
+        try:
+            parsed = loads(json)
+        except ValueError:
+            raise IncompetentQiitaDeveloperError("Malformed options for job "
+                                                 "id %d" % self._id)
+        return parsed
 
     @property
     def results(self):
