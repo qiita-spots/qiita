@@ -10,7 +10,7 @@ before_install:
   # Update conda itself
   - conda update --yes conda
 install:
-  - conda create --yes -n env_name python=$PYTHON_VERSION pip nose pep8 openpyxl=1.8.2 pandas
+  - conda create --yes -n env_name python=$PYTHON_VERSION pip nose pep8 openpyxl=1.8.2 pandas ipython pyzmq
   - source activate env_name
   - pip 
   - pip install coveralls
@@ -23,11 +23,11 @@ script:
   - qiita_env start_cluster --cluster demo
   - qiita_env start_cluster --cluster reserved
   - qiita_env make_env --env test
-  - nosetests --with-doctest
+  - nosetests --with-doctest --with-coverage
   - pep8 qiita_db qiita_core qiita_pet setup.py
   # we need to run the test suite from setup.py for coveralls to grab the info
-  - coverage run setup.py test
-  - coverage report -m
+  # - coverage run setup.py test
+  # - coverage report -m
 services:
   - redis-server
 after_success:
