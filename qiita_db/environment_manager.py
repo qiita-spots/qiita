@@ -12,9 +12,8 @@ from os import remove
 from os.path import abspath, dirname, join
 from shutil import rmtree, move
 from functools import partial
-try:
-    from urllib import urlretrieve
-except ImportError:  # python3
+from future import standard_library
+with standard_library.hooks():
     from urllib.request import urlretrieve
 
 from psycopg2 import connect

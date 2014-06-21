@@ -12,12 +12,9 @@ from tempfile import mkstemp, mkdtemp
 from shutil import rmtree
 from unittest import TestCase, main
 from future.utils.six import StringIO
-try:
-    # Python 2
-    from ConfigParser import NoOptionError
-except ImportError:
-    # Python 3
-    from configparser import NoOptionError
+from future import standard_library
+with standard_library.hooks():
+    import configparser
 
 from qiita_db.commands import (load_study_from_cmd, load_raw_data_cmd,
                                sample_template_adder, load_processed_data_cmd,
@@ -47,7 +44,7 @@ class TestMakeStudyFromCmd(TestCase):
         self.assertTrue(study_id is not None)
 
         fh2 = StringIO(self.config2)
-        with self.assertRaises(NoOptionError):
+        with self.assertRaises(configparser.NoOptionError):
             load_study_from_cmd('test@test.com', 'newstudy2', fh2)
 
 

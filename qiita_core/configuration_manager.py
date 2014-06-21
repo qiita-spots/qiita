@@ -9,13 +9,8 @@
 from functools import partial
 from os.path import join, dirname, abspath
 from os import environ
-
-try:
-    # Python 2
-    from ConfigParser import (ConfigParser, NoOptionError,
-                              MissingSectionHeaderError)
-except ImportError:
-    # Python 3
+from future import standard_library
+with standard_library.hooks():
     from configparser import (ConfigParser, NoOptionError,
                               MissingSectionHeaderError)
 
