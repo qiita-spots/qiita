@@ -17,7 +17,8 @@ with standard_library.hooks():
     import configparser
 
 from qiita_db.commands import (load_study_from_cmd, load_raw_data_cmd,
-                               load_sample_template_from_cmd, load_processed_data_cmd,
+                               load_sample_template_from_cmd,
+                               load_processed_data_cmd,
                                load_preprocessed_data_from_cmd)
 from qiita_db.study import Study, StudyPerson
 from qiita_db.user import User
