@@ -81,8 +81,8 @@ def load_study_from_cmd(owner, title, info):
     return Study.create(User(owner), title, efo_ids, infodict)
 
 
-def load_preprocessed_data_from_cmd(study_id, filedir, filepathtype,
-                                    params_table, params_id,
+def load_preprocessed_data_from_cmd(study_id, params_table, filedir,
+                                    filepathtype, params_id,
                                     submitted_to_insdc, raw_data_id):
     r"""Adds preprocessed data to the database
 
