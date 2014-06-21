@@ -13,15 +13,18 @@ from shutil import rmtree
 from unittest import TestCase, main
 from future.utils.six import StringIO
 from future import standard_library
+from functools import partial
 with standard_library.hooks():
     import configparser
 
 from qiita_db.commands import (load_study_from_cmd, load_raw_data_cmd,
                                load_sample_template_from_cmd,
+                               load_prep_template_from_cmd,
                                load_processed_data_cmd,
                                load_preprocessed_data_from_cmd)
 from qiita_db.study import Study, StudyPerson
 from qiita_db.user import User
+from qiita_db.data import RawData
 from qiita_db.util import get_count, check_count, get_db_files_base_dir
 from qiita_core.util import qiita_test_checker
 
@@ -124,6 +127,42 @@ class TestLoadSampleTemplateFromCmd(TestCase):
         fh = StringIO(self.st_contents)
         st = load_sample_template_from_cmd(fh, self.study.id)
         self.assertEqual(st.id, self.study.id)
+
+
+@qiita_test_checker()
+class TestLoadPrepTemplateFromCmd(TestCase):
+    def setUp(self):
+        # Create a sample template file
+        fd, seqs_fp = mkstemp(suffix='_seqs.fastq')
+        close(fd)
+        fd, barcodes_fp = mkstemp(suffix='_barcodes.fastq')
+        close(fd)
+
+        with open(seqs_fp, "w") as f:
+            f.write("\n")
+        with open(barcodes_fp, "w") as f:
+            f.write("\n")
+
+        self.pt_contents = PREP_TEMPLATE
+
+        self.raw_data = RawData.create(
+            2, [(seqs_fp, 1), (barcodes_fp, 2)], [Study(1)])
+
+        join_f = partial(join, join(get_db_files_base_dir(), 'raw_data'))
+        self.files_to_remove = [
+            join_f("%s_%s" % (self.raw_data.id, basename(seqs_fp))),
+            join_f("%s_%s" % (self.raw_data.id, basename(barcodes_fp)))]
+
+    def tearDown(self):
+        for fp in self.files_to_remove:
+            if exists(fp):
+                remove(fp)
+
+    def test_load_prep_template_from_cmd(self):
+        """Correctly adds a sample template to the DB"""
+        fh = StringIO(self.pt_contents)
+        st = load_prep_template_from_cmd(fh, self.raw_data.id)
+        self.assertEqual(st.id, self.raw_data.id)
 
 
 @qiita_test_checker()
@@ -301,6 +340,13 @@ SAMPLE_TEMPLATE = (
     "\tFast\t20071112\tFasting_mouse_I.D._607\n"
     "PC.636\t1\t2014-06-18 16:44\ttype_1\tTrue\tLocation_1\tTrue\tHS_ID_PC.636"
     "\tFast\t20080116\tFasting_mouse_I.D._636")
+
+PREP_TEMPLATE = (
+    "#SampleID\tcenter_name\tcusom_col\temp_status_id\tdata_type_id\n"
+    "SKB8.640193\tANL\tPC.354\t1\t1\n"
+    "SKD8.640184\tANL\tPC.593\t1\t1\n"
+    "SKB7.640196\tANL\tPC.607\t1\t1\n"
+    "SKM9.640192\tANL\tPC.636\t1\t1\n")
 
 if __name__ == "__main__":
     main()

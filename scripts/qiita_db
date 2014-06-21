@@ -16,7 +16,8 @@ from qiita_db.util import (get_filetypes, get_filepath_types,
 from qiita_db.commands import (load_sample_template_from_cmd,
                                load_study_from_cmd,
                                load_raw_data_cmd, load_processed_data_cmd,
-                               load_preprocessed_data_from_cmd)
+                               load_preprocessed_data_from_cmd,
+                               load_prep_template_from_cmd)
 
 
 @click.group()
@@ -132,6 +133,20 @@ def load_sample_template(fp, study):
     sample_temp = load_sample_template_from_cmd(fp, study)
     print("Sample template successfully added to the database with id %s"
           % sample_temp.id)
+
+
+@qiita_db.command()
+@click.option('--fp', required=True,
+              type=click.Path(resolve_path=True, readable=True, exists=True),
+              help='Path to the tab delimited file holding the prep '
+                   'template information')
+@click.option('--raw_data', required=True, type=int,
+              help='Associate the prep template with this raw data')
+def load_prep_template(fp, raw_data):
+    """Loads a sample template to the database"""
+    prep_template = load_prep_template_from_cmd(fp, raw_data)
+    print("Prep template successfully added to the database with id %s"
+          % prep_template.id)
 
 
 if __name__ == '__main__':
