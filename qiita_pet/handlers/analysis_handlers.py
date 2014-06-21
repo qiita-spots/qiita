@@ -10,6 +10,8 @@ Qitta analysis handlers for the Tornado webserver.
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 from __future__ import division
+from tempfile import mkstemp
+from os import close
 
 from tornado.web import authenticated, asynchronous
 from collections import defaultdict
@@ -22,6 +24,7 @@ from qiita_db.study import Study
 from qiita_db.data import ProcessedData
 from qiita_db.metadata_template import SampleTemplate
 from qiita_db.job import Job
+from qiita_db.util import get_db_files_base_dir
 # login code modified from https://gist.github.com/guillaumevincent/4771570
 
 
@@ -116,17 +119,30 @@ class AnalysisWaitHandler(BaseHandler):
         analysis = Analysis(analysis_id)
 
         commands = []
+        # HARD CODED HACKY THING FOR DEMO, FIX  Issue #164
+        fp, mapping_file = mkstemp(suffix="_map_file.txt")
+        close(fp)
+        SampleTemplate(1).to_file(mapping_file)
+        study_fps = {}
+        for pd in Study(1).processed_data:
+            processed = ProcessedData(pd)
+            study_fps[processed.data_type] = processed.get_filepaths()[0][0]
         for data_type, command in split:
-            Job.create(data_type, command, {}, analysis)
-            commands.append("%s:%s" % (data_type, command))
 
-        self.render("analysis_waiting.html", user=self.get_current_user(),
+            opts = {
+                "--otu_table_fp": study_fps[data_type],
+                "--mapping_fp": mapping_file
+            }
+
+            Job.create(data_type, command, opts, analysis)
+            commands.append("%s: %s" % (data_type, command))
+        user = self.get_current_user()
+        self.render("analysis_waiting.html", user=user,
                     aid=analysis_id, aname=analysis.name,
                     commands=commands)
         # fire off analysis run here
         # currently synch run so redirect done here. Will remove after demo
-        run_analysis(analysis)
-        self.redirect("/analysis/results/%s" % analysis_id)
+        run_analysis(user, analysis)
 
 
 class AnalysisResultsHandler(BaseHandler):
@@ -140,7 +156,8 @@ class AnalysisResultsHandler(BaseHandler):
                                              jobject.results))
 
         self.render("analysis_results.html", user=self.get_current_user(),
-                    jobres=jobres, aname=analysis.name)
+                    jobres=jobres, aname=analysis.name,
+                    basefolder=get_db_files_base_dir())
 
 
 class ShowAnalysesHandler(BaseHandler):
