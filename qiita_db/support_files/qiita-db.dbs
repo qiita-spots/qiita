@@ -449,7 +449,7 @@ An investigation comprises one or more individual studies.</comment>
 				<fk_column name="data_type_id" pk="data_type_id" />
 			</fk>
 			<fk name="fk_job" to_schema="qiita" to_table="logging" >
-				<fk_column name="log_id" pk="log_id" />
+				<fk_column name="log_id" pk="logging_id" />
 			</fk>
 		</table>
 		<table name="job_results_filepath" >
@@ -481,7 +481,7 @@ An investigation comprises one or more individual studies.</comment>
 			</index>
 		</table>
 		<table name="logging" >
-			<column name="log_id" type="bigserial" jt="-5" mandatory="y" />
+			<column name="logging_id" type="bigserial" jt="-5" mandatory="y" />
 			<column name="time" type="timestamp" jt="93" mandatory="y" >
 				<comment><![CDATA[Time the error was thrown]]></comment>
 			</column>
@@ -492,11 +492,11 @@ An investigation comprises one or more individual studies.</comment>
 			<column name="information" type="varchar" jt="12" >
 				<comment><![CDATA[Other applicable information (depending on error)]]></comment>
 			</column>
-			<index name="pk_logging" unique="PRIMARY_KEY" >
-				<column name="log_id" />
-			</index>
 			<index name="idx_logging_0" unique="NORMAL" >
 				<column name="severity_id" />
+			</index>
+			<index name="pk_logging" unique="PRIMARY_KEY" >
+				<column name="logging_id" />
 			</index>
 			<fk name="fk_logging_severity" to_schema="qiita" to_table="severity" >
 				<fk_column name="severity_id" pk="severity_id" />
@@ -1232,7 +1232,6 @@ Controlled Vocabulary]]></comment>
 		<entity schema="qiita" name="controlled_vocab_values" color="d0def5" x="45" y="1530" />
 		<entity schema="qiita" name="controlled_vocabularies" color="d0def5" x="45" y="1320" />
 		<entity schema="qiita" name="severity" color="c0d4f3" x="1500" y="1200" />
-		<entity schema="qiita" name="logging" color="c0d4f3" x="1365" y="1200" />
 		<entity schema="qiita" name="study_person" color="c0d4f3" x="2040" y="90" />
 		<entity schema="qiita" name="investigation" color="c0d4f3" x="2040" y="240" />
 		<entity schema="qiita" name="investigation_study" color="c0d4f3" x="2040" y="390" />
@@ -1288,6 +1287,7 @@ Controlled Vocabulary]]></comment>
 		<entity schema="qiita" name="preprocessed_data" color="c0d4f3" x="1200" y="690" />
 		<entity schema="qiita" name="processed_filepath" color="c0d4f3" x="1005" y="930" />
 		<entity schema="qiita" name="command" color="d0def5" x="210" y="1095" />
+		<entity schema="qiita" name="logging" color="c0d4f3" x="1365" y="1200" />
 		<entity schema="qiita" name="processed_params_uclust" color="d0def5" x="2025" y="795" />
 		<entity schema="qiita" name="reference" color="c0d4f3" x="2070" y="945" />
 		<entity schema="qiita" name="preprocessed_spectra_params" color="d0def5" x="1830" y="825" />
