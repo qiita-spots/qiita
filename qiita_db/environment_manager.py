@@ -148,7 +148,7 @@ def drop_test_environment(user, password, host):
     cur = conn.cursor()
 
     if not _check_db_exists('qiita_test', cur):
-        QiitaEnvironmentError(
+        raise QiitaEnvironmentError(
             "Test environment not present on the system. You can create it "
             "by running 'qiita_env make_test_env'")
 
@@ -272,7 +272,7 @@ def drop_demo_environment(user, password, host):
     cur = conn.cursor()
 
     if not _check_db_exists('qiita_demo', cur):
-        QiitaEnvironmentError(
+        raise QiitaEnvironmentError(
             "Demo environment not present on the system. You can create it "
             "by running 'qiita_env make_demo_env'")
 
