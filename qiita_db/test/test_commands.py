@@ -142,10 +142,10 @@ class TestLoadPrepTemplateFromCmd(TestCase):
         self.raw_data = RawData.create(
             2, [(seqs_fp, 1), (barcodes_fp, 2)], [Study(1)])
 
-    def test_load_sample_template_from_cmd(self):
+    def test_load_prep_template_from_cmd(self):
         """Correctly adds a sample template to the DB"""
-        fh = StringIO(self.st_contents)
-        st = load_prep_template_from_cmd(fh, self.study.id)
+        fh = StringIO(self.pt_contents)
+        st = load_prep_template_from_cmd(fh, self.raw_data.id)
         self.assertEqual(st.id, self.raw_data.id)
 
 
@@ -326,7 +326,7 @@ SAMPLE_TEMPLATE = (
     "\tFast\t20080116\tFasting_mouse_I.D._636")
 
 PREP_TEMPLATE = (
-    "")
+    "#SampleID\tcenter_name\tcusom_col\temp_status_id\tdata_type_id\nSKB8.640193\tANL\tPC.354\t1\t1\nSKD8.640184\tANL\tPC.593\t1\t1\nSKB7.640196\tANL\tPC.607\t1\t1\nSKM9.640192\tANL\tPC.636\t1\t1\n")
 
 if __name__ == "__main__":
     main()
