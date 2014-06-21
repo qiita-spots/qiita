@@ -19,11 +19,12 @@ from json import dumps, loads
 from os.path import join
 from time import strftime
 from datetime import date
+from functools import partial
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 
 from .base import QiitaStatusObject
-from .util import insert_filepaths, convert_to_id
+from .util import insert_filepaths, convert_to_id, get_db_files_base_dir
 from .sql_connection import SQLConnectionHandler
 from .logger import LogEntry
 from .exceptions import QiitaDBStatusError
@@ -58,6 +59,16 @@ class Job(QiitaStatusObject):
         or errored
         """
         self._lock_job(conn_handler)
+
+    @staticmethod
+    def get_commands():
+        """returns commands available with the options as well
+
+        Returns
+        -------
+        list of command objects
+        """
+        return Command.create_list()
 
     @classmethod
     def exists(cls, datatype, command, options):
@@ -107,7 +118,7 @@ class Job(QiitaStatusObject):
         Job object
             The newly created job
         """
-        # IGNORING EXISTS FOR DEMO
+        # EXISTS IGNORED FOR DEMO, ISSUE #83
         # if cls.exists(datatype, command, options):
         #     raise QiitaDBDuplicateError(
         #         "Job", "datatype: %s, command: %s, options: %s"
@@ -137,13 +148,6 @@ class Job(QiitaStatusObject):
 
     @property
     def datatype(self):
-        """Returns the datatype of the job
-
-        Returns
-        -------
-        str
-            datatype of the job
-        """
         sql = ("SELECT data_type from qiita.data_type WHERE data_type_id = "
                "(SELECT data_type_id from qiita.{0} WHERE "
                "job_id = %s)".format(self._table))
@@ -177,14 +181,21 @@ class Job(QiitaStatusObject):
         sql = ("SELECT options FROM qiita.{0} WHERE "
                "job_id = %s".format(self._table))
         conn_handler = SQLConnectionHandler()
-
-        json = conn_handler.execute_fetchone(sql, (self._id, ))[0]
         try:
-            parsed = loads(json)
+            opts = loads(conn_handler.execute_fetchone(sql, (self._id, ))[0])
         except ValueError:
             raise IncompetentQiitaDeveloperError("Malformed options for job "
                                                  "id %d" % self._id)
-        return parsed
+        sql = ("SELECT command, output from qiita.command WHERE command_id = ("
+               "SELECT command_id from qiita.{0} WHERE "
+               "job_id = %s)".format(self._table))
+        db_comm = conn_handler.execute_fetchone(sql, (self._id, ))
+        out_opt = loads(db_comm[1])
+        basedir = get_db_files_base_dir(conn_handler)
+        join_f = partial(join, join(basedir, "job"))
+        for k in out_opt:
+            opts[k] = join_f("%s_%s_%s" % (self._id, db_comm[0], k.strip("-")))
+        return opts
 
     @property
     def results(self):
@@ -253,27 +264,100 @@ class Job(QiitaStatusObject):
         ----------
         results : list of tuples
             filepath information to add to job, in format
-            [(filepath, type_id), ...]
-            Where type_id is the filepath type id of the filepath passed
+            [(filepath, type), ...]
+            Where type is the filepath type of the filepath passed
 
         Notes
         -----
-        If your results are a folder of files, pass the base folder as the
-        filepath and the type_id as 7 (tar). This function will automatically
-        tar the folder before adding it.
-
-        Reference
-        ---------
-        [1] http://stackoverflow.com/questions/2032403/
-            how-to-create-full-compressed-tar-file-using-python
+        Curently available file types are:
+        biom, directory, plain_text
         """
         # add filepaths to the job
         conn_handler = SQLConnectionHandler()
         self._lock_job(conn_handler)
-        file_ids = insert_filepaths(results, self._id, self._table,
-                                    "filepath", conn_handler)
+        # convert all file type text to file type ids
+        res_ids = [(fp, convert_to_id(fptype, "filepath_type", conn_handler))
+                   for fp, fptype in results]
+        file_ids = insert_filepaths(res_ids, self._id, self._table,
+                                    "filepath", conn_handler, move_files=False)
 
         # associate filepaths with job
         sql = ("INSERT INTO qiita.{0}_results_filepath (job_id, filepath_id) "
                "VALUES (%s, %s)".format(self._table))
         conn_handler.executemany(sql, [(self._id, fid) for fid in file_ids])
+
+
+class Command(object):
+    """Holds all information on the commands available
+
+    This will be an in-memory representation because the command table is
+    considerably more static than other objects tables, changing only with new
+    QIIME releases.
+
+    Attributes
+    ----------
+    name
+    command
+    input_opts
+    required_opts
+    optional_opts
+    output_opts
+    """
+    @classmethod
+    def create_list(cls):
+        """Creates list of all available commands
+
+        Returns
+        -------
+        list of Command objects
+        """
+        conn_handler = SQLConnectionHandler()
+        commands = conn_handler.execute_fetchall("SELECT * FROM qiita.command")
+        # create the list of command objects
+        return [cls(c["name"], c["command"], c["input"], c["required"],
+                c["optional"], c["output"]) for c in commands]
+
+    def __eq__(self, other):
+        if type(self) != type(other):
+            return False
+        if self.name != other.name:
+            return False
+        if self.command != other.command:
+            return False
+        if self.input_opts != other.input_opts:
+            return False
+        if self.output_opts != other.output_opts:
+            return False
+        if self.required_opts != other.required_opts:
+            return False
+        if self.optional_opts != other.optional_opts:
+            return False
+        return True
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+    def __init__(self, name, command, input_opts, required_opts,
+                 optional_opts, output_opts):
+        """Creates the command object
+
+        Parameters:
+        name : str
+            Name of the command
+        command: str
+            python command to run
+        input_opts : str
+            JSON of input options for the command
+        required_opts : str
+            JSON of required options for the command
+        optional_opts : str
+            JSON of optional options for the command
+        output_opts : str
+            JSON of output options for the command
+        """
+        self.name = name
+        self.command = command
+        self.input_opts = dumps(input_opts)
+        self.required_opts = dumps(required_opts)
+        self.optional_opts = dumps(optional_opts)
+        self.output_opts = dumps(output_opts)

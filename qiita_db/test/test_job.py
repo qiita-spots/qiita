@@ -7,15 +7,14 @@
 # -----------------------------------------------------------------------------
 
 from unittest import TestCase, main
-from os import remove, close
-from os.path import exists, join, basename
+from os import remove
+from os.path import join
 from shutil import rmtree
 from datetime import datetime
-from tempfile import mkdtemp, mkstemp
 
 from qiita_core.util import qiita_test_checker
-from qiita_db.job import Job
-from qiita_db.util import get_db_files_base_dir, get_work_base_dir
+from qiita_db.job import Job, Command
+from qiita_db.util import get_db_files_base_dir
 from qiita_db.analysis import Analysis
 from qiita_db.exceptions import QiitaDBDuplicateError, QiitaDBStatusError
 from qiita_db.logger import LogEntry
@@ -39,18 +38,38 @@ class JobTest(TestCase):
         for item in self._delete_dir:
             rmtree(item)
 
-    def test_exists(self):
-        """tests that existing job returns true"""
-        self.assertTrue(Job.exists("16S", "Summarize Taxa",
-                                   {'option1': True, 'option2': 12,
-                                    'option3': 'FCM'}))
+    # EXISTS IGNORED FOR DEMO, ISSUE #83
+    # def test_exists(self):
+    #     """tests that existing job returns true"""
+    #     self.assertTrue(Job.exists("16S", "Summarize Taxa",
+    #                                {'option1': True, 'option2': 12,
+    #                                 'option3': 'FCM'}))
 
-    def test_exists_not_there(self):
-        """tests that non-existant job returns false"""
-        self.assertFalse(Job.exists("Metabolomic",
-                                    "Summarize Taxa",
-                                    {'option1': "Nope", 'option2': 10,
-                                     'option3': 'FCM'}))
+    # def test_exists_not_there(self):
+    #     """tests that non-existant job returns false"""
+    #     self.assertFalse(Job.exists("Metabolomic",
+    #                                 "Summarize Taxa",
+    #                                 {'option1': "Nope", 'option2': 10,
+    #                                  'option3': 'FCM'}))
+
+    def test_get_commands(self):
+        exp = [
+            Command('Summarize Taxa', 'summarize_taxa_through_plots.py',
+                    '{"--otu_table_fp":null}', '{}',
+                    '{"--mapping_category":null, "--mapping_fp":null,'
+                    '"--sort":null}', '{"--output_dir":null}'),
+            Command('Beta Diversity', 'beta_diversity_through_plots.py',
+                    '{"--otu_table_fp":null,"--mapping_fp":null}', '{}',
+                    '{"--tree_fp":null,"--color_by_all_fields":null,'
+                    '"--seqs_per_sample":null}', '{"--output_dir":null}'),
+            Command('Alpha Rarefaction', 'alpha_rarefaction.py',
+                    '{"--otu_table_fp":null,"--mapping_fp":null}', '{}',
+                    '{"--tree_fp":null,"--num_steps":null,''"--min_rare_depth"'
+                    ':null,"--max_rare_depth":null,'
+                    '"--retain_intermediate_files":false}',
+                    '{"--output_dir":null}')
+            ]
+        self.assertEqual(Job.get_commands(), exp)
 
     def test_create(self):
         """Makes sure creation works as expected"""
@@ -105,8 +124,11 @@ class JobTest(TestCase):
                                             'summarize_taxa_through_plots.py'])
 
     def test_retrieve_options(self):
-        self.assertEqual(self.job.options, {'option1': True, 'option2': 12,
-                                            'option3': 'FCM'})
+        self.assertEqual(self.job.options, {
+            '--otu_table_fp': 1,
+            '--output_dir': join(get_db_files_base_dir(), 'job/'
+                                 '1_summarize_taxa_through_plots.py'
+                                 '_output_dir')})
 
     def test_retrieve_results(self):
         self.assertEqual(self.job.results, [join("job", "1_job_result.txt")])
@@ -143,13 +165,8 @@ class JobTest(TestCase):
         self.assertEqual(self.job.error.msg, "TESTERROR")
 
     def test_add_results(self):
-        self.job.add_results([(join(get_work_base_dir(),
-                                    "placeholder.txt"), 8)])
-        # make sure file copied correctly
-        self._delete_path = [join(get_db_files_base_dir(), "job",
-                             "1_placeholder.txt")]
-        self.assertTrue(exists(join(get_db_files_base_dir(), "job",
-                                    "1_placeholder.txt")))
+        self.job.add_results([(join(get_db_files_base_dir(), "job",
+                                    "1_job_result.txt"), "plain_text")])
 
         # make sure files attached to job properly
         obs = self.conn_handler.execute_fetchall(
@@ -159,22 +176,10 @@ class JobTest(TestCase):
 
     def test_add_results_dir(self):
         # Create a test directory
-        test_dir = mkdtemp(dir=get_work_base_dir())
-        self._delete_dir.append(test_dir)
-        fd, test_file = mkstemp(dir=test_dir, suffix='.txt')
-        close(fd)
-        with open(test_file, "w") as f:
-            f.write('\n')
-        self._delete_path.append(test_file)
+        test_dir = join(get_db_files_base_dir(), "job", "2_test_folder")
 
         # add folder to job
-        self.job.add_results([(test_dir, 7)])
-
-        # check that the directory was copied correctly
-        db_path = join(get_db_files_base_dir(), "job",
-                       "1_%s" % basename(test_dir))
-        self._delete_dir.append(db_path)
-        self.assertTrue(exists(db_path))
+        self.job.add_results([(test_dir, "directory")])
 
         # make sure files attached to job properly
         obs = self.conn_handler.execute_fetchall(
@@ -184,7 +189,7 @@ class JobTest(TestCase):
     def test_add_results_completed(self):
         self.job.status = "completed"
         with self.assertRaises(QiitaDBStatusError):
-            self.job.add_results([("/fake/dir/", 7)])
+            self.job.add_results([("/fake/dir/", "directory")])
 
 
 if __name__ == "__main__":
