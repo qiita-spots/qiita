@@ -78,6 +78,7 @@ def make_environment(env, base_data_dir, base_work_dir, user, password, host):
                "it by running `qiita_env drop_env --env {0}".format(env))
     else:
         # Create the database
+        print('Creating database')
         cur.execute('CREATE DATABASE %s' % ENVIRONMENTS[env])
         cur.close()
         conn.close()
@@ -87,17 +88,19 @@ def make_environment(env, base_data_dir, base_work_dir, user, password, host):
                        database=ENVIRONMENTS[env])
         cur = conn.cursor()
 
+        print('Inserting database metadata')
         # Build the SQL layout into the database
         with open(SETTINGS_FP, 'U') as f:
             cur.execute(f.read())
 
         # Insert the settings values to the database
         cur.execute("INSERT INTO settings (test, base_data_dir, base_work_dir)"
-                    " VALUES (%s, '%s', '%s')"
-                    % (env == 'test', base_data_dir, base_work_dir))
+                    " VALUES (TRUE, '%s', '%s')"
+                    % (base_data_dir, base_work_dir))
 
         if env == 'demo':
             # Create the schema
+            print('Building SQL layout')
             with open(LAYOUT_FP, 'U') as f:
                 cur.execute(f.read())
 
@@ -153,6 +156,11 @@ def make_environment(env, base_data_dir, base_work_dir, user, password, host):
             # clean up after ourselves
             rmtree(outdir)
             print('Demo environment successfully created')
+        else:
+            # Commit all the changes and close the connections
+            conn.commit()
+            cur.close()
+            conn.close()
 
 
 def drop_environment(env, user, password, host):

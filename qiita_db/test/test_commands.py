@@ -17,7 +17,7 @@ with standard_library.hooks():
     import configparser
 
 from qiita_db.commands import (load_study_from_cmd, load_raw_data_cmd,
-                               sample_template_adder, load_processed_data_cmd,
+                               load_sample_template_from_cmd, load_processed_data_cmd,
                                load_preprocessed_data_from_cmd)
 from qiita_db.study import Study, StudyPerson
 from qiita_db.user import User
@@ -95,7 +95,7 @@ class TestImportPreprocessedData(TestCase):
 
 
 @qiita_test_checker()
-class SampleTemplateAdderTests(TestCase):
+class TestLoadSampleTemplateFromCmd(TestCase):
     def setUp(self):
         # Create a sample template file
         self.st_contents = SAMPLE_TEMPLATE
@@ -118,10 +118,10 @@ class SampleTemplateAdderTests(TestCase):
         self.study = Study.create(User('test@foo.bar'),
                                   "Test study", [1], info)
 
-    def test_sample_template_adder(self):
+    def test_load_sample_template_from_cmd(self):
         """Correctly adds a sample template to the DB"""
         fh = StringIO(self.st_contents)
-        st = sample_template_adder(fh, self.study.id)
+        st = load_sample_template_from_cmd(fh, self.study.id)
         self.assertEqual(st.id, self.study.id)
 
 
