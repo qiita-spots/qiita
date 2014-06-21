@@ -6,10 +6,8 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 from smtplib import SMTP, SMTP_SSL, SMTPException
-try:
-    from email.MIMEMultipart import MIMEMultipart
-    from email.MIMEText import MIMEText
-except ImportError:  # python3
+from future import standard_library
+with standard_library.hooks():
     from email.mime.multipart import MIMEMultipart
     from email.mime.text import MIMEText
 

@@ -11,10 +11,11 @@ Qitta analysis handlers for the Tornado webserver.
 # -----------------------------------------------------------------------------
 from __future__ import division
 
-from tornado.web import authenticated
+from tornado.web import authenticated, asynchronous
 from collections import defaultdict
 
 from qiita_pet.handlers.base_handlers import BaseHandler
+from qiita_ware.run import run_analysis
 from qiita_db.user import User
 from qiita_db.analysis import Analysis
 from qiita_db.study import Study
@@ -108,6 +109,7 @@ class AnalysisWaitHandler(BaseHandler):
                     commands=commands)
 
     @authenticated
+    @asynchronous
     def post(self, analysis_id):
         command_args = self.get_arguments("commands")
         split = [x.split("#") for x in command_args]
@@ -122,6 +124,9 @@ class AnalysisWaitHandler(BaseHandler):
                     aid=analysis_id, aname=analysis.name,
                     commands=commands)
         # fire off analysis run here
+        # currently synch run so redirect done here. Will remove after demo
+        run_analysis(analysis)
+        self.redirect("/analysis/results/%s" % analysis_id)
 
 
 class AnalysisResultsHandler(BaseHandler):
