@@ -103,7 +103,7 @@ class SQLConnectionHandler(object):
             except PostgresError as e:
                 self._connection.rollback()
                 try:
-                    if not isinstance(sql_args, Iterable):
+                    if not isinstance(sql_args[0], Iterable):
                         err_sql = cur.mogrify(sql, sql_args)
                     else:
                         err_sql = cur.mogrify(sql, sql_args[0])

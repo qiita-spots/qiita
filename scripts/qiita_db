@@ -73,15 +73,17 @@ def load_raw_data(fp, fp_type, filetype, study):
               type=click.Choice(get_filepath_types().keys()))
 @click.option('--params_id', required=True,
               help="id in the paramater table associated with the parameters")
-@click.option('--submitted_to_insdc', is_flag=True,
+@click.option('--raw_data_id', help="Raw data id associated with data",
+              default=None)
+@click.option('--insdc', is_flag=True,
               help="If provided, the preprocessed data have been submitted"
-                   " to insdc", required=True)
-def load_preprocessed_data(study_id, filedir, filepathtype,
-                           params_table_name, params_id, submitted_to_insdc):
+                   " to insdc")
+def load_preprocessed_data(study_id, params_table, filedir, filepathtype,
+                           params_id, raw_data_id, insdc):
     """Loads a preprocessed data to the database"""
     preproc_data = load_preprocessed_data_from_cmd(
-        study_id, filedir, filepathtype, params_table_name,
-        params_id, submitted_to_insdc)
+        study_id, params_table, filedir, filepathtype, params_id, insdc,
+        raw_data_id)
     print("Preprocessed data successfully added to the database with id %s"
           % preproc_data.id)
 
