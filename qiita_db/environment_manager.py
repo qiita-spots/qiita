@@ -199,7 +199,7 @@ def drop_environment(env, user, password, host):
                   "table.biom"), 'w') as fout:
             fout.write("\n")
 
-    cur.execute('DROP DATABASE qiita_test')
+    cur.execute('DROP DATABASE %s' % ENVIRONMENTS[env])
     # Close cursor and connection
     cur.close()
     conn.close()

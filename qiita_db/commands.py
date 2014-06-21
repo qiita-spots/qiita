@@ -20,7 +20,7 @@ from .study import Study, StudyPerson
 from .user import User
 from .util import get_filetypes, get_filepath_types
 from .data import RawData, PreprocessedData, ProcessedData
-from .metadata_template import SampleTemplate
+from .metadata_template import SampleTemplate, PrepTemplate
 
 
 def load_study_from_cmd(owner, title, info):
@@ -123,6 +123,21 @@ def load_sample_template_from_cmd(sample_temp_path, study_id):
     sample_temp = pd.DataFrame.from_csv(sample_temp_path, sep='\t',
                                         infer_datetime_format=True)
     return SampleTemplate.create(sample_temp, Study(study_id))
+
+
+def load_prep_template_from_cmd(sample_temp_path, study_id):
+    r"""Adds a prep template to the database
+
+    Parameters
+    ----------
+    prep_temp_path : str
+        Path to the sample template file
+    study_id : int
+        The study id to which the sample template belongs
+    """
+    prep_temp = pd.DataFrame.from_csv(sample_temp_path, sep='\t',
+                                      infer_datetime_format=True)
+    return PrepTemplate.create(prep_temp, RawData(study_id))
 
 
 def load_raw_data_cmd(filepaths, filepath_types, filetype, study_ids):
