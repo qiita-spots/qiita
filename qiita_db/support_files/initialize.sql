@@ -38,4 +38,7 @@ INSERT INTO qiita.filepath_type (filepath_type) VALUES ('raw_sequences'), ('raw_
 INSERT INTO qiita.checksum_algorithm (name) VALUES ('crc32');
 
 -- Populate commands available
-INSERT INTO qiita.command (name, command) VALUES ('Summarize Taxa', 'summarize_taxa_through_plots.py'), ('Beta Diversity', 'beta_diversity_through_plots.py'), ('Alpha Rarefaction', 'alpha_rarefaction.py');
+INSERT INTO qiita.command (name, command, input, required, optional, output) VALUES 
+('Summarize Taxa', 'summarize_taxa_through_plots.py', '{"--otu_table_fp":null}', '{}', '{"--mapping_category":null, "--mapping_fp":null,"--sort":null}', '{"--output_dir":null}'),
+('Beta Diversity', 'beta_diversity_through_plots.py', '{"--otu_table_fp":null,"--mapping_fp":null}', '{}', '{"--tree_fp":null,"--color_by_all_fields":null,"--seqs_per_sample":null}', '{"--output_dir":null}'),
+('Alpha Rarefaction', 'alpha_rarefaction.py', '{"--otu_table_fp":null,"--mapping_fp":null}', '{}', '{"--tree_fp":null,"--num_steps":null,"--min_rare_depth":null,"--max_rare_depth":null,"--retain_intermediate_files":false}', '{"--output_dir":null}');

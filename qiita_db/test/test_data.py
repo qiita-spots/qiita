@@ -42,12 +42,12 @@ class RawDataTests(TestCase):
         self.filepaths = [(self.seqs_fp, 1), (self.barcodes_fp, 2)]
         self.studies = [Study(1)]
         self.db_test_raw_dir = join(get_db_files_base_dir(), 'raw_data')
-        self._clean_up_files = [self.seqs_fp, self.barcodes_fp]
 
         with open(self.seqs_fp, "w") as f:
             f.write("\n")
         with open(self.barcodes_fp, "w") as f:
             f.write("\n")
+        self._clean_up_files = []
 
     def tearDown(self):
         for f in self._clean_up_files:
@@ -128,12 +128,12 @@ class PreprocessedDataTests(TestCase):
         self.filepaths = [(self.fna_fp, 4), (self.qual_fp, 5)]
         self.db_test_ppd_dir = join(get_db_files_base_dir(),
                                     'preprocessed_data')
-        self._clean_up_files = [self.fna_fp, self.qual_fp]
 
         with open(self.fna_fp, "w") as f:
             f.write("\n")
         with open(self.qual_fp, "w") as f:
             f.write("\n")
+        self._clean_up_files = []
 
     def tearDown(self):
         for f in self._clean_up_files:
@@ -246,10 +246,10 @@ class ProcessedDataTests(TestCase):
         self.filepaths = [(self.biom_fp, 6)]
         self.date = datetime(2014, 5, 29, 12, 24, 51)
         self.db_test_pd_dir = join(get_db_files_base_dir(), 'processed_data')
-        self._clean_up_files = [self.biom_fp]
 
         with open(self.biom_fp, "w") as f:
             f.write("\n")
+        self._clean_up_files = []
 
     def tearDown(self):
         for f in self._clean_up_files:

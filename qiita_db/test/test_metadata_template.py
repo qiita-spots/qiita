@@ -808,8 +808,7 @@ class TestPrepTemplate(TestCase):
         db_test_raw_dir = join(get_db_files_base_dir(), 'raw_data')
         db_seqs_fp = join(db_test_raw_dir, "3_%s" % basename(seqs_fp))
         db_barcodes_fp = join(db_test_raw_dir, "3_%s" % basename(barcodes_fp))
-        self._clean_up_files = [seqs_fp, barcodes_fp, db_seqs_fp,
-                                db_barcodes_fp]
+        self._clean_up_files = [db_seqs_fp, db_barcodes_fp]
 
         self.tester = PrepTemplate(1)
         self.exp_sample_ids = {'SKB1.640202', 'SKB2.640194', 'SKB3.640195',
