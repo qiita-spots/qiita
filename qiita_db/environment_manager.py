@@ -148,7 +148,7 @@ def make_environment(env, base_data_dir, base_work_dir, user, password, host):
                         "processed_data/"
                         "study_1001_closed_reference_otu_table.biom"))
             remove(join(base_data_dir, "preprocessed_data/seqs.fna"))
-            move(join(basedir, "study_1001_closed_reference_otu_table.biom"),
+            move(join(basedir, "1_study_1001_closed_reference_otu_table.biom"),
                  join(base_data_dir, "processed_data"))
             move(join(basedir, "seqs.fna"), join(base_data_dir,
                                                  "preprocessed_data"))
