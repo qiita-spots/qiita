@@ -10,11 +10,8 @@ from dateutil.parser import parse
 from os import listdir
 from os.path import join
 from functools import partial
-try:
-    # Python 2
-    from ConfigParser import ConfigParser
-except ImportError:
-    # Python 3
+from future import standard_library
+with standard_library.hooks():
     from configparser import ConfigParser
 
 import pandas as pd
