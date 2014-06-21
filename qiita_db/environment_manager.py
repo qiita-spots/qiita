@@ -129,7 +129,15 @@ def make_environment(env, base_data_dir, base_work_dir, user, password, host):
             cur.close()
             conn.close()
 
-            # print('Downloading test files')
+            print('Downloading test files')
+            # Download tree file
+            url = ("https://github.com/biocore/Evident/blob/master/data/"
+                   "gg_97_otus_4feb2011.tre")
+            try:
+                urlretrieve(url, join(base_data_dir, "reference",
+                                      "gg_97_otus_4feb2011.tre"))
+            except:
+                raise IOError("Error: DOWNLOAD FAILED")
             # # download files from thebeast
             # url = ("ftp://thebeast.colorado.edu/pub/QIIME_DB_Public_Studies/"
             #        "study_1001_split_library_seqs_and_mapping.tgz")
@@ -200,9 +208,11 @@ def drop_environment(env, user, password, host):
             "Test environment not present on the system. You can create it "
             "by running 'qiita_env make_test_env'")
 
-    # if env == 'demo':
-    #     # wipe the overwriiten test files so empty as on repo
-    #     base = get_db_files_base_dir()
+    if env == 'demo':
+        # wipe the overwriiten test files so empty as on repo
+        base = get_db_files_base_dir()
+        with open(join(base, "reference", "gg_97_otus_4feb2011.tre")) as f:
+            f.write('\n')
     #     with open(join(base, "preprocessed_data/seqs.fna"), 'w') as fout:
     #         fout.write("\n")
     #     with open(join(base, "processed_data/study_1001_closed_reference"
