@@ -19,9 +19,10 @@ from json import dumps, loads
 from os.path import join
 from time import strftime
 from datetime import date
+from functools import partial
 
 from .base import QiitaStatusObject
-from .util import insert_filepaths, convert_to_id
+from .util import insert_filepaths, convert_to_id, get_db_files_base_dir
 from .sql_connection import SQLConnectionHandler
 from .exceptions import QiitaDBStatusError
 
@@ -104,7 +105,7 @@ class Job(QiitaStatusObject):
         Job object
             The newly created job
         """
-        # IGNORING EXISTS FOR DEMO
+        # EXISTS IGNORED FOR DEMO, ISSUE #83
         # if cls.exists(datatype, command, options):
         #     raise QiitaDBDuplicateError(
         #         "Job", "datatype: %s, command: %s, options: %s"
@@ -134,13 +135,6 @@ class Job(QiitaStatusObject):
 
     @property
     def datatype(self):
-        """Returns the datatype of the job
-
-        Returns
-        -------
-        str
-            datatype of the job
-        """
         sql = ("SELECT data_type from qiita.data_type WHERE data_type_id = "
                "(SELECT data_type_id from qiita.{0} WHERE "
                "job_id = %s)".format(self._table))
@@ -174,7 +168,17 @@ class Job(QiitaStatusObject):
         sql = ("SELECT options FROM qiita.{0} WHERE "
                "job_id = %s".format(self._table))
         conn_handler = SQLConnectionHandler()
-        return loads(conn_handler.execute_fetchone(sql, (self._id, ))[0])
+        opts = loads(conn_handler.execute_fetchone(sql, (self._id, ))[0])
+        sql = ("SELECT command, output from qiita.command WHERE command_id = ("
+               "SELECT command_id from qiita.{0} WHERE "
+               "job_id = %s)".format(self._table))
+        db_comm = conn_handler.execute_fetchone(sql, (self._id, ))
+        out_opt = loads(db_comm[1])
+        basedir = get_db_files_base_dir(conn_handler)
+        join_f = partial(join, join(basedir, "job"))
+        for k in out_opt:
+            opts[k] = join_f("%s_%s_%s" % (self._id, db_comm[0], k.strip("-")))
+        return opts
 
     @property
     def results(self):
@@ -245,25 +249,22 @@ class Job(QiitaStatusObject):
         ----------
         results : list of tuples
             filepath information to add to job, in format
-            [(filepath, type_id), ...]
-            Where type_id is the filepath type id of the filepath passed
+            [(filepath, type), ...]
+            Where type is the filepath type of the filepath passed
 
         Notes
         -----
-        If your results are a folder of files, pass the base folder as the
-        filepath and the type_id as 7 (tar). This function will automatically
-        tar the folder before adding it.
-
-        Reference
-        ---------
-        [1] http://stackoverflow.com/questions/2032403/
-            how-to-create-full-compressed-tar-file-using-python
+        Curently available file types are:
+        biom, directory, plain_text
         """
         # add filepaths to the job
         conn_handler = SQLConnectionHandler()
         self._lock_job(conn_handler)
-        file_ids = insert_filepaths(results, self._id, self._table,
-                                    "filepath", conn_handler)
+        # convert all file type text to file type ids
+        res_ids = [(fp, convert_to_id(fptype, "filepath_type", conn_handler))
+                   for fp, fptype in results]
+        file_ids = insert_filepaths(res_ids, self._id, self._table,
+                                    "filepath", conn_handler, move_files=False)
 
         # associate filepaths with job
         sql = ("INSERT INTO qiita.{0}_results_filepath (job_id, filepath_id) "
