@@ -54,15 +54,15 @@ class Analysis(QiitaStatusObject):
 
     _table = "analysis"
 
-    def _lock_public(self, conn_handler):
+    def _lock_check(self, conn_handler):
         """Raises QiitaDBStatusError if analysis is public"""
-        if self.check_status({"public", "running"}):
+        if self.check_status({"public", "completed", "error"}):
             raise QiitaDBStatusError("Analysis is locked!")
 
     def _status_setter_checks(self, conn_handler):
         r"""Perform a check to make sure not setting status away from public
         """
-        self._lock_public(conn_handler)
+        self._lock_check(conn_handler)
 
     @classmethod
     def create(cls, owner, name, description, parent=None):
@@ -149,7 +149,7 @@ class Analysis(QiitaStatusObject):
             Analysis is public
         """
         conn_handler = SQLConnectionHandler()
-        self._lock_public(conn_handler)
+        self._lock_check(conn_handler)
         sql = ("UPDATE qiita.{0} SET description = %s WHERE "
                "analysis_id = %s".format(self._table))
         conn_handler.execute(sql, (description, self._id))
@@ -254,7 +254,7 @@ class Analysis(QiitaStatusObject):
         An analysis should only ever have one PMID attached to it.
         """
         conn_handler = SQLConnectionHandler()
-        self._lock_public(conn_handler)
+        self._lock_check(conn_handler)
         sql = ("UPDATE qiita.{0} SET pmid = %s WHERE "
                "analysis_id = %s".format(self._table))
         conn_handler.execute(sql, (pmid, self._id))
@@ -278,7 +278,7 @@ class Analysis(QiitaStatusObject):
             The user to share the study with
         """
         conn_handler = SQLConnectionHandler()
-        self._lock_public(conn_handler)
+        self._lock_check(conn_handler)
 
         sql = ("INSERT INTO qiita.analysis_users (analysis_id, email) VALUES "
                "(%s, %s)")
@@ -293,7 +293,7 @@ class Analysis(QiitaStatusObject):
             The user to unshare the study with
         """
         conn_handler = SQLConnectionHandler()
-        self._lock_public(conn_handler)
+        self._lock_check(conn_handler)
 
         sql = ("DELETE FROM qiita.analysis_users WHERE analysis_id = %s AND "
                "email = %s")
@@ -309,7 +309,7 @@ class Analysis(QiitaStatusObject):
             [(processed_data_id, sample_id), ...]
         """
         conn_handler = SQLConnectionHandler()
-        self._lock_public(conn_handler)
+        self._lock_check(conn_handler)
 
         sql = ("INSERT INTO qiita.analysis_sample (analysis_id, sample_id, "
                "processed_data_id) VALUES (%s, %s, %s)")
@@ -326,7 +326,7 @@ class Analysis(QiitaStatusObject):
             [(processed_data_id, sample_id), ...]
         """
         conn_handler = SQLConnectionHandler()
-        self._lock_public(conn_handler)
+        self._lock_check(conn_handler)
 
         sql = ("DELETE FROM qiita.analysis_sample WHERE analysis_id = %s AND "
                "sample_id = %s AND processed_data_id = %s")
@@ -342,7 +342,7 @@ class Analysis(QiitaStatusObject):
             Biom tables to add
         """
         conn_handler = SQLConnectionHandler()
-        self._lock_public(conn_handler)
+        self._lock_check(conn_handler)
         file_ids = []
         for table in tables:
             file_ids.extend(table.get_filepath_ids())
@@ -359,7 +359,7 @@ class Analysis(QiitaStatusObject):
             Biom tables to remove
         """
         conn_handler = SQLConnectionHandler()
-        self._lock_public(conn_handler)
+        self._lock_check(conn_handler)
         file_ids = []
         for table in tables:
             file_ids.extend(table.get_filepath_ids())
@@ -375,7 +375,7 @@ class Analysis(QiitaStatusObject):
             jobs : list of Job objects
         """
         conn_handler = SQLConnectionHandler()
-        self._lock_public(conn_handler)
+        self._lock_check(conn_handler)
         sql = ("INSERT INTO qiita.analysis_job (analysis_id, job_id) "
                "VALUES (%s, %s)")
         conn_handler.executemany(sql, [(self._id, job.id) for job in jobs])

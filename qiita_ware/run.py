@@ -20,6 +20,8 @@ from qiita_ware.exceptions import ComputeError
 
 def run_analysis(analysis):
     """Run the commands within an Analysis object"""
+    analysis.status = "running"
+    all_good = True
     for job_id in analysis.jobs:
         job = Job(job_id)
         if job.status == 'queued':
@@ -27,8 +29,7 @@ def run_analysis(analysis):
             options = job.options
 
             o_fmt = ' '.join(['%s %s' % (k, v) for k, v in options.items()])
-            c_fmt = str("echo %s %s" % (command, o_fmt))
-            print "%s %s" % (command, o_fmt)
+            c_fmt = str("%s %s" % (command, o_fmt))
 
             try:
                 job.status = 'running'
@@ -36,6 +37,14 @@ def run_analysis(analysis):
                 job.add_results([(options['--output_dir'], 7)])
             except:
                 job.status = 'error'
-                raise ComputeError("Failed compute on job id %d" % job_id)
+                all_good = False
+                print("Failed compute on job id %d: %s" %
+                                   (job_id, c_fmt))
+
             else:
                 job.status = 'completed'
+    # set final analysis status
+    if all_good:
+        analysis.status = "completed"
+    else:
+        analysis.status = "error"
