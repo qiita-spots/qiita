@@ -396,11 +396,12 @@ class ProcessedData(BaseData):
     _table = "processed_data"
     _data_filepath_table = "processed_filepath"
     _data_filepath_column = "processed_data_id"
+    _study_processed_table = "study_processed_data"
     _preprocessed_processed_table = "preprocessed_processed_data"
 
     @classmethod
     def create(cls, processed_params_table, processed_params_id, filepaths,
-               preprocessed_data=None, processed_date=None):
+               preprocessed_data=None, study=None, processed_date=None):
         r"""
         Parameters
         ----------
@@ -414,6 +415,9 @@ class ProcessedData(BaseData):
             identifier
         preprocessed_data : PreprocessedData, optional
             The PreprocessedData object used as base to this processed data
+        study : Study, optional
+            If preprocessed_data is not provided, the study the processed data
+            belongs to
         processed_date : datetime, optional
             Date in which the data have been processed. Default: now
 
@@ -421,7 +425,19 @@ class ProcessedData(BaseData):
         ------
         IncompetentQiitaDeveloperError
             If the table `processed_params_table` does not exists
+            If `preprocessed_data` and `study` are provided at the same time
+            If `preprocessed_data` and `study` are not provided
         """
+        if preprocessed_data is not None:
+            if study is not None:
+                raise IncompetentQiitaDeveloperError(
+                    "You should provide either preprocessed_data or study, "
+                    "but not both")
+        else:
+            if study is None:
+                raise IncompetentQiitaDeveloperError(
+                    "You should provide either a preprocessed_data or a study")
+
         conn_handler = SQLConnectionHandler()
         # We first check that the processed_params_table exists
         if not exists_dynamic_table(processed_params_table,
@@ -453,6 +469,16 @@ class ProcessedData(BaseData):
                 "processed_data_id) VALUES "
                 "(%s, %s)".format(cls._preprocessed_processed_table),
                 (preprocessed_data.id, pd_id))
+            study_id = preprocessed_data.study
+        else:
+            study_id = study.id
+
+        # Connect the processed data with the study
+        conn_handler.execute(
+            "INSERT INTO qiita.{0} (study_id, processed_data_id) VALUES "
+            "(%s, %s)".format(cls._study_processed_table),
+            (study_id, pd_id))
+
         pd._add_filepaths(filepaths, conn_handler)
         return cls(pd_id)
 
