@@ -138,6 +138,11 @@ class TestLoadPrepTemplateFromCmd(TestCase):
         fd, barcodes_fp = mkstemp(suffix='_barcodes.fastq')
         close(fd)
 
+        with open(seqs_fp, "w") as f:
+            f.write("\n")
+        with open(barcodes_fp, "w") as f:
+            f.write("\n")
+
         self.pt_contents = PREP_TEMPLATE
 
         self.raw_data = RawData.create(
@@ -145,8 +150,8 @@ class TestLoadPrepTemplateFromCmd(TestCase):
 
         join_f = partial(join, join(get_db_files_base_dir(), 'raw_data'))
         self.files_to_remove = [
-            join_f("%s_%s" % (self.raw_data.id, seqs_fp)),
-            join_f("%s_%s" % (self.raw_data.id, barcodes_fp))]
+            join_f("%s_%s" % (self.raw_data.id, basename(seqs_fp))),
+            join_f("%s_%s" % (self.raw_data.id, basename(barcodes_fp)))]
 
     def tearDown(self):
         for fp in self.files_to_remove:
