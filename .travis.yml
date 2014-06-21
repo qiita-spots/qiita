@@ -23,7 +23,7 @@ script:
   - qiita_env start_cluster --cluster demo
   - qiita_env start_cluster --cluster reserved
   - qiita_env make_env --env test
-  - nosetests --with-doctest --with-coverage --cover-package=coveralls --cover-xml
+  - nosetests --with-doctest --with-coverage
   - pep8 qiita_db qiita_core qiita_pet setup.py
   # we need to run the test suite from setup.py for coveralls to grab the info
   # - coverage run setup.py test
