@@ -116,7 +116,7 @@ def make_environment(env, base_data_dir, base_work_dir, user, password, host):
             #     cur.execute(f.read())
 
             # Commit all the changes and close the connections
-
+            print('Populating database with demo data')
             cur.execute(
                 "INSERT INTO qiita.qiita_user (email, user_level_id, password,"
                 " name, affiliation, address, phone) VALUES "
@@ -128,9 +128,6 @@ def make_environment(env, base_data_dir, base_work_dir, user, password, host):
             conn.commit()
             cur.close()
             conn.close()
-
-            print('Populating database with demo data')
-
 
             # print('Downloading test files')
             # # download files from thebeast
@@ -203,14 +200,14 @@ def drop_environment(env, user, password, host):
             "Test environment not present on the system. You can create it "
             "by running 'qiita_env make_test_env'")
 
-    if env == 'demo':
-        # wipe the overwriiten test files so empty as on repo
-        base = get_db_files_base_dir()
-        with open(join(base, "preprocessed_data/seqs.fna"), 'w') as fout:
-            fout.write("\n")
-        with open(join(base, "processed_data/study_1001_closed_reference_otu_"
-                  "table.biom"), 'w') as fout:
-            fout.write("\n")
+    # if env == 'demo':
+    #     # wipe the overwriiten test files so empty as on repo
+    #     base = get_db_files_base_dir()
+    #     with open(join(base, "preprocessed_data/seqs.fna"), 'w') as fout:
+    #         fout.write("\n")
+    #     with open(join(base, "processed_data/study_1001_closed_reference"
+    #               "_otu_table.biom"), 'w') as fout:
+    #         fout.write("\n")
 
     cur.execute('DROP DATABASE %s' % ENVIRONMENTS[env])
     # Close cursor and connection
