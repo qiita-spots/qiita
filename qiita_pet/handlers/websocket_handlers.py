@@ -61,4 +61,3 @@ class MessageHandler(WebSocketHandler):
     def on_close(self):
         yield Task(self.redis.unsubscribe, self.channel)
         self.redis.disconnect()
-        pass
