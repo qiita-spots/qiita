@@ -10,6 +10,8 @@ Qitta analysis handlers for the Tornado webserver.
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 from __future__ import division
+from tempfile import mkstemp
+from os import close
 
 from tornado.web import authenticated, asynchronous
 from collections import defaultdict
@@ -116,8 +118,22 @@ class AnalysisWaitHandler(BaseHandler):
         analysis = Analysis(analysis_id)
 
         commands = []
+        # HARD CODED HACKY THING FOR DEMO, FIX  Issue #164
+        fp, mapping_file = mkstemp(suffix="_map_file.txt")
+        close(fp)
+        SampleTemplate(1).to_file(mapping_file)
+        study_fps = {}
+        for pd in Study(1).processed_data:
+            processed = ProcessedData(pd)
+            study_fps[processed.data_type] = processed.get_filepaths()[0][0]
         for data_type, command in split:
-            Job.create(data_type, command, {}, analysis)
+
+            opts = {
+                "--otu_table_fp": study_fps[data_type],
+                "--mapping_fp": mapping_file
+            }
+
+            Job.create(data_type, command, opts, analysis)
             commands.append("%s:%s" % (data_type, command))
 
         self.render("analysis_waiting.html", user=self.get_current_user(),

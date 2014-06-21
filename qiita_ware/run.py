@@ -26,10 +26,9 @@ def run_analysis(analysis):
             name, command = job.command
             options = job.options
 
-            options['--output_dir'] = mkdtemp()
-
             o_fmt = ' '.join(['%s %s' % (k, v) for k, v in options.items()])
             c_fmt = str("echo %s %s" % (command, o_fmt))
+            print "%s %s" % (command, o_fmt)
 
             try:
                 job.status = 'running'
