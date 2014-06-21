@@ -74,8 +74,8 @@ def make_environment(env, base_data_dir, base_work_dir, user, password, host):
     cur = conn.cursor()
     # Check that it does not already exists
     if _check_db_exists(ENVIRONMENTS[env], cur):
-        print ("Environment {0} already present on the system. You can drop "
-               "it by running `qiita_env drop_env --env {0}".format(env))
+        print("Environment {0} already present on the system. You can drop "
+              "it by running `qiita_env drop_env --env {0}".format(env))
     else:
         # Create the database
         print('Creating database')
