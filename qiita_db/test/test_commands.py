@@ -18,10 +18,12 @@ with standard_library.hooks():
 
 from qiita_db.commands import (load_study_from_cmd, load_raw_data_cmd,
                                load_sample_template_from_cmd,
+                               load_prep_template_from_cmd,
                                load_processed_data_cmd,
                                load_preprocessed_data_from_cmd)
 from qiita_db.study import Study, StudyPerson
 from qiita_db.user import User
+from qiita_db.data import RawData
 from qiita_db.util import get_count, check_count, get_db_files_base_dir
 from qiita_core.util import qiita_test_checker
 
@@ -124,6 +126,27 @@ class TestLoadSampleTemplateFromCmd(TestCase):
         fh = StringIO(self.st_contents)
         st = load_sample_template_from_cmd(fh, self.study.id)
         self.assertEqual(st.id, self.study.id)
+
+
+@qiita_test_checker()
+class TestLoadPrepTemplateFromCmd(TestCase):
+    def setUp(self):
+        # Create a sample template file
+        fd, seqs_fp = mkstemp(suffix='_seqs.fastq')
+        close(fd)
+        fd, barcodes_fp = mkstemp(suffix='_barcodes.fastq')
+        close(fd)
+
+        self.pt_contents = PREP_TEMPLATE
+
+        self.raw_data = RawData.create(
+            2, [(seqs_fp, 1), (barcodes_fp, 2)], [Study(1)])
+
+    def test_load_sample_template_from_cmd(self):
+        """Correctly adds a sample template to the DB"""
+        fh = StringIO(self.st_contents)
+        st = load_prep_template_from_cmd(fh, self.study.id)
+        self.assertEqual(st.id, self.raw_data.id)
 
 
 @qiita_test_checker()
@@ -301,6 +324,9 @@ SAMPLE_TEMPLATE = (
     "\tFast\t20071112\tFasting_mouse_I.D._607\n"
     "PC.636\t1\t2014-06-18 16:44\ttype_1\tTrue\tLocation_1\tTrue\tHS_ID_PC.636"
     "\tFast\t20080116\tFasting_mouse_I.D._636")
+
+PREP_TEMPLATE = (
+    "")
 
 if __name__ == "__main__":
     main()
