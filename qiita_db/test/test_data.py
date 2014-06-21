@@ -47,6 +47,7 @@ class RawDataTests(TestCase):
             f.write("\n")
         with open(self.barcodes_fp, "w") as f:
             f.write("\n")
+        self._clean_up_files = []
 
     def tearDown(self):
         for f in self._clean_up_files:
@@ -132,6 +133,7 @@ class PreprocessedDataTests(TestCase):
             f.write("\n")
         with open(self.qual_fp, "w") as f:
             f.write("\n")
+        self._clean_up_files = []
 
     def tearDown(self):
         for f in self._clean_up_files:
@@ -247,6 +249,7 @@ class ProcessedDataTests(TestCase):
 
         with open(self.biom_fp, "w") as f:
             f.write("\n")
+        self._clean_up_files = []
 
     def tearDown(self):
         for f in self._clean_up_files:
