@@ -20,6 +20,15 @@ TEST_ENVIRONMENT = TRUE
 
 # ----------------------------- IPython settings ------------------------------
 [ipython]
+# ties to cluster profiles
+DEMO_CLUSTER = qiita_demo
+DEMO_CLUSTER_SIZE = 1
+
+RESERVED_CLUSTER = qiita_reserved
+RESERVED_CLUSTER_SIZE = 1
+
+GENERAL_CLUSTER = qiita_general
+GENERAL_CLUSTER_SIZE = 1
 
 # ----------------------------- Redis settings --------------------------------
 [redis]

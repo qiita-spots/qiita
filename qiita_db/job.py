@@ -20,9 +20,12 @@ from os.path import join
 from time import strftime
 from datetime import date
 
+from qiita_core.exceptions import IncompetentQiitaDeveloperError
+
 from .base import QiitaStatusObject
 from .util import insert_filepaths, convert_to_id
 from .sql_connection import SQLConnectionHandler
+from .logger import LogEntry
 from .exceptions import QiitaDBStatusError
 
 
@@ -36,7 +39,7 @@ class Job(QiitaStatusObject):
     command
     options
     results
-    error_msg
+    error
 
     Methods
     -------
@@ -174,7 +177,14 @@ class Job(QiitaStatusObject):
         sql = ("SELECT options FROM qiita.{0} WHERE "
                "job_id = %s".format(self._table))
         conn_handler = SQLConnectionHandler()
-        return loads(conn_handler.execute_fetchone(sql, (self._id, ))[0])
+
+        json = conn_handler.execute_fetchone(sql, (self._id, ))[0]
+        try:
+            parsed = loads(json)
+        except ValueError:
+            raise IncompetentQiitaDeveloperError("Malformed options for job "
+                                                 "id %d" % self._id)
+        return parsed
 
     @property
     def results(self):
@@ -196,7 +206,7 @@ class Job(QiitaStatusObject):
         return [join("job", fp[0]) for fp in results]
 
     @property
-    def error_msg(self):
+    def error(self):
         """String with an error message, if the job failed
 
         Returns
@@ -204,11 +214,16 @@ class Job(QiitaStatusObject):
         str or None
             error message/traceback for a job, or None if none exists
         """
-        sql = ("SELECT msg FROM qiita.logging WHERE log_id = (SELECT log_id "
-               "FROM qiita.{0} WHERE job_id = %s)".format(self._table))
         conn_handler = SQLConnectionHandler()
-        msg = conn_handler.execute_fetchone(sql, (self._id, ))
-        return msg if msg is None else msg[0]
+        sql = ("SELECT log_id FROM qiita.{0} "
+               "WHERE job_id = %s".format(self._table))
+        logging_id = conn_handler.execute_fetchone(sql, (self._id, ))[0]
+        if logging_id is None:
+            ret = None
+        else:
+            ret = LogEntry(logging_id)
+
+        return ret
 
 # --- Functions ---
     def set_error(self, msg, severity):
@@ -221,22 +236,15 @@ class Job(QiitaStatusObject):
         severity: int
             Severity code of error
         """
-        # insert the error into the logging table
-        errtime = ' '.join((date.today().isoformat(), strftime("%H:%M:%S")))
-        self._log_error(msg, severity, errtime)
-
-    def _log_error(self, msg, severity, timestamp):
-        sql = ("INSERT INTO qiita.logging (time, severity_id, msg) VALUES "
-               "(%s, %s, %s) RETURNING log_id")
         conn_handler = SQLConnectionHandler()
+        log_entry = LogEntry.create(severity, msg)
         self._lock_job(conn_handler)
-        logid = conn_handler.execute_fetchone(sql, (timestamp,
-                                                    severity, msg))[0]
 
         # attach the error to the job and set to error
         sql = ("UPDATE qiita.{0} SET log_id = %s, job_status_id = 4 WHERE "
                "job_id = %s".format(self._table))
-        conn_handler.execute(sql, (logid, self._id))
+
+        conn_handler.execute(sql, (log_entry.id, self._id))
 
     def add_results(self, results):
         """Adds a list of results to the results

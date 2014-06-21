@@ -61,17 +61,20 @@ def load_raw_data(fp, fp_type, filetype, study):
 @click.option('--preprocessed_data_id', type=int, default=None, help='The '
               'ID of the row in the preprocessed_data table from which '
               'this processed data was created')
+@click.option('--study_id', type=int, default=None, help='The '
+              'ID of the row in the study table to which this processed data '
+              'belongs')
 @click.option('--processed_date', type=str, default=None,
               help='The date to use as the processed_date. Must be '
               'interpretable  as a datetime. If None, then the current date '
               'and time will be used.')
 def load_processed_data(fp, fp_type, processed_params_table,
-                        processed_params_id, preprocessed_data_id,
+                        processed_params_id, preprocessed_data_id, study_id,
                         processed_date):
     """Loads a processed data to the database"""
     load_processed_data_cmd(fp, fp_type, processed_params_table,
                             processed_params_id, preprocessed_data_id,
-                            processed_date)
+                            study_id, processed_date)
 
 
 @qiita_db.command()
