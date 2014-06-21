@@ -1039,7 +1039,6 @@ class TestPrepTemplate(TestCase):
         self._clean_up_files.append(fp)
         with open(fp, 'U') as f:
             obs = f.read()
-        print obs
         self.assertEqual(obs, EXP_PREP_TEMPLATE)
 
 EXP_SAMPLE_TEMPLATE = (
