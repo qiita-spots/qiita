@@ -20,6 +20,7 @@ except ImportError:  # python3
 from psycopg2 import connect
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 
+from qiita_core.exceptions import QiitaEnvironmentError
 from qiita_db.util import get_db_files_base_dir
 
 get_support_file = partial(join, join(dirname(abspath(__file__)),
@@ -31,6 +32,21 @@ SETTINGS_FP = get_support_file('qiita-db-settings.sql')
 LAYOUT_FP = get_support_file('qiita-db.sql')
 INITIALIZE_FP = get_support_file('initialize.sql')
 POPULATE_FP = get_support_file('populate_test_db.sql')
+
+
+def _check_db_exists(db, cursor):
+    r"""Checks if the database db exists on the postgres server
+
+    Parameters
+    ----------
+    db : str
+        The database
+    cursor : psycopg2.cursor
+        The cursor connected to the database
+    """
+    cursor.execute('SELECT datname FROM pg_database')
+    # It's a list of tuples, so just create the tuple to check if exists
+    return (db,) in cursor.fetchall()
 
 
 def make_test_environment(base_data_dir, base_work_dir, user, password, host):
@@ -51,6 +67,12 @@ def make_test_environment(base_data_dir, base_work_dir, user, password, host):
     conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
     # Create the database
     cur = conn.cursor()
+
+    if _check_db_exists('qiita_test', cur):
+        raise QiitaEnvironmentError(
+            "Test environment already present on the system. You can drop it "
+            "by running 'qiita_env drop_test_env'")
+
     cur.execute('CREATE DATABASE qiita_test')
     cur.close()
     conn.close()
@@ -124,6 +146,12 @@ def drop_test_environment(user, password, host):
     conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
     # Drop the database
     cur = conn.cursor()
+
+    if not _check_db_exists('qiita_test', cur):
+        QiitaEnvironmentError(
+            "Test environment not present on the system. You can create it "
+            "by running 'qiita_env make_test_env'")
+
     cur.execute('DROP DATABASE qiita_test')
     # Close cursor and connection
     cur.close()
@@ -142,6 +170,13 @@ def make_demo_environment(base_data_dir, base_work_dir, user, password, host):
     conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
     # Create the database
     cur = conn.cursor()
+    # First check if the qiita_demo database already exists
+    if _check_db_exists('qiita_demo', cur):
+        raise QiitaEnvironmentError(
+            "Demo environment already present on the system. You can drop it "
+            "by running 'qiita_env drop_demo_env'")
+
+    print('Creating database')
     cur.execute('CREATE DATABASE qiita_demo')
     cur.close()
     conn.close()
@@ -151,6 +186,7 @@ def make_demo_environment(base_data_dir, base_work_dir, user, password, host):
                    database='qiita_demo')
     cur = conn.cursor()
 
+    print('Building SQL layout')
     # Build the SQL layout into the database
     with open(SETTINGS_FP, 'U') as f:
         cur.execute(f.read())
@@ -163,10 +199,12 @@ def make_demo_environment(base_data_dir, base_work_dir, user, password, host):
     with open(LAYOUT_FP, 'U') as f:
         cur.execute(f.read())
 
+    print('Initializing database')
     # Initialize the database
     with open(INITIALIZE_FP, 'U') as f:
         cur.execute(f.read())
 
+    print('Populating database with demo data (1/2)')
     # Populate the database
     with open(POPULATE_FP, 'U') as f:
         cur.execute(f.read())
@@ -176,6 +214,7 @@ def make_demo_environment(base_data_dir, base_work_dir, user, password, host):
     cur.close()
     conn.close()
 
+    print('Downloading test files')
     # download files from thebeast
     url = ("ftp://thebeast.colorado.edu/pub/QIIME_DB_Public_Studies/study_1001"
            "_split_library_seqs_and_mapping.tgz")
@@ -187,14 +226,16 @@ def make_demo_environment(base_data_dir, base_work_dir, user, password, host):
         raise IOError("Error: DOWNLOAD FAILED")
         rmtree(outdir)
 
+    print('Extracting files')
     # untar the files
     with taropen(join(outdir, "study_1001.tar.gz")) as tar:
         tar.extractall(outdir)
     # un-gzip sequence file
     with gzopen(join(basedir, "study_1001_split_library_seqs.fna.gz")) as gz:
         with open(join(basedir, "seqs.fna"), 'w') as fout:
-            fout.write(gz.read())
+            fout.write(str(gz.read()))
 
+    print('Populating database with demo data (2/2)')
     # copy the preprocessed and procesed data to the study
     dbbase = get_db_files_base_dir()
     remove(join(dbbase, "processed_data/study_1001_closed_reference_otu"
@@ -206,6 +247,7 @@ def make_demo_environment(base_data_dir, base_work_dir, user, password, host):
 
     # clean up after ourselves
     rmtree(outdir)
+    print('Demo environment successfully created')
 
 
 def drop_demo_environment(user, password, host):
@@ -228,6 +270,12 @@ def drop_demo_environment(user, password, host):
     conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
     # Drop the database
     cur = conn.cursor()
+
+    if not _check_db_exists('qiita_demo', cur):
+        QiitaEnvironmentError(
+            "Demo environment not present on the system. You can create it "
+            "by running 'qiita_env make_demo_env'")
+
     cur.execute('DROP DATABASE qiita_demo')
     # Close cursor and connection
     cur.close()
