@@ -16,7 +16,7 @@
             console.log(evt.data);
             message = JSON.parse(evt.data);
             if(message.analysis == '{{aid}}') {
-                if(noerror && message.msg == 'allcomplete') { 
+                if(message.msg == 'allcomplete') { 
                     window.location.replace("/analysis/results/{{aid}}");
                 }
                 list = document.getElementById(message.command);

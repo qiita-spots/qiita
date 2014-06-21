@@ -6,6 +6,7 @@
 {%end%}
 
 {%block content%}
+{% from os.path import isdir %}
 <div class="container">
 <div class="row">
 <h1>Analysis {{aname}}</h1>
@@ -23,7 +24,11 @@
                 <div class="panel-body">
                   {{job}}<br />
                   {%for result in results%}
-                    <a href="/results/{{result}}" target="resframe">{{result}}</a><br />
+                    {% if isdir(result)%}
+                      <a href="/results/{{result}}/index.html" target="resframe">{{result}}</a><br />
+                    {% else %}
+                      <a href="/results/{{result}}" target="resframe">{{result}}</a><br />
+                    {% end %}
                   {% end %}
                 </div>
               {% end %}
