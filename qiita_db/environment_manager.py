@@ -211,7 +211,8 @@ def drop_environment(env, user, password, host):
     if env == 'demo':
         # wipe the overwriiten test files so empty as on repo
         base = get_db_files_base_dir()
-        with open(join(base, "reference", "gg_97_otus_4feb2011.tre")) as f:
+        with open(join(base, "reference",
+                       "gg_97_otus_4feb2011.tre"), 'w') as f:
             f.write('\n')
     #     with open(join(base, "preprocessed_data/seqs.fna"), 'w') as fout:
     #         fout.write("\n")
