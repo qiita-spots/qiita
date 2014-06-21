@@ -22,15 +22,14 @@ class TestAnalysis(TestCase):
     def setUp(self):
         self.analysis = Analysis(1)
 
-    def test_lock_public(self):
+    def test_lock_check(self):
         self.analysis.status = "public"
         with self.assertRaises(QiitaDBStatusError):
-            self.analysis._lock_public(self.conn_handler)
+            self.analysis._lock_check(self.conn_handler)
 
-    def test_lock_public_running(self):
-        self.analysis.status = "running"
-        with self.assertRaises(QiitaDBStatusError):
-            self.analysis._lock_public(self.conn_handler)
+    def test_lock_check_ok(self):
+        self.analysis.status = "queued"
+        self.analysis._lock_check(self.conn_handler)
 
     def test_create(self):
         new = Analysis.create(User("admin@foo.bar"), "newAnalysis",
