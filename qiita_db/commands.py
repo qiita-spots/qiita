@@ -78,7 +78,7 @@ def load_study_from_cmd(owner, title, info):
     efo_ids = get_required('efo_ids')
     efo_ids = [x.strip() for x in efo_ids.split(',')]
 
-    Study.create(User(owner), title, efo_ids, infodict)
+    return Study.create(User(owner), title, efo_ids, infodict)
 
 
 def load_preprocessed_data_from_cmd(study_id, filedir, filepathtype,
