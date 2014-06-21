@@ -40,7 +40,7 @@ from bcrypt import hashpw, gensalt
 from functools import partial
 from os.path import join, basename, isdir
 from os import walk
-from shutil import copy, copytree
+from shutil import move
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from .exceptions import QiitaDBColumnError
@@ -357,7 +357,8 @@ def compute_checksum(path):
     return crc & 0xffffffff
 
 
-def insert_filepaths(filepaths, obj_id, table, filepath_table, conn_handler):
+def insert_filepaths(filepaths, obj_id, table, filepath_table, conn_handler,
+                     move_files=True):
         r"""Inserts `filepaths` in the DB connected with `conn_handler`. Since
         the files live outside the database, the directory in which the files
         lives is controlled by the database, so it copies the filepaths from
@@ -375,28 +376,29 @@ def insert_filepaths(filepaths, obj_id, table, filepath_table, conn_handler):
             Table that holds the filepath information
         conn_handler : SQLConnectionHandler
             The connection handler object connected to the DB
+        move_files : bool, optional
+            Whether or not to copy from the given filepaths to the db filepaths
+            default: True
 
         Returns
         -------
         list
             The filepath_id in the database for each added filepath
         """
-        # Get the base directory in which the type of data is stored
-        base_data_dir = join(get_db_files_base_dir(), table)
-        # Generate the new fileapths. Format: DataId_OriginalName
-        # Keeping the original name is useful for checking if the RawData
-        # alrady exists on the DB
-        db_path = partial(join, base_data_dir)
-        new_filepaths = [
-            (db_path("%s_%s" % (obj_id, basename(path))), id)
-            for path, id in filepaths]
-        # Copy the original files to the controlled DB directory
-        for old_fp, new_fp in zip(filepaths, new_filepaths):
-            # 7 means a directory, so we need to actually copy the dir
-            if old_fp[1] == 7:
-                copytree(old_fp[0], new_fp[0])
-            else:
-                copy(old_fp[0], new_fp[0])
+        new_filepaths = filepaths
+        if move_files:
+            # Get the base directory in which the type of data is stored
+            base_data_dir = join(get_db_files_base_dir(), table)
+            # Generate the new fileapths. Format: DataId_OriginalName
+            # Keeping the original name is useful for checking if the RawData
+            # alrady exists on the DB
+            db_path = partial(join, base_data_dir)
+            new_filepaths = [
+                (db_path("%s_%s" % (obj_id, basename(path))), id)
+                for path, id in filepaths]
+            # Move the original files to the controlled DB directory
+            for old_fp, new_fp in zip(filepaths, new_filepaths):
+                    move(old_fp[0], new_fp[0])
 
         paths_w_checksum = [(path, id, compute_checksum(path))
                             for path, id in new_filepaths]
