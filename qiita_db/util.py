@@ -335,7 +335,7 @@ def compute_checksum(path):
     int
         The file checksum
     """
-    crc = None
+    crc = 0
     filepaths = []
     if isdir(path):
         for name, dirs, files in walk(path):

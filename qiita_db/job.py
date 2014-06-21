@@ -21,6 +21,8 @@ from time import strftime
 from datetime import date
 from functools import partial
 
+from qiita_core.exceptions import IncompetentQiitaDeveloperError
+
 from .base import QiitaStatusObject
 from .util import insert_filepaths, convert_to_id, get_db_files_base_dir
 from .sql_connection import SQLConnectionHandler
@@ -169,7 +171,11 @@ class Job(QiitaStatusObject):
         sql = ("SELECT options FROM qiita.{0} WHERE "
                "job_id = %s".format(self._table))
         conn_handler = SQLConnectionHandler()
-        opts = loads(conn_handler.execute_fetchone(sql, (self._id, ))[0])
+        try:
+            opts = loads(conn_handler.execute_fetchone(sql, (self._id, ))[0])
+        except ValueError:
+            raise IncompetentQiitaDeveloperError("Malformed options for job "
+                                                 "id %d" % self._id)
         sql = ("SELECT command, output from qiita.command WHERE command_id = ("
                "SELECT command_id from qiita.{0} WHERE "
                "job_id = %s)".format(self._table))
