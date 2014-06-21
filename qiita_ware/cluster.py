@@ -18,6 +18,7 @@ def system_call(cmd):
     """
     proc = Popen(cmd,
                  universal_newlines=True,
+                 shell=True,
                  stdout=PIPE,
                  stderr=PIPE)
     # communicate pulls all stdout/stderr from the PIPEs to
@@ -32,7 +33,7 @@ def system_call(cmd):
     return stdout, stderr, return_value
 
 
-class ClusterDispatch(object):
+class Dispatch(object):
     """Dispatch compute
 
     Attributes
@@ -46,7 +47,8 @@ class ClusterDispatch(object):
 
     Methods
     -------
-    submit
+    submit_async
+    submit_sync
     sync
 
     """
@@ -129,4 +131,4 @@ class ClusterDispatch(object):
         return result
 
 # likely want this in qiita_ware.__init__
-qiita_compute = ClusterDispatch()
+qiita_compute = Dispatch()
