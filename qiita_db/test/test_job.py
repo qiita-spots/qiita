@@ -17,7 +17,8 @@ from qiita_core.util import qiita_test_checker
 from qiita_db.job import Job
 from qiita_db.util import get_db_files_base_dir, get_work_base_dir
 from qiita_db.analysis import Analysis
-from qiita_db.exceptions import QiitaDBStatusError
+from qiita_db.exceptions import QiitaDBDuplicateError, QiitaDBStatusError
+from qiita_db.logger import LogEntry
 
 
 @qiita_test_checker()
@@ -118,28 +119,28 @@ class JobTest(TestCase):
         self.assertEqual(Job(2).results, [join("job", "2_test_folder")])
 
     def test_set_error(self):
-        timestamp = datetime(2014, 6, 13, 14, 19, 25)
-        self.job._log_error("TESTERROR", 1, timestamp)
+        before = datetime.now()
+        self.job.set_error("TESTERROR", 1)
+        after = datetime.now()
         self.assertEqual(self.job.status, "error")
 
-        # make sure logging table correct
-        sql = ("SELECT * FROM qiita.logging WHERE log_id = (SELECT log_id FROM"
-               " qiita.job WHERE job_id = 1)")
-        log = self.conn_handler.execute_fetchall(sql)
-        self.assertEqual(log, [[1, timestamp, 1, 'TESTERROR', None]])
+        error = self.job.error
+
+        self.assertEqual(error.severity, 1)
+        self.assertEqual(error.msg, 'TESTERROR')
+        self.assertTrue(before < error.time < after)
+
+    def test_retrieve_error_blank(self):
+        self.assertEqual(self.job.error, None)
 
     def test_set_error_completed(self):
-        timestamp = datetime(2014, 6, 13, 14, 19, 25)
         self.job.status = "error"
         with self.assertRaises(QiitaDBStatusError):
-            self.job._log_error("TESTERROR", 1, timestamp)
+            self.job.set_error("TESTERROR", 1)
 
-    def test_retrieve_error_msg_blank(self):
-        self.assertEqual(self.job.error_msg, None)
-
-    def test_retrieve_error_msg_exists(self):
+    def test_retrieve_error_exists(self):
         self.job.set_error("TESTERROR", 1)
-        self.assertEqual(self.job.error_msg, "TESTERROR")
+        self.assertEqual(self.job.error.msg, "TESTERROR")
 
     def test_add_results(self):
         self.job.add_results([(join(get_work_base_dir(),

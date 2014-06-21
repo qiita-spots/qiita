@@ -13,7 +13,20 @@
 
     {% block head %}{% end %}
   </head>
-  <body style="padding-top: 65px;">
+  <body style="padding-top: 65px; height: 100%">
+    <!-- try/except to check if we have a loginerror variable -->
+    {% try %}
+      <!-- if we have a loginerror variable make sure it's not empty -->
+      {% if loginerror != '' %}
+      <div class="alert alert-danger alert-dismissable">
+        <a href="#" class="close" data-dismiss="alert">&times;</a>
+        <p align="center">
+          <strong>There's a problem with your credentials: </strong>{{loginerror}}
+        </p>
+      </div>
+      {% end %}
+    {% except %}
+    {% end %}
     <div class="navbar navbar-inverse navbar-fixed-top" role="navigation">
       <div class="container">
         <div class="navbar-header">
@@ -40,8 +53,7 @@
               <a href="/analysis/1" data-toggle="dropdown" class="dropdown-toggle">Meta Analysis<b class="caret"></b></a>
               <ul class="dropdown-menu">
                 <li><a data-toggle="modal" data-target="#create-analysis-modal-view">Create Meta Analysis</a></li>
-                <li><a href="#">See Running Analyses</a></li>
-                <li><a href="#">See Old Analyses</a>
+                <li><a href="/analysis/show/">See Previous Analyses</a></li>
               </ul>
             </li>
             {% end %}
@@ -65,11 +77,6 @@
           </ul>
           <!-- otherwise show the login form -->
           {% else %}
-            {% try %}
-              <span style="color: red;">{{loginerror}}</span>
-            {% except %}
-              </span>
-            {% end %}
           <form class="navbar-form navbar-right" role="form" action="/auth/login/" method="post">
             <div class="form-group">
               <input type="text" id="username" name="username" placeholder="Email" class="form-control">
