@@ -13,6 +13,7 @@ from shutil import rmtree
 from unittest import TestCase, main
 from future.utils.six import StringIO
 from future import standard_library
+from functools import partial
 with standard_library.hooks():
     import configparser
 
@@ -141,6 +142,16 @@ class TestLoadPrepTemplateFromCmd(TestCase):
 
         self.raw_data = RawData.create(
             2, [(seqs_fp, 1), (barcodes_fp, 2)], [Study(1)])
+
+        join_f = partial(join, join(get_db_files_base_dir(), 'raw_data'))
+        self.files_to_remove = [
+            join_f("%s_%s" % (self.raw_data.id, seqs_fp)),
+            join_f("%s_%s" % (self.raw_data.id, barcodes_fp))]
+
+    def tearDown(self):
+        for fp in self.files_to_remove:
+            if exists(fp):
+                remove(fp)
 
     def test_load_prep_template_from_cmd(self):
         """Correctly adds a sample template to the DB"""
@@ -326,7 +337,11 @@ SAMPLE_TEMPLATE = (
     "\tFast\t20080116\tFasting_mouse_I.D._636")
 
 PREP_TEMPLATE = (
-    "#SampleID\tcenter_name\tcusom_col\temp_status_id\tdata_type_id\nSKB8.640193\tANL\tPC.354\t1\t1\nSKD8.640184\tANL\tPC.593\t1\t1\nSKB7.640196\tANL\tPC.607\t1\t1\nSKM9.640192\tANL\tPC.636\t1\t1\n")
+    "#SampleID\tcenter_name\tcusom_col\temp_status_id\tdata_type_id\n"
+    "SKB8.640193\tANL\tPC.354\t1\t1\n"
+    "SKD8.640184\tANL\tPC.593\t1\t1\n"
+    "SKB7.640196\tANL\tPC.607\t1\t1\n"
+    "SKM9.640192\tANL\tPC.636\t1\t1\n")
 
 if __name__ == "__main__":
     main()
