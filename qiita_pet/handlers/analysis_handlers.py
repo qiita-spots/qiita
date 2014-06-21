@@ -24,6 +24,7 @@ from qiita_db.study import Study
 from qiita_db.data import ProcessedData
 from qiita_db.metadata_template import SampleTemplate
 from qiita_db.job import Job
+from qiita_db.util import get_db_files_base_dir
 # login code modified from https://gist.github.com/guillaumevincent/4771570
 
 
@@ -155,7 +156,8 @@ class AnalysisResultsHandler(BaseHandler):
                                              jobject.results))
 
         self.render("analysis_results.html", user=self.get_current_user(),
-                    jobres=jobres, aname=analysis.name)
+                    jobres=jobres, aname=analysis.name,
+                    basefolder=get_db_files_base_dir())
 
 
 class ShowAnalysesHandler(BaseHandler):

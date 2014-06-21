@@ -6,7 +6,7 @@
 {%end%}
 
 {%block content%}
-{% from os.path import isdir %}
+{% from os.path import isdir, join %}
 <div class="container">
 <div class="row">
 <h1>Analysis {{aname}}</h1>
@@ -23,11 +23,11 @@
               {% for job, results in jobs%}
                 <div class="panel-body">
                   {{job}}<br />
-                  {%for result in results%}
-                    {% if isdir(result)%}
-                      <a href="/results/{{result}}/index.html" target="resframe">{{result}}</a><br />
+                  {%for num, result in enumerate(results)%}
+                    {% if isdir(join(basefolder, result)) %}
+                      <a href="/results/{{result}}/index.html" target="resframe">Result File {{num+1}}</a><br />
                     {% else %}
-                      <a href="/results/{{result}}" target="resframe">{{result}}</a><br />
+                      <a href="/results/{{result}}" target="resframe">Result File {{num+1}}</a><br />
                     {% end %}
                   {% end %}
                 </div>
