@@ -78,9 +78,9 @@ class Dispatch(object):
             dict of objects and to sync
 
         """
+        #self.reserved[:].update(data)
+        #self.general[:].update(data)
         self.demo[:].update(data)
-        self.reserved[:].update(data)
-        self.general[:].update(data)
 
     def submit_async(self, cmd, *args, **kwargs):
         """Submit an async command to execute
