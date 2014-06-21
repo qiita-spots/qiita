@@ -38,7 +38,7 @@ Once you have [PostgresSQL](http://www.postgresql.org/download/) and [redis](htt
 echo "export QIITA_CONFIG_FP=$QIITA_DIR/qiita_core/support_files/config_demo.txt" >> ~/.bashrc
 source ~/.bashrc
 pip install https://github.com/biocore/qiita/archive/master.zip
-qiita_env make_demo_env
+qiita_env make_env --env demo
 ```
 ## If using other operating systems that are not Ubuntu
 
