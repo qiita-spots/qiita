@@ -126,9 +126,9 @@ class JobTest(TestCase):
     def test_retrieve_options(self):
         self.assertEqual(self.job.options, {
             '--otu_table_fp': 1,
-            '--output_dir': '/Users/jshorens/Repositories/qiita/qiita_db/'
-            'support_files/test_data/job/'
-            '1_summarize_taxa_through_plots.py_output_dir'})
+            '--output_dir': join(get_db_files_base_dir(), 'job/'
+                                 '1_summarize_taxa_through_plots.py'
+                                 '_output_dir')})
 
     def test_retrieve_results(self):
         self.assertEqual(self.job.results, [join("job", "1_job_result.txt")])
