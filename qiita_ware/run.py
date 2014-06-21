@@ -20,6 +20,7 @@ from qiita_ware.exceptions import ComputeError
 
 r_server = Redis()
 
+
 def run_analysis(user, analysis):
     """Run the commands within an Analysis object and sends user messages"""
     analysis.status = "running"
@@ -31,7 +32,7 @@ def run_analysis(user, analysis):
         if job.status == 'queued':
             name, command = job.command
             options = job.options
-            #create json base for websocket messages
+            # create json base for websocket messages
             msg = {
                 "analysis": analysis.id,
                 "msg": None,
@@ -61,6 +62,8 @@ def run_analysis(user, analysis):
                 msg["msg"] = "Completed"
                 r_server.rpush(user + ":messages", dumps(msg))
                 r_server.publish(user, dumps(msg))
+                # FIX THIS Should not be hard coded
+                job.add_results([options["--output_dir"], "directory"])
                 job.status = 'completed'
 
     # send websockets message that we are done

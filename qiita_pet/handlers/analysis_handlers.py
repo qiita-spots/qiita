@@ -75,10 +75,8 @@ class SelectCommandsHandler(BaseHandler):
         data_types = sorted(list(data_types))
 
         # FIXME: Pull out from the database, see #111
-        commands = {'16S': ['Alpha Rarefaction', 'Beta Diversity',
-                            'Summarize Taxa'],
-                    '18S': ['Alpha Rarefaction', 'Beta Diversity',
-                            'Summarize Taxa'],
+        commands = {'16S': ['Beta Diversity', 'Summarize Taxa'],
+                    '18S': ['Beta Diversity', 'Summarize Taxa'],
                     'Metabolomic': ['Summarize Taxa']}
 
         self.render('select_commands.html', user=self.get_current_user(),

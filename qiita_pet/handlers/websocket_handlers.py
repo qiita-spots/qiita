@@ -45,7 +45,7 @@ class MessageHandler(WebSocketHandler):
             self.write_message('ERROR IN SUBSCRIPTION')
         # listen from tornadoredis makes the listen object asynchronous
         # if using standard redis lib, it blocks while listening
-        self.redis.listen(self.callback)
+        self.redis.listen(self.write_message)
         # fight race condition by loading from redis after listen started
         # need to use std redis lib because tornadoredis is already subscribed
         oldmessages = r_server.lrange(self.channel + ':messages', 0, -1)
