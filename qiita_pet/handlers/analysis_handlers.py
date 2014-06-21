@@ -134,15 +134,14 @@ class AnalysisWaitHandler(BaseHandler):
             }
 
             Job.create(data_type, command, opts, analysis)
-            commands.append("%s:%s" % (data_type, command))
-
-        self.render("analysis_waiting.html", user=self.get_current_user(),
+            commands.append("%s: %s" % (data_type, command))
+        user = self.get_current_user()
+        self.render("analysis_waiting.html", user=user,
                     aid=analysis_id, aname=analysis.name,
                     commands=commands)
         # fire off analysis run here
         # currently synch run so redirect done here. Will remove after demo
-        run_analysis(analysis)
-        self.redirect("/analysis/results/%s" % analysis_id)
+        run_analysis(user, analysis)
 
 
 class AnalysisResultsHandler(BaseHandler):

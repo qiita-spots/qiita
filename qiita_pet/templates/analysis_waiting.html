@@ -9,8 +9,8 @@
         noerror = true;
 
         websocket.onopen = function() {
-            websocket.send(JSON.stringify({'msg': '{{aid}} user:{{user}}'}));
-            console.log(JSON.stringify({'msg':'{{aid}} user:{{user}}'}));
+            websocket.send(JSON.stringify({'msg': 'user:{{user}}'}));
+            console.log(JSON.stringify({'msg':'user:{{user}}'}));
         };
         websocket.onmessage = function(evt) {
             console.log(evt.data);
@@ -19,12 +19,12 @@
                 if(noerror && message.msg == 'allcomplete') { 
                     window.location.replace("/analysis/results/{{aid}}");
                 }
-                list = document.getElementById(message.analysis);
+                list = document.getElementById(message.command);
                 if(message.msg.indexOf("ERROR") != -1) {
                   list.style.color="Red";
                   noerror=false;
                 }
-                else if(message.done == '1') {
+                else if(message.msg.indexOf("Completed") != -1) {
                   list.style.color="Green";
                 }
                 else {
