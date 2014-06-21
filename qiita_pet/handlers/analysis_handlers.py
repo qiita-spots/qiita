@@ -136,8 +136,8 @@ class AnalysisWaitHandler(BaseHandler):
                 opts["--tree_fp"] = join(get_db_files_base_dir(), "reference",
                                          "gg_97_otus_4feb2011.tre")
             else:
-                opts["--tree_fp"] = join(get_db_files_base_dir(), "reference",
-                                         "params_qiime.txt")
+                opts["--parameter_fp"] = join(get_db_files_base_dir(),
+                                              "reference", "params_qiime.txt")
             Job.create(data_type, command, opts, analysis)
             commands.append("%s: %s" % (data_type, command))
         user = self.get_current_user()
