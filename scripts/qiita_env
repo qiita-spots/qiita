@@ -11,14 +11,12 @@
 import click
 
 from qiita_core.configuration_manager import ConfigurationManager
-from qiita_db.environment_manager import (make_test_environment,
-                                          make_production_environment,
-                                          drop_test_environment,
+from qiita_db.environment_manager import (make_environment,
+                                          drop_environment,
                                           clean_test_environment,
-                                          make_demo_environment,
-                                          drop_demo_environment,
                                           DFLT_BASE_DATA_FOLDER,
-                                          DFLT_BASE_WORK_FOLDER)
+                                          DFLT_BASE_WORK_FOLDER,
+                                          ENVIRONMENTS)
 from qiita_core.environment_manager import (start_cluster as _start_cluster,
                                             stop_cluster as _stop_cluster)
 
@@ -58,6 +56,8 @@ def stop_cluster(cluster):
 
 
 @qiita_env.command()
+@click.option('--env', type=click.Choice(ENVIRONMENTS.keys()), required=True,
+              help="The folder where the test data files are stored")
 @click.option('--base_data_folder', default=DFLT_BASE_DATA_FOLDER,
               help="The folder where the test data files are stored")
 @click.option('--base_work_folder', default=DFLT_BASE_WORK_FOLDER,
@@ -66,13 +66,21 @@ def stop_cluster(cluster):
               help="The database user to connect to the database")
 @click.option('--host', default='localhost',
               help='The host where the database lives')
-def make_test_env(base_data_folder, base_work_folder, user, host):
-    """Creates a test database environment.
+def make_env(env, base_data_folder, base_work_folder, user, host):
+    """Drops the passed database environment"""
+    make_environment(env, base_data_folder, base_work_folder, user, None, host)
 
-    Creates a new database called `qiita_test` tailored for testing purposes
-    and initializes the `settings` table of such database
-    """
-    make_test_environment(base_data_folder, base_work_folder, user, None, host)
+
+@qiita_env.command()
+@click.option('--env', type=click.Choice(ENVIRONMENTS.keys()), required=True,
+              help="The folder where the test data files are stored")
+@click.option('--user', default='postgres',
+              help="The database user to connect to the database")
+@click.option('--host', default='localhost',
+              help='The host where the database lives')
+def drop_env(env, user, host):
+    """Drops the passed database environment"""
+    drop_environment(env, user, None, host)
 
 
 @qiita_env.command()
@@ -87,58 +95,6 @@ def clean_test_env(user, host):
     present), this cleans it up by dropping the 'qiita' schema.
     """
     clean_test_environment(user, None, host)
-
-
-@qiita_env.command()
-@click.option('--user', default='postgres',
-              help="The database user to connect to the database")
-@click.option('--host', default='localhost',
-              help='The host where the database lives')
-def drop_test_env(user, host):
-    """Drops the test database environment.
-
-    If the `settings` table is modified, the test database environment should
-    be rebuilt. This command allows to drop the old one.
-    """
-    drop_test_environment(user, None, host)
-
-
-@qiita_env.command()
-@click.option('--base_data_folder', default=DFLT_BASE_DATA_FOLDER,
-              help="The folder where the demo data files are stored")
-@click.option('--base_work_folder', default=DFLT_BASE_WORK_FOLDER,
-              help="The folder where the actively worked on files are stored")
-@click.option('--user', default='postgres',
-              help="The database user to connect to the database")
-@click.option('--host', default='localhost',
-              help='The host where the database lives')
-def make_production_env():
-    """TODO: Not implemented"""
-    make_production_environment()
-
-
-@qiita_env.command()
-@click.option('--base_data_folder', default=DFLT_BASE_DATA_FOLDER,
-              help="The folder where the test data files are stored")
-@click.option('--base_work_folder', default=DFLT_BASE_WORK_FOLDER,
-              help="The folder where the jobs perform the I/O")
-@click.option('--user', default='postgres',
-              help="The database user to connect to the database")
-@click.option('--host', default='localhost',
-              help='The host where the database lives')
-def make_demo_env(base_data_folder, base_work_folder, user, host):
-    """Creates a demo database environment"""
-    make_demo_environment(base_data_folder, base_work_folder, user, None, host)
-
-
-@qiita_env.command()
-@click.option('--user', default='postgres',
-              help="The database user to connect to the database")
-@click.option('--host', default='localhost',
-              help='The host where the database lives')
-def drop_demo_env(user, host):
-    """Drops the demo database environment."""
-    drop_demo_environment(user, None, host)
 
 
 if __name__ == '__main__':

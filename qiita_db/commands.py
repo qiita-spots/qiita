@@ -110,7 +110,7 @@ def load_preprocessed_data_from_cmd(study_id, filedir, filepathtype,
                                    submitted_to_insdc=submitted_to_insdc)
 
 
-def sample_template_adder(sample_temp_path, study_id):
+def load_sample_template_from_cmd(sample_temp_path, study_id):
     r"""Adds a sample template to the database
 
     Parameters

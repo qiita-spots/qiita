@@ -8,7 +8,7 @@ INSERT INTO qiita.analysis_status (status) VALUES ('in_construction'), ('queued'
 INSERT INTO qiita.job_status (status) VALUES ('queued'), ('running'), ('completed'), ('error');
 
 -- Populate data_type table
-INSERT INTO qiita.data_type (data_type) VALUES ('16S'), ('18S'), ('ITS'), ('Proteomic'), ('Metabolomic');
+INSERT INTO qiita.data_type (data_type) VALUES ('16S'), ('18S'), ('ITS'), ('Proteomic'), ('Metabolomic'), ('Metagenomic');
 
 -- Populate filetype table
 INSERT INTO qiita.filetype (type) VALUES ('FASTA'), ('FASTQ'), ('SPECTRA');
