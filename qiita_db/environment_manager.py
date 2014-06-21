@@ -116,46 +116,58 @@ def make_environment(env, base_data_dir, base_work_dir, user, password, host):
             #     cur.execute(f.read())
 
             # Commit all the changes and close the connections
+
+            cur.execute(
+                "INSERT INTO qiita.qiita_user (email, user_level_id, password,"
+                " name, affiliation, address, phone) VALUES "
+                "('demo@microbio.me', 4, "
+                "'$2a$12$gnUi8Qg.0tvW243v889BhOBhWLIHyIJjjgaG6dxuRJkUM8nXG9Efe"
+                "', 'Demo', 'Qitta Dev', '1345 Colorado Avenue', "
+                "'303-492-1984');")
+
             conn.commit()
             cur.close()
             conn.close()
 
-            print('Downloading test files')
-            # download files from thebeast
-            url = ("ftp://thebeast.colorado.edu/pub/QIIME_DB_Public_Studies/"
-                   "study_1001_split_library_seqs_and_mapping.tgz")
-            outdir = mkdtemp()
-            basedir = join(outdir,
-                           "study_1001_split_library_seqs_and_mapping/")
-            try:
-                urlretrieve(url, join(outdir, "study_1001.tar.gz"))
-            except:
-                raise IOError("Error: DOWNLOAD FAILED")
-                rmtree(outdir)
-
-            print('Extracting files')
-            # untar the files
-            with taropen(join(outdir, "study_1001.tar.gz")) as tar:
-                tar.extractall(outdir)
-            # un-gzip sequence file
-            with gzopen(join(basedir,
-                             "study_1001_split_library_seqs.fna.gz")) as gz:
-                with open(join(basedir, "seqs.fna"), 'w') as fout:
-                    fout.write(str(gz.read()))
-
             print('Populating database with demo data')
-            # copy the preprocessed and procesed data to the study
-            remove(join(base_data_dir,
-                        "processed_data/"
-                        "study_1001_closed_reference_otu_table.biom"))
-            remove(join(base_data_dir, "preprocessed_data/seqs.fna"))
-            move(join(basedir, "study_1001_closed_reference_otu_table.biom"),
-                 join(base_data_dir, "processed_data"))
-            move(join(basedir, "seqs.fna"), join(base_data_dir,
-                                                 "preprocessed_data"))
 
-            # clean up after ourselves
-            rmtree(outdir)
+
+            # print('Downloading test files')
+            # # download files from thebeast
+            # url = ("ftp://thebeast.colorado.edu/pub/QIIME_DB_Public_Studies/"
+            #        "study_1001_split_library_seqs_and_mapping.tgz")
+            # outdir = mkdtemp()
+            # basedir = join(outdir,
+            #                "study_1001_split_library_seqs_and_mapping/")
+            # try:
+            #     urlretrieve(url, join(outdir, "study_1001.tar.gz"))
+            # except:
+            #     raise IOError("Error: DOWNLOAD FAILED")
+            #     rmtree(outdir)
+
+            # print('Extracting files')
+            # # untar the files
+            # with taropen(join(outdir, "study_1001.tar.gz")) as tar:
+            #     tar.extractall(outdir)
+            # # un-gzip sequence file
+            # with gzopen(join(basedir,
+            #                  "study_1001_split_library_seqs.fna.gz")) as gz:
+            #     with open(join(basedir, "seqs.fna"), 'w') as fout:
+            #         fout.write(str(gz.read()))
+
+            # print('Populating database with demo data')
+            # # copy the preprocessed and procesed data to the study
+            # remove(join(base_data_dir,
+            #             "processed_data/"
+            #             "study_1001_closed_reference_otu_table.biom"))
+            # remove(join(base_data_dir, "preprocessed_data/seqs.fna"))
+            # move(join(basedir, "study_1001_closed_reference_otu_table.biom"),
+            #      join(base_data_dir, "processed_data"))
+            # move(join(basedir, "seqs.fna"), join(base_data_dir,
+            #                                      "preprocessed_data"))
+
+            # # clean up after ourselves
+            # rmtree(outdir)
             print('Demo environment successfully created')
         else:
             # Commit all the changes and close the connections
