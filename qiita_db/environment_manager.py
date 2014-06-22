@@ -131,8 +131,8 @@ def make_environment(env, base_data_dir, base_work_dir, user, password, host):
 
             print('Downloading test files')
             # Download tree file
-            url = ("https://github.com/biocore/Evident/blob/master/data/"
-                   "gg_97_otus_4feb2011.tre")
+            url = ("https://raw.githubusercontent.com/biocore/Evident/master"
+                   "/data/gg_97_otus_4feb2011.tre")
             try:
                 urlretrieve(url, join(base_data_dir, "reference",
                                       "gg_97_otus_4feb2011.tre"))
