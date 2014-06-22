@@ -46,27 +46,27 @@ def run_analysis(user, analysis):
             job.status = 'running'
             msg["msg"] = "Running"
             r_server.rpush(user + ":messages", dumps(msg))
+            r_server.publish(user, dumps(msg))
 
             # run the command
             try:
-                r_server.publish(user, dumps(msg))
                 qiita_compute.submit_sync(c_fmt)
-            except:
+            except Exception as e:
                 all_good = False
                 job.status = 'error'
                 msg["msg"] = "ERROR"
                 r_server.rpush(user + ":messages", dumps(msg))
                 r_server.publish(user, dumps(msg))
-                print("Failed compute on job id %d: %s" %
-                      (job_id, c_fmt))
+                print("Failed compute on job id %d: %s\n%s" %
+                      (job_id, e, c_fmt))
                 continue
 
             msg["msg"] = "Completed"
-            job.status = 'completed'
             r_server.rpush(user + ":messages", dumps(msg))
             r_server.publish(user, dumps(msg))
             # FIX THIS Should not be hard coded
-            job.add_results([options["--output_dir"], "directory"])
+            job.add_results([(options["--output_dir"], "directory")])
+            job.status = 'completed'
 
     # send websockets message that we are done
     msg["msg"] = "allcomplete"
