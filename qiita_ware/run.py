@@ -42,13 +42,15 @@ def run_analysis(user, analysis):
             o_fmt = ' '.join(['%s %s' % (k, v) for k, v in options.items()])
             c_fmt = str("%s %s" % (command, o_fmt))
 
+            # send running message to user wait page
+            job.status = 'running'
+            msg["msg"] = "Running"
+            r_server.rpush(user + ":messages", dumps(msg))
+
+            # run the command
             try:
-                job.status = 'running'
-                msg["msg"] = "Running"
-                r_server.rpush(user + ":messages", dumps(msg))
                 r_server.publish(user, dumps(msg))
                 qiita_compute.submit_sync(c_fmt)
-                job.add_results([(options['--output_dir'], 7)])
             except:
                 all_good = False
                 job.status = 'error'
