@@ -78,8 +78,8 @@ class SelectCommandsHandler(BaseHandler):
         # FIXME: Pull out from the database, see #111
         commands = {'16S': ['Beta Diversity', 'Summarize Taxa'],
                     '18S': ['Beta Diversity'],
-                    'Metabolomic': ['Summarize Taxa', 'Summarize Taxa'],
-                    'Metagenomic': ['Summarize Taxa', 'Summarize Taxa']}
+                    'Metabolomic': ['Beta Diversity', 'Summarize Taxa'],
+                    'Metagenomic': ['Beta Diversity', 'Summarize Taxa']}
 
         self.render('select_commands.html', user=self.get_current_user(),
                     commands=commands, data_types=data_types, aid=analysis_id)
@@ -135,7 +135,7 @@ class AnalysisWaitHandler(BaseHandler):
             if command is "Beta Diversity" and data_type in {'16S', '18S'}:
                 opts["--tree_fp"] = join(get_db_files_base_dir(), "reference",
                                          "gg_97_otus_4feb2011.tre")
-            else:
+            elif command is "Beta Diversity":
                 opts["--parameter_fp"] = join(get_db_files_base_dir(),
                                               "reference", "params_qiime.txt")
             Job.create(data_type, command, opts, analysis)
