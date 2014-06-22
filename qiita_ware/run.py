@@ -57,14 +57,14 @@ def run_analysis(user, analysis):
                 r_server.publish(user, dumps(msg))
                 print("Failed compute on job id %d: %s" %
                       (job_id, c_fmt))
+                continue
 
-            else:
-                msg["msg"] = "Completed"
-                job.status = 'completed'
-                r_server.rpush(user + ":messages", dumps(msg))
-                r_server.publish(user, dumps(msg))
-                # FIX THIS Should not be hard coded
-                job.add_results([options["--output_dir"], "directory"])
+            msg["msg"] = "Completed"
+            job.status = 'completed'
+            r_server.rpush(user + ":messages", dumps(msg))
+            r_server.publish(user, dumps(msg))
+            # FIX THIS Should not be hard coded
+            job.add_results([options["--output_dir"], "directory"])
 
     # send websockets message that we are done
     msg["msg"] = "allcomplete"
