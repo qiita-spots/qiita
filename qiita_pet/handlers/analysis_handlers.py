@@ -116,7 +116,6 @@ class AnalysisWaitHandler(BaseHandler):
     def post(self, analysis_id):
         command_args = self.get_arguments("commands")
         split = [x.split("#") for x in command_args]
-        print split
         analysis = Analysis(analysis_id)
 
         commands = []
