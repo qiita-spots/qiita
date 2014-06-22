@@ -50,8 +50,8 @@ def run_analysis(user, analysis):
                 qiita_compute.submit_sync(c_fmt)
                 job.add_results([(options['--output_dir'], 7)])
             except:
-                job.status = 'error'
                 all_good = False
+                job.status = 'error'
                 msg["msg"] = "ERROR"
                 r_server.rpush(user + ":messages", dumps(msg))
                 r_server.publish(user, dumps(msg))
@@ -60,11 +60,11 @@ def run_analysis(user, analysis):
 
             else:
                 msg["msg"] = "Completed"
+                job.status = 'completed'
                 r_server.rpush(user + ":messages", dumps(msg))
                 r_server.publish(user, dumps(msg))
                 # FIX THIS Should not be hard coded
                 job.add_results([options["--output_dir"], "directory"])
-                job.status = 'completed'
 
     # send websockets message that we are done
     msg["msg"] = "allcomplete"
