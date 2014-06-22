@@ -42,29 +42,31 @@ def run_analysis(user, analysis):
             o_fmt = ' '.join(['%s %s' % (k, v) for k, v in options.items()])
             c_fmt = str("%s %s" % (command, o_fmt))
 
+            # send running message to user wait page
+            job.status = 'running'
+            msg["msg"] = "Running"
+            r_server.rpush(user + ":messages", dumps(msg))
+
+            # run the command
             try:
-                job.status = 'running'
-                msg["msg"] = "Running"
-                r_server.rpush(user + ":messages", dumps(msg))
                 r_server.publish(user, dumps(msg))
                 qiita_compute.submit_sync(c_fmt)
-                job.add_results([(options['--output_dir'], 7)])
             except:
-                job.status = 'error'
                 all_good = False
+                job.status = 'error'
                 msg["msg"] = "ERROR"
                 r_server.rpush(user + ":messages", dumps(msg))
                 r_server.publish(user, dumps(msg))
                 print("Failed compute on job id %d: %s" %
                       (job_id, c_fmt))
+                continue
 
-            else:
-                msg["msg"] = "Completed"
-                r_server.rpush(user + ":messages", dumps(msg))
-                r_server.publish(user, dumps(msg))
-                # FIX THIS Should not be hard coded
-                job.add_results([options["--output_dir"], "directory"])
-                job.status = 'completed'
+            msg["msg"] = "Completed"
+            job.status = 'completed'
+            r_server.rpush(user + ":messages", dumps(msg))
+            r_server.publish(user, dumps(msg))
+            # FIX THIS Should not be hard coded
+            job.add_results([options["--output_dir"], "directory"])
 
     # send websockets message that we are done
     msg["msg"] = "allcomplete"
