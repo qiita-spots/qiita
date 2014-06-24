@@ -1,0 +1,156 @@
+#!/usr/bin/env python
+
+# -----------------------------------------------------------------------------
+# Copyright (c) 2014--, The Qiita Development Team.
+#
+# Distributed under the terms of the BSD 3-clause License.
+#
+# The full license is in the file LICENSE, distributed with this software.
+# -----------------------------------------------------------------------------
+
+import click
+
+from qiita_db.util import (get_filetypes, get_filepath_types,
+                           get_processed_params_tables,
+                           get_preprocessed_params_tables)
+from qiita_db.commands import (load_sample_template_from_cmd,
+                               load_study_from_cmd,
+                               load_raw_data_cmd, load_processed_data_cmd,
+                               load_preprocessed_data_from_cmd,
+                               load_prep_template_from_cmd)
+
+
+@click.group()
+def qiita_db():
+    pass
+
+
+@qiita_db.command()
+@click.option('--owner', required=True,
+              help="The email address of the owner of the study")
+@click.option('--title', help="The title of the study", required=True)
+@click.option('--info', type=click.File(mode='r'), required=True,
+              help="filepath of file with study information in python "
+              "config file format")
+def load_study(owner, title, info):
+    """Loads a study to the database"""
+    study = load_study_from_cmd(owner, title, info)
+    print("Study successfully added to the database with id %s" % study.id)
+
+
+@qiita_db.command()
+@click.option('--fp', required=True, type=click.Path(resolve_path=True,
+              readable=True, exists=True), multiple=True,
+              help='Path to the raw data file. This option can be used '
+              'multiple times if there are multiple raw data files.')
+@click.option('--fp_type', required=True, multiple=True, help='Describes the '
+              'contents of the file. Pass one fp_type per fp.',
+              type=click.Choice(get_filepath_types().keys()))
+@click.option('--filetype', required=True,
+              type=click.Choice(get_filetypes().keys()),
+              help='The type of data')
+@click.option('--study', multiple=True, help='Associate the data with this '
+              'study. This option can be used multiple times if the data '
+              'should be associated with multiple studies', type=int,
+              required=True)
+def load_raw_data(fp, fp_type, filetype, study):
+    """Loads a raw data to the database"""
+    raw_data = load_raw_data_cmd(fp, fp_type, filetype, study)
+    print("Raw data successfully added to the database with id %s"
+          % raw_data.id)
+
+
+@qiita_db.command()
+@click.option('--study_id', help="Study id associated with data",
+              required=True)
+@click.option('--params_table', help="Name of the paramaters table for the "
+              "preprocessed data", required=True,
+              type=click.Choice(get_preprocessed_params_tables()))
+@click.option('--filedir', help="Directory containing preprocessed data",
+              required=True)
+@click.option('--filepathtype', help="Describes the contents of the input "
+              "files", required=True,
+              type=click.Choice(get_filepath_types().keys()))
+@click.option('--params_id', required=True,
+              help="id in the paramater table associated with the parameters")
+@click.option('--raw_data_id', help="Raw data id associated with data",
+              default=None)
+@click.option('--insdc', is_flag=True,
+              help="If provided, the preprocessed data have been submitted"
+                   " to insdc")
+def load_preprocessed_data(study_id, params_table, filedir, filepathtype,
+                           params_id, raw_data_id, insdc):
+    """Loads a preprocessed data to the database"""
+    preproc_data = load_preprocessed_data_from_cmd(
+        study_id, params_table, filedir, filepathtype, params_id, insdc,
+        raw_data_id)
+    print("Preprocessed data successfully added to the database with id %s"
+          % preproc_data.id)
+
+
+@qiita_db.command()
+@click.option('--fp', required=True, type=click.Path(resolve_path=True,
+              readable=True, exists=True), multiple=True, help='Path to the '
+              'processed data. This option can be used multilpe times if '
+              'there are multiple processed data files.')
+@click.option('--fp_type', required=True, multiple=True, help='Describes the '
+              'contents of the file. Pass one fp_type per fp.',
+              type=click.Choice(get_filepath_types().keys()))
+@click.option('--processed_params_table', required=True,
+              type=click.Choice(get_processed_params_tables()),
+              help='The table containing the processed parameters used to '
+              'generate this file')
+@click.option('--processed_params_id', required=True, type=int,
+              help='The ID of the row in the processed_params table')
+@click.option('--preprocessed_data_id', type=int, default=None, help='The '
+              'ID of the row in the preprocessed_data table from which '
+              'this processed data was created')
+@click.option('--study_id', type=int, default=None, help='The '
+              'ID of the row in the study table to which this processed data '
+              'belongs')
+@click.option('--processed_date', type=str, default=None,
+              help='The date to use as the processed_date. Must be '
+              'interpretable  as a datetime. If None, then the current date '
+              'and time will be used.')
+def load_processed_data(fp, fp_type, processed_params_table,
+                        processed_params_id, preprocessed_data_id, study_id,
+                        processed_date):
+    """Loads a processed data to the database"""
+    proc_data = load_processed_data_cmd(fp, fp_type, processed_params_table,
+                                        processed_params_id,
+                                        preprocessed_data_id, study_id,
+                                        processed_date)
+    print("Processed data successfully added to the database with id %s"
+          % proc_data.id)
+
+
+@qiita_db.command()
+@click.option('--fp', required=True,
+              type=click.Path(resolve_path=True, readable=True, exists=True),
+              help='Path to the tab delimited file holding the sample '
+                   'template information')
+@click.option('--study', required=True, type=int,
+              help='Associate the sample template with this study')
+def load_sample_template(fp, study):
+    """Loads a sample template to the database"""
+    sample_temp = load_sample_template_from_cmd(fp, study)
+    print("Sample template successfully added to the database with id %s"
+          % sample_temp.id)
+
+
+@qiita_db.command()
+@click.option('--fp', required=True,
+              type=click.Path(resolve_path=True, readable=True, exists=True),
+              help='Path to the tab delimited file holding the prep '
+                   'template information')
+@click.option('--raw_data', required=True, type=int,
+              help='Associate the prep template with this raw data')
+def load_prep_template(fp, raw_data):
+    """Loads a sample template to the database"""
+    prep_template = load_prep_template_from_cmd(fp, raw_data)
+    print("Prep template successfully added to the database with id %s"
+          % prep_template.id)
+
+
+if __name__ == '__main__':
+    qiita_db()

@@ -1,0 +1,40 @@
+{% extends sitebase.html%}
+
+{%block head%}
+
+{% end %}
+
+{% block content %}
+
+<div class="page-header">
+<h1>Studies</h1>
+<big>   Select studies to analyze</big>
+  <div class="row"><!--main container-->
+    <div class="col-md-1"></div>
+    <div class="col-md-10">
+    <form role="form" action="/analysis/3" method="post">
+    <input type="hidden" name="analysis-id" value="{{aid}}">
+      <table class="table table-hover">
+        <tr>
+          <th>Data Types</th>
+          <th>Study Name</th>
+          <th>Description</th>
+        </tr>
+        {% for study in studies %}
+        <tr>
+          <td>
+          {% for data_type in study.data_types %}
+              <input type="checkbox" name="studies" value="{{study.id}}#{{data_type}}">{{data_type}}
+              <br />
+          {% end %}
+          </td>
+          <td style="vertical-align:middle;">{{study.title}}</td>
+          <td style="vertical-align:middle;">{{study.info["study_description"]}}</td>
+        </tr>
+        {% end %}
+      </table>
+      <button type="submit" class="btn btn-default">Select studies</button>
+      </form>
+    </div>
+
+{% end %}

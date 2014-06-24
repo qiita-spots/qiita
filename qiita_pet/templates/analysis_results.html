@@ -1,0 +1,52 @@
+{% extends sitebase.html%}
+
+{%block head%}
+
+
+{%end%}
+
+{%block content%}
+{% from os.path import isdir, join %}
+<div class="container">
+<div class="row">
+<h1>Analysis {{aname}}</h1>
+</div>
+  <div class="row">
+    <div class="col-md-2">
+      <div class="panel-group" id="accordion">
+        {% for data_type, jobs in jobres.items() %}
+          <div class="panel panel-default">
+            <div class="panel-heading">
+              <h3 class="panel-title"><a data-toggle="collapse" data-parent="#accordion" href="#{{data_type}}">{{data_type}}</a></h3>
+            </div>
+            <div id="{{data_type}}" class="panel-collapse collapse">
+              {% for job, results in jobs%}
+                <div class="panel-body">
+                  {{job}}<br />
+                  {%for result in results%}
+                    {% if "beta_diversity_through_plots" in result %}
+                      {% if data_type == "16S"%}
+                        <a href="/results/{{result}}/unweighted_unifrac_emperor_pcoa_plot/index.html" target="resframe">Unweighted</a><br />
+                        <a href="/results/{{result}}/weighted_unifrac_emperor_pcoa_plot/index.html" target="resframe">Weighted</a><br />
+                      {%else%}
+                        <a href="/results/{{result}}/bray_curtis_emperor_pcoa_plot/index.html" target="resframe">Bray Curtis</a><br />
+                        <a href="/results/{{result}}/euclidean_emperor_pcoa_plot/index.html" target="resframe">Euclidean</a><br />
+                      {%end%}
+                    {% else %}
+                      <a href="/results/{{result}}/taxa_summary_plots/area_charts.html" target="resframe">Area charts</a><br />
+                      <a href="/results/{{result}}/taxa_summary_plots/bar_charts.html" target="resframe">Bar charts</a><br />
+                    {% end %}
+                  {% end %}
+                </div>
+              {% end %}
+            </div>
+          </div>
+        {% end %}
+      </div>
+    </div>
+    <div class="col-md-10">
+        <iframe id="resframe" name="resframe" width="100%" height="900" frameBorder=0></iframe>
+    </div>
+  </div>
+</div>
+{%end%}
