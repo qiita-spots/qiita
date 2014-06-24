@@ -1,0 +1,101 @@
+#!/usr/bin/env python
+
+# -----------------------------------------------------------------------------
+# Copyright (c) 2014--, The Qiita Development Team.
+#
+# Distributed under the terms of the BSD 3-clause License.
+#
+# The full license is in the file LICENSE, distributed with this software.
+# -----------------------------------------------------------------------------
+
+import click
+
+from qiita_core.configuration_manager import ConfigurationManager
+from qiita_db.environment_manager import (make_environment,
+                                          drop_environment,
+                                          clean_test_environment,
+                                          DFLT_BASE_DATA_FOLDER,
+                                          DFLT_BASE_WORK_FOLDER,
+                                          ENVIRONMENTS)
+from qiita_core.environment_manager import (start_cluster as _start_cluster,
+                                            stop_cluster as _stop_cluster)
+
+
+_CONFIG = ConfigurationManager()
+
+
+@click.group()
+def qiita_env():
+    pass
+
+
+@qiita_env.command()
+@click.option('--cluster', required=True,
+              type=click.Choice(['demo', 'reserved', 'general']))
+def start_cluster(cluster):
+    """Start a compute environment"""
+    if cluster == 'demo':
+        _start_cluster(_CONFIG.ipyc_demo, _CONFIG.ipyc_demo_n)
+    elif cluster == 'reserved':
+        _start_cluster(_CONFIG.ipyc_reserved, _CONFIG.ipyc_reserved_n)
+    elif cluster == 'general':
+        _start_cluster(_CONFIG.ipyc_general, _CONFIG.ipyc_general_n)
+
+
+@qiita_env.command()
+@click.option('--cluster', required=True,
+              type=click.Choice(['demo', 'reserved', 'general']))
+def stop_cluster(cluster):
+    """Stop a compute environment"""
+    if cluster == 'demo':
+        _stop_cluster(_CONFIG.ipyc_demo)
+    elif cluster == 'reserved':
+        _stop_cluster(_CONFIG.ipyc_reserved)
+    elif cluster == 'general':
+        _stop_cluster(_CONFIG.ipyc_general)
+
+
+@qiita_env.command()
+@click.option('--env', type=click.Choice(ENVIRONMENTS.keys()), required=True,
+              help="The folder where the test data files are stored")
+@click.option('--base_data_folder', default=DFLT_BASE_DATA_FOLDER,
+              help="The folder where the test data files are stored")
+@click.option('--base_work_folder', default=DFLT_BASE_WORK_FOLDER,
+              help="The folder where the actively worked on files are stored")
+@click.option('--user', default='postgres',
+              help="The database user to connect to the database")
+@click.option('--host', default='localhost',
+              help='The host where the database lives')
+def make_env(env, base_data_folder, base_work_folder, user, host):
+    """Drops the passed database environment"""
+    make_environment(env, base_data_folder, base_work_folder, user, None, host)
+
+
+@qiita_env.command()
+@click.option('--env', type=click.Choice(ENVIRONMENTS.keys()), required=True,
+              help="The folder where the test data files are stored")
+@click.option('--user', default='postgres',
+              help="The database user to connect to the database")
+@click.option('--host', default='localhost',
+              help='The host where the database lives')
+def drop_env(env, user, host):
+    """Drops the passed database environment"""
+    drop_environment(env, user, None, host)
+
+
+@qiita_env.command()
+@click.option('--user', default='postgres',
+              help="The database user to connect to the database")
+@click.option('--host', default='localhost',
+              help='The host where the database lives')
+def clean_test_env(user, host):
+    """Cleans the test database environment.
+
+    In case that the test database is dirty (i.e. the 'qiita' schema is
+    present), this cleans it up by dropping the 'qiita' schema.
+    """
+    clean_test_environment(user, None, host)
+
+
+if __name__ == '__main__':
+    qiita_env()

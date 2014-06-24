@@ -1,0 +1,59 @@
+{% extends sitebase.html%}
+
+{%block head%}
+<script type="text/javascript">
+
+    function connect() {
+        var host = 'ws://' + getBaseURL() + 'consumer/';
+        var websocket = new WebSocket(host);
+        noerror = true;
+
+        websocket.onopen = function() {
+            websocket.send(JSON.stringify({'msg': 'user:{{user}}'}));
+            console.log(JSON.stringify({'msg':'user:{{user}}'}));
+        };
+        websocket.onmessage = function(evt) {
+            console.log(evt.data);
+            message = JSON.parse(evt.data);
+            if(message.analysis == '{{aid}}') {
+                if(message.msg == 'allcomplete') { 
+                    window.location.replace("/analysis/results/{{aid}}");
+                }
+                list = document.getElementById(message.command);
+                if(message.msg.indexOf("ERROR") != -1) {
+                  list.style.color="Red";
+                  noerror=false;
+                }
+                else if(message.msg.indexOf("Completed") != -1) {
+                  list.style.color="Green";
+                }
+                else {
+                  list.style.color="Blue"; 
+                }
+                list.innerHTML = message.msg;
+            }
+        };
+        websocket.onerror = function(evt) { };
+    }
+
+    window.onload = function() {
+  connect();
+};
+
+function getBaseURL () {
+   return location.hostname + (location.port && ":" + location.port) + "/";
+}
+
+</script>
+{% end %}
+
+{% block content %}
+<h1>Analysis {{aname}}</h1>
+  {% for command in commands%}
+    <p>
+    {{command}}: <span id='{{command}}'>Queued</span>
+    </p>
+  {% end %}
+<div id='error'></div>
+
+{% end %}

@@ -1,0 +1,34 @@
+language: python
+env:
+  - PYTHON_VERSION=3.4
+  - PYTHON_VERSION=2.7
+before_install:
+  - wget http://repo.continuum.io/miniconda/Miniconda-2.2.2-Linux-x86_64.sh -O miniconda.sh
+  - chmod +x miniconda.sh
+  - ./miniconda.sh -b
+  - export PATH=/home/travis/anaconda/bin:$PATH
+  # Update conda itself
+  - conda update --yes conda
+install:
+  - conda create --yes -n env_name python=$PYTHON_VERSION pip nose pep8 openpyxl=1.8.2 pandas ipython pyzmq
+  - source activate env_name
+  - pip 
+  - pip install coveralls
+  - pip install .
+script:
+  - ipython profile create qiita_general --parallel
+  - ipython profile create qiita_demo --parallel
+  - ipython profile create qiita_reserved --parallel
+  - qiita_env start_cluster --cluster general
+  - qiita_env start_cluster --cluster demo
+  - qiita_env start_cluster --cluster reserved
+  - qiita_env make_env --env test
+  - nosetests --with-doctest --with-coverage
+  - pep8 qiita_db qiita_core qiita_pet setup.py
+  # we need to run the test suite from setup.py for coveralls to grab the info
+  # - coverage run setup.py test
+  # - coverage report -m
+services:
+  - redis-server
+after_success:
+  - coveralls
