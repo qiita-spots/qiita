@@ -1,4 +1,0 @@
-#SampleID	center_name	center_project_name	data_type_id	ebi_study_accession	ebi_submission_accession	emp_status_id	str_column
-SKB7.640196	ANL	Test Project	2	None	None	1	Value for sample 3
-SKB8.640193	ANL	Test Project	2	None	None	1	Value for sample 1
-SKD8.640184	ANL	Test Project	2	None	None	1	Value for sample 2
