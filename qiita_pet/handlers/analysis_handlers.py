@@ -26,7 +26,26 @@ from qiita_db.data import ProcessedData
 from qiita_db.metadata_template import SampleTemplate
 from qiita_db.job import Job
 from qiita_db.util import get_db_files_base_dir
-# login code modified from https://gist.github.com/guillaumevincent/4771570
+
+
+def check_access(user, analysis_id):
+    """Checks whether user has access to an analysis
+
+    Parameters
+    ----------
+    user : User object
+        User to check
+    analysis_id : int
+        Analysis to check access for
+
+    Raises
+    ------
+    RuntimeError
+        Tried to access analysis that user does not have access to
+    """
+    if analysis_id not in set(Analysis.get_public() + user.shared_analyses +
+                              user.private_analyses):
+        raise RuntimeError("Analysis access denied to %s" % (analysis_id))
 
 
 class CreateAnalysisHandler(BaseHandler):
@@ -43,11 +62,10 @@ class SelectStudiesHandler(BaseHandler):
         name = self.get_argument('name')
         description = self.get_argument('description')
         user = self.get_current_user()
-        # create list of studies
-        study_ids = {s.id for s in Study.get_public()}
         userobj = User(user)
-        [study_ids.add(x) for x in userobj.private_studies]
-        [study_ids.add(x) for x in userobj.shared_studies]
+        # create list of studies
+        study_ids = set(Study.get_public() + userobj.private_studies +
+                        userobj.shared_studies)
 
         studies = [Study(i) for i in study_ids]
         analysis = Analysis.create(User(user), name, description)
@@ -101,22 +119,28 @@ class SelectCommandsHandler(BaseHandler):
 class AnalysisWaitHandler(BaseHandler):
     @authenticated
     def get(self, analysis_id):
+        user = self.get_current_user()
+        check_access(User(user), analysis_id)
+
         analysis = Analysis(analysis_id)
         commands = []
         for job in analysis.jobs:
             jobject = Job(job)
             commands.append("%s:%s" % (jobject.datatype, jobject.command[0]))
 
-        self.render("analysis_waiting.html", user=self.get_current_user(),
+        self.render("analysis_waiting.html", user=user,
                     aid=analysis_id, aname=analysis.name,
                     commands=commands)
 
     @authenticated
     @asynchronous
-    def post(self, analysis_id):
+    def post(self, aid):
+        user = self.get_current_user()
+        check_access(User(user), aid)
+
         command_args = self.get_arguments("commands")
         split = [x.split("#") for x in command_args]
-        analysis = Analysis(analysis_id)
+        analysis = Analysis(aid)
 
         commands = []
         # HARD CODED HACKY THING FOR DEMO, FIX  Issue #164
@@ -141,9 +165,8 @@ class AnalysisWaitHandler(BaseHandler):
             Job.create(data_type, command, opts, analysis)
             commands.append("%s: %s" % (data_type, command))
         user = self.get_current_user()
-        self.render("analysis_waiting.html", user=user,
-                    aid=analysis_id, aname=analysis.name,
-                    commands=commands)
+        self.render("analysis_waiting.html", user=user, aid=aid,
+                    aname=analysis.name, commands=commands)
         # fire off analysis run here
         # currently synch run so redirect done here. Will remove after demo
         run_analysis(user, analysis)
@@ -152,6 +175,9 @@ class AnalysisWaitHandler(BaseHandler):
 class AnalysisResultsHandler(BaseHandler):
     @authenticated
     def get(self, aid):
+        user = self.get_current_user()
+        check_access(User(user), aid)
+
         analysis = Analysis(aid)
         jobres = defaultdict(list)
         for job in analysis.jobs:
