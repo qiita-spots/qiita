@@ -64,8 +64,8 @@ class SelectStudiesHandler(BaseHandler):
         user = self.get_current_user()
         userobj = User(user)
         # create list of studies
-        study_ids = set(Study.get_public() + userobj.private_studies +
-                        userobj.shared_studies)
+        study_ids = Study.get_public() + userobj.private_studies + \
+            userobj.shared_studies
 
         studies = [Study(i) for i in study_ids]
         analysis = Analysis.create(User(user), name, description)
