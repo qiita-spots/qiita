@@ -9,8 +9,8 @@
         noerror = true;
 
         websocket.onopen = function() {
-            websocket.send(JSON.stringify({'msg': 'user:{{user}}'}));
-            console.log(JSON.stringify({'msg':'user:{{user}}'}));
+            websocket.send(JSON.stringify({'user': '{{user}}'}));
+            console.log(JSON.stringify({'user':'{{user}}'}));
         };
         websocket.onmessage = function(evt) {
             console.log(evt.data);
