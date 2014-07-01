@@ -28,7 +28,7 @@ from qiita_db.job import Job
 from qiita_db.util import get_db_files_base_dir
 
 
-def check_access(user, analysis_id):
+def check_analysis_access(user, analysis_id):
     """Checks whether user has access to an analysis
 
     Parameters
@@ -120,7 +120,7 @@ class AnalysisWaitHandler(BaseHandler):
     @authenticated
     def get(self, analysis_id):
         user = self.get_current_user()
-        check_access(User(user), analysis_id)
+        check_analysis_access(User(user), analysis_id)
 
         analysis = Analysis(analysis_id)
         commands = []
@@ -136,7 +136,7 @@ class AnalysisWaitHandler(BaseHandler):
     @asynchronous
     def post(self, aid):
         user = self.get_current_user()
-        check_access(User(user), aid)
+        check_analysis_access(User(user), aid)
 
         command_args = self.get_arguments("commands")
         split = [x.split("#") for x in command_args]
@@ -176,7 +176,7 @@ class AnalysisResultsHandler(BaseHandler):
     @authenticated
     def get(self, aid):
         user = self.get_current_user()
-        check_access(User(user), aid)
+        check_analysis_access(User(user), aid)
 
         analysis = Analysis(aid)
         jobres = defaultdict(list)
