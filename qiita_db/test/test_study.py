@@ -149,7 +149,7 @@ class TestStudy(TestCase):
         new = Study.create(User('test@foo.bar'), 'Identification of the '
                            'Microbiomes for Cannabis Soils', [1], self.info)
         obs = Study.get_public()
-        self.assertEqual(obs, [Study(1)])
+        self.assertEqual(obs, [1])
 
     def test_create_study_min_data(self):
         """Insert a study into the database"""
