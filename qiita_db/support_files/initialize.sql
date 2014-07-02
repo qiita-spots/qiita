@@ -44,4 +44,4 @@ INSERT INTO qiita.command (name, command, input, required, optional, output) VAL
 ('Alpha Rarefaction', 'alpha_rarefaction.py', '{"--otu_table_fp":null,"--mapping_fp":null}', '{}', '{"--tree_fp":null,"--num_steps":null,"--min_rare_depth":null,"--max_rare_depth":null,"--retain_intermediate_files":false}', '{"--output_dir":null}');
 
 -- Populate command_data_type table
-INSERT INTO qiita.command_data_type (command_id, data_type_id) VALUES (1,1), (1,2), (2,1), (2,2),  (2,3),  (2,4),  (2,5), (2,6), (3,1), (3,3),  (3,3),  (3,4),  (3,5), (3,6);
+INSERT INTO qiita.command_data_type (command_id, data_type_id) VALUES (1,1), (1,2), (2,1), (2,2),  (2,3),  (2,4),  (2,5), (2,6), (3,1), (3,2),  (3,3),  (3,4),  (3,5), (3,6);
