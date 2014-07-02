@@ -212,10 +212,10 @@ class Job(QiitaStatusObject):
         opts: dict
             The options for the command in format {option: value}
         """
-        # make sure job is editable
-        self._lock_job()
-
         conn_handler = SQLConnectionHandler()
+        # make sure job is editable
+        self._lock_job(conn_handler)
+
         # JSON the options dictionary
         opts_json = dumps(opts, sort_keys=True, separators=(',', ':'))
         # Add the options to the job

@@ -74,14 +74,12 @@ class JobTest(TestCase):
     def test_create(self):
         """Makes sure creation works as expected"""
         # make first job
-        new = Job.create("18S", "Alpha Rarefaction",
-                         self.options, Analysis(1))
+        new = Job.create("18S", "Alpha Rarefaction", Analysis(1))
         self.assertEqual(new.id, 4)
         # make sure job inserted correctly
         obs = self.conn_handler.execute_fetchall("SELECT * FROM qiita.job "
                                                  "WHERE job_id = 4")
-        exp = [[4, 2, 1, 3, '{"option1":false,"option2":25,"option3":"NEW"}',
-                None]]
+        exp = [[4, 2, 1, 3, None, None]]
         self.assertEqual(obs, exp)
         # make sure job added to analysis correctly
         obs = self.conn_handler.execute_fetchall("SELECT * FROM "
@@ -91,14 +89,12 @@ class JobTest(TestCase):
         self.assertEqual(obs, exp)
 
         # make second job with diff datatype and command to test column insert
-        new = Job.create("16S", "Beta Diversity",
-                         self.options, Analysis(1))
+        new = Job.create("16S", "Beta Diversity", Analysis(1))
         self.assertEqual(new.id, 5)
         # make sure job inserted correctly
         obs = self.conn_handler.execute_fetchall("SELECT * FROM qiita.job "
                                                  "WHERE job_id = 5")
-        exp = [[5, 1, 1, 2, '{"option1":false,"option2":25,"option3":"NEW"}',
-                None]]
+        exp = [[5, 1, 1, 2, None, None]]
         self.assertEqual(obs, exp)
         # make sure job added to analysis correctly
         obs = self.conn_handler.execute_fetchall("SELECT * FROM "
@@ -130,11 +126,19 @@ class JobTest(TestCase):
                                  '1_summarize_taxa_through_plots.py'
                                  '_output_dir')})
 
+    def test_set_options(self):
+        new = Job.create("18S", "Alpha Rarefaction", Analysis(1))
+        new.options = self.options
+        self.options['--output_dir'] = join(get_db_files_base_dir(),
+                                            'job/4_alpha_rarefaction.'
+                                            'py_output_dir')
+        self.assertEqual(new.options, self.options)
+
     def test_retrieve_results(self):
         self.assertEqual(self.job.results, [join("job", "1_job_result.txt")])
 
     def test_retrieve_results_empty(self):
-        new = Job.create("18S", "Beta Diversity", self.options, Analysis(1))
+        new = Job.create("18S", "Beta Diversity", Analysis(1))
         self.assertEqual(new.results, [])
 
     def test_retrieve_results_dir(self):
