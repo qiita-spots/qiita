@@ -102,13 +102,10 @@ class SQLConnectionHandler(object):
                 self._connection.commit()
             except PostgresError as e:
                 self._connection.rollback()
-                try:
-                    if not isinstance(sql_args[0], Iterable):
-                        err_sql = cur.mogrify(sql, sql_args)
-                    else:
-                        err_sql = cur.mogrify(sql, sql_args[0])
-                except (IndexError, TypeError):
-                    err_sql = sql
+                if sql_args and isinstance(sql_args[0], Iterable):
+                    err_sql = cur.mogrify(sql, sql_args[0])
+                else:
+                    err_sql = cur.mogrify(sql, sql_args)
                 raise QiitaDBExecutionError(("\nError running SQL query: %s"
                                              "\nError: %s" % (err_sql, e)))
 
