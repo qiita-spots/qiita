@@ -149,7 +149,7 @@ class Study(QiitaStatusObject):
 
     @classmethod
     def get_public(cls):
-        """Returns study for all public Studies
+        """Returns study id for all public Studies
 
         Returns
         -------
@@ -160,8 +160,7 @@ class Study(QiitaStatusObject):
         sql = ("SELECT study_id FROM qiita.{0} WHERE "
                "{0}_status_id = %s".format(cls._table))
         # MAGIC NUMBER 2: status id for a public study
-        return [cls(x[0]) for x in
-                conn_handler.execute_fetchall(sql, (2,))]
+        return [x[0] for x in conn_handler.execute_fetchall(sql, (2, ))]
 
     @classmethod
     def create(cls, owner, title, efo, info, investigation=None):
