@@ -75,7 +75,7 @@ class Analysis(QiitaStatusObject):
         """
         conn_handler = SQLConnectionHandler()
         sql = ("SELECT analysis_id FROM qiita.{0} WHERE "
-               "{0}_analysis_id = %s".format(cls._table))
+               "{0}_status_id = %s".format(cls._table))
         # MAGIC NUMBER 6: status id for a public study
         return [x[0] for x in conn_handler.execute_fetchall(sql, (6,))]
 
