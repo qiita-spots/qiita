@@ -192,5 +192,40 @@ class JobTest(TestCase):
             self.job.add_results([("/fake/dir/", "directory")])
 
 
+@qiita_test_checker()
+class CommandTest(TestCase):
+    def setUp(self):
+        com1 = Command('Summarize Taxa', 'summarize_taxa_through_plots.py',
+                       '{"--otu_table_fp":null}', '{}',
+                       '{"--mapping_category":null, "--mapping_fp":null,'
+                       '"--sort":null}', '{"--output_dir":null}')
+        com2 = Command('Beta Diversity', 'beta_diversity_through_plots.py',
+                       '{"--otu_table_fp":null,"--mapping_fp":null}', '{}',
+                       '{"--tree_fp":null,"--color_by_all_fields":null,'
+                       '"--seqs_per_sample":null}', '{"--output_dir":null}')
+        com3 = Command('Alpha Rarefaction', 'alpha_rarefaction.py',
+                       '{"--otu_table_fp":null,"--mapping_fp":null}', '{}',
+                       '{"--tree_fp":null,"--num_steps":null,'
+                       '"--min_rare_depth"'
+                       ':null,"--max_rare_depth":null,'
+                       '"--retain_intermediate_files":false}',
+                       '{"--output_dir":null}')
+        self.all_comms = {
+            "16S": [com1, com2, com3],
+            "18S": [com1, com2, com3],
+            "ITS": [com2, com3],
+            "Proteomic": [com2, com3],
+            "Metabolomic": [com2, com3],
+            "Metagenomic": [com2, com3],
+        }
+
+    def test_get_commands_by_datatype(self):
+        obs = Command.get_commands_by_datatype()
+        self.assertEqual(obs, self.all_comms)
+        obs = Command.get_commands_by_datatype(["16S", "Metabolomic"])
+        exp = {k: self.all_comms[k] for k in ('16S', 'Metabolomic')}
+        self.assertEqual(obs, exp)
+
+
 if __name__ == "__main__":
     main()

@@ -28,9 +28,11 @@ from __future__ import division
 from json import dumps, loads
 from os.path import join
 from functools import partial
+from collections import defaultdict
+
+from future.builtins import zip
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
-
 from .base import QiitaStatusObject
 from .util import insert_filepaths, convert_to_id, get_db_files_base_dir
 from .sql_connection import SQLConnectionHandler
@@ -340,6 +342,50 @@ class Command(object):
         # create the list of command objects
         return [cls(c["name"], c["command"], c["input"], c["required"],
                 c["optional"], c["output"]) for c in commands]
+
+    @classmethod
+    def get_commands_by_datatype(cls, datatypes=None):
+        """Returns the commands available for all or a subset of the datatypes
+
+        Parameters
+        ----------
+        datatypes : list of str, optional
+            List of the datatypes to get commands for. Default is all datatypes
+
+        Returns
+        -------
+        dict of lists of Command objects
+            Returns commands in the format {datatype: [com name1, com name2]}
+
+        Notes
+        -----
+        If no datatypes are passed, the function will default to returning all
+        datatypes available.
+        """
+        conn_handler = SQLConnectionHandler()
+        # get the ids of the datatypes to get commands for
+        if datatypes is not None:
+            datatype_ids = [convert_to_id(dt, "data_type", conn_handler)
+                            for dt in datatypes]
+        else:
+            results = conn_handler.execute_fetchall(
+                "SELECT data_type_id, data_type from qiita.data_type")
+            datatype_ids = [dt_id[0] for dt_id in results]
+            datatypes = [dt_id[1] for dt_id in results]
+
+        commands = defaultdict(list)
+        # get commands for each datatype
+        sql = ("SELECT C.* FROM qiita.command C JOIN qiita.command_data_type "
+               "CD on C.command_id = CD.command_id WHERE CD.data_type_id = %s")
+        for dt, dt_id in zip(datatypes, datatype_ids):
+            comms = conn_handler.execute_fetchall(sql, (dt_id, ))
+            for comm in comms:
+                commands[dt].append(cls(comm["name"], comm["command"],
+                                        comm["input"],
+                                        comm["required"],
+                                        comm["optional"],
+                                        comm["output"]))
+        return commands
 
     def __eq__(self, other):
         if type(self) != type(other):
