@@ -365,19 +365,17 @@ class Command(object):
         conn_handler = SQLConnectionHandler()
         # get the ids of the datatypes to get commands for
         if datatypes is not None:
-            datatype_ids = [convert_to_id(dt, "data_type", conn_handler)
-                            for dt in datatypes]
+            datatype_info = [(convert_to_id(dt, "data_type", conn_handler), dt)
+                             for dt in datatypes]
         else:
-            results = conn_handler.execute_fetchall(
+            datatype_info = conn_handler.execute_fetchall(
                 "SELECT data_type_id, data_type from qiita.data_type")
-            datatype_ids = [dt_id[0] for dt_id in results]
-            datatypes = [dt_id[1] for dt_id in results]
 
         commands = defaultdict(list)
         # get commands for each datatype
         sql = ("SELECT C.* FROM qiita.command C JOIN qiita.command_data_type "
                "CD on C.command_id = CD.command_id WHERE CD.data_type_id = %s")
-        for dt, dt_id in zip(datatypes, datatype_ids):
+        for dt_id, dt in datatype_info:
             comms = conn_handler.execute_fetchall(sql, (dt_id, ))
             for comm in comms:
                 commands[dt].append(cls(comm["name"], comm["command"],
