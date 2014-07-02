@@ -1,11 +1,21 @@
-"""
-Objects for dealing with Qiita jobs
+r"""
+Data objects (:mod: `qiita_db.data`)
+====================================
 
-This module provides the implementation of the Job class.
+..currentmodule:: qiita_db.data
+
+This module provides functionality for creating, running, and storing results
+of jobs in an analysis. It also provides the ability to query what commmands
+are available for jobs, as well as the options for these commands.
 
 Classes
 -------
-- `Job` -- A Qiita Job class
+
+..autosummary::
+    :toctree: generated/
+
+    Job
+    Command
 """
 # -----------------------------------------------------------------------------
 # Copyright (c) 2014--, The Qiita Development Team.
@@ -17,8 +27,6 @@ Classes
 from __future__ import division
 from json import dumps, loads
 from os.path import join
-from time import strftime
-from datetime import date
 from functools import partial
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
@@ -99,7 +107,7 @@ class Job(QiitaStatusObject):
             sql, (datatype_id, command_id, opts_json))[0]
 
     @classmethod
-    def create(cls, datatype, command, options, analysis):
+    def create(cls, datatype, command, analysis):
         """Creates a new job on the database
 
         Parameters
@@ -108,8 +116,6 @@ class Job(QiitaStatusObject):
             The datatype in which this job applies
         command : str
             The identifier of the command executed in this job
-        options: dict
-            The options for the command in format {option: value}
         analysis : Analysis object
             The analysis which this job belongs to
 
@@ -130,14 +136,12 @@ class Job(QiitaStatusObject):
         sql = "SELECT command_id FROM qiita.command WHERE name = %s"
         command_id = conn_handler.execute_fetchone(sql, (command, ))[0]
 
-        # JSON the options dictionary
-        opts_json = dumps(options, sort_keys=True, separators=(',', ':'))
         # Create the job and return it
         sql = ("INSERT INTO qiita.{0} (data_type_id, job_status_id, "
-               "command_id, options) VALUES "
-               "(%s, %s, %s, %s) RETURNING job_id").format(cls._table)
+               "command_id) VALUES "
+               "(%s, %s, %s) RETURNING job_id").format(cls._table)
         job_id = conn_handler.execute_fetchone(sql, (datatype_id, 1,
-                                               command_id, opts_json))[0]
+                                               command_id))[0]
 
         # add job to analysis
         sql = ("INSERT INTO qiita.analysis_job (analysis_id, job_id) VALUES "
@@ -196,6 +200,26 @@ class Job(QiitaStatusObject):
         for k in out_opt:
             opts[k] = join_f("%s_%s_%s" % (self._id, db_comm[0], k.strip("-")))
         return opts
+
+    @options.setter
+    def options(self, opts):
+        """ Sets the options for the job
+
+        Parameters
+        ----------
+        opts: dict
+            The options for the command in format {option: value}
+        """
+        # make sure job is editable
+        self._lock_job()
+
+        conn_handler = SQLConnectionHandler()
+        # JSON the options dictionary
+        opts_json = dumps(opts, sort_keys=True, separators=(',', ':'))
+        # Add the options to the job
+        sql = ("UPDATE qiita.{0} SET options = %s WHERE "
+               "job_id = %s").format(self._table)
+        conn_handler.execute(sql, (opts_json, self._id))
 
     @property
     def results(self):
