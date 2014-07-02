@@ -43,8 +43,8 @@ def check_analysis_access(user, analysis_id):
     RuntimeError
         Tried to access analysis that user does not have access to
     """
-    if analysis_id not in set(Analysis.get_public() + user.shared_analyses +
-                              user.private_analyses):
+    if analysis_id not in Analysis.get_public() + user.shared_analyses + \
+            user.private_analyses:
         raise RuntimeError("Analysis access denied to %s" % (analysis_id))
 
 
