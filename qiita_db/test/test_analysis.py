@@ -31,6 +31,11 @@ class TestAnalysis(TestCase):
         self.analysis.status = "queued"
         self.analysis._lock_check(self.conn_handler)
 
+    def test_get_public(self):
+        self.assertEqual(Analysis.get_public(), [])
+        self.analysis.status = "public"
+        self.assertEqual(Analysis.get_public(), [1])
+
     def test_create(self):
         new = Analysis.create(User("admin@foo.bar"), "newAnalysis",
                               "A New Analysis")
