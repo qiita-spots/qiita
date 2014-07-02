@@ -121,5 +121,8 @@ class SetupTest(TestCase):
     def test_job_results_filepath(self):
         check_count("qiita.job_results_filepath", 2)
 
+    def test_command_data_type(self):
+        check_count("qiita.command_data_type", 14)
+
 if __name__ == '__main__':
     main()
