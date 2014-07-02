@@ -65,6 +65,21 @@ class Analysis(QiitaStatusObject):
         self._lock_check(conn_handler)
 
     @classmethod
+    def get_public(cls):
+        """Returns analysis id for all public Analyses
+
+        Returns
+        -------
+        list of int
+            All public analysses in the database
+        """
+        conn_handler = SQLConnectionHandler()
+        sql = ("SELECT analysis_id FROM qiita.{0} WHERE "
+               "{0}_status_id = %s".format(cls._table))
+        # MAGIC NUMBER 6: status id for a public study
+        return [x[0] for x in conn_handler.execute_fetchall(sql, (6,))]
+
+    @classmethod
     def create(cls, owner, name, description, parent=None):
         """Creates a new analysis on the database
 
