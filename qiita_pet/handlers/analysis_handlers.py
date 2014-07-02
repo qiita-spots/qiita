@@ -24,7 +24,7 @@ from qiita_db.analysis import Analysis
 from qiita_db.study import Study
 from qiita_db.data import ProcessedData
 from qiita_db.metadata_template import SampleTemplate
-from qiita_db.job import Job
+from qiita_db.job import Job, Command
 from qiita_db.util import get_db_files_base_dir
 
 
@@ -94,10 +94,7 @@ class SelectCommandsHandler(BaseHandler):
         data_types = sorted(list(data_types))
 
         # FIXME: Pull out from the database, see #111
-        commands = {'16S': ['Beta Diversity', 'Summarize Taxa'],
-                    '18S': ['Beta Diversity', 'Summarize Taxa'],
-                    'Metabolomic': ['Beta Diversity'],
-                    'Metagenomic': ['Beta Diversity']}
+        commands = Command.get_commands_by_datatype()
 
         self.render('select_commands.html', user=self.get_current_user(),
                     commands=commands, data_types=data_types, aid=analysis_id)
