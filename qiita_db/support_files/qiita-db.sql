@@ -369,6 +369,18 @@ CREATE INDEX idx_column_ontology_0 ON qiita.column_ontology ( column_name );
 
 COMMENT ON TABLE qiita.column_ontology IS 'This table relates a column with an ontology.';
 
+CREATE TABLE qiita.command_data_type ( 
+	command_id           bigint  NOT NULL,
+	data_type_id         bigint  NOT NULL,
+	CONSTRAINT idx_command_data_type PRIMARY KEY ( command_id, data_type_id ),
+	CONSTRAINT fk_command_data_type FOREIGN KEY ( command_id ) REFERENCES qiita.command( command_id )    ,
+	CONSTRAINT fk_command_data_type_0 FOREIGN KEY ( data_type_id ) REFERENCES qiita.data_type( data_type_id )    
+ );
+
+CREATE INDEX idx_command_data_type_0 ON qiita.command_data_type ( command_id );
+
+CREATE INDEX idx_command_data_type_1 ON qiita.command_data_type ( data_type_id );
+
 CREATE TABLE qiita.controlled_vocab_values ( 
 	vocab_value_id       bigserial  NOT NULL,
 	controlled_vocab_id  bigint  NOT NULL,

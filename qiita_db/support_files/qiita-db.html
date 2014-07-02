@@ -622,7 +622,17 @@
 	study_processed_data references processed_data ( processed_data_id )</title>
 </path>
 <text x='1341' y='940' transform='rotate(0 1341,940)' title='Foreign Key fk_study_processed_data_0
-	study_processed_data references processed_data ( processed_data_id )' style='fill:#a1a0a0;'>processed_data_id</text><!-- ============= Table 'term_synonym' ============= -->
+	study_processed_data references processed_data ( processed_data_id )' style='fill:#a1a0a0;'>processed_data_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 375 1155 L 315,1155' >
+	<title>Foreign Key fk_command_data_type
+	command_data_type references command ( command_id )</title>
+</path>
+<text x='308' y='1150' transform='rotate(0 308,1150)' title='Foreign Key fk_command_data_type
+	command_data_type references command ( command_id )' style='fill:#a1a0a0;'>command_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 525 1170 L 697,1170 Q 705,1170 705,1162 L 705,1080' >
+	<title>Foreign Key fk_command_data_type_0
+	command_data_type references data_type ( data_type_id )</title>
+</path>
+<text x='532' y='1165' transform='rotate(0 532,1165)' title='Foreign Key fk_command_data_type_0
+	command_data_type references data_type ( data_type_id )' style='fill:#a1a0a0;'>data_type_id</text><!-- ============= Table 'term_synonym' ============= -->
 <rect class='table' x='525' y='1868' width='135' height='105' rx='7' ry='7' />
 <path d='M 525.50 1894.50 L 525.50 1875.50 Q 525.50 1868.50 532.50 1868.50 L 652.50 1868.50 Q 659.50 1868.50 659.50 1875.50 L 659.50 1894.50 L525.50 1894.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
 <a xlink:href='#term_synonym'><text x='552' y='1882' class='tableTitle'>term_synonym</text><title>Table qiita.term_synonym</title></a>
@@ -1115,7 +1125,9 @@ Time the reset code was generated</title></a>
   <use id='nn' x='692' y='1032' xlink:href='#nn'/><a xlink:href='#data_type_id'><use id='pk' x='692' y='1031' xlink:href='#pk'/><title>Primary Key  ( data_type_id ) </title></a>
 <a xlink:href='#data_type_id'><text x='708' y='1042'>data_type_id</text><title>data_type_id bigserial not null</title></a>
 <a xlink:href='#data_type_id'><use id='ref' x='783' y='1031' xlink:href='#ref'/><title>Referred by common_prep_info ( data_type_id ) 
-Referred by job ( data_type_id ) </title></a>
+Referred by job ( data_type_id ) 
+Referred by command_data_type ( data_type_id ) 
+Referred by command_data_type ( data_type_id ) </title></a>
   <use id='nn' x='692' y='1047' xlink:href='#nn'/><a xlink:href='#data_type'><text x='708' y='1057'>data_type</text><title>data_type varchar not null
 Data type &#040;16S&#044; metabolome&#044; etc&#041; the job will use</title></a>
 
@@ -1464,7 +1476,9 @@ Available commands for jobs</title></a>
   <use id='nn' x='212' y='1122' xlink:href='#nn'/><a xlink:href='#command_id'><use id='pk' x='212' y='1121' xlink:href='#pk'/><title>Primary Key  ( command_id ) </title></a>
 <a xlink:href='#command_id'><text x='228' y='1132'>command_id</text><title>command_id bigserial not null
 Unique identifier for function</title></a>
-<a xlink:href='#command_id'><use id='ref' x='303' y='1121' xlink:href='#ref'/><title>Referred by job ( command_id ) </title></a>
+<a xlink:href='#command_id'><use id='ref' x='303' y='1121' xlink:href='#ref'/><title>Referred by job ( command_id ) 
+Referred by command_data_type ( command_id ) 
+Referred by command_data_type ( command_id ) </title></a>
   <use id='nn' x='212' y='1137' xlink:href='#nn'/><a xlink:href='#name'><text x='228' y='1147'>name</text><title>name varchar not null</title></a>
   <use id='nn' x='212' y='1152' xlink:href='#nn'/><a xlink:href='#command'><text x='228' y='1162'>command</text><title>command varchar not null
 What command to call to run this function</title></a>
@@ -1578,6 +1592,17 @@ Link to a table with the parameters used to generate processed data</title></a>
   <use id='nn' x='1457' y='972' xlink:href='#nn'/><a xlink:href='#processed_data_id'><use id='pk' x='1457' y='971' xlink:href='#pk'/><title>Primary Key  ( study_id, processed_data_id ) Unique Index  ( processed_data_id ) </title></a>
 <a xlink:href='#processed_data_id'><text x='1473' y='982'>processed_data_id</text><title>processed_data_id bigint not null</title></a>
 <a xlink:href='#processed_data_id'><use id='fk' x='1578' y='971' xlink:href='#fk'/><title>References processed_data ( processed_data_id ) </title></a>
+
+<!-- ============= Table 'command_data_type' ============= -->
+<rect class='table' x='390' y='1148' width='135' height='75' rx='7' ry='7' />
+<path d='M 390.50 1174.50 L 390.50 1155.50 Q 390.50 1148.50 397.50 1148.50 L 517.50 1148.50 Q 524.50 1148.50 524.50 1155.50 L 524.50 1174.50 L390.50 1174.50 ' style='fill:url(#tableHeaderGradient1); stroke:none;' />
+<a xlink:href='#command_data_type'><text x='402' y='1162' class='tableTitle'>command_data_type</text><title>Table qiita.command_data_type</title></a>
+  <use id='nn' x='392' y='1182' xlink:href='#nn'/><a xlink:href='#command_id'><use id='pk' x='392' y='1181' xlink:href='#pk'/><title>Primary Key  ( command_id, data_type_id ) Index  ( command_id ) </title></a>
+<a xlink:href='#command_id'><text x='408' y='1192'>command_id</text><title>command_id bigint not null</title></a>
+<a xlink:href='#command_id'><use id='fk' x='513' y='1181' xlink:href='#fk'/><title>References command ( command_id ) </title></a>
+  <use id='nn' x='392' y='1197' xlink:href='#nn'/><a xlink:href='#data_type_id'><use id='pk' x='392' y='1196' xlink:href='#pk'/><title>Primary Key  ( command_id, data_type_id ) Index  ( data_type_id ) </title></a>
+<a xlink:href='#data_type_id'><text x='408' y='1207'>data_type_id</text><title>data_type_id bigint not null</title></a>
+<a xlink:href='#data_type_id'><use id='fk' x='513' y='1196' xlink:href='#fk'/><title>References data_type ( data_type_id ) </title></a>
 
 </g></svg>
 
@@ -4604,6 +4629,49 @@ Linked by y being raw&#095;data&#095;id from raw data table&#046; </td></tr>
 	<tr>
 		<td>fk_study_processed_data_0</td>
 		<td > ( processed&#095;data&#095;id ) ref <a href='#processed&#095;data'>processed&#095;data</a> (processed&#095;data&#095;id) </td>
+		<td>  </td>
+	</tr>
+</tbody>
+</table>
+
+<br/><br/>
+<table id='dbs' >
+<thead>
+<tr><th colspan='3'><a name='command_data_type'>command_data_type</a></th></tr>
+</thead>
+<tbody>
+	<tr>
+		<td><a name='command_id'>command&#095;id</a></td>
+		<td width='40%'> bigint  NOT NULL  </td>
+		<td width='99%'>  </td>
+	</tr>
+	<tr>
+		<td><a name='data_type_id'>data&#095;type&#095;id</a></td>
+		<td width='40%'> bigint  NOT NULL  </td>
+		<td width='99%'>  </td>
+	</tr>
+<tr><td colspan='3' class='subpart'><b>Indexes</b></td></tr>
+	<tr>		<td>idx&#095;command&#095;data&#095;type primary key</td>
+		<td> ON command&#095;id&#044; data&#095;type&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>idx&#095;command&#095;data&#095;type&#095;0 </td>
+		<td> ON command&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>idx&#095;command&#095;data&#095;type&#095;1 </td>
+		<td> ON data&#095;type&#095;id</td>
+		<td>  </td>
+	</tr>
+<tr><td colspan='3' class='subpart'><b>Foreign Keys</b></td></tr>
+	<tr>
+		<td>fk_command_data_type</td>
+		<td > ( command&#095;id ) ref <a href='#command'>command</a> (command&#095;id) </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>fk_command_data_type_0</td>
+		<td > ( data&#095;type&#095;id ) ref <a href='#data&#095;type'>data&#095;type</a> (data&#095;type&#095;id) </td>
 		<td>  </td>
 	</tr>
 </tbody>
