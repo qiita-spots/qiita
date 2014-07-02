@@ -107,7 +107,7 @@ class SQLConnectionHandler(object):
                         err_sql = cur.mogrify(sql, sql_args)
                     else:
                         err_sql = cur.mogrify(sql, sql_args[0])
-                except IndexError:
+                except (IndexError, TypeError):
                     err_sql = sql
                 raise QiitaDBExecutionError(("\nError running SQL query: %s"
                                              "\nError: %s" % (err_sql, e)))
