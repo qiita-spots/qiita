@@ -31,10 +31,10 @@
               {% for command in commands[data_type] %}
                 <tr>
                   <td style="width:20px;">
-                    <input id="{{data_type}}#{{command}}" type="checkbox" name="commands" value="{{data_type}}#{{command}}">
+                    <input id="{{data_type}}#{{command.name}}" type="checkbox" name="commands" value="{{data_type}}#{{command.name}}">
                   </td>
                   <td>
-                    <label style="font-weight:normal;" for="{{data_type}}#{{command}}">{{command}}</label>
+                    <label style="font-weight:normal;" for="{{data_type}}#{{command.name}}">{{command.name}}</label>
                   </td>
                 </tr>
               {% end %}

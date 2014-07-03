@@ -74,14 +74,12 @@ class JobTest(TestCase):
     def test_create(self):
         """Makes sure creation works as expected"""
         # make first job
-        new = Job.create("18S", "Alpha Rarefaction",
-                         self.options, Analysis(1))
+        new = Job.create("18S", "Alpha Rarefaction", Analysis(1))
         self.assertEqual(new.id, 4)
         # make sure job inserted correctly
         obs = self.conn_handler.execute_fetchall("SELECT * FROM qiita.job "
                                                  "WHERE job_id = 4")
-        exp = [[4, 2, 1, 3, '{"option1":false,"option2":25,"option3":"NEW"}',
-                None]]
+        exp = [[4, 2, 1, 3, None, None]]
         self.assertEqual(obs, exp)
         # make sure job added to analysis correctly
         obs = self.conn_handler.execute_fetchall("SELECT * FROM "
@@ -91,14 +89,12 @@ class JobTest(TestCase):
         self.assertEqual(obs, exp)
 
         # make second job with diff datatype and command to test column insert
-        new = Job.create("16S", "Beta Diversity",
-                         self.options, Analysis(1))
+        new = Job.create("16S", "Beta Diversity", Analysis(1))
         self.assertEqual(new.id, 5)
         # make sure job inserted correctly
         obs = self.conn_handler.execute_fetchall("SELECT * FROM qiita.job "
                                                  "WHERE job_id = 5")
-        exp = [[5, 1, 1, 2, '{"option1":false,"option2":25,"option3":"NEW"}',
-                None]]
+        exp = [[5, 1, 1, 2, None, None]]
         self.assertEqual(obs, exp)
         # make sure job added to analysis correctly
         obs = self.conn_handler.execute_fetchall("SELECT * FROM "
@@ -130,11 +126,19 @@ class JobTest(TestCase):
                                  '1_summarize_taxa_through_plots.py'
                                  '_output_dir')})
 
+    def test_set_options(self):
+        new = Job.create("18S", "Alpha Rarefaction", Analysis(1))
+        new.options = self.options
+        self.options['--output_dir'] = join(get_db_files_base_dir(),
+                                            'job/4_alpha_rarefaction.'
+                                            'py_output_dir')
+        self.assertEqual(new.options, self.options)
+
     def test_retrieve_results(self):
         self.assertEqual(self.job.results, [join("job", "1_job_result.txt")])
 
     def test_retrieve_results_empty(self):
-        new = Job.create("18S", "Beta Diversity", self.options, Analysis(1))
+        new = Job.create("18S", "Beta Diversity", Analysis(1))
         self.assertEqual(new.results, [])
 
     def test_retrieve_results_dir(self):
@@ -190,6 +194,41 @@ class JobTest(TestCase):
         self.job.status = "completed"
         with self.assertRaises(QiitaDBStatusError):
             self.job.add_results([("/fake/dir/", "directory")])
+
+
+@qiita_test_checker()
+class CommandTest(TestCase):
+    def setUp(self):
+        com1 = Command('Summarize Taxa', 'summarize_taxa_through_plots.py',
+                       '{"--otu_table_fp":null}', '{}',
+                       '{"--mapping_category":null, "--mapping_fp":null,'
+                       '"--sort":null}', '{"--output_dir":null}')
+        com2 = Command('Beta Diversity', 'beta_diversity_through_plots.py',
+                       '{"--otu_table_fp":null,"--mapping_fp":null}', '{}',
+                       '{"--tree_fp":null,"--color_by_all_fields":null,'
+                       '"--seqs_per_sample":null}', '{"--output_dir":null}')
+        com3 = Command('Alpha Rarefaction', 'alpha_rarefaction.py',
+                       '{"--otu_table_fp":null,"--mapping_fp":null}', '{}',
+                       '{"--tree_fp":null,"--num_steps":null,'
+                       '"--min_rare_depth"'
+                       ':null,"--max_rare_depth":null,'
+                       '"--retain_intermediate_files":false}',
+                       '{"--output_dir":null}')
+        self.all_comms = {
+            "16S": [com1, com2, com3],
+            "18S": [com1, com2, com3],
+            "ITS": [com2, com3],
+            "Proteomic": [com2, com3],
+            "Metabolomic": [com2, com3],
+            "Metagenomic": [com2, com3],
+        }
+
+    def test_get_commands_by_datatype(self):
+        obs = Command.get_commands_by_datatype()
+        self.assertEqual(obs, self.all_comms)
+        obs = Command.get_commands_by_datatype(["16S", "Metabolomic"])
+        exp = {k: self.all_comms[k] for k in ('16S', 'Metabolomic')}
+        self.assertEqual(obs, exp)
 
 
 if __name__ == "__main__":
