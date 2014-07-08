@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-from __future__ import division
 
 # -----------------------------------------------------------------------------
 # Copyright (c) 2014--, The Qiita Development Team.
@@ -8,92 +7,86 @@ from __future__ import division
 #
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
+from __future__ import division
 
-QUERY_TYPES = ["includes", "exact", "starts_with", "ends_with"]
+from pyparsing import (alphas, nums, Word, dblQuotedString, oneOf, Optional,
+                       opAssoc, CaselessLiteral, removeQuotes, Group,
+                       operatorPrecedence, stringEnd)
 
 from qiita_core.exceptions import QiitaSearchError
 
-
-class QiitaSearchCriterion(object):
-    """Models a search criterion"""
-
-    def __init__(self, field, query_type, query):
-        """Initializes the criterion object
-
-        Inputs:
-            field: the field in which the criterion applies
-            query_type: the type of query of the criterion
-            query: the actual string containing the query
-
-        Raises a QiitaSearchError if the query type is not recognized
-        """
-        if query_type not in QUERY_TYPES:
-            raise QiitaSearchError("Query type not recognized: %s" %
-                                   query_type)
-        self.field = field
-        self.query_type = query_type
-        self.query = query
-
-    def __str__(self):
-        """Returns the criterion in a human-readable string"""
-        raise NotImplementedError("")
-
-
-class QiitaSearch(object):
+class QiitaStudySearch(object):
     """Models a search query"""
 
-    def __init__(self, fields, criterion):
+    def __init__(self, searchstr):
         """Initializes the search object
 
-        Inputs:
-            fields: the fields in which the search can apply
-            criterion: the first criterion of the search
+        Parameters
+        ----------
+        searchstr : str
+            the search string
 
-        Raises a QiitaSearchError if the criterion does not apply to the given
-            search fields
+        Raises
+        ------
+        ParseError
+            Search string can not be parsed
         """
-        if criterion.field not in fields:
-            raise QiitaSearchError("Field not recognized")
-        self._fields = fields
-        self._criteria = [criterion]
-        self._operators = []
+        self.searchstr = searchstr
+        self._parse_study_search_string(searchstr)
 
-    def __str__(self):
-        """Returns the search string in a json string"""
-        raise NotImplementedError("")
+    def _parse_study_search_string(self, searchstr):
+        """parses string into SQL query for study search
 
-    def add_criterion(self, criterion, operator):
-        """Adds a new criterion to the search
+        Parameters
+        ----------
+        searchstr : str
+            The string to parse
 
-        Inputs:
-            criterion: the new criterion to be added to the search
-            operator: the operator used in the added criterion
+        Returns
+        -------
+        tuple of list of indeterminate list nesting
+            Parsed information from the query string
+
+        Notes
+        -----
+        The irst item will be a set of all metadata categories searched for.
+        The second item will be the parsed search query in depth first order
+        for further query creation
+
+        Citations
+        ---------
+        [1] McGuire P (2007) Getting started with pyparsing.
         """
-        raise NotImplementedError("")
+        # build the parse grammar
+        category = Word(alphas + nums)
+        seperator = oneOf("> < = : >= <=") | CaselessLiteral("includes") | \
+            CaselessLiteral("startswith")
+        value = Word(alphas + nums) | dblQuotedString().setParseAction(
+            removeQuotes)
+        criterion = Group(category + seperator + value)
+        and_ = CaselessLiteral("and")
+        or_ = CaselessLiteral("or")
+        not_ = CaselessLiteral("not")
+        optional_seps = Optional(and_ | or_ | not_)
 
-    def remove_criterion(self, criterion):
-        """Removes a given criterion from the search
+        # create the grammar for parsing operators AND, OR, NOT
+        search_expr = operatorPrecedence(
+            criterion, [
+                (not_, 1, opAssoc.RIGHT),
+                (and_, 2, opAssoc.LEFT),
+                (or_, 2, opAssoc.LEFT)])
+        print "Search string:", searchstr
 
-        Inputs:
-            criterion: the criterion to be removed
-        """
-        raise NotImplementedError("")
+        # parse out all metadata headers we need to have in a study
+        meta_headers = set(c[0][0][0] for c in
+                           (criterion + optional_seps).scanString(searchstr))
 
-    def get_criteria(self):
-        """Iterator to loop through all the criterion on the search
+        # parse the actual query
+        parsed_query = (search_expr + stringEnd).searchString(searchstr)
 
-        Yields a pair of (operator, criterion) in which the operator
-            for the first criterion is not defined
-        """
-        yield None, self._criteria[0]
+        print meta_headers
+        print parsed_query
+        return (meta_headers, parsed_query)
 
-        for op, criterion in zip(self._operators, self._criteria[1:]):
-            yield op, criterion
-
-    def to_json_str(self):
-        """"""
-        pass
-
-    def load_from_json(self):
-        """"""
-        pass
+if __name__ == "__main__":
+    QiitaStudySearch('pH>5 AND pH < 6 OR author Includes Steve')
