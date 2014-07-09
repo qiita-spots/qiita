@@ -89,6 +89,7 @@ def typecast_string(string):
         except ValueError:
             return string
 
+
 def get_filetypes(key='type'):
     """Gets the list of possible filetypes from the filetype table
 
