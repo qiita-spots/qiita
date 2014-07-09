@@ -33,12 +33,16 @@ NOT Description_duplicate includes Burmese
 
 >>> from qiita_db.search import QiitaStudySearch # doctest: +SKIP
 >>> search = QiitaStudySearch() # doctest: +SKIP
->>> search('(sample_type = ENVO:soil AND COMMON_NAME = "rhizosphere '
-...        'metagenome" ) AND NOT Description_duplicate includes Burmese',
-...        "test@foo.bar") # doctest: +SKIP
+>>> res, meta = search('(sample_type = ENVO:soil AND COMMON_NAME = '
+                       '"rhizosphere metagenome") AND NOT '
+                       'Description_duplicate includes Burmese',
+...                    "test@foo.bar") # doctest: +SKIP
+>>> print(res) # doctest: +SKIP
 {1: ['SKM4.640180', 'SKB4.640189', 'SKB5.640181', 'SKB6.640176',
      'SKM5.640177', 'SKD4.640185', 'SKD6.640190', 'SKM6.640187',
      'SKD5.640186']}
+>>> print(meta) # doctest: +SKIP
+{"sample_type", "COMMON_NAME", "Description_duplicate"}
 
 Note that the userid performing the search must also be passed, so the search
 knows what studies are accessable.
@@ -156,7 +160,8 @@ class QiitaStudySearch(object):
         -----
         Metadata column names and string searches are case-sensitive
         """
-        study_sql, sample_sql = self._parse_study_search_string(searchstr)
+        study_sql, sample_sql, meta_headers = \
+            self._parse_study_search_string(searchstr)
         conn_handler = SQLConnectionHandler()
         # get all studies containing the metadata headers requested
         study_ids = {x[0] for x in conn_handler.execute_fetchall(study_sql)}
@@ -170,7 +175,7 @@ class QiitaStudySearch(object):
         for sid in study_ids:
             results[sid] = [
                 x[0] for x in conn_handler.execute_fetchall(sample_sql % sid)]
-        return results
+        return results, meta_headers
 
     def _parse_study_search_string(self, searchstr):
         """parses string into SQL query for study search
@@ -190,6 +195,7 @@ class QiitaStudySearch(object):
         the required metadata columns.
         The second item will be the SQL query for each study to get the sample
         ids that mach the query.
+        The third item will be the metadata categories in the query string
 
         All searches are case-sensitive
 
@@ -224,6 +230,7 @@ class QiitaStudySearch(object):
         # parse out all metadata headers we need to have in a study
         meta_headers = set(c[0][0].term[0] for c in
                            (criterion + optional_seps).scanString(searchstr))
+        all_headers = meta_headers
 
         # create the study finding SQL
         # remove metadata headers that are in required_sample_info table
@@ -242,7 +249,7 @@ class QiitaStudySearch(object):
                       "JOIN qiita.sample_%s s ON s.sample_id = r.sample_id "
                       "WHERE {0}".format(sql_where))
 
-        return (study_sql, sample_sql)
+        return (study_sql, sample_sql, all_headers)
 
 
 if __name__ == "__main__":
