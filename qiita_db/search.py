@@ -25,7 +25,11 @@ following operators::
 >  <  =  <=  >=  includes
 
 The operators act as they normally do, with includes used for substring
-searches. The object itself is used to search using the call method, like so:
+searches. The object itself is used to search using the call method. In this
+example, we will use the complex query::
+
+(sample_type = ENVO:soil AND COMMON_NAME = "rhizosphere metagenome") AND
+NOT Description_duplicate includes Burmese
 
 >>> from qiita_db.search import QiitaStudySearch # doctest: +SKIP
 >>> search = QiitaStudySearch() # doctest: +SKIP
