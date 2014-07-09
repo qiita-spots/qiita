@@ -34,8 +34,8 @@ NOT Description_duplicate includes Burmese
 >>> from qiita_db.search import QiitaStudySearch # doctest: +SKIP
 >>> search = QiitaStudySearch() # doctest: +SKIP
 >>> res, meta = search('(sample_type = ENVO:soil AND COMMON_NAME = '
-                       '"rhizosphere metagenome") AND NOT '
-                       'Description_duplicate includes Burmese',
+...                    '"rhizosphere metagenome") AND NOT '
+...                    'Description_duplicate includes Burmese',
 ...                    "test@foo.bar") # doctest: +SKIP
 >>> print(res) # doctest: +SKIP
 {1: ['SKM4.640180', 'SKB4.640189', 'SKB5.640181', 'SKB6.640176',
