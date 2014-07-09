@@ -1,4 +1,44 @@
-#!/usr/bin/env python
+r"""
+Search objects (:mod: `qiita_db.search`)
+====================================
+
+..currentmodule:: qiita_db.search
+
+This module provides functionality for searching studies and samples contained
+in the qiita database. All language processing and querying of the database is
+contained within each object.
+
+Classes
+-------
+
+..autosummary::
+    :toctree: generated/
+
+    QiitaStudySearch
+
+Examples
+--------
+Searches are done using natural language, with AND, OR, and NOT supported, as
+well as ordering through parenthesis. You can search over metadata using the
+following operators::
+
+>  <  =  <=  >=  includes
+
+The operators act as they normally do, with includes used for substring
+searches. The object itself is used to search using the call method, like so:
+
+>>> from qiita_db.search import QiitaStudySearch # doctest: +SKIP
+>>> search = QiitaStudySearch() # doctest: +SKIP
+>>> search('(sample_type = ENVO:soil AND COMMON_NAME = "rhizosphere '
+...        'metagenome" ) AND NOT Description_duplicate includes Burmese',
+...        "test@foo.bar") # doctest: +SKIP
+{1: ['SKM4.640180', 'SKB4.640189', 'SKB5.640181', 'SKB6.640176',
+     'SKM5.640177', 'SKD4.640185', 'SKD6.640190', 'SKM6.640187',
+     'SKD5.640186']}
+
+Note that the userid performing the search must also be passed, so the search
+knows what studies are accessable.
+"""
 
 # -----------------------------------------------------------------------------
 # Copyright (c) 2014--, The Qiita Development Team.
@@ -92,8 +132,7 @@ class SearchTerm(object):
 
 
 class QiitaStudySearch(object):
-    """Models a search query"""
-
+    """QiitaStudySearch object to parse and run searches on studies."""
     def __call__(self, searchstr, user):
         """Runs a Study query and returns matching studies and samples
 
