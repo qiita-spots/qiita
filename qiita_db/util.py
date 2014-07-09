@@ -68,6 +68,27 @@ def scrub_data(s):
     return ret
 
 
+def typecast_string(string):
+    """Converts a string to int or float if possible
+
+    Parameters
+    ----------
+    string : str
+        String to evaluate
+
+    Returns
+    -------
+    float, int, or str
+        Re-typed information from string
+    """
+    try:
+        return int(string)
+    except ValueError:
+        try:
+            return float(string)
+        except ValueError:
+            return string
+
 def get_filetypes(key='type'):
     """Gets the list of possible filetypes from the filetype table
 
