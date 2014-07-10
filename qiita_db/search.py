@@ -40,11 +40,14 @@ NOT Description_duplicate includes Burmese
 ...                    'Description_duplicate includes Burmese',
 ...                    "test@foo.bar") # doctest: +SKIP
 >>> print(res) # doctest: +SKIP
-{1: ['SKM4.640180', 'SKB4.640189', 'SKB5.640181', 'SKB6.640176',
-     'SKM5.640177', 'SKD4.640185', 'SKD6.640190', 'SKM6.640187',
-     'SKD5.640186']}
+{1: [['SKM4.640180', 'rhizosphere metagenome', 'Bucu Rhizo', 'ENVO:soil'],
+     ['SKM5.640177', 'rhizosphere metagenome', 'Bucu Rhizo', 'ENVO:soil'],
+     ['SKD4.640185', 'rhizosphere metagenome', 'Diesel Rhizo', 'ENVO:soil'],
+     ['SKD6.640190', 'rhizosphere metagenome', 'Diesel Rhizo', 'ENVO:soil'],
+     ['SKM6.640187', 'rhizosphere metagenome', 'Bucu Rhizo', 'ENVO:soil'],
+     ['SKD5.640186', 'rhizosphere metagenome', 'Diesel Rhizo', 'ENVO:soil']]}
 >>> print(meta) # doctest: +SKIP
-{"sample_type", "COMMON_NAME", "Description_duplicate"}
+["COMMON_NAME", "Description_duplicate", "sample_type"]
 
 Note that the userid performing the search must also be passed, so the search
 knows what studies are accessable.
@@ -157,12 +160,17 @@ class QiitaStudySearch(object):
         Returns
         -------
         dict
-            Found samples in format {study_id: [samp_id1, samp_id2,...]}
-        set
+            Found samples in format 
+            {study_id: [[samp_id1, meta1, meta2, ...],
+                        [samp_id2, meta1, meta2, ...], ...}
+        list
             metadata column names searched for
 
         Notes
         -----
+        Metadata information for each sample is in the same order as the
+        metadata columns list returned
+        
         Metadata column names and string searches are case-sensitive
         """
         study_sql, sample_sql, meta_headers = \
