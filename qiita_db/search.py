@@ -160,7 +160,7 @@ class QiitaStudySearch(object):
         Returns
         -------
         dict
-            Found samples in format 
+            Found samples in format
             {study_id: [[samp_id1, meta1, meta2, ...],
                         [samp_id2, meta1, meta2, ...], ...}
         list
@@ -170,7 +170,7 @@ class QiitaStudySearch(object):
         -----
         Metadata information for each sample is in the same order as the
         metadata columns list returned
-        
+
         Metadata column names and string searches are case-sensitive
         """
         study_sql, sample_sql, meta_headers = \
