@@ -179,8 +179,8 @@ class QiitaStudySearch(object):
         # run search on each study to get out the matching samples
         for sid in study_ids:
 
-            results[sid] = [x[0] for x in conn_handler.execute_fetchall(
-                sample_sql.format(sid))]
+            results[sid] = conn_handler.execute_fetchall(
+                sample_sql.format(sid))
         return results, meta_headers
 
     def _parse_study_search_string(self, searchstr):
@@ -197,8 +197,8 @@ class QiitaStudySearch(object):
             SQL query for selecting studies with the required metadata columns
         sample_sql : str
             SQL query for each study to get the sample ids that mach the query
-        meta_headers : set
-            metadata categories in the query string
+        meta_headers : list
+            metadata categories in the query string in alphabetical order
 
         Notes
         -----
@@ -235,7 +235,10 @@ class QiitaStudySearch(object):
         # parse out all metadata headers we need to have in a study
         meta_headers = set(c[0][0].term[0] for c in
                            (criterion + optional_seps).scanString(searchstr))
-        all_headers = meta_headers
+        all_headers = list(meta_headers)
+        # sort headers so tehy return in same order every time. Should be a
+        # relatively short list so very quick
+        all_headers.sort()
 
         # create the study finding SQL
         # remove metadata headers that are in required_sample_info table
@@ -249,9 +252,17 @@ class QiitaStudySearch(object):
         # combine the query
         study_sql = ' INTERSECT '.join(sql)
 
-        # create  the sample finding SQL
-        sample_sql = ("SELECT r.sample_id FROM qiita.required_sample_info r "
-                      "JOIN qiita.sample_{0} s ON s.sample_id = r.sample_id "
-                      "WHERE %s" % sql_where)
+        # create  the sample finding SQL, getting both sample id and values
+        # build the sql formatted list of metadata headers
+        header_info = []
+        for meta in all_headers:
+            if meta in required_cols:
+                header_info.append("r.%s" % meta)
+            else:
+                header_info.append("s.%s" % meta)
+        # build the SQL query
+        sample_sql = ("SELECT r.sample_id,%s FROM qiita.required_sample_info "
+                      "r JOIN qiita.sample_{0} s ON s.sample_id = r.sample_id "
+                      "WHERE %s" % (','.join(header_info), sql_where))
 
         return study_sql, sample_sql, all_headers
