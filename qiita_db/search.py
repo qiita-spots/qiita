@@ -18,14 +18,16 @@ Classes
 
 Examples
 --------
-Searches are done using natural language, with AND, OR, and NOT supported, as
-well as ordering through parenthesis. You can search over metadata using the
+Searches are done using boolean language, with AND, OR, and NOT supported,
+as well as ordering through parenthesis. You can search over metadata using the
 following operators::
 
 >  <  =  <=  >=  includes
 
 The operators act as they normally do, with includes used for substring
-searches. The object itself is used to search using the call method. In this
+searches.
+
+The object itself is used to search using the call method. In this
 example, we will use the complex query::
 
 (sample_type = ENVO:soil AND COMMON_NAME = "rhizosphere metagenome") AND
@@ -59,7 +61,7 @@ from pyparsing import (alphas, nums, Word, dblQuotedString, oneOf, Optional,
                        opAssoc, CaselessLiteral, removeQuotes, Group,
                        operatorPrecedence, stringEnd)
 
-from qiita_db.util import scrub_data, typecast_string
+from qiita_db.util import scrub_data, typecast_string, get_table_cols
 from qiita_db.sql_connection import SQLConnectionHandler
 from qiita_db.study import Study
 from qiita_db.user import User
@@ -68,6 +70,7 @@ from qiita_db.user import User
 required_cols = {"study_id", "sample_id", "physical_location",
                  "has_physical_specimen", "has_extracted_data", "sample_type",
                  "collection_timestamp", "host_subject_id", "description"}
+# required_cols = set(get_table_cols("required_sample_info"))
 
 
 # classes to be constructed at parse time, from intermediate ParseResults
@@ -125,7 +128,7 @@ class SearchTerm(object):
 
         if self.term[1] == "includes":
             # substring search, so create proper query for it
-            return "%s LIKE '%s'" % (self.term[0], self.term[2])
+            return "%s LIKE '%%%s%%'" % (self.term[0], self.term[2])
         else:
             # standard query so just return it, adding quotes if string
             if isinstance(typecast_string(self.term[2]), str):
@@ -134,7 +137,7 @@ class SearchTerm(object):
 
     def __repr__(self):
         if self.term[1] == "includes":
-            return "%s LIKE '%s')" % (self.term[0], self.term[2])
+            return "%s LIKE '%%%s%%')" % (self.term[0], self.term[2])
         else:
             return ' '.join(self.term)
 
@@ -155,6 +158,8 @@ class QiitaStudySearch(object):
         -------
         dict
             Found samples in format {study_id: [samp_id1, samp_id2,...]}
+        set
+            metadata column names searched for
 
         Notes
         -----
@@ -173,8 +178,9 @@ class QiitaStudySearch(object):
         results = {}
         # run search on each study to get out the matching samples
         for sid in study_ids:
-            results[sid] = [
-                x[0] for x in conn_handler.execute_fetchall(sample_sql % sid)]
+
+            results[sid] = [x[0] for x in conn_handler.execute_fetchall(
+                sample_sql.format(sid))]
         return results, meta_headers
 
     def _parse_study_search_string(self, searchstr):
@@ -187,16 +193,15 @@ class QiitaStudySearch(object):
 
         Returns
         -------
-        tuple of str
+        study_sql : str
+            SQL query for selecting studies with the required metadata columns
+        sample_sql : str
+            SQL query for each study to get the sample ids that mach the query
+        meta_headers : set
+            metadata categories in the query string
 
         Notes
         -----
-        The first item will be the SQL query for selecting all studdies with
-        the required metadata columns.
-        The second item will be the SQL query for each study to get the sample
-        ids that mach the query.
-        The third item will be the metadata categories in the query string
-
         All searches are case-sensitive
 
         Citations
@@ -239,19 +244,14 @@ class QiitaStudySearch(object):
         sql = []
         for meta in meta_headers:
             sql.append("SELECT study_id FROM qiita.study_sample_columns WHERE "
-                       "column_name = '%s' INTERSECT" %
+                       "column_name = '%s'" %
                        scrub_data(meta))
-        # combine the query, stripping off the last INTERSECT
-        study_sql = ' '.join(sql)[:-10]
+        # combine the query
+        study_sql = ' INTERSECT '.join(sql)
 
         # create  the sample finding SQL
         sample_sql = ("SELECT r.sample_id FROM qiita.required_sample_info r "
-                      "JOIN qiita.sample_%s s ON s.sample_id = r.sample_id "
-                      "WHERE {0}".format(sql_where))
+                      "JOIN qiita.sample_{0} s ON s.sample_id = r.sample_id "
+                      "WHERE %s" % sql_where)
 
-        return (study_sql, sample_sql, all_headers)
-
-
-if __name__ == "__main__":
-    search = QiitaStudySearch()
-    search('altititude > 0', "dude@dude.com")
+        return study_sql, sample_sql, all_headers

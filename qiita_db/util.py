@@ -260,14 +260,14 @@ def check_table_cols(conn_handler, keys, table):
                                  set(keys).difference(cols))
 
 
-def get_table_cols(table, conn_handler):
+def get_table_cols(table, conn_handler=None):
     """Returns the column headers of table
 
     Parameters
     ----------
     table : str
         The table name
-    conn_handler : SQLConnectionHandler
+    conn_handler : SQLConnectionHandler, optional
         The connection handler object connected to the DB
 
     Returns
@@ -275,6 +275,7 @@ def get_table_cols(table, conn_handler):
     list of str
         The column headers of `table`
     """
+    conn_handler = conn_handler if conn_handler else SQLConnectionHandler()
     headers = conn_handler.execute_fetchall(
         "SELECT column_name FROM information_schema.columns WHERE "
         "table_name=%s", (table, ))

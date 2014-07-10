@@ -26,7 +26,7 @@ class SearchTest(TestCase):
         exp_st_sql = ("SELECT study_id FROM qiita.study_sample_columns WHERE "
                       "column_name = 'altitude'")
         exp_samp_sql = ("SELECT r.sample_id FROM qiita.required_sample_info r "
-                        "JOIN qiita.sample_%s s ON s.sample_id = r.sample_id "
+                        "JOIN qiita.sample_{0} s ON s.sample_id = r.sample_id "
                         "WHERE s.altitude > 0")
         self.assertEqual(st_sql, exp_st_sql)
         self.assertEqual(samp_sql, exp_samp_sql)
@@ -38,7 +38,7 @@ class SearchTest(TestCase):
         exp_st_sql = ("SELECT study_id FROM qiita.study_sample_columns WHERE "
                       "column_name = 'altitude'")
         exp_samp_sql = ("SELECT r.sample_id FROM qiita.required_sample_info r "
-                        "JOIN qiita.sample_%s s ON s.sample_id = r.sample_id "
+                        "JOIN qiita.sample_{0} s ON s.sample_id = r.sample_id "
                         "WHERE NOT s.altitude > 0")
         self.assertEqual(st_sql, exp_st_sql)
         self.assertEqual(samp_sql, exp_samp_sql)
@@ -50,7 +50,7 @@ class SearchTest(TestCase):
         exp_st_sql = ("SELECT study_id FROM qiita.study_sample_columns WHERE "
                       "column_name = 'ph'")
         exp_samp_sql = ("SELECT r.sample_id FROM qiita.required_sample_info r "
-                        "JOIN qiita.sample_%s s ON s.sample_id = r.sample_id "
+                        "JOIN qiita.sample_{0} s ON s.sample_id = r.sample_id "
                         "WHERE (s.ph > 7 AND s.ph < 9)")
         self.assertEqual(st_sql, exp_st_sql)
         self.assertEqual(samp_sql, exp_samp_sql)
@@ -62,7 +62,7 @@ class SearchTest(TestCase):
         exp_st_sql = ("SELECT study_id FROM qiita.study_sample_columns WHERE "
                       "column_name = 'ph'")
         exp_samp_sql = ("SELECT r.sample_id FROM qiita.required_sample_info r "
-                        "JOIN qiita.sample_%s s ON s.sample_id = r.sample_id "
+                        "JOIN qiita.sample_{0} s ON s.sample_id = r.sample_id "
                         "WHERE (s.ph > 7 OR s.ph < 9)")
         self.assertEqual(st_sql, exp_st_sql)
         self.assertEqual(samp_sql, exp_samp_sql)
@@ -74,8 +74,8 @@ class SearchTest(TestCase):
                 'host_subject_id includes "Chicken little"')
         exp_st_sql = ""
         exp_samp_sql = ("SELECT r.sample_id FROM qiita.required_sample_info r "
-                        "JOIN qiita.sample_%s s ON s.sample_id = r.sample_id "
-                        "WHERE r.host_subject_id LIKE 'Chicken little'")
+                        "JOIN qiita.sample_{0} s ON s.sample_id = r.sample_id "
+                        "WHERE r.host_subject_id LIKE '%Chicken little%'")
         self.assertEqual(st_sql, exp_st_sql)
         self.assertEqual(samp_sql, exp_samp_sql)
         self.assertEqual(meta, {"host_subject_id"})
@@ -90,7 +90,7 @@ class SearchTest(TestCase):
                       "column_name = 'pH'", "SELECT study_id FROM "
                       "qiita.study_sample_columns WHERE column_name = 'ph'"]
         exp_samp_sql = ("SELECT r.sample_id FROM qiita.required_sample_info r "
-                        "JOIN qiita.sample_%s s ON s.sample_id = r.sample_id "
+                        "JOIN qiita.sample_{0} s ON s.sample_id = r.sample_id "
                         "WHERE (s.ph > 7 OR s.ph < 9)")
         # use the split list to make sure the SQL is properly formed
         self.assertEqual(len(st_sql), 2)
@@ -105,8 +105,7 @@ class SearchTest(TestCase):
             '(sample_type = ENVO:soil AND COMMON_NAME = "rhizosphere '
             'metagenome" ) AND NOT Description_duplicate includes Burmese',
             "test@foo.bar")
-        exp_res = {1: ['SKM4.640180', 'SKB4.640189', 'SKB5.640181',
-                       'SKB6.640176', 'SKM5.640177', 'SKD4.640185',
+        exp_res = {1: ['SKM4.640180', 'SKM5.640177', 'SKD4.640185',
                        'SKD6.640190', 'SKM6.640187', 'SKD5.640186']}
         self.assertEqual(obs_res, exp_res)
         self.assertEqual(obs_meta, {"sample_type", "COMMON_NAME",
