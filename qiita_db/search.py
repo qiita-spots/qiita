@@ -71,9 +71,6 @@ from qiita_db.sql_connection import SQLConnectionHandler
 from qiita_db.study import Study
 from qiita_db.user import User
 
-# column names from required_sample_info table
-required_cols = set(get_table_cols("required_sample_info"))
-
 
 # classes to be constructed at parse time, from intermediate ParseResults
 class UnaryOperation(object):
@@ -114,6 +111,9 @@ class SearchNot(UnaryOperation):
 
 
 class SearchTerm(object):
+    # column names from required_sample_info table
+    required_cols = set(get_table_cols("required_sample_info"))
+
     def __init__(self, tokens):
         self.term = tokens[0]
         # clean all the inputs
@@ -123,7 +123,7 @@ class SearchTerm(object):
     def generate_sql(self):
         # we can assume that the metadata is either in required_sample_info
         # or the study-specific table
-        if self.term[0] in required_cols:
+        if self.term[0] in self.required_cols:
             self.term[0] = "r.%s" % self.term[0].lower()
         else:
             self.term[0] = "s.%s" % self.term[0].lower()
@@ -146,6 +146,10 @@ class SearchTerm(object):
 
 class QiitaStudySearch(object):
     """QiitaStudySearch object to parse and run searches on studies."""
+
+    # column names from required_sample_info table
+    required_cols = set(get_table_cols("required_sample_info"))
+
     def __call__(self, searchstr, user):
         """Runs a Study query and returns matching studies and samples
 
@@ -249,7 +253,7 @@ class QiitaStudySearch(object):
 
         # create the study finding SQL
         # remove metadata headers that are in required_sample_info table
-        meta_headers = meta_headers.difference(required_cols)
+        meta_headers = meta_headers.difference(self.required_cols)
         # get all study ids that contain all metadata categories searched for
         sql = []
         for meta in meta_headers:
@@ -263,7 +267,7 @@ class QiitaStudySearch(object):
         # build the sql formatted list of metadata headers
         header_info = []
         for meta in all_headers:
-            if meta in required_cols:
+            if meta in self.required_cols:
                 header_info.append("r.%s" % meta)
             else:
                 header_info.append("s.%s" % meta)
