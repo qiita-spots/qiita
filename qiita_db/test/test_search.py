@@ -87,19 +87,18 @@ class SearchTest(TestCase):
         st_sql, samp_sql, meta = \
             self.search._parse_study_search_string(
                 'name = "Billy Bob" or name = "Timmy" or name=Jimbo and '
-                'age > 25 or age < 5')
+                'name > 25 or name < 5')
         exp_st_sql = (
             "SELECT study_id FROM qiita.study_sample_columns WHERE "
-            "column_name = 'name' INTERSECT SELECT study_id FROM "
-            "qiita.study_sample_columns WHERE column_name = 'age'")
+            "column_name = 'name'")
         exp_samp_sql = (
-            "SELECT r.sample_id,s.age,s.name FROM qiita.required_sample_info "
-            "r JOIN qiita.sample_{0} s ON s.sample_id = r.sample_id WHERE "
-            "(s.name = 'Billy Bob' OR s.name = 'Timmy' OR (s.name = 'Jimbo' "
-            "AND s.age > 25) OR s.age < 5)")
+            "SELECT r.sample_id,s.name FROM qiita.required_sample_info r JOIN "
+            "qiita.sample_{0} s ON s.sample_id = r.sample_id WHERE (s.name = "
+            "'Billy Bob' OR s.name = 'Timmy' OR (s.name = 'Jimbo' AND "
+            "s.name > 25) OR s.name < 5)")
         self.assertEqual(st_sql, exp_st_sql)
         self.assertEqual(samp_sql, exp_samp_sql)
-        self.assertEqual(meta, ['age', 'name'])
+        self.assertEqual(meta, ['name'])
 
         # test case sensitivity
         st_sql, samp_sql, meta = \
