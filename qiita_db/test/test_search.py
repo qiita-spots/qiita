@@ -15,13 +15,12 @@ from qiita_core.util import qiita_test_checker
 class SearchTest(TestCase):
     """Tests that the search object works as expected"""
 
-    def setUp(self):
-        from qiita_db.search import QiitaStudySearch
-        self.search = QiitaStudySearch()
-
     def test_parse_study_search_string(self):
+        from qiita_db.search import QiitaStudySearch
+        search = QiitaStudySearch()
+
         st_sql, samp_sql, meta = \
-            self.search._parse_study_search_string("altitude > 0")
+            search._parse_study_search_string("altitude > 0")
         exp_st_sql = ("SELECT study_id FROM qiita.study_sample_columns WHERE "
                       "column_name = 'altitude'")
         exp_samp_sql = ("SELECT r.sample_id,s.altitude FROM "
@@ -33,7 +32,7 @@ class SearchTest(TestCase):
 
         # test NOT
         st_sql, samp_sql, meta = \
-            self.search._parse_study_search_string("NOT altitude > 0")
+            search._parse_study_search_string("NOT altitude > 0")
         exp_st_sql = ("SELECT study_id FROM qiita.study_sample_columns WHERE "
                       "column_name = 'altitude'")
         exp_samp_sql = ("SELECT r.sample_id,s.altitude FROM "
@@ -46,7 +45,7 @@ class SearchTest(TestCase):
 
         # test AND
         st_sql, samp_sql, meta = \
-            self.search._parse_study_search_string("ph > 7 and ph < 9")
+            search._parse_study_search_string("ph > 7 and ph < 9")
         exp_st_sql = ("SELECT study_id FROM qiita.study_sample_columns WHERE "
                       "column_name = 'ph'")
         exp_samp_sql = ("SELECT r.sample_id,s.ph FROM "
@@ -59,7 +58,7 @@ class SearchTest(TestCase):
 
         # test OR
         st_sql, samp_sql, meta = \
-            self.search._parse_study_search_string("ph > 7 or ph < 9")
+            search._parse_study_search_string("ph > 7 or ph < 9")
         exp_st_sql = ("SELECT study_id FROM qiita.study_sample_columns WHERE "
                       "column_name = 'ph'")
         exp_samp_sql = ("SELECT r.sample_id,s.ph FROM "
@@ -72,7 +71,7 @@ class SearchTest(TestCase):
 
         # test includes
         st_sql, samp_sql, meta = \
-            self.search._parse_study_search_string(
+            search._parse_study_search_string(
                 'host_subject_id includes "Chicken little"')
         exp_st_sql = ""
         exp_samp_sql = ("SELECT r.sample_id,r.host_subject_id FROM "
@@ -85,7 +84,7 @@ class SearchTest(TestCase):
 
         # test complex query
         st_sql, samp_sql, meta = \
-            self.search._parse_study_search_string(
+            search._parse_study_search_string(
                 'name = "Billy Bob" or name = "Timmy" or name=Jimbo and '
                 'name > 25 or name < 5')
         exp_st_sql = (
@@ -102,7 +101,7 @@ class SearchTest(TestCase):
 
         # test case sensitivity
         st_sql, samp_sql, meta = \
-            self.search._parse_study_search_string("ph > 7 or pH < 9")
+            search._parse_study_search_string("ph > 7 or pH < 9")
         # need to split sql because set used to create so can't guarantee order
         st_sql = st_sql.split(" INTERSECT ")
 
@@ -124,7 +123,10 @@ class SearchTest(TestCase):
         assert "pH" in meta
 
     def test_call(self):
-        obs_res, obs_meta = self.search(
+        from qiita_db.search import QiitaStudySearch
+        search = QiitaStudySearch()
+
+        obs_res, obs_meta = search(
             '(sample_type = ENVO:soil AND COMMON_NAME = "rhizosphere '
             'metagenome" ) AND NOT Description_duplicate includes Burmese',
             "test@foo.bar")
@@ -146,7 +148,10 @@ class SearchTest(TestCase):
         self.assertEqual(obs_meta, exp_meta)
 
     def test_call_bad_meta_category(self):
-        obs_res, obs_meta = self.search(
+        from qiita_db.search import QiitaStudySearch
+        search = QiitaStudySearch()
+
+        obs_res, obs_meta = search(
             'BAD_NAME_THING = ENVO:soil', "test@foo.bar")
         self.assertEqual(obs_res, {})
         self.assertEqual(obs_meta, ["BAD_NAME_THING"])
