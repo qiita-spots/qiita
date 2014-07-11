@@ -9,7 +9,6 @@
 from unittest import TestCase, main
 
 from qiita_core.util import qiita_test_checker
-from qiita_db.search import QiitaStudySearch
 
 
 @qiita_test_checker()
@@ -17,12 +16,12 @@ class SearchTest(TestCase):
     """Tests that the search object works as expected"""
 
     def setUp(self):
+        from qiita_db.search import QiitaStudySearch
         self.search = QiitaStudySearch()
 
     def test_parse_study_search_string(self):
-        search = QiitaStudySearch()
         st_sql, samp_sql, meta = \
-            search._parse_study_search_string("altitude > 0")
+            self.search._parse_study_search_string("altitude > 0")
         exp_st_sql = ("SELECT study_id FROM qiita.study_sample_columns WHERE "
                       "column_name = 'altitude'")
         exp_samp_sql = ("SELECT r.sample_id,s.altitude FROM "
@@ -34,7 +33,7 @@ class SearchTest(TestCase):
 
         # test NOT
         st_sql, samp_sql, meta = \
-            search._parse_study_search_string("NOT altitude > 0")
+            self.search._parse_study_search_string("NOT altitude > 0")
         exp_st_sql = ("SELECT study_id FROM qiita.study_sample_columns WHERE "
                       "column_name = 'altitude'")
         exp_samp_sql = ("SELECT r.sample_id,s.altitude FROM "
@@ -47,7 +46,7 @@ class SearchTest(TestCase):
 
         # test AND
         st_sql, samp_sql, meta = \
-            search._parse_study_search_string("ph > 7 and ph < 9")
+            self.search._parse_study_search_string("ph > 7 and ph < 9")
         exp_st_sql = ("SELECT study_id FROM qiita.study_sample_columns WHERE "
                       "column_name = 'ph'")
         exp_samp_sql = ("SELECT r.sample_id,s.ph FROM "
@@ -60,7 +59,7 @@ class SearchTest(TestCase):
 
         # test OR
         st_sql, samp_sql, meta = \
-            search._parse_study_search_string("ph > 7 or ph < 9")
+            self.search._parse_study_search_string("ph > 7 or ph < 9")
         exp_st_sql = ("SELECT study_id FROM qiita.study_sample_columns WHERE "
                       "column_name = 'ph'")
         exp_samp_sql = ("SELECT r.sample_id,s.ph FROM "
@@ -73,7 +72,7 @@ class SearchTest(TestCase):
 
         # test includes
         st_sql, samp_sql, meta = \
-            search._parse_study_search_string(
+            self.search._parse_study_search_string(
                 'host_subject_id includes "Chicken little"')
         exp_st_sql = ""
         exp_samp_sql = ("SELECT r.sample_id,r.host_subject_id FROM "
@@ -84,9 +83,27 @@ class SearchTest(TestCase):
         self.assertEqual(samp_sql, exp_samp_sql)
         self.assertEqual(meta, ["host_subject_id"])
 
+        # test complex query
+        st_sql, samp_sql, meta = \
+            self.search._parse_study_search_string(
+                'name = "Billy Bob" or name = "Timmy" or name=Jimbo and '
+                'age > 25 or age < 5')
+        exp_st_sql = (
+            "SELECT study_id FROM qiita.study_sample_columns WHERE "
+            "column_name = 'name' INTERSECT SELECT study_id FROM "
+            "qiita.study_sample_columns WHERE column_name = 'age'")
+        exp_samp_sql = (
+            "SELECT r.sample_id,s.age,s.name FROM qiita.required_sample_info "
+            "r JOIN qiita.sample_{0} s ON s.sample_id = r.sample_id WHERE "
+            "(s.name = 'Billy Bob' OR s.name = 'Timmy' OR (s.name = 'Jimbo' "
+            "AND s.age > 25) OR s.age < 5)")
+        self.assertEqual(st_sql, exp_st_sql)
+        self.assertEqual(samp_sql, exp_samp_sql)
+        self.assertEqual(meta, ['age', 'name'])
+
         # test case sensitivity
         st_sql, samp_sql, meta = \
-            search._parse_study_search_string("ph > 7 or pH < 9")
+            self.search._parse_study_search_string("ph > 7 or pH < 9")
         # need to split sql because set used to create so can't guarantee order
         st_sql = st_sql.split(" INTERSECT ")
 

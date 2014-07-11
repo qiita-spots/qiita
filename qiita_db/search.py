@@ -50,7 +50,9 @@ NOT Description_duplicate includes Burmese
 ["COMMON_NAME", "Description_duplicate", "sample_type"]
 
 Note that the userid performing the search must also be passed, so the search
-knows what studies are accessable.
+knows what studies are accessable. Also note that the sample list is in the
+order of sample ID followed by metadata in the same order as the metadata
+headers returned.
 """
 
 # -----------------------------------------------------------------------------
@@ -70,10 +72,7 @@ from qiita_db.study import Study
 from qiita_db.user import User
 
 # column names from required_sample_info table
-required_cols = {"study_id", "sample_id", "physical_location",
-                 "has_physical_specimen", "has_extracted_data", "sample_type",
-                 "collection_timestamp", "host_subject_id", "description"}
-# required_cols = set(get_table_cols("required_sample_info"))
+required_cols = set(get_table_cols("required_sample_info"))
 
 
 # classes to be constructed at parse time, from intermediate ParseResults
