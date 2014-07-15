@@ -190,6 +190,7 @@ class RawData(BaseData):
     Methods
     -------
     create
+    data_type
 
     See Also
     --------
@@ -253,6 +254,15 @@ class RawData(BaseData):
             [self._id])
         return [id[0] for id in ids]
 
+    @property
+    def data_type(self):
+        conn_handler = SQLConnectionHandler()
+        data_type = conn_handler.execute_fetchone(
+            "SELECT data_type FROM qiita.data_type d JOIN "
+            "qiita.common_prep_info c ON c.data_type_id = d.data_type_id WHERE"
+            " c.raw_data_id = %s", (self._id, ))
+        return data_type[0]
+
 
 class PreprocessedData(BaseData):
     r"""Object for dealing with preprocessed data
@@ -261,6 +271,7 @@ class PreprocessedData(BaseData):
     ----------
     raw_data
     study
+    data_type
 
     Methods
     -------
@@ -280,7 +291,8 @@ class PreprocessedData(BaseData):
 
     @classmethod
     def create(cls, study, preprocessed_params_table, preprocessed_params_id,
-               filepaths, raw_data=None, submitted_to_insdc=False):
+               filepaths, raw_data=None, data_type=None,
+               submitted_to_insdc=False):
         r"""Creates a new object with a new id on the storage system
 
         Parameters
@@ -299,14 +311,28 @@ class PreprocessedData(BaseData):
             If true, the raw data files have been submitted to insdc
         raw_data : RawData, optional
             The RawData object used as base to this preprocessed data
+        data_type : None, optional
+            The data_type of the preprocessed_data
+
 
         Raises
         ------
         IncompetentQiitaDeveloperError
             If the table `preprocessed_params_table` does not exists
+        IncompetentQiitaDeveloperError
+            If data_type does not match that of raw_data passed
         """
         conn_handler = SQLConnectionHandler()
-        # We first check that the preprocessed_params_table exists
+        if (data_type and raw_data) and data_type != raw_data.data_type:
+            raise IncompetentQiitaDeveloperError(
+                "data_type passed does not match raw_data data_type!")
+        elif data_type is None and raw_data is None:
+            raise IncompetentQiitaDeveloperError("Neither data_type nor "
+                                                 "raw_data passed!")
+        elif raw_data:
+            # raw_data passed but no data_type, so set to raw data data_type
+            data_type = raw_data.data_type
+        # Check that the preprocessed_params_table exists
         if not exists_dynamic_table(preprocessed_params_table, "preprocessed_",
                                     "_params", conn_handler):
             raise IncompetentQiitaDeveloperError(
@@ -316,12 +342,13 @@ class PreprocessedData(BaseData):
         # and get the preprocessed data id back
         ppd_id = conn_handler.execute_fetchone(
             "INSERT INTO qiita.{0} (preprocessed_params_table, "
-            "preprocessed_params_id, submitted_to_insdc) VALUES "
-            "(%(param_table)s, %(param_id)s, %(insdc)s) "
+            "preprocessed_params_id, submitted_to_insdc, data_type) VALUES "
+            "(%(param_table)s, %(param_id)s, %(insdc)s, %(data_type)s) "
             "RETURNING preprocessed_data_id".format(cls._table),
             {'param_table': preprocessed_params_table,
              'param_id': preprocessed_params_id,
-             'insdc': submitted_to_insdc})[0]
+             'insdc': submitted_to_insdc,
+             'data_type': data_type})[0]
         ppd = cls(ppd_id)
 
         # Connect the preprocessed data with its study
@@ -348,6 +375,15 @@ class PreprocessedData(BaseData):
             "SELECT raw_data_id FROM qiita.{0} WHERE "
             "preprocessed_data_id=%s".format(self._raw_preprocessed_table),
             [self._id])[0]
+
+    @property
+    def data_type(self):
+        conn_handler = SQLConnectionHandler()
+        data_type = conn_handler.execute_fetchone(
+            "SELECT data_type FROM qiita.data_type d JOIN "
+            "qiita.{0} p ON p.data_type_id = d.data_type_id WHERE"
+            " p.preprocessed_data_id = %s".format(self._table), (self._id, ))
+        return data_type[0]
 
     @property
     def study(self):
@@ -401,7 +437,8 @@ class ProcessedData(BaseData):
 
     @classmethod
     def create(cls, processed_params_table, processed_params_id, filepaths,
-               preprocessed_data=None, study=None, processed_date=None):
+               preprocessed_data=None, study=None, processed_date=None,
+               data_type=None):
         r"""
         Parameters
         ----------
@@ -420,6 +457,9 @@ class ProcessedData(BaseData):
             belongs to
         processed_date : datetime, optional
             Date in which the data have been processed. Default: now
+        data_type : str, optional
+            data_type of the processed_data. Otherwise taken from passed
+            preprocessed_data.
 
         Raises
         ------
@@ -433,10 +473,21 @@ class ProcessedData(BaseData):
                 raise IncompetentQiitaDeveloperError(
                     "You should provide either preprocessed_data or study, "
                     "but not both")
+            elif data_type is not None and \
+                    data_type != preprocessed_data.data_type:
+                raise IncompetentQiitaDeveloperError(
+                    "data_type passed does not match preprocessed_data "
+                    "data_type!")
+            elif data_type is None:
+                data_type = preprocessed_data.data_type
         else:
             if study is None:
                 raise IncompetentQiitaDeveloperError(
                     "You should provide either a preprocessed_data or a study")
+            if data_type is None:
+                raise IncompetentQiitaDeveloperError(
+                    "You must provide either a preprocessed_data, a "
+                    "data_type, or both")
 
         conn_handler = SQLConnectionHandler()
         # We first check that the processed_params_table exists
@@ -454,12 +505,13 @@ class ProcessedData(BaseData):
         # and get the processed data id back
         pd_id = conn_handler.execute_fetchone(
             "INSERT INTO qiita.{0} (processed_params_table, "
-            "processed_params_id, processed_date) VALUES (%(param_table)s, "
-            "%(param_id)s, %(date)s) RETURNING "
-            "processed_data_id".format(cls._table),
+            "processed_params_id, processed_date, data_type) VALUES ("
+            "%(param_table)s, %(param_id)s, %(date)s, %(data_type)s) RETURNING"
+            " processed_data_id".format(cls._table),
             {'param_table': processed_params_table,
              'param_id': processed_params_id,
-             'date': processed_date})[0]
+             'date': processed_date,
+             'data_type': data_type})[0]
 
         pd = cls(pd_id)
 
@@ -493,13 +545,9 @@ class ProcessedData(BaseData):
 
     @property
     def data_type(self):
-        r"""The data_type of the data used"""
         conn_handler = SQLConnectionHandler()
-        sql = ("SELECT DISTINCT DT.data_type FROM "
-               "qiita.preprocessed_processed_data PPD JOIN "
-               "qiita.raw_preprocessed_data RPD on PPD.preprocessed_data_id = "
-               "RPD.preprocessed_data_id JOIN qiita.common_prep_info CPI ON "
-               "RPD.raw_data_id = CPI.raw_data_id JOIN qiita.data_type DT ON "
-               "CPI.data_type_id = DT.data_type_id WHERE "
-               "PPD.processed_data_id = %s")
-        return conn_handler.execute_fetchone(sql, [self._id])[0]
+        data_type = conn_handler.execute_fetchone(
+            "SELECT data_type FROM qiita.data_type d JOIN "
+            "qiita.{0} p ON p.data_type_id = d.data_type_id WHERE"
+            " p.processed_data_id = %s".format(self._table), (self._id, ))
+        return data_type[0]
