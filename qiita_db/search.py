@@ -196,7 +196,6 @@ class QiitaStudySearch(object):
         results = {}
         # run search on each study to get out the matching samples
         for sid in study_ids:
-
             results[sid] = conn_handler.execute_fetchall(
                 sample_sql.format(sid))
         return results, meta_headers
@@ -222,8 +221,8 @@ class QiitaStudySearch(object):
         -----
         All searches are case-sensitive
 
-        Citations
-        ---------
+        References
+        ----------
         [1] McGuire P (2007) Getting started with pyparsing.
         """
         # build the parse grammar

@@ -69,7 +69,7 @@ def scrub_data(s):
 
 
 def typecast_string(string):
-    """Converts a string to int or float if possible
+    """Converts a string to a number if possible
 
     Parameters
     ----------
@@ -80,6 +80,11 @@ def typecast_string(string):
     -------
     float, int, or str
         Re-typed information from string
+
+    Notes
+    -----
+    The function first tries to convert to an int. If that fails, it tries to
+    convert to a float. If that fails it returns the original string.
     """
     try:
         return int(string)
