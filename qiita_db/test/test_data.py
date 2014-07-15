@@ -161,8 +161,6 @@ class PreprocessedDataTests(TestCase):
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.preprocessed_data WHERE "
             "preprocessed_data_id=3")
-        # preprocessed_data_id, raw_data_id, preprocessed_params_tables,
-        # preprocessed_params_id
         exp = [[3, "preprocessed_sequence_illumina_params", 1, False, 2]]
         self.assertEqual(obs, exp)
 
@@ -194,7 +192,7 @@ class PreprocessedDataTests(TestCase):
         self.assertEqual(obs, exp)
 
     def test_create_data_type_only(self):
-            # Check that the returned object has the correct id
+        # Check that the returned object has the correct id
         obs = PreprocessedData.create(self.study, self.params_table,
                                       self.params_id, self.filepaths,
                                       data_type="18S")
@@ -204,8 +202,6 @@ class PreprocessedDataTests(TestCase):
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.preprocessed_data WHERE "
             "preprocessed_data_id=3")
-        # preprocessed_data_id, raw_data_id, preprocessed_params_tables,
-        # preprocessed_params_id
         exp = [[3, "preprocessed_sequence_illumina_params", 1, False, 2]]
         self.assertEqual(obs, exp)
 

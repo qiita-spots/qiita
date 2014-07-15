@@ -265,7 +265,7 @@ class RawData(BaseData):
         Returns
         -------
         str or int
-            string value of data_type or data_type_id
+            string value of data_type or int if data_type_id
         """
         ret = "_id" if ret_id else ""
         conn_handler = SQLConnectionHandler()
