@@ -112,13 +112,16 @@ class SearchNot(UnaryOperation):
 
 class SearchTerm(object):
     # column names from required_sample_info table
-    required_cols = set(get_table_cols("required_sample_info"))
+    required_cols = None
 
     def __init__(self, tokens):
         self.term = tokens[0]
         # clean all the inputs
         for pos, term in enumerate(self.term):
             self.term[pos] = scrub_data(term)
+        # create set of columns if needed
+        if not self.required_cols:
+            self.required_cols = set(get_table_cols("required_sample_info"))
 
     def generate_sql(self):
         # we can assume that the metadata is either in required_sample_info
@@ -148,7 +151,11 @@ class QiitaStudySearch(object):
     """QiitaStudySearch object to parse and run searches on studies."""
 
     # column names from required_sample_info table
-    required_cols = set(get_table_cols("required_sample_info"))
+    required_cols = None
+
+    def __init__(self):
+        if not self.required_cols:
+            self.required_cols = set(get_table_cols("required_sample_info"))
 
     def __call__(self, searchstr, user):
         """Runs a Study query and returns matching studies and samples
