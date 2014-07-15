@@ -10,6 +10,7 @@ Qitta analysis handlers for the Tornado webserver.
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 from __future__ import division
+from future.utils import viewitems
 from tempfile import mkstemp
 from os import close
 from os.path import join
@@ -18,6 +19,7 @@ from tornado.web import authenticated, asynchronous
 from collections import defaultdict
 
 from qiita_pet.handlers.base_handlers import BaseHandler
+from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_ware.run import run_analysis
 from qiita_db.user import User
 from qiita_db.analysis import Analysis
@@ -26,6 +28,7 @@ from qiita_db.data import ProcessedData
 from qiita_db.metadata_template import SampleTemplate
 from qiita_db.job import Job, Command
 from qiita_db.util import get_db_files_base_dir
+from qiita_db.search import QiitaStudySearch
 
 
 def check_analysis_access(user, analysis_id):
@@ -62,16 +65,57 @@ class SelectStudiesHandler(BaseHandler):
         name = self.get_argument('name')
         description = self.get_argument('description')
         user = self.get_current_user()
-        userobj = User(user)
-        # create list of studies
-        study_ids = Study.get_public() + userobj.private_studies + \
-            userobj.shared_studies
-
-        studies = [Study(i) for i in study_ids]
         analysis = Analysis.create(User(user), name, description)
 
-        self.render('select_studies.html', user=user, aid=analysis.id,
-                    studies=studies)
+        self.render('select_studies.html', user=user, aid=analysis.id)
+
+
+class SearchStudiesHandler(BaseHandler):
+    def post(self):
+        user = self.get_current_user()
+        aid = self.get_argument("aid")
+        action = self.get_argument("action")
+        # build selected study/datatype dictionary
+        selectedinfo = self.get_arguments("selstudies")
+        selected_datatypes = defaultdict(list)
+        selected_samples = defaultdict(list)
+        for info in selectedinfo:
+            study, datatype = info.split("#")
+            selected_datatypes[study].append(datatype)
+        # build the dictionary of selected samples by study
+        for study in selected_datatypes:
+            selected_samples[study] = set(
+                self.get_arguments("study%s" % study))
+
+        # run through action requested
+        results = {}
+        meta_headers = []
+        if action == "search":
+            # run the search
+            search = QiitaStudySearch()
+            results, meta_headers = search(self.get_argument("query"))
+            # remove already selected samples from returned results
+            for study in results:
+                results[study] = selected_samples[study].symmetric_difference(
+                    results.get(study, []))
+        if action == "select":
+            # get the selected studies and datatypes for studies
+            studyinfo = self.get_arguments("availstudies")
+            for s in studyinfo:
+                study, datatype = s.split("#")
+                # add the selected datatype if not already selected
+                if datatype not in selected_datatypes[study]:
+                    selected_datatypes[study].append(datatype)
+            for study in selected_datatypes:
+                # add the new samples to the existing selected samples
+                selected_samples[study].append(
+                    self.get_arguments("study%s" % study))
+
+        elif action == "deselect":
+            pass
+
+        self.render('select_studies.html', user=user, aid=aid, results=results,
+                    meta_headers=meta_headers, viewitems=viewitems)
 
 
 class SelectCommandsHandler(BaseHandler):
