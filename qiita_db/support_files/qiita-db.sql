@@ -116,8 +116,12 @@ CREATE TABLE qiita.preprocessed_data (
 	preprocessed_params_table varchar  NOT NULL,
 	preprocessed_params_id bigint  NOT NULL,
 	submitted_to_insdc   bool  NOT NULL,
-	CONSTRAINT pk_preprocessed_data PRIMARY KEY ( preprocessed_data_id )
+	data_type_id         bigint  NOT NULL,
+	CONSTRAINT pk_preprocessed_data PRIMARY KEY ( preprocessed_data_id ),
+	CONSTRAINT fk_preprocessed_data FOREIGN KEY ( data_type_id ) REFERENCES qiita.data_type( data_type_id )    
  );
+
+CREATE INDEX idx_preprocessed_data ON qiita.preprocessed_data ( data_type_id );
 
 COMMENT ON COLUMN qiita.preprocessed_data.preprocessed_params_table IS 'Name of table holding the params';
 
@@ -153,8 +157,12 @@ CREATE TABLE qiita.processed_data (
 	processed_params_table varchar  NOT NULL,
 	processed_params_id  bigint  NOT NULL,
 	processed_date       timestamp  NOT NULL,
-	CONSTRAINT pk_processed_data PRIMARY KEY ( processed_data_id )
+	data_type_id         bigint  NOT NULL,
+	CONSTRAINT pk_processed_data PRIMARY KEY ( processed_data_id ),
+	CONSTRAINT fk_processed_data FOREIGN KEY ( data_type_id ) REFERENCES qiita.data_type( data_type_id )    
  );
+
+CREATE INDEX idx_processed_data ON qiita.processed_data ( data_type_id );
 
 COMMENT ON COLUMN qiita.processed_data.processed_params_table IS 'Name of table holding processing params';
 
