@@ -115,7 +115,12 @@ class RawDataTests(TestCase):
     def test_data_type(self):
         """Correctly returns the data_type of raw_data"""
         rd = RawData(1)
-        self.assertEqual(rd.data_type, "18S")
+        self.assertEqual(rd.data_type(), "18S")
+
+    def test_data_type_id(self):
+        """Correctly returns the data_type of raw_data"""
+        rd = RawData(1)
+        self.assertEqual(rd.data_type(ret_id=True), 2)
 
 
 @qiita_test_checker()
@@ -239,23 +244,35 @@ class PreprocessedDataTests(TestCase):
         # preprocessed_data_id, filepath_id
         self.assertEqual(obs, [[3, 10], [3, 11]])
 
-    def test_create_error(self):
+    def test_create_error_dynamic_table(self):
         """Raises an error if the preprocessed_params_table does not exist"""
         with self.assertRaises(IncompetentQiitaDeveloperError):
             PreprocessedData.create(self.study, "foo", self.params_id,
-                                    self.filepaths)
+                                    self.filepaths, data_type="18S")
         with self.assertRaises(IncompetentQiitaDeveloperError):
             PreprocessedData.create(self.study, "preprocessed_foo",
-                                    self.params_id, self.filepaths)
+                                    self.params_id, self.filepaths,
+                                    data_type="18S")
         with self.assertRaises(IncompetentQiitaDeveloperError):
             PreprocessedData.create(self.study, "foo_params", self.params_id,
-                                    self.filepaths)
+                                    self.filepaths, data_type="18S")
         with self.assertRaises(IncompetentQiitaDeveloperError):
             PreprocessedData.create(self.study, "preprocessed_foo_params",
-                                    self.params_id, self.filepaths)
+                                    self.params_id, self.filepaths,
+                                    data_type="18S")
+
+    def test_create_error_data_type(self):
         with self.assertRaises(IncompetentQiitaDeveloperError):
-            PreprocessedData.create(self.study, "preprocessed_foo_params",
-                                    self.params_id, data_type="Metabolomics")
+            PreprocessedData.create(self.study,
+                                    "preprocessed_sequence_illumina_params",
+                                    self.params_id, self.filepaths,
+                                    data_type="Metabolomics")
+        with self.assertRaises(IncompetentQiitaDeveloperError):
+            PreprocessedData.create(self.study,
+                                    "preprocessed_sequence_illumina_params",
+                                    self.params_id, self.filepaths,
+                                    data_type="Metabolomics",
+                                    raw_data=self.raw_data)
 
     def test_get_filepaths(self):
         """Correctly returns the filepaths to the preprocessed files"""
@@ -287,7 +304,12 @@ class PreprocessedDataTests(TestCase):
     def test_data_type(self):
         """Correctly returns the data_type of preprocessed_data"""
         pd = ProcessedData(1)
-        self.assertEqual(pd.data_type, "18S")
+        self.assertEqual(pd.data_type(), "18S")
+
+    def test_data_type_id(self):
+        """Correctly returns the data_type of preprocessed_data"""
+        pd = ProcessedData(1)
+        self.assertEqual(pd.data_type(ret_id=True), 2)
 
 
 @qiita_test_checker()
@@ -325,7 +347,7 @@ class ProcessedDataTests(TestCase):
             "SELECT * FROM qiita.processed_data WHERE processed_data_id=2")
         # processed_data_id, preprocessed_data_id, processed_params_table,
         # processed_params_id, processed_date
-        exp = [[2, "processed_params_uclust", 1, self.date]]
+        exp = [[2, "processed_params_uclust", 1, self.date, 2]]
         self.assertEqual(obs, exp)
 
         # Check that the files have been copied to right location
@@ -394,7 +416,7 @@ class ProcessedDataTests(TestCase):
             "SELECT * FROM qiita.processed_data WHERE processed_data_id=2")
         # processed_data_id, preprocessed_data_id, processed_params_table,
         # processed_params_id, processed_date
-        exp = [[2, "processed_params_uclust", 1, self.date]]
+        exp = [[2, "processed_params_uclust", 1, self.date, 2]]
         self.assertEqual(obs, exp)
 
         # Check that the files have been copied to right location
@@ -456,19 +478,12 @@ class ProcessedDataTests(TestCase):
             ProcessedData.create(self.params_table, self.params_id,
                                  self.filepaths,
                                  preprocessed_data=self.preprocessed_data,
-                                 data_type="Metabolomics",
-                                 study=Study(1))
+                                 data_type="Metabolomics",)
 
     def test_create_no_preprocessed_and_study_error(self):
         with self.assertRaises(IncompetentQiitaDeveloperError):
             ProcessedData.create(self.params_table, self.params_id,
-                                 self.filepaths,
-                                 study=Study(1))
-
-    def test_data_type(self):
-        """Correctly returns the data_type of processed_data"""
-        pd = ProcessedData(1)
-        self.assertEqual(pd.data_type, "18S")
+                                 self.filepaths)
 
     def test_get_filepath(self):
         """Correctly returns the filepaths to the processed files"""
@@ -490,7 +505,11 @@ class ProcessedDataTests(TestCase):
 
     def test_data_type(self):
         pd = ProcessedData(1)
-        self.assertEqual(pd.data_type, "18S")
+        self.assertEqual(pd.data_type(), "18S")
+
+    def test_data_type_id(self):
+        pd = ProcessedData(1)
+        self.assertEqual(pd.data_type(ret_id=True), 2)
 
 
 if __name__ == '__main__':

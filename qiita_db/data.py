@@ -86,7 +86,7 @@ from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from .base import QiitaObject
 from .sql_connection import SQLConnectionHandler
 from .util import (exists_dynamic_table, get_db_files_base_dir,
-                   insert_filepaths)
+                   insert_filepaths, convert_to_id)
 
 
 class BaseData(QiitaObject):
@@ -254,13 +254,25 @@ class RawData(BaseData):
             [self._id])
         return [id[0] for id in ids]
 
-    @property
-    def data_type(self):
+    def data_type(self, ret_id=False):
+        """Returns the data_type or data_type_id
+
+        Parameters
+        ----------
+        ret_id : bool, optional
+            Return the id instead of the string, default False
+
+        Returns
+        -------
+        str or int
+            string value of data_type or data_type_id
+        """
+        ret = "_id" if ret_id else ""
         conn_handler = SQLConnectionHandler()
         data_type = conn_handler.execute_fetchone(
-            "SELECT data_type FROM qiita.data_type d JOIN "
+            "SELECT d.data_type{0} FROM qiita.data_type d JOIN "
             "qiita.common_prep_info c ON c.data_type_id = d.data_type_id WHERE"
-            " c.raw_data_id = %s", (self._id, ))
+            " c.raw_data_id = %s".format(ret), (self._id, ))
         return data_type[0]
 
 
@@ -271,12 +283,12 @@ class PreprocessedData(BaseData):
     ----------
     raw_data
     study
-    data_type
 
     Methods
     -------
     create
     is_submitted_to_insdc
+    data_type
 
     See Also
     --------
@@ -311,7 +323,7 @@ class PreprocessedData(BaseData):
             If true, the raw data files have been submitted to insdc
         raw_data : RawData, optional
             The RawData object used as base to this preprocessed data
-        data_type : None, optional
+        data_type : str, optional
             The data_type of the preprocessed_data
 
 
@@ -331,7 +343,10 @@ class PreprocessedData(BaseData):
                                                  "raw_data passed!")
         elif raw_data:
             # raw_data passed but no data_type, so set to raw data data_type
-            data_type = raw_data.data_type
+            data_type = raw_data.data_type(ret_id=True)
+        else:
+            # only data_type, so need id from the text
+            data_type = convert_to_id(data_type, "data_type", conn_handler)
         # Check that the preprocessed_params_table exists
         if not exists_dynamic_table(preprocessed_params_table, "preprocessed_",
                                     "_params", conn_handler):
@@ -342,7 +357,7 @@ class PreprocessedData(BaseData):
         # and get the preprocessed data id back
         ppd_id = conn_handler.execute_fetchone(
             "INSERT INTO qiita.{0} (preprocessed_params_table, "
-            "preprocessed_params_id, submitted_to_insdc, data_type) VALUES "
+            "preprocessed_params_id, submitted_to_insdc, data_type_id) VALUES "
             "(%(param_table)s, %(param_id)s, %(insdc)s, %(data_type)s) "
             "RETURNING preprocessed_data_id".format(cls._table),
             {'param_table': preprocessed_params_table,
@@ -377,15 +392,6 @@ class PreprocessedData(BaseData):
             [self._id])[0]
 
     @property
-    def data_type(self):
-        conn_handler = SQLConnectionHandler()
-        data_type = conn_handler.execute_fetchone(
-            "SELECT data_type FROM qiita.data_type d JOIN "
-            "qiita.{0} p ON p.data_type_id = d.data_type_id WHERE"
-            " p.preprocessed_data_id = %s".format(self._table), (self._id, ))
-        return data_type[0]
-
-    @property
     def study(self):
         r"""The study id to which this preprocessed data belongs to
 
@@ -398,6 +404,28 @@ class PreprocessedData(BaseData):
             "SELECT study_id FROM qiita.{0} WHERE "
             "preprocessed_data_id=%s".format(self._study_preprocessed_table),
             [self._id])[0]
+
+    def data_type(self, ret_id=False):
+        """Returns the data_type or data_type_id
+
+        Parameters
+        ----------
+        ret_id : bool, optional
+            Return the id instead of the string, default False
+
+        Returns
+        -------
+        str or int
+            string value of data_type or data_type_id
+        """
+        conn_handler = SQLConnectionHandler()
+        ret = "_id" if ret_id else ""
+        data_type = conn_handler.execute_fetchone(
+            "SELECT d.data_type{0} FROM qiita.data_type d JOIN "
+            "qiita.{1} p ON p.data_type_id = d.data_type_id WHERE"
+            " p.preprocessed_data_id = %s".format(ret, self._table),
+            (self._id, ))
+        return data_type[0]
 
     def is_submitted_to_insdc(self):
         r"""Tells if the raw data has been submitted to insdc
@@ -423,6 +451,7 @@ class ProcessedData(BaseData):
     Methods
     -------
     create
+    data_type
 
     See Also
     --------
@@ -468,18 +497,19 @@ class ProcessedData(BaseData):
             If `preprocessed_data` and `study` are provided at the same time
             If `preprocessed_data` and `study` are not provided
         """
+        conn_handler = SQLConnectionHandler()
         if preprocessed_data is not None:
             if study is not None:
                 raise IncompetentQiitaDeveloperError(
                     "You should provide either preprocessed_data or study, "
                     "but not both")
             elif data_type is not None and \
-                    data_type != preprocessed_data.data_type:
+                    data_type != preprocessed_data.data_type():
                 raise IncompetentQiitaDeveloperError(
                     "data_type passed does not match preprocessed_data "
                     "data_type!")
-            elif data_type is None:
-                data_type = preprocessed_data.data_type
+            else:
+                data_type = preprocessed_data.data_type(ret_id=True)
         else:
             if study is None:
                 raise IncompetentQiitaDeveloperError(
@@ -488,8 +518,9 @@ class ProcessedData(BaseData):
                 raise IncompetentQiitaDeveloperError(
                     "You must provide either a preprocessed_data, a "
                     "data_type, or both")
+            else:
+                data_type = convert_to_id(data_type, "data_type", conn_handler)
 
-        conn_handler = SQLConnectionHandler()
         # We first check that the processed_params_table exists
         if not exists_dynamic_table(processed_params_table,
                                     "processed_params_", "", conn_handler):
@@ -505,7 +536,7 @@ class ProcessedData(BaseData):
         # and get the processed data id back
         pd_id = conn_handler.execute_fetchone(
             "INSERT INTO qiita.{0} (processed_params_table, "
-            "processed_params_id, processed_date, data_type) VALUES ("
+            "processed_params_id, processed_date, data_type_id) VALUES ("
             "%(param_table)s, %(param_id)s, %(date)s, %(data_type)s) RETURNING"
             " processed_data_id".format(cls._table),
             {'param_table': processed_params_table,
@@ -543,11 +574,24 @@ class ProcessedData(BaseData):
             "processed_data_id=%s".format(self._preprocessed_processed_table),
             [self._id])[0]
 
-    @property
-    def data_type(self):
+    def data_type(self, ret_id=False):
+        """Returns the data_type or data_type_id
+
+        Parameters
+        ----------
+        ret_id : bool, optional
+            Return the id instead of the string, default False
+
+        Returns
+        -------
+        str or int
+            string value of data_type or data_type_id
+        """
         conn_handler = SQLConnectionHandler()
+        ret = "_id" if ret_id else ""
         data_type = conn_handler.execute_fetchone(
-            "SELECT data_type FROM qiita.data_type d JOIN "
-            "qiita.{0} p ON p.data_type_id = d.data_type_id WHERE"
-            " p.processed_data_id = %s".format(self._table), (self._id, ))
+            "SELECT d.data_type{0} FROM qiita.data_type d JOIN "
+            "qiita.{1} p ON p.data_type_id = d.data_type_id WHERE"
+            " p.processed_data_id = %s".format(ret, self._table),
+            (self._id, ))
         return data_type[0]
