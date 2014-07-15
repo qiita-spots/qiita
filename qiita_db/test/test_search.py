@@ -9,6 +9,7 @@
 from unittest import TestCase, main
 
 from qiita_core.util import qiita_test_checker
+from qiita_db.search import QiitaStudySearch
 
 
 @qiita_test_checker()
@@ -16,8 +17,6 @@ class SearchTest(TestCase):
     """Tests that the search object works as expected"""
 
     def setUp(self):
-        # import here so schema exists on import
-        from qiita_db.search import QiitaStudySearch
         self.search = QiitaStudySearch()
 
     def test_parse_study_search_string(self):
