@@ -1,5 +1,7 @@
 {%extends sitebase.html%}
-
+{% from future.utils import viewitems %}
+{% from qiita_db.study import Study %}
+{% from qiita_db.data import ProcessedData %}
 {%block head%}
 
 {%end%}
@@ -22,9 +24,9 @@
       <tr id="study{{sid}}"><td>
       {% for data_type in study.data_types %}
         <input type='checkbox' name='availstudies' value='{{sid}}#{{data_type}}'>
-        {{data_type}} 
         <select name='{{sid}}#{{data_type}}'>
-        {% for proc_data in study.processed_data(data_type) %}
+        <option value="">{{data_type}}</option>
+        {% for proc_data in study.processed_data(data_type=data_type) %}
           <option value="{{proc_data.id}}">{{proc_data.id}}</option>
         {% end %}
         <br />
@@ -52,7 +54,7 @@
        </tr>
       {% for sample in samples %}
         <tr><td>
-        <input type='checkbox' name='study{{sid}}'
+        <input type='checkbox' name='{{sid}}'
         value='{{sample[0]}}' class='{% ' '.join(sample) %}'>
         </td><td>{{sample[0]}}</td>
         {% for num in range(len(meta_headers)) %}
@@ -68,7 +70,22 @@
 
 <big>    Selected Studies</big>
 <div id="selected"> <!-- Selected samples -->
-  {% for %}
+  <table class="table table-hover">
+  {% for study_id, proc_ids in viewitems(selproc_data) %}
+    {% set study = Study(study_id) %}
+    <tr><td>
+    {% for proc in proc_ids %}
+      {% set data_type = ProcessedData(proc).data_type %}
+      <input type='checkbox' name='selstudies' value='{{sid}}#{{data_type}}' checked> {{data_type}} - {{proc}} <br />
+      {% end %}
+    </td><td>{{study.title}}</td><td>{{study.description}}</td></tr>
+    <tr><td colspan=3>
+    {% for samp in selsamples[study_id] %}
+      <input type='checkbox' name='sel{{sid}}' value='{{samp}}'> {{samp}}<br />
+     {% end %}
+    </td></tr>
+    {% end %}
+  </table>
 </div>
 <input type="button" class="btn btn-default" value="De-select">
 <input type="button" class="btn btn-default" value="Continue">

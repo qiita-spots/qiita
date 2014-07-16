@@ -67,7 +67,15 @@ class SelectStudiesHandler(BaseHandler):
         user = self.get_current_user()
         analysis = Analysis.create(User(user), name, description)
 
-        self.render('select_studies.html', user=user, aid=analysis.id)
+        # get the dictionary of selected samples by study
+        selsamples = defaultdict(list)
+        selproc_data = defaultdict(list)
+        for proc_data_id, samps in viewitems(analysis.samples):
+            study = ProcessedData(proc_data_id).study
+            selproc_data[study].append(proc_data_id)
+            selsamples[study] = set(samps)
+        self.render('select_studies.html', user=user, aid=analysis.id,
+                    selsamples=selsamples, selproc_data=selproc_data)
 
 
 class SearchStudiesHandler(BaseHandler):
@@ -75,17 +83,14 @@ class SearchStudiesHandler(BaseHandler):
         user = self.get_current_user()
         aid = self.get_argument("aid")
         action = self.get_argument("action")
-        # build selected study/datatype dictionary
-        selectedinfo = self.get_arguments("selstudies")
-        selected_datatypes = defaultdict(list)
-        selected_samples = defaultdict(list)
-        for info in selectedinfo:
-            study, datatype = info.split("#")
-            selected_datatypes[study].append(datatype)
-        # build the dictionary of selected samples by study
-        for study in selected_datatypes:
-            selected_samples[study] = set(
-                self.get_arguments("study%s" % study))
+        # get the dictionary of selected samples by study
+        analysis = Analysis(aid)
+        selsamples = defaultdict(list)
+        selproc_data = defaultdict(list)
+        for proc_data_id, samps in viewitems(analysis.samples):
+            study = ProcessedData(proc_data_id).study
+            selproc_data[study].append(proc_data_id)
+            selsamples[study] = set(samps)
 
         # run through action requested
         results = {}
@@ -96,26 +101,37 @@ class SearchStudiesHandler(BaseHandler):
             results, meta_headers = search(self.get_argument("query"))
             # remove already selected samples from returned results
             for study in results:
-                results[study] = selected_samples[study].symmetric_difference(
-                    results.get(study, []))
+                # add difference of results and selected as final results
+                results[study] = selsamples[study].symmetric_difference(
+                    results[study])
         if action == "select":
+            samples = defaultdict(list)
+            proc_data = defaultdict(list)
             # get the selected studies and datatypes for studies
             studyinfo = self.get_arguments("availstudies")
             for s in studyinfo:
-                study, datatype = s.split("#")
-                # add the selected datatype if not already selected
-                if datatype not in selected_datatypes[study]:
-                    selected_datatypes[study].append(datatype)
-            for study in selected_datatypes:
-                # add the new samples to the existing selected samples
-                selected_samples[study].append(
-                    self.get_arguments("study%s" % study))
+                study_id, datatype = s.split("#")
+                # get the processed data id and add it to the study
+                proc_data_id = self.get_argument(s)
+                if proc_data_id != "":
+                    proc_data[study_id].append(proc_data_id)
+            # get list of new_selected samples for each study and add to study
+            if samples[study_id] is None:
+                samples[study_id] = self.get_arguments(study_id)
+
+            # add samples to the analysis in the DB
+            def yield_samples(procdict, sampdict):
+                for study_id, proc_data_id in viewitems(procdict):
+                    for sample in sampdict[study_id]:
+                        yield (proc_data_id, sample)
+            analysis.add_samples(yield_samples(proc_data, samples))
 
         elif action == "deselect":
             pass
 
         self.render('select_studies.html', user=user, aid=aid, results=results,
-                    meta_headers=meta_headers, viewitems=viewitems)
+                    meta_headers=meta_headers, selsamples=selsamples,
+                    selproc_data=selproc_data)
 
 
 class SelectCommandsHandler(BaseHandler):
