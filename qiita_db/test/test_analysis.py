@@ -72,8 +72,8 @@ class TestAnalysis(TestCase):
         self.assertEqual(self.analysis.description, "New description")
 
     def test_retrieve_samples(self):
-        exp = {1: ['SKB8.640193', 'SKD8.640184', 'SKB7.640196',
-                   'SKM9.640192', 'SKM4.640180']}
+        exp = {1: {1: ['SKB8.640193', 'SKD8.640184', 'SKB7.640196',
+                       'SKM9.640192', 'SKM4.640180']}}
         self.assertEqual(self.analysis.samples, exp)
 
     def test_retrieve_shared_with(self):

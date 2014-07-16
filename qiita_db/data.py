@@ -383,6 +383,7 @@ class ProcessedData(BaseData):
     Attributes
     ----------
     preprocessed_data
+    study
 
     Methods
     -------
@@ -489,6 +490,20 @@ class ProcessedData(BaseData):
         return conn_handler.execute_fetchone(
             "SELECT preprocessed_data_id FROM qiita.{0} WHERE "
             "processed_data_id=%s".format(self._preprocessed_processed_table),
+            [self._id])[0]
+
+    @property
+    def study(self):
+        r"""The study id to which this preprocessed data belongs to
+
+        Returns
+        -------
+        int
+            The study id to which this processed data belongs to"""
+        conn_handler = SQLConnectionHandler()
+        return conn_handler.execute_fetchone(
+            "SELECT study_id FROM qiita.{0} WHERE "
+            "processed_data_id=%s".format(self._study_processed_table),
             [self._id])[0]
 
     @property

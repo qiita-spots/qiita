@@ -103,7 +103,7 @@ from copy import deepcopy
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from .base import QiitaStatusObject, QiitaObject
 from .exceptions import (QiitaDBStatusError, QiitaDBColumnError)
-from .util import check_required_columns, check_table_cols
+from .util import check_required_columns, check_table_cols, convert_to_id
 from .sql_connection import SQLConnectionHandler
 
 
@@ -120,12 +120,12 @@ class Study(QiitaStatusObject):
     pmids
     investigation
     sample_template
-    raw_data
-    preprocessed_data
-    processed_data
 
     Methods
     -------
+    raw_data
+    preprocessed_data
+    processed_data
     add_pmid
 
     Notes
@@ -438,48 +438,70 @@ class Study(QiitaStatusObject):
                "DT.data_type_id WHERE SRD.study_id = %s")
         return [x[0] for x in conn_handler.execute_fetchall(sql, (self._id,))]
 
-    @property
-    def raw_data(self):
+    # --- methods ---
+    def raw_data(self, data_type=None):
         """ Returns list of data ids for raw data info
+
+        Parameters
+        ----------
+        data_type : str, optional
+            If given, retrieve only raw_data for given datatype. Default None.
 
         Returns
         -------
         list of RawData ids
         """
+        spec_data = ""
+        if data_type:
+            spec_data = " AND data_type_id = %i" % convert_to_id(data_type)
         conn_handler = SQLConnectionHandler()
         sql = ("SELECT raw_data_id FROM qiita.study_raw_data WHERE "
-               "study_id = %s")
+               "study_id = %s{0}".format(spec_data))
         return [x[0] for x in conn_handler.execute_fetchall(sql, (self._id,))]
 
-    @property
-    def preprocessed_data(self):
+    def preprocessed_data(self, data_type=None):
         """ Returns list of data ids for preprocessed data info
+
+        Parameters
+        ----------
+        data_type : str, optional
+            If given, retrieve only raw_data for given datatype. Default None.
 
         Returns
         -------
         list of PreprocessedData ids
         """
+        spec_data = ""
+        if data_type:
+            spec_data = " AND data_type_id = %i" % convert_to_id(data_type)
         conn_handler = SQLConnectionHandler()
         sql = ("SELECT preprocessed_data_id FROM qiita.study_preprocessed_data"
-               " WHERE study_id = %s")
+               " WHERE study_id = %s{0}".format(spec_data))
         return [x[0] for x in conn_handler.execute_fetchall(sql, (self._id,))]
 
-    @property
-    def processed_data(self):
+    def processed_data(self, data_type=None):
         """ Returns list of data ids for processed data info
+
+        Parameters
+        ----------
+        data_type : str, optional
+            If given, retrieve only raw_data for given datatype. Default None.
 
         Returns
         -------
         list of ProcessedData ids
         """
+        spec_data = ""
+        if data_type:
+            spec_data = " AND data_type_id = %i" % convert_to_id(data_type)
         conn_handler = SQLConnectionHandler()
         sql = ("SELECT processed_data_id FROM "
                "qiita.preprocessed_processed_data WHERE "
                "preprocessed_data_id IN (SELECT preprocessed_data_id FROM "
-               "qiita.study_preprocessed_data where study_id = %s)")
+               "qiita.study_preprocessed_data where "
+               "study_id = %s{0)".format(spec_data))
         return [x[0] for x in conn_handler.execute_fetchall(sql, (self._id,))]
 
-# --- methods ---
     def add_pmid(self, pmid):
         """Adds PMID to study
 

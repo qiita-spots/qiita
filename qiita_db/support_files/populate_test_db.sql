@@ -308,6 +308,9 @@ INSERT INTO qiita.preprocessed_sequence_illumina_params (trim_length) VALUES (15
 -- Insert processed information for study 0 and processed data 1
 INSERT INTO qiita.processed_data (processed_params_table, processed_params_id, processed_date) VALUES ('processed_params_uclust', 1, 'Mon Oct 1 09:30:27 2012');
 
+-- Insert (link) processed information to study 1
+INSERT INTO qiita.study_processed_data (processed_data_id, study_id) VALUES (1, 1);
+
 -- Link the processed data with the preprocessed data
 INSERT INTO qiita.preprocessed_processed_data (preprocessed_data_id, processed_data_id) VALUES (1, 1);
 
