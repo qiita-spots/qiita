@@ -103,7 +103,7 @@ class SearchStudiesHandler(BaseHandler):
                                            user)
             # remove already selected samples from returned results
             #  and set up stats counter
-            for study, samples in viewitems(results):                
+            for study, samples in viewitems(results):
                 # count all metadata in the samples for the study
                 counts[study] = {meta: defaultdict(int)
                                  for meta in meta_headers}
