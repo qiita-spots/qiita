@@ -453,7 +453,8 @@ class Study(QiitaStatusObject):
         """
         spec_data = ""
         if data_type:
-            spec_data = " AND data_type_id = %i" % convert_to_id(data_type)
+            spec_data = " AND data_type_id = %i" % convert_to_id(data_type,
+                                                                 "data_type")
         conn_handler = SQLConnectionHandler()
         sql = ("SELECT raw_data_id FROM qiita.study_raw_data WHERE "
                "study_id = %s{0}".format(spec_data))
@@ -473,7 +474,8 @@ class Study(QiitaStatusObject):
         """
         spec_data = ""
         if data_type:
-            spec_data = " AND data_type_id = %i" % convert_to_id(data_type)
+            spec_data = " AND data_type_id = %i" % convert_to_id(data_type,
+                                                                 "data_type")
         conn_handler = SQLConnectionHandler()
         sql = ("SELECT preprocessed_data_id FROM qiita.study_preprocessed_data"
                " WHERE study_id = %s{0}".format(spec_data))
@@ -485,7 +487,7 @@ class Study(QiitaStatusObject):
         Parameters
         ----------
         data_type : str, optional
-            If given, retrieve only raw_data for given datatype. Default None.
+            If given, retrieve only for given datatype. Default None.
 
         Returns
         -------
@@ -493,13 +495,13 @@ class Study(QiitaStatusObject):
         """
         spec_data = ""
         if data_type:
-            spec_data = " AND data_type_id = %i" % convert_to_id(data_type)
+            spec_data = " AND p.data_type_id = %i" % convert_to_id(data_type,
+                                                                   "data_type")
         conn_handler = SQLConnectionHandler()
-        sql = ("SELECT processed_data_id FROM "
-               "qiita.preprocessed_processed_data WHERE "
-               "preprocessed_data_id IN (SELECT preprocessed_data_id FROM "
-               "qiita.study_preprocessed_data where "
-               "study_id = %s{0)".format(spec_data))
+        sql = ("SELECT p.processed_data_id FROM qiita.processed_data p JOIN "
+               "qiita.study_processed_data sp ON p.processed_data_id = "
+               "sp.processed_data_id WHERE "
+               "sp.study_id = %s{0}".format(spec_data))
         return [x[0] for x in conn_handler.execute_fetchall(sql, (self._id,))]
 
     def add_pmid(self, pmid):
