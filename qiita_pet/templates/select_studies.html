@@ -1,17 +1,18 @@
 {% extends sitebase.html%}
-{% from future.utils import viewitems %}
-{% from qiita_db.data import ProcessedData%}
-{% from qiita_db.study import Study%}
 {%block head%}
 
 {% end %}
 
 {% block content %}
+{% from future.utils import viewitems %}
+{% from qiita_db.data import ProcessedData%}
+{% from qiita_db.study import Study%}
+<h1>Search Studies</h1>
  <form role="form" action="/analysis/search/studies/" id="results-form" method="post">
- <input type="hidden" name="action" value="">
+ <input type="hidden" name="action" value="search">
 <input type="hidden" name="analysis-id" value="{{aid}}">
 
-<input type="text" name="query" id="query"><input type="submit" class="btn btn-default" value="Search">
+<input type="text" name="query" id="query" style="width:80%;white-space:nowrap;"><input type="submit" class="btn btn-default" value="Search">
 
 <h1>Studies</h1>
 <big>   Select studies to analyze</big>

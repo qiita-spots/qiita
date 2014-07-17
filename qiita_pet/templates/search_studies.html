@@ -1,18 +1,32 @@
 {%extends sitebase.html%}
-{% from future.utils import viewitems %}
-{% from qiita_db.study import Study %}
-{% from qiita_db.data import ProcessedData %}
 {%block head%}
-
+<script type='text/javascript'>
+function toggle_row(sid) {
+  if(navigator.appName.indexOf("Microsoft") > -1){var canSee = 'block';} 
+  else {var canSee = 'table-row';}
+  row_style = document.getElementById("row" + sid).style;
+  if(row_style.display == "none") {
+    row_style.display = '';
+    document.getElementById('toggle' + sid).innerHTML = "(-)";
+  }
+  else {
+    row_style.display = "none";
+    document.getElementById('toggle' + sid).innerHTML = "(+)";
+  }
+}
+</script>
 {%end%}
 
 {%block content%}
+{% from future.utils import viewitems %}
+{% from qiita_db.study import Study %}
+{% from qiita_db.data import ProcessedData %}
 <h1>Search</h1>
  <form role="form" action="/analysis/search/studies/" id="results-form" method="post">
  <input type="hidden" name="action" value="">
 <input type="hidden" name="analysis-id" value="{{aid}}">
 
-<input type="text" name="query" id="query"><input type="submit" class="btn btn-default" value="Search">
+<input type="text" name="query" id="query" style="width:80%;white-space:nowrap;"><input type="submit" class="btn btn-default" value="Search">
 
 <h1>Studies</h1>
 <big>   Select studies to analyze</big>
@@ -27,18 +41,18 @@
         <select name='{{sid}}#{{data_type}}'>
         <option value="">{{data_type}}</option>
         {% for proc_data in study.processed_data(data_type=data_type) %}
-          <option value="{{proc_data.id}}">{{proc_data.id}}</option>
+          <option value="{{proc_data}}">{{proc_data}}</option>
         {% end %}
         <br />
-        </td><td style='vertical-align:middle;'>{{study.title}}</td>
+        </td><td style='vertical-align:middle;'><a href="#" id="toggle{{sid}}" onclick="toggle_row('{{sid}}'); return false;">(+)</a> {{study.title}}</td>
         <td style='vertical-align:middle;'>
         {{study.info["study_description"]}}</td>
         <td style='vertical-align:middle;'>{{study.status}}</td></tr>
       {% end %}
-      <tr class='{{sid}}'><td colspan=4><h3>Statistics</h3>
+      <tr id='row{{sid}}' style="display:none;"><td colspan=4><h3>Statistics</h3>
       <table class='table'>
         <tr><th>Metadata</th><th>Count</th><th></th></tr>
-        {% for meta_cat, sub_cats in viewitems(stats) %}
+        {% for meta_cat, sub_cats in viewitems(counts[study.id]) %}
           <tr><td><strong>{{meta_cat}}</strong></td><td></td><td></td></tr>
           {% for sub_cat, count in viewitems(sub_cats) %}
             <tr><td>{{sub_cat}}</td><td>{{count}}</td>
@@ -47,7 +61,7 @@
         {% end %}
       </table>
       <h3>Samples</h3>
-      <table class='table table-hover'><td><th></th><th>Sample ID</th>
+      <table class='table table-hover'><td><th>Sample ID</th>
       {% for meta in meta_headers %}
         <th>{{meta}}</th>
       {% end %}
@@ -55,14 +69,15 @@
       {% for sample in samples %}
         <tr><td>
         <input type='checkbox' name='{{sid}}'
-        value='{{sample[0]}}' class='{% ' '.join(sample) %}'>
+        value='{{sample[0]}}' class=''>
         </td><td>{{sample[0]}}</td>
-        {% for num in range(len(meta_headers)) %}
+        {% for pos in range(len(meta_headers)) %}
           <td>{{sample[pos+1]}}</td>
         {% end %}
       </tr>
       {% end %}
       </table>
+      <a href="#" id="toggle{{sid}}" onclick="toggle_row('{{sid}}'); return false;">Collapse</a>
     {% end %}
   </table>
 </div>
@@ -81,7 +96,7 @@
     </td><td>{{study.title}}</td><td>{{study.description}}</td></tr>
     <tr><td colspan=3>
     {% for samp in selsamples[study_id] %}
-      <input type='checkbox' name='sel{{sid}}' value='{{samp}}'> {{samp}}<br />
+      <input type='checkbox' name='sel{{sid}}' value='{{samp}}' checked> {{samp}}<br />
      {% end %}
     </td></tr>
     {% end %}

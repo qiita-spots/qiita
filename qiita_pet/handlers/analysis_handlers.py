@@ -81,7 +81,7 @@ class SelectStudiesHandler(BaseHandler):
 class SearchStudiesHandler(BaseHandler):
     def post(self):
         user = self.get_current_user()
-        aid = self.get_argument("aid")
+        aid = self.get_argument("analysis-id")
         action = self.get_argument("action")
         # get the dictionary of selected samples by study
         analysis = Analysis(aid)
@@ -90,20 +90,27 @@ class SearchStudiesHandler(BaseHandler):
         for proc_data_id, samps in viewitems(analysis.samples):
             study = ProcessedData(proc_data_id).study
             selproc_data[study].append(proc_data_id)
-            selsamples[study] = set(samps)
+            selsamples[study] = samps
 
         # run through action requested
         results = {}
         meta_headers = []
+        counts = {}
         if action == "search":
             # run the search
             search = QiitaStudySearch()
-            results, meta_headers = search(self.get_argument("query"))
+            results, meta_headers = search(str(self.get_argument("query")),
+                                           user)
             # remove already selected samples from returned results
-            for study in results:
-                # add difference of results and selected as final results
-                results[study] = selsamples[study].symmetric_difference(
-                    results[study])
+            #  and set up stats counter
+            for study, samples in viewitems(results):                
+                # count all metadata in the samples for the study
+                counts[study] = {meta: defaultdict(int)
+                                 for meta in meta_headers}
+                for sample in samples:
+                    for pos, meta in enumerate(meta_headers):
+                        counts[study][meta][sample[pos+1]] += 1
+
         if action == "select":
             samples = defaultdict(list)
             proc_data = defaultdict(list)
@@ -128,10 +135,10 @@ class SearchStudiesHandler(BaseHandler):
 
         elif action == "deselect":
             pass
-
-        self.render('select_studies.html', user=user, aid=aid, results=results,
+        print "RESULTS", results
+        self.render('search_studies.html', user=user, aid=aid, results=results,
                     meta_headers=meta_headers, selsamples=selsamples,
-                    selproc_data=selproc_data)
+                    selproc_data=selproc_data, counts=counts)
 
 
 class SelectCommandsHandler(BaseHandler):

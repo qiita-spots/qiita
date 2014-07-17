@@ -18,7 +18,8 @@ from qiita_pet.handlers.auth_handlers import (
     AuthCreateHandler, AuthLoginHandler, AuthLogoutHandler, AuthVerifyHandler)
 from qiita_pet.handlers.analysis_handlers import (
     CreateAnalysisHandler, SelectStudiesHandler, SelectCommandsHandler,
-    AnalysisWaitHandler, AnalysisResultsHandler, ShowAnalysesHandler)
+    AnalysisWaitHandler, AnalysisResultsHandler, ShowAnalysesHandler,
+    SearchStudiesHandler)
 from qiita_pet.handlers.websocket_handlers import MessageHandler
 from qiita_db.util import get_db_files_base_dir
 
@@ -49,6 +50,7 @@ class Application(tornado.web.Application):
             (r"/analysis/wait/(.*)", AnalysisWaitHandler),
             (r"/analysis/results/(.*)", AnalysisResultsHandler),
             (r"/analysis/show/", ShowAnalysesHandler),
+            (r"/analysis/search/studies/", SearchStudiesHandler),
             (r"/consumer/", MessageHandler),
             (r"/mockup/", MockupHandler),
             # 404 PAGE MUST BE LAST IN THIS LIST!
