@@ -109,15 +109,29 @@ class StudiesHandler(BaseHandler):
 class SelectStudiesHandler(StudiesHandler):
     """Study selection"""
     @authenticated
+    def get(self):
+        user = self.get_current_user()
+        analysis = Analysis(self.get_argument("aid"))
+        # make sure user has access to the analysis
+        userobj = User(user)
+        if analysis.id not in Analysis.get_public() + \
+                userobj.private_analyses + userobj.shared_analyses:
+            self.render("404.html", user=user)
+        # get the dictionaries of selected samples and data types
+        selproc_data, selsamples = self._selected_parser(analysis)
+
+        self.render('select_studies.html', user=user, aid=analysis.id,
+                    selsamples=selsamples, selproc_data=selproc_data)
+
+    @authenticated
     def post(self):
         name = self.get_argument('name')
         description = self.get_argument('description')
         user = self.get_current_user()
         analysis = Analysis.create(User(user), name, description)
-
-        # get the dictionaries of selected samples and data types
-        selproc_data, selsamples = self._selected_parser(analysis)
-
+        # empty dicts because analysis just created so no selected anything yet
+        selsamples = {}
+        selproc_data = {}
         self.render('select_studies.html', user=user, aid=analysis.id,
                     selsamples=selsamples, selproc_data=selproc_data)
 
