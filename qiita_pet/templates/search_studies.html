@@ -1,18 +1,37 @@
 {%extends sitebase.html%}
 {%block head%}
 <script type='text/javascript'>
-function toggle_row(sid) {
-  if(navigator.appName.indexOf("Microsoft") > -1){var canSee = 'block';} 
-  else {var canSee = 'table-row';}
-  row_style = document.getElementById("row" + sid).style;
+function toggle_row(sid, select) {
+  if(select) {
+    var row_style = document.getElementById("selrow" + sid).style;
+    var toggle = document.getElementById("seltoggle" + sid);
+  }
+  else {
+    var row_style = document.getElementById("row" + sid).style;
+    var toggle = document.getElementById("toggle" + sid);
+  }
   if(row_style.display == "none") {
     row_style.display = '';
-    document.getElementById('toggle' + sid).innerHTML = "(-)";
+    toggle.innerHTML = "(-)";
   }
   else {
     row_style.display = "none";
-    document.getElementById('toggle' + sid).innerHTML = "(+)";
+    toggle.innerHTML = "(+)";
   }
+} 
+
+function select_category(category, study) {
+  if(study != '') { 
+    $('.'+study+'.'+category).each(function() {this.checked = true;});
+  }
+  else { 
+    $('.'+category).each(function() {this.checked = true;});
+  }
+}
+
+function pre_submit(action) {
+  document.getElementById('action').value = action;
+  if(action == 'continue') {document.getElementById('results-form').action = '/analysis/3'}
 }
 </script>
 {%end%}
@@ -21,14 +40,26 @@ function toggle_row(sid) {
 {% from future.utils import viewitems %}
 {% from qiita_db.study import Study %}
 {% from qiita_db.data import ProcessedData %}
+{% from qiita_pet.util import clean_str %}
 <h1>Search</h1>
  <form role="form" action="/analysis/search/studies/" id="results-form" method="post">
- <input type="hidden" name="action" value="">
+ <input type="hidden" name="action" id="action" value="">
 <input type="hidden" name="analysis-id" value="{{aid}}">
 
-<input type="text" name="query" id="query" style="width:80%;white-space:nowrap;"><input type="submit" class="btn btn-default" value="Search">
+<input type="text" name="query" id="query" style="width:80%;white-space:nowrap;"><input type="submit" class="btn btn-default" onclick="pre_submit('search')" value="Search">
 
 <h1>Studies</h1>
+<big>   Overall counts for selected samples</big>
+ <table class='table'>
+  <tr><th>Metadata</th><th>Count</th><th></th></tr>
+  {% for meta_cat, sub_cats in viewitems(fullcounts) %}
+    <tr><td><strong>{{meta_cat}}</strong></td><td></td><td></td></tr>
+    {% for sub_cat, count in viewitems(sub_cats) %}
+      <tr><td>{{sub_cat}}</td><td>{{count}}</td>
+      <td><a href='#' onclick="select_category('{{clean_str(sub_cat)}}', ''); return false;">Select category</a></td></tr>
+    {% end %}
+  {% end %}
+</table>
 <big>   Select studies to analyze</big>
 <div id="availstudies">  <!-- Search results -->
   <table class='table table-hover'>
@@ -39,12 +70,11 @@ function toggle_row(sid) {
       {% for data_type in study.data_types %}
         <input type='checkbox' name='availstudies' value='{{sid}}#{{data_type}}'>
         <select name='{{sid}}#{{data_type}}'>
-        <option value="">{{data_type}}</option>
         {% for proc_data in study.processed_data(data_type=data_type) %}
           <option value="{{proc_data}}">{{proc_data}}</option>
         {% end %}
-        <br />
-        </td><td style='vertical-align:middle;'><a href="#" id="toggle{{sid}}" onclick="toggle_row('{{sid}}'); return false;">(+)</a> {{study.title}}</td>
+        </select>{{data_type}}<br />
+        </td><td style='vertical-align:middle;'><a href="#" id="toggle{{sid}}" onclick="toggle_row('{{sid}}', false); return false;">(+)</a> {{study.title}}</td>
         <td style='vertical-align:middle;'>
         {{study.info["study_description"]}}</td>
         <td style='vertical-align:middle;'>{{study.status}}</td></tr>
@@ -56,7 +86,7 @@ function toggle_row(sid) {
           <tr><td><strong>{{meta_cat}}</strong></td><td></td><td></td></tr>
           {% for sub_cat, count in viewitems(sub_cats) %}
             <tr><td>{{sub_cat}}</td><td>{{count}}</td>
-            <td><a href='#'>Select category</a></td></tr>
+            <td><a href='#' onclick="select_category('{{clean_str(sub_cat)}}', '{{sid}}'); return false;">Select category</a></td></tr>
           {% end %}
         {% end %}
       </table>
@@ -69,7 +99,7 @@ function toggle_row(sid) {
       {% for sample in samples %}
         <tr><td>
         <input type='checkbox' name='{{sid}}'
-        value='{{sample[0]}}' class=''>
+        value='{{sample[0]}}' class='{{sid}} {{ " ".join(clean_str(s) for s in sample[1:]) }}'>
         </td><td>{{sample[0]}}</td>
         {% for pos in range(len(meta_headers)) %}
           <td>{{sample[pos+1]}}</td>
@@ -77,11 +107,11 @@ function toggle_row(sid) {
       </tr>
       {% end %}
       </table>
-      <a href="#" id="toggle{{sid}}" onclick="toggle_row('{{sid}}'); return false;">Collapse</a>
+      <a href="#" id="toggle{{sid}}" onclick="toggle_row('{{sid}}',  false); return false;">Collapse</a>
     {% end %}
   </table>
 </div>
-<p><input type="submit" class="btn btn-default" value="Select studies"></p>
+<p><input type="submit" class="btn btn-default" onclick="pre_submit('select')" value="Select studies"></p>
 
 <big>    Selected Studies</big>
 <div id="selected"> <!-- Selected samples -->
@@ -90,11 +120,11 @@ function toggle_row(sid) {
     {% set study = Study(study_id) %}
     <tr><td>
     {% for proc in proc_ids %}
-      {% set data_type = ProcessedData(proc).data_type %}
+      {% set data_type = ProcessedData(proc).data_type() %}
       <input type='checkbox' name='selstudies' value='{{sid}}#{{data_type}}' checked> {{data_type}} - {{proc}} <br />
       {% end %}
-    </td><td>{{study.title}}</td><td>{{study.description}}</td></tr>
-    <tr><td colspan=3>
+    </td><td><a href="#" id="seltoggle{{sid}}" onclick="toggle_row('{{sid}}', true); return false;">(+)</a>{{study.title}}</td><td>{{study.info["study_description"]}}</td></tr>
+    <tr id='selrow{{sid}}' style="display:none;"><td colspan=3>
     {% for samp in selsamples[study_id] %}
       <input type='checkbox' name='sel{{sid}}' value='{{samp}}' checked> {{samp}}<br />
      {% end %}
@@ -102,7 +132,7 @@ function toggle_row(sid) {
     {% end %}
   </table>
 </div>
-<input type="button" class="btn btn-default" value="De-select">
-<input type="button" class="btn btn-default" value="Continue">
+<input type="button" class="btn btn-default" onclick="pre_submit('deselect')" value="De-select">
+<input type="button" class="btn btn-default" onclick="pre_submit('continue')" value="Continue">
 </form>
 {%end%}

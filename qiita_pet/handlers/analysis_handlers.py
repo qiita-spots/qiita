@@ -79,6 +79,7 @@ class SelectStudiesHandler(BaseHandler):
 
 
 class SearchStudiesHandler(BaseHandler):
+    @authenticated
     def post(self):
         user = self.get_current_user()
         aid = self.get_argument("analysis-id")
@@ -90,26 +91,37 @@ class SearchStudiesHandler(BaseHandler):
         for proc_data_id, samps in viewitems(analysis.samples):
             study = ProcessedData(proc_data_id).study
             selproc_data[study].append(proc_data_id)
-            selsamples[study] = samps
+            selsamples[study] = set(samps)
 
         # run through action requested
         results = {}
         meta_headers = []
         counts = {}
+        fullcounts = {}
         if action == "search":
             # run the search
             search = QiitaStudySearch()
             results, meta_headers = search(str(self.get_argument("query")),
                                            user)
+            fullcounts = {meta: defaultdict(int) for meta in meta_headers}
             # remove already selected samples from returned results
             #  and set up stats counter
             for study, samples in viewitems(results):
                 # count all metadata in the samples for the study
                 counts[study] = {meta: defaultdict(int)
                                  for meta in meta_headers}
-                for sample in samples:
-                    for pos, meta in enumerate(meta_headers):
-                        counts[study][meta][sample[pos+1]] += 1
+                topop = []
+                for pos, sample in enumerate(samples):
+                    if sample[0] in selsamples[study]:
+                        topop.append(pos)
+                    else:
+                        for pos, meta in enumerate(meta_headers):
+                            counts[study][meta][sample[pos+1]] += 1
+                            fullcounts[meta][sample[pos+1]] += 1
+                # remove already selected samples
+                topop.sort(reverse=True)
+                for pos in topop:
+                    samples.pop(pos)
 
         if action == "select":
             samples = defaultdict(list)
@@ -122,23 +134,24 @@ class SearchStudiesHandler(BaseHandler):
                 proc_data_id = self.get_argument(s)
                 if proc_data_id != "":
                     proc_data[study_id].append(proc_data_id)
-            # get list of new_selected samples for each study and add to study
-            if samples[study_id] is None:
-                samples[study_id] = self.get_arguments(study_id)
+                # get new selected samples for each study and add to study
+                if samples[study_id] is None:
+                    samples[study_id] = self.get_arguments(study_id)
 
             # add samples to the analysis in the DB
             def yield_samples(procdict, sampdict):
                 for study_id, proc_data_id in viewitems(procdict):
                     for sample in sampdict[study_id]:
+                        print (proc_data_id, sample)
                         yield (proc_data_id, sample)
             analysis.add_samples(yield_samples(proc_data, samples))
 
         elif action == "deselect":
             pass
-        print "RESULTS", results
         self.render('search_studies.html', user=user, aid=aid, results=results,
                     meta_headers=meta_headers, selsamples=selsamples,
-                    selproc_data=selproc_data, counts=counts)
+                    selproc_data=selproc_data, counts=counts,
+                    fullcounts=fullcounts)
 
 
 class SelectCommandsHandler(BaseHandler):
