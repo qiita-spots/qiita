@@ -117,6 +117,7 @@ class SelectStudiesHandler(StudiesHandler):
         if analysis.id not in Analysis.get_public() + \
                 userobj.private_analyses + userobj.shared_analyses:
             self.render("404.html", user=user)
+            return
         # get the dictionaries of selected samples and data types
         selproc_data, selsamples = self._selected_parser(analysis)
 

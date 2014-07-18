@@ -4,8 +4,7 @@ Util functions (:mod: `qiita_pet.util`)
 
 ..currentmodule:: qiita_pet.util
 
-This module provides different util functions. These functions will also be
-available in tornado templates by default.
+This module provides different util functions for qiita_pet.
 
 Methods
 -------
