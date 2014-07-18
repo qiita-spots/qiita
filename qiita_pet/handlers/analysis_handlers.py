@@ -57,28 +57,8 @@ class CreateAnalysisHandler(BaseHandler):
         self.render('create_analysis.html', user=self.get_current_user())
 
 
-class SelectStudiesHandler(BaseHandler):
-    """Study selection"""
-    @authenticated
-    def post(self):
-        name = self.get_argument('name')
-        description = self.get_argument('description')
-        user = self.get_current_user()
-        analysis = Analysis.create(User(user), name, description)
-
-        # get the dictionary of selected samples by study
-        selsamples = defaultdict(list)
-        selproc_data = defaultdict(list)
-        for proc_data_id, samps in viewitems(analysis.samples):
-            study = ProcessedData(proc_data_id).study
-            selproc_data[study].append(proc_data_id)
-            selsamples[study] = samps
-            selsamples[study].sort()
-        self.render('select_studies.html', user=user, aid=analysis.id,
-                    selsamples=selsamples, selproc_data=selproc_data)
-
-
-class SearchStudiesHandler(BaseHandler):
+class StudiesHandler(BaseHandler):
+    """Base class for helper functions on study selection"""
     def _selected_parser(self, analysis):
         """builds dictionaries of selected samples from analysis object"""
         selsamples = defaultdict(list)
@@ -125,6 +105,24 @@ class SearchStudiesHandler(BaseHandler):
             samples.extend(self.get_arguments("sel%s" % sid))
         return proc_data, samples
 
+
+class SelectStudiesHandler(StudiesHandler):
+    """Study selection"""
+    @authenticated
+    def post(self):
+        name = self.get_argument('name')
+        description = self.get_argument('description')
+        user = self.get_current_user()
+        analysis = Analysis.create(User(user), name, description)
+
+        # get the dictionaries of selected samples and data types
+        selproc_data, selsamples = self._selected_parser(analysis)
+
+        self.render('select_studies.html', user=user, aid=analysis.id,
+                    selsamples=selsamples, selproc_data=selproc_data)
+
+
+class SearchStudiesHandler(StudiesHandler):
     @authenticated
     def post(self):
         user = self.get_current_user()

@@ -17,7 +17,7 @@
 <h1>Studies</h1>
 <big>   Select studies to analyze</big>
 <div id="availstudies">  <!-- Search results -->
-<big>   Search for metadata information to begin</big>
+<big>   <b>Search for metadata information to begin</b></big>
 </div>
 <big>    Selected Studies</big>
 <div id="selected"> <!-- Selected samples -->
@@ -27,7 +27,7 @@
     <tr><td>
     {% for proc in proc_ids %}
       {% set data_type = ProcessedData(proc).data_type() %}
-      <input type='checkbox' name='selstudies' value='{{sid}}#{{data_type}}'> {{data_type}} - {{proc}} <br />
+      <input type='hidden' name='selstudies' value='{{sid}}'> <input type='checkbox' name='dt{{sid}}' value='{{proc}}'>{{data_type}} - {{proc}} <br />
       {% end %}
     </td><td><a href="#" id="seltoggle{{sid}}" onclick="toggle_row('{{sid}}', true); return false;">(+)</a>{{study.title}}</td><td>{{study.info["study_description"]}}</td></tr>
     <tr id='selrow{{sid}}' style="display:none;"><td colspan=3>
