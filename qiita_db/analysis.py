@@ -330,22 +330,46 @@ class Analysis(QiitaStatusObject):
         conn_handler.executemany(sql, [(self._id, s[1], s[0])
                                        for s in samples])
 
-    def remove_samples(self, samples):
+    def remove_samples(self, proc_data=None, samples=None):
         """Removes samples from the analysis
 
         Parameters
         ----------
-        samples : list of tuples
-            samples and the processed data id they come from in form
-            [(processed_data_id, sample_id), ...]
+        proc_data : list, optional
+            processed data ids to remove
+        samples : list, optional
+            sample ids to remove
+
+        Notes
+        -----
+        When removing samples, the samples will be removed from all processed
+        data ids it is associated with
+
+        When removing proc_data, all samples associated with that processed
+        data are removed
+
+        If both are passed, the given samples are removed from the given
+        processed data ids
         """
         conn_handler = SQLConnectionHandler()
         self._lock_check(conn_handler)
-
-        sql = ("DELETE FROM qiita.analysis_sample WHERE analysis_id = %s AND "
-               "sample_id = %s AND processed_data_id = %s")
-        conn_handler.executemany(sql, [(self._id, s[1], s[0])
-                                       for s in samples])
+        if proc_data and samples:
+            sql = ("DELETE FROM qiita.analysis_sample WHERE analysis_id = %s "
+                   "AND processed_data_id = %s AND sample_id = %s")
+            remove = []
+            # build tuples for what samples to remove from what processed data
+            for proc_id in proc_data:
+                for sample_id in samples:
+                    remove.append((self._id, proc_id, sample_id))
+            conn_handler.executemany(sql, remove)
+        elif proc_data:
+            sql = ("DELETE FROM qiita.analysis_sample WHERE analysis_id = %s "
+                   "AND processed_data_id = %s")
+            conn_handler.executemany(sql, [(self._id, p) for p in proc_data])
+        elif samples:
+            sql = ("DELETE FROM qiita.analysis_sample WHERE analysis_id = %s "
+                   "AND sample_id = %s")
+            conn_handler.executemany(sql, [(self._id, s) for s in samples])
 
     def add_biom_tables(self, tables):
         """Adds biom tables to the analysis
