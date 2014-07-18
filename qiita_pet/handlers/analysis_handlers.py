@@ -124,27 +124,35 @@ class SearchStudiesHandler(BaseHandler):
                     samples.pop(pos)
 
         if action == "select":
-            samples = defaultdict(list)
+            samples = {}
             proc_data = defaultdict(list)
             # get the selected studies and datatypes for studies
             studyinfo = self.get_arguments("availstudies")
             for s in studyinfo:
                 study_id, datatype = s.split("#")
-                # get the processed data id and add it to the study
-                proc_data_id = self.get_argument(s)
-                if proc_data_id != "":
-                    proc_data[study_id].append(proc_data_id)
+                # get the processed data ids and add it to the study
+                proc_data_ids = self.get_arguments(s)
+                if proc_data_ids is not None:
+                    proc_data[study_id].extend(proc_data_ids)
                 # get new selected samples for each study and add to study
-                if samples[study_id] is None:
+                if study_id not in samples:
                     samples[study_id] = self.get_arguments(study_id)
 
             # add samples to the analysis in the DB
             def yield_samples(procdict, sampdict):
-                for study_id, proc_data_id in viewitems(procdict):
-                    for sample in sampdict[study_id]:
-                        print (proc_data_id, sample)
-                        yield (proc_data_id, sample)
+                for study_id, proc_data in viewitems(procdict):
+                    for proc_id in proc_data:
+                        for sample in sampdict[study_id]:
+                            yield (int(proc_id), sample)
             analysis.add_samples(yield_samples(proc_data, samples))
+
+            # rebuild selected from database just in case insertion screwed up
+            selsamples = defaultdict(list)
+            selproc_data = defaultdict(list)
+            for proc_data_id, samps in viewitems(analysis.samples):
+                study = ProcessedData(proc_data_id).study
+                selproc_data[study].append(proc_data_id)
+                selsamples[study] = set(samps)
 
         elif action == "deselect":
             pass

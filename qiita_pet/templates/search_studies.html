@@ -29,6 +29,10 @@ function select_category(category, study) {
   }
 }
 
+function enable_study_datatype(id) {
+  document.getElementById(id).disabled=false;
+}
+
 function pre_submit(action) {
   document.getElementById('action').value = action;
   if(action == 'continue') {document.getElementById('results-form').action = '/analysis/3'}
@@ -68,8 +72,8 @@ function pre_submit(action) {
       {% set study = Study(sid) %}
       <tr id="study{{sid}}"><td>
       {% for data_type in study.data_types %}
-        <input type='checkbox' name='availstudies' value='{{sid}}#{{data_type}}'>
-        <select name='{{sid}}#{{data_type}}'>
+        <input type='hidden' name='availstudies' id='{{sid}}#{{data_type}}' value='{{sid}}#{{data_type}}' disabled=true>
+        <select name='{{sid}}#{{data_type}}' multiple=true onchange="enable_study_datatype('{{sid}}#{{data_type}}')" onclick="enable_study_datatype('{{sid}}#{{data_type}}')">
         {% for proc_data in study.processed_data(data_type=data_type) %}
           <option value="{{proc_data}}">{{proc_data}}</option>
         {% end %}
@@ -116,8 +120,8 @@ function pre_submit(action) {
 <big>    Selected Studies</big>
 <div id="selected"> <!-- Selected samples -->
   <table class="table table-hover">
-  {% for study_id, proc_ids in viewitems(selproc_data) %}
-    {% set study = Study(study_id) %}
+  {% for sid, proc_ids in viewitems(selproc_data) %}
+    {% set study = Study(sid) %}
     <tr><td>
     {% for proc in proc_ids %}
       {% set data_type = ProcessedData(proc).data_type() %}
@@ -125,7 +129,7 @@ function pre_submit(action) {
       {% end %}
     </td><td><a href="#" id="seltoggle{{sid}}" onclick="toggle_row('{{sid}}', true); return false;">(+)</a>{{study.title}}</td><td>{{study.info["study_description"]}}</td></tr>
     <tr id='selrow{{sid}}' style="display:none;"><td colspan=3>
-    {% for samp in selsamples[study_id] %}
+    {% for samp in selsamples[sid] %}
       <input type='checkbox' name='sel{{sid}}' value='{{samp}}' checked> {{samp}}<br />
      {% end %}
     </td></tr>
