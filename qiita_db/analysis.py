@@ -325,7 +325,6 @@ class Analysis(QiitaStatusObject):
         """
         conn_handler = SQLConnectionHandler()
         self._lock_check(conn_handler)
-
         sql = ("INSERT INTO qiita.analysis_sample (analysis_id, sample_id, "
                "processed_data_id) VALUES (%s, %s, %s)")
         conn_handler.executemany(sql, [(self._id, s[1], s[0])
