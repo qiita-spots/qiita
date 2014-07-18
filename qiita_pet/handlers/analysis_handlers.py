@@ -19,7 +19,6 @@ from tornado.web import authenticated, asynchronous
 from collections import defaultdict
 
 from qiita_pet.handlers.base_handlers import BaseHandler
-from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_ware.run import run_analysis
 from qiita_db.user import User
 from qiita_db.analysis import Analysis
@@ -73,12 +72,59 @@ class SelectStudiesHandler(BaseHandler):
         for proc_data_id, samps in viewitems(analysis.samples):
             study = ProcessedData(proc_data_id).study
             selproc_data[study].append(proc_data_id)
-            selsamples[study] = set(samps)
+            selsamples[study] = samps
+            selsamples[study].sort()
         self.render('select_studies.html', user=user, aid=analysis.id,
                     selsamples=selsamples, selproc_data=selproc_data)
 
 
 class SearchStudiesHandler(BaseHandler):
+    def _selected_parser(self, analysis):
+        """builds dictionaries of selected samples from analysis object"""
+        selsamples = defaultdict(list)
+        selproc_data = defaultdict(list)
+        for proc_data_id, samps in viewitems(analysis.samples):
+            study = ProcessedData(proc_data_id).study
+            selproc_data[study].append(proc_data_id)
+            selsamples[study] = set(samps)
+        return selproc_data, selsamples
+
+    def _parse_form_select(self):
+        """parses selected checkboxes and yields the selected ones in
+        format accepted by Analysis.add_samples()
+        """
+        samples = {}
+        proc_data = defaultdict(list)
+        # get the selected studies and datatypes for studies
+        studyinfo = self.get_arguments("availstudies")
+        for s in studyinfo:
+            study_id, datatype = s.split("#")
+            # get the processed data ids and add it to the study
+            proc_data_ids = self.get_arguments(s)
+            if proc_data_ids is not None:
+                proc_data[study_id].extend(proc_data_ids)
+            # get new selected samples for each study and add to study
+            if study_id not in samples:
+                samples[study_id] = self.get_arguments(study_id)
+        for study_id, proc_data in viewitems(proc_data):
+            for proc_id in proc_data:
+                for sample in samples[study_id]:
+                    yield (int(proc_id), sample)
+
+    def _parse_form_deselect(self):
+        """parses selected checkboxes and returns the selected ones in
+        format accepted by Analysis.remove_samples()
+        """
+        studyinfo = self.get_arguments("selstudies")
+        proc_data = []
+        samples = []
+        for sid in studyinfo:
+            # get the processed data ids and add it to the study
+            proc_data.extend(self.get_arguments("dt%s" % sid))
+            # get new selected samples for each study and add to study
+            samples.extend(self.get_arguments("sel%s" % sid))
+        return proc_data, samples
+
     @authenticated
     def post(self):
         user = self.get_current_user()
@@ -86,12 +132,7 @@ class SearchStudiesHandler(BaseHandler):
         action = self.get_argument("action")
         # get the dictionary of selected samples by study
         analysis = Analysis(aid)
-        selsamples = defaultdict(list)
-        selproc_data = defaultdict(list)
-        for proc_data_id, samps in viewitems(analysis.samples):
-            study = ProcessedData(proc_data_id).study
-            selproc_data[study].append(proc_data_id)
-            selsamples[study] = set(samps)
+        selproc_data, selsamples = self._selected_parser(analysis)
 
         # run through action requested
         results = {}
@@ -124,38 +165,19 @@ class SearchStudiesHandler(BaseHandler):
                     samples.pop(pos)
 
         if action == "select":
-            samples = {}
-            proc_data = defaultdict(list)
-            # get the selected studies and datatypes for studies
-            studyinfo = self.get_arguments("availstudies")
-            for s in studyinfo:
-                study_id, datatype = s.split("#")
-                # get the processed data ids and add it to the study
-                proc_data_ids = self.get_arguments(s)
-                if proc_data_ids is not None:
-                    proc_data[study_id].extend(proc_data_ids)
-                # get new selected samples for each study and add to study
-                if study_id not in samples:
-                    samples[study_id] = self.get_arguments(study_id)
+            analysis.add_samples(self._parse_form_select())
 
-            # add samples to the analysis in the DB
-            def yield_samples(procdict, sampdict):
-                for study_id, proc_data in viewitems(procdict):
-                    for proc_id in proc_data:
-                        for sample in sampdict[study_id]:
-                            yield (int(proc_id), sample)
-            analysis.add_samples(yield_samples(proc_data, samples))
-
-            # rebuild selected from database just in case insertion screwed up
-            selsamples = defaultdict(list)
-            selproc_data = defaultdict(list)
-            for proc_data_id, samps in viewitems(analysis.samples):
-                study = ProcessedData(proc_data_id).study
-                selproc_data[study].append(proc_data_id)
-                selsamples[study] = set(samps)
+            # rebuild the selected from database to reflect changes
+            selproc_data, selsamples = self._selected_parser(analysis)
 
         elif action == "deselect":
-            pass
+            proc_data, samples = self._parse_form_deselect()
+            analysis.remove_samples(proc_data=proc_data)
+            analysis.remove_samples(samples=samples)
+
+            # rebuild the selected from database to reflect changes
+            selproc_data, selsamples = self._selected_parser(analysis)
+
         self.render('search_studies.html', user=user, aid=aid, results=results,
                     meta_headers=meta_headers, selsamples=selsamples,
                     selproc_data=selproc_data, counts=counts,
