@@ -245,7 +245,8 @@ def clean_test_environment(user, password, host):
     r"""Cleans the test database environment.
 
     In case that the test database is dirty (i.e. the 'qiita' schema is
-    present), this cleans it up by dropping the 'qiita' schema.
+    present), this cleans it up by dropping the 'qiita' schema and 
+    re-populating it.
 
     Parameters
     ----------
