@@ -115,12 +115,12 @@ def qiita_test_checker():
 
         # Now, we decorate the setup and teardown functions
         class DecoratedClass(cls):
-            @build_test_database
             def setUp(self):
                 super(DecoratedClass, self).setUp()
                 self.conn_handler = SQLConnectionHandler()
 
             @drop_test_database
+            @build_test_database
             def tearDown(self):
                 super(DecoratedClass, self).tearDown()
                 del self.conn_handler
