@@ -69,8 +69,6 @@ def reset_test_database(wrapped_fn):
         # Populate the database
         with open(POPULATE_FP, 'U') as f:
             conn_handler.execute(f.read())
-        # Execute the setup function
-        return setup_fn(*args, **kwargs)
         # Execute the wrapped function
         return wrapped_fn(*args, **kwargs)
 

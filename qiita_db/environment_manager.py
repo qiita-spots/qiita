@@ -189,6 +189,7 @@ def make_environment(env, base_data_dir, base_work_dir, user, password, host):
             conn.commit()
             cur.close()
             conn.close()
+            print('Test environment successfully created')
         else:
             # Commit all the changes and close the connections
             conn.commit()
@@ -245,7 +246,7 @@ def clean_test_environment(user, password, host):
     r"""Cleans the test database environment.
 
     In case that the test database is dirty (i.e. the 'qiita' schema is
-    present), this cleans it up by dropping the 'qiita' schema and 
+    present), this cleans it up by dropping the 'qiita' schema and
     re-populating it.
 
     Parameters
