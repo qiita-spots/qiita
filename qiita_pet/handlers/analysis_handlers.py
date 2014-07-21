@@ -17,6 +17,7 @@ from os.path import join
 
 from tornado.web import authenticated, asynchronous
 from collections import defaultdict
+from pyparsing import ParseException
 
 from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_ware.run import run_analysis
@@ -152,12 +153,19 @@ class SearchStudiesHandler(StudiesHandler):
         meta_headers = []
         counts = {}
         fullcounts = {}
+        searchmsg = ""
         if action == "search":
-            # run the search
+            # run the search, catching if the query is malformed
             search = QiitaStudySearch()
-            results, meta_headers = search(str(self.get_argument("query")),
-                                           user)
+            try:
+                results, meta_headers = search(str(self.get_argument("query")),
+                                               user)
+            except ParseException:
+                searchmsg = "Malformed search query, please try again."
             fullcounts = {meta: defaultdict(int) for meta in meta_headers}
+            # Add message if no results found
+            if not results:
+                searchmsg = "No results found."
             # remove already selected samples from returned results
             #  and set up stats counter
             for study, samples in viewitems(results):
@@ -194,7 +202,7 @@ class SearchStudiesHandler(StudiesHandler):
         self.render('search_studies.html', user=user, aid=aid, results=results,
                     meta_headers=meta_headers, selsamples=selsamples,
                     selproc_data=selproc_data, counts=counts,
-                    fullcounts=fullcounts)
+                    fullcounts=fullcounts, searchmsg=searchmsg)
 
 
 class SelectCommandsHandler(BaseHandler):
