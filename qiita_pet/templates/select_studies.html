@@ -12,7 +12,10 @@
  <input type="hidden" name="action" id="action" value="">
 <input type="hidden" name="analysis-id" value="{{aid}}">
 
-<input type="text" name="query" id="query" style="width:80%;white-space:nowrap;"><input type="submit" class="btn btn-default" onclick="pre_submit('search')" value="Search">
+<p><input type="text" name="query" id="query" style="width:80%;white-space:nowrap;"><input type="submit" class="btn btn-default" onclick="pre_submit('search')" value="Search"></p>
+<p><a href="#" data-toggle="modal" data-target="#searchexample">Search examples</a></p>
+  Launch demo modal
+</button>
 
 <h1>Studies</h1>
 <big>   Select studies to analyze</big>
@@ -40,4 +43,5 @@
 </div>
 <input type="button" class="btn btn-default" onclick="pre_submit('deselect')" value="De-select">
 </form>
+{% include "search_studies_doc_modal.html" %}
 {% end %}

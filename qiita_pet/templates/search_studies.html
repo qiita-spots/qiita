@@ -15,7 +15,8 @@
  <input type="hidden" name="action" id="action" value="">
 <input type="hidden" name="analysis-id" value="{{aid}}">
 
-<input type="text" name="query" id="query" style="width:80%;white-space:nowrap;"><input type="submit" class="btn btn-default" onclick="pre_submit('search')" value="Search">
+<p><input type="text" name="query" id="query" style="width:80%;white-space:nowrap;"><input type="submit" class="btn btn-default" onclick="pre_submit('search')" value="Search"></p>
+<p><a href="#" data-toggle="modal" data-target="#searchexample">Search examples</a></p>
 
 <h1>Studies</h1> 
 {% if results %}
@@ -106,4 +107,5 @@
 <input type="submit" class="btn btn-default" onclick="pre_submit('deselect')" value="De-select">
 <input type="submit" class="btn btn-default" onclick="pre_submit('continue')" value="Continue">
 </form>
+{% include "search_studies_doc_modal.html" %}
 {%end%}
