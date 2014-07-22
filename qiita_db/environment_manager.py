@@ -174,6 +174,22 @@ def make_environment(env, base_data_dir, base_work_dir, user, password, host):
             # # clean up after ourselves
             # rmtree(outdir)
             print('Demo environment successfully created')
+        elif env == "test":
+            # Create the schema
+            print('Create schema in test database')
+            with open(LAYOUT_FP, 'U') as f:
+                cur.execute(f.read())
+            print('Populate the test database')
+            # Initialize the database
+            with open(INITIALIZE_FP, 'U') as f:
+                cur.execute(f.read())
+            # Populate the database
+            with open(POPULATE_FP, 'U') as f:
+                cur.execute(f.read())
+            conn.commit()
+            cur.close()
+            conn.close()
+            print('Test environment successfully created')
         else:
             # Commit all the changes and close the connections
             conn.commit()
@@ -230,7 +246,8 @@ def clean_test_environment(user, password, host):
     r"""Cleans the test database environment.
 
     In case that the test database is dirty (i.e. the 'qiita' schema is
-    present), this cleans it up by dropping the 'qiita' schema.
+    present), this cleans it up by dropping the 'qiita' schema and
+    re-populating it.
 
     Parameters
     ----------
