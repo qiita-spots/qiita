@@ -51,13 +51,6 @@ def check_analysis_access(user, analysis_id):
         raise RuntimeError("Analysis access denied to %s" % (analysis_id))
 
 
-class CreateAnalysisHandler(BaseHandler):
-    """Analysis creation"""
-    @authenticated
-    def get(self):
-        self.render('create_analysis.html', user=self.get_current_user())
-
-
 class StudiesHandler(BaseHandler):
     """Base class for helper functions on study selection"""
     def _selected_parser(self, analysis):
@@ -115,10 +108,10 @@ class SelectStudiesHandler(StudiesHandler):
         analysis = Analysis(self.get_argument("aid"))
         # make sure user has access to the analysis
         userobj = User(user)
-        if analysis.id not in Analysis.get_public() + \
-                userobj.private_analyses + userobj.shared_analyses:
-            self.render("404.html", user=user)
-            return
+        #if analysis.id not in Analysis.get_public() + \
+        #        userobj.private_analyses + userobj.shared_analyses:
+        #    self.render("404.html", user=user)
+        #    return
         # get the dictionaries of selected samples and data types
         selproc_data, selsamples = self._selected_parser(analysis)
 
@@ -131,7 +124,7 @@ class SelectStudiesHandler(StudiesHandler):
         description = self.get_argument('description')
         user = self.get_current_user()
         analysis = Analysis.create(User(user), name, description)
-        # empty dicts because analysis just created so no selected anything yet
+        # empty dicts bacecause analysis just created & nothing selected yet
         selsamples = {}
         selproc_data = {}
         self.render('select_studies.html', user=user, aid=analysis.id,
@@ -176,6 +169,9 @@ class SearchStudiesHandler(StudiesHandler):
                 for pos, sample in enumerate(samples):
                     if sample[0] in selsamples[study]:
                         topop.append(pos)
+                        # still add to full counts, but not study counts
+                        for pos, meta in enumerate(meta_headers):
+                            fullcounts[meta][sample[pos+1]] += 1
                     else:
                         for pos, meta in enumerate(meta_headers):
                             counts[study][meta][sample[pos+1]] += 1

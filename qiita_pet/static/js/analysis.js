@@ -26,6 +26,15 @@ function select_category(category, study) {
   }
 }
 
+function select_deselect(study, select) {
+  if(select == true) { 
+    $('.'+study).each(function() {this.checked = true;});
+  }
+  else { 
+    $('.'+study).each(function() {this.checked = false;});
+  }
+}
+
 function enable_study_datatype(id) {
   document.getElementById(id).disabled=false;
 }
