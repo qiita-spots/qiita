@@ -30,10 +30,9 @@ class MessageHandler(WebSocketHandler):
     def on_message(self, msg):
         msginfo = loads(msg)
         # listens for handshake from page
-        if "user:" in msginfo['msg']:
-            self.channel = msginfo['msg'].split(':')[1]
-            # need to split the rest off to new func so it can be asynchronous
-            self.listen()
+        self.channel = msginfo['user']
+        # need to split the rest off to new func so it can be asynchronous
+        self.listen()
 
     # decorator turns the function into an asynchronous generator object
     @engine
