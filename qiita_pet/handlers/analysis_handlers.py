@@ -105,13 +105,13 @@ class SelectStudiesHandler(StudiesHandler):
     @authenticated
     def get(self):
         user = self.get_current_user()
-        analysis = Analysis(self.get_argument("aid"))
+        analysis = Analysis(int(self.get_argument("aid")))
         # make sure user has access to the analysis
         userobj = User(user)
-        #if analysis.id not in Analysis.get_public() + \
-        #        userobj.private_analyses + userobj.shared_analyses:
-        #    self.render("404.html", user=user)
-        #    return
+        if analysis.id not in Analysis.get_public() + \
+                userobj.private_analyses + userobj.shared_analyses:
+            self.render("404.html", user=user)
+            return
         # get the dictionaries of selected samples and data types
         selproc_data, selsamples = self._selected_parser(analysis)
 
@@ -135,7 +135,7 @@ class SearchStudiesHandler(StudiesHandler):
     @authenticated
     def post(self):
         user = self.get_current_user()
-        aid = self.get_argument("analysis-id")
+        aid = int(self.get_argument("analysis-id"))
         action = self.get_argument("action")
         # get the dictionary of selected samples by study
         analysis = Analysis(aid)
