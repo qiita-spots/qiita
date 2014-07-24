@@ -1,5 +1,5 @@
 function displaySelected() {
-  var linktext = document.getElementById("shselected").innerHTML;
+  var linktext = document.getElementById("shselected");
   var seldiv = document.getElementById("selected");
   var sampdiv = document.getElementById("availstudies");
   var buttondiv = document.getElementById("seperator");
@@ -9,7 +9,7 @@ function displaySelected() {
     buttondiv.style.bottom = "25%";
     seldiv.style.height = "25%";
     seldiv.style.display = "";
-    linktext = "Hide selected samples";
+    linktext.innerHTML = "Hide selected samples";
   }
   else {
     sampdiv.style.bottom = "";
@@ -17,7 +17,7 @@ function displaySelected() {
     buttondiv.style.bottom = "0px";
     seldiv.style.height = "0px";
     seldiv.style.display = "none";
-    linktext = "Show selected samples";
+    linktext.innerHTML = "Show selected samples";
   }
 } 
 
