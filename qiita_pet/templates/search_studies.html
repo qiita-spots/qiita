@@ -11,9 +11,31 @@
 {% from qiita_db.study import Study %}
 {% from qiita_db.data import ProcessedData %}
 {% from qiita_pet.util import clean_str %}
+{% include "search_studies_doc_modal.html" %}
+ <form role="form" action="/analysis/search/studies/" id="results-form" method="post">
+<!-- Build the selected data modals -->
+{% for sid in selproc_data %}
+        <div class="modal fade" id='selmodal{{sid}}'>
+          <div class="modal-dialog modal-sm">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h4 class="modal-title">Selected samples</h4>
+              </div>
+              <div class="modal-body">
+        <p><a href="#" onclick="select_deselect('sel{{sid}}', true); return false;">Select all</a> | <a href="#" onclick="select_deselect('sel{{sid}}', false); return false;">Select none</a></p>
+        {% for samp in selsamples[sid] %}
+          <input type='checkbox' class='sel{{sid}}' name='sel{{sid}}' value='{{samp}}'> {{samp}}<br />
+       {% end %}
+     </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+          </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+      </div><!-- /.modal -->
+  {% end %}
 <div id="availstudies" style="position: fixed;width: 100%;overflow : auto;">  <!-- Search results -->
 <h1>Search</h1>
- <form role="form" action="/analysis/search/studies/" id="results-form" method="post">
  <input type="hidden" name="action" id="action" value="">
 <input type="hidden" name="analysis-id" value="{{aid}}">
 
@@ -121,25 +143,4 @@
   </table>
 </div>
 </form>
-{% for sid in selproc_data %}
-        <div class="modal fade" id='selmodal{{sid}}'>
-          <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-              <div class="modal-header">
-                <h4 class="modal-title">Selected samples</h4>
-              </div>
-              <div class="modal-body">
-        <p><a href="#" onclick="select_deselect('sel{{sid}}', true); return false;">Select all</a> | <a href="#" onclick="select_deselect('sel{{sid}}', false); return false;">Select none</a></p>
-        {% for samp in selsamples[sid] %}
-          <input type='checkbox' class='sel{{sid}}' name='sel{{sid}}' value='{{samp}}'> {{samp}}<br />
-       {% end %}
-     </div>
-            <div class="modal-footer">
-              <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-            </div>
-          </div><!-- /.modal-content -->
-        </div><!-- /.modal-dialog -->
-      </div><!-- /.modal -->
-  {% end %}
-{% include "search_studies_doc_modal.html" %}
 {%end%}

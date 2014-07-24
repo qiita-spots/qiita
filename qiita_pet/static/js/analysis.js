@@ -5,6 +5,7 @@ function displaySelected() {
   var buttondiv = document.getElementById("seperator");
   if(seldiv.style.display == "none") {
     sampdiv.style.bottom = "30%";
+    sampdiv.style.height='60%';
     buttondiv.style.bottom = "25%";
     seldiv.style.height = "25%";
     seldiv.style.display = "";
@@ -12,6 +13,7 @@ function displaySelected() {
   }
   else {
     sampdiv.style.bottom = "";
+    sampdiv.style.height='90%';
     buttondiv.style.bottom = "0px";
     seldiv.style.height = "0px";
     seldiv.style.display = "none";
