@@ -22,7 +22,7 @@ class AuthCreateHandler(BaseHandler):
                     error=error_message)
 
     def post(self):
-        username = self.get_argument("username", "")
+        username = self.get_argument("username", "").strip().lower()
         password = self.get_argument("pass", "")
         info = {}
         for info_column in ("name", "affiliation", "address", "phone"):
@@ -44,7 +44,7 @@ class AuthCreateHandler(BaseHandler):
 
 class AuthVerifyHandler(BaseHandler):
     def get(self):
-        email = self.get_argument("email")
+        email = self.get_argument("email").strip().lower()
         code = self.get_argument("code")
         try:
             User(email).level = 3
@@ -58,7 +58,7 @@ class AuthVerifyHandler(BaseHandler):
 class AuthLoginHandler(BaseHandler):
     """user login, no page necessary"""
     def post(self):
-        username = self.get_argument("username", "")
+        username = self.get_argument("username", "").strip().lower()
         passwd = self.get_argument("password", "")
         # check the user level
         try:

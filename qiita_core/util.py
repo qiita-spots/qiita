@@ -51,16 +51,15 @@ def send_email(to, subject, body):
         smtp.close()
 
 
-def build_test_database(setup_fn):
-    """Decorator that initializes the test database with the schema and initial
-    test data and executes setup_fn
+def reset_test_database(wrapped_fn):
+    """Decorator that drops the qiita schema, rebuilds and repopulates the
+    schema with test data, then executes wrapped_fn
     """
     conn_handler = SQLConnectionHandler()
 
-    # Get the paths to the SQL files with the schema layout, the database
-    # initialization and the test data
-
-    def decorated_setup_fn(*args, **kwargs):
+    def decorated_wrapped_fn(*args, **kwargs):
+        # Drop the schema
+        conn_handler.execute("DROP SCHEMA qiita CASCADE")
         # Create the schema
         with open(LAYOUT_FP, 'U') as f:
             conn_handler.execute(f.read())
@@ -70,25 +69,10 @@ def build_test_database(setup_fn):
         # Populate the database
         with open(POPULATE_FP, 'U') as f:
             conn_handler.execute(f.read())
-        # Execute the setup function
-        return setup_fn(*args, **kwargs)
+        # Execute the wrapped function
+        return wrapped_fn(*args, **kwargs)
 
-    return decorated_setup_fn
-
-
-def drop_test_database(teardown_fn):
-    """Decorator that drops the qiita schema, leaving the test database in its
-    initial state, and then executes teardown_fn
-    """
-    conn_handler = SQLConnectionHandler()
-
-    def decorated_teardown_fn(*args, **kwargs):
-        # Drop the schema
-        conn_handler.execute("DROP SCHEMA qiita CASCADE")
-        # Execute the teardown function
-        return teardown_fn(*args, **kwargs)
-
-    return decorated_teardown_fn
+    return decorated_wrapped_fn
 
 
 def qiita_test_checker():
@@ -115,12 +99,11 @@ def qiita_test_checker():
 
         # Now, we decorate the setup and teardown functions
         class DecoratedClass(cls):
-            @build_test_database
             def setUp(self):
                 super(DecoratedClass, self).setUp()
                 self.conn_handler = SQLConnectionHandler()
 
-            @drop_test_database
+            @reset_test_database
             def tearDown(self):
                 super(DecoratedClass, self).tearDown()
                 del self.conn_handler
