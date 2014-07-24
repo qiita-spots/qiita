@@ -10,10 +10,8 @@
 
         websocket.onopen = function() {
             websocket.send(JSON.stringify({'user': '{{user}}'}));
-            console.log(JSON.stringify({'user':'{{user}}'}));
         };
         websocket.onmessage = function(evt) {
-            console.log(evt.data);
             message = JSON.parse(evt.data);
             if(message.analysis == '{{aid}}') {
                 if(message.msg == 'allcomplete') { 
