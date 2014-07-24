@@ -7,7 +7,7 @@
 {% from future.utils import viewitems %}
 {% from qiita_db.data import ProcessedData%}
 {% from qiita_db.study import Study%}
-<h1>Search Studies</h1>
+<h1>Search</h1>
  <form role="form" action="/analysis/search/studies/" id="results-form" method="post">
  <input type="hidden" name="action" id="action" value="">
 <input type="hidden" name="analysis-id" value="{{aid}}">
@@ -16,12 +16,12 @@
 <p><a href="#" data-toggle="modal" data-target="#searchexample">Search examples</a> | <a href="#" data-toggle="modal" data-target="#availmeta">Metadata headers</a></p>
 </button>
 
-<h1>Studies</h1>
-<big>   Select studies to analyze</big>
+<h1>Samples</h1>
+<big>   Select samples to analyze</big>
 <div id="availstudies">  <!-- Search results -->
 <big>   <b>Search for metadata information to begin</b></big>
 </div>
-<big>    Selected Studies</big>
+<big>    Selected Samples</big>
 <div id="selected"> <!-- Selected samples -->
   <table class="table table-hover">
   {% for sid, proc_ids in viewitems(selproc_data) %}
