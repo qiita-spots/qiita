@@ -205,7 +205,7 @@ class SelectCommandsHandler(BaseHandler):
     """Select commands to be executed"""
     @authenticated
     def post(self):
-        analysis_id = self.get_argument('analysis-id')
+        analysis_id = int(self.get_argument('analysis-id'))
         study_args = self.get_arguments('studies')
         split = [x.split("#") for x in study_args]
 
