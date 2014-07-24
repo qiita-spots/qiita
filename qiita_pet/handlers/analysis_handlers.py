@@ -116,7 +116,8 @@ class SelectStudiesHandler(StudiesHandler):
         selproc_data, selsamples = self._selected_parser(analysis)
 
         self.render('select_studies.html', user=user, aid=analysis.id,
-                    selsamples=selsamples, selproc_data=selproc_data)
+                    selsamples=selsamples, selproc_data=selproc_data,
+                    availmeta=SampleTemplate.metadata_headers())
 
     @authenticated
     def post(self):
@@ -128,7 +129,8 @@ class SelectStudiesHandler(StudiesHandler):
         selsamples = {}
         selproc_data = {}
         self.render('select_studies.html', user=user, aid=analysis.id,
-                    selsamples=selsamples, selproc_data=selproc_data)
+                    selsamples=selsamples, selproc_data=selproc_data,
+                    availmeta=SampleTemplate.metadata_headers())
 
 
 class SearchStudiesHandler(StudiesHandler):
@@ -198,7 +200,8 @@ class SearchStudiesHandler(StudiesHandler):
         self.render('search_studies.html', user=user, aid=aid, results=results,
                     meta_headers=meta_headers, selsamples=selsamples,
                     selproc_data=selproc_data, counts=counts,
-                    fullcounts=fullcounts, searchmsg=searchmsg)
+                    fullcounts=fullcounts, searchmsg=searchmsg,
+                    availmeta=SampleTemplate.metadata_headers())
 
 
 class SelectCommandsHandler(BaseHandler):

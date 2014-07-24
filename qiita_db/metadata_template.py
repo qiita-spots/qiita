@@ -925,6 +925,21 @@ class SampleTemplate(MetadataTemplate):
     _id_column = "study_id"
     _sample_cls = Sample
 
+    @staticmethod
+    def metadata_headers():
+        """ Returns metadata headers available
+
+        Returns
+        -------
+        list
+            Alphabetical list of all metadata headers available
+        """
+        conn_handler = SQLConnectionHandler()
+        return [x[0] for x in
+                conn_handler.execute_fetchall(
+                "SELECT DISTINCT column_name FROM qiita.study_sample_columns "
+                "ORDER BY column_name")]
+
 
 class PrepTemplate(MetadataTemplate):
     r"""Represent the PrepTemplate of a raw dat. Provides access to the

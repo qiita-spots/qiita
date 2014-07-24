@@ -16,3 +16,16 @@
     </div>
   </div>
 </div>
+
+<div class="modal fade seaerch-example-modal" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true" id="availmeta">
+  <div class="modal-dialog modal-sm">
+    <div class="modal-content">
+      <div class="modal-header"><h2>Available metadata<h2></div>
+      <div class="modal-body">
+        {% for meta in availmeta %}
+          {{meta}}<br />
+        {% end %}
+      </div>
+    </div>
+  </div>
+</div>
