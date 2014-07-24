@@ -1,8 +1,9 @@
 {%extends sitebase.html%}
 {%block head%}
-{%block head%}
 <script src="/static/js/analysis.js"></script>
-{%end%}
+<script type="text/javascript">
+
+</script>
 {%end%}
 
 {%block content%}
@@ -10,6 +11,7 @@
 {% from qiita_db.study import Study %}
 {% from qiita_db.data import ProcessedData %}
 {% from qiita_pet.util import clean_str %}
+<div id="availstudies" style="position: fixed;width: 100%;overflow : auto;">  <!-- Search results -->
 <h1>Search</h1>
  <form role="form" action="/analysis/search/studies/" id="results-form" method="post">
  <input type="hidden" name="action" id="action" value="">
@@ -19,10 +21,10 @@
 <p><a href="#" data-toggle="modal" data-target="#searchexample">Search examples</a></p>
 <div id='searchmsg' style="color:red;">{{searchmsg}}</div>
 
-<h1>Studies</h1> 
+
 {% if results %}
-  <big>   Overall counts for selected samples</big>
-   <table class='table'>
+  <big>   Overall counts for current search</big>
+   <table class='table' style="width:50%">
     <tr><th>Metadata</th><th>Count</th><th></th></tr>
     {% for meta_cat, sub_cats in viewitems(fullcounts) %}
       <tr><td><strong>{{meta_cat}}</strong></td><td></td><td></td></tr>
@@ -32,9 +34,7 @@
       {% end %}
     {% end %}
   </table>
-  <big>   Select studies to analyze</big>
-  <div id="availstudies">  <!-- Search results -->
-    <table class='table table-hover'>
+    <table class='table table-hover' style="width:100%">
       <tr><th>Data Types</th><th>Name</th><th>Description</th><th>Status</th></tr>
       {% for sid, samples in viewitems(results) %}
         {% set study = Study(sid) %}
@@ -46,49 +46,68 @@
             <option value="{{proc_data}}">{{proc_data}}</option>
           {% end %}
           </select>{{data_type}}<br />
-          </td><td style='vertical-align:middle;'><a href="#" id="toggle{{sid}}" onclick="toggle_row('{{sid}}', false); return false;">(+)</a> {{study.title}}</td>
+          </td><td style='vertical-align:middle;'><a href="#" data-toggle="modal" data-target="#modal{{sid}}">{{study.title}}</a></td>
           <td style='vertical-align:middle;'>
           {{study.info["study_description"]}}</td>
           <td style='vertical-align:middle;'>{{study.status}}</td></tr>
         {% end %}
-        <tr id='row{{sid}}' style="display:none;"><td colspan=4><h3>Statistics</h3>
-        <table class='table'>
-          <tr><th>Metadata</th><th>Count</th><th></th></tr>
-          {% for meta_cat, sub_cats in viewitems(counts[study.id]) %}
-            <tr><td><strong>{{meta_cat}}</strong></td><td></td><td></td></tr>
-            {% for sub_cat, count in viewitems(sub_cats) %}
-              <tr><td>{{sub_cat}}</td><td>{{count}}</td>
-              <td><a href='#' onclick="select_category('{{clean_str(sub_cat)}}', '{{sid}}'); return false;">Select category</a></td></tr>
-            {% end %}
-          {% end %}
-        </table>
-        <h3>Samples</h3>
-        <a href="#" onclick="select_deselect({{sid}}, true); return false;">Select all</a> | <a href="#" onclick="select_deselect({{sid}}, false); return false;">Select none</a>
-        <table class='table table-hover'><td><th>Sample ID</th>
-        {% for meta in meta_headers %}
-          <th>{{meta}}</th>
-        {% end %}
-         </tr>
-        {% for sample in samples %}
-          <tr><td>
-          <input type='checkbox' name='{{sid}}'
-          value='{{sample[0]}}' class='{{sid}} {{ " ".join(clean_str(s) for s in sample[1:]) }}'>
-          </td><td>{{sample[0]}}</td>
-          {% for pos in range(len(meta_headers)) %}
-            <td>{{sample[pos+1]}}</td>
-          {% end %}
-        </tr>
-        {% end %}
-        </table>
-        <a href="#" id="toggle{{sid}}" onclick="toggle_row('{{sid}}',  false); return false;">Collapse</a>
       {% end %}
     </table>
   </div>
-  <p><input type="submit" class="btn btn-default" onclick="pre_submit('select')" value="Select studies"></p>
+  {% for sid, samples in viewitems(results) %}
+    <div class="modal fade" id='modal{{sid}}'>
+        <div class="modal-dialog modal-lg">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h4 class="modal-title">Select samples</h4>
+            </div>
+            <div class="modal-body">
+              <h3>Statistics</h3>
+              <table class='table' style="width:50%">
+                <tr><th>Metadata</th><th>Count</th><th></th></tr>
+                {% for meta_cat, sub_cats in viewitems(counts[study.id]) %}
+                  <tr><td><strong>{{meta_cat}}</strong></td><td></td><td></td></tr>
+                  {% for sub_cat, count in viewitems(sub_cats) %}
+                    <tr><td>{{sub_cat}}</td><td>{{count}}</td>
+                    <td><a href='#' onclick="select_category('{{clean_str(sub_cat)}}', '{{sid}}'); return false;">Select category</a></td></tr>
+                  {% end %}
+                {% end %}
+              </table>
+              <h3>Samples</h3>
+              <a href="#" onclick="select_deselect({{sid}}, true); return false;">Select all</a> | <a href="#" onclick="select_deselect({{sid}}, false); return false;">Select none</a>
+              <table class='table table-hover'><td><th>Sample ID</th>
+              {% for meta in meta_headers %}
+                <th>{{meta}}</th>
+              {% end %}
+               </tr>
+              {% for sample in samples %}
+                <tr><td>
+                <input type='checkbox' name='{{sid}}'
+                value='{{sample[0]}}' class='{{sid}} {{ " ".join(clean_str(s) for s in sample[1:]) }}'>
+                </td><td>{{sample[0]}}</td>
+                {% for pos in range(len(meta_headers)) %}
+                  <td>{{sample[pos+1]}}</td>
+                {% end %}
+              </tr>
+              {% end %}
+              </table>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+          </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+      </div><!-- /.modal -->
+  {% end %}
 {% end %}
 
+<div id="seperator" style="position:fixed;height:32px;width:100%;background:#ff2500;padding:5px;bottom:0px;"><input type="submit" class="btn btn-default btn-xs" onclick="pre_submit('select')" value="Select samples" style="vertical-align: middle;">
+<input type="submit" class="btn btn-default btn-xs" onclick="pre_submit('deselect')" value="Remove samples">
+<input type="submit" class="btn btn-default btn-xs" onclick="pre_submit('continue')" value="Continue"> <a href="#" onclick="displaySelected(); return false;" style="color:white;" id="shselected">Show selected samples</a>
+</div>
+
+<div id="selected" style="position:absolute;width: 100%;bottom: 0px; height:0px;overflow:auto;display:none;"> <!-- Selected samples -->
 <big>    Selected Studies</big>
-<div id="selected"> <!-- Selected samples -->
   <table class="table table-hover">
   {% for sid, proc_ids in viewitems(selproc_data) %}
     {% set study = Study(sid) %}
@@ -97,18 +116,30 @@
       {% set data_type = ProcessedData(proc).data_type() %}
       <input type='hidden' name='selstudies' value='{{sid}}'> <input type='checkbox' name='dt{{sid}}' value='{{proc}}'>{{data_type}} - {{proc}} <br />
       {% end %}
-    </td><td><a href="#" id="seltoggle{{sid}}" onclick="toggle_row('{{sid}}', true); return false;">(+)</a>{{study.title}}</td><td>{{study.info["study_description"]}}</td></tr>
-    <tr id='selrow{{sid}}' style="display:none;"><td colspan=3>
-    <p><a href="#" onclick="select_deselect('sel{{sid}}', true); return false;">Select all</a> | <a href="#" onclick="select_deselect('sel{{sid}}', false); return false;">Select none</a></p>
-    {% for samp in selsamples[sid] %}
-      <input type='checkbox' class='sel{{sid}}' name='sel{{sid}}' value='{{samp}}'> {{samp}}<br />
-     {% end %}
-    </td></tr>
-    {% end %}
+    </td><td><a href="#" data-toggle="modal" data-target="#selmodal{{sid}}">{{study.title}}</a></td><td>{{study.info["study_description"]}}</td></tr>
+  {%end%}
   </table>
 </div>
-<input type="submit" class="btn btn-default" onclick="pre_submit('deselect')" value="De-select">
-<input type="submit" class="btn btn-default" onclick="pre_submit('continue')" value="Continue">
 </form>
+{% for sid in selproc_data %}
+        <div class="modal fade" id='selmodal{{sid}}'>
+          <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h4 class="modal-title">Selected samples</h4>
+              </div>
+              <div class="modal-body">
+        <p><a href="#" onclick="select_deselect('sel{{sid}}', true); return false;">Select all</a> | <a href="#" onclick="select_deselect('sel{{sid}}', false); return false;">Select none</a></p>
+        {% for samp in selsamples[sid] %}
+          <input type='checkbox' class='sel{{sid}}' name='sel{{sid}}' value='{{samp}}'> {{samp}}<br />
+       {% end %}
+     </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+          </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+      </div><!-- /.modal -->
+  {% end %}
 {% include "search_studies_doc_modal.html" %}
 {%end%}
