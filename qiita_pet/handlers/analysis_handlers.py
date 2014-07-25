@@ -51,8 +51,7 @@ def check_analysis_access(user, analysis_id):
         raise RuntimeError("Analysis access denied to %s" % (analysis_id))
 
 
-class StudiesHandler(BaseHandler):
-    """Base class for helper functions on study selection"""
+class SearchStudiesHandler(BaseHandler):
     def _selected_parser(self, analysis):
         """builds dictionaries of selected samples from analysis object"""
         selsamples = defaultdict(list)
@@ -99,49 +98,40 @@ class StudiesHandler(BaseHandler):
             samples.extend(self.get_arguments("sel%s" % sid))
         return proc_data, samples
 
-
-class SelectStudiesHandler(StudiesHandler):
-    """Study selection"""
     @authenticated
     def get(self):
         user = self.get_current_user()
         analysis = Analysis(int(self.get_argument("aid")))
         # make sure user has access to the analysis
         userobj = User(user)
-        if analysis.id not in Analysis.get_public() + \
-                userobj.private_analyses + userobj.shared_analyses:
+        try:
+            check_analysis_access(userobj, analysis.id)
+        except RuntimeError:
             self.render("404.html", user=user)
             return
         # get the dictionaries of selected samples and data types
         selproc_data, selsamples = self._selected_parser(analysis)
 
-        self.render('select_studies.html', user=user, aid=analysis.id,
+        self.render('search_studies.html', user=user, aid=analysis.id,
                     selsamples=selsamples, selproc_data=selproc_data,
+                    counts={}, fullcounts={}, searchmsg="",
                     availmeta=SampleTemplate.metadata_headers())
 
     @authenticated
     def post(self):
-        name = self.get_argument('name')
-        description = self.get_argument('description')
         user = self.get_current_user()
-        analysis = Analysis.create(User(user), name, description)
-        # empty dicts bacecause analysis just created & nothing selected yet
-        selsamples = {}
-        selproc_data = {}
-        self.render('select_studies.html', user=user, aid=analysis.id,
-                    selsamples=selsamples, selproc_data=selproc_data,
-                    availmeta=SampleTemplate.metadata_headers())
-
-
-class SearchStudiesHandler(StudiesHandler):
-    @authenticated
-    def post(self):
-        user = self.get_current_user()
-        aid = int(self.get_argument("analysis-id"))
         action = self.get_argument("action")
-        # get the dictionary of selected samples by study
-        analysis = Analysis(aid)
-        selproc_data, selsamples = self._selected_parser(analysis)
+        if action == "create":
+            name = self.get_argument('name')
+            description = self.get_argument('description')
+            analysis = Analysis.create(User(user), name, description)
+            aid = analysis.id
+            selproc_data, selsamples = {}, {}
+        else:
+            aid = int(self.get_argument("analysis-id"))
+            # get the dictionary of selected samples by study
+            analysis = Analysis(aid)
+            selproc_data, selsamples = self._selected_parser(analysis)
 
         # run through action requested
         results = {}
