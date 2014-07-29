@@ -100,7 +100,7 @@ class SearchStudiesHandler(BaseHandler):
 
     @authenticated
     def get(self):
-        user = self.get_current_user()
+        user = self.current_user
         analysis = Analysis(int(self.get_argument("aid")))
         # make sure user has access to the analysis
         userobj = User(user)
@@ -119,7 +119,7 @@ class SearchStudiesHandler(BaseHandler):
 
     @authenticated
     def post(self):
-        user = self.get_current_user()
+        user = self.current_user
         action = self.get_argument("action")
         if action == "create":
             name = self.get_argument('name')
@@ -216,7 +216,7 @@ class SelectCommandsHandler(BaseHandler):
         # FIXME: Pull out from the database, see #111
         commands = Command.get_commands_by_datatype()
 
-        self.render('select_commands.html', user=self.get_current_user(),
+        self.render('select_commands.html', user=self.current_user,
                     commands=commands, data_types=data_types, aid=analysis_id)
 
         analysis = Analysis(analysis_id)
@@ -236,7 +236,7 @@ class SelectCommandsHandler(BaseHandler):
 class AnalysisWaitHandler(BaseHandler):
     @authenticated
     def get(self, analysis_id):
-        user = self.get_current_user()
+        user = self.current_user
         check_analysis_access(User(user), analysis_id)
 
         analysis = Analysis(analysis_id)
@@ -252,7 +252,7 @@ class AnalysisWaitHandler(BaseHandler):
     @authenticated
     @asynchronous
     def post(self, aid):
-        user = self.get_current_user()
+        user = self.current_user
         check_analysis_access(User(user), aid)
 
         command_args = self.get_arguments("commands")
@@ -281,7 +281,7 @@ class AnalysisWaitHandler(BaseHandler):
                                               "reference", "params_qiime.txt")
             Job.create(data_type, command, opts, analysis)
             commands.append("%s: %s" % (data_type, command))
-        user = self.get_current_user()
+        user = self.current_user
         self.render("analysis_waiting.html", user=user, aid=aid,
                     aname=analysis.name, commands=commands)
         # fire off analysis run here
@@ -292,7 +292,7 @@ class AnalysisWaitHandler(BaseHandler):
 class AnalysisResultsHandler(BaseHandler):
     @authenticated
     def get(self, aid):
-        user = self.get_current_user()
+        user = self.current_user
         check_analysis_access(User(user), aid)
 
         analysis = Analysis(aid)
@@ -302,7 +302,7 @@ class AnalysisResultsHandler(BaseHandler):
             jobres[jobject.datatype].append((jobject.command[0],
                                              jobject.results))
 
-        self.render("analysis_results.html", user=self.get_current_user(),
+        self.render("analysis_results.html", user=self.current_user,
                     jobres=jobres, aname=analysis.name,
                     basefolder=get_db_files_base_dir())
 
@@ -310,7 +310,7 @@ class AnalysisResultsHandler(BaseHandler):
 class ShowAnalysesHandler(BaseHandler):
     """Shows the user's analyses"""
     def get(self):
-        user_id = self.get_current_user()
+        user_id = self.current_user
         user = User(user_id)
 
         analyses = [Analysis(a) for a in
