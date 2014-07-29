@@ -114,7 +114,7 @@ class SearchStudiesHandler(BaseHandler):
 
         self.render('search_studies.html', user=user, aid=analysis.id,
                     selsamples=selsamples, selproc_data=selproc_data,
-                    counts={}, fullcounts={}, searchmsg="",
+                    counts={}, fullcounts={}, searchmsg="", results={},
                     availmeta=SampleTemplate.metadata_headers())
 
     @authenticated
@@ -149,7 +149,7 @@ class SearchStudiesHandler(BaseHandler):
                 searchmsg = "Malformed search query, please try again."
             fullcounts = {meta: defaultdict(int) for meta in meta_headers}
             # Add message if no results found
-            if not results:
+            if not results and not searchmsg:
                 searchmsg = "No results found."
             # remove already selected samples from returned results
             #  and set up stats counter
