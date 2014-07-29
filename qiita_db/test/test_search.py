@@ -74,7 +74,7 @@ class SearchTest(TestCase):
         st_sql, samp_sql, meta = \
             self.search._parse_study_search_string(
                 'host_subject_id includes "Chicken little"')
-        exp_st_sql = ""
+        exp_st_sql = "SELECT study_id FROM qiita.study_sample_columns"
         exp_samp_sql = ("SELECT r.sample_id,r.host_subject_id FROM "
                         "qiita.required_sample_info r JOIN qiita.sample_{0} s "
                         "ON s.sample_id = r.sample_id WHERE r.host_subject_id "
@@ -150,6 +150,14 @@ class SearchTest(TestCase):
             'BAD_NAME_THING = ENVO:soil', "test@foo.bar")
         self.assertEqual(obs_res, {})
         self.assertEqual(obs_meta, ["BAD_NAME_THING"])
+
+    def test_call_no_results(self):
+        """makes sure a call on a required sample ID column that has no results
+        actually returns no results"""
+        obs_res, obs_meta = self.search('sample_type = unicorns_and_rainbows',
+                                        'test@foo.bar')
+        self.assertEqual(obs_res, {})
+        self.assertEqual(obs_meta, ['sample_type'])
 
 
 if __name__ == "__main__":

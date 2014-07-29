@@ -196,8 +196,10 @@ class QiitaStudySearch(object):
         results = {}
         # run search on each study to get out the matching samples
         for sid in study_ids:
-            results[sid] = conn_handler.execute_fetchall(
-                sample_sql.format(sid))
+            study_res = conn_handler.execute_fetchall(sample_sql.format(sid))
+            if study_res:
+                # only add study to results if actually has samples in results
+                results[sid] = study_res
         return results, meta_headers
 
     def _parse_study_search_string(self, searchstr):
@@ -262,10 +264,14 @@ class QiitaStudySearch(object):
         meta_headers = meta_headers.difference(self.required_cols)
         # get all study ids that contain all metadata categories searched for
         sql = []
-        for meta in meta_headers:
-            sql.append("SELECT study_id FROM qiita.study_sample_columns WHERE "
-                       "column_name = '%s'" %
-                       scrub_data(meta))
+        if meta_headers:
+            # have study-specific metadata, so need to find specific studies
+            for meta in meta_headers:
+                sql.append("SELECT study_id FROM qiita.study_sample_columns "
+                           "WHERE column_name = '%s'" % scrub_data(meta))
+        else:
+            # no study-specific metadata, so need all studies
+            sql.append("SELECT study_id FROM qiita.study_sample_columns")
         # combine the query
         study_sql = ' INTERSECT '.join(sql)
 
