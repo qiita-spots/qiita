@@ -1,9 +1,6 @@
 {%extends sitebase.html%}
 {%block head%}
 <script src="/static/js/analysis.js"></script>
-<script type="text/javascript">
-
-</script>
 {%end%}
 
 {%block content%}
@@ -11,8 +8,9 @@
 {% from qiita_db.study import Study %}
 {% from qiita_db.data import ProcessedData %}
 {% from qiita_pet.util import clean_str %}
-{% module Template("search_studies_doc_modal.html", availmeta=availmeta) %}
- <form role="form" action="/analysis/2" id="results-form" method="post">
+<form role="form" action="/analysis/2" id="results-form" method="post">
+<input type="hidden" name="action" id="action" value="">
+<input type="hidden" name="analysis-id" value="{{aid}}">
 <!-- Build the selected data modals -->
 {% for sid in selproc_data %}
         <div class="modal fade" id='selmodal{{sid}}'>
@@ -34,28 +32,60 @@
         </div><!-- /.modal-dialog -->
       </div><!-- /.modal -->
   {% end %}
-<div id="availstudies" style="position: fixed;width: 100%;overflow : auto;">  <!-- Search results -->
-<h1>Search</h1>
- <input type="hidden" name="action" id="action" value="">
-<input type="hidden" name="analysis-id" value="{{aid}}">
+<div class="row">
+<div id="selected" class="col-lg-3" style="border-right:1px solid black;height:100%;">
+<!-- Selected samples -->
+<big>Selected Samples</big>
+  <table class="table table-hover">
+  <tr><th>Datatypes</th><th>Title</th></tr>
+  {% for sid, proc_ids in viewitems(selproc_data) %}
+    {% set study = Study(sid) %}
+    <tr><td>
+    {% for proc in proc_ids %}
+      {% set data_type = ProcessedData(proc).data_type() %}
+      <input type='hidden' name='selstudies' value='{{sid}}'> <input type='checkbox' name='dt{{sid}}' value='{{proc}}'>{{data_type}} - {{proc}} <br />
+      {% end %}
+    </td><td><a href="#" data-toggle="modal" data-target="#selmodal{{sid}}">{{study.title}}</a></td></tr>
+  {%end%}
+  </table>
+</div>
 
+<div class="col-lg-9">
+<div id="availstudies" style="overflow : auto;">  <!-- Search results -->
+<h1>Search</h1>
 <p><input type="text" name="query" id="query" style="width:80%;white-space:nowrap;"><input type="submit" class="btn btn-default" onclick="pre_submit('search')" value="Search"></p>
 <p><a href="#" data-toggle="modal" data-target="#searchexample">Search examples</a> | <a href="#" data-toggle="modal" data-target="#availmeta">Metadata headers</a></p>
 <div id='searchmsg' style="color:red;">{{searchmsg}}</div>
 
 
 {% if results %}
-  <big>   Overall counts for current search</big>
-   <table class='table' style="width:50%">
-    <tr><th>Metadata</th><th>Count</th><th></th></tr>
-    {% for meta_cat, sub_cats in viewitems(fullcounts) %}
-      <tr><td><strong>{{meta_cat}}</strong></td><td></td><td></td></tr>
-      {% for sub_cat, count in viewitems(sub_cats) %}
-        <tr><td>{{sub_cat}}</td><td>{{count}}</td>
-        <td><a href='#' onclick="select_category('{{clean_str(sub_cat)}}', ''); return false;">Select category</a></td></tr>
-      {% end %}
-    {% end %}
-  </table>
+  <big>   Overall available samples for current search</big>
+  <div class="panel-group" id="accordion" style="width:50%">
+  {% set divcount = 1 %}
+  {% for meta_cat, sub_cats in viewitems(fullcounts) %}
+  <div class="panel panel-default">
+    <div class="panel-heading">
+      <h4 class="panel-title">
+        <a data-toggle="collapse" data-parent="#accordion" href="#collapse{{divcount}}">
+          {{meta_cat}}
+        </a>
+      </h4>
+    </div>
+    <div id="collapse{{divcount}}" class="panel-collapse collapse">
+      <div class="panel-body">
+        <table class="table"><tr><th>Value</th><th>Samples</th><th></th></tr>
+        {% for sub_cat, count in viewitems(sub_cats) %}
+          <tr><td>{{sub_cat}}</td><td>{{count}}</td>
+          <td><a href='#' onclick="select_category('{{clean_str(sub_cat)}}', ''); return false;">Select category</a></td></tr>
+        {% end %}
+        </table>
+      </div>
+    </div>
+  </div>
+  {% set divcount += 1 %}
+  {% end %}
+</div>
+
     <table class='table table-hover' style="width:100%">
       <tr><th>Data Types</th><th>Name</th><th>Description</th><th>Status</th></tr>
       {% for sid, samples in viewitems(results) %}
@@ -85,16 +115,31 @@
             </div>
             <div class="modal-body">
               <h3>Statistics</h3>
-              <table class='table' style="width:50%">
-                <tr><th>Metadata</th><th>Count</th><th></th></tr>
+              <div class="panel-group" id="accordion" style="width:80%">
+                {% set divcount = 1 %}
                 {% for meta_cat, sub_cats in viewitems(counts[study.id]) %}
-                  <tr><td><strong>{{meta_cat}}</strong></td><td></td><td></td></tr>
-                  {% for sub_cat, count in viewitems(sub_cats) %}
-                    <tr><td>{{sub_cat}}</td><td>{{count}}</td>
-                    <td><a href='#' onclick="select_category('{{clean_str(sub_cat)}}', '{{sid}}'); return false;">Select category</a></td></tr>
-                  {% end %}
+                <div class="panel panel-default">
+                  <div class="panel-heading">
+                    <h4 class="panel-title">
+                      <a data-toggle="collapse" data-parent="#accordion" href="#{{sid}}collapse{{divcount}}">
+                        {{meta_cat}}
+                      </a>
+                    </h4>
+                  </div>
+                  <div id="{{sid}}collapse{{divcount}}" class="panel-collapse collapse">
+                    <div class="panel-body">
+                      <table class="table"><tr><th>Value</th><th>Samples</th><th></th></tr>
+                      {% for sub_cat, count in viewitems(sub_cats) %}
+                        <tr><td>{{sub_cat}}</td><td>{{count}}</td>
+                        <td><a href='#' onclick="select_category('{{clean_str(sub_cat)}}', ''); return false;">Select category</a></td></tr>
+                      {% end %}
+                      </table>
+                    </div>
+                  </div>
+                </div>
+                {% set divcount += 1 %}
                 {% end %}
-              </table>
+              </div>
               <h3>Samples</h3>
               <a href="#" onclick="select_deselect({{sid}}, true); return false;">Select all</a> | <a href="#" onclick="select_deselect({{sid}}, false); return false;">Select none</a>
               <table class='table table-hover'><td><th>Sample ID</th>
@@ -122,25 +167,41 @@
       </div><!-- /.modal -->
   {% end %}
 {% end %}
-
-<div id="seperator" style="position:fixed;height:32px;width:100%;background:#ff2500;padding:5px;bottom:0px;"><input type="submit" class="btn btn-default btn-xs" onclick="pre_submit('select')" value="Select samples" style="vertical-align: middle;">
-<input type="submit" class="btn btn-default btn-xs" onclick="pre_submit('deselect')" value="Remove samples">
-<input type="submit" class="btn btn-default btn-xs" onclick="pre_submit('continue')" value="Continue"> <a href="#" onclick="displaySelected(); return false;" style="color:white;" id="shselected">Show selected samples</a>
-</div>
-
-<div id="selected" style="position:absolute;width: 100%;bottom: 0px; height:0px;overflow:auto;display:none;"> <!-- Selected samples -->
-<big>    Selected Samples</big>
-  <table class="table table-hover">
-  {% for sid, proc_ids in viewitems(selproc_data) %}
-    {% set study = Study(sid) %}
-    <tr><td>
-    {% for proc in proc_ids %}
-      {% set data_type = ProcessedData(proc).data_type() %}
-      <input type='hidden' name='selstudies' value='{{sid}}'> <input type='checkbox' name='dt{{sid}}' value='{{proc}}'>{{data_type}} - {{proc}} <br />
-      {% end %}
-    </td><td><a href="#" data-toggle="modal" data-target="#selmodal{{sid}}">{{study.title}}</a></td><td>{{study.info["study_description"]}}</td></tr>
-  {%end%}
-  </table>
+<div class="row">
+  <div id="seperator" style="position:fixed;height:32px;width:100%;background:#ff2500;padding:5px;bottom:0px;"><input type="submit" class="btn btn-default btn-xs" onclick="pre_submit('select')" value="Select samples" style="vertical-align: middle;">
+    <input type="submit" class="btn btn-default btn-xs" onclick="pre_submit('deselect')" value="Remove samples">
+    <input type="submit" class="btn btn-default btn-xs" onclick="pre_submit('continue')" value="Continue">
+  </div>
 </div>
 </form>
+<div class="modal fade seaerch-example-modal" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true" id="searchexample">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header"><h2>Search examples<h2></div>
+      <div class="modal-body">
+        <p>A basic search consists of three parts: The metadata category to search over, the operator to use, and the value to use in the search. For example, to retrieve all soil samples in the database, the query would be:</p>
+        <p><b>sample_type = ENVO:soil</b></p>
+        <p>Valid operators for searches are:</p>
+        <p><b>  <  =  <=  >=  includes</b></p>
+        <p>The mathematical operators work as expected. Includes is used to perform substring searches.</p>
+        <p>Complex queries can also be created by using AND, OR, and NOT operators. As an example, if we want all soil samples that are low or extremely high pH, we can use the following search:</p>
+        <p><b>sample_type = ENVO:soil AND (ph < 4 OR ph > 10)</b></p>
+        <p>You can search for multi-word phrases using quotes. For example, to search for any study with "chicken pox" in the title, the query would be:</p>
+        <p><b>title includes "chicken pox"</b></p>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal fade seaerch-example-modal" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true" id="availmeta">
+  <div class="modal-dialog modal-sm">
+    <div class="modal-content">
+      <div class="modal-header"><h2>Available metadata<h2></div>
+      <div class="modal-body">
+        {% for meta in availmeta %}
+          {{meta}}<br />
+        {% end %}
+      </div>
+    </div>
+  </div>
+</div>
 {%end%}
