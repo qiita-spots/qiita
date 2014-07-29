@@ -7,7 +7,7 @@ class BaseHandler(RequestHandler):
         user = self.get_secure_cookie("user")
         if user is None:
             self.clear_cookie("user")
-            return ''
+            return None
         else:
             return user.strip('" ')
 
@@ -25,22 +25,22 @@ class BaseHandler(RequestHandler):
 
             self.render('error.html', error=error, trace_info=trace_info,
                         request_info=request_info,
-                        user=self.get_current_user())
+                        user=self.current_user)
 
 
 class MainHandler(BaseHandler):
     '''Index page'''
     def get(self):
-        username = self.get_current_user()
+        username = self.current_user
         completedanalyses = []
         self.render("index.html", user=username, analyses=completedanalyses)
 
 
 class MockupHandler(BaseHandler):
     def get(self):
-        self.render("mockup.html", user=self.get_current_user())
+        self.render("mockup.html", user=self.current_user)
 
 
 class NoPageHandler(BaseHandler):
     def get(self):
-        self.render("404.html", user=self.get_current_user())
+        self.render("404.html", user=self.current_user)
