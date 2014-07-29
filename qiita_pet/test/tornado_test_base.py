@@ -40,6 +40,8 @@ class TestHandlerBase(AsyncHTTPTestCase):
         super(TestHandlerBase, self).setUp()
 
     def tearDown(self):
+        if self.database:
+            del self.conn_handler
         self.mox.UnsetStubs()
         self.mox.ResetAll()
 
