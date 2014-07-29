@@ -1,6 +1,19 @@
 {%extends sitebase.html%}
 {%block head%}
+<link rel="stylesheet" href="/static/vendor/css/chosen.css" type="text/css">
+<script src="/static/vendor/js/chosen.jquery.min.js"></script>
 <script src="/static/js/analysis.js"></script>
+<script type="text/javascript">
+$( document ).ready(function() {
+  var studydts = $('[name="availstudies"]');
+  for(i=0;i<studydts.length;i++) {
+    var id = studydts[i].id;
+    $('[name="' + id + '"]').chosen().change(function() {
+      document.getElementById(id).disabled = false;
+    })
+  }
+});
+</script>
 {%end%}
 
 {%block content%}
@@ -32,8 +45,14 @@
         </div><!-- /.modal-dialog -->
       </div><!-- /.modal -->
   {% end %}
+  <div class="row">
+  <div id="seperator" style="position:fixed;height:32px;width:100%;padding:5px;bottom:0px;"><input type="submit" class="btn btn-default btn-xs" onclick="pre_submit('select')" value="Select samples" style="vertical-align: middle;">
+    <input type="submit" class="btn btn-default btn-xs" onclick="pre_submit('deselect')" value="Remove samples">
+    <input type="submit" class="btn btn-default btn-xs" onclick="pre_submit('continue')" value="Continue">
+  </div>
+</div>
 <div class="row">
-<div id="selected" class="col-lg-3" style="border-right:1px solid black;height:100%;">
+<div id="selected" class="col-sm-3" style="border-right:1px solid black;height:100%;">
 <!-- Selected samples -->
 <big>Selected Samples</big>
   <table class="table table-hover">
@@ -50,7 +69,7 @@
   </table>
 </div>
 
-<div class="col-lg-9">
+<div class="col-sm-9">
 <div id="availstudies" style="overflow : auto;">  <!-- Search results -->
 <h1>Search</h1>
 <p><input type="text" name="query" id="query" style="width:80%;white-space:nowrap;"><input type="submit" class="btn btn-default" onclick="pre_submit('search')" value="Search"></p>
@@ -93,7 +112,7 @@
         <tr id="study{{sid}}"><td>
         {% for data_type in study.data_types %}
           <input type='hidden' name='availstudies' id='{{sid}}#{{data_type}}' value='{{sid}}#{{data_type}}' disabled=true>
-          <select name='{{sid}}#{{data_type}}' multiple=true onchange="enable_study_datatype('{{sid}}#{{data_type}}')" onclick="enable_study_datatype('{{sid}}#{{data_type}}')">
+          <select name='{{sid}}#{{data_type}}' data-placeholder="Choose data..." style="width:100px;" multiple class="chosen-select" tabindex="2">
           {% for proc_data in study.processed_data(data_type=data_type) %}
             <option value="{{proc_data}}">{{proc_data}}</option>
           {% end %}
@@ -115,13 +134,13 @@
             </div>
             <div class="modal-body">
               <h3>Statistics</h3>
-              <div class="panel-group" id="accordion" style="width:80%">
+              <div class="panel-group" id="accordion-sample" style="width:80%">
                 {% set divcount = 1 %}
                 {% for meta_cat, sub_cats in viewitems(counts[study.id]) %}
                 <div class="panel panel-default">
                   <div class="panel-heading">
                     <h4 class="panel-title">
-                      <a data-toggle="collapse" data-parent="#accordion" href="#{{sid}}collapse{{divcount}}">
+                      <a data-toggle="collapse" data-parent="#accordion-sample" href="#{{sid}}collapse{{divcount}}">
                         {{meta_cat}}
                       </a>
                     </h4>
@@ -167,12 +186,6 @@
       </div><!-- /.modal -->
   {% end %}
 {% end %}
-<div class="row">
-  <div id="seperator" style="position:fixed;height:32px;width:100%;background:#ff2500;padding:5px;bottom:0px;"><input type="submit" class="btn btn-default btn-xs" onclick="pre_submit('select')" value="Select samples" style="vertical-align: middle;">
-    <input type="submit" class="btn btn-default btn-xs" onclick="pre_submit('deselect')" value="Remove samples">
-    <input type="submit" class="btn btn-default btn-xs" onclick="pre_submit('continue')" value="Continue">
-  </div>
-</div>
 </form>
 <div class="modal fade seaerch-example-modal" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true" id="searchexample">
   <div class="modal-dialog modal-lg">
