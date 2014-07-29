@@ -18,7 +18,7 @@ class AuthCreateHandler(BaseHandler):
         # Tornado can raise an Exception directly, not a defined type
         except:
             error_message = ""
-        self.render("create_user.html", user=self.get_current_user(),
+        self.render("create_user.html", user=self.current_user,
                     error=error_message)
 
     def post(self):
