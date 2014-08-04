@@ -17,8 +17,6 @@ class TestHandlerBase(AsyncHTTPTestCase):
     database = False
 
     def get_app(self):
-        # This only works for one call of get_current_user done by auth
-        # decorator. Any subsequent will fail.
         BaseHandler.get_current_user = Mock(return_value="test@foo.bar")
         self.app = Application()
         return self.app

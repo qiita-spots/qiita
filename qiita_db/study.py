@@ -453,7 +453,7 @@ class Study(QiitaStatusObject):
         """
         spec_data = ""
         if data_type:
-            spec_data = " AND data_type_id = %i" % convert_to_id(data_type,
+            spec_data = " AND data_type_id = %d" % convert_to_id(data_type,
                                                                  "data_type")
         conn_handler = SQLConnectionHandler()
         sql = ("SELECT raw_data_id FROM qiita.study_raw_data WHERE "
@@ -474,7 +474,7 @@ class Study(QiitaStatusObject):
         """
         spec_data = ""
         if data_type:
-            spec_data = " AND data_type_id = %i" % convert_to_id(data_type,
+            spec_data = " AND data_type_id = %d" % convert_to_id(data_type,
                                                                  "data_type")
         conn_handler = SQLConnectionHandler()
         sql = ("SELECT preprocessed_data_id FROM qiita.study_preprocessed_data"
@@ -495,7 +495,7 @@ class Study(QiitaStatusObject):
         """
         spec_data = ""
         if data_type:
-            spec_data = " AND p.data_type_id = %i" % convert_to_id(data_type,
+            spec_data = " AND p.data_type_id = %d" % convert_to_id(data_type,
                                                                    "data_type")
         conn_handler = SQLConnectionHandler()
         sql = ("SELECT p.processed_data_id FROM qiita.processed_data p JOIN "

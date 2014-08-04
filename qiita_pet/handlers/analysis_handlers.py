@@ -14,9 +14,10 @@ from future.utils import viewitems
 from tempfile import mkstemp
 from os import close
 from os.path import join
+from itertools import product
 
 from tornado.web import authenticated, asynchronous, HTTPError
-from collections import defaultdict
+from collections import defaultdict, Counter
 from pyparsing import ParseException
 
 from qiita_pet.handlers.base_handlers import BaseHandler
@@ -52,9 +53,33 @@ def check_analysis_access(user, analysis_id):
 
 
 class SearchStudiesHandler(BaseHandler):
+    def _parse_search_results(self, results, selsamples, meta_headers):
+        """remove already selected samples from results and count metadata"""
+        counts = {}
+        fullcounts = {meta: defaultdict(int) for meta in meta_headers}
+        for study, samples in viewitems(results):
+            counts[study] = {meta: Counter()
+                             for meta in meta_headers}
+            topop = []
+            for pos, sample in enumerate(samples):
+                if sample[0] in selsamples[study]:
+                    topop.append(pos)
+                    # still add to full counts, but not study counts
+                    for pos, meta in enumerate(meta_headers):
+                        fullcounts[meta][sample[pos+1]] += 1
+                else:
+                    for pos, meta in enumerate(meta_headers):
+                        counts[study][meta][sample[pos+1]] += 1
+                        fullcounts[meta][sample[pos+1]] += 1
+            # remove already selected samples
+            topop.sort(reverse=True)
+            for pos in topop:
+                samples.pop(pos)
+        return results, counts, fullcounts
+
     def _selected_parser(self, analysis):
         """builds dictionaries of selected samples from analysis object"""
-        selsamples = defaultdict(list)
+        selsamples = {}
         selproc_data = defaultdict(list)
         for proc_data_id, samps in viewitems(analysis.samples):
             study = ProcessedData(proc_data_id).study
@@ -66,18 +91,15 @@ class SearchStudiesHandler(BaseHandler):
         """parses selected checkboxes and yields the selected ones in
         format accepted by Analysis.add_samples()
         """
-        samples = {}
-        proc_data = defaultdict(list)
         # get the selected studies and datatypes for studies
         studyinfo = self.get_arguments("availstudies")
         for s in studyinfo:
             study_id, datatype = s.split("#")
             # get the processed data ids for the study
-            proc_data_ids = self.get_arguments(s)
             # get new selected samples for each study and yield with proc id
-            for proc_id in proc_data_ids:
-                for sample in self.get_arguments(study_id):
-                    yield (int(proc_id), sample)
+            for proc_samp_combo in product(self.get_arguments(s),
+                                           self.get_arguments(study_id)):
+                yield proc_samp_combo
 
     def _parse_form_deselect(self):
         """parses selected checkboxes and returns the selected ones in
@@ -116,6 +138,7 @@ class SearchStudiesHandler(BaseHandler):
     def post(self):
         user = self.current_user
         action = self.get_argument("action")
+        # get analysis and selected samples if exists, or create if necessary
         if action == "create":
             name = self.get_argument('name')
             description = self.get_argument('description')
@@ -125,51 +148,31 @@ class SearchStudiesHandler(BaseHandler):
             selsamples = {}
         else:
             aid = int(self.get_argument("analysis-id"))
-            # get the dictionary of selected samples by study
             analysis = Analysis(aid)
             selproc_data, selsamples = self._selected_parser(analysis)
 
-        # run through action requested
+        # set required template variables
         results = {}
         meta_headers = []
         counts = {}
         fullcounts = {}
         searchmsg = ""
+        # run through action requested
         if action == "search":
-            # run the search, catching if the query is malformed
             search = QiitaStudySearch()
             try:
                 results, meta_headers = search(str(self.get_argument("query")),
                                                user)
             except ParseException:
                 searchmsg = "Malformed search query, please try again."
-            fullcounts = {meta: defaultdict(int) for meta in meta_headers}
-            # Add message if no results found
+
             if not results and not searchmsg:
                 searchmsg = "No results found."
-            # remove already selected samples from returned results
-            #  and set up stats counter
-            for study, samples in viewitems(results):
-                # count all metadata in the samples for the study
-                counts[study] = {meta: defaultdict(int)
-                                 for meta in meta_headers}
-                topop = []
-                for pos, sample in enumerate(samples):
-                    if sample[0] in selsamples[study]:
-                        topop.append(pos)
-                        # still add to full counts, but not study counts
-                        for pos, meta in enumerate(meta_headers):
-                            fullcounts[meta][sample[pos+1]] += 1
-                    else:
-                        for pos, meta in enumerate(meta_headers):
-                            counts[study][meta][sample[pos+1]] += 1
-                            fullcounts[meta][sample[pos+1]] += 1
-                # remove already selected samples
-                topop.sort(reverse=True)
-                for pos in topop:
-                    samples.pop(pos)
+            else:
+                results, counts, fullcounts = self._parse_search_results(
+                    results, selsamples, meta_headers)
 
-        if action == "select":
+        elif action == "select":
             analysis.add_samples(self._parse_form_select())
 
             # rebuild the selected from database to reflect changes
