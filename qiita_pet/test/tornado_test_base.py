@@ -1,5 +1,8 @@
 from mock import Mock
-from urllib import urlencode
+try:
+    from urllib import urlencode
+except ImportError:  # py3
+    from urllib.parse import urlencode
 
 from tornado.testing import AsyncHTTPTestCase
 from tornado.web import Application

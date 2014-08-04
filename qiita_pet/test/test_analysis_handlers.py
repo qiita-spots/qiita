@@ -19,7 +19,6 @@ class TestAnalysisHandlersDB(TestHandlerBase):
         self.assertTrue("/analysis/2" in response.effective_url)
         # pull analysis_id out from page and instantiate to maeke sure exists
 
-
     def test_select_samples(self):
         newaid = Analysis.create(User("test@foo.bar"), "test1", "testdesc").id
         post_args = {
