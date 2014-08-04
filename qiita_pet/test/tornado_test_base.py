@@ -1,4 +1,4 @@
-import mox
+from mock import Mock
 from urllib import urlencode
 
 from tornado.testing import AsyncHTTPTestCase
@@ -14,16 +14,13 @@ class TestHandlerBase(AsyncHTTPTestCase):
     database = False
 
     def get_app(self):
-        self.mox.StubOutWithMock(BaseHandler, 'get_current_user',
-                                 use_mock_anything=True)
         # This only works for one call of get_current_user done by auth
         # decorator. Any subsequent will fail.
-        BaseHandler.get_current_user().AndReturn("test@foo.bar")
+        BaseHandler.get_current_user = Mock(return_value="test@foo.bar")
         self.app = Application()
         return self.app
 
     def setUp(self):
-        self.mox = mox.Mox()
         if self.database:
             self.conn_handler = SQLConnectionHandler()
             # Drop the schema
@@ -42,8 +39,6 @@ class TestHandlerBase(AsyncHTTPTestCase):
     def tearDown(self):
         if self.database:
             del self.conn_handler
-        self.mox.UnsetStubs()
-        self.mox.ResetAll()
 
     # helpers from http://www.peterbe.com/plog/tricks-asynchttpclient-tornado
     def get(self, url, data=None, headers=None):
