@@ -195,8 +195,15 @@ $( document ).ready(function() {
         <p>A basic search consists of three parts: The metadata category to search over, the operator to use, and the value to use in the search. For example, to retrieve all soil samples in the database, the query would be:</p>
         <p><b>sample_type = ENVO:soil</b></p>
         <p>Valid operators for searches are:</p>
-        <p><b>  <  =  <=  >=  includes</b></p>
-        <p>The mathematical operators work as expected. Includes is used to perform substring searches.</p>
+        <table class="table table-hover" style="width:60%">
+        <tr><th>Operator</th><th>Function</th></tr>
+        <tr><td><</td><td> Less than (for integer and float values)</td></tr>
+        <tr><td>></td><td> Greater than (for integer and float values)</td></tr>
+        <tr><td><=</td><td> Less than or equal (for integer and float values)</td></tr>
+        <tr><td>>=</td><td> Greater than or equal (for integer and float values)</td></tr>
+        <tr><td>=</td><td> Equals (matches exact number or string)</td></tr>
+        <tr><td>includes</td><td>Partial string matching</td></tr>
+        </table>
         <p>Complex queries can also be created by using AND, OR, and NOT operators. As an example, if we want all soil samples that are low or extremely high pH, we can use the following search:</p>
         <p><b>sample_type = ENVO:soil AND (ph < 4 OR ph > 10)</b></p>
         <p>You can search for multi-word phrases using quotes. For example, to search for any study with "chicken pox" in the title, the query would be:</p>
