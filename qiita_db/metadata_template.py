@@ -927,7 +927,7 @@ class SampleTemplate(MetadataTemplate):
 
     @staticmethod
     def metadata_headers():
-        """ Returns metadata headers available
+        """Returns metadata headers available
 
         Returns
         -------

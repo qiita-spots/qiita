@@ -6,7 +6,7 @@
 <script type="text/javascript">
 $( document ).ready(function() {
   var studydts = $('[name="availstudies"]');
-  for(i=0;i<studydts.length;i++) {
+  for(i = 0; i < studydts.length; i++) {
     var id = studydts[i].id;
     $('[name="' + id + '"]').chosen().change(function() {
       document.getElementById(id).disabled = false;

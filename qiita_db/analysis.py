@@ -336,17 +336,17 @@ class Analysis(QiitaStatusObject):
         Parameters
         ----------
         proc_data : list, optional
-            processed data ids to remove
+            processed data ids to remove, default None
         samples : list, optional
-            sample ids to remove
+            sample ids to remove, default None
 
         Notes
         -----
-        When removing samples, the samples will be removed from all processed
-        data ids it is associated with
+        When only a list of samples given, the samples will be removed from all
+        processed data ids it is associated with
 
-        When removing proc_data, all samples associated with that processed
-        data are removed
+        When only a list of proc_data given, all samples associated with that
+        processed data are removed
 
         If both are passed, the given samples are removed from the given
         processed data ids

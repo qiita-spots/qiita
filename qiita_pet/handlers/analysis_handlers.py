@@ -15,7 +15,7 @@ from tempfile import mkstemp
 from os import close
 from os.path import join
 
-from tornado.web import authenticated, asynchronous
+from tornado.web import authenticated, asynchronous, HTTPError
 from collections import defaultdict
 from pyparsing import ParseException
 
@@ -72,16 +72,11 @@ class SearchStudiesHandler(BaseHandler):
         studyinfo = self.get_arguments("availstudies")
         for s in studyinfo:
             study_id, datatype = s.split("#")
-            # get the processed data ids and add it to the study
+            # get the processed data ids for the study
             proc_data_ids = self.get_arguments(s)
-            if proc_data_ids is not None:
-                proc_data[study_id].extend(proc_data_ids)
-            # get new selected samples for each study and add to study
-            if study_id not in samples:
-                samples[study_id] = self.get_arguments(study_id)
-        for study_id, proc_data in viewitems(proc_data):
-            for proc_id in proc_data:
-                for sample in samples[study_id]:
+            # get new selected samples for each study and yield with proc id
+            for proc_id in proc_data_ids:
+                for sample in self.get_arguments(study_id):
                     yield (int(proc_id), sample)
 
     def _parse_form_deselect(self):
@@ -107,8 +102,8 @@ class SearchStudiesHandler(BaseHandler):
         try:
             check_analysis_access(userobj, analysis.id)
         except RuntimeError:
-            self.render("404.html", user=user)
-            return
+            # trying to access someone else's analysis, so throw 403 error
+            raise HTTPError(403)
         # get the dictionaries of selected samples and data types
         selproc_data, selsamples = self._selected_parser(analysis)
 
@@ -126,7 +121,8 @@ class SearchStudiesHandler(BaseHandler):
             description = self.get_argument('description')
             analysis = Analysis.create(User(user), name, description)
             aid = analysis.id
-            selproc_data, selsamples = {}, {}
+            selproc_data = {}
+            selsamples = {}
         else:
             aid = int(self.get_argument("analysis-id"))
             # get the dictionary of selected samples by study

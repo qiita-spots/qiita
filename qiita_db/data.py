@@ -582,7 +582,7 @@ class ProcessedData(BaseData):
         Returns
         -------
         int
-            The study id to which this processed data belongs to"""
+            The study id to which this processed data belongs"""
         conn_handler = SQLConnectionHandler()
         return conn_handler.execute_fetchone(
             "SELECT study_id FROM qiita.{0} WHERE "
