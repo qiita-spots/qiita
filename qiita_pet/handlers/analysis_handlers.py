@@ -139,19 +139,6 @@ class SearchStudiesHandler(BaseHandler):
     def post(self):
         user = self.current_user
         action = self.get_argument("action")
-        # get analysis and selected samples if exists, or create if necessary
-        if action == "create":
-            name = self.get_argument('name')
-            description = self.get_argument('description')
-            analysis = Analysis.create(User(user), name, description)
-            aid = analysis.id
-            selproc_data = {}
-            selsamples = {}
-        else:
-            aid = int(self.get_argument("analysis-id"))
-            analysis = Analysis(aid)
-            selproc_data, selsamples = self._selected_parser(analysis)
-
         # set required template variables
         results = {}
         meta_headers = []
@@ -159,6 +146,25 @@ class SearchStudiesHandler(BaseHandler):
         fullcounts = {}
         query = ""
         searchmsg = ""
+        selsamples = {}
+        selproc_data = {}
+        # get analysis and selected samples if exists, or create if necessary
+        if action == "create":
+            name = self.get_argument('name')
+            description = self.get_argument('description')
+            analysis = Analysis.create(User(user), name, description)
+            aid = analysis.id
+            # fill example studies by running query for specific studies
+            search = QiitaStudySearch()
+            def_query = 'study_id = 1'
+            results, meta_headers = search(def_query, user)
+            results, counts, fullcounts = self._parse_search_results(
+                results, selsamples, meta_headers)
+        else:
+            aid = int(self.get_argument("analysis-id"))
+            analysis = Analysis(aid)
+            selproc_data, selsamples = self._selected_parser(analysis)
+
         # run through action requested
         if action == "search":
             search = QiitaStudySearch()
