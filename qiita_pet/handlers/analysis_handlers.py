@@ -62,7 +62,7 @@ class SearchStudiesHandler(BaseHandler):
                              for meta in meta_headers}
             topop = []
             for pos, sample in enumerate(samples):
-                if sample[0] in selsamples[study]:
+                if study in selsamples and sample[0] in selsamples[study]:
                     topop.append(pos)
                     # still add to full counts, but not study counts
                     for pos, meta in enumerate(meta_headers):
