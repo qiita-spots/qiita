@@ -156,7 +156,7 @@ class SearchStudiesHandler(BaseHandler):
             aid = analysis.id
             # fill example studies by running query for specific studies
             search = QiitaStudySearch()
-            def_query = 'study_id = 1'
+            def_query = 'study_id = 1 OR study_id = 2 OR study_id = 3'
             results, meta_headers = search(def_query, user)
             results, counts, fullcounts = self._parse_search_results(
                 results, selsamples, meta_headers)
