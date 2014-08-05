@@ -231,7 +231,7 @@ class QiitaStudySearch(object):
         category = Word(alphas + nums + "_")
         seperator = oneOf("> < = >= <=") | CaselessLiteral("includes") | \
             CaselessLiteral("startswith")
-        value = Word(alphas + nums + "_" + ":") | \
+        value = Word(alphas + nums + "_" + ":" + ".") | \
             dblQuotedString().setParseAction(removeQuotes)
         criterion = Group(category + seperator + value)
         criterion.setParseAction(SearchTerm)
