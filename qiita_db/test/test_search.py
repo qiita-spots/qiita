@@ -24,9 +24,10 @@ class SearchTest(TestCase):
             self.search._parse_study_search_string("altitude > 0")
         exp_st_sql = ("SELECT study_id FROM qiita.study_sample_columns WHERE "
                       "column_name = 'altitude'")
-        exp_samp_sql = ("SELECT r.sample_id,s.altitude FROM "
-                        "qiita.required_sample_info r JOIN qiita.sample_{0} s "
-                        "ON s.sample_id = r.sample_id WHERE s.altitude > 0")
+        exp_samp_sql = ("SELECT r.sample_id,sa.altitude FROM "
+                        "qiita.required_sample_info r JOIN qiita.sample_{0} sa"
+                        " ON sa.sample_id = r.sample_id JOIN qiita.study st ON"
+                        " st.study_id = r.study_id WHERE sa.altitude > 0")
         self.assertEqual(st_sql, exp_st_sql)
         self.assertEqual(samp_sql, exp_samp_sql)
         self.assertEqual(meta, ["altitude"])
@@ -36,10 +37,11 @@ class SearchTest(TestCase):
             self.search._parse_study_search_string("NOT altitude > 0")
         exp_st_sql = ("SELECT study_id FROM qiita.study_sample_columns WHERE "
                       "column_name = 'altitude'")
-        exp_samp_sql = ("SELECT r.sample_id,s.altitude FROM "
-                        "qiita.required_sample_info r JOIN qiita.sample_{0} s "
-                        "ON s.sample_id = r.sample_id WHERE NOT "
-                        "s.altitude > 0")
+        exp_samp_sql = ("SELECT r.sample_id,sa.altitude FROM "
+                        "qiita.required_sample_info r JOIN qiita.sample_{0} sa"
+                        " ON sa.sample_id = r.sample_id JOIN qiita.study st ON"
+                        " st.study_id = r.study_id WHERE NOT "
+                        "sa.altitude > 0")
         self.assertEqual(st_sql, exp_st_sql)
         self.assertEqual(samp_sql, exp_samp_sql)
         self.assertEqual(meta, ["altitude"])
@@ -49,10 +51,11 @@ class SearchTest(TestCase):
             self.search._parse_study_search_string("ph > 7 and ph < 9")
         exp_st_sql = ("SELECT study_id FROM qiita.study_sample_columns WHERE "
                       "column_name = 'ph'")
-        exp_samp_sql = ("SELECT r.sample_id,s.ph FROM "
-                        "qiita.required_sample_info r JOIN qiita.sample_{0} s "
-                        "ON s.sample_id = r.sample_id WHERE (s.ph > 7 AND "
-                        "s.ph < 9)")
+        exp_samp_sql = ("SELECT r.sample_id,sa.ph FROM "
+                        "qiita.required_sample_info r JOIN qiita.sample_{0} sa"
+                        " ON sa.sample_id = r.sample_id JOIN qiita.study st ON"
+                        " st.study_id = r.study_id WHERE (sa.ph > 7 AND "
+                        "sa.ph < 9)")
         self.assertEqual(st_sql, exp_st_sql)
         self.assertEqual(samp_sql, exp_samp_sql)
         self.assertEqual(meta, ["ph"])
@@ -62,10 +65,11 @@ class SearchTest(TestCase):
             self.search._parse_study_search_string("ph > 7 or ph < 9")
         exp_st_sql = ("SELECT study_id FROM qiita.study_sample_columns WHERE "
                       "column_name = 'ph'")
-        exp_samp_sql = ("SELECT r.sample_id,s.ph FROM "
-                        "qiita.required_sample_info r JOIN qiita.sample_{0} s "
-                        "ON s.sample_id = r.sample_id WHERE (s.ph > 7 OR "
-                        "s.ph < 9)")
+        exp_samp_sql = ("SELECT r.sample_id,sa.ph FROM "
+                        "qiita.required_sample_info r JOIN qiita.sample_{0} sa"
+                        " ON sa.sample_id = r.sample_id JOIN qiita.study st ON"
+                        " st.study_id = r.study_id WHERE (sa.ph > 7 OR "
+                        "sa.ph < 9)")
         self.assertEqual(st_sql, exp_st_sql)
         self.assertEqual(samp_sql, exp_samp_sql)
         self.assertEqual(meta, ["ph"])
@@ -76,9 +80,10 @@ class SearchTest(TestCase):
                 'host_subject_id includes "Chicken little"')
         exp_st_sql = "SELECT study_id FROM qiita.study_sample_columns"
         exp_samp_sql = ("SELECT r.sample_id,r.host_subject_id FROM "
-                        "qiita.required_sample_info r JOIN qiita.sample_{0} s "
-                        "ON s.sample_id = r.sample_id WHERE r.host_subject_id "
-                        "LIKE '%Chicken little%'")
+                        "qiita.required_sample_info r JOIN qiita.sample_{0} sa"
+                        " ON sa.sample_id = r.sample_id JOIN qiita.study st ON"
+                        " st.study_id = r.study_id WHERE "
+                        "r.host_subject_id LIKE '%Chicken little%'")
         self.assertEqual(st_sql, exp_st_sql)
         self.assertEqual(samp_sql, exp_samp_sql)
         self.assertEqual(meta, ["host_subject_id"])
@@ -92,10 +97,11 @@ class SearchTest(TestCase):
             "SELECT study_id FROM qiita.study_sample_columns WHERE "
             "column_name = 'name'")
         exp_samp_sql = (
-            "SELECT r.sample_id,s.name FROM qiita.required_sample_info r JOIN "
-            "qiita.sample_{0} s ON s.sample_id = r.sample_id WHERE (s.name = "
-            "'Billy Bob' OR s.name = 'Timmy' OR (s.name = 'Jimbo' AND "
-            "s.name > 25) OR s.name < 5)")
+            "SELECT r.sample_id,sa.name FROM qiita.required_sample_info r JOIN"
+            " qiita.sample_{0} sa ON sa.sample_id = r.sample_id JOIN "
+            "qiita.study st ON st.study_id = r.study_id WHERE (sa.name = "
+            "'Billy Bob' OR sa.name = 'Timmy' OR (sa.name = 'Jimbo' AND "
+            "sa.name > 25) OR sa.name < 5)")
         self.assertEqual(st_sql, exp_st_sql)
         self.assertEqual(samp_sql, exp_samp_sql)
         self.assertEqual(meta, ['name'])
@@ -109,10 +115,11 @@ class SearchTest(TestCase):
         exp_st_sql = ["SELECT study_id FROM qiita.study_sample_columns WHERE "
                       "column_name = 'pH'", "SELECT study_id FROM "
                       "qiita.study_sample_columns WHERE column_name = 'ph'"]
-        exp_samp_sql = ("SELECT r.sample_id,s.pH,s.ph FROM "
-                        "qiita.required_sample_info r JOIN qiita.sample_{0} s "
-                        "ON s.sample_id = r.sample_id WHERE (s.ph > 7 OR "
-                        "s.ph < 9)")
+        exp_samp_sql = ("SELECT r.sample_id,sa.pH,sa.ph FROM "
+                        "qiita.required_sample_info r JOIN qiita.sample_{0} sa"
+                        " ON sa.sample_id = r.sample_id JOIN qiita.study st ON"
+                        " st.study_id = r.study_id WHERE (sa.ph > 7 OR "
+                        "sa.ph < 9)")
         # use the split list to make sure the SQL is properly formed
         self.assertEqual(len(st_sql), 2)
         pos = exp_st_sql.index(st_sql[0])
