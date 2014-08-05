@@ -228,7 +228,7 @@ class QiitaStudySearch(object):
         """
         # build the parse grammar
         category = Word(alphas + nums + "_")
-        seperator = oneOf("> < = >= <=") | CaselessLiteral("includes") | \
+        seperator = oneOf("> < = >= <= !=") | CaselessLiteral("includes") | \
             CaselessLiteral("startswith")
         value = Word(alphas + nums + "_" + ":" + ".") | \
             dblQuotedString().setParseAction(removeQuotes)
