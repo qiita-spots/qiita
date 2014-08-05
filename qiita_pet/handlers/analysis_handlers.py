@@ -28,7 +28,7 @@ from qiita_db.study import Study
 from qiita_db.data import ProcessedData
 from qiita_db.metadata_template import SampleTemplate
 from qiita_db.job import Job, Command
-from qiita_db.util import get_db_files_base_dir
+from qiita_db.util import get_db_files_base_dir, get_table_cols
 from qiita_db.search import QiitaStudySearch
 
 
@@ -132,7 +132,8 @@ class SearchStudiesHandler(BaseHandler):
         self.render('search_studies.html', user=user, aid=analysis.id,
                     selsamples=selsamples, selproc_data=selproc_data,
                     counts={}, fullcounts={}, searchmsg="", query="",
-                    results={}, availmeta=SampleTemplate.metadata_headers())
+                    results={}, availmeta=SampleTemplate.metadata_headers() +
+                    get_table_cols("study"))
 
     @authenticated
     def post(self):
@@ -165,7 +166,7 @@ class SearchStudiesHandler(BaseHandler):
             try:
                 results, meta_headers = search(query, user)
             except ParseException:
-                searchmsg = "Malformed search query, please try again."
+                searchmsg = "Malformed search query, please read search help."
 
             if not results and not searchmsg:
                 searchmsg = "No results found."
@@ -191,7 +192,8 @@ class SearchStudiesHandler(BaseHandler):
                     meta_headers=meta_headers, selsamples=selsamples,
                     selproc_data=selproc_data, counts=counts,
                     fullcounts=fullcounts, searchmsg=searchmsg, query=query,
-                    availmeta=SampleTemplate.metadata_headers())
+                    availmeta=SampleTemplate.metadata_headers() +
+                    get_table_cols("study"))
 
 
 class SelectCommandsHandler(BaseHandler):

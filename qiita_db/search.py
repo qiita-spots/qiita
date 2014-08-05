@@ -112,24 +112,25 @@ class SearchNot(UnaryOperation):
 
 class SearchTerm(object):
     # column names from required_sample_info table
-    required_cols = None
+    required_cols = set(get_table_cols("required_sample_info"))
+    # column names from study table
+    study_cols = set(get_table_cols("study"))
 
     def __init__(self, tokens):
         self.term = tokens[0]
         # clean all the inputs
         for pos, term in enumerate(self.term):
             self.term[pos] = scrub_data(term)
-        # create set of columns if needed
-        if not self.required_cols:
-            self.required_cols = set(get_table_cols("required_sample_info"))
 
     def generate_sql(self):
         # we can assume that the metadata is either in required_sample_info
         # or the study-specific table
         if self.term[0] in self.required_cols:
             self.term[0] = "r.%s" % self.term[0].lower()
+        elif self.term[0] in self.study_cols:
+            self.term[0] = "st.%s" % self.term[0].lower()
         else:
-            self.term[0] = "s.%s" % self.term[0].lower()
+            self.term[0] = "sa.%s" % self.term[0].lower()
 
         if self.term[1] == "includes":
             # substring search, so create proper query for it
@@ -151,11 +152,9 @@ class QiitaStudySearch(object):
     """QiitaStudySearch object to parse and run searches on studies."""
 
     # column names from required_sample_info table
-    required_cols = None
-
-    def __init__(self):
-        if not self.required_cols:
-            self.required_cols = set(get_table_cols("required_sample_info"))
+    required_cols = set(get_table_cols("required_sample_info"))
+    # column names from study table
+    study_cols = set(get_table_cols("study"))
 
     def __call__(self, searchstr, user):
         """Runs a Study query and returns matching studies and samples
@@ -261,7 +260,8 @@ class QiitaStudySearch(object):
 
         # create the study finding SQL
         # remove metadata headers that are in required_sample_info table
-        meta_headers = meta_headers.difference(self.required_cols)
+        meta_headers = meta_headers.difference(self.required_cols).difference(
+            self.study_cols)
         # get all study ids that contain all metadata categories searched for
         sql = []
         if meta_headers:
@@ -281,11 +281,15 @@ class QiitaStudySearch(object):
         for meta in all_headers:
             if meta in self.required_cols:
                 header_info.append("r.%s" % meta)
+            elif meta in self.study_cols:
+                header_info.append("st.%s" % meta)
             else:
-                header_info.append("s.%s" % meta)
+                header_info.append("sa.%s" % meta)
         # build the SQL query
         sample_sql = ("SELECT r.sample_id,%s FROM qiita.required_sample_info "
-                      "r JOIN qiita.sample_{0} s ON s.sample_id = r.sample_id "
-                      "WHERE %s" % (','.join(header_info), sql_where))
+                      "r JOIN qiita.sample_{0} sa ON sa.sample_id = "
+                      "r.sample_id JOIN qiita.study st ON st.study_id = "
+                      "r.study_id WHERE %s" %
+                      (','.join(header_info), sql_where))
 
         return study_sql, sample_sql, all_headers
