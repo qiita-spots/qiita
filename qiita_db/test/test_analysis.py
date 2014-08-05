@@ -76,6 +76,10 @@ class TestAnalysis(TestCase):
                    'SKM9.640192', 'SKM4.640180']}
         self.assertEqual(self.analysis.samples, exp)
 
+    def test_retrieve_data_types(self):
+        exp = ['18S']
+        self.assertEqual(self.analysis.data_types, exp)
+
     def test_retrieve_shared_with(self):
         self.assertEqual(self.analysis.shared_with, ["shared@foo.bar"])
 

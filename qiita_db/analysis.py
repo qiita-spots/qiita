@@ -34,6 +34,7 @@ class Analysis(QiitaStatusObject):
     name
     description
     samples
+    data_types
     biom_tables
     shared_with
     jobs
@@ -186,6 +187,23 @@ class Analysis(QiitaStatusObject):
         for pid, sample in conn_handler.execute_fetchall(sql, (self._id, )):
             ret_samples[pid].append(sample)
         return ret_samples
+
+    @property
+    def data_types(self):
+        """Returns all data types used in the analysis
+
+        Returns
+        -------
+        list of str
+            Data types in the analysis
+        """
+        sql = ("SELECT DISTINCT data_type from qiita.data_type d JOIN "
+               "qiita.processed_data p ON p.data_type_id = d.data_type_id "
+               "WHERE p.processed_data_id IN (SELECT DISTINCT "
+               "a.processed_data_id FROM qiita.analysis_sample a WHERE "
+               "a.analysis_id = %s) ORDER BY data_type")
+        conn_handler = SQLConnectionHandler()
+        return [x[0] for x in conn_handler.execute_fetchall(sql, (self._id, ))]
 
     @property
     def shared_with(self):
