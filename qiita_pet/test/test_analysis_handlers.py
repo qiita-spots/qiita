@@ -98,7 +98,7 @@ class TestAnalysisHandlersNODB(TestHandlerBase):
         # Make sure page response loaded sucessfully
         self.assertEqual(response.code, 200)
         # make sure we have proper error message
-        self.assertTrue("Malformed search query, please try again."
+        self.assertTrue("Malformed search query, please read search help."
                         in str(response.body))
 
 
