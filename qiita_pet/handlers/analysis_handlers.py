@@ -308,6 +308,7 @@ class AnalysisResultsHandler(BaseHandler):
 
 class ShowAnalysesHandler(BaseHandler):
     """Shows the user's analyses"""
+    @authenticated
     def get(self):
         user_id = self.current_user
         user = User(user_id)

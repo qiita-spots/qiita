@@ -33,7 +33,7 @@ class TestAnalysisHandlersDB(TestHandlerBase):
         # Make sure page response loaded sucessfully
         self.assertEqual(response.code, 200)
         # make sure sample added
-        self.assertTrue("SKD5.640186" in response.body)
+        self.assertTrue("SKD5.640186" in str(response.body))
 
     def test_deselect_samples(self):
         post_args = {
@@ -48,7 +48,7 @@ class TestAnalysisHandlersDB(TestHandlerBase):
         # Make sure page response loaded sucessfully
         self.assertEqual(response.code, 200)
         # make sure sample removed
-        self.assertTrue("SKB8.640193" not in response.body)
+        self.assertTrue("SKB8.640193" not in str(response.body))
 
 
 class TestAnalysisHandlersNODB(TestHandlerBase):
@@ -58,7 +58,7 @@ class TestAnalysisHandlersNODB(TestHandlerBase):
         # Make sure page response loaded sucessfully
         self.assertEqual(response.code, 200)
         # make sure we have proper samples being pulled out
-        self.assertTrue("SKB8.640193" in response.body)
+        self.assertTrue("SKB8.640193" in str(response.body))
 
     def test_search_studies(self):
         post_args = {
@@ -85,7 +85,7 @@ class TestAnalysisHandlersNODB(TestHandlerBase):
         # Make sure page response loaded sucessfully
         self.assertEqual(response.code, 200)
         # make sure we have proper error message
-        self.assertTrue("No results found." in response.body)
+        self.assertTrue("No results found." in str(response.body))
 
     def test_malformed_search(self):
         post_args = {
@@ -99,7 +99,7 @@ class TestAnalysisHandlersNODB(TestHandlerBase):
         self.assertEqual(response.code, 200)
         # make sure we have proper error message
         self.assertTrue("Malformed search query, please try again."
-                        in response.body)
+                        in str(response.body))
 
 
 if __name__ == "__main__":
