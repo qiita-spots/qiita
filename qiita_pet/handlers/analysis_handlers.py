@@ -131,8 +131,8 @@ class SearchStudiesHandler(BaseHandler):
 
         self.render('search_studies.html', user=user, aid=analysis.id,
                     selsamples=selsamples, selproc_data=selproc_data,
-                    counts={}, fullcounts={}, searchmsg="", results={},
-                    availmeta=SampleTemplate.metadata_headers())
+                    counts={}, fullcounts={}, searchmsg="", query="",
+                    results={}, availmeta=SampleTemplate.metadata_headers())
 
     @authenticated
     def post(self):
@@ -156,13 +156,14 @@ class SearchStudiesHandler(BaseHandler):
         meta_headers = []
         counts = {}
         fullcounts = {}
+        query = ""
         searchmsg = ""
         # run through action requested
         if action == "search":
             search = QiitaStudySearch()
+            query = str(self.get_argument("query"))
             try:
-                results, meta_headers = search(str(self.get_argument("query")),
-                                               user)
+                results, meta_headers = search(query, user)
             except ParseException:
                 searchmsg = "Malformed search query, please try again."
 
@@ -189,7 +190,7 @@ class SearchStudiesHandler(BaseHandler):
         self.render('search_studies.html', user=user, aid=aid, results=results,
                     meta_headers=meta_headers, selsamples=selsamples,
                     selproc_data=selproc_data, counts=counts,
-                    fullcounts=fullcounts, searchmsg=searchmsg,
+                    fullcounts=fullcounts, searchmsg=searchmsg, query=query,
                     availmeta=SampleTemplate.metadata_headers())
 
 
