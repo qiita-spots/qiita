@@ -23,9 +23,12 @@ class TestAnalysis(TestCase):
         self.analysis = Analysis(1)
 
     def test_lock_check(self):
-        self.analysis.status = "public"
-        with self.assertRaises(QiitaDBStatusError):
-            self.analysis._lock_check(self.conn_handler)
+        for status in ["queued", "running", "completed", "public"]:
+            new = Analysis.create(User("admin@foo.bar"), "newAnalysis",
+                              "A New Analysis")
+            new.status = status
+            with self.assertRaises(QiitaDBStatusError):
+                new._lock_check(self.conn_handler)
 
     def test_lock_check_ok(self):
         self.analysis.status = "in_construction"
