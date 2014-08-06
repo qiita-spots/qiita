@@ -102,12 +102,10 @@ class SQLConnectionHandler(object):
                 self._connection.commit()
             except PostgresError as e:
                 self._connection.rollback()
-                try:
-                    err_sql = cur.mogrify(sql, sql_args)
-                except ValueError:
-                    err_sql = cur.mogrify(sql, sql_args[0])
                 raise QiitaDBExecutionError(("\nError running SQL query: %s"
-                                             "\nError: %s" % (err_sql, e)))
+                                             "\nARGS: %s"
+                                             "\nError: %s" %
+                                             (sql, sql_args, e)))
 
     def execute_fetchall(self, sql, sql_args=None):
         """ Executes a fetchall SQL query
