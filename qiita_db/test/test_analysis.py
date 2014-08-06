@@ -28,7 +28,7 @@ class TestAnalysis(TestCase):
             self.analysis._lock_check(self.conn_handler)
 
     def test_lock_check_ok(self):
-        self.analysis.status = "queued"
+        self.analysis.status = "in_construction"
         self.analysis._lock_check(self.conn_handler)
 
     def test_get_public(self):
