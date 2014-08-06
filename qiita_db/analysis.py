@@ -18,6 +18,7 @@ Classes
 from __future__ import division
 from collections import defaultdict
 
+from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from .sql_connection import SQLConnectionHandler
 from .base import QiitaStatusObject
 from .exceptions import QiitaDBNotImplementedError, QiitaDBStatusError
@@ -379,15 +380,19 @@ class Analysis(QiitaStatusObject):
             for proc_id in proc_data:
                 for sample_id in samples:
                     remove.append((self._id, proc_id, sample_id))
-            conn_handler.executemany(sql, remove)
         elif proc_data:
             sql = ("DELETE FROM qiita.analysis_sample WHERE analysis_id = %s "
                    "AND processed_data_id = %s")
-            conn_handler.executemany(sql, [(self._id, p) for p in proc_data])
+            remove = [(self._id, p) for p in proc_data]
         elif samples:
             sql = ("DELETE FROM qiita.analysis_sample WHERE analysis_id = %s "
                    "AND sample_id = %s")
-            conn_handler.executemany(sql, [(self._id, s) for s in samples])
+            remove = [(self._id, s) for s in samples]
+        else:
+            raise IncompetentQiitaDeveloperError(
+                "Must provide list of samples and/or proc_data for removal!")
+
+        conn_handler.executemany(sql, remove)
 
     def add_biom_tables(self, tables):
         """Adds biom tables to the analysis
