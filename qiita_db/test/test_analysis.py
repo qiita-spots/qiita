@@ -87,6 +87,40 @@ class TestAnalysis(TestCase):
                               "A New Analysis", Analysis(1))
         self.assertEqual(new.biom_tables, None)
 
+    def test_set_step(self):
+        new = Analysis.create(User("admin@foo.bar"), "newAnalysis",
+                              "A New Analysis", Analysis(1))
+        new.step = 2
+        sql = "SELECT * FROM qiita.analysis_workflow WHERE analysis_id = 3"
+        obs = self.conn_handler.execute_fetchall(sql)
+        self.assertEqual(obs, [[3, 2]])
+
+    def test_set_step_twice(self):
+        new = Analysis.create(User("admin@foo.bar"), "newAnalysis",
+                              "A New Analysis", Analysis(1))
+        new.step = 2
+        new.step = 4
+        sql = "SELECT * FROM qiita.analysis_workflow WHERE analysis_id = 3"
+        obs = self.conn_handler.execute_fetchall(sql)
+        self.assertEqual(obs, [[3, 4]])
+
+    def test_retrive_step(self):
+        new = Analysis.create(User("admin@foo.bar"), "newAnalysis",
+                              "A New Analysis", Analysis(1))
+        new.step = 2
+        self.assertEqual(new.step, 2)
+
+    def test_retrieve_step_new(self):
+        new = Analysis.create(User("admin@foo.bar"), "newAnalysis",
+                              "A New Analysis", Analysis(1))
+        with self.assertRaises(ValueError):
+            new.step
+
+    def test_retrieve_step_locked(self):
+        self.analysis.status = "queued"
+        with self.assertRaises(QiitaDBStatusError):
+            self.analysis.step = 3
+
     def test_retrieve_jobs(self):
         self.assertEqual(self.analysis.jobs, [1, 2])
 
@@ -145,6 +179,17 @@ class TestAnalysis(TestCase):
     def test_unshare(self):
         self.analysis.unshare(User("shared@foo.bar"))
         self.assertEqual(self.analysis.shared_with, [])
+
+    def test_finish_workflow(self):
+        new = Analysis.create(User("admin@foo.bar"), "newAnalysis",
+                              "A New Analysis", Analysis(1))
+        new.step = 2
+        new.finish_workflow()
+
+        obs = self.conn_handler.execute_fetchall(
+            "SELECT * FROM qiita.analysis_workflow WHERE analysis_id = 3")
+        self.assertEqual(obs, [])
+        self.assertEqual(new.status, "queued")
 
 
 if __name__ == "__main__":

@@ -35,6 +35,7 @@ class Analysis(QiitaStatusObject):
     description
     samples
     biom_tables
+    step
     shared_with
     jobs
     pmid
@@ -50,13 +51,15 @@ class Analysis(QiitaStatusObject):
     add_jobs
     share
     unshare
+    finish_workflow
     """
 
     _table = "analysis"
 
     def _lock_check(self, conn_handler):
-        """Raises QiitaDBStatusError if analysis is public"""
-        if self.check_status({"public", "completed", "error"}):
+        """Raises QiitaDBStatusError if analysis is not in_progress"""
+        if self.check_status({"public", "completed", "error", "running",
+                              "queued"}):
             raise QiitaDBStatusError("Analysis is locked!")
 
     def _status_setter_checks(self, conn_handler):
@@ -217,6 +220,32 @@ class Analysis(QiitaStatusObject):
         if tables == []:
             return None
         return [table[0] for table in tables]
+
+    @property
+    def step(self):
+        conn_handler = SQLConnectionHandler()
+        self._lock_check(conn_handler)
+        sql = "SELECT step from qiita.analysis_workflow WHERE analysis_id = %s"
+        try:
+            return conn_handler.execute_fetchone(sql, (self._id,))[0]
+        except TypeError:
+            raise ValueError("Step not set yet!")
+
+    @step.setter
+    def step(self, value):
+        conn_handler = SQLConnectionHandler()
+        self._lock_check(conn_handler)
+        sql = ("SELECT EXISTS(SELECT analysis_id from qiita.analysis_workflow "
+               "WHERE analysis_id = %s)")
+        step_exists = conn_handler.execute_fetchone(sql, (self._id,))[0]
+
+        if step_exists:
+            sql = ("UPDATE qiita.analysis_workflow SET step = %s WHERE "
+                   "analysis_id = %s")
+        else:
+            sql = ("INSERT INTO qiita.analysis_workflow (step, analysis_id) "
+                   "VALUES (%s, %s)")
+        conn_handler.execute(sql, (value, self._id))
 
     @property
     def jobs(self):
@@ -394,3 +423,18 @@ class Analysis(QiitaStatusObject):
         sql = ("INSERT INTO qiita.analysis_job (analysis_id, job_id) "
                "VALUES (%s, %s)")
         conn_handler.executemany(sql, [(self._id, job.id) for job in jobs])
+
+    def finish_workflow(self):
+        """Do database updates required before running analysis
+
+        Notes
+        -----
+            Removes analysis from qiita.analysis_workflow table
+            Set status to queued
+        """
+        conn_handler = SQLConnectionHandler()
+        self._lock_check(conn_handler)
+        sql = "DELETE FROM qiita.analysis_workflow WHERE analysis_id = %s"
+        conn_handler.execute(sql, (self._id,))
+
+        self.status = "queued"
