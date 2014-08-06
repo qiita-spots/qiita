@@ -754,6 +754,15 @@ CREATE INDEX idx_analysis_users_email ON qiita.analysis_users ( email );
 
 COMMENT ON TABLE qiita.analysis_users IS 'Links analyses to the users they are shared with';
 
+CREATE TABLE qiita.analysis_workflow ( 
+	analysis_id          bigint  NOT NULL,
+	step                 integer  NOT NULL,
+	CONSTRAINT pk_analysis_workflow PRIMARY KEY ( analysis_id ),
+	CONSTRAINT fk_analysis_workflow FOREIGN KEY ( analysis_id ) REFERENCES qiita.analysis( analysis_id )    
+ );
+
+COMMENT ON TABLE qiita.analysis_workflow IS 'Stores what step in_production analyses are on.';
+
 CREATE TABLE qiita.investigation_study ( 
 	investigation_id     bigint  NOT NULL,
 	study_id             bigint  NOT NULL,
