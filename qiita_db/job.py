@@ -122,32 +122,19 @@ class Job(QiitaStatusObject):
             analyses.remove(analysis.id)
 
         # check data used to create jobid
-        sql = ("SELECT processed_data_id, array_agg(sample_id) FROM "
-               "qiita.analysis_sample WHERE analysis_id = %s "
+        sql = ("SELECT processed_data_id, array_agg(sample_id ORDER BY "
+               "sample_id) FROM qiita.analysis_sample WHERE analysis_id = %s "
                "GROUP BY processed_data_id")
         samples = dict(conn_handler.execute_fetchall(sql, [analysis.id]))
-        # turn to sets for fast and easy comparisons later
-        for proc_data in viewkeys(samples):
-            samples[proc_data] = set(samples[proc_data])
         for aid in analyses:
             # grab the processed data and samples for the matching analysis
             comp_samples = dict(conn_handler.execute_fetchall(sql, [aid]))
             same = True
-            # check if same processed_data_ids
-            for key in viewkeys(samples):
-                if key not in comp_samples:
-                    same = False
-                    break
-            if not same:
-                continue
-            # check if same samples in both processed_data_ids
-            for proc_data, samps in viewitems(samples):
-                if samps.symmetric_difference(comp_samples[proc_data]):
-                    same = False
-                    break
-            if same:
-                return True
-        return False
+            if samples == comp_samples:
+                break
+            else:
+                same = False
+        return same
 
     @classmethod
     def delete(cls, jobid):
