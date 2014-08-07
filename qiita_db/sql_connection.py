@@ -105,7 +105,7 @@ class SQLConnectionHandler(object):
                 raise QiitaDBExecutionError(("\nError running SQL query: %s"
                                              "\nARGS: %s"
                                              "\nError: %s" %
-                                             (sql, sql_args, e)))
+                                             (sql, str(sql_args), e)))
 
     def execute_fetchall(self, sql, sql_args=None):
         """ Executes a fetchall SQL query
