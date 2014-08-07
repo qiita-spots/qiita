@@ -96,7 +96,7 @@ class Job(QiitaStatusObject):
         options : dict
             Options for the command in the format {option: value}
         analysis : Analysis object
-            Analysis the job will be added to if it doesn't exist
+            The analysis the job will be attached to on creation
 
         Returns
         -------
@@ -116,28 +116,43 @@ class Job(QiitaStatusObject):
         analyses = conn_handler.execute_fetchall(
             sql, (datatype_id, command_id, opts_json))
         if not analyses:
+            # stop looking since we have no possible matches
             return False
-        analyses = [x[0] for x in analyses]
-        if analysis.id in analyses:
-            analyses.remove(analysis.id)
 
-        # check data used to create jobid
+        # clean up analyses found into single list of ids
+        analyses = [x[0] for x in analyses if x[0] != analysis.id]
+        # build the samples dict as list of samples keyed to their proc_data_id
         sql = ("SELECT processed_data_id, array_agg(sample_id ORDER BY "
                "sample_id) FROM qiita.analysis_sample WHERE analysis_id = %s "
                "GROUP BY processed_data_id")
         samples = dict(conn_handler.execute_fetchall(sql, [analysis.id]))
+        # check passed analyses' samples dict against all found analyses
         for aid in analyses:
-            # grab the processed data and samples for the matching analysis
+            # build the samples dict for a found analysis
             comp_samples = dict(conn_handler.execute_fetchall(sql, [aid]))
-            same = True
-            if samples == comp_samples:
+            # compare samples and stop checking if a match is found
+            matched_samples = True if samples == comp_samples else False
+            if matched_samples:
                 break
-            else:
-                same = False
-        return same
+        return matched_samples
 
     @classmethod
     def delete(cls, jobid):
+        """Removes a job and all files attached to it
+
+        Parameters
+        ----------
+        jobid : int
+            ID of the job to delete
+
+        Notes
+        -----
+        This function will remove a job from all analyses it is attached to in
+        analysis_job table, as well as the job itself from the job table. All
+        files and references to files for the job will be removed from the
+        filepath and job_results_filepath tables. All the job's files on the
+        filesystem will also be removed.
+        """
         conn_handler = SQLConnectionHandler()
         # store filepath info for later use
         sql = ("SELECT f.filepath, f.filepath_id FROM qiita.filepath f JOIN "
