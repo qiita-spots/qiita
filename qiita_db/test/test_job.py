@@ -40,7 +40,6 @@ class JobTest(TestCase):
             rmtree(item)
 
     def test_exists(self):
-        """tests that existing job returns true"""
         # need to insert matching sample data into analysis 2
         self.conn_handler.execute(
             "DELETE FROM qiita.analysis_sample WHERE analysis_id = 2")
@@ -49,11 +48,21 @@ class JobTest(TestCase):
             "processed_data_id, sample_id) VALUES (2,1,'SKB8.640193'), "
             "(2,1,'SKD8.640184'), (2,1,'SKB7.640196'), (2,1,'SKM9.640192'),"
             "(2,1,'SKM4.640180')")
+        """tests that existing job returns true"""
         self.assertTrue(Job.exists("16S", "Beta Diversity",
                                    {"--otu_table_fp": 1,
                                     "--mapping_fp": 1}, Analysis(1)))
 
     def test_exists_noexist_options(self):
+        # need to insert matching sample data into analysis 2
+        # makes sure failure is because options and not samples
+        self.conn_handler.execute(
+            "DELETE FROM qiita.analysis_sample WHERE analysis_id = 2")
+        self.conn_handler.execute(
+            "INSERT INTO qiita.analysis_sample (analysis_id, "
+            "processed_data_id, sample_id) VALUES (2,1,'SKB8.640193'), "
+            "(2,1,'SKD8.640184'), (2,1,'SKB7.640196'), (2,1,'SKM9.640192'),"
+            "(2,1,'SKM4.640180')")
         """tests that non-existant job with bad options returns false"""
         self.assertFalse(Job.exists("16S", "Beta Diversity",
                                     {"--otu_table_fp": 1,
