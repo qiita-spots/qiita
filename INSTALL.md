@@ -19,6 +19,7 @@ Qiita is a python package, with support for python 2.7 and 3.2, that depends on 
 * [bcrypt](https://github.com/pyca/bcrypt/)
 * [redis](https://github.com/andymccurdy/redis-py)
 * [pyparsing 2.0.2](http://pyparsing.wikispaces.com/)
+* [Mock](http://www.voidspace.org.uk/python/mock/)  For running test code only
 
 And on the following packages:
 
