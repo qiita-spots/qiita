@@ -76,6 +76,10 @@ class TestAnalysis(TestCase):
                    'SKM9.640192', 'SKM4.640180']}
         self.assertEqual(self.analysis.samples, exp)
 
+    def test_retrieve_data_types(self):
+        exp = ['18S']
+        self.assertEqual(self.analysis.data_types, exp)
+
     def test_retrieve_shared_with(self):
         self.assertEqual(self.analysis.shared_with, ["shared@foo.bar"])
 
@@ -116,10 +120,25 @@ class TestAnalysis(TestCase):
     def test_add_samples(self):
         new = Analysis.create(User("admin@foo.bar"), "newAnalysis",
                               "A New Analysis")
-        new.add_samples([(1, 'SKB8.640193')])
+        new.add_samples([(1, 'SKB8.640193'), (1, 'SKD5.640186')])
+        exp = {1: ['SKB8.640193', 'SKD5.640186']}
+        self.assertEqual(new.samples, exp)
 
-    def test_remove_samples(self):
-        self.analysis.remove_samples([(1, 'SKB8.640193'), (1, 'SKD8.640184')])
+    def test_remove_samples_both(self):
+        self.analysis.remove_samples(proc_data=(1, ),
+                                     samples=('SKB8.640193', ))
+        exp = {1: ['SKD8.640184', 'SKB7.640196', 'SKM9.640192', 'SKM4.640180']}
+        self.assertEqual(self.analysis.samples, exp)
+
+    def test_remove_samples_samples(self):
+        self.analysis.remove_samples(samples=('SKD8.640184', ))
+        exp = {1: ['SKB8.640193', 'SKB7.640196', 'SKM9.640192', 'SKM4.640180']}
+        self.assertEqual(self.analysis.samples, exp)
+
+    def test_remove_samples_processed_data(self):
+        self.analysis.remove_samples(proc_data=(1, ))
+        exp = {}
+        self.assertEqual(self.analysis.samples, exp)
 
     def test_add_biom_tables(self):
         new = Analysis.create(User("admin@foo.bar"), "newAnalysis",

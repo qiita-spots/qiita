@@ -17,8 +17,8 @@ from qiita_pet.handlers.base_handlers import (MainHandler, MockupHandler,
 from qiita_pet.handlers.auth_handlers import (
     AuthCreateHandler, AuthLoginHandler, AuthLogoutHandler, AuthVerifyHandler)
 from qiita_pet.handlers.analysis_handlers import (
-    CreateAnalysisHandler, SelectStudiesHandler, SelectCommandsHandler,
-    AnalysisWaitHandler, AnalysisResultsHandler, ShowAnalysesHandler)
+    SelectCommandsHandler, AnalysisWaitHandler, AnalysisResultsHandler,
+    ShowAnalysesHandler, SearchStudiesHandler)
 from qiita_pet.handlers.websocket_handlers import MessageHandler
 from qiita_db.util import get_db_files_base_dir
 
@@ -43,8 +43,7 @@ class Application(tornado.web.Application):
              {"path": RES_PATH}),
             (r"/static/(.*)", tornado.web.StaticFileHandler,
              {"path": STATIC_PATH}),
-            (r"/analysis/1", CreateAnalysisHandler),
-            (r"/analysis/2", SelectStudiesHandler),
+            (r"/analysis/2", SearchStudiesHandler),
             (r"/analysis/3", SelectCommandsHandler),
             (r"/analysis/wait/(.*)", AnalysisWaitHandler),
             (r"/analysis/results/(.*)", AnalysisResultsHandler),

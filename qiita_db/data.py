@@ -241,7 +241,7 @@ class RawData(BaseData):
 
     @property
     def studies(self):
-        r"""The list of study ids to which the raw data belongs to
+        r"""The IDs of the studies to which this raw data belongs
 
         Returns
         -------
@@ -393,7 +393,7 @@ class PreprocessedData(BaseData):
 
     @property
     def study(self):
-        r"""The study id to which this preprocessed data belongs to
+        r"""The ID of the study to which this preprocessed data belongs
 
         Returns
         -------
@@ -447,6 +447,7 @@ class ProcessedData(BaseData):
     Attributes
     ----------
     preprocessed_data
+    study
 
     Methods
     -------
@@ -572,6 +573,20 @@ class ProcessedData(BaseData):
         return conn_handler.execute_fetchone(
             "SELECT preprocessed_data_id FROM qiita.{0} WHERE "
             "processed_data_id=%s".format(self._preprocessed_processed_table),
+            [self._id])[0]
+
+    @property
+    def study(self):
+        r"""The ID of the study to which this processed data belongs
+
+        Returns
+        -------
+        int
+            The study id to which this processed data belongs"""
+        conn_handler = SQLConnectionHandler()
+        return conn_handler.execute_fetchone(
+            "SELECT study_id FROM qiita.{0} WHERE "
+            "processed_data_id=%s".format(self._study_processed_table),
             [self._id])[0]
 
     def data_type(self, ret_id=False):

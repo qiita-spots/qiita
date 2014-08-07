@@ -387,28 +387,28 @@ class TestStudy(TestCase):
         self.assertEqual(new.data_types, [])
 
     def test_retrieve_raw_data(self):
-        self.assertEqual(self.study.raw_data, [1, 2])
+        self.assertEqual(self.study.raw_data(), [1, 2])
 
     def test_retrieve_raw_data_none(self):
         new = Study.create(User('test@foo.bar'), 'Identification of the '
                            'Microbiomes for Cannabis Soils', [1], self.info)
-        self.assertEqual(new.raw_data, [])
+        self.assertEqual(new.raw_data(), [])
 
     def test_retrieve_preprocessed_data(self):
-        self.assertEqual(self.study.preprocessed_data, [1, 2])
+        self.assertEqual(self.study.preprocessed_data(), [1, 2])
 
     def test_retrieve_preprocessed_data_none(self):
         new = Study.create(User('test@foo.bar'), 'Identification of the '
                            'Microbiomes for Cannabis Soils', [1], self.info)
-        self.assertEqual(new.preprocessed_data, [])
+        self.assertEqual(new.preprocessed_data(), [])
 
     def test_retrieve_processed_data(self):
-        self.assertEqual(self.study.processed_data, [1])
+        self.assertEqual(self.study.processed_data(), [1])
 
     def test_retrieve_processed_data_none(self):
         new = Study.create(User('test@foo.bar'), 'Identification of the '
                            'Microbiomes for Cannabis Soils', [1], self.info)
-        self.assertEqual(new.processed_data, [])
+        self.assertEqual(new.processed_data(), [])
 
     def test_add_pmid(self):
         self.study.add_pmid('4544444')

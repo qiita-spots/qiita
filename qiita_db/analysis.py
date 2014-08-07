@@ -18,6 +18,7 @@ Classes
 from __future__ import division
 from collections import defaultdict
 
+from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from .sql_connection import SQLConnectionHandler
 from .base import QiitaStatusObject
 from .exceptions import QiitaDBNotImplementedError, QiitaDBStatusError
@@ -34,6 +35,7 @@ class Analysis(QiitaStatusObject):
     name
     description
     samples
+    data_types
     biom_tables
     shared_with
     jobs
@@ -188,6 +190,23 @@ class Analysis(QiitaStatusObject):
         return ret_samples
 
     @property
+    def data_types(self):
+        """Returns all data types used in the analysis
+
+        Returns
+        -------
+        list of str
+            Data types in the analysis
+        """
+        sql = ("SELECT DISTINCT data_type from qiita.data_type d JOIN "
+               "qiita.processed_data p ON p.data_type_id = d.data_type_id "
+               "JOIN qiita.analysis_sample a ON p.processed_data_id = "
+               "a.processed_data_id WHERE a.analysis_id = %s ORDER BY "
+               "data_type")
+        conn_handler = SQLConnectionHandler()
+        return [x[0] for x in conn_handler.execute_fetchall(sql, (self._id, ))]
+
+    @property
     def shared_with(self):
         """The user the analysis is shared with
 
@@ -325,28 +344,55 @@ class Analysis(QiitaStatusObject):
         """
         conn_handler = SQLConnectionHandler()
         self._lock_check(conn_handler)
-
         sql = ("INSERT INTO qiita.analysis_sample (analysis_id, sample_id, "
                "processed_data_id) VALUES (%s, %s, %s)")
         conn_handler.executemany(sql, [(self._id, s[1], s[0])
                                        for s in samples])
 
-    def remove_samples(self, samples):
+    def remove_samples(self, proc_data=None, samples=None):
         """Removes samples from the analysis
 
         Parameters
         ----------
-        samples : list of tuples
-            samples and the processed data id they come from in form
-            [(processed_data_id, sample_id), ...]
+        proc_data : list, optional
+            processed data ids to remove, default None
+        samples : list, optional
+            sample ids to remove, default None
+
+        Notes
+        -----
+        When only a list of samples given, the samples will be removed from all
+        processed data ids it is associated with
+
+        When only a list of proc_data given, all samples associated with that
+        processed data are removed
+
+        If both are passed, the given samples are removed from the given
+        processed data ids
         """
         conn_handler = SQLConnectionHandler()
         self._lock_check(conn_handler)
+        if proc_data and samples:
+            sql = ("DELETE FROM qiita.analysis_sample WHERE analysis_id = %s "
+                   "AND processed_data_id = %s AND sample_id = %s")
+            remove = []
+            # build tuples for what samples to remove from what processed data
+            for proc_id in proc_data:
+                for sample_id in samples:
+                    remove.append((self._id, proc_id, sample_id))
+        elif proc_data:
+            sql = ("DELETE FROM qiita.analysis_sample WHERE analysis_id = %s "
+                   "AND processed_data_id = %s")
+            remove = [(self._id, p) for p in proc_data]
+        elif samples:
+            sql = ("DELETE FROM qiita.analysis_sample WHERE analysis_id = %s "
+                   "AND sample_id = %s")
+            remove = [(self._id, s) for s in samples]
+        else:
+            raise IncompetentQiitaDeveloperError(
+                "Must provide list of samples and/or proc_data for removal!")
 
-        sql = ("DELETE FROM qiita.analysis_sample WHERE analysis_id = %s AND "
-               "sample_id = %s AND processed_data_id = %s")
-        conn_handler.executemany(sql, [(self._id, s[1], s[0])
-                                       for s in samples])
+        conn_handler.executemany(sql, remove)
 
     def add_biom_tables(self, tables):
         """Adds biom tables to the analysis
