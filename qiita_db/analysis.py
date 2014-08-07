@@ -200,9 +200,9 @@ class Analysis(QiitaStatusObject):
         """
         sql = ("SELECT DISTINCT data_type from qiita.data_type d JOIN "
                "qiita.processed_data p ON p.data_type_id = d.data_type_id "
-               "WHERE p.processed_data_id IN (SELECT DISTINCT "
-               "a.processed_data_id FROM qiita.analysis_sample a WHERE "
-               "a.analysis_id = %s) ORDER BY data_type")
+               "JOIN qiita.analysis_sample a ON p.processed_data_id = "
+               "a.processed_data_id WHERE a.analysis_id = %s ORDER BY "
+               "data_type")
         conn_handler = SQLConnectionHandler()
         return [x[0] for x in conn_handler.execute_fetchall(sql, (self._id, ))]
 

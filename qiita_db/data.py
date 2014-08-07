@@ -241,7 +241,7 @@ class RawData(BaseData):
 
     @property
     def studies(self):
-        r"""The list of study ids to which the raw data belongs to
+        r"""The IDs of the studies to which this raw data belongs
 
         Returns
         -------
@@ -393,7 +393,7 @@ class PreprocessedData(BaseData):
 
     @property
     def study(self):
-        r"""The study id to which this preprocessed data belongs to
+        r"""The ID of the study to which this preprocessed data belongs
 
         Returns
         -------
@@ -577,7 +577,7 @@ class ProcessedData(BaseData):
 
     @property
     def study(self):
-        r"""The study id to which this preprocessed data belongs to
+        r"""The ID of the study to which this processed data belongs
 
         Returns
         -------
