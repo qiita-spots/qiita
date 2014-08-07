@@ -7,8 +7,8 @@
 # -----------------------------------------------------------------------------
 
 from unittest import TestCase, main
-from os import remove
-from os.path import join
+from os import remove, mkdir
+from os.path import join, exists
 from shutil import rmtree
 from datetime import datetime
 
@@ -16,7 +16,8 @@ from qiita_core.util import qiita_test_checker
 from qiita_db.job import Job, Command
 from qiita_db.util import get_db_files_base_dir
 from qiita_db.analysis import Analysis
-from qiita_db.exceptions import QiitaDBDuplicateError, QiitaDBStatusError
+from qiita_db.exceptions import (QiitaDBDuplicateError, QiitaDBStatusError,
+                                 QiitaDBUnknownIDError)
 from qiita_db.logger import LogEntry
 
 
@@ -38,19 +39,31 @@ class JobTest(TestCase):
         for item in self._delete_dir:
             rmtree(item)
 
-    # EXISTS IGNORED FOR DEMO, ISSUE #83
-    # def test_exists(self):
-    #     """tests that existing job returns true"""
-    #     self.assertTrue(Job.exists("16S", "Summarize Taxa",
-    #                                {'option1': True, 'option2': 12,
-    #                                 'option3': 'FCM'}))
+    def test_exists(self):
+        """tests that existing job returns true"""
+        # need to insert matching sample data into analysis 2
+        self.conn_handler.execute(
+            "DELETE FROM qiita.analysis_sample WHERE analysis_id = 2")
+        self.conn_handler.execute(
+            "INSERT INTO qiita.analysis_sample (analysis_id, "
+            "processed_data_id, sample_id) VALUES (2,1,'SKB8.640193'), "
+            "(2,1,'SKD8.640184'), (2,1,'SKB7.640196'), (2,1,'SKM9.640192'),"
+            "(2,1,'SKM4.640180')")
+        self.assertTrue(Job.exists("16S", "Beta Diversity",
+                                   {"--otu_table_fp": 1,
+                                    "--mapping_fp": 1}, Analysis(1)))
 
-    # def test_exists_not_there(self):
-    #     """tests that non-existant job returns false"""
-    #     self.assertFalse(Job.exists("Metabolomic",
-    #                                 "Summarize Taxa",
-    #                                 {'option1': "Nope", 'option2': 10,
-    #                                  'option3': 'FCM'}))
+    def test_exists_noexist_options(self):
+        """tests that non-existant job with bad options returns false"""
+        self.assertFalse(Job.exists("16S", "Beta Diversity",
+                                    {"--otu_table_fp": 1,
+                                     "--mapping_fp": 27}, Analysis(1)))
+
+    def test_exists_noexist_samples(self):
+        """tests that non-existant job with bad samples returns false"""
+        self.assertFalse(Job.exists("16S", "Beta Diversity",
+                                    {"--otu_table_fp": 1,
+                                     "--mapping_fp": 1}, Analysis(1)))
 
     def test_get_commands(self):
         exp = [
@@ -70,6 +83,61 @@ class JobTest(TestCase):
                     '{"--output_dir":null}')
             ]
         self.assertEqual(Job.get_commands(), exp)
+
+    def test_delete_files(self):
+        try:
+            Job.delete(1)
+            with self.assertRaises(QiitaDBUnknownIDError):
+                Job(1)
+
+            obs = self.conn_handler.execute_fetchall(
+                "SELECT * FROM qiita.filepath WHERE filepath_id = 8 OR "
+                "filepath_id = 10")
+            self.assertEqual(obs, [])
+
+            obs = self.conn_handler.execute_fetchall(
+                "SELECT * FROM qiita.job_results_filepath WHERE job_id = 1")
+            self.assertEqual(obs, [])
+
+            obs = self.conn_handler.execute_fetchall(
+                "SELECT * FROM qiita.analysis_job WHERE job_id = 1")
+            self.assertEqual(obs, [])
+
+            self.assertFalse(exists(join(get_db_files_base_dir(),
+                                    "job/1_job_result.txt")))
+        finally:
+            if not exists(join(get_db_files_base_dir(),
+                          "job/1_job_result.txt")):
+                with open(join(get_db_files_base_dir(),
+                          "job/1_job_result.txt"), 'w') as f:
+                    f.write("job1result.txt")
+
+    def test_delete_folders(self):
+        try:
+            Job.delete(2)
+            with self.assertRaises(QiitaDBUnknownIDError):
+                Job(2)
+
+            obs = self.conn_handler.execute_fetchall(
+                "SELECT * FROM qiita.filepath WHERE filepath_id = 9")
+            self.assertEqual(obs, [])
+
+            obs = self.conn_handler.execute_fetchall(
+                "SELECT * FROM qiita.job_results_filepath WHERE job_id = 2")
+            self.assertEqual(obs, [])
+
+            obs = self.conn_handler.execute_fetchall(
+                "SELECT * FROM qiita.analysis_job WHERE job_id = 2")
+            self.assertEqual(obs, [])
+
+            self.assertFalse(exists(join(get_db_files_base_dir(),
+                                    "job/2_test_folder")))
+        finally:
+            if not exists(join(get_db_files_base_dir(), "job/2_test_folder")):
+                mkdir(join(get_db_files_base_dir(), "job/2_test_folder"))
+                with open(join(get_db_files_base_dir(),
+                          "job/2_test_folder/testfile.txt"), 'w') as f:
+                    f.write("DATA")
 
     def test_create(self):
         """Makes sure creation works as expected"""

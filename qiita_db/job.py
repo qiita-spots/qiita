@@ -27,10 +27,13 @@ Classes
 from __future__ import division
 from json import dumps, loads
 from os.path import join
+from os import remove
+from shutil import rmtree
 from functools import partial
 from collections import defaultdict
 
 from future.builtins import zip
+from future.utils import viewitems, viewkeys
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from .base import QiitaStatusObject
@@ -81,7 +84,7 @@ class Job(QiitaStatusObject):
         return Command.create_list()
 
     @classmethod
-    def exists(cls, datatype, command, options):
+    def exists(cls, datatype, command, options, analysis):
         """Checks if the given job already exists
 
         Parameters
@@ -92,6 +95,8 @@ class Job(QiitaStatusObject):
             The name of the command run on the data
         options : dict
             Options for the command in the format {option: value}
+        analysis : Analysis object
+            Analysis the job will be added to if it doesn't exist
 
         Returns
         -------
@@ -99,14 +104,81 @@ class Job(QiitaStatusObject):
             Whether the job exists or not
         """
         conn_handler = SQLConnectionHandler()
+        # check passed arguments and grab analyses for matching jobs
         datatype_id = convert_to_id(datatype, "data_type", conn_handler)
         sql = "SELECT command_id FROM qiita.command WHERE name = %s"
         command_id = conn_handler.execute_fetchone(sql, (command, ))[0]
         opts_json = dumps(options, sort_keys=True, separators=(',', ':'))
-        sql = ("SELECT EXISTS(SELECT * FROM  qiita.{0} WHERE data_type_id = %s"
-               " AND command_id = %s AND options = %s)".format(cls._table))
-        return conn_handler.execute_fetchone(
-            sql, (datatype_id, command_id, opts_json))[0]
+        sql = ("SELECT DISTINCT aj.analysis_id FROM qiita.analysis_job aj "
+               "JOIN qiita.{0} j ON aj.job_id = j.job_id WHERE j.data_type_id"
+               " = %s AND j.command_id = %s "
+               "AND j.options = %s".format(cls._table))
+        analyses = conn_handler.execute_fetchall(
+            sql, (datatype_id, command_id, opts_json))
+        if not analyses:
+            return False
+        analyses = [x[0] for x in analyses]
+        if analysis.id in analyses:
+            analyses.remove(analysis.id)
+
+        # check data used to create jobid
+        sql = ("SELECT processed_data_id, array_agg(sample_id) FROM "
+               "qiita.analysis_sample WHERE analysis_id = %s "
+               "GROUP BY processed_data_id")
+        samples = dict(conn_handler.execute_fetchall(sql, [analysis.id]))
+        # turn to sets for fast and easy comparisons later
+        for proc_data in viewkeys(samples):
+            samples[proc_data] = set(samples[proc_data])
+        for aid in analyses:
+            # grab the processed data and samples for the matching analysis
+            comp_samples = dict(conn_handler.execute_fetchall(sql, [aid]))
+            same = True
+            # check if same processed_data_ids
+            for key in viewkeys(samples):
+                if key not in comp_samples:
+                    same = False
+                    break
+            if not same:
+                continue
+            # check if same samples in both processed_data_ids
+            for proc_data, samps in viewitems(samples):
+                if samps.symmetric_difference(comp_samples[proc_data]):
+                    same = False
+                    break
+            if same:
+                return True
+        return False
+
+    @classmethod
+    def delete(cls, jobid):
+        conn_handler = SQLConnectionHandler()
+        # store filepath info for later use
+        sql = ("SELECT f.filepath, f.filepath_id FROM qiita.filepath f JOIN "
+               "qiita.job_results_filepath jf ON jf.filepath_id = "
+               "f.filepath_id WHERE jf.job_id = %s")
+        filepaths = conn_handler.execute_fetchall(sql, [jobid])
+
+        # remove fiepath links in DB
+        conn_handler.execute("DELETE FROM qiita.job_results_filepath WHERE "
+                             "job_id = %s", [jobid])
+        sql = "DELETE FROM qiita.filepath WHERE"
+        for x in range(len(filepaths)):
+            sql = ' '.join((sql, "filepath_id = %s"))
+        conn_handler.execute(sql, [fp[1] for fp in filepaths])
+
+        # remove job
+        conn_handler.execute("DELETE FROM qiita.analysis_job WHERE "
+                             "job_id = %s", [jobid])
+        conn_handler.execute("DELETE FROM qiita.job WHERE job_id = %s",
+                             [jobid])
+
+        # remove files/folders attached to job
+        basedir = get_db_files_base_dir()
+        for fp in filepaths:
+            try:
+                rmtree(join(basedir, "job", fp[0]))
+            except OSError:
+                remove(join(basedir, "job", fp[0]))
 
     @classmethod
     def create(cls, datatype, command, analysis):
@@ -127,10 +199,10 @@ class Job(QiitaStatusObject):
             The newly created job
         """
         # EXISTS IGNORED FOR DEMO, ISSUE #83
-        # if cls.exists(datatype, command, options):
+        # if cls.exists(datatype, command, options, analysis):
         #     raise QiitaDBDuplicateError(
-        #         "Job", "datatype: %s, command: %s, options: %s"
-        #         % (datatype, command, options))
+        #         "Job", "datatype: %s, command: %s, options: %s, analysis: %s"
+        #         % (datatype, command, options, analysis.id))
 
         # Get the datatype and command ids from the strings
         conn_handler = SQLConnectionHandler()
@@ -425,7 +497,7 @@ class Command(object):
         """
         self.name = name
         self.command = command
-        self.input_opts = dumps(input_opts)
-        self.required_opts = dumps(required_opts)
-        self.optional_opts = dumps(optional_opts)
-        self.output_opts = dumps(output_opts)
+        self.input_opts = loads(input_opts)
+        self.required_opts = loads(required_opts)
+        self.optional_opts = loads(optional_opts)
+        self.output_opts = loads(output_opts)
