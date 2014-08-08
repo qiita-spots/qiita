@@ -27,7 +27,7 @@ from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from .sql_connection import SQLConnectionHandler
 from .base import QiitaStatusObject
 from .exceptions import QiitaDBNotImplementedError, QiitaDBStatusError
-from .util import convert_to_id, get_db_files_base_dir
+from .util import convert_to_id, get_work_base_dir
 
 
 class Analysis(QiitaStatusObject):
@@ -421,7 +421,7 @@ class Analysis(QiitaStatusObject):
         """Build tables and add them to the analysis"""
         # filter and combine all study BIOM tables needed for each data type
         new_tables = {dt: None for dt in self.data_types}
-        base_fp = get_db_files_base_dir()
+        base_fp = get_work_base_dir()
         for pid, samps in viewitems(samps):
             # one biom table attached to each processed data object
             proc_data = ProcessedData(pid)
@@ -462,22 +462,23 @@ class Analysis(QiitaStatusObject):
         all_sample_ids = set()
         all_headers = set()
         all_studies = set()
+        base_fp = get_work_base_dir()
 
         merged_data = defaultdict(lambda: defaultdict(lambda: None))
         for pid, samples in viewitems(samples):
             study = ProcesseData(pid).study
             if study in all_studies:
-                # samples already added by different processed data file
+                # samples already added by other processed data file in study
                 continue
             all_studies.add(study)
             # query out the combined table of metadata for all samples
             sql = ("SELECT rs.sample_id, rs.sample_type, "
                    "rs.collection_timestamp, rs.host_subject_id, "
                    "rs.description, ss.* FROM qiita.required_sample_info rs "
-                   "JOIN qiita.sample_%s ss USING(sample_id) WHERE "
-                   "rs.sample_id IN %s AND rs.study_id = %s")
+                   "JOIN qiita.sample_{0} ss USING(sample_id) WHERE "
+                   "rs.sample_id IN %s AND rs.study_id = %s".format(study))
             metadata = conn_handler.execute_fetchall(
-                sql, (study, samples, study))
+                sql, (samples, study))
             headers = metadata.keys()
             print headers
             all_headers = all_headers.update(headers)
@@ -492,6 +493,23 @@ class Analysis(QiitaStatusObject):
 
                 for header, value in zip(headers, data):
                     merged_data[sample_id][header] = value
+
+        # order headers properly for mapping file
+        all_headers.remove("sample_id")
+        all_headers = sorted(list(all_headers))
+
+        # write mapping file out
+        mapping_fp = join(base_fp, "processed_data/analysis_%i_mapping.txt" %
+                          (self._id, proc_data))
+
+        with open(mapping_fp, 'w') as f:
+            f.write("#SampleID\t%s\n" % '\t'.join(all_headers))
+            for sample, metadata in viewitems(merged_data):
+                data = []
+                for header in all_headers:
+                    data.append(metadata[header] if
+                                metadata[header] is not None else "")
+                f.write("%s\t%s\n" % (sample, "\t".join(data)))
 
     def add_biom_tables(self, tables):
         """Adds biom tables to the analysis
