@@ -237,14 +237,14 @@ class AnalysisWaitHandler(BaseHandler):
 
     @authenticated
     @asynchronous
-    def post(self, aid):
+    def post(self, analysis_id):
         user = self.current_user
-        aid = int(aid)
-        check_analysis_access(User(user), aid)
+        analysis_id = int(analysis_id)
+        check_analysis_access(User(user), analysis_id)
 
         command_args = self.get_arguments("commands")
         split = [x.split("#") for x in command_args]
-        analysis = Analysis(aid)
+        analysis = Analysis(analysis_id)
 
         commands = []
         # HARD CODED HACKY THING FOR DEMO, FIX  Issue #164
@@ -279,12 +279,12 @@ class AnalysisWaitHandler(BaseHandler):
 
 class AnalysisResultsHandler(BaseHandler):
     @authenticated
-    def get(self, aid):
+    def get(self, analysis_id):
         user = self.current_user
-        aid = int(aid)
-        check_analysis_access(User(user), aid)
+        analysis_id = int(analysis_id)
+        check_analysis_access(User(user), analysis_id)
 
-        analysis = Analysis(aid)
+        analysis = Analysis(analysis_id)
         jobres = defaultdict(list)
         for job in analysis.jobs:
             jobject = Job(job)
