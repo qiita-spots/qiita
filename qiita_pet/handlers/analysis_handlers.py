@@ -222,6 +222,7 @@ class AnalysisWaitHandler(BaseHandler):
     @authenticated
     def get(self, analysis_id):
         user = self.current_user
+        analysis_id = int(analysis_id)
         check_analysis_access(User(user), analysis_id)
 
         analysis = Analysis(analysis_id)
@@ -236,13 +237,14 @@ class AnalysisWaitHandler(BaseHandler):
 
     @authenticated
     @asynchronous
-    def post(self, aid):
+    def post(self, analysis_id):
         user = self.current_user
-        check_analysis_access(User(user), aid)
+        analysis_id = int(analysis_id)
+        check_analysis_access(User(user), analysis_id)
 
         command_args = self.get_arguments("commands")
         split = [x.split("#") for x in command_args]
-        analysis = Analysis(aid)
+        analysis = Analysis(analysis_id)
 
         commands = []
         # HARD CODED HACKY THING FOR DEMO, FIX  Issue #164
@@ -250,9 +252,9 @@ class AnalysisWaitHandler(BaseHandler):
         close(fp)
         SampleTemplate(1).to_file(mapping_file)
         study_fps = {}
-        for pd in Study(1).processed_data:
+        for pd in Study(1).processed_data():
             processed = ProcessedData(pd)
-            study_fps[processed.data_type] = processed.get_filepaths()[0][0]
+            study_fps[processed.data_type()] = processed.get_filepaths()[0][0]
         for data_type, command in split:
             opts = {
                 "--otu_table_fp": study_fps[data_type],
@@ -264,7 +266,8 @@ class AnalysisWaitHandler(BaseHandler):
             elif command == "Beta Diversity":
                 opts["--parameter_fp"] = join(get_db_files_base_dir(),
                                               "reference", "params_qiime.txt")
-            Job.create(data_type, command, opts, analysis)
+            job = Job.create(data_type, command, analysis)
+            job.options = opts
             commands.append("%s: %s" % (data_type, command))
         user = self.current_user
         self.render("analysis_waiting.html", user=user, aid=aid,
@@ -276,11 +279,12 @@ class AnalysisWaitHandler(BaseHandler):
 
 class AnalysisResultsHandler(BaseHandler):
     @authenticated
-    def get(self, aid):
+    def get(self, analysis_id):
         user = self.current_user
-        check_analysis_access(User(user), aid)
+        analysis_id = int(analysis_id)
+        check_analysis_access(User(user), analysis_id)
 
-        analysis = Analysis(aid)
+        analysis = Analysis(analysis_id)
         jobres = defaultdict(list)
         for job in analysis.jobs:
             jobject = Job(job)
