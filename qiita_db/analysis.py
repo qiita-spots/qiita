@@ -17,12 +17,17 @@ Classes
 # -----------------------------------------------------------------------------
 from __future__ import division
 from collections import defaultdict
+from os.path import join
+
+from future.utils import viewitems
+from biom import load_table
+from biom.table import Table
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from .sql_connection import SQLConnectionHandler
 from .base import QiitaStatusObject
 from .exceptions import QiitaDBNotImplementedError, QiitaDBStatusError
-from .util import convert_to_id
+from .util import convert_to_id, get_db_files_base_dir
 
 
 class Analysis(QiitaStatusObject):
@@ -47,6 +52,7 @@ class Analysis(QiitaStatusObject):
     -------
     add_samples
     remove_samples
+    build_biom_table
     add_biom_tables
     remove_biom_tables
     add_jobs
@@ -393,6 +399,55 @@ class Analysis(QiitaStatusObject):
                 "Must provide list of samples and/or proc_data for removal!")
 
         conn_handler.executemany(sql, remove)
+
+    def build_biom_table(self):
+        """Creates BIOM tables combining all samples selected for the analysis
+
+        Notes
+        -----
+        Seperate BIOM tables are created for each data type.
+        """
+        # build the samples dict as list of samples keyed to their proc_data_id
+        conn_handler = SQLConnectionHandler()
+        sql = ("SELECT processed_data_id, array_agg(sample_id ORDER BY "
+               "sample_id) FROM qiita.analysis_sample WHERE analysis_id = %s "
+               "GROUP BY processed_data_id")
+        samples = dict(conn_handler.execute_fetchall(sql, [self._id]))
+
+        # filter and combine all study BIOM tables needed for each data type
+        new_tables = {dt: None for dt in self.data_types}
+        base_fp = get_db_files_base_dir()
+        for pid, samps in viewitems(samps):
+            # one biom table attached to each processed data object
+            proc_data = ProcessedData(pid)
+            proc_data_fp = proc_data.get_filepaths()[0]
+            # make sure we're getting a biom filetype (magic number 6)
+            if proc_data_fp[1] != 6:
+                raise ValueError("ProcessedData %s not a biom formatted file!"
+                                 % pid)
+            table_fp = join(base_fp, proc_data_fp[0])
+            table = load_table(table_fp)
+            # filter for just the wanted samples and merge into new table
+            # this if/else setup avoids needing a blank table to start merges
+            table.filter(samps, axis='sample', inplace=True)
+            if new_tables[proc_data.data_type] is None:
+                new_tables[proc_data.data_type] = table
+            else:
+                new_tables[proc_data.data_type].merge(table)
+
+        # add the new tables to the analysis
+        processed_data = []
+        for proc_data, table in viewitems(new_tables):
+            biom_fp = join(base_fp, "processed_data/analysis_%i_%s.biom" %
+                           (self._id, proc_data))
+            with open(biom_fp, 'w') as f:
+                new_table.to_hdf5(f, "Combined samples for analysis %d and "
+                                  "data_type %s" % (self._id, proc_data))
+            processed_data.append(ProcessedData.create(
+                "processed_params_analysis", 1, (biom_fp, 6),
+                data_type=proc_data))
+
+        self.add_biom_tables(processed_data)
 
     def add_biom_tables(self, tables):
         """Adds biom tables to the analysis
