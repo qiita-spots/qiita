@@ -270,7 +270,7 @@ class AnalysisWaitHandler(BaseHandler):
             job.options = opts
             commands.append("%s: %s" % (data_type, command))
         user = self.current_user
-        self.render("analysis_waiting.html", user=user, aid=aid,
+        self.render("analysis_waiting.html", user=user, aid=analysis_id,
                     aname=analysis.name, commands=commands)
         # fire off analysis run here
         # currently synch run so redirect done here. Will remove after demo
