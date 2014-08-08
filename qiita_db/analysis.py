@@ -400,12 +400,12 @@ class Analysis(QiitaStatusObject):
 
         conn_handler.executemany(sql, remove)
 
-    def build_biom_table(self):
-        """Creates BIOM tables combining all samples selected for the analysis
+    def build_biom_table_mapping_file(self):
+        """Creates BIOM tables and mapping files for samples in analysis
 
         Notes
         -----
-        Seperate BIOM tables are created for each data type.
+        Seperate BIOM tables and mapping files are created for each data type.
         """
         # build the samples dict as list of samples keyed to their proc_data_id
         conn_handler = SQLConnectionHandler()
@@ -414,6 +414,11 @@ class Analysis(QiitaStatusObject):
                "GROUP BY processed_data_id")
         samples = dict(conn_handler.execute_fetchall(sql, [self._id]))
 
+        _build_biom_tables(samples)
+        _build_mapping_files(samples, conn_handler)
+
+    def _build_biom_tables(self, samples):
+        """Build tables and add them to the analysis"""
         # filter and combine all study BIOM tables needed for each data type
         new_tables = {dt: None for dt in self.data_types}
         base_fp = get_db_files_base_dir()
@@ -448,6 +453,45 @@ class Analysis(QiitaStatusObject):
                 data_type=proc_data))
 
         self.add_biom_tables(processed_data)
+
+    def _build_mapping_file(self, samples, conn_handler):
+        """Builds the mapping file for all samples
+           Code modified slightly from qiime.util.MetadataMap.__add__"""
+        # We will keep track of all unique sample_ids and metadata headers
+        # we have seen as we go, as well as studies already seen
+        all_sample_ids = set()
+        all_headers = set()
+        all_studies = set()
+
+        merged_data = defaultdict(lambda: defaultdict(lambda: None))
+        for pid, samples in viewitems(samples):
+            study = ProcesseData(pid).study
+            if study in all_studies:
+                # samples already added by different processed data file
+                continue
+            all_studies.add(study)
+            # query out the combined table of metadata for all samples
+            sql = ("SELECT rs.sample_id, rs.sample_type, "
+                   "rs.collection_timestamp, rs.host_subject_id, "
+                   "rs.description, ss.* FROM qiita.required_sample_info rs "
+                   "JOIN qiita.sample_%s ss USING(sample_id) WHERE "
+                   "rs.sample_id IN %s AND rs.study_id = %s")
+            metadata = conn_handler.execute_fetchall(
+                sql, (study, samples, study))
+            headers = metadata.keys()
+            print headers
+            all_headers = all_headers.update(headers)
+            # add all the metadata to merged_data
+            for data in metadata:
+                sample_id = data.pop()
+                if sample_id not in all_sample_ids:
+                    all_sample_ids.add(sample_id)
+                else:
+                    raise ValueError("Duplicate sample id found: %s" %
+                                     sample_id)
+
+                for header, value in zip(headers, data):
+                    merged_data[sample_id][header] = value
 
     def add_biom_tables(self, tables):
         """Adds biom tables to the analysis
