@@ -462,7 +462,6 @@ class Analysis(QiitaStatusObject):
         all_sample_ids = set()
         all_headers = set()
         all_studies = set()
-        base_fp = get_work_base_dir()
 
         merged_data = defaultdict(lambda: defaultdict(lambda: None))
         for pid, samples in viewitems(samples):
@@ -499,6 +498,7 @@ class Analysis(QiitaStatusObject):
         all_headers = sorted(list(all_headers))
 
         # write mapping file out
+        base_fp = get_work_base_dir()
         mapping_fp = join(base_fp, "processed_data/analysis_%i_mapping.txt" %
                           (self._id, proc_data))
 
@@ -511,36 +511,36 @@ class Analysis(QiitaStatusObject):
                                 metadata[header] is not None else "")
                 f.write("%s\t%s\n" % (sample, "\t".join(data)))
 
-    def add_biom_tables(self, tables):
-        """Adds biom tables to the analysis
+    def add_processed_data(self, proc_data):
+        """Adds processed data to the analysis
 
         Parameters
         ----------
-        tables : list of ProcessedData objects
-            Biom tables to add
+        proc_data : list of ProcessedData objects
+            processed data to attach to analysis
         """
         conn_handler = SQLConnectionHandler()
         self._lock_check(conn_handler)
         file_ids = []
-        for table in tables:
-            file_ids.extend(table.get_filepath_ids())
+        for data in proc_data:
+            file_ids.extend(data.get_filepath_ids())
         sql = ("INSERT INTO qiita.analysis_filepath (analysis_id, filepath_id)"
                " VALUES (%s, %s)")
         conn_handler.executemany(sql, [(self._id, f) for f in file_ids])
 
-    def remove_biom_tables(self, tables):
-        """Removes biom tables from the analysis
+    def remove_processed_data(self, proc_data):
+        """Removes processed_data from the analysis
 
         Parameters
         ----------
-        tables : list of ProcessedData objects
-            Biom tables to remove
+        proc_data : list of ProcessedData objects
+            processed data to remove from analysis
         """
         conn_handler = SQLConnectionHandler()
         self._lock_check(conn_handler)
         file_ids = []
-        for table in tables:
-            file_ids.extend(table.get_filepath_ids())
+        for data in proc_data:
+            file_ids.extend(data.get_filepath_ids())
         sql = ("DELETE FROM qiita.analysis_filepath WHERE analysis_id = %s "
                "AND filepath_id = %s")
         conn_handler.executemany(sql, [(self._id, f) for f in file_ids])
