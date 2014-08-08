@@ -222,6 +222,7 @@ class AnalysisWaitHandler(BaseHandler):
     @authenticated
     def get(self, analysis_id):
         user = self.current_user
+        analysis_id = int(analysis_id)
         check_analysis_access(User(user), analysis_id)
 
         analysis = Analysis(analysis_id)
@@ -238,6 +239,7 @@ class AnalysisWaitHandler(BaseHandler):
     @asynchronous
     def post(self, aid):
         user = self.current_user
+        aid = int(aid)
         check_analysis_access(User(user), aid)
 
         command_args = self.get_arguments("commands")
@@ -250,9 +252,9 @@ class AnalysisWaitHandler(BaseHandler):
         close(fp)
         SampleTemplate(1).to_file(mapping_file)
         study_fps = {}
-        for pd in Study(1).processed_data:
+        for pd in Study(1).processed_data():
             processed = ProcessedData(pd)
-            study_fps[processed.data_type] = processed.get_filepaths()[0][0]
+            study_fps[processed.data_type()] = processed.get_filepaths()[0][0]
         for data_type, command in split:
             opts = {
                 "--otu_table_fp": study_fps[data_type],
@@ -264,7 +266,8 @@ class AnalysisWaitHandler(BaseHandler):
             elif command == "Beta Diversity":
                 opts["--parameter_fp"] = join(get_db_files_base_dir(),
                                               "reference", "params_qiime.txt")
-            Job.create(data_type, command, opts, analysis)
+            job = Job.create(data_type, command, analysis)
+            job.options = opts
             commands.append("%s: %s" % (data_type, command))
         user = self.current_user
         self.render("analysis_waiting.html", user=user, aid=aid,
@@ -278,6 +281,7 @@ class AnalysisResultsHandler(BaseHandler):
     @authenticated
     def get(self, aid):
         user = self.current_user
+        aid = int(aid)
         check_analysis_access(User(user), aid)
 
         analysis = Analysis(aid)
