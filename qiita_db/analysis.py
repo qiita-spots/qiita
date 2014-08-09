@@ -27,7 +27,7 @@ from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from .sql_connection import SQLConnectionHandler
 from .base import QiitaStatusObject
 from .exceptions import QiitaDBNotImplementedError, QiitaDBStatusError
-from .util import convert_to_id, get_work_base_dir
+from .util import convert_to_id, get_work_base_dir, get_table_cols
 
 
 class Analysis(QiitaStatusObject):
@@ -236,9 +236,29 @@ class Analysis(QiitaStatusObject):
             ProcessedData ids of the biom tables or None if no tables generated
         """
         conn_handler = SQLConnectionHandler()
-        sql = ("SELECT filepath_id FROM qiita.analysis_filepath WHERE "
-               "analysis_id = %s")
+        # magic number 6 is biom file type
+        sql = ("SELECT af.filepath_id FROM qiita.analysis_filepath af JOIN "
+               "qiita.filepath f USE(filepath_id) WHERE af.analysis_id = %s"
+               "AND f.filepath_type_id = 6")
         tables = conn_handler.execute_fetchall(sql, (self._id, ))
+        if tables == []:
+            return None
+        return [table[0] for table in tables]
+
+    @property
+    def mapping_file(self):
+        """The mapping table of the analysis
+
+        Returns
+        -------
+        int or None
+            ProcessedData id of the mapping file or None if no mapping file
+        """
+        conn_handler = SQLConnectionHandler()
+        # magic number 8 is biom file type
+        sql = ("SELECT af.filepath_id FROM qiita.analysis_filepath af JOIN "
+               "qiita.filepath f USE(filepath_id) WHERE af.analysis_id = %s"
+               "AND f.filepath_type_id = 8")
         if tables == []:
             return None
         return [table[0] for table in tables]
@@ -452,7 +472,7 @@ class Analysis(QiitaStatusObject):
                 "processed_params_analysis", 1, (biom_fp, 6),
                 data_type=proc_data))
 
-        self.add_biom_tables(processed_data)
+        self.add_processed_data(processed_data)
 
     def _build_mapping_file(self, samples, conn_handler):
         """Builds the mapping file for all samples
@@ -471,15 +491,16 @@ class Analysis(QiitaStatusObject):
                 continue
             all_studies.add(study)
             # query out the combined table of metadata for all samples
-            sql = ("SELECT rs.sample_id, rs.sample_type, "
-                   "rs.collection_timestamp, rs.host_subject_id, "
-                   "rs.description, ss.* FROM qiita.required_sample_info rs "
-                   "JOIN qiita.sample_{0} ss USING(sample_id) WHERE "
-                   "rs.sample_id IN %s AND rs.study_id = %s".format(study))
-            metadata = conn_handler.execute_fetchall(
-                sql, (samples, study))
-            headers = metadata.keys()
-            print headers
+            headers = get_table_cols("sample_%d" % study, conn_handler)
+            sql = ("SELECT rs.sample_type, rs.collection_timestamp, "
+                   "rs.host_subject_id,rs.description,{0},rs.sample_id "
+                   "FROM qiita.required_sample_info rs JOIN qiita.sample_{1} "
+                   "ss USING(sample_id) WHERE rs.sample_id IN %s AND "
+                   "rs.study_id = %s".format(",".join(
+                       ["ss.%s" % h for h in headers]), study))
+            metadata = conn_handler.execute_fetchall(sql, (samples, study))
+            headers = ["sample_type", "collection_timestamp",
+                       "host_subject_id", "description"] + headers
             all_headers = all_headers.update(headers)
             # add all the metadata to merged_data
             for data in metadata:
@@ -493,11 +514,8 @@ class Analysis(QiitaStatusObject):
                 for header, value in zip(headers, data):
                     merged_data[sample_id][header] = value
 
-        # order headers properly for mapping file
-        all_headers.remove("sample_id")
-        all_headers = sorted(list(all_headers))
-
         # write mapping file out
+        all_headers = sorted(list(all_headers))
         base_fp = get_work_base_dir()
         mapping_fp = join(base_fp, "processed_data/analysis_%i_mapping.txt" %
                           (self._id, proc_data))
@@ -510,6 +528,13 @@ class Analysis(QiitaStatusObject):
                     data.append(metadata[header] if
                                 metadata[header] is not None else "")
                 f.write("%s\t%s\n" % (sample, "\t".join(data)))
+
+        # create PreprocessedData for file.  8 is plain text filetype
+        processed_data = ProcessedData.create(
+            "processed_params_analysis", 1, (mapping_fp, 8),
+            data_type=proc_data)
+
+        self.add_processed_data([processed_data])
 
     def add_processed_data(self, proc_data):
         """Adds processed data to the analysis
