@@ -526,7 +526,7 @@ class Analysis(QiitaStatusObject):
                 data = []
                 for header in all_headers:
                     data.append(metadata[header] if
-                                metadata[header] is not None else "")
+                                metadata[header] is not None else "no_data")
                 f.write("%s\t%s\n" % (sample, "\t".join(data)))
 
         # create PreprocessedData for file.  8 is plain text filetype
