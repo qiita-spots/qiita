@@ -243,14 +243,14 @@ class AnalysisWaitHandler(BaseHandler):
         command_args = self.get_arguments("commands")
         split = [x.split("#") for x in command_args]
         analysis = Analysis(aid)
+        analysis.build_biom_table_mapping_file()
 
         commands = []
         # HARD CODED HACKY THING FOR DEMO, FIX  Issue #164
-        fp, mapping_file = mkstemp(suffix="_map_file.txt")
-        close(fp)
-        SampleTemplate(1).to_file(mapping_file)
         study_fps = {}
-        for pd in Study(1).processed_data:
+        mapping_file = ProcessedData(
+            analysis.mapping_file).get_filepaths()[0][0]
+        for pd in analysis.biom_tables:
             processed = ProcessedData(pd)
             study_fps[processed.data_type] = processed.get_filepaths()[0][0]
         for data_type, command in split:
@@ -264,13 +264,13 @@ class AnalysisWaitHandler(BaseHandler):
             elif command == "Beta Diversity":
                 opts["--parameter_fp"] = join(get_db_files_base_dir(),
                                               "reference", "params_qiime.txt")
-            Job.create(data_type, command, opts, analysis)
+            job = Job.create(data_type, command, analysis)
+            job.options = opts
             commands.append("%s: %s" % (data_type, command))
         user = self.current_user
         self.render("analysis_waiting.html", user=user, aid=aid,
                     aname=analysis.name, commands=commands)
         # fire off analysis run here
-        # currently synch run so redirect done here. Will remove after demo
         run_analysis(user, analysis)
 
 

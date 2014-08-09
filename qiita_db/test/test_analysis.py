@@ -1,5 +1,7 @@
 from unittest import TestCase, main
 
+from biom import load_table
+
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_core.util import qiita_test_checker
 from qiita_db.analysis import Analysis
@@ -164,6 +166,55 @@ class TestAnalysis(TestCase):
     def test_unshare(self):
         self.analysis.unshare(User("shared@foo.bar"))
         self.assertEqual(self.analysis.shared_with, [])
+
+    def test_build_mapping_file(self):
+        samples = {1: ['SKB8.640193', 'SKD8.640184', 'SKB7.640196']}
+        self.analysis._build_mapping_file(samples, self.conn_handler)
+        obs = self.analysis.mapping_file
+        self.assertEqual(obs, 15)
+
+        mapfile = ProcessedData(15).get_filepaths()
+        exp = [("1_analysis_mapping.txt", 8)]
+        self.assertEqual(mapfile, exp)
+
+        with open(mapfile[0][0]) as f:
+            mapdata = f.read()
+        exp = ""
+        print "\n" + mapdata
+        self.assertEqual(mapdata, exp)
+
+    def test_build_biom_tables(self):
+        samples = {1: ['SKB8.640193', 'SKD8.640184', 'SKB7.640196']}
+        self.analysis._build_biom_tables(samples)
+        obs = self.analysis.biom_tables
+        self.assertEqual(obs, [15])
+
+        tablefile = ProcessedData(15).get_filepaths()
+        exp = [("1_analysis_18S.biom", 8)]
+
+        self.assertEqual(tablefile, exp)
+
+        table = load_table(tablefile[0][0])
+        obs = set(table.ids(axis='sample'))
+        exp = {'SKB8.640193', 'SKD8.640184', 'SKB7.640196'}
+        self.assertEqual(obs, exp)
+
+    def test_build_biom_table_mapping_file(self):
+        self.analysis.build_biom_table_mapping_file()
+        table_fp = ProcessedData(15).get_filepaths()[0][0]
+        table = load_table(table_fp)
+        obs = set(table.ids(axis='sample'))
+        exp = {'SKB8.640193', 'SKD8.640184', 'SKB7.640196', 'SKM9.640192',
+               'SKM4.640180'}
+        self.assertEqual(obs, exp)
+
+        mapfile_fp = ProcessedData(16).get_filepaths()[0][0]
+
+        with open(mapfile_fp) as f:
+            mapfile = f.read()
+        exp = ""
+        print "\n" + mapfile
+        self.assertEqual(mapfile, exp)
 
 
 if __name__ == "__main__":

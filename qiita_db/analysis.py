@@ -26,6 +26,7 @@ from biom.table import Table
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from .sql_connection import SQLConnectionHandler
 from .base import QiitaStatusObject
+from .data import ProcessedData
 from .exceptions import QiitaDBNotImplementedError, QiitaDBStatusError
 from .util import convert_to_id, get_work_base_dir, get_table_cols
 
@@ -247,7 +248,7 @@ class Analysis(QiitaStatusObject):
 
     @property
     def mapping_file(self):
-        """The mapping table of the analysis
+        """The mapping file of the analysis
 
         Returns
         -------
@@ -259,9 +260,10 @@ class Analysis(QiitaStatusObject):
         sql = ("SELECT af.filepath_id FROM qiita.analysis_filepath af JOIN "
                "qiita.filepath f USE(filepath_id) WHERE af.analysis_id = %s"
                "AND f.filepath_type_id = 8")
-        if tables == []:
+        map_file = conn_handler.execute_fetchone(sql, (self._id, ))
+        if map_file == []:
             return None
-        return [table[0] for table in tables]
+        return map_file[0]
 
     @property
     def jobs(self):
@@ -435,36 +437,33 @@ class Analysis(QiitaStatusObject):
         samples = dict(conn_handler.execute_fetchall(sql, [self._id]))
 
         _build_biom_tables(samples)
-        _build_mapping_files(samples, conn_handler)
+        _build_mapping_file(samples, conn_handler)
 
     def _build_biom_tables(self, samples):
         """Build tables and add them to the analysis"""
         # filter and combine all study BIOM tables needed for each data type
         new_tables = {dt: None for dt in self.data_types}
         base_fp = get_work_base_dir()
-        for pid, samps in viewitems(samps):
+        for pid, samps in viewitems(samples):
             # one biom table attached to each processed data object
             proc_data = ProcessedData(pid)
-            proc_data_fp = proc_data.get_filepaths()[0]
-            # make sure we're getting a biom filetype (magic number 6)
-            if proc_data_fp[1] != 6:
-                raise ValueError("ProcessedData %s not a biom formatted file!"
-                                 % pid)
-            table_fp = join(base_fp, proc_data_fp[0])
+            proc_data_fp = proc_data.get_filepaths()[0][0]
+            table_fp = join(base_fp, proc_data_fp)
             table = load_table(table_fp)
             # filter for just the wanted samples and merge into new table
             # this if/else setup avoids needing a blank table to start merges
             table.filter(samps, axis='sample', inplace=True)
-            if new_tables[proc_data.data_type] is None:
-                new_tables[proc_data.data_type] = table
+            data_type = proc_data.data_type
+            if new_tables[data_type] is None:
+                new_tables[data_type] = table
             else:
-                new_tables[proc_data.data_type].merge(table)
+                new_tables[data_type].merge(table)
 
         # add the new tables to the analysis
         processed_data = []
         for proc_data, table in viewitems(new_tables):
-            biom_fp = join(base_fp, "processed_data/analysis_%i_%s.biom" %
-                           (self._id, proc_data))
+            biom_fp = join(base_fp, "analysis_%s.biom" %
+                           (proc_data))
             with open(biom_fp, 'w') as f:
                 new_table.to_hdf5(f, "Combined samples for analysis %d and "
                                   "data_type %s" % (self._id, proc_data))
@@ -485,7 +484,7 @@ class Analysis(QiitaStatusObject):
 
         merged_data = defaultdict(lambda: defaultdict(lambda: None))
         for pid, samples in viewitems(samples):
-            study = ProcesseData(pid).study
+            study = ProcessedData(pid).study
             if study in all_studies:
                 # samples already added by other processed data file in study
                 continue
@@ -495,13 +494,14 @@ class Analysis(QiitaStatusObject):
             sql = ("SELECT rs.sample_type, rs.collection_timestamp, "
                    "rs.host_subject_id,rs.description,{0},rs.sample_id "
                    "FROM qiita.required_sample_info rs JOIN qiita.sample_{1} "
-                   "ss USING(sample_id) WHERE rs.sample_id IN %s AND "
-                   "rs.study_id = %s".format(",".join(
-                       ["ss.%s" % h for h in headers]), study))
-            metadata = conn_handler.execute_fetchall(sql, (samples, study))
+                   "ss USING(sample_id) WHERE rs.sample_id IN {2} AND "
+                   "rs.study_id = {1}".format(",".join(
+                       ["ss.%s" % h for h in headers]), study,
+                       "(%s)" % ",".join(samples)))
+            metadata = conn_handler.execute_fetchall(sql)
             headers = ["sample_type", "collection_timestamp",
                        "host_subject_id", "description"] + headers
-            all_headers = all_headers.update(headers)
+            all_headers.update(headers)
             # add all the metadata to merged_data
             for data in metadata:
                 sample_id = data.pop()
@@ -512,13 +512,13 @@ class Analysis(QiitaStatusObject):
                                      sample_id)
 
                 for header, value in zip(headers, data):
-                    merged_data[sample_id][header] = value
+                    merged_data[sample_id][header] = str(value)
 
         # write mapping file out
-        all_headers = sorted(list(all_headers))
+        all_headers = list(all_headers)
+        all_headers.sort()
         base_fp = get_work_base_dir()
-        mapping_fp = join(base_fp, "processed_data/analysis_%i_mapping.txt" %
-                          (self._id, proc_data))
+        mapping_fp = join(base_fp, "analysis_mapping.txt")
 
         with open(mapping_fp, 'w') as f:
             f.write("#SampleID\t%s\n" % '\t'.join(all_headers))
@@ -532,7 +532,7 @@ class Analysis(QiitaStatusObject):
         # create PreprocessedData for file.  8 is plain text filetype
         processed_data = ProcessedData.create(
             "processed_params_analysis", 1, (mapping_fp, 8),
-            data_type=proc_data)
+            data_type='18S')
 
         self.add_processed_data([processed_data])
 
