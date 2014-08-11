@@ -1,4 +1,6 @@
 from unittest import TestCase, main
+from os.path import exists, join
+from os import remove
 
 from biom import load_table
 
@@ -10,6 +12,7 @@ from qiita_db.user import User
 from qiita_db.data import ProcessedData
 from qiita_db.exceptions import (QiitaDBDuplicateError, QiitaDBColumnError,
                                  QiitaDBStatusError)
+from qiita_db.util import get_work_base_dir, get_db_files_base_dir
 # -----------------------------------------------------------------------------
 # Copyright (c) 2014--, The Qiita Development Team.
 #
@@ -113,6 +116,16 @@ class TestAnalysis(TestCase):
         self.analysis.pmid = "11211221212213"
         self.assertEqual(self.analysis.pmid, "11211221212213")
 
+    def test_retrieve_mapping_file(self):
+        exp = join(get_work_base_dir(), "1_analysis_mapping.txt")
+        try:
+            obs = self.analysis.mapping_file
+            self.assertEqual(obs, exp)
+            self.assertTrue(exists(exp))
+        finally:
+            remove(exp)
+
+
     # def test_get_parent(self):
     #     raise NotImplementedError()
 
@@ -167,54 +180,69 @@ class TestAnalysis(TestCase):
         self.analysis.unshare(User("shared@foo.bar"))
         self.assertEqual(self.analysis.shared_with, [])
 
+    def test_get_samples(self):
+        obs = self.analysis._get_samples()
+        exp = {1: ['SKB8.640193', 'SKD8.640184', 'SKB7.640196', 'SKM9.640192',
+               'SKM4.640180']}
+        self.assertEqual(obs, exp)
+
     def test_build_mapping_file(self):
-        samples = {1: ['SKB8.640193', 'SKD8.640184', 'SKB7.640196']}
-        self.analysis._build_mapping_file(samples, self.conn_handler)
-        obs = self.analysis.mapping_file
-        self.assertEqual(obs, 15)
+        map_fp = join(get_work_base_dir(), "1_analysis_mapping.txt")
+        try:
+            obs = self.analysis.mapping_file
+            self.assertEqual(obs, map_fp)
 
-        mapfile = ProcessedData(15).get_filepaths()
-        exp = [("1_analysis_mapping.txt", 8)]
-        self.assertEqual(mapfile, exp)
+            with open(map_fp) as f:
+                mapdata = f.readlines()
 
-        with open(mapfile[0][0]) as f:
-            mapdata = f.read()
-        exp = ""
-        print "\n" + mapdata
-        self.assertEqual(mapdata, exp)
+            # check some columns for correctness
+            obs = [line.split('\t')[0] for line in mapdata]
+            exp = ['#SampleID', 'SKM4.640180', 'SKB8.640193', 'SKD8.640184',
+                   'SKB7.640196', 'SKM9.640192']
+            self.assertEqual(obs, exp)
+
+            obs = [line.split('\t')[8] for line in mapdata]
+            exp = ['description_duplicate', 'Bucu Rhizo', 'Burmese root',
+                   'Diesel Root', 'Burmese root', 'Bucu Roots']
+            self.assertEqual(obs, exp)
+
+            obs = [line.split('\t')[12] for line in mapdata]
+            exp = ['host_subject_id', '1001:D2', '1001:M7', '1001:D9',
+                   '1001:M8', '1001:B8']
+            self.assertEqual(obs, exp)
+
+            obs = [line.split('\t')[24] for line in mapdata]
+            exp = ['tot_org_carb', '3.31', '5.0', '4.32', '5.0', '3.31']
+            self.assertEqual(obs, exp)
+
+            obs = [line.split('\t')[-1] for line in mapdata]
+            exp = ['description\n'] + ['Cannabis Soil Microbiome\n'] * 5
+            self.assertEqual(obs, exp)
+        finally:
+            remove(map_fp)
 
     def test_build_biom_tables(self):
-        samples = {1: ['SKB8.640193', 'SKD8.640184', 'SKB7.640196']}
-        self.analysis._build_biom_tables(samples)
-        obs = self.analysis.biom_tables
-        self.assertEqual(obs, [15])
+        map_fp = ""
+        try:
+            samples = {1: ['SKB8.640193', 'SKD8.640184', 'SKB7.640196']}
+            self.analysis._build_biom_tables(samples)
+            obs = self.analysis.biom_tables
+            self.assertEqual(obs, [15])
 
-        tablefile = ProcessedData(15).get_filepaths()
-        exp = [("1_analysis_18S.biom", 8)]
+            tablefile = ProcessedData(15).get_filepaths()
+            exp = [("1_analysis_18S.biom", 8)]
 
-        self.assertEqual(tablefile, exp)
+            self.assertEqual(tablefile, exp)
+            map_fp = join(get_db_files_base_dir(), "processed_data/",
+                          "1_analysis_18S.biom")
 
-        table = load_table(tablefile[0][0])
-        obs = set(table.ids(axis='sample'))
-        exp = {'SKB8.640193', 'SKD8.640184', 'SKB7.640196'}
-        self.assertEqual(obs, exp)
-
-    def test_build_biom_table_mapping_file(self):
-        self.analysis.build_biom_table_mapping_file()
-        table_fp = ProcessedData(15).get_filepaths()[0][0]
-        table = load_table(table_fp)
-        obs = set(table.ids(axis='sample'))
-        exp = {'SKB8.640193', 'SKD8.640184', 'SKB7.640196', 'SKM9.640192',
-               'SKM4.640180'}
-        self.assertEqual(obs, exp)
-
-        mapfile_fp = ProcessedData(16).get_filepaths()[0][0]
-
-        with open(mapfile_fp) as f:
-            mapfile = f.read()
-        exp = ""
-        print "\n" + mapfile
-        self.assertEqual(mapfile, exp)
+            table = load_table(tablefile[0][0])
+            obs = set(table.ids(axis='sample'))
+            exp = {'SKB8.640193', 'SKD8.640184', 'SKB7.640196', 'SKM9.640192',
+                   'SKM4.640180'}
+            self.assertEqual(obs, exp)
+        finally:
+            remove(mapfile[0][0])
 
 
 if __name__ == "__main__":

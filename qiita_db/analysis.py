@@ -19,6 +19,7 @@ from __future__ import division
 from collections import defaultdict
 from os.path import join
 
+from future.builtins import zip
 from future.utils import viewitems
 from biom import load_table
 from biom.table import Table
@@ -248,22 +249,15 @@ class Analysis(QiitaStatusObject):
 
     @property
     def mapping_file(self):
-        """The mapping file of the analysis
+        """Builds and returns the mapping file for the analysis
 
         Returns
         -------
-        int or None
-            ProcessedData id of the mapping file or None if no mapping file
+        str
+            full filepath to the generated mapping file
         """
         conn_handler = SQLConnectionHandler()
-        # magic number 8 is biom file type
-        sql = ("SELECT af.filepath_id FROM qiita.analysis_filepath af JOIN "
-               "qiita.filepath f USE(filepath_id) WHERE af.analysis_id = %s"
-               "AND f.filepath_type_id = 8")
-        map_file = conn_handler.execute_fetchone(sql, (self._id, ))
-        if map_file == []:
-            return None
-        return map_file[0]
+        return self._build_mapping_file()
 
     @property
     def jobs(self):
@@ -422,25 +416,9 @@ class Analysis(QiitaStatusObject):
 
         conn_handler.executemany(sql, remove)
 
-    def build_biom_table_mapping_file(self):
-        """Creates BIOM tables and mapping files for samples in analysis
-
-        Notes
-        -----
-        Seperate BIOM tables and mapping files are created for each data type.
-        """
-        # build the samples dict as list of samples keyed to their proc_data_id
-        conn_handler = SQLConnectionHandler()
-        sql = ("SELECT processed_data_id, array_agg(sample_id ORDER BY "
-               "sample_id) FROM qiita.analysis_sample WHERE analysis_id = %s "
-               "GROUP BY processed_data_id")
-        samples = dict(conn_handler.execute_fetchall(sql, [self._id]))
-
-        _build_biom_tables(samples)
-        _build_mapping_file(samples, conn_handler)
-
-    def _build_biom_tables(self, samples):
+    def build_biom_tables(self):
         """Build tables and add them to the analysis"""
+        samples = _get_samples()
         # filter and combine all study BIOM tables needed for each data type
         new_tables = {dt: None for dt in self.data_types}
         base_fp = get_work_base_dir()
@@ -473,15 +451,27 @@ class Analysis(QiitaStatusObject):
 
         self.add_processed_data(processed_data)
 
-    def _build_mapping_file(self, samples, conn_handler):
-        """Builds the mapping file for all samples
+    def _get_samples(self, conn_handler=None):
+        """Retrieves dict of samples to proc_data_id for the analysis"""
+        conn_handler = conn_handler if conn_handler is not None \
+            else SQLConnectionHandler()
+        sql = ("SELECT processed_data_id, array_agg(sample_id ORDER BY "
+               "sample_id) FROM qiita.analysis_sample WHERE analysis_id = %s "
+               "GROUP BY processed_data_id")
+        return dict(conn_handler.execute_fetchall(sql, [self._id]))
+
+    def _build_mapping_file(self, conn_handler=None):
+        """Builds the combined mapping file for all samples
            Code modified slightly from qiime.util.MetadataMap.__add__"""
+        conn_handler = conn_handler if conn_handler is not None \
+            else SQLConnectionHandler()
         # We will keep track of all unique sample_ids and metadata headers
         # we have seen as we go, as well as studies already seen
         all_sample_ids = set()
         all_headers = set()
         all_studies = set()
 
+        samples = self._get_samples(conn_handler)
         merged_data = defaultdict(lambda: defaultdict(lambda: None))
         for pid, samples in viewitems(samples):
             study = ProcessedData(pid).study
@@ -491,13 +481,15 @@ class Analysis(QiitaStatusObject):
             all_studies.add(study)
             # query out the combined table of metadata for all samples
             headers = get_table_cols("sample_%d" % study, conn_handler)
+            headers.remove("sample_id")
             sql = ("SELECT rs.sample_type, rs.collection_timestamp, "
                    "rs.host_subject_id,rs.description,{0},rs.sample_id "
                    "FROM qiita.required_sample_info rs JOIN qiita.sample_{1} "
                    "ss USING(sample_id) WHERE rs.sample_id IN {2} AND "
-                   "rs.study_id = {1}".format(",".join(
-                       ["ss.%s" % h for h in headers]), study,
-                       "(%s)" % ",".join(samples)))
+                   "rs.study_id = {1}".format(
+                       ",".join("ss.%s" % h for h in headers),
+                       study,
+                       "(%s)" % ",".join("'%s'" % s for s in samples)))
             metadata = conn_handler.execute_fetchall(sql)
             headers = ["sample_type", "collection_timestamp",
                        "host_subject_id", "description"] + headers
@@ -514,25 +506,24 @@ class Analysis(QiitaStatusObject):
                 for header, value in zip(headers, data):
                     merged_data[sample_id][header] = str(value)
 
-        # write mapping file out
+        # prep headers, making sure they follow mapping file format rules
+        all_headers.remove('description')
         all_headers = list(all_headers)
         all_headers.sort()
-        base_fp = get_work_base_dir()
-        mapping_fp = join(base_fp, "analysis_mapping.txt")
+        all_headers.append('description')
 
+        # write mapping file out
+        base_fp = get_work_base_dir()
+        mapping_fp = join(base_fp, "%d_analysis_mapping.txt" % self._id)
         with open(mapping_fp, 'w') as f:
             f.write("#SampleID\t%s\n" % '\t'.join(all_headers))
             for sample, metadata in viewitems(merged_data):
-                data = []
+                data = [sample]
                 for header in all_headers:
                     data.append(metadata[header] if
                                 metadata[header] is not None else "no_data")
-                f.write("%s\t%s\n" % (sample, "\t".join(data)))
-
-        # create PreprocessedData for file.  8 is plain text filetype
-        processed_data = ProcessedData.create(
-            "processed_params_analysis", 1, (mapping_fp, 8),
-            data_type='18S')
+                f.write("%s\n" % "\t".join(data))
+        return mapping_fp
 
         self.add_processed_data([processed_data])
 
