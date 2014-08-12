@@ -89,7 +89,11 @@ class TestAnalysis(TestCase):
         self.assertEqual(self.analysis.shared_with, ["shared@foo.bar"])
 
     def test_retrieve_biom_tables(self):
-        self.assertEqual(self.analysis.biom_tables, [7])
+        exp = {"18S": join(get_db_files_base_dir(), "processed_data",
+                           "1_analysis_18S.biom"),
+               "16S": join(get_db_files_base_dir(), "processed_data",
+                           "1_analysis_16S.biom")}
+        self.assertEqual(self.analysis.biom_tables, exp)
 
     def test_retrieve_biom_tables_none(self):
         new = Analysis.create(User("admin@foo.bar"), "newAnalysis",
@@ -155,16 +159,6 @@ class TestAnalysis(TestCase):
         exp = {}
         self.assertEqual(self.analysis.samples, exp)
 
-    def test_add_biom_tables(self):
-        new = Analysis.create(User("admin@foo.bar"), "newAnalysis",
-                              "A New Analysis")
-        new.add_biom_tables([ProcessedData(1)])
-        self.assertEqual(new.biom_tables, [7])
-
-    def test_remove_biom_tables(self):
-        self.analysis.remove_biom_tables([ProcessedData(1)])
-        self.assertEqual(self.analysis.biom_tables, None)
-
     def test_add_jobs(self):
         new = Analysis.create(User("admin@foo.bar"), "newAnalysis",
                               "A New Analysis")
@@ -182,8 +176,8 @@ class TestAnalysis(TestCase):
 
     def test_get_samples(self):
         obs = self.analysis._get_samples()
-        exp = {1: ['SKB8.640193', 'SKD8.640184', 'SKB7.640196', 'SKM9.640192',
-               'SKM4.640180']}
+        exp = {1L: ['SKB7.640196', 'SKB8.640193', 'SKD8.640184', 'SKM4.640180',
+                    'SKM9.640192']}
         self.assertEqual(obs, exp)
 
     def test_build_mapping_file(self):

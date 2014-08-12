@@ -338,8 +338,11 @@ INSERT INTO qiita.analysis (email, name, description, analysis_status_id, pmid) 
 -- Attach jobs to analysis
 INSERT INTO qiita.analysis_job (analysis_id, job_id) VALUES (1, 1), (1, 2), (2, 3);
 
+-- Insert filepath for analysis biom files
+INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum, checksum_algorithm_id) VALUES ('1_analysis_18S.biom', 6, '852952723', 1), ('1_analysis_16S.biom', 6, '852952723', 1);
+
 -- Attach filepath to analysis
-INSERT INTO qiita.analysis_filepath (analysis_id, filepath_id) VALUES (1, 7);
+INSERT INTO qiita.analysis_filepath (analysis_id, filepath_id) VALUES (1, 10), (1, 11);
 
 -- Attach samples to analysis
 INSERT INTO qiita.analysis_sample (analysis_id, processed_data_id, sample_id) VALUES (1,1,'SKB8.640193'), (1,1,'SKD8.640184'), (1,1,'SKB7.640196'), (1,1,'SKM9.640192'), (1,1,'SKM4.640180'), (2,1,'SKB8.640193'), (2,1,'SKD8.640184'), (2,1,'SKB7.640196');

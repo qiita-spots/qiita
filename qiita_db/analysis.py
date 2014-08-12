@@ -17,19 +17,21 @@ Classes
 # -----------------------------------------------------------------------------
 from __future__ import division
 from collections import defaultdict
-from os.path import join
+from os.path import join, basename, splitext
 
 from future.builtins import zip
 from future.utils import viewitems
 from biom import load_table
 from biom.table import Table
+from biom.util import biom_open
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from .sql_connection import SQLConnectionHandler
 from .base import QiitaStatusObject
 from .data import ProcessedData
 from .exceptions import QiitaDBNotImplementedError, QiitaDBStatusError
-from .util import convert_to_id, get_work_base_dir, get_table_cols
+from .util import (convert_to_id, get_work_base_dir, get_db_files_base_dir,
+                   get_table_cols)
 
 
 class Analysis(QiitaStatusObject):
@@ -55,8 +57,8 @@ class Analysis(QiitaStatusObject):
     add_samples
     remove_samples
     build_biom_table
-    add_biom_tables
-    remove_biom_tables
+    add_processed_data
+    remove_processed_data
     add_jobs
     share
     unshare
@@ -234,18 +236,23 @@ class Analysis(QiitaStatusObject):
 
         Returns
         -------
-        list of int or None
-            ProcessedData ids of the biom tables or None if no tables generated
+        dict or None
+            Dictonary in the form {data_type: BIOM filepath}
         """
         conn_handler = SQLConnectionHandler()
         # magic number 6 is biom file type
-        sql = ("SELECT af.filepath_id FROM qiita.analysis_filepath af JOIN "
-               "qiita.filepath f USE(filepath_id) WHERE af.analysis_id = %s"
-               "AND f.filepath_type_id = 6")
+        sql = ("SELECT f.filepath FROM qiita.filepath f JOIN "
+               "qiita.analysis_filepath af ON f.filepath_id = af.filepath_id "
+               "WHERE af.analysis_id = %s AND f.filepath_type_id = 6")
         tables = conn_handler.execute_fetchall(sql, (self._id, ))
-        if tables == []:
+        if not tables:
             return None
-        return [table[0] for table in tables]
+        ret_tables = {}
+        base_fp = get_db_files_base_dir()
+        for fp in tables:
+            data_type = splitext(basename(fp[0]))[0].split("_")[-1]
+            ret_tables[data_type] = join(base_fp, "processed_data", fp[0])
+        return ret_tables
 
     @property
     def mapping_file(self):
@@ -438,18 +445,7 @@ class Analysis(QiitaStatusObject):
                 new_tables[data_type].merge(table)
 
         # add the new tables to the analysis
-        processed_data = []
-        for proc_data, table in viewitems(new_tables):
-            biom_fp = join(base_fp, "analysis_%s.biom" %
-                           (proc_data))
-            with open(biom_fp, 'w') as f:
-                new_table.to_hdf5(f, "Combined samples for analysis %d and "
-                                  "data_type %s" % (self._id, proc_data))
-            processed_data.append(ProcessedData.create(
-                "processed_params_analysis", 1, (biom_fp, 6),
-                data_type=proc_data))
-
-        self.add_processed_data(processed_data)
+        
 
     def _get_samples(self, conn_handler=None):
         """Retrieves dict of samples to proc_data_id for the analysis"""
@@ -524,42 +520,6 @@ class Analysis(QiitaStatusObject):
                                 metadata[header] is not None else "no_data")
                 f.write("%s\n" % "\t".join(data))
         return mapping_fp
-
-        self.add_processed_data([processed_data])
-
-    def add_processed_data(self, proc_data):
-        """Adds processed data to the analysis
-
-        Parameters
-        ----------
-        proc_data : list of ProcessedData objects
-            processed data to attach to analysis
-        """
-        conn_handler = SQLConnectionHandler()
-        self._lock_check(conn_handler)
-        file_ids = []
-        for data in proc_data:
-            file_ids.extend(data.get_filepath_ids())
-        sql = ("INSERT INTO qiita.analysis_filepath (analysis_id, filepath_id)"
-               " VALUES (%s, %s)")
-        conn_handler.executemany(sql, [(self._id, f) for f in file_ids])
-
-    def remove_processed_data(self, proc_data):
-        """Removes processed_data from the analysis
-
-        Parameters
-        ----------
-        proc_data : list of ProcessedData objects
-            processed data to remove from analysis
-        """
-        conn_handler = SQLConnectionHandler()
-        self._lock_check(conn_handler)
-        file_ids = []
-        for data in proc_data:
-            file_ids.extend(data.get_filepath_ids())
-        sql = ("DELETE FROM qiita.analysis_filepath WHERE analysis_id = %s "
-               "AND filepath_id = %s")
-        conn_handler.executemany(sql, [(self._id, f) for f in file_ids])
 
     def add_jobs(self, jobs):
         """Adds a list of jobs to the analysis
