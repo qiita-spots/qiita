@@ -45,5 +45,12 @@ function enable_study_datatype(id) {
 
 function pre_submit(action) {
   document.getElementById('action').value = action;
+  if(action == 'search') {
+    var msgdiv = document.getElementById('searchmsg');
+    msgdiv.style.color = '';
+    msgdiv.innerHTML = '<img src="/static/img/waiting.gif">';
+    document.getElementById('query').disabled = "disabled";
+    document.getElementById('submitsearchbutton').disabled = "disabled";
+  }
   if(action == 'continue') {document.getElementById('results-form').action = '/analysis/3'}
 }

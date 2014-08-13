@@ -25,6 +25,8 @@ function add_metacat(metacat) {
 {% from qiita_db.study import Study %}
 {% from qiita_db.data import ProcessedData %}
 {% from qiita_pet.util import clean_str %}
+<!--dead easy preload for waiting image -->
+<img src="/static/img/waiting.gif" width="1" height="1" border="0">
 <form role="form" action="/analysis/2" id="results-form" method="post">
 <input type="hidden" name="action" id="action" value="search">
 <input type="hidden" name="analysis-id" value="{{aid}}">
@@ -71,7 +73,7 @@ function add_metacat(metacat) {
 <div id="availstudies" style="overflow : auto;">  <!-- Search results -->
 <h1>Search</h1>
 <p><a href="#" data-toggle="modal" data-target="#searchexample">Search help</a> | <a href="#" data-toggle="modal" data-target="#availmeta">Metadata categories</a></p>
-<p><input type="text" name="query" id="query" style="width:80%;white-space:nowrap;" value='{{query}}'><input type="submit" class="btn btn-default" onclick="pre_submit('search')" value="Search"></p>
+<p><input type="text" name="query" id="query" style="width:80%;white-space:nowrap;" value='{{query}}'><input type="submit" id="submitsearchbutton" class="btn btn-default" onclick="pre_submit('search')" value="Search"></p>
 <div id='searchmsg' style="color:red;">{{searchmsg}}</div>
 
 
