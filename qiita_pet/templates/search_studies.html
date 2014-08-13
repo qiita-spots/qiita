@@ -73,7 +73,7 @@ function add_metacat(metacat) {
 <div id="availstudies" style="overflow : auto;">  <!-- Search results -->
 <h1>Search</h1>
 <p><a href="#" data-toggle="modal" data-target="#searchexample">Search help</a> | <a href="#" data-toggle="modal" data-target="#availmeta">Metadata categories</a></p>
-<p><input type="text" name="query" id="query" style="width:80%;white-space:nowrap;" value='{{query}}'><input type="submit" id="submitsearchbutton" class="btn btn-default" onclick="pre_submit('search')" value="Search"></p>
+<p><input type="text" name="query" id="query" style="width:80%;white-space:nowrap;" value='{{query}}'><input type="submit" id="submitsearchbutton" class="btn btn-default" onclick="return pre_submit('search')" value="Search"></p>
 <div id='searchmsg' style="color:red;">{{searchmsg}}</div>
 
 
@@ -119,7 +119,7 @@ function add_metacat(metacat) {
           </select>{{data_type}}<br />
           </td><td style='vertical-align:middle;'><a href="#" data-toggle="modal" data-target="#modal{{sid}}">{{study.title}}</a></td>
           <td style='vertical-align:middle;'>
-            <a href="#" onclick="select_deselect({{sid}}, true); return false;">Select all</a><br /><a href="#" onclick="select_deselect({{sid}}, false); return false;">Select none</a>
+            <a href="#" onclick="select_deselect({{sid}}, true); return false;">Select all</a>
           </td>
           <td style='vertical-align:middle;'>
           {{study.info["study_description"]}}</td>
@@ -192,10 +192,10 @@ function add_metacat(metacat) {
       </div><!-- /.modal -->
   {% end %}
 {% end %}
-<div id="col-sm-12" style="position:fixed;height:32px;width:100%;padding:5px;top:50px;left:0px;">
+<div id="col-sm-12" style="position:fixed;height:32px;width:100%;padding:5px;top:50px;left:0px;background:white;">
   <input type="submit" class="btn btn-default btn-xs" onclick="pre_submit('select')" value="Select samples" style="vertical-align: middle;">
     <input type="submit" class="btn btn-default btn-xs" onclick="pre_submit('deselect')" value="Remove samples">
-    <input type="submit" class="btn btn-default btn-xs" onclick="pre_submit('continue')" value="Continue">
+    <input type="submit" class="btn btn-default btn-xs" onclick="return pre_submit('continue')" value="Continue">
 </div>
 </form>
 <div class="modal fade search-example-modal" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true" id="searchexample">

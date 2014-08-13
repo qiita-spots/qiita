@@ -30,6 +30,7 @@ from qiita_db.metadata_template import SampleTemplate
 from qiita_db.job import Job, Command
 from qiita_db.util import get_db_files_base_dir, get_table_cols
 from qiita_db.search import QiitaStudySearch
+from qiita_core.exceptions import IncompetentQiitaDeveloperError
 
 
 def check_analysis_access(user, analysis_id):
@@ -188,8 +189,12 @@ class SearchStudiesHandler(BaseHandler):
 
         elif action == "deselect":
             proc_data, samples = self._parse_form_deselect()
-            analysis.remove_samples(proc_data=proc_data)
-            analysis.remove_samples(samples=samples)
+            if proc_data:
+                analysis.remove_samples(proc_data=proc_data)
+            if samples:
+                analysis.remove_samples(samples=samples)
+            if not proc_data and not samples:
+                searchmsg = "Must select samples to remove from analysis!"
 
             # rebuild the selected from database to reflect changes
             selproc_data, selsamples = self._selected_parser(analysis)
