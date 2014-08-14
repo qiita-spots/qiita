@@ -131,6 +131,7 @@ function add_metacat(metacat) {
   </div>
 </div>
   {% for sid, samples in viewitems(results) %}
+    {% set study = Study(sid) %}
     <div class="modal fade" id='modal{{sid}}'>
         <div class="modal-dialog modal-lg">
           <div class="modal-content">
@@ -156,7 +157,7 @@ function add_metacat(metacat) {
                       <table class="table"><tr><th>Value</th><th>Samples</th><th></th></tr>
                       {% for sub_cat, count in viewitems(sub_cats) %}
                         <tr><td>{{sub_cat}}</td><td>{{count}}</td>
-                        <td><a href='#' onclick="select_category('{{clean_str(sub_cat)}}', ''); return false;">Select category</a></td></tr>
+                        <td><a href='#' onclick="select_category('{{clean_str(sub_cat)}}', '{{study.id}}'); return false;">Select category</a></td></tr>
                       {% end %}
                       </table>
                     </div>
@@ -219,7 +220,7 @@ function add_metacat(metacat) {
         <p>Complex queries can also be created by using AND, OR, and NOT operators. As an example, if we want all soil samples that are low or extremely high pH, we can use the following search:</p>
         <p><b>sample_type = ENVO:soil AND (ph < 4 OR ph > 10)</b></p>
         <p>You can search for multi-word phrases using quotes. For example, to search for any study with "chicken pox" in the title, the query would be:</p>
-        <p><b>title includes "chicken pox"</b></p>
+        <p><b>study_title includes "chicken pox"</b></p>
         <p>Note that you can not use wild cards in any string searches. Only alphanumeric characters and colons are supported.</p>
       </div>
     </div>
