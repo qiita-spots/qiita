@@ -285,7 +285,6 @@ class AnalysisWaitHandler(BaseHandler):
                 opts["--parameter_fp"] = join(get_db_files_base_dir(),
                                               "reference", "params_qiime.txt")
             job = Job.create(data_type, command, opts, analysis)
-            job.options = opts
             commands.append("%s: %s" % (data_type, command))
         user = self.current_user
         self.render("analysis_waiting.html", user=user, aid=analysis_id,

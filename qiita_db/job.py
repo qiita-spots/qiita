@@ -237,13 +237,14 @@ class Job(QiitaStatusObject):
         datatype_id = convert_to_id(datatype, "data_type", conn_handler)
         sql = "SELECT command_id FROM qiita.command WHERE name = %s"
         command_id = conn_handler.execute_fetchone(sql, (command, ))[0]
+        opts_json = dumps(options, sort_keys=True, separators=(',', ':'))
 
         # Create the job and return it
         sql = ("INSERT INTO qiita.{0} (data_type_id, job_status_id, "
-               "command_id) VALUES "
-               "(%s, %s, %s) RETURNING job_id").format(cls._table)
+               "command_id, options) VALUES "
+               "(%s, %s, %s, %s) RETURNING job_id").format(cls._table)
         job_id = conn_handler.execute_fetchone(sql, (datatype_id, 1,
-                                               command_id))[0]
+                                               command_id, opts_json))[0]
 
         # add job to analysis
         sql = ("INSERT INTO qiita.analysis_job (analysis_id, job_id) VALUES "

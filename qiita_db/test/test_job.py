@@ -176,7 +176,7 @@ class JobTest(TestCase):
         # make sure job inserted correctly
         obs = self.conn_handler.execute_fetchall("SELECT * FROM qiita.job "
                                                  "WHERE job_id = 4")
-        exp = [[4, 2, 1, 3, None, None]]
+        exp = [[4, 2, 1, 3, '{"opt1":4}', None]]
         self.assertEqual(obs, exp)
         # make sure job added to analysis correctly
         obs = self.conn_handler.execute_fetchall("SELECT * FROM "
@@ -191,7 +191,7 @@ class JobTest(TestCase):
         # make sure job inserted correctly
         obs = self.conn_handler.execute_fetchall("SELECT * FROM qiita.job "
                                                  "WHERE job_id = 5")
-        exp = [[5, 1, 1, 2, None, None]]
+        exp = [[5, 1, 1, 2, '{"opt1":4}', None]]
         self.assertEqual(obs, exp)
         # make sure job added to analysis correctly
         obs = self.conn_handler.execute_fetchall("SELECT * FROM "
