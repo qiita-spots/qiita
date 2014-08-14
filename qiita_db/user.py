@@ -340,7 +340,14 @@ class User(QiitaObject):
 
 
 def validate_email(email):
-    """Makes sure email string has one @ and a period after the @
+    """Validates an email
+
+    Notes
+    -----
+    A valid email must be of the form "string AT string" where the first string
+    must be not empty, and consists of [a-zA-Z0-9.+]. The AT is the '@' symbol.
+    The second string must be not empty, consist of [a-zA-Z0-9.], and is
+    required to have at least one '.'.
 
     Parameters
     ----------
@@ -352,12 +359,30 @@ def validate_email(email):
     bool
         Whether or not the email is valid
     """
-    return True if match(r"[^@]+@[^@]+\.[^@]+", email) else False
+    valid_chars = "a-zA-Z0-9\.\+\-"
+    pattern = r"[%s]+@[%s]+\.[%s]+" % (valid_chars, valid_chars, valid_chars)
+
+    try:
+        email.decode('ascii')
+    except UnicodeError:
+        return False
+
+    return True if match(pattern, email) is not None else False
 
 
 def validate_password(password):
-    """Validates a password is only ascii letters, numbers, or characters and
-    at least 8 characters
+    """Validates a password
+
+    Notes
+    -----
+    The valid characters for a password are:
+
+        * lowercase letters
+        * uppercase letters
+        * numbers
+        * special characters (e.g., !@#$%^&*()-_=+`~[]{}|;:'",<.>/?) with the
+            exception of a backslash
+        * must be ASCII
 
     Parameters
     ----------
@@ -374,4 +399,15 @@ def validate_password(password):
     http://stackoverflow.com/questions/2990654/how-to-test-a-regex-
     password-in-python
     """
-    return True if match(r'[A-Za-z0-9@#$%^&+=]{8,}', password) else False
+    lower_case = 'a-z'
+    upper_case = 'A-Z'
+    numbers = '0-9'
+    special = """!@#\$%\^&\*\(\)-_\=+`~\[\]\{\}|;:'",<.>/\?)"""
+    pattern = r'[%s%s%s%s]{8,}' % (lower_case, upper_case, numbers, special)
+
+    try:
+        password.decode('ascii')
+    except UnicodeError:
+        return False
+    else:
+        return True if match(pattern, password) is not None else False
