@@ -200,7 +200,7 @@ class SearchStudiesHandler(BaseHandler):
 
         self.render('search_studies.html', user=user, aid=analysis_id,
                     results=results, meta_headers=meta_headers,
-                    selsamples=selsamples,selproc_data=selproc_data,
+                    selsamples=selsamples, selproc_data=selproc_data,
                     counts=counts, fullcounts=fullcounts, searchmsg=searchmsg,
                     query=query, availmeta=SampleTemplate.metadata_headers() +
                     get_table_cols("study"))
