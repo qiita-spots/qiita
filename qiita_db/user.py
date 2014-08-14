@@ -363,7 +363,7 @@ def validate_email(email):
     pattern = r"[%s]+@[%s]+\.[%s]+" % (valid_chars, valid_chars, valid_chars)
 
     try:
-        email.decode('ascii')
+        email.encode('ascii')
     except UnicodeError:
         return False
 
@@ -406,7 +406,7 @@ def validate_password(password):
     pattern = r'[%s%s%s%s]{8,}' % (lower_case, upper_case, numbers, special)
 
     try:
-        password.decode('ascii')
+        password.encode('ascii')
     except UnicodeError:
         return False
     else:
