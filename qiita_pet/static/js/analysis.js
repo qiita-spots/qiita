@@ -51,7 +51,8 @@ function pre_submit(action) {
     msgdiv.style.align = 'center';
     msgdiv.innerHTML = '<img src="/static/img/waiting.gif"> <b>Searching...</b>';
   } else if(action == 'continue') {
-    var selected = $('.selected').find($('input:checkbox')).length;
+    var selected = $('#selected input:checkbox').length;
+    alert(selected);
     if(selected == 0) {
       msgdiv.innerHTML = "Must select samples to continue!"
       return false;
@@ -59,7 +60,8 @@ function pre_submit(action) {
     document.getElementById('results-form').action = '/analysis/3'
     }
   } else if(action == "deselect") {
-    var selected = $('.selected').find($('input:checked')).length;
+    var selected = $('#selected input:checked').length;
+    alert(selected);
     if(selected == 0) {
       msgdiv.innerHTML = "Must select samples to remove from study!"
       return false;
