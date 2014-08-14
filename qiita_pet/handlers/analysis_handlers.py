@@ -152,6 +152,7 @@ class SearchStudiesHandler(BaseHandler):
             description = self.get_argument('description')
             analysis = Analysis.create(User(user), name, description)
             analysis_id = analysis.id
+            # set to second step since this page is second step in workflow
             analysis.step = 2
             # fill example studies by running query for specific studies
             search = QiitaStudySearch()
@@ -223,6 +224,7 @@ class SelectCommandsHandler(BaseHandler):
     @authenticated
     def post(self):
         analysis = Analysis(int(self.get_argument('analysis-id')))
+        # set to third step since this page is third step in workflow
         analysis.step = 3
         data_types = analysis.data_types
         commands = Command.get_commands_by_datatype()
