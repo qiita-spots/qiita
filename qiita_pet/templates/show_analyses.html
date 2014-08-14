@@ -12,7 +12,11 @@
   </tr>
   {% for analysis in analyses %}
   {% set status = analysis.status%}
-    {% if status == "running" %}
+    {% if status == "in_construction"%}
+      <tr>
+        <td>
+          <a href="/analysis/{{analysis.step}}?aid={{analysis.id}}">{{analysis.name}}</a>
+    {% elif status == "running" %}
       <tr class="active">
         <td>
           <a href="/analysis/waiting/{{analysis.id}}">{{analysis.name}}</a>

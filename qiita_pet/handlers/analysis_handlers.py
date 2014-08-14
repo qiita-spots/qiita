@@ -32,6 +32,9 @@ from qiita_db.util import get_db_files_base_dir, get_table_cols
 from qiita_db.search import QiitaStudySearch
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 
+SELECT_SAMPLES = 2
+SELECT_COMMANDS = 3
+
 
 def check_analysis_access(user, analysis_id):
     """Checks whether user has access to an analysis
@@ -50,7 +53,7 @@ def check_analysis_access(user, analysis_id):
     """
     if analysis_id not in Analysis.get_public() + user.shared_analyses + \
             user.private_analyses:
-        raise RuntimeError("Analysis access denied to %s" % (analysis_id))
+        raise HTTPError(403, "Analysis access denied to %s" % (analysis_id))
 
 
 class SearchStudiesHandler(BaseHandler):
@@ -122,11 +125,8 @@ class SearchStudiesHandler(BaseHandler):
         analysis = Analysis(int(self.get_argument("aid")))
         # make sure user has access to the analysis
         userobj = User(user)
-        try:
-            check_analysis_access(userobj, analysis.id)
-        except RuntimeError:
-            # trying to access someone else's analysis, so throw 403 error
-            raise HTTPError(403)
+        check_analysis_access(userobj, analysis.id)
+
         # get the dictionaries of selected samples and data types
         selproc_data, selsamples = self._selected_parser(analysis)
 
@@ -154,7 +154,9 @@ class SearchStudiesHandler(BaseHandler):
             name = self.get_argument('name')
             description = self.get_argument('description')
             analysis = Analysis.create(User(user), name, description)
-            aid = analysis.id
+            analysis_id = analysis.id
+            # set to second step since this page is second step in workflow
+            analysis.step = SELECT_SAMPLES
             # fill example studies by running query for specific studies
             search = QiitaStudySearch()
             def_query = 'study_id = 1 OR study_id = 2 OR study_id = 3'
@@ -162,8 +164,9 @@ class SearchStudiesHandler(BaseHandler):
             results, counts, fullcounts = self._parse_search_results(
                 results, selsamples, meta_headers)
         else:
-            aid = int(self.get_argument("analysis-id"))
-            analysis = Analysis(aid)
+            analysis_id = int(self.get_argument("analysis-id"))
+            check_analysis_access(User(user), analysis_id)
+            analysis = Analysis(analysis_id)
             selproc_data, selsamples = self._selected_parser(analysis)
 
         # run through action requested
@@ -199,26 +202,35 @@ class SearchStudiesHandler(BaseHandler):
             # rebuild the selected from database to reflect changes
             selproc_data, selsamples = self._selected_parser(analysis)
 
-        self.render('search_studies.html', user=user, aid=aid, results=results,
-                    meta_headers=meta_headers, selsamples=selsamples,
-                    selproc_data=selproc_data, counts=counts,
-                    fullcounts=fullcounts, searchmsg=searchmsg, query=query,
-                    availmeta=SampleTemplate.metadata_headers() +
+        self.render('search_studies.html', user=user, aid=analysis_id,
+                    results=results, meta_headers=meta_headers,
+                    selsamples=selsamples, selproc_data=selproc_data,
+                    counts=counts, fullcounts=fullcounts, searchmsg=searchmsg,
+                    query=query, availmeta=SampleTemplate.metadata_headers() +
                     get_table_cols("study"))
 
 
 class SelectCommandsHandler(BaseHandler):
     """Select commands to be executed"""
     @authenticated
-    def post(self):
-        analysis = Analysis(int(self.get_argument('analysis-id')))
-        data_types = analysis.data_types
-        # sort the elements to have 16S be the first tho show on the tabs
-        data_types.sort()
+    def get(self):
+        analysis_id = int(self.get_argument('aid'))
+        check_analysis_access(User(self.current_user), analysis_id)
 
-        # FIXME: Pull out from the database, see #111
+        analysis = Analysis(analysis_id)
+        data_types = analysis.data_types
         commands = Command.get_commands_by_datatype()
 
+        self.render('select_commands.html', user=self.current_user,
+                    commands=commands, data_types=data_types, aid=analysis.id)
+
+    @authenticated
+    def post(self):
+        analysis = Analysis(int(self.get_argument('analysis-id')))
+        # set to third step since this page is third step in workflow
+        analysis.step = SELECT_COMMANDS
+        data_types = analysis.data_types
+        commands = Command.get_commands_by_datatype()
         self.render('select_commands.html', user=self.current_user,
                     commands=commands, data_types=data_types, aid=analysis.id)
 
@@ -231,6 +243,7 @@ class AnalysisWaitHandler(BaseHandler):
         check_analysis_access(User(user), analysis_id)
 
         analysis = Analysis(analysis_id)
+
         commands = []
         for job in analysis.jobs:
             jobject = Job(job)
