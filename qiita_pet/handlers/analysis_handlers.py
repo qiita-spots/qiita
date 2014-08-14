@@ -151,7 +151,7 @@ class SearchStudiesHandler(BaseHandler):
             name = self.get_argument('name')
             description = self.get_argument('description')
             analysis = Analysis.create(User(user), name, description)
-            aid = analysis.id
+            analysis_id = analysis.id
             analysis.step = 2
             # fill example studies by running query for specific studies
             search = QiitaStudySearch()
@@ -198,11 +198,11 @@ class SearchStudiesHandler(BaseHandler):
             # rebuild the selected from database to reflect changes
             selproc_data, selsamples = self._selected_parser(analysis)
 
-        self.render('search_studies.html', user=user, aid=aid, results=results,
-                    meta_headers=meta_headers, selsamples=selsamples,
-                    selproc_data=selproc_data, counts=counts,
-                    fullcounts=fullcounts, searchmsg=searchmsg, query=query,
-                    availmeta=SampleTemplate.metadata_headers() +
+        self.render('search_studies.html', user=user, aid=analysis_id,
+                    results=results, meta_headers=meta_headers,
+                    selsamples=selsamples,selproc_data=selproc_data,
+                    counts=counts, fullcounts=fullcounts, searchmsg=searchmsg,
+                    query=query, availmeta=SampleTemplate.metadata_headers() +
                     get_table_cols("study"))
 
 
