@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 # -----------------------------------------------------------------------------
 # Copyright (c) 2014--, The Qiita Development Team.
 #
@@ -11,9 +13,43 @@ from unittest import TestCase, main
 from qiita_core.exceptions import (IncorrectEmailError, IncorrectPasswordError,
                                    IncompetentQiitaDeveloperError)
 from qiita_core.util import qiita_test_checker
-from qiita_db.user import User
+from qiita_db.user import User, validate_password, validate_email
 from qiita_db.exceptions import (QiitaDBDuplicateError, QiitaDBColumnError,
                                  QiitaDBUnknownIDError)
+
+
+class SupportTests(TestCase):
+    def test_validate_password(self):
+        valid1 = 'abcdefgh'
+        valid2 = 'abcdefgh1234'
+        valid3 = 'abcdefgh!@#$'
+        valid4 = 'aBC123!@#{}'
+        invalid1 = 'abc'
+        invalid2 = u'øabcdefghi'
+        invalid3 = 'abcd   efgh'
+
+        self.assertTrue(validate_password(valid1))
+        self.assertTrue(validate_password(valid2))
+        self.assertTrue(validate_password(valid3))
+        self.assertTrue(validate_password(valid4))
+        self.assertFalse(validate_password(invalid1))
+        self.assertFalse(validate_password(invalid2))
+        self.assertFalse(validate_password(invalid3))
+
+    def test_validate_email(self):
+        valid1 = 'foo@bar.com'
+        valid2 = 'asdasd.asdasd.asd123asd@stuff.edu'
+        valid3 = 'w00t@123.456.789.com'
+        invalid1 = '@stuff.com'
+        invalid2 = 'asdasdásd@things.com'
+        invalid3 = 'asdas@com'
+
+        self.assertTrue(validate_email(valid1))
+        self.assertTrue(validate_email(valid2))
+        self.assertTrue(validate_email(valid3))
+        self.assertFalse(validate_email(invalid1))
+        self.assertFalse(validate_email(invalid2))
+        self.assertFalse(validate_email(invalid3))
 
 
 @qiita_test_checker()
