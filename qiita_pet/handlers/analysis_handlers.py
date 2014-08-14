@@ -32,6 +32,9 @@ from qiita_db.util import get_db_files_base_dir, get_table_cols
 from qiita_db.search import QiitaStudySearch
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 
+SELECT_SAMPLES = 2
+SELECT_COMMANDS = 3
+
 
 def check_analysis_access(user, analysis_id):
     """Checks whether user has access to an analysis
@@ -153,7 +156,7 @@ class SearchStudiesHandler(BaseHandler):
             analysis = Analysis.create(User(user), name, description)
             analysis_id = analysis.id
             # set to second step since this page is second step in workflow
-            analysis.step = 2
+            analysis.step = SELECT_SAMPLES
             # fill example studies by running query for specific studies
             search = QiitaStudySearch()
             def_query = 'study_id = 1 OR study_id = 2 OR study_id = 3'
@@ -225,7 +228,7 @@ class SelectCommandsHandler(BaseHandler):
     def post(self):
         analysis = Analysis(int(self.get_argument('analysis-id')))
         # set to third step since this page is third step in workflow
-        analysis.step = 3
+        analysis.step = SELECT_COMMANDS
         data_types = analysis.data_types
         commands = Command.get_commands_by_datatype()
         self.render('select_commands.html', user=self.current_user,
