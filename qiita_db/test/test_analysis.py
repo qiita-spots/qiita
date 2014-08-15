@@ -158,7 +158,7 @@ class TestAnalysis(TestCase):
         new = Analysis.create(User("admin@foo.bar"), "newAnalysis",
                               "A New Analysis")
         new.add_samples([(1, 'SKB8.640193'), (1, 'SKD5.640186')])
-        exp = {None: ['SKB8.640193', 'SKD5.640186']}
+        exp = {1: ['SKB8.640193', 'SKD5.640186']}
         self.assertEqual(new.samples, exp)
 
     def test_remove_samples_both(self):

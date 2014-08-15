@@ -374,8 +374,8 @@ class Analysis(QiitaStatusObject):
         conn_handler = SQLConnectionHandler()
         self._lock_check(conn_handler)
         sql = ("INSERT INTO qiita.analysis_sample (analysis_id, sample_id, "
-               "study_id) VALUES (%s, %s, %s)")
-        conn_handler.executemany(sql, [(self._id, s[1], s[0])
+               "study_id, processed_data_id) VALUES (%s, %s, %s, %s)")
+        conn_handler.executemany(sql, [(self._id, s[1], s[0], 1)
                                        for s in samples])
 
     def remove_samples(self, proc_data=None, samples=None):
