@@ -183,7 +183,7 @@
 
 <g transform='translate(0,110)'>
 <!-- ============= Group 'Group_analyses' ============= -->
-<rect class='grp' style='fill:url(#groupGradient3);;' x='29' y='595' width='512' height='665' />
+<rect class='grp' style='fill:url(#groupGradient3);;' x='29' y='595' width='512' height='680' />
 <text x='40' y='610'>Group_analyses</text>
 <rect style='fill:url(#groupUnderTitleLine); stroke-width:2;' x='40' y='613' width='490' height='2' />
 
@@ -267,17 +267,7 @@
 	analysis references analysis_status ( analysis_status_id )</title>
 </path>
 <text x='114' y='775' transform='rotate(0 114,775)' title='Foreign Key fk_analysis_analysis_status
-	analysis references analysis_status ( analysis_status_id )' style='fill:#a1a0a0;'>analysis_status_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 390 720 L 360,720' >
-	<title>Foreign Key fk_analysis_filepath
-	analysis_filepath references analysis ( analysis_id )</title>
-</path>
-<text x='333' y='715' transform='rotate(0 333,715)' title='Foreign Key fk_analysis_filepath
-	analysis_filepath references analysis ( analysis_id )' style='fill:#a1a0a0;'>analysis_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 510 735 L 645,735' >
-	<title>Foreign Key fk_analysis_filepath_0
-	analysis_filepath references filepath ( filepath_id )</title>
-</path>
-<text x='517' y='730' transform='rotate(0 517,730)' title='Foreign Key fk_analysis_filepath_0
-	analysis_filepath references filepath ( filepath_id )' style='fill:#a1a0a0;'>filepath_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 435 915 L 435,975' >
+	analysis references analysis_status ( analysis_status_id )' style='fill:#a1a0a0;'>analysis_status_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 435 915 L 435,975' >
 	<title>Foreign Key fk_job_results_filepath
 	job_results_filepath references job ( job_id )</title>
 </path>
@@ -297,11 +287,11 @@
 	job references job_status ( job_status_id )</title>
 </path>
 <text x='320' y='1015' transform='rotate(0 320,1015)' title='Foreign Key fk_job_job_status_id
-	job references job_status ( job_status_id )' style='fill:#a1a0a0;'>job_status_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 510 1005 L 675,1005' >
+	job references job_status ( job_status_id )' style='fill:#a1a0a0;'>job_status_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 510 1020 L 675,1020' >
 	<title>Foreign Key fk_job_data_type
 	job references data_type ( data_type_id )</title>
 </path>
-<text x='517' y='1000' transform='rotate(0 517,1000)' title='Foreign Key fk_job_data_type
+<text x='517' y='1015' transform='rotate(0 517,1015)' title='Foreign Key fk_job_data_type
 	job references data_type ( data_type_id )' style='fill:#a1a0a0;'>data_type_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'  style='stroke-dasharray:4,2;'  d='M 510 1110 L 1372,1110 Q 1380,1110 1380,1117 L 1380,1185' >
 	<title>Foreign Key fk_job
 	job references logging ( log_id -> logging_id )</title>
@@ -327,22 +317,7 @@
 	analysis_chain references analysis ( child_id -> analysis_id )</title>
 </path>
 <text x='157' y='940' transform='rotate(0 157,940)' title='Foreign Key fk_analysis_chain_0
-	analysis_chain references analysis ( child_id -> analysis_id )' style='fill:#a1a0a0;'>child_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 165 1140 L 165,907 Q 165,900 172,900 L 187,900 Q 195,900 195,892 L 195,817 Q 195,810 202,810 L 210,810' >
-	<title>Foreign Key fk_analysis_sample_analysis
-	analysis_sample references analysis ( analysis_id )</title>
-</path>
-<text x='167' y='1135' transform='rotate(270 167,1135)' title='Foreign Key fk_analysis_sample_analysis
-	analysis_sample references analysis ( analysis_id )' style='fill:#a1a0a0;'>analysis_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 165 1245 L 165,1252 Q 165,1260 172,1260 L 1222,1260 Q 1230,1260 1230,1252 L 1230,1050' >
-	<title>Foreign Key fk_analysis_sample
-	analysis_sample references processed_data ( processed_data_id )</title>
-</path>
-<text x='178' y='1245' transform='rotate(90 178,1245)' title='Foreign Key fk_analysis_sample
-	analysis_sample references processed_data ( processed_data_id )' style='fill:#a1a0a0;'>processed_data_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 150 1245 L 150,1267 Q 150,1275 157,1275 L 952,1275 Q 960,1275 960,1267 L 960,22 Q 960,15 967,15 L 1357,15 Q 1365,15 1365,22 L 1365,90' >
-	<title>Foreign Key fk_analysis_sample_0
-	analysis_sample references required_sample_info ( sample_id )</title>
-</path>
-<text x='163' y='1245' transform='rotate(90 163,1245)' title='Foreign Key fk_analysis_sample_0
-	analysis_sample references required_sample_info ( sample_id )' style='fill:#a1a0a0;'>sample_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 315 1395 L 315,1470' >
+	analysis_chain references analysis ( child_id -> analysis_id )' style='fill:#a1a0a0;'>child_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 315 1395 L 315,1470' >
 	<title>Foreign Key fk_column_controlled_vocabularies
 	column_controlled_vocabularies references mixs_field_description ( column_name )</title>
 </path>
@@ -647,7 +622,47 @@
 	analysis_workflow references analysis ( analysis_id )</title>
 </path>
 <text x='318' y='670' transform='rotate(0 318,670)' title='Foreign Key fk_analysis_workflow
-	analysis_workflow references analysis ( analysis_id )' style='fill:#a1a0a0;'>analysis_id</text><!-- ============= Table 'term_synonym' ============= -->
+	analysis_workflow references analysis ( analysis_id )' style='fill:#a1a0a0;'>analysis_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 165 1140 L 165,907 Q 165,900 172,900 L 187,900 Q 195,900 195,892 L 195,817 Q 195,810 202,810 L 210,810' >
+	<title>Foreign Key fk_analysis_sample_analysis
+	analysis_sample references analysis ( analysis_id )</title>
+</path>
+<text x='167' y='1135' transform='rotate(270 167,1135)' title='Foreign Key fk_analysis_sample_analysis
+	analysis_sample references analysis ( analysis_id )' style='fill:#a1a0a0;'>analysis_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'  style='stroke-dasharray:4,2;'  d='M 165 1260 L 165,1267 Q 165,1275 172,1275 L 1222,1275 Q 1230,1275 1230,1267 L 1230,1050' >
+	<title>Foreign Key fk_analysis_sample
+	analysis_sample references processed_data ( processed_data_id )</title>
+</path>
+<text x='178' y='1260' transform='rotate(90 178,1260)' title='Foreign Key fk_analysis_sample
+	analysis_sample references processed_data ( processed_data_id )' style='fill:#a1a0a0;'>processed_data_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 30 1155 L 22,1155 Q 15,1155 15,1147 L 15,22 Q 15,15 22,15 L 1357,15 Q 1365,15 1365,22 L 1365,90' >
+	<title>Foreign Key fk_analysis_sample_sample
+	analysis_sample references required_sample_info ( sample_id )</title>
+</path>
+<text x='-22' y='1150' transform='rotate(0 -22,1150)' title='Foreign Key fk_analysis_sample_sample
+	analysis_sample references required_sample_info ( sample_id )' style='fill:#a1a0a0;'>sample_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 150 1260 L 150,1282 Q 150,1290 157,1290 L 952,1290 Q 960,1290 960,1282 L 960,7 Q 960,0 967,0 L 1762,0 Q 1770,0 1770,7 L 1770,30' >
+	<title>Foreign Key fk_analysis_sample_study
+	analysis_sample references study ( study_id )</title>
+</path>
+<text x='163' y='1260' transform='rotate(90 163,1260)' title='Foreign Key fk_analysis_sample_study
+	analysis_sample references study ( study_id )' style='fill:#a1a0a0;'>study_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 390 720 L 360,720' >
+	<title>Foreign Key fk_analysis_filepath
+	analysis_filepath references analysis ( analysis_id )</title>
+</path>
+<text x='333' y='715' transform='rotate(0 333,715)' title='Foreign Key fk_analysis_filepath
+	analysis_filepath references analysis ( analysis_id )' style='fill:#a1a0a0;'>analysis_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 525 735 L 645,735' >
+	<title>Foreign Key fk_analysis_filepath_0
+	analysis_filepath references filepath ( filepath_id )</title>
+</path>
+<text x='532' y='730' transform='rotate(0 532,730)' title='Foreign Key fk_analysis_filepath_0
+	analysis_filepath references filepath ( filepath_id )' style='fill:#a1a0a0;'>filepath_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 525 810 L 607,810 Q 615,810 615,817 L 615,870' >
+	<title>Foreign Key fk_analysis_filepath_1
+	analysis_filepath references filepath_type ( filepath_type_id )</title>
+</path>
+<text x='532' y='805' transform='rotate(0 532,805)' title='Foreign Key fk_analysis_filepath_1
+	analysis_filepath references filepath_type ( filepath_type_id )' style='fill:#a1a0a0;'>filepath_type_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 525 795 L 562,795 Q 570,795 570,802 L 570,997 Q 570,1005 577,1005 L 675,1005' >
+	<title>Foreign Key fk_analysis_filepath_2
+	analysis_filepath references data_type ( data_type_id )</title>
+</path>
+<text x='532' y='790' transform='rotate(0 532,790)' title='Foreign Key fk_analysis_filepath_2
+	analysis_filepath references data_type ( data_type_id )' style='fill:#a1a0a0;'>data_type_id</text><!-- ============= Table 'term_synonym' ============= -->
 <rect class='table' x='525' y='1868' width='135' height='105' rx='7' ry='7' />
 <path d='M 525.50 1894.50 L 525.50 1875.50 Q 525.50 1868.50 532.50 1868.50 L 652.50 1868.50 Q 659.50 1868.50 659.50 1875.50 L 659.50 1894.50 L525.50 1894.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
 <a xlink:href='#term_synonym'><text x='552' y='1882' class='tableTitle'>term_synonym</text><title>Table qiita.term_synonym</title></a>
@@ -789,7 +804,6 @@ Referred by analysis_filepath ( analysis_id )
 Referred by analysis_job ( analysis_id ) 
 Referred by analysis_sample ( analysis_id ) 
 Referred by analysis_users ( analysis_id ) 
-Referred by analysis_workflow ( analysis_id ) 
 Referred by analysis_workflow ( analysis_id ) </title></a>
   <use id='nn' x='227' y='747' xlink:href='#nn'/><a xlink:href='#email'><use id='idx' x='227' y='746' xlink:href='#idx'/><title>Index  ( email ) </title></a>
 <a xlink:href='#email'><text x='243' y='757'>email</text><title>email varchar not null
@@ -803,18 +817,6 @@ Name of the analysis</title></a>
 <a xlink:href='#analysis_status_id'><use id='fk' x='348' y='791' xlink:href='#fk'/><title>References analysis_status ( analysis_status_id ) </title></a>
   <a xlink:href='#pmid'><text x='243' y='817'>pmid</text><title>pmid varchar
 PMID of paper from the analysis</title></a>
-
-<!-- ============= Table 'analysis_filepath' ============= -->
-<rect class='table' x='405' y='713' width='105' height='75' rx='7' ry='7' />
-<path d='M 405.50 739.50 L 405.50 720.50 Q 405.50 713.50 412.50 713.50 L 502.50 713.50 Q 509.50 713.50 509.50 720.50 L 509.50 739.50 L405.50 739.50 ' style='fill:url(#tableHeaderGradient1); stroke:none;' />
-<a xlink:href='#analysis_filepath'><text x='413' y='727' class='tableTitle'>analysis_filepath</text><title>Table qiita.analysis_filepath
-Stores link between analysis and the data file used for the analysis&#046;</title></a>
-  <use id='nn' x='407' y='747' xlink:href='#nn'/><a xlink:href='#analysis_id'><use id='pk' x='407' y='746' xlink:href='#pk'/><title>Index  ( analysis_id ) Primary Key  ( analysis_id, filepath_id ) </title></a>
-<a xlink:href='#analysis_id'><text x='423' y='757'>analysis_id</text><title>analysis_id bigint not null</title></a>
-<a xlink:href='#analysis_id'><use id='fk' x='498' y='746' xlink:href='#fk'/><title>References analysis ( analysis_id ) </title></a>
-  <use id='nn' x='407' y='762' xlink:href='#nn'/><a xlink:href='#filepath_id'><use id='pk' x='407' y='761' xlink:href='#pk'/><title>Index  ( filepath_id ) Primary Key  ( analysis_id, filepath_id ) </title></a>
-<a xlink:href='#filepath_id'><text x='423' y='772'>filepath_id</text><title>filepath_id bigint not null</title></a>
-<a xlink:href='#filepath_id'><use id='fk' x='498' y='761' xlink:href='#fk'/><title>References filepath ( filepath_id ) </title></a>
 
 <!-- ============= Table 'job_results_filepath' ============= -->
 <rect class='table' x='405' y='833' width='120' height='75' rx='7' ry='7' />
@@ -889,20 +891,6 @@ Keeps track of the chain of analysis edits&#046; Tracks what previous analysis a
 <a xlink:href='#job_status_id'><text x='228' y='1042'>job_status_id</text><title>job_status_id bigserial not null</title></a>
 <a xlink:href='#job_status_id'><use id='ref' x='303' y='1031' xlink:href='#ref'/><title>Referred by job ( job_status_id ) </title></a>
   <use id='nn' x='212' y='1047' xlink:href='#nn'/><a xlink:href='#status'><text x='228' y='1057'>status</text><title>status varchar not null</title></a>
-
-<!-- ============= Table 'analysis_sample' ============= -->
-<rect class='table' x='45' y='1148' width='135' height='90' rx='7' ry='7' />
-<path d='M 45.50 1174.50 L 45.50 1155.50 Q 45.50 1148.50 52.50 1148.50 L 172.50 1148.50 Q 179.50 1148.50 179.50 1155.50 L 179.50 1174.50 L45.50 1174.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
-<a xlink:href='#analysis_sample'><text x='69' y='1162' class='tableTitle'>analysis_sample</text><title>Table qiita.analysis_sample</title></a>
-  <use id='nn' x='47' y='1182' xlink:href='#nn'/><a xlink:href='#analysis_id'><use id='idx' x='47' y='1181' xlink:href='#idx'/><title>Index  ( analysis_id ) </title></a>
-<a xlink:href='#analysis_id'><text x='63' y='1192'>analysis_id</text><title>analysis_id bigint not null</title></a>
-<a xlink:href='#analysis_id'><use id='fk' x='168' y='1181' xlink:href='#fk'/><title>References analysis ( analysis_id ) </title></a>
-  <use id='nn' x='47' y='1197' xlink:href='#nn'/><a xlink:href='#processed_data_id'><use id='idx' x='47' y='1196' xlink:href='#idx'/><title>Index  ( processed_data_id ) </title></a>
-<a xlink:href='#processed_data_id'><text x='63' y='1207'>processed_data_id</text><title>processed_data_id bigint not null</title></a>
-<a xlink:href='#processed_data_id'><use id='fk' x='168' y='1196' xlink:href='#fk'/><title>References processed_data ( processed_data_id ) </title></a>
-  <use id='nn' x='47' y='1212' xlink:href='#nn'/><a xlink:href='#sample_id'><use id='idx' x='47' y='1211' xlink:href='#idx'/><title>Index  ( sample_id ) </title></a>
-<a xlink:href='#sample_id'><text x='63' y='1222'>sample_id</text><title>sample_id varchar not null</title></a>
-<a xlink:href='#sample_id'><use id='fk' x='168' y='1211' xlink:href='#fk'/><title>References required_sample_info ( sample_id ) </title></a>
 
 <!-- ============= Table 'column_controlled_vocabularies' ============= -->
 <rect class='table' x='270' y='1313' width='195' height='75' rx='7' ry='7' />
@@ -1123,7 +1111,9 @@ Time the reset code was generated</title></a>
 <a xlink:href='#filepath_type'><text x='625' y='892' class='tableTitle'>filepath_type</text><title>Table qiita.filepath_type</title></a>
   <use id='nn' x='602' y='912' xlink:href='#nn'/><a xlink:href='#filepath_type_id'><use id='pk' x='602' y='911' xlink:href='#pk'/><title>Primary Key  ( filepath_type_id ) </title></a>
 <a xlink:href='#filepath_type_id'><text x='618' y='922'>filepath_type_id</text><title>filepath_type_id bigserial not null</title></a>
-<a xlink:href='#filepath_type_id'><use id='ref' x='708' y='911' xlink:href='#ref'/><title>Referred by filepath ( filepath_type_id ) </title></a>
+<a xlink:href='#filepath_type_id'><use id='ref' x='708' y='911' xlink:href='#ref'/><title>Referred by filepath ( filepath_type_id ) 
+Referred by analysis_filepath ( filepath_type_id ) 
+Referred by analysis_filepath ( filepath_type_id ) </title></a>
   <a xlink:href='#filepath_type'><text x='618' y='937'>filepath_type</text><title>filepath_type varchar</title></a>
 
 <!-- ============= Table 'checksum_algorithm' ============= -->
@@ -1145,7 +1135,9 @@ Time the reset code was generated</title></a>
 Referred by common_prep_info ( data_type_id ) 
 Referred by job ( data_type_id ) 
 Referred by preprocessed_data ( data_type_id ) 
-Referred by processed_data ( data_type_id ) </title></a>
+Referred by processed_data ( data_type_id ) 
+Referred by analysis_filepath ( data_type_id ) 
+Referred by analysis_filepath ( data_type_id ) </title></a>
   <use id='nn' x='692' y='1047' xlink:href='#nn'/><a xlink:href='#data_type'><text x='708' y='1057'>data_type</text><title>data_type varchar not null
 Data type &#040;16S&#044; metabolome&#044; etc&#041; the job will use</title></a>
 
@@ -1194,7 +1186,9 @@ Referred by study_preprocessed_data ( study_id )
 Referred by study_processed_data ( study_id ) 
 Referred by study_raw_data ( study_id ) 
 Referred by study_sample_columns ( study_id ) 
-Referred by study_users ( study_id ) </title></a>
+Referred by study_users ( study_id ) 
+Referred by analysis_sample ( study_id ) 
+Referred by analysis_sample ( study_id ) </title></a>
   <use id='nn' x='1757' y='87' xlink:href='#nn'/><a xlink:href='#email'><use id='idx' x='1757' y='86' xlink:href='#idx'/><title>Index  ( email ) </title></a>
 <a xlink:href='#email'><text x='1773' y='97'>email</text><title>email varchar not null
 Email of study owner</title></a>
@@ -1256,7 +1250,8 @@ Required info for each sample&#046; One row is one sample&#046;</title></a>
   <use id='nn' x='1352' y='147' xlink:href='#nn'/><a xlink:href='#sample_id'><use id='pk' x='1352' y='146' xlink:href='#pk'/><title>Primary Key  ( study_id, sample_id ) Unique Index  ( sample_id ) </title></a>
 <a xlink:href='#sample_id'><text x='1368' y='157'>sample_id</text><title>sample_id varchar not null</title></a>
 <a xlink:href='#sample_id'><use id='ref' x='1548' y='146' xlink:href='#ref'/><title>Referred by analysis_sample ( sample_id ) 
-Referred by common_prep_info ( sample_id ) </title></a>
+Referred by common_prep_info ( sample_id ) 
+Referred by analysis_sample ( sample_id ) </title></a>
   <use id='nn' x='1352' y='162' xlink:href='#nn'/><a xlink:href='#physical_location'><text x='1368' y='172'>physical_location</text><title>physical_location varchar not null
 Where the sample itself is stored</title></a>
   <use id='nn' x='1352' y='177' xlink:href='#nn'/><a xlink:href='#has_physical_specimen'><text x='1368' y='187'>has_physical_specimen</text><title>has_physical_specimen bool not null
@@ -1636,6 +1631,41 @@ Stores what step in&#095;production analyses are on&#046;</title></a>
 <a xlink:href='#analysis_id'><text x='408' y='667'>analysis_id</text><title>analysis_id bigint not null</title></a>
 <a xlink:href='#analysis_id'><use id='fk' x='498' y='656' xlink:href='#fk'/><title>References analysis ( analysis_id ) </title></a>
   <use id='nn' x='392' y='672' xlink:href='#nn'/><a xlink:href='#step'><text x='408' y='682'>step</text><title>step integer not null</title></a>
+
+<!-- ============= Table 'analysis_sample' ============= -->
+<rect class='table' x='45' y='1148' width='135' height='105' rx='7' ry='7' />
+<path d='M 45.50 1174.50 L 45.50 1155.50 Q 45.50 1148.50 52.50 1148.50 L 172.50 1148.50 Q 179.50 1148.50 179.50 1155.50 L 179.50 1174.50 L45.50 1174.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
+<a xlink:href='#analysis_sample'><text x='69' y='1162' class='tableTitle'>analysis_sample</text><title>Table qiita.analysis_sample</title></a>
+  <use id='nn' x='47' y='1182' xlink:href='#nn'/><a xlink:href='#analysis_id'><use id='idx' x='47' y='1181' xlink:href='#idx'/><title>Index  ( analysis_id ) </title></a>
+<a xlink:href='#analysis_id'><text x='63' y='1192'>analysis_id</text><title>analysis_id bigint not null</title></a>
+<a xlink:href='#analysis_id'><use id='fk' x='168' y='1181' xlink:href='#fk'/><title>References analysis ( analysis_id ) </title></a>
+  <a xlink:href='#processed_data_id'><use id='idx' x='47' y='1196' xlink:href='#idx'/><title>Index  ( processed_data_id ) </title></a>
+<a xlink:href='#processed_data_id'><text x='63' y='1207'>processed_data_id</text><title>processed_data_id bigint</title></a>
+<a xlink:href='#processed_data_id'><use id='fk' x='168' y='1196' xlink:href='#fk'/><title>References processed_data ( processed_data_id ) </title></a>
+  <use id='nn' x='47' y='1212' xlink:href='#nn'/><a xlink:href='#sample_id'><use id='idx' x='47' y='1211' xlink:href='#idx'/><title>Index  ( sample_id ) </title></a>
+<a xlink:href='#sample_id'><text x='63' y='1222'>sample_id</text><title>sample_id varchar not null</title></a>
+<a xlink:href='#sample_id'><use id='fk' x='168' y='1211' xlink:href='#fk'/><title>References required_sample_info ( sample_id ) </title></a>
+  <use id='nn' x='47' y='1227' xlink:href='#nn'/><a xlink:href='#study_id'><use id='idx' x='47' y='1226' xlink:href='#idx'/><title>Index  ( study_id ) </title></a>
+<a xlink:href='#study_id'><text x='63' y='1237'>study_id</text><title>study_id bigint not null</title></a>
+<a xlink:href='#study_id'><use id='fk' x='168' y='1226' xlink:href='#fk'/><title>References study ( study_id ) </title></a>
+
+<!-- ============= Table 'analysis_filepath' ============= -->
+<rect class='table' x='405' y='713' width='120' height='105' rx='7' ry='7' />
+<path d='M 405.50 739.50 L 405.50 720.50 Q 405.50 713.50 412.50 713.50 L 517.50 713.50 Q 524.50 713.50 524.50 720.50 L 524.50 739.50 L405.50 739.50 ' style='fill:url(#tableHeaderGradient1); stroke:none;' />
+<a xlink:href='#analysis_filepath'><text x='420' y='727' class='tableTitle'>analysis_filepath</text><title>Table qiita.analysis_filepath
+Stores link between analysis and the data file used for the analysis&#046;</title></a>
+  <use id='nn' x='407' y='747' xlink:href='#nn'/><a xlink:href='#analysis_id'><use id='pk' x='407' y='746' xlink:href='#pk'/><title>Index  ( analysis_id ) Primary Key  ( analysis_id, filepath_id ) </title></a>
+<a xlink:href='#analysis_id'><text x='423' y='757'>analysis_id</text><title>analysis_id bigint not null</title></a>
+<a xlink:href='#analysis_id'><use id='fk' x='513' y='746' xlink:href='#fk'/><title>References analysis ( analysis_id ) </title></a>
+  <use id='nn' x='407' y='762' xlink:href='#nn'/><a xlink:href='#filepath_id'><use id='pk' x='407' y='761' xlink:href='#pk'/><title>Index  ( filepath_id ) Primary Key  ( analysis_id, filepath_id ) </title></a>
+<a xlink:href='#filepath_id'><text x='423' y='772'>filepath_id</text><title>filepath_id bigint not null</title></a>
+<a xlink:href='#filepath_id'><use id='fk' x='513' y='761' xlink:href='#fk'/><title>References filepath ( filepath_id ) </title></a>
+  <use id='nn' x='407' y='777' xlink:href='#nn'/><a xlink:href='#data_type_id'><use id='idx' x='407' y='776' xlink:href='#idx'/><title>Index  ( data_type_id ) </title></a>
+<a xlink:href='#data_type_id'><text x='423' y='787'>data_type_id</text><title>data_type_id bigint not null</title></a>
+<a xlink:href='#data_type_id'><use id='fk' x='513' y='776' xlink:href='#fk'/><title>References data_type ( data_type_id ) </title></a>
+  <use id='nn' x='407' y='792' xlink:href='#nn'/><a xlink:href='#filepath_type_id'><use id='idx' x='407' y='791' xlink:href='#idx'/><title>Index  ( filepath_type_id ) </title></a>
+<a xlink:href='#filepath_type_id'><text x='423' y='802'>filepath_type_id</text><title>filepath_type_id bigint not null</title></a>
+<a xlink:href='#filepath_type_id'><use id='fk' x='513' y='791' xlink:href='#fk'/><title>References filepath_type ( filepath_type_id ) </title></a>
 
 </g></svg>
 
@@ -2104,50 +2134,6 @@ An investigation comprises one or more individual studies&#046; </td></tr>
 <br/><br/>
 <table id='dbs' >
 <thead>
-<tr><th colspan='3'><a name='analysis_filepath'>analysis_filepath</a></th></tr>
-<tr><td colspan='3'>Stores link between analysis and the data file used for the analysis&#046; </td></tr>
-</thead>
-<tbody>
-	<tr>
-		<td><a name='analysis_id'>analysis&#095;id</a></td>
-		<td width='40%'> bigint  NOT NULL  </td>
-		<td width='99%'>  </td>
-	</tr>
-	<tr>
-		<td><a name='filepath_id'>filepath&#095;id</a></td>
-		<td width='40%'> bigint  NOT NULL  </td>
-		<td width='99%'>  </td>
-	</tr>
-<tr><td colspan='3' class='subpart'><b>Indexes</b></td></tr>
-	<tr>		<td>idx&#095;analysis&#095;filepath </td>
-		<td> ON analysis&#095;id</td>
-		<td>  </td>
-	</tr>
-	<tr>		<td>idx&#095;analysis&#095;filepath&#095;0 </td>
-		<td> ON filepath&#095;id</td>
-		<td>  </td>
-	</tr>
-	<tr>		<td>idx&#095;analysis&#095;filepath&#095;1 primary key</td>
-		<td> ON analysis&#095;id&#044; filepath&#095;id</td>
-		<td>  </td>
-	</tr>
-<tr><td colspan='3' class='subpart'><b>Foreign Keys</b></td></tr>
-	<tr>
-		<td>fk_analysis_filepath</td>
-		<td > ( analysis&#095;id ) ref <a href='#analysis'>analysis</a> (analysis&#095;id) </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>fk_analysis_filepath_0</td>
-		<td > ( filepath&#095;id ) ref <a href='#filepath'>filepath</a> (filepath&#095;id) </td>
-		<td>  </td>
-	</tr>
-</tbody>
-</table>
-
-<br/><br/>
-<table id='dbs' >
-<thead>
 <tr><th colspan='3'><a name='job_results_filepath'>job_results_filepath</a></th></tr>
 <tr><td colspan='3'>Holds connection between jobs and the result filepaths </td></tr>
 </thead>
@@ -2378,59 +2364,6 @@ If a given analysis is not in child&#095;id&#044; it is the root of the chain&#0
 <tr><td colspan='3' class='subpart'><b>Indexes</b></td></tr>
 	<tr>		<td>pk&#095;job&#095;status primary key</td>
 		<td> ON job&#095;status&#095;id</td>
-		<td>  </td>
-	</tr>
-</tbody>
-</table>
-
-<br/><br/>
-<table id='dbs' >
-<thead>
-<tr><th colspan='3'><a name='analysis_sample'>analysis_sample</a></th></tr>
-</thead>
-<tbody>
-	<tr>
-		<td><a name='analysis_id'>analysis&#095;id</a></td>
-		<td width='40%'> bigint  NOT NULL  </td>
-		<td width='99%'>  </td>
-	</tr>
-	<tr>
-		<td><a name='processed_data_id'>processed&#095;data&#095;id</a></td>
-		<td width='40%'> bigint  NOT NULL  </td>
-		<td width='99%'>  </td>
-	</tr>
-	<tr>
-		<td><a name='sample_id'>sample&#095;id</a></td>
-		<td width='40%'> varchar  NOT NULL  </td>
-		<td width='99%'>  </td>
-	</tr>
-<tr><td colspan='3' class='subpart'><b>Indexes</b></td></tr>
-	<tr>		<td>idx&#095;analysis&#095;sample </td>
-		<td> ON analysis&#095;id</td>
-		<td>  </td>
-	</tr>
-	<tr>		<td>idx&#095;analysis&#095;sample&#095;0 </td>
-		<td> ON processed&#095;data&#095;id</td>
-		<td>  </td>
-	</tr>
-	<tr>		<td>idx&#095;analysis&#095;sample&#095;1 </td>
-		<td> ON sample&#095;id</td>
-		<td>  </td>
-	</tr>
-<tr><td colspan='3' class='subpart'><b>Foreign Keys</b></td></tr>
-	<tr>
-		<td>fk_analysis_sample_analysis</td>
-		<td > ( analysis&#095;id ) ref <a href='#analysis'>analysis</a> (analysis&#095;id) </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>fk_analysis_sample</td>
-		<td > ( processed&#095;data&#095;id ) ref <a href='#processed&#095;data'>processed&#095;data</a> (processed&#095;data&#095;id) </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>fk_analysis_sample_0</td>
-		<td > ( sample&#095;id ) ref <a href='#required&#095;sample&#095;info'>required&#095;sample&#095;info</a> (sample&#095;id) </td>
 		<td>  </td>
 	</tr>
 </tbody>
@@ -4766,6 +4699,145 @@ Linked by y being raw&#095;data&#095;id from raw data table&#046; </td></tr>
 	<tr>
 		<td>fk_analysis_workflow</td>
 		<td > ( analysis&#095;id ) ref <a href='#analysis'>analysis</a> (analysis&#095;id) </td>
+		<td>  </td>
+	</tr>
+</tbody>
+</table>
+
+<br/><br/>
+<table id='dbs' >
+<thead>
+<tr><th colspan='3'><a name='analysis_sample'>analysis_sample</a></th></tr>
+</thead>
+<tbody>
+	<tr>
+		<td><a name='analysis_id'>analysis&#095;id</a></td>
+		<td width='40%'> bigint  NOT NULL  </td>
+		<td width='99%'>  </td>
+	</tr>
+	<tr>
+		<td><a name='processed_data_id'>processed&#095;data&#095;id</a></td>
+		<td width='40%'> bigint   </td>
+		<td width='99%'>  </td>
+	</tr>
+	<tr>
+		<td><a name='sample_id'>sample&#095;id</a></td>
+		<td width='40%'> varchar  NOT NULL  </td>
+		<td width='99%'>  </td>
+	</tr>
+	<tr>
+		<td><a name='study_id'>study&#095;id</a></td>
+		<td width='40%'> bigint  NOT NULL  </td>
+		<td width='99%'>  </td>
+	</tr>
+<tr><td colspan='3' class='subpart'><b>Indexes</b></td></tr>
+	<tr>		<td>idx&#095;analysis&#095;sample </td>
+		<td> ON analysis&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>idx&#095;analysis&#095;sample&#095;0 </td>
+		<td> ON processed&#095;data&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>idx&#095;analysis&#095;sample&#095;1 </td>
+		<td> ON sample&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>idx&#095;analysis&#095;sample&#095;2 </td>
+		<td> ON study&#095;id</td>
+		<td>  </td>
+	</tr>
+<tr><td colspan='3' class='subpart'><b>Foreign Keys</b></td></tr>
+	<tr>
+		<td>fk_analysis_sample_analysis</td>
+		<td > ( analysis&#095;id ) ref <a href='#analysis'>analysis</a> (analysis&#095;id) </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>fk_analysis_sample</td>
+		<td > ( processed&#095;data&#095;id ) ref <a href='#processed&#095;data'>processed&#095;data</a> (processed&#095;data&#095;id) </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>fk_analysis_sample_sample</td>
+		<td > ( sample&#095;id ) ref <a href='#required&#095;sample&#095;info'>required&#095;sample&#095;info</a> (sample&#095;id) </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>fk_analysis_sample_study</td>
+		<td > ( study&#095;id ) ref <a href='#study'>study</a> (study&#095;id) </td>
+		<td>  </td>
+	</tr>
+</tbody>
+</table>
+
+<br/><br/>
+<table id='dbs' >
+<thead>
+<tr><th colspan='3'><a name='analysis_filepath'>analysis_filepath</a></th></tr>
+<tr><td colspan='3'>Stores link between analysis and the data file used for the analysis&#046; </td></tr>
+</thead>
+<tbody>
+	<tr>
+		<td><a name='analysis_id'>analysis&#095;id</a></td>
+		<td width='40%'> bigint  NOT NULL  </td>
+		<td width='99%'>  </td>
+	</tr>
+	<tr>
+		<td><a name='filepath_id'>filepath&#095;id</a></td>
+		<td width='40%'> bigint  NOT NULL  </td>
+		<td width='99%'>  </td>
+	</tr>
+	<tr>
+		<td><a name='data_type_id'>data&#095;type&#095;id</a></td>
+		<td width='40%'> bigint  NOT NULL  </td>
+		<td width='99%'>  </td>
+	</tr>
+	<tr>
+		<td><a name='filepath_type_id'>filepath&#095;type&#095;id</a></td>
+		<td width='40%'> bigint  NOT NULL  </td>
+		<td width='99%'>  </td>
+	</tr>
+<tr><td colspan='3' class='subpart'><b>Indexes</b></td></tr>
+	<tr>		<td>idx&#095;analysis&#095;filepath </td>
+		<td> ON analysis&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>idx&#095;analysis&#095;filepath&#095;0 </td>
+		<td> ON filepath&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>idx&#095;analysis&#095;filepath&#095;1 primary key</td>
+		<td> ON analysis&#095;id&#044; filepath&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>idx&#095;analysis&#095;filepath&#095;2 </td>
+		<td> ON filepath&#095;type&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>idx&#095;analysis&#095;filepath&#095;3 </td>
+		<td> ON data&#095;type&#095;id</td>
+		<td>  </td>
+	</tr>
+<tr><td colspan='3' class='subpart'><b>Foreign Keys</b></td></tr>
+	<tr>
+		<td>fk_analysis_filepath</td>
+		<td > ( analysis&#095;id ) ref <a href='#analysis'>analysis</a> (analysis&#095;id) </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>fk_analysis_filepath_0</td>
+		<td > ( filepath&#095;id ) ref <a href='#filepath'>filepath</a> (filepath&#095;id) </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>fk_analysis_filepath_1</td>
+		<td > ( filepath&#095;type&#095;id ) ref <a href='#filepath&#095;type'>filepath&#095;type</a> (filepath&#095;type&#095;id) </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>fk_analysis_filepath_2</td>
+		<td > ( data&#095;type&#095;id ) ref <a href='#data&#095;type'>data&#095;type</a> (data&#095;type&#095;id) </td>
 		<td>  </td>
 	</tr>
 </tbody>
