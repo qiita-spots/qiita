@@ -880,7 +880,7 @@ COMMENT ON COLUMN qiita.analysis_job.job_id IS 'Id for a job that is part of the
 
 CREATE TABLE qiita.analysis_sample ( 
 	analysis_id          bigint  NOT NULL,
-	processed_data_id    bigint  ,
+	processed_data_id    bigint  NOT NULL,
 	sample_id            varchar  NOT NULL,
 	study_id             bigint  NOT NULL,
 	CONSTRAINT fk_analysis_sample_analysis FOREIGN KEY ( analysis_id ) REFERENCES qiita.analysis( analysis_id )    ,
