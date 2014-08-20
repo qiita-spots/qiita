@@ -434,11 +434,10 @@ class Analysis(QiitaStatusObject):
         conn_handler = SQLConnectionHandler()
         self._lock_check(conn_handler)
         sql = ("INSERT INTO qiita.analysis_filepath (analysis_id, filepath_id,"
-               "data_type_id, filepath_type_id)"
-               " VALUES (%s, %s, %s, %s)")
-        # magic number 6 is biom filepath_type identifier
+               "data_type_id)"
+               " VALUES (%s, %s, %s)")
         biom_info = [(self._id, table.get_filepath_ids()[0],
-                      table.data_type(ret_id=True), 6)
+                      table.data_type(ret_id=True))
                      for table in tables]
         conn_handler.executemany(sql, biom_info)
 

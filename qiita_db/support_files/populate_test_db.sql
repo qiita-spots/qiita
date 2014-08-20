@@ -339,7 +339,7 @@ INSERT INTO qiita.analysis (email, name, description, analysis_status_id, pmid) 
 INSERT INTO qiita.analysis_job (analysis_id, job_id) VALUES (1, 1), (1, 2), (2, 3);
 
 -- Attach filepath to analysis
-INSERT INTO qiita.analysis_filepath (analysis_id, filepath_id, data_type_id, filepath_type_id) VALUES (1, 7, 2, 6);
+INSERT INTO qiita.analysis_filepath (analysis_id, filepath_id, data_type_id) VALUES (1, 7, 2);
 
 -- Attach samples to analysis
 INSERT INTO qiita.analysis_sample (analysis_id, processed_data_id, sample_id, study_id) VALUES (1,1,'SKB8.640193',1), (1,1,'SKD8.640184',1), (1,1,'SKB7.640196',1), (1,1,'SKM9.640192',1), (1,1,'SKM4.640180',1), (2,1,'SKB8.640193',1), (2,1,'SKD8.640184',1), (2,1,'SKB7.640196',1);
