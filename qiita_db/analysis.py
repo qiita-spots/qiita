@@ -368,14 +368,14 @@ class Analysis(QiitaStatusObject):
         Parameters
         ----------
         samples : list of tuples
-            samples and the processed data id they come from in form
-            [(processed_data_id, sample_id), ...]
+            samples and the studyid they come from in form
+            [(study_id, sample_id), ...]
         """
         conn_handler = SQLConnectionHandler()
         self._lock_check(conn_handler)
         sql = ("INSERT INTO qiita.analysis_sample (analysis_id, sample_id, "
-               "processed_data_id) VALUES (%s, %s, %s)")
-        conn_handler.executemany(sql, [(self._id, s[1], s[0])
+               "study_id, processed_data_id) VALUES (%s, %s, %s, %s)")
+        conn_handler.executemany(sql, [(self._id, s[1], s[0], 1)
                                        for s in samples])
 
     def remove_samples(self, proc_data=None, samples=None):
@@ -383,8 +383,8 @@ class Analysis(QiitaStatusObject):
 
         Parameters
         ----------
-        proc_data : list, optional
-            processed data ids to remove, default None
+        studies : list, optional
+            studies to remove, default None
         samples : list, optional
             sample ids to remove, default None
 
@@ -433,12 +433,13 @@ class Analysis(QiitaStatusObject):
         """
         conn_handler = SQLConnectionHandler()
         self._lock_check(conn_handler)
-        file_ids = []
-        for table in tables:
-            file_ids.extend(table.get_filepath_ids())
-        sql = ("INSERT INTO qiita.analysis_filepath (analysis_id, filepath_id)"
-               " VALUES (%s, %s)")
-        conn_handler.executemany(sql, [(self._id, f) for f in file_ids])
+        sql = ("INSERT INTO qiita.analysis_filepath (analysis_id, filepath_id,"
+               "data_type_id)"
+               " VALUES (%s, %s, %s)")
+        biom_info = [(self._id, table.get_filepath_ids()[0],
+                      table.data_type(ret_id=True))
+                     for table in tables]
+        conn_handler.executemany(sql, biom_info)
 
     def remove_biom_tables(self, tables):
         """Removes biom tables from the analysis

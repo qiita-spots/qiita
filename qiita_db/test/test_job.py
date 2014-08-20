@@ -40,15 +40,19 @@ class JobTest(TestCase):
         for item in self._delete_dir:
             rmtree(item)
 
-    def test_exists(self):
+    def _make_equal_samples(self):
         # need to insert matching sample data into analysis 2
         self.conn_handler.execute(
             "DELETE FROM qiita.analysis_sample WHERE analysis_id = 2")
         self.conn_handler.execute(
             "INSERT INTO qiita.analysis_sample (analysis_id, "
-            "processed_data_id, sample_id) VALUES (2,1,'SKB8.640193'), "
-            "(2,1,'SKD8.640184'), (2,1,'SKB7.640196'), (2,1,'SKM9.640192'),"
-            "(2,1,'SKM4.640180')")
+            "processed_data_id, sample_id, study_id) VALUES "
+            "(2,1,'SKB8.640193',1), (2,1,'SKD8.640184',1), "
+            "(2,1,'SKB7.640196',1), (2,1,'SKM9.640192',1), "
+            "(2,1,'SKM4.640180',1)")
+
+    def test_exists(self):
+        self._make_equal_samples()
         """tests that existing job returns true"""
         self.assertTrue(Job.exists("16S", "Beta Diversity",
                                    {"--otu_table_fp": 1,
@@ -56,13 +60,7 @@ class JobTest(TestCase):
 
     def test_exists_return_jobid(self):
         # need to insert matching sample data into analysis 2
-        self.conn_handler.execute(
-            "DELETE FROM qiita.analysis_sample WHERE analysis_id = 2")
-        self.conn_handler.execute(
-            "INSERT INTO qiita.analysis_sample (analysis_id, "
-            "processed_data_id, sample_id) VALUES (2,1,'SKB8.640193'), "
-            "(2,1,'SKD8.640184'), (2,1,'SKB7.640196'), (2,1,'SKM9.640192'),"
-            "(2,1,'SKM4.640180')")
+        self._make_equal_samples()
         """tests that existing job returns true"""
         exists, jid = Job.exists("16S", "Beta Diversity",
                                  {"--otu_table_fp": 1, "--mapping_fp": 1},
@@ -73,13 +71,7 @@ class JobTest(TestCase):
     def test_exists_noexist_options(self):
         # need to insert matching sample data into analysis 2
         # makes sure failure is because options and not samples
-        self.conn_handler.execute(
-            "DELETE FROM qiita.analysis_sample WHERE analysis_id = 2")
-        self.conn_handler.execute(
-            "INSERT INTO qiita.analysis_sample (analysis_id, "
-            "processed_data_id, sample_id) VALUES (2,1,'SKB8.640193'), "
-            "(2,1,'SKD8.640184'), (2,1,'SKB7.640196'), (2,1,'SKM9.640192'),"
-            "(2,1,'SKM4.640180')")
+        self._make_equal_samples()
         """tests that non-existant job with bad options returns false"""
         self.assertFalse(Job.exists("16S", "Beta Diversity",
                                     {"--otu_table_fp": 1,
