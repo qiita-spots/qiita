@@ -10,8 +10,8 @@ before_install:
   # Update conda itself
   - conda update --yes conda
 install:
-  - conda install --yes -n env_name python=$PYTHON_VERSION h5py>=2.2.0
   - conda create --yes -n env_name python=$PYTHON_VERSION pip nose pep8 openpyxl=1.8.2 pandas ipython pyzmq
+  - conda install --yes -n env_name python=$PYTHON_VERSION h5py>=2.2.0
   - source activate env_name
   - pip 
   - pip install coveralls
