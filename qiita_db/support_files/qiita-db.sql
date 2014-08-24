@@ -729,14 +729,18 @@ If a given analysis is not in child_id, it is the root of the chain. ';
 CREATE TABLE qiita.analysis_filepath ( 
 	analysis_id          bigint  NOT NULL,
 	filepath_id          bigint  NOT NULL,
+	data_type_id         bigint  ,
 	CONSTRAINT idx_analysis_filepath_1 PRIMARY KEY ( analysis_id, filepath_id ),
 	CONSTRAINT fk_analysis_filepath FOREIGN KEY ( analysis_id ) REFERENCES qiita.analysis( analysis_id )    ,
-	CONSTRAINT fk_analysis_filepath_0 FOREIGN KEY ( filepath_id ) REFERENCES qiita.filepath( filepath_id )    
+	CONSTRAINT fk_analysis_filepath_0 FOREIGN KEY ( filepath_id ) REFERENCES qiita.filepath( filepath_id )    ,
+	CONSTRAINT fk_analysis_filepath_1 FOREIGN KEY ( data_type_id ) REFERENCES qiita.data_type( data_type_id )    
  );
 
 CREATE INDEX idx_analysis_filepath ON qiita.analysis_filepath ( analysis_id );
 
 CREATE INDEX idx_analysis_filepath_0 ON qiita.analysis_filepath ( filepath_id );
+
+CREATE INDEX idx_analysis_filepath_2 ON qiita.analysis_filepath ( data_type_id );
 
 COMMENT ON TABLE qiita.analysis_filepath IS 'Stores link between analysis and the data file used for the analysis.';
 
