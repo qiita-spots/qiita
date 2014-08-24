@@ -265,6 +265,7 @@ class AnalysisWaitHandler(BaseHandler):
         analysis = Analysis(aid)
 
         commands = []
+        analysis.build_files()
         mapping_file = analysis.mapping_file
         biom_tables = analysis.biom_tables
         for data_type, command in split:
