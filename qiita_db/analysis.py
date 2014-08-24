@@ -60,7 +60,7 @@ class Analysis(QiitaStatusObject):
     remove_samples
     share
     unshare
-    finalize_analysis
+    build_files
     """
 
     _table = "analysis"
@@ -242,8 +242,9 @@ class Analysis(QiitaStatusObject):
         """
         conn_handler = SQLConnectionHandler()
         fptypeid = convert_to_id("biom", "filepath_type")
-        sql = ("SELECT af.data_type, f.filepath FROM qiita.filepath f JOIN "
+        sql = ("SELECT dt.data_type, f.filepath FROM qiita.filepath f JOIN "
                "qiita.analysis_filepath af ON f.filepath_id = af.filepath_id "
+               "JOIN qiita.data_type dt ON dt.data_type_id = af.data_type_id "
                "WHERE af.analysis_id = %s AND f.filepath_type_id = %s")
         tables = conn_handler.execute_fetchall(sql, (self._id, fptypeid))
         if not tables:
@@ -271,7 +272,7 @@ class Analysis(QiitaStatusObject):
         mapping_fp = conn_handler.execute_fetchone(sql, (self._id, fptypeid))
         if not mapping_fp:
             return None
-        return join(get_db_files_base_dir(), "analysis", mapping_fp)
+        return join(get_db_files_base_dir(), "analysis", mapping_fp[0])
 
     @property
     def step(self):
@@ -456,19 +457,18 @@ class Analysis(QiitaStatusObject):
 
         conn_handler.executemany(sql, remove)
 
-    def finalize_analysis(self):
-        """Does all final setup needed for analysis to run
+    def build_files(self):
+        """Builds biom and mapping files needed for analysis
 
         Notes
         -----
         Creates biom tables for each requested data type
         Creates mapping file for requested samples
-        Sets analysis status to queued
         """
         conn_handler = SQLConnectionHandler()
-        self._build_biom_tables(conn_handler)
-        self._build_mapping_file(conn_handler)
-        self.status = 'queued'
+        samples = self._get_samples(conn_handler=conn_handler)
+        self._build_mapping_file(samples, conn_handler=conn_handler)
+        self._build_biom_tables(samples, conn_handler=conn_handler)
 
     def _get_samples(self, conn_handler=None):
         """Retrieves dict of samples to proc_data_id for the analysis"""
@@ -479,11 +479,8 @@ class Analysis(QiitaStatusObject):
                "GROUP BY processed_data_id")
         return dict(conn_handler.execute_fetchall(sql, [self._id]))
 
-    def _build_biom_tables(self, conn_handler=None):
+    def _build_biom_tables(self, samples, conn_handler=None):
         """Build tables and add them to the analysis"""
-        conn_handler = conn_handler if conn_handler is not None \
-            else SQLConnectionHandler()
-        samples = _get_samples(conn_handler)
         # filter and combine all study BIOM tables needed for each data type
         new_tables = {dt: None for dt in self.data_types}
         base_fp = get_work_base_dir()
@@ -496,22 +493,26 @@ class Analysis(QiitaStatusObject):
             # filter for just the wanted samples and merge into new table
             # this if/else setup avoids needing a blank table to start merges
             table.filter(samps, axis='sample', inplace=True)
-            data_type = proc_data.data_type
+            data_type = proc_data.data_type()
             if new_tables[data_type] is None:
                 new_tables[data_type] = table
             else:
                 new_tables[data_type].merge(table)
 
         # add the new tables to the analysis
-        base_fp = get_db_files_base_dir()
+        conn_handler = conn_handler if conn_handler is not None \
+            else SQLConnectionHandler()
+        base_fp = get_db_files_base_dir(conn_handler)
         for dt, biom_table in viewitems(new_tables):
             # write out the file
             biom_fp = join(base_fp, "analysis", "%d_analysis_%s.biom" %
                            (self._id, dt))
+            with biom_open(biom_fp, 'w') as f:
+                table.to_hdf5(f, "Analysis %s Datatype %s" % (self._id, dt))
             self._add_file("%d_analysis_%s.biom" % (self._id, dt),
                            "biom", data_type=dt, conn_handler=conn_handler)
 
-    def _build_mapping_file(self, conn_handler=None):
+    def _build_mapping_file(self, samples, conn_handler=None):
         """Builds the combined mapping file for all samples
            Code modified slightly from qiime.util.MetadataMap.__add__"""
         conn_handler = conn_handler if conn_handler is not None \
@@ -522,9 +523,14 @@ class Analysis(QiitaStatusObject):
         all_headers = set()
         all_studies = set()
 
-        samples = self._get_samples(conn_handler)
         merged_data = defaultdict(lambda: defaultdict(lambda: None))
         for pid, samples in viewitems(samples):
+            if any([all_sample_ids.intersection(samples),
+                   len(set(samples)) != len(samples)]):
+                # duplicate samples so raise error
+                raise ValueError("Duplicate sample ids found: %s" %
+                                 str(all_sample_ids.intersection(samples)))
+            all_sample_ids.update(samples)
             study = ProcessedData(pid).study
             if study in all_studies:
                 # samples already added by other processed data file in study
@@ -548,12 +554,6 @@ class Analysis(QiitaStatusObject):
             # add all the metadata to merged_data
             for data in metadata:
                 sample_id = data.pop()
-                if sample_id not in all_sample_ids:
-                    all_sample_ids.add(sample_id)
-                else:
-                    raise ValueError("Duplicate sample id found: %s" %
-                                     sample_id)
-
                 for header, value in zip(headers, data):
                     merged_data[sample_id][header] = str(value)
 
@@ -564,7 +564,7 @@ class Analysis(QiitaStatusObject):
         all_headers.append('description')
 
         # write mapping file out
-        base_fp = get_db_files_base_dir()
+        base_fp = get_db_files_base_dir(conn_handler)
         mapping_fp = join(base_fp, "analysis", "%d_analysis_mapping.txt" %
                           self._id)
         with open(mapping_fp, 'w') as f:
@@ -594,23 +594,25 @@ class Analysis(QiitaStatusObject):
             else SQLConnectionHandler()
 
         # get required bookkeeping data for DB
-        with open(filename, 'rb') as f:
-            checksum = crc32(f.read()) & 0xffffffff
         fptypeid = convert_to_id(filetype, "filepath_type", conn_handler)
+        fullpath = join(get_db_files_base_dir(), "analysis", filename)
+        with open(fullpath, 'rb') as f:
+            checksum = crc32(f.read()) & 0xffffffff
 
         # add  file to analysis
         sql = ("INSERT INTO qiita.filepath (filepath, filepath_type_id, "
                "checksum, checksum_algorithm_id) VALUES (%s, %s, %s, %s) "
                "RETURNING filepath_id")
         # magic number 1 is for crc32 checksum algorithm
-        fpid = conn_handler.execute_fetchone(sql, (filename, fptypeid,
-                                                   checksum, 1))
+        fpid = conn_handler.execute_fetchone(sql, (fullpath, fptypeid,
+                                                   checksum, 1))[0]
 
-        dtinfo = ["", ""]
-        if datatype:
-            dtinfo[0] = ",data_type_id"
-            dtinfo[1] = ",%d" % convert_to_id(data_type, "data_type")
+        col = ""
+        dtid = ""
+        if data_type:
+            col = ",data_type_id"
+            dtid = ",%d" % convert_to_id(data_type, "data_type")
 
         sql = ("INSERT INTO qiita.analysis_filepath (analysis_id, filepath_id"
-               "{0}) VALUES (%s, %s{1})".format(**dtinfo))
+               "{0}) VALUES (%s, %s{1})".format(col, dtid))
         conn_handler.execute(sql, (self._id, fpid))
