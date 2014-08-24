@@ -28,12 +28,15 @@ class TestAnalysis(TestCase):
         self.analysis = Analysis(1)
 
     def test_lock_check(self):
-        self.analysis.status = "public"
-        with self.assertRaises(QiitaDBStatusError):
-            self.analysis._lock_check(self.conn_handler)
+        for status in ["queued", "running", "completed", "public"]:
+            new = Analysis.create(User("admin@foo.bar"), "newAnalysis",
+                                  "A New Analysis")
+            new.status = status
+            with self.assertRaises(QiitaDBStatusError):
+                new._lock_check(self.conn_handler)
 
     def test_lock_check_ok(self):
-        self.analysis.status = "queued"
+        self.analysis.status = "in_construction"
         self.analysis._lock_check(self.conn_handler)
 
     def test_get_public(self):
@@ -99,6 +102,40 @@ class TestAnalysis(TestCase):
         new = Analysis.create(User("admin@foo.bar"), "newAnalysis",
                               "A New Analysis", Analysis(1))
         self.assertEqual(new.biom_tables, None)
+
+    def test_set_step(self):
+        new = Analysis.create(User("admin@foo.bar"), "newAnalysis",
+                              "A New Analysis", Analysis(1))
+        new.step = 2
+        sql = "SELECT * FROM qiita.analysis_workflow WHERE analysis_id = 3"
+        obs = self.conn_handler.execute_fetchall(sql)
+        self.assertEqual(obs, [[3, 2]])
+
+    def test_set_step_twice(self):
+        new = Analysis.create(User("admin@foo.bar"), "newAnalysis",
+                              "A New Analysis", Analysis(1))
+        new.step = 2
+        new.step = 4
+        sql = "SELECT * FROM qiita.analysis_workflow WHERE analysis_id = 3"
+        obs = self.conn_handler.execute_fetchall(sql)
+        self.assertEqual(obs, [[3, 4]])
+
+    def test_retrive_step(self):
+        new = Analysis.create(User("admin@foo.bar"), "newAnalysis",
+                              "A New Analysis", Analysis(1))
+        new.step = 2
+        self.assertEqual(new.step, 2)
+
+    def test_retrieve_step_new(self):
+        new = Analysis.create(User("admin@foo.bar"), "newAnalysis",
+                              "A New Analysis", Analysis(1))
+        with self.assertRaises(ValueError):
+            new.step
+
+    def test_retrieve_step_locked(self):
+        self.analysis.status = "queued"
+        with self.assertRaises(QiitaDBStatusError):
+            self.analysis.step = 3
 
     def test_retrieve_jobs(self):
         self.assertEqual(self.analysis.jobs, [1, 2])

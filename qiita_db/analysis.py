@@ -47,6 +47,7 @@ class Analysis(QiitaStatusObject):
     samples
     data_types
     biom_tables
+    step
     shared_with
     jobs
     pmid
@@ -65,8 +66,9 @@ class Analysis(QiitaStatusObject):
     _table = "analysis"
 
     def _lock_check(self, conn_handler):
-        """Raises QiitaDBStatusError if analysis is public"""
-        if self.check_status({"public", "completed", "error"}):
+        """Raises QiitaDBStatusError if analysis is not in_progress"""
+        if self.check_status({"public", "completed", "error", "running",
+                              "queued"}):
             raise QiitaDBStatusError("Analysis is locked!")
 
     def _status_setter_checks(self, conn_handler):
@@ -270,6 +272,32 @@ class Analysis(QiitaStatusObject):
         if not mapping_fp:
             return None
         return join(get_db_files_base_dir(), "analysis", mapping_fp)
+
+    @property
+    def step(self):
+        conn_handler = SQLConnectionHandler()
+        self._lock_check(conn_handler)
+        sql = "SELECT step from qiita.analysis_workflow WHERE analysis_id = %s"
+        try:
+            return conn_handler.execute_fetchone(sql, (self._id,))[0]
+        except TypeError:
+            raise ValueError("Step not set yet!")
+
+    @step.setter
+    def step(self, value):
+        conn_handler = SQLConnectionHandler()
+        self._lock_check(conn_handler)
+        sql = ("SELECT EXISTS(SELECT analysis_id from qiita.analysis_workflow "
+               "WHERE analysis_id = %s)")
+        step_exists = conn_handler.execute_fetchone(sql, (self._id,))[0]
+
+        if step_exists:
+            sql = ("UPDATE qiita.analysis_workflow SET step = %s WHERE "
+                   "analysis_id = %s")
+        else:
+            sql = ("INSERT INTO qiita.analysis_workflow (step, analysis_id) "
+                   "VALUES (%s, %s)")
+        conn_handler.execute(sql, (value, self._id))
 
     @property
     def jobs(self):

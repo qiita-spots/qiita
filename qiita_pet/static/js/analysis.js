@@ -45,5 +45,24 @@ function enable_study_datatype(id) {
 
 function pre_submit(action) {
   document.getElementById('action').value = action;
-  if(action == 'continue') {document.getElementById('results-form').action = '/analysis/3'}
+  var msgdiv = document.getElementById('searchmsg');
+  if(action == 'search') {
+    msgdiv.style.color = '';
+    msgdiv.style.align = 'center';
+    msgdiv.innerHTML = '<img src="/static/img/waiting.gif"> <b>Searching...</b>';
+  } else if(action == 'continue') {
+    var selected = $('#selected input:checkbox').length;
+    if(selected == 0) {
+      msgdiv.innerHTML = "Must select samples to continue!"
+      return false;
+    } else {
+    document.getElementById('results-form').action = '/analysis/3'
+    }
+  } else if(action == "deselect") {
+    var selected = $('#selected input:checked').length;
+    if(selected == 0) {
+      msgdiv.innerHTML = "Must select samples to remove from study!"
+      return false;
+    }
+  }
 }

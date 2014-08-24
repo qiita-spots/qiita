@@ -25,6 +25,8 @@ function add_metacat(metacat) {
 {% from qiita_db.study import Study %}
 {% from qiita_db.data import ProcessedData %}
 {% from qiita_pet.util import clean_str %}
+<!--dead easy preload for waiting image -->
+<img src="/static/img/waiting.gif" width="1" height="1" border="0">
 <form role="form" action="/analysis/2" id="results-form" method="post">
 <input type="hidden" name="action" id="action" value="search">
 <input type="hidden" name="analysis-id" value="{{aid}}">
@@ -71,7 +73,7 @@ function add_metacat(metacat) {
 <div id="availstudies" style="overflow : auto;">  <!-- Search results -->
 <h1>Search</h1>
 <p><a href="#" data-toggle="modal" data-target="#searchexample">Search help</a> | <a href="#" data-toggle="modal" data-target="#availmeta">Metadata categories</a></p>
-<p><input type="text" name="query" id="query" style="width:80%;white-space:nowrap;" value='{{query}}'><input type="submit" class="btn btn-default" onclick="pre_submit('search')" value="Search"></p>
+<p><input type="text" name="query" id="query" style="width:80%;white-space:nowrap;" value='{{query}}'><input type="submit" id="submitsearchbutton" class="btn btn-default" onclick="return pre_submit('search')" value="Search"></p>
 <div id='searchmsg' style="color:red;">{{searchmsg}}</div>
 
 
@@ -104,7 +106,7 @@ function add_metacat(metacat) {
 </div>
 
     <table class='table table-hover' style="width:100%">
-      <tr><th>Data Types</th><th>Name</th><th>Description</th><th>Status</th></tr>
+      <tr><th>Data Types</th><th>Name</th><th></th><th>Description</th><th>Status</th></tr>
       {% for sid, samples in viewitems(results) %}
         {% set study = Study(sid) %}
         <tr id="study{{sid}}"><td>
@@ -117,6 +119,9 @@ function add_metacat(metacat) {
           </select>{{data_type}}<br />
           </td><td style='vertical-align:middle;'><a href="#" data-toggle="modal" data-target="#modal{{sid}}">{{study.title}}</a></td>
           <td style='vertical-align:middle;'>
+            <a href="#" onclick="select_deselect({{sid}}, true); return false;">Select all</a>
+          </td>
+          <td style='vertical-align:middle;'>
           {{study.info["study_description"]}}</td>
           <td style='vertical-align:middle;'>{{study.status}}</td></tr>
         {% end %}
@@ -126,14 +131,16 @@ function add_metacat(metacat) {
   </div>
 </div>
   {% for sid, samples in viewitems(results) %}
+    {% set study = Study(sid) %}
     <div class="modal fade" id='modal{{sid}}'>
         <div class="modal-dialog modal-lg">
           <div class="modal-content">
             <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
               <h4 class="modal-title">Select samples</h4>
             </div>
             <div class="modal-body">
-              <h3>Statistics</h3>
+              <h3>Metadata sample counts</h3>
               <div class="panel-group" id="accordion-sample" style="width:80%">
                 {% set divcount = 1 %}
                 {% for meta_cat, sub_cats in viewitems(counts[study.id]) %}
@@ -150,7 +157,7 @@ function add_metacat(metacat) {
                       <table class="table"><tr><th>Value</th><th>Samples</th><th></th></tr>
                       {% for sub_cat, count in viewitems(sub_cats) %}
                         <tr><td>{{sub_cat}}</td><td>{{count}}</td>
-                        <td><a href='#' onclick="select_category('{{clean_str(sub_cat)}}', ''); return false;">Select category</a></td></tr>
+                        <td><a href='#' onclick="select_category('{{clean_str(sub_cat)}}', '{{study.id}}'); return false;">Select category</a></td></tr>
                       {% end %}
                       </table>
                     </div>
@@ -186,10 +193,10 @@ function add_metacat(metacat) {
       </div><!-- /.modal -->
   {% end %}
 {% end %}
-<div id="col-sm-12" style="position:fixed;height:32px;width:100%;padding:5px;bottom:0px;left:0px;">
-  <input type="submit" class="btn btn-default btn-xs" onclick="pre_submit('select')" value="Select samples" style="vertical-align: middle;">
-    <input type="submit" class="btn btn-default btn-xs" onclick="pre_submit('deselect')" value="Remove samples">
-    <input type="submit" class="btn btn-default btn-xs" onclick="pre_submit('continue')" value="Continue">
+<div id="col-sm-12" style="position:fixed;height:32px;width:100%;padding:5px;top:50px;left:0px;background:white;">
+  <input type="submit" class="btn btn-default btn-xs" onclick="return pre_submit('select')" value="Select samples" style="vertical-align: middle;">
+    <input type="submit" class="btn btn-default btn-xs" onclick="return pre_submit('deselect')" value="Remove samples">
+    <input type="submit" class="btn btn-default btn-xs" onclick="return pre_submit('continue')" value="Continue">
 </div>
 </form>
 <div class="modal fade search-example-modal" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true" id="searchexample">
@@ -213,7 +220,7 @@ function add_metacat(metacat) {
         <p>Complex queries can also be created by using AND, OR, and NOT operators. As an example, if we want all soil samples that are low or extremely high pH, we can use the following search:</p>
         <p><b>sample_type = ENVO:soil AND (ph < 4 OR ph > 10)</b></p>
         <p>You can search for multi-word phrases using quotes. For example, to search for any study with "chicken pox" in the title, the query would be:</p>
-        <p><b>title includes "chicken pox"</b></p>
+        <p><b>study_title includes "chicken pox"</b></p>
         <p>Note that you can not use wild cards in any string searches. Only alphanumeric characters and colons are supported.</p>
       </div>
     </div>

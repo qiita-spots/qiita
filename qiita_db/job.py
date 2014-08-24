@@ -27,17 +27,20 @@ Classes
 from __future__ import division
 from json import dumps, loads
 from os.path import join
+from os import remove
+from shutil import rmtree
 from functools import partial
 from collections import defaultdict
 
 from future.builtins import zip
+from future.utils import viewitems, viewkeys
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from .base import QiitaStatusObject
 from .util import insert_filepaths, convert_to_id, get_db_files_base_dir
 from .sql_connection import SQLConnectionHandler
 from .logger import LogEntry
-from .exceptions import QiitaDBStatusError
+from .exceptions import QiitaDBStatusError, QiitaDBDuplicateError
 
 
 class Job(QiitaStatusObject):
@@ -81,7 +84,8 @@ class Job(QiitaStatusObject):
         return Command.create_list()
 
     @classmethod
-    def exists(cls, datatype, command, options):
+    def exists(cls, datatype, command, options, analysis,
+               return_existing=False):
         """Checks if the given job already exists
 
         Parameters
@@ -92,24 +96,107 @@ class Job(QiitaStatusObject):
             The name of the command run on the data
         options : dict
             Options for the command in the format {option: value}
+        analysis : Analysis object
+            The analysis the job will be attached to on creation
+        return_existing : bool, optional
+            If True, function will return the instatiated Job object for the
+            matching job. Default False
 
         Returns
         -------
         bool
             Whether the job exists or not
+        Job or None, optional
+            If return_existing is True, the Job object of the matching job or
+            None if none exists
         """
         conn_handler = SQLConnectionHandler()
+        # check passed arguments and grab analyses for matching jobs
         datatype_id = convert_to_id(datatype, "data_type", conn_handler)
         sql = "SELECT command_id FROM qiita.command WHERE name = %s"
         command_id = conn_handler.execute_fetchone(sql, (command, ))[0]
         opts_json = dumps(options, sort_keys=True, separators=(',', ':'))
-        sql = ("SELECT EXISTS(SELECT * FROM  qiita.{0} WHERE data_type_id = %s"
-               " AND command_id = %s AND options = %s)".format(cls._table))
-        return conn_handler.execute_fetchone(
-            sql, (datatype_id, command_id, opts_json))[0]
+        sql = ("SELECT DISTINCT aj.analysis_id, aj.job_id FROM "
+               "qiita.analysis_job aj JOIN qiita.{0} j ON aj.job_id = j.job_id"
+               " WHERE j.data_type_id = %s AND j.command_id = %s "
+               "AND j.options = %s".format(cls._table))
+        analyses = conn_handler.execute_fetchall(
+            sql, (datatype_id, command_id, opts_json))
+        if not analyses and return_existing:
+            # stop looking since we have no possible matches
+            return False, None
+        elif not analyses:
+            return False
+
+        # build the samples dict as list of samples keyed to their proc_data_id
+        sql = ("SELECT processed_data_id, array_agg(sample_id ORDER BY "
+               "sample_id) FROM qiita.analysis_sample WHERE analysis_id = %s "
+               "GROUP BY processed_data_id")
+        samples = dict(conn_handler.execute_fetchall(sql, [analysis.id]))
+        # check passed analyses' samples dict against all found analyses
+        matched_job = None
+        for aid, jid in analyses:
+            # build the samples dict for a found analysis
+            comp_samples = dict(conn_handler.execute_fetchall(sql, [aid]))
+            # compare samples and stop checking if a match is found
+            matched_samples = True if samples == comp_samples else False
+            if matched_samples:
+                matched_job = jid
+                break
+
+        if return_existing:
+            return matched_samples, (cls(matched_job) if matched_job else None)
+        return matched_samples
 
     @classmethod
-    def create(cls, datatype, command, analysis):
+    def delete(cls, jobid):
+        """Removes a job and all files attached to it
+
+        Parameters
+        ----------
+        jobid : int
+            ID of the job to delete
+
+        Notes
+        -----
+        This function will remove a job from all analyses it is attached to in
+        analysis_job table, as well as the job itself from the job table. All
+        files and references to files for the job will be removed from the
+        filepath and job_results_filepath tables. All the job's files on the
+        filesystem will also be removed.
+        """
+        conn_handler = SQLConnectionHandler()
+        # store filepath info for later use
+        sql = ("SELECT f.filepath, f.filepath_id FROM qiita.filepath f JOIN "
+               "qiita.job_results_filepath jf ON jf.filepath_id = "
+               "f.filepath_id WHERE jf.job_id = %s")
+        filepaths = conn_handler.execute_fetchall(sql, [jobid])
+
+        # remove fiepath links in DB
+        conn_handler.execute("DELETE FROM qiita.job_results_filepath WHERE "
+                             "job_id = %s", [jobid])
+        sql = "DELETE FROM qiita.filepath WHERE"
+        for x in range(len(filepaths)):
+            sql = ' '.join((sql, "filepath_id = %s"))
+        conn_handler.execute(sql, [fp[1] for fp in filepaths])
+
+        # remove job
+        conn_handler.execute("DELETE FROM qiita.analysis_job WHERE "
+                             "job_id = %s", [jobid])
+        conn_handler.execute("DELETE FROM qiita.job WHERE job_id = %s",
+                             [jobid])
+
+        # remove files/folders attached to job
+        basedir = get_db_files_base_dir()
+        for fp in filepaths:
+            try:
+                rmtree(join(basedir, "job", fp[0]))
+            except OSError:
+                remove(join(basedir, "job", fp[0]))
+
+    @classmethod
+    def create(cls, datatype, command, options, analysis,
+               return_existing=False):
         """Creates a new job on the database
 
         Parameters
@@ -120,30 +207,44 @@ class Job(QiitaStatusObject):
             The identifier of the command executed in this job
         analysis : Analysis object
             The analysis which this job belongs to
+        return_existing : bool, optional
+            If True, returns an instantiated Job object pointing to an already
+            existing job with the given parameters. Default False
 
         Returns
         -------
         Job object
             The newly created job
+
+        Raises
+        ------
+        QiitaDBDuplicateError
+            return_existing is False and an exact duplicate of the job already
+            exists in the DB.
         """
-        # EXISTS IGNORED FOR DEMO, ISSUE #83
-        # if cls.exists(datatype, command, options):
-        #     raise QiitaDBDuplicateError(
-        #         "Job", "datatype: %s, command: %s, options: %s"
-        #         % (datatype, command, options))
+        exists, job = cls.exists(datatype, command, options, analysis,
+                                 return_existing=True)
+        if exists:
+            if return_existing:
+                return job
+            else:
+                raise QiitaDBDuplicateError(
+                    "Job", "datatype: %s, command: %s, options: %s, "
+                    "analysis: %s" % (datatype, command, options, analysis.id))
 
         # Get the datatype and command ids from the strings
         conn_handler = SQLConnectionHandler()
         datatype_id = convert_to_id(datatype, "data_type", conn_handler)
         sql = "SELECT command_id FROM qiita.command WHERE name = %s"
         command_id = conn_handler.execute_fetchone(sql, (command, ))[0]
+        opts_json = dumps(options, sort_keys=True, separators=(',', ':'))
 
         # Create the job and return it
         sql = ("INSERT INTO qiita.{0} (data_type_id, job_status_id, "
-               "command_id) VALUES "
-               "(%s, %s, %s) RETURNING job_id").format(cls._table)
+               "command_id, options) VALUES "
+               "(%s, %s, %s, %s) RETURNING job_id").format(cls._table)
         job_id = conn_handler.execute_fetchone(sql, (datatype_id, 1,
-                                               command_id))[0]
+                                               command_id, opts_json))[0]
 
         # add job to analysis
         sql = ("INSERT INTO qiita.analysis_job (analysis_id, job_id) VALUES "
@@ -187,11 +288,7 @@ class Job(QiitaStatusObject):
         sql = ("SELECT options FROM qiita.{0} WHERE "
                "job_id = %s".format(self._table))
         conn_handler = SQLConnectionHandler()
-        try:
-            opts = loads(conn_handler.execute_fetchone(sql, (self._id, ))[0])
-        except ValueError:
-            raise IncompetentQiitaDeveloperError("Malformed options for job "
-                                                 "id %d" % self._id)
+        opts = loads(conn_handler.execute_fetchone(sql, (self._id, ))[0])
         sql = ("SELECT command, output from qiita.command WHERE command_id = ("
                "SELECT command_id from qiita.{0} WHERE "
                "job_id = %s)".format(self._table))
@@ -425,7 +522,7 @@ class Command(object):
         """
         self.name = name
         self.command = command
-        self.input_opts = dumps(input_opts)
-        self.required_opts = dumps(required_opts)
-        self.optional_opts = dumps(optional_opts)
-        self.output_opts = dumps(output_opts)
+        self.input_opts = loads(input_opts)
+        self.required_opts = loads(required_opts)
+        self.optional_opts = loads(optional_opts)
+        self.output_opts = loads(output_opts)
