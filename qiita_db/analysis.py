@@ -17,7 +17,8 @@ Classes
 # -----------------------------------------------------------------------------
 from __future__ import division
 from collections import defaultdict
-from os.path import join, basename, splitext
+from os.path import join, basename, splitext, relpath
+from binascii import crc32
 
 from future.builtins import zip
 from future.utils import viewitems
@@ -56,12 +57,9 @@ class Analysis(QiitaStatusObject):
     -------
     add_samples
     remove_samples
-    build_biom_table
-    add_processed_data
-    remove_processed_data
-    add_jobs
     share
     unshare
+    finalize_analysis
     """
 
     _table = "analysis"
@@ -237,34 +235,41 @@ class Analysis(QiitaStatusObject):
         Returns
         -------
         dict or None
-            Dictonary in the form {data_type: BIOM filepath}
+            Dictonary in the form {data_type: full BIOM filepath} or None if
+            not generated
         """
         conn_handler = SQLConnectionHandler()
-        # magic number 6 is biom file type
-        sql = ("SELECT f.filepath FROM qiita.filepath f JOIN "
+        fptypeid = convert_to_id("biom", "filepath_type")
+        sql = ("SELECT af.data_type, f.filepath FROM qiita.filepath f JOIN "
                "qiita.analysis_filepath af ON f.filepath_id = af.filepath_id "
-               "WHERE af.analysis_id = %s AND f.filepath_type_id = 6")
-        tables = conn_handler.execute_fetchall(sql, (self._id, ))
+               "WHERE af.analysis_id = %s AND f.filepath_type_id = %s")
+        tables = conn_handler.execute_fetchall(sql, (self._id, fptypeid))
         if not tables:
             return None
         ret_tables = {}
         base_fp = get_db_files_base_dir()
         for fp in tables:
-            data_type = splitext(basename(fp[0]))[0].split("_")[-1]
-            ret_tables[data_type] = join(base_fp, "processed_data", fp[0])
+            ret_tables[fp[0]] = join(base_fp, "analysis", fp[1])
         return ret_tables
 
     @property
     def mapping_file(self):
-        """Builds and returns the mapping file for the analysis
+        """Returns the mapping file for the analysis
 
         Returns
         -------
-        str
-            full filepath to the generated mapping file
+        str or None
+            full filepath to the mapping file or None if not generated
         """
         conn_handler = SQLConnectionHandler()
-        return self._build_mapping_file()
+        fptypeid = convert_to_id("plain_text", "filepath_type")
+        sql = ("SELECT f.filepath FROM qiita.filepath f JOIN "
+               "qiita.analysis_filepath af ON f.filepath_id = af.filepath_id "
+               "WHERE af.analysis_id = %s AND f.filepath_type_id = %s")
+        mapping_fp = conn_handler.execute_fetchone(sql, (self._id, fptypeid))
+        if not mapping_fp:
+            return None
+        return join(get_db_files_base_dir(), "analysis", mapping_fp)
 
     @property
     def jobs(self):
@@ -423,9 +428,34 @@ class Analysis(QiitaStatusObject):
 
         conn_handler.executemany(sql, remove)
 
-    def build_biom_tables(self):
+    def finalize_analysis(self):
+        """Does all final setup needed for analysis to run
+
+        Notes
+        -----
+        Creates biom tables for each requested data type
+        Creates mapping file for requested samples
+        Sets analysis status to queued
+        """
+        conn_handler = SQLConnectionHandler()
+        self._build_biom_tables(conn_handler)
+        self._build_mapping_file(conn_handler)
+        self.status = 'queued'
+
+    def _get_samples(self, conn_handler=None):
+        """Retrieves dict of samples to proc_data_id for the analysis"""
+        conn_handler = conn_handler if conn_handler is not None \
+            else SQLConnectionHandler()
+        sql = ("SELECT processed_data_id, array_agg(sample_id ORDER BY "
+               "sample_id) FROM qiita.analysis_sample WHERE analysis_id = %s "
+               "GROUP BY processed_data_id")
+        return dict(conn_handler.execute_fetchall(sql, [self._id]))
+
+    def _build_biom_tables(self, conn_handler=None):
         """Build tables and add them to the analysis"""
-        samples = _get_samples()
+        conn_handler = conn_handler if conn_handler is not None \
+            else SQLConnectionHandler()
+        samples = _get_samples(conn_handler)
         # filter and combine all study BIOM tables needed for each data type
         new_tables = {dt: None for dt in self.data_types}
         base_fp = get_work_base_dir()
@@ -445,16 +475,13 @@ class Analysis(QiitaStatusObject):
                 new_tables[data_type].merge(table)
 
         # add the new tables to the analysis
-        
-
-    def _get_samples(self, conn_handler=None):
-        """Retrieves dict of samples to proc_data_id for the analysis"""
-        conn_handler = conn_handler if conn_handler is not None \
-            else SQLConnectionHandler()
-        sql = ("SELECT processed_data_id, array_agg(sample_id ORDER BY "
-               "sample_id) FROM qiita.analysis_sample WHERE analysis_id = %s "
-               "GROUP BY processed_data_id")
-        return dict(conn_handler.execute_fetchall(sql, [self._id]))
+        base_fp = get_db_files_base_dir()
+        for dt, biom_table in viewitems(new_tables):
+            # write out the file
+            biom_fp = join(base_fp, "analysis", "%d_analysis_%s.biom" %
+                           (self._id, dt))
+            self._add_file("%d_analysis_%s.biom" % (self._id, dt),
+                           "biom", data_type=dt, conn_handler=conn_handler)
 
     def _build_mapping_file(self, conn_handler=None):
         """Builds the combined mapping file for all samples
@@ -509,8 +536,9 @@ class Analysis(QiitaStatusObject):
         all_headers.append('description')
 
         # write mapping file out
-        base_fp = get_work_base_dir()
-        mapping_fp = join(base_fp, "%d_analysis_mapping.txt" % self._id)
+        base_fp = get_db_files_base_dir()
+        mapping_fp = join(base_fp, "analysis", "%d_analysis_mapping.txt" %
+                          self._id)
         with open(mapping_fp, 'w') as f:
             f.write("#SampleID\t%s\n" % '\t'.join(all_headers))
             for sample, metadata in viewitems(merged_data):
@@ -519,17 +547,42 @@ class Analysis(QiitaStatusObject):
                     data.append(metadata[header] if
                                 metadata[header] is not None else "no_data")
                 f.write("%s\n" % "\t".join(data))
-        return mapping_fp
 
-    def add_jobs(self, jobs):
-        """Adds a list of jobs to the analysis
+        self._add_file("%d_analysis_mapping.txt" % self._id,
+                       "plain_text", conn_handler=conn_handler)
+
+    def _add_file(self, filename, filetype, data_type=None, conn_handler=None):
+        """adds analysis item to database
 
         Parameters
         ----------
-            jobs : list of Job objects
+        filename : str
+            filename to add to analysis
+        filetype : {plain_text, biom}
+        data_type : str, optional
+        conn_handler : SQLConnectionHandler object, optional
         """
-        conn_handler = SQLConnectionHandler()
-        self._lock_check(conn_handler)
-        sql = ("INSERT INTO qiita.analysis_job (analysis_id, job_id) "
-               "VALUES (%s, %s)")
-        conn_handler.executemany(sql, [(self._id, job.id) for job in jobs])
+        conn_handler = conn_handler if conn_handler is not None \
+            else SQLConnectionHandler()
+
+        # get required bookkeeping data for DB
+        with open(filename, 'rb') as f:
+            checksum = crc32(f.read()) & 0xffffffff
+        fptypeid = convert_to_id(filetype, "filepath_type", conn_handler)
+
+        # add  file to analysis
+        sql = ("INSERT INTO qiita.filepath (filepath, filepath_type_id, "
+               "checksum, checksum_algorithm_id) VALUES (%s, %s, %s, %s) "
+               "RETURNING filepath_id")
+        # magic number 1 is for crc32 checksum algorithm
+        fpid = conn_handler.execute_fetchone(sql, (filename, fptypeid,
+                                                   checksum, 1))
+
+        dtinfo = ["", ""]
+        if datatype:
+            dtinfo[0] = ",data_type_id"
+            dtinfo[1] = ",%d" % convert_to_id(data_type, "data_type")
+
+        sql = ("INSERT INTO qiita.analysis_filepath (analysis_id, filepath_id"
+               "{0}) VALUES (%s, %s{1})".format(**dtinfo))
+        conn_handler.execute(sql, (self._id, fpid))
