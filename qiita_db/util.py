@@ -478,6 +478,37 @@ def convert_to_id(value, table, conn_handler=None):
         return _id[0]
 
 
+def convert_from_id(value, table, conn_handler=None):
+        """Converts an id value to it's corresponding string value
+
+        Parameters
+        ----------
+        value : int
+            The id value to convert
+        table : str
+            The table that has the conversion
+        conn_handler : SQLConnectionHandler, optional
+            The sql connection object
+
+        Returns
+        -------
+        str
+            The string correspinding to the id
+
+        Raises
+        ------
+        ValueError
+            The passed id has no associated string
+        """
+        conn_handler = conn_handler if conn_handler else SQLConnectionHandler()
+        string = conn_handler.execute_fetchone(
+            "SELECT {0} FROM qiita.{0} WHERE {0}_id = %s".format(table),
+            (value, ))
+        if string is None:
+            raise ValueError("%s not valid for table %s" % (value, table))
+        return string[0]
+
+
 def get_count(table):
     """Counts the number of rows in a table
 
