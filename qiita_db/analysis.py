@@ -513,7 +513,8 @@ class Analysis(QiitaStatusObject):
             biom_fp = join(base_fp, "analysis", "%d_analysis_%s.biom" %
                            (self._id, dt))
             with biom_open(biom_fp, 'w') as f:
-                table.to_hdf5(f, "Analysis %s Datatype %s" % (self._id, dt))
+                biom_table.to_hdf5(f, "Analysis %s Datatype %s" %
+                                   (self._id, dt))
             self._add_file("%d_analysis_%s.biom" % (self._id, dt),
                            "biom", data_type=dt, conn_handler=conn_handler)
 
@@ -525,7 +526,7 @@ class Analysis(QiitaStatusObject):
         # We will keep track of all unique sample_ids and metadata headers
         # we have seen as we go, as well as studies already seen
         all_sample_ids = set()
-        all_headers = set()
+        all_headers = set(get_table_cols("required_sample_info", conn_handler))
         all_studies = set()
 
         merged_data = defaultdict(lambda: defaultdict(lambda: None))
@@ -541,32 +542,32 @@ class Analysis(QiitaStatusObject):
                 # samples already added by other processed data file in study
                 continue
             all_studies.add(study)
-            # query out the combined table of metadata for all samples
-            headers = get_table_cols("sample_%d" % study, conn_handler)
+            # add headers to set of all ehaders found
+            headers = get_table_cols("sample_%d" % study, conn_handler) + \
+                get_table_cols("prep_%d" % study, conn_handler)
             headers.remove("sample_id")
-            sql = ("SELECT rs.sample_type, rs.collection_timestamp, "
-                   "rs.host_subject_id,rs.description,{0},rs.sample_id "
-                   "FROM qiita.required_sample_info rs JOIN qiita.sample_{1} "
-                   "ss USING(sample_id) WHERE rs.sample_id IN {2} AND "
-                   "rs.study_id = {1}".format(
-                       ",".join("ss.%s" % h for h in headers),
-                       study,
-                       "(%s)" % ",".join("'%s'" % s for s in samples)))
-            metadata = conn_handler.execute_fetchall(sql)
-            headers = ["sample_type", "collection_timestamp",
-                       "host_subject_id", "description"] + headers
             all_headers.update(headers)
+            # NEED TO ADD COMMON PREP INFO Issue #247
+            sql = ("SELECT rs.*, p.*, ss.*"
+                   "FROM qiita.required_sample_info rs JOIN qiita.sample_{0} "
+                   "ss USING(sample_id) JOIN qiita.prep_{0} p USING(sample_id)"
+                   " WHERE rs.sample_id IN {1} AND rs.study_id = {0}".format(
+                       study, "(%s)" % ",".join("'%s'" % s for s in samples)))
+            metadata = conn_handler.execute_fetchall(sql)
             # add all the metadata to merged_data
             for data in metadata:
-                sample_id = data.pop()
-                for header, value in zip(headers, data):
+                sample_id = data['sample_id']
+                for header, value in viewitems(data):
+                    if header in {'sample_id'}:
+                        continue
                     merged_data[sample_id][header] = str(value)
 
         # prep headers, making sure they follow mapping file format rules
-        all_headers.remove('description')
-        all_headers = list(all_headers)
+        all_headers = list(all_headers - {'linkerprimersequence',
+                           'barcodesequence', 'description'})
         all_headers.sort()
-        all_headers.append('description')
+        all_headers = ['BarcodeSequence', 'LinkerPrimerSequence'] + all_headers
+        all_headers.append('Description')
 
         # write mapping file out
         base_fp = get_db_files_base_dir(conn_handler)
@@ -577,8 +578,9 @@ class Analysis(QiitaStatusObject):
             for sample, metadata in viewitems(merged_data):
                 data = [sample]
                 for header in all_headers:
-                    data.append(metadata[header] if
-                                metadata[header] is not None else "no_data")
+                    l_head = header.lower()
+                    data.append(metadata[l_head] if
+                                metadata[l_head] is not None else "no_data")
                 f.write("%s\n" % "\t".join(data))
 
         self._add_file("%d_analysis_mapping.txt" % self._id,

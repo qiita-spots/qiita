@@ -235,22 +235,27 @@ class TestAnalysis(TestCase):
             exp = ['#SampleID', 'SKB8.640193', 'SKD8.640184', 'SKB7.640196']
             self.assertEqual(obs, exp)
 
-            obs = [line.split('\t')[8] for line in mapdata]
-            exp = ['description_duplicate', 'Burmese root',
-                   'Diesel Root', 'Burmese root']
+            obs = [line.split('\t')[1] for line in mapdata]
+            exp = ['BarcodeSequence', 'AGCGCTCACATC', 'TGAGTGGTCTGT',
+                   'CGGCCTAAGTTC']
             self.assertEqual(obs, exp)
 
-            obs = [line.split('\t')[12] for line in mapdata]
+            obs = [line.split('\t')[2] for line in mapdata]
+            exp = ['LinkerPrimerSequence', 'GTGCCAGCMGCCGCGGTAA',
+                   'GTGCCAGCMGCCGCGGTAA', 'GTGCCAGCMGCCGCGGTAA']
+            self.assertEqual(obs, exp)
+
+            obs = [line.split('\t')[19] for line in mapdata]
             exp = ['host_subject_id', '1001:M7', '1001:D9',
                    '1001:M8']
             self.assertEqual(obs, exp)
 
-            obs = [line.split('\t')[24] for line in mapdata]
+            obs = [line.split('\t')[48] for line in mapdata]
             exp = ['tot_org_carb', '5.0', '4.32', '5.0']
             self.assertEqual(obs, exp)
 
             obs = [line.split('\t')[-1] for line in mapdata]
-            exp = ['description\n'] + ['Cannabis Soil Microbiome\n'] * 3
+            exp = ['Description\n'] + ['Cannabis Soil Microbiome\n'] * 3
             self.assertEqual(obs, exp)
         finally:
             with open(map_fp, 'w') as f:
