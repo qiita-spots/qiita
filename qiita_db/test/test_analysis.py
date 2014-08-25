@@ -28,7 +28,8 @@ class TestAnalysis(TestCase):
         self.analysis = Analysis(1)
 
     def test_lock_check(self):
-        for status in ["queued", "running", "completed", "public"]:
+        for status in ["queued", "running", "public", "completed",
+                       "error"]:
             new = Analysis.create(User("admin@foo.bar"), "newAnalysis",
                                   "A New Analysis")
             new.status = status
@@ -38,6 +39,11 @@ class TestAnalysis(TestCase):
     def test_lock_check_ok(self):
         self.analysis.status = "in_construction"
         self.analysis._lock_check(self.conn_handler)
+
+    def test_status_setter_checks(self):
+        self.analysis.status = "public"
+        with self.assertRaises(QiitaDBStatusError):
+            self.analysis.status = "queued"
 
     def test_get_public(self):
         self.assertEqual(Analysis.get_public(), [])
@@ -131,7 +137,7 @@ class TestAnalysis(TestCase):
             new.step
 
     def test_retrieve_step_locked(self):
-        self.analysis.status = "queued"
+        self.analysis.status = "public"
         with self.assertRaises(QiitaDBStatusError):
             self.analysis.step = 3
 

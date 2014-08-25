@@ -67,14 +67,15 @@ class Analysis(QiitaStatusObject):
 
     def _lock_check(self, conn_handler):
         """Raises QiitaDBStatusError if analysis is not in_progress"""
-        if self.check_status({"public", "completed", "error", "running",
-                              "queued"}):
+        if self.check_status({"queued", "running", "public", "completed",
+                              "error"}):
             raise QiitaDBStatusError("Analysis is locked!")
 
     def _status_setter_checks(self, conn_handler):
         r"""Perform a check to make sure not setting status away from public
         """
-        self._lock_check(conn_handler)
+        if self.check_status({"public"}):
+            raise QiitaDBStatusError("Can't set status away from public!")
 
     @classmethod
     def get_public(cls):
