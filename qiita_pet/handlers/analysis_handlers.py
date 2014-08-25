@@ -262,9 +262,12 @@ class AnalysisWaitHandler(BaseHandler):
 
         command_args = self.get_arguments("commands")
         split = [x.split("#") for x in command_args]
-        analysis = Analysis(aid)
+        commands = ["%s: %s" % (s[0], s[1]) for s in split]
+        analysis = Analysis(analysis_id)
 
-        commands = []
+        self.render("analysis_waiting.html", user=user, aid=analysis_id,
+                    aname=analysis.name, commands=commands)
+
         analysis.build_files()
         mapping_file = analysis.mapping_file
         biom_tables = analysis.biom_tables
@@ -281,10 +284,7 @@ class AnalysisWaitHandler(BaseHandler):
                 opts["--parameter_fp"] = join(get_db_files_base_dir(),
                                               "reference", "params_qiime.txt")
             job = Job.create(data_type, command, opts, analysis)
-            commands.append("%s: %s" % (data_type, command))
         user = self.current_user
-        self.render("analysis_waiting.html", user=user, aid=analysis_id,
-                    aname=analysis.name, commands=commands)
         # fire off analysis run here
         run_analysis(user, analysis)
 
