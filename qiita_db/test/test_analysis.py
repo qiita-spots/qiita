@@ -250,7 +250,7 @@ class TestAnalysis(TestCase):
                    '1001:M8']
             self.assertEqual(obs, exp)
 
-            obs = [line.split('\t')[48] for line in mapdata]
+            obs = [line.split('\t')[47] for line in mapdata]
             exp = ['tot_org_carb', '5.0', '4.32', '5.0']
             self.assertEqual(obs, exp)
 

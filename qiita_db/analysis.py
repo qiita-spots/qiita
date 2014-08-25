@@ -542,12 +542,13 @@ class Analysis(QiitaStatusObject):
                 # samples already added by other processed data file in study
                 continue
             all_studies.add(study)
-            # add headers to set of all ehaders found
-            headers = get_table_cols("sample_%d" % study, conn_handler) + \
-                get_table_cols("prep_%d" % study, conn_handler)
-            all_headers.update(headers)
+            # add headers to set of all headers found
+            all_headers.update(get_table_cols("sample_%d" % study,
+                               conn_handler))
+            all_headers.update(get_table_cols("prep_%d" % study,
+                               conn_handler))
             # NEED TO ADD COMMON PREP INFO Issue #247
-            sql = ("SELECT rs.*, p.*, ss.*"
+            sql = ("SELECT rs.*, p.*, ss.* "
                    "FROM qiita.required_sample_info rs JOIN qiita.sample_{0} "
                    "ss USING(sample_id) JOIN qiita.prep_{0} p USING(sample_id)"
                    " WHERE rs.sample_id IN {1} AND rs.study_id = {0}".format(
