@@ -545,7 +545,6 @@ class Analysis(QiitaStatusObject):
             # add headers to set of all ehaders found
             headers = get_table_cols("sample_%d" % study, conn_handler) + \
                 get_table_cols("prep_%d" % study, conn_handler)
-            headers.remove("sample_id")
             all_headers.update(headers)
             # NEED TO ADD COMMON PREP INFO Issue #247
             sql = ("SELECT rs.*, p.*, ss.*"
@@ -564,7 +563,7 @@ class Analysis(QiitaStatusObject):
 
         # prep headers, making sure they follow mapping file format rules
         all_headers = list(all_headers - {'linkerprimersequence',
-                           'barcodesequence', 'description'})
+                           'barcodesequence', 'description', 'sample_id'})
         all_headers.sort()
         all_headers = ['BarcodeSequence', 'LinkerPrimerSequence'] + all_headers
         all_headers.append('Description')
