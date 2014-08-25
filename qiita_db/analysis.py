@@ -502,7 +502,7 @@ class Analysis(QiitaStatusObject):
             if new_tables[data_type] is None:
                 new_tables[data_type] = table
             else:
-                new_tables[data_type].merge(table)
+                new_tables[data_type] = new_tables[data_type].merge(table)
 
         # add the new tables to the analysis
         conn_handler = conn_handler if conn_handler is not None \
