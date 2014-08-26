@@ -262,22 +262,21 @@ class AnalysisWaitHandler(BaseHandler):
 
         command_args = self.get_arguments("commands")
         split = [x.split("#") for x in command_args]
+        commands = ["%s: %s" % (s[0], s[1]) for s in split]
         analysis = Analysis(analysis_id)
 
-        commands = []
-        # HARD CODED HACKY THING FOR DEMO, FIX  Issue #164
-        fp, mapping_file = mkstemp(suffix="_map_file.txt")
-        close(fp)
-        SampleTemplate(1).to_file(mapping_file)
-        study_fps = {}
-        for pd in Study(1).processed_data():
-            processed = ProcessedData(pd)
-            study_fps[processed.data_type()] = processed.get_filepaths()[0][0]
+        self.render("analysis_waiting.html", user=user, aid=analysis_id,
+                    aname=analysis.name, commands=commands)
+
+        analysis.build_files()
+        mapping_file = analysis.mapping_file
+        biom_tables = analysis.biom_tables
         for data_type, command in split:
             opts = {
-                "--otu_table_fp": study_fps[data_type],
+                "--otu_table_fp": biom_tables[data_type],
                 "--mapping_fp": mapping_file
             }
+            # HARD CODED HACKY THING FOR DEMO, FIX  Issue #164
             if command == "Beta Diversity" and data_type in {'16S', '18S'}:
                 opts["--tree_fp"] = join(get_db_files_base_dir(), "reference",
                                          "gg_97_otus_4feb2011.tre")
@@ -285,12 +284,8 @@ class AnalysisWaitHandler(BaseHandler):
                 opts["--parameter_fp"] = join(get_db_files_base_dir(),
                                               "reference", "params_qiime.txt")
             job = Job.create(data_type, command, opts, analysis)
-            commands.append("%s: %s" % (data_type, command))
         user = self.current_user
-        self.render("analysis_waiting.html", user=user, aid=analysis_id,
-                    aname=analysis.name, commands=commands)
         # fire off analysis run here
-        # currently synch run so redirect done here. Will remove after demo
         run_analysis(user, analysis)
 
 

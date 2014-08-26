@@ -1,4 +1,8 @@
 from unittest import TestCase, main
+from os.path import exists, join
+from os import remove
+
+from biom import load_table
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_core.util import qiita_test_checker
@@ -8,6 +12,7 @@ from qiita_db.user import User
 from qiita_db.data import ProcessedData
 from qiita_db.exceptions import (QiitaDBDuplicateError, QiitaDBColumnError,
                                  QiitaDBStatusError)
+from qiita_db.util import get_work_base_dir, get_db_files_base_dir
 # -----------------------------------------------------------------------------
 # Copyright (c) 2014--, The Qiita Development Team.
 #
@@ -23,7 +28,8 @@ class TestAnalysis(TestCase):
         self.analysis = Analysis(1)
 
     def test_lock_check(self):
-        for status in ["queued", "running", "completed", "public"]:
+        for status in ["queued", "running", "public", "completed",
+                       "error"]:
             new = Analysis.create(User("admin@foo.bar"), "newAnalysis",
                                   "A New Analysis")
             new.status = status
@@ -33,6 +39,11 @@ class TestAnalysis(TestCase):
     def test_lock_check_ok(self):
         self.analysis.status = "in_construction"
         self.analysis._lock_check(self.conn_handler)
+
+    def test_status_setter_checks(self):
+        self.analysis.status = "public"
+        with self.assertRaises(QiitaDBStatusError):
+            self.analysis.status = "queued"
 
     def test_get_public(self):
         self.assertEqual(Analysis.get_public(), [])
@@ -87,7 +98,9 @@ class TestAnalysis(TestCase):
         self.assertEqual(self.analysis.shared_with, ["shared@foo.bar"])
 
     def test_retrieve_biom_tables(self):
-        self.assertEqual(self.analysis.biom_tables, [7])
+        exp = {"18S": join(get_db_files_base_dir(), "analysis",
+                           "1_analysis_18S.biom")}
+        self.assertEqual(self.analysis.biom_tables, exp)
 
     def test_retrieve_biom_tables_none(self):
         new = Analysis.create(User("admin@foo.bar"), "newAnalysis",
@@ -124,7 +137,7 @@ class TestAnalysis(TestCase):
             new.step
 
     def test_retrieve_step_locked(self):
-        self.analysis.status = "queued"
+        self.analysis.status = "public"
         with self.assertRaises(QiitaDBStatusError):
             self.analysis.step = 3
 
@@ -147,6 +160,19 @@ class TestAnalysis(TestCase):
     def test_set_pmid(self):
         self.analysis.pmid = "11211221212213"
         self.assertEqual(self.analysis.pmid, "11211221212213")
+
+    def test_retrieve_mapping_file(self):
+        exp = join(get_db_files_base_dir(), "analysis",
+                   "1_analysis_mapping.txt")
+        obs = self.analysis.mapping_file
+        self.assertEqual(obs, exp)
+        self.assertTrue(exists(exp))
+
+    def test_retrieve_mapping_file_none(self):
+        new = Analysis.create(User("admin@foo.bar"), "newAnalysis",
+                              "A New Analysis", Analysis(1))
+        obs = new.mapping_file
+        self.assertEqual(obs, None)
 
     # def test_get_parent(self):
     #     raise NotImplementedError()
@@ -177,22 +203,6 @@ class TestAnalysis(TestCase):
         exp = {}
         self.assertEqual(self.analysis.samples, exp)
 
-    def test_add_biom_tables(self):
-        new = Analysis.create(User("admin@foo.bar"), "newAnalysis",
-                              "A New Analysis")
-        new.add_biom_tables([ProcessedData(1)])
-        self.assertEqual(new.biom_tables, [7])
-
-    def test_remove_biom_tables(self):
-        self.analysis.remove_biom_tables([ProcessedData(1)])
-        self.assertEqual(self.analysis.biom_tables, None)
-
-    def test_add_jobs(self):
-        new = Analysis.create(User("admin@foo.bar"), "newAnalysis",
-                              "A New Analysis")
-        new.add_jobs([Job(1)])
-        self.assertEqual(new.jobs, [1])
-
     def test_share(self):
         self.analysis.share(User("admin@foo.bar"))
         self.assertEqual(self.analysis.shared_with, ["shared@foo.bar",
@@ -202,16 +212,92 @@ class TestAnalysis(TestCase):
         self.analysis.unshare(User("shared@foo.bar"))
         self.assertEqual(self.analysis.shared_with, [])
 
-    def test_finish_workflow(self):
-        new = Analysis.create(User("admin@foo.bar"), "newAnalysis",
-                              "A New Analysis", Analysis(1))
-        new.step = 2
-        new.finish_workflow()
+    def test_get_samples(self):
+        obs = self.analysis._get_samples()
+        exp = {1: ['SKB7.640196', 'SKB8.640193', 'SKD8.640184', 'SKM4.640180',
+                   'SKM9.640192']}
+        self.assertEqual(obs, exp)
 
-        obs = self.conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.analysis_workflow WHERE analysis_id = 3")
-        self.assertEqual(obs, [])
-        self.assertEqual(new.status, "queued")
+    def test_build_mapping_file(self):
+        map_fp = join(get_db_files_base_dir(), "analysis",
+                      "1_analysis_mapping.txt")
+        try:
+            samples = {1: ['SKB8.640193', 'SKD8.640184', 'SKB7.640196']}
+            self.analysis._build_mapping_file(samples,
+                                              conn_handler=self.conn_handler)
+            obs = self.analysis.mapping_file
+            self.assertEqual(obs, map_fp)
+
+            with open(map_fp) as f:
+                mapdata = f.readlines()
+            # check some columns for correctness
+            obs = [line.split('\t')[0] for line in mapdata]
+            exp = ['#SampleID', 'SKB8.640193', 'SKD8.640184', 'SKB7.640196']
+            self.assertEqual(obs, exp)
+
+            obs = [line.split('\t')[1] for line in mapdata]
+            exp = ['BarcodeSequence', 'AGCGCTCACATC', 'TGAGTGGTCTGT',
+                   'CGGCCTAAGTTC']
+            self.assertEqual(obs, exp)
+
+            obs = [line.split('\t')[2] for line in mapdata]
+            exp = ['LinkerPrimerSequence', 'GTGCCAGCMGCCGCGGTAA',
+                   'GTGCCAGCMGCCGCGGTAA', 'GTGCCAGCMGCCGCGGTAA']
+            self.assertEqual(obs, exp)
+
+            obs = [line.split('\t')[19] for line in mapdata]
+            exp = ['host_subject_id', '1001:M7', '1001:D9',
+                   '1001:M8']
+            self.assertEqual(obs, exp)
+
+            obs = [line.split('\t')[47] for line in mapdata]
+            exp = ['tot_org_carb', '5.0', '4.32', '5.0']
+            self.assertEqual(obs, exp)
+
+            obs = [line.split('\t')[-1] for line in mapdata]
+            exp = ['Description\n'] + ['Cannabis Soil Microbiome\n'] * 3
+            self.assertEqual(obs, exp)
+        finally:
+            with open(map_fp, 'w') as f:
+                f.write("")
+
+    def test_build_mapping_file_duplicate_samples(self):
+        samples = {1: ['SKB8.640193', 'SKB8.640193', 'SKD8.640184']}
+        with self.assertRaises(ValueError):
+            self.analysis._build_mapping_file(samples,
+                                              conn_handler=self.conn_handler)
+
+    def test_build_biom_tables(self):
+        biom_fp = join(get_db_files_base_dir(), "analysis",
+                       "1_analysis_18S.biom")
+        try:
+            samples = {1: ['SKB8.640193', 'SKD8.640184', 'SKB7.640196']}
+            self.analysis._build_biom_tables(samples,
+                                             conn_handler=self.conn_handler)
+            obs = self.analysis.biom_tables
+
+            self.assertEqual(obs, {'18S': biom_fp})
+
+            table = load_table(biom_fp)
+            obs = set(table.ids(axis='sample'))
+            exp = {'SKB8.640193', 'SKD8.640184', 'SKB7.640196'}
+            self.assertEqual(obs, exp)
+        finally:
+            with open(biom_fp, 'w') as f:
+                f.write("")
+
+    def test_build_files(self):
+        biom_fp = join(get_db_files_base_dir(), "analysis",
+                       "1_analysis_18S.biom")
+        map_fp = join(get_db_files_base_dir(), "analysis",
+                      "1_analysis_mapping.txt")
+        try:
+            self.analysis.build_files()
+        finally:
+            with open(biom_fp, 'w') as f:
+                f.write("")
+            with open(map_fp, 'w') as f:
+                f.write("")
 
 
 if __name__ == "__main__":

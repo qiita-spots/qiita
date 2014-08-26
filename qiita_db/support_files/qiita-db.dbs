@@ -60,6 +60,7 @@ If a given analysis is not in child_id, it is the root of the chain. </comment>
 			<comment>Stores link between analysis and the data file used for the analysis.</comment>
 			<column name="analysis_id" type="bigint" jt="-5" mandatory="y" />
 			<column name="filepath_id" type="bigint" jt="-5" mandatory="y" />
+			<column name="data_type_id" type="bigint" jt="-5" />
 			<index name="idx_analysis_filepath" unique="NORMAL" >
 				<column name="analysis_id" />
 			</index>
@@ -70,11 +71,17 @@ If a given analysis is not in child_id, it is the root of the chain. </comment>
 				<column name="analysis_id" />
 				<column name="filepath_id" />
 			</index>
+			<index name="idx_analysis_filepath_2" unique="NORMAL" >
+				<column name="data_type_id" />
+			</index>
 			<fk name="fk_analysis_filepath" to_schema="qiita" to_table="analysis" >
 				<fk_column name="analysis_id" pk="analysis_id" />
 			</fk>
 			<fk name="fk_analysis_filepath_0" to_schema="qiita" to_table="filepath" >
 				<fk_column name="filepath_id" pk="filepath_id" />
+			</fk>
+			<fk name="fk_analysis_filepath_1" to_schema="qiita" to_table="data_type" >
+				<fk_column name="data_type_id" pk="data_type_id" />
 			</fk>
 		</table>
 		<table name="analysis_job" >
@@ -1285,7 +1292,6 @@ Controlled Vocabulary]]></comment>
 		<entity schema="qiita" name="study_pmid" color="c0d4f3" x="2025" y="690" />
 		<entity schema="qiita" name="analysis_status" color="d0def5" x="45" y="810" />
 		<entity schema="qiita" name="analysis" color="d0def5" x="225" y="705" />
-		<entity schema="qiita" name="analysis_filepath" color="c0d4f3" x="405" y="720" />
 		<entity schema="qiita" name="job_results_filepath" color="c0d4f3" x="405" y="840" />
 		<entity schema="qiita" name="job" color="d0def5" x="405" y="990" />
 		<entity schema="qiita" name="analysis_job" color="d0def5" x="285" y="915" />
@@ -1341,6 +1347,7 @@ Controlled Vocabulary]]></comment>
 		<entity schema="qiita" name="preprocessed_data" color="c0d4f3" x="1200" y="690" />
 		<entity schema="qiita" name="processed_data" color="d0def5" x="1215" y="930" />
 		<entity schema="qiita" name="preprocessed_filepath" color="c0d4f3" x="990" y="690" />
+		<entity schema="qiita" name="analysis_filepath" color="c0d4f3" x="405" y="720" />
 		<entity schema="qiita" name="analysis_workflow" color="c0d4f3" x="390" y="630" />
 		<group name="Group_analyses" color="c4e0f9" >
 			<comment>analysis tables</comment>
