@@ -304,7 +304,7 @@ def exists_table(table, conn_handler):
 
 
 def exists_dynamic_table(table, prefix, suffix, conn_handler):
-    r"""Checks if the dynamic`table` exists on the database connected through
+    r"""Checks if the dynamic `table` exists on the database connected through
     `conn_handler`, and its name starts with prefix and ends with suffix
 
     Parameters
