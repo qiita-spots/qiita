@@ -70,6 +70,7 @@ from qiita_db.util import scrub_data, typecast_string, get_table_cols
 from qiita_db.sql_connection import SQLConnectionHandler
 from qiita_db.study import Study
 from qiita_db.user import User
+from qiita_db.exceptions import QiitaDBIncompatibleDatatypeError
 
 
 # classes to be constructed at parse time, from intermediate ParseResults
@@ -125,25 +126,36 @@ class SearchTerm(object):
     def generate_sql(self):
         # we can assume that the metadata is either in required_sample_info
         # or the study-specific table
-        if self.term[0] in self.required_cols:
-            self.term[0] = "r.%s" % self.term[0].lower()
-        elif self.term[0] in self.study_cols:
-            self.term[0] = "st.%s" % self.term[0].lower()
-        else:
-            self.term[0] = "sa.%s" % self.term[0].lower()
+        column_name, operator, argument = self.term
+        argument_type = type(typecast_string(argument))
 
-        if self.term[1] == "includes":
+        allowable_types = {int: {'<', '<=', '=', '>=', '>'},
+                           float: {'<', '<=', '=', '>=', '>'},
+                           str: {'=', 'includes', 'startswith'}}
+
+        if operator not in allowable_types[argument_type]:
+            raise QiitaDBIncompatibleDatatypeError(operator, argument_type)
+
+        if column_name in self.required_cols:
+            column_name = "r.%s" % column_name.lower()
+        elif column_name in self.study_cols:
+            column_name = "st.%s" % column_name.lower()
+        else:
+            column_name = "sa.%s" % column_name.lower()
+
+        if operator == "includes":
             # substring search, so create proper query for it
-            return "%s LIKE '%%%s%%'" % (self.term[0], self.term[2])
+            return "%s LIKE '%%%s%%'" % (column_name, argument)
         else:
             # standard query so just return it, adding quotes if string
-            if isinstance(typecast_string(self.term[2]), str):
-                self.term[2] = ''.join(("'", self.term[2], "'"))
-            return ' '.join(self.term)
+            if argument_type == str:
+                argument = ''.join(("'", argument, "'"))
+            return ' '.join([column_name, operator, argument])
 
     def __repr__(self):
-        if self.term[1] == "includes":
-            return "%s LIKE '%%%s%%')" % (self.term[0], self.term[2])
+        column_name, operator, argument = self.term
+        if operator == "includes":
+            return "%s LIKE '%%%s%%')" % (column_name, argument)
         else:
             return ' '.join(self.term)
 
@@ -224,7 +236,7 @@ class QiitaStudySearch(object):
 
         References
         ----------
-        [1] McGuire P (2007) Getting started with pyparsing.
+        .. [1] McGuire P (2007) Getting started with pyparsing.
         """
         # build the parse grammar
         category = Word(alphas + nums + "_")
