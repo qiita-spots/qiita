@@ -262,25 +262,61 @@ class QiitaStudySearch(object):
         eval_stack = (search_expr + stringEnd).parseString(searchstr)[0]
         sql_where = eval_stack.generate_sql()
 
-        # parse out all metadata headers we need to have in a study
-        meta_headers = set(c[0][0].term[0] for c in
-                           (criterion + optional_seps).scanString(searchstr))
-        all_headers = list(meta_headers)
-        # sort headers so tehy return in same order every time. Should be a
-        # relatively short list so very quick
+        # this lookup will be used to select only studies with columns
+        # of the correct type
+        type_lookup = {int: 'integer', float: 'float8', str: 'varchar'}
+
+        # parse out all metadata headers we need to have in a study, and
+        # their corresponding types
+        all_headers = [c[0][0].term[0] for c in
+                       (criterion + optional_seps).scanString(searchstr)]
+        meta_headers = set(all_headers)
+        all_types = [c[0][0].term[2] for c in
+                     (criterion + optional_seps).scanString(searchstr)]
+        all_types = [type_lookup[type(typecast_string(s))] for s in all_types]
+
+        # sort headers and types so they return in same order every time.
+        # Should be a relatively short list so very quick
+        # argsort implementation taken from
+        # http://stackoverflow.com/questions/3382352/
+        # equivalent-of-numpy-argsort-in-basic-python
+        sort_order = sorted(range(len(all_headers)),
+                            key=all_headers.__getitem__)
+        all_types = [all_types[x] for x in sort_order]
         all_headers.sort()
+
+        # At this point it is possible that a metadata header has been
+        # reference more than once in the query. If the types agree, then we
+        # do not need to do anything. If the types do not agree (specifically,
+        # if it appears to be numerical in one case and string in another),
+        # then we need to give varchar the precedence.
+        meta_header_type_lookup = dict()
+        for header, header_type in zip(all_headers, all_types):
+            if header not in meta_header_type_lookup:
+                meta_header_type_lookup[header] = header_type
+            else:
+                if header_type == 'varchar' or \
+                        meta_header_type_lookup[header] == 'varchar':
+                    meta_header_type_lookup[header] = 'varchar'
 
         # create the study finding SQL
         # remove metadata headers that are in required_sample_info table
         meta_headers = meta_headers.difference(self.required_cols).difference(
             self.study_cols)
+
         # get all study ids that contain all metadata categories searched for
         sql = []
         if meta_headers:
             # have study-specific metadata, so need to find specific studies
             for meta in meta_headers:
+                if meta_header_type_lookup[meta] in ('integer', 'float8'):
+                    allowable_types = "('integer', 'float8')"
+                else:
+                    allowable_types = "('varchar')"
+
                 sql.append("SELECT study_id FROM qiita.study_sample_columns "
-                           "WHERE column_name = '%s'" % scrub_data(meta))
+                           "WHERE column_name = '%s' and column_type in %s" %\
+                           (scrub_data(meta), allowable_types))
         else:
             # no study-specific metadata, so need all studies
             sql.append("SELECT study_id FROM qiita.study_sample_columns")
