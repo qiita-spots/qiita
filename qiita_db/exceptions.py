@@ -63,6 +63,7 @@ class QiitaDBDuplicateHeaderError(QiitaDBError):
         self.args = ("Duplicate headers found in MetadataTemplate. Note "
                      "that the headers are not case-sensitive",)
 
+
 class QiitaDBIncompatibleDatatypeError(QiitaDBError):
     """When arguments are used with incompatible operators in a query"""
     def __init__(self, operator, argument_type):
