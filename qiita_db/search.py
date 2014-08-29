@@ -315,7 +315,7 @@ class QiitaStudySearch(object):
                     allowable_types = "('varchar')"
 
                 sql.append("SELECT study_id FROM qiita.study_sample_columns "
-                           "WHERE column_name = '%s' and column_type in %s" %\
+                           "WHERE column_name = '%s' and column_type in %s" %
                            (scrub_data(meta), allowable_types))
         else:
             # no study-specific metadata, so need all studies
@@ -326,7 +326,7 @@ class QiitaStudySearch(object):
         # create  the sample finding SQL, getting both sample id and values
         # build the sql formatted list of metadata headers
         header_info = []
-        for meta in all_headers:
+        for meta in meta_header_type_lookup:
             if meta in self.required_cols:
                 header_info.append("r.%s" % meta)
             elif meta in self.study_cols:
@@ -340,4 +340,4 @@ class QiitaStudySearch(object):
                       "r.study_id WHERE %s" %
                       (','.join(header_info), sql_where))
 
-        return study_sql, sample_sql, all_headers
+        return study_sql, sample_sql, meta_header_type_lookup.keys()
