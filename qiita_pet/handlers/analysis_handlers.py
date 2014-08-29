@@ -31,6 +31,7 @@ from qiita_db.job import Job, Command
 from qiita_db.util import get_db_files_base_dir, get_table_cols
 from qiita_db.search import QiitaStudySearch
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
+from qiita_db.exceptions import QiitaDBIncompatibleDatatypeError
 
 SELECT_SAMPLES = 2
 SELECT_COMMANDS = 3
@@ -177,6 +178,8 @@ class SearchStudiesHandler(BaseHandler):
                 results, meta_headers = search(query, user)
             except ParseException:
                 searchmsg = "Malformed search query, please read search help."
+            except QiitaDBIncompatibleDatatypeError as e:
+                searchmsg = ''.join(e)
 
             if not results and not searchmsg:
                 searchmsg = "No results found."
