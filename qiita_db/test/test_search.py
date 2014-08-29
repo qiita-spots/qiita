@@ -23,7 +23,8 @@ class SearchTest(TestCase):
         st_sql, samp_sql, meta = \
             self.search._parse_study_search_string("altitude > 0")
         exp_st_sql = ("SELECT study_id FROM qiita.study_sample_columns WHERE "
-                      "column_name = 'altitude'")
+                      "column_name = 'altitude' and column_type in "
+                      "('integer', 'float8')")
         exp_samp_sql = ("SELECT r.sample_id,sa.altitude FROM "
                         "qiita.required_sample_info r JOIN qiita.sample_{0} sa"
                         " ON sa.sample_id = r.sample_id JOIN qiita.study st ON"
@@ -36,7 +37,8 @@ class SearchTest(TestCase):
         st_sql, samp_sql, meta = \
             self.search._parse_study_search_string("NOT altitude > 0")
         exp_st_sql = ("SELECT study_id FROM qiita.study_sample_columns WHERE "
-                      "column_name = 'altitude'")
+                      "column_name = 'altitude' and column_type in "
+                      "('integer', 'float8')")
         exp_samp_sql = ("SELECT r.sample_id,sa.altitude FROM "
                         "qiita.required_sample_info r JOIN qiita.sample_{0} sa"
                         " ON sa.sample_id = r.sample_id JOIN qiita.study st ON"
@@ -50,7 +52,8 @@ class SearchTest(TestCase):
         st_sql, samp_sql, meta = \
             self.search._parse_study_search_string("ph > 7 and ph < 9")
         exp_st_sql = ("SELECT study_id FROM qiita.study_sample_columns WHERE "
-                      "column_name = 'ph'")
+                      "column_name = 'ph' and column_type in ('integer', "
+                      "'float8')")
         exp_samp_sql = ("SELECT r.sample_id,sa.ph FROM "
                         "qiita.required_sample_info r JOIN qiita.sample_{0} sa"
                         " ON sa.sample_id = r.sample_id JOIN qiita.study st ON"
@@ -64,7 +67,8 @@ class SearchTest(TestCase):
         st_sql, samp_sql, meta = \
             self.search._parse_study_search_string("ph > 7 or ph < 9")
         exp_st_sql = ("SELECT study_id FROM qiita.study_sample_columns WHERE "
-                      "column_name = 'ph'")
+                      "column_name = 'ph' and column_type in ('integer', "
+                      "'float8')")
         exp_samp_sql = ("SELECT r.sample_id,sa.ph FROM "
                         "qiita.required_sample_info r JOIN qiita.sample_{0} sa"
                         " ON sa.sample_id = r.sample_id JOIN qiita.study st ON"
@@ -95,7 +99,7 @@ class SearchTest(TestCase):
                 'name > 25 or name < 5')
         exp_st_sql = (
             "SELECT study_id FROM qiita.study_sample_columns WHERE "
-            "column_name = 'name'")
+            "column_name = 'name' and column_type in ('varchar')")
         exp_samp_sql = (
             "SELECT r.sample_id,sa.name FROM qiita.required_sample_info r JOIN"
             " qiita.sample_{0} sa ON sa.sample_id = r.sample_id JOIN "
@@ -113,8 +117,10 @@ class SearchTest(TestCase):
         st_sql = st_sql.split(" INTERSECT ")
 
         exp_st_sql = ["SELECT study_id FROM qiita.study_sample_columns WHERE "
-                      "column_name = 'pH'", "SELECT study_id FROM "
-                      "qiita.study_sample_columns WHERE column_name = 'ph'"]
+                      "column_name = 'pH' and column_type in ('integer', "
+                      "'float8')", "SELECT study_id FROM "
+                      "qiita.study_sample_columns WHERE column_name = 'ph' "
+                      "and column_type in ('integer', 'float8')"]
         exp_samp_sql = ("SELECT r.sample_id,sa.pH,sa.ph FROM "
                         "qiita.required_sample_info r JOIN qiita.sample_{0} sa"
                         " ON sa.sample_id = r.sample_id JOIN qiita.study st ON"
