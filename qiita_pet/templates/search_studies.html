@@ -102,7 +102,7 @@ function add_metacat(metacat) {
         <tr id="study{{sid}}"><td>
         {% for data_type in study.data_types %}
           {% set data_type_id = study.processed_data(data_type=data_type)[0] %}
-          <input type='checkbox' name='availstudies' id='{{sid}}#{{data_type}}' value='{{sid}}#{{data_type_id}}'> 
+          <input type='checkbox' name='availstudies' value='{{sid}}#{{data_type_id}}'> 
           {{data_type}}<br />
           </td><td style='vertical-align:middle;'><a href="#" data-toggle="modal" data-target="#modal{{sid}}">{{study.title}}</a></td>
           <td style='vertical-align:middle;'>
