@@ -261,6 +261,8 @@ class AnalysisWaitHandler(BaseHandler):
     def post(self, analysis_id):
         user = self.current_user
         analysis_id = int(analysis_id)
+        rarefaction_depth = int(self.get_argument('rarefaction-depth',
+                                                  default=None))
         check_analysis_access(User(user), analysis_id)
 
         command_args = self.get_arguments("commands")
@@ -271,7 +273,7 @@ class AnalysisWaitHandler(BaseHandler):
         self.render("analysis_waiting.html", user=user, aid=analysis_id,
                     aname=analysis.name, commands=commands)
 
-        analysis.build_files()
+        analysis.build_files(rarefaction_depth)
         mapping_file = analysis.mapping_file
         biom_tables = analysis.biom_tables
         for data_type, command in split:
