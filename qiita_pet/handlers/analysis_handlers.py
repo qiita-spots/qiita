@@ -97,12 +97,11 @@ class SearchStudiesHandler(BaseHandler):
         format accepted by Analysis.add_samples()
         """
         # get the selected studies and datatypes for studies
-        studyinfo = self.get_arguments("availstudies")
-        for s in studyinfo:
-            study_id, datatype = s.split("#")
+        for s in self.get_arguments("availstudies"):
+            study_id, proc_data_id = s.split("#")
             # get the processed data ids for the study
             # get new selected samples for each study and yield with proc id
-            for proc_samp_combo in product(self.get_arguments(s),
+            for proc_samp_combo in product([int(proc_data_id)],
                                            self.get_arguments(study_id)):
                 yield proc_samp_combo
 

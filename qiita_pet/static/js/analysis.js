@@ -39,12 +39,6 @@ function select_deselect(study, select) {
   }
 }
 
-function enable_study_datatype(id) {
-  var value = $('[name="' + id + '"]').val();
-  if(value == '') { document.getElementById(id).disabled=true; }
-  else { document.getElementById(id).disabled=false; }
-}
-
 function pre_submit(action) {
   document.getElementById('action').value = action;
   var msgdiv = document.getElementById('searchmsg');
@@ -61,7 +55,7 @@ function pre_submit(action) {
     document.getElementById('results-form').action = '/analysis/3'
     }
   } else if(action == "deselect") {
-    var selected = $('#selected input:checked').length;
+    var selected = $('#selected input:checkbox:checked').length;
     if(selected == 0) {
       msgdiv.innerHTML = "Must select samples to remove from study!"
       return false;

@@ -20,7 +20,9 @@ function add_metacat(metacat) {
 <form role="form" action="/analysis/2" id="results-form" method="post">
 <input type="hidden" name="action" id="action" value="search">
 <input type="hidden" name="analysis-id" value="{{aid}}">
-<!-- Build the selected data modals -->
+<div class="row">
+<div id="selected" class="col-sm-3" style="border-right:1px solid black;height:100%;">
+  <!-- Build the selected data modals -->
 {% for sid in selproc_data %}
         <div class="modal fade" id='selmodal{{sid}}'>
           <div class="modal-dialog modal-sm">
@@ -31,7 +33,7 @@ function add_metacat(metacat) {
               <div class="modal-body">
         <p><a href="#" onclick="select_deselect('sel{{sid}}', true); return false;">Select all</a> | <a href="#" onclick="select_deselect('sel{{sid}}', false); return false;">Select none</a></p>
         {% for samp in selsamples[sid] %}
-          <input type='checkbox' class='sel{{sid}}' name='sel{{sid}}' value='{{samp}}'> {{samp}}<br />
+          <input type='checkbox' class='selected sel{{sid}}' name='sel{{sid}}' value='{{samp}}'> {{samp}}<br />
        {% end %}
      </div>
             <div class="modal-footer">
@@ -41,10 +43,8 @@ function add_metacat(metacat) {
         </div><!-- /.modal-dialog -->
       </div><!-- /.modal -->
   {% end %}
-<div class="row">
-<div id="selected" class="col-sm-3" style="border-right:1px solid black;height:100%;">
-<!-- Selected samples -->
-<big>Selected Samples</big>
+  <!-- Selected samples -->
+  <big>Selected Samples</big>
   <table class="table table-hover">
   <tr><th>Datatypes</th><th>Title</th></tr>
   {% for sid, proc_ids in viewitems(selproc_data) %}
@@ -52,7 +52,7 @@ function add_metacat(metacat) {
     <tr><td>
     {% for proc in proc_ids %}
       {% set data_type = ProcessedData(proc).data_type() %}
-      <input type='hidden' name='selstudies' value='{{sid}}'> <input type='checkbox' name='dt{{sid}}' value='{{proc}}'>{{data_type}} - {{proc}} <br />
+      <input type='hidden' name='selstudies' value='{{sid}}'> <input type='checkbox' class="selected" name='dt{{sid}}' value='{{proc}}'>{{data_type}} - {{proc}} <br />
       {% end %}
     </td><td><a href="#" data-toggle="modal" data-target="#selmodal{{sid}}">{{study.title}}</a></td></tr>
   {%end%}
@@ -92,7 +92,7 @@ function add_metacat(metacat) {
     </div>
   </div>
   {% set divcount += 1 %}
-  {% end %}
+{% end %}
 </div>
 
     <table class='table table-hover' style="width:100%">
@@ -101,13 +101,9 @@ function add_metacat(metacat) {
         {% set study = Study(sid) %}
         <tr id="study{{sid}}"><td>
         {% for data_type in study.data_types %}
-          <input type='hidden' name='availstudies' id='{{sid}}#{{data_type}}' value='{{sid}}#{{data_type}}' disabled=true>
-          <select name='{{sid}}#{{data_type}}' style="width:100px;" tabindex="2" onchange="enable_study_datatype('{{sid}}#{{data_type}}')">
-          <option value="">Choose data...</option>
-          {% for proc_data in study.processed_data(data_type=data_type) %}
-            <option value="{{proc_data}}">{{proc_data}}</option>
-          {% end %}
-          </select>{{data_type}}<br />
+          {% set data_type_id = study.processed_data(data_type=data_type)[0] %}
+          <input type='checkbox' name='availstudies' id='{{sid}}#{{data_type}}' value='{{sid}}#{{data_type_id}}'> 
+          {{data_type}}<br />
           </td><td style='vertical-align:middle;'><a href="#" data-toggle="modal" data-target="#modal{{sid}}">{{study.title}}</a></td>
           <td style='vertical-align:middle;'>
             <a href="#" onclick="select_deselect({{sid}}, true); return false;">Select all</a>
