@@ -272,7 +272,7 @@ class TestAnalysis(TestCase):
                        "1_analysis_18S.biom")
         try:
             samples = {1: ['SKB8.640193', 'SKD8.640184', 'SKB7.640196']}
-            self.analysis._build_biom_tables(samples,
+            self.analysis._build_biom_tables(samples, None,
                                              conn_handler=self.conn_handler)
             obs = self.analysis.biom_tables
 
