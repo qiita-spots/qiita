@@ -27,6 +27,7 @@ def run_analysis(user, analysis):
     all_good = True
     pubsub = r_server.pubsub()
     pubsub.subscribe(user)
+    print "!!!!!!!!!!!!!!!! JOBS", analysis.jobs
     for job_id in analysis.jobs:
         job = Job(job_id)
         if job.status == 'queued':

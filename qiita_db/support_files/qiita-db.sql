@@ -258,9 +258,10 @@ CREATE TABLE qiita.term (
 	is_root_term         bool  NOT NULL,
 	is_leaf              bool  NOT NULL,
 	CONSTRAINT pk_term PRIMARY KEY ( term_id ),
-	CONSTRAINT idx_term UNIQUE ( ontology_id ) ,
 	CONSTRAINT fk_term_ontology FOREIGN KEY ( ontology_id ) REFERENCES qiita.ontology( ontology_id )    
  );
+
+CREATE INDEX idx_term ON qiita.term ( ontology_id );
 
 CREATE TABLE qiita.term_path ( 
 	term_path_id         bigserial  NOT NULL,

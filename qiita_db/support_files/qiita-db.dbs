@@ -35,8 +35,7 @@
 			</fk>
 		</table>
 		<table name="analysis_chain" >
-			<comment>Keeps track of the chain of analysis edits. Tracks what previous analysis a given analysis came from.
-If a given analysis is not in child_id, it is the root of the chain. </comment>
+			<comment>Keeps track of the chain of analysis edits. Tracks what previous analysis a given analysis came from.&#10;If a given analysis is not in child_id, it is the root of the chain. </comment>
 			<column name="parent_id" type="bigint" jt="-5" mandatory="y" />
 			<column name="child_id" type="bigint" jt="-5" mandatory="y" />
 			<index name="idx_analysis_chain" unique="NORMAL" >
@@ -407,8 +406,7 @@ If a given analysis is not in child_id, it is the root of the chain. </comment>
 			</index>
 		</table>
 		<table name="investigation" >
-			<comment>Overarching investigation information.
-An investigation comprises one or more individual studies.</comment>
+			<comment>Overarching investigation information.&#10;An investigation comprises one or more individual studies.</comment>
 			<column name="investigation_id" type="bigserial" jt="-5" mandatory="y" />
 			<column name="name" type="varchar" jt="12" mandatory="y" />
 			<column name="description" type="varchar" jt="12" mandatory="y" >
@@ -575,8 +573,7 @@ An investigation comprises one or more individual studies.</comment>
 			</index>
 		</table>
 		<table name="prep_y" >
-			<comment>Information on how raw data y was prepared (prep template)
-Linked by y being raw_data_id from raw data table.</comment>
+			<comment>Information on how raw data y was prepared (prep template)&#10;Linked by y being raw_data_id from raw data table.</comment>
 			<column name="sample_id" type="varchar" jt="12" mandatory="y" />
 			<column name="data" type="bigint" jt="-5" >
 				<comment><![CDATA[STUFFFFF]]></comment>
@@ -902,10 +899,7 @@ Linked by y being raw_data_id from raw data table.</comment>
 			</index>
 		</table>
 		<table name="sample_x" >
-			<comment>data for samples in study x (sample template)
-x is the study_id from study table
-
-MAKE SURE sample_id IS FK TO sample_id IN required_sample_info TABLE</comment>
+			<comment>data for samples in study x (sample template)&#10;x is the study_id from study table&#10;&#10;MAKE SURE sample_id IS FK TO sample_id IN required_sample_info TABLE</comment>
 			<column name="sample_id" type="varchar" jt="12" mandatory="y" />
 			<column name="description" type="varchar" jt="12" mandatory="y" />
 			<column name="other_mapping_columns" type="varchar" jt="12" >
@@ -1158,7 +1152,7 @@ Controlled Vocabulary]]></comment>
 			<index name="pk_term" unique="PRIMARY_KEY" >
 				<column name="term_id" />
 			</index>
-			<index name="idx_term" unique="UNIQUE" >
+			<index name="idx_term" unique="NORMAL" >
 				<column name="ontology_id" />
 			</index>
 			<fk name="fk_term_ontology" to_schema="qiita" to_table="ontology" >
@@ -1304,7 +1298,6 @@ Controlled Vocabulary]]></comment>
 		<entity schema="qiita" name="term_relationship" color="d0def5" x="525" y="1515" />
 		<entity schema="qiita" name="term_path" color="d0def5" x="990" y="1320" />
 		<entity schema="qiita" name="ontology" color="d0def5" x="765" y="1320" />
-		<entity schema="qiita" name="term" color="d0def5" x="795" y="1620" />
 		<entity schema="qiita" name="annotation" color="d0def5" x="960" y="1860" />
 		<entity schema="qiita" name="dbxref" color="d0def5" x="795" y="1845" />
 		<entity schema="qiita" name="relationship_type" color="d0def5" x="975" y="1665" />
@@ -1349,6 +1342,7 @@ Controlled Vocabulary]]></comment>
 		<entity schema="qiita" name="preprocessed_filepath" color="c0d4f3" x="990" y="690" />
 		<entity schema="qiita" name="analysis_filepath" color="c0d4f3" x="405" y="720" />
 		<entity schema="qiita" name="analysis_workflow" color="c0d4f3" x="390" y="630" />
+		<entity schema="qiita" name="term" color="d0def5" x="795" y="1620" />
 		<group name="Group_analyses" color="c4e0f9" >
 			<comment>analysis tables</comment>
 			<entity schema="qiita" name="analysis" />

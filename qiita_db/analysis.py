@@ -458,18 +458,38 @@ class Analysis(QiitaStatusObject):
 
         conn_handler.executemany(sql, remove)
 
-    def build_files(self):
+    def build_files(self, rarefaction_depth=None):
         """Builds biom and mapping files needed for analysis
+
+        Parameters
+        ----------
+        rarefaction_depth : int, optional
+            Defaults to ``None``. If ``None``, do not rarefy. Otherwise, rarefy
+            all samples to this number of observations
+
+        Raises
+        ------
+        TypeError
+            If `rarefaction_depth` is not an integer
+        ValueError
+            If `rarefaction_depth` is less than or equal to zero
 
         Notes
         -----
         Creates biom tables for each requested data type
         Creates mapping file for requested samples
         """
+        if rarefaction_depth is not None:
+            if type(rarefaction_depth) is not int:
+                raise TypeError("rarefaction_depth must be in integer")
+            if rarefaction_depth <= 0:
+                raise ValueError("rarefaction_depth must be greater than 0")
+
         conn_handler = SQLConnectionHandler()
         samples = self._get_samples(conn_handler=conn_handler)
         self._build_mapping_file(samples, conn_handler=conn_handler)
-        self._build_biom_tables(samples, conn_handler=conn_handler)
+        self._build_biom_tables(samples, rarefaction_depth,
+                                conn_handler=conn_handler)
 
     def _get_samples(self, conn_handler=None):
         """Retrieves dict of samples to proc_data_id for the analysis"""
@@ -480,7 +500,8 @@ class Analysis(QiitaStatusObject):
                "GROUP BY processed_data_id")
         return dict(conn_handler.execute_fetchall(sql, [self._id]))
 
-    def _build_biom_tables(self, samples, conn_handler=None):
+    def _build_biom_tables(self, samples, rarefaction_depth,
+                           conn_handler=None):
         """Build tables and add them to the analysis"""
         # filter and combine all study BIOM tables needed for each data type
         new_tables = {dt: None for dt in self.data_types}
@@ -491,13 +512,9 @@ class Analysis(QiitaStatusObject):
             proc_data_fp = proc_data.get_filepaths()[0][0]
             table_fp = join(base_fp, proc_data_fp)
             table = load_table(table_fp)
-            # HACKY WORKAROUND FOR DEMO. Issue # 246
-            # make sure samples not in biom table are not filtered for
-            table_samps = set(table.ids())
-            filter_samps = table_samps.intersection(samps)
             # filter for just the wanted samples and merge into new table
             # this if/else setup avoids needing a blank table to start merges
-            table.filter(filter_samps, axis='sample', inplace=True)
+            table.filter(samps, axis='sample', inplace=True)
             data_type = proc_data.data_type()
             if new_tables[data_type] is None:
                 new_tables[data_type] = table
@@ -509,6 +526,9 @@ class Analysis(QiitaStatusObject):
             else SQLConnectionHandler()
         base_fp = get_db_files_base_dir(conn_handler)
         for dt, biom_table in viewitems(new_tables):
+            # rarefy, if specified
+            if rarefaction_depth is not None:
+                biom_table = biom_table.subsample(rarefaction_depth)
             # write out the file
             biom_fp = join(base_fp, "analysis", "%d_analysis_%s.biom" %
                            (self._id, dt))
