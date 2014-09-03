@@ -99,6 +99,7 @@ class SearchStudiesHandler(BaseHandler):
         # get the selected studies and datatypes for studies
         for s in self.get_arguments("availstudies"):
             study_id, proc_data_id = s.split("#", 1)
+            proc_data_id = int(proc_data_id)
             # get new selected samples for each study and yield with proc id
             for sample in self.get_arguments(study_id):
                 yield (proc_data_id, sample)
