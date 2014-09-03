@@ -29,27 +29,45 @@ class UtilTests(TestCase):
         max_seqs = 10
         # note, the result here is sorted by sequence_id but is in heap order
         # by the random values associated to each sequence
-        exp = sorted([('b_0', 'AATTGGCC-b2'),
-                      ('a_0', 'AATTGGCC-a5'),
+        exp = sorted([('b_2', 'AATTGGCC-b2'),
+                      ('a_5', 'AATTGGCC-a5'),
                       ('a_1', 'AATTGGCC-a1'),
-                      ('a_2', 'AATTGGCC-a4'),
+                      ('a_4', 'AATTGGCC-a4'),
                       ('b_1', 'AATTGGCC-b1'),
                       ('a_3', 'AATTGGCC-a3'),
-                      ('c_0', 'AATTGGCC-c3'),
-                      ('a_4', 'AATTGGCC-a2'),
-                      ('c_1', 'AATTGGCC-c2'),
-                      ('c_2', 'AATTGGCC-c1')])
+                      ('c_3', 'AATTGGCC-c3'),
+                      ('a_2', 'AATTGGCC-a2'),
+                      ('c_2', 'AATTGGCC-c2'),
+                      ('c_1', 'AATTGGCC-c1')])
         obs = per_sample_sequences(mock_sequence_iter(sequences), max_seqs)
+        self.assertEqual(sorted(obs), exp)
+
+    def test_per_sample_sequences_min_seqs(self):
+        max_seqs = 10
+        min_seqs = 3
+
+        # note, the result here is sorted by sequence_id but is in heap order
+        # by the random values associated to each sequence
+        exp = sorted([('a_5', 'AATTGGCC-a5'),
+                      ('a_1', 'AATTGGCC-a1'),
+                      ('a_4', 'AATTGGCC-a4'),
+                      ('a_3', 'AATTGGCC-a3'),
+                      ('c_3', 'AATTGGCC-c3'),
+                      ('a_2', 'AATTGGCC-a2'),
+                      ('c_2', 'AATTGGCC-c2'),
+                      ('c_1', 'AATTGGCC-c1')])
+        obs = per_sample_sequences(mock_sequence_iter(sequences), max_seqs,
+                                   min_seqs)
         self.assertEqual(sorted(obs), exp)
 
     def test_per_sample_sequences_complex(self):
         max_seqs = 2
-        exp = sorted([('b_0', 'AATTGGCC-b2'),
+        exp = sorted([('b_2', 'AATTGGCC-b2'),
                       ('b_1', 'AATTGGCC-b1'),
-                      ('a_0', 'AATTGGCC-a2'),
-                      ('a_1', 'AATTGGCC-a3'),
-                      ('c_0', 'AATTGGCC-c1'),
-                      ('c_1', 'AATTGGCC-c2')])
+                      ('a_2', 'AATTGGCC-a2'),
+                      ('a_3', 'AATTGGCC-a3'),
+                      ('c_1', 'AATTGGCC-c1'),
+                      ('c_2', 'AATTGGCC-c2')])
         obs = per_sample_sequences(mock_sequence_iter(sequences), max_seqs)
         self.assertEqual(sorted(obs), exp)
 

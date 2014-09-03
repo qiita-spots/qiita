@@ -17,7 +17,7 @@ from heapq import heappush, heappop
 import numpy as np
 
 
-def per_sample_sequences(iter_, max_seqs, random_buf_size=100000):
+def per_sample_sequences(iter_, max_seqs, min_seqs=1, random_buf_size=100000):
     """Get a max random subset of per sample sequences
 
     Parameters
@@ -26,6 +26,8 @@ def per_sample_sequences(iter_, max_seqs, random_buf_size=100000):
         The sequences to walk over
     max_seqs : unsigned int
         The maximum number of sequences per sample.
+    min_seqs : unsigned int, optional
+        The minimum number of sequences that must exist in a sample.
     random_buf_size : unsigned int, optional
         The size of the random value buffer.
 
@@ -40,20 +42,33 @@ def per_sample_sequences(iter_, max_seqs, random_buf_size=100000):
     All sequences associated to a sample have an equal probability of being
     retained.
 
+    Raises
+    ------
+    ValueError
+        If ``min_seqs`` is > ``max_seqs``.
+    ValueError
+        If ``min_seqs`` < 1 or if ``max_seqs`` < 1.
+
     Returns
     -------
     generator
         (sequence_id, sequence) where ``sequence_id`` is of the form
         sampleid_integer.
     """
+    if min_seqs > max_seqs:
+        raise ValueError("min_seqs cannot be > max_seqs!")
+    if min_seqs < 1 or max_seqs < 1:
+        raise ValueError("min_seqs and max_seqs must be > 0!")
+
     # buffer some random values
     random_values = np.random.randint(0, sys.maxint, random_buf_size)
     random_idx = 0
 
     result = defaultdict(list)
     for record in iter_:
-        # get sequence ID, sequence and heap
-        sample_id = record['SequenceID'].rsplit('_', 1)[0]
+        # get sequence ID, sample_id, sequence and heap
+        sequence_id = record['SequenceID']
+        sample_id = sequence_id.rsplit('_', 1)[0]
         sequence = record['Sequence']
         heap = result[sample_id]
 
@@ -66,11 +81,14 @@ def per_sample_sequences(iter_, max_seqs, random_buf_size=100000):
             random_idx = 0
 
         # push our sequence on to the heap and drop the smallest if necessary
-        heappush(heap, (random_value, sequence))
+        heappush(heap, (random_value, sequence_id, sequence))
         if len(heap) > max_seqs:
             heappop(heap)
 
     # yield the sequences
     for sid, heap in result.items():
-        for idx, (_, seq) in enumerate(heap):
-            yield ('_'.join([sid, str(idx)]), seq)
+        if len(heap) < min_seqs:
+            continue
+
+        for _, sequence_id, sequence in heap:
+            yield (sequence_id, sequence)
