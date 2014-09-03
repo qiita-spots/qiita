@@ -53,7 +53,7 @@ def per_sample_sequences(iter_, max_seqs, random_buf_size=100000):
     result = defaultdict(list)
     for record in iter_:
         # get sequence ID, sequence and heap
-        sample_id = record['SequenceID'].split('_', 1)[0]
+        sample_id = record['SequenceID'].rsplit('_', 1)[0]
         sequence = record['Sequence']
         heap = result[sample_id]
 
