@@ -45,16 +45,18 @@ def run_analysis(user, analysis):
             # send running message to user wait page
             job.status = 'running'
             msg["msg"] = "Running"
+            print "!!!!!!!!!!!!!!!!!!!!!!! RUNNING!"
             r_server.rpush(user + ":messages", dumps(msg))
             r_server.publish(user, dumps(msg))
 
             # run the command
             try:
-                qiita_compute.submit_sync(c_fmt)
+                qiita_compute.submit_async(c_fmt)
             except Exception as e:
                 all_good = False
                 job.status = 'error'
                 msg["msg"] = "ERROR"
+                print "!!!!!!!!!!!!!!!!!!!!!!! ERROR!"
                 r_server.rpush(user + ":messages", dumps(msg))
                 r_server.publish(user, dumps(msg))
                 print("Failed compute on job id %d: %s\n%s" %
@@ -62,6 +64,7 @@ def run_analysis(user, analysis):
                 continue
 
             msg["msg"] = "Completed"
+            print "!!!!!!!!!!!!!!!!!!!!!!! COMPLETED!"
             r_server.rpush(user + ":messages", dumps(msg))
             r_server.publish(user, dumps(msg))
             # FIX THIS Should not be hard coded
