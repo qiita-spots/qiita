@@ -25,7 +25,7 @@ def per_sample_sequences(iter_, max_seqs, random_buf_size=100000):
         The sequences to walk over
     max_seqs : unsigned int
         The maximum number of sequences per sample.
-    random_buf_size : unsigned int
+    random_buf_size : unsigned int, optional
         The size of the random value buffer.
 
     Notes
@@ -36,10 +36,14 @@ def per_sample_sequences(iter_, max_seqs, random_buf_size=100000):
     This method will at most hold ``max_seqs`` * N data, where N is the number
     of samples.
 
+    All sequences associated to a sample have an equal probability of being
+    retained.
+
     Returns
     -------
     generator
-        (sequence_id, sequence)
+        (sequence_id, sequence) where ``sequence_id`` is of the form
+        sampleid_integer.
     """
     # buffer some random values
     random_high = 2**63 - 1
