@@ -68,6 +68,13 @@ function select_deselect(study, select) {
   count_update(study);
 }
 
+function select_inverse(study) {
+  $('.'+study).each(function() {
+    if(this.checked == true) { this.checked = false; }
+    else { this.checked = true; }
+  });
+}
+
 function pre_submit(action) {
   document.getElementById('action').value = action;
   var msgdiv = document.getElementById('searchmsg');

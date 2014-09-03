@@ -32,7 +32,7 @@ function add_metacat(metacat) {
                 <h4 class="modal-title">Selected samples</h4>
               </div>
               <div class="modal-body">
-        <p><a href="#" onclick="select_deselect('sel{{sid}}', true); return false;">Select all</a> | <a href="#" onclick="select_deselect('sel{{sid}}', false); return false;">Select none</a></p>
+        <p><a href="#" onclick="select_deselect('sel{{sid}}', true); return false;">Select all</a> | <a href="#" onclick="select_deselect('sel{{sid}}', false); return false;">Select none</a> | <a href="#" onclick="select_inverse('sel{{sid}}'); return false;">Select inverse</a></p>
         {% for samp in selsamples[sid] %}
           <input type='checkbox' class='selected sel{{sid}}' name='sel{{sid}}' value='{{samp}}'> {{samp}}<br />
        {% end %}
@@ -155,7 +155,7 @@ function add_metacat(metacat) {
                 {% end %}
               </div>
               <h3>Samples</h3>
-              <a href="#" onclick="select_deselect({{sid}}, true); return false;">Select all</a> | <a href="#" onclick="select_deselect({{sid}}, false); return false;">Select none</a>
+              <a href="#" onclick="select_deselect({{sid}}, true); return false;">Select all</a> | <a href="#" onclick="select_deselect({{sid}}, false); return false;">Select none</a> | <a href="#" onclick="select_inverse({{sid}}); return false;">Select inverse</a>
               <table class='table table-hover'><td><th>Sample ID</th>
               {% for meta in meta_headers %}
                 <th>{{meta}}</th>
