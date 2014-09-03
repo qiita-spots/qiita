@@ -299,6 +299,20 @@ class TestAnalysis(TestCase):
             with open(map_fp, 'w') as f:
                 f.write("")
 
+    def test_build_files_raises_type_error(self):
+        with self.assertRaises(TypeError):
+            self.analysis.build_files('string')
+
+        with self.assertRaises(TypeError):
+            self.analysis.build_files(100.5)
+
+    def test_build_files_raises_value_error(self):
+        with self.assertRaises(ValueError):
+            self.analysis.build_files(0)
+
+        with self.assertRaises(ValueError):
+            self.analysis.build_files(-10)
+
 
 if __name__ == "__main__":
     main()
