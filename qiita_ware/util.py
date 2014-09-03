@@ -72,5 +72,5 @@ def per_sample_sequences(iter_, max_seqs, random_buf_size=100000):
 
     # yield the sequences
     for sid, heap in result.items():
-        for idx, (_, seq) in enumerate(sorted(heap)):
+        for idx, (_, seq) in enumerate(heap):
             yield ('_'.join([sid, str(idx)]), seq)

@@ -27,16 +27,18 @@ class UtilTests(TestCase):
 
     def test_per_sample_sequences_simple(self):
         max_seqs = 10
+        # note, the result here is sorted by sequence_id but is in heap order
+        # by the random values associated to each sequence
         exp = sorted([('b_0', 'AATTGGCC-b2'),
                       ('a_0', 'AATTGGCC-a5'),
                       ('a_1', 'AATTGGCC-a1'),
                       ('a_2', 'AATTGGCC-a4'),
                       ('b_1', 'AATTGGCC-b1'),
-                      ('a_3', 'AATTGGCC-a2'),
+                      ('a_3', 'AATTGGCC-a3'),
                       ('c_0', 'AATTGGCC-c3'),
-                      ('a_4', 'AATTGGCC-a3'),
-                      ('c_1', 'AATTGGCC-c1'),
-                      ('c_2', 'AATTGGCC-c2')])
+                      ('a_4', 'AATTGGCC-a2'),
+                      ('c_1', 'AATTGGCC-c2'),
+                      ('c_2', 'AATTGGCC-c1')])
         obs = per_sample_sequences(mock_sequence_iter(sequences), max_seqs)
         self.assertEqual(sorted(obs), exp)
 
