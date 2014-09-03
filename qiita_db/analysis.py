@@ -467,11 +467,24 @@ class Analysis(QiitaStatusObject):
             Defaults to ``None``. If ``None``, do not rarefy. Otherwise, rarefy
             all samples to this number of observations
 
+        Raises
+        ------
+        TypeError
+            If `rarefaction_depth` is not an integer
+        ValueError
+            If `rarefaction_depth` is less than or equal to zero
+
         Notes
         -----
         Creates biom tables for each requested data type
         Creates mapping file for requested samples
         """
+        if rarefaction_depth is not None:
+            if type(rarefaction_depth) is not int:
+                raise TypeError("rarefaction_depth must be in integer")
+            if rarefaction_depth <= 0:
+                raise ValueError("rarefaction_depth must be greater than 0")
+
         conn_handler = SQLConnectionHandler()
         samples = self._get_samples(conn_handler=conn_handler)
         self._build_mapping_file(samples, conn_handler=conn_handler)
