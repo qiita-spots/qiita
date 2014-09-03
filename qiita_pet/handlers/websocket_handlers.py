@@ -2,11 +2,11 @@
 # https://github.com/leporo/tornado-redis/blob/master/demos/websockets
 from json import loads
 
-from tornadoredis import Client
+from qiita_ware.run import r_server
+
+from toredis import Client
 from tornado.websocket import WebSocketHandler
 from tornado.gen import engine, Task
-
-from qiita_ware.run import r_server
 
 # all messages are in json format. They must have the following format:
 # 'analysis': analysis_id
@@ -34,27 +34,20 @@ class MessageHandler(WebSocketHandler):
         # need to split the rest off to new func so it can be asynchronous
         self.listen()
 
-    # decorator turns the function into an asynchronous generator object
-    @engine
     def listen(self):
         # runs task given, with the yield required to get returned value
         # equivalent of callback/wait pairing from tornado.gen
-        yield Task(self.redis.subscribe, self.channel)
-        if not self.redis.subscribed:
-            self.write_message('ERROR IN SUBSCRIPTION')
-        # listen from tornadoredis makes the listen object asynchronous
-        # if using standard redis lib, it blocks while listening
-        self.redis.listen(self.callback)
+        self.redis.subscribe(self.channel, callback=self.callback)
         # fight race condition by loading from redis after listen started
-        # need to use std redis lib because tornadoredis is already subscribed
-        oldmessages = r_server.lrange(self.channel + ':messages', 0, -1)
+        oldmessages = r_server.lrange('%s:messages' % self.channel, 0, -1)
         if oldmessages is not None:
             for message in oldmessages:
                 self.write_message(message)
 
     def callback(self, msg):
-        if msg.kind == 'message':
-            self.write_message(str(msg.body))
+        print ">>>>>>>>>>>>>>", msg
+        if msg[0] == 'message':
+            self.write_message(msg[2])
 
     @engine
     def on_close(self):

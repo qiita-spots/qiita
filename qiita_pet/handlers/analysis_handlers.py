@@ -17,6 +17,8 @@ from os.path import join
 from itertools import product
 
 from tornado.web import authenticated, asynchronous, HTTPError
+from tornado.concurrent import return_future
+from tornado.gen import coroutine
 from collections import defaultdict, Counter
 from pyparsing import ParseException
 
@@ -267,14 +269,16 @@ class AnalysisWaitHandler(BaseHandler):
         split = [x.split("#") for x in command_args]
         commands = ["%s: %s" % (s[0], s[1]) for s in split]
         analysis = Analysis(analysis_id)
-
         self.render("analysis_waiting.html", user=user, aid=analysis_id,
                     aname=analysis.name, commands=commands)
+        self.run_background(self._run_analysis, None, args=(analysis, split))
 
+    @return_future
+    def _run_analysis(self, analysis, commands, callback=None):
         analysis.build_files()
         mapping_file = analysis.mapping_file
         biom_tables = analysis.biom_tables
-        for data_type, command in split:
+        for data_type, command in commands:
             opts = {
                 "--otu_table_fp": biom_tables[data_type],
                 "--mapping_fp": mapping_file
@@ -287,9 +291,11 @@ class AnalysisWaitHandler(BaseHandler):
                 opts["--parameter_fp"] = join(get_db_files_base_dir(),
                                               "reference", "params_qiime.txt")
             job = Job.create(data_type, command, opts, analysis)
-        user = self.current_user
+
+        print ">>>>>>>>>>>>>>>>>>JOBS", analysis.jobs
         # fire off analysis run here
-        run_analysis(user, analysis)
+        run_analysis(self.current_user, analysis)
+        callback()
 
 
 class AnalysisResultsHandler(BaseHandler):
