@@ -17,13 +17,13 @@ import h5py
 import numpy as np
 import numpy.testing as npt
 
-from qiita_ware.demux import AutoExtendHDF5
+from qiita_ware.demux import AutoGrowHDF5
 
 
-class HDF5AutoExtendTests(TestCase):
+class HDF5AutoGrowTests(TestCase):
     def setUp(self):
         self.hdf5_file = h5py.File('_test_file.hdf5','w')
-        self.obj = AutoExtendHDF5(self.hdf5_file)
+        self.obj = AutoGrowHDF5(self.hdf5_file)
 
     def tearDown(self):
         remove('_test_file.hdf5')
