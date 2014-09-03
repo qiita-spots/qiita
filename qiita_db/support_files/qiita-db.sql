@@ -117,7 +117,8 @@ CREATE TABLE qiita.preprocessed_data (
 	preprocessed_params_id bigint  NOT NULL,
 	submitted_to_insdc   bool  NOT NULL,
 	data_type_id         bigint  NOT NULL,
-	CONSTRAINT pk_preprocessed_data PRIMARY KEY ( preprocessed_data_id )
+	CONSTRAINT pk_preprocessed_data PRIMARY KEY ( preprocessed_data_id ),
+	CONSTRAINT fk_preprocessed_data FOREIGN KEY ( data_type_id ) REFERENCES qiita.data_type( data_type_id )    
  );
 
 CREATE INDEX idx_preprocessed_data ON qiita.preprocessed_data ( data_type_id );
@@ -157,7 +158,8 @@ CREATE TABLE qiita.processed_data (
 	processed_params_id  bigint  NOT NULL,
 	processed_date       timestamp  NOT NULL,
 	data_type_id         bigint  NOT NULL,
-	CONSTRAINT pk_processed_data PRIMARY KEY ( processed_data_id )
+	CONSTRAINT pk_processed_data PRIMARY KEY ( processed_data_id ),
+	CONSTRAINT fk_processed_data FOREIGN KEY ( data_type_id ) REFERENCES qiita.data_type( data_type_id )    
  );
 
 CREATE INDEX idx_processed_data ON qiita.processed_data ( data_type_id );
@@ -169,7 +171,8 @@ COMMENT ON COLUMN qiita.processed_data.processed_params_id IS 'Link to a table w
 CREATE TABLE qiita.raw_data ( 
 	raw_data_id          bigserial  NOT NULL,
 	filetype_id          bigint  NOT NULL,
-	CONSTRAINT pk_raw_data UNIQUE ( raw_data_id ) 
+	CONSTRAINT pk_raw_data UNIQUE ( raw_data_id ) ,
+	CONSTRAINT fk_raw_data_filetype FOREIGN KEY ( filetype_id ) REFERENCES qiita.filetype( filetype_id )    
  );
 
 CREATE INDEX idx_raw_data ON qiita.raw_data ( filetype_id );
@@ -178,7 +181,8 @@ CREATE TABLE qiita.raw_data_prep_columns (
 	raw_data_id          bigint  NOT NULL,
 	column_name          varchar  NOT NULL,
 	column_type          varchar  NOT NULL,
-	CONSTRAINT idx_raw_data_prep_columns PRIMARY KEY ( raw_data_id, column_name, column_type )
+	CONSTRAINT idx_raw_data_prep_columns PRIMARY KEY ( raw_data_id, column_name, column_type ),
+	CONSTRAINT fk_prep_columns_raw_data FOREIGN KEY ( raw_data_id ) REFERENCES qiita.raw_data( raw_data_id )    
  );
 
 CREATE INDEX idx_prep_columns ON qiita.raw_data_prep_columns ( raw_data_id );
@@ -188,7 +192,9 @@ COMMENT ON TABLE qiita.raw_data_prep_columns IS 'Holds the columns available for
 CREATE TABLE qiita.raw_preprocessed_data ( 
 	raw_data_id          bigint  NOT NULL,
 	preprocessed_data_id bigint  NOT NULL,
-	CONSTRAINT idx_raw_preprocessed_data PRIMARY KEY ( raw_data_id, preprocessed_data_id )
+	CONSTRAINT idx_raw_preprocessed_data PRIMARY KEY ( raw_data_id, preprocessed_data_id ),
+	CONSTRAINT fk_raw_preprocessed_data FOREIGN KEY ( raw_data_id ) REFERENCES qiita.raw_data( raw_data_id )    ,
+	CONSTRAINT fk_raw_preprocessed_data_0 FOREIGN KEY ( preprocessed_data_id ) REFERENCES qiita.preprocessed_data( preprocessed_data_id )    
  );
 
 CREATE INDEX idx_raw_preprocessed_data_0 ON qiita.raw_preprocessed_data ( raw_data_id );
@@ -251,7 +257,8 @@ CREATE TABLE qiita.term (
 	is_obsolete          bool DEFAULT 'false' NOT NULL,
 	is_root_term         bool  NOT NULL,
 	is_leaf              bool  NOT NULL,
-	CONSTRAINT pk_term PRIMARY KEY ( term_id )
+	CONSTRAINT pk_term PRIMARY KEY ( term_id ),
+	CONSTRAINT fk_term_ontology FOREIGN KEY ( ontology_id ) REFERENCES qiita.ontology( ontology_id )    
  );
 
 CREATE INDEX idx_term ON qiita.term ( ontology_id );
@@ -264,7 +271,12 @@ CREATE TABLE qiita.term_path (
 	ontology_id          bigint  NOT NULL,
 	relationship_type_id integer  NOT NULL,
 	distance             integer  ,
-	CONSTRAINT pk_term_path PRIMARY KEY ( term_path_id )
+	CONSTRAINT pk_term_path PRIMARY KEY ( term_path_id ),
+	CONSTRAINT fk_term_path_ontology FOREIGN KEY ( ontology_id ) REFERENCES qiita.ontology( ontology_id )    ,
+	CONSTRAINT fk_term_path_relationship_type FOREIGN KEY ( relationship_type_id ) REFERENCES qiita.relationship_type( relationship_type_id )    ,
+	CONSTRAINT fk_term_path_term_subject FOREIGN KEY ( subject_term_id ) REFERENCES qiita.term( term_id )    ,
+	CONSTRAINT fk_term_path_term_predicate FOREIGN KEY ( predicate_term_id ) REFERENCES qiita.term( term_id )    ,
+	CONSTRAINT fk_term_path_term_object FOREIGN KEY ( object_term_id ) REFERENCES qiita.term( term_id )    
  );
 
 CREATE INDEX idx_term_path ON qiita.term_path ( ontology_id );
@@ -283,7 +295,11 @@ CREATE TABLE qiita.term_relationship (
 	predicate_term_id    bigint  NOT NULL,
 	object_term_id       bigint  NOT NULL,
 	ontology_id          bigint  NOT NULL,
-	CONSTRAINT pk_term_relationship PRIMARY KEY ( term_relationship_id )
+	CONSTRAINT pk_term_relationship PRIMARY KEY ( term_relationship_id ),
+	CONSTRAINT fk_term_relationship_subj_term FOREIGN KEY ( subject_term_id ) REFERENCES qiita.term( term_id )    ,
+	CONSTRAINT fk_term_relationship_pred_term FOREIGN KEY ( predicate_term_id ) REFERENCES qiita.term( term_id )    ,
+	CONSTRAINT fk_term_relationship_obj_term FOREIGN KEY ( object_term_id ) REFERENCES qiita.term( term_id )    ,
+	CONSTRAINT fk_term_relationship_ontology FOREIGN KEY ( ontology_id ) REFERENCES qiita.ontology( ontology_id )    
  );
 
 CREATE INDEX idx_term_relationship_subject ON qiita.term_relationship ( subject_term_id );
@@ -299,7 +315,9 @@ CREATE TABLE qiita.term_synonym (
 	term_id              bigint  NOT NULL,
 	synonym_value        varchar  NOT NULL,
 	synonym_type_id      bigint  NOT NULL,
-	CONSTRAINT pk_term_synonym PRIMARY KEY ( synonym_id )
+	CONSTRAINT pk_term_synonym PRIMARY KEY ( synonym_id ),
+	CONSTRAINT fk_term_synonym_term FOREIGN KEY ( term_id ) REFERENCES qiita.term( term_id )    ,
+	CONSTRAINT fk_term_synonym_type_term FOREIGN KEY ( synonym_id ) REFERENCES qiita.term( term_id )    
  );
 
 CREATE INDEX idx_term_synonym ON qiita.term_synonym ( term_id );
@@ -327,7 +345,8 @@ CREATE TABLE qiita.annotation (
 	annotation_name      varchar  NOT NULL,
 	annotation_num_value bigint  ,
 	annotation_str_value varchar  ,
-	CONSTRAINT pk_annotation PRIMARY KEY ( annotation_id )
+	CONSTRAINT pk_annotation PRIMARY KEY ( annotation_id ),
+	CONSTRAINT fk_annotation_term FOREIGN KEY ( term_id ) REFERENCES qiita.term( term_id )    
  );
 
 CREATE INDEX idx_annotation ON qiita.annotation ( term_id );
@@ -335,7 +354,9 @@ CREATE INDEX idx_annotation ON qiita.annotation ( term_id );
 CREATE TABLE qiita.column_controlled_vocabularies ( 
 	controlled_vocab_id  bigserial  NOT NULL,
 	column_name          varchar  NOT NULL,
-	CONSTRAINT idx_column_controlled_vocabularies PRIMARY KEY ( controlled_vocab_id, column_name )
+	CONSTRAINT idx_column_controlled_vocabularies PRIMARY KEY ( controlled_vocab_id, column_name ),
+	CONSTRAINT fk_column_controlled_vocabularies FOREIGN KEY ( column_name ) REFERENCES qiita.mixs_field_description( column_name )    ,
+	CONSTRAINT fk_column_controlled_vocab2 FOREIGN KEY ( controlled_vocab_id ) REFERENCES qiita.controlled_vocabularies( controlled_vocab_id )    
  );
 
 CREATE INDEX idx_column_controlled_vocabularies_0 ON qiita.column_controlled_vocabularies ( column_name );
@@ -349,7 +370,8 @@ CREATE TABLE qiita.column_ontology (
 	ontology_short_name  varchar  NOT NULL,
 	bioportal_id         integer  NOT NULL,
 	ontology_branch_id   integer  NOT NULL,
-	CONSTRAINT idx_column_ontology PRIMARY KEY ( column_name, ontology_short_name )
+	CONSTRAINT idx_column_ontology PRIMARY KEY ( column_name, ontology_short_name ),
+	CONSTRAINT fk_column_ontology FOREIGN KEY ( column_name ) REFERENCES qiita.mixs_field_description( column_name )    
  );
 
 CREATE INDEX idx_column_ontology_0 ON qiita.column_ontology ( column_name );
@@ -359,7 +381,9 @@ COMMENT ON TABLE qiita.column_ontology IS 'This table relates a column with an o
 CREATE TABLE qiita.command_data_type ( 
 	command_id           bigint  NOT NULL,
 	data_type_id         bigint  NOT NULL,
-	CONSTRAINT idx_command_data_type PRIMARY KEY ( command_id, data_type_id )
+	CONSTRAINT idx_command_data_type PRIMARY KEY ( command_id, data_type_id ),
+	CONSTRAINT fk_command_data_type FOREIGN KEY ( command_id ) REFERENCES qiita.command( command_id )    ,
+	CONSTRAINT fk_command_data_type_0 FOREIGN KEY ( data_type_id ) REFERENCES qiita.data_type( data_type_id )    
  );
 
 CREATE INDEX idx_command_data_type_0 ON qiita.command_data_type ( command_id );
@@ -372,7 +396,8 @@ CREATE TABLE qiita.controlled_vocab_values (
 	term                 varchar  NOT NULL,
 	order_by             varchar  NOT NULL,
 	default_item         varchar  ,
-	CONSTRAINT pk_controlled_vocab_values PRIMARY KEY ( vocab_value_id )
+	CONSTRAINT pk_controlled_vocab_values PRIMARY KEY ( vocab_value_id ),
+	CONSTRAINT fk_controlled_vocab_values FOREIGN KEY ( controlled_vocab_id ) REFERENCES qiita.controlled_vocabularies( controlled_vocab_id ) ON DELETE CASCADE ON UPDATE CASCADE
  );
 
 CREATE INDEX idx_controlled_vocab_values ON qiita.controlled_vocab_values ( controlled_vocab_id );
@@ -384,7 +409,8 @@ CREATE TABLE qiita.dbxref (
 	accession            varchar  NOT NULL,
 	description          varchar  NOT NULL,
 	xref_type            varchar  NOT NULL,
-	CONSTRAINT pk_dbxref PRIMARY KEY ( dbxref_id )
+	CONSTRAINT pk_dbxref PRIMARY KEY ( dbxref_id ),
+	CONSTRAINT fk_dbxref_term FOREIGN KEY ( term_id ) REFERENCES qiita.term( term_id )    
  );
 
 CREATE INDEX idx_dbxref ON qiita.dbxref ( term_id );
@@ -395,7 +421,9 @@ CREATE TABLE qiita.filepath (
 	filepath_type_id     bigint  NOT NULL,
 	checksum             varchar  NOT NULL,
 	checksum_algorithm_id bigint  NOT NULL,
-	CONSTRAINT pk_filepath PRIMARY KEY ( filepath_id )
+	CONSTRAINT pk_filepath PRIMARY KEY ( filepath_id ),
+	CONSTRAINT fk_filepath FOREIGN KEY ( filepath_type_id ) REFERENCES qiita.filepath_type( filepath_type_id )    ,
+	CONSTRAINT fk_filepath_0 FOREIGN KEY ( checksum_algorithm_id ) REFERENCES qiita.checksum_algorithm( checksum_algorithm_id )    
  );
 
 CREATE INDEX idx_filepath ON qiita.filepath ( filepath_type_id );
@@ -405,7 +433,8 @@ CREATE TABLE qiita.investigation (
 	name                 varchar  NOT NULL,
 	description          varchar  NOT NULL,
 	contact_person_id    bigint  ,
-	CONSTRAINT pk_investigation PRIMARY KEY ( investigation_id )
+	CONSTRAINT pk_investigation PRIMARY KEY ( investigation_id ),
+	CONSTRAINT fk_investigation_study_person FOREIGN KEY ( contact_person_id ) REFERENCES qiita.study_person( study_person_id )    
  );
 
 CREATE INDEX idx_investigation ON qiita.investigation ( contact_person_id );
@@ -421,7 +450,8 @@ CREATE TABLE qiita.logging (
 	severity_id          integer  NOT NULL,
 	msg                  varchar  NOT NULL,
 	information          varchar  ,
-	CONSTRAINT pk_logging PRIMARY KEY ( logging_id )
+	CONSTRAINT pk_logging PRIMARY KEY ( logging_id ),
+	CONSTRAINT fk_logging_severity FOREIGN KEY ( severity_id ) REFERENCES qiita.severity( severity_id )    
  );
 
 CREATE INDEX idx_logging_0 ON qiita.logging ( severity_id );
@@ -435,7 +465,9 @@ COMMENT ON COLUMN qiita.logging.information IS 'Other applicable information (de
 CREATE TABLE qiita.preprocessed_filepath ( 
 	preprocessed_data_id bigint  NOT NULL,
 	filepath_id          bigint  NOT NULL,
-	CONSTRAINT idx_preprocessed_filepath PRIMARY KEY ( preprocessed_data_id, filepath_id )
+	CONSTRAINT idx_preprocessed_filepath PRIMARY KEY ( preprocessed_data_id, filepath_id ),
+	CONSTRAINT fk_preprocessed_filepath FOREIGN KEY ( preprocessed_data_id ) REFERENCES qiita.preprocessed_data( preprocessed_data_id )    ,
+	CONSTRAINT fk_preprocessed_filepath_0 FOREIGN KEY ( filepath_id ) REFERENCES qiita.filepath( filepath_id )    
  );
 
 CREATE INDEX idx_preprocessed_filepath_0 ON qiita.preprocessed_filepath ( preprocessed_data_id );
@@ -445,7 +477,9 @@ CREATE INDEX idx_preprocessed_filepath_1 ON qiita.preprocessed_filepath ( filepa
 CREATE TABLE qiita.preprocessed_processed_data ( 
 	preprocessed_data_id bigint  NOT NULL,
 	processed_data_id    bigint  NOT NULL,
-	CONSTRAINT idx_preprocessed_processed_data PRIMARY KEY ( preprocessed_data_id, processed_data_id )
+	CONSTRAINT idx_preprocessed_processed_data PRIMARY KEY ( preprocessed_data_id, processed_data_id ),
+	CONSTRAINT fk_preprocessed_processed_data FOREIGN KEY ( preprocessed_data_id ) REFERENCES qiita.preprocessed_data( preprocessed_data_id )    ,
+	CONSTRAINT fk_preprocessed_processed_data_0 FOREIGN KEY ( processed_data_id ) REFERENCES qiita.processed_data( processed_data_id )    
  );
 
 CREATE INDEX idx_preprocessed_processed_data_0 ON qiita.preprocessed_processed_data ( preprocessed_data_id );
@@ -455,7 +489,9 @@ CREATE INDEX idx_preprocessed_processed_data_1 ON qiita.preprocessed_processed_d
 CREATE TABLE qiita.processed_filepath ( 
 	processed_data_id    bigint  NOT NULL,
 	filepath_id          bigint  NOT NULL,
-	CONSTRAINT idx_processed_filepath PRIMARY KEY ( processed_data_id, filepath_id )
+	CONSTRAINT idx_processed_filepath PRIMARY KEY ( processed_data_id, filepath_id ),
+	CONSTRAINT fk_processed_data_filepath FOREIGN KEY ( processed_data_id ) REFERENCES qiita.processed_data( processed_data_id )    ,
+	CONSTRAINT fk_processed_data_filepath_0 FOREIGN KEY ( filepath_id ) REFERENCES qiita.filepath( filepath_id )    
  );
 
 CREATE TABLE qiita.processed_params_uclust ( 
@@ -464,7 +500,8 @@ CREATE TABLE qiita.processed_params_uclust (
 	similarity           float8 DEFAULT 0.97 NOT NULL,
 	enable_rev_strand_match bool DEFAULT TRUE NOT NULL,
 	suppress_new_clusters bool DEFAULT TRUE NOT NULL,
-	CONSTRAINT pk_processed_params_uclust PRIMARY KEY ( processed_params_id )
+	CONSTRAINT pk_processed_params_uclust PRIMARY KEY ( processed_params_id ),
+	CONSTRAINT fk_processed_params_uclust FOREIGN KEY ( reference_id ) REFERENCES qiita.reference( reference_id )    
  );
 
 CREATE INDEX idx_processed_params_uclust ON qiita.processed_params_uclust ( reference_id );
@@ -484,7 +521,8 @@ CREATE TABLE qiita.qiita_user (
 	user_verify_code     varchar  ,
 	pass_reset_code      varchar  ,
 	pass_reset_timestamp timestamp  ,
-	CONSTRAINT pk_user PRIMARY KEY ( email )
+	CONSTRAINT pk_user PRIMARY KEY ( email ),
+	CONSTRAINT fk_user_user_level FOREIGN KEY ( user_level_id ) REFERENCES qiita.user_level( user_level_id )   ON UPDATE RESTRICT
  );
 
 CREATE INDEX idx_user ON qiita.qiita_user ( user_level_id );
@@ -502,7 +540,9 @@ COMMENT ON COLUMN qiita.qiita_user.pass_reset_timestamp IS 'Time the reset code 
 CREATE TABLE qiita.raw_filepath ( 
 	raw_data_id          bigint  NOT NULL,
 	filepath_id          bigint  NOT NULL,
-	CONSTRAINT idx_raw_filepath PRIMARY KEY ( raw_data_id, filepath_id )
+	CONSTRAINT idx_raw_filepath PRIMARY KEY ( raw_data_id, filepath_id ),
+	CONSTRAINT fk_raw_filepath FOREIGN KEY ( filepath_id ) REFERENCES qiita.filepath( filepath_id )    ,
+	CONSTRAINT fk_raw_filepath_0 FOREIGN KEY ( raw_data_id ) REFERENCES qiita.raw_data( raw_data_id )    
  );
 
 CREATE INDEX idx_raw_filepath_0 ON qiita.raw_filepath ( filepath_id );
@@ -532,7 +572,14 @@ CREATE TABLE qiita.study (
 	study_description    text  NOT NULL,
 	study_abstract       text  NOT NULL,
 	vamps_id             varchar  ,
-	CONSTRAINT pk_study PRIMARY KEY ( study_id )
+	CONSTRAINT pk_study PRIMARY KEY ( study_id ),
+	CONSTRAINT fk_study_user FOREIGN KEY ( email ) REFERENCES qiita.qiita_user( email )    ,
+	CONSTRAINT fk_study_study_status FOREIGN KEY ( study_status_id ) REFERENCES qiita.study_status( study_status_id )    ,
+	CONSTRAINT fk_study_study_emp_person FOREIGN KEY ( emp_person_id ) REFERENCES qiita.study_person( study_person_id )    ,
+	CONSTRAINT fk_study_study_lab_person FOREIGN KEY ( lab_person_id ) REFERENCES qiita.study_person( study_person_id )    ,
+	CONSTRAINT fk_study_study_pi_person FOREIGN KEY ( principal_investigator_id ) REFERENCES qiita.study_person( study_person_id )    ,
+	CONSTRAINT fk_study_timeseries_type FOREIGN KEY ( timeseries_type_id ) REFERENCES qiita.timeseries_type( timeseries_type_id )    ,
+	CONSTRAINT fk_study FOREIGN KEY ( portal_type_id ) REFERENCES qiita.portal_type( portal_type_id )    
  );
 
 CREATE INDEX idx_study ON qiita.study ( email );
@@ -559,7 +606,8 @@ Controlled Vocabulary';
 CREATE TABLE qiita.study_experimental_factor ( 
 	study_id             bigint  NOT NULL,
 	efo_id               bigint  NOT NULL,
-	CONSTRAINT idx_study_experimental_factor PRIMARY KEY ( study_id, efo_id )
+	CONSTRAINT idx_study_experimental_factor PRIMARY KEY ( study_id, efo_id ),
+	CONSTRAINT fk_study_experimental_factor FOREIGN KEY ( study_id ) REFERENCES qiita.study( study_id )    
  );
 
 CREATE INDEX idx_study_experimental_factor_0 ON qiita.study_experimental_factor ( study_id );
@@ -569,7 +617,8 @@ COMMENT ON TABLE qiita.study_experimental_factor IS 'EFO ontological link of exp
 CREATE TABLE qiita.study_pmid ( 
 	study_id             bigint  NOT NULL,
 	pmid                 varchar  NOT NULL,
-	CONSTRAINT idx_study_pmid PRIMARY KEY ( study_id, pmid )
+	CONSTRAINT idx_study_pmid PRIMARY KEY ( study_id, pmid ),
+	CONSTRAINT fk_study_pmid_study FOREIGN KEY ( study_id ) REFERENCES qiita.study( study_id )    
  );
 
 CREATE INDEX idx_study_pmid_0 ON qiita.study_pmid ( study_id );
@@ -579,7 +628,9 @@ COMMENT ON TABLE qiita.study_pmid IS 'Links a study to all PMIDs for papers crea
 CREATE TABLE qiita.study_preprocessed_data ( 
 	study_id             bigint  NOT NULL,
 	preprocessed_data_id bigint  NOT NULL,
-	CONSTRAINT idx_study_preprocessed_data PRIMARY KEY ( study_id, preprocessed_data_id )
+	CONSTRAINT idx_study_preprocessed_data PRIMARY KEY ( study_id, preprocessed_data_id ),
+	CONSTRAINT fk_study_preprocessed_data FOREIGN KEY ( study_id ) REFERENCES qiita.study( study_id )    ,
+	CONSTRAINT fk_study_preprocessed_data_0 FOREIGN KEY ( preprocessed_data_id ) REFERENCES qiita.preprocessed_data( preprocessed_data_id )    
  );
 
 CREATE INDEX idx_study_preprocessed_data_0 ON qiita.study_preprocessed_data ( study_id );
@@ -590,7 +641,9 @@ CREATE TABLE qiita.study_processed_data (
 	study_id             bigint  NOT NULL,
 	processed_data_id    bigint  NOT NULL,
 	CONSTRAINT idx_study_processed_data PRIMARY KEY ( study_id, processed_data_id ),
-	CONSTRAINT pk_study_processed_data UNIQUE ( processed_data_id ) 
+	CONSTRAINT pk_study_processed_data UNIQUE ( processed_data_id ) ,
+	CONSTRAINT fk_study_processed_data FOREIGN KEY ( study_id ) REFERENCES qiita.study( study_id )    ,
+	CONSTRAINT fk_study_processed_data_0 FOREIGN KEY ( processed_data_id ) REFERENCES qiita.processed_data( processed_data_id )    
  );
 
 CREATE INDEX idx_study_processed_data_0 ON qiita.study_processed_data ( study_id );
@@ -598,7 +651,9 @@ CREATE INDEX idx_study_processed_data_0 ON qiita.study_processed_data ( study_id
 CREATE TABLE qiita.study_raw_data ( 
 	study_id             bigint  NOT NULL,
 	raw_data_id          bigint  NOT NULL,
-	CONSTRAINT idx_study_raw_data_0 PRIMARY KEY ( study_id, raw_data_id )
+	CONSTRAINT idx_study_raw_data_0 PRIMARY KEY ( study_id, raw_data_id ),
+	CONSTRAINT fk_study_raw_data_study FOREIGN KEY ( study_id ) REFERENCES qiita.study( study_id )    ,
+	CONSTRAINT fk_study_raw_data_raw_data FOREIGN KEY ( raw_data_id ) REFERENCES qiita.raw_data( raw_data_id )    
  );
 
 CREATE INDEX idx_study_raw_data ON qiita.study_raw_data ( study_id );
@@ -609,7 +664,8 @@ CREATE TABLE qiita.study_sample_columns (
 	study_id             bigint  NOT NULL,
 	column_name          varchar(100)  NOT NULL,
 	column_type          varchar  NOT NULL,
-	CONSTRAINT idx_study_mapping_columns PRIMARY KEY ( study_id, column_name, column_type )
+	CONSTRAINT idx_study_mapping_columns PRIMARY KEY ( study_id, column_name, column_type ),
+	CONSTRAINT fk_study_mapping_columns_study FOREIGN KEY ( study_id ) REFERENCES qiita.study( study_id )    
  );
 
 CREATE INDEX idx_study_mapping_columns_study_id ON qiita.study_sample_columns ( study_id );
@@ -619,7 +675,9 @@ COMMENT ON TABLE qiita.study_sample_columns IS 'Holds information on which metad
 CREATE TABLE qiita.study_users ( 
 	study_id             bigint  NOT NULL,
 	email                varchar  NOT NULL,
-	CONSTRAINT idx_study_users PRIMARY KEY ( study_id, email )
+	CONSTRAINT idx_study_users PRIMARY KEY ( study_id, email ),
+	CONSTRAINT fk_study_users_study FOREIGN KEY ( study_id ) REFERENCES qiita.study( study_id )    ,
+	CONSTRAINT fk_study_users_user FOREIGN KEY ( email ) REFERENCES qiita.qiita_user( email )    
  );
 
 CREATE INDEX idx_study_users_0 ON qiita.study_users ( study_id );
@@ -635,7 +693,9 @@ CREATE TABLE qiita.analysis (
 	description          varchar  NOT NULL,
 	analysis_status_id   bigint  NOT NULL,
 	pmid                 varchar  ,
-	CONSTRAINT pk_analysis PRIMARY KEY ( analysis_id )
+	CONSTRAINT pk_analysis PRIMARY KEY ( analysis_id ),
+	CONSTRAINT fk_analysis_user FOREIGN KEY ( email ) REFERENCES qiita.qiita_user( email )    ,
+	CONSTRAINT fk_analysis_analysis_status FOREIGN KEY ( analysis_status_id ) REFERENCES qiita.analysis_status( analysis_status_id )    
  );
 
 CREATE INDEX idx_analysis_email ON qiita.analysis ( email );
@@ -655,7 +715,9 @@ COMMENT ON COLUMN qiita.analysis.pmid IS 'PMID of paper from the analysis';
 CREATE TABLE qiita.analysis_chain ( 
 	parent_id            bigint  NOT NULL,
 	child_id             bigint  NOT NULL,
-	CONSTRAINT idx_analysis_chain_1 PRIMARY KEY ( parent_id, child_id )
+	CONSTRAINT idx_analysis_chain_1 PRIMARY KEY ( parent_id, child_id ),
+	CONSTRAINT fk_analysis_chain FOREIGN KEY ( parent_id ) REFERENCES qiita.analysis( analysis_id )    ,
+	CONSTRAINT fk_analysis_chain_0 FOREIGN KEY ( child_id ) REFERENCES qiita.analysis( analysis_id )    
  );
 
 CREATE INDEX idx_analysis_chain ON qiita.analysis_chain ( parent_id );
@@ -669,7 +731,10 @@ CREATE TABLE qiita.analysis_filepath (
 	analysis_id          bigint  NOT NULL,
 	filepath_id          bigint  NOT NULL,
 	data_type_id         bigint  ,
-	CONSTRAINT idx_analysis_filepath_1 PRIMARY KEY ( analysis_id, filepath_id )
+	CONSTRAINT idx_analysis_filepath_1 PRIMARY KEY ( analysis_id, filepath_id ),
+	CONSTRAINT fk_analysis_filepath FOREIGN KEY ( analysis_id ) REFERENCES qiita.analysis( analysis_id )    ,
+	CONSTRAINT fk_analysis_filepath_0 FOREIGN KEY ( filepath_id ) REFERENCES qiita.filepath( filepath_id )    ,
+	CONSTRAINT fk_analysis_filepath_1 FOREIGN KEY ( data_type_id ) REFERENCES qiita.data_type( data_type_id )    
  );
 
 CREATE INDEX idx_analysis_filepath ON qiita.analysis_filepath ( analysis_id );
@@ -683,7 +748,9 @@ COMMENT ON TABLE qiita.analysis_filepath IS 'Stores link between analysis and th
 CREATE TABLE qiita.analysis_users ( 
 	analysis_id          bigint  NOT NULL,
 	email                varchar  NOT NULL,
-	CONSTRAINT idx_analysis_users PRIMARY KEY ( analysis_id, email )
+	CONSTRAINT idx_analysis_users PRIMARY KEY ( analysis_id, email ),
+	CONSTRAINT fk_analysis_users_analysis FOREIGN KEY ( analysis_id ) REFERENCES qiita.analysis( analysis_id ) ON DELETE CASCADE ON UPDATE CASCADE,
+	CONSTRAINT fk_analysis_users_user FOREIGN KEY ( email ) REFERENCES qiita.qiita_user( email ) ON DELETE CASCADE ON UPDATE CASCADE
  );
 
 CREATE INDEX idx_analysis_users_analysis ON qiita.analysis_users ( analysis_id );
@@ -695,7 +762,8 @@ COMMENT ON TABLE qiita.analysis_users IS 'Links analyses to the users they are s
 CREATE TABLE qiita.analysis_workflow ( 
 	analysis_id          bigint  NOT NULL,
 	step                 integer  NOT NULL,
-	CONSTRAINT pk_analysis_workflow PRIMARY KEY ( analysis_id )
+	CONSTRAINT pk_analysis_workflow PRIMARY KEY ( analysis_id ),
+	CONSTRAINT fk_analysis_workflow FOREIGN KEY ( analysis_id ) REFERENCES qiita.analysis( analysis_id )    
  );
 
 COMMENT ON TABLE qiita.analysis_workflow IS 'Stores what step in_production analyses are on.';
@@ -703,7 +771,9 @@ COMMENT ON TABLE qiita.analysis_workflow IS 'Stores what step in_production anal
 CREATE TABLE qiita.investigation_study ( 
 	investigation_id     bigint  NOT NULL,
 	study_id             bigint  NOT NULL,
-	CONSTRAINT idx_investigation_study PRIMARY KEY ( investigation_id, study_id )
+	CONSTRAINT idx_investigation_study PRIMARY KEY ( investigation_id, study_id ),
+	CONSTRAINT fk_investigation_study FOREIGN KEY ( investigation_id ) REFERENCES qiita.investigation( investigation_id )    ,
+	CONSTRAINT fk_investigation_study_study FOREIGN KEY ( study_id ) REFERENCES qiita.study( study_id )    
  );
 
 CREATE INDEX idx_investigation_study_investigation ON qiita.investigation_study ( investigation_id );
@@ -717,7 +787,11 @@ CREATE TABLE qiita.job (
 	command_id           bigint  NOT NULL,
 	options              varchar  ,
 	log_id               bigint  ,
-	CONSTRAINT pk_job PRIMARY KEY ( job_id )
+	CONSTRAINT pk_job PRIMARY KEY ( job_id ),
+	CONSTRAINT fk_job_function FOREIGN KEY ( command_id ) REFERENCES qiita.command( command_id )    ,
+	CONSTRAINT fk_job_job_status_id FOREIGN KEY ( job_status_id ) REFERENCES qiita.job_status( job_status_id )    ,
+	CONSTRAINT fk_job_data_type FOREIGN KEY ( data_type_id ) REFERENCES qiita.data_type( data_type_id )    ,
+	CONSTRAINT fk_job FOREIGN KEY ( log_id ) REFERENCES qiita.logging( logging_id )    
  );
 
 CREATE INDEX idx_job_command ON qiita.job ( command_id );
@@ -741,7 +815,9 @@ COMMENT ON COLUMN qiita.job.log_id IS 'Reference to error if status is error';
 CREATE TABLE qiita.job_results_filepath ( 
 	job_id               bigint  NOT NULL,
 	filepath_id          bigint  NOT NULL,
-	CONSTRAINT idx_job_results_filepath PRIMARY KEY ( job_id, filepath_id )
+	CONSTRAINT idx_job_results_filepath PRIMARY KEY ( job_id, filepath_id ),
+	CONSTRAINT fk_job_results_filepath FOREIGN KEY ( job_id ) REFERENCES qiita.job( job_id )    ,
+	CONSTRAINT fk_job_results_filepath_0 FOREIGN KEY ( filepath_id ) REFERENCES qiita.filepath( filepath_id )    
  );
 
 CREATE INDEX idx_job_results_filepath_0 ON qiita.job_results_filepath ( job_id );
@@ -762,7 +838,9 @@ CREATE TABLE qiita.required_sample_info (
 	host_subject_id      varchar  NOT NULL,
 	description          varchar  NOT NULL,
 	CONSTRAINT idx_common_sample_information PRIMARY KEY ( study_id, sample_id ),
-	CONSTRAINT pk_required_sample_info UNIQUE ( sample_id ) 
+	CONSTRAINT pk_required_sample_info UNIQUE ( sample_id ) ,
+	CONSTRAINT fk_required_sample_info_study FOREIGN KEY ( study_id ) REFERENCES qiita.study( study_id )    ,
+	CONSTRAINT fk_required_sample_info FOREIGN KEY ( required_sample_info_status_id ) REFERENCES qiita.required_sample_info_status( required_sample_info_status_id )    
  );
 
 CREATE INDEX idx_required_sample_info ON qiita.required_sample_info ( study_id );
@@ -782,7 +860,9 @@ COMMENT ON COLUMN qiita.required_sample_info.required_sample_info_status_id IS '
 CREATE TABLE qiita.analysis_job ( 
 	analysis_id          bigint  NOT NULL,
 	job_id               bigint  NOT NULL,
-	CONSTRAINT idx_analysis_jobs PRIMARY KEY ( analysis_id, job_id )
+	CONSTRAINT idx_analysis_jobs PRIMARY KEY ( analysis_id, job_id ),
+	CONSTRAINT fk_analysis_job_analysis FOREIGN KEY ( analysis_id ) REFERENCES qiita.analysis( analysis_id ) ON DELETE CASCADE ON UPDATE CASCADE,
+	CONSTRAINT fk_analysis_job_job FOREIGN KEY ( job_id ) REFERENCES qiita.job( job_id )    
  );
 
 CREATE INDEX idx_analysis_job ON qiita.analysis_job ( analysis_id );
@@ -798,7 +878,10 @@ COMMENT ON COLUMN qiita.analysis_job.job_id IS 'Id for a job that is part of the
 CREATE TABLE qiita.analysis_sample ( 
 	analysis_id          bigint  NOT NULL,
 	processed_data_id    bigint  NOT NULL,
-	sample_id            varchar  NOT NULL
+	sample_id            varchar  NOT NULL,
+	CONSTRAINT fk_analysis_sample_analysis FOREIGN KEY ( analysis_id ) REFERENCES qiita.analysis( analysis_id )    ,
+	CONSTRAINT fk_analysis_sample FOREIGN KEY ( processed_data_id ) REFERENCES qiita.processed_data( processed_data_id )    ,
+	CONSTRAINT fk_analysis_sample_0 FOREIGN KEY ( sample_id ) REFERENCES qiita.required_sample_info( sample_id )    
  );
 
 CREATE INDEX idx_analysis_sample ON qiita.analysis_sample ( analysis_id );
@@ -816,7 +899,11 @@ CREATE TABLE qiita.common_prep_info (
 	ebi_study_accession  varchar  ,
 	emp_status_id        bigint  NOT NULL,
 	data_type_id         bigint  NOT NULL,
-	CONSTRAINT idx_required_prep_info_1 PRIMARY KEY ( raw_data_id, sample_id )
+	CONSTRAINT idx_required_prep_info_1 PRIMARY KEY ( raw_data_id, sample_id ),
+	CONSTRAINT fk_required_prep_info_raw_data FOREIGN KEY ( raw_data_id ) REFERENCES qiita.raw_data( raw_data_id )    ,
+	CONSTRAINT fk_required_prep_info_emp_status FOREIGN KEY ( emp_status_id ) REFERENCES qiita.emp_status( emp_status_id )    ,
+	CONSTRAINT fk_required_prep_info FOREIGN KEY ( sample_id ) REFERENCES qiita.required_sample_info( sample_id )    ,
+	CONSTRAINT fk_required_prep_info_0 FOREIGN KEY ( data_type_id ) REFERENCES qiita.data_type( data_type_id )    
  );
 
 CREATE INDEX idx_required_prep_info ON qiita.common_prep_info ( raw_data_id );
@@ -826,178 +913,4 @@ CREATE INDEX idx_required_prep_info_0 ON qiita.common_prep_info ( emp_status_id 
 CREATE INDEX idx_required_prep_info_2 ON qiita.common_prep_info ( sample_id );
 
 CREATE INDEX idx_required_prep_info_3 ON qiita.common_prep_info ( data_type_id );
-
-ALTER TABLE qiita.analysis ADD CONSTRAINT fk_analysis_user FOREIGN KEY ( email ) REFERENCES qiita.qiita_user( email );
-
-ALTER TABLE qiita.analysis ADD CONSTRAINT fk_analysis_analysis_status FOREIGN KEY ( analysis_status_id ) REFERENCES qiita.analysis_status( analysis_status_id );
-
-ALTER TABLE qiita.analysis_chain ADD CONSTRAINT fk_analysis_chain FOREIGN KEY ( parent_id ) REFERENCES qiita.analysis( analysis_id );
-
-ALTER TABLE qiita.analysis_chain ADD CONSTRAINT fk_analysis_chain_0 FOREIGN KEY ( child_id ) REFERENCES qiita.analysis( analysis_id );
-
-ALTER TABLE qiita.analysis_filepath ADD CONSTRAINT fk_analysis_filepath FOREIGN KEY ( analysis_id ) REFERENCES qiita.analysis( analysis_id );
-
-ALTER TABLE qiita.analysis_filepath ADD CONSTRAINT fk_analysis_filepath_0 FOREIGN KEY ( filepath_id ) REFERENCES qiita.filepath( filepath_id );
-
-ALTER TABLE qiita.analysis_filepath ADD CONSTRAINT fk_analysis_filepath_1 FOREIGN KEY ( data_type_id ) REFERENCES qiita.data_type( data_type_id );
-
-ALTER TABLE qiita.analysis_job ADD CONSTRAINT fk_analysis_job_analysis FOREIGN KEY ( analysis_id ) REFERENCES qiita.analysis( analysis_id ) ON DELETE CASCADE ON UPDATE CASCADE;
-
-ALTER TABLE qiita.analysis_job ADD CONSTRAINT fk_analysis_job_job FOREIGN KEY ( job_id ) REFERENCES qiita.job( job_id );
-
-ALTER TABLE qiita.analysis_sample ADD CONSTRAINT fk_analysis_sample_analysis FOREIGN KEY ( analysis_id ) REFERENCES qiita.analysis( analysis_id );
-
-ALTER TABLE qiita.analysis_sample ADD CONSTRAINT fk_analysis_sample FOREIGN KEY ( processed_data_id ) REFERENCES qiita.processed_data( processed_data_id );
-
-ALTER TABLE qiita.analysis_sample ADD CONSTRAINT fk_analysis_sample_0 FOREIGN KEY ( sample_id ) REFERENCES qiita.required_sample_info( sample_id );
-
-ALTER TABLE qiita.analysis_users ADD CONSTRAINT fk_analysis_users_analysis FOREIGN KEY ( analysis_id ) REFERENCES qiita.analysis( analysis_id ) ON DELETE CASCADE ON UPDATE CASCADE;
-
-ALTER TABLE qiita.analysis_users ADD CONSTRAINT fk_analysis_users_user FOREIGN KEY ( email ) REFERENCES qiita.qiita_user( email ) ON DELETE CASCADE ON UPDATE CASCADE;
-
-ALTER TABLE qiita.analysis_workflow ADD CONSTRAINT fk_analysis_workflow FOREIGN KEY ( analysis_id ) REFERENCES qiita.analysis( analysis_id );
-
-ALTER TABLE qiita.annotation ADD CONSTRAINT fk_annotation_term FOREIGN KEY ( term_id ) REFERENCES qiita.term( term_id );
-
-ALTER TABLE qiita.column_controlled_vocabularies ADD CONSTRAINT fk_column_controlled_vocabularies FOREIGN KEY ( column_name ) REFERENCES qiita.mixs_field_description( column_name );
-
-ALTER TABLE qiita.column_controlled_vocabularies ADD CONSTRAINT fk_column_controlled_vocab2 FOREIGN KEY ( controlled_vocab_id ) REFERENCES qiita.controlled_vocabularies( controlled_vocab_id );
-
-ALTER TABLE qiita.column_ontology ADD CONSTRAINT fk_column_ontology FOREIGN KEY ( column_name ) REFERENCES qiita.mixs_field_description( column_name );
-
-ALTER TABLE qiita.command_data_type ADD CONSTRAINT fk_command_data_type FOREIGN KEY ( command_id ) REFERENCES qiita.command( command_id );
-
-ALTER TABLE qiita.command_data_type ADD CONSTRAINT fk_command_data_type_0 FOREIGN KEY ( data_type_id ) REFERENCES qiita.data_type( data_type_id );
-
-ALTER TABLE qiita.common_prep_info ADD CONSTRAINT fk_required_prep_info_raw_data FOREIGN KEY ( raw_data_id ) REFERENCES qiita.raw_data( raw_data_id );
-
-ALTER TABLE qiita.common_prep_info ADD CONSTRAINT fk_required_prep_info_emp_status FOREIGN KEY ( emp_status_id ) REFERENCES qiita.emp_status( emp_status_id );
-
-ALTER TABLE qiita.common_prep_info ADD CONSTRAINT fk_required_prep_info FOREIGN KEY ( sample_id ) REFERENCES qiita.required_sample_info( sample_id );
-
-ALTER TABLE qiita.common_prep_info ADD CONSTRAINT fk_required_prep_info_0 FOREIGN KEY ( data_type_id ) REFERENCES qiita.data_type( data_type_id );
-
-ALTER TABLE qiita.controlled_vocab_values ADD CONSTRAINT fk_controlled_vocab_values FOREIGN KEY ( controlled_vocab_id ) REFERENCES qiita.controlled_vocabularies( controlled_vocab_id ) ON DELETE CASCADE ON UPDATE CASCADE;
-
-ALTER TABLE qiita.dbxref ADD CONSTRAINT fk_dbxref_term FOREIGN KEY ( term_id ) REFERENCES qiita.term( term_id );
-
-ALTER TABLE qiita.filepath ADD CONSTRAINT fk_filepath FOREIGN KEY ( filepath_type_id ) REFERENCES qiita.filepath_type( filepath_type_id );
-
-ALTER TABLE qiita.filepath ADD CONSTRAINT fk_filepath_0 FOREIGN KEY ( checksum_algorithm_id ) REFERENCES qiita.checksum_algorithm( checksum_algorithm_id );
-
-ALTER TABLE qiita.investigation ADD CONSTRAINT fk_investigation_study_person FOREIGN KEY ( contact_person_id ) REFERENCES qiita.study_person( study_person_id );
-
-ALTER TABLE qiita.investigation_study ADD CONSTRAINT fk_investigation_study FOREIGN KEY ( investigation_id ) REFERENCES qiita.investigation( investigation_id );
-
-ALTER TABLE qiita.investigation_study ADD CONSTRAINT fk_investigation_study_study FOREIGN KEY ( study_id ) REFERENCES qiita.study( study_id );
-
-ALTER TABLE qiita.job ADD CONSTRAINT fk_job_function FOREIGN KEY ( command_id ) REFERENCES qiita.command( command_id );
-
-ALTER TABLE qiita.job ADD CONSTRAINT fk_job_job_status_id FOREIGN KEY ( job_status_id ) REFERENCES qiita.job_status( job_status_id );
-
-ALTER TABLE qiita.job ADD CONSTRAINT fk_job_data_type FOREIGN KEY ( data_type_id ) REFERENCES qiita.data_type( data_type_id );
-
-ALTER TABLE qiita.job ADD CONSTRAINT fk_job FOREIGN KEY ( log_id ) REFERENCES qiita.logging( logging_id );
-
-ALTER TABLE qiita.job_results_filepath ADD CONSTRAINT fk_job_results_filepath FOREIGN KEY ( job_id ) REFERENCES qiita.job( job_id );
-
-ALTER TABLE qiita.job_results_filepath ADD CONSTRAINT fk_job_results_filepath_0 FOREIGN KEY ( filepath_id ) REFERENCES qiita.filepath( filepath_id );
-
-ALTER TABLE qiita.logging ADD CONSTRAINT fk_logging_severity FOREIGN KEY ( severity_id ) REFERENCES qiita.severity( severity_id );
-
-ALTER TABLE qiita.preprocessed_data ADD CONSTRAINT fk_preprocessed_data FOREIGN KEY ( data_type_id ) REFERENCES qiita.data_type( data_type_id );
-
-ALTER TABLE qiita.preprocessed_filepath ADD CONSTRAINT fk_preprocessed_filepath FOREIGN KEY ( preprocessed_data_id ) REFERENCES qiita.preprocessed_data( preprocessed_data_id );
-
-ALTER TABLE qiita.preprocessed_filepath ADD CONSTRAINT fk_preprocessed_filepath_0 FOREIGN KEY ( filepath_id ) REFERENCES qiita.filepath( filepath_id );
-
-ALTER TABLE qiita.preprocessed_processed_data ADD CONSTRAINT fk_preprocessed_processed_data FOREIGN KEY ( preprocessed_data_id ) REFERENCES qiita.preprocessed_data( preprocessed_data_id );
-
-ALTER TABLE qiita.preprocessed_processed_data ADD CONSTRAINT fk_preprocessed_processed_data_0 FOREIGN KEY ( processed_data_id ) REFERENCES qiita.processed_data( processed_data_id );
-
-ALTER TABLE qiita.processed_data ADD CONSTRAINT fk_processed_data FOREIGN KEY ( data_type_id ) REFERENCES qiita.data_type( data_type_id );
-
-ALTER TABLE qiita.processed_filepath ADD CONSTRAINT fk_processed_data_filepath FOREIGN KEY ( processed_data_id ) REFERENCES qiita.processed_data( processed_data_id );
-
-ALTER TABLE qiita.processed_filepath ADD CONSTRAINT fk_processed_data_filepath_0 FOREIGN KEY ( filepath_id ) REFERENCES qiita.filepath( filepath_id );
-
-ALTER TABLE qiita.processed_params_uclust ADD CONSTRAINT fk_processed_params_uclust FOREIGN KEY ( reference_id ) REFERENCES qiita.reference( reference_id );
-
-ALTER TABLE qiita.qiita_user ADD CONSTRAINT fk_user_user_level FOREIGN KEY ( user_level_id ) REFERENCES qiita.user_level( user_level_id )   ON UPDATE RESTRICT;
-
-ALTER TABLE qiita.raw_data ADD CONSTRAINT fk_raw_data_filetype FOREIGN KEY ( filetype_id ) REFERENCES qiita.filetype( filetype_id );
-
-ALTER TABLE qiita.raw_data_prep_columns ADD CONSTRAINT fk_prep_columns_raw_data FOREIGN KEY ( raw_data_id ) REFERENCES qiita.raw_data( raw_data_id );
-
-ALTER TABLE qiita.raw_filepath ADD CONSTRAINT fk_raw_filepath FOREIGN KEY ( filepath_id ) REFERENCES qiita.filepath( filepath_id );
-
-ALTER TABLE qiita.raw_filepath ADD CONSTRAINT fk_raw_filepath_0 FOREIGN KEY ( raw_data_id ) REFERENCES qiita.raw_data( raw_data_id );
-
-ALTER TABLE qiita.raw_preprocessed_data ADD CONSTRAINT fk_raw_preprocessed_data FOREIGN KEY ( raw_data_id ) REFERENCES qiita.raw_data( raw_data_id );
-
-ALTER TABLE qiita.raw_preprocessed_data ADD CONSTRAINT fk_raw_preprocessed_data_0 FOREIGN KEY ( preprocessed_data_id ) REFERENCES qiita.preprocessed_data( preprocessed_data_id );
-
-ALTER TABLE qiita.required_sample_info ADD CONSTRAINT fk_required_sample_info_study FOREIGN KEY ( study_id ) REFERENCES qiita.study( study_id );
-
-ALTER TABLE qiita.required_sample_info ADD CONSTRAINT fk_required_sample_info FOREIGN KEY ( required_sample_info_status_id ) REFERENCES qiita.required_sample_info_status( required_sample_info_status_id );
-
-ALTER TABLE qiita.study ADD CONSTRAINT fk_study_user FOREIGN KEY ( email ) REFERENCES qiita.qiita_user( email );
-
-ALTER TABLE qiita.study ADD CONSTRAINT fk_study_study_status FOREIGN KEY ( study_status_id ) REFERENCES qiita.study_status( study_status_id );
-
-ALTER TABLE qiita.study ADD CONSTRAINT fk_study_study_emp_person FOREIGN KEY ( emp_person_id ) REFERENCES qiita.study_person( study_person_id );
-
-ALTER TABLE qiita.study ADD CONSTRAINT fk_study_study_lab_person FOREIGN KEY ( lab_person_id ) REFERENCES qiita.study_person( study_person_id );
-
-ALTER TABLE qiita.study ADD CONSTRAINT fk_study_study_pi_person FOREIGN KEY ( principal_investigator_id ) REFERENCES qiita.study_person( study_person_id );
-
-ALTER TABLE qiita.study ADD CONSTRAINT fk_study_timeseries_type FOREIGN KEY ( timeseries_type_id ) REFERENCES qiita.timeseries_type( timeseries_type_id );
-
-ALTER TABLE qiita.study ADD CONSTRAINT fk_study FOREIGN KEY ( portal_type_id ) REFERENCES qiita.portal_type( portal_type_id );
-
-ALTER TABLE qiita.study_experimental_factor ADD CONSTRAINT fk_study_experimental_factor FOREIGN KEY ( study_id ) REFERENCES qiita.study( study_id );
-
-ALTER TABLE qiita.study_pmid ADD CONSTRAINT fk_study_pmid_study FOREIGN KEY ( study_id ) REFERENCES qiita.study( study_id );
-
-ALTER TABLE qiita.study_preprocessed_data ADD CONSTRAINT fk_study_preprocessed_data FOREIGN KEY ( study_id ) REFERENCES qiita.study( study_id );
-
-ALTER TABLE qiita.study_preprocessed_data ADD CONSTRAINT fk_study_preprocessed_data_0 FOREIGN KEY ( preprocessed_data_id ) REFERENCES qiita.preprocessed_data( preprocessed_data_id );
-
-ALTER TABLE qiita.study_processed_data ADD CONSTRAINT fk_study_processed_data FOREIGN KEY ( study_id ) REFERENCES qiita.study( study_id );
-
-ALTER TABLE qiita.study_processed_data ADD CONSTRAINT fk_study_processed_data_0 FOREIGN KEY ( processed_data_id ) REFERENCES qiita.processed_data( processed_data_id );
-
-ALTER TABLE qiita.study_raw_data ADD CONSTRAINT fk_study_raw_data_study FOREIGN KEY ( study_id ) REFERENCES qiita.study( study_id );
-
-ALTER TABLE qiita.study_raw_data ADD CONSTRAINT fk_study_raw_data_raw_data FOREIGN KEY ( raw_data_id ) REFERENCES qiita.raw_data( raw_data_id );
-
-ALTER TABLE qiita.study_sample_columns ADD CONSTRAINT fk_study_mapping_columns_study FOREIGN KEY ( study_id ) REFERENCES qiita.study( study_id );
-
-ALTER TABLE qiita.study_users ADD CONSTRAINT fk_study_users_study FOREIGN KEY ( study_id ) REFERENCES qiita.study( study_id );
-
-ALTER TABLE qiita.study_users ADD CONSTRAINT fk_study_users_user FOREIGN KEY ( email ) REFERENCES qiita.qiita_user( email );
-
-ALTER TABLE qiita.term ADD CONSTRAINT fk_term_ontology FOREIGN KEY ( ontology_id ) REFERENCES qiita.ontology( ontology_id );
-
-ALTER TABLE qiita.term_path ADD CONSTRAINT fk_term_path_ontology FOREIGN KEY ( ontology_id ) REFERENCES qiita.ontology( ontology_id );
-
-ALTER TABLE qiita.term_path ADD CONSTRAINT fk_term_path_relationship_type FOREIGN KEY ( relationship_type_id ) REFERENCES qiita.relationship_type( relationship_type_id );
-
-ALTER TABLE qiita.term_path ADD CONSTRAINT fk_term_path_term_subject FOREIGN KEY ( subject_term_id ) REFERENCES qiita.term( term_id );
-
-ALTER TABLE qiita.term_path ADD CONSTRAINT fk_term_path_term_predicate FOREIGN KEY ( predicate_term_id ) REFERENCES qiita.term( term_id );
-
-ALTER TABLE qiita.term_path ADD CONSTRAINT fk_term_path_term_object FOREIGN KEY ( object_term_id ) REFERENCES qiita.term( term_id );
-
-ALTER TABLE qiita.term_relationship ADD CONSTRAINT fk_term_relationship_subj_term FOREIGN KEY ( subject_term_id ) REFERENCES qiita.term( term_id );
-
-ALTER TABLE qiita.term_relationship ADD CONSTRAINT fk_term_relationship_pred_term FOREIGN KEY ( predicate_term_id ) REFERENCES qiita.term( term_id );
-
-ALTER TABLE qiita.term_relationship ADD CONSTRAINT fk_term_relationship_obj_term FOREIGN KEY ( object_term_id ) REFERENCES qiita.term( term_id );
-
-ALTER TABLE qiita.term_relationship ADD CONSTRAINT fk_term_relationship_ontology FOREIGN KEY ( ontology_id ) REFERENCES qiita.ontology( ontology_id );
-
-ALTER TABLE qiita.term_synonym ADD CONSTRAINT fk_term_synonym_term FOREIGN KEY ( term_id ) REFERENCES qiita.term( term_id );
-
-ALTER TABLE qiita.term_synonym ADD CONSTRAINT fk_term_synonym_type_term FOREIGN KEY ( synonym_id ) REFERENCES qiita.term( term_id );
 
