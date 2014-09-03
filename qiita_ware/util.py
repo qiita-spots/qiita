@@ -35,7 +35,7 @@ def per_sample_sequences(iter_, max_seqs, min_seqs=1, random_buf_size=100000):
     Notes
     -----
     Randomly get ``max_seqs`` for each sample. If the sample has less than
-    ``max_seqs``, all of the sequences are returned
+    ``max_seqs``, only those samples that have > ``min_seqs`` are returned.
 
     This method will at most hold ``max_seqs`` * N data, where N is the number
     of samples.
