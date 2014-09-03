@@ -10,6 +10,7 @@ from __future__ import division
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
+import sys
 from collections import defaultdict
 from heapq import heappush, heappop
 
@@ -46,8 +47,7 @@ def per_sample_sequences(iter_, max_seqs, random_buf_size=100000):
         sampleid_integer.
     """
     # buffer some random values
-    random_high = 2**63 - 1
-    random_values = np.random.randint(0, random_high, random_buf_size)
+    random_values = np.random.randint(0, sys.maxint, random_buf_size)
     random_idx = 0
 
     result = defaultdict(list)
@@ -62,7 +62,7 @@ def per_sample_sequences(iter_, max_seqs, random_buf_size=100000):
         random_value = random_values[random_idx]
         random_idx += 1
         if random_idx >= random_buf_size:
-            random_values = np.random.randint(0, random_high, random_buf_size)
+            random_values = np.random.randint(0, sys.maxint, random_buf_size)
             random_idx = 0
 
         # push our sequence on to the heap and drop the smallest if necessary
