@@ -15,6 +15,7 @@ from collections import defaultdict
 from heapq import heappush, heappop
 
 import numpy as np
+from future.utils import viewitems
 
 
 def per_sample_sequences(iter_, max_seqs, min_seqs=1, random_buf_size=100000):
@@ -86,7 +87,7 @@ def per_sample_sequences(iter_, max_seqs, min_seqs=1, random_buf_size=100000):
             heappop(heap)
 
     # yield the sequences
-    for sid, heap in result.items():
+    for sid, heap in viewitems(result):
         if len(heap) < min_seqs:
             continue
 
