@@ -9,7 +9,7 @@ Qiita is a python package, with support for python 2.7 and 3.2, that depends on 
 -->
 
 * [tornado 3.1.1](http://www.tornadoweb.org/en/stable/)
-* [tornado-redis](https://pypi.python.org/pypi/tornado-redis)
+* [toredis](https://pypi.python.org/pypi/toredis)
 * [Psycopg2](http://initd.org/psycopg/download/)
 * [click](http://click.pocoo.org/)
 * [NumPy](https://github.com/numpy/numpy)
