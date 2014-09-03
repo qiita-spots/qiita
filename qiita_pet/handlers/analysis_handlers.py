@@ -98,12 +98,10 @@ class SearchStudiesHandler(BaseHandler):
         """
         # get the selected studies and datatypes for studies
         for s in self.get_arguments("availstudies"):
-            study_id, proc_data_id = s.split("#")
-            # get the processed data ids for the study
+            study_id, proc_data_id = s.split("#", 1)
             # get new selected samples for each study and yield with proc id
-            for proc_samp_combo in product([int(proc_data_id)],
-                                           self.get_arguments(study_id)):
-                yield proc_samp_combo
+            for sample in self.get_arguments(study_id):
+                yield (proc_data_id, sample)
 
     def _parse_form_deselect(self):
         """parses selected checkboxes and returns the selected ones in
