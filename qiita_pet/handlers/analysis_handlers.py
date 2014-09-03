@@ -62,6 +62,7 @@ class SearchStudiesHandler(BaseHandler):
         """remove already selected samples from results and count metadata"""
         counts = {}
         fullcounts = {meta: defaultdict(int) for meta in meta_headers}
+        studypop = []
         for study, samples in viewitems(results):
             counts[study] = {meta: Counter()
                              for meta in meta_headers}
@@ -76,10 +77,16 @@ class SearchStudiesHandler(BaseHandler):
                     for pos, meta in enumerate(meta_headers):
                         counts[study][meta][sample[pos+1]] += 1
                         fullcounts[meta][sample[pos+1]] += 1
+            # if no samples left, remove the study from results
+            if len(topop) == len(samples):
+                studypop.append(study)
+                continue
             # remove already selected samples
             topop.sort(reverse=True)
             for pos in topop:
                 samples.pop(pos)
+        for study in studypop:
+            results.pop(study)
         return results, counts, fullcounts
 
     def _selected_parser(self, analysis):

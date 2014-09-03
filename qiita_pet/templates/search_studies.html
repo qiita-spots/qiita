@@ -4,6 +4,7 @@
 <script src="/static/vendor/js/chosen.jquery.min.js"></script>
 <script src="/static/js/analysis.js"></script>
 <script type="text/javascript">
+STUDIES = {{[int(i) for i in results.keys()]}};
 function add_metacat(metacat) {
   document.getElementById('query').value += (" " + metacat);
 }
@@ -96,17 +97,17 @@ function add_metacat(metacat) {
 </div>
 
     <table class='table table-hover' style="width:100%">
-      <tr><th>Data Types</th><th>Name</th><th></th><th>Description</th><th>Status</th></tr>
+      <tr><th>Data Types</th><th>Name</th><th>Selected</th><th>Description</th><th>Status</th></tr>
       {% for sid, samples in viewitems(results) %}
         {% set study = Study(sid) %}
         <tr id="study{{sid}}"><td>
         {% for data_type in study.data_types %}
           {% set data_type_id = study.processed_data(data_type=data_type)[0] %}
-          <input type='checkbox' name='availstudies' class="{{sid}}" value='{{sid}}#{{data_type_id}}'> 
+          <input type='checkbox' name='availstudies' value='{{sid}}#{{data_type_id}}' onchange="select_deselect_samples_study({{sid}})"> 
           {{data_type}}<br />
-          </td><td style='vertical-align:middle;'><a href="#" data-toggle="modal" data-target="#modal{{sid}}">{{study.title}}</a></td>
+          </td><td style='vertical-align:middle;'><a href="#" data-toggle="modal" data-target="#modal{{sid}}" id="modal-link-{{sid}}" disabled=true>{{study.title}}</a></td>
           <td style='vertical-align:middle;'>
-            <a href="#" onclick="select_deselect({{sid}}, true); return false;">Select all</a>
+            <span id="count{{sid}}">0</span>/{{len(samples)}}
           </td>
           <td style='vertical-align:middle;'>
           {{study.info["study_description"]}}</td>
@@ -163,7 +164,7 @@ function add_metacat(metacat) {
               {% for sample in samples %}
                 <tr><td>
                 <input type='checkbox' name='{{sid}}'
-                value='{{sample[0]}}' class='{{sid}} {{ " ".join(clean_str(s) for s in sample[1:]) }}'>
+                value='{{sample[0]}}' class='{{sid}} {{ " ".join(clean_str(s) for s in sample[1:]) }}' onchange='count_update({{sid}})'>
                 </td><td>{{sample[0]}}</td>
                 {% for pos in range(len(meta_headers)) %}
                   <td>{{sample[pos+1]}}</td>
