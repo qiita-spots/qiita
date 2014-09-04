@@ -528,7 +528,7 @@ class StudyPerson(QiitaObject):
     email : str
         email of the person
     affiliation : str
-        insitution with which the person is affiliated
+        institution with which the person is affiliated
     address : str or None
         address of the person
     phone : str or None
@@ -545,7 +545,7 @@ class StudyPerson(QiitaObject):
         name: str
             Name of the person
         affiliation : str
-            insitution with which the person is affiliated
+            institution with which the person is affiliated
 
         Returns
         -------
@@ -568,7 +568,7 @@ class StudyPerson(QiitaObject):
         email : str
             email of person
         affiliation : str
-            insitution with which the person is affiliated
+            institution with which the person is affiliated
         address : str, optional
             address of person
         phone : str, optional
@@ -636,7 +636,7 @@ class StudyPerson(QiitaObject):
             Affiliation of person
         """
         conn_handler = SQLConnectionHandler()
-        sql = ("SELECT affliation FROM qiita.{0} WHERE "
+        sql = ("SELECT affiliation FROM qiita.{0} WHERE "
                "study_person_id = %s".format(self._table))
         return conn_handler.execute_fetchone(sql, [self._id])[0]
 

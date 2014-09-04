@@ -32,7 +32,7 @@ from qiita_core.util import qiita_test_checker
 @qiita_test_checker()
 class TestMakeStudyFromCmd(TestCase):
     def setUp(self):
-        StudyPerson.create('SomeDude', 'somedude@foo.bar',
+        StudyPerson.create('SomeDude', 'somedude@foo.bar', 'some',
                            '111 fake street', '111-121-1313')
         User.create('test@test.com', 'password')
         self.config1 = CONFIG_1
@@ -294,17 +294,17 @@ CONFIG_1 = """[required]
 timeseries_type_id = 1
 metadata_complete = True
 mixs_compliant = True
-number_samples_collected = 50
-number_samples_promised = 25
 portal_type_id = 3
-principal_investigator = SomeDude, somedude@foo.bar
+principal_investigator = SomeDude, somedude@foo.bar, some
 reprocess = False
 study_alias = 'test study'
 study_description = 'test study description'
 study_abstract = 'study abstract'
 efo_ids = 1,2,3,4
 [optional]
-lab_person = SomeDude, somedude@foo.bar
+number_samples_collected = 50
+number_samples_promised = 25
+lab_person = SomeDude, somedude@foo.bar, some
 funding = 'funding source'
 vamps_id = vamps_id
 """
@@ -312,17 +312,17 @@ vamps_id = vamps_id
 CONFIG_2 = """[required]
 timeseries_type_id = 1
 metadata_complete = True
-number_samples_collected = 50
-number_samples_promised = 25
 portal_type_id = 3
-principal_investigator = SomeDude, somedude@foo.bar
+principal_investigator = SomeDude, somedude@foo.bar, some
 reprocess = False
 study_alias = 'test study'
 study_description = 'test study description'
 study_abstract = 'study abstract'
 efo_ids = 1,2,3,4
 [optional]
-lab_person = SomeDude, somedude@foo.bar
+number_samples_collected = 50
+number_samples_promised = 25
+lab_person = SomeDude, somedude@foo.bar, some
 funding = 'funding source'
 vamps_id = vamps_id
 """
