@@ -126,6 +126,7 @@ def template_to_dict(t):
     for key, value in t.items():
         out[key] = {}
         for t_key, t_value in value.items():
-            out[key][t_key] = t_value
+            # cast to string as a datetime object can be returned here
+            out[key][t_key] = str(t_value)
     return out
 
