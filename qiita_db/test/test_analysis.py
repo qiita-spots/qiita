@@ -272,7 +272,7 @@ class TestAnalysis(TestCase):
                        "1_analysis_18S.biom")
         try:
             samples = {1: ['SKB8.640193', 'SKD8.640184', 'SKB7.640196']}
-            self.analysis._build_biom_tables(samples,
+            self.analysis._build_biom_tables(samples, None,
                                              conn_handler=self.conn_handler)
             obs = self.analysis.biom_tables
 
@@ -298,6 +298,20 @@ class TestAnalysis(TestCase):
                 f.write("")
             with open(map_fp, 'w') as f:
                 f.write("")
+
+    def test_build_files_raises_type_error(self):
+        with self.assertRaises(TypeError):
+            self.analysis.build_files('string')
+
+        with self.assertRaises(TypeError):
+            self.analysis.build_files(100.5)
+
+    def test_build_files_raises_value_error(self):
+        with self.assertRaises(ValueError):
+            self.analysis.build_files(0)
+
+        with self.assertRaises(ValueError):
+            self.analysis.build_files(-10)
 
 
 if __name__ == "__main__":
