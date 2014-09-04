@@ -231,7 +231,8 @@ CREATE TABLE qiita.study_person (
 	affiliation          varchar  NOT NULL,
 	address              varchar(100)  ,
 	phone                varchar  ,
-	CONSTRAINT pk_study_person PRIMARY KEY ( study_person_id )
+	CONSTRAINT pk_study_person PRIMARY KEY ( study_person_id ),
+	CONSTRAINT idx_study_person UNIQUE ( name, affiliation ) 
  );
 
 COMMENT ON TABLE qiita.study_person IS 'Contact information for the various people involved in a study';

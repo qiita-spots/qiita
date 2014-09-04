@@ -1452,9 +1452,11 @@ Contact information for the various people involved in a study</title></a>
 Referred by study ( emp_person_id -> study_person_id ) 
 Referred by study ( lab_person_id -> study_person_id ) 
 Referred by study ( principal_investigator_id -> study_person_id ) </title></a>
-  <use id='nn' x='2042' y='132' xlink:href='#nn'/><a xlink:href='#name'><text x='2058' y='142'>name</text><title>name varchar not null</title></a>
+  <use id='nn' x='2042' y='132' xlink:href='#nn'/><a xlink:href='#name'><use id='unq' x='2042' y='131' xlink:href='#unq'/><title>Unique Index  ( name, affiliation ) </title></a>
+<a xlink:href='#name'><text x='2058' y='142'>name</text><title>name varchar not null</title></a>
   <use id='nn' x='2042' y='147' xlink:href='#nn'/><a xlink:href='#email'><text x='2058' y='157'>email</text><title>email varchar not null</title></a>
-  <use id='nn' x='2042' y='162' xlink:href='#nn'/><a xlink:href='#affiliation'><text x='2058' y='172'>affiliation</text><title>affiliation varchar not null
+  <use id='nn' x='2042' y='162' xlink:href='#nn'/><a xlink:href='#affiliation'><use id='unq' x='2042' y='161' xlink:href='#unq'/><title>Unique Index  ( name, affiliation ) </title></a>
+<a xlink:href='#affiliation'><text x='2058' y='172'>affiliation</text><title>affiliation varchar not null
 The institution with which this person is affiliated</title></a>
   <a xlink:href='#address'><text x='2058' y='187'>address</text><title>address varchar&#040;100&#041;</title></a>
   <a xlink:href='#phone'><text x='2058' y='202'>phone</text><title>phone varchar</title></a>
@@ -4258,6 +4260,10 @@ Controlled Vocabulary </td>
 <tr><td colspan='3' class='subpart'><b>Indexes</b></td></tr>
 	<tr>		<td>pk&#095;study&#095;person primary key</td>
 		<td> ON study&#095;person&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>idx&#095;study&#095;person unique</td>
+		<td> ON name&#044; affiliation</td>
 		<td>  </td>
 	</tr>
 </tbody>

@@ -983,6 +983,10 @@ Controlled Vocabulary]]></comment>
 			<index name="pk_study_person" unique="PRIMARY_KEY" >
 				<column name="study_person_id" />
 			</index>
+			<index name="idx_study_person" unique="UNIQUE" >
+				<column name="name" />
+				<column name="affiliation" />
+			</index>
 		</table>
 		<table name="study_pmid" >
 			<comment>Links a study to all PMIDs for papers created from study</comment>
