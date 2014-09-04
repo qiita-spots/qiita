@@ -102,9 +102,10 @@ class RawDataTests(TestCase):
         rd = RawData(1)
         obs = rd.get_filepaths()
         exp = [
-            (join(self.db_test_raw_dir, '1_s_G1_L001_sequences.fastq.gz'), 1),
+            (join(self.db_test_raw_dir, '1_s_G1_L001_sequences.fastq.gz'),
+             "raw_sequences"),
             (join(self.db_test_raw_dir,
-                  '1_s_G1_L001_sequences_barcodes.fastq.gz'), 2)]
+                  '1_s_G1_L001_sequences_barcodes.fastq.gz'), "raw_barcodes")]
         self.assertEqual(obs, exp)
 
     def test_studies(self):
@@ -274,8 +275,10 @@ class PreprocessedDataTests(TestCase):
         """Correctly returns the filepaths to the preprocessed files"""
         ppd = PreprocessedData(1)
         obs = ppd.get_filepaths()
-        exp = [(join(self.db_test_ppd_dir, '1_seqs.fna'), 4),
-               (join(self.db_test_ppd_dir, '1_seqs.qual'), 5)]
+        exp = [(join(self.db_test_ppd_dir, '1_seqs.fna'),
+                "preprocessed_sequences"),
+               (join(self.db_test_ppd_dir, '1_seqs.qual'),
+                "preprocessed_sequences_qual")]
         self.assertEqual(obs, exp)
 
     def test_raw_data(self):
@@ -487,7 +490,7 @@ class ProcessedDataTests(TestCase):
         pd = ProcessedData(1)
         obs = pd.get_filepaths()
         exp = [(join(self.db_test_pd_dir,
-                     '1_study_1001_closed_reference_otu_table.biom'), 6)]
+                     '1_study_1001_closed_reference_otu_table.biom'), "biom")]
         self.assertEqual(obs, exp)
 
     def test_get_filepath_ids(self):

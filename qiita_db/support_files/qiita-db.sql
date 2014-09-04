@@ -172,6 +172,7 @@ CREATE TABLE qiita.raw_data (
 	raw_data_id          bigserial  NOT NULL,
 	filetype_id          bigint  NOT NULL,
 	CONSTRAINT pk_raw_data UNIQUE ( raw_data_id ) ,
+	CONSTRAINT pk_raw_data_0 PRIMARY KEY ( raw_data_id ),
 	CONSTRAINT fk_raw_data_filetype FOREIGN KEY ( filetype_id ) REFERENCES qiita.filetype( filetype_id )    
  );
 
@@ -439,8 +440,7 @@ CREATE TABLE qiita.investigation (
 
 CREATE INDEX idx_investigation ON qiita.investigation ( contact_person_id );
 
-COMMENT ON TABLE qiita.investigation IS 'Overarching investigation information.
-An investigation comprises one or more individual studies.';
+COMMENT ON TABLE qiita.investigation IS 'Overarching investigation information.An investigation comprises one or more individual studies.';
 
 COMMENT ON COLUMN qiita.investigation.description IS 'Describes the overarching goal of the investigation';
 
@@ -724,8 +724,7 @@ CREATE INDEX idx_analysis_chain ON qiita.analysis_chain ( parent_id );
 
 CREATE INDEX idx_analysis_chain_0 ON qiita.analysis_chain ( child_id );
 
-COMMENT ON TABLE qiita.analysis_chain IS 'Keeps track of the chain of analysis edits. Tracks what previous analysis a given analysis came from.
-If a given analysis is not in child_id, it is the root of the chain. ';
+COMMENT ON TABLE qiita.analysis_chain IS 'Keeps track of the chain of analysis edits. Tracks what previous analysis a given analysis came from.If a given analysis is not in child_id, it is the root of the chain. ';
 
 CREATE TABLE qiita.analysis_filepath ( 
 	analysis_id          bigint  NOT NULL,
