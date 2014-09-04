@@ -1,14 +1,29 @@
 {% extends sitebase.html %}
 {% block content %}
+<div class="modal fade" id='add_person'>
+  <div class="modal-dialog modal-sm">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4 class="modal-title">Add New Person</h4>
+      </div>
+      <div class="modal-body">
+      </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+    </div>
+  </div><!-- /.modal-content -->
+</div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
+
 <h1>Create a new Study</h1>
 <h3>
     <font color="red">*</font> = Required Field
 </h3>
 <br />
-<form action='/create_study/' method="POST">
+<form id="create_study" name="create_study" action='/create_study/' method="POST">
 <table>
 {% for form_item in creation_form %}
-    {% set kwargs = {'class_': 'form-control', 'required': form_item.required} %}
+    {% set kwargs = {'class_': 'form-control', 'required': form_item.flags.required} %}
     {% set additional_info = '' %}
     {# form-item-specific rendering #}
     {% if form_item.label.text == 'Environmental Packages' %}
@@ -25,7 +40,7 @@
     {% raw form_item(**kwargs) %}
     </td>
     <td width="50%">
-    {% if form_item.required %}
+    {% if form_item.flags.required %}
         <font color="red"><h4>&nbsp;&nbsp;*</h4></font>
     {% end %}
     </td>
@@ -35,10 +50,19 @@
     <td>
       <br />
     </td>
+    <td>
+        Can't find the person you're looking for?
+        <a href="#" data-toggle="modal" data-target="#add_person">Add a new person</a>
+    </td>
   </tr>
   <tr>
-    <td></td>
-    <td><input type='submit' class='form-control'></td>
+    <td>
+      <br />
+      <br />
+      <br />
+      <br />
+    </td>
+    <td><input type='submit' class='btn btn-primary'></td>
   </tr>
 </table>
 </form>

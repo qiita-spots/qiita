@@ -11,19 +11,21 @@ from __future__ import division
 
 from tornado.web import authenticated, asynchronous, HTTPError
 from wtforms import (Form, StringField, SelectField, BooleanField,
-                     SelectMultipleField, TextAreaField)
+                     SelectMultipleField, TextAreaField, validators)
 
 from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_db.study import Study
 
+
 class CreateStudyForm(Form):
-    study_name = StringField('Study Name')
-    study_title = StringField('Study Title')
-    study_alias = StringField('Study Alias')
+    study_name = StringField('Study Name', [validators.required()])
+    study_title = StringField('Study Title', [validators.required()])
+    study_alias = StringField('Study Alias', [validators.required()])
     pubmed_id = StringField('PubMed ID')
-    # This can be filled from the database
+    # TODO:This can be filled from the database
     # in oracle, this is in controlled_vocabs (ID 2)
     investigation_type = SelectField('Investigation Type',
+        [validators.required()], coerce=lambda x: x,
         choices=[('eukaryote', 'eukaryote'),
                  ('bacteria_archaea_genome',
                   'bacteria/archaea (complete genome)'),
@@ -32,10 +34,11 @@ class CreateStudyForm(Form):
                  ('organelle_genome', 'organelle (complete genome)'),
                  ('metagenome', 'metagenome'),
                  ('mimarks_survey', 'mimarks-survey (e.g. 16S rRNA)')])
-    # This can be filled from the database
+    # TODO:This can be filled from the database
     # in oracle, this is in controlled_vocabs (ID 1),
     #                       controlled_vocab_values with CVV IDs >= 0
     environmental_packages = SelectMultipleField('Environmental Packages',
+        [validators.required()],
         choices=[('air', 'air'),
                  ('host_associated', 'host-associated'),
                  ('human_amniotic_fluid', 'human-amniotic-fluid'),
@@ -55,13 +58,16 @@ class CreateStudyForm(Form):
                  ('wastewater_sludge', 'wastewater/sludge'),
                  ('water', 'water')])
     is_timeseries = BooleanField('Includes Event-Based Data')
-    study_abstract = TextAreaField('Study Abstract')
-    study_description = StringField('Study Description')
+    study_abstract = TextAreaField('Study Abstract', [validators.required()])
+    study_description = StringField('Study Description',
+                                    [validators.required()])
     # The choices for these "people" fields will be filled from the database
     principal_investigator = SelectField('Principal Investigator',
+        coerce=lambda x: x,
         choices=[('1', 'some guy'),
                  ('2', 'some gal')])
     lab_person = SelectField('Lab Person',
+        coerce=lambda x: x,
         choices=[('1', 'some guy'),
                  ('2', 'some gal')])
 
@@ -90,20 +96,6 @@ class CreateStudyHandler(BaseHandler):
     def get(self):
         creation_form = CreateStudyForm()
 
-        # doing this instead of using WTForms "required" validator so that
-        # the form can be checked client-side
-        creation_form.study_name.required = True
-        creation_form.study_title.required = True
-        creation_form.study_alias.required = True
-        creation_form.pubmed_id.required = False
-        creation_form.investigation_type.required = True
-        creation_form.environmental_packages.required = True
-        creation_form.is_timeseries.required = False
-        creation_form.study_abstract.required = True
-        creation_form.study_description.required = True
-        creation_form.principal_investigator.required = False
-        creation_form.lab_person.required = False
-
         # TODO: set the choices attribute on the PI field
         # TODO: set the choices attribute on the lab_person field
         # TODO: set the choices attributes on the investigation_type field
@@ -112,6 +104,23 @@ class CreateStudyHandler(BaseHandler):
                     creation_form=creation_form)
 
     def post(self):
-        form_data = CreateStudyForm(self.request.body_arguments)
-        # TODO: change this render
-        self.render('index.html', user=self.current_user)
+        # Get the form data from the request arguments
+        form_data = CreateStudyForm(data=self.request.arguments)
+
+        # "process" the form data, and put it in a nicer structure
+        form_data_dict = {}
+        for element in form_data:
+            element.process_formdata(element.data)
+            form_data_dict[elelement.label.text] = element.data
+
+        # create the study
+        info = {
+            'timeseries_type_id': form_data_dict['Includes Event-Based Data'],
+            'metadata_complete': True,
+            'mixs_compliant': True}
+
+        Study.create(self.current_user, form_data_dict['Study Title'],
+                     efo=[1], info=info)
+
+        # TODO: change this redirect
+        self.redirect('/')
