@@ -96,9 +96,9 @@ def per_sample_sequences(iter_, max_seqs, min_seqs=1, random_buf_size=100000):
         for _, sequence_id, sequence in heap:
             yield (sequence_id, sequence)
 
-def metadata_stats_from_sample_and_prep_template(st_id, pt_id):
+def metadata_stats_from_sample_and_prep_templates(st_id, pt_id):
     """ """
-    df = mapping_file_from_sample_and_prep_template(st_id, pt_id)
+    df = mapping_file_from_sample_and_prep_templates(st_id, pt_id)
     out = defaultdict(list)
 
     for column in df.columns:
@@ -109,7 +109,7 @@ def metadata_stats_from_sample_and_prep_template(st_id, pt_id):
 
     return out
 
-def mapping_file_from_sample_and_prep_template(st_id, pt_id):
+def mapping_file_from_sample_and_prep_templates(st_id, pt_id):
     """ """
     st = template_to_dict(SampleTemplate(st_id))
     pt = template_to_dict(PrepTemplate(pt_id))
