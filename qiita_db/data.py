@@ -38,7 +38,7 @@ Inserting the raw data into the database:
 Retrieve the filepaths associated with the raw data
 
 >>> rd.get_filepaths() # doctest: +SKIP
-[('seqs.fastq', 1), ('barcodes.fastq', 2)]
+[('seqs.fastq', 'raw_sequences'), ('barcodes.fastq', 'raw_barcodes')]
 
 Assume we have preprocessed the previous raw data files using the parameters
 under the first row in the 'preprocessed_sequence_illumina_params', and we
