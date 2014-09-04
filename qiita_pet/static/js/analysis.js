@@ -24,9 +24,37 @@ function displaySelected() {
 function select_category(category, study) {
   if(study != '') { 
     $('.'+study+'.'+category).each(function() {this.checked = true;});
+    count_update(study);
   }
   else { 
     $('.'+category).each(function() {this.checked = true;});
+    for(i=0; i<STUDIES.length; i++) {
+      count_update(STUDIES[i]);
+    }
+  }
+}
+
+function select_deselect_samples_study(study) {
+  var selected_datatypes = $('#study' + study + ' input:checkbox:checked').length;
+  var sel = false;
+  if (selected_datatypes > 0) { sel = true; }
+  select_deselect(study, sel)
+}
+
+function count_update(study) {
+  var selected = $('#modal' + study + ' input:checkbox:checked').length;
+  var studylink = document.getElementById('modal-link-' + study)
+  document.getElementById('count' + study).innerHTML = selected;
+  if(selected > 0) { 
+    $('#study' + study).addClass('success');
+    studylink.disabled = false;
+    studylink.style = "";
+  }
+  else {
+    $('#study' + study).removeClass('success');
+    studylink.disabled = true;
+    studylink.style = "text-decoration: none;";
+    $('#study' + study + " input:checkbox").each(function() {this.checked = false;})
   }
 }
 
@@ -37,12 +65,14 @@ function select_deselect(study, select) {
   else { 
     $('.'+study).each(function() {this.checked = false;});
   }
+  count_update(study);
 }
 
-function enable_study_datatype(id) {
-  var value = $('[name="' + id + '"]').val();
-  if(value == '') { document.getElementById(id).disabled=true; }
-  else { document.getElementById(id).disabled=false; }
+function select_inverse(study) {
+  $('.'+study).each(function() {
+    if(this.checked == true) { this.checked = false; }
+    else { this.checked = true; }
+  });
 }
 
 function pre_submit(action) {
@@ -61,7 +91,7 @@ function pre_submit(action) {
     document.getElementById('results-form').action = '/analysis/3'
     }
   } else if(action == "deselect") {
-    var selected = $('#selected input:checked').length;
+    var selected = $('#selected input:checkbox:checked').length;
     if(selected == 0) {
       msgdiv.innerHTML = "Must select samples to remove from study!"
       return false;
