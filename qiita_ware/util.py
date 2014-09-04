@@ -104,10 +104,11 @@ def metadata_stats_from_sample_and_prep_templates(st_id, pt_id):
     for column in df.columns:
         counts = df[column].value_counts()
 
-        # get an pandas series of the value -> count pairs
+        # get a pandas series of the value-count pairs
         out[column] = [(key, counts[key]) for key in counts.index]
 
-    return out
+    # cast to a dictionary as defaultdicts are prone to error
+    return dict(out)
 
 def mapping_file_from_sample_and_prep_templates(st_id, pt_id):
     """ """
