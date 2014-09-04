@@ -228,12 +228,15 @@ CREATE TABLE qiita.study_person (
 	study_person_id      bigserial  NOT NULL,
 	name                 varchar  NOT NULL,
 	email                varchar  NOT NULL,
+	affiliation          varchar  NOT NULL,
 	address              varchar(100)  ,
 	phone                varchar  ,
 	CONSTRAINT pk_study_person PRIMARY KEY ( study_person_id )
  );
 
 COMMENT ON TABLE qiita.study_person IS 'Contact information for the various people involved in a study';
+
+COMMENT ON COLUMN qiita.study_person.affiliation IS 'The institution with which this person is affiliated';
 
 CREATE TABLE qiita.study_status ( 
 	study_status_id      bigserial  NOT NULL,
@@ -471,8 +474,8 @@ CREATE TABLE qiita.study (
 	metadata_complete    bool  NOT NULL,
 	mixs_compliant       bool  NOT NULL,
 	most_recent_contact  varchar  ,
-	number_samples_collected integer  NOT NULL,
-	number_samples_promised integer  NOT NULL,
+	number_samples_collected integer  ,
+	number_samples_promised integer  ,
 	portal_type_id       bigint  NOT NULL,
 	principal_investigator_id bigint  NOT NULL,
 	reprocess            bool  NOT NULL,
