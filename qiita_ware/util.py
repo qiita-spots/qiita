@@ -15,8 +15,10 @@ from collections import defaultdict
 from heapq import heappush, heappop
 
 import numpy as np
+import pandas as pd
 from future.utils import viewitems
 
+from qiita_db.metadata_template import SampleTemplate, PrepTemplate
 
 def per_sample_sequences(iter_, max_seqs, min_seqs=1, random_buf_size=100000):
     """Get a max random subset of per sample sequences
@@ -93,3 +95,36 @@ def per_sample_sequences(iter_, max_seqs, min_seqs=1, random_buf_size=100000):
 
         for _, sequence_id, sequence in heap:
             yield (sequence_id, sequence)
+
+def metadata_stats_from_sample_and_prep_template(st_id, pt_id):
+    """ """
+    df = mapping_file_from_sample_and_prep_template(st_id, pt_id)
+    out = defaultdict(list)
+
+    for column in df.columns:
+        counts = df[column].value_counts()
+
+        # get an pandas series of the value -> count pairs
+        out[column] = [(key, counts[key]) for key in counts.index]
+
+    return out
+
+def mapping_file_from_sample_and_prep_template(st_id, pt_id):
+    """ """
+    st = template_to_dict(SampleTemplate(st_id))
+    pt = template_to_dict(PrepTemplate(pt_id))
+
+    s_df = pd.DataFrame.from_dict(st, orient='index')
+    p_df = pd.DataFrame.from_dict(pt, orient='index')
+
+    return pd.merge(s_df, p_df, left_index=True, right_index=True, how='outer')
+
+def template_to_dict(t):
+    """ """
+    out = {}
+    for key, value in t.items():
+        out[key] = {}
+        for t_key, t_value in value.items():
+            out[key][t_key] = t_value
+    return out
+
