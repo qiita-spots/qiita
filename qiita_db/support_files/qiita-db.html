@@ -97,7 +97,7 @@ table {
 </head>
 
 <body>
-<svg xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink'   width='2250' height='2135' viewbox='0 0 2250 2135' >
+<svg xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink'   width='2250' height='2000' viewbox='0 0 2250 2000' >
 <style type='text/css'>
   text                { fill:#000000; font-family: 'trebuchet MS', 'Lucida sans', Dialog, Dialog, Arial; font-size:11px; stroke:#000000; stroke-width:0.1; }
   text:hover          { fill:#a00000; font-size:12px;}
@@ -240,7 +240,7 @@ table {
 </defs>
 
 <!-- ============= Desktop ============= -->
-<rect x='1' y='1' width='2248' height='2133' rx='7' ry='7' style='fill:url(#layoutBgA); stroke:#333333; stroke-width:0.5;' />
+<rect x='1' y='1' width='2248' height='1998' rx='7' ry='7' style='fill:url(#layoutBgA); stroke:#333333; stroke-width:0.5;' />
 <rect width='120%' x='-10%' y='-10%' height='120%' fill='url(#layoutBgB)'/>
 <!-- ============= Legend ============= -->
 <g transform='translate(10,10)'>
@@ -267,14 +267,14 @@ table {
 <rect style='fill:url(#groupUnderTitleLine); stroke-width:2;' x='985' y='28' width='1225' height='2' />
 
 <!-- ============= Group 'Group_vocabularies' ============= -->
-<rect class='grp' style='fill:#00ffcc;stroke:#c5e0db' x='29' y='1285' width='452' height='545' />
-<text x='40' y='1300'>Group_vocabularies</text>
-<rect style='fill:url(#groupUnderTitleLine); stroke-width:2;' x='40' y='1303' width='430' height='2' />
+<rect class='grp' style='fill:#00ffcc;stroke:#c5e0db' x='29' y='1315' width='452' height='545' />
+<text x='40' y='1330'>Group_vocabularies</text>
+<rect style='fill:url(#groupUnderTitleLine); stroke-width:2;' x='40' y='1333' width='430' height='2' />
 
 <!-- ============= Group 'Group_ontology' ============= -->
-<rect class='grp' style='fill:#ff99ff;stroke:#e0c5e0' x='509' y='1285' width='647' height='710' />
-<text x='520' y='1300'>Group_ontology</text>
-<rect style='fill:url(#groupUnderTitleLine); stroke-width:2;' x='520' y='1303' width='625' height='2' />
+<rect class='grp' style='fill:#ff99ff;stroke:#e0c5e0' x='584' y='1315' width='167' height='530' />
+<text x='595' y='1330'>Group_ontology</text>
+<rect style='fill:url(#groupUnderTitleLine); stroke-width:2;' x='595' y='1333' width='145' height='2' />
 
 <!-- ============= Group 'Group_logging' ============= -->
 <rect class='grp' style='fill:#c4e0f9;stroke:#c5d4e0' x='1349' y='1165' width='257' height='170' />
@@ -286,21 +286,11 @@ table {
 <text x='595' y='655'>Group_filepaths</text>
 <rect style='fill:url(#groupUnderTitleLine); stroke-width:2;' x='595' y='658' width='325' height='2' />
 
-<path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 660 1890 L 757,1890 Q 765,1890 765,1882 L 765,1777 Q 765,1770 772,1770 L 780,1770' >
-	<title>Foreign Key fk_term_synonym_term
-	term_synonym references term ( term_id )</title>
-</path>
-<text x='667' y='1885' transform='rotate(0 667,1885)' title='Foreign Key fk_term_synonym_term
-	term_synonym references term ( term_id )' style='fill:#a1a0a0;'>term_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 660 1905 L 742,1905 Q 750,1905 750,1897 L 750,1762 Q 750,1755 757,1755 L 780,1755' >
-	<title>Foreign Key fk_term_synonym_type_term
-	term_synonym references term ( synonym_id -> term_id )</title>
-</path>
-<text x='667' y='1900' transform='rotate(0 667,1900)' title='Foreign Key fk_term_synonym_type_term
-	term_synonym references term ( synonym_id -> term_id )' style='fill:#a1a0a0;'>synonym_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 60 1515 L 60,1395' >
+<path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 60 1545 L 60,1425' >
 	<title>Foreign Key fk_controlled_vocab_values
 	controlled_vocab_values references controlled_vocabularies ( controlled_vocab_id )</title>
 </path>
-<text x='62' y='1510' transform='rotate(270 62,1510)' title='Foreign Key fk_controlled_vocab_values
+<text x='62' y='1540' transform='rotate(270 62,1540)' title='Foreign Key fk_controlled_vocab_values
 	controlled_vocab_values references controlled_vocabularies ( controlled_vocab_id )' style='fill:#a1a0a0;'>controlled_vocab_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'  style='stroke-dasharray:4,2;'  d='M 2055 225 L 2055,210' >
 	<title>Foreign Key fk_investigation_study_person
 	investigation references study_person ( contact_person_id -> study_person_id )</title>
@@ -401,77 +391,17 @@ table {
 	analysis_sample references required_sample_info ( sample_id )</title>
 </path>
 <text x='163' y='1245' transform='rotate(90 163,1245)' title='Foreign Key fk_analysis_sample_0
-	analysis_sample references required_sample_info ( sample_id )' style='fill:#a1a0a0;'>sample_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 315 1395 L 315,1470' >
+	analysis_sample references required_sample_info ( sample_id )' style='fill:#a1a0a0;'>sample_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 315 1425 L 315,1500' >
 	<title>Foreign Key fk_column_controlled_vocabularies
 	column_controlled_vocabularies references mixs_field_description ( column_name )</title>
 </path>
-<text x='328' y='1395' transform='rotate(90 328,1395)' title='Foreign Key fk_column_controlled_vocabularies
-	column_controlled_vocabularies references mixs_field_description ( column_name )' style='fill:#a1a0a0;'>column_name</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 255 1335 L 195,1335' >
+<text x='328' y='1425' transform='rotate(90 328,1425)' title='Foreign Key fk_column_controlled_vocabularies
+	column_controlled_vocabularies references mixs_field_description ( column_name )' style='fill:#a1a0a0;'>column_name</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 255 1365 L 195,1365' >
 	<title>Foreign Key fk_column_controlled_vocab2
 	column_controlled_vocabularies references controlled_vocabularies ( controlled_vocab_id )</title>
 </path>
-<text x='148' y='1330' transform='rotate(0 148,1330)' title='Foreign Key fk_column_controlled_vocab2
-	column_controlled_vocabularies references controlled_vocabularies ( controlled_vocab_id )' style='fill:#a1a0a0;'>controlled_vocab_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 315 1695 L 315,1620' >
-	<title>Foreign Key fk_column_ontology
-	column_ontology references mixs_field_description ( column_name )</title>
-</path>
-<text x='317' y='1690' transform='rotate(270 317,1690)' title='Foreign Key fk_column_ontology
-	column_ontology references mixs_field_description ( column_name )' style='fill:#a1a0a0;'>column_name</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 675 1620 L 780,1620' >
-	<title>Foreign Key fk_term_relationship_subj_term
-	term_relationship references term ( subject_term_id -> term_id )</title>
-</path>
-<text x='682' y='1615' transform='rotate(0 682,1615)' title='Foreign Key fk_term_relationship_subj_term
-	term_relationship references term ( subject_term_id -> term_id )' style='fill:#a1a0a0;'>subject_term_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 675 1590 L 802,1590 Q 810,1590 810,1597 L 810,1605' >
-	<title>Foreign Key fk_term_relationship_pred_term
-	term_relationship references term ( predicate_term_id -> term_id )</title>
-</path>
-<text x='682' y='1585' transform='rotate(0 682,1585)' title='Foreign Key fk_term_relationship_pred_term
-	term_relationship references term ( predicate_term_id -> term_id )' style='fill:#a1a0a0;'>predicate_term_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 675 1575 L 817,1575 Q 825,1575 825,1582 L 825,1605' >
-	<title>Foreign Key fk_term_relationship_obj_term
-	term_relationship references term ( object_term_id -> term_id )</title>
-</path>
-<text x='682' y='1570' transform='rotate(0 682,1570)' title='Foreign Key fk_term_relationship_obj_term
-	term_relationship references term ( object_term_id -> term_id )' style='fill:#a1a0a0;'>object_term_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 675 1530 L 772,1530 Q 780,1530 780,1522 L 780,1500' >
-	<title>Foreign Key fk_term_relationship_ontology
-	term_relationship references ontology ( ontology_id )</title>
-</path>
-<text x='682' y='1525' transform='rotate(0 682,1525)' title='Foreign Key fk_term_relationship_ontology
-	term_relationship references ontology ( ontology_id )' style='fill:#a1a0a0;'>ontology_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 975 1335 L 870,1335' >
-	<title>Foreign Key fk_term_path_ontology
-	term_path references ontology ( ontology_id )</title>
-</path>
-<text x='913' y='1330' transform='rotate(0 913,1330)' title='Foreign Key fk_term_path_ontology
-	term_path references ontology ( ontology_id )' style='fill:#a1a0a0;'>ontology_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1005 1470 L 1005,1650' >
-	<title>Foreign Key fk_term_path_relationship_type
-	term_path references relationship_type ( relationship_type_id )</title>
-</path>
-<text x='1018' y='1470' transform='rotate(90 1018,1470)' title='Foreign Key fk_term_path_relationship_type
-	term_path references relationship_type ( relationship_type_id )' style='fill:#a1a0a0;'>relationship_type_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 975 1440 L 892,1440 Q 885,1440 885,1447 L 885,1605' >
-	<title>Foreign Key fk_term_path_term_subject
-	term_path references term ( subject_term_id -> term_id )</title>
-</path>
-<text x='891' y='1435' transform='rotate(0 891,1435)' title='Foreign Key fk_term_path_term_subject
-	term_path references term ( subject_term_id -> term_id )' style='fill:#a1a0a0;'>subject_term_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 975 1425 L 922,1425 Q 915,1425 915,1432 L 915,1627 Q 915,1635 907,1635 L 900,1635' >
-	<title>Foreign Key fk_term_path_term_predicate
-	term_path references term ( predicate_term_id -> term_id )</title>
-</path>
-<text x='880' y='1420' transform='rotate(0 880,1420)' title='Foreign Key fk_term_path_term_predicate
-	term_path references term ( predicate_term_id -> term_id )' style='fill:#a1a0a0;'>predicate_term_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 975 1410 L 937,1410 Q 930,1410 930,1417 L 930,1642 Q 930,1650 922,1650 L 900,1650' >
-	<title>Foreign Key fk_term_path_term_object
-	term_path references term ( object_term_id -> term_id )</title>
-</path>
-<text x='897' y='1405' transform='rotate(0 897,1405)' title='Foreign Key fk_term_path_term_object
-	term_path references term ( object_term_id -> term_id )' style='fill:#a1a0a0;'>object_term_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 945 1860 L 922,1860 Q 915,1860 915,1852 L 915,1792 Q 915,1785 907,1785 L 900,1785' >
-	<title>Foreign Key fk_annotation_term
-	annotation references term ( term_id )</title>
-</path>
-<text x='906' y='1855' transform='rotate(0 906,1855)' title='Foreign Key fk_annotation_term
-	annotation references term ( term_id )' style='fill:#a1a0a0;'>term_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 810 1830 L 810,1800' >
-	<title>Foreign Key fk_dbxref_term
-	dbxref references term ( term_id )</title>
-</path>
-<text x='812' y='1825' transform='rotate(270 812,1825)' title='Foreign Key fk_dbxref_term
-	dbxref references term ( term_id )' style='fill:#a1a0a0;'>term_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 150 735 L 210,735' >
+<text x='148' y='1360' transform='rotate(0 148,1360)' title='Foreign Key fk_column_controlled_vocab2
+	column_controlled_vocabularies references controlled_vocabularies ( controlled_vocab_id )' style='fill:#a1a0a0;'>controlled_vocab_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 150 735 L 210,735' >
 	<title>Foreign Key fk_analysis_users_analysis
 	analysis_users references analysis ( analysis_id )</title>
 </path>
@@ -716,46 +646,38 @@ table {
 	analysis_workflow references analysis ( analysis_id )</title>
 </path>
 <text x='318' y='670' transform='rotate(0 318,670)' title='Foreign Key fk_analysis_workflow
-	analysis_workflow references analysis ( analysis_id )' style='fill:#a1a0a0;'>analysis_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 840 1605 L 840,1500' >
+	analysis_workflow references analysis ( analysis_id )' style='fill:#a1a0a0;'>analysis_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 645 1635 L 645,1530' >
 	<title>Foreign Key fk_term_ontology
 	term references ontology ( ontology_id )</title>
 </path>
-<text x='842' y='1600' transform='rotate(270 842,1600)' title='Foreign Key fk_term_ontology
-	term references ontology ( ontology_id )' style='fill:#a1a0a0;'>ontology_id</text><!-- ============= Table 'term_synonym' ============= -->
-<rect class='table' x='525' y='1868' width='135' height='105' rx='7' ry='7' />
-<path d='M 525.50 1894.50 L 525.50 1875.50 Q 525.50 1868.50 532.50 1868.50 L 652.50 1868.50 Q 659.50 1868.50 659.50 1875.50 L 659.50 1894.50 L525.50 1894.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
-<a xlink:href='#term_synonym'><text x='552' y='1882' class='tableTitle'>term_synonym</text><title>Table qiita.term_synonym</title></a>
-  <use id='nn' x='527' y='1902' xlink:href='#nn'/><a xlink:href='#term_synonym.synonym_id'><use id='pk' x='527' y='1901' xlink:href='#pk'/><title>Primary Key  ( synonym_id ) </title></a>
-<a xlink:href='#term_synonym.synonym_id'><text x='543' y='1912'>synonym_id</text><title>synonym_id bigserial not null</title></a>
-<a xlink:href='#term_synonym.synonym_id'><use id='fk' x='648' y='1901' xlink:href='#fk'/><title>References term ( synonym_id -> term_id ) </title></a>
-  <use id='nn' x='527' y='1917' xlink:href='#nn'/><a xlink:href='#term_synonym.term_id'><use id='idx' x='527' y='1916' xlink:href='#idx'/><title>Index  ( term_id ) </title></a>
-<a xlink:href='#term_synonym.term_id'><text x='543' y='1927'>term_id</text><title>term_id bigint not null</title></a>
-<a xlink:href='#term_synonym.term_id'><use id='fk' x='648' y='1916' xlink:href='#fk'/><title>References term ( term_id ) </title></a>
-  <use id='nn' x='527' y='1932' xlink:href='#nn'/><a xlink:href='#term_synonym.synonym_value'><text x='543' y='1942'>synonym_value</text><title>synonym_value varchar not null</title></a>
-  <use id='nn' x='527' y='1947' xlink:href='#nn'/><a xlink:href='#term_synonym.synonym_type_id'><text x='543' y='1957'>synonym_type_id</text><title>synonym_type_id bigint not null</title></a>
-
-<!-- ============= Table 'controlled_vocab_values' ============= -->
-<rect class='table' x='45' y='1523' width='150' height='120' rx='7' ry='7' />
-<path d='M 45.50 1549.50 L 45.50 1530.50 Q 45.50 1523.50 52.50 1523.50 L 187.50 1523.50 Q 194.50 1523.50 194.50 1530.50 L 194.50 1549.50 L45.50 1549.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
-<a xlink:href='#controlled_vocab_values'><text x='53' y='1537' class='tableTitle'>controlled_vocab_values</text><title>Table qiita.controlled_vocab_values</title></a>
-  <use id='nn' x='47' y='1557' xlink:href='#nn'/><a xlink:href='#controlled_vocab_values.vocab_value_id'><use id='pk' x='47' y='1556' xlink:href='#pk'/><title>Primary Key  ( vocab_value_id ) </title></a>
-<a xlink:href='#controlled_vocab_values.vocab_value_id'><text x='63' y='1567'>vocab_value_id</text><title>vocab_value_id bigserial not null</title></a>
-  <use id='nn' x='47' y='1572' xlink:href='#nn'/><a xlink:href='#controlled_vocab_values.controlled_vocab_id'><use id='idx' x='47' y='1571' xlink:href='#idx'/><title>Index  ( controlled_vocab_id ) </title></a>
-<a xlink:href='#controlled_vocab_values.controlled_vocab_id'><text x='63' y='1582'>controlled_vocab_id</text><title>controlled_vocab_id bigint not null</title></a>
-<a xlink:href='#controlled_vocab_values.controlled_vocab_id'><use id='fk' x='183' y='1571' xlink:href='#fk'/><title>References controlled_vocabularies ( controlled_vocab_id ) </title></a>
-  <use id='nn' x='47' y='1587' xlink:href='#nn'/><a xlink:href='#controlled_vocab_values.term'><text x='63' y='1597'>term</text><title>term varchar not null</title></a>
-  <use id='nn' x='47' y='1602' xlink:href='#nn'/><a xlink:href='#controlled_vocab_values.order_by'><text x='63' y='1612'>order_by</text><title>order_by varchar not null</title></a>
-  <a xlink:href='#controlled_vocab_values.default_item'><text x='63' y='1627'>default_item</text><title>default_item varchar</title></a>
+<text x='647' y='1630' transform='rotate(270 647,1630)' title='Foreign Key fk_term_ontology
+	term references ontology ( ontology_id )' style='fill:#a1a0a0;'>ontology_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 315 1725 L 315,1650' >
+	<title>Foreign Key fk_column_ontology
+	column_ontology references mixs_field_description ( column_name )</title>
+</path>
+<text x='317' y='1720' transform='rotate(270 317,1720)' title='Foreign Key fk_column_ontology
+	column_ontology references mixs_field_description ( column_name )' style='fill:#a1a0a0;'>column_name</text><!-- ============= Table 'controlled_vocab_values' ============= -->
+<rect class='table' x='45' y='1553' width='150' height='120' rx='7' ry='7' />
+<path d='M 45.50 1579.50 L 45.50 1560.50 Q 45.50 1553.50 52.50 1553.50 L 187.50 1553.50 Q 194.50 1553.50 194.50 1560.50 L 194.50 1579.50 L45.50 1579.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
+<a xlink:href='#controlled_vocab_values'><text x='53' y='1567' class='tableTitle'>controlled_vocab_values</text><title>Table qiita.controlled_vocab_values</title></a>
+  <use id='nn' x='47' y='1587' xlink:href='#nn'/><a xlink:href='#controlled_vocab_values.vocab_value_id'><use id='pk' x='47' y='1586' xlink:href='#pk'/><title>Primary Key  ( vocab_value_id ) </title></a>
+<a xlink:href='#controlled_vocab_values.vocab_value_id'><text x='63' y='1597'>vocab_value_id</text><title>vocab_value_id bigserial not null</title></a>
+  <use id='nn' x='47' y='1602' xlink:href='#nn'/><a xlink:href='#controlled_vocab_values.controlled_vocab_id'><use id='idx' x='47' y='1601' xlink:href='#idx'/><title>Index  ( controlled_vocab_id ) </title></a>
+<a xlink:href='#controlled_vocab_values.controlled_vocab_id'><text x='63' y='1612'>controlled_vocab_id</text><title>controlled_vocab_id bigint not null</title></a>
+<a xlink:href='#controlled_vocab_values.controlled_vocab_id'><use id='fk' x='183' y='1601' xlink:href='#fk'/><title>References controlled_vocabularies ( controlled_vocab_id ) </title></a>
+  <use id='nn' x='47' y='1617' xlink:href='#nn'/><a xlink:href='#controlled_vocab_values.term'><text x='63' y='1627'>term</text><title>term varchar not null</title></a>
+  <use id='nn' x='47' y='1632' xlink:href='#nn'/><a xlink:href='#controlled_vocab_values.order_by'><text x='63' y='1642'>order_by</text><title>order_by varchar not null</title></a>
+  <a xlink:href='#controlled_vocab_values.default_item'><text x='63' y='1657'>default_item</text><title>default_item varchar</title></a>
 
 <!-- ============= Table 'controlled_vocabularies' ============= -->
-<rect class='table' x='45' y='1313' width='150' height='75' rx='7' ry='7' />
-<path d='M 45.50 1339.50 L 45.50 1320.50 Q 45.50 1313.50 52.50 1313.50 L 187.50 1313.50 Q 194.50 1313.50 194.50 1320.50 L 194.50 1339.50 L45.50 1339.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
-<a xlink:href='#controlled_vocabularies'><text x='55' y='1327' class='tableTitle'>controlled_vocabularies</text><title>Table qiita.controlled_vocabularies</title></a>
-  <use id='nn' x='47' y='1347' xlink:href='#nn'/><a xlink:href='#controlled_vocabularies.controlled_vocab_id'><use id='pk' x='47' y='1346' xlink:href='#pk'/><title>Primary Key  ( controlled_vocab_id ) </title></a>
-<a xlink:href='#controlled_vocabularies.controlled_vocab_id'><text x='63' y='1357'>controlled_vocab_id</text><title>controlled_vocab_id bigserial not null</title></a>
-<a xlink:href='#controlled_vocabularies.controlled_vocab_id'><use id='ref' x='183' y='1346' xlink:href='#ref'/><title>Referred by column_controlled_vocabularies ( controlled_vocab_id ) 
+<rect class='table' x='45' y='1343' width='150' height='75' rx='7' ry='7' />
+<path d='M 45.50 1369.50 L 45.50 1350.50 Q 45.50 1343.50 52.50 1343.50 L 187.50 1343.50 Q 194.50 1343.50 194.50 1350.50 L 194.50 1369.50 L45.50 1369.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
+<a xlink:href='#controlled_vocabularies'><text x='55' y='1357' class='tableTitle'>controlled_vocabularies</text><title>Table qiita.controlled_vocabularies</title></a>
+  <use id='nn' x='47' y='1377' xlink:href='#nn'/><a xlink:href='#controlled_vocabularies.controlled_vocab_id'><use id='pk' x='47' y='1376' xlink:href='#pk'/><title>Primary Key  ( controlled_vocab_id ) </title></a>
+<a xlink:href='#controlled_vocabularies.controlled_vocab_id'><text x='63' y='1387'>controlled_vocab_id</text><title>controlled_vocab_id bigserial not null</title></a>
+<a xlink:href='#controlled_vocabularies.controlled_vocab_id'><use id='ref' x='183' y='1376' xlink:href='#ref'/><title>Referred by column_controlled_vocabularies ( controlled_vocab_id ) 
 Referred by controlled_vocab_values ( controlled_vocab_id ) </title></a>
-  <use id='nn' x='47' y='1362' xlink:href='#nn'/><a xlink:href='#controlled_vocabularies.vocab_name'><text x='63' y='1372'>vocab_name</text><title>vocab_name varchar not null</title></a>
+  <use id='nn' x='47' y='1392' xlink:href='#nn'/><a xlink:href='#controlled_vocabularies.vocab_name'><text x='63' y='1402'>vocab_name</text><title>vocab_name varchar not null</title></a>
 
 <!-- ============= Table 'severity' ============= -->
 <rect class='table' x='1500' y='1193' width='90' height='75' rx='7' ry='7' />
@@ -968,139 +890,46 @@ If a given analysis is not in child&#095;id&#044; it is the root of the chain&#0
 <a xlink:href='#analysis_sample.sample_id'><use id='fk' x='168' y='1211' xlink:href='#fk'/><title>References required_sample_info ( sample_id ) </title></a>
 
 <!-- ============= Table 'column_controlled_vocabularies' ============= -->
-<rect class='table' x='270' y='1313' width='195' height='75' rx='7' ry='7' />
-<path d='M 270.50 1339.50 L 270.50 1320.50 Q 270.50 1313.50 277.50 1313.50 L 457.50 1313.50 Q 464.50 1313.50 464.50 1320.50 L 464.50 1339.50 L270.50 1339.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
-<a xlink:href='#column_controlled_vocabularies'><text x='280' y='1327' class='tableTitle'>column_controlled_vocabularies</text><title>Table qiita.column_controlled_vocabularies
+<rect class='table' x='270' y='1343' width='195' height='75' rx='7' ry='7' />
+<path d='M 270.50 1369.50 L 270.50 1350.50 Q 270.50 1343.50 277.50 1343.50 L 457.50 1343.50 Q 464.50 1343.50 464.50 1350.50 L 464.50 1369.50 L270.50 1369.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
+<a xlink:href='#column_controlled_vocabularies'><text x='280' y='1357' class='tableTitle'>column_controlled_vocabularies</text><title>Table qiita.column_controlled_vocabularies
 Table relates a column with a controlled vocabulary&#046;</title></a>
-  <use id='nn' x='272' y='1347' xlink:href='#nn'/><a xlink:href='#column_controlled_vocabularies.controlled_vocab_id'><use id='pk' x='272' y='1346' xlink:href='#pk'/><title>Primary Key  ( controlled_vocab_id, column_name ) Index  ( controlled_vocab_id ) </title></a>
-<a xlink:href='#column_controlled_vocabularies.controlled_vocab_id'><text x='288' y='1357'>controlled_vocab_id</text><title>controlled_vocab_id bigserial not null</title></a>
-<a xlink:href='#column_controlled_vocabularies.controlled_vocab_id'><use id='fk' x='453' y='1346' xlink:href='#fk'/><title>References controlled_vocabularies ( controlled_vocab_id ) </title></a>
-  <use id='nn' x='272' y='1362' xlink:href='#nn'/><a xlink:href='#column_controlled_vocabularies.column_name'><use id='pk' x='272' y='1361' xlink:href='#pk'/><title>Primary Key  ( controlled_vocab_id, column_name ) Index  ( column_name ) </title></a>
-<a xlink:href='#column_controlled_vocabularies.column_name'><text x='288' y='1372'>column_name</text><title>column_name varchar not null</title></a>
-<a xlink:href='#column_controlled_vocabularies.column_name'><use id='fk' x='453' y='1361' xlink:href='#fk'/><title>References mixs_field_description ( column_name ) </title></a>
+  <use id='nn' x='272' y='1377' xlink:href='#nn'/><a xlink:href='#column_controlled_vocabularies.controlled_vocab_id'><use id='pk' x='272' y='1376' xlink:href='#pk'/><title>Primary Key  ( controlled_vocab_id, column_name ) Index  ( controlled_vocab_id ) </title></a>
+<a xlink:href='#column_controlled_vocabularies.controlled_vocab_id'><text x='288' y='1387'>controlled_vocab_id</text><title>controlled_vocab_id bigserial not null</title></a>
+<a xlink:href='#column_controlled_vocabularies.controlled_vocab_id'><use id='fk' x='453' y='1376' xlink:href='#fk'/><title>References controlled_vocabularies ( controlled_vocab_id ) </title></a>
+  <use id='nn' x='272' y='1392' xlink:href='#nn'/><a xlink:href='#column_controlled_vocabularies.column_name'><use id='pk' x='272' y='1391' xlink:href='#pk'/><title>Primary Key  ( controlled_vocab_id, column_name ) Index  ( column_name ) </title></a>
+<a xlink:href='#column_controlled_vocabularies.column_name'><text x='288' y='1402'>column_name</text><title>column_name varchar not null</title></a>
+<a xlink:href='#column_controlled_vocabularies.column_name'><use id='fk' x='453' y='1391' xlink:href='#fk'/><title>References mixs_field_description ( column_name ) </title></a>
 
 <!-- ============= Table 'mixs_field_description' ============= -->
-<rect class='table' x='300' y='1478' width='135' height='135' rx='7' ry='7' />
-<path d='M 300.50 1504.50 L 300.50 1485.50 Q 300.50 1478.50 307.50 1478.50 L 427.50 1478.50 Q 434.50 1478.50 434.50 1485.50 L 434.50 1504.50 L300.50 1504.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
-<a xlink:href='#mixs_field_description'><text x='306' y='1492' class='tableTitle'>mixs_field_description</text><title>Table qiita.mixs_field_description</title></a>
-  <use id='nn' x='302' y='1512' xlink:href='#nn'/><a xlink:href='#mixs_field_description.column_name'><use id='pk' x='302' y='1511' xlink:href='#pk'/><title>Primary Key  ( column_name ) </title></a>
-<a xlink:href='#mixs_field_description.column_name'><text x='318' y='1522'>column_name</text><title>column_name varchar not null</title></a>
-<a xlink:href='#mixs_field_description.column_name'><use id='ref' x='423' y='1511' xlink:href='#ref'/><title>Referred by column_controlled_vocabularies ( column_name ) 
+<rect class='table' x='300' y='1508' width='135' height='135' rx='7' ry='7' />
+<path d='M 300.50 1534.50 L 300.50 1515.50 Q 300.50 1508.50 307.50 1508.50 L 427.50 1508.50 Q 434.50 1508.50 434.50 1515.50 L 434.50 1534.50 L300.50 1534.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
+<a xlink:href='#mixs_field_description'><text x='306' y='1522' class='tableTitle'>mixs_field_description</text><title>Table qiita.mixs_field_description</title></a>
+  <use id='nn' x='302' y='1542' xlink:href='#nn'/><a xlink:href='#mixs_field_description.column_name'><use id='pk' x='302' y='1541' xlink:href='#pk'/><title>Primary Key  ( column_name ) </title></a>
+<a xlink:href='#mixs_field_description.column_name'><text x='318' y='1552'>column_name</text><title>column_name varchar not null</title></a>
+<a xlink:href='#mixs_field_description.column_name'><use id='ref' x='423' y='1541' xlink:href='#ref'/><title>Referred by column_controlled_vocabularies ( column_name ) 
 Referred by column_ontology ( column_name ) </title></a>
-  <use id='nn' x='302' y='1527' xlink:href='#nn'/><a xlink:href='#mixs_field_description.data_type'><text x='318' y='1537'>data_type</text><title>data_type varchar not null</title></a>
-  <use id='nn' x='302' y='1542' xlink:href='#nn'/><a xlink:href='#mixs_field_description.desc_or_value'><text x='318' y='1552'>desc_or_value</text><title>desc_or_value varchar not null</title></a>
-  <use id='nn' x='302' y='1557' xlink:href='#nn'/><a xlink:href='#mixs_field_description.definition'><text x='318' y='1567'>definition</text><title>definition varchar not null</title></a>
-  <a xlink:href='#mixs_field_description.min_length'><text x='318' y='1582'>min_length</text><title>min_length integer</title></a>
-  <use id='nn' x='302' y='1587' xlink:href='#nn'/><a xlink:href='#mixs_field_description.active'><text x='318' y='1597'>active</text><title>active integer not null</title></a>
-
-<!-- ============= Table 'column_ontology' ============= -->
-<rect class='table' x='285' y='1703' width='150' height='105' rx='7' ry='7' />
-<path d='M 285.50 1729.50 L 285.50 1710.50 Q 285.50 1703.50 292.50 1703.50 L 427.50 1703.50 Q 434.50 1703.50 434.50 1710.50 L 434.50 1729.50 L285.50 1729.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
-<a xlink:href='#column_ontology'><text x='313' y='1717' class='tableTitle'>column_ontology</text><title>Table qiita.column_ontology
-This table relates a column with an ontology&#046;</title></a>
-  <use id='nn' x='287' y='1737' xlink:href='#nn'/><a xlink:href='#column_ontology.column_name'><use id='pk' x='287' y='1736' xlink:href='#pk'/><title>Primary Key  ( column_name, ontology_short_name ) Index  ( column_name ) </title></a>
-<a xlink:href='#column_ontology.column_name'><text x='303' y='1747'>column_name</text><title>column_name varchar not null</title></a>
-<a xlink:href='#column_ontology.column_name'><use id='fk' x='423' y='1736' xlink:href='#fk'/><title>References mixs_field_description ( column_name ) </title></a>
-  <use id='nn' x='287' y='1752' xlink:href='#nn'/><a xlink:href='#column_ontology.ontology_short_name'><use id='pk' x='287' y='1751' xlink:href='#pk'/><title>Primary Key  ( column_name, ontology_short_name ) </title></a>
-<a xlink:href='#column_ontology.ontology_short_name'><text x='303' y='1762'>ontology_short_name</text><title>ontology_short_name varchar not null</title></a>
-  <use id='nn' x='287' y='1767' xlink:href='#nn'/><a xlink:href='#column_ontology.bioportal_id'><text x='303' y='1777'>bioportal_id</text><title>bioportal_id integer not null</title></a>
-  <use id='nn' x='287' y='1782' xlink:href='#nn'/><a xlink:href='#column_ontology.ontology_branch_id'><text x='303' y='1792'>ontology_branch_id</text><title>ontology_branch_id integer not null</title></a>
-
-<!-- ============= Table 'term_relationship' ============= -->
-<rect class='table' x='525' y='1508' width='150' height='120' rx='7' ry='7' />
-<path d='M 525.50 1534.50 L 525.50 1515.50 Q 525.50 1508.50 532.50 1508.50 L 667.50 1508.50 Q 674.50 1508.50 674.50 1515.50 L 674.50 1534.50 L525.50 1534.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
-<a xlink:href='#term_relationship'><text x='552' y='1522' class='tableTitle'>term_relationship</text><title>Table qiita.term_relationship</title></a>
-  <use id='nn' x='527' y='1542' xlink:href='#nn'/><a xlink:href='#term_relationship.term_relationship_id'><use id='pk' x='527' y='1541' xlink:href='#pk'/><title>Primary Key  ( term_relationship_id ) </title></a>
-<a xlink:href='#term_relationship.term_relationship_id'><text x='543' y='1552'>term_relationship_id</text><title>term_relationship_id bigserial not null</title></a>
-  <use id='nn' x='527' y='1557' xlink:href='#nn'/><a xlink:href='#term_relationship.subject_term_id'><use id='idx' x='527' y='1556' xlink:href='#idx'/><title>Index  ( subject_term_id ) </title></a>
-<a xlink:href='#term_relationship.subject_term_id'><text x='543' y='1567'>subject_term_id</text><title>subject_term_id bigint not null</title></a>
-<a xlink:href='#term_relationship.subject_term_id'><use id='fk' x='663' y='1556' xlink:href='#fk'/><title>References term ( subject_term_id -> term_id ) </title></a>
-  <use id='nn' x='527' y='1572' xlink:href='#nn'/><a xlink:href='#term_relationship.predicate_term_id'><use id='idx' x='527' y='1571' xlink:href='#idx'/><title>Index  ( predicate_term_id ) </title></a>
-<a xlink:href='#term_relationship.predicate_term_id'><text x='543' y='1582'>predicate_term_id</text><title>predicate_term_id bigint not null</title></a>
-<a xlink:href='#term_relationship.predicate_term_id'><use id='fk' x='663' y='1571' xlink:href='#fk'/><title>References term ( predicate_term_id -> term_id ) </title></a>
-  <use id='nn' x='527' y='1587' xlink:href='#nn'/><a xlink:href='#term_relationship.object_term_id'><use id='idx' x='527' y='1586' xlink:href='#idx'/><title>Index  ( object_term_id ) </title></a>
-<a xlink:href='#term_relationship.object_term_id'><text x='543' y='1597'>object_term_id</text><title>object_term_id bigint not null</title></a>
-<a xlink:href='#term_relationship.object_term_id'><use id='fk' x='663' y='1586' xlink:href='#fk'/><title>References term ( object_term_id -> term_id ) </title></a>
-  <use id='nn' x='527' y='1602' xlink:href='#nn'/><a xlink:href='#term_relationship.ontology_id'><use id='idx' x='527' y='1601' xlink:href='#idx'/><title>Index  ( ontology_id ) </title></a>
-<a xlink:href='#term_relationship.ontology_id'><text x='543' y='1612'>ontology_id</text><title>ontology_id bigint not null</title></a>
-<a xlink:href='#term_relationship.ontology_id'><use id='fk' x='663' y='1601' xlink:href='#fk'/><title>References ontology ( ontology_id ) </title></a>
-
-<!-- ============= Table 'term_path' ============= -->
-<rect class='table' x='990' y='1313' width='150' height='150' rx='7' ry='7' />
-<path d='M 990.50 1339.50 L 990.50 1320.50 Q 990.50 1313.50 997.50 1313.50 L 1132.50 1313.50 Q 1139.50 1313.50 1139.50 1320.50 L 1139.50 1339.50 L990.50 1339.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
-<a xlink:href='#term_path'><text x='1037' y='1327' class='tableTitle'>term_path</text><title>Table qiita.term_path</title></a>
-  <use id='nn' x='992' y='1347' xlink:href='#nn'/><a xlink:href='#term_path.term_path_id'><use id='pk' x='992' y='1346' xlink:href='#pk'/><title>Primary Key  ( term_path_id ) </title></a>
-<a xlink:href='#term_path.term_path_id'><text x='1008' y='1357'>term_path_id</text><title>term_path_id bigserial not null</title></a>
-  <use id='nn' x='992' y='1362' xlink:href='#nn'/><a xlink:href='#term_path.subject_term_id'><use id='idx' x='992' y='1361' xlink:href='#idx'/><title>Index  ( subject_term_id ) </title></a>
-<a xlink:href='#term_path.subject_term_id'><text x='1008' y='1372'>subject_term_id</text><title>subject_term_id bigint not null</title></a>
-<a xlink:href='#term_path.subject_term_id'><use id='fk' x='1128' y='1361' xlink:href='#fk'/><title>References term ( subject_term_id -> term_id ) </title></a>
-  <use id='nn' x='992' y='1377' xlink:href='#nn'/><a xlink:href='#term_path.predicate_term_id'><use id='idx' x='992' y='1376' xlink:href='#idx'/><title>Index  ( predicate_term_id ) </title></a>
-<a xlink:href='#term_path.predicate_term_id'><text x='1008' y='1387'>predicate_term_id</text><title>predicate_term_id bigint not null</title></a>
-<a xlink:href='#term_path.predicate_term_id'><use id='fk' x='1128' y='1376' xlink:href='#fk'/><title>References term ( predicate_term_id -> term_id ) </title></a>
-  <use id='nn' x='992' y='1392' xlink:href='#nn'/><a xlink:href='#term_path.object_term_id'><use id='idx' x='992' y='1391' xlink:href='#idx'/><title>Index  ( object_term_id ) </title></a>
-<a xlink:href='#term_path.object_term_id'><text x='1008' y='1402'>object_term_id</text><title>object_term_id bigint not null</title></a>
-<a xlink:href='#term_path.object_term_id'><use id='fk' x='1128' y='1391' xlink:href='#fk'/><title>References term ( object_term_id -> term_id ) </title></a>
-  <use id='nn' x='992' y='1407' xlink:href='#nn'/><a xlink:href='#term_path.ontology_id'><use id='idx' x='992' y='1406' xlink:href='#idx'/><title>Index  ( ontology_id ) </title></a>
-<a xlink:href='#term_path.ontology_id'><text x='1008' y='1417'>ontology_id</text><title>ontology_id bigint not null</title></a>
-<a xlink:href='#term_path.ontology_id'><use id='fk' x='1128' y='1406' xlink:href='#fk'/><title>References ontology ( ontology_id ) </title></a>
-  <use id='nn' x='992' y='1422' xlink:href='#nn'/><a xlink:href='#term_path.relationship_type_id'><use id='idx' x='992' y='1421' xlink:href='#idx'/><title>Index  ( relationship_type_id ) </title></a>
-<a xlink:href='#term_path.relationship_type_id'><text x='1008' y='1432'>relationship_type_id</text><title>relationship_type_id integer not null</title></a>
-<a xlink:href='#term_path.relationship_type_id'><use id='fk' x='1128' y='1421' xlink:href='#fk'/><title>References relationship_type ( relationship_type_id ) </title></a>
-  <a xlink:href='#term_path.distance'><text x='1008' y='1447'>distance</text><title>distance integer</title></a>
+  <use id='nn' x='302' y='1557' xlink:href='#nn'/><a xlink:href='#mixs_field_description.data_type'><text x='318' y='1567'>data_type</text><title>data_type varchar not null</title></a>
+  <use id='nn' x='302' y='1572' xlink:href='#nn'/><a xlink:href='#mixs_field_description.desc_or_value'><text x='318' y='1582'>desc_or_value</text><title>desc_or_value varchar not null</title></a>
+  <use id='nn' x='302' y='1587' xlink:href='#nn'/><a xlink:href='#mixs_field_description.definition'><text x='318' y='1597'>definition</text><title>definition varchar not null</title></a>
+  <a xlink:href='#mixs_field_description.min_length'><text x='318' y='1612'>min_length</text><title>min_length integer</title></a>
+  <use id='nn' x='302' y='1617' xlink:href='#nn'/><a xlink:href='#mixs_field_description.active'><text x='318' y='1627'>active</text><title>active integer not null</title></a>
 
 <!-- ============= Table 'ontology' ============= -->
-<rect class='table' x='765' y='1313' width='105' height='180' rx='7' ry='7' />
-<path d='M 765.50 1339.50 L 765.50 1320.50 Q 765.50 1313.50 772.50 1313.50 L 862.50 1313.50 Q 869.50 1313.50 869.50 1320.50 L 869.50 1339.50 L765.50 1339.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
-<a xlink:href='#ontology'><text x='793' y='1327' class='tableTitle'>ontology</text><title>Table qiita.ontology</title></a>
-  <use id='nn' x='767' y='1347' xlink:href='#nn'/><a xlink:href='#ontology.ontology_id'><use id='pk' x='767' y='1346' xlink:href='#pk'/><title>Primary Key  ( ontology_id ) </title></a>
-<a xlink:href='#ontology.ontology_id'><text x='783' y='1357'>ontology_id</text><title>ontology_id bigserial not null</title></a>
-<a xlink:href='#ontology.ontology_id'><use id='ref' x='858' y='1346' xlink:href='#ref'/><title>Referred by term ( ontology_id ) 
-Referred by term_path ( ontology_id ) 
-Referred by term_relationship ( ontology_id ) </title></a>
-  <use id='nn' x='767' y='1362' xlink:href='#nn'/><a xlink:href='#ontology.shortname'><text x='783' y='1372'>shortname</text><title>shortname varchar not null</title></a>
-  <use id='nn' x='767' y='1377' xlink:href='#nn'/><a xlink:href='#ontology.fully_loaded'><text x='783' y='1387'>fully_loaded</text><title>fully_loaded bool not null</title></a>
-  <a xlink:href='#ontology.fullname'><text x='783' y='1402'>fullname</text><title>fullname varchar</title></a>
-  <a xlink:href='#ontology.query_url'><text x='783' y='1417'>query_url</text><title>query_url varchar</title></a>
-  <a xlink:href='#ontology.source_url'><text x='783' y='1432'>source_url</text><title>source_url varchar</title></a>
-  <a xlink:href='#ontology.definition'><text x='783' y='1447'>definition</text><title>definition text</title></a>
-  <use id='nn' x='767' y='1452' xlink:href='#nn'/><a xlink:href='#ontology.load_date'><text x='783' y='1462'>load_date</text><title>load_date date not null</title></a>
-  <a xlink:href='#ontology.version'><text x='783' y='1477'>version</text><title>version varchar</title></a>
-
-<!-- ============= Table 'annotation' ============= -->
-<rect class='table' x='960' y='1853' width='165' height='120' rx='7' ry='7' />
-<path d='M 960.50 1879.50 L 960.50 1860.50 Q 960.50 1853.50 967.50 1853.50 L 1117.50 1853.50 Q 1124.50 1853.50 1124.50 1860.50 L 1124.50 1879.50 L960.50 1879.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
-<a xlink:href='#annotation'><text x='1013' y='1867' class='tableTitle'>annotation</text><title>Table qiita.annotation</title></a>
-  <use id='nn' x='962' y='1887' xlink:href='#nn'/><a xlink:href='#annotation.annotation_id'><use id='pk' x='962' y='1886' xlink:href='#pk'/><title>Primary Key  ( annotation_id ) </title></a>
-<a xlink:href='#annotation.annotation_id'><text x='978' y='1897'>annotation_id</text><title>annotation_id bigserial not null</title></a>
-  <use id='nn' x='962' y='1902' xlink:href='#nn'/><a xlink:href='#annotation.term_id'><use id='idx' x='962' y='1901' xlink:href='#idx'/><title>Index  ( term_id ) </title></a>
-<a xlink:href='#annotation.term_id'><text x='978' y='1912'>term_id</text><title>term_id bigint not null</title></a>
-<a xlink:href='#annotation.term_id'><use id='fk' x='1113' y='1901' xlink:href='#fk'/><title>References term ( term_id ) </title></a>
-  <use id='nn' x='962' y='1917' xlink:href='#nn'/><a xlink:href='#annotation.annotation_name'><text x='978' y='1927'>annotation_name</text><title>annotation_name varchar not null</title></a>
-  <a xlink:href='#annotation.annotation_num_value'><text x='978' y='1942'>annotation_num_value</text><title>annotation_num_value bigint</title></a>
-  <a xlink:href='#annotation.annotation_str_value'><text x='978' y='1957'>annotation_str_value</text><title>annotation_str_value varchar</title></a>
-
-<!-- ============= Table 'dbxref' ============= -->
-<rect class='table' x='795' y='1838' width='90' height='135' rx='7' ry='7' />
-<path d='M 795.50 1864.50 L 795.50 1845.50 Q 795.50 1838.50 802.50 1838.50 L 877.50 1838.50 Q 884.50 1838.50 884.50 1845.50 L 884.50 1864.50 L795.50 1864.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
-<a xlink:href='#dbxref'><text x='822' y='1852' class='tableTitle'>dbxref</text><title>Table qiita.dbxref</title></a>
-  <use id='nn' x='797' y='1872' xlink:href='#nn'/><a xlink:href='#dbxref.dbxref_id'><use id='pk' x='797' y='1871' xlink:href='#pk'/><title>Primary Key  ( dbxref_id ) </title></a>
-<a xlink:href='#dbxref.dbxref_id'><text x='813' y='1882'>dbxref_id</text><title>dbxref_id bigserial not null</title></a>
-  <use id='nn' x='797' y='1887' xlink:href='#nn'/><a xlink:href='#dbxref.term_id'><use id='idx' x='797' y='1886' xlink:href='#idx'/><title>Index  ( term_id ) </title></a>
-<a xlink:href='#dbxref.term_id'><text x='813' y='1897'>term_id</text><title>term_id bigint not null</title></a>
-<a xlink:href='#dbxref.term_id'><use id='fk' x='873' y='1886' xlink:href='#fk'/><title>References term ( term_id ) </title></a>
-  <use id='nn' x='797' y='1902' xlink:href='#nn'/><a xlink:href='#dbxref.dbname'><text x='813' y='1912'>dbname</text><title>dbname varchar not null</title></a>
-  <use id='nn' x='797' y='1917' xlink:href='#nn'/><a xlink:href='#dbxref.accession'><text x='813' y='1927'>accession</text><title>accession varchar not null</title></a>
-  <use id='nn' x='797' y='1932' xlink:href='#nn'/><a xlink:href='#dbxref.description'><text x='813' y='1942'>description</text><title>description varchar not null</title></a>
-  <use id='nn' x='797' y='1947' xlink:href='#nn'/><a xlink:href='#dbxref.xref_type'><text x='813' y='1957'>xref_type</text><title>xref_type varchar not null</title></a>
-
-<!-- ============= Table 'relationship_type' ============= -->
-<rect class='table' x='975' y='1658' width='150' height='75' rx='7' ry='7' />
-<path d='M 975.50 1684.50 L 975.50 1665.50 Q 975.50 1658.50 982.50 1658.50 L 1117.50 1658.50 Q 1124.50 1658.50 1124.50 1665.50 L 1124.50 1684.50 L975.50 1684.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
-<a xlink:href='#relationship_type'><text x='1003' y='1672' class='tableTitle'>relationship_type</text><title>Table qiita.relationship_type</title></a>
-  <use id='nn' x='977' y='1692' xlink:href='#nn'/><a xlink:href='#relationship_type.relationship_type_id'><use id='pk' x='977' y='1691' xlink:href='#pk'/><title>Primary Key  ( relationship_type_id ) </title></a>
-<a xlink:href='#relationship_type.relationship_type_id'><text x='993' y='1702'>relationship_type_id</text><title>relationship_type_id bigserial not null</title></a>
-<a xlink:href='#relationship_type.relationship_type_id'><use id='ref' x='1113' y='1691' xlink:href='#ref'/><title>Referred by term_path ( relationship_type_id ) </title></a>
-  <use id='nn' x='977' y='1707' xlink:href='#nn'/><a xlink:href='#relationship_type.relationship_type'><text x='993' y='1717'>relationship_type</text><title>relationship_type varchar not null</title></a>
+<rect class='table' x='600' y='1343' width='105' height='180' rx='7' ry='7' />
+<path d='M 600.50 1369.50 L 600.50 1350.50 Q 600.50 1343.50 607.50 1343.50 L 697.50 1343.50 Q 704.50 1343.50 704.50 1350.50 L 704.50 1369.50 L600.50 1369.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
+<a xlink:href='#ontology'><text x='628' y='1357' class='tableTitle'>ontology</text><title>Table qiita.ontology</title></a>
+  <use id='nn' x='602' y='1377' xlink:href='#nn'/><a xlink:href='#ontology.ontology_id'><use id='pk' x='602' y='1376' xlink:href='#pk'/><title>Primary Key  ( ontology_id ) </title></a>
+<a xlink:href='#ontology.ontology_id'><text x='618' y='1387'>ontology_id</text><title>ontology_id bigserial not null</title></a>
+<a xlink:href='#ontology.ontology_id'><use id='ref' x='693' y='1376' xlink:href='#ref'/><title>Referred by term ( ontology_id ) </title></a>
+  <use id='nn' x='602' y='1392' xlink:href='#nn'/><a xlink:href='#ontology.shortname'><text x='618' y='1402'>shortname</text><title>shortname varchar not null</title></a>
+  <use id='nn' x='602' y='1407' xlink:href='#nn'/><a xlink:href='#ontology.fully_loaded'><text x='618' y='1417'>fully_loaded</text><title>fully_loaded bool not null</title></a>
+  <a xlink:href='#ontology.fullname'><text x='618' y='1432'>fullname</text><title>fullname varchar</title></a>
+  <a xlink:href='#ontology.query_url'><text x='618' y='1447'>query_url</text><title>query_url varchar</title></a>
+  <a xlink:href='#ontology.source_url'><text x='618' y='1462'>source_url</text><title>source_url varchar</title></a>
+  <a xlink:href='#ontology.definition'><text x='618' y='1477'>definition</text><title>definition text</title></a>
+  <use id='nn' x='602' y='1482' xlink:href='#nn'/><a xlink:href='#ontology.load_date'><text x='618' y='1492'>load_date</text><title>load_date date not null</title></a>
+  <a xlink:href='#ontology.version'><text x='618' y='1507'>version</text><title>version varchar</title></a>
 
 <!-- ============= Table 'analysis_users' ============= -->
 <rect class='table' x='60' y='713' width='90' height='75' rx='7' ry='7' />
@@ -1695,86 +1524,36 @@ Stores what step in&#095;production analyses are on&#046;</title></a>
   <use id='nn' x='392' y='672' xlink:href='#nn'/><a xlink:href='#analysis_workflow.step'><text x='408' y='682'>step</text><title>step integer not null</title></a>
 
 <!-- ============= Table 'term' ============= -->
-<rect class='table' x='795' y='1613' width='105' height='180' rx='7' ry='7' />
-<path d='M 795.50 1639.50 L 795.50 1620.50 Q 795.50 1613.50 802.50 1613.50 L 892.50 1613.50 Q 899.50 1613.50 899.50 1620.50 L 899.50 1639.50 L795.50 1639.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
-<a xlink:href='#term'><text x='835' y='1627' class='tableTitle'>term</text><title>Table qiita.term</title></a>
-  <use id='nn' x='797' y='1647' xlink:href='#nn'/><a xlink:href='#term.term_id'><use id='pk' x='797' y='1646' xlink:href='#pk'/><title>Primary Key  ( term_id ) </title></a>
-<a xlink:href='#term.term_id'><text x='813' y='1657'>term_id</text><title>term_id bigserial not null</title></a>
-<a xlink:href='#term.term_id'><use id='ref' x='888' y='1646' xlink:href='#ref'/><title>Referred by annotation ( term_id ) 
-Referred by dbxref ( term_id ) 
-Referred by term_path ( subject_term_id -> term_id ) 
-Referred by term_path ( predicate_term_id -> term_id ) 
-Referred by term_path ( object_term_id -> term_id ) 
-Referred by term_relationship ( subject_term_id -> term_id ) 
-Referred by term_relationship ( predicate_term_id -> term_id ) 
-Referred by term_relationship ( object_term_id -> term_id ) 
-Referred by term_synonym ( term_id ) 
-Referred by term_synonym ( synonym_id -> term_id ) </title></a>
-  <use id='nn' x='797' y='1662' xlink:href='#nn'/><a xlink:href='#term.ontology_id'><use id='idx' x='797' y='1661' xlink:href='#idx'/><title>Index  ( ontology_id ) </title></a>
-<a xlink:href='#term.ontology_id'><text x='813' y='1672'>ontology_id</text><title>ontology_id bigint not null</title></a>
-<a xlink:href='#term.ontology_id'><use id='fk' x='888' y='1661' xlink:href='#fk'/><title>References ontology ( ontology_id ) </title></a>
-  <use id='nn' x='797' y='1677' xlink:href='#nn'/><a xlink:href='#term.term_name'><text x='813' y='1687'>term_name</text><title>term_name varchar not null</title></a>
-  <a xlink:href='#term.identifier'><text x='813' y='1702'>identifier</text><title>identifier varchar</title></a>
-  <a xlink:href='#term.definition'><text x='813' y='1717'>definition</text><title>definition varchar</title></a>
-  <a xlink:href='#term.namespace'><text x='813' y='1732'>namespace</text><title>namespace varchar</title></a>
-  <use id='nn' x='797' y='1737' xlink:href='#nn'/><a xlink:href='#term.is_obsolete'><text x='813' y='1747'>is_obsolete</text><title>is_obsolete bool not null default &#039;false&#039;</title></a>
-  <use id='nn' x='797' y='1752' xlink:href='#nn'/><a xlink:href='#term.is_root_term'><text x='813' y='1762'>is_root_term</text><title>is_root_term bool not null</title></a>
-  <use id='nn' x='797' y='1767' xlink:href='#nn'/><a xlink:href='#term.is_leaf'><text x='813' y='1777'>is_leaf</text><title>is_leaf bool not null</title></a>
+<rect class='table' x='630' y='1643' width='105' height='180' rx='7' ry='7' />
+<path d='M 630.50 1669.50 L 630.50 1650.50 Q 630.50 1643.50 637.50 1643.50 L 727.50 1643.50 Q 734.50 1643.50 734.50 1650.50 L 734.50 1669.50 L630.50 1669.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
+<a xlink:href='#term'><text x='670' y='1657' class='tableTitle'>term</text><title>Table qiita.term</title></a>
+  <use id='nn' x='632' y='1677' xlink:href='#nn'/><a xlink:href='#term.term_id'><use id='pk' x='632' y='1676' xlink:href='#pk'/><title>Primary Key  ( term_id ) </title></a>
+<a xlink:href='#term.term_id'><text x='648' y='1687'>term_id</text><title>term_id bigserial not null</title></a>
+  <use id='nn' x='632' y='1692' xlink:href='#nn'/><a xlink:href='#term.ontology_id'><use id='idx' x='632' y='1691' xlink:href='#idx'/><title>Index  ( ontology_id ) </title></a>
+<a xlink:href='#term.ontology_id'><text x='648' y='1702'>ontology_id</text><title>ontology_id bigint not null</title></a>
+<a xlink:href='#term.ontology_id'><use id='fk' x='723' y='1691' xlink:href='#fk'/><title>References ontology ( ontology_id ) </title></a>
+  <use id='nn' x='632' y='1707' xlink:href='#nn'/><a xlink:href='#term.term_name'><text x='648' y='1717'>term_name</text><title>term_name varchar not null</title></a>
+  <a xlink:href='#term.identifier'><text x='648' y='1732'>identifier</text><title>identifier varchar</title></a>
+  <a xlink:href='#term.definition'><text x='648' y='1747'>definition</text><title>definition varchar</title></a>
+  <a xlink:href='#term.namespace'><text x='648' y='1762'>namespace</text><title>namespace varchar</title></a>
+  <a xlink:href='#term.is_obsolete'><text x='648' y='1777'>is_obsolete</text><title>is_obsolete bool default &#039;false&#039;</title></a>
+  <a xlink:href='#term.is_root_term'><text x='648' y='1792'>is_root_term</text><title>is_root_term bool</title></a>
+  <a xlink:href='#term.is_leaf'><text x='648' y='1807'>is_leaf</text><title>is_leaf bool</title></a>
+
+<!-- ============= Table 'column_ontology' ============= -->
+<rect class='table' x='285' y='1733' width='150' height='105' rx='7' ry='7' />
+<path d='M 285.50 1759.50 L 285.50 1740.50 Q 285.50 1733.50 292.50 1733.50 L 427.50 1733.50 Q 434.50 1733.50 434.50 1740.50 L 434.50 1759.50 L285.50 1759.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
+<a xlink:href='#column_ontology'><text x='313' y='1747' class='tableTitle'>column_ontology</text><title>Table qiita.column_ontology
+This table relates a column with an ontology&#046;</title></a>
+  <use id='nn' x='287' y='1767' xlink:href='#nn'/><a xlink:href='#column_ontology.column_name'><use id='pk' x='287' y='1766' xlink:href='#pk'/><title>Primary Key  ( column_name, ontology_short_name ) Index  ( column_name ) </title></a>
+<a xlink:href='#column_ontology.column_name'><text x='303' y='1777'>column_name</text><title>column_name varchar not null</title></a>
+<a xlink:href='#column_ontology.column_name'><use id='fk' x='423' y='1766' xlink:href='#fk'/><title>References mixs_field_description ( column_name ) </title></a>
+  <use id='nn' x='287' y='1782' xlink:href='#nn'/><a xlink:href='#column_ontology.ontology_short_name'><use id='pk' x='287' y='1781' xlink:href='#pk'/><title>Primary Key  ( column_name, ontology_short_name ) </title></a>
+<a xlink:href='#column_ontology.ontology_short_name'><text x='303' y='1792'>ontology_short_name</text><title>ontology_short_name varchar not null</title></a>
+  <use id='nn' x='287' y='1797' xlink:href='#nn'/><a xlink:href='#column_ontology.bioportal_id'><text x='303' y='1807'>bioportal_id</text><title>bioportal_id integer not null</title></a>
+  <a xlink:href='#column_ontology.ontology_branch_id'><text x='303' y='1822'>ontology_branch_id</text><title>ontology_branch_id varchar</title></a>
 
 </g></svg>
-
-<br/><br/>
-<table class='bordered'>
-<thead>
-<tr><th colspan='4'><a name='term_synonym'>Table term_synonym</a></th></tr>
-</thead>
-<tbody>
-	<tr>
-		<td>*</td>
-		<td><a name='term_synonym.synonym_id'>synonym&#095;id</a></td>
-		<td> bigserial   </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>*</td>
-		<td><a name='term_synonym.term_id'>term&#095;id</a></td>
-		<td> bigint   </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>*</td>
-		<td><a name='term_synonym.synonym_value'>synonym&#095;value</a></td>
-		<td> varchar   </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>*</td>
-		<td><a name='term_synonym.synonym_type_id'>synonym&#095;type&#095;id</a></td>
-		<td> bigint   </td>
-		<td>  </td>
-	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>pk&#095;term&#095;synonym</td>
-		<td> ON synonym&#095;id</td>
-		<td>  </td>
-	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;term&#095;synonym</td>
-		<td> ON term&#095;id</td>
-		<td>  </td>
-	</tr>
-<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
-	<tr>
-		<td>&nbsp;</td><td>fk_term_synonym_term</td>
-		<td > ( term&#095;id ) ref <a href='#term'>term</a> (term&#095;id) </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>&nbsp;</td><td>fk_term_synonym_type_term</td>
-		<td > ( synonym&#095;id ) ref <a href='#term'>term</a> (term&#095;id) </td>
-		<td>  </td>
-	</tr>
-</tbody>
-</table>
 
 <br/><br/>
 <table class='bordered'>
@@ -2631,238 +2410,6 @@ If a given analysis is not in child&#095;id&#044; it is the root of the chain&#0
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='column_ontology'>Table column_ontology</a></th></tr>
-<tr><td colspan='3'>This table relates a column with an ontology&#046; </td></tr>
-</thead>
-<tbody>
-	<tr>
-		<td>*</td>
-		<td><a name='column_ontology.column_name'>column&#095;name</a></td>
-		<td> varchar   </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>*</td>
-		<td><a name='column_ontology.ontology_short_name'>ontology&#095;short&#095;name</a></td>
-		<td> varchar   </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>*</td>
-		<td><a name='column_ontology.bioportal_id'>bioportal&#095;id</a></td>
-		<td> integer   </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>*</td>
-		<td><a name='column_ontology.ontology_branch_id'>ontology&#095;branch&#095;id</a></td>
-		<td> integer   </td>
-		<td>  </td>
-	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>idx&#095;column&#095;ontology</td>
-		<td> ON column&#095;name&#044; ontology&#095;short&#095;name</td>
-		<td>  </td>
-	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;column&#095;ontology&#095;0</td>
-		<td> ON column&#095;name</td>
-		<td>  </td>
-	</tr>
-<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
-	<tr>
-		<td>&nbsp;</td><td>fk_column_ontology</td>
-		<td > ( column&#095;name ) ref <a href='#mixs&#095;field&#095;description'>mixs&#095;field&#095;description</a> (column&#095;name) </td>
-		<td>  </td>
-	</tr>
-</tbody>
-</table>
-
-<br/><br/>
-<table class='bordered'>
-<thead>
-<tr><th colspan='4'><a name='term_relationship'>Table term_relationship</a></th></tr>
-</thead>
-<tbody>
-	<tr>
-		<td>*</td>
-		<td><a name='term_relationship.term_relationship_id'>term&#095;relationship&#095;id</a></td>
-		<td> bigserial   </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>*</td>
-		<td><a name='term_relationship.subject_term_id'>subject&#095;term&#095;id</a></td>
-		<td> bigint   </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>*</td>
-		<td><a name='term_relationship.predicate_term_id'>predicate&#095;term&#095;id</a></td>
-		<td> bigint   </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>*</td>
-		<td><a name='term_relationship.object_term_id'>object&#095;term&#095;id</a></td>
-		<td> bigint   </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>*</td>
-		<td><a name='term_relationship.ontology_id'>ontology&#095;id</a></td>
-		<td> bigint   </td>
-		<td>  </td>
-	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>pk&#095;term&#095;relationship</td>
-		<td> ON term&#095;relationship&#095;id</td>
-		<td>  </td>
-	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;term&#095;relationship&#095;subject</td>
-		<td> ON subject&#095;term&#095;id</td>
-		<td>  </td>
-	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;term&#095;relationship&#095;predicate</td>
-		<td> ON predicate&#095;term&#095;id</td>
-		<td>  </td>
-	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;term&#095;relationship&#095;object</td>
-		<td> ON object&#095;term&#095;id</td>
-		<td>  </td>
-	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;term&#095;relationship&#095;ontology</td>
-		<td> ON ontology&#095;id</td>
-		<td>  </td>
-	</tr>
-<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
-	<tr>
-		<td>&nbsp;</td><td>fk_term_relationship_subj_term</td>
-		<td > ( subject&#095;term&#095;id ) ref <a href='#term'>term</a> (term&#095;id) </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>&nbsp;</td><td>fk_term_relationship_pred_term</td>
-		<td > ( predicate&#095;term&#095;id ) ref <a href='#term'>term</a> (term&#095;id) </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>&nbsp;</td><td>fk_term_relationship_obj_term</td>
-		<td > ( object&#095;term&#095;id ) ref <a href='#term'>term</a> (term&#095;id) </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>&nbsp;</td><td>fk_term_relationship_ontology</td>
-		<td > ( ontology&#095;id ) ref <a href='#ontology'>ontology</a> (ontology&#095;id) </td>
-		<td>  </td>
-	</tr>
-</tbody>
-</table>
-
-<br/><br/>
-<table class='bordered'>
-<thead>
-<tr><th colspan='4'><a name='term_path'>Table term_path</a></th></tr>
-</thead>
-<tbody>
-	<tr>
-		<td>*</td>
-		<td><a name='term_path.term_path_id'>term&#095;path&#095;id</a></td>
-		<td> bigserial   </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>*</td>
-		<td><a name='term_path.subject_term_id'>subject&#095;term&#095;id</a></td>
-		<td> bigint   </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>*</td>
-		<td><a name='term_path.predicate_term_id'>predicate&#095;term&#095;id</a></td>
-		<td> bigint   </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>*</td>
-		<td><a name='term_path.object_term_id'>object&#095;term&#095;id</a></td>
-		<td> bigint   </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>*</td>
-		<td><a name='term_path.ontology_id'>ontology&#095;id</a></td>
-		<td> bigint   </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>*</td>
-		<td><a name='term_path.relationship_type_id'>relationship&#095;type&#095;id</a></td>
-		<td> integer   </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>&nbsp;</td>
-		<td><a name='term_path.distance'>distance</a></td>
-		<td> integer   </td>
-		<td>  </td>
-	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>pk&#095;term&#095;path</td>
-		<td> ON term&#095;path&#095;id</td>
-		<td>  </td>
-	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;term&#095;path</td>
-		<td> ON ontology&#095;id</td>
-		<td>  </td>
-	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;term&#095;path&#095;relatonship</td>
-		<td> ON relationship&#095;type&#095;id</td>
-		<td>  </td>
-	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;term&#095;path&#095;subject</td>
-		<td> ON subject&#095;term&#095;id</td>
-		<td>  </td>
-	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;term&#095;path&#095;predicate</td>
-		<td> ON predicate&#095;term&#095;id</td>
-		<td>  </td>
-	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;term&#095;path&#095;object</td>
-		<td> ON object&#095;term&#095;id</td>
-		<td>  </td>
-	</tr>
-<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
-	<tr>
-		<td>&nbsp;</td><td>fk_term_path_ontology</td>
-		<td > ( ontology&#095;id ) ref <a href='#ontology'>ontology</a> (ontology&#095;id) </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>&nbsp;</td><td>fk_term_path_relationship_type</td>
-		<td > ( relationship&#095;type&#095;id ) ref <a href='#relationship&#095;type'>relationship&#095;type</a> (relationship&#095;type&#095;id) </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>&nbsp;</td><td>fk_term_path_term_subject</td>
-		<td > ( subject&#095;term&#095;id ) ref <a href='#term'>term</a> (term&#095;id) </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>&nbsp;</td><td>fk_term_path_term_predicate</td>
-		<td > ( predicate&#095;term&#095;id ) ref <a href='#term'>term</a> (term&#095;id) </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>&nbsp;</td><td>fk_term_path_term_object</td>
-		<td > ( object&#095;term&#095;id ) ref <a href='#term'>term</a> (term&#095;id) </td>
-		<td>  </td>
-	</tr>
-</tbody>
-</table>
-
-<br/><br/>
-<table class='bordered'>
-<thead>
 <tr><th colspan='4'><a name='ontology'>Table ontology</a></th></tr>
 </thead>
 <tbody>
@@ -2923,146 +2470,6 @@ If a given analysis is not in child&#095;id&#044; it is the root of the chain&#0
 <tr><th colspan='4'><b>Indexes</b></th></tr>
 	<tr>		<td>Pk</td><td>pk&#095;ontology</td>
 		<td> ON ontology&#095;id</td>
-		<td>  </td>
-	</tr>
-</tbody>
-</table>
-
-<br/><br/>
-<table class='bordered'>
-<thead>
-<tr><th colspan='4'><a name='annotation'>Table annotation</a></th></tr>
-</thead>
-<tbody>
-	<tr>
-		<td>*</td>
-		<td><a name='annotation.annotation_id'>annotation&#095;id</a></td>
-		<td> bigserial   </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>*</td>
-		<td><a name='annotation.term_id'>term&#095;id</a></td>
-		<td> bigint   </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>*</td>
-		<td><a name='annotation.annotation_name'>annotation&#095;name</a></td>
-		<td> varchar   </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>&nbsp;</td>
-		<td><a name='annotation.annotation_num_value'>annotation&#095;num&#095;value</a></td>
-		<td> bigint   </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>&nbsp;</td>
-		<td><a name='annotation.annotation_str_value'>annotation&#095;str&#095;value</a></td>
-		<td> varchar   </td>
-		<td>  </td>
-	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>pk&#095;annotation</td>
-		<td> ON annotation&#095;id</td>
-		<td>  </td>
-	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;annotation</td>
-		<td> ON term&#095;id</td>
-		<td>  </td>
-	</tr>
-<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
-	<tr>
-		<td>&nbsp;</td><td>fk_annotation_term</td>
-		<td > ( term&#095;id ) ref <a href='#term'>term</a> (term&#095;id) </td>
-		<td>  </td>
-	</tr>
-</tbody>
-</table>
-
-<br/><br/>
-<table class='bordered'>
-<thead>
-<tr><th colspan='4'><a name='dbxref'>Table dbxref</a></th></tr>
-</thead>
-<tbody>
-	<tr>
-		<td>*</td>
-		<td><a name='dbxref.dbxref_id'>dbxref&#095;id</a></td>
-		<td> bigserial   </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>*</td>
-		<td><a name='dbxref.term_id'>term&#095;id</a></td>
-		<td> bigint   </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>*</td>
-		<td><a name='dbxref.dbname'>dbname</a></td>
-		<td> varchar   </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>*</td>
-		<td><a name='dbxref.accession'>accession</a></td>
-		<td> varchar   </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>*</td>
-		<td><a name='dbxref.description'>description</a></td>
-		<td> varchar   </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>*</td>
-		<td><a name='dbxref.xref_type'>xref&#095;type</a></td>
-		<td> varchar   </td>
-		<td>  </td>
-	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>pk&#095;dbxref</td>
-		<td> ON dbxref&#095;id</td>
-		<td>  </td>
-	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;dbxref</td>
-		<td> ON term&#095;id</td>
-		<td>  </td>
-	</tr>
-<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
-	<tr>
-		<td>&nbsp;</td><td>fk_dbxref_term</td>
-		<td > ( term&#095;id ) ref <a href='#term'>term</a> (term&#095;id) </td>
-		<td>  </td>
-	</tr>
-</tbody>
-</table>
-
-<br/><br/>
-<table class='bordered'>
-<thead>
-<tr><th colspan='4'><a name='relationship_type'>Table relationship_type</a></th></tr>
-</thead>
-<tbody>
-	<tr>
-		<td>*</td>
-		<td><a name='relationship_type.relationship_type_id'>relationship&#095;type&#095;id</a></td>
-		<td> bigserial   </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>*</td>
-		<td><a name='relationship_type.relationship_type'>relationship&#095;type</a></td>
-		<td> varchar   </td>
-		<td>  </td>
-	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>pk&#095;relationship&#095;type</td>
-		<td> ON relationship&#095;type&#095;id</td>
 		<td>  </td>
 	</tr>
 </tbody>
@@ -5102,19 +4509,19 @@ Linked by y being raw&#095;data&#095;id from raw data table&#046; </td></tr>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
+		<td>&nbsp;</td>
 		<td><a name='term.is_obsolete'>is&#095;obsolete</a></td>
 		<td> bool   DEFO 'false' </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
+		<td>&nbsp;</td>
 		<td><a name='term.is_root_term'>is&#095;root&#095;term</a></td>
 		<td> bool   </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
+		<td>&nbsp;</td>
 		<td><a name='term.is_leaf'>is&#095;leaf</a></td>
 		<td> bool   </td>
 		<td>  </td>
@@ -5132,6 +4539,55 @@ Linked by y being raw&#095;data&#095;id from raw data table&#046; </td></tr>
 	<tr>
 		<td>&nbsp;</td><td>fk_term_ontology</td>
 		<td > ( ontology&#095;id ) ref <a href='#ontology'>ontology</a> (ontology&#095;id) </td>
+		<td>  </td>
+	</tr>
+</tbody>
+</table>
+
+<br/><br/>
+<table class='bordered'>
+<thead>
+<tr><th colspan='4'><a name='column_ontology'>Table column_ontology</a></th></tr>
+<tr><td colspan='3'>This table relates a column with an ontology&#046; </td></tr>
+</thead>
+<tbody>
+	<tr>
+		<td>*</td>
+		<td><a name='column_ontology.column_name'>column&#095;name</a></td>
+		<td> varchar   </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>*</td>
+		<td><a name='column_ontology.ontology_short_name'>ontology&#095;short&#095;name</a></td>
+		<td> varchar   </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>*</td>
+		<td><a name='column_ontology.bioportal_id'>bioportal&#095;id</a></td>
+		<td> integer   </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>&nbsp;</td>
+		<td><a name='column_ontology.ontology_branch_id'>ontology&#095;branch&#095;id</a></td>
+		<td> varchar   </td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='4'><b>Indexes</b></th></tr>
+	<tr>		<td>Pk</td><td>idx&#095;column&#095;ontology</td>
+		<td> ON column&#095;name&#044; ontology&#095;short&#095;name</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>&nbsp;</td><td>idx&#095;column&#095;ontology&#095;0</td>
+		<td> ON column&#095;name</td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
+	<tr>
+		<td>&nbsp;</td><td>fk_column_ontology</td>
+		<td > ( column&#095;name ) ref <a href='#mixs&#095;field&#095;description'>mixs&#095;field&#095;description</a> (column&#095;name) </td>
 		<td>  </td>
 	</tr>
 </tbody>
