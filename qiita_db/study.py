@@ -527,6 +527,8 @@ class StudyPerson(QiitaObject):
         name of the person
     email : str
         email of the person
+    affiliation : str
+        insitution with which the person is affiliated
     address : str or None
         address of the person
     phone : str or None
@@ -535,15 +537,15 @@ class StudyPerson(QiitaObject):
     _table = "study_person"
 
     @classmethod
-    def exists(cls, name, email):
+    def exists(cls, name, affiliation):
         """Checks if a person exists
 
         Parameters
         ----------
         name: str
             Name of the person
-        email: str
-            Email of the person
+        affiliation : str
+            insitution with which the person is affiliated
 
         Returns
         -------
@@ -552,11 +554,11 @@ class StudyPerson(QiitaObject):
         """
         conn_handler = SQLConnectionHandler()
         sql = ("SELECT exists(SELECT * FROM qiita.{0} WHERE "
-               "name = %s AND email = %s)".format(cls._table))
-        return conn_handler.execute_fetchone(sql, (name, email))[0]
+               "name = %s AND affiliation = %s)".format(cls._table))
+        return conn_handler.execute_fetchone(sql, (name, affiliation))[0]
 
     @classmethod
-    def create(cls, name, email, address=None, phone=None):
+    def create(cls, name, email, affiliation, address=None, phone=None):
         """Create a StudyPerson object, checking if person already exists.
 
         Parameters
@@ -565,6 +567,8 @@ class StudyPerson(QiitaObject):
             name of person
         email : str
             email of person
+        affiliation : str
+            insitution with which the person is affiliated
         address : str, optional
             address of person
         phone : str, optional
@@ -575,19 +579,21 @@ class StudyPerson(QiitaObject):
         New StudyPerson object
 
         """
-        if cls.exists(name, email):
+        if cls.exists(name, affiliation):
             sql = ("SELECT study_person_id from qiita.{0} WHERE name = %s and"
-                   " email = %s".format(cls._table))
+                   " affiliation = %s".format(cls._table))
             conn_handler = SQLConnectionHandler()
-            spid = conn_handler.execute_fetchone(sql, (name, email))
+            spid = conn_handler.execute_fetchone(sql, (name, affiliation))
 
         # Doesn't exist so insert new person
         else:
-            sql = ("INSERT INTO qiita.{0} (name, email, address, phone) VALUES"
-                   " (%s, %s, %s, %s) RETURNING "
+            sql = ("INSERT INTO qiita.{0} (name, email, affiliation, address, "
+                   "phone) VALUES"
+                   " (%s, %s, %s, %s, %s) RETURNING "
                    "study_person_id".format(cls._table))
             conn_handler = SQLConnectionHandler()
-            spid = conn_handler.execute_fetchone(sql, (name, email, address,
+            spid = conn_handler.execute_fetchone(sql, (name, email,
+                                                       affiliation, address,
                                                        phone))
         return cls(spid[0])
 
@@ -619,6 +625,20 @@ class StudyPerson(QiitaObject):
         sql = ("SELECT email FROM qiita.{0} WHERE "
                "study_person_id = %s".format(self._table))
         return conn_handler.execute_fetchone(sql, (self._id, ))[0]
+
+    @property
+    def affiliation(self):
+        """Returns the affiliation of the person
+
+        Returns
+        -------
+        str
+            Affiliation of person
+        """
+        conn_handler = SQLConnectionHandler()
+        sql = ("SELECT affliation FROM qiita.{0} WHERE "
+               "study_person_id = %s".format(self._table))
+        return conn_handler.execute_fetchone(sql, [self._id])[0]
 
     @property
     def address(self):
