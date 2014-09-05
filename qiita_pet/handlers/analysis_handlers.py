@@ -62,6 +62,7 @@ class SearchStudiesHandler(BaseHandler):
         """remove already selected samples from results and count metadata"""
         counts = {}
         fullcounts = {meta: defaultdict(int) for meta in meta_headers}
+        studypop = []
         for study, samples in viewitems(results):
             counts[study] = {meta: Counter()
                              for meta in meta_headers}
@@ -76,10 +77,16 @@ class SearchStudiesHandler(BaseHandler):
                     for pos, meta in enumerate(meta_headers):
                         counts[study][meta][sample[pos+1]] += 1
                         fullcounts[meta][sample[pos+1]] += 1
+            # if no samples left, remove the study from results
+            if len(topop) == len(samples):
+                studypop.append(study)
+                continue
             # remove already selected samples
             topop.sort(reverse=True)
             for pos in topop:
                 samples.pop(pos)
+        for study in studypop:
+            results.pop(study)
         return results, counts, fullcounts
 
     def _selected_parser(self, analysis):
@@ -97,14 +104,12 @@ class SearchStudiesHandler(BaseHandler):
         format accepted by Analysis.add_samples()
         """
         # get the selected studies and datatypes for studies
-        studyinfo = self.get_arguments("availstudies")
-        for s in studyinfo:
-            study_id, datatype = s.split("#")
-            # get the processed data ids for the study
+        for s in self.get_arguments("availstudies"):
+            study_id, proc_data_id = s.split("#", 1)
+            proc_data_id = int(proc_data_id)
             # get new selected samples for each study and yield with proc id
-            for proc_samp_combo in product(self.get_arguments(s),
-                                           self.get_arguments(study_id)):
-                yield proc_samp_combo
+            for sample in self.get_arguments(study_id):
+                yield (proc_data_id, sample)
 
     def _parse_form_deselect(self):
         """parses selected checkboxes and returns the selected ones in
