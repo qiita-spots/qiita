@@ -264,12 +264,15 @@ class AnalysisWaitHandler(BaseHandler):
                     commands=commands)
 
     @authenticated
-    @asynchronous
     def post(self, analysis_id):
         user = self.current_user
         analysis_id = int(analysis_id)
-        rarefaction_depth = int(self.get_argument('rarefaction-depth',
-                                                  default=None))
+        rarefaction_depth = self.get_argument('rarefaction-depth')
+        # convert to integer if rarefaction level given
+        if rarefaction_depth:
+            rarefaction_depth = int(rarefaction_depth)
+        else:
+            rarefaction_depth = None
         check_analysis_access(User(user), analysis_id)
 
         command_args = self.get_arguments("commands")
@@ -278,33 +281,8 @@ class AnalysisWaitHandler(BaseHandler):
         analysis = Analysis(analysis_id)
         self.render("analysis_waiting.html", user=user, aid=analysis_id,
                     aname=analysis.name, commands=commands)
-        self.run_background(self._run_analysis, None, args=(analysis, split,
-                                                            rarefaction_depth))
-
-    @return_future
-    def _run_analysis(self, analysis, commands, rarefaction_depth,
-                      callback=None):
-        analysis.build_files(rarefaction_depth)
-        mapping_file = analysis.mapping_file
-        biom_tables = analysis.biom_tables
-        for data_type, command in commands:
-            opts = {
-                "--otu_table_fp": biom_tables[data_type],
-                "--mapping_fp": mapping_file
-            }
-            # HARD CODED HACKY THING FOR DEMO, FIX  Issue #164
-            if command == "Beta Diversity" and data_type in {'16S', '18S'}:
-                opts["--tree_fp"] = join(get_db_files_base_dir(), "reference",
-                                         "gg_97_otus_4feb2011.tre")
-            elif command == "Beta Diversity":
-                opts["--parameter_fp"] = join(get_db_files_base_dir(),
-                                              "reference", "params_qiime.txt")
-            job = Job.create(data_type, command, opts, analysis)
-
-        print ">>>>>>>>>>>>>>>>>>JOBS", analysis.jobs
-        # fire off analysis run here
-        run_analysis(self.current_user, analysis)
-        callback()
+        run_analysis(user, analysis, split,
+                     rarefaction_depth=rarefaction_depth)
 
 
 class AnalysisResultsHandler(BaseHandler):
