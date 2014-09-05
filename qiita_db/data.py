@@ -38,7 +38,7 @@ Inserting the raw data into the database:
 Retrieve the filepaths associated with the raw data
 
 >>> rd.get_filepaths() # doctest: +SKIP
-[('seqs.fastq', 1), ('barcodes.fastq', 2)]
+[('seqs.fastq', 'raw_sequences'), ('barcodes.fastq', 'raw_barcodes')]
 
 Assume we have preprocessed the previous raw data files using the parameters
 under the first row in the 'preprocessed_sequence_illumina_params', and we
@@ -86,7 +86,7 @@ from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from .base import QiitaObject
 from .sql_connection import SQLConnectionHandler
 from .util import (exists_dynamic_table, get_db_files_base_dir,
-                   insert_filepaths, convert_to_id)
+                   insert_filepaths, convert_to_id, convert_from_id)
 
 
 class BaseData(QiitaObject):
@@ -169,7 +169,9 @@ class BaseData(QiitaObject):
                                  self._data_filepath_table,
                                  self._data_filepath_column), {'id': self.id})
         base_fp = partial(join, join(get_db_files_base_dir(), self._table))
-        return [(base_fp(fp), id) for fp, id in db_paths]
+        return [(base_fp(fp),
+                 convert_from_id(id, "filepath_type", conn_handler))
+                for fp, id in db_paths]
 
     def get_filepath_ids(self):
         conn_handler = SQLConnectionHandler()
