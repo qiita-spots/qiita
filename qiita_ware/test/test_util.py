@@ -18,7 +18,7 @@ from unittest import TestCase, main
 from qiita_db.metadata_template import PrepTemplate
 from qiita_ware.util import (per_sample_sequences, template_to_dict,
                              metadata_stats_from_sample_and_prep_templates,
-                             mapping_file_from_sample_and_prep_templates)
+                             metadata_map_from_sample_and_prep_templates)
 
 
 def mock_sequence_iter(items):
@@ -80,8 +80,8 @@ class UtilTests(TestCase):
         self.assertEqual(obs, SUMMARY_STATS)
 
 
-    def test_mapping_file_from_sample_and_prep_templates(self):
-        obs = mapping_file_from_sample_and_prep_templates(1, 1)
+    def test_metadata_map_from_sample_and_prep_templates(self):
+        obs = metadata_map_from_sample_and_prep_templates(1, 1)
 
         # We don't test the specific values as this would blow up the size
         # of this file as the amount of lines would go to ~1000

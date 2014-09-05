@@ -114,8 +114,8 @@ def metadata_stats_from_sample_and_prep_templates(st_id, pt_id):
         of a metadata value in category and the second element is the number of
         times that value was seen.
     """
-    df = mapping_file_from_sample_and_prep_templates(st_id, pt_id)
-    out = defaultdict(list)
+    df = metadata_map_from_sample_and_prep_templates(st_id, pt_id)
+    out = {}
 
     for column in df.columns:
         counts = df[column].value_counts()
@@ -123,10 +123,9 @@ def metadata_stats_from_sample_and_prep_templates(st_id, pt_id):
         # get a pandas series of the value-count pairs
         out[column] = [(key, counts[key]) for key in counts.index]
 
-    # cast to a dictionary as defaultdicts are prone to error
-    return dict(out)
+    return out
 
-def mapping_file_from_sample_and_prep_templates(st_id, pt_id):
+def metadata_map_from_sample_and_prep_templates(st_id, pt_id):
     """Create a mapping file from a sample and a prep template
 
     Parameters
