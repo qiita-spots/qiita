@@ -165,10 +165,10 @@ def template_to_dict(t):
 
     """
     out = {}
-    for key, value in t.items():
-        out[key] = {}
-        for t_key, t_value in value.items():
+    for sample_id, metadata in viewitems(t):
+        out[sample_id] = {}
+        for column_name, column_value in viewitems(metadata):
             # cast to string as a datetime object can be returned here
-            out[key][t_key] = str(t_value)
+            out[sample_id][column_name] = str(column_value)
     return out
 
