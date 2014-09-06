@@ -16,9 +16,9 @@ from heapq import heappush, heappop
 
 import numpy as np
 import pandas as pd
-from future.utils import viewitems
 
-from qiita_db.metadata_template import SampleTemplate, PrepTemplate
+from future.utils import viewitems
+from natsort import natsorted
 
 def per_sample_sequences(iter_, max_seqs, min_seqs=1, random_buf_size=100000):
     """Get a max random subset of per sample sequences
@@ -96,15 +96,15 @@ def per_sample_sequences(iter_, max_seqs, min_seqs=1, random_buf_size=100000):
         for _, sequence_id, sequence in heap:
             yield (sequence_id, sequence)
 
-def metadata_stats_from_sample_and_prep_templates(st_id, pt_id):
+def metadata_stats_from_sample_and_prep_templates(st, pt):
     """Print out summary statistics for the sample and prep templates
 
     Parameters
     ----------
-    st_id : int
-        Unique identifier for the SampleTemplate object you want to invoke.
-    pt_id : int
-        Unique identifier for the PrepTemplate object you want to invoke.
+    st : SampleTemplate
+        Initialized SampleTemplate to use for the metadat stats.
+    pt : PrepTemplate
+        Initialized PrepTemplate to use for the metadat stats.
 
     Returns
     -------
@@ -114,35 +114,41 @@ def metadata_stats_from_sample_and_prep_templates(st_id, pt_id):
         of a metadata value in category and the second element is the number of
         times that value was seen.
     """
-    df = metadata_map_from_sample_and_prep_templates(st_id, pt_id)
+    df = metadata_map_from_sample_and_prep_templates(st, pt)
     out = {}
 
-    for column in df.columns:
+    for column in natsorted(df.columns):
         counts = df[column].value_counts()
 
         # get a pandas series of the value-count pairs
-        out[column] = [(key, counts[key]) for key in counts.index]
+        out[column] = [(key, counts[key]) for key in natsorted(counts.index)]
 
     return out
 
-def metadata_map_from_sample_and_prep_templates(st_id, pt_id):
+def metadata_map_from_sample_and_prep_templates(st, pt):
     """Create a mapping file from a sample and a prep template
 
     Parameters
     ----------
-    st_id : int
-        Unique identifier for the SampleTemplate object you want to invoke.
-    pt_id : int
-        Unique identifier for the PrepTemplate object you want to invoke.
+    st : SampleTemplate
+        Initialized SampleTemplate to use.
+    pt : PrepTemplate
+        Initialized PrepTemplate to use.
 
     Returns
     -------
     pd.DataFrame
         A DataFrame object where the index values are the sample identifiers
         and the column names are the metadata categories.
+
+    Notes
+    -----
+    If the sample and preparation templates include repeated column names these
+    will be repeated in the resulting object, as they are not supposed to have
+    overlapping column names.
     """
-    st = template_to_dict(SampleTemplate(st_id))
-    pt = template_to_dict(PrepTemplate(pt_id))
+    st = template_to_dict(st)
+    pt = template_to_dict(pt)
 
     s_df = pd.DataFrame.from_dict(st, orient='index')
     p_df = pd.DataFrame.from_dict(pt, orient='index')
