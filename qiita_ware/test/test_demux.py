@@ -28,12 +28,25 @@ class HDF5AutoGrowTests(TestCase):
     def tearDown(self):
         remove('_test_file.hdf5')
 
+    def test_contains(self):
+        self.obj.create_dataset('test_group/test_ds1', int)
+        self.obj.create_dataset('test_group/test_ds2', int)
+        self.obj.create_dataset('test_group/test_ds3', int)
+        self.assertEqual(self.obj._known_datasets,
+                         set(['test_group/test_ds1',
+                              'test_group/test_ds2',
+                              'test_group/test_ds3']))
+        self.assertTrue('test_group/test_ds1' in self.obj)
+        self.assertTrue('test_group/test_ds2' in self.obj)
+        self.assertTrue('test_group/test_ds3' in self.obj)
+        self.assertFalse('test_group/test_ds4' in self.obj)
+
     def test_create_dataset(self):
         """Create something"""
         self.obj.create_dataset('test_group/test_ds', int)
         self.assertEqual(np.array([0], int),
                          self.obj.f['test_group/test_ds'][:])
-        self.assertEqual(self.obj._known_datasets, ['test_group/test_ds'])
+        self.assertEqual(self.obj._known_datasets, set(['test_group/test_ds']))
 
     def test_append(self):
         """Check the implicit resizing"""
