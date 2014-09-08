@@ -4,6 +4,7 @@
 <script src="/static/vendor/js/chosen.jquery.min.js"></script>
 <script src="/static/js/analysis.js"></script>
 <script type="text/javascript">
+STUDIES = {{[int(i) for i in results.keys()]}};
 function add_metacat(metacat) {
   document.getElementById('query').value += (" " + metacat);
 }
@@ -20,7 +21,9 @@ function add_metacat(metacat) {
 <form role="form" action="/analysis/2" id="results-form" method="post">
 <input type="hidden" name="action" id="action" value="search">
 <input type="hidden" name="analysis-id" value="{{aid}}">
-<!-- Build the selected data modals -->
+<div class="row">
+<div id="selected" class="col-sm-3" style="border-right:1px solid black;height:100%;">
+  <!-- Build the selected data modals -->
 {% for sid in selproc_data %}
         <div class="modal fade" id='selmodal{{sid}}'>
           <div class="modal-dialog modal-sm">
@@ -29,9 +32,9 @@ function add_metacat(metacat) {
                 <h4 class="modal-title">Selected samples</h4>
               </div>
               <div class="modal-body">
-        <p><a href="#" onclick="select_deselect('sel{{sid}}', true); return false;">Select all</a> | <a href="#" onclick="select_deselect('sel{{sid}}', false); return false;">Select none</a></p>
+        <p><a href="#" onclick="select_deselect('sel{{sid}}', true); return false;">Select all</a> | <a href="#" onclick="select_deselect('sel{{sid}}', false); return false;">Select none</a> | <a href="#" onclick="select_inverse('sel{{sid}}'); return false;">Select inverse</a></p>
         {% for samp in selsamples[sid] %}
-          <input type='checkbox' class='sel{{sid}}' name='sel{{sid}}' value='{{samp}}'> {{samp}}<br />
+          <input type='checkbox' class='selected sel{{sid}}' name='sel{{sid}}' value='{{samp}}'> {{samp}}<br />
        {% end %}
      </div>
             <div class="modal-footer">
@@ -41,10 +44,8 @@ function add_metacat(metacat) {
         </div><!-- /.modal-dialog -->
       </div><!-- /.modal -->
   {% end %}
-<div class="row">
-<div id="selected" class="col-sm-3" style="border-right:1px solid black;height:100%;">
-<!-- Selected samples -->
-<big>Selected Samples</big>
+  <!-- Selected samples -->
+  <big>Selected Samples</big>
   <table class="table table-hover">
   <tr><th>Datatypes</th><th>Title</th></tr>
   {% for sid, proc_ids in viewitems(selproc_data) %}
@@ -52,7 +53,7 @@ function add_metacat(metacat) {
     <tr><td>
     {% for proc in proc_ids %}
       {% set data_type = ProcessedData(proc).data_type() %}
-      <input type='hidden' name='selstudies' value='{{sid}}'> <input type='checkbox' name='dt{{sid}}' value='{{proc}}'>{{data_type}} - {{proc}} <br />
+      <input type='hidden' name='selstudies' value='{{sid}}'> <input type='checkbox' class="selected" name='dt{{sid}}' value='{{proc}}'>{{data_type}} <br />
       {% end %}
     </td><td><a href="#" data-toggle="modal" data-target="#selmodal{{sid}}">{{study.title}}</a></td></tr>
   {%end%}
@@ -92,25 +93,21 @@ function add_metacat(metacat) {
     </div>
   </div>
   {% set divcount += 1 %}
-  {% end %}
+{% end %}
 </div>
 
     <table class='table table-hover' style="width:100%">
-      <tr><th>Data Types</th><th>Name</th><th></th><th>Description</th><th>Status</th></tr>
+      <tr><th>Data Types</th><th>Name</th><th>Selected</th><th>Description</th><th>Status</th></tr>
       {% for sid, samples in viewitems(results) %}
         {% set study = Study(sid) %}
         <tr id="study{{sid}}"><td>
         {% for data_type in study.data_types %}
-          <input type='hidden' name='availstudies' id='{{sid}}#{{data_type}}' value='{{sid}}#{{data_type}}' disabled=true>
-          <select name='{{sid}}#{{data_type}}' style="width:100px;" tabindex="2" onchange="enable_study_datatype('{{sid}}#{{data_type}}')">
-          <option value="">Choose data...</option>
-          {% for proc_data in study.processed_data(data_type=data_type) %}
-            <option value="{{proc_data}}">{{proc_data}}</option>
-          {% end %}
-          </select>{{data_type}}<br />
-          </td><td style='vertical-align:middle;'><a href="#" data-toggle="modal" data-target="#modal{{sid}}">{{study.title}}</a></td>
+          {% set data_type_id = study.processed_data(data_type=data_type)[0] %}
+          <input type='checkbox' name='availstudies' value='{{sid}}#{{data_type_id}}' onchange="select_deselect_samples_study({{sid}})"> 
+          {{data_type}}<br />
+          </td><td style='vertical-align:middle;'><a href="#" data-toggle="modal" data-target="#modal{{sid}}" id="modal-link-{{sid}}" disabled=true>{{study.title}}</a></td>
           <td style='vertical-align:middle;'>
-            <a href="#" onclick="select_deselect({{sid}}, true); return false;">Select all</a>
+            <span id="count{{sid}}">0</span>/{{len(samples)}}
           </td>
           <td style='vertical-align:middle;'>
           {{study.info["study_description"]}}</td>
@@ -158,7 +155,7 @@ function add_metacat(metacat) {
                 {% end %}
               </div>
               <h3>Samples</h3>
-              <a href="#" onclick="select_deselect({{sid}}, true); return false;">Select all</a> | <a href="#" onclick="select_deselect({{sid}}, false); return false;">Select none</a>
+              <a href="#" onclick="select_deselect({{sid}}, true); return false;">Select all</a> | <a href="#" onclick="select_deselect({{sid}}, false); return false;">Select none</a> | <a href="#" onclick="select_inverse({{sid}}); return false;">Select inverse</a>
               <table class='table table-hover'><td><th>Sample ID</th>
               {% for meta in meta_headers %}
                 <th>{{meta}}</th>
@@ -167,7 +164,7 @@ function add_metacat(metacat) {
               {% for sample in samples %}
                 <tr><td>
                 <input type='checkbox' name='{{sid}}'
-                value='{{sample[0]}}' class='{{sid}} {{ " ".join(clean_str(s) for s in sample[1:]) }}'>
+                value='{{sample[0]}}' class='{{sid}} {{ " ".join(clean_str(s) for s in sample[1:]) }}' onchange='count_update({{sid}})'>
                 </td><td>{{sample[0]}}</td>
                 {% for pos in range(len(meta_headers)) %}
                   <td>{{sample[pos+1]}}</td>

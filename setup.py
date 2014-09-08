@@ -62,7 +62,7 @@ setup(name='qiita',
       install_requires=['psycopg2', 'click == 1.0', 'future >= 0.13.0',
                         'bcrypt', 'pandas', 'numpy >= 1.7', 'tornado==3.1.1',
                         'tornado_redis', 'redis', 'ipython[all]', 'pyparsing',
-                        'mock', 'h5py >= 2.3.1', 'biom-format',
+                        'mock', 'h5py >= 2.3.1', 'biom-format', 'natsort',
                         'scikit-bio == 0.2.0'],
       classifiers=classifiers
       )

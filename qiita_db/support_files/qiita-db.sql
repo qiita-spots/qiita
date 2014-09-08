@@ -172,6 +172,7 @@ CREATE TABLE qiita.raw_data (
 	raw_data_id          bigserial  NOT NULL,
 	filetype_id          bigint  NOT NULL,
 	CONSTRAINT pk_raw_data UNIQUE ( raw_data_id ) ,
+	CONSTRAINT pk_raw_data_0 PRIMARY KEY ( raw_data_id ),
 	CONSTRAINT fk_raw_data_filetype FOREIGN KEY ( filetype_id ) REFERENCES qiita.filetype( filetype_id )    
  );
 
@@ -211,12 +212,6 @@ CREATE TABLE qiita.reference (
 	CONSTRAINT pk_reference PRIMARY KEY ( reference_id )
  );
 
-CREATE TABLE qiita.relationship_type ( 
-	relationship_type_id bigserial  NOT NULL,
-	relationship_type    varchar  NOT NULL,
-	CONSTRAINT pk_relationship_type PRIMARY KEY ( relationship_type_id )
- );
-
 CREATE TABLE qiita.required_sample_info_status ( 
 	required_sample_info_status_id bigserial  NOT NULL,
 	status               varchar  ,
@@ -233,12 +228,16 @@ CREATE TABLE qiita.study_person (
 	study_person_id      bigserial  NOT NULL,
 	name                 varchar  NOT NULL,
 	email                varchar  NOT NULL,
+	affiliation          varchar  NOT NULL,
 	address              varchar(100)  ,
 	phone                varchar  ,
-	CONSTRAINT pk_study_person PRIMARY KEY ( study_person_id )
+	CONSTRAINT pk_study_person PRIMARY KEY ( study_person_id ),
+	CONSTRAINT idx_study_person UNIQUE ( name, affiliation ) 
  );
 
 COMMENT ON TABLE qiita.study_person IS 'Contact information for the various people involved in a study';
+
+COMMENT ON COLUMN qiita.study_person.affiliation IS 'The institution with which this person is affiliated';
 
 CREATE TABLE qiita.study_status ( 
 	study_status_id      bigserial  NOT NULL,
@@ -254,72 +253,14 @@ CREATE TABLE qiita.term (
 	identifier           varchar  ,
 	definition           varchar  ,
 	namespace            varchar  ,
-	is_obsolete          bool DEFAULT 'false' NOT NULL,
-	is_root_term         bool  NOT NULL,
-	is_leaf              bool  NOT NULL,
+	is_obsolete          bool DEFAULT 'false' ,
+	is_root_term         bool  ,
+	is_leaf              bool  ,
 	CONSTRAINT pk_term PRIMARY KEY ( term_id ),
-	CONSTRAINT idx_term UNIQUE ( ontology_id ) ,
 	CONSTRAINT fk_term_ontology FOREIGN KEY ( ontology_id ) REFERENCES qiita.ontology( ontology_id )    
  );
 
-CREATE TABLE qiita.term_path ( 
-	term_path_id         bigserial  NOT NULL,
-	subject_term_id      bigint  NOT NULL,
-	predicate_term_id    bigint  NOT NULL,
-	object_term_id       bigint  NOT NULL,
-	ontology_id          bigint  NOT NULL,
-	relationship_type_id integer  NOT NULL,
-	distance             integer  ,
-	CONSTRAINT pk_term_path PRIMARY KEY ( term_path_id ),
-	CONSTRAINT fk_term_path_ontology FOREIGN KEY ( ontology_id ) REFERENCES qiita.ontology( ontology_id )    ,
-	CONSTRAINT fk_term_path_relationship_type FOREIGN KEY ( relationship_type_id ) REFERENCES qiita.relationship_type( relationship_type_id )    ,
-	CONSTRAINT fk_term_path_term_subject FOREIGN KEY ( subject_term_id ) REFERENCES qiita.term( term_id )    ,
-	CONSTRAINT fk_term_path_term_predicate FOREIGN KEY ( predicate_term_id ) REFERENCES qiita.term( term_id )    ,
-	CONSTRAINT fk_term_path_term_object FOREIGN KEY ( object_term_id ) REFERENCES qiita.term( term_id )    
- );
-
-CREATE INDEX idx_term_path ON qiita.term_path ( ontology_id );
-
-CREATE INDEX idx_term_path_relatonship ON qiita.term_path ( relationship_type_id );
-
-CREATE INDEX idx_term_path_subject ON qiita.term_path ( subject_term_id );
-
-CREATE INDEX idx_term_path_predicate ON qiita.term_path ( predicate_term_id );
-
-CREATE INDEX idx_term_path_object ON qiita.term_path ( object_term_id );
-
-CREATE TABLE qiita.term_relationship ( 
-	term_relationship_id bigserial  NOT NULL,
-	subject_term_id      bigint  NOT NULL,
-	predicate_term_id    bigint  NOT NULL,
-	object_term_id       bigint  NOT NULL,
-	ontology_id          bigint  NOT NULL,
-	CONSTRAINT pk_term_relationship PRIMARY KEY ( term_relationship_id ),
-	CONSTRAINT fk_term_relationship_subj_term FOREIGN KEY ( subject_term_id ) REFERENCES qiita.term( term_id )    ,
-	CONSTRAINT fk_term_relationship_pred_term FOREIGN KEY ( predicate_term_id ) REFERENCES qiita.term( term_id )    ,
-	CONSTRAINT fk_term_relationship_obj_term FOREIGN KEY ( object_term_id ) REFERENCES qiita.term( term_id )    ,
-	CONSTRAINT fk_term_relationship_ontology FOREIGN KEY ( ontology_id ) REFERENCES qiita.ontology( ontology_id )    
- );
-
-CREATE INDEX idx_term_relationship_subject ON qiita.term_relationship ( subject_term_id );
-
-CREATE INDEX idx_term_relationship_predicate ON qiita.term_relationship ( predicate_term_id );
-
-CREATE INDEX idx_term_relationship_object ON qiita.term_relationship ( object_term_id );
-
-CREATE INDEX idx_term_relationship_ontology ON qiita.term_relationship ( ontology_id );
-
-CREATE TABLE qiita.term_synonym ( 
-	synonym_id           bigserial  NOT NULL,
-	term_id              bigint  NOT NULL,
-	synonym_value        varchar  NOT NULL,
-	synonym_type_id      bigint  NOT NULL,
-	CONSTRAINT pk_term_synonym PRIMARY KEY ( synonym_id ),
-	CONSTRAINT fk_term_synonym_term FOREIGN KEY ( term_id ) REFERENCES qiita.term( term_id )    ,
-	CONSTRAINT fk_term_synonym_type_term FOREIGN KEY ( synonym_id ) REFERENCES qiita.term( term_id )    
- );
-
-CREATE INDEX idx_term_synonym ON qiita.term_synonym ( term_id );
+CREATE INDEX idx_term ON qiita.term ( ontology_id );
 
 CREATE TABLE qiita.timeseries_type ( 
 	timeseries_type_id   bigserial  NOT NULL,
@@ -337,18 +278,6 @@ CREATE TABLE qiita.user_level (
 COMMENT ON TABLE qiita.user_level IS 'Holds available user levels';
 
 COMMENT ON COLUMN qiita.user_level.name IS 'One of the user levels (admin, user, guest, etc)';
-
-CREATE TABLE qiita.annotation ( 
-	annotation_id        bigserial  NOT NULL,
-	term_id              bigint  NOT NULL,
-	annotation_name      varchar  NOT NULL,
-	annotation_num_value bigint  ,
-	annotation_str_value varchar  ,
-	CONSTRAINT pk_annotation PRIMARY KEY ( annotation_id ),
-	CONSTRAINT fk_annotation_term FOREIGN KEY ( term_id ) REFERENCES qiita.term( term_id )    
- );
-
-CREATE INDEX idx_annotation ON qiita.annotation ( term_id );
 
 CREATE TABLE qiita.column_controlled_vocabularies ( 
 	controlled_vocab_id  bigserial  NOT NULL,
@@ -368,7 +297,7 @@ CREATE TABLE qiita.column_ontology (
 	column_name          varchar  NOT NULL,
 	ontology_short_name  varchar  NOT NULL,
 	bioportal_id         integer  NOT NULL,
-	ontology_branch_id   integer  NOT NULL,
+	ontology_branch_id   varchar  ,
 	CONSTRAINT idx_column_ontology PRIMARY KEY ( column_name, ontology_short_name ),
 	CONSTRAINT fk_column_ontology FOREIGN KEY ( column_name ) REFERENCES qiita.mixs_field_description( column_name )    
  );
@@ -401,19 +330,6 @@ CREATE TABLE qiita.controlled_vocab_values (
 
 CREATE INDEX idx_controlled_vocab_values ON qiita.controlled_vocab_values ( controlled_vocab_id );
 
-CREATE TABLE qiita.dbxref ( 
-	dbxref_id            bigserial  NOT NULL,
-	term_id              bigint  NOT NULL,
-	dbname               varchar  NOT NULL,
-	accession            varchar  NOT NULL,
-	description          varchar  NOT NULL,
-	xref_type            varchar  NOT NULL,
-	CONSTRAINT pk_dbxref PRIMARY KEY ( dbxref_id ),
-	CONSTRAINT fk_dbxref_term FOREIGN KEY ( term_id ) REFERENCES qiita.term( term_id )    
- );
-
-CREATE INDEX idx_dbxref ON qiita.dbxref ( term_id );
-
 CREATE TABLE qiita.filepath ( 
 	filepath_id          bigserial  NOT NULL,
 	filepath             varchar  NOT NULL,
@@ -438,8 +354,7 @@ CREATE TABLE qiita.investigation (
 
 CREATE INDEX idx_investigation ON qiita.investigation ( contact_person_id );
 
-COMMENT ON TABLE qiita.investigation IS 'Overarching investigation information.
-An investigation comprises one or more individual studies.';
+COMMENT ON TABLE qiita.investigation IS 'Overarching investigation information.An investigation comprises one or more individual studies.';
 
 COMMENT ON COLUMN qiita.investigation.description IS 'Describes the overarching goal of the investigation';
 
@@ -560,8 +475,8 @@ CREATE TABLE qiita.study (
 	metadata_complete    bool  NOT NULL,
 	mixs_compliant       bool  NOT NULL,
 	most_recent_contact  varchar  ,
-	number_samples_collected integer  NOT NULL,
-	number_samples_promised integer  NOT NULL,
+	number_samples_collected integer  ,
+	number_samples_promised integer  ,
 	portal_type_id       bigint  NOT NULL,
 	principal_investigator_id bigint  NOT NULL,
 	reprocess            bool  NOT NULL,
@@ -723,8 +638,7 @@ CREATE INDEX idx_analysis_chain ON qiita.analysis_chain ( parent_id );
 
 CREATE INDEX idx_analysis_chain_0 ON qiita.analysis_chain ( child_id );
 
-COMMENT ON TABLE qiita.analysis_chain IS 'Keeps track of the chain of analysis edits. Tracks what previous analysis a given analysis came from.
-If a given analysis is not in child_id, it is the root of the chain. ';
+COMMENT ON TABLE qiita.analysis_chain IS 'Keeps track of the chain of analysis edits. Tracks what previous analysis a given analysis came from.If a given analysis is not in child_id, it is the root of the chain. ';
 
 CREATE TABLE qiita.analysis_filepath ( 
 	analysis_id          bigint  NOT NULL,

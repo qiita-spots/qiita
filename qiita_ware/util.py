@@ -15,8 +15,10 @@ from collections import defaultdict
 from heapq import heappush, heappop
 
 import numpy as np
-from future.utils import viewitems
+import pandas as pd
 
+from future.utils import viewitems
+from natsort import natsorted
 
 def per_sample_sequences(iter_, max_seqs, min_seqs=1, random_buf_size=100000):
     """Get a max random subset of per sample sequences
@@ -93,3 +95,86 @@ def per_sample_sequences(iter_, max_seqs, min_seqs=1, random_buf_size=100000):
 
         for _, sequence_id, sequence in heap:
             yield (sequence_id, sequence)
+
+def metadata_stats_from_sample_and_prep_templates(st, pt):
+    """Print out summary statistics for the sample and prep templates
+
+    Parameters
+    ----------
+    st : SampleTemplate
+        Initialized SampleTemplate to use for the metadat stats.
+    pt : PrepTemplate
+        Initialized PrepTemplate to use for the metadat stats.
+
+    Returns
+    -------
+    dict
+        Dictionary object where the keys are the names of the metadata
+        categories and the keys are tuples where the first element is the name
+        of a metadata value in category and the second element is the number of
+        times that value was seen.
+    """
+    df = metadata_map_from_sample_and_prep_templates(st, pt)
+    out = {}
+
+    for column in natsorted(df.columns):
+        counts = df[column].value_counts()
+
+        # get a pandas series of the value-count pairs
+        out[column] = [(key, counts[key]) for key in natsorted(counts.index)]
+
+    return out
+
+def metadata_map_from_sample_and_prep_templates(st, pt):
+    """Create a mapping file from a sample and a prep template
+
+    Parameters
+    ----------
+    st : SampleTemplate
+        Initialized SampleTemplate to use.
+    pt : PrepTemplate
+        Initialized PrepTemplate to use.
+
+    Returns
+    -------
+    pd.DataFrame
+        A DataFrame object where the index values are the sample identifiers
+        and the column names are the metadata categories.
+
+    Notes
+    -----
+    If the sample and preparation templates include repeated column names these
+    will be repeated in the resulting object, as they are not supposed to have
+    overlapping column names.
+    """
+    st = template_to_dict(st)
+    pt = template_to_dict(pt)
+
+    s_df = pd.DataFrame.from_dict(st, orient='index')
+    p_df = pd.DataFrame.from_dict(pt, orient='index')
+
+    return pd.merge(s_df, p_df, left_index=True, right_index=True, how='outer')
+
+def template_to_dict(t):
+    """Convert a SampleTemplate or PrepTemplate into a 2D-dictionary
+
+    Parameters
+    ----------
+    t : SampleTemplate or PrepTemplate
+        template to convert into a two-dimensional dictionary
+
+    Returns
+    -------
+    dict
+        dictionary object where the keys are the sample identifiers and the
+        the values are dictionaries with each column name as the keys.
+
+    """
+    out = {}
+    for sample_id, metadata in viewitems(t):
+        out[sample_id] = {}
+        for column_name, column_value in viewitems(metadata):
+            # cast to string as a datetime object can be returned here
+            out[sample_id][column_name] = str(column_value)
+    return out
+
