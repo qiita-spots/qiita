@@ -61,18 +61,20 @@ def load_study_from_cmd(owner, title, info):
 
     emp_person_name_email = get_optional('emp_person_name')
     if emp_person_name_email is not None:
-        emp_name, emp_email = emp_person_name_email.split(',')
+        emp_name, emp_email, emp_affiliation = emp_person_name_email.split(',')
         infodict['emp_person_id'] = StudyPerson.create(emp_name.strip(),
-                                                       emp_email.strip())
+                                                       emp_email.strip(),
+                                                       emp_affiliation.strip())
     lab_name_email = get_optional('lab_person')
     if lab_name_email is not None:
-        lab_name, lab_email = lab_name_email.split(',')
+        lab_name, lab_email, lab_affiliation = lab_name_email.split(',')
         infodict['lab_person_id'] = StudyPerson.create(lab_name.strip(),
-                                                       lab_email.strip())
+                                                       lab_email.strip(),
+                                                       lab_affiliation.strip())
     pi_name_email = get_required('principal_investigator')
-    pi_name, pi_email = pi_name_email.split(',')
+    pi_name, pi_email, pi_affiliation = pi_name_email.split(',')
     infodict['principal_investigator_id'] = StudyPerson.create(
-        pi_name.strip(), pi_email.strip())
+        pi_name.strip(), pi_email.strip(), pi_affiliation.strip())
     # this will eventually change to using the Experimental Factory Ontolgoy
     # names
     efo_ids = get_required('efo_ids')
