@@ -44,11 +44,11 @@ def load_study_from_cmd(owner, title, info):
     get_optional = lambda name: optional.get(name, None)
     get_required = partial(config.get, 'required')
     required_fields = ['timeseries_type_id', 'mixs_compliant',
-                       'number_samples_collected', 'number_samples_promised',
                        'portal_type_id', 'reprocess', 'study_alias',
                        'study_description', 'study_abstract',
                        'metadata_complete']
     optional_fields = ['funding', 'most_recent_contact', 'spatial_series',
+                       'number_samples_collected', 'number_samples_promised',
                        'vamps_id']
     infodict = {}
     for value in required_fields:
