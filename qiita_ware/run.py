@@ -62,7 +62,6 @@ def _job_comm_wrapper(user, analysis_id, job):
         msg["msg"] = "ERROR"
         r_server.rpush(user + ":messages", dumps(msg))
         r_server.publish(user, dumps(msg))
-        r_server.publish(user, "Failed compute on job id %d:\n%s\n%s" % (job.id, c_fmt, str(e)))
         #LogEntry.create(
         #    3,
         #    "Failed compute on job id %d:\n%s\n%s" % (job.id, c_fmt, str(e)),
@@ -181,6 +180,8 @@ class RunAnalysis(ParallelWrapper):
                     opts["--parameter_fp"] = join(
                         get_db_files_base_dir(), "reference",
                         "params_qiime.txt")
+            if command == "Alpha Rarefaction":
+                opts["-n"] = 4
             Job.create(data_type, command, opts, analysis,
                        return_existing=True)
 
