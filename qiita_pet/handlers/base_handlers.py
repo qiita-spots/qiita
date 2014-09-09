@@ -1,5 +1,3 @@
-from multiprocessing.pool import ThreadPool
-
 from functools import partial, wraps
 
 from tornado.web import RequestHandler, asynchronous
@@ -7,7 +5,6 @@ from tornado.ioloop import IOLoop
 
 
 class BaseHandler(RequestHandler):
-    EXECUTOR = ThreadPool(4)
 
     def get_current_user(self):
         '''Overrides default method of returning user curently connected'''
@@ -33,12 +30,6 @@ class BaseHandler(RequestHandler):
             self.render('error.html', error=error, trace_info=trace_info,
                         request_info=request_info,
                         user=self.current_user)
-
-    def run_background(self, func, callback, args=(), kwds={}):
-        # from https://gist.github.com/methane/2185380
-        def _callback(result):
-            IOLoop.instance().add_callback(lambda: callback(result))
-        self.EXECUTOR.apply_async(func, args, kwds, _callback)
 
 
 class MainHandler(BaseHandler):
