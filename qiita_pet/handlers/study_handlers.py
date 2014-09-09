@@ -26,7 +26,8 @@ class CreateStudyForm(Form):
     pubmed_id = StringField('PubMed ID')
     # TODO:This can be filled from the database
     # in oracle, this is in controlled_vocabs (ID 2)
-    investigation_type = SelectField('Investigation Type',
+    investigation_type = SelectField(
+        'Investigation Type',
         [validators.required()], coerce=lambda x: x,
         choices=[('eukaryote', 'eukaryote'),
                  ('bacteria_archaea_genome',
@@ -39,7 +40,8 @@ class CreateStudyForm(Form):
     # TODO:This can be filled from the database
     # in oracle, this is in controlled_vocabs (ID 1),
     #                       controlled_vocab_values with CVV IDs >= 0
-    environmental_packages = SelectMultipleField('Environmental Packages',
+    environmental_packages = SelectMultipleField(
+        'Environmental Packages',
         [validators.required()],
         choices=[('air', 'air'),
                  ('host_associated', 'host-associated'),
@@ -85,7 +87,7 @@ class CreateStudyHandler(BaseHandler):
             choices.append((study_person.id, person))
 
         creation_form.lab_person.choices = choices
-        creation_form.principal_investigator.choices = [('','')]+choices
+        creation_form.principal_investigator.choices = [('', '')]+choices
 
         # TODO: set the choices attributes on the investigation_type field
         # TODO: set the choices attributes on the environmental_package field
@@ -114,7 +116,7 @@ class CreateStudyHandler(BaseHandler):
         # the list here
         new_people_info.reverse()
 
-        index = int(form_dict['Principal Investigator']) 
+        index = int(form_dict['Principal Investigator'])
         if index < 0:
             # If the ID is less than 0, then this is a new person
             PI = StudyPerson.create(
@@ -127,7 +129,7 @@ class CreateStudyHandler(BaseHandler):
             PI = index
 
         if form_dict['Lab Person'] is not None:
-            index = int(form_dict['Lab Person']) 
+            index = int(form_dict['Lab Person'])
             if index < 0:
                 # If the ID is less than 0, then this is a new person
                 lab_person = StudyPerson.create(

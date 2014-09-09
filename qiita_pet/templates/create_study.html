@@ -208,7 +208,6 @@ function add_new_person(name, affiliation, email, phone, address) {
     {# form-item-specific rendering #}
     {% if form_item.label.text == 'Environmental Packages' %}
         {# Magic number 17: Current number of environmental packages #}
-        {% set kwargs['class_'] = 'form-control' %}
         {% set kwargs['size'] = '17' %}
         {% set additional_info = 'You can select multiple entries by control-clicking (mac: command-clicking)' %}
     {% end %}

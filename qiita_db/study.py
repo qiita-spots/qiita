@@ -215,7 +215,7 @@ class Study(QiitaStatusObject):
         insertdict['study_status_id'] = 1
 
         # No nuns allowed
-        insertdict = {k: v for k, v in insertdict.items() if v is not None}
+        insertdict = {k: v for k, v in viewitems(insertdict) if v is not None}
 
         conn_handler = SQLConnectionHandler()
         # make sure dictionary only has keys for available columns in db
