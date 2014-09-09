@@ -62,10 +62,11 @@ def _job_comm_wrapper(user, analysis_id, job):
         msg["msg"] = "ERROR"
         r_server.rpush(user + ":messages", dumps(msg))
         r_server.publish(user, dumps(msg))
-        LogEntry.create(
-            3,
-            "Failed compute on job id %d:\n%s\n%s" % (job.id, c_fmt, str(e)),
-            info={'analysis': analysis_id, 'job': job.id})
+        r_server.publish(user, "Failed compute on job id %d:\n%s\n%s" % (job.id, c_fmt, str(e)))
+        #LogEntry.create(
+        #    3,
+        #    "Failed compute on job id %d:\n%s\n%s" % (job.id, c_fmt, str(e)),
+        #    info={'analysis': analysis_id, 'job': job.id})
         return
 
     msg["msg"] = "Completed"
@@ -172,12 +173,14 @@ class RunAnalysis(ParallelWrapper):
             opts = comm_opts.get(command, {})
             # Add commands to analysis as jobs
             # HARD CODED HACKY THING FOR DEMO, FIX  Issue #164
-            if command == "Beta Diversity" and data_type in {'16S', '18S'}:
-                opts["--tree_fp"] = join(get_db_files_base_dir(), "reference",
-                                         "gg_97_otus_4feb2011.tre")
-            elif command == "Beta Diversity":
-                opts["--parameter_fp"] = join(get_db_files_base_dir(),
-                                              "reference", "params_qiime.txt")
+            if (command == "Beta Diversity" or command == "Alpha Rarefaction"):
+                if data_type in {'16S', '18S'}:
+                    opts["--tree_fp"] = join(get_db_files_base_dir(),
+                        "reference", "gg_97_otus_4feb2011.tre")
+                else:
+                    opts["--parameter_fp"] = join(
+                        get_db_files_base_dir(), "reference",
+                        "params_qiime.txt")
             Job.create(data_type, command, opts, analysis,
                        return_existing=True)
 

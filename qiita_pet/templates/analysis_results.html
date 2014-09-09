@@ -23,6 +23,9 @@
               {% for job, results in jobs%}
                 <div class="panel-body">
                   {{job}}<br />
+                  {% if len(results) == 0 %}
+                    <h3 style="color:red">ERROR</h3>
+                  {% end %}
                   {%for result in results%}
                     {% if "beta_diversity_through_plots" in result %}
                       {% if data_type == "16S"%}
