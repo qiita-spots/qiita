@@ -69,8 +69,7 @@ class CreateStudyForm(Form):
     principal_investigator = SelectField('Principal Investigator',
                                          [validators.required()],
                                          coerce=lambda x: x)
-    lab_person = SelectField('Lab Person',
-                             coerce=lambda x: x)
+    lab_person = SelectField('Lab Person', coerce=lambda x: x)
 
 
 class CreateStudyHandler(BaseHandler):
@@ -80,14 +79,14 @@ class CreateStudyHandler(BaseHandler):
 
         # Get people from the study_person table to populate the PI and
         # lab_person fields
-        choices = []
+        choices = [('', '')]
         for study_person in StudyPerson.iter():
             person = "{}, {}".format(study_person.name,
                                      study_person.affiliation)
             choices.append((study_person.id, person))
 
         creation_form.lab_person.choices = choices
-        creation_form.principal_investigator.choices = [('', '')]+choices
+        creation_form.principal_investigator.choices = choices
 
         # TODO: set the choices attributes on the investigation_type field
         # TODO: set the choices attributes on the environmental_package field
@@ -97,13 +96,8 @@ class CreateStudyHandler(BaseHandler):
     @authenticated
     def post(self):
         # Get the form data from the request arguments
-        form_data = CreateStudyForm(data=self.request.arguments)
-
-        # "process" the form data, and put it in a nicer structure
-        form_dict = {}
-        for element in form_data:
-            element.process_formdata(element.data)
-            form_dict[element.label.text] = element.data
+        form_data = CreateStudyForm()
+        form_data.process(data=self.request.arguments)
 
         # Get information about new people that need to be added to the DB
         new_people_info = zip(self.get_arguments('new_people_names'),
@@ -116,7 +110,7 @@ class CreateStudyHandler(BaseHandler):
         # the list here
         new_people_info.reverse()
 
-        index = int(form_dict['Principal Investigator'])
+        index = int(form_data.data['principal_investigator'][0])
         if index < 0:
             # If the ID is less than 0, then this is a new person
             PI = StudyPerson.create(
@@ -128,8 +122,8 @@ class CreateStudyHandler(BaseHandler):
         else:
             PI = index
 
-        if form_dict['Lab Person'] is not None:
-            index = int(form_dict['Lab Person'])
+        if form_data.data['lab_person'][0]:
+            index = int(form_data.data['lab_person'][0])
             if index < 0:
                 # If the ID is less than 0, then this is a new person
                 lab_person = StudyPerson.create(
@@ -155,17 +149,17 @@ class CreateStudyHandler(BaseHandler):
             'principal_investigator_id': PI,
             'metadata_complete': True,
             'mixs_compliant': True,
-            'study_description': form_dict['Study Description'],
-            'study_alias': form_dict['Study Alias'],
-            'study_abstract': form_dict['Study Abstract']}
+            'study_description': form_data.data['study_description'][0],
+            'study_alias': form_data.data['study_alias'][0],
+            'study_abstract': form_data.data['study_abstract'][0]}
 
         # TODO: Fix this EFO once ontology stuff from emily is added
         theStudy = Study.create(User(self.current_user),
-                                form_dict['Study Title'],
+                                form_data.data['study_title'][0],
                                 efo=[1], info=info)
 
-        if form_dict['PubMed ID']:
-            theStudy.add_pmid(form_dict['PubMed ID'])
+        if form_data.data['pubmed_id'][0]:
+            theStudy.add_pmid(form_data.data['pubmed_id'][0])
 
         # TODO: change this redirect to something more sensible
         self.redirect('/')
