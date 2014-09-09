@@ -21,6 +21,7 @@ from tornado.concurrent import return_future
 from tornado.gen import coroutine
 from collections import defaultdict, Counter
 from pyparsing import ParseException
+from redis import Redis
 
 from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_ware.run import RunAnalysis
@@ -257,7 +258,7 @@ class AnalysisWaitHandler(BaseHandler):
         commands = []
         for job in analysis.jobs:
             jobject = Job(job)
-            commands.append("%s:%s" % (jobject.datatype, jobject.command[0]))
+            commands.append("%s: %s" % (jobject.datatype, jobject.command[0]))
 
         self.render("analysis_waiting.html", user=user,
                     aid=analysis_id, aname=analysis.name,
@@ -303,6 +304,15 @@ class AnalysisResultsHandler(BaseHandler):
         self.render("analysis_results.html", user=self.current_user,
                     jobres=jobres, aname=analysis.name,
                     basefolder=get_db_files_base_dir())
+
+        # wipe out cached messages for this analysis
+        r_server = Redis()
+        key = '%s:messages' % self.current_user
+        oldmessages = r_server.lrange(key, 0, -1)
+        if oldmessages is not None:
+            for message in oldmessages:
+                if '"analysis": %d' % analysis_id in message:
+                    r_server.lrem(key, message, 1)
 
 
 class ShowAnalysesHandler(BaseHandler):

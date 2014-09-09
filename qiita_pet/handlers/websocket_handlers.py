@@ -46,7 +46,6 @@ class MessageHandler(WebSocketHandler):
                 self.write_message(message)
 
     def callback(self, msg):
-        print ">>>>>>>>>>>>>>", msg
         if msg[0] == 'message':
             self.write_message(msg[2])
 
