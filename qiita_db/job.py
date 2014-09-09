@@ -288,10 +288,8 @@ class Job(QiitaStatusObject):
         sql = ("SELECT options FROM qiita.{0} WHERE "
                "job_id = %s".format(self._table))
         conn_handler = SQLConnectionHandler()
-        opts = {}
         db_opts = conn_handler.execute_fetchone(sql, (self._id, ))[0]
-        if db_opts is not None:
-            opts = loads(db_opts)
+        opts = loads(db_opts) if db_opts else {}
         sql = ("SELECT command, output from qiita.command WHERE command_id = ("
                "SELECT command_id from qiita.{0} WHERE "
                "job_id = %s)".format(self._table))

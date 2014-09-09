@@ -8,6 +8,7 @@ from redis import Redis
 import networkx as nx
 
 from qiita_db.job import Job
+from qiita_db.logger import LogEntry
 from qiita_db.util import get_db_files_base_dir
 from qiita_ware.wrapper import ParallelWrapper
 from qiita_ware.context import system_call
@@ -23,7 +24,17 @@ from qiita_ware.exceptions import ComputeError
 # -----------------------------------------------------------------------------
 
 def _job_comm_wrapper(user, analysis_id, job):
-    """Wraps the job command execution to allow redis communication"""
+    """Wraps the job command execution to allow redis communication
+
+    Parameters
+    ----------
+    user : str
+        The user calling for the run
+    analysis_id : int
+        The analysis_id the job belongs to
+    job : Job object
+        The job to run
+    """
     name, command = job.command
     options = job.options
     # create json base for websocket messages
@@ -51,20 +62,31 @@ def _job_comm_wrapper(user, analysis_id, job):
         msg["msg"] = "ERROR"
         r_server.rpush(user + ":messages", dumps(msg))
         r_server.publish(user, dumps(msg))
-        print("Failed compute on job id %d:\n%s\n%s" % (job.id, c_fmt, str(e)))
+        LogEntry.create(
+            3,
+            "Failed compute on job id %d:\n%s\n%s" % (job.id, c_fmt, str(e)),
+            info={'analysis': analysis_id, 'job': job.id})
         return
 
     msg["msg"] = "Completed"
     r_server = Redis()
     r_server.rpush(user + ":messages", dumps(msg))
     r_server.publish(user, dumps(msg))
-    # FIX THIS Should not be hard coded
+    # FIX THIS Should not be hard coded  Issue #269
     job.add_results([(job.options["--output_dir"], "directory")])
     job.status = 'completed'
 
 
 def _build_analysis_files(analysis, r_depth=None):
-    """Creates the biom tables and mapping file, then adds to jobs"""
+    """Creates the biom tables and mapping file, then adds to jobs
+
+    Parameters
+    ----------
+    analysis : Analysis object
+        The analysis to build files for
+    r_depth : int, optional
+        Rarefaction depth for biom table creation. Default None
+    """
     # create the biom tables and add jobs to the analysis
     analysis.status = "running"
     analysis.build_files(r_depth)
@@ -85,6 +107,15 @@ def _build_analysis_files(analysis, r_depth=None):
 
 
 def _finish_analysis(user, analysis):
+    """Checks job statuses and finalized analysis and redis communication
+
+    Parameters
+    ----------
+    user : str
+        user running this analysis.
+    analysis: Analysis object
+        Analysis to finalize.
+    """
     # check job exit statuses for analysis result status
     all_good = True
     for job_id in analysis.jobs:
@@ -109,11 +140,29 @@ def _finish_analysis(user, analysis):
 
 
 class RunAnalysis(ParallelWrapper):
-    def __init__(self):
-        super(RunAnalysis, self).__init__(block=False)
+    def __init__(self, **kwargs):
+        super(RunAnalysis, self).__init__(block=False, **kwargs)
 
     def _construct_job_graph(self, user, analysis, commands, comm_opts=None,
                              rarefaction_depth=None):
+        """Builds the job graph for running an analysis
+
+        Parameters
+        ----------
+        user : str
+            user running this analysis.
+        analysis: Analysis object
+            Analysis to finalize.
+        commands : list of tuples
+            Commands to add as jobs in the analysis.
+            Format [(data_type, command name), ...]
+        comm_opts : dict of dicts, optional
+            Options for commands. Format {command name: {opt1: value,...},...}
+            Default None (use default options).
+        rarefaction_depth : int, optional
+            Rarefaction depth for analysis' biom tables. Default None.
+        """
+
         self._logger = stderr
         # Add jobs to analysis
         if comm_opts is None:

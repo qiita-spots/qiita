@@ -22,7 +22,7 @@ from qiita_ware.run import (
 
 
 @qiita_test_checker()
-class TestAnalysis(TestCase):
+class TestRun(TestCase):
     def setUp(self):
         self._del_files = []
 
@@ -88,6 +88,23 @@ class TestAnalysis(TestCase):
              '{"msg": "ERROR", "command": "18S: Beta Diversity", '
              '"analysis": 2}',
              '{"msg": "allcomplete", "analysis": 2}'])
+
+    def test_add_jobs_in_construct_job_graphs(self):
+        analysis = Analysis(2)
+        RunAnalysis()._construct_job_graph(
+            "demo@microbio.me", analysis, [('18S', 'Summarize Taxa')],
+            comm_opts={'Summarize Taxa': {'opt1': 5}})
+        self.assertEqual(analysis.jobs, [3, 4])
+        job = Job(4)
+        self.assertEqual(job.datatype, '18S')
+        self.assertEqual(job.command,
+                         ['Summarize Taxa', 'summarize_taxa_through_plots.py'])
+        expopts = {
+            '--output_dir': join(
+                get_db_files_base_dir(), 'job',
+                '4_summarize_taxa_through_plots.py_output_dir'),
+            'opt1': 5}
+        self.assertEqual(job.options, expopts)
 
 if __name__ == "__main__":
     main()
