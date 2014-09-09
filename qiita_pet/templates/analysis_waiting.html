@@ -8,19 +8,15 @@
         noerror = true;
 
         websocket.onopen = function() {
-            console.log("opened connection!")
             websocket.send(JSON.stringify({'user': '{{user}}'}));
-            console.log("sent!")
         };
         websocket.onmessage = function(evt) {
             message = JSON.parse(evt.data);
-            console.log(evt)
             if(message.analysis == '{{aid}}') {
                 if(message.msg == 'allcomplete') { 
                     window.location.replace("/analysis/results/{{aid}}");
                 }
                 list = document.getElementById(message.command);
-                alert(message.command + " >>> " + list);
                 if(message.msg.indexOf("ERROR") != -1) {
                   list.style.color="Red";
                   noerror=false;
