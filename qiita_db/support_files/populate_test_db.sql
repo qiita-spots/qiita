@@ -330,7 +330,7 @@ INSERT INTO qiita.processed_filepath (processed_data_id, filepath_id) VALUES (1,
 INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum, checksum_algorithm_id) VALUES ('1_job_result.txt', 8, '852952723', 1), ('2_test_folder', 7, '852952723', 1);
 
 -- Insert jobs
-INSERT INTO qiita.job (data_type_id, job_status_id, command_id, options) VALUES (1, 1, 1, '{"--otu_table_fp":1}'), (1, 3, 2, '{"--mapping_fp":1,"--otu_table_fp":1}'), (1, 1, 2, '{"--mapping_fp":1,"--otu_table_fp":1}');
+INSERT INTO qiita.job (data_type_id, job_status_id, command_id, options) VALUES (2, 1, 1, '{"--otu_table_fp":1}'), (2, 3, 2, '{"--mapping_fp":1,"--otu_table_fp":1}'), (2, 1, 2, '{"--mapping_fp":1,"--otu_table_fp":1}');
 
 -- Insert Analysis
 INSERT INTO qiita.analysis (email, name, description, analysis_status_id, pmid) VALUES ('test@foo.bar', 'SomeAnalysis', 'A test analysis', 1, '121112'), ('test@foo.bar', 'SomeSecondAnalysis', 'Another test analysis', 1, '22221112');
