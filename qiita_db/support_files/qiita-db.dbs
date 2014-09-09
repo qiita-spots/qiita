@@ -35,7 +35,7 @@
 			</fk>
 		</table>
 		<table name="analysis_chain" >
-			<comment>Keeps track of the chain of analysis edits. Tracks what previous analysis a given analysis came from.&#10;If a given analysis is not in child_id, it is the root of the chain. </comment>
+			<comment>Keeps track of the chain of analysis edits. Tracks what previous analysis a given analysis came from.If a given analysis is not in child_id, it is the root of the chain. </comment>
 			<column name="parent_id" type="bigint" jt="-5" mandatory="y" />
 			<column name="child_id" type="bigint" jt="-5" mandatory="y" />
 			<index name="idx_analysis_chain" unique="NORMAL" >
@@ -170,22 +170,6 @@
 				<fk_column name="analysis_id" pk="analysis_id" />
 			</fk>
 		</table>
-		<table name="annotation" >
-			<column name="annotation_id" type="bigserial" jt="-5" mandatory="y" />
-			<column name="term_id" type="bigint" jt="-5" mandatory="y" />
-			<column name="annotation_name" type="varchar" jt="12" mandatory="y" />
-			<column name="annotation_num_value" type="bigint" jt="-5" />
-			<column name="annotation_str_value" type="varchar" jt="12" />
-			<index name="pk_annotation" unique="PRIMARY_KEY" >
-				<column name="annotation_id" />
-			</index>
-			<index name="idx_annotation" unique="NORMAL" >
-				<column name="term_id" />
-			</index>
-			<fk name="fk_annotation_term" to_schema="qiita" to_table="term" >
-				<fk_column name="term_id" pk="term_id" />
-			</fk>
-		</table>
 		<table name="checksum_algorithm" >
 			<column name="checksum_algorithm_id" type="bigserial" jt="-5" mandatory="y" />
 			<column name="name" type="varchar" jt="12" mandatory="y" />
@@ -219,7 +203,7 @@
 			<column name="column_name" type="varchar" jt="12" mandatory="y" />
 			<column name="ontology_short_name" type="varchar" jt="12" mandatory="y" />
 			<column name="bioportal_id" type="integer" jt="4" mandatory="y" />
-			<column name="ontology_branch_id" type="integer" jt="4" mandatory="y" />
+			<column name="ontology_branch_id" type="varchar" jt="12" />
 			<index name="idx_column_ontology" unique="PRIMARY_KEY" >
 				<column name="column_name" />
 				<column name="ontology_short_name" />
@@ -346,23 +330,6 @@
 				<column name="data_type_id" />
 			</index>
 		</table>
-		<table name="dbxref" >
-			<column name="dbxref_id" type="bigserial" jt="-5" mandatory="y" />
-			<column name="term_id" type="bigint" jt="-5" mandatory="y" />
-			<column name="dbname" type="varchar" jt="12" mandatory="y" />
-			<column name="accession" type="varchar" jt="12" mandatory="y" />
-			<column name="description" type="varchar" jt="12" mandatory="y" />
-			<column name="xref_type" type="varchar" jt="12" mandatory="y" />
-			<index name="pk_dbxref" unique="PRIMARY_KEY" >
-				<column name="dbxref_id" />
-			</index>
-			<index name="idx_dbxref" unique="NORMAL" >
-				<column name="term_id" />
-			</index>
-			<fk name="fk_dbxref_term" to_schema="qiita" to_table="term" >
-				<fk_column name="term_id" pk="term_id" />
-			</fk>
-		</table>
 		<table name="emp_status" >
 			<comment>All possible statuses for projects relating to EMP. Whether they are part of, processed in accordance to, or not part of EMP.</comment>
 			<column name="emp_status_id" type="bigserial" jt="-5" mandatory="y" />
@@ -406,7 +373,7 @@
 			</index>
 		</table>
 		<table name="investigation" >
-			<comment>Overarching investigation information.&#10;An investigation comprises one or more individual studies.</comment>
+			<comment>Overarching investigation information.An investigation comprises one or more individual studies.</comment>
 			<column name="investigation_id" type="bigserial" jt="-5" mandatory="y" />
 			<column name="name" type="varchar" jt="12" mandatory="y" />
 			<column name="description" type="varchar" jt="12" mandatory="y" >
@@ -573,7 +540,7 @@
 			</index>
 		</table>
 		<table name="prep_y" >
-			<comment>Information on how raw data y was prepared (prep template)&#10;Linked by y being raw_data_id from raw data table.</comment>
+			<comment>Information on how raw data y was prepared (prep template)Linked by y being raw_data_id from raw data table.</comment>
 			<column name="sample_id" type="varchar" jt="12" mandatory="y" />
 			<column name="data" type="bigint" jt="-5" >
 				<comment><![CDATA[STUFFFFF]]></comment>
@@ -772,6 +739,9 @@
 			<index name="idx_raw_data" unique="NORMAL" >
 				<column name="filetype_id" />
 			</index>
+			<index name="pk_raw_data_0" unique="PRIMARY_KEY" >
+				<column name="raw_data_id" />
+			</index>
 			<fk name="fk_raw_data_filetype" to_schema="qiita" to_table="filetype" >
 				<fk_column name="filetype_id" pk="filetype_id" />
 			</fk>
@@ -844,13 +814,6 @@
 				<column name="reference_id" />
 			</index>
 		</table>
-		<table name="relationship_type" >
-			<column name="relationship_type_id" type="bigserial" jt="-5" mandatory="y" />
-			<column name="relationship_type" type="varchar" jt="12" mandatory="y" />
-			<index name="pk_relationship_type" unique="PRIMARY_KEY" >
-				<column name="relationship_type_id" />
-			</index>
-		</table>
 		<table name="required_sample_info" >
 			<comment>Required info for each sample. One row is one sample.</comment>
 			<column name="study_id" type="bigint" jt="-5" mandatory="y" />
@@ -899,7 +862,7 @@
 			</index>
 		</table>
 		<table name="sample_x" >
-			<comment>data for samples in study x (sample template)&#10;x is the study_id from study table&#10;&#10;MAKE SURE sample_id IS FK TO sample_id IN required_sample_info TABLE</comment>
+			<comment>data for samples in study x (sample template)x is the study_id from study tableMAKE SURE sample_id IS FK TO sample_id IN required_sample_info TABLE</comment>
 			<column name="sample_id" type="varchar" jt="12" mandatory="y" />
 			<column name="description" type="varchar" jt="12" mandatory="y" />
 			<column name="other_mapping_columns" type="varchar" jt="12" >
@@ -935,8 +898,8 @@ Controlled Vocabulary]]></comment>
 			<column name="metadata_complete" type="bool" jt="-7" mandatory="y" />
 			<column name="mixs_compliant" type="bool" jt="-7" mandatory="y" />
 			<column name="most_recent_contact" type="varchar" jt="12" />
-			<column name="number_samples_collected" type="integer" jt="4" mandatory="y" />
-			<column name="number_samples_promised" type="integer" jt="4" mandatory="y" />
+			<column name="number_samples_collected" type="integer" jt="4" />
+			<column name="number_samples_promised" type="integer" jt="4" />
 			<column name="portal_type_id" type="bigint" jt="-5" mandatory="y" />
 			<column name="principal_investigator_id" type="bigint" jt="-5" mandatory="y" />
 			<column name="reprocess" type="bool" jt="-7" mandatory="y" />
@@ -1012,10 +975,17 @@ Controlled Vocabulary]]></comment>
 			<column name="study_person_id" type="bigserial" jt="-5" mandatory="y" />
 			<column name="name" type="varchar" jt="12" mandatory="y" />
 			<column name="email" type="varchar" jt="12" mandatory="y" />
+			<column name="affiliation" type="varchar" jt="12" mandatory="y" >
+				<comment><![CDATA[The institution with which this person is affiliated]]></comment>
+			</column>
 			<column name="address" type="varchar" length="100" jt="12" />
 			<column name="phone" type="varchar" jt="12" />
 			<index name="pk_study_person" unique="PRIMARY_KEY" >
 				<column name="study_person_id" />
+			</index>
+			<index name="idx_study_person" unique="UNIQUE" >
+				<column name="name" />
+				<column name="affiliation" />
 			</index>
 		</table>
 		<table name="study_pmid" >
@@ -1144,11 +1114,11 @@ Controlled Vocabulary]]></comment>
 			<column name="identifier" type="varchar" jt="12" />
 			<column name="definition" type="varchar" jt="12" />
 			<column name="namespace" type="varchar" jt="12" />
-			<column name="is_obsolete" type="bool" jt="-7" mandatory="y" >
+			<column name="is_obsolete" type="bool" jt="-7" >
 				<defo>&#039;false&#039;</defo>
 			</column>
-			<column name="is_root_term" type="bool" jt="-7" mandatory="y" />
-			<column name="is_leaf" type="bool" jt="-7" mandatory="y" />
+			<column name="is_root_term" type="bool" jt="-7" />
+			<column name="is_leaf" type="bool" jt="-7" />
 			<index name="pk_term" unique="PRIMARY_KEY" >
 				<column name="term_id" />
 			</index>
@@ -1157,100 +1127,6 @@ Controlled Vocabulary]]></comment>
 			</index>
 			<fk name="fk_term_ontology" to_schema="qiita" to_table="ontology" >
 				<fk_column name="ontology_id" pk="ontology_id" />
-			</fk>
-		</table>
-		<table name="term_path" >
-			<column name="term_path_id" type="bigserial" jt="-5" mandatory="y" />
-			<column name="subject_term_id" type="bigint" jt="-5" mandatory="y" />
-			<column name="predicate_term_id" type="bigint" jt="-5" mandatory="y" />
-			<column name="object_term_id" type="bigint" jt="-5" mandatory="y" />
-			<column name="ontology_id" type="bigint" jt="-5" mandatory="y" />
-			<column name="relationship_type_id" type="integer" jt="4" mandatory="y" />
-			<column name="distance" type="integer" jt="4" />
-			<index name="pk_term_path" unique="PRIMARY_KEY" >
-				<column name="term_path_id" />
-			</index>
-			<index name="idx_term_path" unique="NORMAL" >
-				<column name="ontology_id" />
-			</index>
-			<index name="idx_term_path_relatonship" unique="NORMAL" >
-				<column name="relationship_type_id" />
-			</index>
-			<index name="idx_term_path_subject" unique="NORMAL" >
-				<column name="subject_term_id" />
-			</index>
-			<index name="idx_term_path_predicate" unique="NORMAL" >
-				<column name="predicate_term_id" />
-			</index>
-			<index name="idx_term_path_object" unique="NORMAL" >
-				<column name="object_term_id" />
-			</index>
-			<fk name="fk_term_path_ontology" to_schema="qiita" to_table="ontology" >
-				<fk_column name="ontology_id" pk="ontology_id" />
-			</fk>
-			<fk name="fk_term_path_relationship_type" to_schema="qiita" to_table="relationship_type" >
-				<fk_column name="relationship_type_id" pk="relationship_type_id" />
-			</fk>
-			<fk name="fk_term_path_term_subject" to_schema="qiita" to_table="term" >
-				<fk_column name="subject_term_id" pk="term_id" />
-			</fk>
-			<fk name="fk_term_path_term_predicate" to_schema="qiita" to_table="term" >
-				<fk_column name="predicate_term_id" pk="term_id" />
-			</fk>
-			<fk name="fk_term_path_term_object" to_schema="qiita" to_table="term" >
-				<fk_column name="object_term_id" pk="term_id" />
-			</fk>
-		</table>
-		<table name="term_relationship" >
-			<column name="term_relationship_id" type="bigserial" jt="-5" mandatory="y" />
-			<column name="subject_term_id" type="bigint" jt="-5" mandatory="y" />
-			<column name="predicate_term_id" type="bigint" jt="-5" mandatory="y" />
-			<column name="object_term_id" type="bigint" jt="-5" mandatory="y" />
-			<column name="ontology_id" type="bigint" jt="-5" mandatory="y" />
-			<index name="pk_term_relationship" unique="PRIMARY_KEY" >
-				<column name="term_relationship_id" />
-			</index>
-			<index name="idx_term_relationship_subject" unique="NORMAL" >
-				<column name="subject_term_id" />
-			</index>
-			<index name="idx_term_relationship_predicate" unique="NORMAL" >
-				<column name="predicate_term_id" />
-			</index>
-			<index name="idx_term_relationship_object" unique="NORMAL" >
-				<column name="object_term_id" />
-			</index>
-			<index name="idx_term_relationship_ontology" unique="NORMAL" >
-				<column name="ontology_id" />
-			</index>
-			<fk name="fk_term_relationship_subj_term" to_schema="qiita" to_table="term" >
-				<fk_column name="subject_term_id" pk="term_id" />
-			</fk>
-			<fk name="fk_term_relationship_pred_term" to_schema="qiita" to_table="term" >
-				<fk_column name="predicate_term_id" pk="term_id" />
-			</fk>
-			<fk name="fk_term_relationship_obj_term" to_schema="qiita" to_table="term" >
-				<fk_column name="object_term_id" pk="term_id" />
-			</fk>
-			<fk name="fk_term_relationship_ontology" to_schema="qiita" to_table="ontology" >
-				<fk_column name="ontology_id" pk="ontology_id" />
-			</fk>
-		</table>
-		<table name="term_synonym" >
-			<column name="synonym_id" type="bigserial" jt="-5" mandatory="y" />
-			<column name="term_id" type="bigint" jt="-5" mandatory="y" />
-			<column name="synonym_value" type="varchar" jt="12" mandatory="y" />
-			<column name="synonym_type_id" type="bigint" jt="-5" mandatory="y" />
-			<index name="pk_term_synonym" unique="PRIMARY_KEY" >
-				<column name="synonym_id" />
-			</index>
-			<index name="idx_term_synonym" unique="NORMAL" >
-				<column name="term_id" />
-			</index>
-			<fk name="fk_term_synonym_term" to_schema="qiita" to_table="term" >
-				<fk_column name="term_id" pk="term_id" />
-			</fk>
-			<fk name="fk_term_synonym_type_term" to_schema="qiita" to_table="term" >
-				<fk_column name="synonym_id" pk="term_id" />
 			</fk>
 		</table>
 		<table name="timeseries_type" >
@@ -1274,11 +1150,9 @@ Controlled Vocabulary]]></comment>
 	</schema>
 	<connector name="PostgreSQL" database="PostgreSQL" driver_class="org.postgresql.Driver" driver_jar="postgresql-9.2-1003.jdbc3.jar" host="localhost" port="5432" instance="qiita_test" user="defaultuser" passwd="ZGVmYXVsdHBhc3N3b3Jk" schema_mapping="" />
 	<layout id="Layout669806" name="qiita" show_relation_columns="y" >
-		<entity schema="qiita" name="term_synonym" color="d0def5" x="525" y="1875" />
 		<entity schema="qiita" name="controlled_vocab_values" color="d0def5" x="45" y="1530" />
 		<entity schema="qiita" name="controlled_vocabularies" color="d0def5" x="45" y="1320" />
 		<entity schema="qiita" name="severity" color="c0d4f3" x="1500" y="1200" />
-		<entity schema="qiita" name="study_person" color="c0d4f3" x="2040" y="90" />
 		<entity schema="qiita" name="investigation" color="c0d4f3" x="2040" y="240" />
 		<entity schema="qiita" name="investigation_study" color="c0d4f3" x="2040" y="390" />
 		<entity schema="qiita" name="study_status" color="c0d4f3" x="2040" y="495" />
@@ -1294,13 +1168,7 @@ Controlled Vocabulary]]></comment>
 		<entity schema="qiita" name="analysis_sample" color="d0def5" x="45" y="1155" />
 		<entity schema="qiita" name="column_controlled_vocabularies" color="d0def5" x="270" y="1320" />
 		<entity schema="qiita" name="mixs_field_description" color="d0def5" x="300" y="1485" />
-		<entity schema="qiita" name="column_ontology" color="d0def5" x="285" y="1710" />
-		<entity schema="qiita" name="term_relationship" color="d0def5" x="525" y="1515" />
-		<entity schema="qiita" name="term_path" color="d0def5" x="990" y="1320" />
 		<entity schema="qiita" name="ontology" color="d0def5" x="765" y="1320" />
-		<entity schema="qiita" name="annotation" color="d0def5" x="960" y="1860" />
-		<entity schema="qiita" name="dbxref" color="d0def5" x="795" y="1845" />
-		<entity schema="qiita" name="relationship_type" color="d0def5" x="975" y="1665" />
 		<entity schema="qiita" name="analysis_users" color="d0def5" x="60" y="720" />
 		<entity schema="qiita" name="user_level" color="d0def5" x="165" y="60" />
 		<entity schema="qiita" name="qiita_user" color="d0def5" x="330" y="75" />
@@ -1309,7 +1177,6 @@ Controlled Vocabulary]]></comment>
 		<entity schema="qiita" name="data_type" color="d0def5" x="690" y="1005" />
 		<entity schema="qiita" name="filepath" color="c0d4f3" x="660" y="675" />
 		<entity schema="qiita" name="study_preprocessed_data" color="c0d4f3" x="1485" y="705" />
-		<entity schema="qiita" name="study" color="d0def5" x="1755" y="45" />
 		<entity schema="qiita" name="study_users" color="d0def5" x="1005" y="45" />
 		<entity schema="qiita" name="required_sample_info" color="d0def5" x="1350" y="105" />
 		<entity schema="qiita" name="sample_x" color="d0def5" x="1575" y="150" />
@@ -1325,7 +1192,6 @@ Controlled Vocabulary]]></comment>
 		<entity schema="qiita" name="study_raw_data" color="d0def5" x="1515" y="495" />
 		<entity schema="qiita" name="timeseries_type" color="c0d4f3" x="1620" y="600" />
 		<entity schema="qiita" name="portal_type" color="c0d4f3" x="1845" y="720" />
-		<entity schema="qiita" name="raw_data" color="d0def5" x="1230" y="480" />
 		<entity schema="qiita" name="raw_preprocessed_data" color="b2cdf7" x="1230" y="585" />
 		<entity schema="qiita" name="processed_filepath" color="c0d4f3" x="1005" y="930" />
 		<entity schema="qiita" name="command" color="d0def5" x="210" y="1095" />
@@ -1342,7 +1208,11 @@ Controlled Vocabulary]]></comment>
 		<entity schema="qiita" name="preprocessed_filepath" color="c0d4f3" x="990" y="690" />
 		<entity schema="qiita" name="analysis_filepath" color="c0d4f3" x="405" y="720" />
 		<entity schema="qiita" name="analysis_workflow" color="c0d4f3" x="390" y="630" />
+		<entity schema="qiita" name="raw_data" color="d0def5" x="1230" y="480" />
+		<entity schema="qiita" name="column_ontology" color="d0def5" x="285" y="1710" />
 		<entity schema="qiita" name="term" color="d0def5" x="795" y="1620" />
+		<entity schema="qiita" name="study" color="d0def5" x="1755" y="45" />
+		<entity schema="qiita" name="study_person" color="c0d4f3" x="2040" y="90" />
 		<group name="Group_analyses" color="c4e0f9" >
 			<comment>analysis tables</comment>
 			<entity schema="qiita" name="analysis" />
@@ -1409,12 +1279,6 @@ Controlled Vocabulary]]></comment>
 		<group name="Group_ontology" color="ff99ff" >
 			<entity schema="qiita" name="ontology" />
 			<entity schema="qiita" name="term" />
-			<entity schema="qiita" name="relationship_type" />
-			<entity schema="qiita" name="term_path" />
-			<entity schema="qiita" name="term_relationship" />
-			<entity schema="qiita" name="term_synonym" />
-			<entity schema="qiita" name="dbxref" />
-			<entity schema="qiita" name="annotation" />
 		</group>
 		<group name="Group_logging" color="c4e0f9" >
 			<entity schema="qiita" name="logging" />

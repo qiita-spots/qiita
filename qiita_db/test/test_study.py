@@ -26,16 +26,16 @@ class TestStudyPerson(TestCase):
         self.studyperson = StudyPerson(1)
 
     def test_create_studyperson(self):
-        new = StudyPerson.create('SomeDude', 'somedude@foo.bar',
+        new = StudyPerson.create('SomeDude', 'somedude@foo.bar', 'affil',
                                  '111 fake street', '111-121-1313')
         self.assertEqual(new.id, 4)
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.study_person WHERE study_person_id = 4")
-        self.assertEqual(obs, [[4, 'SomeDude', 'somedude@foo.bar',
+        self.assertEqual(obs, [[4, 'SomeDude', 'somedude@foo.bar', 'affil',
                          '111 fake street', '111-121-1313']])
 
     def test_create_studyperson_already_exists(self):
-        obs = StudyPerson.create('LabDude', 'lab_dude@foo.bar')
+        obs = StudyPerson.create('LabDude', 'lab_dude@foo.bar', 'knight lab')
         self.assertEqual(obs.name, 'LabDude')
         self.assertEqual(obs.email, 'lab_dude@foo.bar')
 
@@ -49,9 +49,16 @@ class TestStudyPerson(TestCase):
     def test_retrieve_email(self):
         self.assertEqual(self.studyperson.email, 'lab_dude@foo.bar')
 
+    def test_retrieve_affiliation(self):
+        self.assertEqual(self.studyperson.affiliation, 'knight lab')
+
     def test_set_email_fail(self):
         with self.assertRaises(AttributeError):
             self.studyperson.email = 'faildude@foo.bar'
+
+    def test_set_affiliation_fail(self):
+        with self.assertRaises(AttributeError):
+            self.studyperson.affiliation = 'squire lab'
 
     def test_retrieve_address(self):
         self.assertEqual(self.studyperson.address, '123 lab street')
