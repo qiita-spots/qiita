@@ -66,6 +66,7 @@ def _job_comm_wrapper(user, analysis_id, job):
 def _build_analysis_files(analysis, r_depth=None):
     """Creates the biom tables and mapping file, then adds to jobs"""
     # create the biom tables and add jobs to the analysis
+    analysis.status = "running"
     analysis.build_files(r_depth)
     mapping_file = analysis.mapping_file
     biom_tables = analysis.biom_tables
