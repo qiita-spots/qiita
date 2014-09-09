@@ -214,6 +214,9 @@ class Study(QiitaStatusObject):
         # default to waiting_approval status
         insertdict['study_status_id'] = 1
 
+        # No nuns allowed
+        insertdict = {k: v for k, v in insertdict.items() if v is not None}
+
         conn_handler = SQLConnectionHandler()
         # make sure dictionary only has keys for available columns in db
         check_table_cols(conn_handler, insertdict, cls._table)
@@ -535,6 +538,24 @@ class StudyPerson(QiitaObject):
         phone number of the person
     """
     _table = "study_person"
+
+    @classmethod
+    def iter(cls):
+        """Iterate over all study people in the database
+
+        Returns
+        -------
+        generator
+            Yields a `StudyPerson` object for each person in the database,
+            in order of ascending study_person_id
+        """
+        conn = SQLConnectionHandler()
+        sql = "select study_person_id from qiita.{} order by study_person_id"
+        results = conn.execute_fetchall(sql.format(cls._table))
+
+        for result in results:
+            ID = result[0]
+            yield StudyPerson(ID)
 
     @classmethod
     def exists(cls, name, affiliation):
