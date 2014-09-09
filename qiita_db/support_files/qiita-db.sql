@@ -487,6 +487,7 @@ CREATE TABLE qiita.study (
 	study_abstract       text  NOT NULL,
 	vamps_id             varchar  ,
 	CONSTRAINT pk_study PRIMARY KEY ( study_id ),
+	CONSTRAINT unique_study_title UNIQUE ( study_title ) ,
 	CONSTRAINT fk_study_user FOREIGN KEY ( email ) REFERENCES qiita.qiita_user( email )    ,
 	CONSTRAINT fk_study_study_status FOREIGN KEY ( study_status_id ) REFERENCES qiita.study_status( study_status_id )    ,
 	CONSTRAINT fk_study_study_emp_person FOREIGN KEY ( emp_person_id ) REFERENCES qiita.study_person( study_person_id )    ,
