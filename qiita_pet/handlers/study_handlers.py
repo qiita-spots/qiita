@@ -13,8 +13,10 @@ from tornado.web import authenticated, asynchronous, HTTPError
 from wtforms import (Form, StringField, SelectField, BooleanField,
                      SelectMultipleField, TextAreaField, validators)
 
-from qiita_pet.handlers.base_handlers import BaseHandler
-from qiita_db.study import Study
+from .base_handlers import BaseHandler
+
+from qiita_db.study import Study, StudyPerson
+from qiita_db.user import User
 
 
 class CreateStudyForm(Form):
@@ -63,64 +65,105 @@ class CreateStudyForm(Form):
                                     [validators.required()])
     # The choices for these "people" fields will be filled from the database
     principal_investigator = SelectField('Principal Investigator',
-        coerce=lambda x: x,
-        choices=[('1', 'some guy'),
-                 ('2', 'some gal')])
+                                         [validators.required()],
+                                         coerce=lambda x: x)
     lab_person = SelectField('Lab Person',
-        coerce=lambda x: x,
-        choices=[('1', 'some guy'),
-                 ('2', 'some gal')])
+                             coerce=lambda x: x)
 
-
-def check_study_access(user, study_id):
-    """Checks whether user has access to a study
-
-    Parameters
-    ----------
-    user : User object
-        User to check
-    study_id : int
-        Study to check access for
-
-    Raises
-    ------
-    RuntimeError
-        Tried to access analysis that user does not have access to
-    """
-    if study_id not in Study.get_public() + user.shared_studies + \
-            user.private_studies:
-        raise HTTPError(403, "Study access denied to %s" % (study_id))
 
 class CreateStudyHandler(BaseHandler):
     @authenticated
     def get(self):
         creation_form = CreateStudyForm()
 
-        # TODO: set the choices attribute on the PI field
-        # TODO: set the choices attribute on the lab_person field
+        # Get people from the study_person table to populate the PI and
+        # lab_person fields
+        choices = []
+        for study_person in StudyPerson.iter():
+            person = "{}, {}".format(study_person.name,
+                                     study_person.affiliation)
+            choices.append((study_person.id, person))
+
+        creation_form.lab_person.choices = choices
+        creation_form.principal_investigator.choices = [('','')]+choices
+
         # TODO: set the choices attributes on the investigation_type field
         # TODO: set the choices attributes on the environmental_package field
         self.render('create_study.html', user=self.current_user,
                     creation_form=creation_form)
 
+    @authenticated
     def post(self):
         # Get the form data from the request arguments
         form_data = CreateStudyForm(data=self.request.arguments)
 
         # "process" the form data, and put it in a nicer structure
-        form_data_dict = {}
+        form_dict = {}
         for element in form_data:
             element.process_formdata(element.data)
-            form_data_dict[elelement.label.text] = element.data
+            form_dict[element.label.text] = element.data
+
+        # Get information about new people that need to be added to the DB
+        new_people_info = zip(self.get_arguments('new_people_names'),
+                              self.get_arguments('new_people_emails'),
+                              self.get_arguments('new_people_affiliations'),
+                              self.get_arguments('new_people_phones'),
+                              self.get_arguments('new_people_addresses'))
+
+        # New people will be indexed with negative numbers, so we reverse
+        # the list here
+        new_people_info.reverse()
+
+        index = int(form_dict['Principal Investigator']) 
+        if index < 0:
+            # If the ID is less than 0, then this is a new person
+            PI = StudyPerson.create(
+                new_people_info[index][0],
+                new_people_info[index][1],
+                new_people_info[index][2],
+                new_people_info[index][3] or None,
+                new_people_info[index][4] or None).id
+        else:
+            PI = index
+
+        if form_dict['Lab Person'] is not None:
+            index = int(form_dict['Lab Person']) 
+            if index < 0:
+                # If the ID is less than 0, then this is a new person
+                lab_person = StudyPerson.create(
+                    new_people_info[index][0],
+                    new_people_info[index][1],
+                    new_people_info[index][2],
+                    new_people_info[index][3] or None,
+                    new_people_info[index][4] or None).id
+            else:
+                lab_person = index
+        else:
+            lab_person = None
 
         # create the study
+        # TODO: Get the portal type from... somewhere
+        # TODO: Time series types; right now it's True/False; from emily?
+        # TODO: MIXS compliant?  Always true, right?
+        # TODO: Metadata complete: always true, right?
         info = {
-            'timeseries_type_id': form_data_dict['Includes Event-Based Data'],
+            'timeseries_type_id': 1,
+            'portal_type_id': 1,
+            'lab_person_id': lab_person,
+            'principal_investigator_id': PI,
             'metadata_complete': True,
-            'mixs_compliant': True}
+            'mixs_compliant': True,
+            'study_description': form_dict['Study Description'],
+            'study_alias': form_dict['Study Alias'],
+            'study_abstract': form_dict['Study Abstract']}
 
-        Study.create(self.current_user, form_data_dict['Study Title'],
-                     efo=[1], info=info)
+        # TODO: Fix this EFO once ontology stuff from emily is added
+        theStudy = Study.create(User(self.current_user),
+                                form_dict['Study Title'],
+                                efo=[1], info=info)
 
-        # TODO: change this redirect
+        if form_dict['PubMed ID']:
+            theStudy.add_pmid(form_dict['PubMed ID'])
+
+        # TODO: change this redirect to something more sensible
         self.redirect('/')
