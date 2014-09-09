@@ -23,7 +23,7 @@ from collections import defaultdict, Counter
 from pyparsing import ParseException
 
 from qiita_pet.handlers.base_handlers import BaseHandler
-from qiita_ware.run import run_analysis
+from qiita_ware.run import RunAnalysis
 from qiita_db.user import User
 from qiita_db.analysis import Analysis
 from qiita_db.study import Study
@@ -281,8 +281,9 @@ class AnalysisWaitHandler(BaseHandler):
         analysis = Analysis(analysis_id)
         self.render("analysis_waiting.html", user=user, aid=analysis_id,
                     aname=analysis.name, commands=commands)
-        run_analysis(user, analysis, split,
-                     rarefaction_depth=rarefaction_depth)
+        app = RunAnalysis()
+        app(user, analysis, split, comm_opts={},
+            rarefaction_depth=rarefaction_depth)
 
 
 class AnalysisResultsHandler(BaseHandler):

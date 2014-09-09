@@ -2,9 +2,9 @@
 # https://github.com/leporo/tornado-redis/blob/master/demos/websockets
 from json import loads
 
-from qiita_ware.run import r_server
-
+from redis import Redis
 from toredis import Client
+
 from tornado.websocket import WebSocketHandler
 from tornado.gen import engine, Task
 
@@ -17,6 +17,7 @@ from tornado.gen import engine, Task
 class MessageHandler(WebSocketHandler):
     def __init__(self, *args, **kwargs):
         super(MessageHandler, self).__init__(*args, **kwargs)
+        self.r_server = Redis()
         self.redis = Client()
         self.redis.connect()
 
@@ -39,7 +40,7 @@ class MessageHandler(WebSocketHandler):
         # equivalent of callback/wait pairing from tornado.gen
         self.redis.subscribe(self.channel, callback=self.callback)
         # fight race condition by loading from redis after listen started
-        oldmessages = r_server.lrange('%s:messages' % self.channel, 0, -1)
+        oldmessages = self.r_server.lrange('%s:messages' % self.channel, 0, -1)
         if oldmessages is not None:
             for message in oldmessages:
                 self.write_message(message)
