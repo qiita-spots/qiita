@@ -127,6 +127,7 @@ class Study(QiitaStatusObject):
     preprocessed_data
     processed_data
     add_pmid
+    exists
 
     Notes
     -----
@@ -161,6 +162,25 @@ class Study(QiitaStatusObject):
                "{0}_status_id = %s".format(cls._table))
         # MAGIC NUMBER 2: status id for a public study
         return [x[0] for x in conn_handler.execute_fetchall(sql, (2, ))]
+
+    @classmethod
+    def exists(cls, study_title):
+        """Check if a study exists based on study_title, which is unique
+
+        Parameters
+        ----------
+        study_title : str
+            The title of the study to search for in the database
+
+        Returns
+        -------
+        bool
+        """
+        conn_handler = SQLConnectionHandler()
+        sql = ("SELECT exists(select study_id from qiita.{} WHERE "
+               "study_title = %s)").format(cls._table)
+
+        return conn_handler.execute_fetchone(sql, [study_title])[0]
 
     @classmethod
     def create(cls, owner, title, efo, info, investigation=None):
