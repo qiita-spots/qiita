@@ -20,7 +20,6 @@ from qiita_db.user import User
 
 
 class CreateStudyForm(Form):
-    study_name = StringField('Study Name', [validators.required()])
     study_title = StringField('Study Title', [validators.required()])
     study_alias = StringField('Study Alias', [validators.required()])
     pubmed_id = StringField('PubMed ID')
