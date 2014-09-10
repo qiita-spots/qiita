@@ -28,9 +28,7 @@ from __future__ import division
 from json import loads, dumps
 from datetime import datetime
 
-from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from .sql_connection import SQLConnectionHandler
-from .exceptions import QiitaDBNotImplementedError, QiitaDBUnknownIDError
 from .base import QiitaObject
 
 

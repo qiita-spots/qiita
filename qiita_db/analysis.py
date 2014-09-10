@@ -17,13 +17,11 @@ Classes
 # -----------------------------------------------------------------------------
 from __future__ import division
 from collections import defaultdict
-from os.path import join, basename, splitext, relpath
 from binascii import crc32
+from os.path import join
 
-from future.builtins import zip
 from future.utils import viewitems
 from biom import load_table
-from biom.table import Table
 from biom.util import biom_open
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError

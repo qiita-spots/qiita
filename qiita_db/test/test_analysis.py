@@ -1,18 +1,13 @@
 from unittest import TestCase, main
 from os.path import exists, join
-from os import remove
 
 from biom import load_table
 
-from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_core.util import qiita_test_checker
 from qiita_db.analysis import Analysis
-from qiita_db.job import Job
 from qiita_db.user import User
-from qiita_db.data import ProcessedData
-from qiita_db.exceptions import (QiitaDBDuplicateError, QiitaDBColumnError,
-                                 QiitaDBStatusError)
-from qiita_db.util import get_work_base_dir, get_db_files_base_dir
+from qiita_db.exceptions import QiitaDBStatusError
+from qiita_db.util import get_db_files_base_dir
 # -----------------------------------------------------------------------------
 # Copyright (c) 2014--, The Qiita Development Team.
 #

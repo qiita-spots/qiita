@@ -15,7 +15,7 @@ from uuid import uuid4
 from qiita_pet.handlers.base_handlers import (MainHandler, MockupHandler,
                                               NoPageHandler)
 from qiita_pet.handlers.auth_handlers import (
-    AuthCreateHandler, AuthLoginHandler, AuthLogoutHandler, AuthVerifyHandler)
+    AuthCreateHandler, AuthLoginHandler, AuthLogoutHandler)
 from qiita_pet.handlers.analysis_handlers import (
     SelectCommandsHandler, AnalysisWaitHandler, AnalysisResultsHandler,
     ShowAnalysesHandler, SearchStudiesHandler)

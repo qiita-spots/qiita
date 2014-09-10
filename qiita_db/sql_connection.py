@@ -10,7 +10,6 @@ from __future__ import division
 # -----------------------------------------------------------------------------
 
 from contextlib import contextmanager
-from collections import Iterable
 
 from psycopg2 import connect, Error as PostgresError
 from psycopg2.extras import DictCursor

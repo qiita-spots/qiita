@@ -11,26 +11,21 @@ Qitta analysis handlers for the Tornado webserver.
 # -----------------------------------------------------------------------------
 from __future__ import division
 from future.utils import viewitems
-from tempfile import mkstemp
-from os import close
 from os.path import join
-from itertools import product
+from collections import defaultdict, Counter
 
 from tornado.web import authenticated, asynchronous, HTTPError
-from collections import defaultdict, Counter
 from pyparsing import ParseException
 
 from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_ware.run import run_analysis
 from qiita_db.user import User
 from qiita_db.analysis import Analysis
-from qiita_db.study import Study
 from qiita_db.data import ProcessedData
 from qiita_db.metadata_template import SampleTemplate
 from qiita_db.job import Job, Command
 from qiita_db.util import get_db_files_base_dir, get_table_cols
 from qiita_db.search import QiitaStudySearch
-from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_db.exceptions import QiitaDBIncompatibleDatatypeError
 
 SELECT_SAMPLES = 2
@@ -293,7 +288,7 @@ class AnalysisWaitHandler(BaseHandler):
             elif command == "Beta Diversity":
                 opts["--parameter_fp"] = join(get_db_files_base_dir(),
                                               "reference", "params_qiime.txt")
-            job = Job.create(data_type, command, opts, analysis)
+            Job.create(data_type, command, opts, analysis)
         user = self.current_user
         # fire off analysis run here
         run_analysis(user, analysis)

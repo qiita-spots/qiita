@@ -153,8 +153,9 @@ class TestStudy(TestCase):
             'number_samples_collected': 27}
 
     def test_get_public(self):
-        new = Study.create(User('test@foo.bar'), 'Identification of the '
-                           'Microbiomes for Cannabis Soils', [1], self.info)
+        Study.create(User('test@foo.bar'), 'Identification of the '
+                     'Microbiomes for Cannabis Soils',
+                     [1], self.info)
         obs = Study.get_public()
         self.assertEqual(obs, [1])
 
