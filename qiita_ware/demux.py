@@ -1,9 +1,7 @@
 #!/usr/bin/env python
 r"""HDF5 demultiplexed DDL
 
-The full DDL is below. The summarized version is here:
-
-    Attributes off of ./ for the full file:
+Attributes off of ./ for the full file:
 
     n         : int, the number of sequences
     max       : int, the max sequence length
@@ -11,8 +9,10 @@ The full DDL is below. The summarized version is here:
     mean      : float, the mean sequence length
     std       : float, the standard deviation of sequence length
     median    : float, the median sequence length
+    hist      : np.array of int, 10 bin histogram of sequence lengths
+    hist_edge : np.array of int, left edge of each bin
 
-    Each sample has its own group with the following structure:
+Each sample has its own group with the following structure:
 
     ./<sample_name>/sequence          : (N,) of str where N is the number of \
 sequences in the sample
@@ -25,8 +25,8 @@ sequences in the sample
     ./<sample_name>/barcode/error     : (N,) of int where N is the number of
 sequences in the sample
 
-    Each sample additionally has the following attributes described on the
-    sample group:
+Each sample additionally has the following attributes described on the
+sample group:
 
     n         : int, the number of sequences
     max       : int, the max sequence length
@@ -34,92 +34,9 @@ sequences in the sample
     mean      : float, the mean sequence length
     std       : float, the standard deviation of sequence length
     median    : float, the median sequence length
+    hist      : np.array of int, 10 bin histogram of sequence lengths
+    hist_edge : np.array of int, left edge of each bin
 
-The full HDF5 DDL:
-
-HDF5 "name_of_file.dmx" {
-GROUP "/" {
-   ATTRIBUTE "max" {
-      DATATYPE  H5T_STD_I64LE
-      DATASPACE  SCALAR
-   }
-   ATTRIBUTE "mean" {
-      DATATYPE  H5T_IEEE_F64LE
-      DATASPACE  SCALAR
-   }
-   ATTRIBUTE "min" {
-      DATATYPE  H5T_STD_I64LE
-      DATASPACE  SCALAR
-   }
-   ATTRIBUTE "n" {
-      DATATYPE  H5T_STD_I64LE
-      DATASPACE  SCALAR
-   }
-   ATTRIBUTE "std" {
-      DATATYPE  H5T_IEEE_F64LE
-      DATASPACE  SCALAR
-   }
-   GROUP "sample_name" {
-      ATTRIBUTE "max" {
-         DATATYPE  H5T_STD_I64LE
-         DATASPACE  SCALAR
-      }
-      ATTRIBUTE "mean" {
-         DATATYPE  H5T_IEEE_F64LE
-         DATASPACE  SCALAR
-      }
-      ATTRIBUTE "min" {
-         DATATYPE  H5T_STD_I64LE
-         DATASPACE  SCALAR
-      }
-      ATTRIBUTE "n" {
-         DATATYPE  H5T_STD_I64LE
-         DATASPACE  SCALAR
-      }
-      ATTRIBUTE "std" {
-         DATATYPE  H5T_IEEE_F64LE
-         DATASPACE  SCALAR
-      }
-      GROUP "barcode" {
-         DATASET "corrected" {
-            DATATYPE  H5T_STRING {
-               STRSIZE 12;
-               STRPAD H5T_STR_NULLPAD;
-               CSET H5T_CSET_ASCII;
-               CTYPE H5T_C_S1;
-            }
-            DATASPACE  SIMPLE { ( N ) / ( N ) }
-         }
-         DATASET "error" {
-            DATATYPE  H5T_STD_I64LE
-            DATASPACE  SIMPLE { ( N ) / ( N ) }
-         }
-         DATASET "original" {
-            DATATYPE  H5T_STRING {
-               STRSIZE 12;
-               STRPAD H5T_STR_NULLPAD;
-               CSET H5T_CSET_ASCII;
-               CTYPE H5T_C_S1;
-            }
-            DATASPACE  SIMPLE { ( N ) / ( N ) }
-         }
-      }
-      DATASET "qual" {
-         DATATYPE  H5T_STD_I64LE
-         DATASPACE  SIMPLE { ( N, M ) / ( N, M ) }
-      }
-      DATASET "sequence" {
-         DATATYPE  H5T_STRING {
-            STRSIZE 151;
-            STRPAD H5T_STR_NULLPAD;
-            CSET H5T_CSET_ASCII;
-            CTYPE H5T_C_S1;
-         }
-         DATASPACE  SIMPLE { ( N ) / ( M ) }
-      }
-   }
-}
-}
 """
 from __future__ import division
 
@@ -133,10 +50,11 @@ from __future__ import division
 
 import os
 from functools import partial
+from itertools import repeat
 from collections import defaultdict, namedtuple
 
-import h5py
 import numpy as np
+from numpy.random import shuffle
 from future.utils import viewitems, viewvalues
 from future.builtins import zip
 
@@ -144,7 +62,7 @@ from skbio.parse.sequences import load
 from skbio.format.sequences import format_fastq_record
 
 # track some basic stats about the samples
-stat = namedtuple('stat', 'n max min mean median std')
+stat = namedtuple('stat', 'n max min mean median std hist hist_edge')
 
 # centralized incase paths change
 dset_paths = {'sequence': 'sequence',
@@ -154,7 +72,7 @@ dset_paths = {'sequence': 'sequence',
               'qual': 'qual'}
 
 
-class buffer_(object):
+class _buffer(object):
     """Buffer baseclass that sits on top of an HDF5 dataset
 
     Notes
@@ -165,7 +83,7 @@ class buffer_(object):
     still a large amount of overhead when writing small pieces of data
     incrementally to h5py datasets.
     """
-    def __init__(self, dset, mode, max_fill=10000):
+    def __init__(self, dset, max_fill=10000):
         """Construct thy self
 
         Parameters
@@ -176,7 +94,6 @@ class buffer_(object):
             The maximum fill for the buffer
         """
         self.dset = dset
-        self.mode = mode
 
         self._current_fill = 0
         self._n = 0
@@ -184,24 +101,10 @@ class buffer_(object):
         self._max_fill = max_fill
         self._alloc()
 
-
     def __del__(self):
         """Flush when the buffer is deconstructed"""
-        if self.mode == 'w':
+        if self._n > 0:
             self.flush()
-
-    def read(self):
-        """Pull from dset into buffer"""
-        if self.mode != 'r':
-            raise IOError("Buffer is not in read mode!")
-
-        if self.exhausted():
-            self.fill()
-
-        data = self._buf[self._n]
-        self._n += 1
-
-        return data
 
     def write(self, data):
         """Deposit into the buffer, write to dataset if necessary
@@ -211,21 +114,11 @@ class buffer_(object):
         data : scalar or np.array
             The data is dependent on the underlying buffer
         """
-        if self.mode != 'w':
-            raise IOError("Buffer is not in write mode!")
-
         self._write(data)
         self._n += 1
 
         if self.is_full():
             self.flush()
-
-    def __iter__(self):
-        while True:
-            try:
-                yield self.read()
-            except IndexError:
-                raise StopIteration
 
     def _write(self, data):
         raise NotImplementedError
@@ -236,10 +129,6 @@ class buffer_(object):
     def is_full(self):
         """Determine if the buffer is full"""
         return self._n >= self._max_fill
-
-    def exhausted(self):
-        """Determine if we've read through the buffer"""
-        return (self._n >= self._current_fill) or (self._idx == 0)
 
     def flush(self):
         """Flush the buffer to the dataset
@@ -257,26 +146,8 @@ class buffer_(object):
         self._n = 0
         self._buf[:] = 0
 
-    def fill(self):
-        """Fill the buffer"""
-        dset_size = self.dset.shape[0]
-        start, end = self._idx, self._idx + self._max_fill
 
-        if start >= dset_size:
-            raise IndexError("Dataset exhausted!")
-
-        # make sure we don't slice to far
-        if end > dset_size:
-            end = dset_size
-
-        self._buf[:(end - start)] = self.dset[start:end]
-
-        self._idx += end - start
-        self._current_fill = end - start
-        self._n = 0
-
-
-class buffer1d(buffer_):
+class buffer1d(_buffer):
     """A 1 dimensional buffer
 
     Notes
@@ -292,7 +163,7 @@ class buffer1d(buffer_):
         self._buf = np.zeros(self._max_fill, self.dset.dtype)
 
 
-class buffer2d(buffer_):
+class buffer2d(_buffer):
     """A 2 dimensional buffer
 
     Notes
@@ -359,16 +230,20 @@ def _summarize_lengths(lengths):
 
     for sid, lens in viewitems(lengths):
         lens = np.array(lens)
+        hist, edge = np.histogram(lens)
         sample_stats[sid] = stat(n=lens.size, max=lens.max(), std=lens.std(),
                                  min=lens.min(), mean=lens.mean(),
-                                 median=np.median(lens))
+                                 median=np.median(lens), hist=hist,
+                                 hist_edge=edge)
 
         all_lengths[pos:pos+lens.size] = lens
         pos += lens.size
 
+    hist, edge = np.histogram(all_lengths)
     full_stats = stat(n=all_lengths.size, max=all_lengths.max(),
                       min=all_lengths.min(), std=all_lengths.std(),
-                      mean=all_lengths.mean(), median=np.median(all_lengths))
+                      mean=all_lengths.mean(), median=np.median(all_lengths),
+                      hist=hist, hist_edge=edge)
 
     return sample_stats, full_stats
 
@@ -389,6 +264,8 @@ def _set_attr_stats(h5grp, stats):
     h5grp.attrs['min'] = stats.min
     h5grp.attrs['median'] = stats.median
     h5grp.attrs['std'] = stats.std
+    h5grp.attrs['hist'] = stats.hist
+    h5grp.attrs['hist_edge'] = stats.hist_edge
 
 
 def _construct_datasets(sample_stats, h5file, max_barcode_length=12):
@@ -404,8 +281,8 @@ def _construct_datasets(sample_stats, h5file, max_barcode_length=12):
     Returns
     -------
     dict
-        {str : buffer_} where str is the dataset path and the buffer_ is either
-        `buffer1d` or `buffer2d`.
+        {str : _buffer} where str is the dataset path and the `_buffer` is
+        either `buffer1d` or `buffer2d`.
     """
     def create_dataset(path, dtype, rows, cols):
         if cols == 1:
@@ -417,7 +294,7 @@ def _construct_datasets(sample_stats, h5file, max_barcode_length=12):
 
         kwargs = {'chunks': True, 'compression': True, 'compression_opts': 1}
         dset = h5file.create_dataset(path, dtype=dtype, shape=shape, **kwargs)
-        return buftype(dset, 'w')
+        return buftype(dset)
 
     buffers = {}
 
@@ -478,10 +355,15 @@ def to_hdf5(fp, h5file, max_barcode_length=12):
 
     for rec in load(fp):
         parts = rec['SequenceID'].split()
-        sample = parts[0].rsplit('_', 1)[0]
-        bc_diffs = int(parts[-1].split('=', 1)[1])
-        corr_bc = parts[-2].split('=', 1)[1]
-        orig_bc = parts[-3].split('=', 1)[1]
+
+        try:
+            sample = parts[0].rsplit('_', 1)[0]
+            bc_diffs = int(parts[-1].split('=', 1)[1])
+            corr_bc = parts[-2].split('=', 1)[1]
+            orig_bc = parts[-3].split('=', 1)[1]
+        except IndexError:
+            raise ValueError("%s doesn't appear to be split libraries "
+                             "output!" % fp)
 
         sequence = rec['Sequence']
         qual = rec['Qual']
@@ -517,7 +399,7 @@ def format_fasta_record(seqid, seq, qual):
 
 
 def to_ascii(demux, samples=None):
-    """Consume a demux HDF5 file and yield fastq records
+    """Consume a demux HDF5 file and yield sequence records
 
     Parameters
     ----------
@@ -527,7 +409,9 @@ def to_ascii(demux, samples=None):
     Returns
     -------
     generator
-        A formatted fastq record
+        A formatted fasta or fastq record. The format is determined based on
+        the presence of qual scores. If qual scores exist, then fastq is
+        returned, otherwise fasta is returned.
     """
     if demux.attrs['has-qual']:
         formatter = format_fastq_record
@@ -540,17 +424,68 @@ def to_ascii(demux, samples=None):
     if samples is None:
         samples = demux.keys()
 
+    for samp, idx, seq, qual, bc_ori, bc_cor, bc_err in fetch(demux, samples):
+        seq_id = id_fmt % {'sample': samp, 'idx': idx, 'bc_ori': bc_ori,
+                           'bc_cor': bc_cor, 'bc_diff': bc_err}
+        yield formatter(seq_id, seq, qual)
+
+
+def fetch(demux, samples=None, k=None):
+    """Fetch sequences from a HDF5 demux file
+
+    Parameters
+    ----------
+    demux : h5py.File
+        The demux file to operate on
+    samples : list, optional
+        Samples to pull out. If None, the all samples will be examined.
+        Defaults to None.
+    random : int, optional
+        Randomly select (without replacement) k sequences from a sample. Only
+        samples in which the number of sequences are >= k are considered. If
+        None, all sequences for a sample are returned. Defaults to None
+
+    Returns
+    -------
+    generator
+        Yields (sample, index, sequence, qual, original_barcode,
+                corrected_barcode, barcode_error)
+    """
+    if samples is None:
+        samples = demux.keys()
+
     for sample in samples:
         pjoin = partial(os.path.join, sample)
 
-        seq = buffer1d(demux[pjoin(dset_paths['sequence'])], 'r')
-        qual = buffer2d(demux[pjoin(dset_paths['qual'])], 'r')
-        bc_ori = buffer1d(demux[pjoin(dset_paths['barcode_original'])], 'r')
-        bc_cor = buffer1d(demux[pjoin(dset_paths['barcode_corrected'])], 'r')
-        bc_err = buffer1d(demux[pjoin(dset_paths['barcode_error'])], 'r')
+        # h5py only has partial fancy indexing support and it is limited to a
+        # boolean vector.
+        indices = np.ones(demux[sample].attrs['n'], dtype=bool)
+        if k is not None:
+            if demux[sample].attrs['n'] < k:
+                continue
 
-        iter_ = zip(seq, qual, bc_ori, bc_cor, bc_err)
-        for i, (s, q, o, c, e) in enumerate(iter_):
-            seq_id = id_fmt % {'sample': sample, 'idx': i, 'bc_ori': o,
-                               'bc_cor': c, 'bc_diff': e}
-            yield formatter(seq_id, s, q)
+            to_keep = np.arange(demux[sample].attrs['n'])
+            shuffle(to_keep)
+            indices = np.logical_not(indices)
+            indices[to_keep[:k]] = True
+
+        seqs = demux[pjoin(dset_paths['sequence'])][indices]
+
+        # only yield qual if we have it
+        quals = repeat(None)
+        if demux.attrs['has-qual']:
+            if len(indices) == 1:
+                if indices[0]:
+                    quals = demux[pjoin(dset_paths['qual'])][:]
+            else:
+                quals = demux[pjoin(dset_paths['qual'])][indices, :]
+
+        bc_original = demux[pjoin(dset_paths['barcode_original'])][indices]
+        bc_corrected = demux[pjoin(dset_paths['barcode_corrected'])][indices]
+        bc_error = demux[pjoin(dset_paths['barcode_error'])][indices]
+
+        iter_ = zip(repeat(sample), np.arange(indices.size)[indices], seqs,
+                    quals, bc_original, bc_corrected, bc_error)
+
+        for item in iter_:
+            yield item
