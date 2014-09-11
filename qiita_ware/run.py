@@ -4,15 +4,11 @@ from json import dumps
 from os.path import join
 from sys import stderr
 
-from redis import Redis
-import networkx as nx
-
 from qiita_db.job import Job
 from qiita_db.logger import LogEntry
 from qiita_db.util import get_db_files_base_dir
 from qiita_ware.wrapper import ParallelWrapper
 from qiita_ware.context import system_call
-from qiita_ware.exceptions import ComputeError
 
 
 # -----------------------------------------------------------------------------
@@ -35,6 +31,7 @@ def _job_comm_wrapper(user, analysis_id, job):
     job : Job object
         The job to run
     """
+    from qiita_ware import r_server
     name, command = job.command
     options = job.options
     # create json base for websocket messages
@@ -45,10 +42,9 @@ def _job_comm_wrapper(user, analysis_id, job):
     }
 
     o_fmt = ' '.join(['%s %s' % (k, v) for k, v in options.items()])
-    c_fmt = str("%s %s" % (command, o_fmt))
+    c_fmt = "%s %s" % (command, o_fmt)
 
     # send running message to user wait page
-    r_server = Redis()
     job.status = 'running'
     msg["msg"] = "Running"
     r_server.rpush(user + ":messages", dumps(msg))
@@ -57,24 +53,20 @@ def _job_comm_wrapper(user, analysis_id, job):
     # run the command
     try:
         system_call(c_fmt)
-    except Exception as e:
+    except Exception:
+        # if ANYTHING goes wrong we want to catch it and set error status
         job.status = 'error'
         msg["msg"] = "ERROR"
         r_server.rpush(user + ":messages", dumps(msg))
         r_server.publish(user, dumps(msg))
-        #LogEntry.create(
-        #    3,
-        #    "Failed compute on job id %d:\n%s\n%s" % (job.id, c_fmt, str(e)),
-        #    info={'analysis': analysis_id, 'job': job.id})
         return
 
-    msg["msg"] = "Completed"
-    r_server = Redis()
-    r_server.rpush(user + ":messages", dumps(msg))
-    r_server.publish(user, dumps(msg))
-    # FIX THIS Should not be hard coded  Issue #269
+    # FIX THIS add_results should not be hard coded  Issue #269
     job.add_results([(job.options["--output_dir"], "directory")])
     job.status = 'completed'
+    msg["msg"] = "Completed"
+    r_server.rpush(user + ":messages", dumps(msg))
+    r_server.publish(user, dumps(msg))
 
 
 def _build_analysis_files(analysis, r_depth=None):
@@ -116,6 +108,7 @@ def _finish_analysis(user, analysis):
     analysis: Analysis object
         Analysis to finalize.
     """
+    from qiita_ware import r_server
     # check job exit statuses for analysis result status
     all_good = True
     for job_id in analysis.jobs:
@@ -134,7 +127,6 @@ def _finish_analysis(user, analysis):
         "msg": "allcomplete",
         "analysis": analysis.id
     }
-    r_server = Redis()
     r_server.rpush(user + ":messages", dumps(msg))
     r_server.publish(user, dumps(msg))
 
@@ -162,7 +154,6 @@ class RunAnalysis(ParallelWrapper):
         rarefaction_depth : int, optional
             Rarefaction depth for analysis' biom tables. Default None.
         """
-
         self._logger = stderr
         # Add jobs to analysis
         if comm_opts is None:
@@ -175,7 +166,8 @@ class RunAnalysis(ParallelWrapper):
             if (command == "Beta Diversity" or command == "Alpha Rarefaction"):
                 if data_type in {'16S', '18S'}:
                     opts["--tree_fp"] = join(get_db_files_base_dir(),
-                        "reference", "gg_97_otus_4feb2011.tre")
+                                             "reference",
+                                             "gg_97_otus_4feb2011.tre")
                 else:
                     opts["--parameter_fp"] = join(
                         get_db_files_base_dir(), "reference",

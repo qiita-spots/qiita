@@ -1,7 +1,4 @@
-from functools import partial, wraps
-
-from tornado.web import RequestHandler, asynchronous
-from tornado.ioloop import IOLoop
+from tornado.web import RequestHandler
 
 
 class BaseHandler(RequestHandler):
