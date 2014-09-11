@@ -1,10 +1,5 @@
 from unittest import main
 
-try:
-    from urllib import urlencode
-except ImportError:  # py3
-    from urllib.parse import urlencode
-
 from tornado_test_base import TestHandlerBase
 from qiita_db.study import StudyPerson
 from qiita_db.util import get_count, check_count
@@ -33,7 +28,7 @@ class CreateStudyHandlerTestsDB(TestHandlerBase):
                      'principal_investigator': '-2',
                      'lab_person': '1'}
 
-        response = self.post('/create_study/', post_data)
+        self.post('/create_study/', post_data)
 
         # Check that the new person was created
         expected_id = person_count_before + 1

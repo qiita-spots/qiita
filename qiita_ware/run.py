@@ -5,7 +5,6 @@ from os.path import join
 from sys import stderr
 
 from qiita_db.job import Job
-from qiita_db.logger import LogEntry
 from qiita_db.util import get_db_files_base_dir
 from qiita_ware.wrapper import ParallelWrapper
 from qiita_ware.context import system_call

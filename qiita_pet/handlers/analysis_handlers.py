@@ -11,10 +11,9 @@ Qitta analysis handlers for the Tornado webserver.
 # -----------------------------------------------------------------------------
 from __future__ import division
 from future.utils import viewitems
-from os.path import join
 from collections import defaultdict, Counter
 
-from tornado.web import authenticated, asynchronous, HTTPError
+from tornado.web import authenticated, HTTPError
 from pyparsing import ParseException
 from redis import Redis
 
