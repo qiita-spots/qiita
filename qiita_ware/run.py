@@ -31,7 +31,6 @@ def _job_comm_wrapper(user, analysis_id, job):
         The job to run
     """
     from qiita_ware import r_server
-    from qiita_db.logger import LogEntry
     name, command = job.command
     options = job.options
     # create json base for websocket messages
@@ -59,8 +58,7 @@ def _job_comm_wrapper(user, analysis_id, job):
         msg["msg"] = "ERROR"
         r_server.rpush(user + ":messages", dumps(msg))
         r_server.publish(user, dumps(msg))
-        LogEntry.create('Runtime', "Job %d ERROR:\n%s" % (job.id, str(e)),
-                        info={'job': job.id, 'analysis': analysis_id})
+        job.set_error(str(e))
         return
 
     # FIX THIS add_results should not be hard coded  Issue #269
