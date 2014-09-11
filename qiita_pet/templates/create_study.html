@@ -200,7 +200,7 @@ function add_new_person(name, affiliation, email, phone, address) {
     <font color="red">*</font> = Required Field
 </h3>
 <br />
-<form id="create_study" name="create_study" action='/create_study/' method="POST">
+<form id="create_study" name="create_study" action='/study/create/' method="POST">
 <table>
 {% for form_item in creation_form %}
     {% set kwargs = {'class_': 'form-control', 'required': form_item.flags.required} %}
