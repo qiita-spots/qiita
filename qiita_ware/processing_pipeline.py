@@ -6,23 +6,18 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
-from tempfile import mkstemp, mkdtemp
-from os import close
-
-from qiita_db.metadata_template import PrepTemplate
+# TODO: change to import from QIITA once is merged
+from qiime.parallel.wrapper import ParallelWrapper
 
 
-def _preprocess_study(study, raw_data):
-    """
-    Parameters
-    ----------
-    study : Study
-        The study object where the data belongs to
-    raw_data : RawData
-        The raw data object to process
-    """
-    # Step 1: split libraries (demultiplexing + quality filtering)
-    # We get the filepaths from the raw data object
+def _get_split_libraries_fastq_cmd(raw_data):
+    """"""
+    from tempfile import mkstemp, mkdtemp
+    from os import close
+
+    from qiita_db.metadata_template import PrepTemplate
+
+    # Get the filepaths from the raw data object
     seqs_fps = []
     barcode_fps = []
     for fp, fp_type in raw_data.get_filepaths():
@@ -31,45 +26,135 @@ def _preprocess_study(study, raw_data):
         elif fp_type == "raw_barcodes":
             barcode_fps.append(fp)
         else:
-            raise ValueError("Raw data file type not supported %s" % fp_type)
+            raise NotImplementedError("Raw data file type not supported %s"
+                                      % fp_type)
 
-    # We need to get the prep template in order to run split libraries
+    # Instantiate the prep template
     prep_template = PrepTemplate(raw_data.id)
 
-    # We have to write it to a temporary file, since QIIME needs a filepath
+    # The prep template should be written to a temporary file
     fd, prep_fp = mkstemp(prefix="qiita_prep_%s" % prep_template.id,
                           suffix='.txt')
     close(fd)
     prep_template.to_file(prep_fp)
 
     # Create a temporary directory to store the split libraries output
-    output_fp = mkdtemp(prefix='slq_out')
+    output_dir = mkdtemp(prefix='slq_out')
 
     # Add any other parameter needed to split libraries fastq
     params = ""
 
-    # Build the command to run split libraries
+    # Create the split_libraries_fastq.py command
     cmd = ("split_libraries_fastq.py -i %s -b %s -m %s -o %s %s"
            % (seqs_fps, barcode_fps, prep_fp, output_dir, params))
+    return (cmd, output_dir)
 
-    # Run the commands
 
-
-def process_study(study, raw_data):
+def _get_pick_closed_reference_cmd(sl_dir, reference):
     """
     Parameters
     ----------
-    study : Study
-        The study object where the data belongs to
-    raw_data : RawData
-        The raw data object to process
-
-    Notes
-    -----
-    TODO: it only performs closed reference OTU picking against gg 13 8
+    sl_dir : str
+        Path to the split libraries output folder
+    reference : Reference
+        The reference object used to pick otus
     """
-    # Step 1: split libraries (demultiplexing + quality filtering)
-    _preprocess_study(study, raw_data)
+    from tempfile import mkstemp, mkdtemp
+    from os import close
+    from os.path import join
 
-    # Step 2: otu picking
-    cmd = "pick_closed_reference_otus.py -i %s -r %s -o %s -t %s"
+    seqs_fp = join(sl_dir, 'seqs.fna')
+    # Create a temporary directory to store the pick otus output
+    output_dir = mkdtemp(prefix='closed_otus_out')
+
+    cmd = ("pick_closed_reference_otus.py -i %s -r %s -t %s -o %s"
+           % (seqs_fp, reference.sequence_fp, reference.taxonomy_fp,
+              output_dir))
+
+    return (cmd, output_dir)
+
+
+def _clean_up(dirs):
+    """"""
+    from shutil import rmtree
+    from os.path import exists
+
+    for dp in dirs:
+        if exists(dp):
+            rmtree(dp)
+
+
+def _insert_preprocessed_data():
+    """"""
+    from qiita_db.data import PreprocessedData
+
+    PreprocessedData.create(study, preprocessed_params_table,
+                            preprocessed_params_id, filepaths, raw_data)
+
+
+def _insert_processed_data():
+    """"""
+    from qiita_db.data import ProcessedData
+
+    ProcessedData(processed_params_table, processed_params_id, filepaths,
+                  preprocessed_data)
+
+
+class StudyProcesser(ParallelWrapper):
+    def _construct_job_graph(self, study, raw_data):
+        """Constructs the workflow graph to process a study
+
+        The steps performed to process a study are:
+        1) Preprocess the study with split_libraries_fastq.py
+        2) Add the new preprocesed data to the DB
+        3) Process the preprocessed data by doing closed reference OTU picking
+        against GreenGenes, using SortMeRNA
+        4) Add the new processed data to the DB
+
+        Parameters
+        ----------
+        study : Study
+            The study to process
+        raw_data: RawData
+            The raw data to use to process the study
+
+        Raises
+        ------
+        NotImplementedError
+            If any file type in the raw data object is not supported
+        """
+        # STEP 1: Preprocess the study
+        preprocess_node = "PREPROCESS"
+        cmd, sl_out = _get_split_libraries_fastq_cmd(raw_data)
+        self._job_graph.add_node(preprocess_node, job=(cmd,),
+                                 requires_deps=False)
+
+        # STEP 2: Add preprocessed data to DB
+        insert_preprocessed_node = "INSERT_PREPROCESSED"
+        self._job_graph.add_node(insert_preprocessed_node,
+                                 job=(_insert_preprocessed_data, ),
+                                 requires_deps=False)
+        self._job_graph.add_edge(preprocess_node, insert_preprocessed_node)
+
+        # STEP 3: pick closed-ref otu picking
+        processed_node = "PROCESS"
+        # TODO: Now hard-coded to GG 13 8 (id = 1) - issue #
+        reference = Reference(1)
+        cmd, otus_out = _get_pick_closed_reference_cmd(sl_out, reference)
+        self._job_graph.add_node(processed_node, job=(cmd,),
+                                 requires_deps=False)
+        self._job_graph.add_edge(insert_preprocessed_node, processed_node)
+
+        # STEP 4: Add processed data to DB
+        insert_processed_node = "INSERT_PROCESSED"
+        self._job_graph.add_node(insert_processed_node,
+                                 job=(_insert_processed_data, ),
+                                 requires_deps=False)
+        self._job_graph.add_edge(process_node, insert_processed_node)
+
+        # Clean up the environment
+        clean_up_node = "CLEAN_UP"
+        self._job_graph.add_node(clean_up_node,
+                                 job=(_clean_up, [sl_out, otus_out]),
+                                 requires_deps=False)
+        self._job_graph.add_edge(insert_processed_node, clean_up_node)
