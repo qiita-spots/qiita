@@ -16,9 +16,10 @@ from collections import defaultdict, Counter
 
 from tornado.web import authenticated, asynchronous, HTTPError
 from pyparsing import ParseException
+from redis import Redis
 
 from qiita_pet.handlers.base_handlers import BaseHandler
-from qiita_ware.run import run_analysis
+from qiita_ware.run import RunAnalysis
 from qiita_db.user import User
 from qiita_db.analysis import Analysis
 from qiita_db.data import ProcessedData
@@ -250,48 +251,33 @@ class AnalysisWaitHandler(BaseHandler):
         commands = []
         for job in analysis.jobs:
             jobject = Job(job)
-            commands.append("%s:%s" % (jobject.datatype, jobject.command[0]))
+            commands.append("%s: %s" % (jobject.datatype, jobject.command[0]))
 
         self.render("analysis_waiting.html", user=user,
                     aid=analysis_id, aname=analysis.name,
                     commands=commands)
 
     @authenticated
-    @asynchronous
     def post(self, analysis_id):
         user = self.current_user
         analysis_id = int(analysis_id)
-        rarefaction_depth = int(self.get_argument('rarefaction-depth',
-                                                  default=None))
+        rarefaction_depth = self.get_argument('rarefaction-depth')
+        # convert to integer if rarefaction level given
+        if rarefaction_depth:
+            rarefaction_depth = int(rarefaction_depth)
+        else:
+            rarefaction_depth = None
         check_analysis_access(User(user), analysis_id)
 
         command_args = self.get_arguments("commands")
         split = [x.split("#") for x in command_args]
         commands = ["%s: %s" % (s[0], s[1]) for s in split]
         analysis = Analysis(analysis_id)
-
         self.render("analysis_waiting.html", user=user, aid=analysis_id,
                     aname=analysis.name, commands=commands)
-
-        analysis.build_files(rarefaction_depth)
-        mapping_file = analysis.mapping_file
-        biom_tables = analysis.biom_tables
-        for data_type, command in split:
-            opts = {
-                "--otu_table_fp": biom_tables[data_type],
-                "--mapping_fp": mapping_file
-            }
-            # HARD CODED HACKY THING FOR DEMO, FIX  Issue #164
-            if command == "Beta Diversity" and data_type in {'16S', '18S'}:
-                opts["--tree_fp"] = join(get_db_files_base_dir(), "reference",
-                                         "gg_97_otus_4feb2011.tre")
-            elif command == "Beta Diversity":
-                opts["--parameter_fp"] = join(get_db_files_base_dir(),
-                                              "reference", "params_qiime.txt")
-            Job.create(data_type, command, opts, analysis)
-        user = self.current_user
-        # fire off analysis run here
-        run_analysis(user, analysis)
+        app = RunAnalysis()
+        app(user, analysis, split, comm_opts={},
+            rarefaction_depth=rarefaction_depth)
 
 
 class AnalysisResultsHandler(BaseHandler):
@@ -311,6 +297,15 @@ class AnalysisResultsHandler(BaseHandler):
         self.render("analysis_results.html", user=self.current_user,
                     jobres=jobres, aname=analysis.name,
                     basefolder=get_db_files_base_dir())
+
+        # wipe out cached messages for this analysis
+        r_server = Redis()
+        key = '%s:messages' % self.current_user
+        oldmessages = r_server.lrange(key, 0, -1)
+        if oldmessages is not None:
+            for message in oldmessages:
+                if '"analysis": %d' % analysis_id in message:
+                    r_server.lrem(key, message, 1)
 
 
 class ShowAnalysesHandler(BaseHandler):

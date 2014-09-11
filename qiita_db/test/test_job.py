@@ -48,7 +48,7 @@ class JobTest(TestCase):
             "(2,1,'SKD8.640184'), (2,1,'SKB7.640196'), (2,1,'SKM9.640192'),"
             "(2,1,'SKM4.640180')")
         """tests that existing job returns true"""
-        self.assertTrue(Job.exists("16S", "Beta Diversity",
+        self.assertTrue(Job.exists("18S", "Beta Diversity",
                                    {"--otu_table_fp": 1,
                                     "--mapping_fp": 1}, Analysis(1)))
 
@@ -62,7 +62,7 @@ class JobTest(TestCase):
             "(2,1,'SKD8.640184'), (2,1,'SKB7.640196'), (2,1,'SKM9.640192'),"
             "(2,1,'SKM4.640180')")
         """tests that existing job returns true"""
-        exists, jid = Job.exists("16S", "Beta Diversity",
+        exists, jid = Job.exists("18S", "Beta Diversity",
                                  {"--otu_table_fp": 1, "--mapping_fp": 1},
                                  Analysis(1), return_existing=True)
         self.assertTrue(exists)
@@ -79,7 +79,7 @@ class JobTest(TestCase):
             "(2,1,'SKD8.640184'), (2,1,'SKB7.640196'), (2,1,'SKM9.640192'),"
             "(2,1,'SKM4.640180')")
         """tests that non-existant job with bad options returns false"""
-        self.assertFalse(Job.exists("16S", "Beta Diversity",
+        self.assertFalse(Job.exists("18S", "Beta Diversity",
                                     {"--otu_table_fp": 1,
                                      "--mapping_fp": 27}, Analysis(1)))
 
@@ -201,20 +201,20 @@ class JobTest(TestCase):
     def test_create_exists(self):
         """Makes sure creation doesn't duplicate a job"""
         with self.assertRaises(QiitaDBDuplicateError):
-            Job.create("16S", "Beta Diversity",
+            Job.create("18S", "Beta Diversity",
                        {"--otu_table_fp": 1, "--mapping_fp": 1},
                        Analysis(1))
 
     def test_create_exists_return_existing(self):
         """Makes sure creation doesn't duplicate a job by returning existing"""
-        new = Job.create("16S", "Beta Diversity",
+        new = Job.create("18S", "Beta Diversity",
                          {"--otu_table_fp": 1, "--mapping_fp": 1},
                          Analysis(1), return_existing=True)
         self.assertEqual(new.id, 2)
 
     def test_retrieve_datatype(self):
         """Makes sure datatype retriveal is correct"""
-        self.assertEqual(self.job.datatype, '16S')
+        self.assertEqual(self.job.datatype, '18S')
 
     def test_retrieve_command(self):
         """Makes sure command retriveal is correct"""
