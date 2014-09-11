@@ -2,9 +2,8 @@
 
 {%block head%}
 <script type="text/javascript">
-
-    function connect() {
-        var host = 'ws://' + getBaseURL() + 'consumer/';
+    window.onload = function() {
+        var host = 'ws://' + window.location.host + '/consumer/';
         var websocket = new WebSocket(host);
         noerror = true;
 
@@ -32,15 +31,7 @@
             }
         };
         websocket.onerror = function(evt) { };
-    }
-
-    window.onload = function() {
-  connect();
 };
-
-function getBaseURL () {
-   return location.hostname + (location.port && ":" + location.port) + "/";
-}
 
 </script>
 {% end %}
