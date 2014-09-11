@@ -202,16 +202,6 @@ CREATE INDEX idx_raw_preprocessed_data_0 ON qiita.raw_preprocessed_data ( raw_da
 
 CREATE INDEX idx_raw_preprocessed_data_1 ON qiita.raw_preprocessed_data ( preprocessed_data_id );
 
-CREATE TABLE qiita.reference ( 
-	reference_id         bigserial  NOT NULL,
-	reference_name       varchar  NOT NULL,
-	reference_version    varchar  ,
-	sequence_filepath    varchar  NOT NULL,
-	taxonomy_filepath    varchar  ,
-	tree_filepath        varchar  ,
-	CONSTRAINT pk_reference PRIMARY KEY ( reference_id )
- );
-
 CREATE TABLE qiita.required_sample_info_status ( 
 	required_sample_info_status_id bigserial  NOT NULL,
 	status               varchar  ,
@@ -408,22 +398,6 @@ CREATE TABLE qiita.processed_filepath (
 	CONSTRAINT fk_processed_data_filepath_0 FOREIGN KEY ( filepath_id ) REFERENCES qiita.filepath( filepath_id )    
  );
 
-CREATE TABLE qiita.processed_params_uclust ( 
-	processed_params_id  bigserial  NOT NULL,
-	reference_id         bigint  NOT NULL,
-	similarity           float8 DEFAULT 0.97 NOT NULL,
-	enable_rev_strand_match bool DEFAULT TRUE NOT NULL,
-	suppress_new_clusters bool DEFAULT TRUE NOT NULL,
-	CONSTRAINT pk_processed_params_uclust PRIMARY KEY ( processed_params_id ),
-	CONSTRAINT fk_processed_params_uclust FOREIGN KEY ( reference_id ) REFERENCES qiita.reference( reference_id )    
- );
-
-CREATE INDEX idx_processed_params_uclust ON qiita.processed_params_uclust ( reference_id );
-
-COMMENT ON TABLE qiita.processed_params_uclust IS 'Parameters used for processing data using method uclust';
-
-COMMENT ON COLUMN qiita.processed_params_uclust.reference_id IS 'What version of reference or type of reference used';
-
 CREATE TABLE qiita.qiita_user ( 
 	email                varchar  NOT NULL,
 	user_level_id        integer DEFAULT 5 NOT NULL,
@@ -462,6 +436,25 @@ CREATE TABLE qiita.raw_filepath (
 CREATE INDEX idx_raw_filepath_0 ON qiita.raw_filepath ( filepath_id );
 
 CREATE INDEX idx_raw_filepath_1 ON qiita.raw_filepath ( raw_data_id );
+
+CREATE TABLE qiita.reference ( 
+	reference_id         bigserial  NOT NULL,
+	reference_name       varchar  NOT NULL,
+	reference_version    varchar  ,
+	sequence_filepath    bigint  NOT NULL,
+	taxonomy_filepath    bigint  ,
+	tree_filepath        bigint  ,
+	CONSTRAINT pk_reference PRIMARY KEY ( reference_id ),
+	CONSTRAINT fk_reference_sequence_filepath FOREIGN KEY ( sequence_filepath ) REFERENCES qiita.filepath( filepath_id )    ,
+	CONSTRAINT fk_reference_taxonomy_filepath FOREIGN KEY ( taxonomy_filepath ) REFERENCES qiita.filepath( filepath_id )    ,
+	CONSTRAINT fk_reference_tree_filepath FOREIGN KEY ( tree_filepath ) REFERENCES qiita.filepath( filepath_id )    
+ );
+
+CREATE INDEX idx_reference ON qiita.reference ( sequence_filepath );
+
+CREATE INDEX idx_reference_0 ON qiita.reference ( taxonomy_filepath );
+
+CREATE INDEX idx_reference_1 ON qiita.reference ( tree_filepath );
 
 CREATE TABLE qiita.study ( 
 	study_id             bigserial  NOT NULL,
@@ -739,6 +732,22 @@ CREATE INDEX idx_job_results_filepath_0 ON qiita.job_results_filepath ( job_id )
 CREATE INDEX idx_job_results_filepath_1 ON qiita.job_results_filepath ( filepath_id );
 
 COMMENT ON TABLE qiita.job_results_filepath IS 'Holds connection between jobs and the result filepaths';
+
+CREATE TABLE qiita.processed_params_uclust ( 
+	processed_params_id  bigserial  NOT NULL,
+	reference_id         bigint  NOT NULL,
+	similarity           float8 DEFAULT 0.97 NOT NULL,
+	enable_rev_strand_match bool DEFAULT TRUE NOT NULL,
+	suppress_new_clusters bool DEFAULT TRUE NOT NULL,
+	CONSTRAINT pk_processed_params_uclust PRIMARY KEY ( processed_params_id ),
+	CONSTRAINT fk_processed_params_uclust FOREIGN KEY ( reference_id ) REFERENCES qiita.reference( reference_id )    
+ );
+
+CREATE INDEX idx_processed_params_uclust ON qiita.processed_params_uclust ( reference_id );
+
+COMMENT ON TABLE qiita.processed_params_uclust IS 'Parameters used for processing data using method uclust';
+
+COMMENT ON COLUMN qiita.processed_params_uclust.reference_id IS 'What version of reference or type of reference used';
 
 CREATE TABLE qiita.required_sample_info ( 
 	study_id             bigint  NOT NULL,
