@@ -2,6 +2,7 @@ from tornado.web import RequestHandler
 
 
 class BaseHandler(RequestHandler):
+
     def get_current_user(self):
         '''Overrides default method of returning user curently connected'''
         user = self.get_secure_cookie("user")

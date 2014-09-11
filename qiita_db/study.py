@@ -127,6 +127,7 @@ class Study(QiitaStatusObject):
     preprocessed_data
     processed_data
     add_pmid
+    exists
 
     Notes
     -----
@@ -161,6 +162,25 @@ class Study(QiitaStatusObject):
                "{0}_status_id = %s".format(cls._table))
         # MAGIC NUMBER 2: status id for a public study
         return [x[0] for x in conn_handler.execute_fetchall(sql, (2, ))]
+
+    @classmethod
+    def exists(cls, study_title):
+        """Check if a study exists based on study_title, which is unique
+
+        Parameters
+        ----------
+        study_title : str
+            The title of the study to search for in the database
+
+        Returns
+        -------
+        bool
+        """
+        conn_handler = SQLConnectionHandler()
+        sql = ("SELECT exists(select study_id from qiita.{} WHERE "
+               "study_title = %s)").format(cls._table)
+
+        return conn_handler.execute_fetchone(sql, [study_title])[0]
 
     @classmethod
     def create(cls, owner, title, efo, info, investigation=None):
@@ -213,6 +233,9 @@ class Study(QiitaStatusObject):
             insertdict['reprocess'] = False
         # default to waiting_approval status
         insertdict['study_status_id'] = 1
+
+        # No nuns allowed
+        insertdict = {k: v for k, v in viewitems(insertdict) if v is not None}
 
         conn_handler = SQLConnectionHandler()
         # make sure dictionary only has keys for available columns in db
@@ -535,6 +558,24 @@ class StudyPerson(QiitaObject):
         phone number of the person
     """
     _table = "study_person"
+
+    @classmethod
+    def iter(cls):
+        """Iterate over all study people in the database
+
+        Returns
+        -------
+        generator
+            Yields a `StudyPerson` object for each person in the database,
+            in order of ascending study_person_id
+        """
+        conn = SQLConnectionHandler()
+        sql = "select study_person_id from qiita.{} order by study_person_id"
+        results = conn.execute_fetchall(sql.format(cls._table))
+
+        for result in results:
+            ID = result[0]
+            yield StudyPerson(ID)
 
     @classmethod
     def exists(cls, name, affiliation):

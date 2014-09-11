@@ -23,6 +23,9 @@
               {% for job, results in jobs%}
                 <div class="panel-body">
                   {{job}}<br />
+                  {% if len(results) == 0 %}
+                    <h3 style="color:red">ERROR</h3>
+                  {% end %}
                   {%for result in results%}
                     {% if "beta_diversity_through_plots" in result %}
                       {% if data_type == "16S"%}
@@ -32,6 +35,8 @@
                         <a href="/results/{{result}}/bray_curtis_emperor_pcoa_plot/index.html" target="resframe">Bray Curtis</a><br />
                         <a href="/results/{{result}}/euclidean_emperor_pcoa_plot/index.html" target="resframe">Euclidean</a><br />
                       {%end%}
+                    {% elif "alpha_rarefaction" in result %}
+                      <a href="/results/{{result}}/alpha_rarefaction_plots/rarefaction_plots.html" target="resframe">Rarefaction plot</a><br />
                     {% else %}
                       <a href="/results/{{result}}/taxa_summary_plots/area_charts.html" target="resframe">Area charts</a><br />
                       <a href="/results/{{result}}/taxa_summary_plots/bar_charts.html" target="resframe">Bar charts</a><br />
