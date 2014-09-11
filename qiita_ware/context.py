@@ -67,7 +67,7 @@ class Dispatch(object):
 
     def _stage_imports(self, cluster):
         with cluster[:].sync_imports(quiet=True):
-            from qiita_ware.cluster import system_call
+            from qiita_ware.context import system_call
 
     def sync(self, data):
         """Sync data to engines
