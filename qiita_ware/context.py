@@ -55,7 +55,7 @@ class Context(object):
 
     def _stage_imports(self, cluster):
         with cluster[:].sync_imports(quiet=True):
-            from .context import system_call
+            from .context import system_call  # noqa
 
     def sync(self, data):
         """Sync data to engines
