@@ -5,7 +5,6 @@ from os.path import join
 from sys import stderr
 
 from qiita_db.job import Job
-from qiita_db.logger import LogEntry
 from qiita_db.util import get_db_files_base_dir
 from qiita_ware.wrapper import ParallelWrapper
 from qiita_ware.context import system_call
@@ -60,8 +59,8 @@ def _job_comm_wrapper(user, analysis_id, job):
         msg["msg"] = "ERROR"
         r_server.rpush(user + ":messages", dumps(msg))
         r_server.publish(user, dumps(msg))
-        LogEntry.create(3, "Job %d ERROR:\n%s" % (job.id, str(e)),
-                        info={'job': job.id, 'analysis':analysis_id})
+        LogEntry.create('Runtime', "Job %d ERROR:\n%s" % (job.id, str(e)),
+                        info={'job': job.id, 'analysis': analysis_id})
         return
 
     # FIX THIS add_results should not be hard coded  Issue #269

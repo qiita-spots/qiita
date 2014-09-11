@@ -93,7 +93,7 @@ class TestRun(TestCase):
         self.assertEqual(1, len(log))
         log = log[0]
         self.assertEqual(1, log[0])
-        self.assertEqual(3, log[2])
+        self.assertEqual(2, log[2])
         self.assertTrue(len(log[3]) > 0)
         self.assertTrue('[{"job": 3, "analysis": 2}]')
 
