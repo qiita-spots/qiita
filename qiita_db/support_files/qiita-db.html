@@ -1387,6 +1387,26 @@ This table relates a column with an ontology&#046;</title></a>
   <a xlink:href='#is_root_term'><text x='813' y='1762'>is_root_term</text><title>is_root_term bool</title></a>
   <a xlink:href='#is_leaf'><text x='813' y='1777'>is_leaf</text><title>is_leaf bool</title></a>
 
+<!-- ============= Table 'study_person' ============= -->
+<rect class='table' x='2040' y='83' width='120' height='135' rx='7' ry='7' />
+<path d='M 2040.50 109.50 L 2040.50 90.50 Q 2040.50 83.50 2047.50 83.50 L 2152.50 83.50 Q 2159.50 83.50 2159.50 90.50 L 2159.50 109.50 L2040.50 109.50 ' style='fill:url(#tableHeaderGradient1); stroke:none;' />
+<a xlink:href='#study_person'><text x='2063' y='97' class='tableTitle'>study_person</text><title>Table qiita.study_person
+Contact information for the various people involved in a study</title></a>
+  <use id='nn' x='2042' y='117' xlink:href='#nn'/><a xlink:href='#study_person_id'><use id='pk' x='2042' y='116' xlink:href='#pk'/><title>Primary Key  ( study_person_id ) </title></a>
+<a xlink:href='#study_person_id'><text x='2058' y='127'>study_person_id</text><title>study_person_id bigserial not null</title></a>
+<a xlink:href='#study_person_id'><use id='ref' x='2148' y='116' xlink:href='#ref'/><title>Referred by investigation ( contact_person_id -> study_person_id ) 
+Referred by study ( emp_person_id -> study_person_id ) 
+Referred by study ( lab_person_id -> study_person_id ) 
+Referred by study ( principal_investigator_id -> study_person_id ) </title></a>
+  <use id='nn' x='2042' y='132' xlink:href='#nn'/><a xlink:href='#name'><use id='unq' x='2042' y='131' xlink:href='#unq'/><title>Unique Index  ( name, affiliation ) </title></a>
+<a xlink:href='#name'><text x='2058' y='142'>name</text><title>name varchar not null</title></a>
+  <use id='nn' x='2042' y='147' xlink:href='#nn'/><a xlink:href='#email'><text x='2058' y='157'>email</text><title>email varchar not null</title></a>
+  <use id='nn' x='2042' y='162' xlink:href='#nn'/><a xlink:href='#affiliation'><use id='unq' x='2042' y='161' xlink:href='#unq'/><title>Unique Index  ( name, affiliation ) </title></a>
+<a xlink:href='#affiliation'><text x='2058' y='172'>affiliation</text><title>affiliation varchar not null
+The institution with which this person is affiliated</title></a>
+  <a xlink:href='#address'><text x='2058' y='187'>address</text><title>address varchar&#040;100&#041;</title></a>
+  <a xlink:href='#phone'><text x='2058' y='202'>phone</text><title>phone varchar</title></a>
+
 <!-- ============= Table 'study' ============= -->
 <rect class='table' x='1755' y='38' width='180' height='375' rx='7' ry='7' />
 <path d='M 1755.50 64.50 L 1755.50 45.50 Q 1755.50 38.50 1762.50 38.50 L 1927.50 38.50 Q 1934.50 38.50 1934.50 45.50 L 1934.50 64.50 L1755.50 64.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
@@ -1435,31 +1455,12 @@ What type of timeseries this study is &#040;or is not&#041;<br>Controlled Vocabu
 <a xlink:href='#principal_investigator_id'><use id='fk' x='1923' y='281' xlink:href='#fk'/><title>References study_person ( principal_investigator_id -> study_person_id ) </title></a>
   <use id='nn' x='1757' y='297' xlink:href='#nn'/><a xlink:href='#reprocess'><text x='1773' y='307'>reprocess</text><title>reprocess bool not null</title></a>
   <a xlink:href='#spatial_series'><text x='1773' y='322'>spatial_series</text><title>spatial_series bool</title></a>
-  <use id='nn' x='1757' y='327' xlink:href='#nn'/><a xlink:href='#study_title'><text x='1773' y='337'>study_title</text><title>study_title varchar not null</title></a>
+  <use id='nn' x='1757' y='327' xlink:href='#nn'/><a xlink:href='#study_title'><use id='unq' x='1757' y='326' xlink:href='#unq'/><title>Unique Index  ( study_title ) </title></a>
+<a xlink:href='#study_title'><text x='1773' y='337'>study_title</text><title>study_title varchar not null</title></a>
   <use id='nn' x='1757' y='342' xlink:href='#nn'/><a xlink:href='#study_alias'><text x='1773' y='352'>study_alias</text><title>study_alias varchar not null</title></a>
   <use id='nn' x='1757' y='357' xlink:href='#nn'/><a xlink:href='#study_description'><text x='1773' y='367'>study_description</text><title>study_description text not null</title></a>
   <use id='nn' x='1757' y='372' xlink:href='#nn'/><a xlink:href='#study_abstract'><text x='1773' y='382'>study_abstract</text><title>study_abstract text not null</title></a>
   <a xlink:href='#vamps_id'><text x='1773' y='397'>vamps_id</text><title>vamps_id varchar</title></a>
-
-<!-- ============= Table 'study_person' ============= -->
-<rect class='table' x='2040' y='83' width='120' height='135' rx='7' ry='7' />
-<path d='M 2040.50 109.50 L 2040.50 90.50 Q 2040.50 83.50 2047.50 83.50 L 2152.50 83.50 Q 2159.50 83.50 2159.50 90.50 L 2159.50 109.50 L2040.50 109.50 ' style='fill:url(#tableHeaderGradient1); stroke:none;' />
-<a xlink:href='#study_person'><text x='2063' y='97' class='tableTitle'>study_person</text><title>Table qiita.study_person
-Contact information for the various people involved in a study</title></a>
-  <use id='nn' x='2042' y='117' xlink:href='#nn'/><a xlink:href='#study_person_id'><use id='pk' x='2042' y='116' xlink:href='#pk'/><title>Primary Key  ( study_person_id ) </title></a>
-<a xlink:href='#study_person_id'><text x='2058' y='127'>study_person_id</text><title>study_person_id bigserial not null</title></a>
-<a xlink:href='#study_person_id'><use id='ref' x='2148' y='116' xlink:href='#ref'/><title>Referred by investigation ( contact_person_id -> study_person_id ) 
-Referred by study ( emp_person_id -> study_person_id ) 
-Referred by study ( lab_person_id -> study_person_id ) 
-Referred by study ( principal_investigator_id -> study_person_id ) </title></a>
-  <use id='nn' x='2042' y='132' xlink:href='#nn'/><a xlink:href='#name'><use id='unq' x='2042' y='131' xlink:href='#unq'/><title>Unique Index  ( name, affiliation ) </title></a>
-<a xlink:href='#name'><text x='2058' y='142'>name</text><title>name varchar not null</title></a>
-  <use id='nn' x='2042' y='147' xlink:href='#nn'/><a xlink:href='#email'><text x='2058' y='157'>email</text><title>email varchar not null</title></a>
-  <use id='nn' x='2042' y='162' xlink:href='#nn'/><a xlink:href='#affiliation'><use id='unq' x='2042' y='161' xlink:href='#unq'/><title>Unique Index  ( name, affiliation ) </title></a>
-<a xlink:href='#affiliation'><text x='2058' y='172'>affiliation</text><title>affiliation varchar not null
-The institution with which this person is affiliated</title></a>
-  <a xlink:href='#address'><text x='2058' y='187'>address</text><title>address varchar&#040;100&#041;</title></a>
-  <a xlink:href='#phone'><text x='2058' y='202'>phone</text><title>phone varchar</title></a>
 
 </g></svg>
 
@@ -4034,6 +4035,55 @@ The institution with which this person is affiliated</title></a>
 <br/><br/>
 <table id='dbs' >
 <thead>
+<tr><th colspan='3'><a name='study_person'>study_person</a></th></tr>
+<tr><td colspan='3'>Contact information for the various people involved in a study </td></tr>
+</thead>
+<tbody>
+	<tr>
+		<td><a name='study_person_id'>study&#095;person&#095;id</a></td>
+		<td width='40%'> bigserial  NOT NULL  </td>
+		<td width='99%'>  </td>
+	</tr>
+	<tr>
+		<td><a name='name'>name</a></td>
+		<td width='40%'> varchar  NOT NULL  </td>
+		<td width='99%'>  </td>
+	</tr>
+	<tr>
+		<td><a name='email'>email</a></td>
+		<td width='40%'> varchar  NOT NULL  </td>
+		<td width='99%'>  </td>
+	</tr>
+	<tr>
+		<td><a name='affiliation'>affiliation</a></td>
+		<td width='40%'> varchar  NOT NULL  </td>
+		<td width='99%'> The institution with which this person is affiliated </td>
+	</tr>
+	<tr>
+		<td><a name='address'>address</a></td>
+		<td width='40%'> varchar&#040; 100 &#041;   </td>
+		<td width='99%'>  </td>
+	</tr>
+	<tr>
+		<td><a name='phone'>phone</a></td>
+		<td width='40%'> varchar   </td>
+		<td width='99%'>  </td>
+	</tr>
+<tr><td colspan='3' class='subpart'><b>Indexes</b></td></tr>
+	<tr>		<td>pk&#095;study&#095;person primary key</td>
+		<td> ON study&#095;person&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>idx&#095;study&#095;person unique</td>
+		<td> ON name&#044; affiliation</td>
+		<td>  </td>
+	</tr>
+</tbody>
+</table>
+
+<br/><br/>
+<table id='dbs' >
+<thead>
 <tr><th colspan='3'><a name='study'>study</a></th></tr>
 </thead>
 <tbody>
@@ -4181,6 +4231,10 @@ Controlled Vocabulary </td>
 		<td> ON portal&#095;type&#095;id</td>
 		<td>  </td>
 	</tr>
+	<tr>		<td>unique&#095;study&#095;title unique</td>
+		<td> ON study&#095;title</td>
+		<td>  </td>
+	</tr>
 <tr><td colspan='3' class='subpart'><b>Foreign Keys</b></td></tr>
 	<tr>
 		<td>fk_study_user</td>
@@ -4215,55 +4269,6 @@ Controlled Vocabulary </td>
 	<tr>
 		<td>fk_study</td>
 		<td > ( portal&#095;type&#095;id ) ref <a href='#portal&#095;type'>portal&#095;type</a> (portal&#095;type&#095;id) </td>
-		<td>  </td>
-	</tr>
-</tbody>
-</table>
-
-<br/><br/>
-<table id='dbs' >
-<thead>
-<tr><th colspan='3'><a name='study_person'>study_person</a></th></tr>
-<tr><td colspan='3'>Contact information for the various people involved in a study </td></tr>
-</thead>
-<tbody>
-	<tr>
-		<td><a name='study_person_id'>study&#095;person&#095;id</a></td>
-		<td width='40%'> bigserial  NOT NULL  </td>
-		<td width='99%'>  </td>
-	</tr>
-	<tr>
-		<td><a name='name'>name</a></td>
-		<td width='40%'> varchar  NOT NULL  </td>
-		<td width='99%'>  </td>
-	</tr>
-	<tr>
-		<td><a name='email'>email</a></td>
-		<td width='40%'> varchar  NOT NULL  </td>
-		<td width='99%'>  </td>
-	</tr>
-	<tr>
-		<td><a name='affiliation'>affiliation</a></td>
-		<td width='40%'> varchar  NOT NULL  </td>
-		<td width='99%'> The institution with which this person is affiliated </td>
-	</tr>
-	<tr>
-		<td><a name='address'>address</a></td>
-		<td width='40%'> varchar&#040; 100 &#041;   </td>
-		<td width='99%'>  </td>
-	</tr>
-	<tr>
-		<td><a name='phone'>phone</a></td>
-		<td width='40%'> varchar   </td>
-		<td width='99%'>  </td>
-	</tr>
-<tr><td colspan='3' class='subpart'><b>Indexes</b></td></tr>
-	<tr>		<td>pk&#095;study&#095;person primary key</td>
-		<td> ON study&#095;person&#095;id</td>
-		<td>  </td>
-	</tr>
-	<tr>		<td>idx&#095;study&#095;person unique</td>
-		<td> ON name&#044; affiliation</td>
 		<td>  </td>
 	</tr>
 </tbody>
