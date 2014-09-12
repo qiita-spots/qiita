@@ -342,6 +342,12 @@ def to_hdf5(fp, h5file, max_barcode_length=12):
 
     The filepath is required as two passes over the file are essential.
 
+    The expectation is that the filepath being operated on is the result of
+    split_libraries.py or split_libraries_fastq.py from QIIME. This code makes
+    assumptions about items in the comment line that are added by split
+    libraries. Specifically, the code looks for a "new_bc", an "ori_bc" and a
+    "bc_diffs" field, and additionally assumes the sample ID is encoded in the
+    ID.
     """
     # walk over the file and collect summary stats
     sample_stats, full_stats = _summarize_lengths(_per_sample_lengths(fp))
