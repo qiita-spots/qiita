@@ -35,8 +35,6 @@ class BufferTests(TestCase):
 
         npt.assert_equal(b1d.dset, self.dset_1d)
         npt.assert_equal(b2d.dset, self.dset_2d)
-        self.assertEqual(b1d._current_fill, 0)
-        self.assertEqual(b2d._current_fill, 0)
         self.assertEqual(b1d._n, 0)
         self.assertEqual(b2d._n, 0)
         self.assertEqual(b1d._idx, 0)
