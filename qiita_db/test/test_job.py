@@ -248,13 +248,13 @@ class JobTest(TestCase):
 
     def test_set_error(self):
         before = datetime.now()
-        self.job.set_error("TESTERROR", 1)
+        self.job.set_error("TESTERROR")
         after = datetime.now()
         self.assertEqual(self.job.status, "error")
 
         error = self.job.error
 
-        self.assertEqual(error.severity, 1)
+        self.assertEqual(error.severity, 2)
         self.assertEqual(error.msg, 'TESTERROR')
         self.assertTrue(before < error.time < after)
 
@@ -264,10 +264,10 @@ class JobTest(TestCase):
     def test_set_error_completed(self):
         self.job.status = "error"
         with self.assertRaises(QiitaDBStatusError):
-            self.job.set_error("TESTERROR", 1)
+            self.job.set_error("TESTERROR")
 
     def test_retrieve_error_exists(self):
-        self.job.set_error("TESTERROR", 1)
+        self.job.set_error("TESTERROR")
         self.assertEqual(self.job.error.msg, "TESTERROR")
 
     def test_add_results(self):

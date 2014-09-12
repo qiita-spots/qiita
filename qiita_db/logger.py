@@ -28,6 +28,7 @@ from __future__ import division
 from json import loads, dumps
 from datetime import datetime
 
+from qiita_db.util import convert_to_id
 from .sql_connection import SQLConnectionHandler
 from .base import QiitaObject
 
@@ -50,12 +51,12 @@ class LogEntry(QiitaObject):
     _table = 'logging'
 
     @classmethod
-    def create(cls, severity_id, msg, info=None):
+    def create(cls, severity, msg, info=None):
         """Creates a new LogEntry object
 
         Parameters
         ----------
-        severity_id : int
+        severity : str  {Warning, Runtime, Fatal}
             The level of severity to use for the LogEntry. Refers to an entry
             in the SEVERITY table.
         msg : str
@@ -79,6 +80,7 @@ class LogEntry(QiitaObject):
         sql = ("INSERT INTO qiita.{} (time, severity_id, msg, information) "
                "VALUES (%s, %s, %s, %s) "
                "RETURNING logging_id".format(cls._table))
+        severity_id = convert_to_id(severity, "severity")
         id_ = conn_handler.execute_fetchone(sql, (datetime.now(), severity_id,
                                                   msg, info))[0]
 

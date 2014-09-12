@@ -71,6 +71,26 @@ class CreateStudyForm(Form):
     lab_person = SelectField('Lab Person', coerce=lambda x: x)
 
 
+class MyStudiesHandler(BaseHandler):
+    @authenticated
+    def get(self):
+        self.render('my_studies.html', user=self.current_user)
+
+    @authenticated
+    def post(self):
+        pass
+
+
+class PublicStudiesHandler(BaseHandler):
+    @authenticated
+    def get(self):
+        self.render('public_studies.html', user=self.current_user)
+
+    @authenticated
+    def post(self):
+        pass
+
+
 class CreateStudyHandler(BaseHandler):
     @authenticated
     def get(self):
