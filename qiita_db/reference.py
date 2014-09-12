@@ -15,7 +15,22 @@ from .sql_connection import SQLConnectionHandler
 
 
 class Reference(QiitaObject):
-    r"""
+    r"""Object for dealing with OTU picking reference databases
+
+    Attributes
+    ----------
+    sequence_fp
+    taxonomy_fp
+    tree_fp
+
+    Methods
+    -------
+    create
+    exists
+
+    See Also
+    --------
+    QiitaObject
     """
     _table = "reference"
 
