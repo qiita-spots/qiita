@@ -447,7 +447,7 @@ def fetch(demux, samples=None, k=None):
     samples : list, optional
         Samples to pull out. If None, the all samples will be examined.
         Defaults to None.
-    random : int, optional
+    k : int, optional
         Randomly select (without replacement) k sequences from a sample. Only
         samples in which the number of sequences are >= k are considered. If
         None, all sequences for a sample are returned. Defaults to None
