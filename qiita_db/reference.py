@@ -5,7 +5,7 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
-
+from __future__ import division
 from os.path import join
 
 from .base import QiitaObject
@@ -15,7 +15,7 @@ from .sql_connection import SQLConnectionHandler
 
 
 class Reference(QiitaObject):
-    r"""Object for dealing with OTU picking reference databases
+    r"""Object to interact with reference sequence databases
 
     Attributes
     ----------
