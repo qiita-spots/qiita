@@ -13,13 +13,11 @@ from shutil import rmtree
 from datetime import datetime
 
 from qiita_core.util import qiita_test_checker
-from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_db.job import Job, Command
 from qiita_db.util import get_db_files_base_dir
 from qiita_db.analysis import Analysis
 from qiita_db.exceptions import (QiitaDBDuplicateError, QiitaDBStatusError,
                                  QiitaDBUnknownIDError)
-from qiita_db.logger import LogEntry
 
 
 @qiita_test_checker()

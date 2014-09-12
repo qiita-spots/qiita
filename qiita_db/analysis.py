@@ -17,20 +17,18 @@ Classes
 # -----------------------------------------------------------------------------
 from __future__ import division
 from collections import defaultdict
-from os.path import join, basename, splitext, relpath
 from binascii import crc32
+from os.path import join
 
-from future.builtins import zip
 from future.utils import viewitems
 from biom import load_table
-from biom.table import Table
 from biom.util import biom_open
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from .sql_connection import SQLConnectionHandler
 from .base import QiitaStatusObject
 from .data import ProcessedData
-from .exceptions import QiitaDBNotImplementedError, QiitaDBStatusError
+from .exceptions import QiitaDBStatusError  # QiitaDBNotImplementedError
 from .util import (convert_to_id, get_work_base_dir, get_db_files_base_dir,
                    get_table_cols)
 

@@ -9,7 +9,7 @@ r"""Qitta study handlers for the Tornado webserver.
 # -----------------------------------------------------------------------------
 from __future__ import division
 
-from tornado.web import authenticated, asynchronous, HTTPError
+from tornado.web import authenticated
 from wtforms import (Form, StringField, SelectField, BooleanField,
                      SelectMultipleField, TextAreaField, validators)
 

@@ -20,6 +20,7 @@ import pandas as pd
 from future.utils import viewitems
 from natsort import natsorted
 
+
 def per_sample_sequences(iter_, max_seqs, min_seqs=1, random_buf_size=100000):
     """Get a max random subset of per sample sequences
 
@@ -96,6 +97,7 @@ def per_sample_sequences(iter_, max_seqs, min_seqs=1, random_buf_size=100000):
         for _, sequence_id, sequence in heap:
             yield (sequence_id, sequence)
 
+
 def metadata_stats_from_sample_and_prep_templates(st, pt):
     """Print out summary statistics for the sample and prep templates
 
@@ -124,6 +126,7 @@ def metadata_stats_from_sample_and_prep_templates(st, pt):
         out[column] = [(key, counts[key]) for key in natsorted(counts.index)]
 
     return out
+
 
 def metadata_map_from_sample_and_prep_templates(st, pt):
     """Create a mapping file from a sample and a prep template
@@ -155,6 +158,7 @@ def metadata_map_from_sample_and_prep_templates(st, pt):
 
     return pd.merge(s_df, p_df, left_index=True, right_index=True, how='outer')
 
+
 def template_to_dict(t):
     """Convert a SampleTemplate or PrepTemplate into a 2D-dictionary
 
@@ -177,4 +181,3 @@ def template_to_dict(t):
             # cast to string as a datetime object can be returned here
             out[sample_id][column_name] = str(column_value)
     return out
-

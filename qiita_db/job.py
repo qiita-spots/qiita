@@ -32,10 +32,6 @@ from shutil import rmtree
 from functools import partial
 from collections import defaultdict
 
-from future.builtins import zip
-from future.utils import viewitems, viewkeys
-
-from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from .base import QiitaStatusObject
 from .util import insert_filepaths, convert_to_id, get_db_files_base_dir
 from .sql_connection import SQLConnectionHandler

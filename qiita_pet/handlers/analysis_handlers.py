@@ -11,15 +11,9 @@ Qitta analysis handlers for the Tornado webserver.
 # -----------------------------------------------------------------------------
 from __future__ import division
 from future.utils import viewitems
-from tempfile import mkstemp
-from os import close
-from os.path import join
-from itertools import product
-
-from tornado.web import authenticated, asynchronous, HTTPError
-from tornado.concurrent import return_future
-from tornado.gen import coroutine
 from collections import defaultdict, Counter
+
+from tornado.web import authenticated, HTTPError
 from pyparsing import ParseException
 from redis import Redis
 
@@ -27,13 +21,11 @@ from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_ware.run import RunAnalysis
 from qiita_db.user import User
 from qiita_db.analysis import Analysis
-from qiita_db.study import Study
 from qiita_db.data import ProcessedData
 from qiita_db.metadata_template import SampleTemplate
 from qiita_db.job import Job, Command
 from qiita_db.util import get_db_files_base_dir, get_table_cols
 from qiita_db.search import QiitaStudySearch
-from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_db.exceptions import QiitaDBIncompatibleDatatypeError
 
 SELECT_SAMPLES = 2
