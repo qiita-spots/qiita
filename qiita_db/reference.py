@@ -111,19 +111,25 @@ class Reference(QiitaObject):
     def sequence_fp(self):
         conn_handler = SQLConnectionHandler()
         rel_path = conn_handler.execute_fetchone(
-            "SELECT f.filepath FROM qiita.filepath f JOIN qiita.{0} r ON r.sequence_filepath=f.filepath_id WHERE r.reference_id=%s".format(self._table), (self._id,))[0]
+            "SELECT f.filepath FROM qiita.filepath f JOIN qiita.{0} r ON "
+            "r.sequence_filepath=f.filepath_id WHERE "
+            "r.reference_id=%s".format(self._table), (self._id,))[0]
         return join(get_db_files_base_dir(), self._table, rel_path)
 
     @property
     def taxonomy_fp(self):
         conn_handler = SQLConnectionHandler()
         rel_path = conn_handler.execute_fetchone(
-            "SELECT f.filepath FROM qiita.filepath f JOIN qiita.{0} r ON r.taxonomy_filepath=f.filepath_id WHERE r.reference_id=%s".format(self._table), (self._id,))[0]
+            "SELECT f.filepath FROM qiita.filepath f JOIN qiita.{0} r ON "
+            "r.taxonomy_filepath=f.filepath_id WHERE "
+            "r.reference_id=%s".format(self._table), (self._id,))[0]
         return join(get_db_files_base_dir(), self._table, rel_path)
 
     @property
     def tree_fp(self):
         conn_handler = SQLConnectionHandler()
         rel_path = conn_handler.execute_fetchone(
-            "SELECT f.filepath FROM qiita.filepath f JOIN qiita.{0} r ON r.tree_filepath=f.filepath_id WHERE r.reference_id=%s".format(self._table), (self._id,))[0]
+            "SELECT f.filepath FROM qiita.filepath f JOIN qiita.{0} r ON "
+            "r.tree_filepath=f.filepath_id WHERE "
+            "r.reference_id=%s".format(self._table), (self._id,))[0]
         return join(get_db_files_base_dir(), self._table, rel_path)
