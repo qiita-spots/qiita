@@ -48,6 +48,7 @@ class Dispatch(object):
     Methods
     -------
     submit_async
+    submit_async_deps
     submit_sync
     sync
 
@@ -103,6 +104,32 @@ class Dispatch(object):
             task = self.demo_lview.apply_async(system_call, cmd)
         else:
             task = self.demo_lview.apply_async(cmd, *args, **kwargs)
+
+        return task
+
+    def submit_async_deps(self, deps, cmd, *args, **kwargs):
+        """Submit as async command to execute after all dependencies are done
+
+        Parameters
+        ----------
+        deps : list of AsyncResult
+            The list of job dependencies for cmd
+        cmd : {function, str}
+            A function to execute or a system call to execute
+        args : list
+            Arguments to pass to a function (if cmd is function)
+        kwargs : dict
+            Keyword arguments to pass to a function (if cmd is function)
+
+        Returns
+        -------
+        IPython.parallel.client.asyncresult.AsyncResult
+        """
+        with self.demo_lview.temp_flags(after=deps, block=False):
+            if isinstance(cmd, str):
+                task = self.demo_lview.apply_async(system_call, cmd)
+            else:
+                task = self.demo_lview.apply_async(cmd, *args, **kwargs)
 
         return task
 
