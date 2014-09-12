@@ -52,6 +52,7 @@ import os
 from functools import partial
 from itertools import repeat
 from collections import defaultdict, namedtuple
+from re import search
 
 import numpy as np
 from numpy.random import shuffle
@@ -358,16 +359,18 @@ def to_hdf5(fp, h5file, max_barcode_length=12):
     h5file.attrs['has-qual'] = _has_qual(fp)
 
     for rec in load(fp):
-        parts = rec['SequenceID'].split()
+        result = search((r'^(?P<sample>.+?)_\d+? .*orig_bc=(?P<orig_bc>.+?) '
+                         'new_bc=(?P<corr_bc>.+?) bc_diffs=(?P<bc_diffs>\d+)'),
+                        rec['SequenceID'])
 
-        try:
-            sample = parts[0].rsplit('_', 1)[0]
-            bc_diffs = int(parts[-1].split('=', 1)[1])
-            corr_bc = parts[-2].split('=', 1)[1]
-            orig_bc = parts[-3].split('=', 1)[1]
-        except IndexError:
+        if result is None:
             raise ValueError("%s doesn't appear to be split libraries "
                              "output!" % fp)
+
+        sample = result.group('sample')
+        bc_diffs = result.group('bc_diffs')
+        corr_bc = result.group('corr_bc')
+        orig_bc = result.group('orig_bc')
 
         sequence = rec['Sequence']
         qual = rec['Qual']
