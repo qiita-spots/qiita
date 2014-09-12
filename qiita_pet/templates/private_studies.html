@@ -1,4 +1,50 @@
 {% extends sitebase.html %}
+{% block head %}
+
+<link rel="stylesheet" href="/static/vendor/css/jquery.dataTables.css" type="text/css">
+
+<script src="/static/vendor/js/jquery.dataTables.min.js"></script>
+
+<script type="text/javascript">
+$(document).ready(function() {
+    $('#private-studies-table').dataTable({"order": [[ 1, "asc" ]]});
+} );
+</script>
+
+{% end %}
 {% block content %}
-All of the user's personal studies will go here, and those that are shared with him or her (in two different sections)
+{% if len(studies) %}
+    <table id="private-studies-table" class="display table-bordered table-hover">
+        <thead>
+            <tr>
+                <th>Samples</th>
+                <th>Title</th>
+                <th>Metadata Complete</th>
+                <th>Sequence Files</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for s in studies %}
+            {% set study_info = s.info %}
+            <tr>
+                <td>{{study_info['number_samples_collected']}}</td>
+                <td><a href="/study/description/{{s.id}}">{{s.title}}</a></td>
+                {% if study_info['metadata_complete'] %}
+                    <td><span class="glyphicon glyphicon-ok"></span></td>
+                {% else %}
+                    <td><span class="glyphicon glyphicon-remove"></span></td>
+                {% end %}
+                <td>{{ len(s.raw_data()) }}</td>
+            </tr>
+            {% end %}
+        </tbody>
+    </table>
+{% else %}
+    <div class="jumbotron">
+        <h1><span class="glyphicon glyphicon-thumbs-down"></span> There are no studies available</h1>
+        <p>
+        This means that you have not yet created a study, <a href="/study/create/">create a study</a>
+        </p>
+</div>
+{% end %}
 {% end %}
