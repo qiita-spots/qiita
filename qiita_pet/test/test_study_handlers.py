@@ -28,7 +28,7 @@ class CreateStudyHandlerTestsDB(TestHandlerBase):
                      'principal_investigator': '-2',
                      'lab_person': '1'}
 
-        response = self.post('/study/create/', post_data)
+        self.post('/study/create/', post_data)
 
         # Check that the new person was created
         expected_id = person_count_before + 1
