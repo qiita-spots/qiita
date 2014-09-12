@@ -57,7 +57,6 @@ import numpy as np
 from numpy.random import shuffle
 from future.utils import viewitems, viewvalues
 from future.builtins import zip
-
 from skbio.parse.sequences import load
 from skbio.format.sequences import format_fastq_record
 
