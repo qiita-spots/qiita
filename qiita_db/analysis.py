@@ -512,9 +512,13 @@ class Analysis(QiitaStatusObject):
             proc_data_fp = proc_data.get_filepaths()[0][0]
             table_fp = join(base_fp, proc_data_fp)
             table = load_table(table_fp)
+            # HACKY WORKAROUND FOR DEMO. Issue # 246
+            # make sure samples not in biom table are not filtered for
+            table_samps = set(table.ids())
+            filter_samps = table_samps.intersection(samps)
             # filter for just the wanted samples and merge into new table
             # this if/else setup avoids needing a blank table to start merges
-            table.filter(samps, axis='sample', inplace=True)
+            table.filter(filter_samps, axis='sample', inplace=True)
             data_type = proc_data.data_type()
             if new_tables[data_type] is None:
                 new_tables[data_type] = table

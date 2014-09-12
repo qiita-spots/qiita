@@ -1,5 +1,4 @@
 # login code modified from https://gist.github.com/guillaumevincent/4771570
-
 import tornado.auth
 import tornado.escape
 import tornado.httpserver
@@ -19,6 +18,8 @@ from qiita_pet.handlers.auth_handlers import (
 from qiita_pet.handlers.analysis_handlers import (
     SelectCommandsHandler, AnalysisWaitHandler, AnalysisResultsHandler,
     ShowAnalysesHandler, SearchStudiesHandler)
+from qiita_pet.handlers.study_handlers import (
+    CreateStudyHandler, MyStudiesHandler, PublicStudiesHandler)
 from qiita_pet.handlers.websocket_handlers import MessageHandler
 from qiita_db.util import get_db_files_base_dir
 
@@ -50,6 +51,9 @@ class Application(tornado.web.Application):
             (r"/analysis/show/", ShowAnalysesHandler),
             (r"/consumer/", MessageHandler),
             (r"/mockup/", MockupHandler),
+            (r"/study/create/", CreateStudyHandler),
+            (r"/study/my/", MyStudiesHandler),
+            (r"/study/public/", PublicStudiesHandler),
             # 404 PAGE MUST BE LAST IN THIS LIST!
             (r".*", NoPageHandler)
         ]

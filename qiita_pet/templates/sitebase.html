@@ -2,11 +2,15 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en-US">
   <head>
     <title>Qiita</title>
+    <link rel="stylesheet" href="/static/vendor/css/jquery-ui.min.css" type="text/css">
+    <link rel="stylesheet" href="/static/vendor/css/jquery-ui.structure.min.css" type="text/css">
+    <link rel="stylesheet" href="/static/vendor/css/jquery-ui.theme.min.css" type="text/css">
     <link rel="stylesheet" href="/static/vendor/css/bootstrap.min.css" type="text/css">
     <link rel="stylesheet" href="/static/vendor/css/bootstrap-theme.min.css" type="text/css">
     <link rel="stylesheet" href="/static/css/style.css" type="text/css">
 
     <script src="/static/vendor/js/jquery-2.1.0.min.js"></script>
+    <script src="/static/vendor/js/jquery-ui.min.js"></script>
     <script src="/static/vendor/js/bootstrap.min.js"></script>
 
     <link rel="shortcut icon" href="/static/img/favicon.ico">
@@ -54,6 +58,14 @@
               <ul class="dropdown-menu">
                 <li><a data-toggle="modal" data-target="#create-analysis-modal-view">Create Meta Analysis</a></li>
                 <li><a href="/analysis/show/">See Previous Analyses</a></li>
+              </ul>
+            </li>
+            <li class="dropdown">
+              <a href="/study/create/" data-toggle="dropdown" class="dropdown-toggle">Study<b class="caret"></b></a>
+              <ul class="dropdown-menu">
+                <li><a href="/study/create/">Create Study</a></li>
+                <li><a href="/study/my/">View My Studies</a></li>
+                <li><a href="/study/public/">View Public and Shared Studies</a></li>
               </ul>
             </li>
             {% end %}
