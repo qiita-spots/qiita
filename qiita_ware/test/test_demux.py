@@ -21,12 +21,13 @@ import numpy.testing as npt
 from qiita_ware.demux import (buffer1d, buffer2d, _has_qual,
                               _per_sample_lengths, _summarize_lengths,
                               _set_attr_stats, _construct_datasets, to_hdf5,
-                              format_fasta_record, to_ascii, fetch, stat)
+                              format_fasta_record, to_ascii, stat)
+
 
 class BufferTests(TestCase):
     def setUp(self):
         self.dset_1d = np.zeros(100, dtype=int)
-        self.dset_2d = np.zeros((100,100), dtype=int)
+        self.dset_2d = np.zeros((100, 100), dtype=int)
 
     def test_init(self):
         b1d = buffer1d(self.dset_1d, max_fill=10)
@@ -120,6 +121,7 @@ class BufferTests(TestCase):
         npt.assert_equal(self.dset_1d, exp1d)
         npt.assert_equal(self.dset_2d, exp2d)
 
+
 class DemuxTests(TestCase):
     def setUp(self):
         self.hdf5_file = h5py.File('test', driver='core', backing_store=False)
@@ -153,11 +155,11 @@ class DemuxTests(TestCase):
 
             obs = _per_sample_lengths(f.name)
 
-        exp = {'a':[1, 2, 3], 'b':[3, 4]}
+        exp = {'a': [1, 2, 3], 'b': [3, 4]}
         self.assertEqual(obs, exp)
 
     def test_summarize_lengths(self):
-        lens = {'a':[1, 2, 3], 'b':[3, 4]}
+        lens = {'a': [1, 2, 3], 'b': [3, 4]}
         exp = ({'a': stat(min=1, max=3, std=.81649658092772603, mean=2.0,
                           median=2.0, n=3,
                           hist=np.array([1, 0, 0, 0, 0, 1, 0, 0, 0, 1]),
@@ -213,9 +215,9 @@ class DemuxTests(TestCase):
         npt.assert_almost_equal(attrs['hist_edge'], stat_obj.hist_edge)
 
     def test_construct_datasets(self):
-        lens = {'a':[1, 2, 3], 'b':[3, 4]}
+        lens = {'a': [1, 2, 3], 'b': [3, 4]}
         sample_stats, _ = _summarize_lengths(lens)
-        bufs = _construct_datasets(sample_stats, self.hdf5_file)
+        _construct_datasets(sample_stats, self.hdf5_file)
 
         self.assertEqual(len(self.hdf5_file.keys()), 2)
         self.assertTrue('a' in self.hdf5_file)
@@ -243,7 +245,6 @@ class DemuxTests(TestCase):
             to_hdf5(f.name, self.hdf5_file)
             self.to_remove.append(f.name)
 
-
         npt.assert_equal(self.hdf5_file['a/sequence'][:], np.array(["x", "xy",
                                                                     "xyz"]))
         npt.assert_equal(self.hdf5_file['a/qual'][:],
@@ -265,7 +266,6 @@ class DemuxTests(TestCase):
                          np.array(["xbc", "wbc"]))
         npt.assert_equal(self.hdf5_file['b/barcode/error'][:],
                          np.array([1, 4]))
-
 
     def test_format_fasta_record(self):
         exp = ">a\nxyz\n"
