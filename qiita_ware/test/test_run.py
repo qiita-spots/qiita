@@ -88,6 +88,14 @@ class TestRun(TestCase):
              '{"msg": "ERROR", "command": "18S: Beta Diversity", '
              '"analysis": 2}',
              '{"msg": "allcomplete", "analysis": 2}'])
+        log = self.conn_handler.execute_fetchall(
+            "SELECT * from qiita.logging")
+        self.assertEqual(1, len(log))
+        log = log[0]
+        self.assertEqual(1, log[0])
+        self.assertEqual(2, log[2])
+        self.assertTrue(len(log[3]) > 0)
+        self.assertTrue('[{"job": 3, "analysis": 2}]')
 
     def test_add_jobs_in_construct_job_graphs(self):
         analysis = Analysis(2)

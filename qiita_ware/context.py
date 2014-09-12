@@ -1,5 +1,8 @@
-from IPython.parallel import Client
 from subprocess import Popen, PIPE
+
+from IPython.parallel import Client
+
+from qiita_ware.exceptions import ComputeError
 
 
 def system_call(cmd):
@@ -18,21 +21,29 @@ def system_call(cmd):
                  shell=True,
                  stdout=PIPE,
                  stderr=PIPE)
-
     # communicate pulls all stdout/stderr from the PIPEs to
     # avoid blocking -- don't remove this line!
     stdout, stderr = proc.communicate()
     return_value = proc.returncode
 
     if return_value != 0:
-        raise RuntimeError("Failed to execute: %s\nstdout: %s\nstderr: %s" %
+        raise ComputeError("Failed to execute: %s\nstdout: %s\nstderr: %s" %
                            (cmd, stdout, stderr))
 
     return stdout, stderr, return_value
 
 
-class Context(object):
-    """Parallel context
+class Dispatch(object):
+    """Dispatch compute
+
+    Attributes
+    ----------
+    reserved
+    reserved_lview
+    general
+    general_lview
+    demo
+    demo_lview
 
     Methods
     -------
@@ -42,20 +53,22 @@ class Context(object):
     sync
 
     """
-    def __init__(self, profile):
-        try:
-            self._client = Client(profile=profile)
-        except IOError:
-            raise RuntimeError("It looks like the profile %s does not exist "
-                               "or the cluster is not actually running."
-                               % profile)
+    def __init__(self):
+        # self.reserved = Client(profile='qiita_reserved')
+        # self.general = Client(profile='qiita_general')
+        self.demo = Client(profile='qiita_demo')
 
-        self._stage_imports(self._client)
-        self._lview = self._client.load_balanced_view()
+        # self._stage_imports(self.reserved)
+        # self._stage_imports(self.general)
+        self._stage_imports(self.demo)
+
+        # self.reserved_lview = self.reserved.load_balanced_view()
+        # self.general_lview = self.general.load_balanced_view()
+        self.demo_lview = self.demo.load_balanced_view()
 
     def _stage_imports(self, cluster):
         with cluster[:].sync_imports(quiet=True):
-            from .context import system_call
+            from qiita_ware.context import system_call
 
     def sync(self, data):
         """Sync data to engines
@@ -66,34 +79,9 @@ class Context(object):
             dict of objects and to sync
 
         """
-        self._client[:].update(data)
-
-    def submit_async_deps(self, deps, cmd, *args, **kwargs):
-        """Submit as async command to execute making sure that cmd is executed
-        after all its dependencies are executed
-
-        Parameters
-        ----------
-        deps : list of AsyncResult
-            The list of job dependencies for cmd
-        cmd : {function, str}
-            A function to execute or a system call to execute
-        args : list
-            Arguments to pass to a function (if cmd is function)
-        kwargs : dict
-            Keyword arguments to pass to a function (if cmd is function)
-
-        Returns
-        -------
-        IPython.parallel.client.asyncresult.AsyncResult
-        """
-        with self._lview.temp_flags(after=deps, block=False):
-            if isinstance(cmd, str):
-                task = self._lview.apply_async(system_call, cmd)
-            else:
-                task = self._lview.apply_async(cmd, *args, **kwargs)
-
-        return task
+        # self.reserved[:].update(data)
+        # self.general[:].update(data)
+        self.demo[:].update(data)
 
     def submit_async(self, cmd, *args, **kwargs):
         """Submit an async command to execute
@@ -113,9 +101,35 @@ class Context(object):
 
         """
         if isinstance(cmd, str):
-            task = self._lview.apply_async(system_call, cmd)
+            task = self.demo_lview.apply_async(system_call, cmd)
         else:
-            task = self._lview.apply_async(cmd, *args, **kwargs)
+            task = self.demo_lview.apply_async(cmd, *args, **kwargs)
+
+        return task
+
+    def submit_async_deps(self, deps, cmd, *args, **kwargs):
+        """Submit as async command to execute after all dependencies are done
+
+        Parameters
+        ----------
+        deps : list of AsyncResult
+            The list of job dependencies for cmd
+        cmd : {function, str}
+            A function to execute or a system call to execute
+        args : list
+            Arguments to pass to a function (if cmd is function)
+        kwargs : dict
+            Keyword arguments to pass to a function (if cmd is function)
+
+        Returns
+        -------
+        IPython.parallel.client.asyncresult.AsyncResult
+        """
+        with self.demo_lview.temp_flags(after=deps, block=False):
+            if isinstance(cmd, str):
+                task = self.demo_lview.apply_async(system_call, cmd)
+            else:
+                task = self.demo_lview.apply_async(cmd, *args, **kwargs)
 
         return task
 
@@ -137,32 +151,11 @@ class Context(object):
 
         """
         if isinstance(cmd, str):
-            result = self._lview.apply_sync(system_call, cmd)
+            result = self.demo_lview.apply_sync(system_call, cmd)
         else:
-            result = self._lview.apply_sync(cmd, *args, **kwargs)
+            result = self.demo_lview.apply_sync(cmd, *args, **kwargs)
 
         return result
 
-    def wait(self, handlers):
-        """Waits until all async jobs in handlers have finished
-
-        Parameters
-        ----------
-        handlers : list of AsyncResult
-            The AsyncResult objects to wait for
-        """
-        return self._lview.wait(handlers)
-
-    def get_number_of_workers(self):
-        """Returns the number of workers present in the cluster
-
-        Returns
-        -------
-        int
-            The number of workers
-        """
-        return len(self._client.ids)
-
-
-# likely want this in qiime.parallel.__init__
-context = Context('qiita_demo')
+# likely want this in qiita_ware.__init__
+context = Dispatch()

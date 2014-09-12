@@ -361,18 +361,17 @@ class Job(QiitaStatusObject):
         return ret
 
 # --- Functions ---
-    def set_error(self, msg, severity):
+    def set_error(self, msg):
         """Logs an error for the job
 
         Parameters
         ----------
         msg : str
             Error message/stacktrace if available
-        severity: int
-            Severity code of error
         """
         conn_handler = SQLConnectionHandler()
-        log_entry = LogEntry.create(severity, msg)
+        log_entry = LogEntry.create('Runtime', msg,
+                                    info={'job': self._id})
         self._lock_job(conn_handler)
 
         # attach the error to the job and set to error
