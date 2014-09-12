@@ -67,15 +67,18 @@ class ReferenceTests(TestCase):
 
     def test_sequence_fp(self):
         ref = Reference(1)
-        self.assertEqual(ref.sequence_fp, join(self.db_dir, ""))
+        exp = join(self.db_dir, "GreenGenes_13_8_97_otus.fasta")
+        self.assertEqual(ref.sequence_fp, exp)
 
     def test_taxonomy_fp(self):
         ref = Reference(1)
-        self.assertEqual(ref.taxonomy_fp, join(self.db_dir, ""))
+        exp = join(self.db_dir, "GreenGenes_13_8_97_otu_taxonomy.txt")
+        self.assertEqual(ref.taxonomy_fp, exp)
 
     def test_tree_fp(self):
         ref = Reference(1)
-        self.assertEqual(ref.tree_fp, join(self.db_dir, ""))
+        exp = join(self.db_dir, "GreenGenes_13_8_97_otus.tree")
+        self.assertEqual(ref.tree_fp, exp)
 
 if __name__ == '__main__':
     main()
