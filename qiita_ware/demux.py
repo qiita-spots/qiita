@@ -409,6 +409,9 @@ def to_ascii(demux, samples=None):
     ----------
     demux : h5py.File
         The demux file to operate on
+    samples : list, optional
+        Samples to pull out. If None, the all samples will be examined.
+        Defaults to None.
 
     Returns
     -------
