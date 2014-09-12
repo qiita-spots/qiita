@@ -94,7 +94,6 @@ class _buffer(object):
         """
         self.dset = dset
 
-        self._current_fill = 0
         self._n = 0
         self._idx = 0
         self._max_fill = max_fill
