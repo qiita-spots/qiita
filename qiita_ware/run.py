@@ -5,7 +5,6 @@ from os.path import join
 from sys import stderr
 
 from qiita_db.job import Job
-from qiita_db.logger import LogEntry
 from qiita_db.util import get_db_files_base_dir
 from qiita_ware.wrapper import ParallelWrapper
 from qiita_ware.context import system_call
@@ -53,12 +52,12 @@ def _job_comm_wrapper(user, analysis_id, job):
     # run the command
     try:
         system_call(c_fmt)
-    except Exception:
+    except Exception as e:
         # if ANYTHING goes wrong we want to catch it and set error status
-        job.status = 'error'
         msg["msg"] = "ERROR"
         r_server.rpush(user + ":messages", dumps(msg))
         r_server.publish(user, dumps(msg))
+        job.set_error(str(e))
         return
 
     # FIX THIS add_results should not be hard coded  Issue #269
