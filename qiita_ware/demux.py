@@ -63,7 +63,7 @@ from skbio.format.sequences import format_fastq_record
 # track some basic stats about the samples
 stat = namedtuple('stat', 'n max min mean median std hist hist_edge')
 
-# centralized incase paths change
+# centralized in case paths change
 dset_paths = {'sequence': 'sequence',
               'barcode_original': 'barcode/original',
               'barcode_corrected': 'barcode/corrected',
@@ -447,7 +447,7 @@ def fetch(demux, samples=None, k=None):
     demux : h5py.File
         The demux file to operate on.
     samples : list, optional
-        Samples to pull out. If None, the all samples will be examined.
+        Samples to pull out. If None, then all samples will be examined.
         Defaults to None.
     k : int, optional
         Randomly select (without replacement) k sequences from a sample. Only
