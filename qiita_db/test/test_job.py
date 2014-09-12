@@ -118,8 +118,8 @@ class JobTest(TestCase):
                 Job(1)
 
             obs = self.conn_handler.execute_fetchall(
-                "SELECT * FROM qiita.filepath WHERE filepath_id = 8 OR "
-                "filepath_id = 12")
+                "SELECT * FROM qiita.filepath WHERE filepath_id = 11 OR "
+                "filepath_id = 15")
             self.assertEqual(obs, [])
 
             obs = self.conn_handler.execute_fetchall(
@@ -146,7 +146,7 @@ class JobTest(TestCase):
                 Job(2)
 
             obs = self.conn_handler.execute_fetchall(
-                "SELECT * FROM qiita.filepath WHERE filepath_id = 9")
+                "SELECT * FROM qiita.filepath WHERE filepath_id = 12")
             self.assertEqual(obs, [])
 
             obs = self.conn_handler.execute_fetchall(
@@ -278,7 +278,7 @@ class JobTest(TestCase):
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.job_results_filepath WHERE job_id = 1")
 
-        self.assertEqual(obs, [[1, 8], [1, 12]])
+        self.assertEqual(obs, [[1, 11], [1, 15]])
 
     def test_add_results_dir(self):
         # Create a test directory
@@ -290,7 +290,7 @@ class JobTest(TestCase):
         # make sure files attached to job properly
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.job_results_filepath WHERE job_id = 1")
-        self.assertEqual(obs, [[1, 8], [1, 12]])
+        self.assertEqual(obs, [[1, 11], [1, 15]])
 
     def test_add_results_completed(self):
         self.job.status = "completed"

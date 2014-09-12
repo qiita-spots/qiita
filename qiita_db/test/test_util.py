@@ -129,7 +129,8 @@ class DBUtilTests(TestCase):
         obs = get_filepath_types()
         exp = {'raw_sequences': 1, 'raw_barcodes': 2, 'raw_spectra': 3,
                'preprocessed_sequences': 4, 'preprocessed_sequences_qual': 5,
-               'biom': 6, 'directory': 7, 'plain_text': 8}
+               'biom': 6, 'directory': 7, 'plain_text': 8, 'reference_seqs': 9,
+               'reference_tax': 10, 'reference_tree': 11}
         self.assertEqual(obs, exp)
 
         obs = get_filepath_types(key='filepath_type_id')
