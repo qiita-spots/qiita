@@ -54,7 +54,6 @@ from collections import defaultdict, namedtuple
 from re import search
 
 import numpy as np
-from numpy.random import shuffle
 from future.utils import viewitems, viewvalues
 from future.builtins import zip
 from skbio.parse.sequences import load
@@ -474,7 +473,7 @@ def fetch(demux, samples=None, k=None):
                 continue
 
             to_keep = np.arange(demux[sample].attrs['n'])
-            shuffle(to_keep)
+            np.random.shuffle(to_keep)
             indices = np.logical_not(indices)
             indices[to_keep[:k]] = True
 
