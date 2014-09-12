@@ -54,7 +54,6 @@ def _job_comm_wrapper(user, analysis_id, job):
         system_call(c_fmt)
     except Exception as e:
         # if ANYTHING goes wrong we want to catch it and set error status
-        job.status = 'error'
         msg["msg"] = "ERROR"
         r_server.rpush(user + ":messages", dumps(msg))
         r_server.publish(user, dumps(msg))
