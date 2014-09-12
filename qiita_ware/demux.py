@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 r"""HDF5 demultiplexed DDL
 
 Attributes off of ./ for the full file:
