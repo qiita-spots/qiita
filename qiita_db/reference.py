@@ -15,7 +15,7 @@ from .sql_connection import SQLConnectionHandler
 class Reference(QiitaObject):
     r"""
     """
-    _table = None
+    _table = "reference"
 
     @classmethod
     def create(cls, name, version, seqs_fp, tax_fp=None, tree_fp=None):
@@ -78,8 +78,8 @@ class Reference(QiitaObject):
         ref_id = conn_handler.execute_fetchone(
             "INSERT INTO qiita.{0} (reference_name, reference_version, "
             "sequence_filepath, taxonomy_filepath, tree_filepath) VALUES "
-            "(%s, %s, %s, %s, %s) RETURNING reference_id",
-            (name, version, seq_id, tax_id, tree_id))
+            "(%s, %s, %s, %s, %s) RETURNING reference_id".format(cls._table),
+            (name, version, seq_id, tax_id, tree_id))[0]
 
         return cls(ref_id)
 
@@ -102,5 +102,23 @@ class Reference(QiitaObject):
         conn_handler = SQLConnectionHandler()
         return conn_handler.execute_fetchone(
             "SELECT EXISTS(SELECT * FROM qiita.{0} WHERE "
-            "reference_name = %s, reference_version)".format(cls._table),
+            "reference_name=%s AND reference_version=%s)".format(cls._table),
             (name, version))[0]
+
+    @property
+    def sequence_fp(self):
+        conn_handler = SQLConnectionHandler()
+        return conn_handler.execute_fetchone(
+            "SELECT f.filepath FROM qiita.filepath f JOIN qiita.{0} r ON r.sequence_filepath=d.filepath_id WHERE r.reference_id=%s".format(self._table), (self._id,))
+
+    @property
+    def taxonomy_fp(self):
+        conn_handler = SQLConnectionHandler()
+        return conn_handler.execute_fetchone(
+            "SELECT f.filepath FROM qiita.filepath f JOIN qiita.{0} r ON r.taxonomy_filepath=d.filepath_id WHERE r.reference_id=%s".format(self._table), (self._id,))
+
+    @property
+    def tree_fp(self):
+        conn_handler = SQLConnectionHandler()
+        return conn_handler.execute_fetchone(
+            "SELECT f.filepath FROM qiita.filepath f JOIN qiita.{0} r ON r.tree_filepath=d.filepath_id WHERE r.reference_id=%s".format(self._table), (self._id,))
