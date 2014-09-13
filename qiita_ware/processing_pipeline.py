@@ -10,8 +10,29 @@
 from qiime.parallel.wrapper import ParallelWrapper
 
 
-def _get_split_libraries_fastq_cmd(raw_data):
-    """"""
+def _get_preprocess_illumina_cmd(raw_data):
+    """Generates the split_libraries_fastq.py command to pre-process the
+    illumina raw data
+
+    Parameters
+    ----------
+    raw_data : RawData
+        The raw data object to pre-process
+
+    Returns
+    -------
+    tuple (str, str)
+        A 2-tuple of strings. The first string is the command to be executed.
+        The second string is the path to the command's output directory
+
+    Raises
+    ------
+    NotImplementedError
+        If any of the raw data input filepath type is not supported
+    ValueError
+        If the number of raw sequences an raw barcode files are not the same
+        If the raw data object does not have any sequence file associated
+    """
     from tempfile import mkstemp, mkdtemp
     from os import close
 
@@ -29,6 +50,15 @@ def _get_split_libraries_fastq_cmd(raw_data):
             raise NotImplementedError("Raw data file type not supported %s"
                                       % fp_type)
 
+    if len(seqs_fps) == 0:
+        raise ValueError("Sequence file not found on raw data %s"
+                         % raw_data.id)
+
+    if len(barcode_fps) != len(seqs_fps):
+        raise ValueError("The number of barcode files and the number of "
+                         "sequence files should match: %d != %d"
+                         % len(barcode_fps), len(seqs_fps))
+
     # Instantiate the prep template
     prep_template = PrepTemplate(raw_data.id)
 
@@ -45,25 +75,31 @@ def _get_split_libraries_fastq_cmd(raw_data):
     params = ""
 
     # Create the split_libraries_fastq.py command
-    cmd = ("split_libraries_fastq.py -i %s -b %s -m %s -o %s %s"
+    cmd = ("split_libraries_fastq.py --store_demultiplexed_fastq -i %s -b %s "
+           "-m %s -o %s %s"
            % (seqs_fps, barcode_fps, prep_fp, output_dir, params))
     return (cmd, output_dir)
 
 
-def _get_pick_closed_reference_cmd(sl_dir, reference):
-    """
+def _get_pick_closed_reference_cmd(preprocessed_data, reference):
+    """Generates the pcik_closed_reference.py command to process the
+    pre-processed data
+
     Parameters
     ----------
-    sl_dir : str
-        Path to the split libraries output folder
+    preprocessed_data : PreprocessedData
+        The pre-processed data object to process
     reference : Reference
-        The reference object used to pick otus
-    """
-    from tempfile import mkstemp, mkdtemp
-    from os import close
-    from os.path import join
+        The reference database to use to process thee data
 
-    seqs_fp = join(sl_dir, 'seqs.fna')
+    Returns
+    -------
+    tuple (str, str)
+        A 2-tuple of strings. The first string is the command to be executed.
+        The second string is the path to the command's output directory
+    """
+    from tempfile import mkdtemp
+
     # Create a temporary directory to store the pick otus output
     output_dir = mkdtemp(prefix='closed_otus_out')
 
@@ -125,7 +161,19 @@ class StudyProcesser(ParallelWrapper):
         """
         # STEP 1: Preprocess the study
         preprocess_node = "PREPROCESS"
-        cmd, sl_out = _get_split_libraries_fastq_cmd(raw_data)
+
+        # Check the raw data filepath to know which command generator we
+        # should use
+        filetype = raw_data.filetype
+        if filetype == "Illumina":
+            cmd_generator = _get_preprocess_illumina_cmd
+        else:
+            raise NotImplementedError(
+                "Raw data %s cannot be preprocessed, filetype %s not supported"
+                % (raw_data.id, filetype))
+
+        # Generate the command
+        cmd, output_dir = cmd_generator(raw_data)
         self._job_graph.add_node(preprocess_node, job=(cmd,),
                                  requires_deps=False)
 
@@ -140,7 +188,7 @@ class StudyProcesser(ParallelWrapper):
         processed_node = "PROCESS"
         # TODO: Now hard-coded to GG 13 8 (id = 1) - issue #
         reference = Reference(1)
-        cmd, otus_out = _get_pick_closed_reference_cmd(sl_out, reference)
+        cmd, otus_out = _get_pick_closed_reference_cmd(output_dir, reference)
         self._job_graph.add_node(processed_node, job=(cmd,),
                                  requires_deps=False)
         self._job_graph.add_edge(insert_preprocessed_node, processed_node)
@@ -155,6 +203,6 @@ class StudyProcesser(ParallelWrapper):
         # Clean up the environment
         clean_up_node = "CLEAN_UP"
         self._job_graph.add_node(clean_up_node,
-                                 job=(_clean_up, [sl_out, otus_out]),
+                                 job=(_clean_up, [output_dir, otus_out]),
                                  requires_deps=False)
         self._job_graph.add_edge(insert_processed_node, clean_up_node)
