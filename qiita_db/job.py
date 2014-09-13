@@ -32,10 +32,6 @@ from shutil import rmtree
 from functools import partial
 from collections import defaultdict
 
-from future.builtins import zip
-from future.utils import viewitems, viewkeys
-
-from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from .base import QiitaStatusObject
 from .util import insert_filepaths, convert_to_id, get_db_files_base_dir
 from .sql_connection import SQLConnectionHandler
@@ -204,7 +200,7 @@ class Job(QiitaStatusObject):
         datatype : str
             The datatype in which this job applies
         command : str
-            The identifier of the command executed in this job
+            The name of the command executed in this job
         analysis : Analysis object
             The analysis which this job belongs to
         return_existing : bool, optional
@@ -288,7 +284,8 @@ class Job(QiitaStatusObject):
         sql = ("SELECT options FROM qiita.{0} WHERE "
                "job_id = %s".format(self._table))
         conn_handler = SQLConnectionHandler()
-        opts = loads(conn_handler.execute_fetchone(sql, (self._id, ))[0])
+        db_opts = conn_handler.execute_fetchone(sql, (self._id, ))[0]
+        opts = loads(db_opts) if db_opts else {}
         sql = ("SELECT command, output from qiita.command WHERE command_id = ("
                "SELECT command_id from qiita.{0} WHERE "
                "job_id = %s)".format(self._table))
@@ -360,18 +357,17 @@ class Job(QiitaStatusObject):
         return ret
 
 # --- Functions ---
-    def set_error(self, msg, severity):
+    def set_error(self, msg):
         """Logs an error for the job
 
         Parameters
         ----------
         msg : str
             Error message/stacktrace if available
-        severity: int
-            Severity code of error
         """
         conn_handler = SQLConnectionHandler()
-        log_entry = LogEntry.create(severity, msg)
+        log_entry = LogEntry.create('Runtime', msg,
+                                    info={'job': self._id})
         self._lock_job(conn_handler)
 
         # attach the error to the job and set to error

@@ -5,7 +5,6 @@ except ImportError:  # py3
     from urllib.parse import urlencode
 
 from tornado.testing import AsyncHTTPTestCase
-from tornado.web import Application
 from qiita_pet.webserver import Application
 from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_db.sql_connection import SQLConnectionHandler
@@ -42,20 +41,20 @@ class TestHandlerBase(AsyncHTTPTestCase):
             del self.conn_handler
 
     # helpers from http://www.peterbe.com/plog/tricks-asynchttpclient-tornado
-    def get(self, url, data=None, headers=None):
+    def get(self, url, data=None, headers=None, doseq=True):
         if data is not None:
             if isinstance(data, dict):
-                data = urlencode(data)
+                data = urlencode(data, doseq=doseq)
             if '?' in url:
                 url += '&amp;%s' % data
             else:
                 url += '?%s' % data
         return self._fetch(url, 'GET', headers=headers)
 
-    def post(self, url, data, headers=None):
+    def post(self, url, data, headers=None, doseq=True):
         if data is not None:
             if isinstance(data, dict):
-                data = urlencode(data)
+                data = urlencode(data, doseq=doseq)
         return self._fetch(url, 'POST', data, headers)
 
     def _fetch(self, url, method, data=None, headers=None):

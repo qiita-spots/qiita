@@ -13,13 +13,11 @@ from shutil import rmtree
 from datetime import datetime
 
 from qiita_core.util import qiita_test_checker
-from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_db.job import Job, Command
 from qiita_db.util import get_db_files_base_dir
 from qiita_db.analysis import Analysis
 from qiita_db.exceptions import (QiitaDBDuplicateError, QiitaDBStatusError,
                                  QiitaDBUnknownIDError)
-from qiita_db.logger import LogEntry
 
 
 @qiita_test_checker()
@@ -50,7 +48,7 @@ class JobTest(TestCase):
             "(2,1,'SKD8.640184'), (2,1,'SKB7.640196'), (2,1,'SKM9.640192'),"
             "(2,1,'SKM4.640180')")
         """tests that existing job returns true"""
-        self.assertTrue(Job.exists("16S", "Beta Diversity",
+        self.assertTrue(Job.exists("18S", "Beta Diversity",
                                    {"--otu_table_fp": 1,
                                     "--mapping_fp": 1}, Analysis(1)))
 
@@ -64,7 +62,7 @@ class JobTest(TestCase):
             "(2,1,'SKD8.640184'), (2,1,'SKB7.640196'), (2,1,'SKM9.640192'),"
             "(2,1,'SKM4.640180')")
         """tests that existing job returns true"""
-        exists, jid = Job.exists("16S", "Beta Diversity",
+        exists, jid = Job.exists("18S", "Beta Diversity",
                                  {"--otu_table_fp": 1, "--mapping_fp": 1},
                                  Analysis(1), return_existing=True)
         self.assertTrue(exists)
@@ -81,7 +79,7 @@ class JobTest(TestCase):
             "(2,1,'SKD8.640184'), (2,1,'SKB7.640196'), (2,1,'SKM9.640192'),"
             "(2,1,'SKM4.640180')")
         """tests that non-existant job with bad options returns false"""
-        self.assertFalse(Job.exists("16S", "Beta Diversity",
+        self.assertFalse(Job.exists("18S", "Beta Diversity",
                                     {"--otu_table_fp": 1,
                                      "--mapping_fp": 27}, Analysis(1)))
 
@@ -120,8 +118,8 @@ class JobTest(TestCase):
                 Job(1)
 
             obs = self.conn_handler.execute_fetchall(
-                "SELECT * FROM qiita.filepath WHERE filepath_id = 8 OR "
-                "filepath_id = 12")
+                "SELECT * FROM qiita.filepath WHERE filepath_id = 11 OR "
+                "filepath_id = 15")
             self.assertEqual(obs, [])
 
             obs = self.conn_handler.execute_fetchall(
@@ -148,7 +146,7 @@ class JobTest(TestCase):
                 Job(2)
 
             obs = self.conn_handler.execute_fetchall(
-                "SELECT * FROM qiita.filepath WHERE filepath_id = 9")
+                "SELECT * FROM qiita.filepath WHERE filepath_id = 12")
             self.assertEqual(obs, [])
 
             obs = self.conn_handler.execute_fetchall(
@@ -203,20 +201,20 @@ class JobTest(TestCase):
     def test_create_exists(self):
         """Makes sure creation doesn't duplicate a job"""
         with self.assertRaises(QiitaDBDuplicateError):
-            Job.create("16S", "Beta Diversity",
+            Job.create("18S", "Beta Diversity",
                        {"--otu_table_fp": 1, "--mapping_fp": 1},
                        Analysis(1))
 
     def test_create_exists_return_existing(self):
         """Makes sure creation doesn't duplicate a job by returning existing"""
-        new = Job.create("16S", "Beta Diversity",
+        new = Job.create("18S", "Beta Diversity",
                          {"--otu_table_fp": 1, "--mapping_fp": 1},
                          Analysis(1), return_existing=True)
         self.assertEqual(new.id, 2)
 
     def test_retrieve_datatype(self):
         """Makes sure datatype retriveal is correct"""
-        self.assertEqual(self.job.datatype, '16S')
+        self.assertEqual(self.job.datatype, '18S')
 
     def test_retrieve_command(self):
         """Makes sure command retriveal is correct"""
@@ -250,13 +248,13 @@ class JobTest(TestCase):
 
     def test_set_error(self):
         before = datetime.now()
-        self.job.set_error("TESTERROR", 1)
+        self.job.set_error("TESTERROR")
         after = datetime.now()
         self.assertEqual(self.job.status, "error")
 
         error = self.job.error
 
-        self.assertEqual(error.severity, 1)
+        self.assertEqual(error.severity, 2)
         self.assertEqual(error.msg, 'TESTERROR')
         self.assertTrue(before < error.time < after)
 
@@ -266,10 +264,10 @@ class JobTest(TestCase):
     def test_set_error_completed(self):
         self.job.status = "error"
         with self.assertRaises(QiitaDBStatusError):
-            self.job.set_error("TESTERROR", 1)
+            self.job.set_error("TESTERROR")
 
     def test_retrieve_error_exists(self):
-        self.job.set_error("TESTERROR", 1)
+        self.job.set_error("TESTERROR")
         self.assertEqual(self.job.error.msg, "TESTERROR")
 
     def test_add_results(self):
@@ -280,7 +278,7 @@ class JobTest(TestCase):
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.job_results_filepath WHERE job_id = 1")
 
-        self.assertEqual(obs, [[1, 8], [1, 12]])
+        self.assertEqual(obs, [[1, 11], [1, 15]])
 
     def test_add_results_dir(self):
         # Create a test directory
@@ -292,7 +290,7 @@ class JobTest(TestCase):
         # make sure files attached to job properly
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.job_results_filepath WHERE job_id = 1")
-        self.assertEqual(obs, [[1, 8], [1, 12]])
+        self.assertEqual(obs, [[1, 11], [1, 15]])
 
     def test_add_results_completed(self):
         self.job.status = "completed"

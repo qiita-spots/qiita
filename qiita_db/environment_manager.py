@@ -5,17 +5,12 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
-from tempfile import mkdtemp
-from tarfile import open as taropen
-from gzip import open as gzopen
-from os import remove
 from os.path import abspath, dirname, join
-from shutil import rmtree, move
 from functools import partial
+
 from future import standard_library
 with standard_library.hooks():
     from urllib.request import urlretrieve
-
 from psycopg2 import connect
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 
@@ -109,12 +104,6 @@ def make_environment(env, base_data_dir, base_work_dir, user, password, host):
             with open(INITIALIZE_FP, 'U') as f:
                 cur.execute(f.read())
 
-            # Commenting out right now - probably will ad later
-            # print('Populating database with demo data (1/2)')
-            # # Populate the database
-            # with open(POPULATE_FP, 'U') as f:
-            #     cur.execute(f.read())
-
             # Commit all the changes and close the connections
             print('Populating database with demo data')
             cur.execute(
@@ -138,41 +127,7 @@ def make_environment(env, base_data_dir, base_work_dir, user, password, host):
                                       "gg_97_otus_4feb2011.tre"))
             except:
                 raise IOError("Error: DOWNLOAD FAILED")
-            # # download files from thebeast
-            # url = ("ftp://thebeast.colorado.edu/pub/QIIME_DB_Public_Studies/"
-            #        "study_1001_split_library_seqs_and_mapping.tgz")
-            # outdir = mkdtemp()
-            # basedir = join(outdir,
-            #                "study_1001_split_library_seqs_and_mapping/")
-            # try:
-            #     urlretrieve(url, join(outdir, "study_1001.tar.gz"))
-            # except:
-            #     raise IOError("Error: DOWNLOAD FAILED")
-            #     rmtree(outdir)
 
-            # print('Extracting files')
-            # # untar the files
-            # with taropen(join(outdir, "study_1001.tar.gz")) as tar:
-            #     tar.extractall(outdir)
-            # # un-gzip sequence file
-            # with gzopen(join(basedir,
-            #                  "study_1001_split_library_seqs.fna.gz")) as gz:
-            #     with open(join(basedir, "seqs.fna"), 'w') as fout:
-            #         fout.write(str(gz.read()))
-
-            # print('Populating database with demo data')
-            # # copy the preprocessed and procesed data to the study
-            # remove(join(base_data_dir,
-            #             "processed_data/"
-            #             "study_1001_closed_reference_otu_table.biom"))
-            # remove(join(base_data_dir, "preprocessed_data/seqs.fna"))
-            # move(join(basedir, "study_1001_closed_reference_otu_table.biom"),
-            #      join(base_data_dir, "processed_data"))
-            # move(join(basedir, "seqs.fna"), join(base_data_dir,
-            #                                      "preprocessed_data"))
-
-            # # clean up after ourselves
-            # rmtree(outdir)
             print('Demo environment successfully created')
         elif env == "test":
             # Create the schema
@@ -230,11 +185,6 @@ def drop_environment(env, user, password, host):
         with open(join(base, "reference",
                        "gg_97_otus_4feb2011.tre"), 'w') as f:
             f.write('\n')
-    #     with open(join(base, "preprocessed_data/seqs.fna"), 'w') as fout:
-    #         fout.write("\n")
-    #     with open(join(base, "processed_data/study_1001_closed_reference"
-    #               "_otu_table.biom"), 'w') as fout:
-    #         fout.write("\n")
 
     cur.execute('DROP DATABASE %s' % ENVIRONMENTS[env])
     # Close cursor and connection

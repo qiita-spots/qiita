@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 from __future__ import division
 
+from redis import Redis
+
 # -----------------------------------------------------------------------------
 # Copyright (c) 2014--, The Qiita Development Team.
 #
@@ -8,3 +10,4 @@ from __future__ import division
 #
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
+r_server = Redis()

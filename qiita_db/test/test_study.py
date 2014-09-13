@@ -34,6 +34,21 @@ class TestStudyPerson(TestCase):
         self.assertEqual(obs, [[4, 'SomeDude', 'somedude@foo.bar', 'affil',
                          '111 fake street', '111-121-1313']])
 
+    def test_iter(self):
+        """Make sure that each and every StudyPerson is retrieved"""
+        expected = [
+            ('LabDude', 'lab_dude@foo.bar', 'knight lab', '123 lab street',
+             '121-222-3333'),
+            ('empDude', 'emp_dude@foo.bar', 'broad', None, '444-222-3333'),
+            ('PIDude', 'PI_dude@foo.bar', 'Wash U', '123 PI street', None)]
+        for i, person in enumerate(StudyPerson.iter()):
+            self.assertTrue(person.id == i+1)
+            self.assertTrue(person.name == expected[i][0])
+            self.assertTrue(person.email == expected[i][1])
+            self.assertTrue(person.affiliation == expected[i][2])
+            self.assertTrue(person.address == expected[i][3])
+            self.assertTrue(person.phone == expected[i][4])
+
     def test_create_studyperson_already_exists(self):
         obs = StudyPerson.create('LabDude', 'lab_dude@foo.bar', 'knight lab')
         self.assertEqual(obs.name, 'LabDude')
@@ -153,10 +168,15 @@ class TestStudy(TestCase):
             'number_samples_collected': 27}
 
     def test_get_public(self):
-        new = Study.create(User('test@foo.bar'), 'Identification of the '
-                           'Microbiomes for Cannabis Soils', [1], self.info)
+        Study.create(User('test@foo.bar'), 'NOT Identification of the '
+                     'Microbiomes for Cannabis Soils', [1], self.info)
         obs = Study.get_public()
         self.assertEqual(obs, [1])
+
+    def test_exists(self):
+        self.assertTrue(Study.exists('Identification of the Microbiomes for '
+                                     'Cannabis Soils'))
+        self.assertFalse(Study.exists('Not Cannabis Soils'))
 
     def test_create_study_min_data(self):
         """Insert a study into the database"""
@@ -274,7 +294,7 @@ class TestStudy(TestCase):
                          ' for Cannabis Soils')
 
     def test_set_title(self):
-        new = Study.create(User('test@foo.bar'), 'Identification of the '
+        new = Study.create(User('test@foo.bar'), 'NOT Identification of the '
                            'Microbiomes for Cannabis Soils', [1], self.info)
         new.title = "Cannabis soils"
         self.assertEqual(new.title, "Cannabis soils")
@@ -289,14 +309,14 @@ class TestStudy(TestCase):
 
     def test_set_efo(self):
         """Set efo with list efo_id"""
-        new = Study.create(User('test@foo.bar'), 'Identification of the '
+        new = Study.create(User('test@foo.bar'), 'NOT Identification of the '
                            'Microbiomes for Cannabis Soils', [1], self.info)
         new.efo = [3, 4]
         self.assertEqual(new.efo, [3, 4])
 
     def test_set_efo_empty(self):
         """Set efo with list efo_id"""
-        new = Study.create(User('test@foo.bar'), 'Identification of the '
+        new = Study.create(User('test@foo.bar'), 'NOT Identification of the '
                            'Microbiomes for Cannabis Soils', [1], self.info)
         with self.assertRaises(IncompetentQiitaDeveloperError):
             new.efo = []
@@ -322,7 +342,7 @@ class TestStudy(TestCase):
             "vamps_id": 'MBE_111222',
             "first_contact": "June 11, 2014"
         }
-        new = Study.create(User('test@foo.bar'), 'Identification of the '
+        new = Study.create(User('test@foo.bar'), 'NOT Identification of the '
                            'Microbiomes for Cannabis Soils', [1], self.info)
         self.infoexp.update(newinfo)
         new.info = newinfo
@@ -341,13 +361,13 @@ class TestStudy(TestCase):
 
     def test_set_info_disallowed_keys(self):
         """Tests for fail if sending non-info keys in info dict"""
-        new = Study.create(User('test@foo.bar'), 'Identification of the '
+        new = Study.create(User('test@foo.bar'), 'NOT Identification of the '
                            'Microbiomes for Cannabis Soils', [1], self.info)
         with self.assertRaises(QiitaDBColumnError):
             new.info = {"email": "fail@fail.com"}
 
     def test_info_empty(self):
-        new = Study.create(User('test@foo.bar'), 'Identification of the '
+        new = Study.create(User('test@foo.bar'), 'NOT Identification of the '
                            'Microbiomes for Cannabis Soils', [1], self.info)
         with self.assertRaises(IncompetentQiitaDeveloperError):
             new.info = {}
@@ -356,7 +376,7 @@ class TestStudy(TestCase):
         self.assertEqual(self.study.status, "public")
 
     def test_set_status(self):
-        new = Study.create(User('test@foo.bar'), 'Identification of the '
+        new = Study.create(User('test@foo.bar'), 'NOT Identification of the '
                            'Microbiomes for Cannabis Soils', [1], self.info)
         new.status = "private"
         self.assertEqual(new.status, "private")
@@ -370,7 +390,7 @@ class TestStudy(TestCase):
         self.assertEqual(self.study.pmids, exp)
 
     def test_retrieve_pmids_empty(self):
-        new = Study.create(User('test@foo.bar'), 'Identification of the '
+        new = Study.create(User('test@foo.bar'), 'NOT Identification of the '
                            'Microbiomes for Cannabis Soils', [1], self.info)
         self.assertEqual(new.pmids, [])
 
@@ -378,7 +398,7 @@ class TestStudy(TestCase):
         self.assertEqual(self.study.investigation, 1)
 
     def test_retrieve_investigation_empty(self):
-        new = Study.create(User('test@foo.bar'), 'Identification of the '
+        new = Study.create(User('test@foo.bar'), 'NOT Identification of the '
                            'Microbiomes for Cannabis Soils', [1], self.info)
         self.assertEqual(new.investigation, None)
 
@@ -389,7 +409,7 @@ class TestStudy(TestCase):
         self.assertEqual(self.study.data_types, ['18S'])
 
     def test_retrieve_data_types_none(self):
-        new = Study.create(User('test@foo.bar'), 'Identification of the '
+        new = Study.create(User('test@foo.bar'), 'NOT Identification of the '
                            'Microbiomes for Cannabis Soils', [1], self.info)
         self.assertEqual(new.data_types, [])
 
@@ -397,7 +417,7 @@ class TestStudy(TestCase):
         self.assertEqual(self.study.raw_data(), [1, 2])
 
     def test_retrieve_raw_data_none(self):
-        new = Study.create(User('test@foo.bar'), 'Identification of the '
+        new = Study.create(User('test@foo.bar'), 'NOT Identification of the '
                            'Microbiomes for Cannabis Soils', [1], self.info)
         self.assertEqual(new.raw_data(), [])
 
@@ -405,7 +425,7 @@ class TestStudy(TestCase):
         self.assertEqual(self.study.preprocessed_data(), [1, 2])
 
     def test_retrieve_preprocessed_data_none(self):
-        new = Study.create(User('test@foo.bar'), 'Identification of the '
+        new = Study.create(User('test@foo.bar'), 'NOT Identification of the '
                            'Microbiomes for Cannabis Soils', [1], self.info)
         self.assertEqual(new.preprocessed_data(), [])
 
@@ -413,7 +433,7 @@ class TestStudy(TestCase):
         self.assertEqual(self.study.processed_data(), [1])
 
     def test_retrieve_processed_data_none(self):
-        new = Study.create(User('test@foo.bar'), 'Identification of the '
+        new = Study.create(User('test@foo.bar'), 'NOT Identification of the '
                            'Microbiomes for Cannabis Soils', [1], self.info)
         self.assertEqual(new.processed_data(), [])
 

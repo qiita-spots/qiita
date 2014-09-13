@@ -7,7 +7,7 @@
 # -----------------------------------------------------------------------------
 
 from functools import partial
-from os.path import join, dirname, abspath
+from os.path import join, dirname, abspath, isdir
 from os import environ
 from future import standard_library
 with standard_library.hooks():
@@ -28,6 +28,8 @@ class ConfigurationManager(object):
     test_environment : bool
         If true, we are in a test environment.
     base_data_dir : str
+        Path to the base directorys where all data file are stored
+    upload_data_dir : str
         Path to the base directorys where all data file are stored
     user : str
         The postgres user
@@ -86,6 +88,11 @@ class ConfigurationManager(object):
                                           '../test_data')
             else:
                 raise e
+
+        self.upload_data_dir = config.get('main', 'UPLOAD_DATA_DIR')
+        if not isdir(self.upload_data_dir):
+            raise ValueError("The UPLOAD_DATA_DIR (%s) folder doesn't exist" %
+                             self.upload_data_dir)
 
     def _get_postgres(self, config):
         """Get the configuration of the postgres section"""

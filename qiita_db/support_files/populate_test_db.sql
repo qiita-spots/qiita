@@ -314,8 +314,11 @@ INSERT INTO qiita.study_processed_data (processed_data_id, study_id) VALUES (1, 
 -- Link the processed data with the preprocessed data
 INSERT INTO qiita.preprocessed_processed_data (preprocessed_data_id, processed_data_id) VALUES (1, 1);
 
+-- Insert the reference files for reference 1
+INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum, checksum_algorithm_id) VALUES ('GreenGenes_13_8_97_otus.fasta', 9, '852952723', 1), ('GreenGenes_13_8_97_otu_taxonomy.txt', 10, '852952723', 1), ('GreenGenes_13_8_97_otus.tree', 11, '852952723', 1);
+
 -- Populate the reference table
-INSERT INTO qiita.reference (reference_name, reference_version, sequence_filepath, taxonomy_filepath, tree_filepath) VALUES ('GreenGenes', '4feb2011', 'gg_97_otus_4feb2011.fasta', 'greengenes_tax.txt', 'gg_97_otus_4feb2011.tre');
+INSERT INTO qiita.reference (reference_name, reference_version, sequence_filepath, taxonomy_filepath, tree_filepath) VALUES ('GreenGenes', '13_8', 7, 8, 9);
 
 -- Insert the processed params uclust used for preprocessed data 1
 INSERT INTO qiita.processed_params_uclust (similarity, enable_rev_strand_match, suppress_new_clusters, reference_id) VALUES (0.97, TRUE, TRUE, 1);
@@ -324,13 +327,13 @@ INSERT INTO qiita.processed_params_uclust (similarity, enable_rev_strand_match, 
 INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum, checksum_algorithm_id) VALUES ('1_study_1001_closed_reference_otu_table.biom', 6, '852952723', 1);
 
 -- Insert (link) the processed data with the processed filepath
-INSERT INTO qiita.processed_filepath (processed_data_id, filepath_id) VALUES (1, 7);
+INSERT INTO qiita.processed_filepath (processed_data_id, filepath_id) VALUES (1, 10);
 
 -- Insert filepath for job results files
 INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum, checksum_algorithm_id) VALUES ('1_job_result.txt', 8, '852952723', 1), ('2_test_folder', 7, '852952723', 1);
 
 -- Insert jobs
-INSERT INTO qiita.job (data_type_id, job_status_id, command_id, options) VALUES (1, 1, 1, '{"--otu_table_fp":1}'), (1, 3, 2, '{"--mapping_fp":1,"--otu_table_fp":1}'), (1, 1, 2, '{"--mapping_fp":1,"--otu_table_fp":1}');
+INSERT INTO qiita.job (data_type_id, job_status_id, command_id, options) VALUES (2, 1, 1, '{"--otu_table_fp":1}'), (2, 3, 2, '{"--mapping_fp":1,"--otu_table_fp":1}'), (2, 1, 2, '{"--mapping_fp":1,"--otu_table_fp":1}');
 
 -- Insert Analysis
 INSERT INTO qiita.analysis (email, name, description, analysis_status_id, pmid) VALUES ('test@foo.bar', 'SomeAnalysis', 'A test analysis', 1, '121112'), ('test@foo.bar', 'SomeSecondAnalysis', 'Another test analysis', 1, '22221112');
@@ -342,7 +345,7 @@ INSERT INTO qiita.analysis_job (analysis_id, job_id) VALUES (1, 1), (1, 2), (2, 
 INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum, checksum_algorithm_id) VALUES ('1_analysis_18S.biom', 6, '852952723', 1), ('1_analysis_mapping.txt', 8, '852952723', 1);
 
 -- Attach filepath to analysis
-INSERT INTO qiita.analysis_filepath (analysis_id, filepath_id, data_type_id) VALUES (1, 10, 2), (1, 11, NULL);
+INSERT INTO qiita.analysis_filepath (analysis_id, filepath_id, data_type_id) VALUES (1, 13, 2), (1, 14, NULL);
 
 -- Attach samples to analysis
 INSERT INTO qiita.analysis_sample (analysis_id, processed_data_id, sample_id) VALUES (1,1,'SKB8.640193'), (1,1,'SKD8.640184'), (1,1,'SKB7.640196'), (1,1,'SKM9.640192'), (1,1,'SKM4.640180'), (2,1,'SKB8.640193'), (2,1,'SKD8.640184'), (2,1,'SKB7.640196'), (2,1,'SKM3.640197');
@@ -351,4 +354,4 @@ INSERT INTO qiita.analysis_sample (analysis_id, processed_data_id, sample_id) VA
 INSERT INTO qiita.analysis_users (analysis_id, email) VALUES (1, 'shared@foo.bar');
 
 -- Add job results
-INSERT INTO qiita.job_results_filepath (job_id, filepath_id) VALUES (1, 8), (2, 9);
+INSERT INTO qiita.job_results_filepath (job_id, filepath_id) VALUES (1, 11), (2, 12);

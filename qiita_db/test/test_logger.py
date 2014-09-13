@@ -10,47 +10,48 @@ from unittest import TestCase, main
 from datetime import datetime
 
 from qiita_core.util import qiita_test_checker
+from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_db.logger import LogEntry
-from qiita_db.exceptions import QiitaDBExecutionError
 
 
 @qiita_test_checker()
 class LoggerTests(TestCase):
     def test_create_log_entry(self):
         """"""
-        log_entry = LogEntry.create(2, 'runtime message')
-        log_entry = LogEntry.create(3, 'fatal message', info={1: 2})
-        log_entry = LogEntry.create(1, 'warning message', info={9: 0})
-        with self.assertRaises(QiitaDBExecutionError):
+        LogEntry.create('Runtime', 'runtime message')
+        LogEntry.create('Fatal', 'fatal message', info={1: 2})
+        LogEntry.create('Warning', 'warning message', info={9: 0})
+        with self.assertRaises(IncompetentQiitaDeveloperError):
             # This severity level does not exist in the test schema
-            log_entry = LogEntry.create(4, 'warning message', info={9: 0})
+            LogEntry.create('Chicken', 'warning message',
+                            info={9: 0})
 
     def test_severity_property(self):
         """"""
-        log_entry = LogEntry.create(1, 'warning test', info=None)
+        log_entry = LogEntry.create('Warning', 'warning test', info=None)
         self.assertEqual(log_entry.severity, 1)
 
     def test_time_property(self):
         """"""
         before = datetime.now()
-        log_entry = LogEntry.create(1, 'warning test', info=None)
+        log_entry = LogEntry.create('Warning', 'warning test', info=None)
         after = datetime.now()
         self.assertTrue(before < log_entry.time < after)
 
     def test_info_property(self):
         """"""
-        log_entry = LogEntry.create(1, 'warning test',
+        log_entry = LogEntry.create('Warning', 'warning test',
                                     info={1: 2, 'test': 'yeah'})
         self.assertEqual(log_entry.info, [{'1': 2, 'test': 'yeah'}])
 
     def test_message_property(self):
         """"""
-        log_entry = LogEntry.create(1, 'warning test', info=None)
+        log_entry = LogEntry.create('Warning', 'warning test', info=None)
         self.assertEqual(log_entry.msg, 'warning test')
 
     def test_add_info(self):
         """"""
-        log_entry = LogEntry.create(1, 'warning test',
+        log_entry = LogEntry.create('Warning', 'warning test',
                                     info={1: 2, 'test': 'yeah'})
         log_entry.add_info({'another': 'set', 'of': 'entries', 'test': 3})
         self.assertEqual(log_entry.info, [{'1': 2, 'test': 'yeah'},
@@ -59,7 +60,7 @@ class LoggerTests(TestCase):
 
     def test_clear_info(self):
         """"""
-        log_entry = LogEntry.create(1, 'warning test',
+        log_entry = LogEntry.create('Warning', 'warning test',
                                     info={1: 2, 'test': 'yeah'})
         log_entry.clear_info()
         self.assertEqual(log_entry.info, [])
