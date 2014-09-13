@@ -256,6 +256,21 @@ class RawData(BaseData):
             [self._id])
         return [id[0] for id in ids]
 
+    @property
+    def filetype(self):
+        r"""Returns the raw data filetype
+
+        Returns
+        -------
+        str
+            The raw data's filetype
+        """
+        conn_handler = SQLConnectionHandler()
+        return conn_handler.execute_fetchone(
+            "SELECT f.type FROM qiita.filetype f JOIN qiita.raw_data r ON "
+            "f.filetype_id = r.filetype_id WHERE r.raw_data_id=%s",
+            (self._id,))[0]
+
     def data_type(self, ret_id=False):
         """Returns the data_type or data_type_id
 

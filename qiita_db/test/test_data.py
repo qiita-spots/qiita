@@ -123,6 +123,10 @@ class RawDataTests(TestCase):
         rd = RawData(1)
         self.assertEqual(rd.data_type(ret_id=True), 2)
 
+    def test_filetype(self):
+        rd = RawData(1)
+        self.assertEqual(rd.filetype, "Illumina")
+
 
 @qiita_test_checker()
 class PreprocessedDataTests(TestCase):
