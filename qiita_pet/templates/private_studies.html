@@ -7,28 +7,40 @@
 
 <script type="text/javascript">
 $(document).ready(function() {
-    $('#private-studies-table').dataTable({"order": [[ 1, "asc" ]]});
+    $('#user-studies-table').dataTable({"order": [[ 1, "asc" ]]});
+    $('#shared-studies-table').dataTable({"order": [[ 1, "asc" ]]});
 } );
 </script>
 
 {% end %}
 {% block content %}
-{% if len(studies) %}
-    <table id="private-studies-table" class="display table-bordered table-hover">
+
+<h1>Your Studies</h1>
+{% if len(user_studies) %}
+    <table id="user-studies-table" class="display table-bordered table-hover">
         <thead>
             <tr>
                 <th>Samples</th>
                 <th>Title</th>
+                <th>Shared</th>
                 <th>Metadata Complete</th>
                 <th>Sequence Files</th>
             </tr>
         </thead>
         <tbody>
-            {% for s in studies %}
+            {% for s in user_studies %}
             {% set study_info = s.info %}
+            {% set s_id = s.id %}
+            {% set s_title = s.title %}
+            {% set share_list = share_dict[s_id] %}
             <tr>
                 <td>{{study_info['number_samples_collected']}}</td>
-                <td><a href="/study/description/{{s.id}}">{{s.title}}</a></td>
+                <td><a href="/study/description/{{s_id}}">{{s_title}}</a></td>
+                {% if len(share_list) %}
+                    <td>{{share_list|join(', ')}}</td>
+                {% else %}
+                    <td><span class="glyphicon glyphicon-remove"></span></td>
+                {% end %}
                 {% if study_info['metadata_complete'] %}
                     <td><span class="glyphicon glyphicon-ok"></span></td>
                 {% else %}
