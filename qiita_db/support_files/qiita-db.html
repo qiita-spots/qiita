@@ -680,15 +680,6 @@ table {
 Referred by controlled_vocab_values ( controlled_vocab_id ) </title></a>
   <use id='nn' x='47' y='1362' xlink:href='#nn'/><a xlink:href='#controlled_vocabularies.vocab_name'><text x='63' y='1372'>vocab_name</text><title>vocab_name varchar not null</title></a>
 
-<!-- ============= Table 'severity' ============= -->
-<rect class='table' x='1470' y='1268' width='90' height='75' rx='7' ry='7' />
-<path d='M 1470.50 1294.50 L 1470.50 1275.50 Q 1470.50 1268.50 1477.50 1268.50 L 1552.50 1268.50 Q 1559.50 1268.50 1559.50 1275.50 L 1559.50 1294.50 L1470.50 1294.50 ' style='fill:url(#tableHeaderGradient1); stroke:none;' />
-<a xlink:href='#severity'><text x='1494' y='1282' class='tableTitle'>severity</text><title>Table qiita.severity</title></a>
-  <use id='nn' x='1472' y='1302' xlink:href='#nn'/><a xlink:href='#severity.severity_id'><use id='pk' x='1472' y='1301' xlink:href='#pk'/><title>Primary Key  ( severity_id ) </title></a>
-<a xlink:href='#severity.severity_id'><text x='1488' y='1312'>severity_id</text><title>severity_id serial not null</title></a>
-<a xlink:href='#severity.severity_id'><use id='ref' x='1548' y='1301' xlink:href='#ref'/><title>Referred by logging ( severity_id ) </title></a>
-  <use id='nn' x='1472' y='1317' xlink:href='#nn'/><a xlink:href='#severity.severity'><text x='1488' y='1327'>severity</text><title>severity varchar not null</title></a>
-
 <!-- ============= Table 'investigation' ============= -->
 <rect class='table' x='2040' y='233' width='135' height='105' rx='7' ry='7' />
 <path d='M 2040.50 259.50 L 2040.50 240.50 Q 2040.50 233.50 2047.50 233.50 L 2167.50 233.50 Q 2174.50 233.50 2174.50 240.50 L 2174.50 259.50 L2040.50 259.50 ' style='fill:url(#tableHeaderGradient1); stroke:none;' />
@@ -1550,6 +1541,15 @@ What version of reference or type of reference used</title></a>
   <use id='nn' x='2027' y='867' xlink:href='#nn'/><a xlink:href='#processed_params_uclust.enable_rev_strand_match'><text x='2043' y='877'>enable_rev_strand_match</text><title>enable_rev_strand_match bool not null default TRUE</title></a>
   <use id='nn' x='2027' y='882' xlink:href='#nn'/><a xlink:href='#processed_params_uclust.suppress_new_clusters'><text x='2043' y='892'>suppress_new_clusters</text><title>suppress_new_clusters bool not null default TRUE</title></a>
 
+<!-- ============= Table 'severity' ============= -->
+<rect class='table' x='1470' y='1268' width='90' height='75' rx='7' ry='7' />
+<path d='M 1470.50 1294.50 L 1470.50 1275.50 Q 1470.50 1268.50 1477.50 1268.50 L 1552.50 1268.50 Q 1559.50 1268.50 1559.50 1275.50 L 1559.50 1294.50 L1470.50 1294.50 ' style='fill:url(#tableHeaderGradient1); stroke:none;' />
+<a xlink:href='#severity'><text x='1494' y='1282' class='tableTitle'>severity</text><title>Table qiita.severity</title></a>
+  <use id='nn' x='1472' y='1302' xlink:href='#nn'/><a xlink:href='#severity.severity_id'><use id='pk' x='1472' y='1301' xlink:href='#pk'/><title>Primary Key  ( severity_id ) </title></a>
+<a xlink:href='#severity.severity_id'><text x='1488' y='1312'>severity_id</text><title>severity_id serial not null</title></a>
+<a xlink:href='#severity.severity_id'><use id='ref' x='1548' y='1301' xlink:href='#ref'/><title>Referred by logging ( severity_id ) </title></a>
+  <use id='nn' x='1472' y='1317' xlink:href='#nn'/><a xlink:href='#severity.severity'><text x='1488' y='1327'>severity</text><title>severity varchar not null</title></a>
+
 <!-- ============= Table 'preprocessed_sequence_illumina_params' ============= -->
 <rect class='table' x='1800' y='998' width='240' height='210' rx='7' ry='7' />
 <path d='M 1800.50 1024.50 L 1800.50 1005.50 Q 1800.50 998.50 1807.50 998.50 L 2032.50 998.50 Q 2039.50 998.50 2039.50 1005.50 L 2039.50 1024.50 L1800.50 1024.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
@@ -1565,7 +1565,7 @@ Parameters used for processing illumina sequence data&#046;</title></a>
   <use id='nn' x='1802' y='1122' xlink:href='#nn'/><a xlink:href='#preprocessed_sequence_illumina_params.rev_comp_mapping_barcodes'><text x='1818' y='1132'>rev_comp_mapping_barcodes</text><title>rev_comp_mapping_barcodes bool not null default FALSE</title></a>
   <use id='nn' x='1802' y='1137' xlink:href='#nn'/><a xlink:href='#preprocessed_sequence_illumina_params.rev_comp'><text x='1818' y='1147'>rev_comp</text><title>rev_comp bool not null default FALSE</title></a>
   <use id='nn' x='1802' y='1152' xlink:href='#nn'/><a xlink:href='#preprocessed_sequence_illumina_params.phred_quality_threshold'><text x='1818' y='1162'>phred_quality_threshold</text><title>phred_quality_threshold integer not null default 3</title></a>
-  <use id='nn' x='1802' y='1167' xlink:href='#nn'/><a xlink:href='#preprocessed_sequence_illumina_params.barcode_type'><text x='1818' y='1177'>barcode_type</text><title>barcode_type varchar not null default golay&#095;12</title></a>
+  <use id='nn' x='1802' y='1167' xlink:href='#nn'/><a xlink:href='#preprocessed_sequence_illumina_params.barcode_type'><text x='1818' y='1177'>barcode_type</text><title>barcode_type varchar not null default &#039;golay&#095;12&#039;</title></a>
   <use id='nn' x='1802' y='1182' xlink:href='#nn'/><a xlink:href='#preprocessed_sequence_illumina_params.max_barcode_errors'><text x='1818' y='1192'>max_barcode_errors</text><title>max_barcode_errors real not null default 1&#046;5</title></a>
 
 </g></svg>
@@ -1638,30 +1638,6 @@ Parameters used for processing illumina sequence data&#046;</title></a>
 <tr><th colspan='3'><b>Indexes</b></th></tr>
 	<tr>		<td>pk&#095;controlled&#095;vocabularies primary key</td>
 		<td> ON controlled&#095;vocab&#095;id</td>
-		<td>  </td>
-	</tr>
-</tbody>
-</table>
-
-<br/><br/>
-<table class='bordered'>
-<thead>
-<tr><th colspan='3'><a name='severity'>Table severity</a></th></tr>
-</thead>
-<tbody>
-	<tr>
-		<td><a name='severity.severity_id'>severity&#095;id</a></td>
-		<td> serial  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='severity.severity'>severity</a></td>
-		<td> varchar  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-<tr><th colspan='3'><b>Indexes</b></th></tr>
-	<tr>		<td>pk&#095;severity primary key</td>
-		<td> ON severity&#095;id</td>
 		<td>  </td>
 	</tr>
 </tbody>
@@ -4371,6 +4347,30 @@ Controlled Vocabulary </td>
 <br/><br/>
 <table class='bordered'>
 <thead>
+<tr><th colspan='3'><a name='severity'>Table severity</a></th></tr>
+</thead>
+<tbody>
+	<tr>
+		<td><a name='severity.severity_id'>severity&#095;id</a></td>
+		<td> serial  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='severity.severity'>severity</a></td>
+		<td> varchar  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;severity primary key</td>
+		<td> ON severity&#095;id</td>
+		<td>  </td>
+	</tr>
+</tbody>
+</table>
+
+<br/><br/>
+<table class='bordered'>
+<thead>
 <tr><th colspan='3'><a name='preprocessed_sequence_illumina_params'>Table preprocessed_sequence_illumina_params</a></th></tr>
 <tr><td colspan='3'>Parameters used for processing illumina sequence data&#046; </td></tr>
 </thead>
@@ -4422,7 +4422,7 @@ Controlled Vocabulary </td>
 	</tr>
 	<tr>
 		<td><a name='preprocessed_sequence_illumina_params.barcode_type'>barcode&#095;type</a></td>
-		<td> varchar  NOT NULL  DEFO golay_12 </td>
+		<td> varchar  NOT NULL  DEFO 'golay_12' </td>
 		<td>  </td>
 	</tr>
 	<tr>
