@@ -11,7 +11,7 @@ INSERT INTO qiita.job_status (status) VALUES ('queued'), ('running'), ('complete
 INSERT INTO qiita.data_type (data_type) VALUES ('16S'), ('18S'), ('ITS'), ('Proteomic'), ('Metabolomic'), ('Metagenomic');
 
 -- Populate filetype table
-INSERT INTO qiita.filetype (type) VALUES ('FASTA'), ('FASTQ'), ('SPECTRA');
+INSERT INTO qiita.filetype (type) VALUES ('454'), ('Illumina'), ('SPECTRA');
 
 -- Populate emp_status table
 INSERT INTO qiita.emp_status (emp_status) VALUES ('EMP'), ('EMP_Processed'), ('NOT_EMP');

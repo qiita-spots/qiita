@@ -197,7 +197,7 @@ class TestLoadRawDataFromCmd(TestCase):
         filepaths = [self.forward_fp, self.reverse_fp, self.barcodes_fp]
         filepath_types = ['raw_sequences', 'raw_sequences', 'raw_barcodes']
 
-        filetype = 'FASTQ'
+        filetype = 'Illumina'
         study_ids = [1]
 
         initial_raw_count = get_count('qiita.raw_data')
