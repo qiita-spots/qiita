@@ -93,7 +93,7 @@ class PublicStudiesHandler(BaseHandler):
         u = User(self.current_user)
         public_studies = [Study(s_id) for s_id in Study.get_public()]
         self.render('public_studies.html', user=self.current_user,
-                    public_studies=studies)
+                    public_studies=public_studies)
 
     @authenticated
     def post(self):

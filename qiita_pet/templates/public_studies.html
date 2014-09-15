@@ -14,7 +14,7 @@ $(document).ready(function() {
 
 {% end %}
 {% block content %}
-{% if len(studies) %}
+{% if len(public_studies) %}
     <table id="public-studies-table" class="display table-bordered table-hover">
         <thead>
             <tr>
@@ -25,7 +25,7 @@ $(document).ready(function() {
             </tr>
         </thead>
         <tbody>
-            {% for s in studies %}
+            {% for s in public_studies %}
             {% set study_info = s.info %}
             <tr>
                 <td>{{study_info['number_samples_collected']}}</td>
