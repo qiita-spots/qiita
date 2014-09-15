@@ -145,7 +145,7 @@ class SearchTerm(object):
 
         if operator == "includes":
             # substring search, so create proper query for it
-            return "%s LIKE '%%%s%%'" % (column_name, argument)
+            return "LOWER(%s) LIKE '%%%s%%'" % (column_name, argument.lower())
         else:
             # standard query so just return it, adding quotes if string
             if argument_type == str:
@@ -155,7 +155,7 @@ class SearchTerm(object):
     def __repr__(self):
         column_name, operator, argument = self.term
         if operator == "includes":
-            return "%s LIKE '%%%s%%')" % (column_name, argument)
+            return "LOWER(%s) LIKE '%%%s%%')" % (column_name, argument.lower())
         else:
             return ' '.join(self.term)
 
@@ -315,7 +315,8 @@ class QiitaStudySearch(object):
                     allowable_types = "('varchar')"
 
                 sql.append("SELECT study_id FROM qiita.study_sample_columns "
-                           "WHERE column_name = '%s' and column_type in %s" %
+                           "WHERE lower(column_name) = lower('%s') and "
+                           "column_type in %s" %
                            (scrub_data(meta), allowable_types))
         else:
             # no study-specific metadata, so need all studies
@@ -339,5 +340,5 @@ class QiitaStudySearch(object):
                       "r.sample_id JOIN qiita.study st ON st.study_id = "
                       "r.study_id WHERE %s" %
                       (','.join(header_info), sql_where))
-
+        print sample_sql
         return study_sql, sample_sql, meta_header_type_lookup.keys()
