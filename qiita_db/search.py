@@ -340,5 +340,4 @@ class QiitaStudySearch(object):
                       "r.sample_id JOIN qiita.study st ON st.study_id = "
                       "r.study_id WHERE %s" %
                       (','.join(header_info), sql_where))
-        print sample_sql
         return study_sql, sample_sql, meta_header_type_lookup.keys()
