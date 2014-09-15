@@ -27,7 +27,7 @@ Classes
 from __future__ import division
 from json import dumps, loads
 from os.path import join, relpath
-from os import remove, walk
+from os import remove
 from glob import glob
 from shutil import rmtree
 from functools import partial
@@ -220,7 +220,7 @@ class Job(QiitaStatusObject):
             exists in the DB.
         """
         analysis_sql = ("INSERT INTO qiita.analysis_job (analysis_id, job_id) "
-                   "VALUES (%s, %s)")
+                        "VALUES (%s, %s)")
         exists, job = cls.exists(datatype, command, options, analysis,
                                  return_existing=True)
         conn_handler = SQLConnectionHandler()
