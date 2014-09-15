@@ -11,27 +11,26 @@
 <div class="row">
 <h1>Analysis {{aname}}</h1>
 </div>
-  <div class="row">
+  <div class="row" width='100%'>
     <div class="col-md-2">
       <div class="panel-group" id="accordion">
-        {% for data_type, jobs in jobres.items() %}
+{% for data_type, jobs in jobres.items() %}
           <div class="panel panel-default">
             <div class="panel-heading">
               <h3 class="panel-title"><a data-toggle="collapse" data-parent="#accordion" href="#{{data_type}}">{{data_type}}</a></h3>
             </div>
             <div id="{{data_type}}" class="panel-collapse collapse">
-              {% for job, results in jobs%}
+  {% for job, results in jobs%}
                 <div class="panel-body">
                   {{job}}<br />
-                  {% if len(results) == 0 %}
+    {% if len(results) == 0 %}
                     <h3 style="color:red">ERROR</h3>
-                  {% end %}
-                  {%for result in results%}
-                    <a href='{{"/%s" % result}}'>{{basename(result)}}</a><br />
-                    {% end %}
-                  {% end %}
+    {% end %}
+    {%for result in results%}
+                    <a href='{{"/results/%s" % result}}' target="resframe">{{basename(result)}}</a><br />
+    {% end %}
                 </div>
-              {% end %}
+{% end %}
             </div>
           </div>
         {% end %}
