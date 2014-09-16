@@ -16,6 +16,7 @@ from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 
 from qiita_core.exceptions import QiitaEnvironmentError
 from qiita_db.util import get_db_files_base_dir
+from qiita_core.util import  download_and_unzip_file, delete_tmp_file
 
 get_support_file = partial(join, join(dirname(abspath(__file__)),
                                       'support_files'))
@@ -44,7 +45,8 @@ def _check_db_exists(db, cursor):
     return (db,) in cursor.fetchall()
 
 
-def make_environment(env, base_data_dir, base_work_dir, user, password, host):
+def make_environment(env, base_data_dir, base_work_dir, user, password, host,
+                     load_ontologies):
     r"""Creates the new environment `env`
 
     Parameters
@@ -103,6 +105,11 @@ def make_environment(env, base_data_dir, base_work_dir, user, password, host):
             # Initialize the database
             with open(INITIALIZE_FP, 'U') as f:
                 cur.execute(f.read())
+            if load_ontos:
+                ontos_fp, f = download_and_unzip_file()
+                conn_handler.execute(f.read())
+                f.close()
+                delete_tmp_file(ontos_fp)
 
             # Commit all the changes and close the connections
             print('Populating database with demo data')

@@ -66,9 +66,13 @@ def stop_cluster(cluster):
               help="The database user to connect to the database")
 @click.option('--host', default='localhost',
               help='The host where the database lives')
-def make_env(env, base_data_folder, base_work_folder, user, host):
+@click.option('--load_ontologies',
+              default=False, help='if True will load ontologies')
+def make_env(env, base_data_folder, base_work_folder, user, host,
+             load_ontologies):
     """Drops the passed database environment"""
-    make_environment(env, base_data_folder, base_work_folder, user, None, host)
+    make_environment(env, base_data_folder, base_work_folder, user, None, host,
+                     load_ontologes)
 
 
 @qiita_env.command()
