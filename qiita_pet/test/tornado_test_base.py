@@ -5,7 +5,6 @@ except ImportError:  # py3
     from urllib.parse import urlencode
 
 from tornado.testing import AsyncHTTPTestCase
-from tornado.web import Application
 from qiita_pet.webserver import Application
 from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_db.sql_connection import SQLConnectionHandler

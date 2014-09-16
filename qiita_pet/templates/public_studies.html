@@ -1,4 +1,52 @@
 {% extends sitebase.html %}
+{% block head %}
+
+<link rel="stylesheet" href="/static/vendor/css/jquery.dataTables.css" type="text/css">
+
+<script src="/static/vendor/js/jquery.dataTables.min.js"></script>
+
+<script type="text/javascript">
+$(document).ready(function() {
+    $('#public-studies-table').dataTable({"order": [[1, "asc"]]});
+    $("#waiting").hide();
+} );
+</script>
+
+{% end %}
 {% block content %}
-This is where the user can find public studies
+{% if len(public_studies) %}
+    <table id="public-studies-table" class="display table-bordered table-hover">
+        <thead>
+            <tr>
+                <th>Samples</th>
+                <th>Title</th>
+                <th>Metadata Complete</th>
+                <th>Sequence Files</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for s in public_studies %}
+            {% set study_info = s.info %}
+            <tr>
+                <td>{{study_info['number_samples_collected']}}</td>
+                <td><a href="/study/description/{{s.id}}">{{s.title}}</a></td>
+                {% if study_info['metadata_complete'] %}
+                    <td><span class="glyphicon glyphicon-ok"></span></td>
+                {% else %}
+                    <td><span class="glyphicon glyphicon-remove"></span></td>
+                {% end %}
+                <td>{{ len(s.raw_data()) }}</td>
+            </tr>
+            {% end %}
+        </tbody>
+    </table>
+{% else %}
+    <div class="jumbotron">
+        <h1><span class="glyphicon glyphicon-thumbs-down"></span> There are no studies available</h1>
+        <p>
+            This means that the system currently has no public studies you can
+            access
+        </p>
+</div>
+{% end %}
 {% end %}

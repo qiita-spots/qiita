@@ -15,6 +15,9 @@
 # Change to FALSE in a production system
 TEST_ENVIRONMENT = TRUE
 
+# Download path files
+UPLOAD_DATA_DIR = /tmp/
+
 # Path to the base directory where the data files are going to be stored, uncomment to set
 # BASE_DATA_DIR = /path/to/base/directory
 

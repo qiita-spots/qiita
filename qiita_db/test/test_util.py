@@ -16,8 +16,9 @@ from qiita_db.exceptions import QiitaDBColumnError
 from qiita_db.util import (exists_table, exists_dynamic_table, scrub_data,
                            compute_checksum, check_table_cols,
                            check_required_columns, convert_to_id,
-                           get_table_cols, get_filetypes, get_filepath_types,
-                           get_count, check_count, get_processed_params_tables)
+                           get_table_cols, get_table_cols_w_type,
+                           get_filetypes, get_filepath_types, get_count,
+                           check_count, get_processed_params_tables)
 
 
 @qiita_test_checker()
@@ -57,6 +58,22 @@ class DBUtilTests(TestCase):
                "address", "phone", "user_verify_code", "pass_reset_code",
                "pass_reset_timestamp"}
         self.assertEqual(set(obs), exp)
+
+    def test_get_table_cols_w_type(self):
+        obs = get_table_cols_w_type("preprocessed_sequence_illumina_params",
+                                    self.conn_handler)
+        exp = [['preprocessed_params_id', 'bigint'],
+               ['trim_length', 'integer'],
+               ['max_bad_run_length', 'integer'],
+               ['min_per_read_length_fraction', 'real'],
+               ['sequence_max_n', 'integer'],
+               ['rev_comp_barcode', 'boolean'],
+               ['rev_comp_mapping_barcodes', 'boolean'],
+               ['rev_comp', 'boolean'],
+               ['phred_quality_threshold', 'integer'],
+               ['barcode_type', 'character varying'],
+               ['max_barcode_errors', 'real']]
+        self.assertItemsEqual(obs, exp)
 
     def test_exists_table(self):
         """Correctly checks if a table exists"""
@@ -129,7 +146,8 @@ class DBUtilTests(TestCase):
         obs = get_filepath_types()
         exp = {'raw_sequences': 1, 'raw_barcodes': 2, 'raw_spectra': 3,
                'preprocessed_sequences': 4, 'preprocessed_sequences_qual': 5,
-               'biom': 6, 'directory': 7, 'plain_text': 8}
+               'biom': 6, 'directory': 7, 'plain_text': 8, 'reference_seqs': 9,
+               'reference_tax': 10, 'reference_tree': 11}
         self.assertEqual(obs, exp)
 
         obs = get_filepath_types(key='filepath_type_id')
