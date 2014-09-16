@@ -84,18 +84,18 @@ class RawDataTests(TestCase):
 
         # Check that the filepaths have been correctly added to the DB
         obs = self.conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.filepath WHERE filepath_id=12 or "
-            "filepath_id=13")
+            "SELECT * FROM qiita.filepath WHERE filepath_id=15 or "
+            "filepath_id=16")
         # filepath_id, path, filepath_type_id
-        exp = [[12, exp_seqs_fp, 1, '852952723', 1],
-               [13, exp_bc_fp, 2, '852952723', 1]]
+        exp = [[15, exp_seqs_fp, 1, '852952723', 1],
+               [16, exp_bc_fp, 2, '852952723', 1]]
         self.assertEqual(obs, exp)
 
         # Check that the raw data have been correctly linked with the filepaths
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.raw_filepath WHERE raw_data_id=3")
         # raw_data_id, filepath_id
-        self.assertEqual(obs, [[3, 12], [3, 13]])
+        self.assertEqual(obs, [[3, 15], [3, 16]])
 
     def test_get_filepaths(self):
         """Correctly returns the filepaths to the raw files"""
@@ -185,11 +185,11 @@ class PreprocessedDataTests(TestCase):
 
         # Check that the filepaths have been correctly added to the DB
         obs = self.conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.filepath WHERE filepath_id=12 or "
-            "filepath_id=13")
+            "SELECT * FROM qiita.filepath WHERE filepath_id=15 or "
+            "filepath_id=16")
         # filepath_id, path, filepath_type_id
-        exp = [[12, exp_fna_fp, 4, '852952723', 1],
-               [13, exp_qual_fp, 5, '852952723', 1]]
+        exp = [[15, exp_fna_fp, 4, '852952723', 1],
+               [16, exp_qual_fp, 5, '852952723', 1]]
         self.assertEqual(obs, exp)
 
     def test_create_data_type_only(self):
@@ -226,11 +226,11 @@ class PreprocessedDataTests(TestCase):
 
         # Check that the filepaths have been correctly added to the DB
         obs = self.conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.filepath WHERE filepath_id=12 or "
-            "filepath_id=13")
+            "SELECT * FROM qiita.filepath WHERE filepath_id=15 or "
+            "filepath_id=16")
         # filepath_id, path, filepath_type_id
-        exp = [[12, exp_fna_fp, 4, '852952723', 1],
-               [13, exp_qual_fp, 5, '852952723', 1]]
+        exp = [[15, exp_fna_fp, 4, '852952723', 1],
+               [16, exp_qual_fp, 5, '852952723', 1]]
         self.assertEqual(obs, exp)
 
         # Check that the preprocessed data have been correctly
@@ -239,7 +239,7 @@ class PreprocessedDataTests(TestCase):
             "SELECT * FROM qiita.preprocessed_filepath WHERE "
             "preprocessed_data_id=3")
         # preprocessed_data_id, filepath_id
-        self.assertEqual(obs, [[3, 12], [3, 13]])
+        self.assertEqual(obs, [[3, 15], [3, 16]])
 
     def test_create_error_dynamic_table(self):
         """Raises an error if the preprocessed_params_table does not exist"""
@@ -357,9 +357,9 @@ class ProcessedDataTests(TestCase):
 
         # Check that the filepaths have been correctly added to the DB
         obs = self.conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.filepath WHERE filepath_id=12")
+            "SELECT * FROM qiita.filepath WHERE filepath_id=15")
         # Filepath_id, path, filepath_type_id
-        exp = [[12, exp_biom_fp, 6, '852952723', 1]]
+        exp = [[15, exp_biom_fp, 6, '852952723', 1]]
         self.assertEqual(obs, exp)
 
         # Check that the processed data have been correctly linked
@@ -367,7 +367,7 @@ class ProcessedDataTests(TestCase):
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.processed_filepath WHERE processed_data_id=2")
         # processed_data_id, filepath_id
-        self.assertEqual(obs, [[2, 12]])
+        self.assertEqual(obs, [[2, 15]])
 
         # Check that the processed data have been correctly linked with the
         # study
@@ -426,9 +426,9 @@ class ProcessedDataTests(TestCase):
 
         # Check that the filepaths have been correctly added to the DB
         obs = self.conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.filepath WHERE filepath_id=12")
+            "SELECT * FROM qiita.filepath WHERE filepath_id=15")
         # Filepath_id, path, filepath_type_id
-        exp = [[12, exp_biom_fp, 6, '852952723', 1]]
+        exp = [[15, exp_biom_fp, 6, '852952723', 1]]
         self.assertEqual(obs, exp)
 
         # Check that the processed data have been correctly linked
@@ -495,7 +495,7 @@ class ProcessedDataTests(TestCase):
 
     def test_get_filepath_ids(self):
         pd = ProcessedData(1)
-        self.assertEqual(pd.get_filepath_ids(), [7])
+        self.assertEqual(pd.get_filepath_ids(), [10])
 
     def test_preprocessed_data(self):
         """Correctly returns the preprocessed_data"""

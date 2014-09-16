@@ -19,7 +19,8 @@ from qiita_pet.handlers.analysis_handlers import (
     SelectCommandsHandler, AnalysisWaitHandler, AnalysisResultsHandler,
     ShowAnalysesHandler, SearchStudiesHandler)
 from qiita_pet.handlers.study_handlers import (
-    CreateStudyHandler, MyStudiesHandler, PublicStudiesHandler)
+    CreateStudyHandler, PrivateStudiesHandler, PublicStudiesHandler,
+    StudyDescriptionHandler)
 from qiita_pet.handlers.websocket_handlers import MessageHandler
 from qiita_db.util import get_db_files_base_dir
 
@@ -52,8 +53,9 @@ class Application(tornado.web.Application):
             (r"/consumer/", MessageHandler),
             (r"/mockup/", MockupHandler),
             (r"/study/create/", CreateStudyHandler),
-            (r"/study/my/", MyStudiesHandler),
+            (r"/study/private/", PrivateStudiesHandler),
             (r"/study/public/", PublicStudiesHandler),
+            (r"/study/description/(.*)", StudyDescriptionHandler),
             # 404 PAGE MUST BE LAST IN THIS LIST!
             (r".*", NoPageHandler)
         ]

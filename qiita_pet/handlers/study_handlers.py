@@ -71,10 +71,13 @@ class CreateStudyForm(Form):
     lab_person = SelectField('Lab Person', coerce=lambda x: x)
 
 
-class MyStudiesHandler(BaseHandler):
+class PrivateStudiesHandler(BaseHandler):
     @authenticated
     def get(self):
-        self.render('my_studies.html', user=self.current_user)
+        u = User(self.current_user)
+        studies = [Study(s_id) for s_id in u.private_studies]
+        self.render('private_studies.html', user=self.current_user,
+                    studies=studies)
 
     @authenticated
     def post(self):
@@ -84,7 +87,20 @@ class MyStudiesHandler(BaseHandler):
 class PublicStudiesHandler(BaseHandler):
     @authenticated
     def get(self):
-        self.render('public_studies.html', user=self.current_user)
+        u = User(self.current_user)
+        studies = [Study(s_id) for s_id in u.shared_studies]
+        self.render('public_studies.html', user=self.current_user,
+                    studies=studies)
+
+    @authenticated
+    def post(self):
+        pass
+
+
+class StudyDescriptionHandler(BaseHandler):
+    @authenticated
+    def get(self, study_id):
+        self.render('study_description.html', user=self.current_user)
 
     @authenticated
     def post(self):
