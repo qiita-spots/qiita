@@ -333,14 +333,15 @@ class Job(QiitaStatusObject):
         conn_handler = SQLConnectionHandler()
         basedir = get_db_files_base_dir(conn_handler)
         results = conn_handler.execute_fetchall(
-            "SELECT f.filepath, fp.filepath_type FROM qiita.filepath f JOIN "
-            "qiita.filepath_type fp ON fp.filepath_type_id = "
-            "f.filepath_type_id WHERE f.filepath_id IN "
-            "(SELECT filepath_id FROM qiita.job_results_filepath "
-            "WHERE job_id = %s)", (self._id, ))
+            "SELECT fp.filepath, fpt.filepath_type FROM qiita.filepath fp "
+            "JOIN qiita.filepath_type fpt ON fp.filepath_type_id = "
+            "fpt.filepath_type_id JOIN qiita.job_results_filepath jrfp ON "
+            "fp.filepath_id = jrfp.filepath_id WHERE jrfp.job_id = %s",
+            (self._id, ))
 
         def add_html(basedir, check_dir, result_fps):
-            for res in glob(join(basedir, check_dir, "*.htm*")):
+            for res in glob(join(basedir, check_dir, "*.htm")) + \
+                    glob(join(basedir, check_dir, "*.html")):
                 result_fps.append(relpath(res, basedir))
 
         # create new list, with relative paths from db base
@@ -353,7 +354,7 @@ class Job(QiitaStatusObject):
                 # now do all subdirectories
                 add_html(basedir, join("job", fp[0], "*"), result_fps)
             else:
-                # result is eact filepath given
+                # result is exact filepath given
                 result_fps.append(join("job", fp[0]))
         return result_fps
 
