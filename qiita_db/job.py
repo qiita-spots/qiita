@@ -26,8 +26,9 @@ Classes
 # -----------------------------------------------------------------------------
 from __future__ import division
 from json import dumps, loads
-from os.path import join
+from os.path import join, relpath
 from os import remove
+from glob import glob
 from shutil import rmtree
 from functools import partial
 from collections import defaultdict
@@ -218,10 +219,15 @@ class Job(QiitaStatusObject):
             return_existing is False and an exact duplicate of the job already
             exists in the DB.
         """
+        analysis_sql = ("INSERT INTO qiita.analysis_job (analysis_id, job_id) "
+                        "VALUES (%s, %s)")
         exists, job = cls.exists(datatype, command, options, analysis,
                                  return_existing=True)
+        conn_handler = SQLConnectionHandler()
         if exists:
             if return_existing:
+                # add job to analysis
+                conn_handler.execute(analysis_sql, (analysis.id, job.id))
                 return job
             else:
                 raise QiitaDBDuplicateError(
@@ -229,7 +235,6 @@ class Job(QiitaStatusObject):
                     "analysis: %s" % (datatype, command, options, analysis.id))
 
         # Get the datatype and command ids from the strings
-        conn_handler = SQLConnectionHandler()
         datatype_id = convert_to_id(datatype, "data_type", conn_handler)
         sql = "SELECT command_id FROM qiita.command WHERE name = %s"
         command_id = conn_handler.execute_fetchone(sql, (command, ))[0]
@@ -243,9 +248,7 @@ class Job(QiitaStatusObject):
                                                command_id, opts_json))[0]
 
         # add job to analysis
-        sql = ("INSERT INTO qiita.analysis_job (analysis_id, job_id) VALUES "
-               "(%s, %s)")
-        conn_handler.execute(sql, (analysis.id, job_id))
+        conn_handler.execute(analysis_sql, (analysis.id, job_id))
 
         return cls(job_id)
 
@@ -326,15 +329,34 @@ class Job(QiitaStatusObject):
         list
             Filepaths to the result files
         """
-        # Copy files to working dir, untar if necessary, then return filepaths
+        # Select results filepaths and filepath types from the database
         conn_handler = SQLConnectionHandler()
+        basedir = get_db_files_base_dir(conn_handler)
         results = conn_handler.execute_fetchall(
-            "SELECT filepath FROM qiita.filepath WHERE filepath_id IN "
-            "(SELECT filepath_id FROM qiita.job_results_filepath "
-            "WHERE job_id = %s)",
+            "SELECT fp.filepath, fpt.filepath_type FROM qiita.filepath fp "
+            "JOIN qiita.filepath_type fpt ON fp.filepath_type_id = "
+            "fpt.filepath_type_id JOIN qiita.job_results_filepath jrfp ON "
+            "fp.filepath_id = jrfp.filepath_id WHERE jrfp.job_id = %s",
             (self._id, ))
+
+        def add_html(basedir, check_dir, result_fps):
+            for res in glob(join(basedir, check_dir, "*.htm")) + \
+                    glob(join(basedir, check_dir, "*.html")):
+                result_fps.append(relpath(res, basedir))
+
         # create new list, with relative paths from db base
-        return [join("job", fp[0]) for fp in results]
+        result_fps = []
+        for fp in results:
+            if fp[1] == "directory":
+                # directory, so all html files in it are results
+                # first, see if we have any in the main directory
+                add_html(basedir, join("job", fp[0]), result_fps)
+                # now do all subdirectories
+                add_html(basedir, join("job", fp[0], "*"), result_fps)
+            else:
+                # result is exact filepath given
+                result_fps.append(join("job", fp[0]))
+        return result_fps
 
     @property
     def error(self):
@@ -369,12 +391,14 @@ class Job(QiitaStatusObject):
         log_entry = LogEntry.create('Runtime', msg,
                                     info={'job': self._id})
         self._lock_job(conn_handler)
-
+        err_id = conn_handler.execute_fetchone(
+            "SELECT job_status_id FROM qiita.job_status WHERE "
+            "status = 'error'")[0]
         # attach the error to the job and set to error
-        sql = ("UPDATE qiita.{0} SET log_id = %s, job_status_id = 4 WHERE "
+        sql = ("UPDATE qiita.{0} SET log_id = %s, job_status_id = %s WHERE "
                "job_id = %s".format(self._table))
 
-        conn_handler.execute(sql, (log_entry.id, self._id))
+        conn_handler.execute(sql, (log_entry.id, err_id, self._id))
 
     def add_results(self, results):
         """Adds a list of results to the results

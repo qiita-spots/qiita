@@ -287,6 +287,27 @@ def get_table_cols(table, conn_handler=None):
     return [h[0] for h in headers]
 
 
+def get_table_cols_w_type(table, conn_handler=None):
+    """Returns the column headers and its type
+
+    Parameters
+    ----------
+    table : str
+        The table name
+    conn_handler : SQLConnectionHandler, optional
+        The connection handler object connected to the db
+
+    Returns
+    -------
+    list of tuples of (str, str)
+        The column headers and data type of `table`
+    """
+    conn_handler = conn_handler if conn_handler else SQLConnectionHandler()
+    return conn_handler.execute_fetchall(
+        "SELECT column_name, data_type FROM information_schema.columns WHERE "
+        "table_name=%s", (table,))
+
+
 def exists_table(table, conn_handler):
     r"""Checks if `table` exists on the database connected through
     `conn_handler`

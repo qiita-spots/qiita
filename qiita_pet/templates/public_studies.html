@@ -7,13 +7,14 @@
 
 <script type="text/javascript">
 $(document).ready(function() {
-    $('#public-studies-table').dataTable({});
+    $('#public-studies-table').dataTable({"order": [[1, "asc"]]});
+    $("#waiting").hide();
 } );
 </script>
 
 {% end %}
 {% block content %}
-{% if len(studies) %}
+{% if len(public_studies) %}
     <table id="public-studies-table" class="display table-bordered table-hover">
         <thead>
             <tr>
@@ -24,7 +25,7 @@ $(document).ready(function() {
             </tr>
         </thead>
         <tbody>
-            {% for s in studies %}
+            {% for s in public_studies %}
             {% set study_info = s.info %}
             <tr>
                 <td>{{study_info['number_samples_collected']}}</td>
@@ -43,8 +44,8 @@ $(document).ready(function() {
     <div class="jumbotron">
         <h1><span class="glyphicon glyphicon-thumbs-down"></span> There are no studies available</h1>
         <p>
-            This means that other users have not yet shared a study with you
-            and that the system has no public studies you can access
+            This means that the system currently has no public studies you can
+            access
         </p>
 </div>
 {% end %}

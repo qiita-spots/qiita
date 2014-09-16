@@ -74,10 +74,15 @@ class CreateStudyForm(Form):
 class PrivateStudiesHandler(BaseHandler):
     @authenticated
     def get(self):
+        self.write(self.render_string('waiting.html'))
+        self.flush()
         u = User(self.current_user)
-        studies = [Study(s_id) for s_id in u.private_studies]
+        user_studies = [Study(s_id) for s_id in u.private_studies]
+        share_dict = {s.id: s.shared_with for s in user_studies}
+        shared_studies = [Study(s_id) for s_id in u.shared_studies]
         self.render('private_studies.html', user=self.current_user,
-                    studies=studies)
+                    user_studies=user_studies, shared_studies=shared_studies,
+                    share_dict=share_dict)
 
     @authenticated
     def post(self):
@@ -87,10 +92,12 @@ class PrivateStudiesHandler(BaseHandler):
 class PublicStudiesHandler(BaseHandler):
     @authenticated
     def get(self):
+        self.write(self.render_string('waiting.html'))
+        self.flush()
         u = User(self.current_user)
-        studies = [Study(s_id) for s_id in u.shared_studies]
+        public_studies = [Study(s_id) for s_id in Study.get_public()]
         self.render('public_studies.html', user=self.current_user,
-                    studies=studies)
+                    public_studies=public_studies)
 
     @authenticated
     def post(self):
