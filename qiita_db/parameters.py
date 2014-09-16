@@ -17,7 +17,7 @@ class BaseParameters(QiitaObject):
 
     @classmethod
     def create(self):
-        r""""""
+        r"""Adds a new parameter set to the DB"""
         raise NotImplementedError("Operation not permitted")
 
     def _check_id(self, id_, conn_handler=None):
@@ -44,7 +44,8 @@ class BaseParameters(QiitaObject):
             "preprocessed_params_id = %s)".format(self._table), (id_, ))[0]
 
     def to_str(self):
-        r"""
+        r"""Generates a string with the parameter values
+
         Returns
         -------
         str
