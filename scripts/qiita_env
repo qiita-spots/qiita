@@ -72,7 +72,7 @@ def make_env(env, base_data_folder, base_work_folder, user, host,
              load_ontologies):
     """Drops the passed database environment"""
     make_environment(env, base_data_folder, base_work_folder, user, None, host,
-                     load_ontologes)
+                     load_ontologies)
 
 
 @qiita_env.command()

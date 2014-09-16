@@ -7,6 +7,10 @@
 # -----------------------------------------------------------------------------
 from os.path import abspath, dirname, join
 from functools import partial
+from os import remove, close
+from tempfile import mkstemp
+from ftplib import FTP
+import gzip
 
 from future import standard_library
 with standard_library.hooks():
@@ -16,7 +20,6 @@ from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 
 from qiita_core.exceptions import QiitaEnvironmentError
 from qiita_db.util import get_db_files_base_dir
-from qiita_core.util import  download_and_unzip_file, delete_tmp_file
 
 get_support_file = partial(join, join(dirname(abspath(__file__)),
                                       'support_files'))
@@ -105,9 +108,11 @@ def make_environment(env, base_data_dir, base_work_dir, user, password, host,
             # Initialize the database
             with open(INITIALIZE_FP, 'U') as f:
                 cur.execute(f.read())
-            if load_ontos:
+            if load_ontologies:
+                print ('Loading Ontology Data')
                 ontos_fp, f = download_and_unzip_file()
-                conn_handler.execute(f.read())
+                # with open('/Users/emte4531/Downloads/qiita_ontoandvocab.sql') as f:
+                cur.execute(f.read())
                 f.close()
                 delete_tmp_file(ontos_fp)
 
@@ -227,3 +232,28 @@ def clean_test_environment(user, password, host):
     # Close cursor and connections
     cur.close()
     conn.close()
+
+
+def download_and_unzip_file(host='thebeast.colorado.edu',
+                            filename='/pub/qiita/qiita_ontoandvocab.sql.gz'):
+    """Function downloads though ftp and unzips a file """
+    handl, tmpfile = mkstemp(suffix='gz')
+    close(handl)
+    ftp = FTP(host)
+    ftp.login()
+    cmd = 'RETR %s' % filename
+    ftp.retrbinary(cmd, open(tmpfile, 'wb').write)
+    f = gzip.open(tmpfile, 'rb')
+    # close(tmpfile)
+    return tmpfile, f
+
+
+def delete_tmp_file(file_path):
+    """Delete at tempory file
+
+    Paramters
+    ---------
+    file_path : str
+        path of file to delete
+    """
+    remove(file_path)

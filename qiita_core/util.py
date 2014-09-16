@@ -6,10 +6,6 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 from smtplib import SMTP, SMTP_SSL, SMTPException
-from os import remove
-from tempfile import mkstemp
-from ftplib import FTP
-import gzip
 from future import standard_library
 with standard_library.hooks():
     from email.mime.multipart import MIMEMultipart
@@ -73,11 +69,7 @@ def reset_test_database(wrapped_fn, load_ontos=False):
         # Populate the database
         with open(POPULATE_FP, 'U') as f:
             conn_handler.execute(f.read())
-        if load_ontos:
-            ontos_fp, f = download_and_unzip_file()
-            conn_handler.execute(f.read())
-            f.close()
-            delete_tmp_file(ontos_fp)
+
         # Execute the wrapped function
         return wrapped_fn(*args, **kwargs)
     return decorated_wrapped_fn
@@ -118,28 +110,3 @@ def qiita_test_checker():
 
         return DecoratedClass
     return class_modifier
-
-
-def download_and_unzip_file(host='thebeast.colorado.edu',
-                            filename='/pub/qiita/qiita_ontoandvocab.sql.gz'):
-    """Function downloads though ftp and unzips a file """
-    handl, tmpfile = mkstemp(suffix=gz)
-    handl.close()
-    ftp = FTP(host)
-    ftp.login()
-    cmd = 'RETR %s' % filename
-    ftp.retrbinary(cmd, open(tmpfile, 'wb').write)
-    f = gzip.open(tmpfile, 'rb')
-    tmpfile.close()
-    return tmpfile, f
-
-
-def delete_tmp_file(file_path):
-    """Delete at tempory file
-
-    Paramters
-    ---------
-    file_path : str
-        path of file to delete
-    """
-    remove(file_path)
