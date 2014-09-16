@@ -60,17 +60,19 @@ class DBUtilTests(TestCase):
         self.assertEqual(set(obs), exp)
 
     def test_get_table_cols_w_type(self):
-        obs = get_table_cols_w_type("qiita_user", self.conn_handler)
-        exp = [["email", "character varying"],
-               ["user_level_id", "integer"],
-               ["password", "character varying"],
-               ["name", "character varying"],
-               ["affiliation", "character varying"],
-               ["address", "character varying"],
-               ["phone", "character varying"],
-               ["user_verify_code", "character varying"],
-               ["pass_reset_code", "character varying"],
-               ["pass_reset_timestamp", "timestamp without time zone"]]
+        obs = get_table_cols_w_type("preprocessed_sequence_illumina_params",
+                                    self.conn_handler)
+        exp = [['preprocessed_params_id', 'bigint'],
+               ['trim_length', 'integer'],
+               ['max_bad_run_length', 'integer'],
+               ['min_per_read_length_fraction', 'real'],
+               ['sequence_max_n', 'integer'],
+               ['rev_comp_barcode', 'boolean'],
+               ['rev_comp_mapping_barcodes', 'boolean'],
+               ['rev_comp', 'boolean'],
+               ['phred_quality_threshold', 'integer'],
+               ['barcode_type', 'character varying'],
+               ['max_barcode_errors', 'real']]
         self.assertItemsEqual(obs, exp)
 
     def test_exists_table(self):
