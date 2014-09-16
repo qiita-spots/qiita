@@ -51,7 +51,7 @@ def send_email(to, subject, body):
         smtp.close()
 
 
-def reset_test_database(wrapped_fn, load_ontos=False):
+def reset_test_database(wrapped_fn):
     """Decorator that drops the qiita schema, rebuilds and repopulates the
     schema with test data, then executes wrapped_fn
     """
@@ -69,9 +69,9 @@ def reset_test_database(wrapped_fn, load_ontos=False):
         # Populate the database
         with open(POPULATE_FP, 'U') as f:
             conn_handler.execute(f.read())
-
         # Execute the wrapped function
         return wrapped_fn(*args, **kwargs)
+
     return decorated_wrapped_fn
 
 
