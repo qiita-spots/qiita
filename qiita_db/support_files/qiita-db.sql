@@ -139,6 +139,12 @@ CREATE TABLE qiita.preprocessed_sequence_illumina_params (
 	max_bad_run_length   integer DEFAULT 3 NOT NULL,
 	min_per_read_length_fraction real DEFAULT 0.75 NOT NULL,
 	sequence_max_n       integer DEFAULT 0 NOT NULL,
+	rev_comp_barcode     bool DEFAULT FALSE NOT NULL,
+	rev_comp_mapping_barcodes bool DEFAULT FALSE NOT NULL,
+	rev_comp             bool DEFAULT FALSE NOT NULL,
+	phred_quality_threshold integer DEFAULT 3 NOT NULL,
+	barcode_type         varchar DEFAULT 'golay_12' NOT NULL,
+	max_barcode_errors   real DEFAULT 1.5 NOT NULL,
 	CONSTRAINT pk_preprocessed_sequence_illumina_params PRIMARY KEY ( preprocessed_params_id )
  );
 

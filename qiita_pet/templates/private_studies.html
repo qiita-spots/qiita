@@ -1,0 +1,99 @@
+{% extends sitebase.html %}
+{% block head %}
+
+<link rel="stylesheet" href="/static/vendor/css/jquery.dataTables.css" type="text/css">
+
+<script src="/static/vendor/js/jquery.dataTables.min.js"></script>
+
+<script type="text/javascript">
+$(document).ready(function() {
+    $('#user-studies-table').dataTable({"order": [[ 1, "asc" ]]});
+    $('#shared-studies-table').dataTable({"order": [[ 1, "asc" ]]});
+    $('#waiting').hide();
+} );
+</script>
+
+{% end %}
+{% block content %}
+
+<h1>Your Studies</h1>
+{% if len(user_studies) %}
+    <table id="user-studies-table" class="display table-bordered table-hover">
+        <thead>
+            <tr>
+                <th>Samples</th>
+                <th>Title</th>
+                <th>Shared</th>
+                <th>Metadata Complete</th>
+                <th>Sequence Files</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for s in user_studies %}
+            {% set study_info = s.info %}
+            {% set s_id = s.id %}
+            {% set s_title = s.title %}
+            {% set share_list = share_dict[s_id] %}
+            <tr>
+                <td>{{study_info['number_samples_collected']}}</td>
+                <td><a href="/study/description/{{s_id}}">{{s_title}}</a></td>
+                {% if len(share_list) %}
+                    <td>{{share_list|join(', ')}}</td>
+                {% else %}
+                    <td><span class="glyphicon glyphicon-remove"></span></td>
+                {% end %}
+                {% if study_info['metadata_complete'] %}
+                    <td><span class="glyphicon glyphicon-ok"></span></td>
+                {% else %}
+                    <td><span class="glyphicon glyphicon-remove"></span></td>
+                {% end %}
+                <td>{{ len(s.raw_data()) }}</td>
+            </tr>
+            {% end %}
+        </tbody>
+    </table>
+{% else %}
+    <div class="jumbotron">
+        <h1><span class="glyphicon glyphicon-thumbs-down"></span> There are no studies available</h1>
+        <p>
+        This means that you have not yet created a study, <a href="/study/create/">create a study</a>
+        </p>
+</div>
+{% end %}
+
+<h1>Shared Studies</h1>
+{% if len(shared_studies) %}
+    <table id="shared-studies-table" class="display table-bordered table-hover">
+        <thead>
+            <tr>
+                <th>Samples</th>
+                <th>Title</th>
+                <th>Metadata Complete</th>
+                <th>Sequence Files</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for s in shared_studies %}
+            {% set study_info = s.info %}
+            <tr>
+                <td>{{study_info['number_samples_collected']}}</td>
+                <td><a href="/study/description/{{s.id}}">{{s.title}}</a></td>
+                {% if study_info['metadata_complete'] %}
+                    <td><span class="glyphicon glyphicon-ok"></span></td>
+                {% else %}
+                    <td><span class="glyphicon glyphicon-remove"></span></td>
+                {% end %}
+                <td>{{ len(s.raw_data()) }}</td>
+            </tr>
+            {% end %}
+        </tbody>
+    </table>
+{% else %}
+    <div class="jumbotron">
+        <h1><span class="glyphicon glyphicon-thumbs-down"></span> There are no studies available</h1>
+        <p>
+        This means that no one has shared any studies with you yet
+        </p>
+</div>
+{% end %}
+{% end %}
