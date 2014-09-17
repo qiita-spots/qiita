@@ -94,7 +94,6 @@ class PublicStudiesHandler(BaseHandler):
     def get(self):
         self.write(self.render_string('waiting.html'))
         self.flush()
-        u = User(self.current_user)
         public_studies = [Study(s_id) for s_id in Study.get_public()]
         self.render('public_studies.html', user=self.current_user,
                     public_studies=public_studies)
