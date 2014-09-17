@@ -23,6 +23,19 @@ Methods
 # -----------------------------------------------------------------------------
 
 
+def linkify(link_template, item):
+    """Formats a strings into a URL using string replacement
+
+    Paramters
+    ---------
+    link_template : str
+        The template for the URL.
+    item : list or tuple of str
+        The strings that will be inserted into the template
+    """
+    return link_template.format(*item)
+
+
 def clean_str(item):
     """Converts input to string and replaces spaces with underscores
 
