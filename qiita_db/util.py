@@ -41,10 +41,22 @@ from functools import partial
 from os.path import join, basename, isdir
 from os import walk
 from shutil import move
+from json import dumps
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from .exceptions import QiitaDBColumnError
 from .sql_connection import SQLConnectionHandler
+
+
+def params_dict_to_json(options):
+    """Convert a dict of parameter key-value pairs to JSON string
+
+    Parameters
+    ----------
+    options : dict
+        The dict of options
+    """
+    return dumps(options, sort_keys=True, separators=(',', ':'))
 
 
 def scrub_data(s):
