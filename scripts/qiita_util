@@ -1,0 +1,43 @@
+#!/usr/bin/env python
+
+from __future__ import print_function
+
+from gzip import open as gz_open
+
+import click
+
+from qiita_ware.util import split_fastq
+
+@click.group()
+def qiita_util():
+    pass
+
+
+@qiita_util.command()
+@click.option('--input-fastq', required=True, type=click.Path(
+    exists=True, readable=True, resolve_path=True, dir_okay=False),
+    help="The input FASTQ file to split. If gzipped, be sure to pass "
+    "--input-is-gzip")
+@click.option('--input-is-gzip/--input-not-gzip', default=False)
+@click.option('--sequence-buffer-size', default=1000,
+              help="The number of sequences to buffer per sample before "
+              "writing to disk. Higher numbers mean better performance at "
+              "the cost of higher memory utilization")
+@click.option('--output-directory', required=True, type=click.Path(
+    writable=True, resolve_path=True, file_okay=False))
+@click.option('--gzip/--no-gzip', default=False,
+              help="Whether or not to GZIP the output files.")
+@click.option('--verbose/--no-verbose', default=False,
+              help="If true, then additional information will be printed "
+              "during the split.")
+def split(input_fastq, input_is_gzip, output_directory, sequence_buffer_size,
+          gzip, verbose):
+
+    open_fn = gz_open if input_is_gzip else open
+
+    with open_fn(input_fastq) as f:
+        split_fastq(f, output_directory, sequence_buffer_size, gzip, verbose)
+
+
+if __name__ == '__main__':
+    qiita_util()

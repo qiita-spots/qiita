@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from __future__ import division
+from __future__ import division, print_function
 
 # -----------------------------------------------------------------------------
 # Copyright (c) 2014--, The Qiita Development Team.
@@ -13,10 +13,15 @@ from __future__ import division
 import sys
 from collections import defaultdict
 from heapq import heappush, heappop
+from os.path import exists, join
+from os import mkdir
+from subprocess import Popen
+from time import sleep
 
+from skbio.parse.sequences.fastq import parse_fastq
+from skbio.format.sequences.fastq import format_fastq_record
 import numpy as np
 import pandas as pd
-
 from future.utils import viewitems
 from natsort import natsorted
 
@@ -181,3 +186,92 @@ def template_to_dict(t):
             # cast to string as a datetime object can be returned here
             out[sample_id][column_name] = str(column_value)
     return out
+
+def split_fastq(input_fastq, output_directory, sequence_buffer_size=1000,
+                gzip=False, verbose=False):
+    """Splits a demultiplexed FASTQ file into per-sample FASTQ files
+
+    Parameters
+    ----------
+    input_fastq : file
+        The input demultiplexed FASTQ file.
+    output_directory : str
+        Path to the output directory. It will be created if it does not already
+        exist.
+    sequence_buffer_size : int
+        The number of sequences to hold in memory for each sample before
+        writing them to disk.
+    gzip : bool, optional
+        If ``True``, then the generated FASTQ files will be gzipped
+    verbose : bool, optional
+        Defaults to ``False``. If ``True``, additional information will be
+        printed during processing.
+
+    Notes
+    -----
+    The sequence identifiers in `input_fastq` should be of the form output by
+    QIIME's demultiplexing scripts; namely, they should be:
+    ``SampleID_SequenceNumber And Additional Notes if Applicable``
+    """
+    if sequence_buffer_size < 1:
+        raise ValueError("sequence_buffer_size must be greater than or equal "
+                         "to 1.")
+
+    if not exists(output_directory):
+        mkdir(output_directory)
+
+    per_sample_seqs = defaultdict(list)
+    per_sample_counts = defaultdict(int)
+    unique_filepaths = set()
+    if verbose:
+        print( 'Reading input file...')
+    for defline, seq, qual in parse_fastq(input_fastq,
+                                          enforce_qual_range=False):
+        label = defline.split()[0]
+        sample_name, sequence_number = label.rsplit('_', 1)
+
+        per_sample_seqs[sample_name].append((defline, seq, qual))
+        per_sample_counts[sample_name] += 1
+
+        if per_sample_counts[sample_name] > sequence_buffer_size:
+            if verbose:
+                print( '	flushing buffer for sample %s' % sample_name)
+            output_filepath = join(output_directory, sample_name+'.fastq')
+            unique_filepaths.add(output_filepath)
+            with open(output_filepath, 'a') \
+                    as outfile:
+                outfile.write(''.join(
+                    format_fastq_record(*x)
+                    for x in per_sample_seqs[sample_name]))
+
+            per_sample_seqs[sample_name] = []
+            per_sample_counts[sample_name] = 0
+
+    if verbose:
+        print('flushing all buffers')
+    for sample_name, entries in viewitems(per_sample_seqs):
+        if not entries:
+            continue
+
+        output_filepath = join(output_directory, sample_name+'.fastq')
+        unique_filepaths.add(output_filepath)
+        with open(output_filepath, 'a') \
+                as outfile:
+            outfile.write(''.join(
+                format_fastq_record(*x)
+                for x in per_sample_seqs[sample_name]))
+
+    if gzip:
+        if verbose:
+            print('Compressing output files. . .', end=' ')
+        procs = []
+        for filepath in unique_filepaths:
+            procs.append(Popen(['gzip', filepath]))
+
+        while any([proc.poll() is None for proc in procs]):
+            if verbose:
+                print( '.', end=' '),
+            sleep(1)
+
+        if verbose:
+            print()
