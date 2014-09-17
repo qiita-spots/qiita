@@ -47,7 +47,7 @@ class UtilTests(TestCase):
         print 'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
         print 'THIS TEST WAS RUN'
         print 'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
-        self.assertEqual(sorted(obs), exp)
+        self.assertEqual(sorted(obs), None)
 
     def test_per_sample_sequences_min_seqs(self):
         max_seqs = 10
