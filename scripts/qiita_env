@@ -70,7 +70,7 @@ def stop_cluster(cluster):
               default=False, help='if True will load ontologies')
 def make_env(env, base_data_folder, base_work_folder, user, host,
              load_ontologies):
-    """Drops the passed database environment"""
+    """Creates the passed environment"""
     make_environment(env, base_data_folder, base_work_folder, user, None, host,
                      load_ontologies)
 

@@ -110,11 +110,12 @@ def make_environment(env, base_data_dir, base_work_dir, user, password, host,
                 cur.execute(f.read())
             if load_ontologies:
                 print ('Loading Ontology Data')
-                ontos_fp, f = download_and_unzip_file()
-                # with open('/Users/emte4531/Downloads/qiita_ontoandvocab.sql') as f:
+                ontos_fp, f = download_and_unzip_file(
+                    host='thebeast.colorado.edu',
+                    filename='/pub/qiita/qiita_ontoandvocab.sql.gz')
                 cur.execute(f.read())
                 f.close()
-                delete_tmp_file(ontos_fp)
+                remove(ontos_fp)
 
             # Commit all the changes and close the connections
             print('Populating database with demo data')
@@ -234,10 +235,18 @@ def clean_test_environment(user, password, host):
     conn.close()
 
 
-def download_and_unzip_file(host='thebeast.colorado.edu',
-                            filename='/pub/qiita/qiita_ontoandvocab.sql.gz'):
-    """Function downloads though ftp and unzips a file """
-    handl, tmpfile = mkstemp(suffix='gz')
+def download_and_unzip_file(host, filename):
+    """Function downloads though ftp and unzips a file
+
+    Parameters
+    -----------
+    host : str
+        the location of the ftp server that is hosting the file
+    filename : str
+        the location of the file on the ftp server to download
+    """
+    handl, tmpfile = mkstemp()
+    print tmpfile
     close(handl)
     ftp = FTP(host)
     ftp.login()
@@ -246,14 +255,3 @@ def download_and_unzip_file(host='thebeast.colorado.edu',
     f = gzip.open(tmpfile, 'rb')
     # close(tmpfile)
     return tmpfile, f
-
-
-def delete_tmp_file(file_path):
-    """Delete at tempory file
-
-    Paramters
-    ---------
-    file_path : str
-        path of file to delete
-    """
-    remove(file_path)
