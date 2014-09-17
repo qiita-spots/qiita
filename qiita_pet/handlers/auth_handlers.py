@@ -33,12 +33,13 @@ class AuthCreateHandler(BaseHandler):
         created = User.create(username, password, info)
 
         if created:
-            send_email(username, "FORGE: Verify Email Address", "Please click "
+            send_email(username, "QIITA: Verify Email Address", "Please click "
                        "the following link to verify email address: "
-                       "http://forge-dev.colorado.edu/auth/verify/%s" % msg)
+                       "http://qiita.colorado.edu/auth/verify/%s" %
+                       User.verify_code)
             self.redirect(u"/")
         else:
-            error_msg = u"?error=" + url_escape(msg)
+            error_msg = u"?error=" + url_escape("Error with user creation")
             self.redirect(u"/auth/create/" + error_msg)
 
 
@@ -57,9 +58,13 @@ class AuthVerifyHandler(BaseHandler):
 
 class AuthLoginHandler(BaseHandler):
     """user login, no page necessary"""
+    def get(self):
+        self.write("YOU SHOULD NOT BE ACCESSING THIS PAGE DIRECTLY. GO AWAY.")
+
     def post(self):
         username = self.get_argument("username", "").strip().lower()
         passwd = self.get_argument("password", "")
+        nextpage = self.get_argument("next", "/")
         # check the user level
         try:
             if User(username).level == 4:  # 4 is id for unverified
@@ -80,7 +85,7 @@ class AuthLoginHandler(BaseHandler):
         if login:
             # everthing good so log in
             self.set_current_user(username)
-            self.redirect("/")
+            self.redirect(nextpage)
             return
         self.render("index.html", user=None, loginerror=msg)
 
