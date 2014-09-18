@@ -25,7 +25,7 @@ Classes
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 from __future__ import division
-from json import dumps, loads
+from json import loads
 from os.path import join, relpath
 from os import remove
 from glob import glob
@@ -34,7 +34,8 @@ from functools import partial
 from collections import defaultdict
 
 from .base import QiitaStatusObject
-from .util import insert_filepaths, convert_to_id, get_db_files_base_dir
+from .util import (insert_filepaths, convert_to_id, get_db_files_base_dir,
+                   params_dict_to_json)
 from .sql_connection import SQLConnectionHandler
 from .logger import LogEntry
 from .exceptions import QiitaDBStatusError, QiitaDBDuplicateError
@@ -112,7 +113,7 @@ class Job(QiitaStatusObject):
         datatype_id = convert_to_id(datatype, "data_type", conn_handler)
         sql = "SELECT command_id FROM qiita.command WHERE name = %s"
         command_id = conn_handler.execute_fetchone(sql, (command, ))[0]
-        opts_json = dumps(options, sort_keys=True, separators=(',', ':'))
+        opts_json = params_dict_to_json(options)
         sql = ("SELECT DISTINCT aj.analysis_id, aj.job_id FROM "
                "qiita.analysis_job aj JOIN qiita.{0} j ON aj.job_id = j.job_id"
                " WHERE j.data_type_id = %s AND j.command_id = %s "
@@ -238,7 +239,7 @@ class Job(QiitaStatusObject):
         datatype_id = convert_to_id(datatype, "data_type", conn_handler)
         sql = "SELECT command_id FROM qiita.command WHERE name = %s"
         command_id = conn_handler.execute_fetchone(sql, (command, ))[0]
-        opts_json = dumps(options, sort_keys=True, separators=(',', ':'))
+        opts_json = params_dict_to_json(options)
 
         # Create the job and return it
         sql = ("INSERT INTO qiita.{0} (data_type_id, job_status_id, "
@@ -314,7 +315,7 @@ class Job(QiitaStatusObject):
         self._lock_job(conn_handler)
 
         # JSON the options dictionary
-        opts_json = dumps(opts, sort_keys=True, separators=(',', ':'))
+        opts_json = params_dict_to_json(opts)
         # Add the options to the job
         sql = ("UPDATE qiita.{0} SET options = %s WHERE "
                "job_id = %s").format(self._table)
