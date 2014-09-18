@@ -6,7 +6,7 @@ from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_core.util import send_email
 from qiita_core.exceptions import IncorrectPasswordError, IncorrectEmailError
 from qiita_db.user import User
-from qiita_db.exceptions import QiitaDBUnknownIDError
+from qiita_db.exceptions import QiitaDBUnknownIDError, QiitaDBDuplicateError
 # login code modified from https://gist.github.com/guillaumevincent/4771570
 
 
@@ -30,17 +30,22 @@ class AuthCreateHandler(BaseHandler):
             if hold:
                 info[info_column] = hold
 
-        created = User.create(username, password, info)
+        created = False
+        try:
+            created = User.create(username, password, info)
+        except QiitaDBDuplicateError:
+            msg = "Email already registered as a user"
 
         if created:
+            info = created.info
             try:
-                send_email(username, "FORGE: Verify Email Address", "Please "
+                send_email(username, "QIITA: Verify Email Address", "Please "
                            "click the following link to verify email address: "
-                           "http://forge-dev.colorado.edu/auth/verify/%s" %
-                           msg)
+                           "http://qiita.colorado.edu/auth/verify/%s?email=%s"
+                           % (info['user_verify_code'], url_escape(username)))
             except:
                 msg = ("Unable to send verification email. Please contact the "
-                       "qiita dvelopers at <a href='mailto:qiita-help"
+                       "qiita developers at <a href='mailto:qiita-help"
                        "@gmail.com'>qiita-help@gmail.com</a>")
                 error_msg = u"?error=" + url_escape(msg)
                 self.redirect(u"/auth/create/" + error_msg)
@@ -52,26 +57,28 @@ class AuthCreateHandler(BaseHandler):
 
 
 class AuthVerifyHandler(BaseHandler):
-    def get(self):
+    def get(self, code):
         email = self.get_argument("email").strip().lower()
-        code = self.get_argument("code")
-        try:
-            User(email).level = 3
-            msg = "Successfully verified user!"
-        except QiitaDBUnknownIDError:
+        if User.verify_code(email, code, "create"):
+            msg = "Successfully verified user! You are now free to log in."
+        else:
             msg = "Code not valid!"
-
-        self.render("user_verified.html", user=None, error=msg)
+        self.render("user_verified.html", user=None, msg=msg)
 
 
 class AuthLoginHandler(BaseHandler):
     """user login, no page necessary"""
+    def get(self):
+        self.redirect("/")
+
     def post(self):
         username = self.get_argument("username", "").strip().lower()
         passwd = self.get_argument("password", "")
+        nextpage = self.get_argument("next", "/")
+        msg = ""
         # check the user level
         try:
-            if User(username).level == 4:  # 4 is id for unverified
+            if User(username).level == "unverified":
                 # email not verified so dont log in
                 msg = "Email not verified"
         except QiitaDBUnknownIDError:
@@ -87,11 +94,11 @@ class AuthLoginHandler(BaseHandler):
             msg = "Incorrect password"
 
         if login:
-            # everthing good so log in
+            # everything good so log in
             self.set_current_user(username)
-            self.redirect("/")
-            return
-        self.render("index.html", user=None, loginerror=msg)
+            self.redirect(nextpage)
+        else:
+            self.render("index.html", user=None, loginerror=msg)
 
     def set_current_user(self, user):
         if user:

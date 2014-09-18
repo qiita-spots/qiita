@@ -7,6 +7,10 @@
 # -----------------------------------------------------------------------------
 from os.path import abspath, dirname, join
 from functools import partial
+from os import remove, close
+from tempfile import mkstemp
+from ftplib import FTP
+import gzip
 
 from future import standard_library
 with standard_library.hooks():
@@ -44,7 +48,8 @@ def _check_db_exists(db, cursor):
     return (db,) in cursor.fetchall()
 
 
-def make_environment(env, base_data_dir, base_work_dir, user, password, host):
+def make_environment(env, base_data_dir, base_work_dir, user, password, host,
+                     load_ontologies):
     r"""Creates the new environment `env`
 
     Parameters
@@ -103,6 +108,14 @@ def make_environment(env, base_data_dir, base_work_dir, user, password, host):
             # Initialize the database
             with open(INITIALIZE_FP, 'U') as f:
                 cur.execute(f.read())
+            if load_ontologies:
+                print ('Loading Ontology Data')
+                ontos_fp, f = download_and_unzip_file(
+                    host='thebeast.colorado.edu',
+                    filename='/pub/qiita/qiita_ontoandvocab.sql.gz')
+                cur.execute(f.read())
+                f.close()
+                remove(ontos_fp)
 
             # Commit all the changes and close the connections
             print('Populating database with demo data')
@@ -220,3 +233,23 @@ def clean_test_environment(user, password, host):
     # Close cursor and connections
     cur.close()
     conn.close()
+
+
+def download_and_unzip_file(host, filename):
+    """Function downloads though ftp and unzips a file
+
+    Parameters
+    -----------
+    host : str
+        the location of the ftp server that is hosting the file
+    filename : str
+        the location of the file on the ftp server to download
+    """
+    handl, tmpfile = mkstemp()
+    close(handl)
+    ftp = FTP(host)
+    ftp.login()
+    cmd = 'RETR %s' % filename
+    ftp.retrbinary(cmd, open(tmpfile, 'wb').write)
+    f = gzip.open(tmpfile, 'rb')
+    return tmpfile, f

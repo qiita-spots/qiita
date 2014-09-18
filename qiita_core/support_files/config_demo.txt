@@ -33,6 +33,28 @@ RESERVED_CLUSTER_SIZE = 1
 GENERAL_CLUSTER = qiita_general
 GENERAL_CLUSTER_SIZE = 1
 
+# ----------------------------- SMTP settings -----------------------------
+[smtp]
+# The hostname to connect to
+# Google: smtp.google.com
+HOST = localhost
+
+# The port to connect to the database
+# Google: 587
+PORT = 25
+
+#SSL needed (True or False)
+SSL = False
+
+# The user name to connect with
+USER =
+
+# The user password to connect with
+PASSWORD =
+
+# The email to have messages sent from
+EMAIL = donotrepy@qiita.colorado.edu
+
 # ----------------------------- Redis settings --------------------------------
 [redis]
 

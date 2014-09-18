@@ -89,6 +89,15 @@
           </ul>
           <!-- otherwise show the login form -->
           {% else %}
+          <ul class="nav navbar-nav">
+            <li>
+              <a href="/auth/create/">New User</a>
+            </li>
+            <li>
+              <a href="/auth/forgot/">Forgot Password</a>
+            </li>
+          </ul>
+
           <form class="navbar-form navbar-right" role="form" action="/auth/login/" method="post">
             <div class="form-group">
               <input type="text" id="username" name="username" placeholder="Email" class="form-control">
