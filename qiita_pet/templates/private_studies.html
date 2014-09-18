@@ -1,5 +1,11 @@
 {% extends sitebase.html %}
 {% block head %}
+{% from qiita_db.study import StudyPerson %}
+{% from qiita_db.user import User %}
+{% from functools import partial %}
+{% from qiita_pet.util import linkify %}
+{% set pubmed_linkifier = partial(linkify, "<a target=\"_blank\" href=\"http://www.ncbi.nlm.nih.gov/pubmed/{0}\">{0}</a>") %}
+{% set study_person_linkifier = partial(linkify, "<a target=\"_blank\" href=\"mailto:{0}\">{1}</a>") %}
 
 <link rel="stylesheet" href="/static/vendor/css/jquery.dataTables.css" type="text/css">
 
@@ -21,33 +27,43 @@ $(document).ready(function() {
     <table id="user-studies-table" class="display table-bordered table-hover">
         <thead>
             <tr>
-                <th>Samples</th>
                 <th>Title</th>
-                <th>Shared</th>
                 <th>Metadata Complete</th>
+                <th>Samples</th>
+                <th>Shared</th>
                 <th>Sequence Files</th>
+                <th>Principal Investigator</th>
+                <th>Pubmed ID(s)</th>
             </tr>
         </thead>
         <tbody>
             {% for s in user_studies %}
-            {% set study_info = s.info %}
-            {% set s_id = s.id %}
-            {% set s_title = s.title %}
-            {% set share_list = share_dict[s_id] %}
+                {% set study_info = s.info %}
+                {% set s_id = s.id %}
+                {% set s_title = s.title %}
+                {% set share_list = [User(ID) for ID in share_dict[s_id]] %}
+                {% set pmids = s.pmids %}
+                {% set PI = StudyPerson(study_info['principal_investigator_id']) %}
             <tr>
-                <td>{{study_info['number_samples_collected']}}</td>
                 <td><a href="/study/description/{{s_id}}">{{s_title}}</a></td>
-                {% if len(share_list) %}
-                    <td>{{share_list|join(', ')}}</td>
-                {% else %}
-                    <td><span class="glyphicon glyphicon-remove"></span></td>
-                {% end %}
                 {% if study_info['metadata_complete'] %}
-                    <td><span class="glyphicon glyphicon-ok"></span></td>
+                <td><span class="glyphicon glyphicon-ok"></span></td>
                 {% else %}
-                    <td><span class="glyphicon glyphicon-remove"></span></td>
+                <td><span class="glyphicon glyphicon-remove"></span></td>
                 {% end %}
+                <td>{{study_info['number_samples_collected']}}</td>
                 <td>{{ len(s.raw_data()) }}</td>
+                {% if len(share_list) %}
+                <td>{% raw ", ".join([study_person_linkifier((person.email, person.info['name'])) for person in share_list]) %}</td>
+                {% else %}
+                <td><span class="glyphicon glyphicon-remove"></span></td>
+                {% end %}
+                <td>{% raw study_person_linkifier((PI.email, PI.name)) %}</td>
+                {% if len(pmids) %}
+                <td>{% raw ", ".join([pubmed_linkifier([pmid]) for pmid in pmids]) %}</td>
+                {% else %}
+                <td>None</td>
+                {% end %}
             </tr>
             {% end %}
         </tbody>
@@ -66,24 +82,34 @@ $(document).ready(function() {
     <table id="shared-studies-table" class="display table-bordered table-hover">
         <thead>
             <tr>
-                <th>Samples</th>
                 <th>Title</th>
                 <th>Metadata Complete</th>
+                <th>Samples</th>
                 <th>Sequence Files</th>
+                <th>Principal Investigator</th>
+                <th>Pubmed ID(s)</th>
             </tr>
         </thead>
         <tbody>
             {% for s in shared_studies %}
             {% set study_info = s.info %}
+            {% set pmids = s.pmids %}
+            {% set PI = StudyPerson(study_info['principal_investigator_id']) %}
             <tr>
-                <td>{{study_info['number_samples_collected']}}</td>
                 <td><a href="/study/description/{{s.id}}">{{s.title}}</a></td>
                 {% if study_info['metadata_complete'] %}
                     <td><span class="glyphicon glyphicon-ok"></span></td>
                 {% else %}
                     <td><span class="glyphicon glyphicon-remove"></span></td>
                 {% end %}
+                <td>{{study_info['number_samples_collected']}}</td>
                 <td>{{ len(s.raw_data()) }}</td>
+                <td>{% raw study_person_linkifier((PI.email, PI.name)) %}</td>
+                {% if len(pmids) %}
+                    <td>{% raw ", ".join([pubmed_linkifier([pmid]) for pmid in pmids]) %}</td>
+                {% else %}
+                    <td>None</td>
+                {% end %}
             </tr>
             {% end %}
         </tbody>
