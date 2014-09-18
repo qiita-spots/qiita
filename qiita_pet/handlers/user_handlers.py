@@ -57,7 +57,7 @@ class ForgotPasswordHandler(BaseHandler):
             user.generate_reset_code()
             info = user.info
         except QiitaDBUnknownIDError:
-            error="ERROR: Unknown user."
+            error = "ERROR: Unknown user."
         else:
             try:
                 send_email(user, "QIITA: Password Reset", "Please go to the "
