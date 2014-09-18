@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 from __future__ import division
 
+from future import standard_library
+with standard_library.hooks():
+    from configparser import Error as ConfigParser_Error
 # -----------------------------------------------------------------------------
 # Copyright (c) 2014--, The Qiita Development Team.
 #
@@ -58,3 +61,11 @@ class IncorrectEmailError(QiitaError):
 class QiitaEnvironmentError(QiitaError):
     """Exception for error when dealing with the environment"""
     pass
+
+class MissingConfigSection(ConfigParser_Error):
+    """Exception when the config file is missing a required section"""
+    def __init__(self, section):
+        super(MissingConfigSection, self).__init__('Missing section(s): %r' %
+                                                   (section,))
+        self.section = section
+        self.args = (section,)
