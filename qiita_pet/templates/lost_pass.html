@@ -1,0 +1,54 @@
+{%extends sitebase.html%}
+{%block head%}
+<script type="text/javascript" src="/static/vendor/js/jquery.validate.min.js"></script>
+<script type="text/javascript">
+// http://www.9lessons.info/2012/04/bootstrap-registration-form-tutorial.html
+$(document).ready(function()
+{
+// Popover 
+$('#lost_pass input').hover(function()
+{
+$(this).popover('show')
+});
+
+// Validation
+$("#lost_pass").validate({
+rules:{
+email:{required:true,email:true}
+},
+
+messages:{
+email:"Enter valid email address"}
+},
+
+errorClass: "help-inline",
+errorElement: "span",
+highlight:function(element, errorClass, validClass)
+{
+$(element).parents('.control-group').addClass('error');
+},
+unhighlight: function(element, errorClass, validClass)
+{
+$(element).parents('.control-group').removeClass('error');
+$(element).parents('.control-group').addClass('success');
+}
+});
+});
+</script>
+{%end%}
+
+{%block content%}
+<div style='width: 50%;'>
+<h1>Lost Password</h1>
+<h3>Enter email for account</h3>
+<div style="color:red;">{{error}}</div>
+<form class="form-horizontal" role="form" action="/auth/forgot/" method="post" id="lost_pass" name="lost_pass">
+<div class="form-group">
+    <label for="email" class="col-sm-2 control-label">Email</label>
+    <div class="col-sm-10">
+      <input type="email" class="form-control" id="email" name="email" placeholder="Email">
+    </div>
+  </div>
+ <button class="btn btn-success">Reset Password</button>
+</form>
+{%end%}
