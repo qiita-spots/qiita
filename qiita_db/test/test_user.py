@@ -63,7 +63,10 @@ class UserTest(TestCase):
             'name': 'Dude',
             'affiliation': 'Nowhere University',
             'address': '123 fake st, Apt 0, Faketown, CO 80302',
-            'phone': '111-222-3344'
+            'phone': '111-222-3344',
+            'pass_reset_code': None,
+            'pass_reset_timestamp': None,
+            'user_verify_code': None
         }
 
     def test_instantiate_user(self):
@@ -126,7 +129,7 @@ class UserTest(TestCase):
         self._check_correct_info(obs, exp)
 
     def test_create_user_column_not_allowed(self):
-        self.userinfo["pass_reset_code"] = "FAIL"
+        self.userinfo["email"] = "FAIL"
         with self.assertRaises(QiitaDBColumnError):
             User.create('new@test.bar', 'password', self.userinfo)
 
@@ -184,6 +187,10 @@ class UserTest(TestCase):
             'name': 'Admin',
             'affiliation': 'Owner University',
             'address': '312 noname st, Apt K, Nonexistantown, CO 80302',
+            'phone': '222-444-6789',
+            'pass_reset_code': None,
+            'pass_reset_timestamp': None,
+            'user_verify_code': None,
             'phone': '222-444-6789'
         }
         self.assertEqual(self.user.info, expinfo)

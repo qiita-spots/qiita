@@ -14,7 +14,7 @@ from uuid import uuid4
 from qiita_pet.handlers.base_handlers import (MainHandler, MockupHandler,
                                               NoPageHandler)
 from qiita_pet.handlers.auth_handlers import (
-    AuthCreateHandler, AuthLoginHandler, AuthLogoutHandler)
+    AuthCreateHandler, AuthLoginHandler, AuthLogoutHandler, AuthVerifyHandler)
 from qiita_pet.handlers.analysis_handlers import (
     SelectCommandsHandler, AnalysisWaitHandler, AnalysisResultsHandler,
     ShowAnalysesHandler, SearchStudiesHandler)
@@ -42,6 +42,7 @@ class Application(tornado.web.Application):
             (r"/auth/login/", AuthLoginHandler),
             (r"/auth/logout/", AuthLogoutHandler),
             (r"/auth/create/", AuthCreateHandler),
+            (r"/auth/verify/(.*)", AuthVerifyHandler),
             (r"/results/(.*)", tornado.web.StaticFileHandler,
              {"path": RES_PATH}),
             (r"/static/(.*)", tornado.web.StaticFileHandler,
