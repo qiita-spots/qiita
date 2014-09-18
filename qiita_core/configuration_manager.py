@@ -62,7 +62,7 @@ class ConfigurationManager(object):
     self.smtp_password : str
         The password for the user on the SMTP server that will send mail
     self.smtp_ssl : bool
-        Whether or not SSL is used when sending mail from the SMTP server
+        Whether or not SSL is used when connecting to the SMTP server
     self.smtp_email : str
         The email address that mail will be sent from when sending mail from
         the SMTP server
