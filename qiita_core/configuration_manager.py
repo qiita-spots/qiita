@@ -53,6 +53,19 @@ class ConfigurationManager(object):
         The IPython general cluster profile
     ipyc_general_n : int
         The size of the general cluster
+    self.smtp_host : str
+        The SMTP host from which mail will be sent
+    self.smtp_port : int
+        The port on the SMTP host to use
+    self.smtp_user : str
+        The user on the SMTP server that will send mail
+    self.smtp_password : str
+        The password for the user on the SMTP server that will send mail
+    self.smtp_ssl : bool
+        Whether or not SSL is used when sending mail from the SMTP server
+    self.smtp_email : str
+        The email address that mail will be sent from when sending mail from
+        the SMTP server
     """
     def __init__(self):
         # If conf_fp is None, we default to the test configuration file
