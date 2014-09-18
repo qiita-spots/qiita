@@ -36,9 +36,11 @@ GENERAL_CLUSTER_SIZE = 1
 # ----------------------------- SMTP settings -----------------------------
 [smtp]
 # The hostname to connect to
+# Google: smtp.google.com
 HOST = localhost
 
 # The port to connect to the database
+# Google: 587
 PORT = 25
 
 #SSL needed (True or False)

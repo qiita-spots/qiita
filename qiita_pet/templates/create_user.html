@@ -51,7 +51,7 @@ $(element).parents('.control-group').addClass('success');
 
 {%block content%}
 <h1>Enter User Information</h1>
-<div style="color:red;">{{error}}</div>
+<div style="color:red;">{% raw error %}</div>
 <form class="form-horizontal" role="form" action="/auth/create/" method="post" id="createuser">
 <div class="form-group">
     <label for="username" class="col-sm-2 control-label">Email</label>

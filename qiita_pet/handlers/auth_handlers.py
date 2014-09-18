@@ -45,7 +45,7 @@ class AuthCreateHandler(BaseHandler):
                            msg)
             except:
                 msg = ("Unable to send verification email. Please contact the "
-                       "qiita dvelopers at <a href='mailto:qiita-help"
+                       "qiita developers at <a href='mailto:qiita-help"
                        "@gmail.com'>qiita-help@gmail.com</a>")
                 error_msg = u"?error=" + url_escape(msg)
                 self.redirect(u"/auth/create/" + error_msg)
