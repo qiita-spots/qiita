@@ -1,23 +1,101 @@
 {% extends sitebase.html %}
-{%block content %}
-<div id="create-form">
-    <form action="/auth/create/" method="post" id="login_form">
-        <fieldset>
-            <label for="username">Username</label>
-            <input autocapitalize="off" autocorrect="off" class="text-input" id="username" name="username" tabindex="1" type="text" value="">
-        </fieldset><br />
+{%block head%}
+<script type="text/javascript" src="/static/vendor/js/jquery.validate.min.js"></script>
+<script type="text/javascript">
+// http://www.9lessons.info/2012/04/bootstrap-registration-form-tutorial.html
+$(document).ready(function()
+{
+// Popover 
+$('#createuser input').hover(function()
+{
+$(this).popover('show')
+});
 
-        <fieldset>
-            <label for="password">Password</label>
-            <input class="text-input" id="password" name="password" tabindex="2" type="password" value="">
-        </fieldset><br />
-        <fieldset>
-            <span class="errormessage">{{error}}</span>
-        </fieldset>
+// Validation
+$("#createuser").validate({
+rules:{
+username:{required:true,email: true},
+pass:{required:true,minlength: 6},
+pass2:{required:true,minlength: 6,equalTo: "#pass"},
+},
 
-        <div id="form_btn">
-            <input id="signin-btn" type="submit" value="Create" tabindex="3">
-        </div>
-    </form>
+messages:{
+name:"Enter your first and last name",
+username:{
+required:"Enter your email address",
+email:"Enter valid email address"},
+pass:{
+required:"Enter your password",
+minlength:"Password must be minimum 6 characters"},
+pass2:{
+required:"Enter confirm password",
+minlength:"Password must be minimum 6 characters",
+equalTo:"Password and Confirm Password must match"}
+},
+
+errorClass: "help-inline",
+errorElement: "span",
+highlight:function(element, errorClass, validClass)
+{
+$(element).parents('.control-group').addClass('error');
+},
+unhighlight: function(element, errorClass, validClass)
+{
+$(element).parents('.control-group').removeClass('error');
+$(element).parents('.control-group').addClass('success');
+}
+});
+});
+</script>
+{%end%}
+
+{%block content%}
+<h1>Enter User Information</h1>
+<div style="color:red;">{% raw error %}</div>
+<form class="form-horizontal" role="form" action="/auth/create/" method="post" id="createuser">
+<div class="form-group">
+    <label for="username" class="col-sm-2 control-label">Email</label>
+    <div class="col-sm-10">
+      <input type="email" class="form-control" id="username" name="username" placeholder="Email">
+    </div>
+  </div>
+<div class="form-group">
+    <label for="pass" class="col-sm-2 control-label">Password</label>
+    <div class="col-sm-10">
+      <input type="password" class="form-control" id="pass" name="pass" placeholder="password">
+    </div>
+  </div>
+<div class="form-group">
+    <label for="pass2" class="col-sm-2 control-label">Confirm password</label>
+    <div class="col-sm-10">
+      <input type="password" class="form-control" id="pass2" name="pass2" placeholder="password">
+    </div>
+  </div>
+<div class="form-group">
+    <label for="name" class="col-sm-2 control-label">Name (optional)</label>
+    <div class="col-sm-10">
+      <input type="textbox" class="form-control" id="name" name="name" placeholder="name">
+    </div>
+  </div>
+<div class="form-group">
+    <label for="affiliation" class="col-sm-2 control-label">Affiliation (Optional)</label>
+    <div class="col-sm-10">
+      <input type="textbox" class="form-control" id="affiliation" name="affiliation" placeholder="affiliation">
+    </div>
+  </div>
+<div class="form-group">
+    <label for="address" class="col-sm-2 control-label">Address (Optional)</label>
+    <div class="col-sm-10">
+      <input type="textbox" class="form-control" id="address" name="address" placeholder="address">
+    </div>
+  </div>
+<div class="form-group">
+    <label for="phone" class="col-sm-2 control-label">Phone # (Optional)</label>
+    <div class="col-sm-10">
+      <input type="textbox" class="form-control" id="phone" name="phone" placeholder="phone">
+    </div>
+  </div>
 </div>
-{% end %}
+<button type="submit" class="btn btn-success">Create User</button>
+</form>
+{%end%}
