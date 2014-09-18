@@ -244,7 +244,6 @@ class User(QiitaObject):
                " = %s".format(cls._table, column))
         conn_handler = SQLConnectionHandler()
         db_code = conn_handler.execute_fetchone(sql, (email,))[0]
-        print "DB", db_code, "CODE", code, "EQ", db_code == code
         if db_code == code and code_type == "create":
             # verify the user
             level = level = conn_handler.execute_fetchone(
