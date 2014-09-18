@@ -246,12 +246,10 @@ def download_and_unzip_file(host, filename):
         the location of the file on the ftp server to download
     """
     handl, tmpfile = mkstemp()
-    print tmpfile
     close(handl)
     ftp = FTP(host)
     ftp.login()
     cmd = 'RETR %s' % filename
     ftp.retrbinary(cmd, open(tmpfile, 'wb').write)
     f = gzip.open(tmpfile, 'rb')
-    # close(tmpfile)
     return tmpfile, f
