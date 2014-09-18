@@ -39,9 +39,9 @@ class AuthCreateHandler(BaseHandler):
         if created:
             info = created.info
             try:
-                send_email(username, "FORGE: Verify Email Address", "Please "
+                send_email(username, "QIITA: Verify Email Address", "Please "
                            "click the following link to verify email address: "
-                           "http://forge-dev.colorado.edu/auth/verify/%s" %
+                           "http://qiita.colorado.edu/auth/verify/%s" %
                            msg)
             except:
                 msg = ("Unable to send verification email. Please contact the "

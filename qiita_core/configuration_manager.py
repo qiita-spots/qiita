@@ -130,10 +130,11 @@ class ConfigurationManager(object):
     def _get_smtp(self, config):
         sec_get = partial(config.get, 'smtp')
         sec_getint = partial(config.getint, 'smtp')
+        sec_getbool = partial(config.getboolean, 'smtp')
 
         self.smtp_host = sec_get("HOST")
         self.smtp_port = sec_getint("PORT")
         self.smtp_user = sec_get("USER")
         self.smtp_password = sec_get("PASSWORD")
-        self.smtp_ssl = config.getboolean('smtp', "SSL")
+        self.smtp_ssl = sec_getbool("SSL")
         self.smtp_email = sec_get('EMAIL')

@@ -246,7 +246,7 @@ class User(QiitaObject):
         db_code = conn_handler.execute_fetchone(sql, (email,))[0]
         if db_code == code and code_type == "create":
             # verify the user
-            level = level = conn_handler.execute_fetchone(
+            level = conn_handler.execute_fetchone(
                 "SELECT user_level_id FROM qiita.user_level WHERE "
                 "name = %s", ("user", ))[0]
             sql = ("UPDATE qiita.{} SET user_level_id = %s WHERE "
