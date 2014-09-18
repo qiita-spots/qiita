@@ -69,7 +69,7 @@ class AuthVerifyHandler(BaseHandler):
 class AuthLoginHandler(BaseHandler):
     """user login, no page necessary"""
     def get(self):
-        self.write("YOU SHOULD NOT BE ACCESSING THIS PAGE DIRECTLY. GO AWAY.")
+        self.redirect("/")
 
     def post(self):
         username = self.get_argument("username", "").strip().lower()
