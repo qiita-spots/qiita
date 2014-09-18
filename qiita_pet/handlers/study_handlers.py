@@ -188,7 +188,7 @@ class CreateStudyHandler(BaseHandler):
             'portal_type_id': 1,
             'lab_person_id': lab_person,
             'principal_investigator_id': PI,
-            'metadata_complete': True,
+            'metadata_complete': False,
             'mixs_compliant': True,
             'study_description': form_data.data['study_description'][0],
             'study_alias': form_data.data['study_alias'][0],
