@@ -33,9 +33,18 @@ class AuthCreateHandler(BaseHandler):
         created = User.create(username, password, info)
 
         if created:
-            send_email(username, "FORGE: Verify Email Address", "Please click "
-                       "the following link to verify email address: "
-                       "http://forge-dev.colorado.edu/auth/verify/%s" % msg)
+            try:
+                send_email(username, "FORGE: Verify Email Address", "Please "
+                           "click the following link to verify email address: "
+                           "http://forge-dev.colorado.edu/auth/verify/%s" %
+                           msg)
+            except:
+                msg = ("Unable to send verification email. Please contact the "
+                       "qiita dvelopers at <a href='mailto:qiita-help"
+                       "@gmail.com'>qiita-help@gmail.com</a>")
+                error_msg = u"?error=" + url_escape(msg)
+                self.redirect(u"/auth/create/" + error_msg)
+                return
             self.redirect(u"/")
         else:
             error_msg = u"?error=" + url_escape(msg)
