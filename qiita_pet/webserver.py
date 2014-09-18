@@ -46,6 +46,7 @@ class Application(tornado.web.Application):
             (r"/auth/verify/(.*)", AuthVerifyHandler),
             (r"/auth/forgot/", ForgotPasswordHandler),
             (r"/auth/reset/(.*)", ChangeForgotPassHandler),
+            (r"/profile/", UserProfileHandler),
             (r"/results/(.*)", tornado.web.StaticFileHandler,
              {"path": RES_PATH}),
             (r"/static/(.*)", tornado.web.StaticFileHandler,

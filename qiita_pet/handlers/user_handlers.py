@@ -11,28 +11,38 @@ class UserProfileHandler(BaseHandler):
     @authenticated
     def get(self):
         user = self.current_user
-        info = User(user).info
-        self.render("user_profile.html", user=user, info=info,
-                    error="")
+        self.render("user_profile.html", user=user, profile=User(user).info,
+                    msg="", passmsg="")
 
     @authenticated
     def post(self):
-        user = self.current_user
-        profile = {}
-        # tuple of colmns available for profile
-        # FORM INPUT NAMES MUST MATCH DB COLUMN NAMES
-        profileinfo = ("name", "affiliation", "address", "phone")
-        for info in profileinfo:
-            profile[info] = self.get_argument(info, None)
+        user = User(self.current_user)
+        action = self.get_argument("action")
+        if action == "profile":
+            profile = {}
+            # tuple of colmns available for profile
+            # FORM INPUT NAMES MUST MATCH DB COLUMN NAMES
+            profileinfo = ("name", "affiliation", "address", "phone")
+            for info in profileinfo:
+                profile[info] = self.get_argument(info, None)
 
-        try:
-            User(user).info = profile
-            msg = "Profile updated successfully"
-        except:
-            msg = "ERROR: profile could not be updated"
-        profile['email'] = user
-        self.render("user_profile.html", user=user, info=profile,
-                    msg=msg)
+            try:
+                user.info = profile
+                msg = "Profile updated successfully"
+            except:
+                msg = "ERROR: profile could not be updated"
+        elif action == "password":
+            profile = user.info
+            oldpass = self.get_argument("oldpass")
+            newpass = self.get_argument("newpass")
+            try:
+                user.change_password(oldpass, newpass)
+            except:
+                passmsg = "ERROR: could not change password"
+            else:
+                passmsg = "Password changed successfully"
+        self.render("user_profile.html", user=user.id, profile=profile,
+                    msg=msg, passmsg="")
 
 
 class ForgotPasswordHandler(BaseHandler):
