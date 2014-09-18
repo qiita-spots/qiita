@@ -67,12 +67,14 @@ class ConfigurationManager(object):
         with open(conf_fp, 'U') as conf_file:
             config.readfp(conf_file)
 
-        _expected_sections = set(['main', 'ipython', 'redis', 'postgres'])
+        _expected_sections = {'main', 'ipython', 'redis', 'postgres',
+                              'smtp'}
         if set(config.sections()) != _expected_sections:
             missing = _expected_sections - set(config.sections())
             raise MissingSectionHeaderError("Missing: %r" % missing)
 
         self._get_main(config)
+        self._get_smtp(config)
         self._get_postgres(config)
         self._get_redis(config)
         self._get_ipython(config)
@@ -124,3 +126,14 @@ class ConfigurationManager(object):
         self.ipyc_demo_n = sec_getint('DEMO_CLUSTER_SIZE')
         self.ipyc_reserved_n = sec_getint('RESERVED_CLUSTER_SIZE')
         self.ipyc_general_n = sec_getint('GENERAL_CLUSTER_SIZE')
+
+    def _get_smtp(self, config):
+        sec_get = partial(config.get, 'smtp')
+        sec_getint = partial(config.getint, 'smtp')
+
+        self.smtp_host = sec_get("HOST")
+        self.smtp_port = sec_getint("PORT")
+        self.smtp_user = sec_get("USER")
+        self.smtp_password = sec_get("PASSWORD")
+        self.smtp_ssl = config.getboolean('smtp', "SSL")
+        self.smtp_email = sec_get('EMAIL')
