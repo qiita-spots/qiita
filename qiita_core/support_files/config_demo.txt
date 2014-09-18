@@ -36,7 +36,7 @@ GENERAL_CLUSTER_SIZE = 1
 # ----------------------------- SMTP settings -----------------------------
 [smtp]
 # The hostname to connect to
-HOST = smtp.hostname.com
+HOST = localhost
 
 # The port to connect to the database
 PORT = 25
@@ -51,7 +51,7 @@ USER =
 PASSWORD =
 
 # The email to have messages sent from
-EMAIL = email@domain.com
+EMAIL = donotrepy@qiita.colorado.edu
 
 # ----------------------------- Redis settings --------------------------------
 [redis]
