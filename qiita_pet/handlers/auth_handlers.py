@@ -41,8 +41,8 @@ class AuthCreateHandler(BaseHandler):
             try:
                 send_email(username, "QIITA: Verify Email Address", "Please "
                            "click the following link to verify email address: "
-                           "http://qiita.colorado.edu/auth/verify/%s" %
-                           msg)
+                           "http://qiita.colorado.edu/auth/verify/%s?email=%s"
+                           % (info['user_verify_code'], url_escape(username)))
             except:
                 msg = ("Unable to send verification email. Please contact the "
                        "qiita developers at <a href='mailto:qiita-help"
