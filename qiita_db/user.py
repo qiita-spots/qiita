@@ -34,7 +34,8 @@ from qiita_core.exceptions import (IncorrectEmailError, IncorrectPasswordError,
                                    IncompetentQiitaDeveloperError)
 from .base import QiitaObject
 from .sql_connection import SQLConnectionHandler
-from .util import create_rand_string, check_table_cols, hash_password
+from .util import (create_rand_string, check_table_cols, hash_password,
+                   convert_from_id, convert_to_id)
 from .exceptions import (QiitaDBColumnError, QiitaDBDuplicateError)
 
 
@@ -64,8 +65,7 @@ class User(QiitaObject):
 
     _table = "qiita_user"
     # The following columns are considered not part of the user info
-    _non_info = {"email", "user_level_id", "password", "user_verify_code",
-                 "pass_reset_code", "pass_reset_timestamp"}
+    _non_info = {"email", "user_level_id", "password"}
 
     def _check_id(self, id_, conn_handler=None):
         r"""Check that the provided ID actually exists in the database
@@ -221,7 +221,7 @@ class User(QiitaObject):
             email address of the user
         code : str
             code to verify
-        code_type : {'create' or 'reset'}
+        code_type : {'create', 'reset'}
 
         Returns
         -------
@@ -244,6 +244,15 @@ class User(QiitaObject):
                " = %s".format(cls._table, column))
         conn_handler = SQLConnectionHandler()
         db_code = conn_handler.execute_fetchone(sql, (email,))[0]
+        print "DB", db_code, "CODE", code, "EQ", db_code == code
+        if db_code == code and code_type == "create":
+            # verify the user
+            level = level = conn_handler.execute_fetchone(
+                "SELECT user_level_id FROM qiita.user_level WHERE "
+                "name = %s", ("user", ))[0]
+            sql = ("UPDATE qiita.{} SET user_level_id = %s WHERE "
+                   "email = %s".format(cls._table))
+            conn_handler.execute(sql, (level, email))
         return db_code == code
 
     # ---properties---
@@ -256,9 +265,9 @@ class User(QiitaObject):
     def level(self):
         """The level of privileges of the user"""
         conn_handler = SQLConnectionHandler()
-        sql = ("SELECT name from qiita.user_level WHERE user_level_id = "
-               "(SELECT user_level_id from qiita.{0} WHERE "
-               "email = %s)".format(self._table))
+        sql = ("SELECT ul.name from qiita.user_level ul JOIN qiita.{0} u ON "
+               "ul.user_level_id = u.user_level_id WHERE "
+               "u.email = %s".format(self._table))
         return conn_handler.execute_fetchone(sql, (self._id, ))[0]
 
     @property
