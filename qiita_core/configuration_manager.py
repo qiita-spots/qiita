@@ -11,8 +11,9 @@ from os.path import join, dirname, abspath, isdir
 from os import environ
 from future import standard_library
 with standard_library.hooks():
-    from configparser import (ConfigParser, NoOptionError,
-                              MissingSectionHeaderError)
+    from configparser import (ConfigParser, NoOptionError)
+
+from .exceptions import MissingConfigSection
 
 
 class ConfigurationManager(object):
@@ -71,7 +72,7 @@ class ConfigurationManager(object):
                               'smtp'}
         if set(config.sections()) != _expected_sections:
             missing = _expected_sections - set(config.sections())
-            raise MissingSectionHeaderError("Missing: %r" % missing)
+            raise MissingConfigSection(', '.join(missing))
 
         self._get_main(config)
         self._get_smtp(config)

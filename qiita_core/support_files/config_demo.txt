@@ -19,7 +19,7 @@ TEST_ENVIRONMENT = TRUE
 UPLOAD_DATA_DIR = /tmp/
 
 # Path to the base directory where the data files are going to be stored, uncomment to set
-# BASE_DATA_DIR = /path/to/base/directory
+BASE_DATA_DIR = 
 
 # ----------------------------- IPython settings ------------------------------
 [ipython]
@@ -71,3 +71,6 @@ HOST = localhost
 
 # The port to connect to the database
 PORT = 5432
+
+# The password to use to connect to the database
+PASSWORD =
