@@ -62,6 +62,7 @@ class QiitaEnvironmentError(QiitaError):
     """Exception for error when dealing with the environment"""
     pass
 
+
 class MissingConfigSection(ConfigParser_Error):
     """Exception when the config file is missing a required section"""
     def __init__(self, section):
