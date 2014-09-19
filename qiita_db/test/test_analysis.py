@@ -48,7 +48,8 @@ class TestAnalysis(TestCase):
 
     def test_create(self):
         new = Analysis.create(User("admin@foo.bar"), "newAnalysis",
-                              "A New Analysis", timestamp="12/12/12 10:10:10.0")
+                              "A New Analysis",
+                              timestamp="12/12/12 10:10:10.0")
         self.assertEqual(new.id, 3)
         sql = "SELECT * FROM qiita.analysis WHERE analysis_id = 3"
         obs = self.conn_handler.execute_fetchall(sql)

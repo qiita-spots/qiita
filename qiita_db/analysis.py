@@ -92,7 +92,8 @@ class Analysis(QiitaStatusObject):
         return [x[0] for x in conn_handler.execute_fetchall(sql, (6,))]
 
     @classmethod
-    def create(cls, owner, name, description, parent=None, timestamp=datetime.now()):
+    def create(cls, owner, name, description, parent=None,
+               timestamp=datetime.now()):
         """Creates a new analysis on the database
 
         Parameters
