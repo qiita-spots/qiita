@@ -14,7 +14,6 @@ from qiita_core.configuration_manager import ConfigurationManager
 from qiita_db.environment_manager import (make_environment,
                                           drop_environment,
                                           clean_test_environment,
-                                          DFLT_BASE_DATA_FOLDER,
                                           DFLT_BASE_WORK_FOLDER,
                                           ENVIRONMENTS)
 from qiita_core.environment_manager import (start_cluster as _start_cluster,
@@ -58,16 +57,16 @@ def stop_cluster(cluster):
 @qiita_env.command()
 @click.option('--env', type=click.Choice(ENVIRONMENTS.keys()), required=True,
               help="The folder where the test data files are stored")
-@click.option('--base_data_folder', default=DFLT_BASE_DATA_FOLDER,
+@click.option('--base_data_folder', default=_CONFIG.base_data_dir,
               help="The folder where the test data files are stored")
 @click.option('--base_work_folder', default=DFLT_BASE_WORK_FOLDER,
               help="The folder where the actively worked on files are stored")
-@click.option('--user', default='postgres',
+@click.option('--user', default=_CONFIG.user,
               help="The database user to connect to the database")
-@click.option('--host', default='localhost',
+@click.option('--host', default=_CONFIG.host,
               help='The host where the database lives')
-@click.option('--load_ontologies',
-              default=False, help='if True will load ontologies')
+@click.option('--load_ontologies/--no-load-ontologies',
+              default=False, help='if True, ontologies will be loaded')
 def make_env(env, base_data_folder, base_work_folder, user, host,
              load_ontologies):
     """Creates the passed environment"""
@@ -78,9 +77,9 @@ def make_env(env, base_data_folder, base_work_folder, user, host,
 @qiita_env.command()
 @click.option('--env', type=click.Choice(ENVIRONMENTS.keys()), required=True,
               help="The folder where the test data files are stored")
-@click.option('--user', default='postgres',
+@click.option('--user', default=_CONFIG.user,
               help="The database user to connect to the database")
-@click.option('--host', default='localhost',
+@click.option('--host', default=_CONFIG.host,
               help='The host where the database lives')
 def drop_env(env, user, host):
     """Drops the passed database environment"""
@@ -88,9 +87,9 @@ def drop_env(env, user, host):
 
 
 @qiita_env.command()
-@click.option('--user', default='postgres',
+@click.option('--user', default=_CONFIG.user,
               help="The database user to connect to the database")
-@click.option('--host', default='localhost',
+@click.option('--host', default=_CONFIG.host,
               help='The host where the database lives')
 def clean_test_env(user, host):
     """Cleans the test database environment.
