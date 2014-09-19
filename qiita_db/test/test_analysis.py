@@ -1,5 +1,6 @@
 from unittest import TestCase, main
 from os.path import exists, join
+from datetime import datetime
 
 from biom import load_table
 
@@ -47,21 +48,24 @@ class TestAnalysis(TestCase):
 
     def test_create(self):
         new = Analysis.create(User("admin@foo.bar"), "newAnalysis",
-                              "A New Analysis")
+                              "A New Analysis", timestamp="12/12/12 10:10:10.0")
         self.assertEqual(new.id, 3)
         sql = "SELECT * FROM qiita.analysis WHERE analysis_id = 3"
         obs = self.conn_handler.execute_fetchall(sql)
         self.assertEqual(obs, [[3, 'admin@foo.bar', 'newAnalysis',
-                                'A New Analysis', 1, None]])
+                                'A New Analysis', 1, None,
+                                datetime(2012, 12, 12, 10, 10, 10)]])
 
     def test_create_parent(self):
         new = Analysis.create(User("admin@foo.bar"), "newAnalysis",
-                              "A New Analysis", Analysis(1))
+                              "A New Analysis", Analysis(1),
+                              timestamp="12/12/12 10:10:10.0")
         self.assertEqual(new.id, 3)
         sql = "SELECT * FROM qiita.analysis WHERE analysis_id = 3"
         obs = self.conn_handler.execute_fetchall(sql)
         self.assertEqual(obs, [[3, 'admin@foo.bar', 'newAnalysis',
-                                'A New Analysis', 1, None]])
+                                'A New Analysis', 1, None,
+                                datetime(2012, 12, 12, 10, 10, 10)]])
 
         sql = "SELECT * FROM qiita.analysis_chain WHERE child_id = 3"
         obs = self.conn_handler.execute_fetchall(sql)
