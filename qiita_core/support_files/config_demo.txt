@@ -13,7 +13,7 @@
 # ------------------------------ Main settings --------------------------------
 [main]
 # Change to FALSE in a production system
-TEST_ENVIRONMENT = TRUE
+TEST_ENVIRONMENT = FALSE
 
 # Download path files
 UPLOAD_DATA_DIR = /tmp/
