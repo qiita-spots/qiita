@@ -93,7 +93,7 @@ class Analysis(QiitaStatusObject):
 
     @classmethod
     def create(cls, owner, name, description, parent=None,
-               timestamp=datetime.now()):
+               timestamp=None):
         """Creates a new analysis on the database
 
         Parameters
@@ -111,6 +111,9 @@ class Analysis(QiitaStatusObject):
         """
         conn_handler = SQLConnectionHandler()
         # TODO after demo: if exists()
+
+        if timestamp is None:
+            timestamp = datetime.now()
 
         # insert analysis information into table with "in construction" status
         sql = ("INSERT INTO qiita.{0} (email, name, description, "
