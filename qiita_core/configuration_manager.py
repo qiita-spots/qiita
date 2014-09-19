@@ -96,14 +96,15 @@ class ConfigurationManager(object):
     def _get_main(self, config):
         """Get the configuration of the main section"""
         self.test_environment = config.getboolean('main', 'TEST_ENVIRONMENT')
-        try:
-            self.base_data_dir = config.get('main', 'BASE_DATA_DIR')
-        except NoOptionError as e:
-            if self.test_environment:
-                self.base_data_dir = join(dirname(abspath(__file__)),
-                                          '../test_data')
-            else:
-                raise e
+        default_base_data_dir = join(dirname(abspath(__file__)),
+                                     '..', 'qiita_db', 'support_files',
+                                     'test_data')
+        self.base_data_dir = config.get('main', 'BASE_DATA_DIR') or \
+            default_base_data_dir
+
+        if not isdir(self.base_data_dir):
+            raise ValueError("The BASE_DATA_DIR (%s) folder doesn't exist" %
+                             self.base_data_dir)
 
         self.upload_data_dir = config.get('main', 'UPLOAD_DATA_DIR')
         if not isdir(self.upload_data_dir):
