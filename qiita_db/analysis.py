@@ -106,6 +106,8 @@ class Analysis(QiitaStatusObject):
             Description of the analysis
         parent : Analysis object, optional
             The analysis this one was forked from
+        timestamp : datetime
+            Timestamp of analysis creation, defauls to now()
         """
         conn_handler = SQLConnectionHandler()
         # TODO after demo: if exists()
@@ -160,7 +162,7 @@ class Analysis(QiitaStatusObject):
 
         Returns
         -------
-        str
+        datetime
             Timestamp of the Analysis
         """
         conn_handler = SQLConnectionHandler()
