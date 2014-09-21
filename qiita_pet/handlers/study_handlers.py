@@ -94,7 +94,6 @@ class PublicStudiesHandler(BaseHandler):
     def get(self):
         self.write(self.render_string('waiting.html'))
         self.flush()
-        u = User(self.current_user)
         public_studies = [Study(s_id) for s_id in Study.get_public()]
         self.render('public_studies.html', user=self.current_user,
                     public_studies=public_studies)
@@ -183,13 +182,12 @@ class CreateStudyHandler(BaseHandler):
         # TODO: Get the portal type from... somewhere
         # TODO: Time series types; right now it's True/False; from emily?
         # TODO: MIXS compliant?  Always true, right?
-        # TODO: Metadata complete: always true, right?
         info = {
             'timeseries_type_id': 1,
             'portal_type_id': 1,
             'lab_person_id': lab_person,
             'principal_investigator_id': PI,
-            'metadata_complete': True,
+            'metadata_complete': False,
             'mixs_compliant': True,
             'study_description': form_data.data['study_description'][0],
             'study_alias': form_data.data['study_alias'][0],

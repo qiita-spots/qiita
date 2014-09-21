@@ -11,8 +11,9 @@ from os.path import join, dirname, abspath, isdir
 from os import environ
 from future import standard_library
 with standard_library.hooks():
-    from configparser import (ConfigParser, NoOptionError,
-                              MissingSectionHeaderError)
+    from configparser import (ConfigParser, NoOptionError)
+
+from .exceptions import MissingConfigSection
 
 
 class ConfigurationManager(object):
@@ -53,6 +54,19 @@ class ConfigurationManager(object):
         The IPython general cluster profile
     ipyc_general_n : int
         The size of the general cluster
+    self.smtp_host : str
+        The SMTP host from which mail will be sent
+    self.smtp_port : int
+        The port on the SMTP host to use
+    self.smtp_user : str
+        The user on the SMTP server that will send mail
+    self.smtp_password : str
+        The password for the user on the SMTP server that will send mail
+    self.smtp_ssl : bool
+        Whether or not SSL is used when connecting to the SMTP server
+    self.smtp_email : str
+        The email address that mail will be sent from when sending mail from
+        the SMTP server
     """
     def __init__(self):
         # If conf_fp is None, we default to the test configuration file
@@ -67,12 +81,14 @@ class ConfigurationManager(object):
         with open(conf_fp, 'U') as conf_file:
             config.readfp(conf_file)
 
-        _expected_sections = set(['main', 'ipython', 'redis', 'postgres'])
+        _expected_sections = {'main', 'ipython', 'redis', 'postgres',
+                              'smtp'}
         if set(config.sections()) != _expected_sections:
             missing = _expected_sections - set(config.sections())
-            raise MissingSectionHeaderError("Missing: %r" % missing)
+            raise MissingConfigSection(', '.join(missing))
 
         self._get_main(config)
+        self._get_smtp(config)
         self._get_postgres(config)
         self._get_redis(config)
         self._get_ipython(config)
@@ -80,14 +96,15 @@ class ConfigurationManager(object):
     def _get_main(self, config):
         """Get the configuration of the main section"""
         self.test_environment = config.getboolean('main', 'TEST_ENVIRONMENT')
-        try:
-            self.base_data_dir = config.get('main', 'BASE_DATA_DIR')
-        except NoOptionError as e:
-            if self.test_environment:
-                self.base_data_dir = join(dirname(abspath(__file__)),
-                                          '../test_data')
-            else:
-                raise e
+        default_base_data_dir = join(dirname(abspath(__file__)),
+                                     '..', 'qiita_db', 'support_files',
+                                     'test_data')
+        self.base_data_dir = config.get('main', 'BASE_DATA_DIR') or \
+            default_base_data_dir
+
+        if not isdir(self.base_data_dir):
+            raise ValueError("The BASE_DATA_DIR (%s) folder doesn't exist" %
+                             self.base_data_dir)
 
         self.upload_data_dir = config.get('main', 'UPLOAD_DATA_DIR')
         if not isdir(self.upload_data_dir):
@@ -124,3 +141,15 @@ class ConfigurationManager(object):
         self.ipyc_demo_n = sec_getint('DEMO_CLUSTER_SIZE')
         self.ipyc_reserved_n = sec_getint('RESERVED_CLUSTER_SIZE')
         self.ipyc_general_n = sec_getint('GENERAL_CLUSTER_SIZE')
+
+    def _get_smtp(self, config):
+        sec_get = partial(config.get, 'smtp')
+        sec_getint = partial(config.getint, 'smtp')
+        sec_getbool = partial(config.getboolean, 'smtp')
+
+        self.smtp_host = sec_get("HOST")
+        self.smtp_port = sec_getint("PORT")
+        self.smtp_user = sec_get("USER")
+        self.smtp_password = sec_get("PASSWORD")
+        self.smtp_ssl = sec_getbool("SSL")
+        self.smtp_email = sec_get('EMAIL')

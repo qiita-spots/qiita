@@ -14,6 +14,7 @@ from datetime import datetime
 
 from qiita_core.util import qiita_test_checker
 from qiita_db.job import Job, Command
+from qiita_db.user import User
 from qiita_db.util import get_db_files_base_dir
 from qiita_db.analysis import Analysis
 from qiita_db.exceptions import (QiitaDBDuplicateError, QiitaDBStatusError,
@@ -160,10 +161,19 @@ class JobTest(TestCase):
             self.assertFalse(exists(join(get_db_files_base_dir(),
                                     "job/2_test_folder")))
         finally:
-            if not exists(join(get_db_files_base_dir(), "job/2_test_folder")):
-                mkdir(join(get_db_files_base_dir(), "job/2_test_folder"))
-                with open(join(get_db_files_base_dir(),
-                          "job/2_test_folder/testfile.txt"), 'w') as f:
+            # put the test data back
+            basedir = get_db_files_base_dir()
+            if not exists(join(basedir, "job/2_test_folder")):
+                mkdir(join(basedir, "job", "2_test_folder"))
+                mkdir(join(basedir, "job", "2_test_folder", "subdir"))
+                with open(join(basedir, "job", "2_test_folder",
+                               "testfile.txt"), 'w') as f:
+                    f.write("DATA")
+                with open(join(basedir, "job", "2_test_folder",
+                               "testres.htm"), 'w') as f:
+                    f.write("DATA")
+                with open(join(basedir, "job", "2_test_folder",
+                               "subdir", "subres.html"), 'w') as f:
                     f.write("DATA")
 
     def test_create(self):
@@ -207,9 +217,15 @@ class JobTest(TestCase):
 
     def test_create_exists_return_existing(self):
         """Makes sure creation doesn't duplicate a job by returning existing"""
+        Analysis.create(User("demo@microbio.me"), "new", "desc")
+        self.conn_handler.execute(
+            "INSERT INTO qiita.analysis_sample (analysis_id, "
+            "processed_data_id, sample_id) VALUES (3,1,'SKB8.640193'), "
+            "(3,1,'SKD8.640184'), (3,1,'SKB7.640196'), (3,1,'SKM9.640192'),"
+            "(3,1,'SKM4.640180')")
         new = Job.create("18S", "Beta Diversity",
                          {"--otu_table_fp": 1, "--mapping_fp": 1},
-                         Analysis(1), return_existing=True)
+                         Analysis(3), return_existing=True)
         self.assertEqual(new.id, 2)
 
     def test_retrieve_datatype(self):
@@ -239,12 +255,14 @@ class JobTest(TestCase):
     def test_retrieve_results(self):
         self.assertEqual(self.job.results, [join("job", "1_job_result.txt")])
 
+    def test_retrieve_results_folder(self):
+        job = Job(2)
+        self.assertEqual(job.results, ['job/2_test_folder/testres.htm',
+                                       'job/2_test_folder/subdir/subres.html'])
+
     def test_retrieve_results_empty(self):
         new = Job.create("18S", "Beta Diversity", {"opt1": 4}, Analysis(1))
         self.assertEqual(new.results, [])
-
-    def test_retrieve_results_dir(self):
-        self.assertEqual(Job(2).results, [join("job", "2_test_folder")])
 
     def test_set_error(self):
         before = datetime.now()

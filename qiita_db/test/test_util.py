@@ -18,7 +18,8 @@ from qiita_db.util import (exists_table, exists_dynamic_table, scrub_data,
                            check_required_columns, convert_to_id,
                            get_table_cols, get_table_cols_w_type,
                            get_filetypes, get_filepath_types, get_count,
-                           check_count, get_processed_params_tables)
+                           check_count, get_processed_params_tables,
+                           params_dict_to_json)
 
 
 @qiita_test_checker()
@@ -31,6 +32,11 @@ class DBUtilTests(TestCase):
             'reprocess', 'study_status_id', 'portal_type_id',
             'timeseries_type_id', 'study_alias', 'study_abstract',
             'principal_investigator_id', 'email', 'number_samples_collected']
+
+    def test_params_dict_to_json(self):
+        params_dict = {'opt1': '1', 'opt2': [2, '3'], 3: 9}
+        exp = '{"3":9,"opt1":"1","opt2":[2,"3"]}'
+        self.assertEqual(params_dict_to_json(params_dict), exp)
 
     def test_check_required_columns(self):
         # Doesn't do anything if correct info passed, only errors if wrong info
