@@ -110,7 +110,7 @@ class ChangeForgotPassHandler(BaseHandler):
             newpass = self.get_argument("newpass")
             changed = user.change_forgot_password(code, newpass)
             if changed:
-                error="Password reset successful. Please log in to continue."
+                error = "Password reset successful. Please log in to continue."
             else:
                 error = "Unable to reset password"
 
