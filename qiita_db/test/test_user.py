@@ -247,7 +247,7 @@ class UserTest(TestCase):
         obspass = self.conn_handler.execute_fetchone(
             "SELECT password FROM qiita.qiita_user WHERE email = %s",
             (self.user.id, ))[0]
-        self.assertTrue(hash_password(passwd, obspass) == obspass)
+        self.assertEqual(hash_password(passwd, obspass), obspass)
 
     def test_change_pass(self):
         self.user._change_pass("newpass")
@@ -270,7 +270,7 @@ class UserTest(TestCase):
                "qiita.qiita_user WHERE email = %s")
         obscode, obstime = self.conn_handler.execute_fetchone(
             sql, ('new@test.bar',))
-        self.assertTrue(len(obscode) == 20)
+        self.assertEqual(len(obscode), 20)
         self.assertTrue(before < obstime < after)
 
     def test_change_forgot_password(self):

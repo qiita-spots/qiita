@@ -2,6 +2,7 @@ from tornado.web import authenticated
 
 from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_db.user import User
+from qiita_db.logger import LogEntry
 from qiita_db.exceptions import QiitaDBUnknownIDError
 from qiita_core.util import send_email
 
@@ -29,16 +30,20 @@ class UserProfileHandler(BaseHandler):
             try:
                 user.info = profile
                 msg = "Profile updated successfully"
-            except:
+            except Exception as e:
                 msg = "ERROR: profile could not be updated"
+                LogEntry.create('Runtime', "Cound not update profile: %s" %
+                                str(e), info={'User': user.id})
         elif action == "password":
             profile = user.info
             oldpass = self.get_argument("oldpass")
             newpass = self.get_argument("newpass")
             try:
                 user.change_password(oldpass, newpass)
-            except:
+            except Exception as e:
                 passmsg = "ERROR: could not change password"
+                LogEntry.create('Runtime', "Cound not change password: %s" %
+                                str(e), info={'User': user.id})
             else:
                 passmsg = "Password changed successfully"
         self.render("user_profile.html", user=user.id, profile=profile,
@@ -54,19 +59,21 @@ class ForgotPasswordHandler(BaseHandler):
         error = ""
         try:
             user = User(self.get_argument("email"))
-            user.generate_reset_code()
-            info = user.info
         except QiitaDBUnknownIDError:
             error = "ERROR: Unknown user."
         else:
+            user.generate_reset_code()
+            info = user.info
             try:
                 send_email(user, "QIITA: Password Reset", "Please go to the "
                            "following URL to reset your password: "
                            "http://qiita.colorado.edu/auth/reset/%s" %
                            info["pass_reset_code"])
                 error = "Password reset. Check your email for the reset code."
-            except:
+            except Exception as e:
                 error = "Unable to send email."
+                LogEntry.create('Runtime', "Unable to send forgot password "
+                                "email" % str(e), info={'User': user.id})
         self.render("lost_pass.html", user=None, error=error)
 
 
@@ -77,18 +84,18 @@ class ChangeForgotPassHandler(BaseHandler):
                         code=code)
 
     def post(self, code):
+        error = ""
         try:
             user = User(self.get_argument("email"))
         except QiitaDBUnknownIDError:
-            self.render("change_lost_pass.html", user=None,
-                        error="Unable to reset password", code=code)
-            return
-        newpass = self.get_argument("newpass")
-        changed = user.change_forgot_password(code, newpass)
-        if changed:
-            self.render("change_lost_pass.html", user=None,
-                        error="Password reset successful. Please log in to "
-                        "continue.", code=code)
+            error = "Unable to reset password"
         else:
-            self.render("change_lost_pass.html", user=None,
-                        error="Unable to reset password", code=code)
+            newpass = self.get_argument("newpass")
+            changed = user.change_forgot_password(code, newpass)
+            if changed:
+                error="Password reset successful. Please log in to continue."
+            else:
+                error = "Unable to reset password"
+
+        self.render("change_lost_pass.html", user=None,
+                    error=error, code=code)

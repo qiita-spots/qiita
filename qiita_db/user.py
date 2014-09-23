@@ -35,8 +35,7 @@ from qiita_core.exceptions import (IncorrectEmailError, IncorrectPasswordError,
                                    IncompetentQiitaDeveloperError)
 from .base import QiitaObject
 from .sql_connection import SQLConnectionHandler
-from .util import (create_rand_string, check_table_cols, hash_password,
-                   convert_from_id, convert_to_id)
+from .util import (create_rand_string, check_table_cols, hash_password)
 from .exceptions import (QiitaDBColumnError, QiitaDBDuplicateError)
 
 
@@ -377,8 +376,9 @@ class User(QiitaObject):
     def generate_reset_code(self):
         """Generates a password reset code for user"""
         reset_code = create_rand_string(20, punct=False)
-        sql = ("UPDATE qiita.{0} SET pass_reset_code = %s, pass_reset"
-               "_timestamp = %s WHERE email = %s".format(self._table))
+        sql = ("UPDATE qiita.{0} SET pass_reset_code = %s, "
+               "pass_reset_timestamp = %s WHERE email = %s".format(
+                   self._table))
         conn_handler = SQLConnectionHandler()
         conn_handler.execute(sql, (reset_code, datetime.now(), self._id))
 
