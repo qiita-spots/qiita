@@ -19,7 +19,6 @@ from __future__ import division
 from collections import defaultdict
 from binascii import crc32
 from os.path import join
-from datetime import datetime
 
 from future.utils import viewitems
 from biom import load_table

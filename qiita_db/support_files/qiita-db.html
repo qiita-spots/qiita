@@ -1570,7 +1570,7 @@ Name of the analysis</title></a>
 <a xlink:href='#analysis.analysis_status_id'><use id='fk' x='348' y='791' xlink:href='#fk'/><title>References analysis_status ( analysis_status_id ) </title></a>
   <a xlink:href='#analysis.pmid'><text x='243' y='817'>pmid</text><title>pmid varchar
 PMID of paper from the analysis</title></a>
-  <a xlink:href='#analysis.timestamp'><text x='243' y='832'>timestamp</text><title>timestamp timestamp default current&#095;timestamp</title></a>
+  <a xlink:href='#analysis.timestamp'><text x='243' y='832'>timestamp</text><title>timestamp timestamptz default current&#095;timestamp</title></a>
 
 </g></svg>
 
@@ -4676,7 +4676,7 @@ Controlled Vocabulary </td>
 	<tr>
 		<td>&nbsp;</td>
 		<td><a name='analysis.timestamp'>timestamp</a></td>
-		<td> timestamp   DEFO current_timestamp </td>
+		<td> timestamptz   DEFO current_timestamp </td>
 		<td>  </td>
 	</tr>
 <tr><th colspan='4'><b>Indexes</b></th></tr>

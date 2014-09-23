@@ -18,7 +18,7 @@
 			<column name="pmid" type="varchar" jt="12" >
 				<comment><![CDATA[PMID of paper from the analysis]]></comment>
 			</column>
-			<column name="timestamp" type="timestamp" jt="93" >
+			<column name="timestamp" type="timestamptz" jt="93" >
 				<defo>current_timestamp</defo>
 			</column>
 			<index name="pk_analysis" unique="PRIMARY_KEY" >
