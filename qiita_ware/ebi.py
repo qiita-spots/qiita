@@ -88,6 +88,7 @@ class EBISubmission(object):
         self.study_title = study_title
         self.study_abstract = study_abstract
         self.investigation_type = investigation_type
+        self.empty_value = empty_value
 
         self.study_xml_fp = None
         self.sample_xml_fp = None
@@ -119,7 +120,7 @@ class EBISubmission(object):
         try:
             result = {
                 str(k): str(v) if v is not None else self.empty_value
-                for k, v in kwargs.iteritems()}
+                for k, v in kwargs_dict.iteritems()}
         except ValueError:
             raise InvalidMetadataError("All additional metadata passed via "
                                        "kwargs to the EBISubmission "
