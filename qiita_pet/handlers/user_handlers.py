@@ -1,4 +1,6 @@
 from tornado.web import authenticated
+from future.utils import viewitems
+from wtforms import Form, StringField, validators
 
 from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_db.user import User
@@ -7,26 +9,40 @@ from qiita_db.exceptions import QiitaDBUnknownIDError
 from qiita_core.util import send_email
 
 
+class UserProfile(Form):
+    name = StringField("Name", [validators.required()])
+    affiliation = StringField("Affiliation")
+    address = StringField("Address")
+    phone = StringField("Phone")
+
+
 class UserProfileHandler(BaseHandler):
     """Displays user profile page and handles profile updates"""
     @authenticated
     def get(self):
         user = self.current_user
-        self.render("user_profile.html", user=user, profile=User(user).info,
-                    msg="", passmsg="")
+        profile = UserProfile()
+        profile.process(data=User(user).info)
+        self.render("user_profile.html", user=user, profile=profile, msg="",
+                    passmsg="")
 
     @authenticated
     def post(self):
+        passmsg = ""
+        msg = ""
         user = User(self.current_user)
         action = self.get_argument("action")
         if action == "profile":
-            profile = {}
             # tuple of colmns available for profile
             # FORM INPUT NAMES MUST MATCH DB COLUMN NAMES
-            profileinfo = ("name", "affiliation", "address", "phone")
-            for info in profileinfo:
-                profile[info] = self.get_argument(info, None)
+            form_data = UserProfile()
+            form_data.process(data=self.request.arguments)
+            profile = {name: data[0] for name, data in
+                       viewitems(form_data.data)}
 
+            # Turn default value as list into default strings
+            for field in form_data:
+                field.data = field.data[0]
             try:
                 user.info = profile
                 msg = "Profile updated successfully"
@@ -34,6 +50,7 @@ class UserProfileHandler(BaseHandler):
                 msg = "ERROR: profile could not be updated"
                 LogEntry.create('Runtime', "Cound not update profile: %s" %
                                 str(e), info={'User': user.id})
+
         elif action == "password":
             profile = user.info
             oldpass = self.get_argument("oldpass")
@@ -46,8 +63,8 @@ class UserProfileHandler(BaseHandler):
                                 str(e), info={'User': user.id})
             else:
                 passmsg = "Password changed successfully"
-        self.render("user_profile.html", user=user.id, profile=profile,
-                    msg=msg, passmsg="")
+        self.render("user_profile.html", user=user.id, profile=form_data,
+                    msg=msg, passmsg=passmsg)
 
 
 class ForgotPasswordHandler(BaseHandler):
