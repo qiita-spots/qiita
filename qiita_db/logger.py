@@ -65,9 +65,11 @@ class LogEntry(QiitaObject):
             list of the log entries
         """
         conn_handler = SQLConnectionHandler()
-        sql = ("SELECT logging_id FROM qiita.{0} ORDER BY logging_id DESC, "
+        sql = ("SELECT logging_id FROM qiita.{0} ORDER BY logging_id DESC "
                "LIMIT %s".format(cls._table))
         ids = conn_handler.execute_fetchone(sql, (numrecords, ))
+        if ids is None:
+            return []
         return [cls(i) for i in ids]
 
     @classmethod
