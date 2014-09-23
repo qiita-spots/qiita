@@ -46,22 +46,34 @@ class TestAnalysis(TestCase):
         self.assertEqual(Analysis.get_public(), [1])
 
     def test_create(self):
+        sql = "SELECT EXTRACT(EPOCH FROM NOW())"
+        time1 = float(self.conn_handler.execute_fetchall(sql)[0][0])
+
         new = Analysis.create(User("admin@foo.bar"), "newAnalysis",
                               "A New Analysis")
         self.assertEqual(new.id, 3)
-        sql = "SELECT * FROM qiita.analysis WHERE analysis_id = 3"
+        sql = ("SELECT analysis_id, email, name, description, "
+               "analysis_status_id, pmid, EXTRACT(EPOCH FROM timestamp) "
+               "FROM qiita.analysis WHERE analysis_id = 3")
         obs = self.conn_handler.execute_fetchall(sql)
-        self.assertEqual(obs, [[3, 'admin@foo.bar', 'newAnalysis',
-                                'A New Analysis', 1, None]])
+        self.assertEqual(obs[0][:-1], [3, 'admin@foo.bar', 'newAnalysis',
+                                'A New Analysis', 1, None])
+        self.assertTrue(time1 < float(obs[0][-1]))
 
     def test_create_parent(self):
+        sql = "SELECT EXTRACT(EPOCH FROM NOW())"
+        time1 = float(self.conn_handler.execute_fetchall(sql)[0][0])
+
         new = Analysis.create(User("admin@foo.bar"), "newAnalysis",
                               "A New Analysis", Analysis(1))
         self.assertEqual(new.id, 3)
-        sql = "SELECT * FROM qiita.analysis WHERE analysis_id = 3"
+        sql = ("SELECT analysis_id, email, name, description, "
+               "analysis_status_id, pmid, EXTRACT(EPOCH FROM timestamp) "
+               "FROM qiita.analysis WHERE analysis_id = 3")
         obs = self.conn_handler.execute_fetchall(sql)
-        self.assertEqual(obs, [[3, 'admin@foo.bar', 'newAnalysis',
-                                'A New Analysis', 1, None]])
+        self.assertEqual(obs[0][:-1], [3, 'admin@foo.bar', 'newAnalysis',
+                                'A New Analysis', 1, None])
+        self.assertTrue(time1 < float(obs[0][-1]))
 
         sql = "SELECT * FROM qiita.analysis_chain WHERE child_id = 3"
         obs = self.conn_handler.execute_fetchall(sql)
