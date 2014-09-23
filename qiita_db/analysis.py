@@ -158,7 +158,7 @@ class Analysis(QiitaStatusObject):
 
         Returns
         -------
-        str
+        datetime
             Timestamp of the Analysis
         """
         conn_handler = SQLConnectionHandler()
