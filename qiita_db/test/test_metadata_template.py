@@ -91,9 +91,9 @@ class TestSample(TestCase):
                                'water_content_soil', 'elevation', 'temp',
                                'tot_nitro', 'samp_salinity', 'altitude',
                                'env_biome', 'country', 'ph', 'anonymized_name',
-                               'tot_org_carb', 'longitude',
+                               'tot_org_carb',
                                'description_duplicate', 'env_feature',
-                               'latitude'}
+                               'latitude', 'longitude'}
 
     def test_init_unknown_error(self):
         """Init raises an error if the sample id is not found in the template
@@ -208,8 +208,9 @@ class TestSample(TestCase):
                '64.6 sand, 17.6 silt, 17.8 clay', '1118232', 0.15, '3483',
                'root metagenome', 0.164, 114, 15, 1.41, 7.15, 0,
                'ENVO:Temperate grasslands, savannas, and shrubland biome',
-               'GAZ:United States of America', 6.94, 'SKB8', 5, -117.241111,
-               'Burmese root', 'ENVO:plant-associated habitat', 33.193611}
+               'GAZ:United States of America', 6.94, 'SKB8', 5,
+               'Burmese root', 'ENVO:plant-associated habitat', 74.0894932572,
+               65.3283470202}
         self.assertEqual(set(obs), exp)
 
     def test_items(self):
@@ -232,10 +233,10 @@ class TestSample(TestCase):
                 'ENVO:Temperate grasslands, savannas, and shrubland biome'),
                ('country', 'GAZ:United States of America'), ('ph', 6.94),
                ('anonymized_name', 'SKB8'), ('tot_org_carb', 5),
-               ('longitude', -117.241111),
                ('description_duplicate', 'Burmese root'),
                ('env_feature', 'ENVO:plant-associated habitat'),
-               ('latitude', 33.193611)}
+               ('latitude', 74.0894932572),
+               ('longitude', 65.3283470202)}
         self.assertEqual(set(obs), exp)
 
     def test_get(self):
@@ -483,7 +484,9 @@ class TestSampleTemplate(TestCase):
                         datetime(2014, 5, 29, 12, 24, 51),
                         'host_subject_id': 'NotIdentified',
                         'Description': 'Test Sample 1',
-                        'str_column': 'Value for sample 1'},
+                        'str_column': 'Value for sample 1',
+                        'latitude': 42.42,
+                        'longitude': 41.41},
             'Sample2': {'physical_location': 'location1',
                         'has_physical_specimen': True,
                         'has_extracted_data': True,
@@ -493,7 +496,9 @@ class TestSampleTemplate(TestCase):
                         datetime(2014, 5, 29, 12, 24, 51),
                         'host_subject_id': 'NotIdentified',
                         'Description': 'Test Sample 2',
-                        'str_column': 'Value for sample 2'},
+                        'str_column': 'Value for sample 2',
+                        'latitude': 4.2,
+                        'longitude': 1.1},
             'Sample3': {'physical_location': 'location1',
                         'has_physical_specimen': True,
                         'has_extracted_data': True,
@@ -503,7 +508,9 @@ class TestSampleTemplate(TestCase):
                         datetime(2014, 5, 29, 12, 24, 51),
                         'host_subject_id': 'NotIdentified',
                         'Description': 'Test Sample 3',
-                        'str_column': 'Value for sample 3'}
+                        'str_column': 'Value for sample 3',
+                        'latitude': 4.8,
+                        'longitude': 4.41},
             }
         self.metadata = pd.DataFrame.from_dict(metadata_dict, orient='index')
 
@@ -583,13 +590,13 @@ class TestSampleTemplate(TestCase):
         # collection_timestamp host_subject_id description
         exp = [[2, "Sample1", "location1", True, True, "type1", 1,
                 datetime(2014, 5, 29, 12, 24, 51), "NotIdentified",
-                "Test Sample 1"],
+                "Test Sample 1", 42.42, 41.41],
                [2, "Sample2", "location1", True, True, "type1", 1,
                 datetime(2014, 5, 29, 12, 24, 51), "NotIdentified",
-                "Test Sample 2"],
+                "Test Sample 2", 4.2, 1.1],
                [2, "Sample3", "location1", True, True, "type1", 1,
                 datetime(2014, 5, 29, 12, 24, 51), "NotIdentified",
-                "Test Sample 3"]]
+                "Test Sample 3", 4.8, 4.41]]
         self.assertEqual(obs, exp)
 
         # The relevant rows have been added to the study_sample_columns
@@ -1039,13 +1046,17 @@ class TestPrepTemplate(TestCase):
 
 EXP_SAMPLE_TEMPLATE = (
     "#SampleID\tcollection_timestamp\tdescription\thas_extracted_data\t"
-    "has_physical_specimen\thost_subject_id\tphysical_location\t"
-    "required_sample_info_status_id\tsample_type\tstr_column\nSample1\t"
-    "2014-05-29 12:24:51\tTest Sample 1\tTrue\tTrue\tNotIdentified\tlocation1"
-    "\t1\ttype1\tValue for sample 1\nSample2\t2014-05-29 12:24:51\t"
-    "Test Sample 2\tTrue\tTrue\tNotIdentified\tlocation1\t1\ttype1\t"
-    "Value for sample 2\nSample3\t2014-05-29 12:24:51\tTest Sample 3\tTrue\t"
-    "True\tNotIdentified\tlocation1\t1\ttype1\tValue for sample 3\n")
+    "has_physical_specimen\thost_subject_id\tlatitude\tlongitude\t"
+    "physical_location\trequired_sample_info_status_id\tsample_type\t"
+    "str_column\n"
+    "Sample1\t2014-05-29 12:24:51\tTest Sample 1\tTrue\tTrue\tNotIdentified\t"
+    "42.42\t41.41\tlocation1\t1\ttype1\tValue for sample 1\n"
+    "Sample2\t2014-05-29 12:24:51\t"
+    "Test Sample 2\tTrue\tTrue\tNotIdentified\t4.2\t1.1\tlocation1\t1\t"
+    "type1\tValue for sample 2\n"
+    "Sample3\t2014-05-29 12:24:51\tTest Sample 3\tTrue\t"
+    "True\tNotIdentified\t4.8\t4.41\tlocation1\t1\ttype1\t"
+    "Value for sample 3\n")
 
 EXP_PREP_TEMPLATE = (
     "#SampleID\tcenter_name\tcenter_project_name\tdata_type_id\t"

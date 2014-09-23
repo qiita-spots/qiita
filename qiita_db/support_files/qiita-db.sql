@@ -766,6 +766,8 @@ CREATE TABLE qiita.required_sample_info (
 	collection_timestamp timestamp  NOT NULL,
 	host_subject_id      varchar  NOT NULL,
 	description          varchar  NOT NULL,
+	latitude             float8  NOT NULL,
+	longitude            float8  NOT NULL,
 	CONSTRAINT idx_common_sample_information PRIMARY KEY ( study_id, sample_id ),
 	CONSTRAINT pk_required_sample_info UNIQUE ( sample_id ) ,
 	CONSTRAINT fk_required_sample_info_study FOREIGN KEY ( study_id ) REFERENCES qiita.study( study_id )    ,
@@ -785,6 +787,10 @@ COMMENT ON COLUMN qiita.required_sample_info.has_physical_specimen IS 'Whether w
 COMMENT ON COLUMN qiita.required_sample_info.sample_type IS 'Controlled vocabulary of sample types';
 
 COMMENT ON COLUMN qiita.required_sample_info.required_sample_info_status_id IS 'What step of the pipeline the samples are in';
+
+COMMENT ON COLUMN qiita.required_sample_info.latitude IS 'Latitude of the collection site';
+
+COMMENT ON COLUMN qiita.required_sample_info.longitude IS 'Longitude of the collection site';
 
 CREATE TABLE qiita.analysis_job ( 
 	analysis_id          bigint  NOT NULL,

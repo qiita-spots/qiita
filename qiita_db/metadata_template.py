@@ -585,6 +585,8 @@ class MetadataTemplate(QiitaObject):
             The obj to which the metadata template belongs to. Study in case
             of SampleTemplate and RawData in case of PrepTemplate
         """
+        cls._check_subclass()
+
         # Check that we don't have a MetadataTemplate for obj
         if cls.exists(obj):
             raise QiitaDBDuplicateError(cls.__name__, 'id: %d' % obj.id)

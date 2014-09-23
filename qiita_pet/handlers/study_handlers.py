@@ -182,13 +182,12 @@ class CreateStudyHandler(BaseHandler):
         # TODO: Get the portal type from... somewhere
         # TODO: Time series types; right now it's True/False; from emily?
         # TODO: MIXS compliant?  Always true, right?
-        # TODO: Metadata complete: always true, right?
         info = {
             'timeseries_type_id': 1,
             'portal_type_id': 1,
             'lab_person_id': lab_person,
             'principal_investigator_id': PI,
-            'metadata_complete': True,
+            'metadata_complete': False,
             'mixs_compliant': True,
             'study_description': form_data.data['study_description'][0],
             'study_alias': form_data.data['study_alias'][0],
