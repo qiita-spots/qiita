@@ -441,27 +441,7 @@ table {
 	study_sample_columns references study ( study_id )</title>
 </path>
 <text x='1732' y='280' transform='rotate(0 1732,280)' title='Foreign Key fk_study_mapping_columns_study
-	study_sample_columns references study ( study_id )' style='fill:#a1a0a0;'>study_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1185 450 L 1185,472 Q 1185,480 1192,480 L 1215,480' >
-	<title>Foreign Key fk_required_prep_info_raw_data
-	common_prep_info references raw_data ( raw_data_id )</title>
-</path>
-<text x='1198' y='450' transform='rotate(90 1198,450)' title='Foreign Key fk_required_prep_info_raw_data
-	common_prep_info references raw_data ( raw_data_id )' style='fill:#a1a0a0;'>raw_data_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1125 270 L 1125,247 Q 1125,240 1132,240 L 1140,240' >
-	<title>Foreign Key fk_required_prep_info_emp_status
-	common_prep_info references emp_status ( emp_status_id )</title>
-</path>
-<text x='1127' y='265' transform='rotate(270 1127,265)' title='Foreign Key fk_required_prep_info_emp_status
-	common_prep_info references emp_status ( emp_status_id )' style='fill:#a1a0a0;'>emp_status_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1200 300 L 1335,300' >
-	<title>Foreign Key fk_required_prep_info
-	common_prep_info references required_sample_info ( sample_id )</title>
-</path>
-<text x='1207' y='295' transform='rotate(0 1207,295)' title='Foreign Key fk_required_prep_info
-	common_prep_info references required_sample_info ( sample_id )' style='fill:#a1a0a0;'>sample_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1005 420 L 937,420 Q 930,420 930,427 L 930,1012 Q 930,1020 922,1020 L 795,1020' >
-	<title>Foreign Key fk_required_prep_info_0
-	common_prep_info references data_type ( data_type_id )</title>
-</path>
-<text x='939' y='415' transform='rotate(0 939,415)' title='Foreign Key fk_required_prep_info_0
-	common_prep_info references data_type ( data_type_id )' style='fill:#a1a0a0;'>data_type_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1365 465 L 1365,487 Q 1365,495 1357,495 L 1335,495' >
+	study_sample_columns references study ( study_id )' style='fill:#a1a0a0;'>study_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1365 465 L 1365,487 Q 1365,495 1357,495 L 1335,495' >
 	<title>Foreign Key fk_prep_columns_raw_data
 	raw_data_prep_columns references raw_data ( raw_data_id )</title>
 </path>
@@ -476,7 +456,7 @@ table {
 	raw_filepath references raw_data ( raw_data_id )</title>
 </path>
 <text x='1132' y='490' transform='rotate(0 1132,490)' title='Foreign Key fk_raw_filepath_0
-	raw_filepath references raw_data ( raw_data_id )' style='fill:#a1a0a0;'>raw_data_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1395 840 L 1402,840 Q 1410,840 1410,832 L 1410,802 Q 1410,795 1402,795 L 1395,795' >
+	raw_filepath references raw_data ( raw_data_id )' style='fill:#a1a0a0;'>raw_data_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1395 840 L 1402,840 Q 1410,840 1410,832 L 1410,832 Q 1410,825 1402,825 L 1395,825' >
 	<title>Foreign Key fk_preprocessed_processed_data
 	preprocessed_processed_data references preprocessed_data ( preprocessed_data_id )</title>
 </path>
@@ -541,12 +521,7 @@ table {
 	command_data_type references data_type ( data_type_id )</title>
 </path>
 <text x='532' y='1165' transform='rotate(0 532,1165)' title='Foreign Key fk_command_data_type_0
-	command_data_type references data_type ( data_type_id )' style='fill:#a1a0a0;'>data_type_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1185 780 L 982,780 Q 975,780 975,787 L 975,967 Q 975,975 967,975 L 787,975 Q 780,975 780,982 L 780,990' >
-	<title>Foreign Key fk_preprocessed_data
-	preprocessed_data references data_type ( data_type_id )</title>
-</path>
-<text x='1119' y='775' transform='rotate(0 1119,775)' title='Foreign Key fk_preprocessed_data
-	preprocessed_data references data_type ( data_type_id )' style='fill:#a1a0a0;'>data_type_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1200 1020 L 952,1020 Q 945,1020 945,1027 L 945,1027 Q 945,1035 937,1035 L 795,1035' >
+	command_data_type references data_type ( data_type_id )' style='fill:#a1a0a0;'>data_type_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1200 1020 L 952,1020 Q 945,1020 945,1027 L 945,1027 Q 945,1035 937,1035 L 795,1035' >
 	<title>Foreign Key fk_processed_data
 	processed_data references data_type ( data_type_id )</title>
 </path>
@@ -656,7 +631,32 @@ table {
 	analysis references analysis_status ( analysis_status_id )</title>
 </path>
 <text x='114' y='775' transform='rotate(0 114,775)' title='Foreign Key fk_analysis_analysis_status
-	analysis references analysis_status ( analysis_status_id )' style='fill:#a1a0a0;'>analysis_status_id</text><!-- ============= Table 'controlled_vocab_values' ============= -->
+	analysis references analysis_status ( analysis_status_id )' style='fill:#a1a0a0;'>analysis_status_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1170 405 L 1192,405 Q 1200,405 1200,412 L 1200,472 Q 1200,480 1207,480 L 1215,480' >
+	<title>Foreign Key fk_required_prep_info_raw_data
+	common_prep_info references raw_data ( raw_data_id )</title>
+</path>
+<text x='1177' y='400' transform='rotate(0 1177,400)' title='Foreign Key fk_required_prep_info_raw_data
+	common_prep_info references raw_data ( raw_data_id )' style='fill:#a1a0a0;'>raw_data_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1125 270 L 1125,247 Q 1125,240 1132,240 L 1140,240' >
+	<title>Foreign Key fk_required_prep_info_emp_status
+	common_prep_info references emp_status ( emp_status_id )</title>
+</path>
+<text x='1127' y='265' transform='rotate(270 1127,265)' title='Foreign Key fk_required_prep_info_emp_status
+	common_prep_info references emp_status ( emp_status_id )' style='fill:#a1a0a0;'>emp_status_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1170 300 L 1335,300' >
+	<title>Foreign Key fk_required_prep_info
+	common_prep_info references required_sample_info ( sample_id )</title>
+</path>
+<text x='1177' y='295' transform='rotate(0 1177,295)' title='Foreign Key fk_required_prep_info
+	common_prep_info references required_sample_info ( sample_id )' style='fill:#a1a0a0;'>sample_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1005 390 L 937,390 Q 930,390 930,397 L 930,1012 Q 930,1020 922,1020 L 795,1020' >
+	<title>Foreign Key fk_required_prep_info_0
+	common_prep_info references data_type ( data_type_id )</title>
+</path>
+<text x='939' y='385' transform='rotate(0 939,385)' title='Foreign Key fk_required_prep_info_0
+	common_prep_info references data_type ( data_type_id )' style='fill:#a1a0a0;'>data_type_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1185 810 L 982,810 Q 975,810 975,817 L 975,967 Q 975,975 967,975 L 787,975 Q 780,975 780,982 L 780,990' >
+	<title>Foreign Key fk_preprocessed_data
+	preprocessed_data references data_type ( data_type_id )</title>
+</path>
+<text x='1119' y='805' transform='rotate(0 1119,805)' title='Foreign Key fk_preprocessed_data
+	preprocessed_data references data_type ( data_type_id )' style='fill:#a1a0a0;'>data_type_id</text><!-- ============= Table 'controlled_vocab_values' ============= -->
 <rect class='table' x='45' y='1523' width='150' height='120' rx='7' ry='7' />
 <path d='M 45.50 1549.50 L 45.50 1530.50 Q 45.50 1523.50 52.50 1523.50 L 187.50 1523.50 Q 194.50 1523.50 194.50 1530.50 L 194.50 1549.50 L45.50 1549.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
 <a xlink:href='#controlled_vocab_values'><text x='53' y='1537' class='tableTitle'>controlled_vocab_values</text><title>Table qiita.controlled_vocab_values</title></a>
@@ -1048,27 +1048,6 @@ Information on how raw data y was prepared &#040;prep template&#041;Linked by y 
   <a xlink:href='#prep_y.data'><text x='1038' y='247'>data</text><title>data bigint
 STUFFFFF</title></a>
 
-<!-- ============= Table 'common_prep_info' ============= -->
-<rect class='table' x='1020' y='278' width='180' height='165' rx='7' ry='7' />
-<path d='M 1020.50 304.50 L 1020.50 285.50 Q 1020.50 278.50 1027.50 278.50 L 1192.50 278.50 Q 1199.50 278.50 1199.50 285.50 L 1199.50 304.50 L1020.50 304.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
-<a xlink:href='#common_prep_info'><text x='1057' y='292' class='tableTitle'>common_prep_info</text><title>Table qiita.common_prep_info</title></a>
-  <use id='nn' x='1022' y='312' xlink:href='#nn'/><a xlink:href='#common_prep_info.raw_data_id'><use id='pk' x='1022' y='311' xlink:href='#pk'/><title>Index  ( raw_data_id ) Primary Key  ( raw_data_id, sample_id ) </title></a>
-<a xlink:href='#common_prep_info.raw_data_id'><text x='1038' y='322'>raw_data_id</text><title>raw_data_id bigserial not null</title></a>
-<a xlink:href='#common_prep_info.raw_data_id'><use id='fk' x='1188' y='311' xlink:href='#fk'/><title>References raw_data ( raw_data_id ) </title></a>
-  <use id='nn' x='1022' y='327' xlink:href='#nn'/><a xlink:href='#common_prep_info.sample_id'><use id='pk' x='1022' y='326' xlink:href='#pk'/><title>Primary Key  ( raw_data_id, sample_id ) Index  ( sample_id ) </title></a>
-<a xlink:href='#common_prep_info.sample_id'><text x='1038' y='337'>sample_id</text><title>sample_id varchar not null</title></a>
-<a xlink:href='#common_prep_info.sample_id'><use id='fk' x='1188' y='326' xlink:href='#fk'/><title>References required_sample_info ( sample_id ) </title></a>
-  <a xlink:href='#common_prep_info.center_name'><text x='1038' y='352'>center_name</text><title>center_name varchar</title></a>
-  <a xlink:href='#common_prep_info.center_project_name'><text x='1038' y='367'>center_project_name</text><title>center_project_name varchar</title></a>
-  <a xlink:href='#common_prep_info.ebi_submission_accession'><text x='1038' y='382'>ebi_submission_accession</text><title>ebi_submission_accession varchar</title></a>
-  <a xlink:href='#common_prep_info.ebi_study_accession'><text x='1038' y='397'>ebi_study_accession</text><title>ebi_study_accession varchar</title></a>
-  <use id='nn' x='1022' y='402' xlink:href='#nn'/><a xlink:href='#common_prep_info.emp_status_id'><use id='idx' x='1022' y='401' xlink:href='#idx'/><title>Index  ( emp_status_id ) </title></a>
-<a xlink:href='#common_prep_info.emp_status_id'><text x='1038' y='412'>emp_status_id</text><title>emp_status_id bigint not null</title></a>
-<a xlink:href='#common_prep_info.emp_status_id'><use id='fk' x='1188' y='401' xlink:href='#fk'/><title>References emp_status ( emp_status_id ) </title></a>
-  <use id='nn' x='1022' y='417' xlink:href='#nn'/><a xlink:href='#common_prep_info.data_type_id'><use id='idx' x='1022' y='416' xlink:href='#idx'/><title>Index  ( data_type_id ) </title></a>
-<a xlink:href='#common_prep_info.data_type_id'><text x='1038' y='427'>data_type_id</text><title>data_type_id bigint not null</title></a>
-<a xlink:href='#common_prep_info.data_type_id'><use id='fk' x='1188' y='416' xlink:href='#fk'/><title>References data_type ( data_type_id ) </title></a>
-
 <!-- ============= Table 'emp_status' ============= -->
 <rect class='table' x='1155' y='188' width='120' height='75' rx='7' ry='7' />
 <path d='M 1155.50 214.50 L 1155.50 195.50 Q 1155.50 188.50 1162.50 188.50 L 1267.50 188.50 Q 1274.50 188.50 1274.50 195.50 L 1274.50 214.50 L1155.50 214.50 ' style='fill:url(#tableHeaderGradient1); stroke:none;' />
@@ -1256,24 +1235,6 @@ Parameters used for processing sequence data&#046;</title></a>
   <use id='nn' x='392' y='1197' xlink:href='#nn'/><a xlink:href='#command_data_type.data_type_id'><use id='pk' x='392' y='1196' xlink:href='#pk'/><title>Primary Key  ( command_id, data_type_id ) Index  ( data_type_id ) </title></a>
 <a xlink:href='#command_data_type.data_type_id'><text x='408' y='1207'>data_type_id</text><title>data_type_id bigint not null</title></a>
 <a xlink:href='#command_data_type.data_type_id'><use id='fk' x='513' y='1196' xlink:href='#fk'/><title>References data_type ( data_type_id ) </title></a>
-
-<!-- ============= Table 'preprocessed_data' ============= -->
-<rect class='table' x='1200' y='683' width='195' height='120' rx='7' ry='7' />
-<path d='M 1200.50 709.50 L 1200.50 690.50 Q 1200.50 683.50 1207.50 683.50 L 1387.50 683.50 Q 1394.50 683.50 1394.50 690.50 L 1394.50 709.50 L1200.50 709.50 ' style='fill:url(#tableHeaderGradient1); stroke:none;' />
-<a xlink:href='#preprocessed_data'><text x='1246' y='697' class='tableTitle'>preprocessed_data</text><title>Table qiita.preprocessed_data</title></a>
-  <use id='nn' x='1202' y='717' xlink:href='#nn'/><a xlink:href='#preprocessed_data.preprocessed_data_id'><use id='pk' x='1202' y='716' xlink:href='#pk'/><title>Primary Key  ( preprocessed_data_id ) </title></a>
-<a xlink:href='#preprocessed_data.preprocessed_data_id'><text x='1218' y='727'>preprocessed_data_id</text><title>preprocessed_data_id bigserial not null</title></a>
-<a xlink:href='#preprocessed_data.preprocessed_data_id'><use id='ref' x='1383' y='716' xlink:href='#ref'/><title>Referred by preprocessed_filepath ( preprocessed_data_id ) 
-Referred by preprocessed_processed_data ( preprocessed_data_id ) 
-Referred by raw_preprocessed_data ( preprocessed_data_id ) 
-Referred by study_preprocessed_data ( preprocessed_data_id ) </title></a>
-  <use id='nn' x='1202' y='732' xlink:href='#nn'/><a xlink:href='#preprocessed_data.preprocessed_params_table'><text x='1218' y='742'>preprocessed_params_table</text><title>preprocessed_params_table varchar not null
-Name of table holding the params</title></a>
-  <use id='nn' x='1202' y='747' xlink:href='#nn'/><a xlink:href='#preprocessed_data.preprocessed_params_id'><text x='1218' y='757'>preprocessed_params_id</text><title>preprocessed_params_id bigint not null</title></a>
-  <use id='nn' x='1202' y='762' xlink:href='#nn'/><a xlink:href='#preprocessed_data.submitted_to_insdc'><text x='1218' y='772'>submitted_to_insdc</text><title>submitted_to_insdc bool not null</title></a>
-  <use id='nn' x='1202' y='777' xlink:href='#nn'/><a xlink:href='#preprocessed_data.data_type_id'><use id='idx' x='1202' y='776' xlink:href='#idx'/><title>Index  ( data_type_id ) </title></a>
-<a xlink:href='#preprocessed_data.data_type_id'><text x='1218' y='787'>data_type_id</text><title>data_type_id bigint not null</title></a>
-<a xlink:href='#preprocessed_data.data_type_id'><use id='fk' x='1383' y='776' xlink:href='#fk'/><title>References data_type ( data_type_id ) </title></a>
 
 <!-- ============= Table 'processed_data' ============= -->
 <rect class='table' x='1215' y='923' width='165' height='120' rx='7' ry='7' />
@@ -1571,6 +1532,45 @@ Name of the analysis</title></a>
   <a xlink:href='#analysis.pmid'><text x='243' y='817'>pmid</text><title>pmid varchar
 PMID of paper from the analysis</title></a>
   <a xlink:href='#analysis.timestamp'><text x='243' y='832'>timestamp</text><title>timestamp timestamptz default current&#095;timestamp</title></a>
+
+<!-- ============= Table 'common_prep_info' ============= -->
+<rect class='table' x='1020' y='278' width='150' height='135' rx='7' ry='7' />
+<path d='M 1020.50 304.50 L 1020.50 285.50 Q 1020.50 278.50 1027.50 278.50 L 1162.50 278.50 Q 1169.50 278.50 1169.50 285.50 L 1169.50 304.50 L1020.50 304.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
+<a xlink:href='#common_prep_info'><text x='1042' y='292' class='tableTitle'>common_prep_info</text><title>Table qiita.common_prep_info</title></a>
+  <use id='nn' x='1022' y='312' xlink:href='#nn'/><a xlink:href='#common_prep_info.raw_data_id'><use id='pk' x='1022' y='311' xlink:href='#pk'/><title>Index  ( raw_data_id ) Primary Key  ( raw_data_id, sample_id ) </title></a>
+<a xlink:href='#common_prep_info.raw_data_id'><text x='1038' y='322'>raw_data_id</text><title>raw_data_id bigserial not null</title></a>
+<a xlink:href='#common_prep_info.raw_data_id'><use id='fk' x='1158' y='311' xlink:href='#fk'/><title>References raw_data ( raw_data_id ) </title></a>
+  <use id='nn' x='1022' y='327' xlink:href='#nn'/><a xlink:href='#common_prep_info.sample_id'><use id='pk' x='1022' y='326' xlink:href='#pk'/><title>Primary Key  ( raw_data_id, sample_id ) Index  ( sample_id ) </title></a>
+<a xlink:href='#common_prep_info.sample_id'><text x='1038' y='337'>sample_id</text><title>sample_id varchar not null</title></a>
+<a xlink:href='#common_prep_info.sample_id'><use id='fk' x='1158' y='326' xlink:href='#fk'/><title>References required_sample_info ( sample_id ) </title></a>
+  <a xlink:href='#common_prep_info.center_name'><text x='1038' y='352'>center_name</text><title>center_name varchar</title></a>
+  <a xlink:href='#common_prep_info.center_project_name'><text x='1038' y='367'>center_project_name</text><title>center_project_name varchar</title></a>
+  <use id='nn' x='1022' y='372' xlink:href='#nn'/><a xlink:href='#common_prep_info.emp_status_id'><use id='idx' x='1022' y='371' xlink:href='#idx'/><title>Index  ( emp_status_id ) </title></a>
+<a xlink:href='#common_prep_info.emp_status_id'><text x='1038' y='382'>emp_status_id</text><title>emp_status_id bigint not null</title></a>
+<a xlink:href='#common_prep_info.emp_status_id'><use id='fk' x='1158' y='371' xlink:href='#fk'/><title>References emp_status ( emp_status_id ) </title></a>
+  <use id='nn' x='1022' y='387' xlink:href='#nn'/><a xlink:href='#common_prep_info.data_type_id'><use id='idx' x='1022' y='386' xlink:href='#idx'/><title>Index  ( data_type_id ) </title></a>
+<a xlink:href='#common_prep_info.data_type_id'><text x='1038' y='397'>data_type_id</text><title>data_type_id bigint not null</title></a>
+<a xlink:href='#common_prep_info.data_type_id'><use id='fk' x='1158' y='386' xlink:href='#fk'/><title>References data_type ( data_type_id ) </title></a>
+
+<!-- ============= Table 'preprocessed_data' ============= -->
+<rect class='table' x='1200' y='683' width='195' height='150' rx='7' ry='7' />
+<path d='M 1200.50 709.50 L 1200.50 690.50 Q 1200.50 683.50 1207.50 683.50 L 1387.50 683.50 Q 1394.50 683.50 1394.50 690.50 L 1394.50 709.50 L1200.50 709.50 ' style='fill:url(#tableHeaderGradient1); stroke:none;' />
+<a xlink:href='#preprocessed_data'><text x='1246' y='697' class='tableTitle'>preprocessed_data</text><title>Table qiita.preprocessed_data</title></a>
+  <use id='nn' x='1202' y='717' xlink:href='#nn'/><a xlink:href='#preprocessed_data.preprocessed_data_id'><use id='pk' x='1202' y='716' xlink:href='#pk'/><title>Primary Key  ( preprocessed_data_id ) </title></a>
+<a xlink:href='#preprocessed_data.preprocessed_data_id'><text x='1218' y='727'>preprocessed_data_id</text><title>preprocessed_data_id bigserial not null</title></a>
+<a xlink:href='#preprocessed_data.preprocessed_data_id'><use id='ref' x='1383' y='716' xlink:href='#ref'/><title>Referred by preprocessed_filepath ( preprocessed_data_id ) 
+Referred by preprocessed_processed_data ( preprocessed_data_id ) 
+Referred by raw_preprocessed_data ( preprocessed_data_id ) 
+Referred by study_preprocessed_data ( preprocessed_data_id ) </title></a>
+  <use id='nn' x='1202' y='732' xlink:href='#nn'/><a xlink:href='#preprocessed_data.preprocessed_params_table'><text x='1218' y='742'>preprocessed_params_table</text><title>preprocessed_params_table varchar not null
+Name of table holding the params</title></a>
+  <use id='nn' x='1202' y='747' xlink:href='#nn'/><a xlink:href='#preprocessed_data.preprocessed_params_id'><text x='1218' y='757'>preprocessed_params_id</text><title>preprocessed_params_id bigint not null</title></a>
+  <use id='nn' x='1202' y='762' xlink:href='#nn'/><a xlink:href='#preprocessed_data.submitted_to_insdc'><text x='1218' y='772'>submitted_to_insdc</text><title>submitted_to_insdc bool not null</title></a>
+  <a xlink:href='#preprocessed_data.ebi_submission_accession'><text x='1218' y='787'>ebi_submission_accession</text><title>ebi_submission_accession varchar</title></a>
+  <a xlink:href='#preprocessed_data.ebi_study_accession'><text x='1218' y='802'>ebi_study_accession</text><title>ebi_study_accession varchar</title></a>
+  <use id='nn' x='1202' y='807' xlink:href='#nn'/><a xlink:href='#preprocessed_data.data_type_id'><use id='idx' x='1202' y='806' xlink:href='#idx'/><title>Index  ( data_type_id ) </title></a>
+<a xlink:href='#preprocessed_data.data_type_id'><text x='1218' y='817'>data_type_id</text><title>data_type_id bigint not null</title></a>
+<a xlink:href='#preprocessed_data.data_type_id'><use id='fk' x='1383' y='806' xlink:href='#fk'/><title>References data_type ( data_type_id ) </title></a>
 
 </g></svg>
 
@@ -2875,105 +2875,6 @@ PMID of paper from the analysis</title></a>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='common_prep_info'>Table common_prep_info</a></th></tr>
-</thead>
-<tbody>
-	<tr>
-		<td>*</td>
-		<td><a name='common_prep_info.raw_data_id'>raw&#095;data&#095;id</a></td>
-		<td> bigserial   </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>*</td>
-		<td><a name='common_prep_info.sample_id'>sample&#095;id</a></td>
-		<td> varchar   </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>&nbsp;</td>
-		<td><a name='common_prep_info.center_name'>center&#095;name</a></td>
-		<td> varchar   </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>&nbsp;</td>
-		<td><a name='common_prep_info.center_project_name'>center&#095;project&#095;name</a></td>
-		<td> varchar   </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>&nbsp;</td>
-		<td><a name='common_prep_info.ebi_submission_accession'>ebi&#095;submission&#095;accession</a></td>
-		<td> varchar   </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>&nbsp;</td>
-		<td><a name='common_prep_info.ebi_study_accession'>ebi&#095;study&#095;accession</a></td>
-		<td> varchar   </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>*</td>
-		<td><a name='common_prep_info.emp_status_id'>emp&#095;status&#095;id</a></td>
-		<td> bigint   </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>*</td>
-		<td><a name='common_prep_info.data_type_id'>data&#095;type&#095;id</a></td>
-		<td> bigint   </td>
-		<td>  </td>
-	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;required&#095;prep&#095;info</td>
-		<td> ON raw&#095;data&#095;id</td>
-		<td>  </td>
-	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;required&#095;prep&#095;info&#095;0</td>
-		<td> ON emp&#095;status&#095;id</td>
-		<td>  </td>
-	</tr>
-	<tr>		<td>Pk</td><td>idx&#095;required&#095;prep&#095;info&#095;1</td>
-		<td> ON raw&#095;data&#095;id&#044; sample&#095;id</td>
-		<td>  </td>
-	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;required&#095;prep&#095;info&#095;2</td>
-		<td> ON sample&#095;id</td>
-		<td>  </td>
-	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;required&#095;prep&#095;info&#095;3</td>
-		<td> ON data&#095;type&#095;id</td>
-		<td>  </td>
-	</tr>
-<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
-	<tr>
-		<td>&nbsp;</td><td>fk_required_prep_info_raw_data</td>
-		<td > ( raw&#095;data&#095;id ) ref <a href='#raw&#095;data'>raw&#095;data</a> (raw&#095;data&#095;id) </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>&nbsp;</td><td>fk_required_prep_info_emp_status</td>
-		<td > ( emp&#095;status&#095;id ) ref <a href='#emp&#095;status'>emp&#095;status</a> (emp&#095;status&#095;id) </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>&nbsp;</td><td>fk_required_prep_info</td>
-		<td > ( sample&#095;id ) ref <a href='#required&#095;sample&#095;info'>required&#095;sample&#095;info</a> (sample&#095;id) </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>&nbsp;</td><td>fk_required_prep_info_0</td>
-		<td > ( data&#095;type&#095;id ) ref <a href='#data&#095;type'>data&#095;type</a> (data&#095;type&#095;id) </td>
-		<td>  </td>
-	</tr>
-</tbody>
-</table>
-
-<br/><br/>
-<table class='bordered'>
-<thead>
 <tr><th colspan='4'><a name='emp_status'>Table emp_status</a></th></tr>
 <tr><td colspan='3'>All possible statuses for projects relating to EMP&#046; Whether they are part of&#044; processed in accordance to&#044; or not part of EMP&#046; </td></tr>
 </thead>
@@ -3590,60 +3491,6 @@ PMID of paper from the analysis</title></a>
 	</tr>
 	<tr>
 		<td>&nbsp;</td><td>fk_command_data_type_0</td>
-		<td > ( data&#095;type&#095;id ) ref <a href='#data&#095;type'>data&#095;type</a> (data&#095;type&#095;id) </td>
-		<td>  </td>
-	</tr>
-</tbody>
-</table>
-
-<br/><br/>
-<table class='bordered'>
-<thead>
-<tr><th colspan='4'><a name='preprocessed_data'>Table preprocessed_data</a></th></tr>
-</thead>
-<tbody>
-	<tr>
-		<td>*</td>
-		<td><a name='preprocessed_data.preprocessed_data_id'>preprocessed&#095;data&#095;id</a></td>
-		<td> bigserial   </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>*</td>
-		<td><a name='preprocessed_data.preprocessed_params_table'>preprocessed&#095;params&#095;table</a></td>
-		<td> varchar   </td>
-		<td> Name of table holding the params </td>
-	</tr>
-	<tr>
-		<td>*</td>
-		<td><a name='preprocessed_data.preprocessed_params_id'>preprocessed&#095;params&#095;id</a></td>
-		<td> bigint   </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>*</td>
-		<td><a name='preprocessed_data.submitted_to_insdc'>submitted&#095;to&#095;insdc</a></td>
-		<td> bool   </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>*</td>
-		<td><a name='preprocessed_data.data_type_id'>data&#095;type&#095;id</a></td>
-		<td> bigint   </td>
-		<td>  </td>
-	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>pk&#095;preprocessed&#095;data</td>
-		<td> ON preprocessed&#095;data&#095;id</td>
-		<td>  </td>
-	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;preprocessed&#095;data</td>
-		<td> ON data&#095;type&#095;id</td>
-		<td>  </td>
-	</tr>
-<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
-	<tr>
-		<td>&nbsp;</td><td>fk_preprocessed_data</td>
 		<td > ( data&#095;type&#095;id ) ref <a href='#data&#095;type'>data&#095;type</a> (data&#095;type&#095;id) </td>
 		<td>  </td>
 	</tr>
@@ -4701,6 +4548,159 @@ Controlled Vocabulary </td>
 	<tr>
 		<td>&nbsp;</td><td>fk_analysis_analysis_status</td>
 		<td > ( analysis&#095;status&#095;id ) ref <a href='#analysis&#095;status'>analysis&#095;status</a> (analysis&#095;status&#095;id) </td>
+		<td>  </td>
+	</tr>
+</tbody>
+</table>
+
+<br/><br/>
+<table class='bordered'>
+<thead>
+<tr><th colspan='4'><a name='common_prep_info'>Table common_prep_info</a></th></tr>
+</thead>
+<tbody>
+	<tr>
+		<td>*</td>
+		<td><a name='common_prep_info.raw_data_id'>raw&#095;data&#095;id</a></td>
+		<td> bigserial   </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>*</td>
+		<td><a name='common_prep_info.sample_id'>sample&#095;id</a></td>
+		<td> varchar   </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>&nbsp;</td>
+		<td><a name='common_prep_info.center_name'>center&#095;name</a></td>
+		<td> varchar   </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>&nbsp;</td>
+		<td><a name='common_prep_info.center_project_name'>center&#095;project&#095;name</a></td>
+		<td> varchar   </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>*</td>
+		<td><a name='common_prep_info.emp_status_id'>emp&#095;status&#095;id</a></td>
+		<td> bigint   </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>*</td>
+		<td><a name='common_prep_info.data_type_id'>data&#095;type&#095;id</a></td>
+		<td> bigint   </td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='4'><b>Indexes</b></th></tr>
+	<tr>		<td>&nbsp;</td><td>idx&#095;required&#095;prep&#095;info</td>
+		<td> ON raw&#095;data&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>&nbsp;</td><td>idx&#095;required&#095;prep&#095;info&#095;0</td>
+		<td> ON emp&#095;status&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>Pk</td><td>idx&#095;required&#095;prep&#095;info&#095;1</td>
+		<td> ON raw&#095;data&#095;id&#044; sample&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>&nbsp;</td><td>idx&#095;required&#095;prep&#095;info&#095;2</td>
+		<td> ON sample&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>&nbsp;</td><td>idx&#095;required&#095;prep&#095;info&#095;3</td>
+		<td> ON data&#095;type&#095;id</td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
+	<tr>
+		<td>&nbsp;</td><td>fk_required_prep_info_raw_data</td>
+		<td > ( raw&#095;data&#095;id ) ref <a href='#raw&#095;data'>raw&#095;data</a> (raw&#095;data&#095;id) </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>&nbsp;</td><td>fk_required_prep_info_emp_status</td>
+		<td > ( emp&#095;status&#095;id ) ref <a href='#emp&#095;status'>emp&#095;status</a> (emp&#095;status&#095;id) </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>&nbsp;</td><td>fk_required_prep_info</td>
+		<td > ( sample&#095;id ) ref <a href='#required&#095;sample&#095;info'>required&#095;sample&#095;info</a> (sample&#095;id) </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>&nbsp;</td><td>fk_required_prep_info_0</td>
+		<td > ( data&#095;type&#095;id ) ref <a href='#data&#095;type'>data&#095;type</a> (data&#095;type&#095;id) </td>
+		<td>  </td>
+	</tr>
+</tbody>
+</table>
+
+<br/><br/>
+<table class='bordered'>
+<thead>
+<tr><th colspan='4'><a name='preprocessed_data'>Table preprocessed_data</a></th></tr>
+</thead>
+<tbody>
+	<tr>
+		<td>*</td>
+		<td><a name='preprocessed_data.preprocessed_data_id'>preprocessed&#095;data&#095;id</a></td>
+		<td> bigserial   </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>*</td>
+		<td><a name='preprocessed_data.preprocessed_params_table'>preprocessed&#095;params&#095;table</a></td>
+		<td> varchar   </td>
+		<td> Name of table holding the params </td>
+	</tr>
+	<tr>
+		<td>*</td>
+		<td><a name='preprocessed_data.preprocessed_params_id'>preprocessed&#095;params&#095;id</a></td>
+		<td> bigint   </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>*</td>
+		<td><a name='preprocessed_data.submitted_to_insdc'>submitted&#095;to&#095;insdc</a></td>
+		<td> bool   </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>&nbsp;</td>
+		<td><a name='preprocessed_data.ebi_submission_accession'>ebi&#095;submission&#095;accession</a></td>
+		<td> varchar   </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>&nbsp;</td>
+		<td><a name='preprocessed_data.ebi_study_accession'>ebi&#095;study&#095;accession</a></td>
+		<td> varchar   </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>*</td>
+		<td><a name='preprocessed_data.data_type_id'>data&#095;type&#095;id</a></td>
+		<td> bigint   </td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='4'><b>Indexes</b></th></tr>
+	<tr>		<td>Pk</td><td>pk&#095;preprocessed&#095;data</td>
+		<td> ON preprocessed&#095;data&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>&nbsp;</td><td>idx&#095;preprocessed&#095;data</td>
+		<td> ON data&#095;type&#095;id</td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
+	<tr>
+		<td>&nbsp;</td><td>fk_preprocessed_data</td>
+		<td > ( data&#095;type&#095;id ) ref <a href='#data&#095;type'>data&#095;type</a> (data&#095;type&#095;id) </td>
 		<td>  </td>
 	</tr>
 </tbody>
