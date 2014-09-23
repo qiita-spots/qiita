@@ -51,6 +51,26 @@ class LogEntry(QiitaObject):
     _table = 'logging'
 
     @classmethod
+    def newest_records(cls, numrecords=100):
+        """Return a list of the newest records in the logging table
+
+        Parameters
+        ----------
+        numrecords : int, optional
+            The number of records to return. Default 100
+
+        Returns
+        -------
+        list of LogEntry objects
+            list of the log entries
+        """
+        conn_handler = SQLConnectionHandler()
+        sql = ("SELECT logging_id FROM qiita.{0} ORDER BY logging_id DESC, "
+               "LIMIT %s".format(cls._table))
+        ids = conn_handler.execute_fetchone(sql, (numrecords, ))
+        return [cls(i) for i in ids]
+
+    @classmethod
     def create(cls, severity, msg, info=None):
         """Creates a new LogEntry object
 
@@ -149,7 +169,7 @@ class LogEntry(QiitaObject):
         str
         """
         conn_handler = SQLConnectionHandler()
-        sql = ("SELECT msg FROM qiita.{} "
+        sql = ("SELECT msg FROM qiita.{0} "
                "WHERE logging_id = %s".format(self._table))
 
         return conn_handler.execute_fetchone(sql, (self.id,))[0]
