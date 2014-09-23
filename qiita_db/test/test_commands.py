@@ -330,15 +330,18 @@ vamps_id = vamps_id
 SAMPLE_TEMPLATE = (
     "#SampleID\trequired_sample_info_status_id\tcollection_timestamp\t"
     "sample_type\thas_physical_specimen\tphysical_location\thas_extracted_data"
-    "\thost_subject_id\tTreatment\tDOB\tDescription\n"
+    "\thost_subject_id\tTreatment\tDOB\tlatitude\tlongitude\tDescription\n"
     "PC.354\t1\t2014-06-18 16:44\ttype_1\tTrue\tLocation_1\tTrue\tHS_ID_PC.354"
-    "\tControl\t20061218\tControl_mouse_I.D._354\n"
+    "\tControl\t20061218\t1.88401499993\t56.0003871552\t"
+    "Control_mouse_I.D._354\n"
     "PC.593\t1\t2014-06-18 16:44\ttype_1\tTrue\tLocation_1\tTrue\tHS_ID_PC.593"
-    "\tControl\t20071210\tControl_mouse_I.D._593\n"
+    "\tControl\t20071210\t35.4079458313\t83.2595338611\t"
+    "Control_mouse_I.D._593\n"
     "PC.607\t1\t2014-06-18 16:44\ttype_1\tTrue\tLocation_1\tTrue\tHS_ID_PC.607"
-    "\tFast\t20071112\tFasting_mouse_I.D._607\n"
+    "\tFast\t20071112\t18.3175615444\t91.3713989729\t"
+    "Fasting_mouse_I.D._607\n"
     "PC.636\t1\t2014-06-18 16:44\ttype_1\tTrue\tLocation_1\tTrue\tHS_ID_PC.636"
-    "\tFast\t20080116\tFasting_mouse_I.D._636")
+    "\tFast\t20080116\t31.0856060708\t4.16781143893\tFasting_mouse_I.D._636")
 
 PREP_TEMPLATE = (
     "#SampleID\tcenter_name\tcusom_col\temp_status_id\tdata_type_id\n"
