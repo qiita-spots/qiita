@@ -78,7 +78,8 @@ class UtilTests(TestCase):
     def test_metadata_stats_from_sample_and_prep_templates(self):
         obs = metadata_stats_from_sample_and_prep_templates(SampleTemplate(1),
                                                             PrepTemplate(1))
-        self.assertEqual(obs, SUMMARY_STATS)
+        for k in obs:
+            self.assertEqual(obs[k], SUMMARY_STATS[k])
 
     def test_metadata_map_from_sample_and_prep_templates(self):
         obs = metadata_map_from_sample_and_prep_templates(SampleTemplate(1),
