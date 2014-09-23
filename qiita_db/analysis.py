@@ -19,6 +19,7 @@ from __future__ import division
 from collections import defaultdict
 from binascii import crc32
 from os.path import join
+from datetime import datetime
 
 from future.utils import viewitems
 from biom import load_table
@@ -149,6 +150,20 @@ class Analysis(QiitaStatusObject):
         """
         conn_handler = SQLConnectionHandler()
         sql = ("SELECT name FROM qiita.{0} WHERE "
+               "analysis_id = %s".format(self._table))
+        return conn_handler.execute_fetchone(sql, (self._id, ))[0]
+
+    @property
+    def timestamp(self):
+        """The timestamp of the analysis
+
+        Returns
+        -------
+        str
+            Timestamp of the Analysis
+        """
+        conn_handler = SQLConnectionHandler()
+        sql = ("SELECT timestamp FROM qiita.{0} WHERE "
                "analysis_id = %s".format(self._table))
         return conn_handler.execute_fetchone(sql, (self._id, ))[0]
 

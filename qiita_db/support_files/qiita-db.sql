@@ -607,6 +607,7 @@ CREATE TABLE qiita.analysis (
 	description          varchar  NOT NULL,
 	analysis_status_id   bigint  NOT NULL,
 	pmid                 varchar  ,
+	timestamp            timestamp DEFAULT current_timestamp ,
 	CONSTRAINT pk_analysis PRIMARY KEY ( analysis_id ),
 	CONSTRAINT fk_analysis_user FOREIGN KEY ( email ) REFERENCES qiita.qiita_user( email )    ,
 	CONSTRAINT fk_analysis_analysis_status FOREIGN KEY ( analysis_status_id ) REFERENCES qiita.analysis_status( analysis_status_id )    
