@@ -2,16 +2,13 @@
 {%block content %}
 <table class="table">
   <tr>
-    <th>
-      Analysis Name
-    </th><th>
-      Analysis Description
-    </th><th>
-      Status
-    </th>
+    <th>Analysis Name</th>
+    <th>Analysis Description</th>
+    <th>Status</th>>
+    <th>Timestamp</th>
   </tr>
   {% for analysis in analyses %}
-  {% set status = analysis.status%}
+    {% set status = analysis.status %}
     {% if status == "in_construction"%}
       <tr>
         <td>
@@ -33,12 +30,15 @@
         <td>
           {{analysis.name}}
     {% end %}
-        </td>
-      <td>
-        {{analysis.description}}
       </td>
       <td>
-        {{status}}
+       {{analysis.description}}
+     </td>
+      <td>
+       {{status}}
+     </td>
+      <td>
+       {{ analysis.timestamp.strftime("%m/%d/%y %H:%M:%S")}}
       </td>
     </tr>
   {% end %}
