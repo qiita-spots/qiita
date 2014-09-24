@@ -162,7 +162,8 @@ class PreprocessedDataTests(TestCase):
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.preprocessed_data WHERE "
             "preprocessed_data_id=3")
-        exp = [[3, "preprocessed_sequence_illumina_params", 1, False, 2]]
+        exp = [[3, "preprocessed_sequence_illumina_params", 1, False, None,
+                None, 2]]
         self.assertEqual(obs, exp)
 
         # Check that the preprocessed data has been linked with its study
@@ -203,7 +204,8 @@ class PreprocessedDataTests(TestCase):
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.preprocessed_data WHERE "
             "preprocessed_data_id=3")
-        exp = [[3, "preprocessed_sequence_illumina_params", 1, False, 2]]
+        exp = [[3, "preprocessed_sequence_illumina_params", 1, False, None,
+                None, 2]]
         self.assertEqual(obs, exp)
 
         # Check that the preprocessed data has been linked with its study
