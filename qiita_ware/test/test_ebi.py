@@ -14,6 +14,9 @@ from unittest import TestCase, main
 from xml.etree import ElementTree as ET
 from xml.dom import minidom
 import StringIO
+from tempfile import mkstemp
+from os import close, remove
+
 
 from qiita_ware.ebi import (InvalidMetadataError, SampleAlreadyExistsError,
                             NoXMLError, EBISubmission)
@@ -178,16 +181,37 @@ class TestEBISubmission(TestCase):
         pass
 
     def test_write_study_xml(self):
-        # raise NotImplementedError()
-        pass
+        submission = EBISubmission('001', 'teststudy', 'test asbstract',
+                                   'metagenome')
+        fh, output = mkstemp()
+        submission.write_study_xml(output)
+        close(fh)
+        self.assertEqual(open(output).read(), STUDYXML)
+        remove(output)
 
     def test_write_sample_xml(self):
-        # raise NotImplementedError()
-        pass
+        submission = EBISubmission('001', 'teststudy', 'test asbstract',
+                                   'metagenome')
+        submission.add_sample('test1')
+        submission.add_sample('test2')
+        fh, output = mkstemp()
+        close(fh)
+        submission.write_sample_xml(output)
+        self.assertEqual(open(output).read(), SAMPLEXML)
+        remove(output)
 
     def test_write_experiment_xml(self):
-        # raise NotImplementedError()
-        pass
+        submission = EBISubmission('001', 'teststudy', 'test asbstract',
+                                   'metagenome')
+        submission.add_sample('test1')
+        submission.add_sample_prep('test1', 'ILLUMINA', 'fastq',
+                                   'fakepath', 'experiment description',
+                                   'library protocol')
+        fh, output = mkstemp()
+        close(fh)
+        submission.write_experiment_xml(output)
+        self.assertEqual(open(output).read(), EXPERIEMENTXML)
+        remove(output)
 
     def test_write_run_xml(self):
         # raise NotImplementedError()
