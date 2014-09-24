@@ -139,6 +139,8 @@ class PreprocessedDataTests(TestCase):
         self.filepaths = [(self.fna_fp, 4), (self.qual_fp, 5)]
         self.db_test_ppd_dir = join(get_db_files_base_dir(),
                                     'preprocessed_data')
+        self.ebi_submission_accession = "EBI123456-A"
+        self.ebi_study_accession = "EBI123456-B"
 
         with open(self.fna_fp, "w") as f:
             f.write("\n")
@@ -154,16 +156,17 @@ class PreprocessedDataTests(TestCase):
         """Correctly creates all the rows in the DB for preprocessed data"""
         # Check that the returned object has the correct id
         obs = PreprocessedData.create(self.study, self.params_table,
-                                      self.params_id, self.filepaths,
-                                      raw_data=self.raw_data)
+            self.params_id, self.filepaths, raw_data=self.raw_data,
+            ebi_submission_accession=self.ebi_submission_accession,
+            ebi_study_accession=self.ebi_study_accession)
         self.assertEqual(obs.id, 3)
 
         # Check that the preprocessed data have been correctly added to the DB
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.preprocessed_data WHERE "
             "preprocessed_data_id=3")
-        exp = [[3, "preprocessed_sequence_illumina_params", 1, False, None,
-                None, 2]]
+        exp = [[3, "preprocessed_sequence_illumina_params", 1, False,
+                "EBI123456-A", "EBI123456-B", 2]]
         self.assertEqual(obs, exp)
 
         # Check that the preprocessed data has been linked with its study
@@ -292,6 +295,16 @@ class PreprocessedDataTests(TestCase):
         """Correctly returns the study"""
         ppd = PreprocessedData(1)
         self.assertEqual(ppd.study, 1)
+
+    def test_ebi_submission_accession(self):
+        """Correctly returns the ebi_submission_accession"""
+        ppd = PreprocessedData(1)
+        self.assertEqual(ppd.ebi_submission_accession, 'EBI123456-AA')
+
+    def test_ebi_ebi_study_accession(self):
+        """Correctly returns the ebi_study_accession"""
+        ppd = PreprocessedData(1)
+        self.assertEqual(ppd.ebi_study_accession, 'EBI123456-BB')
 
     def test_is_submitted_to_insdc(self):
         """is_submitted_to_insdc works correctly"""
