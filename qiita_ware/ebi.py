@@ -6,9 +6,9 @@ from datetime import date, timedelta
 from xml.etree import ElementTree as ET
 from xml.dom import minidom
 from xml.sax.saxutils import escape
-from functools import partial
 
 from qiime.util import split_sequence_file_on_sample_ids_to_files
+from skbio.util import safe_md5
 
 
 class InvalidMetadataError(Exception):
@@ -190,7 +190,7 @@ class EBISubmission(object):
         descriptor = ET.SubElement(study, 'DESCRIPTOR')
         study_title = ET.SubElement(descriptor, 'STUDY_TITLE')
         study_title.text = escape(clean_whitespace(self.study_title))
-        study_type = ET.SubElement(descriptor, 'STUDY_TYPE', {
+        ET.SubElement(descriptor, 'STUDY_TYPE', {
             'existing_study_type': escape(clean_whitespace(
                 self.investigation_type))}
         )
@@ -345,7 +345,7 @@ class EBISubmission(object):
         library_selection.text = self.library_selection
         library_layout = ET.SubElement(library_descriptor,
                                        "LIBRARY_LAYOUT")
-        single = ET.SubElement(library_layout, "SINGLE")
+        ET.SubElement(library_layout, "SINGLE")
         library_construction_protocol_element = ET.SubElement(
             library_descriptor, "LIBRARY_CONSTRUCTION_PROTOCOL")
         library_construction_protocol_element.text = escape(clean_whitespace(
@@ -363,7 +363,7 @@ class EBISubmission(object):
         # There is some hard-coded information in here, but this is what we
         # have always done in the past...
         spot_descriptor = ET.SubElement(design, 'SPOT_DESCRIPTOR')
-        spot_decode_spec = ET.SubElemenet(spot_descriptor, 'SPOT_DECODE_SPEC')
+        ET.SubElemenet(spot_descriptor, 'SPOT_DECODE_SPEC')
         read_spec = ET.SubElemenet(spot_descriptor, 'READ_SPEC')
 
         read_index = ET.SubElemenet(read_spec, 'READ_INDEX')
@@ -400,7 +400,7 @@ class EBISubmission(object):
                 )
                 title = ET.SubElement(experiment, 'TITLE')
                 title.text = experiment_alias
-                study_ref = ET.SubElement(experiment, 'STUDY_REF', {
+                ET.SubElement(experiment, 'STUDY_REF', {
                     'refname': study_alias}
                 )
 
@@ -409,7 +409,7 @@ class EBISubmission(object):
                                                    'DESIGN_DESCRIPTION')
                 design_description.text = escape(clean_whitespace(
                     prep_info['experiment_design_description']))
-                sample_descriptor = ET.SubElement(
+                ET.SubElement(
                     design, 'SAMPLE_DESCRIPTOR', {'refname': sample_alias}
                 )
 
@@ -449,29 +449,30 @@ class EBISubmission(object):
             "xsi:noNamespaceSchemaLocation": "ftp://ftp.sra.ebi.ac.uk/meta/xsd"
                                              "/sra_1_3/SRA.run.xsd"})
         for sample_name, sample_info in sorted(self.samples.items()):
-            sample_alias = self._get_sample_alias(sample_name)
             for row_number, prep_info in enumerate(sample_info['preps']):
                 experiment_alias = self._get_experiment_alias(sample_name,
                                                               row_number)
-                platform = prep_info['platform']
                 file_type = prep_info['file_type']
                 file_path = prep_info['file_path']
+
+                with open(file_path) as fp:
+                    md5 = safe_md5(fp)
 
                 run = ET.SubElement(run_set, 'RUN', {
                     'alias': basename(file_path) + '_run',
                     'center_name': 'CCME-COLORADO'}
                 )
-                experiment_ref = ET.SubElement(run, 'EXPERIMENT_REF', {
+                ET.SubElement(run, 'EXPERIMENT_REF', {
                     'refname': experiment_alias}
                 )
                 data_block = ET.SubElement(run, 'DATA_BLOCK')
                 files = ET.SubElement(data_block, 'FILES')
-                file_element = ET.SubElement(files, 'FILE', {
+                ET.SubElement(files, 'FILE', {
                     'filename': basename(file_path),
                     'filetype': file_type,
                     'quality_scring_system': 'phred',
                     'checksum_method': 'MD5',
-                    'checksum': 'NONE'}  # TODO: checksum
+                    'checksum': md5}
                 )
 
         return run_set
@@ -515,30 +516,30 @@ class EBISubmission(object):
         actions = ET.SubElement(submission, 'ACTIONS')
 
         study_action = ET.SubElement(actions, 'ACTION')
-        study_action_2 = ET.SubElement(study_action, action, {
+        ET.SubElement(study_action, action, {
             'schema': 'study',
             'source': self.study_xml_fp}
         )
 
         sample_action = ET.SubElement(actions, 'ACTION')
-        sample_action_2 = ET.SubElement(sample_action, action, {
+        ET.SubElement(sample_action, action, {
             'schema': 'sample',
             'source': self.sample_xml_fp}
         )
 
         experiment_action = ET.SubElement(actions, 'ACTION')
-        experiment_action_2 = ET.SubElement(experiment_action, action, {
+        ET.SubElement(experiment_action, action, {
             'schema': 'experiment',
             'source': self.experiment_xml_fp}
         )
 
         run_action = ET.SubElement(actions, 'ACTION')
-        run_action_2 = ET.SubElement(run_action, action, {
+        ET.SubElement(run_action, action, {
             'schema': 'run', 'source': self.run_xml_fp}
         )
 
         if action is 'ADD':
-            hold_action = ET.SubElement(actions, 'HOLD', {
+            ET.SubElement(actions, 'HOLD', {
                 'HoldUntilDate': str(date.today() + timedelta(365))}
             )
 
@@ -653,7 +654,7 @@ class EBISubmission(object):
         self._write_xml_file(self.generate_submission_xml, 'submission_xml_fp',
                              fp, action)
 
-    def write_all_xml_files(study_fp, sample_fp, experiment_fp, run_fp,
+    def write_all_xml_files(self, study_fp, sample_fp, experiment_fp, run_fp,
                             submission_fp, action):
         """Write all XML files needed for an EBI submission using current data
 
