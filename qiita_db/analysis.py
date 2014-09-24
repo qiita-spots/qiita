@@ -153,6 +153,20 @@ class Analysis(QiitaStatusObject):
         return conn_handler.execute_fetchone(sql, (self._id, ))[0]
 
     @property
+    def timestamp(self):
+        """The timestamp of the analysis
+
+        Returns
+        -------
+        datetime
+            Timestamp of the Analysis
+        """
+        conn_handler = SQLConnectionHandler()
+        sql = ("SELECT timestamp FROM qiita.{0} WHERE "
+               "analysis_id = %s".format(self._table))
+        return conn_handler.execute_fetchone(sql, (self._id, ))[0]
+
+    @property
     def description(self):
         """Returns the description of the analysis"""
         conn_handler = SQLConnectionHandler()

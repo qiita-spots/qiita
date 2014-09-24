@@ -258,9 +258,8 @@ class TestPrepSample(TestCase):
         self.sample_id = 'SKB8.640193'
         self.tester = PrepSample(self.sample_id, self.prep_template)
         self.exp_categories = {'center_name', 'center_project_name',
-                               'ebi_submission_accession',
-                               'ebi_study_accession', 'emp_status_id',
-                               'data_type_id', 'barcodesequence',
+                               'emp_status_id', 'data_type_id',
+                               'barcodesequence',
                                'library_construction_protocol',
                                'linkerprimersequence', 'target_subfragment',
                                'target_gene', 'run_center', 'run_prefix',
@@ -320,7 +319,7 @@ class TestPrepSample(TestCase):
 
     def test_len(self):
         """Len returns the correct number of categories"""
-        self.assertEqual(len(self.tester), 24)
+        self.assertEqual(len(self.tester), 22)
 
     def test_getitem_required(self):
         """Get item returns the correct metadata value from the required table
@@ -401,9 +400,8 @@ class TestPrepSample(TestCase):
         obs = self.tester.items()
         self.assertTrue(isinstance(obs, Iterable))
         exp = {('center_name', 'ANL'), ('center_project_name', None),
-               ('ebi_submission_accession', None),
-               ('ebi_study_accession', None), ('emp_status_id', 1),
-               ('data_type_id', 2), ('barcodesequence', 'AGCGCTCACATC'),
+               ('emp_status_id', 1), ('data_type_id', 2),
+               ('barcodesequence', 'AGCGCTCACATC'),
                ('library_construction_protocol',
                 'This analysis was done as in Caporaso et al 2011 Genome '
                 'research. The PCR primers (F515/R806) were developed against '
@@ -868,16 +866,17 @@ class TestPrepTemplate(TestCase):
         # raw_data_id, sample_id, center_name, center_project_name,
         # ebi_submission_accession, ebi_study_accession, emp_status_id,
         # data_type_id
-        exp = [[3, 'SKB8.640193', 'ANL', 'Test Project', None, None, 1, 2],
-               [3, 'SKD8.640184', 'ANL', 'Test Project', None, None, 1, 2],
-               [3, 'SKB7.640196', 'ANL', 'Test Project', None, None, 1, 2]]
+        exp = [[3, 'SKB8.640193', 'ANL', 'Test Project', 1, 2],
+               [3, 'SKD8.640184', 'ANL', 'Test Project', 1, 2],
+               [3, 'SKB7.640196', 'ANL', 'Test Project', 1, 2]]
         self.assertEqual(sorted(obs), sorted(exp))
 
         # The relevant rows have been added to the raw_data_prep_columns
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.raw_data_prep_columns WHERE raw_data_id=3")
         # raw_data_id, column_name, column_type
-        exp = [[3, "str_column", "varchar"]]
+        exp = [[3, 'str_column', 'varchar'],
+               [3, 'ebi_submission_accession', 'varchar']]
         self.assertEqual(obs, exp)
 
         # The new table exists
@@ -887,9 +886,9 @@ class TestPrepTemplate(TestCase):
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.prep_3")
         # sample_id, str_column
-        exp = [['SKB8.640193', "Value for sample 1"],
-               ['SKD8.640184', "Value for sample 2"],
-               ['SKB7.640196', "Value for sample 3"]]
+        exp = [['SKB8.640193', "Value for sample 1", None],
+               ['SKD8.640184', "Value for sample 2", None],
+               ['SKB7.640196', "Value for sample 3", None]]
         self.assertEqual(sorted(obs), sorted(exp))
 
     def test_exists_true(self):

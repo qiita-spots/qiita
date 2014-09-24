@@ -116,6 +116,8 @@ CREATE TABLE qiita.preprocessed_data (
 	preprocessed_params_table varchar  NOT NULL,
 	preprocessed_params_id bigint  NOT NULL,
 	submitted_to_insdc   bool  NOT NULL,
+	ebi_submission_accession varchar  ,
+	ebi_study_accession  varchar  ,
 	data_type_id         bigint  NOT NULL,
 	CONSTRAINT pk_preprocessed_data PRIMARY KEY ( preprocessed_data_id ),
 	CONSTRAINT fk_preprocessed_data FOREIGN KEY ( data_type_id ) REFERENCES qiita.data_type( data_type_id )    
@@ -607,6 +609,7 @@ CREATE TABLE qiita.analysis (
 	description          varchar  NOT NULL,
 	analysis_status_id   bigint  NOT NULL,
 	pmid                 varchar  ,
+	timestamp            timestamptz DEFAULT current_timestamp ,
 	CONSTRAINT pk_analysis PRIMARY KEY ( analysis_id ),
 	CONSTRAINT fk_analysis_user FOREIGN KEY ( email ) REFERENCES qiita.qiita_user( email )    ,
 	CONSTRAINT fk_analysis_analysis_status FOREIGN KEY ( analysis_status_id ) REFERENCES qiita.analysis_status( analysis_status_id )    
@@ -830,8 +833,6 @@ CREATE TABLE qiita.common_prep_info (
 	sample_id            varchar  NOT NULL,
 	center_name          varchar  ,
 	center_project_name  varchar  ,
-	ebi_submission_accession varchar  ,
-	ebi_study_accession  varchar  ,
 	emp_status_id        bigint  NOT NULL,
 	data_type_id         bigint  NOT NULL,
 	CONSTRAINT idx_required_prep_info_1 PRIMARY KEY ( raw_data_id, sample_id ),
