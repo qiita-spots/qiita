@@ -13,6 +13,7 @@ from __future__ import division
 from unittest import TestCase, main
 from xml.etree import ElementTree as ET
 from xml.dom import minidom
+import StringIO
 
 from qiita_ware.ebi import (InvalidMetadataError, SampleAlreadyExistsError,
                             NoXMLError, EBISubmission)
@@ -167,6 +168,7 @@ class TestEBISubmission(TestCase):
         pass
 
     def test_add_samples_from_templates(self):
+
         # raise NotImplementedError()
         pass
 
@@ -264,6 +266,27 @@ _PROTOCOL>
   </EXPERIMENT>
 </EXPERIMENT_SET>
 """
+
+EXP_SAMPLE_TEMPLATE = (
+    "#SampleID\tcollection_timestamp\tdescription\thas_extracted_data\t"
+    "has_physical_specimen\thost_subject_id\tlatitude\tlongitude\t"
+    "physical_location\trequired_sample_info_status_id\tsample_type\t"
+    "str_column\n"
+    "Sample1\t2014-05-29 12:24:51\tTest Sample 1\tTrue\tTrue\tNotIdentified\t"
+    "42.42\t41.41\tlocation1\t1\ttype1\tValue for sample 1\n"
+    "Sample2\t2014-05-29 12:24:51\t"
+    "Test Sample 2\tTrue\tTrue\tNotIdentified\t4.2\t1.1\tlocation1\t1\t"
+    "type1\tValue for sample 2\n"
+    "Sample3\t2014-05-29 12:24:51\tTest Sample 3\tTrue\t"
+    "True\tNotIdentified\t4.8\t4.41\tlocation1\t1\ttype1\t"
+    "Value for sample 3\n")
+
+EXP_PREP_TEMPLATE = (
+    "#SampleID\tcenter_name\tcenter_project_name\tdata_type_id\t"
+    "ebi_study_accession\tebi_submission_accession\temp_status_id\tstr_column"
+    "\nSKB7.640196\tANL\tTest Project\t2\tNone\tNone\t1\tValue for sample 3\n"
+    "SKB8.640193\tANL\tTest Project\t2\tNone\tNone\t1\tValue for sample 1\n"
+    "SKD8.640184\tANL\tTest Project\t2\tNone\tNone\t1\tValue for sample 2\n")
 
 if __name__ == "__main__":
     main()
