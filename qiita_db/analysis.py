@@ -28,6 +28,7 @@ from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from .sql_connection import SQLConnectionHandler
 from .base import QiitaStatusObject
 from .data import ProcessedData
+from .study import Study
 from .exceptions import QiitaDBStatusError  # QiitaDBNotImplementedError
 from .util import (convert_to_id, get_work_base_dir, get_db_files_base_dir,
                    get_table_cols)
@@ -528,9 +529,13 @@ class Analysis(QiitaStatusObject):
             # make sure samples not in biom table are not filtered for
             table_samps = set(table.ids())
             filter_samps = table_samps.intersection(samps)
+            # add the metadata column for study the samples come from
+            study_meta = {'Study': Study(proc_data.study).title}
+            samples_meta = {sid: study_meta for sid in filter_samps}
             # filter for just the wanted samples and merge into new table
             # this if/else setup avoids needing a blank table to start merges
             table.filter(filter_samps, axis='sample', inplace=True)
+            table.add_metadata(samples_meta, axis='sample')
             data_type = proc_data.data_type()
             if new_tables[data_type] is None:
                 new_tables[data_type] = table
