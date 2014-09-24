@@ -189,10 +189,14 @@ class TestEBISubmission(TestCase):
                                    'metagenome')
         submission.add_samples_from_templates(sample_template, [prep_template],
                                               '/tmp')
-        print submission.samples
-        print submission.prep
-        # raise NotImplementedError()
-        pass
+        self.assertTrue('Sample1' in submission.samples)
+        self.assertTrue('Sample2' in submission.samples)
+        self.assertTrue('Sample3' in submission.samples)
+        self.assertEqual(submission.samples['Sample2']['preps'][0]['platform'],
+                         'ILLUMINA')
+        self.assertEqual(
+            submission.samples['Sample2']['preps'][0]['file_path'],
+            '/tmp/Sample2.fastq')
 
     def test_from_templates_and_demux_fastq(self):
         # raise NotImplementedError()
