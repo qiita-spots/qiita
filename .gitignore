@@ -47,3 +47,6 @@ config.py
 
 # don't show the data on git status
 qiita_db/support_files/test_data
+
+# dump.rdb
+dump.rdb
