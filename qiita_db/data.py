@@ -443,6 +443,36 @@ class PreprocessedData(BaseData):
             "SELECT ebi_study_accession FROM qiita.{0} "
             "WHERE preprocessed_data_id=%s".format(self._table), (self.id,))[0]
 
+    @ebi_submission_accession.setter
+    def ebi_submission_accession(self, new_ebi_submission_accession):
+        """ Sets the ebi_submission_accession for the preprocessed_data
+
+        Parameters
+        ----------
+        new_ebi_submission_accession: str
+            The new ebi submission accession
+        """
+        conn_handler = SQLConnectionHandler()
+
+        sql = ("UPDATE qiita.{0} SET ebi_submission_accession = %s WHERE "
+               "preprocessed_data_id = %s").format(self._table)
+        conn_handler.execute(sql, (new_ebi_submission_accession, self._id))
+
+    @ebi_study_accession.setter
+    def ebi_study_accession(self, new_ebi_study_accession):
+        """ Sets the ebi_study_accession for the preprocessed_data
+
+        Parameters
+        ----------
+        new_ebi_study_accession: str
+            The new ebi study accession
+        """
+        conn_handler = SQLConnectionHandler()
+
+        sql = ("UPDATE qiita.{0} SET ebi_study_accession = %s WHERE "
+               "preprocessed_data_id = %s").format(self._table)
+        conn_handler.execute(sql, (new_ebi_study_accession, self._id))
+
     def data_type(self, ret_id=False):
         """Returns the data_type or data_type_id
 

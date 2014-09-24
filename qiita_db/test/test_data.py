@@ -306,6 +306,24 @@ class PreprocessedDataTests(TestCase):
         ppd = PreprocessedData(1)
         self.assertEqual(ppd.ebi_study_accession, 'EBI123456-BB')
 
+    def test_ebi_submission_accession(self):
+        new = PreprocessedData.create(self.study, self.params_table,
+           self.params_id, self.filepaths, raw_data=self.raw_data,
+           ebi_submission_accession=self.ebi_submission_accession,
+           ebi_study_accession=self.ebi_study_accession)
+
+        new.ebi_submission_accession = 'EBI12345-CC'
+        self.assertEqual(new.ebi_submission_accession, 'EBI12345-CC')
+
+    def test_ebi_study_accession(self):
+        new = PreprocessedData.create(self.study, self.params_table,
+           self.params_id, self.filepaths, raw_data=self.raw_data,
+           ebi_submission_accession=self.ebi_submission_accession,
+           ebi_study_accession=self.ebi_study_accession)
+
+        new.ebi_study_accession = 'EBI12345-DD'
+        self.assertEqual(new.ebi_study_accession, 'EBI12345-DD')
+
     def test_is_submitted_to_insdc(self):
         """is_submitted_to_insdc works correctly"""
         # False case
