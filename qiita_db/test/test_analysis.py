@@ -97,6 +97,19 @@ class TestAnalysis(TestCase):
                    'SKM9.640192', 'SKM4.640180']}
         self.assertEqual(self.analysis.samples, exp)
 
+    def test_retrieve_dropped_samples(self):
+        biom_fp = join(get_db_files_base_dir(), "analysis",
+                       "1_analysis_18S.biom")
+        try:
+            samples = {1: ['SKB8.640193', 'SKD8.640184', 'SKB7.640196']}
+            self.analysis._build_biom_tables(samples, None,
+                                             conn_handler=self.conn_handler)
+            exp = {1: {'SKM4.640180', 'SKM9.640192'}}
+            self.assertEqual(self.analysis.dropped_samples, exp)
+        finally:
+            with open(biom_fp, 'w') as f:
+                f.write("")
+
     def test_retrieve_data_types(self):
         exp = ['18S']
         self.assertEqual(self.analysis.data_types, exp)
@@ -292,7 +305,8 @@ class TestAnalysis(TestCase):
 
             obs = table.metadata('SKB8.640193')
             exp = {'Study':
-                   'Identification of the Microbiomes for Cannabis Soils'}
+                   'Identification of the Microbiomes for Cannabis Soils',
+                   'Preproccessed_id': 1}
             self.assertEqual(obs, exp)
         finally:
             with open(biom_fp, 'w') as f:
