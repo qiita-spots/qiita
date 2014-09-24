@@ -654,7 +654,7 @@ class EBISubmission(object):
         self._write_xml_file(self.generate_submission_xml, 'submission_xml_fp',
                              fp, action)
 
-    def write_all_xml_files(study_fp, sample_fp, experiment_fp, run_fp,
+    def write_all_xml_files(self, study_fp, sample_fp, experiment_fp, run_fp,
                             submission_fp, action):
         """Write all XML files needed for an EBI submission using current data
 
