@@ -20,9 +20,24 @@ from qiita_ware.ebi import (InvalidMetadataError, SampleAlreadyExistsError,
 
 
 class TestEBISubmission(TestCase):
-    def test___init__(self):
-        # raise NotImplementedError()
-        pass
+    def test_init(self):
+        e = EBISubmission('2', 'Study Title', 'Study Abstract', 'metagenome')
+
+        self.assertEqual(e.study_id, '2')
+        self.assertEqual(e.study_title, 'Study Title')
+        self.assertEqual(e.study_abstract, 'Study Abstract')
+        self.assertEqual(e.investigation_type, 'metagenome')
+
+        self.assertEqual(e.empty_value, 'no_data')
+
+        self.assertEqual(e.study_xml_fp, None)
+        self.assertEqual(e.sample_xml_fp, None)
+        self.assertEqual(e.experiment_xml_fp, None)
+        self.assertEqual(e.run_xml_fp, None)
+
+        self.assertEqual(e.library_strategy, 'POOLCLONE')
+        self.assertEqual(e.library_source, 'METAGENOMIC')
+        self.assertEqual(e.library_selection, 'unspecififed')
 
     def test__stringify_kwargs(self):
         # raise NotImplementedError()
