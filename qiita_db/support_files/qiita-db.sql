@@ -37,11 +37,24 @@ COMMENT ON COLUMN qiita.command.optional IS 'JSON of optional options for comman
 
 COMMENT ON COLUMN qiita.command.output IS 'JSON of output options for the command';
 
-CREATE TABLE qiita.controlled_vocabularies ( 
+CREATE TABLE qiita.controlled_vocab ( 
 	controlled_vocab_id  bigserial  NOT NULL,
-	vocab_name           varchar  NOT NULL,
-	CONSTRAINT pk_controlled_vocabularies PRIMARY KEY ( controlled_vocab_id )
+	controlled_vocab     varchar  NOT NULL,
+	CONSTRAINT pk_controlled_vocabularies PRIMARY KEY ( controlled_vocab_id ),
+	CONSTRAINT idx_controlled_vocabularies UNIQUE ( controlled_vocab ) 
  );
+
+CREATE TABLE qiita.controlled_vocab_values ( 
+	vocab_value_id       bigserial  NOT NULL,
+	controlled_vocab_id  bigint  NOT NULL,
+	term                 varchar  NOT NULL,
+	order_by             varchar  NOT NULL,
+	default_item         varchar  ,
+	CONSTRAINT pk_controlled_vocab_values PRIMARY KEY ( vocab_value_id ),
+	CONSTRAINT fk_controlled_vocab_values FOREIGN KEY ( controlled_vocab_id ) REFERENCES qiita.controlled_vocab( controlled_vocab_id ) ON DELETE CASCADE ON UPDATE CASCADE
+ );
+
+CREATE INDEX idx_controlled_vocab_values ON qiita.controlled_vocab_values ( controlled_vocab_id );
 
 CREATE TABLE qiita.data_type ( 
 	data_type_id         bigserial  NOT NULL,
@@ -91,7 +104,7 @@ CREATE TABLE qiita.mixs_field_description (
 
 CREATE TABLE qiita.ontology ( 
 	ontology_id          bigserial  NOT NULL,
-	shortname            varchar  NOT NULL,
+	ontology             varchar  NOT NULL,
 	fully_loaded         bool  NOT NULL,
 	fullname             varchar  ,
 	query_url            varchar  ,
@@ -99,7 +112,8 @@ CREATE TABLE qiita.ontology (
 	definition           text  ,
 	load_date            date  NOT NULL,
 	version              varchar  ,
-	CONSTRAINT pk_ontology PRIMARY KEY ( ontology_id )
+	CONSTRAINT pk_ontology PRIMARY KEY ( ontology_id ),
+	CONSTRAINT idx_ontology UNIQUE ( ontology ) 
  );
 
 CREATE TABLE qiita.portal_type ( 
@@ -247,7 +261,7 @@ CREATE TABLE qiita.study_status (
 CREATE TABLE qiita.term ( 
 	term_id              bigserial  NOT NULL,
 	ontology_id          bigint  NOT NULL,
-	term_name            varchar  NOT NULL,
+	term                 varchar  NOT NULL,
 	identifier           varchar  ,
 	definition           varchar  ,
 	namespace            varchar  ,
@@ -255,6 +269,7 @@ CREATE TABLE qiita.term (
 	is_root_term         bool  ,
 	is_leaf              bool  ,
 	CONSTRAINT pk_term PRIMARY KEY ( term_id ),
+	CONSTRAINT idx_term_0 UNIQUE ( term ) ,
 	CONSTRAINT fk_term_ontology FOREIGN KEY ( ontology_id ) REFERENCES qiita.ontology( ontology_id )    
  );
 
@@ -282,7 +297,7 @@ CREATE TABLE qiita.column_controlled_vocabularies (
 	column_name          varchar  NOT NULL,
 	CONSTRAINT idx_column_controlled_vocabularies PRIMARY KEY ( controlled_vocab_id, column_name ),
 	CONSTRAINT fk_column_controlled_vocabularies FOREIGN KEY ( column_name ) REFERENCES qiita.mixs_field_description( column_name )    ,
-	CONSTRAINT fk_column_controlled_vocab2 FOREIGN KEY ( controlled_vocab_id ) REFERENCES qiita.controlled_vocabularies( controlled_vocab_id )    
+	CONSTRAINT fk_column_controlled_vocab2 FOREIGN KEY ( controlled_vocab_id ) REFERENCES qiita.controlled_vocab( controlled_vocab_id )    
  );
 
 CREATE INDEX idx_column_controlled_vocabularies_0 ON qiita.column_controlled_vocabularies ( column_name );
@@ -315,18 +330,6 @@ CREATE TABLE qiita.command_data_type (
 CREATE INDEX idx_command_data_type_0 ON qiita.command_data_type ( command_id );
 
 CREATE INDEX idx_command_data_type_1 ON qiita.command_data_type ( data_type_id );
-
-CREATE TABLE qiita.controlled_vocab_values ( 
-	vocab_value_id       bigserial  NOT NULL,
-	controlled_vocab_id  bigint  NOT NULL,
-	term                 varchar  NOT NULL,
-	order_by             varchar  NOT NULL,
-	default_item         varchar  ,
-	CONSTRAINT pk_controlled_vocab_values PRIMARY KEY ( vocab_value_id ),
-	CONSTRAINT fk_controlled_vocab_values FOREIGN KEY ( controlled_vocab_id ) REFERENCES qiita.controlled_vocabularies( controlled_vocab_id ) ON DELETE CASCADE ON UPDATE CASCADE
- );
-
-CREATE INDEX idx_controlled_vocab_values ON qiita.controlled_vocab_values ( controlled_vocab_id );
 
 CREATE TABLE qiita.filepath ( 
 	filepath_id          bigserial  NOT NULL,
