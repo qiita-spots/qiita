@@ -55,7 +55,8 @@ class User(QiitaObject):
     Methods
     -------
     change_password
-    forgot_password
+    generate_reset_code
+    change_forgot_password
     add_shared_study
     remove_shared_study
     add_private_analysis

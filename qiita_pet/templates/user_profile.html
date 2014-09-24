@@ -1,4 +1,3 @@
-
 {%extends sitebase.html%}
 {% block head %}
 <script type="text/javascript" src="/static/vendor/js/jquery.validate.min.js"></script>
@@ -6,31 +5,31 @@
 // http://www.9lessons.info/2012/04/bootstrap-registration-form-tutorial.html
 $(document).ready(function()
 {
-// Popover 
-$('#change_pass input').hover(function()
-{
-$(this).popover('show')
-});
+  // Popover 
+  $('#change_pass input').hover(function()
+  {
+    $(this).popover('show')
+  });
 
-// Validation
-$("#change_pass").validate({
-rules:{
-oldpass:{required:true},
-newpass:{required:true,minlength: 6},
-newpass2:{required:true,minlength: 6,equalTo: "#newpass"},
-},
+  // Validation
+  $("#change_pass").validate({
+    rules:{
+      oldpass:{required:true},
+      newpass:{required:true,minlength: 6},
+      newpass2:{required:true,minlength: 6,equalTo: "#newpass"},
+    },
 
-messages:{
-oldpass:"Enter your old password"},
-newpass:{
-required:"Enter your new password",
-minlength:"Password must be minimum 6 characters"},
-newpass2:{
-required:"Enter new password again",
-minlength:"Password must be minimum 6 characters",
-equalTo:"Password and Confirm Password must match"}
-}
-);
+    messages:{
+      oldpass:"Enter your old password"},
+      newpass:{
+      required:"Enter your new password",
+      minlength:"Password must be minimum 6 characters"},
+      newpass2:{
+      required:"Enter new password again",
+      minlength:"Password must be minimum 6 characters",
+      equalTo:"Password and Confirm Password must match"}
+    }
+  );
 });
 </script>
 {% end %}
@@ -68,7 +67,7 @@ equalTo:"Password and Confirm Password must match"}
       <input type="password" class="form-control" id="newpass2" name="newpass2">
   </div>
 <div style="color:red;">{{passmsg}}</div>
-<button class="btn btn-success">Change Password</button>
+<button class="btn btn-danger">Change Password</button>
 </form>
   </div>
 </div>

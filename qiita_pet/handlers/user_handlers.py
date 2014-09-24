@@ -94,7 +94,7 @@ class ForgotPasswordHandler(BaseHandler):
         self.render("lost_pass.html", user=None, error=error)
 
 
-class ChangeForgotPassHandler(BaseHandler):
+class ChangeForgotPasswordHandler(BaseHandler):
     """Displays change password page and handles password reset"""
     def get(self, code):
             self.render("change_lost_pass.html", user=None, error="",
