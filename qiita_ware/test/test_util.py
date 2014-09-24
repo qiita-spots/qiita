@@ -112,12 +112,12 @@ class UtilTests(TestCase):
             u'experiment_center', u'center_name', u'run_center',
             u'run_prefix', u'data_type_id', u'target_gene',
             u'sequencing_meth', u'run_date', u'pcr_primers',
-            u'ebi_submission_accession', u'linkerprimersequence', u'platform',
+            u'linkerprimersequence', u'platform',
             u'library_construction_protocol', u'experiment_design_description',
             u'study_center', u'center_project_name', u'sample_center',
             u'samp_size', u'illumina_technology', u'experiment_title',
-            u'emp_status_id', u'target_subfragment', u'barcodesequence',
-            u'ebi_study_accession'], dtype='object')))
+            u'emp_status_id', u'target_subfragment', u'barcodesequence'],
+            dtype='object')))
 
     def template_to_dict(self):
         template = PrepTemplate(1)

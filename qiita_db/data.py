@@ -306,7 +306,8 @@ class PreprocessedData(BaseData):
     @classmethod
     def create(cls, study, preprocessed_params_table, preprocessed_params_id,
                filepaths, raw_data=None, data_type=None,
-               submitted_to_insdc=False):
+               submitted_to_insdc=False, ebi_submission_accession=None,
+               ebi_study_accession=None):
         r"""Creates a new object with a new id on the storage system
 
         Parameters
@@ -327,7 +328,10 @@ class PreprocessedData(BaseData):
             The RawData object used as base to this preprocessed data
         data_type : str, optional
             The data_type of the preprocessed_data
-
+        ebi_submission_accession : str, optional
+            The ebi_submission_accession of the preprocessed_data
+        ebi_study_accession : str, optional
+            The ebi_study_accession of the preprocessed_data
 
         Raises
         ------
@@ -359,13 +363,17 @@ class PreprocessedData(BaseData):
         # and get the preprocessed data id back
         ppd_id = conn_handler.execute_fetchone(
             "INSERT INTO qiita.{0} (preprocessed_params_table, "
-            "preprocessed_params_id, submitted_to_insdc, data_type_id) VALUES "
-            "(%(param_table)s, %(param_id)s, %(insdc)s, %(data_type)s) "
+            "preprocessed_params_id, submitted_to_insdc, data_type_id, "
+            "ebi_submission_accession, ebi_study_accession) VALUES "
+            "(%(param_table)s, %(param_id)s, %(insdc)s, %(data_type)s, "
+            "%(ebi_submission_accession)s, %(ebi_study_accession)s) "
             "RETURNING preprocessed_data_id".format(cls._table),
             {'param_table': preprocessed_params_table,
              'param_id': preprocessed_params_id,
              'insdc': submitted_to_insdc,
-             'data_type': data_type})[0]
+             'data_type': data_type,
+             'ebi_submission_accession': ebi_submission_accession,
+             'ebi_study_accession': ebi_study_accession})[0]
         ppd = cls(ppd_id)
 
         # Connect the preprocessed data with its study
@@ -406,6 +414,64 @@ class PreprocessedData(BaseData):
             "SELECT study_id FROM qiita.{0} WHERE "
             "preprocessed_data_id=%s".format(self._study_preprocessed_table),
             [self._id])[0]
+
+    @property
+    def ebi_submission_accession(self):
+        r"""The ebi submission accession of this preprocessed data
+
+        Returns
+        -------
+        str
+            The ebi submission accession of this preprocessed data
+        """
+        conn_handler = SQLConnectionHandler()
+        return conn_handler.execute_fetchone(
+            "SELECT ebi_submission_accession FROM qiita.{0} "
+            "WHERE preprocessed_data_id=%s".format(self._table), (self.id,))[0]
+
+    @property
+    def ebi_study_accession(self):
+        r"""The ebi study accession of this preprocessed data
+
+        Returns
+        -------
+        str
+            The ebi study accession of this preprocessed data
+        """
+        conn_handler = SQLConnectionHandler()
+        return conn_handler.execute_fetchone(
+            "SELECT ebi_study_accession FROM qiita.{0} "
+            "WHERE preprocessed_data_id=%s".format(self._table), (self.id,))[0]
+
+    @ebi_submission_accession.setter
+    def ebi_submission_accession(self, new_ebi_submission_accession):
+        """ Sets the ebi_submission_accession for the preprocessed_data
+
+        Parameters
+        ----------
+        new_ebi_submission_accession: str
+            The new ebi submission accession
+        """
+        conn_handler = SQLConnectionHandler()
+
+        sql = ("UPDATE qiita.{0} SET ebi_submission_accession = %s WHERE "
+               "preprocessed_data_id = %s").format(self._table)
+        conn_handler.execute(sql, (new_ebi_submission_accession, self._id))
+
+    @ebi_study_accession.setter
+    def ebi_study_accession(self, new_ebi_study_accession):
+        """ Sets the ebi_study_accession for the preprocessed_data
+
+        Parameters
+        ----------
+        new_ebi_study_accession: str
+            The new ebi study accession
+        """
+        conn_handler = SQLConnectionHandler()
+
+        sql = ("UPDATE qiita.{0} SET ebi_study_accession = %s WHERE "
+               "preprocessed_data_id = %s").format(self._table)
+        conn_handler.execute(sql, (new_ebi_study_accession, self._id))
 
     def data_type(self, ret_id=False):
         """Returns the data_type or data_type_id

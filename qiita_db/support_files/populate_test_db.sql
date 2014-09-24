@@ -177,34 +177,34 @@ INSERT INTO qiita.sample_1 (sample_id, SEASON_ENVIRONMENT, ASSIGNED_FROM_GEO, TE
 	('SKD1.640179', 'winter', 'n', '66 sand, 16.3 silt, 17.7 clay', '410658', 0.15, '3483', 'soil metagenome', 0.178, 114, 15, 1.51, 7.1, 0, 'ENVO:Temperate grasslands, savannas, and shrubland biome', 'GAZ:United States of America', 6.8, 'SKD1', 4.32, 'Diesel bulk', 'ENVO:plant-associated habitat');
 
 -- Add the common prep info for study 1
-INSERT INTO qiita.common_prep_info (raw_data_id, sample_id, center_name, center_project_name, ebi_submission_accession, ebi_study_accession, emp_status_id, data_type_id) VALUES
-	(1, 'SKB8.640193', 'ANL', NULL, NULL, NULL, 1, 2),
-	(1, 'SKD8.640184', 'ANL', NULL, NULL, NULL, 1, 2),
-	(1, 'SKB7.640196', 'ANL', NULL, NULL, NULL, 1, 2),
-	(1, 'SKM9.640192', 'ANL', NULL, NULL, NULL, 1, 2),
-	(1, 'SKM4.640180', 'ANL', NULL, NULL, NULL, 1, 2),
-	(1, 'SKM5.640177', 'ANL', NULL, NULL, NULL, 1, 2),
-	(1, 'SKB5.640181', 'ANL', NULL, NULL, NULL, 1, 2),
-	(1, 'SKD6.640190', 'ANL', NULL, NULL, NULL, 1, 2),
-	(1, 'SKB2.640194', 'ANL', NULL, NULL, NULL, 1, 2),
-	(1, 'SKD2.640178', 'ANL', NULL, NULL, NULL, 1, 2),
-	(1, 'SKM7.640188', 'ANL', NULL, NULL, NULL, 1, 2),
-	(1, 'SKB1.640202', 'ANL', NULL, NULL, NULL, 1, 2),
-	(1, 'SKD1.640179', 'ANL', NULL, NULL, NULL, 1, 2),
-	(1, 'SKD3.640198', 'ANL', NULL, NULL, NULL, 1, 2),
-	(1, 'SKM8.640201', 'ANL', NULL, NULL, NULL, 1, 2),
-	(1, 'SKM2.640199', 'ANL', NULL, NULL, NULL, 1, 2),
-	(1, 'SKB9.640200', 'ANL', NULL, NULL, NULL, 1, 2),
-	(1, 'SKD5.640186', 'ANL', NULL, NULL, NULL, 1, 2),
-	(1, 'SKM3.640197', 'ANL', NULL, NULL, NULL, 1, 2),
-	(1, 'SKD9.640182', 'ANL', NULL, NULL, NULL, 1, 2),
-	(1, 'SKB4.640189', 'ANL', NULL, NULL, NULL, 1, 2),
-	(1, 'SKD7.640191', 'ANL', NULL, NULL, NULL, 1, 2),
-	(1, 'SKM6.640187', 'ANL', NULL, NULL, NULL, 1, 2),
-	(1, 'SKD4.640185', 'ANL', NULL, NULL, NULL, 1, 2),
-	(1, 'SKB3.640195', 'ANL', NULL, NULL, NULL, 1, 2),
-	(1, 'SKB6.640176', 'ANL', NULL, NULL, NULL, 1, 2),
-	(1, 'SKM1.640183', 'ANL', NULL, NULL, NULL, 1, 2);
+INSERT INTO qiita.common_prep_info (raw_data_id, sample_id, center_name, center_project_name, emp_status_id, data_type_id) VALUES
+	(1, 'SKB8.640193', 'ANL', NULL, 1, 2),
+	(1, 'SKD8.640184', 'ANL', NULL, 1, 2),
+	(1, 'SKB7.640196', 'ANL', NULL, 1, 2),
+	(1, 'SKM9.640192', 'ANL', NULL, 1, 2),
+	(1, 'SKM4.640180', 'ANL', NULL, 1, 2),
+	(1, 'SKM5.640177', 'ANL', NULL, 1, 2),
+	(1, 'SKB5.640181', 'ANL', NULL, 1, 2),
+	(1, 'SKD6.640190', 'ANL', NULL, 1, 2),
+	(1, 'SKB2.640194', 'ANL', NULL, 1, 2),
+	(1, 'SKD2.640178', 'ANL', NULL, 1, 2),
+	(1, 'SKM7.640188', 'ANL', NULL, 1, 2),
+	(1, 'SKB1.640202', 'ANL', NULL, 1, 2),
+	(1, 'SKD1.640179', 'ANL', NULL, 1, 2),
+	(1, 'SKD3.640198', 'ANL', NULL, 1, 2),
+	(1, 'SKM8.640201', 'ANL', NULL, 1, 2),
+	(1, 'SKM2.640199', 'ANL', NULL, 1, 2),
+	(1, 'SKB9.640200', 'ANL', NULL, 1, 2),
+	(1, 'SKD5.640186', 'ANL', NULL, 1, 2),
+	(1, 'SKM3.640197', 'ANL', NULL, 1, 2),
+	(1, 'SKD9.640182', 'ANL', NULL, 1, 2),
+	(1, 'SKB4.640189', 'ANL', NULL, 1, 2),
+	(1, 'SKD7.640191', 'ANL', NULL, 1, 2),
+	(1, 'SKM6.640187', 'ANL', NULL, 1, 2),
+	(1, 'SKD4.640185', 'ANL', NULL, 1, 2),
+	(1, 'SKB3.640195', 'ANL', NULL, 1, 2),
+	(1, 'SKB6.640176', 'ANL', NULL, 1, 2),
+	(1, 'SKM1.640183', 'ANL', NULL, 1, 2);
 
 -- Add raw data prep columns
 INSERT INTO qiita.raw_data_prep_columns (raw_data_id, column_name, column_type) VALUES
@@ -284,7 +284,7 @@ INSERT INTO qiita.prep_1 (sample_id, BarcodeSequence, LIBRARY_CONSTRUCTION_PROTO
 	('SKM9.640192', 'AGCAGGCACGAA', 'This analysis was done as in Caporaso et al 2011 Genome research. The PCR primers (F515/R806) were developed against the V4 region of the 16S rRNA (both bacteria and archaea), which we determined would yield optimal community clustering with reads of this length using a procedure similar to that of ref. 15. [For reference, this primer pair amplifies the region 533_786 in the Escherichia coli strain 83972 sequence (greengenes accession no. prokMSA_id:470367).] The reverse PCR primer is barcoded with a 12-base error-correcting Golay code to facilitate multiplexing of up to 1,500 samples per lane, and both PCR primers contain sequencer adapter regions.', 'GTGCCAGCMGCCGCGGTAA', 'V4', '16S rRNA', 'ANL', 's_G1_L001_sequences', '8/1/12', 'ANL', 'micro biome of soil and rhizosphere of cannabis plants from CA', 'Cannabis Soil Microbiome', 'Illumina', '.25,g', 'Sequencing by synthesis', 'MiSeq', 'ANL', 'FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT', 'CCME');
 
 -- Insert preprocessed information for raw data 1
-INSERT INTO qiita.preprocessed_data (preprocessed_params_table, preprocessed_params_id, submitted_to_insdc, data_type_id) VALUES ('preprocessed_sequence_illumina_params', 1, TRUE, 2), ('preprocessed_sequence_illumina_params', 2, FALSE, 2);
+INSERT INTO qiita.preprocessed_data (preprocessed_params_table, preprocessed_params_id, submitted_to_insdc, ebi_submission_accession, ebi_study_accession, data_type_id) VALUES ('preprocessed_sequence_illumina_params', 1, TRUE, 'EBI123456-AA', 'EBI123456-BB', 2), ('preprocessed_sequence_illumina_params', 2, FALSE, NULL, NULL, 2);
 
 -- Link the new preprocessed data with the raw data
 INSERT INTO qiita.raw_preprocessed_data (raw_data_id, preprocessed_data_id) VALUES (1, 1), (1, 2);
