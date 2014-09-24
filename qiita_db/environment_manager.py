@@ -24,7 +24,6 @@ from qiita_db.util import get_db_files_base_dir
 get_support_file = partial(join, join(dirname(abspath(__file__)),
                                       'support_files'))
 
-DFLT_BASE_DATA_FOLDER = get_support_file('test_data')
 DFLT_BASE_WORK_FOLDER = get_support_file('work_data')
 SETTINGS_FP = get_support_file('qiita-db-settings.sql')
 LAYOUT_FP = get_support_file('qiita-db.sql')
