@@ -1045,7 +1045,7 @@ class TestPrepTemplate(TestCase):
         self.assertEqual(obs, EXP_PREP_TEMPLATE)
 
 EXP_SAMPLE_TEMPLATE = (
-    "#SampleID\tcollection_timestamp\tdescription\thas_extracted_data\t"
+    "sample_name\tcollection_timestamp\tdescription\thas_extracted_data\t"
     "has_physical_specimen\thost_subject_id\tlatitude\tlongitude\t"
     "physical_location\trequired_sample_info_status_id\tsample_type\t"
     "str_column\n"
@@ -1059,7 +1059,7 @@ EXP_SAMPLE_TEMPLATE = (
     "Value for sample 3\n")
 
 EXP_PREP_TEMPLATE = (
-    "#SampleID\tcenter_name\tcenter_project_name\tdata_type_id\t"
+    "sample_name\tcenter_name\tcenter_project_name\tdata_type_id\t"
     "ebi_study_accession\tebi_submission_accession\temp_status_id\tstr_column"
     "\nSKB7.640196\tANL\tTest Project\t2\tNone\tNone\t1\tValue for sample 3\n"
     "SKB8.640193\tANL\tTest Project\t2\tNone\tNone\t1\tValue for sample 1\n"
