@@ -42,6 +42,8 @@ class TestEBISubmission(TestCase):
         self.assertEqual(e.library_source, 'METAGENOMIC')
         self.assertEqual(e.library_selection, 'unspecififed')
 
+        self.assertEqual(e.additional_metadata, {})
+
     def test_stringify_kwargs(self):
         e = EBISubmission('2', 'Study Title', 'Study Abstract', 'metagenome',
                           impossible_field=1, maybe_possible_field='BOOM')
@@ -66,16 +68,19 @@ class TestEBISubmission(TestCase):
             "maybe_possible_field":"BOOM"})
 
     def test_get_study_alias(self):
-        # raise NotImplementedError()
-        pass
+        e = EBISubmission('2', 'Study Title', 'Study Abstract', 'metagenome')
+        self.assertEqual(e._get_study_alias(), 'qiime_study_2')
 
     def test_get_sample_alias(self):
-        # raise NotImplementedError()
-        pass
+        e = EBISubmission('2', 'Study Title', 'Study Abstract', 'metagenome')
+        e.add_sample('foo')
+        self.assertEqual(e._get_sample_alias('foo'), 'qiime_study_2:foo')
 
     def test_get_experiment_alias(self):
-        # raise NotImplementedError()
-        pass
+        e = EBISubmission('2', 'Study Title', 'Study Abstract', 'metagenome')
+        e.add_sample('foo')
+        self.assertEqual(e._get_experiment_alias('foo', 0),
+                         'qiime_study_2:foo:0')
 
     def test_get_submission_alias(self):
         # raise NotImplementedError()
