@@ -21,6 +21,7 @@ from qiita_pet.handlers.analysis_handlers import (
 from qiita_pet.handlers.study_handlers import (
     CreateStudyHandler, PrivateStudiesHandler, PublicStudiesHandler,
     StudyDescriptionHandler)
+from qiita_pet.handlers.logger_handlers import LogEntryViewerHandler
 from qiita_pet.handlers.websocket_handlers import MessageHandler
 from qiita_db.util import get_db_files_base_dir
 
@@ -52,7 +53,7 @@ class Application(tornado.web.Application):
             (r"/analysis/results/(.*)", AnalysisResultsHandler),
             (r"/analysis/show/", ShowAnalysesHandler),
             (r"/consumer/", MessageHandler),
-            (r"/mockup/", MockupHandler),
+            (r"/error/", LogEntryViewerHandler),
             (r"/study/create/", CreateStudyHandler),
             (r"/study/private/", PrivateStudiesHandler),
             (r"/study/public/", PublicStudiesHandler),
