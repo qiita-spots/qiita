@@ -26,7 +26,6 @@ Classes
 from __future__ import division
 
 from json import loads, dumps
-from datetime import datetime
 
 from qiita_db.util import convert_to_id
 from .sql_connection import SQLConnectionHandler
@@ -100,11 +99,10 @@ class LogEntry(QiitaObject):
 
         conn_handler = SQLConnectionHandler()
         sql = ("INSERT INTO qiita.{} (time, severity_id, msg, information) "
-               "VALUES (%s, %s, %s, %s) "
+               "VALUES (NOW(), %s, %s, %s) "
                "RETURNING logging_id".format(cls._table))
         severity_id = convert_to_id(severity, "severity")
-        id_ = conn_handler.execute_fetchone(sql, (datetime.now(), severity_id,
-                                                  msg, info))[0]
+        id_ = conn_handler.execute_fetchone(sql, (severity_id, msg, info))[0]
 
         return cls(id_)
 
