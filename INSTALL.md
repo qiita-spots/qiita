@@ -22,6 +22,7 @@ Qiita is a python package, with support for python 2.7 and 3.2, that depends on 
 * [networkx](http://networkx.lanl.gov/index.html)
 * [WTForms 2.0.1](https://wtforms.readthedocs.org/en/latest/)
 * [Mock](http://www.voidspace.org.uk/python/mock/)  For running test code only
+* [qiime 1.8.0-dev](http://qiime.org)
 
 And on the following packages:
 

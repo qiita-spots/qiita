@@ -54,6 +54,9 @@ class User(QiitaObject):
 
     Methods
     -------
+    change_password
+    generate_reset_code
+    change_forgot_password
     add_shared_study
     remove_shared_study
     add_private_analysis
@@ -344,6 +347,66 @@ class User(QiitaObject):
         conn_handler = SQLConnectionHandler()
         analysis_ids = conn_handler.execute_fetchall(sql, (self._id, ))
         return [a[0] for a in analysis_ids]
+
+    # ------- methods ---------
+    def change_password(self, oldpass, newpass):
+        """Changes the password from oldpass to newpass
+
+        Parameters
+        ----------
+        oldpass : str
+            User's old password
+        newpass : str
+            User's new password
+
+        Returns
+        -------
+        bool
+            password changed or not
+        """
+        conn_handler = SQLConnectionHandler()
+        dbpass = conn_handler.execute_fetchone(
+            "SELECT password FROM qiita.{0} WHERE email = %s".format(
+                self._table), (self._id, ))[0]
+        if dbpass == hash_password(oldpass, dbpass):
+            self._change_pass(newpass, conn_handler=conn_handler)
+            return True
+        return False
+
+    def generate_reset_code(self):
+        """Generates a password reset code for user"""
+        reset_code = create_rand_string(20, punct=False)
+        sql = ("UPDATE qiita.{0} SET pass_reset_code = %s, "
+               "pass_reset_timestamp = NOW() WHERE email = %s".format(
+                   self._table))
+        conn_handler = SQLConnectionHandler()
+        conn_handler.execute(sql, (reset_code, self._id))
+
+    def change_forgot_password(self, code, newpass):
+        """Changes the password if the code is valid
+
+        Parameters
+        ----------
+        code : str
+            User's forgotten password ID code
+        newpass : str
+            User's new password
+
+        Returns
+        -------
+        bool
+            password changed or not
+        """
+        if self.verify_code(self._id, code, "reset"):
+            self._change_pass(newpass)
+            return True
+        return False
+
+    def _change_pass(self, newpass, conn_handler=None):
+        sql = ("UPDATE qiita.{0} SET password = %s WHERE "
+               "email = %s".format(self._table))
+        conn_handler = conn_handler if conn_handler else SQLConnectionHandler()
+        conn_handler.execute(sql, (hash_password(newpass), self._id))
 
 
 def validate_email(email):
