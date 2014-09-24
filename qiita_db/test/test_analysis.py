@@ -289,6 +289,11 @@ class TestAnalysis(TestCase):
             obs = set(table.ids(axis='sample'))
             exp = {'SKB8.640193', 'SKD8.640184', 'SKB7.640196'}
             self.assertEqual(obs, exp)
+
+            obs = table.metadata('SKB8.640193')
+            exp = {'Study':
+                   'Identification of the Microbiomes for Cannabis Soils'}
+            self.assertEqual(obs, exp)
         finally:
             with open(biom_fp, 'w') as f:
                 f.write("")
