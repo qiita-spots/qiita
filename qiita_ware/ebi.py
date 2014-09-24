@@ -9,6 +9,7 @@ from xml.sax.saxutils import escape
 from functools import partial
 
 from qiime.util import split_sequence_file_on_sample_ids_to_files
+from skbio.util import safe_md5
 
 
 class InvalidMetadataError(Exception):
@@ -457,6 +458,9 @@ class EBISubmission(object):
                 file_type = prep_info['file_type']
                 file_path = prep_info['file_path']
 
+                with open(file_path) as fp:
+                    md5 = safe_md5(fp)
+
                 run = ET.SubElement(run_set, 'RUN', {
                     'alias': basename(file_path) + '_run',
                     'center_name': 'CCME-COLORADO'}
@@ -471,7 +475,7 @@ class EBISubmission(object):
                     'filetype': file_type,
                     'quality_scring_system': 'phred',
                     'checksum_method': 'MD5',
-                    'checksum': 'NONE'}  # TODO: checksum
+                    'checksum': md5}
                 )
 
         return run_set
