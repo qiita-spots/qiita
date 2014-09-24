@@ -9,7 +9,6 @@
 # -----------------------------------------------------------------------------
 
 from unittest import TestCase, main
-from datetime import datetime
 
 from qiita_core.exceptions import (IncorrectEmailError, IncorrectPasswordError,
                                    IncompetentQiitaDeveloperError)
@@ -263,9 +262,10 @@ class UserTest(TestCase):
 
     def test_generate_reset_code(self):
         user = User.create('new@test.bar', 'password')
-        before = datetime.now()
+        sql = "SELECT LOCALTIMESTAMP"
+        before = self.conn_handler.execute_fetchone(sql)[0]
         user.generate_reset_code()
-        after = datetime.now()
+        after = self.conn_handler.execute_fetchone(sql)[0]
         sql = ("SELECT pass_reset_code, pass_reset_timestamp FROM "
                "qiita.qiita_user WHERE email = %s")
         obscode, obstime = self.conn_handler.execute_fetchone(
