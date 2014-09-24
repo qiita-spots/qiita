@@ -14,7 +14,7 @@ install:
   - source activate env_name
   - pip
   - pip install coveralls
-  - pip install https://github.com/biocore/qiime/archive/master.zip
+  - pip install https://github.com/biocore/qiime/archive/master.zip --no-deps
   - pip install .
 script:
   - ipython profile create qiita_general --parallel
