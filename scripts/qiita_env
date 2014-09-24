@@ -65,7 +65,7 @@ def stop_cluster(cluster):
               help="The database user to connect to the database")
 @click.option('--host', default=_CONFIG.host,
               help='The host where the database lives')
-@click.option('--load_ontologies/--no-load-ontologies',
+@click.option('--load-ontologies/--no-load-ontologies',
               default=False, help='if True, ontologies will be loaded')
 def make_env(env, base_data_folder, base_work_folder, user, host,
              load_ontologies):
