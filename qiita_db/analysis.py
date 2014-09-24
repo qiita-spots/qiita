@@ -44,6 +44,7 @@ class Analysis(QiitaStatusObject):
     name
     description
     samples
+    dropped_samples
     data_types
     biom_tables
     step
@@ -212,6 +213,36 @@ class Analysis(QiitaStatusObject):
         for pid, sample in conn_handler.execute_fetchall(sql, (self._id, )):
             ret_samples[pid].append(sample)
         return ret_samples
+
+    @property
+    def dropped_samples(self):
+        """The samples that were selected but dropped in processing
+
+        Returns
+        -------
+        dict of sets or None
+            Format is {processed_data_id: {sample_id, sample_id, ...}}
+            if no biom tables exist for the analysis, returns None
+        """
+        bioms = self.biom_tables
+        if not bioms:
+            # no biom tables exist yet, so return None
+            return None
+        # get all samples selected for the analysis
+        all_samples = dict(self.samples)
+        # turn the lists in all_samples into sets for fast searching
+        # this overhead is less than list searching for large analyses
+        for proc_data, samples in viewitems(all_samples):
+            all_samples[proc_data] = set(samples)
+
+        for biom, filepath in viewitems(bioms):
+            table = load_table(filepath)
+            # remove the samples from the sets as they are found in the table
+            for sample in table.ids():
+                proc_data_id = table.metadata(sample)['Proccessed_id']
+                all_samples[proc_data_id].remove(sample)
+        # what's left are unprocessed samples, so return
+        return all_samples
 
     @property
     def data_types(self):
@@ -530,7 +561,8 @@ class Analysis(QiitaStatusObject):
             table_samps = set(table.ids())
             filter_samps = table_samps.intersection(samps)
             # add the metadata column for study the samples come from
-            study_meta = {'Study': Study(proc_data.study).title}
+            study_meta = {'Study': Study(proc_data.study).title,
+                          'Proccessed_id': proc_data.id}
             samples_meta = {sid: study_meta for sid in filter_samps}
             # filter for just the wanted samples and merge into new table
             # this if/else setup avoids needing a blank table to start merges
