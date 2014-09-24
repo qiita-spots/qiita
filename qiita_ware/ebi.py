@@ -121,6 +121,7 @@ class EBISubmission(object):
             result = {
                 str(k): str(v) if v is not None else self.empty_value
                 for k, v in kwargs_dict.iteritems()}
+            return result
         except ValueError:
             raise InvalidMetadataError("All additional metadata passed via "
                                        "kwargs to the EBISubmission "

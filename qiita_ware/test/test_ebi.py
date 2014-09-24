@@ -39,31 +39,50 @@ class TestEBISubmission(TestCase):
         self.assertEqual(e.library_source, 'METAGENOMIC')
         self.assertEqual(e.library_selection, 'unspecififed')
 
-    def test__stringify_kwargs(self):
+    def test_stringify_kwargs(self):
+        e = EBISubmission('2', 'Study Title', 'Study Abstract', 'metagenome',
+                          impossible_field=1, maybe_possible_field='BOOM')
+
+        self.assertEqual(e.study_id, '2')
+        self.assertEqual(e.study_title, 'Study Title')
+        self.assertEqual(e.study_abstract, 'Study Abstract')
+        self.assertEqual(e.investigation_type, 'metagenome')
+
+        self.assertEqual(e.empty_value, 'no_data')
+
+        self.assertEqual(e.study_xml_fp, None)
+        self.assertEqual(e.sample_xml_fp, None)
+        self.assertEqual(e.experiment_xml_fp, None)
+        self.assertEqual(e.run_xml_fp, None)
+
+        self.assertEqual(e.library_strategy, 'POOLCLONE')
+        self.assertEqual(e.library_source, 'METAGENOMIC')
+        self.assertEqual(e.library_selection, 'unspecififed')
+
+        self.assertEqual(e.additional_metadata,{"impossible_field":"1",
+            "maybe_possible_field":"BOOM"})
+
+    def test_get_study_alias(self):
         # raise NotImplementedError()
         pass
 
-    def test__get_study_alias(self):
+    def test_get_sample_alias(self):
         # raise NotImplementedError()
         pass
 
-    def test__get_sample_alias(self):
+    def test_get_experiment_alias(self):
         # raise NotImplementedError()
         pass
 
-    def test__get_experiment_alias(self):
+    def test_get_submission_alias(self):
         # raise NotImplementedError()
         pass
 
-    def test__get_submission_alias(self):
+    def test_get_library_name(self):
         # raise NotImplementedError()
         pass
 
-    def test__get_library_name(self):
-        # raise NotImplementedError()
-        pass
-
-    def test__add_dict_as_tags_and_values(self):
+    def test_add_dict_as_tags_and_values(self):
         # raise NotImplementedError()
         pass
 
