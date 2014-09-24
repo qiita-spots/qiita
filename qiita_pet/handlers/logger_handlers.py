@@ -17,7 +17,7 @@ class LogEntryViewerHandler(BaseHandler):
     def post(self):
         numentries = int(self.get_argument("numrecords"))
         if numentries < 0:
-            numentries = None
+            numentries = 100
         logentries = LogEntry.newest_records(numentries)
         self.render("error_log.html", logentries=logentries,
                     user=self.current_user)
