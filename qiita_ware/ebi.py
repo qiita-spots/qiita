@@ -121,6 +121,7 @@ class EBISubmission(object):
             result = {
                 str(k): str(v) if v is not None else self.empty_value
                 for k, v in kwargs_dict.iteritems()}
+            return result
         except ValueError:
             raise InvalidMetadataError("All additional metadata passed via "
                                        "kwargs to the EBISubmission "
@@ -312,7 +313,8 @@ class EBISubmission(object):
             ``EBISubmission`` object
         """
         prep_info = self._stringify_kwargs(kwargs)
-
+        if prep_info is None:
+            prep_info = {}
         prep_info['platform'] = platform
         prep_info['file_type'] = file_type
         prep_info['file_path'] = file_path
