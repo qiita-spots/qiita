@@ -29,7 +29,6 @@ TODO
 # -----------------------------------------------------------------------------
 from __future__ import division
 from re import match
-from datetime import datetime
 
 from qiita_core.exceptions import (IncorrectEmailError, IncorrectPasswordError,
                                    IncompetentQiitaDeveloperError)
@@ -377,10 +376,10 @@ class User(QiitaObject):
         """Generates a password reset code for user"""
         reset_code = create_rand_string(20, punct=False)
         sql = ("UPDATE qiita.{0} SET pass_reset_code = %s, "
-               "pass_reset_timestamp = %s WHERE email = %s".format(
+               "pass_reset_timestamp = NOW() WHERE email = %s".format(
                    self._table))
         conn_handler = SQLConnectionHandler()
-        conn_handler.execute(sql, (reset_code, datetime.now(), self._id))
+        conn_handler.execute(sql, (reset_code, self._id))
 
     def change_forgot_password(self, code, newpass):
         """Changes the password if the code is valid
