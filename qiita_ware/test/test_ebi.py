@@ -283,12 +283,29 @@ class TestEBISubmission(TestCase):
             preps = submission.samples['nothere']
 
     def test_from_templates_and_demux_fastq(self):
-        # raise NotImplementedError()
+        # sample_template = StringIO.StringIO(EXP_SAMPLE_TEMPLATE)
+        # prep_template = StringIO.StringIO(EXP_PREP_TEMPLATE)
+        # output = self.path + '/demux_output'
+        # submission = EBISubmission.from_templates_and_demux_fastq(
+        #     '001', 'study_title', 'study_abstract', 'investigation_type',
+        #     sample_template, [prep_template], self.path + '/demux.fastq',
+        #     output)
+        # remove output dir
         pass
 
     def test_from_templates_and_per_sample_fastqs(self):
-        # raise NotImplementedError()
-        pass
+        sample_template = StringIO.StringIO(EXP_SAMPLE_TEMPLATE)
+        prep_template = StringIO.StringIO(EXP_PREP_TEMPLATE)
+        submission = EBISubmission.from_templates_and_per_sample_fastqs(
+            '001', 'test study', 'abstract',
+            'type',  sample_template, [prep_template], self.path)
+        self.assertEqual(submission.samples['sample2']['preps'][0]['platform'],
+                         'ILLUMINA')
+        self.assertEqual(
+            submission.samples['sample2']['preps'][0]['file_path'],
+            self.path + '/sample2.fastq')
+        with self.assertRaises(KeyError):
+            preps = submission.samples['nothere']
 
 
 SAMPLEXML = """<?xml version="1.0" encoding="UTF-8"?>
