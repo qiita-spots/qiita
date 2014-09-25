@@ -5,6 +5,29 @@
 
 <table border="0" style="vertical-align: middle; text-align:center; align:center; height: 150px; width: 100%;">
   <tr>
+    <td colspan="2" style="vertical-align: middle; text-align:left; width: 50%;">
+      <b>{{study_info['study_alias']}}</b> ({{study_info['number_samples_promised']}}/{{study_info['number_samples_collected']}})
+      <br/>
+      Metadata: {{study_info['metadata_complete']}}
+      <br/>
+      <!-- {'mixs_compliant': True,
+      'reprocess': False,
+      'emp_person_id': None,
+      'funding': None,
+      'vamps_id': None,
+      'first_contact': '2014-09-22',
+      'principal_investigator_id': 1L,
+      'timeseries_type_id': 1L,
+      'study_abstract':
+      'Myrold_Alder_Fir',
+      'spatial_series': None, '
+      study_description': 'Myrold_Alder_Fir',
+       'portal_type_id': 3L,
+       'study_alias': 'Myrold_Alder_Fir',
+       'most_recent_contact': None, 'lab_person_id': None, -->
+    </td>
+  </tr>
+  <tr>
     <td style="vertical-align: middle; text-align:center; width: 50%;"><b>Upload metadata</b></td>
     <td style="vertical-align: middle; text-align:center; width: 50%;"><b>Upload sequence files</b></td>
   </tr>
@@ -29,15 +52,10 @@
         </table>
       </div>
 
-
       <div class="uploader-list-metadata" style="display:none;">
-        <div class="uploader-item">
-          ... (generated thumbnails for each file)
-        </div>
       </div>
 
       <div class="file-edit-container-sequences" style="display:none;">
-        ... (elements for the edit UI)
       </div>
 
     </td>
@@ -63,8 +81,6 @@
 
 
       <div class="uploader-list-sequences" style="display:none;">
-        <div class="uploader-item">
-        </div>
       </div>
 
       <div class="file-edit-container-sequences" style="display:none;">
@@ -78,15 +94,22 @@
 <script src="/static/vendor/js/resumable.js"></script>
 <script src="/static/vendor/js/resumable-uploader.js"></script>
 <script>
-  var meta = {};
+  var meta = { fileType: [] };
   var maxFileSize = 100; // in Gb
 
   uploader_metadata = (function($){
-      return (new ResumableUploader(meta, $('.resumable-browse-metadata'), $('.resumable-drop-metadata'), $('.progress-metadata'), $('.uploader-list-metadata'), $('.file-edit-container-metadata'), maxFileSize));
+      return (new ResumableUploader(meta, $('.resumable-browse-metadata'), $('.resumable-drop-metadata'), $('.progress-metadata'), $('.uploader-list-metadata'), $('.file-edit-container-metadata'), maxFileSize, "metadata/{{study_id}}"));
     })(jQuery);
   uploader_sequences = (function($){
-      return (new ResumableUploader(meta, $('.resumable-browse-sequences'), $('.resumable-drop-sequences'), $('.progress-sequences'), $('.uploader-list-sequences'), $('.file-edit-container-sequences'), maxFileSize));
+      return (new ResumableUploader(meta, $('.resumable-browse-sequences'), $('.resumable-drop-sequences'), $('.progress-sequences'), $('.uploader-list-sequences'), $('.file-edit-container-sequences'), maxFileSize, "sequences/{{study_id}}"));
   })(jQuery);
+
+  {% for f in files_metatada %}
+    uploader_metadata.addFile("{{f}}");
+  {% end  %}
+  {% for f in files_sequences %}
+    uploader_sequences.addFile("{{f}}");
+  {% end  %}
 </script>
 
 {% end %}

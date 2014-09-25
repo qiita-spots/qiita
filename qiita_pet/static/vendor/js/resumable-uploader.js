@@ -12,7 +12,7 @@
 
 (function(window, document, $, undefined)
  {
-   window.ResumableUploader = function(savedData, browseTarget, dropTarget, progressContainer, uploaderList, fileEditContainer, maxFileSize) {
+   window.ResumableUploader = function(savedData, browseTarget, dropTarget, progressContainer, uploaderList, fileEditContainer, maxFileSize, file_type) {
      var $this = this;
      // Bootstrap parameters and clear HTML
      this.originalDocumentTitle = document.title;
@@ -20,12 +20,12 @@
      this.browseTarget = browseTarget;
      this.dropTarget = dropTarget;
      this.maxFileSize = maxFileSize;
+     this.file_type = file_type
 
      this.progressContainer = progressContainer;
      this.progressContainer.hide();
 
      this.uploaderList = uploaderList;
-     this.uploaderListHTML = uploaderList.html();
      this.uploaderList.empty();
      this.uploaderList.show();
 
@@ -51,7 +51,7 @@
            maxFileSize:this.maxFileSize*1024*1024*1024,
            simultaneousUploads: 6,
            target:'/upload/',
-           query:{},
+           query:{file_type:this.file_type},
            prioritizeFirstAndLastChunk:true,
            throttleProgressCallbacks:1
          });
@@ -75,7 +75,7 @@
 
            // Apply a thumbnail
            if(file.chunks.length>0 && file.chunks[0].status()=='success' && file.chunks[file.chunks.length-1].status()=='success'){
-             $this.setFileThumbnail(file.uniqueIdentifier, '/api/photo/frame?time=10&resumableIdentifier='+encodeURIComponent(file.uniqueIdentifier));
+             $this.setFileThumbnail(file.uniqueIdentifier, '/api/photo/frame?time=10&file_type='+encodeURIComponent(this.file_type)+'&resumableIdentifier='+encodeURIComponent(file.uniqueIdentifier));
            }
          });
        this.resumable.on('complete', function(file){});
@@ -116,8 +116,15 @@
      // Add a new file (or rather: glue between newly added resumable files and the UI)
      this.addFile = function(resumableFile){
        // A list and and edit item for the UI
+       if (typeof resumableFile == 'object') {
+         for (i in resumableFile) console.log(i)
+         name = resumableFile.fileName
+       } else {
+         name = resumableFile
+       }
+
        var listNode = $(document.createElement('div'));
-       listNode.html(this.uploaderListHTML);
+       listNode.html("<div>" + name + "</div>");
        this.uploaderList.append(listNode);
 
        var editNode = $(document.createElement('div'));
@@ -186,6 +193,7 @@
            file.editStatus = 'saving';
            $this.reflectFile(identifier);
            var data = {
+             file_type:this.file_type,
              resumableIdentifier:identifier,
              title:file.title||'',
              description:file.description||'',
@@ -312,7 +320,7 @@
        f.editNode.find('.file-edit-meta-progress-processing span').html(f.progressPercent + ' %');
        f.editNode.find('.file-edit-meta-progress-processing').css({display:(f.uploadStatus!='error' && (f.uploadStatus!='complete' && progress<1) ? 'block' : 'none')});
        f.editNode.find('.file-edit-meta-progress-complete').css({display:(f.uploadStatus!='error' && (f.uploadStatus=='complete'||progress>=1) ? 'block' : 'none')});
-       f.editNode.find('.file-edit-meta-progress-complete span a').attr('href', '/actions?action=resumable-upload-redirect&resumableIdentifier='+encodeURIComponent(identifier));
+       f.editNode.find('.file-edit-meta-progress-complete span a').attr('href', '/actions?action=resumable-upload-redirect&file_type='+encodeURIComponent(this.file_type)+'&resumableIdentifier='+encodeURIComponent(identifier));
 
        // Update progress icon
        f.listNode.find('img.uploader-item-status').each(function(i,img){

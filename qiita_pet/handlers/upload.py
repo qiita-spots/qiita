@@ -6,7 +6,7 @@ from os import makedirs, listdir
 from shutil import copyfileobj, rmtree
 
 from qiita_pet.handlers.base_handlers import BaseHandler
-from qiita_core.qiita_settings import qiita_config
+from qiita_db.util import get_user_fp
 
 class UploadFileHandler(BaseHandler):
 # """ main upload class
@@ -20,18 +20,15 @@ class UploadFileHandler(BaseHandler):
         resumableFilename = self.get_argument('resumableFilename')
         resumableChunkNumber = int(self.get_argument('resumableChunkNumber'))
         resumableTotalChunks = int(self.get_argument('resumableTotalChunks'))
-        data = self.request.files['file'][0]['body']
         file_type = self.get_argument('file_type')
+        data = self.request.files['file'][0]['body']
 
-        fp_vals = self.current_user.split('@')
-        fp = join(qiita_config.upload_data_dir, fp_vals[1], fp_vals[0],
-                  file_type, resumableIdentifier)
-        dfp = join(fp, '%s.part.%d' % (resumableFilename,resumableChunkNumber))
-
+        fp = join(get_user_fp(self.current_user), file_type,
+                  resumableIdentifier)
         # creating temporal folder for upload
-        fp = join(fp, self.get_argument('resumableIdentifier'))
         if not isdir(fp):
             makedirs(fp)
+        dfp = join(fp, '%s.part.%d' % (resumableFilename,resumableChunkNumber))
 
         # writting the output file
         with open(dfp, 'wb') as f:
@@ -41,7 +38,7 @@ class UploadFileHandler(BaseHandler):
         num_files = len([n for n in listdir(fp)])
         if resumableTotalChunks == num_files:
             # creating final destination
-            ffp = join(qiita_config.upload_data_dir, fp_vals[1], fp_vals[0],
+            ffp = join(get_user_fp(self.current_user), file_type,
                        resumableFilename)
             with open(ffp, 'wb') as f:
                 for c in range(1, resumableTotalChunks+1):
@@ -63,8 +60,7 @@ class UploadFileHandler(BaseHandler):
 
         # the idea of using path_vals[1] and then [0] is so we have all email
         # servers under the same path as it could be useful in the future
-        fp_vals = self.current_user.split('@')
-        fp = join(qiita_config.upload_data_dir, fp_vals[1], fp_vals[0])
+        fp = get_user_fp(self.current_user)
         if not isdir(fp):
             makedirs(fp)
 
