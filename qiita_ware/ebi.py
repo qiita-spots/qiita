@@ -166,9 +166,9 @@ class EBISubmission(object):
             attribute_element = ET.SubElement(parent_node,
                                               attribute_element_name)
             tag = ET.SubElement(attribute_element, 'TAG')
-            tag.text = escape(clean_whitespace(attr))
+            tag.text = clean_whitespace(attr)
             value = ET.SubElement(attribute_element, 'VALUE')
-            value.text = escape(clean_whitespace(val))
+            value.text = clean_whitespace(val)
 
     def generate_study_xml(self):
         """Generates the study XML file
