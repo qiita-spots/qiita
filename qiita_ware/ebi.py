@@ -8,7 +8,7 @@ from xml.dom import minidom
 from xml.sax.saxutils import escape
 
 from qiime.util import split_sequence_file_on_sample_ids_to_files
-from skbio.util import safe_md5
+from skbio.util.misc import safe_md5
 
 
 class InvalidMetadataError(Exception):
