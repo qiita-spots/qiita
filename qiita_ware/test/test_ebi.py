@@ -258,15 +258,15 @@ class TestEBISubmission(TestCase):
         remove(output)
 
     def test_write_run_xml(self):
-        # raise NotImplementedError()
+        # This just writes out the output from generate_run_xml...
         pass
 
     def test_write_submission_xml(self):
-        # raise NotImplementedError()
+        # This just writes out the output from generated_submission_xml...
         pass
 
     def test_write_all_xml_files(self):
-        # raise NotImplementedError()
+        # This just writes out the output from the generation methods...
         pass
 
     def test_add_samples_from_templates(self):
@@ -285,7 +285,7 @@ class TestEBISubmission(TestCase):
             submission.samples['sample2']['preps'][0]['file_path'],
             self.path + '/sample2.fastq')
         with self.assertRaises(KeyError):
-            preps = submission.samples['nothere']
+            submission.samples['nothere']
 
     def test_from_templates_and_demux_fastq(self):
         # sample_template = StringIO.StringIO(EXP_SAMPLE_TEMPLATE)
