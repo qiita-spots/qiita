@@ -95,7 +95,7 @@ class TestEBISubmission(TestCase):
         self.assertEqual(obs, exp)
 
     def test_add_dict_as_tags_and_values(self):
-        # raise NotImplementedError()
+        # raise Not
         pass
 
     def test_generate_study_xml(self):
@@ -104,7 +104,9 @@ class TestEBISubmission(TestCase):
         xmlelement = submission.generate_study_xml()
         xml = minidom.parseString(ET.tostring(xmlelement))
         xmlstring = xml.toprettyxml(indent='  ', encoding='UTF-8')
-        self.assertEqual(xmlstring, STUDYXML)
+        obs_stripped = ''.join([l.strip() for l in xmlstring.splitlines()])
+        exp_stripped = ''.join([l.strip() for l in STUDYXML.splitlines()])
+        self.assertEqual(obs_stripped, exp_stripped)
 
     def test_add_sample(self):
         submission = EBISubmission('001', 'teststudy', 'test asbstract',
