@@ -15,7 +15,7 @@ from xml.etree import ElementTree as ET
 from xml.dom import minidom
 import StringIO
 from tempfile import mkstemp
-from os import close, remove
+from os import close, remove, path
 
 
 from qiita_ware.ebi import (InvalidMetadataError, SampleAlreadyExistsError,
@@ -23,6 +23,9 @@ from qiita_ware.ebi import (InvalidMetadataError, SampleAlreadyExistsError,
 
 
 class TestEBISubmission(TestCase):
+    def setUp(self):
+        self.path = path.dirname(path.abspath(__file__)) + '/test_data'
+
     def test_init(self):
         e = EBISubmission('2', 'Study Title', 'Study Abstract', 'metagenome')
 
@@ -141,14 +144,14 @@ class TestEBISubmission(TestCase):
         submission.add_sample('test1')
         submission.add_sample('test2')
         submission.add_sample_prep('test1', 'ILLUMINA', 'fastq',
-                                   'fakepath', 'experiment description',
+                                   self.path, 'experiment description',
                                    'library protocol')
         prep_info = submission.samples['test1']['preps'][0]
         self.assertEqual(prep_info['platform'], 'ILLUMINA')
-        self.assertEqual(prep_info['file_path'], 'fakepath')
+        self.assertEqual(prep_info['file_path'], self.path)
         with self.assertRaises(KeyError):
             submission.add_sample_prep('test3', 'ILLUMINA', 'fastq',
-                                       'fakepath', 'experiment description',
+                                       self.path, 'experiment description',
                                        'library protocol')
 
     def test__generate_library_descriptor(self):
@@ -164,7 +167,8 @@ class TestEBISubmission(TestCase):
                                    'metagenome')
         submission.add_sample('test1')
         submission.add_sample_prep('test1', 'ILLUMINA', 'fastq',
-                                   'fakepath', 'experiment description',
+                                   'fakepath',
+                                   'experiment description',
                                    'library protocol')
         xmlelement = submission.generate_experiment_xml()
         xml = minidom.parseString(ET.tostring(xmlelement))
@@ -261,15 +265,17 @@ class TestEBISubmission(TestCase):
         submission = EBISubmission('001', 'teststudy', 'test asbstract',
                                    'metagenome')
         submission.add_samples_from_templates(sample_template, [prep_template],
-                                              '/tmp')
-        self.assertTrue('Sample1' in submission.samples)
-        self.assertTrue('Sample2' in submission.samples)
-        self.assertTrue('Sample3' in submission.samples)
-        self.assertEqual(submission.samples['Sample2']['preps'][0]['platform'],
+                                              self.path)
+        self.assertTrue('sample1' in submission.samples)
+        self.assertTrue('sample2' in submission.samples)
+        self.assertTrue('sample3' in submission.samples)
+        self.assertEqual(submission.samples['sample2']['preps'][0]['platform'],
                          'ILLUMINA')
         self.assertEqual(
-            submission.samples['Sample2']['preps'][0]['file_path'],
-            '/tmp/Sample2.fastq')
+            submission.samples['sample2']['preps'][0]['file_path'],
+            self.path + '/sample2.fastq')
+        with self.assertRaises(KeyError):
+            preps = submission.samples['nothere']
 
     def test_from_templates_and_demux_fastq(self):
         # raise NotImplementedError()
@@ -404,12 +410,12 @@ EXP_SAMPLE_TEMPLATE = (
     "has_physical_specimen\thost_subject_id\tlatitude\tlongitude\t"
     "physical_location\trequired_sample_info_status_id\tsample_type\t"
     "str_column\n"
-    "Sample1\t2014-05-29 12:24:51\tTest Sample 1\tTrue\tTrue\tNotIdentified\t"
+    "sample1\t2014-05-29 12:24:51\tTest Sample 1\tTrue\tTrue\tNotIdentified\t"
     "42.42\t41.41\tlocation1\t1\ttype1\tValue for sample 1\n"
-    "Sample2\t2014-05-29 12:24:51\t"
+    "sample2\t2014-05-29 12:24:51\t"
     "Test Sample 2\tTrue\tTrue\tNotIdentified\t4.2\t1.1\tlocation1\t1\t"
     "type1\tValue for sample 2\n"
-    "Sample3\t2014-05-29 12:24:51\tTest Sample 3\tTrue\t"
+    "sample3\t2014-05-29 12:24:51\tTest Sample 3\tTrue\t"
     "True\tNotIdentified\t4.8\t4.41\tlocation1\t1\ttype1\t"
     "Value for sample 3\n")
 
@@ -417,11 +423,11 @@ EXP_PREP_TEMPLATE = (
     "sample_name\tcenter_name\tcenter_project_name\tdata_type_id\t"
     "temp_status_id\tstr_column\tplatform\texperiment_design_description"
     "\tlibrary_construction_protocol"
-    "\nSample1\tANL\tTest Project\t2\t1\tValue for sample 3"
+    "\nsample1\tANL\tTest Project\t2\t1\tValue for sample 3"
     "\tILLUMINA\texp design\tlib protocol\n"
-    "Sample2\tANL\tTest Project\t2\t1\tValue for sample 1"
+    "sample2\tANL\tTest Project\t2\t1\tValue for sample 1"
     "\tILLUMINA\texp design\tlib protocol\n"
-    "Sample3\tANL\tTest Project\t2\t1\tValue for sample 2"
+    "sample3\tANL\tTest Project\t2\t1\tValue for sample 2"
     "\tILLUMINA\texp design\tlib protocol\n")
 
 if __name__ == "__main__":
