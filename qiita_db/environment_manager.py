@@ -19,7 +19,9 @@ from psycopg2 import connect
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 
 from qiita_core.exceptions import QiitaEnvironmentError
-from qiita_db.util import get_db_files_base_dir
+from qiita_db.util import (get_db_files_base_dir, get_filepath_types,
+                           get_filetypes, get_processed_params_tables,
+                           get_preprocessed_params_tables)
 
 get_support_file = partial(join, join(dirname(abspath(__file__)),
                                       'support_files'))
@@ -30,6 +32,7 @@ LAYOUT_FP = get_support_file('qiita-db.sql')
 INITIALIZE_FP = get_support_file('initialize.sql')
 POPULATE_FP = get_support_file('populate_test_db.sql')
 ENVIRONMENTS = {'demo': 'qiita_demo', 'test': 'qiita_test'}
+CLUSTERS = ['demo', 'reserved', 'general']
 
 
 def _check_db_exists(db, cursor):
