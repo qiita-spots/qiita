@@ -154,11 +154,16 @@ class TestEBISubmission(TestCase):
                                        self.path, 'experiment description',
                                        'library protocol')
 
-    def test__generate_library_descriptor(self):
-        # raise NotImplementedError()
-        pass
+    def test_generate_library_descriptor(self):
+        e = EBISubmission('2', 'Study Title', 'Study Abstract', 'metagenome')
+        elm = ET.Element('design', {'foo': 'bar'})
 
-    def test__generate_spot_descriptor(self):
+        e._generate_library_descriptor(elm, 'sample', 10, 'libconsprot')
+        exp = ''.join([l.strip() for l in GENLIBDESC.splitlines()])
+        obs = ET.tostring(elm)
+        self.assertEqual(obs, exp)
+
+    def test_generate_spot_descriptor(self):
         # raise NotImplementedError()
         pass
 
@@ -403,6 +408,19 @@ ADDDICTTEST = """<TESTING foo="bar">
         <VALUE>y</VALUE>
     </foo>
 </TESTING>
+"""
+
+GENLIBDESC = """<design foo="bar">
+    <LIBRARY_DESCRIPTOR>
+        <LIBRARY_NAME>sample:10</LIBRARY_NAME>
+        <LIBRARY_STRATEGY>POOLCLONE</LIBRARY_STRATEGY>
+        <LIBRARY_SOURCE>METAGENOMIC</LIBRARY_SOURCE>
+        <LIBRARY_SELECTION>unspecified</LIBRARY_SELECTION>
+        <LIBRARY_LAYOUT><SINGLE /></LIBRARY_LAYOUT>
+        <LIBRARY_CONSTRUCTION_PROTOCOL>libconsprot
+        </LIBRARY_CONSTRUCTION_PROTOCOL>
+    </LIBRARY_DESCRIPTOR>
+</design>
 """
 
 EXP_SAMPLE_TEMPLATE = (

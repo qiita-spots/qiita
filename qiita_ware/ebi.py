@@ -106,7 +106,7 @@ class EBISubmission(object):
         self.library_source = lib_sources.get(
             self.investigation_type, "METAGENOMIC")
         self.library_selection = lib_selections.get(
-            self.investigation_type, "unspecififed")
+            self.investigation_type, "unspecified")
 
         # This allows addition of other arbitrary study metadata
         self.additional_metadata = self._stringify_kwargs(kwargs)
