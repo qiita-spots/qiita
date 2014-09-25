@@ -164,8 +164,13 @@ class TestEBISubmission(TestCase):
         self.assertEqual(obs, exp)
 
     def test_generate_spot_descriptor(self):
-        # raise NotImplementedError()
-        pass
+        e = EBISubmission('2', 'Study Title', 'Study Abstract', 'metagenome')
+        elm = ET.Element('design', {'foo': 'bar'})
+
+        e._generate_spot_descriptor(elm, 'LS454')
+        exp = ''.join([l.strip() for l in GENSPOTDESC.splitlines()])
+        obs = ET.tostring(elm)
+        self.assertEqual(obs, exp)
 
     def test_generate_experiment_xml(self):
         submission = EBISubmission('001', 'teststudy', 'test asbstract',
@@ -437,6 +442,19 @@ GENLIBDESC = """<design foo="bar">
         <LIBRARY_CONSTRUCTION_PROTOCOL>libconsprot
         </LIBRARY_CONSTRUCTION_PROTOCOL>
     </LIBRARY_DESCRIPTOR>
+</design>
+"""
+
+GENSPOTDESC = """<design foo="bar">
+    <SPOT_DESCRIPTOR>
+        <SPOT_DECODE_SPEC />
+        <READ_SPEC>
+            <READ_INDEX>0</READ_INDEX>
+            <READ_CLASS>Application Read</READ_CLASS>
+            <READ_TYPE>Forward</READ_TYPE>
+            <BASE_COORD>1</BASE_COORD>
+        </READ_SPEC>
+    </SPOT_DESCRIPTOR>
 </design>
 """
 
