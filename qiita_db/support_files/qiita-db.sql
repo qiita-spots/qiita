@@ -110,8 +110,8 @@ CREATE TABLE qiita.ontology (
 	source_url           varchar  ,
 	definition           text  ,
 	load_date            date  NOT NULL,
-	version              varchar  ,
-	CONSTRAINT pk_ontology PRIMARY KEY ( ontology_id )
+	CONSTRAINT pk_ontology PRIMARY KEY ( ontology_id ),
+	CONSTRAINT idx_ontology UNIQUE ( ontology ) 
  );
 
 CREATE TABLE qiita.portal_type ( 
