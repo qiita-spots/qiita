@@ -19,6 +19,7 @@ from qiita_core.environment_manager import (start_cluster as _start_cluster,
                                             stop_cluster as _stop_cluster)
 from qiita_core.configuration_manager import ConfigurationManager
 
+
 _CONFIG = ConfigurationManager()
 
 
@@ -45,7 +46,7 @@ def start_cluster(clusters):
 @env.command()
 @click.argument('clusters', required=True, type=click.Choice(CLUSTERS),
                 nargs=-1) 
-def stop_cluster(cluster):
+def stop_cluster(clusters):
     """Stop a compute environment"""
     for cluster in clusters:
         print "Stopping cluster", cluster

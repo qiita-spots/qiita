@@ -164,7 +164,7 @@ def load_sample_template(fp, study):
 
 @db.command()
 @click.argument('fp', required=True,
-              type=click.Path(resolve_path=True, readable=True, exists=True))
+                type=click.Path(resolve_path=True, readable=True, exists=True))
 @click.option('--raw_data', required=True, type=int,
               help='Associate the prep template with this raw data')
 def load_prep_template(fp, raw_data):

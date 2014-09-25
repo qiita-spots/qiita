@@ -307,7 +307,7 @@ class PreprocessedDataTests(TestCase):
         ppd = PreprocessedData(1)
         self.assertEqual(ppd.ebi_study_accession, 'EBI123456-BB')
 
-    def test_ebi_submission_accession(self):
+    def test_set_ebi_submission_accession(self):
         new = PreprocessedData.create(
             self.study, self.params_table, self.params_id, self.filepaths,
             raw_data=self.raw_data,
