@@ -7,7 +7,6 @@
 # -----------------------------------------------------------------------------
 
 from unittest import TestCase, main
-from datetime import datetime
 
 from qiita_core.util import qiita_test_checker
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
@@ -33,9 +32,10 @@ class LoggerTests(TestCase):
 
     def test_time_property(self):
         """"""
-        before = datetime.now()
+        sql = "SELECT localtimestamp"
+        before = self.conn_handler.execute_fetchone(sql)[0]
         log_entry = LogEntry.create('Warning', 'warning test', info=None)
-        after = datetime.now()
+        after = self.conn_handler.execute_fetchone(sql)[0]
         self.assertTrue(before < log_entry.time < after)
 
     def test_info_property(self):
