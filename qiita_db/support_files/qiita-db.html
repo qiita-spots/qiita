@@ -562,7 +562,7 @@
 	preprocessed_data references data_type ( data_type_id )</title>
 </path>
 <text x='1119' y='805' transform='rotate(0 1119,805)' title='Foreign Key fk_preprocessed_data
-	preprocessed_data references data_type ( data_type_id )' style='fill:#a1a0a0;'>data_type_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 810 1605 L 810,1500' >
+	preprocessed_data references data_type ( data_type_id )' style='fill:#a1a0a0;'>data_type_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 810 1605 L 810,1485' >
 	<title>Foreign Key fk_term_ontology
 	term references ontology ( ontology_id )</title>
 </path>
@@ -1467,20 +1467,20 @@ Referred by controlled_vocab_values ( controlled_vocab_id ) </title></a>
   <a xlink:href='#is_leaf'><text x='813' y='1777'>is_leaf</text><title>is_leaf bool</title></a>
 
 <!-- ============= Table 'ontology' ============= -->
-<rect class='table' x='765' y='1313' width='105' height='180' rx='7' ry='7' />
+<rect class='table' x='765' y='1313' width='105' height='165' rx='7' ry='7' />
 <path d='M 765.50 1339.50 L 765.50 1320.50 Q 765.50 1313.50 772.50 1313.50 L 862.50 1313.50 Q 869.50 1313.50 869.50 1320.50 L 869.50 1339.50 L765.50 1339.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
 <a xlink:href='#ontology'><text x='793' y='1327' class='tableTitle'>ontology</text><title>Table qiita.ontology</title></a>
   <use id='nn' x='767' y='1347' xlink:href='#nn'/><a xlink:href='#ontology_id'><use id='pk' x='767' y='1346' xlink:href='#pk'/><title>Primary Key  ( ontology_id ) </title></a>
 <a xlink:href='#ontology_id'><text x='783' y='1357'>ontology_id</text><title>ontology_id bigserial not null</title></a>
 <a xlink:href='#ontology_id'><use id='ref' x='858' y='1346' xlink:href='#ref'/><title>Referred by term ( ontology_id ) </title></a>
-  <use id='nn' x='767' y='1362' xlink:href='#nn'/><a xlink:href='#ontology'><text x='783' y='1372'>ontology</text><title>ontology varchar not null</title></a>
+  <use id='nn' x='767' y='1362' xlink:href='#nn'/><a xlink:href='#ontology'><use id='unq' x='767' y='1361' xlink:href='#unq'/><title>Unique Index  ( ontology ) </title></a>
+<a xlink:href='#ontology'><text x='783' y='1372'>ontology</text><title>ontology varchar not null</title></a>
   <use id='nn' x='767' y='1377' xlink:href='#nn'/><a xlink:href='#fully_loaded'><text x='783' y='1387'>fully_loaded</text><title>fully_loaded bool not null</title></a>
   <a xlink:href='#fullname'><text x='783' y='1402'>fullname</text><title>fullname varchar</title></a>
   <a xlink:href='#query_url'><text x='783' y='1417'>query_url</text><title>query_url varchar</title></a>
   <a xlink:href='#source_url'><text x='783' y='1432'>source_url</text><title>source_url varchar</title></a>
   <a xlink:href='#definition'><text x='783' y='1447'>definition</text><title>definition text</title></a>
   <use id='nn' x='767' y='1452' xlink:href='#nn'/><a xlink:href='#load_date'><text x='783' y='1462'>load_date</text><title>load_date date not null</title></a>
-  <a xlink:href='#version'><text x='783' y='1477'>version</text><title>version varchar</title></a>
 
 </g></svg>
 
@@ -4354,14 +4354,13 @@ Controlled Vocabulary </td>
 		<td width='40%'> date  NOT NULL  </td>
 		<td width='99%'>  </td>
 	</tr>
-	<tr>
-		<td><a name='version'>version</a></td>
-		<td width='40%'> varchar   </td>
-		<td width='99%'>  </td>
-	</tr>
 <tr><td colspan='3' class='subpart'><b>Indexes</b></td></tr>
 	<tr>		<td>pk&#095;ontology primary key</td>
 		<td> ON ontology&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>idx&#095;ontology unique</td>
+		<td> ON ontology</td>
 		<td>  </td>
 	</tr>
 </tbody>
