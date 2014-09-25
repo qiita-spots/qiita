@@ -89,8 +89,10 @@ class TestEBISubmission(TestCase):
         self.assertEqual(obs, exp)
 
     def test_get_library_name(self):
-        # raise NotImplementedError()
-        pass
+        e = EBISubmission('2', 'Study Title', 'Study Abstract', 'metagenome')
+        obs = e._get_library_name("nasty<business>", 42)
+        exp = "nasty&lt;business&gt;:42"
+        self.assertEqual(obs, exp)
 
     def test_add_dict_as_tags_and_values(self):
         # raise NotImplementedError()
