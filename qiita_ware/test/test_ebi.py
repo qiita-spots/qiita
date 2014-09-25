@@ -158,7 +158,7 @@ class TestEBISubmission(TestCase):
         xmlelement = submission.generate_experiment_xml()
         xml = minidom.parseString(ET.tostring(xmlelement))
         xmlstring = xml.toprettyxml(indent='  ', encoding='UTF-8')
-        self.assertEqual(xmlstring, EXPERIEMENTXML)
+        self.assertEqual(xmlstring, EXPERIMENTXML)
 
     def test_generate_run_xml(self):
         submission = EBISubmission('001', 'teststudy', 'test asbstract',
@@ -194,7 +194,9 @@ class TestEBISubmission(TestCase):
         submission.write_study_xml(output)
         close(fh)
 
-        self.assertEqual(open(output).read(), STUDYXML)
+        obs_stripped = ''.join([l.strip() for l in open(output)])
+        exp_stripped = ''.join([l.strip() for l in STUDYXML.splitlines()])
+        self.assertEqual(obs_stripped, exp_stripped)
         remove(output)
 
     def test_write_sample_xml(self):
@@ -205,7 +207,10 @@ class TestEBISubmission(TestCase):
         fh, output = mkstemp()
         close(fh)
         submission.write_sample_xml(output)
-        self.assertEqual(open(output).read(), SAMPLEXML)
+
+        obs_stripped = ''.join([l.strip() for l in open(output)])
+        exp_stripped = ''.join([l.strip() for l in SAMPLEXML.splitlines()])
+        self.assertEqual(obs_stripped, exp_stripped)
         remove(output)
 
     def test_write_experiment_xml(self):
@@ -218,7 +223,9 @@ class TestEBISubmission(TestCase):
         fh, output = mkstemp()
         close(fh)
         submission.write_experiment_xml(output)
-        self.assertEqual(open(output).read(), EXPERIEMENTXML)
+        obs_stripped = ''.join([l.strip() for l in open(output)])
+        exp_stripped = ''.join([l.strip() for l in EXPERIMENTXML.splitlines()])
+        self.assertEqual(obs_stripped, exp_stripped)
         remove(output)
 
     def test_write_run_xml(self):
@@ -295,7 +302,7 @@ spaceSchemaLocation="ftp://ftp.sra.ebi.ac.uk/meta/xsd/sra_1_3/SRA.study.xsd">
 </STUDY_SET>
 """
 
-EXPERIEMENTXML = """<?xml version="1.0" encoding="UTF-8"?>
+EXPERIMENTXML = """<?xml version="1.0" encoding="UTF-8"?>
 <EXPERIMENT_SET xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:no\
 NamespaceSchemaLocation="ftp://ftp.sra.ebi.ac.uk/meta/xsd/sra_1_3/SRA.\
 experiment.xsd">
