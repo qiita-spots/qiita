@@ -226,8 +226,8 @@ class Analysis(QiitaStatusObject):
         """
         bioms = self.biom_tables
         if not bioms:
-            # no biom tables exist yet, so return None
             return None
+
         # get all samples selected for the analysis
         all_samples = dict(self.samples)
         # turn the lists in all_samples into sets for fast searching
