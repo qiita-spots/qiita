@@ -8,11 +8,12 @@ from shutil import copyfileobj, rmtree
 from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_db.util import get_user_fp
 
+
 class UploadFileHandler(BaseHandler):
-# """ main upload class
-# based on
-# https://github.com/23/resumable.js/blob/master/samples/Backend%20on%20PHP.md
-# """
+    # """ main upload class
+    # based on
+    # https://github.com/23/resumable.js/blob/master/samples/Backend%20on%20PHP.md
+    # """
 
     @authenticated
     def post(self):
@@ -28,7 +29,8 @@ class UploadFileHandler(BaseHandler):
         # creating temporal folder for upload
         if not isdir(fp):
             makedirs(fp)
-        dfp = join(fp, '%s.part.%d' % (resumableFilename,resumableChunkNumber))
+        dfp = join(fp, '%s.part.%d' % (resumableFilename,
+                                       resumableChunkNumber))
 
         # writting the output file
         with open(dfp, 'wb') as f:
@@ -49,7 +51,6 @@ class UploadFileHandler(BaseHandler):
                 rmtree(fp)
                 self.set_status(200)
 
-
     @authenticated
     def get(self):
         """ this is the first point of entry into the upload service
@@ -64,8 +65,8 @@ class UploadFileHandler(BaseHandler):
         if not isdir(fp):
             makedirs(fp)
 
-        dfp = join(fp, self.get_argument('resumableFilename') + '.part.'  +
-                       self.get_argument('resumableChunkNumber'))
+        dfp = join(fp, self.get_argument('resumableFilename') + '.part.' +
+                   self.get_argument('resumableChunkNumber'))
 
         if exists(dfp):
             self.set_status(200)

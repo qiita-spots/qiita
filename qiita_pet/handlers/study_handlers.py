@@ -123,7 +123,7 @@ class StudyDescriptionHandler(BaseHandler):
             fs = [f for f in listdir(ft)]
         else:
             fs = []
-            
+
         self.render('study_description.html', user=self.current_user,
                     study_info=Study(study_id).info, study_id=study_id,
                     files_metatada=fm, files_sequences=fs)
