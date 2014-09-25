@@ -18,6 +18,8 @@ from os.path import join, exists
 
 from .base_handlers import BaseHandler
 
+from qiita_core.qiita_settings import qiita_config
+
 from qiita_db.study import Study, StudyPerson
 from qiita_db.user import User
 from qiita_db.util import get_user_fp
@@ -126,7 +128,8 @@ class StudyDescriptionHandler(BaseHandler):
 
         self.render('study_description.html', user=self.current_user,
                     study_info=Study(study_id).info, study_id=study_id,
-                    files_metatada=fm, files_sequences=fs)
+                    files_metatada=fm, files_sequences=fs,
+                    max_upoad_size=qiita_config.max_upoad_size)
 
     @authenticated
     def post(self):

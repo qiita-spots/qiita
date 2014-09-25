@@ -18,8 +18,11 @@ TEST_ENVIRONMENT = FALSE
 # Download path files
 UPLOAD_DATA_DIR = /tmp/
 
+# Maximum upload size (in Gb)
+MAX_UPLOAD_SIZE = 100
+
 # Path to the base directory where the data files are going to be stored, uncomment to set
-BASE_DATA_DIR = 
+BASE_DATA_DIR =
 
 # ----------------------------- IPython settings ------------------------------
 [ipython]

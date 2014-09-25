@@ -17,20 +17,20 @@ class UploadFileHandler(BaseHandler):
 
     @authenticated
     def post(self):
-        resumableIdentifier = self.get_argument('resumableIdentifier')
-        resumableFilename = self.get_argument('resumableFilename')
-        resumableChunkNumber = int(self.get_argument('resumableChunkNumber'))
-        resumableTotalChunks = int(self.get_argument('resumableTotalChunks'))
+        resumable_identifier = self.get_argument('resumableIdentifier')
+        resumable_filename = self.get_argument('resumableFilename')
+        resumable_chunk_number = int(self.get_argument('resumableChunkNumber'))
+        resumable_total_chunks = int(self.get_argument('resumableTotalChunks'))
         file_type = self.get_argument('file_type')
         data = self.request.files['file'][0]['body']
 
         fp = join(get_user_fp(self.current_user), file_type,
-                  resumableIdentifier)
+                  resumable_identifier)
         # creating temporal folder for upload
         if not isdir(fp):
             makedirs(fp)
-        dfp = join(fp, '%s.part.%d' % (resumableFilename,
-                                       resumableChunkNumber))
+        dfp = join(fp, '%s.part.%d' % (resumable_filename,
+                                       resumable_chunk_number))
 
         # writting the output file
         with open(dfp, 'wb') as f:
@@ -38,13 +38,13 @@ class UploadFileHandler(BaseHandler):
 
         # validating if all files have been uploaded
         num_files = len([n for n in listdir(fp)])
-        if resumableTotalChunks == num_files:
+        if resumable_total_chunks == num_files:
             # creating final destination
             ffp = join(get_user_fp(self.current_user), file_type,
-                       resumableFilename)
+                       resumable_filename)
             with open(ffp, 'wb') as f:
-                for c in range(1, resumableTotalChunks+1):
-                    chunk = join(fp, '%s.part.%d' % (resumableFilename, c))
+                for c in range(1, resumable_total_chunks+1):
+                    chunk = join(fp, '%s.part.%d' % (resumable_filename, c))
                     copyfileobj(open(chunk, 'rb'), f)
 
                 # deleting the tmp folder with contents and finish file

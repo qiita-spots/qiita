@@ -20,16 +20,16 @@
       'timeseries_type_id': 1L,
       'study_abstract':
       'Myrold_Alder_Fir',
-      'spatial_series': None, '
-      study_description': 'Myrold_Alder_Fir',
+      'spatial_series': None,
+      'study_description': 'Myrold_Alder_Fir',
        'portal_type_id': 3L,
        'study_alias': 'Myrold_Alder_Fir',
        'most_recent_contact': None, 'lab_person_id': None, -->
     </td>
   </tr>
   <tr>
-    <td style="vertical-align: middle; text-align:center; width: 50%;"><b>Upload metadata</b></td>
-    <td style="vertical-align: middle; text-align:center; width: 50%;"><b>Upload sequence files</b></td>
+    <td style="vertical-align: middle; text-align:center; width: 50%;"><b>Upload metadata (max file size: {{max_upoad_size}}Gb)</b></td>
+    <td style="vertical-align: middle; text-align:center; width: 50%;"><b>Upload sequence files (max file size: {{max_upoad_size}}Gb)</b></td>
   </tr>
   <tr>
     <td style="vertical-align: top; text-align:center; ">
@@ -95,7 +95,7 @@
 <script src="/static/vendor/js/resumable-uploader.js"></script>
 <script>
   var meta = { fileType: [] };
-  var maxFileSize = 100; // in Gb
+  var maxFileSize = {{max_upoad_size}}; // in Gb
 
   uploader_metadata = (function($){
       return (new ResumableUploader(meta, $('.resumable-browse-metadata'), $('.resumable-drop-metadata'), $('.progress-metadata'), $('.uploader-list-metadata'), $('.file-edit-container-metadata'), maxFileSize, "metadata/{{study_id}}"));

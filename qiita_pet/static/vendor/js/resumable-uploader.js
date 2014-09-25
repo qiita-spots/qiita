@@ -117,7 +117,6 @@
      this.addFile = function(resumableFile){
        // A list and and edit item for the UI
        if (typeof resumableFile == 'object') {
-         for (i in resumableFile) console.log(i)
          name = resumableFile.fileName
        } else {
          name = resumableFile
@@ -243,16 +242,10 @@
        var f = this.files[identifier];
 
        var form = f.editNode.find('form')[0];
-//        f.editNode.find('.file-edit-form-title input').val(f.title);
-//        f.editNode.find('.file-edit-form-description textarea').val(f.description);
-//        f.editNode.find('.file-edit-form-tags input').val(f.tags);
-//        f.editNode.find('.file-edit-form-album select').val(f.album_id);
-//        form.published_p.checked = f.published;
        f.editNode.find('.file-edit-form-title input').val("This is the title");
        f.editNode.find('.file-edit-form-description textarea').val("This is the descrition");
        f.editNode.find('.file-edit-form-tags input').val("These are tags");
        f.editNode.find('.file-edit-form-album select').val("My albums");
-//        form.published_p.checked = 'checked';
      }
 
      // Update UI to reflect the status of the object

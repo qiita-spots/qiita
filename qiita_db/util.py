@@ -616,6 +616,8 @@ def get_user_fp(email):
     Returns
     -------
     str
+        The filepath of the user, a join of the qiita_config.upload_data_dir
+        and the host and name of the user's email
     """
     fp_vals = email.split('@')
     fp = join(qiita_config.upload_data_dir, fp_vals[1], fp_vals[0])
