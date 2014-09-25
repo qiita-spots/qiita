@@ -40,7 +40,7 @@ class TestEBISubmission(TestCase):
 
         self.assertEqual(e.library_strategy, 'POOLCLONE')
         self.assertEqual(e.library_source, 'METAGENOMIC')
-        self.assertEqual(e.library_selection, 'unspecififed')
+        self.assertEqual(e.library_selection, 'unspecified')
 
         self.assertEqual(e.additional_metadata, {})
 
@@ -62,7 +62,7 @@ class TestEBISubmission(TestCase):
 
         self.assertEqual(e.library_strategy, 'POOLCLONE')
         self.assertEqual(e.library_source, 'METAGENOMIC')
-        self.assertEqual(e.library_selection, 'unspecififed')
+        self.assertEqual(e.library_selection, 'unspecified')
 
         self.assertEqual(e.additional_metadata,{"impossible_field":"1",
             "maybe_possible_field":"BOOM"})
@@ -336,7 +336,7 @@ experiment.xsd">
         <LIBRARY_NAME>test1:0</LIBRARY_NAME>
         <LIBRARY_STRATEGY>POOLCLONE</LIBRARY_STRATEGY>
         <LIBRARY_SOURCE>METAGENOMIC</LIBRARY_SOURCE>
-        <LIBRARY_SELECTION>unspecififed</LIBRARY_SELECTION>
+        <LIBRARY_SELECTION>unspecified</LIBRARY_SELECTION>
         <LIBRARY_LAYOUT>
           <SINGLE/>
         </LIBRARY_LAYOUT>
