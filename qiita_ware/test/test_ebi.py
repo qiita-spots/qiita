@@ -160,7 +160,9 @@ class TestEBISubmission(TestCase):
         xmlelement = submission.generate_experiment_xml()
         xml = minidom.parseString(ET.tostring(xmlelement))
         xmlstring = xml.toprettyxml(indent='  ', encoding='UTF-8')
-        self.assertEqual(xmlstring, EXPERIMENTXML)
+        obs_stripped = ''.join([l.strip() for l in xmlstring.splitlines()])
+        exp_stripped = ''.join([l.strip() for l in EXPERIMENTXML.splitlines()])
+        self.assertEqual(obs_stripped, exp_stripped)
 
     def test_generate_run_xml(self):
         submission = EBISubmission('001', 'teststudy', 'test asbstract',
