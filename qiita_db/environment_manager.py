@@ -19,9 +19,7 @@ from psycopg2 import connect
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 
 from qiita_core.exceptions import QiitaEnvironmentError
-from qiita_db.util import (get_db_files_base_dir, get_filepath_types,
-                           get_filetypes, get_processed_params_tables,
-                           get_preprocessed_params_tables)
+from qiita_db.util import get_db_files_base_dir
 
 get_support_file = partial(join, join(dirname(abspath(__file__)),
                                       'support_files'))
