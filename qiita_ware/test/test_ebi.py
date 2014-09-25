@@ -83,8 +83,10 @@ class TestEBISubmission(TestCase):
                          'qiime_study_2:foo:0')
 
     def test_get_submission_alias(self):
-        # raise NotImplementedError()
-        pass
+        e = EBISubmission('2', 'Study Title', 'Study Abstract', 'metagenome')
+        obs = e._get_submission_alias()
+        exp = 'qiime_submission_2'
+        self.assertEqual(obs, exp)
 
     def test_get_library_name(self):
         # raise NotImplementedError()
@@ -163,7 +165,7 @@ class TestEBISubmission(TestCase):
                                    'metagenome')
         submission.add_sample('test1')
         submission.add_sample_prep('test1', 'ILLUMINA', 'fastq',
-                                   'fakepath', 'experiment description',
+                                   '__init__.py', 'experiment description',
                                    'library protocol')
         xmlelement = submission.generate_run_xml()
         xml = minidom.parseString(ET.tostring(xmlelement))
@@ -191,6 +193,7 @@ class TestEBISubmission(TestCase):
         fh, output = mkstemp()
         submission.write_study_xml(output)
         close(fh)
+
         self.assertEqual(open(output).read(), STUDYXML)
         remove(output)
 
@@ -280,9 +283,13 @@ STUDYXML = """<?xml version="1.0" encoding="UTF-8"?>
 spaceSchemaLocation="ftp://ftp.sra.ebi.ac.uk/meta/xsd/sra_1_3/SRA.study.xsd">
   <STUDY alias="qiime_study_001" center_name="CCME-COLORADO">
     <DESCRIPTOR>
-      <STUDY_TITLE>teststudy</STUDY_TITLE>
+      <STUDY_TITLE>
+        teststudy
+      </STUDY_TITLE>
       <STUDY_TYPE existing_study_type="metagenome"/>
-      <STUDY_ABSTRACT>test asbstract</STUDY_ABSTRACT>
+      <STUDY_ABSTRACT>
+        test asbstract
+      </STUDY_ABSTRACT>
     </DESCRIPTOR>
   </STUDY>
 </STUDY_SET>
