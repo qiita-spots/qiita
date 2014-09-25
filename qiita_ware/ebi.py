@@ -365,10 +365,10 @@ class EBISubmission(object):
         # There is some hard-coded information in here, but this is what we
         # have always done in the past...
         spot_descriptor = ET.SubElement(design, 'SPOT_DESCRIPTOR')
-        ET.SubElemenet(spot_descriptor, 'SPOT_DECODE_SPEC')
-        read_spec = ET.SubElemenet(spot_descriptor, 'READ_SPEC')
+        ET.SubElement(spot_descriptor, 'SPOT_DECODE_SPEC')
+        read_spec = ET.SubElement(spot_descriptor, 'READ_SPEC')
 
-        read_index = ET.SubElemenet(read_spec, 'READ_INDEX')
+        read_index = ET.SubElement(read_spec, 'READ_INDEX')
         read_index.text = '0'
         read_class = ET.SubElement(read_spec, 'READ_CLASS')
         read_class.text = 'Application Read'
