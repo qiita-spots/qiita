@@ -213,8 +213,14 @@ class TestEBISubmission(TestCase):
         # add more tests
 
     def test__write_xml_file(self):
-        # raise NotImplementedError()
-        pass
+        e = EBISubmission('2', 'Study Title', 'Study Abstract', 'metagenome')
+        elm = ET.Element('TESTING', {'foo': 'bar'})
+        e._write_xml_file(lambda: elm, 'thing', 'testfile')
+        self.assertEqual(e.thing, 'testfile')
+        obs = open('testfile').read()
+        exp = '<?xml version="1.0" encoding="UTF-8"?>\n<TESTING foo="bar"/>\n'
+        self.assertEqual(obs, exp)
+        remove('testfile')
 
     def test_write_study_xml(self):
         submission = EBISubmission('001', 'teststudy', 'test asbstract',
