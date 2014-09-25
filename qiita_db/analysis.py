@@ -221,19 +221,16 @@ class Analysis(QiitaStatusObject):
         Returns
         -------
         dict of sets or None
-            Format is {processed_data_id: {sample_id, sample_id, ...}}
+            Format is {processed_data_id: {sample_id, sample_id, ...}, ...}
             if no biom tables exist for the analysis, returns None
         """
         bioms = self.biom_tables
         if not bioms:
             return None
 
-        # get all samples selected for the analysis
-        all_samples = dict(self.samples)
-        # turn the lists in all_samples into sets for fast searching
-        # this overhead is less than list searching for large analyses
-        for proc_data, samples in viewitems(all_samples):
-            all_samples[proc_data] = set(samples)
+        # get all samples selected for the analysis, converting lists to
+        # sets for fast searching. Overhead less this way for large analyses
+        all_samples = {k: set(v) for k, v in viewitems(self.samples)}
 
         for biom, filepath in viewitems(bioms):
             table = load_table(filepath)

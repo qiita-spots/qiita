@@ -102,7 +102,7 @@ class TestAnalysis(TestCase):
                        "1_analysis_18S.biom")
         try:
             samples = {1: ['SKB8.640193', 'SKD8.640184', 'SKB7.640196']}
-            self.analysis._build_biom_tables(samples, None,
+            self.analysis._build_biom_tables(samples, 100,
                                              conn_handler=self.conn_handler)
             exp = {1: {'SKM4.640180', 'SKM9.640192'}}
             self.assertEqual(self.analysis.dropped_samples, exp)
@@ -292,7 +292,7 @@ class TestAnalysis(TestCase):
                        "1_analysis_18S.biom")
         try:
             samples = {1: ['SKB8.640193', 'SKD8.640184', 'SKB7.640196']}
-            self.analysis._build_biom_tables(samples, None,
+            self.analysis._build_biom_tables(samples, 100,
                                              conn_handler=self.conn_handler)
             obs = self.analysis.biom_tables
 
