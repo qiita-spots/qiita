@@ -95,8 +95,13 @@ class TestEBISubmission(TestCase):
         self.assertEqual(obs, exp)
 
     def test_add_dict_as_tags_and_values(self):
-        # raise Not
-        pass
+        e = EBISubmission('2', 'Study Title', 'Study Abstract', 'metagenome')
+        elm = ET.Element('TESTING', {'foo': 'bar'})
+
+        e._add_dict_as_tags_and_values(elm, 'foo', {'x': 'y', '>x': '<y'})
+        obs = ET.tostring(elm)
+        exp = ''.join([v.strip() for v in ADDDICTTEST.splitlines()])
+        self.assertEqual(obs, exp)
 
     def test_generate_study_xml(self):
         submission = EBISubmission('001', 'teststudy', 'test asbstract',
@@ -380,6 +385,18 @@ quality_scring_system="phred"/>
     </DATA_BLOCK>
   </RUN>
 </RUN_SET>
+"""
+
+ADDDICTTEST = """<TESTING foo="bar">
+    <foo>
+        <TAG>&gt;x</TAG>
+        <VALUE>&lt;y</VALUE>
+    </foo>
+    <foo>
+        <TAG>x</TAG>
+        <VALUE>y</VALUE>
+    </foo>
+</TESTING>
 """
 
 EXP_SAMPLE_TEMPLATE = (
