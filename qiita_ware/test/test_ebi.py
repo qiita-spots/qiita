@@ -188,14 +188,16 @@ class TestEBISubmission(TestCase):
         xmlelement = submission.generate_run_xml()
         xml = minidom.parseString(ET.tostring(xmlelement))
         xmlstring = xml.toprettyxml(indent='  ', encoding='UTF-8')
-        # waiting for checksum function to be done
+        obs_stripped = ''.join([l.strip() for l in xmlstring.splitlines()])
+        exp_stripped = ''.join([l.strip() for l in RUNXML.splitlines()])
+        self.assertEqual(obs_stripped, exp_stripped)
 
     def test_generate_submission_xml(self):
         submission = EBISubmission('001', 'teststudy', 'test asbstract',
                                    'metagenome')
         submission.add_sample('test1')
         submission.add_sample_prep('test1', 'ILLUMINA', 'fastq',
-                                   'fakepath', 'experiment description',
+                                   '__init__.py', 'experiment description',
                                    'library protocol')
         with self.assertRaises(NoXMLError):
             xmlelement = submission.generate_submission_xml('VALIDATE')
@@ -371,6 +373,23 @@ _PROTOCOL>
     </EXPERIMENT_ATTRIBUTES>
   </EXPERIMENT>
 </EXPERIMENT_SET>
+"""
+
+RUNXML = """
+<?xml version="1.0" encoding="UTF-8"?>
+<RUN_SET xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:no\
+NamespaceSchemaLocation="ftp://ftp.sra.ebi.ac.uk/meta/xsd/sra_1_3/SRA.run.xsd">
+  <RUN alias="__init__.py_run" center_name="CCME-COLORADO">
+    <EXPERIMENT_REF refname="qiime_study_001:test1:0"/>
+    <DATA_BLOCK>
+      <FILES>
+        <FILE checksum="665d8f3b5badd430b48ca2e165bad491" checksum_method=\
+"MD5" filename="__init__.py" filetype="fastq" \
+quality_scring_system="phred"/>
+      </FILES>
+    </DATA_BLOCK>
+  </RUN>
+</RUN_SET>
 """
 
 ADDDICTTEST = """<TESTING foo="bar">
