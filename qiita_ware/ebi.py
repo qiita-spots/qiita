@@ -458,7 +458,7 @@ class EBISubmission(object):
                 file_path = prep_info['file_path']
 
                 with open(file_path) as fp:
-                    md5 = safe_md5(fp)
+                    md5 = safe_md5(fp).hexdigest()
 
                 run = ET.SubElement(run_set, 'RUN', {
                     'alias': basename(file_path) + '_run',
