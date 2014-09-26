@@ -294,6 +294,16 @@ class TestEBISubmission(TestCase):
         with self.assertRaises(KeyError):
             submission.samples['nothere']
 
+    def test_add_samples_from_templates_bad_directory(self):
+        sample_template = StringIO.StringIO(EXP_SAMPLE_TEMPLATE)
+        prep_template = StringIO.StringIO(EXP_PREP_TEMPLATE)
+        submission = EBISubmission('001', 'teststudy', 'test asbstract',
+                                   'metagenome')
+        with self.assertRaises(IOError):
+            submission.add_samples_from_templates(
+                sample_template, [prep_template],
+                self.path+'WILL-NOT-EXIST-BOOM')
+
     def test_from_templates_and_demux_fastq(self):
         # sample_template = StringIO.StringIO(EXP_SAMPLE_TEMPLATE)
         # prep_template = StringIO.StringIO(EXP_PREP_TEMPLATE)
