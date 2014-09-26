@@ -316,7 +316,7 @@ class EBISubmission(object):
         platforms = ['LS454', 'ILLUMINA', 'UNKNOWN']
         if platform not in platforms:
             raise ValueError("The platform name %s is invalid, must be one of"
-                             "%s" % ','.join(platforms))
+                             "%s" % (platform, ','.join(platforms)))
 
         prep_info = self._stringify_kwargs(kwargs)
         if prep_info is None:

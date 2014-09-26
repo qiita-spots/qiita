@@ -156,6 +156,16 @@ class TestEBISubmission(TestCase):
                                        self.path, 'experiment description',
                                        'library protocol')
 
+    def test_add_sample_prep_exception(self):
+        submission = EBISubmission('001', 'teststudy', 'test asbstract',
+                                   'metagenome')
+        submission.add_sample('test1')
+        submission.add_sample('test2')
+        with self.assertRaises(ValueError):
+            submission.add_sample_prep('test3', 'DOES-NOT-EXIST', 'fastq',
+                                       self.path, 'experiment description',
+                                       'library protocol')
+
     def test_generate_library_descriptor(self):
         e = EBISubmission('2', 'Study Title', 'Study Abstract', 'metagenome')
         elm = ET.Element('design', {'foo': 'bar'})
