@@ -266,18 +266,6 @@ class TestEBISubmission(TestCase):
         self.assertEqual(obs_stripped, exp_stripped)
         remove(output)
 
-    def test_write_run_xml(self):
-        # This just writes out the output from generate_run_xml...
-        pass
-
-    def test_write_submission_xml(self):
-        # This just writes out the output from generated_submission_xml...
-        pass
-
-    def test_write_all_xml_files(self):
-        # This just writes out the output from the generation methods...
-        pass
-
     def test_add_samples_from_templates(self):
         sample_template = StringIO.StringIO(EXP_SAMPLE_TEMPLATE)
         prep_template = StringIO.StringIO(EXP_PREP_TEMPLATE)
