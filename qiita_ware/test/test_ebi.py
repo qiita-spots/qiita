@@ -13,8 +13,9 @@ from __future__ import division
 import StringIO
 
 from os import close, remove, path
-from os.path import join
-from tempfile import mkstemp
+from os.path import join, exists
+from tempfile import mkstemp, gettempdir
+from shutil import rmtree
 from unittest import TestCase, main
 from xml.dom import minidom
 from xml.etree import ElementTree as ET
@@ -27,6 +28,14 @@ from qiita_ware.ebi import (InvalidMetadataError, SampleAlreadyExistsError,
 class TestEBISubmission(TestCase):
     def setUp(self):
         self.path = path.dirname(path.abspath(__file__)) + '/test_data'
+        self.temp_dir = gettempdir()
+        self.demux_output_dir = join(self.temp_dir, 'demux_output')
+
+    def tearDown(self):
+        try:
+            rmtree(self.demux_output_dir)
+        except:
+            pass
 
     def test_init(self):
         e = EBISubmission('2', 'Study Title', 'Study Abstract', 'metagenome')
@@ -305,15 +314,14 @@ class TestEBISubmission(TestCase):
                 self.path+'WILL-NOT-EXIST-BOOM')
 
     def test_from_templates_and_demux_fastq(self):
-        # sample_template = StringIO.StringIO(EXP_SAMPLE_TEMPLATE)
-        # prep_template = StringIO.StringIO(EXP_PREP_TEMPLATE)
-        # output = self.path + '/demux_output'
-        # submission = EBISubmission.from_templates_and_demux_fastq(
-        #     '001', 'study_title', 'study_abstract', 'investigation_type',
-        #     sample_template, [prep_template], self.path + '/demux.fastq',
-        #     output)
-        # remove output dir
-        pass
+        sample_template = StringIO.StringIO(EXP_SAMPLE_TEMPLATE)
+        prep_template = StringIO.StringIO(EXP_PREP_TEMPLATE)
+        submission = EBISubmission.from_templates_and_demux_fastq(
+            '001', 'study_title', 'study_abstract', 'investigation_type',
+            sample_template, [prep_template], self.path + '/demux.fastq',
+            self.demux_output_dir)
+        # verify that the output directory exists
+        self.assertTrue(exists(self.demux_output_dir))
 
     def test_from_templates_and_per_sample_fastqs(self):
         sample_template = StringIO.StringIO(EXP_SAMPLE_TEMPLATE)
