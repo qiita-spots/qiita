@@ -7,6 +7,7 @@ from xml.etree import ElementTree as ET
 from xml.dom import minidom
 from xml.sax.saxutils import escape
 
+from future.utils import viewitems
 from qiime.util import split_sequence_file_on_sample_ids_to_files
 from skbio.util.misc import safe_md5
 
@@ -120,7 +121,7 @@ class EBISubmission(object):
         try:
             result = {
                 str(k): str(v) if v is not None else self.empty_value
-                for k, v in kwargs_dict.iteritems()}
+                for k, v in viewitems(kwargs_dict)}
             return result
         except ValueError:
             raise InvalidMetadataError("All additional metadata passed via "
