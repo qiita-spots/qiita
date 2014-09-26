@@ -30,6 +30,7 @@ LAYOUT_FP = get_support_file('qiita-db.sql')
 INITIALIZE_FP = get_support_file('initialize.sql')
 POPULATE_FP = get_support_file('populate_test_db.sql')
 ENVIRONMENTS = {'demo': 'qiita_demo', 'test': 'qiita_test'}
+CLUSTERS = ['demo', 'reserved', 'general']
 
 
 def _check_db_exists(db, cursor):
