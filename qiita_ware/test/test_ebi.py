@@ -10,12 +10,14 @@ from __future__ import division
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
-from unittest import TestCase, main
-from xml.etree import ElementTree as ET
-from xml.dom import minidom
 import StringIO
-from tempfile import mkstemp
+
 from os import close, remove, path
+from os.path import join
+from tempfile import mkstemp
+from unittest import TestCase, main
+from xml.dom import minidom
+from xml.etree import ElementTree as ET
 
 
 from qiita_ware.ebi import (InvalidMetadataError, SampleAlreadyExistsError,
@@ -192,7 +194,8 @@ class TestEBISubmission(TestCase):
                                    'metagenome')
         submission.add_sample('test1')
         submission.add_sample_prep('test1', 'ILLUMINA', 'fastq',
-                                   '__init__.py', 'experiment description',
+                                   join(self.path, '__init__.py'),
+                                   'experiment description',
                                    'library protocol')
         xmlelement = submission.generate_run_xml()
         xml = minidom.parseString(ET.tostring(xmlelement))
@@ -417,7 +420,7 @@ NamespaceSchemaLocation="ftp://ftp.sra.ebi.ac.uk/meta/xsd/sra_1_3/SRA.run.xsd">
     <EXPERIMENT_REF refname="qiime_study_001:test1:0"/>
     <DATA_BLOCK>
       <FILES>
-        <FILE checksum="665d8f3b5badd430b48ca2e165bad491" checksum_method=\
+        <FILE checksum="612cbff13a4f0e236e5e62ac2e00329a" checksum_method=\
 "MD5" filename="__init__.py" filetype="fastq" \
 quality_scring_system="phred"/>
       </FILES>
