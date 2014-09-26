@@ -263,7 +263,7 @@ class EBISubmission(object):
             "xsi:noNamespaceSchemaLocation": "ftp://ftp.sra.ebi.ac.uk/meta/xsd"
                                              "/sra_1_3/SRA.sample.xsd"})
 
-        for sample_name, sample_info in sorted(self.samples.iteritems()):
+        for sample_name, sample_info in sorted(viewitems(self.samples)):
             sample = ET.SubElement(sample_set, 'SAMPLE', {
                 'alias': self._get_sample_alias(sample_name),
                 'center_name': 'CCME-COLORADO'}
@@ -313,6 +313,11 @@ class EBISubmission(object):
             If `sample_name` is not in the list of samples in the
             ``EBISubmission`` object
         """
+        platforms = ['LS454', 'ILLUMINA', 'UNKNOWN']
+        if platform not in platforms:
+            raise ValueError("The platform name %s is invalid, must be one of"
+                             "%s" % ','.join(platforms))
+
         prep_info = self._stringify_kwargs(kwargs)
         if prep_info is None:
             prep_info = {}
@@ -451,7 +456,7 @@ class EBISubmission(object):
             "xmlns:xsi": "http://www.w3.org/2001/XMLSchema-instance",
             "xsi:noNamespaceSchemaLocation": "ftp://ftp.sra.ebi.ac.uk/meta/xsd"
                                              "/sra_1_3/SRA.run.xsd"})
-        for sample_name, sample_info in sorted(self.samples.items()):
+        for sample_name, sample_info in sorted(viewitems(self.samples)):
             for row_number, prep_info in enumerate(sample_info['preps']):
                 experiment_alias = self._get_experiment_alias(sample_name,
                                                               row_number)
@@ -695,10 +700,13 @@ class EBISubmission(object):
         sample_template : file
         prep_templates : list of file
         per_sample_fastq_dir : str
-            Path to the direcotry containing per-sample FASTQ files containing
-            The sequence labels should be:
+            Path to the directory containing per-sample FASTQ files where
+            the sequence labels should be:
             ``SampleID_SequenceNumber And Additional Notes if Applicable``
         """
+        if not exists(per_sample_fastq_dir):
+            raise IOError('The directory with the FASTQ file does not exist.')
+
         for sample in iter_file_via_list_of_dicts(sample_template):
             sample_name = sample.pop('sample_name')
             taxon_id = sample.pop('taxon_id', None)
