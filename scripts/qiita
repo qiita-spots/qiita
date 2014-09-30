@@ -54,6 +54,11 @@ def ebi():
     pass
 
 
+# #############################################################################
+# DB COMMANDS
+# #############################################################################
+
+
 @db.command()
 @click.option('--owner', required=True,
               help="The email address of the owner of the study")
@@ -175,6 +180,11 @@ def load_prep_template(fp, raw_data):
     prep_template = load_prep_template_from_cmd(fp, raw_data)
     print("Prep template successfully added to the database with id %s"
           % prep_template.id)
+
+
+# #############################################################################
+# EBI COMMANDS
+# #############################################################################
 
 
 @ebi.command()
