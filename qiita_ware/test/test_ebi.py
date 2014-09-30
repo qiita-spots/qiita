@@ -325,6 +325,59 @@ class TestEBISubmission(TestCase):
         with self.assertRaises(KeyError):
             submission.samples['nothere']
 
+    def test_generate_curl_command(self):
+        sample_template = StringIO(EXP_SAMPLE_TEMPLATE)
+        prep_template = StringIO(EXP_PREP_TEMPLATE)
+        submission = EBISubmission.from_templates_and_per_sample_fastqs(
+            '001', 'test study', 'abstract',
+            'type',  sample_template, prep_template, self.path)
+
+        # Set these artificially since the function depends only on these fps
+        submission.submission_xml_fp = 'submission.xml'
+        submission.experiment_xml_fp = 'experiment.xml'
+        submission.study_xml_fp = 'study.xml'
+        submission.sample_xml_fp = 'sample.xml'
+        # this should fail since we have not yet set the run.xml fp
+        with self.assertRaises(NoXMLError):
+            submission.generate_curl_command('1', '2', '3', '4')
+        submission.run_xml_fp = 'run.xml'
+
+        test_ebi_seq_xfer_user = 'ebi_seq_xfer_user'
+        test_ebi_access_key = 'ebi_access_key'
+        test_ebi_dropbox_url = 'ebi_dropbox_url'
+
+        # Without curl certificate authentication
+        test_ebi_skip_curl_cert = True
+        obs = submission.generate_curl_command(test_ebi_seq_xfer_user,
+                                               test_ebi_access_key,
+                                               test_ebi_skip_curl_cert,
+                                               test_ebi_dropbox_url)
+        exp_skip_cert = ('curl -k '
+                         '-F "SUBMISSION=@submission.xml" '
+                         '-F "STUDY=@study.xml" '
+                         '-F "SAMPLE=@sample.xml" '
+                         '-F "RUN=@run.xml" '
+                         '-F "EXPERIMENT=@experiment.xml" '
+                         '"ebi_dropbox_url/?auth=ERA%20ebi_seq_xfer_user'
+                         '%20ebi_access_key%3D"')
+        self.assertEqual(obs, exp_skip_cert)
+
+        # With curl certificate authentication
+        test_ebi_skip_curl_cert = False
+        obs = submission.generate_curl_command(test_ebi_seq_xfer_user,
+                                               test_ebi_access_key,
+                                               test_ebi_skip_curl_cert,
+                                               test_ebi_dropbox_url)
+        exp_with_cert = ('curl '
+                         '-F "SUBMISSION=@submission.xml" '
+                         '-F "STUDY=@study.xml" '
+                         '-F "SAMPLE=@sample.xml" '
+                         '-F "RUN=@run.xml" '
+                         '-F "EXPERIMENT=@experiment.xml" '
+                         '"ebi_dropbox_url/?auth=ERA%20ebi_seq_xfer_user'
+                         '%20ebi_access_key%3D"')
+        self.assertEqual(obs, exp_with_cert)
+
 
 SAMPLEXML = """<?xml version="1.0" encoding="UTF-8"?>
 <SAMPLE_SET xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noName\
