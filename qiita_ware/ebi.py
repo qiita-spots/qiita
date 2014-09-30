@@ -6,7 +6,7 @@ from subprocess import call
 from shlex import split as shsplit
 from glob import glob
 from os.path import basename, exists, join, split
-from os import mkdir, environ, close
+from os import environ, close
 from datetime import date, timedelta
 from xml.etree import ElementTree as ET
 from xml.dom import minidom
@@ -760,7 +760,6 @@ class EBISubmission(object):
                                  file_path, experiment_design_description,
                                  library_construction_protocol,
                                  **prep)
-
 
     @classmethod
     def from_templates_and_per_sample_fastqs(cls, study_id, study_title,

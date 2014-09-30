@@ -11,7 +11,6 @@ from os import makedirs
 from functools import partial
 
 from qiita_db.study import Study
-from qiita_db.metadata_template import PrepTemplate, SampleTemplate
 from qiita_ware.ebi import EBISubmission
 
 
