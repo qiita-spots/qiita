@@ -314,9 +314,10 @@ class EBISubmission(object):
             ``EBISubmission`` object
         """
         platforms = ['LS454', 'ILLUMINA', 'UNKNOWN']
-        if platform not in platforms:
-            raise ValueError("The platform name %s is invalid, must be one of"
-                             "%s" % (platform, ','.join(platforms)))
+        if platform.upper() not in platforms:
+            raise ValueError("The platform name %s is invalid, must be one of "
+                             "%s (case insensitive)" % (platform,
+                                                        ','.join(platforms)))
 
         prep_info = self._stringify_kwargs(kwargs)
         if prep_info is None:
@@ -692,13 +693,13 @@ class EBISubmission(object):
         self.write_run_xml(run_fp)
         self.write_submission_xml(submission_fp, action)
 
-    def add_samples_from_templates(self, sample_template, prep_templates,
+    def add_samples_from_templates(self, sample_template, prep_template,
                                    per_sample_fastq_dir):
         """
         Parameters
         ----------
         sample_template : file
-        prep_templates : list of file
+        prep_template : file
         per_sample_fastq_dir : str
             Path to the directory containing per-sample FASTQ files where
             the sequence labels should be:
@@ -716,25 +717,24 @@ class EBISubmission(object):
                             description=description,
                             **sample)
 
-        for prep_template in prep_templates:
-            for prep in iter_file_via_list_of_dicts(prep_template):
-                sample_name = prep.pop('sample_name')
-                platform = prep.pop('platform')
-                experiment_design_description = prep.pop(
-                    'experiment_design_description')
-                library_construction_protocol = prep.pop(
-                    'library_construction_protocol')
+        for prep in iter_file_via_list_of_dicts(prep_template):
+            sample_name = prep.pop('sample_name')
+            platform = prep.pop('platform')
+            experiment_design_description = prep.pop(
+                'experiment_design_description')
+            library_construction_protocol = prep.pop(
+                'library_construction_protocol')
 
-                file_path = join(per_sample_fastq_dir, sample_name+'.fastq')
-                self.add_sample_prep(sample_name, platform, 'fastq',
-                                     file_path, experiment_design_description,
-                                     library_construction_protocol,
-                                     **prep)
+            file_path = join(per_sample_fastq_dir, sample_name+'.fastq')
+            self.add_sample_prep(sample_name, platform, 'fastq',
+                                 file_path, experiment_design_description,
+                                 library_construction_protocol,
+                                 **prep)
 
     @classmethod
     def from_templates_and_demux_fastq(
             cls, study_id, study_title, study_abstract, investigation_type,
-            sample_template, prep_templates, demux_seqs_fp, output_dir,
+            sample_template, prep_template, demux_seqs_fp, output_dir,
             **kwargs):
         """Generate an ``EBISubmission`` from templates and a sequence file
 
@@ -745,7 +745,7 @@ class EBISubmission(object):
         study_abstract : str
         investigation_type : str
         sample_template : file
-        prep_templates : list of file
+        prep_template : file
         demux_seqs_fp : str
             Path to FASTQ File containing the demultiplexed sequences in the
             format output by QIIME. Namely, the sequence labels should be:
@@ -768,7 +768,7 @@ class EBISubmission(object):
                          investigation_type, **kwargs)
 
         submission.add_samples_from_templates(
-            sample_template, prep_templates, output_dir)
+            sample_template, prep_template, output_dir)
 
         return submission
 
@@ -776,7 +776,7 @@ class EBISubmission(object):
     def from_templates_and_per_sample_fastqs(cls, study_id, study_title,
                                              study_abstract,
                                              investigation_type,
-                                             sample_template, prep_templates,
+                                             sample_template, prep_template,
                                              per_sample_fastq_dir,
                                              **kwargs):
         """Generate an ``EBISubmission`` from templates and FASTQ files
@@ -788,7 +788,7 @@ class EBISubmission(object):
         study_abstract : str
         investigation_type : str
         sample_template : file
-        prep_templates : list of file
+        prep_template : file
         per_sample_fastq_dir : str
             Path to the direcotry containing per-sample FASTQ files containing
             The sequence labels should be:
@@ -805,7 +805,7 @@ class EBISubmission(object):
                          investigation_type, **kwargs)
 
         submission.add_samples_from_templates(sample_template,
-                                              prep_templates,
+                                              prep_template,
                                               per_sample_fastq_dir)
 
         return submission
