@@ -8,6 +8,8 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
+from os import makedirs
+
 import click
 from psycopg2 import OperationalError
 
@@ -22,6 +24,8 @@ from qiita_db.commands import (load_sample_template_from_cmd,
 from qiita_db.sql_connection import SQLConnectionHandler
 from qiita_db.exceptions import QiitaDBConnectionError
 from qiita_core.configuration_manager import ConfigurationManager
+from qiita_ware.commands import (
+    generate_from_files as from_files_command)
 
 
 _CONFIG = ConfigurationManager()
@@ -33,7 +37,6 @@ except OperationalError:
                                  "make --help for more information")
 else:
     del conn
-
 
 
 @click.group()
@@ -172,6 +175,23 @@ def load_prep_template(fp, raw_data):
     prep_template = load_prep_template_from_cmd(fp, raw_data)
     print("Prep template successfully added to the database with id %s"
           % prep_template.id)
+
+
+@ebi.command()
+@click.argument('study', required=True, type=int)
+@click.argument('prep_templates', required=True, nargs=-1,
+                type=click.Path(dir_okay=False, resolve_path=True))
+@click.option('--output-dir', required=True,
+              type=click.Path(file_okay=False, resolve_path=True))
+@click.option('--sample-template', required=True, type=click.File())
+@click.option('--fastq-dir', required=True,
+              type=click.Path(file_okay=False, resolve_path=True))
+@click.option('--investigation-type', required=True,
+              type=click.Choice(['mimarks-survey', 'metagenome']))
+def from_files(study, sample_template, prep_templates, fastq_dir):
+    makedirs(output_dir)
+    from_files_command(study, samlpe_template, prep_templates, fastq_dir,
+                       investigation_type, output_dir)
 
 
 if __name__ == '__main__':
