@@ -799,7 +799,12 @@ class EBISubmission(object):
 
         return submission
 
-    def generate_curl_command(self):
+    def generate_curl_command(
+            self,
+            ebi_seq_xfer_user=qiita_config.ebi_seq_xfer_user,
+            ebi_access_key=qiita_config.ebi_access_key,
+            ebi_skip_curl_cert=qiita_config.ebi_skip_curl_cert,
+            ebi_dropbox_url=qiita_config.ebi_dropbox_url):
         """Generates the curl command for submission
 
         Notes
@@ -818,19 +823,19 @@ class EBISubmission(object):
                              "XML files before attempting to generate the "
                              "curl command.")
 
-        url = '?auth=ERA%20{0}%20{1}%3D'.format(qiita_config.ebi_seq_xfer_user,
-                                                qiita_config.ebi_access_key)
+        url = '?auth=ERA%20{0}%20{1}%3D'.format(ebi_seq_xfer_user,
+                                                ebi_access_key)
         curl_command = (
             'curl {0}-F "SUBMISSION=@{1}" -F "STUDY=@{2}" -F "SAMPLE=@{3}" '
             '-F "RUN=@{4}" -F "EXPERIMENT=@{5}" "{6}"'
         ).format(
-            '-k ' if qiita_config.ebi_skip_curl_cert else '',
+            '-k ' if ebi_skip_curl_cert else '',
             self.submission_xml_fp,
             self.study_xml_fp,
             self.sample_xml_fp,
             self.run_xml_fp,
             self.experiment_xml_fp,
-            join(qiita_config.ebi_dropbox_url, url)
+            join(ebi_dropbox_url, url)
         )
 
         return curl_command
