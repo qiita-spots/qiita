@@ -72,9 +72,9 @@ class ConfigurationManager(object):
     ebi_seq_xfer_user : str
         The user to use when submitting to EBI
     ebi_seq_xfer_pass : str
-        The password for the ebi_ftp_user
+        The password for the ebi_seq_xfer_user
     ebi_seq_xfer_url : str
-        The URL of EBI's FTP site
+        The URL of EBI's sequence portal site
     ebi_skip_curl_cert : bool
         Whether or not to skip the certificate check when curling the metadata
     """
