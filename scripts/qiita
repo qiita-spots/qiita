@@ -24,9 +24,7 @@ from qiita_db.commands import (load_sample_template_from_cmd,
 from qiita_db.sql_connection import SQLConnectionHandler
 from qiita_db.exceptions import QiitaDBConnectionError
 from qiita_core.configuration_manager import ConfigurationManager
-from qiita_ware.commands import (
-    generate_from_per_sample_files as from_per_sample_files_command,
-    generate_from_files as from_files_command)
+from qiita_ware.commands import from_files as from_files_command
 
 
 _CONFIG = ConfigurationManager()
@@ -194,40 +192,24 @@ def load_prep_template(fp, raw_data):
                 type=click.File())
 @click.argument('prep-template', required=True,
                 type=click.File())
-@click.argument('fastq', required=True,
-              type=click.Path(exists=True, dir_okay=False, resolve_path=True))
-@click.argument('output-dir', required=True,
-              type=click.Path(file_okay=False, writable=True,
-              resolve_path=True))
-@click.option('--investigation-type', required=True,
-              type=click.Choice(['mimarks-survey', 'metagenome']))
-@click.option('--action', type=click.Choice(['submit', 'validate', 'update']),
-              default='submit')
-def from_files(study, sample_template, prep_template, fastq, output_dir,
-               investigation_type, action):
-    from_files_command(study, sample_template, prep_template, fastq,
-                       output_dir, investigation_type, action)
-
-
-@ebi.command()
-@click.argument('study', required=True, type=int)
-@click.argument('sample-template', required=True,
-                type=click.File())
-@click.argument('prep-template', required=True,
-                type=click.File())
-@click.argument('fastq', required=True,
+@click.argument('fastq_dir', required=True,
               type=click.Path(exists=True, file_okay=False, resolve_path=True))
 @click.argument('output-dir', required=True,
               type=click.Path(file_okay=False, writable=True,
               resolve_path=True))
 @click.option('--investigation-type', required=True,
               type=click.Choice(['mimarks-survey', 'metagenome']))
-@click.option('--action', type=click.Choice(['submit', 'validate', 'update']),
-              default='submit')
-def from_per_sample_files(study, sample_template, prep_template, fastq,
-                          output_dir, investigation_type, action):
-    from_per_sample_files_command(study, sample_template, prep_template, fastq,
-                                  output_dir, investigation_type, action)
+@click.option('--action', type=click.Choice(['ADD', 'VALIDATE', 'MODIFY']),
+              default='submit', help='The generated XML files will specify '
+              'this "action", which controls how the EBI servers handle the '
+              'metadata')
+@click.option('--send/--no-send', default=False, help="Controls whether or "
+              "not sequence files and metadata will actually be sent to EBI "
+              "(default is to generate all the files, but not to send)")
+def from_files(study, sample_template, prep_template, fastq_dir,
+               output_dir, investigation_type, action, send):
+    from_files_command(study, sample_template, prep_template, fastq_dir,
+                       output_dir, investigation_type, action, send)
 
 
 if __name__ == '__main__':
