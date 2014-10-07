@@ -45,3 +45,6 @@ INSERT INTO qiita.command (name, command, input, required, optional, output) VAL
 
 -- Populate command_data_type table
 INSERT INTO qiita.command_data_type (command_id, data_type_id) VALUES (1,1), (1,2), (2,1), (2,2),  (2,3),  (2,4),  (2,5), (2,6), (3,1), (3,2),  (3,3),  (3,4),  (3,5), (3,6);
+
+-- Set the autoincrementing study_id column to start at 10,000 so we don't overlap with existing (QIIME database) study IDs, which should be maintained
+SELECT setval('qiita.study_study_id_seq', 10000);

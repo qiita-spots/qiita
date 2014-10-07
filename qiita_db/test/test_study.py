@@ -182,7 +182,7 @@ class TestStudy(TestCase):
         """Insert a study into the database"""
         obs = Study.create(User('test@foo.bar'), "Fried chicken microbiome",
                            [1], self.info)
-        self.assertEqual(obs.id, 2)
+        self.assertEqual(obs.id, 10002)
         exp = {'mixs_compliant': True, 'metadata_complete': True,
                'reprocess': False, 'study_status_id': 1,
                'number_samples_promised': 28, 'emp_person_id': 2,
@@ -201,7 +201,7 @@ class TestStudy(TestCase):
                'number_samples_collected': 25}
 
         obsins = self.conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.study WHERE study_id = 2")
+            "SELECT * FROM qiita.study WHERE study_id = 10002")
         self.assertEqual(len(obsins), 1)
         obsins = dict(obsins[0])
         self.assertEqual(obsins, exp)
@@ -209,17 +209,17 @@ class TestStudy(TestCase):
         # make sure EFO went in to table correctly
         efo = self.conn_handler.execute_fetchall(
             "SELECT efo_id FROM qiita.study_experimental_factor "
-            "WHERE study_id = 2")
+            "WHERE study_id = 10002")
         self.assertEqual(efo, [[1]])
 
     def test_create_study_with_investigation(self):
         """Insert a study into the database with an investigation"""
         obs = Study.create(User('test@foo.bar'), "Fried chicken microbiome",
                            [1], self.info, Investigation(1))
-        self.assertEqual(obs.id, 2)
+        self.assertEqual(obs.id, 10002)
         # check the investigation was assigned
         obs = self.conn_handler.execute_fetchall(
-            "SELECT * from qiita.investigation_study WHERE study_id = 2")
+            "SELECT * from qiita.investigation_study WHERE study_id = 10002")
         self.assertEqual(obs, [[1, 2]])
 
     def test_create_study_all_data(self):
@@ -234,7 +234,7 @@ class TestStudy(TestCase):
             })
         obs = Study.create(User('test@foo.bar'), "Fried chicken microbiome",
                            [1], self.info)
-        self.assertEqual(obs.id, 2)
+        self.assertEqual(obs.id, 10002)
         exp = {'mixs_compliant': True, 'metadata_complete': False,
                'reprocess': True, 'study_status_id': 1,
                'number_samples_promised': 28, 'emp_person_id': 2,
@@ -251,7 +251,7 @@ class TestStudy(TestCase):
                'study_title': 'Fried chicken microbiome',
                'number_samples_collected': 25}
         obsins = self.conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.study WHERE study_id = 2")
+            "SELECT * FROM qiita.study WHERE study_id = 10002")
         self.assertEqual(len(obsins), 1)
         obsins = dict(obsins[0])
         self.assertEqual(obsins, exp)
@@ -259,7 +259,7 @@ class TestStudy(TestCase):
         # make sure EFO went in to table correctly
         obsefo = self.conn_handler.execute_fetchall(
             "SELECT efo_id FROM qiita.study_experimental_factor "
-            "WHERE study_id = 2")
+            "WHERE study_id = 10002")
         self.assertEqual(obsefo, [[1]])
 
     def test_create_missing_required(self):
