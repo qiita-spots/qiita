@@ -75,3 +75,26 @@ PORT = 5432
 # The password to use to connect to the database
 PASSWORD =
 
+# ----------------------------- EBI settings -----------------------------
+[ebi]
+# The access key issued by EBI for REST submissions
+EBI_ACCESS_KEY =
+
+# The user to use when submitting to EBI
+EBI_SEQ_XFER_USER =
+
+# Password for the above user
+EBI_SEQ_XFER_PASS =
+
+# URL of EBI's FASP site
+EBI_SEQ_XFER_URL = fasp.sra.ebi.ac.uk
+
+# URL of EBI's HTTPS dropbox
+# live submission URL
+#EBI_DROPBOX_URL = https://www.ebi.ac.uk/ena/submit/drop-box/submit/
+# testing URL
+EBI_DROPBOX_URL = https://www-test.ebi.ac.uk/ena/submit/drop-box/submit/
+
+# Skip acertificate check when calling curl (necessary for using the EBI test
+# dropbox URL)
+EBI_SKIP_CURL_CERT = True

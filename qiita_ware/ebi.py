@@ -1,15 +1,21 @@
-#!/usr/bin/env python
-
-from os.path import basename, exists, join
-from os import mkdir
+from re import search
+from tempfile import mkstemp
+from subprocess import call
+from shlex import split as shsplit
+from glob import glob
+from os.path import basename, exists, join, split
+from os import environ, close
 from datetime import date, timedelta
 from xml.etree import ElementTree as ET
 from xml.dom import minidom
 from xml.sax.saxutils import escape
 
 from future.utils import viewitems
-from qiime.util import split_sequence_file_on_sample_ids_to_files
 from skbio.util.misc import safe_md5
+
+from qiita_core.qiita_settings import qiita_config
+
+from qiita_db.logger import LogEntry
 
 
 class InvalidMetadataError(Exception):
@@ -90,11 +96,13 @@ class EBISubmission(object):
         self.study_abstract = study_abstract
         self.investigation_type = investigation_type
         self.empty_value = empty_value
+        self.sequence_files = []
 
         self.study_xml_fp = None
         self.sample_xml_fp = None
         self.experiment_xml_fp = None
         self.run_xml_fp = None
+        self.submission_xml_fp = None
 
         # dicts that map investigation_type to library attributes
         lib_strategies = {'metagenome': 'POOLCLONE',
@@ -192,8 +200,29 @@ class EBISubmission(object):
         descriptor = ET.SubElement(study, 'DESCRIPTOR')
         study_title = ET.SubElement(descriptor, 'STUDY_TITLE')
         study_title.text = escape(clean_whitespace(self.study_title))
+        # TODO: Add existing study types to a controlled vocab. Information
+        # below taken from https://www.ebi.ac.uk/ega/sites/ebi.ac.uk.ega/
+        # files/documents/Study.xml
+        # Controlled vocabulary for existing_study_type:
+        #    Whole Genome Sequencing
+        #    Metagenomics
+        #    Transcriptome Analysis
+        #    Resequencing
+        #    Epigenetics
+        #    Synthetic Genomics
+        #    Forensic or Paleo-genomics
+        #    Gene Regulation Study
+        #    Cancer Genomics
+        #    Population Genomics
+        #    RNASeq
+        #    Exome Sequencing
+        #    Pooled Clone Sequencing
+        #    Other
+        # If using "Other" please add new_study_type="<new term>" attr
+
         ET.SubElement(descriptor, 'STUDY_TYPE', {
-            'existing_study_type': escape(clean_whitespace(
+            'existing_study_type': 'Other',
+            'new_study_type': escape(clean_whitespace(
                 self.investigation_type))}
         )
         study_abstract = ET.SubElement(descriptor, 'STUDY_ABSTRACT')
@@ -314,10 +343,12 @@ class EBISubmission(object):
             ``EBISubmission`` object
         """
         platforms = ['LS454', 'ILLUMINA', 'UNKNOWN']
-        if platform not in platforms:
-            raise ValueError("The platform name %s is invalid, must be one of"
-                             "%s" % (platform, ','.join(platforms)))
+        if platform.upper() not in platforms:
+            raise ValueError("The platform name %s is invalid, must be one of "
+                             "%s (case insensitive)" % (platform,
+                                                        ','.join(platforms)))
 
+        self.sequence_files.append(file_path)
         prep_info = self._stringify_kwargs(kwargs)
         if prep_info is None:
             prep_info = {}
@@ -478,7 +509,7 @@ class EBISubmission(object):
                 ET.SubElement(files, 'FILE', {
                     'filename': basename(file_path),
                     'filetype': file_type,
-                    'quality_scring_system': 'phred',
+                    'quality_scoring_system': 'phred',
                     'checksum_method': 'MD5',
                     'checksum': md5}
                 )
@@ -526,24 +557,24 @@ class EBISubmission(object):
         study_action = ET.SubElement(actions, 'ACTION')
         ET.SubElement(study_action, action, {
             'schema': 'study',
-            'source': self.study_xml_fp}
+            'source': basename(self.study_xml_fp)}
         )
 
         sample_action = ET.SubElement(actions, 'ACTION')
         ET.SubElement(sample_action, action, {
             'schema': 'sample',
-            'source': self.sample_xml_fp}
+            'source': basename(self.sample_xml_fp)}
         )
 
         experiment_action = ET.SubElement(actions, 'ACTION')
         ET.SubElement(experiment_action, action, {
             'schema': 'experiment',
-            'source': self.experiment_xml_fp}
+            'source': basename(self.experiment_xml_fp)}
         )
 
         run_action = ET.SubElement(actions, 'ACTION')
         ET.SubElement(run_action, action, {
-            'schema': 'run', 'source': self.run_xml_fp}
+            'schema': 'run', 'source': basename(self.run_xml_fp)}
         )
 
         if action is 'ADD':
@@ -692,13 +723,13 @@ class EBISubmission(object):
         self.write_run_xml(run_fp)
         self.write_submission_xml(submission_fp, action)
 
-    def add_samples_from_templates(self, sample_template, prep_templates,
+    def add_samples_from_templates(self, sample_template, prep_template,
                                    per_sample_fastq_dir):
         """
         Parameters
         ----------
         sample_template : file
-        prep_templates : list of file
+        prep_template : file
         per_sample_fastq_dir : str
             Path to the directory containing per-sample FASTQ files where
             the sequence labels should be:
@@ -716,67 +747,25 @@ class EBISubmission(object):
                             description=description,
                             **sample)
 
-        for prep_template in prep_templates:
-            for prep in iter_file_via_list_of_dicts(prep_template):
-                sample_name = prep.pop('sample_name')
-                platform = prep.pop('platform')
-                experiment_design_description = prep.pop(
-                    'experiment_design_description')
-                library_construction_protocol = prep.pop(
-                    'library_construction_protocol')
+        for prep in iter_file_via_list_of_dicts(prep_template):
+            sample_name = prep.pop('sample_name')
+            platform = prep.pop('platform')
+            experiment_design_description = prep.pop(
+                'experiment_design_description')
+            library_construction_protocol = prep.pop(
+                'library_construction_protocol')
 
-                file_path = join(per_sample_fastq_dir, sample_name+'.fastq')
-                self.add_sample_prep(sample_name, platform, 'fastq',
-                                     file_path, experiment_design_description,
-                                     library_construction_protocol,
-                                     **prep)
-
-    @classmethod
-    def from_templates_and_demux_fastq(
-            cls, study_id, study_title, study_abstract, investigation_type,
-            sample_template, prep_templates, demux_seqs_fp, output_dir,
-            **kwargs):
-        """Generate an ``EBISubmission`` from templates and a sequence file
-
-        Parameters
-        ----------
-        study_id : str
-        study_title : str
-        study_abstract : str
-        investigation_type : str
-        sample_template : file
-        prep_templates : list of file
-        demux_seqs_fp : str
-            Path to FASTQ File containing the demultiplexed sequences in the
-            format output by QIIME. Namely, the sequence labels should be:
-            ``SampleID_SequenceNumber And Additional Notes if Applicable``
-        output_dir : str
-            The directory to output the per-sample FASTQ files. It will be
-            created it if does not already exist. The files will be named
-            <sample_name>.fastq
-        """
-        if not exists(output_dir):
-            mkdir(output_dir)
-
-        # generate the per-sample FASTQ files
-        with open(demux_seqs_fp, 'U') as demux_seqs:
-            split_sequence_file_on_sample_ids_to_files(
-                demux_seqs, 'fastq', output_dir)
-
-        # initialize the EBISubmission object
-        submission = cls(study_id, study_title, study_abstract,
-                         investigation_type, **kwargs)
-
-        submission.add_samples_from_templates(
-            sample_template, prep_templates, output_dir)
-
-        return submission
+            file_path = join(per_sample_fastq_dir, sample_name+'.fastq.gz')
+            self.add_sample_prep(sample_name, platform, 'fastq',
+                                 file_path, experiment_design_description,
+                                 library_construction_protocol,
+                                 **prep)
 
     @classmethod
     def from_templates_and_per_sample_fastqs(cls, study_id, study_title,
                                              study_abstract,
                                              investigation_type,
-                                             sample_template, prep_templates,
+                                             sample_template, prep_template,
                                              per_sample_fastq_dir,
                                              **kwargs):
         """Generate an ``EBISubmission`` from templates and FASTQ files
@@ -788,7 +777,7 @@ class EBISubmission(object):
         study_abstract : str
         investigation_type : str
         sample_template : file
-        prep_templates : list of file
+        prep_template : file
         per_sample_fastq_dir : str
             Path to the direcotry containing per-sample FASTQ files containing
             The sequence labels should be:
@@ -805,7 +794,134 @@ class EBISubmission(object):
                          investigation_type, **kwargs)
 
         submission.add_samples_from_templates(sample_template,
-                                              prep_templates,
+                                              prep_template,
                                               per_sample_fastq_dir)
 
         return submission
+
+    def generate_curl_command(
+            self,
+            ebi_seq_xfer_user=qiita_config.ebi_seq_xfer_user,
+            ebi_access_key=qiita_config.ebi_access_key,
+            ebi_skip_curl_cert=qiita_config.ebi_skip_curl_cert,
+            ebi_dropbox_url=qiita_config.ebi_dropbox_url):
+        """Generates the curl command for submission
+
+        Parameters
+        ----------
+        ebi_seq_xfer_user : str
+            The user to use when submitting to EBI
+        ebi_access_key : str
+            The access key issued by EBI for REST submissions
+        ebi_skip_curl_cert : bool
+            If the curl certificate should be skipped
+        ebi_dropbox_url : str
+            The dropbox url
+
+        Returns
+        -------
+        curl_command
+            The curl string to be executed
+
+        Notes
+        -----
+        - All 5 XML files (study, sample, experiment, run, and submission) must
+          be generated before executing this function
+        """
+        # make sure that the XML files have been generated
+        if any([self.study_xml_fp is None,
+                self.sample_xml_fp is None,
+                self.experiment_xml_fp is None,
+                self.run_xml_fp is None,
+                self.submission_xml_fp is None]):
+            raise NoXMLError("One of the necessary XML files has not been "
+                             "generated. Make sure you write out all 5 of the "
+                             "XML files before attempting to generate the "
+                             "curl command.")
+
+        url = '?auth=ERA%20{0}%20{1}%3D'.format(ebi_seq_xfer_user,
+                                                ebi_access_key)
+        curl_command = (
+            'curl {0}-F "SUBMISSION=@{1}" -F "STUDY=@{2}" -F "SAMPLE=@{3}" '
+            '-F "RUN=@{4}" -F "EXPERIMENT=@{5}" "{6}"'
+        ).format(
+            '-k ' if ebi_skip_curl_cert else '',
+            self.submission_xml_fp,
+            self.study_xml_fp,
+            self.sample_xml_fp,
+            self.run_xml_fp,
+            self.experiment_xml_fp,
+            join(ebi_dropbox_url, url)
+        )
+
+        return curl_command
+
+    def send_sequences(self):
+        # Send the sequence files by directory
+        unique_dirs = set()
+        for f in self.sequence_files:
+            basedir, filename = split(f)
+            unique_dirs.add(basedir)
+
+        # Set the ASCP password to the one in the Qiita config, but remember
+        # the old pass so that we can politely reset it
+        old_ascp_pass = environ.get('ASPERA_SCP_PASS', '')
+        environ['ASPERA_SCP_PASS'] = qiita_config.ebi_seq_xfer_pass
+
+        for unique_dir in unique_dirs:
+            # Get the list of FASTQ files to submit
+            fastqs = glob(join(unique_dir, '*.fastq.gz'))
+
+            ascp_command = 'ascp -QT -k2 -L- {0} {1}@{2}:/.'.format(
+                ' '.join(fastqs), qiita_config.ebi_seq_xfer_user,
+                qiita_config.ebi_seq_xfer_url)
+
+            # Generate the command using shlex.split so that we don't have to
+            # pass shell=True to subprocess.call
+            ascp_command_parts = shsplit(ascp_command)
+
+            # Don't leave the password lingering in the environment if there
+            # is any error
+            try:
+                call(ascp_command_parts)
+            finally:
+                environ['ASPERA_SCP_PASS'] = old_ascp_pass
+
+    def send_xml(self):
+        # Send the XML files
+        curl_command = self.generate_curl_command()
+        curl_command_parts = shsplit(curl_command)
+        temp_fd, temp_fp = mkstemp()
+        call(curl_command_parts, stdout=temp_fd)
+        close(temp_fd)
+
+        with open(temp_fp, 'U') as curl_output_f:
+            curl_result = curl_output_f.read()
+
+        if 'success="true"' in curl_result:
+            LogEntry.create('Runtime', curl_result)
+            print curl_result
+            print "SUCCESS"
+
+            # TODO: insert these values into the database
+            accessions = search('<STUDY accession="(?P<study>.+?)".*?'
+                                '<SUBMISSION accession="(?P<submission>.+?)"',
+                                curl_result)
+            if accessions is not None:
+                LogEntry.create('Runtime', "Study accession:\t%s" %
+                                accessions.group('study'))
+                LogEntry.create('Runtime', "Submission accession:\t%s" %
+                                accessions.group('submission'))
+
+                print "Study accession:\t", accessions.group('study')
+                print "Submission accession:\t", accessions.group('submission')
+            else:
+                LogEntry.create('Runtime', ("However, the accession numbers "
+                                            "could not be found in the output "
+                                            " above."))
+                print ("However, the accession numbers could not be found in "
+                       "the output above.")
+        else:
+            LogEntry.create('Fatal', curl_result)
+            print curl_result
+            print "FAILED"
