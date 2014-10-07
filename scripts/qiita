@@ -8,9 +8,12 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
-import click
+from os import makedirs
 
-from qiita_db.util import (get_filetypes, get_filepath_types,
+import click
+from psycopg2 import OperationalError
+
+from qiita_db.util import (get_filepath_types, get_filetypes,
                            get_processed_params_tables,
                            get_preprocessed_params_tables)
 from qiita_db.commands import (load_sample_template_from_cmd,
@@ -18,14 +21,46 @@ from qiita_db.commands import (load_sample_template_from_cmd,
                                load_raw_data_cmd, load_processed_data_cmd,
                                load_preprocessed_data_from_cmd,
                                load_prep_template_from_cmd)
+from qiita_db.sql_connection import SQLConnectionHandler
+from qiita_db.exceptions import QiitaDBConnectionError
+from qiita_core.configuration_manager import ConfigurationManager
+from qiita_ware.commands import (
+    ebi_actions,
+    submit_EBI_from_files as submit_EBI_from_files_command)
+
+
+_CONFIG = ConfigurationManager()
+
+try:
+    conn = SQLConnectionHandler()
+except OperationalError:
+    raise QiitaDBConnectionError("Database does not exist. See qiita_env "
+                                 "make --help for more information")
+else:
+    del conn
 
 
 @click.group()
-def qiita_db():
+def qiita():
     pass
 
 
-@qiita_db.command()
+@qiita.group()
+def db():
+    pass
+
+
+@qiita.group()
+def ebi():
+    pass
+
+
+# #############################################################################
+# DB COMMANDS
+# #############################################################################
+
+
+@db.command()
 @click.option('--owner', required=True,
               help="The email address of the owner of the study")
 @click.option('--title', help="The title of the study", required=True)
@@ -38,7 +73,7 @@ def load_study(owner, title, info):
     print("Study successfully added to the database with id %s" % study.id)
 
 
-@qiita_db.command()
+@db.command()
 @click.option('--fp', required=True, type=click.Path(resolve_path=True,
               readable=True, exists=True), multiple=True,
               help='Path to the raw data file. This option can be used '
@@ -53,14 +88,14 @@ def load_study(owner, title, info):
               'study. This option can be used multiple times if the data '
               'should be associated with multiple studies', type=int,
               required=True)
-def load_raw_data(fp, fp_type, filetype, study):
+def load_raw(fp, fp_type, filetype, study):
     """Loads a raw data to the database"""
     raw_data = load_raw_data_cmd(fp, fp_type, filetype, study)
     print("Raw data successfully added to the database with id %s"
           % raw_data.id)
 
 
-@qiita_db.command()
+@db.command()
 @click.option('--study_id', help="Study id associated with data",
               required=True)
 @click.option('--params_table', help="Name of the paramaters table for the "
@@ -76,10 +111,10 @@ def load_raw_data(fp, fp_type, filetype, study):
 @click.option('--raw_data_id', help="Raw data id associated with data",
               default=None)
 @click.option('--insdc', is_flag=True,
-              help="If provided, the preprocessed data have been submitted"
-                   " to insdc")
-def load_preprocessed_data(study_id, params_table, filedir, filepathtype,
-                           params_id, raw_data_id, insdc):
+              help="If provided, the preprocessed data have been submitted "
+                   "to insdc")
+def load_preprocessed(study_id, params_table, filedir, filepathtype,
+                      params_id, raw_data_id, insdc):
     """Loads a preprocessed data to the database"""
     preproc_data = load_preprocessed_data_from_cmd(
         study_id, params_table, filedir, filepathtype, params_id, insdc,
@@ -88,7 +123,7 @@ def load_preprocessed_data(study_id, params_table, filedir, filepathtype,
           % preproc_data.id)
 
 
-@qiita_db.command()
+@db.command()
 @click.option('--fp', required=True, type=click.Path(resolve_path=True,
               readable=True, exists=True), multiple=True, help='Path to the '
               'processed data. This option can be used multilpe times if '
@@ -112,9 +147,9 @@ def load_preprocessed_data(study_id, params_table, filedir, filepathtype,
               help='The date to use as the processed_date. Must be '
               'interpretable  as a datetime. If None, then the current date '
               'and time will be used.')
-def load_processed_data(fp, fp_type, processed_params_table,
-                        processed_params_id, preprocessed_data_id, study_id,
-                        processed_date):
+def load_processed(fp, fp_type, processed_params_table,
+                   processed_params_id, preprocessed_data_id, study_id,
+                   processed_date):
     """Loads a processed data to the database"""
     proc_data = load_processed_data_cmd(fp, fp_type, processed_params_table,
                                         processed_params_id,
@@ -124,11 +159,9 @@ def load_processed_data(fp, fp_type, processed_params_table,
           % proc_data.id)
 
 
-@qiita_db.command()
-@click.option('--fp', required=True,
-              type=click.Path(resolve_path=True, readable=True, exists=True),
-              help='Path to the tab delimited file holding the sample '
-                   'template information')
+@db.command()
+@click.argument('fp', required=True,
+                type=click.Path(resolve_path=True, readable=True, exists=True))
 @click.option('--study', required=True, type=int,
               help='Associate the sample template with this study')
 def load_sample_template(fp, study):
@@ -138,11 +171,9 @@ def load_sample_template(fp, study):
           % sample_temp.id)
 
 
-@qiita_db.command()
-@click.option('--fp', required=True,
-              type=click.Path(resolve_path=True, readable=True, exists=True),
-              help='Path to the tab delimited file holding the prep '
-                   'template information')
+@db.command()
+@click.argument('fp', required=True,
+                type=click.Path(resolve_path=True, readable=True, exists=True))
 @click.option('--raw_data', required=True, type=int,
               help='Associate the prep template with this raw data')
 def load_prep_template(fp, raw_data):
@@ -152,5 +183,38 @@ def load_prep_template(fp, raw_data):
           % prep_template.id)
 
 
+# #############################################################################
+# EBI COMMANDS
+# #############################################################################
+
+
+@ebi.command()
+@click.argument('study', required=True, type=int)
+@click.argument('sample-template', required=True,
+                type=click.File())
+@click.argument('prep-template', required=True,
+                type=click.File())
+@click.argument('fastq_dir', required=True,
+                type=click.Path(exists=True, file_okay=False,
+                                resolve_path=True))
+@click.argument('output-dir', required=True,
+                type=click.Path(file_okay=False, writable=True,
+                                resolve_path=True))
+@click.option('--investigation-type', required=True,
+              type=click.Choice(['mimarks-survey', 'metagenome']))
+@click.option('--action', type=click.Choice(ebi_actions),
+              default='submit', help='The generated XML files will specify '
+              'this "action", which controls how the EBI servers handle the '
+              'metadata')
+@click.option('--send/--no-send', default=False, help="Controls whether or "
+              "not sequence files and metadata will actually be sent to EBI "
+              "(default is to generate all the files, but not to send)")
+def submit_EBI_from_files(study, sample_template, prep_template, fastq_dir,
+                          output_dir, investigation_type, action, send):
+    submit_EBI_from_files_command(study, sample_template, prep_template,
+                                  fastq_dir, output_dir, investigation_type,
+                                  action, send)
+
+
 if __name__ == '__main__':
-    qiita_db()
+    qiita()

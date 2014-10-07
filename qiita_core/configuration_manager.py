@@ -56,19 +56,29 @@ class ConfigurationManager(object):
         The IPython general cluster profile
     ipyc_general_n : int
         The size of the general cluster
-    self.smtp_host : str
+    smtp_host : str
         The SMTP host from which mail will be sent
-    self.smtp_port : int
+    smtp_port : int
         The port on the SMTP host to use
-    self.smtp_user : str
+    smtp_user : str
         The user on the SMTP server that will send mail
-    self.smtp_password : str
+    smtp_password : str
         The password for the user on the SMTP server that will send mail
-    self.smtp_ssl : bool
+    smtp_ssl : bool
         Whether or not SSL is used when connecting to the SMTP server
-    self.smtp_email : str
+    smtp_email : str
         The email address that mail will be sent from when sending mail from
         the SMTP server
+    ebi_access_key : str
+        The access key issued by EBI for REST submissions
+    ebi_seq_xfer_user : str
+        The user to use when submitting to EBI
+    ebi_seq_xfer_pass : str
+        The password for the ebi_seq_xfer_user
+    ebi_seq_xfer_url : str
+        The URL of EBI's sequence portal site
+    ebi_skip_curl_cert : bool
+        Whether or not to skip the certificate check when curling the metadata
     """
     def __init__(self):
         # If conf_fp is None, we default to the test configuration file
@@ -84,7 +94,7 @@ class ConfigurationManager(object):
             config.readfp(conf_file)
 
         _expected_sections = {'main', 'ipython', 'redis', 'postgres',
-                              'smtp'}
+                              'smtp', 'ebi'}
         if set(config.sections()) != _expected_sections:
             missing = _expected_sections - set(config.sections())
             raise MissingConfigSection(', '.join(missing))
@@ -94,6 +104,7 @@ class ConfigurationManager(object):
         self._get_postgres(config)
         self._get_redis(config)
         self._get_ipython(config)
+        self._get_ebi(config)
 
     def _get_main(self, config):
         """Get the configuration of the main section"""
@@ -157,3 +168,14 @@ class ConfigurationManager(object):
         self.smtp_password = sec_get("PASSWORD")
         self.smtp_ssl = sec_getbool("SSL")
         self.smtp_email = sec_get('EMAIL')
+
+    def _get_ebi(self, config):
+        sec_get = partial(config.get, 'ebi')
+        sec_getbool = partial(config.getboolean, 'ebi')
+
+        self.ebi_access_key = sec_get('EBI_ACCESS_KEY')
+        self.ebi_seq_xfer_user = sec_get('EBI_SEQ_XFER_USER')
+        self.ebi_seq_xfer_pass = sec_get('EBI_SEQ_XFER_PASS')
+        self.ebi_seq_xfer_url = sec_get('EBI_SEQ_XFER_URL')
+        self.ebi_dropbox_url = sec_get('EBI_DROPBOX_URL')
+        self.ebi_skip_curl_cert = sec_getbool('EBI_SKIP_CURL_CERT')

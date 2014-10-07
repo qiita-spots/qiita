@@ -12,17 +12,16 @@ install:
   - conda create --yes -n env_name python=$PYTHON_VERSION pip nose pep8 openpyxl=1.8.2 pandas ipython pyzmq
   - conda install --yes -n env_name python=$PYTHON_VERSION h5py>=2.3.1
   - source activate env_name
-  - pip install coveralls
+  - pip install coveralls cogent burrito qcli
+  - pip install https://github.com/biocore/brokit/archive/master.zip
   - pip install https://github.com/biocore/qiime/archive/master.zip --no-deps
   - pip install .
 script:
   - ipython profile create qiita_general --parallel
   - ipython profile create qiita_demo --parallel
   - ipython profile create qiita_reserved --parallel
-  - qiita_env start_cluster --cluster general
-  - qiita_env start_cluster --cluster demo
-  - qiita_env start_cluster --cluster reserved
-  - qiita_env make_env --env test
+  - qiita_env start_cluster general demo reserved
+  - qiita_env make test
   - nosetests --with-doctest --with-coverage
   - pep8 qiita_db qiita_core qiita_pet setup.py
   # we need to run the test suite from setup.py for coveralls to grab the info

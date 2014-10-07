@@ -11,8 +11,7 @@ from os.path import dirname, join
 from base64 import b64encode
 from uuid import uuid4
 
-from qiita_pet.handlers.base_handlers import (MainHandler, MockupHandler,
-                                              NoPageHandler)
+from qiita_pet.handlers.base_handlers import (MainHandler, NoPageHandler)
 from qiita_pet.handlers.auth_handlers import (
     AuthCreateHandler, AuthLoginHandler, AuthLogoutHandler, AuthVerifyHandler)
 from qiita_pet.handlers.user_handlers import (

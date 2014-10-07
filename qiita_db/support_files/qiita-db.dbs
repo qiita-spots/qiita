@@ -526,9 +526,11 @@
 			<column name="source_url" type="varchar" jt="12" />
 			<column name="definition" type="text" jt="12" />
 			<column name="load_date" type="date" jt="91" mandatory="y" />
-			<column name="version" type="varchar" jt="12" />
 			<index name="pk_ontology" unique="PRIMARY_KEY" >
 				<column name="ontology_id" />
+			</index>
+			<index name="idx_ontology" unique="UNIQUE" >
+				<column name="ontology" />
 			</index>
 		</table>
 		<table name="portal_type" >

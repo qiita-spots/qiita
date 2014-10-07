@@ -1057,12 +1057,12 @@ EXP_SAMPLE_TEMPLATE = (
     "True\tNotIdentified\t4.8\t4.41\tlocation1\t1\ttype1\t"
     "Value for sample 3\n")
 
-EXP_PREP_TEMPLATE = (
-    "#SampleID\tcenter_name\tcenter_project_name\tdata_type_id\t"
-    "ebi_submission_accession\temp_status_id\tstr_column"
-    "\nSKB7.640196\tANL\tTest Project\t2\tNone\t1\tValue for sample 3\n"
-    "SKB8.640193\tANL\tTest Project\t2\tNone\t1\tValue for sample 1\n"
-    "SKD8.640184\tANL\tTest Project\t2\tNone\t1\tValue for sample 2\n")
+EXP_PREP_TEMPLATE = ('#SampleID\tcenter_name\tcenter_project_name\tdata_type'
+                     '_id\tebi_submission_accession\temp_status_id\tstr_colu'
+                     'mn\nSKB7.640196\tANL\tTest Project\t2\tNone\t1\tValue '
+                     'for sample 3\nSKB8.640193\tANL\tTest Project\t2\tNone'
+                     '\t1\tValue for sample 1\nSKD8.640184\tANL\tTest Project'
+                     '\t2\tNone\t1\tValue for sample 2\n')
 
 if __name__ == '__main__':
     main()
