@@ -81,35 +81,6 @@ def _get_preprocess_illumina_cmd(raw_data):
     return (cmd, output_dir)
 
 
-def _get_pick_closed_reference_cmd(preprocessed_data, reference):
-    """Generates the pcik_closed_reference.py command to process the
-    pre-processed data
-
-    Parameters
-    ----------
-    preprocessed_data : PreprocessedData
-        The pre-processed data object to process
-    reference : Reference
-        The reference database to use to process thee data
-
-    Returns
-    -------
-    tuple (str, str)
-        A 2-tuple of strings. The first string is the command to be executed.
-        The second string is the path to the command's output directory
-    """
-    from tempfile import mkdtemp
-
-    # Create a temporary directory to store the pick otus output
-    output_dir = mkdtemp(prefix='closed_otus_out')
-
-    cmd = ("pick_closed_reference_otus.py -i %s -r %s -t %s -o %s"
-           % (seqs_fp, reference.sequence_fp, reference.taxonomy_fp,
-              output_dir))
-
-    return (cmd, output_dir)
-
-
 def _clean_up(dirs):
     """"""
     from shutil import rmtree
@@ -128,36 +99,13 @@ def _insert_preprocessed_data():
                             preprocessed_params_id, filepaths, raw_data)
 
 
-def _insert_processed_data():
-    """"""
-    from qiita_db.data import ProcessedData
-
-    ProcessedData(processed_params_table, processed_params_id, filepaths,
-                  preprocessed_data)
-
-
-class StudyProcesser(ParallelWrapper):
+class StudyPreprocesser(ParallelWrapper):
     def _construct_job_graph(self, study, raw_data):
-        """Constructs the workflow graph to process a study
+        """Constructs the workflow graph to preprocess a study
 
-        The steps performed to process a study are:
-        1) Preprocess the study with split_libraries_fastq.py
-        2) Add the new preprocesed data to the DB
-        3) Process the preprocessed data by doing closed reference OTU picking
-        against GreenGenes, using SortMeRNA
-        4) Add the new processed data to the DB
-
-        Parameters
-        ----------
-        study : Study
-            The study to process
-        raw_data: RawData
-            The raw data to use to process the study
-
-        Raises
-        ------
-        NotImplementedError
-            If any file type in the raw data object is not supported
+        The steps performed to preprocess a study are:
+        1) Execute split libraries
+        2) Add the new preprocessed data to the DB
         """
         # STEP 1: Preprocess the study
         preprocess_node = "PREPROCESS"
@@ -184,25 +132,94 @@ class StudyProcesser(ParallelWrapper):
                                  requires_deps=False)
         self._job_graph.add_edge(preprocess_node, insert_preprocessed_node)
 
-        # STEP 3: pick closed-ref otu picking
-        processed_node = "PROCESS"
-        # TODO: Now hard-coded to GG 13 8 (id = 1) - issue #
-        reference = Reference(1)
-        cmd, otus_out = _get_pick_closed_reference_cmd(output_dir, reference)
-        self._job_graph.add_node(processed_node, job=(cmd,),
-                                 requires_deps=False)
-        self._job_graph.add_edge(insert_preprocessed_node, processed_node)
-
-        # STEP 4: Add processed data to DB
-        insert_processed_node = "INSERT_PROCESSED"
-        self._job_graph.add_node(insert_processed_node,
-                                 job=(_insert_processed_data, ),
-                                 requires_deps=False)
-        self._job_graph.add_edge(process_node, insert_processed_node)
-
         # Clean up the environment
         clean_up_node = "CLEAN_UP"
         self._job_graph.add_node(clean_up_node,
-                                 job=(_clean_up, [output_dir, otus_out]),
+                                 job=(_clean_up, [output_dir]),
                                  requires_deps=False)
         self._job_graph.add_edge(insert_processed_node, clean_up_node)
+
+
+# def _get_pick_closed_reference_cmd(preprocessed_data, reference):
+#     """Generates the pcik_closed_reference.py command to process the
+#     pre-processed data
+
+#     Parameters
+#     ----------
+#     preprocessed_data : PreprocessedData
+#         The pre-processed data object to process
+#     reference : Reference
+#         The reference database to use to process thee data
+
+#     Returns
+#     -------
+#     tuple (str, str)
+#         A 2-tuple of strings. The first string is the command to be executed.
+#         The second string is the path to the command's output directory
+#     """
+#     from tempfile import mkdtemp
+
+#     # Create a temporary directory to store the pick otus output
+#     output_dir = mkdtemp(prefix='closed_otus_out')
+
+#     cmd = ("pick_closed_reference_otus.py -i %s -r %s -t %s -o %s"
+#            % (seqs_fp, reference.sequence_fp, reference.taxonomy_fp,
+#               output_dir))
+
+#     return (cmd, output_dir)
+
+
+# def _insert_processed_data():
+#     """"""
+#     from qiita_db.data import ProcessedData
+
+#     ProcessedData(processed_params_table, processed_params_id, filepaths,
+#                   preprocessed_data)
+
+
+# class StudyProcesser(ParallelWrapper):
+#     def _construct_job_graph(self, study, raw_data):
+#         """Constructs the workflow graph to process a study
+
+#         The steps performed to process a study are:
+#         1) Preprocess the study with split_libraries_fastq.py
+#         2) Add the new preprocesed data to the DB
+#         3) Process the preprocessed data by doing closed reference OTU
+#         picking against GreenGenes, using SortMeRNA
+#         4) Add the new processed data to the DB
+
+#         Parameters
+#         ----------
+#         study : Study
+#             The study to process
+#         raw_data: RawData
+#             The raw data to use to process the study
+
+#         Raises
+#         ------
+#         NotImplementedError
+#             If any file type in the raw data object is not supported
+#         """
+
+#         # STEP 3: pick closed-ref otu picking
+#         processed_node = "PROCESS"
+#         # TODO: Now hard-coded to GG 13 8 (id = 1) - issue #
+#         reference = Reference(1)
+#         cmd, otus_out = _get_pick_closed_reference_cmd(output_dir, reference)
+#         self._job_graph.add_node(processed_node, job=(cmd,),
+#                                  requires_deps=False)
+#         self._job_graph.add_edge(insert_preprocessed_node, processed_node)
+
+#         # STEP 4: Add processed data to DB
+#         insert_processed_node = "INSERT_PROCESSED"
+#         self._job_graph.add_node(insert_processed_node,
+#                                  job=(_insert_processed_data, ),
+#                                  requires_deps=False)
+#         self._job_graph.add_edge(process_node, insert_processed_node)
+
+#         # Clean up the environment
+#         clean_up_node = "CLEAN_UP"
+#         self._job_graph.add_node(clean_up_node,
+#                                  job=(_clean_up, [output_dir, otus_out]),
+#                                  requires_deps=False)
+#         self._job_graph.add_edge(insert_processed_node, clean_up_node)
