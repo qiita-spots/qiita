@@ -578,7 +578,7 @@ class TestSampleTemplate(TestCase):
         """Creates a new SampleTemplate"""
         st = SampleTemplate.create(self.metadata, self.new_study)
         # The returned object has the correct id
-        self.assertEqual(st.id, 2)
+        self.assertEqual(st.id, 10002)
 
         # The relevant rows to required_sample_info have been added.
         obs = self.conn_handler.execute_fetchall(
