@@ -884,8 +884,6 @@ class EBISubmission(object):
             # is any error
             try:
                 call(ascp_command_parts)
-            except:
-                raise
             finally:
                 environ['ASPERA_SCP_PASS'] = old_ascp_pass
 
