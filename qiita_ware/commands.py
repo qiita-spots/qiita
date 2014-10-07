@@ -14,8 +14,12 @@ from qiita_db.study import Study
 from qiita_ware.ebi import EBISubmission
 
 
-def from_files(study_id, sample_template, prep_template, fastq_dir_fp,
-               output_dir_fp, investigation_type, action, send):
+ebi_actions = ['ADD', 'VALIDATE', 'MODIFY']
+
+
+def submit_EBI_from_files(study_id, sample_template, prep_template,
+                          fastq_dir_fp, output_dir_fp, investigation_type,
+                          action, send):
     """EBI submission from files
 
     Parameters
@@ -24,16 +28,16 @@ def from_files(study_id, sample_template, prep_template, fastq_dir_fp,
         The study id
     sample_template : File
         The file handler of the sample template file
-    prep_template :
+    prep_template : File
         The file handler of the prep template file
-    fastq_dir_fp :
+    fastq_dir_fp : str
         The fastq filepath
     output_dir_fp : str
         The output directory
     investigation_type : str
         The investigation type string
     action : str
-        The action to perform with this data {'ADD', 'VALIDATE', 'UPDATE'}
+        The action to perform with this data, see ebi_actions within this file
     send : bool
         True to actually send the files
     """

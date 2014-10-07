@@ -557,24 +557,24 @@ class EBISubmission(object):
         study_action = ET.SubElement(actions, 'ACTION')
         ET.SubElement(study_action, action, {
             'schema': 'study',
-            'source': split(self.study_xml_fp)[1]}
+            'source': basename(self.study_xml_fp)}
         )
 
         sample_action = ET.SubElement(actions, 'ACTION')
         ET.SubElement(sample_action, action, {
             'schema': 'sample',
-            'source': split(self.sample_xml_fp)[1]}
+            'source': basename(self.sample_xml_fp)}
         )
 
         experiment_action = ET.SubElement(actions, 'ACTION')
         ET.SubElement(experiment_action, action, {
             'schema': 'experiment',
-            'source': split(self.experiment_xml_fp)[1]}
+            'source': basename(self.experiment_xml_fp)}
         )
 
         run_action = ET.SubElement(actions, 'ACTION')
         ET.SubElement(run_action, action, {
-            'schema': 'run', 'source': split(self.run_xml_fp)[1]}
+            'schema': 'run', 'source': basename(self.run_xml_fp)}
         )
 
         if action is 'ADD':
@@ -807,7 +807,8 @@ class EBISubmission(object):
             ebi_dropbox_url=qiita_config.ebi_dropbox_url):
         """Generates the curl command for submission
 
-
+        Parameters
+        ----------
         ebi_seq_xfer_user : str
             The user to use when submitting to EBI
         ebi_access_key : str
@@ -816,6 +817,11 @@ class EBISubmission(object):
             If the curl certificate should be skipped
         ebi_dropbox_url : str
             The dropbox url
+
+        Returns
+        -------
+        curl_command
+            The curl string to be executed
 
         Notes
         -----
@@ -906,7 +912,7 @@ class EBISubmission(object):
             if accessions is not None:
                 LogEntry.create('Runtime', "Study accession:\t%s" %
                                 accessions.group('study'))
-                LogEntry.create('Runtime', "Submission accessio:\t%s" %
+                LogEntry.create('Runtime', "Submission accession:\t%s" %
                                 accessions.group('submission'))
 
                 print "Study accession:\t", accessions.group('study')
