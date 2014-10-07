@@ -13,10 +13,16 @@ from tornado.web import authenticated
 from wtforms import (Form, StringField, SelectField, BooleanField,
                      SelectMultipleField, TextAreaField, validators)
 
+from os import listdir
+from os.path import join, exists
+
 from .base_handlers import BaseHandler
+
+from qiita_core.qiita_settings import qiita_config
 
 from qiita_db.study import Study, StudyPerson
 from qiita_db.user import User
+from qiita_db.util import get_user_fp
 
 
 class CreateStudyForm(Form):
@@ -106,7 +112,24 @@ class PublicStudiesHandler(BaseHandler):
 class StudyDescriptionHandler(BaseHandler):
     @authenticated
     def get(self, study_id):
-        self.render('study_description.html', user=self.current_user)
+        fp = get_user_fp(self.current_user)
+
+        ft = join(fp, "metadata", study_id)
+        if exists(ft):
+            fm = [f for f in listdir(ft)]
+        else:
+            fm = []
+
+        ft = join(fp, "sequences", study_id)
+        if exists(ft):
+            fs = [f for f in listdir(ft)]
+        else:
+            fs = []
+
+        self.render('study_description.html', user=self.current_user,
+                    study_info=Study(study_id).info, study_id=study_id,
+                    files_metatada=fm, files_sequences=fs,
+                    max_upoad_size=qiita_config.max_upoad_size)
 
     @authenticated
     def post(self):

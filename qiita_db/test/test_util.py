@@ -19,7 +19,7 @@ from qiita_db.util import (exists_table, exists_dynamic_table, scrub_data,
                            get_table_cols, get_table_cols_w_type,
                            get_filetypes, get_filepath_types, get_count,
                            check_count, get_processed_params_tables,
-                           params_dict_to_json)
+                           params_dict_to_json, get_user_fp)
 
 
 @qiita_test_checker()
@@ -177,6 +177,10 @@ class DBUtilTests(TestCase):
     def test_get_processed_params_tables(self):
         obs = get_processed_params_tables()
         self.assertEqual(obs, ['processed_params_uclust'])
+
+    def test_get_user_fps(self):
+        obs = get_user_fp("demo@demo.com")
+        self.assertEqual(obs, "/tmp/demo.com/demo")
 
 
 class UtilTests(TestCase):

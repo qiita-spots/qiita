@@ -44,6 +44,7 @@ from shutil import move
 from json import dumps
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
+from qiita_core.qiita_settings import qiita_config
 from .exceptions import QiitaDBColumnError
 from .sql_connection import SQLConnectionHandler
 
@@ -602,3 +603,23 @@ def get_processed_params_tables():
 
     conn = SQLConnectionHandler()
     return [x[2] for x in conn.execute_fetchall(sql)]
+
+
+def get_user_fp(email):
+    """Returns the user's working filepath
+
+    Parameters
+    ----------
+    email : str
+        The email of the user
+
+    Returns
+    -------
+    str
+        The user's working filepath, a join of the
+        qiita_config.upload_data_dir and the host and name of the user's email
+    """
+    fp_vals = email.split('@')
+    fp = join(qiita_config.upload_data_dir, fp_vals[1], fp_vals[0])
+
+    return fp
