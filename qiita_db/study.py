@@ -112,14 +112,16 @@ class Study(QiitaStatusObject):
 
     Attributes
     ----------
-    name
-    info
-    status
+    data_types
     efo
-    shared_with
-    pmids
+    info
     investigation
+    name
+    pmids
+    shared_with
     sample_template
+    status
+    title
 
     Methods
     -------

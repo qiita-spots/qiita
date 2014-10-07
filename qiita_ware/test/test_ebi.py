@@ -10,19 +10,17 @@ from __future__ import division
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
-import StringIO
-
+from StringIO import StringIO
 from os import close, remove, path
-from os.path import join, exists
+from os.path import join
 from tempfile import mkstemp, gettempdir
 from shutil import rmtree
 from unittest import TestCase, main
 from xml.dom import minidom
 from xml.etree import ElementTree as ET
 
-
-from qiita_ware.ebi import (InvalidMetadataError, SampleAlreadyExistsError,
-                            NoXMLError, EBISubmission)
+from qiita_ware.ebi import (SampleAlreadyExistsError, NoXMLError,
+                            EBISubmission)
 
 
 class TestEBISubmission(TestCase):
@@ -78,8 +76,8 @@ class TestEBISubmission(TestCase):
         self.assertEqual(e.library_source, 'METAGENOMIC')
         self.assertEqual(e.library_selection, 'unspecified')
 
-        self.assertEqual(e.additional_metadata,{"impossible_field":"1",
-            "maybe_possible_field":"BOOM"})
+        self.assertEqual(e.additional_metadata, {
+            "impossible_field": "1", "maybe_possible_field": "BOOM"})
 
     def test_get_study_alias(self):
         e = EBISubmission('2', 'Study Title', 'Study Abstract', 'metagenome')
@@ -231,7 +229,7 @@ class TestEBISubmission(TestCase):
                                    '__init__.py', 'experiment description',
                                    'library protocol')
         with self.assertRaises(NoXMLError):
-            xmlelement = submission.generate_submission_xml('VALIDATE')
+            submission.generate_submission_xml('VALIDATE')
         # add more tests
 
     def test__write_xml_file(self):
@@ -286,11 +284,11 @@ class TestEBISubmission(TestCase):
         remove(output)
 
     def test_add_samples_from_templates(self):
-        sample_template = StringIO.StringIO(EXP_SAMPLE_TEMPLATE)
-        prep_template = StringIO.StringIO(EXP_PREP_TEMPLATE)
+        sample_template = StringIO(EXP_SAMPLE_TEMPLATE)
+        prep_template = StringIO(EXP_PREP_TEMPLATE)
         submission = EBISubmission('001', 'teststudy', 'test asbstract',
                                    'metagenome')
-        submission.add_samples_from_templates(sample_template, [prep_template],
+        submission.add_samples_from_templates(sample_template, prep_template,
                                               self.path)
         self.assertTrue('sample1' in submission.samples)
         self.assertTrue('sample2' in submission.samples)
@@ -299,13 +297,13 @@ class TestEBISubmission(TestCase):
                          'ILLUMINA')
         self.assertEqual(
             submission.samples['sample2']['preps'][0]['file_path'],
-            self.path + '/sample2.fastq')
+            self.path + '/sample2.fastq.gz')
         with self.assertRaises(KeyError):
             submission.samples['nothere']
 
     def test_add_samples_from_templates_bad_directory(self):
-        sample_template = StringIO.StringIO(EXP_SAMPLE_TEMPLATE)
-        prep_template = StringIO.StringIO(EXP_PREP_TEMPLATE)
+        sample_template = StringIO(EXP_SAMPLE_TEMPLATE)
+        prep_template = StringIO(EXP_PREP_TEMPLATE)
         submission = EBISubmission('001', 'teststudy', 'test asbstract',
                                    'metagenome')
         with self.assertRaises(IOError):
@@ -313,29 +311,72 @@ class TestEBISubmission(TestCase):
                 sample_template, [prep_template],
                 self.path+'WILL-NOT-EXIST-BOOM')
 
-    def test_from_templates_and_demux_fastq(self):
-        sample_template = StringIO.StringIO(EXP_SAMPLE_TEMPLATE)
-        prep_template = StringIO.StringIO(EXP_PREP_TEMPLATE)
-        submission = EBISubmission.from_templates_and_demux_fastq(
-            '001', 'study_title', 'study_abstract', 'investigation_type',
-            sample_template, [prep_template], self.path + '/demux.fastq',
-            self.demux_output_dir)
-        # verify that the output directory exists
-        self.assertTrue(exists(self.demux_output_dir))
-
     def test_from_templates_and_per_sample_fastqs(self):
-        sample_template = StringIO.StringIO(EXP_SAMPLE_TEMPLATE)
-        prep_template = StringIO.StringIO(EXP_PREP_TEMPLATE)
+        sample_template = StringIO(EXP_SAMPLE_TEMPLATE)
+        prep_template = StringIO(EXP_PREP_TEMPLATE)
         submission = EBISubmission.from_templates_and_per_sample_fastqs(
             '001', 'test study', 'abstract',
-            'type',  sample_template, [prep_template], self.path)
+            'type',  sample_template, prep_template, self.path)
         self.assertEqual(submission.samples['sample2']['preps'][0]['platform'],
                          'ILLUMINA')
         self.assertEqual(
             submission.samples['sample2']['preps'][0]['file_path'],
-            self.path + '/sample2.fastq')
+            self.path + '/sample2.fastq.gz')
         with self.assertRaises(KeyError):
-            preps = submission.samples['nothere']
+            submission.samples['nothere']
+
+    def test_generate_curl_command(self):
+        sample_template = StringIO(EXP_SAMPLE_TEMPLATE)
+        prep_template = StringIO(EXP_PREP_TEMPLATE)
+        submission = EBISubmission.from_templates_and_per_sample_fastqs(
+            '001', 'test study', 'abstract',
+            'type',  sample_template, prep_template, self.path)
+
+        # Set these artificially since the function depends only on these fps
+        submission.submission_xml_fp = 'submission.xml'
+        submission.experiment_xml_fp = 'experiment.xml'
+        submission.study_xml_fp = 'study.xml'
+        submission.sample_xml_fp = 'sample.xml'
+        # this should fail since we have not yet set the run.xml fp
+        with self.assertRaises(NoXMLError):
+            submission.generate_curl_command('1', '2', '3', '4')
+        submission.run_xml_fp = 'run.xml'
+
+        test_ebi_seq_xfer_user = 'ebi_seq_xfer_user'
+        test_ebi_access_key = 'ebi_access_key'
+        test_ebi_dropbox_url = 'ebi_dropbox_url'
+
+        # Without curl certificate authentication
+        test_ebi_skip_curl_cert = True
+        obs = submission.generate_curl_command(test_ebi_seq_xfer_user,
+                                               test_ebi_access_key,
+                                               test_ebi_skip_curl_cert,
+                                               test_ebi_dropbox_url)
+        exp_skip_cert = ('curl -k '
+                         '-F "SUBMISSION=@submission.xml" '
+                         '-F "STUDY=@study.xml" '
+                         '-F "SAMPLE=@sample.xml" '
+                         '-F "RUN=@run.xml" '
+                         '-F "EXPERIMENT=@experiment.xml" '
+                         '"ebi_dropbox_url/?auth=ERA%20ebi_seq_xfer_user'
+                         '%20ebi_access_key%3D"')
+        self.assertEqual(obs, exp_skip_cert)
+
+        # With curl certificate authentication
+        test_ebi_skip_curl_cert = False
+        obs = submission.generate_curl_command(test_ebi_seq_xfer_user,
+                                               test_ebi_access_key,
+                                               test_ebi_skip_curl_cert,
+                                               test_ebi_dropbox_url)
+        exp_with_cert = ('curl '
+                         '-F "SUBMISSION=@submission.xml" '
+                         '-F "STUDY=@study.xml" '
+                         '-F "SAMPLE=@sample.xml" '
+                         '-F "RUN=@run.xml" '
+                         '-F "EXPERIMENT=@experiment.xml" '
+                         '"ebi_dropbox_url/?auth=ERA%20ebi_seq_xfer_user'
+                         '%20ebi_access_key%3D"')
+        self.assertEqual(obs, exp_with_cert)
 
 
 SAMPLEXML = """<?xml version="1.0" encoding="UTF-8"?>
@@ -366,7 +407,7 @@ spaceSchemaLocation="ftp://ftp.sra.ebi.ac.uk/meta/xsd/sra_1_3/SRA.study.xsd">
       <STUDY_TITLE>
         teststudy
       </STUDY_TITLE>
-      <STUDY_TYPE existing_study_type="metagenome"/>
+      <STUDY_TYPE existing_study_type="Other" new_study_type="metagenome"/>
       <STUDY_ABSTRACT>
         test asbstract
       </STUDY_ABSTRACT>
@@ -438,7 +479,7 @@ NamespaceSchemaLocation="ftp://ftp.sra.ebi.ac.uk/meta/xsd/sra_1_3/SRA.run.xsd">
       <FILES>
         <FILE checksum="612cbff13a4f0e236e5e62ac2e00329a" checksum_method=\
 "MD5" filename="__init__.py" filetype="fastq" \
-quality_scring_system="phred"/>
+quality_scoring_system="phred"/>
       </FILES>
     </DATA_BLOCK>
   </RUN>
