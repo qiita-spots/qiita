@@ -13,6 +13,7 @@ from unittest import TestCase, main
 from qiita_core.exceptions import (IncorrectEmailError, IncorrectPasswordError,
                                    IncompetentQiitaDeveloperError)
 from qiita_core.util import qiita_test_checker
+from qiita_db.util import hash_password
 from qiita_db.user import User, validate_password, validate_email
 from qiita_db.exceptions import (QiitaDBDuplicateError, QiitaDBColumnError,
                                  QiitaDBUnknownIDError)
@@ -240,6 +241,51 @@ class UserTest(TestCase):
                                           'reset'))
         with self.assertRaises(IncompetentQiitaDeveloperError):
             User.verify_code('test@user.com', 'fakecode', 'badtype')
+
+    def _check_pass(self, passwd):
+        obspass = self.conn_handler.execute_fetchone(
+            "SELECT password FROM qiita.qiita_user WHERE email = %s",
+            (self.user.id, ))[0]
+        self.assertEqual(hash_password(passwd, obspass), obspass)
+
+    def test_change_pass(self):
+        self.user._change_pass("newpass")
+        self._check_pass("newpass")
+
+    def test_change_password(self):
+        self.user.change_password("password", "newpass")
+        self._check_pass("newpass")
+
+    def test_change_password_wrong_oldpass(self):
+        self.user.change_password("WRONG", "newpass")
+        self._check_pass("password")
+
+    def test_generate_reset_code(self):
+        user = User.create('new@test.bar', 'password')
+        sql = "SELECT LOCALTIMESTAMP"
+        before = self.conn_handler.execute_fetchone(sql)[0]
+        user.generate_reset_code()
+        after = self.conn_handler.execute_fetchone(sql)[0]
+        sql = ("SELECT pass_reset_code, pass_reset_timestamp FROM "
+               "qiita.qiita_user WHERE email = %s")
+        obscode, obstime = self.conn_handler.execute_fetchone(
+            sql, ('new@test.bar',))
+        self.assertEqual(len(obscode), 20)
+        self.assertTrue(before < obstime < after)
+
+    def test_change_forgot_password(self):
+        self.user.generate_reset_code()
+        code = self.user.info["pass_reset_code"]
+        obsbool = self.user.change_forgot_password(code, "newpass")
+        self.assertEqual(obsbool, True)
+        self._check_pass("newpass")
+
+    def test_change_forgot_password_bad_code(self):
+        self.user.generate_reset_code()
+        code = "AAAAAAA"
+        obsbool = self.user.change_forgot_password(code, "newpass")
+        self.assertEqual(obsbool, False)
+        self._check_pass("password")
 
 
 if __name__ == "__main__":

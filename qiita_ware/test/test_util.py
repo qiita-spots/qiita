@@ -78,7 +78,8 @@ class UtilTests(TestCase):
     def test_metadata_stats_from_sample_and_prep_templates(self):
         obs = metadata_stats_from_sample_and_prep_templates(SampleTemplate(1),
                                                             PrepTemplate(1))
-        self.assertEqual(obs, SUMMARY_STATS)
+        for k in obs:
+            self.assertEqual(obs[k], SUMMARY_STATS[k])
 
     def test_metadata_map_from_sample_and_prep_templates(self):
         obs = metadata_map_from_sample_and_prep_templates(SampleTemplate(1),
@@ -98,26 +99,25 @@ class UtilTests(TestCase):
             u'SKM3.640197', u'SKM4.640180', u'SKM5.640177', u'SKM6.640187',
             u'SKM7.640188', u'SKM8.640201', u'SKM9.640192'], dtype='object')))
 
-        # check the column names are correct
         self.assertTrue(all(obs.columns == pd.Index([
-            u'sample_type', u'common_name', u'has_extracted_data',
+            u'tot_org_carb', u'common_name', u'has_extracted_data',
             u'water_content_soil', u'env_feature', u'assigned_from_geo',
             u'altitude', u'env_biome', u'texture', u'has_physical_specimen',
             u'description_duplicate', u'physical_location', u'latitude',
             u'ph', u'host_taxid', u'elevation', u'description',
             u'collection_timestamp', u'taxon_id', u'samp_salinity',
-            u'host_subject_id', u'season_environment',
+            u'host_subject_id', u'sample_type', u'season_environment',
             u'required_sample_info_status_id', u'temp', u'country',
             u'longitude', u'tot_nitro', u'depth', u'anonymized_name',
-            u'tot_org_carb', u'experiment_center', u'center_name',
-            u'run_center', u'run_prefix', u'data_type_id', u'target_gene',
+            u'experiment_center', u'center_name', u'run_center',
+            u'run_prefix', u'data_type_id', u'target_gene',
             u'sequencing_meth', u'run_date', u'pcr_primers',
-            u'ebi_submission_accession', u'linkerprimersequence', u'platform',
+            u'linkerprimersequence', u'platform',
             u'library_construction_protocol', u'experiment_design_description',
             u'study_center', u'center_project_name', u'sample_center',
             u'samp_size', u'illumina_technology', u'experiment_title',
-            u'emp_status_id', u'target_subfragment', u'barcodesequence',
-            u'ebi_study_accession'], dtype='object')))
+            u'emp_status_id', u'target_subfragment', u'barcodesequence'],
+            dtype='object')))
 
     def template_to_dict(self):
         template = PrepTemplate(1)
@@ -277,7 +277,33 @@ SUMMARY_STATS = {
                         ('1001:M9', 1)],
     'host_taxid': [('3483', 27)],
     'illumina_technology': [('MiSeq', 27)],
-    'latitude': [('33.193611', 27)],
+    'latitude': [('0.291867635913', 1),
+                 ('3.21190859967', 1),
+                 ('4.59216095574', 1),
+                 ('10.6655599093', 1),
+                 ('12.6245524972', 1),
+                 ('12.7065957714', 1),
+                 ('13.089194595', 1),
+                 ('23.1218032799', 1),
+                 ('29.1499460692', 1),
+                 ('31.7167821863', 1),
+                 ('35.2374368957', 1),
+                 ('38.2627021402', 1),
+                 ('40.8623799474', 1),
+                 ('43.9614715197', 1),
+                 ('44.9725384282', 1),
+                 ('53.5050692395', 1),
+                 ('57.571893782', 1),
+                 ('60.1102854322', 1),
+                 ('63.6505562766', 1),
+                 ('68.0991287718', 1),
+                 ('68.51099627', 1),
+                 ('74.0894932572', 1),
+                 ('78.3634273709', 1),
+                 ('82.8302905615', 1),
+                 ('84.0030227585', 1),
+                 ('85.4121476399', 1),
+                 ('95.2060749748', 1)],
     'library_construction_protocol': [('This analysis was done as in Caporaso '
                                        'et al 2011 Genome research. The PCR '
                                        'primers (F515/R806) were developed '
@@ -299,7 +325,34 @@ SUMMARY_STATS = {
                                        'PCR primers contain sequencer adapter '
                                        'regions.', 27)],
     'linkerprimersequence': [('GTGCCAGCMGCCGCGGTAA', 27)],
-    'longitude': [('-117.241111', 27)],
+    'longitude': [
+        ('2.35063674718', 1),
+        ('3.48274264219', 1),
+        ('6.66444220187', 1),
+        ('15.6526750776', 1),
+        ('26.8138925876', 1),
+        ('27.3592668624', 1),
+        ('31.2003474585', 1),
+        ('31.6056761814', 1),
+        ('32.5563076447', 1),
+        ('34.8360987059', 1),
+        ('42.838497795', 1),
+        ('63.5115213108', 1),
+        ('65.3283470202', 1),
+        ('66.1920014699', 1),
+        ('66.8954849864', 1),
+        ('68.5041623253', 1),
+        ('68.5945325743', 1),
+        ('70.784770579', 1),
+        ('74.423907894', 1),
+        ('74.7123248382', 1),
+        ('82.1270418227', 1),
+        ('82.8516734159', 1),
+        ('84.9722975792', 1),
+        ('86.3615778099', 1),
+        ('92.5274472082', 1),
+        ('95.5088566087', 1),
+        ('96.0693176066', 1)],
     'pcr_primers': [('FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT', 27)],
     'ph': [('6.8', 9), ('6.82', 10), ('6.94', 8)],
     'physical_location': [('ANL', 27)],

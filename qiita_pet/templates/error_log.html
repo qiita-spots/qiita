@@ -1,0 +1,60 @@
+{% extends sitebase.html %}
+{% block head %}
+{% from qiita_db.study import StudyPerson %}
+{% from future.utils import viewitems %}
+
+<link rel="stylesheet" href="/static/vendor/css/jquery.dataTables.css" type="text/css">
+
+<script src="/static/vendor/js/jquery.dataTables.min.js"></script>
+
+<script type="text/javascript">
+$(document).ready(function() {
+    $('#error-table').dataTable({"order": [[1, "asc"]]});
+    $("#waiting").hide();
+} );
+</script>
+
+{% end %}
+
+{% block content %}
+  {% if logentries %}
+    <div>
+      <form id="records" method="post" action="/error/">
+      Number of entries: <input type="number" name="numrecords" value="100" class="form-">
+      </form>
+    </div>
+      <table id="error-table" class="display table-bordered table-hover">
+          <thead>
+              <tr>
+                  <th>Time</th>
+                  <th>Severity</th>
+                  <th>Message</th>
+                  <th>Other Info</th>
+              </tr>
+          </thead>
+          <tbody>
+          {% for error in logentries %}
+              <tr>
+                <td>{{error.time}}</td>
+                <td>{{error.severity}}</td>
+                <td>{{error.msg}}</td>
+                <td>
+                    {% for entry in error.info %}
+                      {% for field, val in viewitems(entry) %}
+                          {{field}}: {{val}}<br />
+                      {% end %}
+                    {% end %}
+                </td>
+              </tr>
+          {% end %}
+          </tbody>
+      </table>
+  {% else %}
+      <div class="jumbotron">
+          <h1><span class="glyphicon glyphicon-thumbs-down"></span> There are no errors</h1>
+          <p>
+              This means that the system currently has no errors logged.
+          </p>
+  </div>
+  {% end %}
+{% end %}

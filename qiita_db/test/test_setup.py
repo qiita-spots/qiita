@@ -56,7 +56,7 @@ class SetupTest(TestCase):
         self.assertEqual(get_count("qiita.required_sample_info"), 27)
 
     def test_study_sample_columns(self):
-        self.assertEqual(get_count("qiita.study_sample_columns"), 23)
+        self.assertEqual(get_count("qiita.study_sample_columns"), 21)
 
     def test_sample_1(self):
         self.assertEqual(get_count("qiita.sample_1"), 27)

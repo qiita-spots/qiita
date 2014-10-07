@@ -26,7 +26,6 @@ Classes
 from __future__ import division
 
 from json import loads, dumps
-from datetime import datetime
 
 from qiita_db.util import convert_to_id
 from .sql_connection import SQLConnectionHandler
@@ -49,6 +48,28 @@ class LogEntry(QiitaObject):
     """
 
     _table = 'logging'
+
+    @classmethod
+    def newest_records(cls, numrecords=100):
+        """Return a list of the newest records in the logging table
+
+        Parameters
+        ----------
+        numrecords : int, optional
+            The number of records to return. Default 100
+
+        Returns
+        -------
+        list of LogEntry objects
+            list of the log entries
+        """
+        conn_handler = SQLConnectionHandler()
+        sql = ("SELECT logging_id FROM qiita.{0} ORDER BY logging_id DESC "
+               "LIMIT %s".format(cls._table))
+        ids = conn_handler.execute_fetchone(sql, (numrecords, ))
+        if ids is None:
+            return []
+        return [cls(i) for i in ids]
 
     @classmethod
     def create(cls, severity, msg, info=None):
@@ -78,11 +99,10 @@ class LogEntry(QiitaObject):
 
         conn_handler = SQLConnectionHandler()
         sql = ("INSERT INTO qiita.{} (time, severity_id, msg, information) "
-               "VALUES (%s, %s, %s, %s) "
+               "VALUES (NOW(), %s, %s, %s) "
                "RETURNING logging_id".format(cls._table))
         severity_id = convert_to_id(severity, "severity")
-        id_ = conn_handler.execute_fetchone(sql, (datetime.now(), severity_id,
-                                                  msg, info))[0]
+        id_ = conn_handler.execute_fetchone(sql, (severity_id, msg, info))[0]
 
         return cls(id_)
 
@@ -149,7 +169,7 @@ class LogEntry(QiitaObject):
         str
         """
         conn_handler = SQLConnectionHandler()
-        sql = ("SELECT msg FROM qiita.{} "
+        sql = ("SELECT msg FROM qiita.{0} "
                "WHERE logging_id = %s".format(self._table))
 
         return conn_handler.execute_fetchone(sql, (self.id,))[0]

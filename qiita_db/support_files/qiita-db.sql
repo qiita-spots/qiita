@@ -37,11 +37,23 @@ COMMENT ON COLUMN qiita.command.optional IS 'JSON of optional options for comman
 
 COMMENT ON COLUMN qiita.command.output IS 'JSON of output options for the command';
 
-CREATE TABLE qiita.controlled_vocabularies ( 
+CREATE TABLE qiita.controlled_vocab ( 
 	controlled_vocab_id  bigserial  NOT NULL,
-	vocab_name           varchar  NOT NULL,
+	controlled_vocab     varchar  NOT NULL,
 	CONSTRAINT pk_controlled_vocabularies PRIMARY KEY ( controlled_vocab_id )
  );
+
+CREATE TABLE qiita.controlled_vocab_values ( 
+	vocab_value_id       bigserial  NOT NULL,
+	controlled_vocab_id  bigint  NOT NULL,
+	term                 varchar  NOT NULL,
+	order_by             varchar  NOT NULL,
+	default_item         varchar  ,
+	CONSTRAINT pk_controlled_vocab_values PRIMARY KEY ( vocab_value_id ),
+	CONSTRAINT fk_controlled_vocab_values FOREIGN KEY ( controlled_vocab_id ) REFERENCES qiita.controlled_vocab( controlled_vocab_id ) ON DELETE CASCADE ON UPDATE CASCADE
+ );
+
+CREATE INDEX idx_controlled_vocab_values ON qiita.controlled_vocab_values ( controlled_vocab_id );
 
 CREATE TABLE qiita.data_type ( 
 	data_type_id         bigserial  NOT NULL,
@@ -91,15 +103,15 @@ CREATE TABLE qiita.mixs_field_description (
 
 CREATE TABLE qiita.ontology ( 
 	ontology_id          bigserial  NOT NULL,
-	shortname            varchar  NOT NULL,
+	ontology             varchar  NOT NULL,
 	fully_loaded         bool  NOT NULL,
 	fullname             varchar  ,
 	query_url            varchar  ,
 	source_url           varchar  ,
 	definition           text  ,
 	load_date            date  NOT NULL,
-	version              varchar  ,
-	CONSTRAINT pk_ontology PRIMARY KEY ( ontology_id )
+	CONSTRAINT pk_ontology PRIMARY KEY ( ontology_id ),
+	CONSTRAINT idx_ontology UNIQUE ( ontology ) 
  );
 
 CREATE TABLE qiita.portal_type ( 
@@ -116,6 +128,8 @@ CREATE TABLE qiita.preprocessed_data (
 	preprocessed_params_table varchar  NOT NULL,
 	preprocessed_params_id bigint  NOT NULL,
 	submitted_to_insdc   bool  NOT NULL,
+	ebi_submission_accession varchar  ,
+	ebi_study_accession  varchar  ,
 	data_type_id         bigint  NOT NULL,
 	CONSTRAINT pk_preprocessed_data PRIMARY KEY ( preprocessed_data_id ),
 	CONSTRAINT fk_preprocessed_data FOREIGN KEY ( data_type_id ) REFERENCES qiita.data_type( data_type_id )    
@@ -245,7 +259,7 @@ CREATE TABLE qiita.study_status (
 CREATE TABLE qiita.term ( 
 	term_id              bigserial  NOT NULL,
 	ontology_id          bigint  NOT NULL,
-	term_name            varchar  NOT NULL,
+	term                 varchar  NOT NULL,
 	identifier           varchar  ,
 	definition           varchar  ,
 	namespace            varchar  ,
@@ -280,7 +294,7 @@ CREATE TABLE qiita.column_controlled_vocabularies (
 	column_name          varchar  NOT NULL,
 	CONSTRAINT idx_column_controlled_vocabularies PRIMARY KEY ( controlled_vocab_id, column_name ),
 	CONSTRAINT fk_column_controlled_vocabularies FOREIGN KEY ( column_name ) REFERENCES qiita.mixs_field_description( column_name )    ,
-	CONSTRAINT fk_column_controlled_vocab2 FOREIGN KEY ( controlled_vocab_id ) REFERENCES qiita.controlled_vocabularies( controlled_vocab_id )    
+	CONSTRAINT fk_column_controlled_vocab2 FOREIGN KEY ( controlled_vocab_id ) REFERENCES qiita.controlled_vocab( controlled_vocab_id )    
  );
 
 CREATE INDEX idx_column_controlled_vocabularies_0 ON qiita.column_controlled_vocabularies ( column_name );
@@ -313,18 +327,6 @@ CREATE TABLE qiita.command_data_type (
 CREATE INDEX idx_command_data_type_0 ON qiita.command_data_type ( command_id );
 
 CREATE INDEX idx_command_data_type_1 ON qiita.command_data_type ( data_type_id );
-
-CREATE TABLE qiita.controlled_vocab_values ( 
-	vocab_value_id       bigserial  NOT NULL,
-	controlled_vocab_id  bigint  NOT NULL,
-	term                 varchar  NOT NULL,
-	order_by             varchar  NOT NULL,
-	default_item         varchar  ,
-	CONSTRAINT pk_controlled_vocab_values PRIMARY KEY ( vocab_value_id ),
-	CONSTRAINT fk_controlled_vocab_values FOREIGN KEY ( controlled_vocab_id ) REFERENCES qiita.controlled_vocabularies( controlled_vocab_id ) ON DELETE CASCADE ON UPDATE CASCADE
- );
-
-CREATE INDEX idx_controlled_vocab_values ON qiita.controlled_vocab_values ( controlled_vocab_id );
 
 CREATE TABLE qiita.filepath ( 
 	filepath_id          bigserial  NOT NULL,
@@ -607,6 +609,7 @@ CREATE TABLE qiita.analysis (
 	description          varchar  NOT NULL,
 	analysis_status_id   bigint  NOT NULL,
 	pmid                 varchar  ,
+	timestamp            timestamptz DEFAULT current_timestamp ,
 	CONSTRAINT pk_analysis PRIMARY KEY ( analysis_id ),
 	CONSTRAINT fk_analysis_user FOREIGN KEY ( email ) REFERENCES qiita.qiita_user( email )    ,
 	CONSTRAINT fk_analysis_analysis_status FOREIGN KEY ( analysis_status_id ) REFERENCES qiita.analysis_status( analysis_status_id )    
@@ -766,6 +769,8 @@ CREATE TABLE qiita.required_sample_info (
 	collection_timestamp timestamp  NOT NULL,
 	host_subject_id      varchar  NOT NULL,
 	description          varchar  NOT NULL,
+	latitude             float8  NOT NULL,
+	longitude            float8  NOT NULL,
 	CONSTRAINT idx_common_sample_information PRIMARY KEY ( study_id, sample_id ),
 	CONSTRAINT pk_required_sample_info UNIQUE ( sample_id ) ,
 	CONSTRAINT fk_required_sample_info_study FOREIGN KEY ( study_id ) REFERENCES qiita.study( study_id )    ,
@@ -785,6 +790,10 @@ COMMENT ON COLUMN qiita.required_sample_info.has_physical_specimen IS 'Whether w
 COMMENT ON COLUMN qiita.required_sample_info.sample_type IS 'Controlled vocabulary of sample types';
 
 COMMENT ON COLUMN qiita.required_sample_info.required_sample_info_status_id IS 'What step of the pipeline the samples are in';
+
+COMMENT ON COLUMN qiita.required_sample_info.latitude IS 'Latitude of the collection site';
+
+COMMENT ON COLUMN qiita.required_sample_info.longitude IS 'Longitude of the collection site';
 
 CREATE TABLE qiita.analysis_job ( 
 	analysis_id          bigint  NOT NULL,
@@ -824,8 +833,6 @@ CREATE TABLE qiita.common_prep_info (
 	sample_id            varchar  NOT NULL,
 	center_name          varchar  ,
 	center_project_name  varchar  ,
-	ebi_submission_accession varchar  ,
-	ebi_study_accession  varchar  ,
 	emp_status_id        bigint  NOT NULL,
 	data_type_id         bigint  NOT NULL,
 	CONSTRAINT idx_required_prep_info_1 PRIMARY KEY ( raw_data_id, sample_id ),
