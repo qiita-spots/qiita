@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 from re import search
 from tempfile import mkstemp
 from subprocess import call
@@ -16,6 +14,8 @@ from future.utils import viewitems
 from skbio.util.misc import safe_md5
 
 from qiita_core.qiita_settings import qiita_config
+
+from qiita_db.logger import LogEntry
 
 
 class InvalidMetadataError(Exception):
@@ -807,6 +807,16 @@ class EBISubmission(object):
             ebi_dropbox_url=qiita_config.ebi_dropbox_url):
         """Generates the curl command for submission
 
+
+        ebi_seq_xfer_user : str
+            The user to use when submitting to EBI
+        ebi_access_key : str
+            The access key issued by EBI for REST submissions
+        ebi_skip_curl_cert : bool
+            If the curl certificate should be skipped
+        ebi_dropbox_url : str
+            The dropbox url
+
         Notes
         -----
         - All 5 XML files (study, sample, experiment, run, and submission) must
@@ -849,9 +859,7 @@ class EBISubmission(object):
 
         # Set the ASCP password to the one in the Qiita config, but remember
         # the old pass so that we can politely reset it
-        old_ascp_pass = environ.get('ASPERA_SCP_PASS')
-        if old_ascp_pass is None:
-            old_ascp_pass = ''
+        old_ascp_pass = environ.get('ASPERA_SCP_PASS', '')
         environ['ASPERA_SCP_PASS'] = qiita_config.ebi_seq_xfer_pass
 
         for unique_dir in unique_dirs:
@@ -887,6 +895,7 @@ class EBISubmission(object):
             curl_result = curl_output_f.read()
 
         if 'success="true"' in curl_result:
+            LogEntry.create('Runtime', curl_result)
             print curl_result
             print "SUCCESS"
 
@@ -895,11 +904,20 @@ class EBISubmission(object):
                                 '<SUBMISSION accession="(?P<submission>.+?)"',
                                 curl_result)
             if accessions is not None:
+                LogEntry.create('Runtime', "Study accession:\t%s" %
+                                accessions.group('study'))
+                LogEntry.create('Runtime', "Submission accessio:\t%s" %
+                                accessions.group('submission'))
+
                 print "Study accession:\t", accessions.group('study')
                 print "Submission accession:\t", accessions.group('submission')
             else:
+                LogEntry.create('Runtime', ("However, the accession numbers "
+                                            "could not be found in the output "
+                                            " above."))
                 print ("However, the accession numbers could not be found in "
                        "the output above.")
         else:
+            LogEntry.create('Fatal', curl_result)
             print curl_result
             print "FAILED"

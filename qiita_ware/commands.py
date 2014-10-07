@@ -6,7 +6,7 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
-from os.path import join
+from os.path import join, isdir
 from os import makedirs
 from functools import partial
 
@@ -16,6 +16,28 @@ from qiita_ware.ebi import EBISubmission
 
 def from_files(study_id, sample_template, prep_template, fastq_dir_fp,
                output_dir_fp, investigation_type, action, send):
+    """EBI submission from files
+
+    Parameters
+    ----------
+    study_id : int
+        The study id
+    sample_template : File
+        The file handler of the sample template file
+    prep_template :
+        The file handler of the prep template file
+    fastq_dir_fp :
+        The fastq filepath
+    output_dir_fp : str
+        The output directory
+    investigation_type : str
+        The investigation type string
+    action : str
+        The action to perform with this data {'ADD', 'VALIDATE', 'UPDATE'}
+    send : bool
+        True to actually send the files
+    """
+
     study = Study(study_id)
     study_id_str = str(study_id)
 
@@ -27,7 +49,11 @@ def from_files(study_id, sample_template, prep_template, fastq_dir_fp,
     run_fp = get_output_fp('run.xml')
     submission_fp = get_output_fp('submission.xml')
 
-    makedirs(output_dir_fp)
+    if not isdir(output_dir_fp):
+        makedirs(output_dir_fp)
+    else:
+        raise ValueError('The output folder already exists: %s' %
+                         output_dir_fp)
 
     submission = EBISubmission.from_templates_and_per_sample_fastqs(
         study_id_str, study.title, study.info['study_abstract'],
