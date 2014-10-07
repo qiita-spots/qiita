@@ -37,7 +37,7 @@ def submit_EBI_from_files(study_id, sample_template, prep_template,
     investigation_type : str
         The investigation type string
     action : str
-        The action to perform with this data, see ebi_actions within this file
+        The action to perform with this data, valid options are: %s
     send : bool
         True to actually send the files
     """
@@ -70,3 +70,5 @@ def submit_EBI_from_files(study_id, sample_template, prep_template,
     if send:
         submission.send_sequences()
         submission.send_xml()
+
+submit_EBI_from_files.__doc__ %= ebi_actions
