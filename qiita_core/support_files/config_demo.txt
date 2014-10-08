@@ -12,9 +12,6 @@
 
 # ------------------------------ Main settings --------------------------------
 [main]
-# Change to FALSE in a production system
-TEST_ENVIRONMENT = FALSE
-
 # Download path files
 UPLOAD_DATA_DIR = /tmp/
 
@@ -23,6 +20,9 @@ MAX_UPLOAD_SIZE = 100
 
 # Path to the base directory where the data files are going to be stored, uncomment to set
 BASE_DATA_DIR =
+
+# Path to the directory that Qiita will use as its "working"/scrath directory
+BASE_WORK_DIR =
 
 # ----------------------------- IPython settings ------------------------------
 [ipython]

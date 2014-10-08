@@ -76,7 +76,7 @@ def reset_test_database(wrapped_fn):
 
 
 def qiita_test_checker():
-    """Decorator that allows the execution of all methods in a test class only
+    """Decorator that allows the execution of all methods in a test class if
     and only if Qiita is set up to work in a test environment.
 
     Raises
@@ -91,8 +91,7 @@ def qiita_test_checker():
         test_db = conn_handler.execute_fetchone("SELECT test FROM settings")[0]
         # Or the loaded configuration file belongs to a production environment
         # or the test database is not qiita_test
-        if not qiita_config.test_environment or not test_db \
-                or qiita_config.database != 'qiita_test':
+        if not test_db:
             raise RuntimeError("Working in a production environment. Not "
                                "executing the tests to keep the production "
                                "database safe.")
