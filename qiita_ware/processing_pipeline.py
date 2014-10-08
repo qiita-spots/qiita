@@ -38,7 +38,6 @@ def _get_preprocess_illumina_cmd(raw_data, params):
     from os import close
 
     from qiita_db.metadata_template import PrepTemplate
-    from qiita_db.parameters import PreprocessedIlluminaParams
 
     # Get the filepaths from the raw data object
     seqs_fps = []
@@ -143,7 +142,7 @@ def _insert_preprocessed_data(study, params, raw_data, prep_out_dir):
                  (fastq_fp, "preprocessed_fastq"),
                  (demux_fp, "preprocessed_demux")]
 
-    PreprocessedData.create(study, params._table, params.id(), filepaths,
+    PreprocessedData.create(study, params._table, params.id, filepaths,
                             raw_data)
 
 
@@ -194,4 +193,4 @@ class StudyPreprocesser(ParallelWrapper):
         self._job_graph.add_node(clean_up_node,
                                  job=(_clean_up, [output_dir]),
                                  requires_deps=False)
-        self._job_graph.add_edge(insert_processed_node, clean_up_node)
+        self._job_graph.add_edge(insert_preprocessed_node, clean_up_node)
