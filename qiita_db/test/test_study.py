@@ -230,11 +230,12 @@ class TestStudy(TestCase):
             'spatial_series': True,
             'metadata_complete': False,
             'reprocess': True,
-            'first_contact': "Today"
+            'first_contact': "Today",
+            'study_id': 3827
             })
         obs = Study.create(User('test@foo.bar'), "Fried chicken microbiome",
                            [1], self.info)
-        self.assertEqual(obs.id, 2)
+        self.assertEqual(obs.id, 3827)
         exp = {'mixs_compliant': True, 'metadata_complete': False,
                'reprocess': True, 'study_status_id': 1,
                'number_samples_promised': 28, 'emp_person_id': 2,
@@ -246,12 +247,12 @@ class TestStudy(TestCase):
                'email': 'test@foo.bar', 'spatial_series': True,
                'study_description': 'Microbiome of people who eat nothing '
                                     'but fried chicken',
-               'portal_type_id': 3, 'study_alias': 'FCM', 'study_id': 2,
+               'portal_type_id': 3, 'study_alias': 'FCM', 'study_id': 3827,
                'most_recent_contact': None, 'lab_person_id': 1,
                'study_title': 'Fried chicken microbiome',
                'number_samples_collected': 25}
         obsins = self.conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.study WHERE study_id = 2")
+            "SELECT * FROM qiita.study WHERE study_id = 3827")
         self.assertEqual(len(obsins), 1)
         obsins = dict(obsins[0])
         self.assertEqual(obsins, exp)
@@ -259,7 +260,7 @@ class TestStudy(TestCase):
         # make sure EFO went in to table correctly
         obsefo = self.conn_handler.execute_fetchall(
             "SELECT efo_id FROM qiita.study_experimental_factor "
-            "WHERE study_id = 2")
+            "WHERE study_id = 3827")
         self.assertEqual(obsefo, [[1]])
 
     def test_create_missing_required(self):
@@ -277,7 +278,7 @@ class TestStudy(TestCase):
 
     def test_create_study_with_not_allowed_key(self):
         """Insert a study with key from _non_info present"""
-        self.info.update({"study_id": 1})
+        self.info.update({"email": "wooo@sup.net"})
         with self.assertRaises(QiitaDBColumnError):
             Study.create(User('test@foo.bar'), "Fried Chicken Microbiome",
                          [1], self.info)
