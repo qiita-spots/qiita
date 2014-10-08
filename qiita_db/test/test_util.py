@@ -9,6 +9,7 @@
 from unittest import TestCase, main
 from tempfile import mkstemp
 from os import close
+from os.path import join
 
 from qiita_core.util import qiita_test_checker
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
@@ -20,6 +21,7 @@ from qiita_db.util import (exists_table, exists_dynamic_table, scrub_data,
                            get_filetypes, get_filepath_types, get_count,
                            check_count, get_processed_params_tables,
                            params_dict_to_json, get_user_fp)
+from qiita_core.qiita_settings import qiita_config
 
 
 @qiita_test_checker()
@@ -180,7 +182,8 @@ class DBUtilTests(TestCase):
 
     def test_get_user_fps(self):
         obs = get_user_fp("demo@demo.com")
-        self.assertEqual(obs, "/tmp/demo.com/demo")
+        exp = join(qiita_config.upload_data_dir, 'demo.com', 'demo')
+        self.assertEqual(obs, exp)
 
 
 class UtilTests(TestCase):
