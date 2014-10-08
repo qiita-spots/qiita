@@ -1,5 +1,115 @@
 {% extends sitebase.html %}
 {% block content %}
-    <img src="http://i.imgur.com/qZylTfc.gif" alt="Find The Men Who Did This">
-{% end %}
 
+<!-- Upload section -->
+
+<table border="0" style="vertical-align: middle; text-align:center; align:center; height: 150px; width: 100%;">
+  <tr>
+    <td colspan="2" style="vertical-align: middle; text-align:left; width: 50%;">
+      <b>{{study_info['study_alias']}}</b> ({{study_info['number_samples_promised']}}/{{study_info['number_samples_collected']}})
+      <br/>
+      Metadata: {{study_info['metadata_complete']}}
+      <br/>
+      <!-- {'mixs_compliant': True,
+      'reprocess': False,
+      'emp_person_id': None,
+      'funding': None,
+      'vamps_id': None,
+      'first_contact': '2014-09-22',
+      'principal_investigator_id': 1L,
+      'timeseries_type_id': 1L,
+      'study_abstract':
+      'Myrold_Alder_Fir',
+      'spatial_series': None,
+      'study_description': 'Myrold_Alder_Fir',
+       'portal_type_id': 3L,
+       'study_alias': 'Myrold_Alder_Fir',
+       'most_recent_contact': None, 'lab_person_id': None, -->
+    </td>
+  </tr>
+  <tr>
+    <td style="vertical-align: middle; text-align:center; width: 50%;"><b>Upload metadata (max file size: {{max_upoad_size}}Gb)</b></td>
+    <td style="vertical-align: middle; text-align:center; width: 50%;"><b>Upload sequence files (max file size: {{max_upoad_size}}Gb)</b></td>
+  </tr>
+  <tr>
+    <td style="vertical-align: top; text-align:center; ">
+      <div style="height: 150px; width: 95%; background-color:lightgrey; border: 2px solid; border-radius: 25px;" class="resumable-drop-metadata" ondragenter="jQuery(this).addClass('resumable-dragover');" ondragend="jQuery(this).removeClass('resumable-dragover');" ondrop="jQuery(this).removeClass('resumable-dragover');">
+        <p style="vertical-align: middle;">Drop files here to upload or <a class="resumable-browse-metadata"><u>select from your computer</u></a></p>
+      </div>
+
+      <div class="progress-metadata" style="display:none;">
+        <table>
+          <tr>
+            <td width="100%"><div class="progress-container"><div class="progress-bar"></div></div></td>
+            <td class="progress-text" nowrap="nowrap"></td>
+            <td class="progress-pause" nowrap="nowrap">
+              &nbsp;&nbsp;&nbsp;&nbsp;
+              <a href="#" onclick="uploader_metadata.resumable.upload(); return(false);" class="progress-resume-link"><span class="glyphicon glyphicon-play"></span></a>
+              &nbsp;&nbsp;&nbsp;&nbsp;
+              <a href="#" onclick="uploader_metadata.resumable.pause(); return(false);" class="progress-pause-link"><span class="glyphicon glyphicon-pause"></span></a>
+            </td>
+          </tr>
+        </table>
+      </div>
+
+      <div class="uploader-list-metadata" style="display:none;">
+      </div>
+
+      <div class="file-edit-container-sequences" style="display:none;">
+      </div>
+
+    </td>
+    <td style="vertical-align: top; text-align:center; ">
+      <div style="text-align:center; height: 150px; width: 95%; background-color:lightgrey; border: 2px solid; border-radius: 25px;" class="resumable-drop-sequences" ondragenter="jQuery(this).addClass('resumable-dragover');" ondragend="jQuery(this).removeClass('resumable-dragover');" ondrop="jQuery(this).removeClass('resumable-dragover');">
+        <p style="vertical-align: middle;">Drop files here to upload or <a class="resumable-browse-sequences"><u>select from your computer</u></a></p>
+      </div>
+
+      <div class="progress-sequences" style="display:none;">
+        <table>
+          <tr>
+            <td width="100%"><div class="progress-container"><div class="progress-bar"></div></div></td>
+            <td class="progress-text" nowrap="nowrap"></td>
+            <td class="progress-pause" nowrap="nowrap">
+              &nbsp;&nbsp;&nbsp;&nbsp;
+              <a href="#" onclick="uploader_sequences.resumable.upload(); return(false);" class="progress-resume-link"><span class="glyphicon glyphicon-play"></span></a>
+              &nbsp;&nbsp;&nbsp;&nbsp;
+              <a href="#" onclick="uploader_sequences.resumable.pause(); return(false);" class="progress-pause-link"><span class="glyphicon glyphicon-pause"></span></a>
+            </td>
+          </tr>
+        </table>
+      </div>
+
+
+      <div class="uploader-list-sequences" style="display:none;">
+      </div>
+
+      <div class="file-edit-container-sequences" style="display:none;">
+      </div>
+
+
+    </td>
+  </tr>
+</table>
+
+<script src="/static/vendor/js/resumable.js"></script>
+<script src="/static/vendor/js/resumable-uploader.js"></script>
+<script>
+  var meta = { fileType: [] };
+  var maxFileSize = {{max_upoad_size}}; // in Gb
+
+  uploader_metadata = (function($){
+      return (new ResumableUploader(meta, $('.resumable-browse-metadata'), $('.resumable-drop-metadata'), $('.progress-metadata'), $('.uploader-list-metadata'), $('.file-edit-container-metadata'), maxFileSize, "metadata/{{study_id}}"));
+    })(jQuery);
+  uploader_sequences = (function($){
+      return (new ResumableUploader(meta, $('.resumable-browse-sequences'), $('.resumable-drop-sequences'), $('.progress-sequences'), $('.uploader-list-sequences'), $('.file-edit-container-sequences'), maxFileSize, "sequences/{{study_id}}"));
+  })(jQuery);
+
+  {% for f in files_metatada %}
+    uploader_metadata.addFile("{{f}}");
+  {% end  %}
+  {% for f in files_sequences %}
+    uploader_sequences.addFile("{{f}}");
+  {% end  %}
+</script>
+
+{% end %}
