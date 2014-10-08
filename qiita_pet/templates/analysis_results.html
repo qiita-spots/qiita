@@ -8,21 +8,27 @@
 {%block content%}
 {% from os.path import basename %}
 {% from future.utils import viewitems %}
+
+
 <div class="row">
   <h1>Analysis {{aname}}</h1>
-{% if dropped %}
-  <h3>Dropped Samples</h3>
-  These samples were dropped during processing:
-  <table>
-  {% for study, samples in %}
-    <tr>
-      <td>{{study}}</td><td>{{str(samples).strip('[]')}}</td>
-    </tr>
+
+  {% if dropped %}
+    <h3>Dropped Samples</h3>
+    These samples were dropped during processing due to rarefaction:
+    <table width="100%">
+    {% for study, samples in viewitems(dropped) %}
+      <tr>
+        <td width="5%">For {{study}}:</td>
+        <td width="80%"><small>{{', '.join(samples)}}</small></td>
+      </tr>
+    {% end %}
+    </table>
+    <br/>
   {% end %}
- </table>
-  }
-{% end %}
 </div>
+
+
 <div class="row" width='100%'>
   <div class="col-md-2">
     <div class="panel-group" id="accordion">
