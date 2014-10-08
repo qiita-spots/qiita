@@ -72,14 +72,20 @@ class ProcessingPipelineTests(TestCase):
         prep_out_dir = mkdtemp()
         path_builder = partial(join, prep_out_dir)
 
-        with open(path_builder('seqs.fna'), 'w') as f:
+        fasta_fp = path_builder('seqs.fna')
+        with open(fasta_fp, 'w') as f:
             f.write("\n")
+        self.files_to_remove.append(fasta_fp)
 
-        with open(path_builder('seqs.fastq'), 'w') as f:
+        fastq_fp = path_builder('seqs.fastq')
+        with open(fastq_fp, 'w') as f:
             f.write("\n")
+        self.files_to_remove.append(fastq_fp)
 
-        with open(path_builder('seqs.demux'), 'w') as f:
+        demux_fp = path_builder('seqs.demux')
+        with open(demux_fp, 'w') as f:
             f.write("\n")
+        self.files_to_remove.append(demux_fp)
 
         _insert_preprocessed_data(study, params, raw_data, prep_out_dir)
 
