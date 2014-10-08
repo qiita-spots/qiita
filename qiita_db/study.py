@@ -138,7 +138,7 @@ class Study(QiitaStatusObject):
     """
     _table = "study"
     # The following columns are considered not part of the study info
-    _non_info = {"email", "study_id", "study_status_id", "study_title"}
+    _non_info = {"email", "study_status_id", "study_title"}
 
     def _lock_public(self, conn_handler):
         """Raises QiitaDBStatusError if study is public"""
@@ -256,6 +256,7 @@ class Study(QiitaStatusObject):
                 data.append(insertdict[col].id)
             else:
                 data.append(insertdict[col])
+
         study_id = conn_handler.execute_fetchone(sql, data)[0]
 
         # insert efo information into database
@@ -316,6 +317,9 @@ class Study(QiitaStatusObject):
         # remove non-info items from info
         for item in self._non_info:
             info.pop(item)
+        # This is an optional column, but should not be considered part of the
+        # info
+        info.pop('study_id')
         return info
 
     @info.setter
@@ -336,6 +340,9 @@ class Study(QiitaStatusObject):
         """
         if not info:
             raise IncompetentQiitaDeveloperError("Need entries in info dict!")
+
+        if 'study_id' in info:
+            raise QiitaDBColumnError("Cannot set study_id!")
 
         if self._non_info.intersection(info):
             raise QiitaDBColumnError("non info keys passed: %s" %
