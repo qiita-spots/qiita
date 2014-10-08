@@ -6,11 +6,10 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
-# TODO: change to import from QIITA once is merged
-from qiime.parallel.wrapper import ParallelWrapper
+from qiita_ware.wrapper import ParallelWrapper
 
 
-def _get_preprocess_illumina_cmd(raw_data):
+def _get_preprocess_illumina_cmd(raw_data, params):
     """Generates the split_libraries_fastq.py command to pre-process the
     illumina raw data
 
@@ -18,6 +17,8 @@ def _get_preprocess_illumina_cmd(raw_data):
     ----------
     raw_data : RawData
         The raw data object to pre-process
+    params : PreprocessedIlluminaParams
+        The parameters to use for the preprocessing
 
     Returns
     -------
@@ -37,6 +38,7 @@ def _get_preprocess_illumina_cmd(raw_data):
     from os import close
 
     from qiita_db.metadata_template import PrepTemplate
+    from qiita_db.parameters import PreprocessedIlluminaParams
 
     # Get the filepaths from the raw data object
     seqs_fps = []
@@ -72,17 +74,24 @@ def _get_preprocess_illumina_cmd(raw_data):
     output_dir = mkdtemp(prefix='slq_out')
 
     # Add any other parameter needed to split libraries fastq
-    params = ""
+    params_str = params.to_str()
 
     # Create the split_libraries_fastq.py command
     cmd = ("split_libraries_fastq.py --store_demultiplexed_fastq -i %s -b %s "
            "-m %s -o %s %s"
-           % (seqs_fps, barcode_fps, prep_fp, output_dir, params))
+           % (','.join(seqs_fps), ','.join(barcode_fps), prep_fp, output_dir,
+              params_str))
     return (cmd, output_dir)
 
 
 def _clean_up(dirs):
-    """"""
+    """Removes the directories listed in dirs
+
+    Parameters
+    ----------
+    dirs : list of str
+        Path to the directories to remove
+    """
     from shutil import rmtree
     from os.path import exists
 
@@ -91,21 +100,69 @@ def _clean_up(dirs):
             rmtree(dp)
 
 
-def _insert_preprocessed_data():
-    """"""
+def _insert_preprocessed_data(study, params, raw_data, prep_out_dir):
+    """Inserts the preprocessed data to the database
+
+    Parameters
+    ----------
+    study : Study
+        The study to preprocess
+    params : BaseParameters
+        The parameters to use for preprocessing
+    raw_data : RawData
+        The raw data to use for the preprocessing
+    prep_out_dir : str
+        Path to the preprocessed command output directory
+
+    Raises
+    ------
+    ValueError
+        If the preprocessed output directory does not contain all the expected
+        files
+    """
+    from os.path import exists, join
+    from functools import partial
     from qiita_db.data import PreprocessedData
 
-    PreprocessedData.create(study, preprocessed_params_table,
-                            preprocessed_params_id, filepaths, raw_data)
+    # The filepaths that we are interested in are:
+    #   1) seqs.fna -> demultiplexed fasta file
+    #   2) seqs.fastq -> demultiplexed fastq file
+    #   3) seqs.demux -> demultiplexed HDF5 file
+
+    path_builder = partial(join, prep_out_dir)
+    fasta_fp = path_builder('seqs.fna')
+    fastq_fp = path_builder('seqs.fastq')
+    demux_fp = path_builder('seqs.demux')
+
+    # Check that all the files exist
+    if not (exists(fasta_fp) and exists(fastq_fp) and exists(demux_fp)):
+        raise ValueError("The output directory %s does not contain all the "
+                         "expected files." % prep_out_dir)
+
+    filepaths = [(fasta_fp, "preprocessed_fasta"),
+                 (fastq_fp, "preprocessed_fastq"),
+                 (demux_fp, "preprocessed_demux")]
+
+    PreprocessedData.create(study, params._table, params.id(), filepaths,
+                            raw_data)
 
 
 class StudyPreprocesser(ParallelWrapper):
-    def _construct_job_graph(self, study, raw_data):
+    def _construct_job_graph(self, study, raw_data, params):
         """Constructs the workflow graph to preprocess a study
 
         The steps performed to preprocess a study are:
         1) Execute split libraries
         2) Add the new preprocessed data to the DB
+
+        Parameters
+        ----------
+        study : Study
+            The study to preprocess
+        raw_data : RawData
+            The raw data to use for the preprocessing
+        params : BaseParameters
+            The parameters to use for preprocessing
         """
         # STEP 1: Preprocess the study
         preprocess_node = "PREPROCESS"
@@ -121,7 +178,7 @@ class StudyPreprocesser(ParallelWrapper):
                 % (raw_data.id, filetype))
 
         # Generate the command
-        cmd, output_dir = cmd_generator(raw_data)
+        cmd, output_dir = cmd_generator(raw_data, params)
         self._job_graph.add_node(preprocess_node, job=(cmd,),
                                  requires_deps=False)
 
@@ -138,88 +195,3 @@ class StudyPreprocesser(ParallelWrapper):
                                  job=(_clean_up, [output_dir]),
                                  requires_deps=False)
         self._job_graph.add_edge(insert_processed_node, clean_up_node)
-
-
-# def _get_pick_closed_reference_cmd(preprocessed_data, reference):
-#     """Generates the pcik_closed_reference.py command to process the
-#     pre-processed data
-
-#     Parameters
-#     ----------
-#     preprocessed_data : PreprocessedData
-#         The pre-processed data object to process
-#     reference : Reference
-#         The reference database to use to process thee data
-
-#     Returns
-#     -------
-#     tuple (str, str)
-#         A 2-tuple of strings. The first string is the command to be executed.
-#         The second string is the path to the command's output directory
-#     """
-#     from tempfile import mkdtemp
-
-#     # Create a temporary directory to store the pick otus output
-#     output_dir = mkdtemp(prefix='closed_otus_out')
-
-#     cmd = ("pick_closed_reference_otus.py -i %s -r %s -t %s -o %s"
-#            % (seqs_fp, reference.sequence_fp, reference.taxonomy_fp,
-#               output_dir))
-
-#     return (cmd, output_dir)
-
-
-# def _insert_processed_data():
-#     """"""
-#     from qiita_db.data import ProcessedData
-
-#     ProcessedData(processed_params_table, processed_params_id, filepaths,
-#                   preprocessed_data)
-
-
-# class StudyProcesser(ParallelWrapper):
-#     def _construct_job_graph(self, study, raw_data):
-#         """Constructs the workflow graph to process a study
-
-#         The steps performed to process a study are:
-#         1) Preprocess the study with split_libraries_fastq.py
-#         2) Add the new preprocesed data to the DB
-#         3) Process the preprocessed data by doing closed reference OTU
-#         picking against GreenGenes, using SortMeRNA
-#         4) Add the new processed data to the DB
-
-#         Parameters
-#         ----------
-#         study : Study
-#             The study to process
-#         raw_data: RawData
-#             The raw data to use to process the study
-
-#         Raises
-#         ------
-#         NotImplementedError
-#             If any file type in the raw data object is not supported
-#         """
-
-#         # STEP 3: pick closed-ref otu picking
-#         processed_node = "PROCESS"
-#         # TODO: Now hard-coded to GG 13 8 (id = 1) - issue #
-#         reference = Reference(1)
-#         cmd, otus_out = _get_pick_closed_reference_cmd(output_dir, reference)
-#         self._job_graph.add_node(processed_node, job=(cmd,),
-#                                  requires_deps=False)
-#         self._job_graph.add_edge(insert_preprocessed_node, processed_node)
-
-#         # STEP 4: Add processed data to DB
-#         insert_processed_node = "INSERT_PROCESSED"
-#         self._job_graph.add_node(insert_processed_node,
-#                                  job=(_insert_processed_data, ),
-#                                  requires_deps=False)
-#         self._job_graph.add_edge(process_node, insert_processed_node)
-
-#         # Clean up the environment
-#         clean_up_node = "CLEAN_UP"
-#         self._job_graph.add_node(clean_up_node,
-#                                  job=(_clean_up, [output_dir, otus_out]),
-#                                  requires_deps=False)
-#         self._job_graph.add_edge(insert_processed_node, clean_up_node)
