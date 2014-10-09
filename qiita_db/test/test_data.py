@@ -286,9 +286,9 @@ class PreprocessedDataTests(TestCase):
         ppd = PreprocessedData(1)
         obs = ppd.get_filepaths()
         exp = [(join(self.db_test_ppd_dir, '1_seqs.fna'),
-                "preprocessed_sequences"),
+                "preprocessed_fasta"),
                (join(self.db_test_ppd_dir, '1_seqs.qual'),
-                "preprocessed_sequences_qual")]
+                "preprocessed_fastq")]
         self.assertEqual(obs, exp)
 
     def test_raw_data(self):
