@@ -87,6 +87,8 @@ class ProcessingPipelineTests(TestCase):
             f.write("\n")
         self.files_to_remove.append(demux_fp)
 
+        # TODO: clean the test environment (files copied to preprocessed data)
+
         _insert_preprocessed_data(study, params, raw_data, prep_out_dir)
 
     def test_clean_up(self):

@@ -40,25 +40,28 @@ def _get_preprocess_illumina_cmd(raw_data, params):
     from qiita_db.metadata_template import PrepTemplate
 
     # Get the filepaths from the raw data object
-    seqs_fps = []
+    forward_seqs = []
+    reverse_seqs = []
     barcode_fps = []
     for fp, fp_type in raw_data.get_filepaths():
-        if fp_type == "raw_sequences":
-            seqs_fps.append(fp)
+        if fp_type == "raw_forward_seqs":
+            forward_seqs.append(fp)
+        elif fp_type == "raw_reverse_seqs":
+            reverse_seqs.append(fp)
         elif fp_type == "raw_barcodes":
             barcode_fps.append(fp)
         else:
             raise NotImplementedError("Raw data file type not supported %s"
                                       % fp_type)
 
-    if len(seqs_fps) == 0:
-        raise ValueError("Sequence file not found on raw data %s"
+    if len(forward_seqs) == 0:
+        raise ValueError("Forward reads file not found on raw data %s"
                          % raw_data.id)
 
-    if len(barcode_fps) != len(seqs_fps):
+    if len(barcode_fps) != len(forward_seqs):
         raise ValueError("The number of barcode files and the number of "
                          "sequence files should match: %d != %d"
-                         % len(barcode_fps), len(seqs_fps))
+                         % (len(barcode_fps), len(forward_seqs)))
 
     # Instantiate the prep template
     prep_template = PrepTemplate(raw_data.id)
@@ -78,8 +81,8 @@ def _get_preprocess_illumina_cmd(raw_data, params):
     # Create the split_libraries_fastq.py command
     cmd = ("split_libraries_fastq.py --store_demultiplexed_fastq -i %s -b %s "
            "-m %s -o %s %s"
-           % (','.join(seqs_fps), ','.join(barcode_fps), prep_fp, output_dir,
-              params_str))
+           % (','.join(forward_seqs), ','.join(barcode_fps), prep_fp,
+              output_dir, params_str))
     return (cmd, output_dir)
 
 
