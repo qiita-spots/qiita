@@ -235,9 +235,10 @@ class Analysis(QiitaStatusObject):
         for biom, filepath in viewitems(bioms):
             table = load_table(filepath)
             # remove the samples from the sets as they are found in the table
-            for sample in table.ids():
-                proc_data_id = table.metadata(sample)['Proccessed_id']
-                all_samples[proc_data_id].remove(sample)
+            proc_data_id = table.metadata()[0]['Processed_id']
+            ids = set(table.ids())
+            all_samples[proc_data_id] = all_samples[proc_data_id] - ids
+
         # what's left are unprocessed samples, so return
         return all_samples
 
@@ -559,7 +560,7 @@ class Analysis(QiitaStatusObject):
             filter_samps = table_samps.intersection(samps)
             # add the metadata column for study the samples come from
             study_meta = {'Study': Study(proc_data.study).title,
-                          'Proccessed_id': proc_data.id}
+                          'Processed_id': proc_data.id}
             samples_meta = {sid: study_meta for sid in filter_samps}
             # filter for just the wanted samples and merge into new table
             # this if/else setup avoids needing a blank table to start merges
