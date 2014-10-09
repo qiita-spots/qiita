@@ -70,6 +70,7 @@ class ProcessingPipelineTests(TestCase):
         params = PreprocessedIlluminaParams(1)
         raw_data = RawData(1)
         prep_out_dir = mkdtemp()
+        self.dirs_to_remove.append(prep_out_dir)
         path_builder = partial(join, prep_out_dir)
 
         fasta_fp = path_builder('seqs.fna')

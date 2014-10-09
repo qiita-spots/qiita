@@ -195,7 +195,8 @@ class TestLoadRawDataFromCmd(TestCase):
 
     def test_load_data_from_cmd(self):
         filepaths = [self.forward_fp, self.reverse_fp, self.barcodes_fp]
-        filepath_types = ['raw_sequences', 'raw_sequences', 'raw_barcodes']
+        filepath_types = ['raw_forward_seqs', 'raw_reverse_seqs',
+                          'raw_barcodes']
 
         filetype = 'Illumina'
         study_ids = [1]

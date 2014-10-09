@@ -159,11 +159,11 @@ class DBUtilTests(TestCase):
     def test_get_filepath_types(self):
         """Tests that get_filepath_types works with valid arguments"""
         obs = get_filepath_types()
-        exp = {'raw_sequences': 1, 'raw_barcodes': 2, 'raw_spectra': 3,
-               'preprocessed_fasta': 4, 'preprocessed_fastq': 5,
-               'preprocessed_demux': 6, 'biom': 7, 'directory': 8,
-               'plain_text': 9, 'reference_seqs': 10, 'reference_tax': 11,
-               'reference_tree': 12}
+        exp = {'raw_forward_seqs': 1, 'raw_reverse_seqs': 2,
+               'raw_barcodes': 3, 'preprocessed_fasta': 4,
+               'preprocessed_fastq': 5, 'preprocessed_demux': 6, 'biom': 7,
+               'directory': 8, 'plain_text': 9, 'reference_seqs': 10,
+               'reference_tax': 11, 'reference_tree': 12}
         self.assertEqual(obs, exp)
 
         obs = get_filepath_types(key='filepath_type_id')
@@ -224,7 +224,7 @@ class DBUtilTests(TestCase):
             f.write("\n")
         self.files_to_remove.append(fp)
 
-        obs = insert_filepaths([(fp, "raw_sequences")], 1, "raw_data",
+        obs = insert_filepaths([(fp, "raw_forward_seqs")], 1, "raw_data",
                                "filepath", self.conn_handler)
         exp = [15]
         self.assertEqual(obs, exp)

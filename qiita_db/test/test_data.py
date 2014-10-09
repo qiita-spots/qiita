@@ -103,7 +103,7 @@ class RawDataTests(TestCase):
         obs = rd.get_filepaths()
         exp = [
             (join(self.db_test_raw_dir, '1_s_G1_L001_sequences.fastq.gz'),
-             "raw_sequences"),
+             "raw_forward_seqs"),
             (join(self.db_test_raw_dir,
                   '1_s_G1_L001_sequences_barcodes.fastq.gz'), "raw_barcodes")]
         self.assertEqual(obs, exp)
