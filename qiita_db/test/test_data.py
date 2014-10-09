@@ -63,7 +63,7 @@ class RawDataTests(TestCase):
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.raw_data WHERE raw_data_id=3")
         # raw_data_id, filetype, submitted_to_insdc
-        self.assertEqual(obs, [[3, 2]])
+        self.assertEqual(obs, [[3, 2, None]])
 
         # Check that the raw data have been correctly linked with the study
         obs = self.conn_handler.execute_fetchall(

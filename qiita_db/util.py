@@ -21,6 +21,7 @@ Methods
     insert_filepaths
     check_table_cols
     check_required_columns
+    convert_from_id
     convert_to_id
 """
 # -----------------------------------------------------------------------------
