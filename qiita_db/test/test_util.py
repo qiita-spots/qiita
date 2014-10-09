@@ -217,14 +217,29 @@ class DBUtilTests(TestCase):
         exp = [[15, exp_fp, 1, '852952723', 1]]
         self.assertEqual(obs, exp)
 
-    # def test_insert_filepaths_string(self):
-    #     fd, fp = mkstemp()
-    #     close(fd)
-    #     with open(fp, "w") as f:
-    #         f.write("\n")
+    def test_insert_filepaths_string(self):
+        fd, fp = mkstemp()
+        close(fd)
+        with open(fp, "w") as f:
+            f.write("\n")
+        self.files_to_remove.append(fp)
 
-    #     insert_filepaths([(fp, "raw_sequences")], 1, "raw_data", "filepath",
-    #                      self.conn_handler)
+        obs = insert_filepaths([(fp, "raw_sequences")], 1, "raw_data",
+                               "filepath", self.conn_handler)
+        exp = [15]
+        self.assertEqual(obs, exp)
+
+        # Check that the files have been copied correctly
+        exp_fp = join(get_db_files_base_dir(), "raw_data",
+                      "1_%s" % basename(fp))
+        self.assertTrue(exists(exp_fp))
+        self.files_to_remove.append(exp_fp)
+
+        # Check that the filepaths have been added to the DB
+        obs = self.conn_handler.execute_fetchall(
+            "SELECT * FROM qiita.filepath WHERE filepath_id=15")
+        exp = [[15, exp_fp, 1, '852952723', 1]]
+        self.assertEqual(obs, exp)
 
 
 class UtilTests(TestCase):
