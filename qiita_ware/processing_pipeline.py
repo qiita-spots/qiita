@@ -86,23 +86,35 @@ def _get_preprocess_illumina_cmd(raw_data, params):
     return (cmd, output_dir)
 
 
-def _clean_up(dirs):
-    """Removes the directories listed in dirs
+def _generate_demux_file(sl_out):
+    """Creates the HDF5 demultiplexed file
 
     Parameters
     ----------
-    dirs : list of str
-        Path to the directories to remove
+    sl_out : str
+        Path to the output directory of split libraries
+
+    Raises
+    ------
+    ValueError
+        If the split libraries output does not contain the demultiplexed fastq
+        file
     """
-    from shutil import rmtree
-    from os.path import exists
+    from os.path import join, exists
+    from h5py import File
+    from qiita_ware.demux import to_hdf5
 
-    for dp in dirs:
-        if exists(dp):
-            rmtree(dp)
+    fastq_fp = join(sl_out, 'seqs.fastq')
+    if not exists(fastq_fp):
+        raise ValueError("The split libraries output directory does not "
+                         "contain the demultiplexed fastq file")
+
+    demux_fp = join(sl_out, 'seqs.demux')
+    with File(demux_fp, "w") as f:
+        to_hdf5(fastq_fp, f)
 
 
-def _insert_preprocessed_data(study, params, raw_data, prep_out_dir):
+def _insert_preprocessed_data_illumina(study, params, raw_data, slq_out):
     """Inserts the preprocessed data to the database
 
     Parameters
@@ -113,8 +125,8 @@ def _insert_preprocessed_data(study, params, raw_data, prep_out_dir):
         The parameters to use for preprocessing
     raw_data : RawData
         The raw data to use for the preprocessing
-    prep_out_dir : str
-        Path to the preprocessed command output directory
+    slq_out : str
+        Path to the split_libraries_fastq.py output directory
 
     Raises
     ------
@@ -131,7 +143,7 @@ def _insert_preprocessed_data(study, params, raw_data, prep_out_dir):
     #   2) seqs.fastq -> demultiplexed fastq file
     #   3) seqs.demux -> demultiplexed HDF5 file
 
-    path_builder = partial(join, prep_out_dir)
+    path_builder = partial(join, slq_out)
     fasta_fp = path_builder('seqs.fna')
     fastq_fp = path_builder('seqs.fastq')
     demux_fp = path_builder('seqs.demux')
@@ -139,7 +151,7 @@ def _insert_preprocessed_data(study, params, raw_data, prep_out_dir):
     # Check that all the files exist
     if not (exists(fasta_fp) and exists(fastq_fp) and exists(demux_fp)):
         raise ValueError("The output directory %s does not contain all the "
-                         "expected files." % prep_out_dir)
+                         "expected files." % slq_out)
 
     filepaths = [(fasta_fp, "preprocessed_fasta"),
                  (fastq_fp, "preprocessed_fastq"),
@@ -147,6 +159,22 @@ def _insert_preprocessed_data(study, params, raw_data, prep_out_dir):
 
     PreprocessedData.create(study, params._table, params.id, filepaths,
                             raw_data)
+
+
+def _clean_up(dirs):
+    """Removes the directories listed in dirs
+
+    Parameters
+    ----------
+    dirs : list of str
+        Path to the directories to remove
+    """
+    from shutil import rmtree
+    from os.path import exists
+
+    for dp in dirs:
+        if exists(dp):
+            rmtree(dp)
 
 
 class StudyPreprocesser(ParallelWrapper):
@@ -174,6 +202,7 @@ class StudyPreprocesser(ParallelWrapper):
         filetype = raw_data.filetype
         if filetype == "Illumina":
             cmd_generator = _get_preprocess_illumina_cmd
+            insert_preprocessed_data = _insert_preprocessed_data_illumina
         else:
             raise NotImplementedError(
                 "Raw data %s cannot be preprocessed, filetype %s not supported"
@@ -184,12 +213,23 @@ class StudyPreprocesser(ParallelWrapper):
         self._job_graph.add_node(preprocess_node, job=(cmd,),
                                  requires_deps=False)
 
+        # This step is currently only for data types in which we need to store,
+        # demultiplexed sequences. Since it is the only supported data type at
+        # this point, it is ok the leave it here. However, as new data types
+        # become available, we will need to think a better way of doing this.
+        demux_node = "GEN_DEMUX_FILE"
+        self._job_graph.add_node(demux_node,
+                                 job=(_generate_demux_file, output_dir),
+                                 requires_deps=False)
+        self._job_graph.add_edge(preprocess_node, demux_node)
+
         # STEP 2: Add preprocessed data to DB
         insert_preprocessed_node = "INSERT_PREPROCESSED"
         self._job_graph.add_node(insert_preprocessed_node,
-                                 job=(_insert_preprocessed_data, ),
+                                 job=(insert_preprocessed_data, study, params,
+                                      raw_data, output_dir),
                                  requires_deps=False)
-        self._job_graph.add_edge(preprocess_node, insert_preprocessed_node)
+        self._job_graph.add_edge(demux_node, insert_preprocessed_node)
 
         # Clean up the environment
         clean_up_node = "CLEAN_UP"
