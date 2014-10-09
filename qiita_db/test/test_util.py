@@ -20,7 +20,7 @@ from qiita_db.util import (exists_table, exists_dynamic_table, scrub_data,
                            get_table_cols, get_table_cols_w_type,
                            get_filetypes, get_filepath_types, get_count,
                            check_count, get_processed_params_tables,
-                           params_dict_to_json, get_user_fp)
+                           params_dict_to_json, get_user_fp, get_study_fp)
 from qiita_core.qiita_settings import qiita_config
 
 
@@ -183,6 +183,12 @@ class DBUtilTests(TestCase):
     def test_get_user_fps(self):
         obs = get_user_fp("demo@demo.com")
         exp = join(qiita_config.upload_data_dir, 'demo.com', 'demo')
+        self.assertEqual(obs, exp)
+
+    def test_get_study_fps(self):
+        study_id = 1000
+        obs = get_study_fp(study_id)
+        exp = join(qiita_config.upload_data_dir, str(study_id))
         self.assertEqual(obs, exp)
 
 
