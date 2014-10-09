@@ -12,7 +12,7 @@
 
 (function(window, document, $, undefined)
  {
-   window.ResumableUploader = function(savedData, browseTarget, dropTarget, progressContainer, uploaderList, fileEditContainer, maxFileSize, file_type) {
+   window.ResumableUploader = function(savedData, browseTarget, dropTarget, progressContainer, uploaderList, fileEditContainer, maxFileSize, study_id, filetypes) {
      var $this = this;
      // Bootstrap parameters and clear HTML
      this.originalDocumentTitle = document.title;
@@ -20,7 +20,8 @@
      this.browseTarget = browseTarget;
      this.dropTarget = dropTarget;
      this.maxFileSize = maxFileSize;
-     this.file_type = file_type
+     this.study_id = study_id;
+     this.filetypes = filetypes;
 
      this.progressContainer = progressContainer;
      this.progressContainer.hide();
@@ -51,7 +52,7 @@
            maxFileSize:this.maxFileSize*1024*1024*1024,
            simultaneousUploads: 6,
            target:'/upload/',
-           query:{file_type:this.file_type},
+           query:{study_id:this.study_id},
            prioritizeFirstAndLastChunk:true,
            throttleProgressCallbacks:1
          });
@@ -75,7 +76,7 @@
 
            // Apply a thumbnail
            if(file.chunks.length>0 && file.chunks[0].status()=='success' && file.chunks[file.chunks.length-1].status()=='success'){
-             $this.setFileThumbnail(file.uniqueIdentifier, '/api/photo/frame?time=10&file_type='+encodeURIComponent(this.file_type)+'&resumableIdentifier='+encodeURIComponent(file.uniqueIdentifier));
+             $this.setFileThumbnail(file.uniqueIdentifier, '/api/photo/frame?time=10&study_id='+encodeURIComponent(this.study_id)+'&resumableIdentifier='+encodeURIComponent(file.uniqueIdentifier));
            }
          });
        this.resumable.on('complete', function(file){});
@@ -123,7 +124,23 @@
        }
 
        var listNode = $(document.createElement('div'));
-       listNode.html("<div>" + name + "</div>");
+       var text = '';
+       // left gap
+       text += '<div class="col-md-3"></div>';
+       // name
+       text += '<div class="col-md-3">' + name + '</div>';
+       // options
+       text += '<div class="col-md-3">';
+       text += '<select name="item">';
+       text += '<option value="raw_sample_template">sample template</option>';
+       text += '<option value="raw_pret_template">prep template</option>';
+       for (i=0; i < self.filetypes.length; i++) {
+         text += '<option value="' + self.filetypes[i] + '">' + self.filetypes[i] + '</option>';
+       }
+       text += '</select>'
+       text += '</div>';
+       // add to main node
+       listNode.html('<div class="row">' + text + "</div>");
        this.uploaderList.append(listNode);
 
        var editNode = $(document.createElement('div'));
@@ -176,52 +193,54 @@
        listNode.click(showEdit);
        if(this.fileCount==1) showEdit(); // Activate editing for the first file
 
-       editNode.find('form').submit(function(e){
-           // Save data to object
-           var form = $(e.target);
-           file.title = form.find('.file-edit-form-title input').val();
-           file.description = form.find('.file-edit-form-description textarea').val();
-           file.tags = form.find('.file-edit-form-tags input[name=tags]').val();
-           form.find('.file-edit-form-album select').each(function(i,select){
-               file.album_id = $(select).val();
-               file.album_label = select.options[select.selectedIndex].label;
-             })
-           file.published = form[0].published_p.checked;
 
-           // Save the data through API
-           file.editStatus = 'saving';
-           $this.reflectFile(identifier);
-           var data = {
-             file_type:this.file_type,
-             resumableIdentifier:identifier,
-             title:file.title||'',
-             description:file.description||'',
-             album_id:file.album_id||'',
-             album_label:file.album_label||'',
-             tags:file.tags||'',
-             publish:(file.published ? 1 : 0)
-           };
-           $.ajax('/api/photo/update-upload-token', {type:'POST', data:data, success:function(){
-                 file.editStatus = 'saved';
-                 $this.reflectFile(identifier);
-               }});
-
-           return false;
-         });
-
-       editNode.find('input.file-edit-edit').click(function(e){
-           // Edit file
-           file.editStatus = 'editing';
-           $this.reflectFile(identifier);
-         });
-
-       editNode.find('a.file-edit-cancel').click(function(e){
-           // Cancel upload
-           $this.removeFile(identifier);
-           if($this.fileCount<=0) $this.progressContainer.hide();
-
-           return false;
-         });
+      // qiita: ===> This is currently not needed but we might need it in the future
+      //  editNode.find('form').submit(function(e){
+      //      // Save data to object
+      //      var form = $(e.target);
+      //      file.title = form.find('.file-edit-form-title input').val();
+      //      file.description = form.find('.file-edit-form-description textarea').val();
+      //      file.tags = form.find('.file-edit-form-tags input[name=tags]').val();
+      //      form.find('.file-edit-form-album select').each(function(i,select){
+      //          file.album_id = $(select).val();
+      //          file.album_label = select.options[select.selectedIndex].label;
+      //        })
+      //      file.published = form[0].published_p.checked;
+      //
+      //      // Save the data through API
+      //      file.editStatus = 'saving';
+      //      $this.reflectFile(identifier);
+      //      var data = {
+      //        study_id:this.study_id,
+      //        resumableIdentifier:identifier,
+      //        title:file.title||'',
+      //        description:file.description||'',
+      //        album_id:file.album_id||'',
+      //        album_label:file.album_label||'',
+      //        tags:file.tags||'',
+      //        publish:(file.published ? 1 : 0)
+      //      };
+      //      $.ajax('/api/photo/update-upload-token', {type:'POST', data:data, success:function(){
+      //            file.editStatus = 'saved';
+      //            $this.reflectFile(identifier);
+      //          }});
+      //
+      //      return false;
+      //    });
+      //
+      //  editNode.find('input.file-edit-edit').click(function(e){
+      //      // Edit file
+      //      file.editStatus = 'editing';
+      //      $this.reflectFile(identifier);
+      //    });
+      //
+      //  editNode.find('a.file-edit-cancel').click(function(e){
+      //      // Cancel upload
+      //      $this.removeFile(identifier);
+      //      if($this.fileCount<=0) $this.progressContainer.hide();
+      //
+      //      return false;
+      //    });
      }
 
      // Cancel a file an remove the
@@ -313,7 +332,7 @@
        f.editNode.find('.file-edit-meta-progress-processing span').html(f.progressPercent + ' %');
        f.editNode.find('.file-edit-meta-progress-processing').css({display:(f.uploadStatus!='error' && (f.uploadStatus!='complete' && progress<1) ? 'block' : 'none')});
        f.editNode.find('.file-edit-meta-progress-complete').css({display:(f.uploadStatus!='error' && (f.uploadStatus=='complete'||progress>=1) ? 'block' : 'none')});
-       f.editNode.find('.file-edit-meta-progress-complete span a').attr('href', '/actions?action=resumable-upload-redirect&file_type='+encodeURIComponent(this.file_type)+'&resumableIdentifier='+encodeURIComponent(identifier));
+       f.editNode.find('.file-edit-meta-progress-complete span a').attr('href', '/actions?action=resumable-upload-redirect&study_id='+encodeURIComponent(this.study_id)+'&resumableIdentifier='+encodeURIComponent(identifier));
 
        // Update progress icon
        f.listNode.find('img.uploader-item-status').each(function(i,img){
