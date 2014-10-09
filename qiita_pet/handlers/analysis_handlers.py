@@ -296,7 +296,8 @@ class AnalysisResultsHandler(BaseHandler):
         dropped = {}
         for proc_data_id, samples in viewitems(analysis.dropped_samples):
             proc_data = ProcessedData(proc_data_id)
-            key = "Data type %s, Study: %s" % (proc_data.data_type(), proc_data.study)
+            key = "Data type %s, Study: %s" % (proc_data.data_type(),
+                                               proc_data.study)
             dropped[key] = samples
 
         self.render("analysis_results.html", user=self.current_user,

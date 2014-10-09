@@ -306,7 +306,7 @@ class TestAnalysis(TestCase):
             obs = table.metadata('SKB8.640193')
             exp = {'Study':
                    'Identification of the Microbiomes for Cannabis Soils',
-                   'Proccessed_id': 1}
+                   'Processed_id': 1}
             self.assertEqual(obs, exp)
         finally:
             with open(biom_fp, 'w') as f:
