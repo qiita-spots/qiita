@@ -45,7 +45,7 @@ def start_cluster(clusters):
 
 @env.command()
 @click.argument('clusters', required=True, type=click.Choice(CLUSTERS),
-                nargs=-1) 
+                nargs=-1)
 def stop_cluster(clusters):
     """Stop a compute environment"""
     for cluster in clusters:
@@ -60,7 +60,7 @@ def stop_cluster(clusters):
 
 @env.command()
 @click.argument('envs', nargs=-1, required=True,
-                type=click.Choice(ENVIRONMENTS.keys()))
+                type=click.Choice(ENVIRONMENTS))
 @click.option('--base_data_folder', default=_CONFIG.base_data_dir,
               help="The folder where the test data files are stored")
 @click.option('--base_work_folder', default=DFLT_BASE_WORK_FOLDER,
@@ -82,7 +82,7 @@ def make(envs, base_data_folder, base_work_folder, user, host,
 
 @env.command()
 @click.argument('envs', nargs=-1, required=True,
-                type=click.Choice(ENVIRONMENTS.keys()))
+                type=click.Choice(ENVIRONMENTS))
 @click.option('--user', default=_CONFIG.user,
               help="The database user to connect to the database")
 @click.option('--host', default=_CONFIG.host,
