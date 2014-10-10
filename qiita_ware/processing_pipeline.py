@@ -9,9 +9,9 @@
 from qiita_ware.wrapper import ParallelWrapper
 
 
-def _get_preprocess_illumina_cmd(raw_data, params):
+def _get_preprocess_fastq_cmd(raw_data, params):
     """Generates the split_libraries_fastq.py command to pre-process the
-    illumina raw data
+    fastq raw data
 
     Parameters
     ----------
@@ -37,6 +37,7 @@ def _get_preprocess_illumina_cmd(raw_data, params):
     from tempfile import mkstemp, mkdtemp
     from os import close
 
+    from qiita_core.qiita_settings import qiita_config
     from qiita_db.metadata_template import PrepTemplate
 
     # Get the filepaths from the raw data object
@@ -67,13 +68,14 @@ def _get_preprocess_illumina_cmd(raw_data, params):
     prep_template = PrepTemplate(raw_data.id)
 
     # The prep template should be written to a temporary file
-    fd, prep_fp = mkstemp(prefix="qiita_prep_%s" % prep_template.id,
+    fd, prep_fp = mkstemp(dir=qiita_config.working_dir,
+                          prefix="qiita_prep_%s" % prep_template.id,
                           suffix='.txt')
     close(fd)
     prep_template.to_file(prep_fp)
 
     # Create a temporary directory to store the split libraries output
-    output_dir = mkdtemp(prefix='slq_out')
+    output_dir = mkdtemp(dir=qiita_config.working_dir, prefix='slq_out')
 
     # Add any other parameter needed to split libraries fastq
     params_str = params.to_str()
@@ -114,7 +116,7 @@ def _generate_demux_file(sl_out):
         to_hdf5(fastq_fp, f)
 
 
-def _insert_preprocessed_data_illumina(study, params, raw_data, slq_out):
+def _insert_preprocessed_data_fastq(study, params, raw_data, slq_out):
     """Inserts the preprocessed data to the database
 
     Parameters
@@ -177,7 +179,7 @@ def _clean_up(dirs):
             rmtree(dp)
 
 
-class StudyPreprocesser(ParallelWrapper):
+class StudyPreprocessor(ParallelWrapper):
     def _construct_job_graph(self, study, raw_data, params):
         """Constructs the workflow graph to preprocess a study
 
@@ -200,9 +202,9 @@ class StudyPreprocesser(ParallelWrapper):
         # Check the raw data filepath to know which command generator we
         # should use
         filetype = raw_data.filetype
-        if filetype == "Illumina":
-            cmd_generator = _get_preprocess_illumina_cmd
-            insert_preprocessed_data = _insert_preprocessed_data_illumina
+        if filetype == "FASTQ":
+            cmd_generator = _get_preprocess_fastq_cmd
+            insert_preprocessed_data = _insert_preprocessed_data_fastq
         else:
             raise NotImplementedError(
                 "Raw data %s cannot be preprocessed, filetype %s not supported"

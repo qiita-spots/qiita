@@ -19,8 +19,8 @@ from qiita_db.util import get_db_files_base_dir
 from qiita_db.data import RawData
 from qiita_db.study import Study
 from qiita_db.parameters import PreprocessedIlluminaParams
-from qiita_ware.processing_pipeline import (_get_preprocess_illumina_cmd,
-                                            _insert_preprocessed_data_illumina,
+from qiita_ware.processing_pipeline import (_get_preprocess_fastq_cmd,
+                                            _insert_preprocessed_data_fastq,
                                             _clean_up, _generate_demux_file)
 
 
@@ -39,11 +39,10 @@ class ProcessingPipelineTests(TestCase):
             if exists(dp):
                 rmtree(dp)
 
-    def test_get_preprocess_illumina_cmd(self):
+    def test_get_preprocess_fastq_cmd(self):
         raw_data = RawData(1)
         params = PreprocessedIlluminaParams(1)
-        obs_cmd, obs_output_dir = _get_preprocess_illumina_cmd(raw_data,
-                                                               params)
+        obs_cmd, obs_output_dir = _get_preprocess_fastq_cmd(raw_data, params)
         exp_cmd_1 = ("split_libraries_fastq.py --store_demultiplexed_fastq -i "
                      "{0}/raw_data/1_s_G1_L001_sequences.fastq.gz -b "
                      "{0}/raw_data/1_s_G1_L001_sequences_barcodes.fastq.gz "
@@ -65,7 +64,7 @@ class ProcessingPipelineTests(TestCase):
         self.assertEqual(obs_cmd_1, exp_cmd_1)
         self.assertEqual(obs_cmd_2, exp_cmd_2)
 
-    def test_insert_preprocessed_data_illumina(self):
+    def test_insert_preprocessed_data_fastq(self):
         study = Study(1)
         params = PreprocessedIlluminaParams(1)
         raw_data = RawData(1)
@@ -84,8 +83,7 @@ class ProcessingPipelineTests(TestCase):
             db_files.append(db_path_builder("3_%s" % f_suff))
         self.files_to_remove.extend(db_files)
 
-        _insert_preprocessed_data_illumina(study, params, raw_data,
-                                           prep_out_dir)
+        _insert_preprocessed_data_fastq(study, params, raw_data, prep_out_dir)
 
         # Check that the files have been copied
         for fp in db_files:

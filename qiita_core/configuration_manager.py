@@ -32,6 +32,8 @@ class ConfigurationManager(object):
         Path to the base directorys where all data file are stored
     upload_data_dir : str
         Path to the base directorys where all data file are stored
+    working_dir : str
+        Path to the working directory
     max_upoad_size : int
         Max upload size
     user : str
@@ -122,6 +124,11 @@ class ConfigurationManager(object):
         self.upload_data_dir = config.get('main', 'UPLOAD_DATA_DIR')
         if not isdir(self.upload_data_dir):
             raise ValueError("The UPLOAD_DATA_DIR (%s) folder doesn't exist" %
+                             self.upload_data_dir)
+
+        self.working_dir = config.get('main', 'WORKING_DIR')
+        if not isdir(self.upload_data_dir):
+            raise ValueError("The WORKING_DIR (%s) folder doesn't exist" %
                              self.upload_data_dir)
 
         self.max_upoad_size = config.getint('main', 'MAX_UPLOAD_SIZE')
