@@ -437,6 +437,37 @@ def to_ascii(demux, samples=None):
                            'bc_cor': bc_cor, 'bc_diff': bc_err}
         yield formatter(seq_id, seq, qual)
 
+def to_per_sample_ascii(demux, samples=None):
+    """Consume a demux HDF5 file and yield sequence records per sample
+
+    Parameters
+    ----------
+    demux : h5py.File
+        The demux file to operate on
+    samples : list, optional
+        Samples to pull out. If None, the all samples will be examined.
+        Defaults to None.
+
+    Returns
+    -------
+    generator
+        A formatted fasta or fastq record. The format is determined based on
+        the presence of qual scores. If qual scores exist, then fastq is
+        returned, otherwise fasta is returned.
+    """
+    if demux.attrs['has-qual']:
+        formatter = format_fastq_record
+    else:
+        formatter = format_fasta_record
+
+    id_fmt = ("%(sample)s_%(idx)d orig_bc=%(bc_ori)s new_bc=%(bc_cor)s "
+              "bc_diffs=%(bc_diff)d")
+
+    if samples is None:
+        samples = demux.keys()
+
+    for samp in samples:
+        yield samp, to_ascii(demux, samples=samp)
 
 def fetch(demux, samples=None, k=None):
     """Fetch sequences from a HDF5 demux file
