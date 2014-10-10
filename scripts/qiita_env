@@ -71,15 +71,17 @@ def stop_cluster(clusters):
               help="The database password to connect to the database")
 @click.option('--host', default=_CONFIG.host,
               help='The host where the database lives')
+@click.option('--database', default=_CONFIG.database,
+              help="The postgres database to connect to")
 @click.option('--load-ontologies/--no-load-ontologies',
               default=False, help='if True, ontologies will be loaded')
 def make(envs, base_data_folder, base_work_folder, user, password, host,
-         load_ontologies):
+         database, load_ontologies):
     """Creates the passed environment"""
     for env in envs:
         print "Making environment", env
         make_environment(env, base_data_folder, base_work_folder, user, password,
-                         host, load_ontologies)
+                         host, database, load_ontologies)
 
 
 @env.command()
@@ -91,10 +93,12 @@ def make(envs, base_data_folder, base_work_folder, user, password, host,
               help="The database password to connect to the database")
 @click.option('--host', default=_CONFIG.host,
               help='The host where the database lives')
-def drop(envs, user, password, host):
+@click.option('--database', default=_CONFIG.database,
+              help="The postgres database to connect to")
+def drop(envs, user, password, host, database):
     """Drops the passed database environment"""
     for env in envs:
-        drop_environment(env, user, password, host)
+        drop_environment(env, user, password, host, database)
 
 
 @env.command()
