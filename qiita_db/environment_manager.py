@@ -87,8 +87,8 @@ def make_environment(env, base_data_dir, base_work_dir, user, password, host,
         conn.close()
 
         # Connect to the postgres server, but this time to the just created db
-        conn = connect(user=_CONFIG.user, host=_CONFIG.host,
-                       password=_CONFIG.password, database=_CONFIG.database)
+        conn = connect(user=user, host=host,
+                       password=password, database=_CONFIG.database)
         cur = conn.cursor()
 
         print('Inserting database metadata')
@@ -215,6 +215,15 @@ def clean_test_environment(user, password, host):
     In case that the test database is dirty (i.e. the 'qiita' schema is
     present), this cleans it up by dropping the 'qiita' schema and
     re-populating it.
+
+    Parameters
+    ----------
+    user : str
+        The postgres user to connect to the server
+    password : str
+        The password of the user
+    host : str
+        The host where the postgres server is running
     """
     # Connect to the postgres server
     conn = connect(user=user, host=host,
