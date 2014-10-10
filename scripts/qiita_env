@@ -67,16 +67,18 @@ def stop_cluster(clusters):
               help="The folder where the actively worked on files are stored")
 @click.option('--user', default=_CONFIG.user,
               help="The database user to connect to the database")
+@click.option('--password', default=_CONFIG.password,
+              help="The database password to connect to the database")
 @click.option('--host', default=_CONFIG.host,
               help='The host where the database lives')
 @click.option('--load-ontologies/--no-load-ontologies',
               default=False, help='if True, ontologies will be loaded')
-def make(envs, base_data_folder, base_work_folder, user, host,
+def make(envs, base_data_folder, base_work_folder, user, password, host,
          load_ontologies):
     """Creates the passed environment"""
     for env in envs:
         print "Making environment", env
-        make_environment(env, base_data_folder, base_work_folder, user, None,
+        make_environment(env, base_data_folder, base_work_folder, user, password,
                          host, load_ontologies)
 
 
@@ -85,26 +87,30 @@ def make(envs, base_data_folder, base_work_folder, user, host,
                 type=click.Choice(ENVIRONMENTS))
 @click.option('--user', default=_CONFIG.user,
               help="The database user to connect to the database")
+@click.option('--password', default=_CONFIG.password,
+              help="The database password to connect to the database")
 @click.option('--host', default=_CONFIG.host,
               help='The host where the database lives')
-def drop(envs, user, host):
+def drop(envs, user, password, host):
     """Drops the passed database environment"""
     for env in envs:
-        drop_environment(env, user, None, host)
+        drop_environment(env, user, password, host)
 
 
 @env.command()
 @click.option('--user', default=_CONFIG.user,
               help="The database user to connect to the database")
+@click.option('--password', default=_CONFIG.password,
+              help="The database password to connect to the database")
 @click.option('--host', default=_CONFIG.host,
               help='The host where the database lives')
-def clean_test(user, host):
+def clean_test(user, password, host):
     """Cleans the test database environment.
 
     In case that the test database is dirty (i.e. the 'qiita' schema is
     present), this cleans it up by dropping the 'qiita' schema.
     """
-    clean_test_environment(user, None, host)
+    clean_test_environment(user, password, host)
 
 
 if __name__ == '__main__':
