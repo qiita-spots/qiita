@@ -230,7 +230,7 @@ def clean_test_environment(user, password, host):
     # Connect to the postgres server
     conn = connect(user=user, host=host,
                    password=password,
-                   database=_CONFIG.database)
+                   database='qiita_test')
     # Get the cursor
     cur = conn.cursor()
     # Drop the qiita schema
