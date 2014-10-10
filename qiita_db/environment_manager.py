@@ -73,8 +73,7 @@ def make_environment(env, base_data_dir, base_work_dir, user, password, host,
         database = 'qiita_test'
 
     # Connect to the postgres server
-    conn = connect(user=user, host=host,
-                   password=password, database=database)
+    conn = connect(user=user, host=host, password=password)
     # Set the isolation level to AUTOCOMMIT so we can execute a create database
     # sql quary
     conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
