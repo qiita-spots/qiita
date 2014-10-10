@@ -21,7 +21,7 @@ from qiita_pet.handlers.analysis_handlers import (
     ShowAnalysesHandler, SearchStudiesHandler)
 from qiita_pet.handlers.study_handlers import (
     CreateStudyHandler, PrivateStudiesHandler, PublicStudiesHandler,
-    StudyDescriptionHandler)
+    StudyDescriptionHandler, MetadataSummaryHandler)
 from qiita_pet.handlers.logger_handlers import LogEntryViewerHandler
 from qiita_pet.handlers.websocket_handlers import MessageHandler
 from qiita_pet.handlers.upload import UploadFileHandler
@@ -59,6 +59,7 @@ class Application(tornado.web.Application):
             (r"/analysis/show/", ShowAnalysesHandler),
             (r"/consumer/", MessageHandler),
             (r"/error/", LogEntryViewerHandler),
+            (r"/metadata_summary/(.*)", MetadataSummaryHandler),
             (r"/study/create/", CreateStudyHandler),
             (r"/study/private/", PrivateStudiesHandler),
             (r"/study/public/", PublicStudiesHandler),

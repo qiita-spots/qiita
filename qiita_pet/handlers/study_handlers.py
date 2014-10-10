@@ -20,6 +20,9 @@ from .base_handlers import BaseHandler
 
 from qiita_core.qiita_settings import qiita_config
 
+from qiita_ware.util import metadata_stats_from_sample_and_prep_templates
+
+from qiita_db.metadata_template import SampleTemplate, PrepTemplate
 from qiita_db.study import Study, StudyPerson
 from qiita_db.user import User
 from qiita_db.util import get_user_fp
@@ -226,3 +229,14 @@ class CreateStudyHandler(BaseHandler):
 
         # TODO: change this redirect to something more sensible
         self.redirect('/')
+
+class MetadataSummaryHandler(BaseHandler):
+    @authenticated
+    def get(self, arguments):
+        st = SampleTemplate(int(self.get_argument('sample_template')))
+        pt = PrepTemplate(int(self.get_argument('prep_template')))
+
+        stats = metadata_stats_from_sample_and_prep_templates(st, pt)
+
+        self.render('metadata_summary.html', user=self.current_user,
+                    study_title=Study(st.id).title, stats=stats)
