@@ -50,7 +50,8 @@ def _check_db_exists(db, cursor):
     return (db,) in cursor.fetchall()
 
 
-def make_environment(env, base_work_dir, load_ontologies):
+def make_environment(env, base_data_dir, base_work_dir, user, password, host,
+                     load_ontologies):
     r"""Creates the new environment `env`
 
     Parameters
@@ -67,8 +68,8 @@ def make_environment(env, base_work_dir, load_ontologies):
         raise ValueError("Environment %s not recognized. Available "
                          "environments are %s" % (env, ENVIRONMENTS))
     # Connect to the postgres server
-    conn = connect(user=_CONFIG.user, host=_CONFIG.host,
-                   password=_CONFIG.password, database=_CONFIG.database)
+    conn = connect(user=user, host=host,
+                   password=password, database=_CONFIG.database)
     # Set the isolation level to AUTOCOMMIT so we can execute a create database
     # sql quary
     conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
@@ -98,7 +99,7 @@ def make_environment(env, base_work_dir, load_ontologies):
         # Insert the settings values to the database
         cur.execute("INSERT INTO settings (test, base_data_dir, base_work_dir)"
                     " VALUES (TRUE, '%s', '%s')"
-                    % (_CONFIG.base_data_dir, base_work_dir))
+                    % (base_data_dir, base_work_dir))
 
         if env == 'demo':
             # Create the schema
@@ -138,7 +139,7 @@ def make_environment(env, base_work_dir, load_ontologies):
             url = ("https://raw.githubusercontent.com/biocore/Evident/master"
                    "/data/gg_97_otus_4feb2011.tre")
             try:
-                urlretrieve(url, join(_CONFIG.base_data_dir, "reference",
+                urlretrieve(url, join(base_data_dir, "reference",
                                       "gg_97_otus_4feb2011.tre"))
             except:
                 raise IOError("Error: DOWNLOAD FAILED")
@@ -167,17 +168,23 @@ def make_environment(env, base_work_dir, load_ontologies):
             conn.close()
 
 
-def drop_environment(env):
+def drop_environment(env, user, password, host):
     r"""Drops the `env` environment.
 
     Parameters
     ----------
     env : {demo, test}
-        The environment to drop
+        The environment to create
+    user : str
+        The postgres user to connect to the server
+    password : str
+        The password of the user
+    host : str
+        The host where the postgres server is running
     """
     # Connect to the postgres server
-    conn = connect(user=_CONFIG.user, host=_CONFIG.host,
-                   password=_CONFIG.password)
+    conn = connect(user=user, host=host,
+                   password=password)
     # Set the isolation level to AUTOCOMMIT so we can execute a
     # drop database sql query
     conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
@@ -202,7 +209,7 @@ def drop_environment(env):
     conn.close()
 
 
-def clean_test_environment():
+def clean_test_environment(user, password, host):
     r"""Cleans the test database environment.
 
     In case that the test database is dirty (i.e. the 'qiita' schema is
@@ -210,8 +217,8 @@ def clean_test_environment():
     re-populating it.
     """
     # Connect to the postgres server
-    conn = connect(user=_CONFIG.user, host=_CONFIG.host,
-                   password=_CONFIG.password,
+    conn = connect(user=user, host=host,
+                   password=password,
                    database=_CONFIG.database)
     # Get the cursor
     cur = conn.cursor()
