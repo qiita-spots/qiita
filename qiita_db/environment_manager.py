@@ -68,9 +68,9 @@ def make_environment(env, base_data_dir, base_work_dir, user, password, host,
         raise ValueError("Environment %s not recognized. Available "
                          "environments are %s" % (env, ENVIRONMENTS))
     if env == 'demo':
-        database = 'qiita_test'
-    elif env == 'test':
         database = 'qiita_demo'
+    elif env == 'test':
+        database = 'qiita_test'
 
     # Connect to the postgres server
     conn = connect(user=user, host=host,
