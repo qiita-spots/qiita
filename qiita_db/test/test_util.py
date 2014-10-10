@@ -144,7 +144,7 @@ class DBUtilTests(TestCase):
         """Tests that get_filetypes works with valid arguments"""
 
         obs = get_filetypes()
-        exp = {'454': 1, 'Illumina': 2, 'SPECTRA': 3}
+        exp = {'FASTA': 1, 'FASTQ': 2, 'SPECTRA': 3}
         self.assertEqual(obs, exp)
 
         obs = get_filetypes(key='filetype_id')

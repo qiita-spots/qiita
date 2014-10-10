@@ -125,7 +125,7 @@ class RawDataTests(TestCase):
 
     def test_filetype(self):
         rd = RawData(1)
-        self.assertEqual(rd.filetype, "Illumina")
+        self.assertEqual(rd.filetype, "FASTQ")
 
 
 @qiita_test_checker()
