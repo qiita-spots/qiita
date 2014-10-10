@@ -157,5 +157,15 @@ class Dispatch(object):
 
         return result
 
+    def wait(self, handlers):
+        """Waits until all async jobs in handlers have finished
+
+        Parameters
+        ----------
+        handlers : list of AsyncResult
+            The AsyncResult objects to wait for
+        """
+        return self.demo_lview.wait(handlers)
+
 # likely want this in qiita_ware.__init__
 context = Dispatch()

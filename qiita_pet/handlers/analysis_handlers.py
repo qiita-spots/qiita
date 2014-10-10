@@ -293,8 +293,15 @@ class AnalysisResultsHandler(BaseHandler):
             jobres[jobject.datatype].append((jobject.command[0],
                                              jobject.results))
 
+        dropped = {}
+        for proc_data_id, samples in viewitems(analysis.dropped_samples):
+            proc_data = ProcessedData(proc_data_id)
+            key = "Data type %s, Study: %s" % (proc_data.data_type(),
+                                               proc_data.study)
+            dropped[key] = samples
+
         self.render("analysis_results.html", user=self.current_user,
-                    jobres=jobres, aname=analysis.name,
+                    jobres=jobres, aname=analysis.name, dropped=dropped,
                     basefolder=get_db_files_base_dir())
 
         # wipe out cached messages for this analysis
