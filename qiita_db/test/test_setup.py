@@ -9,7 +9,7 @@
 from unittest import TestCase, main
 
 from qiita_core.util import qiita_test_checker
-from qiita_db.util import get_count
+from qiita_db.util import get_count, check_count
 
 
 @qiita_test_checker()
@@ -124,6 +124,13 @@ class SetupTest(TestCase):
 
     def test_command_data_type(self):
         self.assertEqual(get_count("qiita.command_data_type"), 14)
+
+    def test_ontology(self):
+        self.assertTrue(check_count('qiita.ontology', 1))
+
+    def test_ontology_terms(self):
+        self.assertTrue(check_count('qiita.term', 14))
+
 
 if __name__ == '__main__':
     main()

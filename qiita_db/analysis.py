@@ -28,6 +28,7 @@ from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from .sql_connection import SQLConnectionHandler
 from .base import QiitaStatusObject
 from .data import ProcessedData
+from .study import Study
 from .exceptions import QiitaDBStatusError  # QiitaDBNotImplementedError
 from .util import (convert_to_id, get_work_base_dir, get_db_files_base_dir,
                    get_table_cols)
@@ -43,6 +44,7 @@ class Analysis(QiitaStatusObject):
     name
     description
     samples
+    dropped_samples
     data_types
     biom_tables
     step
@@ -211,6 +213,34 @@ class Analysis(QiitaStatusObject):
         for pid, sample in conn_handler.execute_fetchall(sql, (self._id, )):
             ret_samples[pid].append(sample)
         return ret_samples
+
+    @property
+    def dropped_samples(self):
+        """The samples that were selected but dropped in processing
+
+        Returns
+        -------
+        dict of sets or None
+            Format is {processed_data_id: {sample_id, sample_id, ...}, ...}
+            if no biom tables exist for the analysis, returns None
+        """
+        bioms = self.biom_tables
+        if not bioms:
+            return None
+
+        # get all samples selected for the analysis, converting lists to
+        # sets for fast searching. Overhead less this way for large analyses
+        all_samples = {k: set(v) for k, v in viewitems(self.samples)}
+
+        for biom, filepath in viewitems(bioms):
+            table = load_table(filepath)
+            # remove the samples from the sets as they are found in the table
+            proc_data_id = table.metadata()[0]['Processed_id']
+            ids = set(table.ids())
+            all_samples[proc_data_id] = all_samples[proc_data_id] - ids
+
+        # what's left are unprocessed samples, so return
+        return all_samples
 
     @property
     def data_types(self):
@@ -528,9 +558,14 @@ class Analysis(QiitaStatusObject):
             # make sure samples not in biom table are not filtered for
             table_samps = set(table.ids())
             filter_samps = table_samps.intersection(samps)
+            # add the metadata column for study the samples come from
+            study_meta = {'Study': Study(proc_data.study).title,
+                          'Processed_id': proc_data.id}
+            samples_meta = {sid: study_meta for sid in filter_samps}
             # filter for just the wanted samples and merge into new table
             # this if/else setup avoids needing a blank table to start merges
             table.filter(filter_samps, axis='sample', inplace=True)
+            table.add_metadata(samples_meta, axis='sample')
             data_type = proc_data.data_type()
             if new_tables[data_type] is None:
                 new_tables[data_type] = table
