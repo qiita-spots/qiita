@@ -230,6 +230,7 @@ class CreateStudyHandler(BaseHandler):
         # TODO: change this redirect to something more sensible
         self.redirect('/')
 
+
 class MetadataSummaryHandler(BaseHandler):
     @authenticated
     def get(self, arguments):
