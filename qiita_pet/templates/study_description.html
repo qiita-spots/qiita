@@ -5,7 +5,7 @@
 
 <table border="0" style="vertical-align: middle; text-align:center; align:center; height: 150px; width: 100%;">
   <tr>
-    <td style="vertical-align: middle; text-align:left; width: 50%;">
+    <td style="vertical-align: middle; text-align:left; width: 50%;" colspan="2">
       <b>{{study_info['study_alias']}}</b> ({{study_info['number_samples_promised']}}/{{study_info['number_samples_collected']}})
       <br/>
       Metadata: {{study_info['metadata_complete']}}
@@ -28,10 +28,10 @@
     </td>
   </tr>
   <tr>
-    <td style="vertical-align: middle; text-align:center; width: 50%;"><b>Upload files (max file size: {{max_upoad_size}}Gb)</b></td>
+    <td style="vertical-align: middle; text-align:center; width: 50%;" colspan="2"><b>Upload files (max file size: {{max_upoad_size}}Gb)</b></td>
   </tr>
   <tr>
-    <td style="vertical-align: top; text-align:center; ">
+    <td style="vertical-align: top; text-align:center; " colspan="2">
       <div style="height: 150px; width: 100%; background-color:lightgrey; border: 2px solid; border-radius: 25px;" class="resumable-drop-metadata" ondragenter="jQuery(this).addClass('resumable-dragover');" ondragend="jQuery(this).removeClass('resumable-dragover');" ondrop="jQuery(this).removeClass('resumable-dragover');">
         <p style="vertical-align: middle;">Drop files here to upload or <a class="resumable-browse-metadata"><u>select from your computer</u></a></p>
       </div>
@@ -59,6 +59,15 @@
 
     </td>
   </tr>
+  <tr><td colspan="2"><br/></td></tr>
+  <tr>
+    <td><input type="button" value="Process metadata" onclick="process_metadata();"></td>
+    <td><input type="button" value="Validate all files" onclick="validate_all_files();"></td>
+  </tr>
+  <tr>
+    <td id="response_to_process_data"></td>
+    <td id="response_to_validate_all_files"></td>
+  </tr>
 </table>
 
 <script src="/static/vendor/js/resumable.js"></script>
@@ -75,6 +84,69 @@
   {% for f in files %}
     uploader.addFile("{{f}}");
   {% end  %}
+
+  function reset_vals() {
+    // a reset vals function so we do not have these lines multiple times
+    raw_sample_template = false;
+    raw_prep_template = false;
+    raw_sample_template_value = "";
+    raw_prep_template_value = "";
+    iterations = 0
+  }
+
+  reset_vals();
+  function process_metadata() {
+    // function to validate the input files to process metadata and submits to
+    // post those values
+    all_inputfiles = $('select[id^="inputfile"]');
+
+    all_inputfiles.each(function () {
+      iterations += 1;
+      console.log(iterations + '  ' + all_inputfiles.length)
+      if (raw_sample_template && raw_prep_template && iterations != all_inputfiles.length) {
+        alert("You have selected more than one sample and/or prep template")
+        reset_vals();
+        return;
+      }
+
+      if (this.value == "raw_sample_template") {
+        raw_sample_template = true;
+        raw_sample_template_value = this.name;
+      }
+      if (this.value == "raw_prep_template") {
+        raw_prep_template = true;
+        raw_prep_template_value = this.name;
+      }
+
+      if (iterations == all_inputfiles.length) {
+        if (!raw_sample_template) {
+          alert("Missing sample template");
+          reset_vals();
+          return;
+        }
+        if (!raw_prep_template) {
+          alert("Missing prep template");
+          reset_vals();
+          return;
+        }
+        $.ajax({
+          type: 'POST',
+          url: window.location.href,
+          data: {
+            'raw_sample_template': raw_sample_template_value,
+            'raw_prep_template': raw_prep_template_value
+          },
+          complete: function () {
+            window.location.reload(true);
+          }
+        });
+      }
+    });
+  }
+
+  function validate_all_files() {
+    alert('To be implemented');
+  }
 </script>
 
 {% end %}

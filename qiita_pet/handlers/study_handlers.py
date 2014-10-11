@@ -131,8 +131,8 @@ class StudyDescriptionHandler(BaseHandler):
                     filetypes=fts)
 
     @authenticated
-    def post(self):
-        pass
+    def post(self, study_id):
+        print 'need to get the files, add them to the db and then summarize'
 
 
 class CreateStudyHandler(BaseHandler):

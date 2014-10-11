@@ -131,9 +131,9 @@
        text += '<div class="col-md-3">' + name + '</div>';
        // options
        text += '<div class="col-md-3">';
-       text += '<select name="item">';
+       text += '<select id="inputfile" name="' + name + '"">';
        text += '<option value="raw_sample_template">sample template</option>';
-       text += '<option value="raw_pret_template">prep template</option>';
+       text += '<option value="raw_prep_template">prep template</option>';
        for (i=0; i < self.filetypes.length; i++) {
          text += '<option value="' + self.filetypes[i] + '">' + self.filetypes[i] + '</option>';
        }
