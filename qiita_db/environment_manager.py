@@ -178,7 +178,7 @@ def drop_environment(env, user, password, host, database):
     Parameters
     ----------
     env : {demo, test}
-        The environment to create
+        The environment to drop
     user : str
         The postgres user to connect to the server
     password : str
@@ -189,8 +189,7 @@ def drop_environment(env, user, password, host, database):
         The postgres database to connect to
     """
     # Connect to the postgres server
-    conn = connect(user=user, host=host,
-                   password=password, database=database)
+    conn = connect(user=user, host=host, password=password)
     # Set the isolation level to AUTOCOMMIT so we can execute a
     # drop database sql query
     conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
