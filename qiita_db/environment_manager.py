@@ -24,12 +24,12 @@ from qiita_db.util import get_db_files_base_dir
 get_support_file = partial(join, join(dirname(abspath(__file__)),
                                       'support_files'))
 
+DFLT_BASE_WORK_FOLDER = get_support_file('work_data')
 SETTINGS_FP = get_support_file('qiita-db-settings.sql')
 LAYOUT_FP = get_support_file('qiita-db.sql')
 INITIALIZE_FP = get_support_file('initialize.sql')
 POPULATE_FP = get_support_file('populate_test_db.sql')
-ENVIRONMENTS = {'demo': 'qiita_demo', 'test': 'qiita_test',
-                'production': 'qiita'}
+ENVIRONMENTS = {'demo': 'qiita_demo', 'test': 'qiita_test'}
 CLUSTERS = ['demo', 'reserved', 'general']
 
 
@@ -54,22 +54,17 @@ def make_environment(env, base_data_dir, base_work_dir, user, password, host,
 
     Parameters
     ----------
-    env : {demo, test, production}
+    env : {demo, test}
         The environment to create
-    base_data_dir : str
-        Path to the directory where Qiita will store its internal data
-    base_work_dir : str
-        Path to the directory that Qiita will use as scratch space
-    user : str
-        The user that will be used to connect to the database
-    password : str
-        The password for the database user
-    host : str
-        The database server host name/address
-    load_ontologies : bool
-        Controlls whether or not ontology information will be fetched and
-        loaded
+
+    Raises
+    ------
+    ValueError
+        If `env` not recognized
     """
+    if env not in ENVIRONMENTS:
+        raise ValueError("Environment %s not recognized. Available "
+                         "environments are %s" % (env, ENVIRONMENTS.keys()))
     # Connect to the postgres server
     conn = connect(user=user, host=host, password=password)
     # Set the isolation level to AUTOCOMMIT so we can execute a create database
@@ -80,7 +75,7 @@ def make_environment(env, base_data_dir, base_work_dir, user, password, host,
     # Check that it does not already exists
     if _check_db_exists(ENVIRONMENTS[env], cur):
         print("Environment {0} already present on the system. You can drop "
-              "it by running `qiita env drop {0}".format(env))
+              "it by running `qiita_env drop_env --env {0}".format(env))
     else:
         # Create the database
         print('Creating database')
@@ -100,9 +95,8 @@ def make_environment(env, base_data_dir, base_work_dir, user, password, host,
 
         # Insert the settings values to the database
         cur.execute("INSERT INTO settings (test, base_data_dir, base_work_dir)"
-                    " VALUES (%s, %s, %s)", (True if env == 'test' else False,
-                                             base_data_dir,
-                                             base_work_dir))
+                    " VALUES (TRUE, '%s', '%s')"
+                    % (base_data_dir, base_work_dir))
 
         if env == 'demo':
             # Create the schema
@@ -110,10 +104,19 @@ def make_environment(env, base_data_dir, base_work_dir, user, password, host,
             with open(LAYOUT_FP, 'U') as f:
                 cur.execute(f.read())
 
+            print('Initializing database')
             # Initialize the database
-            print('Initializing database tables')
             with open(INITIALIZE_FP, 'U') as f:
                 cur.execute(f.read())
+            if load_ontologies:
+                print ('Loading Ontology Data')
+                ontos_fp, f = download_and_unzip_file(
+                    host='thebeast.colorado.edu',
+                    filename='/pub/qiita/qiita_ontoandvocab.sql.gz')
+                cur.execute(f.read())
+                f.close()
+                remove(ontos_fp)
+
             # Commit all the changes and close the connections
             print('Populating database with demo data')
             cur.execute(
@@ -139,26 +142,16 @@ def make_environment(env, base_data_dir, base_work_dir, user, password, host,
                 raise IOError("Error: DOWNLOAD FAILED")
 
             print('Demo environment successfully created')
-        elif env == 'production':
-            # Create the schema
-            print('Create schema in test database')
-            with open(LAYOUT_FP, 'U') as f:
-                cur.execute(f.read())
-            # Initialize the database
-            print('Initializing database tables')
-            with open(INITIALIZE_FP, 'U') as f:
-                cur.execute(f.read())
         elif env == "test":
             # Create the schema
             print('Create schema in test database')
             with open(LAYOUT_FP, 'U') as f:
                 cur.execute(f.read())
+            print('Populate the test database')
             # Initialize the database
-            print('Initializing database tables')
             with open(INITIALIZE_FP, 'U') as f:
                 cur.execute(f.read())
             # Populate the database
-            print('Populate the test database')
             with open(POPULATE_FP, 'U') as f:
                 cur.execute(f.read())
             conn.commit()
@@ -170,15 +163,6 @@ def make_environment(env, base_data_dir, base_work_dir, user, password, host,
             conn.commit()
             cur.close()
             conn.close()
-
-        if load_ontologies:
-            print ('Loading Ontology Data')
-            ontos_fp, f = download_and_unzip_file(
-                host='thebeast.colorado.edu',
-                filename='/pub/qiita/qiita_ontoandvocab.sql.gz')
-            cur.execute(f.read())
-            f.close()
-            remove(ontos_fp)
 
 
 def drop_environment(env, user, password, host):
@@ -205,8 +189,8 @@ def drop_environment(env, user, password, host):
 
     if not _check_db_exists(ENVIRONMENTS[env], cur):
         raise QiitaEnvironmentError(
-            "Environment {0} not present on the system. You can create it "
-            "by running 'qiita env make {0}'".format(env))
+            "Test environment not present on the system. You can create it "
+            "by running 'qiita_env make_test_env'")
 
     if env == 'demo':
         # wipe the overwriiten test files so empty as on repo

@@ -26,11 +26,10 @@ class ConfigurationManager(object):
 
     Attributes
     ----------
+    test_environment : bool
+        If true, we are in a test environment.
     base_data_dir : str
         Path to the base directorys where all data file are stored
-    base_work_dir : str
-        Path to the directory that Qiita will use as its "working"/scrath
-        directory
     upload_data_dir : str
         Path to the base directorys where all data file are stored
     max_upoad_size : int
@@ -109,18 +108,28 @@ class ConfigurationManager(object):
 
     def _get_main(self, config):
         """Get the configuration of the main section"""
-        self.base_data_dir = config.get('main', 'BASE_DATA_DIR')
-        self.base_work_dir = config.get('main', 'BASE_WORK_DIR')
-        self.upload_data_dir = config.get('main', 'UPLOAD_DATA_DIR')
+        self.test_environment = config.getboolean('main', 'TEST_ENVIRONMENT')
+        default_base_data_dir = join(dirname(abspath(__file__)),
+                                     '..', 'qiita_db', 'support_files',
+                                     'test_data')
+        default_base_work_dir = join(dirname(abspath(__file__)),
+                                     '..', 'qiita_db', 'support_files',
+                                     'test_work')
+
+        self.base_data_dir = config.get('main', 'BASE_DATA_DIR') or \
+            default_base_data_dir
+        self.base_work_dir = config.get('main', 'BASE_WORK_DIR') or \
+            default_base_work_dir
 
         if not isdir(self.base_data_dir):
             raise ValueError("The BASE_DATA_DIR (%s) folder doesn't exist" %
                              self.base_data_dir)
 
-        if not isdir(self.base_data_dir):
+        if not isdir(self.base_work_dir):
             raise ValueError("The BASE_WORK_DIR (%s) folder doesn't exist" %
-                             self.base_data_dir)
+                             self.base_work_dir)
 
+        self.upload_data_dir = config.get('main', 'UPLOAD_DATA_DIR')
         if not isdir(self.upload_data_dir):
             raise ValueError("The UPLOAD_DATA_DIR (%s) folder doesn't exist" %
                              self.upload_data_dir)

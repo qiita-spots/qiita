@@ -24,9 +24,6 @@ MAX_UPLOAD_SIZE = 100
 # Path to the base directory where the data files are going to be stored, uncomment to set
 BASE_DATA_DIR =
 
-# Path to the directory that Qiita will use as its "working"/scrath directory
-BASE_WORK_DIR =
-
 # ----------------------------- IPython settings ------------------------------
 [ipython]
 # ties to cluster profiles
