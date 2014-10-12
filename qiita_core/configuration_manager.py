@@ -11,7 +11,7 @@ from os.path import join, dirname, abspath, isdir
 from os import environ
 from future import standard_library
 with standard_library.hooks():
-    from configparser import (ConfigParser, NoOptionError)
+    from configparser import ConfigParser
 
 from .exceptions import MissingConfigSection
 
@@ -29,9 +29,11 @@ class ConfigurationManager(object):
     test_environment : bool
         If true, we are in a test environment.
     base_data_dir : str
-        Path to the base directorys where all data file are stored
+        Path to the base directory where all data file are stored
+    base_work_dir : str
+        Path to the base directory where all working data is stored
     upload_data_dir : str
-        Path to the base directorys where all data file are stored
+        Path to the base directory where all data files are uploaded
     max_upoad_size : int
         Max upload size
     user : str
@@ -112,12 +114,22 @@ class ConfigurationManager(object):
         default_base_data_dir = join(dirname(abspath(__file__)),
                                      '..', 'qiita_db', 'support_files',
                                      'test_data')
+        default_base_work_dir = join(dirname(abspath(__file__)),
+                                     '..', 'qiita_db', 'support_files',
+                                     'work_data')
+
         self.base_data_dir = config.get('main', 'BASE_DATA_DIR') or \
             default_base_data_dir
+        self.base_work_dir = config.get('main', 'BASE_WORK_DIR') or \
+            default_base_work_dir
 
         if not isdir(self.base_data_dir):
             raise ValueError("The BASE_DATA_DIR (%s) folder doesn't exist" %
                              self.base_data_dir)
+
+        if not isdir(self.base_work_dir):
+            raise ValueError("The BASE_WORK_DIR (%s) folder doesn't exist" %
+                             self.base_work_dir)
 
         self.upload_data_dir = config.get('main', 'UPLOAD_DATA_DIR')
         if not isdir(self.upload_data_dir):
@@ -129,13 +141,10 @@ class ConfigurationManager(object):
     def _get_postgres(self, config):
         """Get the configuration of the postgres section"""
         self.user = config.get('postgres', 'USER')
-        try:
-            self.password = config.get('postgres', 'PASSWORD')
-        except NoOptionError as e:
-            if self.test_environment:
-                self.password = None
-            else:
-                raise e
+        self.password = config.get('postgres', 'PASSWORD')
+        if not self.password:
+            self.password = None
+
         self.database = config.get('postgres', 'DATABASE')
         self.host = config.get('postgres', 'HOST')
         self.port = config.getint('postgres', 'PORT')
