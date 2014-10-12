@@ -55,6 +55,12 @@ class RawDataTests(TestCase):
 
     def test_create(self):
         """Correctly creates all the rows in the DB for the raw data"""
+        # Make sure there is an error if an investigation_type is supplied
+        # that does not exist
+        with self.assertRaises(QiitaDBColumnError):
+            fail = RawData.create(self.filetype, self.filepaths, self.studies,
+                                  'Not a term')
+
         # Check that the returned object has the correct id
         obs = RawData.create(self.filetype, self.filepaths, self.studies)
         self.assertEqual(obs.id, 3)
