@@ -145,7 +145,7 @@ class CreateStudyHandler(BaseHandler):
 
         ena = Ontology(convert_to_id('ENA', 'ongology'))
         ena_terms = ena.terms
-        creation_form.investigation_type.choices = [(t, t) for t in ENA_TERMS]
+        creation_form.investigation_type.choices = [(t, t) for t in ena_terms]
 
         # TODO: set the choices attributes on the environmental_package field
         self.render('create_study.html', user=self.current_user,

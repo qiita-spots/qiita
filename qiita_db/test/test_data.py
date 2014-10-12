@@ -59,8 +59,8 @@ class RawDataTests(TestCase):
         # Make sure there is an error if an investigation_type is supplied
         # that does not exist
         with self.assertRaises(QiitaDBColumnError):
-            fail = RawData.create(self.filetype, self.filepaths, self.studies,
-                                  'Not a term')
+            RawData.create(self.filetype, self.filepaths, self.studies,
+                           'Not a term')
 
         # Check that the returned object has the correct id
         obs = RawData.create(self.filetype, self.filepaths, self.studies)

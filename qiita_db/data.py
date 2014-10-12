@@ -299,7 +299,7 @@ class RawData(BaseData):
         conn_handler = SQLConnectionHandler()
         sql = ("SELECT investigation_type FROM {} "
                "where raw_data_id = %s".format(self._table))
-        return execute_fetchone(sql, [self._id])[0]
+        return conn_handler.execute_fetchone(sql, [self._id])[0]
 
 
 class PreprocessedData(BaseData):
