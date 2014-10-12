@@ -34,9 +34,6 @@ nosetests.xml
 .project
 .pydevproject
 
-# Config files
-config.py
-
 # OSX files
 .DS_Store
 
