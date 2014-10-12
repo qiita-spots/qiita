@@ -294,6 +294,13 @@ class RawData(BaseData):
             " c.raw_data_id = %s".format(ret), (self._id, ))
         return data_type[0]
 
+    @property
+    def investigation_type(self):
+        conn_handler = SQLConnectionHandler()
+        sql = "SELECT investigation_type FROM {}"
+              "where raw_data_id = %s".format(self._table)
+        return execute_fetchone(sql, [self._id])[0]
+
 
 class PreprocessedData(BaseData):
     r"""Object for dealing with preprocessed data
