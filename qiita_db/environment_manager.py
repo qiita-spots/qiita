@@ -19,7 +19,9 @@ from psycopg2 import connect
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 
 from qiita_core.exceptions import QiitaEnvironmentError
+from qiita_core.qiita_settings import qiita_config
 from qiita_db.util import get_db_files_base_dir
+from qiita_db.exceptions import QiitaDBError
 
 get_support_file = partial(join, join(dirname(abspath(__file__)),
                                       'support_files'))
@@ -29,7 +31,8 @@ SETTINGS_FP = get_support_file('qiita-db-settings.sql')
 LAYOUT_FP = get_support_file('qiita-db.sql')
 INITIALIZE_FP = get_support_file('initialize.sql')
 POPULATE_FP = get_support_file('populate_test_db.sql')
-ENVIRONMENTS = {'demo': 'qiita_demo', 'test': 'qiita_test'}
+ENVIRONMENTS = {'demo': 'qiita_demo', 'test': 'qiita_test',
+                'production': 'qiita'}
 CLUSTERS = ['demo', 'reserved', 'general']
 
 
@@ -48,14 +51,66 @@ def _check_db_exists(db, cursor):
     return (db,) in cursor.fetchall()
 
 
+def _create_layout_and_init_db(cur):
+    print('Building SQL layout')
+    # Create the schema
+    with open(LAYOUT_FP, 'U') as f:
+        cur.execute(f.read())
+
+    print('Initializing database')
+    # Initialize the database
+    with open(INITIALIZE_FP, 'U') as f:
+        cur.execute(f.read())
+
+
+def _populate_test_db(cur):
+    print('Populating database with demo data')
+    with open(POPULATE_FP, 'U') as f:
+        cur.execute(f.read())
+
+
+def _add_ontology_data(cur):
+    print ('Loading Ontology Data')
+    ontos_fp, f = download_and_unzip_file(
+        host='thebeast.colorado.edu',
+        filename='/pub/qiita/qiita_ontoandvocab.sql.gz')
+    cur.execute(f.read())
+    f.close()
+    remove(ontos_fp)
+
+
+def _download_test_files(cur, base_data_dir):
+    print('Downloading test files')
+    # Download tree file
+    url = ("https://raw.githubusercontent.com/biocore/Evident/master"
+           "/data/gg_97_otus_4feb2011.tre")
+    try:
+        urlretrieve(url, join(base_data_dir, "reference",
+                              "gg_97_otus_4feb2011.tre"))
+    except:
+        raise IOError("Error: DOWNLOAD FAILED")
+
+
 def make_environment(env, base_data_dir, base_work_dir, user, password, host,
                      load_ontologies):
     r"""Creates the new environment `env`
 
     Parameters
     ----------
-    env : {demo, test}
+    env : {demo, test, production}
         The environment to create
+    base_data_dir : str
+        the path to the directory where all user data is stored
+    base_work_dir : str
+        The path to the directory to use for working space
+    user : str
+        The postgres user to use
+    password : str
+        The password for the above postgres user
+    host : str
+        The postgrs host
+    load_ontologies : bool
+        Whether or not to retrieve and unpack ontology information
 
     Raises
     ------
@@ -74,95 +129,60 @@ def make_environment(env, base_data_dir, base_work_dir, user, password, host,
     cur = conn.cursor()
     # Check that it does not already exists
     if _check_db_exists(ENVIRONMENTS[env], cur):
-        print("Environment {0} already present on the system. You can drop "
-              "it by running `qiita_env drop_env --env {0}".format(env))
-    else:
-        # Create the database
-        print('Creating database')
-        cur.execute('CREATE DATABASE %s' % ENVIRONMENTS[env])
-        cur.close()
-        conn.close()
+        raise QiitaDBError("Environment {0} already present on the system. "
+                           "You can drop it by running "
+                           "qiita_env drop {0}".format(env))
+    # Create the database
+    print('Creating database')
+    cur.execute('CREATE DATABASE %s' % ENVIRONMENTS[env])
+    cur.close()
+    conn.close()
 
-        # Connect to the postgres server, but this time to the just created db
-        conn = connect(user=user, host=host, password=password,
-                       database=ENVIRONMENTS[env])
-        cur = conn.cursor()
+    # Connect to the postgres server, but this time to the just created db
+    conn = connect(user=user, host=host, password=password,
+                   database=ENVIRONMENTS[env])
+    cur = conn.cursor()
 
-        print('Inserting database metadata')
-        # Build the SQL layout into the database
-        with open(SETTINGS_FP, 'U') as f:
-            cur.execute(f.read())
+    print('Inserting database metadata')
+    # Build the SQL layout into the database
+    with open(SETTINGS_FP, 'U') as f:
+        cur.execute(f.read())
 
-        # Insert the settings values to the database
-        cur.execute("INSERT INTO settings (test, base_data_dir, base_work_dir)"
-                    " VALUES (TRUE, '%s', '%s')"
-                    % (base_data_dir, base_work_dir))
+    # Insert the settings values to the database
+    cur.execute("INSERT INTO settings (test, base_data_dir, base_work_dir) "
+                "VALUES (%s, %s, %s)",
+                (qiita_config.test_environment, base_data_dir,
+                 base_work_dir))
 
-        if env == 'demo':
-            # Create the schema
-            print('Building SQL layout')
-            with open(LAYOUT_FP, 'U') as f:
-                cur.execute(f.read())
+    if load_ontologies:
+        _add_ontology_data(cur)
 
-            print('Initializing database')
-            # Initialize the database
-            with open(INITIALIZE_FP, 'U') as f:
-                cur.execute(f.read())
-            if load_ontologies:
-                print ('Loading Ontology Data')
-                ontos_fp, f = download_and_unzip_file(
-                    host='thebeast.colorado.edu',
-                    filename='/pub/qiita/qiita_ontoandvocab.sql.gz')
-                cur.execute(f.read())
-                f.close()
-                remove(ontos_fp)
+    if env == 'demo':
+        _download_test_files(cur, base_data_dir)
+        _create_layout_and_init_db(cur)
 
-            # Commit all the changes and close the connections
-            print('Populating database with demo data')
-            cur.execute(
-                "INSERT INTO qiita.qiita_user (email, user_level_id, password,"
-                " name, affiliation, address, phone) VALUES "
-                "('demo@microbio.me', 4, "
-                "'$2a$12$gnUi8Qg.0tvW243v889BhOBhWLIHyIJjjgaG6dxuRJkUM8nXG9Efe"
-                "', 'Demo', 'Qitta Dev', '1345 Colorado Avenue', "
-                "'303-492-1984');")
+        # add demo user
+        cur.execute("""
+            INSERT INTO qiita.qiita_user (email, user_level_id, password,
+                                          name, affiliation, address, phone)
+            VALUES
+            ('demo@microbio.me', 4,
+             '$2a$12$gnUi8Qg.0tvW243v889BhOBhWLIHyIJjjgaG6dxuRJkUM8nXG9Efe',
+             'Demo', 'Qitta Dev', '1345 Colorado Avenue', '303-492-1984')""")
 
-            conn.commit()
-            cur.close()
-            conn.close()
+        print('Demo environment successfully created')
+    elif env == "test":
+        _create_layout_and_init_db(cur)
+        _populate_test_db(cur)
+        print('Test environment successfully created')
+    elif env == "production":
+        _create_layout_and_init_db(cur)
+        print('Production environment successfully created')
 
-            print('Downloading test files')
-            # Download tree file
-            url = ("https://raw.githubusercontent.com/biocore/Evident/master"
-                   "/data/gg_97_otus_4feb2011.tre")
-            try:
-                urlretrieve(url, join(base_data_dir, "reference",
-                                      "gg_97_otus_4feb2011.tre"))
-            except:
-                raise IOError("Error: DOWNLOAD FAILED")
-
-            print('Demo environment successfully created')
-        elif env == "test":
-            # Create the schema
-            print('Create schema in test database')
-            with open(LAYOUT_FP, 'U') as f:
-                cur.execute(f.read())
-            print('Populate the test database')
-            # Initialize the database
-            with open(INITIALIZE_FP, 'U') as f:
-                cur.execute(f.read())
-            # Populate the database
-            with open(POPULATE_FP, 'U') as f:
-                cur.execute(f.read())
-            conn.commit()
-            cur.close()
-            conn.close()
-            print('Test environment successfully created')
-        else:
-            # Commit all the changes and close the connections
-            conn.commit()
-            cur.close()
-            conn.close()
+    # Commit all the changes and close the connections
+    conn.commit()
+    cur.close()
+    conn.close()
 
 
 def drop_environment(env, user, password, host):
@@ -170,8 +190,8 @@ def drop_environment(env, user, password, host):
 
     Parameters
     ----------
-    env : {demo, test}
-        The environment to create
+    env : {demo, test, production}
+        The environment to drop
     user : str
         The postgres user to connect to the server
     password : str
@@ -189,8 +209,11 @@ def drop_environment(env, user, password, host):
 
     if not _check_db_exists(ENVIRONMENTS[env], cur):
         raise QiitaEnvironmentError(
+            "Environment {0} not present on the system. You can create it "
+            "by running 'qiita_env make {0}'".format(env))
 
     cur.execute('DROP DATABASE %s' % ENVIRONMENTS[env])
+
     # Close cursor and connection
     cur.close()
     conn.close()
