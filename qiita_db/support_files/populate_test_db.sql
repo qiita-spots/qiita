@@ -60,7 +60,7 @@ INSERT INTO qiita.study_experimental_factor (study_id, efo_id) VALUES (1, 1);
 INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum, checksum_algorithm_id) VALUES ('1_s_G1_L001_sequences.fastq.gz', 1, '852952723', 1), ('1_s_G1_L001_sequences_barcodes.fastq.gz', 2, '852952723', 1), ('2_sequences.fastq.gz', 1, '852952723', 1), ('2_sequences_barcodes.fastq.gz', 2, '852952723', 1);
 
 -- Insert the raw data information for study 1
-INSERT INTO qiita.raw_data (filetype_id, investigation_type) VALUES (2, 'Metagenomics'), (2, '16S Survey');
+INSERT INTO qiita.raw_data (filetype_id, investigation_type) VALUES (2, 'Metagenomics'), (2, 'Whole Genome Sequencing');
 
 -- Insert (link) the raw data with the raw filepaths
 INSERT INTO qiita.raw_filepath (raw_data_id, filepath_id) VALUES (1, 1), (1, 2), (2, 3), (2, 4);
