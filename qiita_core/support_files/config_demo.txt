@@ -12,6 +12,9 @@
 
 # ------------------------------ Main settings --------------------------------
 [main]
+# Change to FALSE in a production system
+TEST_ENVIRONMENT = TRUE
+
 # Download path files
 UPLOAD_DATA_DIR = /tmp/
 
@@ -46,7 +49,7 @@ HOST = localhost
 # Google: 587
 PORT = 25
 
-#SSL needed (True or False)
+# SSL needed (True or False)
 SSL = False
 
 # The user name to connect with
@@ -94,7 +97,7 @@ EBI_SEQ_XFER_URL = fasp.sra.ebi.ac.uk
 
 # URL of EBI's HTTPS dropbox
 # live submission URL
-#EBI_DROPBOX_URL = https://www.ebi.ac.uk/ena/submit/drop-box/submit/
+# EBI_DROPBOX_URL = https://www.ebi.ac.uk/ena/submit/drop-box/submit/
 # testing URL
 EBI_DROPBOX_URL = https://www-test.ebi.ac.uk/ena/submit/drop-box/submit/
 
