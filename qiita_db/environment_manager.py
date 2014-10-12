@@ -189,15 +189,6 @@ def drop_environment(env, user, password, host):
 
     if not _check_db_exists(ENVIRONMENTS[env], cur):
         raise QiitaEnvironmentError(
-            "Test environment not present on the system. You can create it "
-            "by running 'qiita_env make_test_env'")
-
-    if env == 'demo':
-        # wipe the overwriiten test files so empty as on repo
-        base = get_db_files_base_dir()
-        with open(join(base, "reference",
-                       "gg_97_otus_4feb2011.tre"), 'w') as f:
-            f.write('\n')
 
     cur.execute('DROP DATABASE %s' % ENVIRONMENTS[env])
     # Close cursor and connection
