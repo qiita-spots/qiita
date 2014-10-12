@@ -17,6 +17,7 @@ from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_db.study import Study
 from qiita_db.util import get_db_files_base_dir
 from qiita_db.data import BaseData, RawData, PreprocessedData, ProcessedData
+from qiita_db.exceptions import QiitaDBColumnError
 
 
 @qiita_test_checker()
