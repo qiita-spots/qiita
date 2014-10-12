@@ -624,3 +624,22 @@ def get_user_fp(email):
     fp = join(qiita_config.upload_data_dir, fp_vals[1], fp_vals[0])
 
     return fp
+
+
+def get_study_fp(study_id):
+    """Returns the study's working filepath
+
+    Parameters
+    ----------
+    study_id : int
+        The study id
+
+    Returns
+    -------
+    str
+        The study's working filepath, a join of the
+        qiita_config.upload_data_dir and the study's email
+    """
+    fp = join(qiita_config.upload_data_dir, str(study_id))
+
+    return fp

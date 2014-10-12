@@ -14,15 +14,18 @@ from wtforms import (Form, StringField, SelectField, BooleanField,
                      SelectMultipleField, TextAreaField, validators)
 
 from os import listdir
-from os.path import join, exists
+from os.path import exists
 
 from .base_handlers import BaseHandler
 
 from qiita_core.qiita_settings import qiita_config
 
+from qiita_ware.util import metadata_stats_from_sample_and_prep_templates
+
+from qiita_db.metadata_template import SampleTemplate, PrepTemplate
 from qiita_db.study import Study, StudyPerson
 from qiita_db.user import User
-from qiita_db.util import get_user_fp
+from qiita_db.util import get_study_fp, get_filetypes
 
 
 class CreateStudyForm(Form):
@@ -112,24 +115,20 @@ class PublicStudiesHandler(BaseHandler):
 class StudyDescriptionHandler(BaseHandler):
     @authenticated
     def get(self, study_id):
-        fp = get_user_fp(self.current_user)
+        fp = get_study_fp(study_id)
 
-        ft = join(fp, "metadata", study_id)
-        if exists(ft):
-            fm = [f for f in listdir(ft)]
-        else:
-            fm = []
-
-        ft = join(fp, "sequences", study_id)
-        if exists(ft):
-            fs = [f for f in listdir(ft)]
+        if exists(fp):
+            fs = [f for f in listdir(fp)]
         else:
             fs = []
 
+        fts = [' '.join(k.split('_')[1:])
+               for k in get_filetypes().keys() if k.startswith('raw_')]
+
         self.render('study_description.html', user=self.current_user,
                     study_info=Study(study_id).info, study_id=study_id,
-                    files_metatada=fm, files_sequences=fs,
-                    max_upoad_size=qiita_config.max_upoad_size)
+                    files=fs, max_upoad_size=qiita_config.max_upoad_size,
+                    filetypes=fts)
 
     @authenticated
     def post(self):
@@ -226,3 +225,15 @@ class CreateStudyHandler(BaseHandler):
 
         # TODO: change this redirect to something more sensible
         self.redirect('/')
+
+
+class MetadataSummaryHandler(BaseHandler):
+    @authenticated
+    def get(self, arguments):
+        st = SampleTemplate(int(self.get_argument('sample_template')))
+        pt = PrepTemplate(int(self.get_argument('prep_template')))
+
+        stats = metadata_stats_from_sample_and_prep_templates(st, pt)
+
+        self.render('metadata_summary.html', user=self.current_user,
+                    study_title=Study(st.id).title, stats=stats)
