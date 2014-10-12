@@ -29,9 +29,11 @@ class ConfigurationManager(object):
     test_environment : bool
         If true, we are in a test environment.
     base_data_dir : str
-        Path to the base directorys where all data file are stored
+        Path to the base directory where all data file are stored
+    base_work_dir : str
+        Path to the base directory where all working data is stored
     upload_data_dir : str
-        Path to the base directorys where all data file are stored
+        Path to the base directory where all data files are uploaded
     max_upoad_size : int
         Max upload size
     user : str
@@ -114,7 +116,7 @@ class ConfigurationManager(object):
                                      'test_data')
         default_base_work_dir = join(dirname(abspath(__file__)),
                                      '..', 'qiita_db', 'support_files',
-                                     'test_work')
+                                     'work_data')
 
         self.base_data_dir = config.get('main', 'BASE_DATA_DIR') or \
             default_base_data_dir
