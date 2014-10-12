@@ -19,7 +19,8 @@ import numpy.testing as npt
 from qiita_ware.demux import (buffer1d, buffer2d, _has_qual,
                               _per_sample_lengths, _summarize_lengths,
                               _set_attr_stats, _construct_datasets, to_hdf5,
-                              format_fasta_record, to_ascii, stat)
+                              format_fasta_record, to_ascii, stat,
+                              to_per_sample_ascii)
 
 
 class BufferTests(TestCase):
@@ -291,6 +292,31 @@ class DemuxTests(TestCase):
                 "F\x00\x00\x00\x00\x00\x00\x00\n")]
 
         obs = list(to_ascii(self.hdf5_file, samples=['a', 'b']))
+        self.assertEqual(obs, exp)
+
+    def test_to_per_sample_ascii(self):
+        with tempfile.NamedTemporaryFile('r+', suffix='.fq',
+                                         delete=False) as f:
+            f.write(fqdata)
+            f.flush()
+            f.close()
+            to_hdf5(f.name, self.hdf5_file)
+            self.to_remove.append(f.name)
+
+        exp = [('a', [(b"@a_0 orig_bc=abc new_bc=abc bc_diffs=0\nxyz\n+\n"
+                "A\x00\x00\x00\x00\x00\x00\x00"
+                "B\x00\x00\x00\x00\x00\x00\x00"
+                "C\x00\x00\x00\x00\x00\x00\x00\n")]),
+               ('b', [(b"@b_0 orig_bc=abw new_bc=wbc bc_diffs=4\nqwe\n+\n"
+                "D\x00\x00\x00\x00\x00\x00\x00"
+                "F\x00\x00\x00\x00\x00\x00\x00"
+                "G\x00\x00\x00\x00\x00\x00\x00\n"),
+               (b"@b_1 orig_bc=abw new_bc=wbc bc_diffs=4\nqwe\n+\n"
+                "D\x00\x00\x00\x00\x00\x00\x00"
+                "E\x00\x00\x00\x00\x00\x00\x00"
+                "F\x00\x00\x00\x00\x00\x00\x00\n")])]
+
+        obs = [(s[0], list(s[1])) for s in to_per_sample_ascii(self.hdf5_file)]
         self.assertEqual(obs, exp)
 
     def test_fetch(self):
