@@ -59,6 +59,9 @@ from future.builtins import zip
 from skbio.parse.sequences import load
 from skbio.format.sequences import format_fastq_record
 
+from .util import open_file
+
+
 # track some basic stats about the samples
 stat = namedtuple('stat', 'n max min mean median std hist hist_edge')
 
@@ -524,3 +527,30 @@ def fetch(demux, samples=None, k=None):
 
         for item in iter_:
             yield item
+
+
+def stats(demux):
+    """Return file stats
+
+    Parameters
+    ----------
+    demux : {str, h5py.File, h5py.Group}
+        The file or group to get stats from
+
+    Returns
+    -------
+    stat
+        The corresponding stats
+    """
+    with open_file(demux) as fh:
+        attrs = fh.attrs
+        obs_stats = stat(n=attrs['n'],
+                         max=attrs['max'],
+                         min=attrs['min'],
+                         std=attrs['std'],
+                         mean=attrs['mean'],
+                         median=attrs['median'],
+                         hist=attrs['hist'],
+                         hist_edge=attrs['hist_edge'])
+
+    return obs_stats
