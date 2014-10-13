@@ -108,8 +108,8 @@ class PublicStudiesHandler(BaseHandler):
 
 class StudyDescriptionHandler(BaseHandler):
     def get_values_for_post_or_get(self, study_id):
-        """ Process the values for both post and get to avoid having duplicated
-        lines"""
+        """ Process the values for both post and get to avoid having duplicated lines
+        """
 
         fp = get_study_fp(study_id)
 
@@ -118,8 +118,8 @@ class StudyDescriptionHandler(BaseHandler):
         else:
             fs = []
 
-        fts = [' '.join(k.split('_')[1:])
-               for k in get_filetypes().keys() if k.startswith('raw_')]
+        fts = [k.split('_', 1)[1].replace('_', ' ')
+               for k in get_filetypes() if k.startswith('raw_')]
 
         return fs, fts
 
@@ -129,7 +129,7 @@ class StudyDescriptionHandler(BaseHandler):
 
         self.render('study_description.html', user=self.current_user,
                     study_info=Study(study_id).info, study_id=study_id,
-                    files=fs, max_upoad_size=qiita_config.max_upoad_size,
+                    files=fs, max_upload_size=qiita_config.max_upload_size,
                     filetypes=fts, msg="msg")
 
     @authenticated
@@ -152,10 +152,9 @@ class StudyDescriptionHandler(BaseHandler):
             samp_template_id = load_sample_template_from_cmd(fp_rsp, study_id)
         except TypeError:
             msg = "An error has occurred"
-            print msg
             self.render('study_description.html', user=self.current_user,
                         study_info=Study(study_id).info, study_id=study_id,
-                        files=fs, max_upoad_size=qiita_config.max_upoad_size,
+                        files=fs, max_upload_size=qiita_config.max_upload_size,
                         filetypes=fts, msg=msg)
             return
 
@@ -163,10 +162,9 @@ class StudyDescriptionHandler(BaseHandler):
             load_prep_template_from_cmd(fp_rpt, samp_template_id)
         except TypeError:
             msg = "An error has occurred"
-            print msg
             self.render('study_description.html', user=self.current_user,
                         study_info=Study(study_id).info, study_id=study_id,
-                        files=fs, max_upoad_size=qiita_config.max_upoad_size,
+                        files=fs, max_upload_size=qiita_config.max_upload_size,
                         filetypes=fts, msg=msg)
             return
 

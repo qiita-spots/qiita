@@ -32,7 +32,7 @@ class ConfigurationManager(object):
         Path to the base directorys where all data file are stored
     upload_data_dir : str
         Path to the base directorys where all data file are stored
-    max_upoad_size : int
+    max_upload_size : int
         Max upload size
     user : str
         The postgres user
@@ -124,7 +124,7 @@ class ConfigurationManager(object):
             raise ValueError("The UPLOAD_DATA_DIR (%s) folder doesn't exist" %
                              self.upload_data_dir)
 
-        self.max_upoad_size = config.getint('main', 'MAX_UPLOAD_SIZE')
+        self.max_upload_size = config.getint('main', 'MAX_UPLOAD_SIZE')
 
     def _get_postgres(self, config):
         """Get the configuration of the postgres section"""

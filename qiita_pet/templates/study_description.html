@@ -28,7 +28,7 @@
     </td>
   </tr>
   <tr>
-    <td style="vertical-align: middle; text-align:center; width: 50%;" colspan="2"><b>Upload files (max file size: {{max_upoad_size}}Gb)</b></td>
+    <td style="vertical-align: middle; text-align:center; width: 50%;" colspan="2"><b>Upload files (max file size: {{max_upload_size}}Gb)</b></td>
   </tr>
   <tr>
     <td style="vertical-align: top; text-align:center; " colspan="2">
@@ -74,7 +74,7 @@
 <script src="/static/vendor/js/resumable-uploader.js"></script>
 <script>
   var meta = { fileType: [] };
-  var maxFileSize = {{max_upoad_size}}; // in Gb
+  var maxFileSize = {{max_upload_size}}; // in Gb
   var filetypes = {{filetypes}}
 
   uploader = (function($){
