@@ -8,8 +8,8 @@
 
 from unittest import TestCase, main
 from tempfile import mkstemp
-from os import close
-from os.path import join
+from os import close, remove
+from os.path import join, exists, basename
 
 from qiita_core.util import qiita_test_checker
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
@@ -20,7 +20,8 @@ from qiita_db.util import (exists_table, exists_dynamic_table, scrub_data,
                            get_table_cols, get_table_cols_w_type,
                            get_filetypes, get_filepath_types, get_count,
                            check_count, get_processed_params_tables,
-                           params_dict_to_json, get_user_fp, get_study_fp)
+                           params_dict_to_json, get_user_fp, get_study_fp,
+                           insert_filepaths, get_db_files_base_dir)
 from qiita_core.qiita_settings import qiita_config
 
 
@@ -34,6 +35,12 @@ class DBUtilTests(TestCase):
             'reprocess', 'study_status_id', 'portal_type_id',
             'timeseries_type_id', 'study_alias', 'study_abstract',
             'principal_investigator_id', 'email', 'number_samples_collected']
+        self.files_to_remove = []
+
+    def tearDown(self):
+        for fp in self.files_to_remove:
+            if exists(fp):
+                remove(fp)
 
     def test_params_dict_to_json(self):
         params_dict = {'opt1': '1', 'opt2': [2, '3'], 3: 9}
@@ -126,7 +133,7 @@ class DBUtilTests(TestCase):
 
     def test_convert_to_id(self):
         """Tests that ids are returned correctly"""
-        self.assertEqual(convert_to_id("directory", "filepath_type"), 7)
+        self.assertEqual(convert_to_id("directory", "filepath_type"), 8)
 
     def test_convert_to_id_bad_value(self):
         """Tests that ids are returned correctly"""
@@ -152,10 +159,11 @@ class DBUtilTests(TestCase):
     def test_get_filepath_types(self):
         """Tests that get_filepath_types works with valid arguments"""
         obs = get_filepath_types()
-        exp = {'raw_sequences': 1, 'raw_barcodes': 2, 'raw_spectra': 3,
-               'preprocessed_sequences': 4, 'preprocessed_sequences_qual': 5,
-               'biom': 6, 'directory': 7, 'plain_text': 8, 'reference_seqs': 9,
-               'reference_tax': 10, 'reference_tree': 11}
+        exp = {'raw_forward_seqs': 1, 'raw_reverse_seqs': 2,
+               'raw_barcodes': 3, 'preprocessed_fasta': 4,
+               'preprocessed_fastq': 5, 'preprocessed_demux': 6, 'biom': 7,
+               'directory': 8, 'plain_text': 9, 'reference_seqs': 10,
+               'reference_tax': 11, 'reference_tree': 12}
         self.assertEqual(obs, exp)
 
         obs = get_filepath_types(key='filepath_type_id')
@@ -183,6 +191,54 @@ class DBUtilTests(TestCase):
     def test_get_user_fps(self):
         obs = get_user_fp("demo@demo.com")
         exp = join(qiita_config.upload_data_dir, 'demo.com', 'demo')
+        self.assertEqual(obs, exp)
+
+    def test_insert_filepaths(self):
+        fd, fp = mkstemp()
+        close(fd)
+        with open(fp, "w") as f:
+            f.write("\n")
+        self.files_to_remove.append(fp)
+
+        obs = insert_filepaths([(fp, 1)], 1, "raw_data", "filepath",
+                               self.conn_handler)
+        exp = [15]
+        self.assertEqual(obs, exp)
+
+        # Check that the files have been copied correctly
+        exp_fp = join(get_db_files_base_dir(), "raw_data",
+                      "1_%s" % basename(fp))
+        self.assertTrue(exists(exp_fp))
+        self.files_to_remove.append(exp_fp)
+
+        # Check that the filepaths have been added to the DB
+        obs = self.conn_handler.execute_fetchall(
+            "SELECT * FROM qiita.filepath WHERE filepath_id=15")
+        exp = [[15, exp_fp, 1, '852952723', 1]]
+        self.assertEqual(obs, exp)
+
+    def test_insert_filepaths_string(self):
+        fd, fp = mkstemp()
+        close(fd)
+        with open(fp, "w") as f:
+            f.write("\n")
+        self.files_to_remove.append(fp)
+
+        obs = insert_filepaths([(fp, "raw_forward_seqs")], 1, "raw_data",
+                               "filepath", self.conn_handler)
+        exp = [15]
+        self.assertEqual(obs, exp)
+
+        # Check that the files have been copied correctly
+        exp_fp = join(get_db_files_base_dir(), "raw_data",
+                      "1_%s" % basename(fp))
+        self.assertTrue(exists(exp_fp))
+        self.files_to_remove.append(exp_fp)
+
+        # Check that the filepaths have been added to the DB
+        obs = self.conn_handler.execute_fetchall(
+            "SELECT * FROM qiita.filepath WHERE filepath_id=15")
+        exp = [[15, exp_fp, 1, '852952723', 1]]
         self.assertEqual(obs, exp)
 
     def test_get_study_fps(self):

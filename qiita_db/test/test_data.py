@@ -110,7 +110,7 @@ class RawDataTests(TestCase):
         obs = rd.get_filepaths()
         exp = [
             (join(self.db_test_raw_dir, '1_s_G1_L001_sequences.fastq.gz'),
-             "raw_sequences"),
+             "raw_forward_seqs"),
             (join(self.db_test_raw_dir,
                   '1_s_G1_L001_sequences_barcodes.fastq.gz'), "raw_barcodes")]
         self.assertEqual(obs, exp)
@@ -129,6 +129,10 @@ class RawDataTests(TestCase):
         """Correctly returns the data_type of raw_data"""
         rd = RawData(1)
         self.assertEqual(rd.data_type(ret_id=True), 2)
+
+    def test_filetype(self):
+        rd = RawData(1)
+        self.assertEqual(rd.filetype, "FASTQ")
 
 
 @qiita_test_checker()
@@ -289,9 +293,9 @@ class PreprocessedDataTests(TestCase):
         ppd = PreprocessedData(1)
         obs = ppd.get_filepaths()
         exp = [(join(self.db_test_ppd_dir, '1_seqs.fna'),
-                "preprocessed_sequences"),
+                "preprocessed_fasta"),
                (join(self.db_test_ppd_dir, '1_seqs.qual'),
-                "preprocessed_sequences_qual")]
+                "preprocessed_fastq")]
         self.assertEqual(obs, exp)
 
     def test_raw_data(self):
