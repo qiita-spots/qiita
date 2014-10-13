@@ -217,7 +217,7 @@ def make_environment(env, base_data_dir, base_work_dir, user, password, host,
 
 
 def drop_environment(admin_user, admin_password, host):
-    r"""Drops the `env` environment.
+    r"""Drops the database specified in the configuration
 
     Parameters
     ----------
@@ -246,7 +246,24 @@ def drop_environment(admin_user, admin_password, host):
             "Database {0} not present on the system. You can create it "
             "by running 'qiita_env make'".format(qiita_config.database))
 
-    cur.execute('DROP DATABASE %s' % qiita_config.database)
+    settings_sql = "SELECT test FROM qiita.settings"
+    cur.execute(settings_sql)
+    is_test_environment = cur.fetchone(settings_sql)[0]
+
+    if is_test_environment:
+        do_drop=True
+    else:
+        confirm = ''
+        while confirm not in ('Y', 'y', 'N', 'n'):
+            confirm = raw_input("THIS IS NOT A TEST ENVIRONMENT.\n"
+                                "Proceed with drop? (y/n)")
+
+        do_drop = confirm in ('Y', 'y')
+
+    if do_drop:
+        cur.execute('DROP DATABASE %s' % qiita_config.database)
+    else:
+        print('ABORTING')
 
     # Close cursor and connection
     cur.close()
