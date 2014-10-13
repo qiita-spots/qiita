@@ -210,7 +210,8 @@ class RawData(BaseData):
     _study_raw_table = "study_raw_data"
 
     @classmethod
-    def create(cls, filetype, filepaths, studies, investigation_type=None):
+    def create(cls, filetype, filepaths, studies, data_type_id,
+               investigation_type=None):
         r"""Creates a new object with a new id on the storage system
 
         Parameters
@@ -221,6 +222,8 @@ class RawData(BaseData):
             The list of paths to the raw files and its filepath type identifier
         studies : list of Study
             The list of Study objects to which the raw data belongs to
+        data_type : int
+            The data_type identifier
         investigation_type : str, optional
             The investigation type, if relevant
 
@@ -240,10 +243,10 @@ class RawData(BaseData):
         # Add the raw data to the database, and get the raw data id back
         conn_handler = SQLConnectionHandler()
         rd_id = conn_handler.execute_fetchone(
-            """INSERT INTO qiita.{0} (filetype_id, investigation_type)
-               VALUES (%s, %s)
-               RETURNING raw_data_id""".format(cls._table),
-            (filetype, investigation_type))[0]
+            "INSERT INTO qiita.{0} (filetype_id, investigation_type, "
+            "data_type_id) VALUES (%s, %s, %s) "
+            "RETURNING raw_data_id".format(cls._table),
+            (filetype, investigation_type, data_type_id))[0]
 
         rd = cls(rd_id)
 
@@ -306,8 +309,8 @@ class RawData(BaseData):
         conn_handler = SQLConnectionHandler()
         data_type = conn_handler.execute_fetchone(
             "SELECT d.data_type{0} FROM qiita.data_type d JOIN "
-            "qiita.common_prep_info c ON c.data_type_id = d.data_type_id WHERE"
-            " c.raw_data_id = %s".format(ret), (self._id, ))
+            "qiita.{1} c ON c.data_type_id = d.data_type_id WHERE"
+            " c.raw_data_id = %s".format(ret, self._table), (self._id, ))
         return data_type[0]
 
     @property
