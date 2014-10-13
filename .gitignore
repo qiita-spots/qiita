@@ -50,3 +50,7 @@ qiita_db/support_files/test_data
 
 # ignoring redis files
 dump.rdb
+
+# ignoring the reference file that (might) be downloaded during env creation
+gg_97_otus_4feb2011.tre
+gg_13_8-*

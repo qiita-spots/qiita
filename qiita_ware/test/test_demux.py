@@ -304,17 +304,17 @@ class DemuxTests(TestCase):
             self.to_remove.append(f.name)
 
         exp = [('a', [(b"@a_0 orig_bc=abc new_bc=abc bc_diffs=0\nxyz\n+\n"
-                "A\x00\x00\x00\x00\x00\x00\x00"
-                "B\x00\x00\x00\x00\x00\x00\x00"
-                "C\x00\x00\x00\x00\x00\x00\x00\n")]),
+                       "A\x00\x00\x00\x00\x00\x00\x00"
+                       "B\x00\x00\x00\x00\x00\x00\x00"
+                       "C\x00\x00\x00\x00\x00\x00\x00\n")]),
                ('b', [(b"@b_0 orig_bc=abw new_bc=wbc bc_diffs=4\nqwe\n+\n"
-                "D\x00\x00\x00\x00\x00\x00\x00"
-                "F\x00\x00\x00\x00\x00\x00\x00"
-                "G\x00\x00\x00\x00\x00\x00\x00\n"),
-               (b"@b_1 orig_bc=abw new_bc=wbc bc_diffs=4\nqwe\n+\n"
-                "D\x00\x00\x00\x00\x00\x00\x00"
-                "E\x00\x00\x00\x00\x00\x00\x00"
-                "F\x00\x00\x00\x00\x00\x00\x00\n")])]
+                       "D\x00\x00\x00\x00\x00\x00\x00"
+                       "F\x00\x00\x00\x00\x00\x00\x00"
+                       "G\x00\x00\x00\x00\x00\x00\x00\n"),
+                      (b"@b_1 orig_bc=abw new_bc=wbc bc_diffs=4\nqwe\n+\n"
+                       "D\x00\x00\x00\x00\x00\x00\x00"
+                       "E\x00\x00\x00\x00\x00\x00\x00"
+                       "F\x00\x00\x00\x00\x00\x00\x00\n")])]
 
         obs = [(s[0], list(s[1])) for s in to_per_sample_ascii(self.hdf5_file)]
         self.assertEqual(obs, exp)
