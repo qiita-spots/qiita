@@ -21,7 +21,6 @@ from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 
 from qiita_core.exceptions import QiitaEnvironmentError
 from qiita_core.qiita_settings import qiita_config
-from qiita_db.util import get_db_files_base_dir
 
 get_support_file = partial(join, join(dirname(abspath(__file__)),
                                       'support_files'))
@@ -90,8 +89,7 @@ def _download_reference_files(cur, base_data_dir):
                           'gg_13_8_otus/taxonomy/97_otu_taxonomy.txt'),
              'rep_set': ('gg_13_8-97_otus.fasta',
                          'ftp://thebeast.colorado.edu/greengenes_release/'
-                         'gg_13_8_otus/rep_set/97_otus.fasta')
-    }
+                         'gg_13_8_otus/rep_set/97_otus.fasta')}
 
     for file_type, (local_file_name, url) in viewitems(files):
         try:
