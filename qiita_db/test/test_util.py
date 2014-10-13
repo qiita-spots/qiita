@@ -186,7 +186,8 @@ class DBUtilTests(TestCase):
 
     def test_get_processed_params_tables(self):
         obs = get_processed_params_tables()
-        self.assertEqual(obs, ['processed_params_uclust'])
+        self.assertEqual(obs, ['processed_params_sortmerna',
+                               'processed_params_uclust'])
 
     def test_get_user_fps(self):
         obs = get_user_fp("demo@demo.com")
