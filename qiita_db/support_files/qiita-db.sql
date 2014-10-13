@@ -191,12 +191,15 @@ COMMENT ON COLUMN qiita.processed_data.processed_params_id IS 'Link to a table w
 CREATE TABLE qiita.raw_data ( 
 	raw_data_id          bigserial  NOT NULL,
 	filetype_id          bigint  NOT NULL,
+	investigation_type   varchar  ,
 	CONSTRAINT pk_raw_data UNIQUE ( raw_data_id ) ,
 	CONSTRAINT pk_raw_data_0 PRIMARY KEY ( raw_data_id ),
 	CONSTRAINT fk_raw_data_filetype FOREIGN KEY ( filetype_id ) REFERENCES qiita.filetype( filetype_id )    
  );
 
 CREATE INDEX idx_raw_data ON qiita.raw_data ( filetype_id );
+
+COMMENT ON COLUMN qiita.raw_data.investigation_type IS 'The investigation type (e.g., one of the values from EBI`s set of known types)';
 
 CREATE TABLE qiita.raw_data_prep_columns ( 
 	raw_data_id          bigint  NOT NULL,

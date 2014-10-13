@@ -25,26 +25,18 @@ from qiita_ware.util import metadata_stats_from_sample_and_prep_templates
 from qiita_db.metadata_template import SampleTemplate, PrepTemplate
 from qiita_db.study import Study, StudyPerson
 from qiita_db.user import User
-from qiita_db.util import get_study_fp, get_filetypes
+from qiita_db.util import get_study_fp, get_filetypes, convert_to_id
+from qiita_db.ontology import Ontology
 
 
 class CreateStudyForm(Form):
     study_title = StringField('Study Title', [validators.required()])
     study_alias = StringField('Study Alias', [validators.required()])
     pubmed_id = StringField('PubMed ID')
-    # TODO:This can be filled from the database
-    # in oracle, this is in controlled_vocabs (ID 2)
     investigation_type = SelectField(
         'Investigation Type',
-        [validators.required()], coerce=lambda x: x,
-        choices=[('eukaryote', 'eukaryote'),
-                 ('bacteria_archaea_genome',
-                  'bacteria/archaea (complete genome)'),
-                 ('plasmid_genome', 'plasmid (complete genome)'),
-                 ('virus_genome', 'virus (complete genome)'),
-                 ('organelle_genome', 'organelle (complete genome)'),
-                 ('metagenome', 'metagenome'),
-                 ('mimarks_survey', 'mimarks-survey (e.g. 16S rRNA)')])
+        [validators.required()], coerce=lambda x: x)
+
     # TODO:This can be filled from the database
     # in oracle, this is in controlled_vocabs (ID 1),
     #                       controlled_vocab_values with CVV IDs >= 0
@@ -151,7 +143,10 @@ class CreateStudyHandler(BaseHandler):
         creation_form.lab_person.choices = choices
         creation_form.principal_investigator.choices = choices
 
-        # TODO: set the choices attributes on the investigation_type field
+        ena = Ontology(convert_to_id('ENA', 'ongology'))
+        ena_terms = ena.terms
+        creation_form.investigation_type.choices = [(t, t) for t in ena_terms]
+
         # TODO: set the choices attributes on the environmental_package field
         self.render('create_study.html', user=self.current_user,
                     creation_form=creation_form)
