@@ -606,7 +606,7 @@ def get_processed_params_tables():
            "'qiita' AND SUBSTR(table_name, 1, 17) = 'processed_params_'")
 
     conn = SQLConnectionHandler()
-    return [x[2] for x in conn.execute_fetchall(sql)]
+    return sorted([x[2] for x in conn.execute_fetchall(sql)])
 
 
 def get_user_fp(email):

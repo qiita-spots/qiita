@@ -8,6 +8,7 @@
 from os.path import abspath, dirname, join
 from functools import partial
 from os import remove, close
+from os.path import exists
 from tempfile import mkstemp
 from ftplib import FTP
 import gzip
@@ -24,6 +25,8 @@ from qiita_core.qiita_settings import qiita_config
 
 get_support_file = partial(join, join(dirname(abspath(__file__)),
                                       'support_files'))
+get_reference_fp = partial(join, qiita_config.base_data_dir, "reference")
+
 
 DFLT_BASE_WORK_FOLDER = get_support_file('work_data')
 SETTINGS_FP = get_support_file('qiita-db-settings.sql')
@@ -73,31 +76,42 @@ def _add_ontology_data(cur):
     ontos_fp, f = download_and_unzip_file(
         host='thebeast.colorado.edu',
         filename='/pub/qiita/qiita_ontoandvocab.sql.gz')
-    cur.execute(f.read())
-    f.close()
-    remove(ontos_fp)
+
+    # f will be None if the file already exists
+    if f is None:
+        print("SKIPPING ontologies: File already exists at %s. To download "
+              "the file again, delete the existing file first.")
+    else:
+        cur.execute(f.read())
+        f.close()
+        remove(ontos_fp)
 
 
 def _download_reference_files(cur, base_data_dir):
     print('Downloading reference files')
 
-    files = {'tree': ('gg_13_8-97_otus.tree',
+    files = {'tree': (get_reference_fp('gg_13_8-97_otus.tree'),
                       'ftp://thebeast.colorado.edu/greengenes_release/'
                       'gg_13_8_otus/trees/97_otus.tree'),
-             'taxonomy': ('gg_13_8-97_otu_taxonomy.txt',
+             'taxonomy': (get_reference_fp('gg_13_8-97_otu_taxonomy.txt'),
                           'ftp://thebeast.colorado.edu/greengenes_release/'
                           'gg_13_8_otus/taxonomy/97_otu_taxonomy.txt'),
-             'rep_set': ('gg_13_8-97_otus.fasta',
-                         'ftp://thebeast.colorado.edu/greengenes_release/'
-                         'gg_13_8_otus/rep_set/97_otus.fasta')}
+             'sequence': (get_reference_fp('gg_13_8-97_otus.fasta'),
+                          'ftp://thebeast.colorado.edu/greengenes_release/'
+                          'gg_13_8_otus/rep_set/97_otus.fasta')}
 
-    for file_type, (local_file_name, url) in viewitems(files):
-        try:
-            urlretrieve(url, join(base_data_dir, "reference",
-                                  local_file_name))
-        except:
-            raise IOError("Error: Could not fetch %s file from %s" %
-                          (file_type, url))
+    for file_type, (local_fp, url) in viewitems(files):
+        # Do not download the file if it exists already
+        if exists(local_fp):
+            print("SKIPPING %s: file already exists at %s. To "
+                  "download the file again, erase the existing file first" %
+                  (file_type, local_fp))
+        else:
+            try:
+                urlretrieve(url, local_fp)
+            except:
+                raise IOError("Error: Could not fetch %s file from %s" %
+                              (file_type, url))
 
 
 def make_environment(env, base_data_dir, base_work_dir, user, password, host,
@@ -281,11 +295,15 @@ def download_and_unzip_file(host, filename):
     filename : str
         the location of the file on the ftp server to download
     """
-    handl, tmpfile = mkstemp()
-    close(handl)
+    fp = get_reference_fp('ontologies.tgz')
+
+    if exists(fp):
+        return fp, None
+
     ftp = FTP(host)
     ftp.login()
     cmd = 'RETR %s' % filename
-    ftp.retrbinary(cmd, open(tmpfile, 'wb').write)
-    f = gzip.open(tmpfile, 'rb')
-    return tmpfile, f
+    ftp.retrbinary(cmd, open(fp, 'wb').write)
+    f = gzip.open(fp, 'rb')
+
+    return fp, f
