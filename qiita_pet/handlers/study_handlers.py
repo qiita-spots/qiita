@@ -162,7 +162,6 @@ class StudyDescriptionHandler(BaseHandler):
             load_prep_template_from_cmd(fp_rpt, samp_template_id)
         except TypeError:
             msg = 'An error occurred parsing the prep template %s' % fp_rpt
-            print msg
             self.render('study_description.html', user=self.current_user,
                         study_info=Study(study_id).info, study_id=study_id,
                         files=fs, max_upload_size=qiita_config.max_upload_size,
