@@ -432,9 +432,10 @@ def insert_filepaths(filepaths, obj_id, table, filepath_table, conn_handler,
         filepaths : iterable of tuples (str, int)
             The list of paths to the raw files and its filepath type identifier
         obj_id : int
-            Id of the object calling the functions
+            Id of the object calling the functions. Disregarded if move_files
+            is False
         table : str
-            Table that holds the file data
+            Table that holds the file data. Disregarded if move_files is False
         filepath_table : str
             Table that holds the filepath information
         conn_handler : SQLConnectionHandler
