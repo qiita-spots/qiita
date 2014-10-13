@@ -296,10 +296,10 @@ INSERT INTO qiita.raw_preprocessed_data (raw_data_id, preprocessed_data_id) VALU
 INSERT INTO qiita.study_preprocessed_data (preprocessed_data_id, study_id) VALUES (1, 1), (2, 1);
 
 -- Insert the preprocessed filepath for raw data 1
-INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum, checksum_algorithm_id) VALUES ('1_seqs.fna', 4, '852952723', 1), ('1_seqs.qual', 5, '852952723', 1);
+INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum, checksum_algorithm_id) VALUES ('1_seqs.fna', 4, '852952723', 1), ('1_seqs.qual', 5, '852952723', 1), ('1_seqs.demux', 6, 852952723, 1);
 
 -- Insert (link) the preprocessed data with the preprocessed filepaths
-INSERT INTO qiita.preprocessed_filepath (preprocessed_data_id, filepath_id) VALUES (1, 5), (1, 6);
+INSERT INTO qiita.preprocessed_filepath (preprocessed_data_id, filepath_id) VALUES (1, 5), (1, 6), (1, 7);
 
 -- Insert the preprocessed illumina params used for raw data 1
 INSERT INTO qiita.preprocessed_sequence_illumina_params (trim_length) VALUES (151), (100);
@@ -326,7 +326,7 @@ INSERT INTO qiita.processed_params_uclust (similarity, enable_rev_strand_match, 
 INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum, checksum_algorithm_id) VALUES ('1_study_1001_closed_reference_otu_table.biom', 7, '852952723', 1);
 
 -- Insert (link) the processed data with the processed filepath
-INSERT INTO qiita.processed_filepath (processed_data_id, filepath_id) VALUES (1, 10);
+INSERT INTO qiita.processed_filepath (processed_data_id, filepath_id) VALUES (1, 11);
 
 -- Insert filepath for job results files
 INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum, checksum_algorithm_id) VALUES ('1_job_result.txt', 9, '852952723', 1), ('2_test_folder', 8, '852952723', 1);
@@ -344,7 +344,7 @@ INSERT INTO qiita.analysis_job (analysis_id, job_id) VALUES (1, 1), (1, 2), (2, 
 INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum, checksum_algorithm_id) VALUES ('1_analysis_18S.biom', 7, '852952723', 1), ('1_analysis_mapping.txt', 9, '852952723', 1);
 
 -- Attach filepath to analysis
-INSERT INTO qiita.analysis_filepath (analysis_id, filepath_id, data_type_id) VALUES (1, 13, 2), (1, 14, NULL);
+INSERT INTO qiita.analysis_filepath (analysis_id, filepath_id, data_type_id) VALUES (1, 14, 2), (1, 15, NULL);
 
 -- Attach samples to analysis
 INSERT INTO qiita.analysis_sample (analysis_id, processed_data_id, sample_id) VALUES (1,1,'SKB8.640193'), (1,1,'SKD8.640184'), (1,1,'SKB7.640196'), (1,1,'SKM9.640192'), (1,1,'SKM4.640180'), (2,1,'SKB8.640193'), (2,1,'SKD8.640184'), (2,1,'SKB7.640196'), (2,1,'SKM3.640197');
@@ -353,7 +353,7 @@ INSERT INTO qiita.analysis_sample (analysis_id, processed_data_id, sample_id) VA
 INSERT INTO qiita.analysis_users (analysis_id, email) VALUES (1, 'shared@foo.bar');
 
 -- Add job results
-INSERT INTO qiita.job_results_filepath (job_id, filepath_id) VALUES (1, 11), (2, 12);
+INSERT INTO qiita.job_results_filepath (job_id, filepath_id) VALUES (1, 12), (2, 13);
 
 -- Add an ontology
 INSERT INTO qiita.ontology (ontology_id, ontology, fully_loaded, fullname, query_url, source_url, definition, load_date) VALUES (807481739, E'ENA', E'1', E'European Nucleotide Archive Submission Ontology', NULL, E'http://www.ebi.ac.uk/embl/Documentation/ENA-Reads.html', E'The ENA CV is to be used to annotate XML submissions to the ENA.', '2009-02-23 00:00:00');
