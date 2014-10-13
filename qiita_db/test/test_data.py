@@ -17,6 +17,7 @@ from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_db.study import Study
 from qiita_db.util import get_db_files_base_dir
 from qiita_db.data import BaseData, RawData, PreprocessedData, ProcessedData
+from qiita_db.exceptions import QiitaDBColumnError
 
 
 @qiita_test_checker()
@@ -55,6 +56,12 @@ class RawDataTests(TestCase):
 
     def test_create(self):
         """Correctly creates all the rows in the DB for the raw data"""
+        # Make sure there is an error if an investigation_type is supplied
+        # that does not exist
+        with self.assertRaises(QiitaDBColumnError):
+            RawData.create(self.filetype, self.filepaths, self.studies,
+                           'Not a term')
+
         # Check that the returned object has the correct id
         obs = RawData.create(self.filetype, self.filepaths, self.studies)
         self.assertEqual(obs.id, 3)
@@ -63,7 +70,7 @@ class RawDataTests(TestCase):
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.raw_data WHERE raw_data_id=3")
         # raw_data_id, filetype, submitted_to_insdc
-        self.assertEqual(obs, [[3, 2]])
+        self.assertEqual(obs, [[3, 2, None]])
 
         # Check that the raw data have been correctly linked with the study
         obs = self.conn_handler.execute_fetchall(

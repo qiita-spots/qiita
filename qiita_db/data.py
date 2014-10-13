@@ -87,6 +87,8 @@ from .base import QiitaObject
 from .sql_connection import SQLConnectionHandler
 from .util import (exists_dynamic_table, get_db_files_base_dir,
                    insert_filepaths, convert_to_id, convert_from_id)
+from .exceptions import QiitaDBColumnError
+from .ontology import Ontology
 
 
 class BaseData(QiitaObject):
@@ -188,6 +190,7 @@ class RawData(BaseData):
     Attributes
     ----------
     studies
+    investigation_type
 
     Methods
     -------
@@ -207,7 +210,7 @@ class RawData(BaseData):
     _study_raw_table = "study_raw_data"
 
     @classmethod
-    def create(cls, filetype, filepaths, studies):
+    def create(cls, filetype, filepaths, studies, investigation_type=None):
         r"""Creates a new object with a new id on the storage system
 
         Parameters
@@ -218,17 +221,30 @@ class RawData(BaseData):
             The list of paths to the raw files and its filepath type identifier
         studies : list of Study
             The list of Study objects to which the raw data belongs to
+        investigation_type : str, optional
+            The investigation type, if relevant
 
         Returns
         -------
         A new instance of `cls` to access to the RawData stored in the DB
         """
+        # If the investigation_type is supplied, make sure if it is one of
+        # the recognized investigation types
+        if investigation_type is not None:
+            investigation_types = Ontology(convert_to_id('ENA', 'ontology'))
+            terms = investigation_types.terms
+            if investigation_type not in terms:
+                raise QiitaDBColumnError("Not a valid investigation_type. "
+                                         "Choose from: %r" % terms)
+
         # Add the raw data to the database, and get the raw data id back
         conn_handler = SQLConnectionHandler()
         rd_id = conn_handler.execute_fetchone(
-            "INSERT INTO qiita.{0} (filetype_id) VALUES (%s) RETURNING "
-            "raw_data_id".format(cls._table),
-            (filetype, ))[0]
+            """INSERT INTO qiita.{0} (filetype_id, investigation_type)
+               VALUES (%s, %s)
+               RETURNING raw_data_id""".format(cls._table),
+            (filetype, investigation_type))[0]
+
         rd = cls(rd_id)
 
         # Connect the raw data with its studies
@@ -248,7 +264,8 @@ class RawData(BaseData):
         Returns
         -------
         list of int
-            The list of study ids to which the raw data belongs to"""
+            The list of study ids to which the raw data belongs to
+        """
         conn_handler = SQLConnectionHandler()
         ids = conn_handler.execute_fetchall(
             "SELECT study_id FROM qiita.{0} WHERE "
@@ -276,6 +293,13 @@ class RawData(BaseData):
             "qiita.common_prep_info c ON c.data_type_id = d.data_type_id WHERE"
             " c.raw_data_id = %s".format(ret), (self._id, ))
         return data_type[0]
+
+    @property
+    def investigation_type(self):
+        conn_handler = SQLConnectionHandler()
+        sql = ("SELECT investigation_type FROM {} "
+               "where raw_data_id = %s".format(self._table))
+        return conn_handler.execute_fetchone(sql, [self._id])[0]
 
 
 class PreprocessedData(BaseData):
