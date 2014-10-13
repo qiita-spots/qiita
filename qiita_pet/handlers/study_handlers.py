@@ -149,7 +149,7 @@ class StudyDescriptionHandler(BaseHandler):
         fs, fts = self.get_values_for_post_or_get(study_id)
 
         try:
-            sample = load_sample_template_from_cmd(fp_rsp, study_id)
+            samp_template_id = load_sample_template_from_cmd(fp_rsp, study_id)
         except TypeError:
             msg = "An error has occurred"
             print msg
@@ -159,8 +159,17 @@ class StudyDescriptionHandler(BaseHandler):
                         filetypes=fts, msg=msg)
             return
 
+        try:
+            load_prep_template_from_cmd(fp_rpt, samp_template_id)
+        except TypeError:
+            msg = "An error has occurred"
+            print msg
+            self.render('study_description.html', user=self.current_user,
+                        study_info=Study(study_id).info, study_id=study_id,
+                        files=fs, max_upoad_size=qiita_config.max_upoad_size,
+                        filetypes=fts, msg=msg)
+            return
 
-        print 'empty study metadata, merge sample/prep template and add to db'
 
 class CreateStudyHandler(BaseHandler):
     @authenticated
