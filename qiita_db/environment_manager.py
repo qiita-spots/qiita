@@ -13,6 +13,7 @@ from ftplib import FTP
 import gzip
 
 from future import standard_library
+from future.utils import viewitems
 with standard_library.hooks():
     from urllib.request import urlretrieve
 from psycopg2 import connect
@@ -21,7 +22,6 @@ from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 from qiita_core.exceptions import QiitaEnvironmentError
 from qiita_core.qiita_settings import qiita_config
 from qiita_db.util import get_db_files_base_dir
-from qiita_db.exceptions import QiitaDBError
 
 get_support_file = partial(join, join(dirname(abspath(__file__)),
                                       'support_files'))
@@ -79,20 +79,31 @@ def _add_ontology_data(cur):
     remove(ontos_fp)
 
 
-def _download_test_files(cur, base_data_dir):
-    print('Downloading test files')
-    # Download tree file
-    url = ("https://raw.githubusercontent.com/biocore/Evident/master"
-           "/data/gg_97_otus_4feb2011.tre")
-    try:
-        urlretrieve(url, join(base_data_dir, "reference",
-                              "gg_97_otus_4feb2011.tre"))
-    except:
-        raise IOError("Error: DOWNLOAD FAILED")
+def _download_reference_files(cur, base_data_dir):
+    print('Downloading reference files')
+
+    files = {'tree': ('gg_13_8-97_otus.tree',
+                      'ftp://thebeast.colorado.edu/greengenes_release/'
+                      'gg_13_8_otus/trees/97_otus.tree'),
+             'taxonomy': ('gg_13_8-97_otu_taxonomy.txt',
+                          'ftp://thebeast.colorado.edu/greengenes_release/'
+                          'gg_13_8_otus/taxonomy/97_otu_taxonomy.txt'),
+             'rep_set': ('gg_13_8-97_otus.fasta',
+                         'ftp://thebeast.colorado.edu/greengenes_release/'
+                         'gg_13_8_otus/rep_set/97_otus.fasta')
+    }
+
+    for file_type, (local_file_name, url) in viewitems(files):
+        try:
+            urlretrieve(url, join(base_data_dir, "reference",
+                                  local_file_name))
+        except:
+            raise IOError("Error: Could not fetch %s file from %s" %
+                          (file_type, url))
 
 
 def make_environment(env, base_data_dir, base_work_dir, user, password, host,
-                     load_ontologies):
+                     load_ontologies, download_reference):
     r"""Creates the new environment `env`
 
     Parameters
@@ -111,11 +122,18 @@ def make_environment(env, base_data_dir, base_work_dir, user, password, host,
         The postgrs host
     load_ontologies : bool
         Whether or not to retrieve and unpack ontology information
+    download_reference : bool
+        Whether or not to download greengenes reference files
 
     Raises
     ------
     ValueError
         If `env` not recognized
+    IOError
+        If `download_reference` is true but one of the files cannot be
+        retrieved
+    QiitaEnvironmentError
+        If the environment already exists
     """
     if env not in ENVIRONMENTS:
         raise ValueError("Environment %s not recognized. Available "
@@ -129,9 +147,10 @@ def make_environment(env, base_data_dir, base_work_dir, user, password, host,
     cur = conn.cursor()
     # Check that it does not already exists
     if _check_db_exists(ENVIRONMENTS[env], cur):
-        raise QiitaDBError("Environment {0} already present on the system. "
-                           "You can drop it by running "
-                           "qiita_env drop {0}".format(env))
+        raise QiitaEnvironmentError(
+            "Environment {0} already present on the system. You can drop it "
+            "by running qiita_env drop {0}".format(env))
+
     # Create the database
     print('Creating database')
     cur.execute('CREATE DATABASE %s' % ENVIRONMENTS[env])
@@ -157,10 +176,12 @@ def make_environment(env, base_data_dir, base_work_dir, user, password, host,
     if load_ontologies:
         _add_ontology_data(cur)
 
-    if env == 'demo':
-        _download_test_files(cur, base_data_dir)
-        _create_layout_and_init_db(cur)
+    if download_reference:
+        _download_reference_files(cur, base_data_dir)
 
+    _create_layout_and_init_db(cur)
+
+    if env == 'demo':
         # add demo user
         cur.execute("""
             INSERT INTO qiita.qiita_user (email, user_level_id, password,
@@ -172,11 +193,9 @@ def make_environment(env, base_data_dir, base_work_dir, user, password, host,
 
         print('Demo environment successfully created')
     elif env == "test":
-        _create_layout_and_init_db(cur)
         _populate_test_db(cur)
         print('Test environment successfully created')
     elif env == "production":
-        _create_layout_and_init_db(cur)
         print('Production environment successfully created')
 
     # Commit all the changes and close the connections
@@ -198,6 +217,11 @@ def drop_environment(env, user, password, host):
         The password of the user
     host : str
         The host where the postgres server is running
+
+    Raises
+    ------
+    QiitaEnvironmentError
+        The If the environment is not present on the system
     """
     # Connect to the postgres server
     conn = connect(user=user, host=host, password=password)
