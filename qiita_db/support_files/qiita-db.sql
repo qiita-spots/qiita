@@ -102,7 +102,7 @@ CREATE TABLE qiita.mixs_field_description (
  );
 
 CREATE TABLE qiita.ontology ( 
-	ontology_id          bigserial  NOT NULL,
+	ontology_id          bigint  NOT NULL,
 	ontology             varchar  NOT NULL,
 	fully_loaded         bool  NOT NULL,
 	fullname             varchar  ,
@@ -260,7 +260,7 @@ CREATE TABLE qiita.study_status (
  );
 
 CREATE TABLE qiita.term ( 
-	term_id              bigserial  NOT NULL,
+	term_id              bigint  NOT NULL,
 	ontology_id          bigint  NOT NULL,
 	term                 varchar  NOT NULL,
 	identifier           varchar  ,
@@ -744,6 +744,24 @@ CREATE INDEX idx_job_results_filepath_0 ON qiita.job_results_filepath ( job_id )
 CREATE INDEX idx_job_results_filepath_1 ON qiita.job_results_filepath ( filepath_id );
 
 COMMENT ON TABLE qiita.job_results_filepath IS 'Holds connection between jobs and the result filepaths';
+
+CREATE TABLE qiita.processed_params_sortmerna ( 
+	processed_params_id  bigserial  NOT NULL,
+	reference_id         bigint  NOT NULL,
+	evalue               float8  NOT NULL,
+	max_pos              integer  NOT NULL,
+	similarity           float8  NOT NULL,
+	coverage             float8  NOT NULL,
+	threads              integer  NOT NULL,
+	CONSTRAINT pk_processed_params_sortmerna PRIMARY KEY ( processed_params_id ),
+	CONSTRAINT fk_processed_params_sortmerna FOREIGN KEY ( reference_id ) REFERENCES qiita.reference( reference_id )    
+ );
+
+CREATE INDEX idx_processed_params_sortmerna ON qiita.processed_params_sortmerna ( reference_id );
+
+COMMENT ON TABLE qiita.processed_params_sortmerna IS 'Parameters used for processing data using method sortmerna';
+
+COMMENT ON COLUMN qiita.processed_params_sortmerna.reference_id IS 'What version of reference or type of reference used';
 
 CREATE TABLE qiita.processed_params_uclust ( 
 	processed_params_id  bigserial  NOT NULL,
