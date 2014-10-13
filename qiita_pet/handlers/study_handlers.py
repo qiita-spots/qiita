@@ -9,39 +9,36 @@ r"""Qitta study handlers for the Tornado webserver.
 # -----------------------------------------------------------------------------
 from __future__ import division
 
-from tornado.web import authenticated
+from tornado.web import authenticated, HTTPError
 from wtforms import (Form, StringField, SelectField, BooleanField,
                      SelectMultipleField, TextAreaField, validators)
 
 from os import listdir
-from os.path import exists
+from os.path import exists, join
 
 from .base_handlers import BaseHandler
 
 from qiita_core.qiita_settings import qiita_config
 
+from qiita_ware.util import metadata_stats_from_sample_and_prep_templates
+
+from qiita_db.metadata_template import SampleTemplate, PrepTemplate
 from qiita_db.study import Study, StudyPerson
 from qiita_db.user import User
-from qiita_db.util import get_study_fp, get_filetypes
+from qiita_db.util import get_study_fp, convert_to_id, get_filetypes
+from qiita_db.ontology import Ontology
+from qiita_db.commands import (load_sample_template_from_cmd,
+                               load_prep_template_from_cmd)
 
 
 class CreateStudyForm(Form):
     study_title = StringField('Study Title', [validators.required()])
     study_alias = StringField('Study Alias', [validators.required()])
     pubmed_id = StringField('PubMed ID')
-    # TODO:This can be filled from the database
-    # in oracle, this is in controlled_vocabs (ID 2)
     investigation_type = SelectField(
         'Investigation Type',
-        [validators.required()], coerce=lambda x: x,
-        choices=[('eukaryote', 'eukaryote'),
-                 ('bacteria_archaea_genome',
-                  'bacteria/archaea (complete genome)'),
-                 ('plasmid_genome', 'plasmid (complete genome)'),
-                 ('virus_genome', 'virus (complete genome)'),
-                 ('organelle_genome', 'organelle (complete genome)'),
-                 ('metagenome', 'metagenome'),
-                 ('mimarks_survey', 'mimarks-survey (e.g. 16S rRNA)')])
+        [validators.required()], coerce=lambda x: x)
+
     # TODO:This can be filled from the database
     # in oracle, this is in controlled_vocabs (ID 1),
     #                       controlled_vocab_values with CVV IDs >= 0
@@ -110,8 +107,10 @@ class PublicStudiesHandler(BaseHandler):
 
 
 class StudyDescriptionHandler(BaseHandler):
-    @authenticated
-    def get(self, study_id):
+    def get_values_for_post_or_get(self, study_id):
+        """ Process the values for both post and get to avoid having duplicated lines
+        """
+
         fp = get_study_fp(study_id)
 
         if exists(fp):
@@ -119,17 +118,55 @@ class StudyDescriptionHandler(BaseHandler):
         else:
             fs = []
 
-        fts = [' '.join(k.split('_')[1:])
-               for k in get_filetypes().keys() if k.startswith('raw_')]
+        fts = [k.split('_', 1)[1].replace('_', ' ')
+               for k in get_filetypes() if k.startswith('raw_')]
+
+        return fs, fts
+
+    @authenticated
+    def get(self, study_id):
+        fs, fts = self.get_values_for_post_or_get(study_id)
 
         self.render('study_description.html', user=self.current_user,
                     study_info=Study(study_id).info, study_id=study_id,
-                    files=fs, max_upoad_size=qiita_config.max_upoad_size,
-                    filetypes=fts)
+                    files=fs, max_upload_size=qiita_config.max_upload_size,
+                    filetypes=fts, msg="")
 
     @authenticated
-    def post(self):
-        pass
+    def post(self, study_id):
+        raw_sample_template = self.get_argument('raw_sample_template', None)
+        raw_prep_template = self.get_argument('raw_prep_template', None)
+        if raw_sample_template is None or raw_prep_template is None:
+            raise HTTPError(403, "This function needs a sample template: "
+                            "%s and a prep template: %s" %
+                            (raw_sample_template, raw_prep_template))
+        fp_rsp = join(get_study_fp(study_id), raw_sample_template)
+        fp_rpt = join(get_study_fp(study_id), raw_prep_template)
+        if not exists(fp_rsp) or not exists(fp_rpt):
+            raise HTTPError(403, "One of these files doesn't exist: %s, %s",
+                            (fp_rsp, fp_rpt))
+
+        fs, fts = self.get_values_for_post_or_get(study_id)
+
+        try:
+            samp_template_id = load_sample_template_from_cmd(fp_rsp, study_id)
+        except TypeError:
+            msg = 'An error occurred parsing the sample template %s' % fp_rsp
+            self.render('study_description.html', user=self.current_user,
+                        study_info=Study(study_id).info, study_id=study_id,
+                        files=fs, max_upload_size=qiita_config.max_upload_size,
+                        filetypes=fts, msg=msg)
+            return
+
+        try:
+            load_prep_template_from_cmd(fp_rpt, samp_template_id)
+        except TypeError:
+            msg = 'An error occurred parsing the prep template %s' % fp_rpt
+            self.render('study_description.html', user=self.current_user,
+                        study_info=Study(study_id).info, study_id=study_id,
+                        files=fs, max_upload_size=qiita_config.max_upload_size,
+                        filetypes=fts, msg=msg)
+            return
 
 
 class CreateStudyHandler(BaseHandler):
@@ -148,7 +185,10 @@ class CreateStudyHandler(BaseHandler):
         creation_form.lab_person.choices = choices
         creation_form.principal_investigator.choices = choices
 
-        # TODO: set the choices attributes on the investigation_type field
+        ena = Ontology(convert_to_id('ENA', 'ongology'))
+        ena_terms = ena.terms
+        creation_form.investigation_type.choices = [(t, t) for t in ena_terms]
+
         # TODO: set the choices attributes on the environmental_package field
         self.render('create_study.html', user=self.current_user,
                     creation_form=creation_form)
@@ -222,3 +262,15 @@ class CreateStudyHandler(BaseHandler):
 
         # TODO: change this redirect to something more sensible
         self.redirect('/')
+
+
+class MetadataSummaryHandler(BaseHandler):
+    @authenticated
+    def get(self, arguments):
+        st = SampleTemplate(int(self.get_argument('sample_template')))
+        pt = PrepTemplate(int(self.get_argument('prep_template')))
+
+        stats = metadata_stats_from_sample_and_prep_templates(st, pt)
+
+        self.render('metadata_summary.html', user=self.current_user,
+                    study_title=Study(st.id).title, stats=stats)
