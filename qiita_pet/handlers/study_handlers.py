@@ -130,15 +130,15 @@ class StudyDescriptionHandler(BaseHandler):
         self.render('study_description.html', user=self.current_user,
                     study_info=Study(study_id).info, study_id=study_id,
                     files=fs, max_upload_size=qiita_config.max_upload_size,
-                    filetypes=fts, msg="msg")
+                    filetypes=fts, msg="")
 
     @authenticated
     def post(self, study_id):
         raw_sample_template = self.get_argument('raw_sample_template', None)
         raw_prep_template = self.get_argument('raw_prep_template', None)
         if raw_sample_template is None or raw_prep_template is None:
-            raise HTTPError(403, "This function needs a raw_sample_template: "
-                            "%s and a raw_prep_template: %s" %
+            raise HTTPError(403, "This function needs a sample template: "
+                            "%s and a prep template: %s" %
                             (raw_sample_template, raw_prep_template))
         fp_rsp = join(get_study_fp(study_id), raw_sample_template)
         fp_rpt = join(get_study_fp(study_id), raw_prep_template)
@@ -151,7 +151,7 @@ class StudyDescriptionHandler(BaseHandler):
         try:
             samp_template_id = load_sample_template_from_cmd(fp_rsp, study_id)
         except TypeError:
-            msg = "An error has occurred"
+            msg = 'An error occurred parsing the sample template %s' % fp_rsp
             self.render('study_description.html', user=self.current_user,
                         study_info=Study(study_id).info, study_id=study_id,
                         files=fs, max_upload_size=qiita_config.max_upload_size,
@@ -161,7 +161,7 @@ class StudyDescriptionHandler(BaseHandler):
         try:
             load_prep_template_from_cmd(fp_rpt, samp_template_id)
         except TypeError:
-            msg = "An error has occurred"
+            msg = 'An error occurred parsing the prep template %s' % fp_rpt
             self.render('study_description.html', user=self.current_user,
                         study_info=Study(study_id).info, study_id=study_id,
                         files=fs, max_upload_size=qiita_config.max_upload_size,

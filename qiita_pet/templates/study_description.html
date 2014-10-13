@@ -85,20 +85,21 @@
     uploader.addFile("{{f}}");
   {% end  %}
 
-  function reset_vals() {
-    // a reset vals function so we do not have these lines multiple times
-    raw_sample_template = false;
-    raw_prep_template = false;
-    raw_sample_template_value = "";
-    raw_prep_template_value = "";
-    iterations = 0
-  }
-
-  reset_vals();
   function process_metadata() {
     // function to validate the input files to process metadata and submits to
     // post those values
     all_inputfiles = $('select[id^="inputfile"]');
+    
+    function reset_vals() {
+      // a reset vals function so we do not have these lines multiple times
+      raw_sample_template = false;
+      raw_prep_template = false;
+      raw_sample_template_value = "";
+      raw_prep_template_value = "";
+      iterations = 0
+    }
+
+    reset_vals();
 
     all_inputfiles.each(function () {
       iterations += 1;
