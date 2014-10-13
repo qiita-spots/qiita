@@ -185,7 +185,7 @@ class CreateStudyHandler(BaseHandler):
         creation_form.lab_person.choices = choices
         creation_form.principal_investigator.choices = choices
 
-        ena = Ontology(convert_to_id('ENA', 'ongology'))
+        ena = Ontology(convert_to_id('ENA', 'ontology'))
         ena_terms = ena.terms
         creation_form.investigation_type.choices = [(t, t) for t in ena_terms]
 
