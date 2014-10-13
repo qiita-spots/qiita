@@ -61,8 +61,8 @@
   </tr>
   <tr><td colspan="2"><br/></td></tr>
   <tr>
-    <td><input type="button" value="Process metadata" onclick="process_metadata();"></td>
-    <td><input type="button" value="Validate all files" onclick="validate_all_files();"></td>
+    <td><input type="button" class="btn btn-primary" value="Process metadata" onclick="process_metadata();"></td>
+    <td><input type="button" class="btn btn-primary" value="Validate all files" onclick="validate_all_files();"></td>
   </tr>
   <tr>
     <td id="response_to_process_data">{{msg}}</td>
@@ -89,7 +89,7 @@
     // function to validate the input files to process metadata and submits to
     // post those values
     all_inputfiles = $('select[id^="inputfile"]');
-    
+
     function reset_vals() {
       // a reset vals function so we do not have these lines multiple times
       raw_sample_template = false;
@@ -104,7 +104,7 @@
     all_inputfiles.each(function () {
       iterations += 1;
       if (raw_sample_template && raw_prep_template && iterations != all_inputfiles.length) {
-        alert("You have selected more than one sample and/or prep template")
+        alert("You have selected more than one sample and/or prep templates")
         reset_vals();
         return;
       }
