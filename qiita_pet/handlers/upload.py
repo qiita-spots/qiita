@@ -1,4 +1,4 @@
-from tornado.web import authenticated, RequestHandler
+from tornado.web import authenticated
 
 from os.path import isdir, join, exists
 from os import makedirs, listdir

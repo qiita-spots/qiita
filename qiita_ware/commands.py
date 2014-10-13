@@ -37,7 +37,7 @@ def submit_EBI_from_files(study_id, sample_template, prep_template,
     investigation_type : str
         The investigation type string
     action : %s
-        The action to perform with this data 
+        The action to perform with this data
     send : bool
         True to actually send the files
     """
