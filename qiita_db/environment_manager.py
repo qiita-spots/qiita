@@ -73,18 +73,12 @@ def _populate_test_db(cur):
 
 def _add_ontology_data(cur):
     print ('Loading Ontology Data')
-    ontos_fp, f = download_and_unzip_file(
+    ontos_fp = download_and_unzip_file(
         host='thebeast.colorado.edu',
         filename='/pub/qiita/qiita_ontoandvocab.sql.gz')
 
-    # f will be None if the file already exists
-    if f is None:
-        print("SKIPPING ontologies: File already exists at %s. To download "
-              "the file again, delete the existing file first.")
-    else:
+    with gzip.open(ontos_fp, 'rb') as f:
         cur.execute(f.read())
-        f.close()
-        remove(ontos_fp)
 
 
 def _download_reference_files(cur, base_data_dir):
@@ -298,12 +292,12 @@ def download_and_unzip_file(host, filename):
     fp = get_reference_fp('ontologies.tgz')
 
     if exists(fp):
-        return fp, None
+        print("SKIPPING download of ontologies: File already exists at %s. "
+              "To download the file again, delete the existing file first.")
+    else:
+        ftp = FTP(host)
+        ftp.login()
+        cmd = 'RETR %s' % filename
+        ftp.retrbinary(cmd, open(fp, 'wb').write)
 
-    ftp = FTP(host)
-    ftp.login()
-    cmd = 'RETR %s' % filename
-    ftp.retrbinary(cmd, open(fp, 'wb').write)
-    f = gzip.open(fp, 'rb')
-
-    return fp, f
+    return fp
