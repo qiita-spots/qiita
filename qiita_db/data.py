@@ -267,8 +267,9 @@ class RawData(BaseData):
         """
         conn_handler = SQLConnectionHandler()
         return conn_handler.execute_fetchone(
-            "SELECT f.type FROM qiita.filetype f JOIN qiita.raw_data r ON "
-            "f.filetype_id = r.filetype_id WHERE r.raw_data_id=%s",
+            "SELECT f.type FROM qiita.filetype f JOIN qiita.{0} r ON "
+            "f.filetype_id = r.filetype_id WHERE "
+            "r.raw_data_id=%s".format(self._table),
             (self._id,))[0]
 
     def data_type(self, ret_id=False):

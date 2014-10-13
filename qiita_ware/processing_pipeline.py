@@ -10,8 +10,7 @@ from qiita_ware.wrapper import ParallelWrapper
 
 
 def _get_preprocess_fastq_cmd(raw_data, params):
-    """Generates the split_libraries_fastq.py command to pre-process the
-    fastq raw data
+    """Generates the split_libraries_fastq.py command for the raw-data
 
     Parameters
     ----------
@@ -199,7 +198,7 @@ class StudyPreprocessor(ParallelWrapper):
         # STEP 1: Preprocess the study
         preprocess_node = "PREPROCESS"
 
-        # Check the raw data filepath to know which command generator we
+        # Check the raw data filetype to know which command generator we
         # should use
         filetype = raw_data.filetype
         if filetype == "FASTQ":
