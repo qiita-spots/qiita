@@ -216,17 +216,15 @@ def make_environment(env, base_data_dir, base_work_dir, user, password, host,
     conn.close()
 
 
-def drop_environment(env, user, password, host):
+def drop_environment(admin_user, admin_password, host):
     r"""Drops the `env` environment.
 
     Parameters
     ----------
-    env : {demo, test, production}
-        The environment to drop
-    user : str
-        The postgres user to connect to the server
-    password : str
-        The password of the user
+    admin_user : str
+        The admin postgres user to use
+    admin_password : str
+        The password for the admin postgres user
     host : str
         The host where the postgres server is running
 
@@ -236,19 +234,19 @@ def drop_environment(env, user, password, host):
         The If the environment is not present on the system
     """
     # Connect to the postgres server
-    conn = connect(user=user, host=host, password=password)
+    conn = connect(user=admin_user, host=host, password=admin_password)
     # Set the isolation level to AUTOCOMMIT so we can execute a
     # drop database sql query
     conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
     # Drop the database
     cur = conn.cursor()
 
-    if not _check_db_exists(ENVIRONMENTS[env], cur):
+    if not _check_db_exists(qiita_config.database, cur):
         raise QiitaEnvironmentError(
-            "Environment {0} not present on the system. You can create it "
-            "by running 'qiita_env make {0}'".format(env))
+            "Database {0} not present on the system. You can create it "
+            "by running 'qiita_env make'".format(qiita_config.database))
 
-    cur.execute('DROP DATABASE %s' % ENVIRONMENTS[env])
+    cur.execute('DROP DATABASE %s' % qiita_config.database)
 
     # Close cursor and connection
     cur.close()

@@ -84,16 +84,19 @@ def make(envs, base_data_folder, base_work_folder, user, host,
 
 
 @env.command()
-@click.argument('envs', nargs=-1, required=True,
-                type=click.Choice(ENVIRONMENTS.keys()))
-@click.option('--user', default=_CONFIG.user,
+@click.option('--admin-user', default=_CONFIG.admin_user,
               help="The database user to connect to the database")
+@click.option('--admin-password', default=_CONFIG.admin_password,
+              help="The password for the admin user")
 @click.option('--host', default=_CONFIG.host,
               help='The host where the database lives')
-def drop(envs, user, host):
-    """Drops the passed database environment"""
-    for env in envs:
-        drop_environment(env, user, None, host)
+def drop(admin_user, admin_password, host):
+    """Drops the database specified in config"""
+    # TODO: use password from config, see issue #363
+    # Or figure out a way to use
+    # http://click.pocoo.org/3/options/#password-prompts
+    # and have it work with Travis...
+    drop_environment(admin_user, admin_password, host)
 
 
 @env.command()
