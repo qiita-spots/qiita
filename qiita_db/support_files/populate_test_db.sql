@@ -60,7 +60,7 @@ INSERT INTO qiita.study_experimental_factor (study_id, efo_id) VALUES (1, 1);
 INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum, checksum_algorithm_id) VALUES ('1_s_G1_L001_sequences.fastq.gz', 1, '852952723', 1), ('1_s_G1_L001_sequences_barcodes.fastq.gz', 3, '852952723', 1), ('2_sequences.fastq.gz', 1, '852952723', 1), ('2_sequences_barcodes.fastq.gz', 3, '852952723', 1);
 
 -- Insert the raw data information for study 1
-INSERT INTO qiita.raw_data (filetype_id, investigation_type) VALUES (2, 'Metagenomics'), (2, 'Whole Genome Sequencing');
+INSERT INTO qiita.raw_data (filetype_id, investigation_type, data_type_id) VALUES (2, 'Metagenomics', 2), (2, 'Whole Genome Sequencing', 2);
 
 -- Insert (link) the raw data with the raw filepaths
 INSERT INTO qiita.raw_filepath (raw_data_id, filepath_id) VALUES (1, 1), (1, 2), (2, 3), (2, 4);
@@ -180,34 +180,34 @@ INSERT INTO qiita.sample_1 (sample_id, SEASON_ENVIRONMENT, ASSIGNED_FROM_GEO, TE
 	('SKD1.640179', 'winter', 'n', '66 sand, 16.3 silt, 17.7 clay', '410658', 0.15, '3483', 'soil metagenome', 0.178, 114, 15, 1.51, 7.1, 0, 'ENVO:Temperate grasslands, savannas, and shrubland biome', 'GAZ:United States of America', 6.8, 'SKD1', 4.32, 'Diesel bulk', 'ENVO:plant-associated habitat');
 
 -- Add the common prep info for study 1
-INSERT INTO qiita.common_prep_info (raw_data_id, sample_id, center_name, center_project_name, emp_status_id, data_type_id) VALUES
-	(1, 'SKB8.640193', 'ANL', NULL, 1, 2),
-	(1, 'SKD8.640184', 'ANL', NULL, 1, 2),
-	(1, 'SKB7.640196', 'ANL', NULL, 1, 2),
-	(1, 'SKM9.640192', 'ANL', NULL, 1, 2),
-	(1, 'SKM4.640180', 'ANL', NULL, 1, 2),
-	(1, 'SKM5.640177', 'ANL', NULL, 1, 2),
-	(1, 'SKB5.640181', 'ANL', NULL, 1, 2),
-	(1, 'SKD6.640190', 'ANL', NULL, 1, 2),
-	(1, 'SKB2.640194', 'ANL', NULL, 1, 2),
-	(1, 'SKD2.640178', 'ANL', NULL, 1, 2),
-	(1, 'SKM7.640188', 'ANL', NULL, 1, 2),
-	(1, 'SKB1.640202', 'ANL', NULL, 1, 2),
-	(1, 'SKD1.640179', 'ANL', NULL, 1, 2),
-	(1, 'SKD3.640198', 'ANL', NULL, 1, 2),
-	(1, 'SKM8.640201', 'ANL', NULL, 1, 2),
-	(1, 'SKM2.640199', 'ANL', NULL, 1, 2),
-	(1, 'SKB9.640200', 'ANL', NULL, 1, 2),
-	(1, 'SKD5.640186', 'ANL', NULL, 1, 2),
-	(1, 'SKM3.640197', 'ANL', NULL, 1, 2),
-	(1, 'SKD9.640182', 'ANL', NULL, 1, 2),
-	(1, 'SKB4.640189', 'ANL', NULL, 1, 2),
-	(1, 'SKD7.640191', 'ANL', NULL, 1, 2),
-	(1, 'SKM6.640187', 'ANL', NULL, 1, 2),
-	(1, 'SKD4.640185', 'ANL', NULL, 1, 2),
-	(1, 'SKB3.640195', 'ANL', NULL, 1, 2),
-	(1, 'SKB6.640176', 'ANL', NULL, 1, 2),
-	(1, 'SKM1.640183', 'ANL', NULL, 1, 2);
+INSERT INTO qiita.common_prep_info (raw_data_id, sample_id, center_name, center_project_name, emp_status_id) VALUES
+	(1, 'SKB8.640193', 'ANL', NULL, 1),
+	(1, 'SKD8.640184', 'ANL', NULL, 1),
+	(1, 'SKB7.640196', 'ANL', NULL, 1),
+	(1, 'SKM9.640192', 'ANL', NULL, 1),
+	(1, 'SKM4.640180', 'ANL', NULL, 1),
+	(1, 'SKM5.640177', 'ANL', NULL, 1),
+	(1, 'SKB5.640181', 'ANL', NULL, 1),
+	(1, 'SKD6.640190', 'ANL', NULL, 1),
+	(1, 'SKB2.640194', 'ANL', NULL, 1),
+	(1, 'SKD2.640178', 'ANL', NULL, 1),
+	(1, 'SKM7.640188', 'ANL', NULL, 1),
+	(1, 'SKB1.640202', 'ANL', NULL, 1),
+	(1, 'SKD1.640179', 'ANL', NULL, 1),
+	(1, 'SKD3.640198', 'ANL', NULL, 1),
+	(1, 'SKM8.640201', 'ANL', NULL, 1),
+	(1, 'SKM2.640199', 'ANL', NULL, 1),
+	(1, 'SKB9.640200', 'ANL', NULL, 1),
+	(1, 'SKD5.640186', 'ANL', NULL, 1),
+	(1, 'SKM3.640197', 'ANL', NULL, 1),
+	(1, 'SKD9.640182', 'ANL', NULL, 1),
+	(1, 'SKB4.640189', 'ANL', NULL, 1),
+	(1, 'SKD7.640191', 'ANL', NULL, 1),
+	(1, 'SKM6.640187', 'ANL', NULL, 1),
+	(1, 'SKD4.640185', 'ANL', NULL, 1),
+	(1, 'SKB3.640195', 'ANL', NULL, 1),
+	(1, 'SKB6.640176', 'ANL', NULL, 1),
+	(1, 'SKM1.640183', 'ANL', NULL, 1);
 
 -- Add raw data prep columns
 INSERT INTO qiita.raw_data_prep_columns (raw_data_id, column_name, column_type) VALUES
