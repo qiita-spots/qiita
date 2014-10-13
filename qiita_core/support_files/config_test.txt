@@ -18,6 +18,9 @@ TEST_ENVIRONMENT = TRUE
 # Download path files
 UPLOAD_DATA_DIR = /tmp/
 
+# Working directory path
+WORKING_DIR = /tmp/
+
 # Maximum upload size (in Gb)
 MAX_UPLOAD_SIZE = 100
 
