@@ -28,7 +28,7 @@ from qiita_db.study import Study, StudyPerson
 from qiita_db.user import User
 from qiita_db.util import get_study_fp, convert_to_id, get_filetypes
 from qiita_db.ontology import Ontology
-from qiita_db.data import RawData
+from qiita_db.data import PreprocessedData
 from qiita_db.commands import (load_sample_template_from_cmd,
                                load_prep_template_from_cmd)
 
@@ -284,15 +284,16 @@ class EBISubmitHandler(BaseHandler):
         study = Study(int(study_id))
         st = SampleTemplate(study.sample_template)
 
-        # TODO: only supporting a single prep template right now
-        raw_data_id = study.raw_data()[0]
+        # TODO: only supporting a single prep template right now, which I think
+        # is what indexing the first item here is equiv to
+        raw_data_id = study.preprocessed_data()[0]
 
-        pt = PrepTemplate(raw_data_id)
+        preprocessed_data = PreprocessedData(raw_data_id)
 
         stats = [('Number of samples', len(st)),
                  ('Number of metadata headers', len(st.metadata_headers()))]
 
-        demux = [path for path, ftype in RawData(raw_data_id).get_filepaths()
+        demux = [path for path, ftype in preprocessed_data.get_filepaths()
                  if ftype == 'preprocessed_demux']
 
         if not len(demux):
