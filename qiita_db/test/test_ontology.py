@@ -10,7 +10,6 @@ from unittest import TestCase, main
 
 from qiita_core.util import qiita_test_checker
 from qiita_db.ontology import Ontology
-from qiita_db.exceptions import QiitaDBColumnError
 from qiita_db.util import convert_from_id, convert_to_id
 
 
