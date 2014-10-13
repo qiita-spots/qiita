@@ -171,13 +171,13 @@ def make_environment(env, base_data_dir, base_work_dir, user, password, host,
                 (qiita_config.test_environment, base_data_dir,
                  base_work_dir))
 
+    _create_layout_and_init_db(cur)
+
     if load_ontologies:
         _add_ontology_data(cur)
 
     if download_reference:
         _download_reference_files(cur, base_data_dir)
-
-    _create_layout_and_init_db(cur)
 
     if env == 'demo':
         # add demo user
