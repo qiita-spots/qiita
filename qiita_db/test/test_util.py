@@ -215,7 +215,7 @@ class DBUtilTests(TestCase):
 
         obs = insert_filepaths([(fp, 1)], 1, "raw_data", "filepath",
                                self.conn_handler)
-        exp = [15]
+        exp = [16]
         self.assertEqual(obs, exp)
 
         # Check that the files have been copied correctly
@@ -239,7 +239,7 @@ class DBUtilTests(TestCase):
 
         obs = insert_filepaths([(fp, "raw_forward_seqs")], 1, "raw_data",
                                "filepath", self.conn_handler)
-        exp = [15]
+        exp = [16]
         self.assertEqual(obs, exp)
 
         # Check that the files have been copied correctly
