@@ -6,7 +6,9 @@
 <table border="0" style="vertical-align: middle; text-align:center; align:center; height: 150px; width: 100%;">
   <tr>
     <td style="vertical-align: middle; text-align:left; width: 50%;" colspan="2">
-      <b>{{study_info['study_alias']}}</b> ({{study_info['number_samples_promised']}}/{{study_info['number_samples_collected']}})
+      <b>{{study_title}} ({{study_info['study_alias']}})</b>
+      <br/>
+      Samples: {{study_info['number_samples_promised']}}/{{study_info['number_samples_collected']}}
       <br/>
       Metadata: {{study_info['metadata_complete']}}
       <br/>
@@ -61,17 +63,17 @@
   </tr>
   <tr><td colspan="2"><br/></td></tr>
   <tr>
-    <td><input type="button" class="btn btn-primary" value="Process metadata" onclick="process_metadata();"></td>
-    <td><input type="button" class="btn btn-primary" value="Validate all files" onclick="validate_all_files();"></td>
+    <td colspan="2"><input type="button" class="btn btn-primary" value="Process files" onclick="process_files();"></td>
   </tr>
   <tr>
-    <td id="response_to_process_data">{{msg}}</td>
-    <td id="response_to_validate_all_files"></td>
+    <td style="vertical-align: middle; text-align:center;" colspan="2">{% raw msg %}</td>
   </tr>
 </table>
 
 <script src="/static/vendor/js/resumable.js"></script>
 <script src="/static/vendor/js/resumable-uploader.js"></script>
+<script src="/static/vendor/js/underscore.min.js"></script>
+
 <script>
   var meta = { fileType: [] };
   var maxFileSize = {{max_upload_size}}; // in Gb
@@ -85,69 +87,91 @@
     uploader.addFile("{{f}}");
   {% end  %}
 
-  function process_metadata() {
+  function process_files() {
     // function to validate the input files to process metadata and submits to
     // post those values
-    all_inputfiles = $('select[id^="inputfile"]');
+    var all_inputfiles = $('select[id^="inputfile"]');
+
+    if (all_inputfiles.length == 0) {
+      alert("You need to upload some files");
+    }
 
     function reset_vals() {
       // a reset vals function so we do not have these lines multiple times
-      raw_sample_template = false;
-      raw_prep_template = false;
-      raw_sample_template_value = "";
-      raw_prep_template_value = "";
+      required_values = {'raw_sample_template': "", 'raw_prep_template': [], 'barcodes': [], 'forward seqs': [], 'reverse seqs': []}
       iterations = 0
     }
 
     reset_vals();
 
     all_inputfiles.each(function () {
+
       iterations += 1;
-      if (raw_sample_template && raw_prep_template && iterations != all_inputfiles.length) {
-        alert("You have selected more than one sample and/or prep templates")
-        reset_vals();
-        return;
-      }
 
       if (this.value == "raw_sample_template") {
-        raw_sample_template = true;
-        raw_sample_template_value = this.name;
-      }
-      if (this.value == "raw_prep_template") {
-        raw_prep_template = true;
-        raw_prep_template_value = this.name;
+        if (required_values['raw_sample_template'] == "")
+          required_values['raw_sample_template'] = this.name;
+        else {
+          alert("You can not have one than more sample template");
+          reset_vals();
+          return false;
+        }
+      } else {
+        required_values[this.value].push(this.name)
       }
 
       if (iterations == all_inputfiles.length) {
-        if (!raw_sample_template) {
-          alert("Missing sample template");
+        if (required_values['raw_sample_template'] == "") {
+          alert("You should have at least one sample template")
           reset_vals();
-          return;
+          return false;
         }
-        if (!raw_prep_template) {
-          alert("Missing prep template");
+
+        if (required_values['raw_prep_template'].length == 0) {
+          alert("You should have at least one prep template")
           reset_vals();
-          return;
+          return false;
         }
+
+        if (required_values['barcodes'].length == 0) {
+          alert("You should have at least one barcodes file")
+          reset_vals();
+          return false;
+        }
+
+        if (required_values['barcodes'].length != required_values['forward seqs'].length) {
+          alert("You should have the same number of barcodes and forward seqs")
+          reset_vals();
+          return false;
+        }
+
         var form = $("<form>")
           .attr("action", window.location.href)
           .attr("method", "post")
           .append($("<input>")
             .attr("type", "hidden")
             .attr("name", "raw_sample_template")
-            .attr("value", raw_sample_template_value))
+            .attr("value", required_values['raw_sample_template']))
           .append($("<input>")
             .attr("type", "hidden")
             .attr("name", "raw_prep_template")
-            .attr("value", raw_prep_template_value));
+            .attr("value", required_values['raw_prep_template']))
+          .append($("<input>")
+            .attr("type", "hidden")
+            .attr("name", "barcodes")
+            .attr("value", required_values['barcodes']))
+          .append($("<input>")
+            .attr("type", "hidden")
+            .attr("name", "forward_seqs")
+            .attr("value", required_values['forward seqs']))
+          .append($("<input>")
+            .attr("type", "hidden")
+            .attr("name", "reverse_seqs")
+            .attr("value", required_values['reverse seqs']));
         $("body").append(form);
         form.submit();
       }
     });
-  }
-
-  function validate_all_files() {
-    alert('To be implemented');
   }
 </script>
 
