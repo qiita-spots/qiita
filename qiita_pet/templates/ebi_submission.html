@@ -4,28 +4,30 @@
 
 <h1>Submission Summary for Study {{study_title}}</h1>
 
-<div class="panel panel-default">
-    <div class="panel-heading">
-        The  information below describes information contained in the sample
-        and prep templates which will be submitted to EBI.
-    </div> 
+<form role="form" action="/ebi_submission/{{study_id}}" method="post">
+    <div class="panel panel-default">
+        <div class="panel-heading">
+            The  information below describes information contained in the sample
+            and prep templates which will be submitted to EBI.
+        </div> 
 
-    {% if error %}
-        <div style="color:red;">
-            {{error}}
-        </div>
-    {% else %}
-        <table class="table">
-        {% for category, summary in viewitems(stats) %}
-            <tr>
-                <th colspan="2" align="center">{{category}}</th>
-            </tr>
-            <tr>
-                <td>{{ summary }}</td>
-            </tr>
+        {% if error %}
+            <div style="color:red;">
+                {{error}}
+            </div>
+        {% else %}
+            <table class="table">
+            {% for category, summary in stats %}
+                <tr>
+                    <th colspan="2" align="center">{{category}}</th>
+                </tr>
+                <tr>
+                    <td>{{ summary }}</td>
+                </tr>
+            {% end %}
         {% end %}
-    {% end %}
-    </table>
-    <!-- ADD SUBMIT BUTTON HERE -->
-</div>
+        </table>
+    </div>
+    <td><input type="submit" class="btn btn-primary" value="Submit to EBI"></td>
+</form>
 {% end %}
