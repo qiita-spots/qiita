@@ -1015,14 +1015,20 @@ class PrepTemplate(MetadataTemplate):
         Parameters
         ----------
         md_template : DataFrame
-            The metadata template file contents indexed by samples Ids
+            The metadata template file contents indexed by sample ids
         raw_data : RawData
             The raw_data to which the prep template belongs to.
 
         Raises
         ------
         ValueError
-            If any of the required columns are not present on the md_template
+            If any of the required columns are not present in the md_template
+
+        Notes
+        -----
+        Sometimes people use different names for the same columns. We just
+        rename them to use the naming that we expect, so this is normalized
+        across studies.
         """
         # We only have column requirements if the data type of the raw data
         # is one of the target gene types
@@ -1036,6 +1042,6 @@ class PrepTemplate(MetadataTemplate):
             missing_cols = REQUIRED_TARGET_GENE_COLS.difference(
                 md_template.columns)
             if missing_cols:
-                raise ValueError("The following columns are missing on the "
+                raise ValueError("The following columns are missing in the "
                                  "PrepTemplate and they are requried for "
                                  "target gene studies: %s" % missing_cols)

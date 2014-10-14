@@ -40,7 +40,7 @@ def _get_qiime_minimal_mapping(prep_template, output_fp):
     cols = ['BarcodeSequence', 'LinkerPrimerSequence', 'Description']
     pt = pt[cols]
 
-    # Finally we store the file in the desired path, in tab-separated file
+    # Finally we store the file in the desired path, in tab-separated format
     pt.to_csv(output_fp, sep="\t")
 
 
