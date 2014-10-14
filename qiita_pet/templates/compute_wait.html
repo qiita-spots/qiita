@@ -1,0 +1,36 @@
+{% extends sitebase.html%}
+
+{%block head%}
+<script type="text/javascript">
+    window.onload = function() {
+        var host = 'ws://' + window.location.host + '/consumer/';
+        var websocket = new WebSocket(host);
+
+        websocket.onopen = function() {
+            websocket.send(JSON.stringify({'user': '{{user}}'}));
+        };
+        websocket.onmessage = function(evt) {
+            message = JSON.parse(evt.data);
+            if(message.job_id == "{{job_id}}") {
+                switch(message.status_msg) {
+                    case 'Success':
+                    case 'Failed':
+                        window.location.replace('{{completion_redirect}}/{{job_id}}');
+                        break;
+                    default:
+                        status_msg = document.getElementById('status-msg');
+                        status_msg.innerHTML = message.status_msg;
+                        break;
+                }
+            }
+        };
+        websocket.onerror = function(evt) { };
+};
+
+</script>
+{% end %}
+
+{% block content %}
+<h1>Waiting on {{title}}</h1>
+<p>Current status: <span id=status-msg>Queued</span></p>
+{% end %}
