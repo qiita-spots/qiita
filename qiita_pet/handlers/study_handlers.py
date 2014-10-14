@@ -298,7 +298,7 @@ class EBISubmitHandler(BaseHandler):
                  if ftype == 'preprocessed_demux']
 
         if not len(demux):
-            error = ("Study does not appear to have demultiplexed sequence "
+            error = ("Study does not appear to have demultiplexed sequences "
                      "associated")
         elif len(demux) > 1:
             error = ("Study appears to have multiple demultiplexed files!")
