@@ -215,7 +215,7 @@ class DBUtilTests(TestCase):
 
         obs = insert_filepaths([(fp, 1)], 1, "raw_data", "filepath",
                                self.conn_handler)
-        exp = [15]
+        exp = [16]
         self.assertEqual(obs, exp)
 
         # Check that the files have been copied correctly
@@ -226,8 +226,8 @@ class DBUtilTests(TestCase):
 
         # Check that the filepaths have been added to the DB
         obs = self.conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.filepath WHERE filepath_id=15")
-        exp = [[15, exp_fp, 1, '852952723', 1]]
+            "SELECT * FROM qiita.filepath WHERE filepath_id=16")
+        exp = [[16, exp_fp, 1, '852952723', 1]]
         self.assertEqual(obs, exp)
 
     def test_insert_filepaths_string(self):
@@ -239,7 +239,7 @@ class DBUtilTests(TestCase):
 
         obs = insert_filepaths([(fp, "raw_forward_seqs")], 1, "raw_data",
                                "filepath", self.conn_handler)
-        exp = [15]
+        exp = [16]
         self.assertEqual(obs, exp)
 
         # Check that the files have been copied correctly
@@ -250,8 +250,8 @@ class DBUtilTests(TestCase):
 
         # Check that the filepaths have been added to the DB
         obs = self.conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.filepath WHERE filepath_id=15")
-        exp = [[15, exp_fp, 1, '852952723', 1]]
+            "SELECT * FROM qiita.filepath WHERE filepath_id=16")
+        exp = [[16, exp_fp, 1, '852952723', 1]]
         self.assertEqual(obs, exp)
 
     def test_get_study_fps(self):

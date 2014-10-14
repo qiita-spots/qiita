@@ -47,22 +47,22 @@ class ReferenceTests(TestCase):
         # Check that the information on the database is correct
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.reference WHERE reference_id=2")
-        exp = [[2, self.name, self.version, 15, 16, 17]]
+        exp = [[2, self.name, self.version, 16, 17, 18]]
         self.assertEqual(obs, exp)
 
         # Check that the filepaths have been correctly added to the DB
         obs = self.conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.filepath WHERE filepath_id=15 or "
-            "filepath_id=16 or filepath_id=17")
+            "SELECT * FROM qiita.filepath WHERE filepath_id=16 or "
+            "filepath_id=17 or filepath_id=18")
         exp_seq = join(self.db_dir, "%s_%s_%s" % (self.name, self.version,
                                                   basename(self.seqs_fp)))
         exp_tax = join(self.db_dir, "%s_%s_%s" % (self.name, self.version,
                                                   basename(self.tax_fp)))
         exp_tree = join(self.db_dir, "%s_%s_%s" % (self.name, self.version,
                                                    basename(self.tree_fp)))
-        exp = [[15, exp_seq, 10, '0', 1],
-               [16, exp_tax, 11, '0', 1],
-               [17, exp_tree, 12, '0', 1]]
+        exp = [[16, exp_seq, 10, '0', 1],
+               [17, exp_tax, 11, '0', 1],
+               [18, exp_tree, 12, '0', 1]]
         self.assertEqual(obs, exp)
 
     def test_sequence_fp(self):

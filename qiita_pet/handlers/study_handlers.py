@@ -20,13 +20,16 @@ from .base_handlers import BaseHandler
 
 from qiita_core.qiita_settings import qiita_config
 
+from qiita_ware.context import submit
 from qiita_ware.util import metadata_stats_from_sample_and_prep_templates
-
+from qiita_ware.demux import stats as demux_stats
+from qiita_ware.dispatchable import submit_to_ebi
 from qiita_db.metadata_template import SampleTemplate, PrepTemplate
 from qiita_db.study import Study, StudyPerson
 from qiita_db.user import User
 from qiita_db.util import get_study_fp, convert_to_id, get_filetypes
 from qiita_db.ontology import Ontology
+from qiita_db.data import PreprocessedData
 from qiita_db.commands import (load_sample_template_from_cmd,
                                load_prep_template_from_cmd)
 
@@ -274,3 +277,46 @@ class MetadataSummaryHandler(BaseHandler):
 
         self.render('metadata_summary.html', user=self.current_user,
                     study_title=Study(st.id).title, stats=stats)
+
+
+class EBISubmitHandler(BaseHandler):
+    @authenticated
+    def get(self, study_id):
+        study = Study(int(study_id))
+        st = SampleTemplate(study.sample_template)
+
+        # TODO: only supporting a single prep template right now, which I think
+        # is what indexing the first item here is equiv to
+        raw_data_id = study.preprocessed_data()[0]
+
+        preprocessed_data = PreprocessedData(raw_data_id)
+
+        stats = [('Number of samples', len(st)),
+                 ('Number of metadata headers', len(st.metadata_headers()))]
+
+        demux = [path for path, ftype in preprocessed_data.get_filepaths()
+                 if ftype == 'preprocessed_demux']
+
+        if not len(demux):
+            error = ("Study does not appear to have demultiplexed sequences "
+                     "associated")
+        elif len(demux) > 1:
+            error = ("Study appears to have multiple demultiplexed files!")
+        else:
+            error = ""
+            demux_file = demux[0]
+            demux_file_stats = demux_stats(demux_file)
+            stats.append(('Number of sequences', demux_file_stats.n))
+
+        self.render('ebi_submission.html', user=self.current_user,
+                    study_title=study.title, stats=stats, error=error,
+                    study_id=study.id)
+
+    @authenticated
+    def post(self, study_id):
+        channel = self.current_user
+        job_id = submit(channel, submit_to_ebi, int(study_id))
+
+        self.render('compute_wait.html', user=self.current_user,
+                    job_id=job_id, title='EBI Submission',
+                    completion_redirect='/compute_complete')

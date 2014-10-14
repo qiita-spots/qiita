@@ -1,4 +1,6 @@
 from subprocess import Popen, PIPE
+from uuid import uuid4
+from functools import partial
 
 from IPython.parallel import Client
 
@@ -167,5 +169,107 @@ class Dispatch(object):
         """
         return self.demo_lview.wait(handlers)
 
+
+def _redis_wrap(f, redis_deets, *args, **kwargs):
+    """Wrap something to compute, and notify about state
+
+    At the end, sets the key job_id with the serialized payload result. The
+    payload consists of:
+
+        {'job_id': uuid,
+         'status_msg': {'Success', 'Failed'},
+         'return': up to f}
+
+    The set key will expire in 7 days.
+
+    The result is also pushed to the corresponding messages key in redis_deets,
+    as well as published on the corresponding pubsub key.
+
+    Parameters
+    ----------
+    f : function
+        A function to execute
+    redis_deets : dict
+        Redis details, specifically {'job_id': uuid,
+                                     'pubsub': key to publish on,
+                                     'messages': key to push messages to}
+    """
+    def _deposit_payload(redis_deets, payload):
+        """Drop messages into redis
+
+        This is being defined inline as we need to use it multiple times, and
+        for an undiagnosed reason, having this function call it as a first
+        class function does not work.
+        """
+        from json import dumps
+        from qiita_ware import r_server
+
+        job_id = redis_deets['job_id']
+        pubsub = redis_deets['pubsub']
+        messages = redis_deets['messages']
+
+        serialized = dumps(payload)
+
+        # First, we need to push the message on to the messages queue which is
+        # in place in the event of a race-condition where a websocket client
+        # may not be already listening to the pubsub.
+        r_server.rpush(messages, serialized)
+
+        # Next, in support of our "normal" and desired means of communicating,
+        # we "publish" our payload. Anyone listening on the pubsub will see
+        # this and fire an event (e.g., WebSocketHandler.callback)
+        r_server.publish(pubsub, serialized)
+
+        # Finally, we dump the payload keyed by job ID so that subsequent
+        # handlers who are not listening on the channel can examine the results
+        r_server.set(job_id, serialized, ex=84600 * 7)  # expire at 1 week
+
+    job_id = redis_deets['job_id']
+    payload = {'job_id': job_id, 'status_msg': 'Running', 'return': None}
+
+    _deposit_payload(redis_deets, payload)
+    try:
+        payload['return'] = f(*args, **kwargs)
+        payload['status_msg'] = 'Success'
+    except Exception as e:
+        payload['return'] = e.message
+        payload['status_msg'] = 'Failed'
+    finally:
+        _deposit_payload(redis_deets, payload)
+
+
+def _submit(ctx, channel, f, *args, **kwargs):
+    """Submit a function to a cluster
+
+    The work is submitted to the context, and a UUID describing the job is
+    returned. On completion, regardless of success or fail, the status of the
+    job will be set in `r_server` under the key of the UUID, and additionally,
+    the UUID will be published to the channel 'qiita-compute-complete'.
+
+    Parameters
+    ----------
+    ctx : Dispatch
+        A Dispatch object to submit through
+    f : function
+        The function to execute. Any returns from this function will be
+        serialized and deposited into Redis using the uuid for a key.
+    args : tuple or None
+        Any args for ``f``
+    kwargs : dict or None
+        Any kwargs for ``f``
+
+    Returns
+    -------
+    uuid
+        The job ID
+    """
+    uuid = str(uuid4())
+    redis_deets = {'job_id': uuid, 'pubsub': channel,
+                   'messages': channel + ':messages'}
+    ctx.submit_async(_redis_wrap, f, redis_deets, *args, **kwargs)
+    return uuid
+
+
 # likely want this in qiita_ware.__init__
 context = Dispatch()
+submit = partial(_submit, context)
