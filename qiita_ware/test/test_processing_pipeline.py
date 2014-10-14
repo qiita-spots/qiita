@@ -73,7 +73,8 @@ class ProcessingPipelineTests(TestCase):
         path_builder = partial(join, prep_out_dir)
         db_path_builder = partial(join, join(self.db_dir, "preprocessed_data"))
 
-        file_suffixes = ['seqs.fna', 'seqs.fastq', 'seqs.demux']
+        file_suffixes = ['seqs.fna', 'seqs.fastq', 'seqs.demux',
+                         'split_library_log.txt']
         db_files = []
         for f_suff in file_suffixes:
             fp = path_builder(f_suff)
