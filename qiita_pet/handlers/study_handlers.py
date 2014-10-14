@@ -183,28 +183,27 @@ class StudyDescriptionHandler(BaseHandler):
                         filetypes=fts, msg=msg)
             return
 
+        # inserting raw data
+        fp = get_study_fp(study_id)
+        filepaths, filepath_types = [], []
+        if barcodes and barcodes[0] != "":
+            filepaths.extend([join(fp, t) for t in barcodes])
+            filepath_types.extend(["raw_barcodes"]*len(barcodes))
+        if forward_seqs and forward_seqs[0] != "":
+            filepaths.extend([join(fp, t) for t in forward_seqs])
+            filepath_types.extend(["raw_forward_seqs"]*len(forward_seqs))
+        if reverse_seqs and reverse_seqs[0] != "":
+            filepaths.extend([join(fp, t) for t in reverse_seqs])
+            filepath_types.extend(["raw_reverse_seqs"]*len(reverse_seqs))
+
+        # currently hardcoding the filetypes and data_type, see issue
+        # https://github.com/biocore/qiita/issues/391
+        filetype = 'FASTQ'
+        data_type = '16S'
+
         try:
-            # inserting raw data
-            fp = get_study_fp(study_id)
-            filepaths, filepath_types = [], []
-            if barcodes and barcodes[0] != "":
-                filepaths.extend([join(fp, t) for t in barcodes])
-                filepath_types.extend(["raw_barcodes"]*len(barcodes))
-            if forward_seqs and forward_seqs[0] != "":
-                filepaths.extend([join(fp, t) for t in forward_seqs])
-                filepath_types.extend(["raw_forward_seqs"]*len(forward_seqs))
-            if reverse_seqs and reverse_seqs[0] != "":
-                filepaths.extend([join(fp, t) for t in reverse_seqs])
-                filepath_types.extend(["raw_reverse_seqs"]*len(reverse_seqs))
-
-            # currently hardcoding the filetypes and data_type, see issue
-            # https://github.com/biocore/qiita/issues/391
-            filetype = 'FASTQ'
-            data_type = '16S'
-
-            # currently hardcoding the study_ids to be an array but not sure if
-            # this will ever be an actual array via the web interfase
-            print filepaths, filepath_types, filetype, [study_id], data_type
+            # currently hardcoding the study_ids to be an array but not sure
+            # if this will ever be an actual array via the web interface
             raw_data = load_raw_data_cmd(filepaths, filepath_types, filetype,
                                          [study_id], data_type)
         except (TypeError, QiitaDBColumnError, QiitaDBExecutionError), e:

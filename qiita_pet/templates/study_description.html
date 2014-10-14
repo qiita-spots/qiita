@@ -109,10 +109,10 @@
       iterations += 1;
 
       if (this.value == "raw_sample_template") {
-        if (required_values['raw_sample_template'] == "")
+        if (required_values['raw_sample_template'] == "") {
           required_values['raw_sample_template'] = this.name;
-        else {
-          alert("You can not have one than more sample template");
+        } else {
+          alert("You can not have more than one sample template");
           reset_vals();
           return false;
         }
