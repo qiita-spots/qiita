@@ -317,7 +317,7 @@ INSERT INTO qiita.preprocessed_processed_data (preprocessed_data_id, processed_d
 INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum, checksum_algorithm_id) VALUES ('GreenGenes_13_8_97_otus.fasta', 10, '852952723', 1), ('GreenGenes_13_8_97_otu_taxonomy.txt', 11, '852952723', 1), ('GreenGenes_13_8_97_otus.tree', 12, '852952723', 1);
 
 -- Populate the reference table
-INSERT INTO qiita.reference (reference_name, reference_version, sequence_filepath, taxonomy_filepath, tree_filepath) VALUES ('GreenGenes', '13_8', 7, 8, 9);
+INSERT INTO qiita.reference (reference_name, reference_version, sequence_filepath, taxonomy_filepath, tree_filepath) VALUES ('GreenGenes', '13_8', 8, 9, 10);
 
 -- Insert the processed params uclust used for preprocessed data 1
 INSERT INTO qiita.processed_params_uclust (similarity, enable_rev_strand_match, suppress_new_clusters, reference_id) VALUES (0.97, TRUE, TRUE, 1);
