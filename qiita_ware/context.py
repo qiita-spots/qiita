@@ -194,14 +194,40 @@ def _redis_wrap(f, redis_deets, *args, **kwargs):
                                      'pubsub': key to publish on,
                                      'messages': key to push messages to}
     """
-    from json import dumps
-    from qiita_ware import r_server
+    def _deposit_payload(redis_deets, payload):
+        """Drop messages into redis
+
+        This is being defined inline as we need to use it multiple times, and
+        for an undiagnosed reason, having this function call it as a first
+        class function does not work.
+        """
+        from json import dumps
+        from qiita_ware import r_server
+
+        job_id = redis_deets['job_id']
+        pubsub = redis_deets['pubsub']
+        messages = redis_deets['messages']
+
+        serialized = dumps(payload)
+
+        # First, we need to push the message on to the messages queue which is
+        # in place in the event of a race-condition where a websocket client
+        # may not be already listening to the pubsub.
+        r_server.rpush(messages, serialized)
+
+        # Next, in support of our "normal" and desired means of communicating,
+        # we "publish" our payload. Anyone listening on the pubsub will see
+        # this and fire an event (e.g., WebSocketHandler.callback)
+        r_server.publish(pubsub, serialized)
+
+        # Finally, we dump the payload keyed by job ID so that subsequent
+        # handlers who are not listening on the channel can examine the results
+        r_server.set(job_id, serialized, ex=84600 * 7)  # expire at 1 week
 
     job_id = redis_deets['job_id']
-    pubsub = redis_deets['pubsub']
-    messages = redis_deets['messages']
+    payload = {'job_id': job_id, 'status_msg': 'Running', 'return': None}
 
-    payload = {'job_id': job_id, 'status_msg': None, 'return': None}
+    _deposit_payload(redis_deets, payload)
     try:
         payload['return'] = f(*args, **kwargs)
         payload['status_msg'] = 'Success'
@@ -209,10 +235,7 @@ def _redis_wrap(f, redis_deets, *args, **kwargs):
         payload['return'] = e.message
         payload['status_msg'] = 'Failed'
     finally:
-        serialized = dumps(payload)
-        r_server.rpush(messages, serialized)
-        r_server.publish(pubsub, serialized)
-        r_server.set(job_id, serialized, ex=84600 * 7)  # expire at 1 week
+        _deposit_payload(redis_deets, payload)
 
 
 def _submit(ctx, channel, f, *args, **kwargs):
