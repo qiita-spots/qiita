@@ -158,7 +158,7 @@ class TestLoadPrepTemplateFromCmd(TestCase):
                 remove(fp)
 
     def test_load_prep_template_from_cmd(self):
-        """Correctly adds a sample template to the DB"""
+        """Correctly adds a prep template to the DB"""
         fh = StringIO(self.pt_contents)
         st = load_prep_template_from_cmd(fh, self.raw_data.id)
         self.assertEqual(st.id, self.raw_data.id)
@@ -345,11 +345,15 @@ SAMPLE_TEMPLATE = (
     "\tFast\t20080116\t31.0856060708\t4.16781143893\tFasting_mouse_I.D._636")
 
 PREP_TEMPLATE = (
-    "#SampleID\tcenter_name\tcusom_col\temp_status_id\tdata_type_id\n"
-    "SKB8.640193\tANL\tPC.354\t1\t1\n"
-    "SKD8.640184\tANL\tPC.593\t1\t1\n"
-    "SKB7.640196\tANL\tPC.607\t1\t1\n"
-    "SKM9.640192\tANL\tPC.636\t1\t1\n")
+    '#SampleID\tbarcodesequence\tcenter_name\tcenter_project_name\tdescription'
+    '\tebi_submission_accession\temp_status_id\tlinkerprimersequence\t'
+    'str_column\n'
+    'SKB7.640196\tCCTCTGAGAGCT\tANL\tTest Project\tskb7\tNone\t1\t'
+    'GTGCCAGCMGCCGCGGTAA\tValue for sample 3\n'
+    'SKB8.640193\tGTCCGCAAGTTA\tANL\tTest Project\tskb8\tNone\t1\t'
+    'GTGCCAGCMGCCGCGGTAA\tValue for sample 1\n'
+    'SKD8.640184\tCGTAGAGCTCTC\tANL\tTest Project\tskd8\tNone\t1\t'
+    'GTGCCAGCMGCCGCGGTAA\tValue for sample 2\n')
 
 if __name__ == "__main__":
     main()

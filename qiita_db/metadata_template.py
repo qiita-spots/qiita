@@ -53,6 +53,12 @@ from .sql_connection import SQLConnectionHandler
 from .util import exists_table, get_table_cols
 
 
+TARGET_GENE_DATA_TYPES = ['16S', '18S', 'ITS']
+REQUIRED_TARGET_GENE_COLS = {'barcodesequence', 'linkerprimersequence'}
+RENAME_COLS_DICT = {'barcode': 'barcodesequence',
+                    'primer': 'linkerprimersequence'}
+
+
 def _get_datatypes(metadata_map):
     r"""Returns the datatype of each metadata_map column
 
@@ -574,6 +580,20 @@ class MetadataTemplate(QiitaObject):
         return "%s%d" % (cls._table_prefix, obj.id)
 
     @classmethod
+    def _check_special_columns(cls, md_template, obj):
+        r"""Checks for special columns based on obj type
+
+        Parameters
+        ----------
+        md_template : DataFrame
+            The metadata template file contents indexed by sample ids
+        obj : Study or RawData
+            The obj to which the metadata template belongs to. Study in case
+            of SampleTemplate and RawData in case of PrepTemplate
+        """
+        pass
+
+    @classmethod
     def create(cls, md_template, obj):
         r"""Creates the metadata template in the database
 
@@ -600,6 +620,10 @@ class MetadataTemplate(QiitaObject):
         # Check that we don't have duplicate columns
         if len(set(md_template.columns)) != len(md_template.columns):
             raise QiitaDBDuplicateHeaderError()
+
+        # We need to check for some special columns, that are not present on
+        # the database, but depending on the data type are required.
+        cls._check_special_columns(md_template, obj)
 
         conn_handler = SQLConnectionHandler()
         # Check that md_template have the required columns
@@ -927,7 +951,7 @@ class MetadataTemplate(QiitaObject):
         headers = sorted(list(metadata_map.values())[0].keys())
         with open(fp, 'w') as f:
             # First write the headers
-            f.write("#SampleID\t%s\n" % '\t'.join(headers))
+            f.write("sample_name\t%s\n" % '\t'.join(headers))
             # Write the values for each sample id
             for sid, d in sorted(metadata_map.items()):
                 values = [str(d[h]) for h in headers]
@@ -983,3 +1007,38 @@ class PrepTemplate(MetadataTemplate):
     _id_column = "raw_data_id"
     _strict = False
     _sample_cls = PrepSample
+
+    @classmethod
+    def _check_special_columns(cls, md_template, raw_data):
+        r"""Checks for special columns based on obj type
+
+        Parameters
+        ----------
+        md_template : DataFrame
+            The metadata template file contents indexed by sample ids
+        raw_data : RawData
+            The raw_data to which the prep template belongs to.
+
+        Raises
+        ------
+        ValueError
+            If any of the required columns are not present in the md_template
+
+        Notes
+        -----
+        Sometimes people use different names for the same columns. We just
+        rename them to use the naming that we expect, so this is normalized
+        across studies.
+        """
+        # We only have column requirements if the data type of the raw data
+        # is one of the target gene types
+        if raw_data.data_type() in TARGET_GENE_DATA_TYPES:
+            md_template.rename(columns=RENAME_COLS_DICT, inplace=True)
+
+            # Check for all required columns for target genes studies
+            missing_cols = REQUIRED_TARGET_GENE_COLS.difference(
+                md_template.columns)
+            if missing_cols:
+                raise ValueError("The following columns are missing in the "
+                                 "PrepTemplate and they are requried for "
+                                 "target gene studies: %s" % missing_cols)
