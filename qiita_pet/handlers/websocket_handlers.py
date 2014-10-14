@@ -3,7 +3,6 @@
 from json import loads
 
 import toredis
-from toredis import Client
 from tornado.web import authenticated
 from tornado.websocket import WebSocketHandler
 from tornado.gen import engine, Task
