@@ -591,7 +591,12 @@ class MetadataTemplate(QiitaObject):
             The obj to which the metadata template belongs to. Study in case
             of SampleTemplate and RawData in case of PrepTemplate
         """
-        pass
+        # Change any *_id column to its str column
+        missing = set(cls._ignore_cols.values()).difference(md_template.keys())
+        if missing:
+            raise QiitaDBColumnError("Missing columns: %s" % missing)
+
+        cls._template_specific_column_check(cls, md_template, obj)
 
     @classmethod
     def create(cls, md_template, obj):
@@ -626,14 +631,22 @@ class MetadataTemplate(QiitaObject):
         cls._check_special_columns(md_template, obj)
 
         conn_handler = SQLConnectionHandler()
-        # Check that md_template have the required columns
+
+        # Get some useful information from the metadata template
+        sample_ids = list(md_template.index)
+        num_samples = len(sample_ids)
+
+        # Get the required columns from the DB
         db_cols = get_table_cols(cls._table, conn_handler)
+
         # Remove the sample_id and study_id columns
         db_cols.remove('sample_id')
         db_cols.remove(cls._id_column)
+
+        # Retrieve the headers of the metadata template
         headers = list(md_template.keys())
-        sample_ids = list(md_template.index)
-        num_samples = len(sample_ids)
+
+        # Check that md_template have the required columns
         remaining = set(db_cols).difference(headers)
         if remaining:
             # If strict, raise an error, else default to None
@@ -643,6 +656,7 @@ class MetadataTemplate(QiitaObject):
                 for col in remaining:
                     md_template[col] = pd.Series([None] * num_samples,
                                                  index=sample_ids)
+
         # Insert values on required columns
         values = _as_python_types(md_template, db_cols)
         values.insert(0, sample_ids)
@@ -972,6 +986,8 @@ class SampleTemplate(MetadataTemplate):
     _table_prefix = "sample_"
     _column_table = "study_sample_columns"
     _id_column = "study_id"
+    _ignore_cols = {
+        'required_sample_info_status_id': 'required_sample_info_status'}
     _sample_cls = Sample
 
     @staticmethod
@@ -991,6 +1007,11 @@ class SampleTemplate(MetadataTemplate):
                 "WHERE table_name = 'required_sample_info' "
                 "ORDER BY column_name")]
 
+    @classmethod
+    def _template_specific_column_check(cls, md_template, raw_data):
+        """"""
+        
+
 
 class PrepTemplate(MetadataTemplate):
     r"""Represent the PrepTemplate of a raw dat. Provides access to the
@@ -1006,10 +1027,11 @@ class PrepTemplate(MetadataTemplate):
     _column_table = "raw_data_prep_columns"
     _id_column = "raw_data_id"
     _strict = False
+    _ignore_cols = {'emp_status_id': 'emp_status'}
     _sample_cls = PrepSample
 
     @classmethod
-    def _check_special_columns(cls, md_template, raw_data):
+    def _template_specific_column_check(cls, md_template, raw_data):
         r"""Checks for special columns based on obj type
 
         Parameters
