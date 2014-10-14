@@ -8,7 +8,7 @@ from qiita_ware.demux import to_per_sample_ascii
 from qiita_ware.util import open_file
 from qiita_db.study import Study
 from qiita_db.metadata_template import SampleTemplate, PrepTemplate
-from qiita_db.data import PreprocessedData
+from qiita_db.data import PreprocessedData, RawData
 
 
 def submit_to_ebi(study_id):
@@ -18,6 +18,8 @@ def submit_to_ebi(study_id):
     raw_data_id = study.preprocessed_data()[0]
     pt = PrepTemplate(raw_data_id)
     preprocessed_data = PreprocessedData(raw_data_id)
+    investigation_type = RawData(raw_data_id).investigation_type
+
     demux = [path for path, ftype in preprocessed_data.get_filepaths()
              if ftype == 'preprocessed_demux'][0]
 
@@ -37,6 +39,6 @@ def submit_to_ebi(study_id):
                     fh.write(record)
 
     submit_EBI_from_files(study_id, open(samp_fp), open(prep_fp), tmp_dir,
-                          output_dir, 'metagenomic', 'ADD', False)
+                          output_dir, investigation_type, 'ADD', False)
 
     return tmp_dir
