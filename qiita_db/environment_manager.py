@@ -7,9 +7,8 @@
 # -----------------------------------------------------------------------------
 from os.path import abspath, dirname, join
 from functools import partial
-from os import remove, mkdir
+from os import mkdir
 from os.path import exists
-from ftplib import FTP
 import gzip
 
 from future import standard_library
