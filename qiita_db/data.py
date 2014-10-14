@@ -316,7 +316,7 @@ class RawData(BaseData):
     @property
     def investigation_type(self):
         conn_handler = SQLConnectionHandler()
-        sql = ("SELECT investigation_type FROM {} "
+        sql = ("SELECT investigation_type FROM qiita.{} "
                "where raw_data_id = %s".format(self._table))
         return conn_handler.execute_fetchone(sql, [self._id])[0]
 
