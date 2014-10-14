@@ -183,7 +183,8 @@ def template_to_dict(t):
             out[sample_id][column_name] = str(column_value)
     return out
 
-##### open_file logic adapted from scikit-bio's skbio.io.util #####
+
+# open_file logic adapted from scikit-bio's skbio.io.util #
 def _is_string_or_bytes(s):
     """Returns True if input argument is string (unicode or not) or bytes.
     """
