@@ -59,41 +59,32 @@ def stop_cluster(clusters):
 
 
 @env.command()
-@click.argument('envs', nargs=-1, required=True,
-                type=click.Choice(ENVIRONMENTS.keys()))
-@click.option('--base_data_folder', default=_CONFIG.base_data_dir,
-              help="The folder where the test data files are stored")
-@click.option('--base_work_folder', default=DFLT_BASE_WORK_FOLDER,
-              help="The folder where the actively worked on files are stored")
-@click.option('--user', default=_CONFIG.user,
-              help="The database user to connect to the database")
-@click.option('--host', default=_CONFIG.host,
-              help='The host where the database lives')
 @click.option('--load-ontologies/--no-load-ontologies',
               default=False, help='If True, ontologies will be loaded')
 @click.option('--download-reference/--no-download-reference',
               default=False, help='If True, greengenes reference files will '
                                   'be downloaded')
-def make(envs, base_data_folder, base_work_folder, user, host,
-         load_ontologies, download_reference):
-    """Creates the passed environment"""
-    for env in envs:
-        print "Making environment", env
-        make_environment(env, base_data_folder, base_work_folder, user, None,
-                         host, load_ontologies, download_reference)
+@click.option('--add-demo-user/--no-add-demo-user',
+              default=False, help='If True, then demo@microbio.me will be '
+                                  'added to the database with password '
+                                  '"password"')
+def make(load_ontologies, download_reference, add_demo_user):
+    """Creates the database specified in config"""
+    # TODO: use password from config, see issue #363
+    # Or figure out a way to use
+    # http://click.pocoo.org/3/options/#password-prompts
+    # and have it work with Travis...
+    make_environment(load_ontologies, download_reference, add_demo_user)
 
 
 @env.command()
-@click.argument('envs', nargs=-1, required=True,
-                type=click.Choice(ENVIRONMENTS.keys()))
-@click.option('--user', default=_CONFIG.user,
-              help="The database user to connect to the database")
-@click.option('--host', default=_CONFIG.host,
-              help='The host where the database lives')
-def drop(envs, user, host):
-    """Drops the passed database environment"""
-    for env in envs:
-        drop_environment(env, user, None, host)
+def drop():
+    """Drops the database specified in config"""
+    # TODO: use password from config, see issue #363
+    # Or figure out a way to use
+    # http://click.pocoo.org/3/options/#password-prompts
+    # and have it work with Travis...
+    drop_environment()
 
 
 @env.command()

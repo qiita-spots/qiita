@@ -7,9 +7,8 @@
 # -----------------------------------------------------------------------------
 from os.path import abspath, dirname, join
 from functools import partial
-from os import remove, close
+from os import remove
 from os.path import exists
-from tempfile import mkstemp
 from ftplib import FTP
 import gzip
 
@@ -18,10 +17,10 @@ from future.utils import viewitems
 with standard_library.hooks():
     from urllib.request import urlretrieve
 from psycopg2 import connect
-from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 
 from qiita_core.exceptions import QiitaEnvironmentError
 from qiita_core.qiita_settings import qiita_config
+from .sql_connection import SQLConnectionHandler
 
 get_support_file = partial(join, join(dirname(abspath(__file__)),
                                       'support_files'))
@@ -38,40 +37,41 @@ ENVIRONMENTS = {'demo': 'qiita_demo', 'test': 'qiita_test',
 CLUSTERS = ['demo', 'reserved', 'general']
 
 
-def _check_db_exists(db, cursor):
+def _check_db_exists(db, conn_handler):
     r"""Checks if the database db exists on the postgres server
 
     Parameters
     ----------
     db : str
         The database
-    cursor : psycopg2.cursor
-        The cursor connected to the database
+    conn_handler : SQLConnectionHandler
+        The connection to the database
     """
-    cursor.execute('SELECT datname FROM pg_database')
+    dbs = conn_handler.execute_fetchall('SELECT datname FROM pg_database')
+
     # It's a list of tuples, so just create the tuple to check if exists
-    return (db,) in cursor.fetchall()
+    return (db,) in dbs
 
 
-def _create_layout_and_init_db(cur):
+def _create_layout_and_init_db(conn):
     print('Building SQL layout')
     # Create the schema
     with open(LAYOUT_FP, 'U') as f:
-        cur.execute(f.read())
+        conn.execute(f.read())
 
     print('Initializing database')
     # Initialize the database
     with open(INITIALIZE_FP, 'U') as f:
-        cur.execute(f.read())
+        conn.execute(f.read())
 
 
-def _populate_test_db(cur):
+def _populate_test_db(conn):
     print('Populating database with demo data')
     with open(POPULATE_FP, 'U') as f:
-        cur.execute(f.read())
+        conn.execute(f.read())
 
 
-def _add_ontology_data(cur):
+def _add_ontology_data(conn):
     print ('Loading Ontology Data')
     fp = get_reference_fp('ontologies.sql.gz')
 
@@ -91,7 +91,7 @@ def _add_ontology_data(cur):
         cur.execute(f.read())
 
 
-def _download_reference_files(cur, base_data_dir):
+def _download_reference_files(cur):
     print('Downloading reference files')
 
     files = {'tree': (get_reference_fp('gg_13_8-97_otus.tree'),
@@ -118,88 +118,68 @@ def _download_reference_files(cur, base_data_dir):
                               (file_type, url))
 
 
-def make_environment(env, base_data_dir, base_work_dir, user, password, host,
-                     load_ontologies, download_reference):
-    r"""Creates the new environment `env`
+def make_environment(load_ontologies, download_reference, add_demo_user):
+    r"""Creates the new environment specified in the configuration
 
     Parameters
     ----------
-    env : {demo, test, production}
-        The environment to create
-    base_data_dir : str
-        the path to the directory where all user data is stored
-    base_work_dir : str
-        The path to the directory to use for working space
-    user : str
-        The postgres user to use
-    password : str
-        The password for the above postgres user
-    host : str
-        The postgrs host
     load_ontologies : bool
         Whether or not to retrieve and unpack ontology information
     download_reference : bool
         Whether or not to download greengenes reference files
+    add_demo_user : bool
+        Whether or not to add a demo user to the database with username
+        demo@microbio.me and password "password"
 
     Raises
     ------
-    ValueError
-        If `env` not recognized
     IOError
         If `download_reference` is true but one of the files cannot be
         retrieved
     QiitaEnvironmentError
         If the environment already exists
     """
-    if env not in ENVIRONMENTS:
-        raise ValueError("Environment %s not recognized. Available "
-                         "environments are %s" % (env, ENVIRONMENTS.keys()))
     # Connect to the postgres server
-    conn = connect(user=user, host=host, password=password)
-    # Set the isolation level to AUTOCOMMIT so we can execute a create database
-    # sql quary
-    conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
-    # Get the cursor
-    cur = conn.cursor()
+    admin_conn = SQLConnectionHandler(admin=True)
+
     # Check that it does not already exists
-    if _check_db_exists(ENVIRONMENTS[env], cur):
+    if _check_db_exists(qiita_config.database, admin_conn):
         raise QiitaEnvironmentError(
-            "Environment {0} already present on the system. You can drop it "
-            "by running qiita_env drop {0}".format(env))
+            "Database {0} already present on the system. You can drop it "
+            "by running 'qiita_env drop'".format(qiita_config.database))
 
     # Create the database
     print('Creating database')
-    cur.execute('CREATE DATABASE %s' % ENVIRONMENTS[env])
-    cur.close()
-    conn.close()
+    admin_conn.execute('CREATE DATABASE %s' % qiita_config.database)
+
+    del admin_conn
 
     # Connect to the postgres server, but this time to the just created db
-    conn = connect(user=user, host=host, password=password,
-                   database=ENVIRONMENTS[env])
-    cur = conn.cursor()
+    conn = SQLConnectionHandler()
 
     print('Inserting database metadata')
     # Build the SQL layout into the database
     with open(SETTINGS_FP, 'U') as f:
-        cur.execute(f.read())
+        conn.execute(f.read())
 
     # Insert the settings values to the database
-    cur.execute("INSERT INTO settings (test, base_data_dir, base_work_dir) "
-                "VALUES (%s, %s, %s)",
-                (qiita_config.test_environment, base_data_dir,
-                 base_work_dir))
+    conn.execute("INSERT INTO settings (test, base_data_dir, base_work_dir) "
+                 "VALUES (%s, %s, %s)",
+                 (qiita_config.test_environment, qiita_config.base_data_dir,
+                  qiita_config.working_dir))
 
-    _create_layout_and_init_db(cur)
+    _create_layout_and_init_db(conn)
 
     if load_ontologies:
-        _add_ontology_data(cur)
+        _add_ontology_data(conn)
 
     if download_reference:
-        _download_reference_files(cur, base_data_dir)
+        _download_reference_files(conn)
 
-    if env == 'demo':
-        # add demo user
-        cur.execute("""
+    # we don't do this if it's a test environment because populate.sql
+    # already adds this user...
+    if add_demo_user and not qiita_config.test_environment:
+        conn.execute("""
             INSERT INTO qiita.qiita_user (email, user_level_id, password,
                                           name, affiliation, address, phone)
             VALUES
@@ -207,56 +187,40 @@ def make_environment(env, base_data_dir, base_work_dir, user, password, host,
              '$2a$12$gnUi8Qg.0tvW243v889BhOBhWLIHyIJjjgaG6dxuRJkUM8nXG9Efe',
              'Demo', 'Qitta Dev', '1345 Colorado Avenue', '303-492-1984')""")
 
-        print('Demo environment successfully created')
-    elif env == "test":
-        _populate_test_db(cur)
+        print('Demo user successfully created')
+
+    if qiita_config.test_environment:
+        _populate_test_db(conn)
         print('Test environment successfully created')
-    elif env == "production":
+    else:
         print('Production environment successfully created')
 
-    # Commit all the changes and close the connections
-    conn.commit()
-    cur.close()
-    conn.close()
 
-
-def drop_environment(env, user, password, host):
-    r"""Drops the `env` environment.
-
-    Parameters
-    ----------
-    env : {demo, test, production}
-        The environment to drop
-    user : str
-        The postgres user to connect to the server
-    password : str
-        The password of the user
-    host : str
-        The host where the postgres server is running
-
-    Raises
-    ------
-    QiitaEnvironmentError
-        The If the environment is not present on the system
+def drop_environment():
+    """Drops the database specified in the configuration
     """
     # Connect to the postgres server
-    conn = connect(user=user, host=host, password=password)
-    # Set the isolation level to AUTOCOMMIT so we can execute a
-    # drop database sql query
-    conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
-    # Drop the database
-    cur = conn.cursor()
+    conn = SQLConnectionHandler()
+    settings_sql = "SELECT test FROM settings"
+    is_test_environment = conn.execute_fetchone(settings_sql)[0]
 
-    if not _check_db_exists(ENVIRONMENTS[env], cur):
-        raise QiitaEnvironmentError(
-            "Environment {0} not present on the system. You can create it "
-            "by running 'qiita_env make {0}'".format(env))
+    del conn
 
-    cur.execute('DROP DATABASE %s' % ENVIRONMENTS[env])
+    if is_test_environment:
+        do_drop = True
+    else:
+        confirm = ''
+        while confirm not in ('Y', 'y', 'N', 'n'):
+            confirm = raw_input("THIS IS NOT A TEST ENVIRONMENT.\n"
+                                "Proceed with drop? (y/n)")
 
-    # Close cursor and connection
-    cur.close()
-    conn.close()
+        do_drop = confirm in ('Y', 'y')
+
+    if do_drop:
+        admin_conn = SQLConnectionHandler(admin=True)
+        admin_conn.execute('DROP DATABASE %s' % qiita_config.database)
+    else:
+        print('ABORTING')
 
 
 def clean_test_environment(user, password, host):
