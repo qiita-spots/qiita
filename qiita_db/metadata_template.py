@@ -586,7 +586,7 @@ class MetadataTemplate(QiitaObject):
         Parameters
         ----------
         md_template : DataFrame
-            The metadata template file contents indexed by samples Ids
+            The metadata template file contents indexed by sample ids
         obj : Study or RawData
             The obj to which the metadata template belongs to. Study in case
             of SampleTemplate and RawData in case of PrepTemplate
@@ -1033,9 +1033,6 @@ class PrepTemplate(MetadataTemplate):
         # We only have column requirements if the data type of the raw data
         # is one of the target gene types
         if raw_data.data_type() in TARGET_GENE_DATA_TYPES:
-            # Sometimes people use different names for the same columns
-            # We just rename them to use the naming that we expect, so this is
-            # normalized across studies
             md_template.rename(columns=RENAME_COLS_DICT, inplace=True)
 
             # Check for all required columns for target genes studies

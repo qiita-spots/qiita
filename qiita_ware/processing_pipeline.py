@@ -12,6 +12,10 @@ from qiita_ware.wrapper import ParallelWrapper
 def _get_qiime_minimal_mapping(prep_template, output_fp):
     """Generates a minimal QIIME-compliant mapping file for split libraries
 
+    The columns of the generated file are, in order: SampleID, BarcodeSequence,
+    LinkerPrimerSequence, Description. All values are taken from the prep
+    template except for Description, which always receive the value "Qiita MMF"
+
     Parameters
     ----------
     prep_template : PrepTemplate
@@ -31,7 +35,8 @@ def _get_qiime_minimal_mapping(prep_template, output_fp):
     pt.rename(columns={'barcodesequence': 'BarcodeSequence',
                        'linkerprimersequence': 'LinkerPrimerSequence'},
               inplace=True)
-    pt['Description'] = pd.Series(['NA'] * len(pt.index), index=pt.index)
+    pt['Description'] = pd.Series(['Qiita MMF'] * len(pt.index),
+                                  index=pt.index)
 
     # We make sure that the headers file starts with #SampleID
     pt.index.name = "#SampleID"
