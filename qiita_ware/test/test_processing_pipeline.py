@@ -61,7 +61,7 @@ class ProcessingPipelineTests(TestCase):
         exp_cmd_2 = ("-o {0} --barcode_type golay_12 --max_bad_run_length 3 "
                      "--max_barcode_errors 1.5 "
                      "--min_per_read_length_fraction 0.75 "
-                     "--phred_quality_threshold 3 --preprocessed_params_id 1 "
+                     "--phred_quality_threshold 3 "
                      "--sequence_max_n 0 "
                      "--trim_length 151".format(obs_output_dir))
 
