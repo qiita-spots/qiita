@@ -465,7 +465,7 @@ def to_per_sample_ascii(demux, samples=None):
         samples = demux.keys()
 
     for samp in samples:
-        yield samp, to_ascii(demux, samples=samp)
+        yield samp, to_ascii(demux, samples=[samp])
 
 
 def fetch(demux, samples=None, k=None):
