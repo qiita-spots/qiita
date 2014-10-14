@@ -52,4 +52,5 @@ class MessageHandler(WebSocketHandler):
     @engine
     def on_close(self):
         yield Task(self.redis.unsubscribe, self.channel)
+        self.r_server.delete('%s:messages' % self.channel)
         self.redis.disconnect()
