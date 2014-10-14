@@ -38,7 +38,6 @@ def submit_to_ebi(study_id):
                 for record in iterator:
                     fh.write(record)
 
-    submit_EBI_from_files(study_id, open(samp_fp), open(prep_fp), tmp_dir,
-                          output_dir, investigation_type, 'ADD', True)
-
-    return tmp_dir
+    return submit_EBI_from_files(study_id, open(samp_fp), open(prep_fp),
+                                 tmp_dir, output_dir, investigation_type,
+                                 'ADD', True)
