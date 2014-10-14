@@ -14,7 +14,7 @@ from wtforms import (Form, StringField, SelectField, BooleanField,
                      SelectMultipleField, TextAreaField, validators)
 
 from os import listdir
-from os.path import exists, join
+from os.path import exists, join, basename
 
 from .base_handlers import BaseHandler
 
@@ -175,7 +175,7 @@ class StudyDescriptionHandler(BaseHandler):
         except (TypeError, QiitaDBColumnError, QiitaDBExecutionError,
                 QiitaDBDuplicateError, IOError), e:
             msg = ('<b>An error occurred parsing the sample template: '
-                   '%s</b><br/>%s' % (fp_rsp, e))
+                   '%s</b><br/>%s' % (basename(fp_rsp), e))
             self.render('study_description.html', user=self.current_user,
                         study_title=study.title, study_info=study.info,
                         study_id=study_id, files=fs,
@@ -208,8 +208,9 @@ class StudyDescriptionHandler(BaseHandler):
                                          [study_id], data_type)
         except (TypeError, QiitaDBColumnError, QiitaDBExecutionError,
                 IOError), e:
+            fps = ', '.join([basename(f) for f in filepaths])
             msg = ('<b>An error occurred parsing the raw files: '
-                   '%s</b><br/>%s' % (', '.join(filepaths), e))
+                   '%s</b><br/>%s' % (fps, e))
             self.render('study_description.html', user=self.current_user,
                         study_title=study.title, study_info=study.info,
                         study_id=study_id, files=fs,
@@ -223,7 +224,7 @@ class StudyDescriptionHandler(BaseHandler):
         except (TypeError, QiitaDBColumnError, QiitaDBExecutionError,
                 IOError), e:
             msg = ('<b>An error occurred parsing the prep template: '
-                   '%s</b><br/>%s' % (fp_rsp, e))
+                   '%s</b><br/>%s' % (basename(fp_rsp), e))
             self.render('study_description.html', user=self.current_user,
                         study_title=study.title, study_info=study.info,
                         study_id=study_id, files=fs,
