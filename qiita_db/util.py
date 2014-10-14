@@ -164,6 +164,34 @@ def get_filepath_types(key='filepath_type'):
     return dict(con.execute_fetchall(sql))
 
 
+def get_data_types(key='data_type'):
+    """Gets the list of possible data types from the data_type table
+
+    Parameters
+    ----------
+    key : {'data_type', 'data_type_id'}, optional
+        Defaults to "data_type". Determines the format of the returned dict.
+
+    Returns
+    -------
+    dict
+        - If `key` is "data_type", dict is of the form
+          {data_type: data_type_id}
+        - If `key` is "data_type_id", dict is of the form
+          {data_type_id: data_type}
+    """
+    con = SQLConnectionHandler()
+    if key == 'data_type':
+        cols = 'data_type, data_type_id'
+    elif key == 'data_type_id':
+        cols = 'data_type_id, data_type'
+    else:
+        raise QiitaDBColumnError("Unknown key. Pass either 'data_type_id' or "
+                                 "'data_type'.")
+    sql = 'select {} from qiita.data_type'.format(cols)
+    return dict(con.execute_fetchall(sql))
+
+
 def create_rand_string(length, punct=True):
         """Returns a string of random ascii characters
 
@@ -432,9 +460,10 @@ def insert_filepaths(filepaths, obj_id, table, filepath_table, conn_handler,
         filepaths : iterable of tuples (str, int)
             The list of paths to the raw files and its filepath type identifier
         obj_id : int
-            Id of the object calling the functions
+            Id of the object calling the functions. Disregarded if move_files
+            is False
         table : str
-            Table that holds the file data
+            Table that holds the file data. Disregarded if move_files is False
         filepath_table : str
             Table that holds the filepath information
         conn_handler : SQLConnectionHandler
@@ -606,7 +635,7 @@ def get_processed_params_tables():
            "'qiita' AND SUBSTR(table_name, 1, 17) = 'processed_params_'")
 
     conn = SQLConnectionHandler()
-    return [x[2] for x in conn.execute_fetchall(sql)]
+    return sorted([x[2] for x in conn.execute_fetchall(sql)])
 
 
 def get_user_fp(email):

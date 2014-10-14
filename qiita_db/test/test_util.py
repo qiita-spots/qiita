@@ -21,7 +21,8 @@ from qiita_db.util import (exists_table, exists_dynamic_table, scrub_data,
                            get_filetypes, get_filepath_types, get_count,
                            check_count, get_processed_params_tables,
                            params_dict_to_json, get_user_fp, get_study_fp,
-                           insert_filepaths, get_db_files_base_dir)
+                           insert_filepaths, get_db_files_base_dir,
+                           get_data_types)
 from qiita_core.qiita_settings import qiita_config
 
 
@@ -163,7 +164,7 @@ class DBUtilTests(TestCase):
                'raw_barcodes': 3, 'preprocessed_fasta': 4,
                'preprocessed_fastq': 5, 'preprocessed_demux': 6, 'biom': 7,
                'directory': 8, 'plain_text': 9, 'reference_seqs': 10,
-               'reference_tax': 11, 'reference_tree': 12}
+               'reference_tax': 11, 'reference_tree': 12, 'log': 13}
         self.assertEqual(obs, exp)
 
         obs = get_filepath_types(key='filepath_type_id')
@@ -174,6 +175,17 @@ class DBUtilTests(TestCase):
         """Tests that get_Filetypes fails with invalid argument"""
         with self.assertRaises(QiitaDBColumnError):
             get_filepath_types(key='invalid')
+
+    def test_get_data_types(self):
+        """Tests that get_data_types works with valid arguments"""
+        obs = get_data_types()
+        exp = {'16S': 1, '18S': 2, 'ITS': 3, 'Proteomic': 4, 'Metabolomic': 5,
+               'Metagenomic': 6}
+        self.assertEqual(obs, exp)
+
+        obs = get_data_types(key='data_type_id')
+        exp = {v: k for k, v in exp.items()}
+        self.assertEqual(obs, exp)
 
     def test_get_count(self):
         """Checks that get_count retrieves proper count"""
@@ -186,7 +198,8 @@ class DBUtilTests(TestCase):
 
     def test_get_processed_params_tables(self):
         obs = get_processed_params_tables()
-        self.assertEqual(obs, ['processed_params_uclust'])
+        self.assertEqual(obs, ['processed_params_sortmerna',
+                               'processed_params_uclust'])
 
     def test_get_user_fps(self):
         obs = get_user_fp("demo@demo.com")

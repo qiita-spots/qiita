@@ -13,6 +13,7 @@ from contextlib import contextmanager
 
 from psycopg2 import connect, Error as PostgresError
 from psycopg2.extras import DictCursor
+from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 
 from .exceptions import QiitaDBExecutionError, QiitaDBConnectionError
 from qiita_core.qiita_settings import qiita_config
@@ -20,12 +21,28 @@ from qiita_core.qiita_settings import qiita_config
 
 class SQLConnectionHandler(object):
     """Encapsulates the DB connection with the Postgres DB"""
-    def __init__(self):
-        self._connection = connect(user=qiita_config.user,
-                                   password=qiita_config.password,
-                                   database=qiita_config.database,
-                                   host=qiita_config.host,
-                                   port=qiita_config.port)
+    def __init__(self, admin=False):
+        # connection string arguments for a normal user
+        args = {
+            'user': qiita_config.user,
+            'password': qiita_config.password,
+            'database': qiita_config.database,
+            'host': qiita_config.host,
+            'port': qiita_config.port}
+
+        # if this is an admin user, do not connect to a particular database,
+        # and use the admin credentials
+        if admin:
+            args['user'] = qiita_config.admin_user
+            args['password'] = qiita_config.admin_password
+            del args['database']
+
+        self._connection = connect(**args)
+
+        if admin:
+            # Set the isolation level to AUTOCOMMIT so we can execute a create
+            # or drop database sql query
+            self._connection.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
 
     def __del__(self):
         self._connection.close()

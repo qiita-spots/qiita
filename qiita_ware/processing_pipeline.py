@@ -9,6 +9,46 @@
 from qiita_ware.wrapper import ParallelWrapper
 
 
+def _get_qiime_minimal_mapping(prep_template, output_fp):
+    """Generates a minimal QIIME-compliant mapping file for split libraries
+
+    The columns of the generated file are, in order: SampleID, BarcodeSequence,
+    LinkerPrimerSequence, Description. All values are taken from the prep
+    template except for Description, which always receive the value "Qiita MMF"
+
+    Parameters
+    ----------
+    prep_template : PrepTemplate
+        The prep template from which we need to generate the minimal mapping
+    output_fp : str
+        Path to the output file
+    """
+    import pandas as pd
+    from qiita_ware.util import template_to_dict
+
+    # Get the data in a pandas DataFrame, so it is easier to manage
+    pt = pd.DataFrame.from_dict(template_to_dict(prep_template),
+                                orient='index')
+    # We now need to rename some columns to be QIIME compliant.
+    # Hopefully, this conversion won't be needed if QIIME relaxes its
+    # constraints
+    pt.rename(columns={'barcodesequence': 'BarcodeSequence',
+                       'linkerprimersequence': 'LinkerPrimerSequence'},
+              inplace=True)
+    pt['Description'] = pd.Series(['Qiita MMF'] * len(pt.index),
+                                  index=pt.index)
+
+    # We make sure that the headers file starts with #SampleID
+    pt.index.name = "#SampleID"
+
+    # We ensure the order of the columns as QIIME is expecting
+    cols = ['BarcodeSequence', 'LinkerPrimerSequence', 'Description']
+    pt = pt[cols]
+
+    # Finally we store the file in the desired path, in tab-separated format
+    pt.to_csv(output_fp, sep="\t")
+
+
 def _get_preprocess_fastq_cmd(raw_data, params):
     """Generates the split_libraries_fastq.py command for the raw-data
 
@@ -71,7 +111,7 @@ def _get_preprocess_fastq_cmd(raw_data, params):
                           prefix="qiita_prep_%s" % prep_template.id,
                           suffix='.txt')
     close(fd)
-    prep_template.to_file(prep_fp)
+    _get_qiime_minimal_mapping(prep_template, prep_fp)
 
     # Create a temporary directory to store the split libraries output
     output_dir = mkdtemp(dir=qiita_config.working_dir, prefix='slq_out')
@@ -148,15 +188,18 @@ def _insert_preprocessed_data_fastq(study, params, raw_data, slq_out):
     fasta_fp = path_builder('seqs.fna')
     fastq_fp = path_builder('seqs.fastq')
     demux_fp = path_builder('seqs.demux')
+    log_fp = path_builder('split_library_log.txt')
 
     # Check that all the files exist
-    if not (exists(fasta_fp) and exists(fastq_fp) and exists(demux_fp)):
+    if not (exists(fasta_fp) and exists(fastq_fp) and exists(demux_fp) and
+            exists(log_fp)):
         raise ValueError("The output directory %s does not contain all the "
                          "expected files." % slq_out)
 
     filepaths = [(fasta_fp, "preprocessed_fasta"),
                  (fastq_fp, "preprocessed_fastq"),
-                 (demux_fp, "preprocessed_demux")]
+                 (demux_fp, "preprocessed_demux"),
+                 (log_fp, "log")]
 
     PreprocessedData.create(study, params._table, params.id, filepaths,
                             raw_data)

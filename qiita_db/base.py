@@ -72,7 +72,8 @@ class QiitaObject(object):
         """
         raise QiitaDBNotImplementedError()
 
-    def delete(id_):
+    @classmethod
+    def delete(cls, id_):
         r"""Deletes the object `id_` from the storage system
 
         Parameters

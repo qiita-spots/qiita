@@ -102,7 +102,7 @@ CREATE TABLE qiita.mixs_field_description (
  );
 
 CREATE TABLE qiita.ontology ( 
-	ontology_id          bigserial  NOT NULL,
+	ontology_id          bigint  NOT NULL,
 	ontology             varchar  NOT NULL,
 	fully_loaded         bool  NOT NULL,
 	fullname             varchar  ,
@@ -192,12 +192,16 @@ CREATE TABLE qiita.raw_data (
 	raw_data_id          bigserial  NOT NULL,
 	filetype_id          bigint  NOT NULL,
 	investigation_type   varchar  ,
+	data_type_id         bigint  NOT NULL,
 	CONSTRAINT pk_raw_data UNIQUE ( raw_data_id ) ,
 	CONSTRAINT pk_raw_data_0 PRIMARY KEY ( raw_data_id ),
-	CONSTRAINT fk_raw_data_filetype FOREIGN KEY ( filetype_id ) REFERENCES qiita.filetype( filetype_id )    
+	CONSTRAINT fk_raw_data_filetype FOREIGN KEY ( filetype_id ) REFERENCES qiita.filetype( filetype_id )    ,
+	CONSTRAINT fk_raw_data_data_type FOREIGN KEY ( data_type_id ) REFERENCES qiita.data_type( data_type_id )    
  );
 
 CREATE INDEX idx_raw_data ON qiita.raw_data ( filetype_id );
+
+CREATE INDEX idx_raw_data_0 ON qiita.raw_data ( data_type_id );
 
 COMMENT ON COLUMN qiita.raw_data.investigation_type IS 'The investigation type (e.g., one of the values from EBI`s set of known types)';
 
@@ -260,7 +264,7 @@ CREATE TABLE qiita.study_status (
  );
 
 CREATE TABLE qiita.term ( 
-	term_id              bigserial  NOT NULL,
+	term_id              bigint  NOT NULL,
 	ontology_id          bigint  NOT NULL,
 	term                 varchar  NOT NULL,
 	identifier           varchar  ,
@@ -745,6 +749,24 @@ CREATE INDEX idx_job_results_filepath_1 ON qiita.job_results_filepath ( filepath
 
 COMMENT ON TABLE qiita.job_results_filepath IS 'Holds connection between jobs and the result filepaths';
 
+CREATE TABLE qiita.processed_params_sortmerna ( 
+	processed_params_id  bigserial  NOT NULL,
+	reference_id         bigint  NOT NULL,
+	evalue               float8  NOT NULL,
+	max_pos              integer  NOT NULL,
+	similarity           float8  NOT NULL,
+	coverage             float8  NOT NULL,
+	threads              integer  NOT NULL,
+	CONSTRAINT pk_processed_params_sortmerna PRIMARY KEY ( processed_params_id ),
+	CONSTRAINT fk_processed_params_sortmerna FOREIGN KEY ( reference_id ) REFERENCES qiita.reference( reference_id )    
+ );
+
+CREATE INDEX idx_processed_params_sortmerna ON qiita.processed_params_sortmerna ( reference_id );
+
+COMMENT ON TABLE qiita.processed_params_sortmerna IS 'Parameters used for processing data using method sortmerna';
+
+COMMENT ON COLUMN qiita.processed_params_sortmerna.reference_id IS 'What version of reference or type of reference used';
+
 CREATE TABLE qiita.processed_params_uclust ( 
 	processed_params_id  bigserial  NOT NULL,
 	reference_id         bigint  NOT NULL,
@@ -837,12 +859,10 @@ CREATE TABLE qiita.common_prep_info (
 	center_name          varchar  ,
 	center_project_name  varchar  ,
 	emp_status_id        bigint  NOT NULL,
-	data_type_id         bigint  NOT NULL,
 	CONSTRAINT idx_required_prep_info_1 PRIMARY KEY ( raw_data_id, sample_id ),
 	CONSTRAINT fk_required_prep_info_raw_data FOREIGN KEY ( raw_data_id ) REFERENCES qiita.raw_data( raw_data_id )    ,
 	CONSTRAINT fk_required_prep_info_emp_status FOREIGN KEY ( emp_status_id ) REFERENCES qiita.emp_status( emp_status_id )    ,
-	CONSTRAINT fk_required_prep_info FOREIGN KEY ( sample_id ) REFERENCES qiita.required_sample_info( sample_id )    ,
-	CONSTRAINT fk_required_prep_info_0 FOREIGN KEY ( data_type_id ) REFERENCES qiita.data_type( data_type_id )    
+	CONSTRAINT fk_required_prep_info FOREIGN KEY ( sample_id ) REFERENCES qiita.required_sample_info( sample_id )    
  );
 
 CREATE INDEX idx_required_prep_info ON qiita.common_prep_info ( raw_data_id );
@@ -850,6 +870,4 @@ CREATE INDEX idx_required_prep_info ON qiita.common_prep_info ( raw_data_id );
 CREATE INDEX idx_required_prep_info_0 ON qiita.common_prep_info ( emp_status_id );
 
 CREATE INDEX idx_required_prep_info_2 ON qiita.common_prep_info ( sample_id );
-
-CREATE INDEX idx_required_prep_info_3 ON qiita.common_prep_info ( data_type_id );
 
