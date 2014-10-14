@@ -7,9 +7,8 @@
 # -----------------------------------------------------------------------------
 from os.path import abspath, dirname, join
 from functools import partial
-from os import remove, close
+from os import remove
 from os.path import exists
-from tempfile import mkstemp
 from ftplib import FTP
 import gzip
 
@@ -204,7 +203,7 @@ def drop_environment():
     del conn
 
     if is_test_environment:
-        do_drop=True
+        do_drop = True
     else:
         confirm = ''
         while confirm not in ('Y', 'y', 'N', 'n'):

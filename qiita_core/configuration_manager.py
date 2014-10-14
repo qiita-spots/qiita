@@ -11,7 +11,7 @@ from os.path import join, dirname, abspath, isdir
 from os import environ
 from future import standard_library
 with standard_library.hooks():
-    from configparser import (ConfigParser, NoOptionError)
+    from configparser import ConfigParser
 
 from .exceptions import MissingConfigSection
 
