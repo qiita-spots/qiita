@@ -917,6 +917,32 @@ class TestPrepTemplate(TestCase):
                 'CGTAGAGCTCTC', 'GTGCCAGCMGCCGCGGTAA']]
         self.assertEqual(sorted(obs), sorted(exp))
 
+    def test_create_error(self):
+        """Create raises an error if not all columns are on the template"""
+        metadata_dict = {
+            'SKB8.640193': {'center_name': 'ANL',
+                            'center_project_name': 'Test Project',
+                            'ebi_submission_accession': None,
+                            'EMP_status_id': 1,
+                            'str_column': 'Value for sample 1',
+                            'description': 'skb8'},
+            'SKD8.640184': {'center_name': 'ANL',
+                            'center_project_name': 'Test Project',
+                            'ebi_submission_accession': None,
+                            'EMP_status_id': 1,
+                            'str_column': 'Value for sample 2',
+                            'description': 'skd8'},
+            'SKB7.640196': {'center_name': 'ANL',
+                            'center_project_name': 'Test Project',
+                            'ebi_submission_accession': None,
+                            'EMP_status_id': 1,
+                            'str_column': 'Value for sample 3',
+                            'description': 'skb7'}
+            }
+        metadata = pd.DataFrame.from_dict(metadata_dict, orient='index')
+        with self.assertRaises(ValueError):
+            PrepTemplate.create(metadata, self.new_raw_data)
+
     def test_delete(self):
         """Deletes prep template 1"""
         PrepTemplate.delete(1)
