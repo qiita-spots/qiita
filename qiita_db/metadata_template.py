@@ -951,7 +951,7 @@ class MetadataTemplate(QiitaObject):
         headers = sorted(list(metadata_map.values())[0].keys())
         with open(fp, 'w') as f:
             # First write the headers
-            f.write("#SampleID\t%s\n" % '\t'.join(headers))
+            f.write("sample_name\t%s\n" % '\t'.join(headers))
             # Write the values for each sample id
             for sid, d in sorted(metadata_map.items()):
                 values = [str(d[h]) for h in headers]
