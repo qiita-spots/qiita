@@ -259,8 +259,7 @@ class TestPrepSample(TestCase):
         self.sample_id = 'SKB8.640193'
         self.tester = PrepSample(self.sample_id, self.prep_template)
         self.exp_categories = {'center_name', 'center_project_name',
-                               'emp_status_id', 'data_type_id',
-                               'barcodesequence',
+                               'emp_status_id', 'barcodesequence',
                                'library_construction_protocol',
                                'linkerprimersequence', 'target_subfragment',
                                'target_gene', 'run_center', 'run_prefix',
@@ -320,7 +319,7 @@ class TestPrepSample(TestCase):
 
     def test_len(self):
         """Len returns the correct number of categories"""
-        self.assertEqual(len(self.tester), 22)
+        self.assertEqual(len(self.tester), 21)
 
     def test_getitem_required(self):
         """Get item returns the correct metadata value from the required table
@@ -376,7 +375,7 @@ class TestPrepSample(TestCase):
         """values returns an iterator over the values"""
         obs = self.tester.values()
         self.assertTrue(isinstance(obs, Iterable))
-        exp = {'ANL', None, None, None, 1, 2, 'AGCGCTCACATC',
+        exp = {'ANL', None, None, None, 1, 'AGCGCTCACATC',
                'This analysis was done as in Caporaso et al 2011 Genome '
                'research. The PCR primers (F515/R806) were developed against '
                'the V4 region of the 16S rRNA (both bacteria and archaea), '
@@ -401,8 +400,7 @@ class TestPrepSample(TestCase):
         obs = self.tester.items()
         self.assertTrue(isinstance(obs, Iterable))
         exp = {('center_name', 'ANL'), ('center_project_name', None),
-               ('emp_status_id', 1), ('data_type_id', 2),
-               ('barcodesequence', 'AGCGCTCACATC'),
+               ('emp_status_id', 1), ('barcodesequence', 'AGCGCTCACATC'),
                ('library_construction_protocol',
                 'This analysis was done as in Caporaso et al 2011 Genome '
                 'research. The PCR primers (F515/R806) were developed against '
@@ -796,19 +794,16 @@ class TestPrepTemplate(TestCase):
                             'center_project_name': 'Test Project',
                             'ebi_submission_accession': None,
                             'EMP_status_id': 1,
-                            'data_type_id': 2,
                             'str_column': 'Value for sample 1'},
             'SKD8.640184': {'center_name': 'ANL',
                             'center_project_name': 'Test Project',
                             'ebi_submission_accession': None,
                             'EMP_status_id': 1,
-                            'data_type_id': 2,
                             'str_column': 'Value for sample 2'},
             'SKB7.640196': {'center_name': 'ANL',
                             'center_project_name': 'Test Project',
                             'ebi_submission_accession': None,
                             'EMP_status_id': 1,
-                            'data_type_id': 2,
                             'str_column': 'Value for sample 3'}
             }
         self.metadata = pd.DataFrame.from_dict(metadata_dict, orient='index')
@@ -823,7 +818,7 @@ class TestPrepTemplate(TestCase):
             f.write("\n")
         with open(barcodes_fp, "w") as f:
             f.write("\n")
-        self.new_raw_data = RawData.create(2, filepaths, [Study(1)])
+        self.new_raw_data = RawData.create(2, filepaths, [Study(1)], 1)
         db_test_raw_dir = join(get_db_files_base_dir(), 'raw_data')
         db_seqs_fp = join(db_test_raw_dir, "3_%s" % basename(seqs_fp))
         db_barcodes_fp = join(db_test_raw_dir, "3_%s" % basename(barcodes_fp))
@@ -881,11 +876,10 @@ class TestPrepTemplate(TestCase):
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.common_prep_info WHERE raw_data_id=3")
         # raw_data_id, sample_id, center_name, center_project_name,
-        # ebi_submission_accession, ebi_study_accession, emp_status_id,
-        # data_type_id
-        exp = [[3, 'SKB8.640193', 'ANL', 'Test Project', 1, 2],
-               [3, 'SKD8.640184', 'ANL', 'Test Project', 1, 2],
-               [3, 'SKB7.640196', 'ANL', 'Test Project', 1, 2]]
+        # ebi_submission_accession, ebi_study_accession, emp_status_id
+        exp = [[3, 'SKB8.640193', 'ANL', 'Test Project', 1],
+               [3, 'SKD8.640184', 'ANL', 'Test Project', 1],
+               [3, 'SKB7.640196', 'ANL', 'Test Project', 1]]
         self.assertEqual(sorted(obs), sorted(exp))
 
         # The relevant rows have been added to the raw_data_prep_columns
@@ -1089,12 +1083,12 @@ EXP_SAMPLE_TEMPLATE = (
     "True\tNotIdentified\t4.8\t4.41\tlocation1\t1\ttype1\t"
     "Value for sample 3\n")
 
-EXP_PREP_TEMPLATE = ('#SampleID\tcenter_name\tcenter_project_name\tdata_type'
-                     '_id\tebi_submission_accession\temp_status_id\tstr_colu'
-                     'mn\nSKB7.640196\tANL\tTest Project\t2\tNone\t1\tValue '
-                     'for sample 3\nSKB8.640193\tANL\tTest Project\t2\tNone'
-                     '\t1\tValue for sample 1\nSKD8.640184\tANL\tTest Project'
-                     '\t2\tNone\t1\tValue for sample 2\n')
+EXP_PREP_TEMPLATE = (
+    '#SampleID\tcenter_name\tcenter_project_name\tebi_submission_accession\t'
+    'emp_status_id\tstr_column\n'
+    'SKB7.640196\tANL\tTest Project\tNone\t1\tValue for sample 3\n'
+    'SKB8.640193\tANL\tTest Project\tNone\t1\tValue for sample 1\n'
+    'SKD8.640184\tANL\tTest Project\tNone\t1\tValue for sample 2\n')
 
 if __name__ == '__main__':
     main()

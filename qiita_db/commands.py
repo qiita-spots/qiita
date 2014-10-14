@@ -18,7 +18,7 @@ import pandas as pd
 
 from .study import Study, StudyPerson
 from .user import User
-from .util import get_filetypes, get_filepath_types
+from .util import get_filetypes, get_filepath_types, get_data_types
 from .data import RawData, PreprocessedData, ProcessedData
 from .metadata_template import SampleTemplate, PrepTemplate
 
@@ -145,7 +145,8 @@ def load_prep_template_from_cmd(sample_temp_path, study_id):
     return PrepTemplate.create(prep_temp, RawData(study_id))
 
 
-def load_raw_data_cmd(filepaths, filepath_types, filetype, study_ids):
+def load_raw_data_cmd(filepaths, filepath_types, filetype, study_ids,
+                      data_type):
     """Add new raw data by populating the relevant tables
 
     Parameters
@@ -158,6 +159,8 @@ def load_raw_data_cmd(filepaths, filepath_types, filetype, study_ids):
         The type of file being loaded
     study_ids : iterable of int
         The IDs of the studies with which to associate this raw data
+    data_type : int
+        The data type of the study
 
     Returns
     -------
@@ -176,8 +179,11 @@ def load_raw_data_cmd(filepaths, filepath_types, filetype, study_ids):
 
     studies = [Study(x) for x in study_ids]
 
+    data_types_dict = get_data_types()
+    data_type_id = data_types_dict[data_type]
+
     return RawData.create(filetype_id, list(zip(filepaths, filepath_types)),
-                          studies)
+                          studies, data_type_id)
 
 
 def load_processed_data_cmd(fps, fp_types, processed_params_table_name,

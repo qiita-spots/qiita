@@ -41,6 +41,7 @@ class RawDataTests(TestCase):
         close(fd)
         self.filetype = 2
         self.filepaths = [(self.seqs_fp, 1), (self.barcodes_fp, 2)]
+        self.data_type_id = 2
         self.studies = [Study(1)]
         self.db_test_raw_dir = join(get_db_files_base_dir(), 'raw_data')
 
@@ -60,17 +61,18 @@ class RawDataTests(TestCase):
         # that does not exist
         with self.assertRaises(QiitaDBColumnError):
             RawData.create(self.filetype, self.filepaths, self.studies,
-                           'Not a term')
+                           self.data_type_id, 'Not a term')
 
         # Check that the returned object has the correct id
-        obs = RawData.create(self.filetype, self.filepaths, self.studies)
+        obs = RawData.create(self.filetype, self.filepaths, self.studies,
+                             self.data_type_id)
         self.assertEqual(obs.id, 3)
 
         # Check that the raw data have been correctly added to the DB
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.raw_data WHERE raw_data_id=3")
         # raw_data_id, filetype, submitted_to_insdc
-        self.assertEqual(obs, [[3, 2, None]])
+        self.assertEqual(obs, [[3, 2, None, 2]])
 
         # Check that the raw data have been correctly linked with the study
         obs = self.conn_handler.execute_fetchall(

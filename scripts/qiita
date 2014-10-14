@@ -14,6 +14,7 @@ import click
 from psycopg2 import OperationalError
 
 from qiita_db.util import (get_filepath_types, get_filetypes,
+                           get_data_types,
                            get_processed_params_tables,
                            get_preprocessed_params_tables)
 from qiita_db.commands import (load_sample_template_from_cmd,
@@ -88,9 +89,12 @@ def load_study(owner, title, info):
               'study. This option can be used multiple times if the data '
               'should be associated with multiple studies', type=int,
               required=True)
-def load_raw(fp, fp_type, filetype, study):
+@click.option('--data_type', required=True,
+              type=click.Choice(get_data_types().keys()),
+              help="The data type of data")
+def load_raw(fp, fp_type, filetype, study, data_type):
     """Loads a raw data to the database"""
-    raw_data = load_raw_data_cmd(fp, fp_type, filetype, study)
+    raw_data = load_raw_data_cmd(fp, fp_type, filetype, study, data_type)
     print("Raw data successfully added to the database with id %s"
           % raw_data.id)
 

@@ -269,7 +269,6 @@
 			<column name="center_name" type="varchar" jt="12" />
 			<column name="center_project_name" type="varchar" jt="12" />
 			<column name="emp_status_id" type="bigint" jt="-5" mandatory="y" />
-			<column name="data_type_id" type="bigint" jt="-5" mandatory="y" />
 			<index name="idx_required_prep_info" unique="NORMAL" >
 				<column name="raw_data_id" />
 			</index>
@@ -283,9 +282,6 @@
 			<index name="idx_required_prep_info_2" unique="NORMAL" >
 				<column name="sample_id" />
 			</index>
-			<index name="idx_required_prep_info_3" unique="NORMAL" >
-				<column name="data_type_id" />
-			</index>
 			<fk name="fk_required_prep_info_raw_data" to_schema="qiita" to_table="raw_data" >
 				<fk_column name="raw_data_id" pk="raw_data_id" />
 			</fk>
@@ -294,9 +290,6 @@
 			</fk>
 			<fk name="fk_required_prep_info" to_schema="qiita" to_table="required_sample_info" >
 				<fk_column name="sample_id" pk="sample_id" />
-			</fk>
-			<fk name="fk_required_prep_info_0" to_schema="qiita" to_table="data_type" >
-				<fk_column name="data_type_id" pk="data_type_id" />
 			</fk>
 		</table>
 		<table name="controlled_vocab" >
@@ -780,6 +773,7 @@
 			<column name="investigation_type" type="varchar" jt="12" >
 				<comment><![CDATA[The investigation type (e.g., one of the values from EBI's set of known types)]]></comment>
 			</column>
+			<column name="data_type_id" type="bigint" jt="-5" mandatory="y" />
 			<index name="pk_raw_data" unique="UNIQUE" >
 				<column name="raw_data_id" />
 			</index>
@@ -789,8 +783,14 @@
 			<index name="pk_raw_data_0" unique="PRIMARY_KEY" >
 				<column name="raw_data_id" />
 			</index>
+			<index name="idx_raw_data_0" unique="NORMAL" >
+				<column name="data_type_id" />
+			</index>
 			<fk name="fk_raw_data_filetype" to_schema="qiita" to_table="filetype" >
 				<fk_column name="filetype_id" pk="filetype_id" />
+			</fk>
+			<fk name="fk_raw_data_data_type" to_schema="qiita" to_table="data_type" >
+				<fk_column name="data_type_id" pk="data_type_id" />
 			</fk>
 		</table>
 		<table name="raw_data_prep_columns" >
@@ -1256,7 +1256,6 @@ Controlled Vocabulary]]></comment>
 		<entity schema="qiita" name="raw_data_prep_columns" color="d0def5" x="1380" y="375" />
 		<entity schema="qiita" name="filetype" color="d0def5" x="1260" y="375" />
 		<entity schema="qiita" name="raw_filepath" color="c0d4f3" x="1050" y="480" />
-		<entity schema="qiita" name="preprocessed_processed_data" color="b2cdf7" x="1245" y="825" />
 		<entity schema="qiita" name="study_raw_data" color="d0def5" x="1545" y="495" />
 		<entity schema="qiita" name="timeseries_type" color="c0d4f3" x="1650" y="600" />
 		<entity schema="qiita" name="portal_type" color="c0d4f3" x="1845" y="720" />
@@ -1266,7 +1265,6 @@ Controlled Vocabulary]]></comment>
 		<entity schema="qiita" name="logging" color="c0d4f3" x="1335" y="1275" />
 		<entity schema="qiita" name="study_processed_data" color="b2cdf7" x="1485" y="930" />
 		<entity schema="qiita" name="command_data_type" color="c0d4f3" x="390" y="1155" />
-		<entity schema="qiita" name="processed_data" color="d0def5" x="1245" y="930" />
 		<entity schema="qiita" name="preprocessed_filepath" color="c0d4f3" x="1020" y="690" />
 		<entity schema="qiita" name="analysis_filepath" color="c0d4f3" x="405" y="720" />
 		<entity schema="qiita" name="analysis_workflow" color="c0d4f3" x="390" y="630" />
@@ -1276,10 +1274,7 @@ Controlled Vocabulary]]></comment>
 		<entity schema="qiita" name="severity" color="c0d4f3" x="1470" y="1275" />
 		<entity schema="qiita" name="required_sample_info" color="d0def5" x="1380" y="105" />
 		<entity schema="qiita" name="analysis" color="d0def5" x="225" y="705" />
-		<entity schema="qiita" name="common_prep_info" color="d0def5" x="1050" y="285" />
-		<entity schema="qiita" name="preprocessed_data" color="c0d4f3" x="1230" y="690" />
 		<entity schema="qiita" name="controlled_vocab" color="d0def5" x="45" y="1320" />
-		<entity schema="qiita" name="raw_data" color="d0def5" x="1260" y="480" />
 		<entity schema="qiita" name="term" color="d0def5" x="795" y="1620" />
 		<entity schema="qiita" name="ontology" color="d0def5" x="765" y="1320" />
 		<entity schema="qiita" name="preprocessed_sequence_454_params" color="c0d4f3" x="1725" y="930" />
@@ -1288,6 +1283,11 @@ Controlled Vocabulary]]></comment>
 		<entity schema="qiita" name="reference" color="c0d4f3" x="2100" y="945" />
 		<entity schema="qiita" name="processed_params_uclust" color="d0def5" x="2175" y="795" />
 		<entity schema="qiita" name="processed_params_sortmerna" color="a8c4ef" x="1980" y="795" />
+		<entity schema="qiita" name="raw_data" color="d0def5" x="1260" y="480" />
+		<entity schema="qiita" name="common_prep_info" color="d0def5" x="1050" y="285" />
+		<entity schema="qiita" name="processed_data" color="d0def5" x="1245" y="945" />
+		<entity schema="qiita" name="preprocessed_processed_data" color="b2cdf7" x="1245" y="840" />
+		<entity schema="qiita" name="preprocessed_data" color="c0d4f3" x="1230" y="675" />
 		<group name="Group_analyses" color="c4e0f9" >
 			<comment>analysis tables</comment>
 			<entity schema="qiita" name="analysis" />
