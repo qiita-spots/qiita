@@ -8,9 +8,9 @@
 
 from __future__ import division
 from unittest import TestCase, main
-from tempfile import mkdtemp
+from tempfile import mkdtemp, mkstemp
 from os.path import exists, join
-from os import remove
+from os import remove, close
 from functools import partial
 from shutil import rmtree
 
@@ -19,9 +19,11 @@ from qiita_db.util import get_db_files_base_dir
 from qiita_db.data import RawData
 from qiita_db.study import Study
 from qiita_db.parameters import PreprocessedIlluminaParams
+from qiita_db.metadata_template import PrepTemplate
 from qiita_ware.processing_pipeline import (_get_preprocess_fastq_cmd,
                                             _insert_preprocessed_data_fastq,
-                                            _clean_up, _generate_demux_file)
+                                            _clean_up, _generate_demux_file,
+                                            _get_qiime_minimal_mapping)
 
 
 @qiita_test_checker()
@@ -38,6 +40,15 @@ class ProcessingPipelineTests(TestCase):
         for dp in self.dirs_to_remove:
             if exists(dp):
                 rmtree(dp)
+
+    def test_get_qiime_minimal_mapping(self):
+        prep_template = PrepTemplate(1)
+        fd, out_fp = mkstemp(prefix="prep_template_1", suffix=".txt")
+        close(fd)
+
+        _get_qiime_minimal_mapping(prep_template, out_fp)
+        with open(out_fp, "U") as f:
+            self.assertEqual(f.read(), EXP_PREP)
 
     def test_get_preprocess_fastq_cmd(self):
         raw_data = RawData(1)
@@ -127,6 +138,36 @@ qwe
 +
 DEF
 """
+
+EXP_PREP = (
+    "#SampleID\tBarcodeSequence\tLinkerPrimerSequence\tDescription\n"
+    "SKB1.640202\tGTCCGCAAGTTA\tGTGCCAGCMGCCGCGGTAA\tSKB1\n"
+    "SKB2.640194\tCGTAGAGCTCTC\tGTGCCAGCMGCCGCGGTAA\tSKB2\n"
+    "SKB3.640195\tCCTCTGAGAGCT\tGTGCCAGCMGCCGCGGTAA\tSKB3\n"
+    "SKB4.640189\tCCTCGATGCAGT\tGTGCCAGCMGCCGCGGTAA\tSKB4\n"
+    "SKB5.640181\tGCGGACTATTCA\tGTGCCAGCMGCCGCGGTAA\tSKB5\n"
+    "SKB6.640176\tCGTGCACAATTG\tGTGCCAGCMGCCGCGGTAA\tSKB6\n"
+    "SKB7.640196\tCGGCCTAAGTTC\tGTGCCAGCMGCCGCGGTAA\tSKB7\n"
+    "SKB8.640193\tAGCGCTCACATC\tGTGCCAGCMGCCGCGGTAA\tSKB8\n"
+    "SKB9.640200\tTGGTTATGGCAC\tGTGCCAGCMGCCGCGGTAA\tSKB9\n"
+    "SKD1.640179\tCGAGGTTCTGAT\tGTGCCAGCMGCCGCGGTAA\tSKD1\n"
+    "SKD2.640178\tAACTCCTGTGGA\tGTGCCAGCMGCCGCGGTAA\tSKD2\n"
+    "SKD3.640198\tTAATGGTCGTAG\tGTGCCAGCMGCCGCGGTAA\tSKD3\n"
+    "SKD4.640185\tTTGCACCGTCGA\tGTGCCAGCMGCCGCGGTAA\tSKD4\n"
+    "SKD5.640186\tTGCTACAGACGT\tGTGCCAGCMGCCGCGGTAA\tSKD5\n"
+    "SKD6.640190\tATGGCCTGACTA\tGTGCCAGCMGCCGCGGTAA\tSKD6\n"
+    "SKD7.640191\tACGCACATACAA\tGTGCCAGCMGCCGCGGTAA\tSKD7\n"
+    "SKD8.640184\tTGAGTGGTCTGT\tGTGCCAGCMGCCGCGGTAA\tSKD8\n"
+    "SKD9.640182\tGATAGCACTCGT\tGTGCCAGCMGCCGCGGTAA\tSKD9\n"
+    "SKM1.640183\tTAGCGCGAACTT\tGTGCCAGCMGCCGCGGTAA\tSKM1\n"
+    "SKM2.640199\tCATACACGCACC\tGTGCCAGCMGCCGCGGTAA\tSKM2\n"
+    "SKM3.640197\tACCTCAGTCAAG\tGTGCCAGCMGCCGCGGTAA\tSKM3\n"
+    "SKM4.640180\tTCGACCAAACAC\tGTGCCAGCMGCCGCGGTAA\tSKM4\n"
+    "SKM5.640177\tCCACCCAGTAAC\tGTGCCAGCMGCCGCGGTAA\tSKM5\n"
+    "SKM6.640187\tATATCGCGATGA\tGTGCCAGCMGCCGCGGTAA\tSKM6\n"
+    "SKM7.640188\tCGCCGGTAATCT\tGTGCCAGCMGCCGCGGTAA\tSKM7\n"
+    "SKM8.640201\tCCGATGCCTTGA\tGTGCCAGCMGCCGCGGTAA\tSKM8\n"
+    "SKM9.640192\tAGCAGGCACGAA\tGTGCCAGCMGCCGCGGTAA\tSKM9\n")
 
 if __name__ == '__main__':
     main()
