@@ -145,7 +145,7 @@ class TestLoadPrepTemplateFromCmd(TestCase):
         self.pt_contents = PREP_TEMPLATE
 
         self.raw_data = RawData.create(
-            2, [(seqs_fp, 1), (barcodes_fp, 2)], [Study(1)])
+            2, [(seqs_fp, 1), (barcodes_fp, 2)], [Study(1)], 2)
 
         join_f = partial(join, join(get_db_files_base_dir(), 'raw_data'))
         self.files_to_remove = [
@@ -206,7 +206,7 @@ class TestLoadRawDataFromCmd(TestCase):
         initial_raw_fp_count = get_count('qiita.raw_filepath')
 
         new = load_raw_data_cmd(filepaths, filepath_types, filetype,
-                                study_ids)
+                                study_ids, "16S")
         raw_data_id = new.id
         self.files_to_remove.append(
             join(self.db_test_raw_dir,
@@ -230,7 +230,7 @@ class TestLoadRawDataFromCmd(TestCase):
         # provided for each and every filepath
         with self.assertRaises(ValueError):
             load_raw_data_cmd(filepaths, filepath_types[:-1], filetype,
-                              study_ids)
+                              study_ids, "16S")
 
 
 @qiita_test_checker()
