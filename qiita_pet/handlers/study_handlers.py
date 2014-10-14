@@ -135,10 +135,12 @@ class StudyDescriptionHandler(BaseHandler):
         fs, fts = self.get_values_for_post_or_get(study_id)
 
         study = Study(int(study_id))
+        raw_data = study.raw_data()
+        ssb = any([PrepTemplate.exists(RawData(rd)) for rd in raw_data])
 
         self.render('study_description.html', user=self.current_user,
                     study_title=study.title, study_info=study.info,
-                    study_id=study_id, files=fs,
+                    study_id=study_id, files=fs, ssb=ssb,
                     max_upload_size=qiita_config.max_upload_size,
                     filetypes=fts, msg="")
 
@@ -164,6 +166,7 @@ class StudyDescriptionHandler(BaseHandler):
 
         study_id = int(study_id)
         study = Study(study_id)
+        ssb = any([PrepTemplate.exists(RawData(d)) for d in study.raw_data()])
 
         # deleting previous uploads
         for rd in study.raw_data():
@@ -179,9 +182,11 @@ class StudyDescriptionHandler(BaseHandler):
                 QiitaDBDuplicateError, IOError), e:
             msg = ('<b>An error occurred parsing the sample template: '
                    '%s</b><br/>%s' % (basename(fp_rsp), e))
+            ssb = any([PrepTemplate.exists(RawData(d))
+                       for d in study.raw_data()])
             self.render('study_description.html', user=self.current_user,
                         study_title=study.title, study_info=study.info,
-                        study_id=study_id, files=fs,
+                        study_id=study_id, files=fs, ssb=ssb,
                         max_upload_size=qiita_config.max_upload_size,
                         filetypes=fts, msg=msg)
             return
@@ -213,10 +218,12 @@ class StudyDescriptionHandler(BaseHandler):
                 IOError), e:
             fps = ', '.join([basename(f) for f in filepaths])
             msg = ('<b>An error occurred parsing the raw files: '
-                   '%s</b><br/>%s' % (fps, e))
+                   '%s</b><br/>%s' % (basename(fps), e))
+            ssb = any([PrepTemplate.exists(RawData(rd))
+                       for rd in study.raw_data()])
             self.render('study_description.html', user=self.current_user,
                         study_title=study.title, study_info=study.info,
-                        study_id=study_id, files=fs,
+                        study_id=study_id, files=fs, ssb=ssb,
                         max_upload_size=qiita_config.max_upload_size,
                         filetypes=fts, msg=msg)
             return
@@ -228,19 +235,21 @@ class StudyDescriptionHandler(BaseHandler):
                 IOError), e:
             msg = ('<b>An error occurred parsing the prep template: '
                    '%s</b><br/>%s' % (basename(fp_rsp), e))
+            ssb = any([PrepTemplate.exists(RawData(rd)) for rd in raw_data])
             self.render('study_description.html', user=self.current_user,
                         study_title=study.title, study_info=study.info,
-                        study_id=study_id, files=fs,
+                        study_id=study_id, files=fs, ssb=ssb,
                         max_upload_size=qiita_config.max_upload_size,
                         filetypes=fts, msg=msg)
             return
 
         # rerun so we have the must upto date info
         fs, fts = self.get_values_for_post_or_get(study_id)
+        ssb = any([PrepTemplate.exists(RawData(d)) for d in study.raw_data()])
 
         self.render('study_description.html', user=self.current_user,
                     study_title=study.title, study_info=study.info,
-                    study_id=study_id, files=fs,
+                    study_id=study_id, files=fs, ssb=ssb,
                     max_upload_size=qiita_config.max_upload_size,
                     filetypes=fts, msg="Your samples where processed")
 

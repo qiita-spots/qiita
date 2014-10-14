@@ -68,6 +68,19 @@
   <tr>
     <td style="vertical-align: middle; text-align:center;" colspan="2">{% raw msg %}</td>
   </tr>
+
+  {% if ssb %}
+  <tr><td><hr/></td></tr>
+  <tr>
+     <td style="vertical-align: middle; text-align:center;" colspan="2">
+       This study has valid files, you can:
+       &nbsp;&nbsp;
+       <input type="button" class="btn btn-primary" value="Show metadata sumary" onclick="show_metadata_summary();">
+       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+       <input type="button" class="btn btn-primary" value="Split libraries" onclick="split_libraries();">
+     </td>
+  </tr>
+  {% end %}
 </table>
 
 <script src="/static/vendor/js/resumable.js"></script>
@@ -172,6 +185,14 @@
         form.submit();
       }
     });
+  }
+
+  function show_metadata_summary() {
+    alert("To be implemented");
+  }
+
+  function split_libraries() {
+    alert("To be implemented");
   }
 </script>
 
