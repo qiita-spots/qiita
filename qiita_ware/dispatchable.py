@@ -2,6 +2,7 @@ from os.path import join
 from tempfile import mkdtemp
 from gzip import open as gzopen
 
+from qiita_core.qiita_settings import qiita_config
 from qiita_ware.commands import submit_EBI_from_files
 from qiita_ware.demux import to_per_sample_ascii
 from qiita_ware.util import open_file
@@ -20,7 +21,9 @@ def submit_to_ebi(study_id):
     demux = [path for path, ftype in preprocessed_data.get_filepaths()
              if ftype == 'preprocessed_demux'][0]
 
-    tmp_dir = mkdtemp()
+    tmp_dir = mkdtemp(prefix=qiita_config.working_dir)
+    output_dir = tmp_dir + '_submission'
+
     samp_fp = join(tmp_dir, 'sample_metadata.txt')
     prep_fp = join(tmp_dir, 'prep_metadata.txt')
 
@@ -34,6 +37,6 @@ def submit_to_ebi(study_id):
                     fh.write(record)
 
     submit_EBI_from_files(study_id, open(samp_fp), open(prep_fp), tmp_dir,
-                          'test_output', 'metagenomic', 'ADD', False)
+                          output_dir, 'metagenomic', 'ADD', False)
 
     return tmp_dir
