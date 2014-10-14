@@ -796,24 +796,21 @@ class TestPrepTemplate(TestCase):
                             'EMP_status_id': 1,
                             'str_column': 'Value for sample 1',
                             'linkerprimersequence': 'GTGCCAGCMGCCGCGGTAA',
-                            'barcodesequence': 'GTCCGCAAGTTA',
-                            'description': 'skb8'},
+                            'barcodesequence': 'GTCCGCAAGTTA'},
             'SKD8.640184': {'center_name': 'ANL',
                             'center_project_name': 'Test Project',
                             'ebi_submission_accession': None,
                             'EMP_status_id': 1,
                             'str_column': 'Value for sample 2',
                             'linkerprimersequence': 'GTGCCAGCMGCCGCGGTAA',
-                            'barcodesequence': 'CGTAGAGCTCTC',
-                            'description': 'skd8'},
+                            'barcodesequence': 'CGTAGAGCTCTC'},
             'SKB7.640196': {'center_name': 'ANL',
                             'center_project_name': 'Test Project',
                             'ebi_submission_accession': None,
                             'EMP_status_id': 1,
                             'str_column': 'Value for sample 3',
                             'linkerprimersequence': 'GTGCCAGCMGCCGCGGTAA',
-                            'barcodesequence': 'CCTCTGAGAGCT',
-                            'description': 'skb7'}
+                            'barcodesequence': 'CCTCTGAGAGCT'}
             }
         self.metadata = pd.DataFrame.from_dict(metadata_dict, orient='index')
         self.test_raw_data = RawData(1)
@@ -896,7 +893,6 @@ class TestPrepTemplate(TestCase):
             "SELECT * FROM qiita.raw_data_prep_columns WHERE raw_data_id=3")
         # raw_data_id, column_name, column_type
         exp = [[3, 'str_column', 'varchar'],
-               [3, 'description', 'varchar'],
                [3, 'ebi_submission_accession', 'varchar'],
                [3, 'barcodesequence', 'varchar'],
                [3, 'linkerprimersequence', 'varchar']]
@@ -909,11 +905,11 @@ class TestPrepTemplate(TestCase):
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.prep_3")
         # sample_id, str_column
-        exp = [['SKB7.640196', 'Value for sample 3', 'skb7', None,
+        exp = [['SKB7.640196', 'Value for sample 3', None,
                 'CCTCTGAGAGCT', 'GTGCCAGCMGCCGCGGTAA'],
-               ['SKB8.640193', 'Value for sample 1', 'skb8', None,
+               ['SKB8.640193', 'Value for sample 1', None,
                 'GTCCGCAAGTTA', 'GTGCCAGCMGCCGCGGTAA'],
-               ['SKD8.640184', 'Value for sample 2', 'skd8', None,
+               ['SKD8.640184', 'Value for sample 2', None,
                 'CGTAGAGCTCTC', 'GTGCCAGCMGCCGCGGTAA']]
         self.assertEqual(sorted(obs), sorted(exp))
 
@@ -924,20 +920,17 @@ class TestPrepTemplate(TestCase):
                             'center_project_name': 'Test Project',
                             'ebi_submission_accession': None,
                             'EMP_status_id': 1,
-                            'str_column': 'Value for sample 1',
-                            'description': 'skb8'},
+                            'str_column': 'Value for sample 1'},
             'SKD8.640184': {'center_name': 'ANL',
                             'center_project_name': 'Test Project',
                             'ebi_submission_accession': None,
                             'EMP_status_id': 1,
-                            'str_column': 'Value for sample 2',
-                            'description': 'skd8'},
+                            'str_column': 'Value for sample 2'},
             'SKB7.640196': {'center_name': 'ANL',
                             'center_project_name': 'Test Project',
                             'ebi_submission_accession': None,
                             'EMP_status_id': 1,
-                            'str_column': 'Value for sample 3',
-                            'description': 'skb7'}
+                            'str_column': 'Value for sample 3'}
             }
         metadata = pd.DataFrame.from_dict(metadata_dict, orient='index')
         with self.assertRaises(ValueError):
@@ -1125,14 +1118,14 @@ EXP_SAMPLE_TEMPLATE = (
     "Value for sample 3\n")
 
 EXP_PREP_TEMPLATE = (
-    '#SampleID\tbarcodesequence\tcenter_name\tcenter_project_name\tdescription'
-    '\tebi_submission_accession\temp_status_id\tlinkerprimersequence\t'
+    '#SampleID\tbarcodesequence\tcenter_name\tcenter_project_name\t'
+    'ebi_submission_accession\temp_status_id\tlinkerprimersequence\t'
     'str_column\n'
-    'SKB7.640196\tCCTCTGAGAGCT\tANL\tTest Project\tskb7\tNone\t1\t'
+    'SKB7.640196\tCCTCTGAGAGCT\tANL\tTest Project\tNone\t1\t'
     'GTGCCAGCMGCCGCGGTAA\tValue for sample 3\n'
-    'SKB8.640193\tGTCCGCAAGTTA\tANL\tTest Project\tskb8\tNone\t1\t'
+    'SKB8.640193\tGTCCGCAAGTTA\tANL\tTest Project\tNone\t1\t'
     'GTGCCAGCMGCCGCGGTAA\tValue for sample 1\n'
-    'SKD8.640184\tCGTAGAGCTCTC\tANL\tTest Project\tskd8\tNone\t1\t'
+    'SKD8.640184\tCGTAGAGCTCTC\tANL\tTest Project\tNone\t1\t'
     'GTGCCAGCMGCCGCGGTAA\tValue for sample 2\n')
 
 if __name__ == '__main__':

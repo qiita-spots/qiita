@@ -29,9 +29,9 @@ def _get_qiime_minimal_mapping(prep_template, output_fp):
     # Hopefully, this conversion won't be needed if QIIME relaxes its
     # constraints
     pt.rename(columns={'barcodesequence': 'BarcodeSequence',
-                       'linkerprimersequence': 'LinkerPrimerSequence',
-                       'description': 'Description'},
+                       'linkerprimersequence': 'LinkerPrimerSequence'},
               inplace=True)
+    pt['Description'] = pd.Series(['NA'] * len(pt.index), index=pt.index)
 
     # We make sure that the headers file starts with #SampleID
     pt.index.name = "#SampleID"
