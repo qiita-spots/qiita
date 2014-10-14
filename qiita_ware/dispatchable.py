@@ -10,13 +10,13 @@ from qiita_ware.util import open_file
 from qiita_db.study import Study
 from qiita_db.metadata_template import SampleTemplate, PrepTemplate
 from qiita_db.data import PreprocessedData, RawData
-from qiita_db.parameters import PreprocessedIlluminaParams
 
 
-def split_libraries(study_id, raw_data_id, param_id):
+def preprocessor(study_id, raw_data_id, param_id, param_constructor):
+    """Dispatch for preprocessor work"""
     study = Study(study_id)
     raw_data = RawData(raw_data_id)
-    params = PreprocessedIlluminaParams(param_id)
+    params = param_constructor(param_id)
 
     sp = StudyPreprocessor()
     return sp(study, raw_data, params)
