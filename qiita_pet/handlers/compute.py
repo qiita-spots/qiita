@@ -15,4 +15,4 @@ class ComputeCompleteHandler(BaseHandler):
             # TODO: something smart
             pass
 
-        self.render('/')
+        self.redirect('/')
