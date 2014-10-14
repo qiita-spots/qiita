@@ -591,12 +591,7 @@ class MetadataTemplate(QiitaObject):
             The obj to which the metadata template belongs to. Study in case
             of SampleTemplate and RawData in case of PrepTemplate
         """
-        # Change any *_id column to its str column
-        missing = set(cls._ignore_cols.values()).difference(md_template.keys())
-        if missing:
-            raise QiitaDBColumnError("Missing columns: %s" % missing)
-
-        cls._template_specific_column_check(cls, md_template, obj)
+        pass
 
     @classmethod
     def create(cls, md_template, obj):
@@ -1008,9 +1003,25 @@ class SampleTemplate(MetadataTemplate):
                 "ORDER BY column_name")]
 
     @classmethod
-    def _template_specific_column_check(cls, md_template, raw_data):
-        """"""
-        
+    def _check_special_columns(cls, md_template, study):
+        r"""Checks for special columns based on obj type
+
+        Parameters
+        ----------
+        md_template : DataFrame
+            The metadata template file contents indexed by sample ids
+        study : Study
+            The study to which the sample template belongs to.
+
+        Raises
+        ------
+        QiitaDBColumnError
+            If any of the required columns are not present in the md_template
+        """
+        # Change any *_id column to its str column
+        missing = set(cls._ignore_cols.values()).difference(md_template.keys())
+        if missing:
+            raise QiitaDBColumnError("Missing columns: %s" % missing)
 
 
 class PrepTemplate(MetadataTemplate):
@@ -1031,7 +1042,7 @@ class PrepTemplate(MetadataTemplate):
     _sample_cls = PrepSample
 
     @classmethod
-    def _template_specific_column_check(cls, md_template, raw_data):
+    def _check_special_columns(cls, md_template, raw_data):
         r"""Checks for special columns based on obj type
 
         Parameters
@@ -1052,6 +1063,11 @@ class PrepTemplate(MetadataTemplate):
         rename them to use the naming that we expect, so this is normalized
         across studies.
         """
+        # Change any *_id column to its str column
+        missing = set(cls._ignore_cols.values()).difference(md_template.keys())
+        if missing:
+            raise QiitaDBColumnError("Missing columns: %s" % missing)
+
         # We only have column requirements if the data type of the raw data
         # is one of the target gene types
         if raw_data.data_type() in TARGET_GENE_DATA_TYPES:
@@ -1061,6 +1077,7 @@ class PrepTemplate(MetadataTemplate):
             missing_cols = REQUIRED_TARGET_GENE_COLS.difference(
                 md_template.columns)
             if missing_cols:
-                raise ValueError("The following columns are missing in the "
-                                 "PrepTemplate and they are requried for "
-                                 "target gene studies: %s" % missing_cols)
+                raise QiitaDBColumnError(
+                    "The following columns are missing in the PrepTemplate and"
+                    " they are requried for target gene studies: %s"
+                    % missing_cols)

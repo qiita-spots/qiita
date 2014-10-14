@@ -21,7 +21,8 @@ from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_db.exceptions import (QiitaDBDuplicateError, QiitaDBUnknownIDError,
                                  QiitaDBNotImplementedError,
                                  QiitaDBDuplicateHeaderError,
-                                 QiitaDBExecutionError)
+                                 QiitaDBExecutionError,
+                                 QiitaDBColumnError)
 from qiita_db.study import Study, StudyPerson
 from qiita_db.user import User
 from qiita_db.data import RawData
@@ -934,7 +935,7 @@ class TestPrepTemplate(TestCase):
                             'str_column': 'Value for sample 3'}
             }
         metadata = pd.DataFrame.from_dict(metadata_dict, orient='index')
-        with self.assertRaises(ValueError):
+        with self.assertRaises(QiitaDBColumnError):
             PrepTemplate.create(metadata, self.new_raw_data)
 
     def test_create_error_partial(self):
