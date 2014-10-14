@@ -174,7 +174,7 @@ def make_environment(load_ontologies, download_reference, add_demo_user):
         _add_ontology_data(conn)
 
     if download_reference:
-        _download_reference_files(conn)
+        _download_reference_files()
 
     # we don't do this if it's a test environment because populate.sql
     # already adds this user...
