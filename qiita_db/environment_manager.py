@@ -73,11 +73,21 @@ def _populate_test_db(cur):
 
 def _add_ontology_data(cur):
     print ('Loading Ontology Data')
-    ontos_fp = download_and_unzip_file(
-        host='thebeast.colorado.edu',
-        filename='/pub/qiita/qiita_ontoandvocab.sql.gz')
+    fp = get_reference_fp('ontologies.sql.gz')
 
-    with gzip.open(ontos_fp, 'rb') as f:
+    if exists(fp):
+        print("SKIPPING download of ontologies: File already exists at %s. "
+              "To download the file again, delete the existing file first."
+              % fp)
+    else:
+        url = 'ftp://thebeast.colorado.edu/pub/qiita/qiita_ontoandvocab.sql.gz'
+        try:
+            urlretrieve(url, fp)
+        except:
+            raise IOError("Error: Could not fetch ontologies file from %s" %
+                          url)
+
+    with gzip.open(fp, 'rb') as f:
         cur.execute(f.read())
 
 
@@ -277,27 +287,3 @@ def clean_test_environment(user, password, host):
     # Close cursor and connections
     cur.close()
     conn.close()
-
-
-def download_and_unzip_file(host, filename):
-    """Function downloads though ftp and unzips a file
-
-    Parameters
-    -----------
-    host : str
-        the location of the ftp server that is hosting the file
-    filename : str
-        the location of the file on the ftp server to download
-    """
-    fp = get_reference_fp('ontologies.tgz')
-
-    if exists(fp):
-        print("SKIPPING download of ontologies: File already exists at %s. "
-              "To download the file again, delete the existing file first.")
-    else:
-        ftp = FTP(host)
-        ftp.login()
-        cmd = 'RETR %s' % filename
-        ftp.retrbinary(cmd, open(fp, 'wb').write)
-
-    return fp
