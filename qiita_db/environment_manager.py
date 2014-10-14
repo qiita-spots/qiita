@@ -88,10 +88,10 @@ def _add_ontology_data(conn):
                           url)
 
     with gzip.open(fp, 'rb') as f:
-        cur.execute(f.read())
+        conn.execute(f.read())
 
 
-def _download_reference_files(cur):
+def _download_reference_files():
     print('Downloading reference files')
 
     files = {'tree': (get_reference_fp('gg_13_8-97_otus.tree'),
