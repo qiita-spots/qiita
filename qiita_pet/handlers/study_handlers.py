@@ -173,7 +173,7 @@ class StudyDescriptionHandler(BaseHandler):
             # inserting sample template
             load_sample_template_from_cmd(fp_rsp, study_id)
         except (TypeError, QiitaDBColumnError, QiitaDBExecutionError,
-                QiitaDBDuplicateError), e:
+                QiitaDBDuplicateError, IOError), e:
             msg = ('<b>An error occurred parsing the sample template: '
                    '%s</b><br/>%s' % (fp_rsp, e))
             self.render('study_description.html', user=self.current_user,
@@ -206,7 +206,8 @@ class StudyDescriptionHandler(BaseHandler):
             # if this will ever be an actual array via the web interface
             raw_data = load_raw_data_cmd(filepaths, filepath_types, filetype,
                                          [study_id], data_type)
-        except (TypeError, QiitaDBColumnError, QiitaDBExecutionError), e:
+        except (TypeError, QiitaDBColumnError, QiitaDBExecutionError,
+                IOError), e:
             msg = ('<b>An error occurred parsing the raw files: '
                    '%s</b><br/>%s' % (', '.join(filepaths), e))
             self.render('study_description.html', user=self.current_user,
@@ -219,7 +220,8 @@ class StudyDescriptionHandler(BaseHandler):
         try:
             # inserting prep templates
             load_prep_template_from_cmd(fp_rpt, raw_data.id)
-        except (TypeError, QiitaDBColumnError, QiitaDBExecutionError), e:
+        except (TypeError, QiitaDBColumnError, QiitaDBExecutionError,
+                IOError), e:
             msg = ('<b>An error occurred parsing the prep template: '
                    '%s</b><br/>%s' % (fp_rsp, e))
             self.render('study_description.html', user=self.current_user,
