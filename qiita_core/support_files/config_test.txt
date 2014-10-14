@@ -59,7 +59,7 @@ USER =
 PASSWORD =
 
 # The email to have messages sent from
-EMAIL = donotrepy@qiita.colorado.edu
+EMAIL = donotreply@qiita.colorado.edu
 
 # ----------------------------- Redis settings --------------------------------
 [redis]

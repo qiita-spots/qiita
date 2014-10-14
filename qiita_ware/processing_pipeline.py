@@ -119,6 +119,10 @@ def _get_preprocess_fastq_cmd(raw_data, params):
     # Add any other parameter needed to split libraries fastq
     params_str = params.to_str()
 
+    forward_seqs = sorted(forward_seqs)
+    reverse_seqs = sorted(reverse_seqs)
+    barcode_fps = sorted(barcode_fps)
+
     # Create the split_libraries_fastq.py command
     cmd = ("split_libraries_fastq.py --store_demultiplexed_fastq -i %s -b %s "
            "-m %s -o %s %s"

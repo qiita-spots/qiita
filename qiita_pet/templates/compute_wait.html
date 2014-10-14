@@ -1,0 +1,45 @@
+{% extends sitebase.html%}
+
+{%block head%}
+<script type="text/javascript">
+    window.onload = function() {
+        var host = 'ws://' + window.location.host + '/consumer/';
+        var websocket = new WebSocket(host);
+
+        // When the socket is opened, send a message from the client to the
+        // server that indicates the current user. This is likely not secure.
+        websocket.onopen = function() {
+            websocket.send(JSON.stringify({'user': '{{user}}'}));
+        };
+
+        // When the web socket receives an event
+        websocket.onmessage = function(evt) {
+
+            // ...convert the event's data to JSON
+            message = JSON.parse(evt.data);
+
+            // ...and if the message has the job ID we currently care about
+            if(message.job_id == "{{job_id}}") {
+                // ...o something based on its status.
+                switch(message.status_msg) {
+                    case 'Success':
+                    case 'Failed':
+                        window.location.replace('{{completion_redirect}}/{{job_id}}');
+                        break;
+                    default:
+                        status_msg = document.getElementById('status-msg');
+                        status_msg.innerHTML = message.status_msg;
+                        break;
+                }
+            }
+        };
+        websocket.onerror = function(evt) { };
+};
+
+</script>
+{% end %}
+
+{% block content %}
+<h1>Waiting on {{title}}</h1>
+<p>Current status: <span id=status-msg>Queued</span></p>
+{% end %}

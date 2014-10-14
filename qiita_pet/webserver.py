@@ -21,10 +21,11 @@ from qiita_pet.handlers.analysis_handlers import (
     ShowAnalysesHandler, SearchStudiesHandler)
 from qiita_pet.handlers.study_handlers import (
     CreateStudyHandler, PrivateStudiesHandler, PublicStudiesHandler,
-    StudyDescriptionHandler, MetadataSummaryHandler)
+    StudyDescriptionHandler, MetadataSummaryHandler, EBISubmitHandler)
 from qiita_pet.handlers.logger_handlers import LogEntryViewerHandler
 from qiita_pet.handlers.websocket_handlers import MessageHandler
 from qiita_pet.handlers.upload import UploadFileHandler
+from qiita_pet.handlers.compute import ComputeCompleteHandler
 from qiita_db.util import get_db_files_base_dir
 
 define("port", default=8888, help="run on the given port", type=int)
@@ -60,6 +61,8 @@ class Application(tornado.web.Application):
             (r"/consumer/", MessageHandler),
             (r"/error/", LogEntryViewerHandler),
             (r"/metadata_summary/(.*)", MetadataSummaryHandler),
+            (r"/ebi_submission/(.*)", EBISubmitHandler),
+            (r"/compute_complete/(.*)", ComputeCompleteHandler),
             (r"/study/create/", CreateStudyHandler),
             (r"/study/private/", PrivateStudiesHandler),
             (r"/study/public/", PublicStudiesHandler),
