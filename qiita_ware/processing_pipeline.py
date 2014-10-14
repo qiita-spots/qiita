@@ -148,15 +148,18 @@ def _insert_preprocessed_data_fastq(study, params, raw_data, slq_out):
     fasta_fp = path_builder('seqs.fna')
     fastq_fp = path_builder('seqs.fastq')
     demux_fp = path_builder('seqs.demux')
+    log_fp = path_builder('split_library_log.txt')
 
     # Check that all the files exist
-    if not (exists(fasta_fp) and exists(fastq_fp) and exists(demux_fp)):
+    if not (exists(fasta_fp) and exists(fastq_fp) and exists(demux_fp) and
+            exists(log_fp)):
         raise ValueError("The output directory %s does not contain all the "
                          "expected files." % slq_out)
 
     filepaths = [(fasta_fp, "preprocessed_fasta"),
                  (fastq_fp, "preprocessed_fastq"),
-                 (demux_fp, "preprocessed_demux")]
+                 (demux_fp, "preprocessed_demux"),
+                 (log_fp, "log")]
 
     PreprocessedData.create(study, params._table, params.id, filepaths,
                             raw_data)
