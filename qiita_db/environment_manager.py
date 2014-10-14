@@ -18,10 +18,10 @@ from future.utils import viewitems
 with standard_library.hooks():
     from urllib.request import urlretrieve
 from psycopg2 import connect
-from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 
 from qiita_core.exceptions import QiitaEnvironmentError
 from qiita_core.qiita_settings import qiita_config
+from .sql_connection import SQLConnectionHandler
 
 get_support_file = partial(join, join(dirname(abspath(__file__)),
                                       'support_files'))
@@ -234,21 +234,9 @@ def drop_environment(admin_user, admin_password, host):
         The If the environment is not present on the system
     """
     # Connect to the postgres server
-    conn = connect(user=admin_user, host=host, password=admin_password)
-    # Set the isolation level to AUTOCOMMIT so we can execute a
-    # drop database sql query
-    conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
-    # Drop the database
-    cur = conn.cursor()
-
-    if not _check_db_exists(qiita_config.database, cur):
-        raise QiitaEnvironmentError(
-            "Database {0} not present on the system. You can create it "
-            "by running 'qiita_env make'".format(qiita_config.database))
-
+    conn = SQLConnectionHandler()
     settings_sql = "SELECT test FROM qiita.settings"
-    cur.execute(settings_sql)
-    is_test_environment = cur.fetchone(settings_sql)[0]
+    is_test_environment = conn.execute_fetchone(settings_sql)[0]
 
     if is_test_environment:
         do_drop=True
@@ -261,13 +249,10 @@ def drop_environment(admin_user, admin_password, host):
         do_drop = confirm in ('Y', 'y')
 
     if do_drop:
-        cur.execute('DROP DATABASE %s' % qiita_config.database)
+        admin_conn = SQLConnectionHandler(admin=True)
+        admin_conn.execute('DROP DATABASE %s' % qiita_config.database)
     else:
         print('ABORTING')
-
-    # Close cursor and connection
-    cur.close()
-    conn.close()
 
 
 def clean_test_environment(user, password, host):
