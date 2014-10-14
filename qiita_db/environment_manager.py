@@ -21,6 +21,7 @@ from psycopg2 import connect
 from qiita_core.exceptions import QiitaEnvironmentError
 from qiita_core.qiita_settings import qiita_config
 from .sql_connection import SQLConnectionHandler
+from .reference import Reference
 
 get_support_file = partial(join, join(dirname(abspath(__file__)),
                                       'support_files'))
@@ -91,7 +92,17 @@ def _add_ontology_data(conn):
         cur.execute(f.read())
 
 
-def _download_reference_files(cur):
+def _insert_processed_params(conn, ref):
+    sortmerna_sql = """INSERT INTO qiita.processed_params_sortmerna
+                       (reference_id, evalue, max_pos, similarity, coverage,
+                        threads)
+                       VALUES
+                       (%s, 1, 10000, 0.97, 0.97, 1)"""
+
+    conn.execute(sortmerna_sql, [ref._id])
+
+
+def _download_reference_files(conn):
     print('Downloading reference files')
 
     files = {'tree': (get_reference_fp('gg_13_8-97_otus.tree'),
@@ -116,6 +127,11 @@ def _download_reference_files(cur):
             except:
                 raise IOError("Error: Could not fetch %s file from %s" %
                               (file_type, url))
+
+    ref = Reference.create('Greengenes', '13_8', files['sequence'][0],
+                           files['taxonomy'][0], files['tree'][0])
+
+    _insert_processed_params(conn, ref)
 
 
 def make_environment(load_ontologies, download_reference, add_demo_user):
