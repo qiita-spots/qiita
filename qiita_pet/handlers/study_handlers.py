@@ -171,7 +171,7 @@ class StudyDescriptionHandler(BaseHandler):
 
         try:
             # inserting sample template
-            samp_template = load_sample_template_from_cmd(fp_rsp, study_id)
+            load_sample_template_from_cmd(fp_rsp, study_id)
         except (TypeError, QiitaDBColumnError, QiitaDBExecutionError,
                 QiitaDBDuplicateError), e:
             msg = ('<b>An error occurred parsing the sample template: '
@@ -187,13 +187,13 @@ class StudyDescriptionHandler(BaseHandler):
             # inserting raw data
             fp = get_study_fp(study_id)
             filepaths, filepath_types = [], []
-            if barcodes and barcodes[0]!="":
+            if barcodes and barcodes[0] != "":
                 filepaths.extend([join(fp, t) for t in barcodes])
                 filepath_types.extend(["raw_barcodes"]*len(barcodes))
-            if forward_seqs and forward_seqs[0]!="":
+            if forward_seqs and forward_seqs[0] != "":
                 filepaths.extend([join(fp, t) for t in forward_seqs])
                 filepath_types.extend(["raw_forward_seqs"]*len(forward_seqs))
-            if reverse_seqs and reverse_seqs[0]!="":
+            if reverse_seqs and reverse_seqs[0] != "":
                 filepaths.extend([join(fp, t) for t in reverse_seqs])
                 filepath_types.extend(["raw_reverse_seqs"]*len(reverse_seqs))
 
@@ -207,8 +207,7 @@ class StudyDescriptionHandler(BaseHandler):
             print filepaths, filepath_types, filetype, [study_id], data_type
             raw_data = load_raw_data_cmd(filepaths, filepath_types, filetype,
                                          [study_id], data_type)
-        except (ValueError), e:
-        # except (TypeError, QiitaDBColumnError, QiitaDBExecutionError), e:
+        except (TypeError, QiitaDBColumnError, QiitaDBExecutionError), e:
             msg = ('<b>An error occurred parsing the raw files: '
                    '%s</b><br/>%s' % (', '.join(filepaths), e))
             self.render('study_description.html', user=self.current_user,
@@ -239,8 +238,6 @@ class StudyDescriptionHandler(BaseHandler):
                     study_id=study_id, files=fs,
                     max_upload_size=qiita_config.max_upload_size,
                     filetypes=fts, msg="Your samples where processed")
-
-
 
 
 class CreateStudyHandler(BaseHandler):
