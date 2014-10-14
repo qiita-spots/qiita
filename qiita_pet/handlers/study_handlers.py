@@ -20,9 +20,10 @@ from .base_handlers import BaseHandler
 
 from qiita_core.qiita_settings import qiita_config
 
+from qiita_ware.context import submit
 from qiita_ware.util import metadata_stats_from_sample_and_prep_templates
 from qiita_ware.demux import stats as demux_stats
-
+from qiita_ware.dispatchable import submit_to_ebi
 from qiita_db.metadata_template import SampleTemplate, PrepTemplate
 from qiita_db.study import Study, StudyPerson
 from qiita_db.user import User
@@ -308,4 +309,14 @@ class EBISubmitHandler(BaseHandler):
             stats.append(('Number of sequences', demux_file_stats.n))
 
         self.render('ebi_submission.html', user=self.current_user,
-                    study_title=study.title, stats=stats, error=error)
+                    study_title=study.title, stats=stats, error=error,
+                    study_id=study.id)
+
+    @authenticated
+    def post(self, study_id):
+        channel = self.current_user
+        job_id = submit(channel, submit_to_ebi, int(study_id))
+
+        self.render('compute_wait.html', user=self.current_user,
+                    job_id=job_id, title='EBI Submission',
+                    completion_redirect='/compute_complete')
