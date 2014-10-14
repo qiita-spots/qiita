@@ -99,24 +99,23 @@ class UtilTests(TestCase):
             u'SKM3.640197', u'SKM4.640180', u'SKM5.640177', u'SKM6.640187',
             u'SKM7.640188', u'SKM8.640201', u'SKM9.640192'], dtype='object')))
 
-        self.assertTrue(all(obs.columns == pd.Index([
-            u'tot_org_carb', u'common_name', u'has_extracted_data',
-            u'water_content_soil', u'env_feature', u'assigned_from_geo',
-            u'altitude', u'env_biome', u'texture', u'has_physical_specimen',
-            u'description_duplicate', u'physical_location', u'latitude',
-            u'ph', u'host_taxid', u'elevation', u'description',
-            u'collection_timestamp', u'taxon_id', u'samp_salinity',
-            u'host_subject_id', u'sample_type', u'season_environment',
-            u'required_sample_info_status_id', u'temp', u'country',
-            u'longitude', u'tot_nitro', u'depth', u'anonymized_name',
-            u'experiment_center', u'center_name', u'run_center',
-            u'run_prefix', u'data_type_id', u'target_gene',
-            u'sequencing_meth', u'run_date', u'pcr_primers',
-            u'linkerprimersequence', u'platform',
-            u'library_construction_protocol', u'experiment_design_description',
-            u'study_center', u'center_project_name', u'sample_center',
-            u'samp_size', u'illumina_technology', u'experiment_title',
-            u'emp_status_id', u'target_subfragment', u'barcodesequence'],
+        self.assertTrue(all(obs.columns == pd.Index(
+            [u'tot_org_carb', u'common_name', u'has_extracted_data',
+             u'water_content_soil', u'env_feature', u'assigned_from_geo',
+             u'altitude', u'env_biome', u'texture', u'has_physical_specimen',
+             u'description_duplicate', u'physical_location', u'latitude',
+             u'ph', u'host_taxid', u'elevation', u'description',
+             u'collection_timestamp', u'taxon_id', u'samp_salinity',
+             u'host_subject_id', u'sample_type', u'season_environment',
+             u'required_sample_info_status_id', u'temp', u'country',
+             u'longitude', u'tot_nitro', u'depth', u'anonymized_name',
+             u'emp_status_id', u'target_subfragment', u'sample_center',
+             u'samp_size', u'run_date', u'experiment_center', u'platform',
+             u'center_name', u'barcodesequence', u'run_center', u'run_prefix',
+             u'library_construction_protocol', u'pcr_primers',
+             u'linkerprimersequence', u'experiment_design_description',
+             u'target_gene', u'center_project_name', u'illumina_technology',
+             u'sequencing_meth', u'experiment_title', u'study_center'],
             dtype='object')))
 
     def template_to_dict(self):
