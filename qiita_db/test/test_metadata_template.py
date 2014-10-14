@@ -20,7 +20,8 @@ from qiita_core.util import qiita_test_checker
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_db.exceptions import (QiitaDBDuplicateError, QiitaDBUnknownIDError,
                                  QiitaDBNotImplementedError,
-                                 QiitaDBDuplicateHeaderError)
+                                 QiitaDBDuplicateHeaderError,
+                                 QiitaDBExecutionError)
 from qiita_db.study import Study, StudyPerson
 from qiita_db.user import User
 from qiita_db.data import RawData
@@ -614,6 +615,22 @@ class TestSampleTemplate(TestCase):
                ['Sample3', "Value for sample 3"]]
         self.assertEqual(obs, exp)
 
+    def test_delete(self):
+        """Deletes Sample template 1"""
+        st = SampleTemplate.create(self.metadata, self.new_study)
+        SampleTemplate.delete(2)
+        obs = self.conn_handler.execute_fetchall(
+            "SELECT * FROM qiita.required_sample_info WHERE study_id=2")
+        exp = []
+        self.assertEqual(obs, exp)
+        obs = self.conn_handler.execute_fetchall(
+            "SELECT * FROM qiita.study_sample_columns WHERE study_id=2")
+        exp = []
+        self.assertEqual(obs, exp)
+        with self.assertRaises(QiitaDBExecutionError):
+            self.conn_handler.execute_fetchall(
+                "SELECT * FROM qiita.sample_2")
+
     def test_exists_true(self):
         """Exists returns true when the SampleTemplate already exists"""
         self.assertTrue(SampleTemplate.exists(self.test_study))
@@ -884,6 +901,21 @@ class TestPrepTemplate(TestCase):
                ['SKD8.640184', "Value for sample 2", None],
                ['SKB7.640196', "Value for sample 3", None]]
         self.assertEqual(sorted(obs), sorted(exp))
+
+    def test_delete(self):
+        """Deletes prep template 1"""
+        PrepTemplate.delete(1)
+        obs = self.conn_handler.execute_fetchall(
+            "SELECT * FROM qiita.common_prep_info WHERE raw_data_id=1")
+        exp = []
+        self.assertEqual(obs, exp)
+        obs = self.conn_handler.execute_fetchall(
+            "SELECT * FROM qiita.raw_data_prep_columns WHERE raw_data_id=1")
+        exp = []
+        self.assertEqual(obs, exp)
+        with self.assertRaises(QiitaDBExecutionError):
+            self.conn_handler.execute_fetchall(
+                "SELECT * FROM qiita.prep_1")
 
     def test_exists_true(self):
         """Exists returns true when the PrepTemplate already exists"""

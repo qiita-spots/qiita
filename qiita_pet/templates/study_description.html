@@ -129,14 +129,19 @@
           reset_vals();
           return;
         }
-        $.ajax({
-          type: 'POST',
-          url: window.location.href,
-          data: {
-            'raw_sample_template': raw_sample_template_value,
-            'raw_prep_template': raw_prep_template_value
-          }
-        });
+        var form = $("<form>")
+          .attr("action", window.location.href)
+          .attr("method", "post")
+          .append($("<input>")
+            .attr("type", "hidden")
+            .attr("name", "raw_sample_template")
+            .attr("value", raw_sample_template_value))
+          .append($("<input>")
+            .attr("type", "hidden")
+            .attr("name", "raw_prep_template")
+            .attr("value", raw_prep_template_value));
+        $("body").append(form);
+        form.submit();
       }
     });
   }

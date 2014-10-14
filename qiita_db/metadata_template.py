@@ -665,6 +665,29 @@ class MetadataTemplate(QiitaObject):
         return cls(obj.id)
 
     @classmethod
+    def delete(cls, id_):
+        r"""Deletes the table from the database
+
+        Parameters
+        ----------
+        id_ : obj
+            The object identifier
+
+        """
+        table_name = "%s%d" % (cls._table_prefix, id_)
+        conn_handler = SQLConnectionHandler()
+        conn_handler.execute(
+            "DROP TABLE qiita.{0}".format(table_name))
+        conn_handler.execute(
+            "DELETE FROM qiita.{0} where {1} = %s".format(cls._table,
+                                                          cls._id_column),
+            (id_,))
+        conn_handler.execute(
+            "DELETE FROM qiita.{0} where {1} = %s".format(cls._column_table,
+                                                          cls._id_column),
+            (id_,))
+
+    @classmethod
     def exists(cls, obj):
         r"""Checks if already exists a MetadataTemplate for the provided object
 
