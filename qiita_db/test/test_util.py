@@ -226,8 +226,8 @@ class DBUtilTests(TestCase):
 
         # Check that the filepaths have been added to the DB
         obs = self.conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.filepath WHERE filepath_id=15")
-        exp = [[15, exp_fp, 1, '852952723', 1]]
+            "SELECT * FROM qiita.filepath WHERE filepath_id=16")
+        exp = [[16, exp_fp, 1, '852952723', 1]]
         self.assertEqual(obs, exp)
 
     def test_insert_filepaths_string(self):
@@ -250,8 +250,8 @@ class DBUtilTests(TestCase):
 
         # Check that the filepaths have been added to the DB
         obs = self.conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.filepath WHERE filepath_id=15")
-        exp = [[15, exp_fp, 1, '852952723', 1]]
+            "SELECT * FROM qiita.filepath WHERE filepath_id=16")
+        exp = [[16, exp_fp, 1, '852952723', 1]]
         self.assertEqual(obs, exp)
 
     def test_get_study_fps(self):

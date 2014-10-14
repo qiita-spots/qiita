@@ -47,7 +47,7 @@ class ReferenceTests(TestCase):
         # Check that the information on the database is correct
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.reference WHERE reference_id=2")
-        exp = [[2, self.name, self.version, 15, 16, 17]]
+        exp = [[2, self.name, self.version, 16, 17, 18]]
         self.assertEqual(obs, exp)
 
         # Check that the filepaths have been correctly added to the DB
