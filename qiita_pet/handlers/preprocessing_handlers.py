@@ -15,7 +15,7 @@ class PreprocessHandler(BaseHandler):
         # currently forcing these values
         # param_id = int(self.get_argument('param_id'))
         # param_constructor = self.get_argument('param_constructor')
-        if param_id=='false':
+        if param_id == 'false':
             param_id = 1
         else:
             param_id = 2

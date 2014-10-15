@@ -140,12 +140,14 @@ class StudyDescriptionHandler(BaseHandler):
         # see issue https://github.com/biocore/qiita/issues/415
         if valid_ssb:
             prep_template_id = valid_ssb[0]
-            split_libs_status = RawData(prep_template_id).preprocessing_status.replace('\n','<br/>')
+            split_libs_status = RawData(
+                prep_template_id).preprocessing_status.replace('\n', '<br/>')
         else:
             prep_template_id = None
             split_libs_status = None
 
         valid_ssb = ','.join(map(str, valid_ssb))
+
         ssb = len(valid_ssb) > 0
 
         self.render('study_description.html', user=self.current_user,

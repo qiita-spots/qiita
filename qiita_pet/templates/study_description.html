@@ -73,6 +73,7 @@
     <td style="vertical-align: middle; text-align:center;" colspan="2">{% raw msg %}</td>
   </tr>
 
+<hr>{{ssb}}<hr>
   {% if ssb %}
   <tr><td><hr/></td></tr>
   <tr>
@@ -81,14 +82,17 @@
       &nbsp;&nbsp;
       <a class="btn btn-primary" href="/metadata_summary/?sample_template={{study_id}}&prep_template={{prep_template_id}}">Show metadata Summary</a>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-      {% if sls and not sls.startswith('preprocessing') %}
+      {% if sls and not sls.startswith('preprocessing') and not sls.startswith('success') %}
         <input type="button" class="btn btn-primary" value="Split libraries" onclick="split_libraries();">
         <input type="checkbox" name="rev_comp_mapping_barcodes" id="rev_comp_mapping_barcodes"> Use rev_comp_mapping_barcodes
-      {% else %}
-        <font color="red">Split library is running </font>
+      {% elif sls.startswith('preprocessing') %}
+        <font color="red">Split library is running</font>
+      {% elif sls.startswith('success') %}
+        <font color="red">EBI!</font>
       {% end %}
     </td>
   </tr>
+
   <tr>
     <td><font color="red">
     {% if sls and sls.startswith('failed') %}
