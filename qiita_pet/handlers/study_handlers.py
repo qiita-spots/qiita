@@ -143,7 +143,7 @@ class StudyDescriptionHandler(BaseHandler):
             if ex:
                 valid_ssb.append(rdi)
 
-        return len(valid_ssb)>0, valid_ssb
+        return len(valid_ssb) > 0, valid_ssb
 
     @authenticated
     def get(self, study_id):
