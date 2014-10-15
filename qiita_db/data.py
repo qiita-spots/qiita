@@ -366,7 +366,8 @@ class PreprocessedData(BaseData):
         filepaths : iterable of tuples (str, int)
             The list of paths to the preprocessed files and its filepath type
             identifier
-        submitted_to_insdc_status : str, optional
+        submitted_to_insdc_status : str, {'not submitted', 'submitting', \
+                'success', 'failed'} optional
             Submission status of the raw data files
         raw_data : RawData, optional
             The RawData object used as base to this preprocessed data

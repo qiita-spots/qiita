@@ -101,7 +101,8 @@ def load_preprocessed_data_from_cmd(study_id, params_table, filedir,
         preprocessing
     params_id : int
         The id of parameters int the params_table
-    submitted_to_insdc : str
+    submitted_to_insdc_status : str, {'not submitted', 'submitting', \
+            'success', 'failed'}
         INSDC submission status
     raw_data_id : int
         Raw data id associated with data
