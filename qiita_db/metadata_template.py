@@ -258,6 +258,12 @@ class BaseSample(QiitaObject):
         # actually belong to the metadata
         cols.remove('sample_id')
         cols.remove(self._id_column)
+        # Change the *_id columns, as this is for convenience internally,
+        # and add the original categories
+        for key, value in viewitems(self._md_template._ignore_cols):
+            cols.remove(key)
+            cols.add(value)
+
         return cols
 
     def __len__(self):

@@ -85,7 +85,7 @@ class TestSample(TestCase):
         self.tester = Sample(self.sample_id, self.sample_template)
         self.exp_categories = {'physical_location', 'has_physical_specimen',
                                'has_extracted_data', 'sample_type',
-                               'required_sample_info_status_id',
+                               'required_sample_info_status',
                                'collection_timestamp', 'host_subject_id',
                                'description', 'season_environment',
                                'assigned_from_geo', 'texture', 'taxon_id',
@@ -93,9 +93,8 @@ class TestSample(TestCase):
                                'water_content_soil', 'elevation', 'temp',
                                'tot_nitro', 'samp_salinity', 'altitude',
                                'env_biome', 'country', 'ph', 'anonymized_name',
-                               'tot_org_carb',
-                               'description_duplicate', 'env_feature',
-                               'latitude', 'longitude'}
+                               'tot_org_carb', 'description_duplicate',
+                               'env_feature', 'latitude', 'longitude'}
 
     def test_init_unknown_error(self):
         """Init raises an error if the sample id is not found in the template
@@ -164,6 +163,12 @@ class TestSample(TestCase):
         self.assertEqual(self.tester['SEASON_ENVIRONMENT'], 'winter')
         self.assertEqual(self.tester['depth'], 0.15)
 
+    def test_getitem_id_column(self):
+        """Get item returns the correct metadata value from the changed column
+        """
+        self.assertEqual(self.tester['required_sample_info_status'],
+                         'received')
+
     def test_getitem_error(self):
         """Get item raises an error if category does not exists"""
         with self.assertRaises(KeyError):
@@ -204,7 +209,7 @@ class TestSample(TestCase):
         """values returns an iterator over the values"""
         obs = self.tester.values()
         self.assertTrue(isinstance(obs, Iterable))
-        exp = {'ANL', True, True, 'ENVO:soil', 4,
+        exp = {'ANL', True, True, 'ENVO:soil', 'completed',
                datetime(2011, 11, 11, 13, 00, 00), '1001:M7',
                'Cannabis Soil Microbiome', 'winter', 'n',
                '64.6 sand, 17.6 silt, 17.8 clay', '1118232', 0.15, '3483',
@@ -221,7 +226,7 @@ class TestSample(TestCase):
         self.assertTrue(isinstance(obs, Iterable))
         exp = {('physical_location', 'ANL'), ('has_physical_specimen', True),
                ('has_extracted_data', True), ('sample_type', 'ENVO:soil'),
-               ('required_sample_info_status_id', 4),
+               ('required_sample_info_status', 'completed'),
                ('collection_timestamp', datetime(2011, 11, 11, 13, 00, 00)),
                ('host_subject_id', '1001:M7'),
                ('description', 'Cannabis Soil Microbiome'),
@@ -260,7 +265,7 @@ class TestPrepSample(TestCase):
         self.sample_id = 'SKB8.640193'
         self.tester = PrepSample(self.sample_id, self.prep_template)
         self.exp_categories = {'center_name', 'center_project_name',
-                               'emp_status_id', 'barcodesequence',
+                               'emp_status', 'barcodesequence',
                                'library_construction_protocol',
                                'linkerprimersequence', 'target_subfragment',
                                'target_gene', 'run_center', 'run_prefix',
@@ -326,7 +331,6 @@ class TestPrepSample(TestCase):
         """Get item returns the correct metadata value from the required table
         """
         self.assertEqual(self.tester['center_name'], 'ANL')
-        self.assertEqual(self.tester['emp_status_id'], 1)
         self.assertTrue(self.tester['center_project_name'] is None)
 
     def test_getitem_dynamic(self):
@@ -335,6 +339,11 @@ class TestPrepSample(TestCase):
         self.assertEqual(self.tester['pcr_primers'],
                          'FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT')
         self.assertEqual(self.tester['barcodesequence'], 'AGCGCTCACATC')
+
+    def test_getitem_id_column(self):
+        """Get item returns the correct metadata value from the changed column
+        """
+        self.assertEqual(self.tester['emp_status'], 'EMP')
 
     def test_getitem_error(self):
         """Get item raises an error if category does not exists"""
@@ -376,7 +385,7 @@ class TestPrepSample(TestCase):
         """values returns an iterator over the values"""
         obs = self.tester.values()
         self.assertTrue(isinstance(obs, Iterable))
-        exp = {'ANL', None, None, None, 1, 'AGCGCTCACATC',
+        exp = {'ANL', None, None, None, 'EMP', 'AGCGCTCACATC',
                'This analysis was done as in Caporaso et al 2011 Genome '
                'research. The PCR primers (F515/R806) were developed against '
                'the V4 region of the 16S rRNA (both bacteria and archaea), '
@@ -401,7 +410,7 @@ class TestPrepSample(TestCase):
         obs = self.tester.items()
         self.assertTrue(isinstance(obs, Iterable))
         exp = {('center_name', 'ANL'), ('center_project_name', None),
-               ('emp_status_id', 1), ('barcodesequence', 'AGCGCTCACATC'),
+               ('emp_status', 'EMP'), ('barcodesequence', 'AGCGCTCACATC'),
                ('library_construction_protocol',
                 'This analysis was done as in Caporaso et al 2011 Genome '
                 'research. The PCR primers (F515/R806) were developed against '
