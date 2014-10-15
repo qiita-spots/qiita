@@ -62,8 +62,7 @@ class ProcessingPipelineTests(TestCase):
                      "--max_barcode_errors 1.5 "
                      "--min_per_read_length_fraction 0.75 "
                      "--phred_quality_threshold 3 "
-                     "--sequence_max_n 0 "
-                     "--trim_length 151".format(obs_output_dir))
+                     "--sequence_max_n 0".format(obs_output_dir))
 
         # We are splitting the command into two parts because there is no way
         # that we can know the filepath of the mapping file. We thus split the
