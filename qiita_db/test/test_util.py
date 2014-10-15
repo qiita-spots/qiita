@@ -79,7 +79,6 @@ class DBUtilTests(TestCase):
         obs = get_table_cols_w_type("preprocessed_sequence_illumina_params",
                                     self.conn_handler)
         exp = [['preprocessed_params_id', 'bigint'],
-               ['trim_length', 'integer'],
                ['max_bad_run_length', 'integer'],
                ['min_per_read_length_fraction', 'real'],
                ['sequence_max_n', 'integer'],

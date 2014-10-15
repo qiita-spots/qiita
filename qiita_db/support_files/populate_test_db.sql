@@ -302,7 +302,7 @@ INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum, checksum_algor
 INSERT INTO qiita.preprocessed_filepath (preprocessed_data_id, filepath_id) VALUES (1, 5), (1, 6), (1, 7);
 
 -- Insert the preprocessed illumina params used for raw data 1
-INSERT INTO qiita.preprocessed_sequence_illumina_params (trim_length) VALUES (151), (100);
+INSERT INTO qiita.preprocessed_sequence_illumina_params (max_bad_run_length) VALUES (3), (4);
 
 -- Insert processed information for study 0 and processed data 1
 INSERT INTO qiita.processed_data (processed_params_table, processed_params_id, processed_date, data_type_id) VALUES ('processed_params_uclust', 1, 'Mon Oct 1 09:30:27 2012', 2);
