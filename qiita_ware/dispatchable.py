@@ -29,6 +29,11 @@ def submit_to_ebi(study_id):
     raw_data_id = study.preprocessed_data()[0]
     pt = PrepTemplate(raw_data_id)
     preprocessed_data = PreprocessedData(raw_data_id)
+
+    state = preprocessed_data.submitted_to_insdc_status()
+    if state in ('submitting', 'success'):
+        raise ValueError("Cannot resubmit! Current state is: %s" % state)
+
     investigation_type = RawData(raw_data_id).investigation_type
 
     demux = [path for path, ftype in preprocessed_data.get_filepaths()
@@ -49,6 +54,17 @@ def submit_to_ebi(study_id):
                 for record in iterator:
                     fh.write(record)
 
-    return submit_EBI_from_files(study_id, open(samp_fp), open(prep_fp),
-                                 tmp_dir, output_dir, investigation_type,
-                                 'ADD', True)
+    preprocessed_data.update_insdc_status('submitting')
+    study_acc, submission_acc = submit_EBI_from_files(study_id, open(samp_fp),
+                                                      open(prep_fp), tmp_dir,
+                                                      output_dir,
+                                                      investigation_type,
+                                                      'MODIFY', True)
+
+    if study_acc is None or submission_acc is None:
+        preprocessed_data.update_insdc_status('failed')
+    else:
+        preprocessed_data.update_insdc_status('success', study_acc,
+                                              submission_acc)
+
+    return study_acc, submission_acc
