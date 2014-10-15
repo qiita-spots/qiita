@@ -260,7 +260,7 @@ class BaseSample(QiitaObject):
         cols.remove(self._id_column)
         # Change the *_id columns, as this is for convenience internally,
         # and add the original categories
-        for key, value in viewitems(self._md_template._ignore_cols):
+        for key, value in viewitems(self._md_template.translate_cols_dict):
             cols.remove(key)
             cols.add(value)
 
@@ -287,8 +287,8 @@ class BaseSample(QiitaObject):
         del d['sample_id']
         del d[self._id_column]
         # Modify all the *_id columns to include the string instead of the id
-        for k, v in viewitems(self._md_template._ignore_cols):
-            d[v] = self._md_template._str_cols_handlers[k][d[k]]
+        for k, v in viewitems(self._md_template.translate_cols_dict):
+            d[v] = self._md_template.str_cols_handlers[k][d[k]]
             del d[k]
         return d
 
@@ -332,9 +332,9 @@ class BaseSample(QiitaObject):
             # It's possible that the key is asking for one of the *_id columns
             # that we have to do the translation
             handler = lambda x: x
-            if key in self._md_template._ignore_cols.values():
+            if key in self._md_template.translate_cols_dict.values():
                 handler = (
-                    lambda x: self._md_template._str_cols_handlers[key][x])
+                    lambda x: self._md_template.str_cols_handlers[key][x])
                 key = "%s_id" % key
             # Check if we have either to query the table with required columns
             # or the dynamic table
@@ -614,19 +614,20 @@ class MetadataTemplate(QiitaObject):
             of SampleTemplate and RawData in case of PrepTemplate
         """
         # Check required columns
-        missing = set(cls._ignore_cols.values()).difference(md_template.keys())
+        missing = set(cls.translate_cols_dict.values()).difference(md_template)
         if missing:
-            raise QiitaDBColumnError("Missing columns: %s" % missing)
+            raise QiitaDBColumnError("Missing columns: %s"
+                                     % ', '.join(map(str, missing)))
 
         # Change any *_id column to its str column
-        for key, value in viewitems(cls._ignore_cols):
-            handler = cls._id_cols_handlers[key]
+        for key, value in viewitems(cls.translate_cols_dict):
+            handler = cls.id_cols_handlers[key]
             md_template[key] = pd.Series(
                 [handler[i] for i in md_template[value]],
                 index=md_template.index)
             del md_template[value]
 
-        cls._check_template_specific_columns(md_template, obj)
+        cls._check_template_special_columns(md_template, obj)
 
     @classmethod
     def create(cls, md_template, obj):
@@ -663,7 +664,7 @@ class MetadataTemplate(QiitaObject):
         conn_handler = SQLConnectionHandler()
 
         # Get some useful information from the metadata template
-        sample_ids = list(md_template.index)
+        sample_ids = md_template.index.tolist()
         num_samples = len(sample_ids)
 
         # Get the required columns from the DB
@@ -676,7 +677,7 @@ class MetadataTemplate(QiitaObject):
         # Retrieve the headers of the metadata template
         headers = list(md_template.keys())
 
-        # Check that md_template have the required columns
+        # Check that md_template has the required columns
         remaining = set(db_cols).difference(headers)
         if remaining:
             # If strict, raise an error, else default to None
@@ -990,9 +991,9 @@ class MetadataTemplate(QiitaObject):
             "SELECT * FROM qiita.{0}".format(self._table_name(self))))
 
         for k in metadata_map:
-            for key, value in viewitems(self._ignore_cols):
+            for key, value in viewitems(self.translate_cols_dict):
                 id_ = metadata_map[k][key]
-                metadata_map[k][value] = self._str_cols_handlers[key][id_]
+                metadata_map[k][value] = self.str_cols_handlers[key][id_]
                 del metadata_map[k][key]
             metadata_map[k].update(dyn_vals[k])
 
@@ -1020,11 +1021,11 @@ class SampleTemplate(MetadataTemplate):
     _table_prefix = "sample_"
     _column_table = "study_sample_columns"
     _id_column = "study_id"
-    _ignore_cols = {
+    translate_cols_dict = {
         'required_sample_info_status_id': 'required_sample_info_status'}
-    _id_cols_handlers = {
+    id_cols_handlers = {
         'required_sample_info_status_id': get_required_sample_info_status()}
-    _str_cols_handlers = {
+    str_cols_handlers = {
         'required_sample_info_status_id': get_required_sample_info_status(
             key='required_sample_info_status_id')}
     _sample_cls = Sample
@@ -1047,7 +1048,7 @@ class SampleTemplate(MetadataTemplate):
                 "ORDER BY column_name")]
 
     @classmethod
-    def _check_template_specific_columns(cls, md_template, study):
+    def _check_template_special_columns(cls, md_template, study):
         r"""Checks for special columns based on obj type
 
         Parameters
@@ -1074,13 +1075,13 @@ class PrepTemplate(MetadataTemplate):
     _column_table = "raw_data_prep_columns"
     _id_column = "raw_data_id"
     _strict = False
-    _ignore_cols = {'emp_status_id': 'emp_status'}
-    _id_cols_handlers = {'emp_status_id': get_emp_status()}
-    _str_cols_handlers = {'emp_status_id': get_emp_status(key='emp_status_id')}
+    translate_cols_dict = {'emp_status_id': 'emp_status'}
+    id_cols_handlers = {'emp_status_id': get_emp_status()}
+    str_cols_handlers = {'emp_status_id': get_emp_status(key='emp_status_id')}
     _sample_cls = PrepSample
 
     @classmethod
-    def _check_template_specific_columns(cls, md_template, raw_data):
+    def _check_template_special_columns(cls, md_template, raw_data):
         r"""Checks for special columns based on obj type
 
         Parameters

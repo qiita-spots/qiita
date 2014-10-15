@@ -221,7 +221,7 @@ def get_required_sample_info_status(key='status'):
 
 
 def get_emp_status(key='emp_status'):
-    """Gets the list of possible emp status
+    """Gets the list of possible emp statuses
 
     Parameters
     ----------
