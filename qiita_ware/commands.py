@@ -69,6 +69,11 @@ def submit_EBI_from_files(study_id, sample_template, prep_template,
 
     if send:
         submission.send_sequences()
-        submission.send_xml()
+        study_accession, submission_accession = submission.send_xml()
+    else:
+        study_accession, submission_accession = None, None
+
+    return study_accession, submission_accession
+
 
 submit_EBI_from_files.__doc__ %= ebi_actions

@@ -238,7 +238,7 @@ class TestEBISubmission(TestCase):
         e._write_xml_file(lambda: elm, 'thing', 'testfile')
         self.assertEqual(e.thing, 'testfile')
         obs = open('testfile').read()
-        exp = '<?xml version="1.0" encoding="UTF-8"?>\n<TESTING foo="bar"/>\n'
+        exp = '<?xml version="1.0" encoding="UTF-8"?><TESTING foo="bar"/>'
         self.assertEqual(obs, exp)
         remove('testfile')
 

@@ -1,4 +1,4 @@
--- Populate user_level table 
+-- Populate user_level table
 INSERT INTO qiita.user_level (name, description) VALUES ('admin', 'Can access and do all the things'), ('dev', 'Can access all data and info about errors'), ('superuser', 'Can see all studies, can run analyses'), ('user', 'Can see own and public data, can run analyses'), ('unverified', 'Email not verified'), ('guest', 'Can view & download public data');
 
 -- Populate analysis_status table
@@ -38,7 +38,7 @@ INSERT INTO qiita.filepath_type (filepath_type) VALUES ('raw_forward_seqs'), ('r
 INSERT INTO qiita.checksum_algorithm (name) VALUES ('crc32');
 
 -- Populate commands available
-INSERT INTO qiita.command (name, command, input, required, optional, output) VALUES 
+INSERT INTO qiita.command (name, command, input, required, optional, output) VALUES
 ('Summarize Taxa', 'summarize_taxa_through_plots.py', '{"--otu_table_fp":null}', '{}', '{"--mapping_category":null, "--mapping_fp":null,"--sort":null}', '{"--output_dir":null}'),
 ('Beta Diversity', 'beta_diversity_through_plots.py', '{"--otu_table_fp":null,"--mapping_fp":null}', '{}', '{"--tree_fp":null,"--color_by_all_fields":null,"--seqs_per_sample":null}', '{"--output_dir":null}'),
 ('Alpha Rarefaction', 'alpha_rarefaction.py', '{"--otu_table_fp":null,"--mapping_fp":null}', '{}', '{"--tree_fp":null,"--num_steps":null,"--min_rare_depth":null,"--max_rare_depth":null,"--retain_intermediate_files":false}', '{"--output_dir":null}');
@@ -48,3 +48,6 @@ INSERT INTO qiita.command_data_type (command_id, data_type_id) VALUES (1,1), (1,
 
 -- Set the autoincrementing study_id column to start at 10,000 so we don't overlap with existing (QIIME database) study IDs, which should be maintained
 SELECT setval('qiita.study_study_id_seq', 10000, false);
+
+-- Initializing preprocessed_sequence_illumina_params to have 1 row (default)
+INSERT INTO qiita.preprocessed_sequence_illumina_params (max_bad_run_length) VALUES (3)

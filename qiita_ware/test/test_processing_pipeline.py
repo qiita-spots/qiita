@@ -8,9 +8,9 @@
 
 from __future__ import division
 from unittest import TestCase, main
-from tempfile import mkdtemp
+from tempfile import mkdtemp, mkstemp
 from os.path import exists, join
-from os import remove
+from os import remove, close
 from functools import partial
 from shutil import rmtree
 
@@ -19,9 +19,11 @@ from qiita_db.util import get_db_files_base_dir
 from qiita_db.data import RawData
 from qiita_db.study import Study
 from qiita_db.parameters import PreprocessedIlluminaParams
+from qiita_db.metadata_template import PrepTemplate
 from qiita_ware.processing_pipeline import (_get_preprocess_fastq_cmd,
                                             _insert_preprocessed_data_fastq,
-                                            _clean_up, _generate_demux_file)
+                                            _clean_up, _generate_demux_file,
+                                            _get_qiime_minimal_mapping)
 
 
 @qiita_test_checker()
@@ -39,6 +41,15 @@ class ProcessingPipelineTests(TestCase):
             if exists(dp):
                 rmtree(dp)
 
+    def test_get_qiime_minimal_mapping(self):
+        prep_template = PrepTemplate(1)
+        fd, out_fp = mkstemp(prefix="prep_template_1", suffix=".txt")
+        close(fd)
+
+        _get_qiime_minimal_mapping(prep_template, out_fp)
+        with open(out_fp, "U") as f:
+            self.assertEqual(f.read(), EXP_PREP)
+
     def test_get_preprocess_fastq_cmd(self):
         raw_data = RawData(1)
         params = PreprocessedIlluminaParams(1)
@@ -50,9 +61,8 @@ class ProcessingPipelineTests(TestCase):
         exp_cmd_2 = ("-o {0} --barcode_type golay_12 --max_bad_run_length 3 "
                      "--max_barcode_errors 1.5 "
                      "--min_per_read_length_fraction 0.75 "
-                     "--phred_quality_threshold 3 --preprocessed_params_id 1 "
-                     "--sequence_max_n 0 "
-                     "--trim_length 151".format(obs_output_dir))
+                     "--phred_quality_threshold 3 "
+                     "--sequence_max_n 0".format(obs_output_dir))
 
         # We are splitting the command into two parts because there is no way
         # that we can know the filepath of the mapping file. We thus split the
@@ -127,6 +137,36 @@ qwe
 +
 DEF
 """
+
+EXP_PREP = (
+    "#SampleID\tBarcodeSequence\tLinkerPrimerSequence\tDescription\n"
+    "SKB1.640202\tGTCCGCAAGTTA\tGTGCCAGCMGCCGCGGTAA\tQiita MMF\n"
+    "SKB2.640194\tCGTAGAGCTCTC\tGTGCCAGCMGCCGCGGTAA\tQiita MMF\n"
+    "SKB3.640195\tCCTCTGAGAGCT\tGTGCCAGCMGCCGCGGTAA\tQiita MMF\n"
+    "SKB4.640189\tCCTCGATGCAGT\tGTGCCAGCMGCCGCGGTAA\tQiita MMF\n"
+    "SKB5.640181\tGCGGACTATTCA\tGTGCCAGCMGCCGCGGTAA\tQiita MMF\n"
+    "SKB6.640176\tCGTGCACAATTG\tGTGCCAGCMGCCGCGGTAA\tQiita MMF\n"
+    "SKB7.640196\tCGGCCTAAGTTC\tGTGCCAGCMGCCGCGGTAA\tQiita MMF\n"
+    "SKB8.640193\tAGCGCTCACATC\tGTGCCAGCMGCCGCGGTAA\tQiita MMF\n"
+    "SKB9.640200\tTGGTTATGGCAC\tGTGCCAGCMGCCGCGGTAA\tQiita MMF\n"
+    "SKD1.640179\tCGAGGTTCTGAT\tGTGCCAGCMGCCGCGGTAA\tQiita MMF\n"
+    "SKD2.640178\tAACTCCTGTGGA\tGTGCCAGCMGCCGCGGTAA\tQiita MMF\n"
+    "SKD3.640198\tTAATGGTCGTAG\tGTGCCAGCMGCCGCGGTAA\tQiita MMF\n"
+    "SKD4.640185\tTTGCACCGTCGA\tGTGCCAGCMGCCGCGGTAA\tQiita MMF\n"
+    "SKD5.640186\tTGCTACAGACGT\tGTGCCAGCMGCCGCGGTAA\tQiita MMF\n"
+    "SKD6.640190\tATGGCCTGACTA\tGTGCCAGCMGCCGCGGTAA\tQiita MMF\n"
+    "SKD7.640191\tACGCACATACAA\tGTGCCAGCMGCCGCGGTAA\tQiita MMF\n"
+    "SKD8.640184\tTGAGTGGTCTGT\tGTGCCAGCMGCCGCGGTAA\tQiita MMF\n"
+    "SKD9.640182\tGATAGCACTCGT\tGTGCCAGCMGCCGCGGTAA\tQiita MMF\n"
+    "SKM1.640183\tTAGCGCGAACTT\tGTGCCAGCMGCCGCGGTAA\tQiita MMF\n"
+    "SKM2.640199\tCATACACGCACC\tGTGCCAGCMGCCGCGGTAA\tQiita MMF\n"
+    "SKM3.640197\tACCTCAGTCAAG\tGTGCCAGCMGCCGCGGTAA\tQiita MMF\n"
+    "SKM4.640180\tTCGACCAAACAC\tGTGCCAGCMGCCGCGGTAA\tQiita MMF\n"
+    "SKM5.640177\tCCACCCAGTAAC\tGTGCCAGCMGCCGCGGTAA\tQiita MMF\n"
+    "SKM6.640187\tATATCGCGATGA\tGTGCCAGCMGCCGCGGTAA\tQiita MMF\n"
+    "SKM7.640188\tCGCCGGTAATCT\tGTGCCAGCMGCCGCGGTAA\tQiita MMF\n"
+    "SKM8.640201\tCCGATGCCTTGA\tGTGCCAGCMGCCGCGGTAA\tQiita MMF\n"
+    "SKM9.640192\tAGCAGGCACGAA\tGTGCCAGCMGCCGCGGTAA\tQiita MMF\n")
 
 if __name__ == '__main__':
     main()

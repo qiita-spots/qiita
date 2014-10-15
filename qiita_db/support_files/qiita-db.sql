@@ -127,7 +127,7 @@ CREATE TABLE qiita.preprocessed_data (
 	preprocessed_data_id bigserial  NOT NULL,
 	preprocessed_params_table varchar  NOT NULL,
 	preprocessed_params_id bigint  NOT NULL,
-	submitted_to_insdc   bool  NOT NULL,
+	submitted_to_insdc_status varchar DEFAULT 'not submitted' NOT NULL,
 	ebi_submission_accession varchar  ,
 	ebi_study_accession  varchar  ,
 	data_type_id         bigint  NOT NULL,
@@ -149,7 +149,6 @@ COMMENT ON TABLE qiita.preprocessed_sequence_454_params IS 'Parameters used for 
 
 CREATE TABLE qiita.preprocessed_sequence_illumina_params ( 
 	preprocessed_params_id bigserial  NOT NULL,
-	trim_length          integer  NOT NULL,
 	max_bad_run_length   integer DEFAULT 3 NOT NULL,
 	min_per_read_length_fraction real DEFAULT 0.75 NOT NULL,
 	sequence_max_n       integer DEFAULT 0 NOT NULL,

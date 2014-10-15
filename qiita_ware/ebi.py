@@ -615,7 +615,7 @@ class EBISubmission(object):
         xml = minidom.parseString(ET.tostring(xml_element))
 
         with open(fp, 'w') as outfile:
-            outfile.write(xml.toprettyxml(indent='  ', encoding='UTF-8'))
+            outfile.write(xml.toxml(encoding='UTF-8'))
 
         setattr(self, attribute_name, fp)
 
@@ -898,8 +898,12 @@ class EBISubmission(object):
         with open(temp_fp, 'U') as curl_output_f:
             curl_result = curl_output_f.read()
 
+        study_accession = None
+        submission_accession = None
+
         if 'success="true"' in curl_result:
             LogEntry.create('Runtime', curl_result)
+
             print curl_result
             print "SUCCESS"
 
@@ -908,13 +912,16 @@ class EBISubmission(object):
                                 '<SUBMISSION accession="(?P<submission>.+?)"',
                                 curl_result)
             if accessions is not None:
-                LogEntry.create('Runtime', "Study accession:\t%s" %
-                                accessions.group('study'))
-                LogEntry.create('Runtime', "Submission accession:\t%s" %
-                                accessions.group('submission'))
+                study_accession = accessions.group('study')
+                submission_accession = accessions.group('submission')
 
-                print "Study accession:\t", accessions.group('study')
-                print "Submission accession:\t", accessions.group('submission')
+                LogEntry.create('Runtime', "Study accession:\t%s" %
+                                study_accession)
+                LogEntry.create('Runtime', "Submission accession:\t%s" %
+                                submission_accession)
+
+                print "Study accession:\t", study_accession
+                print "Submission accession:\t", submission_accession
             else:
                 LogEntry.create('Runtime', ("However, the accession numbers "
                                             "could not be found in the output "
@@ -925,3 +932,5 @@ class EBISubmission(object):
             LogEntry.create('Fatal', curl_result)
             print curl_result
             print "FAILED"
+
+        return (study_accession, submission_accession)

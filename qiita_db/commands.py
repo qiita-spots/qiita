@@ -85,7 +85,7 @@ def load_study_from_cmd(owner, title, info):
 
 def load_preprocessed_data_from_cmd(study_id, params_table, filedir,
                                     filepathtype, params_id,
-                                    submitted_to_insdc, raw_data_id):
+                                    submitted_to_insdc_status, raw_data_id):
     r"""Adds preprocessed data to the database
 
     Parameters
@@ -101,8 +101,9 @@ def load_preprocessed_data_from_cmd(study_id, params_table, filedir,
         preprocessing
     params_id : int
         The id of parameters int the params_table
-    submitted_to_insdc : bool
-        Has the data been submitted to insdc
+    submitted_to_insdc_status : str, {'not submitted', 'submitting', \
+            'success', 'failed'}
+        INSDC submission status
     raw_data_id : int
         Raw data id associated with data
     """
@@ -110,9 +111,9 @@ def load_preprocessed_data_from_cmd(study_id, params_table, filedir,
     fp_type = fp_types_dict[filepathtype]
     filepaths = [(join(filedir, fp), fp_type) for fp in listdir(filedir)]
     raw_data = None if raw_data_id is None else RawData(raw_data_id)
-    return PreprocessedData.create(Study(study_id), params_table, params_id,
-                                   filepaths, raw_data=raw_data,
-                                   submitted_to_insdc=submitted_to_insdc)
+    return PreprocessedData.create(
+        Study(study_id), params_table, params_id, filepaths, raw_data=raw_data,
+        submitted_to_insdc_status=submitted_to_insdc_status)
 
 
 def load_sample_template_from_cmd(sample_temp_path, study_id):

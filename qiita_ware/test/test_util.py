@@ -10,15 +10,20 @@ from __future__ import division
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
+import os
+from unittest import TestCase, main
+import tempfile
+
+import h5py
 import numpy as np
 import pandas as pd
-
-from unittest import TestCase, main
+from future.utils.six import StringIO, BytesIO
 
 from qiita_db.metadata_template import SampleTemplate, PrepTemplate
 from qiita_ware.util import (per_sample_sequences, template_to_dict,
                              metadata_stats_from_sample_and_prep_templates,
-                             metadata_map_from_sample_and_prep_templates)
+                             metadata_map_from_sample_and_prep_templates,
+                             open_file, _is_string_or_bytes)
 
 
 def mock_sequence_iter(items):
@@ -101,22 +106,21 @@ class UtilTests(TestCase):
 
         self.assertTrue(all(obs.columns == pd.Index(
             [u'tot_org_carb', u'common_name', u'has_extracted_data',
-             u'water_content_soil', u'env_feature', u'assigned_from_geo',
-             u'altitude', u'env_biome', u'texture', u'has_physical_specimen',
-             u'description_duplicate', u'physical_location', u'latitude',
-             u'ph', u'host_taxid', u'elevation', u'description',
-             u'collection_timestamp', u'taxon_id', u'samp_salinity',
-             u'host_subject_id', u'sample_type', u'season_environment',
-             u'required_sample_info_status_id', u'temp', u'country',
-             u'longitude', u'tot_nitro', u'depth', u'anonymized_name',
-             u'emp_status_id', u'target_subfragment', u'sample_center',
-             u'samp_size', u'run_date', u'experiment_center', u'platform',
-             u'center_name', u'barcodesequence', u'run_center', u'run_prefix',
-             u'library_construction_protocol', u'pcr_primers',
+             u'required_sample_info_status', u'water_content_soil',
+             u'env_feature', u'assigned_from_geo', u'altitude', u'env_biome',
+             u'texture', u'has_physical_specimen', u'description_duplicate',
+             u'physical_location', u'latitude', u'ph', u'host_taxid',
+             u'elevation', u'description', u'collection_timestamp',
+             u'taxon_id', u'samp_salinity', u'host_subject_id', u'sample_type',
+             u'season_environment', u'temp', u'country', u'longitude',
+             u'tot_nitro', u'depth', u'anonymized_name', u'target_subfragment',
+             u'sample_center', u'samp_size', u'run_date', u'experiment_center',
+             u'pcr_primers', u'center_name', u'barcodesequence', u'run_center',
+             u'run_prefix', u'library_construction_protocol', u'emp_status',
              u'linkerprimersequence', u'experiment_design_description',
              u'target_gene', u'center_project_name', u'illumina_technology',
-             u'sequencing_meth', u'experiment_title', u'study_center'],
-            dtype='object')))
+             u'sequencing_meth', u'platform', u'experiment_title',
+             u'study_center'], dtype='object')))
 
     def template_to_dict(self):
         template = PrepTemplate(1)
@@ -139,10 +143,81 @@ class UtilTests(TestCase):
                 'platform', 'library_construction_protocol',
                 'experiment_design_description', 'study_center',
                 'center_project_name', 'sample_center', 'samp_size',
-                'illumina_technology', 'experiment_title', 'emp_status_id',
+                'illumina_technology', 'experiment_title', 'emp_status',
                 'target_subfragment', 'barcodesequence',
                 'ebi_study_accession'])
 
+
+class TestFilePathOpening(TestCase):
+    """Tests adapted from scikit-bio's skbio.io.util tests"""
+    def test_is_string_or_bytes(self):
+        self.assertTrue(_is_string_or_bytes('foo'))
+        self.assertTrue(_is_string_or_bytes(u'foo'))
+        self.assertTrue(_is_string_or_bytes(b'foo'))
+        self.assertFalse(_is_string_or_bytes(StringIO('bar')))
+        self.assertFalse(_is_string_or_bytes([1]))
+
+    def test_file_closed(self):
+        """File gets closed in decorator"""
+        f = tempfile.NamedTemporaryFile('r')
+        filepath = f.name
+        with open_file(filepath) as fh:
+            pass
+        self.assertTrue(fh.closed)
+
+    def test_file_closed_harder(self):
+        """File gets closed in decorator, even if exceptions happen."""
+        f = tempfile.NamedTemporaryFile('r')
+        filepath = f.name
+        try:
+            with open_file(filepath) as fh:
+                raise TypeError
+        except TypeError:
+            self.assertTrue(fh.closed)
+        else:
+            # If we're here, no exceptions have been raised inside the
+            # try clause, so the context manager swallowed them. No
+            # good.
+            raise Exception("`open_file` didn't propagate exceptions")
+
+    def test_filehandle(self):
+        """Filehandles slip through untouched"""
+        with tempfile.TemporaryFile('r') as fh:
+            with open_file(fh) as ffh:
+                self.assertTrue(fh is ffh)
+            # And it doesn't close the file-handle
+            self.assertFalse(fh.closed)
+
+    def test_StringIO(self):
+        """StringIO (useful e.g. for testing) slips through."""
+        f = StringIO("File contents")
+        with open_file(f) as fh:
+            self.assertTrue(fh is f)
+
+    def test_BytesIO(self):
+        """BytesIO (useful e.g. for testing) slips through."""
+        f = BytesIO(b"File contents")
+        with open_file(f) as fh:
+            self.assertTrue(fh is f)
+
+    def test_hdf5IO(self):
+        f = h5py.File('test', driver='core', backing_store=False)
+        with open_file(f) as fh:
+            self.assertTrue(fh is f)
+
+    def test_hdf5IO_open(self):
+        name = None
+        with tempfile.NamedTemporaryFile(delete=False) as fh:
+            name = fh.name
+            fh.close()
+
+            h5file = h5py.File(name, 'w')
+            h5file.close()
+
+            with open_file(name) as fh_inner:
+                self.assertTrue(isinstance(fh_inner, h5py.File))
+
+        os.remove(name)
 
 # comment indicates the expected random value
 sequences = [
@@ -237,7 +312,7 @@ SUMMARY_STATS = {
     'ebi_study_accession': [('None', 27)],
     'ebi_submission_accession': [('None', 27)],
     'elevation': [('114.0', 27)],
-    'emp_status_id': [('1', 27)],
+    'emp_status': [('EMP', 27)],
     'env_biome': [('ENVO:Temperate grasslands, savannas, and shrubland biome',
                    27)],
     'env_feature': [('ENVO:plant-associated habitat', 27)],
@@ -356,7 +431,7 @@ SUMMARY_STATS = {
     'ph': [('6.8', 9), ('6.82', 10), ('6.94', 8)],
     'physical_location': [('ANL', 27)],
     'platform': [('Illumina', 27)],
-    'required_sample_info_status_id': [('4', 27)],
+    'required_sample_info_status': [('completed', 27)],
     'run_center': [('ANL', 27)],
     'run_date': [('8/1/12', 27)],
     'run_prefix': [('s_G1_L001_sequences', 27)],

@@ -22,7 +22,8 @@ from qiita_db.util import (exists_table, exists_dynamic_table, scrub_data,
                            check_count, get_processed_params_tables,
                            params_dict_to_json, get_user_fp, get_study_fp,
                            insert_filepaths, get_db_files_base_dir,
-                           get_data_types)
+                           get_data_types, get_required_sample_info_status,
+                           get_emp_status)
 from qiita_core.qiita_settings import qiita_config
 
 
@@ -79,7 +80,6 @@ class DBUtilTests(TestCase):
         obs = get_table_cols_w_type("preprocessed_sequence_illumina_params",
                                     self.conn_handler)
         exp = [['preprocessed_params_id', 'bigint'],
-               ['trim_length', 'integer'],
                ['max_bad_run_length', 'integer'],
                ['min_per_read_length_fraction', 'real'],
                ['sequence_max_n', 'integer'],
@@ -187,6 +187,28 @@ class DBUtilTests(TestCase):
         exp = {v: k for k, v in exp.items()}
         self.assertEqual(obs, exp)
 
+    def test_get_required_sample_info_status(self):
+        """Tests that get_required_sample_info_status works"""
+        obs = get_required_sample_info_status()
+        exp = {'received': 1, 'in_preparation': 2, 'running': 3,
+               'completed': 4}
+        self.assertEqual(obs, exp)
+
+        obs = get_required_sample_info_status(
+            key='required_sample_info_status_id')
+        exp = {v: k for k, v in exp.items()}
+        self.assertEqual(obs, exp)
+
+    def test_get_emp_status(self):
+        """Tests that get_emp_status works"""
+        obs = get_emp_status()
+        exp = {'EMP': 1, 'EMP_Processed': 2, 'NOT_EMP': 3}
+        self.assertEqual(obs, exp)
+
+        obs = get_emp_status(key='emp_status_id')
+        exp = {v: k for k, v in exp.items()}
+        self.assertEqual(obs, exp)
+
     def test_get_count(self):
         """Checks that get_count retrieves proper count"""
         self.assertEqual(get_count('qiita.study_person'), 3)
@@ -215,7 +237,7 @@ class DBUtilTests(TestCase):
 
         obs = insert_filepaths([(fp, 1)], 1, "raw_data", "filepath",
                                self.conn_handler)
-        exp = [15]
+        exp = [16]
         self.assertEqual(obs, exp)
 
         # Check that the files have been copied correctly
@@ -226,8 +248,8 @@ class DBUtilTests(TestCase):
 
         # Check that the filepaths have been added to the DB
         obs = self.conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.filepath WHERE filepath_id=15")
-        exp = [[15, exp_fp, 1, '852952723', 1]]
+            "SELECT * FROM qiita.filepath WHERE filepath_id=16")
+        exp = [[16, exp_fp, 1, '852952723', 1]]
         self.assertEqual(obs, exp)
 
     def test_insert_filepaths_string(self):
@@ -239,7 +261,7 @@ class DBUtilTests(TestCase):
 
         obs = insert_filepaths([(fp, "raw_forward_seqs")], 1, "raw_data",
                                "filepath", self.conn_handler)
-        exp = [15]
+        exp = [16]
         self.assertEqual(obs, exp)
 
         # Check that the files have been copied correctly
@@ -250,8 +272,8 @@ class DBUtilTests(TestCase):
 
         # Check that the filepaths have been added to the DB
         obs = self.conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.filepath WHERE filepath_id=15")
-        exp = [[15, exp_fp, 1, '852952723', 1]]
+            "SELECT * FROM qiita.filepath WHERE filepath_id=16")
+        exp = [[16, exp_fp, 1, '852952723', 1]]
         self.assertEqual(obs, exp)
 
     def test_get_study_fps(self):

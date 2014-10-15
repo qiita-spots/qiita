@@ -39,6 +39,7 @@ Methods
 
 from __future__ import division
 from future.builtins import zip
+from future.utils import viewitems
 from copy import deepcopy
 
 import pandas as pd
@@ -50,7 +51,14 @@ from .exceptions import (QiitaDBDuplicateError, QiitaDBColumnError,
                          QiitaDBDuplicateHeaderError)
 from .base import QiitaObject
 from .sql_connection import SQLConnectionHandler
-from .util import exists_table, get_table_cols
+from .util import (exists_table, get_table_cols, get_emp_status,
+                   get_required_sample_info_status)
+
+
+TARGET_GENE_DATA_TYPES = ['16S', '18S', 'ITS']
+REQUIRED_TARGET_GENE_COLS = {'barcodesequence', 'linkerprimersequence'}
+RENAME_COLS_DICT = {'barcode': 'barcodesequence',
+                    'primer': 'linkerprimersequence'}
 
 
 def _get_datatypes(metadata_map):
@@ -250,7 +258,39 @@ class BaseSample(QiitaObject):
         # actually belong to the metadata
         cols.remove('sample_id')
         cols.remove(self._id_column)
+        # Change the *_id columns, as this is for convenience internally,
+        # and add the original categories
+        for key, value in viewitems(self._md_template.translate_cols_dict):
+            cols.remove(key)
+            cols.add(value)
+
         return cols
+
+    def _to_dict(self):
+        r"""Returns the categories and their values in a dictionary
+
+        Returns
+        -------
+        dict of {str: str}
+            A dictionary of the form {category: value}
+        """
+        conn_handler = SQLConnectionHandler()
+        d = dict(conn_handler.execute_fetchone(
+            "SELECT * FROM qiita.{0} WHERE {1}=%s AND "
+            "sample_id=%s".format(self._table, self._id_column),
+            (self._md_template.id, self._id)))
+        dynamic_d = dict(conn_handler.execute_fetchone(
+            "SELECT * from qiita.{0} WHERE "
+            "sample_id=%s".format(self._dynamic_table),
+            (self._id, )))
+        d.update(dynamic_d)
+        del d['sample_id']
+        del d[self._id_column]
+        # Modify all the *_id columns to include the string instead of the id
+        for k, v in viewitems(self._md_template.translate_cols_dict):
+            d[v] = self._md_template.str_cols_handlers[k][d[k]]
+            del d[k]
+        return d
 
     def __len__(self):
         r"""Returns the number of metadata categories
@@ -289,13 +329,21 @@ class BaseSample(QiitaObject):
         conn_handler = SQLConnectionHandler()
         key = key.lower()
         if key in self._get_categories(conn_handler):
+            # It's possible that the key is asking for one of the *_id columns
+            # that we have to do the translation
+            handler = lambda x: x
+            if key in self._md_template.translate_cols_dict.values():
+                handler = (
+                    lambda x: self._md_template.str_cols_handlers[key][x])
+                key = "%s_id" % key
             # Check if we have either to query the table with required columns
             # or the dynamic table
             if key in get_table_cols(self._table, conn_handler):
-                return conn_handler.execute_fetchone(
+                result = conn_handler.execute_fetchone(
                     "SELECT {0} FROM qiita.{1} WHERE {2}=%s AND "
                     "sample_id=%s".format(key, self._table, self._id_column),
                     (self._md_template.id, self._id))[0]
+                return handler(result)
             else:
                 return conn_handler.execute_fetchone(
                     "SELECT {0} FROM qiita.{1} WHERE "
@@ -382,17 +430,8 @@ class BaseSample(QiitaObject):
         Iterator
             Iterator over metadata values
         """
-        conn_handler = SQLConnectionHandler()
-        values = conn_handler.execute_fetchone(
-            "SELECT * FROM qiita.{0} WHERE {1}=%s AND "
-            "sample_id=%s".format(self._table, self._id_column),
-            (self._md_template.id, self._id))[2:]
-        dynamic_values = conn_handler.execute_fetchone(
-            "SELECT * from qiita.{0} WHERE "
-            "sample_id=%s".format(self._dynamic_table),
-            (self._id, ))[1:]
-        values.extend(dynamic_values)
-        return iter(values)
+        d = self._to_dict()
+        return d.values()
 
     def items(self):
         r"""Iterator over (category, value) tuples
@@ -402,19 +441,8 @@ class BaseSample(QiitaObject):
         Iterator
             Iterator over (category, value) tuples
         """
-        conn_handler = SQLConnectionHandler()
-        values = dict(conn_handler.execute_fetchone(
-            "SELECT * FROM qiita.{0} WHERE {1}=%s AND "
-            "sample_id=%s".format(self._table, self._id_column),
-            (self._md_template.id, self._id)))
-        dynamic_values = dict(conn_handler.execute_fetchone(
-            "SELECT * from qiita.{0} WHERE "
-            "sample_id=%s".format(self._dynamic_table),
-            (self._id, )))
-        values.update(dynamic_values)
-        del values['sample_id']
-        del values[self._id_column]
-        return values.items()
+        d = self._to_dict()
+        return d.items()
 
     def get(self, key):
         r"""Returns the metadata value for category `key`, or None if the
@@ -574,6 +602,34 @@ class MetadataTemplate(QiitaObject):
         return "%s%d" % (cls._table_prefix, obj.id)
 
     @classmethod
+    def _check_special_columns(cls, md_template, obj):
+        r"""Checks for special columns based on obj type
+
+        Parameters
+        ----------
+        md_template : DataFrame
+            The metadata template file contents indexed by sample ids
+        obj : Study or RawData
+            The obj to which the metadata template belongs to. Study in case
+            of SampleTemplate and RawData in case of PrepTemplate
+        """
+        # Check required columns
+        missing = set(cls.translate_cols_dict.values()).difference(md_template)
+        if missing:
+            raise QiitaDBColumnError("Missing columns: %s"
+                                     % ', '.join(map(str, missing)))
+
+        # Change any *_id column to its str column
+        for key, value in viewitems(cls.translate_cols_dict):
+            handler = cls.id_cols_handlers[key]
+            md_template[key] = pd.Series(
+                [handler[i] for i in md_template[value]],
+                index=md_template.index)
+            del md_template[value]
+
+        cls._check_template_special_columns(md_template, obj)
+
+    @classmethod
     def create(cls, md_template, obj):
         r"""Creates the metadata template in the database
 
@@ -601,15 +657,27 @@ class MetadataTemplate(QiitaObject):
         if len(set(md_template.columns)) != len(md_template.columns):
             raise QiitaDBDuplicateHeaderError()
 
+        # We need to check for some special columns, that are not present on
+        # the database, but depending on the data type are required.
+        cls._check_special_columns(md_template, obj)
+
         conn_handler = SQLConnectionHandler()
-        # Check that md_template have the required columns
+
+        # Get some useful information from the metadata template
+        sample_ids = md_template.index.tolist()
+        num_samples = len(sample_ids)
+
+        # Get the required columns from the DB
         db_cols = get_table_cols(cls._table, conn_handler)
+
         # Remove the sample_id and study_id columns
         db_cols.remove('sample_id')
         db_cols.remove(cls._id_column)
+
+        # Retrieve the headers of the metadata template
         headers = list(md_template.keys())
-        sample_ids = list(md_template.index)
-        num_samples = len(sample_ids)
+
+        # Check that md_template has the required columns
         remaining = set(db_cols).difference(headers)
         if remaining:
             # If strict, raise an error, else default to None
@@ -619,6 +687,7 @@ class MetadataTemplate(QiitaObject):
                 for col in remaining:
                     md_template[col] = pd.Series([None] * num_samples,
                                                  index=sample_ids)
+
         # Insert values on required columns
         values = _as_python_types(md_template, db_cols)
         values.insert(0, sample_ids)
@@ -922,12 +991,16 @@ class MetadataTemplate(QiitaObject):
             "SELECT * FROM qiita.{0}".format(self._table_name(self))))
 
         for k in metadata_map:
+            for key, value in viewitems(self.translate_cols_dict):
+                id_ = metadata_map[k][key]
+                metadata_map[k][value] = self.str_cols_handlers[key][id_]
+                del metadata_map[k][key]
             metadata_map[k].update(dyn_vals[k])
 
         headers = sorted(list(metadata_map.values())[0].keys())
         with open(fp, 'w') as f:
             # First write the headers
-            f.write("#SampleID\t%s\n" % '\t'.join(headers))
+            f.write("sample_name\t%s\n" % '\t'.join(headers))
             # Write the values for each sample id
             for sid, d in sorted(metadata_map.items()):
                 values = [str(d[h]) for h in headers]
@@ -948,6 +1021,13 @@ class SampleTemplate(MetadataTemplate):
     _table_prefix = "sample_"
     _column_table = "study_sample_columns"
     _id_column = "study_id"
+    translate_cols_dict = {
+        'required_sample_info_status_id': 'required_sample_info_status'}
+    id_cols_handlers = {
+        'required_sample_info_status_id': get_required_sample_info_status()}
+    str_cols_handlers = {
+        'required_sample_info_status_id': get_required_sample_info_status(
+            key='required_sample_info_status_id')}
     _sample_cls = Sample
 
     @staticmethod
@@ -967,6 +1047,19 @@ class SampleTemplate(MetadataTemplate):
                 "WHERE table_name = 'required_sample_info' "
                 "ORDER BY column_name")]
 
+    @classmethod
+    def _check_template_special_columns(cls, md_template, study):
+        r"""Checks for special columns based on obj type
+
+        Parameters
+        ----------
+        md_template : DataFrame
+            The metadata template file contents indexed by sample ids
+        study : Study
+            The study to which the sample template belongs to.
+        """
+        pass
+
 
 class PrepTemplate(MetadataTemplate):
     r"""Represent the PrepTemplate of a raw dat. Provides access to the
@@ -982,4 +1075,43 @@ class PrepTemplate(MetadataTemplate):
     _column_table = "raw_data_prep_columns"
     _id_column = "raw_data_id"
     _strict = False
+    translate_cols_dict = {'emp_status_id': 'emp_status'}
+    id_cols_handlers = {'emp_status_id': get_emp_status()}
+    str_cols_handlers = {'emp_status_id': get_emp_status(key='emp_status_id')}
     _sample_cls = PrepSample
+
+    @classmethod
+    def _check_template_special_columns(cls, md_template, raw_data):
+        r"""Checks for special columns based on obj type
+
+        Parameters
+        ----------
+        md_template : DataFrame
+            The metadata template file contents indexed by sample ids
+        raw_data : RawData
+            The raw_data to which the prep template belongs to.
+
+        Raises
+        ------
+        QiitaDBColumnError
+            If any of the required columns are not present in the md_template
+
+        Notes
+        -----
+        Sometimes people use different names for the same columns. We just
+        rename them to use the naming that we expect, so this is normalized
+        across studies.
+        """
+        # We only have column requirements if the data type of the raw data
+        # is one of the target gene types
+        if raw_data.data_type() in TARGET_GENE_DATA_TYPES:
+            md_template.rename(columns=RENAME_COLS_DICT, inplace=True)
+
+            # Check for all required columns for target genes studies
+            missing_cols = REQUIRED_TARGET_GENE_COLS.difference(
+                md_template.columns)
+            if missing_cols:
+                raise QiitaDBColumnError(
+                    "The following columns are missing in the PrepTemplate and"
+                    " they are requried for target gene studies: %s"
+                    % missing_cols)

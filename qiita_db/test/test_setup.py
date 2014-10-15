@@ -38,7 +38,7 @@ class SetupTest(TestCase):
         self.assertEqual(get_count("qiita.study_experimental_factor"), 1)
 
     def test_filepath(self):
-        self.assertEqual(get_count("qiita.filepath"), 14)
+        self.assertEqual(get_count("qiita.filepath"), 15)
 
     def test_filepath_type(self):
         self.assertEqual(get_count("qiita.filepath_type"), 13)
@@ -80,7 +80,7 @@ class SetupTest(TestCase):
         self.assertEqual(get_count("qiita.study_preprocessed_data"), 2)
 
     def test_preprocessed_filepath(self):
-        self.assertEqual(get_count("qiita.preprocessed_filepath"), 2)
+        self.assertEqual(get_count("qiita.preprocessed_filepath"), 3)
 
     def test_preprocessed_sequence_illumina_params(self):
         self.assertEqual(

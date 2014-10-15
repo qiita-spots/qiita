@@ -7,9 +7,8 @@
 # -----------------------------------------------------------------------------
 from os.path import abspath, dirname, join
 from functools import partial
-from os import remove
+from os import mkdir
 from os.path import exists
-from ftplib import FTP
 import gzip
 
 from future import standard_library
@@ -25,7 +24,8 @@ from .reference import Reference
 
 get_support_file = partial(join, join(dirname(abspath(__file__)),
                                       'support_files'))
-get_reference_fp = partial(join, qiita_config.base_data_dir, "reference")
+reference_base_dir = join(qiita_config.base_data_dir, "reference")
+get_reference_fp = partial(join, reference_base_dir)
 
 
 DFLT_BASE_WORK_FOLDER = get_support_file('work_data')
@@ -74,6 +74,9 @@ def _populate_test_db(conn):
 
 def _add_ontology_data(conn):
     print ('Loading Ontology Data')
+    if not exists(reference_base_dir):
+        mkdir(reference_base_dir)
+
     fp = get_reference_fp('ontologies.sql.gz')
 
     if exists(fp):
@@ -89,7 +92,7 @@ def _add_ontology_data(conn):
                           url)
 
     with gzip.open(fp, 'rb') as f:
-        cur.execute(f.read())
+        conn.execute(f.read())
 
 
 def _insert_processed_params(conn, ref):
@@ -104,6 +107,8 @@ def _insert_processed_params(conn, ref):
 
 def _download_reference_files(conn):
     print('Downloading reference files')
+    if not exists(reference_base_dir):
+        mkdir(reference_base_dir)
 
     files = {'tree': (get_reference_fp('gg_13_8-97_otus.tree'),
                       'ftp://thebeast.colorado.edu/greengenes_release/'
