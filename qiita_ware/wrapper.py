@@ -163,4 +163,5 @@ class ParallelWrapper(object):
                 results[node] = context.submit_async_deps(deps, *job)
             self._logger.write("Done\n")
 
-        self._job_blocker(results)
+        if self._block:
+            self._job_blocker(results)
