@@ -233,7 +233,7 @@ class StudyPreprocessor(ParallelWrapper):
         self.raw_data = raw_data
         self._logger = stderr
         # Change the raw_data status to preprocessing
-        raw_data.update_preprocessing_status('preprocessing')
+        raw_data.preprocessing_status = 'preprocessing'
         # STEP 1: Preprocess the study
         preprocess_node = "PREPROCESS"
 
