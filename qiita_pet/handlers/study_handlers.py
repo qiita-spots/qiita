@@ -114,27 +114,20 @@ class PublicStudiesHandler(BaseHandler):
 
 
 class StudyDescriptionHandler(BaseHandler):
-    def get_values_for_post_or_get(self, study_id):
-        """Process the values for both post and get to avoid having duplicated
-        lines
-        """
+    def display_template(self, study_id, msg):
+        """Simple function to avoid duplication of code"""
 
+        # processing paths
         fp = get_study_fp(study_id)
-
         if exists(fp):
             fs = [f for f in listdir(fp)]
         else:
             fs = []
-
         fts = [k.split('_', 1)[1].replace('_', ' ')
                for k in get_filepath_types() if k.startswith('raw_')]
 
-        return fs, fts
-
-    def get_raw_data_variables(self, study):
-        """ Create the boolean ssb to display the split and metadata buttons
-        and the array of valid raw data to avoid duplicated lines
-        """
+        # getting the raw_data
+        study = Study(study_id)
 
         valid_ssb = []
         for rdi in study.raw_data():
@@ -143,26 +136,25 @@ class StudyDescriptionHandler(BaseHandler):
             if ex:
                 valid_ssb.append(rdi)
 
-        return len(valid_ssb) > 0, valid_ssb
-
-    @authenticated
-    def get(self, study_id):
-        fs, fts = self.get_values_for_post_or_get(study_id)
-
-        study = Study(int(study_id))
-        ssb, valid_ssb = self.get_raw_data_variables(study)
-
         # get the prep template id and force to choose the first one
         # see issue https://github.com/biocore/qiita/issues/415
-        prep_template_id = valid_ssb[0]
+        if valid_ssb:
+            prep_template_id = valid_ssb[0]
+        else:
+            prep_template_id = None
 
         valid_ssb = ','.join(map(str, valid_ssb))
+        ssb = len(valid_ssb) > 0
 
         self.render('study_description.html', user=self.current_user,
                     study_title=study.title, study_info=study.info,
                     study_id=study_id, files=fs, ssb=ssb, vssb=valid_ssb,
                     max_upload_size=qiita_config.max_upload_size,
-                    filetypes=fts, prep_template_id=prep_template_id, msg="")
+                    filetypes=fts, prep_template_id=prep_template_id, msg=msg)
+
+    @authenticated
+    def get(self, study_id):
+        self.display_template(int(study_id), "")
 
     @authenticated
     def post(self, study_id):
@@ -182,11 +174,8 @@ class StudyDescriptionHandler(BaseHandler):
             raise HTTPError(403, "One of these files doesn't exist: %s, %s",
                             (fp_rsp, fp_rpt))
 
-        fs, fts = self.get_values_for_post_or_get(study_id)
-
         study_id = int(study_id)
         study = Study(study_id)
-        ssb = any([PrepTemplate.exists(RawData(d)) for d in study.raw_data()])
 
         # deleting previous uploads
         for rd in study.raw_data():
@@ -202,19 +191,7 @@ class StudyDescriptionHandler(BaseHandler):
                 QiitaDBDuplicateError, IOError), e:
             msg = ('<b>An error occurred parsing the sample template: '
                    '%s</b><br/>%s' % (basename(fp_rsp), e))
-            ssb, valid_ssb = self.get_raw_data_variables(study)
-
-            # get the prep template id and force to choose the first one
-            # see issue https://github.com/biocore/qiita/issues/415
-            prep_template_id = valid_ssb[0]
-
-            valid_ssb = ','.join(map(str, valid_ssb))
-            self.render('study_description.html', user=self.current_user,
-                        study_title=study.title, study_info=study.info,
-                        study_id=study_id, files=fs, ssb=ssb, vssb=valid_ssb,
-                        max_upload_size=qiita_config.max_upload_size,
-                        filetypes=fts, prep_template_id=prep_template_id,
-                        msg=msg)
+            self.display_template(int(study_id), msg)
             return
 
         # inserting raw data
@@ -245,19 +222,7 @@ class StudyDescriptionHandler(BaseHandler):
             fps = ', '.join([basename(f) for f in filepaths])
             msg = ('<b>An error occurred parsing the raw files: '
                    '%s</b><br/>%s' % (basename(fps), e))
-            ssb, valid_ssb = self.get_raw_data_variables(study)
-
-            # get the prep template id and force to choose the first one
-            # see issue https://github.com/biocore/qiita/issues/415
-            prep_template_id = valid_ssb[0]
-
-            valid_ssb = ','.join(map(str, valid_ssb))
-            self.render('study_description.html', user=self.current_user,
-                        study_title=study.title, study_info=study.info,
-                        study_id=study_id, files=fs, ssb=ssb, vssb=valid_ssb,
-                        max_upload_size=qiita_config.max_upload_size,
-                        filetypes=fts, prep_template_id=prep_template_id,
-                        msg=msg)
+            self.display_template(int(study_id), msg)
             return
 
         try:
@@ -267,37 +232,11 @@ class StudyDescriptionHandler(BaseHandler):
                 IOError), e:
             msg = ('<b>An error occurred parsing the prep template: '
                    '%s</b><br/>%s' % (basename(fp_rsp), e))
-            ssb, valid_ssb = self.get_raw_data_variables(study)
-
-            # get the prep template id and force to choose the first one
-            # see issue https://github.com/biocore/qiita/issues/415
-            prep_template_id = valid_ssb[0]
-
-            valid_ssb = ','.join(map(str, valid_ssb))
-            self.render('study_description.html', user=self.current_user,
-                        study_title=study.title, study_info=study.info,
-                        study_id=study_id, files=fs, ssb=ssb, vssb=valid_ssb,
-                        max_upload_size=qiita_config.max_upload_size,
-                        filetypes=fts, prep_template_id=prep_template_id,
-                        msg=msg)
+            self.display_template(int(study_id), msg)
             return
 
-        # rerun so we have the must upto date info
-        fs, fts = self.get_values_for_post_or_get(study_id)
-        ssb, valid_ssb = self.get_raw_data_variables(study)
-
-        # get the prep template id and force to choose the first one
-        # see issue https://github.com/biocore/qiita/issues/415
-        prep_template_id = valid_ssb[0]
-
-        valid_ssb = ','.join(map(str, valid_ssb))
-
-        self.render('study_description.html', user=self.current_user,
-                    study_title=study.title, study_info=study.info,
-                    study_id=study_id, files=fs, ssb=ssb, vssb=valid_ssb,
-                    max_upload_size=qiita_config.max_upload_size,
-                    filetypes=fts, prep_template_id=prep_template_id,
-                    msg="Your samples where processed")
+        msg = "Your samples where processed"
+        self.display_template(int(study_id), msg)
 
 
 class CreateStudyHandler(BaseHandler):
