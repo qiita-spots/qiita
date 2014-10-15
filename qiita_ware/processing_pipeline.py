@@ -273,9 +273,9 @@ class StudyPreprocessor(ParallelWrapper):
 
         self._dirpaths_to_remove.append(output_dir)
 
-    def _failure_callback(self):
+    def _failure_callback(self, msg=None):
         """Callback to execute in case that any of the job nodes failed
 
         Need to change the raw_data status to 'failed'
         """
-        self.raw_data.preprocessing_status = 'failed'
+        self.raw_data.preprocessing_status = 'failed: %s' % msg

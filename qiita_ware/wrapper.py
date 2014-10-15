@@ -52,8 +52,14 @@ class ParallelWrapper(object):
         raise NotImplementedError("This method should be overwritten by the "
                                   "subclass")
 
-    def _failure_callback(self):
-        """Callback to execute in case that any of the job nodes failed"""
+    def _failure_callback(self, msg=None):
+        """Callback to execute in case that any of the job nodes failed
+
+        Parameters
+        ----------
+        msg : str
+            Any message generated from the failure
+        """
         pass
 
     def _validate_execution_order(self, results):
@@ -96,6 +102,7 @@ class ParallelWrapper(object):
         """
         self._logger.write("\nValidating job status:\n")
         errored = False
+        callback_msg = []
         for node, ar in results.items():
             self._logger.write("\nJob %s: " % node)
             if ar.successful():
@@ -107,14 +114,15 @@ class ParallelWrapper(object):
                     job_result = ar.get()
                 except Exception, e:
                     job_result = e
-                self._logger.write("\tJob results: %s\n"
-                                   "\tPython output: %s\n"
-                                   "\tStandard output: %s\n"
-                                   "\tStandard error: %s\n"
-                                   % (job_result, ar.pyout, ar.stdout,
-                                      ar.stderr))
+                msg = ("\tJob results: %s\n"
+                       "\tPython output: %s\n"
+                       "\tStandard output: %s\n"
+                       "\tStandard error: %s\n"
+                       % (job_result, ar.pyout, ar.stdout, ar.stderr))
+                self._logger.write(msg)
+                callback_msg.append(msg)
         if errored:
-            self._failure_callback()
+            self._failure_callback(msg='\n'.join(callback_msg))
 
     def _clean_up_paths(self):
         """Removes the temporary paths"""

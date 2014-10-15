@@ -349,8 +349,8 @@ class RawData(BaseData):
         ValueError
             If the state is not known.
         """
-        if state not in ('not_preprocessed', 'preprocessing', 'success',
-                         'failed'):
+        if (state not in ('not_preprocessed', 'preprocessing', 'success') and
+                not state.startswith('failed:')):
             raise ValueError('Unknown state: %s' % state)
 
         conn_handler = SQLConnectionHandler()

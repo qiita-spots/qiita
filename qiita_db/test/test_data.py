@@ -155,6 +155,17 @@ class RawDataTests(TestCase):
         rd.preprocessing_status = 'success'
         self.assertEqual(rd.preprocessing_status, 'success')
 
+    def test_preprocessing_status_setter_failed(self):
+        """Able to update preprocessing status with a failure message"""
+        rd = RawData(2)
+        state = "failed: some error message"
+        self.assertEqual(rd.preprocessing_status, 'not_preprocessed')
+        rd.preprocessing_status = state
+        self.assertEqual(rd.preprocessing_status, state)
+
+    def test_preprocessing_status_setter_valueerror(self):
+        """Able to update the preprocessing status"""
+        rd = RawData(2)
         with self.assertRaises(ValueError):
             rd.preprocessing_status = 'not a valid state'
 
