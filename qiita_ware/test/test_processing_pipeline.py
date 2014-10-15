@@ -22,7 +22,7 @@ from qiita_db.parameters import PreprocessedIlluminaParams
 from qiita_db.metadata_template import PrepTemplate
 from qiita_ware.processing_pipeline import (_get_preprocess_fastq_cmd,
                                             _insert_preprocessed_data_fastq,
-                                            _clean_up, _generate_demux_file,
+                                            _generate_demux_file,
                                             _get_qiime_minimal_mapping)
 
 
@@ -113,15 +113,6 @@ class ProcessingPipelineTests(TestCase):
         _generate_demux_file(prep_out_dir)
 
         self.assertTrue(exists(join(prep_out_dir, 'seqs.demux')))
-
-    def test_clean_up(self):
-        dir1 = mkdtemp()
-        dir2 = mkdtemp()
-
-        _clean_up([dir1, dir2])
-
-        self.assertFalse(exists(dir1))
-        self.assertFalse(exists(dir2))
 
 
 DEMUX_SEQS = """@a_1 orig_bc=abc new_bc=abc bc_diffs=0

@@ -209,21 +209,8 @@ def _insert_preprocessed_data_fastq(study, params, raw_data, slq_out):
     PreprocessedData.create(study, params._table, params.id, filepaths,
                             raw_data)
 
-
-def _clean_up(dirs):
-    """Removes the directories listed in dirs
-
-    Parameters
-    ----------
-    dirs : list of str
-        Path to the directories to remove
-    """
-    from shutil import rmtree
-    from os.path import exists
-
-    for dp in dirs:
-        if exists(dp):
-            rmtree(dp)
+    # Change the raw_data status to success
+    raw_data.preprocessing_status = 'success'
 
 
 class StudyPreprocessor(ParallelWrapper):
@@ -243,6 +230,10 @@ class StudyPreprocessor(ParallelWrapper):
         params : BaseParameters
             The parameters to use for preprocessing
         """
+        self.raw_data = raw_data
+        self._logger = stderr
+        # Change the raw_data status to preprocessing
+        raw_data.preprocessing_status = 'preprocessing'
         # STEP 1: Preprocess the study
         preprocess_node = "PREPROCESS"
 
@@ -280,10 +271,11 @@ class StudyPreprocessor(ParallelWrapper):
                                  requires_deps=False)
         self._job_graph.add_edge(demux_node, insert_preprocessed_node)
 
-        # Clean up the environment
-        clean_up_node = "CLEAN_UP"
-        self._job_graph.add_node(clean_up_node,
-                                 job=(_clean_up, [output_dir]),
-                                 requires_deps=False)
-        self._job_graph.add_edge(insert_preprocessed_node, clean_up_node)
-        self._logger = stderr
+        self._dirpaths_to_remove.append(output_dir)
+
+    def _failure_callback(self, msg=None):
+        """Callback to execute in case that any of the job nodes failed
+
+        Need to change the raw_data status to 'failed'
+        """
+        self.raw_data.preprocessing_status = 'failed: %s' % msg

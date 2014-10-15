@@ -11,6 +11,7 @@ __maintainer__ = "Jose Navas Antonio Molina"
 
 from shutil import rmtree
 from os import remove
+from sys import stderr
 
 import networkx as nx
 
@@ -51,6 +52,16 @@ class ParallelWrapper(object):
         raise NotImplementedError("This method should be overwritten by the "
                                   "subclass")
 
+    def _failure_callback(self, msg=None):
+        """Callback to execute in case that any of the job nodes failed
+
+        Parameters
+        ----------
+        msg : str
+            Any message generated from the failure
+        """
+        pass
+
     def _validate_execution_order(self, results):
         """Makes sure that the execution order represented in _job_graph has
         been respected
@@ -90,22 +101,28 @@ class ParallelWrapper(object):
             The AsyncResult objects of the executed jobs
         """
         self._logger.write("\nValidating job status:\n")
+        errored = False
+        callback_msg = []
         for node, ar in results.items():
             self._logger.write("\nJob %s: " % node)
             if ar.successful():
                 self._logger.write("Success\n")
             else:
+                errored = True
                 self._logger.write("Error\n")
                 try:
                     job_result = ar.get()
                 except Exception, e:
                     job_result = e
-                self._logger.write("\tJob results: %s\n"
-                                   "\tPython output: %s\n"
-                                   "\tStandard output: %s\n"
-                                   "\tStandard error: %s\n"
-                                   % (job_result, ar.pyout, ar.stdout,
-                                      ar.stderr))
+                msg = ("\tJob results: %s\n"
+                       "\tPython output: %s\n"
+                       "\tStandard output: %s\n"
+                       "\tStandard error: %s\n"
+                       % (job_result, ar.pyout, ar.stdout, ar.stderr))
+                self._logger.write(msg)
+                callback_msg.append(msg)
+        if errored:
+            self._failure_callback(msg='\n'.join(callback_msg))
 
     def _clean_up_paths(self):
         """Removes the temporary paths"""
@@ -124,7 +141,8 @@ class ParallelWrapper(object):
         self._validate_job_status(results)
         self._validate_execution_order(results)
         self._clean_up_paths()
-        self._logger.close()
+        if self._logger != stderr:
+            self._logger.close()
 
     def __call__(self, *args, **kwargs):
         self._construct_job_graph(*args, **kwargs)
@@ -155,7 +173,5 @@ class ParallelWrapper(object):
                 results[node] = context.submit_async_deps(deps, *job)
             self._logger.write("Done\n")
 
-        # if self._block:
-        #     self._job_blocker(results)
-        # else:
-        #     context.submit_async(self._job_blocker, results)
+        if self._block:
+            self._job_blocker(results)
