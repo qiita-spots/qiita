@@ -136,6 +136,10 @@ class RawDataTests(TestCase):
         rd = RawData(1)
         self.assertEqual(rd.filetype, "FASTQ")
 
+    def test_preprocessed_data(self):
+        rd = RawData(1)
+        self.assertEqual(rd.preprocessed_data, [1, 2])
+
 
 @qiita_test_checker()
 class PreprocessedDataTests(TestCase):
