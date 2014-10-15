@@ -15,7 +15,6 @@ from future import standard_library
 from future.utils import viewitems
 with standard_library.hooks():
     from urllib.request import urlretrieve
-from psycopg2 import connect
 
 from qiita_core.exceptions import QiitaEnvironmentError
 from qiita_core.qiita_settings import qiita_config
@@ -244,31 +243,56 @@ def drop_environment():
         print('ABORTING')
 
 
-def clean_test_environment(user, password, host):
+def reset_test_database(wrapped_fn):
+    """Decorator that drops the qiita schema, rebuilds and repopulates the
+    schema with test data, then executes wrapped_fn
+    """
+    conn_handler = SQLConnectionHandler()
+
+    def decorated_wrapped_fn(*args, **kwargs):
+        # Drop the schema
+        try:
+            conn_handler.execute("DROP SCHEMA qiita CASCADE")
+        except:
+            # ignore the failure of the drop if the schema already doesnt exist
+            # generic Error raised so can't catch specific error
+            pass
+        # Create the schema
+        with open(LAYOUT_FP, 'U') as f:
+            conn_handler.execute(f.read())
+        # Initialize the database
+        with open(INITIALIZE_FP, 'U') as f:
+            conn_handler.execute(f.read())
+        # Populate the database
+        with open(POPULATE_FP, 'U') as f:
+            conn_handler.execute(f.read())
+        # Execute the wrapped function
+        return wrapped_fn(*args, **kwargs)
+
+    return decorated_wrapped_fn
+
+
+def clean_test_environment():
     r"""Cleans the test database environment.
 
     In case that the test database is dirty (i.e. the 'qiita' schema is
     present), this cleans it up by dropping the 'qiita' schema and
     re-populating it.
-
-    Parameters
-    ----------
-    user : str
-        The postgres user to connect to the server
-    password : str
-        The password of the user
-    host : str
-        The host where the postgres server is running
     """
-    # Connect to the postgres server
-    conn = connect(user=user, host=host, password=password,
-                   database='qiita_test')
-    # Get the cursor
-    cur = conn.cursor()
-    # Drop the qiita schema
-    cur.execute("DROP SCHEMA qiita CASCADE")
-    # Commit the changes
-    conn.commit()
-    # Close cursor and connections
-    cur.close()
-    conn.close()
+    # First, we check that we are not in a production environment
+    conn_handler = SQLConnectionHandler()
+    # It is possible that we are connecting to a production database
+    test_db = conn_handler.execute_fetchone("SELECT test FROM settings")[0]
+    # Or the loaded configuration file belongs to a production environment
+    # or the test database is not qiita_test
+    if not qiita_config.test_environment or not test_db \
+            or qiita_config.database != 'qiita_test':
+        raise RuntimeError("Working in a production environment. Not "
+                           "executing the test cleanup to keep the production "
+                           "database safe.")
+
+    # wrap the dummy function and execute it
+    @reset_test_database
+    def dummyfunc():
+        pass
+    dummyfunc()

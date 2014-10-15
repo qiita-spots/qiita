@@ -13,8 +13,7 @@ with standard_library.hooks():
 
 from qiita_core.qiita_settings import qiita_config
 from qiita_db.sql_connection import SQLConnectionHandler
-from qiita_db.environment_manager import (LAYOUT_FP, INITIALIZE_FP,
-                                          POPULATE_FP)
+from qiita_db.environment_manager import reset_test_database
 
 
 def send_email(to, subject, body):
@@ -49,30 +48,6 @@ def send_email(to, subject, body):
         raise RuntimeError("Can't send email!")
     finally:
         smtp.close()
-
-
-def reset_test_database(wrapped_fn):
-    """Decorator that drops the qiita schema, rebuilds and repopulates the
-    schema with test data, then executes wrapped_fn
-    """
-    conn_handler = SQLConnectionHandler()
-
-    def decorated_wrapped_fn(*args, **kwargs):
-        # Drop the schema
-        conn_handler.execute("DROP SCHEMA qiita CASCADE")
-        # Create the schema
-        with open(LAYOUT_FP, 'U') as f:
-            conn_handler.execute(f.read())
-        # Initialize the database
-        with open(INITIALIZE_FP, 'U') as f:
-            conn_handler.execute(f.read())
-        # Populate the database
-        with open(POPULATE_FP, 'U') as f:
-            conn_handler.execute(f.read())
-        # Execute the wrapped function
-        return wrapped_fn(*args, **kwargs)
-
-    return decorated_wrapped_fn
 
 
 def qiita_test_checker():

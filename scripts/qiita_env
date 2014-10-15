@@ -88,17 +88,14 @@ def drop():
 
 
 @env.command()
-@click.option('--user', default=_CONFIG.user,
-              help="The database user to connect to the database")
-@click.option('--host', default=_CONFIG.host,
-              help='The host where the database lives')
-def clean_test(user, host):
+def clean_test():
     """Cleans the test database environment.
 
     In case that the test database is dirty (i.e. the 'qiita' schema is
-    present), this cleans it up by dropping the 'qiita' schema.
+    present), this cleans it up by dropping the 'qiita' schema and rebuilding
+    the test database.
     """
-    clean_test_environment(user, None, host)
+    clean_test_environment()
 
 
 if __name__ == '__main__':
