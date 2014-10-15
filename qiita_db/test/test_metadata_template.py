@@ -21,7 +21,8 @@ from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_db.exceptions import (QiitaDBDuplicateError, QiitaDBUnknownIDError,
                                  QiitaDBNotImplementedError,
                                  QiitaDBDuplicateHeaderError,
-                                 QiitaDBExecutionError)
+                                 QiitaDBExecutionError,
+                                 QiitaDBColumnError)
 from qiita_db.study import Study, StudyPerson
 from qiita_db.user import User
 from qiita_db.data import RawData
@@ -84,7 +85,7 @@ class TestSample(TestCase):
         self.tester = Sample(self.sample_id, self.sample_template)
         self.exp_categories = {'physical_location', 'has_physical_specimen',
                                'has_extracted_data', 'sample_type',
-                               'required_sample_info_status_id',
+                               'required_sample_info_status',
                                'collection_timestamp', 'host_subject_id',
                                'description', 'season_environment',
                                'assigned_from_geo', 'texture', 'taxon_id',
@@ -92,9 +93,8 @@ class TestSample(TestCase):
                                'water_content_soil', 'elevation', 'temp',
                                'tot_nitro', 'samp_salinity', 'altitude',
                                'env_biome', 'country', 'ph', 'anonymized_name',
-                               'tot_org_carb',
-                               'description_duplicate', 'env_feature',
-                               'latitude', 'longitude'}
+                               'tot_org_carb', 'description_duplicate',
+                               'env_feature', 'latitude', 'longitude'}
 
     def test_init_unknown_error(self):
         """Init raises an error if the sample id is not found in the template
@@ -163,6 +163,12 @@ class TestSample(TestCase):
         self.assertEqual(self.tester['SEASON_ENVIRONMENT'], 'winter')
         self.assertEqual(self.tester['depth'], 0.15)
 
+    def test_getitem_id_column(self):
+        """Get item returns the correct metadata value from the changed column
+        """
+        self.assertEqual(self.tester['required_sample_info_status'],
+                         'completed')
+
     def test_getitem_error(self):
         """Get item raises an error if category does not exists"""
         with self.assertRaises(KeyError):
@@ -203,7 +209,7 @@ class TestSample(TestCase):
         """values returns an iterator over the values"""
         obs = self.tester.values()
         self.assertTrue(isinstance(obs, Iterable))
-        exp = {'ANL', True, True, 'ENVO:soil', 4,
+        exp = {'ANL', True, True, 'ENVO:soil', 'completed',
                datetime(2011, 11, 11, 13, 00, 00), '1001:M7',
                'Cannabis Soil Microbiome', 'winter', 'n',
                '64.6 sand, 17.6 silt, 17.8 clay', '1118232', 0.15, '3483',
@@ -220,7 +226,7 @@ class TestSample(TestCase):
         self.assertTrue(isinstance(obs, Iterable))
         exp = {('physical_location', 'ANL'), ('has_physical_specimen', True),
                ('has_extracted_data', True), ('sample_type', 'ENVO:soil'),
-               ('required_sample_info_status_id', 4),
+               ('required_sample_info_status', 'completed'),
                ('collection_timestamp', datetime(2011, 11, 11, 13, 00, 00)),
                ('host_subject_id', '1001:M7'),
                ('description', 'Cannabis Soil Microbiome'),
@@ -259,7 +265,7 @@ class TestPrepSample(TestCase):
         self.sample_id = 'SKB8.640193'
         self.tester = PrepSample(self.sample_id, self.prep_template)
         self.exp_categories = {'center_name', 'center_project_name',
-                               'emp_status_id', 'barcodesequence',
+                               'emp_status', 'barcodesequence',
                                'library_construction_protocol',
                                'linkerprimersequence', 'target_subfragment',
                                'target_gene', 'run_center', 'run_prefix',
@@ -325,7 +331,6 @@ class TestPrepSample(TestCase):
         """Get item returns the correct metadata value from the required table
         """
         self.assertEqual(self.tester['center_name'], 'ANL')
-        self.assertEqual(self.tester['emp_status_id'], 1)
         self.assertTrue(self.tester['center_project_name'] is None)
 
     def test_getitem_dynamic(self):
@@ -334,6 +339,11 @@ class TestPrepSample(TestCase):
         self.assertEqual(self.tester['pcr_primers'],
                          'FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT')
         self.assertEqual(self.tester['barcodesequence'], 'AGCGCTCACATC')
+
+    def test_getitem_id_column(self):
+        """Get item returns the correct metadata value from the changed column
+        """
+        self.assertEqual(self.tester['emp_status'], 'EMP')
 
     def test_getitem_error(self):
         """Get item raises an error if category does not exists"""
@@ -375,7 +385,7 @@ class TestPrepSample(TestCase):
         """values returns an iterator over the values"""
         obs = self.tester.values()
         self.assertTrue(isinstance(obs, Iterable))
-        exp = {'ANL', None, None, None, 1, 'AGCGCTCACATC',
+        exp = {'ANL', None, None, None, 'EMP', 'AGCGCTCACATC',
                'This analysis was done as in Caporaso et al 2011 Genome '
                'research. The PCR primers (F515/R806) were developed against '
                'the V4 region of the 16S rRNA (both bacteria and archaea), '
@@ -400,7 +410,7 @@ class TestPrepSample(TestCase):
         obs = self.tester.items()
         self.assertTrue(isinstance(obs, Iterable))
         exp = {('center_name', 'ANL'), ('center_project_name', None),
-               ('emp_status_id', 1), ('barcodesequence', 'AGCGCTCACATC'),
+               ('emp_status', 'EMP'), ('barcodesequence', 'AGCGCTCACATC'),
                ('library_construction_protocol',
                 'This analysis was done as in Caporaso et al 2011 Genome '
                 'research. The PCR primers (F515/R806) were developed against '
@@ -476,7 +486,7 @@ class TestSampleTemplate(TestCase):
                         'has_physical_specimen': True,
                         'has_extracted_data': True,
                         'sample_type': 'type1',
-                        'required_sample_info_status_id': 1,
+                        'required_sample_info_status': 'received',
                         'collection_timestamp':
                         datetime(2014, 5, 29, 12, 24, 51),
                         'host_subject_id': 'NotIdentified',
@@ -488,7 +498,7 @@ class TestSampleTemplate(TestCase):
                         'has_physical_specimen': True,
                         'has_extracted_data': True,
                         'sample_type': 'type1',
-                        'required_sample_info_status_id': 1,
+                        'required_sample_info_status': 'received',
                         'collection_timestamp':
                         datetime(2014, 5, 29, 12, 24, 51),
                         'host_subject_id': 'NotIdentified',
@@ -500,7 +510,7 @@ class TestSampleTemplate(TestCase):
                         'has_physical_specimen': True,
                         'has_extracted_data': True,
                         'sample_type': 'type1',
-                        'required_sample_info_status_id': 1,
+                        'required_sample_info_status': 'received',
                         'collection_timestamp':
                         datetime(2014, 5, 29, 12, 24, 51),
                         'host_subject_id': 'NotIdentified',
@@ -793,21 +803,21 @@ class TestPrepTemplate(TestCase):
             'SKB8.640193': {'center_name': 'ANL',
                             'center_project_name': 'Test Project',
                             'ebi_submission_accession': None,
-                            'EMP_status_id': 1,
+                            'EMP_status': 'EMP',
                             'str_column': 'Value for sample 1',
                             'linkerprimersequence': 'GTGCCAGCMGCCGCGGTAA',
                             'barcodesequence': 'GTCCGCAAGTTA'},
             'SKD8.640184': {'center_name': 'ANL',
                             'center_project_name': 'Test Project',
                             'ebi_submission_accession': None,
-                            'EMP_status_id': 1,
+                            'EMP_status': 'EMP',
                             'str_column': 'Value for sample 2',
                             'linkerprimersequence': 'GTGCCAGCMGCCGCGGTAA',
                             'barcodesequence': 'CGTAGAGCTCTC'},
             'SKB7.640196': {'center_name': 'ANL',
                             'center_project_name': 'Test Project',
                             'ebi_submission_accession': None,
-                            'EMP_status_id': 1,
+                            'EMP_status': 'EMP',
                             'str_column': 'Value for sample 3',
                             'linkerprimersequence': 'GTGCCAGCMGCCGCGGTAA',
                             'barcodesequence': 'CCTCTGAGAGCT'}
@@ -934,7 +944,7 @@ class TestPrepTemplate(TestCase):
                             'str_column': 'Value for sample 3'}
             }
         metadata = pd.DataFrame.from_dict(metadata_dict, orient='index')
-        with self.assertRaises(ValueError):
+        with self.assertRaises(QiitaDBColumnError):
             PrepTemplate.create(metadata, self.new_raw_data)
 
     def test_create_error_partial(self):
@@ -943,24 +953,24 @@ class TestPrepTemplate(TestCase):
             'SKB8.640193': {'center_name': 'ANL',
                             'center_project_name': 'Test Project',
                             'ebi_submission_accession': None,
-                            'EMP_status_id': 1,
+                            'EMP_status': 'EMP',
                             'str_column': 'Value for sample 1',
                             'barcodesequence': 'GTCCGCAAGTTA'},
             'SKD8.640184': {'center_name': 'ANL',
                             'center_project_name': 'Test Project',
                             'ebi_submission_accession': None,
-                            'EMP_status_id': 1,
+                            'EMP_status': 'EMP',
                             'str_column': 'Value for sample 2',
                             'barcodesequence': 'CGTAGAGCTCTC'},
             'SKB7.640196': {'center_name': 'ANL',
                             'center_project_name': 'Test Project',
                             'ebi_submission_accession': None,
-                            'EMP_status_id': 1,
+                            'EMP_status': 'EMP',
                             'str_column': 'Value for sample 3',
                             'barcodesequence': 'CCTCTGAGAGCT'}
             }
         metadata = pd.DataFrame.from_dict(metadata_dict, orient='index')
-        with self.assertRaises(ValueError):
+        with self.assertRaises(QiitaDBColumnError):
             PrepTemplate.create(metadata, self.new_raw_data)
 
     def test_delete(self):
@@ -1133,26 +1143,26 @@ class TestPrepTemplate(TestCase):
 EXP_SAMPLE_TEMPLATE = (
     "sample_name\tcollection_timestamp\tdescription\thas_extracted_data\t"
     "has_physical_specimen\thost_subject_id\tlatitude\tlongitude\t"
-    "physical_location\trequired_sample_info_status_id\tsample_type\t"
+    "physical_location\trequired_sample_info_status\tsample_type\t"
     "str_column\n"
     "Sample1\t2014-05-29 12:24:51\tTest Sample 1\tTrue\tTrue\tNotIdentified\t"
-    "42.42\t41.41\tlocation1\t1\ttype1\tValue for sample 1\n"
+    "42.42\t41.41\tlocation1\treceived\ttype1\tValue for sample 1\n"
     "Sample2\t2014-05-29 12:24:51\t"
-    "Test Sample 2\tTrue\tTrue\tNotIdentified\t4.2\t1.1\tlocation1\t1\t"
+    "Test Sample 2\tTrue\tTrue\tNotIdentified\t4.2\t1.1\tlocation1\treceived\t"
     "type1\tValue for sample 2\n"
     "Sample3\t2014-05-29 12:24:51\tTest Sample 3\tTrue\t"
-    "True\tNotIdentified\t4.8\t4.41\tlocation1\t1\ttype1\t"
+    "True\tNotIdentified\t4.8\t4.41\tlocation1\treceived\ttype1\t"
     "Value for sample 3\n")
 
 EXP_PREP_TEMPLATE = (
     'sample_name\tbarcodesequence\tcenter_name\tcenter_project_name\t'
-    'ebi_submission_accession\temp_status_id\tlinkerprimersequence\t'
+    'ebi_submission_accession\temp_status\tlinkerprimersequence\t'
     'str_column\n'
-    'SKB7.640196\tCCTCTGAGAGCT\tANL\tTest Project\tNone\t1\t'
+    'SKB7.640196\tCCTCTGAGAGCT\tANL\tTest Project\tNone\tEMP\t'
     'GTGCCAGCMGCCGCGGTAA\tValue for sample 3\n'
-    'SKB8.640193\tGTCCGCAAGTTA\tANL\tTest Project\tNone\t1\t'
+    'SKB8.640193\tGTCCGCAAGTTA\tANL\tTest Project\tNone\tEMP\t'
     'GTGCCAGCMGCCGCGGTAA\tValue for sample 1\n'
-    'SKD8.640184\tCGTAGAGCTCTC\tANL\tTest Project\tNone\t1\t'
+    'SKD8.640184\tCGTAGAGCTCTC\tANL\tTest Project\tNone\tEMP\t'
     'GTGCCAGCMGCCGCGGTAA\tValue for sample 2\n')
 
 if __name__ == '__main__':

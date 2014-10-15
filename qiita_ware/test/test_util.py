@@ -106,22 +106,21 @@ class UtilTests(TestCase):
 
         self.assertTrue(all(obs.columns == pd.Index(
             [u'tot_org_carb', u'common_name', u'has_extracted_data',
-             u'water_content_soil', u'env_feature', u'assigned_from_geo',
-             u'altitude', u'env_biome', u'texture', u'has_physical_specimen',
-             u'description_duplicate', u'physical_location', u'latitude',
-             u'ph', u'host_taxid', u'elevation', u'description',
-             u'collection_timestamp', u'taxon_id', u'samp_salinity',
-             u'host_subject_id', u'sample_type', u'season_environment',
-             u'required_sample_info_status_id', u'temp', u'country',
-             u'longitude', u'tot_nitro', u'depth', u'anonymized_name',
-             u'emp_status_id', u'target_subfragment', u'sample_center',
-             u'samp_size', u'run_date', u'experiment_center', u'platform',
-             u'center_name', u'barcodesequence', u'run_center', u'run_prefix',
-             u'library_construction_protocol', u'pcr_primers',
+             u'required_sample_info_status', u'water_content_soil',
+             u'env_feature', u'assigned_from_geo', u'altitude', u'env_biome',
+             u'texture', u'has_physical_specimen', u'description_duplicate',
+             u'physical_location', u'latitude', u'ph', u'host_taxid',
+             u'elevation', u'description', u'collection_timestamp',
+             u'taxon_id', u'samp_salinity', u'host_subject_id', u'sample_type',
+             u'season_environment', u'temp', u'country', u'longitude',
+             u'tot_nitro', u'depth', u'anonymized_name', u'target_subfragment',
+             u'sample_center', u'samp_size', u'run_date', u'experiment_center',
+             u'pcr_primers', u'center_name', u'barcodesequence', u'run_center',
+             u'run_prefix', u'library_construction_protocol', u'emp_status',
              u'linkerprimersequence', u'experiment_design_description',
              u'target_gene', u'center_project_name', u'illumina_technology',
-             u'sequencing_meth', u'experiment_title', u'study_center'],
-            dtype='object')))
+             u'sequencing_meth', u'platform', u'experiment_title',
+             u'study_center'], dtype='object')))
 
     def template_to_dict(self):
         template = PrepTemplate(1)
@@ -144,7 +143,7 @@ class UtilTests(TestCase):
                 'platform', 'library_construction_protocol',
                 'experiment_design_description', 'study_center',
                 'center_project_name', 'sample_center', 'samp_size',
-                'illumina_technology', 'experiment_title', 'emp_status_id',
+                'illumina_technology', 'experiment_title', 'emp_status',
                 'target_subfragment', 'barcodesequence',
                 'ebi_study_accession'])
 
@@ -313,7 +312,7 @@ SUMMARY_STATS = {
     'ebi_study_accession': [('None', 27)],
     'ebi_submission_accession': [('None', 27)],
     'elevation': [('114.0', 27)],
-    'emp_status_id': [('1', 27)],
+    'emp_status': [('EMP', 27)],
     'env_biome': [('ENVO:Temperate grasslands, savannas, and shrubland biome',
                    27)],
     'env_feature': [('ENVO:plant-associated habitat', 27)],
@@ -432,7 +431,7 @@ SUMMARY_STATS = {
     'ph': [('6.8', 9), ('6.82', 10), ('6.94', 8)],
     'physical_location': [('ANL', 27)],
     'platform': [('Illumina', 27)],
-    'required_sample_info_status_id': [('4', 27)],
+    'required_sample_info_status': [('completed', 27)],
     'run_center': [('ANL', 27)],
     'run_date': [('8/1/12', 27)],
     'run_prefix': [('s_G1_L001_sequences', 27)],
