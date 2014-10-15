@@ -231,8 +231,10 @@ def _redis_wrap(f, redis_deets, *args, **kwargs):
     try:
         payload['return'] = f(*args, **kwargs)
         payload['status_msg'] = 'Success'
-    except Exception as e:
-        payload['return'] = e.message
+    except Exception:
+        import sys
+        import traceback
+        payload['return'] = repr(traceback.format_exception(*sys.exc_info()))
         payload['status_msg'] = 'Failed'
     finally:
         _deposit_payload(redis_deets, payload)

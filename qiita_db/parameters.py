@@ -53,6 +53,7 @@ class BaseParameters(QiitaObject):
         """
         conn_handler = SQLConnectionHandler()
         table_cols = get_table_cols_w_type(self._table)
+        table_cols.remove(["preprocessed_params_id", 'bigint'])
 
         values = dict(conn_handler.execute_fetchone(
             "SELECT * FROM qiita.{0} WHERE "

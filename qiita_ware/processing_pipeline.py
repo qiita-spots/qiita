@@ -7,6 +7,7 @@
 # -----------------------------------------------------------------------------
 
 from qiita_ware.wrapper import ParallelWrapper
+from sys import stderr
 
 
 def _get_qiime_minimal_mapping(prep_template, output_fp):
@@ -285,3 +286,4 @@ class StudyPreprocessor(ParallelWrapper):
                                  job=(_clean_up, [output_dir]),
                                  requires_deps=False)
         self._job_graph.add_edge(insert_preprocessed_node, clean_up_node)
+        self._logger = stderr
