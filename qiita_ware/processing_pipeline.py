@@ -209,6 +209,9 @@ def _insert_preprocessed_data_fastq(study, params, raw_data, slq_out):
     PreprocessedData.create(study, params._table, params.id, filepaths,
                             raw_data)
 
+    # Change the raw_data status to success
+    raw_data.update_preprocessing_status('success')
+
 
 def _clean_up(dirs):
     """Removes the directories listed in dirs
@@ -243,6 +246,9 @@ class StudyPreprocessor(ParallelWrapper):
         params : BaseParameters
             The parameters to use for preprocessing
         """
+        self.raw_data = raw_data
+        # Change the raw_data status to preprocessing
+        raw_data.update_preprocessing_status('preprocessing')
         # STEP 1: Preprocess the study
         preprocess_node = "PREPROCESS"
 
@@ -287,3 +293,10 @@ class StudyPreprocessor(ParallelWrapper):
                                  requires_deps=False)
         self._job_graph.add_edge(insert_preprocessed_node, clean_up_node)
         self._logger = stderr
+
+    def _failure_callback(self):
+        """Callback to execute in case that any of the job nodes failed
+
+        Need to change the raw_data status to 'failed'
+        """
+        self.raw_data.update_preprocessing_status('failed')
