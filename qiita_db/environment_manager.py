@@ -15,7 +15,6 @@ from future import standard_library
 from future.utils import viewitems
 with standard_library.hooks():
     from urllib.request import urlretrieve
-from psycopg2 import connect
 
 from qiita_core.exceptions import QiitaEnvironmentError
 from qiita_core.qiita_settings import qiita_config
@@ -244,6 +243,30 @@ def drop_environment():
         print('ABORTING')
 
 
+def reset_test_database(wrapped_fn):
+    """Decorator that drops the qiita schema, rebuilds and repopulates the
+    schema with test data, then executes wrapped_fn
+    """
+    conn_handler = SQLConnectionHandler()
+
+    def decorated_wrapped_fn(*args, **kwargs):
+        # Drop the schema
+        conn_handler.execute("DROP SCHEMA qiita CASCADE")
+        # Create the schema
+        with open(LAYOUT_FP, 'U') as f:
+            conn_handler.execute(f.read())
+        # Initialize the database
+        with open(INITIALIZE_FP, 'U') as f:
+            conn_handler.execute(f.read())
+        # Populate the database
+        with open(POPULATE_FP, 'U') as f:
+            conn_handler.execute(f.read())
+        # Execute the wrapped function
+        return wrapped_fn(*args, **kwargs)
+
+    return decorated_wrapped_fn
+
+
 def clean_test_environment(user, password, host):
     r"""Cleans the test database environment.
 
@@ -260,15 +283,6 @@ def clean_test_environment(user, password, host):
     host : str
         The host where the postgres server is running
     """
-    # Connect to the postgres server
-    conn = connect(user=user, host=host, password=password,
-                   database='qiita_test')
-    # Get the cursor
-    cur = conn.cursor()
-    # Drop the qiita schema
-    cur.execute("DROP SCHEMA qiita CASCADE")
-    # Commit the changes
-    conn.commit()
-    # Close cursor and connections
-    cur.close()
-    conn.close()
+    def dummyfunc():
+        pass
+    reset_test_database(dummyfunc)
