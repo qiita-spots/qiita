@@ -12,6 +12,10 @@
       <br/>
       Metadata: {{study_info['metadata_complete']}}
       <br/>
+      {% if sls and not sls.startswith('failed') %}
+        <b>Split library status:</b> {% raw sls %}
+        <br/>
+      {% end %}
       <!-- {'mixs_compliant': True,
       'reprocess': False,
       'emp_person_id': None,
@@ -77,9 +81,23 @@
       &nbsp;&nbsp;
       <a class="btn btn-primary" href="/metadata_summary/?sample_template={{study_id}}&prep_template={{prep_template_id}}">Show metadata Summary</a>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-      <input type="button" class="btn btn-primary" value="Split libraries" onclick="split_libraries();">
+      {% if sls and not sls.startswith('preprocessing') %}
+        <input type="button" class="btn btn-primary" value="Split libraries" onclick="split_libraries();">
+        <input type="checkbox" name="rev_comp_mapping_barcodes" id="rev_comp_mapping_barcodes"> Use rev_comp_mapping_barcodes
+      {% else %}
+        <font color="red">Split library is running </font>
+      {% end %}
     </td>
   </tr>
+  <tr>
+    <td><font color="red">
+    {% if sls and sls.startswith('failed') %}
+      {% raw sls %}
+      <br/>
+    {% end %}
+    </font></td>
+  </tr>
+
   {% end %}
 </table>
 
@@ -187,10 +205,6 @@
     });
   }
 
-  function show_metadata_summary() {
-    alert("To be implemented");
-  }
-
   function split_libraries() {
     if (confirm("Are you sure you want to submit a split libraries job?")) {
       var form = $("<form>")
@@ -203,7 +217,11 @@
         .append($("<input>")
           .attr("type", "hidden")
           .attr("name", "raw_data_id")
-          .attr("value", "{{vssb}}"));
+          .attr("value", "{{vssb}}"))
+        .append($("<input>")
+          .attr("type", "hidden")
+          .attr("name", "rev_comp_mapping_barcodes")
+          .attr("value", $("#rev_comp_mapping_barcodes").is(':checked')));
       $("body").append(form);
       form.submit();
     }

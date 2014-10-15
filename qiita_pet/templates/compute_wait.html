@@ -24,7 +24,7 @@
                 switch(message.status_msg) {
                     case 'Success':
                     case 'Failed':
-                        window.location.replace('{{completion_redirect}}/{{job_id}}');
+                        window.location.replace('{{completion_redirect}}');
                         break;
                     default:
                         status_msg = document.getElementById('status-msg');
