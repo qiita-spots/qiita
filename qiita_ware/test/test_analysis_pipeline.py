@@ -76,7 +76,6 @@ class TestRun(TestCase):
         app = RunAnalysis()
         app("demo@microbio.me", Analysis(2), [], rarefaction_depth=100)
         for msg in pubsub.listen():
-            print msg
             if msg['type'] == 'message':
                 msgs.append(msg['data'])
                 if "allcomplete" in msg['data']:
