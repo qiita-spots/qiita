@@ -14,7 +14,7 @@ from wtforms import (Form, StringField, SelectField, BooleanField,
                      SelectMultipleField, TextAreaField, validators)
 
 from os import listdir
-from os.path import exists, join
+from os.path import exists, join, basename
 
 from .base_handlers import BaseHandler
 
@@ -27,11 +27,15 @@ from qiita_ware.dispatchable import submit_to_ebi
 from qiita_db.metadata_template import SampleTemplate, PrepTemplate
 from qiita_db.study import Study, StudyPerson
 from qiita_db.user import User
-from qiita_db.util import get_study_fp, convert_to_id, get_filetypes
+from qiita_db.util import get_study_fp, convert_to_id, get_filepath_types
 from qiita_db.ontology import Ontology
 from qiita_db.data import PreprocessedData
 from qiita_db.commands import (load_sample_template_from_cmd,
-                               load_prep_template_from_cmd)
+                               load_prep_template_from_cmd,
+                               load_raw_data_cmd)
+from qiita_db.exceptions import (QiitaDBColumnError, QiitaDBExecutionError,
+                                 QiitaDBDuplicateError)
+from qiita_db.data import RawData
 
 
 class CreateStudyForm(Form):
@@ -122,7 +126,7 @@ class StudyDescriptionHandler(BaseHandler):
             fs = []
 
         fts = [k.split('_', 1)[1].replace('_', ' ')
-               for k in get_filetypes() if k.startswith('raw_')]
+               for k in get_filepath_types() if k.startswith('raw_')]
 
         return fs, fts
 
@@ -130,15 +134,24 @@ class StudyDescriptionHandler(BaseHandler):
     def get(self, study_id):
         fs, fts = self.get_values_for_post_or_get(study_id)
 
+        study = Study(int(study_id))
+        raw_data = study.raw_data()
+        ssb = any([PrepTemplate.exists(RawData(rd)) for rd in raw_data])
+
         self.render('study_description.html', user=self.current_user,
-                    study_info=Study(study_id).info, study_id=study_id,
-                    files=fs, max_upload_size=qiita_config.max_upload_size,
+                    study_title=study.title, study_info=study.info,
+                    study_id=study_id, files=fs, ssb=ssb,
+                    max_upload_size=qiita_config.max_upload_size,
                     filetypes=fts, msg="")
 
     @authenticated
     def post(self, study_id):
         raw_sample_template = self.get_argument('raw_sample_template', None)
         raw_prep_template = self.get_argument('raw_prep_template', None)
+        barcodes = self.get_argument('barcodes', "").split(',')
+        forward_seqs = self.get_argument('forward_seqs', "").split(',')
+        reverse_seqs = self.get_argument('reverse_seqs', "").split(',')
+
         if raw_sample_template is None or raw_prep_template is None:
             raise HTTPError(403, "This function needs a sample template: "
                             "%s and a prep template: %s" %
@@ -151,25 +164,94 @@ class StudyDescriptionHandler(BaseHandler):
 
         fs, fts = self.get_values_for_post_or_get(study_id)
 
+        study_id = int(study_id)
+        study = Study(study_id)
+        ssb = any([PrepTemplate.exists(RawData(d)) for d in study.raw_data()])
+
+        # deleting previous uploads
+        for rd in study.raw_data():
+            if PrepTemplate.exists(RawData(rd)):
+                PrepTemplate.delete(rd)
+        if SampleTemplate.exists(study):
+            SampleTemplate.delete(study_id)
+
         try:
-            samp_template_id = load_sample_template_from_cmd(fp_rsp, study_id)
-        except TypeError:
-            msg = 'An error occurred parsing the sample template %s' % fp_rsp
+            # inserting sample template
+            load_sample_template_from_cmd(fp_rsp, study_id)
+        except (TypeError, QiitaDBColumnError, QiitaDBExecutionError,
+                QiitaDBDuplicateError, IOError), e:
+            msg = ('<b>An error occurred parsing the sample template: '
+                   '%s</b><br/>%s' % (basename(fp_rsp), e))
+            ssb = any([PrepTemplate.exists(RawData(d))
+                       for d in study.raw_data()])
             self.render('study_description.html', user=self.current_user,
-                        study_info=Study(study_id).info, study_id=study_id,
-                        files=fs, max_upload_size=qiita_config.max_upload_size,
+                        study_title=study.title, study_info=study.info,
+                        study_id=study_id, files=fs, ssb=ssb,
+                        max_upload_size=qiita_config.max_upload_size,
+                        filetypes=fts, msg=msg)
+            return
+
+        # inserting raw data
+        fp = get_study_fp(study_id)
+        filepaths, filepath_types = [], []
+        if barcodes and barcodes[0] != "":
+            filepaths.extend([join(fp, t) for t in barcodes])
+            filepath_types.extend(["raw_barcodes"]*len(barcodes))
+        if forward_seqs and forward_seqs[0] != "":
+            filepaths.extend([join(fp, t) for t in forward_seqs])
+            filepath_types.extend(["raw_forward_seqs"]*len(forward_seqs))
+        if reverse_seqs and reverse_seqs[0] != "":
+            filepaths.extend([join(fp, t) for t in reverse_seqs])
+            filepath_types.extend(["raw_reverse_seqs"]*len(reverse_seqs))
+
+        # currently hardcoding the filetypes and data_type, see issue
+        # https://github.com/biocore/qiita/issues/391
+        filetype = 'FASTQ'
+        data_type = '16S'
+
+        try:
+            # currently hardcoding the study_ids to be an array but not sure
+            # if this will ever be an actual array via the web interface
+            raw_data = load_raw_data_cmd(filepaths, filepath_types, filetype,
+                                         [study_id], data_type)
+        except (TypeError, QiitaDBColumnError, QiitaDBExecutionError,
+                IOError), e:
+            fps = ', '.join([basename(f) for f in filepaths])
+            msg = ('<b>An error occurred parsing the raw files: '
+                   '%s</b><br/>%s' % (basename(fps), e))
+            ssb = any([PrepTemplate.exists(RawData(rd))
+                       for rd in study.raw_data()])
+            self.render('study_description.html', user=self.current_user,
+                        study_title=study.title, study_info=study.info,
+                        study_id=study_id, files=fs, ssb=ssb,
+                        max_upload_size=qiita_config.max_upload_size,
                         filetypes=fts, msg=msg)
             return
 
         try:
-            load_prep_template_from_cmd(fp_rpt, samp_template_id)
-        except TypeError:
-            msg = 'An error occurred parsing the prep template %s' % fp_rpt
+            # inserting prep templates
+            load_prep_template_from_cmd(fp_rpt, raw_data.id)
+        except (TypeError, QiitaDBColumnError, QiitaDBExecutionError,
+                IOError), e:
+            msg = ('<b>An error occurred parsing the prep template: '
+                   '%s</b><br/>%s' % (basename(fp_rsp), e))
+            ssb = any([PrepTemplate.exists(RawData(rd)) for rd in raw_data])
             self.render('study_description.html', user=self.current_user,
-                        study_info=Study(study_id).info, study_id=study_id,
-                        files=fs, max_upload_size=qiita_config.max_upload_size,
+                        study_title=study.title, study_info=study.info,
+                        study_id=study_id, files=fs, ssb=ssb,
+                        max_upload_size=qiita_config.max_upload_size,
                         filetypes=fts, msg=msg)
             return
+
+        # rerun so we have the must upto date info
+        fs, fts = self.get_values_for_post_or_get(study_id)
+        ssb = any([PrepTemplate.exists(RawData(d)) for d in study.raw_data()])
+
+        self.render('study_description.html', user=self.current_user,
+                    study_title=study.title, study_info=study.info,
+                    study_id=study_id, files=fs, ssb=ssb,
+                    max_upload_size=qiita_config.max_upload_size,
+                    filetypes=fts, msg="Your samples where processed")
 
 
 class CreateStudyHandler(BaseHandler):

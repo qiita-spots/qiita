@@ -23,7 +23,7 @@ script:
   - qiita_env start_cluster general demo reserved
   - qiita_env make
   - nosetests --with-doctest --with-coverage
-  - flake8 qiita_db qiita_core qiita_pet setup.py scripts
+  - flake8 qiita_* setup.py scripts
   # we need to run the test suite from setup.py for coveralls to grab the info
   # - coverage run setup.py test
   # - coverage report -m

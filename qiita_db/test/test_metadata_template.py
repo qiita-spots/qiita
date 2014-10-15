@@ -617,7 +617,7 @@ class TestSampleTemplate(TestCase):
 
     def test_delete(self):
         """Deletes Sample template 1"""
-        st = SampleTemplate.create(self.metadata, self.new_study)
+        SampleTemplate.create(self.metadata, self.new_study)
         SampleTemplate.delete(2)
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.required_sample_info WHERE study_id=2")
