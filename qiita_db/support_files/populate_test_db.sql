@@ -287,7 +287,7 @@ INSERT INTO qiita.prep_1 (sample_id, BarcodeSequence, LIBRARY_CONSTRUCTION_PROTO
 	('SKM9.640192', 'AGCAGGCACGAA', 'This analysis was done as in Caporaso et al 2011 Genome research. The PCR primers (F515/R806) were developed against the V4 region of the 16S rRNA (both bacteria and archaea), which we determined would yield optimal community clustering with reads of this length using a procedure similar to that of ref. 15. [For reference, this primer pair amplifies the region 533_786 in the Escherichia coli strain 83972 sequence (greengenes accession no. prokMSA_id:470367).] The reverse PCR primer is barcoded with a 12-base error-correcting Golay code to facilitate multiplexing of up to 1,500 samples per lane, and both PCR primers contain sequencer adapter regions.', 'GTGCCAGCMGCCGCGGTAA', 'V4', '16S rRNA', 'ANL', 's_G1_L001_sequences', '8/1/12', 'ANL', 'micro biome of soil and rhizosphere of cannabis plants from CA', 'Cannabis Soil Microbiome', 'Illumina', '.25,g', 'Sequencing by synthesis', 'MiSeq', 'ANL', 'FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT', 'CCME');
 
 -- Insert preprocessed information for raw data 1
-INSERT INTO qiita.preprocessed_data (preprocessed_params_table, preprocessed_params_id, submitted_to_insdc, ebi_submission_accession, ebi_study_accession, data_type_id) VALUES ('preprocessed_sequence_illumina_params', 1, TRUE, 'EBI123456-AA', 'EBI123456-BB', 2), ('preprocessed_sequence_illumina_params', 2, FALSE, NULL, NULL, 2);
+INSERT INTO qiita.preprocessed_data (preprocessed_params_table, preprocessed_params_id, submitted_to_insdc_status, ebi_submission_accession, ebi_study_accession, data_type_id) VALUES ('preprocessed_sequence_illumina_params', 1, 'submitting', 'EBI123456-AA', 'EBI123456-BB', 2), ('preprocessed_sequence_illumina_params', 2, 'not submitted', NULL, NULL, 2);
 
 -- Link the new preprocessed data with the raw data
 INSERT INTO qiita.raw_preprocessed_data (raw_data_id, preprocessed_data_id) VALUES (1, 1), (1, 2);
@@ -302,7 +302,7 @@ INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum, checksum_algor
 INSERT INTO qiita.preprocessed_filepath (preprocessed_data_id, filepath_id) VALUES (1, 5), (1, 6), (1, 7);
 
 -- Insert the preprocessed illumina params used for raw data 1
-INSERT INTO qiita.preprocessed_sequence_illumina_params (max_bad_run_length) VALUES (3), (4);
+INSERT INTO qiita.preprocessed_sequence_illumina_params (max_bad_run_length) VALUES (4);
 
 -- Insert processed information for study 0 and processed data 1
 INSERT INTO qiita.processed_data (processed_params_table, processed_params_id, processed_date, data_type_id) VALUES ('processed_params_uclust', 1, 'Mon Oct 1 09:30:27 2012', 2);

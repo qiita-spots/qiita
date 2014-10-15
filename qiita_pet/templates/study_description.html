@@ -192,7 +192,21 @@
   }
 
   function split_libraries() {
-    alert("To be implemented");
+    if (confirm("Are you sure you want to submit a split libraries job?")) {
+      var form = $("<form>")
+        .attr("action", "/study/preprocess")
+        .attr("method", "post")
+        .append($("<input>")
+          .attr("type", "hidden")
+          .attr("name", "study_id")
+          .attr("value", "{{study_id}}"))
+        .append($("<input>")
+          .attr("type", "hidden")
+          .attr("name", "raw_data_id")
+          .attr("value", "{{vssb}}"));
+      $("body").append(form);
+      form.submit();
+    }
   }
 </script>
 
