@@ -115,7 +115,8 @@ class PublicStudiesHandler(BaseHandler):
 
 class StudyDescriptionHandler(BaseHandler):
     def get_values_for_post_or_get(self, study_id):
-        """ Process the values for both post and get to avoid having duplicated lines
+        """Process the values for both post and get to avoid having duplicated
+        lines
         """
 
         fp = get_study_fp(study_id)
@@ -131,20 +132,18 @@ class StudyDescriptionHandler(BaseHandler):
         return fs, fts
 
     def get_raw_data_variables(self, study):
-        """ Create the boolean ssb to display the split and metadata buttons and the
-        array of valid raw data to avoid duplicated lines
+        """ Create the boolean ssb to display the split and metadata buttons
+        and the array of valid raw data to avoid duplicated lines
         """
 
         valid_ssb = []
-        ssb = []
         for rdi in study.raw_data():
             rd = RawData(rdi)
             ex = PrepTemplate.exists(rd)
-            ssb.append(ex)
             if ex:
                 valid_ssb.append(rdi)
 
-        return any(ssb), valid_ssb
+        return len(valid_ssb)>0, valid_ssb
 
     @authenticated
     def get(self, study_id):
