@@ -127,7 +127,6 @@ CREATE TABLE qiita.preprocessed_data (
 	preprocessed_data_id bigserial  NOT NULL,
 	preprocessed_params_table varchar  NOT NULL,
 	preprocessed_params_id bigint  NOT NULL,
-	submitted_to_insdc   bool  NOT NULL,
 	submitted_to_insdc_status varchar DEFAULT 'not submitted' NOT NULL,
 	ebi_submission_accession varchar  ,
 	ebi_study_accession  varchar  ,

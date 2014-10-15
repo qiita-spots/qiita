@@ -551,7 +551,6 @@
 				<comment><![CDATA[Name of table holding the params]]></comment>
 			</column>
 			<column name="preprocessed_params_id" type="bigint" jt="-5" mandatory="y" />
-			<column name="submitted_to_insdc" type="bool" jt="-7" mandatory="y" />
 			<column name="submitted_to_insdc_status" type="varchar" jt="12" mandatory="y" >
 				<defo>&#039;not submitted&#039;</defo>
 			</column>
