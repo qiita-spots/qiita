@@ -320,6 +320,43 @@ class RawData(BaseData):
                "where raw_data_id = %s".format(self._table))
         return conn_handler.execute_fetchone(sql, [self._id])[0]
 
+    def preprocessing_status(self):
+        r"""Tells if the data has been preprocessed or not
+
+        Returns
+        -------
+        str
+            One of {'not_preprocessed', 'preprocessing', 'success', 'failed'}
+        """
+        conn_handler = SQLConnectionHandler()
+        return conn_handler.execute_fetchone(
+            "SELECT preprocesseing_status FROM qiita.{0} "
+            "WHERE raw_data_id=%s".format(self._table), (self.id,))[0]
+
+    def update_preprocessing_status(self, state):
+        r"""Update the preprocessing status
+
+        Parameters
+        ----------
+        state : str, {'not_preprocessed', 'preprocessing', 'success', 'failed'}
+            The current status of preprocessing
+
+        Raises
+        ------
+        ValueError
+            If the state is not known.
+        """
+        if state not in ('not_preprocessed', 'preprocessing', 'success',
+                         'failed'):
+            raise ValueError('Unknown state: %s' % state)
+
+        conn_handler = SQLConnectionHandler()
+
+        conn_handler.execute(
+            "UPDATE qiita.{0} SET preprocesseing_status = %s "
+            "WHERE raw_data_id = %s".format(self._table),
+            (state, self.id))
+
 
 class PreprocessedData(BaseData):
     r"""Object for dealing with preprocessed data

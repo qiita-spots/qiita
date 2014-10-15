@@ -72,7 +72,7 @@ class RawDataTests(TestCase):
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.raw_data WHERE raw_data_id=3")
         # raw_data_id, filetype, submitted_to_insdc
-        self.assertEqual(obs, [[3, 2, None, 2]])
+        self.assertEqual(obs, [[3, 2, None, 2, 'not_preprocessed']])
 
         # Check that the raw data have been correctly linked with the study
         obs = self.conn_handler.execute_fetchall(
@@ -135,6 +135,28 @@ class RawDataTests(TestCase):
     def test_filetype(self):
         rd = RawData(1)
         self.assertEqual(rd.filetype, "FASTQ")
+
+    def test_preprocessing_status(self):
+        """preprocessing_status works correctly"""
+        # Success case
+        rd = RawData(1)
+        self.assertEqual(rd.preprocessing_status(), 'success')
+
+        # not preprocessed case
+        rd = RawData(2)
+        self.assertEqual(rd.preprocessing_status(), 'not_preprocessed')
+
+    def test_update_preprocessing_status(self):
+        """Able to update the preprocessing status"""
+        rd = RawData(2)
+        self.assertEqual(rd.preprocessing_status(), 'not_preprocessed')
+        rd.update_preprocessing_status('preprocessing')
+        self.assertEqual(rd.preprocessing_status(), 'preprocessing')
+        rd.update_preprocessing_status('success')
+        self.assertEqual(rd.preprocessing_status(), 'success')
+
+        with self.assertRaises(ValueError):
+            rd.update_preprocessing_status('not a valid state')
 
 
 @qiita_test_checker()
