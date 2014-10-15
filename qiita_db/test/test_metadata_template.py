@@ -477,7 +477,7 @@ class TestSampleTemplate(TestCase):
                         'has_physical_specimen': True,
                         'has_extracted_data': True,
                         'sample_type': 'type1',
-                        'required_sample_info_status_id': 1,
+                        'required_sample_info_status': 'received',
                         'collection_timestamp':
                         datetime(2014, 5, 29, 12, 24, 51),
                         'host_subject_id': 'NotIdentified',
@@ -489,7 +489,7 @@ class TestSampleTemplate(TestCase):
                         'has_physical_specimen': True,
                         'has_extracted_data': True,
                         'sample_type': 'type1',
-                        'required_sample_info_status_id': 1,
+                        'required_sample_info_status': 'received',
                         'collection_timestamp':
                         datetime(2014, 5, 29, 12, 24, 51),
                         'host_subject_id': 'NotIdentified',
@@ -501,7 +501,7 @@ class TestSampleTemplate(TestCase):
                         'has_physical_specimen': True,
                         'has_extracted_data': True,
                         'sample_type': 'type1',
-                        'required_sample_info_status_id': 1,
+                        'required_sample_info_status': 'received',
                         'collection_timestamp':
                         datetime(2014, 5, 29, 12, 24, 51),
                         'host_subject_id': 'NotIdentified',
@@ -794,21 +794,21 @@ class TestPrepTemplate(TestCase):
             'SKB8.640193': {'center_name': 'ANL',
                             'center_project_name': 'Test Project',
                             'ebi_submission_accession': None,
-                            'EMP_status_id': 1,
+                            'EMP_status': 'EMP',
                             'str_column': 'Value for sample 1',
                             'linkerprimersequence': 'GTGCCAGCMGCCGCGGTAA',
                             'barcodesequence': 'GTCCGCAAGTTA'},
             'SKD8.640184': {'center_name': 'ANL',
                             'center_project_name': 'Test Project',
                             'ebi_submission_accession': None,
-                            'EMP_status_id': 1,
+                            'EMP_status': 'EMP',
                             'str_column': 'Value for sample 2',
                             'linkerprimersequence': 'GTGCCAGCMGCCGCGGTAA',
                             'barcodesequence': 'CGTAGAGCTCTC'},
             'SKB7.640196': {'center_name': 'ANL',
                             'center_project_name': 'Test Project',
                             'ebi_submission_accession': None,
-                            'EMP_status_id': 1,
+                            'EMP_status': 'EMP',
                             'str_column': 'Value for sample 3',
                             'linkerprimersequence': 'GTGCCAGCMGCCGCGGTAA',
                             'barcodesequence': 'CCTCTGAGAGCT'}
@@ -944,24 +944,24 @@ class TestPrepTemplate(TestCase):
             'SKB8.640193': {'center_name': 'ANL',
                             'center_project_name': 'Test Project',
                             'ebi_submission_accession': None,
-                            'EMP_status_id': 1,
+                            'EMP_status': 'EMP',
                             'str_column': 'Value for sample 1',
                             'barcodesequence': 'GTCCGCAAGTTA'},
             'SKD8.640184': {'center_name': 'ANL',
                             'center_project_name': 'Test Project',
                             'ebi_submission_accession': None,
-                            'EMP_status_id': 1,
+                            'EMP_status': 'EMP',
                             'str_column': 'Value for sample 2',
                             'barcodesequence': 'CGTAGAGCTCTC'},
             'SKB7.640196': {'center_name': 'ANL',
                             'center_project_name': 'Test Project',
                             'ebi_submission_accession': None,
-                            'EMP_status_id': 1,
+                            'EMP_status': 'EMP',
                             'str_column': 'Value for sample 3',
                             'barcodesequence': 'CCTCTGAGAGCT'}
             }
         metadata = pd.DataFrame.from_dict(metadata_dict, orient='index')
-        with self.assertRaises(ValueError):
+        with self.assertRaises(QiitaDBColumnError):
             PrepTemplate.create(metadata, self.new_raw_data)
 
     def test_delete(self):
@@ -1134,26 +1134,26 @@ class TestPrepTemplate(TestCase):
 EXP_SAMPLE_TEMPLATE = (
     "sample_name\tcollection_timestamp\tdescription\thas_extracted_data\t"
     "has_physical_specimen\thost_subject_id\tlatitude\tlongitude\t"
-    "physical_location\trequired_sample_info_status_id\tsample_type\t"
+    "physical_location\trequired_sample_info_status\tsample_type\t"
     "str_column\n"
     "Sample1\t2014-05-29 12:24:51\tTest Sample 1\tTrue\tTrue\tNotIdentified\t"
-    "42.42\t41.41\tlocation1\t1\ttype1\tValue for sample 1\n"
+    "42.42\t41.41\tlocation1\treceived\ttype1\tValue for sample 1\n"
     "Sample2\t2014-05-29 12:24:51\t"
-    "Test Sample 2\tTrue\tTrue\tNotIdentified\t4.2\t1.1\tlocation1\t1\t"
+    "Test Sample 2\tTrue\tTrue\tNotIdentified\t4.2\t1.1\tlocation1\treceived\t"
     "type1\tValue for sample 2\n"
     "Sample3\t2014-05-29 12:24:51\tTest Sample 3\tTrue\t"
-    "True\tNotIdentified\t4.8\t4.41\tlocation1\t1\ttype1\t"
+    "True\tNotIdentified\t4.8\t4.41\tlocation1\treceived\ttype1\t"
     "Value for sample 3\n")
 
 EXP_PREP_TEMPLATE = (
     'sample_name\tbarcodesequence\tcenter_name\tcenter_project_name\t'
-    'ebi_submission_accession\temp_status_id\tlinkerprimersequence\t'
+    'ebi_submission_accession\temp_status\tlinkerprimersequence\t'
     'str_column\n'
-    'SKB7.640196\tCCTCTGAGAGCT\tANL\tTest Project\tNone\t1\t'
+    'SKB7.640196\tCCTCTGAGAGCT\tANL\tTest Project\tNone\tEMP\t'
     'GTGCCAGCMGCCGCGGTAA\tValue for sample 3\n'
-    'SKB8.640193\tGTCCGCAAGTTA\tANL\tTest Project\tNone\t1\t'
+    'SKB8.640193\tGTCCGCAAGTTA\tANL\tTest Project\tNone\tEMP\t'
     'GTGCCAGCMGCCGCGGTAA\tValue for sample 1\n'
-    'SKD8.640184\tCGTAGAGCTCTC\tANL\tTest Project\tNone\t1\t'
+    'SKD8.640184\tCGTAGAGCTCTC\tANL\tTest Project\tNone\tEMP\t'
     'GTGCCAGCMGCCGCGGTAA\tValue for sample 2\n')
 
 if __name__ == '__main__':

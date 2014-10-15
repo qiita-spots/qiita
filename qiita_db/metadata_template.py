@@ -39,6 +39,7 @@ Methods
 
 from __future__ import division
 from future.builtins import zip
+from future.utils import viewitems
 from copy import deepcopy
 
 import pandas as pd
@@ -50,7 +51,8 @@ from .exceptions import (QiitaDBDuplicateError, QiitaDBColumnError,
                          QiitaDBDuplicateHeaderError)
 from .base import QiitaObject
 from .sql_connection import SQLConnectionHandler
-from .util import exists_table, get_table_cols
+from .util import (exists_table, get_table_cols, get_emp_status,
+                   get_required_sample_info_status)
 
 
 TARGET_GENE_DATA_TYPES = ['16S', '18S', 'ITS']
@@ -591,7 +593,20 @@ class MetadataTemplate(QiitaObject):
             The obj to which the metadata template belongs to. Study in case
             of SampleTemplate and RawData in case of PrepTemplate
         """
-        pass
+        # Check required columns
+        missing = set(cls._ignore_cols.values()).difference(md_template.keys())
+        if missing:
+            raise QiitaDBColumnError("Missing columns: %s" % missing)
+
+        # Change any *_id column to its str column
+        for key, value in viewitems(cls._ignore_cols):
+            handler = cls._id_cols_handlers[key]
+            md_template[key] = pd.Series(
+                [handler[i] for i in md_template[value]],
+                index=md_template.index)
+            del md_template[value]
+
+        cls._check_template_specific_columns(md_template, obj)
 
     @classmethod
     def create(cls, md_template, obj):
@@ -955,6 +970,10 @@ class MetadataTemplate(QiitaObject):
             "SELECT * FROM qiita.{0}".format(self._table_name(self))))
 
         for k in metadata_map:
+            for key, value in viewitems(self._ignore_cols):
+                id_ = metadata_map[k][key]
+                metadata_map[k][value] = self._str_cols_handlers[key][id_]
+                del metadata_map[k][key]
             metadata_map[k].update(dyn_vals[k])
 
         headers = sorted(list(metadata_map.values())[0].keys())
@@ -983,7 +1002,11 @@ class SampleTemplate(MetadataTemplate):
     _id_column = "study_id"
     _ignore_cols = {
         'required_sample_info_status_id': 'required_sample_info_status'}
-    _id_cols_handlers = {'required_sample_info_status_id': foo}
+    _id_cols_handlers = {
+        'required_sample_info_status_id': get_required_sample_info_status()}
+    _str_cols_handlers = {
+        'required_sample_info_status_id': get_required_sample_info_status(
+            key='required_sample_info_status_id')}
     _sample_cls = Sample
 
     @staticmethod
@@ -1004,7 +1027,7 @@ class SampleTemplate(MetadataTemplate):
                 "ORDER BY column_name")]
 
     @classmethod
-    def _check_special_columns(cls, md_template, study):
+    def _check_template_specific_columns(cls, md_template, study):
         r"""Checks for special columns based on obj type
 
         Parameters
@@ -1013,16 +1036,8 @@ class SampleTemplate(MetadataTemplate):
             The metadata template file contents indexed by sample ids
         study : Study
             The study to which the sample template belongs to.
-
-        Raises
-        ------
-        QiitaDBColumnError
-            If any of the required columns are not present in the md_template
         """
-        # Change any *_id column to its str column
-        missing = set(cls._ignore_cols.values()).difference(md_template.keys())
-        if missing:
-            raise QiitaDBColumnError("Missing columns: %s" % missing)
+        pass
 
 
 class PrepTemplate(MetadataTemplate):
@@ -1040,10 +1055,12 @@ class PrepTemplate(MetadataTemplate):
     _id_column = "raw_data_id"
     _strict = False
     _ignore_cols = {'emp_status_id': 'emp_status'}
+    _id_cols_handlers = {'emp_status_id': get_emp_status()}
+    _str_cols_handlers = {'emp_status_id': get_emp_status(key='emp_status_id')}
     _sample_cls = PrepSample
 
     @classmethod
-    def _check_special_columns(cls, md_template, raw_data):
+    def _check_template_specific_columns(cls, md_template, raw_data):
         r"""Checks for special columns based on obj type
 
         Parameters
@@ -1055,7 +1072,7 @@ class PrepTemplate(MetadataTemplate):
 
         Raises
         ------
-        ValueError
+        QiitaDBColumnError
             If any of the required columns are not present in the md_template
 
         Notes
@@ -1064,11 +1081,6 @@ class PrepTemplate(MetadataTemplate):
         rename them to use the naming that we expect, so this is normalized
         across studies.
         """
-        # Change any *_id column to its str column
-        missing = set(cls._ignore_cols.values()).difference(md_template.keys())
-        if missing:
-            raise QiitaDBColumnError("Missing columns: %s" % missing)
-
         # We only have column requirements if the data type of the raw data
         # is one of the target gene types
         if raw_data.data_type() in TARGET_GENE_DATA_TYPES:
