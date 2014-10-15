@@ -167,7 +167,7 @@ class TestSample(TestCase):
         """Get item returns the correct metadata value from the changed column
         """
         self.assertEqual(self.tester['required_sample_info_status'],
-                         'received')
+                         'completed')
 
     def test_getitem_error(self):
         """Get item raises an error if category does not exists"""

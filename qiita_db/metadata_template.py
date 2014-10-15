@@ -266,6 +266,32 @@ class BaseSample(QiitaObject):
 
         return cols
 
+    def _to_dict(self):
+        r"""Returns the categories and their values in a dictionary
+
+        Returns
+        -------
+        dict of {str: str}
+            A dictionary of the form {category: value}
+        """
+        conn_handler = SQLConnectionHandler()
+        d = dict(conn_handler.execute_fetchone(
+            "SELECT * FROM qiita.{0} WHERE {1}=%s AND "
+            "sample_id=%s".format(self._table, self._id_column),
+            (self._md_template.id, self._id)))
+        dynamic_d = dict(conn_handler.execute_fetchone(
+            "SELECT * from qiita.{0} WHERE "
+            "sample_id=%s".format(self._dynamic_table),
+            (self._id, )))
+        d.update(dynamic_d)
+        del d['sample_id']
+        del d[self._id_column]
+        # Modify all the *_id columns to include the string instead of the id
+        for k, v in viewitems(self._md_template._ignore_cols):
+            d[v] = self._md_template._str_cols_handlers[k][d[k]]
+            del d[k]
+        return d
+
     def __len__(self):
         r"""Returns the number of metadata categories
 
@@ -303,13 +329,21 @@ class BaseSample(QiitaObject):
         conn_handler = SQLConnectionHandler()
         key = key.lower()
         if key in self._get_categories(conn_handler):
+            # It's possible that the key is asking for one of the *_id columns
+            # that we have to do the translation
+            handler = lambda x: x
+            if key in self._md_template._ignore_cols.values():
+                handler = (
+                    lambda x: self._md_template._str_cols_handlers[key][x])
+                key = "%s_id" % key
             # Check if we have either to query the table with required columns
             # or the dynamic table
             if key in get_table_cols(self._table, conn_handler):
-                return conn_handler.execute_fetchone(
+                result = conn_handler.execute_fetchone(
                     "SELECT {0} FROM qiita.{1} WHERE {2}=%s AND "
                     "sample_id=%s".format(key, self._table, self._id_column),
                     (self._md_template.id, self._id))[0]
+                return handler(result)
             else:
                 return conn_handler.execute_fetchone(
                     "SELECT {0} FROM qiita.{1} WHERE "
@@ -396,17 +430,8 @@ class BaseSample(QiitaObject):
         Iterator
             Iterator over metadata values
         """
-        conn_handler = SQLConnectionHandler()
-        values = conn_handler.execute_fetchone(
-            "SELECT * FROM qiita.{0} WHERE {1}=%s AND "
-            "sample_id=%s".format(self._table, self._id_column),
-            (self._md_template.id, self._id))[2:]
-        dynamic_values = conn_handler.execute_fetchone(
-            "SELECT * from qiita.{0} WHERE "
-            "sample_id=%s".format(self._dynamic_table),
-            (self._id, ))[1:]
-        values.extend(dynamic_values)
-        return iter(values)
+        d = self._to_dict()
+        return d.values()
 
     def items(self):
         r"""Iterator over (category, value) tuples
@@ -416,19 +441,8 @@ class BaseSample(QiitaObject):
         Iterator
             Iterator over (category, value) tuples
         """
-        conn_handler = SQLConnectionHandler()
-        values = dict(conn_handler.execute_fetchone(
-            "SELECT * FROM qiita.{0} WHERE {1}=%s AND "
-            "sample_id=%s".format(self._table, self._id_column),
-            (self._md_template.id, self._id)))
-        dynamic_values = dict(conn_handler.execute_fetchone(
-            "SELECT * from qiita.{0} WHERE "
-            "sample_id=%s".format(self._dynamic_table),
-            (self._id, )))
-        values.update(dynamic_values)
-        del values['sample_id']
-        del values[self._id_column]
-        return values.items()
+        d = self._to_dict()
+        return d.items()
 
     def get(self, key):
         r"""Returns the metadata value for category `key`, or None if the
