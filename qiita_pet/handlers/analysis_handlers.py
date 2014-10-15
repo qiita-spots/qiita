@@ -18,7 +18,8 @@ from pyparsing import ParseException
 from redis import Redis
 
 from qiita_pet.handlers.base_handlers import BaseHandler
-from qiita_ware.run import RunAnalysis
+from qiita_ware.dispatchable import run_analysis
+from qiita_ware.context import submit
 from qiita_db.user import User
 from qiita_db.analysis import Analysis
 from qiita_db.data import ProcessedData
@@ -274,9 +275,8 @@ class AnalysisWaitHandler(BaseHandler):
         analysis = Analysis(analysis_id)
         self.render("analysis_waiting.html", user=user, aid=analysis_id,
                     aname=analysis.name, commands=commands)
-        app = RunAnalysis()
-        app(user, analysis, split, comm_opts={},
-            rarefaction_depth=rarefaction_depth)
+        submit(user, run_analysis, user, analysis_id, split, comm_opts={},
+               rarefaction_depth=rarefaction_depth)
 
 
 class AnalysisResultsHandler(BaseHandler):
