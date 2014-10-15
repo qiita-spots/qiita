@@ -30,14 +30,15 @@ BASE_DATA_DIR =
 # ----------------------------- IPython settings ------------------------------
 [ipython]
 # ties to cluster profiles
+# Make sure that all the cluster size are bigger than 1, otherwise a deadlock can occur
 DEMO_CLUSTER = qiita_demo
-DEMO_CLUSTER_SIZE = 1
+DEMO_CLUSTER_SIZE = 2
 
 RESERVED_CLUSTER = qiita_reserved
-RESERVED_CLUSTER_SIZE = 1
+RESERVED_CLUSTER_SIZE = 2
 
 GENERAL_CLUSTER = qiita_general
-GENERAL_CLUSTER_SIZE = 1
+GENERAL_CLUSTER_SIZE = 2
 
 # ----------------------------- SMTP settings -----------------------------
 [smtp]
