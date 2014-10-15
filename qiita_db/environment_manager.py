@@ -251,7 +251,12 @@ def reset_test_database(wrapped_fn):
 
     def decorated_wrapped_fn(*args, **kwargs):
         # Drop the schema
-        conn_handler.execute("DROP SCHEMA qiita CASCADE")
+        try:
+            conn_handler.execute("DROP SCHEMA qiita CASCADE")
+        except:
+            # ignore the failure of the drop if the schema already doesnt exist
+            # generic Error raised so can't catch specific error
+            pass
         # Create the schema
         with open(LAYOUT_FP, 'U') as f:
             conn_handler.execute(f.read())
@@ -267,22 +272,27 @@ def reset_test_database(wrapped_fn):
     return decorated_wrapped_fn
 
 
-def clean_test_environment(user, password, host):
+def clean_test_environment():
     r"""Cleans the test database environment.
 
     In case that the test database is dirty (i.e. the 'qiita' schema is
     present), this cleans it up by dropping the 'qiita' schema and
     re-populating it.
-
-    Parameters
-    ----------
-    user : str
-        The postgres user to connect to the server
-    password : str
-        The password of the user
-    host : str
-        The host where the postgres server is running
     """
+    # First, we check that we are not in a production environment
+    conn_handler = SQLConnectionHandler()
+    # It is possible that we are connecting to a production database
+    test_db = conn_handler.execute_fetchone("SELECT test FROM settings")[0]
+    # Or the loaded configuration file belongs to a production environment
+    # or the test database is not qiita_test
+    if not qiita_config.test_environment or not test_db \
+            or qiita_config.database != 'qiita_test':
+        raise RuntimeError("Working in a production environment. Not "
+                           "executing the test cleanup to keep the production "
+                           "database safe.")
+
+    # wrap the dummy function and execute it
+    @reset_test_database
     def dummyfunc():
         pass
-    reset_test_database(dummyfunc)
+    dummyfunc()
