@@ -247,6 +247,7 @@ class StudyPreprocessor(ParallelWrapper):
             The parameters to use for preprocessing
         """
         self.raw_data = raw_data
+        self._logger = stderr
         # Change the raw_data status to preprocessing
         raw_data.update_preprocessing_status('preprocessing')
         # STEP 1: Preprocess the study
@@ -286,13 +287,7 @@ class StudyPreprocessor(ParallelWrapper):
                                  requires_deps=False)
         self._job_graph.add_edge(demux_node, insert_preprocessed_node)
 
-        # Clean up the environment
-        clean_up_node = "CLEAN_UP"
-        self._job_graph.add_node(clean_up_node,
-                                 job=(_clean_up, [output_dir]),
-                                 requires_deps=False)
-        self._job_graph.add_edge(insert_preprocessed_node, clean_up_node)
-        self._logger = stderr
+        self._dirpaths_to_remove.append(output_dir)
 
     def _failure_callback(self):
         """Callback to execute in case that any of the job nodes failed
