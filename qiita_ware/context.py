@@ -232,7 +232,8 @@ def _redis_wrap(f, redis_deets, *args, **kwargs):
         payload['return'] = f(*args, **kwargs)
         payload['status_msg'] = 'Success'
     except Exception:
-        import sys, traceback
+        import sys
+        import traceback
         payload['return'] = repr(traceback.format_exception(*sys.exc_info()))
         payload['status_msg'] = 'Failed'
     finally:

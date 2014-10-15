@@ -369,7 +369,6 @@ class PreprocessedDataTests(TestCase):
         with self.assertRaises(ValueError):
             pd.update_insdc_status('success', 'only one accession')
 
-
     def test_data_type(self):
         """Correctly returns the data_type of preprocessed_data"""
         pd = ProcessedData(1)
