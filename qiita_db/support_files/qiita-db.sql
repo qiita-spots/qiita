@@ -192,6 +192,7 @@ CREATE TABLE qiita.raw_data (
 	filetype_id          bigint  NOT NULL,
 	investigation_type   varchar  ,
 	data_type_id         bigint  NOT NULL,
+	preprocesseing_status varchar DEFAULT 'not_preprocessed' NOT NULL,
 	CONSTRAINT pk_raw_data UNIQUE ( raw_data_id ) ,
 	CONSTRAINT pk_raw_data_0 PRIMARY KEY ( raw_data_id ),
 	CONSTRAINT fk_raw_data_filetype FOREIGN KEY ( filetype_id ) REFERENCES qiita.filetype( filetype_id )    ,
