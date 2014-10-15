@@ -130,17 +130,33 @@ class StudyDescriptionHandler(BaseHandler):
 
         return fs, fts
 
+    def get_raw_data_variables(self, study):
+        """ Create the boolean ssb to display the split and metadata buttons and the
+        array of valid raw data to avoid duplicated lines
+        """
+
+        valid_ssb = []
+        ssb = []
+        for rdi in study.raw_data():
+            rd = RawData(rdi)
+            ex = PrepTemplate.exists(rd)
+            ssb.append(ex)
+            if ex:
+                valid_ssb.append(rdi)
+
+        return any(ssb), valid_ssb
+
     @authenticated
     def get(self, study_id):
         fs, fts = self.get_values_for_post_or_get(study_id)
 
         study = Study(int(study_id))
-        raw_data = study.raw_data()
-        ssb = any([PrepTemplate.exists(RawData(rd)) for rd in raw_data])
+        ssb, valid_ssb = self.get_raw_data_variables(study)
+        valid_ssb = ','.join(map(str, valid_ssb))
 
         self.render('study_description.html', user=self.current_user,
                     study_title=study.title, study_info=study.info,
-                    study_id=study_id, files=fs, ssb=ssb,
+                    study_id=study_id, files=fs, ssb=ssb, vssb=valid_ssb,
                     max_upload_size=qiita_config.max_upload_size,
                     filetypes=fts, msg="")
 
@@ -182,11 +198,11 @@ class StudyDescriptionHandler(BaseHandler):
                 QiitaDBDuplicateError, IOError), e:
             msg = ('<b>An error occurred parsing the sample template: '
                    '%s</b><br/>%s' % (basename(fp_rsp), e))
-            ssb = any([PrepTemplate.exists(RawData(d))
-                       for d in study.raw_data()])
+            ssb, valid_ssb = self.get_raw_data_variables(study)
+            valid_ssb = ','.join(map(str, valid_ssb))
             self.render('study_description.html', user=self.current_user,
                         study_title=study.title, study_info=study.info,
-                        study_id=study_id, files=fs, ssb=ssb,
+                        study_id=study_id, files=fs, ssb=ssb, vssb=valid_ssb,
                         max_upload_size=qiita_config.max_upload_size,
                         filetypes=fts, msg=msg)
             return
@@ -219,11 +235,11 @@ class StudyDescriptionHandler(BaseHandler):
             fps = ', '.join([basename(f) for f in filepaths])
             msg = ('<b>An error occurred parsing the raw files: '
                    '%s</b><br/>%s' % (basename(fps), e))
-            ssb = any([PrepTemplate.exists(RawData(rd))
-                       for rd in study.raw_data()])
+            ssb, valid_ssb = self.get_raw_data_variables(study)
+            valid_ssb = ','.join(map(str, valid_ssb))
             self.render('study_description.html', user=self.current_user,
                         study_title=study.title, study_info=study.info,
-                        study_id=study_id, files=fs, ssb=ssb,
+                        study_id=study_id, files=fs, ssb=ssb, vssb=valid_ssb,
                         max_upload_size=qiita_config.max_upload_size,
                         filetypes=fts, msg=msg)
             return
@@ -235,21 +251,23 @@ class StudyDescriptionHandler(BaseHandler):
                 IOError), e:
             msg = ('<b>An error occurred parsing the prep template: '
                    '%s</b><br/>%s' % (basename(fp_rsp), e))
-            ssb = any([PrepTemplate.exists(RawData(rd)) for rd in raw_data])
+            ssb, valid_ssb = self.get_raw_data_variables(study)
+            valid_ssb = ','.join(map(str, valid_ssb))
             self.render('study_description.html', user=self.current_user,
                         study_title=study.title, study_info=study.info,
-                        study_id=study_id, files=fs, ssb=ssb,
+                        study_id=study_id, files=fs, ssb=ssb, vssb=valid_ssb,
                         max_upload_size=qiita_config.max_upload_size,
                         filetypes=fts, msg=msg)
             return
 
         # rerun so we have the must upto date info
         fs, fts = self.get_values_for_post_or_get(study_id)
-        ssb = any([PrepTemplate.exists(RawData(d)) for d in study.raw_data()])
+        ssb, valid_ssb = self.get_raw_data_variables(study)
+        valid_ssb = ','.join(map(str, valid_ssb))
 
         self.render('study_description.html', user=self.current_user,
                     study_title=study.title, study_info=study.info,
-                    study_id=study_id, files=fs, ssb=ssb,
+                    study_id=study_id, files=fs, ssb=ssb, vssb=valid_ssb,
                     max_upload_size=qiita_config.max_upload_size,
                     filetypes=fts, msg="Your samples where processed")
 
