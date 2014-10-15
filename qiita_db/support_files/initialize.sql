@@ -49,5 +49,7 @@ INSERT INTO qiita.command_data_type (command_id, data_type_id) VALUES (1,1), (1,
 -- Set the autoincrementing study_id column to start at 10,000 so we don't overlap with existing (QIIME database) study IDs, which should be maintained
 SELECT setval('qiita.study_study_id_seq', 10000, false);
 
--- Initializing preprocessed_sequence_illumina_params to have 1 row (default)
-INSERT INTO qiita.preprocessed_sequence_illumina_params (max_bad_run_length) VALUES (3)
+-- Initializing preprocessed_sequence_illumina_params to have 2 rows
+-- The first row has the default values on QIIME
+-- The second row has the default values on QIIME but rev_comp_mapping_barcodes is set to true
+INSERT INTO qiita.preprocessed_sequence_illumina_params (rev_comp_mapping_barcodes) VALUES (false), (true);
