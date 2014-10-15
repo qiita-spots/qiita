@@ -151,13 +151,18 @@ class StudyDescriptionHandler(BaseHandler):
 
         study = Study(int(study_id))
         ssb, valid_ssb = self.get_raw_data_variables(study)
+
+        # get the prep template id and force to choose the first one
+        # see issue https://github.com/biocore/qiita/issues/415
+        prep_template_id = valid_ssb[0]
+
         valid_ssb = ','.join(map(str, valid_ssb))
 
         self.render('study_description.html', user=self.current_user,
                     study_title=study.title, study_info=study.info,
                     study_id=study_id, files=fs, ssb=ssb, vssb=valid_ssb,
                     max_upload_size=qiita_config.max_upload_size,
-                    filetypes=fts, msg="")
+                    filetypes=fts, prep_template_id=prep_template_id, msg="")
 
     @authenticated
     def post(self, study_id):

@@ -72,13 +72,13 @@
   {% if ssb %}
   <tr><td><hr/></td></tr>
   <tr>
-     <td style="vertical-align: middle; text-align:center;" colspan="2">
-       This study has valid files, you can:
-       &nbsp;&nbsp;
-       <input type="button" class="btn btn-primary" value="Show metadata sumary" onclick="show_metadata_summary();">
-       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-       <input type="button" class="btn btn-primary" value="Split libraries" onclick="split_libraries();">
-     </td>
+    <td style="vertical-align: middle; text-align:center;" colspan="2">
+      This study has valid files, you can:
+      &nbsp;&nbsp;
+      <a class="btn btn-primary" href="/metadata_summary/?sample_template={{study_id}}&prep_template={{prep_template_id}}">Show metadata Summary</a>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      <input type="button" class="btn btn-primary" value="Split libraries" onclick="split_libraries();">
+    </td>
   </tr>
   {% end %}
 </table>
