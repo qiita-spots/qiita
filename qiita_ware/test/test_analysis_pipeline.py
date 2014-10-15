@@ -8,7 +8,7 @@ from qiita_core.util import qiita_test_checker
 from qiita_db.analysis import Analysis
 from qiita_db.job import Job
 from qiita_db.util import get_db_files_base_dir
-from qiita_ware.run import (
+from qiita_ware.analysis_pipeline import (
     RunAnalysis, _build_analysis_files, _job_comm_wrapper, _finish_analysis)
 
 
@@ -76,6 +76,7 @@ class TestRun(TestCase):
         app = RunAnalysis()
         app("demo@microbio.me", Analysis(2), [], rarefaction_depth=100)
         for msg in pubsub.listen():
+            print msg
             if msg['type'] == 'message':
                 msgs.append(msg['data'])
                 if "allcomplete" in msg['data']:
