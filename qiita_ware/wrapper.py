@@ -11,6 +11,7 @@ __maintainer__ = "Jose Navas Antonio Molina"
 
 from shutil import rmtree
 from os import remove
+from sys import stderr
 
 import networkx as nx
 
@@ -132,7 +133,8 @@ class ParallelWrapper(object):
         self._validate_job_status(results)
         self._validate_execution_order(results)
         self._clean_up_paths()
-        self._logger.close()
+        if self._logger != stderr:
+            self._logger.close()
 
     def __call__(self, *args, **kwargs):
         self._construct_job_graph(*args, **kwargs)
