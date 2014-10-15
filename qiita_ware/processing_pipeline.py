@@ -213,22 +213,6 @@ def _insert_preprocessed_data_fastq(study, params, raw_data, slq_out):
     raw_data.update_preprocessing_status('success')
 
 
-def _clean_up(dirs):
-    """Removes the directories listed in dirs
-
-    Parameters
-    ----------
-    dirs : list of str
-        Path to the directories to remove
-    """
-    from shutil import rmtree
-    from os.path import exists
-
-    for dp in dirs:
-        if exists(dp):
-            rmtree(dp)
-
-
 class StudyPreprocessor(ParallelWrapper):
     def _construct_job_graph(self, study, raw_data, params):
         """Constructs the workflow graph to preprocess a study
