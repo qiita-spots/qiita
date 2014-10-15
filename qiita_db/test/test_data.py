@@ -179,8 +179,8 @@ class PreprocessedDataTests(TestCase):
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.preprocessed_data WHERE "
             "preprocessed_data_id=3")
-        exp = [[3, "preprocessed_sequence_illumina_params", 1, False,
-                "EBI123456-A", "EBI123456-B", 2]]
+        exp = [[3, "preprocessed_sequence_illumina_params", 1,
+                'not submitted', "EBI123456-A", "EBI123456-B", 2]]
         self.assertEqual(obs, exp)
 
         # Check that the preprocessed data has been linked with its study
@@ -221,8 +221,8 @@ class PreprocessedDataTests(TestCase):
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.preprocessed_data WHERE "
             "preprocessed_data_id=3")
-        exp = [[3, "preprocessed_sequence_illumina_params", 1, False, None,
-                None, 2]]
+        exp = [[3, "preprocessed_sequence_illumina_params", 1,
+                'not submitted', None, None, 2]]
         self.assertEqual(obs, exp)
 
         # Check that the preprocessed data has been linked with its study
@@ -342,14 +342,33 @@ class PreprocessedDataTests(TestCase):
         new.ebi_study_accession = 'EBI12345-DD'
         self.assertEqual(new.ebi_study_accession, 'EBI12345-DD')
 
-    def test_is_submitted_to_insdc(self):
-        """is_submitted_to_insdc works correctly"""
+    def test_submitted_to_insdc_status(self):
+        """submitted_to_insdc_status works correctly"""
         # False case
         pd = PreprocessedData(1)
-        self.assertTrue(pd.is_submitted_to_insdc())
+        self.assertEqual(pd.submitted_to_insdc_status(), 'submitting')
         # True case
         pd = PreprocessedData(2)
-        self.assertFalse(pd.is_submitted_to_insdc())
+        self.assertEqual(pd.submitted_to_insdc_status(), 'not submitted')
+
+    def test_update_insdc_status(self):
+        """Able to update insdc status"""
+        pd = PreprocessedData(1)
+        self.assertEqual(pd.submitted_to_insdc_status(), 'submitting')
+        pd.update_insdc_status('failed')
+        self.assertEqual(pd.submitted_to_insdc_status(), 'failed')
+
+        pd.update_insdc_status('success', 'foo', 'bar')
+        self.assertEqual(pd.submitted_to_insdc_status(), 'success')
+        self.assertEqual(pd.ebi_study_accession, 'foo')
+        self.assertEqual(pd.ebi_submission_accession, 'bar')
+
+        with self.assertRaises(ValueError):
+            pd.update_insdc_status('not valid state')
+
+        with self.assertRaises(ValueError):
+            pd.update_insdc_status('success', 'only one accession')
+
 
     def test_data_type(self):
         """Correctly returns the data_type of preprocessed_data"""

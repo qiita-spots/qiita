@@ -349,7 +349,8 @@ class PreprocessedData(BaseData):
     @classmethod
     def create(cls, study, preprocessed_params_table, preprocessed_params_id,
                filepaths, raw_data=None, data_type=None,
-               submitted_to_insdc=False, ebi_submission_accession=None,
+               submitted_to_insdc_status='not submitted',
+               ebi_submission_accession=None,
                ebi_study_accession=None):
         r"""Creates a new object with a new id on the storage system
 
@@ -365,8 +366,8 @@ class PreprocessedData(BaseData):
         filepaths : iterable of tuples (str, int)
             The list of paths to the preprocessed files and its filepath type
             identifier
-        submitted_to_insdc : bool, optional
-            If true, the raw data files have been submitted to insdc
+        submitted_to_insdc_status : str, optional
+            Submission status of the raw data files
         raw_data : RawData, optional
             The RawData object used as base to this preprocessed data
         data_type : str, optional
@@ -406,14 +407,14 @@ class PreprocessedData(BaseData):
         # and get the preprocessed data id back
         ppd_id = conn_handler.execute_fetchone(
             "INSERT INTO qiita.{0} (preprocessed_params_table, "
-            "preprocessed_params_id, submitted_to_insdc, data_type_id, "
+            "preprocessed_params_id, submitted_to_insdc_status, data_type_id, "
             "ebi_submission_accession, ebi_study_accession) VALUES "
             "(%(param_table)s, %(param_id)s, %(insdc)s, %(data_type)s, "
             "%(ebi_submission_accession)s, %(ebi_study_accession)s) "
             "RETURNING preprocessed_data_id".format(cls._table),
             {'param_table': preprocessed_params_table,
              'param_id': preprocessed_params_id,
-             'insdc': submitted_to_insdc,
+             'insdc': submitted_to_insdc_status,
              'data_type': data_type,
              'ebi_submission_accession': ebi_submission_accession,
              'ebi_study_accession': ebi_study_accession})[0]
@@ -538,18 +539,63 @@ class PreprocessedData(BaseData):
             (self._id, ))
         return data_type[0]
 
-    def is_submitted_to_insdc(self):
-        r"""Tells if the raw data has been submitted to insdc
+    def submitted_to_insdc_status(self):
+        r"""Tells if the raw data has been submitted to INSDC
 
         Returns
         -------
-        bool
-            True if the raw data have been submitted to insdc. False otherwise
+        str
+            One of {'not submitted', 'submitting', 'success', 'failed'}
         """
         conn_handler = SQLConnectionHandler()
         return conn_handler.execute_fetchone(
-            "SELECT submitted_to_insdc FROM qiita.{0} "
+            "SELECT submitted_to_insdc_status FROM qiita.{0} "
             "WHERE preprocessed_data_id=%s".format(self._table), (self.id,))[0]
+
+    def update_insdc_status(self, state, study_acc=None, submission_acc=None):
+        r"""Update the INSDC submission status
+
+        Parameters
+        ----------
+        state : str, {'not submitted', 'submitting', 'success', 'failed'}
+            The current status of submission
+        study_acc : str, optional
+            The study accession from EBI. This is not optional if ``state`` is
+            ``success``.
+        submission_acc : str, optional
+            The submission accession from EBI. This is not optional if
+            ``state`` is ``success``.
+
+        Raises
+        ------
+        ValueError
+            If the state is not known.
+        ValueError
+            If ``state`` is ``success`` and either ``study_acc`` or
+            ``submission_acc`` are ``None``.
+        """
+        if state not in ('not submitted', 'submitting', 'success', 'failed'):
+            raise ValueError("Unknown state: %s" % state)
+
+        conn_handler = SQLConnectionHandler()
+
+        if state == 'success':
+            if study_acc is None or submission_acc is None:
+                raise ValueError("study_acc or submission_acc is None!")
+
+            conn_handler.execute("""
+                UPDATE qiita.{0}
+                SET (submitted_to_insdc_status,
+                     ebi_study_accession,
+                     ebi_submission_accession) = (%s, %s, %s)
+                WHERE preprocessed_data_id=%s""".format(self._table),
+                                 (state, study_acc, submission_acc, self.id))
+        else:
+            conn_handler.execute("""
+                UPDATE qiita.{0}
+                SET submitted_to_insdc_status = %s
+                WHERE preprocessed_data_id=%s""".format(self._table),
+                                 (state, self.id))
 
 
 class ProcessedData(BaseData):
