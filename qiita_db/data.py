@@ -552,6 +552,51 @@ class PreprocessedData(BaseData):
             "SELECT submitted_to_insdc_status FROM qiita.{0} "
             "WHERE preprocessed_data_id=%s".format(self._table), (self.id,))[0]
 
+    def update_insdc_status(self, state, study_acc=None, submission_acc=None):
+        r"""Update the INSDC submission status
+
+        Parameters
+        ----------
+        state : str, {'not submitted', 'submitting', 'success', 'failed'}
+            The current status of submission
+        study_acc : str, optional
+            The study accession from EBI. This is not optional if ``state`` is
+            ``success``.
+        submission_acc : str, optional
+            The submission accession from EBI. This is not optional if
+            ``state`` is ``success``.
+
+        Raises
+        ------
+        ValueError
+            If the state is not known.
+        ValueError
+            If ``state`` is ``success`` and either ``study_acc`` or
+            ``submission_acc`` are ``None``.
+        """
+        if state not in ('not submitted', 'submitting', 'success', 'failed'):
+            raise ValueError("Unknown state: %s" % state)
+
+        conn_handler = SQLConnectionHandler()
+
+        if state == 'success':
+            if study_acc is None or submission_acc is None:
+                raise ValueError("study_acc or submission_acc is None!")
+
+            conn_handler.execute("""
+                UPDATE qiita.{0}
+                SET (submitted_to_insdc_status,
+                     ebi_study_accession,
+                     ebi_submission_accession) = (%s, %s, %s)
+                WHERE preprocessed_data_id=%s""".format(self._table),
+                                 (state, study_acc, submission_acc, self.id))
+        else:
+            conn_handler.execute("""
+                UPDATE qiita.{0}
+                SET submitted_to_insdc_status = %s
+                WHERE preprocessed_data_id=%s""".format(self._table),
+                                 (state, self.id))
+
 
 class ProcessedData(BaseData):
     r"""Object for dealing with processed data

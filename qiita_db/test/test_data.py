@@ -343,13 +343,32 @@ class PreprocessedDataTests(TestCase):
         self.assertEqual(new.ebi_study_accession, 'EBI12345-DD')
 
     def test_submitted_to_insdc_status(self):
-        """is_submitted_to_insdc works correctly"""
+        """submitted_to_insdc_status works correctly"""
         # False case
         pd = PreprocessedData(1)
         self.assertEqual(pd.submitted_to_insdc_status(), 'submitting')
         # True case
         pd = PreprocessedData(2)
         self.assertEqual(pd.submitted_to_insdc_status(), 'not submitted')
+
+    def test_update_insdc_status(self):
+        """Able to update insdc status"""
+        pd = PreprocessedData(1)
+        self.assertEqual(pd.submitted_to_insdc_status(), 'submitting')
+        pd.update_insdc_status('failed')
+        self.assertEqual(pd.submitted_to_insdc_status(), 'failed')
+
+        pd.update_insdc_status('success', 'foo', 'bar')
+        self.assertEqual(pd.submitted_to_insdc_status(), 'success')
+        self.assertEqual(pd.ebi_study_accession, 'foo')
+        self.assertEqual(pd.ebi_submission_accession, 'bar')
+
+        with self.assertRaises(ValueError):
+            pd.update_insdc_status('not valid state')
+
+        with self.assertRaises(ValueError):
+            pd.update_insdc_status('success', 'only one accession')
+
 
     def test_data_type(self):
         """Correctly returns the data_type of preprocessed_data"""
