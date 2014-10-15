@@ -983,6 +983,7 @@ class SampleTemplate(MetadataTemplate):
     _id_column = "study_id"
     _ignore_cols = {
         'required_sample_info_status_id': 'required_sample_info_status'}
+    _id_cols_handlers = {'required_sample_info_status_id': foo}
     _sample_cls = Sample
 
     @staticmethod
