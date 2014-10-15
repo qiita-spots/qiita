@@ -26,6 +26,7 @@ from qiita_pet.handlers.logger_handlers import LogEntryViewerHandler
 from qiita_pet.handlers.websocket_handlers import MessageHandler
 from qiita_pet.handlers.upload import UploadFileHandler
 from qiita_pet.handlers.compute import ComputeCompleteHandler
+from qiita_pet.handlers.preprocessing_handlers import PreprocessHandler
 from qiita_db.util import get_db_files_base_dir
 
 define("port", default=8888, help="run on the given port", type=int)
@@ -66,6 +67,7 @@ class Application(tornado.web.Application):
             (r"/study/create/", CreateStudyHandler),
             (r"/study/private/", PrivateStudiesHandler),
             (r"/study/public/", PublicStudiesHandler),
+            (r"/study/preprocess", PreprocessHandler),
             (r"/study/description/(.*)", StudyDescriptionHandler),
             (r"/upload/", UploadFileHandler),
             # 404 PAGE MUST BE LAST IN THIS LIST!
