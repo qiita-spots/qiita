@@ -196,6 +196,7 @@ class RawData(BaseData):
     -------
     create
     data_type
+    preprocessed_data
 
     See Also
     --------
@@ -320,6 +321,7 @@ class RawData(BaseData):
                "where raw_data_id = %s".format(self._table))
         return conn_handler.execute_fetchone(sql, [self._id])[0]
 
+    @property
     def preprocessing_status(self):
         r"""Tells if the data has been preprocessed or not
 
@@ -330,10 +332,11 @@ class RawData(BaseData):
         """
         conn_handler = SQLConnectionHandler()
         return conn_handler.execute_fetchone(
-            "SELECT preprocesseing_status FROM qiita.{0} "
+            "SELECT preprocessing_status FROM qiita.{0} "
             "WHERE raw_data_id=%s".format(self._table), (self.id,))[0]
 
-    def update_preprocessing_status(self, state):
+    @preprocessing_status.setter
+    def preprocessing_status(self, state):
         r"""Update the preprocessing status
 
         Parameters
@@ -353,9 +356,16 @@ class RawData(BaseData):
         conn_handler = SQLConnectionHandler()
 
         conn_handler.execute(
-            "UPDATE qiita.{0} SET preprocesseing_status = %s "
+            "UPDATE qiita.{0} SET preprocessing_status = %s "
             "WHERE raw_data_id = %s".format(self._table),
             (state, self.id))
+
+    @property
+    def preprocessed_data(self):
+        conn_handler = SQLConnectionHandler()
+        sql = ("SELECT preprocessed_data_id FROM qiita.raw_preprocessed_data "
+               "where raw_data_id = %s")
+        return [x[0] for x in conn_handler.execute_fetchall(sql, (self._id,))]
 
 
 class PreprocessedData(BaseData):

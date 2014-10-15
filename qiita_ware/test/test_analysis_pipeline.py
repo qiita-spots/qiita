@@ -8,7 +8,7 @@ from qiita_core.util import qiita_test_checker
 from qiita_db.analysis import Analysis
 from qiita_db.job import Job
 from qiita_db.util import get_db_files_base_dir
-from qiita_ware.run import (
+from qiita_ware.analysis_pipeline import (
     RunAnalysis, _build_analysis_files, _job_comm_wrapper, _finish_analysis)
 
 

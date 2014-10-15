@@ -131,9 +131,6 @@ def _finish_analysis(user, analysis):
 
 
 class RunAnalysis(ParallelWrapper):
-    def __init__(self, **kwargs):
-        super(RunAnalysis, self).__init__(block=False, **kwargs)
-
     def _construct_job_graph(self, user, analysis, commands, comm_opts=None,
                              rarefaction_depth=None):
         """Builds the job graph for running an analysis

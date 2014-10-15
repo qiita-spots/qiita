@@ -140,23 +140,27 @@ class RawDataTests(TestCase):
         """preprocessing_status works correctly"""
         # Success case
         rd = RawData(1)
-        self.assertEqual(rd.preprocessing_status(), 'success')
+        self.assertEqual(rd.preprocessing_status, 'success')
 
         # not preprocessed case
         rd = RawData(2)
-        self.assertEqual(rd.preprocessing_status(), 'not_preprocessed')
+        self.assertEqual(rd.preprocessing_status, 'not_preprocessed')
 
-    def test_update_preprocessing_status(self):
+    def test_preprocessing_status_setter(self):
         """Able to update the preprocessing status"""
         rd = RawData(2)
-        self.assertEqual(rd.preprocessing_status(), 'not_preprocessed')
-        rd.update_preprocessing_status('preprocessing')
-        self.assertEqual(rd.preprocessing_status(), 'preprocessing')
-        rd.update_preprocessing_status('success')
-        self.assertEqual(rd.preprocessing_status(), 'success')
+        self.assertEqual(rd.preprocessing_status, 'not_preprocessed')
+        rd.preprocessing_status = 'preprocessing'
+        self.assertEqual(rd.preprocessing_status, 'preprocessing')
+        rd.preprocessing_status = 'success'
+        self.assertEqual(rd.preprocessing_status, 'success')
 
         with self.assertRaises(ValueError):
-            rd.update_preprocessing_status('not a valid state')
+            rd.preprocessing_status = 'not a valid state'
+
+    def test_preprocessed_data(self):
+        rd = RawData(1)
+        self.assertEqual(rd.preprocessed_data, [1, 2])
 
 
 @qiita_test_checker()

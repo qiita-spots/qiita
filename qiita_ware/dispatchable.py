@@ -3,11 +3,13 @@ from tempfile import mkdtemp
 from gzip import open as gzopen
 
 from .processing_pipeline import StudyPreprocessor
+from .analysis_pipeline import RunAnalysis
 from qiita_core.qiita_settings import qiita_config
 from qiita_ware.commands import submit_EBI_from_files
 from qiita_ware.demux import to_per_sample_ascii
 from qiita_ware.util import open_file
 from qiita_db.study import Study
+from qiita_db.analysis import Analysis
 from qiita_db.metadata_template import SampleTemplate, PrepTemplate
 from qiita_db.data import PreprocessedData, RawData
 
@@ -68,3 +70,11 @@ def submit_to_ebi(study_id):
                                               submission_acc)
 
     return study_acc, submission_acc
+
+
+def run_analysis(user_id, analysis_id, commands, comm_opts=None,
+                 rarefaction_depth=None):
+    """Run a meta-analysis"""
+    analysis = Analysis(analysis_id)
+    ar = RunAnalysis()
+    return ar(user_id, analysis, commands, comm_opts, rarefaction_depth)

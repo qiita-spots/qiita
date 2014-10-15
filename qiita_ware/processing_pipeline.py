@@ -210,7 +210,7 @@ def _insert_preprocessed_data_fastq(study, params, raw_data, slq_out):
                             raw_data)
 
     # Change the raw_data status to success
-    raw_data.update_preprocessing_status('success')
+    raw_data.preprocessing_status = 'success'
 
 
 class StudyPreprocessor(ParallelWrapper):
@@ -278,4 +278,4 @@ class StudyPreprocessor(ParallelWrapper):
 
         Need to change the raw_data status to 'failed'
         """
-        self.raw_data.update_preprocessing_status('failed')
+        self.raw_data.preprocessing_status = 'failed'
