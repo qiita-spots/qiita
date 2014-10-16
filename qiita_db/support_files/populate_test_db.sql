@@ -145,8 +145,7 @@ CREATE TABLE qiita.sample_1 (
 	TOT_ORG_CARB			float8,
 	Description_duplicate	varchar,
 	ENV_FEATURE				varchar,
-	CONSTRAINT pk_sample_1 PRIMARY KEY ( sample_id ),
-	CONSTRAINT fk_sample_1_sample_id FOREIGN KEY (sample_id) REFERENCES qiita.required_sample_info( sample_id )
+	CONSTRAINT pk_sample_1 PRIMARY KEY ( sample_id )
 );
 
 -- Populates the sample_1 dynamic table
@@ -254,8 +253,7 @@ CREATE TABLE qiita.prep_1 (
 	SAMPLE_CENTER					varchar,
 	pcr_primers						varchar,
 	STUDY_CENTER					varchar,
-	CONSTRAINT pk_prep_1 PRIMARY KEY ( sample_id ),
-	CONSTRAINT fk_prep_1_sample_id FOREIGN KEY (sample_id) REFERENCES qiita.required_sample_info( sample_id )
+	CONSTRAINT pk_prep_1 PRIMARY KEY ( sample_id )
 );
 
 -- Populates the prep_1 dynamic table

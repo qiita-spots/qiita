@@ -627,17 +627,7 @@ table {
 	raw_data references data_type ( data_type_id )</title>
 </path>
 <text x='1179' y='565' transform='rotate(0 1179,565)' title='Foreign Key fk_raw_data_data_type
-	raw_data references data_type ( data_type_id )' style='fill:#a1a0a0;'>data_type_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1590 120 L 1770,120' >
-	<title>Foreign Key fk_required_sample_info_study
-	required_sample_info references study ( study_id )</title>
-</path>
-<text x='1597' y='115' transform='rotate(0 1597,115)' title='Foreign Key fk_required_sample_info_study
-	required_sample_info references study ( study_id )' style='fill:#a1a0a0;'>study_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1575 330 L 1575,375' >
-	<title>Foreign Key fk_required_sample_info
-	required_sample_info references required_sample_info_status ( required_sample_info_status_id )</title>
-</path>
-<text x='1588' y='330' transform='rotate(90 1588,330)' title='Foreign Key fk_required_sample_info
-	required_sample_info references required_sample_info_status ( required_sample_info_status_id )' style='fill:#a1a0a0;'>required_sample_info_status_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 165 1140 L 165,907 Q 165,900 172,900 L 187,900 Q 195,900 195,892 L 195,832 Q 195,825 202,825 L 210,825' >
+	raw_data references data_type ( data_type_id )' style='fill:#a1a0a0;'>data_type_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 165 1140 L 165,907 Q 165,900 172,900 L 187,900 Q 195,900 195,892 L 195,832 Q 195,825 202,825 L 210,825' >
 	<title>Foreign Key fk_analysis_sample_analysis
 	analysis_sample references analysis ( analysis_id )</title>
 </path>
@@ -667,7 +657,17 @@ table {
 	common_prep_info references required_sample_info ( sample_id, study_id )</title>
 </path>
 <text x='1207' y='295' transform='rotate(0 1207,295)' title='Foreign Key fk_common_prep_info
-	common_prep_info references required_sample_info ( sample_id, study_id )' style='fill:#a1a0a0;'>sample_id,study_id</text><!-- ============= Table 'controlled_vocab_values' ============= -->
+	common_prep_info references required_sample_info ( sample_id, study_id )' style='fill:#a1a0a0;'>sample_id,study_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1590 120 L 1770,120' >
+	<title>Foreign Key fk_required_sample_info_study
+	required_sample_info references study ( study_id )</title>
+</path>
+<text x='1597' y='115' transform='rotate(0 1597,115)' title='Foreign Key fk_required_sample_info_study
+	required_sample_info references study ( study_id )' style='fill:#a1a0a0;'>study_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1575 330 L 1575,375' >
+	<title>Foreign Key fk_required_sample_info
+	required_sample_info references required_sample_info_status ( required_sample_info_status_id )</title>
+</path>
+<text x='1588' y='330' transform='rotate(90 1588,330)' title='Foreign Key fk_required_sample_info
+	required_sample_info references required_sample_info_status ( required_sample_info_status_id )' style='fill:#a1a0a0;'>required_sample_info_status_id</text><!-- ============= Table 'controlled_vocab_values' ============= -->
 <rect class='table' x='45' y='1523' width='150' height='120' rx='7' ry='7' />
 <path d='M 45.50 1549.50 L 45.50 1530.50 Q 45.50 1523.50 52.50 1523.50 L 187.50 1523.50 Q 194.50 1523.50 194.50 1530.50 L 194.50 1549.50 L45.50 1549.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
 <a xlink:href='#controlled_vocab_values'><text x='53' y='1537' class='tableTitle'>controlled_vocab_values</text><title>Table qiita.controlled_vocab_values</title></a>
@@ -1315,8 +1315,7 @@ Referred by analysis_filepath ( analysis_id )
 Referred by analysis_job ( analysis_id ) 
 Referred by analysis_sample ( analysis_id ) 
 Referred by analysis_users ( analysis_id ) 
-Referred by analysis_workflow ( analysis_id ) 
-Referred by analysis_sample ( analysis_id ) </title></a>
+Referred by analysis_workflow ( analysis_id ) </title></a>
   <use id='nn' x='227' y='747' xlink:href='#nn'/><a xlink:href='#analysis.email'><use id='idx' x='227' y='746' xlink:href='#idx'/><title>Index  ( email ) </title></a>
 <a xlink:href='#analysis.email'><text x='243' y='757'>email</text><title>email varchar not null
 Email for user who owns the analysis</title></a>
@@ -1453,9 +1452,7 @@ What version of reference or type of reference used</title></a>
 <a xlink:href='#processed_data.processed_data_id'><use id='ref' x='1398' y='971' xlink:href='#ref'/><title>Referred by analysis_sample ( processed_data_id ) 
 Referred by preprocessed_processed_data ( processed_data_id ) 
 Referred by processed_filepath ( processed_data_id ) 
-Referred by study_processed_data ( processed_data_id ) 
-Referred by analysis_sample ( processed_data_id ) 
-Referred by analysis_sample ( processed_data_id ) </title></a>
+Referred by study_processed_data ( processed_data_id ) </title></a>
   <use id='nn' x='1247' y='987' xlink:href='#nn'/><a xlink:href='#processed_data.processed_params_table'><text x='1263' y='997'>processed_params_table</text><title>processed_params_table varchar not null
 Name of table holding processing params</title></a>
   <use id='nn' x='1247' y='1002' xlink:href='#nn'/><a xlink:href='#processed_data.processed_params_id'><text x='1263' y='1012'>processed_params_id</text><title>processed_params_id bigint not null
@@ -1545,44 +1542,6 @@ The investigation type &#040;e&#046;g&#046;&#044; one of the values from EBI&#03
 <a xlink:href='#raw_data.data_type_id'><use id='fk' x='1398' y='551' xlink:href='#fk'/><title>References data_type ( data_type_id ) </title></a>
   <use id='nn' x='1262' y='567' xlink:href='#nn'/><a xlink:href='#raw_data.preprocessing_status'><text x='1278' y='577'>preprocessing_status</text><title>preprocessing_status varchar not null default &#039;not&#095;preprocessed&#039;</title></a>
 
-<!-- ============= Table 'required_sample_info' ============= -->
-<rect class='table' x='1380' y='98' width='210' height='225' rx='7' ry='7' />
-<path d='M 1380.50 124.50 L 1380.50 105.50 Q 1380.50 98.50 1387.50 98.50 L 1582.50 98.50 Q 1589.50 98.50 1589.50 105.50 L 1589.50 124.50 L1380.50 124.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
-<a xlink:href='#required_sample_info'><text x='1426' y='112' class='tableTitle'>required_sample_info</text><title>Table qiita.required_sample_info
-Required info for each sample&#046; One row is one sample&#046;</title></a>
-  <use id='nn' x='1382' y='132' xlink:href='#nn'/><a xlink:href='#required_sample_info.study_id'><use id='pk' x='1382' y='131' xlink:href='#pk'/><title>Primary Key  ( study_id, sample_id ) Index  ( study_id ) Unique Index  ( sample_id, study_id ) </title></a>
-<a xlink:href='#required_sample_info.study_id'><text x='1398' y='142'>study_id</text><title>study_id bigint not null</title></a>
-<a xlink:href='#required_sample_info.study_id'><use id='fk' x='1578' y='131' xlink:href='#fk'/><title>References study ( study_id ) 
-Referred by analysis_sample ( sample_id, study_id ) 
-Referred by analysis_sample ( sample_id, study_id ) 
-Referred by common_prep_info ( sample_id, study_id ) 
-Referred by common_prep_info ( sample_id, study_id ) </title></a>
-  <use id='nn' x='1382' y='147' xlink:href='#nn'/><a xlink:href='#required_sample_info.sample_id'><use id='pk' x='1382' y='146' xlink:href='#pk'/><title>Primary Key  ( study_id, sample_id ) Unique Index  ( sample_id, study_id ) Unique Index  ( sample_id ) </title></a>
-<a xlink:href='#required_sample_info.sample_id'><text x='1398' y='157'>sample_id</text><title>sample_id varchar not null</title></a>
-<a xlink:href='#required_sample_info.sample_id'><use id='ref' x='1578' y='146' xlink:href='#ref'/><title>Referred by analysis_sample ( sample_id, study_id ) 
-Referred by analysis_sample ( sample_id, study_id ) 
-Referred by common_prep_info ( sample_id ) 
-Referred by common_prep_info ( sample_id, study_id ) 
-Referred by common_prep_info ( sample_id, study_id ) </title></a>
-  <use id='nn' x='1382' y='162' xlink:href='#nn'/><a xlink:href='#required_sample_info.physical_location'><text x='1398' y='172'>physical_location</text><title>physical_location varchar not null
-Where the sample itself is stored</title></a>
-  <use id='nn' x='1382' y='177' xlink:href='#nn'/><a xlink:href='#required_sample_info.has_physical_specimen'><text x='1398' y='187'>has_physical_specimen</text><title>has_physical_specimen bool not null
-Whether we have the full speciment or just DNA</title></a>
-  <use id='nn' x='1382' y='192' xlink:href='#nn'/><a xlink:href='#required_sample_info.has_extracted_data'><text x='1398' y='202'>has_extracted_data</text><title>has_extracted_data bool not null</title></a>
-  <use id='nn' x='1382' y='207' xlink:href='#nn'/><a xlink:href='#required_sample_info.sample_type'><text x='1398' y='217'>sample_type</text><title>sample_type varchar not null
-Controlled vocabulary of sample types</title></a>
-  <use id='nn' x='1382' y='222' xlink:href='#nn'/><a xlink:href='#required_sample_info.required_sample_info_status_id'><use id='idx' x='1382' y='221' xlink:href='#idx'/><title>Index  ( required_sample_info_status_id ) </title></a>
-<a xlink:href='#required_sample_info.required_sample_info_status_id'><text x='1398' y='232'>required_sample_info_status_id</text><title>required_sample_info_status_id bigint not null
-What step of the pipeline the samples are in</title></a>
-<a xlink:href='#required_sample_info.required_sample_info_status_id'><use id='fk' x='1578' y='221' xlink:href='#fk'/><title>References required_sample_info_status ( required_sample_info_status_id ) </title></a>
-  <use id='nn' x='1382' y='237' xlink:href='#nn'/><a xlink:href='#required_sample_info.collection_timestamp'><text x='1398' y='247'>collection_timestamp</text><title>collection_timestamp timestamp not null</title></a>
-  <use id='nn' x='1382' y='252' xlink:href='#nn'/><a xlink:href='#required_sample_info.host_subject_id'><text x='1398' y='262'>host_subject_id</text><title>host_subject_id varchar not null</title></a>
-  <use id='nn' x='1382' y='267' xlink:href='#nn'/><a xlink:href='#required_sample_info.description'><text x='1398' y='277'>description</text><title>description varchar not null</title></a>
-  <use id='nn' x='1382' y='282' xlink:href='#nn'/><a xlink:href='#required_sample_info.latitude'><text x='1398' y='292'>latitude</text><title>latitude float8 not null
-Latitude of the collection site</title></a>
-  <use id='nn' x='1382' y='297' xlink:href='#nn'/><a xlink:href='#required_sample_info.longitude'><text x='1398' y='307'>longitude</text><title>longitude float8 not null
-Longitude of the collection site</title></a>
-
 <!-- ============= Table 'analysis_sample' ============= -->
 <rect class='table' x='45' y='1148' width='135' height='105' rx='7' ry='7' />
 <path d='M 45.50 1174.50 L 45.50 1155.50 Q 45.50 1148.50 52.50 1148.50 L 172.50 1148.50 Q 179.50 1148.50 179.50 1155.50 L 179.50 1174.50 L45.50 1174.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
@@ -1618,6 +1577,39 @@ Longitude of the collection site</title></a>
   <use id='nn' x='1052' y='387' xlink:href='#nn'/><a xlink:href='#common_prep_info.emp_status_id'><use id='idx' x='1052' y='386' xlink:href='#idx'/><title>Index  ( emp_status_id ) </title></a>
 <a xlink:href='#common_prep_info.emp_status_id'><text x='1068' y='397'>emp_status_id</text><title>emp_status_id bigint not null</title></a>
 <a xlink:href='#common_prep_info.emp_status_id'><use id='fk' x='1188' y='386' xlink:href='#fk'/><title>References emp_status ( emp_status_id ) </title></a>
+
+<!-- ============= Table 'required_sample_info' ============= -->
+<rect class='table' x='1380' y='98' width='210' height='225' rx='7' ry='7' />
+<path d='M 1380.50 124.50 L 1380.50 105.50 Q 1380.50 98.50 1387.50 98.50 L 1582.50 98.50 Q 1589.50 98.50 1589.50 105.50 L 1589.50 124.50 L1380.50 124.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
+<a xlink:href='#required_sample_info'><text x='1426' y='112' class='tableTitle'>required_sample_info</text><title>Table qiita.required_sample_info
+Required info for each sample&#046; One row is one sample&#046;</title></a>
+  <use id='nn' x='1382' y='132' xlink:href='#nn'/><a xlink:href='#required_sample_info.study_id'><use id='pk' x='1382' y='131' xlink:href='#pk'/><title>Primary Key  ( study_id, sample_id ) Index  ( study_id ) Unique Index  ( sample_id, study_id ) </title></a>
+<a xlink:href='#required_sample_info.study_id'><text x='1398' y='142'>study_id</text><title>study_id bigint not null</title></a>
+<a xlink:href='#required_sample_info.study_id'><use id='fk' x='1578' y='131' xlink:href='#fk'/><title>References study ( study_id ) 
+Referred by analysis_sample ( sample_id, study_id ) 
+Referred by common_prep_info ( sample_id, study_id ) </title></a>
+  <use id='nn' x='1382' y='147' xlink:href='#nn'/><a xlink:href='#required_sample_info.sample_id'><use id='pk' x='1382' y='146' xlink:href='#pk'/><title>Primary Key  ( study_id, sample_id ) Unique Index  ( sample_id, study_id ) </title></a>
+<a xlink:href='#required_sample_info.sample_id'><text x='1398' y='157'>sample_id</text><title>sample_id varchar not null</title></a>
+<a xlink:href='#required_sample_info.sample_id'><use id='ref' x='1578' y='146' xlink:href='#ref'/><title>Referred by analysis_sample ( sample_id, study_id ) 
+Referred by common_prep_info ( sample_id, study_id ) </title></a>
+  <use id='nn' x='1382' y='162' xlink:href='#nn'/><a xlink:href='#required_sample_info.physical_location'><text x='1398' y='172'>physical_location</text><title>physical_location varchar not null
+Where the sample itself is stored</title></a>
+  <use id='nn' x='1382' y='177' xlink:href='#nn'/><a xlink:href='#required_sample_info.has_physical_specimen'><text x='1398' y='187'>has_physical_specimen</text><title>has_physical_specimen bool not null
+Whether we have the full speciment or just DNA</title></a>
+  <use id='nn' x='1382' y='192' xlink:href='#nn'/><a xlink:href='#required_sample_info.has_extracted_data'><text x='1398' y='202'>has_extracted_data</text><title>has_extracted_data bool not null</title></a>
+  <use id='nn' x='1382' y='207' xlink:href='#nn'/><a xlink:href='#required_sample_info.sample_type'><text x='1398' y='217'>sample_type</text><title>sample_type varchar not null
+Controlled vocabulary of sample types</title></a>
+  <use id='nn' x='1382' y='222' xlink:href='#nn'/><a xlink:href='#required_sample_info.required_sample_info_status_id'><use id='idx' x='1382' y='221' xlink:href='#idx'/><title>Index  ( required_sample_info_status_id ) </title></a>
+<a xlink:href='#required_sample_info.required_sample_info_status_id'><text x='1398' y='232'>required_sample_info_status_id</text><title>required_sample_info_status_id bigint not null
+What step of the pipeline the samples are in</title></a>
+<a xlink:href='#required_sample_info.required_sample_info_status_id'><use id='fk' x='1578' y='221' xlink:href='#fk'/><title>References required_sample_info_status ( required_sample_info_status_id ) </title></a>
+  <use id='nn' x='1382' y='237' xlink:href='#nn'/><a xlink:href='#required_sample_info.collection_timestamp'><text x='1398' y='247'>collection_timestamp</text><title>collection_timestamp timestamp not null</title></a>
+  <use id='nn' x='1382' y='252' xlink:href='#nn'/><a xlink:href='#required_sample_info.host_subject_id'><text x='1398' y='262'>host_subject_id</text><title>host_subject_id varchar not null</title></a>
+  <use id='nn' x='1382' y='267' xlink:href='#nn'/><a xlink:href='#required_sample_info.description'><text x='1398' y='277'>description</text><title>description varchar not null</title></a>
+  <use id='nn' x='1382' y='282' xlink:href='#nn'/><a xlink:href='#required_sample_info.latitude'><text x='1398' y='292'>latitude</text><title>latitude float8 not null
+Latitude of the collection site</title></a>
+  <use id='nn' x='1382' y='297' xlink:href='#nn'/><a xlink:href='#required_sample_info.longitude'><text x='1398' y='307'>longitude</text><title>longitude float8 not null
+Longitude of the collection site</title></a>
 
 </g></svg>
 
@@ -4353,108 +4345,6 @@ Controlled Vocabulary </td>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='3'><a name='required_sample_info'>Table required_sample_info</a></th></tr>
-<tr><td colspan='3'>Required info for each sample&#046; One row is one sample&#046; </td></tr>
-</thead>
-<tbody>
-	<tr>
-		<td><a name='required_sample_info.study_id'>study&#095;id</a></td>
-		<td> bigint  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='required_sample_info.sample_id'>sample&#095;id</a></td>
-		<td> varchar  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='required_sample_info.physical_location'>physical&#095;location</a></td>
-		<td> varchar  NOT NULL  </td>
-		<td> Where the sample itself is stored </td>
-	</tr>
-	<tr>
-		<td><a name='required_sample_info.has_physical_specimen'>has&#095;physical&#095;specimen</a></td>
-		<td> bool  NOT NULL  </td>
-		<td> Whether we have the full speciment or just DNA </td>
-	</tr>
-	<tr>
-		<td><a name='required_sample_info.has_extracted_data'>has&#095;extracted&#095;data</a></td>
-		<td> bool  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='required_sample_info.sample_type'>sample&#095;type</a></td>
-		<td> varchar  NOT NULL  </td>
-		<td> Controlled vocabulary of sample types </td>
-	</tr>
-	<tr>
-		<td><a name='required_sample_info.required_sample_info_status_id'>required&#095;sample&#095;info&#095;status&#095;id</a></td>
-		<td> bigint  NOT NULL  </td>
-		<td> What step of the pipeline the samples are in </td>
-	</tr>
-	<tr>
-		<td><a name='required_sample_info.collection_timestamp'>collection&#095;timestamp</a></td>
-		<td> timestamp  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='required_sample_info.host_subject_id'>host&#095;subject&#095;id</a></td>
-		<td> varchar  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='required_sample_info.description'>description</a></td>
-		<td> varchar  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='required_sample_info.latitude'>latitude</a></td>
-		<td> float8  NOT NULL  </td>
-		<td> Latitude of the collection site </td>
-	</tr>
-	<tr>
-		<td><a name='required_sample_info.longitude'>longitude</a></td>
-		<td> float8  NOT NULL  </td>
-		<td> Longitude of the collection site </td>
-	</tr>
-<tr><th colspan='3'><b>Indexes</b></th></tr>
-	<tr>		<td>idx&#095;common&#095;sample&#095;information primary key</td>
-		<td> ON study&#095;id&#044; sample&#095;id</td>
-		<td>  </td>
-	</tr>
-	<tr>		<td>idx&#095;required&#095;sample&#095;info </td>
-		<td> ON study&#095;id</td>
-		<td>  </td>
-	</tr>
-	<tr>		<td>idx&#095;required&#095;sample&#095;info&#095;0 </td>
-		<td> ON required&#095;sample&#095;info&#095;status&#095;id</td>
-		<td>  </td>
-	</tr>
-	<tr>		<td>pk&#095;required&#095;sample&#095;info unique</td>
-		<td> ON sample&#095;id&#044; study&#095;id</td>
-		<td>  </td>
-	</tr>
-	<tr>		<td>pk&#095;required&#095;sample&#095;info&#095;0 unique</td>
-		<td> ON sample&#095;id</td>
-		<td>  </td>
-	</tr>
-<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
-	<tr>
-		<td>fk_required_sample_info_study</td>
-		<td > ( study&#095;id ) ref <a href='#study'>study</a> (study&#095;id) </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>fk_required_sample_info</td>
-		<td > ( required&#095;sample&#095;info&#095;status&#095;id ) ref <a href='#required&#095;sample&#095;info&#095;status'>required&#095;sample&#095;info&#095;status</a> (required&#095;sample&#095;info&#095;status&#095;id) </td>
-		<td>  </td>
-	</tr>
-</tbody>
-</table>
-
-<br/><br/>
-<table class='bordered'>
-<thead>
 <tr><th colspan='3'><a name='analysis_sample'>Table analysis_sample</a></th></tr>
 </thead>
 <tbody>
@@ -4585,6 +4475,104 @@ Controlled Vocabulary </td>
 	<tr>
 		<td>fk_common_prep_info</td>
 		<td > ( sample&#095;id&#044; study&#095;id ) ref <a href='#required&#095;sample&#095;info'>required&#095;sample&#095;info</a> (sample&#095;id&#044; study&#095;id) </td>
+		<td>  </td>
+	</tr>
+</tbody>
+</table>
+
+<br/><br/>
+<table class='bordered'>
+<thead>
+<tr><th colspan='3'><a name='required_sample_info'>Table required_sample_info</a></th></tr>
+<tr><td colspan='3'>Required info for each sample&#046; One row is one sample&#046; </td></tr>
+</thead>
+<tbody>
+	<tr>
+		<td><a name='required_sample_info.study_id'>study&#095;id</a></td>
+		<td> bigint  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='required_sample_info.sample_id'>sample&#095;id</a></td>
+		<td> varchar  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='required_sample_info.physical_location'>physical&#095;location</a></td>
+		<td> varchar  NOT NULL  </td>
+		<td> Where the sample itself is stored </td>
+	</tr>
+	<tr>
+		<td><a name='required_sample_info.has_physical_specimen'>has&#095;physical&#095;specimen</a></td>
+		<td> bool  NOT NULL  </td>
+		<td> Whether we have the full speciment or just DNA </td>
+	</tr>
+	<tr>
+		<td><a name='required_sample_info.has_extracted_data'>has&#095;extracted&#095;data</a></td>
+		<td> bool  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='required_sample_info.sample_type'>sample&#095;type</a></td>
+		<td> varchar  NOT NULL  </td>
+		<td> Controlled vocabulary of sample types </td>
+	</tr>
+	<tr>
+		<td><a name='required_sample_info.required_sample_info_status_id'>required&#095;sample&#095;info&#095;status&#095;id</a></td>
+		<td> bigint  NOT NULL  </td>
+		<td> What step of the pipeline the samples are in </td>
+	</tr>
+	<tr>
+		<td><a name='required_sample_info.collection_timestamp'>collection&#095;timestamp</a></td>
+		<td> timestamp  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='required_sample_info.host_subject_id'>host&#095;subject&#095;id</a></td>
+		<td> varchar  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='required_sample_info.description'>description</a></td>
+		<td> varchar  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='required_sample_info.latitude'>latitude</a></td>
+		<td> float8  NOT NULL  </td>
+		<td> Latitude of the collection site </td>
+	</tr>
+	<tr>
+		<td><a name='required_sample_info.longitude'>longitude</a></td>
+		<td> float8  NOT NULL  </td>
+		<td> Longitude of the collection site </td>
+	</tr>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>idx&#095;common&#095;sample&#095;information primary key</td>
+		<td> ON study&#095;id&#044; sample&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>idx&#095;required&#095;sample&#095;info </td>
+		<td> ON study&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>idx&#095;required&#095;sample&#095;info&#095;0 </td>
+		<td> ON required&#095;sample&#095;info&#095;status&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>pk&#095;required&#095;sample&#095;info unique</td>
+		<td> ON sample&#095;id&#044; study&#095;id</td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
+	<tr>
+		<td>fk_required_sample_info_study</td>
+		<td > ( study&#095;id ) ref <a href='#study'>study</a> (study&#095;id) </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>fk_required_sample_info</td>
+		<td > ( required&#095;sample&#095;info&#095;status&#095;id ) ref <a href='#required&#095;sample&#095;info&#095;status'>required&#095;sample&#095;info&#095;status</a> (required&#095;sample&#095;info&#095;status&#095;id) </td>
 		<td>  </td>
 	</tr>
 </tbody>
