@@ -61,7 +61,7 @@ def submit_to_ebi(study_id):
                                                       open(prep_fp), tmp_dir,
                                                       output_dir,
                                                       investigation_type,
-                                                      'MODIFY', True)
+                                                      'ADD', True)
 
     if study_acc is None or submission_acc is None:
         preprocessed_data.update_insdc_status('failed')
