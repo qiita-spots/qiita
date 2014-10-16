@@ -13,6 +13,7 @@ class LogEntryViewerHandler(BaseHandler):
         if User(self.current_user).level not in {'admin', 'dev'}:
             raise HTTPError(405, "User %s doesn't have sufficient privileges "
                             "to view error page" % self.current_user)
+
     @authenticated
     def get(self):
         self._check_access()

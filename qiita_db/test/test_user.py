@@ -181,7 +181,7 @@ class UserTest(TestCase):
         self.assertEqual(self.user.email, 'admin@foo.bar')
 
     def test_get_level(self):
-        self.assertEqual(self.user.level, "user")
+        self.assertEqual(self.user.level, "admin")
 
     def test_get_info(self):
         expinfo = {
