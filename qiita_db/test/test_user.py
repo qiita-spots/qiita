@@ -287,6 +287,16 @@ class UserTest(TestCase):
         self.assertEqual(obsbool, False)
         self._check_pass("password")
 
+    def test_has_study_access(self):
+        obs = self.user.has_study_access(1)
+        self.assertEqual(obs, True)
+
+    def test_has_study_access_no_access(self):
+        #make study private
+        self.conn_handler.execute("UPDATE qiita.study SET study_status_id = 3")
+        obs = self.user.has_study_access(1)
+        self.assertEqual(obs, False)
+
 
 if __name__ == "__main__":
     main()

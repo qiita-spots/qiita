@@ -33,6 +33,7 @@ from re import match
 from qiita_core.exceptions import (IncorrectEmailError, IncorrectPasswordError,
                                    IncompetentQiitaDeveloperError)
 from .base import QiitaObject
+from .study import Study
 from .sql_connection import SQLConnectionHandler
 from .util import (create_rand_string, check_table_cols, hash_password)
 from .exceptions import (QiitaDBColumnError, QiitaDBDuplicateError)
@@ -57,12 +58,7 @@ class User(QiitaObject):
     change_password
     generate_reset_code
     change_forgot_password
-    add_shared_study
-    remove_shared_study
-    add_private_analysis
-    remove_private_analysis
-    add_shared_analysis
-    remove_shared_analysis
+    has_study_access
     """
 
     _table = "qiita_user"
@@ -349,6 +345,24 @@ class User(QiitaObject):
         return [a[0] for a in analysis_ids]
 
     # ------- methods ---------
+    def has_study_access(self, study_id):
+        """Checks if user has access to the given study id
+
+        Parameters
+        ----------
+        study_id : int
+            The study ID to check
+
+        Returns
+        -------
+        bool
+            Whether user has acccess to the study or not
+        """
+        if study_id in set(Study.get_public() + self.private_studies + \
+                self.shared_studies):
+            return True
+        return False
+
     def change_password(self, oldpass, newpass):
         """Changes the password from oldpass to newpass
 
