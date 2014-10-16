@@ -188,9 +188,9 @@ class Job(QiitaStatusObject):
         basedir = get_db_files_base_dir()
         for fp in filepaths:
             try:
-                rmtree(join(basedir, "job", fp[0]))
+                rmtree(join(basedir, fp[0]))
             except OSError:
-                remove(join(basedir, "job", fp[0]))
+                remove(join(basedir, fp[0]))
 
     @classmethod
     def create(cls, datatype, command, options, analysis,
@@ -351,12 +351,12 @@ class Job(QiitaStatusObject):
             if fp[1] == "directory":
                 # directory, so all html files in it are results
                 # first, see if we have any in the main directory
-                add_html(basedir, join("job", fp[0]), result_fps)
+                add_html(basedir, fp[0], result_fps)
                 # now do all subdirectories
-                add_html(basedir, join("job", fp[0], "*"), result_fps)
+                add_html(basedir, join(fp[0], "*"), result_fps)
             else:
                 # result is exact filepath given
-                result_fps.append(join("job", fp[0]))
+                result_fps.append(fp[0])
         return result_fps
 
     @property
