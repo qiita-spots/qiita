@@ -12,6 +12,7 @@ from __future__ import division
 from tornado.web import authenticated, HTTPError
 from wtforms import (Form, StringField, SelectField, BooleanField,
                      SelectMultipleField, TextAreaField, validators)
+import pandas as pd
 
 from os import listdir
 from os.path import exists, join, basename
@@ -30,9 +31,6 @@ from qiita_db.user import User
 from qiita_db.util import get_study_fp, convert_to_id, get_filepath_types
 from qiita_db.ontology import Ontology
 from qiita_db.data import PreprocessedData
-from qiita_db.commands import (load_sample_template_from_cmd,
-                               load_prep_template_from_cmd,
-                               load_raw_data_cmd)
 from qiita_db.exceptions import (QiitaDBColumnError, QiitaDBExecutionError,
                                  QiitaDBDuplicateError)
 from qiita_db.data import RawData
@@ -42,9 +40,6 @@ class CreateStudyForm(Form):
     study_title = StringField('Study Title', [validators.required()])
     study_alias = StringField('Study Alias', [validators.required()])
     pubmed_id = StringField('PubMed ID')
-    investigation_type = SelectField(
-        'Investigation Type',
-        [validators.required()], coerce=lambda x: x)
 
     # TODO:This can be filled from the database
     # in oracle, this is in controlled_vocabs (ID 1),
@@ -128,7 +123,6 @@ class StudyDescriptionHandler(BaseHandler):
 
         # getting the raw_data
         study = Study(study_id)
-
         valid_ssb = []
         for rdi in study.raw_data():
             rd = RawData(rdi)
@@ -147,14 +141,17 @@ class StudyDescriptionHandler(BaseHandler):
             split_libs_status = None
 
         valid_ssb = ','.join(map(str, valid_ssb))
-
         ssb = len(valid_ssb) > 0
+
+        # getting the ontologies
+        ena = Ontology(convert_to_id('ENA', 'ontology'))
 
         self.render('study_description.html', user=self.current_user,
                     study_title=study.title, study_info=study.info,
                     study_id=study_id, files=fs, ssb=ssb, vssb=valid_ssb,
                     max_upload_size=qiita_config.max_upload_size,
                     sls=split_libs_status, filetypes=fts,
+                    investigation_types=ena.terms,
                     prep_template_id=prep_template_id, msg=msg)
 
     @authenticated
@@ -168,6 +165,7 @@ class StudyDescriptionHandler(BaseHandler):
         barcodes = self.get_argument('barcodes', "").split(',')
         forward_seqs = self.get_argument('forward_seqs', "").split(',')
         reverse_seqs = self.get_argument('reverse_seqs', "").split(',')
+        investigation_type = self.get_argument('investigation-type', "")
 
         if raw_sample_template is None or raw_prep_template is None:
             raise HTTPError(403, "This function needs a sample template: "
@@ -178,6 +176,11 @@ class StudyDescriptionHandler(BaseHandler):
         if not exists(fp_rsp) or not exists(fp_rpt):
             raise HTTPError(403, "One of these files doesn't exist: %s, %s",
                             (fp_rsp, fp_rpt))
+
+        ena = Ontology(convert_to_id('ENA', 'ontology'))
+        if (not investigation_type or investigation_type == "" or
+                investigation_type not in ena.terms):
+            raise HTTPError(403, "You need to have an investigation type")
 
         study_id = int(study_id)
         study = Study(study_id)
@@ -191,7 +194,8 @@ class StudyDescriptionHandler(BaseHandler):
 
         try:
             # inserting sample template
-            load_sample_template_from_cmd(fp_rsp, study_id)
+            SampleTemplate.create(pd.DataFrame.from_csv(
+                fp_rsp, sep="\t", infer_datetime_format=True), study)
         except (TypeError, QiitaDBColumnError, QiitaDBExecutionError,
                 QiitaDBDuplicateError, IOError), e:
             msg = ('<b>An error occurred parsing the sample template: '
@@ -201,30 +205,28 @@ class StudyDescriptionHandler(BaseHandler):
 
         # inserting raw data
         fp = get_study_fp(study_id)
-        filepaths, filepath_types = [], []
+        filepaths = []
         if barcodes and barcodes[0] != "":
-            filepaths.extend([join(fp, t) for t in barcodes])
-            filepath_types.extend(["raw_barcodes"]*len(barcodes))
+            filepaths.extend([(join(fp, t), "raw_barcodes") for t in barcodes])
         if forward_seqs and forward_seqs[0] != "":
-            filepaths.extend([join(fp, t) for t in forward_seqs])
-            filepath_types.extend(["raw_forward_seqs"]*len(forward_seqs))
+            filepaths.extend([(join(fp, t), "raw_forward_seqs")
+                              for t in forward_seqs])
         if reverse_seqs and reverse_seqs[0] != "":
-            filepaths.extend([join(fp, t) for t in reverse_seqs])
-            filepath_types.extend(["raw_reverse_seqs"]*len(reverse_seqs))
+            filepaths.extend([(join(fp, t), "raw_reverse_seqs")
+                              for t in reverse_seqs])
 
-        # currently hardcoding the filetypes and data_type, see issue
+        # currently hardcoding the filetypes, see issue
         # https://github.com/biocore/qiita/issues/391
-        filetype = 'FASTQ'
-        data_type = '16S'
+        filetype = 2
 
         try:
             # currently hardcoding the study_ids to be an array but not sure
             # if this will ever be an actual array via the web interface
-            raw_data = load_raw_data_cmd(filepaths, filepath_types, filetype,
-                                         [study_id], data_type)
+            raw_data = RawData.create(filetype, filepaths, [study], 1,
+                                      investigation_type)
         except (TypeError, QiitaDBColumnError, QiitaDBExecutionError,
                 IOError), e:
-            fps = ', '.join([basename(f) for f in filepaths])
+            fps = ', '.join([basename(f[0]) for f in filepaths])
             msg = ('<b>An error occurred parsing the raw files: '
                    '%s</b><br/>%s' % (basename(fps), e))
             self.display_template(int(study_id), msg)
@@ -232,7 +234,8 @@ class StudyDescriptionHandler(BaseHandler):
 
         try:
             # inserting prep templates
-            load_prep_template_from_cmd(fp_rpt, raw_data.id)
+            PrepTemplate.create(pd.DataFrame.from_csv(
+                fp_rpt, sep="\t", infer_datetime_format=True), raw_data, study)
         except (TypeError, QiitaDBColumnError, QiitaDBExecutionError,
                 IOError), e:
             msg = ('<b>An error occurred parsing the prep template: '
@@ -259,10 +262,6 @@ class CreateStudyHandler(BaseHandler):
 
         creation_form.lab_person.choices = choices
         creation_form.principal_investigator.choices = choices
-
-        ena = Ontology(convert_to_id('ENA', 'ontology'))
-        ena_terms = ena.terms
-        creation_form.investigation_type.choices = [(t, t) for t in ena_terms]
 
         # TODO: set the choices attributes on the environmental_package field
         self.render('create_study.html', user=self.current_user,
