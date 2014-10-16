@@ -127,7 +127,8 @@ def load_sample_template_from_cmd(sample_temp_path, study_id):
         The study id to which the sample template belongs
     """
     sample_temp = pd.DataFrame.from_csv(sample_temp_path, sep='\t',
-                                        infer_datetime_format=True)
+                                        infer_datetime_format=True,
+                                        index_col='sample_name')
     return SampleTemplate.create(sample_temp, Study(study_id))
 
 
@@ -144,7 +145,8 @@ def load_prep_template_from_cmd(prep_temp_path, raw_data_id, study_id):
         The study id to which the prep template belongs
     """
     prep_temp = pd.DataFrame.from_csv(prep_temp_path, sep='\t',
-                                      infer_datetime_format=True)
+                                      infer_datetime_format=True,
+                                      index_col='sample_name')
     return PrepTemplate.create(prep_temp, RawData(raw_data_id),
                                Study(study_id))
 
