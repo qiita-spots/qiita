@@ -95,32 +95,32 @@ class UtilTests(TestCase):
 
         # 27 samples
         self.assertEqual(len(obs), 27)
-        self.assertTrue(all(obs.index == pd.Index([
+        self.assertTrue(set(obs.index), {
             u'SKB1.640202', u'SKB2.640194', u'SKB3.640195', u'SKB4.640189',
             u'SKB5.640181', u'SKB6.640176', u'SKB7.640196', u'SKB8.640193',
             u'SKB9.640200', u'SKD1.640179', u'SKD2.640178', u'SKD3.640198',
             u'SKD4.640185', u'SKD5.640186', u'SKD6.640190', u'SKD7.640191',
             u'SKD8.640184', u'SKD9.640182', u'SKM1.640183', u'SKM2.640199',
             u'SKM3.640197', u'SKM4.640180', u'SKM5.640177', u'SKM6.640187',
-            u'SKM7.640188', u'SKM8.640201', u'SKM9.640192'], dtype='object')))
+            u'SKM7.640188', u'SKM8.640201', u'SKM9.640192'})
 
-        self.assertTrue(all(obs.columns == pd.Index(
-            [u'tot_org_carb', u'common_name', u'has_extracted_data',
-             u'required_sample_info_status', u'water_content_soil',
-             u'env_feature', u'assigned_from_geo', u'altitude', u'env_biome',
-             u'texture', u'has_physical_specimen', u'description_duplicate',
-             u'physical_location', u'latitude', u'ph', u'host_taxid',
-             u'elevation', u'description', u'collection_timestamp',
-             u'taxon_id', u'samp_salinity', u'host_subject_id', u'sample_type',
-             u'season_environment', u'temp', u'country', u'longitude',
-             u'tot_nitro', u'depth', u'anonymized_name', u'target_subfragment',
-             u'sample_center', u'samp_size', u'run_date', u'experiment_center',
-             u'pcr_primers', u'center_name', u'barcodesequence', u'run_center',
-             u'run_prefix', u'library_construction_protocol', u'emp_status',
-             u'linkerprimersequence', u'experiment_design_description',
-             u'target_gene', u'center_project_name', u'illumina_technology',
-             u'sequencing_meth', u'platform', u'experiment_title',
-             u'study_center'], dtype='object')))
+        self.assertTrue(set(obs.columns), {
+            u'tot_org_carb', u'common_name', u'has_extracted_data',
+            u'required_sample_info_status', u'water_content_soil',
+            u'env_feature', u'assigned_from_geo', u'altitude', u'env_biome',
+            u'texture', u'has_physical_specimen', u'description_duplicate',
+            u'physical_location', u'latitude', u'ph', u'host_taxid',
+            u'elevation', u'description', u'collection_timestamp',
+            u'taxon_id', u'samp_salinity', u'host_subject_id', u'sample_type',
+            u'season_environment', u'temp', u'country', u'longitude',
+            u'tot_nitro', u'depth', u'anonymized_name', u'target_subfragment',
+            u'sample_center', u'samp_size', u'run_date', u'experiment_center',
+            u'pcr_primers', u'center_name', u'barcodesequence', u'run_center',
+            u'run_prefix', u'library_construction_protocol', u'emp_status',
+            u'linkerprimersequence', u'experiment_design_description',
+            u'target_gene', u'center_project_name', u'illumina_technology',
+            u'sequencing_meth', u'platform', u'experiment_title',
+            u'study_center'})
 
     def template_to_dict(self):
         template = PrepTemplate(1)

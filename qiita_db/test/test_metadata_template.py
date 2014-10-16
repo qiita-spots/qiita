@@ -452,7 +452,6 @@ class TestMetadataTemplate(TestCase):
     """Tests the MetadataTemplate base class"""
     def setUp(self):
         self.study = Study(1)
-        self.metadata = pd.DataFrame.from_dict({})
 
     def test_init(self):
         """Init raises an error because it's not called from a subclass"""
@@ -461,8 +460,8 @@ class TestMetadataTemplate(TestCase):
 
     def test_create(self):
         """Create raises an error because it's not called from a subclass"""
-        with self.assertRaises(IncompetentQiitaDeveloperError):
-            MetadataTemplate.create(self.metadata, self.study)
+        with self.assertRaises(QiitaDBNotImplementedError):
+            MetadataTemplate.create()
 
     def test_exist(self):
         """Exists raises an error because it's not called from a subclass"""
@@ -824,6 +823,7 @@ class TestPrepTemplate(TestCase):
             }
         self.metadata = pd.DataFrame.from_dict(metadata_dict, orient='index')
         self.test_raw_data = RawData(1)
+        self.test_study = Study(1)
 
         fd, seqs_fp = mkstemp(suffix='_seqs.fastq')
         close(fd)
@@ -873,18 +873,21 @@ class TestPrepTemplate(TestCase):
     def test_create_duplicate(self):
         """Create raises an error when creating a duplicated PrepTemplate"""
         with self.assertRaises(QiitaDBDuplicateError):
-            PrepTemplate.create(self.metadata, self.test_raw_data)
+            PrepTemplate.create(self.metadata, self.test_raw_data,
+                                self.test_study)
 
     def test_create_duplicate_header(self):
         """Create raises an error when duplicate headers are present"""
         self.metadata['STR_COLUMN'] = pd.Series(['', '', ''],
                                                 index=self.metadata.index)
         with self.assertRaises(QiitaDBDuplicateHeaderError):
-            PrepTemplate.create(self.metadata, self.new_raw_data)
+            PrepTemplate.create(self.metadata, self.new_raw_data,
+                                self.test_study)
 
     def test_create(self):
         """Creates a new PrepTemplate"""
-        pt = PrepTemplate.create(self.metadata, self.new_raw_data)
+        pt = PrepTemplate.create(self.metadata, self.new_raw_data,
+                                 self.test_study)
         # The returned object has the correct id
         self.assertEqual(pt.id, 3)
 
@@ -893,9 +896,9 @@ class TestPrepTemplate(TestCase):
             "SELECT * FROM qiita.common_prep_info WHERE raw_data_id=3")
         # raw_data_id, sample_id, center_name, center_project_name,
         # ebi_submission_accession, ebi_study_accession, emp_status_id
-        exp = [[3, 'SKB8.640193', 'ANL', 'Test Project', 1],
-               [3, 'SKD8.640184', 'ANL', 'Test Project', 1],
-               [3, 'SKB7.640196', 'ANL', 'Test Project', 1]]
+        exp = [[3, 'SKB8.640193', 1, 'ANL', 'Test Project', 1],
+               [3, 'SKD8.640184', 1, 'ANL', 'Test Project', 1],
+               [3, 'SKB7.640196', 1, 'ANL', 'Test Project', 1]]
         self.assertEqual(sorted(obs), sorted(exp))
 
         # The relevant rows have been added to the raw_data_prep_columns
@@ -914,12 +917,13 @@ class TestPrepTemplate(TestCase):
         # The new table hosts the correct values
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.prep_3")
-        # sample_id, str_column
-        exp = [['SKB7.640196', 'Value for sample 3', None,
+        # sample_id, study_id, str_column, ebi_submission_accession,
+        # barcodesequence, linkerprimersequence
+        exp = [['SKB7.640196', 1, 'Value for sample 3', None,
                 'CCTCTGAGAGCT', 'GTGCCAGCMGCCGCGGTAA'],
-               ['SKB8.640193', 'Value for sample 1', None,
+               ['SKB8.640193', 1, 'Value for sample 1', None,
                 'GTCCGCAAGTTA', 'GTGCCAGCMGCCGCGGTAA'],
-               ['SKD8.640184', 'Value for sample 2', None,
+               ['SKD8.640184', 1, 'Value for sample 2', None,
                 'CGTAGAGCTCTC', 'GTGCCAGCMGCCGCGGTAA']]
         self.assertEqual(sorted(obs), sorted(exp))
 
@@ -945,7 +949,7 @@ class TestPrepTemplate(TestCase):
             }
         metadata = pd.DataFrame.from_dict(metadata_dict, orient='index')
         with self.assertRaises(QiitaDBColumnError):
-            PrepTemplate.create(metadata, self.new_raw_data)
+            PrepTemplate.create(metadata, self.new_raw_data, self.test_study)
 
     def test_create_error_partial(self):
         """Create raises an error if not all columns are on the template"""
@@ -971,7 +975,7 @@ class TestPrepTemplate(TestCase):
             }
         metadata = pd.DataFrame.from_dict(metadata_dict, orient='index')
         with self.assertRaises(QiitaDBColumnError):
-            PrepTemplate.create(metadata, self.new_raw_data)
+            PrepTemplate.create(metadata, self.new_raw_data, self.test_study)
 
     def test_delete(self):
         """Deletes prep template 1"""
@@ -1133,7 +1137,8 @@ class TestPrepTemplate(TestCase):
         """to file writes a tab delimited file with all the metadata"""
         fd, fp = mkstemp()
         close(fd)
-        pt = PrepTemplate.create(self.metadata, self.new_raw_data)
+        pt = PrepTemplate.create(self.metadata, self.new_raw_data,
+                                 self.test_study)
         pt.to_file(fp)
         self._clean_up_files.append(fp)
         with open(fp, 'U') as f:

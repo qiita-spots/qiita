@@ -797,7 +797,8 @@ CREATE TABLE qiita.required_sample_info (
 	latitude             float8  NOT NULL,
 	longitude            float8  NOT NULL,
 	CONSTRAINT idx_common_sample_information PRIMARY KEY ( study_id, sample_id ),
-	CONSTRAINT pk_required_sample_info UNIQUE ( sample_id ) ,
+	CONSTRAINT pk_required_sample_info UNIQUE ( sample_id, study_id ) ,
+	CONSTRAINT pk_required_sample_info_0 UNIQUE ( sample_id ) ,
 	CONSTRAINT fk_required_sample_info_study FOREIGN KEY ( study_id ) REFERENCES qiita.study( study_id )    ,
 	CONSTRAINT fk_required_sample_info FOREIGN KEY ( required_sample_info_status_id ) REFERENCES qiita.required_sample_info_status( required_sample_info_status_id )    
  );
@@ -842,9 +843,10 @@ CREATE TABLE qiita.analysis_sample (
 	analysis_id          bigint  NOT NULL,
 	processed_data_id    bigint  NOT NULL,
 	sample_id            varchar  NOT NULL,
+	study_id             bigint  NOT NULL,
 	CONSTRAINT fk_analysis_sample_analysis FOREIGN KEY ( analysis_id ) REFERENCES qiita.analysis( analysis_id )    ,
-	CONSTRAINT fk_analysis_sample FOREIGN KEY ( processed_data_id ) REFERENCES qiita.processed_data( processed_data_id )    ,
-	CONSTRAINT fk_analysis_sample_0 FOREIGN KEY ( sample_id ) REFERENCES qiita.required_sample_info( sample_id )    
+	CONSTRAINT fk_analysis_processed_data FOREIGN KEY ( processed_data_id ) REFERENCES qiita.processed_data( processed_data_id )    ,
+	CONSTRAINT fk_analysis_sample FOREIGN KEY ( sample_id, study_id ) REFERENCES qiita.required_sample_info( sample_id, study_id )    
  );
 
 CREATE INDEX idx_analysis_sample ON qiita.analysis_sample ( analysis_id );
@@ -853,16 +855,19 @@ CREATE INDEX idx_analysis_sample_0 ON qiita.analysis_sample ( processed_data_id 
 
 CREATE INDEX idx_analysis_sample_1 ON qiita.analysis_sample ( sample_id );
 
+CREATE INDEX idx_analysis_sample_2 ON qiita.analysis_sample ( sample_id, study_id );
+
 CREATE TABLE qiita.common_prep_info ( 
 	raw_data_id          bigserial  NOT NULL,
 	sample_id            varchar  NOT NULL,
+	study_id             bigint  NOT NULL,
 	center_name          varchar  ,
 	center_project_name  varchar  ,
 	emp_status_id        bigint  NOT NULL,
-	CONSTRAINT idx_required_prep_info_1 PRIMARY KEY ( raw_data_id, sample_id ),
+	CONSTRAINT idx_common_prep_info PRIMARY KEY ( raw_data_id, sample_id, study_id ),
 	CONSTRAINT fk_required_prep_info_raw_data FOREIGN KEY ( raw_data_id ) REFERENCES qiita.raw_data( raw_data_id )    ,
 	CONSTRAINT fk_required_prep_info_emp_status FOREIGN KEY ( emp_status_id ) REFERENCES qiita.emp_status( emp_status_id )    ,
-	CONSTRAINT fk_required_prep_info FOREIGN KEY ( sample_id ) REFERENCES qiita.required_sample_info( sample_id )    
+	CONSTRAINT fk_common_prep_info FOREIGN KEY ( sample_id, study_id ) REFERENCES qiita.required_sample_info( sample_id, study_id )    
  );
 
 CREATE INDEX idx_required_prep_info ON qiita.common_prep_info ( raw_data_id );
@@ -870,4 +875,6 @@ CREATE INDEX idx_required_prep_info ON qiita.common_prep_info ( raw_data_id );
 CREATE INDEX idx_required_prep_info_0 ON qiita.common_prep_info ( emp_status_id );
 
 CREATE INDEX idx_required_prep_info_2 ON qiita.common_prep_info ( sample_id );
+
+CREATE INDEX idx_common_prep_info_0 ON qiita.common_prep_info ( sample_id, study_id );
 

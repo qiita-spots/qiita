@@ -115,6 +115,7 @@
 			<column name="analysis_id" type="bigint" jt="-5" mandatory="y" />
 			<column name="processed_data_id" type="bigint" jt="-5" mandatory="y" />
 			<column name="sample_id" type="varchar" jt="12" mandatory="y" />
+			<column name="study_id" type="bigint" jt="-5" mandatory="y" />
 			<index name="idx_analysis_sample" unique="NORMAL" >
 				<column name="analysis_id" />
 			</index>
@@ -124,14 +125,19 @@
 			<index name="idx_analysis_sample_1" unique="NORMAL" >
 				<column name="sample_id" />
 			</index>
+			<index name="idx_analysis_sample_2" unique="NORMAL" >
+				<column name="sample_id" />
+				<column name="study_id" />
+			</index>
 			<fk name="fk_analysis_sample_analysis" to_schema="qiita" to_table="analysis" >
 				<fk_column name="analysis_id" pk="analysis_id" />
 			</fk>
-			<fk name="fk_analysis_sample" to_schema="qiita" to_table="processed_data" >
+			<fk name="fk_analysis_processed_data" to_schema="qiita" to_table="processed_data" >
 				<fk_column name="processed_data_id" pk="processed_data_id" />
 			</fk>
-			<fk name="fk_analysis_sample_0" to_schema="qiita" to_table="required_sample_info" >
+			<fk name="fk_analysis_sample" to_schema="qiita" to_table="required_sample_info" >
 				<fk_column name="sample_id" pk="sample_id" />
+				<fk_column name="study_id" pk="study_id" />
 			</fk>
 		</table>
 		<table name="analysis_status" >
@@ -266,6 +272,7 @@
 		<table name="common_prep_info" >
 			<column name="raw_data_id" type="bigserial" jt="-5" mandatory="y" />
 			<column name="sample_id" type="varchar" jt="12" mandatory="y" />
+			<column name="study_id" type="bigint" jt="-5" mandatory="y" />
 			<column name="center_name" type="varchar" jt="12" />
 			<column name="center_project_name" type="varchar" jt="12" />
 			<column name="emp_status_id" type="bigint" jt="-5" mandatory="y" />
@@ -275,12 +282,17 @@
 			<index name="idx_required_prep_info_0" unique="NORMAL" >
 				<column name="emp_status_id" />
 			</index>
-			<index name="idx_required_prep_info_1" unique="PRIMARY_KEY" >
-				<column name="raw_data_id" />
-				<column name="sample_id" />
-			</index>
 			<index name="idx_required_prep_info_2" unique="NORMAL" >
 				<column name="sample_id" />
+			</index>
+			<index name="idx_common_prep_info" unique="PRIMARY_KEY" >
+				<column name="raw_data_id" />
+				<column name="sample_id" />
+				<column name="study_id" />
+			</index>
+			<index name="idx_common_prep_info_0" unique="NORMAL" >
+				<column name="sample_id" />
+				<column name="study_id" />
 			</index>
 			<fk name="fk_required_prep_info_raw_data" to_schema="qiita" to_table="raw_data" >
 				<fk_column name="raw_data_id" pk="raw_data_id" />
@@ -288,8 +300,9 @@
 			<fk name="fk_required_prep_info_emp_status" to_schema="qiita" to_table="emp_status" >
 				<fk_column name="emp_status_id" pk="emp_status_id" />
 			</fk>
-			<fk name="fk_required_prep_info" to_schema="qiita" to_table="required_sample_info" >
+			<fk name="fk_common_prep_info" to_schema="qiita" to_table="required_sample_info" >
 				<fk_column name="sample_id" pk="sample_id" />
+				<fk_column name="study_id" pk="study_id" />
 			</fk>
 		</table>
 		<table name="controlled_vocab" >
@@ -921,6 +934,10 @@
 			</index>
 			<index name="pk_required_sample_info" unique="UNIQUE" >
 				<column name="sample_id" />
+				<column name="study_id" />
+			</index>
+			<index name="pk_required_sample_info_0" unique="UNIQUE" >
+				<column name="sample_id" />
 			</index>
 			<fk name="fk_required_sample_info_study" to_schema="qiita" to_table="study" >
 				<fk_column name="study_id" pk="study_id" />
@@ -1240,7 +1257,6 @@ Controlled Vocabulary]]></comment>
 		<entity schema="qiita" name="analysis_job" color="d0def5" x="285" y="915" />
 		<entity schema="qiita" name="analysis_chain" color="c0d4f3" x="60" y="915" />
 		<entity schema="qiita" name="job_status" color="d0def5" x="210" y="1005" />
-		<entity schema="qiita" name="analysis_sample" color="d0def5" x="45" y="1155" />
 		<entity schema="qiita" name="column_controlled_vocabularies" color="d0def5" x="270" y="1320" />
 		<entity schema="qiita" name="mixs_field_description" color="d0def5" x="300" y="1485" />
 		<entity schema="qiita" name="analysis_users" color="d0def5" x="60" y="720" />
@@ -1275,7 +1291,6 @@ Controlled Vocabulary]]></comment>
 		<entity schema="qiita" name="study_person" color="c0d4f3" x="2070" y="90" />
 		<entity schema="qiita" name="study" color="d0def5" x="1785" y="45" />
 		<entity schema="qiita" name="severity" color="c0d4f3" x="1470" y="1275" />
-		<entity schema="qiita" name="required_sample_info" color="d0def5" x="1380" y="105" />
 		<entity schema="qiita" name="analysis" color="d0def5" x="225" y="705" />
 		<entity schema="qiita" name="controlled_vocab" color="d0def5" x="45" y="1320" />
 		<entity schema="qiita" name="term" color="d0def5" x="795" y="1620" />
@@ -1285,13 +1300,15 @@ Controlled Vocabulary]]></comment>
 		<entity schema="qiita" name="reference" color="c0d4f3" x="2100" y="945" />
 		<entity schema="qiita" name="processed_params_uclust" color="d0def5" x="2175" y="795" />
 		<entity schema="qiita" name="processed_params_sortmerna" color="a8c4ef" x="1980" y="795" />
-		<entity schema="qiita" name="common_prep_info" color="d0def5" x="1050" y="285" />
 		<entity schema="qiita" name="processed_data" color="d0def5" x="1245" y="945" />
 		<entity schema="qiita" name="preprocessed_sequence_illumina_params" color="d0def5" x="1710" y="1020" />
 		<entity schema="qiita" name="preprocessed_processed_data" color="b2cdf7" x="1245" y="855" />
 		<entity schema="qiita" name="preprocessed_data" color="c0d4f3" x="1230" y="690" />
 		<entity schema="qiita" name="raw_preprocessed_data" color="b2cdf7" x="1245" y="600" />
 		<entity schema="qiita" name="raw_data" color="d0def5" x="1260" y="480" />
+		<entity schema="qiita" name="required_sample_info" color="d0def5" x="1380" y="105" />
+		<entity schema="qiita" name="analysis_sample" color="d0def5" x="45" y="1155" />
+		<entity schema="qiita" name="common_prep_info" color="d0def5" x="1050" y="285" />
 		<group name="Group_analyses" color="c4e0f9" >
 			<comment>analysis tables</comment>
 			<entity schema="qiita" name="analysis" />
