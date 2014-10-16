@@ -216,7 +216,7 @@ def make_environment(load_ontologies, download_reference, add_demo_user):
         print('Production environment successfully created')
 
 
-def drop_environment():
+def drop_environment(ask_for_confirmation):
     """Drops the database specified in the configuration
     """
     # Connect to the postgres server
@@ -229,12 +229,15 @@ def drop_environment():
     if is_test_environment:
         do_drop = True
     else:
-        confirm = ''
-        while confirm not in ('Y', 'y', 'N', 'n'):
-            confirm = raw_input("THIS IS NOT A TEST ENVIRONMENT.\n"
-                                "Proceed with drop? (y/n)")
+        if ask_for_confirmation:
+            confirm = ''
+            while confirm not in ('Y', 'y', 'N', 'n'):
+                confirm = raw_input("THIS IS NOT A TEST ENVIRONMENT.\n"
+                                    "Proceed with drop? (y/n)")
 
-        do_drop = confirm in ('Y', 'y')
+            do_drop = confirm in ('Y', 'y')
+        else:
+            do_drop = True
 
     if do_drop:
         admin_conn = SQLConnectionHandler(admin=True)
