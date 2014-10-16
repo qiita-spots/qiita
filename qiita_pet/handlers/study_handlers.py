@@ -136,9 +136,14 @@ class StudyDescriptionHandler(BaseHandler):
             prep_template_id = valid_ssb[0]
             split_libs_status = RawData(
                 prep_template_id).preprocessing_status.replace('\n', '<br/>')
+
+            # getting EBI status
+            ebi_status = PreprocessedData(
+                study.preprocessed_data()[-1]).submitted_to_insdc_status()
         else:
             prep_template_id = None
             split_libs_status = None
+            ebi_status = None
 
         valid_ssb = ','.join(map(str, valid_ssb))
         ssb = len(valid_ssb) > 0
@@ -151,7 +156,7 @@ class StudyDescriptionHandler(BaseHandler):
                     study_id=study_id, files=fs, ssb=ssb, vssb=valid_ssb,
                     max_upload_size=qiita_config.max_upload_size,
                     sls=split_libs_status, filetypes=fts,
-                    investigation_types=ena.terms,
+                    investigation_types=ena.terms, ebi_status=ebi_status,
                     prep_template_id=prep_template_id, msg=msg)
 
     @authenticated
@@ -405,7 +410,7 @@ class EBISubmitHandler(BaseHandler):
         preprocessed_data = None
         sample_template = None
         error = None
-        
+
         # this could be done with exists but it works on the title and
         # we do not have that
         try:
