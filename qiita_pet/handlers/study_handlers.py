@@ -32,7 +32,7 @@ from qiita_db.util import get_study_fp, convert_to_id, get_filepath_types
 from qiita_db.ontology import Ontology
 from qiita_db.data import PreprocessedData
 from qiita_db.exceptions import (QiitaDBColumnError, QiitaDBExecutionError,
-                                 QiitaDBDuplicateError)
+                                 QiitaDBDuplicateError, QiitaDBUnknownIDError)
 from qiita_db.data import RawData
 
 
@@ -416,7 +416,7 @@ class EBISubmitHandler(BaseHandler):
         # we do not have that
         try:
             study = Study(int(study_id))
-        except:
+        except (QiitaDBUnknownIDError):
             study = None
             error = 'There is no study %s' % study_id
 
