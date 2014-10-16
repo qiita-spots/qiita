@@ -105,7 +105,7 @@ class SearchStudiesHandler(BaseHandler):
             proc_data_id = int(proc_data_id)
             # get new selected samples for each study and yield with proc id
             for sample in self.get_arguments(study_id):
-                yield (proc_data_id, sample)
+                yield (proc_data_id, sample, study_id)
 
     def _parse_form_deselect(self):
         """parses selected checkboxes and returns the selected ones in
