@@ -30,6 +30,7 @@ from qiita_db.user import User
 from qiita_db.util import get_study_fp, convert_to_id, get_filepath_types
 from qiita_db.ontology import Ontology
 from qiita_db.data import PreprocessedData
+from qiita_db.exceptions import QiitaDBUnknownIDError
 from qiita_db.commands import (load_sample_template_from_cmd,
                                load_prep_template_from_cmd,
                                load_raw_data_cmd)
@@ -114,44 +115,79 @@ class PublicStudiesHandler(BaseHandler):
 
 
 class StudyDescriptionHandler(BaseHandler):
+    def _has_access(self, user, study_id):
+        """make sure user has access to the study requested"""
+        userobj = User(user)
+        if study_id in Study.get_public() + userobj.private_studies + \
+                userobj.shared_studies:
+            return True
+        return False
+
     def display_template(self, study_id, msg):
         """Simple function to avoid duplication of code"""
-
-        # processing paths
-        fp = get_study_fp(study_id)
-        if exists(fp):
-            fs = [f for f in listdir(fp)]
+        # make sure study is accessable and exists
+        study = None
+        study_id = int(study_id)
+        try:
+            study = Study(study_id)
+        except QiitaDBUnknownIDError:
+            # Study not in database so fail nicely
+            msg = "<h1>This study does not exist</h1>"
         else:
-            fs = []
-        fts = [k.split('_', 1)[1].replace('_', ' ')
-               for k in get_filepath_types() if k.startswith('raw_')]
+            if not self._has_access(self.current_user, study_id):
+                study = None
+                msg = "<h1>You do not have access to this study!</h1>"
 
-        # getting the raw_data
-        study = Study(study_id)
+        if study:
+            # processing paths
+            fp = get_study_fp(study_id)
+            if exists(fp):
+                fs = [f for f in listdir(fp)]
+            else:
+                fs = []
+            fts = [k.split('_', 1)[1].replace('_', ' ')
+                   for k in get_filepath_types() if k.startswith('raw_')]
 
-        valid_ssb = []
-        for rdi in study.raw_data():
-            rd = RawData(rdi)
-            ex = PrepTemplate.exists(rd)
-            if ex:
-                valid_ssb.append(rdi)
+            valid_ssb = []
+            for rdi in study.raw_data():
+                rd = RawData(rdi)
+                ex = PrepTemplate.exists(rd)
+                if ex:
+                    valid_ssb.append(rdi)
 
-        # get the prep template id and force to choose the first one
-        # see issue https://github.com/biocore/qiita/issues/415
-        if valid_ssb:
-            prep_template_id = valid_ssb[0]
-            split_libs_status = RawData(
-                prep_template_id).preprocessing_status.replace('\n', '<br/>')
+            # get the prep template id and force to choose the first one
+            # see issue https://github.com/biocore/qiita/issues/415
+            if valid_ssb:
+                prep_template_id = valid_ssb[0]
+                split_libs_status = RawData(
+                    prep_template_id).preprocessing_status.replace('\n',
+                                                                   '<br/>')
+            else:
+                prep_template_id = None
+                split_libs_status = None
+
+            valid_ssb = ','.join(map(str, valid_ssb))
+
+            ssb = len(valid_ssb) > 0
+
+            study_title = study.title
+            study_info = study.info
         else:
-            prep_template_id = None
+            # study doesnt exist or user doesnt have access
+            study_title = "ERROR"
+            study_info = {'study_alias': '',
+                          'number_samples_promised': -1,
+                          'number_samples_collected': -1,
+                          'metadata_complete': False}
+            ssb = 0
+            valid_ssb = True
             split_libs_status = None
-
-        valid_ssb = ','.join(map(str, valid_ssb))
-
-        ssb = len(valid_ssb) > 0
+            fts = []
+            fs = []
+            prep_template_id = -1
 
         self.render('study_description.html', user=self.current_user,
-                    study_title=study.title, study_info=study.info,
+                    study_title=study_title, study_info=study_info,
                     study_id=study_id, files=fs, ssb=ssb, vssb=valid_ssb,
                     max_upload_size=qiita_config.max_upload_size,
                     sls=split_libs_status, filetypes=fts,
