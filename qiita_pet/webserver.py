@@ -21,7 +21,8 @@ from qiita_pet.handlers.analysis_handlers import (
     ShowAnalysesHandler, SearchStudiesHandler)
 from qiita_pet.handlers.study_handlers import (
     CreateStudyHandler, PrivateStudiesHandler, PublicStudiesHandler,
-    StudyDescriptionHandler, MetadataSummaryHandler, EBISubmitHandler)
+    StudyDescriptionHandler, MetadataSummaryHandler, EBISubmitHandler,
+    CreateStudyAJAX)
 from qiita_pet.handlers.logger_handlers import LogEntryViewerHandler
 from qiita_pet.handlers.websocket_handlers import MessageHandler
 from qiita_pet.handlers.upload import UploadFileHandler
@@ -70,6 +71,7 @@ class Application(tornado.web.Application):
             (r"/study/preprocess", PreprocessHandler),
             (r"/study/description/(.*)", StudyDescriptionHandler),
             (r"/upload/", UploadFileHandler),
+            (r"/check_study/", CreateStudyAJAX),
             # 404 PAGE MUST BE LAST IN THIS LIST!
             (r".*", NoPageHandler)
         ]
