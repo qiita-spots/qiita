@@ -339,6 +339,17 @@ class CreateStudyHandler(BaseHandler):
         self.redirect('/')
 
 
+class CreateStudyAJAX(BaseHandler):
+    @authenticated
+    def get(self):
+        study_title = self.get_argument('study_title', None)
+        if study_title is None:
+            self.write('False')
+            return
+
+        self.write('False' if Study.exists(study_title) else 'True')
+
+
 class MetadataSummaryHandler(BaseHandler):
     @authenticated
     def get(self, arguments):
