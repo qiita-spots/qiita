@@ -249,6 +249,7 @@ class DBUtilTests(TestCase):
         # Check that the filepaths have been added to the DB
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.filepath WHERE filepath_id=16")
+        exp_fp = join("raw_data", "1_%s" % basename(fp))
         exp = [[16, exp_fp, 1, '852952723', 1]]
         self.assertEqual(obs, exp)
 
@@ -273,6 +274,7 @@ class DBUtilTests(TestCase):
         # Check that the filepaths have been added to the DB
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.filepath WHERE filepath_id=16")
+        exp_fp = join("raw_data", "1_%s" % basename(fp))
         exp = [[16, exp_fp, 1, '852952723', 1]]
         self.assertEqual(obs, exp)
 

@@ -78,13 +78,16 @@ def make(load_ontologies, download_reference, add_demo_user):
 
 
 @env.command()
-def drop():
+@click.option('--ask-for-confirmation/--no-ask-for-confirmation',
+              default=True, help='If True, will ask for confirmation before '
+              'dropping the production environment.')
+def drop(ask_for_confirmation):
     """Drops the database specified in config"""
     # TODO: use password from config, see issue #363
     # Or figure out a way to use
     # http://click.pocoo.org/3/options/#password-prompts
     # and have it work with Travis...
-    drop_environment()
+    drop_environment(ask_for_confirmation)
 
 
 @env.command()

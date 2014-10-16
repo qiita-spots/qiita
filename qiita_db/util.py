@@ -39,7 +39,7 @@ from string import ascii_letters, digits, punctuation
 from binascii import crc32
 from bcrypt import hashpw, gensalt
 from functools import partial
-from os.path import join, basename, isdir
+from os.path import join, basename, isdir, relpath
 from os import walk
 from shutil import move
 from json import dumps
@@ -534,6 +534,7 @@ def insert_filepaths(filepaths, obj_id, table, filepath_table, conn_handler,
             The filepath_id in the database for each added filepath
         """
         new_filepaths = filepaths
+        base_fp = get_db_files_base_dir()
         if move_files:
             # Get the base directory in which the type of data is stored
             base_data_dir = join(get_db_files_base_dir(), table)
@@ -551,9 +552,9 @@ def insert_filepaths(filepaths, obj_id, table, filepath_table, conn_handler,
         str_to_id = lambda x: (x if isinstance(x, (int, long))
                                else convert_to_id(x, "filepath_type",
                                                   conn_handler))
-        paths_w_checksum = [(path, str_to_id(id), compute_checksum(path))
+        paths_w_checksum = [(relpath(path, base_fp), str_to_id(id),
+                            compute_checksum(path))
                             for path, id in new_filepaths]
-
         # Create the list of SQL values to add
         values = ["('%s', %s, '%s', %s)" % (scrub_data(path), id, checksum, 1)
                   for path, id, checksum in paths_w_checksum]
