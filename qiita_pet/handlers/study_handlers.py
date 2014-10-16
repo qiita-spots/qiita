@@ -168,19 +168,19 @@ class StudyDescriptionHandler(BaseHandler):
         investigation_type = self.get_argument('investigation-type', "")
 
         if raw_sample_template is None or raw_prep_template is None:
-            raise HTTPError(403, "This function needs a sample template: "
+            raise HTTPError(400, "This function needs a sample template: "
                             "%s and a prep template: %s" %
                             (raw_sample_template, raw_prep_template))
         fp_rsp = join(get_study_fp(study_id), raw_sample_template)
         fp_rpt = join(get_study_fp(study_id), raw_prep_template)
         if not exists(fp_rsp) or not exists(fp_rpt):
-            raise HTTPError(403, "One of these files doesn't exist: %s, %s",
+            raise HTTPError(400, "One of these files doesn't exist: %s, %s",
                             (fp_rsp, fp_rpt))
 
         ena = Ontology(convert_to_id('ENA', 'ontology'))
         if (not investigation_type or investigation_type == "" or
                 investigation_type not in ena.terms):
-            raise HTTPError(403, "You need to have an investigation type")
+            raise HTTPError(400, "You need to have an investigation type")
 
         study_id = int(study_id)
         study = Study(study_id)
