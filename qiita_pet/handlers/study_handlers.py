@@ -32,7 +32,7 @@ from qiita_db.util import get_study_fp, convert_to_id, get_filepath_types
 from qiita_db.ontology import Ontology
 from qiita_db.data import PreprocessedData
 from qiita_db.exceptions import (QiitaDBColumnError, QiitaDBExecutionError,
-                                 QiitaDBDuplicateError, QiitaDBUnknownIDError)
+                                 QiitaDBDuplicateError)
 from qiita_db.data import RawData
 
 
@@ -368,7 +368,8 @@ class MetadataSummaryHandler(BaseHandler):
 
 
 class EBISubmitHandler(BaseHandler):
-    def display_template(self, study, sample_template, preprocessed_data, error):
+    def display_template(self, study, sample_template, preprocessed_data,
+                         error):
         """Simple function to avoid duplication of code"""
 
         if not study:
@@ -387,8 +388,8 @@ class EBISubmitHandler(BaseHandler):
                      if ftype == 'preprocessed_demux']
 
             if not len(demux):
-                error = ("Study does not appear to have demultiplexed sequences "
-                         "associated")
+                error = ("Study does not appear to have demultiplexed "
+                         "sequences associated")
             elif len(demux) > 1:
                 error = ("Study appears to have multiple demultiplexed files!")
             else:
@@ -429,16 +430,14 @@ class EBISubmitHandler(BaseHandler):
             try:
                 # TODO: only supporting a single prep template right now, which
                 # should be the last item
-                raw_data_id = study.raw_data()[-1]
                 preprocessed_data = PreprocessedData(
                     study.preprocessed_data()[-1])
             except:
                 preprocessed_data = None
                 error = ('There is no preprocessed data for study: '
-                    '%s' % study_id)
+                         '%s' % study_id)
 
         self.display_template(study, sample_template, preprocessed_data, error)
-
 
     @authenticated
     def post(self, study_id):
