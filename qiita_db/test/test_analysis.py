@@ -203,7 +203,7 @@ class TestAnalysis(TestCase):
     def test_add_samples(self):
         new = Analysis.create(User("admin@foo.bar"), "newAnalysis",
                               "A New Analysis")
-        new.add_samples([(1, 'SKB8.640193'), (1, 'SKD5.640186')])
+        new.add_samples([(1, 'SKB8.640193', 1), (1, 'SKD5.640186', 1)])
         exp = {1: ['SKB8.640193', 'SKD5.640186']}
         self.assertEqual(new.samples, exp)
 
