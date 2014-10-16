@@ -170,8 +170,9 @@ class BaseData(QiitaObject):
             "{2}=%(id)s)".format(self._filepath_table,
                                  self._data_filepath_table,
                                  self._data_filepath_column), {'id': self.id})
-        return [(join(get_db_files_base_dir(conn_handler), fp),
-                 convert_from_id(id, "filepath_type", conn_handler))
+        base_fp = partial(join, get_db_files_base_dir(conn_handler))
+        return [(base_fp(fp), convert_from_id(id, "filepath_type",
+                 conn_handler))
                 for fp, id in db_paths]
 
     def get_filepath_ids(self):
