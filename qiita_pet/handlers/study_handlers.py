@@ -173,9 +173,10 @@ class StudyDescriptionHandler(BaseHandler):
                             (raw_sample_template, raw_prep_template))
         fp_rsp = join(get_study_fp(study_id), raw_sample_template)
         fp_rpt = join(get_study_fp(study_id), raw_prep_template)
-        if not exists(fp_rsp) or not exists(fp_rpt):
-            raise HTTPError(400, "One of these files doesn't exist: %s, %s",
-                            (fp_rsp, fp_rpt))
+        if not exists(fp_rsp):
+            raise HTTPError(400, "This file doesn't exist: %s" % fp_rsp)
+        if not exists(fp_rpt):
+            raise HTTPError(400, "This file doesn't exist: %s" % fp_rpt)
 
         ena = Ontology(convert_to_id('ENA', 'ontology'))
         if (not investigation_type or investigation_type == "" or
