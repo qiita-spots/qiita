@@ -358,8 +358,8 @@ class User(QiitaObject):
         bool
             Whether user has acccess to the study or not
         """
-        if study_id in set(Study.get_public() + self.private_studies + \
-                self.shared_studies):
+        if study_id in set(Study.get_public() + self.private_studies +
+                           self.shared_studies):
             return True
         return False
 

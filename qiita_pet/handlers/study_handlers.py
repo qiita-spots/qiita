@@ -117,15 +117,11 @@ class PublicStudiesHandler(BaseHandler):
 class StudyDescriptionHandler(BaseHandler):
     def _has_access(self, user, study_id):
         """make sure user has access to the study requested"""
-        userobj = User(user)
-        if study_id in Study.get_public() + userobj.private_studies + \
-                userobj.shared_studies:
-            return True
-        return False
+        return User(user).has_study_access(study_id)
 
     def display_template(self, study_id, msg):
         """Simple function to avoid duplication of code"""
-        # make sure study is accessable and exists
+        # make sure study is accessible and exists
         study = None
         study_id = int(study_id)
         try:
