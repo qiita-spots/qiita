@@ -295,7 +295,7 @@ class Analysis(QiitaStatusObject):
         ret_tables = {}
         base_fp = get_db_files_base_dir()
         for fp in tables:
-            ret_tables[fp[0]] = join(base_fp, "analysis", fp[1])
+            ret_tables[fp[0]] = join(base_fp, fp[1])
         return ret_tables
 
     @property
@@ -315,7 +315,7 @@ class Analysis(QiitaStatusObject):
         mapping_fp = conn_handler.execute_fetchone(sql, (self._id, fptypeid))
         if not mapping_fp:
             return None
-        return join(get_db_files_base_dir(), "analysis", mapping_fp[0])
+        return join(get_db_files_base_dir(), mapping_fp[0])
 
     @property
     def step(self):

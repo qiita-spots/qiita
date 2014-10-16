@@ -95,6 +95,8 @@ class RawDataTests(TestCase):
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.filepath WHERE filepath_id=16 or "
             "filepath_id=17")
+        exp_seqs_fp = join("raw_data", "3_%s" % basename(self.seqs_fp))
+        exp_bc_fp = join("raw_data", "3_%s" % basename(self.barcodes_fp))
         # filepath_id, path, filepath_type_id
         exp = [[16, exp_seqs_fp, 1, '852952723', 1],
                [17, exp_bc_fp, 2, '852952723', 1]]
@@ -242,6 +244,10 @@ class PreprocessedDataTests(TestCase):
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.filepath WHERE filepath_id=16 or "
             "filepath_id=17")
+        exp_fna_fp = join("preprocessed_data",
+                          "3_%s" % basename(self.fna_fp))
+        exp_qual_fp = join("preprocessed_data",
+                           "3_%s" % basename(self.qual_fp))
         # filepath_id, path, filepath_type_id
         exp = [[16, exp_fna_fp, 4, '852952723', 1],
                [17, exp_qual_fp, 5, '852952723', 1]]
@@ -284,6 +290,10 @@ class PreprocessedDataTests(TestCase):
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.filepath WHERE filepath_id=16 or "
             "filepath_id=17")
+        exp_fna_fp = join("preprocessed_data",
+                          "3_%s" % basename(self.fna_fp))
+        exp_qual_fp = join("preprocessed_data",
+                           "3_%s" % basename(self.qual_fp))
         # filepath_id, path, filepath_type_id
         exp = [[16, exp_fna_fp, 4, '852952723', 1],
                [17, exp_qual_fp, 5, '852952723', 1]]
@@ -464,6 +474,8 @@ class ProcessedDataTests(TestCase):
         # Check that the filepaths have been correctly added to the DB
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.filepath WHERE filepath_id=16")
+        exp_biom_fp = join("processed_data",
+                           "2_%s" % basename(self.biom_fp))
         # Filepath_id, path, filepath_type_id
         exp = [[16, exp_biom_fp, 6, '852952723', 1]]
         self.assertEqual(obs, exp)
@@ -533,6 +545,8 @@ class ProcessedDataTests(TestCase):
         # Check that the filepaths have been correctly added to the DB
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.filepath WHERE filepath_id=16")
+        exp_biom_fp = join("processed_data",
+                           "2_%s" % basename(self.biom_fp))
         # Filepath_id, path, filepath_type_id
         exp = [[16, exp_biom_fp, 6, '852952723', 1]]
         self.assertEqual(obs, exp)
