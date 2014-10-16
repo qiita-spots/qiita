@@ -39,6 +39,11 @@ from qiita_db.exceptions import (QiitaDBColumnError, QiitaDBExecutionError,
 from qiita_db.data import RawData
 
 
+def _has_access(self, user, study_id):
+        """make sure user has access to the study requested"""
+        return User(user).has_study_access(study_id)
+
+
 class CreateStudyForm(Form):
     study_title = StringField('Study Title', [validators.required()])
     study_alias = StringField('Study Alias', [validators.required()])
@@ -112,10 +117,6 @@ class PublicStudiesHandler(BaseHandler):
 
 
 class StudyDescriptionHandler(BaseHandler):
-    def _has_access(self, user, study_id):
-        """make sure user has access to the study requested"""
-        return User(user).has_study_access(study_id)
-
     def display_template(self, study_id, msg):
         """Simple function to avoid duplication of code"""
         # make sure study is accessible and exists
@@ -127,7 +128,7 @@ class StudyDescriptionHandler(BaseHandler):
             # Study not in database so fail nicely
             msg = "<h1>This study does not exist</h1>"
         else:
-            if not self._has_access(self.current_user, study_id):
+            if not _has_access(self.current_user, study_id):
                 study = None
                 msg = "<h1>You do not have access to this study!</h1>"
 
