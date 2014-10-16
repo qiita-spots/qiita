@@ -797,7 +797,6 @@ CREATE TABLE qiita.required_sample_info (
 	latitude             float8  NOT NULL,
 	longitude            float8  NOT NULL,
 	CONSTRAINT idx_common_sample_information PRIMARY KEY ( study_id, sample_id ),
-	CONSTRAINT pk_required_sample_info UNIQUE ( sample_id ) ,
 	CONSTRAINT fk_required_sample_info_study FOREIGN KEY ( study_id ) REFERENCES qiita.study( study_id )    ,
 	CONSTRAINT fk_required_sample_info FOREIGN KEY ( required_sample_info_status_id ) REFERENCES qiita.required_sample_info_status( required_sample_info_status_id )    
  );
