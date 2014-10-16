@@ -16,7 +16,6 @@ import tempfile
 
 import h5py
 import numpy as np
-import pandas as pd
 from future.utils.six import StringIO, BytesIO
 
 from qiita_db.metadata_template import SampleTemplate, PrepTemplate
