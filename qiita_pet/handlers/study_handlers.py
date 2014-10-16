@@ -140,17 +140,22 @@ class StudyDescriptionHandler(BaseHandler):
         # see issue https://github.com/biocore/qiita/issues/415
         if valid_ssb:
             prep_template_id = valid_ssb[0]
+            split_libs_status = RawData(
+                prep_template_id).preprocessing_status.replace('\n', '<br/>')
         else:
             prep_template_id = None
+            split_libs_status = None
 
         valid_ssb = ','.join(map(str, valid_ssb))
+
         ssb = len(valid_ssb) > 0
 
         self.render('study_description.html', user=self.current_user,
                     study_title=study.title, study_info=study.info,
                     study_id=study_id, files=fs, ssb=ssb, vssb=valid_ssb,
                     max_upload_size=qiita_config.max_upload_size,
-                    filetypes=fts, prep_template_id=prep_template_id, msg=msg)
+                    sls=split_libs_status, filetypes=fts,
+                    prep_template_id=prep_template_id, msg=msg)
 
     @authenticated
     def get(self, study_id):
@@ -386,4 +391,4 @@ class EBISubmitHandler(BaseHandler):
 
         self.render('compute_wait.html', user=self.current_user,
                     job_id=job_id, title='EBI Submission',
-                    completion_redirect='/compute_complete')
+                    completion_redirect='/compute_complete/')
