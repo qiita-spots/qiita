@@ -28,9 +28,11 @@ def submit_to_ebi(study_id):
     """Submit a study to EBI"""
     study = Study(study_id)
     st = SampleTemplate(study.sample_template)
-    raw_data_id = study.preprocessed_data()[0]
+
+    # currently we get the last one always
+    raw_data_id = study.raw_data()[-1]
     pt = PrepTemplate(raw_data_id)
-    preprocessed_data = PreprocessedData(raw_data_id)
+    preprocessed_data = PreprocessedData(study.preprocessed_data()[-1])
 
     state = preprocessed_data.submitted_to_insdc_status()
     if state in ('submitting', 'success'):

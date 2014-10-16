@@ -14,7 +14,6 @@
 
         // When the web socket receives an event
         websocket.onmessage = function(evt) {
-
             // ...convert the event's data to JSON
             message = JSON.parse(evt.data);
 
@@ -34,8 +33,7 @@
             }
         };
         websocket.onerror = function(evt) { };
-};
-
+      };
 </script>
 {% end %}
 

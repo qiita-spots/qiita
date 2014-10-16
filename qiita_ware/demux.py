@@ -493,6 +493,9 @@ def fetch(demux, samples=None, k=None):
         samples = demux.keys()
 
     for sample in samples:
+        if sample not in demux:
+            continue
+          
         pjoin = partial(os.path.join, sample)
 
         # h5py only has partial fancy indexing support and it is limited to a

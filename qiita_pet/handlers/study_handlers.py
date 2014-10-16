@@ -34,7 +34,7 @@ from qiita_db.commands import (load_sample_template_from_cmd,
                                load_prep_template_from_cmd,
                                load_raw_data_cmd)
 from qiita_db.exceptions import (QiitaDBColumnError, QiitaDBExecutionError,
-                                 QiitaDBDuplicateError)
+                                 QiitaDBDuplicateError, QiitaDBUnknownIDError)
 from qiita_db.data import RawData
 
 
@@ -352,37 +352,77 @@ class MetadataSummaryHandler(BaseHandler):
 
 
 class EBISubmitHandler(BaseHandler):
-    @authenticated
-    def get(self, study_id):
-        study = Study(int(study_id))
-        st = SampleTemplate(study.sample_template)
+    def display_template(self, study, sample_template, preprocessed_data, error):
+        """Simple function to avoid duplication of code"""
 
-        # TODO: only supporting a single prep template right now, which I think
-        # is what indexing the first item here is equiv to
-        raw_data_id = study.preprocessed_data()[0]
-
-        preprocessed_data = PreprocessedData(raw_data_id)
-
-        stats = [('Number of samples', len(st)),
-                 ('Number of metadata headers', len(st.metadata_headers()))]
-
-        demux = [path for path, ftype in preprocessed_data.get_filepaths()
-                 if ftype == 'preprocessed_demux']
-
-        if not len(demux):
-            error = ("Study does not appear to have demultiplexed sequences "
-                     "associated")
-        elif len(demux) > 1:
-            error = ("Study appears to have multiple demultiplexed files!")
+        if not study:
+            study_title = 'This study DOES NOT exist'
+            study_id = 'This study DOES NOT exist'
         else:
-            error = ""
-            demux_file = demux[0]
-            demux_file_stats = demux_stats(demux_file)
-            stats.append(('Number of sequences', demux_file_stats.n))
+            study_title = study.title
+            study_id = study.id
+
+        if not error:
+            stats = [('Number of samples', len(sample_template)),
+                     ('Number of metadata headers',
+                      len(sample_template.metadata_headers()))]
+
+            demux = [path for path, ftype in preprocessed_data.get_filepaths()
+                     if ftype == 'preprocessed_demux']
+
+            if not len(demux):
+                error = ("Study does not appear to have demultiplexed sequences "
+                         "associated")
+            elif len(demux) > 1:
+                error = ("Study appears to have multiple demultiplexed files!")
+            else:
+                error = ""
+                demux_file = demux[0]
+                demux_file_stats = demux_stats(demux_file)
+                stats.append(('Number of sequences', demux_file_stats.n))
+
+            error = None
+        else:
+            stats = []
 
         self.render('ebi_submission.html', user=self.current_user,
-                    study_title=study.title, stats=stats, error=error,
-                    study_id=study.id)
+                    study_title=study_title, stats=stats, error=error,
+                    study_id=study_id)
+
+    @authenticated
+    def get(self, study_id):
+        preprocessed_data = None
+        sample_template = None
+        error = None
+        
+        # this could be done with exists but it works on the title and
+        # we do not have that
+        try:
+            study = Study(int(study_id))
+        except:
+            study = None
+            error = 'There is no study %s' % study_id
+
+        if study:
+            try:
+                sample_template = SampleTemplate(study.sample_template)
+            except:
+                sample_template = None
+                error = 'There is no sample template for study: %s' % study_id
+
+            try:
+                # TODO: only supporting a single prep template right now, which
+                # should be the last item
+                raw_data_id = study.raw_data()[-1]
+                preprocessed_data = PreprocessedData(
+                    study.preprocessed_data()[-1])
+            except:
+                preprocessed_data = None
+                error = ('There is no preprocessed data for study: '
+                    '%s' % study_id)
+
+        self.display_template(study, sample_template, preprocessed_data, error)
+
 
     @authenticated
     def post(self, study_id):
@@ -391,4 +431,4 @@ class EBISubmitHandler(BaseHandler):
 
         self.render('compute_wait.html', user=self.current_user,
                     job_id=job_id, title='EBI Submission',
-                    completion_redirect='/compute_complete/')
+                    completion_redirect='/compute_complete/%s/' % job_id)
