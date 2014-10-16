@@ -258,6 +258,12 @@ class BaseSample(QiitaObject):
         # actually belong to the metadata
         cols.remove('sample_id')
         cols.remove(self._id_column)
+        try:
+            # study_id could be potentially removed by _id_column, so wrap
+            # in a try except
+            cols.remove('study_id')
+        except KeyError:
+            pass
         # Change the *_id columns, as this is for convenience internally,
         # and add the original categories
         for key, value in viewitems(self._md_template.translate_cols_dict):
@@ -286,6 +292,12 @@ class BaseSample(QiitaObject):
         d.update(dynamic_d)
         del d['sample_id']
         del d[self._id_column]
+        try:
+            # The study_id could potentially be already removed with _id_column
+            # so wrapping in a try except
+            del d['study_id']
+        except KeyError:
+            pass
         # Modify all the *_id columns to include the string instead of the id
         for k, v in viewitems(self._md_template.translate_cols_dict):
             d[v] = self._md_template.str_cols_handlers[k][d[k]]
@@ -630,110 +642,6 @@ class MetadataTemplate(QiitaObject):
         cls._check_template_special_columns(md_template, obj)
 
     @classmethod
-    def create(cls, md_template, obj):
-        r"""Creates the metadata template in the database
-
-        Parameters
-        ----------
-        md_template : DataFrame
-            The metadata template file contents indexed by samples Ids
-        obj : Study or RawData
-            The obj to which the metadata template belongs to. Study in case
-            of SampleTemplate and RawData in case of PrepTemplate
-        """
-        cls._check_subclass()
-
-        # Check that we don't have a MetadataTemplate for obj
-        if cls.exists(obj):
-            raise QiitaDBDuplicateError(cls.__name__, 'id: %d' % obj.id)
-
-        # We are going to modify the md_template. We create a copy so
-        # we don't modify the user one
-        md_template = deepcopy(md_template)
-        # In the database, all the column headers are lowercase
-        md_template.columns = [c.lower() for c in md_template.columns]
-
-        # Check that we don't have duplicate columns
-        if len(set(md_template.columns)) != len(md_template.columns):
-            raise QiitaDBDuplicateHeaderError()
-
-        # We need to check for some special columns, that are not present on
-        # the database, but depending on the data type are required.
-        cls._check_special_columns(md_template, obj)
-
-        conn_handler = SQLConnectionHandler()
-
-        # Get some useful information from the metadata template
-        sample_ids = md_template.index.tolist()
-        num_samples = len(sample_ids)
-
-        # Get the required columns from the DB
-        db_cols = get_table_cols(cls._table, conn_handler)
-
-        # Remove the sample_id and study_id columns
-        db_cols.remove('sample_id')
-        db_cols.remove(cls._id_column)
-
-        # Retrieve the headers of the metadata template
-        headers = list(md_template.keys())
-
-        # Check that md_template has the required columns
-        remaining = set(db_cols).difference(headers)
-        if remaining:
-            # If strict, raise an error, else default to None
-            if cls._strict:
-                raise QiitaDBColumnError("Missing columns: %s" % remaining)
-            else:
-                for col in remaining:
-                    md_template[col] = pd.Series([None] * num_samples,
-                                                 index=sample_ids)
-
-        # Insert values on required columns
-        values = _as_python_types(md_template, db_cols)
-        values.insert(0, sample_ids)
-        values.insert(0, [obj.id] * num_samples)
-        values = [v for v in zip(*values)]
-        conn_handler.executemany(
-            "INSERT INTO qiita.{0} ({1}, sample_id, {2}) "
-            "VALUES (%s, %s, {3})".format(cls._table, cls._id_column,
-                                          ', '.join(db_cols),
-                                          ', '.join(['%s'] * len(db_cols))),
-            values)
-
-        # Insert rows on *_columns table
-        headers = list(set(headers).difference(db_cols))
-        datatypes = _get_datatypes(md_template.ix[:, headers])
-        # psycopg2 requires a list of tuples, in which each tuple is a set
-        # of values to use in the string formatting of the query. We have all
-        # the values in different lists (but in the same order) so use zip
-        # to create the list of tuples that psycopg2 requires.
-        values = [v for v in zip([obj.id] * len(headers), headers, datatypes)]
-        conn_handler.executemany(
-            "INSERT INTO qiita.{0} ({1}, column_name, column_type) "
-            "VALUES (%s, %s, %s)".format(cls._column_table, cls._id_column),
-            values)
-
-        # Create table with custom columns
-        table_name = cls._table_name(obj)
-        column_datatype = ["%s %s" % (col, dtype)
-                           for col, dtype in zip(headers, datatypes)]
-        conn_handler.execute(
-            "CREATE TABLE qiita.{0} (sample_id varchar, {1})".format(
-                table_name, ', '.join(column_datatype)))
-
-        # Insert values on custom table
-        values = _as_python_types(md_template, headers)
-        values.insert(0, sample_ids)
-        values = [v for v in zip(*values)]
-        conn_handler.executemany(
-            "INSERT INTO qiita.{0} (sample_id, {1}) "
-            "VALUES (%s, {2})".format(table_name, ", ".join(headers),
-                                      ', '.join(["%s"] * len(headers))),
-            values)
-
-        return cls(obj.id)
-
-    @classmethod
     def delete(cls, id_):
         r"""Deletes the table from the database
 
@@ -996,6 +904,10 @@ class MetadataTemplate(QiitaObject):
                 metadata_map[k][value] = self.str_cols_handlers[key][id_]
                 del metadata_map[k][key]
             metadata_map[k].update(dyn_vals[k])
+            try:
+                del metadata_map[k]['study_id']
+            except KeyError:
+                pass
 
         headers = sorted(list(metadata_map.values())[0].keys())
         with open(fp, 'w') as f:
@@ -1060,6 +972,111 @@ class SampleTemplate(MetadataTemplate):
         """
         pass
 
+    @classmethod
+    def create(cls, md_template, study):
+        r"""Creates the metadata template in the database
+
+        Parameters
+        ----------
+        md_template : DataFrame
+            The metadata template file contents indexed by samples Ids
+        study : Study or RawData
+            The study to which the metadata template belongs to. Study in case
+            of SampleTemplate and RawData in case of PrepTemplate
+        """
+        cls._check_subclass()
+
+        # Check that we don't have a MetadataTemplate for study
+        if cls.exists(study):
+            raise QiitaDBDuplicateError(cls.__name__, 'id: %d' % study.id)
+
+        # We are going to modify the md_template. We create a copy so
+        # we don't modify the user one
+        md_template = deepcopy(md_template)
+        # In the database, all the column headers are lowercase
+        md_template.columns = [c.lower() for c in md_template.columns]
+
+        # Check that we don't have duplicate columns
+        if len(set(md_template.columns)) != len(md_template.columns):
+            raise QiitaDBDuplicateHeaderError()
+
+        # We need to check for some special columns, that are not present on
+        # the database, but depending on the data type are required.
+        cls._check_special_columns(md_template, study)
+
+        conn_handler = SQLConnectionHandler()
+
+        # Get some useful information from the metadata template
+        sample_ids = md_template.index.tolist()
+        num_samples = len(sample_ids)
+
+        # Get the required columns from the DB
+        db_cols = get_table_cols(cls._table, conn_handler)
+
+        # Remove the sample_id and study_id columns
+        db_cols.remove('sample_id')
+        db_cols.remove(cls._id_column)
+
+        # Retrieve the headers of the metadata template
+        headers = list(md_template.keys())
+
+        # Check that md_template has the required columns
+        remaining = set(db_cols).difference(headers)
+        if remaining:
+            # If strict, raise an error, else default to None
+            if cls._strict:
+                raise QiitaDBColumnError("Missing columns: %s" % remaining)
+            else:
+                for col in remaining:
+                    md_template[col] = pd.Series([None] * num_samples,
+                                                 index=sample_ids)
+
+        # Insert values on required columns
+        values = _as_python_types(md_template, db_cols)
+        values.insert(0, sample_ids)
+        values.insert(0, [study.id] * num_samples)
+        values = [v for v in zip(*values)]
+        conn_handler.executemany(
+            "INSERT INTO qiita.{0} ({1}, sample_id, {2}) "
+            "VALUES (%s, %s, {3})".format(cls._table, cls._id_column,
+                                          ', '.join(db_cols),
+                                          ', '.join(['%s'] * len(db_cols))),
+            values)
+
+        # Insert rows on *_columns table
+        headers = list(set(headers).difference(db_cols))
+        datatypes = _get_datatypes(md_template.ix[:, headers])
+        # psycopg2 requires a list of tuples, in which each tuple is a set
+        # of values to use in the string formatting of the query. We have all
+        # the values in different lists (but in the same order) so use zip
+        # to create the list of tuples that psycopg2 requires.
+        values = [
+            v for v in zip([study.id] * len(headers), headers, datatypes)]
+        conn_handler.executemany(
+            "INSERT INTO qiita.{0} ({1}, column_name, column_type) "
+            "VALUES (%s, %s, %s)".format(cls._column_table, cls._id_column),
+            values)
+
+        # Create table with custom columns
+        table_name = cls._table_name(study)
+        column_datatype = ["%s %s" % (col, dtype)
+                           for col, dtype in zip(headers, datatypes)]
+        conn_handler.execute(
+            "CREATE TABLE qiita.{0} (sample_id varchar, {1})".format(
+                table_name, ', '.join(column_datatype)))
+
+        # Insert values on custom table
+        values = _as_python_types(md_template, headers)
+        values.insert(0, sample_ids)
+        values = [v for v in zip(*values)]
+        conn_handler.executemany(
+            "INSERT INTO qiita.{0} (sample_id, {1}) "
+            "VALUES (%s, {2})".format(table_name, ", ".join(headers),
+                                      ', '.join(["%s"] * len(headers))),
+            values)
+
+        return cls(study.id)
+
 
 class PrepTemplate(MetadataTemplate):
     r"""Represent the PrepTemplate of a raw dat. Provides access to the
@@ -1115,3 +1132,112 @@ class PrepTemplate(MetadataTemplate):
                     "The following columns are missing in the PrepTemplate and"
                     " they are requried for target gene studies: %s"
                     % missing_cols)
+
+    @classmethod
+    def create(cls, md_template, raw_data, study):
+        r"""Creates the metadata template in the database
+
+        Parameters
+        ----------
+        md_template : DataFrame
+            The metadata template file contents indexed by samples Ids
+        raw_data : RawData
+            The raw_data to which the prep template belongs to.
+        study : Study
+            The study to which the prep template belongs to.
+        """
+        cls._check_subclass()
+
+        # Check that we don't have a MetadataTemplate for raw_data
+        if cls.exists(raw_data):
+            raise QiitaDBDuplicateError(cls.__name__, 'id: %d' % raw_data.id)
+
+        # We are going to modify the md_template. We create a copy so
+        # we don't modify the user one
+        md_template = deepcopy(md_template)
+        # In the database, all the column headers are lowercase
+        md_template.columns = [c.lower() for c in md_template.columns]
+
+        # Check that we don't have duplicate columns
+        if len(set(md_template.columns)) != len(md_template.columns):
+            raise QiitaDBDuplicateHeaderError()
+
+        # We need to check for some special columns, that are not present on
+        # the database, but depending on the data type are required.
+        cls._check_special_columns(md_template, raw_data)
+
+        conn_handler = SQLConnectionHandler()
+
+        # Get some useful information from the metadata template
+        sample_ids = md_template.index.tolist()
+        num_samples = len(sample_ids)
+
+        # Get the required columns from the DB
+        db_cols = get_table_cols(cls._table, conn_handler)
+
+        # Remove the sample_id and study_id columns
+        db_cols.remove('sample_id')
+        db_cols.remove('study_id')
+        db_cols.remove(cls._id_column)
+
+        # Retrieve the headers of the metadata template
+        headers = list(md_template.keys())
+
+        # Check that md_template has the required columns
+        remaining = set(db_cols).difference(headers)
+        if remaining:
+            # If strict, raise an error, else default to None
+            if cls._strict:
+                raise QiitaDBColumnError("Missing columns: %s" % remaining)
+            else:
+                for col in remaining:
+                    md_template[col] = pd.Series([None] * num_samples,
+                                                 index=sample_ids)
+
+        # Insert values on required columns
+        values = _as_python_types(md_template, db_cols)
+        values.insert(0, [study.id] * num_samples)
+        values.insert(0, sample_ids)
+        values.insert(0, [raw_data.id] * num_samples)
+        values = [v for v in zip(*values)]
+        conn_handler.executemany(
+            "INSERT INTO qiita.{0} ({1}, sample_id, study_id, {2}) "
+            "VALUES (%s, %s, %s, {3})".format(
+                cls._table, cls._id_column, ', '.join(db_cols),
+                ', '.join(['%s'] * len(db_cols))),
+            values)
+
+        # Insert rows on *_columns table
+        headers = list(set(headers).difference(db_cols))
+        datatypes = _get_datatypes(md_template.ix[:, headers])
+        # psycopg2 requires a list of tuples, in which each tuple is a set
+        # of values to use in the string formatting of the query. We have all
+        # the values in different lists (but in the same order) so use zip
+        # to create the list of tuples that psycopg2 requires.
+        values = [
+            v for v in zip([raw_data.id] * len(headers), headers, datatypes)]
+        conn_handler.executemany(
+            "INSERT INTO qiita.{0} ({1}, column_name, column_type) "
+            "VALUES (%s, %s, %s)".format(cls._column_table, cls._id_column),
+            values)
+
+        # Create table with custom columns
+        table_name = cls._table_name(raw_data)
+        column_datatype = ["%s %s" % (col, dtype)
+                           for col, dtype in zip(headers, datatypes)]
+        conn_handler.execute(
+            "CREATE TABLE qiita.{0} (sample_id varchar, study_id bigint, "
+            "{1})".format(table_name, ', '.join(column_datatype)))
+
+        # Insert values on custom table
+        values = _as_python_types(md_template, headers)
+        values.insert(0, [study.id] * num_samples)
+        values.insert(0, sample_ids)
+        values = [v for v in zip(*values)]
+        conn_handler.executemany(
+            "INSERT INTO qiita.{0} (sample_id, study_id, {1}) "
+            "VALUES (%s, %s, {2})".format(table_name, ", ".join(headers),
+                                          ', '.join(["%s"] * len(headers))),
+            values)
+
+        return cls(raw_data.id)

@@ -40,29 +40,31 @@ class JobTest(TestCase):
             rmtree(item)
 
     def test_exists(self):
+        """tests that existing job returns true"""
         # need to insert matching sample data into analysis 2
         self.conn_handler.execute(
             "DELETE FROM qiita.analysis_sample WHERE analysis_id = 2")
         self.conn_handler.execute(
-            "INSERT INTO qiita.analysis_sample (analysis_id, "
-            "processed_data_id, sample_id) VALUES (2,1,'SKB8.640193'), "
-            "(2,1,'SKD8.640184'), (2,1,'SKB7.640196'), (2,1,'SKM9.640192'),"
-            "(2,1,'SKM4.640180')")
-        """tests that existing job returns true"""
+            "INSERT INTO qiita.analysis_sample "
+            "(analysis_id, processed_data_id, sample_id, study_id) VALUES "
+            "(2, 1,'SKB8.640193', 1), (2, 1,'SKD8.640184', 1), "
+            "(2, 1,'SKB7.640196', 1), (2, 1,'SKM9.640192', 1), "
+            "(2, 1,'SKM4.640180', 1)")
         self.assertTrue(Job.exists("18S", "Beta Diversity",
                                    {"--otu_table_fp": 1,
                                     "--mapping_fp": 1}, Analysis(1)))
 
     def test_exists_return_jobid(self):
+        """tests that existing job returns true"""
         # need to insert matching sample data into analysis 2
         self.conn_handler.execute(
             "DELETE FROM qiita.analysis_sample WHERE analysis_id = 2")
         self.conn_handler.execute(
-            "INSERT INTO qiita.analysis_sample (analysis_id, "
-            "processed_data_id, sample_id) VALUES (2,1,'SKB8.640193'), "
-            "(2,1,'SKD8.640184'), (2,1,'SKB7.640196'), (2,1,'SKM9.640192'),"
-            "(2,1,'SKM4.640180')")
-        """tests that existing job returns true"""
+            "INSERT INTO qiita.analysis_sample "
+            "(analysis_id, processed_data_id, sample_id, study_id) VALUES "
+            "(2, 1,'SKB8.640193', 1), (2, 1,'SKD8.640184', 1), "
+            "(2, 1,'SKB7.640196', 1), (2, 1,'SKM9.640192', 1), "
+            "(2, 1,'SKM4.640180', 1)")
         exists, jid = Job.exists("18S", "Beta Diversity",
                                  {"--otu_table_fp": 1, "--mapping_fp": 1},
                                  Analysis(1), return_existing=True)
@@ -70,16 +72,17 @@ class JobTest(TestCase):
         self.assertEqual(jid, Job(2))
 
     def test_exists_noexist_options(self):
+        """tests that non-existant job with bad options returns false"""
         # need to insert matching sample data into analysis 2
         # makes sure failure is because options and not samples
         self.conn_handler.execute(
             "DELETE FROM qiita.analysis_sample WHERE analysis_id = 2")
         self.conn_handler.execute(
-            "INSERT INTO qiita.analysis_sample (analysis_id, "
-            "processed_data_id, sample_id) VALUES (2,1,'SKB8.640193'), "
-            "(2,1,'SKD8.640184'), (2,1,'SKB7.640196'), (2,1,'SKM9.640192'),"
-            "(2,1,'SKM4.640180')")
-        """tests that non-existant job with bad options returns false"""
+            "INSERT INTO qiita.analysis_sample "
+            "(analysis_id, processed_data_id, sample_id, study_id) VALUES "
+            "(2, 1,'SKB8.640193', 1), (2, 1,'SKD8.640184', 1), "
+            "(2, 1,'SKB7.640196', 1), (2, 1,'SKM9.640192', 1), "
+            "(2, 1,'SKM4.640180', 1)")
         self.assertFalse(Job.exists("18S", "Beta Diversity",
                                     {"--otu_table_fp": 1,
                                      "--mapping_fp": 27}, Analysis(1)))
@@ -219,10 +222,11 @@ class JobTest(TestCase):
         """Makes sure creation doesn't duplicate a job by returning existing"""
         Analysis.create(User("demo@microbio.me"), "new", "desc")
         self.conn_handler.execute(
-            "INSERT INTO qiita.analysis_sample (analysis_id, "
-            "processed_data_id, sample_id) VALUES (3,1,'SKB8.640193'), "
-            "(3,1,'SKD8.640184'), (3,1,'SKB7.640196'), (3,1,'SKM9.640192'),"
-            "(3,1,'SKM4.640180')")
+            "INSERT INTO qiita.analysis_sample "
+            "(analysis_id, processed_data_id, sample_id, study_id) VALUES "
+            "(3, 1, 'SKB8.640193', 1), (3, 1, 'SKD8.640184', 1), "
+            "(3, 1, 'SKB7.640196', 1), (3, 1, 'SKM9.640192', 1), "
+            "(3, 1, 'SKM4.640180', 1)")
         new = Job.create("18S", "Beta Diversity",
                          {"--otu_table_fp": 1, "--mapping_fp": 1},
                          Analysis(3), return_existing=True)
