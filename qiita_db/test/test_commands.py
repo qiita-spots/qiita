@@ -160,7 +160,7 @@ class TestLoadPrepTemplateFromCmd(TestCase):
     def test_load_prep_template_from_cmd(self):
         """Correctly adds a prep template to the DB"""
         fh = StringIO(self.pt_contents)
-        st = load_prep_template_from_cmd(fh, self.raw_data.id)
+        st = load_prep_template_from_cmd(fh, self.raw_data.id, 1)
         self.assertEqual(st.id, self.raw_data.id)
 
 

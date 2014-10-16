@@ -131,7 +131,7 @@ def load_sample_template_from_cmd(sample_temp_path, study_id):
     return SampleTemplate.create(sample_temp, Study(study_id))
 
 
-def load_prep_template_from_cmd(sample_temp_path, study_id):
+def load_prep_template_from_cmd(sample_temp_path, raw_data_id, study_id):
     r"""Adds a prep template to the database
 
     Parameters
@@ -143,7 +143,8 @@ def load_prep_template_from_cmd(sample_temp_path, study_id):
     """
     prep_temp = pd.DataFrame.from_csv(sample_temp_path, sep='\t',
                                       infer_datetime_format=True)
-    return PrepTemplate.create(prep_temp, RawData(study_id))
+    return PrepTemplate.create(prep_temp, RawData(raw_data_id),
+                               Study(study_id))
 
 
 def load_raw_data_cmd(filepaths, filepath_types, filetype, study_ids,
