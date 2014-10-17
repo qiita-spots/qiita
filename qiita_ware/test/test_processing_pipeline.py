@@ -8,11 +8,13 @@
 
 from __future__ import division
 from unittest import TestCase, main
-from tempfile import mkdtemp, mkstemp
+from tempfile import mkdtemp
 from os.path import exists, join
-from os import remove, close
+from os import remove
 from functools import partial
 from shutil import rmtree
+
+import pandas as pd
 
 from qiita_core.util import qiita_test_checker
 from qiita_db.util import get_db_files_base_dir
@@ -41,14 +43,68 @@ class ProcessingPipelineTests(TestCase):
             if exists(dp):
                 rmtree(dp)
 
-    def test_get_qiime_minimal_mapping(self):
+    def test_get_qiime_minimal_mapping_single(self):
         prep_template = PrepTemplate(1)
-        fd, out_fp = mkstemp(prefix="prep_template_1", suffix=".txt")
-        close(fd)
+        out_dir = mkdtemp()
 
-        _get_qiime_minimal_mapping(prep_template, out_fp)
-        with open(out_fp, "U") as f:
+        obs_fps = _get_qiime_minimal_mapping(prep_template, out_dir)
+        exp_fps = [join(out_dir, 's_G1_L001_sequences_MMF.txt')]
+
+        # Check that the returned list is as expected
+        self.assertEqual(obs_fps, exp_fps)
+        # Check that the file exists
+        self.assertTrue(exists(exp_fps[0]))
+        # Check the contents of the file
+        with open(exp_fps[0], "U") as f:
             self.assertEqual(f.read(), EXP_PREP)
+
+    def test_get_qiime_minimal_mapping_multiple(self):
+        # We need to create a prep template in which we have different run
+        # prefix values, so we can test this case
+        metadata_dict = {
+            'SKB8.640193': {'center_name': 'ANL',
+                            'center_project_name': 'Test Project',
+                            'ebi_submission_accession': None,
+                            'EMP_status': 'EMP',
+                            'str_column': 'Value for sample 1',
+                            'linkerprimersequence': 'GTGCCAGCMGCCGCGGTAA',
+                            'barcodesequence': 'GTCCGCAAGTTA',
+                            'run_prefix': "s_G1_L001_sequences"},
+            'SKD8.640184': {'center_name': 'ANL',
+                            'center_project_name': 'Test Project',
+                            'ebi_submission_accession': None,
+                            'EMP_status': 'EMP',
+                            'str_column': 'Value for sample 2',
+                            'linkerprimersequence': 'GTGCCAGCMGCCGCGGTAA',
+                            'barcodesequence': 'CGTAGAGCTCTC',
+                            'run_prefix': "s_G1_L001_sequences"},
+            'SKB7.640196': {'center_name': 'ANL',
+                            'center_project_name': 'Test Project',
+                            'ebi_submission_accession': None,
+                            'EMP_status': 'EMP',
+                            'str_column': 'Value for sample 3',
+                            'linkerprimersequence': 'GTGCCAGCMGCCGCGGTAA',
+                            'barcodesequence': 'CCTCTGAGAGCT',
+                            'run_prefix': "s_G1_L002_sequences"}
+            }
+        md_template = pd.DataFrame.from_dict(metadata_dict, orient='index')
+        prep_template = PrepTemplate.create(md_template, RawData(2), Study(1))
+
+        out_dir = mkdtemp()
+
+        obs_fps = sorted(_get_qiime_minimal_mapping(prep_template, out_dir))
+        exp_fps = sorted([join(out_dir, 's_G1_L001_sequences_MMF.txt'),
+                          join(out_dir, 's_G1_L002_sequences_MMF.txt')])
+
+        # Check that the returned list is as expected
+        self.assertEqual(obs_fps, exp_fps)
+        # Check that the file exists
+        for fp in exp_fps:
+            self.assertTrue(exists(fp))
+        # Check the contents of the file
+        for fp, contents in zip(exp_fps, [EXP_PREP_1, EXP_PREP_2]):
+            with open(fp, "U") as f:
+                self.assertEqual(f.read(), contents)
 
     def test_get_preprocess_fastq_cmd(self):
         raw_data = RawData(1)
@@ -158,6 +214,15 @@ EXP_PREP = (
     "SKM7.640188\tCGCCGGTAATCT\tGTGCCAGCMGCCGCGGTAA\tQiita MMF\n"
     "SKM8.640201\tCCGATGCCTTGA\tGTGCCAGCMGCCGCGGTAA\tQiita MMF\n"
     "SKM9.640192\tAGCAGGCACGAA\tGTGCCAGCMGCCGCGGTAA\tQiita MMF\n")
+
+EXP_PREP_1 = (
+    "#SampleID\tBarcodeSequence\tLinkerPrimerSequence\tDescription\n"
+    "SKB8.640193\tGTCCGCAAGTTA\tGTGCCAGCMGCCGCGGTAA\tQiita MMF\n"
+    "SKD8.640184\tCGTAGAGCTCTC\tGTGCCAGCMGCCGCGGTAA\tQiita MMF\n")
+
+EXP_PREP_2 = (
+    "#SampleID\tBarcodeSequence\tLinkerPrimerSequence\tDescription\n"
+    "SKB7.640196\tCCTCTGAGAGCT\tGTGCCAGCMGCCGCGGTAA\tQiita MMF\n")
 
 if __name__ == '__main__':
     main()

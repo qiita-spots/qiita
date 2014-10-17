@@ -56,7 +56,8 @@ from .util import (exists_table, get_table_cols, get_emp_status,
 
 
 TARGET_GENE_DATA_TYPES = ['16S', '18S', 'ITS']
-REQUIRED_TARGET_GENE_COLS = {'barcodesequence', 'linkerprimersequence'}
+REQUIRED_TARGET_GENE_COLS = {'barcodesequence', 'linkerprimersequence',
+                             'run_prefix'}
 RENAME_COLS_DICT = {'barcode': 'barcodesequence',
                     'primer': 'linkerprimersequence'}
 

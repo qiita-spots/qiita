@@ -54,11 +54,11 @@ class ReferenceTests(TestCase):
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.filepath WHERE filepath_id=16 or "
             "filepath_id=17 or filepath_id=18")
-        exp_seq = join(self.db_dir, "%s_%s_%s" % (self.name, self.version,
+        exp_seq = join('reference', "%s_%s_%s" % (self.name, self.version,
                                                   basename(self.seqs_fp)))
-        exp_tax = join(self.db_dir, "%s_%s_%s" % (self.name, self.version,
+        exp_tax = join('reference', "%s_%s_%s" % (self.name, self.version,
                                                   basename(self.tax_fp)))
-        exp_tree = join(self.db_dir, "%s_%s_%s" % (self.name, self.version,
+        exp_tree = join('reference', "%s_%s_%s" % (self.name, self.version,
                                                    basename(self.tree_fp)))
         exp = [[16, exp_seq, 10, '0', 1],
                [17, exp_tax, 11, '0', 1],

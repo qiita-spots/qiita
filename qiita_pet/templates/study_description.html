@@ -16,6 +16,11 @@
         <b>Split library status:</b> {% raw sls %}
         <br/>
       {% end %}
+      {% if sls and sls.startswith('success') %}
+        <b>EBI status:</b> {{ebi_status}}
+        <br/>
+      {% end %}
+
       <!-- {'mixs_compliant': True,
       'reprocess': False,
       'emp_person_id': None,
@@ -66,6 +71,15 @@
     </td>
   </tr>
   <tr><td colspan="2"><br/></td></tr>
+  <tr><td colspan="2">
+    Investigation type:
+    <select name="investigation-type" id="investigation-type">
+      {% for i in investigation_types %}
+        <option value="{{i}}">{{i}}</option>
+      {% end %}
+    </select>
+  </td></tr>
+  <tr><td colspan="2"><br/></td></tr>
   <tr>
     <td colspan="2"><input type="button" class="btn btn-primary" value="Process files" onclick="process_files();"></td>
   </tr>
@@ -87,7 +101,7 @@
       {% elif sls.startswith('preprocessing') %}
         <font color="red">Split library is running</font>
       {% elif sls.startswith('success') %}
-        <font color="red">EBI!</font>
+        <a class="btn btn-primary" href="/ebi_submission/{{study_id}}">Submit EBI - Good luck!</a>
       {% end %}
     </td>
   </tr>
@@ -112,7 +126,6 @@
   var meta = { fileType: [] };
   var maxFileSize = {{max_upload_size}}; // in Gb
   var filetypes = {{filetypes}}
-
   uploader = (function($){
       return (new ResumableUploader(meta, $('.resumable-browse-metadata'), $('.resumable-drop-metadata'), $('.progress-metadata'), $('.uploader-list-metadata'), $('.file-edit-container-metadata'), maxFileSize, "{{study_id}}", filetypes));
     })(jQuery);
@@ -201,7 +214,11 @@
           .append($("<input>")
             .attr("type", "hidden")
             .attr("name", "reverse_seqs")
-            .attr("value", required_values['reverse seqs']));
+            .attr("value", required_values['reverse seqs']))
+          .append($("<input>")
+            .attr("type", "hidden")
+            .attr("name", "investigation-type")
+            .attr("value", $("#investigation-type").val()));
         $("body").append(form);
         form.submit();
       }

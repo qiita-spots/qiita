@@ -10,7 +10,7 @@ from qiita_ware.wrapper import ParallelWrapper
 from sys import stderr
 
 
-def _get_qiime_minimal_mapping(prep_template, output_fp):
+def _get_qiime_minimal_mapping(prep_template, out_dir):
     """Generates a minimal QIIME-compliant mapping file for split libraries
 
     The columns of the generated file are, in order: SampleID, BarcodeSequence,
@@ -21,9 +21,16 @@ def _get_qiime_minimal_mapping(prep_template, output_fp):
     ----------
     prep_template : PrepTemplate
         The prep template from which we need to generate the minimal mapping
-    output_fp : str
-        Path to the output file
+    out_dir : str
+        Path to the output directory
+
+    Returns
+    -------
+    list of str
+        The paths to the qiime minimal mapping files
     """
+    from functools import partial
+    from os.path import join
     import pandas as pd
     from qiita_ware.util import template_to_dict
 
@@ -39,15 +46,21 @@ def _get_qiime_minimal_mapping(prep_template, output_fp):
     pt['Description'] = pd.Series(['Qiita MMF'] * len(pt.index),
                                   index=pt.index)
 
-    # We make sure that the headers file starts with #SampleID
-    pt.index.name = "#SampleID"
-
     # We ensure the order of the columns as QIIME is expecting
     cols = ['BarcodeSequence', 'LinkerPrimerSequence', 'Description']
-    pt = pt[cols]
 
-    # Finally we store the file in the desired path, in tab-separated format
-    pt.to_csv(output_fp, sep="\t")
+    # If the study has more than 1 lane, we should generate a qiita MMF for
+    # each of the lanes. We know how to split the prep template based on
+    # the run_prefix column
+    output_fps = []
+    path_builder = partial(join, out_dir)
+    for prefix, df in pt.groupby('run_prefix'):
+        df = df[cols]
+        out_fp = path_builder("%s_MMF.txt" % prefix)
+        output_fps.append(out_fp)
+        df.to_csv(out_fp, index_label="#SampleID", sep='\t')
+
+    return output_fps
 
 
 def _get_preprocess_fastq_cmd(raw_data, params):
@@ -74,8 +87,7 @@ def _get_preprocess_fastq_cmd(raw_data, params):
         If the number of raw sequences an raw barcode files are not the same
         If the raw data object does not have any sequence file associated
     """
-    from tempfile import mkstemp, mkdtemp
-    from os import close
+    from tempfile import mkdtemp
 
     from qiita_core.qiita_settings import qiita_config
     from qiita_db.metadata_template import PrepTemplate
@@ -107,12 +119,13 @@ def _get_preprocess_fastq_cmd(raw_data, params):
     # Instantiate the prep template
     prep_template = PrepTemplate(raw_data.id)
 
-    # The prep template should be written to a temporary file
-    fd, prep_fp = mkstemp(dir=qiita_config.working_dir,
-                          prefix="qiita_prep_%s" % prep_template.id,
-                          suffix='.txt')
-    close(fd)
-    _get_qiime_minimal_mapping(prep_template, prep_fp)
+    # The minimal QIIME mapping files should be written to a directory,
+    # so QIIME can consume them
+    prep_dir = mkdtemp(dir=qiita_config.working_dir,
+                       prefix='MMF_%s' % prep_template.id)
+
+    # Get the Minimal Mapping Files
+    mapping_fps = _get_qiime_minimal_mapping(prep_template, prep_dir)
 
     # Create a temporary directory to store the split libraries output
     output_dir = mkdtemp(dir=qiita_config.working_dir, prefix='slq_out')
@@ -120,15 +133,20 @@ def _get_preprocess_fastq_cmd(raw_data, params):
     # Add any other parameter needed to split libraries fastq
     params_str = params.to_str()
 
+    # We need to sort the filepaths to make sure that each lane's file is in
+    # the same order, so they match when passed to split_libraries_fastq.py
+    # All files should be prefixed with run_prefix, so the ordering is
+    # ensured to be correct
     forward_seqs = sorted(forward_seqs)
     reverse_seqs = sorted(reverse_seqs)
     barcode_fps = sorted(barcode_fps)
+    mapping_fps = sorted(mapping_fps)
 
     # Create the split_libraries_fastq.py command
-    cmd = ("split_libraries_fastq.py --store_demultiplexed_fastq -i %s -b %s "
-           "-m %s -o %s %s"
-           % (','.join(forward_seqs), ','.join(barcode_fps), prep_fp,
-              output_dir, params_str))
+    cmd = str("split_libraries_fastq.py --store_demultiplexed_fastq -i %s -b "
+              "%s -m %s -o %s %s"
+              % (','.join(forward_seqs), ','.join(barcode_fps),
+                 ','.join(mapping_fps), output_dir, params_str))
     return (cmd, output_dir)
 
 

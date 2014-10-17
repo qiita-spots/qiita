@@ -12,6 +12,7 @@ from __future__ import division
 from tornado.web import authenticated, HTTPError
 from wtforms import (Form, StringField, SelectField, BooleanField,
                      SelectMultipleField, TextAreaField, validators)
+import pandas as pd
 
 from os import listdir
 from os.path import exists, join, basename
@@ -30,11 +31,8 @@ from qiita_db.user import User
 from qiita_db.util import get_study_fp, convert_to_id, get_filepath_types
 from qiita_db.ontology import Ontology
 from qiita_db.data import PreprocessedData
-from qiita_db.commands import (load_sample_template_from_cmd,
-                               load_prep_template_from_cmd,
-                               load_raw_data_cmd)
 from qiita_db.exceptions import (QiitaDBColumnError, QiitaDBExecutionError,
-                                 QiitaDBDuplicateError)
+                                 QiitaDBDuplicateError, QiitaDBUnknownIDError)
 from qiita_db.data import RawData
 
 
@@ -42,9 +40,6 @@ class CreateStudyForm(Form):
     study_title = StringField('Study Title', [validators.required()])
     study_alias = StringField('Study Alias', [validators.required()])
     pubmed_id = StringField('PubMed ID')
-    investigation_type = SelectField(
-        'Investigation Type',
-        [validators.required()], coerce=lambda x: x)
 
     # TODO:This can be filled from the database
     # in oracle, this is in controlled_vocabs (ID 1),
@@ -128,7 +123,6 @@ class StudyDescriptionHandler(BaseHandler):
 
         # getting the raw_data
         study = Study(study_id)
-
         valid_ssb = []
         for rdi in study.raw_data():
             rd = RawData(rdi)
@@ -142,19 +136,31 @@ class StudyDescriptionHandler(BaseHandler):
             prep_template_id = valid_ssb[0]
             split_libs_status = RawData(
                 prep_template_id).preprocessing_status.replace('\n', '<br/>')
+
+            # getting EBI status
+            sppd = study.preprocessed_data()
+            if sppd:
+                ebi_status = PreprocessedData(
+                    sppd[-1]).submitted_to_insdc_status()
+            else:
+                ebi_status = None
         else:
             prep_template_id = None
             split_libs_status = None
+            ebi_status = None
 
         valid_ssb = ','.join(map(str, valid_ssb))
-
         ssb = len(valid_ssb) > 0
+
+        # getting the ontologies
+        ena = Ontology(convert_to_id('ENA', 'ontology'))
 
         self.render('study_description.html', user=self.current_user,
                     study_title=study.title, study_info=study.info,
                     study_id=study_id, files=fs, ssb=ssb, vssb=valid_ssb,
                     max_upload_size=qiita_config.max_upload_size,
                     sls=split_libs_status, filetypes=fts,
+                    investigation_types=ena.terms, ebi_status=ebi_status,
                     prep_template_id=prep_template_id, msg=msg)
 
     @authenticated
@@ -168,16 +174,23 @@ class StudyDescriptionHandler(BaseHandler):
         barcodes = self.get_argument('barcodes', "").split(',')
         forward_seqs = self.get_argument('forward_seqs', "").split(',')
         reverse_seqs = self.get_argument('reverse_seqs', "").split(',')
+        investigation_type = self.get_argument('investigation-type', "")
 
         if raw_sample_template is None or raw_prep_template is None:
-            raise HTTPError(403, "This function needs a sample template: "
+            raise HTTPError(400, "This function needs a sample template: "
                             "%s and a prep template: %s" %
                             (raw_sample_template, raw_prep_template))
         fp_rsp = join(get_study_fp(study_id), raw_sample_template)
         fp_rpt = join(get_study_fp(study_id), raw_prep_template)
-        if not exists(fp_rsp) or not exists(fp_rpt):
-            raise HTTPError(403, "One of these files doesn't exist: %s, %s",
-                            (fp_rsp, fp_rpt))
+        if not exists(fp_rsp):
+            raise HTTPError(400, "This file doesn't exist: %s" % fp_rsp)
+        if not exists(fp_rpt):
+            raise HTTPError(400, "This file doesn't exist: %s" % fp_rpt)
+
+        ena = Ontology(convert_to_id('ENA', 'ontology'))
+        if (not investigation_type or investigation_type == "" or
+                investigation_type not in ena.terms):
+            raise HTTPError(400, "You need to have an investigation type")
 
         study_id = int(study_id)
         study = Study(study_id)
@@ -191,7 +204,8 @@ class StudyDescriptionHandler(BaseHandler):
 
         try:
             # inserting sample template
-            load_sample_template_from_cmd(fp_rsp, study_id)
+            SampleTemplate.create(pd.DataFrame.from_csv(
+                fp_rsp, sep="\t", infer_datetime_format=True), study)
         except (TypeError, QiitaDBColumnError, QiitaDBExecutionError,
                 QiitaDBDuplicateError, IOError), e:
             msg = ('<b>An error occurred parsing the sample template: '
@@ -201,30 +215,28 @@ class StudyDescriptionHandler(BaseHandler):
 
         # inserting raw data
         fp = get_study_fp(study_id)
-        filepaths, filepath_types = [], []
+        filepaths = []
         if barcodes and barcodes[0] != "":
-            filepaths.extend([join(fp, t) for t in barcodes])
-            filepath_types.extend(["raw_barcodes"]*len(barcodes))
+            filepaths.extend([(join(fp, t), "raw_barcodes") for t in barcodes])
         if forward_seqs and forward_seqs[0] != "":
-            filepaths.extend([join(fp, t) for t in forward_seqs])
-            filepath_types.extend(["raw_forward_seqs"]*len(forward_seqs))
+            filepaths.extend([(join(fp, t), "raw_forward_seqs")
+                              for t in forward_seqs])
         if reverse_seqs and reverse_seqs[0] != "":
-            filepaths.extend([join(fp, t) for t in reverse_seqs])
-            filepath_types.extend(["raw_reverse_seqs"]*len(reverse_seqs))
+            filepaths.extend([(join(fp, t), "raw_reverse_seqs")
+                              for t in reverse_seqs])
 
-        # currently hardcoding the filetypes and data_type, see issue
+        # currently hardcoding the filetypes, see issue
         # https://github.com/biocore/qiita/issues/391
-        filetype = 'FASTQ'
-        data_type = '16S'
+        filetype = 2
 
         try:
             # currently hardcoding the study_ids to be an array but not sure
             # if this will ever be an actual array via the web interface
-            raw_data = load_raw_data_cmd(filepaths, filepath_types, filetype,
-                                         [study_id], data_type)
+            raw_data = RawData.create(filetype, filepaths, [study], 1,
+                                      investigation_type)
         except (TypeError, QiitaDBColumnError, QiitaDBExecutionError,
                 IOError), e:
-            fps = ', '.join([basename(f) for f in filepaths])
+            fps = ', '.join([basename(f[0]) for f in filepaths])
             msg = ('<b>An error occurred parsing the raw files: '
                    '%s</b><br/>%s' % (basename(fps), e))
             self.display_template(int(study_id), msg)
@@ -232,11 +244,12 @@ class StudyDescriptionHandler(BaseHandler):
 
         try:
             # inserting prep templates
-            load_prep_template_from_cmd(fp_rpt, raw_data.id)
+            PrepTemplate.create(pd.DataFrame.from_csv(
+                fp_rpt, sep="\t", infer_datetime_format=True), raw_data, study)
         except (TypeError, QiitaDBColumnError, QiitaDBExecutionError,
                 IOError), e:
             msg = ('<b>An error occurred parsing the prep template: '
-                   '%s</b><br/>%s' % (basename(fp_rsp), e))
+                   '%s</b><br/>%s' % (basename(fp_rpt), e))
             self.display_template(int(study_id), msg)
             return
 
@@ -259,10 +272,6 @@ class CreateStudyHandler(BaseHandler):
 
         creation_form.lab_person.choices = choices
         creation_form.principal_investigator.choices = choices
-
-        ena = Ontology(convert_to_id('ENA', 'ontology'))
-        ena_terms = ena.terms
-        creation_form.investigation_type.choices = [(t, t) for t in ena_terms]
 
         # TODO: set the choices attributes on the environmental_package field
         self.render('create_study.html', user=self.current_user,
@@ -339,6 +348,17 @@ class CreateStudyHandler(BaseHandler):
         self.redirect('/')
 
 
+class CreateStudyAJAX(BaseHandler):
+    @authenticated
+    def get(self):
+        study_title = self.get_argument('study_title', None)
+        if study_title is None:
+            self.write('False')
+            return
+
+        self.write('False' if Study.exists(study_title) else 'True')
+
+
 class MetadataSummaryHandler(BaseHandler):
     @authenticated
     def get(self, arguments):
@@ -352,37 +372,76 @@ class MetadataSummaryHandler(BaseHandler):
 
 
 class EBISubmitHandler(BaseHandler):
-    @authenticated
-    def get(self, study_id):
-        study = Study(int(study_id))
-        st = SampleTemplate(study.sample_template)
+    def display_template(self, study, sample_template, preprocessed_data,
+                         error):
+        """Simple function to avoid duplication of code"""
 
-        # TODO: only supporting a single prep template right now, which I think
-        # is what indexing the first item here is equiv to
-        raw_data_id = study.preprocessed_data()[0]
-
-        preprocessed_data = PreprocessedData(raw_data_id)
-
-        stats = [('Number of samples', len(st)),
-                 ('Number of metadata headers', len(st.metadata_headers()))]
-
-        demux = [path for path, ftype in preprocessed_data.get_filepaths()
-                 if ftype == 'preprocessed_demux']
-
-        if not len(demux):
-            error = ("Study does not appear to have demultiplexed sequences "
-                     "associated")
-        elif len(demux) > 1:
-            error = ("Study appears to have multiple demultiplexed files!")
+        if not study:
+            study_title = 'This study DOES NOT exist'
+            study_id = 'This study DOES NOT exist'
         else:
-            error = ""
-            demux_file = demux[0]
-            demux_file_stats = demux_stats(demux_file)
-            stats.append(('Number of sequences', demux_file_stats.n))
+            study_title = study.title
+            study_id = study.id
+
+        if not error:
+            stats = [('Number of samples', len(sample_template)),
+                     ('Number of metadata headers',
+                      len(sample_template.metadata_headers()))]
+
+            demux = [path for path, ftype in preprocessed_data.get_filepaths()
+                     if ftype == 'preprocessed_demux']
+
+            if not len(demux):
+                error = ("Study does not appear to have demultiplexed "
+                         "sequences associated")
+            elif len(demux) > 1:
+                error = ("Study appears to have multiple demultiplexed files!")
+            else:
+                error = ""
+                demux_file = demux[0]
+                demux_file_stats = demux_stats(demux_file)
+                stats.append(('Number of sequences', demux_file_stats.n))
+
+            error = None
+        else:
+            stats = []
 
         self.render('ebi_submission.html', user=self.current_user,
-                    study_title=study.title, stats=stats, error=error,
-                    study_id=study.id)
+                    study_title=study_title, stats=stats, error=error,
+                    study_id=study_id)
+
+    @authenticated
+    def get(self, study_id):
+        preprocessed_data = None
+        sample_template = None
+        error = None
+
+        # this could be done with exists but it works on the title and
+        # we do not have that
+        try:
+            study = Study(int(study_id))
+        except (QiitaDBUnknownIDError):
+            study = None
+            error = 'There is no study %s' % study_id
+
+        if study:
+            try:
+                sample_template = SampleTemplate(study.sample_template)
+            except:
+                sample_template = None
+                error = 'There is no sample template for study: %s' % study_id
+
+            try:
+                # TODO: only supporting a single prep template right now, which
+                # should be the last item
+                preprocessed_data = PreprocessedData(
+                    study.preprocessed_data()[-1])
+            except:
+                preprocessed_data = None
+                error = ('There is no preprocessed data for study: '
+                         '%s' % study_id)
+
+        self.display_template(study, sample_template, preprocessed_data, error)
 
     @authenticated
     def post(self, study_id):
@@ -391,4 +450,4 @@ class EBISubmitHandler(BaseHandler):
 
         self.render('compute_wait.html', user=self.current_user,
                     job_id=job_id, title='EBI Submission',
-                    completion_redirect='/compute_complete/')
+                    completion_redirect='/compute_complete/%s/' % job_id)

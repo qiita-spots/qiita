@@ -155,9 +155,21 @@
     $( "#{{creation_form.lab_person.id}}" ).combobox();
   });
 
-$(function() {
+$(document).ready(function() {
     $("#new_person_div").hide();
 });
+
+function submit_create_study() {
+    $.get('/check_study/', {study_title: $("#study_title")[0].value})
+        .done(function(data) {
+            if (data == 'True') {
+                $("#create_study").submit();
+            }
+            else {
+                alert("Study '" + $("#study_title")[0].value + "' already exists! Please choose a different name.");
+            };
+        });
+};
 
 counter = -1;
 
@@ -202,8 +214,8 @@ function add_new_person(name, affiliation, email, phone, address) {
 <br />
 <form id="create_study" name="create_study" action='/study/create/' method="POST">
 <table>
-{% for form_item in creation_form %}
-    {% set kwargs = {'class_': 'form-control', 'required': form_item.flags.required} %}
+{% for idx, form_item in enumerate(creation_form, start=1) %}
+    {% set kwargs = {'tabindex': idx, 'class_': 'form-control', 'required': form_item.flags.required} %}
     {% set additional_info = '' %}
     {# form-item-specific rendering #}
     {% if form_item.label.text == 'Environmental Packages' %}
@@ -307,7 +319,7 @@ function add_new_person(name, affiliation, email, phone, address) {
   </tr>
   <tr>
     <td>
-      <a name="bot"><input type='submit' class='btn btn-primary'>
+      <a name="bot"><input type='button' class='btn btn-primary' value="Create Study" onclick='submit_create_study();'>
     </td>
   </tr>
 </table>
