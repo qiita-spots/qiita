@@ -12,7 +12,6 @@ from __future__ import division
 from tornado.web import authenticated, HTTPError
 from wtforms import (Form, StringField, SelectField, BooleanField,
                      SelectMultipleField, TextAreaField, validators)
-import pandas as pd
 
 from os import listdir
 from os.path import exists, join, basename
@@ -25,7 +24,8 @@ from qiita_ware.context import submit
 from qiita_ware.util import metadata_stats_from_sample_and_prep_templates
 from qiita_ware.demux import stats as demux_stats
 from qiita_ware.dispatchable import submit_to_ebi
-from qiita_db.metadata_template import SampleTemplate, PrepTemplate
+from .metadata_template import (SampleTemplate, PrepTemplate,
+                                load_template_to_dataframe)
 from qiita_db.study import Study, StudyPerson
 from qiita_db.user import User
 from qiita_db.util import get_study_fp, convert_to_id, get_filepath_types
@@ -204,8 +204,7 @@ class StudyDescriptionHandler(BaseHandler):
 
         try:
             # inserting sample template
-            SampleTemplate.create(pd.DataFrame.from_csv(
-                fp_rsp, sep="\t", infer_datetime_format=True), study)
+            SampleTemplate.create(load_template_to_dataframe(fp_rsp), study)
         except (TypeError, QiitaDBColumnError, QiitaDBExecutionError,
                 QiitaDBDuplicateError, IOError), e:
             msg = ('<b>An error occurred parsing the sample template: '
@@ -244,8 +243,8 @@ class StudyDescriptionHandler(BaseHandler):
 
         try:
             # inserting prep templates
-            PrepTemplate.create(pd.DataFrame.from_csv(
-                fp_rpt, sep="\t", infer_datetime_format=True), raw_data, study)
+            PrepTemplate.create(load_template_to_dataframe(fp_rpt), raw_data,
+                                study)
         except (TypeError, QiitaDBColumnError, QiitaDBExecutionError,
                 IOError), e:
             msg = ('<b>An error occurred parsing the prep template: '

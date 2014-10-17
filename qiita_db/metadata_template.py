@@ -1246,3 +1246,22 @@ class PrepTemplate(MetadataTemplate):
             values)
 
         return cls(raw_data.id)
+
+
+def load_template_to_dataframe(fn):
+    """Load a sample or a prep template into a data frame
+
+    Parameters
+    ----------
+    fn : str
+        filename of the template to load
+
+    Returns
+    -------
+    DataFrame
+        Pandas dataframe with the loaded information
+    """
+    template = pd.read_csv(fn, sep='\t', infer_datetime_format=True,
+                           index_col='sample_name', parse_dates=True)
+
+    return template
