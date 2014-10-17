@@ -172,19 +172,19 @@ class TestStudy(TestCase):
         self.conn_handler.execute("UPDATE qiita.study SET study_status_id = 3")
 
     def test_has_access_public(self):
-        self.assertTrue(Study.has_access("admin@foo.bar", 1))
+        self.assertTrue(self.study.has_access("admin@foo.bar"))
 
     def test_has_access_shared(self):
         self._make_private()
-        self.assertTrue(Study.has_access("shared@foo.bar", 1))
+        self.assertTrue(self.study.has_access("shared@foo.bar"))
 
     def test_has_access_private(self):
         self._make_private()
-        self.assertTrue(Study.has_access("test@foo.bar", 1))
+        self.assertTrue(self.study.has_access("test@foo.bar"))
 
     def test_has_access_no_access(self):
         self._make_private()
-        self.assertFalse(Study.has_access("admin@foo.bar", 1))
+        self.assertFalse(self.study.has_access("admin@foo.bar"))
 
     def test_get_public(self):
         Study.create(User('test@foo.bar'), 'NOT Identification of the '

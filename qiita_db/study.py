@@ -130,6 +130,7 @@ class Study(QiitaStatusObject):
     processed_data
     add_pmid
     exists
+    has_access
 
     Notes
     -----
@@ -149,31 +150,6 @@ class Study(QiitaStatusObject):
         r"""Perform a check to make sure not setting status away from public
         """
         self._lock_public(conn_handler)
-
-    @classmethod
-    def has_access(cls, user_id, study_id):
-        """Returns whether the given user has access to a study
-
-        Parameters
-        ----------
-        user_id : str
-            User we are checking access for
-        study_id : int
-            Study we are checking access to
-
-        Returns
-        -------
-        bool
-            Whether user has access to study or not
-        """
-        conn_handler = SQLConnectionHandler()
-        # SQL checks over private, public, and shared studies
-        sql = ("SELECT EXISTS(SELECT st.study_id from qiita.{0} st JOIN "
-               "qiita.study_users su ON su.study_id = st.study_id WHERE "
-               "st.study_id = %s AND (su.email = %s OR "
-               "st.email = %s OR st.{0}_status_id = %s))".format(cls._table))
-        return conn_handler.execute_fetchone(
-            sql, (study_id, user_id, user_id, 2))[0]
 
     @classmethod
     def get_public(cls):
@@ -573,6 +549,29 @@ class Study(QiitaStatusObject):
         sql = ("INSERT INTO qiita.{0}_pmid (study_id, pmid) "
                "VALUES (%s, %s)".format(self._table))
         conn_handler.execute(sql, (self._id, pmid))
+
+    def has_access(self, user_id):
+        """Returns whether the given user has access to the study
+
+        Parameters
+        ----------
+        user_id : str
+            User we are checking access for
+
+        Returns
+        -------
+        bool
+            Whether user has access to study or not
+        """
+        conn_handler = SQLConnectionHandler()
+        # SQL checks over private, public, and shared studies
+        sql = ("SELECT EXISTS(SELECT st.study_id from qiita.{0} st JOIN "
+               "qiita.study_users su ON su.study_id = st.study_id WHERE "
+               "st.study_id = %s AND (su.email = %s OR "
+               "st.email = %s OR st.{0}_status_id = %s))".format(self._table))
+        # MAGIC NUMBER 2: status id for a public study
+        return conn_handler.execute_fetchone(
+            sql, (self._id, user_id, user_id, 2))[0]
 
 
 class StudyPerson(QiitaObject):
