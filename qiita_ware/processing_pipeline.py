@@ -8,6 +8,7 @@
 
 from qiita_ware.wrapper import ParallelWrapper
 from sys import stderr
+from qiita_db.logger import LogEntry
 
 
 def _get_qiime_minimal_mapping(prep_template, out_dir):
@@ -297,3 +298,4 @@ class StudyPreprocessor(ParallelWrapper):
         Need to change the raw_data status to 'failed'
         """
         self.raw_data.preprocessing_status = 'failed: %s' % msg
+        LogEntry.create('Fatal', msg, info={'raw_data': self.raw_data.id})
