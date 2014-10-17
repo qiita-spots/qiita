@@ -3,6 +3,7 @@
 {%block head%}
 <script type="text/javascript">
     window.onload = function() {
+
         var host = 'ws://' + window.location.host + '/consumer/';
         var websocket = new WebSocket(host);
 
@@ -14,7 +15,6 @@
 
         // When the web socket receives an event
         websocket.onmessage = function(evt) {
-
             // ...convert the event's data to JSON
             message = JSON.parse(evt.data);
 
@@ -34,8 +34,7 @@
             }
         };
         websocket.onerror = function(evt) { };
-};
-
+      };
 </script>
 {% end %}
 

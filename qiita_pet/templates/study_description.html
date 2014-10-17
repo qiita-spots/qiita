@@ -16,6 +16,11 @@
         <b>Split library status:</b> {% raw sls %}
         <br/>
       {% end %}
+      {% if sls and sls.startswith('success') %}
+        <b>EBI status:</b> {{ebi_status}}
+        <br/>
+      {% end %}
+
       <!-- {'mixs_compliant': True,
       'reprocess': False,
       'emp_person_id': None,
@@ -96,7 +101,7 @@
       {% elif sls.startswith('preprocessing') %}
         <font color="red">Split library is running</font>
       {% elif sls.startswith('success') %}
-        <font color="red">EBI!</font>
+        <a class="btn btn-primary" href="/ebi_submission/{{study_id}}">Submit EBI - Good luck!</a>
       {% end %}
     </td>
   </tr>
