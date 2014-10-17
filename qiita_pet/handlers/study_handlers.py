@@ -158,16 +158,13 @@ class StudyDescriptionHandler(BaseHandler):
                 if sppd:
                     ebi_status = PreprocessedData(
                         sppd[-1]).submitted_to_insdc_status()
-                
             else:
                 ebi_status = None
                 prep_template_id = None
                 split_libs_status = None
 
             valid_ssb = ','.join(map(str, valid_ssb))
-
             ssb = len(valid_ssb) > 0
-
             study_title = study.title
             study_info = study.info
         else:
