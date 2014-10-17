@@ -108,7 +108,11 @@ def _as_python_types(metadata_map, headers):
     """
     values = []
     for h in headers:
-        if isinstance(metadata_map[h][0], np.generic):
+        # we explicitly check for cases when we have a datetime64 object
+        # because otherwise doing the isinstance check against np.generic fails
+        if isinstance(metadata_map[h].values[0], np.datetime64):
+            values.append(list(map(pd.to_datetime, metadata_map[h])))
+        elif isinstance(metadata_map[h].values[0], np.generic):
             values.append(list(map(np.asscalar, metadata_map[h])))
         else:
             values.append(list(metadata_map[h]))
