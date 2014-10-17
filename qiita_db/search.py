@@ -195,7 +195,7 @@ class QiitaStudySearch(object):
         Metadata column names and string searches are case-sensitive
         """
         study_sql, sample_sql, meta_headers = \
-            self._parse_study_search_string(searchstr)
+            self._parse_study_search_string(searchstr, True)
         conn_handler = SQLConnectionHandler()
         # get all studies containing the metadata headers requested
         study_ids = {x[0] for x in conn_handler.execute_fetchall(study_sql)}
@@ -213,13 +213,16 @@ class QiitaStudySearch(object):
                 results[sid] = study_res
         return results, meta_headers
 
-    def _parse_study_search_string(self, searchstr):
+    def _parse_study_search_string(self, searchstr,
+                                   only_with_processed_data=False):
         """parses string into SQL query for study search
 
         Parameters
         ----------
         searchstr : str
             The string to parse
+        only_with_processed_data : bool
+            Whether or not to return studies with processed data.
 
         Returns
         -------
@@ -321,7 +324,10 @@ class QiitaStudySearch(object):
         else:
             # no study-specific metadata, so need all studies
             sql.append("SELECT study_id FROM qiita.study_sample_columns")
+
         # combine the query
+        if only_with_processed_data:
+            sql.append('SELECT study_id FROM qiita.study_processed_data')
         study_sql = ' INTERSECT '.join(sql)
 
         # create  the sample finding SQL, getting both sample id and values
