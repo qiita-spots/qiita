@@ -39,9 +39,11 @@ from qiita_db.exceptions import (QiitaDBColumnError, QiitaDBExecutionError,
 from qiita_db.data import RawData
 
 
-def _has_access(self, user, study_id):
+def _check_access(self, user, study_id):
         """make sure user has access to the study requested"""
-        return User(user).has_study_access(study_id)
+        if not User(user).has_study_access(study_id):
+            raise HTTPError(403, "User %s does not have access to study %d" %
+                            (user, study_id))
 
 
 class CreateStudyForm(Form):
@@ -128,9 +130,7 @@ class StudyDescriptionHandler(BaseHandler):
             # Study not in database so fail nicely
             msg = "<h1>This study does not exist</h1>"
         else:
-            if not _has_access(self.current_user, study_id):
-                study = None
-                msg = "<h1>You do not have access to this study!</h1>"
+            _check_access(self.current_user, study_id)
 
         if study:
             # processing paths
@@ -392,6 +392,8 @@ class MetadataSummaryHandler(BaseHandler):
     def get(self, arguments):
         st = SampleTemplate(int(self.get_argument('sample_template')))
         pt = PrepTemplate(int(self.get_argument('prep_template')))
+        # templates have same ID as study associated with, so can do check
+        _check_access(self.current_user, st)
 
         stats = metadata_stats_from_sample_and_prep_templates(st, pt)
 
@@ -402,7 +404,13 @@ class MetadataSummaryHandler(BaseHandler):
 class EBISubmitHandler(BaseHandler):
     @authenticated
     def get(self, study_id):
-        study = Study(int(study_id))
+        try:
+            study = Study(int(study_id))
+        except QiitaDBUnknownIDError:
+            raise HTTPError(400, "Study %s does not exist!" % study_id)
+        else:
+            _check_access(self.current_user, study_id)
+
         st = SampleTemplate(study.sample_template)
 
         # TODO: only supporting a single prep template right now, which I think
