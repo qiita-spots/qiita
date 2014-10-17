@@ -118,68 +118,53 @@ class PublicStudiesHandler(BaseHandler):
 class StudyDescriptionHandler(BaseHandler):
     def display_template(self, study_id, msg):
         """Simple function to avoid duplication of code"""
-        # make sure study is accessible and exists
+        # make sure study is accessible and exists, raise error if not
         study = None
         study_id = int(study_id)
         try:
             study = Study(study_id)
         except QiitaDBUnknownIDError:
             # Study not in database so fail nicely
-            msg = "<h1>This study does not exist</h1>"
+            raise HTTPError(500, "Study %d does not exist" % study_id)
         else:
             _check_access(self.current_user, study)
 
-        if study:
-            # processing paths
-            fp = get_study_fp(study_id)
-            if exists(fp):
-                fs = [f for f in listdir(fp)]
-            else:
-                fs = []
-            fts = [k.split('_', 1)[1].replace('_', ' ')
-                   for k in get_filepath_types() if k.startswith('raw_')]
-
-            valid_ssb = []
-            for rdi in study.raw_data():
-                rd = RawData(rdi)
-                ex = PrepTemplate.exists(rd)
-                if ex:
-                    valid_ssb.append(rdi)
-
-            # get the prep template id and force to choose the first one
-            # see issue https://github.com/biocore/qiita/issues/415
-            if valid_ssb:
-                prep_template_id = valid_ssb[0]
-                split_libs_status = RawData(
-                    prep_template_id).preprocessing_status.replace('\n',
-                                                                   '<br/>')
-                # getting EBI status
-                sppd = study.preprocessed_data()
-                if sppd:
-                    ebi_status = PreprocessedData(
-                        sppd[-1]).submitted_to_insdc_status()
-            else:
-                ebi_status = None
-                prep_template_id = None
-                split_libs_status = None
-
-            valid_ssb = ','.join(map(str, valid_ssb))
-            ssb = len(valid_ssb) > 0
-            study_title = study.title
-            study_info = study.info
+        fp = get_study_fp(study_id)
+        if exists(fp):
+            fs = [f for f in listdir(fp)]
         else:
-            # study doesnt exist or user doesnt have access
-            study_title = "ERROR"
-            study_info = {'study_alias': '',
-                          'number_samples_promised': -1,
-                          'number_samples_collected': -1,
-                          'metadata_complete': False}
-            ssb = 0
-            valid_ssb = True
-            split_libs_status = None
-            fts = []
             fs = []
-            prep_template_id = -1
+        fts = [k.split('_', 1)[1].replace('_', ' ')
+               for k in get_filepath_types() if k.startswith('raw_')]
+
+        valid_ssb = []
+        for rdi in study.raw_data():
+            rd = RawData(rdi)
+            ex = PrepTemplate.exists(rd)
+            if ex:
+                valid_ssb.append(rdi)
+
+        # get the prep template id and force to choose the first one
+        # see issue https://github.com/biocore/qiita/issues/415
+        if valid_ssb:
+            prep_template_id = valid_ssb[0]
+            split_libs_status = RawData(
+                prep_template_id).preprocessing_status.replace('\n',
+                                                               '<br/>')
+            # getting EBI status
+            sppd = study.preprocessed_data()
+            if sppd:
+                ebi_status = PreprocessedData(
+                    sppd[-1]).submitted_to_insdc_status()
+        else:
+            ebi_status = None
+            prep_template_id = None
+            split_libs_status = None
+
+        valid_ssb = ','.join(map(str, valid_ssb))
+        ssb = len(valid_ssb) > 0
+        study_title = study.title
+        study_info = study.info
 
         # getting the ontologies
         ena = Ontology(convert_to_id('ENA', 'ontology'))
