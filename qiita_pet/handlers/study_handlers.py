@@ -404,10 +404,11 @@ class MetadataSummaryHandler(BaseHandler):
 class EBISubmitHandler(BaseHandler):
     @authenticated
     def get(self, study_id):
+        study_id = int(study_id)
         try:
-            study = Study(int(study_id))
+            study = Study(study_id)
         except QiitaDBUnknownIDError:
-            raise HTTPError(400, "Study %s does not exist!" % study_id)
+            raise HTTPError(400, "Study %d does not exist!" % study_id)
         else:
             _check_access(self.current_user, study_id)
 
