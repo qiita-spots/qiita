@@ -49,7 +49,7 @@ def _get_qiime_minimal_mapping(prep_template, out_dir):
     # We ensure the order of the columns as QIIME is expecting
     cols = ['BarcodeSequence', 'LinkerPrimerSequence', 'Description']
 
-    # If the study has more than 1 lane, we should generate a Qiita MMF for
+    # If the study has more than 1 lane, we should generate a qiita MMF for
     # each of the lanes. We know how to split the prep template based on
     # the run_prefix column
     output_fps = []
@@ -133,6 +133,10 @@ def _get_preprocess_fastq_cmd(raw_data, params):
     # Add any other parameter needed to split libraries fastq
     params_str = params.to_str()
 
+    # We need to sort the filepaths to make sure that each lane's file is in
+    # the same order, so they match when passed to split_libraries_fastq.py
+    # All files should be prefixed with run_prefix, so the ordering is
+    # ensured to be correct
     forward_seqs = sorted(forward_seqs)
     reverse_seqs = sorted(reverse_seqs)
     barcode_fps = sorted(barcode_fps)
