@@ -180,9 +180,11 @@ def load_sample_template(fp, study):
                 type=click.Path(resolve_path=True, readable=True, exists=True))
 @click.option('--raw_data', required=True, type=int,
               help='Associate the prep template with this raw data')
-def load_prep_template(fp, raw_data):
+@click.option('--study', required=True, type=int,
+              help='Associate the prep template with this study')
+def load_prep_template(fp, raw_data, study):
     """Loads a sample template to the database"""
-    prep_template = load_prep_template_from_cmd(fp, raw_data)
+    prep_template = load_prep_template_from_cmd(fp, raw_data, study)
     print("Prep template successfully added to the database with id %s"
           % prep_template.id)
 
