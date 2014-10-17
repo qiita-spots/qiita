@@ -32,7 +32,7 @@ from qiita_db.util import get_study_fp, convert_to_id, get_filepath_types
 from qiita_db.ontology import Ontology
 from qiita_db.data import PreprocessedData
 from qiita_db.exceptions import (QiitaDBColumnError, QiitaDBExecutionError,
-                                 QiitaDBDuplicateError)
+                                 QiitaDBDuplicateError, QiitaDBUnknownIDError)
 from qiita_db.data import RawData
 
 
@@ -136,9 +136,18 @@ class StudyDescriptionHandler(BaseHandler):
             prep_template_id = valid_ssb[0]
             split_libs_status = RawData(
                 prep_template_id).preprocessing_status.replace('\n', '<br/>')
+
+            # getting EBI status
+            sppd = study.preprocessed_data()
+            if sppd:
+                ebi_status = PreprocessedData(
+                    sppd[-1]).submitted_to_insdc_status()
+            else:
+                ebi_status = None
         else:
             prep_template_id = None
             split_libs_status = None
+            ebi_status = None
 
         valid_ssb = ','.join(map(str, valid_ssb))
         ssb = len(valid_ssb) > 0
@@ -151,7 +160,7 @@ class StudyDescriptionHandler(BaseHandler):
                     study_id=study_id, files=fs, ssb=ssb, vssb=valid_ssb,
                     max_upload_size=qiita_config.max_upload_size,
                     sls=split_libs_status, filetypes=fts,
-                    investigation_types=ena.terms,
+                    investigation_types=ena.terms, ebi_status=ebi_status,
                     prep_template_id=prep_template_id, msg=msg)
 
     @authenticated
@@ -363,37 +372,76 @@ class MetadataSummaryHandler(BaseHandler):
 
 
 class EBISubmitHandler(BaseHandler):
-    @authenticated
-    def get(self, study_id):
-        study = Study(int(study_id))
-        st = SampleTemplate(study.sample_template)
+    def display_template(self, study, sample_template, preprocessed_data,
+                         error):
+        """Simple function to avoid duplication of code"""
 
-        # TODO: only supporting a single prep template right now, which I think
-        # is what indexing the first item here is equiv to
-        raw_data_id = study.preprocessed_data()[0]
-
-        preprocessed_data = PreprocessedData(raw_data_id)
-
-        stats = [('Number of samples', len(st)),
-                 ('Number of metadata headers', len(st.metadata_headers()))]
-
-        demux = [path for path, ftype in preprocessed_data.get_filepaths()
-                 if ftype == 'preprocessed_demux']
-
-        if not len(demux):
-            error = ("Study does not appear to have demultiplexed sequences "
-                     "associated")
-        elif len(demux) > 1:
-            error = ("Study appears to have multiple demultiplexed files!")
+        if not study:
+            study_title = 'This study DOES NOT exist'
+            study_id = 'This study DOES NOT exist'
         else:
-            error = ""
-            demux_file = demux[0]
-            demux_file_stats = demux_stats(demux_file)
-            stats.append(('Number of sequences', demux_file_stats.n))
+            study_title = study.title
+            study_id = study.id
+
+        if not error:
+            stats = [('Number of samples', len(sample_template)),
+                     ('Number of metadata headers',
+                      len(sample_template.metadata_headers()))]
+
+            demux = [path for path, ftype in preprocessed_data.get_filepaths()
+                     if ftype == 'preprocessed_demux']
+
+            if not len(demux):
+                error = ("Study does not appear to have demultiplexed "
+                         "sequences associated")
+            elif len(demux) > 1:
+                error = ("Study appears to have multiple demultiplexed files!")
+            else:
+                error = ""
+                demux_file = demux[0]
+                demux_file_stats = demux_stats(demux_file)
+                stats.append(('Number of sequences', demux_file_stats.n))
+
+            error = None
+        else:
+            stats = []
 
         self.render('ebi_submission.html', user=self.current_user,
-                    study_title=study.title, stats=stats, error=error,
-                    study_id=study.id)
+                    study_title=study_title, stats=stats, error=error,
+                    study_id=study_id)
+
+    @authenticated
+    def get(self, study_id):
+        preprocessed_data = None
+        sample_template = None
+        error = None
+
+        # this could be done with exists but it works on the title and
+        # we do not have that
+        try:
+            study = Study(int(study_id))
+        except (QiitaDBUnknownIDError):
+            study = None
+            error = 'There is no study %s' % study_id
+
+        if study:
+            try:
+                sample_template = SampleTemplate(study.sample_template)
+            except:
+                sample_template = None
+                error = 'There is no sample template for study: %s' % study_id
+
+            try:
+                # TODO: only supporting a single prep template right now, which
+                # should be the last item
+                preprocessed_data = PreprocessedData(
+                    study.preprocessed_data()[-1])
+            except:
+                preprocessed_data = None
+                error = ('There is no preprocessed data for study: '
+                         '%s' % study_id)
+
+        self.display_template(study, sample_template, preprocessed_data, error)
 
     @authenticated
     def post(self, study_id):
@@ -402,4 +450,4 @@ class EBISubmitHandler(BaseHandler):
 
         self.render('compute_wait.html', user=self.current_user,
                     job_id=job_id, title='EBI Submission',
-                    completion_redirect='/compute_complete/')
+                    completion_redirect='/compute_complete/%s/' % job_id)

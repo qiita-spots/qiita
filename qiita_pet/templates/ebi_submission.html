@@ -2,14 +2,14 @@
 {% block content %}
 {% from future.utils import viewitems %}
 
-<h1>Submission Summary for Study {{study_title}}</h1>
+<h1>Submission summary for: <b>{{study_title}}</b></h1>
 
 <form role="form" action="/ebi_submission/{{study_id}}" method="post">
     <div class="panel panel-default">
         <div class="panel-heading">
             The  information below describes information contained in the sample
             and prep templates which will be submitted to EBI.
-        </div> 
+        </div>
 
         {% if error %}
             <div style="color:red;">
@@ -28,6 +28,8 @@
         {% end %}
         </table>
     </div>
-    <td><input type="submit" class="btn btn-primary" value="Submit to EBI"></td>
+    {% if not error %}
+      <td><input type="submit" class="btn btn-primary" value="Submit to EBI"></td>
+    {% end %}
 </form>
 {% end %}
