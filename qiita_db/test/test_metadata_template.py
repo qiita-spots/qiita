@@ -805,21 +805,24 @@ class TestPrepTemplate(TestCase):
                             'EMP_status': 'EMP',
                             'str_column': 'Value for sample 1',
                             'linkerprimersequence': 'GTGCCAGCMGCCGCGGTAA',
-                            'barcodesequence': 'GTCCGCAAGTTA'},
+                            'barcodesequence': 'GTCCGCAAGTTA',
+                            'run_prefix': "s_G1_L001_sequences"},
             'SKD8.640184': {'center_name': 'ANL',
                             'center_project_name': 'Test Project',
                             'ebi_submission_accession': None,
                             'EMP_status': 'EMP',
                             'str_column': 'Value for sample 2',
                             'linkerprimersequence': 'GTGCCAGCMGCCGCGGTAA',
-                            'barcodesequence': 'CGTAGAGCTCTC'},
+                            'barcodesequence': 'CGTAGAGCTCTC',
+                            'run_prefix': "s_G1_L001_sequences"},
             'SKB7.640196': {'center_name': 'ANL',
                             'center_project_name': 'Test Project',
                             'ebi_submission_accession': None,
                             'EMP_status': 'EMP',
                             'str_column': 'Value for sample 3',
                             'linkerprimersequence': 'GTGCCAGCMGCCGCGGTAA',
-                            'barcodesequence': 'CCTCTGAGAGCT'}
+                            'barcodesequence': 'CCTCTGAGAGCT',
+                            'run_prefix': "s_G1_L002_sequences"}
             }
         self.metadata = pd.DataFrame.from_dict(metadata_dict, orient='index')
         self.test_raw_data = RawData(1)
@@ -907,6 +910,7 @@ class TestPrepTemplate(TestCase):
         # raw_data_id, column_name, column_type
         exp = [[3, 'str_column', 'varchar'],
                [3, 'ebi_submission_accession', 'varchar'],
+               [3, 'run_prefix', 'varchar'],
                [3, 'barcodesequence', 'varchar'],
                [3, 'linkerprimersequence', 'varchar']]
         self.assertEqual(obs, exp)
@@ -920,11 +924,11 @@ class TestPrepTemplate(TestCase):
         # sample_id, study_id, str_column, ebi_submission_accession,
         # barcodesequence, linkerprimersequence
         exp = [['SKB7.640196', 1, 'Value for sample 3', None,
-                'CCTCTGAGAGCT', 'GTGCCAGCMGCCGCGGTAA'],
+                's_G1_L002_sequences', 'CCTCTGAGAGCT', 'GTGCCAGCMGCCGCGGTAA'],
                ['SKB8.640193', 1, 'Value for sample 1', None,
-                'GTCCGCAAGTTA', 'GTGCCAGCMGCCGCGGTAA'],
+                's_G1_L001_sequences', 'GTCCGCAAGTTA', 'GTGCCAGCMGCCGCGGTAA'],
                ['SKD8.640184', 1, 'Value for sample 2', None,
-                'CGTAGAGCTCTC', 'GTGCCAGCMGCCGCGGTAA']]
+                's_G1_L001_sequences', 'CGTAGAGCTCTC', 'GTGCCAGCMGCCGCGGTAA']]
         self.assertEqual(sorted(obs), sorted(exp))
 
     def test_create_error(self):
@@ -1162,13 +1166,13 @@ EXP_SAMPLE_TEMPLATE = (
 EXP_PREP_TEMPLATE = (
     'sample_name\tbarcodesequence\tcenter_name\tcenter_project_name\t'
     'ebi_submission_accession\temp_status\tlinkerprimersequence\t'
-    'str_column\n'
+    'run_prefix\tstr_column\n'
     'SKB7.640196\tCCTCTGAGAGCT\tANL\tTest Project\tNone\tEMP\t'
-    'GTGCCAGCMGCCGCGGTAA\tValue for sample 3\n'
+    'GTGCCAGCMGCCGCGGTAA\ts_G1_L002_sequences\tValue for sample 3\n'
     'SKB8.640193\tGTCCGCAAGTTA\tANL\tTest Project\tNone\tEMP\t'
-    'GTGCCAGCMGCCGCGGTAA\tValue for sample 1\n'
+    'GTGCCAGCMGCCGCGGTAA\ts_G1_L001_sequences\tValue for sample 1\n'
     'SKD8.640184\tCGTAGAGCTCTC\tANL\tTest Project\tNone\tEMP\t'
-    'GTGCCAGCMGCCGCGGTAA\tValue for sample 2\n')
+    'GTGCCAGCMGCCGCGGTAA\ts_G1_L001_sequences\tValue for sample 2\n')
 
 if __name__ == '__main__':
     main()
