@@ -346,7 +346,8 @@ SAMPLE_TEMPLATE = (
     "Fasting_mouse_I.D._636")
 
 PREP_TEMPLATE = (
-    'sample_name\tbarcodesequence\tcenter_name\tcenter_project_name\tdescription'
+    'sample_name\tbarcodesequence\tcenter_name\tcenter_project_name\t'
+    'description'
     '\tebi_submission_accession\temp_status\tlinkerprimersequence\t'
     'str_column\n'
     'SKB7.640196\tCCTCTGAGAGCT\tANL\tTest Project\tskb7\tNone\tEMP\t'
