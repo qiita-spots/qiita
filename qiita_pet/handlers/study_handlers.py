@@ -40,7 +40,7 @@ def _check_access(self, user, study):
         """make sure user has access to the study requested"""
         if not study.has_access(user):
             raise HTTPError(403, "User %s does not have access to study %d" %
-                            (user, study_id))
+                            (user, study.id))
 
 
 class CreateStudyForm(Form):
