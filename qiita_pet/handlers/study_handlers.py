@@ -240,7 +240,7 @@ class StudyDescriptionHandler(BaseHandler):
         except (TypeError, QiitaDBColumnError, QiitaDBExecutionError,
                 IOError), e:
             msg = ('<b>An error occurred parsing the prep template: '
-                   '%s</b><br/>%s' % (basename(fp_rsp), e))
+                   '%s</b><br/>%s' % (basename(fp_rpt), e))
             self.display_template(int(study_id), msg)
             return
 

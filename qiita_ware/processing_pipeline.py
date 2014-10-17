@@ -139,10 +139,10 @@ def _get_preprocess_fastq_cmd(raw_data, params):
     mapping_fps = sorted(mapping_fps)
 
     # Create the split_libraries_fastq.py command
-    cmd = ("split_libraries_fastq.py --store_demultiplexed_fastq -i %s -b %s "
-           "-m %s -o %s %s"
-           % (','.join(forward_seqs), ','.join(barcode_fps),
-              ','.join(mapping_fps), output_dir, params_str))
+    cmd = str("split_libraries_fastq.py --store_demultiplexed_fastq -i %s -b "
+              "%s -m %s -o %s %s"
+              % (','.join(forward_seqs), ','.join(barcode_fps),
+                 ','.join(mapping_fps), output_dir, params_str))
     return (cmd, output_dir)
 
 
