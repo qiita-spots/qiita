@@ -24,8 +24,8 @@ from qiita_ware.context import submit
 from qiita_ware.util import metadata_stats_from_sample_and_prep_templates
 from qiita_ware.demux import stats as demux_stats
 from qiita_ware.dispatchable import submit_to_ebi
-from .metadata_template import (SampleTemplate, PrepTemplate,
-                                load_template_to_dataframe)
+from qiita_db.metadata_template import (SampleTemplate, PrepTemplate,
+                                        load_template_to_dataframe)
 from qiita_db.study import Study, StudyPerson
 from qiita_db.user import User
 from qiita_db.util import get_study_fp, convert_to_id, get_filepath_types
