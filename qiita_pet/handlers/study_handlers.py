@@ -38,7 +38,7 @@ from qiita_db.data import RawData
 
 def _check_access(self, user, study_id):
         """make sure user has access to the study requested"""
-        if not User(user).has_study_access(study_id):
+        if not Study.has_access(user, study_id):
             raise HTTPError(403, "User %s does not have access to study %d" %
                             (user, study_id))
 

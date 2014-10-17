@@ -167,6 +167,25 @@ class TestStudy(TestCase):
             'lab_person_id': StudyPerson(1),
             'number_samples_collected': 27}
 
+    def _make_private(self):
+        # make studies private
+        self.conn_handler.execute("UPDATE qiita.study SET study_status_id = 3")
+
+    def test_has_access_public(self):
+        self.assertTrue(Study.has_access("admin@foo.bar", 1))
+
+    def test_has_access_shared(self):
+        self._make_private()
+        self.assertTrue(Study.has_access("shared@foo.bar", 1))
+
+    def test_has_access_private(self):
+        self._make_private()
+        self.assertTrue(Study.has_access("test@foo.bar", 1))
+
+    def test_has_access_no_access(self):
+        self._make_private()
+        self.assertFalse(Study.has_access("admin@foo.bar", 1))
+
     def test_get_public(self):
         Study.create(User('test@foo.bar'), 'NOT Identification of the '
                      'Microbiomes for Cannabis Soils', [1], self.info)
