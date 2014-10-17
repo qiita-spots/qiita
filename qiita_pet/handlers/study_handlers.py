@@ -153,7 +153,14 @@ class StudyDescriptionHandler(BaseHandler):
                 split_libs_status = RawData(
                     prep_template_id).preprocessing_status.replace('\n',
                                                                    '<br/>')
+                # getting EBI status
+                sppd = study.preprocessed_data()
+                if sppd:
+                    ebi_status = PreprocessedData(
+                        sppd[-1]).submitted_to_insdc_status()
+                
             else:
+                ebi_status = None
                 prep_template_id = None
                 split_libs_status = None
 
