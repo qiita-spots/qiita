@@ -125,7 +125,7 @@ class StudyDescriptionHandler(BaseHandler):
             study = Study(study_id)
         except QiitaDBUnknownIDError:
             # Study not in database so fail nicely
-            raise HTTPError(500, "Study %d does not exist" % study_id)
+            raise HTTPError(404, "Study %d does not exist" % study_id)
         else:
             _check_access(self.current_user, study)
 
