@@ -31,9 +31,6 @@ from qiita_db.user import User
 from qiita_db.util import get_study_fp, convert_to_id, get_filepath_types
 from qiita_db.ontology import Ontology
 from qiita_db.data import PreprocessedData
-from qiita_db.commands import (load_sample_template_from_cmd,
-                               load_prep_template_from_cmd,
-                               load_raw_data_cmd)
 from qiita_db.exceptions import (QiitaDBColumnError, QiitaDBExecutionError,
                                  QiitaDBDuplicateError, QiitaDBUnknownIDError)
 from qiita_db.data import RawData
@@ -416,9 +413,9 @@ class EBISubmitHandler(BaseHandler):
 
         # TODO: only supporting a single prep template right now, which I think
         # is what indexing the first item here is equiv to
-        raw_data_id = study.preprocessed_data()[0]
+        preprocessed_data_id = study.preprocessed_data()[0]
 
-        preprocessed_data = PreprocessedData(raw_data_id)
+        preprocessed_data = PreprocessedData(preprocessed_data_id)
 
         stats = [('Number of samples', len(st)),
                  ('Number of metadata headers', len(st.metadata_headers()))]
