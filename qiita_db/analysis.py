@@ -609,22 +609,36 @@ class Analysis(QiitaStatusObject):
                 raise ValueError("Duplicate sample ids found: %s" %
                                  str(all_sample_ids.intersection(samples)))
             all_sample_ids.update(samples)
-            study = ProcessedData(pid).study
-            if study in all_studies:
-                # samples already added by other processed data file in study
+            study_id = ProcessedData(pid).study
+
+            # create a convenience study object
+            s = Study(study_id)
+
+            # get the ids to retrieve the data from the sample and prep tables
+            sample_template_id = s.sample_template
+            # you can have multiple different prep templates but we are only
+            # using the one for 16S i. e. the last one ... sorry ;l
+            # see issue https://github.com/biocore/qiita/issues/465
+            prep_template_id = s.raw_data()[0]
+
+            if study_id in all_studies:
+                # samples already added by other processed data file
+                # with the study_id
                 continue
-            all_studies.add(study)
+            all_studies.add(study_id)
             # add headers to set of all headers found
-            all_headers.update(get_table_cols("sample_%d" % study,
+            all_headers.update(get_table_cols("sample_%d" % sample_template_id,
                                conn_handler))
-            all_headers.update(get_table_cols("prep_%d" % study,
+            all_headers.update(get_table_cols("prep_%d" % prep_template_id,
                                conn_handler))
             # NEED TO ADD COMMON PREP INFO Issue #247
             sql = ("SELECT rs.*, p.*, ss.* "
                    "FROM qiita.required_sample_info rs JOIN qiita.sample_{0} "
-                   "ss USING(sample_id) JOIN qiita.prep_{0} p USING(sample_id)"
-                   " WHERE rs.sample_id IN {1} AND rs.study_id = {0}".format(
-                       study, "(%s)" % ",".join("'%s'" % s for s in samples)))
+                   "ss USING(sample_id) JOIN qiita.prep_{1} p USING(sample_id)"
+                   " WHERE rs.sample_id IN {2} AND rs.study_id = {3}".format(
+                       sample_template_id, prep_template_id,
+                       "(%s)" % ",".join("'%s'" % s for s in samples),
+                       study_id))
             metadata = conn_handler.execute_fetchall(sql)
             # add all the metadata to merged_data
             for data in metadata:
