@@ -620,9 +620,9 @@ class Analysis(QiitaStatusObject):
             # using the one for 16S i. e. the last one ... sorry ;l
             prep_template_id = s.raw_data()[-1]
 
-
             if study_id in all_studies:
-                # samples already added by other processed data file in study_id
+                # samples already added by other processed data file
+                # with the study_id
                 continue
             all_studies.add(study_id)
             # add headers to set of all headers found
