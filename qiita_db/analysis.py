@@ -618,7 +618,8 @@ class Analysis(QiitaStatusObject):
             sample_template_id = s.sample_template
             # you can have multiple different prep templates but we are only
             # using the one for 16S i. e. the last one ... sorry ;l
-            prep_template_id = s.raw_data()[-1]
+            # see issue https://github.com/biocore/qiita/issues/465
+            prep_template_id = s.raw_data()[0]
 
             if study_id in all_studies:
                 # samples already added by other processed data file
