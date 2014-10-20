@@ -160,12 +160,14 @@ $(document).ready(function() {
 });
 
 function submit_create_study() {
+    $("#create_study_submit").prop('disabled', true);
     $.get('/check_study/', {study_title: $("#study_title")[0].value})
         .done(function(data) {
             if (data == 'True') {
                 $("#create_study").submit();
             }
             else {
+                $("#create_study_submit").prop('disabled', false);
                 alert("Study '" + $("#study_title")[0].value + "' already exists! Please choose a different name.");
             };
         });
@@ -319,7 +321,7 @@ function add_new_person(name, affiliation, email, phone, address) {
   </tr>
   <tr>
     <td>
-      <a name="bot"><input type='button' class='btn btn-primary' value="Create Study" onclick='submit_create_study();'>
+      <a name="bot"><input type='button' id="create_study_submit" class='btn btn-primary' value="Create Study" onclick='submit_create_study();'>
     </td>
   </tr>
 </table>
