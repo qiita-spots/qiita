@@ -453,6 +453,7 @@ def validate_password(password):
         * special characters (e.g., !@#$%^&*()-_=+`~[]{}|;:'",<.>/?) with the
             exception of a backslash
         * must be ASCII
+        * must be at least 8 characters
 
     Parameters
     ----------
@@ -466,18 +467,17 @@ def validate_password(password):
 
     References
     -----
-    http://stackoverflow.com/questions/2990654/how-to-test-a-regex-
-    password-in-python
+    http://stackoverflow.com/q/196345
     """
-    lower_case = 'a-z'
-    upper_case = 'A-Z'
-    numbers = '0-9'
-    special = """!@#\$%\^&\*\(\)-_\=+`~\[\]\{\}|;:'",<.>/\?)"""
-    pattern = r'[%s%s%s%s]{8,}' % (lower_case, upper_case, numbers, special)
+    if len(password) < 8:
+        return False
+
+    if "\\" in password:
+        return False
 
     try:
         password.encode('ascii')
     except UnicodeError:
         return False
-    else:
-        return True if match(pattern, password) is not None else False
+
+    return True
