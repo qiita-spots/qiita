@@ -565,8 +565,8 @@ class Study(QiitaStatusObject):
         """
         conn_handler = SQLConnectionHandler()
         # SQL checks over private, public, and shared studies
-        sql = ("SELECT EXISTS(SELECT st.study_id from qiita.{0} st JOIN "
-               "qiita.study_users su ON su.study_id = st.study_id WHERE "
+        sql = ("SELECT EXISTS(SELECT st.study_id from qiita.{0} st FULL OUTER "
+               "JOIN qiita.study_users su ON su.study_id = st.study_id WHERE "
                "st.study_id = %s AND (su.email = %s OR "
                "st.email = %s OR st.{0}_status_id = %s))".format(self._table))
         # MAGIC NUMBER 2: status id for a public study
