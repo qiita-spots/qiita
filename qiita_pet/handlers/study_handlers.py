@@ -361,13 +361,15 @@ class CreateStudyAJAX(BaseHandler):
 class MetadataSummaryHandler(BaseHandler):
     @authenticated
     def get(self, arguments):
-        st = SampleTemplate(int(self.get_argument('sample_template')))
+        study_id = int(self.get_argument('sample_template'))
+        st = SampleTemplate(study_id)
         pt = PrepTemplate(int(self.get_argument('prep_template')))
 
         stats = metadata_stats_from_sample_and_prep_templates(st, pt)
 
         self.render('metadata_summary.html', user=self.current_user,
-                    study_title=Study(st.id).title, stats=stats)
+                    study_title=Study(st.id).title, stats=stats,
+                    study_id=study_id)
 
 
 class EBISubmitHandler(BaseHandler):
