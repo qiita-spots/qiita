@@ -58,6 +58,11 @@ class IncorrectEmailError(QiitaError):
     pass
 
 
+class UnverifiedEmailError(QiitaError):
+    """Email has not been validated"""
+    pass
+
+
 class QiitaEnvironmentError(QiitaError):
     """Exception for error when dealing with the environment"""
     pass
