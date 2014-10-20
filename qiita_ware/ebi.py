@@ -11,7 +11,7 @@ from xml.dom import minidom
 from xml.sax.saxutils import escape
 
 from future.utils import viewitems
-from skbio.util.misc import safe_md5
+from skbio.util import safe_md5
 
 from qiita_core.qiita_settings import qiita_config
 
