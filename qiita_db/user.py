@@ -132,7 +132,7 @@ class User(QiitaObject):
         info = conn_handler.execute_fetchone(sql, (email, ))
 
         # verify user email verification
-        #MAGIC NUMBER 5 = unverified email
+        # MAGIC NUMBER 5 = unverified email
         if int(info[1]) == 5:
             return False
 
@@ -480,7 +480,7 @@ def validate_password(password):
     if len(password) < 8:
         return False
 
-    if "\\" in password:
+    if "\\" in password or " " in password:
         return False
 
     try:
