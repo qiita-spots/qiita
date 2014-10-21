@@ -461,6 +461,7 @@ def validate_password(password):
         * special characters (e.g., !@#$%^&*()-_=+`~[]{}|;:'",<.>/?) with the
             exception of a backslash
         * must be ASCII
+        * no spaces
         * must be at least 8 characters
 
     Parameters
