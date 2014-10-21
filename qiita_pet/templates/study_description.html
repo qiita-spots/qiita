@@ -100,7 +100,7 @@
         <input type="checkbox" name="rev_comp_mapping_barcodes" id="rev_comp_mapping_barcodes"> Use rev_comp_mapping_barcodes
       {% elif sls.startswith('preprocessing') %}
         <font color="red">Split library is running</font>
-      {% elif sls.startswith('success') %}
+      {% elif sls.startswith('success') and user_level == 'admin' %}
         <a class="btn btn-primary" href="/ebi_submission/{{study_id}}">Submit EBI - Good luck!</a>
       {% end %}
     </td>

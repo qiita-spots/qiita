@@ -154,14 +154,15 @@ class StudyDescriptionHandler(BaseHandler):
 
         # getting the ontologies
         ena = Ontology(convert_to_id('ENA', 'ontology'))
-
+        user = User(self.current_user)
         self.render('study_description.html', user=self.current_user,
                     study_title=study.title, study_info=study.info,
                     study_id=study_id, files=fs, ssb=ssb, vssb=valid_ssb,
                     max_upload_size=qiita_config.max_upload_size,
                     sls=split_libs_status, filetypes=fts,
                     investigation_types=ena.terms, ebi_status=ebi_status,
-                    prep_template_id=prep_template_id, msg=msg)
+                    prep_template_id=prep_template_id, user_level=user.level,
+                    msg=msg)
 
     @authenticated
     def get(self, study_id):
