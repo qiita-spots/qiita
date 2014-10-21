@@ -31,10 +31,12 @@ from __future__ import division
 from re import match
 
 from qiita_core.exceptions import (IncorrectEmailError, IncorrectPasswordError,
-                                   IncompetentQiitaDeveloperError)
+                                   IncompetentQiitaDeveloperError,
+                                   UnverifiedEmailError)
 from .base import QiitaObject
 from .sql_connection import SQLConnectionHandler
-from .util import (create_rand_string, check_table_cols, hash_password)
+from .util import (create_rand_string, check_table_cols, hash_password,
+                   convert_from_id)
 from .exceptions import (QiitaDBColumnError, QiitaDBDuplicateError)
 
 
@@ -125,11 +127,17 @@ class User(QiitaObject):
 
         # pull password out of database
         conn_handler = SQLConnectionHandler()
-        sql = ("SELECT password FROM qiita.{0} WHERE "
+        sql = ("SELECT password, user_level_id FROM qiita.{0} WHERE "
                "email = %s".format(cls._table))
-        dbpass = conn_handler.execute_fetchone(sql, (email, ))[0]
+        info = conn_handler.execute_fetchone(sql, (email, ))
+
+        # verify user email verification
+        # MAGIC NUMBER 5 = unverified email
+        if int(info[1]) == 5:
+            return False
 
         # verify password
+        dbpass = info[0]
         hashed = hash_password(password, dbpass)
         if hashed == dbpass:
             return cls(email)
@@ -453,6 +461,8 @@ def validate_password(password):
         * special characters (e.g., !@#$%^&*()-_=+`~[]{}|;:'",<.>/?) with the
             exception of a backslash
         * must be ASCII
+        * no spaces
+        * must be at least 8 characters
 
     Parameters
     ----------
@@ -466,18 +476,17 @@ def validate_password(password):
 
     References
     -----
-    http://stackoverflow.com/questions/2990654/how-to-test-a-regex-
-    password-in-python
+    http://stackoverflow.com/q/196345
     """
-    lower_case = 'a-z'
-    upper_case = 'A-Z'
-    numbers = '0-9'
-    special = """!@#\$%\^&\*\(\)-_\=+`~\[\]\{\}|;:'",<.>/\?)"""
-    pattern = r'[%s%s%s%s]{8,}' % (lower_case, upper_case, numbers, special)
+    if len(password) < 8:
+        return False
+
+    if "\\" in password or " " in password:
+        return False
 
     try:
         password.encode('ascii')
     except UnicodeError:
         return False
-    else:
-        return True if match(pattern, password) is not None else False
+
+    return True

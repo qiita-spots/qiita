@@ -4,7 +4,8 @@ from tornado.escape import url_escape, json_encode
 
 from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_core.util import send_email
-from qiita_core.exceptions import IncorrectPasswordError, IncorrectEmailError
+from qiita_core.exceptions import (IncorrectPasswordError, IncorrectEmailError,
+                                   UnverifiedEmailError)
 from qiita_db.user import User
 from qiita_db.exceptions import QiitaDBUnknownIDError, QiitaDBDuplicateError
 # login code modified from https://gist.github.com/guillaumevincent/4771570
@@ -92,6 +93,8 @@ class AuthLoginHandler(BaseHandler):
             msg = "Unknown user"
         except IncorrectPasswordError:
             msg = "Incorrect password"
+        except UnverifiedEmailError:
+            msg = "You have not verified your email address"
 
         if login:
             # everything good so log in
