@@ -40,7 +40,7 @@ def _check_access(user, study):
         """make sure user has access to the study requested"""
         if not study.has_access(user):
             raise HTTPError(403, "User %s does not have access to study %d" %
-                            (user, study.id))
+                            (user.id, study.id))
 
 
 class CreateStudyForm(Form):
@@ -127,7 +127,7 @@ class StudyDescriptionHandler(BaseHandler):
             # Study not in database so fail nicely
             raise HTTPError(404, "Study %d does not exist" % study_id)
         else:
-            _check_access(self.current_user, study)
+            _check_access(User(self.current_user), study)
 
         fp = get_study_fp(study_id)
         if exists(fp):
@@ -379,7 +379,7 @@ class MetadataSummaryHandler(BaseHandler):
         st = SampleTemplate(int(self.get_argument('sample_template')))
         pt = PrepTemplate(int(self.get_argument('prep_template')))
         # templates have same ID as study associated with, so can do check
-        _check_access(self.current_user, Study(st))
+        _check_access(User(self.current_user), Study(st))
 
         stats = metadata_stats_from_sample_and_prep_templates(st, pt)
 
@@ -394,9 +394,9 @@ class EBISubmitHandler(BaseHandler):
         try:
             study = Study(study_id)
         except QiitaDBUnknownIDError:
-            raise HTTPError(400, "Study %d does not exist!" % study_id)
+            raise HTTPError(404, "Study %d does not exist!" % study_id)
         else:
-            _check_access(self.current_user, study)
+            _check_access(User(self.current_user), study)
 
         st = SampleTemplate(study.sample_template)
 

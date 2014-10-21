@@ -550,12 +550,12 @@ class Study(QiitaStatusObject):
                "VALUES (%s, %s)".format(self._table))
         conn_handler.execute(sql, (self._id, pmid))
 
-    def has_access(self, user_id):
+    def has_access(self, user):
         """Returns whether the given user has access to the study
 
         Parameters
         ----------
-        user_id : str
+        user : User object
             User we are checking access for
 
         Returns
@@ -565,13 +565,13 @@ class Study(QiitaStatusObject):
         """
         conn_handler = SQLConnectionHandler()
         # SQL checks over private, public, and shared studies
-        sql = ("SELECT EXISTS(SELECT st.study_id from qiita.{0} st FULL OUTER "
+        sql = ("SELECT EXISTS(SELECT st.study_id from qiita.{0} st LEFT "
                "JOIN qiita.study_users su ON su.study_id = st.study_id WHERE "
                "st.study_id = %s AND (su.email = %s OR "
                "st.email = %s OR st.{0}_status_id = %s))".format(self._table))
         # MAGIC NUMBER 2: status id for a public study
         return conn_handler.execute_fetchone(
-            sql, (self._id, user_id, user_id, 2))[0]
+            sql, (self._id, user.id, user.id, 2))[0]
 
 
 class StudyPerson(QiitaObject):
