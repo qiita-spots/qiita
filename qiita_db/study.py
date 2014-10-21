@@ -564,6 +564,10 @@ class Study(QiitaStatusObject):
             Whether user has access to study or not
         """
         conn_handler = SQLConnectionHandler()
+        # if admin or superuser, just return true
+        if user.level in {'superuser', 'admin'}:
+            return True
+
         # SQL checks over private, public, and shared studies
         sql = ("SELECT EXISTS(SELECT st.study_id from qiita.{0} st LEFT "
                "JOIN qiita.study_users su ON su.study_id = st.study_id WHERE "
