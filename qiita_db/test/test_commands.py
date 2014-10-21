@@ -329,7 +329,7 @@ vamps_id = vamps_id
 """
 
 SAMPLE_TEMPLATE = (
-    "#SampleID\trequired_sample_info_status\tcollection_timestamp\t"
+    "sample_name\trequired_sample_info_status\tcollection_timestamp\t"
     "sample_type\thas_physical_specimen\tphysical_location\thas_extracted_data"
     "\thost_subject_id\tTreatment\tDOB\tlatitude\tlongitude\tDescription\n"
     "PC.354\treceived\t2014-06-18 16:44\ttype_1\tTrue\tLocation_1\tTrue\t"
@@ -346,15 +346,16 @@ SAMPLE_TEMPLATE = (
     "Fasting_mouse_I.D._636")
 
 PREP_TEMPLATE = (
-    '#SampleID\tbarcodesequence\tcenter_name\tcenter_project_name\tdescription'
+    'sample_name\tbarcodesequence\tcenter_name\tcenter_project_name\t'
+    'description'
     '\tebi_submission_accession\temp_status\tlinkerprimersequence\t'
-    'str_column\n'
+    'run_prefix\tstr_column\n'
     'SKB7.640196\tCCTCTGAGAGCT\tANL\tTest Project\tskb7\tNone\tEMP\t'
-    'GTGCCAGCMGCCGCGGTAA\tValue for sample 3\n'
+    'GTGCCAGCMGCCGCGGTAA\tts_G1_L001_sequences\tValue for sample 3\n'
     'SKB8.640193\tGTCCGCAAGTTA\tANL\tTest Project\tskb8\tNone\tEMP\t'
-    'GTGCCAGCMGCCGCGGTAA\tValue for sample 1\n'
+    'GTGCCAGCMGCCGCGGTAA\tts_G1_L001_sequences\tValue for sample 1\n'
     'SKD8.640184\tCGTAGAGCTCTC\tANL\tTest Project\tskd8\tNone\tEMP\t'
-    'GTGCCAGCMGCCGCGGTAA\tValue for sample 2\n')
+    'GTGCCAGCMGCCGCGGTAA\tts_G1_L001_sequences\tValue for sample 2\n')
 
 if __name__ == "__main__":
     main()

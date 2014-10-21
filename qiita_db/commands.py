@@ -14,13 +14,12 @@ from future import standard_library
 with standard_library.hooks():
     from configparser import ConfigParser
 
-import pandas as pd
-
 from .study import Study, StudyPerson
 from .user import User
 from .util import get_filetypes, get_filepath_types, get_data_types
 from .data import RawData, PreprocessedData, ProcessedData
-from .metadata_template import SampleTemplate, PrepTemplate
+from .metadata_template import (SampleTemplate, PrepTemplate,
+                                load_template_to_dataframe)
 
 
 def load_study_from_cmd(owner, title, info):
@@ -126,8 +125,8 @@ def load_sample_template_from_cmd(sample_temp_path, study_id):
     study_id : int
         The study id to which the sample template belongs
     """
-    sample_temp = pd.DataFrame.from_csv(sample_temp_path, sep='\t',
-                                        infer_datetime_format=True)
+    sample_temp = load_template_to_dataframe(sample_temp_path)
+
     return SampleTemplate.create(sample_temp, Study(study_id))
 
 
@@ -143,8 +142,7 @@ def load_prep_template_from_cmd(prep_temp_path, raw_data_id, study_id):
     study_id : int
         The study id to which the prep template belongs
     """
-    prep_temp = pd.DataFrame.from_csv(prep_temp_path, sep='\t',
-                                      infer_datetime_format=True)
+    prep_temp = load_template_to_dataframe(prep_temp_path)
     return PrepTemplate.create(prep_temp, RawData(raw_data_id),
                                Study(study_id))
 
