@@ -568,14 +568,10 @@ class Study(QiitaStatusObject):
         if user.level in {'superuser', 'admin'}:
             return True
 
-        # SQL checks over private, public, and shared studies
-        sql = ("SELECT EXISTS(SELECT st.study_id from qiita.{0} st LEFT "
-               "JOIN qiita.study_users su ON su.study_id = st.study_id WHERE "
-               "st.study_id = %s AND (su.email = %s OR "
-               "st.email = %s OR st.{0}_status_id = %s))".format(self._table))
-        # MAGIC NUMBER 2: status id for a public study
-        return conn_handler.execute_fetchone(
-            sql, (self._id, user.id, user.id, 2))[0]
+        if self._id in user.private_studies + user.shared_studies \
+                + self.get_public():
+            return True
+        return False
 
 
 class StudyPerson(QiitaObject):
