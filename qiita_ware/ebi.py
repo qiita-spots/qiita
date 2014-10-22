@@ -577,8 +577,9 @@ class EBISubmission(object):
             'schema': 'run', 'source': basename(self.run_xml_fp)}
         )
 
-        if action is 'ADD':
-            ET.SubElement(actions, 'HOLD', {
+        if action == 'ADD':
+            hold_action = ET.SubElement(actions, 'ACTION')
+            ET.SubElement(hold_action, 'HOLD', {
                 'HoldUntilDate': str(date.today() + timedelta(365))}
             )
 
