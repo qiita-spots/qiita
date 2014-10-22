@@ -447,7 +447,7 @@ class EBISubmitHandler(BaseHandler):
     def post(self, study_id):
         # make sure user is admin and can therefore actually submit to EBI
         if User(self.current_user).level != 'admin':
-            raise HTTPError(403, "User %s can not submit EBI!" %
+            raise HTTPError(403, "User %s cannot submit to EBI!" %
                             self.current_user)
 
         channel = self.current_user
