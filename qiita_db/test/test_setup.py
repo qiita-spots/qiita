@@ -26,7 +26,7 @@ class SetupTest(TestCase):
         self.assertEqual(get_count("qiita.study"), 1)
 
     def test_study_users(self):
-        self.assertEqual(get_count("qiita.study_users"), 1)
+        self.assertEqual(get_count("qiita.study_users"), 2)
 
     def test_investigation(self):
         self.assertEqual(get_count("qiita.investigation"), 1)
