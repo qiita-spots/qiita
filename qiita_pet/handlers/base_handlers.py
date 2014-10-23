@@ -48,4 +48,10 @@ class MockupHandler(BaseHandler):
 
 class NoPageHandler(BaseHandler):
     def get(self):
+        self.set_status(404)
         self.render("404.html", user=self.current_user)
+
+    def head(self):
+        """Satisfy servers that this url exists"""
+        self.set_status(404)
+        self.finish()
