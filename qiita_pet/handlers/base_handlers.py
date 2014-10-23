@@ -28,6 +28,10 @@ class BaseHandler(RequestHandler):
                         request_info=request_info,
                         user=self.current_user)
 
+    def head(self):
+        """Adds proper resonse for head requests"""
+        self.finish()
+
 
 class MainHandler(BaseHandler):
     '''Index page'''
