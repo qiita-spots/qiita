@@ -29,7 +29,7 @@ class BaseHandler(RequestHandler):
                         user=self.current_user)
 
     def head(self):
-        """Adds proper resonse for head requests"""
+        """Adds proper response for head requests"""
         self.finish()
 
 
