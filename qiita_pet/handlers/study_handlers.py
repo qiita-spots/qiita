@@ -9,7 +9,7 @@ r"""Qitta study handlers for the Tornado webserver.
 # -----------------------------------------------------------------------------
 from __future__ import division
 
-from tornado.web import authenticated, HTTPError
+from tornado.web import authenticated, HTTPError, asynchronous
 from tornado.gen import engine, Task
 from wtforms import (Form, StringField, SelectField, BooleanField,
                      SelectMultipleField, TextAreaField, validators)
@@ -79,6 +79,7 @@ class CreateStudyForm(Form):
 
 class PrivateStudiesHandler(BaseHandler):
     @authenticated
+    @asynchronous
     @engine
     def get(self):
         self.write(self.render_string('waiting.html'))
@@ -90,10 +91,12 @@ class PrivateStudiesHandler(BaseHandler):
                     user_studies=user_studies, shared_studies=shared_studies,
                     share_dict=share_dict)
 
+    @asynchronous
     def _get_private_shared(self, user, callback):
         callback(([Study(s_id) for s_id in user.private_studies],
                 [Study(s_id) for s_id in user.shared_studies]))
 
+    @asynchronous
     def _get_shared_with(self, studies, callback):
         callback({s.id: s.shared_with for s in studies})
 
@@ -104,6 +107,7 @@ class PrivateStudiesHandler(BaseHandler):
 
 class PublicStudiesHandler(BaseHandler):
     @authenticated
+    @asynchronous
     @engine
     def get(self):
         self.write(self.render_string('waiting.html'))
@@ -112,6 +116,8 @@ class PublicStudiesHandler(BaseHandler):
         self.render('public_studies.html', user=self.current_user,
                     public_studies=public_studies)
 
+
+    @asynchronous
     def _get_public(self, callback):
         callback([Study(s_id) for s_id in Study.get_public()])
 
