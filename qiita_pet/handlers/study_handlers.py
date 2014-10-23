@@ -94,7 +94,7 @@ class PrivateStudiesHandler(BaseHandler):
     @asynchronous
     def _get_private_shared(self, user, callback):
         callback(([Study(s_id) for s_id in user.private_studies],
-                [Study(s_id) for s_id in user.shared_studies]))
+                 [Study(s_id) for s_id in user.shared_studies]))
 
     @asynchronous
     def _get_shared_with(self, studies, callback):
@@ -115,7 +115,6 @@ class PublicStudiesHandler(BaseHandler):
         public_studies = yield Task(self._get_public)
         self.render('public_studies.html', user=self.current_user,
                     public_studies=public_studies)
-
 
     @asynchronous
     def _get_public(self, callback):
