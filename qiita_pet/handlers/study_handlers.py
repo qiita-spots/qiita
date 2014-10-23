@@ -10,6 +10,7 @@ r"""Qitta study handlers for the Tornado webserver.
 from __future__ import division
 
 from tornado.web import authenticated, HTTPError
+from tornado.gen import engine, Task
 from wtforms import (Form, StringField, SelectField, BooleanField,
                      SelectMultipleField, TextAreaField, validators)
 
@@ -78,16 +79,23 @@ class CreateStudyForm(Form):
 
 class PrivateStudiesHandler(BaseHandler):
     @authenticated
+    @engine
     def get(self):
         self.write(self.render_string('waiting.html'))
         self.flush()
         u = User(self.current_user)
-        user_studies = [Study(s_id) for s_id in u.private_studies]
-        share_dict = {s.id: s.shared_with for s in user_studies}
-        shared_studies = [Study(s_id) for s_id in u.shared_studies]
+        user_studies, shared_studies = yield Task(self._get_private_shared, u)
+        share_dict = yield Task(self._get_shared_with, user_studies)
         self.render('private_studies.html', user=self.current_user,
                     user_studies=user_studies, shared_studies=shared_studies,
                     share_dict=share_dict)
+
+    def _get_private_shared(self, user, callback):
+        callback(([Study(s_id) for s_id in user.private_studies],
+                [Study(s_id) for s_id in user.shared_studies]))
+
+    def _get_shared_with(self, studies, callback):
+        callback({s.id: s.shared_with for s in studies})
 
     @authenticated
     def post(self):
@@ -96,12 +104,16 @@ class PrivateStudiesHandler(BaseHandler):
 
 class PublicStudiesHandler(BaseHandler):
     @authenticated
+    @engine
     def get(self):
         self.write(self.render_string('waiting.html'))
         self.flush()
-        public_studies = [Study(s_id) for s_id in Study.get_public()]
+        public_studies = yield Task(self._get_public)
         self.render('public_studies.html', user=self.current_user,
                     public_studies=public_studies)
+
+    def _get_public(self, callback):
+        callback([Study(s_id) for s_id in Study.get_public()])
 
     @authenticated
     def post(self):
