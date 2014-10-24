@@ -160,6 +160,8 @@ class SQLConnectionHandler(object):
         will be cleaned out.
 
         Currently does not support executemany command
+
+        Queues are executed in FILO order
         """
         with self.get_postgres_cursor() as cur:
             results = []
@@ -181,8 +183,9 @@ class SQLConnectionHandler(object):
                     # wipe out queue since it has an error in it
                     del self.queues[queue]
                     raise QiitaDBExecutionError(
-                        ("\nError running SQL query: %s"
-                         "\nARGS: %s\nError: %s" % (sql, str(sql_args), e)))
+                        ("\nError running SQL query in queue %s: %s"
+                         "\nARGS: %s\nError: %s" % (queue, sql,
+                                                    str(sql_args), e)))
                 if res is not None:
                     # append all results linearly
                     results.extend(chain(res))
@@ -238,6 +241,8 @@ class SQLConnectionHandler(object):
         Notes
         -----
         Currently does not support executemany command
+
+        Queues are executed in FILO order
         """
         if len(sql) != 2 or not isinstance(sql[1], list) \
                 or not isinstance(sql[1], tuple):
