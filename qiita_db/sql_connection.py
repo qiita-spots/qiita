@@ -19,13 +19,6 @@ from .exceptions import QiitaDBExecutionError, QiitaDBConnectionError
 from qiita_core.qiita_settings import qiita_config
 
 
-def chain(item):
-    # itertools chain not playing nicely, use my own
-    for i in item:
-        for x in i:
-            yield x
-
-
 class SQLConnectionHandler(object):
     """Encapsulates the DB connection with the Postgres DB"""
     def __init__(self, admin=False):
@@ -171,6 +164,12 @@ class SQLConnectionHandler(object):
 
         Queues are executed in FILO order
         """
+        def chain(item):
+            # itertools chain not playing nicely, use my own
+            for i in item:
+                for x in i:
+                    yield x
+
         with self.get_postgres_cursor() as cur:
             results = []
             clear_res = False
