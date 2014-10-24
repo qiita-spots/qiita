@@ -114,7 +114,6 @@ class PublicStudiesHandler(BaseHandler):
         self.render('public_studies.html', user=self.current_user,
                     public_studies=public_studies)
 
-    @asynchronous
     def _get_public(self, callback):
         callback([Study(s_id) for s_id in Study.get_public()])
 
