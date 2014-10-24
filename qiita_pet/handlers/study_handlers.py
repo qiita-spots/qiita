@@ -10,7 +10,7 @@ r"""Qitta study handlers for the Tornado webserver.
 from __future__ import division
 
 from tornado.web import authenticated, HTTPError, asynchronous
-from tornado.gen import engine, Task
+from tornado.gen import coroutine, Task
 from wtforms import (Form, StringField, SelectField, BooleanField,
                      SelectMultipleField, TextAreaField, validators)
 
@@ -80,7 +80,7 @@ class CreateStudyForm(Form):
 class PrivateStudiesHandler(BaseHandler):
     @authenticated
     @asynchronous
-    @engine
+    @coroutine
     def get(self):
         self.write(self.render_string('waiting.html'))
         self.flush()
@@ -106,7 +106,7 @@ class PrivateStudiesHandler(BaseHandler):
 class PublicStudiesHandler(BaseHandler):
     @authenticated
     @asynchronous
-    @engine
+    @coroutine
     def get(self):
         self.write(self.render_string('waiting.html'))
         self.flush()
