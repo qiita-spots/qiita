@@ -977,7 +977,9 @@
 			</column>
 			<column name="study_status_id" type="bigint" jt="-5" mandatory="y" />
 			<column name="emp_person_id" type="bigint" jt="-5" />
-			<column name="first_contact" type="varchar" jt="12" mandatory="y" />
+			<column name="first_contact" type="timestamp" jt="93" mandatory="y" >
+				<defo>current_timestamp</defo>
+			</column>
 			<column name="funding" type="varchar" jt="12" />
 			<column name="timeseries_type_id" type="bigint" jt="-5" mandatory="y" >
 				<comment><![CDATA[What type of timeseries this study is (or is not)
@@ -986,7 +988,7 @@ Controlled Vocabulary]]></comment>
 			<column name="lab_person_id" type="bigint" jt="-5" />
 			<column name="metadata_complete" type="bool" jt="-7" mandatory="y" />
 			<column name="mixs_compliant" type="bool" jt="-7" mandatory="y" />
-			<column name="most_recent_contact" type="varchar" jt="12" />
+			<column name="most_recent_contact" type="timestamp" jt="93" />
 			<column name="number_samples_collected" type="integer" jt="4" />
 			<column name="number_samples_promised" type="integer" jt="4" />
 			<column name="portal_type_id" type="bigint" jt="-5" mandatory="y" />
@@ -1258,7 +1260,6 @@ Controlled Vocabulary]]></comment>
 		<entity schema="qiita" name="mixs_field_description" color="d0def5" x="300" y="1485" />
 		<entity schema="qiita" name="analysis_users" color="d0def5" x="60" y="720" />
 		<entity schema="qiita" name="user_level" color="d0def5" x="165" y="60" />
-		<entity schema="qiita" name="qiita_user" color="d0def5" x="330" y="75" />
 		<entity schema="qiita" name="filepath_type" color="c0d4f3" x="600" y="885" />
 		<entity schema="qiita" name="checksum_algorithm" color="b2cdf7" x="750" y="885" />
 		<entity schema="qiita" name="data_type" color="d0def5" x="690" y="1005" />
@@ -1286,7 +1287,6 @@ Controlled Vocabulary]]></comment>
 		<entity schema="qiita" name="analysis_workflow" color="c0d4f3" x="390" y="630" />
 		<entity schema="qiita" name="column_ontology" color="d0def5" x="285" y="1710" />
 		<entity schema="qiita" name="study_person" color="c0d4f3" x="2070" y="90" />
-		<entity schema="qiita" name="study" color="d0def5" x="1785" y="45" />
 		<entity schema="qiita" name="severity" color="c0d4f3" x="1470" y="1275" />
 		<entity schema="qiita" name="analysis" color="d0def5" x="225" y="705" />
 		<entity schema="qiita" name="controlled_vocab" color="d0def5" x="45" y="1320" />
@@ -1306,6 +1306,8 @@ Controlled Vocabulary]]></comment>
 		<entity schema="qiita" name="analysis_sample" color="d0def5" x="45" y="1155" />
 		<entity schema="qiita" name="common_prep_info" color="d0def5" x="1050" y="285" />
 		<entity schema="qiita" name="required_sample_info" color="d0def5" x="1380" y="105" />
+		<entity schema="qiita" name="study" color="d0def5" x="1785" y="45" />
+		<entity schema="qiita" name="qiita_user" color="d0def5" x="330" y="75" />
 		<group name="Group_analyses" color="c4e0f9" >
 			<comment>analysis tables</comment>
 			<entity schema="qiita" name="analysis" />
