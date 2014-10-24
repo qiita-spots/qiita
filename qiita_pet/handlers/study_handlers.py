@@ -16,10 +16,12 @@ from wtforms import (Form, StringField, SelectField, BooleanField,
 
 from os import listdir
 from os.path import exists, join, basename
-
+from functools import partial
 from .base_handlers import BaseHandler
 
 from qiita_core.qiita_settings import qiita_config
+from qiita_core.exceptions import IncompetentQiitaDeveloperError
+from qiita_pet.util import linkify
 
 from qiita_ware.context import submit
 from qiita_ware.util import metadata_stats_from_sample_and_prep_templates
@@ -85,18 +87,55 @@ class PrivateStudiesHandler(BaseHandler):
         self.write(self.render_string('waiting.html'))
         self.flush()
         u = User(self.current_user)
-        user_studies, shared_studies = yield Task(self._get_private_shared, u)
-        share_dict = yield Task(self._get_shared_with, user_studies)
+        user_studies = yield Task(self._get_private, u)
+        shared_studies = yield Task(self._get_shared, u)
         self.render('private_studies.html', user=self.current_user,
-                    user_studies=user_studies, shared_studies=shared_studies,
-                    share_dict=share_dict)
+                    user_studies=user_studies, shared_studies=shared_studies)
 
-    def _get_private_shared(self, user, callback):
-        callback(([Study(s_id) for s_id in user.private_studies],
-                 [Study(s_id) for s_id in user.shared_studies]))
+    def _build_study_info(self, user, studytype):
+        """builds list of tuples for studies that are private to user"""
+        if studytype == "private":
+            studylist = user.private_studies
+        elif studytype == "shared":
+            studylist = user.shared_studies
+        else:
+            raise IncompetentQiitaDeveloperError("Must use private or shared!")
 
-    def _get_shared_with(self, studies, callback):
-        callback({s.id: s.shared_with for s in studies})
+        study_person_linkifier = partial(
+            linkify, "<a target=\"_blank\" href=\"mailto:{0}\">{1}</a>")
+        pubmed_linkifier = partial(
+            linkify, "<a target=\"_blank\" href=\"http://www.ncbi.nlm.nih.gov/"
+            "pubmed/{0}\">{0}</a>")
+        infolist = []
+        for s_id in studylist:
+            study = Study(s_id)
+            info = study.info
+            PI = StudyPerson(info['principal_investigator_id'])
+            PI = study_person_linkifier((PI.email, PI.name))
+            shared = []
+            for person in study.shared_with:
+                person = User(person)
+                shared.append(study_person_linkifier(
+                    (person.email, person.info['name'])))
+            shared = ", ".join(shared)
+            pmids = ", ".join([pubmed_linkifier([pmid])
+                               for pmid in study.pmids])
+
+            infolist.append([study.id, study.title, info["metadata_complete"],
+                             info["number_samples_collected"],
+                             shared, len(study.raw_data()), PI, pmids])
+        return infolist
+
+    def _get_private(self, user, callback):
+        callback(self._build_study_info(user, "private"))
+
+    def _get_shared(self, user, callback):
+        """builds list of tuples for studies that are private to user"""
+        studyinfo = self._build_study_info(user, "shared")
+        for study in studyinfo:
+            # remove shared info since not needed
+            del study[4]
+        callback(studyinfo)
 
     @authenticated
     def post(self):
