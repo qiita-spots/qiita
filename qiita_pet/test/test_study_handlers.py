@@ -45,7 +45,7 @@ class CreateStudyHandlerTestsDB(TestHandlerBase):
 class CreateStudyHandlerTestsNoDB(TestHandlerBase):
     def test_page_load(self):
         """Make sure the page loads when no arguments are passed"""
-        response = self.get('/create_study/')
+        response = self.get('/study/create/')
         self.assertEqual(response.code, 200)
 
 
