@@ -62,18 +62,24 @@ def _build_study_info(studytype, user=None):
             info = study.info
             PI = StudyPerson(info['principal_investigator_id'])
             PI = study_person_linkifier((PI.email, PI.name))
-            shared = []
-            for person in study.shared_with:
-                person = User(person)
-                shared.append(study_person_linkifier(
-                    (person.email, person.info['name'])))
-            shared = ", ".join(shared)
             pmids = ", ".join([pubmed_linkifier([pmid])
                                for pmid in study.pmids])
-
-            infolist.append([study.id, study.title, info["metadata_complete"],
-                             info["number_samples_collected"],
-                             shared, len(study.raw_data()), PI, pmids])
+            if studytype == "private":
+                shared = []
+                for person in study.shared_with:
+                    person = User(person)
+                    shared.append(study_person_linkifier(
+                        (person.email, person.info['name'])))
+                shared = ", ".join(shared)
+                infolist.append([study.id, study.title,
+                                 info["metadata_complete"],
+                                 info["number_samples_collected"],
+                                 shared, len(study.raw_data()), PI, pmids])
+            else:
+                infolist.append([study.id, study.title,
+                                 info["metadata_complete"],
+                                 info["number_samples_collected"],
+                                 len(study.raw_data()), PI, pmids])
         return infolist
 
 
@@ -135,11 +141,7 @@ class PrivateStudiesHandler(BaseHandler):
 
     def _get_shared(self, user, callback):
         """builds list of tuples for studies that are shared with user"""
-        studyinfo = _build_study_info("shared", user)
-        for study in studyinfo:
-            # remove shared info since not needed
-            del study[4]
-        callback(studyinfo)
+        callback(_build_study_info("shared", user))
 
     @authenticated
     def post(self):
@@ -159,11 +161,8 @@ class PublicStudiesHandler(BaseHandler):
 
     def _get_public(self, callback):
         """builds list of tuples for studies that are public"""
-        studyinfo = _build_study_info("public")
-        for study in studyinfo:
-            # remove shared info since not needed
-            del study[4]
-        callback(studyinfo)
+        callback(_build_study_info("public"))
+        
 
     @authenticated
     def post(self):
