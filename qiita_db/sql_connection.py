@@ -187,7 +187,6 @@ class SQLConnectionHandler(object):
                     cur.execute(sql, sql_args)
                     # get results and add if they exist, otherwise keep going
                     try:
-
                         res = cur.fetchall()
                         # append all results linearly
                         results.extend(chain(res))
@@ -200,7 +199,7 @@ class SQLConnectionHandler(object):
                     raise QiitaDBExecutionError(
                         ("\nError running SQL query in queue %s: %s"
                          "\nARGS: %s\nError: %s" % (queue, sql,
-                                                    str(sql_args), e)))                    
+                                                    str(sql_args), e)))
         self._connection.commit()
         # wipe out queue since finished
         del self.queues[queue]
