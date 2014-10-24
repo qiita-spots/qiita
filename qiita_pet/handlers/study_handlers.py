@@ -162,7 +162,6 @@ class PublicStudiesHandler(BaseHandler):
     def _get_public(self, callback):
         """builds list of tuples for studies that are public"""
         callback(_build_study_info("public"))
-        
 
     @authenticated
     def post(self):
