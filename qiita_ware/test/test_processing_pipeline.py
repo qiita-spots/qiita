@@ -110,10 +110,14 @@ class ProcessingPipelineTests(TestCase):
         raw_data = RawData(1)
         params = PreprocessedIlluminaParams(1)
         obs_cmd, obs_output_dir = _get_preprocess_fastq_cmd(raw_data, params)
+
+        get_raw_path = partial(join, self.db_dir, 'raw_data')
+        seqs_fp = get_raw_path('1_s_G1_L001_sequences.fastq.gz')
+        bc_fp = get_raw_path('1_s_G1_L001_sequences_barcodes.fastq.gz')
+
         exp_cmd_1 = ("split_libraries_fastq.py --store_demultiplexed_fastq -i "
-                     "{0}/raw_data/1_s_G1_L001_sequences.fastq.gz -b "
-                     "{0}/raw_data/1_s_G1_L001_sequences_barcodes.fastq.gz "
-                     "-m ".format(self.db_dir))
+                     "{} -b {} "
+                     "-m ".format(seqs_fp, bc_fp))
         exp_cmd_2 = ("-o {0} --barcode_type golay_12 --max_bad_run_length 3 "
                      "--max_barcode_errors 1.5 "
                      "--min_per_read_length_fraction 0.75 "
