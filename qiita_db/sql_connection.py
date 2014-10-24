@@ -10,7 +10,6 @@ from __future__ import division
 # -----------------------------------------------------------------------------
 
 from contextlib import contextmanager
-from itertools import chain
 
 from psycopg2 import connect, Error as PostgresError
 from psycopg2.extras import DictCursor
@@ -18,6 +17,13 @@ from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 
 from .exceptions import QiitaDBExecutionError, QiitaDBConnectionError
 from qiita_core.qiita_settings import qiita_config
+
+
+def chain(item):
+    # itertools chain not playing nicely, use my own
+    for i in item:
+        for x in i:
+            yield x
 
 
 class SQLConnectionHandler(object):
@@ -97,7 +103,7 @@ class SQLConnectionHandler(object):
                             % type(sql_args))
 
     @contextmanager
-    def _sql_executor(self, sql, sql_args=None, many=False):
+    def _sql_executor(self, sql, sql_args=None, many=False, commit=True):
         """Executes an SQL query
 
         Parameters
@@ -108,6 +114,8 @@ class SQLConnectionHandler(object):
             The arguments for the SQL query
         many: bool, optional
             If true, performs an execute many call
+        commit : bool, optional
+            Whether to commit or not after executing. Default True
 
         Returns
         -------
@@ -141,8 +149,8 @@ class SQLConnectionHandler(object):
                                              "\nARGS: %s"
                                              "\nError: %s" %
                                              (sql, str(sql_args), e)))
-    
-    def execute_queue(self, queue, success_call=None, fail_call=None):
+
+    def execute_queue(self, queue):
         """Executes all sql in a queue in a single transaction block
 
         Parameters
@@ -170,25 +178,30 @@ class SQLConnectionHandler(object):
                 for pos, arg in enumerate(sql_args):
                     # check if previous results needed and replace if necessary
                     if isinstance(arg, str) and \
-                            arg.beginswith("{") and arg[-1] == "}":
-                        result_pos = int(arg[1:-2])
+                            arg[0] == "{" and arg[-1] == "}":
+                        result_pos = int(arg[1:-1])
                         sql_args[pos] = results[result_pos]
                         clear_res = True
                 if clear_res:
                     results = []
                 try:
-                    res = cur.execute_fetchall(sql, sql_args)
-                except:
+                    cur.execute(sql, sql_args)
+                    # get results and add if they exist, otherwise keep going
+                    try:
+
+                        res = cur.fetchall()
+                        # append all results linearly
+                        results.extend(chain(res))
+                    except:
+                        pass
+                except Exception as e:
                     self._connection.rollback()
                     # wipe out queue since it has an error in it
                     del self.queues[queue]
                     raise QiitaDBExecutionError(
                         ("\nError running SQL query in queue %s: %s"
                          "\nARGS: %s\nError: %s" % (queue, sql,
-                                                    str(sql_args), e)))
-                if res is not None:
-                    # append all results linearly
-                    results.extend(chain(res))
+                                                    str(sql_args), e)))                    
         self._connection.commit()
         # wipe out queue since finished
         del self.queues[queue]
@@ -221,22 +234,22 @@ class SQLConnectionHandler(object):
 
         self.queues[queue_name] = []
 
-    def add_to_queue(self, queue, sql):
+    def add_to_queue(self, queue, sql, sql_args=None):
         """Add an sql command to the end of a queue
 
         Parameters
         ----------
         queue : str
             name of queue adding to
-        sql : tuple
-            sql command to run in the form (sql, sql_args)
+        sql : str
+            sql command to run
+        sql_args : list or tuple, optional
+            the arguments to fill sql command with
 
         Raises
         ------
         KeyError
             queue does not exist
-        ValueError
-            sql tuple is malformed
 
         Notes
         -----
@@ -244,10 +257,10 @@ class SQLConnectionHandler(object):
 
         Queues are executed in FILO order
         """
-        if len(sql) != 2 or not isinstance(sql[1], list) \
-                or not isinstance(sql[1], tuple):
-            raise ValueError("SQL query is malformed!")
-        self.queues[queue].append(sql)
+        # basic validation of insert item
+        if sql_args and type(sql_args) not in {list, tuple}:
+            raise IncompetentQiitaDeveloperError("sql_args is malformed!")
+        self.queues[queue].append((sql, sql_args))
 
     def execute_fetchall(self, sql, sql_args=None):
         """ Executes a fetchall SQL query
@@ -275,11 +288,7 @@ class SQLConnectionHandler(object):
             running execute.
         """
         with self._sql_executor(sql, sql_args) as pgcursor:
-            try:
-                result = pgcursor.fetchall()
-            except:
-                # allows non-returning calls to be made with this function
-                return None
+            result = pgcursor.fetchall()
         return result
 
     def execute_fetchone(self, sql, sql_args=None):
@@ -308,11 +317,7 @@ class SQLConnectionHandler(object):
             running execute.
         """
         with self._sql_executor(sql, sql_args) as pgcursor:
-            try:
-                result = pgcursor.fetchone()
-            except:
-                # allows non-returning calls to be made with this function
-                return None
+            result = pgcursor.fetchone()
         return result
 
     def execute(self, sql, sql_args=None):
