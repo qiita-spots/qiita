@@ -135,7 +135,8 @@ class SQLConnectionHandler(object):
                 else:
                     cur.execute(sql, sql_args)
                 yield cur
-                self._connection.commit()
+                if commit:
+                    self._connection.commit()
             except PostgresError as e:
                 self._connection.rollback()
                 raise QiitaDBExecutionError(("\nError running SQL query: %s"
