@@ -91,12 +91,10 @@ class PrivateStudiesHandler(BaseHandler):
                     user_studies=user_studies, shared_studies=shared_studies,
                     share_dict=share_dict)
 
-    @asynchronous
     def _get_private_shared(self, user, callback):
         callback(([Study(s_id) for s_id in user.private_studies],
                  [Study(s_id) for s_id in user.shared_studies]))
 
-    @asynchronous
     def _get_shared_with(self, studies, callback):
         callback({s.id: s.shared_with for s in studies})
 
