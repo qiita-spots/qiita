@@ -15,7 +15,7 @@ class TestConnHandler(TestCase):
         self.conn_handler.create_queue("toy_queue")
         self.conn_handler.add_to_queue(
             "toy_queue", "INSERT INTO qiita.qiita_user (email, name, password,"
-                "phone) VALUES (%s, %s, %s, %s) RETURNING email, password",
+            "phone) VALUES (%s, %s, %s, %s) RETURNING email, password",
             ['insert@foo.bar', 'Toy', 'pass', '111-111-11112'])
         self.conn_handler.add_to_queue(
             "toy_queue", "UPDATE qiita.qiita_user SET user_level_id = 1, "
