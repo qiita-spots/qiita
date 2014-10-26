@@ -25,8 +25,9 @@ class TestConnHandler(TestCase):
         obs = self.conn_handler.execute_fetchall(
             "SELECT * from qiita.qiita_user WHERE email = %s",
             ['insert@foo.bar'])
-        exp = [['insert@foo.bar', 1, 'pass', 'Toy', None, None, None, None,
-                None, '222-222-2221']]
+        exp = [['insert@foo.bar', 1, 'pass', 'Toy', None, None, '222-222-2221',
+                None, None, None]]
+        self.assertEqual(obs, exp)
 
     def test_queue_fail(self):
         """Fail if no results data exists for substitution"""
