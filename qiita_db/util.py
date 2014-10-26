@@ -317,16 +317,15 @@ def check_required_columns(conn_handler, keys, table):
     RuntimeError
         Unable to get columns from database
     """
-    sql = ("SELECT is_nullable, column_name FROM information_schema.columns "
+    sql = ("SELECT is_nullable, column_name, column_default "
+           "FROM information_schema.columns "
            "WHERE table_name = %s")
     cols = conn_handler.execute_fetchall(sql, (table, ))
     # Test needed because a user with certain permissions can query without
     # error but be unable to get the column names
     if len(cols) == 0:
         raise RuntimeError("Unable to fetch column names for table %s" % table)
-    required = set(x[1] for x in cols if x[0] == 'NO')
-    # remove the table id column as required
-    required.remove("%s_id" % table)
+    required = set(x[1] for x in cols if x[0] == 'NO' and x[2] is None)
     if len(required.difference(keys)) > 0:
         raise QiitaDBColumnError("Required keys missing: %s" %
                                  required.difference(keys))

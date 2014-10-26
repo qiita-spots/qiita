@@ -97,7 +97,6 @@ object while creating the study.
 
 from __future__ import division
 from future.utils import viewitems
-from datetime import date
 from copy import deepcopy
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
@@ -227,8 +226,6 @@ class Study(QiitaStatusObject):
 
         # add default values to info
         insertdict = deepcopy(info)
-        if "first_contact" not in insertdict:
-            insertdict['first_contact'] = date.today().isoformat()
         insertdict['email'] = owner.id
         insertdict['study_title'] = title
         if "reprocess" not in insertdict:

@@ -31,12 +31,10 @@ from __future__ import division
 from re import match
 
 from qiita_core.exceptions import (IncorrectEmailError, IncorrectPasswordError,
-                                   IncompetentQiitaDeveloperError,
-                                   UnverifiedEmailError)
+                                   IncompetentQiitaDeveloperError)
 from .base import QiitaObject
 from .sql_connection import SQLConnectionHandler
-from .util import (create_rand_string, check_table_cols, hash_password,
-                   convert_from_id)
+from .util import (create_rand_string, check_table_cols, hash_password)
 from .exceptions import (QiitaDBColumnError, QiitaDBDuplicateError)
 
 
