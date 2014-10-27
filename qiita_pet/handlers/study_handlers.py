@@ -8,6 +8,7 @@ r"""Qitta study handlers for the Tornado webserver.
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 from __future__ import division
+from collections import namedtuple
 
 from tornado.web import authenticated, HTTPError, asynchronous
 from tornado.gen import coroutine, Task
@@ -56,6 +57,10 @@ def _build_study_info(studytype, user=None):
         pubmed_linkifier = partial(
             linkify, "<a target=\"_blank\" href=\"http://www.ncbi.nlm.nih.gov/"
             "pubmed/{0}\">{0}</a>")
+        StudyTuple = namedtuple('StudyInfo', 'id title meta_complete '
+                                'num_samples_collected shared num_raw_data pi '
+                                'pmids')
+
         infolist = []
         for s_id in studylist:
             study = Study(s_id)
@@ -71,15 +76,17 @@ def _build_study_info(studytype, user=None):
                     shared.append(study_person_linkifier(
                         (person.email, person.info['name'])))
                 shared = ", ".join(shared)
-                infolist.append([study.id, study.title,
-                                 info["metadata_complete"],
-                                 info["number_samples_collected"],
-                                 shared, len(study.raw_data()), PI, pmids])
+                infolist.append(StudyTuple(study.id, study.title,
+                                           info["metadata_complete"],
+                                           info["number_samples_collected"],
+                                           shared, len(study.raw_data()),
+                                           PI, pmids))
             else:
-                infolist.append([study.id, study.title,
-                                 info["metadata_complete"],
-                                 info["number_samples_collected"],
-                                 len(study.raw_data()), PI, pmids])
+                infolist.append(StudyTuple(study.id, study.title,
+                                           info["metadata_complete"],
+                                           info["number_samples_collected"],
+                                           None, len(study.raw_data()),
+                                           PI, pmids))
         return infolist
 
 

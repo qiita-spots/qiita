@@ -32,21 +32,21 @@ $(document).ready(function() {
         <tbody>
             {% for s in user_studies %}
             <tr>
-                <td><a href="/study/description/{{ s[0] }}">{{ s[1] }}</a></td>
-                {% if s[2] %}
+                <td><a href="/study/description/{{ s.id }}">{{ s.title }}</a></td>
+                {% if s.meta_complete %}
                 <td><span class="glyphicon glyphicon-ok"></span></td>
                 {% else %}
                 <td><span class="glyphicon glyphicon-remove"></span></td>
                 {% end %}
-                <td>{{ s[3] }}</td>
-                <td>{% raw s[4] %}</td>
-                {% if s[5] %}
-                <td>{{ s[5] }}</td>
+                <td>{{ s.num_samples_collected }}</td>
+                <td>{% raw s.shared %}</td>
+                {% if s.num_raw_data %}
+                <td>{{ s.num_raw_data }}</td>
                 {% else %}
                 <td><span class="glyphicon glyphicon-remove"></span></td>
                 {% end %}
-                <td>{% raw s[6] %}</td>
-                <td>{% raw s[7] %}</td>
+                <td>{% raw s.pi %}</td>
+                <td>{% raw s.pmids %}</td>
             </tr>
             {% end %}
         </tbody>
@@ -76,20 +76,20 @@ $(document).ready(function() {
         <tbody>
             {% for s in shared_studies %}
             <tr>
-                <td><a href="/study/description/{{ s[0] }}">{{ s[1] }}</a></td>
-                {% if s[2] %}
+                <td><a href="/study/description/{{ s.id }}">{{ s.title }}</a></td>
+                {% if s.meta_complete %}
                 <td><span class="glyphicon glyphicon-ok"></span></td>
                 {% else %}
                 <td><span class="glyphicon glyphicon-remove"></span></td>
                 {% end %}
-                <td>{{ s[3] }}</td>
-                {% if s[4] %}
-                <td>{{ s[4] }}</td>
+                <td>{{ s.num_samples_collected }}</td>
+                {% if s.num_raw_data %}
+                <td>{{ s.num_raw_data }}</td>
                 {% else %}
                 <td><span class="glyphicon glyphicon-remove"></span></td>
                 {% end %}
-                <td>{% raw s[5] %}</td>
-                <td>{% raw s[6] %}</td>
+                <td>{% raw s.pi %}</td>
+                <td>{% raw s.pmids %}</td>
             </tr>
             {% end %}
         </tbody>
