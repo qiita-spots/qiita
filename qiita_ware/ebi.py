@@ -113,10 +113,9 @@ class EBISubmission(object):
         self.submission_xml_fp = None
 
         if self.investigation_type == 'Other' and \
-            self.new_investigation_type is None:
+                self.new_investigation_type is None:
             raise ValueError("If the investigation_type is 'Other' you have "
                              " to specify a value for new_investigation_type.")
-
 
         # dicts that map investigation_type to library attributes
         lib_strategies = {'metagenome': 'POOLCLONE',

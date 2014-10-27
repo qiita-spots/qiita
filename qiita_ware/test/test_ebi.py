@@ -37,8 +37,8 @@ class TestEBISubmission(TestCase):
 
     def test_init(self):
         e = EBISubmission('2', 'Study Title', 'Study Abstract',
-                investigation_type='Other',
-                new_investigation_type='metagenome')
+                          investigation_type='Other',
+                          new_investigation_type='metagenome')
 
         self.assertEqual(e.study_id, '2')
         self.assertEqual(e.study_title, 'Study Title')
