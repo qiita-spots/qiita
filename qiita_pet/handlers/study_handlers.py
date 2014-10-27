@@ -253,7 +253,7 @@ class StudyDescriptionHandler(BaseHandler):
             self.display_template(int(study_id), msg)
             return
 
-        msg = "Your samples where processed"
+        msg = "Your samples were processed"
         self.display_template(int(study_id), msg)
 
 
