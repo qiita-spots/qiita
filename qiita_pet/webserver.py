@@ -82,7 +82,6 @@ class Application(tornado.web.Application):
             "cookie_secret": COOKIE_SECRET,
             "login_url": "/auth/login/"
         }
-        print DEBUG
         tornado.web.Application.__init__(self, handlers, **settings)
 
 
