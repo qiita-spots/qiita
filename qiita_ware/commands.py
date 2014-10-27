@@ -19,7 +19,7 @@ ebi_actions = ['ADD', 'VALIDATE', 'MODIFY']
 
 def submit_EBI_from_files(study_id, sample_template, prep_template,
                           fastq_dir_fp, output_dir_fp, investigation_type,
-                          action, send, new_investigation_type):
+                          action, send, new_investigation_type=None):
     """EBI submission from files
 
     Parameters

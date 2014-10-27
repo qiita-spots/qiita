@@ -127,19 +127,13 @@ class EBISubmission(object):
         # if the investigation_type is 'Other' we should use the value in
         # the new_investigation_type attribute to retrieve this information
         if self.investigation_type == 'Other':
-            self.library_strategy = lib_strategies.get(
-                self.new_investigation_type, "OTHER")
-            self.library_source = lib_sources.get(
-                self.new_investigation_type, "METAGENOMIC")
-            self.library_selection = lib_selections.get(
-                self.new_investigation_type, "unspecified")
+            key = self.new_investigation_type
         else:
-            self.library_strategy = lib_strategies.get(
-                self.investigation_type, "OTHER")
-            self.library_source = lib_sources.get(
-                self.investigation_type, "METAGENOMIC")
-            self.library_selection = lib_selections.get(
-                self.investigation_type, "unspecified")
+            key = self.investigation_type
+
+        self.library_strategy = lib_strategies.get(key, "OTHER")
+        self.library_source = lib_sources.get(key, "METAGENOMIC")
+        self.library_selection = lib_selections.get(key, "unspecified")
 
         # This allows addition of other arbitrary study metadata
         self.additional_metadata = self._stringify_kwargs(kwargs)
@@ -796,7 +790,7 @@ class EBISubmission(object):
             Path to the direcotry containing per-sample FASTQ files containing
             The sequence labels should be:
             ``SampleID_SequenceNumber And Additional Notes if Applicable``
-        new_investigation_type : str
+        new_investigation_type : str, optional
 
         Notes
         -----
