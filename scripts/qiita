@@ -230,7 +230,7 @@ def submit_EBI_from_files(study, sample_template, prep_template, fastq_dir,
 
     submit_EBI_from_files_command(study, sample_template, prep_template,
                                   fastq_dir, output_dir, investigation_type,
-                                  action, send)
+                                  action, send, new_investigation_type)
 
 
 if __name__ == '__main__':
