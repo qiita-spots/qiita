@@ -184,8 +184,8 @@ def load_raw_data_cmd(filepaths, filepath_types, filetype, study_ids,
     data_types_dict = get_data_types()
     data_type_id = data_types_dict[data_type]
 
-    return RawData.create(filetype_id, list(zip(filepaths, filepath_types)),
-                          studies, data_type_id)
+    return RawData.create(filetype_id, studies, data_type_id,
+                          filepaths=list(zip(filepaths, filepath_types)))
 
 
 def load_processed_data_cmd(fps, fp_types, processed_params_table_name,
