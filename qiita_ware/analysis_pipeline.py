@@ -151,6 +151,7 @@ class RunAnalysis(ParallelWrapper):
             Rarefaction depth for analysis' biom tables. Default None.
         """
         self._logger = stderr
+        self.analysis = analysis
         # Add jobs to analysis
         if comm_opts is None:
             comm_opts = {}
@@ -200,3 +201,24 @@ class RunAnalysis(ParallelWrapper):
         # Adding the dependency edges to the graph
         for job_node_name in job_nodes:
             self._job_graph.add_edge(job_node_name, node_name)
+
+    def _failure_callback(self):
+        """Executed if something fails"""
+        from qiita_ware import r_server
+        # set the analysis to errored
+        self.analysis.status = 'error'
+
+        # set any jobs to errored if they didn't execute
+        for job_id in self.analysis.jobs:
+            job = Job(job_id)
+            if job.status not in {'error', 'completed'}:
+                job.status = 'error'
+
+        # send completed signal to wait page
+        msg = {
+            "msg": "allcomplete",
+            "analysis": self.analysis.id
+        }
+        user = self.analysis.owner
+        r_server.rpush(user + ":messages", dumps(msg))
+        r_server.publish(user, dumps(msg))
