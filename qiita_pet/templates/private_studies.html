@@ -52,12 +52,12 @@ $(document).ready(function() {
                 <td><span class="glyphicon glyphicon-remove"></span></td>
                 {% end %}
                 <td>{{study_info['number_samples_collected']}}</td>
-                <td>{{ len(s.raw_data()) }}</td>
                 {% if len(share_list) %}
                 <td>{% raw ", ".join([study_person_linkifier((person.email, person.info['name'])) for person in share_list]) %}</td>
                 {% else %}
                 <td><span class="glyphicon glyphicon-remove"></span></td>
                 {% end %}
+                <td>{{ len(s.raw_data()) }}</td>
                 <td>{% raw study_person_linkifier((PI.email, PI.name)) %}</td>
                 {% if len(pmids) %}
                 <td>{% raw ", ".join([pubmed_linkifier([pmid]) for pmid in pmids]) %}</td>
