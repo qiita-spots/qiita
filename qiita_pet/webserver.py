@@ -38,7 +38,7 @@ STATIC_PATH = join(DIRNAME, "static")
 TEMPLATE_PATH = join(DIRNAME, "templates")  # base folder for webpages
 RES_PATH = get_db_files_base_dir()
 COOKIE_SECRET = b64encode(uuid4().bytes + uuid4().bytes)
-DEBUG = True if qiita_config.test_environment else False
+DEBUG = qiita_config.test_environment
 
 
 class Application(tornado.web.Application):
