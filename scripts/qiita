@@ -216,8 +216,18 @@ def load_prep_template(fp, raw_data, study):
 @click.option('--send/--no-send', default=False, help="Controls whether or "
               "not sequence files and metadata will actually be sent to EBI "
               "(default is to generate all the files, but not to send)")
+@click.option('--new-investigation-type', required=False, default=None,
+              type=str, help= "If 'Other' is passed in --investigation-type, "
+              "then a value has to be provided for this option, the most "
+              "commonly used values are 'metagemomic' and 'mimarks-survey'.")
 def submit_EBI_from_files(study, sample_template, prep_template, fastq_dir,
-                          output_dir, investigation_type, action, send):
+                          output_dir, investigation_type, action, send,
+                          new_investigation_type):
+
+    if new_investigation_type is None and investigation_type == 'Other':
+            raise ValueError("If the investigation-type is 'Other' you have "
+                             " to specify a value for new-investigation-type.")
+
     submit_EBI_from_files_command(study, sample_template, prep_template,
                                   fastq_dir, output_dir, investigation_type,
                                   action, send)

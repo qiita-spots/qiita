@@ -19,7 +19,7 @@ ebi_actions = ['ADD', 'VALIDATE', 'MODIFY']
 
 def submit_EBI_from_files(study_id, sample_template, prep_template,
                           fastq_dir_fp, output_dir_fp, investigation_type,
-                          action, send):
+                          action, send, new_investigation_type):
     """EBI submission from files
 
     Parameters
@@ -40,6 +40,10 @@ def submit_EBI_from_files(study_id, sample_template, prep_template,
         The action to perform with this data
     send : bool
         True to actually send the files
+    new_investigation_type : str, optional
+        If investigation_type is `'Other'` then a value describing this new
+        investigation type should be specified. 'mimarks-survey' or
+        'metagenomics' are commonly used.
     """
 
     study = Study(study_id)
@@ -62,7 +66,7 @@ def submit_EBI_from_files(study_id, sample_template, prep_template,
     submission = EBISubmission.from_templates_and_per_sample_fastqs(
         study_id_str, study.title, study.info['study_abstract'],
         investigation_type, sample_template, prep_template,
-        fastq_dir_fp)
+        fastq_dir_fp, new_investigation_type=new_investigation_type)
 
     submission.write_all_xml_files(study_fp, sample_fp, experiment_fp, run_fp,
                                    submission_fp, action)
