@@ -219,7 +219,7 @@ class RawData(BaseData):
     _study_raw_table = "study_raw_data"
 
     @classmethod
-    def create(cls, filetype, studies, data_type_id, filepaths=None,
+    def create(cls, filetype, studies, filepaths=None,
                investigation_type=None):
         r"""Creates a new object with a new id on the storage system
 
@@ -229,8 +229,6 @@ class RawData(BaseData):
             The filetype identifier
         studies : list of Study
             The list of Study objects to which the raw data belongs to
-        data_type : int
-            The data_type identifier
         filepaths : iterable of tuples (str, int), optional
             The list of paths to the raw files and its filepath type identifier
         investigation_type : str, optional
@@ -252,10 +250,9 @@ class RawData(BaseData):
         # Add the raw data to the database, and get the raw data id back
         conn_handler = SQLConnectionHandler()
         rd_id = conn_handler.execute_fetchone(
-            "INSERT INTO qiita.{0} (filetype_id, investigation_type, "
-            "data_type_id) VALUES (%s, %s, %s) "
-            "RETURNING raw_data_id".format(cls._table),
-            (filetype, investigation_type, data_type_id))[0]
+            "INSERT INTO qiita.{0} (filetype_id, investigation_type) "
+            "VALUES (%s, %s) RETURNING raw_data_id".format(cls._table),
+            (filetype, investigation_type))[0]
 
         # Instantiate the object with the new id
         rd = cls(rd_id)
@@ -304,8 +301,8 @@ class RawData(BaseData):
             "r.raw_data_id=%s".format(self._table),
             (self._id,))[0]
 
-    def data_type(self, ret_id=False):
-        """Returns the data_type or data_type_id
+    def data_types(self, ret_id=False):
+        """Returns the list of data_types or data_type_ids
 
         Parameters
         ----------
@@ -314,16 +311,16 @@ class RawData(BaseData):
 
         Returns
         -------
-        str or int
-            string value of data_type or int if data_type_id
+        list of str or int
+            string values of data_type or ints if data_type_id
         """
         ret = "_id" if ret_id else ""
         conn_handler = SQLConnectionHandler()
-        data_type = conn_handler.execute_fetchone(
+        data_types = conn_handler.execute_fetchall(
             "SELECT d.data_type{0} FROM qiita.data_type d JOIN "
-            "qiita.{1} c ON c.data_type_id = d.data_type_id WHERE"
-            " c.raw_data_id = %s".format(ret, self._table), (self._id, ))
-        return data_type[0]
+            "qiita.prep_template p ON p.data_type_id = d.data_type_id "
+            "WHERE p.raw_data_id = %s".format(ret), (self._id, ))
+        return [dt[0] for dt in data_types]
 
     @property
     def investigation_type(self):
