@@ -20,7 +20,7 @@ INSERT INTO qiita.emp_status (emp_status) VALUES ('EMP'), ('EMP_Processed'), ('N
 INSERT INTO qiita.study_status (status, description) VALUES ('waiting_approval', 'Awaiting approval of metadata'), ('public', 'Anyone can see this study'), ('private', 'Only owner and shared users can see this study');
 
 -- Populate timeseries_type table
-INSERT INTO qiita.timeseries_type (timeseries_type) VALUES ('NOT_TIMESERIES'), ('TIMESERIES_1'), ('TIMESERIES_2');
+INSERT INTO qiita.timeseries_type (timeseries_type) VALUES ('NOT_TIMESERIES'), ('TIMESERIES_1'), ('TIMESERIES_2'), ('TIMESERIES_3');
 
 -- Populate severity table
 INSERT INTO qiita.severity (severity) VALUES ('Warning'), ('Runtime'), ('Fatal');
