@@ -191,31 +191,15 @@ CREATE TABLE qiita.raw_data (
 	raw_data_id          bigserial  NOT NULL,
 	filetype_id          bigint  NOT NULL,
 	investigation_type   varchar  ,
-	data_type_id         bigint  NOT NULL,
 	preprocessing_status varchar DEFAULT 'not_preprocessed' NOT NULL,
 	CONSTRAINT pk_raw_data UNIQUE ( raw_data_id ) ,
 	CONSTRAINT pk_raw_data_0 PRIMARY KEY ( raw_data_id ),
-	CONSTRAINT fk_raw_data_filetype FOREIGN KEY ( filetype_id ) REFERENCES qiita.filetype( filetype_id )    ,
-	CONSTRAINT fk_raw_data_data_type FOREIGN KEY ( data_type_id ) REFERENCES qiita.data_type( data_type_id )    
+	CONSTRAINT fk_raw_data_filetype FOREIGN KEY ( filetype_id ) REFERENCES qiita.filetype( filetype_id )    
  );
 
 CREATE INDEX idx_raw_data ON qiita.raw_data ( filetype_id );
 
-CREATE INDEX idx_raw_data_0 ON qiita.raw_data ( data_type_id );
-
 COMMENT ON COLUMN qiita.raw_data.investigation_type IS 'The investigation type (e.g., one of the values from EBI`s set of known types)';
-
-CREATE TABLE qiita.raw_data_prep_columns ( 
-	raw_data_id          bigint  NOT NULL,
-	column_name          varchar  NOT NULL,
-	column_type          varchar  NOT NULL,
-	CONSTRAINT idx_raw_data_prep_columns PRIMARY KEY ( raw_data_id, column_name, column_type ),
-	CONSTRAINT fk_prep_columns_raw_data FOREIGN KEY ( raw_data_id ) REFERENCES qiita.raw_data( raw_data_id )    
- );
-
-CREATE INDEX idx_prep_columns ON qiita.raw_data_prep_columns ( raw_data_id );
-
-COMMENT ON TABLE qiita.raw_data_prep_columns IS 'Holds the columns available for a given raw data prep';
 
 CREATE TABLE qiita.raw_preprocessed_data ( 
 	raw_data_id          bigint  NOT NULL,
@@ -380,6 +364,19 @@ COMMENT ON COLUMN qiita.logging.time IS 'Time the error was thrown';
 COMMENT ON COLUMN qiita.logging.msg IS 'Error message thrown';
 
 COMMENT ON COLUMN qiita.logging.information IS 'Other applicable information (depending on error)';
+
+CREATE TABLE qiita.prep_template ( 
+	prep_template_id     bigserial  NOT NULL,
+	data_type_id         bigint  NOT NULL,
+	raw_data_id          bigint  NOT NULL,
+	CONSTRAINT pk_prep_template PRIMARY KEY ( prep_template_id ),
+	CONSTRAINT fk_prep_template_data_type FOREIGN KEY ( data_type_id ) REFERENCES qiita.data_type( data_type_id )    ,
+	CONSTRAINT fk_prep_template_raw_data FOREIGN KEY ( raw_data_id ) REFERENCES qiita.raw_data( raw_data_id )    
+ );
+
+CREATE INDEX idx_prep_template ON qiita.prep_template ( data_type_id );
+
+CREATE INDEX idx_prep_template_0 ON qiita.prep_template ( raw_data_id );
 
 CREATE TABLE qiita.preprocessed_filepath ( 
 	preprocessed_data_id bigint  NOT NULL,
@@ -749,6 +746,16 @@ CREATE INDEX idx_job_results_filepath_1 ON qiita.job_results_filepath ( filepath
 
 COMMENT ON TABLE qiita.job_results_filepath IS 'Holds connection between jobs and the result filepaths';
 
+CREATE TABLE qiita.prep_columns ( 
+	prep_template_id     bigint  NOT NULL,
+	column_name          varchar  NOT NULL,
+	column_type          varchar  NOT NULL,
+	CONSTRAINT idx_prep_columns_0 PRIMARY KEY ( prep_template_id, column_name, column_type ),
+	CONSTRAINT fk_prep_columns_prep_template FOREIGN KEY ( prep_template_id ) REFERENCES qiita.prep_template( prep_template_id )    
+ );
+
+CREATE INDEX idx_prep_columns_1 ON qiita.prep_columns ( prep_template_id );
+
 CREATE TABLE qiita.processed_params_sortmerna ( 
 	processed_params_id  bigserial  NOT NULL,
 	reference_id         bigint  NOT NULL,
@@ -857,23 +864,25 @@ CREATE INDEX idx_analysis_sample_1 ON qiita.analysis_sample ( sample_id );
 CREATE INDEX idx_analysis_sample_2 ON qiita.analysis_sample ( sample_id, study_id );
 
 CREATE TABLE qiita.common_prep_info ( 
-	raw_data_id          bigserial  NOT NULL,
+	prep_template_id     bigint  NOT NULL,
 	sample_id            varchar  NOT NULL,
 	study_id             bigint  NOT NULL,
 	center_name          varchar  ,
 	center_project_name  varchar  ,
 	emp_status_id        bigint  NOT NULL,
-	CONSTRAINT idx_common_prep_info PRIMARY KEY ( raw_data_id, sample_id, study_id ),
-	CONSTRAINT fk_required_prep_info_raw_data FOREIGN KEY ( raw_data_id ) REFERENCES qiita.raw_data( raw_data_id )    ,
+	CONSTRAINT idx_common_prep_info PRIMARY KEY ( prep_template_id, sample_id, study_id ),
 	CONSTRAINT fk_required_prep_info_emp_status FOREIGN KEY ( emp_status_id ) REFERENCES qiita.emp_status( emp_status_id )    ,
-	CONSTRAINT fk_common_prep_info FOREIGN KEY ( sample_id, study_id ) REFERENCES qiita.required_sample_info( sample_id, study_id )    
+	CONSTRAINT fk_common_prep_info FOREIGN KEY ( sample_id, study_id ) REFERENCES qiita.required_sample_info( sample_id, study_id )    ,
+	CONSTRAINT fk_prep_template FOREIGN KEY ( prep_template_id ) REFERENCES qiita.prep_template( prep_template_id )    
  );
-
-CREATE INDEX idx_required_prep_info ON qiita.common_prep_info ( raw_data_id );
 
 CREATE INDEX idx_required_prep_info_0 ON qiita.common_prep_info ( emp_status_id );
 
 CREATE INDEX idx_required_prep_info_2 ON qiita.common_prep_info ( sample_id );
 
 CREATE INDEX idx_common_prep_info_0 ON qiita.common_prep_info ( sample_id, study_id );
+
+CREATE INDEX idx_common_prep_info_1 ON qiita.common_prep_info ( prep_template_id );
+
+COMMENT ON COLUMN qiita.common_prep_info.prep_template_id IS 'The prep template identifier';
 
