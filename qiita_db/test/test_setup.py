@@ -76,8 +76,8 @@ class SetupTest(TestCase):
     def test_preprocessed_data(self):
         self.assertEqual(get_count("qiita.preprocessed_data"), 2)
 
-    def test_raw_preprocessed_data(self):
-        self.assertEqual(get_count("qiita.raw_preprocessed_data"), 2)
+    def test_prep_template_preprocessed_data(self):
+        self.assertEqual(get_count("qiita.prep_template_preprocessed_data"), 2)
 
     def test_study_preprocessed_data(self):
         self.assertEqual(get_count("qiita.study_preprocessed_data"), 2)

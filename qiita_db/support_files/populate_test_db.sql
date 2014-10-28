@@ -292,7 +292,7 @@ INSERT INTO qiita.prep_1 (sample_id, study_id, BarcodeSequence, LIBRARY_CONSTRUC
 INSERT INTO qiita.preprocessed_data (preprocessed_params_table, preprocessed_params_id, submitted_to_insdc_status, ebi_submission_accession, ebi_study_accession, data_type_id) VALUES ('preprocessed_sequence_illumina_params', 1, 'submitting', 'EBI123456-AA', 'EBI123456-BB', 2), ('preprocessed_sequence_illumina_params', 2, 'not submitted', NULL, NULL, 2);
 
 -- Link the new preprocessed data with the raw data
-INSERT INTO qiita.raw_preprocessed_data (raw_data_id, preprocessed_data_id) VALUES (1, 1), (1, 2);
+INSERT INTO qiita.prep_template_preprocessed_data (prep_template_id, preprocessed_data_id) VALUES (1, 1), (1, 2);
 
 -- Insert (link) preprocessed information to study 1
 INSERT INTO qiita.study_preprocessed_data (preprocessed_data_id, study_id) VALUES (1, 1), (2, 1);
