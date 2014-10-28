@@ -7,6 +7,7 @@ from .analysis_pipeline import RunAnalysis
 from qiita_core.qiita_settings import qiita_config
 from qiita_ware.commands import submit_EBI_from_files
 from qiita_ware.demux import to_per_sample_ascii
+from qiita_ware.exceptions import ComputeError
 from qiita_ware.util import open_file
 from qiita_db.study import Study
 from qiita_db.analysis import Analysis
@@ -67,6 +68,10 @@ def submit_to_ebi(study_id):
 
     if study_acc is None or submission_acc is None:
         preprocessed_data.update_insdc_status('failed')
+
+        # this exception is raised so the compute wrapper sets the job status
+        # as 'success' and instead lists it as 'failed'
+        raise ComputeError("EBI Submission failed!")
     else:
         preprocessed_data.update_insdc_status('success', study_acc,
                                               submission_acc)
