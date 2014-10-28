@@ -563,15 +563,12 @@ class Study(QiitaStatusObject):
         bool
             Whether user has access to study or not
         """
-        conn_handler = SQLConnectionHandler()
         # if admin or superuser, just return true
         if user.level in {'superuser', 'admin'}:
             return True
 
-        if self._id in user.private_studies + user.shared_studies \
-                + self.get_public():
-            return True
-        return False
+        return self._id in user.private_studies + user.shared_studies \
+            + self.get_public()
 
 
 class StudyPerson(QiitaObject):

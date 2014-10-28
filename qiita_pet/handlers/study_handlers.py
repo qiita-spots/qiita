@@ -37,10 +37,10 @@ from qiita_db.data import RawData
 
 
 def _check_access(user, study):
-        """make sure user has access to the study requested"""
-        if not study.has_access(user):
-            raise HTTPError(403, "User %s does not have access to study %d" %
-                            (user.id, study.id))
+    """make sure user has access to the study requested"""
+    if not study.has_access(user):
+        raise HTTPError(403, "User %s does not have access to study %d" %
+                        (user.id, study.id))
 
 
 class CreateStudyForm(Form):
@@ -163,14 +163,12 @@ class StudyDescriptionHandler(BaseHandler):
 
         valid_ssb = ','.join(map(str, valid_ssb))
         ssb = len(valid_ssb) > 0
-        study_title = study.title
-        study_info = study.info
 
         # getting the ontologies
         ena = Ontology(convert_to_id('ENA', 'ontology'))
 
         self.render('study_description.html', user=self.current_user,
-                    study_title=study_title, study_info=study_info,
+                    study_title=study.title, study_info=study.info,
                     study_id=study_id, files=fs, ssb=ssb, vssb=valid_ssb,
                     max_upload_size=qiita_config.max_upload_size,
                     sls=split_libs_status, filetypes=fts,
