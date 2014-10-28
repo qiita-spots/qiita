@@ -231,7 +231,7 @@ class PreprocessedDataTests(TestCase):
         # Check that the returned object has the correct id
         obs = PreprocessedData.create(
             self.study, self.params_table,
-            self.params_id, self.filepaths, raw_data=self.raw_data,
+            self.params_id, self.filepaths, prep_template=self.prep_template,
             ebi_submission_accession=self.ebi_submission_accession,
             ebi_study_accession=self.ebi_study_accession)
         self.assertEqual(obs.id, 3)
@@ -357,7 +357,7 @@ class PreprocessedDataTests(TestCase):
                                     "preprocessed_sequence_illumina_params",
                                     self.params_id, self.filepaths,
                                     data_type="Metabolomics",
-                                    raw_data=self.raw_data)
+                                    prep_template=self.prep_template)
 
     def test_get_filepaths(self):
         """Correctly returns the filepaths to the preprocessed files"""
@@ -371,10 +371,10 @@ class PreprocessedDataTests(TestCase):
                 "preprocessed_demux")]
         self.assertEqual(obs, exp)
 
-    def test_raw_data(self):
-        """Correctly returns the raw data"""
+    def test_prep_template(self):
+        """Correctly returns the prep template"""
         ppd = PreprocessedData(1)
-        self.assertEqual(ppd.raw_data, 1)
+        self.assertEqual(ppd.prep_template, 1)
 
     def test_study(self):
         """Correctly returns the study"""
@@ -394,7 +394,7 @@ class PreprocessedDataTests(TestCase):
     def test_set_ebi_submission_accession(self):
         new = PreprocessedData.create(
             self.study, self.params_table, self.params_id, self.filepaths,
-            raw_data=self.raw_data,
+            prep_template=self.prep_template,
             ebi_submission_accession=self.ebi_submission_accession,
             ebi_study_accession=self.ebi_study_accession)
 
@@ -404,7 +404,7 @@ class PreprocessedDataTests(TestCase):
     def test_ebi_study_accession(self):
         new = PreprocessedData.create(
             self.study, self.params_table,
-            self.params_id, self.filepaths, raw_data=self.raw_data,
+            self.params_id, self.filepaths, prep_template=self.prep_template,
             ebi_submission_accession=self.ebi_submission_accession,
             ebi_study_accession=self.ebi_study_accession)
 
