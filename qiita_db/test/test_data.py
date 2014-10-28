@@ -17,6 +17,7 @@ from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_db.study import Study
 from qiita_db.util import get_db_files_base_dir
 from qiita_db.data import BaseData, RawData, PreprocessedData, ProcessedData
+from qiita_db.metadata_template import PrepTemplate
 from qiita_db.exceptions import QiitaDBColumnError
 
 
@@ -192,16 +193,16 @@ class RawDataTests(TestCase):
         with self.assertRaises(ValueError):
             rd.preprocessing_status = 'not a valid state'
 
-    def test_preprocessed_data(self):
+    def test_prep_templates(self):
         rd = RawData(1)
-        self.assertEqual(rd.preprocessed_data, [1, 2])
+        self.assertEqual(rd.prep_templates, [1])
 
 
 @qiita_test_checker()
 class PreprocessedDataTests(TestCase):
     """Tests the PreprocessedData class"""
     def setUp(self):
-        self.raw_data = RawData(1)
+        self.prep_template = PrepTemplate(1)
         self.study = Study(1)
         self.params_table = "preprocessed_sequence_illumina_params"
         self.params_id = 1
