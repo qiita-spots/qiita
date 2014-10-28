@@ -8,10 +8,12 @@ from qiita_core.qiita_settings import qiita_config
 from qiita_ware.commands import submit_EBI_from_files
 from qiita_ware.demux import to_per_sample_ascii
 from qiita_ware.util import open_file
+from qiita_db.util import convert_to_id
 from qiita_db.study import Study
 from qiita_db.analysis import Analysis
 from qiita_db.metadata_template import SampleTemplate, PrepTemplate
 from qiita_db.data import PreprocessedData, RawData
+from qiita_db.ontology import Ontology
 
 
 def preprocessor(study_id, raw_data_id, param_id, param_constructor):
@@ -38,7 +40,15 @@ def submit_to_ebi(study_id):
     if state in ('submitting', 'success'):
         raise ValueError("Cannot resubmit! Current state is: %s" % state)
 
-    investigation_type = RawData(raw_data_id).investigation_type
+    # we need to figure out whehter the investigation type is a known one
+    # or if we have to submit a "new_investigation_type" to EBI
+    current_type = RawData(raw_data_id).investigation_type
+    if current_type not in Ontology(convert_to_id('ENA', 'ontology')):
+        investigation_type = 'Other'
+        new_investigation_type = current_type
+    else:
+        investigation_type = current_type
+        new_investigation_type = None
 
     demux = [path for path, ftype in preprocessed_data.get_filepaths()
              if ftype == 'preprocessed_demux'][0]
@@ -63,7 +73,8 @@ def submit_to_ebi(study_id):
                                                       open(prep_fp), tmp_dir,
                                                       output_dir,
                                                       investigation_type,
-                                                      'ADD', True)
+                                                      'ADD', True,
+                                                      new_investigation_type)
 
     if study_acc is None or submission_acc is None:
         preprocessed_data.update_insdc_status('failed')
