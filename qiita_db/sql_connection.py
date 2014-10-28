@@ -17,12 +17,14 @@ from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 
 from .exceptions import QiitaDBExecutionError, QiitaDBConnectionError
 from qiita_core.qiita_settings import qiita_config
+from qiita_core.exceptions import IncompetentQiitaDeveloperError
 
 
 class SQLConnectionHandler(object):
     """Encapsulates the DB connection with the Postgres DB"""
     def __init__(self, admin=False):
-        self._open_connection(admin)
+        self.admin = admin
+        self._open_connection()
         # queues for transaction blocks
         self.queues = {}
 
@@ -34,7 +36,7 @@ class SQLConnectionHandler(object):
         except:
             pass
 
-    def _open_connection(self, admin=False):
+    def _open_connection(self):
         # connection string arguments for a normal user
         args = {
             'user': qiita_config.user,
@@ -45,7 +47,7 @@ class SQLConnectionHandler(object):
 
         # if this is an admin user, do not connect to a particular database,
         # and use the admin credentials
-        if admin:
+        if self.admin:
             args['user'] = qiita_config.admin_user
             args['password'] = qiita_config.admin_password
             del args['database']
@@ -56,7 +58,7 @@ class SQLConnectionHandler(object):
             # catch any exception and raise as runtime error
             raise RuntimeError("Cannot connect to database: %s" % str(e))
 
-        if admin:
+        if self.admin:
             # Set the isolation level to AUTOCOMMIT so we can execute a create
             # or drop database sql query
             self._connection.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
@@ -163,7 +165,7 @@ class SQLConnectionHandler(object):
 
         Currently does not support executemany command
 
-        Queues are executed in FILO order
+        Queues are executed in FIFO order
         """
         def chain(item):
             # itertools chain not playing nicely, use my own
@@ -254,11 +256,12 @@ class SQLConnectionHandler(object):
         -----
         Currently does not support executemany command
 
-        Queues are executed in FILO order
+        Queues are executed in FIFO order
         """
         # basic validation of insert item
         if sql_args and type(sql_args) not in {list, tuple}:
-            raise IncompetentQiitaDeveloperError("sql_args is malformed!")
+            raise IncompetentQiitaDeveloperError("sql_args must be list or "
+                                                 "tuple!")
         self.queues[queue].append((sql, sql_args))
 
     def execute_fetchall(self, sql, sql_args=None):
