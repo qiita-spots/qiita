@@ -1,5 +1,5 @@
 r"""
-User object (:mod:`qiita_db.sql_connection`)
+SQL Connection object (:mod:`qiita_db.sql_connection`)
 ==================================
 
 .. currentmodule:: qiita_db.sql_connection

@@ -75,5 +75,7 @@ class TestConnHandler(TestCase):
             "SELECT * from qiita.qiita_user WHERE email LIKE "
             "'%somebody@foo.bar%'")
         self.assertEqual(obs, [])
+
+
 if __name__ == "__main__":
     main()
