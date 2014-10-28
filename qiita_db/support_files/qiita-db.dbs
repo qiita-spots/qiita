@@ -593,16 +593,16 @@
 				<column name="prep_template_id" />
 				<column name="preprocessed_data_id" />
 			</index>
-			<index name="idx_prep_template_preprocessed_data" unique="NORMAL" >
+			<index name="idx_prep_template_preprocessed_data_0" unique="NORMAL" >
 				<column name="prep_template_id" />
 			</index>
-			<index name="idx_prep_template_preprocessed_data" unique="NORMAL" >
+			<index name="idx_prep_template_preprocessed_data_1" unique="NORMAL" >
 				<column name="preprocessed_data_id" />
 			</index>
-			<fk name="fk_prep_template" to_schema="qiita" to_table="prep_template" >
+			<fk name="fk_prep_template_id" to_schema="qiita" to_table="prep_template" >
 				<fk_column name="prep_template_id" pk="prep_template_id" />
 			</fk>
-			<fk name="fk_preprocessed_data" to_schema="qiita" to_table="preprocessed_data" >
+			<fk name="fk_prep_template_preprocessed_data" to_schema="qiita" to_table="preprocessed_data" >
 				<fk_column name="preprocessed_data_id" pk="preprocessed_data_id" />
 			</fk>
 		</table>
@@ -1378,7 +1378,6 @@ Controlled Vocabulary]]></comment>
 			<entity schema="qiita" name="study_processed_data" />
 			<entity schema="qiita" name="prep_template" />
 			<entity schema="qiita" name="prep_columns" />
-			<entity schema="qiita" name="prep_template_preprocessed_data" />
 		</group>
 		<group name="Group_vocabularies" color="00ffcc" >
 			<entity schema="qiita" name="controlled_vocab" />

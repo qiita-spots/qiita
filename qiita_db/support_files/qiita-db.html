@@ -663,15 +663,15 @@ table {
 </path>
 <text x='1162' y='505' transform='rotate(0 1162,505)' title='Foreign Key fk_raw_filepath_0
 	raw_filepath references raw_data ( raw_data_id )' style='fill:#a1a0a0;'>raw_data_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1200 600 L 1192,600 Q 1185,600 1185,592 L 1185,427 Q 1185,420 1177,420 L 1170,420' >
-	<title>Foreign Key fk_prep_template
+	<title>Foreign Key fk_prep_template_id
 	prep_template_preprocessed_data references prep_template ( prep_template_id )</title>
 </path>
-<text x='1109' y='595' transform='rotate(0 1109,595)' title='Foreign Key fk_prep_template
+<text x='1109' y='595' transform='rotate(0 1109,595)' title='Foreign Key fk_prep_template_id
 	prep_template_preprocessed_data references prep_template ( prep_template_id )' style='fill:#a1a0a0;'>prep_template_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1425 660 L 1432,660 Q 1440,660 1440,667 L 1440,697 Q 1440,705 1432,705 L 1425,705' >
-	<title>Foreign Key fk_preprocessed_data
+	<title>Foreign Key fk_prep_template_preprocessed_data
 	prep_template_preprocessed_data references preprocessed_data ( preprocessed_data_id )</title>
 </path>
-<text x='1432' y='655' transform='rotate(0 1432,655)' title='Foreign Key fk_preprocessed_data
+<text x='1432' y='655' transform='rotate(0 1432,655)' title='Foreign Key fk_prep_template_preprocessed_data
 	prep_template_preprocessed_data references preprocessed_data ( preprocessed_data_id )' style='fill:#a1a0a0;'>preprocessed_data_id</text><!-- ============= Table 'controlled_vocab_values' ============= -->
 <rect class='table' x='45' y='1523' width='150' height='120' rx='7' ry='7' />
 <path d='M 45.50 1549.50 L 45.50 1530.50 Q 45.50 1523.50 52.50 1523.50 L 187.50 1523.50 Q 194.50 1523.50 194.50 1530.50 L 194.50 1549.50 L45.50 1549.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
@@ -1588,7 +1588,6 @@ The prep template identifier</title></a>
 <a xlink:href='#prep_template.prep_template_id'><text x='1053' y='382'>prep_template_id</text><title>prep_template_id bigserial not null</title></a>
 <a xlink:href='#prep_template.prep_template_id'><use id='ref' x='1158' y='371' xlink:href='#ref'/><title>Referred by common_prep_info ( prep_template_id ) 
 Referred by prep_columns ( prep_template_id ) 
-Referred by prep_template_preprocessed_data ( prep_template_id ) 
 Referred by prep_template_preprocessed_data ( prep_template_id ) </title></a>
   <use id='nn' x='1037' y='387' xlink:href='#nn'/><a xlink:href='#prep_template.data_type_id'><use id='idx' x='1037' y='386' xlink:href='#idx'/><title>Index  ( data_type_id ) </title></a>
 <a xlink:href='#prep_template.data_type_id'><text x='1053' y='397'>data_type_id</text><title>data_type_id bigint not null</title></a>
@@ -4606,22 +4605,22 @@ Controlled Vocabulary </td>
 		<td> ON prep&#095;template&#095;id&#044; preprocessed&#095;data&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>idx&#095;prep&#095;template&#095;preprocessed&#095;data </td>
+	<tr>		<td>idx&#095;prep&#095;template&#095;preprocessed&#095;data&#095;0 </td>
 		<td> ON prep&#095;template&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>idx&#095;prep&#095;template&#095;preprocessed&#095;data </td>
+	<tr>		<td>idx&#095;prep&#095;template&#095;preprocessed&#095;data&#095;1 </td>
 		<td> ON preprocessed&#095;data&#095;id</td>
 		<td>  </td>
 	</tr>
 <tr><th colspan='3'><b>Foreign Keys</b></th></tr>
 	<tr>
-		<td>fk_prep_template</td>
+		<td>fk_prep_template_id</td>
 		<td > ( prep&#095;template&#095;id ) ref <a href='#prep&#095;template'>prep&#095;template</a> (prep&#095;template&#095;id) </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>fk_preprocessed_data</td>
+		<td>fk_prep_template_preprocessed_data</td>
 		<td > ( preprocessed&#095;data&#095;id ) ref <a href='#preprocessed&#095;data'>preprocessed&#095;data</a> (preprocessed&#095;data&#095;id) </td>
 		<td>  </td>
 	</tr>

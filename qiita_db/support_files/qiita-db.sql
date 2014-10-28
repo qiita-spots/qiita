@@ -370,13 +370,13 @@ CREATE TABLE qiita.prep_template_preprocessed_data (
 	prep_template_id     bigint  NOT NULL,
 	preprocessed_data_id bigint  NOT NULL,
 	CONSTRAINT idx_prep_template_preprocessed_data PRIMARY KEY ( prep_template_id, preprocessed_data_id ),
-	CONSTRAINT fk_prep_template FOREIGN KEY ( prep_template_id ) REFERENCES qiita.prep_template( prep_template_id )    ,
-	CONSTRAINT fk_preprocessed_data FOREIGN KEY ( preprocessed_data_id ) REFERENCES qiita.preprocessed_data( preprocessed_data_id )    
+	CONSTRAINT fk_prep_template_id FOREIGN KEY ( prep_template_id ) REFERENCES qiita.prep_template( prep_template_id )    ,
+	CONSTRAINT fk_prep_template_preprocessed_data FOREIGN KEY ( preprocessed_data_id ) REFERENCES qiita.preprocessed_data( preprocessed_data_id )    
  );
 
-CREATE INDEX idx_prep_template_preprocessed_data ON qiita.prep_template_preprocessed_data ( prep_template_id );
+CREATE INDEX idx_prep_template_preprocessed_data_0 ON qiita.prep_template_preprocessed_data ( prep_template_id );
 
-CREATE INDEX idx_prep_template_preprocessed_data ON qiita.prep_template_preprocessed_data ( preprocessed_data_id );
+CREATE INDEX idx_prep_template_preprocessed_data_1 ON qiita.prep_template_preprocessed_data ( preprocessed_data_id );
 
 CREATE TABLE qiita.preprocessed_filepath ( 
 	preprocessed_data_id bigint  NOT NULL,
