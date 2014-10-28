@@ -11,6 +11,7 @@ from os.path import dirname, join
 from base64 import b64encode
 from uuid import uuid4
 
+from qiita_core.qiita_settings import qiita_config
 from qiita_pet.handlers.base_handlers import (MainHandler, NoPageHandler)
 from qiita_pet.handlers.auth_handlers import (
     AuthCreateHandler, AuthLoginHandler, AuthLogoutHandler, AuthVerifyHandler)
@@ -37,7 +38,7 @@ STATIC_PATH = join(DIRNAME, "static")
 TEMPLATE_PATH = join(DIRNAME, "templates")  # base folder for webpages
 RES_PATH = get_db_files_base_dir()
 COOKIE_SECRET = b64encode(uuid4().bytes + uuid4().bytes)
-DEBUG = True
+DEBUG = qiita_config.test_environment
 
 
 class Application(tornado.web.Application):

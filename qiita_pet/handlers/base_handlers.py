@@ -14,6 +14,10 @@ class BaseHandler(RequestHandler):
 
     def write_error(self, status_code, **kwargs):
         '''Overrides the error page created by Tornado'''
+        if status_code == 404:
+            # just use the 404 page as the error
+            self.render("404.html", user=self.current_user)
+            return
         from traceback import format_exception
         if self.settings.get("debug") and "exc_info" in kwargs:
             exc_info = kwargs["exc_info"]
@@ -27,6 +31,10 @@ class BaseHandler(RequestHandler):
             self.render('error.html', error=error, trace_info=trace_info,
                         request_info=request_info,
                         user=self.current_user)
+
+    def head(self):
+        """Adds proper response for head requests"""
+        self.finish()
 
 
 class MainHandler(BaseHandler):
@@ -44,4 +52,10 @@ class MockupHandler(BaseHandler):
 
 class NoPageHandler(BaseHandler):
     def get(self):
+        self.set_status(404)
         self.render("404.html", user=self.current_user)
+
+    def head(self):
+        """Satisfy servers that this url exists"""
+        self.set_status(404)
+        self.finish()

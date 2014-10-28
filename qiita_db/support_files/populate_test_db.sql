@@ -41,7 +41,6 @@ INSERT INTO qiita.study (email, study_status_id, emp_person_id, first_contact,
 
 -- Insert study_users (share study 1 with shared user)
 INSERT INTO qiita.study_users (study_id, email) VALUES (1, 'shared@foo.bar');
-INSERT INTO qiita.study_users (study_id, email) VALUES (1, 'demo@microbio.me');
 
 -- Insert PMIDs for study
 INSERT INTO qiita.study_pmid (study_id, pmid) VALUES (1, '123456'), (1, '7891011');

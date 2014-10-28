@@ -60,18 +60,19 @@ class RawDataTests(TestCase):
         # Make sure there is an error if an investigation_type is supplied
         # that does not exist
         with self.assertRaises(QiitaDBColumnError):
-            RawData.create(self.filetype, self.filepaths, self.studies,
-                           self.data_type_id, 'Not a term')
+            RawData.create(self.filetype, self.studies, self.data_type_id,
+                           self.filepaths, 'Not a term')
 
         # Check that the returned object has the correct id
-        obs = RawData.create(self.filetype, self.filepaths, self.studies,
-                             self.data_type_id)
+        obs = RawData.create(self.filetype, self.studies, self.data_type_id,
+                             self.filepaths)
         self.assertEqual(obs.id, 3)
 
         # Check that the raw data have been correctly added to the DB
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.raw_data WHERE raw_data_id=3")
-        # raw_data_id, filetype, submitted_to_insdc
+        # raw_data_id, filetype, investigation_type, data_type_id,
+        # preprocessing_status
         self.assertEqual(obs, [[3, 2, None, 2, 'not_preprocessed']])
 
         # Check that the raw data have been correctly linked with the study
@@ -107,6 +108,30 @@ class RawDataTests(TestCase):
             "SELECT * FROM qiita.raw_filepath WHERE raw_data_id=3")
         # raw_data_id, filepath_id
         self.assertEqual(obs, [[3, 16], [3, 17]])
+
+    def test_create_no_filepaths(self):
+        """Correctly creates a raw data object with no filepaths attached"""
+        # Check that the returned object has the correct id
+        obs = RawData.create(self.filetype, self.studies, self.data_type_id)
+        self.assertEqual(obs.id, 3)
+
+        # Check that the raw data have been correctly added to the DB
+        obs = self.conn_handler.execute_fetchall(
+            "SELECT * FROM qiita.raw_data WHERE raw_data_id=3")
+        # raw_data_id, filetype, investigation_type, data_type_id,
+        # preprocessing_status
+        self.assertEqual(obs, [[3, 2, None, 2, 'not_preprocessed']])
+
+        # Check that the raw data have been correctly linked with the study
+        obs = self.conn_handler.execute_fetchall(
+            "SELECT * FROM qiita.study_raw_data WHERE raw_data_id=3")
+        # study_id , raw_data_id
+        self.assertEqual(obs, [[1, 3]])
+
+        # Check that no files have been linked with the filepaths
+        obs = self.conn_handler.execute_fetchall(
+            "SELECT * FROM qiita.raw_filepath WHERE raw_data_id=3")
+        self.assertEqual(obs, [])
 
     def test_get_filepaths(self):
         """Correctly returns the filepaths to the raw files"""

@@ -1,5 +1,5 @@
 from unittest import TestCase, main
-from datetime import date
+from datetime import datetime
 
 from future.utils import viewitems
 
@@ -145,7 +145,7 @@ class TestStudy(TestCase):
             'emp_person_id': StudyPerson(2),
             'funding': None,
             'vamps_id': None,
-            'first_contact': '2014-05-19 16:10',
+            'first_contact': datetime(2014, 5, 19, 16, 10),
             'principal_investigator_id': StudyPerson(3),
             'timeseries_type_id': 1,
             'study_abstract':
@@ -164,8 +164,32 @@ class TestStudy(TestCase):
             'portal_type_id': 2,
             'study_alias': 'Cannabis Soils',
             'most_recent_contact': '2014-05-19 16:11',
+            'most_recent_contact': datetime(2014, 5, 19, 16, 11),
             'lab_person_id': StudyPerson(1),
             'number_samples_collected': 27}
+
+    def _make_private(self):
+        # make studies private
+        self.conn_handler.execute("UPDATE qiita.study SET study_status_id = 3")
+
+    def test_has_access_public(self):
+        self.assertTrue(self.study.has_access(User("demo@microbio.me")))
+
+    def test_has_access_shared(self):
+        self._make_private()
+        self.assertTrue(self.study.has_access(User("shared@foo.bar")))
+
+    def test_has_access_private(self):
+        self._make_private()
+        self.assertTrue(self.study.has_access(User("test@foo.bar")))
+
+    def test_has_access_admin(self):
+        self._make_private()
+        self.assertTrue(self.study.has_access(User("admin@foo.bar")))
+
+    def test_has_access_no_access(self):
+        self._make_private()
+        self.assertFalse(self.study.has_access(User("demo@microbio.me")))
 
     def test_get_public(self):
         Study.create(User('test@foo.bar'), 'NOT Identification of the '
@@ -180,14 +204,15 @@ class TestStudy(TestCase):
 
     def test_create_study_min_data(self):
         """Insert a study into the database"""
+        before = datetime.now()
         obs = Study.create(User('test@foo.bar'), "Fried chicken microbiome",
                            [1], self.info)
+        after = datetime.now()
         self.assertEqual(obs.id, 2)
         exp = {'mixs_compliant': True, 'metadata_complete': True,
                'reprocess': False, 'study_status_id': 1,
                'number_samples_promised': 28, 'emp_person_id': 2,
                'funding': None, 'vamps_id': None,
-               'first_contact': date.today().isoformat(),
                'principal_investigator_id': 3,
                'timeseries_type_id': 1,
                'study_abstract': 'Exploring how a high fat diet changes the '
@@ -204,6 +229,12 @@ class TestStudy(TestCase):
             "SELECT * FROM qiita.study WHERE study_id = 2")
         self.assertEqual(len(obsins), 1)
         obsins = dict(obsins[0])
+
+        # Check the timestamp separately, since it is set by the database
+        # to the microsecond, and we can't predict it a priori
+        ins_timestamp = obsins.pop('first_contact')
+        self.assertTrue(before < ins_timestamp < after)
+
         self.assertEqual(obsins, exp)
 
         # make sure EFO went in to table correctly
@@ -230,7 +261,7 @@ class TestStudy(TestCase):
             'spatial_series': True,
             'metadata_complete': False,
             'reprocess': True,
-            'first_contact': "Today",
+            'first_contact': "10/24/2014 12:47PM",
             'study_id': 3827
             })
         obs = Study.create(User('test@foo.bar'), "Fried chicken microbiome",
@@ -240,7 +271,7 @@ class TestStudy(TestCase):
                'reprocess': True, 'study_status_id': 1,
                'number_samples_promised': 28, 'emp_person_id': 2,
                'funding': 'FundAgency', 'vamps_id': 'MBE_1111111',
-               'first_contact': "Today",
+               'first_contact': datetime(2014, 10, 24, 12, 47),
                'principal_investigator_id': 3, 'timeseries_type_id': 1,
                'study_abstract': 'Exploring how a high fat diet changes the '
                                  'gut microbiome',
@@ -341,8 +372,8 @@ class TestStudy(TestCase):
             "number_samples_collected": 28,
             "lab_person_id": StudyPerson(2),
             "vamps_id": 'MBE_111222',
-            "first_contact": "June 11, 2014"
         }
+        self.info['first_contact'] = "6/11/2014"
         new = Study.create(User('test@foo.bar'), 'NOT Identification of the '
                            'Microbiomes for Cannabis Soils', [1], self.info)
         self.infoexp.update(newinfo)
@@ -353,6 +384,8 @@ class TestStudy(TestCase):
         self.infoexp["most_recent_contact"] = None
         self.infoexp["reprocess"] = False
         self.infoexp["lab_person_id"] = 2
+        self.infoexp["first_contact"] = datetime(2014, 6, 11)
+
         self.assertEqual(new.info, self.infoexp)
 
     def test_set_info_public(self):
@@ -383,8 +416,7 @@ class TestStudy(TestCase):
         self.assertEqual(new.status, "private")
 
     def test_retrieve_shared_with(self):
-        self.assertEqual(self.study.shared_with, ['shared@foo.bar',
-                         'demo@microbio.me'])
+        self.assertEqual(self.study.shared_with, ['shared@foo.bar'])
 
     def test_retrieve_pmids(self):
         exp = ['123456', '7891011']

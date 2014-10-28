@@ -145,7 +145,7 @@ class TestLoadPrepTemplateFromCmd(TestCase):
         self.pt_contents = PREP_TEMPLATE
 
         self.raw_data = RawData.create(
-            2, [(seqs_fp, 1), (barcodes_fp, 2)], [Study(1)], 2)
+            2, [Study(1)], 2, filepaths=[(seqs_fp, 1), (barcodes_fp, 2)])
 
         join_f = partial(join, join(get_db_files_base_dir(), 'raw_data'))
         self.files_to_remove = [
