@@ -18,19 +18,21 @@
     {% block head %}{% end %}
   </head>
   <body style="padding-top: 65px; height: 100%">
-    <!-- try/except to check if we have a loginerror variable -->
-    {% try %}
-      <!-- if we have a loginerror variable make sure it's not empty -->
-      {% if loginerror != '' %}
-      <div class="alert alert-danger alert-dismissable">
+  {% set level = globals().get('level', '') %}
+  {% set message = globals().get('message', '') %}
+
+  {% if message != '' %}
+      {% if level not in {'danger', 'success', 'info'} %}
+          {% set level = 'info' %}
+      {% end %}
+      <div class="alert alert-{{ level }} alert-dismissable">
         <a href="#" class="close" data-dismiss="alert">&times;</a>
         <p align="center">
-          <strong>There's a problem with your credentials: </strong>{{loginerror}}
+          {{ message }}
         </p>
       </div>
-      {% end %}
-    {% except %}
-    {% end %}
+  {% end %}
+
     <div class="navbar navbar-inverse navbar-fixed-top" role="navigation">
       <div class="container">
         <div class="navbar-header">
