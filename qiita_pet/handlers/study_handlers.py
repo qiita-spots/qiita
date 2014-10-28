@@ -41,7 +41,7 @@ from qiita_db.data import RawData
 
 
 def _build_study_info(studytype, user=None):
-        """builds list of tuples for """
+        """builds list of namedtuples for study listings"""
         if studytype == "private":
             studylist = user.private_studies
         elif studytype == "shared":
