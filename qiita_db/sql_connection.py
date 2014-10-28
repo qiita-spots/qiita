@@ -1,6 +1,74 @@
-#!/usr/bin/env python
-from __future__ import division
+r"""
+User object (:mod:`qiita_db.sql_connection`)
+==================================
 
+.. currentmodule:: qiita_db.sql_connection
+
+This modules provides wrappers for the psycopg2 module to allow easy use of
+transaction blocks and SQL execution/data retrieval.
+
+Classes
+-------
+
+.. autosummary::
+   :toctree: generated/
+
+   SQLConnectionHandler
+
+Examples
+--------
+Transaction blocks are created by first creating a queue of SQL commands, then
+adding commands to it. Finally, the execute command is called to execute the
+entire queue of SQL commands. A single command is made up of SQL and sql_args.
+SQL is the sql string in psycopg2 format with \%s markup, and sql_args is the
+list or tuple of replacement items.
+An example of a basic queue with two SQL commands in a single transaction:
+
+from qiita_db.sql_connection import SQLConnectionHandler
+conn_handler = SQLConnectionHandler # doctest: +SKIP
+conn_handler.create_queue("example_queue") # doctest: +SKIP
+conn_handler.add_to_queue(
+    "example_queue", "INSERT INTO qiita.qiita_user (email, name, password,"
+    "phone) VALUES (%s, %s, %s, %s)",
+    ['insert@foo.bar', 'Toy', 'pass', '111-111-11112']) # doctest: +SKIP
+conn_handler.add_to_queue(
+    "example_queue", "UPDATE qiita.qiita_user SET user_level_id = 1, "
+    "phone = '222-222-2221' WHERE email = %s",
+    ['insert@foo.bar']) # doctest: +SKIP
+conn_handler.execute_queue("example_queue") # doctest: +SKIP
+conn_handler.execute_fetchall(
+    "SELECT * from qiita.qiita_user WHERE email = %s",
+    ['insert@foo.bar']) # doctest: +SKIP
+[['insert@foo.bar', 1, 'pass', 'Toy', None, None, '222-222-2221', None, None,
+  None]] # doctest: +SKIP
+
+You can also use results from a previous command in the queue in a later
+command. If an item in the queue depends on a previous sql command's output,
+use {#} notation as a placeholder for the value. The \# must be the
+position of the result, e.g. if you return two things you can use \{0\}
+to reference the first and \{1\} to referece the second. The results list
+will continue to grow until one of the references is reached, then it
+will be cleaned out.
+Modifying the previous example to show this ability (Note the RETURNING added
+to the first SQL command):
+
+from qiita_db.sql_connection import SQLConnectionHandler
+conn_handler = SQLConnectionHandler # doctest: +SKIP
+conn_handler.create_queue("example_queue") # doctest: +SKIP
+conn_handler.add_to_queue(
+    "example_queue", "INSERT INTO qiita.qiita_user (email, name, password,"
+    "phone) VALUES (%s, %s, %s, %s) RETURNING email, password",
+    ['insert@foo.bar', 'Toy', 'pass', '111-111-11112']) # doctest: +SKIP
+conn_handler.add_to_queue(
+    "example_queue", "UPDATE qiita.qiita_user SET user_level_id = 1, "
+    "phone = '222-222-2221' WHERE email = %s AND password = %s",
+    ['{0}', '{1}']) # doctest: +SKIP
+conn_handler.execute_queue("example_queue") # doctest: +SKIP
+conn_handler.execute_fetchall(
+    "SELECT * from qiita.qiita_user WHERE email = %s", ['insert@foo.bar'])
+[['insert@foo.bar', 1, 'pass', 'Toy', None, None, '222-222-2221', None, None,
+  None]] # doctest: +SKIP
+"""
 # -----------------------------------------------------------------------------
 # Copyright (c) 2014--, The Qiita Development Team.
 #
@@ -8,7 +76,7 @@ from __future__ import division
 #
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
-
+from __future__ import division
 from contextlib import contextmanager
 
 from psycopg2 import connect, Error as PostgresError
@@ -25,7 +93,8 @@ class SQLConnectionHandler(object):
     def __init__(self, admin=False):
         self.admin = admin
         self._open_connection()
-        # queues for transaction blocks
+        # queues for transaction blocks. Format is {str: list} where the str
+        # is the queue name and the list is the queue of SQL commands
         self.queues = {}
 
     def __del__(self):
@@ -156,13 +225,6 @@ class SQLConnectionHandler(object):
 
         Notes
         -----
-        If an item in the queue depends on a previous sql command's output,
-        use {#} notation as a placeholder for the value. The # must be the
-        position of the result, e.g. if you return two things you can use {0}
-        to reference the first and {1} to referece the second. The results list
-        will continue to grow until one of the references is reached, then it
-        will be cleaned out.
-
         Currently does not support executemany command
 
         Queues are executed in FIFO order
