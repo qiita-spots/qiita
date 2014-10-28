@@ -45,7 +45,8 @@ def load_study_from_cmd(owner, title, info):
     required_fields = ['timeseries_type_id', 'mixs_compliant',
                        'portal_type_id', 'reprocess', 'study_alias',
                        'study_description', 'study_abstract',
-                       'metadata_complete']
+                       'metadata_complete', 'efo_ids',
+                       'principal_investigator']
     optional_fields = ['funding', 'most_recent_contact', 'spatial_series',
                        'number_samples_collected', 'number_samples_promised',
                        'vamps_id', 'study_id']
