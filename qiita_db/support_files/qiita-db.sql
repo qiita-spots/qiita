@@ -201,18 +201,6 @@ CREATE INDEX idx_raw_data ON qiita.raw_data ( filetype_id );
 
 COMMENT ON COLUMN qiita.raw_data.investigation_type IS 'The investigation type (e.g., one of the values from EBI`s set of known types)';
 
-CREATE TABLE qiita.raw_preprocessed_data ( 
-	raw_data_id          bigint  NOT NULL,
-	preprocessed_data_id bigint  NOT NULL,
-	CONSTRAINT idx_raw_preprocessed_data PRIMARY KEY ( raw_data_id, preprocessed_data_id ),
-	CONSTRAINT fk_raw_preprocessed_data FOREIGN KEY ( raw_data_id ) REFERENCES qiita.raw_data( raw_data_id )    ,
-	CONSTRAINT fk_raw_preprocessed_data_0 FOREIGN KEY ( preprocessed_data_id ) REFERENCES qiita.preprocessed_data( preprocessed_data_id )    
- );
-
-CREATE INDEX idx_raw_preprocessed_data_0 ON qiita.raw_preprocessed_data ( raw_data_id );
-
-CREATE INDEX idx_raw_preprocessed_data_1 ON qiita.raw_preprocessed_data ( preprocessed_data_id );
-
 CREATE TABLE qiita.required_sample_info_status ( 
 	required_sample_info_status_id bigserial  NOT NULL,
 	status               varchar  ,
@@ -377,6 +365,18 @@ CREATE TABLE qiita.prep_template (
 CREATE INDEX idx_prep_template ON qiita.prep_template ( data_type_id );
 
 CREATE INDEX idx_prep_template_0 ON qiita.prep_template ( raw_data_id );
+
+CREATE TABLE qiita.prep_template_preprocessed_data ( 
+	prep_template_id     bigint  NOT NULL,
+	preprocessed_data_id bigint  NOT NULL,
+	CONSTRAINT idx_prep_template_preprocessed_data PRIMARY KEY ( prep_template_id, preprocessed_data_id ),
+	CONSTRAINT fk_prep_template FOREIGN KEY ( prep_template_id ) REFERENCES qiita.prep_template( prep_template_id )    ,
+	CONSTRAINT fk_preprocessed_data FOREIGN KEY ( preprocessed_data_id ) REFERENCES qiita.preprocessed_data( preprocessed_data_id )    
+ );
+
+CREATE INDEX idx_prep_template_preprocessed_data ON qiita.prep_template_preprocessed_data ( prep_template_id );
+
+CREATE INDEX idx_prep_template_preprocessed_data ON qiita.prep_template_preprocessed_data ( preprocessed_data_id );
 
 CREATE TABLE qiita.preprocessed_filepath ( 
 	preprocessed_data_id bigint  NOT NULL,
