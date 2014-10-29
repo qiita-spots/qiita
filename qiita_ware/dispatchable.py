@@ -69,8 +69,7 @@ def submit_to_ebi(study_id):
     if study_acc is None or submission_acc is None:
         preprocessed_data.update_insdc_status('failed')
 
-        # this exception is raised so the compute wrapper sets the job status
-        # as 'success' and instead lists it as 'failed'
+        # this will set the job status as failed
         raise ComputeError("EBI Submission failed!")
     else:
         preprocessed_data.update_insdc_status('success', study_acc,
