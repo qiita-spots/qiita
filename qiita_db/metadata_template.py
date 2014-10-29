@@ -973,7 +973,7 @@ class SampleTemplate(MetadataTemplate):
         study : Study
             The study to which the sample template belongs to.
         """
-        return {}
+        return set()
 
     @classmethod
     def create(cls, md_template, study):
@@ -1235,7 +1235,7 @@ class PrepTemplate(MetadataTemplate):
         """
         # We only have column requirements if the data type of the raw data
         # is one of the target gene types
-        missing_cols = {}
+        missing_cols = set()
         if data_type in TARGET_GENE_DATA_TYPES:
             md_template.rename(columns=RENAME_COLS_DICT, inplace=True)
 
