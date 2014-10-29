@@ -653,7 +653,14 @@ class MetadataTemplate(QiitaObject):
         id_ : obj
             The object identifier
 
+        Raises
+        ------
+        QiitaDBUnknownIDError
+            If no metadata_template with id id_ exists
         """
+        if not cls.exists(id_):
+            raise QiitaDBUnknownIDError(id_, cls.__name__)
+
         table_name = cls._table_name(id_)
         conn_handler = SQLConnectionHandler()
         conn_handler.execute(
@@ -973,7 +980,7 @@ class SampleTemplate(MetadataTemplate):
         study : Study
             The study to which the sample template belongs to.
         """
-        return {}
+        return set()
 
     @classmethod
     def create(cls, md_template, study):
@@ -1235,7 +1242,7 @@ class PrepTemplate(MetadataTemplate):
         """
         # We only have column requirements if the data type of the raw data
         # is one of the target gene types
-        missing_cols = {}
+        missing_cols = set()
         if data_type in TARGET_GENE_DATA_TYPES:
             md_template.rename(columns=RENAME_COLS_DICT, inplace=True)
 
@@ -1258,9 +1265,14 @@ class PrepTemplate(MetadataTemplate):
         ------
         QiitaDBError
             If the prep template already has a preprocessed data
+        QiitaDBUnknownIDError
+            If no prep template with id = id_ exists
         """
         table_name = cls._table_name(id_)
         conn_handler = SQLConnectionHandler()
+
+        if not cls.exists(id_):
+            raise QiitaDBUnknownIDError(id_, cls.__name__)
 
         preprocessed_data_exists = conn_handler.execute_fetchone(
             "SELECT EXISTS(SELECT * FROM qiita.prep_template_preprocessed_data"
