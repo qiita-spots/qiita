@@ -653,7 +653,14 @@ class MetadataTemplate(QiitaObject):
         id_ : obj
             The object identifier
 
+        Raises
+        ------
+        QiitaDBUnknownIDError
+            If no metadata_template with id id_ exists
         """
+        if not cls.exists(id_):
+            raise QiitaDBUnknownIDError(id_, cls.__name__)
+
         table_name = cls._table_name(id_)
         conn_handler = SQLConnectionHandler()
         conn_handler.execute(
@@ -1258,9 +1265,14 @@ class PrepTemplate(MetadataTemplate):
         ------
         QiitaDBError
             If the prep template already has a preprocessed data
+        QiitaDBUnknownIDError
+            If no prep template with id = id_ exists
         """
         table_name = cls._table_name(id_)
         conn_handler = SQLConnectionHandler()
+
+        if not cls.exists(id_):
+            raise QiitaDBUnknownIDError(id_, cls.__name__)
 
         preprocessed_data_exists = conn_handler.execute_fetchone(
             "SELECT EXISTS(SELECT * FROM qiita.prep_template_preprocessed_data"

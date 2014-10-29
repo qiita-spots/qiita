@@ -640,6 +640,11 @@ class TestSampleTemplate(TestCase):
             self.conn_handler.execute_fetchall(
                 "SELECT * FROM qiita.sample_2")
 
+    def test_delete_unkonwn_id_error(self):
+        """Try to delete a non existent prep template"""
+        with self.assertRaises(QiitaDBUnknownIDError):
+            SampleTemplate.delete(5)
+
     def test_exists_true(self):
         """Exists returns true when the SampleTemplate already exists"""
         self.assertTrue(SampleTemplate.exists(self.test_study.id))
@@ -1036,9 +1041,14 @@ class TestPrepTemplate(TestCase):
                                 self.data_type)
 
     def test_delete_error(self):
-        """Deletes prep template 1"""
+        """Try to delete a prep template that already has preprocessed data"""
         with self.assertRaises(QiitaDBError):
             PrepTemplate.delete(1)
+
+    def test_delete_unkonwn_id_error(self):
+        """Try to delete a non existent prep template"""
+        with self.assertRaises(QiitaDBUnknownIDError):
+            PrepTemplate.delete(5)
 
     def test_delete(self):
         """Deletes prep template 2"""
