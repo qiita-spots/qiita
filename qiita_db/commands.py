@@ -54,6 +54,11 @@ def load_study_from_cmd(owner, title, info):
     for value in required_fields:
         infodict[value] = get_required(value)
 
+    # this will eventually change to using the Experimental Factory Ontolgoy
+    # names
+    efo_ids = infodict.pop('efo_ids')
+    efo_ids = [x.strip() for x in efo_ids.split(',')]
+
     for value in optional_fields:
         optvalue = get_optional(value)
         if optvalue is not None:
@@ -71,14 +76,11 @@ def load_study_from_cmd(owner, title, info):
         infodict['lab_person_id'] = StudyPerson.create(lab_name.strip(),
                                                        lab_email.strip(),
                                                        lab_affiliation.strip())
-    pi_name_email = get_required('principal_investigator')
+
+    pi_name_email = infodict.pop('principal_investigator')
     pi_name, pi_email, pi_affiliation = pi_name_email.split(',')
     infodict['principal_investigator_id'] = StudyPerson.create(
         pi_name.strip(), pi_email.strip(), pi_affiliation.strip())
-    # this will eventually change to using the Experimental Factory Ontolgoy
-    # names
-    efo_ids = get_required('efo_ids')
-    efo_ids = [x.strip() for x in efo_ids.split(',')]
 
     return Study.create(User(owner), title, efo_ids, infodict)
 
