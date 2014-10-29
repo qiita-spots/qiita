@@ -3,13 +3,15 @@ CREATE SCHEMA qiita;
 CREATE TABLE qiita.analysis_status ( 
 	analysis_status_id   bigserial  NOT NULL,
 	status               varchar  NOT NULL,
-	CONSTRAINT pk_analysis_status PRIMARY KEY ( analysis_status_id )
+	CONSTRAINT pk_analysis_status PRIMARY KEY ( analysis_status_id ),
+	CONSTRAINT idx_analysis_status UNIQUE ( status ) 
  );
 
 CREATE TABLE qiita.checksum_algorithm ( 
 	checksum_algorithm_id bigserial  NOT NULL,
 	name                 varchar  NOT NULL,
-	CONSTRAINT pk_checksum_algorithm PRIMARY KEY ( checksum_algorithm_id )
+	CONSTRAINT pk_checksum_algorithm PRIMARY KEY ( checksum_algorithm_id ),
+	CONSTRAINT idx_checksum_algorithm UNIQUE ( name ) 
  );
 
 CREATE TABLE qiita.command ( 
@@ -58,7 +60,8 @@ CREATE INDEX idx_controlled_vocab_values ON qiita.controlled_vocab_values ( cont
 CREATE TABLE qiita.data_type ( 
 	data_type_id         bigserial  NOT NULL,
 	data_type            varchar  NOT NULL,
-	CONSTRAINT pk_data_type PRIMARY KEY ( data_type_id )
+	CONSTRAINT pk_data_type PRIMARY KEY ( data_type_id ),
+	CONSTRAINT idx_data_type UNIQUE ( data_type ) 
  );
 
 COMMENT ON COLUMN qiita.data_type.data_type IS 'Data type (16S, metabolome, etc) the job will use';
@@ -66,7 +69,8 @@ COMMENT ON COLUMN qiita.data_type.data_type IS 'Data type (16S, metabolome, etc)
 CREATE TABLE qiita.emp_status ( 
 	emp_status_id        bigserial  NOT NULL,
 	emp_status           varchar  NOT NULL,
-	CONSTRAINT pk_emp_status PRIMARY KEY ( emp_status_id )
+	CONSTRAINT pk_emp_status PRIMARY KEY ( emp_status_id ),
+	CONSTRAINT idx_emp_status UNIQUE ( emp_status ) 
  );
 
 COMMENT ON TABLE qiita.emp_status IS 'All possible statuses for projects relating to EMP. Whether they are part of, processed in accordance to, or not part of EMP.';
@@ -74,13 +78,15 @@ COMMENT ON TABLE qiita.emp_status IS 'All possible statuses for projects relatin
 CREATE TABLE qiita.filepath_type ( 
 	filepath_type_id     bigserial  NOT NULL,
 	filepath_type        varchar  ,
-	CONSTRAINT pk_filepath_type PRIMARY KEY ( filepath_type_id )
+	CONSTRAINT pk_filepath_type PRIMARY KEY ( filepath_type_id ),
+	CONSTRAINT idx_filepath_type UNIQUE ( filepath_type ) 
  );
 
 CREATE TABLE qiita.filetype ( 
 	filetype_id          bigserial  NOT NULL,
 	type                 varchar  NOT NULL,
-	CONSTRAINT pk_filetype PRIMARY KEY ( filetype_id )
+	CONSTRAINT pk_filetype PRIMARY KEY ( filetype_id ),
+	CONSTRAINT idx_filetype UNIQUE ( type ) 
  );
 
 COMMENT ON TABLE qiita.filetype IS 'Type of file (FASTA, FASTQ, SPECTRA, etc)';
@@ -88,7 +94,8 @@ COMMENT ON TABLE qiita.filetype IS 'Type of file (FASTA, FASTQ, SPECTRA, etc)';
 CREATE TABLE qiita.job_status ( 
 	job_status_id        bigserial  NOT NULL,
 	status               varchar  NOT NULL,
-	CONSTRAINT pk_job_status PRIMARY KEY ( job_status_id )
+	CONSTRAINT pk_job_status PRIMARY KEY ( job_status_id ),
+	CONSTRAINT idx_job_status_0 UNIQUE ( status ) 
  );
 
 CREATE TABLE qiita.mixs_field_description ( 
@@ -204,13 +211,15 @@ COMMENT ON COLUMN qiita.raw_data.investigation_type IS 'The investigation type (
 CREATE TABLE qiita.required_sample_info_status ( 
 	required_sample_info_status_id bigserial  NOT NULL,
 	status               varchar  ,
-	CONSTRAINT pk_sample_status PRIMARY KEY ( required_sample_info_status_id )
+	CONSTRAINT pk_sample_status PRIMARY KEY ( required_sample_info_status_id ),
+	CONSTRAINT idx_required_sample_info_status UNIQUE ( status ) 
  );
 
 CREATE TABLE qiita.severity ( 
 	severity_id          serial  NOT NULL,
 	severity             varchar  NOT NULL,
-	CONSTRAINT pk_severity PRIMARY KEY ( severity_id )
+	CONSTRAINT pk_severity PRIMARY KEY ( severity_id ),
+	CONSTRAINT idx_severity UNIQUE ( severity ) 
  );
 
 CREATE TABLE qiita.study_person ( 
@@ -232,7 +241,8 @@ CREATE TABLE qiita.study_status (
 	study_status_id      bigserial  NOT NULL,
 	status               varchar  NOT NULL,
 	description          varchar  NOT NULL,
-	CONSTRAINT pk_study_status PRIMARY KEY ( study_status_id )
+	CONSTRAINT pk_study_status PRIMARY KEY ( study_status_id ),
+	CONSTRAINT idx_study_status UNIQUE ( status ) 
  );
 
 CREATE TABLE qiita.term ( 
@@ -254,14 +264,16 @@ CREATE INDEX idx_term ON qiita.term ( ontology_id );
 CREATE TABLE qiita.timeseries_type ( 
 	timeseries_type_id   bigserial  NOT NULL,
 	timeseries_type      varchar  NOT NULL,
-	CONSTRAINT pk_timeseries_type PRIMARY KEY ( timeseries_type_id )
+	CONSTRAINT pk_timeseries_type PRIMARY KEY ( timeseries_type_id ),
+	CONSTRAINT idx_timeseries_type UNIQUE ( timeseries_type ) 
  );
 
 CREATE TABLE qiita.user_level ( 
 	user_level_id        serial  NOT NULL,
 	name                 varchar  NOT NULL,
 	description          text  NOT NULL,
-	CONSTRAINT pk_user_level PRIMARY KEY ( user_level_id )
+	CONSTRAINT pk_user_level PRIMARY KEY ( user_level_id ),
+	CONSTRAINT idx_user_level UNIQUE ( name ) 
  );
 
 COMMENT ON TABLE qiita.user_level IS 'Holds available user levels';
