@@ -49,7 +49,7 @@ $(document).ready(function() {
                 {% if study_info['metadata_complete'] %}
                 <td><span class="glyphicon glyphicon-ok"></span></td>
                 {% else %}
-                <td><span class="glyphicon glyphicon-remove"></span></td>
+                <td><span class="glyphicon glyphicon-remove"></span> &nbsp; - &nbsp; <a href="/study/upload/{{s_id}}">Upload files.</a></td>
                 {% end %}
                 <td>{{study_info['number_samples_collected']}}</td>
                 <td>{{ len(s.raw_data()) }}</td>

@@ -13,12 +13,16 @@ from tornado.web import authenticated, HTTPError
 from wtforms import (Form, StringField, SelectField, BooleanField,
                      SelectMultipleField, TextAreaField, validators)
 
-from os import listdir
+from future.utils import viewitems
+
+from operator import itemgetter
+
+from os import listdir, remove
 from os.path import exists, join, basename
 
 from .base_handlers import BaseHandler
 
-from qiita_core.qiita_settings import qiita_config
+from pandas.parser import CParserError
 
 from qiita_ware.context import submit
 from qiita_ware.util import metadata_stats_from_sample_and_prep_templates
@@ -28,7 +32,8 @@ from qiita_db.metadata_template import (SampleTemplate, PrepTemplate,
                                         load_template_to_dataframe)
 from qiita_db.study import Study, StudyPerson
 from qiita_db.user import User
-from qiita_db.util import get_study_fp, convert_to_id, get_filepath_types
+from qiita_db.util import (get_study_fp, convert_to_id, get_filepath_types,
+                           get_data_types, get_filetypes)
 from qiita_db.ontology import Ontology
 from qiita_db.data import PreprocessedData
 from qiita_db.exceptions import (QiitaDBColumnError, QiitaDBExecutionError,
@@ -112,57 +117,32 @@ class StudyDescriptionHandler(BaseHandler):
     def display_template(self, study_id, msg):
         """Simple function to avoid duplication of code"""
 
-        # processing paths
+        # processing files from upload path
         fp = get_study_fp(study_id)
         if exists(fp):
             fs = [f for f in listdir(fp)]
         else:
             fs = []
+        # getting raw filepath_ types
         fts = [k.split('_', 1)[1].replace('_', ' ')
                for k in get_filepath_types() if k.startswith('raw_')]
+        fts = '\n'.join(['<option value="%s">%s</option>' % (f, f) for f in fts])
 
-        # getting the raw_data
         study = Study(study_id)
-        valid_ssb = []
-        for rdi in study.raw_data():
-            rd = RawData(rdi)
-            ex = PrepTemplate.exists(rd)
-            if ex:
-                valid_ssb.append(rdi)
+        # getting the RawData and its valid PrepTemplate
+        available_raw_data = [ ( RawData(rdi), [PrepTemplate(pt) for pt in [16, 18]] ) for rdi in study.raw_data() ]
+        #
 
-        # get the prep template id and force to choose the first one
-        # see issue https://github.com/biocore/qiita/issues/415
-        if valid_ssb:
-            prep_template_id = valid_ssb[0]
-            split_libs_status = RawData(
-                prep_template_id).preprocessing_status.replace('\n', '<br/>')
-
-            # getting EBI status
-            sppd = study.preprocessed_data()
-            if sppd:
-                ebi_status = PreprocessedData(
-                    sppd[-1]).submitted_to_insdc_status()
-            else:
-                ebi_status = None
-        else:
-            prep_template_id = None
-            split_libs_status = None
-            ebi_status = None
-
-        valid_ssb = ','.join(map(str, valid_ssb))
-        ssb = len(valid_ssb) > 0
-
-        # getting the ontologies
-        ena = Ontology(convert_to_id('ENA', 'ontology'))
         user = User(self.current_user)
+        data_types = sorted(viewitems(get_data_types()), key=itemgetter(1))
+        filetypes = sorted(viewitems(get_filetypes()), key=itemgetter(1))
+
         self.render('study_description.html', user=self.current_user,
                     study_title=study.title, study_info=study.info,
-                    study_id=study_id, files=fs, ssb=ssb, vssb=valid_ssb,
-                    max_upload_size=qiita_config.max_upload_size,
-                    sls=split_libs_status, filetypes=fts,
-                    investigation_types=ena.terms, ebi_status=ebi_status,
-                    prep_template_id=prep_template_id, user_level=user.level,
-                    msg=msg)
+                    study_id=study_id, files=fs, filetypes=filetypes,
+                    user_level=user.level, available_raw_data=available_raw_data,
+                    msg=msg, ste=SampleTemplate.exists(study),
+                    data_types=data_types, filepath_types=fts)
 
     @authenticated
     def get(self, study_id):
@@ -170,91 +150,116 @@ class StudyDescriptionHandler(BaseHandler):
 
     @authenticated
     def post(self, study_id):
-        raw_sample_template = self.get_argument('raw_sample_template', None)
-        raw_prep_template = self.get_argument('raw_prep_template', None)
-        barcodes = self.get_argument('barcodes', "").split(',')
-        forward_seqs = self.get_argument('forward_seqs', "").split(',')
-        reverse_seqs = self.get_argument('reverse_seqs', "").split(',')
-        investigation_type = self.get_argument('investigation-type', "")
-
-        if raw_sample_template is None or raw_prep_template is None:
-            raise HTTPError(400, "This function needs a sample template: "
-                            "%s and a prep template: %s" %
-                            (raw_sample_template, raw_prep_template))
-        fp_rsp = join(get_study_fp(study_id), raw_sample_template)
-        fp_rpt = join(get_study_fp(study_id), raw_prep_template)
-        if not exists(fp_rsp):
-            raise HTTPError(400, "This file doesn't exist: %s" % fp_rsp)
-        if not exists(fp_rpt):
-            raise HTTPError(400, "This file doesn't exist: %s" % fp_rpt)
-
-        ena = Ontology(convert_to_id('ENA', 'ontology'))
-        if (not investigation_type or investigation_type == "" or
-                investigation_type not in ena.terms):
-            raise HTTPError(400, "You need to have an investigation type")
+        # to add sample template
+        sample_template = self.get_argument('sample_template', None)
+        # to add raw data
+        filetype = self.get_argument('filetype', None)
+        previous_raw_data = self.get_argument('previous_raw_data', None)
+        # to add prep template
+        add_prep_template = self.get_argument('add_prep_template', None)
+        raw_data_id = self.get_argument('raw_data_id', None)
 
         study_id = int(study_id)
         study = Study(study_id)
+        if sample_template:
+            # processing sample teplates
 
-        # deleting previous uploads
-        for rd in study.raw_data():
-            if PrepTemplate.exists(RawData(rd)):
-                PrepTemplate.delete(rd)
-        if SampleTemplate.exists(study):
-            SampleTemplate.delete(study_id)
+            # deleting previous uploads
+            for rd in study.raw_data():
+                if PrepTemplate.exists((rd)):
+                    PrepTemplate.delete(rd)
+            if SampleTemplate.exists(study):
+                SampleTemplate.delete(study_id)
 
-        try:
-            # inserting sample template
-            SampleTemplate.create(load_template_to_dataframe(fp_rsp), study)
-        except (TypeError, QiitaDBColumnError, QiitaDBExecutionError,
-                QiitaDBDuplicateError, IOError), e:
-            msg = ('<b>An error occurred parsing the sample template: '
-                   '%s</b><br/>%s' % (basename(fp_rsp), e))
-            self.display_template(int(study_id), msg)
-            return
+            fp_rsp = join(get_study_fp(study_id), sample_template)
+            if not exists(fp_rsp):
+                raise HTTPError(400, "This file doesn't exist: %s" % fp_rsp)
 
-        # inserting raw data
-        fp = get_study_fp(study_id)
-        filepaths = []
-        if barcodes and barcodes[0] != "":
-            filepaths.extend([(join(fp, t), "raw_barcodes") for t in barcodes])
-        if forward_seqs and forward_seqs[0] != "":
-            filepaths.extend([(join(fp, t), "raw_forward_seqs")
-                              for t in forward_seqs])
-        if reverse_seqs and reverse_seqs[0] != "":
-            filepaths.extend([(join(fp, t), "raw_reverse_seqs")
-                              for t in reverse_seqs])
+            try:
+                # inserting sample template
+                SampleTemplate.create(load_template_to_dataframe(fp_rsp),
+                                      study)
 
-        # currently hardcoding the filetypes, see issue
-        # https://github.com/biocore/qiita/issues/391
-        filetype = 2
+                # TODO: do not remove but move to final storage space
+                # and keep there forever
+                remove(fp_rsp)
+            except (TypeError, QiitaDBColumnError, QiitaDBExecutionError,
+                    QiitaDBDuplicateError, IOError, ValueError, KeyError,
+                    CParserError), e:
+                error_type = e.__class__.__name__
+                msg = ('<b>An error occurred parsing the sample template: '
+                       '%s</b><br/>%s: %s' % (basename(fp_rsp), error_type, e))
+                self.display_template(study_id, msg)
+                return
 
-        try:
-            # currently hardcoding the study_ids to be an array but not sure
-            # if this will ever be an actual array via the web interface
-            raw_data = RawData.create(filetype, [study], 1, filepaths,
-                                      investigation_type)
-        except (TypeError, QiitaDBColumnError, QiitaDBExecutionError,
-                IOError), e:
-            fps = ', '.join([basename(f[0]) for f in filepaths])
-            msg = ('<b>An error occurred parsing the raw files: '
-                   '%s</b><br/>%s' % (basename(fps), e))
-            self.display_template(int(study_id), msg)
-            return
+            msg = ("The sample template <b>%s</b> has been added" %
+                   sample_template)
 
-        try:
-            # inserting prep templates
-            PrepTemplate.create(load_template_to_dataframe(fp_rpt), raw_data,
-                                study)
-        except (TypeError, QiitaDBColumnError, QiitaDBExecutionError,
-                IOError), e:
-            msg = ('<b>An error occurred parsing the prep template: '
-                   '%s</b><br/>%s' % (basename(fp_rpt), e))
-            self.display_template(int(study_id), msg)
-            return
+        elif filetype or previous_raw_data:
+            # adding blank raw data
 
-        msg = "Your samples were processed"
-        self.display_template(int(study_id), msg)
+            if filetype and previous_raw_data:
+                msg = ("You can not specify both a new raw data and a "
+                    "previouly used one")
+            else:
+                try:
+                    raw_data = RawData.create(filetype, [study], 1)
+                except (TypeError, QiitaDBColumnError, QiitaDBExecutionError,
+                        QiitaDBDuplicateError, IOError, ValueError, KeyError,
+                        CParserError), e:
+
+                    error_type = e.__class__.__name__
+                    msg = ('<b>An error occurred creating a new raw data'
+                           'object.</b><br/>%s: %s' % (error_type, e))
+                    self.display_template(study_id, msg)
+                    return
+
+                msg = ""
+
+        elif add_prep_template and raw_data_id:
+            # adding prep templates
+
+            raw_data_id = int(raw_data_id)
+            fp_rpt = join(get_study_fp(study_id), add_prep_template)
+            if not exists(fp_rpt):
+                raise HTTPError(400, "This file doesn't exist: %s" % fp_rpt)
+
+            try:
+                # inserting prep templates
+                PrepTemplate.create(load_template_to_dataframe(fp_rpt),
+                                    RawData(raw_data_id), study)
+            except (TypeError, QiitaDBColumnError, QiitaDBExecutionError,
+                    IOError), e:
+                msg = ('<b>An error occurred parsing the prep template: '
+                       '%s</b><br/>%s' % (basename(fp_rpt), e))
+                self.display_template(study_id, msg)
+                return
+
+            msg = "Your prep template was added"
+        else:
+            msg = "<b>Error, did you select a valid uploaded file?</b>"
+
+        self.display_template(study_id, msg)
+
+        # barcodes = self.get_argument('barcodes', "").split(',')
+        # forward_seqs = self.get_argument('forward_seqs', "").split(',')
+        # reverse_seqs = self.get_argument('reverse_seqs', "").split(',')
+        #
+        # # inserting raw data
+        # fp = get_study_fp(study_id)
+        # filepaths = []
+        # if barcodes and barcodes[0] != "":
+        #     filepaths.extend([(join(fp, t), "raw_barcodes") for t in barcodes])
+        # if forward_seqs and forward_seqs[0] != "":
+        #     filepaths.extend([(join(fp, t), "raw_forward_seqs")
+        #                       for t in forward_seqs])
+        # if reverse_seqs and reverse_seqs[0] != "":
+        #     filepaths.extend([(join(fp, t), "raw_reverse_seqs")
+        #                       for t in reverse_seqs])
+        #
+        # # currently hardcoding the filetypes, see issue
+        # # https://github.com/biocore/qiita/issues/391
+        # filetype = 2
 
 
 class CreateStudyHandler(BaseHandler):

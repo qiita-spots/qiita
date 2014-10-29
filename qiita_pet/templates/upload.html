@@ -1,0 +1,67 @@
+{% extends sitebase.html %}
+{% block content %}
+
+<table border="0" style="vertical-align: middle; text-align:center; align:center; height: 150px; width: 100%;">
+  <tr>
+    <td style="vertical-align: middle; text-align:left; width: 50%;" colspan="2">
+      <b>Uploading files for: {{study_title}} ({{study_info['study_alias']}})</b>
+      <br/>
+      <a href="/study/description/{{study_id}}">Go to study descripion</a>
+    </td>
+  </tr>
+
+  <tr>
+    <td style="vertical-align: middle; text-align:center; width: 50%;" colspan="2"><b>Upload files (max file size: {{max_upload_size}}Gb)</b></td>
+  </tr>
+
+  <tr>
+    <td style="vertical-align: top; text-align:center; " colspan="2">
+      <div style="height: 150px; width: 100%; background-color:lightgrey; border: 2px solid; border-radius: 25px;" class="resumable-drop-metadata" ondragenter="jQuery(this).addClass('resumable-dragover');" ondragend="jQuery(this).removeClass('resumable-dragover');" ondrop="jQuery(this).removeClass('resumable-dragover');">
+        <p style="vertical-align: middle;">Drop files here to upload or <a class="resumable-browse-metadata"><u>select from your computer</u></a></p>
+      </div>
+
+      <div class="progress-metadata" style="display:none;">
+        <table>
+          <tr>
+            <td width="100%"><div class="progress-container"><div class="progress-bar"></div></div></td>
+            <td class="progress-text" nowrap="nowrap"></td>
+            <td class="progress-pause" nowrap="nowrap">
+              &nbsp;&nbsp;&nbsp;&nbsp;
+              <a href="#" onclick="uploader.resumable.upload(); return(false);" class="progress-resume-link"><span class="glyphicon glyphicon-play"></span></a>
+              &nbsp;&nbsp;&nbsp;&nbsp;
+              <a href="#" onclick="uploader.resumable.pause(); return(false);" class="progress-pause-link"><span class="glyphicon glyphicon-pause"></span></a>
+            </td>
+          </tr>
+        </table>
+      </div>
+
+      <div class="uploader-list-metadata" style="display:none;">
+      </div>
+
+      <div class="file-edit-container-sequences" style="display:none;">
+      </div>
+
+    </td>
+  </tr>
+</table>
+
+
+<!-- Upload required files and JS code -->
+<script src="/static/vendor/js/resumable.js"></script>
+<script src="/static/vendor/js/resumable-uploader.js"></script>
+<script src="/static/vendor/js/underscore.min.js"></script>
+
+<script>
+  var meta = { fileType: [] };
+  var maxFileSize = {{max_upload_size}}; // in Gb
+  uploader = (function($){
+      return (new ResumableUploader(meta, $('.resumable-browse-metadata'), $('.resumable-drop-metadata'), $('.progress-metadata'), $('.uploader-list-metadata'), $('.file-edit-container-metadata'), maxFileSize, "{{study_id}}"));
+    })(jQuery);
+
+  {% for f in files %}
+    uploader.addFile("{{f}}");
+  {% end  %}
+
+</script>
+
+{% end %}

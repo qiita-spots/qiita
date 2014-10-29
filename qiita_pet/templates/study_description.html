@@ -1,9 +1,9 @@
 {% extends sitebase.html %}
 {% block content %}
 
-<!-- Upload section -->
+{% from future.utils import viewitems %}
 
-<table border="0" style="vertical-align: middle; text-align:center; align:center; height: 150px; width: 100%;">
+<table border="0" style="vertical-align: middle; text-align:center; align:center; width: 100%;">
   <tr>
     <td style="vertical-align: middle; text-align:left; width: 50%;" colspan="2">
       <b>{{study_title}} ({{study_info['study_alias']}})</b>
@@ -12,14 +12,8 @@
       <br/>
       Metadata: {{study_info['metadata_complete']}}
       <br/>
-      {% if sls and not sls.startswith('failed') %}
-        <b>Split library status:</b> {% raw sls %}
-        <br/>
-      {% end %}
-      {% if sls and sls.startswith('success') %}
-        <b>EBI status:</b> {{ebi_status}}
-        <br/>
-      {% end %}
+      <a href="/study/upload/{{study_id}}">Upload files</a>
+      <br/>
 
       <!-- {'mixs_compliant': True,
       'reprocess': False,
@@ -38,214 +32,183 @@
        'most_recent_contact': None, 'lab_person_id': None, -->
     </td>
   </tr>
-  <tr>
-    <td style="vertical-align: middle; text-align:center; width: 50%;" colspan="2"><b>Upload files (max file size: {{max_upload_size}}Gb)</b></td>
-  </tr>
-  <tr>
-    <td style="vertical-align: top; text-align:center; " colspan="2">
-      <div style="height: 150px; width: 100%; background-color:lightgrey; border: 2px solid; border-radius: 25px;" class="resumable-drop-metadata" ondragenter="jQuery(this).addClass('resumable-dragover');" ondragend="jQuery(this).removeClass('resumable-dragover');" ondrop="jQuery(this).removeClass('resumable-dragover');">
-        <p style="vertical-align: middle;">Drop files here to upload or <a class="resumable-browse-metadata"><u>select from your computer</u></a></p>
-      </div>
-
-      <div class="progress-metadata" style="display:none;">
-        <table>
-          <tr>
-            <td width="100%"><div class="progress-container"><div class="progress-bar"></div></div></td>
-            <td class="progress-text" nowrap="nowrap"></td>
-            <td class="progress-pause" nowrap="nowrap">
-              &nbsp;&nbsp;&nbsp;&nbsp;
-              <a href="#" onclick="uploader.resumable.upload(); return(false);" class="progress-resume-link"><span class="glyphicon glyphicon-play"></span></a>
-              &nbsp;&nbsp;&nbsp;&nbsp;
-              <a href="#" onclick="uploader.resumable.pause(); return(false);" class="progress-pause-link"><span class="glyphicon glyphicon-pause"></span></a>
-            </td>
-          </tr>
-        </table>
-      </div>
-
-      <div class="uploader-list-metadata" style="display:none;">
-      </div>
-
-      <div class="file-edit-container-sequences" style="display:none;">
-      </div>
-
-    </td>
-  </tr>
-  <tr><td colspan="2"><br/></td></tr>
-  <tr><td colspan="2">
-    Investigation type:
-    <select name="investigation-type" id="investigation-type">
-      {% for i in investigation_types %}
-        <option value="{{i}}">{{i}}</option>
-      {% end %}
-    </select>
-  </td></tr>
-  <tr><td colspan="2"><br/></td></tr>
-  <tr>
-    <td colspan="2"><input type="button" class="btn btn-primary" value="Process files" onclick="process_files();"></td>
-  </tr>
-  <tr>
-    <td style="vertical-align: middle; text-align:center;" colspan="2">{% raw msg %}</td>
-  </tr>
-
-  {% if ssb %}
-  <tr><td><hr/></td></tr>
-  <tr>
-    <td style="vertical-align: middle; text-align:center;" colspan="2">
-      This study has valid files, you can:
-      &nbsp;&nbsp;
-      <a class="btn btn-primary" href="/metadata_summary/?sample_template={{study_id}}&prep_template={{prep_template_id}}">Show metadata Summary</a>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-      {% if sls and not sls.startswith('preprocessing') and not sls.startswith('success') %}
-        <input type="button" class="btn btn-primary" value="Split libraries" onclick="split_libraries();">
-        <input type="checkbox" name="rev_comp_mapping_barcodes" id="rev_comp_mapping_barcodes"> Use rev_comp_mapping_barcodes
-      {% elif sls.startswith('preprocessing') %}
-        <font color="red">Split library is running</font>
-      {% elif sls.startswith('success') and user_level == 'admin' %}
-        <a class="btn btn-primary" href="/ebi_submission/{{study_id}}">Submit EBI - Good luck!</a>
-      {% end %}
-    </td>
-  </tr>
-
-  <tr>
-    <td><font color="red">
-    {% if sls and sls.startswith('failed') %}
-      {% raw sls %}
-      <br/>
-    {% end %}
-    </font></td>
-  </tr>
-
-  {% end %}
 </table>
 
-<script src="/static/vendor/js/resumable.js"></script>
-<script src="/static/vendor/js/resumable-uploader.js"></script>
-<script src="/static/vendor/js/underscore.min.js"></script>
+<br/>
+
+<!-- Nav tabs -->
+<ul class="nav nav-tabs" role="tablist" id="myTab">
+  <li class="active"><a href="#add_sample_template" role="tab" data-toggle="tab">Add sample template</a></li>
+  {% if ste %}
+    <li><a href="#add_raw_data" role="tab" data-toggle="tab">Add raw data</a></li>
+  {% end %}
+
+  {% for r in available_raw_data %}
+    <li><a href="#raw_data_info_{{r[0].id}}" role="tab" data-toggle="tab">{{r[0].filetype}} (ID: {{r[0].id}})</a></li>
+  {% end %}
+</ul>
+
+<!-- Tab panes -->
+<div class="tab-content">
+  <div class="tab-pane active" id="add_sample_template" style="padding: 10px;">
+    Select your sample template:
+    <select id="sample_template">
+      {% for f in files %}
+        <option value="{{f}}">{{f}}</option>
+      {% end %}
+    </select>
+    <br/>
+    If you do not see your file in the selector, go <a href="/study/upload/{{study_id}}">here</a> to upload it.
+    <br/><br/>
+    <a class="btn btn-primary" onClick="process_sample_template();">Process sample template</a>
+
+    <br/><br/>
+    {% if ste %}
+      You have a valid sample template, if you reprocess with a new file you <b>will loose</b> all prep and sequence information.
+      <br/>
+      You can modify a sample template <a onclick="alert('Not implemented! Coming soon.')">here</a>
+    {% end %}
+  </div>
+
+  {% if ste %}
+    <div class="tab-pane" id="add_raw_data" style="padding: 10px;">
+      What file type you raw data is?
+      <select id="filetype">
+        <option value="">Not selected ...</option>
+        {% for k, v in filetypes %}
+          <option value="{{v}}">{{k}}</option>
+        {% end %}
+      </select>
+      <br/><br/>
+      You could also select raw data from other studies that you have access to:
+      <select id="previous_raw_data">
+        <option value="">Not selected ...</option>
+        <!-- {% for k, v in filetypes %} -->
+          <!-- <option value="{{v}}">{{k}}</option> -->
+        <!-- {% end %} -->
+      </select>
+      <br/><br/>
+      <a class="btn btn-primary" onClick="create_raw_data();">Add raw data</a>
+    </div>
+  {% end %}
+
+  <!-- Adding raw data to template -->
+  {% for r in available_raw_data %}
+    <div class="tab-pane" id="raw_data_info_{{r[0].id}}" style="padding: 10px;">
+      <h4>Add prep template to this raw data</h4>
+      Select your prep template file or <a href="/study/upload/{{study_id}}">upload</a> some files.
+      <br/>
+      <select id="add_prep_template">
+        {% for f in files %}
+          <option value="{{f}}">{{f}}</option>
+        {% end %}
+      </select>
+      <br/><br/>
+      <a class="btn btn-primary" onClick="add_prep_template({{r[0].id}});">Add prep template</a>
+      <br/>
+      <hr/>
+      <h4>Valid prep templates</h4>
+      <table border="1">
+        {% for prep in r[1] %}
+        <tr>
+          <td>{{prep}}</td>
+        </tr>
+        {% end %}
+      </table>
+      <br/>
+      <hr/>
+      <h4>Link uploaded files with raw data</h4>
+      <table border="0">
+        <tr>
+          <th>File</th>
+          <th>&nbsp;&nbsp;&nbsp;</th>
+          <th>File type</th>
+        </tr>
+      {% for f in files %}
+        <tr>
+          <td>{{f}}</td>
+          <td>&nbsp;</td>
+          <td>
+            <select id="raw_data_info_{{r[0].id}}">
+              <option value="">Ignore ...</option>
+              {% raw filepath_types %}
+            </select>
+          </td>
+        </tr>
+      {% end %}
+      </table>
+      <br/>
+      <a class="btn btn-primary" onClick="link_files_to_raw_data({{r[0].id}});">Link raw files to: {{r[0].filetype}} (ID: {{r[0].id}})</a>
+
+    </div>
+  {% end %}
+</div>
+
+{% raw msg %}
+
 
 <script>
-  var meta = { fileType: [] };
-  var maxFileSize = {{max_upload_size}}; // in Gb
-  var filetypes = {{filetypes}}
-  uploader = (function($){
-      return (new ResumableUploader(meta, $('.resumable-browse-metadata'), $('.resumable-drop-metadata'), $('.progress-metadata'), $('.uploader-list-metadata'), $('.file-edit-container-metadata'), maxFileSize, "{{study_id}}", filetypes));
-    })(jQuery);
-
-  {% for f in files %}
-    uploader.addFile("{{f}}");
-  {% end  %}
-
-  function process_files() {
-    // function to validate the input files to process metadata and submits to
-    // post those values
-    var all_inputfiles = $('select[id^="inputfile"]');
-
-    if (all_inputfiles.length == 0) {
-      alert("You need to upload some files");
+  function process_sample_template() {
+    if (confirm("Are you sure you want to (re)process the sample template?")) {
+      var form = $("<form>")
+        .attr("action", window.location.href)
+        .attr("method", "post")
+        .append($("<input>")
+          .attr("type", "hidden")
+          .attr("name", "sample_template")
+          .attr("value", $("#sample_template").val()));
+      $("body").append(form);
+      form.submit();
     }
+  }
 
-    function reset_vals() {
-      // a reset vals function so we do not have these lines multiple times
-      required_values = {'raw_sample_template': "", 'raw_prep_template': [], 'barcodes': [], 'forward seqs': [], 'reverse seqs': []}
-      iterations = 0
-    }
-
-    reset_vals();
-
-    all_inputfiles.each(function () {
-
-      iterations += 1;
-
-      if (this.value == "raw_sample_template") {
-        if (required_values['raw_sample_template'] == "") {
-          required_values['raw_sample_template'] = this.name;
-        } else {
-          alert("You can not have more than one sample template");
-          reset_vals();
-          return false;
-        }
-      } else {
-        required_values[this.value].push(this.name)
-      }
-
-      if (iterations == all_inputfiles.length) {
-        if (required_values['raw_sample_template'] == "") {
-          alert("You should have at least one sample template")
-          reset_vals();
-          return false;
-        }
-
-        if (required_values['raw_prep_template'].length == 0) {
-          alert("You should have at least one prep template")
-          reset_vals();
-          return false;
-        }
-
-        if (required_values['barcodes'].length == 0) {
-          alert("You should have at least one barcodes file")
-          reset_vals();
-          return false;
-        }
-
-        if (required_values['barcodes'].length != required_values['forward seqs'].length) {
-          alert("You should have the same number of barcodes and forward seqs")
-          reset_vals();
-          return false;
-        }
-
+  function create_raw_data() {
+    if ($("#previous_raw_data").val() === "" && $("#filetype").val() === "") {
+      alert("You need to select either a new file type or a raw data used in a previous study.")
+    } else if ($("#previous_raw_data").val() !== "" && $("#filetype").val() !== "") {
+      alert("You can only select a new file type or one used in a previous study but not both.")
+    } else {
+      if (confirm("Are you sure you want to create a new raw data?")) {
         var form = $("<form>")
           .attr("action", window.location.href)
           .attr("method", "post")
           .append($("<input>")
             .attr("type", "hidden")
-            .attr("name", "raw_sample_template")
-            .attr("value", required_values['raw_sample_template']))
+            .attr("name", "filetype")
+            .attr("value", $("#filetype").val()))
           .append($("<input>")
             .attr("type", "hidden")
-            .attr("name", "raw_prep_template")
-            .attr("value", required_values['raw_prep_template']))
-          .append($("<input>")
-            .attr("type", "hidden")
-            .attr("name", "barcodes")
-            .attr("value", required_values['barcodes']))
-          .append($("<input>")
-            .attr("type", "hidden")
-            .attr("name", "forward_seqs")
-            .attr("value", required_values['forward seqs']))
-          .append($("<input>")
-            .attr("type", "hidden")
-            .attr("name", "reverse_seqs")
-            .attr("value", required_values['reverse seqs']))
-          .append($("<input>")
-            .attr("type", "hidden")
-            .attr("name", "investigation-type")
-            .attr("value", $("#investigation-type").val()));
+            .attr("name", "previous_raw_data")
+            .attr("value", $("#previous_raw_data").val()));
         $("body").append(form);
         form.submit();
       }
-    });
+    }
   }
 
-  function split_libraries() {
-    if (confirm("Are you sure you want to submit a split libraries job?")) {
+  function add_prep_template(raw_data_id) {
+    if (confirm("Are you sure you want to add a new prep template?")) {
       var form = $("<form>")
-        .attr("action", "/study/preprocess")
+        .attr("action", window.location.href)
         .attr("method", "post")
         .append($("<input>")
           .attr("type", "hidden")
-          .attr("name", "study_id")
-          .attr("value", "{{study_id}}"))
-        .append($("<input>")
-          .attr("type", "hidden")
           .attr("name", "raw_data_id")
-          .attr("value", "{{vssb}}"))
+          .attr("value", raw_data_id))
         .append($("<input>")
           .attr("type", "hidden")
-          .attr("name", "rev_comp_mapping_barcodes")
-          .attr("value", $("#rev_comp_mapping_barcodes").is(':checked')));
+          .attr("name", "add_prep_template")
+          .attr("value", $("#add_prep_template").val()));
       $("body").append(form);
       form.submit();
     }
   }
+
+  function link_files_to_raw_data(raw_data_id) {
+    alert(raw_data_id)
+  }
+
+  $('#myTab a:last').tab('show')
 </script>
 
 {% end %}

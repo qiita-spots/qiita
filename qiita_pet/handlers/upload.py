@@ -5,8 +5,40 @@ from os import makedirs, listdir
 
 from shutil import copyfileobj, rmtree
 
+from qiita_core.qiita_settings import qiita_config
+
 from qiita_pet.handlers.base_handlers import BaseHandler
+
 from qiita_db.util import get_study_fp
+from qiita_db.study import Study
+
+
+class StudyUploadFileHandler(BaseHandler):
+    @authenticated
+    def display_template(self, study_id, msg):
+        """Simple function to avoid duplication of code"""
+
+        # processing paths
+        fp = get_study_fp(study_id)
+        if exists(fp):
+            fs = [f for f in listdir(fp)]
+        else:
+            fs = []
+
+        study = Study(study_id)
+        # getting the ontologies
+        self.render('upload.html', user=self.current_user,
+                    study_title=study.title, study_info=study.info,
+                    study_id=study_id, files=fs,
+                    max_upload_size=qiita_config.max_upload_size)
+
+    @authenticated
+    def get(self, study_id):
+        self.display_template(int(study_id), "")
+
+    @authenticated
+    def post(self, study_id):
+        pass
 
 
 class UploadFileHandler(BaseHandler):
