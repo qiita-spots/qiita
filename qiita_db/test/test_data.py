@@ -17,6 +17,7 @@ from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_db.study import Study
 from qiita_db.util import get_db_files_base_dir
 from qiita_db.data import BaseData, RawData, PreprocessedData, ProcessedData
+from qiita_db.metadata_template import PrepTemplate
 from qiita_db.exceptions import QiitaDBColumnError
 
 
@@ -41,7 +42,6 @@ class RawDataTests(TestCase):
         close(fd)
         self.filetype = 2
         self.filepaths = [(self.seqs_fp, 1), (self.barcodes_fp, 2)]
-        self.data_type_id = 2
         self.studies = [Study(1)]
         self.db_test_raw_dir = join(get_db_files_base_dir(), 'raw_data')
 
@@ -60,20 +60,18 @@ class RawDataTests(TestCase):
         # Make sure there is an error if an investigation_type is supplied
         # that does not exist
         with self.assertRaises(QiitaDBColumnError):
-            RawData.create(self.filetype, self.studies, self.data_type_id,
-                           self.filepaths, 'Not a term')
+            RawData.create(self.filetype, self.studies, self.filepaths,
+                           'Not a term')
 
         # Check that the returned object has the correct id
-        obs = RawData.create(self.filetype, self.studies, self.data_type_id,
-                             self.filepaths)
+        obs = RawData.create(self.filetype, self.studies, self.filepaths)
         self.assertEqual(obs.id, 3)
 
         # Check that the raw data have been correctly added to the DB
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.raw_data WHERE raw_data_id=3")
-        # raw_data_id, filetype, investigation_type, data_type_id,
-        # preprocessing_status
-        self.assertEqual(obs, [[3, 2, None, 2, 'not_preprocessed']])
+        # raw_data_id, filetype, investigation_type, preprocessing_status
+        self.assertEqual(obs, [[3, 2, None, 'not_preprocessed']])
 
         # Check that the raw data have been correctly linked with the study
         obs = self.conn_handler.execute_fetchall(
@@ -112,15 +110,14 @@ class RawDataTests(TestCase):
     def test_create_no_filepaths(self):
         """Correctly creates a raw data object with no filepaths attached"""
         # Check that the returned object has the correct id
-        obs = RawData.create(self.filetype, self.studies, self.data_type_id)
+        obs = RawData.create(self.filetype, self.studies)
         self.assertEqual(obs.id, 3)
 
         # Check that the raw data have been correctly added to the DB
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.raw_data WHERE raw_data_id=3")
-        # raw_data_id, filetype, investigation_type, data_type_id,
-        # preprocessing_status
-        self.assertEqual(obs, [[3, 2, None, 2, 'not_preprocessed']])
+        # raw_data_id, filetype, investigation_type, preprocessing_status
+        self.assertEqual(obs, [[3, 2, None, 'not_preprocessed']])
 
         # Check that the raw data have been correctly linked with the study
         obs = self.conn_handler.execute_fetchall(
@@ -149,15 +146,15 @@ class RawDataTests(TestCase):
         rd = RawData(1)
         self.assertEqual(rd.studies, [1])
 
-    def test_data_type(self):
-        """Correctly returns the data_type of raw_data"""
+    def test_data_types(self):
+        """Correctly returns the data_types of raw_data"""
         rd = RawData(1)
-        self.assertEqual(rd.data_type(), "18S")
+        self.assertEqual(rd.data_types(), ["18S"])
 
-    def test_data_type_id(self):
-        """Correctly returns the data_type of raw_data"""
+    def test_data_types_id(self):
+        """Correctly returns the data_types of raw_data"""
         rd = RawData(1)
-        self.assertEqual(rd.data_type(ret_id=True), 2)
+        self.assertEqual(rd.data_types(ret_id=True), [2])
 
     def test_filetype(self):
         rd = RawData(1)
@@ -196,16 +193,16 @@ class RawDataTests(TestCase):
         with self.assertRaises(ValueError):
             rd.preprocessing_status = 'not a valid state'
 
-    def test_preprocessed_data(self):
+    def test_prep_templates(self):
         rd = RawData(1)
-        self.assertEqual(rd.preprocessed_data, [1, 2])
+        self.assertEqual(rd.prep_templates, [1])
 
 
 @qiita_test_checker()
 class PreprocessedDataTests(TestCase):
     """Tests the PreprocessedData class"""
     def setUp(self):
-        self.raw_data = RawData(1)
+        self.prep_template = PrepTemplate(1)
         self.study = Study(1)
         self.params_table = "preprocessed_sequence_illumina_params"
         self.params_id = 1
@@ -234,7 +231,7 @@ class PreprocessedDataTests(TestCase):
         # Check that the returned object has the correct id
         obs = PreprocessedData.create(
             self.study, self.params_table,
-            self.params_id, self.filepaths, raw_data=self.raw_data,
+            self.params_id, self.filepaths, prep_template=self.prep_template,
             ebi_submission_accession=self.ebi_submission_accession,
             ebi_study_accession=self.ebi_study_accession)
         self.assertEqual(obs.id, 3)
@@ -360,7 +357,7 @@ class PreprocessedDataTests(TestCase):
                                     "preprocessed_sequence_illumina_params",
                                     self.params_id, self.filepaths,
                                     data_type="Metabolomics",
-                                    raw_data=self.raw_data)
+                                    prep_template=self.prep_template)
 
     def test_get_filepaths(self):
         """Correctly returns the filepaths to the preprocessed files"""
@@ -374,10 +371,10 @@ class PreprocessedDataTests(TestCase):
                 "preprocessed_demux")]
         self.assertEqual(obs, exp)
 
-    def test_raw_data(self):
-        """Correctly returns the raw data"""
+    def test_prep_template(self):
+        """Correctly returns the prep template"""
         ppd = PreprocessedData(1)
-        self.assertEqual(ppd.raw_data, 1)
+        self.assertEqual(ppd.prep_template, 1)
 
     def test_study(self):
         """Correctly returns the study"""
@@ -397,7 +394,7 @@ class PreprocessedDataTests(TestCase):
     def test_set_ebi_submission_accession(self):
         new = PreprocessedData.create(
             self.study, self.params_table, self.params_id, self.filepaths,
-            raw_data=self.raw_data,
+            prep_template=self.prep_template,
             ebi_submission_accession=self.ebi_submission_accession,
             ebi_study_accession=self.ebi_study_accession)
 
@@ -407,7 +404,7 @@ class PreprocessedDataTests(TestCase):
     def test_ebi_study_accession(self):
         new = PreprocessedData.create(
             self.study, self.params_table,
-            self.params_id, self.filepaths, raw_data=self.raw_data,
+            self.params_id, self.filepaths, prep_template=self.prep_template,
             ebi_submission_accession=self.ebi_submission_accession,
             ebi_study_accession=self.ebi_study_accession)
 

@@ -6,9 +6,12 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
-from qiita_ware.wrapper import ParallelWrapper
 from sys import stderr
+
+from qiita_ware.wrapper import ParallelWrapper
+
 from qiita_db.logger import LogEntry
+from qiita_db.data import RawData
 
 
 def _get_qiime_minimal_mapping(prep_template, out_dir):
@@ -64,13 +67,15 @@ def _get_qiime_minimal_mapping(prep_template, out_dir):
     return output_fps
 
 
-def _get_preprocess_fastq_cmd(raw_data, params):
+def _get_preprocess_fastq_cmd(raw_data, prep_template, params):
     """Generates the split_libraries_fastq.py command for the raw-data
 
     Parameters
     ----------
     raw_data : RawData
         The raw data object to pre-process
+    prep_template : PrepTemplate
+        The prep template to pre-process
     params : PreprocessedIlluminaParams
         The parameters to use for the preprocessing
 
@@ -91,7 +96,6 @@ def _get_preprocess_fastq_cmd(raw_data, params):
     from tempfile import mkdtemp
 
     from qiita_core.qiita_settings import qiita_config
-    from qiita_db.metadata_template import PrepTemplate
 
     # Get the filepaths from the raw data object
     forward_seqs = []
@@ -116,9 +120,6 @@ def _get_preprocess_fastq_cmd(raw_data, params):
         raise ValueError("The number of barcode files and the number of "
                          "sequence files should match: %d != %d"
                          % (len(barcode_fps), len(forward_seqs)))
-
-    # Instantiate the prep template
-    prep_template = PrepTemplate(raw_data.id)
 
     # The minimal QIIME mapping files should be written to a directory,
     # so QIIME can consume them
@@ -179,7 +180,8 @@ def _generate_demux_file(sl_out):
         to_hdf5(fastq_fp, f)
 
 
-def _insert_preprocessed_data_fastq(study, params, raw_data, slq_out):
+def _insert_preprocessed_data_fastq(study, params, raw_data, prep_template,
+                                    slq_out):
     """Inserts the preprocessed data to the database
 
     Parameters
@@ -190,6 +192,8 @@ def _insert_preprocessed_data_fastq(study, params, raw_data, slq_out):
         The parameters to use for preprocessing
     raw_data : RawData
         The raw data to use for the preprocessing
+    prep_template : PrepTemplate
+        The prep template to use for the preprocessing
     slq_out : str
         Path to the split_libraries_fastq.py output directory
 
@@ -226,14 +230,14 @@ def _insert_preprocessed_data_fastq(study, params, raw_data, slq_out):
                  (log_fp, "log")]
 
     PreprocessedData.create(study, params._table, params.id, filepaths,
-                            raw_data)
+                            prep_template)
 
     # Change the raw_data status to success
     raw_data.preprocessing_status = 'success'
 
 
 class StudyPreprocessor(ParallelWrapper):
-    def _construct_job_graph(self, study, raw_data, params):
+    def _construct_job_graph(self, study, prep_template, params):
         """Constructs the workflow graph to preprocess a study
 
         The steps performed to preprocess a study are:
@@ -244,12 +248,12 @@ class StudyPreprocessor(ParallelWrapper):
         ----------
         study : Study
             The study to preprocess
-        raw_data : RawData
-            The raw data to use for the preprocessing
+        prep_template : PrepTemplate
+            The prep template to use for the preprocessing
         params : BaseParameters
             The parameters to use for preprocessing
         """
-        self.raw_data = raw_data
+        self.raw_data = RawData(prep_template.raw_data)
         self._logger = stderr
         # Change the raw_data status to preprocessing
         raw_data.preprocessing_status = 'preprocessing'
@@ -258,7 +262,7 @@ class StudyPreprocessor(ParallelWrapper):
 
         # Check the raw data filetype to know which command generator we
         # should use
-        filetype = raw_data.filetype
+        filetype = self.raw_data.filetype
         if filetype == "FASTQ":
             cmd_generator = _get_preprocess_fastq_cmd
             insert_preprocessed_data = _insert_preprocessed_data_fastq
@@ -268,7 +272,7 @@ class StudyPreprocessor(ParallelWrapper):
                 % (raw_data.id, filetype))
 
         # Generate the command
-        cmd, output_dir = cmd_generator(raw_data, params)
+        cmd, output_dir = cmd_generator(raw_data, prep_template, params)
         self._job_graph.add_node(preprocess_node, job=(cmd,),
                                  requires_deps=False)
 
