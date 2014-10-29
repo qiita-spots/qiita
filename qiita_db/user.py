@@ -57,12 +57,6 @@ class User(QiitaObject):
     change_password
     generate_reset_code
     change_forgot_password
-    add_shared_study
-    remove_shared_study
-    add_private_analysis
-    remove_private_analysis
-    add_shared_analysis
-    remove_shared_analysis
     """
 
     _table = "qiita_user"

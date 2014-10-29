@@ -168,6 +168,29 @@ class TestStudy(TestCase):
             'lab_person_id': StudyPerson(1),
             'number_samples_collected': 27}
 
+    def _make_private(self):
+        # make studies private
+        self.conn_handler.execute("UPDATE qiita.study SET study_status_id = 3")
+
+    def test_has_access_public(self):
+        self.assertTrue(self.study.has_access(User("demo@microbio.me")))
+
+    def test_has_access_shared(self):
+        self._make_private()
+        self.assertTrue(self.study.has_access(User("shared@foo.bar")))
+
+    def test_has_access_private(self):
+        self._make_private()
+        self.assertTrue(self.study.has_access(User("test@foo.bar")))
+
+    def test_has_access_admin(self):
+        self._make_private()
+        self.assertTrue(self.study.has_access(User("admin@foo.bar")))
+
+    def test_has_access_no_access(self):
+        self._make_private()
+        self.assertFalse(self.study.has_access(User("demo@microbio.me")))
+
     def test_get_public(self):
         Study.create(User('test@foo.bar'), 'NOT Identification of the '
                      'Microbiomes for Cannabis Soils', [1], self.info)
@@ -393,8 +416,7 @@ class TestStudy(TestCase):
         self.assertEqual(new.status, "private")
 
     def test_retrieve_shared_with(self):
-        self.assertEqual(self.study.shared_with, ['shared@foo.bar',
-                         'demo@microbio.me'])
+        self.assertEqual(self.study.shared_with, ['shared@foo.bar'])
 
     def test_retrieve_pmids(self):
         exp = ['123456', '7891011']
