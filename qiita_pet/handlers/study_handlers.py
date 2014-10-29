@@ -488,4 +488,4 @@ class EBISubmitHandler(BaseHandler):
 
         self.render('compute_wait.html', user=self.current_user,
                     job_id=job_id, title='EBI Submission',
-                    completion_redirect='/compute_complete/%s/' % job_id)
+                    completion_redirect='/compute_complete/%s' % job_id)
