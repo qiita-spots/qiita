@@ -84,7 +84,8 @@ def load_study_from_cmd(owner, title, info):
 
 def load_preprocessed_data_from_cmd(study_id, params_table, filedir,
                                     filepathtype, params_id,
-                                    submitted_to_insdc_status, raw_data_id):
+                                    submitted_to_insdc_status,
+                                    prep_template_id):
     r"""Adds preprocessed data to the database
 
     Parameters
@@ -103,15 +104,15 @@ def load_preprocessed_data_from_cmd(study_id, params_table, filedir,
     submitted_to_insdc_status : str, {'not submitted', 'submitting', \
             'success', 'failed'}
         INSDC submission status
-    raw_data_id : int
-        Raw data id associated with data
+    prep_template_id : int
+        Prep template id associated with data
     """
     fp_types_dict = get_filepath_types()
     fp_type = fp_types_dict[filepathtype]
     filepaths = [(join(filedir, fp), fp_type) for fp in listdir(filedir)]
-    raw_data = None if raw_data_id is None else RawData(raw_data_id)
+    pt = None if prep_template_id is None else PrepTemplate(prep_template_id)
     return PreprocessedData.create(
-        Study(study_id), params_table, params_id, filepaths, raw_data=raw_data,
+        Study(study_id), params_table, params_id, filepaths, prep_template=pt,
         submitted_to_insdc_status=submitted_to_insdc_status)
 
 
@@ -130,7 +131,8 @@ def load_sample_template_from_cmd(sample_temp_path, study_id):
     return SampleTemplate.create(sample_temp, Study(study_id))
 
 
-def load_prep_template_from_cmd(prep_temp_path, raw_data_id, study_id):
+def load_prep_template_from_cmd(prep_temp_path, raw_data_id, study_id,
+                                data_type):
     r"""Adds a prep template to the database
 
     Parameters
@@ -141,14 +143,15 @@ def load_prep_template_from_cmd(prep_temp_path, raw_data_id, study_id):
         The raw data id to which the prep template belongs
     study_id : int
         The study id to which the prep template belongs
+    data_type : str
+        The data type of the prep template
     """
     prep_temp = load_template_to_dataframe(prep_temp_path)
     return PrepTemplate.create(prep_temp, RawData(raw_data_id),
-                               Study(study_id))
+                               Study(study_id), data_type)
 
 
-def load_raw_data_cmd(filepaths, filepath_types, filetype, study_ids,
-                      data_type):
+def load_raw_data_cmd(filepaths, filepath_types, filetype, study_ids):
     """Add new raw data by populating the relevant tables
 
     Parameters
@@ -161,8 +164,6 @@ def load_raw_data_cmd(filepaths, filepath_types, filetype, study_ids,
         The type of file being loaded
     study_ids : iterable of int
         The IDs of the studies with which to associate this raw data
-    data_type : int
-        The data type of the study
 
     Returns
     -------
@@ -181,10 +182,7 @@ def load_raw_data_cmd(filepaths, filepath_types, filetype, study_ids,
 
     studies = [Study(x) for x in study_ids]
 
-    data_types_dict = get_data_types()
-    data_type_id = data_types_dict[data_type]
-
-    return RawData.create(filetype_id, studies, data_type_id,
+    return RawData.create(filetype_id, studies,
                           filepaths=list(zip(filepaths, filepath_types)))
 
 
