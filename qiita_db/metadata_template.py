@@ -1274,6 +1274,7 @@ class PrepTemplate(MetadataTemplate):
         if not cls.exists(id_):
             raise QiitaDBUnknownIDError(id_, cls.__name__)
 
+        # TODO: Should we cascade to preprocessed data? See issue #537
         preprocessed_data_exists = conn_handler.execute_fetchone(
             "SELECT EXISTS(SELECT * FROM qiita.prep_template_preprocessed_data"
             " WHERE prep_template_id=%s)", (id_,))[0]
