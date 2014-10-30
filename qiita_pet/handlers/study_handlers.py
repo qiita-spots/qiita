@@ -159,10 +159,6 @@ class PrivateStudiesHandler(BaseHandler):
         """builds list of tuples for studies that are shared with user"""
         callback(_build_study_info("shared", user))
 
-    @authenticated
-    def post(self):
-        pass
-
 
 class PublicStudiesHandler(BaseHandler):
     @authenticated
@@ -179,12 +175,19 @@ class PublicStudiesHandler(BaseHandler):
         """builds list of tuples for studies that are public"""
         callback(_build_study_info("public"))
 
-    @authenticated
-    def post(self):
-        pass
-
 
 class StudyDescriptionHandler(BaseHandler):
+    def get_raw_data(self, rdis, callback):
+        """Get all raw data objects from a list of raw_data_ids"""
+        callback(list(RawData(rdi) for rdi in rdis))
+
+    def get_prep_templates(self, raw_data, callback):
+        """Get all prep templates for a list of raw data objects"""
+        callback(dict((rd.id, list((PrepTemplate(p) for p in rd.prep_templates
+                 if PrepTemplate.exists(p)))) for rd in raw_data))
+
+    @asynchronous
+    @coroutine
     def display_template(self, study_id, msg, tab_to_display=""):
         """Simple function to avoid duplication of code"""
         # make sure study is accessible and exists, raise error if not
@@ -206,16 +209,14 @@ class StudyDescriptionHandler(BaseHandler):
             fs = []
         # getting raw filepath_ types
         fts = list(k.split('_', 1)[1].replace('_', ' ')
-               for k in get_filepath_types() if k.startswith('raw_'))
+                   for k in get_filepath_types() if k.startswith('raw_'))
         fts = list('<option value="%s">%s</option>' % (f, f) for f in fts)
 
         study = Study(study_id)
         # getting the RawData and its prep templates
-        available_raw_data = list(RawData(rdi) for rdi in study.raw_data())
-        available_prep_templates = dict(
-            (rd.id, list((PrepTemplate(p) for p in rd.prep_templates
-                    if PrepTemplate.exists(p))))
-            for rd in available_raw_data)
+        available_raw_data = yield Task(self.get_raw_data, study.raw_data())
+        available_prep_templates = yield Task(self.get_prep_template,
+                                              available_raw_data)
 
         user = User(self.current_user)
         data_types = sorted(viewitems(get_data_types()), key=itemgetter(1))
@@ -241,7 +242,18 @@ class StudyDescriptionHandler(BaseHandler):
         _check_access(User(self.current_user), Study(study_id))
         self.display_template(int(study_id), "")
 
+    def remove_from_study_template_down(self, raw_data, callback):
+        for rd in raw_data():
+            if PrepTemplate.exists((rd)):
+                PrepTemplate.delete(rd)
+        if SampleTemplate.exists(study_id):
+            SampleTemplate.delete(study_id)
+
+        callback()
+
     @authenticated
+    @asynchronous
+    @coroutine
     def post(self, study_id):
         study_id = int(study_id)
         _check_access(User(self.current_user), Study(study_id))
@@ -256,17 +268,12 @@ class StudyDescriptionHandler(BaseHandler):
         raw_data_id = self.get_argument('raw_data_id', None)
         data_type_id = self.get_argument('data_type_id', None)
 
-
         study = Study(study_id)
         if sample_template:
             # processing sample teplates
 
             # deleting previous uploads
-            for rd in study.raw_data():
-                if PrepTemplate.exists((rd)):
-                    PrepTemplate.delete(rd)
-            if SampleTemplate.exists(study_id):
-                SampleTemplate.delete(study_id)
+            yield Task(self.remove_from_study_template_down, study.raw_data)
 
             fp_rsp = join(get_study_fp(study_id), sample_template)
             if not exists(fp_rsp):
