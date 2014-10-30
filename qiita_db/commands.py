@@ -16,7 +16,7 @@ with standard_library.hooks():
 
 from .study import Study, StudyPerson
 from .user import User
-from .util import get_filetypes, get_filepath_types, get_data_types
+from .util import get_filetypes, get_filepath_types
 from .data import RawData, PreprocessedData, ProcessedData
 from .metadata_template import (SampleTemplate, PrepTemplate,
                                 load_template_to_dataframe)

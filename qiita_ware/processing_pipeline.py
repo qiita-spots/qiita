@@ -256,7 +256,7 @@ class StudyPreprocessor(ParallelWrapper):
         self.raw_data = RawData(prep_template.raw_data)
         self._logger = stderr
         # Change the raw_data status to preprocessing
-        raw_data.preprocessing_status = 'preprocessing'
+        self.raw_data.preprocessing_status = 'preprocessing'
         # STEP 1: Preprocess the study
         preprocess_node = "PREPROCESS"
 
@@ -269,10 +269,10 @@ class StudyPreprocessor(ParallelWrapper):
         else:
             raise NotImplementedError(
                 "Raw data %s cannot be preprocessed, filetype %s not supported"
-                % (raw_data.id, filetype))
+                % (self.raw_data.id, filetype))
 
         # Generate the command
-        cmd, output_dir = cmd_generator(raw_data, prep_template, params)
+        cmd, output_dir = cmd_generator(self.raw_data, prep_template, params)
         self._job_graph.add_node(preprocess_node, job=(cmd,),
                                  requires_deps=False)
 
@@ -290,7 +290,7 @@ class StudyPreprocessor(ParallelWrapper):
         insert_preprocessed_node = "INSERT_PREPROCESSED"
         self._job_graph.add_node(insert_preprocessed_node,
                                  job=(insert_preprocessed_data, study, params,
-                                      raw_data, output_dir),
+                                      self.raw_data, output_dir),
                                  requires_deps=False)
         self._job_graph.add_edge(demux_node, insert_preprocessed_node)
 
