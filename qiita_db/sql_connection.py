@@ -1,6 +1,6 @@
 r"""
 SQL Connection object (:mod:`qiita_db.sql_connection`)
-==================================
+======================================================
 
 .. currentmodule:: qiita_db.sql_connection
 
@@ -155,7 +155,7 @@ class SQLConnectionHandler(object):
         """ Checks that sql_args have the correct type
 
         Inputs:
-            sql_args: SQL arguments
+            sql_args : SQL arguments
 
         Raises a TypeError if sql_args does not have the correct type,
             otherwise it just returns the execution to the caller
@@ -171,11 +171,11 @@ class SQLConnectionHandler(object):
 
         Parameters
         ----------
-        sql: str
+        sql : str
             The SQL query
-        sql_args: tuple or list, optional
+        sql_args : tuple or list, optional
             The arguments for the SQL query
-        many: bool, optional
+        many : bool, optional
             If true, performs an execute many call
 
         Returns
@@ -343,9 +343,9 @@ class SQLConnectionHandler(object):
 
         Parameters
         ----------
-        sql: str
+        sql : str
             The SQL query
-        sql_args: tuple or list, optional
+        sql_args : tuple or list, optional
             The arguments for the SQL query
 
         Returns
@@ -372,9 +372,9 @@ class SQLConnectionHandler(object):
 
         Parameters
         ----------
-        sql: str
+        sql : str
             The SQL query
-        sql_args: tuple or list, optional
+        sql_args : tuple or list, optional
             The arguments for the SQL query
 
         Returns
@@ -401,9 +401,9 @@ class SQLConnectionHandler(object):
 
         Parameters
         ----------
-        sql: str
+        sql : str
             The SQL query
-        sql_args: tuple or list, optional
+        sql_args : tuple or list, optional
             The arguments for the SQL query
 
         Raises
@@ -424,9 +424,9 @@ class SQLConnectionHandler(object):
 
         Parameters
         ----------
-        sql: str
+        sql : str
             The SQL query
-        sql_args: list of tuples
+        sql_args : list of tuples
             The arguments for the SQL query
 
         Raises
