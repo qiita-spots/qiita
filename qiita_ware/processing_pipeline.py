@@ -301,4 +301,5 @@ class StudyPreprocessor(ParallelWrapper):
         Need to change the prep_template preprocessing status to 'failed'
         """
         self.prep_template.preprocessing_status = 'failed: %s' % msg
-        LogEntry.create('Fatal', msg, info={'raw_data': raw_data.id})
+        LogEntry.create('Fatal', msg,
+                        info={'prep_template': self.prep_template.id})

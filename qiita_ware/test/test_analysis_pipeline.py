@@ -3,7 +3,6 @@ from os.path import exists, join
 from os import remove, rename
 
 from redis import Redis
-from toredis import Client
 
 from qiita_core.util import qiita_test_checker
 from qiita_db.analysis import Analysis
