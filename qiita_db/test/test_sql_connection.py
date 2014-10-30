@@ -56,7 +56,6 @@ class TestConnHandler(TestCase):
                 None, None, None]]
         self.assertEqual(obs, exp)
 
-
     def test_run_queue_last_return(self):
         self.conn_handler.create_queue("toy_queue")
         self.conn_handler.add_to_queue(
