@@ -1,8 +1,9 @@
-from unittest import TestCase, main
+from unittest import main
+from tornado_test_base import TestHandlerBase
 from websocket_handlers import MessageHandler
 
 
-class TestMessageHandler(TestCase):
+class TestMessageHandler(TestHandlerBase):
     def test___init__(self):
         raise NotImplementedError()
 

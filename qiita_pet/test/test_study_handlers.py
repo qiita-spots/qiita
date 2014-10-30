@@ -1,4 +1,4 @@
-from unittest import TestCase, main
+from unittest import main
 
 from tornado_test_base import TestHandlerBase
 from qiita_db.study import StudyPerson
@@ -14,7 +14,7 @@ class TestCreateStudyForm(TestHandlerBase):
     pass
 
 
-class TestPrivateStudiesHandler(TestCase):
+class TestPrivateStudiesHandler(TestHandlerBase):
     def test_get(self):
         raise NotImplementedError()
 
@@ -28,7 +28,7 @@ class TestPrivateStudiesHandler(TestCase):
         raise NotImplementedError()
 
 
-class TestPublicStudiesHandler(TestCase):
+class TestPublicStudiesHandler(TestHandlerBase):
     def test_get(self):
         raise NotImplementedError()
 
@@ -39,7 +39,7 @@ class TestPublicStudiesHandler(TestCase):
         raise NotImplementedError()
 
 
-class TestStudyDescriptionHandler(TestCase):
+class TestStudyDescriptionHandler(TestHandlerBase):
     def test_display_template(self):
         raise NotImplementedError()
 
@@ -50,7 +50,9 @@ class TestStudyDescriptionHandler(TestCase):
         raise NotImplementedError()
 
 
-class TestCreateStudyHandler(TestCase):
+class TestCreateStudyHandler(TestHandlerBase):
+    database = True
+
     def test_get(self):
         """Make sure the page loads when no arguments are passed"""
         response = self.get('/study/create/')
@@ -90,19 +92,20 @@ class TestCreateStudyHandler(TestCase):
         self.assertTrue(new_person.phone is None)
 
 
-class TestCreateStudyAJAX(TestCase):
+class TestCreateStudyAJAX(TestHandlerBase):
+    database = True
+
     def test_get(self):
         raise NotImplementedError()
 
 
-class TestMetadataSummaryHandler(TestCase):
+class TestMetadataSummaryHandler(TestHandlerBase):
     def test_get(self):
         raise NotImplementedError()
 
 
-class TestEBISubmitHandler(TestCase):
-    def test_get(self):
-        raise NotImplementedError()
+class TestEBISubmitHandler(TestHandlerBase):
+    database = True
 
     def test_get(self):
         raise NotImplementedError()

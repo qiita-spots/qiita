@@ -1,10 +1,17 @@
-from unittest import TestCase, main
-from user_handlers import UserProfile, UserProfileHandler, ForgotPasswordHandler, ChangeForgotPasswordHandler
+from unittest import main
+from tornado_test_base import TestHandlerBase
+from user_handlers import (
+    UserProfile, UserProfileHandler, ForgotPasswordHandler,
+    ChangeForgotPasswordHandler)
 
 
-class TestUserProfile(TestCase):
+class TestUserProfile(TestHandlerBase):
+    pass
 
-class TestUserProfileHandler(TestCase):
+
+class TestUserProfileHandler(TestHandlerBase):
+    database = True
+
     def test_get(self):
         raise NotImplementedError()
 
@@ -12,7 +19,9 @@ class TestUserProfileHandler(TestCase):
         raise NotImplementedError()
 
 
-class TestForgotPasswordHandler(TestCase):
+class TestForgotPasswordHandler(TestHandlerBase):
+    database = True
+
     def test_get(self):
         raise NotImplementedError()
 
@@ -20,7 +29,9 @@ class TestForgotPasswordHandler(TestCase):
         raise NotImplementedError()
 
 
-class TestChangeForgotPasswordHandler(TestCase):
+class TestChangeForgotPasswordHandler(TestHandlerBase):
+    database = True
+
     def test_get(self):
         raise NotImplementedError()
 

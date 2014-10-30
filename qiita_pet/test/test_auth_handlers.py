@@ -1,9 +1,12 @@
-from unittest import TestCase, main
+from unittest import main
+from tornado_test_base import TestHandlerBase
 from auth_handlers import (AuthCreateHandler, AuthVerifyHandler,
                            AuthLoginHandler, AuthLogoutHandler)
 
 
-class TestAuthCreateHandler(TestCase):
+class TestAuthCreateHandler(TestHandlerBase):
+    database = True
+
     def test_get(self):
         raise NotImplementedError()
 
@@ -11,12 +14,12 @@ class TestAuthCreateHandler(TestCase):
         raise NotImplementedError()
 
 
-class TestAuthVerifyHandler(TestCase):
+class TestAuthVerifyHandler(TestHandlerBase):
     def test_get(self):
         raise NotImplementedError()
 
 
-class TestAuthLoginHandler(TestCase):
+class TestAuthLoginHandler(TestHandlerBase):
     def test_get(self):
         raise NotImplementedError()
 
@@ -27,7 +30,7 @@ class TestAuthLoginHandler(TestCase):
         raise NotImplementedError()
 
 
-class TestAuthLogoutHandler(TestCase):
+class TestAuthLogoutHandler(TestHandlerBase):
     def test_get(self):
         raise NotImplementedError()
 

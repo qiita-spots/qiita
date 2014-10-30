@@ -1,8 +1,9 @@
-from unittest import TestCase, main
+from unittest import main
+from tornado_test_base import TestHandlerBase
 from compute import ComputeCompleteHandler
 
 
-class TestComputeCompleteHandler(TestCase):
+class TestComputeCompleteHandler(TestHandlerBase):
     def test_get(self):
         raise NotImplementedError()
 

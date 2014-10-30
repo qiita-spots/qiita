@@ -1,8 +1,11 @@
-from unittest import TestCase, main
+from unittest import main
+from tornado_test_base import TestHandlerBase
 from upload import UploadFileHandler
 
 
-class TestUploadFileHandler(TestCase):
+class TestUploadFileHandler(TestHandlerBase):
+    database = True
+
     def test_post(self):
         raise NotImplementedError()
 

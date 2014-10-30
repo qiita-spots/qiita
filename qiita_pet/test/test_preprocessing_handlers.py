@@ -1,8 +1,11 @@
-from unittest import TestCase, main
+from unittest import main
+from tornado_test_base import TestHandlerBase
 from preprocessing_handlers import PreprocessHandler
 
 
-class TestPreprocessHandler(TestCase):
+class TestPreprocessHandler(TestHandlerBase):
+    database = True
+
     def test_post(self):
         raise NotImplementedError()
 

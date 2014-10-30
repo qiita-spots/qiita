@@ -1,8 +1,10 @@
-from unittest import TestCase, main
-from base_handlers import BaseHandler, MainHandler, MockupHandler, NoPageHandler
+from unittest import main
+from tornado_test_base import TestHandlerBase
+from base_handlers import (
+    BaseHandler, MainHandler, MockupHandler, NoPageHandler)
 
 
-class TestBaseHandler(TestCase):
+class TestBaseHandler(TestHandlerBase):
     def test_get_current_user(self):
         raise NotImplementedError()
 
@@ -13,17 +15,17 @@ class TestBaseHandler(TestCase):
         raise NotImplementedError()
 
 
-class TestMainHandler(TestCase):
+class TestMainHandler(TestHandlerBase):
     def test_get(self):
         raise NotImplementedError()
 
 
-class TestMockupHandler(TestCase):
+class TestMockupHandler(TestHandlerBase):
     def test_get(self):
         raise NotImplementedError()
 
 
-class TestNoPageHandler(TestCase):
+class TestNoPageHandler(TestHandlerBase):
     def test_get(self):
         raise NotImplementedError()
 

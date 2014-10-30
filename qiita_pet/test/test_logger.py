@@ -1,8 +1,9 @@
-from unittest import TestCase, main
+from unittest import main
+from tornado_test_base import TestHandlerBase
 from logger_handlers import LogEntryViewerHandler
 
 
-class TestLogEntryViewerHandler(TestCase):
+class TestLogEntryViewerHandler(TestHandlerBase):
     def test__check_access(self):
         raise NotImplementedError()
 
