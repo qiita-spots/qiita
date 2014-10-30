@@ -382,7 +382,8 @@ class MetadataSummaryHandler(BaseHandler):
         if self.get_argument('prep_template', None):
             template = PrepTemplate(int(self.get_argument('prep_template')))
         if self.get_argument('sample_template', None):
-            template = SampleTemplate(int(self.get_argument('sample_template')))
+            tid = int(self.get_argument('sample_template'))
+            template = SampleTemplate(tid)
 
         # templates have same ID as study associated with, so can do check
         _check_access(User(self.current_user), Study(study_id))
