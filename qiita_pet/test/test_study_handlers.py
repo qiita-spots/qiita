@@ -1,14 +1,62 @@
-from unittest import main
+from unittest import TestCase, main
 
 from tornado_test_base import TestHandlerBase
 from qiita_db.study import StudyPerson
 from qiita_db.util import get_count, check_count
+from study_handlers import (
+    _build_study_info, _check_access, CreateStudyForm, PrivateStudiesHandler,
+    PublicStudiesHandler, StudyDescriptionHandler, CreateStudyHandler,
+    CreateStudyAJAX, MetadataSummaryHandler, EBISubmitHandler)
 
 
-class CreateStudyHandlerTestsDB(TestHandlerBase):
-    database = True
+class TestCreateStudyForm(TestHandlerBase):
+    # TODO: add tests for form creation
+    pass
 
-    def test_new_person_created(self):
+
+class TestPrivateStudiesHandler(TestCase):
+    def test_get(self):
+        raise NotImplementedError()
+
+    def test__get_private(self):
+        raise NotImplementedError()
+
+    def test__get_shared(self):
+        raise NotImplementedError()
+
+    def test_post(self):
+        raise NotImplementedError()
+
+
+class TestPublicStudiesHandler(TestCase):
+    def test_get(self):
+        raise NotImplementedError()
+
+    def test_get_public(self):
+        raise NotImplementedError()
+
+    def test_post(self):
+        raise NotImplementedError()
+
+
+class TestStudyDescriptionHandler(TestCase):
+    def test_display_template(self):
+        raise NotImplementedError()
+
+    def test_get(self):
+        raise NotImplementedError()
+
+    def test_post(self):
+        raise NotImplementedError()
+
+
+class TestCreateStudyHandler(TestCase):
+    def test_get(self):
+        """Make sure the page loads when no arguments are passed"""
+        response = self.get('/study/create/')
+        self.assertEqual(response.code, 200)
+
+    def test_post(self):
         person_count_before = get_count('qiita.study_person')
 
         post_data = {'new_people_names': ['Adam', 'Ethan'],
@@ -42,12 +90,26 @@ class CreateStudyHandlerTestsDB(TestHandlerBase):
         self.assertTrue(new_person.phone is None)
 
 
-class CreateStudyHandlerTestsNoDB(TestHandlerBase):
-    def test_page_load(self):
-        """Make sure the page loads when no arguments are passed"""
-        response = self.get('/study/create/')
-        self.assertEqual(response.code, 200)
+class TestCreateStudyAJAX(TestCase):
+    def test_get(self):
+        raise NotImplementedError()
 
 
-if __name__ == '__main__':
+class TestMetadataSummaryHandler(TestCase):
+    def test_get(self):
+        raise NotImplementedError()
+
+
+class TestEBISubmitHandler(TestCase):
+    def test_get(self):
+        raise NotImplementedError()
+
+    def test_get(self):
+        raise NotImplementedError()
+
+    def test_post(self):
+        raise NotImplementedError()
+
+
+if __name__ == "__main__":
     main()
