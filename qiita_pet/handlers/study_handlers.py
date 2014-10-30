@@ -416,8 +416,11 @@ class CreateStudyHandler(BaseHandler):
         if form_data.data['pubmed_id'][0]:
             theStudy.add_pmid(form_data.data['pubmed_id'][0])
 
-        # TODO: change this redirect to something more sensible
-        self.redirect('/')
+        msg = 'Study "%s" successfully created' % (
+            form_data.data['study_title'][0])
+
+        self.render('index.html', message=msg, level='success',
+                    user=self.current_user)
 
 
 class CreateStudyAJAX(BaseHandler):
