@@ -333,6 +333,9 @@ INSERT INTO qiita.job (data_type_id, job_status_id, command_id, options) VALUES 
 -- Insert Analysis
 INSERT INTO qiita.analysis (email, name, description, analysis_status_id, pmid) VALUES ('test@foo.bar', 'SomeAnalysis', 'A test analysis', 1, '121112'), ('test@foo.bar', 'SomeSecondAnalysis', 'Another test analysis', 1, '22221112');
 
+-- Insert Analysis Workflow
+INSERT INTO qiita.analysis_workflow (analysis_id, step) VALUES (1, 3), (2, 3);
+
 -- Attach jobs to analysis
 INSERT INTO qiita.analysis_job (analysis_id, job_id) VALUES (1, 1), (1, 2), (2, 3);
 
