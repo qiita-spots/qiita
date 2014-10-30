@@ -85,7 +85,6 @@ from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 
 from .exceptions import QiitaDBExecutionError, QiitaDBConnectionError
 from qiita_core.qiita_settings import qiita_config
-from qiita_core.exceptions import IncompetentQiitaDeveloperError
 
 
 class SQLConnectionHandler(object):
@@ -225,7 +224,8 @@ class SQLConnectionHandler(object):
 
         Notes
         -----
-        Currently does not support executemany command
+        Does not support executemany command. Instead, enter the multiple
+        SQL commands as multiple entries in the queue.
 
         Queues are executed in FIFO order
         """
@@ -239,6 +239,7 @@ class SQLConnectionHandler(object):
             results = []
             clear_res = False
             for sql, sql_args in self.queues[queue]:
+                # wipe out results list if needed
                 for pos, arg in enumerate(sql_args):
                     # check if previous results needed and replace if necessary
                     if isinstance(arg, str) and \
@@ -246,8 +247,10 @@ class SQLConnectionHandler(object):
                         result_pos = int(arg[1:-1])
                         sql_args[pos] = results[result_pos]
                         clear_res = True
+                # wipe out results if needed and reset clear_res
                 if clear_res:
                     results = []
+                clear_res = False
                 try:
                     self._check_sql_args(sql_args)
                     cur.execute(sql, sql_args)
@@ -269,6 +272,7 @@ class SQLConnectionHandler(object):
         self._connection.commit()
         # wipe out queue since finished
         del self.queues[queue]
+        return results
 
     def list_queues(self):
         """Returns list of all queue names currently in handler
