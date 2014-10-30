@@ -8,18 +8,21 @@ r"""Qitta study handlers for the Tornado webserver.
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 from __future__ import division
+from collections import namedtuple
 
-from tornado.web import authenticated, HTTPError
+from tornado.web import authenticated, HTTPError, asynchronous
+from tornado.gen import coroutine, Task
 from wtforms import (Form, StringField, SelectField, BooleanField,
                      SelectMultipleField, TextAreaField, validators)
 
 from os import listdir
 from os.path import exists, join, basename
-
+from functools import partial
 from .base_handlers import BaseHandler
 
 from qiita_core.qiita_settings import qiita_config
-
+from qiita_core.exceptions import IncompetentQiitaDeveloperError
+from qiita_pet.util import linkify
 from qiita_ware.context import submit
 from qiita_ware.util import metadata_stats_from_sample_and_prep_templates
 from qiita_ware.demux import stats as demux_stats
@@ -34,6 +37,50 @@ from qiita_db.data import PreprocessedData
 from qiita_db.exceptions import (QiitaDBColumnError, QiitaDBExecutionError,
                                  QiitaDBDuplicateError, QiitaDBUnknownIDError)
 from qiita_db.data import RawData
+
+
+def _build_study_info(studytype, user=None):
+        """builds list of namedtuples for study listings"""
+        if studytype == "private":
+            studylist = user.private_studies
+        elif studytype == "shared":
+            studylist = user.shared_studies
+        elif studytype == "public":
+            studylist = Study.get_public()
+        else:
+            raise IncompetentQiitaDeveloperError("Must use private, shared, "
+                                                 "or public!")
+
+        study_person_linkifier = partial(
+            linkify, "<a target=\"_blank\" href=\"mailto:{0}\">{1}</a>")
+        pubmed_linkifier = partial(
+            linkify, "<a target=\"_blank\" href=\"http://www.ncbi.nlm.nih.gov/"
+            "pubmed/{0}\">{0}</a>")
+        StudyTuple = namedtuple('StudyInfo', 'id title meta_complete '
+                                'num_samples_collected shared num_raw_data pi '
+                                'pmids')
+
+        infolist = []
+        for s_id in studylist:
+            study = Study(s_id)
+            info = study.info
+            PI = StudyPerson(info['principal_investigator_id'])
+            PI = study_person_linkifier((PI.email, PI.name))
+            pmids = ", ".join([pubmed_linkifier([pmid])
+                               for pmid in study.pmids])
+            shared = []
+            for person in study.shared_with:
+                person = User(person)
+                shared.append(study_person_linkifier(
+                    (person.email, person.info['name'])))
+            shared = ", ".join(shared)
+
+            infolist.append(StudyTuple(study.id, study.title,
+                                       info["metadata_complete"],
+                                       info["number_samples_collected"],
+                                       shared, len(study.raw_data()),
+                                       PI, pmids))
+        return infolist
 
 
 def _check_access(user, study):
@@ -85,16 +132,23 @@ class CreateStudyForm(Form):
 
 class PrivateStudiesHandler(BaseHandler):
     @authenticated
+    @asynchronous
+    @coroutine
     def get(self):
         self.write(self.render_string('waiting.html'))
         self.flush()
-        u = User(self.current_user)
-        user_studies = [Study(s_id) for s_id in u.private_studies]
-        share_dict = {s.id: s.shared_with for s in user_studies}
-        shared_studies = [Study(s_id) for s_id in u.shared_studies]
+        user = User(self.current_user)
+        user_studies = yield Task(self._get_private, user)
+        shared_studies = yield Task(self._get_shared, user)
         self.render('private_studies.html', user=self.current_user,
-                    user_studies=user_studies, shared_studies=shared_studies,
-                    share_dict=share_dict)
+                    user_studies=user_studies, shared_studies=shared_studies)
+
+    def _get_private(self, user, callback):
+        callback(_build_study_info("private", user))
+
+    def _get_shared(self, user, callback):
+        """builds list of tuples for studies that are shared with user"""
+        callback(_build_study_info("shared", user))
 
     @authenticated
     def post(self):
@@ -103,12 +157,18 @@ class PrivateStudiesHandler(BaseHandler):
 
 class PublicStudiesHandler(BaseHandler):
     @authenticated
+    @asynchronous
+    @coroutine
     def get(self):
         self.write(self.render_string('waiting.html'))
         self.flush()
-        public_studies = [Study(s_id) for s_id in Study.get_public()]
+        public_studies = yield Task(self._get_public)
         self.render('public_studies.html', user=self.current_user,
                     public_studies=public_studies)
+
+    def _get_public(self, callback):
+        """builds list of tuples for studies that are public"""
+        callback(_build_study_info("public"))
 
     @authenticated
     def post(self):
@@ -488,4 +548,4 @@ class EBISubmitHandler(BaseHandler):
 
         self.render('compute_wait.html', user=self.current_user,
                     job_id=job_id, title='EBI Submission',
-                    completion_redirect='/compute_complete/%s/' % job_id)
+                    completion_redirect='/compute_complete/%s' % job_id)
