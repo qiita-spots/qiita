@@ -89,12 +89,9 @@ def load_study(owner, title, info):
               'study. This option can be used multiple times if the data '
               'should be associated with multiple studies', type=int,
               required=True)
-@click.option('--data_type', required=True,
-              type=click.Choice(get_data_types().keys()),
-              help="The data type of data")
-def load_raw(fp, fp_type, filetype, study, data_type):
+def load_raw(fp, fp_type, filetype, study):
     """Loads a raw data to the database"""
-    raw_data = load_raw_data_cmd(fp, fp_type, filetype, study, data_type)
+    raw_data = load_raw_data_cmd(fp, fp_type, filetype, study)
     print("Raw data successfully added to the database with id %s"
           % raw_data.id)
 
@@ -112,17 +109,20 @@ def load_raw(fp, fp_type, filetype, study, data_type):
               type=click.Choice(get_filepath_types().keys()))
 @click.option('--params_id', required=True,
               help="id in the paramater table associated with the parameters")
-@click.option('--raw_data_id', help="Raw data id associated with data",
-              default=None)
+@click.option('--prep_template_id',
+              help="Prep template id associated with data", default=None)
 @click.option('--insdc', is_flag=True,
               help="If provided, the preprocessed data have been submitted "
                    "to insdc")
+@click.option('--data_type', default=None,
+              type=click.Choice(get_data_types()),
+              help="The data type of data")
 def load_preprocessed(study_id, params_table, filedir, filepathtype,
-                      params_id, raw_data_id, insdc):
+                      params_id, prep_template_id, insdc, data_type):
     """Loads a preprocessed data to the database"""
     preproc_data = load_preprocessed_data_from_cmd(
         study_id, params_table, filedir, filepathtype, params_id, insdc,
-        raw_data_id)
+        prep_template_id, data_type)
     print("Preprocessed data successfully added to the database with id %s"
           % preproc_data.id)
 
@@ -182,9 +182,12 @@ def load_sample_template(fp, study):
               help='Associate the prep template with this raw data')
 @click.option('--study', required=True, type=int,
               help='Associate the prep template with this study')
-def load_prep_template(fp, raw_data, study):
+@click.option('--data_type', required=True,
+              type=click.Choice(get_data_types()),
+              help="The data type of data")
+def load_prep_template(fp, raw_data, study, data_type):
     """Loads a sample template to the database"""
-    prep_template = load_prep_template_from_cmd(fp, raw_data, study)
+    prep_template = load_prep_template_from_cmd(fp, raw_data, study, data_type)
     print("Prep template successfully added to the database with id %s"
           % prep_template.id)
 
