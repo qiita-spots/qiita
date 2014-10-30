@@ -56,6 +56,7 @@ class Analysis(QiitaStatusObject):
 
     Methods
     -------
+    has_access
     add_samples
     remove_samples
     share
@@ -409,13 +410,33 @@ class Analysis(QiitaStatusObject):
     #     return QiitaDBNotImplementedError()
 
     # ---- Functions ----
+    def has_access(self, user):
+        """Returns whether the given user has access to the analysis
+
+        Parameters
+        ----------
+        user : User object
+            User we are checking access for
+
+        Returns
+        -------
+        bool
+            Whether user has access to analysis or not
+        """
+        # if admin or superuser, just return true
+        if user.level in {'superuser', 'admin'}:
+            return True
+
+        return self._id in Analysis.get_public() + user.private_analyses +\
+            user.shared_analyses
+
     def share(self, user):
         """Share the analysis with another user
 
         Parameters
         ----------
         user: User object
-            The user to share the study with
+            The user to share the analysis with
         """
         conn_handler = SQLConnectionHandler()
         self._lock_check(conn_handler)
@@ -430,7 +451,7 @@ class Analysis(QiitaStatusObject):
         Parameters
         ----------
         user: User object
-            The user to unshare the study with
+            The user to unshare the analysis with
         """
         conn_handler = SQLConnectionHandler()
         self._lock_check(conn_handler)
