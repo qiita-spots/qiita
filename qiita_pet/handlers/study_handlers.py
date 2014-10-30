@@ -23,7 +23,6 @@ from .base_handlers import BaseHandler
 from qiita_core.qiita_settings import qiita_config
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_pet.util import linkify
-
 from qiita_ware.context import submit
 from qiita_ware.util import metadata_stats_from_sample_and_prep_templates
 from qiita_ware.demux import stats as demux_stats
@@ -69,24 +68,18 @@ def _build_study_info(studytype, user=None):
             PI = study_person_linkifier((PI.email, PI.name))
             pmids = ", ".join([pubmed_linkifier([pmid])
                                for pmid in study.pmids])
-            if studytype == "private":
-                shared = []
-                for person in study.shared_with:
-                    person = User(person)
-                    shared.append(study_person_linkifier(
-                        (person.email, person.info['name'])))
-                shared = ", ".join(shared)
-                infolist.append(StudyTuple(study.id, study.title,
-                                           info["metadata_complete"],
-                                           info["number_samples_collected"],
-                                           shared, len(study.raw_data()),
-                                           PI, pmids))
-            else:
-                infolist.append(StudyTuple(study.id, study.title,
-                                           info["metadata_complete"],
-                                           info["number_samples_collected"],
-                                           None, len(study.raw_data()),
-                                           PI, pmids))
+            shared = []
+            for person in study.shared_with:
+                person = User(person)
+                shared.append(study_person_linkifier(
+                    (person.email, person.info['name'])))
+            shared = ", ".join(shared)
+
+            infolist.append(StudyTuple(study.id, study.title,
+                                       info["metadata_complete"],
+                                       info["number_samples_collected"],
+                                       shared, len(study.raw_data()),
+                                       PI, pmids))
         return infolist
 
 
@@ -144,9 +137,9 @@ class PrivateStudiesHandler(BaseHandler):
     def get(self):
         self.write(self.render_string('waiting.html'))
         self.flush()
-        u = User(self.current_user)
-        user_studies = yield Task(self._get_private, u)
-        shared_studies = yield Task(self._get_shared, u)
+        user = User(self.current_user)
+        user_studies = yield Task(self._get_private, user)
+        shared_studies = yield Task(self._get_shared, user)
         self.render('private_studies.html', user=self.current_user,
                     user_studies=user_studies, shared_studies=shared_studies)
 
