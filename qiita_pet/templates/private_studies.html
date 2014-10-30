@@ -58,7 +58,7 @@ function modify_sharing(study_id) {
             <div class="form-group">
               <label for="users_list">Add/Remove Users</label>
               <select multiple class="chosen-select" id="users_list" data-placeholder=" ">
-                {% for email in all_emails %}
+                {% for email in all_emails_except_current %}
                 <option value="{{ email }}">{{ email }} </option>
                 {% end %}
               </select>

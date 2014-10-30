@@ -599,6 +599,9 @@ class Study(QiitaStatusObject):
         # Make sure the study is not already shared with the given user
         if user.id in self.shared_with:
             return
+        # Do not allow the study to be shared with the owner
+        if user.id == self.owner:
+            return
 
         sql = ("INSERT INTO qiita.study_users (study_id, email) VALUES "
                "(%s, %s)")

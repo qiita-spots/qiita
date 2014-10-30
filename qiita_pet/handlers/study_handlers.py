@@ -156,10 +156,11 @@ class PrivateStudiesHandler(BaseHandler):
         user = User(self.current_user)
         user_studies = yield Task(self._get_private, user)
         shared_studies = yield Task(self._get_shared, user)
-        all_emails = yield Task(self._get_all_emails)
+        all_emails_except_current = yield Task(self._get_all_emails)
+        all_emails_except_current.remove(self.current_user)
         self.render('private_studies.html', user=self.current_user,
                     user_studies=user_studies, shared_studies=shared_studies,
-                    all_emails=all_emails)
+                    all_emails_except_current=all_emails_except_current)
 
     def _get_private(self, user, callback):
         callback(_build_study_info("private", user))
