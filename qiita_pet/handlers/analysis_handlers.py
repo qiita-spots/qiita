@@ -33,14 +33,14 @@ SELECT_SAMPLES = 2
 SELECT_COMMANDS = 3
 
 
-def check_analysis_access(user, analysis_id):
+def check_analysis_access(user, analysis):
     """Checks whether user has access to an analysis
 
     Parameters
     ----------
     user : User object
         User to check
-    analysis_id : int
+    analysis : Analysis object
         Analysis to check access for
 
     Raises
@@ -48,9 +48,8 @@ def check_analysis_access(user, analysis_id):
     RuntimeError
         Tried to access analysis that user does not have access to
     """
-    if analysis_id not in Analysis.get_public() + user.shared_analyses + \
-            user.private_analyses:
-        raise HTTPError(403, "Analysis access denied to %s" % (analysis_id))
+    if not analysis.has_access(user):
+        raise HTTPError(403, "Analysis access denied to %s" % (analysis.id))
 
 
 class SearchStudiesHandler(BaseHandler):
@@ -127,7 +126,7 @@ class SearchStudiesHandler(BaseHandler):
         analysis = Analysis(int(self.get_argument("aid")))
         # make sure user has access to the analysis
         userobj = User(user)
-        check_analysis_access(userobj, analysis.id)
+        check_analysis_access(userobj, analysis)
 
         # get the dictionaries of selected samples and data types
         selproc_data, selsamples = self._selected_parser(analysis)
@@ -167,8 +166,8 @@ class SearchStudiesHandler(BaseHandler):
                 results, selsamples, meta_headers)
         else:
             analysis_id = int(self.get_argument("analysis-id"))
-            check_analysis_access(User(user), analysis_id)
             analysis = Analysis(analysis_id)
+            check_analysis_access(User(user), analysis)
             selproc_data, selsamples = self._selected_parser(analysis)
 
         # run through action requested
@@ -219,9 +218,9 @@ class SelectCommandsHandler(BaseHandler):
     @authenticated
     def get(self):
         analysis_id = int(self.get_argument('aid'))
-        check_analysis_access(User(self.current_user), analysis_id)
-
         analysis = Analysis(analysis_id)
+        check_analysis_access(User(self.current_user), analysis)
+
         data_types = analysis.data_types
         commands = Command.get_commands_by_datatype()
 
@@ -244,9 +243,8 @@ class AnalysisWaitHandler(BaseHandler):
     def get(self, analysis_id):
         user = self.current_user
         analysis_id = int(analysis_id)
-        check_analysis_access(User(user), analysis_id)
-
         analysis = Analysis(analysis_id)
+        check_analysis_access(User(user), analysis)
 
         commands = []
         for job in analysis.jobs:
@@ -267,12 +265,12 @@ class AnalysisWaitHandler(BaseHandler):
             rarefaction_depth = int(rarefaction_depth)
         else:
             rarefaction_depth = None
-        check_analysis_access(User(user), analysis_id)
+        analysis = Analysis(analysis_id)
+        check_analysis_access(User(user), analysis)
 
         command_args = self.get_arguments("commands")
         split = [x.split("#") for x in command_args]
         commands = ["%s: %s" % (s[0], s[1]) for s in split]
-        analysis = Analysis(analysis_id)
         self.render("analysis_waiting.html", user=user, aid=analysis_id,
                     aname=analysis.name, commands=commands)
         submit(user, run_analysis, user, analysis_id, split, comm_opts={},
@@ -284,9 +282,9 @@ class AnalysisResultsHandler(BaseHandler):
     def get(self, analysis_id):
         user = self.current_user
         analysis_id = int(analysis_id)
-        check_analysis_access(User(user), analysis_id)
-
         analysis = Analysis(analysis_id)
+        check_analysis_access(User(user), analysis)
+
         jobres = defaultdict(list)
         for job in analysis.jobs:
             jobject = Job(job)
