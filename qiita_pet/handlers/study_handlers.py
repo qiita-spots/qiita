@@ -385,14 +385,16 @@ class MetadataSummaryHandler(BaseHandler):
             tid = int(self.get_argument('sample_template'))
             template = SampleTemplate(tid)
 
+        study = Study(study_id)
+
         # templates have same ID as study associated with, so can do check
-        _check_access(User(self.current_user), Study(study_id))
+        _check_access(User(self.current_user), study)
 
         df = dataframe_from_template(template)
         stats = stats_from_df(df)
 
         self.render('metadata_summary.html', user=self.current_user,
-                    study_title=Study(study_id).title, stats=stats,
+                    study_title=study.title, stats=stats,
                     study_id=study_id)
 
 
