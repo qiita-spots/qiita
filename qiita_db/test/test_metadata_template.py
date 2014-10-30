@@ -895,7 +895,7 @@ class TestPrepTemplate(TestCase):
         # The returned object has the correct id
         self.assertEqual(pt.id, 2)
 
-        # The row in the prep template table have been created
+        # The row in the prep template table has been created
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.prep_template WHERE prep_template_id=2")
         # prep_template_id, data_type_id, raw_data_id, preprocessing_status,
