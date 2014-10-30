@@ -130,6 +130,8 @@ class Study(QiitaStatusObject):
     add_pmid
     exists
     has_access
+    share
+    unshare
 
     Notes
     -----
@@ -143,7 +145,7 @@ class Study(QiitaStatusObject):
     def _lock_public(self, conn_handler):
         """Raises QiitaDBStatusError if study is public"""
         if self.check_status(("public", )):
-            raise QiitaDBStatusError("Can't change status of public study!")
+            raise QiitaDBStatusError("Illegal operation on public study!")
 
     def _status_setter_checks(self, conn_handler):
         r"""Perform a check to make sure not setting status away from public
@@ -566,6 +568,42 @@ class Study(QiitaStatusObject):
 
         return self._id in user.private_studies + user.shared_studies \
             + self.get_public()
+
+    def share(self, user):
+        """Share the study with another user
+
+        Parameters
+        ----------
+        user: User object
+            The user to share the study with
+        """
+        conn_handler = SQLConnectionHandler()
+        self._lock_public(conn_handler)
+
+        # Make sure the study is not already shared with the given user
+        if user.id in self.shared_with:
+            return
+
+        sql = ("INSERT INTO qiita.study_users (study_id, email) VALUES "
+               "(%s, %s)")
+
+        conn_handler.execute(sql, (self._id, user.id))
+
+    def unshare(self, user):
+        """Unshare the study with another user
+
+        Parameters
+        ----------
+        user: User object
+            The user to unshare the study with
+        """
+        conn_handler = SQLConnectionHandler()
+        self._lock_public(conn_handler)
+
+        sql = ("DELETE FROM qiita.study_users WHERE study_id = %s AND "
+               "email = %s")
+
+        conn_handler.execute(sql, (self._id, user.id))
 
 
 class StudyPerson(QiitaObject):

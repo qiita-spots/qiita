@@ -24,6 +24,7 @@ from qiita_db.exceptions import QiitaDBColumnError, QiitaDBStatusError
 class TestStudyPerson(TestCase):
     def setUp(self):
         self.studyperson = StudyPerson(1)
+        self.study = Study(1)
 
     def test_create_studyperson(self):
         new = StudyPerson.create('SomeDude', 'somedude@foo.bar', 'affil',
@@ -174,6 +175,21 @@ class TestStudy(TestCase):
 
     def test_has_access_public(self):
         self.assertTrue(self.study.has_access(User("demo@microbio.me")))
+
+    def test_share(self):
+        # Clear all sharing associations
+        self._make_private()
+        self.conn_handler.execute("delete from qiita.study_users")
+        self.assertEqual(self.study.shared_with, [])
+
+        # Then share the study with shared@foo.bar
+        self.study.share(User("shared@foo.bar"))
+        self.assertEqual(self.study.shared_with, ["shared@foo.bar"])
+
+    def test_unshare(self):
+        self._make_private()
+        self.study.unshare(User("shared@foo.bar"))
+        self.assertEqual(self.study.shared_with, [])
 
     def test_has_access_shared(self):
         self._make_private()
