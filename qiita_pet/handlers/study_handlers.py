@@ -374,6 +374,7 @@ class CreateStudyAJAX(BaseHandler):
 class MetadataSummaryHandler(BaseHandler):
     @authenticated
     def get(self, arguments):
+        study_id = int(self.get_argument('study_id'))
 
         # this block is tricky because you can pass either the sample or the
         # prep template and if none is passed then we will let an exception
@@ -382,8 +383,6 @@ class MetadataSummaryHandler(BaseHandler):
             template = PrepTemplate(int(self.get_argument('prep_template')))
         if self.get_argument('sample_template', None):
             template = SampleTemplate(int(self.get_argument('sample_template')))
-
-        study_id = int(self.get_argument('study_id'))
 
         # templates have same ID as study associated with, so can do check
         _check_access(User(self.current_user), Study(study_id))
