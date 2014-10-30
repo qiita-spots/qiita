@@ -138,13 +138,21 @@ class BaseData(QiitaObject):
             "VALUES (%s, %s)".format(self._data_filepath_table,
                                      self._data_filepath_column), values)
 
-    def _add_filepaths(self, filepaths, conn_handler):
+    def add_filepaths(self, filepaths, conn_handler=None):
         r"""Populates the DB tables for storing the filepaths and connects the
         `self` objects with these filepaths"""
+        # Check that this function has been called from a subclass
         self._check_subclass()
+
+        # Check if the connection handler has been provided. Create a new
+        # one if not.
+        if not conn_handler:
+            conn_handler = SQLConnectionHandler()
+
         # Add the filepaths to the database
         fp_ids = insert_filepaths(filepaths, self._id, self._table,
                                   self._filepath_table, conn_handler)
+
         # Connect the raw data with its filepaths
         self._link_data_filepaths(fp_ids, conn_handler)
 
@@ -211,7 +219,7 @@ class RawData(BaseData):
     _study_raw_table = "study_raw_data"
 
     @classmethod
-    def create(cls, filetype, filepaths, studies, data_type_id,
+    def create(cls, filetype, studies, data_type_id, filepaths=None,
                investigation_type=None):
         r"""Creates a new object with a new id on the storage system
 
@@ -219,12 +227,12 @@ class RawData(BaseData):
         ----------
         filetype : int
             The filetype identifier
-        filepaths : iterable of tuples (str, int)
-            The list of paths to the raw files and its filepath type identifier
         studies : list of Study
             The list of Study objects to which the raw data belongs to
         data_type : int
             The data_type identifier
+        filepaths : iterable of tuples (str, int), optional
+            The list of paths to the raw files and its filepath type identifier
         investigation_type : str, optional
             The investigation type, if relevant
 
@@ -249,6 +257,7 @@ class RawData(BaseData):
             "RETURNING raw_data_id".format(cls._table),
             (filetype, investigation_type, data_type_id))[0]
 
+        # Instantiate the object with the new id
         rd = cls(rd_id)
 
         # Connect the raw data with its studies
@@ -257,7 +266,9 @@ class RawData(BaseData):
             "INSERT INTO qiita.{0} (study_id, raw_data_id) VALUES "
             "(%s, %s)".format(rd._study_raw_table), values)
 
-        rd._add_filepaths(filepaths, conn_handler)
+        # If file paths have been provided, add them to the raw data object
+        if filepaths:
+            rd.add_filepaths(filepaths, conn_handler)
 
         return rd
 
@@ -481,7 +492,7 @@ class PreprocessedData(BaseData):
                 "VALUES (%s, %s)".format(cls._raw_preprocessed_table),
                 (raw_data.id, ppd_id))
 
-        ppd._add_filepaths(filepaths, conn_handler)
+        ppd.add_filepaths(filepaths, conn_handler)
         return ppd
 
     @property
@@ -768,7 +779,7 @@ class ProcessedData(BaseData):
             "(%s, %s)".format(cls._study_processed_table),
             (study_id, pd_id))
 
-        pd._add_filepaths(filepaths, conn_handler)
+        pd.add_filepaths(filepaths, conn_handler)
         return cls(pd_id)
 
     @property

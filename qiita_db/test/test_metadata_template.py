@@ -837,7 +837,8 @@ class TestPrepTemplate(TestCase):
             f.write("\n")
         with open(barcodes_fp, "w") as f:
             f.write("\n")
-        self.new_raw_data = RawData.create(2, filepaths, [Study(1)], 1)
+        self.new_raw_data = RawData.create(2, [Study(1)], 1,
+                                           filepaths=filepaths)
         db_test_raw_dir = join(get_db_files_base_dir(), 'raw_data')
         db_seqs_fp = join(db_test_raw_dir, "3_%s" % basename(seqs_fp))
         db_barcodes_fp = join(db_test_raw_dir, "3_%s" % basename(barcodes_fp))

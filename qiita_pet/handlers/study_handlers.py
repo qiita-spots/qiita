@@ -36,6 +36,13 @@ from qiita_db.exceptions import (QiitaDBColumnError, QiitaDBExecutionError,
 from qiita_db.data import RawData
 
 
+def _check_access(user, study):
+    """make sure user has access to the study requested"""
+    if not study.has_access(user):
+        raise HTTPError(403, "User %s does not have access to study %d" %
+                        (user.id, study.id))
+
+
 class CreateStudyForm(Form):
     study_title = StringField('Study Title', [validators.required()])
     study_alias = StringField('Study Alias', [validators.required()])
@@ -111,8 +118,17 @@ class PublicStudiesHandler(BaseHandler):
 class StudyDescriptionHandler(BaseHandler):
     def display_template(self, study_id, msg):
         """Simple function to avoid duplication of code"""
+        # make sure study is accessible and exists, raise error if not
+        study = None
+        study_id = int(study_id)
+        try:
+            study = Study(study_id)
+        except QiitaDBUnknownIDError:
+            # Study not in database so fail nicely
+            raise HTTPError(404, "Study %d does not exist" % study_id)
+        else:
+            _check_access(User(self.current_user), study)
 
-        # processing paths
         fp = get_study_fp(study_id)
         if exists(fp):
             fs = [f for f in listdir(fp)]
@@ -121,8 +137,6 @@ class StudyDescriptionHandler(BaseHandler):
         fts = [k.split('_', 1)[1].replace('_', ' ')
                for k in get_filepath_types() if k.startswith('raw_')]
 
-        # getting the raw_data
-        study = Study(study_id)
         valid_ssb = []
         for rdi in study.raw_data():
             rd = RawData(rdi)
@@ -135,19 +149,17 @@ class StudyDescriptionHandler(BaseHandler):
         if valid_ssb:
             prep_template_id = valid_ssb[0]
             split_libs_status = RawData(
-                prep_template_id).preprocessing_status.replace('\n', '<br/>')
-
+                prep_template_id).preprocessing_status.replace('\n',
+                                                               '<br/>')
             # getting EBI status
             sppd = study.preprocessed_data()
             if sppd:
                 ebi_status = PreprocessedData(
                     sppd[-1]).submitted_to_insdc_status()
-            else:
-                ebi_status = None
         else:
+            ebi_status = None
             prep_template_id = None
             split_libs_status = None
-            ebi_status = None
 
         valid_ssb = ','.join(map(str, valid_ssb))
         ssb = len(valid_ssb) > 0
@@ -232,7 +244,7 @@ class StudyDescriptionHandler(BaseHandler):
         try:
             # currently hardcoding the study_ids to be an array but not sure
             # if this will ever be an actual array via the web interface
-            raw_data = RawData.create(filetype, filepaths, [study], 1,
+            raw_data = RawData.create(filetype, [study], 1, filepaths,
                                       investigation_type)
         except (TypeError, QiitaDBColumnError, QiitaDBExecutionError,
                 IOError), e:
@@ -253,7 +265,7 @@ class StudyDescriptionHandler(BaseHandler):
             self.display_template(int(study_id), msg)
             return
 
-        msg = "Your samples where processed"
+        msg = "Your samples were processed"
         self.display_template(int(study_id), msg)
 
 
@@ -362,19 +374,40 @@ class CreateStudyAJAX(BaseHandler):
 class MetadataSummaryHandler(BaseHandler):
     @authenticated
     def get(self, arguments):
-        st = SampleTemplate(int(self.get_argument('sample_template')))
+        study_id = int(self.get_argument('sample_template'))
+        st = SampleTemplate(study_id)
         pt = PrepTemplate(int(self.get_argument('prep_template')))
+        # templates have same ID as study associated with, so can do check
+        _check_access(User(self.current_user), Study(st))
 
         stats = metadata_stats_from_sample_and_prep_templates(st, pt)
 
         self.render('metadata_summary.html', user=self.current_user,
-                    study_title=Study(st.id).title, stats=stats)
+                    study_title=Study(st.id).title, stats=stats,
+                    study_id=study_id)
 
 
 class EBISubmitHandler(BaseHandler):
-    def display_template(self, study, sample_template, preprocessed_data,
-                         error):
-        """Simple function to avoid duplication of code"""
+    @authenticated
+    def get(self, study_id):
+        study_id = int(study_id)
+        try:
+            study = Study(study_id)
+        except QiitaDBUnknownIDError:
+            raise HTTPError(404, "Study %d does not exist!" % study_id)
+        else:
+            _check_access(User(self.current_user), study)
+
+        st = SampleTemplate(study.sample_template)
+
+        # TODO: only supporting a single prep template right now, which I think
+        # is what indexing the first item here is equiv to
+        preprocessed_data_id = study.preprocessed_data()[0]
+
+        preprocessed_data = PreprocessedData(preprocessed_data_id)
+
+        stats = [('Number of samples', len(st)),
+                 ('Number of metadata headers', len(st.metadata_headers()))]
 
         if not study:
             study_title = 'This study DOES NOT exist'
@@ -455,4 +488,4 @@ class EBISubmitHandler(BaseHandler):
 
         self.render('compute_wait.html', user=self.current_user,
                     job_id=job_id, title='EBI Submission',
-                    completion_redirect='/compute_complete/%s/' % job_id)
+                    completion_redirect='/compute_complete/%s' % job_id)

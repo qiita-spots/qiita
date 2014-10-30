@@ -97,7 +97,6 @@ object while creating the study.
 
 from __future__ import division
 from future.utils import viewitems
-from datetime import date
 from copy import deepcopy
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
@@ -130,6 +129,7 @@ class Study(QiitaStatusObject):
     processed_data
     add_pmid
     exists
+    has_access
 
     Notes
     -----
@@ -227,8 +227,6 @@ class Study(QiitaStatusObject):
 
         # add default values to info
         insertdict = deepcopy(info)
-        if "first_contact" not in insertdict:
-            insertdict['first_contact'] = date.today().isoformat()
         insertdict['email'] = owner.id
         insertdict['study_title'] = title
         if "reprocess" not in insertdict:
@@ -548,6 +546,26 @@ class Study(QiitaStatusObject):
         sql = ("INSERT INTO qiita.{0}_pmid (study_id, pmid) "
                "VALUES (%s, %s)".format(self._table))
         conn_handler.execute(sql, (self._id, pmid))
+
+    def has_access(self, user):
+        """Returns whether the given user has access to the study
+
+        Parameters
+        ----------
+        user : User object
+            User we are checking access for
+
+        Returns
+        -------
+        bool
+            Whether user has access to study or not
+        """
+        # if admin or superuser, just return true
+        if user.level in {'superuser', 'admin'}:
+            return True
+
+        return self._id in user.private_studies + user.shared_studies \
+            + self.get_public()
 
 
 class StudyPerson(QiitaObject):
