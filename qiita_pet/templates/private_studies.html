@@ -23,8 +23,8 @@ $(document).ready(function() {
                 <th>Title</th>
                 <th>Metadata Complete</th>
                 <th>Samples</th>
-                <th>Shared</th>
                 <th>Sequence Files</th>
+                <th>Shared</th>
                 <th>Principal Investigator</th>
                 <th>Pubmed ID(s)</th>
             </tr>
@@ -39,12 +39,12 @@ $(document).ready(function() {
                 <td><span class="glyphicon glyphicon-remove"></span></td>
                 {% end %}
                 <td>{{ s.num_samples_collected }}</td>
-                <td>{% raw s.shared %}</td>
                 {% if s.num_raw_data %}
                 <td>{{ s.num_raw_data }}</td>
                 {% else %}
                 <td><span class="glyphicon glyphicon-remove"></span></td>
                 {% end %}
+                <td>{% raw s.shared %}</td>
                 <td>{% raw s.pi %}</td>
                 <td>{% raw s.pmids %}</td>
             </tr>
