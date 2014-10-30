@@ -180,7 +180,7 @@ def load_sample_template(fp, study):
 @click.option('--study', required=True, type=int,
               help='Associate the prep template with this study')
 @click.option('--data_type', required=True,
-              type=click.Choice(get_data_types().keys()),
+              type=click.Choice(get_data_types()),
               help="The data type of data")
 def load_prep_template(fp, raw_data, study, data_type):
     """Loads a sample template to the database"""
