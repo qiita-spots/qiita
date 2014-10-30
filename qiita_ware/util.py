@@ -194,6 +194,7 @@ def dataframe_from_template(t):
     df = pd.DataFrame.from_dict(t, orient='index')
     return df
 
+
 def template_to_dict(t):
     """Convert a SampleTemplate or PrepTemplate into a 2D-dictionary
 
