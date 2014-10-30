@@ -24,7 +24,7 @@ from qiita_core.qiita_settings import qiita_config
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_pet.util import linkify
 from qiita_ware.context import submit
-from qiita_ware.util import metadata_stats_from_sample_and_prep_templates
+from qiita_ware.util import dataframe_from_template, stats_from_df
 from qiita_ware.demux import stats as demux_stats
 from qiita_ware.dispatchable import submit_to_ebi
 from qiita_db.metadata_template import (SampleTemplate, PrepTemplate,
@@ -447,16 +447,27 @@ class CreateStudyAJAX(BaseHandler):
 class MetadataSummaryHandler(BaseHandler):
     @authenticated
     def get(self, arguments):
-        study_id = int(self.get_argument('sample_template'))
-        st = SampleTemplate(study_id)
-        pt = PrepTemplate(int(self.get_argument('prep_template')))
-        # templates have same ID as study associated with, so can do check
-        _check_access(User(self.current_user), Study(st))
+        study_id = int(self.get_argument('study_id'))
 
-        stats = metadata_stats_from_sample_and_prep_templates(st, pt)
+        # this block is tricky because you can pass either the sample or the
+        # prep template and if none is passed then we will let an exception
+        # be raised because template will not be declared for the logic below
+        if self.get_argument('prep_template', None):
+            template = PrepTemplate(int(self.get_argument('prep_template')))
+        if self.get_argument('sample_template', None):
+            tid = int(self.get_argument('sample_template'))
+            template = SampleTemplate(tid)
+
+        study = Study(study_id)
+
+        # templates have same ID as study associated with, so can do check
+        _check_access(User(self.current_user), study)
+
+        df = dataframe_from_template(template)
+        stats = stats_from_df(df)
 
         self.render('metadata_summary.html', user=self.current_user,
-                    study_title=Study(st.id).title, stats=stats,
+                    study_title=study.title, stats=stats,
                     study_id=study_id)
 
 
