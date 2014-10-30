@@ -231,15 +231,17 @@
 
   function split_libraries(prep_template_id) {
     if (confirm("Are you sure you want to submit a split libraries job?")) {
-      alert('working on this')
-      return
       var form = $("<form>")
         .attr("action", "/study/preprocess")
         .attr("method", "post")
         .append($("<input>")
           .attr("type", "hidden")
-          .attr("name", "prep_template_id")
-          .attr("value", prep_template_id))
+          .attr("name", "study_id")
+          .attr("value", {{study_id}}))
+          .append($("<input>")
+            .attr("type", "hidden")
+            .attr("name", "prep_template_id")
+            .attr("value", prep_template_id))
         .append($("<input>")
           .attr("type", "hidden")
           .attr("name", "rev_comp_mapping_barcodes")
