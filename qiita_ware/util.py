@@ -100,7 +100,7 @@ def per_sample_sequences(iter_, max_seqs, min_seqs=1, random_buf_size=100000):
 
 
 def stats_from_df(df):
-    """Print out summary statistics for a sample or prep template
+    """Create a dictionary of summary statistics for a sample or prep template
 
     Parameters
     ----------
@@ -127,7 +127,7 @@ def stats_from_df(df):
 
 
 def metadata_stats_from_sample_and_prep_templates(st, pt):
-    """Print out summary statistics for the sample and prep templates
+    """Create a dictionary of summary statistics for the sample/prep templates
 
     Parameters
     ----------

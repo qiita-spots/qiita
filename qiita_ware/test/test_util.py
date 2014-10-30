@@ -152,7 +152,6 @@ class UtilTests(TestCase):
         for k in obs:
             self.assertEqual(obs[k], SUMMARY_STATS[k])
 
-
     def test_dataframe_from_template(self):
         template = PrepTemplate(1)
         obs = dataframe_from_template(template)
@@ -185,7 +184,6 @@ class UtilTests(TestCase):
             u'target_gene', u'center_project_name', u'illumina_technology',
             u'sequencing_meth', u'platform', u'experiment_title',
             u'study_center'})
-
 
 
 class TestFilePathOpening(TestCase):
