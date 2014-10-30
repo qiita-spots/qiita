@@ -140,7 +140,6 @@ class ProcessingPipelineTests(TestCase):
     def test_insert_preprocessed_data_fastq(self):
         study = Study(1)
         params = PreprocessedIlluminaParams(1)
-        raw_data = RawData(1)
         prep_template = PrepTemplate(1)
         prep_out_dir = mkdtemp()
         self.dirs_to_remove.append(prep_out_dir)
@@ -158,7 +157,7 @@ class ProcessingPipelineTests(TestCase):
             db_files.append(db_path_builder("3_%s" % f_suff))
         self.files_to_remove.extend(db_files)
 
-        _insert_preprocessed_data_fastq(study, params, raw_data, prep_template,
+        _insert_preprocessed_data_fastq(study, params, prep_template,
                                         prep_out_dir)
 
         # Check that the files have been copied
