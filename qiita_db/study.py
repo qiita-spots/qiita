@@ -234,7 +234,7 @@ class Study(QiitaStatusObject):
         insertdict['study_title'] = title
         if "reprocess" not in insertdict:
             insertdict['reprocess'] = False
-        # default to waiting_approval status
+        # default to awaiting_approval status
         insertdict['study_status_id'] = 1
 
         # No nuns allowed
