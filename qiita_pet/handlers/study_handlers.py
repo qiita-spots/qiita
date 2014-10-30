@@ -32,9 +32,8 @@ from qiita_db.metadata_template import (SampleTemplate, PrepTemplate,
                                         load_template_to_dataframe)
 from qiita_db.study import Study, StudyPerson
 from qiita_db.user import User
-from qiita_db.util import (get_study_fp, convert_to_id, get_filepath_types,
-                           get_data_types, get_filetypes)
-from qiita_db.ontology import Ontology
+from qiita_db.util import (get_study_fp, get_filepath_types, get_data_types,
+                           get_filetypes)
 from qiita_db.data import PreprocessedData
 from qiita_db.exceptions import (QiitaDBColumnError, QiitaDBExecutionError,
                                  QiitaDBDuplicateError, QiitaDBUnknownIDError)
@@ -121,7 +120,7 @@ class PublicStudiesHandler(BaseHandler):
 
 
 class StudyDescriptionHandler(BaseHandler):
-    def display_template(self, study_id, msg):
+    def display_template(self, study_id, msg, tab_to_display=""):
         """Simple function to avoid duplication of code"""
         # make sure study is accessible and exists, raise error if not
         study = None
@@ -143,23 +142,34 @@ class StudyDescriptionHandler(BaseHandler):
         # getting raw filepath_ types
         fts = [k.split('_', 1)[1].replace('_', ' ')
                for k in get_filepath_types() if k.startswith('raw_')]
-        fts = '\n'.join(['<option value="%s">%s</option>' % (f, f) for f in fts])
+        fts = ['<option value="%s">%s</option>' % (f, f) for f in fts]
 
         study = Study(study_id)
-        # getting the RawData and its valid PrepTemplate
-        available_raw_data = [ ( RawData(rdi), [PrepTemplate(pt) for pt in [16, 18]] ) for rdi in study.raw_data() ]
-
+        # getting the RawData and its prep templates
+        available_raw_data = [RawData(rdi) for rdi in study.raw_data()]
+        available_prep_templates = {
+            rd.id: [PrepTemplate(p) for p in rd.prep_templates
+                    if PrepTemplate.exists(p)]
+            for rd in available_raw_data
+            }
 
         user = User(self.current_user)
         data_types = sorted(viewitems(get_data_types()), key=itemgetter(1))
+        data_types = ['<option value="%s">%s</option>' % (d[1], d[0])
+                      for d in data_types]
         filetypes = sorted(viewitems(get_filetypes()), key=itemgetter(1))
+        filetypes = ['<option value="%s">%s</option>' % (d[1], d[0])
+                     for d in filetypes]
 
         self.render('study_description.html', user=self.current_user,
-                    study_title=study.title, study_info=study.info,
-                    study_id=study_id, files=fs, filetypes=filetypes,
-                    user_level=user.level, available_raw_data=available_raw_data,
-                    msg=msg, ste=SampleTemplate.exists(study),
-                    data_types=data_types, filepath_types=fts)
+                    study_title=study.title, study_info=study.info, msg=msg,
+                    study_id=study_id, files=fs, filetypes=''.join(filetypes),
+                    user_level=user.level, data_types=''.join(data_types),
+                    available_raw_data=available_raw_data,
+                    available_prep_templates=available_prep_templates,
+                    ste=SampleTemplate.exists(study_id),
+                    filepath_types=''.join(fts),
+                    tab_to_display=tab_to_display)
 
     @authenticated
     def get(self, study_id):
@@ -167,14 +177,15 @@ class StudyDescriptionHandler(BaseHandler):
 
     @authenticated
     def post(self, study_id):
-        # to add sample template
+        # vars to add sample template
         sample_template = self.get_argument('sample_template', None)
-        # to add raw data
+        # vars to add raw data
         filetype = self.get_argument('filetype', None)
         previous_raw_data = self.get_argument('previous_raw_data', None)
-        # to add prep template
+        # vars to add prep template
         add_prep_template = self.get_argument('add_prep_template', None)
         raw_data_id = self.get_argument('raw_data_id', None)
+        data_type_id = self.get_argument('data_type_id', None)
 
         study_id = int(study_id)
         study = Study(study_id)
@@ -185,7 +196,7 @@ class StudyDescriptionHandler(BaseHandler):
             for rd in study.raw_data():
                 if PrepTemplate.exists((rd)):
                     PrepTemplate.delete(rd)
-            if SampleTemplate.exists(study):
+            if SampleTemplate.exists(study_id):
                 SampleTemplate.delete(study_id)
 
             fp_rsp = join(get_study_fp(study_id), sample_template)
@@ -211,20 +222,20 @@ class StudyDescriptionHandler(BaseHandler):
 
             msg = ("The sample template <b>%s</b> has been added" %
                    sample_template)
+            tab_to_display = ""
 
         elif filetype or previous_raw_data:
             # adding blank raw data
 
             if filetype and previous_raw_data:
                 msg = ("You can not specify both a new raw data and a "
-                    "previouly used one")
+                       "previouly used one")
             else:
                 try:
-                    raw_data = RawData.create(filetype, [study], 1)
+                    RawData.create(filetype, [study])
                 except (TypeError, QiitaDBColumnError, QiitaDBExecutionError,
                         QiitaDBDuplicateError, IOError, ValueError, KeyError,
                         CParserError), e:
-
                     error_type = e.__class__.__name__
                     msg = ('<b>An error occurred creating a new raw data'
                            'object.</b><br/>%s: %s' % (error_type, e))
@@ -233,7 +244,9 @@ class StudyDescriptionHandler(BaseHandler):
 
                 msg = ""
 
-        elif add_prep_template and raw_data_id:
+            tab_to_display = ""
+
+        elif add_prep_template and raw_data_id and data_type_id:
             # adding prep templates
 
             raw_data_id = int(raw_data_id)
@@ -244,19 +257,24 @@ class StudyDescriptionHandler(BaseHandler):
             try:
                 # inserting prep templates
                 PrepTemplate.create(load_template_to_dataframe(fp_rpt),
-                                    RawData(raw_data_id), study)
+                                    RawData(raw_data_id), study,
+                                    int(data_type_id))
             except (TypeError, QiitaDBColumnError, QiitaDBExecutionError,
-                    IOError), e:
+                    QiitaDBDuplicateError, IOError, ValueError,
+                    CParserError), e:
+                error_type = e.__class__.__name__
                 msg = ('<b>An error occurred parsing the prep template: '
-                       '%s</b><br/>%s' % (basename(fp_rpt), e))
-                self.display_template(study_id, msg)
+                       '%s</b><br/>%s: %s' % (basename(fp_rpt), error_type, e))
+                self.display_template(study_id, msg, str(raw_data_id))
                 return
 
-            msg = "Your prep template was added"
+            msg = "<b>Your prep template was added</b>"
+            tab_to_display = str(raw_data_id)
         else:
-            msg = "<b>Error, did you select a valid uploaded file?</b>"
+            msg = ("<b>Error, did you select a valid uploaded file or are "
+                   "passing the correct parameters?</b>")
 
-        self.display_template(study_id, msg)
+        self.display_template(study_id, msg, tab_to_display)
 
         # barcodes = self.get_argument('barcodes', "").split(',')
         # forward_seqs = self.get_argument('forward_seqs', "").split(',')
@@ -266,7 +284,8 @@ class StudyDescriptionHandler(BaseHandler):
         # fp = get_study_fp(study_id)
         # filepaths = []
         # if barcodes and barcodes[0] != "":
-        #     filepaths.extend([(join(fp, t), "raw_barcodes") for t in barcodes])
+        #     filepaths.extend([(join(fp, t), "raw_barcodes")
+        # for t in barcodes])
         # if forward_seqs and forward_seqs[0] != "":
         #     filepaths.extend([(join(fp, t), "raw_forward_seqs")
         #                       for t in forward_seqs])
@@ -385,8 +404,10 @@ class MetadataSummaryHandler(BaseHandler):
     @authenticated
     def get(self, arguments):
         study_id = int(self.get_argument('sample_template'))
+        prep_template_id = int(self.get_argument('prep_template'))
+
         st = SampleTemplate(study_id)
-        pt = PrepTemplate(int(self.get_argument('prep_template')))
+        pt = PrepTemplate(prep_template_id)
         # templates have same ID as study associated with, so can do check
         _check_access(User(self.current_user), Study(st))
 

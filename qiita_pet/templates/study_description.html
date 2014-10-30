@@ -44,7 +44,7 @@
   {% end %}
 
   {% for r in available_raw_data %}
-    <li><a href="#raw_data_info_{{r[0].id}}" role="tab" data-toggle="tab">{{r[0].filetype}} (ID: {{r[0].id}})</a></li>
+    <li><a href="#raw_data_info_{{r.id}}" role="tab" data-toggle="tab">{{r.filetype}} (ID: {{r.id}})</a></li>
   {% end %}
 </ul>
 
@@ -75,17 +75,12 @@
       What file type you raw data is?
       <select id="filetype">
         <option value="">Not selected ...</option>
-        {% for k, v in filetypes %}
-          <option value="{{v}}">{{k}}</option>
-        {% end %}
+        {% raw filetypes %}
       </select>
       <br/><br/>
       You could also select raw data from other studies that you have access to:
       <select id="previous_raw_data">
         <option value="">Not selected ...</option>
-        <!-- {% for k, v in filetypes %} -->
-          <!-- <option value="{{v}}">{{k}}</option> -->
-        <!-- {% end %} -->
       </select>
       <br/><br/>
       <a class="btn btn-primary" onClick="create_raw_data();">Add raw data</a>
@@ -94,52 +89,73 @@
 
   <!-- Adding raw data to template -->
   {% for r in available_raw_data %}
-    <div class="tab-pane" id="raw_data_info_{{r[0].id}}" style="padding: 10px;">
-      <h4>Add prep template to this raw data</h4>
-      Select your prep template file or <a href="/study/upload/{{study_id}}">upload</a> some files.
-      <br/>
-      <select id="add_prep_template">
-        {% for f in files %}
-          <option value="{{f}}">{{f}}</option>
-        {% end %}
-      </select>
-      <br/><br/>
-      <a class="btn btn-primary" onClick="add_prep_template({{r[0].id}});">Add prep template</a>
-      <br/>
-      <hr/>
-      <h4>Valid prep templates</h4>
-      <table border="1">
-        {% for prep in r[1] %}
-        <tr>
-          <td>{{prep}}</td>
-        </tr>
-        {% end %}
-      </table>
-      <br/>
-      <hr/>
-      <h4>Link uploaded files with raw data</h4>
+    <div class="tab-pane" id="raw_data_info_{{r.id}}" style="padding: 10px;">
       <table border="0">
         <tr>
-          <th>File</th>
-          <th>&nbsp;&nbsp;&nbsp;</th>
-          <th>File type</th>
-        </tr>
-      {% for f in files %}
-        <tr>
-          <td>{{f}}</td>
-          <td>&nbsp;</td>
-          <td>
-            <select id="raw_data_info_{{r[0].id}}">
-              <option value="">Ignore ...</option>
-              {% raw filepath_types %}
+          <td style="vertical-align:top;padding:10px;">
+            <h4>Add prep template to this raw data</h4>
+            To add a prep template you need to (1) select your prep template file
+            <select id="add_prep_template_{{r.id}}">
+              {% for f in files %}
+                <option value="{{f}}">{{f}}</option>
+              {% end %}
             </select>
+            and (2) the prep template data type:
+            <select id="data_type_{{r.id}}">
+              {% raw data_types %}
+            </select>
+            <br/><br/>
+            You can also <a href="/study/upload/{{study_id}}">upload</a> some files.
+            <br/><br/>
+            <a class="btn btn-primary" onClick="add_prep_template({{r.id}});">Add prep template</a>
+            <br/>
+            <hr/>
+            <h4>Prep templates uploaded</h4>
+            <table border="1">
+              {% for prep in available_prep_templates[r.id] %}
+              <tr>
+                <td style="padding:3px;">{{prep.data_type()}}</td>
+                {% if not prep.preprocessed_data %}
+                  <td style="padding:3px;">
+                    <a class="btn btn-primary" href="/metadata_summary/?sample_template={{study_id}}&prep_template={{prep.id}}">Show metadata Summary</a>
+                  </td>
+                  <td style="padding:3px;">
+                    <input type="button" class="btn btn-primary" value="Split libraries" onclick="split_libraries({{prep.id}});">
+                    <input type="checkbox" id="rev_comp_mapping_barcodes_{{prep.id}}"> Use rev_comp_mapping_barcodes
+                  </td>
+                {% else %}
+                  <td style="padding:3px;">{{prep.data_type()}}</td>
+                {% end %}
+              </tr>
+              {% end %}
+            </table>
+            <br/>
           </td>
-        </tr>
-      {% end %}
-      </table>
-      <br/>
-      <a class="btn btn-primary" onClick="link_files_to_raw_data({{r[0].id}});">Link raw files to: {{r[0].filetype}} (ID: {{r[0].id}})</a>
-
+          <td style="vertical-align:top;padding:10px;">
+            <h4>Link uploaded files with raw data</h4>
+            <table border="0">
+              <tr>
+                <th>File</th>
+                <th>&nbsp;&nbsp;&nbsp;</th>
+                <th>File type</th>
+              </tr>
+            {% for f in files %}
+              <tr>
+                <td>{{f}}</td>
+                <td>&nbsp;</td>
+                <td>
+                  <select id="raw_data_info_{{r.id}}">
+                    <option value="">Ignore ...</option>
+                    {% raw filepath_types %}
+                  </select>
+                </td>
+              </tr>
+            {% end %}
+            </table>
+            <br/>
+            <a class="btn btn-primary" onClick="link_files_to_raw_data({{r.id}});">Link raw files to: {{r.filetype}} (ID: {{r.id}})</a>
+          </td>
+        </table>
     </div>
   {% end %}
 </div>
@@ -198,7 +214,11 @@
         .append($("<input>")
           .attr("type", "hidden")
           .attr("name", "add_prep_template")
-          .attr("value", $("#add_prep_template").val()));
+          .attr("value", $("#add_prep_template_" + raw_data_id).val()))
+        .append($("<input>")
+          .attr("type", "hidden")
+          .attr("name", "data_type_id")
+          .attr("value", $("#data_type_" + raw_data_id).val()));
       $("body").append(form);
       form.submit();
     }
@@ -208,7 +228,33 @@
     alert(raw_data_id)
   }
 
-  $('#myTab a:last').tab('show')
+
+  function split_libraries(prep_template_id) {
+    if (confirm("Are you sure you want to submit a split libraries job?")) {
+      alert('working on this')
+      return
+      var form = $("<form>")
+        .attr("action", "/study/preprocess")
+        .attr("method", "post")
+        .append($("<input>")
+          .attr("type", "hidden")
+          .attr("name", "prep_template_id")
+          .attr("value", prep_template_id))
+        .append($("<input>")
+          .attr("type", "hidden")
+          .attr("name", "rev_comp_mapping_barcodes")
+          .attr("value", $("#rev_comp_mapping_barcodes_" + prep_template_id).is(':checked')));
+      $("body").append(form);
+      form.submit();
+    }
+  }
+
+  if ("{{tab_to_display}}") {
+    $('#myTab a[href="#raw_data_info_{{tab_to_display}}"]').tab('show')
+  } else {
+    $('#myTab a:last').tab('show')
+  }
+
 </script>
 
 {% end %}
