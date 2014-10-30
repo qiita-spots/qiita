@@ -561,15 +561,14 @@ def insert_filepaths(filepaths, obj_id, table, filepath_table, conn_handler,
         values = ["('%s', %s, '%s', %s)" % (scrub_data(path), id, checksum, 1)
                   for path, id, checksum in paths_w_checksum]
         # Insert all the filepaths at once and get the filepath_id back
+        sql = ("INSERT INTO qiita.{0} (filepath, filepath_type_id, checksum, "
+               "checksum_algorithm_id) VALUES {1} RETURNING "
+               "filepath_id".format(filepath_table, ', '.join(values)))
         if queue is not None:
             # Drop the sql into the given queue
-            conn_handler.add_to_queue(queue, (sql, None))
+            conn_handler.add_to_queue(queue, sql, None)
         else:
-            ids = conn_handler.execute_fetchall(
-                "INSERT INTO qiita.{0} (filepath, filepath_type_id, checksum, "
-                "checksum_algorithm_id) VALUES {1} "
-                "RETURNING filepath_id".format(filepath_table,
-                                               ', '.join(values)))
+            ids = conn_handler.execute_fetchall(sql)
 
             # we will receive a list of lists with a single element on it
             # (the id), transform it to a list of ids
