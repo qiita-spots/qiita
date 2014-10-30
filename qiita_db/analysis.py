@@ -427,7 +427,7 @@ class Analysis(QiitaStatusObject):
         if user.level in {'superuser', 'admin'}:
             return True
 
-        return user.id in Analysis.get_public() + user.private_analyses +\
+        return self._id in Analysis.get_public() + user.private_analyses +\
             user.shared_analyses
 
     def share(self, user):
