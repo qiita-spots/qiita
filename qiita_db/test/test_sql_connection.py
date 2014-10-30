@@ -11,6 +11,24 @@ class TestConnHandler(TestCase):
         self.conn_handler.create_queue("toy_queue")
         self.assertEqual(self.conn_handler.list_queues(), ["toy_queue"])
 
+    def test_run_queue(self):
+        self.conn_handler.create_queue("toy_queue")
+        self.conn_handler.add_to_queue(
+            "toy_queue", "INSERT INTO qiita.qiita_user (email, name, password,"
+            "phone) VALUES (%s, %s, %s, %s)",
+            ['insert@foo.bar', 'Toy', 'pass', '111-111-11112'])
+        self.conn_handler.add_to_queue(
+            "toy_queue", "UPDATE qiita.qiita_user SET user_level_id = 1, "
+            "phone = '222-222-2221' WHERE email = %s",
+            ['insert@foo.bar'])
+        self.conn_handler.execute_queue("toy_queue")
+        obs = self.conn_handler.execute_fetchall(
+            "SELECT * from qiita.qiita_user WHERE email = %s",
+            ['insert@foo.bar'])
+        exp = [['insert@foo.bar', 1, 'pass', 'Toy', None, None, '222-222-2221',
+                None, None, None]]
+        self.assertEqual(obs, exp)
+
     def test_run_queue_placeholders(self):
         self.conn_handler.create_queue("toy_queue")
         self.conn_handler.add_to_queue(

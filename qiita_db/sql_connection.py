@@ -79,7 +79,7 @@ conn_handler.execute_fetchall(
 from __future__ import division
 from contextlib import contextmanager
 
-from psycopg2 import connect, Error as PostgresError
+from psycopg2 import connect, ProgrammingError, Error as PostgresError
 from psycopg2.extras import DictCursor
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 
@@ -249,13 +249,14 @@ class SQLConnectionHandler(object):
                 if clear_res:
                     results = []
                 try:
+                    self._check_sql_args(sql_args)
                     cur.execute(sql, sql_args)
-                    # get results and add if they exist, otherwise keep going
                     try:
                         res = cur.fetchall()
                         # append all results linearly
                         results.extend(chain(res))
-                    except:
+                    except ProgrammingError:
+                        # ignore error if nothing to fetch
                         pass
                 except Exception as e:
                     self._connection.rollback()
@@ -320,10 +321,10 @@ class SQLConnectionHandler(object):
 
         Queues are executed in FIFO order
         """
-        # basic validation of insert item
-        if sql_args and type(sql_args) not in {list, tuple}:
-            raise IncompetentQiitaDeveloperError("sql_args must be list or "
-                                                 "tuple!")
+        if sql_args is None:
+            sql_args = []
+        else:
+            self._check_sql_args(sql_args)
         self.queues[queue].append((sql, sql_args))
 
     def execute_fetchall(self, sql, sql_args=None):
