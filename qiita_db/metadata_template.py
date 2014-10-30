@@ -1341,6 +1341,45 @@ class PrepTemplate(MetadataTemplate):
             (self.id,))
         return [x[0] for x in prep_datas]
 
+    @property
+    def preprocessing_status(self):
+        r"""Tells if the data has been preprocessed or not
+
+        Returns
+        -------
+        str
+            One of {'not_preprocessed', 'preprocessing', 'success', 'failed'}
+        """
+        conn_handler = SQLConnectionHandler()
+        return conn_handler.execute_fetchone(
+            "SELECT preprocessing_status FROM qiita.prep_template "
+            "WHERE {0}=%s".format(self._id_column), (self.id,))[0]
+
+    @preprocessing_status.setter
+    def preprocessing_status(self, state):
+        r"""Update the preprocessing status
+
+        Parameters
+        ----------
+        state : str, {'not_preprocessed', 'preprocessing', 'success', 'failed'}
+            The current status of preprocessing
+
+        Raises
+        ------
+        ValueError
+            If the state is not known.
+        """
+        if (state not in ('not_preprocessed', 'preprocessing', 'success') and
+                not state.startswith('failed:')):
+            raise ValueError('Unknown state: %s' % state)
+
+        conn_handler = SQLConnectionHandler()
+
+        conn_handler.execute(
+            "UPDATE qiita.prep_template SET preprocessing_status = %s "
+            "WHERE {0} = %s".format(self._id_column),
+            (state, self.id))
+
 
 def load_template_to_dataframe(fn):
     """Load a sample or a prep template into a data frame
