@@ -30,6 +30,33 @@ class TestConnHandler(TestCase):
                 None, None, None]]
         self.assertEqual(obs, exp)
 
+    def test_run_queue_many(self):
+        sql = ("INSERT INTO qiita.qiita_user (email, name, password,"
+               "phone) VALUES (%s, %s, %s, %s)")
+        sql_args = [
+            ('p1@test.com', 'p1', 'pass1', '111-111'),
+            ('p2@test.com', 'p2', 'pass2', '111-222')
+            ]
+        self.conn_handler.create_queue("toy_queue")
+        self.conn_handler.add_to_queue(
+            "toy_queue", sql, sql_args, many=True)
+        self.conn_handler.execute_queue('toy_queue')
+
+        # make sure both users added
+        obs = self.conn_handler.execute_fetchall(
+            "SELECT * from qiita.qiita_user WHERE email = %s",
+            ['p1@test.com'])
+        exp = [['p1@test.com', 5, 'pass1', 'p1', None, None, '111-111',
+                None, None, None]]
+        self.assertEqual(obs, exp)
+        obs = self.conn_handler.execute_fetchall(
+            "SELECT * from qiita.qiita_user WHERE email = %s",
+            ['p2@test.com'])
+        exp = [['p2@test.com', 5, 'pass2', 'p2', None, None, '111-222',
+                None, None, None]]
+        self.assertEqual(obs, exp)
+
+
     def test_run_queue_last_return(self):
         self.conn_handler.create_queue("toy_queue")
         self.conn_handler.add_to_queue(
