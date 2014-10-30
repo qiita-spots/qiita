@@ -266,6 +266,15 @@ class StudyDescriptionHandler(BaseHandler):
                 investigation_type not in ena.terms):
             raise HTTPError(400, "You need to have an investigation type")
 
+        # FIXME: new studies that get created should be submitted with this
+        # investigation type regardless of what the user selects from the GUI.
+        #
+        # Once #522 is merged this will have to be removed.
+        #
+        # See this comment for more information:
+        # https://github.com/biocore/qiita/pull/522#issuecomment-60692714
+        investigation_type = 'Amplicon Sequencing'
+
         study_id = int(study_id)
         study = Study(study_id)
 
