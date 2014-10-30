@@ -87,8 +87,6 @@ from .base import QiitaObject
 from .sql_connection import SQLConnectionHandler
 from .util import (exists_dynamic_table, get_db_files_base_dir,
                    insert_filepaths, convert_to_id, convert_from_id)
-from .exceptions import QiitaDBColumnError
-from .ontology import Ontology
 
 
 class BaseData(QiitaObject):

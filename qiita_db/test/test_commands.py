@@ -84,7 +84,24 @@ class TestImportPreprocessedData(TestCase):
         initial_fp_count = get_count('qiita.filepath')
         ppd = load_preprocessed_data_from_cmd(
             1, 'preprocessed_sequence_illumina_params',
-            self.tmpdir, 'preprocessed_fasta', 1, False, 1)
+            self.tmpdir, 'preprocessed_fasta', 1, False, 1, None)
+        self.files_to_remove.append(
+            join(self.db_test_ppd_dir,
+                 '%d_%s' % (ppd.id, basename(self.file1))))
+        self.files_to_remove.append(
+            join(self.db_test_ppd_dir,
+                 '%d_%s' % (ppd.id, basename(self.file2))))
+        self.assertEqual(ppd.id, 3)
+        self.assertTrue(check_count('qiita.preprocessed_data',
+                                    initial_ppd_count + 1))
+        self.assertTrue(check_count('qiita.filepath', initial_fp_count+2))
+
+    def test_import_preprocessed_data_data_type(self):
+        initial_ppd_count = get_count('qiita.preprocessed_data')
+        initial_fp_count = get_count('qiita.filepath')
+        ppd = load_preprocessed_data_from_cmd(
+            1, 'preprocessed_sequence_illumina_params',
+            self.tmpdir, 'preprocessed_fasta', 1, False, None, '16S')
         self.files_to_remove.append(
             join(self.db_test_ppd_dir,
                  '%d_%s' % (ppd.id, basename(self.file1))))
