@@ -72,7 +72,7 @@
 
   {% if ste %}
     <div class="tab-pane" id="add_raw_data" style="padding: 10px;">
-      What file type you raw data is?
+      What file type is your raw data?
       <select id="filetype">
         <option value="">Not selected ...</option>
         {% raw filetypes %}
@@ -180,9 +180,9 @@
 
   function create_raw_data() {
     if ($("#previous_raw_data").val() === "" && $("#filetype").val() === "") {
-      alert("You need to select either a new file type or a raw data used in a previous study.")
+      alert("You need to select either a new file type or a raw data used in a previous study.");
     } else if ($("#previous_raw_data").val() !== "" && $("#filetype").val() !== "") {
-      alert("You can only select a new file type or one used in a previous study but not both.")
+      alert("You can only select a new file type or one used in a previous study but not both.");
     } else {
       if (confirm("Are you sure you want to create a new raw data?")) {
         var form = $("<form>")
@@ -225,7 +225,7 @@
   }
 
   function link_files_to_raw_data(raw_data_id) {
-    alert(raw_data_id)
+    alert(raw_data_id);
   }
 
 
@@ -252,9 +252,9 @@
   }
 
   if ("{{tab_to_display}}") {
-    $('#myTab a[href="#raw_data_info_{{tab_to_display}}"]').tab('show')
+    $('#myTab a[href="#raw_data_info_{{tab_to_display}}"]').tab('show');
   } else {
-    $('#myTab a:last').tab('show')
+    $('#myTab a:last').tab('show');
   }
 
 </script>

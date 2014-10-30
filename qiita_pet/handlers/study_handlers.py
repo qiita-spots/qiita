@@ -17,6 +17,9 @@ from future.utils import viewitems
 
 from operator import itemgetter
 
+from traceback import format_exception_only
+from sys import exc_info
+
 from os import listdir, remove
 from os.path import exists, join, basename
 
@@ -136,30 +139,29 @@ class StudyDescriptionHandler(BaseHandler):
         # processing files from upload path
         fp = get_study_fp(study_id)
         if exists(fp):
-            fs = [f for f in listdir(fp)]
+            fs = list(f for f in listdir(fp))
         else:
             fs = []
         # getting raw filepath_ types
-        fts = [k.split('_', 1)[1].replace('_', ' ')
-               for k in get_filepath_types() if k.startswith('raw_')]
-        fts = ['<option value="%s">%s</option>' % (f, f) for f in fts]
+        fts = list(k.split('_', 1)[1].replace('_', ' ')
+               for k in get_filepath_types() if k.startswith('raw_'))
+        fts = list('<option value="%s">%s</option>' % (f, f) for f in fts)
 
         study = Study(study_id)
         # getting the RawData and its prep templates
-        available_raw_data = [RawData(rdi) for rdi in study.raw_data()]
-        available_prep_templates = {
-            rd.id: [PrepTemplate(p) for p in rd.prep_templates
-                    if PrepTemplate.exists(p)]
-            for rd in available_raw_data
-            }
+        available_raw_data = list(RawData(rdi) for rdi in study.raw_data())
+        available_prep_templates = dict(
+            (rd.id, list((PrepTemplate(p) for p in rd.prep_templates
+                    if PrepTemplate.exists(p))))
+            for rd in available_raw_data)
 
         user = User(self.current_user)
         data_types = sorted(viewitems(get_data_types()), key=itemgetter(1))
-        data_types = ['<option value="%s">%s</option>' % (d[1], d[0])
-                      for d in data_types]
+        data_types = ('<option value="%s">%s</option>' % (v, k)
+                      for k, v in data_types)
         filetypes = sorted(viewitems(get_filetypes()), key=itemgetter(1))
-        filetypes = ['<option value="%s">%s</option>' % (d[1], d[0])
-                     for d in filetypes]
+        filetypes = ('<option value="%s">%s</option>' % (v, k)
+                     for k, v in filetypes)
 
         self.render('study_description.html', user=self.current_user,
                     study_title=study.title, study_info=study.info, msg=msg,
@@ -173,10 +175,15 @@ class StudyDescriptionHandler(BaseHandler):
 
     @authenticated
     def get(self, study_id):
+        study_id = int(study_id)
+        _check_access(User(self.current_user), Study(study_id))
         self.display_template(int(study_id), "")
 
     @authenticated
     def post(self, study_id):
+        study_id = int(study_id)
+        _check_access(User(self.current_user), Study(study_id))
+
         # vars to add sample template
         sample_template = self.get_argument('sample_template', None)
         # vars to add raw data
@@ -187,7 +194,7 @@ class StudyDescriptionHandler(BaseHandler):
         raw_data_id = self.get_argument('raw_data_id', None)
         data_type_id = self.get_argument('data_type_id', None)
 
-        study_id = int(study_id)
+
         study = Study(study_id)
         if sample_template:
             # processing sample teplates
@@ -213,10 +220,10 @@ class StudyDescriptionHandler(BaseHandler):
                 remove(fp_rsp)
             except (TypeError, QiitaDBColumnError, QiitaDBExecutionError,
                     QiitaDBDuplicateError, IOError, ValueError, KeyError,
-                    CParserError), e:
-                error_type = e.__class__.__name__
+                    CParserError) as e:
+                error_msg = ''.join(format_exception_only(e, exc_info()))
                 msg = ('<b>An error occurred parsing the sample template: '
-                       '%s</b><br/>%s: %s' % (basename(fp_rsp), error_type, e))
+                       '%s</b><br/>%s' % (basename(fp_rsp), error_msg))
                 self.display_template(study_id, msg)
                 return
 
@@ -235,10 +242,10 @@ class StudyDescriptionHandler(BaseHandler):
                     RawData.create(filetype, [study])
                 except (TypeError, QiitaDBColumnError, QiitaDBExecutionError,
                         QiitaDBDuplicateError, IOError, ValueError, KeyError,
-                        CParserError), e:
-                    error_type = e.__class__.__name__
+                        CParserError) as e:
+                    error_msg = ''.join(format_exception_only(e, exc_info()))
                     msg = ('<b>An error occurred creating a new raw data'
-                           'object.</b><br/>%s: %s' % (error_type, e))
+                           'object.</b><br/>%s' % (error_msg))
                     self.display_template(study_id, msg)
                     return
 
@@ -261,10 +268,10 @@ class StudyDescriptionHandler(BaseHandler):
                                     int(data_type_id))
             except (TypeError, QiitaDBColumnError, QiitaDBExecutionError,
                     QiitaDBDuplicateError, IOError, ValueError,
-                    CParserError), e:
-                error_type = e.__class__.__name__
+                    CParserError) as e:
+                error_msg = ''.join(format_exception_only(e, exc_info()))
                 msg = ('<b>An error occurred parsing the prep template: '
-                       '%s</b><br/>%s: %s' % (basename(fp_rpt), error_type, e))
+                       '%s</b><br/>%s' % (basename(fp_rpt), error_msg))
                 self.display_template(study_id, msg, str(raw_data_id))
                 return
 

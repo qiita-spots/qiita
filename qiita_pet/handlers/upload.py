@@ -21,7 +21,7 @@ class StudyUploadFileHandler(BaseHandler):
         # processing paths
         fp = get_study_fp(study_id)
         if exists(fp):
-            fs = [f for f in listdir(fp)]
+            fs = list(f for f in listdir(fp))
         else:
             fs = []
 
@@ -35,10 +35,6 @@ class StudyUploadFileHandler(BaseHandler):
     @authenticated
     def get(self, study_id):
         self.display_template(int(study_id), "")
-
-    @authenticated
-    def post(self, study_id):
-        pass
 
 
 class UploadFileHandler(BaseHandler):
