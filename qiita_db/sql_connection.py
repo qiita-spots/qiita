@@ -166,7 +166,7 @@ class SQLConnectionHandler(object):
                             % type(sql_args))
 
     @contextmanager
-    def _sql_executor(self, sql, sql_args=None, many=False, commit=True):
+    def _sql_executor(self, sql, sql_args=None, many=False):
         """Executes an SQL query
 
         Parameters
@@ -177,8 +177,6 @@ class SQLConnectionHandler(object):
             The arguments for the SQL query
         many: bool, optional
             If true, performs an execute many call
-        commit : bool, optional
-            Whether to commit or not after executing. Default True
 
         Returns
         -------
@@ -205,8 +203,7 @@ class SQLConnectionHandler(object):
                 else:
                     cur.execute(sql, sql_args)
                 yield cur
-                if commit:
-                    self._connection.commit()
+                self._connection.commit()
             except PostgresError as e:
                 self._connection.rollback()
                 raise QiitaDBExecutionError(("\nError running SQL query: %s"
@@ -235,6 +232,15 @@ class SQLConnectionHandler(object):
                 for x in i:
                     yield x
 
+        def rollback_raise_error(queue, sql, sql_args, e):
+            self._connection.rollback()
+            # wipe out queue since it has an error in it
+            del self.queues[queue]
+            raise QiitaDBExecutionError(
+                ("\nError running SQL query in queue %s: %s"
+                 "\nARGS: %s\nError: %s" % (queue, sql,
+                                            str(sql_args), e)))
+
         with self.get_postgres_cursor() as cur:
             results = []
             clear_res = False
@@ -251,24 +257,23 @@ class SQLConnectionHandler(object):
                 if clear_res:
                     results = []
                 clear_res = False
+
+                # Fire off the SQL command
                 try:
-                    self._check_sql_args(sql_args)
                     cur.execute(sql, sql_args)
-                    try:
-                        res = cur.fetchall()
-                        # append all results linearly
-                        results.extend(chain(res))
-                    except ProgrammingError:
-                        # ignore error if nothing to fetch
-                        pass
                 except Exception as e:
-                    self._connection.rollback()
-                    # wipe out queue since it has an error in it
-                    del self.queues[queue]
-                    raise QiitaDBExecutionError(
-                        ("\nError running SQL query in queue %s: %s"
-                         "\nARGS: %s\nError: %s" % (queue, sql,
-                                                    str(sql_args), e)))
+                    rollback_raise_error(queue, sql, sql_args, e)
+
+                # fetch results if available and append to results list
+                try:
+                    res = cur.fetchall()
+                    # append all results linearly
+                    results.extend(chain(res))
+                except ProgrammingError:
+                    # ignore error if nothing to fetch
+                    pass
+                except Exception as e:
+                    rollback_raise_error(queue, sql, sql_args, e)
         self._connection.commit()
         # wipe out queue since finished
         del self.queues[queue]
@@ -302,7 +307,7 @@ class SQLConnectionHandler(object):
 
         self.queues[queue_name] = []
 
-    def add_to_queue(self, queue, sql, sql_args=None):
+    def add_to_queue(self, queue, sql, sql_args=None, many=False):
         """Add an sql command to the end of a queue
 
         Parameters
@@ -313,6 +318,9 @@ class SQLConnectionHandler(object):
             sql command to run
         sql_args : list or tuple, optional
             the arguments to fill sql command with
+        many : bool, optional
+            Whether or not this should be treated as an executemany command.
+            Default False
 
         Raises
         ------
@@ -321,15 +329,15 @@ class SQLConnectionHandler(object):
 
         Notes
         -----
-        Currently does not support executemany command
-
         Queues are executed in FIFO order
         """
-        if sql_args is None:
-            sql_args = []
+        if many:
+            for args in sql_args:
+                self._check_sql_args(args)
+                self.queues[queue].append((sql, args))
         else:
             self._check_sql_args(sql_args)
-        self.queues[queue].append((sql, sql_args))
+            self.queues[queue].append((sql, sql_args))
 
     def execute_fetchall(self, sql, sql_args=None):
         """ Executes a fetchall SQL query
