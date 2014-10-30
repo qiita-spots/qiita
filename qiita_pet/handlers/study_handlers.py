@@ -121,6 +121,7 @@ class StudyDescriptionHandler(BaseHandler):
         # make sure study is accessible and exists, raise error if not
         study = None
         study_id = int(study_id)
+        ebi_status = None
         try:
             study = Study(study_id)
         except QiitaDBUnknownIDError:
