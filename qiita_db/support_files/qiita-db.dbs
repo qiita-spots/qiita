@@ -591,6 +591,9 @@
 			<column name="prep_template_id" type="bigserial" jt="-5" mandatory="y" />
 			<column name="data_type_id" type="bigint" jt="-5" mandatory="y" />
 			<column name="raw_data_id" type="bigint" jt="-5" mandatory="y" />
+			<column name="preprocessing_status" type="varchar" jt="12" mandatory="y" >
+				<defo>&#039;not_preprocessed&#039;</defo>
+			</column>
 			<index name="pk_prep_template" unique="PRIMARY_KEY" >
 				<column name="prep_template_id" />
 			</index>
@@ -865,9 +868,6 @@
 			<column name="filetype_id" type="bigint" jt="-5" mandatory="y" />
 			<column name="investigation_type" type="varchar" jt="12" >
 				<comment><![CDATA[The investigation type (e.g., one of the values from EBI's set of known types)]]></comment>
-			</column>
-			<column name="preprocessing_status" type="varchar" jt="12" mandatory="y" >
-				<defo>&#039;not_preprocessed&#039;</defo>
 			</column>
 			<index name="pk_raw_data" unique="UNIQUE" >
 				<column name="raw_data_id" />
@@ -1341,10 +1341,8 @@ Controlled Vocabulary]]></comment>
 		<entity schema="qiita" name="study" color="d0def5" x="1785" y="45" />
 		<entity schema="qiita" name="qiita_user" color="d0def5" x="330" y="75" />
 		<entity schema="qiita" name="prep_y" color="d0def5" x="1200" y="180" />
-		<entity schema="qiita" name="raw_data" color="d0def5" x="1245" y="480" />
 		<entity schema="qiita" name="common_prep_info" color="d0def5" x="1020" y="150" />
 		<entity schema="qiita" name="prep_columns" color="b2cdf7" x="1245" y="330" />
-		<entity schema="qiita" name="prep_template" color="b2cdf7" x="1035" y="345" />
 		<entity schema="qiita" name="raw_filepath" color="c0d4f3" x="1050" y="495" />
 		<entity schema="qiita" name="prep_template_preprocessed_data" color="b2cdf7" x="1215" y="600" />
 		<entity schema="qiita" name="emp_status" color="c0d4f3" x="1200" y="105" />
@@ -1359,6 +1357,8 @@ Controlled Vocabulary]]></comment>
 		<entity schema="qiita" name="analysis_status" color="d0def5" x="45" y="810" />
 		<entity schema="qiita" name="job_status" color="d0def5" x="210" y="1005" />
 		<entity schema="qiita" name="severity" color="c0d4f3" x="1470" y="1275" />
+		<entity schema="qiita" name="prep_template" color="b2cdf7" x="1035" y="345" />
+		<entity schema="qiita" name="raw_data" color="d0def5" x="1245" y="480" />
 		<group name="Group_analyses" color="c4e0f9" >
 			<comment>analysis tables</comment>
 			<entity schema="qiita" name="analysis" />

@@ -198,7 +198,6 @@ CREATE TABLE qiita.raw_data (
 	raw_data_id          bigserial  NOT NULL,
 	filetype_id          bigint  NOT NULL,
 	investigation_type   varchar  ,
-	preprocessing_status varchar DEFAULT 'not_preprocessed' NOT NULL,
 	CONSTRAINT pk_raw_data UNIQUE ( raw_data_id ) ,
 	CONSTRAINT pk_raw_data_0 PRIMARY KEY ( raw_data_id ),
 	CONSTRAINT fk_raw_data_filetype FOREIGN KEY ( filetype_id ) REFERENCES qiita.filetype( filetype_id )    
@@ -369,6 +368,7 @@ CREATE TABLE qiita.prep_template (
 	prep_template_id     bigserial  NOT NULL,
 	data_type_id         bigint  NOT NULL,
 	raw_data_id          bigint  NOT NULL,
+	preprocessing_status varchar DEFAULT 'not_preprocessed' NOT NULL,
 	CONSTRAINT pk_prep_template PRIMARY KEY ( prep_template_id ),
 	CONSTRAINT fk_prep_template_data_type FOREIGN KEY ( data_type_id ) REFERENCES qiita.data_type( data_type_id )    ,
 	CONSTRAINT fk_prep_template_raw_data FOREIGN KEY ( raw_data_id ) REFERENCES qiita.raw_data( raw_data_id )    
