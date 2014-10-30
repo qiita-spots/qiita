@@ -121,6 +121,7 @@ class Study(QiitaStatusObject):
     sample_template
     status
     title
+    owner
 
     Methods
     -------
@@ -469,6 +470,21 @@ class Study(QiitaStatusObject):
                "JOIN qiita.data_type DT ON RD.data_type_id = DT.data_type_id "
                "WHERE SRD.study_id = %s")
         return [x[0] for x in conn_handler.execute_fetchall(sql, (self._id,))]
+
+    @property
+    def owner(self):
+        """Gets the owner of the study
+
+        Returns
+        -------
+        str
+            The email (id) of the user that owns this study
+        """
+        conn_handler = SQLConnectionHandler()
+        sql = """select email from qiita.{} where study_id = %s""".format(
+            self._table)
+
+        return conn_handler.execute_fetchone(sql, [self.id])[0]
 
     # --- methods ---
     def raw_data(self, data_type=None):
