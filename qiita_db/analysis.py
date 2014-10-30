@@ -56,6 +56,7 @@ class Analysis(QiitaStatusObject):
 
     Methods
     -------
+    has_access
     add_samples
     remove_samples
     share
