@@ -245,19 +245,18 @@ class SQLConnectionHandler(object):
             results = []
             clear_res = False
             for sql, sql_args in self.queues[queue]:
-                # wipe out results list if needed
-                for pos, arg in enumerate(sql_args):
-                    # check if previous results needed and replace if necessary
-                    if isinstance(arg, str) and \
-                            arg[0] == "{" and arg[-1] == "}":
-                        result_pos = int(arg[1:-1])
-                        sql_args[pos] = results[result_pos]
-                        clear_res = True
+                if sql_args is not None:
+                    for pos, arg in enumerate(sql_args):
+                        # check if previous results needed and replace
+                        if isinstance(arg, str) and \
+                                arg[0] == "{" and arg[-1] == "}":
+                            result_pos = int(arg[1:-1])
+                            sql_args[pos] = results[result_pos]
+                            clear_res = True
                 # wipe out results if needed and reset clear_res
                 if clear_res:
                     results = []
-                clear_res = False
-
+                    clear_res = False
                 # Fire off the SQL command
                 try:
                     cur.execute(sql, sql_args)
@@ -269,7 +268,7 @@ class SQLConnectionHandler(object):
                     res = cur.fetchall()
                     # append all results linearly
                     results.extend(chain(res))
-                except ProgrammingError:
+                except ProgrammingError as e:
                     # ignore error if nothing to fetch
                     pass
                 except Exception as e:
