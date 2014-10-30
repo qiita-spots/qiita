@@ -1,8 +1,9 @@
 from unittest import TestCase, main
 from os.path import exists, join
-from os import remove
+from os import remove, rename
 
 from redis import Redis
+from toredis import Client
 
 from qiita_core.util import qiita_test_checker
 from qiita_db.analysis import Analysis
@@ -44,6 +45,27 @@ class TestRun(TestCase):
                     pubsub.unsubscribe("demo@microbio.me")
                     break
         self.assertEqual(msgs, ['{"msg": "allcomplete", "analysis": 1}'])
+
+    def test_failure_callback(self):
+        """Make sure failure at file creation step doesn't hang everything"""
+        # rename a needed file for creating the biom table
+        base = get_db_files_base_dir()
+        rename(join(base, "processed_data",
+                    "1_study_1001_closed_reference_otu_table.biom"),
+               join(base, "processed_data", "1_study_1001.bak"))
+
+        try:
+            app = RunAnalysis()
+            app("demo@microbio.me", Analysis(2), [], rarefaction_depth=100)
+            # make sure analysis set to error
+            analysis = Analysis(2)
+            self.assertEqual(analysis.status, 'error')
+            for job_id in analysis.jobs:
+                self.assertEqual(Job(job_id).status, 'error')
+        finally:
+            rename(join(base, "processed_data", "1_study_1001.bak"),
+                   join(base, "processed_data",
+                        "1_study_1001_closed_reference_otu_table.biom"))
 
     def test_build_files_job_comm_wrapper(self):
         # basic setup needed for test
