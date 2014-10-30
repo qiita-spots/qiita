@@ -57,12 +57,6 @@ class RawDataTests(TestCase):
 
     def test_create(self):
         """Correctly creates all the rows in the DB for the raw data"""
-        # Make sure there is an error if an investigation_type is supplied
-        # that does not exist
-        with self.assertRaises(QiitaDBColumnError):
-            RawData.create(self.filetype, self.studies, self.filepaths,
-                           'Not a term')
-
         # Check that the returned object has the correct id
         obs = RawData.create(self.filetype, self.studies, self.filepaths)
         self.assertEqual(obs.id, 3)
@@ -70,8 +64,8 @@ class RawDataTests(TestCase):
         # Check that the raw data have been correctly added to the DB
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.raw_data WHERE raw_data_id=3")
-        # raw_data_id, filetype, investigation_type
-        self.assertEqual(obs, [[3, 2, None]])
+        # raw_data_id, filetype
+        self.assertEqual(obs, [[3, 2]])
 
         # Check that the raw data have been correctly linked with the study
         obs = self.conn_handler.execute_fetchall(
@@ -116,8 +110,8 @@ class RawDataTests(TestCase):
         # Check that the raw data have been correctly added to the DB
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.raw_data WHERE raw_data_id=3")
-        # raw_data_id, filetype, investigation_type
-        self.assertEqual(obs, [[3, 2, None]])
+        # raw_data_id, filetype
+        self.assertEqual(obs, [[3, 2]])
 
         # Check that the raw data have been correctly linked with the study
         obs = self.conn_handler.execute_fetchall(

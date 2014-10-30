@@ -51,6 +51,7 @@ from .exceptions import (QiitaDBDuplicateError, QiitaDBColumnError,
                          QiitaDBDuplicateHeaderError, QiitaDBError)
 from .base import QiitaObject
 from .sql_connection import SQLConnectionHandler
+from .ontology import Ontology
 from .util import (exists_table, get_table_cols, get_emp_status,
                    get_required_sample_info_status, convert_to_id,
                    convert_from_id)
@@ -1102,7 +1103,8 @@ class PrepTemplate(MetadataTemplate):
     _sample_cls = PrepSample
 
     @classmethod
-    def create(cls, md_template, raw_data, study, data_type):
+    def create(cls, md_template, raw_data, study, data_type,
+               investigation_type=None):
         r"""Creates the metadata template in the database
 
         Parameters
@@ -1115,7 +1117,28 @@ class PrepTemplate(MetadataTemplate):
             The study to which the prep template belongs to.
         data_type : str or int
             The data_type of the prep template
+        investigation_type : str, optional
+            The investigation type, if relevant
+
+        Returns
+        -------
+        A new instance of `cls` to access to the PrepTemplate stored in the DB
+
+        Raises
+        ------
+        QiitaDBColumnError
+            If the investigation_type is not valid
+            If a required column is missing in md_template
         """
+        # If the investigation_type is supplied, make sure if it is one of
+        # the recognized investigation types
+        if investigation_type is not None:
+            investigation_types = Ontology(convert_to_id('ENA', 'ontology'))
+            terms = investigation_types.terms
+            if investigation_type not in terms:
+                raise QiitaDBColumnError("Not a valid investigation_type. "
+                                         "Choose from: %r" % terms)
+
         # We are going to modify the md_template. We create a copy so
         # we don't modify the user one
         md_template = deepcopy(md_template)
@@ -1379,6 +1402,13 @@ class PrepTemplate(MetadataTemplate):
             "UPDATE qiita.prep_template SET preprocessing_status = %s "
             "WHERE {0} = %s".format(self._id_column),
             (state, self.id))
+
+    @property
+    def investigation_type(self):
+        conn_handler = SQLConnectionHandler()
+        sql = ("SELECT investigation_type FROM qiita.prep_template "
+               "WHERE {0} = %s".format(self._id_column))
+        return conn_handler.execute_fetchone(sql, [self._id])[0]
 
 
 def load_template_to_dataframe(fn):

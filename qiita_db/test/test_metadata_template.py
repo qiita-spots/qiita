@@ -898,8 +898,9 @@ class TestPrepTemplate(TestCase):
         # The row in the prep template table have been created
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.prep_template WHERE prep_template_id=2")
-        # prep_template_id, data_type_id, raw_data_id, preprocessing_status
-        self.assertEqual(obs, [[2, 2, 3, 'not_preprocessed']])
+        # prep_template_id, data_type_id, raw_data_id, preprocessing_status,
+        # investigation_type
+        self.assertEqual(obs, [[2, 2, 3, 'not_preprocessed', None]])
 
         # The relevant rows to common_prep_info have been added.
         obs = self.conn_handler.execute_fetchall(
@@ -948,8 +949,9 @@ class TestPrepTemplate(TestCase):
         # The row in the prep template table have been created
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.prep_template WHERE prep_template_id=2")
-        # prep_template_id, data_type_id, raw_data_id, preprocessing_status
-        self.assertEqual(obs, [[2, 2, 3, 'not_preprocessed']])
+        # prep_template_id, data_type_id, raw_data_id, preprocessing_status,
+        # investigation_type
+        self.assertEqual(obs, [[2, 2, 3, 'not_preprocessed', None]])
 
         # The relevant rows to common_prep_info have been added.
         obs = self.conn_handler.execute_fetchall(
@@ -1039,6 +1041,13 @@ class TestPrepTemplate(TestCase):
         with self.assertRaises(QiitaDBColumnError):
             PrepTemplate.create(metadata, self.new_raw_data, self.test_study,
                                 self.data_type)
+
+    def test_create_investigation_type_error(self):
+        """Create raises an error if the investigation_type does not exists"""
+        with self.assertRaises(QiitaDBColumnError):
+            PrepTemplate.create(self.metadata, self.new_raw_data,
+                                self.test_study, self.data_type_id,
+                                'Not a term')
 
     def test_delete_error(self):
         """Try to delete a prep template that already has preprocessed data"""
@@ -1276,9 +1285,12 @@ class TestPrepTemplate(TestCase):
 
     def test_preprocessing_status_setter_valueerror(self):
         """Raises an error if the status is not recognized"""
-        pt = PrepTemplate(1)
         with self.assertRaises(ValueError):
-            pt.preprocessing_status = 'not a valid state'
+            self.tester.preprocessing_status = 'not a valid state'
+
+    def test_investigation_type(self):
+        """investigation_type works correctly"""
+        self.assertEqual(self.tester.investigation_type, "Metagenomics")
 
 EXP_SAMPLE_TEMPLATE = (
     "sample_name\tcollection_timestamp\tdescription\thas_extracted_data\t"

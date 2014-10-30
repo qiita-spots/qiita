@@ -219,8 +219,7 @@ class RawData(BaseData):
     _study_raw_table = "study_raw_data"
 
     @classmethod
-    def create(cls, filetype, studies, filepaths=None,
-               investigation_type=None):
+    def create(cls, filetype, studies, filepaths=None):
         r"""Creates a new object with a new id on the storage system
 
         Parameters
@@ -231,28 +230,16 @@ class RawData(BaseData):
             The list of Study objects to which the raw data belongs to
         filepaths : iterable of tuples (str, int), optional
             The list of paths to the raw files and its filepath type identifier
-        investigation_type : str, optional
-            The investigation type, if relevant
 
         Returns
         -------
         A new instance of `cls` to access to the RawData stored in the DB
         """
-        # If the investigation_type is supplied, make sure if it is one of
-        # the recognized investigation types
-        if investigation_type is not None:
-            investigation_types = Ontology(convert_to_id('ENA', 'ontology'))
-            terms = investigation_types.terms
-            if investigation_type not in terms:
-                raise QiitaDBColumnError("Not a valid investigation_type. "
-                                         "Choose from: %r" % terms)
-
         # Add the raw data to the database, and get the raw data id back
         conn_handler = SQLConnectionHandler()
         rd_id = conn_handler.execute_fetchone(
-            "INSERT INTO qiita.{0} (filetype_id, investigation_type) "
-            "VALUES (%s, %s) RETURNING raw_data_id".format(cls._table),
-            (filetype, investigation_type))[0]
+            "INSERT INTO qiita.{0} (filetype_id) VALUES (%s) "
+            "RETURNING raw_data_id".format(cls._table), (filetype,))[0]
 
         # Instantiate the object with the new id
         rd = cls(rd_id)
@@ -321,13 +308,6 @@ class RawData(BaseData):
             "qiita.prep_template p ON p.data_type_id = d.data_type_id "
             "WHERE p.raw_data_id = %s".format(ret), (self._id, ))
         return [dt[0] for dt in data_types]
-
-    @property
-    def investigation_type(self):
-        conn_handler = SQLConnectionHandler()
-        sql = ("SELECT investigation_type FROM qiita.{} "
-               "where raw_data_id = %s".format(self._table))
-        return conn_handler.execute_fetchone(sql, [self._id])[0]
 
     @property
     def prep_templates(self):
