@@ -197,15 +197,12 @@ COMMENT ON COLUMN qiita.processed_data.processed_params_id IS 'Link to a table w
 CREATE TABLE qiita.raw_data ( 
 	raw_data_id          bigserial  NOT NULL,
 	filetype_id          bigint  NOT NULL,
-	investigation_type   varchar  ,
 	CONSTRAINT pk_raw_data UNIQUE ( raw_data_id ) ,
 	CONSTRAINT pk_raw_data_0 PRIMARY KEY ( raw_data_id ),
 	CONSTRAINT fk_raw_data_filetype FOREIGN KEY ( filetype_id ) REFERENCES qiita.filetype( filetype_id )    
  );
 
 CREATE INDEX idx_raw_data ON qiita.raw_data ( filetype_id );
-
-COMMENT ON COLUMN qiita.raw_data.investigation_type IS 'The investigation type (e.g., one of the values from EBI`s set of known types)';
 
 CREATE TABLE qiita.required_sample_info_status ( 
 	required_sample_info_status_id bigserial  NOT NULL,
@@ -369,6 +366,7 @@ CREATE TABLE qiita.prep_template (
 	data_type_id         bigint  NOT NULL,
 	raw_data_id          bigint  NOT NULL,
 	preprocessing_status varchar DEFAULT 'not_preprocessed' NOT NULL,
+	investigation_type   varchar  ,
 	CONSTRAINT pk_prep_template PRIMARY KEY ( prep_template_id ),
 	CONSTRAINT fk_prep_template_data_type FOREIGN KEY ( data_type_id ) REFERENCES qiita.data_type( data_type_id )    ,
 	CONSTRAINT fk_prep_template_raw_data FOREIGN KEY ( raw_data_id ) REFERENCES qiita.raw_data( raw_data_id )    
@@ -377,6 +375,8 @@ CREATE TABLE qiita.prep_template (
 CREATE INDEX idx_prep_template ON qiita.prep_template ( data_type_id );
 
 CREATE INDEX idx_prep_template_0 ON qiita.prep_template ( raw_data_id );
+
+COMMENT ON COLUMN qiita.prep_template.investigation_type IS 'The investigation type (e.g., one of the values from EBI`s set of known types)';
 
 CREATE TABLE qiita.prep_template_preprocessed_data ( 
 	prep_template_id     bigint  NOT NULL,

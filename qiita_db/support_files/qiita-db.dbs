@@ -594,6 +594,9 @@
 			<column name="preprocessing_status" type="varchar" jt="12" mandatory="y" >
 				<defo>&#039;not_preprocessed&#039;</defo>
 			</column>
+			<column name="investigation_type" type="varchar" jt="12" >
+				<comment><![CDATA[The investigation type (e.g., one of the values from EBI's set of known types)]]></comment>
+			</column>
 			<index name="pk_prep_template" unique="PRIMARY_KEY" >
 				<column name="prep_template_id" />
 			</index>
@@ -866,9 +869,6 @@
 		<table name="raw_data" >
 			<column name="raw_data_id" type="bigserial" jt="-5" mandatory="y" />
 			<column name="filetype_id" type="bigint" jt="-5" mandatory="y" />
-			<column name="investigation_type" type="varchar" jt="12" >
-				<comment><![CDATA[The investigation type (e.g., one of the values from EBI's set of known types)]]></comment>
-			</column>
 			<index name="pk_raw_data" unique="UNIQUE" >
 				<column name="raw_data_id" />
 			</index>
