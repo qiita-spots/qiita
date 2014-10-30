@@ -101,7 +101,7 @@ class AuthLoginHandler(BaseHandler):
             self.set_current_user(username)
             self.redirect(nextpage)
         else:
-            self.render("index.html", user=None, loginerror=msg)
+            self.render("index.html", user=None, message=msg, level='danger')
 
     def set_current_user(self, user):
         if user:
