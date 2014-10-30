@@ -66,6 +66,7 @@ $(document).ready(function() {
         <thead>
             <tr>
                 <th>Title</th>
+                <th>Owner</th>
                 <th>Metadata Complete</th>
                 <th>Samples</th>
                 <th>Sequence Files</th>
@@ -77,6 +78,7 @@ $(document).ready(function() {
             {% for s in shared_studies %}
             <tr>
                 <td><a href="/study/description/{{ s.id }}">{{ s.title }}</a></td>
+                <td>{% raw s.owner %}</td>
                 {% if s.meta_complete %}
                 <td><span class="glyphicon glyphicon-ok"></span></td>
                 {% else %}

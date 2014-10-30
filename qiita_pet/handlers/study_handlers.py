@@ -58,11 +58,14 @@ def _build_study_info(studytype, user=None):
             "pubmed/{0}\">{0}</a>")
         StudyTuple = namedtuple('StudyInfo', 'id title meta_complete '
                                 'num_samples_collected shared num_raw_data pi '
-                                'pmids')
+                                'pmids owner')
 
         infolist = []
         for s_id in studylist:
             study = Study(s_id)
+            # Just passing the email address as the name here, since
+            # name is not a required field in qiita.qiita_user
+            owner = study_person_linkifier((study.owner, study.owner))
             info = study.info
             PI = StudyPerson(info['principal_investigator_id'])
             PI = study_person_linkifier((PI.email, PI.name))
@@ -79,7 +82,7 @@ def _build_study_info(studytype, user=None):
                                        info["metadata_complete"],
                                        info["number_samples_collected"],
                                        shared, len(study.raw_data()),
-                                       PI, pmids))
+                                       PI, pmids, owner))
         return infolist
 
 
