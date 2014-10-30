@@ -99,6 +99,33 @@ def per_sample_sequences(iter_, max_seqs, min_seqs=1, random_buf_size=100000):
             yield (sequence_id, sequence)
 
 
+def stats_from_df(df):
+    """Print out summary statistics for a sample or prep template
+
+    Parameters
+    ----------
+    t : SampleTemplate or PrepTemplate
+        Sample or prep template object to summarize
+
+    Returns
+    -------
+    dict
+        Dictionary object where the keys are the names of the metadata
+        categories and the keys are tuples where the first element is the name
+        of a metadata value in category and the second element is the number of
+        times that value was seen.
+    """
+    out = {}
+
+    for column in natsorted(df.columns):
+        counts = df[column].value_counts()
+
+        # get a pandas series of the value-count pairs
+        out[column] = [(key, counts[key]) for key in natsorted(counts.index)]
+
+    return out
+
+
 def metadata_stats_from_sample_and_prep_templates(st, pt):
     """Print out summary statistics for the sample and prep templates
 
@@ -118,15 +145,7 @@ def metadata_stats_from_sample_and_prep_templates(st, pt):
         times that value was seen.
     """
     df = metadata_map_from_sample_and_prep_templates(st, pt)
-    out = {}
-
-    for column in natsorted(df.columns):
-        counts = df[column].value_counts()
-
-        # get a pandas series of the value-count pairs
-        out[column] = [(key, counts[key]) for key in natsorted(counts.index)]
-
-    return out
+    return stats_from_df(df)
 
 
 def metadata_map_from_sample_and_prep_templates(st, pt):
@@ -151,14 +170,29 @@ def metadata_map_from_sample_and_prep_templates(st, pt):
     will be repeated in the resulting object, as they are not supposed to have
     overlapping column names.
     """
-    st = template_to_dict(st)
-    pt = template_to_dict(pt)
-
-    s_df = pd.DataFrame.from_dict(st, orient='index')
-    p_df = pd.DataFrame.from_dict(pt, orient='index')
+    s_df = dataframe_from_template(st)
+    p_df = dataframe_from_template(pt)
 
     return pd.merge(s_df, p_df, left_index=True, right_index=True, how='outer')
 
+
+def dataframe_from_template(t):
+    """Get a dataframe from a sample or prep template
+
+    Parameters
+    ----------
+    t : SampleTemplate, PrepTemplate
+        Object to convert into a dataframe
+
+    Returns
+    -------
+    pd.DataFrame
+        A DataFrame object where the index values are the sample identifiers
+        and the column names are the metadata categories.
+    """
+    t = template_to_dict(t)
+    df = pd.DataFrame.from_dict(t, orient='index')
+    return df
 
 def template_to_dict(t):
     """Convert a SampleTemplate or PrepTemplate into a 2D-dictionary
