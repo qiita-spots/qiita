@@ -180,8 +180,7 @@ def _generate_demux_file(sl_out):
         to_hdf5(fastq_fp, f)
 
 
-def _insert_preprocessed_data_fastq(study, params, raw_data, prep_template,
-                                    slq_out):
+def _insert_preprocessed_data_fastq(study, params, prep_template, slq_out):
     """Inserts the preprocessed data to the database
 
     Parameters
@@ -190,8 +189,6 @@ def _insert_preprocessed_data_fastq(study, params, raw_data, prep_template,
         The study to preprocess
     params : BaseParameters
         The parameters to use for preprocessing
-    raw_data : RawData
-        The raw data to use for the preprocessing
     prep_template : PrepTemplate
         The prep template to use for the preprocessing
     slq_out : str
@@ -232,8 +229,8 @@ def _insert_preprocessed_data_fastq(study, params, raw_data, prep_template,
     PreprocessedData.create(study, params._table, params.id, filepaths,
                             prep_template)
 
-    # Change the raw_data status to success
-    raw_data.preprocessing_status = 'success'
+    # Change the prep_template status to success
+    prep_template.preprocessing_status = 'success'
 
 
 class StudyPreprocessor(ParallelWrapper):
@@ -253,26 +250,28 @@ class StudyPreprocessor(ParallelWrapper):
         params : BaseParameters
             The parameters to use for preprocessing
         """
-        self.raw_data = RawData(prep_template.raw_data)
+        self.prep_template = prep_template
         self._logger = stderr
-        # Change the raw_data status to preprocessing
-        self.raw_data.preprocessing_status = 'preprocessing'
+        raw_data = RawData(prep_template.raw_data)
+        # Change the prep_template preprocessing_status to preprocessing
+        self.prep_template.preprocessing_status = 'preprocessing'
+
         # STEP 1: Preprocess the study
         preprocess_node = "PREPROCESS"
 
         # Check the raw data filetype to know which command generator we
         # should use
-        filetype = self.raw_data.filetype
+        filetype = raw_data.filetype
         if filetype == "FASTQ":
             cmd_generator = _get_preprocess_fastq_cmd
             insert_preprocessed_data = _insert_preprocessed_data_fastq
         else:
             raise NotImplementedError(
                 "Raw data %s cannot be preprocessed, filetype %s not supported"
-                % (self.raw_data.id, filetype))
+                % (raw_data.id, filetype))
 
         # Generate the command
-        cmd, output_dir = cmd_generator(self.raw_data, prep_template, params)
+        cmd, output_dir = cmd_generator(raw_data, self.prep_template, params)
         self._job_graph.add_node(preprocess_node, job=(cmd,),
                                  requires_deps=False)
 
@@ -290,7 +289,7 @@ class StudyPreprocessor(ParallelWrapper):
         insert_preprocessed_node = "INSERT_PREPROCESSED"
         self._job_graph.add_node(insert_preprocessed_node,
                                  job=(insert_preprocessed_data, study, params,
-                                      self.raw_data, output_dir),
+                                      self.prep_template, output_dir),
                                  requires_deps=False)
         self._job_graph.add_edge(demux_node, insert_preprocessed_node)
 
@@ -299,7 +298,7 @@ class StudyPreprocessor(ParallelWrapper):
     def _failure_callback(self, msg=None):
         """Callback to execute in case that any of the job nodes failed
 
-        Need to change the raw_data status to 'failed'
+        Need to change the prep_template preprocessing status to 'failed'
         """
-        self.raw_data.preprocessing_status = 'failed: %s' % msg
-        LogEntry.create('Fatal', msg, info={'raw_data': self.raw_data.id})
+        self.prep_template.preprocessing_status = 'failed: %s' % msg
+        LogEntry.create('Fatal', msg, info={'raw_data': raw_data.id})

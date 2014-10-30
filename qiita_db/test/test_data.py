@@ -57,12 +57,6 @@ class RawDataTests(TestCase):
 
     def test_create(self):
         """Correctly creates all the rows in the DB for the raw data"""
-        # Make sure there is an error if an investigation_type is supplied
-        # that does not exist
-        with self.assertRaises(QiitaDBColumnError):
-            RawData.create(self.filetype, self.studies, self.filepaths,
-                           'Not a term')
-
         # Check that the returned object has the correct id
         obs = RawData.create(self.filetype, self.studies, self.filepaths)
         self.assertEqual(obs.id, 3)
@@ -70,8 +64,8 @@ class RawDataTests(TestCase):
         # Check that the raw data have been correctly added to the DB
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.raw_data WHERE raw_data_id=3")
-        # raw_data_id, filetype, investigation_type, preprocessing_status
-        self.assertEqual(obs, [[3, 2, None, 'not_preprocessed']])
+        # raw_data_id, filetype
+        self.assertEqual(obs, [[3, 2]])
 
         # Check that the raw data have been correctly linked with the study
         obs = self.conn_handler.execute_fetchall(
@@ -116,8 +110,8 @@ class RawDataTests(TestCase):
         # Check that the raw data have been correctly added to the DB
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.raw_data WHERE raw_data_id=3")
-        # raw_data_id, filetype, investigation_type, preprocessing_status
-        self.assertEqual(obs, [[3, 2, None, 'not_preprocessed']])
+        # raw_data_id, filetype
+        self.assertEqual(obs, [[3, 2]])
 
         # Check that the raw data have been correctly linked with the study
         obs = self.conn_handler.execute_fetchall(
@@ -159,39 +153,6 @@ class RawDataTests(TestCase):
     def test_filetype(self):
         rd = RawData(1)
         self.assertEqual(rd.filetype, "FASTQ")
-
-    def test_preprocessing_status(self):
-        """preprocessing_status works correctly"""
-        # Success case
-        rd = RawData(1)
-        self.assertEqual(rd.preprocessing_status, 'success')
-
-        # not preprocessed case
-        rd = RawData(2)
-        self.assertEqual(rd.preprocessing_status, 'not_preprocessed')
-
-    def test_preprocessing_status_setter(self):
-        """Able to update the preprocessing status"""
-        rd = RawData(2)
-        self.assertEqual(rd.preprocessing_status, 'not_preprocessed')
-        rd.preprocessing_status = 'preprocessing'
-        self.assertEqual(rd.preprocessing_status, 'preprocessing')
-        rd.preprocessing_status = 'success'
-        self.assertEqual(rd.preprocessing_status, 'success')
-
-    def test_preprocessing_status_setter_failed(self):
-        """Able to update preprocessing status with a failure message"""
-        rd = RawData(2)
-        state = "failed: some error message"
-        self.assertEqual(rd.preprocessing_status, 'not_preprocessed')
-        rd.preprocessing_status = state
-        self.assertEqual(rd.preprocessing_status, state)
-
-    def test_preprocessing_status_setter_valueerror(self):
-        """Able to update the preprocessing status"""
-        rd = RawData(2)
-        with self.assertRaises(ValueError):
-            rd.preprocessing_status = 'not a valid state'
 
     def test_prep_templates(self):
         rd = RawData(1)

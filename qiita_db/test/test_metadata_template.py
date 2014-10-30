@@ -898,8 +898,9 @@ class TestPrepTemplate(TestCase):
         # The row in the prep template table have been created
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.prep_template WHERE prep_template_id=2")
-        # prep_template_id, data_type_id, raw_data_id
-        self.assertEqual(obs, [[2, 2, 3]])
+        # prep_template_id, data_type_id, raw_data_id, preprocessing_status,
+        # investigation_type
+        self.assertEqual(obs, [[2, 2, 3, 'not_preprocessed', None]])
 
         # The relevant rows to common_prep_info have been added.
         obs = self.conn_handler.execute_fetchall(
@@ -948,8 +949,9 @@ class TestPrepTemplate(TestCase):
         # The row in the prep template table have been created
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.prep_template WHERE prep_template_id=2")
-        # prep_template_id, data_type_id, raw_data_id
-        self.assertEqual(obs, [[2, 2, 3]])
+        # prep_template_id, data_type_id, raw_data_id, preprocessing_status,
+        # investigation_type
+        self.assertEqual(obs, [[2, 2, 3, 'not_preprocessed', None]])
 
         # The relevant rows to common_prep_info have been added.
         obs = self.conn_handler.execute_fetchall(
@@ -1039,6 +1041,13 @@ class TestPrepTemplate(TestCase):
         with self.assertRaises(QiitaDBColumnError):
             PrepTemplate.create(metadata, self.new_raw_data, self.test_study,
                                 self.data_type)
+
+    def test_create_investigation_type_error(self):
+        """Create raises an error if the investigation_type does not exists"""
+        with self.assertRaises(QiitaDBColumnError):
+            PrepTemplate.create(self.metadata, self.new_raw_data,
+                                self.test_study, self.data_type_id,
+                                'Not a term')
 
     def test_delete_error(self):
         """Try to delete a prep template that already has preprocessed data"""
@@ -1243,6 +1252,45 @@ class TestPrepTemplate(TestCase):
     def test_preprocessed_data(self):
         """Returns the preprocessed data list generated from this template"""
         self.assertEqual(self.tester.preprocessed_data, [1, 2])
+
+    def test_preprocessing_status(self):
+        """preprocessing_status works correctly"""
+        # Success case
+        pt = PrepTemplate(1)
+        self.assertEqual(pt.preprocessing_status, 'success')
+
+        # not preprocessed case
+        pt = PrepTemplate.create(self.metadata, self.new_raw_data,
+                                 self.test_study, self.data_type_id)
+        self.assertEqual(pt.preprocessing_status, 'not_preprocessed')
+
+    def test_preprocessing_status_setter(self):
+        """Able to update the preprocessing status"""
+        pt = PrepTemplate.create(self.metadata, self.new_raw_data,
+                                 self.test_study, self.data_type_id)
+        self.assertEqual(pt.preprocessing_status, 'not_preprocessed')
+        pt.preprocessing_status = 'preprocessing'
+        self.assertEqual(pt.preprocessing_status, 'preprocessing')
+        pt.preprocessing_status = 'success'
+        self.assertEqual(pt.preprocessing_status, 'success')
+
+    def test_preprocessing_status_setter_failed(self):
+        """Able to update preprocessing_status with a failure message"""
+        pt = PrepTemplate.create(self.metadata, self.new_raw_data,
+                                 self.test_study, self.data_type_id)
+        state = 'failed: some error message'
+        self.assertEqual(pt.preprocessing_status, 'not_preprocessed')
+        pt.preprocessing_status = state
+        self.assertEqual(pt.preprocessing_status, state)
+
+    def test_preprocessing_status_setter_valueerror(self):
+        """Raises an error if the status is not recognized"""
+        with self.assertRaises(ValueError):
+            self.tester.preprocessing_status = 'not a valid state'
+
+    def test_investigation_type(self):
+        """investigation_type works correctly"""
+        self.assertEqual(self.tester.investigation_type, "Metagenomics")
 
 EXP_SAMPLE_TEMPLATE = (
     "sample_name\tcollection_timestamp\tdescription\thas_extracted_data\t"
