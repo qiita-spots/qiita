@@ -463,9 +463,9 @@ class Study(QiitaStatusObject):
         """
         conn_handler = SQLConnectionHandler()
         sql = ("SELECT DISTINCT DT.data_type FROM qiita.study_raw_data SRD "
-               "JOIN qiita.raw_data RD ON SRD.raw_data_id = RD.raw_data_id "
-               "JOIN qiita.data_type DT ON RD.data_type_id = DT.data_type_id "
-               "WHERE SRD.study_id = %s")
+               "JOIN qiita.prep_template PT ON SRD.raw_data_id = "
+               "PT.raw_data_id JOIN qiita.data_type DT ON PT.data_type_id = "
+               "DT.data_type_id WHERE SRD.study_id = %s")
         return [x[0] for x in conn_handler.execute_fetchall(sql, (self._id,))]
 
     # --- methods ---

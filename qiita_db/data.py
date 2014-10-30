@@ -87,8 +87,6 @@ from .base import QiitaObject
 from .sql_connection import SQLConnectionHandler
 from .util import (exists_dynamic_table, get_db_files_base_dir,
                    insert_filepaths, convert_to_id, convert_from_id)
-from .exceptions import QiitaDBColumnError
-from .ontology import Ontology
 
 
 class BaseData(QiitaObject):
@@ -219,8 +217,7 @@ class RawData(BaseData):
     _study_raw_table = "study_raw_data"
 
     @classmethod
-    def create(cls, filetype, studies, data_type_id, filepaths=None,
-               investigation_type=None):
+    def create(cls, filetype, studies, filepaths=None):
         r"""Creates a new object with a new id on the storage system
 
         Parameters
@@ -229,33 +226,18 @@ class RawData(BaseData):
             The filetype identifier
         studies : list of Study
             The list of Study objects to which the raw data belongs to
-        data_type : int
-            The data_type identifier
         filepaths : iterable of tuples (str, int), optional
             The list of paths to the raw files and its filepath type identifier
-        investigation_type : str, optional
-            The investigation type, if relevant
 
         Returns
         -------
         A new instance of `cls` to access to the RawData stored in the DB
         """
-        # If the investigation_type is supplied, make sure if it is one of
-        # the recognized investigation types
-        if investigation_type is not None:
-            investigation_types = Ontology(convert_to_id('ENA', 'ontology'))
-            terms = investigation_types.terms
-            if investigation_type not in terms:
-                raise QiitaDBColumnError("Not a valid investigation_type. "
-                                         "Choose from: %r" % terms)
-
         # Add the raw data to the database, and get the raw data id back
         conn_handler = SQLConnectionHandler()
         rd_id = conn_handler.execute_fetchone(
-            "INSERT INTO qiita.{0} (filetype_id, investigation_type, "
-            "data_type_id) VALUES (%s, %s, %s) "
-            "RETURNING raw_data_id".format(cls._table),
-            (filetype, investigation_type, data_type_id))[0]
+            "INSERT INTO qiita.{0} (filetype_id) VALUES (%s) "
+            "RETURNING raw_data_id".format(cls._table), (filetype,))[0]
 
         # Instantiate the object with the new id
         rd = cls(rd_id)
@@ -304,8 +286,8 @@ class RawData(BaseData):
             "r.raw_data_id=%s".format(self._table),
             (self._id,))[0]
 
-    def data_type(self, ret_id=False):
-        """Returns the data_type or data_type_id
+    def data_types(self, ret_id=False):
+        """Returns the list of data_types or data_type_ids
 
         Parameters
         ----------
@@ -314,68 +296,22 @@ class RawData(BaseData):
 
         Returns
         -------
-        str or int
-            string value of data_type or int if data_type_id
+        list of str or int
+            string values of data_type or ints if data_type_id
         """
         ret = "_id" if ret_id else ""
         conn_handler = SQLConnectionHandler()
-        data_type = conn_handler.execute_fetchone(
+        data_types = conn_handler.execute_fetchall(
             "SELECT d.data_type{0} FROM qiita.data_type d JOIN "
-            "qiita.{1} c ON c.data_type_id = d.data_type_id WHERE"
-            " c.raw_data_id = %s".format(ret, self._table), (self._id, ))
-        return data_type[0]
+            "qiita.prep_template p ON p.data_type_id = d.data_type_id "
+            "WHERE p.raw_data_id = %s".format(ret), (self._id, ))
+        return [dt[0] for dt in data_types]
 
     @property
-    def investigation_type(self):
+    def prep_templates(self):
         conn_handler = SQLConnectionHandler()
-        sql = ("SELECT investigation_type FROM qiita.{} "
-               "where raw_data_id = %s".format(self._table))
-        return conn_handler.execute_fetchone(sql, [self._id])[0]
-
-    @property
-    def preprocessing_status(self):
-        r"""Tells if the data has been preprocessed or not
-
-        Returns
-        -------
-        str
-            One of {'not_preprocessed', 'preprocessing', 'success', 'failed'}
-        """
-        conn_handler = SQLConnectionHandler()
-        return conn_handler.execute_fetchone(
-            "SELECT preprocessing_status FROM qiita.{0} "
-            "WHERE raw_data_id=%s".format(self._table), (self.id,))[0]
-
-    @preprocessing_status.setter
-    def preprocessing_status(self, state):
-        r"""Update the preprocessing status
-
-        Parameters
-        ----------
-        state : str, {'not_preprocessed', 'preprocessing', 'success', 'failed'}
-            The current status of preprocessing
-
-        Raises
-        ------
-        ValueError
-            If the state is not known.
-        """
-        if (state not in ('not_preprocessed', 'preprocessing', 'success') and
-                not state.startswith('failed:')):
-            raise ValueError('Unknown state: %s' % state)
-
-        conn_handler = SQLConnectionHandler()
-
-        conn_handler.execute(
-            "UPDATE qiita.{0} SET preprocessing_status = %s "
-            "WHERE raw_data_id = %s".format(self._table),
-            (state, self.id))
-
-    @property
-    def preprocessed_data(self):
-        conn_handler = SQLConnectionHandler()
-        sql = ("SELECT preprocessed_data_id FROM qiita.raw_preprocessed_data "
-               "where raw_data_id = %s")
+        sql = ("SELECT prep_template_id FROM qiita.prep_template "
+               "WHERE raw_data_id = %s")
         return [x[0] for x in conn_handler.execute_fetchall(sql, (self._id,))]
 
 
@@ -402,11 +338,11 @@ class PreprocessedData(BaseData):
     _data_filepath_table = "preprocessed_filepath"
     _data_filepath_column = "preprocessed_data_id"
     _study_preprocessed_table = "study_preprocessed_data"
-    _raw_preprocessed_table = "raw_preprocessed_data"
+    _template_preprocessed_table = "prep_template_preprocessed_data"
 
     @classmethod
     def create(cls, study, preprocessed_params_table, preprocessed_params_id,
-               filepaths, raw_data=None, data_type=None,
+               filepaths, prep_template=None, data_type=None,
                submitted_to_insdc_status='not submitted',
                ebi_submission_accession=None,
                ebi_study_accession=None):
@@ -427,8 +363,8 @@ class PreprocessedData(BaseData):
         submitted_to_insdc_status : str, {'not submitted', 'submitting', \
                 'success', 'failed'} optional
             Submission status of the raw data files
-        raw_data : RawData, optional
-            The RawData object used as base to this preprocessed data
+        prep_template : PrepTemplate, optional
+            The PrepTemplate object used to generate this preprocessed data
         data_type : str, optional
             The data_type of the preprocessed_data
         ebi_submission_accession : str, optional
@@ -441,27 +377,33 @@ class PreprocessedData(BaseData):
         IncompetentQiitaDeveloperError
             If the table `preprocessed_params_table` does not exists
         IncompetentQiitaDeveloperError
-            If data_type does not match that of raw_data passed
+            If data_type does not match that of prep_template passed
         """
         conn_handler = SQLConnectionHandler()
-        if (data_type and raw_data) and data_type != raw_data.data_type:
+
+        # Sanity checks for the preprocesses_data data_type
+        if ((data_type and prep_template) and
+                data_type != prep_template.data_type):
             raise IncompetentQiitaDeveloperError(
-                "data_type passed does not match raw_data data_type!")
-        elif data_type is None and raw_data is None:
+                "data_type passed does not match prep_template data_type!")
+        elif data_type is None and prep_template is None:
             raise IncompetentQiitaDeveloperError("Neither data_type nor "
-                                                 "raw_data passed!")
-        elif raw_data:
-            # raw_data passed but no data_type, so set to raw data data_type
-            data_type = raw_data.data_type(ret_id=True)
+                                                 "prep_template passed!")
+        elif prep_template:
+            # prep_template passed but no data_type,
+            # so set to prep_template data_type
+            data_type = prep_template.data_type(ret_id=True)
         else:
             # only data_type, so need id from the text
             data_type = convert_to_id(data_type, "data_type", conn_handler)
+
         # Check that the preprocessed_params_table exists
         if not exists_dynamic_table(preprocessed_params_table, "preprocessed_",
                                     "_params", conn_handler):
             raise IncompetentQiitaDeveloperError(
                 "Preprocessed params table '%s' does not exists!"
                 % preprocessed_params_table)
+
         # Add the preprocessed data to the database,
         # and get the preprocessed data id back
         ppd_id = conn_handler.execute_fetchone(
@@ -485,24 +427,27 @@ class PreprocessedData(BaseData):
             "VALUES (%s, %s)".format(ppd._study_preprocessed_table),
             (study.id, ppd.id))
 
-        if raw_data is not None:
-            # Connect the preprocessed data with the raw data
+        # If the prep template was provided, connect the preprocessed data
+        # with the prep_template
+        if prep_template is not None:
             conn_handler.execute(
-                "INSERT INTO qiita.{0} (raw_data_id, preprocessed_data_id) "
-                "VALUES (%s, %s)".format(cls._raw_preprocessed_table),
-                (raw_data.id, ppd_id))
+                "INSERT INTO qiita.{0} (prep_template_id, "
+                "preprocessed_data_id) VALUES "
+                "(%s, %s)".format(cls._template_preprocessed_table),
+                (prep_template.id, ppd_id))
 
+        # Add the filepaths to the database and connect them
         ppd.add_filepaths(filepaths, conn_handler)
         return ppd
 
     @property
-    def raw_data(self):
-        r"""The raw data id used to generate the preprocessed data"""
+    def prep_template(self):
+        r"""The prep template used to generate the preprocessed data"""
         conn_handler = SQLConnectionHandler()
         return conn_handler.execute_fetchone(
-            "SELECT raw_data_id FROM qiita.{0} WHERE "
-            "preprocessed_data_id=%s".format(self._raw_preprocessed_table),
-            [self._id])[0]
+            "SELECT prep_template_id FROM qiita.{0} WHERE "
+            "preprocessed_data_id=%s".format(
+                self._template_preprocessed_table), (self._id,))[0]
 
     @property
     def study(self):

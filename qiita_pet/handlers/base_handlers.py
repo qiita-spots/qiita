@@ -41,8 +41,7 @@ class MainHandler(BaseHandler):
     '''Index page'''
     def get(self):
         username = self.current_user
-        completedanalyses = []
-        self.render("index.html", user=username, analyses=completedanalyses)
+        self.render("index.html", user=username, message='', level='')
 
 
 class MockupHandler(BaseHandler):

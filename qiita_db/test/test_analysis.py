@@ -45,6 +45,23 @@ class TestAnalysis(TestCase):
         self.analysis.status = "public"
         self.assertEqual(Analysis.get_public(), [1])
 
+    def test_has_access_public(self):
+        self.conn_handler.execute("UPDATE qiita.analysis SET "
+                                  "analysis_status_id = 6")
+        self.assertTrue(self.analysis.has_access(User("demo@microbio.me")))
+
+    def test_has_access_shared(self):
+        self.assertTrue(self.analysis.has_access(User("shared@foo.bar")))
+
+    def test_has_access_private(self):
+        self.assertTrue(self.analysis.has_access(User("test@foo.bar")))
+
+    def test_has_access_admin(self):
+        self.assertTrue(self.analysis.has_access(User("admin@foo.bar")))
+
+    def test_has_access_no_access(self):
+        self.assertFalse(self.analysis.has_access(User("demo@microbio.me")))
+
     def test_create(self):
         sql = "SELECT EXTRACT(EPOCH FROM NOW())"
         time1 = float(self.conn_handler.execute_fetchall(sql)[0][0])
