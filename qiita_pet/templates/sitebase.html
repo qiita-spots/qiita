@@ -18,6 +18,9 @@
     {% block head %}{% end %}
   </head>
   <body style="padding-top: 65px; height: 100%">
+  {% set level = globals().get('level', '') %}
+  {% set message = globals().get('message', '') %}
+
   {% if message != '' %}
       {% if level not in {'danger', 'success', 'info'} %}
           {% set level = 'info' %}
