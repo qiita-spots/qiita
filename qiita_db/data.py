@@ -85,8 +85,10 @@ from functools import partial
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from .base import QiitaObject
 from .sql_connection import SQLConnectionHandler
+from .exceptions import QiitaDBError
 from .util import (exists_dynamic_table, get_db_files_base_dir,
-                   insert_filepaths, convert_to_id, convert_from_id)
+                   insert_filepaths, convert_to_id, convert_from_id,
+                   purge_filepaths, get_filepath_id)
 
 
 class BaseData(QiitaObject):
@@ -331,6 +333,85 @@ class RawData(BaseData):
             "UPDATE qiita.{0} SET add_filepaths_status = %s "
             "WHERE raw_data_id = %s".format(self._table),
             (status, self._id))
+
+    def _is_preprocessed(self, conn_handler=None):
+        """Returns whether the RawData has been preprocessed or not
+
+        Parameters
+        ----------
+        conn_handler : SQLConnectionHandler
+            The connection handler object connected to the DB
+
+        Returns
+        -------
+        bool
+            whether the RawData has been preprocessed or not
+        """
+        conn_handler = conn_handler if conn_handler else SQLConnectionHandler()
+        return conn_handler.execute_fetchone(
+            "SELECT EXISTS(SELECT * FROM qiita.prep_template_preprocessed_data"
+            " PTPD JOIN qiita.prep_template PT ON PT.prep_template_id = "
+            "PTPD.prep_template_id WHERE PT.raw_data_id = %s)", (self._id,))[0]
+
+    def clear_filepaths(self):
+        """Removes all the filepaths attached to the RawData
+
+        Raises
+        ------
+        QiitaDBError
+            If the RawData has been already preprocessed
+        """
+        conn_handler = SQLConnectionHandler()
+
+        # If the RawData has been already preprocessed, we cannot remove any
+        # file - raise an error
+        if self._is_preprocessed(conn_handler):
+            raise QiitaDBError("Cannot clear all the filepaths from raw data "
+                               "%s, it has been already preprocessed"
+                               % self._id)
+
+        # We can remove the files - first get all the ids in the filepath table
+        fp_ids = self.get_filepath_ids()
+
+        # Unlink all the filepaths from the raw_data
+        conn_handler.execute("DELETE FROM qiita.{0} WHERE {1}=%s".format(
+            self._data_filepath_table, self._data_filepath_column),
+            (self._id,))
+
+        # Delete the files, if they are not used anywhere
+        purge_filepaths(fp_ids, conn_handler)
+
+    def remove_filepath(self, fp):
+        """Removes the filepath from the RawData
+
+        Parameters
+        ----------
+        fp : str
+            The filepath to remove
+
+        Raises
+        ------
+        QiitaDBError
+            If the RawData has been already preprocessed
+        """
+        conn_handler = SQLConnectionHandler()
+        # If the RawData has been already preprocessed, we cannot remove any
+        # file - raise an error
+        if self._is_preprocessed(conn_handler):
+            raise QiitaDBError("Cannot clear all the filepaths from raw data "
+                               "%s, it has been already preprocessed"
+                               % self._id)
+
+        # We can remove the file, get the filepath id
+        fp_id = get_filepath_id(fp, conn_handler)
+
+        # Unlink the file from the raw data
+        conn_handler.execute(
+            "DELETE FROM qiita.{0} WHERE filepath_id=%s".format(
+                self._data_filepath_table), (fp_id,))
+
+        # Delete the file if it is not used anywhere
+        purge_filepaths([fp_id], conn_handler)
 
 
 class PreprocessedData(BaseData):

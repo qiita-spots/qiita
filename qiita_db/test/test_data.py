@@ -14,6 +14,7 @@ from tempfile import mkstemp
 
 from qiita_core.util import qiita_test_checker
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
+from qiita_db.exceptions import QiitaDBError
 from qiita_db.study import Study
 from qiita_db.util import get_db_files_base_dir
 from qiita_db.data import BaseData, RawData, PreprocessedData, ProcessedData
@@ -171,6 +172,40 @@ class RawDataTests(TestCase):
         rd = RawData(1)
         with self.assertRaises(ValueError):
             rd.add_filepaths_status = 'not a valid status'
+
+    def test_is_preprocessed(self):
+        self.assertTrue(RawData(1)._is_preprocessed())
+        self.assertFalse(RawData(2)._is_preprocessed())
+
+    def test_clear_filepaths(self):
+        rd = RawData.create(self.filetype, self.studies, self.filepaths)
+        self.assertTrue(self.conn_handler.execute_fetchone(
+            "SELECT EXISTS(SELECT * FROM qiita.raw_filepath "
+            "WHERE raw_data_id=%s)", (rd.id,))[0])
+        rd.clear_filepaths()
+        self.assertFalse(self.conn_handler.execute_fetchone(
+            "SELECT EXISTS(SELECT * FROM qiita.raw_filepath "
+            "WHERE raw_data_id=%s)", (rd.id,))[0])
+
+    def test_remove_filepath(self):
+        rd = RawData.create(self.filetype, self.studies, self.filepaths)
+        fp = join(self.db_test_raw_dir, "3_%s" % basename(self.seqs_fp))
+        rd.remove_filepath(fp)
+        self.assertFalse(self.conn_handler.execute_fetchone(
+            "SELECT EXISTS(SELECT * FROM qiita.raw_filepath "
+            "WHERE filepath_id=16)")[0])
+        self.assertTrue(self.conn_handler.execute_fetchone(
+            "SELECT EXISTS(SELECT * FROM qiita.raw_filepath "
+            "WHERE filepath_id=17)")[0])
+
+    def test_remove_filepath_error(self):
+        fp = join(self.db_test_raw_dir, '1_s_G1_L001_sequences.fastq.gz')
+        with self.assertRaises(QiitaDBError):
+            RawData(1).remove_filepath(fp)
+
+    def test_clear_filepaths_error(self):
+        with self.assertRaises(QiitaDBError):
+            RawData(1).clear_filepaths()
 
 
 @qiita_test_checker()
