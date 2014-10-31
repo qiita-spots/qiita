@@ -613,7 +613,8 @@ class EBISubmitHandler(BaseHandler):
         else:
             user = User(self.current_user)
             if user.level != 'admin':
-                raise HTTPError(403, "No permissions: %s!" % user.id)
+                raise HTTPError(403, "No permissions of admin, "
+                                     "get/EBISubmitHandler: %s!" % user.id)
 
         preprocessed_data = None
         sample_template = None
