@@ -432,7 +432,7 @@ table {
 	study_raw_data references study ( study_id )</title>
 </path>
 <text x='1657' y='505' transform='rotate(0 1657,505)' title='Foreign Key fk_study_raw_data_study
-	study_raw_data references study ( study_id )' style='fill:#a1a0a0;'>study_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1530 495 L 1350,495' >
+	study_raw_data references study ( study_id )' style='fill:#a1a0a0;'>study_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1530 495 L 1395,495' >
 	<title>Foreign Key fk_study_raw_data_raw_data
 	study_raw_data references raw_data ( raw_data_id )</title>
 </path>
@@ -667,11 +667,11 @@ table {
 	prep_template references raw_data ( raw_data_id )</title>
 </path>
 <text x='1192' y='445' transform='rotate(0 1192,445)' title='Foreign Key fk_prep_template_raw_data
-	prep_template references raw_data ( raw_data_id )' style='fill:#a1a0a0;'>raw_data_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1350 540 L 1492,540 Q 1500,540 1500,547 L 1500,577 Q 1500,585 1507,585 L 1515,585' >
+	prep_template references raw_data ( raw_data_id )' style='fill:#a1a0a0;'>raw_data_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1395 555 L 1492,555 Q 1500,555 1500,562 L 1500,577 Q 1500,585 1507,585 L 1515,585' >
 	<title>Foreign Key fk_raw_data_filetype
 	raw_data references filetype ( filetype_id )</title>
 </path>
-<text x='1357' y='535' transform='rotate(0 1357,535)' title='Foreign Key fk_raw_data_filetype
+<text x='1402' y='550' transform='rotate(0 1402,550)' title='Foreign Key fk_raw_data_filetype
 	raw_data references filetype ( filetype_id )' style='fill:#a1a0a0;'>filetype_id</text><!-- ============= Table 'controlled_vocab_values' ============= -->
 <rect class='table' x='45' y='1523' width='150' height='120' rx='7' ry='7' />
 <path d='M 45.50 1549.50 L 45.50 1530.50 Q 45.50 1523.50 52.50 1523.50 L 187.50 1523.50 Q 194.50 1523.50 194.50 1530.50 L 194.50 1549.50 L45.50 1549.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
@@ -1627,17 +1627,18 @@ Referred by prep_template_preprocessed_data ( prep_template_id ) </title></a>
 The investigation type &#040;e&#046;g&#046;&#044; one of the values from EBI&#039;s set of known types&#041;</title></a>
 
 <!-- ============= Table 'raw_data' ============= -->
-<rect class='table' x='1245' y='473' width='105' height='75' rx='7' ry='7' />
-<path d='M 1245.50 499.50 L 1245.50 480.50 Q 1245.50 473.50 1252.50 473.50 L 1342.50 473.50 Q 1349.50 473.50 1349.50 480.50 L 1349.50 499.50 L1245.50 499.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
-<a xlink:href='#raw_data'><text x='1273' y='487' class='tableTitle'>raw_data</text><title>Table qiita.raw_data</title></a>
+<rect class='table' x='1245' y='473' width='150' height='90' rx='7' ry='7' />
+<path d='M 1245.50 499.50 L 1245.50 480.50 Q 1245.50 473.50 1252.50 473.50 L 1387.50 473.50 Q 1394.50 473.50 1394.50 480.50 L 1394.50 499.50 L1245.50 499.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
+<a xlink:href='#raw_data'><text x='1296' y='487' class='tableTitle'>raw_data</text><title>Table qiita.raw_data</title></a>
   <use id='nn' x='1247' y='507' xlink:href='#nn'/><a xlink:href='#raw_data.raw_data_id'><use id='pk' x='1247' y='506' xlink:href='#pk'/><title>Unique Index  ( raw_data_id ) Primary Key  ( raw_data_id ) </title></a>
 <a xlink:href='#raw_data.raw_data_id'><text x='1263' y='517'>raw_data_id</text><title>raw_data_id bigserial not null</title></a>
-<a xlink:href='#raw_data.raw_data_id'><use id='ref' x='1338' y='506' xlink:href='#ref'/><title>Referred by prep_template ( raw_data_id ) 
+<a xlink:href='#raw_data.raw_data_id'><use id='ref' x='1383' y='506' xlink:href='#ref'/><title>Referred by prep_template ( raw_data_id ) 
 Referred by raw_filepath ( raw_data_id ) 
 Referred by study_raw_data ( raw_data_id ) </title></a>
   <use id='nn' x='1247' y='522' xlink:href='#nn'/><a xlink:href='#raw_data.filetype_id'><use id='idx' x='1247' y='521' xlink:href='#idx'/><title>Index  ( filetype_id ) </title></a>
 <a xlink:href='#raw_data.filetype_id'><text x='1263' y='532'>filetype_id</text><title>filetype_id bigint not null</title></a>
-<a xlink:href='#raw_data.filetype_id'><use id='fk' x='1338' y='521' xlink:href='#fk'/><title>References filetype ( filetype_id ) </title></a>
+<a xlink:href='#raw_data.filetype_id'><use id='fk' x='1383' y='521' xlink:href='#fk'/><title>References filetype ( filetype_id ) </title></a>
+  <use id='nn' x='1247' y='537' xlink:href='#nn'/><a xlink:href='#raw_data.add_filepaths_status'><text x='1263' y='547'>add_filepaths_status</text><title>add_filepaths_status varchar not null default &#039;done&#039;</title></a>
 
 </g></svg>
 
@@ -4663,6 +4664,11 @@ Controlled Vocabulary </td>
 	<tr>
 		<td><a name='raw_data.filetype_id'>filetype&#095;id</a></td>
 		<td> bigint  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='raw_data.add_filepaths_status'>add&#095;filepaths&#095;status</a></td>
+		<td> varchar  NOT NULL  DEFO 'done' </td>
 		<td>  </td>
 	</tr>
 <tr><th colspan='3'><b>Indexes</b></th></tr>

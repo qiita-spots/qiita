@@ -869,6 +869,9 @@
 		<table name="raw_data" >
 			<column name="raw_data_id" type="bigserial" jt="-5" mandatory="y" />
 			<column name="filetype_id" type="bigint" jt="-5" mandatory="y" />
+			<column name="add_filepaths_status" type="varchar" jt="12" mandatory="y" >
+				<defo>&#039;done&#039;</defo>
+			</column>
 			<index name="pk_raw_data" unique="UNIQUE" >
 				<column name="raw_data_id" />
 			</index>
