@@ -230,8 +230,8 @@ class SQLConnectionHandler(object):
         def flatten(listOfLists):
             return chain.from_iterable(listOfLists)
 
-
         def rollback_raise_error(queue, sql, sql_args, e):
+            # https://docs.python.org/2/library/itertools.html
             self._connection.rollback()
             # wipe out queue since it has an error in it
             del self.queues[queue]
