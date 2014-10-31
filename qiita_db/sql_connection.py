@@ -90,6 +90,7 @@ from qiita_core.qiita_settings import qiita_config
 
 def flatten(listOfLists):
     # https://docs.python.org/2/library/itertools.html
+    # TODO: Issue #551  Use skbio.util.flatten instead of this
     return chain.from_iterable(listOfLists)
 
 
