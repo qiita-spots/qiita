@@ -314,6 +314,24 @@ class RawData(BaseData):
                "WHERE raw_data_id = %s")
         return [x[0] for x in conn_handler.execute_fetchall(sql, (self._id,))]
 
+    @property
+    def add_filepaths_status(self):
+        conn_handler = SQLConnectionHandler()
+        return conn_handler.execute_fetchone(
+            "SELECT add_filepaths_status FROM qiita.{0} "
+            "WHERE raw_data_id=%s".format(self._table), (self._id,))[0]
+
+    @add_filepaths_status.setter
+    def add_filepaths_status(self, status):
+        if status not in ['done', 'in_progress']:
+            raise ValueError('Unknown status: %s' % status)
+
+        conn_handler = SQLConnectionHandler()
+        conn_handler.execute(
+            "UPDATE qiita.{0} SET add_filepaths_status = %s "
+            "WHERE raw_data_id = %s".format(self._table),
+            (status, self._id))
+
 
 class PreprocessedData(BaseData):
     r"""Object for dealing with preprocessed data

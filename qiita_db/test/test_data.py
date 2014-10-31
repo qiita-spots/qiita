@@ -157,6 +157,21 @@ class RawDataTests(TestCase):
         rd = RawData(1)
         self.assertEqual(rd.prep_templates, [1])
 
+    def test_add_filepaths_status(self):
+        rd = RawData(1)
+        self.assertEqual(rd.add_filepaths_status, 'done')
+
+    def test_add_filepaths_status_setter(self):
+        rd = RawData(1)
+        self.assertEqual(rd.add_filepaths_status, 'done')
+        rd.add_filepaths_status = 'in_progress'
+        self.assertEqual(rd.add_filepaths_status, 'in_progress')
+
+    def test_add_filepaths_status_setter_error(self):
+        rd = RawData(1)
+        with self.assertRaises(ValueError):
+            rd.add_filepaths_status = 'not a valid status'
+
 
 @qiita_test_checker()
 class PreprocessedDataTests(TestCase):
