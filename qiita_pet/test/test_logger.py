@@ -1,18 +1,18 @@
 from unittest import main
 from tornado_test_base import TestHandlerBase
-from logger_handlers import LogEntryViewerHandler
 
 
 class TestLogEntryViewerHandler(TestHandlerBase):
-    def test__check_access(self):
-        raise NotImplementedError()
-
     def test_get(self):
-        raise NotImplementedError()
+        response = self.get('/error/')
+        self.assertEqual(response.code, 405)
 
     def test_post(self):
-        raise NotImplementedError()
+        response = self.post('/error/', {'numrecords': -5})
+        self.assertEqual(response.code, 405)
 
+        response = self.post('/error/', {'numrecords': 20})
+        self.assertEqual(response.code, 405)
 
 if __name__ == "__main__":
     main()

@@ -1,8 +1,5 @@
 from unittest import main
 from tornado_test_base import TestHandlerBase
-from user_handlers import (
-    UserProfile, UserProfileHandler, ForgotPasswordHandler,
-    ChangeForgotPasswordHandler)
 
 
 class TestUserProfile(TestHandlerBase):

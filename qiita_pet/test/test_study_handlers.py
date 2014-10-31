@@ -3,10 +3,6 @@ from unittest import main
 from tornado_test_base import TestHandlerBase
 from qiita_db.study import StudyPerson
 from qiita_db.util import get_count, check_count
-from study_handlers import (
-    _build_study_info, _check_access, CreateStudyForm, PrivateStudiesHandler,
-    PublicStudiesHandler, StudyDescriptionHandler, CreateStudyHandler,
-    CreateStudyAJAX, MetadataSummaryHandler, EBISubmitHandler)
 
 
 class TestCreateStudyForm(TestHandlerBase):
@@ -16,38 +12,25 @@ class TestCreateStudyForm(TestHandlerBase):
 
 class TestPrivateStudiesHandler(TestHandlerBase):
     def test_get(self):
-        raise NotImplementedError()
-
-    def test__get_private(self):
-        raise NotImplementedError()
-
-    def test__get_shared(self):
-        raise NotImplementedError()
-
-    def test_post(self):
-        raise NotImplementedError()
+        response = self.get('/study/private/')
+        self.assertEqual(response.code, 200)
 
 
 class TestPublicStudiesHandler(TestHandlerBase):
     def test_get(self):
-        raise NotImplementedError()
-
-    def test_get_public(self):
-        raise NotImplementedError()
-
-    def test_post(self):
-        raise NotImplementedError()
+        response = self.get('/study/public/')
+        self.assertEqual(response.code, 200)
 
 
 class TestStudyDescriptionHandler(TestHandlerBase):
-    def test_display_template(self):
-        raise NotImplementedError()
-
     def test_get(self):
-        raise NotImplementedError()
+        response = self.get('/study/description/1')
+        self.assertEqual(response.code, 200)
 
     def test_post(self):
-        raise NotImplementedError()
+        post_args = {}
+        response = self.post('/study/description/1', post_args)
+        self.assertEqual(response.code, 400)
 
 
 class TestCreateStudyHandler(TestHandlerBase):
@@ -93,15 +76,31 @@ class TestCreateStudyHandler(TestHandlerBase):
 
 
 class TestCreateStudyAJAX(TestHandlerBase):
-    database = True
-
     def test_get(self):
-        raise NotImplementedError()
+        response = self.get('/check_study/', {'study_title': 'notreal'})
+        self.assertEqual(response.code, 200)
+        # make sure responds properly
+        self.assertEqual(response.body, 'False')
+
+        response = self.get('/check_study/')
+        self.assertEqual(response.code, 200)
+        # make sure responds properly
+        self.assertEqual(response.body, 'False')
+
+        response = self.get(
+            '/check_study/',
+            {'study_title':
+             'Identification of the Microbiomes for Cannabis Soils'})
+        self.assertEqual(response.code, 200)
+        # make sure responds properly
+        self.assertEqual(response.body, 'True')
 
 
 class TestMetadataSummaryHandler(TestHandlerBase):
     def test_get(self):
-        raise NotImplementedError()
+        response = self.get('/metadata_summary/', {'sample_template': 1,
+                                                   'prep_template': 1})
+        self.assertEqual(response.code, 200)
 
 
 class TestEBISubmitHandler(TestHandlerBase):
