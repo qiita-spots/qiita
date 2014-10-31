@@ -570,7 +570,7 @@ def insert_filepaths(filepaths, obj_id, table, filepath_table, conn_handler,
 
 
 def purge_filepaths(filepaths_id, conn_handler):
-    r"""Removes the filepaths from the db if it safe to remove them
+    r"""Removes the filepaths from the db if it is safe to remove them
 
     Parameters
     ----------
