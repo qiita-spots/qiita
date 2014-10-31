@@ -85,8 +85,9 @@
       </select>
       <br/><br/>
       You could also select raw data from other studies that you have access to:
-      <select id="previous_raw_data">
-        <option value="">Not selected ...</option>
+      <br/>
+      <select id="previous_raw_data" multiple="5">
+        {% raw other_studies_rd %}
       </select>
       <br/><br/>
       <a class="btn btn-primary" onClick="create_raw_data();">Add raw data</a>
@@ -200,7 +201,6 @@
 
 {% raw msg %}
 
-
 <script>
   function process_sample_template() {
     if (confirm("Are you sure you want to (re)process the sample template?")) {
@@ -217,23 +217,29 @@
   }
 
   function create_raw_data() {
-    if ($("#previous_raw_data").val() === "" && $("#filetype").val() === "") {
+    if ($("#previous_raw_data").val() === null && $("#filetype").val() === "") {
       alert("You need to select either a new file type or a raw data used in a previous study.");
-    } else if ($("#previous_raw_data").val() !== "" && $("#filetype").val() !== "") {
+    } else if ($("#previous_raw_data").val() !== null && $("#filetype").val() !== "") {
       alert("You can only select a new file type or one used in a previous study but not both.");
     } else {
       if (confirm("Are you sure you want to create a new raw data?")) {
-        var form = $("<form>")
-          .attr("action", window.location.href)
-          .attr("method", "post")
-          .append($("<input>")
-            .attr("type", "hidden")
-            .attr("name", "filetype")
-            .attr("value", $("#filetype").val()))
-          .append($("<input>")
-            .attr("type", "hidden")
-            .attr("name", "previous_raw_data")
-            .attr("value", $("#previous_raw_data").val()));
+        if ($("#filetype").val() !== "") {
+          var form = $("<form>")
+            .attr("action", window.location.href)
+            .attr("method", "post")
+            .append($("<input>")
+              .attr("type", "hidden")
+              .attr("name", "filetype")
+              .attr("value", $("#filetype").val()));
+        } else {
+          var form = $("<form>")
+            .attr("action", window.location.href)
+            .attr("method", "post")
+            .append($("<input>")
+              .attr("type", "hidden")
+              .attr("name", "previous_raw_data")
+              .attr("value", $("#previous_raw_data option:selected").map(function(){ return this.value }).get().join(",")));
+        }
         $("body").append(form);
         form.submit();
       }

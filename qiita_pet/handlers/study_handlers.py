@@ -224,11 +224,12 @@ class StudyDescriptionHandler(BaseHandler):
         callback()
 
     def get_raw_data_from_other_studies(self, user, study, callback):
-        # callback(list((rdid, Study(RawData(rdid).studies[-1]).title)
-        #          for sid in study.private_studies if sid != study.id
-        #          for rdid in Study(sid).raw_data()))
-        # print user.private_studies
-        callback()
+        """Retrieves a tuple of raw_data_id and the last study title for that
+        raw_data
+        """
+        callback(((rdid, Study(RawData(rdid).studies[-1]).title)
+                 for sid in user.private_studies if sid != study.id
+                 for rdid in Study(sid).raw_data()))
 
     @coroutine
     def display_template(self, study_id, msg, tab_to_display=""):
@@ -256,21 +257,23 @@ class StudyDescriptionHandler(BaseHandler):
         fts = list('<option value="%s">%s</option>' % (f, f) for f in fts)
 
         study = Study(study_id)
+        user = User(self.current_user)
         # getting the RawData and its prep templates
         available_raw_data = yield Task(self.get_raw_data, study.raw_data())
         available_prep_templates = yield Task(self.get_prep_templates,
                                               available_raw_data)
-        # raw_data_from_other_studies = yield Task(
-        #     self.get_raw_data_from_other_studies, User(self.user_id)study)
-        #
-        # print raw_data_from_other_studies
-        user = User(self.current_user)
+
         data_types = sorted(viewitems(get_data_types()), key=itemgetter(1))
         data_types = ('<option value="%s">%s</option>' % (v, k)
                       for k, v in data_types)
         filetypes = sorted(viewitems(get_filetypes()), key=itemgetter(1))
         filetypes = ('<option value="%s">%s</option>' % (v, k)
                      for k, v in filetypes)
+        other_studies_rd = yield Task(self.get_raw_data_from_other_studies,
+                                      user, study)
+        other_studies_rd = ('<option value="%s">%s</option>' % (k,
+                            "id: %d, study: %s" % (k, v))
+                            for k, v in other_studies_rd)
 
         self.render('study_description.html', user=self.current_user,
                     study_title=study.title, study_info=study.info, msg=msg,
@@ -280,7 +283,8 @@ class StudyDescriptionHandler(BaseHandler):
                     available_prep_templates=available_prep_templates,
                     ste=SampleTemplate.exists(study_id),
                     filepath_types=''.join(fts),
-                    tab_to_display=tab_to_display)
+                    tab_to_display=tab_to_display,
+                    other_studies_rd=''.join(other_studies_rd))
 
     @authenticated
     def get(self, study_id):
@@ -336,7 +340,7 @@ class StudyDescriptionHandler(BaseHandler):
             if filetype and previous_raw_data:
                 msg = ("You can not specify both a new raw data and a "
                        "previouly used one")
-            else:
+            elif filetype:
                 try:
                     RawData.create(filetype, [study])
                 except (TypeError, QiitaDBColumnError, QiitaDBExecutionError,
@@ -347,9 +351,11 @@ class StudyDescriptionHandler(BaseHandler):
                            'object.</b><br/>%s' % (error_msg))
                     self.display_template(study_id, msg)
                     return
-
                 msg = ""
-
+            else:
+                # to be implemented
+                # add raw data to study
+                msg = "adding other study's raw data is being implemented"
             tab_to_display = ""
 
         elif add_prep_template and raw_data_id and data_type_id:
