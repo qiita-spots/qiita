@@ -63,8 +63,8 @@ class RawDataTests(TestCase):
         # Check that the raw data have been correctly added to the DB
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.raw_data WHERE raw_data_id=3")
-        # raw_data_id, filetype
-        self.assertEqual(obs, [[3, 2]])
+        # raw_data_id, filetype, add_filepaths_status
+        self.assertEqual(obs, [[3, 2, 'done']])
 
         # Check that the raw data have been correctly linked with the study
         obs = self.conn_handler.execute_fetchall(
@@ -109,8 +109,8 @@ class RawDataTests(TestCase):
         # Check that the raw data have been correctly added to the DB
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.raw_data WHERE raw_data_id=3")
-        # raw_data_id, filetype
-        self.assertEqual(obs, [[3, 2]])
+        # raw_data_id, filetype, add_filepaths_status
+        self.assertEqual(obs, [[3, 2, 'done']])
 
         # Check that the raw data have been correctly linked with the study
         obs = self.conn_handler.execute_fetchall(
