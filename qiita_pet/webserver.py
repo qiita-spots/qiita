@@ -27,7 +27,8 @@ from qiita_pet.handlers.study_handlers import (
 from qiita_pet.handlers.logger_handlers import LogEntryViewerHandler
 from qiita_pet.handlers.websocket_handlers import MessageHandler
 from qiita_pet.handlers.upload import UploadFileHandler, StudyUploadFileHandler
-from qiita_pet.handlers.compute import ComputeCompleteHandler
+from qiita_pet.handlers.compute import (
+    ComputeCompleteHandler, AddFilesToRawData)
 from qiita_pet.handlers.preprocessing_handlers import PreprocessHandler
 from qiita_db.util import get_db_files_base_dir
 
@@ -69,6 +70,7 @@ class Application(tornado.web.Application):
             (r"/study/create/", CreateStudyHandler),
             (r"/study/private/", PrivateStudiesHandler),
             (r"/study/public/", PublicStudiesHandler),
+            (r"/study/add_files_to_raw_data", AddFilesToRawData),
             (r"/study/preprocess", PreprocessHandler),
             (r"/study/description/(.*)", StudyDescriptionHandler),
             (r"/study/upload/(.*)", StudyUploadFileHandler),

@@ -36,7 +36,7 @@ $(document).ready(function() {
                 {% if s.meta_complete %}
                 <td><span class="glyphicon glyphicon-ok"></span></td>
                 {% else %}
-                <td><span class="glyphicon glyphicon-remove"></span> &nbsp; - &nbsp; <a href="/study/upload/{{s_id}}">Upload files.</a></td>
+                <td><span class="glyphicon glyphicon-remove"></span></td>
                 {% end %}
                 <td>{{ s.num_samples_collected }}</td>
                 <td>{% raw s.shared %}</td>

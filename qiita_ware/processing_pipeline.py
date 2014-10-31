@@ -233,6 +233,25 @@ def _insert_preprocessed_data_fastq(study, params, prep_template, slq_out):
     prep_template.preprocessing_status = 'success'
 
 
+def _add_files_to_raw_data(raw_data_id, filepaths):
+    """Add files to raw data
+
+    Parameters
+    ----------
+    raw_data_id : int
+        The raw_data id to preprocess
+    filepaths : list
+        A list of tuples where the first element is the fullpath to add
+        and the second is the file type
+
+    """
+    from qiita_db.data import RawData
+
+    # starting move
+    RawData(raw_data_id).add_filepaths(filepaths)
+    # finish move
+
+
 class StudyPreprocessor(ParallelWrapper):
     def _construct_job_graph(self, study, prep_template, params):
         """Constructs the workflow graph to preprocess a study
@@ -250,10 +269,11 @@ class StudyPreprocessor(ParallelWrapper):
         params : BaseParameters
             The parameters to use for preprocessing
         """
+
         self.prep_template = prep_template
         self._logger = stderr
         raw_data = RawData(prep_template.raw_data)
-        # Change the prep_template preprocessing_status to preprocessing
+        # Change the prep_template preprocessing_status t
         self.prep_template.preprocessing_status = 'preprocessing'
 
         # STEP 1: Preprocess the study
@@ -303,3 +323,31 @@ class StudyPreprocessor(ParallelWrapper):
         self.prep_template.preprocessing_status = 'failed: %s' % msg
         LogEntry.create('Fatal', msg,
                         info={'prep_template': self.prep_template.id})
+
+
+class AddFilesToRawData(ParallelWrapper):
+    def _construct_job_graph(self, raw_data_id, filepaths):
+        """Constructs the workflow graph to add files to raw data
+
+        Parameters
+        ----------
+        raw_data_id : int
+            The raw_data id to preprocess
+        filepaths : list
+            A list of tuples where the first element is the fullpath to add
+            and the second is the file type
+        """
+        self.raw_data_id = raw_data_id
+
+        adding_files = "ADDINGFILES"
+
+        self._job_graph.add_node(adding_files,
+                                 job=(_add_files_to_raw_data, raw_data_id,
+                                      filepaths), requires_deps=False)
+
+    def _failure_callback(self, msg=None):
+        """Callback to execute in case the job node fails
+        """
+        # job failed
+        LogEntry.create('Fatal', msg,
+                        info={'raw_data': self.raw_data_id})

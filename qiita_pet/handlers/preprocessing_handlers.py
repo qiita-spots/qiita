@@ -4,8 +4,6 @@ from .base_handlers import BaseHandler
 from qiita_ware.dispatchable import preprocessor
 from qiita_ware.context import submit
 from qiita_db.parameters import PreprocessedIlluminaParams
-from qiita_db.study import Study 
-from qiita_db.metadata_template import PrepTemplate
 
 
 class PreprocessHandler(BaseHandler):
@@ -13,16 +11,18 @@ class PreprocessHandler(BaseHandler):
     def post(self):
         study_id = int(self.get_argument('study_id'))
         prep_template_id = int(self.get_argument('prep_template_id'))
-        rev_comp_mapping_barcodes = self.get_argument('prep_template_id')
+        rcomp_mapping_barcodes = self.get_argument('rev_comp_mapping_barcodes')
         # currently forcing these values
         # param_constructor = self.get_argument('param_constructor')
-        if rev_comp_mapping_barcodes == 'false':
+        if rcomp_mapping_barcodes == 'false':
             param_id = 1
         else:
             param_id = 2
 
-        job_id = submit(self.current_user, preprocessor, Study(study_id),
-                        PrepTemplate(prep_template_id), param_id)
+        param_constructor = PreprocessedIlluminaParams
+
+        job_id = submit(self.current_user, preprocessor, study_id,
+                        prep_template_id, param_id, param_constructor)
 
         # do not remove this is useful for debugging
         print job_id

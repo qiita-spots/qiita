@@ -10,7 +10,7 @@ r"""Qitta study handlers for the Tornado webserver.
 from __future__ import division
 from collections import namedtuple
 
-from tornado.web import authenticated, HTTPError, asynchronous
+from tornado.web import authenticated, HTTPError
 from tornado.gen import coroutine, Task
 from wtforms import (Form, StringField, SelectField, BooleanField,
                      SelectMultipleField, TextAreaField, validators)
@@ -29,7 +29,6 @@ from .base_handlers import BaseHandler
 
 from pandas.parser import CParserError
 
-from qiita_core.qiita_settings import qiita_config
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_pet.util import linkify
 from qiita_ware.context import submit
@@ -141,7 +140,6 @@ class CreateStudyForm(Form):
 
 class PrivateStudiesHandler(BaseHandler):
     @authenticated
-    @asynchronous
     @coroutine
     def get(self):
         self.write(self.render_string('waiting.html'))
@@ -162,7 +160,6 @@ class PrivateStudiesHandler(BaseHandler):
 
 class PublicStudiesHandler(BaseHandler):
     @authenticated
-    @asynchronous
     @coroutine
     def get(self):
         self.write(self.render_string('waiting.html'))
@@ -186,14 +183,21 @@ class StudyDescriptionHandler(BaseHandler):
         callback(dict((rd.id, list((PrepTemplate(p) for p in rd.prep_templates
                  if PrepTemplate.exists(p)))) for rd in raw_data))
 
-    @asynchronous
+    def remove_from_study_template_down(self, raw_data, study_id, callback):
+        """Removes prep templates, raw data and sample template"""
+        for rd in raw_data():
+            if PrepTemplate.exists((rd)):
+                PrepTemplate.delete(rd)
+        if SampleTemplate.exists(study_id):
+            SampleTemplate.delete(study_id)
+        callback()
+
     @coroutine
     def display_template(self, study_id, msg, tab_to_display=""):
         """Simple function to avoid duplication of code"""
         # make sure study is accessible and exists, raise error if not
         study = None
         study_id = int(study_id)
-        ebi_status = None
         try:
             study = Study(study_id)
         except QiitaDBUnknownIDError:
@@ -216,7 +220,7 @@ class StudyDescriptionHandler(BaseHandler):
         study = Study(study_id)
         # getting the RawData and its prep templates
         available_raw_data = yield Task(self.get_raw_data, study.raw_data())
-        available_prep_templates = yield Task(self.get_prep_template,
+        available_prep_templates = yield Task(self.get_prep_templates,
                                               available_raw_data)
 
         user = User(self.current_user)
@@ -243,17 +247,7 @@ class StudyDescriptionHandler(BaseHandler):
         _check_access(User(self.current_user), Study(study_id))
         self.display_template(int(study_id), "")
 
-    def remove_from_study_template_down(self, raw_data, callback):
-        for rd in raw_data():
-            if PrepTemplate.exists((rd)):
-                PrepTemplate.delete(rd)
-        if SampleTemplate.exists(study_id):
-            SampleTemplate.delete(study_id)
-
-        callback()
-
     @authenticated
-    @asynchronous
     @coroutine
     def post(self, study_id):
         study_id = int(study_id)
@@ -274,7 +268,9 @@ class StudyDescriptionHandler(BaseHandler):
             # processing sample teplates
 
             # deleting previous uploads
-            yield Task(self.remove_from_study_template_down, study.raw_data)
+            yield Task(self.remove_from_study_template_down,
+                       study.raw_data,
+                       study_id)
 
             fp_rsp = join(get_study_fp(study_id), sample_template)
             if not exists(fp_rsp):
@@ -347,32 +343,13 @@ class StudyDescriptionHandler(BaseHandler):
 
             msg = "<b>Your prep template was added</b>"
             tab_to_display = str(raw_data_id)
+
         else:
             msg = ("<b>Error, did you select a valid uploaded file or are "
                    "passing the correct parameters?</b>")
+            tab_to_display = ""
 
         self.display_template(study_id, msg, tab_to_display)
-
-        # barcodes = self.get_argument('barcodes', "").split(',')
-        # forward_seqs = self.get_argument('forward_seqs', "").split(',')
-        # reverse_seqs = self.get_argument('reverse_seqs', "").split(',')
-        #
-        # # inserting raw data
-        # fp = get_study_fp(study_id)
-        # filepaths = []
-        # if barcodes and barcodes[0] != "":
-        #     filepaths.extend([(join(fp, t), "raw_barcodes")
-        # for t in barcodes])
-        # if forward_seqs and forward_seqs[0] != "":
-        #     filepaths.extend([(join(fp, t), "raw_forward_seqs")
-        #                       for t in forward_seqs])
-        # if reverse_seqs and reverse_seqs[0] != "":
-        #     filepaths.extend([(join(fp, t), "raw_reverse_seqs")
-        #                       for t in reverse_seqs])
-        #
-        # # currently hardcoding the filetypes, see issue
-        # # https://github.com/biocore/qiita/issues/391
-        # filetype = 2
 
 
 class CreateStudyHandler(BaseHandler):
@@ -485,7 +462,7 @@ class MetadataSummaryHandler(BaseHandler):
     def get(self, arguments):
         study_id = int(self.get_argument('study_id'))
 
-        # this block is tricky because you can pass either the sample or the
+        # this block is tricky because you can   either the sample or the
         # prep template and if none is passed then we will let an exception
         # be raised because template will not be declared for the logic below
         if self.get_argument('prep_template', None):
@@ -508,27 +485,9 @@ class MetadataSummaryHandler(BaseHandler):
 
 
 class EBISubmitHandler(BaseHandler):
-    @authenticated
-    def get(self, study_id):
-        study_id = int(study_id)
-        try:
-            study = Study(study_id)
-        except QiitaDBUnknownIDError:
-            raise HTTPError(404, "Study %d does not exist!" % study_id)
-        else:
-            _check_access(User(self.current_user), study)
-
-        st = SampleTemplate(study.sample_template)
-
-        # TODO: only supporting a single prep template right now, which I think
-        # is what indexing the first item here is equiv to
-        preprocessed_data_id = study.preprocessed_data()[0]
-
-        preprocessed_data = PreprocessedData(preprocessed_data_id)
-
-        stats = [('Number of samples', len(st)),
-                 ('Number of metadata headers', len(st.metadata_headers()))]
-
+    def display_template(self, study, sample_template, preprocessed_data,
+                         error):
+        """Simple function to avoid duplication of code"""
         if not study:
             study_title = 'This study DOES NOT exist'
             study_id = 'This study DOES NOT exist'
@@ -565,34 +524,35 @@ class EBISubmitHandler(BaseHandler):
 
     @authenticated
     def get(self, study_id):
+        study_id = int(study_id)
+        try:
+            study = Study(study_id)
+        except QiitaDBUnknownIDError:
+            raise HTTPError(404, "Study %d does not exist!" % study_id)
+        else:
+            user = User(self.current_user)
+            if user.level != 'admin':
+                raise HTTPError(403, "No permissions: %s!" % user.id)
+
         preprocessed_data = None
         sample_template = None
         error = None
 
-        # this could be done with exists but it works on the title and
-        # we do not have that
         try:
-            study = Study(int(study_id))
-        except (QiitaDBUnknownIDError):
-            study = None
-            error = 'There is no study %s' % study_id
+            sample_template = SampleTemplate(study.sample_template)
+        except:
+            sample_template = None
+            error = 'There is no sample template for study: %s' % study_id
 
-        if study:
-            try:
-                sample_template = SampleTemplate(study.sample_template)
-            except:
-                sample_template = None
-                error = 'There is no sample template for study: %s' % study_id
-
-            try:
-                # TODO: only supporting a single prep template right now, which
-                # should be the last item
-                preprocessed_data = PreprocessedData(
-                    study.preprocessed_data()[-1])
-            except:
-                preprocessed_data = None
-                error = ('There is no preprocessed data for study: '
-                         '%s' % study_id)
+        try:
+            # TODO: only supporting a single prep template right now, which
+            # should be the last item
+            preprocessed_data = PreprocessedData(
+                study.preprocessed_data()[-1])
+        except:
+            preprocessed_data = None
+            error = ('There is no preprocessed data for study: '
+                     '%s' % study_id)
 
         self.display_template(study, sample_template, preprocessed_data, error)
 

@@ -2,6 +2,8 @@
 {% block content %}
 
 {% from future.utils import viewitems %}
+{% from os.path import basename %}
+{% from qiita_db.data import PreprocessedData %}
 
 <table border="0" style="vertical-align: middle; text-align:center; align:center; width: 100%;">
   <tr>
@@ -115,16 +117,36 @@
               {% for prep in available_prep_templates[r.id] %}
               <tr>
                 <td style="padding:3px;">{{prep.data_type()}}</td>
+                <td style="padding:3px;">
+                  <a class="btn btn-primary" href="/metadata_summary/?sample_template={{study_id}}&prep_template={{prep.id}}">Show metadata Summary</a>
+                </td>
                 {% if not prep.preprocessed_data %}
-                  <td style="padding:3px;">
-                    <a class="btn btn-primary" href="/metadata_summary/?sample_template={{study_id}}&prep_template={{prep.id}}">Show metadata Summary</a>
-                  </td>
                   <td style="padding:3px;">
                     <input type="button" class="btn btn-primary" value="Split libraries" onclick="split_libraries({{prep.id}});">
                     <input type="checkbox" id="rev_comp_mapping_barcodes_{{prep.id}}"> Use rev_comp_mapping_barcodes
+                    <hr/>
+                    <i>Status:</i> {{prep.preprocessing_status}}
+                    <br>
+                    {% if 'zero-size array' in prep.preprocessing_status %}
+                    <b>Your barcodes do not seem to match your prep template info</b>
+                    {% end %}
                   </td>
                 {% else %}
-                  <td style="padding:3px;">{{prep.data_type()}}</td>
+                  <td style="padding:3px;">
+                    <table border="1">
+                    {% for pdi in prep.preprocessed_data %}
+                      {% set pd = PreprocessedData(pdi) %}
+                        <tr>
+                          <td>
+                            EBI status: {{pd.submitted_to_insdc_status}}<br/>
+                            EBI update status: {{pd.update_insdc_status}}<br/>
+                            EBI study accession: {{pd.ebi_study_accession}}<br/>
+                            EBI submission accession: {{pd.ebi_submission_accession}}
+                          </td>
+                        </tr>
+                    {% end %}
+                    </table>
+                  </td>
                 {% end %}
               </tr>
               {% end %}
@@ -132,6 +154,11 @@
             <br/>
           </td>
           <td style="vertical-align:top;padding:10px;">
+            <h4>Linked files to this raw data</h4>
+            {% for f, t in r.get_filepaths() %}
+              <i>{{basename(f)}}:</i> {{t[4:]}}<br/>
+            {% end %}
+            <br/>
             <h4>Link uploaded files with raw data</h4>
             <table border="0">
               <tr>
@@ -144,7 +171,7 @@
                 <td>{{f}}</td>
                 <td>&nbsp;</td>
                 <td>
-                  <select id="raw_data_info_{{r.id}}">
+                  <select id="{{f}}" name="upload_file_{{r.id}}">
                     <option value="">Ignore ...</option>
                     {% raw filepath_types %}
                   </select>
@@ -225,9 +252,60 @@
   }
 
   function link_files_to_raw_data(raw_data_id) {
-    alert(raw_data_id);
-  }
+    var barcodes = [];
+    var forward = [];
+    var reverse = [];
 
+    all_files = document.getElementsByName("upload_file_" + raw_data_id);
+    for (var i = 0; i<all_files.length; i++) {
+      ele = all_files[i];
+      switch (ele.options[ele.selectedIndex].value) {
+        case "barcodes":
+          barcodes.push(ele.id);
+          break;
+        case "forward seqs":
+          forward.push(ele.id);
+          break;
+        case "reverse seqs":
+          reverse.push(ele.id);
+          break;
+      }
+    }
+
+    if (barcodes.length == 0 || forward.length == 0) {
+      alert("You need to select at least one barcode and one forward file.");
+    } else if (barcodes.length != forward.length) {
+      alert("You must select the same number of barcode and forward seq files.")
+    } else if (reverse.length != 0 && reverse.length != forward.length) {
+      alert("If you select reverse seqs, they should have the same number than barcodes and forward files.")
+    } else {
+      var form = $("<form>")
+        .attr("action", "/study/add_files_to_raw_data")
+        .attr("method", "post")
+        .append($("<input>")
+          .attr("type", "hidden")
+          .attr("name", "raw_data_id")
+          .attr("value", raw_data_id))
+        .append($("<input>")
+          .attr("type", "hidden")
+          .attr("name", "study_id")
+          .attr("value", {{study_id}}))
+        .append($("<input>")
+          .attr("type", "hidden")
+          .attr("name", "barcodes")
+          .attr("value", barcodes.join()))
+        .append($("<input>")
+          .attr("type", "hidden")
+          .attr("name", "forward")
+          .attr("value", forward.join()))
+        .append($("<input>")
+          .attr("type", "hidden")
+          .attr("name", "reverse")
+          .attr("value", reverse.join()));
+      $("body").append(form);
+      form.submit();
+    }
+  }
 
   function split_libraries(prep_template_id) {
     if (confirm("Are you sure you want to submit a split libraries job?")) {
