@@ -196,7 +196,7 @@ class ProcessingPipelineTests(TestCase):
         _add_files_to_raw_data(1, [(fp, 'raw_forward_seqs')])
         actual = rd.get_filepaths()
 
-        self.assertEqual(actual, expected)
+        self.assertEqual(set(actual), set(expected))
 
 DEMUX_SEQS = """@a_1 orig_bc=abc new_bc=abc bc_diffs=0
 xyz
