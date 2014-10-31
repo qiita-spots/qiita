@@ -18,6 +18,7 @@ $(document).ready(function() {
         <thead>
             <tr>
                 <th>Title</th>
+                <th>Owner</th>
                 <th>Metadata Complete</th>
                 <th>Samples</th>
                 <th>Sequence Files</th>
@@ -30,6 +31,7 @@ $(document).ready(function() {
             <tr>
                 <td><a href="/study/description/{{ s.id }}">{{ s.title }}</a></td>
                 {% if s.meta_complete %}
+                <td>{% raw s.owner %}</td>
                 <td><span class="glyphicon glyphicon-ok"></span></td>
                 {% else %}
                 <td><span class="glyphicon glyphicon-remove"></span></td>

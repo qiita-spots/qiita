@@ -441,8 +441,13 @@ class Analysis(QiitaStatusObject):
         conn_handler = SQLConnectionHandler()
         self._lock_check(conn_handler)
 
+        # Make sure the analysis is not already shared with the given user
+        if user.id in self.shared_with:
+            return
+
         sql = ("INSERT INTO qiita.analysis_users (analysis_id, email) VALUES "
                "(%s, %s)")
+
         conn_handler.execute(sql, (self._id, user.id))
 
     def unshare(self, user):
@@ -458,6 +463,7 @@ class Analysis(QiitaStatusObject):
 
         sql = ("DELETE FROM qiita.analysis_users WHERE analysis_id = %s AND "
                "email = %s")
+
         conn_handler.execute(sql, (self._id, user.id))
 
     def add_samples(self, samples):
