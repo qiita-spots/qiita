@@ -88,6 +88,11 @@ from .exceptions import QiitaDBExecutionError, QiitaDBConnectionError
 from qiita_core.qiita_settings import qiita_config
 
 
+def flatten(listOfLists):
+        # https://docs.python.org/2/library/itertools.html
+        return chain.from_iterable(listOfLists)
+
+
 class SQLConnectionHandler(object):
     """Encapsulates the DB connection with the Postgres DB"""
     def __init__(self, admin=False):
@@ -212,6 +217,15 @@ class SQLConnectionHandler(object):
                                              "\nError: %s" %
                                              (sql, str(sql_args), e)))
 
+    def _rollback_raise_error(self, queue, sql, sql_args, e):
+        self._connection.rollback()
+        # wipe out queue since it has an error in it
+        del self.queues[queue]
+        raise QiitaDBExecutionError(
+            ("\nError running SQL query in queue %s: %s"
+             "\nARGS: %s\nError: %s" % (queue, sql,
+                                        str(sql_args), e)))
+
     def execute_queue(self, queue):
         """Executes all sql in a queue in a single transaction block
 
@@ -227,19 +241,6 @@ class SQLConnectionHandler(object):
 
         Queues are executed in FIFO order
         """
-        def flatten(listOfLists):
-            return chain.from_iterable(listOfLists)
-
-        def rollback_raise_error(queue, sql, sql_args, e):
-            # https://docs.python.org/2/library/itertools.html
-            self._connection.rollback()
-            # wipe out queue since it has an error in it
-            del self.queues[queue]
-            raise QiitaDBExecutionError(
-                ("\nError running SQL query in queue %s: %s"
-                 "\nARGS: %s\nError: %s" % (queue, sql,
-                                            str(sql_args), e)))
-
         with self.get_postgres_cursor() as cur:
             results = []
             clear_res = False
@@ -260,7 +261,7 @@ class SQLConnectionHandler(object):
                 try:
                     cur.execute(sql, sql_args)
                 except Exception as e:
-                    rollback_raise_error(queue, sql, sql_args, e)
+                    self._rollback_raise_error(queue, sql, sql_args, e)
 
                 # fetch results if available and append to results list
                 try:
@@ -271,7 +272,7 @@ class SQLConnectionHandler(object):
                     # ignore error if nothing to fetch
                     pass
                 except Exception as e:
-                    rollback_raise_error(queue, sql, sql_args, e)
+                    self._rollback_raise_error(queue, sql, sql_args, e)
         self._connection.commit()
         # wipe out queue since finished
         del self.queues[queue]
