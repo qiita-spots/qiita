@@ -5,15 +5,72 @@
 <script src="/static/vendor/js/jquery.dataTables.min.js"></script>
 
 <script type="text/javascript">
+var current_study;
+
 $(document).ready(function() {
     $('#user-studies-table').dataTable({"order": [[ 1, "asc" ]]});
     $('#shared-studies-table').dataTable({"order": [[ 1, "asc" ]]});
     $('#waiting').hide();
+    $('#users_list').chosen({width: "100%"});
+    $('#users_list').on('change', function(evt, params) {
+        params['study_id'] = current_study;
+        $.get('/study/sharing/', params)
+            .done(function(data) {
+                users_links = JSON.parse(data);
+                links = users_links['links'];
+                document.getElementById("shared_html_"+current_study).innerHTML = links;
+            }
+        );
+    });
 } );
+
+function modify_sharing(study_id) {
+    var shared_list;
+    current_study = study_id;
+
+    $.get('/study/sharing/', {study_id: study_id})
+        .done(function(data) {
+            users_links = JSON.parse(data);
+            users = users_links['users']
+
+            $("#users_list").val(users);
+            $("#users_list").trigger("chosen:updated");
+
+        });
+};
+
 </script>
 
 {% end %}
 {% block content %}
+
+<!-- modal view to enter sharing settings -->
+<div class="modal fade" id="create-analysis-modal-view" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title" id="myModalLabel">Modify Sharing Settings</h4>
+      </div>
+      <form role="form" action="/study/sharing/" method="post">
+        <div class="modal-body">
+          <div>
+            <div class="form-group">
+              <label for="users_list">Add/Remove Users</label>
+              <select multiple class="chosen-select" id="users_list" data-placeholder=" ">
+                {% for email in all_emails_except_current %}
+                <option value="{{ email }}">{{ email }} </option>
+                {% end %}
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
 
 <h1>Your Studies</h1>
 {% if len(user_studies) %}
@@ -23,8 +80,8 @@ $(document).ready(function() {
                 <th>Title</th>
                 <th>Metadata Complete</th>
                 <th>Samples</th>
-                <th>Shared</th>
                 <th>Sequence Files</th>
+                <th>Shared With These Users</th>
                 <th>Principal Investigator</th>
                 <th>Pubmed ID(s)</th>
             </tr>
@@ -32,20 +89,34 @@ $(document).ready(function() {
         <tbody>
             {% for s in user_studies %}
             <tr>
+                {# Title #}
                 <td><a href="/study/description/{{ s.id }}">{{ s.title }}</a></td>
+                {# Metadata Comlete #}
                 {% if s.meta_complete %}
                 <td><span class="glyphicon glyphicon-ok"></span></td>
                 {% else %}
                 <td><span class="glyphicon glyphicon-remove"></span></td>
                 {% end %}
+                {# Samples #}
                 <td>{{ s.num_samples_collected }}</td>
-                <td>{% raw s.shared %}</td>
+                {# Sequence Files #}
                 {% if s.num_raw_data %}
                 <td>{{ s.num_raw_data }}</td>
                 {% else %}
                 <td><span class="glyphicon glyphicon-remove"></span></td>
                 {% end %}
+                {# Shared #}
+                {% if s.status == 'public' %}
+                <td>This study is public</td>
+                {% else %}
+                <td><span id="shared_html_{{ s.id }}">{% raw s.shared %}</span>
+                <br/>
+                <a class="btn btn-primary" data-toggle="modal" data-target="#create-analysis-modal-view" onclick="modify_sharing({{ s.id }});">Modify</a>
+                </td>
+                {% end %}
+                {# Principal Investigator #}
                 <td>{% raw s.pi %}</td>
+                {# Pubmed ID(s) #}
                 <td>{% raw s.pmids %}</td>
             </tr>
             {% end %}
@@ -66,6 +137,7 @@ $(document).ready(function() {
         <thead>
             <tr>
                 <th>Title</th>
+                <th>Owner</th>
                 <th>Metadata Complete</th>
                 <th>Samples</th>
                 <th>Sequence Files</th>
@@ -77,6 +149,7 @@ $(document).ready(function() {
             {% for s in shared_studies %}
             <tr>
                 <td><a href="/study/description/{{ s.id }}">{{ s.title }}</a></td>
+                <td>{% raw s.owner %}</td>
                 {% if s.meta_complete %}
                 <td><span class="glyphicon glyphicon-ok"></span></td>
                 {% else %}
