@@ -627,7 +627,7 @@ class EBISubmitHandler(BaseHandler):
 
         try:
             # TODO: only supporting a single prep template right now, which
-            # should be the last item
+            # should be the last item: issue #549
             preprocessed_data = PreprocessedData(
                 study.preprocessed_data()[-1])
         except:

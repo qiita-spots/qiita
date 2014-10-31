@@ -62,7 +62,9 @@ class AddFilesToRawData(BaseHandler):
         # but rather be save than sorry
         if (len(barcodes) != len(forward_reads)
            or (barcodes and len(barcodes) != len(forward_reads))):
-            raise HTTPError(404, "What are you doing?")
+            raise HTTPError(404, "user %s tried to submit a wrong pair of "
+                                 "barcodes/forward/reverse reads" %
+                                 User(self.current_user))
 
         # join all files to send on single var
         filepaths = barcodes

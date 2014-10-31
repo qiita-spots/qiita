@@ -183,7 +183,8 @@ class ProcessingPipelineTests(TestCase):
         # preparing temporal files
         fd, fp = mkstemp()
         close(fd)
-        open(fp, 'w').write("test")
+        with open(fp, 'w') as f:
+            f.write("test")
 
         # getting previous filepaths to check that they are not erased in a
         # new submission
