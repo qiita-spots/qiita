@@ -201,6 +201,13 @@ class StudyDescriptionHandler(BaseHandler):
 
         callback()
 
+    def get_raw_data_from_other_studies(self, user, study, callback):
+        # callback(list((rdid, Study(RawData(rdid).studies[-1]).title)
+        #          for sid in study.private_studies if sid != study.id
+        #          for rdid in Study(sid).raw_data()))
+        # print user.private_studies
+        callback()
+
     @coroutine
     def display_template(self, study_id, msg, tab_to_display=""):
         """Simple function to avoid duplication of code"""
@@ -231,7 +238,10 @@ class StudyDescriptionHandler(BaseHandler):
         available_raw_data = yield Task(self.get_raw_data, study.raw_data())
         available_prep_templates = yield Task(self.get_prep_templates,
                                               available_raw_data)
-
+        # raw_data_from_other_studies = yield Task(
+        #     self.get_raw_data_from_other_studies, User(self.user_id)study)
+        #
+        # print raw_data_from_other_studies
         user = User(self.current_user)
         data_types = sorted(viewitems(get_data_types()), key=itemgetter(1))
         data_types = ('<option value="%s">%s</option>' % (v, k)

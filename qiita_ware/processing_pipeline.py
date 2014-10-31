@@ -340,7 +340,7 @@ class AddFilesToRawData(ParallelWrapper):
         self.raw_data_id = raw_data_id
 
         adding_files = "ADDINGFILES"
-
+        self._logger = stderr
         self._job_graph.add_node(adding_files,
                                  job=(_add_files_to_raw_data, raw_data_id,
                                       filepaths), requires_deps=False)
