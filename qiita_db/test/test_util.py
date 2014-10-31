@@ -350,7 +350,7 @@ class DBUtilTests(TestCase):
 
     def test_get_filepath_id_error(self):
         with self.assertRaises(QiitaDBError):
-            obs = get_filepath_id("Not_a_path", self.conn_handler)
+            get_filepath_id("Not_a_path", self.conn_handler)
 
     def test_get_study_fps(self):
         study_id = 1000
