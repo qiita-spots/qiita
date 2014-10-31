@@ -40,13 +40,13 @@ from binascii import crc32
 from bcrypt import hashpw, gensalt
 from functools import partial
 from os.path import join, basename, isdir, relpath
-from os import walk
-from shutil import move
+from os import walk, remove
+from shutil import move, rmtree
 from json import dumps
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_core.qiita_settings import qiita_config
-from .exceptions import QiitaDBColumnError
+from .exceptions import QiitaDBColumnError, QiitaDBUnknownIDError, QiitaDBError
 from .sql_connection import SQLConnectionHandler
 
 
@@ -567,6 +567,88 @@ def insert_filepaths(filepaths, obj_id, table, filepath_table, conn_handler,
         # we will receive a list of lists with a single element on it (the id),
         # transform it to a list of ids
         return [id[0] for id in ids]
+
+
+def purge_filepaths(filepaths_id, conn_handler):
+    r"""Removes the filepaths from the db if it safe to remove them
+
+    Parameters
+    ----------
+    filepaths_id : list of int
+        The list of filepaths ids to remove
+    conn_handler : SQLConnectionHandler
+            The connection handler object connected to the DB
+
+    Raises
+    ------
+    QiitaDBUnknownIDError
+        If any filepath_id in filepaths_id does not exist
+    """
+    # Check that all the filepaths exists
+    for fp_id in filepaths_id:
+        exists = conn_handler.execute_fetchone(
+            "SELECT EXISTS(SELECT * FROM qiita.filepath WHERE filepath_id=%s)",
+            (fp_id,))[0]
+        if not exists:
+            raise QiitaDBUnknownIDError(fp_id, 'filepath')
+
+    for fp_id in filepaths_id:
+        # Check if the filepath is used in any place
+        used = conn_handler.execute_fetchone(
+            "SELECT EXISTS(SELECT filepath_id FROM qiita.raw_filepath WHERE "
+            "filepath_id = %s UNION SELECT filepath_id FROM "
+            "qiita.preprocessed_filepath WHERE filepath_id = %s UNION "
+            "SELECT filepath_id FROM qiita.processed_filepath WHERE "
+            "filepath_id = %s UNION SELECT filepath_id FROM "
+            "qiita.job_results_filepath WHERE filepath_id = %s UNION "
+            "SELECT filepath_id FROM qiita.analysis_filepath WHERE "
+            "filepath_id = %s UNION SELECT reference_id FROM qiita.reference "
+            "WHERE sequence_filepath = %s OR taxonomy_filepath = %s "
+            "OR tree_filepath = %s)", [fp_id]*8)[0]
+        # Only remove the file if it is not used in any place
+        if not used:
+            # Get the filepath for the current id
+            fp, fp_type = conn_handler.execute_fetchone(
+                "SELECT filepath, filepath_type FROM qiita.filepath FP JOIN "
+                "qiita.filepath_type FPT ON FP.filepath_type_id = "
+                "FPT.filepath_type_id WHERE filepath_id=%s",
+                (fp_id,))
+
+            # Remove the row in the filepath table
+            conn_handler.execute(
+                "DELETE FROM qiita.filepath WHERE filepath_id=%s", (fp_id,))
+
+            # Remove the data
+            fp = join(get_db_files_base_dir(), fp)
+            if fp_type is 'directory':
+                rmtree(fp)
+            else:
+                remove(fp)
+
+
+def get_filepath_id(fp, conn_handler):
+    """Return the filepath_id of fp
+
+    Parameters
+    ----------
+    fp : str
+        The filepath
+    conn_handler : SQLConnectionHandler
+            The sql connection object
+
+    Raises
+    ------
+    QiitaDBError
+    """
+    fp_id = conn_handler.execute_fetchone(
+        "SELECT filepath_id FROM qiita.filepath WHERE filepath=%s",
+        (relpath(fp, get_db_files_base_dir()),))
+
+    # check if the query has actually returned something
+    if not fp_id:
+        raise QiitaDBError("Filepath not stored in the database")
+
+    return fp_id[0]
 
 
 def convert_to_id(value, table, conn_handler=None):

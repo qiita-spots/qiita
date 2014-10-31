@@ -10,10 +10,12 @@ from unittest import TestCase, main
 from tempfile import mkstemp
 from os import close, remove
 from os.path import join, exists, basename
+from functools import partial
 
 from qiita_core.util import qiita_test_checker
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
-from qiita_db.exceptions import QiitaDBColumnError
+from qiita_db.exceptions import (QiitaDBColumnError, QiitaDBUnknownIDError,
+                                 QiitaDBError)
 from qiita_db.util import (exists_table, exists_dynamic_table, scrub_data,
                            compute_checksum, check_table_cols,
                            check_required_columns, convert_to_id,
@@ -23,7 +25,7 @@ from qiita_db.util import (exists_table, exists_dynamic_table, scrub_data,
                            params_dict_to_json, get_user_fp, get_study_fp,
                            insert_filepaths, get_db_files_base_dir,
                            get_data_types, get_required_sample_info_status,
-                           get_emp_status)
+                           get_emp_status, purge_filepaths, get_filepath_id)
 from qiita_core.qiita_settings import qiita_config
 
 
@@ -277,6 +279,78 @@ class DBUtilTests(TestCase):
         exp_fp = join("raw_data", "1_%s" % basename(fp))
         exp = [[16, exp_fp, 1, '852952723', 1]]
         self.assertEqual(obs, exp)
+
+    def test_purge_filepaths(self):
+        filepaths_ids = [1, 15]
+        path_builder = partial(join, get_db_files_base_dir())
+        fps = [path_builder(f[0]) for f in self.conn_handler.execute_fetchall(
+            "SELECT filepath FROM qiita.filepath WHERE filepath_id IN (1, 15) "
+            "ORDER BY filepath_id")]
+
+        # Check that it does not remove anything because the files are used
+        purge_filepaths(filepaths_ids, self.conn_handler)
+
+        # Check the filepath 1
+        obs = self.conn_handler.execute_fetchone(
+            "SELECT EXISTS(SELECT * FROM qiita.filepath "
+            "WHERE filepath_id=1)")[0]
+        self.assertTrue(obs)
+        self.assertTrue(exists(fps[0]))
+        # Check the filepath 15
+        obs = self.conn_handler.execute_fetchone(
+            "SELECT EXISTS(SELECT * FROM qiita.filepath "
+            "WHERE filepath_id=15)")[0]
+        self.assertTrue(obs)
+        self.assertTrue(exists(fps[1]))
+
+        # Add a filepath with no links to any table
+        fd, fp = mkstemp()
+        close(fd)
+        fp_id = self.conn_handler.execute_fetchone(
+            "INSERT INTO qiita.filepath (filepath, filepath_type_id, "
+            "checksum, checksum_algorithm_id) VALUES ('{0}', 1, '', 1) "
+            "RETURNING filepath_id".format(fp))[0]
+        filepaths_ids.append(fp_id)
+        # Check that has been correctly added
+        self.assertTrue(self.conn_handler.execute_fetchone(
+            "SELECT EXISTS(SELECT * FROM qiita.filepath "
+            "WHERE filepath_id=%s)", (fp_id,))[0])
+
+        # Check that the new filepath has been removed but filepath 1 and 15
+        # are still there
+        purge_filepaths(filepaths_ids, self.conn_handler)
+        obs = self.conn_handler.execute_fetchone(
+            "SELECT EXISTS(SELECT * FROM qiita.filepath "
+            "WHERE filepath_id=1)")[0]
+        self.assertTrue(obs)
+        self.assertTrue(exists(fps[0]))
+        obs = self.conn_handler.execute_fetchone(
+            "SELECT EXISTS(SELECT * FROM qiita.filepath "
+            "WHERE filepath_id=15)")[0]
+        self.assertTrue(obs)
+        self.assertTrue(exists(fps[1]))
+        obs = self.conn_handler.execute_fetchone(
+            "SELECT EXISTS(SELECT * FROM qiita.filepath "
+            "WHERE filepath_id=%s)", (fp_id,))[0]
+        self.assertFalse(obs)
+        self.assertFalse(exists(fp))
+
+    def test_purge_filepaths_error(self):
+        with self.assertRaises(QiitaDBUnknownIDError):
+            purge_filepaths([100], self.conn_handler)
+
+        with self.assertRaises(QiitaDBUnknownIDError):
+            purge_filepaths([1, 100], self.conn_handler)
+
+    def test_get_filepath_id(self):
+        fp = join(get_db_files_base_dir(),
+                  'raw_data/1_s_G1_L001_sequences.fastq.gz')
+        obs = get_filepath_id(fp, self.conn_handler)
+        self.assertEqual(obs, 1)
+
+    def test_get_filepath_id_error(self):
+        with self.assertRaises(QiitaDBError):
+            obs = get_filepath_id("Not_a_path", self.conn_handler)
 
     def test_get_study_fps(self):
         study_id = 1000
