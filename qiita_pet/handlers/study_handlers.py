@@ -221,7 +221,7 @@ class StudyDescriptionHandler(BaseHandler):
         SampleTemplate.create(load_template_to_dataframe(fp_rsp),
                               Study(study_id))
         # TODO: do not remove but move to final storage space
-        # and keep there forever
+        # and keep there forever, issue #550
         remove(fp_rsp)
 
         callback()

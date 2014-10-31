@@ -5,18 +5,22 @@ from os import makedirs, listdir
 
 from shutil import copyfileobj, rmtree
 
-from qiita_core.qiita_settings import qiita_config
+from .study_handlers import check_access
+from .base_handlers import BaseHandler
 
-from qiita_pet.handlers.base_handlers import BaseHandler
+from qiita_core.qiita_settings import qiita_config
 
 from qiita_db.util import get_study_fp
 from qiita_db.study import Study
+from qiita_db.user import User
 
 
 class StudyUploadFileHandler(BaseHandler):
     @authenticated
     def display_template(self, study_id, msg):
         """Simple function to avoid duplication of code"""
+        study = Study(study_id)
+        check_access(User(self.current_user), study)
 
         # processing paths
         fp = get_study_fp(study_id)
@@ -25,7 +29,6 @@ class StudyUploadFileHandler(BaseHandler):
         else:
             fs = []
 
-        study = Study(study_id)
         # getting the ontologies
         self.render('upload.html', user=self.current_user,
                     study_title=study.title, study_info=study.info,

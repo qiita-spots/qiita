@@ -40,7 +40,7 @@ class AddFilesToRawData(BaseHandler):
         forward_reads = self.get_argument('forward', None)
         reverse_reads = self.get_argument('reverse', None)
 
-        study_id = int(study_id)
+        study_id = int(study_id) if study_id else None
 
         try:
             study = Study(study_id)
