@@ -100,7 +100,7 @@ def _build_study_info(studytype, user=None):
         return infolist
 
 
-def _check_access(user, study):
+def check_access(user, study):
     """make sure user has access to the study requested"""
     if not study.has_access(user):
         raise HTTPError(403, "User %s does not have access to study %d" %
@@ -198,12 +198,15 @@ class PublicStudiesHandler(BaseHandler):
 class StudyDescriptionHandler(BaseHandler):
     def get_raw_data(self, rdis, callback):
         """Get all raw data objects from a list of raw_data_ids"""
-        callback(list(RawData(rdi) for rdi in rdis))
+        callback([RawData(rdi) for rdi in rdis])
 
     def get_prep_templates(self, raw_data, callback):
         """Get all prep templates for a list of raw data objects"""
-        callback(dict((rd.id, list((PrepTemplate(p) for p in rd.prep_templates
-                 if PrepTemplate.exists(p)))) for rd in raw_data))
+        d = {}
+        for rd in raw_data:
+            d[rd.id] = [PrepTemplate(p) for p in rd.prep_templates
+                        if PrepTemplate.exists(p)]
+        callback(d)
 
     def remove_add_study_template(self, raw_data, study_id, fp_rsp, callback):
         """Removes prep templates, raw data and sample template and adds
@@ -227,9 +230,13 @@ class StudyDescriptionHandler(BaseHandler):
         """Retrieves a tuple of raw_data_id and the last study title for that
         raw_data
         """
-        callback(((rdid, Study(RawData(rdid).studies[-1]).title)
-                 for sid in user.private_studies if sid != study.id
-                 for rdid in Study(sid).raw_data()))
+        d = {}
+        for sid in user.private_studies:
+            if sid == study.id:
+                continue
+            for rdid in Study(sid).raw_data():
+                d[rdid] = Study(RawData(rdid).studies[-1]).title
+        callback(d)
 
     @coroutine
     def display_template(self, study_id, msg, tab_to_display=""):
@@ -243,18 +250,18 @@ class StudyDescriptionHandler(BaseHandler):
             # Study not in database so fail nicely
             raise HTTPError(404, "Study %d does not exist" % study_id)
         else:
-            _check_access(User(self.current_user), study)
+            check_access(User(self.current_user), study)
 
         # processing files from upload path
         fp = get_study_fp(study_id)
         if exists(fp):
-            fs = list(f for f in listdir(fp))
+            fs = listdir(fp)
         else:
             fs = []
         # getting raw filepath_ types
-        fts = list(k.split('_', 1)[1].replace('_', ' ')
-                   for k in get_filepath_types() if k.startswith('raw_'))
-        fts = list('<option value="%s">%s</option>' % (f, f) for f in fts)
+        fts = [k.split('_', 1)[1].replace('_', ' ')
+               for k in get_filepath_types() if k.startswith('raw_')]
+        fts = ['<option value="%s">%s</option>' % (f, f) for f in fts]
 
         study = Study(study_id)
         user = User(self.current_user)
@@ -273,7 +280,7 @@ class StudyDescriptionHandler(BaseHandler):
                                       user, study)
         other_studies_rd = ('<option value="%s">%s</option>' % (k,
                             "id: %d, study: %s" % (k, v))
-                            for k, v in other_studies_rd)
+                            for k, v in viewitems(other_studies_rd))
 
         self.render('study_description.html', user=self.current_user,
                     study_title=study.title, study_info=study.info, msg=msg,
@@ -289,14 +296,14 @@ class StudyDescriptionHandler(BaseHandler):
     @authenticated
     def get(self, study_id):
         study_id = int(study_id)
-        _check_access(User(self.current_user), Study(study_id))
+        check_access(User(self.current_user), Study(study_id))
         self.display_template(int(study_id), "")
 
     @authenticated
     @coroutine
     def post(self, study_id):
         study_id = int(study_id)
-        _check_access(User(self.current_user), Study(study_id))
+        check_access(User(self.current_user), Study(study_id))
 
         # vars to add sample template
         sample_template = self.get_argument('sample_template', None)
@@ -536,7 +543,7 @@ class MetadataSummaryHandler(BaseHandler):
     def get(self, arguments):
         study_id = int(self.get_argument('study_id'))
 
-        # this block is tricky because you can   either the sample or the
+        # this block is tricky because you can either pass the sample or the
         # prep template and if none is passed then we will let an exception
         # be raised because template will not be declared for the logic below
         if self.get_argument('prep_template', None):
@@ -548,7 +555,7 @@ class MetadataSummaryHandler(BaseHandler):
         study = Study(study_id)
 
         # templates have same ID as study associated with, so can do check
-        _check_access(User(self.current_user), study)
+        check_access(User(self.current_user), study)
 
         df = dataframe_from_template(template)
         stats = stats_from_df(df)

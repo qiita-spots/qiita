@@ -21,7 +21,7 @@ class StudyUploadFileHandler(BaseHandler):
         # processing paths
         fp = get_study_fp(study_id)
         if exists(fp):
-            fs = list(f for f in listdir(fp))
+            fs = listdir(fp)
         else:
             fs = []
 

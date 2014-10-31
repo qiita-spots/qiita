@@ -3,7 +3,7 @@ from json import loads
 from tornado.web import authenticated, HTTPError
 
 from .base_handlers import BaseHandler
-from .study_handlers import _check_access
+from .study_handlers import check_access
 
 from qiita_ware import r_server
 from qiita_ware.context import submit
@@ -48,16 +48,15 @@ class AddFilesToRawData(BaseHandler):
             # Study not in database so fail nicely
             raise HTTPError(404, "Study %d does not exist" % study_id)
         else:
-            _check_access(User(self.current_user), study)
+            check_access(User(self.current_user), study)
 
         fp = get_study_fp(study_id)
-        barcodes = list((join(fp, t), "raw_barcodes")
-                        for t in barcodes.split(','))
-        forward_reads = list((join(fp, t), "raw_forward_seqs")
-                             for t in forward_reads.split(','))
+        barcodes = [(join(fp, t), "raw_barcodes") for t in barcodes.split(',')]
+        forward_reads = [(join(fp, t), "raw_forward_seqs")
+                         for t in forward_reads.split(',')]
         if reverse_reads:
-            reverse_reads = list((join(fp, t), "raw_reverse_seqs")
-                                 for t in reverse_reads.split(','))
+            reverse_reads = [(join(fp, t), "raw_reverse_seqs")
+                             for t in reverse_reads.split(',')]
 
         # this should never happen if following the GUI pipeline
         # but rather be save than sorry
@@ -73,8 +72,6 @@ class AddFilesToRawData(BaseHandler):
 
         job_id = submit(self.current_user, add_files_to_raw_data, raw_data_id,
                         filepaths)
-        # do not remove this is useful for debugging
-        print job_id
 
         self.render('compute_wait.html', user=self.current_user,
                     job_id=job_id, title='Adding files to your raw data',

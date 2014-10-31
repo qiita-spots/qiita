@@ -24,8 +24,6 @@ class PreprocessHandler(BaseHandler):
         job_id = submit(self.current_user, preprocessor, study_id,
                         prep_template_id, param_id, param_constructor)
 
-        # do not remove this is useful for debugging
-        print job_id
         self.render('compute_wait.html', user=self.current_user,
                     job_id=job_id, title='Preprocessing',
                     completion_redirect='/study/description/%d' % study_id)
