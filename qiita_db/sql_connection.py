@@ -77,20 +77,20 @@ conn_handler.execute_fetchall(
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 from __future__ import division
-from itertools import chain
 from contextlib import contextmanager
 
 from psycopg2 import connect, ProgrammingError, Error as PostgresError
 from psycopg2.extras import DictCursor
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
+from itertools import chain
 
 from .exceptions import QiitaDBExecutionError, QiitaDBConnectionError
 from qiita_core.qiita_settings import qiita_config
 
 
 def flatten(listOfLists):
-        # https://docs.python.org/2/library/itertools.html
-        return chain.from_iterable(listOfLists)
+    # https://docs.python.org/2/library/itertools.html
+    return chain.from_iterable(listOfLists)
 
 
 class SQLConnectionHandler(object):
@@ -266,13 +266,14 @@ class SQLConnectionHandler(object):
                 # fetch results if available and append to results list
                 try:
                     res = cur.fetchall()
-                    # append all results linearly
-                    results.extend(flatten(res))
                 except ProgrammingError as e:
                     # ignore error if nothing to fetch
                     pass
                 except Exception as e:
                     self._rollback_raise_error(queue, sql, sql_args, e)
+                else:
+                    # append all results linearly
+                    results.extend(flatten(res))
         self._connection.commit()
         # wipe out queue since finished
         del self.queues[queue]
