@@ -5,7 +5,7 @@ from shlex import split as shsplit
 from glob import glob
 from os.path import basename, exists, join, split
 from os import environ, close
-from datetime import date, timedelta
+from datetime import date, timedelta, datetime
 from xml.etree import ElementTree as ET
 from xml.dom import minidom
 from xml.sax.saxutils import escape
@@ -104,6 +104,8 @@ class EBISubmission(object):
         self.run_xml_fp = None
         self.submission_xml_fp = None
 
+        self.ebi_dir = self._get_ebi_dir()
+
         # dicts that map investigation_type to library attributes
         lib_strategies = {'metagenome': 'POOLCLONE',
                           'mimarks-survey': 'AMPLICON'}
@@ -122,6 +124,10 @@ class EBISubmission(object):
 
         # This will hold the submission's samples, keyed by the sample name
         self.samples = {}
+
+    def _get_ebi_dir(self):
+        timestamp = datetime.now().strftime('%Y_%m_%d_%H:%M:%S')
+        return '%s_%s' % (self.study_id, timestamp)
 
     def _stringify_kwargs(self, kwargs_dict):
         """Turns values in a dictionay into strings, None, or self.empty_value
@@ -507,7 +513,7 @@ class EBISubmission(object):
                 data_block = ET.SubElement(run, 'DATA_BLOCK')
                 files = ET.SubElement(data_block, 'FILES')
                 ET.SubElement(files, 'FILE', {
-                    'filename': basename(file_path),
+                    'filename': join(self.ebi_dir, basename(file_path)),
                     'filetype': file_type,
                     'quality_scoring_system': 'phred',
                     'checksum_method': 'MD5',
@@ -873,9 +879,9 @@ class EBISubmission(object):
             # Get the list of FASTQ files to submit
             fastqs = glob(join(unique_dir, '*.fastq.gz'))
 
-            ascp_command = 'ascp -QT -k2 -L- {0} {1}@{2}:/.'.format(
+            ascp_command = 'ascp -QT -k2 -L- {0} {1}@{2}:/{3}/'.format(
                 ' '.join(fastqs), qiita_config.ebi_seq_xfer_user,
-                qiita_config.ebi_seq_xfer_url)
+                qiita_config.ebi_seq_xfer_url, ebi_dir)
 
             # Generate the command using shlex.split so that we don't have to
             # pass shell=True to subprocess.call
