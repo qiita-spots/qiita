@@ -5,7 +5,7 @@
 {% from os.path import basename %}
 {% from qiita_db.data import PreprocessedData %}
 
-<table border="0" style="vertical-align: middle; text-align:center; align:center; width: 100%;">
+<table border="0" style="vertical-align: middle; text-align:center; align:center;">
   <tr>
     <td style="vertical-align: middle; text-align:left; width: 50%;" colspan="2">
       <b>{{study_title}} ({{study_info['study_alias']}})</b>
@@ -15,7 +15,6 @@
       Metadata: {{study_info['metadata_complete']}}
       <br/>
       <a href="/study/upload/{{study_id}}">Upload files</a>
-      <br/>
 
       <!-- {'mixs_compliant': True,
       'reprocess': False,
@@ -32,6 +31,11 @@
        'portal_type_id': 3L,
        'study_alias': 'Myrold_Alder_Fir',
        'most_recent_contact': None, 'lab_person_id': None, -->
+    </td>
+    <td width="60px">
+      {% if ste %}
+        <a class="btn btn-primary" href="/metadata_summary/?study_id={{study_id}}&sample_template={{study_id}}">Show study template summary</a>
+      {% end %}
     </td>
   </tr>
 </table>
@@ -118,7 +122,7 @@
               <tr>
                 <td style="padding:3px;">{{prep.data_type()}}</td>
                 <td style="padding:3px;">
-                  <a class="btn btn-primary" href="/metadata_summary/?sample_template={{study_id}}&prep_template={{prep.id}}">Show metadata Summary</a>
+                  <a class="btn btn-primary" href="/metadata_summary/?study_id={{study_id}}&prep_template={{prep.id}}">Show prep template summary</a>
                 </td>
                 {% if not prep.preprocessed_data %}
                   <td style="padding:3px;">
@@ -133,13 +137,20 @@
                   </td>
                 {% else %}
                   <td style="padding:3px;">
-                    <table border="1">
+                    <table border="0">
                     {% for pdi in prep.preprocessed_data %}
                       {% set pd = PreprocessedData(pdi) %}
                         <tr>
-                          <td>
-                            EBI status: {{pd.submitted_to_insdc_status}}<br/>
-                            EBI update status: {{pd.update_insdc_status}}<br/>
+                          <td style="padding:3px;">
+                            <a class="btn btn-primary" href="" onclick="alert('Coming soon!')">Preprocessing summary</a>
+                          </td>
+                          {% if user_level == "admin" %}
+                          <td style="padding:3px;">
+                            <a class="btn btn-primary" href="ebi_submission/{{study_id}}">Submit to EBI</a>
+                          </td>
+                          {% end %}
+                          <td style="padding:3px;">
+                            EBI status: {{pd.submitted_to_insdc_status()}}<br/>
                             EBI study accession: {{pd.ebi_study_accession}}<br/>
                             EBI submission accession: {{pd.ebi_submission_accession}}
                           </td>
