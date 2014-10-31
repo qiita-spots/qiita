@@ -184,6 +184,10 @@ class TestStudy(TestCase):
         self.conn_handler.execute("delete from qiita.study_users")
         self.assertEqual(self.study.shared_with, [])
 
+        # Try to share with the owner, which should not work
+        self.study.share(User("test@foo.bar"))
+        self.assertEqual(self.study.shared_with, [])
+
         # Then share the study with shared@foo.bar
         self.study.share(User("shared@foo.bar"))
         self.assertEqual(self.study.shared_with, ["shared@foo.bar"])

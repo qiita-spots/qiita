@@ -484,7 +484,7 @@ class Study(QiitaStatusObject):
         sql = """select email from qiita.{} where study_id = %s""".format(
             self._table)
 
-        return conn_handler.execute_fetchone(sql, [self.id])[0]
+        return conn_handler.execute_fetchone(sql, [self._id])[0]
 
     # --- methods ---
     def raw_data(self, data_type=None):
