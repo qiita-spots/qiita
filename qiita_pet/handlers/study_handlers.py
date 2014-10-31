@@ -183,13 +183,22 @@ class StudyDescriptionHandler(BaseHandler):
         callback(dict((rd.id, list((PrepTemplate(p) for p in rd.prep_templates
                  if PrepTemplate.exists(p)))) for rd in raw_data))
 
-    def remove_from_study_template_down(self, raw_data, study_id, callback):
-        """Removes prep templates, raw data and sample template"""
+    def remove_add_study_template(self, raw_data, study_id, fp_rsp, callback):
+        """Removes prep templates, raw data and sample template and adds
+           a new one
+        """
         for rd in raw_data():
             if PrepTemplate.exists((rd)):
                 PrepTemplate.delete(rd)
         if SampleTemplate.exists(study_id):
             SampleTemplate.delete(study_id)
+
+        SampleTemplate.create(load_template_to_dataframe(fp_rsp),
+                              Study(study_id))
+        # TODO: do not remove but move to final storage space
+        # and keep there forever
+        remove(fp_rsp)
+
         callback()
 
     @coroutine
@@ -267,23 +276,15 @@ class StudyDescriptionHandler(BaseHandler):
         if sample_template:
             # processing sample teplates
 
-            # deleting previous uploads
-            yield Task(self.remove_from_study_template_down,
-                       study.raw_data,
-                       study_id)
-
             fp_rsp = join(get_study_fp(study_id), sample_template)
             if not exists(fp_rsp):
                 raise HTTPError(400, "This file doesn't exist: %s" % fp_rsp)
 
             try:
-                # inserting sample template
-                SampleTemplate.create(load_template_to_dataframe(fp_rsp),
-                                      study)
-
-                # TODO: do not remove but move to final storage space
-                # and keep there forever
-                remove(fp_rsp)
+                # deleting previous uploads and inserting new one
+                yield Task(self.remove_add_study_template,
+                           study.raw_data,
+                           study_id, fp_rsp)
             except (TypeError, QiitaDBColumnError, QiitaDBExecutionError,
                     QiitaDBDuplicateError, IOError, ValueError, KeyError,
                     CParserError) as e:
