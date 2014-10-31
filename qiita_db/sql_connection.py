@@ -77,6 +77,7 @@ conn_handler.execute_fetchall(
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 from __future__ import division
+from itertools import chain
 from contextlib import contextmanager
 
 from psycopg2 import connect, ProgrammingError, Error as PostgresError
@@ -226,11 +227,9 @@ class SQLConnectionHandler(object):
 
         Queues are executed in FIFO order
         """
-        def chain(item):
-            # itertools chain not playing nicely, use my own
-            for i in item:
-                for x in i:
-                    yield x
+        def flatten(listOfLists):
+            return chain.from_iterable(listOfLists)
+
 
         def rollback_raise_error(queue, sql, sql_args, e):
             self._connection.rollback()
@@ -267,7 +266,7 @@ class SQLConnectionHandler(object):
                 try:
                     res = cur.fetchall()
                     # append all results linearly
-                    results.extend(chain(res))
+                    results.extend(flatten(res))
                 except ProgrammingError as e:
                     # ignore error if nothing to fetch
                     pass
