@@ -204,6 +204,8 @@ class StudyDescriptionHandler(BaseHandler):
         """Get all prep templates for a list of raw data objects"""
         d = {}
         for rd in raw_data:
+            # We neeed this so PrepTemplate(p) doesn't fail if that raw
+            # doesn't exist but raw data has the row: #554
             d[rd.id] = [PrepTemplate(p) for p in rd.prep_templates
                         if PrepTemplate.exists(p)]
         callback(d)
