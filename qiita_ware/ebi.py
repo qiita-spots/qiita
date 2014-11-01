@@ -879,7 +879,7 @@ class EBISubmission(object):
             # Get the list of FASTQ files to submit
             fastqs = glob(join(unique_dir, '*.fastq.gz'))
 
-            ascp_command = 'ascp -QT -k2 -L- {0} {1}@{2}:/{3}/'.format(
+            ascp_command = 'ascp -d -QT -k2 -L- {0} {1}@{2}:/{3}/'.format(
                 ' '.join(fastqs), qiita_config.ebi_seq_xfer_user,
                 qiita_config.ebi_seq_xfer_url, ebi_dir)
 
