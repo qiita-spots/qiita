@@ -1,9 +1,7 @@
 from __future__ import division
 
-from datetime import datetime
 from random import choice
 
-from tornado.web import authenticated, HTTPError, asynchronous
 from tornado.gen import coroutine, Task
 
 from qiita_ware import r_server
@@ -11,6 +9,7 @@ from qiita_db.sql_connection import SQLConnectionHandler
 from qiita_db.util import get_count
 from qiita_db.study import Study
 from .base_handlers import BaseHandler
+
 
 class StatsHandler(BaseHandler):
     def _get_stats(self, callback):
@@ -26,13 +25,13 @@ class StatsHandler(BaseHandler):
             lat_longs = conn.execute_fetchall(sql)
             with r_server.pipeline() as pipe:
                 for latitude, longitude in lat_longs:
-                    # storing as a simple data structure, hopefully this doesn't
-                    # burn us later
+                    # storing as a simple data structure, hopefully this
+                    # doesn't burn us later
                     pipe.rpush('stats:sample_lats', latitude)
                     pipe.rpush('stats:sample_longs', longitude)
 
-                # set the key to expire in an hour, so that we limit the number of
-                # times we have to go to the database to a reasonable amount
+                # set the key to expire in an hour, so that we limit the number
+                # of times we have to go to the database to a reasonable amount
                 r_server.expire('stats:sample_lats', 3600)
                 r_server.expire('stats:sample_longs', 3600)
 
