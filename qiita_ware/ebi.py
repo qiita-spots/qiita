@@ -881,7 +881,7 @@ class EBISubmission(object):
 
             ascp_command = 'ascp -d -QT -k2 -L- {0} {1}@{2}:/{3}/'.format(
                 ' '.join(fastqs), qiita_config.ebi_seq_xfer_user,
-                qiita_config.ebi_seq_xfer_url, ebi_dir)
+                qiita_config.ebi_seq_xfer_url, self.ebi_dir)
 
             # Generate the command using shlex.split so that we don't have to
             # pass shell=True to subprocess.call
