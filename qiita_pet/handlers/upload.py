@@ -20,7 +20,7 @@ class StudyUploadFileHandler(BaseHandler):
     def display_template(self, study_id, msg):
         """Simple function to avoid duplication of code"""
         study = Study(study_id)
-        check_access(User(self.current_user), study)
+        check_access(User(self.current_user), study, no_public=True)
 
         # processing paths
         fp = get_study_fp(study_id)
@@ -37,7 +37,9 @@ class StudyUploadFileHandler(BaseHandler):
 
     @authenticated
     def get(self, study_id):
-        self.display_template(int(study_id), "")
+        study_id = int(study_id)
+        check_access(User(self.current_user), Study(study_id), no_public=True)
+        self.display_template(study_id, "")
 
 
 class UploadFileHandler(BaseHandler):
@@ -54,6 +56,9 @@ class UploadFileHandler(BaseHandler):
         resumable_total_chunks = int(self.get_argument('resumableTotalChunks'))
         study_id = self.get_argument('study_id')
         data = self.request.files['file'][0]['body']
+
+        check_access(User(self.current_user), Study(int(study_id)),
+                     no_public=True)
 
         fp = join(get_study_fp(study_id), resumable_identifier)
         # creating temporal folder for upload
@@ -88,6 +93,8 @@ class UploadFileHandler(BaseHandler):
         sent via post or 200 (valid) to not send the file
         """
         study_id = self.get_argument('study_id')
+
+        check_access(User(self.current_user), Study(study_id), no_public=True)
 
         # temporaly filename or chunck
         tfp = join(get_study_fp(study_id),

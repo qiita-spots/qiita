@@ -100,9 +100,9 @@ def _build_study_info(studytype, user=None):
         return infolist
 
 
-def check_access(user, study):
+def check_access(user, study, no_public=False):
     """make sure user has access to the study requested"""
-    if not study.has_access(user):
+    if not study.has_access(user, no_public):
         raise HTTPError(403, "User %s does not have access to study %d" %
                         (user.id, study.id))
 
