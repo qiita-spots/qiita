@@ -13,9 +13,10 @@
       Samples: {{study_info['number_samples_promised']}}/{{study_info['number_samples_collected']}}
       <br/>
       Metadata: {{study_info['metadata_complete']}}
-      <br/>
-      <a href="/study/upload/{{study_id}}">Upload files</a>
-
+      {% if can_upload %}
+        <br/>
+        <a href="/study/upload/{{study_id}}">Upload files</a>
+      {% end %}
       <!-- {'mixs_compliant': True,
       'reprocess': False,
       'emp_person_id': None,
@@ -63,8 +64,6 @@
         <option value="{{f}}">{{f}}</option>
       {% end %}
     </select>
-    <br/>
-    If you do not see your file in the selector, go <a href="/study/upload/{{study_id}}">here</a> to upload it.
     <br/><br/>
     <a class="btn btn-primary" onClick="process_sample_template();">Process sample template</a>
 
@@ -111,8 +110,10 @@
             <select id="data_type_{{r.id}}">
               {% raw data_types %}
             </select>
-            <br/><br/>
-            You can also <a href="/study/upload/{{study_id}}">upload</a> some files.
+            {% if can_upload %}
+              <br/><br/>
+              You can also <a href="/study/upload/{{study_id}}">upload</a> some files.
+            {% end %}
             <br/><br/>
             <a class="btn btn-primary" onClick="add_prep_template({{r.id}});">Add prep template</a>
             <br/>

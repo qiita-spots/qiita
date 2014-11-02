@@ -103,8 +103,12 @@ def _build_study_info(studytype, user=None):
 def check_access(user, study, no_public=False):
     """make sure user has access to the study requested"""
     if not study.has_access(user, no_public):
-        raise HTTPError(403, "User %s does not have access to study %d" %
-                        (user.id, study.id))
+        if not_public:
+            return False
+        else:
+            raise HTTPError(403, "User %s does not have access to study %d" %
+                                 (user.id, study.id))
+    return True
 
 
 def _check_owner(user, study):
@@ -293,6 +297,7 @@ class StudyDescriptionHandler(BaseHandler):
                     ste=SampleTemplate.exists(study_id),
                     filepath_types=''.join(fts),
                     tab_to_display=tab_to_display,
+                    can_upload=check_access(user, study, True),
                     other_studies_rd=''.join(other_studies_rd))
 
     @authenticated
