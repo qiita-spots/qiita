@@ -30,7 +30,7 @@ class TestStudyDescriptionHandler(TestHandlerBase):
     def test_post(self):
         post_args = {}
         response = self.post('/study/description/1', post_args)
-        self.assertEqual(response.code, 400)
+        self.assertEqual(response.code, 200)
 
 
 class TestCreateStudyHandler(TestHandlerBase):
