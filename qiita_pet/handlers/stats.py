@@ -59,10 +59,21 @@ class StatsHandler(BaseHandler):
             yield Task(self._get_stats)
 
         # Pull a random public study from the database
-        study = Study(choice(Study.get_public()))
+        public_studies = Study.get_public()
+        study = Study(choice(public_studies)) if public_studies else None
+        if study is None:
+            random_study_info = None
+            random_study_title = None
+            random_study_id = None
+        else:
+            random_study_info = study.info
+            random_study_title = study.title
+            random_study_id = study.id
+
 
         self.render('stats.html', user=self.current_user,
                     num_studies=num_studies, num_samples=num_samples,
                     num_users=num_users, lat_longs=lat_longs,
-                    random_study_info=study.info,
-                    random_study_title=study.title, random_study_id=study.id)
+                    random_study_info=random_study_info,
+                    random_study_title=random_study_title,
+                    random_study_id=random_study_id)

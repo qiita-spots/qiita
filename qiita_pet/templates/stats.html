@@ -70,16 +70,19 @@ function setMarker(map, lat, lng)
   </table>
 </div>
 <div id="map-canvas"></div>
-<div class="jumbotron">
-  <h2>Check out this random public study from the database!</h2>
-  <h3>{{ random_study_title }}</h3>
-  <p align="justify">{{ random_study_info['study_abstract'] }}</p>
-  <p>
-  {% if user is not None %}
-      <a href="/study/description/{{ random_study_id }}">Go to the study <span class="glyphicon glyphicon-arrow-right"></span></a>
-  {% else %}
-      <h4>Log in above to see this and other public studies</h4>
-  {% end %}
-  </p>
-</div>
+
+{% if random_study_id is not None %}
+    <div class="jumbotron">
+      <h2>Check out this random public study from the database!</h2>
+      <h3>{{ random_study_title }}</h3>
+      <p align="justify">{{ random_study_info['study_abstract'] }}</p>
+      <p>
+      {% if user is not None %}
+          <a href="/study/description/{{ random_study_id }}">Go to the study <span class="glyphicon glyphicon-arrow-right"></span></a>
+      {% else %}
+          <h4>Log in above to see this and other public studies</h4>
+      {% end %}
+      </p>
+    </div>
+{% end %}
 {% end %}
