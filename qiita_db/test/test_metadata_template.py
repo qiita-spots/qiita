@@ -555,6 +555,17 @@ class TestSampleTemplate(TestCase):
         for f in self._clean_up_files:
             remove(f)
 
+    def test_has_access(self):
+        # Only test@foo.bar and shared@foo.bar should have access
+        # demo@foo.bar should not
+        test_user = User('test@foo.bar')
+        shared_user = User('shared@foo.bar')
+        demo_user = User('demo@microbio.me')
+
+        self.assertTrue(self.tester.has_access(test_user, no_public=True))
+        self.assertTrue(self.tester.has_access(shared_user, no_public=True))
+        self.assertFalse(self.tester.has_access(demo_user, no_public=True))
+
     def test_init_unknown_error(self):
         """Init raises an error if the id is not known"""
         with self.assertRaises(QiitaDBUnknownIDError):
@@ -864,6 +875,17 @@ class TestPrepTemplate(TestCase):
     def tearDown(self):
         for f in self._clean_up_files:
             remove(f)
+
+    def test_has_access(self):
+        # Only test@foo.bar and shared@foo.bar should have access
+        # demo@foo.bar should not
+        test_user = User('test@foo.bar')
+        shared_user = User('shared@foo.bar')
+        demo_user = User('demo@microbio.me')
+
+        self.assertTrue(self.tester.has_access(test_user, no_public=True))
+        self.assertTrue(self.tester.has_access(shared_user, no_public=True))
+        self.assertFalse(self.tester.has_access(demo_user, no_public=True))
 
     def test_init_unknown_error(self):
         """Init raises an error if the id is not known"""

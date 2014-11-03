@@ -55,6 +55,7 @@ from .ontology import Ontology
 from .util import (exists_table, get_table_cols, get_emp_status,
                    get_required_sample_info_status, convert_to_id,
                    convert_from_id)
+from .study import Study
 
 
 TARGET_GENE_DATA_TYPES = ['16S', '18S', 'ITS']
@@ -1083,6 +1084,27 @@ class SampleTemplate(MetadataTemplate):
 
         return cls(study.id)
 
+    def has_access(self, user, no_public=False):
+        """Checks whether the user has access to this SampleTemplate
+
+        The user has access to the template if the user has access to the
+        study with which the template is associated.
+
+        Parameters
+        ----------
+        user : qiita_db User object
+            The user whose access rights will be checked
+        no_public: bool
+            If we should ignore those studies shared with the user. Defaults
+            to False
+
+        Returns
+        -------
+        bool
+            True if the user has access, False if not
+        """
+        return Study(self._id).has_access(user, no_public)
+
 
 class PrepTemplate(MetadataTemplate):
     r"""Represent the PrepTemplate of a raw dat. Provides access to the
@@ -1409,6 +1431,38 @@ class PrepTemplate(MetadataTemplate):
         sql = ("SELECT investigation_type FROM qiita.prep_template "
                "WHERE {0} = %s".format(self._id_column))
         return conn_handler.execute_fetchone(sql, [self._id])[0]
+
+    def has_access(self, user, no_public=False):
+        """Checks whether the user has access to this PrepTemplate
+
+        The user has access to the template if the user has access to the
+        study with which the template is associated.
+
+        Parameters
+        ----------
+        user : qiita_db User object
+            The user whose access rights will be checked
+        no_public: bool
+            If we should ignore those studies shared with the user. Defaults
+            to False
+
+        Returns
+        -------
+        bool
+            True if the user has access, False if not
+        """
+        conn = SQLConnectionHandler()
+        sql = """SELECT srd.study_id
+                 FROM qiita.prep_template pt JOIN qiita.study_raw_data srd
+                 ON pt.raw_data_id = srd.raw_data_id"""
+        study_id = conn.execute_fetchone(sql)
+        if study_id:
+            study_id = study_id[0]
+        else:
+            raise QiitaDBError("No studies found associated with prep "
+                               "template ID %d" % self._id)
+
+        return Study(study_id).has_access(user, no_public)
 
 
 def load_template_to_dataframe(fn):
