@@ -15,6 +15,7 @@ from tornado.gen import coroutine, Task
 from wtforms import (Form, StringField, SelectField, BooleanField,
                      SelectMultipleField, TextAreaField, validators)
 
+from json import dumps
 from os import listdir
 from os.path import exists, join, basename
 from functools import partial
@@ -24,7 +25,7 @@ from qiita_core.qiita_settings import qiita_config
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_pet.util import linkify
 from qiita_ware.context import submit
-from qiita_ware.util import metadata_stats_from_sample_and_prep_templates
+from qiita_ware.util import dataframe_from_template, stats_from_df
 from qiita_ware.demux import stats as demux_stats
 from qiita_ware.dispatchable import submit_to_ebi
 from qiita_db.metadata_template import (SampleTemplate, PrepTemplate,
@@ -37,6 +38,21 @@ from qiita_db.data import PreprocessedData
 from qiita_db.exceptions import (QiitaDBColumnError, QiitaDBExecutionError,
                                  QiitaDBDuplicateError, QiitaDBUnknownIDError)
 from qiita_db.data import RawData
+
+study_person_linkifier = partial(
+    linkify, "<a target=\"_blank\" href=\"mailto:{0}\">{1}</a>")
+pubmed_linkifier = partial(
+    linkify, "<a target=\"_blank\" href=\"http://www.ncbi.nlm.nih.gov/"
+    "pubmed/{0}\">{0}</a>")
+
+
+def _get_shared_links_for_study(study):
+    shared = []
+    for person in study.shared_with:
+        person = User(person)
+        shared.append(study_person_linkifier(
+            (person.email, person.info['name'])))
+    return ", ".join(shared)
 
 
 def _build_study_info(studytype, user=None):
@@ -51,35 +67,28 @@ def _build_study_info(studytype, user=None):
             raise IncompetentQiitaDeveloperError("Must use private, shared, "
                                                  "or public!")
 
-        study_person_linkifier = partial(
-            linkify, "<a target=\"_blank\" href=\"mailto:{0}\">{1}</a>")
-        pubmed_linkifier = partial(
-            linkify, "<a target=\"_blank\" href=\"http://www.ncbi.nlm.nih.gov/"
-            "pubmed/{0}\">{0}</a>")
         StudyTuple = namedtuple('StudyInfo', 'id title meta_complete '
                                 'num_samples_collected shared num_raw_data pi '
-                                'pmids')
+                                'pmids owner status')
 
         infolist = []
         for s_id in studylist:
             study = Study(s_id)
+            status = study.status
+            # Just passing the email address as the name here, since
+            # name is not a required field in qiita.qiita_user
+            owner = study_person_linkifier((study.owner, study.owner))
             info = study.info
             PI = StudyPerson(info['principal_investigator_id'])
             PI = study_person_linkifier((PI.email, PI.name))
             pmids = ", ".join([pubmed_linkifier([pmid])
                                for pmid in study.pmids])
-            shared = []
-            for person in study.shared_with:
-                person = User(person)
-                shared.append(study_person_linkifier(
-                    (person.email, person.info['name'])))
-            shared = ", ".join(shared)
-
+            shared = _get_shared_links_for_study(study)
             infolist.append(StudyTuple(study.id, study.title,
                                        info["metadata_complete"],
                                        info["number_samples_collected"],
                                        shared, len(study.raw_data()),
-                                       PI, pmids))
+                                       PI, pmids, owner, status))
         return infolist
 
 
@@ -88,6 +97,13 @@ def _check_access(user, study):
     if not study.has_access(user):
         raise HTTPError(403, "User %s does not have access to study %d" %
                         (user.id, study.id))
+
+
+def _check_owner(user, study):
+    """make sure user is the owner of the study requested"""
+    if not user == study.owner:
+        raise HTTPError(403, "User %s does not own study %d" %
+                        (user, study.id))
 
 
 class CreateStudyForm(Form):
@@ -140,8 +156,11 @@ class PrivateStudiesHandler(BaseHandler):
         user = User(self.current_user)
         user_studies = yield Task(self._get_private, user)
         shared_studies = yield Task(self._get_shared, user)
+        all_emails_except_current = yield Task(self._get_all_emails)
+        all_emails_except_current.remove(self.current_user)
         self.render('private_studies.html', user=self.current_user,
-                    user_studies=user_studies, shared_studies=shared_studies)
+                    user_studies=user_studies, shared_studies=shared_studies,
+                    all_emails_except_current=all_emails_except_current)
 
     def _get_private(self, user, callback):
         callback(_build_study_info("private", user))
@@ -149,6 +168,9 @@ class PrivateStudiesHandler(BaseHandler):
     def _get_shared(self, user, callback):
         """builds list of tuples for studies that are shared with user"""
         callback(_build_study_info("shared", user))
+
+    def _get_all_emails(self, callback):
+        callback(list(User.iter()))
 
     @authenticated
     def post(self):
@@ -181,6 +203,7 @@ class StudyDescriptionHandler(BaseHandler):
         # make sure study is accessible and exists, raise error if not
         study = None
         study_id = int(study_id)
+        ebi_status = None
         try:
             study = Study(study_id)
         except QiitaDBUnknownIDError:
@@ -264,6 +287,15 @@ class StudyDescriptionHandler(BaseHandler):
         if (not investigation_type or investigation_type == "" or
                 investigation_type not in ena.terms):
             raise HTTPError(400, "You need to have an investigation type")
+
+        # FIXME: new studies that get created should be submitted with this
+        # investigation type regardless of what the user selects from the GUI.
+        #
+        # Once #522 is merged this will have to be removed.
+        #
+        # See this comment for more information:
+        # https://github.com/biocore/qiita/pull/522#issuecomment-60692714
+        investigation_type = 'Amplicon Sequencing'
 
         study_id = int(study_id)
         study = Study(study_id)
@@ -434,19 +466,65 @@ class CreateStudyAJAX(BaseHandler):
         self.write('False' if Study.exists(study_title) else 'True')
 
 
+class ShareStudyAJAX(BaseHandler):
+    def _get_shared_for_study(self, study, callback):
+        shared_links = _get_shared_links_for_study(study)
+        users = study.shared_with
+        callback((users, shared_links))
+
+    def _share(self, study, user, callback):
+        user = User(user)
+        callback(study.share(user))
+
+    def _unshare(self, study, user, callback):
+        user = User(user)
+        callback(study.unshare(user))
+
+    @authenticated
+    @asynchronous
+    @coroutine
+    def get(self):
+        study_id = int(self.get_argument('study_id'))
+        study = Study(study_id)
+        _check_owner(self.current_user, study)
+
+        selected = self.get_argument('selected', None)
+        deselected = self.get_argument('deselected', None)
+
+        if selected is not None:
+            yield Task(self._share, study, selected)
+        if deselected is not None:
+            yield Task(self._unshare, study, deselected)
+
+        users, links = yield Task(self._get_shared_for_study, study)
+
+        self.write(dumps({'users': users, 'links': links}))
+
+
 class MetadataSummaryHandler(BaseHandler):
     @authenticated
     def get(self, arguments):
-        study_id = int(self.get_argument('sample_template'))
-        st = SampleTemplate(study_id)
-        pt = PrepTemplate(int(self.get_argument('prep_template')))
-        # templates have same ID as study associated with, so can do check
-        _check_access(User(self.current_user), Study(study_id))
+        study_id = int(self.get_argument('study_id'))
 
-        stats = metadata_stats_from_sample_and_prep_templates(st, pt)
+        # this block is tricky because you can pass either the sample or the
+        # prep template and if none is passed then we will let an exception
+        # be raised because template will not be declared for the logic below
+        if self.get_argument('prep_template', None):
+            template = PrepTemplate(int(self.get_argument('prep_template')))
+        if self.get_argument('sample_template', None):
+            tid = int(self.get_argument('sample_template'))
+            template = SampleTemplate(tid)
+
+        study = Study(study_id)
+
+        # templates have same ID as study associated with, so can do check
+        _check_access(User(self.current_user), study)
+
+        df = dataframe_from_template(template)
+        stats = stats_from_df(df)
 
         self.render('metadata_summary.html', user=self.current_user,
-                    study_title=Study(st.id).title, stats=stats,
+                    study_title=study.title, stats=stats,
                     study_id=study_id)
 
 

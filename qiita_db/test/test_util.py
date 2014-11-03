@@ -145,7 +145,7 @@ class DBUtilTests(TestCase):
         """Tests that get_filetypes works with valid arguments"""
 
         obs = get_filetypes()
-        exp = {'FASTA': 1, 'FASTQ': 2, 'SPECTRA': 3}
+        exp = {'SFF': 1, 'FASTA-Sanger': 2, 'FASTQ': 3}
         self.assertEqual(obs, exp)
 
         obs = get_filetypes(key='filetype_id')
@@ -276,6 +276,50 @@ class DBUtilTests(TestCase):
             "SELECT * FROM qiita.filepath WHERE filepath_id=16")
         exp_fp = join("raw_data", "1_%s" % basename(fp))
         exp = [[16, exp_fp, 1, '852952723', 1]]
+        self.assertEqual(obs, exp)
+
+    def test_insert_filepaths_queue(self):
+        fd, fp = mkstemp()
+        close(fd)
+        with open(fp, "w") as f:
+            f.write("\n")
+        self.files_to_remove.append(fp)
+
+        # create and populate queue
+        self.conn_handler.create_queue("toy_queue")
+        self.conn_handler.add_to_queue(
+            "toy_queue", "INSERT INTO qiita.qiita_user (email, name, password,"
+            "phone) VALUES (%s, %s, %s, %s)",
+            ['insert@foo.bar', 'Toy', 'pass', '111-111-1111'])
+
+        insert_filepaths([(fp, "raw_forward_seqs")], 1, "raw_data",
+                         "filepath", self.conn_handler, queue='toy_queue')
+
+        self.conn_handler.add_to_queue(
+            "toy_queue", "INSERT INTO qiita.raw_filepath (raw_data_id, "
+            "filepath_id) VALUES (1, %s)", ['{0}'])
+        self.conn_handler.execute_queue("toy_queue")
+
+        # check that the user was added to the DB
+        obs = self.conn_handler.execute_fetchall(
+            "SELECT * from qiita.qiita_user WHERE email = %s",
+            ['insert@foo.bar'])
+        exp = [['insert@foo.bar', 5, 'pass', 'Toy', None, None, '111-111-1111',
+                None, None, None]]
+        self.assertEqual(obs, exp)
+
+        # Check that the filepaths have been added to the DB
+        obs = self.conn_handler.execute_fetchall(
+            "SELECT * FROM qiita.filepath WHERE filepath_id=16")
+        exp_fp = join("raw_data", "1_%s" % basename(fp))
+        exp = [[16, exp_fp, 1, '852952723', 1]]
+        self.assertEqual(obs, exp)
+
+        # check that raw_filpath data was added to the DB
+        obs = self.conn_handler.execute_fetchall(
+            "SELECT * FROM qiita.raw_filepath WHERE filepath_id=16")
+        exp_fp = join("raw_data", "1_%s" % basename(fp))
+        exp = [[1, 16]]
         self.assertEqual(obs, exp)
 
     def test_get_study_fps(self):

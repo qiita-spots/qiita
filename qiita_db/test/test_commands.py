@@ -84,7 +84,24 @@ class TestImportPreprocessedData(TestCase):
         initial_fp_count = get_count('qiita.filepath')
         ppd = load_preprocessed_data_from_cmd(
             1, 'preprocessed_sequence_illumina_params',
-            self.tmpdir, 'preprocessed_fasta', 1, False, 1)
+            self.tmpdir, 'preprocessed_fasta', 1, False, 1, None)
+        self.files_to_remove.append(
+            join(self.db_test_ppd_dir,
+                 '%d_%s' % (ppd.id, basename(self.file1))))
+        self.files_to_remove.append(
+            join(self.db_test_ppd_dir,
+                 '%d_%s' % (ppd.id, basename(self.file2))))
+        self.assertEqual(ppd.id, 3)
+        self.assertTrue(check_count('qiita.preprocessed_data',
+                                    initial_ppd_count + 1))
+        self.assertTrue(check_count('qiita.filepath', initial_fp_count+2))
+
+    def test_import_preprocessed_data_data_type(self):
+        initial_ppd_count = get_count('qiita.preprocessed_data')
+        initial_fp_count = get_count('qiita.filepath')
+        ppd = load_preprocessed_data_from_cmd(
+            1, 'preprocessed_sequence_illumina_params',
+            self.tmpdir, 'preprocessed_fasta', 1, False, None, '16S')
         self.files_to_remove.append(
             join(self.db_test_ppd_dir,
                  '%d_%s' % (ppd.id, basename(self.file1))))
@@ -145,7 +162,7 @@ class TestLoadPrepTemplateFromCmd(TestCase):
         self.pt_contents = PREP_TEMPLATE
 
         self.raw_data = RawData.create(
-            2, [Study(1)], 2, filepaths=[(seqs_fp, 1), (barcodes_fp, 2)])
+            2, [Study(1)], filepaths=[(seqs_fp, 1), (barcodes_fp, 2)])
 
         join_f = partial(join, join(get_db_files_base_dir(), 'raw_data'))
         self.files_to_remove = [
@@ -160,8 +177,8 @@ class TestLoadPrepTemplateFromCmd(TestCase):
     def test_load_prep_template_from_cmd(self):
         """Correctly adds a prep template to the DB"""
         fh = StringIO(self.pt_contents)
-        st = load_prep_template_from_cmd(fh, self.raw_data.id, 1)
-        self.assertEqual(st.id, self.raw_data.id)
+        st = load_prep_template_from_cmd(fh, self.raw_data.id, 1, '18S')
+        self.assertEqual(st.id, 2)
 
 
 @qiita_test_checker()
@@ -206,7 +223,7 @@ class TestLoadRawDataFromCmd(TestCase):
         initial_raw_fp_count = get_count('qiita.raw_filepath')
 
         new = load_raw_data_cmd(filepaths, filepath_types, filetype,
-                                study_ids, "16S")
+                                study_ids)
         raw_data_id = new.id
         self.files_to_remove.append(
             join(self.db_test_raw_dir,
@@ -230,7 +247,7 @@ class TestLoadRawDataFromCmd(TestCase):
         # provided for each and every filepath
         with self.assertRaises(ValueError):
             load_raw_data_cmd(filepaths, filepath_types[:-1], filetype,
-                              study_ids, "16S")
+                              study_ids)
 
 
 @qiita_test_checker()

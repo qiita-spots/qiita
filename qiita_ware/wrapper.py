@@ -104,23 +104,24 @@ class ParallelWrapper(object):
         errored = False
         callback_msg = []
         for node, ar in results.items():
-            self._logger.write("\nJob %s: " % node)
+            msg = ["\nJob %s: " % node]
             if ar.successful():
-                self._logger.write("Success\n")
+                msg.append("Success\n")
             else:
                 errored = True
-                self._logger.write("Error\n")
+                msg.append("Error\n")
                 try:
                     job_result = ar.get()
                 except Exception, e:
                     job_result = e
-                msg = ("\tJob results: %s\n"
-                       "\tPython output: %s\n"
-                       "\tStandard output: %s\n"
-                       "\tStandard error: %s\n"
-                       % (job_result, ar.pyout, ar.stdout, ar.stderr))
-                self._logger.write(msg)
-                callback_msg.append(msg)
+                msg.append("\tJob results: %s\n"
+                           "\tPython output: %s\n"
+                           "\tStandard output: %s\n"
+                           "\tStandard error: %s\n"
+                           % (job_result, ar.pyout, ar.stdout, ar.stderr))
+                callback_msg.append(''.join(msg))
+            self._logger.write(''.join(msg))
+
         if errored:
             self._failure_callback(msg='\n'.join(callback_msg))
 

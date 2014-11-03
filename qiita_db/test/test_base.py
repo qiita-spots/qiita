@@ -104,25 +104,25 @@ class QiitaStatusObjectTest(TestCase):
     def test_check_status_list(self):
         """check_status work passing a list of status"""
         self.assertTrue(self.tester.check_status(
-            ["public", "waiting_approval"]))
+            ["public", "awaiting_approval"]))
         self.assertTrue(self.tester.check_status(
-            ["public", "waiting_approval"], conn_handler=self.conn_handler))
+            ["public", "awaiting_approval"], conn_handler=self.conn_handler))
         self.assertFalse(self.tester.check_status(
-            ["private", "waiting_approval"]))
+            ["private", "awaiting_approval"]))
         self.assertFalse(self.tester.check_status(
-            ["private", "waiting_approval"], conn_handler=self.conn_handler))
+            ["private", "awaiting_approval"], conn_handler=self.conn_handler))
 
     def test_check_status_exclude_list(self):
         """check_status work passing a list of status and the exclude flag"""
         self.assertTrue(self.tester.check_status(
-            ["private", "waiting_approval"], exclude=True))
+            ["private", "awaiting_approval"], exclude=True))
         self.assertTrue(self.tester.check_status(
-            ["private", "waiting_approval"], exclude=True,
+            ["private", "awaiting_approval"], exclude=True,
             conn_handler=self.conn_handler))
         self.assertFalse(self.tester.check_status(
-            ["public", "waiting_approval"], exclude=True))
+            ["public", "awaiting_approval"], exclude=True))
         self.assertFalse(self.tester.check_status(
-            ["public", "waiting_approval"], exclude=True,
+            ["public", "awaiting_approval"], exclude=True,
             conn_handler=self.conn_handler))
 
     def test_check_status_unknown_status(self):

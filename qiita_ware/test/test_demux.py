@@ -278,18 +278,9 @@ class DemuxTests(TestCase):
             to_hdf5(f.name, self.hdf5_file)
             self.to_remove.append(f.name)
 
-        exp = [(b"@a_0 orig_bc=abc new_bc=abc bc_diffs=0\nxyz\n+\n"
-                "A\x00\x00\x00\x00\x00\x00\x00"
-                "B\x00\x00\x00\x00\x00\x00\x00"
-                "C\x00\x00\x00\x00\x00\x00\x00\n"),
-               (b"@b_0 orig_bc=abw new_bc=wbc bc_diffs=4\nqwe\n+\n"
-                "D\x00\x00\x00\x00\x00\x00\x00"
-                "F\x00\x00\x00\x00\x00\x00\x00"
-                "G\x00\x00\x00\x00\x00\x00\x00\n"),
-               (b"@b_1 orig_bc=abw new_bc=wbc bc_diffs=4\nqwe\n+\n"
-                "D\x00\x00\x00\x00\x00\x00\x00"
-                "E\x00\x00\x00\x00\x00\x00\x00"
-                "F\x00\x00\x00\x00\x00\x00\x00\n")]
+        exp = [(b"@a_0 orig_bc=abc new_bc=abc bc_diffs=0\nxyz\n+\nABC\n"),
+               (b"@b_0 orig_bc=abw new_bc=wbc bc_diffs=4\nqwe\n+\nDFG\n"),
+               (b"@b_1 orig_bc=abw new_bc=wbc bc_diffs=4\nqwe\n+\nDEF\n")]
 
         obs = list(to_ascii(self.hdf5_file, samples=['a', 'b']))
         self.assertEqual(obs, exp)
@@ -304,17 +295,11 @@ class DemuxTests(TestCase):
             self.to_remove.append(f.name)
 
         exp = [('a', [(b"@a_0 orig_bc=abc new_bc=abc bc_diffs=0\nxyz\n+\n"
-                       "A\x00\x00\x00\x00\x00\x00\x00"
-                       "B\x00\x00\x00\x00\x00\x00\x00"
-                       "C\x00\x00\x00\x00\x00\x00\x00\n")]),
+                       "ABC\n")]),
                ('b', [(b"@b_0 orig_bc=abw new_bc=wbc bc_diffs=4\nqwe\n+\n"
-                       "D\x00\x00\x00\x00\x00\x00\x00"
-                       "F\x00\x00\x00\x00\x00\x00\x00"
-                       "G\x00\x00\x00\x00\x00\x00\x00\n"),
+                       "DFG\n"),
                       (b"@b_1 orig_bc=abw new_bc=wbc bc_diffs=4\nqwe\n+\n"
-                       "D\x00\x00\x00\x00\x00\x00\x00"
-                       "E\x00\x00\x00\x00\x00\x00\x00"
-                       "F\x00\x00\x00\x00\x00\x00\x00\n")])]
+                       "DEF\n")])]
 
         obs = [(s[0], list(s[1])) for s in to_per_sample_ascii(self.hdf5_file)]
         self.assertEqual(obs, exp)
