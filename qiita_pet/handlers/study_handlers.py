@@ -369,7 +369,9 @@ class StudyDescriptionHandler(BaseHandler):
             else:
                 # to be implemented
                 # add raw data to study
-                msg = "adding other study's raw data is being implemented"
+                raw_datas = [RawData(rd) for rd in previous_raw_data]
+                study.add_raw_datas(raw_datas)
+                msg = ""
             tab_to_display = ""
 
         elif add_prep_template and raw_data_id and data_type_id:
