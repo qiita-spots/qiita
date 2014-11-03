@@ -1,6 +1,6 @@
 from unittest import main
 
-from tornado_test_base import TestHandlerBase
+from qiita_pet.test.tornado_test_base import TestHandlerBase
 from qiita_db.study import StudyPerson
 from qiita_db.util import get_count, check_count
 
