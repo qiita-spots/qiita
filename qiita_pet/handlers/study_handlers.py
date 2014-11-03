@@ -441,7 +441,7 @@ class MetadataSummaryHandler(BaseHandler):
         st = SampleTemplate(study_id)
         pt = PrepTemplate(int(self.get_argument('prep_template')))
         # templates have same ID as study associated with, so can do check
-        _check_access(User(self.current_user), Study(st))
+        _check_access(User(self.current_user), Study(study_id))
 
         stats = metadata_stats_from_sample_and_prep_templates(st, pt)
 
