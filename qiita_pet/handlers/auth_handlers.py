@@ -75,7 +75,10 @@ class AuthLoginHandler(BaseHandler):
     def post(self):
         username = self.get_argument("username", "").strip().lower()
         passwd = self.get_argument("password", "")
-        nextpage = self.get_argument("next", "/")
+        nextpage = self.get_argument("next", None)
+        if nextpage is None:
+            nextpage = self.request.headers['Referer']
+
         msg = ""
         # check the user level
         try:
