@@ -1,8 +1,10 @@
 from os.path import join
 from tempfile import mkdtemp
 from gzip import open as gzopen
+from traceback import format_exception_only
+from sys import exc_info
 
-from .processing_pipeline import StudyPreprocessor
+from .processing_pipeline import StudyPreprocessor, AddFilesToRawData
 from .analysis_pipeline import RunAnalysis
 from qiita_core.qiita_settings import qiita_config
 from qiita_ware.commands import submit_EBI_from_files
@@ -15,14 +17,21 @@ from qiita_db.metadata_template import SampleTemplate, PrepTemplate
 from qiita_db.data import PreprocessedData, RawData
 
 
-def preprocessor(study_id, raw_data_id, param_id, param_constructor):
+def preprocessor(study_id, prep_template_id, param_id, param_constructor):
     """Dispatch for preprocessor work"""
     study = Study(study_id)
-    raw_data = RawData(raw_data_id)
+    prep_template = PrepTemplate(prep_template_id)
     params = param_constructor(param_id)
 
     sp = StudyPreprocessor()
-    return sp(study, raw_data, params)
+    try:
+        preprocess_out = sp(study, prep_template, params)
+    except Exception as e:
+        error_msg = ''.join(format_exception_only(e, exc_info()))
+        prep_template.preprocessing_status = "failed: %s" % error_msg
+        preprocess_out = None
+
+    return preprocess_out
 
 
 def submit_to_ebi(study_id):
@@ -84,3 +93,12 @@ def run_analysis(user_id, analysis_id, commands, comm_opts=None,
     analysis = Analysis(analysis_id)
     ar = RunAnalysis()
     return ar(user_id, analysis, commands, comm_opts, rarefaction_depth)
+
+
+def add_files_to_raw_data(raw_data_id, filepaths):
+    """Add files to raw data
+
+    Needs to be dispachable because it moves large files
+    """
+    aftrd = AddFilesToRawData()
+    return aftrd(raw_data_id, filepaths)

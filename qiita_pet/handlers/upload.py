@@ -5,8 +5,41 @@ from os import makedirs, listdir
 
 from shutil import copyfileobj, rmtree
 
-from qiita_pet.handlers.base_handlers import BaseHandler
+from .study_handlers import check_access
+from .base_handlers import BaseHandler
+
+from qiita_core.qiita_settings import qiita_config
+
 from qiita_db.util import get_study_fp
+from qiita_db.study import Study
+from qiita_db.user import User
+
+
+class StudyUploadFileHandler(BaseHandler):
+    @authenticated
+    def display_template(self, study_id, msg):
+        """Simple function to avoid duplication of code"""
+        study = Study(study_id)
+        check_access(User(self.current_user), study, no_public=True)
+
+        # processing paths
+        fp = get_study_fp(study_id)
+        if exists(fp):
+            fs = listdir(fp)
+        else:
+            fs = []
+
+        # getting the ontologies
+        self.render('upload.html', user=self.current_user,
+                    study_title=study.title, study_info=study.info,
+                    study_id=study_id, files=fs,
+                    max_upload_size=qiita_config.max_upload_size)
+
+    @authenticated
+    def get(self, study_id):
+        study_id = int(study_id)
+        check_access(User(self.current_user), Study(study_id), no_public=True)
+        self.display_template(study_id, "")
 
 
 class UploadFileHandler(BaseHandler):
@@ -23,6 +56,9 @@ class UploadFileHandler(BaseHandler):
         resumable_total_chunks = int(self.get_argument('resumableTotalChunks'))
         study_id = self.get_argument('study_id')
         data = self.request.files['file'][0]['body']
+
+        check_access(User(self.current_user), Study(int(study_id)),
+                     no_public=True)
 
         fp = join(get_study_fp(study_id), resumable_identifier)
         # creating temporal folder for upload
@@ -57,6 +93,8 @@ class UploadFileHandler(BaseHandler):
         sent via post or 200 (valid) to not send the file
         """
         study_id = self.get_argument('study_id')
+
+        check_access(User(self.current_user), Study(study_id), no_public=True)
 
         # temporaly filename or chunck
         tfp = join(get_study_fp(study_id),

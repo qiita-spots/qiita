@@ -565,13 +565,16 @@ class Study(QiitaStatusObject):
                "VALUES (%s, %s)".format(self._table))
         conn_handler.execute(sql, (self._id, pmid))
 
-    def has_access(self, user):
+    def has_access(self, user, no_public=False):
         """Returns whether the given user has access to the study
 
         Parameters
         ----------
         user : User object
             User we are checking access for
+        no_public: bool
+            If we should ignore those studies shared with the user. Defaults
+            to False
 
         Returns
         -------
@@ -582,8 +585,11 @@ class Study(QiitaStatusObject):
         if user.level in {'superuser', 'admin'}:
             return True
 
-        return self._id in user.private_studies + user.shared_studies \
-            + self.get_public()
+        if no_public:
+            return self._id in user.private_studies + user.shared_studies
+        else:
+            return self._id in user.private_studies + user.shared_studies \
+                + self.get_public()
 
     def share(self, user):
         """Share the study with another user
