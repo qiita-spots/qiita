@@ -8,6 +8,7 @@ from qiita_ware import r_server
 from qiita_db.sql_connection import SQLConnectionHandler
 from qiita_db.util import get_count
 from qiita_db.study import Study
+from qiita_db.util import get_lat_longs
 from .base_handlers import BaseHandler
 
 
@@ -18,11 +19,8 @@ class StatsHandler(BaseHandler):
         longs = r_server.lrange('stats:sample_longs', 0, -1)
         if not (lats or longs):
             # if we don't have them, then fetch from disk and add to the
-            conn = SQLConnectionHandler()
-            sql = """select latitude, longitude
-                     from qiita.required_sample_info"""
-            lat_longs = conn.execute_fetchall(sql)
             # redis server with a 24-hour expiration
+            lat_longs = get_lat_longs()
             with r_server.pipeline() as pipe:
                 for latitude, longitude in lat_longs:
                     # storing as a simple data structure, hopefully this
