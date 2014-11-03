@@ -175,6 +175,9 @@ class TestStudy(TestCase):
     def test_has_access_public(self):
         self.assertTrue(self.study.has_access(User("demo@microbio.me")))
 
+    def test_has_access_no_public(self):
+        self.assertFalse(self.study.has_access(User("demo@microbio.me"), True))
+
     def test_owner(self):
         self.assertEqual(self.study.owner, "test@foo.bar")
 

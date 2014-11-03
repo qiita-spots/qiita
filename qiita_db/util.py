@@ -504,7 +504,7 @@ def compute_checksum(path):
 
 
 def insert_filepaths(filepaths, obj_id, table, filepath_table, conn_handler,
-                     move_files=True):
+                     move_files=True, queue=None):
         r"""Inserts `filepaths` in the DB connected with `conn_handler`. Since
         the files live outside the database, the directory in which the files
         lives is controlled by the database, so it copies the filepaths from
@@ -526,11 +526,14 @@ def insert_filepaths(filepaths, obj_id, table, filepath_table, conn_handler,
         move_files : bool, optional
             Whether or not to copy from the given filepaths to the db filepaths
             default: True
+        queue : str, optional
+            The queue to add this transaction to. Default return list of ids
 
         Returns
         -------
-        list
-            The filepath_id in the database for each added filepath
+        list or None
+            List of the filepath_id in the database for each added filepath if
+            queue not specified, or no return value if queue specified
         """
         new_filepaths = filepaths
         base_fp = get_db_files_base_dir()
@@ -558,15 +561,18 @@ def insert_filepaths(filepaths, obj_id, table, filepath_table, conn_handler,
         values = ["('%s', %s, '%s', %s)" % (scrub_data(path), id, checksum, 1)
                   for path, id, checksum in paths_w_checksum]
         # Insert all the filepaths at once and get the filepath_id back
-        ids = conn_handler.execute_fetchall(
-            "INSERT INTO qiita.{0} (filepath, filepath_type_id, checksum, "
-            "checksum_algorithm_id) VALUES {1} "
-            "RETURNING filepath_id".format(filepath_table,
-                                           ', '.join(values)))
+        sql = ("INSERT INTO qiita.{0} (filepath, filepath_type_id, checksum, "
+               "checksum_algorithm_id) VALUES {1} RETURNING "
+               "filepath_id".format(filepath_table, ', '.join(values)))
+        if queue is not None:
+            # Drop the sql into the given queue
+            conn_handler.add_to_queue(queue, sql, None)
+        else:
+            ids = conn_handler.execute_fetchall(sql)
 
-        # we will receive a list of lists with a single element on it (the id),
-        # transform it to a list of ids
-        return [id[0] for id in ids]
+            # we will receive a list of lists with a single element on it
+            # (the id), transform it to a list of ids
+            return [id[0] for id in ids]
 
 
 def purge_filepaths(filepaths_id, conn_handler):

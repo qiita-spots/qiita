@@ -280,60 +280,102 @@ class DBUtilTests(TestCase):
         exp = [[16, exp_fp, 1, '852952723', 1]]
         self.assertEqual(obs, exp)
 
+    def test_insert_filepaths_queue(self):
+        fd, fp = mkstemp()
+        close(fd)
+        with open(fp, "w") as f:
+            f.write("\n")
+        self.files_to_remove.append(fp)
+
+        # create and populate queue
+        self.conn_handler.create_queue("toy_queue")
+        self.conn_handler.add_to_queue(
+            "toy_queue", "INSERT INTO qiita.qiita_user (email, name, password,"
+            "phone) VALUES (%s, %s, %s, %s)",
+            ['insert@foo.bar', 'Toy', 'pass', '111-111-1111'])
+
+        insert_filepaths([(fp, "raw_forward_seqs")], 1, "raw_data",
+                         "filepath", self.conn_handler, queue='toy_queue')
+
+        self.conn_handler.add_to_queue(
+            "toy_queue", "INSERT INTO qiita.raw_filepath (raw_data_id, "
+            "filepath_id) VALUES (1, %s)", ['{0}'])
+        self.conn_handler.execute_queue("toy_queue")
+
+        # check that the user was added to the DB
+        obs = self.conn_handler.execute_fetchall(
+            "SELECT * from qiita.qiita_user WHERE email = %s",
+            ['insert@foo.bar'])
+        exp = [['insert@foo.bar', 5, 'pass', 'Toy', None, None, '111-111-1111',
+                None, None, None]]
+        self.assertEqual(obs, exp)
+
+        # Check that the filepaths have been added to the DB
+        obs = self.conn_handler.execute_fetchall(
+            "SELECT * FROM qiita.filepath WHERE filepath_id=16")
+        exp_fp = join("raw_data", "1_%s" % basename(fp))
+        exp = [[16, exp_fp, 1, '852952723', 1]]
+        self.assertEqual(obs, exp)
+
+        # check that raw_filpath data was added to the DB
+        obs = self.conn_handler.execute_fetchall(
+            "SELECT * FROM qiita.raw_filepath WHERE filepath_id=16")
+        exp_fp = join("raw_data", "1_%s" % basename(fp))
+        exp = [[1, 16]]
+        self.assertEqual(obs, exp)
+
     def test_purge_filepaths(self):
-        filepaths_ids = [1, 15]
-        path_builder = partial(join, get_db_files_base_dir())
-        fps = [path_builder(f[0]) for f in self.conn_handler.execute_fetchall(
-            "SELECT filepath FROM qiita.filepath WHERE filepath_id IN (1, 15) "
-            "ORDER BY filepath_id")]
-
-        # Check that it does not remove anything because the files are used
-        purge_filepaths(filepaths_ids, self.conn_handler)
-
-        # Check the filepath 1
-        obs = self.conn_handler.execute_fetchone(
-            "SELECT EXISTS(SELECT * FROM qiita.filepath "
-            "WHERE filepath_id=1)")[0]
-        self.assertTrue(obs)
-        self.assertTrue(exists(fps[0]))
-        # Check the filepath 15
-        obs = self.conn_handler.execute_fetchone(
-            "SELECT EXISTS(SELECT * FROM qiita.filepath "
-            "WHERE filepath_id=15)")[0]
-        self.assertTrue(obs)
-        self.assertTrue(exists(fps[1]))
-
-        # Add a filepath with no links to any table
+        # Add a new filepath to the database
         fd, fp = mkstemp()
         close(fd)
         fp_id = self.conn_handler.execute_fetchone(
-            "INSERT INTO qiita.filepath (filepath, filepath_type_id, "
-            "checksum, checksum_algorithm_id) VALUES ('{0}', 1, '', 1) "
-            "RETURNING filepath_id".format(fp))[0]
-        filepaths_ids.append(fp_id)
-        # Check that has been correctly added
-        self.assertTrue(self.conn_handler.execute_fetchone(
-            "SELECT EXISTS(SELECT * FROM qiita.filepath "
-            "WHERE filepath_id=%s)", (fp_id,))[0])
+            "INSERT INTO qiita.filepath "
+            "(filepath, filepath_type_id, checksum, checksum_algorithm_id) "
+            "VALUES (%s, %s, %s, %s) RETURNING filepath_id", (fp, 1, "", 1))[0]
+        self.assertEqual(fp_id, 16)
 
-        # Check that the new filepath has been removed but filepath 1 and 15
-        # are still there
-        purge_filepaths(filepaths_ids, self.conn_handler)
-        obs = self.conn_handler.execute_fetchone(
-            "SELECT EXISTS(SELECT * FROM qiita.filepath "
-            "WHERE filepath_id=1)")[0]
+        # Connect the just added filepath to a raw data
+        self.conn_handler.execute(
+            "INSERT INTO qiita.raw_filepath (raw_data_id, filepath_id) VALUES"
+            "(%s, %s)", (1, 16))
+
+        # Nothing should be removed
+        purge_filepaths([1, 16], self.conn_handler)
+
+        sql_exists = ("SELECT EXISTS(SELECT * FROM qiita.filepath "
+                      "WHERE filepath_id=%s)")
+        sql_fp = "SELECT filepath FROM qiita.filepath WHERE filepath_id=%s"
+
+        # Check that the filepath 1 still is in the DB
+        obs = self.conn_handler.execute_fetchone(sql_exists, (1,))[0]
         self.assertTrue(obs)
-        self.assertTrue(exists(fps[0]))
-        obs = self.conn_handler.execute_fetchone(
-            "SELECT EXISTS(SELECT * FROM qiita.filepath "
-            "WHERE filepath_id=15)")[0]
+        fp1 = self.conn_handler.execute_fetchone(sql_fp, (1,))[0]
+        fp1 = join(get_db_files_base_dir(), fp1)
+        self.assertTrue(exists(fp1))
+
+        # Check that the filepath 16 still is in the DB
+        obs = self.conn_handler.execute_fetchone(sql_exists, (16,))[0]
         self.assertTrue(obs)
-        self.assertTrue(exists(fps[1]))
-        obs = self.conn_handler.execute_fetchone(
-            "SELECT EXISTS(SELECT * FROM qiita.filepath "
-            "WHERE filepath_id=%s)", (fp_id,))[0]
+        fp16 = self.conn_handler.execute_fetchone(sql_fp, (16,))[0]
+        fp16 = join(get_db_files_base_dir(), fp16)
+        self.assertTrue(exists(fp16))
+
+        # Unlink the filepath from the raw data
+        self.conn_handler.execute(
+            "DELETE FROM qiita.raw_filepath WHERE filepath_id=%s", (16,))
+
+        # Only filepath 16 should be removed
+        purge_filepaths([1, 16], self.conn_handler)
+
+        # Check that the filepath 1 still is in the DB
+        obs = self.conn_handler.execute_fetchone(sql_exists, (1,))[0]
+        self.assertTrue(obs)
+        self.assertTrue(exists(fp1))
+
+        # Check that the filepath 16 still is in the DB
+        obs = self.conn_handler.execute_fetchone(sql_exists, (16,))[0]
         self.assertFalse(obs)
-        self.assertFalse(exists(fp))
+        self.assertFalse(exists(fp16))
 
     def test_purge_filepaths_error(self):
         with self.assertRaises(QiitaDBUnknownIDError):
