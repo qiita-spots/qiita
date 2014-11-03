@@ -55,7 +55,6 @@ from .ontology import Ontology
 from .util import (exists_table, get_table_cols, get_emp_status,
                    get_required_sample_info_status, convert_to_id,
                    convert_from_id)
-from .study import Study
 
 
 TARGET_GENE_DATA_TYPES = ['16S', '18S', 'ITS']
@@ -1084,26 +1083,16 @@ class SampleTemplate(MetadataTemplate):
 
         return cls(study.id)
 
-    def has_access(self, user, no_public=False):
-        """Checks whether the user has access to this SampleTemplate
-
-        The user has access to the template if the user has access to the
-        study with which the template is associated.
-
-        Parameters
-        ----------
-        user : qiita_db User object
-            The user whose access rights will be checked
-        no_public: bool
-            If we should ignore those studies shared with the user. Defaults
-            to False
+    @property
+    def study_id(self):
+        """Gets the study id with which this sample template is associated
 
         Returns
         -------
-        bool
-            True if the user has access, False if not
+        int
+            The ID of the study with which this sample template is associated
         """
-        return Study(self._id).has_access(user, no_public)
+        return self._id
 
 
 class PrepTemplate(MetadataTemplate):
@@ -1432,24 +1421,14 @@ class PrepTemplate(MetadataTemplate):
                "WHERE {0} = %s".format(self._id_column))
         return conn_handler.execute_fetchone(sql, [self._id])[0]
 
-    def has_access(self, user, no_public=False):
-        """Checks whether the user has access to this PrepTemplate
-
-        The user has access to the template if the user has access to the
-        study with which the template is associated.
-
-        Parameters
-        ----------
-        user : qiita_db User object
-            The user whose access rights will be checked
-        no_public: bool
-            If we should ignore those studies shared with the user. Defaults
-            to False
+    @property
+    def study_id(self):
+        """Gets the study id with which this prep template is associated
 
         Returns
         -------
-        bool
-            True if the user has access, False if not
+        int
+            The ID of the study with which this prep template is associated
         """
         conn = SQLConnectionHandler()
         sql = """SELECT srd.study_id
@@ -1457,12 +1436,10 @@ class PrepTemplate(MetadataTemplate):
                  ON pt.raw_data_id = srd.raw_data_id"""
         study_id = conn.execute_fetchone(sql)
         if study_id:
-            study_id = study_id[0]
+            return study_id[0]
         else:
             raise QiitaDBError("No studies found associated with prep "
                                "template ID %d" % self._id)
-
-        return Study(study_id).has_access(user, no_public)
 
 
 def load_template_to_dataframe(fn):
