@@ -325,7 +325,8 @@ class RawData(BaseData):
 
     @add_filepaths_status.setter
     def add_filepaths_status(self, status):
-        if status not in ['done', 'in_progress']:
+        if (status not in ('done', 'in_progress') and
+                not status.startswith('failed')):
             raise ValueError('Unknown status: %s' % status)
 
         conn_handler = SQLConnectionHandler()

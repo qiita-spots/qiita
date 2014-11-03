@@ -167,6 +167,8 @@ class RawDataTests(TestCase):
         self.assertEqual(rd.add_filepaths_status, 'done')
         rd.add_filepaths_status = 'in_progress'
         self.assertEqual(rd.add_filepaths_status, 'in_progress')
+        rd.add_filepaths_status = 'failed: error'
+        self.assertEqual(rd.add_filepaths_status, 'failed: error')
 
     def test_add_filepaths_status_setter_error(self):
         rd = RawData(1)
