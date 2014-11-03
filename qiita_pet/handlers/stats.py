@@ -18,11 +18,11 @@ class StatsHandler(BaseHandler):
         longs = r_server.lrange('stats:sample_longs', 0, -1)
         if not (lats or longs):
             # if we don't have them, then fetch from disk and add to the
-            # redis server with a 1-hour expiration
             conn = SQLConnectionHandler()
             sql = """select latitude, longitude
                      from qiita.required_sample_info"""
             lat_longs = conn.execute_fetchall(sql)
+            # redis server with a 24-hour expiration
             with r_server.pipeline() as pipe:
                 for latitude, longitude in lat_longs:
                     # storing as a simple data structure, hopefully this
@@ -30,10 +30,11 @@ class StatsHandler(BaseHandler):
                     pipe.rpush('stats:sample_lats', latitude)
                     pipe.rpush('stats:sample_longs', longitude)
 
-                # set the key to expire in an hour, so that we limit the number
-                # of times we have to go to the database to a reasonable amount
-                r_server.expire('stats:sample_lats', 3600)
-                r_server.expire('stats:sample_longs', 3600)
+                # set the key to expire in 24 hours, so that we limit the
+                # number of times we have to go to the database to a reasonable
+                # amount
+                r_server.expire('stats:sample_lats', 86400)
+                r_server.expire('stats:sample_longs', 86400)
 
                 pipe.execute()
         else:
