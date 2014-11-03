@@ -373,25 +373,33 @@ class DBUtilTests(TestCase):
             "INSERT INTO qiita.raw_filepath (raw_data_id, filepath_id) VALUES"
             "(%s, %s)", (1, 16))
 
+        # Get the filepaths so we can test if they've been removed or not
+        sql_fp = "SELECT filepath FROM qiita.filepath WHERE filepath_id=%s"
+
+        fp1 = self.conn_handler.execute_fetchone(sql_fp, (1,))[0]
+        fp1 = join(get_db_files_base_dir(), fp1)
+
+        # Make sure that the file exists - specially for travis
+        with open(fp1, 'w') as f:
+            f.write('\n')
+
+        fp16 = self.conn_handler.execute_fetchone(sql_fp, (16,))[0]
+        fp16 = join(get_db_files_base_dir(), fp16)
+
         # Nothing should be removed
         purge_filepaths([1, 16], self.conn_handler)
 
         sql_exists = ("SELECT EXISTS(SELECT * FROM qiita.filepath "
                       "WHERE filepath_id=%s)")
-        sql_fp = "SELECT filepath FROM qiita.filepath WHERE filepath_id=%s"
 
         # Check that the filepath 1 still is in the DB
         obs = self.conn_handler.execute_fetchone(sql_exists, (1,))[0]
         self.assertTrue(obs)
-        fp1 = self.conn_handler.execute_fetchone(sql_fp, (1,))[0]
-        fp1 = join(get_db_files_base_dir(), fp1)
         self.assertTrue(exists(fp1))
 
         # Check that the filepath 16 still is in the DB
         obs = self.conn_handler.execute_fetchone(sql_exists, (16,))[0]
         self.assertTrue(obs)
-        fp16 = self.conn_handler.execute_fetchone(sql_fp, (16,))[0]
-        fp16 = join(get_db_files_base_dir(), fp16)
         self.assertTrue(exists(fp16))
 
         # Unlink the filepath from the raw data
