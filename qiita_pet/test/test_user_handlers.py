@@ -24,9 +24,11 @@ class TestUserProfileHandler(TestHandlerBase):
 
     def test_post_profile(self):
         post_args = {
-            'action': 'profile',
-            'name': 'NEWNAME'
-        }
+            'action': ['profile'],
+            'affiliation': ['NEWNAME'],
+            'address': ['ADDRESS'],
+            'name': ['TESTDUDE'],
+            'phone': ['111-222-3333']}
         response = self.post('/profile/', post_args)
         self.assertEqual(response.code, 200)
 
