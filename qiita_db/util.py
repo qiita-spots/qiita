@@ -739,6 +739,7 @@ def get_study_fp(study_id):
 
     return fp
 
+
 def get_lat_longs():
     conn = SQLConnectionHandler()
     sql = """select latitude, longitude

@@ -5,7 +5,6 @@ from random import choice
 from tornado.gen import coroutine, Task
 
 from qiita_ware import r_server
-from qiita_db.sql_connection import SQLConnectionHandler
 from qiita_db.util import get_count
 from qiita_db.study import Study
 from qiita_db.util import get_lat_longs
@@ -69,7 +68,6 @@ class StatsHandler(BaseHandler):
             random_study_info = study.info
             random_study_title = study.title
             random_study_id = study.id
-
 
         self.render('stats.html', user=self.current_user,
                     num_studies=num_studies, num_samples=num_samples,
