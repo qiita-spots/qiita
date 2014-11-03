@@ -101,7 +101,7 @@ from copy import deepcopy
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from .base import QiitaStatusObject, QiitaObject
-from .exceptions import (QiitaDBStatusError, QiitaDBColumnError)
+from .exceptions import (QiitaDBStatusError, QiitaDBColumnError, QiitaDBError)
 from .util import check_required_columns, check_table_cols, convert_to_id
 from .sql_connection import SQLConnectionHandler
 
@@ -507,6 +507,30 @@ class Study(QiitaStatusObject):
         sql = ("SELECT raw_data_id FROM qiita.study_raw_data WHERE "
                "study_id = %s{0}".format(spec_data))
         return [x[0] for x in conn_handler.execute_fetchall(sql, (self._id,))]
+
+    def add_raw_data(self, raw_data):
+        """ Adds raw_data to the current study
+
+        Parameters
+        ----------
+        raw_data : RawData
+            The RawData object to be added to the study
+
+        Raises
+        ------
+        QiitaDBError
+            If the raw_data is already linked to the current study
+        """
+        conn_handler = SQLConnectionHandler()
+        linked = conn_handler.execute_fetchone(
+            "SELECT EXISTS(SELECT * FROM qiita.study_raw_data WHERE "
+            "study_id=%s AND raw_data_id=%s)", (self._id, raw_data.id))[0]
+        if linked:
+            raise QiitaDBError("Raw data %s already linked with study %s"
+                               % (raw_data.id, self._id))
+        conn_handler.execute(
+            "INSERT INTO qiita.study_raw_data (study_id, raw_data_id) "
+            "VALUES (%s, %s)", (self._id, raw_data.id))
 
     def preprocessed_data(self, data_type=None):
         """ Returns list of data ids for preprocessed data info

@@ -9,7 +9,9 @@ from qiita_db.base import QiitaObject
 from qiita_db.study import Study, StudyPerson
 from qiita_db.investigation import Investigation
 from qiita_db.user import User
-from qiita_db.exceptions import QiitaDBColumnError, QiitaDBStatusError
+from qiita_db.data import RawData
+from qiita_db.exceptions import (QiitaDBColumnError, QiitaDBStatusError,
+                                 QiitaDBError)
 
 # -----------------------------------------------------------------------------
 # Copyright (c) 2014--, The Qiita Development Team.
@@ -478,6 +480,19 @@ class TestStudy(TestCase):
         new = Study.create(User('test@foo.bar'), 'NOT Identification of the '
                            'Microbiomes for Cannabis Soils', [1], self.info)
         self.assertEqual(new.raw_data(), [])
+
+    def test_add_raw_data(self):
+        new = Study.create(User('test@foo.bar'), 'NOT Identification of the '
+                           'Microbiomes for Cannabis Soils', [1], self.info)
+        new.add_raw_data(RawData(2))
+        obs = self.conn_handler.execute_fetchall(
+            "SELECT * FROM qiita.study_raw_data WHERE study_id=%s",
+            (new.id,))
+        self.assertEqual(obs, [[new.id, 2]])
+
+    def test_add_raw_data_error(self):
+        with self.assertRaises(QiitaDBError):
+            self.study.add_raw_data(RawData(1))
 
     def test_retrieve_preprocessed_data(self):
         self.assertEqual(self.study.preprocessed_data(), [1, 2])
