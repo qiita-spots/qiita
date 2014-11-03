@@ -508,13 +508,13 @@ class Study(QiitaStatusObject):
                "study_id = %s{0}".format(spec_data))
         return [x[0] for x in conn_handler.execute_fetchall(sql, (self._id,))]
 
-    def add_raw_data(self, raw_data):
+    def add_raw_datas(self, raw_datas):
         """ Adds raw_data to the current study
 
         Parameters
         ----------
-        raw_data : RawData
-            The RawData object to be added to the study
+        raw_datas : list of RawData
+            The RawData objects to be added to the study
 
         Raises
         ------
@@ -522,15 +522,20 @@ class Study(QiitaStatusObject):
             If the raw_data is already linked to the current study
         """
         conn_handler = SQLConnectionHandler()
-        linked = conn_handler.execute_fetchone(
-            "SELECT EXISTS(SELECT * FROM qiita.study_raw_data WHERE "
-            "study_id=%s AND raw_data_id=%s)", (self._id, raw_data.id))[0]
-        if linked:
-            raise QiitaDBError("Raw data %s already linked with study %s"
-                               % (raw_data.id, self._id))
-        conn_handler.execute(
+        queue = "%d_add_raw_datas" % self.id
+        sql = ("SELECT EXISTS(SELECT * FROM qiita.study_raw_data WHERE "
+               "study_id=%s AND raw_data_id=%s)")
+        conn_handler.create_queue(queue)
+        sql_args = [(self.id, rd.id) for rd in raw_datas]
+        conn_handler.add_to_queue(queue, sql, sql_args, many=True)
+        linked = conn_handler.execute_queue(queue)
+        if any(linked):
+            raise QiitaDBError("Some of the passed raw datas have been already"
+                               "linked to the study %s" % self.id)
+
+        conn_handler.executemany(
             "INSERT INTO qiita.study_raw_data (study_id, raw_data_id) "
-            "VALUES (%s, %s)", (self._id, raw_data.id))
+            "VALUES (%s, %s)", sql_args)
 
     def preprocessed_data(self, data_type=None):
         """ Returns list of data ids for preprocessed data info
