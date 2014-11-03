@@ -559,10 +559,10 @@ class MetadataSummaryHandler(BaseHandler):
             tid = int(self.get_argument('sample_template'))
             template = SampleTemplate(tid)
 
-        study = Study(study_id)
+        study = Study(template.study_id)
 
         # check whether or not the user has access to the requested information
-        if not template.has_access(User(self.current_user)):
+        if not study.has_access(User(self.current_user)):
             raise HTTPError(403, "You do not have access to access this "
                                  "information.")
 
