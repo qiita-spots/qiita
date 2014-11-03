@@ -561,8 +561,10 @@ class MetadataSummaryHandler(BaseHandler):
 
         study = Study(study_id)
 
-        # templates have same ID as study associated with, so can do check
-        check_access(User(self.current_user), study)
+        # check whether or not the user has access to the requested information
+        if not template.has_access(User(self.current_user)):
+            raise HTTPError(403, "You do not have access to access this "
+                                 "information.")
 
         df = dataframe_from_template(template)
         stats = stats_from_df(df)
