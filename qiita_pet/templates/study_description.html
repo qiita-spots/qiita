@@ -168,8 +168,16 @@
           </td>
           <td style="vertical-align:top;padding:10px;">
             <h4>Linked files to this raw data</h4>
+            {% if r.get_filepaths() %}
+              <a onClick="unlink_all_files({{r.id}})">Unlink all files</a><br/>
+            {% end %}
+            {% if r.add_filepaths_status == 'in_progress' %}
+              <i><b style="color:red">Linking files...</b></i><br/>
+            {% elif r.add_filepaths_status.startswith('failed') %}
+              <i><b style="color:red">Error linking files: {{r.add_filepaths_status}} </b></i><br/>
+            {% end %}
             {% for f, t in r.get_filepaths() %}
-              <i>{{basename(f)}}:</i> {{t[4:]}}<br/>
+              <i>{{basename(f)}}:</i> {{t[4:]}} <br/>
             {% end %}
             <br/>
             <h4>Link uploaded files with raw data</h4>
@@ -320,6 +328,24 @@
           .attr("type", "hidden")
           .attr("name", "reverse")
           .attr("value", reverse.join()));
+      $("body").append(form);
+      form.submit();
+    }
+  }
+
+  function unlink_all_files(raw_data_id) {
+    if (confirm("Are you sure you want to unlink all files? They will be removed from the system")){
+      var form = $("<form>")
+        .attr("action", "/study/unlink_all_files")
+        .attr("method", "post")
+        .append($("<input>")
+          .attr("type", "hidden")
+          .attr("name", "study_id")
+          .attr("value", {{study_id}}))
+        .append($("<input>")
+          .attr("type", "hidden")
+          .attr("name", "raw_data_id")
+          .attr("value", raw_data_id))
       $("body").append(form);
       form.submit();
     }

@@ -26,7 +26,8 @@ from qiita_ware.processing_pipeline import (_get_preprocess_fastq_cmd,
                                             _insert_preprocessed_data_fastq,
                                             _generate_demux_file,
                                             _get_qiime_minimal_mapping,
-                                            _add_files_to_raw_data)
+                                            _add_files_to_raw_data,
+                                            _unlink_files_from_raw_data)
 
 
 @qiita_test_checker()
@@ -198,6 +199,17 @@ class ProcessingPipelineTests(TestCase):
         actual = rd.get_filepaths()
 
         self.assertEqual(set(actual), set(expected))
+
+    def test_unlink_files_from_raw_data(self):
+        fd, seqs_fp = mkstemp(suffix='_seqs.fastq')
+        close(fd)
+        rd = RawData.create(2, [Study(1)], [(seqs_fp, 1)])
+
+        _unlink_files_from_raw_data(rd.id)
+
+        self.assertFalse(self.conn_handler.execute_fetchone(
+            "SELECT EXISTS(SELECT * FROM qiita.raw_filepath "
+            "WHERE raw_data_id=%s)", (rd.id,))[0])
 
 DEMUX_SEQS = """@a_1 orig_bc=abc new_bc=abc bc_diffs=0
 xyz

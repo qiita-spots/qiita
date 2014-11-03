@@ -4,7 +4,8 @@ from gzip import open as gzopen
 from traceback import format_exception_only
 from sys import exc_info
 
-from .processing_pipeline import StudyPreprocessor, AddFilesToRawData
+from .processing_pipeline import (StudyPreprocessor, AddFilesToRawData,
+                                  UnlinkAllFiles)
 from .analysis_pipeline import RunAnalysis
 from qiita_core.qiita_settings import qiita_config
 from qiita_ware.commands import submit_EBI_from_files
@@ -102,3 +103,12 @@ def add_files_to_raw_data(raw_data_id, filepaths):
     """
     aftrd = AddFilesToRawData()
     return aftrd(raw_data_id, filepaths)
+
+
+def unlink_all_files(raw_data_id):
+    """Removes all files from raw data
+
+    Needs to be dispachable because it does I/O and a lot of DB calls
+    """
+    uaf = UnlinkAllFiles()
+    return uaf(raw_data_id)

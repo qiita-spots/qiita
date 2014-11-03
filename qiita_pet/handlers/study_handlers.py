@@ -324,7 +324,7 @@ class StudyDescriptionHandler(BaseHandler):
 
         study = Study(study_id)
         if sample_template:
-            # processing sample teplates
+            # processing sample templates
 
             fp_rsp = join(get_study_fp(study_id), sample_template)
             if not exists(fp_rsp):
