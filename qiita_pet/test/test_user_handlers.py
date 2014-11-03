@@ -10,31 +10,25 @@ class TestUserProfileHandler(TestHandlerBase):
     database = True
 
     def test_get(self):
-        raise NotImplementedError()
+        response = self.get('/profile/')
+        self.assertEqual(response.code, 200)
 
-    def test_post(self):
-        raise NotImplementedError()
+    def test_post_password(self):
+        post_args = {
+            'action': 'password',
+            'oldpass': 'password',
+            'newpass': 'newpass'
+        }
+        response = self.post('/profile/', post_args)
+        self.assertEqual(response.code, 200)
 
-
-class TestForgotPasswordHandler(TestHandlerBase):
-    database = True
-
-    def test_get(self):
-        raise NotImplementedError()
-
-    def test_post(self):
-        raise NotImplementedError()
-
-
-class TestChangeForgotPasswordHandler(TestHandlerBase):
-    database = True
-
-    def test_get(self):
-        raise NotImplementedError()
-
-    def test_post(self):
-        raise NotImplementedError()
-
+    def test_post_profile(self):
+        post_args = {
+            'action': 'profile',
+            'name': 'NEWNAME'
+        }
+        response = self.post('/profile/', post_args)
+        self.assertEqual(response.code, 200)
 
 if __name__ == "__main__":
     main()

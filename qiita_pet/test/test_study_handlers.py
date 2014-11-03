@@ -77,10 +77,11 @@ class TestCreateStudyHandler(TestHandlerBase):
 
 class TestCreateStudyAJAX(TestHandlerBase):
     def test_get(self):
+
         response = self.get('/check_study/', {'study_title': 'notreal'})
         self.assertEqual(response.code, 200)
         # make sure responds properly
-        self.assertEqual(response.body, 'False')
+        self.assertEqual(response.body, 'True')
 
         response = self.get('/check_study/')
         self.assertEqual(response.code, 200)
@@ -93,7 +94,7 @@ class TestCreateStudyAJAX(TestHandlerBase):
              'Identification of the Microbiomes for Cannabis Soils'})
         self.assertEqual(response.code, 200)
         # make sure responds properly
-        self.assertEqual(response.body, 'True')
+        self.assertEqual(response.body, 'False')
 
 
 class TestMetadataSummaryHandler(TestHandlerBase):
@@ -104,13 +105,8 @@ class TestMetadataSummaryHandler(TestHandlerBase):
 
 
 class TestEBISubmitHandler(TestHandlerBase):
-    database = True
-
-    def test_get(self):
-        raise NotImplementedError()
-
-    def test_post(self):
-        raise NotImplementedError()
+    # TODO: figure out how tot test this
+    pass
 
 
 if __name__ == "__main__":
