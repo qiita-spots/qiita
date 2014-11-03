@@ -23,6 +23,7 @@ Methods
     check_required_columns
     convert_from_id
     convert_to_id
+    get_lat_longs
 """
 # -----------------------------------------------------------------------------
 # Copyright (c) 2014--, The Qiita Development Team.
@@ -737,3 +738,9 @@ def get_study_fp(study_id):
     fp = join(qiita_config.upload_data_dir, str(study_id))
 
     return fp
+
+def get_lat_longs():
+    conn = SQLConnectionHandler()
+    sql = """select latitude, longitude
+             from qiita.required_sample_info"""
+    return conn.execute_fetchall(sql)
