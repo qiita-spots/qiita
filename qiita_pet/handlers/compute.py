@@ -7,7 +7,7 @@ from .study_handlers import check_access
 
 from qiita_ware import r_server
 from qiita_ware.context import submit
-from qiita_ware.dispatchable import add_files_to_raw_data
+from qiita_ware.dispatchable import add_files_to_raw_data, unlink_all_files
 
 from qiita_db.util import get_study_fp
 from qiita_db.study import Study
