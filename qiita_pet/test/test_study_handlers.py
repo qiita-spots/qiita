@@ -100,7 +100,8 @@ class TestCreateStudyAJAX(TestHandlerBase):
 class TestMetadataSummaryHandler(TestHandlerBase):
     def test_get(self):
         response = self.get('/metadata_summary/', {'sample_template': 1,
-                                                   'prep_template': 1})
+                                                   'prep_template': 1,
+                                                   'study_id': 1})
         self.assertEqual(response.code, 200)
 
 
