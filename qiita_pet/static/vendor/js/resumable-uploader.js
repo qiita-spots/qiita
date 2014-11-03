@@ -12,7 +12,7 @@
 
 (function(window, document, $, undefined)
  {
-   window.ResumableUploader = function(savedData, browseTarget, dropTarget, progressContainer, uploaderList, fileEditContainer, maxFileSize, study_id, filetypes) {
+   window.ResumableUploader = function(savedData, browseTarget, dropTarget, progressContainer, uploaderList, fileEditContainer, maxFileSize, study_id) {
      var $this = this;
      // Bootstrap parameters and clear HTML
      this.originalDocumentTitle = document.title;
@@ -21,7 +21,6 @@
      this.dropTarget = dropTarget;
      this.maxFileSize = maxFileSize;
      this.study_id = study_id;
-     this.filetypes = filetypes;
 
      this.progressContainer = progressContainer;
      this.progressContainer.hide();
@@ -126,19 +125,9 @@
        var listNode = $(document.createElement('div'));
        var text = '';
        // left gap
-       text += '<div class="col-md-3"></div>';
+       text += '<div class="col-md-4"></div>';
        // name
        text += '<div class="col-md-3">' + name + '</div>';
-       // options
-       text += '<div class="col-md-3">';
-       text += '<select id="inputfile" name="' + name + '"">';
-       text += '<option value="raw_sample_template">sample template</option>';
-       text += '<option value="raw_prep_template">prep template</option>';
-       for (i=0; i < self.filetypes.length; i++) {
-         text += '<option value="' + self.filetypes[i] + '">' + self.filetypes[i] + '</option>';
-       }
-       text += '</select>'
-       text += '</div>';
        // add to main node
        listNode.html('<div class="row">' + text + "</div>");
        this.uploaderList.append(listNode);
