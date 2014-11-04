@@ -1252,12 +1252,23 @@ class PrepTemplate(MetadataTemplate):
 
     @classmethod
     def validate_investigation_type(self, investigation_type):
-        """Simple investigation validation to avoid code duplication"""
+        """Simple investigation validation to avoid code duplication
+
+        Parameters
+        ----------
+        investigation_type : str
+            The investigation type, should be part of the ENA ontology
+
+        Raises
+        -------
+        QiitaDBColumnError
+            The investigation type is not in the ENA ontology
+        """
         investigation_types = Ontology(convert_to_id('ENA', 'ontology'))
         terms = investigation_types.terms
         if investigation_type not in terms:
             raise QiitaDBColumnError("Not a valid investigation_type. "
-                                     "Choose from: %r" % terms)
+                                     "Choose from: %s" % ', '.join(terms))
 
     @classmethod
     def _check_template_special_columns(cls, md_template, data_type):
@@ -1434,8 +1445,8 @@ class PrepTemplate(MetadataTemplate):
 
         Parameters
         ----------
-        investigation_type : str, a valid ENA see validate_investigation_type
-            The investigation type to set
+        investigation_type : str
+            The investigation type to set, should be part of the ENA ontology
 
         Raises
         ------

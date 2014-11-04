@@ -280,19 +280,19 @@ class StudyDescriptionHandler(BaseHandler):
         # other general vars, note that we create the select options here
         # so we do not have to loop several times over them in the template
         data_types = sorted(viewitems(get_data_types()), key=itemgetter(1))
-        data_types = ('<option value="%s">%s</option>' % (v, k)
-                      for k, v in data_types)
+        data_types = ['<option value="%s">%s</option>' % (v, k)
+                      for k, v in data_types]
         filetypes = sorted(viewitems(get_filetypes()), key=itemgetter(1))
-        filetypes = ('<option value="%s">%s</option>' % (v, k)
-                     for k, v in filetypes)
+        filetypes = ['<option value="%s">%s</option>' % (v, k)
+                     for k, v in filetypes]
         other_studies_rd = yield Task(self.get_raw_data_from_other_studies,
                                       user, study)
-        other_studies_rd = ('<option value="%s">%s</option>' % (k,
+        other_studies_rd = ['<option value="%s">%s</option>' % (k,
                             "id: %d, study: %s" % (k, v))
-                            for k, v in viewitems(other_studies_rd))
+                            for k, v in viewitems(other_studies_rd)]
         ena_terms = Ontology(convert_to_id('ENA', 'ontology')).terms
-        ena_terms = ('<option value="%s">%s</option>' % (v, v)
-                     for v in ena_terms)
+        ena_terms = ['<option value="%s">%s</option>' % (v, v)
+                     for v in ena_terms]
 
         self.render('study_description.html', user=self.current_user,
                     study_title=study.title, study_info=study.info, msg=msg,
