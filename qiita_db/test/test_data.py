@@ -64,7 +64,7 @@ class RawDataTests(TestCase):
         # Check that the raw data have been correctly added to the DB
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.raw_data WHERE raw_data_id=3")
-        # raw_data_id, filetype, add_filepaths_status
+        # raw_data_id, filetype, link_filepaths_status
         self.assertEqual(obs, [[3, 2, 'done']])
 
         # Check that the raw data have been correctly linked with the study
@@ -110,7 +110,7 @@ class RawDataTests(TestCase):
         # Check that the raw data have been correctly added to the DB
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.raw_data WHERE raw_data_id=3")
-        # raw_data_id, filetype, add_filepaths_status
+        # raw_data_id, filetype, link_filepaths_status
         self.assertEqual(obs, [[3, 2, 'done']])
 
         # Check that the raw data have been correctly linked with the study
@@ -158,22 +158,22 @@ class RawDataTests(TestCase):
         rd = RawData(1)
         self.assertEqual(rd.prep_templates, [1])
 
-    def test_add_filepaths_status(self):
+    def test_link_filepaths_status(self):
         rd = RawData(1)
-        self.assertEqual(rd.add_filepaths_status, 'done')
+        self.assertEqual(rd.link_filepaths_status, 'done')
 
-    def test_add_filepaths_status_setter(self):
+    def test_link_filepaths_status_setter(self):
         rd = RawData(1)
-        self.assertEqual(rd.add_filepaths_status, 'done')
-        rd.add_filepaths_status = 'in_progress'
-        self.assertEqual(rd.add_filepaths_status, 'in_progress')
-        rd.add_filepaths_status = 'failed: error'
-        self.assertEqual(rd.add_filepaths_status, 'failed: error')
+        self.assertEqual(rd.link_filepaths_status, 'done')
+        rd.link_filepaths_status = 'in_progress'
+        self.assertEqual(rd.link_filepaths_status, 'in_progress')
+        rd.link_filepaths_status = 'failed: error'
+        self.assertEqual(rd.link_filepaths_status, 'failed: error')
 
-    def test_add_filepaths_status_setter_error(self):
+    def test_link_filepaths_status_setter_error(self):
         rd = RawData(1)
         with self.assertRaises(ValueError):
-            rd.add_filepaths_status = 'not a valid status'
+            rd.link_filepaths_status = 'not a valid status'
 
     def test_is_preprocessed(self):
         self.assertTrue(RawData(1)._is_preprocessed())

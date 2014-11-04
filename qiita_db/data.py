@@ -184,12 +184,34 @@ class BaseData(QiitaObject):
                 for fp, id in db_paths]
 
     def get_filepath_ids(self):
+        self._check_subclass()
         conn_handler = SQLConnectionHandler()
         db_ids = conn_handler.execute_fetchall(
             "SELECT filepath_id FROM qiita.{0} WHERE "
             "{1}=%(id)s".format(self._data_filepath_table,
                                 self._data_filepath_column), {'id': self.id})
         return [fp_id[0] for fp_id in db_ids]
+
+    @property
+    def link_filepaths_status(self):
+        self._check_subclass()
+        conn_handler = SQLConnectionHandler()
+        return conn_handler.execute_fetchone(
+            "SELECT link_filepaths_status FROM qiita.{0} "
+            "WHERE raw_data_id=%s".format(self._table), (self._id,))[0]
+
+    @link_filepaths_status.setter
+    def link_filepaths_status(self, status):
+        self._check_subclass()
+        if (status != 'done' and not (status.startswith('in_progress') or
+                                      status.startswith('failed'))):
+            raise ValueError('Unknown status: %s' % status)
+
+        conn_handler = SQLConnectionHandler()
+        conn_handler.execute(
+            "UPDATE qiita.{0} SET link_filepaths_status = %s "
+            "WHERE {1} = %s".format(self._table, self._data_filepath_column),
+            (status, self._id))
 
 
 class RawData(BaseData):
@@ -315,25 +337,6 @@ class RawData(BaseData):
         sql = ("SELECT prep_template_id FROM qiita.prep_template "
                "WHERE raw_data_id = %s")
         return [x[0] for x in conn_handler.execute_fetchall(sql, (self._id,))]
-
-    @property
-    def add_filepaths_status(self):
-        conn_handler = SQLConnectionHandler()
-        return conn_handler.execute_fetchone(
-            "SELECT add_filepaths_status FROM qiita.{0} "
-            "WHERE raw_data_id=%s".format(self._table), (self._id,))[0]
-
-    @add_filepaths_status.setter
-    def add_filepaths_status(self, status):
-        if (status not in ('done', 'in_progress') and
-                not status.startswith('failed')):
-            raise ValueError('Unknown status: %s' % status)
-
-        conn_handler = SQLConnectionHandler()
-        conn_handler.execute(
-            "UPDATE qiita.{0} SET add_filepaths_status = %s "
-            "WHERE raw_data_id = %s".format(self._table),
-            (status, self._id))
 
     def _is_preprocessed(self, conn_handler=None):
         """Returns whether the RawData has been preprocessed or not
