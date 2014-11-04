@@ -1083,6 +1083,17 @@ class SampleTemplate(MetadataTemplate):
 
         return cls(study.id)
 
+    @property
+    def study_id(self):
+        """Gets the study id with which this sample template is associated
+
+        Returns
+        -------
+        int
+            The ID of the study with which this sample template is associated
+        """
+        return self._id
+
 
 class PrepTemplate(MetadataTemplate):
     r"""Represent the PrepTemplate of a raw dat. Provides access to the
@@ -1439,6 +1450,26 @@ class PrepTemplate(MetadataTemplate):
             "UPDATE qiita.prep_template SET investigation_type = %s "
             "WHERE {0} = %s".format(self._id_column),
             (investigation_type, self.id))
+
+    @property
+    def study_id(self):
+        """Gets the study id with which this prep template is associated
+
+        Returns
+        -------
+        int
+            The ID of the study with which this prep template is associated
+        """
+        conn = SQLConnectionHandler()
+        sql = """SELECT srd.study_id
+                 FROM qiita.prep_template pt JOIN qiita.study_raw_data srd
+                 ON pt.raw_data_id = srd.raw_data_id"""
+        study_id = conn.execute_fetchone(sql)
+        if study_id:
+            return study_id[0]
+        else:
+            raise QiitaDBError("No studies found associated with prep "
+                               "template ID %d" % self._id)
 
 
 def load_template_to_dataframe(fn):

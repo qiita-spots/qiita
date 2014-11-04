@@ -555,6 +555,10 @@ class TestSampleTemplate(TestCase):
         for f in self._clean_up_files:
             remove(f)
 
+    def test_study_id(self):
+        """Ensure that the correct study ID is returned"""
+        self.assertEqual(self.tester.study_id, 1)
+
     def test_init_unknown_error(self):
         """Init raises an error if the id is not known"""
         with self.assertRaises(QiitaDBUnknownIDError):
@@ -864,6 +868,10 @@ class TestPrepTemplate(TestCase):
     def tearDown(self):
         for f in self._clean_up_files:
             remove(f)
+
+    def test_study_id(self):
+        """Ensure that the correct study ID is returned"""
+        self.assertEqual(self.tester.study_id, 1)
 
     def test_init_unknown_error(self):
         """Init raises an error if the id is not known"""
