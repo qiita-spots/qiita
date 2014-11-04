@@ -15,11 +15,11 @@ from collections import defaultdict, Counter
 
 from tornado.web import authenticated, HTTPError
 from pyparsing import ParseException
-from redis import Redis
 
 from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_ware.dispatchable import run_analysis
 from qiita_ware.context import submit
+from qiita_ware import r_server
 from qiita_db.user import User
 from qiita_db.analysis import Analysis
 from qiita_db.data import ProcessedData
@@ -303,7 +303,6 @@ class AnalysisResultsHandler(BaseHandler):
                     basefolder=get_db_files_base_dir())
 
         # wipe out cached messages for this analysis
-        r_server = Redis()
         key = '%s:messages' % self.current_user
         oldmessages = r_server.lrange(key, 0, -1)
         if oldmessages is not None:

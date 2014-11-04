@@ -64,6 +64,10 @@ EMAIL = donotreply@qiita.colorado.edu
 
 # ----------------------------- Redis settings --------------------------------
 [redis]
+HOST = localhost
+PORT = 6379
+PASSWORD =
+DB = 0
 
 # ----------------------------- Postgres settings -----------------------------
 [postgres]
