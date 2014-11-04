@@ -261,8 +261,12 @@ class PreprocessedDataTests(TestCase):
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.preprocessed_data WHERE "
             "preprocessed_data_id=3")
+        # preprocessed_data_id, preprocessed_params_table,
+        # preprocessed_params_id, submitted_to_insdc_status,
+        # ebi_submission_accession, ebi_study_accession, data_type_id,
+        # link_filepaths_status
         exp = [[3, "preprocessed_sequence_illumina_params", 1,
-                'not submitted', "EBI123456-A", "EBI123456-B", 2]]
+                'not submitted', "EBI123456-A", "EBI123456-B", 2, 'done']]
         self.assertEqual(obs, exp)
 
         # Check that the preprocessed data has been linked with its study
@@ -307,8 +311,12 @@ class PreprocessedDataTests(TestCase):
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.preprocessed_data WHERE "
             "preprocessed_data_id=3")
+        # preprocessed_data_id, preprocessed_params_table,
+        # preprocessed_params_id, submitted_to_insdc_status,
+        # ebi_submission_accession, ebi_study_accession, data_type_id,
+        # link_filepaths_status
         exp = [[3, "preprocessed_sequence_illumina_params", 1,
-                'not submitted', None, None, 2]]
+                'not submitted', None, None, 2, 'done']]
         self.assertEqual(obs, exp)
 
         # Check that the preprocessed data has been linked with its study
@@ -468,6 +476,23 @@ class PreprocessedDataTests(TestCase):
         """Correctly returns the data_type of preprocessed_data"""
         pd = ProcessedData(1)
         self.assertEqual(pd.data_type(ret_id=True), 2)
+
+    def test_link_filepaths_status(self):
+        ppd = PreprocessedData(1)
+        self.assertEqual(ppd.link_filepaths_status, 'done')
+
+    def test_link_filepaths_status_setter(self):
+        ppd = PreprocessedData(1)
+        self.assertEqual(ppd.link_filepaths_status, 'done')
+        ppd.link_filepaths_status = 'in_progress'
+        self.assertEqual(ppd.link_filepaths_status, 'in_progress')
+        ppd.link_filepaths_status = 'failed: error'
+        self.assertEqual(ppd.link_filepaths_status, 'failed: error')
+
+    def test_link_filepaths_status_setter_error(self):
+        ppd = PreprocessedData(1)
+        with self.assertRaises(ValueError):
+            ppd.link_filepaths_status = 'not a valid status'
 
 
 @qiita_test_checker()

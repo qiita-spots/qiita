@@ -198,7 +198,8 @@ class BaseData(QiitaObject):
         conn_handler = SQLConnectionHandler()
         return conn_handler.execute_fetchone(
             "SELECT link_filepaths_status FROM qiita.{0} "
-            "WHERE raw_data_id=%s".format(self._table), (self._id,))[0]
+            "WHERE {1}=%s".format(self._table, self._data_filepath_column),
+            (self._id,))[0]
 
     @link_filepaths_status.setter
     def link_filepaths_status(self, status):
