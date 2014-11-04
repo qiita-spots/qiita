@@ -218,7 +218,8 @@ class TestEBISubmission(TestCase):
         xml = minidom.parseString(ET.tostring(xmlelement))
         # insert the proper EBI directory, since it is a timestamp and hard
         # to predict
-        RUNXML_mod = RUNXML % submission.ebi_dir
+        RUNXML_mod = RUNXML % (submission._get_study_alias(),
+                               submission.ebi_dir)
         xmlstring = xml.toprettyxml(indent='  ', encoding='UTF-8')
         obs_stripped = ''.join([l.strip() for l in xmlstring.splitlines()])
         exp_stripped = ''.join([l.strip() for l in RUNXML_mod.splitlines()])
@@ -476,7 +477,7 @@ RUNXML = """
 <?xml version="1.0" encoding="UTF-8"?>
 <RUN_SET xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:no\
 NamespaceSchemaLocation="ftp://ftp.sra.ebi.ac.uk/meta/xsd/sra_1_3/SRA.run.xsd">
-  <RUN alias="__init__.py_run" center_name="CCME-COLORADO">
+  <RUN alias="%s___init__.py_run" center_name="CCME-COLORADO">
     <EXPERIMENT_REF refname="qiime_study_001:test1:0"/>
     <DATA_BLOCK>
       <FILES>
