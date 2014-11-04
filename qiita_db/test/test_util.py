@@ -387,19 +387,17 @@ class DBUtilTests(TestCase):
         fp16 = join(get_db_files_base_dir(), fp16)
 
         # Nothing should be removed
-        purge_filepaths([1, 16], self.conn_handler)
+        purge_filepaths(self.conn_handler)
 
-        sql_exists = ("SELECT EXISTS(SELECT * FROM qiita.filepath "
-                      "WHERE filepath_id=%s)")
+        sql_ids = ("SELECT filepath_id FROM qiita.filepath ORDER BY "
+                   "filepath_id")
+        obs = self.conn_handler.execute_fetchall(sql_ids)
+        exp = [[1], [2], [3], [4], [5], [6], [7], [8], [9],
+               [10], [11], [12], [13], [14], [15], [16]]
+        self.assertEqual(obs, exp)
 
-        # Check that the filepath 1 still is in the DB
-        obs = self.conn_handler.execute_fetchone(sql_exists, (1,))[0]
-        self.assertTrue(obs)
+        # Check that the files still exist
         self.assertTrue(exists(fp1))
-
-        # Check that the filepath 16 still is in the DB
-        obs = self.conn_handler.execute_fetchone(sql_exists, (16,))[0]
-        self.assertTrue(obs)
         self.assertTrue(exists(fp16))
 
         # Unlink the filepath from the raw data
@@ -407,24 +405,16 @@ class DBUtilTests(TestCase):
             "DELETE FROM qiita.raw_filepath WHERE filepath_id=%s", (16,))
 
         # Only filepath 16 should be removed
-        purge_filepaths([1, 16], self.conn_handler)
+        purge_filepaths(self.conn_handler)
 
-        # Check that the filepath 1 still is in the DB
-        obs = self.conn_handler.execute_fetchone(sql_exists, (1,))[0]
-        self.assertTrue(obs)
+        obs = self.conn_handler.execute_fetchall(sql_ids)
+        exp = [[1], [2], [3], [4], [5], [6], [7], [8], [9],
+               [10], [11], [12], [13], [14], [15]]
+        self.assertEqual(obs, exp)
+
+        # Check that only the file for the removed filepath has been removed
         self.assertTrue(exists(fp1))
-
-        # Check that the filepath 16 still is in the DB
-        obs = self.conn_handler.execute_fetchone(sql_exists, (16,))[0]
-        self.assertFalse(obs)
         self.assertFalse(exists(fp16))
-
-    def test_purge_filepaths_error(self):
-        with self.assertRaises(QiitaDBUnknownIDError):
-            purge_filepaths([100], self.conn_handler)
-
-        with self.assertRaises(QiitaDBUnknownIDError):
-            purge_filepaths([1, 100], self.conn_handler)
 
     def test_get_filepath_id(self):
         fp = join(get_db_files_base_dir(),
