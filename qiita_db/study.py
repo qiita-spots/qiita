@@ -529,9 +529,10 @@ class Study(QiitaStatusObject):
         sql_args = [(self.id, rd.id) for rd in raw_datas]
         conn_handler.add_to_queue(queue, sql, sql_args, many=True)
         linked = conn_handler.execute_queue(queue)
+
         if any(linked):
             raise QiitaDBError("Some of the passed raw datas have been already"
-                               "linked to the study %s" % self.id)
+                               " linked to the study %s" % self.id)
 
         conn_handler.executemany(
             "INSERT INTO qiita.study_raw_data (study_id, raw_data_id) "

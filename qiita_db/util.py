@@ -590,16 +590,18 @@ def purge_filepaths(conn_handler=None):
     # Get all the filepaths from the filepath table that are not
     # referenced from any place in the database
     fps = conn_handler.execute_fetchall(
-        "SELECT filepath_id, filepath, filepath_type FROM qiita.filepath FP "
-        "JOIN qiita.filepath_type FPT ON FP.filepath_type_id = "
-        "FPT.filepath_type_id WHERE filepath_id NOT IN (SELECT filepath_id "
-        "FROM qiita.raw_filepath UNION SELECT filepath_id FROM "
-        "qiita.preprocessed_filepath UNION SELECT filepath_id FROM "
-        "qiita.processed_filepath UNION SELECT filepath_id FROM "
-        "qiita.job_results_filepath UNION SELECT filepath_id FROM "
-        "qiita.analysis_filepath UNION SELECT sequence_filepath FROM "
-        "qiita.reference UNION SELECT taxonomy_filepath FROM qiita.reference "
-        "UNION SELECT tree_filepath FROM qiita.reference)")
+        """SELECT filepath_id, filepath, filepath_type FROM qiita.filepath
+        FP JOIN qiita.filepath_type FPT ON
+        FP.filepath_type_id = FPT.filepath_type_id
+        WHERE filepath_id NOT IN (
+            SELECT filepath_id FROM qiita.raw_filepath UNION
+            SELECT filepath_id FROM qiita.preprocessed_filepath UNION
+            SELECT filepath_id FROM qiita.processed_filepath UNION
+            SELECT filepath_id FROM qiita.job_results_filepath UNION
+            SELECT filepath_id FROM qiita.analysis_filepath UNION
+            SELECT sequence_filepath FROM qiita.reference UNION
+            SELECT taxonomy_filepath FROM qiita.reference UNION
+            SELECT tree_filepath FROM qiita.reference)""")
 
     # We can now go over and remove all the filepaths
     for fp_id, fp, fp_type in fps:
