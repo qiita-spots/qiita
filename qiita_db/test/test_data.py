@@ -189,6 +189,10 @@ class RawDataTests(TestCase):
             "SELECT EXISTS(SELECT * FROM qiita.raw_filepath "
             "WHERE raw_data_id=%s)", (rd.id,))[0])
 
+    def test_clear_filepaths_error(self):
+        with self.assertRaises(QiitaDBError):
+            RawData(1).clear_filepaths()
+
     def test_remove_filepath(self):
         rd = RawData.create(self.filetype, self.studies, self.filepaths)
         fp = join(self.db_test_raw_dir, "3_%s" % basename(self.seqs_fp))
@@ -205,9 +209,14 @@ class RawDataTests(TestCase):
         with self.assertRaises(QiitaDBError):
             RawData(1).remove_filepath(fp)
 
-    def test_clear_filepaths_error(self):
-        with self.assertRaises(QiitaDBError):
-            RawData(1).clear_filepaths()
+    def test_remove_filepath_error_queue(self):
+        with self.assertRaises(IncompetentQiitaDeveloperError):
+            RawData(1).remove_filepath("foo", queue="bar")
+
+    def test_remove_filepath_error_fp(self):
+        fp = join(self.db_test_raw_dir, '1_s_G1_L001_sequences.fastq.gz')
+        with self.assertRaises(ValueError):
+            RawData(2).remove_filepath(fp)
 
 
 @qiita_test_checker()

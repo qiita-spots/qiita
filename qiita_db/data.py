@@ -364,38 +364,45 @@ class RawData(BaseData):
         """
         conn_handler = SQLConnectionHandler()
 
-        # If the RawData has been already preprocessed, we cannot remove any
-        # file - raise an error
-        if self._is_preprocessed(conn_handler):
-            raise QiitaDBError("Cannot clear all the filepaths from raw data "
-                               "%s, it has been already preprocessed"
-                               % self._id)
+        queue = "%s_clear_fps" % self.id
+        conn_handler.create_queue(queue)
 
-        # We can remove the files - first get all the ids in the filepath table
-        fp_ids = self.get_filepath_ids()
+        for fp, fp_type in self.get_filepaths():
+            self.remove_filepath(fp, conn_handler, queue)
 
-        # Unlink all the filepaths from the raw_data
-        conn_handler.execute("DELETE FROM qiita.{0} WHERE {1}=%s".format(
-            self._data_filepath_table, self._data_filepath_column),
-            (self._id,))
+        # Execute all the queue
+        conn_handler.execute_queue(queue)
 
         # Delete the files, if they are not used anywhere
-        purge_filepaths(fp_ids, conn_handler)
+        purge_filepaths(conn_handler)
 
-    def remove_filepath(self, fp):
+    def remove_filepath(self, fp, conn_handler=None, queue=None):
         """Removes the filepath from the RawData
 
         Parameters
         ----------
         fp : str
             The filepath to remove
+        conn_handler : SQLConnectionHandler
+            The connection handler object connected to the DB
+        queue : str
+            The queue to use in the conn_handler
 
         Raises
         ------
         QiitaDBError
             If the RawData has been already preprocessed
+        IncompetentQiitaDeveloperError
+            If the queue is provided but not the conn_handler
+        ValueError
+            If fp does not belong to the raw data
         """
-        conn_handler = SQLConnectionHandler()
+        if conn_handler is None and queue is not None:
+            raise IncompetentQiitaDeveloperError(
+                "If a queue is provided, the conn_handler is also needed")
+
+        conn_handler = conn_handler if conn_handler else SQLConnectionHandler()
+
         # If the RawData has been already preprocessed, we cannot remove any
         # file - raise an error
         if self._is_preprocessed(conn_handler):
@@ -403,16 +410,31 @@ class RawData(BaseData):
                                "%s, it has been already preprocessed"
                                % self._id)
 
-        # We can remove the file, get the filepath id
+        # Get the filpeath id
         fp_id = get_filepath_id(fp, conn_handler)
+        fp_is_mine = conn_handler.execute_fetchone(
+            "SELECT EXISTS(SELECT * FROM qiita.{0} WHERE filepath_id=%s AND "
+            "{1}=%s)".format(self._data_filepath_table,
+                             self._data_filepath_column),
+            (fp_id, self._id))[0]
+
+        if not fp_is_mine:
+            raise ValueError("The filepath %s does not belong to raw data %s"
+                             % (fp, self._id))
+
+        # We can remove the file
+        sql = "DELETE FROM qiita.{0} WHERE filepath_id=%s".format(
+            self._data_filepath_table)
+        sql_args = (fp_id,)
 
         # Unlink the file from the raw data
-        conn_handler.execute(
-            "DELETE FROM qiita.{0} WHERE filepath_id=%s".format(
-                self._data_filepath_table), (fp_id,))
+        if queue:
+            conn_handler.add_to_queue(queue, sql, sql_args)
+        else:
+            conn_handler.execute(sql, sql_args)
 
-        # Delete the file if it is not used anywhere
-        purge_filepaths([fp_id], conn_handler)
+            # Delete the file if it is not used anywhere
+            purge_filepaths(conn_handler)
 
 
 class PreprocessedData(BaseData):
