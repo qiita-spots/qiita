@@ -1292,6 +1292,17 @@ class TestPrepTemplate(TestCase):
         """investigation_type works correctly"""
         self.assertEqual(self.tester.investigation_type, "Metagenomics")
 
+    def test_investigation_type_setter(self):
+        """Able to update the investigation type"""
+        pt = PrepTemplate.create(self.metadata, self.new_raw_data,
+                                 self.test_study, self.data_type_id)
+        self.assertEqual(pt.investigation_type, None)
+        pt.investigation_type = "Other"
+        self.assertEqual(pt.investigation_type, 'Other')
+        with self.assertRaises(QiitaDBColumnError):
+            pt.investigation_type = "should fail"
+
+
 EXP_SAMPLE_TEMPLATE = (
     "sample_name\tcollection_timestamp\tdescription\thas_extracted_data\t"
     "has_physical_specimen\thost_subject_id\tlatitude\tlongitude\t"
