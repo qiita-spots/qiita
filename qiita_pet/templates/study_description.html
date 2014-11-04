@@ -111,23 +111,20 @@
                 </select>,
               </li>
               <li>
-                the prep template data type
+                select the prep template data type
                 <select id="data_type_{{r.id}}">
                   {% raw data_types %}
                 </select>, and
               </li>
               <li>
-                (optional) select an investigation type:
+                (optional but required for EBI submission) select an investigation type:
                 <select id="investigation_type_{{r.id}}">
                   <option value="">Non selected</option>
                   {% raw ena_terms %}
                 </select>
               </li>
             </ol>
-            {% if can_upload %}
-              You can also <a href="/study/upload/{{study_id}}">upload</a> some files.
-            {% end %}
-            <br/><br/>
+            <br/>
             <a class="btn btn-primary" onClick="add_prep_template({{r.id}});">Add prep template</a>
             <br/>
             <hr/>

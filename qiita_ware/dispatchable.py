@@ -33,7 +33,7 @@ def preprocessor(study_id, prep_template_id, param_id, param_constructor):
     return preprocess_out
 
 
-def submit_to_ebi(preprocessed_data_id, investigation_type, submittion_type):
+def submit_to_ebi(preprocessed_data_id, submission_type):
     """Submit a study to EBI"""
     from qiita_db.data import PreprocessedData
 
@@ -68,8 +68,8 @@ def submit_to_ebi(preprocessed_data_id, investigation_type, submittion_type):
                                                       open(samp_fp),
                                                       open(prep_fp), tmp_dir,
                                                       output_dir,
-                                                      investigation_type,
-                                                      submittion_type, True)
+                                                      pt.investigation_type,
+                                                      submission_type, True)
 
     if study_acc is None or submission_acc is None:
         preprocessed_data.update_insdc_status('failed')

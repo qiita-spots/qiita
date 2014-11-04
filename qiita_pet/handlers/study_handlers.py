@@ -420,6 +420,8 @@ class StudyDescriptionHandler(BaseHandler):
                 error_msg = ''.join(format_exception_only(e, exc_info()))
                 msg = ('<b>Invalid investigation type: %s</b><br/>%s' %
                        (basename(fp_rpt), error_msg))
+                self.display_template(study_id, msg, str(pt.raw_data))
+                return
 
             msg = "The prep template has been updated!"
             tab_to_display = str(pt.raw_data)
@@ -604,10 +606,10 @@ class MetadataSummaryHandler(BaseHandler):
 class EBISubmitHandler(BaseHandler):
     def display_template(self, preprocessed_data_id, error=""):
         """Simple function to avoid duplication of code"""
+        preprocessed_data_id = int(preprocessed_data_id)
         try:
-            preprocessed_data_id = int(preprocessed_data_id)
             preprocessed_data = PreprocessedData(preprocessed_data_id)
-        except (QiitaDBUnknownIDError, ValueError):
+        except QiitaDBUnknownIDError:
             raise HTTPError(404, "PreprocessedData %d does not exist!" %
                                  preprocessed_data_id)
         else:
@@ -652,12 +654,11 @@ class EBISubmitHandler(BaseHandler):
         if User(self.current_user).level != 'admin':
             raise HTTPError(403, "User %s cannot submit to EBI!" %
                             self.current_user)
-        investigation_type = self.get_argument('investigation_type')
         submission_type = self.get_argument('submission_type')
 
         if submission_type not in ['ADD', 'MODIFY']:
-            raise HTTPError(403, "User %s trying to submit to EBI via %s!" %
-                            self.current_user, submission_type)
+            raise HTTPError(403, "User: %s, %s is not a recognized submission "
+                            "type" % (self.current_user, submission_type))
 
         preprocessed_data = PreprocessedData(preprocessed_data_id)
         state = preprocessed_data.submitted_to_insdc_status()
@@ -668,7 +669,7 @@ class EBISubmitHandler(BaseHandler):
         else:
             channel = self.current_user
             job_id = submit(channel, submit_to_ebi, int(preprocessed_data_id),
-                            investigation_type, submission_type)
+                            submission_type)
 
             self.render('compute_wait.html', user=self.current_user,
                         job_id=job_id, title='EBI Submission',
