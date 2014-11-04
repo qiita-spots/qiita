@@ -249,10 +249,10 @@ def _add_files_to_raw_data(raw_data_id, filepaths):
 
     rd = RawData(raw_data_id)
     # starting move
-    rd.add_filepaths_status = 'in_progress'
+    rd.link_filepaths_status = 'in_progress'
     rd.add_filepaths(filepaths)
     # Move is done
-    rd.add_filepaths_status = 'done'
+    rd.link_filepaths_status = 'done'
 
 
 def _unlink_files_from_raw_data(raw_data_id):
@@ -366,7 +366,7 @@ class AddFilesToRawData(ParallelWrapper):
         """Callback to execute in case the job node fails
         """
         # job failed
-        RawData(self.raw_data_id).add_filepaths_status = 'failed: %s' % msg
+        RawData(self.raw_data_id).link_filepaths_status = 'failed: %s' % msg
         LogEntry.create('Fatal', msg,
                         info={'raw_data': self.raw_data_id})
 
@@ -391,6 +391,6 @@ class UnlinkAllFiles(ParallelWrapper):
 
     def _failure_callback(self, msg=None):
         """Callback to execute in case the job node fails"""
-        RawData(self.raw_data_id).add_filepaths_status = 'failed: %s' % msg
+        RawData(self.raw_data_id).link_filepaths_status = 'failed: %s' % msg
         LogEntry.create('Fatal', msg,
                         info={'raw_data': self.raw_data_id})

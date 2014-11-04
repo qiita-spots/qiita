@@ -171,10 +171,10 @@
             {% if r.get_filepaths() %}
               <a onClick="unlink_all_files({{r.id}})">Unlink all files</a><br/>
             {% end %}
-            {% if r.add_filepaths_status == 'in_progress' %}
+            {% if r.link_filepaths_status.startswith('in_progress') %}
               <i><b style="color:red">Linking files...</b></i><br/>
-            {% elif r.add_filepaths_status.startswith('failed') %}
-              <i><b style="color:red">Error linking files: {{r.add_filepaths_status}} </b></i><br/>
+            {% elif r.link_filepaths_status.startswith('failed') %}
+              <i><b style="color:red">Error linking files: {{r.link_filepaths_status}} </b></i><br/>
             {% end %}
             {% for f, t in r.get_filepaths() %}
               <i>{{basename(f)}}:</i> {{t[4:]}} <br/>
