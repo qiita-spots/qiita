@@ -166,6 +166,12 @@ class EBISubmission(object):
         safe_study_id = escape(clean_whitespace(str(self.study_id)))
         return 'qiime_submission_' + safe_study_id
 
+    def _get_run_alias(self, file_base_name):
+        """Format alias using `file_base_name`
+        """
+        return '%s_%s_run' % (self._get_study_alias(),
+                              basename(file_base_name))
+
     def _get_library_name(self, sample_name, row_number):
         """Format alias using `sample_name`, `row_number`
 
@@ -504,7 +510,7 @@ class EBISubmission(object):
                     md5 = safe_md5(fp).hexdigest()
 
                 run = ET.SubElement(run_set, 'RUN', {
-                    'alias': basename(file_path) + '_run',
+                    'alias': self._get_run_alias(basename(file_path)),
                     'center_name': 'CCME-COLORADO'}
                 )
                 ET.SubElement(run, 'EXPERIMENT_REF', {
