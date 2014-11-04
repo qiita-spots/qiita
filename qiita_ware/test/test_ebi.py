@@ -482,7 +482,7 @@ NamespaceSchemaLocation="ftp://ftp.sra.ebi.ac.uk/meta/xsd/sra_1_3/SRA.run.xsd">
     <DATA_BLOCK>
       <FILES>
         <FILE checksum="612cbff13a4f0e236e5e62ac2e00329a" checksum_method=\
-"MD5" filename="%s/__init__.py" filetype="fastq" \
+"MD5" filename="./%s/__init__.py" filetype="fastq" \
 quality_scoring_system="phred"/>
       </FILES>
     </DATA_BLOCK>
