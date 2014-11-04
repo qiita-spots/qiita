@@ -519,7 +519,7 @@ class EBISubmission(object):
                 data_block = ET.SubElement(run, 'DATA_BLOCK')
                 files = ET.SubElement(data_block, 'FILES')
                 ET.SubElement(files, 'FILE', {
-                    'filename': join(self.ebi_dir, basename(file_path)),
+                    'filename': join('./', self.ebi_dir, basename(file_path)),
                     'filetype': file_type,
                     'quality_scoring_system': 'phred',
                     'checksum_method': 'MD5',
@@ -885,7 +885,7 @@ class EBISubmission(object):
             # Get the list of FASTQ files to submit
             fastqs = glob(join(unique_dir, '*.fastq.gz'))
 
-            ascp_command = 'ascp -d -QT -k2 -L- {0} {1}@{2}:/{3}/'.format(
+            ascp_command = 'ascp -d -QT -k2 -L- {0} {1}@{2}:./{3}/'.format(
                 ' '.join(fastqs), qiita_config.ebi_seq_xfer_user,
                 qiita_config.ebi_seq_xfer_url, self.ebi_dir)
 
