@@ -528,9 +528,9 @@ class ProcessedDataTests(TestCase):
         # Check that the processed data have been correctly added to the DB
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.processed_data WHERE processed_data_id=2")
-        # processed_data_id, preprocessed_data_id, processed_params_table,
-        # processed_params_id, processed_date
-        exp = [[2, "processed_params_uclust", 1, self.date, 2]]
+        # processed_data_id, processed_params_table, processed_params_id,
+        # processed_date, data_type_id, link_filepaths_status
+        exp = [[2, "processed_params_uclust", 1, self.date, 2, 'done']]
         self.assertEqual(obs, exp)
 
         # Check that the files have been copied to right location
@@ -599,9 +599,9 @@ class ProcessedDataTests(TestCase):
         # Check that the processed data have been correctly added to the DB
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.processed_data WHERE processed_data_id=2")
-        # processed_data_id, preprocessed_data_id, processed_params_table,
-        # processed_params_id, processed_date
-        exp = [[2, "processed_params_uclust", 1, self.date, 2]]
+        # processed_data_id, processed_params_table, processed_params_id,
+        # processed_date, data_type_id, link_filepaths_status
+        exp = [[2, "processed_params_uclust", 1, self.date, 2, 'done']]
         self.assertEqual(obs, exp)
 
         # Check that the files have been copied to right location
@@ -697,6 +697,23 @@ class ProcessedDataTests(TestCase):
     def test_data_type_id(self):
         pd = ProcessedData(1)
         self.assertEqual(pd.data_type(ret_id=True), 2)
+
+    def test_link_filepaths_status(self):
+        pd = ProcessedData(1)
+        self.assertEqual(pd.link_filepaths_status, 'done')
+
+    def test_link_filepaths_status_setter(self):
+        pd = ProcessedData(1)
+        self.assertEqual(pd.link_filepaths_status, 'done')
+        pd.link_filepaths_status = 'in_progress'
+        self.assertEqual(pd.link_filepaths_status, 'in_progress')
+        pd.link_filepaths_status = 'failed: error'
+        self.assertEqual(pd.link_filepaths_status, 'failed: error')
+
+    def test_link_filepaths_status_setter_error(self):
+        pd = ProcessedData(1)
+        with self.assertRaises(ValueError):
+            pd.link_filepaths_status = 'not a valid status'
 
 
 if __name__ == '__main__':
