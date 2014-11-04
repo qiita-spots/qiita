@@ -216,9 +216,13 @@ class TestEBISubmission(TestCase):
                                    'library protocol')
         xmlelement = submission.generate_run_xml()
         xml = minidom.parseString(ET.tostring(xmlelement))
+        # insert the proper EBI directory, since it is a timestamp and hard
+        # to predict
+        RUNXML_mod = RUNXML % (submission._get_study_alias(),
+                               submission.ebi_dir)
         xmlstring = xml.toprettyxml(indent='  ', encoding='UTF-8')
         obs_stripped = ''.join([l.strip() for l in xmlstring.splitlines()])
-        exp_stripped = ''.join([l.strip() for l in RUNXML.splitlines()])
+        exp_stripped = ''.join([l.strip() for l in RUNXML_mod.splitlines()])
         self.assertEqual(obs_stripped, exp_stripped)
 
     def test_generate_submission_xml(self):
@@ -473,12 +477,12 @@ RUNXML = """
 <?xml version="1.0" encoding="UTF-8"?>
 <RUN_SET xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:no\
 NamespaceSchemaLocation="ftp://ftp.sra.ebi.ac.uk/meta/xsd/sra_1_3/SRA.run.xsd">
-  <RUN alias="__init__.py_run" center_name="CCME-COLORADO">
+  <RUN alias="%s___init__.py_run" center_name="CCME-COLORADO">
     <EXPERIMENT_REF refname="qiime_study_001:test1:0"/>
     <DATA_BLOCK>
       <FILES>
         <FILE checksum="612cbff13a4f0e236e5e62ac2e00329a" checksum_method=\
-"MD5" filename="__init__.py" filetype="fastq" \
+"MD5" filename="./%s/__init__.py" filetype="fastq" \
 quality_scoring_system="phred"/>
       </FILES>
     </DATA_BLOCK>

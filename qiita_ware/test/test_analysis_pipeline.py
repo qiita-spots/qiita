@@ -2,12 +2,11 @@ from unittest import TestCase, main
 from os.path import exists, join
 from os import remove, rename
 
-from redis import Redis
-
 from qiita_core.util import qiita_test_checker
 from qiita_db.analysis import Analysis
 from qiita_db.job import Job
 from qiita_db.util import get_db_files_base_dir
+from qiita_ware import r_server
 from qiita_ware.analysis_pipeline import (
     RunAnalysis, _build_analysis_files, _job_comm_wrapper, _finish_analysis)
 
@@ -31,8 +30,7 @@ class TestRun(TestCase):
             remove(delfile)
 
     def test_finish_analysis(self):
-        redis = Redis()
-        pubsub = redis.pubsub()
+        pubsub = r_server.pubsub()
         pubsub.subscribe("demo@microbio.me")
         msgs = []
 
@@ -90,8 +88,7 @@ class TestRun(TestCase):
     def test_redis_comms(self):
         """Make sure redis communication happens"""
         msgs = []
-        redis = Redis()
-        pubsub = redis.pubsub()
+        pubsub = r_server.pubsub()
         pubsub.subscribe("demo@microbio.me")
 
         app = RunAnalysis()

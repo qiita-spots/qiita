@@ -155,7 +155,13 @@ class ConfigurationManager(object):
 
     def _get_redis(self, config):
         """Get the configuration of the redis section"""
-        pass
+        sec_get = partial(config.get, 'redis')
+        sec_getint = partial(config.getint, 'redis')
+
+        self.redis_host = sec_get('HOST')
+        self.redis_password = sec_get('PASSWORD')
+        self.redis_db = sec_getint('DB')
+        self.redis_port = sec_getint('PORT')
 
     def _get_ipython(self, config):
         """Get the configuration of the ipython section"""
