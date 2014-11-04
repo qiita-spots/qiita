@@ -41,11 +41,11 @@ from qiita_db.metadata_template import (SampleTemplate, PrepTemplate,
 from qiita_db.study import Study, StudyPerson
 from qiita_db.user import User
 from qiita_db.util import (get_study_fp, get_filepath_types, get_data_types,
-                           get_filetypes)
-from qiita_db.data import PreprocessedData
+                           get_filetypes, convert_to_id)
+from qiita_db.data import PreprocessedData, RawData
 from qiita_db.exceptions import (QiitaDBColumnError, QiitaDBExecutionError,
                                  QiitaDBDuplicateError, QiitaDBUnknownIDError)
-from qiita_db.data import RawData
+from qiita_db.ontology import Ontology
 
 study_person_linkifier = partial(
     linkify, "<a target=\"_blank\" href=\"mailto:{0}\">{1}</a>")
@@ -210,7 +210,8 @@ class StudyDescriptionHandler(BaseHandler):
         for rd in raw_data:
             # We neeed this so PrepTemplate(p) doesn't fail if that raw
             # doesn't exist but raw data has the row: #554
-            d[rd.id] = [PrepTemplate(p) for p in rd.prep_templates
+            prep_templates = sorted(rd.prep_templates)
+            d[rd.id] = [PrepTemplate(p) for p in prep_templates
                         if PrepTemplate.exists(p)]
         callback(d)
 
@@ -276,6 +277,8 @@ class StudyDescriptionHandler(BaseHandler):
         available_prep_templates = yield Task(self.get_prep_templates,
                                               available_raw_data)
 
+        # other general vars, note that we create the select options here
+        # so we do not have to loop several times over them in the template
         data_types = sorted(viewitems(get_data_types()), key=itemgetter(1))
         data_types = ('<option value="%s">%s</option>' % (v, k)
                       for k, v in data_types)
@@ -287,6 +290,9 @@ class StudyDescriptionHandler(BaseHandler):
         other_studies_rd = ('<option value="%s">%s</option>' % (k,
                             "id: %d, study: %s" % (k, v))
                             for k, v in viewitems(other_studies_rd))
+        ena_terms = Ontology(convert_to_id('ENA', 'ontology')).terms
+        ena_terms = ('<option value="%s">%s</option>' % (v, v)
+                     for v in ena_terms)
 
         self.render('study_description.html', user=self.current_user,
                     study_title=study.title, study_info=study.info, msg=msg,
@@ -295,7 +301,7 @@ class StudyDescriptionHandler(BaseHandler):
                     available_raw_data=available_raw_data,
                     available_prep_templates=available_prep_templates,
                     ste=SampleTemplate.exists(study_id),
-                    filepath_types=''.join(fts),
+                    filepath_types=''.join(fts), ena_terms=''.join(ena_terms),
                     tab_to_display=tab_to_display,
                     can_upload=check_access(user, study, True),
                     other_studies_rd=''.join(other_studies_rd))
@@ -321,6 +327,12 @@ class StudyDescriptionHandler(BaseHandler):
         add_prep_template = self.get_argument('add_prep_template', None)
         raw_data_id = self.get_argument('raw_data_id', None)
         data_type_id = self.get_argument('data_type_id', None)
+        investigation_type = self.get_argument('investigation_type', None)
+        if investigation_type == "":
+            investigation_type = None
+        # to update investigation type
+        update_investigation_type = self.get_argument(
+            'update_investigation_type', None)
 
         study = Study(study_id)
         if sample_template:
@@ -384,7 +396,8 @@ class StudyDescriptionHandler(BaseHandler):
                 # inserting prep templates
                 PrepTemplate.create(load_template_to_dataframe(fp_rpt),
                                     RawData(raw_data_id), study,
-                                    int(data_type_id))
+                                    int(data_type_id),
+                                    investigation_type=investigation_type)
             except (TypeError, QiitaDBColumnError, QiitaDBExecutionError,
                     QiitaDBDuplicateError, IOError, ValueError,
                     CParserError) as e:
@@ -396,6 +409,20 @@ class StudyDescriptionHandler(BaseHandler):
 
             msg = "<b>Your prep template was added</b>"
             tab_to_display = str(raw_data_id)
+
+        elif update_investigation_type:
+            # updating the prep template investigation type
+
+            pt = PrepTemplate(update_investigation_type)
+            try:
+                pt.investigation_type = investigation_type
+            except QiitaDBColumnError as e:
+                error_msg = ''.join(format_exception_only(e, exc_info()))
+                msg = ('<b>Invalid investigation type: %s</b><br/>%s' %
+                       (basename(fp_rpt), error_msg))
+
+            msg = "The prep template has been updated!"
+            tab_to_display = str(pt.raw_data)
 
         else:
             msg = ("<b>Error, did you select a valid uploaded file or are "
@@ -575,88 +602,77 @@ class MetadataSummaryHandler(BaseHandler):
 
 
 class EBISubmitHandler(BaseHandler):
-    def display_template(self, study, sample_template, preprocessed_data,
-                         error):
+    def display_template(self, preprocessed_data_id, error=""):
         """Simple function to avoid duplication of code"""
-        if not study:
-            study_title = 'This study DOES NOT exist'
-            study_id = 'This study DOES NOT exist'
-        else:
-            study_title = study.title
-            study_id = study.id
-
-        if not error:
-            stats = [('Number of samples', len(sample_template)),
-                     ('Number of metadata headers',
-                      len(sample_template.metadata_headers()))]
-
-            demux = [path for path, ftype in preprocessed_data.get_filepaths()
-                     if ftype == 'preprocessed_demux']
-
-            if not len(demux):
-                error = ("Study does not appear to have demultiplexed "
-                         "sequences associated")
-            elif len(demux) > 1:
-                error = ("Study appears to have multiple demultiplexed files!")
-            else:
-                error = ""
-                demux_file = demux[0]
-                demux_file_stats = demux_stats(demux_file)
-                stats.append(('Number of sequences', demux_file_stats.n))
-
-            error = None
-        else:
-            stats = []
-
-        self.render('ebi_submission.html', user=self.current_user,
-                    study_title=study_title, stats=stats, error=error,
-                    study_id=study_id)
-
-    @authenticated
-    def get(self, study_id):
-        study_id = int(study_id)
         try:
-            study = Study(study_id)
-        except QiitaDBUnknownIDError:
-            raise HTTPError(404, "Study %d does not exist!" % study_id)
+            preprocessed_data_id = int(preprocessed_data_id)
+            preprocessed_data = PreprocessedData(preprocessed_data_id)
+        except (QiitaDBUnknownIDError, ValueError):
+            raise HTTPError(404, "PreprocessedData %d does not exist!" %
+                                 preprocessed_data_id)
         else:
             user = User(self.current_user)
             if user.level != 'admin':
                 raise HTTPError(403, "No permissions of admin, "
                                      "get/EBISubmitHandler: %s!" % user.id)
 
-        preprocessed_data = None
-        sample_template = None
-        error = None
+        prep_template = PrepTemplate(preprocessed_data.prep_template)
+        sample_template = SampleTemplate(preprocessed_data.study)
+        study = Study(preprocessed_data.study)
+        stats = [('Number of samples', len(prep_template)),
+                 ('Number of metadata headers',
+                  len(sample_template.metadata_headers()))]
 
-        try:
-            sample_template = SampleTemplate(study.sample_template)
-        except:
-            sample_template = None
-            error = 'There is no sample template for study: %s' % study_id
+        demux = [path for path, ftype in preprocessed_data.get_filepaths()
+                 if ftype == 'preprocessed_demux']
 
-        try:
-            # TODO: only supporting a single prep template right now, which
-            # should be the last item: issue #549
-            preprocessed_data = PreprocessedData(
-                study.preprocessed_data()[-1])
-        except:
-            preprocessed_data = None
-            error = ('There is no preprocessed data for study: '
-                     '%s' % study_id)
+        if not len(demux):
+            error = ("Study does not appear to have demultiplexed "
+                     "sequences associated")
+        elif len(demux) > 1:
+            error = ("Study appears to have multiple demultiplexed files!")
+        elif error != "":
+            demux_file = demux[0]
+            demux_file_stats = demux_stats(demux_file)
+            stats.append(('Number of sequences', demux_file_stats.n))
 
-        self.display_template(study, sample_template, preprocessed_data, error)
+        self.render('ebi_submission.html', user=self.current_user,
+                    study_title=study.title, stats=stats, error=error,
+                    study_id=study.id,
+                    preprocessed_data_id=preprocessed_data_id,
+                    investigation_type=prep_template.investigation_type)
 
     @authenticated
-    def post(self, study_id):
+    def get(self, preprocessed_data_id):
+        self.display_template(preprocessed_data_id)
+
+    @authenticated
+    def post(self, preprocessed_data_id):
         # make sure user is admin and can therefore actually submit to EBI
         if User(self.current_user).level != 'admin':
             raise HTTPError(403, "User %s cannot submit to EBI!" %
                             self.current_user)
+        investigation_type = self.get_argument('investigation_type')
+        submission_type = self.get_argument('submission_type')
 
-        channel = self.current_user
-        job_id = submit(channel, submit_to_ebi, int(study_id))
+        if submission_type not in ['ADD', 'MODIFY']:
+            raise HTTPError(403, "User %s trying to submit to EBI via %s!" %
+                            self.current_user, submission_type)
 
-        self.render('compute_wait.html', user=self.current_user,
-                    job_id=job_id, title='EBI Submission',
-                    completion_redirect='/compute_complete/%s' % job_id)
+        preprocessed_data = PreprocessedData(preprocessed_data_id)
+        state = preprocessed_data.submitted_to_insdc_status()
+        if state == 'submitting':
+            error = "Cannot resubmit! Current state is: %s" % state
+        elif state == 'success' and submission_type == "ADD":
+            error = "Cannot resubmit! Current state is: %s, use MODIFY" % state
+        else:
+            channel = self.current_user
+            job_id = submit(channel, submit_to_ebi, int(preprocessed_data_id),
+                            investigation_type, submission_type)
+
+            self.render('compute_wait.html', user=self.current_user,
+                        job_id=job_id, title='EBI Submission',
+                        completion_redirect='/compute_complete/%s' % job_id)
+            return
+
+        self.display_template(preprocessed_data_id, error)

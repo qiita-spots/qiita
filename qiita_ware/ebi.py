@@ -763,10 +763,16 @@ class EBISubmission(object):
         for prep in iter_file_via_list_of_dicts(prep_template):
             sample_name = prep.pop('sample_name')
             platform = prep.pop('platform')
-            experiment_design_description = prep.pop(
-                'experiment_design_description')
-            library_construction_protocol = prep.pop(
-                'library_construction_protocol')
+            if 'experiment_design_description' in prep:
+                experiment_design_description = prep.pop(
+                    'experiment_design_description')
+            else:
+                experiment_design_description = ''
+            if 'library_construction_protocol' in prep:
+                library_construction_protocol = prep.pop(
+                    'library_construction_protocol')
+            else:
+                library_construction_protocol = ''
 
             file_path = join(per_sample_fastq_dir, sample_name+'.fastq.gz')
             self.add_sample_prep(sample_name, platform, 'fastq',
