@@ -323,6 +323,7 @@ class StudyDescriptionHandler(BaseHandler):
         raw_data_id = self.get_argument('raw_data_id', None)
         data_type_id = self.get_argument('data_type_id', None)
         make_public = self.get_argument('make_public', None)
+        approve_study = self.get_argument('approve_study', None)
 
         study = Study(study_id)
         if sample_template:
@@ -349,6 +350,16 @@ class StudyDescriptionHandler(BaseHandler):
             msg = ("The sample template <b>%s</b> has been added" %
                    sample_template)
             tab_to_display = ""
+
+        elif make_public:
+            # make sure user is admin, then make public
+            if User(self.current_user).level == 'admin':
+                study.status = 'public'
+
+        elif approve_study:
+            # make sure user is admin, then make public
+            if User(self.current_user).level == 'admin':
+                study.status = 'private'
 
         elif filetype or previous_raw_data:
             # adding blank raw data
@@ -398,11 +409,6 @@ class StudyDescriptionHandler(BaseHandler):
 
             msg = "<b>Your prep template was added</b>"
             tab_to_display = str(raw_data_id)
-
-        elif make_public:
-            # make sure user is admin, then make public
-            if User(self.current_user).level == 'admin':
-                study.status = 'public'
         else:
             msg = ("<b>Error, did you select a valid uploaded file or are "
                    "passing the correct parameters?</b>")
