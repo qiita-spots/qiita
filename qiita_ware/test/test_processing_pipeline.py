@@ -8,9 +8,9 @@
 
 from __future__ import division
 from unittest import TestCase, main
-from tempfile import mkdtemp, mkstemp
-from os.path import exists, join, basename
-from os import remove, close
+from tempfile import mkdtemp
+from os.path import exists, join
+from os import remove
 from functools import partial
 from shutil import rmtree
 

@@ -47,7 +47,7 @@ from json import dumps
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_core.qiita_settings import qiita_config
-from .exceptions import QiitaDBColumnError, QiitaDBUnknownIDError, QiitaDBError
+from .exceptions import QiitaDBColumnError, QiitaDBError
 from .sql_connection import SQLConnectionHandler
 
 
