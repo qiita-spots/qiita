@@ -69,7 +69,10 @@ class ProcessingPipelineTests(TestCase):
                             'str_column': 'Value for sample 1',
                             'linkerprimersequence': 'GTGCCAGCMGCCGCGGTAA',
                             'barcodesequence': 'GTCCGCAAGTTA',
-                            'run_prefix': "s_G1_L001_sequences"},
+                            'run_prefix': "s_G1_L001_sequences",
+                            'platform': 'ILLUMINA',
+                            'library_construction_protocol': 'AAA',
+                            'experiment_design_description': 'BBB'},
             'SKD8.640184': {'center_name': 'ANL',
                             'center_project_name': 'Test Project',
                             'ebi_submission_accession': None,
@@ -77,7 +80,10 @@ class ProcessingPipelineTests(TestCase):
                             'str_column': 'Value for sample 2',
                             'linkerprimersequence': 'GTGCCAGCMGCCGCGGTAA',
                             'barcodesequence': 'CGTAGAGCTCTC',
-                            'run_prefix': "s_G1_L001_sequences"},
+                            'run_prefix': "s_G1_L001_sequences",
+                            'platform': 'ILLUMINA',
+                            'library_construction_protocol': 'AAA',
+                            'experiment_design_description': 'BBB'},
             'SKB7.640196': {'center_name': 'ANL',
                             'center_project_name': 'Test Project',
                             'ebi_submission_accession': None,
@@ -85,7 +91,10 @@ class ProcessingPipelineTests(TestCase):
                             'str_column': 'Value for sample 3',
                             'linkerprimersequence': 'GTGCCAGCMGCCGCGGTAA',
                             'barcodesequence': 'CCTCTGAGAGCT',
-                            'run_prefix': "s_G1_L002_sequences"}
+                            'run_prefix': "s_G1_L002_sequences",
+                            'platform': 'ILLUMINA',
+                            'library_construction_protocol': 'AAA',
+                            'experiment_design_description': 'BBB'}
             }
         md_template = pd.DataFrame.from_dict(metadata_dict, orient='index')
         prep_template = PrepTemplate.create(md_template, RawData(2), Study(1),
