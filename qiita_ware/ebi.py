@@ -147,7 +147,10 @@ class EBISubmission(object):
 
     def _get_study_alias(self):
         """Format alias using ``self.study_id``"""
-        return 'qiime_study_' + escape(clean_whitespace(str(self.study_id)))
+        study_alias_format = '%s_study_%s'
+        return study_alias_format % (
+            qiita_config.ebi_organization_prefix,
+            escape(clean_whitespace(str(self.study_id))))
 
     def _get_sample_alias(self, sample_name):
         """Format alias using ``self.study_id``, `sample_name`"""
@@ -166,7 +169,9 @@ class EBISubmission(object):
     def _get_submission_alias(self):
         """Format alias using ``self.study_id``"""
         safe_study_id = escape(clean_whitespace(str(self.study_id)))
-        return 'qiime_submission_' + safe_study_id
+        submission_alias_format = '%s_submission_%s'
+        return submission_alias_format % (qiita_config.ebi_organization_prefix,
+                                          safe_study_id)
 
     def _get_run_alias(self, file_base_name):
         """Format alias using `file_base_name`
