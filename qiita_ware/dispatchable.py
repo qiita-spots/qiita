@@ -14,6 +14,7 @@ from qiita_ware.util import open_file
 from qiita_db.study import Study
 from qiita_db.analysis import Analysis
 from qiita_db.metadata_template import SampleTemplate, PrepTemplate
+from qiita_db.data import RawData
 
 
 def preprocessor(study_id, prep_template_id, param_id, param_constructor):
