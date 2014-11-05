@@ -16,6 +16,7 @@ from skbio.util.misc import safe_md5
 from qiita_core.qiita_settings import qiita_config
 
 from qiita_db.logger import LogEntry
+from qiita_db.study import Study
 
 
 class InvalidMetadataError(Exception):
@@ -90,7 +91,8 @@ class EBISubmission(object):
         for a particular metadata field is missing
     """
     def __init__(self, study_id, study_title, study_abstract,
-                 investigation_type, empty_value='no_data', **kwargs):
+                 investigation_type, empty_value='no_data', pmids=None,
+                 **kwargs):
         self.study_id = study_id
         self.study_title = study_title
         self.study_abstract = study_abstract
@@ -103,6 +105,7 @@ class EBISubmission(object):
         self.experiment_xml_fp = None
         self.run_xml_fp = None
         self.submission_xml_fp = None
+        self.pmids = pmids if pmids is not None else []
 
         self.ebi_dir = self._get_ebi_dir()
 
@@ -191,6 +194,16 @@ class EBISubmission(object):
             value = ET.SubElement(attribute_element, 'VALUE')
             value.text = clean_whitespace(val)
 
+    def _get_pmid_element(self, study_links, pmid):
+        study_link = ET.SubElement(study_links, 'STUDY_LINK')
+        xref_link = ET.SubElement(study_link,  'XREF_LINK')
+
+        db = ET.SubElement(xref_link, 'DB')
+        db.text = 'PUBMED'
+
+        _id = ET.SubElement(xref_link, 'ID')
+        _id.text = str(pmid)
+
     def generate_study_xml(self):
         """Generates the study XML file
 
@@ -206,7 +219,7 @@ class EBISubmission(object):
 
         study = ET.SubElement(study_set, 'STUDY', {
             'alias': self._get_study_alias(),
-            'center_name': "CCME-COLORADO"}
+            'center_name': qiita_config.ebi_center_name}
         )
 
         descriptor = ET.SubElement(study, 'DESCRIPTOR')
@@ -239,6 +252,12 @@ class EBISubmission(object):
         )
         study_abstract = ET.SubElement(descriptor, 'STUDY_ABSTRACT')
         study_abstract.text = clean_whitespace(escape(self.study_abstract))
+
+        # Add pubmed IDs
+        if self.pmids:
+            study_links = ET.SubElement(descriptor, 'STUDY_LINKS')
+            for pmid in self.pmids:
+                self._get_pmid_element(study_links, pmid)
 
         if self.additional_metadata:
             study_attributes = ET.SubElement(study, 'STUDY_ATTRIBUTES')
@@ -307,7 +326,7 @@ class EBISubmission(object):
         for sample_name, sample_info in sorted(viewitems(self.samples)):
             sample = ET.SubElement(sample_set, 'SAMPLE', {
                 'alias': self._get_sample_alias(sample_name),
-                'center_name': 'CCME-COLORADO'}
+                'center_name': qiita_config.ebi_center_name}
             )
 
             sample_title = ET.SubElement(sample, 'TITLE')
@@ -447,7 +466,7 @@ class EBISubmission(object):
                 platform = prep_info['platform']
                 experiment = ET.SubElement(experiment_set, 'EXPERIMENT', {
                     'alias': experiment_alias,
-                    'center_name': 'CCME-COLORADO'}
+                    'center_name': qiita_config.ebi_center_name}
                 )
                 title = ET.SubElement(experiment, 'TITLE')
                 title.text = experiment_alias
@@ -511,7 +530,7 @@ class EBISubmission(object):
 
                 run = ET.SubElement(run_set, 'RUN', {
                     'alias': self._get_run_alias(basename(file_path)),
-                    'center_name': 'CCME-COLORADO'}
+                    'center_name': qiita_config.ebi_center_name}
                 )
                 ET.SubElement(run, 'EXPERIMENT_REF', {
                     'refname': experiment_alias}
@@ -561,7 +580,7 @@ class EBISubmission(object):
                                              "/sra_1_3/SRA.submission.xsd"})
         submission = ET.SubElement(submission_set, 'SUBMISSION', {
             'alias': self._get_submission_alias(),
-            'center_name': 'CCME-COLORADO'}
+            'center_name': qiita_config.ebi_center_name}
         )
 
         actions = ET.SubElement(submission, 'ACTIONS')
@@ -780,6 +799,7 @@ class EBISubmission(object):
                                              investigation_type,
                                              sample_template, prep_template,
                                              per_sample_fastq_dir,
+                                             pmids=None,
                                              **kwargs):
         """Generate an ``EBISubmission`` from templates and FASTQ files
 
@@ -795,6 +815,8 @@ class EBISubmission(object):
             Path to the direcotry containing per-sample FASTQ files containing
             The sequence labels should be:
             ``SampleID_SequenceNumber And Additional Notes if Applicable``
+        pmids : list, optional
+            The pubmed IDs that are associated with this submission
 
         Notes
         -----
@@ -804,7 +826,7 @@ class EBISubmission(object):
         """
         # initialize the EBISubmission object
         submission = cls(study_id, study_title, study_abstract,
-                         investigation_type, **kwargs)
+                         investigation_type, pmids=pmids, **kwargs)
 
         submission.add_samples_from_templates(sample_template,
                                               prep_template,

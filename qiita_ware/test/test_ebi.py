@@ -125,6 +125,16 @@ class TestEBISubmission(TestCase):
         exp_stripped = ''.join([l.strip() for l in STUDYXML.splitlines()])
         self.assertEqual(obs_stripped, exp_stripped)
 
+        submission_pmids = EBISubmission('001', 'teststudy', 'test asbstract',
+                                         'metagenome', pmids=[12, 15])
+        xmlelement = submission_pmids.generate_study_xml()
+        xml = minidom.parseString(ET.tostring(xmlelement))
+        xmlstring = xml.toprettyxml(indent='  ', encoding='UTF-8')
+        obs_stripped = ''.join([l.strip() for l in xmlstring.splitlines()])
+        exp_stripped = ''.join([l.strip() for l in
+                                STUDYXML_PMIDS.splitlines()])
+        self.assertEqual(obs_stripped, exp_stripped)
+
     def test_add_sample(self):
         submission = EBISubmission('001', 'teststudy', 'test asbstract',
                                    'metagenome')
@@ -415,6 +425,37 @@ spaceSchemaLocation="ftp://ftp.sra.ebi.ac.uk/meta/xsd/sra_1_3/SRA.study.xsd">
       <STUDY_ABSTRACT>
         test asbstract
       </STUDY_ABSTRACT>
+    </DESCRIPTOR>
+  </STUDY>
+</STUDY_SET>
+"""
+
+STUDYXML_PMIDS = """<?xml version="1.0" encoding="UTF-8"?>
+<STUDY_SET xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noName\
+spaceSchemaLocation="ftp://ftp.sra.ebi.ac.uk/meta/xsd/sra_1_3/SRA.study.xsd">
+  <STUDY alias="qiime_study_001" center_name="CCME-COLORADO">
+    <DESCRIPTOR>
+      <STUDY_TITLE>
+        teststudy
+      </STUDY_TITLE>
+      <STUDY_TYPE existing_study_type="Other" new_study_type="metagenome"/>
+      <STUDY_ABSTRACT>
+        test asbstract
+      </STUDY_ABSTRACT>
+      <STUDY_LINKS>
+        <STUDY_LINK>
+          <XREF_LINK>
+            <DB>PUBMED</DB>
+            <ID>12</ID>
+          </XREF_LINK>
+        </STUDY_LINK>
+        <STUDY_LINK>
+          <XREF_LINK>
+            <DB>PUBMED</DB>
+            <ID>15</ID>
+          </XREF_LINK>
+        </STUDY_LINK>
+      </STUDY_LINKS>
     </DESCRIPTOR>
   </STUDY>
 </STUDY_SET>
