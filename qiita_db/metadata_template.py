@@ -59,7 +59,8 @@ from .util import (exists_table, get_table_cols, get_emp_status,
 
 TARGET_GENE_DATA_TYPES = ['16S', '18S', 'ITS']
 REQUIRED_TARGET_GENE_COLS = {'barcodesequence', 'linkerprimersequence',
-                             'run_prefix'}
+                             'run_prefix', 'library_construction_protocol',
+                             'experiment_design_description', 'platform'}
 RENAME_COLS_DICT = {'barcode': 'barcodesequence',
                     'primer': 'linkerprimersequence'}
 
@@ -1144,11 +1145,7 @@ class PrepTemplate(MetadataTemplate):
         # If the investigation_type is supplied, make sure if it is one of
         # the recognized investigation types
         if investigation_type is not None:
-            investigation_types = Ontology(convert_to_id('ENA', 'ontology'))
-            terms = investigation_types.terms
-            if investigation_type not in terms:
-                raise QiitaDBColumnError("Not a valid investigation_type. "
-                                         "Choose from: %r" % terms)
+            cls.validate_investigation_type(investigation_type)
 
         # We are going to modify the md_template. We create a copy so
         # we don't modify the user one
@@ -1200,9 +1197,10 @@ class PrepTemplate(MetadataTemplate):
 
         # Insert the metadata template
         prep_id = conn_handler.execute_fetchone(
-            "INSERT INTO qiita.prep_template (data_type_id, raw_data_id) "
-            "VALUES (%s, %s) RETURNING prep_template_id",
-            (data_type_id, raw_data.id))[0]
+            "INSERT INTO qiita.prep_template (data_type_id, raw_data_id, "
+            "investigation_type) VALUES (%s, %s, %s) RETURNING "
+            "prep_template_id", (data_type_id, raw_data.id,
+                                 investigation_type))[0]
 
         # Insert values on required columns
         values = _as_python_types(md_template, db_cols)
@@ -1251,6 +1249,26 @@ class PrepTemplate(MetadataTemplate):
             values)
 
         return cls(prep_id)
+
+    @classmethod
+    def validate_investigation_type(self, investigation_type):
+        """Simple investigation validation to avoid code duplication
+
+        Parameters
+        ----------
+        investigation_type : str
+            The investigation type, should be part of the ENA ontology
+
+        Raises
+        -------
+        QiitaDBColumnError
+            The investigation type is not in the ENA ontology
+        """
+        investigation_types = Ontology(convert_to_id('ENA', 'ontology'))
+        terms = investigation_types.terms
+        if investigation_type not in terms:
+            raise QiitaDBColumnError("Not a valid investigation_type. "
+                                     "Choose from: %s" % ', '.join(terms))
 
     @classmethod
     def _check_template_special_columns(cls, md_template, data_type):
@@ -1420,6 +1438,30 @@ class PrepTemplate(MetadataTemplate):
         sql = ("SELECT investigation_type FROM qiita.prep_template "
                "WHERE {0} = %s".format(self._id_column))
         return conn_handler.execute_fetchone(sql, [self._id])[0]
+
+    @investigation_type.setter
+    def investigation_type(self, investigation_type):
+        r"""Update the investigation type
+
+        Parameters
+        ----------
+        investigation_type : str
+            The investigation type to set, should be part of the ENA ontology
+
+        Raises
+        ------
+        QiitaDBColumnError
+            If the investigation type is not a valid ENA ontology
+        """
+        if investigation_type is not None:
+            self.validate_investigation_type(investigation_type)
+
+        conn_handler = SQLConnectionHandler()
+
+        conn_handler.execute(
+            "UPDATE qiita.prep_template SET investigation_type = %s "
+            "WHERE {0} = %s".format(self._id_column),
+            (investigation_type, self.id))
 
     @property
     def study_id(self):
