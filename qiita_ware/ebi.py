@@ -16,7 +16,6 @@ from skbio.util.misc import safe_md5
 from qiita_core.qiita_settings import qiita_config
 
 from qiita_db.logger import LogEntry
-from qiita_db.study import Study
 
 
 class InvalidMetadataError(Exception):
