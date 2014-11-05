@@ -44,11 +44,18 @@ def _get_qiime_minimal_mapping(prep_template, out_dir):
     # We now need to rename some columns to be QIIME compliant.
     # Hopefully, this conversion won't be needed if QIIME relaxes its
     # constraints
+    num_samples = len(pt.index)
     pt.rename(columns={'barcodesequence': 'BarcodeSequence',
                        'linkerprimersequence': 'LinkerPrimerSequence'},
               inplace=True)
-    pt['Description'] = pd.Series(['Qiita MMF'] * len(pt.index),
+    pt['Description'] = pd.Series(['Qiita MMF'] * num_samples,
                                   index=pt.index)
+
+    # prefix each sample name with the study id
+    study_id_series = pd.Series([str(prep_template.study_id)] * num_samples,
+                                index=pt.index)
+    pt['new_name'] = study_id_series + '.' + pt.index
+    pt.index = pt.new_name
 
     # We ensure the order of the columns as QIIME is expecting
     cols = ['BarcodeSequence', 'LinkerPrimerSequence', 'Description']
