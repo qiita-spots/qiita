@@ -656,7 +656,7 @@
 			<column name="ebi_study_accession" type="varchar" jt="12" />
 			<column name="data_type_id" type="bigint" jt="-5" mandatory="y" />
 			<column name="link_filepaths_status" type="varchar" jt="12" mandatory="y" >
-				<defo>&#039;done&#039;</defo>
+				<defo>&#039;idle&#039;</defo>
 			</column>
 			<index name="pk_preprocessed_data" unique="PRIMARY_KEY" >
 				<column name="preprocessed_data_id" />
@@ -769,7 +769,7 @@
 			<column name="processed_date" type="timestamp" jt="93" mandatory="y" />
 			<column name="data_type_id" type="bigint" jt="-5" mandatory="y" />
 			<column name="link_filepaths_status" type="varchar" jt="12" mandatory="y" >
-				<defo>&#039;done&#039;</defo>
+				<defo>&#039;idle&#039;</defo>
 			</column>
 			<index name="pk_processed_data" unique="PRIMARY_KEY" >
 				<column name="processed_data_id" />
@@ -876,7 +876,7 @@
 			<column name="raw_data_id" type="bigserial" jt="-5" mandatory="y" />
 			<column name="filetype_id" type="bigint" jt="-5" mandatory="y" />
 			<column name="link_filepaths_status" type="varchar" jt="12" mandatory="y" >
-				<defo>&#039;done&#039;</defo>
+				<defo>&#039;idle&#039;</defo>
 			</column>
 			<index name="pk_raw_data" unique="UNIQUE" >
 				<column name="raw_data_id" />
