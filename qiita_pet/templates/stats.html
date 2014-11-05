@@ -1,0 +1,85 @@
+{% extends sitebase.html %}
+{% block head %}
+<style type="text/css">
+  html, body, #map-canvas { height: 100%; margin: 0; padding: 0;}
+</style>
+<script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?libraries=visualization"></script>
+<script type="text/javascript">
+
+function initialize() {
+  var mapOptions = {
+    center: { lat: 40.01027, lng: -105.24827},
+    zoom: 4,
+    scrollwheel: false,
+    streetViewControl: false,
+    mapTypeControl: false
+  };
+  
+  var map = new google.maps.Map(document.getElementById('map-canvas'),
+      mapOptions);
+
+  var pinColor = '00B2EE';
+  var pinImage = new google.maps.MarkerImage("http://chart.apis.google.com/chart?chst=d_map_pin_letter&chld= |" + pinColor,
+      new google.maps.Size(21, 34),
+      new google.maps.Point(0,0),
+      new google.maps.Point(10, 34));
+  var pinShadow = new google.maps.MarkerImage("http://chart.apis.google.com/chart?chst=d_map_pin_shadow",
+      new google.maps.Size(40, 37),
+      new google.maps.Point(0, 0),
+      new google.maps.Point(12, 35));
+  
+  {% for lat, lng in lat_longs %}
+      setMarker(map, {{ lat }}, {{ lng }}, pinImage, pinShadow, pinColor);
+  {% end %}
+};
+
+google.maps.event.addDomListener(window, 'load', initialize);
+
+function setMarker(map, lat, lng, pinImage, pinShadow)
+{
+    var marker = new google.maps.Marker({
+        position: {lat: lat, lng: lng},
+        map: map,
+        clickable: false,
+        icon: pinImage,
+        shadow: pinShadow
+    });
+}
+</script>
+
+{% end %}
+{% block content %}
+
+<div class="jumbotron">
+  <table width="100%">
+  <thead>
+    <tr>
+      <th>Number of studies</th>
+      <th>Number of samples</th>
+      <th>Number of users</th>
+    </tr>
+  </thead>
+    <tr>
+      <td>{{ num_samples }}</td>
+      <td>{{ num_users }}</td>
+      <td>{{ num_studies }}</td>
+    </tr>
+  </table>
+</div>
+<div id="map-canvas"></div>
+
+{% if random_study_id is not None %}
+    <div class="jumbotron">
+      <h2>Check out this random public study from the database!</h2>
+      <h3>{{ random_study_title }}</h3>
+      <p align="justify">{{ random_study_info['study_abstract'] }}</p>
+      <p>
+      {% if user is not None %}
+          <a href="/study/description/{{ random_study_id }}">Go to the study <span class="glyphicon glyphicon-arrow-right"></span></a>
+      {% else %}
+          <h4>Log in above to see this and other public studies</h4>
+      {% end %}
+      </p>
+    </div>
+{% end %}
+{% end %}

@@ -30,6 +30,7 @@ from qiita_pet.handlers.upload import UploadFileHandler, StudyUploadFileHandler
 from qiita_pet.handlers.compute import (
     ComputeCompleteHandler, AddFilesToRawData)
 from qiita_pet.handlers.preprocessing_handlers import PreprocessHandler
+from qiita_pet.handlers.stats import StatsHandler
 from qiita_db.util import get_db_files_base_dir
 
 define("port", default=8888, help="run on the given port", type=int)
@@ -77,6 +78,7 @@ class Application(tornado.web.Application):
             (r"/study/upload/(.*)", StudyUploadFileHandler),
             (r"/upload/", UploadFileHandler),
             (r"/check_study/", CreateStudyAJAX),
+            (r"/stats/", StatsHandler),
             # 404 PAGE MUST BE LAST IN THIS LIST!
             (r".*", NoPageHandler)
         ]
