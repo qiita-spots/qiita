@@ -84,6 +84,7 @@ from functools import partial
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from .base import QiitaObject
+from .logger import LogEntry
 from .sql_connection import SQLConnectionHandler
 from .exceptions import QiitaDBError
 from .util import (exists_dynamic_table, get_db_files_base_dir,
@@ -161,6 +162,8 @@ class BaseData(QiitaObject):
         except Exception as e:
             # Something went wrong, update the status
             self._set_link_filepaths_status("failed: %s" % e)
+            LogEntry.create('Runtime', e,
+                            info={self.__class__.__name__: self.id})
             raise e
 
         # Filepaths successfully added, update the status
@@ -439,6 +442,8 @@ class RawData(BaseData):
             conn_handler.execute_queue(queue)
         except Exception as e:
             self._set_link_filepaths_status("failed: %s" % e)
+            LogEntry.create('Runtime', e,
+                            info={self.__class__.__name__: self.id})
             raise e
 
         # We can already update the status to done, as the files have been
@@ -471,6 +476,8 @@ class RawData(BaseData):
             conn_handler.execute_queue(queue)
         except Exception as e:
             self._set_link_filepaths_status("failed: %s" % e)
+            LogEntry.create('Runtime', e,
+                            info={self.__class__.__name__: self.id})
             raise e
 
         # We can already update the status to done, as the files have been
