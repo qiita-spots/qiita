@@ -815,7 +815,10 @@ class TestPrepTemplate(TestCase):
                             'str_column': 'Value for sample 1',
                             'linkerprimersequence': 'GTGCCAGCMGCCGCGGTAA',
                             'barcodesequence': 'GTCCGCAAGTTA',
-                            'run_prefix': "s_G1_L001_sequences"},
+                            'run_prefix': "s_G1_L001_sequences",
+                            'platform': 'ILLUMINA',
+                            'library_construction_protocol': 'AAAA',
+                            'experiment_design_description': 'BBBB'},
             'SKD8.640184': {'center_name': 'ANL',
                             'center_project_name': 'Test Project',
                             'ebi_submission_accession': None,
@@ -823,7 +826,10 @@ class TestPrepTemplate(TestCase):
                             'str_column': 'Value for sample 2',
                             'linkerprimersequence': 'GTGCCAGCMGCCGCGGTAA',
                             'barcodesequence': 'CGTAGAGCTCTC',
-                            'run_prefix': "s_G1_L001_sequences"},
+                            'run_prefix': "s_G1_L001_sequences",
+                            'platform': 'ILLUMINA',
+                            'library_construction_protocol': 'AAAA',
+                            'experiment_design_description': 'BBBB'},
             'SKB7.640196': {'center_name': 'ANL',
                             'center_project_name': 'Test Project',
                             'ebi_submission_accession': None,
@@ -831,7 +837,10 @@ class TestPrepTemplate(TestCase):
                             'str_column': 'Value for sample 3',
                             'linkerprimersequence': 'GTGCCAGCMGCCGCGGTAA',
                             'barcodesequence': 'CCTCTGAGAGCT',
-                            'run_prefix': "s_G1_L002_sequences"}
+                            'run_prefix': "s_G1_L002_sequences",
+                            'platform': 'ILLUMINA',
+                            'library_construction_protocol': 'AAAA',
+                            'experiment_design_description': 'BBBB'}
             }
         self.metadata = pd.DataFrame.from_dict(metadata_dict, orient='index')
         self.test_raw_data = RawData(1)
@@ -928,8 +937,11 @@ class TestPrepTemplate(TestCase):
                [2, 'ebi_submission_accession', 'varchar'],
                [2, 'run_prefix', 'varchar'],
                [2, 'barcodesequence', 'varchar'],
-               [2, 'linkerprimersequence', 'varchar']]
-        self.assertEqual(obs, exp)
+               [2, 'linkerprimersequence', 'varchar'],
+               [2, 'platform', 'varchar'],
+               [2, 'experiment_design_description', 'varchar'],
+               [2, 'library_construction_protocol', 'varchar']]
+        self.assertEqual(sorted(obs), sorted(exp))
 
         # The new table exists
         self.assertTrue(exists_table("prep_2", self.conn_handler))
@@ -939,12 +951,15 @@ class TestPrepTemplate(TestCase):
             "SELECT * FROM qiita.prep_2")
         # sample_id, study_id, str_column, ebi_submission_accession,
         # run_prefix, barcodesequence, linkerprimersequence
-        exp = [['SKB7.640196', 1, 'Value for sample 3', None,
-                's_G1_L002_sequences', 'CCTCTGAGAGCT', 'GTGCCAGCMGCCGCGGTAA'],
-               ['SKB8.640193', 1, 'Value for sample 1', None,
-                's_G1_L001_sequences', 'GTCCGCAAGTTA', 'GTGCCAGCMGCCGCGGTAA'],
-               ['SKD8.640184', 1, 'Value for sample 2', None,
-                's_G1_L001_sequences', 'CGTAGAGCTCTC', 'GTGCCAGCMGCCGCGGTAA']]
+        exp = [['SKB7.640196', 1L, 'Value for sample 3', 'ILLUMINA',
+                's_G1_L002_sequences', 'CCTCTGAGAGCT', None,
+                'GTGCCAGCMGCCGCGGTAA', 'BBBB', 'AAAA'],
+               ['SKB8.640193', 1L, 'Value for sample 1', 'ILLUMINA',
+                's_G1_L001_sequences', 'GTCCGCAAGTTA', None,
+                'GTGCCAGCMGCCGCGGTAA', 'BBBB', 'AAAA'],
+               ['SKD8.640184', 1L, 'Value for sample 2', 'ILLUMINA',
+                's_G1_L001_sequences', 'CGTAGAGCTCTC', None,
+                'GTGCCAGCMGCCGCGGTAA', 'BBBB', 'AAAA']]
         self.assertEqual(sorted(obs), sorted(exp))
 
     def test_create_data_type_id(self):
@@ -979,8 +994,11 @@ class TestPrepTemplate(TestCase):
                [2, 'ebi_submission_accession', 'varchar'],
                [2, 'run_prefix', 'varchar'],
                [2, 'barcodesequence', 'varchar'],
-               [2, 'linkerprimersequence', 'varchar']]
-        self.assertEqual(obs, exp)
+               [2, 'linkerprimersequence', 'varchar'],
+               [2, 'platform', 'varchar'],
+               [2, 'experiment_design_description', 'varchar'],
+               [2, 'library_construction_protocol', 'varchar']]
+        self.assertEqual(sorted(obs), sorted(exp))
 
         # The new table exists
         self.assertTrue(exists_table("prep_2", self.conn_handler))
@@ -990,12 +1008,15 @@ class TestPrepTemplate(TestCase):
             "SELECT * FROM qiita.prep_2")
         # sample_id, study_id, str_column, ebi_submission_accession,
         # run_prefix, barcodesequence, linkerprimersequence
-        exp = [['SKB7.640196', 1, 'Value for sample 3', None,
-                's_G1_L002_sequences', 'CCTCTGAGAGCT', 'GTGCCAGCMGCCGCGGTAA'],
-               ['SKB8.640193', 1, 'Value for sample 1', None,
-                's_G1_L001_sequences', 'GTCCGCAAGTTA', 'GTGCCAGCMGCCGCGGTAA'],
-               ['SKD8.640184', 1, 'Value for sample 2', None,
-                's_G1_L001_sequences', 'CGTAGAGCTCTC', 'GTGCCAGCMGCCGCGGTAA']]
+        exp = [['SKB7.640196', 1L, 'Value for sample 3', 'ILLUMINA',
+                's_G1_L002_sequences', 'CCTCTGAGAGCT', None,
+                'GTGCCAGCMGCCGCGGTAA', 'BBBB', 'AAAA'],
+               ['SKB8.640193', 1L, 'Value for sample 1', 'ILLUMINA',
+                's_G1_L001_sequences', 'GTCCGCAAGTTA', None,
+                'GTGCCAGCMGCCGCGGTAA', 'BBBB', 'AAAA'],
+               ['SKD8.640184', 1L, 'Value for sample 2', 'ILLUMINA',
+                's_G1_L001_sequences', 'CGTAGAGCTCTC', None,
+                'GTGCCAGCMGCCGCGGTAA', 'BBBB', 'AAAA']]
         self.assertEqual(sorted(obs), sorted(exp))
 
     def test_create_error(self):
@@ -1300,6 +1321,17 @@ class TestPrepTemplate(TestCase):
         """investigation_type works correctly"""
         self.assertEqual(self.tester.investigation_type, "Metagenomics")
 
+    def test_investigation_type_setter(self):
+        """Able to update the investigation type"""
+        pt = PrepTemplate.create(self.metadata, self.new_raw_data,
+                                 self.test_study, self.data_type_id)
+        self.assertEqual(pt.investigation_type, None)
+        pt.investigation_type = "Other"
+        self.assertEqual(pt.investigation_type, 'Other')
+        with self.assertRaises(QiitaDBColumnError):
+            pt.investigation_type = "should fail"
+
+
 EXP_SAMPLE_TEMPLATE = (
     "sample_name\tcollection_timestamp\tdescription\thas_extracted_data\t"
     "has_physical_specimen\thost_subject_id\tlatitude\tlongitude\t"
@@ -1314,16 +1346,18 @@ EXP_SAMPLE_TEMPLATE = (
     "True\tNotIdentified\t4.8\t4.41\tlocation1\treceived\ttype1\t"
     "Value for sample 3\n")
 
+
 EXP_PREP_TEMPLATE = (
     'sample_name\tbarcodesequence\tcenter_name\tcenter_project_name\t'
-    'ebi_submission_accession\temp_status\tlinkerprimersequence\t'
+    'ebi_submission_accession\temp_status\texperiment_design_description\t'
+    'library_construction_protocol\tlinkerprimersequence\tplatform\t'
     'run_prefix\tstr_column\n'
-    'SKB7.640196\tCCTCTGAGAGCT\tANL\tTest Project\tNone\tEMP\t'
-    'GTGCCAGCMGCCGCGGTAA\ts_G1_L002_sequences\tValue for sample 3\n'
-    'SKB8.640193\tGTCCGCAAGTTA\tANL\tTest Project\tNone\tEMP\t'
-    'GTGCCAGCMGCCGCGGTAA\ts_G1_L001_sequences\tValue for sample 1\n'
-    'SKD8.640184\tCGTAGAGCTCTC\tANL\tTest Project\tNone\tEMP\t'
-    'GTGCCAGCMGCCGCGGTAA\ts_G1_L001_sequences\tValue for sample 2\n')
+    'SKB7.640196\tCCTCTGAGAGCT\tANL\tTest Project\tNone\tEMP\tBBBB\tAAAA\t'
+    'GTGCCAGCMGCCGCGGTAA\tILLUMINA\ts_G1_L002_sequences\tValue for sample 3\n'
+    'SKB8.640193\tGTCCGCAAGTTA\tANL\tTest Project\tNone\tEMP\tBBBB\tAAAA\t'
+    'GTGCCAGCMGCCGCGGTAA\tILLUMINA\ts_G1_L001_sequences\tValue for sample 1\n'
+    'SKD8.640184\tCGTAGAGCTCTC\tANL\tTest Project\tNone\tEMP\tBBBB\tAAAA\t'
+    'GTGCCAGCMGCCGCGGTAA\tILLUMINA\ts_G1_L001_sequences\tValue for sample 2\n')
 
 if __name__ == '__main__':
     main()

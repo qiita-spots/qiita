@@ -100,21 +100,31 @@
         <tr>
           <td style="vertical-align:top;padding:10px;">
             <h4>Add prep template to this raw data</h4>
-            To add a prep template you need to (1) select your prep template file
-            <select id="add_prep_template_{{r.id}}">
-              {% for f in files %}
-                <option value="{{f}}">{{f}}</option>
-              {% end %}
-            </select>
-            and (2) the prep template data type:
-            <select id="data_type_{{r.id}}">
-              {% raw data_types %}
-            </select>
-            {% if can_upload %}
-              <br/><br/>
-              You can also <a href="/study/upload/{{study_id}}">upload</a> some files.
-            {% end %}
-            <br/><br/>
+            To add a prep template you need to:
+            <ol>
+              <li>
+                select your prep template file
+                <select id="add_prep_template_{{r.id}}">
+                  {% for f in files %}
+                    <option value="{{f}}">{{f}}</option>
+                  {% end %}
+                </select>,
+              </li>
+              <li>
+                select the prep template data type
+                <select id="data_type_{{r.id}}">
+                  {% raw data_types %}
+                </select>, and
+              </li>
+              <li>
+                (optional but required for EBI submission) select an investigation type:
+                <select id="investigation_type_{{r.id}}">
+                  <option value="">Non selected</option>
+                  {% raw ena_terms %}
+                </select>
+              </li>
+            </ol>
+            <br/>
             <a class="btn btn-primary" onClick="add_prep_template({{r.id}});">Add prep template</a>
             <br/>
             <hr/>
@@ -125,8 +135,19 @@
                 <td style="padding:3px;">{{prep.data_type()}}</td>
                 <td style="padding:3px;">
                   <a class="btn btn-primary" href="/metadata_summary/?study_id={{study_id}}&prep_template={{prep.id}}">Show prep template summary</a>
+                  <br/><br/>
+                  Investigation type:
+                  <select id="investigation_type_prep_{{prep.id}}" onchange="update_investigation_type('{{prep.investigation_type}}', {{prep.id}})">
+                    <option value="">Non selected</option>
+                    {% raw ena_terms %}
+                  </select>
+                  <script>
+                  if ("{{prep.investigation_type}}" != "None") {
+                    document.getElementById('investigation_type_prep_{{prep.id}}').value = "{{prep.investigation_type}}";
+                  }
+                  </script>
                 </td>
-                {% if not prep.preprocessed_data %}
+                {% if not prep.preprocessed_data or prep.preprocessing_status.startswith('failed') %}
                   <td style="padding:3px;">
                     <input type="button" class="btn btn-primary" value="Split libraries" onclick="split_libraries({{prep.id}});">
                     <input type="checkbox" id="rev_comp_mapping_barcodes_{{prep.id}}"> Use rev_comp_mapping_barcodes
@@ -142,21 +163,25 @@
                     <table border="0">
                     {% for pdi in prep.preprocessed_data %}
                       {% set pd = PreprocessedData(pdi) %}
+                      {% if pd.get_filepaths() %}
                         <tr>
                           <td style="padding:3px;">
                             <a class="btn btn-primary" href="" onclick="alert('Coming soon!')">Preprocessing summary</a>
                           </td>
-                          {% if user_level == "admin" %}
-                          <td style="padding:3px;">
-                            <a class="btn btn-primary" href="ebi_submission/{{study_id}}">Submit to EBI</a>
-                          </td>
-                          {% end %}
-                          <td style="padding:3px;">
+                          <td rowspan="2" style="padding:3px;">
                             EBI status: {{pd.submitted_to_insdc_status()}}<br/>
                             EBI study accession: {{pd.ebi_study_accession}}<br/>
                             EBI submission accession: {{pd.ebi_submission_accession}}
                           </td>
                         </tr>
+                        {% if user_level == "admin" %}
+                        <tr>
+                          <td style="padding:3px;">
+                            <a class="btn btn-primary" href="/ebi_submission/{{pd.id}}">Submit to EBI</a>
+                          </td>
+                        </tr>
+                        {% end %}
+                      {% end %}
                     {% end %}
                     </table>
                   </td>
@@ -199,8 +224,6 @@
     </div>
   {% end %}
 </div>
-
-{% raw msg %}
 
 <script>
   function process_sample_template() {
@@ -260,6 +283,10 @@
           .attr("type", "hidden")
           .attr("name", "add_prep_template")
           .attr("value", $("#add_prep_template_" + raw_data_id).val()))
+        .append($("<input>")
+          .attr("type", "hidden")
+          .attr("name", "investigation_type")
+          .attr("value", $("#investigation_type_" + raw_data_id).val()))
         .append($("<input>")
           .attr("type", "hidden")
           .attr("name", "data_type_id")
@@ -344,6 +371,26 @@
           .attr("value", $("#rev_comp_mapping_barcodes_" + prep_template_id).is(':checked')));
       $("body").append(form);
       form.submit();
+    }
+  }
+
+  function update_investigation_type(old_value, prep_template_id) {
+    if (confirm("Are you sure you want to update the investigation type?")) {
+        var form = $("<form>")
+          .attr("action", window.location.href)
+          .attr("method", "post")
+          .append($("<input>")
+            .attr("type", "hidden")
+            .attr("name", "update_investigation_type")
+            .attr("value", prep_template_id))
+          .append($("<input>")
+            .attr("type", "hidden")
+            .attr("name", "investigation_type")
+            .attr("value", $("#investigation_type_prep_" + prep_template_id).val()));
+        $("body").append(form);
+        form.submit();
+    } else {
+      $("#investigation_type_prep_" + prep_template_id).val(old_value);
     }
   }
 
