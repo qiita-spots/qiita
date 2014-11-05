@@ -165,17 +165,17 @@ class RawDataTests(TestCase):
     def test_link_filepaths_status_setter(self):
         rd = RawData(1)
         self.assertEqual(rd.link_filepaths_status, 'done')
-        rd.link_filepaths_status = 'linking'
+        rd._set_link_filepaths_status('linking')
         self.assertEqual(rd.link_filepaths_status, 'linking')
-        rd.link_filepaths_status = 'unlinking'
+        rd._set_link_filepaths_status('unlinking')
         self.assertEqual(rd.link_filepaths_status, 'unlinking')
-        rd.link_filepaths_status = 'failed: error'
+        rd._set_link_filepaths_status('failed: error')
         self.assertEqual(rd.link_filepaths_status, 'failed: error')
 
     def test_link_filepaths_status_setter_error(self):
         rd = RawData(1)
         with self.assertRaises(ValueError):
-            rd.link_filepaths_status = 'not a valid status'
+            rd._set_link_filepaths_status('not a valid status')
 
     def test_is_preprocessed(self):
         self.assertTrue(RawData(1)._is_preprocessed())
@@ -486,17 +486,17 @@ class PreprocessedDataTests(TestCase):
     def test_link_filepaths_status_setter(self):
         ppd = PreprocessedData(1)
         self.assertEqual(ppd.link_filepaths_status, 'done')
-        ppd.link_filepaths_status = 'linking'
+        ppd._set_link_filepaths_status('linking')
         self.assertEqual(ppd.link_filepaths_status, 'linking')
-        ppd.link_filepaths_status = 'unlinking'
+        ppd._set_link_filepaths_status('unlinking')
         self.assertEqual(ppd.link_filepaths_status, 'unlinking')
-        ppd.link_filepaths_status = 'failed: error'
+        ppd._set_link_filepaths_status('failed: error')
         self.assertEqual(ppd.link_filepaths_status, 'failed: error')
 
     def test_link_filepaths_status_setter_error(self):
         ppd = PreprocessedData(1)
         with self.assertRaises(ValueError):
-            ppd.link_filepaths_status = 'not a valid status'
+            ppd._set_link_filepaths_status('not a valid status')
 
 
 @qiita_test_checker()
@@ -709,17 +709,17 @@ class ProcessedDataTests(TestCase):
     def test_link_filepaths_status_setter(self):
         pd = ProcessedData(1)
         self.assertEqual(pd.link_filepaths_status, 'done')
-        pd.link_filepaths_status = 'linking'
+        pd._set_link_filepaths_status('linking')
         self.assertEqual(pd.link_filepaths_status, 'linking')
-        pd.link_filepaths_status = 'unlinking'
+        pd._set_link_filepaths_status('unlinking')
         self.assertEqual(pd.link_filepaths_status, 'unlinking')
-        pd.link_filepaths_status = 'failed: error'
+        pd._set_link_filepaths_status('failed: error')
         self.assertEqual(pd.link_filepaths_status, 'failed: error')
 
     def test_link_filepaths_status_setter_error(self):
         pd = ProcessedData(1)
         with self.assertRaises(ValueError):
-            pd.link_filepaths_status = 'not a valid status'
+            pd._set_link_filepaths_status('not a valid status')
 
 
 if __name__ == '__main__':
