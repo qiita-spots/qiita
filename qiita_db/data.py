@@ -215,9 +215,23 @@ class BaseData(QiitaObject):
             (self._id,))[0]
 
     def _set_link_filepaths_status(self, status):
+        """Updates the link_filepaths_status of the object
+
+        Parameters
+        ----------
+        status : str
+            The new status
+
+        Raises
+        ------
+        ValueError
+            If the status is unknown
+        """
         self._check_subclass()
         if (status not in ('idle', 'linking', 'unlinking') and
                 not status.startswith('failed')):
+            LogEntry.create('Runtime', e,
+                            info={self.__class__.__name__: self.id})
             raise ValueError('Unknown status: %s' % status)
 
         conn_handler = SQLConnectionHandler()
