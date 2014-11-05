@@ -8,9 +8,9 @@
 
 from __future__ import division
 from unittest import TestCase, main
-from tempfile import mkdtemp, mkstemp
-from os.path import exists, join, basename
-from os import remove, close
+from tempfile import mkdtemp
+from os.path import exists, join
+from os import remove
 from functools import partial
 from shutil import rmtree
 
@@ -25,8 +25,7 @@ from qiita_db.metadata_template import PrepTemplate
 from qiita_ware.processing_pipeline import (_get_preprocess_fastq_cmd,
                                             _insert_preprocessed_data_fastq,
                                             _generate_demux_file,
-                                            _get_qiime_minimal_mapping,
-                                            _add_files_to_raw_data)
+                                            _get_qiime_minimal_mapping)
 
 
 @qiita_test_checker()
@@ -188,25 +187,6 @@ class ProcessingPipelineTests(TestCase):
 
         self.assertTrue(exists(join(prep_out_dir, 'seqs.demux')))
 
-    def test_add_files_to_raw_data(self):
-        # preparing temporal files
-        fd, fp = mkstemp()
-        close(fd)
-        with open(fp, 'w') as f:
-            f.write("test")
-
-        # getting previous filepaths to check that they are not erased in a
-        # new submission
-        rd = RawData(1)
-        expected = rd.get_filepaths()
-        expected.append(
-            (join(self.db_dir, 'raw_data', "1_%s" % basename(fp)),
-             "raw_forward_seqs"))
-
-        _add_files_to_raw_data(1, [(fp, 'raw_forward_seqs')])
-        actual = rd.get_filepaths()
-
-        self.assertEqual(set(actual), set(expected))
 
 DEMUX_SEQS = """@a_1 orig_bc=abc new_bc=abc bc_diffs=0
 xyz
