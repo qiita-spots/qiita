@@ -8,19 +8,19 @@ class TestSearchStudiesHandler(TestHandlerBase):
     database = True
 
     def test_parse_search_results(self):
-        # figure out how to test this
+        # TODO: add proper test for this once figure out how. Issue 567
         pass
 
     def test_selected_parser(self):
-        # figure out how to test this
+        # TODO: add proper test for this once figure out how. Issue 567
         pass
 
     def test_parse_form_select(self):
-        # figure out how to test this
+        # TODO: add proper test for this once figure out how. Issue 567
         pass
 
     def test_parse_form_deselect(self):
-        # figure out how to test this
+        # TODO: add proper test for this once figure out how. Issue 567
         pass
 
     def test_get_existing_selected(self):

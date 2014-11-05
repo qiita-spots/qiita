@@ -6,7 +6,7 @@ from qiita_db.util import get_count, check_count
 
 
 class TestCreateStudyForm(TestHandlerBase):
-    # TODO: add tests for form creation
+    # TODO: add proper test for this once figure out how. Issue 567
     pass
 
 
@@ -106,7 +106,7 @@ class TestMetadataSummaryHandler(TestHandlerBase):
 
 
 class TestEBISubmitHandler(TestHandlerBase):
-    # TODO: figure out how tot test this
+    # TODO: add proper test for this once figure out how. Issue 567
     pass
 
 

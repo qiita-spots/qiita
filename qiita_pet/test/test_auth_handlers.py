@@ -42,7 +42,7 @@ class TestAuthLoginHandler(TestHandlerBase):
         self.assertEqual(response.code, 200)
 
     def test_set_current_user(self):
-        # TODO: figure out how to test this
+        # TODO: add proper test for this once figure out how. Issue 567
         pass
 
 
