@@ -367,8 +367,6 @@ class StudyDescriptionHandler(BaseHandler):
                     return
                 msg = ""
             else:
-                # to be implemented
-                # add raw data to study
                 raw_data = [RawData(rd) for rd in previous_raw_data]
                 study.add_raw_data(raw_data)
                 msg = ""
