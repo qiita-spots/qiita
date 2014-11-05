@@ -11,6 +11,7 @@ from os.path import dirname, join
 from base64 import b64encode
 from uuid import uuid4
 
+from qiita_core.qiita_settings import qiita_config
 from qiita_pet.handlers.base_handlers import (MainHandler, NoPageHandler)
 from qiita_pet.handlers.auth_handlers import (
     AuthCreateHandler, AuthLoginHandler, AuthLogoutHandler, AuthVerifyHandler)
@@ -22,12 +23,14 @@ from qiita_pet.handlers.analysis_handlers import (
 from qiita_pet.handlers.study_handlers import (
     CreateStudyHandler, PrivateStudiesHandler, PublicStudiesHandler,
     StudyDescriptionHandler, MetadataSummaryHandler, EBISubmitHandler,
-    CreateStudyAJAX)
+    CreateStudyAJAX, ShareStudyAJAX)
 from qiita_pet.handlers.logger_handlers import LogEntryViewerHandler
 from qiita_pet.handlers.websocket_handlers import MessageHandler
-from qiita_pet.handlers.upload import UploadFileHandler
-from qiita_pet.handlers.compute import ComputeCompleteHandler
+from qiita_pet.handlers.upload import UploadFileHandler, StudyUploadFileHandler
+from qiita_pet.handlers.compute import (
+    ComputeCompleteHandler, AddFilesToRawData, UnlinkAllFiles)
 from qiita_pet.handlers.preprocessing_handlers import PreprocessHandler
+from qiita_pet.handlers.stats import StatsHandler
 from qiita_db.util import get_db_files_base_dir
 
 define("port", default=8888, help="run on the given port", type=int)
@@ -37,7 +40,7 @@ STATIC_PATH = join(DIRNAME, "static")
 TEMPLATE_PATH = join(DIRNAME, "templates")  # base folder for webpages
 RES_PATH = get_db_files_base_dir()
 COOKIE_SECRET = b64encode(uuid4().bytes + uuid4().bytes)
-DEBUG = True
+DEBUG = qiita_config.test_environment
 
 
 class Application(tornado.web.Application):
@@ -68,10 +71,15 @@ class Application(tornado.web.Application):
             (r"/study/create/", CreateStudyHandler),
             (r"/study/private/", PrivateStudiesHandler),
             (r"/study/public/", PublicStudiesHandler),
+            (r"/study/add_files_to_raw_data", AddFilesToRawData),
+            (r"/study/unlink_all_files", UnlinkAllFiles),
             (r"/study/preprocess", PreprocessHandler),
+            (r"/study/sharing/", ShareStudyAJAX),
             (r"/study/description/(.*)", StudyDescriptionHandler),
+            (r"/study/upload/(.*)", StudyUploadFileHandler),
             (r"/upload/", UploadFileHandler),
             (r"/check_study/", CreateStudyAJAX),
+            (r"/stats/", StatsHandler),
             # 404 PAGE MUST BE LAST IN THIS LIST!
             (r".*", NoPageHandler)
         ]

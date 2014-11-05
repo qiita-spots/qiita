@@ -13,7 +13,7 @@ from os.path import join, exists, basename
 
 from qiita_core.util import qiita_test_checker
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
-from qiita_db.exceptions import QiitaDBColumnError
+from qiita_db.exceptions import QiitaDBColumnError, QiitaDBError
 from qiita_db.util import (exists_table, exists_dynamic_table, scrub_data,
                            compute_checksum, check_table_cols,
                            check_required_columns, convert_to_id,
@@ -23,7 +23,8 @@ from qiita_db.util import (exists_table, exists_dynamic_table, scrub_data,
                            params_dict_to_json, get_user_fp, get_study_fp,
                            insert_filepaths, get_db_files_base_dir,
                            get_data_types, get_required_sample_info_status,
-                           get_emp_status)
+                           get_emp_status, purge_filepaths, get_filepath_id,
+                           get_lat_longs)
 from qiita_core.qiita_settings import qiita_config
 
 
@@ -58,6 +59,39 @@ class DBUtilTests(TestCase):
         with self.assertRaises(QiitaDBColumnError):
             check_required_columns(self.conn_handler, self.required,
                                    self.table)
+
+    def test_get_lat_longs(self):
+        exp = [
+            [74.0894932572, 65.3283470202],
+            [57.571893782, 32.5563076447],
+            [13.089194595, 92.5274472082],
+            [12.7065957714, 84.9722975792],
+            [31.7167821863, 95.5088566087],
+            [44.9725384282, 66.1920014699],
+            [10.6655599093, 70.784770579],
+            [29.1499460692, 82.1270418227],
+            [35.2374368957, 68.5041623253],
+            [53.5050692395, 31.6056761814],
+            [60.1102854322, 74.7123248382],
+            [4.59216095574, 63.5115213108],
+            [68.0991287718, 34.8360987059],
+            [84.0030227585, 66.8954849864],
+            [3.21190859967, 26.8138925876],
+            [82.8302905615, 86.3615778099],
+            [12.6245524972, 96.0693176066],
+            [85.4121476399, 15.6526750776],
+            [63.6505562766, 31.2003474585],
+            [23.1218032799, 42.838497795],
+            [43.9614715197, 82.8516734159],
+            [68.51099627, 2.35063674718],
+            [0.291867635913, 68.5945325743],
+            [40.8623799474, 6.66444220187],
+            [95.2060749748, 27.3592668624],
+            [78.3634273709, 74.423907894],
+            [38.2627021402, 3.48274264219]]
+
+        obs = get_lat_longs()
+        self.assertEqual(obs, exp)
 
     def test_check_table_cols(self):
         # Doesn't do anything if correct info passed, only errors if wrong info
@@ -145,7 +179,7 @@ class DBUtilTests(TestCase):
         """Tests that get_filetypes works with valid arguments"""
 
         obs = get_filetypes()
-        exp = {'FASTA': 1, 'FASTQ': 2, 'SPECTRA': 3}
+        exp = {'SFF': 1, 'FASTA-Sanger': 2, 'FASTQ': 3}
         self.assertEqual(obs, exp)
 
         obs = get_filetypes(key='filetype_id')
@@ -277,6 +311,118 @@ class DBUtilTests(TestCase):
         exp_fp = join("raw_data", "1_%s" % basename(fp))
         exp = [[16, exp_fp, 1, '852952723', 1]]
         self.assertEqual(obs, exp)
+
+    def test_insert_filepaths_queue(self):
+        fd, fp = mkstemp()
+        close(fd)
+        with open(fp, "w") as f:
+            f.write("\n")
+        self.files_to_remove.append(fp)
+
+        # create and populate queue
+        self.conn_handler.create_queue("toy_queue")
+        self.conn_handler.add_to_queue(
+            "toy_queue", "INSERT INTO qiita.qiita_user (email, name, password,"
+            "phone) VALUES (%s, %s, %s, %s)",
+            ['insert@foo.bar', 'Toy', 'pass', '111-111-1111'])
+
+        insert_filepaths([(fp, "raw_forward_seqs")], 1, "raw_data",
+                         "filepath", self.conn_handler, queue='toy_queue')
+
+        self.conn_handler.add_to_queue(
+            "toy_queue", "INSERT INTO qiita.raw_filepath (raw_data_id, "
+            "filepath_id) VALUES (1, %s)", ['{0}'])
+        self.conn_handler.execute_queue("toy_queue")
+
+        # check that the user was added to the DB
+        obs = self.conn_handler.execute_fetchall(
+            "SELECT * from qiita.qiita_user WHERE email = %s",
+            ['insert@foo.bar'])
+        exp = [['insert@foo.bar', 5, 'pass', 'Toy', None, None, '111-111-1111',
+                None, None, None]]
+        self.assertEqual(obs, exp)
+
+        # Check that the filepaths have been added to the DB
+        obs = self.conn_handler.execute_fetchall(
+            "SELECT * FROM qiita.filepath WHERE filepath_id=16")
+        exp_fp = join("raw_data", "1_%s" % basename(fp))
+        exp = [[16, exp_fp, 1, '852952723', 1]]
+        self.assertEqual(obs, exp)
+
+        # check that raw_filpath data was added to the DB
+        obs = self.conn_handler.execute_fetchall(
+            "SELECT * FROM qiita.raw_filepath WHERE filepath_id=16")
+        exp_fp = join("raw_data", "1_%s" % basename(fp))
+        exp = [[1, 16]]
+        self.assertEqual(obs, exp)
+
+    def test_purge_filepaths(self):
+        # Add a new filepath to the database
+        fd, fp = mkstemp()
+        close(fd)
+        fp_id = self.conn_handler.execute_fetchone(
+            "INSERT INTO qiita.filepath "
+            "(filepath, filepath_type_id, checksum, checksum_algorithm_id) "
+            "VALUES (%s, %s, %s, %s) RETURNING filepath_id", (fp, 1, "", 1))[0]
+        self.assertEqual(fp_id, 16)
+
+        # Connect the just added filepath to a raw data
+        self.conn_handler.execute(
+            "INSERT INTO qiita.raw_filepath (raw_data_id, filepath_id) VALUES"
+            "(%s, %s)", (1, 16))
+
+        # Get the filepaths so we can test if they've been removed or not
+        sql_fp = "SELECT filepath FROM qiita.filepath WHERE filepath_id=%s"
+
+        fp1 = self.conn_handler.execute_fetchone(sql_fp, (1,))[0]
+        fp1 = join(get_db_files_base_dir(), fp1)
+
+        # Make sure that the file exists - specially for travis
+        with open(fp1, 'w') as f:
+            f.write('\n')
+
+        fp16 = self.conn_handler.execute_fetchone(sql_fp, (16,))[0]
+        fp16 = join(get_db_files_base_dir(), fp16)
+
+        # Nothing should be removed
+        purge_filepaths(self.conn_handler)
+
+        sql_ids = ("SELECT filepath_id FROM qiita.filepath ORDER BY "
+                   "filepath_id")
+        obs = self.conn_handler.execute_fetchall(sql_ids)
+        exp = [[1], [2], [3], [4], [5], [6], [7], [8], [9],
+               [10], [11], [12], [13], [14], [15], [16]]
+        self.assertEqual(obs, exp)
+
+        # Check that the files still exist
+        self.assertTrue(exists(fp1))
+        self.assertTrue(exists(fp16))
+
+        # Unlink the filepath from the raw data
+        self.conn_handler.execute(
+            "DELETE FROM qiita.raw_filepath WHERE filepath_id=%s", (16,))
+
+        # Only filepath 16 should be removed
+        purge_filepaths(self.conn_handler)
+
+        obs = self.conn_handler.execute_fetchall(sql_ids)
+        exp = [[1], [2], [3], [4], [5], [6], [7], [8], [9],
+               [10], [11], [12], [13], [14], [15]]
+        self.assertEqual(obs, exp)
+
+        # Check that only the file for the removed filepath has been removed
+        self.assertTrue(exists(fp1))
+        self.assertFalse(exists(fp16))
+
+    def test_get_filepath_id(self):
+        fp = join(get_db_files_base_dir(),
+                  'raw_data/1_s_G1_L001_sequences.fastq.gz')
+        obs = get_filepath_id(fp, self.conn_handler)
+        self.assertEqual(obs, 1)
+
+    def test_get_filepath_id_error(self):
+        with self.assertRaises(QiitaDBError):
+            get_filepath_id("Not_a_path", self.conn_handler)
 
     def test_get_study_fps(self):
         study_id = 1000

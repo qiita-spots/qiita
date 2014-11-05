@@ -11,21 +11,22 @@ from os import makedirs
 from functools import partial
 
 from qiita_db.study import Study
+from qiita_db.data import PreprocessedData
 from qiita_ware.ebi import EBISubmission
 
 
 ebi_actions = ['ADD', 'VALIDATE', 'MODIFY']
 
 
-def submit_EBI_from_files(study_id, sample_template, prep_template,
+def submit_EBI_from_files(preprocessed_data_id, sample_template, prep_template,
                           fastq_dir_fp, output_dir_fp, investigation_type,
                           action, send, new_investigation_type=None):
     """EBI submission from files
 
     Parameters
     ----------
-    study_id : int
-        The study id
+    preprocessed_data_id : int
+        The preprocesssed data id
     sample_template : File
         The file handler of the sample template file
     prep_template : File
@@ -46,8 +47,9 @@ def submit_EBI_from_files(study_id, sample_template, prep_template,
         'metagenomics' are commonly used.
     """
 
-    study = Study(study_id)
-    study_id_str = str(study_id)
+    preprocessed_data = PreprocessedData(preprocessed_data_id)
+    preprocessed_data_id_str = str(preprocessed_data_id)
+    study = Study(preprocessed_data.study)
 
     # Get study-specific output directory and set filepaths
     get_output_fp = partial(join, output_dir_fp)
@@ -63,10 +65,15 @@ def submit_EBI_from_files(study_id, sample_template, prep_template,
         raise ValueError('The output folder already exists: %s' %
                          output_dir_fp)
 
+    # this is a know issue and @ElDeveloper is working on a fix:
+    # https://github.com/biocore/qiita/pull/522
+    if investigation_type == "Other":
+        investigation_type = 'Amplicon Sequencing'
     submission = EBISubmission.from_templates_and_per_sample_fastqs(
-        study_id_str, study.title, study.info['study_abstract'],
+        preprocessed_data_id_str, study.title, study.info['study_abstract'],
         investigation_type, sample_template, prep_template,
-        fastq_dir_fp, new_investigation_type=new_investigation_type)
+        fastq_dir_fp, new_investigation_type=new_investigation_type,
+        pmids=study.pmids)
 
     submission.write_all_xml_files(study_fp, sample_fp, experiment_fp, run_fp,
                                    submission_fp, action)

@@ -318,7 +318,7 @@ def _construct_datasets(sample_stats, h5file, max_barcode_length=12):
         path = pjoin(dset_paths['barcode_error'])
         buffers[path] = create_dataset(path, int, rows, 1)
         path = pjoin(dset_paths['qual'])
-        buffers[path] = create_dataset(path, int, rows, cols)
+        buffers[path] = create_dataset(path, np.uint8, rows, cols)
 
         # set stats
         _set_attr_stats(h5file[sid], stats)
@@ -438,7 +438,7 @@ def to_ascii(demux, samples=None):
     for samp, idx, seq, qual, bc_ori, bc_cor, bc_err in fetch(demux, samples):
         seq_id = id_fmt % {'sample': samp, 'idx': idx, 'bc_ori': bc_ori,
                            'bc_cor': bc_cor, 'bc_diff': bc_err}
-        yield formatter(seq_id, seq, qual)
+        yield formatter(seq_id, seq, qual.astype(np.uint8))
 
 
 def to_per_sample_ascii(demux, samples=None):

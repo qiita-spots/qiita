@@ -9,7 +9,9 @@ from qiita_db.base import QiitaObject
 from qiita_db.study import Study, StudyPerson
 from qiita_db.investigation import Investigation
 from qiita_db.user import User
-from qiita_db.exceptions import QiitaDBColumnError, QiitaDBStatusError
+from qiita_db.data import RawData
+from qiita_db.exceptions import (QiitaDBColumnError, QiitaDBStatusError,
+                                 QiitaDBError)
 
 # -----------------------------------------------------------------------------
 # Copyright (c) 2014--, The Qiita Development Team.
@@ -167,6 +169,54 @@ class TestStudy(TestCase):
             'most_recent_contact': datetime(2014, 5, 19, 16, 11),
             'lab_person_id': StudyPerson(1),
             'number_samples_collected': 27}
+
+    def _make_private(self):
+        # make studies private
+        self.conn_handler.execute("UPDATE qiita.study SET study_status_id = 3")
+
+    def test_has_access_public(self):
+        self.assertTrue(self.study.has_access(User("demo@microbio.me")))
+
+    def test_has_access_no_public(self):
+        self.assertFalse(self.study.has_access(User("demo@microbio.me"), True))
+
+    def test_owner(self):
+        self.assertEqual(self.study.owner, "test@foo.bar")
+
+    def test_share(self):
+        # Clear all sharing associations
+        self._make_private()
+        self.conn_handler.execute("delete from qiita.study_users")
+        self.assertEqual(self.study.shared_with, [])
+
+        # Try to share with the owner, which should not work
+        self.study.share(User("test@foo.bar"))
+        self.assertEqual(self.study.shared_with, [])
+
+        # Then share the study with shared@foo.bar
+        self.study.share(User("shared@foo.bar"))
+        self.assertEqual(self.study.shared_with, ["shared@foo.bar"])
+
+    def test_unshare(self):
+        self._make_private()
+        self.study.unshare(User("shared@foo.bar"))
+        self.assertEqual(self.study.shared_with, [])
+
+    def test_has_access_shared(self):
+        self._make_private()
+        self.assertTrue(self.study.has_access(User("shared@foo.bar")))
+
+    def test_has_access_private(self):
+        self._make_private()
+        self.assertTrue(self.study.has_access(User("test@foo.bar")))
+
+    def test_has_access_admin(self):
+        self._make_private()
+        self.assertTrue(self.study.has_access(User("admin@foo.bar")))
+
+    def test_has_access_no_access(self):
+        self._make_private()
+        self.assertFalse(self.study.has_access(User("demo@microbio.me")))
 
     def test_get_public(self):
         Study.create(User('test@foo.bar'), 'NOT Identification of the '
@@ -393,8 +443,7 @@ class TestStudy(TestCase):
         self.assertEqual(new.status, "private")
 
     def test_retrieve_shared_with(self):
-        self.assertEqual(self.study.shared_with, ['shared@foo.bar',
-                         'demo@microbio.me'])
+        self.assertEqual(self.study.shared_with, ['shared@foo.bar'])
 
     def test_retrieve_pmids(self):
         exp = ['123456', '7891011']
@@ -431,6 +480,19 @@ class TestStudy(TestCase):
         new = Study.create(User('test@foo.bar'), 'NOT Identification of the '
                            'Microbiomes for Cannabis Soils', [1], self.info)
         self.assertEqual(new.raw_data(), [])
+
+    def test_add_raw_data(self):
+        new = Study.create(User('test@foo.bar'), 'NOT Identification of the '
+                           'Microbiomes for Cannabis Soils', [1], self.info)
+        new.add_raw_data([RawData(1), RawData(2)])
+        obs = self.conn_handler.execute_fetchall(
+            "SELECT * FROM qiita.study_raw_data WHERE study_id=%s",
+            (new.id,))
+        self.assertEqual(obs, [[new.id, 1], [new.id, 2]])
+
+    def test_add_raw_data_error(self):
+        with self.assertRaises(QiitaDBError):
+            self.study.add_raw_data([RawData(1)])
 
     def test_retrieve_preprocessed_data(self):
         self.assertEqual(self.study.preprocessed_data(), [1, 2])

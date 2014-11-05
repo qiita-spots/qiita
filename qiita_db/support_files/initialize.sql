@@ -11,16 +11,16 @@ INSERT INTO qiita.job_status (status) VALUES ('queued'), ('running'), ('complete
 INSERT INTO qiita.data_type (data_type) VALUES ('16S'), ('18S'), ('ITS'), ('Proteomic'), ('Metabolomic'), ('Metagenomic');
 
 -- Populate filetype table
-INSERT INTO qiita.filetype (type) VALUES ('FASTA'), ('FASTQ'), ('SPECTRA');
+INSERT INTO qiita.filetype (type) VALUES ('SFF'), ('FASTA-Sanger'), ('FASTQ');
 
 -- Populate emp_status table
 INSERT INTO qiita.emp_status (emp_status) VALUES ('EMP'), ('EMP_Processed'), ('NOT_EMP');
 
 -- Populate study_status table
-INSERT INTO qiita.study_status (status, description) VALUES ('waiting_approval', 'Awaiting approval of metadata'), ('public', 'Anyone can see this study'), ('private', 'Only owner and shared users can see this study');
+INSERT INTO qiita.study_status (status, description) VALUES ('awaiting_approval', 'Awaiting approval of metadata'), ('public', 'Anyone can see this study'), ('private', 'Only owner and shared users can see this study');
 
 -- Populate timeseries_type table
-INSERT INTO qiita.timeseries_type (timeseries_type) VALUES ('NOT_TIMESERIES'), ('TIMESERIES_1'), ('TIMESERIES_2');
+INSERT INTO qiita.timeseries_type (timeseries_type) VALUES ('NOT_TIMESERIES'), ('TIMESERIES_1'), ('TIMESERIES_2'), ('TIMESERIES_3');
 
 -- Populate severity table
 INSERT INTO qiita.severity (severity) VALUES ('Warning'), ('Runtime'), ('Fatal');
