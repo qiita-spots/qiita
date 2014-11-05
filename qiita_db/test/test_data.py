@@ -14,6 +14,7 @@ from tempfile import mkstemp
 
 from qiita_core.util import qiita_test_checker
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
+from qiita_db.exceptions import QiitaDBError
 from qiita_db.study import Study
 from qiita_db.util import get_db_files_base_dir
 from qiita_db.data import BaseData, RawData, PreprocessedData, ProcessedData
@@ -63,8 +64,8 @@ class RawDataTests(TestCase):
         # Check that the raw data have been correctly added to the DB
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.raw_data WHERE raw_data_id=3")
-        # raw_data_id, filetype
-        self.assertEqual(obs, [[3, 2]])
+        # raw_data_id, filetype, link_filepaths_status
+        self.assertEqual(obs, [[3, 2, 'idle']])
 
         # Check that the raw data have been correctly linked with the study
         obs = self.conn_handler.execute_fetchall(
@@ -109,8 +110,8 @@ class RawDataTests(TestCase):
         # Check that the raw data have been correctly added to the DB
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.raw_data WHERE raw_data_id=3")
-        # raw_data_id, filetype
-        self.assertEqual(obs, [[3, 2]])
+        # raw_data_id, filetype, link_filepaths_status
+        self.assertEqual(obs, [[3, 2, 'idle']])
 
         # Check that the raw data have been correctly linked with the study
         obs = self.conn_handler.execute_fetchall(
@@ -157,6 +158,64 @@ class RawDataTests(TestCase):
         rd = RawData(1)
         self.assertEqual(rd.prep_templates, [1])
 
+    def test_link_filepaths_status(self):
+        rd = RawData(1)
+        self.assertEqual(rd.link_filepaths_status, 'idle')
+
+    def test_link_filepaths_status_setter(self):
+        rd = RawData(1)
+        self.assertEqual(rd.link_filepaths_status, 'idle')
+        rd._set_link_filepaths_status('linking')
+        self.assertEqual(rd.link_filepaths_status, 'linking')
+        rd._set_link_filepaths_status('unlinking')
+        self.assertEqual(rd.link_filepaths_status, 'unlinking')
+        rd._set_link_filepaths_status('failed: error')
+        self.assertEqual(rd.link_filepaths_status, 'failed: error')
+
+    def test_link_filepaths_status_setter_error(self):
+        rd = RawData(1)
+        with self.assertRaises(ValueError):
+            rd._set_link_filepaths_status('not a valid status')
+
+    def test_is_preprocessed(self):
+        self.assertTrue(RawData(1)._is_preprocessed())
+        self.assertFalse(RawData(2)._is_preprocessed())
+
+    def test_clear_filepaths(self):
+        rd = RawData.create(self.filetype, self.studies, self.filepaths)
+        self.assertTrue(self.conn_handler.execute_fetchone(
+            "SELECT EXISTS(SELECT * FROM qiita.raw_filepath "
+            "WHERE raw_data_id=%s)", (rd.id,))[0])
+        rd.clear_filepaths()
+        self.assertFalse(self.conn_handler.execute_fetchone(
+            "SELECT EXISTS(SELECT * FROM qiita.raw_filepath "
+            "WHERE raw_data_id=%s)", (rd.id,))[0])
+
+    def test_clear_filepaths_error(self):
+        with self.assertRaises(QiitaDBError):
+            RawData(1).clear_filepaths()
+
+    def test_remove_filepath(self):
+        rd = RawData.create(self.filetype, self.studies, self.filepaths)
+        fp = join(self.db_test_raw_dir, "3_%s" % basename(self.seqs_fp))
+        rd.remove_filepath(fp)
+        self.assertFalse(self.conn_handler.execute_fetchone(
+            "SELECT EXISTS(SELECT * FROM qiita.raw_filepath "
+            "WHERE filepath_id=16)")[0])
+        self.assertTrue(self.conn_handler.execute_fetchone(
+            "SELECT EXISTS(SELECT * FROM qiita.raw_filepath "
+            "WHERE filepath_id=17)")[0])
+
+    def test_remove_filepath_error(self):
+        fp = join(self.db_test_raw_dir, '1_s_G1_L001_sequences.fastq.gz')
+        with self.assertRaises(QiitaDBError):
+            RawData(1).remove_filepath(fp)
+
+    def test_remove_filepath_error_fp(self):
+        fp = join(self.db_test_raw_dir, '1_s_G1_L001_sequences.fastq.gz')
+        with self.assertRaises(ValueError):
+            RawData(2).remove_filepath(fp)
+
 
 @qiita_test_checker()
 class PreprocessedDataTests(TestCase):
@@ -200,8 +259,12 @@ class PreprocessedDataTests(TestCase):
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.preprocessed_data WHERE "
             "preprocessed_data_id=3")
+        # preprocessed_data_id, preprocessed_params_table,
+        # preprocessed_params_id, submitted_to_insdc_status,
+        # ebi_submission_accession, ebi_study_accession, data_type_id,
+        # link_filepaths_status
         exp = [[3, "preprocessed_sequence_illumina_params", 1,
-                'not submitted', "EBI123456-A", "EBI123456-B", 2]]
+                'not submitted', "EBI123456-A", "EBI123456-B", 2, 'idle']]
         self.assertEqual(obs, exp)
 
         # Check that the preprocessed data has been linked with its study
@@ -246,8 +309,12 @@ class PreprocessedDataTests(TestCase):
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.preprocessed_data WHERE "
             "preprocessed_data_id=3")
+        # preprocessed_data_id, preprocessed_params_table,
+        # preprocessed_params_id, submitted_to_insdc_status,
+        # ebi_submission_accession, ebi_study_accession, data_type_id,
+        # link_filepaths_status
         exp = [[3, "preprocessed_sequence_illumina_params", 1,
-                'not submitted', None, None, 2]]
+                'not submitted', None, None, 2, 'idle']]
         self.assertEqual(obs, exp)
 
         # Check that the preprocessed data has been linked with its study
@@ -408,6 +475,25 @@ class PreprocessedDataTests(TestCase):
         pd = ProcessedData(1)
         self.assertEqual(pd.data_type(ret_id=True), 2)
 
+    def test_link_filepaths_status(self):
+        ppd = PreprocessedData(1)
+        self.assertEqual(ppd.link_filepaths_status, 'idle')
+
+    def test_link_filepaths_status_setter(self):
+        ppd = PreprocessedData(1)
+        self.assertEqual(ppd.link_filepaths_status, 'idle')
+        ppd._set_link_filepaths_status('linking')
+        self.assertEqual(ppd.link_filepaths_status, 'linking')
+        ppd._set_link_filepaths_status('unlinking')
+        self.assertEqual(ppd.link_filepaths_status, 'unlinking')
+        ppd._set_link_filepaths_status('failed: error')
+        self.assertEqual(ppd.link_filepaths_status, 'failed: error')
+
+    def test_link_filepaths_status_setter_error(self):
+        ppd = PreprocessedData(1)
+        with self.assertRaises(ValueError):
+            ppd._set_link_filepaths_status('not a valid status')
+
 
 @qiita_test_checker()
 class ProcessedDataTests(TestCase):
@@ -442,9 +528,9 @@ class ProcessedDataTests(TestCase):
         # Check that the processed data have been correctly added to the DB
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.processed_data WHERE processed_data_id=2")
-        # processed_data_id, preprocessed_data_id, processed_params_table,
-        # processed_params_id, processed_date
-        exp = [[2, "processed_params_uclust", 1, self.date, 2]]
+        # processed_data_id, processed_params_table, processed_params_id,
+        # processed_date, data_type_id, link_filepaths_status
+        exp = [[2, "processed_params_uclust", 1, self.date, 2, 'idle']]
         self.assertEqual(obs, exp)
 
         # Check that the files have been copied to right location
@@ -513,9 +599,9 @@ class ProcessedDataTests(TestCase):
         # Check that the processed data have been correctly added to the DB
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.processed_data WHERE processed_data_id=2")
-        # processed_data_id, preprocessed_data_id, processed_params_table,
-        # processed_params_id, processed_date
-        exp = [[2, "processed_params_uclust", 1, self.date, 2]]
+        # processed_data_id, processed_params_table, processed_params_id,
+        # processed_date, data_type_id, link_filepaths_status
+        exp = [[2, "processed_params_uclust", 1, self.date, 2, 'idle']]
         self.assertEqual(obs, exp)
 
         # Check that the files have been copied to right location
@@ -611,6 +697,25 @@ class ProcessedDataTests(TestCase):
     def test_data_type_id(self):
         pd = ProcessedData(1)
         self.assertEqual(pd.data_type(ret_id=True), 2)
+
+    def test_link_filepaths_status(self):
+        pd = ProcessedData(1)
+        self.assertEqual(pd.link_filepaths_status, 'idle')
+
+    def test_link_filepaths_status_setter(self):
+        pd = ProcessedData(1)
+        self.assertEqual(pd.link_filepaths_status, 'idle')
+        pd._set_link_filepaths_status('linking')
+        self.assertEqual(pd.link_filepaths_status, 'linking')
+        pd._set_link_filepaths_status('unlinking')
+        self.assertEqual(pd.link_filepaths_status, 'unlinking')
+        pd._set_link_filepaths_status('failed: error')
+        self.assertEqual(pd.link_filepaths_status, 'failed: error')
+
+    def test_link_filepaths_status_setter_error(self):
+        pd = ProcessedData(1)
+        with self.assertRaises(ValueError):
+            pd._set_link_filepaths_status('not a valid status')
 
 
 if __name__ == '__main__':

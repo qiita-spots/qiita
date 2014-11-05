@@ -85,6 +85,11 @@ class ConfigurationManager(object):
         The URL of EBI's sequence portal site
     ebi_skip_curl_cert : bool
         Whether or not to skip the certificate check when curling the metadata
+    ebi_center_name : str
+        The name of the sequencing center to use when doing EBI submissions
+    ebi_organization_prefix : str
+        This string (with an underscore) will be prefixed to your EBI
+        submission and study aliases
     """
     def __init__(self):
         # If conf_fp is None, we default to the test configuration file
@@ -198,3 +203,5 @@ class ConfigurationManager(object):
         self.ebi_seq_xfer_url = sec_get('EBI_SEQ_XFER_URL')
         self.ebi_dropbox_url = sec_get('EBI_DROPBOX_URL')
         self.ebi_skip_curl_cert = sec_getbool('EBI_SKIP_CURL_CERT')
+        self.ebi_center_name = sec_get('EBI_CENTER_NAME')
+        self.ebi_organization_prefix = sec_get('EBI_ORGANIZATION_PREFIX')
