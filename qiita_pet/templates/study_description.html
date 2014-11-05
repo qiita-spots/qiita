@@ -169,7 +169,7 @@
           <td style="vertical-align:top;padding:10px;">
             <h4>Linked files to this raw data</h4>
             {% if r.get_filepaths() and r.link_filepaths_status not in {'linking', 'unlinking'} %}
-              <a onClick="unlink_all_files({{r.id}})">Unlink all files</a><br/>
+              <a class="btn btn-danger" onClick="unlink_all_files({{r.id}})">Unlink all files</a><br/>
             {% end %}
             {% if r.link_filepaths_status == 'linking' %}
               <i><b style="color:red">Linking files...</b></i><br/>

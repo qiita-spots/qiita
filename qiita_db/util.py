@@ -40,7 +40,7 @@ from string import ascii_letters, digits, punctuation
 from binascii import crc32
 from bcrypt import hashpw, gensalt
 from functools import partial
-from os.path import join, basename, isdir, relpath
+from os.path import join, basename, isdir, relpath, exists
 from os import walk, remove
 from shutil import move, rmtree
 from json import dumps
@@ -610,10 +610,11 @@ def purge_filepaths(conn_handler=None):
 
         # Remove the data
         fp = join(get_db_files_base_dir(), fp)
-        if fp_type is 'directory':
-            rmtree(fp)
-        else:
-            remove(fp)
+        if exists(fp):
+            if fp_type is 'directory':
+                rmtree(fp)
+            else:
+                remove(fp)
 
 
 def get_filepath_id(fp, conn_handler):
@@ -629,6 +630,7 @@ def get_filepath_id(fp, conn_handler):
     Raises
     ------
     QiitaDBError
+        If fp is not stored in the DB.
     """
     fp_id = conn_handler.execute_fetchone(
         "SELECT filepath_id FROM qiita.filepath WHERE filepath=%s",
