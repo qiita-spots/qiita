@@ -118,3 +118,7 @@ EBI_SKIP_CURL_CERT = True
 
 # The name of the sequencing center to use when doing EBI submissions
 EBI_CENTER_NAME = CCME-COLORADO
+
+# This string (with an underscore) will be prefixed to your EBI submission and
+# study aliases
+EBI_ORGANIZATION_PREFIX = qiime
