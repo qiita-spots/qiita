@@ -367,40 +367,7 @@ class RawData(BaseData):
             " PTPD JOIN qiita.prep_template PT ON PT.prep_template_id = "
             "PTPD.prep_template_id WHERE PT.raw_data_id = %s)", (self._id,))[0]
 
-    def clear_filepaths(self):
-        """Removes all the filepaths attached to the RawData
-
-        Raises
-        ------
-        QiitaDBError
-            If the RawData has been already preprocessed
-        """
-        conn_handler = SQLConnectionHandler()
-
-        queue = "%s_clear_fps" % self.id
-        conn_handler.create_queue(queue)
-
-        self._set_link_filepaths_status("unlinking")
-
-        for fp, fp_type in self.get_filepaths():
-            self.remove_filepath(fp, conn_handler, queue)
-
-        try:
-            # Execute all the queue
-            conn_handler.execute_queue(queue)
-        except Exception as e:
-            self._set_link_filepaths_status("failed: %s" % e)
-            raise e
-
-        # We can already update the status to done, as the files have been
-        # unlinked, the purge_filepaths call will not change the status
-        # of the raw data object
-        self._set_link_filepaths_status("done")
-
-        # Delete the files, if they are not used anywhere
-        purge_filepaths(conn_handler)
-
-    def remove_filepath(self, fp, conn_handler=None, queue=None):
+    def _remove_filepath(self, fp, conn_handler, queue):
         """Removes the filepath from the RawData
 
         Parameters
@@ -421,15 +388,6 @@ class RawData(BaseData):
         ValueError
             If fp does not belong to the raw data
         """
-        if conn_handler is None and queue is not None:
-            raise IncompetentQiitaDeveloperError(
-                "If a queue is provided, the conn_handler is also needed")
-
-        conn_handler = conn_handler if conn_handler else SQLConnectionHandler()
-
-        # Set the current status to unlinking
-        self._set_link_filepaths_status("unlinking")
-
         # If the RawData has been already preprocessed, we cannot remove any
         # file - raise an error
         if self._is_preprocessed(conn_handler):
@@ -456,23 +414,72 @@ class RawData(BaseData):
         sql = "DELETE FROM qiita.{0} WHERE filepath_id=%s".format(
             self._data_filepath_table)
         sql_args = (fp_id,)
+        conn_handler.add_to_queue(queue, sql, sql_args)
 
-        # Unlink the file from the raw data
-        if queue:
-            conn_handler.add_to_queue(queue, sql, sql_args)
-        else:
-            try:
-                conn_handler.execute(sql, sql_args)
-            except Exception as e:
-                self._set_link_filepaths_status("failed: %s" % e)
-                raise e
+    def clear_filepaths(self):
+        """Removes all the filepaths attached to the RawData
 
-            # We can already update the status to done, as the files have been
-            # unlinked, the purge_filepaths call will not change the status
-            # of the raw data object
-            self._set_link_filepaths_status("done")
-            # Delete the file if it is not used anywhere
-            purge_filepaths(conn_handler)
+        Raises
+        ------
+        QiitaDBError
+            If the RawData has been already preprocessed
+        """
+        conn_handler = SQLConnectionHandler()
+
+        queue = "%s_clear_fps" % self.id
+        conn_handler.create_queue(queue)
+
+        self._set_link_filepaths_status("unlinking")
+
+        for fp, fp_type in self.get_filepaths():
+            self._remove_filepath(fp, conn_handler, queue)
+
+        try:
+            # Execute all the queue
+            conn_handler.execute_queue(queue)
+        except Exception as e:
+            self._set_link_filepaths_status("failed: %s" % e)
+            raise e
+
+        # We can already update the status to done, as the files have been
+        # unlinked, the purge_filepaths call will not change the status
+        # of the raw data object
+        self._set_link_filepaths_status("done")
+
+        # Delete the files, if they are not used anywhere
+        purge_filepaths(conn_handler)
+
+    def remove_filepath(self, fp):
+        """Removes the filepath from the RawData
+
+        Parameters
+        ----------
+        fp : str
+            The filepath to remove
+        """
+        conn_handler = SQLConnectionHandler()
+        queue = "remove_fp_%s" % self.id
+        conn_handler.create_queue(queue)
+
+        # Set the current status to unlinking
+        self._set_link_filepaths_status("unlinking")
+
+        self._remove_filepath(fp, conn_handler, queue)
+
+        try:
+            # Execute the queue
+            conn_handler.execute_queue(queue)
+        except Exception as e:
+            self._set_link_filepaths_status("failed: %s" % e)
+            raise e
+
+        # We can already update the status to done, as the files have been
+        # unlinked, the purge_filepaths call will not change the status
+        # of the raw data object
+        self._set_link_filepaths_status("done")
+
+        # Delete the file if it is not used anywhere
+        purge_filepaths(conn_handler)
 
 
 class PreprocessedData(BaseData):

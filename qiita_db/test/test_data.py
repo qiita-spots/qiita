@@ -211,10 +211,6 @@ class RawDataTests(TestCase):
         with self.assertRaises(QiitaDBError):
             RawData(1).remove_filepath(fp)
 
-    def test_remove_filepath_error_queue(self):
-        with self.assertRaises(IncompetentQiitaDeveloperError):
-            RawData(1).remove_filepath("foo", queue="bar")
-
     def test_remove_filepath_error_fp(self):
         fp = join(self.db_test_raw_dir, '1_s_G1_L001_sequences.fastq.gz')
         with self.assertRaises(ValueError):
