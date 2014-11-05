@@ -1,4 +1,211 @@
 {% extends sitebase.html %}
+{% block head %}
+<script type='text/javascript'>
+  function process_sample_template() {
+    if (confirm("Are you sure you want to (re)process the sample template?")) {
+      var form = $("<form>")
+        .attr("action", window.location.href)
+        .attr("method", "post")
+        .append($("<input>")
+          .attr("type", "hidden")
+          .attr("name", "sample_template")
+          .attr("value", $("#sample_template").val()));
+      $("body").append(form);
+      form.submit();
+    }
+  }
+
+  function create_raw_data() {
+    if ($("#previous_raw_data").val() === null && $("#filetype").val() === "") {
+      alert("You need to select either a new file type or a raw data used in a previous study.");
+    } else if ($("#previous_raw_data").val() !== null && $("#filetype").val() !== "") {
+      alert("You can only select a new file type or one used in a previous study but not both.");
+    } else {
+      if (confirm("Are you sure you want to create a new raw data?")) {
+        if ($("#filetype").val() !== "") {
+          var form = $("<form>")
+            .attr("action", window.location.href)
+            .attr("method", "post")
+            .append($("<input>")
+              .attr("type", "hidden")
+              .attr("name", "filetype")
+              .attr("value", $("#filetype").val()));
+        } else {
+          var form = $("<form>")
+            .attr("action", window.location.href)
+            .attr("method", "post")
+            .append($("<input>")
+              .attr("type", "hidden")
+              .attr("name", "previous_raw_data")
+              .attr("value", $("#previous_raw_data option:selected").map(function(){ return this.value }).get().join(",")));
+        }
+        $("body").append(form);
+        form.submit();
+      }
+    }
+  }
+
+  function add_prep_template(raw_data_id) {
+    if (confirm("Are you sure you want to add a new prep template?")) {
+      var form = $("<form>")
+        .attr("action", window.location.href)
+        .attr("method", "post")
+        .append($("<input>")
+          .attr("type", "hidden")
+          .attr("name", "raw_data_id")
+          .attr("value", raw_data_id))
+        .append($("<input>")
+          .attr("type", "hidden")
+          .attr("name", "add_prep_template")
+          .attr("value", $("#add_prep_template_" + raw_data_id).val()))
+        .append($("<input>")
+          .attr("type", "hidden")
+          .attr("name", "investigation_type")
+          .attr("value", $("#investigation_type_" + raw_data_id).val()))
+        .append($("<input>")
+          .attr("type", "hidden")
+          .attr("name", "data_type_id")
+          .attr("value", $("#data_type_" + raw_data_id).val()));
+      $("body").append(form);
+      form.submit();
+    }
+  }
+
+  function link_files_to_raw_data(raw_data_id) {
+    var barcodes = [];
+    var forward = [];
+    var reverse = [];
+
+    all_files = document.getElementsByName("upload_file_" + raw_data_id);
+    for (var i = 0; i<all_files.length; i++) {
+      ele = all_files[i];
+      switch (ele.options[ele.selectedIndex].value) {
+        case "barcodes":
+          barcodes.push(ele.id);
+          break;
+        case "forward seqs":
+          forward.push(ele.id);
+          break;
+        case "reverse seqs":
+          reverse.push(ele.id);
+          break;
+      }
+    }
+
+    if (barcodes.length === 0 || forward.length === 0) {
+      alert("You need to select at least one barcode and one forward file.");
+    } else if (barcodes.length != forward.length) {
+      alert("You must select the same number of barcode and forward seq files.");
+    } else if (reverse.length != 0 && reverse.length != forward.length) {
+      alert("If you select reverse seqs, they should have the same number than barcodes and forward files.");
+    } else {
+      var form = $("<form>")
+        .attr("action", "/study/add_files_to_raw_data")
+        .attr("method", "post")
+        .append($("<input>")
+          .attr("type", "hidden")
+          .attr("name", "raw_data_id")
+          .attr("value", raw_data_id))
+        .append($("<input>")
+          .attr("type", "hidden")
+          .attr("name", "study_id")
+          .attr("value", {{study_id}}))
+        .append($("<input>")
+          .attr("type", "hidden")
+          .attr("name", "barcodes")
+          .attr("value", barcodes.join()))
+        .append($("<input>")
+          .attr("type", "hidden")
+          .attr("name", "forward")
+          .attr("value", forward.join()))
+        .append($("<input>")
+          .attr("type", "hidden")
+          .attr("name", "reverse")
+          .attr("value", reverse.join()));
+      $("body").append(form);
+      form.submit();
+    }
+  }
+
+  function split_libraries(prep_template_id) {
+    if (confirm("Are you sure you want to submit a split libraries job?")) {
+      var form = $("<form>")
+        .attr("action", "/study/preprocess")
+        .attr("method", "post")
+        .append($("<input>")
+          .attr("type", "hidden")
+          .attr("name", "study_id")
+          .attr("value", {{study_id}}))
+          .append($("<input>")
+            .attr("type", "hidden")
+            .attr("name", "prep_template_id")
+            .attr("value", prep_template_id))
+        .append($("<input>")
+          .attr("type", "hidden")
+          .attr("name", "rev_comp_mapping_barcodes")
+          .attr("value", $("#rev_comp_mapping_barcodes_" + prep_template_id).is(':checked')));
+      $("body").append(form);
+      form.submit();
+    }
+  }
+
+  function make_public() {
+    if (confirm("Are you sure you want to make this study public?")) {
+      var form = $("<form>")
+        .attr("action", window.location.href)
+        .attr("method", "post")
+        .append($("<input>")
+          .attr("type", "hidden")
+          .attr("name", "make_public")
+          .attr("value", true))
+      $("body").append(form);
+      form.submit();
+    }
+  }
+
+  function approve_study() {
+    if (confirm("Are you sure you want to approve this study?")) {
+      var form = $("<form>")
+        .attr("action", window.location.href)
+        .attr("method", "post")
+        .append($("<input>")
+          .attr("type", "hidden")
+          .attr("name", "approve_study")
+          .attr("value", true))
+      $("body").append(form);
+      form.submit();
+    }
+  }
+
+  function update_investigation_type(old_value, prep_template_id) {
+    if (confirm("Are you sure you want to update the investigation type?")) {
+        var form = $("<form>")
+          .attr("action", window.location.href)
+          .attr("method", "post")
+          .append($("<input>")
+            .attr("type", "hidden")
+            .attr("name", "update_investigation_type")
+            .attr("value", prep_template_id))
+          .append($("<input>")
+            .attr("type", "hidden")
+            .attr("name", "investigation_type")
+            .attr("value", $("#investigation_type_prep_" + prep_template_id).val()));
+        $("body").append(form);
+        form.submit();
+    } else {
+      $("#investigation_type_prep_" + prep_template_id).val(old_value);
+    }
+  }
+
+  if ("{{tab_to_display}}") {
+    $('#myTab a[href="#raw_data_info_{{tab_to_display}}"]').tab('show');
+  } else {
+    $('#myTab a:last').tab('show');
+  }
+
+</script>
+{% end %}
+
 {% block content %}
 
 {% from future.utils import viewitems %}
@@ -39,7 +246,7 @@
        'study_alias': 'Myrold_Alder_Fir',
        'most_recent_contact': None, 'lab_person_id': None, -->
     </td>
-    <td width="60px">
+    <td width="60">
       {% if ste %}
         <a class="btn btn-primary" href="/metadata_summary/?study_id={{study_id}}&sample_template={{study_id}}">Show study template summary</a>
       {% end %}
@@ -53,9 +260,7 @@
 <ul class="nav nav-tabs" role="tablist" id="myTab">
   <li class="active"><a href="#add_sample_template" role="tab" data-toggle="tab">Add sample template</a></li>
   {% if ste and study_status != 'awaiting_approval' %}
-  {% # only allow raw data attachment after metadata approved by admin %}
     <li><a href="#add_raw_data" role="tab" data-toggle="tab">Add raw data</a></li>
-  }
   {% end %}
 
   {% for r in available_raw_data %}
@@ -232,208 +437,4 @@
     </div>
   {% end %}
 </div>
-
-<script>
-  function process_sample_template() {
-    if (confirm("Are you sure you want to (re)process the sample template?")) {
-      var form = $("<form>")
-        .attr("action", window.location.href)
-        .attr("method", "post")
-        .append($("<input>")
-          .attr("type", "hidden")
-          .attr("name", "sample_template")
-          .attr("value", $("#sample_template").val()));
-      $("body").append(form);
-      form.submit();
-    }
-  }
-
-  function create_raw_data() {
-    if ($("#previous_raw_data").val() === null && $("#filetype").val() === "") {
-      alert("You need to select either a new file type or a raw data used in a previous study.");
-    } else if ($("#previous_raw_data").val() !== null && $("#filetype").val() !== "") {
-      alert("You can only select a new file type or one used in a previous study but not both.");
-    } else {
-      if (confirm("Are you sure you want to create a new raw data?")) {
-        if ($("#filetype").val() !== "") {
-          var form = $("<form>")
-            .attr("action", window.location.href)
-            .attr("method", "post")
-            .append($("<input>")
-              .attr("type", "hidden")
-              .attr("name", "filetype")
-              .attr("value", $("#filetype").val()));
-        } else {
-          var form = $("<form>")
-            .attr("action", window.location.href)
-            .attr("method", "post")
-            .append($("<input>")
-              .attr("type", "hidden")
-              .attr("name", "previous_raw_data")
-              .attr("value", $("#previous_raw_data option:selected").map(function(){ return this.value }).get().join(",")));
-        }
-        $("body").append(form);
-        form.submit();
-      }
-    }
-  }
-
-  function add_prep_template(raw_data_id) {
-    if (confirm("Are you sure you want to add a new prep template?")) {
-      var form = $("<form>")
-        .attr("action", window.location.href)
-        .attr("method", "post")
-        .append($("<input>")
-          .attr("type", "hidden")
-          .attr("name", "raw_data_id")
-          .attr("value", raw_data_id))
-        .append($("<input>")
-          .attr("type", "hidden")
-          .attr("name", "add_prep_template")
-          .attr("value", $("#add_prep_template_" + raw_data_id).val()))
-        .append($("<input>")
-          .attr("type", "hidden")
-          .attr("name", "investigation_type")
-          .attr("value", $("#investigation_type_" + raw_data_id).val()))
-        .append($("<input>")
-          .attr("type", "hidden")
-          .attr("name", "data_type_id")
-          .attr("value", $("#data_type_" + raw_data_id).val()));
-      $("body").append(form);
-      form.submit();
-    }
-  }
-
-  function link_files_to_raw_data(raw_data_id) {
-    var barcodes = [];
-    var forward = [];
-    var reverse = [];
-
-    all_files = document.getElementsByName("upload_file_" + raw_data_id);
-    for (var i = 0; i<all_files.length; i++) {
-      ele = all_files[i];
-      switch (ele.options[ele.selectedIndex].value) {
-        case "barcodes":
-          barcodes.push(ele.id);
-          break;
-        case "forward seqs":
-          forward.push(ele.id);
-          break;
-        case "reverse seqs":
-          reverse.push(ele.id);
-          break;
-      }
-    }
-
-    if (barcodes.length == 0 || forward.length == 0) {
-      alert("You need to select at least one barcode and one forward file.");
-    } else if (barcodes.length != forward.length) {
-      alert("You must select the same number of barcode and forward seq files.")
-    } else if (reverse.length != 0 && reverse.length != forward.length) {
-      alert("If you select reverse seqs, they should have the same number than barcodes and forward files.")
-    } else {
-      var form = $("<form>")
-        .attr("action", "/study/add_files_to_raw_data")
-        .attr("method", "post")
-        .append($("<input>")
-          .attr("type", "hidden")
-          .attr("name", "raw_data_id")
-          .attr("value", raw_data_id))
-        .append($("<input>")
-          .attr("type", "hidden")
-          .attr("name", "study_id")
-          .attr("value", {{study_id}}))
-        .append($("<input>")
-          .attr("type", "hidden")
-          .attr("name", "barcodes")
-          .attr("value", barcodes.join()))
-        .append($("<input>")
-          .attr("type", "hidden")
-          .attr("name", "forward")
-          .attr("value", forward.join()))
-        .append($("<input>")
-          .attr("type", "hidden")
-          .attr("name", "reverse")
-          .attr("value", reverse.join()));
-      $("body").append(form);
-      form.submit();
-    }
-  }
-
-  function split_libraries(prep_template_id) {
-    if (confirm("Are you sure you want to submit a split libraries job?")) {
-      var form = $("<form>")
-        .attr("action", "/study/preprocess")
-        .attr("method", "post")
-        .append($("<input>")
-          .attr("type", "hidden")
-          .attr("name", "study_id")
-          .attr("value", {{study_id}}))
-          .append($("<input>")
-            .attr("type", "hidden")
-            .attr("name", "prep_template_id")
-            .attr("value", prep_template_id))
-        .append($("<input>")
-          .attr("type", "hidden")
-          .attr("name", "rev_comp_mapping_barcodes")
-          .attr("value", $("#rev_comp_mapping_barcodes_" + prep_template_id).is(':checked')));
-      $("body").append(form);
-      form.submit();
-    }
-  }
-
-   function make_public() {
-    if (confirm("Are you sure you want to make this study public?")) {
-      var form = $("<form>")
-        .attr("action", window.location.href)
-        .attr("method", "post")
-        .append($("<input>")
-          .attr("type", "hidden")
-          .attr("name", "make_public")
-          .attr("value", true)
-      $("body").append(form);
-      form.submit();
-    }
-  }
-
-     function approve_study() {
-    if (confirm("Are you sure you want to approve this study?")) {
-      var form = $("<form>")
-        .attr("action", window.location.href)
-        .attr("method", "post")
-        .append($("<input>")
-          .attr("type", "hidden")
-          .attr("name", "approve_study")
-          .attr("value", true)
-      $("body").append(form);
-      form.submit();
-
-  function update_investigation_type(old_value, prep_template_id) {
-    if (confirm("Are you sure you want to update the investigation type?")) {
-        var form = $("<form>")
-          .attr("action", window.location.href)
-          .attr("method", "post")
-          .append($("<input>")
-            .attr("type", "hidden")
-            .attr("name", "update_investigation_type")
-            .attr("value", prep_template_id))
-          .append($("<input>")
-            .attr("type", "hidden")
-            .attr("name", "investigation_type")
-            .attr("value", $("#investigation_type_prep_" + prep_template_id).val()));
-        $("body").append(form);
-        form.submit();
-    } else {
-      $("#investigation_type_prep_" + prep_template_id).val(old_value);
-    }
-  }
-
-  if ("{{tab_to_display}}") {
-    $('#myTab a[href="#raw_data_info_{{tab_to_display}}"]').tab('show');
-  } else {
-    $('#myTab a:last').tab('show');
-  }
-
-</script>
-
 {% end %}
