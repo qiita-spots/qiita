@@ -1453,7 +1453,7 @@ class PrepTemplate(MetadataTemplate):
         QiitaDBColumnError
             If the investigation type is not a valid ENA ontology
         """
-        if investigation_type not in [None, ""]:
+        if investigation_type is not None:
             self.validate_investigation_type(investigation_type)
 
         conn_handler = SQLConnectionHandler()
