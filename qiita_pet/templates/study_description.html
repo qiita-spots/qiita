@@ -193,8 +193,18 @@
           </td>
           <td style="vertical-align:top;padding:10px;">
             <h4>Linked files to this raw data</h4>
+            {% if r.get_filepaths() and r.link_filepaths_status not in {'linking', 'unlinking'} %}
+              <a class="btn btn-danger" onClick="unlink_all_files({{r.id}})">Unlink all files</a><br/>
+            {% end %}
+            {% if r.link_filepaths_status == 'linking' %}
+              <i><b style="color:red">Linking files...</b></i><br/>
+            {% elif r.link_filepaths_status == 'unlinking' %}
+              <i><b style="color:red">Unlinking files...</b></i><br/>
+            {% elif r.link_filepaths_status.startswith('failed') %}
+              <i><b style="color:red">Error (un)linking files: {{r.link_filepaths_status}} </b></i><br/>
+            {% end %}
             {% for f, t in r.get_filepaths() %}
-              <i>{{basename(f)}}:</i> {{t[4:]}}<br/>
+              <i>{{basename(f)}}:</i> {{t[4:]}} <br/>
             {% end %}
             <br/>
             <h4>Link uploaded files with raw data</h4>
@@ -218,7 +228,7 @@
             {% end %}
             </table>
             <br/>
-            <a class="btn btn-primary" onClick="link_files_to_raw_data({{r.id}});">Link raw files to: {{r.filetype}} (ID: {{r.id}})</a>
+            <a onClick="link_files_to_raw_data({{r.id}});" {% if r.link_filepaths_status in {'linking', 'unlinking'} %} class="btn btn-default" style=" pointer-events: none; cursor: default; background-color:grey;" {% else %} class="btn btn-primary" {% end %}>Link raw files to: {{r.filetype}} (ID: {{r.id}})</a>
           </td>
         </table>
     </div>
@@ -347,6 +357,24 @@
           .attr("type", "hidden")
           .attr("name", "reverse")
           .attr("value", reverse.join()));
+      $("body").append(form);
+      form.submit();
+    }
+  }
+
+  function unlink_all_files(raw_data_id) {
+    if (confirm("Are you sure you want to unlink all files? They will be removed from the system")){
+      var form = $("<form>")
+        .attr("action", "/study/unlink_all_files")
+        .attr("method", "post")
+        .append($("<input>")
+          .attr("type", "hidden")
+          .attr("name", "study_id")
+          .attr("value", {{study_id}}))
+        .append($("<input>")
+          .attr("type", "hidden")
+          .attr("name", "raw_data_id")
+          .attr("value", raw_data_id))
       $("body").append(form);
       form.submit();
     }
