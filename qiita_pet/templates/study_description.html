@@ -46,8 +46,10 @@
 <!-- Nav tabs -->
 <ul class="nav nav-tabs" role="tablist" id="myTab">
   <li class="active"><a href="#add_sample_template" role="tab" data-toggle="tab">Add sample template</a></li>
-  {% if ste %}
+  {% if ste and study_status != 'awaiting_approval' %}
+  {% # only allow raw data submission after approved by admin %}
     <li><a href="#add_raw_data" role="tab" data-toggle="tab">Add raw data</a></li>
+  }
   {% end %}
 
   {% for r in available_raw_data %}

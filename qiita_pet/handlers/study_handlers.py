@@ -295,6 +295,7 @@ class StudyDescriptionHandler(BaseHandler):
                     available_raw_data=available_raw_data,
                     available_prep_templates=available_prep_templates,
                     ste=SampleTemplate.exists(study_id),
+                    study_status=study.status,
                     filepath_types=''.join(fts),
                     tab_to_display=tab_to_display,
                     can_upload=check_access(user, study, True),
