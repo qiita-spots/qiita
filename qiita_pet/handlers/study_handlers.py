@@ -246,7 +246,7 @@ class StudyDescriptionHandler(BaseHandler):
         callback(d)
 
     @coroutine
-    def display_template(self, study_id, msg, tab_to_display=""):
+    def display_template(self, study_id, msg, msg_level, tab_to_display=""):
         """Simple function to avoid duplication of code"""
         # make sure study is accessible and exists, raise error if not
         study = None
@@ -295,7 +295,7 @@ class StudyDescriptionHandler(BaseHandler):
                      for v in ena_terms]
 
         self.render('study_description.html', user=self.current_user,
-                    study_title=study.title, study_info=study.info, msg=msg,
+                    study_title=study.title, study_info=study.info,
                     study_id=study_id, files=fs, filetypes=''.join(filetypes),
                     user_level=user.level, data_types=''.join(data_types),
                     available_raw_data=available_raw_data,
@@ -303,6 +303,7 @@ class StudyDescriptionHandler(BaseHandler):
                     ste=SampleTemplate.exists(study_id),
                     filepath_types=''.join(fts), ena_terms=''.join(ena_terms),
                     tab_to_display=tab_to_display,
+                    level=msg_level, message=msg,
                     can_upload=check_access(user, study, True),
                     other_studies_rd=''.join(other_studies_rd))
 
@@ -310,7 +311,7 @@ class StudyDescriptionHandler(BaseHandler):
     def get(self, study_id):
         study_id = int(study_id)
         check_access(User(self.current_user), Study(study_id))
-        self.display_template(int(study_id), "")
+        self.display_template(int(study_id), "", "")
 
     @authenticated
     @coroutine
@@ -353,10 +354,10 @@ class StudyDescriptionHandler(BaseHandler):
                 error_msg = ''.join(format_exception_only(e, exc_info()))
                 msg = ('<b>An error occurred parsing the sample template: '
                        '%s</b><br/>%s' % (basename(fp_rsp), error_msg))
-                self.display_template(study_id, msg)
+                self.display_template(study_id, msg, "danger")
                 return
 
-            msg = ("The sample template <b>%s</b> has been added" %
+            msg = ("The sample template '%s' has been added" %
                    sample_template)
             tab_to_display = ""
 
@@ -373,9 +374,9 @@ class StudyDescriptionHandler(BaseHandler):
                         QiitaDBDuplicateError, IOError, ValueError, KeyError,
                         CParserError) as e:
                     error_msg = ''.join(format_exception_only(e, exc_info()))
-                    msg = ('<b>An error occurred creating a new raw data'
-                           'object.</b><br/>%s' % (error_msg))
-                    self.display_template(study_id, msg)
+                    msg = ('An error occurred creating a new raw data'
+                           'object. %s' % (error_msg))
+                    self.display_template(study_id, msg, "danger")
                     return
                 msg = ""
             else:
@@ -402,12 +403,13 @@ class StudyDescriptionHandler(BaseHandler):
                     QiitaDBDuplicateError, IOError, ValueError,
                     CParserError) as e:
                 error_msg = ''.join(format_exception_only(e, exc_info()))
-                msg = ('<b>An error occurred parsing the prep template: '
-                       '%s</b><br/>%s' % (basename(fp_rpt), error_msg))
-                self.display_template(study_id, msg, str(raw_data_id))
+                msg = ('An error occurred parsing the prep template: '
+                       '%s. %s' % (basename(fp_rpt), error_msg))
+                self.display_template(study_id, msg, "danger",
+                                      str(raw_data_id))
                 return
 
-            msg = "<b>Your prep template was added</b>"
+            msg = "Your prep template was added"
             tab_to_display = str(raw_data_id)
 
         elif update_investigation_type:
@@ -418,20 +420,21 @@ class StudyDescriptionHandler(BaseHandler):
                 pt.investigation_type = investigation_type
             except QiitaDBColumnError as e:
                 error_msg = ''.join(format_exception_only(e, exc_info()))
-                msg = ('<b>Invalid investigation type: %s</b><br/>%s' %
+                msg = ('Invalid investigation type: %s. %s' %
                        (basename(fp_rpt), error_msg))
-                self.display_template(study_id, msg, str(pt.raw_data))
+                self.display_template(study_id, msg, "danger",
+                                      str(pt.raw_data_id))
                 return
 
             msg = "The prep template has been updated!"
             tab_to_display = str(pt.raw_data)
 
         else:
-            msg = ("<b>Error, did you select a valid uploaded file or are "
-                   "passing the correct parameters?</b>")
+            msg = ("Error, did you select a valid uploaded file or are "
+                   "passing the correct parameters?")
             tab_to_display = ""
 
-        self.display_template(study_id, msg, tab_to_display)
+        self.display_template(study_id, msg, "success", tab_to_display)
 
 
 class CreateStudyHandler(BaseHandler):
@@ -604,7 +607,7 @@ class MetadataSummaryHandler(BaseHandler):
 
 
 class EBISubmitHandler(BaseHandler):
-    def display_template(self, preprocessed_data_id, error=""):
+    def display_template(self, preprocessed_data_id, msg, msg_level):
         """Simple function to avoid duplication of code"""
         preprocessed_data_id = int(preprocessed_data_id)
         try:
@@ -629,24 +632,27 @@ class EBISubmitHandler(BaseHandler):
                  if ftype == 'preprocessed_demux']
 
         if not len(demux):
-            error = ("Study does not appear to have demultiplexed "
-                     "sequences associated")
+            msg = ("Study does not appear to have demultiplexed "
+                   "sequences associated")
+            msg_level = 'danger'
         elif len(demux) > 1:
-            error = ("Study appears to have multiple demultiplexed files!")
-        elif error != "":
+            msg = ("Study appears to have multiple demultiplexed files!")
+            msg_level = 'danger'
+        elif msg == "":
             demux_file = demux[0]
             demux_file_stats = demux_stats(demux_file)
             stats.append(('Number of sequences', demux_file_stats.n))
+            msg_level = 'success'
 
         self.render('ebi_submission.html', user=self.current_user,
-                    study_title=study.title, stats=stats, error=error,
-                    study_id=study.id,
+                    study_title=study.title, stats=stats, message=msg,
+                    study_id=study.id, level=msg_level,
                     preprocessed_data_id=preprocessed_data_id,
                     investigation_type=prep_template.investigation_type)
 
     @authenticated
     def get(self, preprocessed_data_id):
-        self.display_template(preprocessed_data_id)
+        self.display_template(preprocessed_data_id, "", "")
 
     @authenticated
     def post(self, preprocessed_data_id):
@@ -660,12 +666,16 @@ class EBISubmitHandler(BaseHandler):
             raise HTTPError(403, "User: %s, %s is not a recognized submission "
                             "type" % (self.current_user, submission_type))
 
+        msg = ''
+        msg_level = 'success'
         preprocessed_data = PreprocessedData(preprocessed_data_id)
         state = preprocessed_data.submitted_to_insdc_status()
         if state == 'submitting':
-            error = "Cannot resubmit! Current state is: %s" % state
+            msg = "Cannot resubmit! Current state is: %s" % state
+            msg_level = 'danger'
         elif state == 'success' and submission_type == "ADD":
-            error = "Cannot resubmit! Current state is: %s, use MODIFY" % state
+            msg = "Cannot resubmit! Current state is: %s, use MODIFY" % state
+            msg_level = 'danger'
         else:
             channel = self.current_user
             job_id = submit(channel, submit_to_ebi, int(preprocessed_data_id),
@@ -676,4 +686,4 @@ class EBISubmitHandler(BaseHandler):
                         completion_redirect='/compute_complete/%s' % job_id)
             return
 
-        self.display_template(preprocessed_data_id, error)
+        self.display_template(preprocessed_data_id, msg, msg_level)
