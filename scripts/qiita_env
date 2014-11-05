@@ -10,13 +10,11 @@
 
 import click
 
-from qiita_db.environment_manager import (make_environment,
-                                          drop_environment,
-                                          clean_test_environment,
-                                          DFLT_BASE_WORK_FOLDER,
-                                          ENVIRONMENTS, CLUSTERS)
-from qiita_core.environment_manager import (start_cluster as _start_cluster,
-                                            stop_cluster as _stop_cluster)
+from qiita_db.environment_manager import (
+    make_environment, drop_environment, clean_test_environment,
+    DFLT_BASE_WORK_FOLDER, ENVIRONMENTS, CLUSTERS, patch as _patch)
+from qiita_core.environment_manager import (
+    start_cluster as _start_cluster, stop_cluster as _stop_cluster)
 from qiita_core.configuration_manager import ConfigurationManager
 
 
@@ -99,6 +97,16 @@ def clean_test():
     the test database.
     """
     clean_test_environment()
+
+
+@env.command()
+def patch():
+    """Patches the database schema based on the SETTINGS table
+
+    Pulls the current patch from the settings table and applies all subsequent
+    patches found in the patches directory.
+    """
+    _patch()
 
 
 if __name__ == '__main__':

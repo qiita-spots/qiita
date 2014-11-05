@@ -5,16 +5,17 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
-from os.path import abspath, dirname, join
+from os.path import abspath, dirname, join, exists, split
 from functools import partial
 from os import mkdir
-from os.path import exists
 import gzip
+from glob import glob
 
 from future import standard_library
 from future.utils import viewitems
 with standard_library.hooks():
     from urllib.request import urlretrieve
+from natsort import natsorted
 
 from qiita_core.exceptions import QiitaEnvironmentError
 from qiita_core.qiita_settings import qiita_config
@@ -29,9 +30,10 @@ get_reference_fp = partial(join, reference_base_dir)
 
 DFLT_BASE_WORK_FOLDER = get_support_file('work_data')
 SETTINGS_FP = get_support_file('qiita-db-settings.sql')
-LAYOUT_FP = get_support_file('qiita-db.sql')
+LAYOUT_FP = get_support_file('qiita-db-unpatched.sql')
 INITIALIZE_FP = get_support_file('initialize.sql')
 POPULATE_FP = get_support_file('populate_test_db.sql')
+PATCHES_DIR = get_support_file('patches')
 ENVIRONMENTS = {'demo': 'qiita_demo', 'test': 'qiita_test',
                 'production': 'qiita'}
 CLUSTERS = ['demo', 'reserved', 'general']
@@ -58,6 +60,9 @@ def _create_layout_and_init_db(conn):
     # Create the schema
     with open(LAYOUT_FP, 'U') as f:
         conn.execute(f.read())
+
+    print('Patching Database...')
+    patch()
 
     print('Initializing database')
     # Initialize the database
@@ -160,7 +165,7 @@ def make_environment(load_ontologies, download_reference, add_demo_user):
         If the environment already exists
     """
     # Connect to the postgres server
-    admin_conn = SQLConnectionHandler(admin=True)
+    admin_conn = SQLConnectionHandler(admin='no_database')
 
     # Check that it does not already exists
     if _check_db_exists(qiita_config.database, admin_conn):
@@ -240,7 +245,7 @@ def drop_environment(ask_for_confirmation):
             do_drop = True
 
     if do_drop:
-        admin_conn = SQLConnectionHandler(admin=True)
+        admin_conn = SQLConnectionHandler(admin='no_database')
         admin_conn.execute('DROP DATABASE %s' % qiita_config.database)
     else:
         print('ABORTING')
@@ -299,3 +304,38 @@ def clean_test_environment():
     def dummyfunc():
         pass
     dummyfunc()
+
+
+def patch():
+    """Patches the database schema based on the SETTINGS table
+
+    Pulls the current patch from the settings table and applies all subsequent
+    patches found in the patches directory.
+    """
+    admin_conn = SQLConnectionHandler(admin='database')
+
+    current_patch = admin_conn.execute_fetchone(
+        "select current_patch from settings")[0]
+
+    sql_glob = join(PATCHES_DIR, '*.sql')
+    patch_files = natsorted(glob(sql_glob))
+
+    if current_patch == 'unpatched':
+        next_patch_index = 0
+    elif current_patch not in current_patch_index:
+        raise RuntimeError("Cannot find patch file %s" % current_patch)
+    else:
+        next_patch_index = patch_files.index(current_patch)
+
+    patch_update_sql = "update settings set current_patch = %s"
+
+    for patch_fp in patch_files[next_patch_index:]:
+        patch_filename = split(patch_fp)[-1]
+        admin_conn.create_queue(patch_filename)
+        with open(patch_fp, 'U') as patch_file:
+            print('\tApplying patch %s...' % patch_filename)
+            admin_conn.add_to_queue(patch_filename, patch_file.read())
+            admin_conn.add_to_queue(patch_filename, patch_update_sql,
+                                    [patch_filename])
+
+        admin_conn.execute_queue(patch_filename)
