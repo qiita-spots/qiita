@@ -18,7 +18,7 @@
         <a href="/study/upload/{{study_id}}">Upload files</a>
       {% end %}
       {% if user_level == 'admin' %}
-       <a class="btn btn-primary" onClick="make_public({{study_id}});">Make Public</a>
+       <a class="btn btn-primary" onClick="make_public();">Make Public</a>
       {% end %}
       <!-- {'mixs_compliant': True,
       'reprocess': False,
@@ -352,8 +352,8 @@
     }
   }
 
-   function make_public(study_id) {
-    if (confirm("Are you sure you want to add a new prep template?")) {
+   function make_public() {
+    if (confirm("Are you sure you want to make this study public?")) {
       var form = $("<form>")
         .attr("action", window.location.href)
         .attr("method", "post")
