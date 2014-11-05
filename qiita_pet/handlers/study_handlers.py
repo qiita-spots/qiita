@@ -369,8 +369,8 @@ class StudyDescriptionHandler(BaseHandler):
             else:
                 # to be implemented
                 # add raw data to study
-                raw_datas = [RawData(rd) for rd in previous_raw_data]
-                study.add_raw_datas(raw_datas)
+                raw_data = [RawData(rd) for rd in previous_raw_data]
+                study.add_raw_data(raw_data)
                 msg = ""
             tab_to_display = ""
 

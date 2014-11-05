@@ -508,12 +508,12 @@ class Study(QiitaStatusObject):
                "study_id = %s{0}".format(spec_data))
         return [x[0] for x in conn_handler.execute_fetchall(sql, (self._id,))]
 
-    def add_raw_datas(self, raw_datas):
+    def add_raw_data(self, raw_data):
         """ Adds raw_data to the current study
 
         Parameters
         ----------
-        raw_datas : list of RawData
+        raw_data : list of RawData
             The RawData objects to be added to the study
 
         Raises
@@ -522,11 +522,11 @@ class Study(QiitaStatusObject):
             If the raw_data is already linked to the current study
         """
         conn_handler = SQLConnectionHandler()
-        queue = "%d_add_raw_datas" % self.id
+        queue = "%d_add_raw_data" % self.id
         sql = ("SELECT EXISTS(SELECT * FROM qiita.study_raw_data WHERE "
                "study_id=%s AND raw_data_id=%s)")
         conn_handler.create_queue(queue)
-        sql_args = [(self.id, rd.id) for rd in raw_datas]
+        sql_args = [(self.id, rd.id) for rd in raw_data]
         conn_handler.add_to_queue(queue, sql, sql_args, many=True)
         linked = conn_handler.execute_queue(queue)
 

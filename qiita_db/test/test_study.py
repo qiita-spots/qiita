@@ -481,18 +481,18 @@ class TestStudy(TestCase):
                            'Microbiomes for Cannabis Soils', [1], self.info)
         self.assertEqual(new.raw_data(), [])
 
-    def test_add_raw_datas(self):
+    def test_add_raw_data(self):
         new = Study.create(User('test@foo.bar'), 'NOT Identification of the '
                            'Microbiomes for Cannabis Soils', [1], self.info)
-        new.add_raw_datas([RawData(1), RawData(2)])
+        new.add_raw_data([RawData(1), RawData(2)])
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.study_raw_data WHERE study_id=%s",
             (new.id,))
         self.assertEqual(obs, [[new.id, 1], [new.id, 2]])
 
-    def test_add_raw_datas_error(self):
+    def test_add_raw_data_error(self):
         with self.assertRaises(QiitaDBError):
-            self.study.add_raw_datas([RawData(1)])
+            self.study.add_raw_data([RawData(1)])
 
     def test_retrieve_preprocessed_data(self):
         self.assertEqual(self.study.preprocessed_data(), [1, 2])
