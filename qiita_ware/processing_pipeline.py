@@ -233,42 +233,6 @@ def _insert_preprocessed_data_fastq(study, params, prep_template, slq_out):
     prep_template.preprocessing_status = 'success'
 
 
-def _add_files_to_raw_data(raw_data_id, filepaths):
-    """Add files to raw data
-
-    Parameters
-    ----------
-    raw_data_id : int
-        The raw_data id to preprocess
-    filepaths : list
-        A list of tuples where the first element is the fullpath to add
-        and the second is the file type
-
-    """
-    from qiita_db.data import RawData
-
-    rd = RawData(raw_data_id)
-    # starting move
-    rd.link_filepaths_status = 'in_progress'
-    rd.add_filepaths(filepaths)
-    # Move is done
-    rd.link_filepaths_status = 'done'
-
-
-def _unlink_files_from_raw_data(raw_data_id):
-    """Removes the files from raw_data
-
-    Parameters
-    ----------
-    raw_data_id : int
-        The raw_data_id to unlink all files
-    """
-    from qiita_db.data import RawData
-
-    rd = RawData(raw_data_id)
-    rd.clear_filepaths()
-
-
 class StudyPreprocessor(ParallelWrapper):
     def _construct_job_graph(self, study, prep_template, params):
         """Constructs the workflow graph to preprocess a study
@@ -340,57 +304,3 @@ class StudyPreprocessor(ParallelWrapper):
         self.prep_template.preprocessing_status = 'failed: %s' % msg
         LogEntry.create('Fatal', msg,
                         info={'prep_template': self.prep_template.id})
-
-
-class AddFilesToRawData(ParallelWrapper):
-    def _construct_job_graph(self, raw_data_id, filepaths):
-        """Constructs the workflow graph to add files to raw data
-
-        Parameters
-        ----------
-        raw_data_id : int
-            The raw_data id to preprocess
-        filepaths : list
-            A list of tuples where the first element is the fullpath to add
-            and the second is the file type
-        """
-        self.raw_data_id = raw_data_id
-
-        adding_files = "ADDINGFILES"
-        self._logger = stderr
-        self._job_graph.add_node(adding_files,
-                                 job=(_add_files_to_raw_data, raw_data_id,
-                                      filepaths), requires_deps=False)
-
-    def _failure_callback(self, msg=None):
-        """Callback to execute in case the job node fails
-        """
-        # job failed
-        RawData(self.raw_data_id).link_filepaths_status = 'failed: %s' % msg
-        LogEntry.create('Fatal', msg,
-                        info={'raw_data': self.raw_data_id})
-
-
-class UnlinkAllFiles(ParallelWrapper):
-    def _construct_job_graph(self, raw_data_id):
-        """Constructs the workflow graph to remove all files from raw data
-
-        Parameters
-        ----------
-        raw_data_id : int
-            The raw_data_id to unlink all files
-        """
-        self.raw_data_id = raw_data_id
-
-        unlinking_files = "UNLINKING_FILES"
-        self._logger = stderr
-        self._job_graph.add_node(unlinking_files,
-                                 job=(_unlink_files_from_raw_data,
-                                      raw_data_id),
-                                 requires_deps=False)
-
-    def _failure_callback(self, msg=None):
-        """Callback to execute in case the job node fails"""
-        RawData(self.raw_data_id).link_filepaths_status = 'failed: %s' % msg
-        LogEntry.create('Fatal', msg,
-                        info={'raw_data': self.raw_data_id})
