@@ -95,8 +95,23 @@ def flatten(listOfLists):
 
 
 class SQLConnectionHandler(object):
-    """Encapsulates the DB connection with the Postgres DB"""
+    """Encapsulates the DB connection with the Postgres DB
+
+    Parameters
+    ----------
+    admin : {False, 'no_database', 'database'}, optional
+        Whether or not to connect as the admin user. Options other than `False`
+        depend on admin credentials in the qiita configuration. If
+        'no_database', the connection will be made to the server specified in
+        the qiita configuration, but not to a specific database. If 'database',
+        then a connection will be made to the server and database specified in
+        the qiita config.
+    """
     def __init__(self, admin=False):
+        if admin not in (False, 'database', 'no_database'):
+            raise RuntimeError("admin takes only {False, 'database', or "
+                               "'no_database'}")
+
         self.admin = admin
         self._open_connection()
         # queues for transaction blocks. Format is {str: list} where the str
@@ -125,7 +140,9 @@ class SQLConnectionHandler(object):
         if self.admin:
             args['user'] = qiita_config.admin_user
             args['password'] = qiita_config.admin_password
-            del args['database']
+
+            if self.admin == 'no_database':
+                del args['database']
 
         try:
             self._connection = connect(**args)
