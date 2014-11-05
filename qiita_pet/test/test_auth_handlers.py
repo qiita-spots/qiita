@@ -37,6 +37,7 @@ class TestAuthLoginHandler(TestHandlerBase):
         post_args = {
             'username': 'test@foo.bar',
             'passwd': 'password',
+            'next': '/'
         }
         response = self.post('/auth/login/', post_args)
         self.assertEqual(response.code, 200)
