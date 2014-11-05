@@ -230,9 +230,10 @@ class BaseData(QiitaObject):
         self._check_subclass()
         if (status not in ('idle', 'linking', 'unlinking') and
                 not status.startswith('failed')):
-            LogEntry.create('Runtime', e,
+            msg = 'Unknown status: %s' % status
+            LogEntry.create('Runtime', msg,
                             info={self.__class__.__name__: self.id})
-            raise ValueError('Unknown status: %s' % status)
+            raise ValueError(msg)
 
         conn_handler = SQLConnectionHandler()
         conn_handler.execute(
