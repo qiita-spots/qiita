@@ -390,7 +390,7 @@ class RawData(BaseData):
             conn_handler.execute_queue(queue)
         except Exception as e:
             self._set_link_filepaths_status("failed: %s" % e)
-            raise
+            raise e
 
         # We can already update the status to done, as the files have been
         # unlinked, the purge_filepaths call will not change the status
@@ -465,7 +465,7 @@ class RawData(BaseData):
                 conn_handler.execute(sql, sql_args)
             except Exception as e:
                 self._set_link_filepaths_status("failed: %s" % e)
-                raise
+                raise e
 
             # We can already update the status to done, as the files have been
             # unlinked, the purge_filepaths call will not change the status
