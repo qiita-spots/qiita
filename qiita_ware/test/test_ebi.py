@@ -442,21 +442,21 @@ spaceSchemaLocation="ftp://ftp.sra.ebi.ac.uk/meta/xsd/sra_1_3/SRA.study.xsd">
       <STUDY_ABSTRACT>
         test asbstract
       </STUDY_ABSTRACT>
-      <STUDY_LINKS>
-        <STUDY_LINK>
-          <XREF_LINK>
-            <DB>PUBMED</DB>
-            <ID>12</ID>
-          </XREF_LINK>
-        </STUDY_LINK>
-        <STUDY_LINK>
-          <XREF_LINK>
-            <DB>PUBMED</DB>
-            <ID>15</ID>
-          </XREF_LINK>
-        </STUDY_LINK>
-      </STUDY_LINKS>
     </DESCRIPTOR>
+    <STUDY_LINKS>
+      <STUDY_LINK>
+        <XREF_LINK>
+          <DB>PUBMED</DB>
+          <ID>12</ID>
+        </XREF_LINK>
+      </STUDY_LINK>
+      <STUDY_LINK>
+        <XREF_LINK>
+          <DB>PUBMED</DB>
+          <ID>15</ID>
+        </XREF_LINK>
+      </STUDY_LINK>
+    </STUDY_LINKS>
   </STUDY>
 </STUDY_SET>
 """

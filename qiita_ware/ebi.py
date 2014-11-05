@@ -255,7 +255,7 @@ class EBISubmission(object):
 
         # Add pubmed IDs
         if self.pmids:
-            study_links = ET.SubElement(descriptor, 'STUDY_LINKS')
+            study_links = ET.SubElement(study, 'STUDY_LINKS')
             for pmid in self.pmids:
                 self._get_pmid_element(study_links, pmid)
 
