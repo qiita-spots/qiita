@@ -65,7 +65,7 @@ class RawDataTests(TestCase):
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.raw_data WHERE raw_data_id=3")
         # raw_data_id, filetype, link_filepaths_status
-        self.assertEqual(obs, [[3, 2, 'done']])
+        self.assertEqual(obs, [[3, 2, 'idle']])
 
         # Check that the raw data have been correctly linked with the study
         obs = self.conn_handler.execute_fetchall(
@@ -111,7 +111,7 @@ class RawDataTests(TestCase):
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.raw_data WHERE raw_data_id=3")
         # raw_data_id, filetype, link_filepaths_status
-        self.assertEqual(obs, [[3, 2, 'done']])
+        self.assertEqual(obs, [[3, 2, 'idle']])
 
         # Check that the raw data have been correctly linked with the study
         obs = self.conn_handler.execute_fetchall(
@@ -160,11 +160,11 @@ class RawDataTests(TestCase):
 
     def test_link_filepaths_status(self):
         rd = RawData(1)
-        self.assertEqual(rd.link_filepaths_status, 'done')
+        self.assertEqual(rd.link_filepaths_status, 'idle')
 
     def test_link_filepaths_status_setter(self):
         rd = RawData(1)
-        self.assertEqual(rd.link_filepaths_status, 'done')
+        self.assertEqual(rd.link_filepaths_status, 'idle')
         rd._set_link_filepaths_status('linking')
         self.assertEqual(rd.link_filepaths_status, 'linking')
         rd._set_link_filepaths_status('unlinking')
@@ -264,7 +264,7 @@ class PreprocessedDataTests(TestCase):
         # ebi_submission_accession, ebi_study_accession, data_type_id,
         # link_filepaths_status
         exp = [[3, "preprocessed_sequence_illumina_params", 1,
-                'not submitted', "EBI123456-A", "EBI123456-B", 2, 'done']]
+                'not submitted', "EBI123456-A", "EBI123456-B", 2, 'idle']]
         self.assertEqual(obs, exp)
 
         # Check that the preprocessed data has been linked with its study
@@ -314,7 +314,7 @@ class PreprocessedDataTests(TestCase):
         # ebi_submission_accession, ebi_study_accession, data_type_id,
         # link_filepaths_status
         exp = [[3, "preprocessed_sequence_illumina_params", 1,
-                'not submitted', None, None, 2, 'done']]
+                'not submitted', None, None, 2, 'idle']]
         self.assertEqual(obs, exp)
 
         # Check that the preprocessed data has been linked with its study
@@ -477,11 +477,11 @@ class PreprocessedDataTests(TestCase):
 
     def test_link_filepaths_status(self):
         ppd = PreprocessedData(1)
-        self.assertEqual(ppd.link_filepaths_status, 'done')
+        self.assertEqual(ppd.link_filepaths_status, 'idle')
 
     def test_link_filepaths_status_setter(self):
         ppd = PreprocessedData(1)
-        self.assertEqual(ppd.link_filepaths_status, 'done')
+        self.assertEqual(ppd.link_filepaths_status, 'idle')
         ppd._set_link_filepaths_status('linking')
         self.assertEqual(ppd.link_filepaths_status, 'linking')
         ppd._set_link_filepaths_status('unlinking')
@@ -530,7 +530,7 @@ class ProcessedDataTests(TestCase):
             "SELECT * FROM qiita.processed_data WHERE processed_data_id=2")
         # processed_data_id, processed_params_table, processed_params_id,
         # processed_date, data_type_id, link_filepaths_status
-        exp = [[2, "processed_params_uclust", 1, self.date, 2, 'done']]
+        exp = [[2, "processed_params_uclust", 1, self.date, 2, 'idle']]
         self.assertEqual(obs, exp)
 
         # Check that the files have been copied to right location
@@ -601,7 +601,7 @@ class ProcessedDataTests(TestCase):
             "SELECT * FROM qiita.processed_data WHERE processed_data_id=2")
         # processed_data_id, processed_params_table, processed_params_id,
         # processed_date, data_type_id, link_filepaths_status
-        exp = [[2, "processed_params_uclust", 1, self.date, 2, 'done']]
+        exp = [[2, "processed_params_uclust", 1, self.date, 2, 'idle']]
         self.assertEqual(obs, exp)
 
         # Check that the files have been copied to right location
@@ -700,11 +700,11 @@ class ProcessedDataTests(TestCase):
 
     def test_link_filepaths_status(self):
         pd = ProcessedData(1)
-        self.assertEqual(pd.link_filepaths_status, 'done')
+        self.assertEqual(pd.link_filepaths_status, 'idle')
 
     def test_link_filepaths_status_setter(self):
         pd = ProcessedData(1)
-        self.assertEqual(pd.link_filepaths_status, 'done')
+        self.assertEqual(pd.link_filepaths_status, 'idle')
         pd._set_link_filepaths_status('linking')
         self.assertEqual(pd.link_filepaths_status, 'linking')
         pd._set_link_filepaths_status('unlinking')

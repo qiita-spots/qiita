@@ -164,7 +164,7 @@ class BaseData(QiitaObject):
             raise e
 
         # Filepaths successfully added, update the status
-        self._set_link_filepaths_status("done")
+        self._set_link_filepaths_status("idle")
 
     def get_filepaths(self):
         r"""Returns the filepath associated with the data object
@@ -213,7 +213,7 @@ class BaseData(QiitaObject):
 
     def _set_link_filepaths_status(self, status):
         self._check_subclass()
-        if (status not in ('done', 'linking', 'unlinking') and
+        if (status not in ('idle', 'linking', 'unlinking') and
                 not status.startswith('failed')):
             raise ValueError('Unknown status: %s' % status)
 
@@ -444,7 +444,7 @@ class RawData(BaseData):
         # We can already update the status to done, as the files have been
         # unlinked, the purge_filepaths call will not change the status
         # of the raw data object
-        self._set_link_filepaths_status("done")
+        self._set_link_filepaths_status("idle")
 
         # Delete the files, if they are not used anywhere
         purge_filepaths(conn_handler)
@@ -476,7 +476,7 @@ class RawData(BaseData):
         # We can already update the status to done, as the files have been
         # unlinked, the purge_filepaths call will not change the status
         # of the raw data object
-        self._set_link_filepaths_status("done")
+        self._set_link_filepaths_status("idle")
 
         # Delete the file if it is not used anywhere
         purge_filepaths(conn_handler)
