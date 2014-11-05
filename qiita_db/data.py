@@ -146,15 +146,25 @@ class BaseData(QiitaObject):
 
         # Check if the connection handler has been provided. Create a new
         # one if not.
-        if not conn_handler:
-            conn_handler = SQLConnectionHandler()
+        conn_handler = conn_handler if conn_handler else SQLConnectionHandler()
 
-        # Add the filepaths to the database
-        fp_ids = insert_filepaths(filepaths, self._id, self._table,
-                                  self._filepath_table, conn_handler)
+        # Update the status of the current object
+        self.link_filepaths_status = "linking"
 
-        # Connect the raw data with its filepaths
-        self._link_data_filepaths(fp_ids, conn_handler)
+        try:
+            # Add the filepaths to the database
+            fp_ids = insert_filepaths(filepaths, self._id, self._table,
+                                      self._filepath_table, conn_handler)
+
+            # Connect the raw data with its filepaths
+            self._link_data_filepaths(fp_ids, conn_handler)
+        except Exception as e:
+            # Something went wrong, update the status
+            self.link_filepaths_status = "failed: %s" % e
+            raise e
+
+        # Filepaths successfully added, update the status
+        self.link_filepaths_status = "done"
 
     def get_filepaths(self):
         r"""Returns the filepath associated with the data object
@@ -204,8 +214,8 @@ class BaseData(QiitaObject):
     @link_filepaths_status.setter
     def link_filepaths_status(self, status):
         self._check_subclass()
-        if (status != 'done' and not (status.startswith('in_progress') or
-                                      status.startswith('failed'))):
+        if (status not in ('done', 'linking', 'unlinking') and
+                not status.startswith('failed')):
             raise ValueError('Unknown status: %s' % status)
 
         conn_handler = SQLConnectionHandler()
@@ -371,11 +381,22 @@ class RawData(BaseData):
         queue = "%s_clear_fps" % self.id
         conn_handler.create_queue(queue)
 
+        self.link_filepaths_status = "unlinking"
+
         for fp, fp_type in self.get_filepaths():
             self.remove_filepath(fp, conn_handler, queue)
 
-        # Execute all the queue
-        conn_handler.execute_queue(queue)
+        try:
+            # Execute all the queue
+            conn_handler.execute_queue(queue)
+        except Exception as e:
+            self.link_filepaths_status = "failed: %s" % e
+            raise
+
+        # We can already update the status to done, as the files have been
+        # unlinked, the purge_filepaths call will not change the status
+        # of the raw data object
+        self.link_filepaths_status = "done"
 
         # Delete the files, if they are not used anywhere
         purge_filepaths(conn_handler)
@@ -407,12 +428,16 @@ class RawData(BaseData):
 
         conn_handler = conn_handler if conn_handler else SQLConnectionHandler()
 
+        # Set the current status to unlinking
+        self.link_filepaths_status = "unlinking"
+
         # If the RawData has been already preprocessed, we cannot remove any
         # file - raise an error
         if self._is_preprocessed(conn_handler):
-            raise QiitaDBError("Cannot clear all the filepaths from raw data "
-                               "%s, it has been already preprocessed"
-                               % self._id)
+            msg = ("Cannot clear all the filepaths from raw data %s, it has "
+                   "been already preprocessed" % self._id)
+            self.link_filepaths_status = "failed: %s" % msg
+            raise QiitaDBError(msg)
 
         # Get the filpeath id
         fp_id = get_filepath_id(fp, conn_handler)
@@ -423,8 +448,10 @@ class RawData(BaseData):
             (fp_id, self._id))[0]
 
         if not fp_is_mine:
-            raise ValueError("The filepath %s does not belong to raw data %s"
-                             % (fp, self._id))
+            msg = ("The filepath %s does not belong to raw data %s"
+                   % (fp, self._id))
+            self.link_filepaths_status = "failed: %s" % msg
+            raise ValueError(msg)
 
         # We can remove the file
         sql = "DELETE FROM qiita.{0} WHERE filepath_id=%s".format(
@@ -435,8 +462,16 @@ class RawData(BaseData):
         if queue:
             conn_handler.add_to_queue(queue, sql, sql_args)
         else:
-            conn_handler.execute(sql, sql_args)
+            try:
+                conn_handler.execute(sql, sql_args)
+            except Exception as e:
+                self.link_filepaths_status = "failed: %s" % e
+                raise
 
+            # We can already update the status to done, as the files have been
+            # unlinked, the purge_filepaths call will not change the status
+            # of the raw data object
+            self.link_filepaths_status = "done"
             # Delete the file if it is not used anywhere
             purge_filepaths(conn_handler)
 
