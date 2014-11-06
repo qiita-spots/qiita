@@ -154,7 +154,7 @@ class ConfigurationManager(object):
         self.valid_upload_extension = [ve.strip() for ve in config.get(
             'main', 'VALID_UPLOAD_EXTENSION').split(',')]
         if (not self.valid_upload_extension or
-            self.valid_upload_extension == ['']):
+           self.valid_upload_extension == ['']):
             self.valid_upload_extension = []
             print 'No files will be allowed to be uploaded.'
 

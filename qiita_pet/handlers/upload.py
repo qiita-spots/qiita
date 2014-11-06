@@ -1,4 +1,4 @@
-from tornado.web import authenticated
+from tornado.web import authenticated, HTTPError
 
 from os.path import isdir, join, exists
 from os import makedirs, listdir
@@ -57,8 +57,7 @@ class UploadFileHandler(BaseHandler):
         if not filename.endswith(tuple(qiita_config.valid_upload_extension)):
             self.set_status(415)
             raise HTTPError(415, "User %s is trying to upload %d" %
-                                 (user.id, filename))
-
+                                 (self.current_user, filename))
 
     @authenticated
     def post(self):
