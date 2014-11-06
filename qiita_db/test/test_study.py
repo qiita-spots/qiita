@@ -172,7 +172,7 @@ class TestStudy(TestCase):
 
     def _make_private(self):
         # make studies private
-        self.conn_handler.execute("UPDATE qiita.study SET study_status_id = 3")
+        self.conn_handler.execute("UPDATE qiita.study SET study_status_id = 4")
 
     def test_has_access_public(self):
         self.assertTrue(self.study.has_access(User("demo@microbio.me")))

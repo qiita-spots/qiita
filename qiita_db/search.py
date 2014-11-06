@@ -202,7 +202,7 @@ class QiitaStudySearch(object):
         # strip to only studies user has access to
         userobj = User(user)
         study_ids = study_ids.intersection(Study.get_by_status('public') +
-                                           userobj.private_studies +
+                                           userobj.user_studies +
                                            userobj.shared_studies)
         results = {}
         # run search on each study to get out the matching samples

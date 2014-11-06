@@ -47,7 +47,7 @@ class User(QiitaObject):
     email
     level
     info
-    private_studies
+    user_studies
     shared_studies
     private_analyses
     shared_analyses
@@ -330,8 +330,18 @@ class User(QiitaObject):
         conn_handler.execute(sql, data)
 
     @property
-    def private_studies(self):
-        """Returns a list of private study ids owned by the user"""
+    def sandbox_studies(self):
+        """Returns a list of sandboxed study ids owned by the user"""
+        sql = ("SELECT study_id FROM qiita.study s JOIN qiita.study_status ss "
+               "ON s.study_status_id = ss.study_status_id WHERE "
+               "s.email = %s AND ss.status = %s".format(self._table))
+        conn_handler = SQLConnectionHandler()
+        study_ids = conn_handler.execute_fetchall(sql, (self._id, 'sandbox'))
+        return [s[0] for s in study_ids]
+
+    @property
+    def user_studies(self):
+        """Returns a list of study ids owned by the user"""
         sql = ("SELECT study_id FROM qiita.study WHERE "
                "email = %s".format(self._table))
         conn_handler = SQLConnectionHandler()

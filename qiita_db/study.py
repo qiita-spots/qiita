@@ -621,9 +621,9 @@ class Study(QiitaStatusObject):
             return True
 
         if no_public:
-            return self._id in user.private_studies + user.shared_studies
+            return self._id in user.user_studies + user.shared_studies
         else:
-            return self._id in user.private_studies + user.shared_studies \
+            return self._id in user.user_studies + user.shared_studies \
                 + self.get_by_status('public')
 
     def share(self, user):

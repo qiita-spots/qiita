@@ -212,9 +212,9 @@ class UserTest(TestCase):
         with self.assertRaises(QiitaDBColumnError):
             self.user.info = self.userinfo
 
-    def test_get_private_studies(self):
+    def test_get_user_studies(self):
         user = User('test@foo.bar')
-        self.assertEqual(user.private_studies, [1])
+        self.assertEqual(user.user_studies, [1])
 
     def test_get_shared_studies(self):
         user = User('shared@foo.bar')
