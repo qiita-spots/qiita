@@ -369,18 +369,21 @@ class StudyDescriptionHandler(BaseHandler):
         elif request_approval:
             study.status = 'awaiting_approval'
             msg = "Study sent to admin for approval"
+            tab_to_display = ""
 
         elif make_public:
             # make sure user is admin, then make public
             if User(self.current_user).level == 'admin':
                 study.status = 'public'
                 msg = "Study set to public"
+                tab_to_display = ""
 
         elif approve_study:
             # make sure user is admin, then make full private study
             if User(self.current_user).level == 'admin':
                 study.status = 'private'
                 msg = "Study approved"
+                tab_to_display = ""
 
         elif filetype or previous_raw_data:
             # adding blank raw data
