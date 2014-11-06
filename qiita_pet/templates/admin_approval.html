@@ -1,0 +1,27 @@
+{% extends sitebase.html %}
+{% block head %}
+<link rel="stylesheet" href="/static/vendor/css/jquery.dataTables.css" type="text/css">
+<script src="/static/vendor/js/jquery.dataTables.min.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+$(document).ready(function() {
+    $('#admin-approval-table').dataTable({"order": [[ 1, "asc" ]]});
+});
+</script>
+{% end %}
+{% block content %}
+<h2>Studies awaiting approval</h2>
+<table id='admin-approval-table' class="display table-bordered table-hover">
+	<thead>
+		<tr>
+			<td>Study Title</td><td>Study Owner</td>
+		</tr>
+	</thead>
+{% for study_id, study_title, study_owner in study_info %}
+	<tr>
+	  <td><a href='/study/description/{{study_id}}'>{{study_title}}</a></td>
+	  <td>{{study_owner}}</td>
+	</tr>
+{% end %}
+</table>
+{% end %}
