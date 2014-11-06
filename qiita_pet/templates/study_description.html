@@ -70,7 +70,7 @@
       <br/><br/>
       You could also select raw data from other studies that you have access to:
       <br/>
-      <select id="previous_raw_data" multiple="5">
+      <select multiple class="chosen-select" id="previous_raw_data" data-placeholder=" ">
         {% raw other_studies_rd %}
       </select>
       <br/><br/>
@@ -221,6 +221,10 @@
 </div>
 
 <script>
+
+  $(document).ready(function() {
+        $("#previous_raw_data").chosen({width: "100%"});
+  });
   function process_sample_template() {
     if (confirm("Are you sure you want to (re)process the sample template?")) {
       var form = $("<form>")
