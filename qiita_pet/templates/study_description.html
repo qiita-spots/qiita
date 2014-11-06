@@ -34,7 +34,7 @@
        'most_recent_contact': None, 'lab_person_id': None, -->
     </td>
     <td>
-      {% if study_status == 'sandbox' %}
+      {% if study_status == 'sandbox' and ste %}
         <a class="btn btn-primary" onClick="request_approval();">Request Study Approval</a>
       {% end %}
       {% if user_level == 'admin' and study_status == 'awaiting_approval' %}
@@ -56,7 +56,7 @@
 <!-- Nav tabs -->
 <ul class="nav nav-tabs" role="tablist" id="myTab">
   <li class="active"><a href="#add_sample_template" role="tab" data-toggle="tab">Add sample template</a></li>
-  {% if ste and study_status != 'awaiting_approval' %}
+  {% if ste and study_status != 'private' %}
     <li><a href="#add_raw_data" role="tab" data-toggle="tab">Add raw data</a></li>
   {% end %}
 
