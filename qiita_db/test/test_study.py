@@ -218,10 +218,10 @@ class TestStudy(TestCase):
         self._make_private()
         self.assertFalse(self.study.has_access(User("demo@microbio.me")))
 
-    def test_get_public(self):
+    def test_get_by_status(self):
         Study.create(User('test@foo.bar'), 'NOT Identification of the '
                      'Microbiomes for Cannabis Soils', [1], self.info)
-        obs = Study.get_public()
+        obs = Study.get_by_status('public')
         self.assertEqual(obs, [1])
 
     def test_exists(self):

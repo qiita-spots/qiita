@@ -154,19 +154,24 @@ class Study(QiitaStatusObject):
         self._lock_public(conn_handler)
 
     @classmethod
-    def get_public(cls):
+    def get_by_status(cls, status):
         """Returns study id for all public Studies
+
+        Parameters
+        ----------
+        status : str
+            Status setting to search for
 
         Returns
         -------
         list of Study objects
-            All public studies in the database
+            All studies in the database that match the given status
         """
         conn_handler = SQLConnectionHandler()
-        sql = ("SELECT study_id FROM qiita.{0} WHERE "
-               "{0}_status_id = %s".format(cls._table))
-        # MAGIC NUMBER 2: status id for a public study
-        return [x[0] for x in conn_handler.execute_fetchall(sql, (2, ))]
+        sql = ("SELECT study_id FROM qiita.{0} s JOIN qiita.{0}_status ss ON "
+               "s.study_status_id = ss.study_status_id WHERE "
+               "ss.status = %s".format(cls._table))
+        return [x[0] for x in conn_handler.execute_fetchall(sql, (status, ))]
 
     @classmethod
     def exists(cls, study_title):
@@ -619,7 +624,7 @@ class Study(QiitaStatusObject):
             return self._id in user.private_studies + user.shared_studies
         else:
             return self._id in user.private_studies + user.shared_studies \
-                + self.get_public()
+                + self.get_by_status('public')
 
     def share(self, user):
         """Share the study with another user
