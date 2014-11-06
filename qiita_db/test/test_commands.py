@@ -22,6 +22,8 @@ from qiita_db.commands import (load_study_from_cmd, load_raw_data_cmd,
                                load_prep_template_from_cmd,
                                load_processed_data_cmd,
                                load_preprocessed_data_from_cmd)
+from qiita_db.environment_manager import patch
+from qiita_db.sql_connection import SQLConnectionHandler
 from qiita_db.study import Study, StudyPerson
 from qiita_db.user import User
 from qiita_db.data import RawData
@@ -306,6 +308,94 @@ class TestLoadProcessedDataFromCmd(TestCase):
         with self.assertRaises(ValueError):
             load_processed_data_cmd(filepaths, filepath_types[:-1],
                                     'processed_params_uclust', 1, 1, None)
+
+
+@qiita_test_checker()
+class TestPatch(TestCase):
+    def setUp(self):
+        self.patches_dir = mkdtemp()
+        patch2_fp = join(self.patches_dir, '2.sql')
+        patch10_fp = join(self.patches_dir, '10.sql')
+
+        with open(patch2_fp, 'w') as f:
+            f.write("CREATE TABLE qiita.patchtest2 (testing integer);\n")
+            f.write("INSERT INTO qiita.patchtest2 VALUES (1);\n")
+            f.write("INSERT INTO qiita.patchtest2 VALUES (9);\n")
+
+        with open(patch10_fp, 'w') as f:
+            f.write("CREATE TABLE qiita.patchtest10 (testing integer);\n")
+
+    def tearDown(self):
+        rmtree(self.patches_dir)
+
+    def _check_patchtest2(self, exists=True):
+        if exists:
+            assertion_fn = self.assertTrue
+        else:
+            assertion_fn = self.assertFalse
+
+        obs = self.conn_handler.execute_fetchone(
+            """SELECT EXISTS(SELECT * FROM information_schema.tables
+               WHERE table_name = 'patchtest2')""")[0]
+        assertion_fn(obs)
+
+        if exists:
+            exp = [[1], [9]]
+            obs = self.conn_handler.execute_fetchall(
+                """SELECT * FROM qiita.patchtest2 ORDER BY testing""")
+            self.assertEqual(obs, exp)
+
+    def _check_patchtest10(self):
+        obs = self.conn_handler.execute_fetchone(
+            """SELECT EXISTS(SELECT * FROM information_schema.tables
+               WHERE table_name = 'patchtest10')""")[0]
+        self.assertTrue(obs)
+
+        exp = []
+        obs = self.conn_handler.execute_fetchall(
+            """SELECT * FROM qiita.patchtest10""")
+        self.assertEqual(obs, exp)
+
+    def _assert_current_patch(self, patch_to_check):
+        current_patch = self.conn_handler.execute_fetchone(
+            """SELECT current_patch FROM settings""")[0]
+        self.assertEqual(current_patch, patch_to_check)
+
+    def test_unpatched(self):
+        """Test patching from unpatched state"""
+        # Reset the settings table to the unpatched state
+        self.conn_handler.execute(
+            """UPDATE settings SET current_patch = 'unpatched'""")
+
+        self._assert_current_patch('unpatched')
+        patch(self.patches_dir)
+        self._check_patchtest2()
+        self._check_patchtest10()
+        self._assert_current_patch('10.sql')
+
+    def test_skip_patch(self):
+        """Test patching from a patched state"""
+        self.conn_handler.execute(
+            """UPDATE settings SET current_patch = '2.sql'""")
+        self._assert_current_patch('2.sql')
+
+        # If it tried to apply patch 2.sql again, this will error
+        patch(self.patches_dir)
+
+        self._assert_current_patch('10.sql')
+        self._check_patchtest10()
+
+        # Since we "tricked" the system, patchtest2 should not exist
+        self._check_patchtest2(exists=False)
+
+    def test_nonexistent_patch(self):
+        """Test case where current patch does not exist"""
+        self.conn_handler.execute(
+            """UPDATE settings SET current_patch = 'nope.sql'""")
+        self._assert_current_patch('nope.sql')
+
+        with self.assertRaises(RuntimeError):
+            patch(self.patches_dir)
 
 
 CONFIG_1 = """[required]
