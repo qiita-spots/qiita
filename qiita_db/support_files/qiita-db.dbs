@@ -338,9 +338,10 @@
 		</table>
 		<table name="data_directory" >
 			<column name="data_directory_id" type="bigserial" jt="-5" mandatory="y" />
-			<column name="type" type="text" jt="12" mandatory="y" />
-			<column name="mountpoint" type="text" jt="12" />
-			<column name="subdirectory" type="text" jt="12" />
+			<column name="data_type" type="varchar" jt="12" mandatory="y" />
+			<column name="mountpoint" type="varchar" jt="12" mandatory="y" />
+			<column name="subdirectory" type="varchar" jt="12" mandatory="y" />
+			<column name="active" type="bool" jt="-7" mandatory="y" />
 			<index name="pk_data_directory" unique="PRIMARY_KEY" >
 				<column name="data_directory_id" />
 			</index>

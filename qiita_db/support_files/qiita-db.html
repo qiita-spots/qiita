@@ -446,11 +446,11 @@ table {
 	preprocessed_filepath references preprocessed_data ( preprocessed_data_id )</title>
 </path>
 <text x='1177' y='700' transform='rotate(0 1177,700)' title='Foreign Key fk_preprocessed_filepath
-	preprocessed_filepath references preprocessed_data ( preprocessed_data_id )' style='fill:#a1a0a0;'>preprocessed_data_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1005 690 L 810,690' >
+	preprocessed_filepath references preprocessed_data ( preprocessed_data_id )' style='fill:#a1a0a0;'>preprocessed_data_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1005 705 L 810,705' >
 	<title>Foreign Key fk_preprocessed_filepath_0
 	preprocessed_filepath references filepath ( filepath_id )</title>
 </path>
-<text x='951' y='685' transform='rotate(0 951,685)' title='Foreign Key fk_preprocessed_filepath_0
+<text x='951' y='700' transform='rotate(0 951,700)' title='Foreign Key fk_preprocessed_filepath_0
 	preprocessed_filepath references filepath ( filepath_id )' style='fill:#a1a0a0;'>filepath_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 390 720 L 360,720' >
 	<title>Foreign Key fk_analysis_filepath
 	analysis_filepath references analysis ( analysis_id )</title>
@@ -671,11 +671,11 @@ table {
 	filepath references checksum_algorithm ( checksum_algorithm_id )</title>
 </path>
 <text x='763' y='795' transform='rotate(90 763,795)' title='Foreign Key fk_filepath_0
-	filepath references checksum_algorithm ( checksum_algorithm_id )' style='fill:#a1a0a0;'>checksum_algorithm_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'  style='stroke-dasharray:4,2;'  d='M 810 705 L 847,705 Q 855,705 855,697 L 855,675' >
+	filepath references checksum_algorithm ( checksum_algorithm_id )' style='fill:#a1a0a0;'>checksum_algorithm_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'  style='stroke-dasharray:4,2;'  d='M 810 720 L 847,720 Q 855,720 855,712 L 855,690' >
 	<title>Foreign Key fk_filepath_data_directory
 	filepath references data_directory ( data_directory_id )</title>
 </path>
-<text x='817' y='700' transform='rotate(0 817,700)' title='Foreign Key fk_filepath_data_directory
+<text x='817' y='715' transform='rotate(0 817,715)' title='Foreign Key fk_filepath_data_directory
 	filepath references data_directory ( data_directory_id )' style='fill:#a1a0a0;'>data_directory_id</text><!-- ============= Table 'controlled_vocab_values' ============= -->
 <rect class='table' x='45' y='1523' width='150' height='120' rx='7' ry='7' />
 <path d='M 45.50 1549.50 L 45.50 1530.50 Q 45.50 1523.50 52.50 1523.50 L 187.50 1523.50 Q 194.50 1523.50 194.50 1530.50 L 194.50 1549.50 L45.50 1549.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
@@ -1652,16 +1652,16 @@ Referred by reference ( tree_filepath -> filepath_id ) </title></a>
 <a xlink:href='#filepath.data_directory_id'><use id='fk' x='798' y='761' xlink:href='#fk'/><title>References data_directory ( data_directory_id ) </title></a>
 
 <!-- ============= Table 'data_directory' ============= -->
-<rect class='table' x='840' y='563' width='135' height='105' rx='7' ry='7' />
+<rect class='table' x='840' y='563' width='135' height='120' rx='7' ry='7' />
 <path d='M 840.50 589.50 L 840.50 570.50 Q 840.50 563.50 847.50 563.50 L 967.50 563.50 Q 974.50 563.50 974.50 570.50 L 974.50 589.50 L840.50 589.50 ' style='fill:url(#tableHeaderGradient2); stroke:none;' />
 <a xlink:href='#data_directory'><text x='868' y='577' class='tableTitle'>data_directory</text><title>Table qiita.data_directory</title></a>
   <use id='nn' x='842' y='597' xlink:href='#nn'/><a xlink:href='#data_directory.data_directory_id'><use id='pk' x='842' y='596' xlink:href='#pk'/><title>Primary Key  ( data_directory_id ) </title></a>
 <a xlink:href='#data_directory.data_directory_id'><text x='858' y='607'>data_directory_id</text><title>data_directory_id bigserial not null</title></a>
-<a xlink:href='#data_directory.data_directory_id'><use id='ref' x='963' y='596' xlink:href='#ref'/><title>Referred by filepath ( data_directory_id ) 
-Referred by filepath ( data_directory_id ) </title></a>
-  <use id='nn' x='842' y='612' xlink:href='#nn'/><a xlink:href='#data_directory.type'><text x='858' y='622'>type</text><title>type text not null</title></a>
-  <a xlink:href='#data_directory.mountpoint'><text x='858' y='637'>mountpoint</text><title>mountpoint text</title></a>
-  <a xlink:href='#data_directory.subdirectory'><text x='858' y='652'>subdirectory</text><title>subdirectory text</title></a>
+<a xlink:href='#data_directory.data_directory_id'><use id='ref' x='963' y='596' xlink:href='#ref'/><title>Referred by filepath ( data_directory_id ) </title></a>
+  <use id='nn' x='842' y='612' xlink:href='#nn'/><a xlink:href='#data_directory.data_type'><text x='858' y='622'>data_type</text><title>data_type varchar not null</title></a>
+  <use id='nn' x='842' y='627' xlink:href='#nn'/><a xlink:href='#data_directory.mountpoint'><text x='858' y='637'>mountpoint</text><title>mountpoint varchar not null</title></a>
+  <use id='nn' x='842' y='642' xlink:href='#nn'/><a xlink:href='#data_directory.subdirectory'><text x='858' y='652'>subdirectory</text><title>subdirectory varchar not null</title></a>
+  <use id='nn' x='842' y='657' xlink:href='#nn'/><a xlink:href='#data_directory.active'><text x='858' y='667'>active</text><title>active bool not null</title></a>
 
 </g></svg>
 
@@ -5024,20 +5024,26 @@ Controlled Vocabulary </td>
 	</tr>
 	<tr>
 		<td>*</td>
-		<td><a name='data_directory.type'>type</a></td>
-		<td> text   </td>
+		<td><a name='data_directory.data_type'>data&#095;type</a></td>
+		<td> varchar   </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td>
+		<td>*</td>
 		<td><a name='data_directory.mountpoint'>mountpoint</a></td>
-		<td> text   </td>
+		<td> varchar   </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td>
+		<td>*</td>
 		<td><a name='data_directory.subdirectory'>subdirectory</a></td>
-		<td> text   </td>
+		<td> varchar   </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>*</td>
+		<td><a name='data_directory.active'>active</a></td>
+		<td> bool   </td>
 		<td>  </td>
 	</tr>
 <tr><th colspan='4'><b>Indexes</b></th></tr>

@@ -59,9 +59,10 @@ CREATE INDEX idx_controlled_vocab_values ON qiita.controlled_vocab_values ( cont
 
 CREATE TABLE qiita.data_directory ( 
 	data_directory_id    bigserial  NOT NULL,
-	type                 text  NOT NULL,
-	mountpoint           text  ,
-	subdirectory         text  ,
+	data_type            varchar  NOT NULL,
+	mountpoint           varchar  NOT NULL,
+	subdirectory         varchar  NOT NULL,
+	active               bool  NOT NULL,
 	CONSTRAINT pk_data_directory PRIMARY KEY ( data_directory_id )
  );
 
