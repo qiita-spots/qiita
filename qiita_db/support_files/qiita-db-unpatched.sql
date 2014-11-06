@@ -254,11 +254,14 @@ CREATE TABLE qiita.term (
 	is_obsolete          bool DEFAULT 'false' ,
 	is_root_term         bool  ,
 	is_leaf              bool  ,
+	user_defined         bool DEFAULT False NOT NULL,
 	CONSTRAINT pk_term PRIMARY KEY ( term_id ),
 	CONSTRAINT fk_term_ontology FOREIGN KEY ( ontology_id ) REFERENCES qiita.ontology( ontology_id )    
  );
 
 CREATE INDEX idx_term ON qiita.term ( ontology_id );
+
+COMMENT ON COLUMN qiita.term.user_defined IS 'Whether or not this term was defined by a user';
 
 CREATE TABLE qiita.timeseries_type ( 
 	timeseries_type_id   bigserial  NOT NULL,
