@@ -5,7 +5,12 @@
   <tr>
     <td style="vertical-align: middle; text-align:left; width: 50%;" colspan="2">
       <b>Uploading files for: {{study_title}} ({{study_info['study_alias']}})</b>
-      <br/>
+      <br/><br/>
+      Currently we can process (<b>{{extensions.replace(',',', ')}}</b>):
+      <ul>
+        <li>fastq or fastq.gz (gziped fastq) for sequences. Note that zip files can not be processed</li>
+        <li>tab separed text files for sample and prep templates, the extention should be txt</li>
+      </ul>
       <a href="/study/description/{{study_id}}">Go to study descripion</a>
     </td>
   </tr>
@@ -50,12 +55,14 @@
 <script src="/static/vendor/js/resumable.js"></script>
 <script src="/static/vendor/js/resumable-uploader.js"></script>
 <script src="/static/vendor/js/underscore.min.js"></script>
+<script src="/static/vendor/js/string.min.js"></script>
 
 <script>
   var meta = { fileType: [] };
   var maxFileSize = {{max_upload_size}}; // in GB
+
   uploader = (function($){
-      return (new ResumableUploader(meta, $('.resumable-browse-metadata'), $('.resumable-drop-metadata'), $('.progress-metadata'), $('.uploader-list-metadata'), $('.file-edit-container-metadata'), maxFileSize, "{{study_id}}"));
+      return (new ResumableUploader(meta, $('.resumable-browse-metadata'), $('.resumable-drop-metadata'), $('.progress-metadata'), $('.uploader-list-metadata'), $('.file-edit-container-metadata'), maxFileSize, "{{study_id}}", "{{extensions}}"));
     })(jQuery);
 
   {% for f in files %}
