@@ -43,7 +43,6 @@ class StudyUploadFileHandler(BaseHandler):
         self.display_template(study_id, "")
 
 
-
 class UploadFileHandler(BaseHandler):
     # """ main upload class
     # based on
