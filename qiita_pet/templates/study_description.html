@@ -17,12 +17,6 @@
         <br/>
         <a href="/study/upload/{{study_id}}">Upload files</a>
       {% end %}
-
-      {% if user_level == 'admin' and study_status == 'awaiting_approval' %}
-        <a class="btn btn-primary" onClick="approve_study();">Approve Study</a>
-      {% elif user_level == 'admin' and study_status == 'private' %}
-       <a class="btn btn-primary" onClick="make_public();">Make Public</a>
-      {% end %}
       <!-- {'mixs_compliant': True,
       'reprocess': False,
       'emp_person_id': None,
@@ -38,6 +32,16 @@
        'portal_type_id': 3L,
        'study_alias': 'Myrold_Alder_Fir',
        'most_recent_contact': None, 'lab_person_id': None, -->
+    </td>
+    <td>
+      {% if study_status == 'sandbox' %}
+        <a class="btn btn-primary" onClick="request_approval();">Request Study Approval</a>
+      {% end %}
+      {% if user_level == 'admin' and study_status == 'awaiting_approval' %}
+        <a class="btn btn-primary" onClick="approve_study();">Approve Study</a>
+      {% elif user_level == 'admin' and study_status == 'private' %}
+       <a class="btn btn-primary" onClick="make_public();">Make Public</a>
+      {% end %}
     </td>
     <td width="60">
       {% if ste %}
@@ -430,6 +434,20 @@
         .append($("<input>")
           .attr("type", "hidden")
           .attr("name", "approve_study")
+          .attr("value", true))
+      $("body").append(form);
+      form.submit();
+    }
+  }
+
+  function request_approval() {
+    if (confirm("Are you sure you want to ask for approval?")) {
+      var form = $("<form>")
+        .attr("action", window.location.href)
+        .attr("method", "post")
+        .append($("<input>")
+          .attr("type", "hidden")
+          .attr("name", "request_approval")
           .attr("value", true))
       $("body").append(form);
       form.submit();

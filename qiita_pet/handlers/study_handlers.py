@@ -70,7 +70,7 @@ def _build_study_info(studytype, user=None):
         elif studytype == "shared":
             studylist = user.shared_studies
         elif studytype == "public":
-            studylist = Study.get_public()
+            studylist = Study.get_by_status('public')
         else:
             raise IncompetentQiitaDeveloperError("Must use private, shared, "
                                                  "or public!")
@@ -331,6 +331,7 @@ class StudyDescriptionHandler(BaseHandler):
         data_type_id = self.get_argument('data_type_id', None)
         make_public = self.get_argument('make_public', False)
         approve_study = self.get_argument('approve_study', False)
+        request_approval = self.get_argument('request_approval', False)
         investigation_type = self.get_argument('investigation_type', None)
 
         if investigation_type == "":
@@ -365,15 +366,21 @@ class StudyDescriptionHandler(BaseHandler):
                    sample_template)
             tab_to_display = ""
 
+        elif request_approval:
+            study.status = 'awaiting_approval'
+            msg = "Study sent to admin for approval"
+
         elif make_public:
             # make sure user is admin, then make public
             if User(self.current_user).level == 'admin':
                 study.status = 'public'
+                msg = "Study set to public"
 
         elif approve_study:
             # make sure user is admin, then make full private study
             if User(self.current_user).level == 'admin':
                 study.status = 'private'
+                msg = "Study approved"
 
         elif filetype or previous_raw_data:
             # adding blank raw data
@@ -543,6 +550,22 @@ class CreateStudyHandler(BaseHandler):
 
         self.render('index.html', message=msg, level='success',
                     user=self.current_user)
+
+
+class StudyApprovalList(BaseHandler):
+    @authenticated
+    def get(self):
+        user = User(self.current_user)
+        if user.level != 'admin':
+            raise HTTPError(403, 'User %s is not admin' % self.current_user)
+
+        parsed_studies = []
+        for sid in Study.get_by_status('awaiting_approval'):
+            study = Study(sid)
+            parsed_studies.append((study.id, study.title, study.owner))
+
+        self.render('admin_approval.html', user=self.current_user,
+                    study_info=parsed_studies)
 
 
 class CreateStudyAJAX(BaseHandler):
