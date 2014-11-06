@@ -8,6 +8,7 @@ from qiita_core.qiita_settings import qiita_config
 
 from .exceptions import ComputeError
 
+
 def system_call(cmd):
     """Call cmd and return (stdout, stderr, return_value).
 
