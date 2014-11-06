@@ -504,6 +504,33 @@ def compute_checksum(path):
     return crc & 0xffffffff
 
 
+def retrive_latests_data_directory(data_type, conn_handler=None):
+    r""" Returns the most recent values from data directory for the given type
+
+    Parameters
+    ----------
+    data_type : str
+        The data type
+    conn_handler : SQLConnectionHandler
+        The connection handler object connected to the DB
+
+    Returns
+    -------
+    int
+        The id of the most recent entry for the given type
+    str
+        The mountpoint for that entry in data_directory
+    str
+        The subdirectory for that entry in data_directory
+    """
+    conn_handler = (conn_handler if conn_handler is not None
+                    else SQLConnectionHandler())
+    return conn_handler.execute_fetchone(
+        "SELECT data_directory_id, mountpoint, subdirectory FROM "
+        "qiita.data_directory WHERE type='%s' ORDER BY data_directory_id DESC"
+        % data_type)
+
+
 def insert_filepaths(filepaths, obj_id, table, filepath_table, conn_handler,
                      move_files=True, queue=None):
         r"""Inserts `filepaths` in the DB connected with `conn_handler`. Since
@@ -538,9 +565,10 @@ def insert_filepaths(filepaths, obj_id, table, filepath_table, conn_handler,
         """
         new_filepaths = filepaths
         base_fp = get_db_files_base_dir()
+        dd_id, mp, sd = retrive_latests_data_directory(table, conn_handler)
         if move_files:
             # Get the base directory in which the type of data is stored
-            base_data_dir = join(get_db_files_base_dir(), table)
+            base_data_dir = join(get_db_files_base_dir(), mp, sd)
             # Generate the new fileapths. Format: DataId_OriginalName
             # Keeping the original name is useful for checking if the RawData
             # alrady exists on the DB
@@ -559,12 +587,12 @@ def insert_filepaths(filepaths, obj_id, table, filepath_table, conn_handler,
                             compute_checksum(path))
                             for path, id in new_filepaths]
         # Create the list of SQL values to add
-        values = ["('%s', %s, '%s', %s)" % (scrub_data(path), id, checksum, 1)
-                  for path, id, checksum in paths_w_checksum]
+        values = ["('%s', %s, '%s', %s, %s)" % (scrub_data(path), id, checksum,
+                  1, dd_id) for path, id, checksum in paths_w_checksum]
         # Insert all the filepaths at once and get the filepath_id back
         sql = ("INSERT INTO qiita.{0} (filepath, filepath_type_id, checksum, "
-               "checksum_algorithm_id) VALUES {1} RETURNING "
-               "filepath_id".format(filepath_table, ', '.join(values)))
+               "checksum_algorithm_id, data_directory_id) VALUES {1} RETURNING"
+               " filepath_id".format(filepath_table, ', '.join(values)))
         if queue is not None:
             # Drop the sql into the given queue
             conn_handler.add_to_queue(queue, sql, None)

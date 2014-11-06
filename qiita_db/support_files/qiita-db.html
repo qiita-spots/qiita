@@ -287,9 +287,9 @@ table {
 <rect style='fill:url(#groupUnderTitleLine); stroke-width:2;' x='1330' y='1258' width='235' height='2' />
 
 <!-- ============= Group 'Group_filepaths' ============= -->
-<rect class='grp' style='fill:#c4e0f9;stroke:#c5d4e0' x='584' y='640' width='347' height='335' />
-<text x='595' y='655'>Group_filepaths</text>
-<rect style='fill:url(#groupUnderTitleLine); stroke-width:2;' x='595' y='658' width='325' height='2' />
+<rect class='grp' style='fill:#c4e0f9;stroke:#c5d4e0' x='569' y='535' width='422' height='425' />
+<text x='580' y='550'>Group_filepaths</text>
+<rect style='fill:url(#groupUnderTitleLine); stroke-width:2;' x='580' y='553' width='400' height='2' />
 
 <path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 60 1515 L 60,1395' >
 	<title>Foreign Key fk_controlled_vocab_values
@@ -326,32 +326,12 @@ table {
 	job_results_filepath references job ( job_id )</title>
 </path>
 <text x='448' y='915' transform='rotate(90 448,915)' title='Foreign Key fk_job_results_filepath
-	job_results_filepath references job ( job_id )' style='fill:#a1a0a0;'>job_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 525 855 L 667,855 Q 675,855 675,847 L 675,795' >
+	job_results_filepath references job ( job_id )' style='fill:#a1a0a0;'>job_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 525 855 L 532,855 Q 540,855 540,847 L 540,772 Q 540,765 547,765 L 630,765' >
 	<title>Foreign Key fk_job_results_filepath_0
 	job_results_filepath references filepath ( filepath_id )</title>
 </path>
 <text x='532' y='850' transform='rotate(0 532,850)' title='Foreign Key fk_job_results_filepath_0
-	job_results_filepath references filepath ( filepath_id )' style='fill:#a1a0a0;'>filepath_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 390 1095 L 337,1095 Q 330,1095 330,1102 L 330,1102 Q 330,1110 322,1110 L 315,1110' >
-	<title>Foreign Key fk_job_function
-	job references command ( command_id )</title>
-</path>
-<text x='323' y='1090' transform='rotate(0 323,1090)' title='Foreign Key fk_job_function
-	job references command ( command_id )' style='fill:#a1a0a0;'>command_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 390 1020 L 315,1020' >
-	<title>Foreign Key fk_job_job_status_id
-	job references job_status ( job_status_id )</title>
-</path>
-<text x='320' y='1015' transform='rotate(0 320,1015)' title='Foreign Key fk_job_job_status_id
-	job references job_status ( job_status_id )' style='fill:#a1a0a0;'>job_status_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 510 1020 L 675,1020' >
-	<title>Foreign Key fk_job_data_type
-	job references data_type ( data_type_id )</title>
-</path>
-<text x='517' y='1015' transform='rotate(0 517,1015)' title='Foreign Key fk_job_data_type
-	job references data_type ( data_type_id )' style='fill:#a1a0a0;'>data_type_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'  style='stroke-dasharray:4,2;'  d='M 510 1110 L 1342,1110 Q 1350,1110 1350,1117 L 1350,1260' >
-	<title>Foreign Key fk_job
-	job references logging ( log_id -> logging_id )</title>
-</path>
-<text x='517' y='1105' transform='rotate(0 517,1105)' title='Foreign Key fk_job
-	job references logging ( log_id -> logging_id )' style='fill:#a1a0a0;'>log_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 300 900 L 300,855' >
+	job_results_filepath references filepath ( filepath_id )' style='fill:#a1a0a0;'>filepath_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 300 900 L 300,855' >
 	<title>Foreign Key fk_analysis_job_analysis
 	analysis_job references analysis ( analysis_id )</title>
 </path>
@@ -391,17 +371,7 @@ table {
 	analysis_users references qiita_user ( email )</title>
 </path>
 <text x='157' y='745' transform='rotate(0 157,745)' title='Foreign Key fk_analysis_users_user
-	analysis_users references qiita_user ( email )' style='fill:#a1a0a0;'>email</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 690 795 L 690,870' >
-	<title>Foreign Key fk_filepath
-	filepath references filepath_type ( filepath_type_id )</title>
-</path>
-<text x='703' y='795' transform='rotate(90 703,795)' title='Foreign Key fk_filepath
-	filepath references filepath_type ( filepath_type_id )' style='fill:#a1a0a0;'>filepath_type_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 765 795 L 765,870' >
-	<title>Foreign Key fk_filepath_0
-	filepath references checksum_algorithm ( checksum_algorithm_id )</title>
-</path>
-<text x='778' y='795' transform='rotate(90 778,795)' title='Foreign Key fk_filepath_0
-	filepath references checksum_algorithm ( checksum_algorithm_id )' style='fill:#a1a0a0;'>checksum_algorithm_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1665 720 L 1792,720 Q 1800,720 1800,712 L 1800,420' >
+	analysis_users references qiita_user ( email )' style='fill:#a1a0a0;'>email</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1665 720 L 1792,720 Q 1800,720 1800,712 L 1800,420' >
 	<title>Foreign Key fk_study_preprocessed_data
 	study_preprocessed_data references study ( study_id )</title>
 </path>
@@ -441,7 +411,7 @@ table {
 	processed_filepath references processed_data ( processed_data_id )</title>
 </path>
 <text x='1177' y='955' transform='rotate(0 1177,955)' title='Foreign Key fk_processed_data_filepath
-	processed_filepath references processed_data ( processed_data_id )' style='fill:#a1a0a0;'>processed_data_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1020 930 L 937,930 Q 930,930 930,922 L 930,787 Q 930,780 922,780 L 825,780' >
+	processed_filepath references processed_data ( processed_data_id )' style='fill:#a1a0a0;'>processed_data_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1020 930 L 922,930 Q 915,930 915,922 L 915,787 Q 915,780 907,780 L 810,780' >
 	<title>Foreign Key fk_processed_data_filepath_0
 	processed_filepath references filepath ( filepath_id )</title>
 </path>
@@ -476,7 +446,7 @@ table {
 	preprocessed_filepath references preprocessed_data ( preprocessed_data_id )</title>
 </path>
 <text x='1177' y='700' transform='rotate(0 1177,700)' title='Foreign Key fk_preprocessed_filepath
-	preprocessed_filepath references preprocessed_data ( preprocessed_data_id )' style='fill:#a1a0a0;'>preprocessed_data_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1005 690 L 825,690' >
+	preprocessed_filepath references preprocessed_data ( preprocessed_data_id )' style='fill:#a1a0a0;'>preprocessed_data_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1005 690 L 810,690' >
 	<title>Foreign Key fk_preprocessed_filepath_0
 	preprocessed_filepath references filepath ( filepath_id )</title>
 </path>
@@ -486,12 +456,12 @@ table {
 	analysis_filepath references analysis ( analysis_id )</title>
 </path>
 <text x='333' y='715' transform='rotate(0 333,715)' title='Foreign Key fk_analysis_filepath
-	analysis_filepath references analysis ( analysis_id )' style='fill:#a1a0a0;'>analysis_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 510 735 L 645,735' >
+	analysis_filepath references analysis ( analysis_id )' style='fill:#a1a0a0;'>analysis_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 510 735 L 630,735' >
 	<title>Foreign Key fk_analysis_filepath_0
 	analysis_filepath references filepath ( filepath_id )</title>
 </path>
 <text x='517' y='730' transform='rotate(0 517,730)' title='Foreign Key fk_analysis_filepath_0
-	analysis_filepath references filepath ( filepath_id )' style='fill:#a1a0a0;'>filepath_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'  style='stroke-dasharray:4,2;'  d='M 510 795 L 562,795 Q 570,795 570,802 L 570,997 Q 570,1005 577,1005 L 675,1005' >
+	analysis_filepath references filepath ( filepath_id )' style='fill:#a1a0a0;'>filepath_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'  style='stroke-dasharray:4,2;'  d='M 510 795 L 547,795 Q 555,795 555,802 L 555,997 Q 555,1005 562,1005 L 675,1005' >
 	<title>Foreign Key fk_analysis_filepath_1
 	analysis_filepath references data_type ( data_type_id )</title>
 </path>
@@ -621,7 +591,7 @@ table {
 	prep_columns references prep_template ( prep_template_id )</title>
 </path>
 <text x='1139' y='355' transform='rotate(0 1139,355)' title='Foreign Key fk_prep_columns_prep_template
-	prep_columns references prep_template ( prep_template_id )' style='fill:#a1a0a0;'>prep_template_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1035 540 L 817,540 Q 810,540 810,547 L 810,660' >
+	prep_columns references prep_template ( prep_template_id )' style='fill:#a1a0a0;'>prep_template_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1035 540 L 802,540 Q 795,540 795,547 L 795,645' >
 	<title>Foreign Key fk_raw_filepath
 	raw_filepath references filepath ( filepath_id )</title>
 </path>
@@ -641,7 +611,7 @@ table {
 	prep_template_preprocessed_data references preprocessed_data ( preprocessed_data_id )</title>
 </path>
 <text x='1432' y='655' transform='rotate(0 1432,655)' title='Foreign Key fk_prep_template_preprocessed_data
-	prep_template_preprocessed_data references preprocessed_data ( preprocessed_data_id )' style='fill:#a1a0a0;'>preprocessed_data_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1020 435 L 952,435 Q 945,435 945,442 L 945,1012 Q 945,1020 937,1020 L 795,1020' >
+	prep_template_preprocessed_data references preprocessed_data ( preprocessed_data_id )' style='fill:#a1a0a0;'>preprocessed_data_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1020 435 L 997,435 Q 990,435 990,442 L 990,1012 Q 990,1020 982,1020 L 795,1020' >
 	<title>Foreign Key fk_prep_template_data_type
 	prep_template references data_type ( data_type_id )</title>
 </path>
@@ -656,7 +626,7 @@ table {
 	raw_data references filetype ( filetype_id )</title>
 </path>
 <text x='1402' y='550' transform='rotate(0 1402,550)' title='Foreign Key fk_raw_data_filetype
-	raw_data references filetype ( filetype_id )' style='fill:#a1a0a0;'>filetype_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1215 825 L 967,825 Q 960,825 960,832 L 960,967 Q 960,975 952,975 L 787,975 Q 780,975 780,982 L 780,990' >
+	raw_data references filetype ( filetype_id )' style='fill:#a1a0a0;'>filetype_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1215 825 L 937,825 Q 930,825 930,832 L 930,967 Q 930,975 922,975 L 787,975 Q 780,975 780,982 L 780,990' >
 	<title>Foreign Key fk_preprocessed_data
 	preprocessed_data references data_type ( data_type_id )</title>
 </path>
@@ -671,7 +641,42 @@ table {
 	term references ontology ( ontology_id )</title>
 </path>
 <text x='812' y='1600' transform='rotate(270 812,1600)' title='Foreign Key fk_term_ontology
-	term references ontology ( ontology_id )' style='fill:#a1a0a0;'>ontology_id</text><!-- ============= Table 'controlled_vocab_values' ============= -->
+	term references ontology ( ontology_id )' style='fill:#a1a0a0;'>ontology_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 390 1095 L 337,1095 Q 330,1095 330,1102 L 330,1102 Q 330,1110 322,1110 L 315,1110' >
+	<title>Foreign Key fk_job_function
+	job references command ( command_id )</title>
+</path>
+<text x='323' y='1090' transform='rotate(0 323,1090)' title='Foreign Key fk_job_function
+	job references command ( command_id )' style='fill:#a1a0a0;'>command_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 390 1020 L 315,1020' >
+	<title>Foreign Key fk_job_job_status_id
+	job references job_status ( job_status_id )</title>
+</path>
+<text x='320' y='1015' transform='rotate(0 320,1015)' title='Foreign Key fk_job_job_status_id
+	job references job_status ( job_status_id )' style='fill:#a1a0a0;'>job_status_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 510 1020 L 675,1020' >
+	<title>Foreign Key fk_job_data_type
+	job references data_type ( data_type_id )</title>
+</path>
+<text x='517' y='1015' transform='rotate(0 517,1015)' title='Foreign Key fk_job_data_type
+	job references data_type ( data_type_id )' style='fill:#a1a0a0;'>data_type_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'  style='stroke-dasharray:4,2;'  d='M 510 1110 L 1342,1110 Q 1350,1110 1350,1117 L 1350,1260' >
+	<title>Foreign Key fk_job
+	job references logging ( log_id -> logging_id )</title>
+</path>
+<text x='517' y='1105' transform='rotate(0 517,1105)' title='Foreign Key fk_job
+	job references logging ( log_id -> logging_id )' style='fill:#a1a0a0;'>log_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 660 795 L 660,855' >
+	<title>Foreign Key fk_filepath
+	filepath references filepath_type ( filepath_type_id )</title>
+</path>
+<text x='673' y='795' transform='rotate(90 673,795)' title='Foreign Key fk_filepath
+	filepath references filepath_type ( filepath_type_id )' style='fill:#a1a0a0;'>filepath_type_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 750 795 L 750,855' >
+	<title>Foreign Key fk_filepath_0
+	filepath references checksum_algorithm ( checksum_algorithm_id )</title>
+</path>
+<text x='763' y='795' transform='rotate(90 763,795)' title='Foreign Key fk_filepath_0
+	filepath references checksum_algorithm ( checksum_algorithm_id )' style='fill:#a1a0a0;'>checksum_algorithm_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'  style='stroke-dasharray:4,2;'  d='M 810 705 L 847,705 Q 855,705 855,697 L 855,675' >
+	<title>Foreign Key fk_filepath_data_directory
+	filepath references data_directory ( data_directory_id )</title>
+</path>
+<text x='817' y='700' transform='rotate(0 817,700)' title='Foreign Key fk_filepath_data_directory
+	filepath references data_directory ( data_directory_id )' style='fill:#a1a0a0;'>data_directory_id</text><!-- ============= Table 'controlled_vocab_values' ============= -->
 <rect class='table' x='45' y='1523' width='150' height='120' rx='7' ry='7' />
 <path d='M 45.50 1549.50 L 45.50 1530.50 Q 45.50 1523.50 52.50 1523.50 L 187.50 1523.50 Q 194.50 1523.50 194.50 1530.50 L 194.50 1549.50 L45.50 1549.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
 <a xlink:href='#controlled_vocab_values'><text x='53' y='1537' class='tableTitle'>controlled_vocab_values</text><title>Table qiita.controlled_vocab_values</title></a>
@@ -744,33 +749,6 @@ Holds connection between jobs and the result filepaths</title></a>
 <a xlink:href='#job_results_filepath.filepath_id'><text x='423' y='892'>filepath_id</text><title>filepath_id bigint not null</title></a>
 <a xlink:href='#job_results_filepath.filepath_id'><use id='fk' x='513' y='881' xlink:href='#fk'/><title>References filepath ( filepath_id ) </title></a>
 
-<!-- ============= Table 'job' ============= -->
-<rect class='table' x='405' y='983' width='105' height='135' rx='7' ry='7' />
-<path d='M 405.50 1009.50 L 405.50 990.50 Q 405.50 983.50 412.50 983.50 L 502.50 983.50 Q 509.50 983.50 509.50 990.50 L 509.50 1009.50 L405.50 1009.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
-<a xlink:href='#job'><text x='449' y='997' class='tableTitle'>job</text><title>Table qiita.job</title></a>
-  <use id='nn' x='407' y='1017' xlink:href='#nn'/><a xlink:href='#job.job_id'><use id='pk' x='407' y='1016' xlink:href='#pk'/><title>Primary Key  ( job_id ) </title></a>
-<a xlink:href='#job.job_id'><text x='423' y='1027'>job_id</text><title>job_id bigserial not null
-Unique identifier for job</title></a>
-<a xlink:href='#job.job_id'><use id='ref' x='498' y='1016' xlink:href='#ref'/><title>Referred by analysis_job ( job_id ) 
-Referred by job_results_filepath ( job_id ) </title></a>
-  <use id='nn' x='407' y='1032' xlink:href='#nn'/><a xlink:href='#job.data_type_id'><use id='idx' x='407' y='1031' xlink:href='#idx'/><title>Index  ( data_type_id ) </title></a>
-<a xlink:href='#job.data_type_id'><text x='423' y='1042'>data_type_id</text><title>data_type_id bigint not null
-What datatype &#040;16s&#044; metabolome&#044; etc&#041; job is run on&#046;</title></a>
-<a xlink:href='#job.data_type_id'><use id='fk' x='498' y='1031' xlink:href='#fk'/><title>References data_type ( data_type_id ) </title></a>
-  <use id='nn' x='407' y='1047' xlink:href='#nn'/><a xlink:href='#job.job_status_id'><use id='idx' x='407' y='1046' xlink:href='#idx'/><title>Index  ( job_status_id ) </title></a>
-<a xlink:href='#job.job_status_id'><text x='423' y='1057'>job_status_id</text><title>job_status_id bigint not null</title></a>
-<a xlink:href='#job.job_status_id'><use id='fk' x='498' y='1046' xlink:href='#fk'/><title>References job_status ( job_status_id ) </title></a>
-  <use id='nn' x='407' y='1062' xlink:href='#nn'/><a xlink:href='#job.command_id'><use id='idx' x='407' y='1061' xlink:href='#idx'/><title>Index  ( command_id ) </title></a>
-<a xlink:href='#job.command_id'><text x='423' y='1072'>command_id</text><title>command_id bigint not null
-The Qiime or other function being run &#040;alpha diversity&#044; etc&#041;</title></a>
-<a xlink:href='#job.command_id'><use id='fk' x='498' y='1061' xlink:href='#fk'/><title>References command ( command_id ) </title></a>
-  <a xlink:href='#job.options'><text x='423' y='1087'>options</text><title>options varchar
-Holds all options set for the job as a json string</title></a>
-  <a xlink:href='#job.log_id'><use id='idx' x='407' y='1091' xlink:href='#idx'/><title>Index  ( log_id ) </title></a>
-<a xlink:href='#job.log_id'><text x='423' y='1102'>log_id</text><title>log_id bigint
-Reference to error if status is error</title></a>
-<a xlink:href='#job.log_id'><use id='fk' x='498' y='1091' xlink:href='#fk'/><title>References logging ( log_id -> logging_id ) </title></a>
-
 <!-- ============= Table 'analysis_job' ============= -->
 <rect class='table' x='285' y='908' width='90' height='75' rx='7' ry='7' />
 <path d='M 285.50 934.50 L 285.50 915.50 Q 285.50 908.50 292.50 908.50 L 367.50 908.50 Q 374.50 908.50 374.50 915.50 L 374.50 934.50 L285.50 934.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
@@ -834,28 +812,6 @@ Links analyses to the users they are shared with</title></a>
   <use id='nn' x='62' y='762' xlink:href='#nn'/><a xlink:href='#analysis_users.email'><use id='pk' x='62' y='761' xlink:href='#pk'/><title>Primary Key  ( analysis_id, email ) Index  ( email ) </title></a>
 <a xlink:href='#analysis_users.email'><text x='78' y='772'>email</text><title>email varchar not null</title></a>
 <a xlink:href='#analysis_users.email'><use id='fk' x='138' y='761' xlink:href='#fk'/><title>References qiita_user ( email ) </title></a>
-
-<!-- ============= Table 'filepath' ============= -->
-<rect class='table' x='660' y='668' width='165' height='120' rx='7' ry='7' />
-<path d='M 660.50 694.50 L 660.50 675.50 Q 660.50 668.50 667.50 668.50 L 817.50 668.50 Q 824.50 668.50 824.50 675.50 L 824.50 694.50 L660.50 694.50 ' style='fill:url(#tableHeaderGradient1); stroke:none;' />
-<a xlink:href='#filepath'><text x='722' y='682' class='tableTitle'>filepath</text><title>Table qiita.filepath</title></a>
-  <use id='nn' x='662' y='702' xlink:href='#nn'/><a xlink:href='#filepath.filepath_id'><use id='pk' x='662' y='701' xlink:href='#pk'/><title>Primary Key  ( filepath_id ) </title></a>
-<a xlink:href='#filepath.filepath_id'><text x='678' y='712'>filepath_id</text><title>filepath_id bigserial not null</title></a>
-<a xlink:href='#filepath.filepath_id'><use id='ref' x='813' y='701' xlink:href='#ref'/><title>Referred by analysis_filepath ( filepath_id ) 
-Referred by job_results_filepath ( filepath_id ) 
-Referred by preprocessed_filepath ( filepath_id ) 
-Referred by processed_filepath ( filepath_id ) 
-Referred by raw_filepath ( filepath_id ) 
-Referred by reference ( sequence_filepath -> filepath_id ) 
-Referred by reference ( taxonomy_filepath -> filepath_id ) 
-Referred by reference ( tree_filepath -> filepath_id ) </title></a>
-  <use id='nn' x='662' y='717' xlink:href='#nn'/><a xlink:href='#filepath.filepath'><text x='678' y='727'>filepath</text><title>filepath varchar not null</title></a>
-  <use id='nn' x='662' y='732' xlink:href='#nn'/><a xlink:href='#filepath.filepath_type_id'><use id='idx' x='662' y='731' xlink:href='#idx'/><title>Index  ( filepath_type_id ) </title></a>
-<a xlink:href='#filepath.filepath_type_id'><text x='678' y='742'>filepath_type_id</text><title>filepath_type_id bigint not null</title></a>
-<a xlink:href='#filepath.filepath_type_id'><use id='fk' x='813' y='731' xlink:href='#fk'/><title>References filepath_type ( filepath_type_id ) </title></a>
-  <use id='nn' x='662' y='747' xlink:href='#nn'/><a xlink:href='#filepath.checksum'><text x='678' y='757'>checksum</text><title>checksum varchar not null</title></a>
-  <use id='nn' x='662' y='762' xlink:href='#nn'/><a xlink:href='#filepath.checksum_algorithm_id'><text x='678' y='772'>checksum_algorithm_id</text><title>checksum_algorithm_id bigint not null</title></a>
-<a xlink:href='#filepath.checksum_algorithm_id'><use id='fk' x='813' y='761' xlink:href='#fk'/><title>References checksum_algorithm ( checksum_algorithm_id ) </title></a>
 
 <!-- ============= Table 'study_preprocessed_data' ============= -->
 <rect class='table' x='1515' y='698' width='150' height='75' rx='7' ry='7' />
@@ -1472,24 +1428,24 @@ Type of file &#040;FASTA&#044; FASTQ&#044; SPECTRA&#044; etc&#041;</title></a>
 <a xlink:href='#filetype.type'><text x='1548' y='637'>type</text><title>type varchar not null</title></a>
 
 <!-- ============= Table 'filepath_type' ============= -->
-<rect class='table' x='600' y='878' width='120' height='75' rx='7' ry='7' />
-<path d='M 600.50 904.50 L 600.50 885.50 Q 600.50 878.50 607.50 878.50 L 712.50 878.50 Q 719.50 878.50 719.50 885.50 L 719.50 904.50 L600.50 904.50 ' style='fill:url(#tableHeaderGradient1); stroke:none;' />
-<a xlink:href='#filepath_type'><text x='625' y='892' class='tableTitle'>filepath_type</text><title>Table qiita.filepath_type</title></a>
-  <use id='nn' x='602' y='912' xlink:href='#nn'/><a xlink:href='#filepath_type.filepath_type_id'><use id='pk' x='602' y='911' xlink:href='#pk'/><title>Primary Key  ( filepath_type_id ) </title></a>
-<a xlink:href='#filepath_type.filepath_type_id'><text x='618' y='922'>filepath_type_id</text><title>filepath_type_id bigserial not null</title></a>
-<a xlink:href='#filepath_type.filepath_type_id'><use id='ref' x='708' y='911' xlink:href='#ref'/><title>Referred by filepath ( filepath_type_id ) </title></a>
-  <a xlink:href='#filepath_type.filepath_type'><use id='unq' x='602' y='926' xlink:href='#unq'/><title>Unique Index  ( filepath_type ) </title></a>
-<a xlink:href='#filepath_type.filepath_type'><text x='618' y='937'>filepath_type</text><title>filepath_type varchar</title></a>
+<rect class='table' x='585' y='863' width='120' height='75' rx='7' ry='7' />
+<path d='M 585.50 889.50 L 585.50 870.50 Q 585.50 863.50 592.50 863.50 L 697.50 863.50 Q 704.50 863.50 704.50 870.50 L 704.50 889.50 L585.50 889.50 ' style='fill:url(#tableHeaderGradient1); stroke:none;' />
+<a xlink:href='#filepath_type'><text x='610' y='877' class='tableTitle'>filepath_type</text><title>Table qiita.filepath_type</title></a>
+  <use id='nn' x='587' y='897' xlink:href='#nn'/><a xlink:href='#filepath_type.filepath_type_id'><use id='pk' x='587' y='896' xlink:href='#pk'/><title>Primary Key  ( filepath_type_id ) </title></a>
+<a xlink:href='#filepath_type.filepath_type_id'><text x='603' y='907'>filepath_type_id</text><title>filepath_type_id bigserial not null</title></a>
+<a xlink:href='#filepath_type.filepath_type_id'><use id='ref' x='693' y='896' xlink:href='#ref'/><title>Referred by filepath ( filepath_type_id ) </title></a>
+  <a xlink:href='#filepath_type.filepath_type'><use id='unq' x='587' y='911' xlink:href='#unq'/><title>Unique Index  ( filepath_type ) </title></a>
+<a xlink:href='#filepath_type.filepath_type'><text x='603' y='922'>filepath_type</text><title>filepath_type varchar</title></a>
 
 <!-- ============= Table 'checksum_algorithm' ============= -->
-<rect class='table' x='750' y='878' width='165' height='75' rx='7' ry='7' />
-<path d='M 750.50 904.50 L 750.50 885.50 Q 750.50 878.50 757.50 878.50 L 907.50 878.50 Q 914.50 878.50 914.50 885.50 L 914.50 904.50 L750.50 904.50 ' style='fill:url(#tableHeaderGradient2); stroke:none;' />
-<a xlink:href='#checksum_algorithm'><text x='776' y='892' class='tableTitle'>checksum_algorithm</text><title>Table qiita.checksum_algorithm</title></a>
-  <use id='nn' x='752' y='912' xlink:href='#nn'/><a xlink:href='#checksum_algorithm.checksum_algorithm_id'><use id='pk' x='752' y='911' xlink:href='#pk'/><title>Primary Key  ( checksum_algorithm_id ) </title></a>
-<a xlink:href='#checksum_algorithm.checksum_algorithm_id'><text x='768' y='922'>checksum_algorithm_id</text><title>checksum_algorithm_id bigserial not null</title></a>
-<a xlink:href='#checksum_algorithm.checksum_algorithm_id'><use id='ref' x='903' y='911' xlink:href='#ref'/><title>Referred by filepath ( checksum_algorithm_id ) </title></a>
-  <use id='nn' x='752' y='927' xlink:href='#nn'/><a xlink:href='#checksum_algorithm.name'><use id='unq' x='752' y='926' xlink:href='#unq'/><title>Unique Index  ( name ) </title></a>
-<a xlink:href='#checksum_algorithm.name'><text x='768' y='937'>name</text><title>name varchar not null</title></a>
+<rect class='table' x='735' y='863' width='165' height='75' rx='7' ry='7' />
+<path d='M 735.50 889.50 L 735.50 870.50 Q 735.50 863.50 742.50 863.50 L 892.50 863.50 Q 899.50 863.50 899.50 870.50 L 899.50 889.50 L735.50 889.50 ' style='fill:url(#tableHeaderGradient2); stroke:none;' />
+<a xlink:href='#checksum_algorithm'><text x='761' y='877' class='tableTitle'>checksum_algorithm</text><title>Table qiita.checksum_algorithm</title></a>
+  <use id='nn' x='737' y='897' xlink:href='#nn'/><a xlink:href='#checksum_algorithm.checksum_algorithm_id'><use id='pk' x='737' y='896' xlink:href='#pk'/><title>Primary Key  ( checksum_algorithm_id ) </title></a>
+<a xlink:href='#checksum_algorithm.checksum_algorithm_id'><text x='753' y='907'>checksum_algorithm_id</text><title>checksum_algorithm_id bigserial not null</title></a>
+<a xlink:href='#checksum_algorithm.checksum_algorithm_id'><use id='ref' x='888' y='896' xlink:href='#ref'/><title>Referred by filepath ( checksum_algorithm_id ) </title></a>
+  <use id='nn' x='737' y='912' xlink:href='#nn'/><a xlink:href='#checksum_algorithm.name'><use id='unq' x='737' y='911' xlink:href='#unq'/><title>Unique Index  ( name ) </title></a>
+<a xlink:href='#checksum_algorithm.name'><text x='753' y='922'>name</text><title>name varchar not null</title></a>
 
 <!-- ============= Table 'data_type' ============= -->
 <rect class='table' x='690' y='998' width='105' height='75' rx='7' ry='7' />
@@ -1642,6 +1598,70 @@ Link to a table with the parameters used to generate processed data</title></a>
   <a xlink:href='#term.is_leaf'><text x='813' y='1777'>is_leaf</text><title>is_leaf bool</title></a>
   <use id='nn' x='797' y='1782' xlink:href='#nn'/><a xlink:href='#term.user_defined'><text x='813' y='1792'>user_defined</text><title>user_defined bool not null default False
 Whether or not this term was defined by a user</title></a>
+
+<!-- ============= Table 'job' ============= -->
+<rect class='table' x='405' y='983' width='105' height='135' rx='7' ry='7' />
+<path d='M 405.50 1009.50 L 405.50 990.50 Q 405.50 983.50 412.50 983.50 L 502.50 983.50 Q 509.50 983.50 509.50 990.50 L 509.50 1009.50 L405.50 1009.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
+<a xlink:href='#job'><text x='449' y='997' class='tableTitle'>job</text><title>Table qiita.job</title></a>
+  <use id='nn' x='407' y='1017' xlink:href='#nn'/><a xlink:href='#job.job_id'><use id='pk' x='407' y='1016' xlink:href='#pk'/><title>Primary Key  ( job_id ) </title></a>
+<a xlink:href='#job.job_id'><text x='423' y='1027'>job_id</text><title>job_id bigserial not null
+Unique identifier for job</title></a>
+<a xlink:href='#job.job_id'><use id='ref' x='498' y='1016' xlink:href='#ref'/><title>Referred by analysis_job ( job_id ) 
+Referred by job_results_filepath ( job_id ) </title></a>
+  <use id='nn' x='407' y='1032' xlink:href='#nn'/><a xlink:href='#job.data_type_id'><use id='idx' x='407' y='1031' xlink:href='#idx'/><title>Index  ( data_type_id ) </title></a>
+<a xlink:href='#job.data_type_id'><text x='423' y='1042'>data_type_id</text><title>data_type_id bigint not null
+What datatype &#040;16s&#044; metabolome&#044; etc&#041; job is run on&#046;</title></a>
+<a xlink:href='#job.data_type_id'><use id='fk' x='498' y='1031' xlink:href='#fk'/><title>References data_type ( data_type_id ) </title></a>
+  <use id='nn' x='407' y='1047' xlink:href='#nn'/><a xlink:href='#job.job_status_id'><use id='idx' x='407' y='1046' xlink:href='#idx'/><title>Index  ( job_status_id ) </title></a>
+<a xlink:href='#job.job_status_id'><text x='423' y='1057'>job_status_id</text><title>job_status_id bigint not null</title></a>
+<a xlink:href='#job.job_status_id'><use id='fk' x='498' y='1046' xlink:href='#fk'/><title>References job_status ( job_status_id ) </title></a>
+  <use id='nn' x='407' y='1062' xlink:href='#nn'/><a xlink:href='#job.command_id'><use id='idx' x='407' y='1061' xlink:href='#idx'/><title>Index  ( command_id ) </title></a>
+<a xlink:href='#job.command_id'><text x='423' y='1072'>command_id</text><title>command_id bigint not null
+The Qiime or other function being run &#040;alpha diversity&#044; etc&#041;</title></a>
+<a xlink:href='#job.command_id'><use id='fk' x='498' y='1061' xlink:href='#fk'/><title>References command ( command_id ) </title></a>
+  <a xlink:href='#job.options'><text x='423' y='1087'>options</text><title>options varchar
+Holds all options set for the job as a json string</title></a>
+  <a xlink:href='#job.log_id'><use id='idx' x='407' y='1091' xlink:href='#idx'/><title>Index  ( log_id ) </title></a>
+<a xlink:href='#job.log_id'><text x='423' y='1102'>log_id</text><title>log_id bigint
+Reference to error if status is error</title></a>
+<a xlink:href='#job.log_id'><use id='fk' x='498' y='1091' xlink:href='#fk'/><title>References logging ( log_id -> logging_id ) </title></a>
+
+<!-- ============= Table 'filepath' ============= -->
+<rect class='table' x='645' y='653' width='165' height='135' rx='7' ry='7' />
+<path d='M 645.50 679.50 L 645.50 660.50 Q 645.50 653.50 652.50 653.50 L 802.50 653.50 Q 809.50 653.50 809.50 660.50 L 809.50 679.50 L645.50 679.50 ' style='fill:url(#tableHeaderGradient1); stroke:none;' />
+<a xlink:href='#filepath'><text x='707' y='667' class='tableTitle'>filepath</text><title>Table qiita.filepath</title></a>
+  <use id='nn' x='647' y='687' xlink:href='#nn'/><a xlink:href='#filepath.filepath_id'><use id='pk' x='647' y='686' xlink:href='#pk'/><title>Primary Key  ( filepath_id ) </title></a>
+<a xlink:href='#filepath.filepath_id'><text x='663' y='697'>filepath_id</text><title>filepath_id bigserial not null</title></a>
+<a xlink:href='#filepath.filepath_id'><use id='ref' x='798' y='686' xlink:href='#ref'/><title>Referred by analysis_filepath ( filepath_id ) 
+Referred by job_results_filepath ( filepath_id ) 
+Referred by preprocessed_filepath ( filepath_id ) 
+Referred by processed_filepath ( filepath_id ) 
+Referred by raw_filepath ( filepath_id ) 
+Referred by reference ( sequence_filepath -> filepath_id ) 
+Referred by reference ( taxonomy_filepath -> filepath_id ) 
+Referred by reference ( tree_filepath -> filepath_id ) </title></a>
+  <use id='nn' x='647' y='702' xlink:href='#nn'/><a xlink:href='#filepath.filepath'><text x='663' y='712'>filepath</text><title>filepath varchar not null</title></a>
+  <use id='nn' x='647' y='717' xlink:href='#nn'/><a xlink:href='#filepath.filepath_type_id'><use id='idx' x='647' y='716' xlink:href='#idx'/><title>Index  ( filepath_type_id ) </title></a>
+<a xlink:href='#filepath.filepath_type_id'><text x='663' y='727'>filepath_type_id</text><title>filepath_type_id bigint not null</title></a>
+<a xlink:href='#filepath.filepath_type_id'><use id='fk' x='798' y='716' xlink:href='#fk'/><title>References filepath_type ( filepath_type_id ) </title></a>
+  <use id='nn' x='647' y='732' xlink:href='#nn'/><a xlink:href='#filepath.checksum'><text x='663' y='742'>checksum</text><title>checksum varchar not null</title></a>
+  <use id='nn' x='647' y='747' xlink:href='#nn'/><a xlink:href='#filepath.checksum_algorithm_id'><text x='663' y='757'>checksum_algorithm_id</text><title>checksum_algorithm_id bigint not null</title></a>
+<a xlink:href='#filepath.checksum_algorithm_id'><use id='fk' x='798' y='746' xlink:href='#fk'/><title>References checksum_algorithm ( checksum_algorithm_id ) </title></a>
+  <a xlink:href='#filepath.data_directory_id'><use id='idx' x='647' y='761' xlink:href='#idx'/><title>Index  ( data_directory_id ) </title></a>
+<a xlink:href='#filepath.data_directory_id'><text x='663' y='772'>data_directory_id</text><title>data_directory_id bigserial</title></a>
+<a xlink:href='#filepath.data_directory_id'><use id='fk' x='798' y='761' xlink:href='#fk'/><title>References data_directory ( data_directory_id ) </title></a>
+
+<!-- ============= Table 'data_directory' ============= -->
+<rect class='table' x='840' y='563' width='135' height='105' rx='7' ry='7' />
+<path d='M 840.50 589.50 L 840.50 570.50 Q 840.50 563.50 847.50 563.50 L 967.50 563.50 Q 974.50 563.50 974.50 570.50 L 974.50 589.50 L840.50 589.50 ' style='fill:url(#tableHeaderGradient2); stroke:none;' />
+<a xlink:href='#data_directory'><text x='868' y='577' class='tableTitle'>data_directory</text><title>Table qiita.data_directory</title></a>
+  <use id='nn' x='842' y='597' xlink:href='#nn'/><a xlink:href='#data_directory.data_directory_id'><use id='pk' x='842' y='596' xlink:href='#pk'/><title>Primary Key  ( data_directory_id ) </title></a>
+<a xlink:href='#data_directory.data_directory_id'><text x='858' y='607'>data_directory_id</text><title>data_directory_id bigserial not null</title></a>
+<a xlink:href='#data_directory.data_directory_id'><use id='ref' x='963' y='596' xlink:href='#ref'/><title>Referred by filepath ( data_directory_id ) 
+Referred by filepath ( data_directory_id ) </title></a>
+  <use id='nn' x='842' y='612' xlink:href='#nn'/><a xlink:href='#data_directory.type'><text x='858' y='622'>type</text><title>type text not null</title></a>
+  <a xlink:href='#data_directory.mountpoint'><text x='858' y='637'>mountpoint</text><title>mountpoint text</title></a>
+  <a xlink:href='#data_directory.subdirectory'><text x='858' y='652'>subdirectory</text><title>subdirectory text</title></a>
 
 </g></svg>
 
@@ -1916,93 +1936,6 @@ Whether or not this term was defined by a user</title></a>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='job'>Table job</a></th></tr>
-</thead>
-<tbody>
-	<tr>
-		<td>*</td>
-		<td><a name='job.job_id'>job&#095;id</a></td>
-		<td> bigserial   </td>
-		<td> Unique identifier for job </td>
-	</tr>
-	<tr>
-		<td>*</td>
-		<td><a name='job.data_type_id'>data&#095;type&#095;id</a></td>
-		<td> bigint   </td>
-		<td> What datatype &#040;16s&#044; metabolome&#044; etc&#041; job is run on&#046; </td>
-	</tr>
-	<tr>
-		<td>*</td>
-		<td><a name='job.job_status_id'>job&#095;status&#095;id</a></td>
-		<td> bigint   </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>*</td>
-		<td><a name='job.command_id'>command&#095;id</a></td>
-		<td> bigint   </td>
-		<td> The Qiime or other function being run &#040;alpha diversity&#044; etc&#041; </td>
-	</tr>
-	<tr>
-		<td>&nbsp;</td>
-		<td><a name='job.options'>options</a></td>
-		<td> varchar   </td>
-		<td> Holds all options set for the job as a json string </td>
-	</tr>
-	<tr>
-		<td>&nbsp;</td>
-		<td><a name='job.log_id'>log&#095;id</a></td>
-		<td> bigint   </td>
-		<td> Reference to error if status is error </td>
-	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>pk&#095;job</td>
-		<td> ON job&#095;id</td>
-		<td>  </td>
-	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;job&#095;command</td>
-		<td> ON command&#095;id</td>
-		<td>  </td>
-	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;job&#095;status</td>
-		<td> ON job&#095;status&#095;id</td>
-		<td>  </td>
-	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;job&#095;type</td>
-		<td> ON data&#095;type&#095;id</td>
-		<td>  </td>
-	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;job</td>
-		<td> ON log&#095;id</td>
-		<td>  </td>
-	</tr>
-<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
-	<tr>
-		<td>&nbsp;</td><td>fk_job_function</td>
-		<td > ( command&#095;id ) ref <a href='#command'>command</a> (command&#095;id) </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>&nbsp;</td><td>fk_job_job_status_id</td>
-		<td > ( job&#095;status&#095;id ) ref <a href='#job&#095;status'>job&#095;status</a> (job&#095;status&#095;id) </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>&nbsp;</td><td>fk_job_data_type</td>
-		<td > ( data&#095;type&#095;id ) ref <a href='#data&#095;type'>data&#095;type</a> (data&#095;type&#095;id) </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>&nbsp;</td><td>fk_job</td>
-		<td > ( log&#095;id ) ref <a href='#logging'>logging</a> (logging&#095;id) </td>
-		<td>  </td>
-	</tr>
-</tbody>
-</table>
-
-<br/><br/>
-<table class='bordered'>
-<thead>
 <tr><th colspan='4'><a name='analysis_job'>Table analysis_job</a></th></tr>
 <tr><td colspan='3'>Holds information for a one&#045;to&#045;many relation of analysis to the jobs in it </td></tr>
 </thead>
@@ -2229,65 +2162,6 @@ Whether or not this term was defined by a user</title></a>
 	<tr>
 		<td>&nbsp;</td><td>fk_analysis_users_user</td>
 		<td > ( email ) ref <a href='#qiita&#095;user'>qiita&#095;user</a> (email) </td>
-		<td>  </td>
-	</tr>
-</tbody>
-</table>
-
-<br/><br/>
-<table class='bordered'>
-<thead>
-<tr><th colspan='4'><a name='filepath'>Table filepath</a></th></tr>
-</thead>
-<tbody>
-	<tr>
-		<td>*</td>
-		<td><a name='filepath.filepath_id'>filepath&#095;id</a></td>
-		<td> bigserial   </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>*</td>
-		<td><a name='filepath.filepath'>filepath</a></td>
-		<td> varchar   </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>*</td>
-		<td><a name='filepath.filepath_type_id'>filepath&#095;type&#095;id</a></td>
-		<td> bigint   </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>*</td>
-		<td><a name='filepath.checksum'>checksum</a></td>
-		<td> varchar   </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>*</td>
-		<td><a name='filepath.checksum_algorithm_id'>checksum&#095;algorithm&#095;id</a></td>
-		<td> bigint   </td>
-		<td>  </td>
-	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>pk&#095;filepath</td>
-		<td> ON filepath&#095;id</td>
-		<td>  </td>
-	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;filepath</td>
-		<td> ON filepath&#095;type&#095;id</td>
-		<td>  </td>
-	</tr>
-<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
-	<tr>
-		<td>&nbsp;</td><td>fk_filepath</td>
-		<td > ( filepath&#095;type&#095;id ) ref <a href='#filepath&#095;type'>filepath&#095;type</a> (filepath&#095;type&#095;id) </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>&nbsp;</td><td>fk_filepath_0</td>
-		<td > ( checksum&#095;algorithm&#095;id ) ref <a href='#checksum&#095;algorithm'>checksum&#095;algorithm</a> (checksum&#095;algorithm&#095;id) </td>
 		<td>  </td>
 	</tr>
 </tbody>
@@ -4970,6 +4844,205 @@ Controlled Vocabulary </td>
 	<tr>
 		<td>&nbsp;</td><td>fk_term_ontology</td>
 		<td > ( ontology&#095;id ) ref <a href='#ontology'>ontology</a> (ontology&#095;id) </td>
+		<td>  </td>
+	</tr>
+</tbody>
+</table>
+
+<br/><br/>
+<table class='bordered'>
+<thead>
+<tr><th colspan='4'><a name='job'>Table job</a></th></tr>
+</thead>
+<tbody>
+	<tr>
+		<td>*</td>
+		<td><a name='job.job_id'>job&#095;id</a></td>
+		<td> bigserial   </td>
+		<td> Unique identifier for job </td>
+	</tr>
+	<tr>
+		<td>*</td>
+		<td><a name='job.data_type_id'>data&#095;type&#095;id</a></td>
+		<td> bigint   </td>
+		<td> What datatype &#040;16s&#044; metabolome&#044; etc&#041; job is run on&#046; </td>
+	</tr>
+	<tr>
+		<td>*</td>
+		<td><a name='job.job_status_id'>job&#095;status&#095;id</a></td>
+		<td> bigint   </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>*</td>
+		<td><a name='job.command_id'>command&#095;id</a></td>
+		<td> bigint   </td>
+		<td> The Qiime or other function being run &#040;alpha diversity&#044; etc&#041; </td>
+	</tr>
+	<tr>
+		<td>&nbsp;</td>
+		<td><a name='job.options'>options</a></td>
+		<td> varchar   </td>
+		<td> Holds all options set for the job as a json string </td>
+	</tr>
+	<tr>
+		<td>&nbsp;</td>
+		<td><a name='job.log_id'>log&#095;id</a></td>
+		<td> bigint   </td>
+		<td> Reference to error if status is error </td>
+	</tr>
+<tr><th colspan='4'><b>Indexes</b></th></tr>
+	<tr>		<td>Pk</td><td>pk&#095;job</td>
+		<td> ON job&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>&nbsp;</td><td>idx&#095;job&#095;command</td>
+		<td> ON command&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>&nbsp;</td><td>idx&#095;job&#095;status</td>
+		<td> ON job&#095;status&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>&nbsp;</td><td>idx&#095;job&#095;type</td>
+		<td> ON data&#095;type&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>&nbsp;</td><td>idx&#095;job</td>
+		<td> ON log&#095;id</td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
+	<tr>
+		<td>&nbsp;</td><td>fk_job_function</td>
+		<td > ( command&#095;id ) ref <a href='#command'>command</a> (command&#095;id) </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>&nbsp;</td><td>fk_job_job_status_id</td>
+		<td > ( job&#095;status&#095;id ) ref <a href='#job&#095;status'>job&#095;status</a> (job&#095;status&#095;id) </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>&nbsp;</td><td>fk_job_data_type</td>
+		<td > ( data&#095;type&#095;id ) ref <a href='#data&#095;type'>data&#095;type</a> (data&#095;type&#095;id) </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>&nbsp;</td><td>fk_job</td>
+		<td > ( log&#095;id ) ref <a href='#logging'>logging</a> (logging&#095;id) </td>
+		<td>  </td>
+	</tr>
+</tbody>
+</table>
+
+<br/><br/>
+<table class='bordered'>
+<thead>
+<tr><th colspan='4'><a name='filepath'>Table filepath</a></th></tr>
+</thead>
+<tbody>
+	<tr>
+		<td>*</td>
+		<td><a name='filepath.filepath_id'>filepath&#095;id</a></td>
+		<td> bigserial   </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>*</td>
+		<td><a name='filepath.filepath'>filepath</a></td>
+		<td> varchar   </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>*</td>
+		<td><a name='filepath.filepath_type_id'>filepath&#095;type&#095;id</a></td>
+		<td> bigint   </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>*</td>
+		<td><a name='filepath.checksum'>checksum</a></td>
+		<td> varchar   </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>*</td>
+		<td><a name='filepath.checksum_algorithm_id'>checksum&#095;algorithm&#095;id</a></td>
+		<td> bigint   </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>&nbsp;</td>
+		<td><a name='filepath.data_directory_id'>data&#095;directory&#095;id</a></td>
+		<td> bigserial   </td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='4'><b>Indexes</b></th></tr>
+	<tr>		<td>Pk</td><td>pk&#095;filepath</td>
+		<td> ON filepath&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>&nbsp;</td><td>idx&#095;filepath</td>
+		<td> ON filepath&#095;type&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>&nbsp;</td><td>idx&#095;filepath&#095;0</td>
+		<td> ON data&#095;directory&#095;id</td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
+	<tr>
+		<td>&nbsp;</td><td>fk_filepath</td>
+		<td > ( filepath&#095;type&#095;id ) ref <a href='#filepath&#095;type'>filepath&#095;type</a> (filepath&#095;type&#095;id) </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>&nbsp;</td><td>fk_filepath_0</td>
+		<td > ( checksum&#095;algorithm&#095;id ) ref <a href='#checksum&#095;algorithm'>checksum&#095;algorithm</a> (checksum&#095;algorithm&#095;id) </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>&nbsp;</td><td>fk_filepath_data_directory</td>
+		<td > ( data&#095;directory&#095;id ) ref <a href='#data&#095;directory'>data&#095;directory</a> (data&#095;directory&#095;id) </td>
+		<td>  </td>
+	</tr>
+</tbody>
+</table>
+
+<br/><br/>
+<table class='bordered'>
+<thead>
+<tr><th colspan='4'><a name='data_directory'>Table data_directory</a></th></tr>
+</thead>
+<tbody>
+	<tr>
+		<td>*</td>
+		<td><a name='data_directory.data_directory_id'>data&#095;directory&#095;id</a></td>
+		<td> bigserial   </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>*</td>
+		<td><a name='data_directory.type'>type</a></td>
+		<td> text   </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>&nbsp;</td>
+		<td><a name='data_directory.mountpoint'>mountpoint</a></td>
+		<td> text   </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>&nbsp;</td>
+		<td><a name='data_directory.subdirectory'>subdirectory</a></td>
+		<td> text   </td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='4'><b>Indexes</b></th></tr>
+	<tr>		<td>Pk</td><td>pk&#095;data&#095;directory</td>
+		<td> ON data&#095;directory&#095;id</td>
 		<td>  </td>
 	</tr>
 </tbody>
