@@ -306,7 +306,7 @@ def clean_test_environment():
     dummyfunc()
 
 
-def patch():
+def patch(patches_dir=PATCHES_DIR):
     """Patches the database schema based on the SETTINGS table
 
     Pulls the current patch from the settings table and applies all subsequent
@@ -316,16 +316,17 @@ def patch():
 
     current_patch = admin_conn.execute_fetchone(
         "select current_patch from settings")[0]
+    current_patch_fp = join(patches_dir, current_patch)
 
-    sql_glob = join(PATCHES_DIR, '*.sql')
+    sql_glob = join(patches_dir, '*.sql')
     patch_files = natsorted(glob(sql_glob))
 
     if current_patch == 'unpatched':
         next_patch_index = 0
-    elif current_patch not in current_patch_index:
+    elif current_patch_fp not in patch_files:
         raise RuntimeError("Cannot find patch file %s" % current_patch)
     else:
-        next_patch_index = patch_files.index(current_patch)
+        next_patch_index = patch_files.index(current_patch_fp) + 1
 
     patch_update_sql = "update settings set current_patch = %s"
 
