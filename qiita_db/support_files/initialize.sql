@@ -17,7 +17,7 @@ INSERT INTO qiita.filetype (type) VALUES ('SFF'), ('FASTA-Sanger'), ('FASTQ');
 INSERT INTO qiita.emp_status (emp_status) VALUES ('EMP'), ('EMP_Processed'), ('NOT_EMP');
 
 -- Populate study_status table
-INSERT INTO qiita.study_status (status, description) VALUES ('awaiting_approval', 'Awaiting approval of metadata'), ('public', 'Anyone can see this study'), ('private', 'Only owner and shared users can see this study');
+INSERT INTO qiita.study_status (status, description) VALUES ('sandbox', 'Only available to the owner. No sharing'), ('awaiting_approval', 'Awaiting approval of metadata'), ('public', 'Anyone can see this study'), ('private', 'Only owner and shared users can see this study');
 
 -- Populate timeseries_type table
 INSERT INTO qiita.timeseries_type (timeseries_type) VALUES ('NOT_TIMESERIES'), ('TIMESERIES_1'), ('TIMESERIES_2'), ('TIMESERIES_3');
