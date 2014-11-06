@@ -37,7 +37,7 @@ class ConfigurationManager(object):
     max_upload_size : int
         Max upload size
     valid_upload_extension : str
-        The extensions that are valid to upload, comma separated, no spaces
+        The extensions that are valid to upload, comma separated
     user : str
         The postgres user
     password : str
@@ -151,11 +151,12 @@ class ConfigurationManager(object):
                              self.upload_data_dir)
         self.max_upload_size = config.getint('main', 'MAX_UPLOAD_SIZE')
 
-        self.valid_upload_extension = config.get(
-            'main', 'VALID_UPLOAD_EXTENSION').split(',')
-        if not self.valid_upload_extension:
-            raise ValueError('You need to set some valid upload extensions '
-                             'in your config file')
+        self.valid_upload_extension = [ve.strip() for ve in config.get(
+            'main', 'VALID_UPLOAD_EXTENSION').split(',')]
+        if (not self.valid_upload_extension or
+            self.valid_upload_extension == ['']):
+            self.valid_upload_extension = []
+            print 'No files will be allowed to be uploaded.'
 
     def _get_postgres(self, config):
         """Get the configuration of the postgres section"""

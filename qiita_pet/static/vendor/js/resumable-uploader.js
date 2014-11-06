@@ -126,7 +126,7 @@
        // validating extensions
        is_valid = false;
        _.each(this.valid_extensions, function(extension) {
-           if (S(name).endsWith(extension)) {
+           if (extension != "" && S(name).endsWith(extension)) {
              is_valid = true;
              return;
            }
@@ -241,7 +241,7 @@
       //      // Cancel upload
       //      $this.removeFile(identifier);
       //      if($this.fileCount<=0) $this.progressContainer.hide();
-      // 
+      //
       //      return false;
       //    });
      }

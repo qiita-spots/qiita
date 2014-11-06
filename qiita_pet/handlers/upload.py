@@ -52,13 +52,13 @@ class UploadFileHandler(BaseHandler):
         """simple method to avoid duplication of code
 
         This validation is server side in case they can go around the client
-        side validate
+        side validation
         """
         if not filename.endswith(tuple(qiita_config.valid_upload_extension)):
             self.set_status(415)
-            # this line is necessary to stop execution and not having to
-            # modify resumable.js
-            self.redirect("/")
+            raise HTTPError(415, "User %s is trying to upload %d" %
+                                 (user.id, filename))
+
 
     @authenticated
     def post(self):
