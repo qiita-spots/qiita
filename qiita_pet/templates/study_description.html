@@ -3,6 +3,7 @@
 
 {% from future.utils import viewitems %}
 {% from os.path import basename %}
+{% from qiita_core.qiita_settings import qiita_config %}
 {% from qiita_db.data import PreprocessedData %}
 
 <table border="0" style="vertical-align: middle; text-align:center; align:center;">
@@ -34,12 +35,12 @@
        'most_recent_contact': None, 'lab_person_id': None, -->
     </td>
     <td>
-      {% if study_status == 'sandbox' and ste %}
+      {% if study_status == 'sandbox' and ste and qiita_config.require_approval %}
         <a class="btn btn-primary" onClick="request_approval();">Request Study Approval</a>
       {% end %}
-      {% if user_level == 'admin' and study_status == 'awaiting_approval' %}
+      {% if (user_level == 'admin' and study_status == 'awaiting_approval') or not qiita_config.require_approval %}
         <a class="btn btn-primary" onClick="approve_study();">Approve Study</a>
-      {% elif user_level == 'admin' and study_status == 'private' %}
+      {% elif (user_level == 'admin' and study_status == 'private') %}
        <a class="btn btn-primary" onClick="make_public();">Make Public</a>
       {% end %}
     </td>

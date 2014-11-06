@@ -140,6 +140,7 @@ class ConfigurationManager(object):
             raise ValueError("The WORKING_DIR (%s) folder doesn't exist" %
                              self.upload_data_dir)
         self.max_upload_size = config.getint('main', 'MAX_UPLOAD_SIZE')
+        self.require_approval = config.getboolean('main', 'REQUIRE_APPROVAL')
 
     def _get_postgres(self, config):
         """Get the configuration of the postgres section"""

@@ -31,6 +31,7 @@ from .base_handlers import BaseHandler
 from pandas.parser import CParserError
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
+from qiita_core.qiita_settings import qiita_config
 from qiita_pet.util import linkify
 from qiita_ware.context import submit
 from qiita_ware.util import dataframe_from_template, stats_from_df
@@ -373,14 +374,16 @@ class StudyDescriptionHandler(BaseHandler):
 
         elif make_public:
             # make sure user is admin, then make public
-            if User(self.current_user).level == 'admin':
+            if User(self.current_user).level == 'admin' or not \
+                    qiita_config.require_approval:
                 study.status = 'public'
                 msg = "Study set to public"
                 tab_to_display = ""
 
         elif approve_study:
             # make sure user is admin, then make full private study
-            if User(self.current_user).level == 'admin':
+            if User(self.current_user).level == 'admin' or not \
+                    qiita_config.require_approval:
                 study.status = 'private'
                 msg = "Study approved"
                 tab_to_display = ""
