@@ -23,7 +23,6 @@ from qiita_db.commands import (load_study_from_cmd, load_raw_data_cmd,
                                load_processed_data_cmd,
                                load_preprocessed_data_from_cmd)
 from qiita_db.environment_manager import patch
-from qiita_db.sql_connection import SQLConnectionHandler
 from qiita_db.study import Study, StudyPerson
 from qiita_db.user import User
 from qiita_db.data import RawData
