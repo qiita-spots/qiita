@@ -22,7 +22,7 @@ from qiita_db.exceptions import (QiitaDBDuplicateError, QiitaDBUnknownIDError,
                                  QiitaDBNotImplementedError,
                                  QiitaDBDuplicateHeaderError,
                                  QiitaDBExecutionError,
-                                 QiitaDBColumnError)
+                                 QiitaDBColumnError, QiitaDBError)
 from qiita_db.study import Study, StudyPerson
 from qiita_db.user import User
 from qiita_db.data import RawData
@@ -555,6 +555,10 @@ class TestSampleTemplate(TestCase):
         for f in self._clean_up_files:
             remove(f)
 
+    def test_study_id(self):
+        """Ensure that the correct study ID is returned"""
+        self.assertEqual(self.tester.study_id, 1)
+
     def test_init_unknown_error(self):
         """Init raises an error if the id is not known"""
         with self.assertRaises(QiitaDBUnknownIDError):
@@ -567,7 +571,7 @@ class TestSampleTemplate(TestCase):
 
     def test_table_name(self):
         """Table name return the correct string"""
-        obs = SampleTemplate._table_name(self.test_study)
+        obs = SampleTemplate._table_name(self.test_study.id)
         self.assertEqual(obs, "sample_1")
 
     def test_create_duplicate(self):
@@ -640,13 +644,18 @@ class TestSampleTemplate(TestCase):
             self.conn_handler.execute_fetchall(
                 "SELECT * FROM qiita.sample_2")
 
+    def test_delete_unkonwn_id_error(self):
+        """Try to delete a non existent prep template"""
+        with self.assertRaises(QiitaDBUnknownIDError):
+            SampleTemplate.delete(5)
+
     def test_exists_true(self):
         """Exists returns true when the SampleTemplate already exists"""
-        self.assertTrue(SampleTemplate.exists(self.test_study))
+        self.assertTrue(SampleTemplate.exists(self.test_study.id))
 
     def test_exists_false(self):
         """Exists returns false when the SampleTemplate does not exists"""
-        self.assertFalse(SampleTemplate.exists(self.new_study))
+        self.assertFalse(SampleTemplate.exists(self.new_study.id))
 
     def test_get_sample_ids(self):
         """get_sample_ids returns the correct set of sample ids"""
@@ -806,7 +815,10 @@ class TestPrepTemplate(TestCase):
                             'str_column': 'Value for sample 1',
                             'linkerprimersequence': 'GTGCCAGCMGCCGCGGTAA',
                             'barcodesequence': 'GTCCGCAAGTTA',
-                            'run_prefix': "s_G1_L001_sequences"},
+                            'run_prefix': "s_G1_L001_sequences",
+                            'platform': 'ILLUMINA',
+                            'library_construction_protocol': 'AAAA',
+                            'experiment_design_description': 'BBBB'},
             'SKD8.640184': {'center_name': 'ANL',
                             'center_project_name': 'Test Project',
                             'ebi_submission_accession': None,
@@ -814,7 +826,10 @@ class TestPrepTemplate(TestCase):
                             'str_column': 'Value for sample 2',
                             'linkerprimersequence': 'GTGCCAGCMGCCGCGGTAA',
                             'barcodesequence': 'CGTAGAGCTCTC',
-                            'run_prefix': "s_G1_L001_sequences"},
+                            'run_prefix': "s_G1_L001_sequences",
+                            'platform': 'ILLUMINA',
+                            'library_construction_protocol': 'AAAA',
+                            'experiment_design_description': 'BBBB'},
             'SKB7.640196': {'center_name': 'ANL',
                             'center_project_name': 'Test Project',
                             'ebi_submission_accession': None,
@@ -822,11 +837,16 @@ class TestPrepTemplate(TestCase):
                             'str_column': 'Value for sample 3',
                             'linkerprimersequence': 'GTGCCAGCMGCCGCGGTAA',
                             'barcodesequence': 'CCTCTGAGAGCT',
-                            'run_prefix': "s_G1_L002_sequences"}
+                            'run_prefix': "s_G1_L002_sequences",
+                            'platform': 'ILLUMINA',
+                            'library_construction_protocol': 'AAAA',
+                            'experiment_design_description': 'BBBB'}
             }
         self.metadata = pd.DataFrame.from_dict(metadata_dict, orient='index')
         self.test_raw_data = RawData(1)
         self.test_study = Study(1)
+        self.data_type = "18S"
+        self.data_type_id = 2
 
         fd, seqs_fp = mkstemp(suffix='_seqs.fastq')
         close(fd)
@@ -837,8 +857,7 @@ class TestPrepTemplate(TestCase):
             f.write("\n")
         with open(barcodes_fp, "w") as f:
             f.write("\n")
-        self.new_raw_data = RawData.create(2, [Study(1)], 1,
-                                           filepaths=filepaths)
+        self.new_raw_data = RawData.create(2, [Study(1)], filepaths=filepaths)
         db_test_raw_dir = join(get_db_files_base_dir(), 'raw_data')
         db_seqs_fp = join(db_test_raw_dir, "3_%s" % basename(seqs_fp))
         db_barcodes_fp = join(db_test_raw_dir, "3_%s" % basename(barcodes_fp))
@@ -859,6 +878,10 @@ class TestPrepTemplate(TestCase):
         for f in self._clean_up_files:
             remove(f)
 
+    def test_study_id(self):
+        """Ensure that the correct study ID is returned"""
+        self.assertEqual(self.tester.study_id, 1)
+
     def test_init_unknown_error(self):
         """Init raises an error if the id is not known"""
         with self.assertRaises(QiitaDBUnknownIDError):
@@ -871,14 +894,8 @@ class TestPrepTemplate(TestCase):
 
     def test_table_name(self):
         """Table name return the correct string"""
-        obs = PrepTemplate._table_name(self.test_raw_data)
+        obs = PrepTemplate._table_name(1)
         self.assertEqual(obs, "prep_1")
-
-    def test_create_duplicate(self):
-        """Create raises an error when creating a duplicated PrepTemplate"""
-        with self.assertRaises(QiitaDBDuplicateError):
-            PrepTemplate.create(self.metadata, self.test_raw_data,
-                                self.test_study)
 
     def test_create_duplicate_header(self):
         """Create raises an error when duplicate headers are present"""
@@ -886,54 +903,124 @@ class TestPrepTemplate(TestCase):
                                                 index=self.metadata.index)
         with self.assertRaises(QiitaDBDuplicateHeaderError):
             PrepTemplate.create(self.metadata, self.new_raw_data,
-                                self.test_study)
+                                self.test_study, self.data_type)
 
     def test_create(self):
         """Creates a new PrepTemplate"""
         pt = PrepTemplate.create(self.metadata, self.new_raw_data,
-                                 self.test_study)
+                                 self.test_study, self.data_type)
         # The returned object has the correct id
-        self.assertEqual(pt.id, 3)
+        self.assertEqual(pt.id, 2)
+
+        # The row in the prep template table has been created
+        obs = self.conn_handler.execute_fetchall(
+            "SELECT * FROM qiita.prep_template WHERE prep_template_id=2")
+        # prep_template_id, data_type_id, raw_data_id, preprocessing_status,
+        # investigation_type
+        self.assertEqual(obs, [[2, 2, 3, 'not_preprocessed', None]])
 
         # The relevant rows to common_prep_info have been added.
         obs = self.conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.common_prep_info WHERE raw_data_id=3")
-        # raw_data_id, sample_id, center_name, center_project_name,
-        # ebi_submission_accession, ebi_study_accession, emp_status_id
-        exp = [[3, 'SKB8.640193', 1, 'ANL', 'Test Project', 1],
-               [3, 'SKD8.640184', 1, 'ANL', 'Test Project', 1],
-               [3, 'SKB7.640196', 1, 'ANL', 'Test Project', 1]]
+            "SELECT * FROM qiita.common_prep_info WHERE prep_template_id=2")
+        # prep_template_id, sample_id, study_id, center_name,
+        # center_project_name, emp_status_id
+        exp = [[2, 'SKB8.640193', 1, 'ANL', 'Test Project', 1],
+               [2, 'SKD8.640184', 1, 'ANL', 'Test Project', 1],
+               [2, 'SKB7.640196', 1, 'ANL', 'Test Project', 1]]
         self.assertEqual(sorted(obs), sorted(exp))
 
-        # The relevant rows have been added to the raw_data_prep_columns
+        # The relevant rows have been added to the prep_columns table
         obs = self.conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.raw_data_prep_columns WHERE raw_data_id=3")
-        # raw_data_id, column_name, column_type
-        exp = [[3, 'str_column', 'varchar'],
-               [3, 'ebi_submission_accession', 'varchar'],
-               [3, 'run_prefix', 'varchar'],
-               [3, 'barcodesequence', 'varchar'],
-               [3, 'linkerprimersequence', 'varchar']]
-        self.assertEqual(obs, exp)
+            "SELECT * FROM qiita.prep_columns WHERE prep_template_id=2")
+        # prep_template_id, column_name, column_type
+        exp = [[2, 'str_column', 'varchar'],
+               [2, 'ebi_submission_accession', 'varchar'],
+               [2, 'run_prefix', 'varchar'],
+               [2, 'barcodesequence', 'varchar'],
+               [2, 'linkerprimersequence', 'varchar'],
+               [2, 'platform', 'varchar'],
+               [2, 'experiment_design_description', 'varchar'],
+               [2, 'library_construction_protocol', 'varchar']]
+        self.assertEqual(sorted(obs), sorted(exp))
 
         # The new table exists
-        self.assertTrue(exists_table("prep_3", self.conn_handler))
+        self.assertTrue(exists_table("prep_2", self.conn_handler))
 
         # The new table hosts the correct values
         obs = self.conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.prep_3")
+            "SELECT * FROM qiita.prep_2")
         # sample_id, study_id, str_column, ebi_submission_accession,
-        # barcodesequence, linkerprimersequence
-        exp = [['SKB7.640196', 1, 'Value for sample 3', None,
-                's_G1_L002_sequences', 'CCTCTGAGAGCT', 'GTGCCAGCMGCCGCGGTAA'],
-               ['SKB8.640193', 1, 'Value for sample 1', None,
-                's_G1_L001_sequences', 'GTCCGCAAGTTA', 'GTGCCAGCMGCCGCGGTAA'],
-               ['SKD8.640184', 1, 'Value for sample 2', None,
-                's_G1_L001_sequences', 'CGTAGAGCTCTC', 'GTGCCAGCMGCCGCGGTAA']]
+        # run_prefix, barcodesequence, linkerprimersequence
+        exp = [['SKB7.640196', 1L, 'Value for sample 3', 'ILLUMINA',
+                's_G1_L002_sequences', 'CCTCTGAGAGCT', None,
+                'GTGCCAGCMGCCGCGGTAA', 'BBBB', 'AAAA'],
+               ['SKB8.640193', 1L, 'Value for sample 1', 'ILLUMINA',
+                's_G1_L001_sequences', 'GTCCGCAAGTTA', None,
+                'GTGCCAGCMGCCGCGGTAA', 'BBBB', 'AAAA'],
+               ['SKD8.640184', 1L, 'Value for sample 2', 'ILLUMINA',
+                's_G1_L001_sequences', 'CGTAGAGCTCTC', None,
+                'GTGCCAGCMGCCGCGGTAA', 'BBBB', 'AAAA']]
+        self.assertEqual(sorted(obs), sorted(exp))
+
+    def test_create_data_type_id(self):
+        """Creates a new PrepTemplate passing the data_type_id"""
+        pt = PrepTemplate.create(self.metadata, self.new_raw_data,
+                                 self.test_study, self.data_type_id)
+        # The returned object has the correct id
+        self.assertEqual(pt.id, 2)
+
+        # The row in the prep template table have been created
+        obs = self.conn_handler.execute_fetchall(
+            "SELECT * FROM qiita.prep_template WHERE prep_template_id=2")
+        # prep_template_id, data_type_id, raw_data_id, preprocessing_status,
+        # investigation_type
+        self.assertEqual(obs, [[2, 2, 3, 'not_preprocessed', None]])
+
+        # The relevant rows to common_prep_info have been added.
+        obs = self.conn_handler.execute_fetchall(
+            "SELECT * FROM qiita.common_prep_info WHERE prep_template_id=2")
+        # prep_template_id, sample_id, study_id, center_name,
+        # center_project_name, emp_status_id
+        exp = [[2, 'SKB8.640193', 1, 'ANL', 'Test Project', 1],
+               [2, 'SKD8.640184', 1, 'ANL', 'Test Project', 1],
+               [2, 'SKB7.640196', 1, 'ANL', 'Test Project', 1]]
+        self.assertEqual(sorted(obs), sorted(exp))
+
+        # The relevant rows have been added to the prep_columns table
+        obs = self.conn_handler.execute_fetchall(
+            "SELECT * FROM qiita.prep_columns WHERE prep_template_id=2")
+        # prep_template_id, column_name, column_type
+        exp = [[2, 'str_column', 'varchar'],
+               [2, 'ebi_submission_accession', 'varchar'],
+               [2, 'run_prefix', 'varchar'],
+               [2, 'barcodesequence', 'varchar'],
+               [2, 'linkerprimersequence', 'varchar'],
+               [2, 'platform', 'varchar'],
+               [2, 'experiment_design_description', 'varchar'],
+               [2, 'library_construction_protocol', 'varchar']]
+        self.assertEqual(sorted(obs), sorted(exp))
+
+        # The new table exists
+        self.assertTrue(exists_table("prep_2", self.conn_handler))
+
+        # The new table hosts the correct values
+        obs = self.conn_handler.execute_fetchall(
+            "SELECT * FROM qiita.prep_2")
+        # sample_id, study_id, str_column, ebi_submission_accession,
+        # run_prefix, barcodesequence, linkerprimersequence
+        exp = [['SKB7.640196', 1L, 'Value for sample 3', 'ILLUMINA',
+                's_G1_L002_sequences', 'CCTCTGAGAGCT', None,
+                'GTGCCAGCMGCCGCGGTAA', 'BBBB', 'AAAA'],
+               ['SKB8.640193', 1L, 'Value for sample 1', 'ILLUMINA',
+                's_G1_L001_sequences', 'GTCCGCAAGTTA', None,
+                'GTGCCAGCMGCCGCGGTAA', 'BBBB', 'AAAA'],
+               ['SKD8.640184', 1L, 'Value for sample 2', 'ILLUMINA',
+                's_G1_L001_sequences', 'CGTAGAGCTCTC', None,
+                'GTGCCAGCMGCCGCGGTAA', 'BBBB', 'AAAA']]
         self.assertEqual(sorted(obs), sorted(exp))
 
     def test_create_error(self):
-        """Create raises an error if any required columns are on the template
+        """Create raises an error if any required columns are missing
         """
         metadata_dict = {
             'SKB8.640193': {'center_name': 'ANL',
@@ -954,9 +1041,10 @@ class TestPrepTemplate(TestCase):
             }
         metadata = pd.DataFrame.from_dict(metadata_dict, orient='index')
         with self.assertRaises(QiitaDBColumnError):
-            PrepTemplate.create(metadata, self.new_raw_data, self.test_study)
+            PrepTemplate.create(metadata, self.new_raw_data, self.test_study,
+                                self.data_type)
 
-    def test_create_error_partial(self):
+    def test_create_error_template_special(self):
         """Create raises an error if not all columns are on the template"""
         metadata_dict = {
             'SKB8.640193': {'center_name': 'ANL',
@@ -980,30 +1068,58 @@ class TestPrepTemplate(TestCase):
             }
         metadata = pd.DataFrame.from_dict(metadata_dict, orient='index')
         with self.assertRaises(QiitaDBColumnError):
-            PrepTemplate.create(metadata, self.new_raw_data, self.test_study)
+            PrepTemplate.create(metadata, self.new_raw_data, self.test_study,
+                                self.data_type)
+
+    def test_create_investigation_type_error(self):
+        """Create raises an error if the investigation_type does not exists"""
+        with self.assertRaises(QiitaDBColumnError):
+            PrepTemplate.create(self.metadata, self.new_raw_data,
+                                self.test_study, self.data_type_id,
+                                'Not a term')
+
+    def test_delete_error(self):
+        """Try to delete a prep template that already has preprocessed data"""
+        with self.assertRaises(QiitaDBError):
+            PrepTemplate.delete(1)
+
+    def test_delete_unkonwn_id_error(self):
+        """Try to delete a non existent prep template"""
+        with self.assertRaises(QiitaDBUnknownIDError):
+            PrepTemplate.delete(5)
 
     def test_delete(self):
-        """Deletes prep template 1"""
-        PrepTemplate.delete(1)
+        """Deletes prep template 2"""
+        pt = PrepTemplate.create(self.metadata, self.new_raw_data,
+                                 self.test_study, self.data_type_id)
+        PrepTemplate.delete(pt.id)
+
         obs = self.conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.common_prep_info WHERE raw_data_id=1")
+            "SELECT * FROM qiita.prep_template WHERE prep_template_id=2")
         exp = []
         self.assertEqual(obs, exp)
+
         obs = self.conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.raw_data_prep_columns WHERE raw_data_id=1")
+            "SELECT * FROM qiita.common_prep_info WHERE prep_template_id=2")
         exp = []
         self.assertEqual(obs, exp)
+
+        obs = self.conn_handler.execute_fetchall(
+            "SELECT * FROM qiita.prep_columns WHERE prep_template_id=2")
+        exp = []
+        self.assertEqual(obs, exp)
+
         with self.assertRaises(QiitaDBExecutionError):
             self.conn_handler.execute_fetchall(
-                "SELECT * FROM qiita.prep_1")
+                "SELECT * FROM qiita.prep_2")
 
     def test_exists_true(self):
         """Exists returns true when the PrepTemplate already exists"""
-        self.assertTrue(PrepTemplate.exists(self.test_raw_data))
+        self.assertTrue(PrepTemplate.exists(1))
 
     def test_exists_false(self):
         """Exists returns false when the PrepTemplate does not exists"""
-        self.assertFalse(PrepTemplate.exists(self.new_raw_data))
+        self.assertFalse(PrepTemplate.exists(2))
 
     def test_get_sample_ids(self):
         """get_sample_ids returns the correct set of sample ids"""
@@ -1143,12 +1259,78 @@ class TestPrepTemplate(TestCase):
         fd, fp = mkstemp()
         close(fd)
         pt = PrepTemplate.create(self.metadata, self.new_raw_data,
-                                 self.test_study)
+                                 self.test_study, self.data_type)
         pt.to_file(fp)
         self._clean_up_files.append(fp)
         with open(fp, 'U') as f:
             obs = f.read()
         self.assertEqual(obs, EXP_PREP_TEMPLATE)
+
+    def test_data_type(self):
+        """data_type returns the string with the data_type"""
+        self.assertTrue(self.tester.data_type(), "18S")
+
+    def test_data_type_id(self):
+        """data_type returns the int with the data_type_id"""
+        self.assertTrue(self.tester.data_type(ret_id=True), 2)
+
+    def test_raw_data(self):
+        """Returns the raw_data associated with the prep template"""
+        self.assertEqual(self.tester.raw_data, 1)
+
+    def test_preprocessed_data(self):
+        """Returns the preprocessed data list generated from this template"""
+        self.assertEqual(self.tester.preprocessed_data, [1, 2])
+
+    def test_preprocessing_status(self):
+        """preprocessing_status works correctly"""
+        # Success case
+        pt = PrepTemplate(1)
+        self.assertEqual(pt.preprocessing_status, 'success')
+
+        # not preprocessed case
+        pt = PrepTemplate.create(self.metadata, self.new_raw_data,
+                                 self.test_study, self.data_type_id)
+        self.assertEqual(pt.preprocessing_status, 'not_preprocessed')
+
+    def test_preprocessing_status_setter(self):
+        """Able to update the preprocessing status"""
+        pt = PrepTemplate.create(self.metadata, self.new_raw_data,
+                                 self.test_study, self.data_type_id)
+        self.assertEqual(pt.preprocessing_status, 'not_preprocessed')
+        pt.preprocessing_status = 'preprocessing'
+        self.assertEqual(pt.preprocessing_status, 'preprocessing')
+        pt.preprocessing_status = 'success'
+        self.assertEqual(pt.preprocessing_status, 'success')
+
+    def test_preprocessing_status_setter_failed(self):
+        """Able to update preprocessing_status with a failure message"""
+        pt = PrepTemplate.create(self.metadata, self.new_raw_data,
+                                 self.test_study, self.data_type_id)
+        state = 'failed: some error message'
+        self.assertEqual(pt.preprocessing_status, 'not_preprocessed')
+        pt.preprocessing_status = state
+        self.assertEqual(pt.preprocessing_status, state)
+
+    def test_preprocessing_status_setter_valueerror(self):
+        """Raises an error if the status is not recognized"""
+        with self.assertRaises(ValueError):
+            self.tester.preprocessing_status = 'not a valid state'
+
+    def test_investigation_type(self):
+        """investigation_type works correctly"""
+        self.assertEqual(self.tester.investigation_type, "Metagenomics")
+
+    def test_investigation_type_setter(self):
+        """Able to update the investigation type"""
+        pt = PrepTemplate.create(self.metadata, self.new_raw_data,
+                                 self.test_study, self.data_type_id)
+        self.assertEqual(pt.investigation_type, None)
+        pt.investigation_type = "Other"
+        self.assertEqual(pt.investigation_type, 'Other')
+        with self.assertRaises(QiitaDBColumnError):
+            pt.investigation_type = "should fail"
+
 
 EXP_SAMPLE_TEMPLATE = (
     "sample_name\tcollection_timestamp\tdescription\thas_extracted_data\t"
@@ -1164,16 +1346,18 @@ EXP_SAMPLE_TEMPLATE = (
     "True\tNotIdentified\t4.8\t4.41\tlocation1\treceived\ttype1\t"
     "Value for sample 3\n")
 
+
 EXP_PREP_TEMPLATE = (
     'sample_name\tbarcodesequence\tcenter_name\tcenter_project_name\t'
-    'ebi_submission_accession\temp_status\tlinkerprimersequence\t'
+    'ebi_submission_accession\temp_status\texperiment_design_description\t'
+    'library_construction_protocol\tlinkerprimersequence\tplatform\t'
     'run_prefix\tstr_column\n'
-    'SKB7.640196\tCCTCTGAGAGCT\tANL\tTest Project\tNone\tEMP\t'
-    'GTGCCAGCMGCCGCGGTAA\ts_G1_L002_sequences\tValue for sample 3\n'
-    'SKB8.640193\tGTCCGCAAGTTA\tANL\tTest Project\tNone\tEMP\t'
-    'GTGCCAGCMGCCGCGGTAA\ts_G1_L001_sequences\tValue for sample 1\n'
-    'SKD8.640184\tCGTAGAGCTCTC\tANL\tTest Project\tNone\tEMP\t'
-    'GTGCCAGCMGCCGCGGTAA\ts_G1_L001_sequences\tValue for sample 2\n')
+    'SKB7.640196\tCCTCTGAGAGCT\tANL\tTest Project\tNone\tEMP\tBBBB\tAAAA\t'
+    'GTGCCAGCMGCCGCGGTAA\tILLUMINA\ts_G1_L002_sequences\tValue for sample 3\n'
+    'SKB8.640193\tGTCCGCAAGTTA\tANL\tTest Project\tNone\tEMP\tBBBB\tAAAA\t'
+    'GTGCCAGCMGCCGCGGTAA\tILLUMINA\ts_G1_L001_sequences\tValue for sample 1\n'
+    'SKD8.640184\tCGTAGAGCTCTC\tANL\tTest Project\tNone\tEMP\tBBBB\tAAAA\t'
+    'GTGCCAGCMGCCGCGGTAA\tILLUMINA\ts_G1_L001_sequences\tValue for sample 2\n')
 
 if __name__ == '__main__':
     main()

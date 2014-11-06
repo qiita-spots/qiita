@@ -22,6 +22,7 @@ from qiita_db.commands import (load_study_from_cmd, load_raw_data_cmd,
                                load_prep_template_from_cmd,
                                load_processed_data_cmd,
                                load_preprocessed_data_from_cmd)
+from qiita_db.environment_manager import patch
 from qiita_db.study import Study, StudyPerson
 from qiita_db.user import User
 from qiita_db.data import RawData
@@ -84,7 +85,24 @@ class TestImportPreprocessedData(TestCase):
         initial_fp_count = get_count('qiita.filepath')
         ppd = load_preprocessed_data_from_cmd(
             1, 'preprocessed_sequence_illumina_params',
-            self.tmpdir, 'preprocessed_fasta', 1, False, 1)
+            self.tmpdir, 'preprocessed_fasta', 1, False, 1, None)
+        self.files_to_remove.append(
+            join(self.db_test_ppd_dir,
+                 '%d_%s' % (ppd.id, basename(self.file1))))
+        self.files_to_remove.append(
+            join(self.db_test_ppd_dir,
+                 '%d_%s' % (ppd.id, basename(self.file2))))
+        self.assertEqual(ppd.id, 3)
+        self.assertTrue(check_count('qiita.preprocessed_data',
+                                    initial_ppd_count + 1))
+        self.assertTrue(check_count('qiita.filepath', initial_fp_count+2))
+
+    def test_import_preprocessed_data_data_type(self):
+        initial_ppd_count = get_count('qiita.preprocessed_data')
+        initial_fp_count = get_count('qiita.filepath')
+        ppd = load_preprocessed_data_from_cmd(
+            1, 'preprocessed_sequence_illumina_params',
+            self.tmpdir, 'preprocessed_fasta', 1, False, None, '16S')
         self.files_to_remove.append(
             join(self.db_test_ppd_dir,
                  '%d_%s' % (ppd.id, basename(self.file1))))
@@ -145,7 +163,7 @@ class TestLoadPrepTemplateFromCmd(TestCase):
         self.pt_contents = PREP_TEMPLATE
 
         self.raw_data = RawData.create(
-            2, [Study(1)], 2, filepaths=[(seqs_fp, 1), (barcodes_fp, 2)])
+            2, [Study(1)], filepaths=[(seqs_fp, 1), (barcodes_fp, 2)])
 
         join_f = partial(join, join(get_db_files_base_dir(), 'raw_data'))
         self.files_to_remove = [
@@ -160,8 +178,8 @@ class TestLoadPrepTemplateFromCmd(TestCase):
     def test_load_prep_template_from_cmd(self):
         """Correctly adds a prep template to the DB"""
         fh = StringIO(self.pt_contents)
-        st = load_prep_template_from_cmd(fh, self.raw_data.id, 1)
-        self.assertEqual(st.id, self.raw_data.id)
+        st = load_prep_template_from_cmd(fh, self.raw_data.id, 1, '18S')
+        self.assertEqual(st.id, 2)
 
 
 @qiita_test_checker()
@@ -206,7 +224,7 @@ class TestLoadRawDataFromCmd(TestCase):
         initial_raw_fp_count = get_count('qiita.raw_filepath')
 
         new = load_raw_data_cmd(filepaths, filepath_types, filetype,
-                                study_ids, "16S")
+                                study_ids)
         raw_data_id = new.id
         self.files_to_remove.append(
             join(self.db_test_raw_dir,
@@ -230,7 +248,7 @@ class TestLoadRawDataFromCmd(TestCase):
         # provided for each and every filepath
         with self.assertRaises(ValueError):
             load_raw_data_cmd(filepaths, filepath_types[:-1], filetype,
-                              study_ids, "16S")
+                              study_ids)
 
 
 @qiita_test_checker()
@@ -291,6 +309,94 @@ class TestLoadProcessedDataFromCmd(TestCase):
                                     'processed_params_uclust', 1, 1, None)
 
 
+@qiita_test_checker()
+class TestPatch(TestCase):
+    def setUp(self):
+        self.patches_dir = mkdtemp()
+        patch2_fp = join(self.patches_dir, '2.sql')
+        patch10_fp = join(self.patches_dir, '10.sql')
+
+        with open(patch2_fp, 'w') as f:
+            f.write("CREATE TABLE qiita.patchtest2 (testing integer);\n")
+            f.write("INSERT INTO qiita.patchtest2 VALUES (1);\n")
+            f.write("INSERT INTO qiita.patchtest2 VALUES (9);\n")
+
+        with open(patch10_fp, 'w') as f:
+            f.write("CREATE TABLE qiita.patchtest10 (testing integer);\n")
+
+    def tearDown(self):
+        rmtree(self.patches_dir)
+
+    def _check_patchtest2(self, exists=True):
+        if exists:
+            assertion_fn = self.assertTrue
+        else:
+            assertion_fn = self.assertFalse
+
+        obs = self.conn_handler.execute_fetchone(
+            """SELECT EXISTS(SELECT * FROM information_schema.tables
+               WHERE table_name = 'patchtest2')""")[0]
+        assertion_fn(obs)
+
+        if exists:
+            exp = [[1], [9]]
+            obs = self.conn_handler.execute_fetchall(
+                """SELECT * FROM qiita.patchtest2 ORDER BY testing""")
+            self.assertEqual(obs, exp)
+
+    def _check_patchtest10(self):
+        obs = self.conn_handler.execute_fetchone(
+            """SELECT EXISTS(SELECT * FROM information_schema.tables
+               WHERE table_name = 'patchtest10')""")[0]
+        self.assertTrue(obs)
+
+        exp = []
+        obs = self.conn_handler.execute_fetchall(
+            """SELECT * FROM qiita.patchtest10""")
+        self.assertEqual(obs, exp)
+
+    def _assert_current_patch(self, patch_to_check):
+        current_patch = self.conn_handler.execute_fetchone(
+            """SELECT current_patch FROM settings""")[0]
+        self.assertEqual(current_patch, patch_to_check)
+
+    def test_unpatched(self):
+        """Test patching from unpatched state"""
+        # Reset the settings table to the unpatched state
+        self.conn_handler.execute(
+            """UPDATE settings SET current_patch = 'unpatched'""")
+
+        self._assert_current_patch('unpatched')
+        patch(self.patches_dir)
+        self._check_patchtest2()
+        self._check_patchtest10()
+        self._assert_current_patch('10.sql')
+
+    def test_skip_patch(self):
+        """Test patching from a patched state"""
+        self.conn_handler.execute(
+            """UPDATE settings SET current_patch = '2.sql'""")
+        self._assert_current_patch('2.sql')
+
+        # If it tried to apply patch 2.sql again, this will error
+        patch(self.patches_dir)
+
+        self._assert_current_patch('10.sql')
+        self._check_patchtest10()
+
+        # Since we "tricked" the system, patchtest2 should not exist
+        self._check_patchtest2(exists=False)
+
+    def test_nonexistent_patch(self):
+        """Test case where current patch does not exist"""
+        self.conn_handler.execute(
+            """UPDATE settings SET current_patch = 'nope.sql'""")
+        self._assert_current_patch('nope.sql')
+
+        with self.assertRaises(RuntimeError):
+            patch(self.patches_dir)
+
+
 CONFIG_1 = """[required]
 timeseries_type_id = 1
 metadata_complete = True
@@ -347,15 +453,15 @@ SAMPLE_TEMPLATE = (
 
 PREP_TEMPLATE = (
     'sample_name\tbarcodesequence\tcenter_name\tcenter_project_name\t'
-    'description'
-    '\tebi_submission_accession\temp_status\tlinkerprimersequence\t'
-    'run_prefix\tstr_column\n'
+    'description\tebi_submission_accession\temp_status\tlinkerprimersequence\t'
+    'run_prefix\tstr_column\tplatform\tlibrary_construction_protocol\t'
+    'experiment_design_description\n'
     'SKB7.640196\tCCTCTGAGAGCT\tANL\tTest Project\tskb7\tNone\tEMP\t'
-    'GTGCCAGCMGCCGCGGTAA\tts_G1_L001_sequences\tValue for sample 3\n'
+    'GTGCCAGCMGCCGCGGTAA\tts_G1_L001_sequences\tValue for sample 3\tA\tB\tC\n'
     'SKB8.640193\tGTCCGCAAGTTA\tANL\tTest Project\tskb8\tNone\tEMP\t'
-    'GTGCCAGCMGCCGCGGTAA\tts_G1_L001_sequences\tValue for sample 1\n'
+    'GTGCCAGCMGCCGCGGTAA\tts_G1_L001_sequences\tValue for sample 1\tA\tB\tC\n'
     'SKD8.640184\tCGTAGAGCTCTC\tANL\tTest Project\tskd8\tNone\tEMP\t'
-    'GTGCCAGCMGCCGCGGTAA\tts_G1_L001_sequences\tValue for sample 2\n')
+    'GTGCCAGCMGCCGCGGTAA\tts_G1_L001_sequences\tValue for sample 2\tA\tB\tC\n')
 
 if __name__ == "__main__":
     main()

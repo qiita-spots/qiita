@@ -48,16 +48,19 @@ import numpy as np
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from .exceptions import (QiitaDBDuplicateError, QiitaDBColumnError,
                          QiitaDBUnknownIDError, QiitaDBNotImplementedError,
-                         QiitaDBDuplicateHeaderError)
+                         QiitaDBDuplicateHeaderError, QiitaDBError)
 from .base import QiitaObject
 from .sql_connection import SQLConnectionHandler
+from .ontology import Ontology
 from .util import (exists_table, get_table_cols, get_emp_status,
-                   get_required_sample_info_status)
+                   get_required_sample_info_status, convert_to_id,
+                   convert_from_id)
 
 
 TARGET_GENE_DATA_TYPES = ['16S', '18S', 'ITS']
 REQUIRED_TARGET_GENE_COLS = {'barcodesequence', 'linkerprimersequence',
-                             'run_prefix'}
+                             'run_prefix', 'library_construction_protocol',
+                             'experiment_design_description', 'platform'}
 RENAME_COLS_DICT = {'barcode': 'barcodesequence',
                     'primer': 'linkerprimersequence'}
 
@@ -496,8 +499,8 @@ class PrepSample(BaseSample):
     """
     _table = "common_prep_info"
     _table_prefix = "prep_"
-    _column_table = "raw_data_prep_columns"
-    _id_column = "raw_data_id"
+    _column_table = "prep_columns"
+    _id_column = "prep_template_id"
 
     def _check_template_class(self, md_template):
         r"""Checks that md_template is of the correct type
@@ -581,7 +584,6 @@ class MetadataTemplate(QiitaObject):
     _table_prefix = None
     _column_table = None
     _id_column = None
-    _strict = True
     _sample_cls = None
 
     def _check_id(self, id_, conn_handler=None):
@@ -595,13 +597,13 @@ class MetadataTemplate(QiitaObject):
             (id_, ))[0]
 
     @classmethod
-    def _table_name(cls, obj):
+    def _table_name(cls, obj_id):
         r"""Returns the dynamic table name
 
         Parameters
         ----------
-        obj : Study or RawData
-            The obj to which the metadata template belongs to.
+        obj_id : int
+            The id of the metadata template
 
         Returns
         -------
@@ -616,7 +618,7 @@ class MetadataTemplate(QiitaObject):
         if not cls._table_prefix:
             raise IncompetentQiitaDeveloperError(
                 "_table_prefix should be defined in the subclasses")
-        return "%s%d" % (cls._table_prefix, obj.id)
+        return "%s%d" % (cls._table_prefix, obj_id)
 
     @classmethod
     def _check_special_columns(cls, md_template, obj):
@@ -632,19 +634,17 @@ class MetadataTemplate(QiitaObject):
         """
         # Check required columns
         missing = set(cls.translate_cols_dict.values()).difference(md_template)
-        if missing:
-            raise QiitaDBColumnError("Missing columns: %s"
-                                     % ', '.join(map(str, missing)))
+        if not missing:
+            # Change any *_id column to its str column
+            for key, value in viewitems(cls.translate_cols_dict):
+                handler = cls.id_cols_handlers[key]
+                md_template[key] = pd.Series(
+                    [handler[i] for i in md_template[value]],
+                    index=md_template.index)
+                del md_template[value]
 
-        # Change any *_id column to its str column
-        for key, value in viewitems(cls.translate_cols_dict):
-            handler = cls.id_cols_handlers[key]
-            md_template[key] = pd.Series(
-                [handler[i] for i in md_template[value]],
-                index=md_template.index)
-            del md_template[value]
-
-        cls._check_template_special_columns(md_template, obj)
+        return missing.union(
+            cls._check_template_special_columns(md_template, obj))
 
     @classmethod
     def delete(cls, id_):
@@ -655,8 +655,15 @@ class MetadataTemplate(QiitaObject):
         id_ : obj
             The object identifier
 
+        Raises
+        ------
+        QiitaDBUnknownIDError
+            If no metadata_template with id id_ exists
         """
-        table_name = "%s%d" % (cls._table_prefix, id_)
+        if not cls.exists(id_):
+            raise QiitaDBUnknownIDError(id_, cls.__name__)
+
+        table_name = cls._table_name(id_)
         conn_handler = SQLConnectionHandler()
         conn_handler.execute(
             "DROP TABLE qiita.{0}".format(table_name))
@@ -670,13 +677,13 @@ class MetadataTemplate(QiitaObject):
             (id_,))
 
     @classmethod
-    def exists(cls, obj):
+    def exists(cls, obj_id):
         r"""Checks if already exists a MetadataTemplate for the provided object
 
         Parameters
         ----------
-        obj : QiitaObject
-            The object to test if a MetadataTemplate exists for
+        obj_id : int
+            The id to test if it exists on the database
 
         Returns
         -------
@@ -684,7 +691,7 @@ class MetadataTemplate(QiitaObject):
             True if already exists. False otherwise.
         """
         cls._check_subclass()
-        return exists_table(cls._table_name(obj), SQLConnectionHandler())
+        return exists_table(cls._table_name(obj_id), SQLConnectionHandler())
 
     def _get_sample_ids(self, conn_handler):
         r"""Returns all the available samples for the metadata template
@@ -901,7 +908,7 @@ class MetadataTemplate(QiitaObject):
                                                           self._id_column),
             (self.id,)))
         dyn_vals = self._transform_to_dict(conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.{0}".format(self._table_name(self))))
+            "SELECT * FROM qiita.{0}".format(self._table_name(self.id))))
 
         for k in metadata_map:
             for key, value in viewitems(self.translate_cols_dict):
@@ -975,7 +982,7 @@ class SampleTemplate(MetadataTemplate):
         study : Study
             The study to which the sample template belongs to.
         """
-        pass
+        return set()
 
     @classmethod
     def create(cls, md_template, study):
@@ -992,7 +999,7 @@ class SampleTemplate(MetadataTemplate):
         cls._check_subclass()
 
         # Check that we don't have a MetadataTemplate for study
-        if cls.exists(study):
+        if cls.exists(study.id):
             raise QiitaDBDuplicateError(cls.__name__, 'id: %d' % study.id)
 
         # We are going to modify the md_template. We create a copy so
@@ -1007,7 +1014,7 @@ class SampleTemplate(MetadataTemplate):
 
         # We need to check for some special columns, that are not present on
         # the database, but depending on the data type are required.
-        cls._check_special_columns(md_template, study)
+        missing = cls._check_special_columns(md_template, study)
 
         conn_handler = SQLConnectionHandler()
 
@@ -1027,14 +1034,9 @@ class SampleTemplate(MetadataTemplate):
 
         # Check that md_template has the required columns
         remaining = set(db_cols).difference(headers)
-        if remaining:
-            # If strict, raise an error, else default to None
-            if cls._strict:
-                raise QiitaDBColumnError("Missing columns: %s" % remaining)
-            else:
-                for col in remaining:
-                    md_template[col] = pd.Series([None] * num_samples,
-                                                 index=sample_ids)
+        missing = missing.union(remaining)
+        if missing:
+            raise QiitaDBColumnError("Missing columns: %s" % missing)
 
         # Insert values on required columns
         values = _as_python_types(md_template, db_cols)
@@ -1063,7 +1065,7 @@ class SampleTemplate(MetadataTemplate):
             values)
 
         # Create table with custom columns
-        table_name = cls._table_name(study)
+        table_name = cls._table_name(study.id)
         column_datatype = ["%s %s" % (col, dtype)
                            for col, dtype in zip(headers, datatypes)]
         conn_handler.execute(
@@ -1082,6 +1084,17 @@ class SampleTemplate(MetadataTemplate):
 
         return cls(study.id)
 
+    @property
+    def study_id(self):
+        """Gets the study id with which this sample template is associated
+
+        Returns
+        -------
+        int
+            The ID of the study with which this sample template is associated
+        """
+        return self._id
+
 
 class PrepTemplate(MetadataTemplate):
     r"""Represent the PrepTemplate of a raw dat. Provides access to the
@@ -1094,52 +1107,16 @@ class PrepTemplate(MetadataTemplate):
     """
     _table = "common_prep_info"
     _table_prefix = "prep_"
-    _column_table = "raw_data_prep_columns"
-    _id_column = "raw_data_id"
-    _strict = False
+    _column_table = "prep_columns"
+    _id_column = "prep_template_id"
     translate_cols_dict = {'emp_status_id': 'emp_status'}
     id_cols_handlers = {'emp_status_id': get_emp_status()}
     str_cols_handlers = {'emp_status_id': get_emp_status(key='emp_status_id')}
     _sample_cls = PrepSample
 
     @classmethod
-    def _check_template_special_columns(cls, md_template, raw_data):
-        r"""Checks for special columns based on obj type
-
-        Parameters
-        ----------
-        md_template : DataFrame
-            The metadata template file contents indexed by sample ids
-        raw_data : RawData
-            The raw_data to which the prep template belongs to.
-
-        Raises
-        ------
-        QiitaDBColumnError
-            If any of the required columns are not present in the md_template
-
-        Notes
-        -----
-        Sometimes people use different names for the same columns. We just
-        rename them to use the naming that we expect, so this is normalized
-        across studies.
-        """
-        # We only have column requirements if the data type of the raw data
-        # is one of the target gene types
-        if raw_data.data_type() in TARGET_GENE_DATA_TYPES:
-            md_template.rename(columns=RENAME_COLS_DICT, inplace=True)
-
-            # Check for all required columns for target genes studies
-            missing_cols = REQUIRED_TARGET_GENE_COLS.difference(
-                md_template.columns)
-            if missing_cols:
-                raise QiitaDBColumnError(
-                    "The following columns are missing in the PrepTemplate and"
-                    " they are requried for target gene studies: %s"
-                    % missing_cols)
-
-    @classmethod
-    def create(cls, md_template, raw_data, study):
+    def create(cls, md_template, raw_data, study, data_type,
+               investigation_type=None):
         r"""Creates the metadata template in the database
 
         Parameters
@@ -1150,16 +1127,30 @@ class PrepTemplate(MetadataTemplate):
             The raw_data to which the prep template belongs to.
         study : Study
             The study to which the prep template belongs to.
-        """
-        cls._check_subclass()
+        data_type : str or int
+            The data_type of the prep template
+        investigation_type : str, optional
+            The investigation type, if relevant
 
-        # Check that we don't have a MetadataTemplate for raw_data
-        if cls.exists(raw_data):
-            raise QiitaDBDuplicateError(cls.__name__, 'id: %d' % raw_data.id)
+        Returns
+        -------
+        A new instance of `cls` to access to the PrepTemplate stored in the DB
+
+        Raises
+        ------
+        QiitaDBColumnError
+            If the investigation_type is not valid
+            If a required column is missing in md_template
+        """
+        # If the investigation_type is supplied, make sure if it is one of
+        # the recognized investigation types
+        if investigation_type is not None:
+            cls.validate_investigation_type(investigation_type)
 
         # We are going to modify the md_template. We create a copy so
         # we don't modify the user one
         md_template = deepcopy(md_template)
+
         # In the database, all the column headers are lowercase
         md_template.columns = [c.lower() for c in md_template.columns]
 
@@ -1167,11 +1158,21 @@ class PrepTemplate(MetadataTemplate):
         if len(set(md_template.columns)) != len(md_template.columns):
             raise QiitaDBDuplicateHeaderError()
 
+        # Get a connection handler
+        conn_handler = SQLConnectionHandler()
+
+        # Check if the data_type is the id or the string
+        if isinstance(data_type, (int, long)):
+            data_type_id = data_type
+            data_type_str = convert_from_id(data_type, "data_type",
+                                            conn_handler)
+        else:
+            data_type_id = convert_to_id(data_type, "data_type", conn_handler)
+            data_type_str = data_type
+
         # We need to check for some special columns, that are not present on
         # the database, but depending on the data type are required.
-        cls._check_special_columns(md_template, raw_data)
-
-        conn_handler = SQLConnectionHandler()
+        missing = cls._check_special_columns(md_template, data_type_str)
 
         # Get some useful information from the metadata template
         sample_ids = md_template.index.tolist()
@@ -1190,20 +1191,22 @@ class PrepTemplate(MetadataTemplate):
 
         # Check that md_template has the required columns
         remaining = set(db_cols).difference(headers)
-        if remaining:
-            # If strict, raise an error, else default to None
-            if cls._strict:
-                raise QiitaDBColumnError("Missing columns: %s" % remaining)
-            else:
-                for col in remaining:
-                    md_template[col] = pd.Series([None] * num_samples,
-                                                 index=sample_ids)
+        missing = missing.union(remaining)
+        if missing:
+            raise QiitaDBColumnError("Missing columns: %s" % missing)
+
+        # Insert the metadata template
+        prep_id = conn_handler.execute_fetchone(
+            "INSERT INTO qiita.prep_template (data_type_id, raw_data_id, "
+            "investigation_type) VALUES (%s, %s, %s) RETURNING "
+            "prep_template_id", (data_type_id, raw_data.id,
+                                 investigation_type))[0]
 
         # Insert values on required columns
         values = _as_python_types(md_template, db_cols)
         values.insert(0, [study.id] * num_samples)
         values.insert(0, sample_ids)
-        values.insert(0, [raw_data.id] * num_samples)
+        values.insert(0, [prep_id] * num_samples)
         values = [v for v in zip(*values)]
         conn_handler.executemany(
             "INSERT INTO qiita.{0} ({1}, sample_id, study_id, {2}) "
@@ -1220,14 +1223,14 @@ class PrepTemplate(MetadataTemplate):
         # the values in different lists (but in the same order) so use zip
         # to create the list of tuples that psycopg2 requires.
         values = [
-            v for v in zip([raw_data.id] * len(headers), headers, datatypes)]
+            v for v in zip([prep_id] * len(headers), headers, datatypes)]
         conn_handler.executemany(
             "INSERT INTO qiita.{0} ({1}, column_name, column_type) "
             "VALUES (%s, %s, %s)".format(cls._column_table, cls._id_column),
             values)
 
         # Create table with custom columns
-        table_name = cls._table_name(raw_data)
+        table_name = cls._table_name(prep_id)
         column_datatype = ["%s %s" % (col, dtype)
                            for col, dtype in zip(headers, datatypes)]
         conn_handler.execute(
@@ -1245,7 +1248,240 @@ class PrepTemplate(MetadataTemplate):
                                           ', '.join(["%s"] * len(headers))),
             values)
 
-        return cls(raw_data.id)
+        return cls(prep_id)
+
+    @classmethod
+    def validate_investigation_type(self, investigation_type):
+        """Simple investigation validation to avoid code duplication
+
+        Parameters
+        ----------
+        investigation_type : str
+            The investigation type, should be part of the ENA ontology
+
+        Raises
+        -------
+        QiitaDBColumnError
+            The investigation type is not in the ENA ontology
+        """
+        investigation_types = Ontology(convert_to_id('ENA', 'ontology'))
+        terms = investigation_types.terms
+        if investigation_type not in terms:
+            raise QiitaDBColumnError("Not a valid investigation_type. "
+                                     "Choose from: %s" % ', '.join(terms))
+
+    @classmethod
+    def _check_template_special_columns(cls, md_template, data_type):
+        r"""Checks for special columns based on obj type
+
+        Parameters
+        ----------
+        md_template : DataFrame
+            The metadata template file contents indexed by sample ids
+        data_type : str
+            The data_type of the template.
+
+        Returns
+        -------
+        set
+            The set of missing columns
+
+        Notes
+        -----
+        Sometimes people use different names for the same columns. We just
+        rename them to use the naming that we expect, so this is normalized
+        across studies.
+        """
+        # We only have column requirements if the data type of the raw data
+        # is one of the target gene types
+        missing_cols = set()
+        if data_type in TARGET_GENE_DATA_TYPES:
+            md_template.rename(columns=RENAME_COLS_DICT, inplace=True)
+
+            # Check for all required columns for target genes studies
+            missing_cols = REQUIRED_TARGET_GENE_COLS.difference(
+                md_template.columns)
+
+        return missing_cols
+
+    @classmethod
+    def delete(cls, id_):
+        r"""Deletes the table from the database
+
+        Parameters
+        ----------
+        id_ : obj
+            The object identifier
+
+        Raises
+        ------
+        QiitaDBError
+            If the prep template already has a preprocessed data
+        QiitaDBUnknownIDError
+            If no prep template with id = id_ exists
+        """
+        table_name = cls._table_name(id_)
+        conn_handler = SQLConnectionHandler()
+
+        if not cls.exists(id_):
+            raise QiitaDBUnknownIDError(id_, cls.__name__)
+
+        # TODO: Should we cascade to preprocessed data? See issue #537
+        preprocessed_data_exists = conn_handler.execute_fetchone(
+            "SELECT EXISTS(SELECT * FROM qiita.prep_template_preprocessed_data"
+            " WHERE prep_template_id=%s)", (id_,))[0]
+
+        if preprocessed_data_exists:
+            raise QiitaDBError("Cannot remove prep template %d because a "
+                               "preprocessed data has been already generated "
+                               "using it." % id_)
+
+        # Drop the prep_X table
+        conn_handler.execute(
+            "DROP TABLE qiita.{0}".format(table_name))
+
+        # Remove the rows from common_prep_info
+        conn_handler.execute(
+            "DELETE FROM qiita.{0} where {1} = %s".format(cls._table,
+                                                          cls._id_column),
+            (id_,))
+
+        # Remove the rows from prep_columns
+        conn_handler.execute(
+            "DELETE FROM qiita.{0} where {1} = %s".format(cls._column_table,
+                                                          cls._id_column),
+            (id_,))
+
+        # Remove the row from prep_template
+        conn_handler.execute(
+            "DELETE FROM qiita.prep_template where "
+            "{0} = %s".format(cls._id_column), (id_,))
+
+    def data_type(self, ret_id=False):
+        """Returns the data_type or the data_type id
+
+        Parameters
+        ----------
+        ret_id : bool, optional
+            If true, return the id instead of the string, default false.
+
+        Returns
+        -------
+        str or int
+            string value of data_type or data_type_id if ret_id is True
+        """
+        ret = "_id" if ret_id else ""
+        conn_handler = SQLConnectionHandler()
+        return conn_handler.execute_fetchone(
+            "SELECT d.data_type{0} FROM qiita.data_type d JOIN "
+            "qiita.prep_template p ON p.data_type_id = d.data_type_id WHERE "
+            "p.prep_template_id=%s".format(ret), (self.id,))[0]
+
+    @property
+    def raw_data(self):
+        conn_handler = SQLConnectionHandler()
+        return conn_handler.execute_fetchone(
+            "SELECT raw_data_id FROM qiita.prep_template "
+            "WHERE prep_template_id=%s", (self.id,))[0]
+
+    @property
+    def preprocessed_data(self):
+        conn_handler = SQLConnectionHandler()
+        prep_datas = conn_handler.execute_fetchall(
+            "SELECT preprocessed_data_id FROM "
+            "qiita.prep_template_preprocessed_data WHERE prep_template_id=%s",
+            (self.id,))
+        return [x[0] for x in prep_datas]
+
+    @property
+    def preprocessing_status(self):
+        r"""Tells if the data has been preprocessed or not
+
+        Returns
+        -------
+        str
+            One of {'not_preprocessed', 'preprocessing', 'success', 'failed'}
+        """
+        conn_handler = SQLConnectionHandler()
+        return conn_handler.execute_fetchone(
+            "SELECT preprocessing_status FROM qiita.prep_template "
+            "WHERE {0}=%s".format(self._id_column), (self.id,))[0]
+
+    @preprocessing_status.setter
+    def preprocessing_status(self, state):
+        r"""Update the preprocessing status
+
+        Parameters
+        ----------
+        state : str, {'not_preprocessed', 'preprocessing', 'success', 'failed'}
+            The current status of preprocessing
+
+        Raises
+        ------
+        ValueError
+            If the state is not known.
+        """
+        if (state not in ('not_preprocessed', 'preprocessing', 'success') and
+                not state.startswith('failed:')):
+            raise ValueError('Unknown state: %s' % state)
+
+        conn_handler = SQLConnectionHandler()
+
+        conn_handler.execute(
+            "UPDATE qiita.prep_template SET preprocessing_status = %s "
+            "WHERE {0} = %s".format(self._id_column),
+            (state, self.id))
+
+    @property
+    def investigation_type(self):
+        conn_handler = SQLConnectionHandler()
+        sql = ("SELECT investigation_type FROM qiita.prep_template "
+               "WHERE {0} = %s".format(self._id_column))
+        return conn_handler.execute_fetchone(sql, [self._id])[0]
+
+    @investigation_type.setter
+    def investigation_type(self, investigation_type):
+        r"""Update the investigation type
+
+        Parameters
+        ----------
+        investigation_type : str
+            The investigation type to set, should be part of the ENA ontology
+
+        Raises
+        ------
+        QiitaDBColumnError
+            If the investigation type is not a valid ENA ontology
+        """
+        if investigation_type is not None:
+            self.validate_investigation_type(investigation_type)
+
+        conn_handler = SQLConnectionHandler()
+
+        conn_handler.execute(
+            "UPDATE qiita.prep_template SET investigation_type = %s "
+            "WHERE {0} = %s".format(self._id_column),
+            (investigation_type, self.id))
+
+    @property
+    def study_id(self):
+        """Gets the study id with which this prep template is associated
+
+        Returns
+        -------
+        int
+            The ID of the study with which this prep template is associated
+        """
+        conn = SQLConnectionHandler()
+        sql = """SELECT srd.study_id
+                 FROM qiita.prep_template pt JOIN qiita.study_raw_data srd
+                 ON pt.raw_data_id = srd.raw_data_id"""
+        study_id = conn.execute_fetchone(sql)
+        if study_id:
+            return study_id[0]
+        else:
+            raise QiitaDBError("No studies found associated with prep "
+                               "template ID %d" % self._id)
 
 
 def load_template_to_dataframe(fn):

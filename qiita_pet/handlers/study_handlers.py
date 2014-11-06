@@ -8,39 +8,114 @@ r"""Qitta study handlers for the Tornado webserver.
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 from __future__ import division
+from collections import namedtuple
 
-from tornado.web import authenticated, HTTPError
+from tornado.web import authenticated, HTTPError, asynchronous
+from tornado.gen import coroutine, Task
 from wtforms import (Form, StringField, SelectField, BooleanField,
                      SelectMultipleField, TextAreaField, validators)
 
-from os import listdir
-from os.path import exists, join, basename
+from future.utils import viewitems
 
+from operator import itemgetter
+
+from traceback import format_exception_only
+from sys import exc_info
+
+from json import dumps
+from os import listdir, remove
+from os.path import exists, join, basename
+from functools import partial
 from .base_handlers import BaseHandler
 
-from qiita_core.qiita_settings import qiita_config
+from pandas.parser import CParserError
 
+from qiita_core.exceptions import IncompetentQiitaDeveloperError
+from qiita_pet.util import linkify
 from qiita_ware.context import submit
-from qiita_ware.util import metadata_stats_from_sample_and_prep_templates
+from qiita_ware.util import dataframe_from_template, stats_from_df
 from qiita_ware.demux import stats as demux_stats
 from qiita_ware.dispatchable import submit_to_ebi
 from qiita_db.metadata_template import (SampleTemplate, PrepTemplate,
                                         load_template_to_dataframe)
 from qiita_db.study import Study, StudyPerson
 from qiita_db.user import User
-from qiita_db.util import get_study_fp, convert_to_id, get_filepath_types
-from qiita_db.ontology import Ontology
-from qiita_db.data import PreprocessedData
+from qiita_db.util import (get_study_fp, get_filepath_types, get_data_types,
+                           get_filetypes, convert_to_id)
+from qiita_db.data import PreprocessedData, RawData
 from qiita_db.exceptions import (QiitaDBColumnError, QiitaDBExecutionError,
                                  QiitaDBDuplicateError, QiitaDBUnknownIDError)
-from qiita_db.data import RawData
+from qiita_db.ontology import Ontology
+
+study_person_linkifier = partial(
+    linkify, "<a target=\"_blank\" href=\"mailto:{0}\">{1}</a>")
+pubmed_linkifier = partial(
+    linkify, "<a target=\"_blank\" href=\"http://www.ncbi.nlm.nih.gov/"
+    "pubmed/{0}\">{0}</a>")
 
 
-def _check_access(user, study):
+def _get_shared_links_for_study(study):
+    shared = []
+    for person in study.shared_with:
+        person = User(person)
+        shared.append(study_person_linkifier(
+            (person.email, person.info['name'])))
+    return ", ".join(shared)
+
+
+def _build_study_info(studytype, user=None):
+        """builds list of namedtuples for study listings"""
+        if studytype == "private":
+            studylist = user.private_studies
+        elif studytype == "shared":
+            studylist = user.shared_studies
+        elif studytype == "public":
+            studylist = Study.get_public()
+        else:
+            raise IncompetentQiitaDeveloperError("Must use private, shared, "
+                                                 "or public!")
+
+        StudyTuple = namedtuple('StudyInfo', 'id title meta_complete '
+                                'num_samples_collected shared num_raw_data pi '
+                                'pmids owner status')
+
+        infolist = []
+        for s_id in studylist:
+            study = Study(s_id)
+            status = study.status
+            # Just passing the email address as the name here, since
+            # name is not a required field in qiita.qiita_user
+            owner = study_person_linkifier((study.owner, study.owner))
+            info = study.info
+            PI = StudyPerson(info['principal_investigator_id'])
+            PI = study_person_linkifier((PI.email, PI.name))
+            pmids = ", ".join([pubmed_linkifier([pmid])
+                               for pmid in study.pmids])
+            shared = _get_shared_links_for_study(study)
+            infolist.append(StudyTuple(study.id, study.title,
+                                       info["metadata_complete"],
+                                       info["number_samples_collected"],
+                                       shared, len(study.raw_data()),
+                                       PI, pmids, owner, status))
+        return infolist
+
+
+def check_access(user, study, no_public=False):
     """make sure user has access to the study requested"""
-    if not study.has_access(user):
-        raise HTTPError(403, "User %s does not have access to study %d" %
-                        (user.id, study.id))
+    if not study.has_access(user, no_public):
+        if no_public:
+            return False
+        else:
+            raise HTTPError(403, "User %s does not have access to study %d" %
+                                 (user.id, study.id))
+    return True
+
+
+def _check_owner(user, study):
+    """make sure user is the owner of the study requested"""
+    if not user == study.owner:
+        raise HTTPError(403, "User %s does not own study %d" %
+                        (user, study.id))
 
 
 class CreateStudyForm(Form):
@@ -85,38 +160,93 @@ class CreateStudyForm(Form):
 
 class PrivateStudiesHandler(BaseHandler):
     @authenticated
+    @coroutine
     def get(self):
         self.write(self.render_string('waiting.html'))
         self.flush()
-        u = User(self.current_user)
-        user_studies = [Study(s_id) for s_id in u.private_studies]
-        share_dict = {s.id: s.shared_with for s in user_studies}
-        shared_studies = [Study(s_id) for s_id in u.shared_studies]
+        user = User(self.current_user)
+        user_studies = yield Task(self._get_private, user)
+        shared_studies = yield Task(self._get_shared, user)
+        all_emails_except_current = yield Task(self._get_all_emails)
+        all_emails_except_current.remove(self.current_user)
         self.render('private_studies.html', user=self.current_user,
                     user_studies=user_studies, shared_studies=shared_studies,
-                    share_dict=share_dict)
+                    all_emails_except_current=all_emails_except_current)
 
-    @authenticated
-    def post(self):
-        pass
+    def _get_private(self, user, callback):
+        callback(_build_study_info("private", user))
+
+    def _get_shared(self, user, callback):
+        """builds list of tuples for studies that are shared with user"""
+        callback(_build_study_info("shared", user))
+
+    def _get_all_emails(self, callback):
+        callback(list(User.iter()))
 
 
 class PublicStudiesHandler(BaseHandler):
     @authenticated
+    @coroutine
     def get(self):
         self.write(self.render_string('waiting.html'))
         self.flush()
-        public_studies = [Study(s_id) for s_id in Study.get_public()]
+        public_studies = yield Task(self._get_public)
         self.render('public_studies.html', user=self.current_user,
                     public_studies=public_studies)
 
-    @authenticated
-    def post(self):
-        pass
+    def _get_public(self, callback):
+        """builds list of tuples for studies that are public"""
+        callback(_build_study_info("public"))
 
 
 class StudyDescriptionHandler(BaseHandler):
-    def display_template(self, study_id, msg):
+    def get_raw_data(self, rdis, callback):
+        """Get all raw data objects from a list of raw_data_ids"""
+        callback([RawData(rdi) for rdi in rdis])
+
+    def get_prep_templates(self, raw_data, callback):
+        """Get all prep templates for a list of raw data objects"""
+        d = {}
+        for rd in raw_data:
+            # We neeed this so PrepTemplate(p) doesn't fail if that raw
+            # doesn't exist but raw data has the row: #554
+            prep_templates = sorted(rd.prep_templates)
+            d[rd.id] = [PrepTemplate(p) for p in prep_templates
+                        if PrepTemplate.exists(p)]
+        callback(d)
+
+    def remove_add_study_template(self, raw_data, study_id, fp_rsp, callback):
+        """Removes prep templates, raw data and sample template and adds
+           a new one
+        """
+        for rd in raw_data():
+            if PrepTemplate.exists((rd)):
+                PrepTemplate.delete(rd)
+        if SampleTemplate.exists(study_id):
+            SampleTemplate.delete(study_id)
+
+        SampleTemplate.create(load_template_to_dataframe(fp_rsp),
+                              Study(study_id))
+        # TODO: do not remove but move to final storage space
+        # and keep there forever, issue #550
+        remove(fp_rsp)
+
+        callback()
+
+    def get_raw_data_from_other_studies(self, user, study, callback):
+        """Retrieves a tuple of raw_data_id and the last study title for that
+        raw_data
+        """
+        d = {}
+        for sid in user.private_studies:
+            if sid == study.id:
+                continue
+            for rdid in Study(sid).raw_data():
+                d[rdid] = Study(RawData(rdid).studies[-1]).title
+        callback(d)
+
+    @coroutine
+    def display_template(self, study_id, msg, msg_level, tab_to_display=""):
         """Simple function to avoid duplication of code"""
         # make sure study is accessible and exists, raise error if not
         study = None
@@ -127,146 +257,186 @@ class StudyDescriptionHandler(BaseHandler):
             # Study not in database so fail nicely
             raise HTTPError(404, "Study %d does not exist" % study_id)
         else:
-            _check_access(User(self.current_user), study)
+            check_access(User(self.current_user), study)
 
+        # processing files from upload path
         fp = get_study_fp(study_id)
         if exists(fp):
-            fs = [f for f in listdir(fp)]
+            fs = listdir(fp)
         else:
             fs = []
+        # getting raw filepath_ types
         fts = [k.split('_', 1)[1].replace('_', ' ')
                for k in get_filepath_types() if k.startswith('raw_')]
+        fts = ['<option value="%s">%s</option>' % (f, f) for f in fts]
 
-        valid_ssb = []
-        for rdi in study.raw_data():
-            rd = RawData(rdi)
-            ex = PrepTemplate.exists(rd)
-            if ex:
-                valid_ssb.append(rdi)
-
-        # get the prep template id and force to choose the first one
-        # see issue https://github.com/biocore/qiita/issues/415
-        if valid_ssb:
-            prep_template_id = valid_ssb[0]
-            split_libs_status = RawData(
-                prep_template_id).preprocessing_status.replace('\n',
-                                                               '<br/>')
-            # getting EBI status
-            sppd = study.preprocessed_data()
-            if sppd:
-                ebi_status = PreprocessedData(
-                    sppd[-1]).submitted_to_insdc_status()
-        else:
-            ebi_status = None
-            prep_template_id = None
-            split_libs_status = None
-
-        valid_ssb = ','.join(map(str, valid_ssb))
-        ssb = len(valid_ssb) > 0
-
-        # getting the ontologies
-        ena = Ontology(convert_to_id('ENA', 'ontology'))
+        study = Study(study_id)
         user = User(self.current_user)
+        # getting the RawData and its prep templates
+        available_raw_data = yield Task(self.get_raw_data, study.raw_data())
+        available_prep_templates = yield Task(self.get_prep_templates,
+                                              available_raw_data)
+
+        # other general vars, note that we create the select options here
+        # so we do not have to loop several times over them in the template
+        data_types = sorted(viewitems(get_data_types()), key=itemgetter(1))
+        data_types = ['<option value="%s">%s</option>' % (v, k)
+                      for k, v in data_types]
+        filetypes = sorted(viewitems(get_filetypes()), key=itemgetter(1))
+        filetypes = ['<option value="%s">%s</option>' % (v, k)
+                     for k, v in filetypes]
+        other_studies_rd = yield Task(self.get_raw_data_from_other_studies,
+                                      user, study)
+        other_studies_rd = ['<option value="%s">%s</option>' % (k,
+                            "id: %d, study: %s" % (k, v))
+                            for k, v in viewitems(other_studies_rd)]
+        ena_terms = Ontology(convert_to_id('ENA', 'ontology')).terms
+        ena_terms = ['<option value="%s">%s</option>' % (v, v)
+                     for v in ena_terms]
+
         self.render('study_description.html', user=self.current_user,
                     study_title=study.title, study_info=study.info,
-                    study_id=study_id, files=fs, ssb=ssb, vssb=valid_ssb,
-                    max_upload_size=qiita_config.max_upload_size,
-                    sls=split_libs_status, filetypes=fts,
-                    investigation_types=ena.terms, ebi_status=ebi_status,
-                    prep_template_id=prep_template_id, user_level=user.level,
-                    msg=msg)
+                    study_id=study_id, files=fs, filetypes=''.join(filetypes),
+                    user_level=user.level, data_types=''.join(data_types),
+                    available_raw_data=available_raw_data,
+                    available_prep_templates=available_prep_templates,
+                    ste=SampleTemplate.exists(study_id),
+                    filepath_types=''.join(fts), ena_terms=''.join(ena_terms),
+                    tab_to_display=tab_to_display,
+                    level=msg_level, message=msg,
+                    can_upload=check_access(user, study, True),
+                    other_studies_rd=''.join(other_studies_rd))
 
     @authenticated
     def get(self, study_id):
-        self.display_template(int(study_id), "")
+        study_id = int(study_id)
+        check_access(User(self.current_user), Study(study_id))
+        self.display_template(int(study_id), "", "")
 
     @authenticated
+    @coroutine
     def post(self, study_id):
-        raw_sample_template = self.get_argument('raw_sample_template', None)
-        raw_prep_template = self.get_argument('raw_prep_template', None)
-        barcodes = self.get_argument('barcodes', "").split(',')
-        forward_seqs = self.get_argument('forward_seqs', "").split(',')
-        reverse_seqs = self.get_argument('reverse_seqs', "").split(',')
-        investigation_type = self.get_argument('investigation-type', "")
-
-        if raw_sample_template is None or raw_prep_template is None:
-            raise HTTPError(400, "This function needs a sample template: "
-                            "%s and a prep template: %s" %
-                            (raw_sample_template, raw_prep_template))
-        fp_rsp = join(get_study_fp(study_id), raw_sample_template)
-        fp_rpt = join(get_study_fp(study_id), raw_prep_template)
-        if not exists(fp_rsp):
-            raise HTTPError(400, "This file doesn't exist: %s" % fp_rsp)
-        if not exists(fp_rpt):
-            raise HTTPError(400, "This file doesn't exist: %s" % fp_rpt)
-
-        ena = Ontology(convert_to_id('ENA', 'ontology'))
-        if (not investigation_type or investigation_type == "" or
-                investigation_type not in ena.terms):
-            raise HTTPError(400, "You need to have an investigation type")
-
         study_id = int(study_id)
+        check_access(User(self.current_user), Study(study_id))
+
+        # vars to add sample template
+        sample_template = self.get_argument('sample_template', None)
+        # vars to add raw data
+        filetype = self.get_argument('filetype', None)
+        previous_raw_data = self.get_argument('previous_raw_data', None)
+        # vars to add prep template
+        add_prep_template = self.get_argument('add_prep_template', None)
+        raw_data_id = self.get_argument('raw_data_id', None)
+        data_type_id = self.get_argument('data_type_id', None)
+        investigation_type = self.get_argument('investigation_type', None)
+        if investigation_type == "":
+            investigation_type = None
+        # to update investigation type
+        update_investigation_type = self.get_argument(
+            'update_investigation_type', None)
+
         study = Study(study_id)
+        msg_level = 'success'
+        if sample_template:
+            # processing sample templates
 
-        # deleting previous uploads
-        for rd in study.raw_data():
-            if PrepTemplate.exists(RawData(rd)):
-                PrepTemplate.delete(rd)
-        if SampleTemplate.exists(study):
-            SampleTemplate.delete(study_id)
+            fp_rsp = join(get_study_fp(study_id), sample_template)
+            if not exists(fp_rsp):
+                raise HTTPError(400, "This file doesn't exist: %s" % fp_rsp)
 
-        try:
-            # inserting sample template
-            SampleTemplate.create(load_template_to_dataframe(fp_rsp), study)
-        except (TypeError, QiitaDBColumnError, QiitaDBExecutionError,
-                QiitaDBDuplicateError, IOError), e:
-            msg = ('<b>An error occurred parsing the sample template: '
-                   '%s</b><br/>%s' % (basename(fp_rsp), e))
-            self.display_template(int(study_id), msg)
-            return
+            try:
+                # deleting previous uploads and inserting new one
+                yield Task(self.remove_add_study_template,
+                           study.raw_data,
+                           study_id, fp_rsp)
+            except (TypeError, QiitaDBColumnError, QiitaDBExecutionError,
+                    QiitaDBDuplicateError, IOError, ValueError, KeyError,
+                    CParserError) as e:
+                error_msg = ''.join(format_exception_only(e, exc_info()))
+                msg = ('<b>An error occurred parsing the sample template: '
+                       '%s</b><br/>%s' % (basename(fp_rsp), error_msg))
+                self.display_template(study_id, msg, "danger")
+                return
 
-        # inserting raw data
-        fp = get_study_fp(study_id)
-        filepaths = []
-        if barcodes and barcodes[0] != "":
-            filepaths.extend([(join(fp, t), "raw_barcodes") for t in barcodes])
-        if forward_seqs and forward_seqs[0] != "":
-            filepaths.extend([(join(fp, t), "raw_forward_seqs")
-                              for t in forward_seqs])
-        if reverse_seqs and reverse_seqs[0] != "":
-            filepaths.extend([(join(fp, t), "raw_reverse_seqs")
-                              for t in reverse_seqs])
+            msg = ("The sample template '%s' has been added" %
+                   sample_template)
+            tab_to_display = ""
 
-        # currently hardcoding the filetypes, see issue
-        # https://github.com/biocore/qiita/issues/391
-        filetype = 2
+        elif filetype or previous_raw_data:
+            # adding blank raw data
 
-        try:
-            # currently hardcoding the study_ids to be an array but not sure
-            # if this will ever be an actual array via the web interface
-            raw_data = RawData.create(filetype, [study], 1, filepaths,
-                                      investigation_type)
-        except (TypeError, QiitaDBColumnError, QiitaDBExecutionError,
-                IOError), e:
-            fps = ', '.join([basename(f[0]) for f in filepaths])
-            msg = ('<b>An error occurred parsing the raw files: '
-                   '%s</b><br/>%s' % (basename(fps), e))
-            self.display_template(int(study_id), msg)
-            return
+            if filetype and previous_raw_data:
+                msg = ("You can not specify both a new raw data and a "
+                       "previouly used one")
+            elif filetype:
+                try:
+                    RawData.create(filetype, [study])
+                except (TypeError, QiitaDBColumnError, QiitaDBExecutionError,
+                        QiitaDBDuplicateError, IOError, ValueError, KeyError,
+                        CParserError) as e:
+                    error_msg = ''.join(format_exception_only(e, exc_info()))
+                    msg = ('An error occurred creating a new raw data'
+                           'object. %s' % (error_msg))
+                    self.display_template(study_id, msg, "danger")
+                    return
+                msg = ""
+            else:
+                raw_data = [RawData(rd) for rd in previous_raw_data]
+                study.add_raw_data(raw_data)
+                msg = ""
+            tab_to_display = ""
 
-        try:
-            # inserting prep templates
-            PrepTemplate.create(load_template_to_dataframe(fp_rpt), raw_data,
-                                study)
-        except (TypeError, QiitaDBColumnError, QiitaDBExecutionError,
-                IOError), e:
-            msg = ('<b>An error occurred parsing the prep template: '
-                   '%s</b><br/>%s' % (basename(fp_rpt), e))
-            self.display_template(int(study_id), msg)
-            return
+        elif add_prep_template and raw_data_id and data_type_id:
+            # adding prep templates
 
-        msg = "Your samples were processed"
-        self.display_template(int(study_id), msg)
+            raw_data_id = int(raw_data_id)
+            fp_rpt = join(get_study_fp(study_id), add_prep_template)
+            if not exists(fp_rpt):
+                raise HTTPError(400, "This file doesn't exist: %s" % fp_rpt)
+
+            try:
+                # inserting prep templates
+                PrepTemplate.create(load_template_to_dataframe(fp_rpt),
+                                    RawData(raw_data_id), study,
+                                    int(data_type_id),
+                                    investigation_type=investigation_type)
+            except (TypeError, QiitaDBColumnError, QiitaDBExecutionError,
+                    QiitaDBDuplicateError, IOError, ValueError,
+                    CParserError) as e:
+                error_msg = ''.join(format_exception_only(e, exc_info()))
+                msg = ('An error occurred parsing the prep template: '
+                       '%s. %s' % (basename(fp_rpt), error_msg))
+                self.display_template(study_id, msg, "danger",
+                                      str(raw_data_id))
+                return
+
+            msg = "Your prep template was added"
+            tab_to_display = str(raw_data_id)
+
+        elif update_investigation_type:
+            # updating the prep template investigation type
+
+            pt = PrepTemplate(update_investigation_type)
+            try:
+                pt.investigation_type = investigation_type
+            except QiitaDBColumnError as e:
+                error_msg = ''.join(format_exception_only(e, exc_info()))
+                msg = ('Invalid investigation type: %s. %s' %
+                       (basename(fp_rpt), error_msg))
+                self.display_template(study_id, msg, "danger",
+                                      str(pt.raw_data_id))
+                return
+
+            msg = "The prep template has been updated!"
+            tab_to_display = str(pt.raw_data)
+
+        else:
+            msg = ("Error, did you select a valid uploaded file or are "
+                   "passing the correct parameters?")
+            msg_level = 'danger'
+            tab_to_display = ""
+
+        self.display_template(study_id, msg, msg_level, tab_to_display)
 
 
 class CreateStudyHandler(BaseHandler):
@@ -356,8 +526,11 @@ class CreateStudyHandler(BaseHandler):
         if form_data.data['pubmed_id'][0]:
             theStudy.add_pmid(form_data.data['pubmed_id'][0])
 
-        # TODO: change this redirect to something more sensible
-        self.redirect('/')
+        msg = 'Study "%s" successfully created' % (
+            form_data.data['study_title'][0])
+
+        self.render('index.html', message=msg, level='success',
+                    user=self.current_user)
 
 
 class CreateStudyAJAX(BaseHandler):
@@ -371,121 +544,148 @@ class CreateStudyAJAX(BaseHandler):
         self.write('False' if Study.exists(study_title) else 'True')
 
 
+class ShareStudyAJAX(BaseHandler):
+    def _get_shared_for_study(self, study, callback):
+        shared_links = _get_shared_links_for_study(study)
+        users = study.shared_with
+        callback((users, shared_links))
+
+    def _share(self, study, user, callback):
+        user = User(user)
+        callback(study.share(user))
+
+    def _unshare(self, study, user, callback):
+        user = User(user)
+        callback(study.unshare(user))
+
+    @authenticated
+    @asynchronous
+    @coroutine
+    def get(self):
+        study_id = int(self.get_argument('study_id'))
+        study = Study(study_id)
+        _check_owner(self.current_user, study)
+
+        selected = self.get_argument('selected', None)
+        deselected = self.get_argument('deselected', None)
+
+        if selected is not None:
+            yield Task(self._share, study, selected)
+        if deselected is not None:
+            yield Task(self._unshare, study, deselected)
+
+        users, links = yield Task(self._get_shared_for_study, study)
+
+        self.write(dumps({'users': users, 'links': links}))
+
+
 class MetadataSummaryHandler(BaseHandler):
     @authenticated
     def get(self, arguments):
-        study_id = int(self.get_argument('sample_template'))
-        st = SampleTemplate(study_id)
-        pt = PrepTemplate(int(self.get_argument('prep_template')))
-        # templates have same ID as study associated with, so can do check
-        _check_access(User(self.current_user), Study(st))
+        study_id = int(self.get_argument('study_id'))
 
-        stats = metadata_stats_from_sample_and_prep_templates(st, pt)
+        # this block is tricky because you can either pass the sample or the
+        # prep template and if none is passed then we will let an exception
+        # be raised because template will not be declared for the logic below
+        if self.get_argument('prep_template', None):
+            template = PrepTemplate(int(self.get_argument('prep_template')))
+        if self.get_argument('sample_template', None):
+            tid = int(self.get_argument('sample_template'))
+            template = SampleTemplate(tid)
+
+        study = Study(template.study_id)
+
+        # check whether or not the user has access to the requested information
+        if not study.has_access(User(self.current_user)):
+            raise HTTPError(403, "You do not have access to access this "
+                                 "information.")
+
+        df = dataframe_from_template(template)
+        stats = stats_from_df(df)
 
         self.render('metadata_summary.html', user=self.current_user,
-                    study_title=Study(st.id).title, stats=stats,
+                    study_title=study.title, stats=stats,
                     study_id=study_id)
 
 
 class EBISubmitHandler(BaseHandler):
-    @authenticated
-    def get(self, study_id):
-        study_id = int(study_id)
+    def display_template(self, preprocessed_data_id, msg, msg_level):
+        """Simple function to avoid duplication of code"""
+        preprocessed_data_id = int(preprocessed_data_id)
         try:
-            study = Study(study_id)
+            preprocessed_data = PreprocessedData(preprocessed_data_id)
         except QiitaDBUnknownIDError:
-            raise HTTPError(404, "Study %d does not exist!" % study_id)
+            raise HTTPError(404, "PreprocessedData %d does not exist!" %
+                                 preprocessed_data_id)
         else:
-            _check_access(User(self.current_user), study)
+            user = User(self.current_user)
+            if user.level != 'admin':
+                raise HTTPError(403, "No permissions of admin, "
+                                     "get/EBISubmitHandler: %s!" % user.id)
 
-        st = SampleTemplate(study.sample_template)
+        prep_template = PrepTemplate(preprocessed_data.prep_template)
+        sample_template = SampleTemplate(preprocessed_data.study)
+        study = Study(preprocessed_data.study)
+        stats = [('Number of samples', len(prep_template)),
+                 ('Number of metadata headers',
+                  len(sample_template.metadata_headers()))]
 
-        # TODO: only supporting a single prep template right now, which I think
-        # is what indexing the first item here is equiv to
-        preprocessed_data_id = study.preprocessed_data()[0]
+        demux = [path for path, ftype in preprocessed_data.get_filepaths()
+                 if ftype == 'preprocessed_demux']
 
-        preprocessed_data = PreprocessedData(preprocessed_data_id)
-
-        stats = [('Number of samples', len(st)),
-                 ('Number of metadata headers', len(st.metadata_headers()))]
-
-        if not study:
-            study_title = 'This study DOES NOT exist'
-            study_id = 'This study DOES NOT exist'
-        else:
-            study_title = study.title
-            study_id = study.id
-
-        if not error:
-            stats = [('Number of samples', len(sample_template)),
-                     ('Number of metadata headers',
-                      len(sample_template.metadata_headers()))]
-
-            demux = [path for path, ftype in preprocessed_data.get_filepaths()
-                     if ftype == 'preprocessed_demux']
-
-            if not len(demux):
-                error = ("Study does not appear to have demultiplexed "
-                         "sequences associated")
-            elif len(demux) > 1:
-                error = ("Study appears to have multiple demultiplexed files!")
-            else:
-                error = ""
-                demux_file = demux[0]
-                demux_file_stats = demux_stats(demux_file)
-                stats.append(('Number of sequences', demux_file_stats.n))
-
-            error = None
-        else:
-            stats = []
+        if not len(demux):
+            msg = ("Study does not appear to have demultiplexed "
+                   "sequences associated")
+            msg_level = 'danger'
+        elif len(demux) > 1:
+            msg = ("Study appears to have multiple demultiplexed files!")
+            msg_level = 'danger'
+        elif msg == "":
+            demux_file = demux[0]
+            demux_file_stats = demux_stats(demux_file)
+            stats.append(('Number of sequences', demux_file_stats.n))
+            msg_level = 'success'
 
         self.render('ebi_submission.html', user=self.current_user,
-                    study_title=study_title, stats=stats, error=error,
-                    study_id=study_id)
+                    study_title=study.title, stats=stats, message=msg,
+                    study_id=study.id, level=msg_level,
+                    preprocessed_data_id=preprocessed_data_id,
+                    investigation_type=prep_template.investigation_type)
 
     @authenticated
-    def get(self, study_id):
-        preprocessed_data = None
-        sample_template = None
-        error = None
-
-        # this could be done with exists but it works on the title and
-        # we do not have that
-        try:
-            study = Study(int(study_id))
-        except (QiitaDBUnknownIDError):
-            study = None
-            error = 'There is no study %s' % study_id
-
-        if study:
-            try:
-                sample_template = SampleTemplate(study.sample_template)
-            except:
-                sample_template = None
-                error = 'There is no sample template for study: %s' % study_id
-
-            try:
-                # TODO: only supporting a single prep template right now, which
-                # should be the last item
-                preprocessed_data = PreprocessedData(
-                    study.preprocessed_data()[-1])
-            except:
-                preprocessed_data = None
-                error = ('There is no preprocessed data for study: '
-                         '%s' % study_id)
-
-        self.display_template(study, sample_template, preprocessed_data, error)
+    def get(self, preprocessed_data_id):
+        self.display_template(preprocessed_data_id, "", "")
 
     @authenticated
-    def post(self, study_id):
+    def post(self, preprocessed_data_id):
         # make sure user is admin and can therefore actually submit to EBI
         if User(self.current_user).level != 'admin':
             raise HTTPError(403, "User %s cannot submit to EBI!" %
                             self.current_user)
+        submission_type = self.get_argument('submission_type')
 
-        channel = self.current_user
-        job_id = submit(channel, submit_to_ebi, int(study_id))
+        if submission_type not in ['ADD', 'MODIFY']:
+            raise HTTPError(403, "User: %s, %s is not a recognized submission "
+                            "type" % (self.current_user, submission_type))
 
-        self.render('compute_wait.html', user=self.current_user,
-                    job_id=job_id, title='EBI Submission',
-                    completion_redirect='/compute_complete/%s' % job_id)
+        msg = ''
+        msg_level = 'success'
+        preprocessed_data = PreprocessedData(preprocessed_data_id)
+        state = preprocessed_data.submitted_to_insdc_status()
+        if state == 'submitting':
+            msg = "Cannot resubmit! Current state is: %s" % state
+            msg_level = 'danger'
+        elif state == 'success' and submission_type == "ADD":
+            msg = "Cannot resubmit! Current state is: %s, use MODIFY" % state
+            msg_level = 'danger'
+        else:
+            channel = self.current_user
+            job_id = submit(channel, submit_to_ebi, int(preprocessed_data_id),
+                            submission_type)
+
+            self.render('compute_wait.html', user=self.current_user,
+                        job_id=job_id, title='EBI Submission',
+                        completion_redirect='/compute_complete/%s' % job_id)
+            return
+
+        self.display_template(preprocessed_data_id, msg, msg_level)

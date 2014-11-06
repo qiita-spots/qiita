@@ -101,7 +101,7 @@ from copy import deepcopy
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from .base import QiitaStatusObject, QiitaObject
-from .exceptions import (QiitaDBStatusError, QiitaDBColumnError)
+from .exceptions import (QiitaDBStatusError, QiitaDBColumnError, QiitaDBError)
 from .util import check_required_columns, check_table_cols, convert_to_id
 from .sql_connection import SQLConnectionHandler
 
@@ -121,6 +121,7 @@ class Study(QiitaStatusObject):
     sample_template
     status
     title
+    owner
 
     Methods
     -------
@@ -130,6 +131,8 @@ class Study(QiitaStatusObject):
     add_pmid
     exists
     has_access
+    share
+    unshare
 
     Notes
     -----
@@ -143,7 +146,7 @@ class Study(QiitaStatusObject):
     def _lock_public(self, conn_handler):
         """Raises QiitaDBStatusError if study is public"""
         if self.check_status(("public", )):
-            raise QiitaDBStatusError("Can't change status of public study!")
+            raise QiitaDBStatusError("Illegal operation on public study!")
 
     def _status_setter_checks(self, conn_handler):
         r"""Perform a check to make sure not setting status away from public
@@ -231,7 +234,7 @@ class Study(QiitaStatusObject):
         insertdict['study_title'] = title
         if "reprocess" not in insertdict:
             insertdict['reprocess'] = False
-        # default to waiting_approval status
+        # default to awaiting_approval status
         insertdict['study_status_id'] = 1
 
         # No nuns allowed
@@ -463,10 +466,25 @@ class Study(QiitaStatusObject):
         """
         conn_handler = SQLConnectionHandler()
         sql = ("SELECT DISTINCT DT.data_type FROM qiita.study_raw_data SRD "
-               "JOIN qiita.raw_data RD ON SRD.raw_data_id = RD.raw_data_id "
-               "JOIN qiita.data_type DT ON RD.data_type_id = DT.data_type_id "
-               "WHERE SRD.study_id = %s")
+               "JOIN qiita.prep_template PT ON SRD.raw_data_id = "
+               "PT.raw_data_id JOIN qiita.data_type DT ON PT.data_type_id = "
+               "DT.data_type_id WHERE SRD.study_id = %s")
         return [x[0] for x in conn_handler.execute_fetchall(sql, (self._id,))]
+
+    @property
+    def owner(self):
+        """Gets the owner of the study
+
+        Returns
+        -------
+        str
+            The email (id) of the user that owns this study
+        """
+        conn_handler = SQLConnectionHandler()
+        sql = """select email from qiita.{} where study_id = %s""".format(
+            self._table)
+
+        return conn_handler.execute_fetchone(sql, [self._id])[0]
 
     # --- methods ---
     def raw_data(self, data_type=None):
@@ -489,6 +507,36 @@ class Study(QiitaStatusObject):
         sql = ("SELECT raw_data_id FROM qiita.study_raw_data WHERE "
                "study_id = %s{0}".format(spec_data))
         return [x[0] for x in conn_handler.execute_fetchall(sql, (self._id,))]
+
+    def add_raw_data(self, raw_data):
+        """ Adds raw_data to the current study
+
+        Parameters
+        ----------
+        raw_data : list of RawData
+            The RawData objects to be added to the study
+
+        Raises
+        ------
+        QiitaDBError
+            If the raw_data is already linked to the current study
+        """
+        conn_handler = SQLConnectionHandler()
+        queue = "%d_add_raw_data" % self.id
+        sql = ("SELECT EXISTS(SELECT * FROM qiita.study_raw_data WHERE "
+               "study_id=%s AND raw_data_id=%s)")
+        conn_handler.create_queue(queue)
+        sql_args = [(self.id, rd.id) for rd in raw_data]
+        conn_handler.add_to_queue(queue, sql, sql_args, many=True)
+        linked = conn_handler.execute_queue(queue)
+
+        if any(linked):
+            raise QiitaDBError("Some of the passed raw datas have been already"
+                               " linked to the study %s" % self.id)
+
+        conn_handler.executemany(
+            "INSERT INTO qiita.study_raw_data (study_id, raw_data_id) "
+            "VALUES (%s, %s)", sql_args)
 
     def preprocessed_data(self, data_type=None):
         """ Returns list of data ids for preprocessed data info
@@ -547,13 +595,16 @@ class Study(QiitaStatusObject):
                "VALUES (%s, %s)".format(self._table))
         conn_handler.execute(sql, (self._id, pmid))
 
-    def has_access(self, user):
+    def has_access(self, user, no_public=False):
         """Returns whether the given user has access to the study
 
         Parameters
         ----------
         user : User object
             User we are checking access for
+        no_public: bool
+            If we should ignore those studies shared with the user. Defaults
+            to False
 
         Returns
         -------
@@ -564,8 +615,50 @@ class Study(QiitaStatusObject):
         if user.level in {'superuser', 'admin'}:
             return True
 
-        return self._id in user.private_studies + user.shared_studies \
-            + self.get_public()
+        if no_public:
+            return self._id in user.private_studies + user.shared_studies
+        else:
+            return self._id in user.private_studies + user.shared_studies \
+                + self.get_public()
+
+    def share(self, user):
+        """Share the study with another user
+
+        Parameters
+        ----------
+        user: User object
+            The user to share the study with
+        """
+        conn_handler = SQLConnectionHandler()
+        self._lock_public(conn_handler)
+
+        # Make sure the study is not already shared with the given user
+        if user.id in self.shared_with:
+            return
+        # Do not allow the study to be shared with the owner
+        if user.id == self.owner:
+            return
+
+        sql = ("INSERT INTO qiita.study_users (study_id, email) VALUES "
+               "(%s, %s)")
+
+        conn_handler.execute(sql, (self._id, user.id))
+
+    def unshare(self, user):
+        """Unshare the study with another user
+
+        Parameters
+        ----------
+        user: User object
+            The user to unshare the study with
+        """
+        conn_handler = SQLConnectionHandler()
+        self._lock_public(conn_handler)
+
+        sql = ("DELETE FROM qiita.study_users WHERE study_id = %s AND "
+               "email = %s")
+
+        conn_handler.execute(sql, (self._id, user.id))
 
 
 class StudyPerson(QiitaObject):

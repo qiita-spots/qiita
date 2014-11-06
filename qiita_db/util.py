@@ -23,6 +23,7 @@ Methods
     check_required_columns
     convert_from_id
     convert_to_id
+    get_lat_longs
 """
 # -----------------------------------------------------------------------------
 # Copyright (c) 2014--, The Qiita Development Team.
@@ -39,14 +40,14 @@ from string import ascii_letters, digits, punctuation
 from binascii import crc32
 from bcrypt import hashpw, gensalt
 from functools import partial
-from os.path import join, basename, isdir, relpath
-from os import walk
-from shutil import move
+from os.path import join, basename, isdir, relpath, exists
+from os import walk, remove
+from shutil import move, rmtree
 from json import dumps
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_core.qiita_settings import qiita_config
-from .exceptions import QiitaDBColumnError
+from .exceptions import QiitaDBColumnError, QiitaDBError
 from .sql_connection import SQLConnectionHandler
 
 
@@ -504,7 +505,7 @@ def compute_checksum(path):
 
 
 def insert_filepaths(filepaths, obj_id, table, filepath_table, conn_handler,
-                     move_files=True):
+                     move_files=True, queue=None):
         r"""Inserts `filepaths` in the DB connected with `conn_handler`. Since
         the files live outside the database, the directory in which the files
         lives is controlled by the database, so it copies the filepaths from
@@ -526,11 +527,14 @@ def insert_filepaths(filepaths, obj_id, table, filepath_table, conn_handler,
         move_files : bool, optional
             Whether or not to copy from the given filepaths to the db filepaths
             default: True
+        queue : str, optional
+            The queue to add this transaction to. Default return list of ids
 
         Returns
         -------
-        list
-            The filepath_id in the database for each added filepath
+        list or None
+            List of the filepath_id in the database for each added filepath if
+            queue not specified, or no return value if queue specified
         """
         new_filepaths = filepaths
         base_fp = get_db_files_base_dir()
@@ -558,15 +562,85 @@ def insert_filepaths(filepaths, obj_id, table, filepath_table, conn_handler,
         values = ["('%s', %s, '%s', %s)" % (scrub_data(path), id, checksum, 1)
                   for path, id, checksum in paths_w_checksum]
         # Insert all the filepaths at once and get the filepath_id back
-        ids = conn_handler.execute_fetchall(
-            "INSERT INTO qiita.{0} (filepath, filepath_type_id, checksum, "
-            "checksum_algorithm_id) VALUES {1} "
-            "RETURNING filepath_id".format(filepath_table,
-                                           ', '.join(values)))
+        sql = ("INSERT INTO qiita.{0} (filepath, filepath_type_id, checksum, "
+               "checksum_algorithm_id) VALUES {1} RETURNING "
+               "filepath_id".format(filepath_table, ', '.join(values)))
+        if queue is not None:
+            # Drop the sql into the given queue
+            conn_handler.add_to_queue(queue, sql, None)
+        else:
+            ids = conn_handler.execute_fetchall(sql)
 
-        # we will receive a list of lists with a single element on it (the id),
-        # transform it to a list of ids
-        return [id[0] for id in ids]
+            # we will receive a list of lists with a single element on it
+            # (the id), transform it to a list of ids
+            return [id[0] for id in ids]
+
+
+def purge_filepaths(conn_handler=None):
+    r"""Goes over the filepath table and remove all the filepaths that are not
+    used in any place
+
+    Parameters
+    ----------
+    conn_handler : SQLConnectionHandler, optional
+            The connection handler object connected to the DB
+    """
+    conn_handler = conn_handler if conn_handler else SQLConnectionHandler()
+
+    # Get all the filepaths from the filepath table that are not
+    # referenced from any place in the database
+    fps = conn_handler.execute_fetchall(
+        """SELECT filepath_id, filepath, filepath_type FROM qiita.filepath
+        FP JOIN qiita.filepath_type FPT ON
+        FP.filepath_type_id = FPT.filepath_type_id
+        WHERE filepath_id NOT IN (
+            SELECT filepath_id FROM qiita.raw_filepath UNION
+            SELECT filepath_id FROM qiita.preprocessed_filepath UNION
+            SELECT filepath_id FROM qiita.processed_filepath UNION
+            SELECT filepath_id FROM qiita.job_results_filepath UNION
+            SELECT filepath_id FROM qiita.analysis_filepath UNION
+            SELECT sequence_filepath FROM qiita.reference UNION
+            SELECT taxonomy_filepath FROM qiita.reference UNION
+            SELECT tree_filepath FROM qiita.reference)""")
+
+    # We can now go over and remove all the filepaths
+    for fp_id, fp, fp_type in fps:
+        conn_handler.execute("DELETE FROM qiita.filepath WHERE filepath_id=%s",
+                             (fp_id,))
+
+        # Remove the data
+        fp = join(get_db_files_base_dir(), fp)
+        if exists(fp):
+            if fp_type is 'directory':
+                rmtree(fp)
+            else:
+                remove(fp)
+
+
+def get_filepath_id(fp, conn_handler):
+    """Return the filepath_id of fp
+
+    Parameters
+    ----------
+    fp : str
+        The filepath
+    conn_handler : SQLConnectionHandler
+            The sql connection object
+
+    Raises
+    ------
+    QiitaDBError
+        If fp is not stored in the DB.
+    """
+    fp_id = conn_handler.execute_fetchone(
+        "SELECT filepath_id FROM qiita.filepath WHERE filepath=%s",
+        (relpath(fp, get_db_files_base_dir()),))
+
+    # check if the query has actually returned something
+    if not fp_id:
+        raise QiitaDBError("Filepath not stored in the database")
+
+    return fp_id[0]
 
 
 def convert_to_id(value, table, conn_handler=None):
@@ -731,3 +805,10 @@ def get_study_fp(study_id):
     fp = join(qiita_config.upload_data_dir, str(study_id))
 
     return fp
+
+
+def get_lat_longs():
+    conn = SQLConnectionHandler()
+    sql = """select latitude, longitude
+             from qiita.required_sample_info"""
+    return conn.execute_fetchall(sql)

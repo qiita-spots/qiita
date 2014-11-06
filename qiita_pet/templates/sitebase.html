@@ -7,30 +7,34 @@
     <link rel="stylesheet" href="/static/vendor/css/jquery-ui.theme.min.css" type="text/css">
     <link rel="stylesheet" href="/static/vendor/css/bootstrap.min.css" type="text/css">
     <link rel="stylesheet" href="/static/vendor/css/bootstrap-theme.min.css" type="text/css">
+    <link rel="stylesheet" href="/static/vendor/css/chosen.css" type="text/css">
     <link rel="stylesheet" href="/static/css/style.css" type="text/css">
 
     <script src="/static/vendor/js/jquery-2.1.0.min.js"></script>
     <script src="/static/vendor/js/jquery-ui.min.js"></script>
     <script src="/static/vendor/js/bootstrap.min.js"></script>
+    <script src="/static/vendor/js/chosen.jquery.min.js"></script>
 
     <link rel="shortcut icon" href="/static/img/favicon.ico">
 
     {% block head %}{% end %}
   </head>
   <body style="padding-top: 65px; height: 100%">
-    <!-- try/except to check if we have a loginerror variable -->
-    {% try %}
-      <!-- if we have a loginerror variable make sure it's not empty -->
-      {% if loginerror != '' %}
-      <div class="alert alert-danger alert-dismissable">
+  {% set level = globals().get('level', '') %}
+  {% set message = globals().get('message', '') %}
+
+  {% if message != '' %}
+      {% if level not in {'danger', 'success', 'info'} %}
+          {% set level = 'info' %}
+      {% end %}
+      <div class="alert alert-{{ level }} alert-dismissable">
         <a href="#" class="close" data-dismiss="alert">&times;</a>
         <p align="center">
-          <strong>There's a problem with your credentials: </strong>{{loginerror}}
+          {% raw message %}
         </p>
       </div>
-      {% end %}
-    {% except %}
-    {% end %}
+  {% end %}
+
     <div class="navbar navbar-inverse navbar-fixed-top" role="navigation">
       <div class="container">
         <div class="navbar-header">
@@ -72,6 +76,9 @@
             <!-- generic elements -->
             <li>
               <a href="#">Help</a>
+            </li>
+            <li>
+              <a href="/stats/">Stats</a>
             </li>
             <li>
               <a href="http://github.com/biocore/qiita">GitHub</a>

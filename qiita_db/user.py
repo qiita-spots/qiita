@@ -57,6 +57,7 @@ class User(QiitaObject):
     change_password
     generate_reset_code
     change_forgot_password
+    iter
     """
 
     _table = "qiita_user"
@@ -85,6 +86,22 @@ class User(QiitaObject):
         return conn_handler.execute_fetchone(
             "SELECT EXISTS(SELECT * FROM qiita.qiita_user WHERE "
             "email = %s)", (id_, ))[0]
+
+    @classmethod
+    def iter(cls):
+        """Iterates over all users, sorted by their email addresses
+
+        Returns
+        -------
+        generator
+            Yields a user ID (email) for each user in the database,
+            in order of ascending ID
+        """
+        conn_handler = SQLConnectionHandler()
+        sql = """select email from qiita.{}""".format(cls._table)
+
+        for result in conn_handler.execute_fetchall(sql):
+            yield result[0]
 
     @classmethod
     def login(cls, email, password):

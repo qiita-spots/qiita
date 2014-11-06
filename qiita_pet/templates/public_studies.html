@@ -1,11 +1,5 @@
 {% extends sitebase.html %}
 {% block head %}
-{% from qiita_db.study import StudyPerson %}
-{% from functools import partial %}
-{% from qiita_pet.util import linkify %}
-{% set pubmed_linkifier = partial(linkify, "<a target=\"_blank\" href=\"http://www.ncbi.nlm.nih.gov/pubmed/{0}\">{0}</a>") %}
-{% set study_person_linkifier = partial(linkify, "<a target=\"_blank\" href=\"mailto:{0}\">{1}</a>") %}
-
 <link rel="stylesheet" href="/static/vendor/css/jquery.dataTables.css" type="text/css">
 
 <script src="/static/vendor/js/jquery.dataTables.min.js"></script>
@@ -24,6 +18,7 @@ $(document).ready(function() {
         <thead>
             <tr>
                 <th>Title</th>
+                <th>Owner</th>
                 <th>Metadata Complete</th>
                 <th>Samples</th>
                 <th>Sequence Files</th>
@@ -33,24 +28,22 @@ $(document).ready(function() {
         </thead>
         <tbody>
             {% for s in public_studies %}
-                {% set study_info = s.info %}
-                {% set pmids = s.pmids %}
-                {% set PI = StudyPerson(study_info['principal_investigator_id']) %}
             <tr>
-                <td><a href="/study/description/{{s.id}}">{{s.title}}</a></td>
-                {% if study_info['metadata_complete'] %}
+                <td><a href="/study/description/{{ s.id }}">{{ s.title }}</a></td>
+                {% if s.meta_complete %}
+                <td>{% raw s.owner %}</td>
                 <td><span class="glyphicon glyphicon-ok"></span></td>
                 {% else %}
                 <td><span class="glyphicon glyphicon-remove"></span></td>
                 {% end %}
-                <td>{{study_info['number_samples_collected']}}</td>
-                <td>{{ len(s.raw_data()) }}</td>
-                <td>{% raw study_person_linkifier((PI.email, PI.name)) %}</td>
-                {% if len(pmids) %}
-                <td>{% raw ", ".join([pubmed_linkifier([pmid]) for pmid in pmids]) %}</td>
+                <td>{{ s.num_samples_collected }}</td>
+                {% if s.num_raw_data %}
+                <td>{{ s.num_raw_data }}</td>
                 {% else %}
-                <td>None</td>
+                <td><span class="glyphicon glyphicon-remove"></span></td>
                 {% end %}
+                <td>{% raw s.pi %}</td>
+                <td>{% raw s.pmids %}</td>
             </tr>
             {% end %}
         </tbody>

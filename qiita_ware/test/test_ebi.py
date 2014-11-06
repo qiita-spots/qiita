@@ -21,6 +21,7 @@ from xml.etree import ElementTree as ET
 
 from qiita_ware.ebi import (SampleAlreadyExistsError, NoXMLError,
                             EBISubmission)
+from qiita_core.qiita_settings import qiita_config
 
 
 class TestEBISubmission(TestCase):
@@ -81,23 +82,25 @@ class TestEBISubmission(TestCase):
 
     def test_get_study_alias(self):
         e = EBISubmission('2', 'Study Title', 'Study Abstract', 'metagenome')
-        self.assertEqual(e._get_study_alias(), 'qiime_study_2')
+        exp = '%s_study_2' % qiita_config.ebi_organization_prefix
+        self.assertEqual(e._get_study_alias(), exp)
 
     def test_get_sample_alias(self):
         e = EBISubmission('2', 'Study Title', 'Study Abstract', 'metagenome')
         e.add_sample('foo')
-        self.assertEqual(e._get_sample_alias('foo'), 'qiime_study_2:foo')
+        exp = '%s_study_2:foo' % qiita_config.ebi_organization_prefix
+        self.assertEqual(e._get_sample_alias('foo'), exp)
 
     def test_get_experiment_alias(self):
         e = EBISubmission('2', 'Study Title', 'Study Abstract', 'metagenome')
         e.add_sample('foo')
-        self.assertEqual(e._get_experiment_alias('foo', 0),
-                         'qiime_study_2:foo:0')
+        exp = '%s_study_2:foo:0' % qiita_config.ebi_organization_prefix
+        self.assertEqual(e._get_experiment_alias('foo', 0), exp)
 
     def test_get_submission_alias(self):
         e = EBISubmission('2', 'Study Title', 'Study Abstract', 'metagenome')
         obs = e._get_submission_alias()
-        exp = 'qiime_submission_2'
+        exp = '%s_submission_2' % qiita_config.ebi_organization_prefix
         self.assertEqual(obs, exp)
 
     def test_get_library_name(self):
@@ -123,6 +126,16 @@ class TestEBISubmission(TestCase):
         xmlstring = xml.toprettyxml(indent='  ', encoding='UTF-8')
         obs_stripped = ''.join([l.strip() for l in xmlstring.splitlines()])
         exp_stripped = ''.join([l.strip() for l in STUDYXML.splitlines()])
+        self.assertEqual(obs_stripped, exp_stripped)
+
+        submission_pmids = EBISubmission('001', 'teststudy', 'test asbstract',
+                                         'metagenome', pmids=[12, 15])
+        xmlelement = submission_pmids.generate_study_xml()
+        xml = minidom.parseString(ET.tostring(xmlelement))
+        xmlstring = xml.toprettyxml(indent='  ', encoding='UTF-8')
+        obs_stripped = ''.join([l.strip() for l in xmlstring.splitlines()])
+        exp_stripped = ''.join([l.strip() for l in
+                                STUDYXML_PMIDS.splitlines()])
         self.assertEqual(obs_stripped, exp_stripped)
 
     def test_add_sample(self):
@@ -216,9 +229,16 @@ class TestEBISubmission(TestCase):
                                    'library protocol')
         xmlelement = submission.generate_run_xml()
         xml = minidom.parseString(ET.tostring(xmlelement))
+        # insert the proper EBI directory, since it is a timestamp and hard
+        # to predict
+        RUNXML_mod = RUNXML % {
+            'study_alias': submission._get_study_alias(),
+            'ebi_dir': submission.ebi_dir,
+            'organization_prefix': qiita_config.ebi_organization_prefix}
+
         xmlstring = xml.toprettyxml(indent='  ', encoding='UTF-8')
         obs_stripped = ''.join([l.strip() for l in xmlstring.splitlines()])
-        exp_stripped = ''.join([l.strip() for l in RUNXML.splitlines()])
+        exp_stripped = ''.join([l.strip() for l in RUNXML_mod.splitlines()])
         self.assertEqual(obs_stripped, exp_stripped)
 
     def test_generate_submission_xml(self):
@@ -382,14 +402,16 @@ class TestEBISubmission(TestCase):
 SAMPLEXML = """<?xml version="1.0" encoding="UTF-8"?>
 <SAMPLE_SET xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noName\
 spaceSchemaLocation="ftp://ftp.sra.ebi.ac.uk/meta/xsd/sra_1_3/SRA.sample.xsd">
-  <SAMPLE alias="qiime_study_001:test1" center_name="CCME-COLORADO">
+  <SAMPLE alias="%(organization_prefix)s_study_001:test1" center_name="CCME-\
+COLORADO">
     <TITLE>test1</TITLE>
     <SAMPLE_NAME>
       <TAXON_ID>no_data</TAXON_ID>
     </SAMPLE_NAME>
     <DESCRIPTION>no_data</DESCRIPTION>
   </SAMPLE>
-  <SAMPLE alias="qiime_study_001:test2" center_name="CCME-COLORADO">
+  <SAMPLE alias="%(organization_prefix)s_study_001:test2" center_name="CCME-\
+COLORADO">
     <TITLE>test2</TITLE>
     <SAMPLE_NAME>
       <TAXON_ID>no_data</TAXON_ID>
@@ -397,12 +419,12 @@ spaceSchemaLocation="ftp://ftp.sra.ebi.ac.uk/meta/xsd/sra_1_3/SRA.sample.xsd">
     <DESCRIPTION>no_data</DESCRIPTION>
   </SAMPLE>
 </SAMPLE_SET>
-"""
+""" % {'organization_prefix': qiita_config.ebi_organization_prefix}
 
 STUDYXML = """<?xml version="1.0" encoding="UTF-8"?>
 <STUDY_SET xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noName\
 spaceSchemaLocation="ftp://ftp.sra.ebi.ac.uk/meta/xsd/sra_1_3/SRA.study.xsd">
-  <STUDY alias="qiime_study_001" center_name="CCME-COLORADO">
+  <STUDY alias="%(organization_prefix)s_study_001" center_name="CCME-COLORADO">
     <DESCRIPTOR>
       <STUDY_TITLE>
         teststudy
@@ -414,18 +436,51 @@ spaceSchemaLocation="ftp://ftp.sra.ebi.ac.uk/meta/xsd/sra_1_3/SRA.study.xsd">
     </DESCRIPTOR>
   </STUDY>
 </STUDY_SET>
-"""
+""" % {'organization_prefix': qiita_config.ebi_organization_prefix}
+
+STUDYXML_PMIDS = """<?xml version="1.0" encoding="UTF-8"?>
+<STUDY_SET xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noName\
+spaceSchemaLocation="ftp://ftp.sra.ebi.ac.uk/meta/xsd/sra_1_3/SRA.study.xsd">
+  <STUDY alias="%(organization_prefix)s_study_001" center_name="CCME-\
+COLORADO">
+    <DESCRIPTOR>
+      <STUDY_TITLE>
+        teststudy
+      </STUDY_TITLE>
+      <STUDY_TYPE existing_study_type="Other" new_study_type="metagenome"/>
+      <STUDY_ABSTRACT>
+        test asbstract
+      </STUDY_ABSTRACT>
+    </DESCRIPTOR>
+    <STUDY_LINKS>
+      <STUDY_LINK>
+        <XREF_LINK>
+          <DB>PUBMED</DB>
+          <ID>12</ID>
+        </XREF_LINK>
+      </STUDY_LINK>
+      <STUDY_LINK>
+        <XREF_LINK>
+          <DB>PUBMED</DB>
+          <ID>15</ID>
+        </XREF_LINK>
+      </STUDY_LINK>
+    </STUDY_LINKS>
+  </STUDY>
+</STUDY_SET>
+""" % {'organization_prefix': qiita_config.ebi_organization_prefix}
 
 EXPERIMENTXML = """<?xml version="1.0" encoding="UTF-8"?>
 <EXPERIMENT_SET xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:no\
 NamespaceSchemaLocation="ftp://ftp.sra.ebi.ac.uk/meta/xsd/sra_1_3/SRA.\
 experiment.xsd">
-  <EXPERIMENT alias="qiime_study_001:test1:0" center_name="CCME-COLORADO">
-    <TITLE>qiime_study_001:test1:0</TITLE>
-    <STUDY_REF refname="qiime_study_001"/>
+  <EXPERIMENT alias="%(organization_prefix)s_study_001:test1:0" center_name=\
+"CCME-COLORADO">
+    <TITLE>%(organization_prefix)s_study_001:test1:0</TITLE>
+    <STUDY_REF refname="%(organization_prefix)s_study_001"/>
     <DESIGN>
       <DESIGN_DESCRIPTION>experiment description</DESIGN_DESCRIPTION>
-      <SAMPLE_DESCRIPTOR refname="qiime_study_001:test1"/>
+      <SAMPLE_DESCRIPTOR refname="%(organization_prefix)s_study_001:test1"/>
       <LIBRARY_DESCRIPTOR>
         <LIBRARY_NAME>test1:0</LIBRARY_NAME>
         <LIBRARY_STRATEGY>POOLCLONE</LIBRARY_STRATEGY>
@@ -467,18 +522,18 @@ _PROTOCOL>
     </EXPERIMENT_ATTRIBUTES>
   </EXPERIMENT>
 </EXPERIMENT_SET>
-"""
+""" % {'organization_prefix': qiita_config.ebi_organization_prefix}
 
 RUNXML = """
 <?xml version="1.0" encoding="UTF-8"?>
 <RUN_SET xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:no\
 NamespaceSchemaLocation="ftp://ftp.sra.ebi.ac.uk/meta/xsd/sra_1_3/SRA.run.xsd">
-  <RUN alias="__init__.py_run" center_name="CCME-COLORADO">
-    <EXPERIMENT_REF refname="qiime_study_001:test1:0"/>
+  <RUN alias="%(study_alias)s___init__.py_run" center_name="CCME-COLORADO">
+    <EXPERIMENT_REF refname="%(organization_prefix)s_study_001:test1:0"/>
     <DATA_BLOCK>
       <FILES>
         <FILE checksum="612cbff13a4f0e236e5e62ac2e00329a" checksum_method=\
-"MD5" filename="__init__.py" filetype="fastq" \
+"MD5" filename="./%(ebi_dir)s/__init__.py" filetype="fastq" \
 quality_scoring_system="phred"/>
       </FILES>
     </DATA_BLOCK>

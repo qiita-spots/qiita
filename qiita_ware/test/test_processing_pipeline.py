@@ -69,7 +69,10 @@ class ProcessingPipelineTests(TestCase):
                             'str_column': 'Value for sample 1',
                             'linkerprimersequence': 'GTGCCAGCMGCCGCGGTAA',
                             'barcodesequence': 'GTCCGCAAGTTA',
-                            'run_prefix': "s_G1_L001_sequences"},
+                            'run_prefix': "s_G1_L001_sequences",
+                            'platform': 'ILLUMINA',
+                            'library_construction_protocol': 'AAA',
+                            'experiment_design_description': 'BBB'},
             'SKD8.640184': {'center_name': 'ANL',
                             'center_project_name': 'Test Project',
                             'ebi_submission_accession': None,
@@ -77,7 +80,10 @@ class ProcessingPipelineTests(TestCase):
                             'str_column': 'Value for sample 2',
                             'linkerprimersequence': 'GTGCCAGCMGCCGCGGTAA',
                             'barcodesequence': 'CGTAGAGCTCTC',
-                            'run_prefix': "s_G1_L001_sequences"},
+                            'run_prefix': "s_G1_L001_sequences",
+                            'platform': 'ILLUMINA',
+                            'library_construction_protocol': 'AAA',
+                            'experiment_design_description': 'BBB'},
             'SKB7.640196': {'center_name': 'ANL',
                             'center_project_name': 'Test Project',
                             'ebi_submission_accession': None,
@@ -85,10 +91,14 @@ class ProcessingPipelineTests(TestCase):
                             'str_column': 'Value for sample 3',
                             'linkerprimersequence': 'GTGCCAGCMGCCGCGGTAA',
                             'barcodesequence': 'CCTCTGAGAGCT',
-                            'run_prefix': "s_G1_L002_sequences"}
+                            'run_prefix': "s_G1_L002_sequences",
+                            'platform': 'ILLUMINA',
+                            'library_construction_protocol': 'AAA',
+                            'experiment_design_description': 'BBB'}
             }
         md_template = pd.DataFrame.from_dict(metadata_dict, orient='index')
-        prep_template = PrepTemplate.create(md_template, RawData(2), Study(1))
+        prep_template = PrepTemplate.create(md_template, RawData(2), Study(1),
+                                            '16S')
 
         out_dir = mkdtemp()
 
@@ -109,7 +119,9 @@ class ProcessingPipelineTests(TestCase):
     def test_get_preprocess_fastq_cmd(self):
         raw_data = RawData(1)
         params = PreprocessedIlluminaParams(1)
-        obs_cmd, obs_output_dir = _get_preprocess_fastq_cmd(raw_data, params)
+        prep_template = PrepTemplate(1)
+        obs_cmd, obs_output_dir = _get_preprocess_fastq_cmd(
+            raw_data, prep_template, params)
 
         get_raw_path = partial(join, self.db_dir, 'raw_data')
         seqs_fp = get_raw_path('1_s_G1_L001_sequences.fastq.gz')
@@ -137,7 +149,7 @@ class ProcessingPipelineTests(TestCase):
     def test_insert_preprocessed_data_fastq(self):
         study = Study(1)
         params = PreprocessedIlluminaParams(1)
-        raw_data = RawData(1)
+        prep_template = PrepTemplate(1)
         prep_out_dir = mkdtemp()
         self.dirs_to_remove.append(prep_out_dir)
         path_builder = partial(join, prep_out_dir)
@@ -154,7 +166,8 @@ class ProcessingPipelineTests(TestCase):
             db_files.append(db_path_builder("3_%s" % f_suff))
         self.files_to_remove.extend(db_files)
 
-        _insert_preprocessed_data_fastq(study, params, raw_data, prep_out_dir)
+        _insert_preprocessed_data_fastq(study, params, prep_template,
+                                        prep_out_dir)
 
         # Check that the files have been copied
         for fp in db_files:

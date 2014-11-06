@@ -5,7 +5,7 @@ from shlex import split as shsplit
 from glob import glob
 from os.path import basename, exists, join, split
 from os import environ, close
-from datetime import date, timedelta
+from datetime import date, timedelta, datetime
 from xml.etree import ElementTree as ET
 from xml.dom import minidom
 from xml.sax.saxutils import escape
@@ -90,7 +90,8 @@ class EBISubmission(object):
         for a particular metadata field is missing
     """
     def __init__(self, study_id, study_title, study_abstract,
-                 investigation_type, empty_value='no_data', **kwargs):
+                 investigation_type, empty_value='no_data', pmids=None,
+                 **kwargs):
         self.study_id = study_id
         self.study_title = study_title
         self.study_abstract = study_abstract
@@ -103,6 +104,9 @@ class EBISubmission(object):
         self.experiment_xml_fp = None
         self.run_xml_fp = None
         self.submission_xml_fp = None
+        self.pmids = pmids if pmids is not None else []
+
+        self.ebi_dir = self._get_ebi_dir()
 
         # dicts that map investigation_type to library attributes
         lib_strategies = {'metagenome': 'POOLCLONE',
@@ -123,6 +127,10 @@ class EBISubmission(object):
         # This will hold the submission's samples, keyed by the sample name
         self.samples = {}
 
+    def _get_ebi_dir(self):
+        timestamp = datetime.now().strftime('%Y_%m_%d_%H:%M:%S')
+        return '%s_%s' % (self.study_id, timestamp)
+
     def _stringify_kwargs(self, kwargs_dict):
         """Turns values in a dictionay into strings, None, or self.empty_value
         """
@@ -139,7 +147,10 @@ class EBISubmission(object):
 
     def _get_study_alias(self):
         """Format alias using ``self.study_id``"""
-        return 'qiime_study_' + escape(clean_whitespace(str(self.study_id)))
+        study_alias_format = '%s_study_%s'
+        return study_alias_format % (
+            qiita_config.ebi_organization_prefix,
+            escape(clean_whitespace(str(self.study_id))))
 
     def _get_sample_alias(self, sample_name):
         """Format alias using ``self.study_id``, `sample_name`"""
@@ -158,7 +169,15 @@ class EBISubmission(object):
     def _get_submission_alias(self):
         """Format alias using ``self.study_id``"""
         safe_study_id = escape(clean_whitespace(str(self.study_id)))
-        return 'qiime_submission_' + safe_study_id
+        submission_alias_format = '%s_submission_%s'
+        return submission_alias_format % (qiita_config.ebi_organization_prefix,
+                                          safe_study_id)
+
+    def _get_run_alias(self, file_base_name):
+        """Format alias using `file_base_name`
+        """
+        return '%s_%s_run' % (self._get_study_alias(),
+                              basename(file_base_name))
 
     def _get_library_name(self, sample_name, row_number):
         """Format alias using `sample_name`, `row_number`
@@ -179,6 +198,16 @@ class EBISubmission(object):
             value = ET.SubElement(attribute_element, 'VALUE')
             value.text = clean_whitespace(val)
 
+    def _get_pmid_element(self, study_links, pmid):
+        study_link = ET.SubElement(study_links, 'STUDY_LINK')
+        xref_link = ET.SubElement(study_link,  'XREF_LINK')
+
+        db = ET.SubElement(xref_link, 'DB')
+        db.text = 'PUBMED'
+
+        _id = ET.SubElement(xref_link, 'ID')
+        _id.text = str(pmid)
+
     def generate_study_xml(self):
         """Generates the study XML file
 
@@ -194,7 +223,7 @@ class EBISubmission(object):
 
         study = ET.SubElement(study_set, 'STUDY', {
             'alias': self._get_study_alias(),
-            'center_name': "CCME-COLORADO"}
+            'center_name': qiita_config.ebi_center_name}
         )
 
         descriptor = ET.SubElement(study, 'DESCRIPTOR')
@@ -227,6 +256,12 @@ class EBISubmission(object):
         )
         study_abstract = ET.SubElement(descriptor, 'STUDY_ABSTRACT')
         study_abstract.text = clean_whitespace(escape(self.study_abstract))
+
+        # Add pubmed IDs
+        if self.pmids:
+            study_links = ET.SubElement(study, 'STUDY_LINKS')
+            for pmid in self.pmids:
+                self._get_pmid_element(study_links, pmid)
 
         if self.additional_metadata:
             study_attributes = ET.SubElement(study, 'STUDY_ATTRIBUTES')
@@ -295,7 +330,7 @@ class EBISubmission(object):
         for sample_name, sample_info in sorted(viewitems(self.samples)):
             sample = ET.SubElement(sample_set, 'SAMPLE', {
                 'alias': self._get_sample_alias(sample_name),
-                'center_name': 'CCME-COLORADO'}
+                'center_name': qiita_config.ebi_center_name}
             )
 
             sample_title = ET.SubElement(sample, 'TITLE')
@@ -435,7 +470,7 @@ class EBISubmission(object):
                 platform = prep_info['platform']
                 experiment = ET.SubElement(experiment_set, 'EXPERIMENT', {
                     'alias': experiment_alias,
-                    'center_name': 'CCME-COLORADO'}
+                    'center_name': qiita_config.ebi_center_name}
                 )
                 title = ET.SubElement(experiment, 'TITLE')
                 title.text = experiment_alias
@@ -498,8 +533,8 @@ class EBISubmission(object):
                     md5 = safe_md5(fp).hexdigest()
 
                 run = ET.SubElement(run_set, 'RUN', {
-                    'alias': basename(file_path) + '_run',
-                    'center_name': 'CCME-COLORADO'}
+                    'alias': self._get_run_alias(basename(file_path)),
+                    'center_name': qiita_config.ebi_center_name}
                 )
                 ET.SubElement(run, 'EXPERIMENT_REF', {
                     'refname': experiment_alias}
@@ -507,7 +542,7 @@ class EBISubmission(object):
                 data_block = ET.SubElement(run, 'DATA_BLOCK')
                 files = ET.SubElement(data_block, 'FILES')
                 ET.SubElement(files, 'FILE', {
-                    'filename': basename(file_path),
+                    'filename': join('./', self.ebi_dir, basename(file_path)),
                     'filetype': file_type,
                     'quality_scoring_system': 'phred',
                     'checksum_method': 'MD5',
@@ -549,7 +584,7 @@ class EBISubmission(object):
                                              "/sra_1_3/SRA.submission.xsd"})
         submission = ET.SubElement(submission_set, 'SUBMISSION', {
             'alias': self._get_submission_alias(),
-            'center_name': 'CCME-COLORADO'}
+            'center_name': qiita_config.ebi_center_name}
         )
 
         actions = ET.SubElement(submission, 'ACTIONS')
@@ -768,6 +803,7 @@ class EBISubmission(object):
                                              investigation_type,
                                              sample_template, prep_template,
                                              per_sample_fastq_dir,
+                                             pmids=None,
                                              **kwargs):
         """Generate an ``EBISubmission`` from templates and FASTQ files
 
@@ -783,6 +819,8 @@ class EBISubmission(object):
             Path to the direcotry containing per-sample FASTQ files containing
             The sequence labels should be:
             ``SampleID_SequenceNumber And Additional Notes if Applicable``
+        pmids : list, optional
+            The pubmed IDs that are associated with this submission
 
         Notes
         -----
@@ -792,7 +830,7 @@ class EBISubmission(object):
         """
         # initialize the EBISubmission object
         submission = cls(study_id, study_title, study_abstract,
-                         investigation_type, **kwargs)
+                         investigation_type, pmids=pmids, **kwargs)
 
         submission.add_samples_from_templates(sample_template,
                                               prep_template,
@@ -873,9 +911,9 @@ class EBISubmission(object):
             # Get the list of FASTQ files to submit
             fastqs = glob(join(unique_dir, '*.fastq.gz'))
 
-            ascp_command = 'ascp -QT -k2 -L- {0} {1}@{2}:/.'.format(
+            ascp_command = 'ascp -d -QT -k2 -L- {0} {1}@{2}:./{3}/'.format(
                 ' '.join(fastqs), qiita_config.ebi_seq_xfer_user,
-                qiita_config.ebi_seq_xfer_url)
+                qiita_config.ebi_seq_xfer_url, self.ebi_dir)
 
             # Generate the command using shlex.split so that we don't have to
             # pass shell=True to subprocess.call
