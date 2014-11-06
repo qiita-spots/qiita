@@ -67,7 +67,7 @@ def _get_shared_links_for_study(study):
 def _build_study_info(studytype, user=None):
         """builds list of namedtuples for study listings"""
         if studytype == "private":
-            studylist = user.private_studies
+            studylist = user.user_studies
         elif studytype == "shared":
             studylist = user.shared_studies
         elif studytype == "public":
@@ -239,7 +239,7 @@ class StudyDescriptionHandler(BaseHandler):
         raw_data
         """
         d = {}
-        for sid in user.private_studies:
+        for sid in user.user_studies:
             if sid == study.id:
                 continue
             for rdid in Study(sid).raw_data():

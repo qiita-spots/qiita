@@ -84,6 +84,7 @@ function modify_sharing(study_id) {
                 <th>Shared With These Users</th>
                 <th>Principal Investigator</th>
                 <th>Pubmed ID(s)</th>
+                <th>Status</th>
             </tr>
         </thead>
         <tbody>
@@ -108,6 +109,8 @@ function modify_sharing(study_id) {
                 {# Shared #}
                 {% if s.status == 'public' %}
                 <td>This study is public</td>
+                {% elif s.status == 'sandbox' %}
+                <td>This study is sandboxed</td>
                 {% else %}
                 <td><span id="shared_html_{{ s.id }}">{% raw s.shared %}</span>
                 <br/>
@@ -118,6 +121,7 @@ function modify_sharing(study_id) {
                 <td>{% raw s.pi %}</td>
                 {# Pubmed ID(s) #}
                 <td>{% raw s.pmids %}</td>
+                <td>{{ s.status }}</td>
             </tr>
             {% end %}
         </tbody>
