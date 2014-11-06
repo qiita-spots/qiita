@@ -5,16 +5,17 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
-from os.path import abspath, dirname, join
+from os.path import abspath, dirname, join, exists, split
 from functools import partial
 from os import mkdir
-from os.path import exists
 import gzip
+from glob import glob
 
 from future import standard_library
 from future.utils import viewitems
 with standard_library.hooks():
     from urllib.request import urlretrieve
+from natsort import natsorted
 
 from qiita_core.exceptions import QiitaEnvironmentError
 from qiita_core.qiita_settings import qiita_config
@@ -29,9 +30,10 @@ get_reference_fp = partial(join, reference_base_dir)
 
 DFLT_BASE_WORK_FOLDER = get_support_file('work_data')
 SETTINGS_FP = get_support_file('qiita-db-settings.sql')
-LAYOUT_FP = get_support_file('qiita-db.sql')
+LAYOUT_FP = get_support_file('qiita-db-unpatched.sql')
 INITIALIZE_FP = get_support_file('initialize.sql')
 POPULATE_FP = get_support_file('populate_test_db.sql')
+PATCHES_DIR = get_support_file('patches')
 ENVIRONMENTS = {'demo': 'qiita_demo', 'test': 'qiita_test',
                 'production': 'qiita'}
 CLUSTERS = ['demo', 'reserved', 'general']
@@ -58,6 +60,9 @@ def _create_layout_and_init_db(conn):
     # Create the schema
     with open(LAYOUT_FP, 'U') as f:
         conn.execute(f.read())
+
+    print('Patching Database...')
+    patch()
 
     print('Initializing database')
     # Initialize the database
@@ -160,7 +165,7 @@ def make_environment(load_ontologies, download_reference, add_demo_user):
         If the environment already exists
     """
     # Connect to the postgres server
-    admin_conn = SQLConnectionHandler(admin=True)
+    admin_conn = SQLConnectionHandler(admin='admin_without_database')
 
     # Check that it does not already exists
     if _check_db_exists(qiita_config.database, admin_conn):
@@ -170,7 +175,9 @@ def make_environment(load_ontologies, download_reference, add_demo_user):
 
     # Create the database
     print('Creating database')
+    admin_conn.set_autocommit('on')
     admin_conn.execute('CREATE DATABASE %s' % qiita_config.database)
+    admin_conn.set_autocommit('off')
 
     del admin_conn
 
@@ -240,8 +247,10 @@ def drop_environment(ask_for_confirmation):
             do_drop = True
 
     if do_drop:
-        admin_conn = SQLConnectionHandler(admin=True)
+        admin_conn = SQLConnectionHandler(admin='admin_without_database')
+        admin_conn.set_autocommit('on')
         admin_conn.execute('DROP DATABASE %s' % qiita_config.database)
+        admin_conn.set_autocommit('off')
     else:
         print('ABORTING')
 
@@ -299,3 +308,39 @@ def clean_test_environment():
     def dummyfunc():
         pass
     dummyfunc()
+
+
+def patch(patches_dir=PATCHES_DIR):
+    """Patches the database schema based on the SETTINGS table
+
+    Pulls the current patch from the settings table and applies all subsequent
+    patches found in the patches directory.
+    """
+    conn = SQLConnectionHandler()
+
+    current_patch = conn.execute_fetchone(
+        "select current_patch from settings")[0]
+    current_patch_fp = join(patches_dir, current_patch)
+
+    sql_glob = join(patches_dir, '*.sql')
+    patch_files = natsorted(glob(sql_glob))
+
+    if current_patch == 'unpatched':
+        next_patch_index = 0
+    elif current_patch_fp not in patch_files:
+        raise RuntimeError("Cannot find patch file %s" % current_patch)
+    else:
+        next_patch_index = patch_files.index(current_patch_fp) + 1
+
+    patch_update_sql = "update settings set current_patch = %s"
+
+    for patch_fp in patch_files[next_patch_index:]:
+        patch_filename = split(patch_fp)[-1]
+        conn.create_queue(patch_filename)
+        with open(patch_fp, 'U') as patch_file:
+            print('\tApplying patch %s...' % patch_filename)
+            conn.add_to_queue(patch_filename, patch_file.read())
+            conn.add_to_queue(patch_filename, patch_update_sql,
+                              [patch_filename])
+
+        conn.execute_queue(patch_filename)

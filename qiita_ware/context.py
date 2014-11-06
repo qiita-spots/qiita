@@ -4,7 +4,9 @@ from functools import partial
 
 from IPython.parallel import Client
 
-from qiita_ware.exceptions import ComputeError
+from qiita_core.qiita_settings import qiita_config
+
+from .exceptions import ComputeError
 
 
 def system_call(cmd):
@@ -56,16 +58,16 @@ class Dispatch(object):
 
     """
     def __init__(self):
-        # self.reserved = Client(profile='qiita_reserved')
-        # self.general = Client(profile='qiita_general')
-        self.demo = Client(profile='qiita_demo')
+        self.reserved = Client(profile=qiita_config.ipyc_reserved)
+        self.general = Client(profile=qiita_config.ipyc_general)
+        self.demo = Client(profile=qiita_config.ipyc_demo)
 
-        # self._stage_imports(self.reserved)
-        # self._stage_imports(self.general)
+        self._stage_imports(self.reserved)
+        self._stage_imports(self.general)
         self._stage_imports(self.demo)
 
-        # self.reserved_lview = self.reserved.load_balanced_view()
-        # self.general_lview = self.general.load_balanced_view()
+        self.reserved_lview = self.reserved.load_balanced_view()
+        self.general_lview = self.general.load_balanced_view()
         self.demo_lview = self.demo.load_balanced_view()
 
     def _stage_imports(self, cluster):
