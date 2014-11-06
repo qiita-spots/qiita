@@ -99,18 +99,20 @@ class SQLConnectionHandler(object):
 
     Parameters
     ----------
-    admin : {False, 'no_database', 'database'}, optional
-        Whether or not to connect as the admin user. Options other than `False`
-        depend on admin credentials in the qiita configuration. If
-        'no_database', the connection will be made to the server specified in
-        the qiita configuration, but not to a specific database. If 'database',
-        then a connection will be made to the server and database specified in
-        the qiita config.
+    admin : {'no_admin', 'no_database', 'database'}, optional
+        Whether or not to connect as the admin user. Options other than
+        `no_admin` depend on admin credentials in the qiita configuration. If
+        'admin_without_database', the connection will be made to the server
+        specified in the qiita configuration, but not to a specific database.
+        If 'admin_with_database', then a connection will be made to the server
+        and database specified in the qiita config.
     """
-    def __init__(self, admin=False):
-        if admin not in (False, 'database', 'no_database'):
-            raise RuntimeError("admin takes only {False, 'database', or "
-                               "'no_database'}")
+    def __init__(self, admin='no_admin'):
+        if admin not in ('no_admin', 'admin_with_database',
+                         'admin_without_database'):
+            raise RuntimeError("admin takes only {'no_admin', "
+                               "'admin_with_database', or "
+                               "'admin_without_database'}")
 
         self.admin = admin
         self._open_connection()
@@ -135,14 +137,14 @@ class SQLConnectionHandler(object):
             'host': qiita_config.host,
             'port': qiita_config.port}
 
-        # if this is an admin user, do not connect to a particular database,
-        # and use the admin credentials
-        if self.admin:
+        # if this is an admin user, use the admin credentials
+        if self.admin != 'no_admin':
             args['user'] = qiita_config.admin_user
             args['password'] = qiita_config.admin_password
 
-            if self.admin == 'no_database':
-                del args['database']
+        # Do not connect to a particular database unless requested
+        if self.admin == 'admin_without_database':
+            del args['database']
 
         try:
             self._connection = connect(**args)

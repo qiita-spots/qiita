@@ -165,7 +165,7 @@ def make_environment(load_ontologies, download_reference, add_demo_user):
         If the environment already exists
     """
     # Connect to the postgres server
-    admin_conn = SQLConnectionHandler(admin='no_database')
+    admin_conn = SQLConnectionHandler(admin='admin_without_database')
 
     # Check that it does not already exists
     if _check_db_exists(qiita_config.database, admin_conn):
@@ -245,7 +245,7 @@ def drop_environment(ask_for_confirmation):
             do_drop = True
 
     if do_drop:
-        admin_conn = SQLConnectionHandler(admin='no_database')
+        admin_conn = SQLConnectionHandler(admin='admin_without_database')
         admin_conn.execute('DROP DATABASE %s' % qiita_config.database)
     else:
         print('ABORTING')
@@ -312,7 +312,7 @@ def patch():
     Pulls the current patch from the settings table and applies all subsequent
     patches found in the patches directory.
     """
-    admin_conn = SQLConnectionHandler(admin='database')
+    admin_conn = SQLConnectionHandler(admin='admin_with_database')
 
     current_patch = admin_conn.execute_fetchone(
         "select current_patch from settings")[0]
