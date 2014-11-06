@@ -68,7 +68,7 @@ def submit_EBI_from_files(preprocessed_data_id, sample_template, prep_template,
     submission = EBISubmission.from_templates_and_per_sample_fastqs(
         preprocessed_data_id_str, study.title, study.info['study_abstract'],
         investigation_type, sample_template, prep_template,
-        fastq_dir_fp)
+        fastq_dir_fp, pmids=study.pmids)
 
     submission.write_all_xml_files(study_fp, sample_fp, experiment_fp, run_fp,
                                    submission_fp, action)
