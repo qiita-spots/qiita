@@ -12,7 +12,7 @@
 
 (function(window, document, $, undefined)
  {
-   window.ResumableUploader = function(savedData, browseTarget, dropTarget, progressContainer, uploaderList, fileEditContainer, maxFileSize, study_id) {
+   window.ResumableUploader = function(savedData, browseTarget, dropTarget, progressContainer, uploaderList, fileEditContainer, maxFileSize, study_id, valid_extensions) {
      var $this = this;
      // Bootstrap parameters and clear HTML
      this.originalDocumentTitle = document.title;
@@ -21,6 +21,7 @@
      this.dropTarget = dropTarget;
      this.maxFileSize = maxFileSize;
      this.study_id = study_id;
+     this.valid_extensions = valid_extensions.split(",");
 
      this.progressContainer = progressContainer;
      this.progressContainer.hide();
@@ -120,6 +121,19 @@
          name = resumableFile.fileName
        } else {
          name = resumableFile
+       }
+
+       // validating extensions
+       is_valid = false;
+       _.each(this.valid_extensions, function(extension) {
+           if (S(name).endsWith(extension)) {
+             is_valid = true;
+             return;
+           }
+       })
+       if (!is_valid) {
+         alert('Not a valid extension! Try again.');
+         throw new Error("Not a valid extension");
        }
 
        var listNode = $(document.createElement('div'));
@@ -227,7 +241,7 @@
       //      // Cancel upload
       //      $this.removeFile(identifier);
       //      if($this.fileCount<=0) $this.progressContainer.hide();
-      //
+      // 
       //      return false;
       //    });
      }
