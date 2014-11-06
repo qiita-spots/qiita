@@ -81,7 +81,8 @@ from contextlib import contextmanager
 
 from psycopg2 import connect, ProgrammingError, Error as PostgresError
 from psycopg2.extras import DictCursor
-from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
+from psycopg2.extensions import (
+    ISOLATION_LEVEL_AUTOCOMMIT, ISOLATION_LEVEL_READ_COMMITTED)
 from itertools import chain
 
 from .exceptions import QiitaDBExecutionError, QiitaDBConnectionError
@@ -152,11 +153,6 @@ class SQLConnectionHandler(object):
             # catch any exception and raise as runtime error
             raise RuntimeError("Cannot connect to database: %s" % str(e))
 
-        if self.admin:
-            # Set the isolation level to AUTOCOMMIT so we can execute a create
-            # or drop database sql query
-            self._connection.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
-
     @contextmanager
     def get_postgres_cursor(self):
         """ Returns a Postgres cursor
@@ -176,6 +172,25 @@ class SQLConnectionHandler(object):
                 yield cur
         except PostgresError as e:
             raise QiitaDBConnectionError("Cannot get postgres cursor! %s" % e)
+
+    def set_autocommit(self, on_or_off):
+        """Sets the isolation level to autocommit or default (read committed)
+
+        Parameters
+        ----------
+        on_or_off : {'on', 'off'}
+            If 'on', isolation level will be set to autocommit. Otherwise,
+            it will be set to read committed.
+        """
+        if on_or_off not in {'on', 'off'}:
+            raise ValueError("set_autocommit takes only 'on' or 'off'")
+
+        if on_or_off == 'on':
+            level = ISOLATION_LEVEL_AUTOCOMMIT
+        else:
+            level = ISOLATION_LEVEL_READ_COMMITTED
+
+        self._connection.set_isolation_level(level)
 
     def _check_sql_args(self, sql_args):
         """ Checks that sql_args have the correct type

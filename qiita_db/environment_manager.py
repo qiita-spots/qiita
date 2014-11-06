@@ -175,7 +175,9 @@ def make_environment(load_ontologies, download_reference, add_demo_user):
 
     # Create the database
     print('Creating database')
+    admin_conn.set_autocommit('on')
     admin_conn.execute('CREATE DATABASE %s' % qiita_config.database)
+    admin_conn.set_autocommit('off')
 
     del admin_conn
 
@@ -246,7 +248,9 @@ def drop_environment(ask_for_confirmation):
 
     if do_drop:
         admin_conn = SQLConnectionHandler(admin='admin_without_database')
+        admin_conn.set_autocommit('on')
         admin_conn.execute('DROP DATABASE %s' % qiita_config.database)
+        admin_conn.set_autocommit('off')
     else:
         print('ABORTING')
 
@@ -312,9 +316,9 @@ def patch(patches_dir=PATCHES_DIR):
     Pulls the current patch from the settings table and applies all subsequent
     patches found in the patches directory.
     """
-    admin_conn = SQLConnectionHandler(admin='admin_with_database')
+    conn = SQLConnectionHandler()
 
-    current_patch = admin_conn.execute_fetchone(
+    current_patch = conn.execute_fetchone(
         "select current_patch from settings")[0]
     current_patch_fp = join(patches_dir, current_patch)
 
@@ -332,11 +336,11 @@ def patch(patches_dir=PATCHES_DIR):
 
     for patch_fp in patch_files[next_patch_index:]:
         patch_filename = split(patch_fp)[-1]
-        admin_conn.create_queue(patch_filename)
+        conn.create_queue(patch_filename)
         with open(patch_fp, 'U') as patch_file:
             print('\tApplying patch %s...' % patch_filename)
-            admin_conn.add_to_queue(patch_filename, patch_file.read())
-            admin_conn.add_to_queue(patch_filename, patch_update_sql,
-                                    [patch_filename])
+            conn.add_to_queue(patch_filename, patch_file.read())
+            conn.add_to_queue(patch_filename, patch_update_sql,
+                              [patch_filename])
 
-        admin_conn.execute_queue(patch_filename)
+        conn.execute_queue(patch_filename)
