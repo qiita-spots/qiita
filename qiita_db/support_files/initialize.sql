@@ -53,3 +53,8 @@ SELECT setval('qiita.study_study_id_seq', 10000, false);
 -- The first row has the default values on QIIME
 -- The second row has the default values on QIIME but rev_comp_mapping_barcodes is set to true
 INSERT INTO qiita.preprocessed_sequence_illumina_params (rev_comp_mapping_barcodes) VALUES (false), (true);
+
+-- these terms are commonly used new_investigation_types, belong to ENA as they
+-- are used as part of the EBI submission
+INSERT INTO qiita.term (term_id, ontology_id, term, user_defined) VALUES (2052508988, 807481739, 'Amplicon Sequencing', true);
+INSERT INTO qiita.term (term_id, ontology_id, term, user_defined) VALUES (2052508989, 807481739, 'Metagenome', true);
