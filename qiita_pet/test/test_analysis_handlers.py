@@ -137,7 +137,7 @@ class TestAnalysisWaitHandler(TestHandlerBase):
 
     def test_get_no_exists(self):
         response = self.get('/analysis/wait/237')
-        # Make sure page response loaded sucessfully
+        # Make sure page response loaded with 404, not 500
         self.assertEqual(response.code, 404)
 
     def test_post(self):
@@ -154,7 +154,7 @@ class TestAnalysisResultsHandler(TestHandlerBase):
     database = True
 
     def test_get(self):
-        # need to figure out biom taable to test this with
+        # need to figure out biom table to test this with
         pass
 
 
