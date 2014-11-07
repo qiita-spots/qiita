@@ -45,6 +45,14 @@ class TestOntology(TestCase):
             'Pooled Clone Sequencing',
             'Other'])
 
+    def test_user_defined_terms(self):
+        obs = self.ontology.user_defined_terms
+        self.assertEqual(obs, [])
+
+    def test_add_user_defined_term(self):
+        self.ontology.add_user_defined_term('Test Term')
+        self.assertTrue('Test Term' in self.ontology.user_defined_terms)
+
     def testContains(self):
         self.assertTrue('Metagenomics' in self.ontology)
         self.assertFalse('NotATerm' in self.ontology)

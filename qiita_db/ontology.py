@@ -52,7 +52,17 @@ class Ontology(QiitaObject):
     @property
     def terms(self):
         conn_handler = SQLConnectionHandler()
-        sql = """SELECT term FROM qiita.term WHERE ontology_id = %s"""
+        sql = """SELECT term FROM qiita.term WHERE ontology_id = %s AND
+                 user_defined = false"""
+
+        return [row[0] for row in
+                conn_handler.execute_fetchall(sql, [self.id])]
+
+    @property
+    def user_defined_terms(self):
+        conn_handler = SQLConnectionHandler()
+        sql = """SELECT term FROM qiita.term WHERE ontology_id = %s AND
+                 user_defined = true"""
 
         return [row[0] for row in
                 conn_handler.execute_fetchall(sql, [self.id])]
@@ -60,3 +70,25 @@ class Ontology(QiitaObject):
     @property
     def shortname(self):
         return convert_from_id(self.id, 'ontology')
+
+    def add_user_defined_term(self, term):
+        """Add a user defined term to the ontology
+
+        Parameters
+        ----------
+        term : str
+            New user defined term to add into a given ontology
+        """
+
+        # we don't need to add an existing term
+        terms = self.user_defined_terms
+        if term in terms:
+            return
+
+        conn_handler = SQLConnectionHandler()
+        sql = """INSERT INTO qiita.term
+                 (term_id, ontology_id, term, user_defined)
+                 VALUES
+                 (2052508991, %s, %s, true);"""
+
+        return conn_handler.execute(sql, [self.id, term])
