@@ -55,7 +55,7 @@ def _check_db_exists(db, conn_handler):
     return (db,) in dbs
 
 
-def _create_layout_and_init_db(conn):
+def _create_layout_and_init_db(conn, load_ontologies=False):
     print('Building SQL layout')
     # Create the schema
     with open(LAYOUT_FP, 'U') as f:
@@ -63,6 +63,11 @@ def _create_layout_and_init_db(conn):
 
     print('Patching Database...')
     patch()
+
+    # we need to load the ontologies here because initialize.sql relies on
+    # some ontologies to exist already for the statements to work
+    if load_ontologies:
+        _add_ontology_data(conn)
 
     print('Initializing database')
     # Initialize the database
@@ -195,10 +200,7 @@ def make_environment(load_ontologies, download_reference, add_demo_user):
                  (qiita_config.test_environment, qiita_config.base_data_dir,
                   qiita_config.working_dir))
 
-    _create_layout_and_init_db(conn)
-
-    if load_ontologies:
-        _add_ontology_data(conn)
+    _create_layout_and_init_db(conn, load_ontologies)
 
     if download_reference:
         _download_reference_files(conn)
