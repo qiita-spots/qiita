@@ -91,8 +91,8 @@ class RawDataTests(TestCase):
         exp_seqs_fp = join("raw_data", "3_%s" % basename(self.seqs_fp))
         exp_bc_fp = join("raw_data", "3_%s" % basename(self.barcodes_fp))
         # filepath_id, path, filepath_type_id
-        exp = [[16, exp_seqs_fp, 1, '852952723', 1],
-               [17, exp_bc_fp, 2, '852952723', 1]]
+        exp = [[16, exp_seqs_fp, 1, '852952723', 1, 5],
+               [17, exp_bc_fp, 2, '852952723', 1, 5]]
         self.assertEqual(obs, exp)
 
         # Check that the raw data have been correctly linked with the filepaths
@@ -294,8 +294,8 @@ class PreprocessedDataTests(TestCase):
         exp_qual_fp = join("preprocessed_data",
                            "3_%s" % basename(self.qual_fp))
         # filepath_id, path, filepath_type_id
-        exp = [[16, exp_fna_fp, 4, '852952723', 1],
-               [17, exp_qual_fp, 5, '852952723', 1]]
+        exp = [[16, exp_fna_fp, 4, '852952723', 1, 3],
+               [17, exp_qual_fp, 5, '852952723', 1, 3]]
         self.assertEqual(obs, exp)
 
     def test_create_data_type_only(self):
@@ -344,8 +344,8 @@ class PreprocessedDataTests(TestCase):
         exp_qual_fp = join("preprocessed_data",
                            "3_%s" % basename(self.qual_fp))
         # filepath_id, path, filepath_type_id
-        exp = [[16, exp_fna_fp, 4, '852952723', 1],
-               [17, exp_qual_fp, 5, '852952723', 1]]
+        exp = [[16, exp_fna_fp, 4, '852952723', 1, 3],
+               [17, exp_qual_fp, 5, '852952723', 1, 3]]
         self.assertEqual(obs, exp)
 
         # Check that the preprocessed data have been correctly
@@ -545,7 +545,7 @@ class ProcessedDataTests(TestCase):
         exp_biom_fp = join("processed_data",
                            "2_%s" % basename(self.biom_fp))
         # Filepath_id, path, filepath_type_id
-        exp = [[16, exp_biom_fp, 6, '852952723', 1]]
+        exp = [[16, exp_biom_fp, 6, '852952723', 1, 4]]
         self.assertEqual(obs, exp)
 
         # Check that the processed data have been correctly linked
@@ -616,7 +616,7 @@ class ProcessedDataTests(TestCase):
         exp_biom_fp = join("processed_data",
                            "2_%s" % basename(self.biom_fp))
         # Filepath_id, path, filepath_type_id
-        exp = [[16, exp_biom_fp, 6, '852952723', 1]]
+        exp = [[16, exp_biom_fp, 6, '852952723', 1, 4]]
         self.assertEqual(obs, exp)
 
         # Check that the processed data have been correctly linked
