@@ -20,7 +20,8 @@ class StudyUploadFileHandler(BaseHandler):
     def display_template(self, study_id, msg):
         """Simple function to avoid duplication of code"""
         study = Study(study_id)
-        check_access(User(self.current_user), study, no_public=True)
+        check_access(User(self.current_user), study, no_public=True,
+                     raise_error=True)
 
         # processing paths
         fp = get_study_fp(study_id)
@@ -39,7 +40,8 @@ class StudyUploadFileHandler(BaseHandler):
     @authenticated
     def get(self, study_id):
         study_id = int(study_id)
-        check_access(User(self.current_user), Study(study_id), no_public=True)
+        check_access(User(self.current_user), Study(study_id), no_public=True,
+                     raise_error=True)
         self.display_template(study_id, "")
 
 
@@ -69,7 +71,7 @@ class UploadFileHandler(BaseHandler):
         data = self.request.files['file'][0]['body']
 
         check_access(User(self.current_user), Study(int(study_id)),
-                     no_public=True)
+                     no_public=True, raise_error=True)
 
         self.validate_file_extension(resumable_filename)
 
@@ -109,7 +111,8 @@ class UploadFileHandler(BaseHandler):
         resumable_filename = self.get_argument('resumableFilename')
         resumable_chunk_number = self.get_argument('resumableChunkNumber')
 
-        check_access(User(self.current_user), Study(study_id), no_public=True)
+        check_access(User(self.current_user), Study(study_id), no_public=True,
+                     raise_error=True)
 
         self.validate_file_extension(resumable_filename)
 

@@ -48,7 +48,7 @@ class AddFilesToRawData(BaseHandler):
             # Study not in database so fail nicely
             raise HTTPError(404, "Study %d does not exist" % study_id)
         else:
-            check_access(User(self.current_user), study)
+            check_access(User(self.current_user), study, raise_error=True)
 
         fp = get_study_fp(study_id)
         barcodes = [(join(fp, t), "raw_barcodes") for t in barcodes.split(',')]
@@ -95,7 +95,7 @@ class UnlinkAllFiles(BaseHandler):
             # Study not in database so fail nicely
             raise HTTPError(404, "Study %d does not exist" % study_id)
         else:
-            check_access(User(self.current_user), study)
+            check_access(User(self.current_user), study, raise_error=True)
 
         job_id = submit(self.current_user, unlink_all_files, raw_data_id)
 

@@ -100,14 +100,14 @@ def _build_study_info(studytype, user=None):
         return infolist
 
 
-def check_access(user, study, no_public=False):
+def check_access(user, study, no_public=False, raise_error=False):
     """make sure user has access to the study requested"""
     if not study.has_access(user, no_public):
-        if no_public:
-            return False
-        else:
+        if raise_error:
             raise HTTPError(403, "User %s does not have access to study %d" %
                                  (user.id, study.id))
+        else:
+            return False
     return True
 
 
@@ -257,7 +257,7 @@ class StudyDescriptionHandler(BaseHandler):
             # Study not in database so fail nicely
             raise HTTPError(404, "Study %d does not exist" % study_id)
         else:
-            check_access(User(self.current_user), study)
+            check_access(User(self.current_user), study, raise_error=True)
 
         # processing files from upload path
         fp = get_study_fp(study_id)
@@ -304,20 +304,22 @@ class StudyDescriptionHandler(BaseHandler):
                     filepath_types=''.join(fts), ena_terms=''.join(ena_terms),
                     tab_to_display=tab_to_display,
                     level=msg_level, message=msg,
-                    can_upload=check_access(user, study, True),
+                    can_upload=check_access(user, study, no_public=True),
                     other_studies_rd=''.join(other_studies_rd))
 
     @authenticated
     def get(self, study_id):
         study_id = int(study_id)
-        check_access(User(self.current_user), Study(study_id))
+        check_access(User(self.current_user), Study(study_id),
+                     raise_error=True)
         self.display_template(int(study_id), "", "")
 
     @authenticated
     @coroutine
     def post(self, study_id):
         study_id = int(study_id)
-        check_access(User(self.current_user), Study(study_id))
+        check_access(User(self.current_user), Study(study_id),
+                     raise_error=True)
 
         # vars to add sample template
         sample_template = self.get_argument('sample_template', None)
