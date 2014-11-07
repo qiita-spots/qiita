@@ -87,8 +87,8 @@ class Ontology(QiitaObject):
 
         conn_handler = SQLConnectionHandler()
         sql = """INSERT INTO qiita.term
-                 (term_id, ontology_id, term, user_defined)
+                 (ontology_id, term, user_defined)
                  VALUES
-                 (2052508991, %s, %s, true);"""
+                 (%s, %s, true);"""
 
         return conn_handler.execute(sql, [self.id, term])
