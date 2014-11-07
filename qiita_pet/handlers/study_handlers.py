@@ -41,7 +41,7 @@ from qiita_db.metadata_template import (SampleTemplate, PrepTemplate,
 from qiita_db.study import Study, StudyPerson
 from qiita_db.user import User
 from qiita_db.util import (get_study_fp, get_filepath_types, get_data_types,
-                           get_filetypes, convert_to_id)
+                           get_filetypes, convert_to_id, get_db_files_base_dir)
 from qiita_db.data import PreprocessedData, RawData
 from qiita_db.exceptions import (QiitaDBColumnError, QiitaDBExecutionError,
                                  QiitaDBDuplicateError, QiitaDBUnknownIDError)
@@ -197,6 +197,31 @@ class PublicStudiesHandler(BaseHandler):
     def _get_public(self, callback):
         """builds list of tuples for studies that are public"""
         callback(_build_study_info("public"))
+
+
+class PreprocessingSummaryHandler(BaseHandler):
+    @authenticated
+    def get(self, preprocessed_data_id):
+        ppd_id = int(preprocessed_data_id)
+        ppd = PreprocessedData(ppd_id)
+        study = Study(ppd.study)
+        check_access(User(self.current_user), study, raise_error=True)
+
+        files = ppd.files
+
+        for fpt, fps in viewitems(files):
+            fps = [join(get_db_files_base_dir(), fp) for fp in fps]
+            files[fpt] = fps
+
+        with open(files['log'][0], 'U') as f:
+            contents = f.read()
+            contents = contents.replace('\n', '<br/>')
+            contents = contents.replace('\t', '&nbsp;&nbsp;&nbsp;&nbsp;')
+
+        title = ('Preprocessed Data: %d' % ppd_id)
+
+        self.render('text_file.html', title=title, contents=contents,
+                    user=self.current_user)
 
 
 class StudyDescriptionHandler(BaseHandler):
