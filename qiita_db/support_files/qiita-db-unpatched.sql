@@ -57,6 +57,15 @@ CREATE TABLE qiita.controlled_vocab_values (
 
 CREATE INDEX idx_controlled_vocab_values ON qiita.controlled_vocab_values ( controlled_vocab_id );
 
+CREATE TABLE qiita.data_directory ( 
+	data_directory_id    bigserial  NOT NULL,
+	data_type            varchar  NOT NULL,
+	mountpoint           varchar  NOT NULL,
+	subdirectory         varchar  NOT NULL,
+	active               bool  NOT NULL,
+	CONSTRAINT pk_data_directory PRIMARY KEY ( data_directory_id )
+ );
+
 CREATE TABLE qiita.data_type ( 
 	data_type_id         bigserial  NOT NULL,
 	data_type            varchar  NOT NULL,
@@ -327,12 +336,16 @@ CREATE TABLE qiita.filepath (
 	filepath_type_id     bigint  NOT NULL,
 	checksum             varchar  NOT NULL,
 	checksum_algorithm_id bigint  NOT NULL,
+	data_directory_id    bigserial  ,
 	CONSTRAINT pk_filepath PRIMARY KEY ( filepath_id ),
 	CONSTRAINT fk_filepath FOREIGN KEY ( filepath_type_id ) REFERENCES qiita.filepath_type( filepath_type_id )    ,
-	CONSTRAINT fk_filepath_0 FOREIGN KEY ( checksum_algorithm_id ) REFERENCES qiita.checksum_algorithm( checksum_algorithm_id )    
+	CONSTRAINT fk_filepath_0 FOREIGN KEY ( checksum_algorithm_id ) REFERENCES qiita.checksum_algorithm( checksum_algorithm_id )    ,
+	CONSTRAINT fk_filepath_data_directory FOREIGN KEY ( data_directory_id ) REFERENCES qiita.data_directory( data_directory_id ) ON DELETE RESTRICT ON UPDATE RESTRICT
  );
 
 CREATE INDEX idx_filepath ON qiita.filepath ( filepath_type_id );
+
+CREATE INDEX idx_filepath_0 ON qiita.filepath ( data_directory_id );
 
 CREATE TABLE qiita.investigation ( 
 	investigation_id     bigserial  NOT NULL,
