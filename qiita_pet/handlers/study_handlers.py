@@ -216,8 +216,7 @@ class StudyDescriptionHandler(BaseHandler):
         callback(d)
 
     def remove_add_study_template(self, raw_data, study_id, fp_rsp, callback):
-        """Removes prep templates, raw data and sample template and adds
-           a new one
+        """Replace prep templates, raw data, and sample template with a new one
         """
         for rd in raw_data():
             if PrepTemplate.exists((rd)):
