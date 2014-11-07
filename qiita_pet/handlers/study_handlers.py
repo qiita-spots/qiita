@@ -319,7 +319,8 @@ class StudyDescriptionHandler(BaseHandler):
     @coroutine
     def post(self, study_id):
         study_id = int(study_id)
-        check_access(User(self.current_user), Study(study_id))
+        user = User(self.current_user)
+        check_access(user, Study(study_id))
 
         # vars to add sample template
         sample_template = self.get_argument('sample_template', None)
@@ -374,7 +375,7 @@ class StudyDescriptionHandler(BaseHandler):
 
         elif make_public:
             # make sure user is admin, then make public
-            if User(self.current_user).level == 'admin' or not \
+            if user.level == 'admin' or not \
                     qiita_config.require_approval:
                 study.status = 'public'
                 msg = "Study set to public"
@@ -382,7 +383,7 @@ class StudyDescriptionHandler(BaseHandler):
 
         elif approve_study:
             # make sure user is admin, then make full private study
-            if User(self.current_user).level == 'admin' or not \
+            if user.level == 'admin' or not \
                     qiita_config.require_approval:
                 study.status = 'private'
                 msg = "Study approved"
