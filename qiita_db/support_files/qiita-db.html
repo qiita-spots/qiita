@@ -1653,7 +1653,7 @@ Referred by reference ( tree_filepath -> filepath_id ) </title></a>
   <use id='nn' x='797' y='1662' xlink:href='#nn'/><a xlink:href='#term.ontology_id'><use id='idx' x='797' y='1661' xlink:href='#idx'/><title>Index  ( ontology_id ) </title></a>
 <a xlink:href='#term.ontology_id'><text x='813' y='1672'>ontology_id</text><title>ontology_id bigint not null</title></a>
 <a xlink:href='#term.ontology_id'><use id='fk' x='888' y='1661' xlink:href='#fk'/><title>References ontology ( ontology_id ) </title></a>
-  <a xlink:href='#term.old_term_id'><text x='813' y='1687'>old_term_id</text><title>old_term_id bigint
+  <a xlink:href='#term.old_term_id'><text x='813' y='1687'>old_term_id</text><title>old_term_id bigint default NULL
 Identifier used in the old system&#044; we are keeping this for consistency</title></a>
   <use id='nn' x='797' y='1692' xlink:href='#nn'/><a xlink:href='#term.term'><text x='813' y='1702'>term</text><title>term varchar not null</title></a>
   <a xlink:href='#term.identifier'><text x='813' y='1717'>identifier</text><title>identifier varchar</title></a>
@@ -4993,7 +4993,7 @@ Controlled Vocabulary </td>
 	<tr>
 		<td>&nbsp;</td>
 		<td><a name='term.old_term_id'>old&#095;term&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint   DEFO NULL </td>
 		<td> Identifier used in the old system&#044; we are keeping this for consistency </td>
 	</tr>
 	<tr>

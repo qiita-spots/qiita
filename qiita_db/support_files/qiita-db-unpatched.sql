@@ -256,7 +256,7 @@ CREATE TABLE qiita.study_status (
 CREATE TABLE qiita.term ( 
 	term_id              bigserial  NOT NULL,
 	ontology_id          bigint  NOT NULL,
-	old_term_id          bigint  ,
+	old_term_id          bigint DEFAULT NULL ,
 	term                 varchar  NOT NULL,
 	identifier           varchar  ,
 	definition           varchar  ,
