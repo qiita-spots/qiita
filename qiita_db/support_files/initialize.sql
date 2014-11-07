@@ -35,7 +35,7 @@ INSERT INTO qiita.required_sample_info_status (status) VALUES ('received'), ('in
 INSERT INTO qiita.filepath_type (filepath_type) VALUES ('raw_forward_seqs'), ('raw_reverse_seqs'), ('raw_barcodes'), ('preprocessed_fasta'), ('preprocessed_fastq'), ('preprocessed_demux'), ('biom'), ('directory'), ('plain_text'), ('reference_seqs'), ('reference_tax'), ('reference_tree'), ('log');
 
 -- Populate data_directory table
-INSERT INTO qiita.data_directory (type, mountpoint, subdirectory) VALUES ('analysis', 'analysis', ''), ('job', 'job', ''), ('preprocessed_data', 'preprocessed_data', ''), ('processed_data', 'processed_data', ''), ('raw_data', 'raw_data', ''), ('reference', 'reference', ''), ('uploads', 'uploads', ''), ('working_dir', 'working_dir', '');
+INSERT INTO qiita.data_directory (data_type, mountpoint, subdirectory, active) VALUES ('analysis', 'analysis', '', true), ('job', 'job', '', true), ('preprocessed_data', 'preprocessed_data', '', true), ('processed_data', 'processed_data', '', true), ('raw_data', 'raw_data', '', true), ('reference', 'reference', '', true), ('uploads', 'uploads', '', true), ('working_dir', 'working_dir', '', true);
 
 -- Populate checksum_algorithm table
 INSERT INTO qiita.checksum_algorithm (name) VALUES ('crc32');

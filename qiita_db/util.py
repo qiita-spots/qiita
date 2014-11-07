@@ -504,7 +504,7 @@ def compute_checksum(path):
     return crc & 0xffffffff
 
 
-def retrive_latests_data_directory(data_type, conn_handler=None):
+def retrive_latest_data_directory(data_type, conn_handler=None):
     r""" Returns the most recent values from data directory for the given type
 
     Parameters
@@ -527,7 +527,7 @@ def retrive_latests_data_directory(data_type, conn_handler=None):
                     else SQLConnectionHandler())
     return conn_handler.execute_fetchone(
         "SELECT data_directory_id, mountpoint, subdirectory FROM "
-        "qiita.data_directory WHERE type='%s' ORDER BY data_directory_id DESC"
+        "qiita.data_directory WHERE data_type='%s' and active=true"
         % data_type)
 
 
@@ -565,7 +565,7 @@ def insert_filepaths(filepaths, obj_id, table, filepath_table, conn_handler,
         """
         new_filepaths = filepaths
         base_fp = get_db_files_base_dir()
-        dd_id, mp, sd = retrive_latests_data_directory(table, conn_handler)
+        dd_id, mp, sd = retrive_latest_data_directory(table, conn_handler)
         if move_files:
             # Get the base directory in which the type of data is stored
             base_data_dir = join(get_db_files_base_dir(), mp, sd)
