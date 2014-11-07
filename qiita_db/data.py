@@ -731,7 +731,7 @@ class PreprocessedData(BaseData):
                 on fp.filepath_type_id = fpt.filepath_type_id
             join qiita.{} ppdfp on ppdfp.filepath_id = fp.filepath_id
             where ppdfp.preprocessed_data_id = %s""".format(
-                self._data_filepath_table)
+            self._data_filepath_table)
 
         files = defaultdict(list)
         for fpt, fp in conn_handler.execute_fetchall(sql, [self._id]):
