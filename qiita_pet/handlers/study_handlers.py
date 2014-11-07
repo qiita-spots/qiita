@@ -338,7 +338,8 @@ class StudyDescriptionHandler(BaseHandler):
         investigation_type = self.get_argument('investigation_type', None)
         user_defined_investigation_type = self.get_argument(
             'user-defined-investigation-type', None)
-        new_investigation_type = self.get_argument('new-investigation-type', None)
+        new_investigation_type = self.get_argument('new-investigation-type',
+                                                   None)
         if investigation_type == "":
             investigation_type = None
         # to update investigation type
