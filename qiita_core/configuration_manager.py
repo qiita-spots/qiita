@@ -36,6 +36,8 @@ class ConfigurationManager(object):
         Path to the working directory
     max_upload_size : int
         Max upload size
+    valid_upload_extension : str
+        The extensions that are valid to upload, comma separated
     user : str
         The postgres user
     password : str
@@ -85,6 +87,19 @@ class ConfigurationManager(object):
         The URL of EBI's sequence portal site
     ebi_skip_curl_cert : bool
         Whether or not to skip the certificate check when curling the metadata
+    ebi_center_name : str
+        The name of the sequencing center to use when doing EBI submissions
+    ebi_organization_prefix : str
+        This string (with an underscore) will be prefixed to your EBI
+        submission and study aliases
+    redis_host : str
+        The host/ip for redis
+    redis_port : int
+        The port for redis
+    redis_password : str
+        The password for redis
+    redis_db : int
+        The db for redis
     """
     def __init__(self):
         # If conf_fp is None, we default to the test configuration file
@@ -135,6 +150,13 @@ class ConfigurationManager(object):
             raise ValueError("The WORKING_DIR (%s) folder doesn't exist" %
                              self.upload_data_dir)
         self.max_upload_size = config.getint('main', 'MAX_UPLOAD_SIZE')
+
+        self.valid_upload_extension = [ve.strip() for ve in config.get(
+            'main', 'VALID_UPLOAD_EXTENSION').split(',')]
+        if (not self.valid_upload_extension or
+           self.valid_upload_extension == ['']):
+            self.valid_upload_extension = []
+            print 'No files will be allowed to be uploaded.'
 
     def _get_postgres(self, config):
         """Get the configuration of the postgres section"""
@@ -198,3 +220,5 @@ class ConfigurationManager(object):
         self.ebi_seq_xfer_url = sec_get('EBI_SEQ_XFER_URL')
         self.ebi_dropbox_url = sec_get('EBI_DROPBOX_URL')
         self.ebi_skip_curl_cert = sec_getbool('EBI_SKIP_CURL_CERT')
+        self.ebi_center_name = sec_get('EBI_CENTER_NAME')
+        self.ebi_organization_prefix = sec_get('EBI_ORGANIZATION_PREFIX')

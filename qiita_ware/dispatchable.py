@@ -4,7 +4,7 @@ from gzip import open as gzopen
 from traceback import format_exception_only
 from sys import exc_info
 
-from .processing_pipeline import StudyPreprocessor, AddFilesToRawData
+from .processing_pipeline import StudyPreprocessor
 from .analysis_pipeline import RunAnalysis
 from qiita_core.qiita_settings import qiita_config
 from qiita_ware.commands import submit_EBI_from_files
@@ -14,7 +14,7 @@ from qiita_ware.util import open_file
 from qiita_db.study import Study
 from qiita_db.analysis import Analysis
 from qiita_db.metadata_template import SampleTemplate, PrepTemplate
-from qiita_db.data import PreprocessedData, RawData
+from qiita_db.data import RawData
 
 
 def preprocessor(study_id, prep_template_id, param_id, param_constructor):
@@ -34,21 +34,17 @@ def preprocessor(study_id, prep_template_id, param_id, param_constructor):
     return preprocess_out
 
 
-def submit_to_ebi(study_id):
+def submit_to_ebi(preprocessed_data_id, submission_type):
     """Submit a study to EBI"""
-    study = Study(study_id)
-    st = SampleTemplate(study.sample_template)
+    from qiita_db.data import PreprocessedData
 
-    # currently we get the last one always
-    raw_data_id = study.raw_data()[-1]
-    pt = PrepTemplate(raw_data_id)
-    preprocessed_data = PreprocessedData(study.preprocessed_data()[-1])
+    preprocessed_data = PreprocessedData(preprocessed_data_id)
+    pt = PrepTemplate(preprocessed_data.prep_template)
+    st = SampleTemplate(preprocessed_data.study)
 
     state = preprocessed_data.submitted_to_insdc_status()
     if state in ('submitting', 'success'):
         raise ValueError("Cannot resubmit! Current state is: %s" % state)
-
-    investigation_type = RawData(raw_data_id).investigation_type
 
     demux = [path for path, ftype in preprocessed_data.get_filepaths()
              if ftype == 'preprocessed_demux'][0]
@@ -69,11 +65,12 @@ def submit_to_ebi(study_id):
                     fh.write(record)
 
     preprocessed_data.update_insdc_status('submitting')
-    study_acc, submission_acc = submit_EBI_from_files(study_id, open(samp_fp),
+    study_acc, submission_acc = submit_EBI_from_files(preprocessed_data_id,
+                                                      open(samp_fp),
                                                       open(prep_fp), tmp_dir,
                                                       output_dir,
-                                                      investigation_type,
-                                                      'ADD', True)
+                                                      pt.investigation_type,
+                                                      submission_type, True)
 
     if study_acc is None or submission_acc is None:
         preprocessed_data.update_insdc_status('failed')
@@ -100,5 +97,14 @@ def add_files_to_raw_data(raw_data_id, filepaths):
 
     Needs to be dispachable because it moves large files
     """
-    aftrd = AddFilesToRawData()
-    return aftrd(raw_data_id, filepaths)
+    rd = RawData(raw_data_id)
+    rd.add_filepaths(filepaths)
+
+
+def unlink_all_files(raw_data_id):
+    """Removes all files from raw data
+
+    Needs to be dispachable because it does I/O and a lot of DB calls
+    """
+    rd = RawData(raw_data_id)
+    rd.clear_filepaths()

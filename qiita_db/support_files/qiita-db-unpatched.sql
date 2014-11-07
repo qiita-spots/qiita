@@ -57,6 +57,15 @@ CREATE TABLE qiita.controlled_vocab_values (
 
 CREATE INDEX idx_controlled_vocab_values ON qiita.controlled_vocab_values ( controlled_vocab_id );
 
+CREATE TABLE qiita.data_directory ( 
+	data_directory_id    bigserial  NOT NULL,
+	data_type            varchar  NOT NULL,
+	mountpoint           varchar  NOT NULL,
+	subdirectory         varchar  NOT NULL,
+	active               bool  NOT NULL,
+	CONSTRAINT pk_data_directory PRIMARY KEY ( data_directory_id )
+ );
+
 CREATE TABLE qiita.data_type ( 
 	data_type_id         bigserial  NOT NULL,
 	data_type            varchar  NOT NULL,
@@ -138,6 +147,7 @@ CREATE TABLE qiita.preprocessed_data (
 	ebi_submission_accession varchar  ,
 	ebi_study_accession  varchar  ,
 	data_type_id         bigint  NOT NULL,
+	link_filepaths_status varchar DEFAULT 'idle' NOT NULL,
 	CONSTRAINT pk_preprocessed_data PRIMARY KEY ( preprocessed_data_id ),
 	CONSTRAINT fk_preprocessed_data FOREIGN KEY ( data_type_id ) REFERENCES qiita.data_type( data_type_id )    
  );
@@ -184,6 +194,7 @@ CREATE TABLE qiita.processed_data (
 	processed_params_id  bigint  NOT NULL,
 	processed_date       timestamp  NOT NULL,
 	data_type_id         bigint  NOT NULL,
+	link_filepaths_status varchar DEFAULT 'idle' NOT NULL,
 	CONSTRAINT pk_processed_data PRIMARY KEY ( processed_data_id ),
 	CONSTRAINT fk_processed_data FOREIGN KEY ( data_type_id ) REFERENCES qiita.data_type( data_type_id )    
  );
@@ -197,6 +208,7 @@ COMMENT ON COLUMN qiita.processed_data.processed_params_id IS 'Link to a table w
 CREATE TABLE qiita.raw_data ( 
 	raw_data_id          bigserial  NOT NULL,
 	filetype_id          bigint  NOT NULL,
+	link_filepaths_status varchar DEFAULT 'idle' NOT NULL,
 	CONSTRAINT pk_raw_data UNIQUE ( raw_data_id ) ,
 	CONSTRAINT pk_raw_data_0 PRIMARY KEY ( raw_data_id ),
 	CONSTRAINT fk_raw_data_filetype FOREIGN KEY ( filetype_id ) REFERENCES qiita.filetype( filetype_id )    
@@ -242,8 +254,9 @@ CREATE TABLE qiita.study_status (
  );
 
 CREATE TABLE qiita.term ( 
-	term_id              bigint  NOT NULL,
+	term_id              bigserial  NOT NULL,
 	ontology_id          bigint  NOT NULL,
+	old_term_id          bigint DEFAULT NULL ,
 	term                 varchar  NOT NULL,
 	identifier           varchar  ,
 	definition           varchar  ,
@@ -251,11 +264,16 @@ CREATE TABLE qiita.term (
 	is_obsolete          bool DEFAULT 'false' ,
 	is_root_term         bool  ,
 	is_leaf              bool  ,
+	user_defined         bool DEFAULT False NOT NULL,
 	CONSTRAINT pk_term PRIMARY KEY ( term_id ),
 	CONSTRAINT fk_term_ontology FOREIGN KEY ( ontology_id ) REFERENCES qiita.ontology( ontology_id )    
  );
 
 CREATE INDEX idx_term ON qiita.term ( ontology_id );
+
+COMMENT ON COLUMN qiita.term.old_term_id IS 'Identifier used in the old system, we are keeping this for consistency';
+
+COMMENT ON COLUMN qiita.term.user_defined IS 'Whether or not this term was defined by a user';
 
 CREATE TABLE qiita.timeseries_type ( 
 	timeseries_type_id   bigserial  NOT NULL,
@@ -321,12 +339,16 @@ CREATE TABLE qiita.filepath (
 	filepath_type_id     bigint  NOT NULL,
 	checksum             varchar  NOT NULL,
 	checksum_algorithm_id bigint  NOT NULL,
+	data_directory_id    bigserial  ,
 	CONSTRAINT pk_filepath PRIMARY KEY ( filepath_id ),
 	CONSTRAINT fk_filepath FOREIGN KEY ( filepath_type_id ) REFERENCES qiita.filepath_type( filepath_type_id )    ,
-	CONSTRAINT fk_filepath_0 FOREIGN KEY ( checksum_algorithm_id ) REFERENCES qiita.checksum_algorithm( checksum_algorithm_id )    
+	CONSTRAINT fk_filepath_0 FOREIGN KEY ( checksum_algorithm_id ) REFERENCES qiita.checksum_algorithm( checksum_algorithm_id )    ,
+	CONSTRAINT fk_filepath_data_directory FOREIGN KEY ( data_directory_id ) REFERENCES qiita.data_directory( data_directory_id ) ON DELETE RESTRICT ON UPDATE RESTRICT
  );
 
 CREATE INDEX idx_filepath ON qiita.filepath ( filepath_type_id );
+
+CREATE INDEX idx_filepath_0 ON qiita.filepath ( data_directory_id );
 
 CREATE TABLE qiita.investigation ( 
 	investigation_id     bigserial  NOT NULL,

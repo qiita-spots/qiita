@@ -13,7 +13,7 @@ from os.path import join, exists, basename
 
 from qiita_core.util import qiita_test_checker
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
-from qiita_db.exceptions import QiitaDBColumnError
+from qiita_db.exceptions import QiitaDBColumnError, QiitaDBError
 from qiita_db.util import (exists_table, exists_dynamic_table, scrub_data,
                            compute_checksum, check_table_cols,
                            check_required_columns, convert_to_id,
@@ -23,7 +23,8 @@ from qiita_db.util import (exists_table, exists_dynamic_table, scrub_data,
                            params_dict_to_json, get_user_fp, get_study_fp,
                            insert_filepaths, get_db_files_base_dir,
                            get_data_types, get_required_sample_info_status,
-                           get_emp_status, get_lat_longs)
+                           get_emp_status, purge_filepaths, get_filepath_id,
+                           get_lat_longs, retrive_latest_data_directory)
 from qiita_core.qiita_settings import qiita_config
 
 
@@ -283,7 +284,7 @@ class DBUtilTests(TestCase):
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.filepath WHERE filepath_id=16")
         exp_fp = join("raw_data", "1_%s" % basename(fp))
-        exp = [[16, exp_fp, 1, '852952723', 1]]
+        exp = [[16, exp_fp, 1, '852952723', 1, 5]]
         self.assertEqual(obs, exp)
 
     def test_insert_filepaths_string(self):
@@ -308,7 +309,7 @@ class DBUtilTests(TestCase):
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.filepath WHERE filepath_id=16")
         exp_fp = join("raw_data", "1_%s" % basename(fp))
-        exp = [[16, exp_fp, 1, '852952723', 1]]
+        exp = [[16, exp_fp, 1, '852952723', 1, 5]]
         self.assertEqual(obs, exp)
 
     def test_insert_filepaths_queue(self):
@@ -345,7 +346,7 @@ class DBUtilTests(TestCase):
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.filepath WHERE filepath_id=16")
         exp_fp = join("raw_data", "1_%s" % basename(fp))
-        exp = [[16, exp_fp, 1, '852952723', 1]]
+        exp = [[16, exp_fp, 1, '852952723', 1, 5]]
         self.assertEqual(obs, exp)
 
         # check that raw_filpath data was added to the DB
@@ -355,10 +356,115 @@ class DBUtilTests(TestCase):
         exp = [[1, 16]]
         self.assertEqual(obs, exp)
 
+    def test_purge_filepaths(self):
+        # Add a new filepath to the database
+        fd, fp = mkstemp()
+        close(fd)
+        fp_id = self.conn_handler.execute_fetchone(
+            "INSERT INTO qiita.filepath "
+            "(filepath, filepath_type_id, checksum, checksum_algorithm_id) "
+            "VALUES (%s, %s, %s, %s) RETURNING filepath_id", (fp, 1, "", 1))[0]
+        self.assertEqual(fp_id, 16)
+
+        # Connect the just added filepath to a raw data
+        self.conn_handler.execute(
+            "INSERT INTO qiita.raw_filepath (raw_data_id, filepath_id) VALUES"
+            "(%s, %s)", (1, 16))
+
+        # Get the filepaths so we can test if they've been removed or not
+        sql_fp = "SELECT filepath FROM qiita.filepath WHERE filepath_id=%s"
+
+        fp1 = self.conn_handler.execute_fetchone(sql_fp, (1,))[0]
+        fp1 = join(get_db_files_base_dir(), fp1)
+
+        # Make sure that the file exists - specially for travis
+        with open(fp1, 'w') as f:
+            f.write('\n')
+
+        fp16 = self.conn_handler.execute_fetchone(sql_fp, (16,))[0]
+        fp16 = join(get_db_files_base_dir(), fp16)
+
+        # Nothing should be removed
+        purge_filepaths(self.conn_handler)
+
+        sql_ids = ("SELECT filepath_id FROM qiita.filepath ORDER BY "
+                   "filepath_id")
+        obs = self.conn_handler.execute_fetchall(sql_ids)
+        exp = [[1], [2], [3], [4], [5], [6], [7], [8], [9],
+               [10], [11], [12], [13], [14], [15], [16]]
+        self.assertEqual(obs, exp)
+
+        # Check that the files still exist
+        self.assertTrue(exists(fp1))
+        self.assertTrue(exists(fp16))
+
+        # Unlink the filepath from the raw data
+        self.conn_handler.execute(
+            "DELETE FROM qiita.raw_filepath WHERE filepath_id=%s", (16,))
+
+        # Only filepath 16 should be removed
+        purge_filepaths(self.conn_handler)
+
+        obs = self.conn_handler.execute_fetchall(sql_ids)
+        exp = [[1], [2], [3], [4], [5], [6], [7], [8], [9],
+               [10], [11], [12], [13], [14], [15]]
+        self.assertEqual(obs, exp)
+
+        # Check that only the file for the removed filepath has been removed
+        self.assertTrue(exists(fp1))
+        self.assertFalse(exists(fp16))
+
+    def test_get_filepath_id(self):
+        fp = join(get_db_files_base_dir(),
+                  'raw_data/1_s_G1_L001_sequences.fastq.gz')
+        obs = get_filepath_id(fp, self.conn_handler)
+        self.assertEqual(obs, 1)
+
+    def test_get_filepath_id_error(self):
+        with self.assertRaises(QiitaDBError):
+            get_filepath_id("Not_a_path", self.conn_handler)
+
     def test_get_study_fps(self):
         study_id = 1000
         obs = get_study_fp(study_id)
         exp = join(qiita_config.upload_data_dir, str(study_id))
+        self.assertEqual(obs, exp)
+
+    def test_retrive_latest_data_directory(self):
+        exp = [5, 'raw_data', '']
+        obs = retrive_latest_data_directory("raw_data")
+        self.assertEqual(obs, exp)
+
+        exp = [1, 'analysis', '']
+        obs = retrive_latest_data_directory("analysis")
+        self.assertEqual(obs, exp)
+
+        exp = [2, 'job', '']
+        obs = retrive_latest_data_directory("job")
+        self.assertEqual(obs, exp)
+
+        # inserting new ones so we can test that it retrieves these and
+        # doesn't alter other ones
+        self.conn_handler.execute(
+            "UPDATE qiita.data_directory SET active=false WHERE "
+            "data_directory_id=1")
+        self.conn_handler.execute(
+            "INSERT INTO qiita.data_directory (data_type, mountpoint, "
+            "subdirectory, active) VALUES ('analysis', 'analysis', 'tmp', "
+            "true), ('raw_data', 'raw_data', 'tmp', false)")
+
+        # this should have been updated
+        exp = [9, 'analysis', 'tmp']
+        obs = retrive_latest_data_directory("analysis")
+        self.assertEqual(obs, exp)
+
+        # these 2 shouldn't
+        exp = [5, 'raw_data', '']
+        obs = retrive_latest_data_directory("raw_data")
+        self.assertEqual(obs, exp)
+
+        exp = [2, 'job', '']
+        obs = retrive_latest_data_directory("job")
         self.assertEqual(obs, exp)
 
 

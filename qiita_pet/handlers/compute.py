@@ -7,7 +7,7 @@ from .study_handlers import check_access
 
 from qiita_ware import r_server
 from qiita_ware.context import submit
-from qiita_ware.dispatchable import add_files_to_raw_data
+from qiita_ware.dispatchable import add_files_to_raw_data, unlink_all_files
 
 from qiita_db.util import get_study_fp
 from qiita_db.study import Study
@@ -77,4 +77,28 @@ class AddFilesToRawData(BaseHandler):
 
         self.render('compute_wait.html', user=self.current_user,
                     job_id=job_id, title='Adding files to your raw data',
+                    completion_redirect='/study/description/%d' % study_id)
+
+
+class UnlinkAllFiles(BaseHandler):
+    @authenticated
+    def post(self):
+        # vars to remove all files from a raw data
+        study_id = self.get_argument('study_id', None)
+        raw_data_id = self.get_argument('raw_data_id', None)
+
+        study_id = int(study_id) if study_id else None
+
+        try:
+            study = Study(study_id)
+        except QiitaDBUnknownIDError:
+            # Study not in database so fail nicely
+            raise HTTPError(404, "Study %d does not exist" % study_id)
+        else:
+            check_access(User(self.current_user), study)
+
+        job_id = submit(self.current_user, unlink_all_files, raw_data_id)
+
+        self.render('compute_wait.html', user=self.current_user,
+                    job_id=job_id, title='Removing files from your raw data',
                     completion_redirect='/study/description/%d' % study_id)

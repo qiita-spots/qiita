@@ -34,6 +34,7 @@ class StudyUploadFileHandler(BaseHandler):
         self.render('upload.html', user=self.current_user,
                     study_title=study.title, study_info=study.info,
                     study_id=study_id, files=fs,
+                    extensions=','.join(qiita_config.valid_upload_extension),
                     max_upload_size=qiita_config.max_upload_size)
 
     @authenticated
@@ -51,6 +52,16 @@ class UploadFileHandler(BaseHandler):
     # based on
     # https://github.com/23/resumable.js/blob/master/samples/Backend%20on%20PHP.md
     # """
+    def validate_file_extension(self, filename):
+        """simple method to avoid duplication of code
+
+        This validation is server side in case they can go around the client
+        side validation
+        """
+        if not filename.endswith(tuple(qiita_config.valid_upload_extension)):
+            self.set_status(415)
+            raise HTTPError(415, "User %s is trying to upload %d" %
+                                 (self.current_user, filename))
 
     @authenticated
     def post(self):
@@ -63,6 +74,8 @@ class UploadFileHandler(BaseHandler):
 
         check_access(User(self.current_user), Study(int(study_id)),
                      no_public=True)
+
+        self.validate_file_extension(resumable_filename)
 
         fp = join(get_study_fp(study_id), resumable_identifier)
         # creating temporal folder for upload
@@ -97,13 +110,16 @@ class UploadFileHandler(BaseHandler):
         sent via post or 200 (valid) to not send the file
         """
         study_id = self.get_argument('study_id')
+        resumable_filename = self.get_argument('resumableFilename')
+        resumable_chunk_number = self.get_argument('resumableChunkNumber')
 
         check_access(User(self.current_user), Study(study_id), no_public=True)
 
+        self.validate_file_extension(resumable_filename)
+
         # temporaly filename or chunck
-        tfp = join(get_study_fp(study_id),
-                   self.get_argument('resumableFilename') + '.part.' +
-                   self.get_argument('resumableChunkNumber'))
+        tfp = join(get_study_fp(study_id), resumable_filename + '.part.' +
+                   resumable_chunk_number)
 
         if exists(tfp):
             self.set_status(200)
