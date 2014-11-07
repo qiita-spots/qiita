@@ -130,10 +130,15 @@ class TestSelectCommandsHandler(TestHandlerBase):
 class TestAnalysisWaitHandler(TestHandlerBase):
     database = True
 
-    def test_get(self):
+    def test_get_exists(self):
         response = self.get('/analysis/wait/1')
         # Make sure page response loaded sucessfully
         self.assertEqual(response.code, 200)
+
+    def test_get_no_exists(self):
+        response = self.get('/analysis/wait/237')
+        # Make sure page response loaded sucessfully
+        self.assertEqual(response.code, 404)
 
     def test_post(self):
         post_args = {

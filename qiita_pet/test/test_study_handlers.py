@@ -23,9 +23,13 @@ class TestPublicStudiesHandler(TestHandlerBase):
 
 
 class TestStudyDescriptionHandler(TestHandlerBase):
-    def test_get(self):
+    def test_get_exists(self):
         response = self.get('/study/description/1')
         self.assertEqual(response.code, 200)
+
+    def test_get_no_exists(self):
+        response = self.get('/study/description/245')
+        self.assertEqual(response.code, 404)
 
     def test_post(self):
         post_args = {}
@@ -98,11 +102,17 @@ class TestCreateStudyAJAX(TestHandlerBase):
 
 
 class TestMetadataSummaryHandler(TestHandlerBase):
-    def test_get(self):
+    def test_get_exists(self):
         response = self.get('/metadata_summary/', {'sample_template': 1,
                                                    'prep_template': 1,
                                                    'study_id': 1})
         self.assertEqual(response.code, 200)
+
+    def test_get_no_exist(self):
+        response = self.get('/metadata_summary/', {'sample_template': 237,
+                                                   'prep_template': 1,
+                                                   'study_id': 237})
+        self.assertEqual(response.code, 404)
 
 
 class TestEBISubmitHandler(TestHandlerBase):
