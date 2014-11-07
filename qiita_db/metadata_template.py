@@ -1142,6 +1142,10 @@ class PrepTemplate(MetadataTemplate):
             If the investigation_type is not valid
             If a required column is missing in md_template
         """
+        # If the investigation_type is supplied, make sure if it is one of
+        # the recognized investigation types
+        if investigation_type is not None:
+            cls.validate_investigation_type(investigation_type)
 
         # We are going to modify the md_template. We create a copy so
         # we don't modify the user one
@@ -1260,8 +1264,8 @@ class PrepTemplate(MetadataTemplate):
         QiitaDBColumnError
             The investigation type is not in the ENA ontology
         """
-        investigation_types = Ontology(convert_to_id('ENA', 'ontology'))
-        terms = investigation_types.terms
+        ontology = Ontology(convert_to_id('ENA', 'ontology'))
+        terms = ontology.terms + ontology.user_defined_terms
         if investigation_type not in terms:
             raise QiitaDBColumnError("Not a valid investigation_type. "
                                      "Choose from: %s" % ', '.join(terms))
