@@ -1,7 +1,7 @@
 #Making Database Changes
 After the initial production release of Qiita, changes to the database schema will require patches; the database can no longer be dropped and recreated using the most recent schema because all the data would be lost! Therefore, patches must be applied instead.
 
-##Aproach
+##Approach
 
 1. We keep "unpatched" versions of the SQL and DBS files in the repository
 2. We keep fully patched versions of the DBS and HTML files in the repository
