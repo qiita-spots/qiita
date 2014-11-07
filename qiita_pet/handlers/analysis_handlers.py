@@ -27,7 +27,8 @@ from qiita_db.metadata_template import SampleTemplate
 from qiita_db.job import Job, Command
 from qiita_db.util import get_db_files_base_dir, get_table_cols
 from qiita_db.search import QiitaStudySearch
-from qiita_db.exceptions import QiitaDBIncompatibleDatatypeError
+from qiita_db.exceptions import (
+    QiitaDBIncompatibleDatatypeError, QiitaDBUnknownIDError)
 
 SELECT_SAMPLES = 2
 SELECT_COMMANDS = 3
@@ -243,8 +244,12 @@ class AnalysisWaitHandler(BaseHandler):
     def get(self, analysis_id):
         user = self.current_user
         analysis_id = int(analysis_id)
-        analysis = Analysis(analysis_id)
-        check_analysis_access(User(user), analysis)
+        try:
+            analysis = Analysis(analysis_id)
+        except QiitaDBUnknownIDError:
+            raise HTTPError(404, "Analysis %d does not exist" % analysis_id)
+        else:
+            check_analysis_access(User(user), analysis)
 
         commands = []
         for job in analysis.jobs:

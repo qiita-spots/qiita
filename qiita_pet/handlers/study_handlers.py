@@ -302,8 +302,13 @@ class StudyDescriptionHandler(BaseHandler):
 
     @authenticated
     def get(self, study_id):
-        study_id = int(study_id)
-        check_access(User(self.current_user), Study(study_id))
+        try:
+            study = Study(int(study_id))
+        except QiitaDBUnknownIDError:
+            raise HTTPError(404, "Study %s does not exist" % study_id)
+        else:
+            check_access(User(self.current_user), study)
+
         self.display_template(int(study_id), "")
 
     @authenticated
@@ -556,8 +561,12 @@ class MetadataSummaryHandler(BaseHandler):
         if self.get_argument('prep_template', None):
             template = PrepTemplate(int(self.get_argument('prep_template')))
         if self.get_argument('sample_template', None):
+            template = None
             tid = int(self.get_argument('sample_template'))
-            template = SampleTemplate(tid)
+            try:
+                template = SampleTemplate(tid)
+            except QiitaDBUnknownIDError:
+                raise HTTPError(404, "SampleTemplate %d does not exist" % tid)
 
         study = Study(template.study_id)
 
