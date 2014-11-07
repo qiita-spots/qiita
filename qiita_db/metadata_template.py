@@ -1142,10 +1142,6 @@ class PrepTemplate(MetadataTemplate):
             If the investigation_type is not valid
             If a required column is missing in md_template
         """
-        # If the investigation_type is supplied, make sure if it is one of
-        # the recognized investigation types
-        if investigation_type is not None:
-            cls.validate_investigation_type(investigation_type)
 
         # We are going to modify the md_template. We create a copy so
         # we don't modify the user one
