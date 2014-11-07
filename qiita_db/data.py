@@ -80,7 +80,7 @@ from __future__ import division
 from datetime import datetime
 from os.path import join
 from functools import partial
-
+from collections import defaultdict
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from .base import QiitaObject
@@ -511,6 +511,10 @@ class PreprocessedData(BaseData):
     ----------
     raw_data
     study
+    prep_template
+    ebi_submission_accession
+    ebi_study_accession
+    files
 
     Methods
     -------
@@ -709,6 +713,31 @@ class PreprocessedData(BaseData):
         sql = ("UPDATE qiita.{0} SET ebi_study_accession = %s WHERE "
                "preprocessed_data_id = %s").format(self._table)
         conn_handler.execute(sql, (new_ebi_study_accession, self._id))
+
+    @property
+    def files(self):
+        """Returns a dict of filetypes and filepaths associated with this PPD
+
+        Returns
+        -------
+        dict
+            {file_type: list of filepaths}
+        """
+        conn_handler = SQLConnectionHandler()
+
+        sql = """
+            SELECT fpt.filepath_type, fp.filepath
+            FROM qiita.filepath fp join qiita.filepath_type fpt
+                on fp.filepath_type_id = fpt.filepath_type_id
+            join qiita.{} ppdfp on ppdfp.filepath_id = fp.filepath_id
+            where ppdfp.preprocessed_data_id = %s""".format(
+                self._data_filepath_table)
+
+        files = defaultdict(list)
+        for fpt, fp in conn_handler.execute_fetchall(sql, [self._id]):
+            files[fpt].append(fp)
+
+        return dict(files)
 
     def data_type(self, ret_id=False):
         """Returns the data_type or data_type_id
