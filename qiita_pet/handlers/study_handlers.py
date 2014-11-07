@@ -290,9 +290,15 @@ class StudyDescriptionHandler(BaseHandler):
         other_studies_rd = ['<option value="%s">%s</option>' % (k,
                             "id: %d, study: %s" % (k, v))
                             for k, v in viewitems(other_studies_rd)]
-        ena_terms = Ontology(convert_to_id('ENA', 'ontology')).terms
+
+        ontology = Ontology(convert_to_id('ENA', 'ontology'))
+
+        ena_terms = ontology.terms
         ena_terms = ['<option value="%s">%s</option>' % (v, v)
                      for v in ena_terms]
+
+        # New Type is for users to add a new user-defined investigation type
+        user_defined_terms = ontology.user_defined_terms + ['New Type']
 
         self.render('study_description.html', user=self.current_user,
                     study_title=study.title, study_info=study.info,
@@ -305,7 +311,8 @@ class StudyDescriptionHandler(BaseHandler):
                     tab_to_display=tab_to_display,
                     level=msg_level, message=msg,
                     can_upload=check_access(user, study, True),
-                    other_studies_rd=''.join(other_studies_rd))
+                    other_studies_rd=''.join(other_studies_rd),
+                    user_defined_terms=user_defined_terms)
 
     @authenticated
     def get(self, study_id):
@@ -329,6 +336,9 @@ class StudyDescriptionHandler(BaseHandler):
         raw_data_id = self.get_argument('raw_data_id', None)
         data_type_id = self.get_argument('data_type_id', None)
         investigation_type = self.get_argument('investigation_type', None)
+        user_defined_investigation_type = self.get_argument(
+            'user-defined-investigation-type', None)
+        new_investigation_type = self.get_argument('new-investigation-type', None)
         if investigation_type == "":
             investigation_type = None
         # to update investigation type
@@ -388,6 +398,17 @@ class StudyDescriptionHandler(BaseHandler):
 
         elif add_prep_template and raw_data_id and data_type_id:
             # adding prep templates
+
+            if investigation_type == 'Other' and \
+                    user_defined_investigation_type == 'New Type':
+                investigation_type = new_investigation_type
+
+                # this is a new user defined investigation type so store it
+                ontology = Ontology(convert_to_id('ENA', 'ontology'))
+                ontology.add_user_defined_term(investigation_type)
+            elif investigation_type == 'Other' and \
+                    user_defined_investigation_type != 'New Type':
+                investigation_type = user_defined_investigation_type
 
             raw_data_id = int(raw_data_id)
             fp_rpt = join(get_study_fp(study_id), add_prep_template)

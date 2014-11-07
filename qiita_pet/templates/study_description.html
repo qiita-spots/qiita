@@ -1,4 +1,26 @@
 {% extends sitebase.html %}
+{% block head %}
+<script>
+function investigationTypeChanged(rawDataID){
+  if ($('#investigation_type_'+rawDataID).val() === 'Other'){
+    $('#user-defined-investigation-types-'+rawDataID).show()
+  }
+  else {
+    $('#user-defined-investigation-types-'+rawDataID).hide()
+  }
+}
+function newInvestigationTypeChanged(rawDataID){
+  if ($('#user-defined-investigation-type-'+rawDataID).val() === 'New Type'){
+    $('#new-investigation-type-entry-'+rawDataID).show()
+  }
+  else {
+    $('#new-investigation-type-entry-'+rawDataID).hide()
+  }
+}
+</script>
+{% end %}
+
+
 {% block content %}
 
 {% from future.utils import viewitems %}
@@ -118,10 +140,33 @@
               </li>
               <li>
                 (optional but required for EBI submission) select an investigation type:
-                <select id="investigation_type_{{r.id}}">
+                <select onchange="investigationTypeChanged({{r.id}})" id="investigation_type_{{r.id}}">
                   <option value="">Non selected</option>
                   {% raw ena_terms %}
                 </select>
+                <table id="investigation-type-table" name="investigation-types">
+                  <tr id="user-defined-investigation-types-{{r.id}}" style="display:none;" class="investigation-row">
+                    <td>
+                      Select one of the user defined investigation types:
+                    </td>
+                    <td>
+                      <select onchange="newInvestigationTypeChanged({{r.id}})" id="user-defined-investigation-type-{{r.id}}">
+                      {% for term in user_defined_terms %}
+                        <option value="{{term}}">{{term}}</option>
+                      {% end %}
+                      </select>
+                    </td>
+                  </tr>
+                  <tr id="new-investigation-type-entry-{{r.id}}" style="display:none;">
+                    <td>
+                      Enter a new investigation type:
+                    </td>
+                    <td>
+                      <input type="text" id="new-investigation-type-{{r.id}}" name="new-investigation-type" class="form-control">
+                    </td>
+                  </tr>
+                </div>
+                </table>
               </li>
             </ol>
             <br/>
@@ -297,6 +342,14 @@
           .attr("type", "hidden")
           .attr("name", "investigation_type")
           .attr("value", $("#investigation_type_" + raw_data_id).val()))
+        .append($("<input>")
+          .attr("type", "hidden")
+          .attr("name", "user-defined-investigation-type")
+          .attr("value", $("#user-defined-investigation-type-" + raw_data_id).val()))
+        .append($("<input>")
+          .attr("type", "hidden")
+          .attr("name", "new-investigation-type")
+          .attr("value", $("#new-investigation-type-" + raw_data_id).val()))
         .append($("<input>")
           .attr("type", "hidden")
           .attr("name", "data_type_id")
