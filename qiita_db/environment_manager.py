@@ -203,14 +203,17 @@ def make_environment(load_ontologies, download_reference, add_demo_user):
         # these values can only be added if the environment is being loaded
         # with the ontologies, thus this cannot exist inside intialize.sql
         # because otherwise loading the ontologies would be a requirement
+        ontology_id = conn.execute_fetchone("""SELECT ontology_id
+                                               FROM qiita.ontology
+                                               WHERE ontology = 'ENA'""")[0]
         conn.execute("INSERT INTO qiita.term "
                      "(ontology_id, term, user_defined) "
                      "VALUES "
-                     "(807481739, 'Amplicon Sequencing', true);")
+                     "(%s, 'Amplicon Sequencing', true)", [ontology_id])
         conn.execute("INSERT INTO qiita.term "
                      "(ontology_id, term, user_defined) "
                      "VALUES "
-                     "(807481739, 'Metagenome', true);")
+                     "(%s, 'Metagenome', true)", [ontology_id])
 
     if download_reference:
         _download_reference_files(conn)
