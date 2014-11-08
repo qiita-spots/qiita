@@ -16,3 +16,6 @@ class TestUploadFileHandler(TestHandlerBase):
     def test_get(self):
         response = self.get('/upload/')
         self.assertEqual(response.code, 400)
+
+if __name__ == "__main__":
+    main()
