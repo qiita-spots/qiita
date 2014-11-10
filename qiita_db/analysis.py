@@ -471,7 +471,7 @@ class Analysis(QiitaStatusObject):
 
         Parameters
         ----------
-        samples : list of tuples of (int, str, int)
+        samples : list of tuples of (int, str)
             samples and the processed data id they come from in form
             [(processed_data_id, sample_id), ...]
         """
