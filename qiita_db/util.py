@@ -620,7 +620,6 @@ def insert_filepaths(filepaths, obj_id, table, filepath_table, conn_handler,
         values = ["('%s', %s, '%s', %s, %s)" % (scrub_data(path), pid,
                   checksum, 1, dd_id) for path, pid, checksum in
                   paths_w_checksum]
-        print values
         # Insert all the filepaths at once and get the filepath_id back
         sql = ("INSERT INTO qiita.{0} (filepath, filepath_type_id, checksum, "
                "checksum_algorithm_id, data_directory_id) VALUES {1} RETURNING"
