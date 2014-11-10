@@ -254,8 +254,9 @@ CREATE TABLE qiita.study_status (
  );
 
 CREATE TABLE qiita.term ( 
-	term_id              bigint  NOT NULL,
+	term_id              bigserial  NOT NULL,
 	ontology_id          bigint  NOT NULL,
+	old_term_id          bigint DEFAULT NULL ,
 	term                 varchar  NOT NULL,
 	identifier           varchar  ,
 	definition           varchar  ,
@@ -269,6 +270,8 @@ CREATE TABLE qiita.term (
  );
 
 CREATE INDEX idx_term ON qiita.term ( ontology_id );
+
+COMMENT ON COLUMN qiita.term.old_term_id IS 'Identifier used in the old system, we are keeping this for consistency';
 
 COMMENT ON COLUMN qiita.term.user_defined IS 'Whether or not this term was defined by a user';
 
