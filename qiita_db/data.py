@@ -87,9 +87,9 @@ from .base import QiitaObject
 from .logger import LogEntry
 from .sql_connection import SQLConnectionHandler
 from .exceptions import QiitaDBError
-from .util import (exists_dynamic_table, get_db_files_base_dir,
-                   insert_filepaths, convert_to_id, convert_from_id,
-                   purge_filepaths, get_filepath_id)
+from .util import (exists_dynamic_table, insert_filepaths, convert_to_id,
+                   convert_from_id, purge_filepaths, get_filepath_id,
+                   retrive_latest_data_directory)
 
 
 class BaseData(QiitaObject):
@@ -191,10 +191,12 @@ class BaseData(QiitaObject):
             "{2}=%(id)s)".format(self._filepath_table,
                                  self._data_filepath_table,
                                  self._data_filepath_column), {'id': self.id})
-        base_fp = partial(join, get_db_files_base_dir(conn_handler))
-        return [(base_fp(fp), convert_from_id(id, "filepath_type",
-                 conn_handler))
-                for fp, id in db_paths]
+
+        _, fb = retrive_latest_data_directory(self._table, conn_handler)[0]
+        base_fp = partial(join, fb)
+
+        return [(base_fp(fp), convert_from_id(fid, "filepath_type",
+                conn_handler)) for fp, fid in db_paths]
 
     def get_filepath_ids(self):
         self._check_subclass()

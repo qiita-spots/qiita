@@ -20,12 +20,12 @@ from qiita_db.util import (exists_table, exists_dynamic_table, scrub_data,
                            get_table_cols, get_table_cols_w_type,
                            get_filetypes, get_filepath_types, get_count,
                            check_count, get_processed_params_tables,
-                           params_dict_to_json, get_user_fp, get_study_fp,
-                           insert_filepaths, get_db_files_base_dir,
-                           get_data_types, get_required_sample_info_status,
+                           params_dict_to_json, insert_filepaths,
+                           get_db_files_base_dir, get_data_types,
+                           get_required_sample_info_status,
                            get_emp_status, purge_filepaths, get_filepath_id,
-                           get_lat_longs, retrive_latest_data_directory)
-from qiita_core.qiita_settings import qiita_config
+                           get_lat_longs, retrive_latest_data_directory,
+                           get_files_from_uploads_folders)
 
 
 @qiita_test_checker()
@@ -257,11 +257,6 @@ class DBUtilTests(TestCase):
         self.assertEqual(obs, ['processed_params_sortmerna',
                                'processed_params_uclust'])
 
-    def test_get_user_fps(self):
-        obs = get_user_fp("demo@demo.com")
-        exp = join(qiita_config.upload_data_dir, 'demo.com', 'demo')
-        self.assertEqual(obs, exp)
-
     def test_insert_filepaths(self):
         fd, fp = mkstemp()
         close(fd)
@@ -424,22 +419,16 @@ class DBUtilTests(TestCase):
         with self.assertRaises(QiitaDBError):
             get_filepath_id("Not_a_path", self.conn_handler)
 
-    def test_get_study_fps(self):
-        study_id = 1000
-        obs = get_study_fp(study_id)
-        exp = join(qiita_config.upload_data_dir, str(study_id))
-        self.assertEqual(obs, exp)
-
     def test_retrive_latest_data_directory(self):
-        exp = [5, 'raw_data', '']
+        exp = [[5, join(get_db_files_base_dir(), 'raw_data', '')]]
         obs = retrive_latest_data_directory("raw_data")
         self.assertEqual(obs, exp)
 
-        exp = [1, 'analysis', '']
+        exp = [[1, join(get_db_files_base_dir(), 'analysis', '')]]
         obs = retrive_latest_data_directory("analysis")
         self.assertEqual(obs, exp)
 
-        exp = [2, 'job', '']
+        exp = [[2, join(get_db_files_base_dir(), 'job', '')]]
         obs = retrive_latest_data_directory("job")
         self.assertEqual(obs, exp)
 
@@ -454,17 +443,34 @@ class DBUtilTests(TestCase):
             "true), ('raw_data', 'raw_data', 'tmp', false)")
 
         # this should have been updated
-        exp = [9, 'analysis', 'tmp']
+        exp = [[9, join(get_db_files_base_dir(), 'analysis', 'tmp')]]
         obs = retrive_latest_data_directory("analysis")
         self.assertEqual(obs, exp)
 
         # these 2 shouldn't
-        exp = [5, 'raw_data', '']
+        exp = [[5, join(get_db_files_base_dir(), 'raw_data', '')]]
         obs = retrive_latest_data_directory("raw_data")
         self.assertEqual(obs, exp)
 
-        exp = [2, 'job', '']
+        exp = [[2, join(get_db_files_base_dir(), 'job', '')]]
         obs = retrive_latest_data_directory("job")
+        self.assertEqual(obs, exp)
+
+        # testing multi returns
+        exp = [[5, join(get_db_files_base_dir(), 'raw_data', '')],
+               [10, join(get_db_files_base_dir(), 'raw_data', 'tmp')]]
+        obs = retrive_latest_data_directory("raw_data", retrive_all=True)
+        self.assertEqual(obs, exp)
+
+    def test_get_files_from_uploads_folders(self):
+        # something has been uploaded
+        exp = ['uploaded_file.txt']
+        obs = get_files_from_uploads_folders("1")
+        self.assertEqual(obs, exp)
+
+        # nothing has been uploaded
+        exp = []
+        obs = get_files_from_uploads_folders("2")
         self.assertEqual(obs, exp)
 
 

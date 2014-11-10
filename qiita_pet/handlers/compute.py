@@ -9,12 +9,12 @@ from qiita_ware import r_server
 from qiita_ware.context import submit
 from qiita_ware.dispatchable import add_files_to_raw_data, unlink_all_files
 
-from qiita_db.util import get_study_fp
 from qiita_db.study import Study
 from qiita_db.user import User
 from qiita_db.exceptions import QiitaDBUnknownIDError
+from qiita_db.util import retrive_latest_data_directory
 
-from os.path import join
+from os.path import join, exists
 
 
 class ComputeCompleteHandler(BaseHandler):
@@ -36,9 +36,9 @@ class AddFilesToRawData(BaseHandler):
         # vars to add files to raw data
         study_id = self.get_argument('study_id', None)
         raw_data_id = self.get_argument('raw_data_id', None)
-        barcodes = self.get_argument('barcodes', None)
-        forward_reads = self.get_argument('forward', None)
-        reverse_reads = self.get_argument('reverse', None)
+        barcodes_str = self.get_argument('barcodes', None)
+        forward_reads_str = self.get_argument('forward', None)
+        reverse_reads_str = self.get_argument('reverse', None)
 
         study_id = int(study_id) if study_id else None
 
@@ -50,13 +50,22 @@ class AddFilesToRawData(BaseHandler):
         else:
             check_access(User(self.current_user), study)
 
-        fp = get_study_fp(study_id)
-        barcodes = [(join(fp, t), "raw_barcodes") for t in barcodes.split(',')]
-        forward_reads = [(join(fp, t), "raw_forward_seqs")
-                         for t in forward_reads.split(',')]
-        if reverse_reads:
-            reverse_reads = [(join(fp, t), "raw_reverse_seqs")
-                             for t in reverse_reads.split(',')]
+        barcodes, forward_reads, reverse_reads = [], [], []
+        for _, f in retrive_latest_data_directory("uploads", retrive_all=True):
+            f = join(f, str(study_id))
+            for t in barcodes_str.split(','):
+                ft = join(f, t)
+                if exists(ft):
+                    barcodes.append([ft, "raw_barcodes"])
+            for t in forward_reads_str.split(','):
+                ft = join(f, t)
+                if exists(ft):
+                    forward_reads.append([ft, "raw_forward_seqs"])
+            if reverse_reads_str:
+                for t in reverse_reads_str.split(','):
+                    ft = join(f, t)
+                    if exists(ft):
+                        reverse_reads.append([ft, "raw_reverse_seqs"])
 
         # this should never happen if following the GUI pipeline
         # but rather be save than sorry

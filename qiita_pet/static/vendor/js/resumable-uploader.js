@@ -132,7 +132,7 @@
            }
        })
        if (!is_valid) {
-         alert('Not a valid extension! Try again.');
+         alert('Not a valid extension: ' + name + '! Try again.');
          throw new Error("Not a valid extension");
        }
 

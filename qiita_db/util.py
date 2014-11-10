@@ -18,6 +18,8 @@ Methods
     exists_dynamic_table
     get_db_files_base_dir
     compute_checksum
+    get_files_from_uploads_folders
+    retrive_latest_data_directory
     insert_filepaths
     check_table_cols
     check_required_columns
@@ -41,12 +43,11 @@ from binascii import crc32
 from bcrypt import hashpw, gensalt
 from functools import partial
 from os.path import join, basename, isdir, relpath, exists
-from os import walk, remove
+from os import walk, remove, listdir
 from shutil import move, rmtree
 from json import dumps
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
-from qiita_core.qiita_settings import qiita_config
 from .exceptions import QiitaDBColumnError, QiitaDBError
 from .sql_connection import SQLConnectionHandler
 
@@ -504,7 +505,30 @@ def compute_checksum(path):
     return crc & 0xffffffff
 
 
-def retrive_latest_data_directory(data_type, conn_handler=None):
+def get_files_from_uploads_folders(study_id):
+    """Retrive files in upload folders
+
+    Parameters
+    ----------
+    study_id : str
+        The study id of which to retrive all upload folders
+
+    Returns
+    -------
+    list
+        List of the filepaths for upload for that study
+    """
+    fp = []
+    for _, p in retrive_latest_data_directory("uploads", retrive_all=True):
+        t = join(p, study_id)
+        if exists(t):
+            fp.extend(listdir(t))
+
+    return fp
+
+
+def retrive_latest_data_directory(data_type, conn_handler=None,
+                                  retrive_all=False):
     r""" Returns the most recent values from data directory for the given type
 
     Parameters
@@ -518,17 +542,23 @@ def retrive_latest_data_directory(data_type, conn_handler=None):
     -------
     int
         The id of the most recent entry for the given type
-    str
-        The mountpoint for that entry in data_directory
-    str
-        The subdirectory for that entry in data_directory
+    list
+        List of list, where: [[id, filepath]]
     """
     conn_handler = (conn_handler if conn_handler is not None
                     else SQLConnectionHandler())
-    return conn_handler.execute_fetchone(
-        "SELECT data_directory_id, mountpoint, subdirectory FROM "
-        "qiita.data_directory WHERE data_type='%s' and active=true"
-        % data_type)
+    if retrive_all:
+        result = conn_handler.execute_fetchall(
+            "SELECT data_directory_id, mountpoint, subdirectory FROM "
+            "qiita.data_directory WHERE data_type='%s' ORDER BY active DESC"
+            % data_type)
+    else:
+        result = [conn_handler.execute_fetchone(
+            "SELECT data_directory_id, mountpoint, subdirectory FROM "
+            "qiita.data_directory WHERE data_type='%s' and active=true"
+            % data_type)]
+
+    return [[d, join(get_db_files_base_dir(), m, s)] for d, m, s in result]
 
 
 def insert_filepaths(filepaths, obj_id, table, filepath_table, conn_handler,
@@ -564,15 +594,15 @@ def insert_filepaths(filepaths, obj_id, table, filepath_table, conn_handler,
             queue not specified, or no return value if queue specified
         """
         new_filepaths = filepaths
-        base_fp = get_db_files_base_dir()
-        dd_id, mp, sd = retrive_latest_data_directory(table, conn_handler)
+
+        dd_id, mp = retrive_latest_data_directory(table, conn_handler)[0]
+        base_fp = join(get_db_files_base_dir(), mp)
+
         if move_files:
-            # Get the base directory in which the type of data is stored
-            base_data_dir = join(get_db_files_base_dir(), mp, sd)
             # Generate the new fileapths. Format: DataId_OriginalName
             # Keeping the original name is useful for checking if the RawData
             # alrady exists on the DB
-            db_path = partial(join, base_data_dir)
+            db_path = partial(join, base_fp)
             new_filepaths = [
                 (db_path("%s_%s" % (obj_id, basename(path))), id)
                 for path, id in filepaths]
@@ -587,8 +617,10 @@ def insert_filepaths(filepaths, obj_id, table, filepath_table, conn_handler,
                             compute_checksum(path))
                             for path, id in new_filepaths]
         # Create the list of SQL values to add
-        values = ["('%s', %s, '%s', %s, %s)" % (scrub_data(path), id, checksum,
-                  1, dd_id) for path, id, checksum in paths_w_checksum]
+        values = ["('%s', %s, '%s', %s, %s)" % (scrub_data(path), pid,
+                  checksum, 1, dd_id) for path, pid, checksum in
+                  paths_w_checksum]
+        print values
         # Insert all the filepaths at once and get the filepath_id back
         sql = ("INSERT INTO qiita.{0} (filepath, filepath_type_id, checksum, "
                "checksum_algorithm_id, data_directory_id) VALUES {1} RETURNING"
@@ -794,45 +826,6 @@ def get_processed_params_tables():
 
     conn = SQLConnectionHandler()
     return sorted([x[2] for x in conn.execute_fetchall(sql)])
-
-
-def get_user_fp(email):
-    """Returns the user's working filepath
-
-    Parameters
-    ----------
-    email : str
-        The email of the user
-
-    Returns
-    -------
-    str
-        The user's working filepath, a join of the
-        qiita_config.upload_data_dir and the host and name of the user's email
-    """
-    fp_vals = email.split('@')
-    fp = join(qiita_config.upload_data_dir, fp_vals[1], fp_vals[0])
-
-    return fp
-
-
-def get_study_fp(study_id):
-    """Returns the study's working filepath
-
-    Parameters
-    ----------
-    study_id : int
-        The study id
-
-    Returns
-    -------
-    str
-        The study's working filepath, a join of the
-        qiita_config.upload_data_dir and the study's email
-    """
-    fp = join(qiita_config.upload_data_dir, str(study_id))
-
-    return fp
 
 
 def get_lat_longs():

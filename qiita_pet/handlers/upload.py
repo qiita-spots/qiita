@@ -10,7 +10,8 @@ from .base_handlers import BaseHandler
 
 from qiita_core.qiita_settings import qiita_config
 
-from qiita_db.util import get_study_fp
+from qiita_db.util import (get_files_from_uploads_folders,
+                           retrive_latest_data_directory)
 from qiita_db.study import Study
 from qiita_db.user import User
 
@@ -22,19 +23,13 @@ class StudyUploadFileHandler(BaseHandler):
         study = Study(study_id)
         check_access(User(self.current_user), study, no_public=True)
 
-        # processing paths
-        fp = get_study_fp(study_id)
-        if exists(fp):
-            fs = listdir(fp)
-        else:
-            fs = []
-
         # getting the ontologies
         self.render('upload.html', user=self.current_user,
                     study_title=study.title, study_info=study.info,
-                    study_id=study_id, files=fs,
+                    study_id=study_id,
                     extensions=','.join(qiita_config.valid_upload_extension),
-                    max_upload_size=qiita_config.max_upload_size)
+                    max_upload_size=qiita_config.max_upload_size,
+                    files=get_files_from_uploads_folders(str(study_id)))
 
     @authenticated
     def get(self, study_id):
@@ -73,7 +68,8 @@ class UploadFileHandler(BaseHandler):
 
         self.validate_file_extension(resumable_filename)
 
-        fp = join(get_study_fp(study_id), resumable_identifier)
+        _, base_fp = retrive_latest_data_directory("uploads")[0]
+        fp = join(base_fp, study_id, resumable_identifier)
         # creating temporal folder for upload
         if not isdir(fp):
             makedirs(fp)
@@ -88,7 +84,7 @@ class UploadFileHandler(BaseHandler):
         num_files = len([n for n in listdir(fp)])
         if resumable_total_chunks == num_files:
             # creating final destination
-            ffp = join(get_study_fp(study_id), resumable_filename)
+            ffp = join(base_fp, study_id, resumable_filename)
             with open(ffp, 'wb') as f:
                 for c in range(1, resumable_total_chunks+1):
                     chunk = join(fp, '%s.part.%d' % (resumable_filename, c))
@@ -114,8 +110,9 @@ class UploadFileHandler(BaseHandler):
         self.validate_file_extension(resumable_filename)
 
         # temporaly filename or chunck
-        tfp = join(get_study_fp(study_id), resumable_filename + '.part.' +
-                   resumable_chunk_number)
+        _, fp = retrive_latest_data_directory("uploads")[0]
+        tfp = join(fp, study_id,
+                   resumable_filename + '.part.' + resumable_chunk_number)
 
         if exists(tfp):
             self.set_status(200)
