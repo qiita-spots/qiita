@@ -81,7 +81,7 @@ class Ontology(QiitaObject):
         """
 
         # we don't need to add an existing term
-        terms = self.user_defined_terms
+        terms = self.user_defined_terms + self.terms
         if term in terms:
             return
 

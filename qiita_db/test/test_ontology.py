@@ -50,8 +50,12 @@ class TestOntology(TestCase):
         self.assertEqual(obs, [])
 
     def test_add_user_defined_term(self):
+        self.assertFalse('Test Term' in self.ontology.user_defined_terms)
+        pre = len(self.ontology.user_defined_terms)
         self.ontology.add_user_defined_term('Test Term')
+        post = len(self.ontology.user_defined_terms)
         self.assertTrue('Test Term' in self.ontology.user_defined_terms)
+        self.assertEqual(post-pre, 1)
 
     def testContains(self):
         self.assertTrue('Metagenomics' in self.ontology)

@@ -21,6 +21,8 @@ from qiita_core.exceptions import QiitaEnvironmentError
 from qiita_core.qiita_settings import qiita_config
 from .sql_connection import SQLConnectionHandler
 from .reference import Reference
+from qiita_db.ontology import Ontology
+from qiita_db.util import convert_to_id
 
 get_support_file = partial(join, join(dirname(abspath(__file__)),
                                       'support_files'))
@@ -203,17 +205,8 @@ def make_environment(load_ontologies, download_reference, add_demo_user):
         # these values can only be added if the environment is being loaded
         # with the ontologies, thus this cannot exist inside intialize.sql
         # because otherwise loading the ontologies would be a requirement
-        ontology_id = conn.execute_fetchone("""SELECT ontology_id
-                                               FROM qiita.ontology
-                                               WHERE ontology = 'ENA'""")[0]
-        conn.execute("INSERT INTO qiita.term "
-                     "(ontology_id, term, user_defined) "
-                     "VALUES "
-                     "(%s, 'Amplicon Sequencing', true)", [ontology_id])
-        conn.execute("INSERT INTO qiita.term "
-                     "(ontology_id, term, user_defined) "
-                     "VALUES "
-                     "(%s, 'Metagenome', true)", [ontology_id])
+        ontology = Ontology(convert_to_id('ENA', 'ontology'))
+        ontology.add_user_defined_term('Amplicon Sequencing')
 
     if download_reference:
         _download_reference_files(conn)
