@@ -521,7 +521,6 @@ def get_files_from_uploads_folders(study_id):
     fp = []
     for _, p in retrive_latest_data_directory("uploads", retrive_all=True):
         t = join(p, study_id)
-        print t
         if exists(t):
             fp.extend(listdir(t))
 
