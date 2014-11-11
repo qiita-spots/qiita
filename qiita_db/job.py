@@ -35,7 +35,7 @@ from collections import defaultdict
 
 from .base import QiitaStatusObject
 from .util import (insert_filepaths, convert_to_id, get_db_files_base_dir,
-                   params_dict_to_json)
+                   params_dict_to_json, retrive_latest_data_directory)
 from .sql_connection import SQLConnectionHandler
 from .logger import LogEntry
 from .exceptions import QiitaDBStatusError, QiitaDBDuplicateError
@@ -185,7 +185,7 @@ class Job(QiitaStatusObject):
                              [jobid])
 
         # remove files/folders attached to job
-        basedir = get_db_files_base_dir()
+        _, basedir = retrive_latest_data_directory("job")[0]
         for fp in filepaths:
             try:
                 rmtree(join(basedir, fp[0]))
@@ -332,7 +332,7 @@ class Job(QiitaStatusObject):
         """
         # Select results filepaths and filepath types from the database
         conn_handler = SQLConnectionHandler()
-        basedir = get_db_files_base_dir(conn_handler)
+        _, basedir = retrive_latest_data_directory('job')[0]
         results = conn_handler.execute_fetchall(
             "SELECT fp.filepath, fpt.filepath_type FROM qiita.filepath fp "
             "JOIN qiita.filepath_type fpt ON fp.filepath_type_id = "

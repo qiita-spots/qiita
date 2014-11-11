@@ -417,7 +417,7 @@ class RawData(BaseData):
             raise QiitaDBError(msg)
 
         # Get the filpeath id
-        fp_id = get_filepath_id(fp, conn_handler)
+        fp_id = get_filepath_id(self._table, fp, conn_handler)
         fp_is_mine = conn_handler.execute_fetchone(
             "SELECT EXISTS(SELECT * FROM qiita.{0} WHERE filepath_id=%s AND "
             "{1}=%s)".format(self._data_filepath_table,

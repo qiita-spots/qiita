@@ -13,7 +13,7 @@ from tempfile import mkstemp
 
 from qiita_core.util import qiita_test_checker
 from qiita_db.reference import Reference
-from qiita_db.util import get_db_files_base_dir
+from qiita_db.util import retrive_latest_data_directory
 
 
 @qiita_test_checker()
@@ -29,7 +29,7 @@ class ReferenceTests(TestCase):
         fd, self.tree_fp = mkstemp(suffix="_tree.tre")
         close(fd)
 
-        self.db_dir = join(get_db_files_base_dir(), 'reference')
+        _, self.db_dir = retrive_latest_data_directory('reference')[0]
 
         self._clean_up_files = []
 
@@ -54,12 +54,12 @@ class ReferenceTests(TestCase):
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.filepath WHERE filepath_id=16 or "
             "filepath_id=17 or filepath_id=18")
-        exp_seq = join('reference', "%s_%s_%s" % (self.name, self.version,
-                                                  basename(self.seqs_fp)))
-        exp_tax = join('reference', "%s_%s_%s" % (self.name, self.version,
-                                                  basename(self.tax_fp)))
-        exp_tree = join('reference', "%s_%s_%s" % (self.name, self.version,
-                                                   basename(self.tree_fp)))
+        exp_seq = "%s_%s_%s" % (self.name, self.version,
+                                basename(self.seqs_fp))
+        exp_tax = "%s_%s_%s" % (self.name, self.version,
+                                basename(self.tax_fp))
+        exp_tree = "%s_%s_%s" % (self.name, self.version,
+                                 basename(self.tree_fp))
         exp = [[16, exp_seq, 10, '0', 1, 6],
                [17, exp_tax, 11, '0', 1, 6],
                [18, exp_tree, 12, '0', 1, 6]]

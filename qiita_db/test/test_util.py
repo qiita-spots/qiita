@@ -278,7 +278,7 @@ class DBUtilTests(TestCase):
         # Check that the filepaths have been added to the DB
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.filepath WHERE filepath_id=16")
-        exp_fp = join("raw_data", "1_%s" % basename(fp))
+        exp_fp = "1_%s" % basename(fp)
         exp = [[16, exp_fp, 1, '852952723', 1, 5]]
         self.assertEqual(obs, exp)
 
@@ -303,7 +303,7 @@ class DBUtilTests(TestCase):
         # Check that the filepaths have been added to the DB
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.filepath WHERE filepath_id=16")
-        exp_fp = join("raw_data", "1_%s" % basename(fp))
+        exp_fp = "1_%s" % basename(fp)
         exp = [[16, exp_fp, 1, '852952723', 1, 5]]
         self.assertEqual(obs, exp)
 
@@ -340,14 +340,14 @@ class DBUtilTests(TestCase):
         # Check that the filepaths have been added to the DB
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.filepath WHERE filepath_id=16")
-        exp_fp = join("raw_data", "1_%s" % basename(fp))
+        exp_fp = "1_%s" % basename(fp)
         exp = [[16, exp_fp, 1, '852952723', 1, 5]]
         self.assertEqual(obs, exp)
 
         # check that raw_filpath data was added to the DB
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.raw_filepath WHERE filepath_id=16")
-        exp_fp = join("raw_data", "1_%s" % basename(fp))
+        exp_fp = "1_%s" % basename(fp)
         exp = [[1, 16]]
         self.assertEqual(obs, exp)
 
@@ -410,25 +410,25 @@ class DBUtilTests(TestCase):
         self.assertFalse(exists(fp16))
 
     def test_get_filepath_id(self):
-        fp = join(get_db_files_base_dir(),
-                  'raw_data/1_s_G1_L001_sequences.fastq.gz')
-        obs = get_filepath_id(fp, self.conn_handler)
+        _, base = retrive_latest_data_directory("raw_data")[0]
+        fp = join(base, '1_s_G1_L001_sequences.fastq.gz')
+        obs = get_filepath_id("raw_data", fp, self.conn_handler)
         self.assertEqual(obs, 1)
 
     def test_get_filepath_id_error(self):
         with self.assertRaises(QiitaDBError):
-            get_filepath_id("Not_a_path", self.conn_handler)
+            get_filepath_id("raw_data", "Not_a_path", self.conn_handler)
 
     def test_retrive_latest_data_directory(self):
-        exp = [[5, join(get_db_files_base_dir(), 'raw_data', '')]]
+        exp = [(5, join(get_db_files_base_dir(), 'raw_data', ''))]
         obs = retrive_latest_data_directory("raw_data")
         self.assertEqual(obs, exp)
 
-        exp = [[1, join(get_db_files_base_dir(), 'analysis', '')]]
+        exp = [(1, join(get_db_files_base_dir(), 'analysis', ''))]
         obs = retrive_latest_data_directory("analysis")
         self.assertEqual(obs, exp)
 
-        exp = [[2, join(get_db_files_base_dir(), 'job', '')]]
+        exp = [(2, join(get_db_files_base_dir(), 'job', ''))]
         obs = retrive_latest_data_directory("job")
         self.assertEqual(obs, exp)
 
@@ -443,22 +443,22 @@ class DBUtilTests(TestCase):
             "true), ('raw_data', 'raw_data', 'tmp', false)")
 
         # this should have been updated
-        exp = [[9, join(get_db_files_base_dir(), 'analysis', 'tmp')]]
+        exp = [(9, join(get_db_files_base_dir(), 'analysis', 'tmp'))]
         obs = retrive_latest_data_directory("analysis")
         self.assertEqual(obs, exp)
 
         # these 2 shouldn't
-        exp = [[5, join(get_db_files_base_dir(), 'raw_data', '')]]
+        exp = [(5, join(get_db_files_base_dir(), 'raw_data', ''))]
         obs = retrive_latest_data_directory("raw_data")
         self.assertEqual(obs, exp)
 
-        exp = [[2, join(get_db_files_base_dir(), 'job', '')]]
+        exp = [(2, join(get_db_files_base_dir(), 'job', ''))]
         obs = retrive_latest_data_directory("job")
         self.assertEqual(obs, exp)
 
         # testing multi returns
-        exp = [[5, join(get_db_files_base_dir(), 'raw_data', '')],
-               [10, join(get_db_files_base_dir(), 'raw_data', 'tmp')]]
+        exp = [(5, join(get_db_files_base_dir(), 'raw_data', '')),
+               (10, join(get_db_files_base_dir(), 'raw_data', 'tmp'))]
         obs = retrive_latest_data_directory("raw_data", retrive_all=True)
         self.assertEqual(obs, exp)
 

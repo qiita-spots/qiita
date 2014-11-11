@@ -311,7 +311,7 @@ INSERT INTO qiita.study_processed_data (processed_data_id, study_id) VALUES (1, 
 INSERT INTO qiita.preprocessed_processed_data (preprocessed_data_id, processed_data_id) VALUES (1, 1);
 
 -- Insert the reference files for reference 1
-INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum, checksum_algorithm_id, data_directory_id) VALUES ('referenceGreenGenes_13_8_97_otus.fasta', 10, '852952723', 1, 6), ('GreenGenes_13_8_97_otu_taxonomy.txt', 11, '852952723', 1, 6), ('GreenGenes_13_8_97_otus.tree', 12, '852952723', 1, 6);
+INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum, checksum_algorithm_id, data_directory_id) VALUES ('GreenGenes_13_8_97_otus.fasta', 10, '852952723', 1, 6), ('GreenGenes_13_8_97_otu_taxonomy.txt', 11, '852952723', 1, 6), ('GreenGenes_13_8_97_otus.tree', 12, '852952723', 1, 6);
 
 -- Populate the reference table
 INSERT INTO qiita.reference (reference_name, reference_version, sequence_filepath, taxonomy_filepath, tree_filepath) VALUES ('GreenGenes', '13_8', 8, 9, 10);

@@ -676,11 +676,13 @@ def purge_filepaths(conn_handler=None):
                 remove(fp)
 
 
-def get_filepath_id(fp, conn_handler):
+def get_filepath_id(table, fp, conn_handler):
     """Return the filepath_id of fp
 
     Parameters
     ----------
+    table : str
+        The table type so we can search on this one
     fp : str
         The filepath
     conn_handler : SQLConnectionHandler
@@ -691,9 +693,12 @@ def get_filepath_id(fp, conn_handler):
     QiitaDBError
         If fp is not stored in the DB.
     """
+    _, mp = retrive_latest_data_directory(table, conn_handler)[0]
+    base_fp = join(get_db_files_base_dir(), mp)
+
     fp_id = conn_handler.execute_fetchone(
         "SELECT filepath_id FROM qiita.filepath WHERE filepath=%s",
-        (relpath(fp, get_db_files_base_dir()),))
+        (relpath(fp, base_fp),))
 
     # check if the query has actually returned something
     if not fp_id:
