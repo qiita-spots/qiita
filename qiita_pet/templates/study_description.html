@@ -57,7 +57,7 @@
 <!-- Nav tabs -->
 <ul class="nav nav-tabs" role="tablist" id="myTab">
   <li class="active"><a href="#add_sample_template" role="tab" data-toggle="tab">Add sample template</a></li>
-  {% if ste and study_status != 'private' %}
+  {% if ste and study_status != 'public' %}
     <li><a href="#add_raw_data" role="tab" data-toggle="tab">Add raw data</a></li>
   {% end %}
 
@@ -86,7 +86,7 @@
     {% end %}
   </div>
 
-  {% if ste %}
+  {% if ste and study_status != 'public' %}
     <div class="tab-pane" id="add_raw_data" style="padding: 10px;">
       What file type is your raw data?
       <select id="filetype">
