@@ -82,13 +82,12 @@ class Ontology(QiitaObject):
 
         # we don't need to add an existing term
         terms = self.user_defined_terms + self.terms
-        if term in terms:
-            return
 
-        conn_handler = SQLConnectionHandler()
-        sql = """INSERT INTO qiita.term
-                 (ontology_id, term, user_defined)
-                 VALUES
-                 (%s, %s, true);"""
+        if term not in terms:
+            conn_handler = SQLConnectionHandler()
+            sql = """INSERT INTO qiita.term
+                     (ontology_id, term, user_defined)
+                     VALUES
+                     (%s, %s, true);"""
 
-        return conn_handler.execute(sql, [self.id, term])
+            return conn_handler.execute(sql, [self.id, term])

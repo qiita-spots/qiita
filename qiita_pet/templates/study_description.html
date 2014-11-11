@@ -171,7 +171,7 @@ function newInvestigationTypeChanged(rawDataID, isEdit){
               <li>
                 (optional but required for EBI submission) select an investigation type:
                 <select onchange="investigationTypeChanged({{r.id}})" id="investigation-type-{{r.id}}">
-                  <option value="">Non selected</option>
+                  <option value="Non selected">Non selected</option>
                   {% raw ena_terms %}
                 </select>
                 <table id="investigation-type-table" name="investigation-types" class="investigation-type-table">
@@ -217,6 +217,7 @@ function newInvestigationTypeChanged(rawDataID, isEdit){
                       </td>
                       <td>
                         <select id="edit-investigation-type-{{prep.id}}" onchange="investigationTypeChanged({{prep.id}}, true)">
+                          <option value="Non selected">Non selected</option>
                           {% raw ena_terms %}
                         </select>
                       </td>
@@ -253,7 +254,7 @@ function newInvestigationTypeChanged(rawDataID, isEdit){
                     been rendered
                   -->
                   <script>
-                  if ("{{prep.investigation_type}}" != "None") {
+                  if ("{{prep.investigation_type}}" !== "None") {
                     // if the investigation type is a known ENA term, set as needed
                     if ($("#edit-investigation-type-{{prep.id}} option[value='{{prep.investigation_type}}']").length > 0 ){
                       $('#edit-investigation-type-{{prep.id}}').val("{{prep.investigation_type}}");
@@ -266,6 +267,9 @@ function newInvestigationTypeChanged(rawDataID, isEdit){
                         $('#edit-user-defined-investigation-type-{{prep.id}}').val("{{prep.investigation_type}}");
                       }
                     }
+                  }
+                  else{
+                    $('#edit-investigation-type-{{prep.id}}').val("Non selected");
                   }
                   </script>
                 </td>
