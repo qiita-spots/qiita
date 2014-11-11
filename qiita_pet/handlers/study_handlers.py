@@ -207,6 +207,9 @@ class PreprocessingSummaryHandler(BaseHandler):
         study = Study(ppd.study)
         check_access(User(self.current_user), study, raise_error=True)
 
+        back_button_path = self.get_argument(
+            'back_button_path', '/study/description/%d' % study.id)
+
         files_tuples = ppd.get_filepaths()
         files = defaultdict(list)
 
@@ -221,7 +224,7 @@ class PreprocessingSummaryHandler(BaseHandler):
         title = ('Preprocessed Data: %d' % ppd_id)
 
         self.render('text_file.html', title=title, contents=contents,
-                    user=self.current_user)
+                    user=self.current_user, back_button_path=back_button_path)
 
 
 class StudyDescriptionHandler(BaseHandler):
