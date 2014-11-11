@@ -36,6 +36,8 @@ class ConfigurationManager(object):
         Path to the working directory
     max_upload_size : int
         Max upload size
+    valid_upload_extension : str
+        The extensions that are valid to upload, comma separated
     user : str
         The postgres user
     password : str
@@ -90,6 +92,14 @@ class ConfigurationManager(object):
     ebi_organization_prefix : str
         This string (with an underscore) will be prefixed to your EBI
         submission and study aliases
+    redis_host : str
+        The host/ip for redis
+    redis_port : int
+        The port for redis
+    redis_password : str
+        The password for redis
+    redis_db : int
+        The db for redis
     """
     def __init__(self):
         # If conf_fp is None, we default to the test configuration file
@@ -141,6 +151,13 @@ class ConfigurationManager(object):
                              self.upload_data_dir)
         self.max_upload_size = config.getint('main', 'MAX_UPLOAD_SIZE')
         self.require_approval = config.getboolean('main', 'REQUIRE_APPROVAL')
+
+        self.valid_upload_extension = [ve.strip() for ve in config.get(
+            'main', 'VALID_UPLOAD_EXTENSION').split(',')]
+        if (not self.valid_upload_extension or
+           self.valid_upload_extension == ['']):
+            self.valid_upload_extension = []
+            print 'No files will be allowed to be uploaded.'
 
     def _get_postgres(self, config):
         """Get the configuration of the postgres section"""

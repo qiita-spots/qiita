@@ -343,6 +343,7 @@ class StudyDescriptionHandler(BaseHandler):
             'update_investigation_type', None)
 
         study = Study(study_id)
+        msg_level = 'success'
         if sample_template:
             # processing sample templates
 
@@ -460,9 +461,10 @@ class StudyDescriptionHandler(BaseHandler):
         else:
             msg = ("Error, did you select a valid uploaded file or are "
                    "passing the correct parameters?")
+            msg_level = 'danger'
             tab_to_display = ""
 
-        self.display_template(study_id, msg, "success", tab_to_display)
+        self.display_template(study_id, msg, msg_level, tab_to_display)
 
 
 class CreateStudyHandler(BaseHandler):

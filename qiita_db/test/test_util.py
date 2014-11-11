@@ -24,7 +24,7 @@ from qiita_db.util import (exists_table, exists_dynamic_table, scrub_data,
                            insert_filepaths, get_db_files_base_dir,
                            get_data_types, get_required_sample_info_status,
                            get_emp_status, purge_filepaths, get_filepath_id,
-                           get_lat_longs)
+                           get_lat_longs, retrive_latest_data_directory)
 from qiita_core.qiita_settings import qiita_config
 
 
@@ -284,7 +284,7 @@ class DBUtilTests(TestCase):
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.filepath WHERE filepath_id=16")
         exp_fp = join("raw_data", "1_%s" % basename(fp))
-        exp = [[16, exp_fp, 1, '852952723', 1]]
+        exp = [[16, exp_fp, 1, '852952723', 1, 5]]
         self.assertEqual(obs, exp)
 
     def test_insert_filepaths_string(self):
@@ -309,7 +309,7 @@ class DBUtilTests(TestCase):
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.filepath WHERE filepath_id=16")
         exp_fp = join("raw_data", "1_%s" % basename(fp))
-        exp = [[16, exp_fp, 1, '852952723', 1]]
+        exp = [[16, exp_fp, 1, '852952723', 1, 5]]
         self.assertEqual(obs, exp)
 
     def test_insert_filepaths_queue(self):
@@ -346,7 +346,7 @@ class DBUtilTests(TestCase):
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.filepath WHERE filepath_id=16")
         exp_fp = join("raw_data", "1_%s" % basename(fp))
-        exp = [[16, exp_fp, 1, '852952723', 1]]
+        exp = [[16, exp_fp, 1, '852952723', 1, 5]]
         self.assertEqual(obs, exp)
 
         # check that raw_filpath data was added to the DB
@@ -428,6 +428,43 @@ class DBUtilTests(TestCase):
         study_id = 1000
         obs = get_study_fp(study_id)
         exp = join(qiita_config.upload_data_dir, str(study_id))
+        self.assertEqual(obs, exp)
+
+    def test_retrive_latest_data_directory(self):
+        exp = [5, 'raw_data', '']
+        obs = retrive_latest_data_directory("raw_data")
+        self.assertEqual(obs, exp)
+
+        exp = [1, 'analysis', '']
+        obs = retrive_latest_data_directory("analysis")
+        self.assertEqual(obs, exp)
+
+        exp = [2, 'job', '']
+        obs = retrive_latest_data_directory("job")
+        self.assertEqual(obs, exp)
+
+        # inserting new ones so we can test that it retrieves these and
+        # doesn't alter other ones
+        self.conn_handler.execute(
+            "UPDATE qiita.data_directory SET active=false WHERE "
+            "data_directory_id=1")
+        self.conn_handler.execute(
+            "INSERT INTO qiita.data_directory (data_type, mountpoint, "
+            "subdirectory, active) VALUES ('analysis', 'analysis', 'tmp', "
+            "true), ('raw_data', 'raw_data', 'tmp', false)")
+
+        # this should have been updated
+        exp = [9, 'analysis', 'tmp']
+        obs = retrive_latest_data_directory("analysis")
+        self.assertEqual(obs, exp)
+
+        # these 2 shouldn't
+        exp = [5, 'raw_data', '']
+        obs = retrive_latest_data_directory("raw_data")
+        self.assertEqual(obs, exp)
+
+        exp = [2, 'job', '']
+        obs = retrive_latest_data_directory("job")
         self.assertEqual(obs, exp)
 
 

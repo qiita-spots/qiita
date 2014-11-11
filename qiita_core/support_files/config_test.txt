@@ -30,6 +30,9 @@ MAX_UPLOAD_SIZE = 100
 # Path to the base directory where the data files are going to be stored, uncomment to set
 BASE_DATA_DIR =
 
+# Valid upload extension, comma separated. Empty for no uploads
+VALID_UPLOAD_EXTENSION = fastq,fastq.gz,txt
+
 # ----------------------------- IPython settings ------------------------------
 [ipython]
 # ties to cluster profiles

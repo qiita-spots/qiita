@@ -57,6 +57,15 @@ CREATE TABLE qiita.controlled_vocab_values (
 
 CREATE INDEX idx_controlled_vocab_values ON qiita.controlled_vocab_values ( controlled_vocab_id );
 
+CREATE TABLE qiita.data_directory ( 
+	data_directory_id    bigserial  NOT NULL,
+	data_type            varchar  NOT NULL,
+	mountpoint           varchar  NOT NULL,
+	subdirectory         varchar  NOT NULL,
+	active               bool  NOT NULL,
+	CONSTRAINT pk_data_directory PRIMARY KEY ( data_directory_id )
+ );
+
 CREATE TABLE qiita.data_type ( 
 	data_type_id         bigserial  NOT NULL,
 	data_type            varchar  NOT NULL,
@@ -245,8 +254,9 @@ CREATE TABLE qiita.study_status (
  );
 
 CREATE TABLE qiita.term ( 
-	term_id              bigint  NOT NULL,
+	term_id              bigserial  NOT NULL,
 	ontology_id          bigint  NOT NULL,
+	old_term_id          bigint DEFAULT NULL ,
 	term                 varchar  NOT NULL,
 	identifier           varchar  ,
 	definition           varchar  ,
@@ -254,11 +264,16 @@ CREATE TABLE qiita.term (
 	is_obsolete          bool DEFAULT 'false' ,
 	is_root_term         bool  ,
 	is_leaf              bool  ,
+	user_defined         bool DEFAULT False NOT NULL,
 	CONSTRAINT pk_term PRIMARY KEY ( term_id ),
 	CONSTRAINT fk_term_ontology FOREIGN KEY ( ontology_id ) REFERENCES qiita.ontology( ontology_id )    
  );
 
 CREATE INDEX idx_term ON qiita.term ( ontology_id );
+
+COMMENT ON COLUMN qiita.term.old_term_id IS 'Identifier used in the old system, we are keeping this for consistency';
+
+COMMENT ON COLUMN qiita.term.user_defined IS 'Whether or not this term was defined by a user';
 
 CREATE TABLE qiita.timeseries_type ( 
 	timeseries_type_id   bigserial  NOT NULL,
@@ -324,12 +339,16 @@ CREATE TABLE qiita.filepath (
 	filepath_type_id     bigint  NOT NULL,
 	checksum             varchar  NOT NULL,
 	checksum_algorithm_id bigint  NOT NULL,
+	data_directory_id    bigserial  ,
 	CONSTRAINT pk_filepath PRIMARY KEY ( filepath_id ),
 	CONSTRAINT fk_filepath FOREIGN KEY ( filepath_type_id ) REFERENCES qiita.filepath_type( filepath_type_id )    ,
-	CONSTRAINT fk_filepath_0 FOREIGN KEY ( checksum_algorithm_id ) REFERENCES qiita.checksum_algorithm( checksum_algorithm_id )    
+	CONSTRAINT fk_filepath_0 FOREIGN KEY ( checksum_algorithm_id ) REFERENCES qiita.checksum_algorithm( checksum_algorithm_id )    ,
+	CONSTRAINT fk_filepath_data_directory FOREIGN KEY ( data_directory_id ) REFERENCES qiita.data_directory( data_directory_id ) ON DELETE RESTRICT ON UPDATE RESTRICT
  );
 
 CREATE INDEX idx_filepath ON qiita.filepath ( filepath_type_id );
+
+CREATE INDEX idx_filepath_0 ON qiita.filepath ( data_directory_id );
 
 CREATE TABLE qiita.investigation ( 
 	investigation_id     bigserial  NOT NULL,
@@ -806,8 +825,8 @@ COMMENT ON TABLE qiita.processed_params_uclust IS 'Parameters used for processin
 COMMENT ON COLUMN qiita.processed_params_uclust.reference_id IS 'What version of reference or type of reference used';
 
 CREATE TABLE qiita.required_sample_info ( 
-	study_id             bigint  NOT NULL,
 	sample_id            varchar  NOT NULL,
+	study_id             bigint  NOT NULL,
 	physical_location    varchar  NOT NULL,
 	has_physical_specimen bool  NOT NULL,
 	has_extracted_data   bool  NOT NULL,
@@ -818,15 +837,14 @@ CREATE TABLE qiita.required_sample_info (
 	description          varchar  NOT NULL,
 	latitude             float8  NOT NULL,
 	longitude            float8  NOT NULL,
-	CONSTRAINT idx_common_sample_information PRIMARY KEY ( study_id, sample_id ),
-	CONSTRAINT pk_required_sample_info UNIQUE ( sample_id, study_id ) ,
-	CONSTRAINT fk_required_sample_info_study FOREIGN KEY ( study_id ) REFERENCES qiita.study( study_id )    ,
-	CONSTRAINT fk_required_sample_info FOREIGN KEY ( required_sample_info_status_id ) REFERENCES qiita.required_sample_info_status( required_sample_info_status_id )    
+	CONSTRAINT idx_required_sample_info_1 PRIMARY KEY ( sample_id ),
+	CONSTRAINT fk_required_sample_info FOREIGN KEY ( required_sample_info_status_id ) REFERENCES qiita.required_sample_info_status( required_sample_info_status_id )    ,
+	CONSTRAINT fk_required_sample_info_study FOREIGN KEY ( study_id ) REFERENCES qiita.study( study_id )    
  );
 
-CREATE INDEX idx_required_sample_info ON qiita.required_sample_info ( study_id );
-
 CREATE INDEX idx_required_sample_info_0 ON qiita.required_sample_info ( required_sample_info_status_id );
+
+CREATE INDEX idx_required_sample_info ON qiita.required_sample_info ( study_id );
 
 COMMENT ON TABLE qiita.required_sample_info IS 'Required info for each sample. One row is one sample.';
 
@@ -864,10 +882,9 @@ CREATE TABLE qiita.analysis_sample (
 	analysis_id          bigint  NOT NULL,
 	processed_data_id    bigint  NOT NULL,
 	sample_id            varchar  NOT NULL,
-	study_id             bigint  NOT NULL,
 	CONSTRAINT fk_analysis_sample_analysis FOREIGN KEY ( analysis_id ) REFERENCES qiita.analysis( analysis_id )    ,
 	CONSTRAINT fk_analysis_processed_data FOREIGN KEY ( processed_data_id ) REFERENCES qiita.processed_data( processed_data_id )    ,
-	CONSTRAINT fk_analysis_sample FOREIGN KEY ( sample_id, study_id ) REFERENCES qiita.required_sample_info( sample_id, study_id )    
+	CONSTRAINT fk_analysis_sample FOREIGN KEY ( sample_id ) REFERENCES qiita.required_sample_info( sample_id )    
  );
 
 CREATE INDEX idx_analysis_sample ON qiita.analysis_sample ( analysis_id );
@@ -876,18 +893,15 @@ CREATE INDEX idx_analysis_sample_0 ON qiita.analysis_sample ( processed_data_id 
 
 CREATE INDEX idx_analysis_sample_1 ON qiita.analysis_sample ( sample_id );
 
-CREATE INDEX idx_analysis_sample_2 ON qiita.analysis_sample ( sample_id, study_id );
-
 CREATE TABLE qiita.common_prep_info ( 
 	prep_template_id     bigint  NOT NULL,
 	sample_id            varchar  NOT NULL,
-	study_id             bigint  NOT NULL,
 	center_name          varchar  ,
 	center_project_name  varchar  ,
 	emp_status_id        bigint  NOT NULL,
-	CONSTRAINT idx_common_prep_info PRIMARY KEY ( prep_template_id, sample_id, study_id ),
+	CONSTRAINT idx_common_prep_info PRIMARY KEY ( prep_template_id, sample_id ),
 	CONSTRAINT fk_required_prep_info_emp_status FOREIGN KEY ( emp_status_id ) REFERENCES qiita.emp_status( emp_status_id )    ,
-	CONSTRAINT fk_common_prep_info FOREIGN KEY ( sample_id, study_id ) REFERENCES qiita.required_sample_info( sample_id, study_id )    ,
+	CONSTRAINT fk_common_prep_info FOREIGN KEY ( sample_id ) REFERENCES qiita.required_sample_info( sample_id )    ,
 	CONSTRAINT fk_prep_template FOREIGN KEY ( prep_template_id ) REFERENCES qiita.prep_template( prep_template_id )    
  );
 
@@ -895,7 +909,7 @@ CREATE INDEX idx_required_prep_info_0 ON qiita.common_prep_info ( emp_status_id 
 
 CREATE INDEX idx_required_prep_info_2 ON qiita.common_prep_info ( sample_id );
 
-CREATE INDEX idx_common_prep_info_0 ON qiita.common_prep_info ( sample_id, study_id );
+CREATE INDEX idx_common_prep_info_0 ON qiita.common_prep_info ( sample_id );
 
 CREATE INDEX idx_common_prep_info_1 ON qiita.common_prep_info ( prep_template_id );
 
