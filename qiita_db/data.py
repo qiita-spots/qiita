@@ -170,12 +170,12 @@ class BaseData(QiitaObject):
         self._set_link_filepaths_status("idle")
 
     def get_filepaths(self):
-        r"""Returns the filepath associated with the data object
+        r"""Returns the filepaths and filetypes associated with the data object
 
         Returns
         -------
         list of tuples
-            A list of (path, filetype id) with all the paths associated with
+            A list of (path, filetype) with all the paths associated with
             the current data
         """
         self._check_subclass()
@@ -184,7 +184,7 @@ class BaseData(QiitaObject):
         # Retrieve all the (path, id) tuples related with the current data
         # object. We need to first check the _data_filepath_table to get the
         # filepath ids of the filepath associated with the current data object.
-        # We then can query the filepath table to get those paths/
+        # We then can query the filepath table to get those paths.
         db_paths = conn_handler.execute_fetchall(
             "SELECT filepath, filepath_type_id FROM qiita.{0} WHERE "
             "filepath_id IN (SELECT filepath_id FROM qiita.{1} WHERE "
@@ -713,31 +713,6 @@ class PreprocessedData(BaseData):
         sql = ("UPDATE qiita.{0} SET ebi_study_accession = %s WHERE "
                "preprocessed_data_id = %s").format(self._table)
         conn_handler.execute(sql, (new_ebi_study_accession, self._id))
-
-    @property
-    def files(self):
-        """Returns a dict of filetypes and filepaths associated with this PPD
-
-        Returns
-        -------
-        dict
-            {file_type: list of filepaths}
-        """
-        conn_handler = SQLConnectionHandler()
-
-        sql = """
-            SELECT fpt.filepath_type, fp.filepath
-            FROM qiita.filepath fp join qiita.filepath_type fpt
-                on fp.filepath_type_id = fpt.filepath_type_id
-            join qiita.{} ppdfp on ppdfp.filepath_id = fp.filepath_id
-            where ppdfp.preprocessed_data_id = %s""".format(
-            self._data_filepath_table)
-
-        files = defaultdict(list)
-        for fpt, fp in conn_handler.execute_fetchall(sql, [self._id]):
-            files[fpt].append(fp)
-
-        return dict(files)
 
     def data_type(self, ret_id=False):
         """Returns the data_type or data_type_id
