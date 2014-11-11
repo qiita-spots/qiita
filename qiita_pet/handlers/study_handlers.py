@@ -8,7 +8,7 @@ r"""Qitta study handlers for the Tornado webserver.
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 from __future__ import division
-from collections import namedtuple
+from collections import namedtuple, defaultdict
 
 from tornado.web import authenticated, HTTPError, asynchronous
 from tornado.gen import coroutine, Task
@@ -41,7 +41,7 @@ from qiita_db.metadata_template import (SampleTemplate, PrepTemplate,
 from qiita_db.study import Study, StudyPerson
 from qiita_db.user import User
 from qiita_db.util import (get_study_fp, get_filepath_types, get_data_types,
-                           get_filetypes, convert_to_id, get_db_files_base_dir)
+                           get_filetypes, convert_to_id)
 from qiita_db.data import PreprocessedData, RawData
 from qiita_db.exceptions import (QiitaDBColumnError, QiitaDBExecutionError,
                                  QiitaDBDuplicateError, QiitaDBUnknownIDError)
@@ -207,11 +207,11 @@ class PreprocessingSummaryHandler(BaseHandler):
         study = Study(ppd.study)
         check_access(User(self.current_user), study, raise_error=True)
 
-        files = ppd.files
+        files_tuples = ppd.get_filepaths()
+        files = defaultdict(list)
 
-        for fpt, fps in viewitems(files):
-            fps = [join(get_db_files_base_dir(), fp) for fp in fps]
-            files[fpt] = fps
+        for fp, fpt in files_tuples:
+            files[fpt].append(fp)
 
         with open(files['log'][0], 'U') as f:
             contents = f.read()

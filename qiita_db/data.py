@@ -80,7 +80,6 @@ from __future__ import division
 from datetime import datetime
 from os.path import join
 from functools import partial
-from collections import defaultdict
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from .base import QiitaObject
