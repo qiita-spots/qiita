@@ -7,7 +7,7 @@ from qiita_core.util import qiita_test_checker
 from qiita_db.analysis import Analysis
 from qiita_db.user import User
 from qiita_db.exceptions import QiitaDBStatusError
-from qiita_db.util import get_db_files_base_dir
+from qiita_db.util import retrive_latest_data_directory
 # -----------------------------------------------------------------------------
 # Copyright (c) 2014--, The Qiita Development Team.
 #
@@ -21,6 +21,7 @@ from qiita_db.util import get_db_files_base_dir
 class TestAnalysis(TestCase):
     def setUp(self):
         self.analysis = Analysis(1)
+        _, self.fp = retrive_latest_data_directory("analysis")[0]
 
     def test_lock_check(self):
         for status in ["queued", "running", "public", "completed",
@@ -115,8 +116,7 @@ class TestAnalysis(TestCase):
         self.assertEqual(self.analysis.samples, exp)
 
     def test_retrieve_dropped_samples(self):
-        biom_fp = join(get_db_files_base_dir(), "analysis",
-                       "1_analysis_18S.biom")
+        biom_fp = join(self.fp, "1_analysis_18S.biom")
         try:
             samples = {1: ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196']}
             self.analysis._build_biom_tables(samples, 100,
@@ -135,8 +135,7 @@ class TestAnalysis(TestCase):
         self.assertEqual(self.analysis.shared_with, ["shared@foo.bar"])
 
     def test_retrieve_biom_tables(self):
-        exp = {"18S": join(get_db_files_base_dir(), "analysis",
-                           "1_analysis_18S.biom")}
+        exp = {"18S": join(self.fp, "1_analysis_18S.biom")}
         self.assertEqual(self.analysis.biom_tables, exp)
 
     def test_retrieve_biom_tables_none(self):
@@ -199,8 +198,7 @@ class TestAnalysis(TestCase):
         self.assertEqual(self.analysis.pmid, "11211221212213")
 
     def test_retrieve_mapping_file(self):
-        exp = join(get_db_files_base_dir(), "analysis",
-                   "1_analysis_mapping.txt")
+        exp = join(self.fp, "1_analysis_mapping.txt")
         obs = self.analysis.mapping_file
         self.assertEqual(obs, exp)
         self.assertTrue(exists(exp))
@@ -258,8 +256,7 @@ class TestAnalysis(TestCase):
         self.assertEqual(obs, exp)
 
     def test_build_mapping_file(self):
-        map_fp = join(get_db_files_base_dir(), "analysis",
-                      "1_analysis_mapping.txt")
+        map_fp = join(self.fp, "1_analysis_mapping.txt")
         try:
             samples = {1: ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196']}
             self.analysis._build_mapping_file(samples,
@@ -308,8 +305,7 @@ class TestAnalysis(TestCase):
                                               conn_handler=self.conn_handler)
 
     def test_build_biom_tables(self):
-        biom_fp = join(get_db_files_base_dir(), "analysis",
-                       "1_analysis_18S.biom")
+        biom_fp = join(self.fp, "1_analysis_18S.biom")
         try:
             samples = {1: ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196']}
             self.analysis._build_biom_tables(samples, 100,
@@ -333,10 +329,8 @@ class TestAnalysis(TestCase):
                 f.write("")
 
     def test_build_files(self):
-        biom_fp = join(get_db_files_base_dir(), "analysis",
-                       "1_analysis_18S.biom")
-        map_fp = join(get_db_files_base_dir(), "analysis",
-                      "1_analysis_mapping.txt")
+        biom_fp = join(self.fp, "1_analysis_18S.biom")
+        map_fp = join(self.fp, "1_analysis_mapping.txt")
         try:
             self.analysis.build_files()
         finally:

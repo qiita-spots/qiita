@@ -30,8 +30,8 @@ from .base import QiitaStatusObject
 from .data import ProcessedData
 from .study import Study
 from .exceptions import QiitaDBStatusError  # QiitaDBNotImplementedError
-from .util import (convert_to_id, get_work_base_dir, get_db_files_base_dir,
-                   get_table_cols)
+from .util import (convert_to_id, get_work_base_dir,
+                   retrive_latest_data_directory, get_table_cols)
 
 
 class Analysis(QiitaStatusObject):
@@ -294,7 +294,7 @@ class Analysis(QiitaStatusObject):
         if not tables:
             return None
         ret_tables = {}
-        base_fp = get_db_files_base_dir()
+        _, base_fp = retrive_latest_data_directory(self._table)[0]
         for fp in tables:
             ret_tables[fp[0]] = join(base_fp, fp[1])
         return ret_tables
@@ -316,7 +316,9 @@ class Analysis(QiitaStatusObject):
         mapping_fp = conn_handler.execute_fetchone(sql, (self._id, fptypeid))
         if not mapping_fp:
             return None
-        return join(get_db_files_base_dir(), mapping_fp[0])
+
+        _, base_fp = retrive_latest_data_directory(self._table)[0]
+        return join(base_fp, mapping_fp[0])
 
     @property
     def step(self):
@@ -603,14 +605,13 @@ class Analysis(QiitaStatusObject):
         # add the new tables to the analysis
         conn_handler = conn_handler if conn_handler is not None \
             else SQLConnectionHandler()
-        base_fp = get_db_files_base_dir(conn_handler)
+        _, base_fp = retrive_latest_data_directory(self._table)[0]
         for dt, biom_table in viewitems(new_tables):
             # rarefy, if specified
             if rarefaction_depth is not None:
                 biom_table = biom_table.subsample(rarefaction_depth)
             # write out the file
-            biom_fp = join(base_fp, "analysis", "%d_analysis_%s.biom" %
-                           (self._id, dt))
+            biom_fp = join(base_fp, "%d_analysis_%s.biom" % (self._id, dt))
             with biom_open(biom_fp, 'w') as f:
                 biom_table.to_hdf5(f, "Analysis %s Datatype %s" %
                                    (self._id, dt))
@@ -683,9 +684,8 @@ class Analysis(QiitaStatusObject):
         all_headers.append('Description')
 
         # write mapping file out
-        base_fp = get_db_files_base_dir(conn_handler)
-        mapping_fp = join(base_fp, "analysis", "%d_analysis_mapping.txt" %
-                          self._id)
+        _, base_fp = retrive_latest_data_directory(self._table)[0]
+        mapping_fp = join(base_fp, "%d_analysis_mapping.txt" % self._id)
         with open(mapping_fp, 'w') as f:
             f.write("#SampleID\t%s\n" % '\t'.join(all_headers))
             for sample, metadata in viewitems(merged_data):
@@ -714,8 +714,9 @@ class Analysis(QiitaStatusObject):
             else SQLConnectionHandler()
 
         # get required bookkeeping data for DB
+        _, base_fp = retrive_latest_data_directory(self._table)[0]
         fptypeid = convert_to_id(filetype, "filepath_type", conn_handler)
-        fullpath = join(get_db_files_base_dir(), "analysis", filename)
+        fullpath = join(base_fp, filename)
         with open(fullpath, 'rb') as f:
             checksum = crc32(f.read()) & 0xffffffff
 
