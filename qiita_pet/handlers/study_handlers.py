@@ -335,16 +335,23 @@ class StudyDescriptionHandler(BaseHandler):
         add_prep_template = self.get_argument('add_prep_template', None)
         raw_data_id = self.get_argument('raw_data_id', None)
         data_type_id = self.get_argument('data_type_id', None)
-        investigation_type = self.get_argument('investigation_type', None)
+        investigation_type = self.get_argument('investigation-type', None)
         user_defined_investigation_type = self.get_argument(
             'user-defined-investigation-type', None)
         new_investigation_type = self.get_argument('new-investigation-type',
                                                    None)
         if investigation_type == "":
             investigation_type = None
+
         # to update investigation type
         update_investigation_type = self.get_argument(
             'update_investigation_type', None)
+        edit_investigation_type = self.get_argument('edit-investigation-type',
+                                                    None)
+        edit_user_defined_investigation_type = self.get_argument(
+            'edit-user-defined-investigation-type', None)
+        edit_new_investigation_type = self.get_argument(
+            'edit-new-investigation-type', None)
 
         study = Study(study_id)
         msg_level = 'success'
@@ -439,14 +446,28 @@ class StudyDescriptionHandler(BaseHandler):
             # updating the prep template investigation type
 
             pt = PrepTemplate(update_investigation_type)
+            investigation_type = edit_investigation_type
+
+            # figure out whether to add it as a user defined term or not
+            if edit_investigation_type == 'Other' and \
+                    edit_user_defined_investigation_type == 'New Type':
+                investigation_type = edit_new_investigation_type
+
+                # this is a new user defined investigation type so store it
+                ontology = Ontology(convert_to_id('ENA', 'ontology'))
+                ontology.add_user_defined_term(investigation_type)
+
+            elif investigation_type == 'Other' and \
+                    user_defined_investigation_type != 'New Type':
+                investigation_type = user_defined_investigation_type
+
             try:
                 pt.investigation_type = investigation_type
             except QiitaDBColumnError as e:
                 error_msg = ''.join(format_exception_only(e, exc_info()))
-                msg = ('Invalid investigation type: %s. %s' %
-                       (basename(fp_rpt), error_msg))
+                msg = 'Invalid investigation type: %s' % error_msg
                 self.display_template(study_id, msg, "danger",
-                                      str(pt.raw_data_id))
+                                      str(pt.raw_data))
                 return
 
             msg = "The prep template has been updated!"

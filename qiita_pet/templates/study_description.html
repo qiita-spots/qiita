@@ -1,20 +1,50 @@
 {% extends sitebase.html %}
 {% block head %}
 <script>
-function investigationTypeChanged(rawDataID){
-  if ($('#investigation_type_'+rawDataID).val() === 'Other'){
-    $('#user-defined-investigation-types-'+rawDataID).show()
+// Note that these two callbacks can come from the step where you are creating
+// a new prep template or when you are editing the prep template thus isEdit
+function investigationTypeChanged(rawDataID, isEdit){
+
+  // whether the callback comes from an edit element
+  var isEdit = isEdit !== undefined ? isEdit : false;
+
+  if (isEdit){
+    if ($('#edit-investigation-type-'+rawDataID).val() === 'Other'){
+      $('#edit-user-defined-investigation-types-'+rawDataID).show()
+    }
+    else {
+      $('#edit-user-defined-investigation-types-'+rawDataID).hide()
+    }
   }
-  else {
-    $('#user-defined-investigation-types-'+rawDataID).hide()
+    else{
+    if ($('#investigation-type-'+rawDataID).val() === 'Other'){
+      $('#user-defined-investigation-types-'+rawDataID).show()
+    }
+    else {
+      $('#user-defined-investigation-types-'+rawDataID).hide()
+    }
   }
 }
-function newInvestigationTypeChanged(rawDataID){
-  if ($('#user-defined-investigation-type-'+rawDataID).val() === 'New Type'){
-    $('#new-investigation-type-entry-'+rawDataID).show()
+function newInvestigationTypeChanged(rawDataID, isEdit){
+
+  // whether the callback comes from an edit element
+  var isEdit = isEdit !== undefined ? isEdit : false;
+
+  if (isEdit){
+    if ($('#edit-user-defined-investigation-type-'+rawDataID).val() === 'New Type'){
+      $('#edit-new-investigation-type-entry-'+rawDataID).show()
+    }
+    else {
+      $('#edit-new-investigation-type-entry-'+rawDataID).hide()
+    }
   }
-  else {
-    $('#new-investigation-type-entry-'+rawDataID).hide()
+  else{
+    if ($('#user-defined-investigation-type-'+rawDataID).val() === 'New Type'){
+      $('#new-investigation-type-entry-'+rawDataID).show()
+    }
+    else {
+      $('#new-investigation-type-entry-'+rawDataID).hide()
+    }
   }
 }
 </script>
@@ -140,12 +170,12 @@ function newInvestigationTypeChanged(rawDataID){
               </li>
               <li>
                 (optional but required for EBI submission) select an investigation type:
-                <select onchange="investigationTypeChanged({{r.id}})" id="investigation_type_{{r.id}}">
+                <select onchange="investigationTypeChanged({{r.id}})" id="investigation-type-{{r.id}}">
                   <option value="">Non selected</option>
                   {% raw ena_terms %}
                 </select>
-                <table id="investigation-type-table" name="investigation-types">
-                  <tr id="user-defined-investigation-types-{{r.id}}" style="display:none;" class="investigation-row">
+                <table id="investigation-type-table" name="investigation-types" class="investigation-type-table">
+                  <tr id="user-defined-investigation-types-{{r.id}}" style="display:none;">
                     <td>
                       Select one of the user defined investigation types:
                     </td>
@@ -180,14 +210,62 @@ function newInvestigationTypeChanged(rawDataID){
                 <td style="padding:3px;">
                   <a class="btn btn-primary" href="/metadata_summary/?study_id={{study_id}}&prep_template={{prep.id}}">Show prep template summary</a>
                   <br/><br/>
-                  Investigation type:
-                  <select id="investigation_type_prep_{{prep.id}}" onchange="update_investigation_type('{{prep.investigation_type}}', {{prep.id}})">
-                    <option value="">Non selected</option>
-                    {% raw ena_terms %}
-                  </select>
+                  <table id="edit-investigation-type-table" name="edit-investigation-types" class="investigation-type-table">
+                    <tr>
+                      <td>
+                        Selected investigation type:
+                      </td>
+                      <td>
+                        <select id="edit-investigation-type-{{prep.id}}" onchange="investigationTypeChanged({{prep.id}}, true)">
+                          {% raw ena_terms %}
+                        </select>
+                      </td>
+                    </tr>
+                    <tr id="edit-user-defined-investigation-types-{{prep.id}}" style="display:none;">
+                      <td>
+                        User defined investigation type:
+                      </td>
+                      <td>
+                        <select onchange="newInvestigationTypeChanged({{prep.id}}, true)" id="edit-user-defined-investigation-type-{{prep.id}}">
+                        {% for term in user_defined_terms %}
+                          <option value="{{term}}">{{term}}</option>
+                        {% end %}
+                        </select>
+                      </td>
+                    </tr>
+                    <tr id="edit-new-investigation-type-entry-{{prep.id}}" style="display:none;">
+                      <td>
+                        New investigation type:
+                      </td>
+                      <td>
+                        <input type="text" id="edit-new-investigation-type-{{prep.id}}" name="new-investigation-type" class="form-control">
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <a class="btn btn-warning" onClick="update_investigation_type('{{prep.investigation_type}}', {{prep.id}})">Update Investigation Type</a>
+                      </td>
+                    </tr>
+                  </table>
+                  <!--
+                    We need this JavaScript block here because the elements
+                    that we modify only exist if the HTML code above has
+                    been rendered
+                  -->
                   <script>
                   if ("{{prep.investigation_type}}" != "None") {
-                    document.getElementById('investigation_type_prep_{{prep.id}}').value = "{{prep.investigation_type}}";
+                    // if the investigation type is a known ENA term, set as needed
+                    if ($("#edit-investigation-type-{{prep.id}} option[value='{{prep.investigation_type}}']").length > 0 ){
+                      $('#edit-investigation-type-{{prep.id}}').val("{{prep.investigation_type}}");
+                    }
+                    // else set as Other and load the fields to change the data
+                    else{
+                      $('#edit-investigation-type-{{prep.id}}').val("Other");
+                      investigationTypeChanged({{prep.id}}, true);
+                      if ($("#edit-user-defined-investigation-type-{{prep.id}} option[value='{{prep.investigation_type}}']").length > 0 ){
+                        $('#edit-user-defined-investigation-type-{{prep.id}}').val("{{prep.investigation_type}}");
+                      }
+                    }
                   }
                   </script>
                 </td>
@@ -339,8 +417,8 @@ function newInvestigationTypeChanged(rawDataID){
           .attr("value", $("#add_prep_template_" + raw_data_id).val()))
         .append($("<input>")
           .attr("type", "hidden")
-          .attr("name", "investigation_type")
-          .attr("value", $("#investigation_type_" + raw_data_id).val()))
+          .attr("name", "investigation-type")
+          .attr("value", $("#investigation-type-" + raw_data_id).val()))
         .append($("<input>")
           .attr("type", "hidden")
           .attr("name", "user-defined-investigation-type")
@@ -465,8 +543,16 @@ function newInvestigationTypeChanged(rawDataID){
             .attr("value", prep_template_id))
           .append($("<input>")
             .attr("type", "hidden")
-            .attr("name", "investigation_type")
-            .attr("value", $("#investigation_type_prep_" + prep_template_id).val()));
+            .attr("name", "edit-user-defined-investigation-type")
+            .attr("value", $("#edit-user-defined-investigation-type-" + prep_template_id).val()))
+          .append($("<input>")
+            .attr("type", "hidden")
+            .attr("name", "edit-new-investigation-type")
+            .attr("value", $("#edit-new-investigation-type-" + prep_template_id).val()))
+          .append($("<input>")
+            .attr("type", "hidden")
+            .attr("name", "edit-investigation-type")
+            .attr("value", $("#edit-investigation-type-" + prep_template_id).val()));
         $("body").append(form);
         form.submit();
     } else {
