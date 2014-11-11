@@ -80,7 +80,7 @@ class Analysis(QiitaStatusObject):
 
     @classmethod
     def get_by_status(cls, status):
-        """Returns analysis id for all public Analyses
+        """Returns analysis ids for all Analyses with given status
 
         Parameters
         ----------
