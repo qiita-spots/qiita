@@ -543,7 +543,7 @@ def retrive_latest_data_directory(data_type, conn_handler=None,
     int
         The id of the most recent entry for the given type
     list
-        List of list, where: [[id, filepath]]
+        List of tuple, where: [(id, filepath)]
     """
     conn_handler = (conn_handler if conn_handler is not None
                     else SQLConnectionHandler())
@@ -558,7 +558,7 @@ def retrive_latest_data_directory(data_type, conn_handler=None,
             "qiita.data_directory WHERE data_type='%s' and active=true"
             % data_type)]
 
-    return [[d, join(get_db_files_base_dir(), m, s)] for d, m, s in result]
+    return [(d, join(get_db_files_base_dir(), m, s)) for d, m, s in result]
 
 
 def insert_filepaths(filepaths, obj_id, table, filepath_table, conn_handler,

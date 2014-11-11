@@ -34,14 +34,13 @@ class AddFilesToRawData(BaseHandler):
     def post(self):
 
         # vars to add files to raw data
-        study_id = self.get_argument('study_id', None)
-        raw_data_id = self.get_argument('raw_data_id', None)
-        barcodes_str = self.get_argument('barcodes', None)
-        forward_reads_str = self.get_argument('forward', None)
+        study_id = self.get_argument('study_id')
+        raw_data_id = self.get_argument('raw_data_id')
+        barcodes_str = self.get_argument('barcodes')
+        forward_reads_str = self.get_argument('forward')
         reverse_reads_str = self.get_argument('reverse', None)
 
-        study_id = int(study_id) if study_id else None
-
+        study_id = int(study_id)
         try:
             study = Study(study_id)
         except QiitaDBUnknownIDError:
