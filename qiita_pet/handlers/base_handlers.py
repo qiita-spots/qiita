@@ -1,4 +1,5 @@
 from tornado.web import RequestHandler
+from qiita_db.logger import LogEntry
 
 
 class BaseHandler(RequestHandler):
@@ -18,19 +19,24 @@ class BaseHandler(RequestHandler):
             # just use the 404 page as the error
             self.render("404.html", user=self.current_user)
             return
+        # render error page
+        self.render('error.html', user=self.current_user,
+                    status_code=status_code)
+
+        # log the error
         from traceback import format_exception
         if self.settings.get("debug") and "exc_info" in kwargs:
             exc_info = kwargs["exc_info"]
-            trace_info = ''.join(["%s<br />" % line for line in
+            trace_info = ''.join(["%s\n" % line for line in
                                  format_exception(*exc_info)])
-            request_info = ''.join(["<strong>%s</strong>: %s<br />" %
+            request_info = ''.join(["<strong>%s</strong>: %s\n" %
                                    (k, self.request.__dict__[k]) for k in
                                     self.request.__dict__.keys()])
             error = exc_info[1]
-
-            self.render('error.html', error=error, trace_info=trace_info,
-                        request_info=request_info,
-                        user=self.current_user)
+            LogEntry.create(
+                'Runtime',
+                'ERROR:\n%s\nTRACE:\n%s\nHTTP INFO:\n%s\n' %
+                (error, trace_info, request_info))
 
     def head(self):
         """Adds proper response for head requests"""
