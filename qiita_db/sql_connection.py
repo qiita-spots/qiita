@@ -83,16 +83,10 @@ from psycopg2 import connect, ProgrammingError, Error as PostgresError
 from psycopg2.extras import DictCursor
 from psycopg2.extensions import (
     ISOLATION_LEVEL_AUTOCOMMIT, ISOLATION_LEVEL_READ_COMMITTED)
-from itertools import chain
+from skbio.util import flatten
 
 from .exceptions import QiitaDBExecutionError, QiitaDBConnectionError
 from qiita_core.qiita_settings import qiita_config
-
-
-def flatten(listOfLists):
-    # https://docs.python.org/2/library/itertools.html
-    # TODO: Issue #551  Use skbio.util.flatten instead of this
-    return chain.from_iterable(listOfLists)
 
 
 class SQLConnectionHandler(object):
