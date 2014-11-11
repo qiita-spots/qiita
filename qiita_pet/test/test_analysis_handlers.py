@@ -26,7 +26,7 @@ class TestAnalysisHandlersDB(TestHandlerBase):
             'action': 'select',
             'availstudies': "1#1",
             '1#1': 1,
-            '1': 'SKD5.640186'}
+            '1': '1.SKD5.640186'}
 
         response = self.post('/analysis/2', post_args)
 
@@ -41,7 +41,7 @@ class TestAnalysisHandlersDB(TestHandlerBase):
             'action': 'deselect',
             'selstudies': '1',
             'dt1': '1',
-            'sel1': 'SKB8.640193'}
+            'sel1': '1.SKB8.640193'}
 
         response = self.post('/analysis/2', post_args)
 
@@ -58,7 +58,7 @@ class TestAnalysisHandlersNODB(TestHandlerBase):
         # Make sure page response loaded sucessfully
         self.assertEqual(response.code, 200)
         # make sure we have proper samples being pulled out
-        self.assertTrue("SKB8.640193" in str(response.body))
+        self.assertTrue("1.SKB8.640193" in str(response.body))
 
     def test_search_studies(self):
         post_args = {

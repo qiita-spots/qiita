@@ -123,6 +123,32 @@ def _as_python_types(metadata_map, headers):
     return values
 
 
+def _prefix_sample_names_with_id(md_template, study):
+    r"""prefix the sample_names in md_template with the study id
+
+    Parameters
+    ----------
+    md_template : DataFrame
+        The metadata template to modify
+    study : Study
+        The study to which the metadata belongs to
+    """
+    # Create a new pandas series in which all the values are the study_id and
+    # it is indexed as the metadata template
+    study_ids = pd.Series([str(study.id)] * len(md_template.index),
+                          index=md_template.index)
+    # Create a new column on the metadata template that includes the metadata
+    # template indexes prefixed with the study id
+    md_template['sample_name_with_id'] = study_ids + '.' + md_template.index
+    # Assign the new previously created column as the new index
+    md_template.index = md_template.sample_name_with_id
+    # Delete the previously created column
+    del md_template['sample_name_with_id']
+    # The original metadata template had the index column unnamed - remove
+    # the name of the index
+    md_template.index.name = None
+
+
 class BaseSample(QiitaObject):
     r"""Sample object that accesses the db to get the information of a sample
     belonging to a PrepTemplate or a SampleTemplate.
@@ -1005,6 +1031,10 @@ class SampleTemplate(MetadataTemplate):
         # We are going to modify the md_template. We create a copy so
         # we don't modify the user one
         md_template = deepcopy(md_template)
+
+        # Prefix the sample names with the study_id
+        _prefix_sample_names_with_id(md_template, study)
+
         # In the database, all the column headers are lowercase
         md_template.columns = [c.lower() for c in md_template.columns]
 
@@ -1151,6 +1181,9 @@ class PrepTemplate(MetadataTemplate):
         # we don't modify the user one
         md_template = deepcopy(md_template)
 
+        # Prefix the sample names with the study_id
+        _prefix_sample_names_with_id(md_template, study)
+
         # In the database, all the column headers are lowercase
         md_template.columns = [c.lower() for c in md_template.columns]
 
@@ -1183,7 +1216,6 @@ class PrepTemplate(MetadataTemplate):
 
         # Remove the sample_id and study_id columns
         db_cols.remove('sample_id')
-        db_cols.remove('study_id')
         db_cols.remove(cls._id_column)
 
         # Retrieve the headers of the metadata template
@@ -1204,13 +1236,12 @@ class PrepTemplate(MetadataTemplate):
 
         # Insert values on required columns
         values = _as_python_types(md_template, db_cols)
-        values.insert(0, [study.id] * num_samples)
         values.insert(0, sample_ids)
         values.insert(0, [prep_id] * num_samples)
         values = [v for v in zip(*values)]
         conn_handler.executemany(
-            "INSERT INTO qiita.{0} ({1}, sample_id, study_id, {2}) "
-            "VALUES (%s, %s, %s, {3})".format(
+            "INSERT INTO qiita.{0} ({1}, sample_id, {2}) "
+            "VALUES (%s, %s, {3})".format(
                 cls._table, cls._id_column, ', '.join(db_cols),
                 ', '.join(['%s'] * len(db_cols))),
             values)
@@ -1234,18 +1265,17 @@ class PrepTemplate(MetadataTemplate):
         column_datatype = ["%s %s" % (col, dtype)
                            for col, dtype in zip(headers, datatypes)]
         conn_handler.execute(
-            "CREATE TABLE qiita.{0} (sample_id varchar, study_id bigint, "
+            "CREATE TABLE qiita.{0} (sample_id varchar, "
             "{1})".format(table_name, ', '.join(column_datatype)))
 
         # Insert values on custom table
         values = _as_python_types(md_template, headers)
-        values.insert(0, [study.id] * num_samples)
         values.insert(0, sample_ids)
         values = [v for v in zip(*values)]
         conn_handler.executemany(
-            "INSERT INTO qiita.{0} (sample_id, study_id, {1}) "
-            "VALUES (%s, %s, {2})".format(table_name, ", ".join(headers),
-                                          ', '.join(["%s"] * len(headers))),
+            "INSERT INTO qiita.{0} (sample_id, {1}) "
+            "VALUES (%s, {2})".format(table_name, ", ".join(headers),
+                                      ', '.join(["%s"] * len(headers))),
             values)
 
         return cls(prep_id)
