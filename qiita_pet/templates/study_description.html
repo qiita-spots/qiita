@@ -266,7 +266,6 @@ function newInvestigationTypeChanged(rawDataID, isEdit){
                       if ($("#edit-user-defined-investigation-type-{{prep.id}} option[value='{{prep.investigation_type}}']").length > 0 ){
                         $('#edit-user-defined-investigation-type-{{prep.id}}').val("{{prep.investigation_type}}");
                       }
-                      newInvestigationTypeChanged({{prep.id}}, true);
                     }
                   }
                   else{
