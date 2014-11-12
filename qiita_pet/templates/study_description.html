@@ -174,7 +174,7 @@ function newInvestigationTypeChanged(rawDataID, isEdit){
               </li>
               <li>
                 (optional but required for EBI submission) select an investigation type:
-                <select onclick="investigationTypeChanged({{r.id}})" id="investigation-type-{{r.id}}">
+                <select onclick="investigationTypeChanged({{r.id}})" onchange="investigationTypeChanged({{r.id}})" id="investigation-type-{{r.id}}">
                   <option value="Non selected">Non selected</option>
                   {% raw ena_terms %}
                 </select>
@@ -184,7 +184,7 @@ function newInvestigationTypeChanged(rawDataID, isEdit){
                       Select one of the user defined investigation types:
                     </td>
                     <td>
-                      <select onclick="newInvestigationTypeChanged({{r.id}})" id="user-defined-investigation-type-{{r.id}}">
+                      <select onclick="newInvestigationTypeChanged({{r.id}})" onchange="newInvestigationTypeChanged({{r.id}})" id="user-defined-investigation-type-{{r.id}}">
                       {% for term in user_defined_terms %}
                         <option value="{{term}}">{{term}}</option>
                       {% end %}
@@ -220,7 +220,7 @@ function newInvestigationTypeChanged(rawDataID, isEdit){
                         Selected investigation type:
                       </td>
                       <td>
-                        <select id="edit-investigation-type-{{prep.id}}" onclick="investigationTypeChanged({{prep.id}}, true)">
+                        <select id="edit-investigation-type-{{prep.id}}" onclick="investigationTypeChanged({{prep.id}}, true)" onchange="investigationTypeChanged({{prep.id}}, true)">
                           <option value="Non selected">Non selected</option>
                           {% raw ena_terms %}
                         </select>
@@ -231,7 +231,7 @@ function newInvestigationTypeChanged(rawDataID, isEdit){
                         User defined investigation type:
                       </td>
                       <td>
-                        <select onclick="newInvestigationTypeChanged({{prep.id}}, true)" id="edit-user-defined-investigation-type-{{prep.id}}">
+                        <select onclick="newInvestigationTypeChanged({{prep.id}}, true)" onchange="newInvestigationTypeChanged({{prep.id}}, true)" id="edit-user-defined-investigation-type-{{prep.id}}">
                         {% for term in user_defined_terms %}
                           <option value="{{term}}">{{term}}</option>
                         {% end %}
