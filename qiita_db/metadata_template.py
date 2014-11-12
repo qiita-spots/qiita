@@ -1283,6 +1283,12 @@ class PrepTemplate(MetadataTemplate):
                                       ', '.join(["%s"] * len(headers))),
             values)
 
+        # We are instantiating the object before returning it so that
+        # we can set the _investigation_type_ontology member, which
+        # is needed so that the object can keep track of which ontology
+        # to use when checking for valid terms. This facilitates testing by
+        # allowing the caller of this function to specify, e.g., ENA_test
+        # instead of the usual ENA ontology.
         ret = cls(prep_id)
         ret._investigation_type_ontology = investigation_type_ontology
 
