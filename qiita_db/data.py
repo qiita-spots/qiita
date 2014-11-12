@@ -162,7 +162,7 @@ class BaseData(QiitaObject):
         except Exception as e:
             # Something went wrong, update the status
             self._set_link_filepaths_status("failed: %s" % e)
-            LogEntry.create('Runtime', e,
+            LogEntry.create('Runtime', str(e),
                             info={self.__class__.__name__: self.id})
             raise e
 
@@ -457,7 +457,7 @@ class RawData(BaseData):
             conn_handler.execute_queue(queue)
         except Exception as e:
             self._set_link_filepaths_status("failed: %s" % e)
-            LogEntry.create('Runtime', e,
+            LogEntry.create('Runtime', str(e),
                             info={self.__class__.__name__: self.id})
             raise e
 
@@ -491,7 +491,7 @@ class RawData(BaseData):
             conn_handler.execute_queue(queue)
         except Exception as e:
             self._set_link_filepaths_status("failed: %s" % e)
-            LogEntry.create('Runtime', e,
+            LogEntry.create('Runtime', str(e),
                             info={self.__class__.__name__: self.id})
             raise e
 

@@ -144,17 +144,17 @@ class SearchTest(TestCase):
             "test@foo.bar")
         exp_meta = ["COMMON_NAME", "Description_duplicate", "sample_type"]
         exp_res = {1:
-                   [['SKM4.640180', 'rhizosphere metagenome', 'Bucu Rhizo',
+                   [['1.SKM4.640180', 'rhizosphere metagenome', 'Bucu Rhizo',
                      'ENVO:soil'],
-                    ['SKM5.640177', 'rhizosphere metagenome', 'Bucu Rhizo',
+                    ['1.SKM5.640177', 'rhizosphere metagenome', 'Bucu Rhizo',
                      'ENVO:soil'],
-                    ['SKD4.640185', 'rhizosphere metagenome', 'Diesel Rhizo',
+                    ['1.SKD4.640185', 'rhizosphere metagenome', 'Diesel Rhizo',
                      'ENVO:soil'],
-                    ['SKD6.640190', 'rhizosphere metagenome', 'Diesel Rhizo',
+                    ['1.SKD6.640190', 'rhizosphere metagenome', 'Diesel Rhizo',
                     'ENVO:soil'],
-                    ['SKM6.640187', 'rhizosphere metagenome', 'Bucu Rhizo',
+                    ['1.SKM6.640187', 'rhizosphere metagenome', 'Bucu Rhizo',
                      'ENVO:soil'],
-                    ['SKD5.640186', 'rhizosphere metagenome', 'Diesel Rhizo',
+                    ['1.SKD5.640186', 'rhizosphere metagenome', 'Diesel Rhizo',
                      'ENVO:soil']]}
         self.assertEqual(obs_res, exp_res)
         self.assertEqual(obs_meta, exp_meta)

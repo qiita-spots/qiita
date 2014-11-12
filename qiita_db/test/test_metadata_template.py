@@ -15,6 +15,7 @@ from os.path import join, basename
 from collections import Iterable
 
 import pandas as pd
+from pandas.util.testing import assert_frame_equal
 
 from qiita_core.util import qiita_test_checker
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
@@ -30,7 +31,7 @@ from qiita_db.util import exists_table, get_db_files_base_dir
 from qiita_db.metadata_template import (_get_datatypes, _as_python_types,
                                         MetadataTemplate, SampleTemplate,
                                         PrepTemplate, BaseSample, PrepSample,
-                                        Sample)
+                                        Sample, _prefix_sample_names_with_id)
 
 
 class TestUtilMetadataMap(TestCase):
@@ -59,6 +60,18 @@ class TestUtilMetadataMap(TestCase):
                [1, 2, 3]]
         self.assertEqual(obs, exp)
 
+    def test_prefix_sample_names_with_id(self):
+        exp_metadata_dict = {
+            '1.Sample1': {'int_col': 1, 'float_col': 2.1, 'str_col': 'str1'},
+            '1.Sample2': {'int_col': 2, 'float_col': 3.1, 'str_col': '200'},
+            '1.Sample3': {'int_col': 3, 'float_col': 3, 'str_col': 'string30'},
+        }
+        exp_df = pd.DataFrame.from_dict(exp_metadata_dict, orient='index')
+        _prefix_sample_names_with_id(self.metadata_map, Study(1))
+        self.metadata_map.sort_index(inplace=True)
+        exp_df.sort_index(inplace=True)
+        assert_frame_equal(self.metadata_map, exp_df)
+
 
 @qiita_test_checker()
 class TestBaseSample(TestCase):
@@ -81,7 +94,7 @@ class TestSample(TestCase):
 
     def setUp(self):
         self.sample_template = SampleTemplate(1)
-        self.sample_id = 'SKB8.640193'
+        self.sample_id = '1.SKB8.640193'
         self.tester = Sample(self.sample_id, self.sample_template)
         self.exp_categories = {'physical_location', 'has_physical_specimen',
                                'has_extracted_data', 'sample_type',
@@ -111,7 +124,7 @@ class TestSample(TestCase):
         """Init correctly initializes the sample object"""
         sample = Sample(self.sample_id, self.sample_template)
         # Check that the internal id have been correctly set
-        self.assertEqual(sample._id, 'SKB8.640193')
+        self.assertEqual(sample._id, '1.SKB8.640193')
         # Check that the internal template have been correctly set
         self.assertEqual(sample._md_template, self.sample_template)
         # Check that the internal dynamic table name have been correctly set
@@ -129,7 +142,7 @@ class TestSample(TestCase):
 
     def test_eq_false_id(self):
         """Equality returns false if ids are different"""
-        other = Sample('SKD8.640184', self.sample_template)
+        other = Sample('1.SKD8.640184', self.sample_template)
         self.assertFalse(self.tester == other)
 
     def test_exists_true(self):
@@ -262,7 +275,7 @@ class TestPrepSample(TestCase):
 
     def setUp(self):
         self.prep_template = PrepTemplate(1)
-        self.sample_id = 'SKB8.640193'
+        self.sample_id = '1.SKB8.640193'
         self.tester = PrepSample(self.sample_id, self.prep_template)
         self.exp_categories = {'center_name', 'center_project_name',
                                'emp_status', 'barcodesequence',
@@ -283,13 +296,13 @@ class TestPrepSample(TestCase):
     def test_init_wrong_template(self):
         """Raises an error if using a SampleTemplate instead of PrepTemplate"""
         with self.assertRaises(IncompetentQiitaDeveloperError):
-            PrepSample('SKB8.640193', SampleTemplate(1))
+            PrepSample('1.SKB8.640193', SampleTemplate(1))
 
     def test_init(self):
         """Init correctly initializes the PrepSample object"""
         sample = PrepSample(self.sample_id, self.prep_template)
         # Check that the internal id have been correctly set
-        self.assertEqual(sample._id, 'SKB8.640193')
+        self.assertEqual(sample._id, '1.SKB8.640193')
         # Check that the internal template have been correctly set
         self.assertEqual(sample._md_template, self.prep_template)
         # Check that the internal dynamic table name have been correctly set
@@ -307,7 +320,7 @@ class TestPrepSample(TestCase):
 
     def test_eq_false_id(self):
         """Equality returns false if ids are different"""
-        other = PrepSample('SKD8.640184', self.prep_template)
+        other = PrepSample('1.SKD8.640184', self.prep_template)
         self.assertFalse(self.tester == other)
 
     def test_exists_true(self):
@@ -540,15 +553,14 @@ class TestSampleTemplate(TestCase):
         self.new_study = Study.create(User('test@foo.bar'),
                                       "Fried Chicken Microbiome", [1], info)
         self.tester = SampleTemplate(1)
-        self.exp_sample_ids = {'SKB1.640202', 'SKB2.640194', 'SKB3.640195',
-                               'SKB4.640189', 'SKB5.640181', 'SKB6.640176',
-                               'SKB7.640196', 'SKB8.640193', 'SKB9.640200',
-                               'SKD1.640179', 'SKD2.640178', 'SKD3.640198',
-                               'SKD4.640185', 'SKD5.640186', 'SKD6.640190',
-                               'SKD7.640191', 'SKD8.640184', 'SKD9.640182',
-                               'SKM1.640183', 'SKM2.640199', 'SKM3.640197',
-                               'SKM4.640180', 'SKM5.640177', 'SKM6.640187',
-                               'SKM7.640188', 'SKM8.640201', 'SKM9.640192'}
+        self.exp_sample_ids = {
+            '1.SKB1.640202', '1.SKB2.640194', '1.SKB3.640195', '1.SKB4.640189',
+            '1.SKB5.640181', '1.SKB6.640176', '1.SKB7.640196', '1.SKB8.640193',
+            '1.SKB9.640200', '1.SKD1.640179', '1.SKD2.640178', '1.SKD3.640198',
+            '1.SKD4.640185', '1.SKD5.640186', '1.SKD6.640190', '1.SKD7.640191',
+            '1.SKD8.640184', '1.SKD9.640182', '1.SKM1.640183', '1.SKM2.640199',
+            '1.SKM3.640197', '1.SKM4.640180', '1.SKM5.640177', '1.SKM6.640187',
+            '1.SKM7.640188', '1.SKM8.640201', '1.SKM9.640192'}
         self._clean_up_files = []
 
     def tearDown(self):
@@ -595,16 +607,16 @@ class TestSampleTemplate(TestCase):
         # The relevant rows to required_sample_info have been added.
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.required_sample_info WHERE study_id=2")
-        # study_id sample_id physical_location has_physical_specimen
+        # sample_id study_id physical_location has_physical_specimen
         # has_extracted_data sample_type required_sample_info_status_id
         # collection_timestamp host_subject_id description
-        exp = [[2, "Sample1", "location1", True, True, "type1", 1,
+        exp = [["2.Sample1", 2, "location1", True, True, "type1", 1,
                 datetime(2014, 5, 29, 12, 24, 51), "NotIdentified",
                 "Test Sample 1", 42.42, 41.41],
-               [2, "Sample2", "location1", True, True, "type1", 1,
+               ["2.Sample2", 2, "location1", True, True, "type1", 1,
                 datetime(2014, 5, 29, 12, 24, 51), "NotIdentified",
                 "Test Sample 2", 4.2, 1.1],
-               [2, "Sample3", "location1", True, True, "type1", 1,
+               ["2.Sample3", 2, "location1", True, True, "type1", 1,
                 datetime(2014, 5, 29, 12, 24, 51), "NotIdentified",
                 "Test Sample 3", 4.8, 4.41]]
         self.assertEqual(obs, exp)
@@ -623,9 +635,9 @@ class TestSampleTemplate(TestCase):
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.sample_2")
         # sample_id, str_column
-        exp = [['Sample1', "Value for sample 1"],
-               ['Sample2', "Value for sample 2"],
-               ['Sample3', "Value for sample 3"]]
+        exp = [['2.Sample1', "Value for sample 1"],
+               ['2.Sample2', "Value for sample 2"],
+               ['2.Sample3', "Value for sample 3"]]
         self.assertEqual(obs, exp)
 
     def test_delete(self):
@@ -668,8 +680,8 @@ class TestSampleTemplate(TestCase):
 
     def test_getitem(self):
         """Get item returns the correct sample object"""
-        obs = self.tester['SKM7.640188']
-        exp = Sample('SKM7.640188', self.tester)
+        obs = self.tester['1.SKM7.640188']
+        exp = Sample('1.SKM7.640188', self.tester)
         self.assertEqual(obs, exp)
 
     def test_getitem_error(self):
@@ -680,12 +692,12 @@ class TestSampleTemplate(TestCase):
     def test_setitem(self):
         """setitem raises an error (currently not allowed)"""
         with self.assertRaises(QiitaDBNotImplementedError):
-            self.tester['SKM7.640188'] = Sample('SKM7.640188', self.tester)
+            self.tester['1.SKM7.640188'] = Sample('1.SKM7.640188', self.tester)
 
     def test_delitem(self):
         """delitem raises an error (currently not allowed)"""
         with self.assertRaises(QiitaDBNotImplementedError):
-            del self.tester['SKM7.640188']
+            del self.tester['1.SKM7.640188']
 
     def test_iter(self):
         """iter returns an iterator over the sample ids"""
@@ -695,7 +707,7 @@ class TestSampleTemplate(TestCase):
 
     def test_contains_true(self):
         """contains returns true if the sample id exists"""
-        self.assertTrue('SKM7.640188' in self.tester)
+        self.assertTrue('1.SKM7.640188' in self.tester)
 
     def test_contains_false(self):
         """contains returns false if the sample id does not exists"""
@@ -711,33 +723,33 @@ class TestSampleTemplate(TestCase):
         """values returns an iterator over the values"""
         obs = self.tester.values()
         self.assertTrue(isinstance(obs, Iterable))
-        exp = {Sample('SKB1.640202', self.tester),
-               Sample('SKB2.640194', self.tester),
-               Sample('SKB3.640195', self.tester),
-               Sample('SKB4.640189', self.tester),
-               Sample('SKB5.640181', self.tester),
-               Sample('SKB6.640176', self.tester),
-               Sample('SKB7.640196', self.tester),
-               Sample('SKB8.640193', self.tester),
-               Sample('SKB9.640200', self.tester),
-               Sample('SKD1.640179', self.tester),
-               Sample('SKD2.640178', self.tester),
-               Sample('SKD3.640198', self.tester),
-               Sample('SKD4.640185', self.tester),
-               Sample('SKD5.640186', self.tester),
-               Sample('SKD6.640190', self.tester),
-               Sample('SKD7.640191', self.tester),
-               Sample('SKD8.640184', self.tester),
-               Sample('SKD9.640182', self.tester),
-               Sample('SKM1.640183', self.tester),
-               Sample('SKM2.640199', self.tester),
-               Sample('SKM3.640197', self.tester),
-               Sample('SKM4.640180', self.tester),
-               Sample('SKM5.640177', self.tester),
-               Sample('SKM6.640187', self.tester),
-               Sample('SKM7.640188', self.tester),
-               Sample('SKM8.640201', self.tester),
-               Sample('SKM9.640192', self.tester)}
+        exp = {Sample('1.SKB1.640202', self.tester),
+               Sample('1.SKB2.640194', self.tester),
+               Sample('1.SKB3.640195', self.tester),
+               Sample('1.SKB4.640189', self.tester),
+               Sample('1.SKB5.640181', self.tester),
+               Sample('1.SKB6.640176', self.tester),
+               Sample('1.SKB7.640196', self.tester),
+               Sample('1.SKB8.640193', self.tester),
+               Sample('1.SKB9.640200', self.tester),
+               Sample('1.SKD1.640179', self.tester),
+               Sample('1.SKD2.640178', self.tester),
+               Sample('1.SKD3.640198', self.tester),
+               Sample('1.SKD4.640185', self.tester),
+               Sample('1.SKD5.640186', self.tester),
+               Sample('1.SKD6.640190', self.tester),
+               Sample('1.SKD7.640191', self.tester),
+               Sample('1.SKD8.640184', self.tester),
+               Sample('1.SKD9.640182', self.tester),
+               Sample('1.SKM1.640183', self.tester),
+               Sample('1.SKM2.640199', self.tester),
+               Sample('1.SKM3.640197', self.tester),
+               Sample('1.SKM4.640180', self.tester),
+               Sample('1.SKM5.640177', self.tester),
+               Sample('1.SKM6.640187', self.tester),
+               Sample('1.SKM7.640188', self.tester),
+               Sample('1.SKM8.640201', self.tester),
+               Sample('1.SKM9.640192', self.tester)}
         # Creating a list and looping over it since unittest does not call
         # the __eq__ function on the objects
         for o, e in zip(sorted(list(obs), key=lambda x: x.id),
@@ -748,33 +760,33 @@ class TestSampleTemplate(TestCase):
         """items returns an iterator over the (key, value) tuples"""
         obs = self.tester.items()
         self.assertTrue(isinstance(obs, Iterable))
-        exp = [('SKB1.640202', Sample('SKB1.640202', self.tester)),
-               ('SKB2.640194', Sample('SKB2.640194', self.tester)),
-               ('SKB3.640195', Sample('SKB3.640195', self.tester)),
-               ('SKB4.640189', Sample('SKB4.640189', self.tester)),
-               ('SKB5.640181', Sample('SKB5.640181', self.tester)),
-               ('SKB6.640176', Sample('SKB6.640176', self.tester)),
-               ('SKB7.640196', Sample('SKB7.640196', self.tester)),
-               ('SKB8.640193', Sample('SKB8.640193', self.tester)),
-               ('SKB9.640200', Sample('SKB9.640200', self.tester)),
-               ('SKD1.640179', Sample('SKD1.640179', self.tester)),
-               ('SKD2.640178', Sample('SKD2.640178', self.tester)),
-               ('SKD3.640198', Sample('SKD3.640198', self.tester)),
-               ('SKD4.640185', Sample('SKD4.640185', self.tester)),
-               ('SKD5.640186', Sample('SKD5.640186', self.tester)),
-               ('SKD6.640190', Sample('SKD6.640190', self.tester)),
-               ('SKD7.640191', Sample('SKD7.640191', self.tester)),
-               ('SKD8.640184', Sample('SKD8.640184', self.tester)),
-               ('SKD9.640182', Sample('SKD9.640182', self.tester)),
-               ('SKM1.640183', Sample('SKM1.640183', self.tester)),
-               ('SKM2.640199', Sample('SKM2.640199', self.tester)),
-               ('SKM3.640197', Sample('SKM3.640197', self.tester)),
-               ('SKM4.640180', Sample('SKM4.640180', self.tester)),
-               ('SKM5.640177', Sample('SKM5.640177', self.tester)),
-               ('SKM6.640187', Sample('SKM6.640187', self.tester)),
-               ('SKM7.640188', Sample('SKM7.640188', self.tester)),
-               ('SKM8.640201', Sample('SKM8.640201', self.tester)),
-               ('SKM9.640192', Sample('SKM9.640192', self.tester))]
+        exp = [('1.SKB1.640202', Sample('1.SKB1.640202', self.tester)),
+               ('1.SKB2.640194', Sample('1.SKB2.640194', self.tester)),
+               ('1.SKB3.640195', Sample('1.SKB3.640195', self.tester)),
+               ('1.SKB4.640189', Sample('1.SKB4.640189', self.tester)),
+               ('1.SKB5.640181', Sample('1.SKB5.640181', self.tester)),
+               ('1.SKB6.640176', Sample('1.SKB6.640176', self.tester)),
+               ('1.SKB7.640196', Sample('1.SKB7.640196', self.tester)),
+               ('1.SKB8.640193', Sample('1.SKB8.640193', self.tester)),
+               ('1.SKB9.640200', Sample('1.SKB9.640200', self.tester)),
+               ('1.SKD1.640179', Sample('1.SKD1.640179', self.tester)),
+               ('1.SKD2.640178', Sample('1.SKD2.640178', self.tester)),
+               ('1.SKD3.640198', Sample('1.SKD3.640198', self.tester)),
+               ('1.SKD4.640185', Sample('1.SKD4.640185', self.tester)),
+               ('1.SKD5.640186', Sample('1.SKD5.640186', self.tester)),
+               ('1.SKD6.640190', Sample('1.SKD6.640190', self.tester)),
+               ('1.SKD7.640191', Sample('1.SKD7.640191', self.tester)),
+               ('1.SKD8.640184', Sample('1.SKD8.640184', self.tester)),
+               ('1.SKD9.640182', Sample('1.SKD9.640182', self.tester)),
+               ('1.SKM1.640183', Sample('1.SKM1.640183', self.tester)),
+               ('1.SKM2.640199', Sample('1.SKM2.640199', self.tester)),
+               ('1.SKM3.640197', Sample('1.SKM3.640197', self.tester)),
+               ('1.SKM4.640180', Sample('1.SKM4.640180', self.tester)),
+               ('1.SKM5.640177', Sample('1.SKM5.640177', self.tester)),
+               ('1.SKM6.640187', Sample('1.SKM6.640187', self.tester)),
+               ('1.SKM7.640188', Sample('1.SKM7.640188', self.tester)),
+               ('1.SKM8.640201', Sample('1.SKM8.640201', self.tester)),
+               ('1.SKM9.640192', Sample('1.SKM9.640192', self.tester))]
         # Creating a list and looping over it since unittest does not call
         # the __eq__ function on the objects
         for o, e in zip(sorted(list(obs)), sorted(exp)):
@@ -782,8 +794,8 @@ class TestSampleTemplate(TestCase):
 
     def test_get(self):
         """get returns the correct sample object"""
-        obs = self.tester.get('SKM7.640188')
-        exp = Sample('SKM7.640188', self.tester)
+        obs = self.tester.get('1.SKM7.640188')
+        exp = Sample('1.SKM7.640188', self.tester)
         self.assertEqual(obs, exp)
 
     def test_get_none(self):
@@ -864,15 +876,14 @@ class TestPrepTemplate(TestCase):
         self._clean_up_files = [db_seqs_fp, db_barcodes_fp]
 
         self.tester = PrepTemplate(1)
-        self.exp_sample_ids = {'SKB1.640202', 'SKB2.640194', 'SKB3.640195',
-                               'SKB4.640189', 'SKB5.640181', 'SKB6.640176',
-                               'SKB7.640196', 'SKB8.640193', 'SKB9.640200',
-                               'SKD1.640179', 'SKD2.640178', 'SKD3.640198',
-                               'SKD4.640185', 'SKD5.640186', 'SKD6.640190',
-                               'SKD7.640191', 'SKD8.640184', 'SKD9.640182',
-                               'SKM1.640183', 'SKM2.640199', 'SKM3.640197',
-                               'SKM4.640180', 'SKM5.640177', 'SKM6.640187',
-                               'SKM7.640188', 'SKM8.640201', 'SKM9.640192'}
+        self.exp_sample_ids = {
+            '1.SKB1.640202', '1.SKB2.640194', '1.SKB3.640195', '1.SKB4.640189',
+            '1.SKB5.640181', '1.SKB6.640176', '1.SKB7.640196', '1.SKB8.640193',
+            '1.SKB9.640200', '1.SKD1.640179', '1.SKD2.640178', '1.SKD3.640198',
+            '1.SKD4.640185', '1.SKD5.640186', '1.SKD6.640190', '1.SKD7.640191',
+            '1.SKD8.640184', '1.SKD9.640182', '1.SKM1.640183', '1.SKM2.640199',
+            '1.SKM3.640197', '1.SKM4.640180', '1.SKM5.640177', '1.SKM6.640187',
+            '1.SKM7.640188', '1.SKM8.640201', '1.SKM9.640192'}
 
     def tearDown(self):
         for f in self._clean_up_files:
@@ -924,9 +935,9 @@ class TestPrepTemplate(TestCase):
             "SELECT * FROM qiita.common_prep_info WHERE prep_template_id=2")
         # prep_template_id, sample_id, study_id, center_name,
         # center_project_name, emp_status_id
-        exp = [[2, 'SKB8.640193', 1, 'ANL', 'Test Project', 1],
-               [2, 'SKD8.640184', 1, 'ANL', 'Test Project', 1],
-               [2, 'SKB7.640196', 1, 'ANL', 'Test Project', 1]]
+        exp = [[2, '1.SKB8.640193', 'ANL', 'Test Project', 1],
+               [2, '1.SKD8.640184', 'ANL', 'Test Project', 1],
+               [2, '1.SKB7.640196', 'ANL', 'Test Project', 1]]
         self.assertEqual(sorted(obs), sorted(exp))
 
         # The relevant rows have been added to the prep_columns table
@@ -951,13 +962,13 @@ class TestPrepTemplate(TestCase):
             "SELECT * FROM qiita.prep_2")
         # sample_id, study_id, str_column, ebi_submission_accession,
         # run_prefix, barcodesequence, linkerprimersequence
-        exp = [['SKB7.640196', 1L, 'Value for sample 3', 'ILLUMINA',
+        exp = [['1.SKB7.640196', 'Value for sample 3', 'ILLUMINA',
                 's_G1_L002_sequences', 'CCTCTGAGAGCT', None,
                 'GTGCCAGCMGCCGCGGTAA', 'BBBB', 'AAAA'],
-               ['SKB8.640193', 1L, 'Value for sample 1', 'ILLUMINA',
+               ['1.SKB8.640193', 'Value for sample 1', 'ILLUMINA',
                 's_G1_L001_sequences', 'GTCCGCAAGTTA', None,
                 'GTGCCAGCMGCCGCGGTAA', 'BBBB', 'AAAA'],
-               ['SKD8.640184', 1L, 'Value for sample 2', 'ILLUMINA',
+               ['1.SKD8.640184', 'Value for sample 2', 'ILLUMINA',
                 's_G1_L001_sequences', 'CGTAGAGCTCTC', None,
                 'GTGCCAGCMGCCGCGGTAA', 'BBBB', 'AAAA']]
         self.assertEqual(sorted(obs), sorted(exp))
@@ -979,11 +990,11 @@ class TestPrepTemplate(TestCase):
         # The relevant rows to common_prep_info have been added.
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.common_prep_info WHERE prep_template_id=2")
-        # prep_template_id, sample_id, study_id, center_name,
+        # prep_template_id, sample_id, center_name,
         # center_project_name, emp_status_id
-        exp = [[2, 'SKB8.640193', 1, 'ANL', 'Test Project', 1],
-               [2, 'SKD8.640184', 1, 'ANL', 'Test Project', 1],
-               [2, 'SKB7.640196', 1, 'ANL', 'Test Project', 1]]
+        exp = [[2, '1.SKB8.640193', 'ANL', 'Test Project', 1],
+               [2, '1.SKD8.640184', 'ANL', 'Test Project', 1],
+               [2, '1.SKB7.640196', 'ANL', 'Test Project', 1]]
         self.assertEqual(sorted(obs), sorted(exp))
 
         # The relevant rows have been added to the prep_columns table
@@ -1006,15 +1017,15 @@ class TestPrepTemplate(TestCase):
         # The new table hosts the correct values
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.prep_2")
-        # sample_id, study_id, str_column, ebi_submission_accession,
+        # sample_id, str_column, ebi_submission_accession,
         # run_prefix, barcodesequence, linkerprimersequence
-        exp = [['SKB7.640196', 1L, 'Value for sample 3', 'ILLUMINA',
+        exp = [['1.SKB7.640196', 'Value for sample 3', 'ILLUMINA',
                 's_G1_L002_sequences', 'CCTCTGAGAGCT', None,
                 'GTGCCAGCMGCCGCGGTAA', 'BBBB', 'AAAA'],
-               ['SKB8.640193', 1L, 'Value for sample 1', 'ILLUMINA',
+               ['1.SKB8.640193', 'Value for sample 1', 'ILLUMINA',
                 's_G1_L001_sequences', 'GTCCGCAAGTTA', None,
                 'GTGCCAGCMGCCGCGGTAA', 'BBBB', 'AAAA'],
-               ['SKD8.640184', 1L, 'Value for sample 2', 'ILLUMINA',
+               ['1.SKD8.640184', 'Value for sample 2', 'ILLUMINA',
                 's_G1_L001_sequences', 'CGTAGAGCTCTC', None,
                 'GTGCCAGCMGCCGCGGTAA', 'BBBB', 'AAAA']]
         self.assertEqual(sorted(obs), sorted(exp))
@@ -1023,21 +1034,21 @@ class TestPrepTemplate(TestCase):
         """Create raises an error if any required columns are missing
         """
         metadata_dict = {
-            'SKB8.640193': {'center_name': 'ANL',
-                            'center_project_name': 'Test Project',
-                            'ebi_submission_accession': None,
-                            'EMP_status_id': 1,
-                            'str_column': 'Value for sample 1'},
-            'SKD8.640184': {'center_name': 'ANL',
-                            'center_project_name': 'Test Project',
-                            'ebi_submission_accession': None,
-                            'EMP_status_id': 1,
-                            'str_column': 'Value for sample 2'},
-            'SKB7.640196': {'center_name': 'ANL',
-                            'center_project_name': 'Test Project',
-                            'ebi_submission_accession': None,
-                            'EMP_status_id': 1,
-                            'str_column': 'Value for sample 3'}
+            '1.SKB8.640193': {'center_name': 'ANL',
+                              'center_project_name': 'Test Project',
+                              'ebi_submission_accession': None,
+                              'EMP_status_id': 1,
+                              'str_column': 'Value for sample 1'},
+            '1.SKD8.640184': {'center_name': 'ANL',
+                              'center_project_name': 'Test Project',
+                              'ebi_submission_accession': None,
+                              'EMP_status_id': 1,
+                              'str_column': 'Value for sample 2'},
+            '1.SKB7.640196': {'center_name': 'ANL',
+                              'center_project_name': 'Test Project',
+                              'ebi_submission_accession': None,
+                              'EMP_status_id': 1,
+                              'str_column': 'Value for sample 3'}
             }
         metadata = pd.DataFrame.from_dict(metadata_dict, orient='index')
         with self.assertRaises(QiitaDBColumnError):
@@ -1047,24 +1058,24 @@ class TestPrepTemplate(TestCase):
     def test_create_error_template_special(self):
         """Create raises an error if not all columns are on the template"""
         metadata_dict = {
-            'SKB8.640193': {'center_name': 'ANL',
-                            'center_project_name': 'Test Project',
-                            'ebi_submission_accession': None,
-                            'EMP_status': 'EMP',
-                            'str_column': 'Value for sample 1',
-                            'barcodesequence': 'GTCCGCAAGTTA'},
-            'SKD8.640184': {'center_name': 'ANL',
-                            'center_project_name': 'Test Project',
-                            'ebi_submission_accession': None,
-                            'EMP_status': 'EMP',
-                            'str_column': 'Value for sample 2',
-                            'barcodesequence': 'CGTAGAGCTCTC'},
-            'SKB7.640196': {'center_name': 'ANL',
-                            'center_project_name': 'Test Project',
-                            'ebi_submission_accession': None,
-                            'EMP_status': 'EMP',
-                            'str_column': 'Value for sample 3',
-                            'barcodesequence': 'CCTCTGAGAGCT'}
+            '1.SKB8.640193': {'center_name': 'ANL',
+                              'center_project_name': 'Test Project',
+                              'ebi_submission_accession': None,
+                              'EMP_status': 'EMP',
+                              'str_column': 'Value for sample 1',
+                              'barcodesequence': 'GTCCGCAAGTTA'},
+            '1.SKD8.640184': {'center_name': 'ANL',
+                              'center_project_name': 'Test Project',
+                              'ebi_submission_accession': None,
+                              'EMP_status': 'EMP',
+                              'str_column': 'Value for sample 2',
+                              'barcodesequence': 'CGTAGAGCTCTC'},
+            '1.SKB7.640196': {'center_name': 'ANL',
+                              'center_project_name': 'Test Project',
+                              'ebi_submission_accession': None,
+                              'EMP_status': 'EMP',
+                              'str_column': 'Value for sample 3',
+                              'barcodesequence': 'CCTCTGAGAGCT'}
             }
         metadata = pd.DataFrame.from_dict(metadata_dict, orient='index')
         with self.assertRaises(QiitaDBColumnError):
@@ -1132,8 +1143,8 @@ class TestPrepTemplate(TestCase):
 
     def test_getitem(self):
         """Get item returns the correct sample object"""
-        obs = self.tester['SKM7.640188']
-        exp = PrepSample('SKM7.640188', self.tester)
+        obs = self.tester['1.SKM7.640188']
+        exp = PrepSample('1.SKM7.640188', self.tester)
         self.assertEqual(obs, exp)
 
     def test_getitem_error(self):
@@ -1144,12 +1155,13 @@ class TestPrepTemplate(TestCase):
     def test_setitem(self):
         """setitem raises an error (currently not allowed)"""
         with self.assertRaises(QiitaDBNotImplementedError):
-            self.tester['SKM7.640188'] = PrepSample('SKM7.640188', self.tester)
+            self.tester['1.SKM7.640188'] = PrepSample('1.SKM7.640188',
+                                                      self.tester)
 
     def test_delitem(self):
         """delitem raises an error (currently not allowed)"""
         with self.assertRaises(QiitaDBNotImplementedError):
-            del self.tester['SKM7.640188']
+            del self.tester['1.SKM7.640188']
 
     def test_iter(self):
         """iter returns an iterator over the sample ids"""
@@ -1159,7 +1171,7 @@ class TestPrepTemplate(TestCase):
 
     def test_contains_true(self):
         """contains returns true if the sample id exists"""
-        self.assertTrue('SKM7.640188' in self.tester)
+        self.assertTrue('1.SKM7.640188' in self.tester)
 
     def test_contains_false(self):
         """contains returns false if the sample id does not exists"""
@@ -1175,33 +1187,33 @@ class TestPrepTemplate(TestCase):
         """values returns an iterator over the values"""
         obs = self.tester.values()
         self.assertTrue(isinstance(obs, Iterable))
-        exp = {PrepSample('SKB1.640202', self.tester),
-               PrepSample('SKB2.640194', self.tester),
-               PrepSample('SKB3.640195', self.tester),
-               PrepSample('SKB4.640189', self.tester),
-               PrepSample('SKB5.640181', self.tester),
-               PrepSample('SKB6.640176', self.tester),
-               PrepSample('SKB7.640196', self.tester),
-               PrepSample('SKB8.640193', self.tester),
-               PrepSample('SKB9.640200', self.tester),
-               PrepSample('SKD1.640179', self.tester),
-               PrepSample('SKD2.640178', self.tester),
-               PrepSample('SKD3.640198', self.tester),
-               PrepSample('SKD4.640185', self.tester),
-               PrepSample('SKD5.640186', self.tester),
-               PrepSample('SKD6.640190', self.tester),
-               PrepSample('SKD7.640191', self.tester),
-               PrepSample('SKD8.640184', self.tester),
-               PrepSample('SKD9.640182', self.tester),
-               PrepSample('SKM1.640183', self.tester),
-               PrepSample('SKM2.640199', self.tester),
-               PrepSample('SKM3.640197', self.tester),
-               PrepSample('SKM4.640180', self.tester),
-               PrepSample('SKM5.640177', self.tester),
-               PrepSample('SKM6.640187', self.tester),
-               PrepSample('SKM7.640188', self.tester),
-               PrepSample('SKM8.640201', self.tester),
-               PrepSample('SKM9.640192', self.tester)}
+        exp = {PrepSample('1.SKB1.640202', self.tester),
+               PrepSample('1.SKB2.640194', self.tester),
+               PrepSample('1.SKB3.640195', self.tester),
+               PrepSample('1.SKB4.640189', self.tester),
+               PrepSample('1.SKB5.640181', self.tester),
+               PrepSample('1.SKB6.640176', self.tester),
+               PrepSample('1.SKB7.640196', self.tester),
+               PrepSample('1.SKB8.640193', self.tester),
+               PrepSample('1.SKB9.640200', self.tester),
+               PrepSample('1.SKD1.640179', self.tester),
+               PrepSample('1.SKD2.640178', self.tester),
+               PrepSample('1.SKD3.640198', self.tester),
+               PrepSample('1.SKD4.640185', self.tester),
+               PrepSample('1.SKD5.640186', self.tester),
+               PrepSample('1.SKD6.640190', self.tester),
+               PrepSample('1.SKD7.640191', self.tester),
+               PrepSample('1.SKD8.640184', self.tester),
+               PrepSample('1.SKD9.640182', self.tester),
+               PrepSample('1.SKM1.640183', self.tester),
+               PrepSample('1.SKM2.640199', self.tester),
+               PrepSample('1.SKM3.640197', self.tester),
+               PrepSample('1.SKM4.640180', self.tester),
+               PrepSample('1.SKM5.640177', self.tester),
+               PrepSample('1.SKM6.640187', self.tester),
+               PrepSample('1.SKM7.640188', self.tester),
+               PrepSample('1.SKM8.640201', self.tester),
+               PrepSample('1.SKM9.640192', self.tester)}
         # Creating a list and looping over it since unittest does not call
         # the __eq__ function on the objects
         for o, e in zip(sorted(list(obs), key=lambda x: x.id),
@@ -1212,33 +1224,33 @@ class TestPrepTemplate(TestCase):
         """items returns an iterator over the (key, value) tuples"""
         obs = self.tester.items()
         self.assertTrue(isinstance(obs, Iterable))
-        exp = [('SKB1.640202', PrepSample('SKB1.640202', self.tester)),
-               ('SKB2.640194', PrepSample('SKB2.640194', self.tester)),
-               ('SKB3.640195', PrepSample('SKB3.640195', self.tester)),
-               ('SKB4.640189', PrepSample('SKB4.640189', self.tester)),
-               ('SKB5.640181', PrepSample('SKB5.640181', self.tester)),
-               ('SKB6.640176', PrepSample('SKB6.640176', self.tester)),
-               ('SKB7.640196', PrepSample('SKB7.640196', self.tester)),
-               ('SKB8.640193', PrepSample('SKB8.640193', self.tester)),
-               ('SKB9.640200', PrepSample('SKB9.640200', self.tester)),
-               ('SKD1.640179', PrepSample('SKD1.640179', self.tester)),
-               ('SKD2.640178', PrepSample('SKD2.640178', self.tester)),
-               ('SKD3.640198', PrepSample('SKD3.640198', self.tester)),
-               ('SKD4.640185', PrepSample('SKD4.640185', self.tester)),
-               ('SKD5.640186', PrepSample('SKD5.640186', self.tester)),
-               ('SKD6.640190', PrepSample('SKD6.640190', self.tester)),
-               ('SKD7.640191', PrepSample('SKD7.640191', self.tester)),
-               ('SKD8.640184', PrepSample('SKD8.640184', self.tester)),
-               ('SKD9.640182', PrepSample('SKD9.640182', self.tester)),
-               ('SKM1.640183', PrepSample('SKM1.640183', self.tester)),
-               ('SKM2.640199', PrepSample('SKM2.640199', self.tester)),
-               ('SKM3.640197', PrepSample('SKM3.640197', self.tester)),
-               ('SKM4.640180', PrepSample('SKM4.640180', self.tester)),
-               ('SKM5.640177', PrepSample('SKM5.640177', self.tester)),
-               ('SKM6.640187', PrepSample('SKM6.640187', self.tester)),
-               ('SKM7.640188', PrepSample('SKM7.640188', self.tester)),
-               ('SKM8.640201', PrepSample('SKM8.640201', self.tester)),
-               ('SKM9.640192', PrepSample('SKM9.640192', self.tester))]
+        exp = [('1.SKB1.640202', PrepSample('1.SKB1.640202', self.tester)),
+               ('1.SKB2.640194', PrepSample('1.SKB2.640194', self.tester)),
+               ('1.SKB3.640195', PrepSample('1.SKB3.640195', self.tester)),
+               ('1.SKB4.640189', PrepSample('1.SKB4.640189', self.tester)),
+               ('1.SKB5.640181', PrepSample('1.SKB5.640181', self.tester)),
+               ('1.SKB6.640176', PrepSample('1.SKB6.640176', self.tester)),
+               ('1.SKB7.640196', PrepSample('1.SKB7.640196', self.tester)),
+               ('1.SKB8.640193', PrepSample('1.SKB8.640193', self.tester)),
+               ('1.SKB9.640200', PrepSample('1.SKB9.640200', self.tester)),
+               ('1.SKD1.640179', PrepSample('1.SKD1.640179', self.tester)),
+               ('1.SKD2.640178', PrepSample('1.SKD2.640178', self.tester)),
+               ('1.SKD3.640198', PrepSample('1.SKD3.640198', self.tester)),
+               ('1.SKD4.640185', PrepSample('1.SKD4.640185', self.tester)),
+               ('1.SKD5.640186', PrepSample('1.SKD5.640186', self.tester)),
+               ('1.SKD6.640190', PrepSample('1.SKD6.640190', self.tester)),
+               ('1.SKD7.640191', PrepSample('1.SKD7.640191', self.tester)),
+               ('1.SKD8.640184', PrepSample('1.SKD8.640184', self.tester)),
+               ('1.SKD9.640182', PrepSample('1.SKD9.640182', self.tester)),
+               ('1.SKM1.640183', PrepSample('1.SKM1.640183', self.tester)),
+               ('1.SKM2.640199', PrepSample('1.SKM2.640199', self.tester)),
+               ('1.SKM3.640197', PrepSample('1.SKM3.640197', self.tester)),
+               ('1.SKM4.640180', PrepSample('1.SKM4.640180', self.tester)),
+               ('1.SKM5.640177', PrepSample('1.SKM5.640177', self.tester)),
+               ('1.SKM6.640187', PrepSample('1.SKM6.640187', self.tester)),
+               ('1.SKM7.640188', PrepSample('1.SKM7.640188', self.tester)),
+               ('1.SKM8.640201', PrepSample('1.SKM8.640201', self.tester)),
+               ('1.SKM9.640192', PrepSample('1.SKM9.640192', self.tester))]
         # Creating a list and looping over it since unittest does not call
         # the __eq__ function on the objects
         for o, e in zip(sorted(list(obs)), sorted(exp)):
@@ -1246,8 +1258,8 @@ class TestPrepTemplate(TestCase):
 
     def test_get(self):
         """get returns the correct PrepSample object"""
-        obs = self.tester.get('SKM7.640188')
-        exp = PrepSample('SKM7.640188', self.tester)
+        obs = self.tester.get('1.SKM7.640188')
+        exp = PrepSample('1.SKM7.640188', self.tester)
         self.assertEqual(obs, exp)
 
     def test_get_none(self):
@@ -1337,12 +1349,13 @@ EXP_SAMPLE_TEMPLATE = (
     "has_physical_specimen\thost_subject_id\tlatitude\tlongitude\t"
     "physical_location\trequired_sample_info_status\tsample_type\t"
     "str_column\n"
-    "Sample1\t2014-05-29 12:24:51\tTest Sample 1\tTrue\tTrue\tNotIdentified\t"
-    "42.42\t41.41\tlocation1\treceived\ttype1\tValue for sample 1\n"
-    "Sample2\t2014-05-29 12:24:51\t"
+    "2.Sample1\t2014-05-29 12:24:51\tTest Sample 1\tTrue\tTrue\t"
+    "NotIdentified\t42.42\t41.41\tlocation1\treceived\ttype1\t"
+    "Value for sample 1\n"
+    "2.Sample2\t2014-05-29 12:24:51\t"
     "Test Sample 2\tTrue\tTrue\tNotIdentified\t4.2\t1.1\tlocation1\treceived\t"
     "type1\tValue for sample 2\n"
-    "Sample3\t2014-05-29 12:24:51\tTest Sample 3\tTrue\t"
+    "2.Sample3\t2014-05-29 12:24:51\tTest Sample 3\tTrue\t"
     "True\tNotIdentified\t4.8\t4.41\tlocation1\treceived\ttype1\t"
     "Value for sample 3\n")
 
@@ -1352,11 +1365,11 @@ EXP_PREP_TEMPLATE = (
     'ebi_submission_accession\temp_status\texperiment_design_description\t'
     'library_construction_protocol\tlinkerprimersequence\tplatform\t'
     'run_prefix\tstr_column\n'
-    'SKB7.640196\tCCTCTGAGAGCT\tANL\tTest Project\tNone\tEMP\tBBBB\tAAAA\t'
+    '1.SKB7.640196\tCCTCTGAGAGCT\tANL\tTest Project\tNone\tEMP\tBBBB\tAAAA\t'
     'GTGCCAGCMGCCGCGGTAA\tILLUMINA\ts_G1_L002_sequences\tValue for sample 3\n'
-    'SKB8.640193\tGTCCGCAAGTTA\tANL\tTest Project\tNone\tEMP\tBBBB\tAAAA\t'
+    '1.SKB8.640193\tGTCCGCAAGTTA\tANL\tTest Project\tNone\tEMP\tBBBB\tAAAA\t'
     'GTGCCAGCMGCCGCGGTAA\tILLUMINA\ts_G1_L001_sequences\tValue for sample 1\n'
-    'SKD8.640184\tCGTAGAGCTCTC\tANL\tTest Project\tNone\tEMP\tBBBB\tAAAA\t'
+    '1.SKD8.640184\tCGTAGAGCTCTC\tANL\tTest Project\tNone\tEMP\tBBBB\tAAAA\t'
     'GTGCCAGCMGCCGCGGTAA\tILLUMINA\ts_G1_L001_sequences\tValue for sample 2\n')
 
 if __name__ == '__main__':

@@ -63,6 +63,6 @@ setup(name='qiita',
                         'bcrypt', 'pandas', 'numpy >= 1.7', 'tornado==3.1.1',
                         'toredis', 'redis', 'ipython[all]', 'pyparsing',
                         'h5py >= 2.3.1', 'biom-format', 'natsort', 'networkx',
-                        'scikit-bio == 0.1.4', 'wtforms == 2.0.1'],
+                        'scikit-bio == 0.2.1', 'wtforms == 2.0.1'],
       classifiers=classifiers
       )
