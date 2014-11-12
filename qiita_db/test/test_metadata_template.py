@@ -1087,7 +1087,8 @@ class TestPrepTemplate(TestCase):
         with self.assertRaises(QiitaDBColumnError):
             PrepTemplate.create(self.metadata, self.new_raw_data,
                                 self.test_study, self.data_type_id,
-                                'Not a term')
+                                'Not a term',
+                                investigation_type_ontology='ENA_test')
 
     def test_delete_error(self):
         """Try to delete a prep template that already has preprocessed data"""
@@ -1336,7 +1337,8 @@ class TestPrepTemplate(TestCase):
     def test_investigation_type_setter(self):
         """Able to update the investigation type"""
         pt = PrepTemplate.create(self.metadata, self.new_raw_data,
-                                 self.test_study, self.data_type_id)
+                                 self.test_study, self.data_type_id,
+                                 investigation_type_ontology='ENA_test')
         self.assertEqual(pt.investigation_type, None)
         pt.investigation_type = "Other"
         self.assertEqual(pt.investigation_type, 'Other')
