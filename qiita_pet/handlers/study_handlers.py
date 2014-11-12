@@ -293,9 +293,12 @@ class StudyDescriptionHandler(BaseHandler):
 
         ontology = Ontology(convert_to_id('ENA', 'ontology'))
 
-        ena_terms = ontology.terms
-        ena_terms = ['<option value="%s">%s</option>' % (v, v)
-                     for v in ena_terms]
+        # make "Other" show at the bottom of the drop down menu
+        ena_terms = []
+        for v in sorted(ontology.terms):
+            if v != 'Other':
+                ena_terms.append('<option value="%s">%s</option>' % (v, v))
+        ena_terms.append('<option value="Other">Other</option>')
 
         # New Type is for users to add a new user-defined investigation type
         user_defined_terms = ontology.user_defined_terms + ['New Type']
