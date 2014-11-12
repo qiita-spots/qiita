@@ -12,12 +12,11 @@ import sys
 from collections import defaultdict
 from heapq import heappush, heappop
 from contextlib import contextmanager
-from future.builtins import bytes, str
 
 import h5py
 import numpy as np
 import pandas as pd
-
+from skbio.io.util import _is_string_or_bytes
 from future.utils import viewitems
 from natsort import natsorted
 
@@ -217,13 +216,6 @@ def template_to_dict(t):
             # cast to string as a datetime object can be returned here
             out[sample_id][column_name] = str(column_value)
     return out
-
-
-# open_file logic adapted from scikit-bio's skbio.io.util #
-def _is_string_or_bytes(s):
-    """Returns True if input argument is string (unicode or not) or bytes.
-    """
-    return isinstance(s, str) or isinstance(s, bytes)
 
 
 def _get_filehandle(filepath_or, *args, **kwargs):
