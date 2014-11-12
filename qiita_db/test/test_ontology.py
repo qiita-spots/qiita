@@ -16,16 +16,16 @@ from qiita_db.util import convert_from_id, convert_to_id
 @qiita_test_checker()
 class TestOntology(TestCase):
     def setUp(self):
-        self.ontology = Ontology(807481739)
+        self.ontology = Ontology(999999999)
 
     def testConvertToID(self):
-        self.assertEqual(convert_to_id('ENA', 'ontology'), 807481739)
+        self.assertEqual(convert_to_id('ENA_test', 'ontology'), 999999999)
 
     def testConvertFromID(self):
-        self.assertEqual(convert_from_id(807481739, 'ontology'), 'ENA')
+        self.assertEqual(convert_from_id(999999999, 'ontology'), 'ENA_test')
 
     def testShortNameProperty(self):
-        self.assertEqual(self.ontology.shortname, 'ENA')
+        self.assertEqual(self.ontology.shortname, 'ENA_test')
 
     def testTerms(self):
         obs = self.ontology.terms
