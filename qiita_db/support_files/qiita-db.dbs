@@ -115,7 +115,6 @@
 			<column name="analysis_id" type="bigint" jt="-5" mandatory="y" />
 			<column name="processed_data_id" type="bigint" jt="-5" mandatory="y" />
 			<column name="sample_id" type="varchar" jt="12" mandatory="y" />
-			<column name="study_id" type="bigint" jt="-5" mandatory="y" />
 			<index name="idx_analysis_sample" unique="NORMAL" >
 				<column name="analysis_id" />
 			</index>
@@ -125,10 +124,6 @@
 			<index name="idx_analysis_sample_1" unique="NORMAL" >
 				<column name="sample_id" />
 			</index>
-			<index name="idx_analysis_sample_2" unique="NORMAL" >
-				<column name="sample_id" />
-				<column name="study_id" />
-			</index>
 			<fk name="fk_analysis_sample_analysis" to_schema="qiita" to_table="analysis" >
 				<fk_column name="analysis_id" pk="analysis_id" />
 			</fk>
@@ -137,7 +132,6 @@
 			</fk>
 			<fk name="fk_analysis_sample" to_schema="qiita" to_table="required_sample_info" >
 				<fk_column name="sample_id" pk="sample_id" />
-				<fk_column name="study_id" pk="study_id" />
 			</fk>
 		</table>
 		<table name="analysis_status" >
@@ -280,7 +274,6 @@
 				<comment><![CDATA[The prep template identifier]]></comment>
 			</column>
 			<column name="sample_id" type="varchar" jt="12" mandatory="y" />
-			<column name="study_id" type="bigint" jt="-5" mandatory="y" />
 			<column name="center_name" type="varchar" jt="12" />
 			<column name="center_project_name" type="varchar" jt="12" />
 			<column name="emp_status_id" type="bigint" jt="-5" mandatory="y" />
@@ -292,12 +285,10 @@
 			</index>
 			<index name="idx_common_prep_info_0" unique="NORMAL" >
 				<column name="sample_id" />
-				<column name="study_id" />
 			</index>
 			<index name="idx_common_prep_info" unique="PRIMARY_KEY" >
 				<column name="prep_template_id" />
 				<column name="sample_id" />
-				<column name="study_id" />
 			</index>
 			<index name="idx_common_prep_info_1" unique="NORMAL" >
 				<column name="prep_template_id" />
@@ -307,7 +298,6 @@
 			</fk>
 			<fk name="fk_common_prep_info" to_schema="qiita" to_table="required_sample_info" >
 				<fk_column name="sample_id" pk="sample_id" />
-				<fk_column name="study_id" pk="study_id" />
 			</fk>
 			<fk name="fk_prep_template" to_schema="qiita" to_table="prep_template" >
 				<fk_column name="prep_template_id" pk="prep_template_id" />
@@ -959,8 +949,8 @@
 		</table>
 		<table name="required_sample_info" >
 			<comment>Required info for each sample. One row is one sample.</comment>
-			<column name="study_id" type="bigint" jt="-5" mandatory="y" />
 			<column name="sample_id" type="varchar" jt="12" mandatory="y" />
+			<column name="study_id" type="bigint" jt="-5" mandatory="y" />
 			<column name="physical_location" type="varchar" jt="12" mandatory="y" >
 				<comment><![CDATA[Where the sample itself is stored]]></comment>
 			</column>
@@ -983,25 +973,20 @@
 			<column name="longitude" type="float8" jt="6" mandatory="y" >
 				<comment><![CDATA[Longitude of the collection site]]></comment>
 			</column>
-			<index name="idx_common_sample_information" unique="PRIMARY_KEY" >
-				<column name="study_id" />
-				<column name="sample_id" />
+			<index name="idx_required_sample_info_0" unique="NORMAL" >
+				<column name="required_sample_info_status_id" />
 			</index>
 			<index name="idx_required_sample_info" unique="NORMAL" >
 				<column name="study_id" />
 			</index>
-			<index name="idx_required_sample_info_0" unique="NORMAL" >
-				<column name="required_sample_info_status_id" />
-			</index>
-			<index name="pk_required_sample_info" unique="UNIQUE" >
+			<index name="idx_required_sample_info_1" unique="PRIMARY_KEY" >
 				<column name="sample_id" />
-				<column name="study_id" />
 			</index>
-			<fk name="fk_required_sample_info_study" to_schema="qiita" to_table="study" >
-				<fk_column name="study_id" pk="study_id" />
-			</fk>
 			<fk name="fk_required_sample_info" to_schema="qiita" to_table="required_sample_info_status" >
 				<fk_column name="required_sample_info_status_id" pk="required_sample_info_status_id" />
+			</fk>
+			<fk name="fk_required_sample_info_study" to_schema="qiita" to_table="study" >
+				<fk_column name="study_id" pk="study_id" />
 			</fk>
 		</table>
 		<table name="required_sample_info_status" >
@@ -1365,12 +1350,9 @@ Controlled Vocabulary]]></comment>
 		<entity schema="qiita" name="processed_params_sortmerna" color="a8c4ef" x="1980" y="795" />
 		<entity schema="qiita" name="preprocessed_sequence_illumina_params" color="d0def5" x="1710" y="1020" />
 		<entity schema="qiita" name="preprocessed_processed_data" color="b2cdf7" x="1245" y="855" />
-		<entity schema="qiita" name="analysis_sample" color="d0def5" x="45" y="1155" />
-		<entity schema="qiita" name="required_sample_info" color="d0def5" x="1380" y="105" />
 		<entity schema="qiita" name="study" color="d0def5" x="1785" y="45" />
 		<entity schema="qiita" name="qiita_user" color="d0def5" x="330" y="75" />
 		<entity schema="qiita" name="prep_y" color="d0def5" x="1200" y="180" />
-		<entity schema="qiita" name="common_prep_info" color="d0def5" x="1020" y="150" />
 		<entity schema="qiita" name="prep_columns" color="b2cdf7" x="1245" y="330" />
 		<entity schema="qiita" name="raw_filepath" color="c0d4f3" x="1050" y="495" />
 		<entity schema="qiita" name="prep_template_preprocessed_data" color="b2cdf7" x="1215" y="600" />
@@ -1394,6 +1376,9 @@ Controlled Vocabulary]]></comment>
 		<entity schema="qiita" name="filepath" color="c0d4f3" x="645" y="660" />
 		<entity schema="qiita" name="data_directory" color="b2cdf7" x="840" y="570" />
 		<entity schema="qiita" name="term" color="d0def5" x="795" y="1620" />
+		<entity schema="qiita" name="common_prep_info" color="d0def5" x="1020" y="150" />
+		<entity schema="qiita" name="analysis_sample" color="d0def5" x="45" y="1155" />
+		<entity schema="qiita" name="required_sample_info" color="d0def5" x="1380" y="105" />
 		<group name="Group_analyses" color="c4e0f9" >
 			<comment>analysis tables</comment>
 			<entity schema="qiita" name="analysis" />

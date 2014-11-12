@@ -15,7 +15,7 @@ from datetime import datetime
 from qiita_core.util import qiita_test_checker
 from qiita_db.job import Job, Command
 from qiita_db.user import User
-from qiita_db.util import get_db_files_base_dir
+from qiita_db.util import get_mountpoint
 from qiita_db.analysis import Analysis
 from qiita_db.exceptions import (QiitaDBDuplicateError, QiitaDBStatusError,
                                  QiitaDBUnknownIDError)
@@ -30,6 +30,7 @@ class JobTest(TestCase):
         self.options = {"option1": False, "option2": 25, "option3": "NEW"}
         self._delete_path = []
         self._delete_dir = []
+        _, self._job_folder = get_mountpoint("job")[0]
 
     def tearDown(self):
         # needs to be this way because map does not play well with remove and
@@ -46,10 +47,10 @@ class JobTest(TestCase):
             "DELETE FROM qiita.analysis_sample WHERE analysis_id = 2")
         self.conn_handler.execute(
             "INSERT INTO qiita.analysis_sample "
-            "(analysis_id, processed_data_id, sample_id, study_id) VALUES "
-            "(2, 1,'SKB8.640193', 1), (2, 1,'SKD8.640184', 1), "
-            "(2, 1,'SKB7.640196', 1), (2, 1,'SKM9.640192', 1), "
-            "(2, 1,'SKM4.640180', 1)")
+            "(analysis_id, processed_data_id, sample_id) VALUES "
+            "(2, 1,'1.SKB8.640193'), (2, 1,'1.SKD8.640184'), "
+            "(2, 1,'1.SKB7.640196'), (2, 1,'1.SKM9.640192'), "
+            "(2, 1,'1.SKM4.640180')")
         self.assertTrue(Job.exists("18S", "Beta Diversity",
                                    {"--otu_table_fp": 1,
                                     "--mapping_fp": 1}, Analysis(1)))
@@ -61,10 +62,10 @@ class JobTest(TestCase):
             "DELETE FROM qiita.analysis_sample WHERE analysis_id = 2")
         self.conn_handler.execute(
             "INSERT INTO qiita.analysis_sample "
-            "(analysis_id, processed_data_id, sample_id, study_id) VALUES "
-            "(2, 1,'SKB8.640193', 1), (2, 1,'SKD8.640184', 1), "
-            "(2, 1,'SKB7.640196', 1), (2, 1,'SKM9.640192', 1), "
-            "(2, 1,'SKM4.640180', 1)")
+            "(analysis_id, processed_data_id, sample_id) VALUES "
+            "(2, 1,'1.SKB8.640193'), (2, 1,'1.SKD8.640184'), "
+            "(2, 1,'1.SKB7.640196'), (2, 1,'1.SKM9.640192'), "
+            "(2, 1,'1.SKM4.640180')")
         exists, jid = Job.exists("18S", "Beta Diversity",
                                  {"--otu_table_fp": 1, "--mapping_fp": 1},
                                  Analysis(1), return_existing=True)
@@ -79,10 +80,10 @@ class JobTest(TestCase):
             "DELETE FROM qiita.analysis_sample WHERE analysis_id = 2")
         self.conn_handler.execute(
             "INSERT INTO qiita.analysis_sample "
-            "(analysis_id, processed_data_id, sample_id, study_id) VALUES "
-            "(2, 1,'SKB8.640193', 1), (2, 1,'SKD8.640184', 1), "
-            "(2, 1,'SKB7.640196', 1), (2, 1,'SKM9.640192', 1), "
-            "(2, 1,'SKM4.640180', 1)")
+            "(analysis_id, processed_data_id, sample_id) VALUES "
+            "(2, 1,'1.SKB8.640193'), (2, 1,'1.SKD8.640184'), "
+            "(2, 1,'1.SKB7.640196'), (2, 1,'1.SKM9.640192'), "
+            "(2, 1,'1.SKM4.640180')")
         self.assertFalse(Job.exists("18S", "Beta Diversity",
                                     {"--otu_table_fp": 1,
                                      "--mapping_fp": 27}, Analysis(1)))
@@ -134,13 +135,12 @@ class JobTest(TestCase):
                 "SELECT * FROM qiita.analysis_job WHERE job_id = 1")
             self.assertEqual(obs, [])
 
-            self.assertFalse(exists(join(get_db_files_base_dir(),
-                                    "job/1_job_result.txt")))
+            self.assertFalse(exists(join(self._job_folder,
+                             "1_job_result.txt")))
         finally:
-            if not exists(join(get_db_files_base_dir(),
-                          "job/1_job_result.txt")):
-                with open(join(get_db_files_base_dir(),
-                          "job/1_job_result.txt"), 'w') as f:
+            f = join(self._job_folder, "1_job_result.txt")
+            if not exists(f):
+                with open(f, 'w') as f:
                     f.write("job1result.txt")
 
     def test_delete_folders(self):
@@ -161,21 +161,20 @@ class JobTest(TestCase):
                 "SELECT * FROM qiita.analysis_job WHERE job_id = 2")
             self.assertEqual(obs, [])
 
-            self.assertFalse(exists(join(get_db_files_base_dir(),
-                                    "job/2_test_folder")))
+            self.assertFalse(exists(join(self._job_folder, "2_test_folder")))
         finally:
             # put the test data back
-            basedir = get_db_files_base_dir()
-            if not exists(join(basedir, "job/2_test_folder")):
-                mkdir(join(basedir, "job", "2_test_folder"))
-                mkdir(join(basedir, "job", "2_test_folder", "subdir"))
-                with open(join(basedir, "job", "2_test_folder",
+            basedir = self._job_folder
+            if not exists(join(basedir, "2_test_folder")):
+                mkdir(join(basedir, "2_test_folder"))
+                mkdir(join(basedir, "2_test_folder", "subdir"))
+                with open(join(basedir, "2_test_folder",
                                "testfile.txt"), 'w') as f:
                     f.write("DATA")
-                with open(join(basedir, "job", "2_test_folder",
+                with open(join(basedir, "2_test_folder",
                                "testres.htm"), 'w') as f:
                     f.write("DATA")
-                with open(join(basedir, "job", "2_test_folder",
+                with open(join(basedir, "2_test_folder",
                                "subdir", "subres.html"), 'w') as f:
                     f.write("DATA")
 
@@ -223,10 +222,10 @@ class JobTest(TestCase):
         Analysis.create(User("demo@microbio.me"), "new", "desc")
         self.conn_handler.execute(
             "INSERT INTO qiita.analysis_sample "
-            "(analysis_id, processed_data_id, sample_id, study_id) VALUES "
-            "(3, 1, 'SKB8.640193', 1), (3, 1, 'SKD8.640184', 1), "
-            "(3, 1, 'SKB7.640196', 1), (3, 1, 'SKM9.640192', 1), "
-            "(3, 1, 'SKM4.640180', 1)")
+            "(analysis_id, processed_data_id, sample_id) VALUES "
+            "(3, 1, '1.SKB8.640193'), (3, 1, '1.SKD8.640184'), "
+            "(3, 1, '1.SKB7.640196'), (3, 1, '1.SKM9.640192'), "
+            "(3, 1, '1.SKM4.640180')")
         new = Job.create("18S", "Beta Diversity",
                          {"--otu_table_fp": 1, "--mapping_fp": 1},
                          Analysis(3), return_existing=True)
@@ -244,25 +243,25 @@ class JobTest(TestCase):
     def test_retrieve_options(self):
         self.assertEqual(self.job.options, {
             '--otu_table_fp': 1,
-            '--output_dir': join(get_db_files_base_dir(), 'job/'
-                                 '1_summarize_taxa_through_plots.py'
-                                 '_output_dir')})
+            '--output_dir': join(
+                self._job_folder,
+                '1_summarize_taxa_through_plots.py_output_dir')})
 
     def test_set_options(self):
         new = Job.create("18S", "Alpha Rarefaction", {"opt1": 4}, Analysis(1))
         new.options = self.options
-        self.options['--output_dir'] = join(get_db_files_base_dir(),
-                                            'job/4_alpha_rarefaction.'
+        self.options['--output_dir'] = join(self._job_folder,
+                                            '4_alpha_rarefaction.'
                                             'py_output_dir')
         self.assertEqual(new.options, self.options)
 
     def test_retrieve_results(self):
-        self.assertEqual(self.job.results, [join("job", "1_job_result.txt")])
+        self.assertEqual(self.job.results, ["1_job_result.txt"])
 
     def test_retrieve_results_folder(self):
         job = Job(2)
-        self.assertEqual(job.results, ['job/2_test_folder/testres.htm',
-                                       'job/2_test_folder/subdir/subres.html'])
+        self.assertEqual(job.results, ['2_test_folder/testres.htm',
+                                       '2_test_folder/subdir/subres.html'])
 
     def test_retrieve_results_empty(self):
         new = Job.create("18S", "Beta Diversity", {"opt1": 4}, Analysis(1))
@@ -293,8 +292,8 @@ class JobTest(TestCase):
         self.assertEqual(self.job.error.msg, "TESTERROR")
 
     def test_add_results(self):
-        self.job.add_results([(join(get_db_files_base_dir(), "job",
-                                    "1_job_result.txt"), "plain_text")])
+        self.job.add_results([(join(self._job_folder, "1_job_result.txt"),
+                             "plain_text")])
 
         # make sure files attached to job properly
         obs = self.conn_handler.execute_fetchall(
@@ -304,7 +303,7 @@ class JobTest(TestCase):
 
     def test_add_results_dir(self):
         # Create a test directory
-        test_dir = join(get_db_files_base_dir(), "job", "2_test_folder")
+        test_dir = join(self._job_folder, "2_test_folder")
 
         # add folder to job
         self.job.add_results([(test_dir, "directory")])

@@ -23,7 +23,7 @@ from traceback import format_exception_only
 from sys import exc_info
 
 from json import dumps
-from os import listdir, remove
+from os import remove
 from os.path import exists, join, basename
 from functools import partial
 from .base_handlers import BaseHandler
@@ -40,8 +40,9 @@ from qiita_db.metadata_template import (SampleTemplate, PrepTemplate,
                                         load_template_to_dataframe)
 from qiita_db.study import Study, StudyPerson
 from qiita_db.user import User
-from qiita_db.util import (get_study_fp, get_filepath_types, get_data_types,
-                           get_filetypes, convert_to_id)
+from qiita_db.util import (get_filepath_types, get_data_types, get_filetypes,
+                           convert_to_id, get_mountpoint,
+                           get_files_from_uploads_folders)
 from qiita_db.data import PreprocessedData, RawData
 from qiita_db.exceptions import (QiitaDBColumnError, QiitaDBExecutionError,
                                  QiitaDBDuplicateError, QiitaDBUnknownIDError)
@@ -259,12 +260,6 @@ class StudyDescriptionHandler(BaseHandler):
         else:
             check_access(User(self.current_user), study)
 
-        # processing files from upload path
-        fp = get_study_fp(study_id)
-        if exists(fp):
-            fs = listdir(fp)
-        else:
-            fs = []
         # getting raw filepath_ types
         fts = [k.split('_', 1)[1].replace('_', ' ')
                for k in get_filepath_types() if k.startswith('raw_')]
@@ -305,7 +300,7 @@ class StudyDescriptionHandler(BaseHandler):
 
         self.render('study_description.html', user=self.current_user,
                     study_title=study.title, study_info=study.info,
-                    study_id=study_id, files=fs, filetypes=''.join(filetypes),
+                    study_id=study_id, filetypes=''.join(filetypes),
                     user_level=user.level, data_types=''.join(data_types),
                     available_raw_data=available_raw_data,
                     available_prep_templates=available_prep_templates,
@@ -315,7 +310,8 @@ class StudyDescriptionHandler(BaseHandler):
                     level=msg_level, message=msg,
                     can_upload=check_access(user, study, True),
                     other_studies_rd=''.join(other_studies_rd),
-                    user_defined_terms=user_defined_terms)
+                    user_defined_terms=user_defined_terms,
+                    files=get_files_from_uploads_folders(str(study_id)))
 
     @authenticated
     def get(self, study_id):
@@ -364,7 +360,8 @@ class StudyDescriptionHandler(BaseHandler):
         if sample_template:
             # processing sample templates
 
-            fp_rsp = join(get_study_fp(study_id), sample_template)
+            _, base_fp = get_mountpoint("uploads")[0]
+            fp_rsp = join(base_fp, str(study_id), sample_template)
             if not exists(fp_rsp):
                 raise HTTPError(400, "This file doesn't exist: %s" % fp_rsp)
 
@@ -425,7 +422,8 @@ class StudyDescriptionHandler(BaseHandler):
                 investigation_type = user_defined_investigation_type
 
             raw_data_id = int(raw_data_id)
-            fp_rpt = join(get_study_fp(study_id), add_prep_template)
+            _, base_path = get_mountpoint("uploads")[0]
+            fp_rpt = join(base_path, str(study_id), add_prep_template)
             if not exists(fp_rpt):
                 raise HTTPError(400, "This file doesn't exist: %s" % fp_rpt)
 

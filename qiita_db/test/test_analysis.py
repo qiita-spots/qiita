@@ -7,7 +7,7 @@ from qiita_core.util import qiita_test_checker
 from qiita_db.analysis import Analysis
 from qiita_db.user import User
 from qiita_db.exceptions import QiitaDBStatusError
-from qiita_db.util import get_db_files_base_dir
+from qiita_db.util import get_mountpoint
 # -----------------------------------------------------------------------------
 # Copyright (c) 2014--, The Qiita Development Team.
 #
@@ -21,6 +21,7 @@ from qiita_db.util import get_db_files_base_dir
 class TestAnalysis(TestCase):
     def setUp(self):
         self.analysis = Analysis(1)
+        _, self.fp = get_mountpoint("analysis")[0]
 
     def test_lock_check(self):
         for status in ["queued", "running", "public", "completed",
@@ -110,18 +111,17 @@ class TestAnalysis(TestCase):
         self.assertEqual(self.analysis.description, "New description")
 
     def test_retrieve_samples(self):
-        exp = {1: ['SKB8.640193', 'SKD8.640184', 'SKB7.640196',
-                   'SKM9.640192', 'SKM4.640180']}
+        exp = {1: ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196',
+                   '1.SKM9.640192', '1.SKM4.640180']}
         self.assertEqual(self.analysis.samples, exp)
 
     def test_retrieve_dropped_samples(self):
-        biom_fp = join(get_db_files_base_dir(), "analysis",
-                       "1_analysis_18S.biom")
+        biom_fp = join(self.fp, "1_analysis_18S.biom")
         try:
-            samples = {1: ['SKB8.640193', 'SKD8.640184', 'SKB7.640196']}
+            samples = {1: ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196']}
             self.analysis._build_biom_tables(samples, 100,
                                              conn_handler=self.conn_handler)
-            exp = {1: {'SKM4.640180', 'SKM9.640192'}}
+            exp = {1: {'1.SKM4.640180', '1.SKM9.640192'}}
             self.assertEqual(self.analysis.dropped_samples, exp)
         finally:
             with open(biom_fp, 'w') as f:
@@ -135,8 +135,7 @@ class TestAnalysis(TestCase):
         self.assertEqual(self.analysis.shared_with, ["shared@foo.bar"])
 
     def test_retrieve_biom_tables(self):
-        exp = {"18S": join(get_db_files_base_dir(), "analysis",
-                           "1_analysis_18S.biom")}
+        exp = {"18S": join(self.fp, "1_analysis_18S.biom")}
         self.assertEqual(self.analysis.biom_tables, exp)
 
     def test_retrieve_biom_tables_none(self):
@@ -199,8 +198,7 @@ class TestAnalysis(TestCase):
         self.assertEqual(self.analysis.pmid, "11211221212213")
 
     def test_retrieve_mapping_file(self):
-        exp = join(get_db_files_base_dir(), "analysis",
-                   "1_analysis_mapping.txt")
+        exp = join(self.fp, "1_analysis_mapping.txt")
         obs = self.analysis.mapping_file
         self.assertEqual(obs, exp)
         self.assertTrue(exists(exp))
@@ -220,19 +218,21 @@ class TestAnalysis(TestCase):
     def test_add_samples(self):
         new = Analysis.create(User("admin@foo.bar"), "newAnalysis",
                               "A New Analysis")
-        new.add_samples([(1, 'SKB8.640193', 1), (1, 'SKD5.640186', 1)])
-        exp = {1: ['SKB8.640193', 'SKD5.640186']}
+        new.add_samples([(1, '1.SKB8.640193'), (1, '1.SKD5.640186')])
+        exp = {1: ['1.SKB8.640193', '1.SKD5.640186']}
         self.assertEqual(new.samples, exp)
 
     def test_remove_samples_both(self):
         self.analysis.remove_samples(proc_data=(1, ),
-                                     samples=('SKB8.640193', ))
-        exp = {1: ['SKD8.640184', 'SKB7.640196', 'SKM9.640192', 'SKM4.640180']}
+                                     samples=('1.SKB8.640193', ))
+        exp = {1: ['1.SKD8.640184', '1.SKB7.640196', '1.SKM9.640192',
+                   '1.SKM4.640180']}
         self.assertEqual(self.analysis.samples, exp)
 
     def test_remove_samples_samples(self):
-        self.analysis.remove_samples(samples=('SKD8.640184', ))
-        exp = {1: ['SKB8.640193', 'SKB7.640196', 'SKM9.640192', 'SKM4.640180']}
+        self.analysis.remove_samples(samples=('1.SKD8.640184', ))
+        exp = {1: ['1.SKB8.640193', '1.SKB7.640196', '1.SKM9.640192',
+                   '1.SKM4.640180']}
         self.assertEqual(self.analysis.samples, exp)
 
     def test_remove_samples_processed_data(self):
@@ -251,15 +251,14 @@ class TestAnalysis(TestCase):
 
     def test_get_samples(self):
         obs = self.analysis._get_samples()
-        exp = {1: ['SKB7.640196', 'SKB8.640193', 'SKD8.640184', 'SKM4.640180',
-                   'SKM9.640192']}
+        exp = {1: ['1.SKB7.640196', '1.SKB8.640193', '1.SKD8.640184',
+                   '1.SKM4.640180', '1.SKM9.640192']}
         self.assertEqual(obs, exp)
 
     def test_build_mapping_file(self):
-        map_fp = join(get_db_files_base_dir(), "analysis",
-                      "1_analysis_mapping.txt")
+        map_fp = join(self.fp, "1_analysis_mapping.txt")
         try:
-            samples = {1: ['SKB8.640193', 'SKD8.640184', 'SKB7.640196']}
+            samples = {1: ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196']}
             self.analysis._build_mapping_file(samples,
                                               conn_handler=self.conn_handler)
             obs = self.analysis.mapping_file
@@ -269,7 +268,8 @@ class TestAnalysis(TestCase):
                 mapdata = f.readlines()
             # check some columns for correctness
             obs = [line.split('\t')[0] for line in mapdata]
-            exp = ['#SampleID', 'SKB8.640193', 'SKD8.640184', 'SKB7.640196']
+            exp = ['#SampleID', '1.SKB8.640193', '1.SKD8.640184',
+                   '1.SKB7.640196']
             self.assertEqual(obs, exp)
 
             obs = [line.split('\t')[1] for line in mapdata]
@@ -299,16 +299,15 @@ class TestAnalysis(TestCase):
                 f.write("")
 
     def test_build_mapping_file_duplicate_samples(self):
-        samples = {1: ['SKB8.640193', 'SKB8.640193', 'SKD8.640184']}
+        samples = {1: ['1.SKB8.640193', '1.SKB8.640193', '1.SKD8.640184']}
         with self.assertRaises(ValueError):
             self.analysis._build_mapping_file(samples,
                                               conn_handler=self.conn_handler)
 
     def test_build_biom_tables(self):
-        biom_fp = join(get_db_files_base_dir(), "analysis",
-                       "1_analysis_18S.biom")
+        biom_fp = join(self.fp, "1_analysis_18S.biom")
         try:
-            samples = {1: ['SKB8.640193', 'SKD8.640184', 'SKB7.640196']}
+            samples = {1: ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196']}
             self.analysis._build_biom_tables(samples, 100,
                                              conn_handler=self.conn_handler)
             obs = self.analysis.biom_tables
@@ -317,10 +316,10 @@ class TestAnalysis(TestCase):
 
             table = load_table(biom_fp)
             obs = set(table.ids(axis='sample'))
-            exp = {'SKB8.640193', 'SKD8.640184', 'SKB7.640196'}
+            exp = {'1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196'}
             self.assertEqual(obs, exp)
 
-            obs = table.metadata('SKB8.640193')
+            obs = table.metadata('1.SKB8.640193')
             exp = {'Study':
                    'Identification of the Microbiomes for Cannabis Soils',
                    'Processed_id': 1}
@@ -330,10 +329,8 @@ class TestAnalysis(TestCase):
                 f.write("")
 
     def test_build_files(self):
-        biom_fp = join(get_db_files_base_dir(), "analysis",
-                       "1_analysis_18S.biom")
-        map_fp = join(get_db_files_base_dir(), "analysis",
-                      "1_analysis_mapping.txt")
+        biom_fp = join(self.fp, "1_analysis_18S.biom")
+        map_fp = join(self.fp, "1_analysis_mapping.txt")
         try:
             self.analysis.build_files()
         finally:
