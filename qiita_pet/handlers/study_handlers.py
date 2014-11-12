@@ -343,7 +343,10 @@ class StudyDescriptionHandler(BaseHandler):
             'user-defined-investigation-type', None)
         new_investigation_type = self.get_argument('new-investigation-type',
                                                    None)
-        if investigation_type == "":
+
+        # non selected is the equivalent to the user not specifyin the info
+        # thus we should make the investigation_type None
+        if investigation_type == "" or investigation_type == "Non selected":
             investigation_type = None
 
         # to update investigation type
