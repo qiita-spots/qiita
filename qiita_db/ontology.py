@@ -90,4 +90,34 @@ class Ontology(QiitaObject):
                      VALUES
                      (%s, %s, true);"""
 
-            return conn_handler.execute(sql, [self.id, term])
+            conn_handler.execute(sql, [self.id, term])
+
+    def term_type(self, term):
+        """Get the type of a given ontology term
+
+        Parameters
+        ----------
+        term : str
+            String for which the method will check the type
+
+        Returns
+        -------
+        str
+            The term type: 'ontology' if the term is part of the ontology,
+            'user_defined' if the term is part of the ontology and was
+            user-defined and 'not_ontology' if the term is not part of the
+            ontology.
+        """
+        conn_handler = SQLConnectionHandler()
+        sql = """SELECT user_defined FROM
+                 qiita.term
+                 WHERE term = %s AND ontology_id = %s
+              """
+        result = conn_handler.execute_fetchone(sql, [term, self.id])
+
+        if result is None:
+            return 'not_ontology'
+        elif result[0]:
+            return 'user_defined'
+        elif not result[0]:
+            return 'ontology'
