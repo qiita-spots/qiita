@@ -1498,7 +1498,7 @@ class PrepTemplate(MetadataTemplate):
         """
         if investigation_type is not None:
             self.validate_investigation_type(
-            investigation_type, self._investigation_type_ontology)
+                investigation_type, self._investigation_type_ontology)
 
         conn_handler = SQLConnectionHandler()
 
