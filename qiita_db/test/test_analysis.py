@@ -7,7 +7,7 @@ from qiita_core.util import qiita_test_checker
 from qiita_db.analysis import Analysis
 from qiita_db.user import User
 from qiita_db.exceptions import QiitaDBStatusError
-from qiita_db.util import retrive_latest_data_directory
+from qiita_db.util import get_mountpoint
 # -----------------------------------------------------------------------------
 # Copyright (c) 2014--, The Qiita Development Team.
 #
@@ -21,7 +21,7 @@ from qiita_db.util import retrive_latest_data_directory
 class TestAnalysis(TestCase):
     def setUp(self):
         self.analysis = Analysis(1)
-        _, self.fp = retrive_latest_data_directory("analysis")[0]
+        _, self.fp = get_mountpoint("analysis")[0]
 
     def test_lock_check(self):
         for status in ["queued", "running", "public", "completed",

@@ -16,7 +16,7 @@ from qiita_core.util import qiita_test_checker
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_db.exceptions import QiitaDBError
 from qiita_db.study import Study
-from qiita_db.util import retrive_latest_data_directory
+from qiita_db.util import get_mountpoint
 from qiita_db.data import BaseData, RawData, PreprocessedData, ProcessedData
 from qiita_db.metadata_template import PrepTemplate
 
@@ -43,7 +43,7 @@ class RawDataTests(TestCase):
         self.filetype = 2
         self.filepaths = [(self.seqs_fp, 1), (self.barcodes_fp, 2)]
         self.studies = [Study(1)]
-        _, self.db_test_raw_dir = retrive_latest_data_directory('raw_data')[0]
+        _, self.db_test_raw_dir = get_mountpoint('raw_data')[0]
 
         with open(self.seqs_fp, "w") as f:
             f.write("\n")
@@ -230,7 +230,7 @@ class PreprocessedDataTests(TestCase):
         fd, self.qual_fp = mkstemp(suffix='_seqs.qual')
         close(fd)
         self.filepaths = [(self.fna_fp, 4), (self.qual_fp, 5)]
-        _, self.db_test_ppd_dir = retrive_latest_data_directory(
+        _, self.db_test_ppd_dir = get_mountpoint(
             'preprocessed_data')[0]
         self.ebi_submission_accession = "EBI123456-A"
         self.ebi_study_accession = "EBI123456-B"
@@ -502,7 +502,7 @@ class ProcessedDataTests(TestCase):
         close(fd)
         self.filepaths = [(self.biom_fp, 6)]
         self.date = datetime(2014, 5, 29, 12, 24, 51)
-        _, self.db_test_pd_dir = retrive_latest_data_directory(
+        _, self.db_test_pd_dir = get_mountpoint(
             'processed_data')[0]
 
         with open(self.biom_fp, "w") as f:

@@ -31,7 +31,7 @@ from .data import ProcessedData
 from .study import Study
 from .exceptions import QiitaDBStatusError  # QiitaDBNotImplementedError
 from .util import (convert_to_id, get_work_base_dir,
-                   retrive_latest_data_directory, get_table_cols)
+                   get_mountpoint, get_table_cols)
 
 
 class Analysis(QiitaStatusObject):
@@ -294,7 +294,7 @@ class Analysis(QiitaStatusObject):
         if not tables:
             return None
         ret_tables = {}
-        _, base_fp = retrive_latest_data_directory(self._table)[0]
+        _, base_fp = get_mountpoint(self._table)[0]
         for fp in tables:
             ret_tables[fp[0]] = join(base_fp, fp[1])
         return ret_tables
@@ -317,7 +317,7 @@ class Analysis(QiitaStatusObject):
         if not mapping_fp:
             return None
 
-        _, base_fp = retrive_latest_data_directory(self._table)[0]
+        _, base_fp = get_mountpoint(self._table)[0]
         return join(base_fp, mapping_fp[0])
 
     @property
@@ -605,7 +605,7 @@ class Analysis(QiitaStatusObject):
         # add the new tables to the analysis
         conn_handler = conn_handler if conn_handler is not None \
             else SQLConnectionHandler()
-        _, base_fp = retrive_latest_data_directory(self._table)[0]
+        _, base_fp = get_mountpoint(self._table)[0]
         for dt, biom_table in viewitems(new_tables):
             # rarefy, if specified
             if rarefaction_depth is not None:
@@ -684,7 +684,7 @@ class Analysis(QiitaStatusObject):
         all_headers.append('Description')
 
         # write mapping file out
-        _, base_fp = retrive_latest_data_directory(self._table)[0]
+        _, base_fp = get_mountpoint(self._table)[0]
         mapping_fp = join(base_fp, "%d_analysis_mapping.txt" % self._id)
         with open(mapping_fp, 'w') as f:
             f.write("#SampleID\t%s\n" % '\t'.join(all_headers))
@@ -714,7 +714,7 @@ class Analysis(QiitaStatusObject):
             else SQLConnectionHandler()
 
         # get required bookkeeping data for DB
-        _, base_fp = retrive_latest_data_directory(self._table)[0]
+        _, base_fp = get_mountpoint(self._table)[0]
         fptypeid = convert_to_id(filetype, "filepath_type", conn_handler)
         fullpath = join(base_fp, filename)
         with open(fullpath, 'rb') as f:

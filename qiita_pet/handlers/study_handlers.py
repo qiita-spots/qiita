@@ -41,7 +41,7 @@ from qiita_db.metadata_template import (SampleTemplate, PrepTemplate,
 from qiita_db.study import Study, StudyPerson
 from qiita_db.user import User
 from qiita_db.util import (get_filepath_types, get_data_types, get_filetypes,
-                           convert_to_id, retrive_latest_data_directory,
+                           convert_to_id, get_mountpoint,
                            get_files_from_uploads_folders)
 from qiita_db.data import PreprocessedData, RawData
 from qiita_db.exceptions import (QiitaDBColumnError, QiitaDBExecutionError,
@@ -336,7 +336,7 @@ class StudyDescriptionHandler(BaseHandler):
         if sample_template:
             # processing sample templates
 
-            _, base_fp = retrive_latest_data_directory("uploads")[0]
+            _, base_fp = get_mountpoint("uploads")[0]
             fp_rsp = join(base_fp, str(study_id), sample_template)
             if not exists(fp_rsp):
                 raise HTTPError(400, "This file doesn't exist: %s" % fp_rsp)
@@ -387,7 +387,7 @@ class StudyDescriptionHandler(BaseHandler):
             # adding prep templates
 
             raw_data_id = int(raw_data_id)
-            _, base_path = retrive_latest_data_directory("uploads")[0]
+            _, base_path = get_mountpoint("uploads")[0]
             fp_rpt = join(base_path, str(study_id), add_prep_template)
             if not exists(fp_rpt):
                 raise HTTPError(400, "This file doesn't exist: %s" % fp_rpt)

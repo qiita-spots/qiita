@@ -15,7 +15,7 @@ from datetime import datetime
 from qiita_core.util import qiita_test_checker
 from qiita_db.job import Job, Command
 from qiita_db.user import User
-from qiita_db.util import retrive_latest_data_directory
+from qiita_db.util import get_mountpoint
 from qiita_db.analysis import Analysis
 from qiita_db.exceptions import (QiitaDBDuplicateError, QiitaDBStatusError,
                                  QiitaDBUnknownIDError)
@@ -30,7 +30,7 @@ class JobTest(TestCase):
         self.options = {"option1": False, "option2": 25, "option3": "NEW"}
         self._delete_path = []
         self._delete_dir = []
-        _, self._job_folder = retrive_latest_data_directory("job")[0]
+        _, self._job_folder = get_mountpoint("job")[0]
 
     def tearDown(self):
         # needs to be this way because map does not play well with remove and

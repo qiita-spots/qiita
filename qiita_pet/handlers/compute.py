@@ -12,7 +12,7 @@ from qiita_ware.dispatchable import add_files_to_raw_data, unlink_all_files
 from qiita_db.study import Study
 from qiita_db.user import User
 from qiita_db.exceptions import QiitaDBUnknownIDError
-from qiita_db.util import retrive_latest_data_directory
+from qiita_db.util import get_mountpoint
 
 from os.path import join, exists
 
@@ -50,7 +50,7 @@ class AddFilesToRawData(BaseHandler):
             check_access(User(self.current_user), study)
 
         barcodes, forward_reads, reverse_reads = [], [], []
-        for _, f in retrive_latest_data_directory("uploads", retrive_all=True):
+        for _, f in get_mountpoint("uploads", retrive_all=True):
             f = join(f, str(study_id))
             for t in barcodes_str.split(','):
                 ft = join(f, t)

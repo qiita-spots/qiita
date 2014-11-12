@@ -19,7 +19,7 @@ Methods
     get_db_files_base_dir
     compute_checksum
     get_files_from_uploads_folders
-    retrive_latest_data_directory
+    get_mountpoint
     insert_filepaths
     check_table_cols
     check_required_columns
@@ -519,7 +519,7 @@ def get_files_from_uploads_folders(study_id):
         List of the filepaths for upload for that study
     """
     fp = []
-    for _, p in retrive_latest_data_directory("uploads", retrive_all=True):
+    for _, p in get_mountpoint("uploads", retrive_all=True):
         t = join(p, study_id)
         if exists(t):
             fp.extend(listdir(t))
@@ -527,23 +527,22 @@ def get_files_from_uploads_folders(study_id):
     return fp
 
 
-def retrive_latest_data_directory(data_type, conn_handler=None,
-                                  retrive_all=False):
+def get_mountpoint(mount_type, conn_handler=None, retrive_all=False):
     r""" Returns the most recent values from data directory for the given type
 
     Parameters
     ----------
-    data_type : str
-        The data type
+    mount_type : str
+        The data mount type
     conn_handler : SQLConnectionHandler
         The connection handler object connected to the DB
+    retrieve_all : bool
+        Retrive all the available mount points or just the active one
 
     Returns
     -------
-    int
-        The id of the most recent entry for the given type
     list
-        List of tuple, where: [(id, filepath)]
+        List of tuple, where: [(id_mountpoint, filepath_of_mountpoint)]
     """
     conn_handler = (conn_handler if conn_handler is not None
                     else SQLConnectionHandler())
@@ -551,12 +550,12 @@ def retrive_latest_data_directory(data_type, conn_handler=None,
         result = conn_handler.execute_fetchall(
             "SELECT data_directory_id, mountpoint, subdirectory FROM "
             "qiita.data_directory WHERE data_type='%s' ORDER BY active DESC"
-            % data_type)
+            % mount_type)
     else:
         result = [conn_handler.execute_fetchone(
             "SELECT data_directory_id, mountpoint, subdirectory FROM "
             "qiita.data_directory WHERE data_type='%s' and active=true"
-            % data_type)]
+            % mount_type)]
 
     return [(d, join(get_db_files_base_dir(), m, s)) for d, m, s in result]
 
@@ -595,7 +594,7 @@ def insert_filepaths(filepaths, obj_id, table, filepath_table, conn_handler,
         """
         new_filepaths = filepaths
 
-        dd_id, mp = retrive_latest_data_directory(table, conn_handler)[0]
+        dd_id, mp = get_mountpoint(table, conn_handler)[0]
         base_fp = join(get_db_files_base_dir(), mp)
 
         if move_files:
@@ -693,7 +692,7 @@ def get_filepath_id(table, fp, conn_handler):
     QiitaDBError
         If fp is not stored in the DB.
     """
-    _, mp = retrive_latest_data_directory(table, conn_handler)[0]
+    _, mp = get_mountpoint(table, conn_handler)[0]
     base_fp = join(get_db_files_base_dir(), mp)
 
     fp_id = conn_handler.execute_fetchone(

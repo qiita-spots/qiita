@@ -89,7 +89,7 @@ from .sql_connection import SQLConnectionHandler
 from .exceptions import QiitaDBError
 from .util import (exists_dynamic_table, insert_filepaths, convert_to_id,
                    convert_from_id, purge_filepaths, get_filepath_id,
-                   retrive_latest_data_directory)
+                   get_mountpoint)
 
 
 class BaseData(QiitaObject):
@@ -192,7 +192,7 @@ class BaseData(QiitaObject):
                                  self._data_filepath_table,
                                  self._data_filepath_column), {'id': self.id})
 
-        _, fb = retrive_latest_data_directory(self._table, conn_handler)[0]
+        _, fb = get_mountpoint(self._table, conn_handler)[0]
         base_fp = partial(join, fb)
 
         return [(base_fp(fp), convert_from_id(fid, "filepath_type",

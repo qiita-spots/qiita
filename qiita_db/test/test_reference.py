@@ -13,7 +13,7 @@ from tempfile import mkstemp
 
 from qiita_core.util import qiita_test_checker
 from qiita_db.reference import Reference
-from qiita_db.util import retrive_latest_data_directory
+from qiita_db.util import get_mountpoint
 
 
 @qiita_test_checker()
@@ -29,7 +29,7 @@ class ReferenceTests(TestCase):
         fd, self.tree_fp = mkstemp(suffix="_tree.tre")
         close(fd)
 
-        _, self.db_dir = retrive_latest_data_directory('reference')[0]
+        _, self.db_dir = get_mountpoint('reference')[0]
 
         self._clean_up_files = []
 

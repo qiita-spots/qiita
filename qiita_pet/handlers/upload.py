@@ -11,7 +11,7 @@ from .base_handlers import BaseHandler
 from qiita_core.qiita_settings import qiita_config
 
 from qiita_db.util import (get_files_from_uploads_folders,
-                           retrive_latest_data_directory)
+                           get_mountpoint)
 from qiita_db.study import Study
 from qiita_db.user import User
 
@@ -68,7 +68,7 @@ class UploadFileHandler(BaseHandler):
 
         self.validate_file_extension(resumable_filename)
 
-        _, base_fp = retrive_latest_data_directory("uploads")[0]
+        _, base_fp = get_mountpoint("uploads")[0]
         fp = join(base_fp, study_id, resumable_identifier)
         # creating temporal folder for upload
         if not isdir(fp):
@@ -110,7 +110,7 @@ class UploadFileHandler(BaseHandler):
         self.validate_file_extension(resumable_filename)
 
         # temporaly filename or chunck
-        _, fp = retrive_latest_data_directory("uploads")[0]
+        _, fp = get_mountpoint("uploads")[0]
         tfp = join(fp, study_id,
                    resumable_filename + '.part.' + resumable_chunk_number)
 

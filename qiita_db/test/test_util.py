@@ -24,7 +24,7 @@ from qiita_db.util import (exists_table, exists_dynamic_table, scrub_data,
                            get_db_files_base_dir, get_data_types,
                            get_required_sample_info_status,
                            get_emp_status, purge_filepaths, get_filepath_id,
-                           get_lat_longs, retrive_latest_data_directory,
+                           get_lat_longs, get_mountpoint,
                            get_files_from_uploads_folders)
 
 
@@ -410,7 +410,7 @@ class DBUtilTests(TestCase):
         self.assertFalse(exists(fp16))
 
     def test_get_filepath_id(self):
-        _, base = retrive_latest_data_directory("raw_data")[0]
+        _, base = get_mountpoint("raw_data")[0]
         fp = join(base, '1_s_G1_L001_sequences.fastq.gz')
         obs = get_filepath_id("raw_data", fp, self.conn_handler)
         self.assertEqual(obs, 1)
@@ -419,17 +419,17 @@ class DBUtilTests(TestCase):
         with self.assertRaises(QiitaDBError):
             get_filepath_id("raw_data", "Not_a_path", self.conn_handler)
 
-    def test_retrive_latest_data_directory(self):
+    def test_get_mountpoint(self):
         exp = [(5, join(get_db_files_base_dir(), 'raw_data', ''))]
-        obs = retrive_latest_data_directory("raw_data")
+        obs = get_mountpoint("raw_data")
         self.assertEqual(obs, exp)
 
         exp = [(1, join(get_db_files_base_dir(), 'analysis', ''))]
-        obs = retrive_latest_data_directory("analysis")
+        obs = get_mountpoint("analysis")
         self.assertEqual(obs, exp)
 
         exp = [(2, join(get_db_files_base_dir(), 'job', ''))]
-        obs = retrive_latest_data_directory("job")
+        obs = get_mountpoint("job")
         self.assertEqual(obs, exp)
 
         # inserting new ones so we can test that it retrieves these and
@@ -444,22 +444,22 @@ class DBUtilTests(TestCase):
 
         # this should have been updated
         exp = [(9, join(get_db_files_base_dir(), 'analysis', 'tmp'))]
-        obs = retrive_latest_data_directory("analysis")
+        obs = get_mountpoint("analysis")
         self.assertEqual(obs, exp)
 
         # these 2 shouldn't
         exp = [(5, join(get_db_files_base_dir(), 'raw_data', ''))]
-        obs = retrive_latest_data_directory("raw_data")
+        obs = get_mountpoint("raw_data")
         self.assertEqual(obs, exp)
 
         exp = [(2, join(get_db_files_base_dir(), 'job', ''))]
-        obs = retrive_latest_data_directory("job")
+        obs = get_mountpoint("job")
         self.assertEqual(obs, exp)
 
         # testing multi returns
         exp = [(5, join(get_db_files_base_dir(), 'raw_data', '')),
                (10, join(get_db_files_base_dir(), 'raw_data', 'tmp'))]
-        obs = retrive_latest_data_directory("raw_data", retrive_all=True)
+        obs = get_mountpoint("raw_data", retrive_all=True)
         self.assertEqual(obs, exp)
 
     def test_get_files_from_uploads_folders(self):
