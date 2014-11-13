@@ -469,7 +469,7 @@ class StudyDescriptionHandler(BaseHandler):
 
             elif investigation_type == 'Other' and \
                     user_defined_investigation_type != 'New Type':
-                investigation_type = user_defined_investigation_type
+                investigation_type = edit_user_defined_investigation_type
 
             try:
                 pt.investigation_type = investigation_type
