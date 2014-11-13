@@ -16,16 +16,16 @@ from qiita_db.util import convert_from_id, convert_to_id
 @qiita_test_checker()
 class TestOntology(TestCase):
     def setUp(self):
-        self.ontology = Ontology(807481739)
+        self.ontology = Ontology(999999999)
 
     def testConvertToID(self):
-        self.assertEqual(convert_to_id('ENA', 'ontology'), 807481739)
+        self.assertEqual(convert_to_id('ENA_test', 'ontology'), 999999999)
 
     def testConvertFromID(self):
-        self.assertEqual(convert_from_id(807481739, 'ontology'), 'ENA')
+        self.assertEqual(convert_from_id(999999999, 'ontology'), 'ENA_test')
 
     def testShortNameProperty(self):
-        self.assertEqual(self.ontology.shortname, 'ENA')
+        self.assertEqual(self.ontology.shortname, 'ENA_test')
 
     def testTerms(self):
         obs = self.ontology.terms
@@ -44,6 +44,29 @@ class TestOntology(TestCase):
             'Exome Sequencing',
             'Pooled Clone Sequencing',
             'Other'])
+
+    def test_user_defined_terms(self):
+        obs = self.ontology.user_defined_terms
+        self.assertEqual(obs, [])
+
+    def test_term_type(self):
+        obs = self.ontology.term_type('RNASeq')
+        self.assertEqual('ontology', obs)
+
+        obs = self.ontology.term_type('Sasquatch')
+        self.assertEqual('not_ontology', obs)
+
+        self.ontology.add_user_defined_term('Test Term')
+        obs = self.ontology.term_type('Test Term')
+        self.assertEqual('user_defined', obs)
+
+    def test_add_user_defined_term(self):
+        self.assertFalse('Test Term' in self.ontology.user_defined_terms)
+        pre = len(self.ontology.user_defined_terms)
+        self.ontology.add_user_defined_term('Test Term')
+        post = len(self.ontology.user_defined_terms)
+        self.assertTrue('Test Term' in self.ontology.user_defined_terms)
+        self.assertEqual(post-pre, 1)
 
     def testContains(self):
         self.assertTrue('Metagenomics' in self.ontology)

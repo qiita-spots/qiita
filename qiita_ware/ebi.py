@@ -83,20 +83,27 @@ class EBISubmission(object):
     study_title : str
     study_abstract : str
     investigation_type : str
-        'metagenome', and 'mimarks-survey' are specially recognized and used to
-        set other attributes in the submission, but any string is valid
+        Any of the options provided by ebi, see:
+        https://www.ebi.ac.uk/ega/sites/ebi.ac.uk.ega/files/documents/Study.xml
+        If `'Other'` is passed, then you must provide a value in the
+        new_investigation_type argument.
     empty_value : str, optional
         Defaults to "no_data". This is the value that will be used when data
         for a particular metadata field is missing
+    new_investigation_type: str, optional
+        'metagenome', and 'mimarks-survey' are specially recognized and used to
+        set other attributes in the submission, but any string is valid. This
+        value is required only if `'Other'` is passed in `investigation_type`.
     """
     def __init__(self, study_id, study_title, study_abstract,
-                 investigation_type, empty_value='no_data', pmids=None,
-                 **kwargs):
+                 investigation_type, empty_value='no_data',
+                 new_investigation_type=None, pmids=None, **kwargs):
         self.study_id = study_id
         self.study_title = study_title
         self.study_abstract = study_abstract
         self.investigation_type = investigation_type
         self.empty_value = empty_value
+        self.new_investigation_type = new_investigation_type
         self.sequence_files = []
 
         self.study_xml_fp = None
@@ -108,18 +115,27 @@ class EBISubmission(object):
 
         self.ebi_dir = self._get_ebi_dir()
 
+        if self.investigation_type == 'Other' and \
+                self.new_investigation_type is None:
+            raise ValueError("If the investigation_type is 'Other' you have "
+                             " to specify a value for new_investigation_type.")
+
         # dicts that map investigation_type to library attributes
         lib_strategies = {'metagenome': 'POOLCLONE',
                           'mimarks-survey': 'AMPLICON'}
         lib_selections = {'mimarks-survey': 'PCR'}
         lib_sources = {}
 
-        self.library_strategy = lib_strategies.get(
-            self.investigation_type, "OTHER")
-        self.library_source = lib_sources.get(
-            self.investigation_type, "METAGENOMIC")
-        self.library_selection = lib_selections.get(
-            self.investigation_type, "unspecified")
+        # if the investigation_type is 'Other' we should use the value in
+        # the new_investigation_type attribute to retrieve this information
+        if self.investigation_type == 'Other':
+            key = self.new_investigation_type
+        else:
+            key = self.investigation_type
+
+        self.library_strategy = lib_strategies.get(key, "OTHER")
+        self.library_source = lib_sources.get(key, "METAGENOMIC")
+        self.library_selection = lib_selections.get(key, "unspecified")
 
         # This allows addition of other arbitrary study metadata
         self.additional_metadata = self._stringify_kwargs(kwargs)
@@ -229,31 +245,19 @@ class EBISubmission(object):
         descriptor = ET.SubElement(study, 'DESCRIPTOR')
         study_title = ET.SubElement(descriptor, 'STUDY_TITLE')
         study_title.text = escape(clean_whitespace(self.study_title))
-        # TODO: Add existing study types to a controlled vocab. Information
-        # below taken from https://www.ebi.ac.uk/ega/sites/ebi.ac.uk.ega/
-        # files/documents/Study.xml
-        # Controlled vocabulary for existing_study_type:
-        #    Whole Genome Sequencing
-        #    Metagenomics
-        #    Transcriptome Analysis
-        #    Resequencing
-        #    Epigenetics
-        #    Synthetic Genomics
-        #    Forensic or Paleo-genomics
-        #    Gene Regulation Study
-        #    Cancer Genomics
-        #    Population Genomics
-        #    RNASeq
-        #    Exome Sequencing
-        #    Pooled Clone Sequencing
-        #    Other
-        # If using "Other" please add new_study_type="<new term>" attr
 
-        ET.SubElement(descriptor, 'STUDY_TYPE', {
-            'existing_study_type': 'Other',
-            'new_study_type': escape(clean_whitespace(
-                self.investigation_type))}
-        )
+        if self.investigation_type == 'Other':
+            ET.SubElement(descriptor, 'STUDY_TYPE', {
+                'existing_study_type': 'Other',
+                'new_study_type': escape(clean_whitespace(
+                    self.new_investigation_type))}
+            )
+        else:
+            ET.SubElement(descriptor, 'STUDY_TYPE', {
+                'existing_study_type': escape(clean_whitespace(
+                    self.investigation_type))}
+            )
+
         study_abstract = ET.SubElement(descriptor, 'STUDY_ABSTRACT')
         study_abstract.text = clean_whitespace(escape(self.study_abstract))
 
@@ -803,6 +807,7 @@ class EBISubmission(object):
                                              investigation_type,
                                              sample_template, prep_template,
                                              per_sample_fastq_dir,
+                                             new_investigation_type=None,
                                              pmids=None,
                                              **kwargs):
         """Generate an ``EBISubmission`` from templates and FASTQ files
@@ -819,6 +824,7 @@ class EBISubmission(object):
             Path to the direcotry containing per-sample FASTQ files containing
             The sequence labels should be:
             ``SampleID_SequenceNumber And Additional Notes if Applicable``
+        new_investigation_type : str, optional
         pmids : list, optional
             The pubmed IDs that are associated with this submission
 
@@ -830,7 +836,9 @@ class EBISubmission(object):
         """
         # initialize the EBISubmission object
         submission = cls(study_id, study_title, study_abstract,
-                         investigation_type, pmids=pmids, **kwargs)
+                         investigation_type,
+                         new_investigation_type=new_investigation_type,
+                         pmids=pmids, **kwargs)
 
         submission.add_samples_from_templates(sample_template,
                                               prep_template,

@@ -86,9 +86,9 @@ from .base import QiitaObject
 from .logger import LogEntry
 from .sql_connection import SQLConnectionHandler
 from .exceptions import QiitaDBError
-from .util import (exists_dynamic_table, get_db_files_base_dir,
-                   insert_filepaths, convert_to_id, convert_from_id,
-                   purge_filepaths, get_filepath_id)
+from .util import (exists_dynamic_table, insert_filepaths, convert_to_id,
+                   convert_from_id, purge_filepaths, get_filepath_id,
+                   get_mountpoint)
 
 
 class BaseData(QiitaObject):
@@ -190,10 +190,12 @@ class BaseData(QiitaObject):
             "{2}=%(id)s)".format(self._filepath_table,
                                  self._data_filepath_table,
                                  self._data_filepath_column), {'id': self.id})
-        base_fp = partial(join, get_db_files_base_dir(conn_handler))
-        return [(base_fp(fp), convert_from_id(id, "filepath_type",
-                 conn_handler))
-                for fp, id in db_paths]
+
+        _, fb = get_mountpoint(self._table, conn_handler)[0]
+        base_fp = partial(join, fb)
+
+        return [(base_fp(fp), convert_from_id(fid, "filepath_type",
+                conn_handler)) for fp, fid in db_paths]
 
     def get_filepath_ids(self):
         self._check_subclass()
@@ -414,7 +416,7 @@ class RawData(BaseData):
             raise QiitaDBError(msg)
 
         # Get the filpeath id
-        fp_id = get_filepath_id(fp, conn_handler)
+        fp_id = get_filepath_id(self._table, fp, conn_handler)
         fp_is_mine = conn_handler.execute_fetchone(
             "SELECT EXISTS(SELECT * FROM qiita.{0} WHERE filepath_id=%s AND "
             "{1}=%s)".format(self._data_filepath_table,

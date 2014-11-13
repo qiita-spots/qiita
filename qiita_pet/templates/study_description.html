@@ -1,4 +1,58 @@
 {% extends sitebase.html %}
+{% block head %}
+<script>
+// Note that these two callbacks can come from the step where you are creating
+// a new prep template or when you are editing the prep template thus isEdit
+function investigationTypeChanged(rawDataID, isEdit){
+
+  // whether the callback comes from an edit element
+  var isEdit = isEdit !== undefined ? isEdit : false;
+
+  if (isEdit){
+    if ($('#edit-investigation-type-'+rawDataID).val() === 'Other'){
+      $('#edit-user-defined-investigation-types-'+rawDataID).show()
+    }
+    else {
+      $('#edit-user-defined-investigation-types-'+rawDataID).hide()
+      $('#edit-new-investigation-type-entry-'+rawDataID).hide()
+    }
+  }
+    else{
+    if ($('#investigation-type-'+rawDataID).val() === 'Other'){
+      $('#user-defined-investigation-types-'+rawDataID).show()
+    }
+    else {
+      $('#user-defined-investigation-types-'+rawDataID).hide()
+      $('#new-investigation-type-entry-'+rawDataID).hide()
+    }
+  }
+}
+function newInvestigationTypeChanged(rawDataID, isEdit){
+
+  // whether the callback comes from an edit element
+  var isEdit = isEdit !== undefined ? isEdit : false;
+
+  if (isEdit){
+    if ($('#edit-user-defined-investigation-type-'+rawDataID).val() === 'New Type'){
+      $('#edit-new-investigation-type-entry-'+rawDataID).show()
+    }
+    else {
+      $('#edit-new-investigation-type-entry-'+rawDataID).hide()
+    }
+  }
+  else{
+    if ($('#user-defined-investigation-type-'+rawDataID).val() === 'New Type'){
+      $('#new-investigation-type-entry-'+rawDataID).show()
+    }
+    else {
+      $('#new-investigation-type-entry-'+rawDataID).hide()
+    }
+  }
+}
+</script>
+{% end %}
+
+
 {% block content %}
 
 {% from future.utils import viewitems %}
@@ -50,7 +104,7 @@
       {% end %}
     </select>
     <br/><br/>
-    <a class="btn btn-primary" onClick="process_sample_template();">Process sample template</a>
+    <a class="btn btn-primary" onclick="process_sample_template();">Process sample template</a>
 
     <br/><br/>
     {% if ste %}
@@ -67,14 +121,16 @@
         <option value="">Not selected ...</option>
         {% raw filetypes %}
       </select>
+      {% if other_studies_rd %}
+        <br/><br/>
+        You could also select raw data from other studies that you have access to:
+        <br/>
+        <select multiple class="chosen-select" id="previous_raw_data" data-placeholder=" ">
+          {% raw other_studies_rd %}
+        </select>
+      {% end %}
       <br/><br/>
-      You could also select raw data from other studies that you have access to:
-      <br/>
-      <select multiple class="chosen-select" id="previous_raw_data" data-placeholder=" ">
-        {% raw other_studies_rd %}
-      </select>
-      <br/><br/>
-      <a class="btn btn-primary" onClick="create_raw_data();">Add raw data</a>
+      <a class="btn btn-primary" onclick="create_raw_data();">Add raw data</a>
     </div>
   {% end %}
 
@@ -103,14 +159,36 @@
               </li>
               <li>
                 (optional but required for EBI submission) select an investigation type:
-                <select id="investigation_type_{{r.id}}">
-                  <option value="">Non selected</option>
+                <select onclick="investigationTypeChanged({{r.id}})" onchange="investigationTypeChanged({{r.id}})" id="investigation-type-{{r.id}}">
+                  <option value="Non selected">Non selected</option>
                   {% raw ena_terms %}
                 </select>
+                <table id="investigation-type-table" name="investigation-types" class="investigation-type-table">
+                  <tr id="user-defined-investigation-types-{{r.id}}" style="display:none;">
+                    <td>
+                      Select one of the user defined investigation types:
+                    </td>
+                    <td>
+                      <select onclick="newInvestigationTypeChanged({{r.id}})" onchange="newInvestigationTypeChanged({{r.id}})" id="user-defined-investigation-type-{{r.id}}">
+                      {% for term in user_defined_terms %}
+                        <option value="{{term}}">{{term}}</option>
+                      {% end %}
+                      </select>
+                    </td>
+                  </tr>
+                  <tr id="new-investigation-type-entry-{{r.id}}" style="display:none;">
+                    <td>
+                      Enter a new investigation type:
+                    </td>
+                    <td>
+                      <input type="text" id="new-investigation-type-{{r.id}}" name="new-investigation-type" class="form-control">
+                    </td>
+                  </tr>
+                </table>
               </li>
             </ol>
             <br/>
-            <a class="btn btn-primary" onClick="add_prep_template({{r.id}});">Add prep template</a>
+            <a class="btn btn-primary" onclick="add_prep_template({{r.id}});">Add prep template</a>
             <br/>
             <hr/>
             <h4>Prep templates uploaded</h4>
@@ -121,14 +199,66 @@
                 <td style="padding:3px;">
                   <a class="btn btn-primary" href="/metadata_summary/?study_id={{study_id}}&prep_template={{prep.id}}">Show prep template summary</a>
                   <br/><br/>
-                  Investigation type:
-                  <select id="investigation_type_prep_{{prep.id}}" onchange="update_investigation_type('{{prep.investigation_type}}', {{prep.id}})">
-                    <option value="">Non selected</option>
-                    {% raw ena_terms %}
-                  </select>
+                  <table id="edit-investigation-type-table" name="edit-investigation-types" class="investigation-type-table">
+                    <tr>
+                      <td>
+                        Selected investigation type:
+                      </td>
+                      <td>
+                        <select id="edit-investigation-type-{{prep.id}}" onclick="investigationTypeChanged({{prep.id}}, true)" onchange="investigationTypeChanged({{prep.id}}, true)">
+                          <option value="Non selected">Non selected</option>
+                          {% raw ena_terms %}
+                        </select>
+                      </td>
+                    </tr>
+                    <tr id="edit-user-defined-investigation-types-{{prep.id}}" style="display:none;">
+                      <td>
+                        User defined investigation type:
+                      </td>
+                      <td>
+                        <select onclick="newInvestigationTypeChanged({{prep.id}}, true)" onchange="newInvestigationTypeChanged({{prep.id}}, true)" id="edit-user-defined-investigation-type-{{prep.id}}">
+                        {% for term in user_defined_terms %}
+                          <option value="{{term}}">{{term}}</option>
+                        {% end %}
+                        </select>
+                      </td>
+                    </tr>
+                    <tr id="edit-new-investigation-type-entry-{{prep.id}}" style="display:none;">
+                      <td>
+                        New investigation type:
+                      </td>
+                      <td>
+                        <input type="text" id="edit-new-investigation-type-{{prep.id}}" name="new-investigation-type" class="form-control">
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <a class="btn btn-warning" onclick="update_investigation_type('{{prep.investigation_type}}', {{prep.id}})">Update Investigation Type</a>
+                      </td>
+                    </tr>
+                  </table>
+                  <!--
+                    We need this JavaScript block here because the elements
+                    that we modify only exist if the HTML code above has
+                    been rendered
+                  -->
                   <script>
-                  if ("{{prep.investigation_type}}" != "None") {
-                    document.getElementById('investigation_type_prep_{{prep.id}}').value = "{{prep.investigation_type}}";
+                  if ("{{prep.investigation_type}}" !== "None") {
+                    // if the investigation type is a known ENA term, set as needed
+                    if ($("#edit-investigation-type-{{prep.id}} option[value='{{prep.investigation_type}}']").length > 0 ){
+                      $('#edit-investigation-type-{{prep.id}}').val("{{prep.investigation_type}}");
+                    }
+                    // else set as Other and load the fields to change the data
+                    else{
+                      $('#edit-investigation-type-{{prep.id}}').val("Other");
+                      investigationTypeChanged({{prep.id}}, true);
+                      if ($("#edit-user-defined-investigation-type-{{prep.id}} option[value='{{prep.investigation_type}}']").length > 0 ){
+                        $('#edit-user-defined-investigation-type-{{prep.id}}').val("{{prep.investigation_type}}");
+                      }
+                    }
+                  }
+                  else{
+                    $('#edit-investigation-type-{{prep.id}}').val("Non selected");
                   }
                   </script>
                 </td>
@@ -179,7 +309,7 @@
           <td style="vertical-align:top;padding:10px;">
             <h4>Linked files to this raw data</h4>
             {% if r.get_filepaths() and r.link_filepaths_status not in {'linking', 'unlinking'} %}
-              <a class="btn btn-danger" onClick="unlink_all_files({{r.id}})">Unlink all files</a><br/>
+              <a class="btn btn-danger" onclick="unlink_all_files({{r.id}})">Unlink all files</a><br/>
             {% end %}
             {% if r.link_filepaths_status == 'linking' %}
               <i><b style="color:red">Linking files...</b></i><br/>
@@ -213,7 +343,7 @@
             {% end %}
             </table>
             <br/>
-            <a onClick="link_files_to_raw_data({{r.id}});" {% if r.link_filepaths_status in {'linking', 'unlinking'} %} class="btn btn-default" style=" pointer-events: none; cursor: default; background-color:grey;" {% else %} class="btn btn-primary" {% end %}>Link raw files to: {{r.filetype}} (ID: {{r.id}})</a>
+            <a onclick="link_files_to_raw_data({{r.id}});" {% if r.link_filepaths_status in {'linking', 'unlinking'} %} class="btn btn-default" style=" pointer-events: none; cursor: default; background-color:grey;" {% else %} class="btn btn-primary" {% end %}>Link raw files to: {{r.filetype}} (ID: {{r.id}})</a>
           </td>
         </table>
     </div>
@@ -242,7 +372,7 @@
   function create_raw_data() {
     if ($("#previous_raw_data").val() === null && $("#filetype").val() === "") {
       alert("You need to select either a new file type or a raw data used in a previous study.");
-    } else if ($("#previous_raw_data").val() !== null && $("#filetype").val() !== "") {
+    } else if ((typeof $("#previous_raw_data").val() != 'undefined' && $("#previous_raw_data").val() !== null) && $("#filetype").val() !== "") {
       alert("You can only select a new file type or one used in a previous study but not both.");
     } else {
       if (confirm("Are you sure you want to create a new raw data?")) {
@@ -284,8 +414,16 @@
           .attr("value", $("#add_prep_template_" + raw_data_id).val()))
         .append($("<input>")
           .attr("type", "hidden")
-          .attr("name", "investigation_type")
-          .attr("value", $("#investigation_type_" + raw_data_id).val()))
+          .attr("name", "investigation-type")
+          .attr("value", $("#investigation-type-" + raw_data_id).val()))
+        .append($("<input>")
+          .attr("type", "hidden")
+          .attr("name", "user-defined-investigation-type")
+          .attr("value", $("#user-defined-investigation-type-" + raw_data_id).val()))
+        .append($("<input>")
+          .attr("type", "hidden")
+          .attr("name", "new-investigation-type")
+          .attr("value", $("#new-investigation-type-" + raw_data_id).val()))
         .append($("<input>")
           .attr("type", "hidden")
           .attr("name", "data_type_id")
@@ -402,8 +540,16 @@
             .attr("value", prep_template_id))
           .append($("<input>")
             .attr("type", "hidden")
-            .attr("name", "investigation_type")
-            .attr("value", $("#investigation_type_prep_" + prep_template_id).val()));
+            .attr("name", "edit-user-defined-investigation-type")
+            .attr("value", $("#edit-user-defined-investigation-type-" + prep_template_id).val()))
+          .append($("<input>")
+            .attr("type", "hidden")
+            .attr("name", "edit-new-investigation-type")
+            .attr("value", $("#edit-new-investigation-type-" + prep_template_id).val()))
+          .append($("<input>")
+            .attr("type", "hidden")
+            .attr("name", "edit-investigation-type")
+            .attr("value", $("#edit-investigation-type-" + prep_template_id).val()));
         $("body").append(form);
         form.submit();
     } else {
