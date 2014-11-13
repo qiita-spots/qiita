@@ -21,7 +21,7 @@ script:
   - ipython profile create qiita_demo --parallel
   - ipython profile create qiita_reserved --parallel
   - qiita_env start_cluster general demo reserved
-  - qiita_env make
+  - qiita_env make --no-load-ontologies
   - nosetests --with-doctest --with-coverage
   - flake8 qiita_* setup.py scripts
   # we need to run the test suite from setup.py for coveralls to grab the info

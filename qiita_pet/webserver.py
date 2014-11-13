@@ -31,14 +31,14 @@ from qiita_pet.handlers.compute import (
     ComputeCompleteHandler, AddFilesToRawData, UnlinkAllFiles)
 from qiita_pet.handlers.preprocessing_handlers import PreprocessHandler
 from qiita_pet.handlers.stats import StatsHandler
-from qiita_db.util import get_db_files_base_dir
+from qiita_db.util import get_mountpoint
 
 define("port", default=8888, help="run on the given port", type=int)
 
 DIRNAME = dirname(__file__)
 STATIC_PATH = join(DIRNAME, "static")
 TEMPLATE_PATH = join(DIRNAME, "templates")  # base folder for webpages
-RES_PATH = get_db_files_base_dir()
+_, RES_PATH = get_mountpoint('job')[0]
 COOKIE_SECRET = b64encode(uuid4().bytes + uuid4().bytes)
 DEBUG = qiita_config.test_environment
 

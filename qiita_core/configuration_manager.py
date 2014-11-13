@@ -30,8 +30,6 @@ class ConfigurationManager(object):
         If true, we are in a test environment.
     base_data_dir : str
         Path to the base directorys where all data file are stored
-    upload_data_dir : str
-        Path to the base directorys where all data file are stored
     working_dir : str
         Path to the working directory
     max_upload_size : int
@@ -140,15 +138,10 @@ class ConfigurationManager(object):
             raise ValueError("The BASE_DATA_DIR (%s) folder doesn't exist" %
                              self.base_data_dir)
 
-        self.upload_data_dir = config.get('main', 'UPLOAD_DATA_DIR')
-        if not isdir(self.upload_data_dir):
-            raise ValueError("The UPLOAD_DATA_DIR (%s) folder doesn't exist" %
-                             self.upload_data_dir)
-
         self.working_dir = config.get('main', 'WORKING_DIR')
-        if not isdir(self.upload_data_dir):
+        if not isdir(self.working_dir):
             raise ValueError("The WORKING_DIR (%s) folder doesn't exist" %
-                             self.upload_data_dir)
+                             self.working_dir)
         self.max_upload_size = config.getint('main', 'MAX_UPLOAD_SIZE')
         self.require_approval = config.getboolean('main', 'REQUIRE_APPROVAL')
 

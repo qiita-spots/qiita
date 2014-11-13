@@ -78,7 +78,7 @@ def load_study_from_cmd(owner, title, info):
                                                        lab_affiliation.strip())
 
     pi_name_email = infodict.pop('principal_investigator')
-    pi_name, pi_email, pi_affiliation = pi_name_email.split(',')
+    pi_name, pi_email, pi_affiliation = pi_name_email.split(',', 2)
     infodict['principal_investigator_id'] = StudyPerson.create(
         pi_name.strip(), pi_email.strip(), pi_affiliation.strip())
 
