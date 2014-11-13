@@ -49,7 +49,7 @@ class AuthCreateHandler(BaseHandler):
                        "qiita developers at <a href='mailto:qiita-help"
                        "@gmail.com'>qiita-help@gmail.com</a>")
                 error_msg = u"?error=" + url_escape(msg)
-                self.redirect(u"/auth/create/" + error_msg)
+                self.redirect(u"/?level=danger&message=" + error_msg)
                 return
             self.redirect(u"/")
         else:

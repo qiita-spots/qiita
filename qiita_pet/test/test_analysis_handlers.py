@@ -103,7 +103,7 @@ class TestSearchStudiesHandler(TestHandlerBase):
             'action': 'select',
             'availstudies': "1#1",
             '1#1': 1,
-            '1': 'SKD5.640186'}
+            '1': '1.SKD5.640186'}
 
         response = self.post('/analysis/2', post_args)
 

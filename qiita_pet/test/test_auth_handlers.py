@@ -12,7 +12,7 @@ class TestAuthCreateHandler(TestHandlerBase):
     def test_post(self):
         post_args = {
             'username': 'newuser@foo.bar',
-            'pass': 'password',
+            'pass': 'password'
         }
         response = self.post('/auth/create/', post_args)
         # Make sure page response loaded sucessfully
@@ -33,10 +33,19 @@ class TestAuthLoginHandler(TestHandlerBase):
         port = self.get_http_port()
         self.assertEqual(response.effective_url, 'http://localhost:%d/' % port)
 
-    def test_post(self):
+    def test_post_correct_pass(self):
         post_args = {
             'username': 'test@foo.bar',
             'passwd': 'password',
+            'next': '/'
+        }
+        response = self.post('/auth/login/', post_args)
+        self.assertEqual(response.code, 200)
+
+    def test_post_wrong_pass(self):
+        post_args = {
+            'username': 'test@foo.bar',
+            'passwd': 'wrongpass',
             'next': '/'
         }
         response = self.post('/auth/login/', post_args)
