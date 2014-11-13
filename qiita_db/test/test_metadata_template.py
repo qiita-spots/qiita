@@ -1345,6 +1345,23 @@ class TestPrepTemplate(TestCase):
         with self.assertRaises(QiitaDBColumnError):
             pt.investigation_type = "should fail"
 
+    def test_investigation_type_ontology(self):
+        pt = PrepTemplate(1)
+        self.assertEqual(pt._investigation_type_ontology, 'ENA')
+
+    def test_investigation_type_ontology_fails(self):
+        # this should fail because ENA is not valid in the test environments
+        pt = PrepTemplate(1)
+        with self.assertRaises(IncompetentQiitaDeveloperError):
+            pt.investigation_type = 'RNASeq'
+
+    def test_investigation_type_instance_setter(self):
+        pt = PrepTemplate(1)
+        # we need to check against the ontology test table
+        pt._investigation_type_ontology = 'ENA_test'
+        pt.investigation_type = 'RNASeq'
+        self.assertEqual(pt.investigation_type, 'RNASeq')
+
 
 EXP_SAMPLE_TEMPLATE = (
     "sample_name\tcollection_timestamp\tdescription\thas_extracted_data\t"

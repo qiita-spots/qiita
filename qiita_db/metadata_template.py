@@ -1144,6 +1144,10 @@ class PrepTemplate(MetadataTemplate):
     str_cols_handlers = {'emp_status_id': get_emp_status(key='emp_status_id')}
     _sample_cls = PrepSample
 
+    def __init__(self, id_):
+        super(PrepTemplate, self).__init__(id_)
+        self._investigation_type_ontology = 'ENA'
+
     @classmethod
     def create(cls, md_template, raw_data, study, data_type,
                investigation_type=None, investigation_type_ontology='ENA'):
