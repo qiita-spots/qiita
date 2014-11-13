@@ -94,7 +94,8 @@ class TestSearchStudiesHandler(TestHandlerBase):
         # Make sure page response loaded sucessfully and went to proper place
         self.assertEqual(response.code, 200)
         self.assertTrue("/analysis/2" in response.effective_url)
-        # pull analysis_id out from page and instantiate to maeke sure exists
+        # TODO: add proper test for this Issue 567
+        # Pull analysis_id out from page and instantiate to make sure exists
 
     def test_post_select_samples(self):
         newaid = Analysis.create(User("test@foo.bar"), "test1", "testdesc").id
@@ -154,6 +155,7 @@ class TestAnalysisResultsHandler(TestHandlerBase):
     database = True
 
     def test_get(self):
+        # TODO: add proper test for this once figure out how. Issue 567
         # need to figure out biom table to test this with
         pass
 

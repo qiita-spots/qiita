@@ -3,6 +3,7 @@ from qiita_pet.test.tornado_test_base import TestHandlerBase
 
 
 class TestUserProfile(TestHandlerBase):
+    # TODO: add proper test for this once figure out how. Issue 567
     pass
 
 
