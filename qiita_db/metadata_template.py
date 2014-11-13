@@ -1316,12 +1316,13 @@ class PrepTemplate(MetadataTemplate):
         QiitaDBColumnError
             The investigation type is not in the ENA ontology
         """
-        investigation_types = Ontology(convert_to_id(
+        ontology = Ontology(convert_to_id(
             investigation_type_ontology, 'ontology'))
-        terms = investigation_types.terms
+        terms = ontology.terms + ontology.user_defined_terms
         if investigation_type not in terms:
-            raise QiitaDBColumnError("Not a valid investigation_type. "
-                                     "Choose from: %s" % ', '.join(terms))
+            raise QiitaDBColumnError("'%s' is Not a valid investigation_type. "
+                                     "Choose from: %s" % (investigation_type,
+                                                          ', '.join(terms)))
 
     @classmethod
     def _check_template_special_columns(cls, md_template, data_type):

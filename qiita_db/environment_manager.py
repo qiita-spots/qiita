@@ -21,6 +21,8 @@ from qiita_core.exceptions import QiitaEnvironmentError
 from qiita_core.qiita_settings import qiita_config
 from .sql_connection import SQLConnectionHandler
 from .reference import Reference
+from qiita_db.ontology import Ontology
+from qiita_db.util import convert_to_id
 
 get_support_file = partial(join, join(dirname(abspath(__file__)),
                                       'support_files'))
@@ -199,6 +201,12 @@ def make_environment(load_ontologies, download_reference, add_demo_user):
 
     if load_ontologies:
         _add_ontology_data(conn)
+
+        # these values can only be added if the environment is being loaded
+        # with the ontologies, thus this cannot exist inside intialize.sql
+        # because otherwise loading the ontologies would be a requirement
+        ontology = Ontology(convert_to_id('ENA', 'ontology'))
+        ontology.add_user_defined_term('Amplicon Sequencing')
 
     if download_reference:
         _download_reference_files(conn)
