@@ -25,18 +25,17 @@ class BaseHandler(RequestHandler):
 
         # log the error
         from traceback import format_exception
-        if self.settings.get("debug") and "exc_info" in kwargs:
-            exc_info = kwargs["exc_info"]
-            trace_info = ''.join(["%s\n" % line for line in
-                                 format_exception(*exc_info)])
-            request_info = ''.join(["<strong>%s</strong>: %s\n" %
-                                   (k, self.request.__dict__[k]) for k in
-                                    self.request.__dict__.keys()])
-            error = exc_info[1]
-            LogEntry.create(
-                'Runtime',
-                'ERROR:\n%s\nTRACE:\n%s\nHTTP INFO:\n%s\n' %
-                (error, trace_info, request_info))
+        exc_info = kwargs["exc_info"]
+        trace_info = ''.join(["%s\n" % line for line in
+                             format_exception(*exc_info)])
+        request_info = ''.join(["<strong>%s</strong>: %s\n" %
+                               (k, self.request.__dict__[k]) for k in
+                                self.request.__dict__.keys()])
+        error = exc_info[1]
+        LogEntry.create(
+            'Runtime',
+            'ERROR:\n%s\nTRACE:\n%s\nHTTP INFO:\n%s\n' %
+            (error, trace_info, request_info))
 
     def head(self):
         """Adds proper response for head requests"""
