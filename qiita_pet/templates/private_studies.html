@@ -45,7 +45,7 @@ function modify_sharing(study_id) {
 {% block content %}
 
 <!-- modal view to enter sharing settings -->
-<div class="modal fade" id="create-analysis-modal-view" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+<div class="modal fade" id="share-study-modal-view" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
@@ -111,7 +111,7 @@ function modify_sharing(study_id) {
                 {% else %}
                 <td><span id="shared_html_{{ s.id }}">{% raw s.shared %}</span>
                 <br/>
-                <a class="btn btn-primary" data-toggle="modal" data-target="#create-analysis-modal-view" onclick="modify_sharing({{ s.id }});">Modify</a>
+                <a class="btn btn-primary" data-toggle="modal" data-target="#share-study-modal-view" onclick="modify_sharing({{ s.id }});">Modify</a>
                 </td>
                 {% end %}
                 {# Principal Investigator #}
