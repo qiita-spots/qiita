@@ -82,12 +82,14 @@
         <option value="">Not selected ...</option>
         {% raw filetypes %}
       </select>
-      <br/><br/>
-      You could also select raw data from other studies that you have access to:
-      <br/>
-      <select id="previous_raw_data" multiple="5">
-        {% raw other_studies_rd %}
-      </select>
+      {% if other_studies_rd %}
+        <br/><br/>
+        You could also select raw data from other studies that you have access to:
+        <br/>
+        <select id="previous_raw_data" multiple="5">
+          {% raw other_studies_rd %}
+        </select>
+      {% end %}
       <br/><br/>
       <a class="btn btn-primary" onClick="create_raw_data();">Add raw data</a>
     </div>
@@ -253,7 +255,7 @@
   function create_raw_data() {
     if ($("#previous_raw_data").val() === null && $("#filetype").val() === "") {
       alert("You need to select either a new file type or a raw data used in a previous study.");
-    } else if ($("#previous_raw_data").val() !== null && $("#filetype").val() !== "") {
+    } else if ((typeof $("#previous_raw_data").val() != 'undefined' && $("#previous_raw_data").val() !== null) && $("#filetype").val() !== "") {
       alert("You can only select a new file type or one used in a previous study but not both.");
     } else {
       if (confirm("Are you sure you want to create a new raw data?")) {
