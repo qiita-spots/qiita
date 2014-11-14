@@ -36,6 +36,8 @@ LAYOUT_FP = get_support_file('qiita-db-unpatched.sql')
 INITIALIZE_FP = get_support_file('initialize.sql')
 POPULATE_FP = get_support_file('populate_test_db.sql')
 PATCHES_DIR = get_support_file('patches')
+ENVIRONMENTS = {'demo': 'qiita_demo', 'test': 'qiita_test',
+                'production': 'qiita'}
 CLUSTERS = ['demo', 'reserved', 'general']
 
 
