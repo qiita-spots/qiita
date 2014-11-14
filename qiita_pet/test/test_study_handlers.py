@@ -1,14 +1,51 @@
 from unittest import main
 
-from tornado_test_base import TestHandlerBase
+from qiita_pet.test.tornado_test_base import TestHandlerBase
 from qiita_db.study import StudyPerson
 from qiita_db.util import get_count, check_count
 
 
-class CreateStudyHandlerTestsDB(TestHandlerBase):
+class TestCreateStudyForm(TestHandlerBase):
+    # TODO: add proper test for this once figure out how. Issue 567
+    pass
+
+
+class TestPrivateStudiesHandler(TestHandlerBase):
+    def test_get(self):
+        response = self.get('/study/private/')
+        self.assertEqual(response.code, 200)
+
+
+class TestPublicStudiesHandler(TestHandlerBase):
+    def test_get(self):
+        response = self.get('/study/public/')
+        self.assertEqual(response.code, 200)
+
+
+class TestStudyDescriptionHandler(TestHandlerBase):
+    def test_get_exists(self):
+        response = self.get('/study/description/1')
+        self.assertEqual(response.code, 200)
+
+    def test_get_no_exists(self):
+        response = self.get('/study/description/245')
+        self.assertEqual(response.code, 404)
+
+    def test_post(self):
+        post_args = {}
+        response = self.post('/study/description/1', post_args)
+        self.assertEqual(response.code, 200)
+
+
+class TestCreateStudyHandler(TestHandlerBase):
     database = True
 
-    def test_new_person_created(self):
+    def test_get(self):
+        """Make sure the page loads when no arguments are passed"""
+        response = self.get('/study/create/')
+        self.assertEqual(response.code, 200)
+
+    def test_post(self):
         person_count_before = get_count('qiita.study_person')
 
         post_data = {'new_people_names': ['Adam', 'Ethan'],
@@ -42,12 +79,46 @@ class CreateStudyHandlerTestsDB(TestHandlerBase):
         self.assertTrue(new_person.phone is None)
 
 
-class CreateStudyHandlerTestsNoDB(TestHandlerBase):
-    def test_page_load(self):
-        """Make sure the page loads when no arguments are passed"""
-        response = self.get('/study/create/')
+class TestCreateStudyAJAX(TestHandlerBase):
+    def test_get(self):
+
+        response = self.get('/check_study/', {'study_title': 'notreal'})
+        self.assertEqual(response.code, 200)
+        # make sure responds properly
+        self.assertEqual(response.body, 'True')
+
+        response = self.get('/check_study/')
+        self.assertEqual(response.code, 200)
+        # make sure responds properly
+        self.assertEqual(response.body, 'False')
+
+        response = self.get(
+            '/check_study/',
+            {'study_title':
+             'Identification of the Microbiomes for Cannabis Soils'})
+        self.assertEqual(response.code, 200)
+        # make sure responds properly
+        self.assertEqual(response.body, 'False')
+
+
+class TestMetadataSummaryHandler(TestHandlerBase):
+    def test_get_exists(self):
+        response = self.get('/metadata_summary/', {'sample_template': 1,
+                                                   'prep_template': 1,
+                                                   'study_id': 1})
         self.assertEqual(response.code, 200)
 
+    def test_get_no_exist(self):
+        response = self.get('/metadata_summary/', {'sample_template': 237,
+                                                   'prep_template': 1,
+                                                   'study_id': 237})
+        self.assertEqual(response.code, 404)
 
-if __name__ == '__main__':
+
+class TestEBISubmitHandler(TestHandlerBase):
+    # TODO: add proper test for this once figure out how. Issue 567
+    pass
+
+
+if __name__ == "__main__":
     main()

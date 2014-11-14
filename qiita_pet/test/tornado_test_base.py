@@ -5,6 +5,7 @@ except ImportError:  # py3
     from urllib.parse import urlencode
 
 from tornado.testing import AsyncHTTPTestCase
+from qiita_core.qiita_settings import qiita_config
 from qiita_pet.webserver import Application
 from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_db.sql_connection import SQLConnectionHandler
@@ -22,7 +23,19 @@ class TestHandlerBase(AsyncHTTPTestCase):
 
     def setUp(self):
         if self.database:
+            # First, we check that we are not in a production environment
             self.conn_handler = SQLConnectionHandler()
+            # It is possible that we are connecting to a production database
+            test_db = self.conn_handler.execute_fetchone(
+                "SELECT test FROM settings")[0]
+            # Or the loaded config file belongs to a production environment
+            # or the test database is not qiita_test
+            if not qiita_config.test_environment or not test_db \
+                    or qiita_config.database != 'qiita_test':
+                raise RuntimeError("Working in a production environment. Not "
+                                   "executing the tests to keep the production"
+                                   " database safe.")
+
             # Drop the schema
             self.conn_handler.execute("DROP SCHEMA qiita CASCADE")
             # Create the schema
