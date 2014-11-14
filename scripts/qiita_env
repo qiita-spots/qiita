@@ -58,7 +58,8 @@ def stop_cluster(clusters):
 
 @env.command()
 @click.option('--load-ontologies/--no-load-ontologies',
-              default=True, help='If True, ontologies will be loaded')
+              default=True, help='If True, ontologies will be loaded. '
+              'Cannot be True if this is a test environment.')
 @click.option('--download-reference/--no-download-reference',
               default=False, help='If True, greengenes reference files will '
                                   'be downloaded')
