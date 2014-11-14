@@ -166,6 +166,12 @@ def make_environment(load_ontologies, download_reference, add_demo_user):
     QiitaEnvironmentError
         If the environment already exists
     """
+    if load_ontologies and qiita_config.test_environment:
+        raise EnvironmentError("Cannot load ontologies in a test environment! "
+                               "Pass --no-load-ontologies, or set "
+                               "TEST_ENVIRONMENT = FALSE in your "
+                               "configuration")
+
     # Connect to the postgres server
     admin_conn = SQLConnectionHandler(admin='admin_without_database')
 
