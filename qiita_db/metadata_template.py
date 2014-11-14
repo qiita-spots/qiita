@@ -1144,13 +1144,9 @@ class PrepTemplate(MetadataTemplate):
     str_cols_handlers = {'emp_status_id': get_emp_status(key='emp_status_id')}
     _sample_cls = PrepSample
 
-    def __init__(self, id_):
-        super(PrepTemplate, self).__init__(id_)
-        self._investigation_type_ontology = 'ENA'
-
     @classmethod
     def create(cls, md_template, raw_data, study, data_type,
-               investigation_type=None, investigation_type_ontology='ENA'):
+               investigation_type=None):
         r"""Creates the metadata template in the database
 
         Parameters
@@ -1165,9 +1161,6 @@ class PrepTemplate(MetadataTemplate):
             The data_type of the prep template
         investigation_type : str, optional
             The investigation type, if relevant
-        investigation_type_ontology : str, optional
-            Defaults to 'ENA'. The ontology to use when checking for a valid
-            investigation type.
 
         Returns
         -------
@@ -1182,9 +1175,7 @@ class PrepTemplate(MetadataTemplate):
         # If the investigation_type is supplied, make sure if it is one of
         # the recognized investigation types
         if investigation_type is not None:
-            cls.validate_investigation_type(
-                investigation_type,
-                investigation_type_ontology=investigation_type_ontology)
+            cls.validate_investigation_type(investigation_type)
 
         # We are going to modify the md_template. We create a copy so
         # we don't modify the user one
@@ -1287,37 +1278,23 @@ class PrepTemplate(MetadataTemplate):
                                       ', '.join(["%s"] * len(headers))),
             values)
 
-        # We are instantiating the object before returning it so that
-        # we can set the _investigation_type_ontology member, which
-        # is needed so that the object can keep track of which ontology
-        # to use when checking for valid terms. This facilitates testing by
-        # allowing the caller of this function to specify, e.g., ENA_test
-        # instead of the usual ENA ontology.
-        ret = cls(prep_id)
-        ret._investigation_type_ontology = investigation_type_ontology
-
-        return ret
+        return cls(prep_id)
 
     @classmethod
-    def validate_investigation_type(self, investigation_type,
-                                    investigation_type_ontology='ENA'):
+    def validate_investigation_type(self, investigation_type):
         """Simple investigation validation to avoid code duplication
 
         Parameters
         ----------
         investigation_type : str
             The investigation type, should be part of the ENA ontology
-        investigation_type_ontology : str, optional
-            Defaults to 'ENA'. The ontology to use when checking for a valid
-            investigation type.
 
         Raises
         -------
         QiitaDBColumnError
             The investigation type is not in the ENA ontology
         """
-        ontology = Ontology(convert_to_id(
-            investigation_type_ontology, 'ontology'))
+        ontology = Ontology(convert_to_id('ENA', 'ontology'))
         terms = ontology.terms + ontology.user_defined_terms
         if investigation_type not in terms:
             raise QiitaDBColumnError("'%s' is Not a valid investigation_type. "
@@ -1508,8 +1485,7 @@ class PrepTemplate(MetadataTemplate):
             If the investigation type is not a valid ENA ontology
         """
         if investigation_type is not None:
-            self.validate_investigation_type(
-                investigation_type, self._investigation_type_ontology)
+            self.validate_investigation_type(investigation_type)
 
         conn_handler = SQLConnectionHandler()
 
