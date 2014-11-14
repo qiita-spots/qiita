@@ -16,6 +16,8 @@ from skbio.util import safe_md5
 from qiita_core.qiita_settings import qiita_config
 
 from qiita_db.logger import LogEntry
+from qiita_db.ontology import Ontology
+from qiita_db.util import convert_to_id
 
 
 class InvalidMetadataError(Exception):
@@ -119,6 +121,15 @@ class EBISubmission(object):
                 self.new_investigation_type is None:
             raise ValueError("If the investigation_type is 'Other' you have "
                              " to specify a value for new_investigation_type.")
+
+        # we need to be able to set an investigation_type_ontology for the
+        # test suite to pass, because ENA doesn't exist in the test env
+        ontology_name = kwargs.pop('investigation_type_ontology', 'ENA')
+        ontology = Ontology(convert_to_id(ontology_name, 'ontology'))
+        if ontology.term_type(self.investigation_type) == 'not_ontology':
+            raise ValueError("The investigation type must be part of ENA's "
+                             "ontology, '%s' is not valid" %
+                             self.investigation_type)
 
         # dicts that map investigation_type to library attributes
         lib_strategies = {'metagenome': 'POOLCLONE',
