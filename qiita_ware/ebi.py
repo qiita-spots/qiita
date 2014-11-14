@@ -122,7 +122,11 @@ class EBISubmission(object):
             raise ValueError("If the investigation_type is 'Other' you have "
                              " to specify a value for new_investigation_type.")
 
-        o = Ontology(convert_to_id('ENA', 'ontology'))
+        # we need to be able to set an investigation_type_ontology for the
+        # test suite to pass, because ENA doesn't exist in the test env
+        ontology_name = kwargs.get('investigation_type_ontology', 'ENA')
+        kwargs.pop('investigation_type_ontology')
+        o = Ontology(convert_to_id(ontology_name, 'ontology'))
         if o.term_type(self.investigation_type) == 'not_ontology':
             raise ValueError("The investigation type must be part of ENA's "
                              "ontology, '%s' is not valid" %
