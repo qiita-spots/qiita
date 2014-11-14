@@ -36,6 +36,11 @@ class TestStudyDescriptionHandler(TestHandlerBase):
         response = self.post('/study/description/1', post_args)
         self.assertEqual(response.code, 200)
 
+    def test_post_no_exists(self):
+        post_args = {}
+        response = self.post('/study/description/245', post_args)
+        self.assertEqual(response.code, 404)
+
 
 class TestCreateStudyHandler(TestHandlerBase):
     database = True
