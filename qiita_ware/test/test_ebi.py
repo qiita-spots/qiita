@@ -60,6 +60,17 @@ class TestEBISubmission(TestCase):
 
         self.assertEqual(e.additional_metadata, {})
 
+    def test_init_exceptions(self):
+        with self.assertRaises(ValueError):
+            e = EBISubmission('2', 'Study Title', 'Study Abstract',
+                              investigation_type='Other',
+                              new_investigation_type=None)
+
+        with self.assertRaises(ValueError):
+            e = EBISubmission('2', 'Study Title', 'Study Abstract',
+                              investigation_type='SASQUATCH SEQUENCING',
+                              new_investigation_type='metagenome')
+
     def test_stringify_kwargs(self):
         e = EBISubmission('2', 'Study Title', 'Study Abstract',
                           investigation_type='Other',
@@ -374,7 +385,7 @@ class TestEBISubmission(TestCase):
         prep_template = StringIO(EXP_PREP_TEMPLATE)
         submission = EBISubmission.from_templates_and_per_sample_fastqs(
             '001', 'test study', 'abstract',
-            'type',  sample_template, prep_template, self.path)
+            'Metagenomics', sample_template, prep_template, self.path)
         self.assertEqual(submission.samples['sample2']['preps'][0]['platform'],
                          'ILLUMINA')
         self.assertEqual(
@@ -388,7 +399,7 @@ class TestEBISubmission(TestCase):
         prep_template = StringIO(EXP_PREP_TEMPLATE)
         submission = EBISubmission.from_templates_and_per_sample_fastqs(
             '001', 'test study', 'abstract',
-            'type',  sample_template, prep_template, self.path)
+            'Metagenomics',  sample_template, prep_template, self.path)
 
         # Set these artificially since the function depends only on these fps
         submission.submission_xml_fp = 'submission.xml'
