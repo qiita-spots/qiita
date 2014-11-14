@@ -123,19 +123,19 @@ class SearchStudiesHandler(BaseHandler):
 
     @authenticated
     def get(self):
-        user = self.current_user
         analysis = Analysis(int(self.get_argument("aid")))
         # make sure user has access to the analysis
-        userobj = User(user)
-        check_analysis_access(userobj, analysis)
+        user = User(self.current_user)
+        check_analysis_access(user, analysis)
 
         # get the dictionaries of selected samples and data types
         selproc_data, selsamples = self._selected_parser(analysis)
 
-        self.render('search_studies.html', user=user, aid=analysis.id,
-                    selsamples=selsamples, selproc_data=selproc_data,
-                    counts={}, fullcounts={}, searchmsg="", query="",
-                    results={}, availmeta=SampleTemplate.metadata_headers() +
+        self.render('search_studies.html', user_level=user.level,
+                    aid=analysis.id, selsamples=selsamples,
+                    selproc_data=selproc_data, counts={}, fullcounts={},
+                    searchmsg="", query="", results={},
+                    availmeta=SampleTemplate.metadata_headers() +
                     get_table_cols("study"))
 
     @authenticated
@@ -206,10 +206,11 @@ class SearchStudiesHandler(BaseHandler):
             # rebuild the selected from database to reflect changes
             selproc_data, selsamples = self._selected_parser(analysis)
 
-        self.render('search_studies.html', user=user, aid=analysis_id,
-                    results=results, meta_headers=meta_headers,
-                    selsamples=selsamples, selproc_data=selproc_data,
-                    counts=counts, fullcounts=fullcounts, searchmsg=searchmsg,
+        self.render('search_studies.html', user_level=User(user).level,
+                    aid=analysis_id, results=results,
+                    meta_headers=meta_headers, selsamples=selsamples,
+                    selproc_data=selproc_data, counts=counts,
+                    fullcounts=fullcounts, searchmsg=searchmsg,
                     query=query, availmeta=SampleTemplate.metadata_headers() +
                     get_table_cols("study"))
 
@@ -224,8 +225,8 @@ class SelectCommandsHandler(BaseHandler):
 
         data_types = analysis.data_types
         commands = Command.get_commands_by_datatype()
-
-        self.render('select_commands.html', user=self.current_user,
+        user_level =  User(self.current_user).level
+        self.render('select_commands.html', user_level=user_level,
                     commands=commands, data_types=data_types, aid=analysis.id)
 
     @authenticated
@@ -235,34 +236,35 @@ class SelectCommandsHandler(BaseHandler):
         analysis.step = SELECT_COMMANDS
         data_types = analysis.data_types
         commands = Command.get_commands_by_datatype()
-        self.render('select_commands.html', user=self.current_user,
+        user_level =  User(self.current_user).level
+        self.render('select_commands.html', user_level=user_level,
                     commands=commands, data_types=data_types, aid=analysis.id)
 
 
 class AnalysisWaitHandler(BaseHandler):
     @authenticated
     def get(self, analysis_id):
-        user = self.current_user
+        user =  User(self.current_user)
         analysis_id = int(analysis_id)
         try:
             analysis = Analysis(analysis_id)
         except QiitaDBUnknownIDError:
             raise HTTPError(404, "Analysis %d does not exist" % analysis_id)
         else:
-            check_analysis_access(User(user), analysis)
+            check_analysis_access(user, analysis)
 
         commands = []
         for job in analysis.jobs:
             jobject = Job(job)
             commands.append("%s: %s" % (jobject.datatype, jobject.command[0]))
 
-        self.render("analysis_waiting.html", user=user,
+        self.render("analysis_waiting.html", user_level=user.level,
                     aid=analysis_id, aname=analysis.name,
                     commands=commands)
 
     @authenticated
     def post(self, analysis_id):
-        user = self.current_user
+        user = User(self.current_user)
         analysis_id = int(analysis_id)
         rarefaction_depth = self.get_argument('rarefaction-depth')
         # convert to integer if rarefaction level given
@@ -271,14 +273,15 @@ class AnalysisWaitHandler(BaseHandler):
         else:
             rarefaction_depth = None
         analysis = Analysis(analysis_id)
-        check_analysis_access(User(user), analysis)
+        check_analysis_access(user, analysis)
 
         command_args = self.get_arguments("commands")
         split = [x.split("#") for x in command_args]
         commands = ["%s: %s" % (s[0], s[1]) for s in split]
-        self.render("analysis_waiting.html", user=user, aid=analysis_id,
-                    aname=analysis.name, commands=commands)
-        submit(user, run_analysis, user, analysis_id, split, comm_opts={},
+        self.render("analysis_waiting.html", user_level=user.level,
+                    aid=analysis_id,aname=analysis.name,
+                    commands=commands)
+        submit(user.id, run_analysis, user, analysis_id, split, comm_opts={},
                rarefaction_depth=rarefaction_depth)
 
 
@@ -303,7 +306,7 @@ class AnalysisResultsHandler(BaseHandler):
                                                proc_data.study)
             dropped[key] = samples
 
-        self.render("analysis_results.html", user=self.current_user,
+        self.render("analysis_results.html", user_level=user_level,
                     jobres=jobres, aname=analysis.name, dropped=dropped,
                     basefolder=get_db_files_base_dir())
 
@@ -326,4 +329,5 @@ class ShowAnalysesHandler(BaseHandler):
         analyses = [Analysis(a) for a in
                     user.shared_analyses + user.private_analyses]
 
-        self.render("show_analyses.html", user=user_id, analyses=analyses)
+        self.render("show_analyses.html", user_level=user.level,
+                    analyses=analyses)
