@@ -113,6 +113,9 @@ class SetupTest(TestCase):
     def test_analysis_job(self):
         self.assertEqual(get_count("qiita.analysis_job"), 3)
 
+    def test_analysis_workflow(self):
+        self.assertEqual(get_count("qiita.analysis_workflow"), 2)
+
     def test_analysis_filepath(self):
         self.assertEqual(get_count("qiita.analysis_filepath"), 2)
 

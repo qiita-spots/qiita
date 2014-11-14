@@ -14,6 +14,7 @@ from qiita_db.util import (get_files_from_uploads_folders,
                            get_mountpoint)
 from qiita_db.study import Study
 from qiita_db.user import User
+from qiita_db.exceptions import QiitaDBUnknownIDError
 
 
 class StudyUploadFileHandler(BaseHandler):
@@ -34,8 +35,11 @@ class StudyUploadFileHandler(BaseHandler):
 
     @authenticated
     def get(self, study_id):
-        study_id = int(study_id)
-        check_access(User(self.current_user), Study(study_id), no_public=True,
+        try:
+            study = Study(int(study_id))
+        except QiitaDBUnknownIDError:
+            raise HTTPError(404, "Study %s does not exist" % study_id)
+        check_access(User(self.current_user), study, no_public=True,
                      raise_error=True)
         self.display_template(study_id, "")
 

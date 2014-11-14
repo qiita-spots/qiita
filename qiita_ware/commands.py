@@ -65,10 +65,6 @@ def submit_EBI_from_files(preprocessed_data_id, sample_template, prep_template,
         raise ValueError('The output folder already exists: %s' %
                          output_dir_fp)
 
-    # this is a know issue and @ElDeveloper is working on a fix:
-    # https://github.com/biocore/qiita/pull/522
-    if investigation_type == "Other":
-        investigation_type = 'Amplicon Sequencing'
     submission = EBISubmission.from_templates_and_per_sample_fastqs(
         preprocessed_data_id_str, study.title, study.info['study_abstract'],
         investigation_type, sample_template, prep_template,
