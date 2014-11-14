@@ -30,14 +30,11 @@ reference_base_dir = join(qiita_config.base_data_dir, "reference")
 get_reference_fp = partial(join, reference_base_dir)
 
 
-DFLT_BASE_WORK_FOLDER = get_support_file('work_data')
 SETTINGS_FP = get_support_file('qiita-db-settings.sql')
 LAYOUT_FP = get_support_file('qiita-db-unpatched.sql')
 INITIALIZE_FP = get_support_file('initialize.sql')
 POPULATE_FP = get_support_file('populate_test_db.sql')
 PATCHES_DIR = get_support_file('patches')
-ENVIRONMENTS = {'demo': 'qiita_demo', 'test': 'qiita_test',
-                'production': 'qiita'}
 CLUSTERS = ['demo', 'reserved', 'general']
 
 
