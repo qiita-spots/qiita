@@ -184,14 +184,13 @@ class EBISubmission(object):
         return "%s:%s" % (self._get_study_alias(),
                           escape(clean_whitespace(str(sample_name))))
 
-    def _get_experiment_alias(self, sample_name, row_number):
-        """Format alias using ``self.study_id``, `sample_name`, `row_number`
+    def _get_experiment_alias(self, sample_name):
+        """Format alias using ``self.preprocessed_data_id``, and `sample_name`
 
-        `row_number` comes from the index of the prep in the sample's prep
-        list.
+        Currently, this is identical to _get_sample_alias above, since we are
+        only going to allow submission of one prep for each sample
         """
-        return "%s:%d" % (self._get_sample_alias(sample_name),
-                          row_number)
+        return self._get_sample_alias(sample_name)
 
     def _get_submission_alias(self):
         """Format alias using ``self.preprocessed_data_id``"""
@@ -207,13 +206,10 @@ class EBISubmission(object):
         return '%s_%s_run' % (self._get_study_alias(),
                               basename(file_base_name))
 
-    def _get_library_name(self, sample_name, row_number):
-        """Format alias using `sample_name`, `row_number`
-
-        `row_number` comes from the index of the prep in the sample's prep
-        list.
+    def _get_library_name(self, sample_name):
+        """Format alias using `sample_name`
         """
-        return '%s:%d' % (escape(clean_whitespace(sample_name)), row_number)
+        return escape(clean_whitespace(sample_name))
 
     def _add_dict_as_tags_and_values(self, parent_node, attribute_element_name,
                                      data_dict):
@@ -328,7 +324,7 @@ class EBISubmission(object):
         self.samples[sample_name]['attributes'] = self._stringify_kwargs(
             kwargs)
 
-        self.samples[sample_name]['preps'] = []
+        self.samples[sample_name]['prep'] = None
 
     def generate_sample_xml(self):
         """Generates the sample XML file
@@ -392,12 +388,24 @@ class EBISubmission(object):
         KeyError
             If `sample_name` is not in the list of samples in the
             ``EBISubmission`` object
+        KeyError
+            If there is already prep info associated with the specified sample
+        ValueError
+            If the platform is not one of the recognized platforms
         """
+        if sample_name not in self.samples:
+            raise KeyError("Sample %s: sample has not yet been associated "
+                           "with the submission.")
+
+        if self.samples[sample_name]['prep']:
+            raise KeyError("Sample %s: multiple rows in prep with this sample "
+                           "id!" % sample_name)
+
         platforms = ['LS454', 'ILLUMINA', 'UNKNOWN']
         if platform.upper() not in platforms:
             raise ValueError("The platform name %s is invalid, must be one of "
                              "%s (case insensitive)" % (platform,
-                                                        ','.join(platforms)))
+                                                        ', '.join(platforms)))
 
         self.sequence_files.append(file_path)
         prep_info = self._stringify_kwargs(kwargs)
@@ -411,9 +419,9 @@ class EBISubmission(object):
         prep_info['library_construction_protocol'] = \
             library_construction_protocol
 
-        self.samples[sample_name]['preps'].append(prep_info)
+        self.samples[sample_name]['prep'] = prep_info
 
-    def _generate_library_descriptor(self, design, sample_name, row_number,
+    def _generate_library_descriptor(self, design, sample_name,
                                      library_construction_protocol):
         """This XML element (and its subelements) must be written for every
         sample, but its generation depends on only study-level information.
@@ -422,8 +430,8 @@ class EBISubmission(object):
 
         library_descriptor = ET.SubElement(design, 'LIBRARY_DESCRIPTOR')
         library_name = ET.SubElement(library_descriptor, 'LIBRARY_NAME')
-        library_name.text = self._get_library_name(sample_name,
-                                                   row_number)
+        library_name.text = self._get_library_name(sample_name)
+
         library_strategy = ET.SubElement(library_descriptor,
                                          "LIBRARY_STRATEGY")
         library_strategy.text = self.library_strategy
@@ -480,49 +488,49 @@ class EBISubmission(object):
                                              "/sra_1_3/SRA.experiment.xsd"})
         for sample_name, sample_info in sorted(self.samples.items()):
             sample_alias = self._get_sample_alias(sample_name)
-            for row_number, prep_info in enumerate(sample_info['preps']):
-                experiment_alias = self._get_experiment_alias(sample_name,
-                                                              row_number)
-                platform = prep_info['platform']
-                experiment = ET.SubElement(experiment_set, 'EXPERIMENT', {
-                    'alias': experiment_alias,
-                    'center_name': qiita_config.ebi_center_name}
-                )
-                title = ET.SubElement(experiment, 'TITLE')
-                title.text = experiment_alias
-                ET.SubElement(experiment, 'STUDY_REF', {
-                    'refname': study_alias}
-                )
 
-                design = ET.SubElement(experiment, 'DESIGN')
-                design_description = ET.SubElement(design,
-                                                   'DESIGN_DESCRIPTION')
-                design_description.text = escape(clean_whitespace(
-                    prep_info['experiment_design_description']))
-                ET.SubElement(
-                    design, 'SAMPLE_DESCRIPTOR', {'refname': sample_alias}
-                )
+            experiment_alias = self._get_experiment_alias(sample_name)
 
-                self._generate_library_descriptor(
-                    design, sample_name, row_number,
-                    prep_info['library_construction_protocol']
-                )
+            platform = sample_info['prep']['platform']
+            experiment = ET.SubElement(experiment_set, 'EXPERIMENT', {
+                'alias': experiment_alias,
+                'center_name': qiita_config.ebi_center_name}
+            )
+            title = ET.SubElement(experiment, 'TITLE')
+            title.text = experiment_alias
+            ET.SubElement(experiment, 'STUDY_REF', {
+                'refname': study_alias}
+            )
 
-                self._generate_spot_descriptor(design, platform)
+            design = ET.SubElement(experiment, 'DESIGN')
+            design_description = ET.SubElement(design,
+                                               'DESIGN_DESCRIPTION')
+            design_description.text = escape(clean_whitespace(
+                sample_info['prep']['experiment_design_description']))
+            ET.SubElement(
+                design, 'SAMPLE_DESCRIPTOR', {'refname': sample_alias}
+            )
 
-                platform_element = ET.SubElement(experiment, 'PLATFORM')
-                platform_info = ET.SubElement(platform_element,
-                                              platform.upper())
-                instrument_model = ET.SubElement(platform_info,
-                                                 'INSTRUMENT_MODEL')
-                instrument_model.text = 'unspecified'
+            self._generate_library_descriptor(
+                design, sample_name,
+                sample_info['prep']['library_construction_protocol']
+            )
 
-                if prep_info:
-                    experiment_attributes = ET.SubElement(
-                        experiment, 'EXPERIMENT_ATTRIBUTES')
-                    self._add_dict_as_tags_and_values(experiment_attributes,
-                                                      'EXPERIMENT_ATTRIBUTE',
-                                                      prep_info)
+            self._generate_spot_descriptor(design, platform)
+
+            platform_element = ET.SubElement(experiment, 'PLATFORM')
+            platform_info = ET.SubElement(platform_element,
+                                          platform.upper())
+            instrument_model = ET.SubElement(platform_info,
+                                             'INSTRUMENT_MODEL')
+            instrument_model.text = 'unspecified'
+
+            if sample_info['prep']:
+                experiment_attributes = ET.SubElement(
+                    experiment, 'EXPERIMENT_ATTRIBUTES')
+                self._add_dict_as_tags_and_values(experiment_attributes,
+                                                  'EXPERIMENT_ATTRIBUTE',
+                                                  sample_info['prep'])
 
         return experiment_set
 
@@ -539,31 +547,31 @@ class EBISubmission(object):
             "xsi:noNamespaceSchemaLocation": "ftp://ftp.sra.ebi.ac.uk/meta/xsd"
                                              "/sra_1_3/SRA.run.xsd"})
         for sample_name, sample_info in sorted(viewitems(self.samples)):
-            for row_number, prep_info in enumerate(sample_info['preps']):
-                experiment_alias = self._get_experiment_alias(sample_name,
-                                                              row_number)
-                file_type = prep_info['file_type']
-                file_path = prep_info['file_path']
 
-                with open(file_path) as fp:
-                    md5 = safe_md5(fp).hexdigest()
+            experiment_alias = self._get_experiment_alias(sample_name)
 
-                run = ET.SubElement(run_set, 'RUN', {
-                    'alias': self._get_run_alias(basename(file_path)),
-                    'center_name': qiita_config.ebi_center_name}
-                )
-                ET.SubElement(run, 'EXPERIMENT_REF', {
-                    'refname': experiment_alias}
-                )
-                data_block = ET.SubElement(run, 'DATA_BLOCK')
-                files = ET.SubElement(data_block, 'FILES')
-                ET.SubElement(files, 'FILE', {
-                    'filename': join('./', self.ebi_dir, basename(file_path)),
-                    'filetype': file_type,
-                    'quality_scoring_system': 'phred',
-                    'checksum_method': 'MD5',
-                    'checksum': md5}
-                )
+            file_type = sample_info['prep']['file_type']
+            file_path = sample_info['prep']['file_path']
+
+            with open(file_path) as fp:
+                md5 = safe_md5(fp).hexdigest()
+
+            run = ET.SubElement(run_set, 'RUN', {
+                'alias': self._get_run_alias(basename(file_path)),
+                'center_name': qiita_config.ebi_center_name}
+            )
+            ET.SubElement(run, 'EXPERIMENT_REF', {
+                'refname': experiment_alias}
+            )
+            data_block = ET.SubElement(run, 'DATA_BLOCK')
+            files = ET.SubElement(data_block, 'FILES')
+            ET.SubElement(files, 'FILE', {
+                'filename': join('./', self.ebi_dir, basename(file_path)),
+                'filetype': file_type,
+                'quality_scoring_system': 'phred',
+                'checksum_method': 'MD5',
+                'checksum': md5}
+            )
 
         return run_set
 
