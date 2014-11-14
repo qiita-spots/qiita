@@ -37,12 +37,15 @@ class TestEBISubmission(TestCase):
             pass
 
     def test_init(self):
-        e = EBISubmission('2', 'Study Title', 'Study Abstract', 'metagenome')
+        e = EBISubmission('2', 'Study Title', 'Study Abstract',
+                          investigation_type='Other',
+                          new_investigation_type='metagenome')
 
         self.assertEqual(e.study_id, '2')
         self.assertEqual(e.study_title, 'Study Title')
         self.assertEqual(e.study_abstract, 'Study Abstract')
-        self.assertEqual(e.investigation_type, 'metagenome')
+        self.assertEqual(e.investigation_type, 'Other')
+        self.assertEqual(e.new_investigation_type, 'metagenome')
 
         self.assertEqual(e.empty_value, 'no_data')
 
@@ -58,13 +61,15 @@ class TestEBISubmission(TestCase):
         self.assertEqual(e.additional_metadata, {})
 
     def test_stringify_kwargs(self):
-        e = EBISubmission('2', 'Study Title', 'Study Abstract', 'metagenome',
+        e = EBISubmission('2', 'Study Title', 'Study Abstract',
+                          investigation_type='Other',
+                          new_investigation_type='metagenome',
                           impossible_field=1, maybe_possible_field='BOOM')
 
         self.assertEqual(e.study_id, '2')
         self.assertEqual(e.study_title, 'Study Title')
         self.assertEqual(e.study_abstract, 'Study Abstract')
-        self.assertEqual(e.investigation_type, 'metagenome')
+        self.assertEqual(e.investigation_type, 'Other')
 
         self.assertEqual(e.empty_value, 'no_data')
 
@@ -81,36 +86,48 @@ class TestEBISubmission(TestCase):
             "impossible_field": "1", "maybe_possible_field": "BOOM"})
 
     def test_get_study_alias(self):
-        e = EBISubmission('2', 'Study Title', 'Study Abstract', 'metagenome')
+        e = EBISubmission('2', 'Study Title', 'Study Abstract',
+                          investigation_type='Other',
+                          new_investigation_type='metagenome')
         exp = '%s_study_2' % qiita_config.ebi_organization_prefix
         self.assertEqual(e._get_study_alias(), exp)
 
     def test_get_sample_alias(self):
-        e = EBISubmission('2', 'Study Title', 'Study Abstract', 'metagenome')
+        e = EBISubmission('2', 'Study Title', 'Study Abstract',
+                          investigation_type='Other',
+                          new_investigation_type='metagenome')
         e.add_sample('foo')
         exp = '%s_study_2:foo' % qiita_config.ebi_organization_prefix
         self.assertEqual(e._get_sample_alias('foo'), exp)
 
     def test_get_experiment_alias(self):
-        e = EBISubmission('2', 'Study Title', 'Study Abstract', 'metagenome')
+        e = EBISubmission('2', 'Study Title', 'Study Abstract',
+                          investigation_type='Other',
+                          new_investigation_type='metagenome')
         e.add_sample('foo')
         exp = '%s_study_2:foo:0' % qiita_config.ebi_organization_prefix
         self.assertEqual(e._get_experiment_alias('foo', 0), exp)
 
     def test_get_submission_alias(self):
-        e = EBISubmission('2', 'Study Title', 'Study Abstract', 'metagenome')
+        e = EBISubmission('2', 'Study Title', 'Study Abstract',
+                          investigation_type='Other',
+                          new_investigation_type='metagenome')
         obs = e._get_submission_alias()
         exp = '%s_submission_2' % qiita_config.ebi_organization_prefix
         self.assertEqual(obs, exp)
 
     def test_get_library_name(self):
-        e = EBISubmission('2', 'Study Title', 'Study Abstract', 'metagenome')
+        e = EBISubmission('2', 'Study Title', 'Study Abstract',
+                          investigation_type='Other',
+                          new_investigation_type='metagenome')
         obs = e._get_library_name("nasty<business>", 42)
         exp = "nasty&lt;business&gt;:42"
         self.assertEqual(obs, exp)
 
     def test_add_dict_as_tags_and_values(self):
-        e = EBISubmission('2', 'Study Title', 'Study Abstract', 'metagenome')
+        e = EBISubmission('2', 'Study Title', 'Study Abstract',
+                          investigation_type='Other',
+                          new_investigation_type='metagenome')
         elm = ET.Element('TESTING', {'foo': 'bar'})
 
         e._add_dict_as_tags_and_values(elm, 'foo', {'x': 'y', '>x': '<y'})
@@ -120,7 +137,8 @@ class TestEBISubmission(TestCase):
 
     def test_generate_study_xml(self):
         submission = EBISubmission('001', 'teststudy', 'test asbstract',
-                                   'metagenome')
+                                   investigation_type='Other',
+                                   new_investigation_type='metagenome')
         xmlelement = submission.generate_study_xml()
         xml = minidom.parseString(ET.tostring(xmlelement))
         xmlstring = xml.toprettyxml(indent='  ', encoding='UTF-8')
@@ -128,8 +146,10 @@ class TestEBISubmission(TestCase):
         exp_stripped = ''.join([l.strip() for l in STUDYXML.splitlines()])
         self.assertEqual(obs_stripped, exp_stripped)
 
-        submission_pmids = EBISubmission('001', 'teststudy', 'test asbstract',
-                                         'metagenome', pmids=[12, 15])
+        submission_pmids = \
+            EBISubmission('001', 'teststudy', 'test asbstract', 'Other',
+                          new_investigation_type='Amplicon Sequencing',
+                          pmids=[12, 15])
         xmlelement = submission_pmids.generate_study_xml()
         xml = minidom.parseString(ET.tostring(xmlelement))
         xmlstring = xml.toprettyxml(indent='  ', encoding='UTF-8')
@@ -140,7 +160,8 @@ class TestEBISubmission(TestCase):
 
     def test_add_sample(self):
         submission = EBISubmission('001', 'teststudy', 'test asbstract',
-                                   'metagenome')
+                                   investigation_type='Other',
+                                   new_investigation_type='metagenome')
         submission.add_sample('test1')
         submission.add_sample('test2')
         samples = submission.samples
@@ -150,7 +171,8 @@ class TestEBISubmission(TestCase):
 
     def test_generate_sample_xml(self):
         submission = EBISubmission('001', 'teststudy', 'test asbstract',
-                                   'metagenome')
+                                   investigation_type='Other',
+                                   new_investigation_type='metagenome')
         submission.add_sample('test1')
         submission.add_sample('test2')
         xmlelement = submission.generate_sample_xml()
@@ -162,7 +184,8 @@ class TestEBISubmission(TestCase):
 
     def test_add_sample_prep(self):
         submission = EBISubmission('001', 'teststudy', 'test asbstract',
-                                   'metagenome')
+                                   investigation_type='Other',
+                                   new_investigation_type='metagenome')
         submission.add_sample('test1')
         submission.add_sample('test2')
         submission.add_sample_prep('test1', 'ILLUMINA', 'fastq',
@@ -178,7 +201,8 @@ class TestEBISubmission(TestCase):
 
     def test_add_sample_prep_exception(self):
         submission = EBISubmission('001', 'teststudy', 'test asbstract',
-                                   'metagenome')
+                                   investigation_type='Other',
+                                   new_investigation_type='metagenome')
         submission.add_sample('test1')
         submission.add_sample('test2')
         with self.assertRaises(ValueError):
@@ -187,7 +211,9 @@ class TestEBISubmission(TestCase):
                                        'library protocol')
 
     def test_generate_library_descriptor(self):
-        e = EBISubmission('2', 'Study Title', 'Study Abstract', 'metagenome')
+        e = EBISubmission('2', 'Study Title', 'Study Abstract',
+                          investigation_type='Other',
+                          new_investigation_type='metagenome')
         elm = ET.Element('design', {'foo': 'bar'})
 
         e._generate_library_descriptor(elm, 'sample', 10, 'libconsprot')
@@ -196,7 +222,9 @@ class TestEBISubmission(TestCase):
         self.assertEqual(obs, exp)
 
     def test_generate_spot_descriptor(self):
-        e = EBISubmission('2', 'Study Title', 'Study Abstract', 'metagenome')
+        e = EBISubmission('2', 'Study Title', 'Study Abstract',
+                          investigation_type='Other',
+                          new_investigation_type='metagenome')
         elm = ET.Element('design', {'foo': 'bar'})
 
         e._generate_spot_descriptor(elm, 'LS454')
@@ -206,7 +234,8 @@ class TestEBISubmission(TestCase):
 
     def test_generate_experiment_xml(self):
         submission = EBISubmission('001', 'teststudy', 'test asbstract',
-                                   'metagenome')
+                                   investigation_type='Other',
+                                   new_investigation_type='metagenome')
         submission.add_sample('test1')
         submission.add_sample_prep('test1', 'ILLUMINA', 'fastq',
                                    'fakepath',
@@ -221,7 +250,8 @@ class TestEBISubmission(TestCase):
 
     def test_generate_run_xml(self):
         submission = EBISubmission('001', 'teststudy', 'test asbstract',
-                                   'metagenome')
+                                   investigation_type='Other',
+                                   new_investigation_type='metagenome')
         submission.add_sample('test1')
         submission.add_sample_prep('test1', 'ILLUMINA', 'fastq',
                                    join(self.path, '__init__.py'),
@@ -243,7 +273,8 @@ class TestEBISubmission(TestCase):
 
     def test_generate_submission_xml(self):
         submission = EBISubmission('001', 'teststudy', 'test asbstract',
-                                   'metagenome')
+                                   investigation_type='Other',
+                                   new_investigation_type='metagenome')
         submission.add_sample('test1')
         submission.add_sample_prep('test1', 'ILLUMINA', 'fastq',
                                    '__init__.py', 'experiment description',
@@ -253,7 +284,9 @@ class TestEBISubmission(TestCase):
         # add more tests
 
     def test__write_xml_file(self):
-        e = EBISubmission('2', 'Study Title', 'Study Abstract', 'metagenome')
+        e = EBISubmission('2', 'Study Title', 'Study Abstract',
+                          investigation_type='Other',
+                          new_investigation_type='metagenome')
         elm = ET.Element('TESTING', {'foo': 'bar'})
         e._write_xml_file(lambda: elm, 'thing', 'testfile')
         self.assertEqual(e.thing, 'testfile')
@@ -264,7 +297,8 @@ class TestEBISubmission(TestCase):
 
     def test_write_study_xml(self):
         submission = EBISubmission('001', 'teststudy', 'test asbstract',
-                                   'metagenome')
+                                   investigation_type='Other',
+                                   new_investigation_type='metagenome')
         fh, output = mkstemp()
         submission.write_study_xml(output)
         close(fh)
@@ -276,7 +310,8 @@ class TestEBISubmission(TestCase):
 
     def test_write_sample_xml(self):
         submission = EBISubmission('001', 'teststudy', 'test asbstract',
-                                   'metagenome')
+                                   investigation_type='Other',
+                                   new_investigation_type='metagenome')
         submission.add_sample('test1')
         submission.add_sample('test2')
         fh, output = mkstemp()
@@ -290,7 +325,8 @@ class TestEBISubmission(TestCase):
 
     def test_write_experiment_xml(self):
         submission = EBISubmission('001', 'teststudy', 'test asbstract',
-                                   'metagenome')
+                                   investigation_type='Other',
+                                   new_investigation_type='metagenome')
         submission.add_sample('test1')
         submission.add_sample_prep('test1', 'ILLUMINA', 'fastq',
                                    'fakepath', 'experiment description',
@@ -307,7 +343,8 @@ class TestEBISubmission(TestCase):
         sample_template = StringIO(EXP_SAMPLE_TEMPLATE)
         prep_template = StringIO(EXP_PREP_TEMPLATE)
         submission = EBISubmission('001', 'teststudy', 'test asbstract',
-                                   'metagenome')
+                                   investigation_type='Other',
+                                   new_investigation_type='metagenome')
         submission.add_samples_from_templates(sample_template, prep_template,
                                               self.path)
         self.assertTrue('sample1' in submission.samples)
@@ -325,7 +362,8 @@ class TestEBISubmission(TestCase):
         sample_template = StringIO(EXP_SAMPLE_TEMPLATE)
         prep_template = StringIO(EXP_PREP_TEMPLATE)
         submission = EBISubmission('001', 'teststudy', 'test asbstract',
-                                   'metagenome')
+                                   investigation_type='Other',
+                                   new_investigation_type='metagenome')
         with self.assertRaises(IOError):
             submission.add_samples_from_templates(
                 sample_template, [prep_template],
@@ -447,7 +485,8 @@ COLORADO">
       <STUDY_TITLE>
         teststudy
       </STUDY_TITLE>
-      <STUDY_TYPE existing_study_type="Other" new_study_type="metagenome"/>
+      <STUDY_TYPE existing_study_type="Other" new_study_type="Amplicon Sequenc\
+ing"/>
       <STUDY_ABSTRACT>
         test asbstract
       </STUDY_ABSTRACT>

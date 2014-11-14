@@ -52,7 +52,8 @@ class UserProfileHandler(BaseHandler):
                                 str(e), info={'User': user.id})
 
         elif action == "password":
-            profile = user.info
+            form_data = UserProfile()
+            form_data.process(data=user.info)
             oldpass = self.get_argument("oldpass")
             newpass = self.get_argument("newpass")
             try:

@@ -11,10 +11,12 @@ from qiita_ware.commands import submit_EBI_from_files
 from qiita_ware.demux import to_per_sample_ascii
 from qiita_ware.exceptions import ComputeError
 from qiita_ware.util import open_file
+from qiita_db.util import convert_to_id
 from qiita_db.study import Study
 from qiita_db.analysis import Analysis
 from qiita_db.metadata_template import SampleTemplate, PrepTemplate
 from qiita_db.data import RawData
+from qiita_db.ontology import Ontology
 
 
 def preprocessor(study_id, prep_template_id, param_id, param_constructor):
@@ -42,9 +44,21 @@ def submit_to_ebi(preprocessed_data_id, submission_type):
     pt = PrepTemplate(preprocessed_data.prep_template)
     st = SampleTemplate(preprocessed_data.study)
 
+    investigation_type = None
+    new_investigation_type = None
+
     state = preprocessed_data.submitted_to_insdc_status()
     if state in ('submitting', 'success'):
         raise ValueError("Cannot resubmit! Current state is: %s" % state)
+
+    # we need to figure out whehter the investigation type is a known one
+    # or if we have to submit a "new_investigation_type" to EBI
+    current_type = pt.investigation_type
+    if current_type not in Ontology(convert_to_id('ENA', 'ontology')).terms:
+        investigation_type = 'Other'
+        new_investigation_type = current_type
+    else:
+        investigation_type = current_type
 
     demux = [path for path, ftype in preprocessed_data.get_filepaths()
              if ftype == 'preprocessed_demux'][0]
@@ -69,8 +83,9 @@ def submit_to_ebi(preprocessed_data_id, submission_type):
                                                       open(samp_fp),
                                                       open(prep_fp), tmp_dir,
                                                       output_dir,
-                                                      pt.investigation_type,
-                                                      submission_type, True)
+                                                      investigation_type,
+                                                      submission_type, True,
+                                                      new_investigation_type)
 
     if study_acc is None or submission_acc is None:
         preprocessed_data.update_insdc_status('failed')

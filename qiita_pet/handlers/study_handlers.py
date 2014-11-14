@@ -286,9 +286,18 @@ class StudyDescriptionHandler(BaseHandler):
         other_studies_rd = ['<option value="%s">%s</option>' % (k,
                             "id: %d, study: %s" % (k, v))
                             for k, v in viewitems(other_studies_rd)]
-        ena_terms = Ontology(convert_to_id('ENA', 'ontology')).terms
-        ena_terms = ['<option value="%s">%s</option>' % (v, v)
-                     for v in ena_terms]
+
+        ontology = Ontology(convert_to_id('ENA', 'ontology'))
+
+        # make "Other" show at the bottom of the drop down menu
+        ena_terms = []
+        for v in sorted(ontology.terms):
+            if v != 'Other':
+                ena_terms.append('<option value="%s">%s</option>' % (v, v))
+        ena_terms.append('<option value="Other">Other</option>')
+
+        # New Type is for users to add a new user-defined investigation type
+        user_defined_terms = ontology.user_defined_terms + ['New Type']
 
         self.render('study_description.html', user=self.current_user,
                     study_title=study.title, study_info=study.info,
@@ -303,13 +312,19 @@ class StudyDescriptionHandler(BaseHandler):
                     level=msg_level, message=msg,
                     can_upload=check_access(user, study, True),
                     other_studies_rd=''.join(other_studies_rd),
+                    user_defined_terms=user_defined_terms,
                     files=get_files_from_uploads_folders(str(study_id)))
 
     @authenticated
     def get(self, study_id):
-        study_id = int(study_id)
-        check_access(User(self.current_user), Study(study_id))
-        self.display_template(int(study_id), "", "")
+        try:
+            study = Study(int(study_id))
+        except QiitaDBUnknownIDError:
+            raise HTTPError(404, "Study %s does not exist" % study_id)
+        else:
+            check_access(User(self.current_user), study)
+
+        self.display_template(int(study_id), "")
 
     @authenticated
     @coroutine
@@ -330,13 +345,32 @@ class StudyDescriptionHandler(BaseHandler):
         make_public = self.get_argument('make_public', False)
         approve_study = self.get_argument('approve_study', False)
         request_approval = self.get_argument('request_approval', False)
-        investigation_type = self.get_argument('investigation_type', None)
+        investigation_type = self.get_argument('investigation-type', None)
+        user_defined_investigation_type = self.get_argument(
+            'user-defined-investigation-type', None)
+        new_investigation_type = self.get_argument('new-investigation-type',
+                                                   None)
 
-        if investigation_type == "":
+        # non selected is the equivalent to the user not specifying the info
+        # thus we should make the investigation_type None
+        if investigation_type == "" or investigation_type == "Non selected":
             investigation_type = None
+
         # to update investigation type
         update_investigation_type = self.get_argument(
             'update_investigation_type', None)
+        edit_investigation_type = self.get_argument('edit-investigation-type',
+                                                    None)
+        edit_user_defined_investigation_type = self.get_argument(
+            'edit-user-defined-investigation-type', None)
+        edit_new_investigation_type = self.get_argument(
+            'edit-new-investigation-type', None)
+
+        # non selected is the equivalent to the user not specifying the info
+        # thus we should make the investigation_type None
+        if edit_investigation_type == "" or \
+                edit_investigation_type == "Non selected":
+            edit_investigation_type = None
 
         study = Study(study_id)
         msg_level = 'success'
@@ -414,6 +448,17 @@ class StudyDescriptionHandler(BaseHandler):
         elif add_prep_template and raw_data_id and data_type_id:
             # adding prep templates
 
+            if investigation_type == 'Other' and \
+                    user_defined_investigation_type == 'New Type':
+                investigation_type = new_investigation_type
+
+                # this is a new user defined investigation type so store it
+                ontology = Ontology(convert_to_id('ENA', 'ontology'))
+                ontology.add_user_defined_term(investigation_type)
+            elif investigation_type == 'Other' and \
+                    user_defined_investigation_type != 'New Type':
+                investigation_type = user_defined_investigation_type
+
             raw_data_id = int(raw_data_id)
             _, base_path = get_mountpoint("uploads")[0]
             fp_rpt = join(base_path, str(study_id), add_prep_template)
@@ -443,14 +488,28 @@ class StudyDescriptionHandler(BaseHandler):
             # updating the prep template investigation type
 
             pt = PrepTemplate(update_investigation_type)
+            investigation_type = edit_investigation_type
+
+            # figure out whether to add it as a user defined term or not
+            if edit_investigation_type == 'Other' and \
+                    edit_user_defined_investigation_type == 'New Type':
+                investigation_type = edit_new_investigation_type
+
+                # this is a new user defined investigation type so store it
+                ontology = Ontology(convert_to_id('ENA', 'ontology'))
+                ontology.add_user_defined_term(investigation_type)
+
+            elif investigation_type == 'Other' and \
+                    user_defined_investigation_type != 'New Type':
+                investigation_type = edit_user_defined_investigation_type
+
             try:
                 pt.investigation_type = investigation_type
             except QiitaDBColumnError as e:
                 error_msg = ''.join(format_exception_only(e, exc_info()))
-                msg = ('Invalid investigation type: %s. %s' %
-                       (basename(fp_rpt), error_msg))
+                msg = 'Invalid investigation type: %s' % error_msg
                 self.display_template(study_id, msg, "danger",
-                                      str(pt.raw_data_id))
+                                      str(pt.raw_data))
                 return
 
             msg = "The prep template has been updated!"
@@ -632,8 +691,12 @@ class MetadataSummaryHandler(BaseHandler):
         if self.get_argument('prep_template', None):
             template = PrepTemplate(int(self.get_argument('prep_template')))
         if self.get_argument('sample_template', None):
+            template = None
             tid = int(self.get_argument('sample_template'))
-            template = SampleTemplate(tid)
+            try:
+                template = SampleTemplate(tid)
+            except QiitaDBUnknownIDError:
+                raise HTTPError(404, "SampleTemplate %d does not exist" % tid)
 
         study = Study(template.study_id)
 

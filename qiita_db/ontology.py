@@ -52,7 +52,17 @@ class Ontology(QiitaObject):
     @property
     def terms(self):
         conn_handler = SQLConnectionHandler()
-        sql = """SELECT term FROM qiita.term WHERE ontology_id = %s"""
+        sql = """SELECT term FROM qiita.term WHERE ontology_id = %s AND
+                 user_defined = false"""
+
+        return [row[0] for row in
+                conn_handler.execute_fetchall(sql, [self.id])]
+
+    @property
+    def user_defined_terms(self):
+        conn_handler = SQLConnectionHandler()
+        sql = """SELECT term FROM qiita.term WHERE ontology_id = %s AND
+                 user_defined = true"""
 
         return [row[0] for row in
                 conn_handler.execute_fetchall(sql, [self.id])]
@@ -60,3 +70,54 @@ class Ontology(QiitaObject):
     @property
     def shortname(self):
         return convert_from_id(self.id, 'ontology')
+
+    def add_user_defined_term(self, term):
+        """Add a user defined term to the ontology
+
+        Parameters
+        ----------
+        term : str
+            New user defined term to add into a given ontology
+        """
+
+        # we don't need to add an existing term
+        terms = self.user_defined_terms + self.terms
+
+        if term not in terms:
+            conn_handler = SQLConnectionHandler()
+            sql = """INSERT INTO qiita.term
+                     (ontology_id, term, user_defined)
+                     VALUES
+                     (%s, %s, true);"""
+
+            conn_handler.execute(sql, [self.id, term])
+
+    def term_type(self, term):
+        """Get the type of a given ontology term
+
+        Parameters
+        ----------
+        term : str
+            String for which the method will check the type
+
+        Returns
+        -------
+        str
+            The term type: 'ontology' if the term is part of the ontology,
+            'user_defined' if the term is part of the ontology and was
+            user-defined and 'not_ontology' if the term is not part of the
+            ontology.
+        """
+        conn_handler = SQLConnectionHandler()
+        sql = """SELECT user_defined FROM
+                 qiita.term
+                 WHERE term = %s AND ontology_id = %s
+              """
+        result = conn_handler.execute_fetchone(sql, [term, self.id])
+
+        if result is None:
+            return 'not_ontology'
+        elif result[0]:
+            return 'user_defined'
+        elif not result[0]:
+            return 'ontology'
