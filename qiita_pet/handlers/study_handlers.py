@@ -293,7 +293,7 @@ class StudyDescriptionHandler(BaseHandler):
                     user_level=user.level, data_types=''.join(data_types),
                     available_raw_data=available_raw_data,
                     available_prep_templates=available_prep_templates,
-                    ste=SampleTemplate.exists(study_id),
+                    ste=SampleTemplate.exists(study.id),
                     study_status=study.status,
                     filepath_types=''.join(fts), ena_terms=''.join(ena_terms),
                     tab_to_display=tab_to_display,
