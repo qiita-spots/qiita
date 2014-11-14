@@ -1087,8 +1087,7 @@ class TestPrepTemplate(TestCase):
         with self.assertRaises(QiitaDBColumnError):
             PrepTemplate.create(self.metadata, self.new_raw_data,
                                 self.test_study, self.data_type_id,
-                                'Not a term',
-                                investigation_type_ontology='ENA_test')
+                                'Not a term')
 
     def test_delete_error(self):
         """Try to delete a prep template that already has preprocessed data"""
@@ -1337,28 +1336,15 @@ class TestPrepTemplate(TestCase):
     def test_investigation_type_setter(self):
         """Able to update the investigation type"""
         pt = PrepTemplate.create(self.metadata, self.new_raw_data,
-                                 self.test_study, self.data_type_id,
-                                 investigation_type_ontology='ENA_test')
+                                 self.test_study, self.data_type_id)
         self.assertEqual(pt.investigation_type, None)
         pt.investigation_type = "Other"
         self.assertEqual(pt.investigation_type, 'Other')
         with self.assertRaises(QiitaDBColumnError):
             pt.investigation_type = "should fail"
 
-    def test_investigation_type_ontology(self):
-        pt = PrepTemplate(1)
-        self.assertEqual(pt._investigation_type_ontology, 'ENA')
-
-    def test_investigation_type_ontology_fails(self):
-        # this should fail because ENA is not valid in the test environments
-        pt = PrepTemplate(1)
-        with self.assertRaises(IncompetentQiitaDeveloperError):
-            pt.investigation_type = 'RNASeq'
-
     def test_investigation_type_instance_setter(self):
         pt = PrepTemplate(1)
-        # we need to check against the ontology test table
-        pt._investigation_type_ontology = 'ENA_test'
         pt.investigation_type = 'RNASeq'
         self.assertEqual(pt.investigation_type, 'RNASeq')
 
