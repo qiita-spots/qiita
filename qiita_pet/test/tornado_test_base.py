@@ -9,8 +9,7 @@ from qiita_core.qiita_settings import qiita_config
 from qiita_pet.webserver import Application
 from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_db.sql_connection import SQLConnectionHandler
-from qiita_db.environment_manager import (LAYOUT_FP, INITIALIZE_FP,
-                                          POPULATE_FP)
+from qiita_db.environment_manager import drop_and_rebuild_test_database
 
 
 class TestHandlerBase(AsyncHTTPTestCase):
@@ -36,17 +35,9 @@ class TestHandlerBase(AsyncHTTPTestCase):
                                    "executing the tests to keep the production"
                                    " database safe.")
 
-            # Drop the schema
-            self.conn_handler.execute("DROP SCHEMA qiita CASCADE")
-            # Create the schema
-            with open(LAYOUT_FP, 'U') as f:
-                self.conn_handler.execute(f.read())
-            # Initialize the database
-            with open(INITIALIZE_FP, 'U') as f:
-                self.conn_handler.execute(f.read())
-            # Populate the database
-            with open(POPULATE_FP, 'U') as f:
-                self.conn_handler.execute(f.read())
+            # Drop the schema and rebuild the test database
+            drop_and_rebuild_test_database(self.conn_handler)
+
         super(TestHandlerBase, self).setUp()
 
     def tearDown(self):

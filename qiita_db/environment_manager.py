@@ -33,7 +33,6 @@ get_reference_fp = partial(join, reference_base_dir)
 DFLT_BASE_WORK_FOLDER = get_support_file('work_data')
 SETTINGS_FP = get_support_file('qiita-db-settings.sql')
 LAYOUT_FP = get_support_file('qiita-db-unpatched.sql')
-INITIALIZE_FP = get_support_file('initialize.sql')
 POPULATE_FP = get_support_file('populate_test_db.sql')
 PATCHES_DIR = get_support_file('patches')
 ENVIRONMENTS = {'demo': 'qiita_demo', 'test': 'qiita_test',
@@ -57,19 +56,25 @@ def _check_db_exists(db, conn_handler):
     return (db,) in dbs
 
 
-def _create_layout_and_init_db(conn):
-    print('Building SQL layout')
+def create_layout_and_patch(conn, verbose=False):
+    r"""Builds the SQL layout and applies all the patches
+
+    Parameters
+    ----------
+    conn : SQLConnectionHandler
+        The handler connected to the DB
+    verbose : bool
+        If true, print the current step
+    """
+    if verbose:
+        print('Building SQL layout')
     # Create the schema
     with open(LAYOUT_FP, 'U') as f:
         conn.execute(f.read())
 
-    print('Patching Database...')
-    patch()
-
-    print('Initializing database')
-    # Initialize the database
-    with open(INITIALIZE_FP, 'U') as f:
-        conn.execute(f.read())
+    if verbose:
+        print('Patching Database...')
+    patch(verbose=verbose)
 
 
 def _populate_test_db(conn):
@@ -197,7 +202,7 @@ def make_environment(load_ontologies, download_reference, add_demo_user):
                  (qiita_config.test_environment, qiita_config.base_data_dir,
                   qiita_config.working_dir))
 
-    _create_layout_and_init_db(conn)
+    create_layout_and_patch(conn, verbose=True)
 
     if load_ontologies:
         _add_ontology_data(conn)
@@ -263,6 +268,30 @@ def drop_environment(ask_for_confirmation):
         print('ABORTING')
 
 
+def drop_and_rebuild_test_database(conn_handler):
+    """Drops the qiita schema and rebuilds the test database
+
+    Parameters
+    ----------
+    conn_handler : SQLConnectionHandler
+        The handler connected to the database
+    """
+    # Drop the schema
+    try:
+        conn_handler.execute("DROP SCHEMA qiita CASCADE")
+    except Exception:
+        # ignore the failure of the drop if the schema already doesnt exist
+        # generic Error raised so can't catch specific error
+        pass
+    # Set the database to unpatched
+    conn_handler.execute("UPDATE settings SET current_patch = 'unpatched'")
+    # Create the database and apply patches
+    create_layout_and_patch(conn_handler)
+    # Populate the database
+    with open(POPULATE_FP, 'U') as f:
+        conn_handler.execute(f.read())
+
+
 def reset_test_database(wrapped_fn):
     """Decorator that drops the qiita schema, rebuilds and repopulates the
     schema with test data, then executes wrapped_fn
@@ -270,22 +299,8 @@ def reset_test_database(wrapped_fn):
     conn_handler = SQLConnectionHandler()
 
     def decorated_wrapped_fn(*args, **kwargs):
-        # Drop the schema
-        try:
-            conn_handler.execute("DROP SCHEMA qiita CASCADE")
-        except:
-            # ignore the failure of the drop if the schema already doesnt exist
-            # generic Error raised so can't catch specific error
-            pass
-        # Create the schema
-        with open(LAYOUT_FP, 'U') as f:
-            conn_handler.execute(f.read())
-        # Initialize the database
-        with open(INITIALIZE_FP, 'U') as f:
-            conn_handler.execute(f.read())
-        # Populate the database
-        with open(POPULATE_FP, 'U') as f:
-            conn_handler.execute(f.read())
+        # Reset the test database
+        drop_and_rebuild_test_database(conn_handler)
         # Execute the wrapped function
         return wrapped_fn(*args, **kwargs)
 
@@ -318,7 +333,7 @@ def clean_test_environment():
     dummyfunc()
 
 
-def patch(patches_dir=PATCHES_DIR):
+def patch(patches_dir=PATCHES_DIR, verbose=False):
     """Patches the database schema based on the SETTINGS table
 
     Pulls the current patch from the settings table and applies all subsequent
@@ -346,7 +361,8 @@ def patch(patches_dir=PATCHES_DIR):
         patch_filename = split(patch_fp)[-1]
         conn.create_queue(patch_filename)
         with open(patch_fp, 'U') as patch_file:
-            print('\tApplying patch %s...' % patch_filename)
+            if verbose:
+                print('\tApplying patch %s...' % patch_filename)
             conn.add_to_queue(patch_filename, patch_file.read())
             conn.add_to_queue(patch_filename, patch_update_sql,
                               [patch_filename])
