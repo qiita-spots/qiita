@@ -42,7 +42,7 @@ class TestEBISubmission(TestCase):
                           new_investigation_type='metagenome',
                           investigation_type_ontology='ENA_test')
 
-        self.assertEqual(e.study_id, '2')
+        self.assertEqual(e.preprocessed_data_id, '2')
         self.assertEqual(e.study_title, 'Study Title')
         self.assertEqual(e.study_abstract, 'Study Abstract')
         self.assertEqual(e.investigation_type, 'Other')
@@ -81,7 +81,7 @@ class TestEBISubmission(TestCase):
                           impossible_field=1, maybe_possible_field='BOOM',
                           investigation_type_ontology='ENA_test')
 
-        self.assertEqual(e.study_id, '2')
+        self.assertEqual(e.preprocessed_data_id, '2')
         self.assertEqual(e.study_title, 'Study Title')
         self.assertEqual(e.study_abstract, 'Study Abstract')
         self.assertEqual(e.investigation_type, 'Other')
@@ -105,7 +105,7 @@ class TestEBISubmission(TestCase):
                           investigation_type='Other',
                           new_investigation_type='metagenome',
                           investigation_type_ontology='ENA_test')
-        exp = '%s_study_2' % qiita_config.ebi_organization_prefix
+        exp = '%s_ppdid_2' % qiita_config.ebi_organization_prefix
         self.assertEqual(e._get_study_alias(), exp)
 
     def test_get_sample_alias(self):
@@ -114,7 +114,7 @@ class TestEBISubmission(TestCase):
                           new_investigation_type='metagenome',
                           investigation_type_ontology='ENA_test')
         e.add_sample('foo')
-        exp = '%s_study_2:foo' % qiita_config.ebi_organization_prefix
+        exp = '%s_ppdid_2:foo' % qiita_config.ebi_organization_prefix
         self.assertEqual(e._get_sample_alias('foo'), exp)
 
     def test_get_experiment_alias(self):
@@ -123,8 +123,8 @@ class TestEBISubmission(TestCase):
                           new_investigation_type='metagenome',
                           investigation_type_ontology='ENA_test')
         e.add_sample('foo')
-        exp = '%s_study_2:foo:0' % qiita_config.ebi_organization_prefix
-        self.assertEqual(e._get_experiment_alias('foo', 0), exp)
+        exp = '%s_ppdid_2:foo' % qiita_config.ebi_organization_prefix
+        self.assertEqual(e._get_experiment_alias('foo'), exp)
 
     def test_get_submission_alias(self):
         e = EBISubmission('2', 'Study Title', 'Study Abstract',
@@ -140,8 +140,8 @@ class TestEBISubmission(TestCase):
                           investigation_type='Other',
                           new_investigation_type='metagenome',
                           investigation_type_ontology='ENA_test')
-        obs = e._get_library_name("nasty<business>", 42)
-        exp = "nasty&lt;business&gt;:42"
+        obs = e._get_library_name("nasty<business>")
+        exp = "nasty&lt;business&gt;"
         self.assertEqual(obs, exp)
 
     def test_add_dict_as_tags_and_values(self):
@@ -217,7 +217,7 @@ class TestEBISubmission(TestCase):
         submission.add_sample_prep('test1', 'ILLUMINA', 'fastq',
                                    self.path, 'experiment description',
                                    'library protocol')
-        prep_info = submission.samples['test1']['preps'][0]
+        prep_info = submission.samples['test1']['prep']
         self.assertEqual(prep_info['platform'], 'ILLUMINA')
         self.assertEqual(prep_info['file_path'], self.path)
         with self.assertRaises(KeyError):
@@ -233,6 +233,10 @@ class TestEBISubmission(TestCase):
         submission.add_sample('test1')
         submission.add_sample('test2')
         with self.assertRaises(ValueError):
+            submission.add_sample_prep('test2', 'DOES-NOT-EXIST', 'fastq',
+                                       self.path, 'experiment description',
+                                       'library protocol')
+        with self.assertRaises(KeyError):
             submission.add_sample_prep('test3', 'DOES-NOT-EXIST', 'fastq',
                                        self.path, 'experiment description',
                                        'library protocol')
@@ -244,7 +248,7 @@ class TestEBISubmission(TestCase):
                           investigation_type_ontology='ENA_test')
         elm = ET.Element('design', {'foo': 'bar'})
 
-        e._generate_library_descriptor(elm, 'sample', 10, 'libconsprot')
+        e._generate_library_descriptor(elm, 'sample', 'libconsprot')
         exp = ''.join([l.strip() for l in GENLIBDESC.splitlines()])
         obs = ET.tostring(elm)
         self.assertEqual(obs, exp)
@@ -387,10 +391,10 @@ class TestEBISubmission(TestCase):
         self.assertTrue('sample1' in submission.samples)
         self.assertTrue('sample2' in submission.samples)
         self.assertTrue('sample3' in submission.samples)
-        self.assertEqual(submission.samples['sample2']['preps'][0]['platform'],
+        self.assertEqual(submission.samples['sample2']['prep']['platform'],
                          'ILLUMINA')
         self.assertEqual(
-            submission.samples['sample2']['preps'][0]['file_path'],
+            submission.samples['sample2']['prep']['file_path'],
             self.path + '/sample2.fastq.gz')
         with self.assertRaises(KeyError):
             submission.samples['nothere']
@@ -414,10 +418,10 @@ class TestEBISubmission(TestCase):
             '001', 'test study', 'abstract',
             'Metagenomics', sample_template, prep_template, self.path,
             investigation_type_ontology='ENA_test')
-        self.assertEqual(submission.samples['sample2']['preps'][0]['platform'],
+        self.assertEqual(submission.samples['sample2']['prep']['platform'],
                          'ILLUMINA')
         self.assertEqual(
-            submission.samples['sample2']['preps'][0]['file_path'],
+            submission.samples['sample2']['prep']['file_path'],
             self.path + '/sample2.fastq.gz')
         with self.assertRaises(KeyError):
             submission.samples['nothere']
@@ -480,7 +484,7 @@ class TestEBISubmission(TestCase):
 SAMPLEXML = """<?xml version="1.0" encoding="UTF-8"?>
 <SAMPLE_SET xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noName\
 spaceSchemaLocation="ftp://ftp.sra.ebi.ac.uk/meta/xsd/sra_1_3/SRA.sample.xsd">
-  <SAMPLE alias="%(organization_prefix)s_study_001:test1" center_name="CCME-\
+  <SAMPLE alias="%(organization_prefix)s_ppdid_001:test1" center_name="CCME-\
 COLORADO">
     <TITLE>test1</TITLE>
     <SAMPLE_NAME>
@@ -488,7 +492,7 @@ COLORADO">
     </SAMPLE_NAME>
     <DESCRIPTION>no_data</DESCRIPTION>
   </SAMPLE>
-  <SAMPLE alias="%(organization_prefix)s_study_001:test2" center_name="CCME-\
+  <SAMPLE alias="%(organization_prefix)s_ppdid_001:test2" center_name="CCME-\
 COLORADO">
     <TITLE>test2</TITLE>
     <SAMPLE_NAME>
@@ -502,7 +506,7 @@ COLORADO">
 STUDYXML = """<?xml version="1.0" encoding="UTF-8"?>
 <STUDY_SET xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noName\
 spaceSchemaLocation="ftp://ftp.sra.ebi.ac.uk/meta/xsd/sra_1_3/SRA.study.xsd">
-  <STUDY alias="%(organization_prefix)s_study_001" center_name="CCME-COLORADO">
+  <STUDY alias="%(organization_prefix)s_ppdid_001" center_name="CCME-COLORADO">
     <DESCRIPTOR>
       <STUDY_TITLE>
         teststudy
@@ -519,7 +523,7 @@ spaceSchemaLocation="ftp://ftp.sra.ebi.ac.uk/meta/xsd/sra_1_3/SRA.study.xsd">
 STUDYXML_PMIDS = """<?xml version="1.0" encoding="UTF-8"?>
 <STUDY_SET xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noName\
 spaceSchemaLocation="ftp://ftp.sra.ebi.ac.uk/meta/xsd/sra_1_3/SRA.study.xsd">
-  <STUDY alias="%(organization_prefix)s_study_001" center_name="CCME-\
+  <STUDY alias="%(organization_prefix)s_ppdid_001" center_name="CCME-\
 COLORADO">
     <DESCRIPTOR>
       <STUDY_TITLE>
@@ -553,15 +557,15 @@ EXPERIMENTXML = """<?xml version="1.0" encoding="UTF-8"?>
 <EXPERIMENT_SET xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:no\
 NamespaceSchemaLocation="ftp://ftp.sra.ebi.ac.uk/meta/xsd/sra_1_3/SRA.\
 experiment.xsd">
-  <EXPERIMENT alias="%(organization_prefix)s_study_001:test1:0" center_name=\
+  <EXPERIMENT alias="%(organization_prefix)s_ppdid_001:test1" center_name=\
 "CCME-COLORADO">
-    <TITLE>%(organization_prefix)s_study_001:test1:0</TITLE>
-    <STUDY_REF refname="%(organization_prefix)s_study_001"/>
+    <TITLE>%(organization_prefix)s_ppdid_001:test1</TITLE>
+    <STUDY_REF refname="%(organization_prefix)s_ppdid_001"/>
     <DESIGN>
       <DESIGN_DESCRIPTION>experiment description</DESIGN_DESCRIPTION>
-      <SAMPLE_DESCRIPTOR refname="%(organization_prefix)s_study_001:test1"/>
+      <SAMPLE_DESCRIPTOR refname="%(organization_prefix)s_ppdid_001:test1"/>
       <LIBRARY_DESCRIPTOR>
-        <LIBRARY_NAME>test1:0</LIBRARY_NAME>
+        <LIBRARY_NAME>test1</LIBRARY_NAME>
         <LIBRARY_STRATEGY>POOLCLONE</LIBRARY_STRATEGY>
         <LIBRARY_SOURCE>METAGENOMIC</LIBRARY_SOURCE>
         <LIBRARY_SELECTION>unspecified</LIBRARY_SELECTION>
@@ -608,7 +612,7 @@ RUNXML = """
 <RUN_SET xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:no\
 NamespaceSchemaLocation="ftp://ftp.sra.ebi.ac.uk/meta/xsd/sra_1_3/SRA.run.xsd">
   <RUN alias="%(study_alias)s___init__.py_run" center_name="CCME-COLORADO">
-    <EXPERIMENT_REF refname="%(organization_prefix)s_study_001:test1:0"/>
+    <EXPERIMENT_REF refname="%(organization_prefix)s_ppdid_001:test1"/>
     <DATA_BLOCK>
       <FILES>
         <FILE checksum="612cbff13a4f0e236e5e62ac2e00329a" checksum_method=\
@@ -634,7 +638,7 @@ ADDDICTTEST = """<TESTING foo="bar">
 
 GENLIBDESC = """<design foo="bar">
     <LIBRARY_DESCRIPTOR>
-        <LIBRARY_NAME>sample:10</LIBRARY_NAME>
+        <LIBRARY_NAME>sample</LIBRARY_NAME>
         <LIBRARY_STRATEGY>POOLCLONE</LIBRARY_STRATEGY>
         <LIBRARY_SOURCE>METAGENOMIC</LIBRARY_SOURCE>
         <LIBRARY_SELECTION>unspecified</LIBRARY_SELECTION>
