@@ -97,7 +97,7 @@ table {
 </head>
 
 <body>
-<svg xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink'   width='2400' height='1985' viewbox='0 0 2400 1985' >
+<svg xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink'   width='2460' height='1985' viewbox='0 0 2460 1985' >
 <style type='text/css'>
   text                { fill:#000000; font-family: Dialog, Dialog, Arial; font-size:11px; stroke:#000000; stroke-width:0.1; }
   text:hover          { fill:#a00000; font-size:12px;}
@@ -245,7 +245,7 @@ table {
 </defs>
 
 <!-- ============= Desktop ============= -->
-<rect x='1' y='1' width='2398' height='1983' rx='7' ry='7' style='fill:url(#layoutGradient); stroke:#333333; stroke-width:0.5;' />
+<rect x='1' y='1' width='2458' height='1983' rx='7' ry='7' style='fill:url(#layoutGradient); stroke:#333333; stroke-width:0.5;' />
 
 <!-- ============= Legend ============= -->
 <g transform='translate(10,10)'>
@@ -268,9 +268,9 @@ table {
 <rect style='fill:url(#groupUnderTitleLine); stroke-width:2;' x='160' y='43' width='325' height='2' />
 
 <!-- ============= Group 'Group_study' ============= -->
-<rect class='grp' style='fill:#99ff99;stroke:#c5e0c5' x='1004' y='10' width='1367' height='1220' />
+<rect class='grp' style='fill:#99ff99;stroke:#c5e0c5' x='1004' y='10' width='1427' height='1220' />
 <text x='1015' y='25'>Group_study</text>
-<rect style='fill:url(#groupUnderTitleLine); stroke-width:2;' x='1015' y='28' width='1345' height='2' />
+<rect style='fill:url(#groupUnderTitleLine); stroke-width:2;' x='1015' y='28' width='1405' height='2' />
 
 <!-- ============= Group 'Group_vocabularies' ============= -->
 <rect class='grp' style='fill:#00ffcc;stroke:#c5e0db' x='29' y='1285' width='452' height='545' />
@@ -677,7 +677,22 @@ table {
 	required_sample_info references study ( study_id )</title>
 </path>
 <text x='1597' y='115' transform='rotate(0 1597,115)' title='Foreign Key fk_required_sample_info_study
-	required_sample_info references study ( study_id )' style='fill:#a1a0a0;'>study_id</text><!-- ============= Table 'controlled_vocab_values' ============= -->
+	required_sample_info references study ( study_id )' style='fill:#a1a0a0;'>study_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 2205 60 L 1965,60' >
+	<title>Foreign Key fk_study_environmental_package
+	study_environmental_package references study ( study_id )</title>
+</path>
+<text x='2161' y='55' transform='rotate(0 2161,55)' title='Foreign Key fk_study_environmental_package
+	study_environmental_package references study ( study_id )' style='fill:#a1a0a0;'>study_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 2235 120 L 2235,135' >
+	<title>Foreign Key fk_study_environmental_package_0
+	study_environmental_package references environmental_package ( environmental_package_id )</title>
+</path>
+<text x='2248' y='120' transform='rotate(90 2248,120)' title='Foreign Key fk_study_environmental_package_0
+	study_environmental_package references environmental_package ( environmental_package_id )' style='fill:#a1a0a0;'>environmental_package_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 2235 240 L 2235,225' >
+	<title>Foreign Key fk_environmental_package_columns
+	environmental_package_columns references environmental_package ( environmental_package_id )</title>
+</path>
+<text x='2237' y='235' transform='rotate(270 2237,235)' title='Foreign Key fk_environmental_package_columns
+	environmental_package_columns references environmental_package ( environmental_package_id )' style='fill:#a1a0a0;'>environmental_package_id</text><!-- ============= Table 'controlled_vocab_values' ============= -->
 <rect class='table' x='45' y='1523' width='150' height='120' rx='7' ry='7' />
 <path d='M 45.50 1549.50 L 45.50 1530.50 Q 45.50 1523.50 52.50 1523.50 L 187.50 1523.50 Q 194.50 1523.50 194.50 1530.50 L 194.50 1549.50 L45.50 1549.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
 <a xlink:href='#controlled_vocab_values'><text x='53' y='1537' class='tableTitle'>controlled_vocab_values</text><title>Table qiita.controlled_vocab_values</title></a>
@@ -1186,6 +1201,7 @@ Parameters used for processing illumina sequence data&#046;</title></a>
 <a xlink:href='#study.study_id'><text x='1803' y='82'>study_id</text><title>study_id bigserial not null
 Unique name for study</title></a>
 <a xlink:href='#study.study_id'><use id='ref' x='1953' y='71' xlink:href='#ref'/><title>Referred by investigation_study ( study_id ) 
+Referred by required_sample_info ( study_id ) 
 Referred by study_experimental_factor ( study_id ) 
 Referred by study_pmid ( study_id ) 
 Referred by study_preprocessed_data ( study_id ) 
@@ -1193,8 +1209,7 @@ Referred by study_processed_data ( study_id )
 Referred by study_raw_data ( study_id ) 
 Referred by study_sample_columns ( study_id ) 
 Referred by study_users ( study_id ) 
-Referred by required_sample_info ( study_id ) 
-Referred by required_sample_info ( study_id ) </title></a>
+Referred by study_environmental_package ( study_id ) </title></a>
   <use id='nn' x='1787' y='87' xlink:href='#nn'/><a xlink:href='#study.email'><use id='idx' x='1787' y='86' xlink:href='#idx'/><title>Index  ( email ) </title></a>
 <a xlink:href='#study.email'><text x='1803' y='97'>email</text><title>email varchar not null
 Email of study owner</title></a>
@@ -1635,9 +1650,8 @@ The prep template identifier</title></a>
 Required info for each sample&#046; One row is one sample&#046;</title></a>
   <use id='nn' x='1382' y='132' xlink:href='#nn'/><a xlink:href='#required_sample_info.sample_id'><use id='pk' x='1382' y='131' xlink:href='#pk'/><title>Primary Key  ( sample_id ) </title></a>
 <a xlink:href='#required_sample_info.sample_id'><text x='1398' y='142'>sample_id</text><title>sample_id varchar not null</title></a>
-<a xlink:href='#required_sample_info.sample_id'><use id='ref' x='1578' y='131' xlink:href='#ref'/><title>Referred by common_prep_info ( sample_id ) 
-Referred by analysis_sample ( sample_id ) 
-Referred by analysis_sample ( sample_id ) </title></a>
+<a xlink:href='#required_sample_info.sample_id'><use id='ref' x='1578' y='131' xlink:href='#ref'/><title>Referred by analysis_sample ( sample_id ) 
+Referred by common_prep_info ( sample_id ) </title></a>
   <use id='nn' x='1382' y='147' xlink:href='#nn'/><a xlink:href='#required_sample_info.study_id'><use id='idx' x='1382' y='146' xlink:href='#idx'/><title>Index  ( study_id ) </title></a>
 <a xlink:href='#required_sample_info.study_id'><text x='1398' y='157'>study_id</text><title>study_id bigint not null</title></a>
 <a xlink:href='#required_sample_info.study_id'><use id='fk' x='1578' y='146' xlink:href='#fk'/><title>References study ( study_id ) </title></a>
@@ -1659,6 +1673,45 @@ What step of the pipeline the samples are in</title></a>
 Latitude of the collection site</title></a>
   <use id='nn' x='1382' y='297' xlink:href='#nn'/><a xlink:href='#required_sample_info.longitude'><text x='1398' y='307'>longitude</text><title>longitude float8 not null
 Longitude of the collection site</title></a>
+
+<!-- ============= Table 'environmental_package' ============= -->
+<rect class='table' x='2220' y='143' width='180' height='75' rx='7' ry='7' />
+<path d='M 2220.50 169.50 L 2220.50 150.50 Q 2220.50 143.50 2227.50 143.50 L 2392.50 143.50 Q 2399.50 143.50 2399.50 150.50 L 2399.50 169.50 L2220.50 169.50 ' style='fill:url(#tableHeaderGradient2); stroke:none;' />
+<a xlink:href='#environmental_package'><text x='2246' y='157' class='tableTitle'>environmental_package</text><title>Table qiita.environmental_package
+Holds the information for each environmental package</title></a>
+  <use id='nn' x='2222' y='177' xlink:href='#nn'/><a xlink:href='#environmental_package.environmental_package_id'><use id='pk' x='2222' y='176' xlink:href='#pk'/><title>Primary Key  ( environmental_package_id ) </title></a>
+<a xlink:href='#environmental_package.environmental_package_id'><text x='2238' y='187'>environmental_package_id</text><title>environmental_package_id bigserial not null</title></a>
+<a xlink:href='#environmental_package.environmental_package_id'><use id='ref' x='2388' y='176' xlink:href='#ref'/><title>Referred by study_environmental_package ( environmental_package_id ) 
+Referred by environmental_package_columns ( environmental_package_id ) </title></a>
+  <use id='nn' x='2222' y='192' xlink:href='#nn'/><a xlink:href='#environmental_package.name'><text x='2238' y='202'>name</text><title>name varchar not null
+Holds the name of the environmental package</title></a>
+
+<!-- ============= Table 'study_environmental_package' ============= -->
+<rect class='table' x='2220' y='38' width='180' height='75' rx='7' ry='7' />
+<path d='M 2220.50 64.50 L 2220.50 45.50 Q 2220.50 38.50 2227.50 38.50 L 2392.50 38.50 Q 2399.50 38.50 2399.50 45.50 L 2399.50 64.50 L2220.50 64.50 ' style='fill:url(#tableHeaderGradient2); stroke:none;' />
+<a xlink:href='#study_environmental_package'><text x='2228' y='52' class='tableTitle'>study_environmental_package</text><title>Table qiita.study_environmental_package
+Holds the 1 to many relationship between the study and the environmental package&#046;</title></a>
+  <use id='nn' x='2222' y='72' xlink:href='#nn'/><a xlink:href='#study_environmental_package.study_id'><use id='pk' x='2222' y='71' xlink:href='#pk'/><title>Primary Key  ( study_id, environmental_package_id ) Index  ( study_id ) </title></a>
+<a xlink:href='#study_environmental_package.study_id'><text x='2238' y='82'>study_id</text><title>study_id bigint not null</title></a>
+<a xlink:href='#study_environmental_package.study_id'><use id='fk' x='2388' y='71' xlink:href='#fk'/><title>References study ( study_id ) </title></a>
+  <use id='nn' x='2222' y='87' xlink:href='#nn'/><a xlink:href='#study_environmental_package.environmental_package_id'><use id='pk' x='2222' y='86' xlink:href='#pk'/><title>Primary Key  ( study_id, environmental_package_id ) Index  ( environmental_package_id ) </title></a>
+<a xlink:href='#study_environmental_package.environmental_package_id'><text x='2238' y='97'>environmental_package_id</text><title>environmental_package_id bigint not null</title></a>
+<a xlink:href='#study_environmental_package.environmental_package_id'><use id='fk' x='2388' y='86' xlink:href='#fk'/><title>References environmental_package ( environmental_package_id ) </title></a>
+
+<!-- ============= Table 'environmental_package_columns' ============= -->
+<rect class='table' x='2220' y='248' width='195' height='90' rx='7' ry='7' />
+<path d='M 2220.50 274.50 L 2220.50 255.50 Q 2220.50 248.50 2227.50 248.50 L 2407.50 248.50 Q 2414.50 248.50 2414.50 255.50 L 2414.50 274.50 L2220.50 274.50 ' style='fill:url(#tableHeaderGradient2); stroke:none;' />
+<a xlink:href='#environmental_package_columns'><text x='2228' y='262' class='tableTitle'>environmental_package_columns</text><title>Table qiita.environmental_package_columns
+Holds the required columns for the environmental packages</title></a>
+  <use id='nn' x='2222' y='282' xlink:href='#nn'/><a xlink:href='#environmental_package_columns.environmental_package_id'><use id='pk' x='2222' y='281' xlink:href='#pk'/><title>Primary Key  ( environmental_package_id, column_name, column_type ) Index  ( environmental_package_id ) </title></a>
+<a xlink:href='#environmental_package_columns.environmental_package_id'><text x='2238' y='292'>environmental_package_id</text><title>environmental_package_id bigint not null</title></a>
+<a xlink:href='#environmental_package_columns.environmental_package_id'><use id='fk' x='2403' y='281' xlink:href='#fk'/><title>References environmental_package ( environmental_package_id ) </title></a>
+  <use id='nn' x='2222' y='297' xlink:href='#nn'/><a xlink:href='#environmental_package_columns.column_name'><use id='pk' x='2222' y='296' xlink:href='#pk'/><title>Primary Key  ( environmental_package_id, column_name, column_type ) </title></a>
+<a xlink:href='#environmental_package_columns.column_name'><text x='2238' y='307'>column_name</text><title>column_name varchar not null
+Holds the name of the required column</title></a>
+  <use id='nn' x='2222' y='312' xlink:href='#nn'/><a xlink:href='#environmental_package_columns.column_type'><use id='pk' x='2222' y='311' xlink:href='#pk'/><title>Primary Key  ( environmental_package_id, column_name, column_type ) </title></a>
+<a xlink:href='#environmental_package_columns.column_type'><text x='2238' y='322'>column_type</text><title>column_type varchar not null
+Holds the type of the required column</title></a>
 
 </g></svg>
 
@@ -4763,6 +4816,115 @@ Controlled Vocabulary </td>
 	<tr>
 		<td>fk_required_sample_info_study</td>
 		<td > ( study&#095;id ) ref <a href='#study'>study</a> (study&#095;id) </td>
+		<td>  </td>
+	</tr>
+</tbody>
+</table>
+
+<br/><br/>
+<table class='bordered'>
+<thead>
+<tr><th colspan='3'><a name='environmental_package'>Table environmental_package</a></th></tr>
+<tr><td colspan='3'>Holds the information for each environmental package </td></tr>
+</thead>
+<tbody>
+	<tr>
+		<td><a name='environmental_package.environmental_package_id'>environmental&#095;package&#095;id</a></td>
+		<td> bigserial  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='environmental_package.name'>name</a></td>
+		<td> varchar  NOT NULL  </td>
+		<td> Holds the name of the environmental package </td>
+	</tr>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;environmental&#095;package primary key</td>
+		<td> ON environmental&#095;package&#095;id</td>
+		<td>  </td>
+	</tr>
+</tbody>
+</table>
+
+<br/><br/>
+<table class='bordered'>
+<thead>
+<tr><th colspan='3'><a name='study_environmental_package'>Table study_environmental_package</a></th></tr>
+<tr><td colspan='3'>Holds the 1 to many relationship between the study and the environmental package&#046; </td></tr>
+</thead>
+<tbody>
+	<tr>
+		<td><a name='study_environmental_package.study_id'>study&#095;id</a></td>
+		<td> bigint  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='study_environmental_package.environmental_package_id'>environmental&#095;package&#095;id</a></td>
+		<td> bigint  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;study&#095;environmental&#095;package primary key</td>
+		<td> ON study&#095;id&#044; environmental&#095;package&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>idx&#095;study&#095;environmental&#095;package </td>
+		<td> ON study&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>idx&#095;study&#095;environmental&#095;package </td>
+		<td> ON environmental&#095;package&#095;id</td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
+	<tr>
+		<td>fk_study_environmental_package</td>
+		<td > ( study&#095;id ) ref <a href='#study'>study</a> (study&#095;id) </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>fk_study_environmental_package_0</td>
+		<td > ( environmental&#095;package&#095;id ) ref <a href='#environmental&#095;package'>environmental&#095;package</a> (environmental&#095;package&#095;id) </td>
+		<td>  </td>
+	</tr>
+</tbody>
+</table>
+
+<br/><br/>
+<table class='bordered'>
+<thead>
+<tr><th colspan='3'><a name='environmental_package_columns'>Table environmental_package_columns</a></th></tr>
+<tr><td colspan='3'>Holds the required columns for the environmental packages </td></tr>
+</thead>
+<tbody>
+	<tr>
+		<td><a name='environmental_package_columns.environmental_package_id'>environmental&#095;package&#095;id</a></td>
+		<td> bigint  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='environmental_package_columns.column_name'>column&#095;name</a></td>
+		<td> varchar  NOT NULL  </td>
+		<td> Holds the name of the required column </td>
+	</tr>
+	<tr>
+		<td><a name='environmental_package_columns.column_type'>column&#095;type</a></td>
+		<td> varchar  NOT NULL  </td>
+		<td> Holds the type of the required column </td>
+	</tr>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;environmental&#095;package&#095;columns primary key</td>
+		<td> ON environmental&#095;package&#095;id&#044; column&#095;name&#044; column&#095;type</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>idx&#095;environmental&#095;package&#095;columns </td>
+		<td> ON environmental&#095;package&#095;id</td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
+	<tr>
+		<td>fk_environmental_package_columns</td>
+		<td > ( environmental&#095;package&#095;id ) ref <a href='#environmental&#095;package'>environmental&#095;package</a> (environmental&#095;package&#095;id) </td>
 		<td>  </td>
 	</tr>
 </tbody>
