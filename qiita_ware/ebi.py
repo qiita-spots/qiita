@@ -81,7 +81,7 @@ class EBISubmission(object):
 
     Parameters
     ----------
-    study_id : str
+    preprocessed_data_id : str
     study_title : str
     study_abstract : str
     investigation_type : str
@@ -97,10 +97,10 @@ class EBISubmission(object):
         set other attributes in the submission, but any string is valid. This
         value is required only if `'Other'` is passed in `investigation_type`.
     """
-    def __init__(self, study_id, study_title, study_abstract,
+    def __init__(self, preprocessed_data_id, study_title, study_abstract,
                  investigation_type, empty_value='no_data',
                  new_investigation_type=None, pmids=None, **kwargs):
-        self.study_id = study_id
+        self.preprocessed_data_id = preprocessed_data_id
         self.study_title = study_title
         self.study_abstract = study_abstract
         self.investigation_type = investigation_type
@@ -156,7 +156,7 @@ class EBISubmission(object):
 
     def _get_ebi_dir(self):
         timestamp = datetime.now().strftime('%Y_%m_%d_%H:%M:%S')
-        return '%s_%s' % (self.study_id, timestamp)
+        return '%s_%s' % (self.preprocessed_data_id, timestamp)
 
     def _stringify_kwargs(self, kwargs_dict):
         """Turns values in a dictionay into strings, None, or self.empty_value
@@ -173,14 +173,14 @@ class EBISubmission(object):
                                        "as strings.")
 
     def _get_study_alias(self):
-        """Format alias using ``self.study_id``"""
-        study_alias_format = '%s_study_%s'
+        """Format alias using ``self.preprocessed_data_id``"""
+        study_alias_format = '%s_ppdid_%s'
         return study_alias_format % (
             qiita_config.ebi_organization_prefix,
-            escape(clean_whitespace(str(self.study_id))))
+            escape(clean_whitespace(str(self.preprocessed_data_id))))
 
     def _get_sample_alias(self, sample_name):
-        """Format alias using ``self.study_id``, `sample_name`"""
+        """Format alias using ``self.preprocessed_data_id``, `sample_name`"""
         return "%s:%s" % (self._get_study_alias(),
                           escape(clean_whitespace(str(sample_name))))
 
@@ -194,11 +194,12 @@ class EBISubmission(object):
                           row_number)
 
     def _get_submission_alias(self):
-        """Format alias using ``self.study_id``"""
-        safe_study_id = escape(clean_whitespace(str(self.study_id)))
+        """Format alias using ``self.preprocessed_data_id``"""
+        safe_preprocessed_data_id = escape(
+            clean_whitespace(str(self.preprocessed_data_id)))
         submission_alias_format = '%s_submission_%s'
         return submission_alias_format % (qiita_config.ebi_organization_prefix,
-                                          safe_study_id)
+                                          safe_preprocessed_data_id)
 
     def _get_run_alias(self, file_base_name):
         """Format alias using `file_base_name`
@@ -813,7 +814,8 @@ class EBISubmission(object):
                                  **prep)
 
     @classmethod
-    def from_templates_and_per_sample_fastqs(cls, study_id, study_title,
+    def from_templates_and_per_sample_fastqs(cls, preprocessed_data_id,
+                                             study_title,
                                              study_abstract,
                                              investigation_type,
                                              sample_template, prep_template,
@@ -825,7 +827,7 @@ class EBISubmission(object):
 
         Parameters
         ----------
-        study_id : str
+        preprocessed_data_id : str
         study_title : str
         study_abstract : str
         investigation_type : str
@@ -846,7 +848,7 @@ class EBISubmission(object):
           section of the submission
         """
         # initialize the EBISubmission object
-        submission = cls(study_id, study_title, study_abstract,
+        submission = cls(preprocessed_data_id, study_title, study_abstract,
                          investigation_type,
                          new_investigation_type=new_investigation_type,
                          pmids=pmids, **kwargs)
