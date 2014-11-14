@@ -297,7 +297,6 @@ class StudyDescriptionHandler(BaseHandler):
 
         # New Type is for users to add a new user-defined investigation type
         user_defined_terms = ontology.user_defined_terms + ['New Type']
-
         self.render('study_description.html', user=self.current_user,
                     study_title=study.title, study_info=study.info,
                     study_id=study_id, filetypes=''.join(filetypes),
@@ -315,14 +314,7 @@ class StudyDescriptionHandler(BaseHandler):
 
     @authenticated
     def get(self, study_id):
-        try:
-            study = Study(int(study_id))
-        except QiitaDBUnknownIDError:
-            raise HTTPError(404, "Study %s does not exist" % study_id)
-        else:
-            check_access(User(self.current_user), study)
-
-        self.display_template(int(study_id), "")
+        self.display_template(int(study_id), "", 'info')
 
     @authenticated
     @coroutine
