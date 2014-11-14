@@ -261,7 +261,6 @@ class StudyDescriptionHandler(BaseHandler):
         available_raw_data = yield Task(self.get_raw_data, study.raw_data())
         available_prep_templates = yield Task(self.get_prep_templates,
                                               available_raw_data)
-
         # other general vars, note that we create the select options here
         # so we do not have to loop several times over them in the template
         data_types = sorted(viewitems(get_data_types()), key=itemgetter(1))
@@ -289,7 +288,7 @@ class StudyDescriptionHandler(BaseHandler):
         user_defined_terms = ontology.user_defined_terms + ['New Type']
         self.render('study_description.html', user=self.current_user,
                     study_title=study.title, study_info=study.info,
-                    study_id=study_id, filetypes=''.join(filetypes),
+                    study_id=study.id, filetypes=''.join(filetypes),
                     user_level=user.level, data_types=''.join(data_types),
                     available_raw_data=available_raw_data,
                     available_prep_templates=available_prep_templates,
