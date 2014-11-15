@@ -68,7 +68,7 @@ function newInvestigationTypeChanged(rawDataID, isEdit){
       Samples: {{study_info['number_samples_promised']}}/{{study_info['number_samples_collected']}}
       <br/>
       Metadata: {{study_info['metadata_complete']}}
-      {% if can_upload %}
+      {% if can_upload and study_status != 'sandbox' %}
         <br/>
         <a href="/study/upload/{{study_id}}">Upload files</a>
       {% end %}
@@ -94,7 +94,7 @@ function newInvestigationTypeChanged(rawDataID, isEdit){
       {% end %}
       {% if (user_level == 'admin' and study_status == 'awaiting_approval') or not qiita_config.require_approval %}
         <a class="btn btn-primary" onClick="approve_study();">Approve Study</a>
-      {% elif (user_level == 'admin' and study_status == 'private') %}
+      {% elif study_status == 'private' %}
        <a class="btn btn-primary" onClick="make_public();">Make Public</a>
       {% end %}
     </td>
@@ -111,7 +111,7 @@ function newInvestigationTypeChanged(rawDataID, isEdit){
 <!-- Nav tabs -->
 <ul class="nav nav-tabs" role="tablist" id="myTab">
   <li class="active"><a href="#add_sample_template" role="tab" data-toggle="tab">Add sample template</a></li>
-  {% if ste and study_status != 'public' %}
+  {% if ste and study_status in {'sandbox', 'awaiting_approval'} %}
     <li><a href="#add_raw_data" role="tab" data-toggle="tab">Add raw data</a></li>
   {% end %}
 

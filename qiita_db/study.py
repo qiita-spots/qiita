@@ -143,15 +143,16 @@ class Study(QiitaStatusObject):
     # The following columns are considered not part of the study info
     _non_info = {"email", "study_status_id", "study_title"}
 
-    def _lock_public(self, conn_handler):
+    def _lock_non_sandbox(self, conn_handler):
         """Raises QiitaDBStatusError if study is public"""
-        if self.check_status(("public", )):
+        if self.status != 'sandbox':
             raise QiitaDBStatusError("Illegal operation on public study!")
 
     def _status_setter_checks(self, conn_handler):
         r"""Perform a check to make sure not setting status away from public
         """
-        self._lock_public(conn_handler)
+        if self.check_status(("public", )):
+            raise QiitaDBStatusError("Illegal operation on public study!")
 
     @classmethod
     def get_by_status(cls, status):
@@ -303,7 +304,7 @@ class Study(QiitaStatusObject):
             The new study title
         """
         conn_handler = SQLConnectionHandler()
-        self._lock_public(conn_handler)
+        self._lock_non_sandbox(conn_handler)
         sql = ("UPDATE qiita.{0} SET study_title = %s WHERE "
                "study_id = %s".format(self._table))
         return conn_handler.execute(sql, (title, self._id))
@@ -355,7 +356,7 @@ class Study(QiitaStatusObject):
                                      self._non_info.intersection(info))
 
         conn_handler = SQLConnectionHandler()
-        self._lock_public(conn_handler)
+        self._lock_non_sandbox(conn_handler)
 
         # make sure dictionary only has keys for available columns in db
         check_table_cols(conn_handler, info, self._table)
@@ -399,7 +400,7 @@ class Study(QiitaStatusObject):
         if not efo_vals:
             raise IncompetentQiitaDeveloperError("Need EFO information!")
         conn_handler = SQLConnectionHandler()
-        self._lock_public(conn_handler)
+        self._lock_non_sandbox(conn_handler)
         # wipe out any EFOs currently attached to study
         sql = ("DELETE FROM qiita.{0}_experimental_factor WHERE "
                "study_id = %s".format(self._table))
@@ -526,6 +527,7 @@ class Study(QiitaStatusObject):
         QiitaDBError
             If the raw_data is already linked to the current study
         """
+        self._lock_non_sandbox()
         conn_handler = SQLConnectionHandler()
         queue = "%d_add_raw_data" % self.id
         sql = ("SELECT EXISTS(SELECT * FROM qiita.study_raw_data WHERE "
@@ -596,6 +598,7 @@ class Study(QiitaStatusObject):
             pmid to associate with study
         """
         conn_handler = SQLConnectionHandler()
+        self._lock_non_sandbox()
         sql = ("INSERT INTO qiita.{0}_pmid (study_id, pmid) "
                "VALUES (%s, %s)".format(self._table))
         conn_handler.execute(sql, (self._id, pmid))
@@ -635,7 +638,6 @@ class Study(QiitaStatusObject):
             The user to share the study with
         """
         conn_handler = SQLConnectionHandler()
-        self._lock_public(conn_handler)
 
         # Make sure the study is not already shared with the given user
         if user.id in self.shared_with:
@@ -658,7 +660,6 @@ class Study(QiitaStatusObject):
             The user to unshare the study with
         """
         conn_handler = SQLConnectionHandler()
-        self._lock_public(conn_handler)
 
         sql = ("DELETE FROM qiita.study_users WHERE study_id = %s AND "
                "email = %s")
