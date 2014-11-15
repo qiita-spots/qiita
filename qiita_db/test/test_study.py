@@ -10,8 +10,7 @@ from qiita_db.study import Study, StudyPerson
 from qiita_db.investigation import Investigation
 from qiita_db.user import User
 from qiita_db.data import RawData
-from qiita_db.exceptions import (QiitaDBColumnError, QiitaDBStatusError,
-                                 QiitaDBError)
+from qiita_db.exceptions import QiitaDBColumnError, QiitaDBStatusError
 
 # -----------------------------------------------------------------------------
 # Copyright (c) 2014--, The Qiita Development Team.
