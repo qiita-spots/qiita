@@ -163,6 +163,12 @@ def make_environment(load_ontologies, download_reference, add_demo_user):
     QiitaEnvironmentError
         If the environment already exists
     """
+    if load_ontologies and qiita_config.test_environment:
+        raise EnvironmentError("Cannot load ontologies in a test environment! "
+                               "Pass --no-load-ontologies, or set "
+                               "TEST_ENVIRONMENT = FALSE in your "
+                               "configuration")
+
     # Connect to the postgres server
     admin_conn = SQLConnectionHandler(admin='admin_without_database')
 
@@ -301,9 +307,7 @@ def clean_test_environment():
     # It is possible that we are connecting to a production database
     test_db = conn_handler.execute_fetchone("SELECT test FROM settings")[0]
     # Or the loaded configuration file belongs to a production environment
-    # or the test database is not qiita_test
-    if not qiita_config.test_environment or not test_db \
-            or qiita_config.database != 'qiita_test':
+    if not qiita_config.test_environment or not test_db:
         raise RuntimeError("Working in a production environment. Not "
                            "executing the test cleanup to keep the production "
                            "database safe.")

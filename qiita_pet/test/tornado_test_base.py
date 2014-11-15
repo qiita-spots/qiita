@@ -29,9 +29,7 @@ class TestHandlerBase(AsyncHTTPTestCase):
             test_db = self.conn_handler.execute_fetchone(
                 "SELECT test FROM settings")[0]
             # Or the loaded config file belongs to a production environment
-            # or the test database is not qiita_test
-            if not qiita_config.test_environment or not test_db \
-                    or qiita_config.database != 'qiita_test':
+            if not qiita_config.test_environment or not test_db:
                 raise RuntimeError("Working in a production environment. Not "
                                    "executing the tests to keep the production"
                                    " database safe.")

@@ -19,13 +19,13 @@ class TestOntology(TestCase):
         self.ontology = Ontology(999999999)
 
     def testConvertToID(self):
-        self.assertEqual(convert_to_id('ENA_test', 'ontology'), 999999999)
+        self.assertEqual(convert_to_id('ENA', 'ontology'), 999999999)
 
     def testConvertFromID(self):
-        self.assertEqual(convert_from_id(999999999, 'ontology'), 'ENA_test')
+        self.assertEqual(convert_from_id(999999999, 'ontology'), 'ENA')
 
     def testShortNameProperty(self):
-        self.assertEqual(self.ontology.shortname, 'ENA_test')
+        self.assertEqual(self.ontology.shortname, 'ENA')
 
     def testTerms(self):
         obs = self.ontology.terms
