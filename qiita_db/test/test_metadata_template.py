@@ -7,6 +7,7 @@
 # -----------------------------------------------------------------------------
 
 from future.builtins import zip
+from six import StringIO
 from unittest import TestCase, main
 from datetime import datetime
 from tempfile import mkstemp
@@ -31,7 +32,8 @@ from qiita_db.util import exists_table, get_db_files_base_dir
 from qiita_db.metadata_template import (_get_datatypes, _as_python_types,
                                         MetadataTemplate, SampleTemplate,
                                         PrepTemplate, BaseSample, PrepSample,
-                                        Sample, _prefix_sample_names_with_id)
+                                        Sample, _prefix_sample_names_with_id,
+                                        load_template_to_dataframe)
 
 
 class TestUtilMetadataMap(TestCase):
@@ -1363,6 +1365,17 @@ class TestPrepTemplate(TestCase):
         self.assertEqual(pt.investigation_type, 'RNASeq')
 
 
+class TestUtilities(TestCase):
+
+    def test_load_template_to_dataframe(self):
+        obs = load_template_to_dataframe(StringIO(EXP_SAMPLE_TEMPLATE))
+        self.assertEqual(obs.to_dict(), SAMPLE_TEMPLATE_DICT_FORM)
+
+    def test_load_template_to_dataframe_scrubbing(self):
+        obs = load_template_to_dataframe(StringIO(EXP_SAMPLE_TEMPLATE_SPACES))
+        self.assertEqual(obs.to_dict(), SAMPLE_TEMPLATE_DICT_FORM)
+
+
 EXP_SAMPLE_TEMPLATE = (
     "sample_name\tcollection_timestamp\tdescription\thas_extracted_data\t"
     "has_physical_specimen\thost_subject_id\tlatitude\tlongitude\t"
@@ -1378,6 +1391,55 @@ EXP_SAMPLE_TEMPLATE = (
     "True\tNotIdentified\t4.8\t4.41\tlocation1\treceived\ttype1\t"
     "Value for sample 3\n")
 
+EXP_SAMPLE_TEMPLATE_SPACES = (
+    "sample_name\tcollection_timestamp\tdescription\thas_extracted_data\t"
+    "has_physical_specimen\thost_subject_id\tlatitude\tlongitude\t"
+    "physical_location\trequired_sample_info_status\tsample_type\t"
+    "str_column\n"
+    "2.Sample1         \t2014-05-29 12:24:51\tTest Sample 1\tTrue\tTrue\t"
+    "NotIdentified\t42.42\t41.41\tlocation1\treceived\ttype1\t"
+    "Value for sample 1\n"
+    "2.Sample2  \t2014-05-29 12:24:51\t"
+    "Test Sample 2\tTrue\tTrue\tNotIdentified\t4.2\t1.1\tlocation1\treceived\t"
+    "type1\tValue for sample 2\n"
+    "2.Sample3\t2014-05-29 12:24:51\tTest Sample 3\tTrue\t"
+    "True\tNotIdentified\t4.8\t4.41\tlocation1\treceived\ttype1\t"
+    "Value for sample 3\n")
+
+SAMPLE_TEMPLATE_DICT_FORM = {
+    'collection_timestamp': {'2.Sample1': '2014-05-29 12:24:51',
+                             '2.Sample2': '2014-05-29 12:24:51',
+                             '2.Sample3': '2014-05-29 12:24:51'},
+    'description': {'2.Sample1': 'Test Sample 1',
+                    '2.Sample2': 'Test Sample 2',
+                    '2.Sample3': 'Test Sample 3'},
+    'has_extracted_data': {'2.Sample1': True,
+                           '2.Sample2': True,
+                           '2.Sample3': True},
+    'has_physical_specimen': {'2.Sample1': True,
+                              '2.Sample2': True,
+                              '2.Sample3': True},
+    'host_subject_id': {'2.Sample1': 'NotIdentified',
+                        '2.Sample2': 'NotIdentified',
+                        '2.Sample3': 'NotIdentified'},
+    'latitude': {'2.Sample1': 42.420000000000002,
+                 '2.Sample2': 4.2000000000000002,
+                 '2.Sample3': 4.7999999999999998},
+    'longitude': {'2.Sample1': 41.409999999999997,
+                  '2.Sample2': 1.1000000000000001,
+                  '2.Sample3': 4.4100000000000001},
+    'physical_location': {'2.Sample1': 'location1',
+                          '2.Sample2': 'location1',
+                          '2.Sample3': 'location1'},
+    'required_sample_info_status': {'2.Sample1': 'received',
+                                    '2.Sample2': 'received',
+                                    '2.Sample3': 'received'},
+    'sample_type': {'2.Sample1': 'type1',
+                    '2.Sample2': 'type1',
+                    '2.Sample3': 'type1'},
+    'str_column': {'2.Sample1': 'Value for sample 1',
+                   '2.Sample2': 'Value for sample 2',
+                   '2.Sample3': 'Value for sample 3'}}
 
 EXP_PREP_TEMPLATE = (
     'sample_name\tbarcodesequence\tcenter_name\tcenter_project_name\t'
