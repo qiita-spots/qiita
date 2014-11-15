@@ -174,6 +174,10 @@ class TestStudy(TestCase):
         # make studies private
         self.conn_handler.execute("UPDATE qiita.study SET study_status_id = 4")
 
+    def _make_sandbox(self):
+        # make studies private
+        self.conn_handler.execute("UPDATE qiita.study SET study_status_id = 1")
+
     def test_has_access_public(self):
         self.assertTrue(self.study.has_access(User("demo@microbio.me")))
 
@@ -482,6 +486,7 @@ class TestStudy(TestCase):
         self.assertEqual(new.raw_data(), [])
 
     def test_add_raw_data(self):
+        self._make_sandbox()
         new = Study.create(User('test@foo.bar'), 'NOT Identification of the '
                            'Microbiomes for Cannabis Soils', [1], self.info)
         new.add_raw_data([RawData(1), RawData(2)])
@@ -491,7 +496,8 @@ class TestStudy(TestCase):
         self.assertEqual(obs, [[new.id, 1], [new.id, 2]])
 
     def test_add_raw_data_error(self):
-        with self.assertRaises(QiitaDBError):
+        self._make_private()
+        with self.assertRaises(QiitaDBStatusError):
             self.study.add_raw_data([RawData(1)])
 
     def test_retrieve_preprocessed_data(self):
@@ -511,6 +517,7 @@ class TestStudy(TestCase):
         self.assertEqual(new.processed_data(), [])
 
     def test_add_pmid(self):
+        self._make_private()
         self.study.add_pmid('4544444')
         exp = ['123456', '7891011', '4544444']
         self.assertEqual(self.study.pmids, exp)

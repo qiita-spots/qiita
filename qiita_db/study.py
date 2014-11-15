@@ -527,8 +527,8 @@ class Study(QiitaStatusObject):
         QiitaDBError
             If the raw_data is already linked to the current study
         """
-        self._lock_non_sandbox()
         conn_handler = SQLConnectionHandler()
+        self._lock_non_sandbox(conn_handler)
         queue = "%d_add_raw_data" % self.id
         sql = ("SELECT EXISTS(SELECT * FROM qiita.study_raw_data WHERE "
                "study_id=%s AND raw_data_id=%s)")
@@ -598,7 +598,6 @@ class Study(QiitaStatusObject):
             pmid to associate with study
         """
         conn_handler = SQLConnectionHandler()
-        self._lock_non_sandbox()
         sql = ("INSERT INTO qiita.{0}_pmid (study_id, pmid) "
                "VALUES (%s, %s)".format(self._table))
         conn_handler.execute(sql, (self._id, pmid))
