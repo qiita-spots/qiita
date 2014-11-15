@@ -1355,11 +1355,15 @@ class TestUtilities(TestCase):
 
     def test_load_template_to_dataframe(self):
         obs = load_template_to_dataframe(StringIO(EXP_SAMPLE_TEMPLATE))
-        self.assertEqual(obs.to_dict(), SAMPLE_TEMPLATE_DICT_FORM)
+        exp = pd.DataFrame.from_dict(SAMPLE_TEMPLATE_DICT_FORM)
+        exp.index.name = 'sample_name'
+        assert_frame_equal(obs, exp)
 
     def test_load_template_to_dataframe_scrubbing(self):
         obs = load_template_to_dataframe(StringIO(EXP_SAMPLE_TEMPLATE_SPACES))
-        self.assertEqual(obs.to_dict(), SAMPLE_TEMPLATE_DICT_FORM)
+        exp = pd.DataFrame.from_dict(SAMPLE_TEMPLATE_DICT_FORM)
+        exp.index.name = 'sample_name'
+        assert_frame_equal(obs, exp)
 
 
 EXP_SAMPLE_TEMPLATE = (
