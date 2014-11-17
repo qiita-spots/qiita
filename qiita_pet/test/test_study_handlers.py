@@ -8,6 +8,7 @@ from qiita_db.user import User
 from qiita_pet.handlers.study_handlers import (
     _get_shared_links_for_study, _build_study_info)
 
+
 class TestHelpers(TestHandlerBase):
     database = True
 
