@@ -9,7 +9,7 @@ from qiita_core.qiita_settings import qiita_config
 from qiita_pet.webserver import Application
 from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_db.sql_connection import SQLConnectionHandler
-from qiita_db.environment_manager import drop_and_rebuild_test_database
+from qiita_db.environment_manager import drop_and_rebuild_tst_database
 
 
 class TestHandlerBase(AsyncHTTPTestCase):
@@ -36,7 +36,7 @@ class TestHandlerBase(AsyncHTTPTestCase):
                                    " database safe.")
 
             # Drop the schema and rebuild the test database
-            drop_and_rebuild_test_database(self.conn_handler)
+            drop_and_rebuild_tst_database(self.conn_handler)
 
         super(TestHandlerBase, self).setUp()
 

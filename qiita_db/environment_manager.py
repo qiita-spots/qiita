@@ -268,7 +268,7 @@ def drop_environment(ask_for_confirmation):
         print('ABORTING')
 
 
-def drop_and_rebuild_test_database(conn_handler):
+def drop_and_rebuild_tst_database(conn_handler):
     """Drops the qiita schema and rebuilds the test database
 
     Parameters
@@ -295,7 +295,7 @@ def reset_test_database(wrapped_fn):
 
     def decorated_wrapped_fn(*args, **kwargs):
         # Reset the test database
-        drop_and_rebuild_test_database(conn_handler)
+        drop_and_rebuild_tst_database(conn_handler)
         # Execute the wrapped function
         return wrapped_fn(*args, **kwargs)
 
