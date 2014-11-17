@@ -28,7 +28,7 @@ from qiita_db.ontology import Ontology
 ebi_actions = ['ADD', 'VALIDATE', 'MODIFY']
 
 
-def submit_EBI(preprocessed_data_id, action, send, fastq_dir_fp=None):
+def submit_EBI(preprocessed_data_id, action, send, fastq_dir_fp):
     """Submit a preprocessed data to EBI
 
     Parameters

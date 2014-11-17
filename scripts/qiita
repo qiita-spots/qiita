@@ -205,8 +205,7 @@ def load_prep_template(fp, raw_data, study, data_type):
               "(default is to generate all the files, but not to send)")
 @click.option('--fastq-dir', type=click.Path(exists=True, file_okay=False,
                                              resolve_path=True))
-def submit(preprocessed_data_id, fastq_dir, action, send,
-           new_investigation_type):
+def submit(preprocessed_data_id, action, send, fastq_dir):
     _submit_EBI(preprocessed_data_id, action, send, fastq_dir)
 
 
