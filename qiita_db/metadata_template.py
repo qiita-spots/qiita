@@ -1539,6 +1539,8 @@ def load_template_to_dataframe(fn):
         Pandas dataframe with the loaded information
     """
     template = pd.read_csv(fn, sep='\t', infer_datetime_format=True,
-                           index_col='sample_name', parse_dates=True)
+                           index_col='sample_name', parse_dates=True,
+                           converters={
+                               'sample_name': lambda x: str(x).strip()})
 
     return template
