@@ -21,6 +21,7 @@ class StudyUploadFileHandler(BaseHandler):
     @authenticated
     def display_template(self, study_id, msg):
         """Simple function to avoid duplication of code"""
+        study_id = int(study_id)
         study = Study(study_id)
         check_access(User(self.current_user), study, no_public=True,
                      raise_error=True)
