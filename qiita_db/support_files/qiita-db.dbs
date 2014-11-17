@@ -360,15 +360,14 @@
 			</index>
 		</table>
 		<table name="environmental_package" >
-			<column name="environmental_package_id" type="bigserial" jt="-5" mandatory="y" />
-			<column name="name" type="varchar" jt="12" mandatory="y" >
+			<column name="environmental_package_name" type="varchar" jt="12" mandatory="y" >
 				<comment><![CDATA[The name of the environmental package]]></comment>
 			</column>
 			<column name="metadata_table" type="varchar" jt="12" mandatory="y" >
 				<comment><![CDATA[Contains the name of the table that contains the pre-defined metadata columns for the environmental package]]></comment>
 			</column>
 			<index name="pk_environmental_package" unique="PRIMARY_KEY" >
-				<column name="environmental_package_id" />
+				<column name="environmental_package_name" />
 			</index>
 		</table>
 		<table name="filepath" >
@@ -1114,24 +1113,24 @@ Controlled Vocabulary]]></comment>
 			</fk>
 		</table>
 		<table name="study_environmental_package" >
-			<comment>Holds the 1 to many relationship between the study and the environmental packages</comment>
+			<comment>Holds the 1 to many relationship between the study and the environmental_package</comment>
 			<column name="study_id" type="bigint" jt="-5" mandatory="y" />
-			<column name="environmental_package_id" type="bigint" jt="-5" mandatory="y" />
+			<column name="environmental_package_name" type="varchar" jt="12" mandatory="y" />
 			<index name="pk_study_environmental_package" unique="PRIMARY_KEY" >
 				<column name="study_id" />
-				<column name="environmental_package_id" />
+				<column name="environmental_package_name" />
 			</index>
 			<index name="idx_study_environmental_package" unique="NORMAL" >
 				<column name="study_id" />
 			</index>
 			<index name="idx_study_environmental_package_0" unique="NORMAL" >
-				<column name="environmental_package_id" />
+				<column name="environmental_package_name" />
 			</index>
 			<fk name="fk_study_environmental_package" to_schema="qiita" to_table="study" >
 				<fk_column name="study_id" pk="study_id" />
 			</fk>
 			<fk name="fk_study_environmental_package_0" to_schema="qiita" to_table="environmental_package" >
-				<fk_column name="environmental_package_id" pk="environmental_package_id" />
+				<fk_column name="environmental_package_name" pk="environmental_package_name" />
 			</fk>
 		</table>
 		<table name="study_experimental_factor" >
