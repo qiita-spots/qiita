@@ -63,8 +63,8 @@ def create_layout_and_patch(conn, verbose=False):
     ----------
     conn : SQLConnectionHandler
         The handler connected to the DB
-    verbose : bool
-        If true, print the current step
+    verbose : bool, optional
+        If true, print the current step. Default: False.
     """
     if verbose:
         print('Building SQL layout')
@@ -277,12 +277,7 @@ def drop_and_rebuild_test_database(conn_handler):
         The handler connected to the database
     """
     # Drop the schema
-    try:
-        conn_handler.execute("DROP SCHEMA qiita CASCADE")
-    except Exception:
-        # ignore the failure of the drop if the schema already doesnt exist
-        # generic Error raised so can't catch specific error
-        pass
+    conn_handler.execute("DROP SCHEMA IF EXISTS qiita CASCADE")
     # Set the database to unpatched
     conn_handler.execute("UPDATE settings SET current_patch = 'unpatched'")
     # Create the database and apply patches
