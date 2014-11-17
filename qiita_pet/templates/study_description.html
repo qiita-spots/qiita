@@ -299,6 +299,7 @@ function newInvestigationTypeChanged(rawDataID, isEdit){
                             <a class="btn btn-primary" href="" onclick="alert('Coming soon!')">Preprocessing summary</a>
                           </td>
                           <td rowspan="2" style="padding:3px;">
+                            Preprocessed Data ID: {{ pdi }}<br/>
                             EBI status: {{pd.submitted_to_insdc_status()}}<br/>
                             EBI study accession: {{pd.ebi_study_accession}}<br/>
                             EBI submission accession: {{pd.ebi_submission_accession}}
