@@ -26,6 +26,7 @@ Methods
     convert_from_id
     convert_to_id
     get_lat_longs
+    get_environmental_packages
 """
 # -----------------------------------------------------------------------------
 # Copyright (c) 2014--, The Qiita Development Team.
@@ -836,3 +837,8 @@ def get_lat_longs():
     sql = """select latitude, longitude
              from qiita.required_sample_info"""
     return conn.execute_fetchall(sql)
+
+
+def get_environmental_packages():
+    conn = SQLConnectionHandler()
+    return conn.execute_fetchall("SELECT * FROM qiita.environmental_package")

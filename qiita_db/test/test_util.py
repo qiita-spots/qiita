@@ -25,7 +25,8 @@ from qiita_db.util import (exists_table, exists_dynamic_table, scrub_data,
                            get_required_sample_info_status,
                            get_emp_status, purge_filepaths, get_filepath_id,
                            get_lat_longs, get_mountpoint,
-                           get_files_from_uploads_folders)
+                           get_files_from_uploads_folders,
+                           get_environmental_packages)
 
 
 @qiita_test_checker()
@@ -472,6 +473,29 @@ class DBUtilTests(TestCase):
         exp = []
         obs = get_files_from_uploads_folders("2")
         self.assertEqual(obs, exp)
+
+    def test_get_environmental_packages(self):
+        obs = get_environmental_packages()
+        exp = [['air', 'ep_air'],
+               ['built environment', 'ep_built_environment'],
+               ['host-associated', 'ep_host_associated'],
+               ['human-amniotic-fluid', 'ep_human_amniotic_fluid'],
+               ['human-associated', 'ep_human_associated'],
+               ['human-blood', 'ep_human_blood'],
+               ['human-gut', 'ep_human_gut'],
+               ['human-oral', 'ep_human_oral'],
+               ['human-skin', 'ep_human_skin'],
+               ['human-urine', 'ep_human_urine'],
+               ['human-vaginal', 'ep_human_vaginal'],
+               ['microbial mat/biofilm', 'ep_microbial_mat_biofilm'],
+               ['miscellaneous natural or artificial environment',
+                'ep_misc_artif'],
+               ['plant-associated', 'ep_plant_associated'],
+               ['sediment', 'ep_sediment'],
+               ['soil', 'ep_soil'],
+               ['wastewater/sludge', 'ep_wastewater_sludge'],
+               ['water', 'ep_water']]
+        self.assertEqual(sorted(obs), sorted(exp))
 
 
 class UtilTests(TestCase):
