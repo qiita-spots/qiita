@@ -72,21 +72,6 @@ function newInvestigationTypeChanged(rawDataID, isEdit){
         <br/>
         <a href="/study/upload/{{study_id}}">Upload files</a>
       {% end %}
-      <!-- {'mixs_compliant': True,
-      'reprocess': False,
-      'emp_person_id': None,
-      'funding': None,
-      'vamps_id': None,
-      'first_contact': '2014-09-22',
-      'principal_investigator_id': 1L,
-      'timeseries_type_id': 1L,
-      'study_abstract':
-      'Myrold_Alder_Fir',
-      'spatial_series': None,
-      'study_description': 'Myrold_Alder_Fir',
-       'portal_type_id': 3L,
-       'study_alias': 'Myrold_Alder_Fir',
-       'most_recent_contact': None, 'lab_person_id': None, -->
     </td>
     <td>
       {% if study_status == 'sandbox' and ste and qiita_config.require_approval %}
@@ -151,7 +136,7 @@ function newInvestigationTypeChanged(rawDataID, isEdit){
         <br/><br/>
         You could also select raw data from other studies that you have access to:
         <br/>
-        <select id="previous_raw_data" multiple="5">
+        <select multiple class="chosen-select" id="previous_raw_data" data-placeholder=" ">
           {% raw other_studies_rd %}
         </select>
       {% end %}
@@ -307,7 +292,7 @@ function newInvestigationTypeChanged(rawDataID, isEdit){
                       {% if pd.get_filepaths() %}
                         <tr>
                           <td style="padding:3px;">
-                            <a class="btn btn-primary" href="" onclick="alert('Coming soon!')">Preprocessing summary</a>
+                            <a class="btn btn-primary" href="/preprocessing_summary/{{pdi}}">Preprocessing summary</a>
                           </td>
                           <td rowspan="2" style="padding:3px;">
                             EBI status: {{pd.submitted_to_insdc_status()}}<br/>
@@ -377,6 +362,11 @@ function newInvestigationTypeChanged(rawDataID, isEdit){
 </div>
 
 <script type='text/javascript'>
+
+  $(document).ready(function() {
+        $("#previous_raw_data").chosen({width: "100%"});
+  });
+
   function process_sample_template() {
     if (confirm("Are you sure you want to (re)process the sample template?")) {
       var form = $("<form>")

@@ -8,7 +8,7 @@ r"""Qitta study handlers for the Tornado webserver.
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 from __future__ import division
-from collections import namedtuple
+from collections import namedtuple, defaultdict
 
 from tornado.web import authenticated, HTTPError, asynchronous
 from tornado.gen import coroutine, Task
@@ -102,14 +102,14 @@ def _build_study_info(studytype, user=None):
         return infolist
 
 
-def check_access(user, study, no_public=False):
+def check_access(user, study, no_public=False, raise_error=False):
     """make sure user has access to the study requested"""
     if not study.has_access(user, no_public):
-        if no_public:
-            return False
-        else:
+        if raise_error:
             raise HTTPError(403, "User %s does not have access to study %d" %
                                  (user.id, study.id))
+        else:
+            return False
     return True
 
 
@@ -201,6 +201,34 @@ class PublicStudiesHandler(BaseHandler):
         callback(_build_study_info("public"))
 
 
+class PreprocessingSummaryHandler(BaseHandler):
+    @authenticated
+    def get(self, preprocessed_data_id):
+        ppd_id = int(preprocessed_data_id)
+        ppd = PreprocessedData(ppd_id)
+        study = Study(ppd.study)
+        check_access(User(self.current_user), study, raise_error=True)
+
+        back_button_path = self.get_argument(
+            'back_button_path', '/study/description/%d' % study.id)
+
+        files_tuples = ppd.get_filepaths()
+        files = defaultdict(list)
+
+        for fp, fpt in files_tuples:
+            files[fpt].append(fp)
+
+        with open(files['log'][0], 'U') as f:
+            contents = f.read()
+            contents = contents.replace('\n', '<br/>')
+            contents = contents.replace('\t', '&nbsp;&nbsp;&nbsp;&nbsp;')
+
+        title = ('Preprocessed Data: %d' % ppd_id)
+
+        self.render('text_file.html', title=title, contents=contents,
+                    user=self.current_user, back_button_path=back_button_path)
+
+
 class StudyDescriptionHandler(BaseHandler):
     def get_raw_data(self, rdis, callback):
         """Get all raw data objects from a list of raw_data_ids"""
@@ -218,8 +246,7 @@ class StudyDescriptionHandler(BaseHandler):
         callback(d)
 
     def remove_add_study_template(self, raw_data, study_id, fp_rsp, callback):
-        """Removes prep templates, raw data and sample template and adds
-           a new one
+        """Replace prep templates, raw data, and sample template with a new one
         """
         for rd in raw_data():
             if PrepTemplate.exists((rd)):
@@ -250,8 +277,6 @@ class StudyDescriptionHandler(BaseHandler):
     @coroutine
     def display_template(self, study, msg, msg_level, tab_to_display=""):
         """Simple function to avoid duplication of code"""
-        # make sure study is accessible and exists, raise error if not
-
         # getting raw filepath_ types
         fts = [k.split('_', 1)[1].replace('_', ' ')
                for k in get_filepath_types() if k.startswith('raw_')]
@@ -298,7 +323,7 @@ class StudyDescriptionHandler(BaseHandler):
                     filepath_types=''.join(fts), ena_terms=''.join(ena_terms),
                     tab_to_display=tab_to_display,
                     level=msg_level, message=msg,
-                    can_upload=check_access(user, study, True),
+                    can_upload=check_access(user, study, no_public=True),
                     other_studies_rd=''.join(other_studies_rd),
                     user_defined_terms=user_defined_terms,
                     files=get_files_from_uploads_folders(str(study.id)))
@@ -311,7 +336,8 @@ class StudyDescriptionHandler(BaseHandler):
             # Study not in database so fail nicely
             raise HTTPError(404, "Study %s does not exist" % study_id)
         else:
-            check_access(User(self.current_user), study)
+            check_access(User(self.current_user), study,
+                         raise_error=True)
 
         self.display_template(study, "", 'info')
 
@@ -326,7 +352,8 @@ class StudyDescriptionHandler(BaseHandler):
             # Study not in database so fail nicely
             raise HTTPError(404, "Study %d does not exist" % study_id)
         else:
-            check_access(user, study)
+            check_access(User(self.current_user), study,
+                         raise_error=True)
 
         # vars to add sample template
         sample_template = self.get_argument('sample_template', None)

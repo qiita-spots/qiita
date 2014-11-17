@@ -1,0 +1,13 @@
+{% extends sitebase.html %}
+{% block content %}
+
+{% if back_button_path %}
+    <a class="btn btn-primary" href="{{ back_button_path }}">Back to Study Description</a>
+{% end %}
+
+<h1>{{ title }}</h1>
+<p>
+{% raw contents %}
+</p>
+
+{% end %}

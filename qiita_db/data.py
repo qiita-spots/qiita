@@ -81,7 +81,6 @@ from datetime import datetime
 from os.path import join
 from functools import partial
 
-
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from .base import QiitaObject
 from .logger import LogEntry
@@ -170,12 +169,12 @@ class BaseData(QiitaObject):
         self._set_link_filepaths_status("idle")
 
     def get_filepaths(self):
-        r"""Returns the filepath associated with the data object
+        r"""Returns the filepaths and filetypes associated with the data object
 
         Returns
         -------
         list of tuples
-            A list of (path, filetype id) with all the paths associated with
+            A list of (path, filetype) with all the paths associated with
             the current data
         """
         self._check_subclass()
@@ -184,7 +183,7 @@ class BaseData(QiitaObject):
         # Retrieve all the (path, id) tuples related with the current data
         # object. We need to first check the _data_filepath_table to get the
         # filepath ids of the filepath associated with the current data object.
-        # We then can query the filepath table to get those paths/
+        # We then can query the filepath table to get those paths.
         db_paths = conn_handler.execute_fetchall(
             "SELECT filepath, filepath_type_id FROM qiita.{0} WHERE "
             "filepath_id IN (SELECT filepath_id FROM qiita.{1} WHERE "
@@ -513,6 +512,10 @@ class PreprocessedData(BaseData):
     ----------
     raw_data
     study
+    prep_template
+    ebi_submission_accession
+    ebi_study_accession
+    files
 
     Methods
     -------
