@@ -158,6 +158,22 @@ class CreateStudyForm(Form):
                                          coerce=lambda x: x)
     lab_person = SelectField('Lab Person', coerce=lambda x: x)
 
+    def __init__(self, study=None, **kwargs):
+        super(CreateStudyForm, self).__init__(**kwargs)
+        # Get people from the study_person table to populate the PI and
+        # lab_person fields
+        choices = [('', '')]
+        for study_person in StudyPerson.iter():
+            person = "{}, {}".format(study_person.name,
+                                     study_person.affiliation)
+            choices.append((study_person.id, person))
+
+        self.lab_person.choices = choices
+        self.principal_investigator.choices = choices
+
+        if study:
+            print "YAY:", study.id
+
 
 class PrivateStudiesHandler(BaseHandler):
     @authenticated
@@ -493,19 +509,18 @@ class StudyDescriptionHandler(BaseHandler):
 
 class CreateStudyHandler(BaseHandler):
     @authenticated
-    def get(self):
-        creation_form = CreateStudyForm()
+    def get(self, study_id=None):
+        study = None
+        if study_id:
+            try:
+                study = Study(int(study_id))
+            except QiitaDBUnknownIDError:
+                # Study not in database so fail nicely
+                raise HTTPError(404, "Study %s does not exist" % study_id)
+            else:
+                check_access(User(self.current_user), study)
 
-        # Get people from the study_person table to populate the PI and
-        # lab_person fields
-        choices = [('', '')]
-        for study_person in StudyPerson.iter():
-            person = "{}, {}".format(study_person.name,
-                                     study_person.affiliation)
-            choices.append((study_person.id, person))
-
-        creation_form.lab_person.choices = choices
-        creation_form.principal_investigator.choices = choices
+        creation_form = CreateStudyForm(study=study)
 
         # TODO: set the choices attributes on the environmental_package field
         self.render('create_study.html', user=self.current_user,
