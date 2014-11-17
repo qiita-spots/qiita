@@ -28,7 +28,7 @@ from qiita_db.ontology import Ontology
 ebi_actions = ['ADD', 'VALIDATE', 'MODIFY']
 
 
-def submit_EBI(preprocessed_data_id, action, send, fastq_dir_fp):
+def submit_EBI(preprocessed_data_id, action, send, fastq_dir_fp=None):
     """Submit a preprocessed data to EBI
 
     Parameters
@@ -75,7 +75,7 @@ def submit_EBI(preprocessed_data_id, action, send, fastq_dir_fp):
                          "is neither one of the official terms nor one of the "
                          "user-defined terms in the ENA ontology")
 
-    if fastq_dir_fp:
+    if fastq_dir_fp is not None:
         # If the user specifies a FASTQ directory, use it
 
         # Set demux_samples to None so that MetadataTemplate.to_file will put
