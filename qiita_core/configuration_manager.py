@@ -112,17 +112,15 @@ class ConfigurationManager(object):
         with open(conf_fp, 'U') as conf_file:
             config.readfp(conf_file)
 
-        _expected_sections = {'main', 'ipython', 'redis', 'postgres',
-                              'smtp', 'ebi'}
-        if set(config.sections()) != _expected_sections:
-            missing = _expected_sections - set(config.sections())
+        _required_sections = {'main', 'redis', 'postgres', 'smtp', 'ebi'}
+        if not _required_sections.issubset(set(config.sections())):
+            missing = _required_sections - set(config.sections())
             raise MissingConfigSection(', '.join(missing))
 
         self._get_main(config)
         self._get_smtp(config)
         self._get_postgres(config)
         self._get_redis(config)
-        self._get_ipython(config)
         self._get_ebi(config)
 
     def _get_main(self, config):
@@ -177,19 +175,6 @@ class ConfigurationManager(object):
         self.redis_password = sec_get('PASSWORD')
         self.redis_db = sec_getint('DB')
         self.redis_port = sec_getint('PORT')
-
-    def _get_ipython(self, config):
-        """Get the configuration of the ipython section"""
-        sec_get = partial(config.get, 'ipython')
-        sec_getint = partial(config.getint, 'ipython')
-
-        self.ipyc_demo = sec_get('DEMO_CLUSTER')
-        self.ipyc_reserved = sec_get('RESERVED_CLUSTER')
-        self.ipyc_general = sec_get('GENERAL_CLUSTER')
-
-        self.ipyc_demo_n = sec_getint('DEMO_CLUSTER_SIZE')
-        self.ipyc_reserved_n = sec_getint('RESERVED_CLUSTER_SIZE')
-        self.ipyc_general_n = sec_getint('GENERAL_CLUSTER_SIZE')
 
     def _get_smtp(self, config):
         sec_get = partial(config.get, 'smtp')
