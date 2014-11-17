@@ -123,11 +123,12 @@ def submit_EBI(preprocessed_data_id, action, send, fastq_dir_fp):
         raise IOError('The output folder already exists: %s' %
                       output_dir)
 
-    submission = EBISubmission.from_templates_and_per_sample_fastqs(
-        preprocessed_data_id_str, study.title, study.info['study_abstract'],
-        investigation_type, sample_template, prep_template,
-        fastq_dir_fp, new_investigation_type=new_investigation_type,
-        pmids=study.pmids)
+    with open(samp_fp, 'U') as st, open(prep_fp, 'U') as pt:
+        submission = EBISubmission.from_templates_and_per_sample_fastqs(
+            preprocessed_data_id_str, study.title,
+            study.info['study_abstract'], investigation_type, st, pt,
+            fastq_dir_fp, new_investigation_type=new_investigation_type,
+            pmids=study.pmids)
 
     submission.write_all_xml_files(study_fp, sample_fp, experiment_fp, run_fp,
                                    submission_fp, action)
