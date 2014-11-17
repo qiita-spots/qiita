@@ -19,7 +19,7 @@ from qiita_db.util import get_mountpoint
 @qiita_test_checker()
 class ReferenceTests(TestCase):
     def setUp(self):
-        self.name = "Fake GreenGenes"
+        self.name = "Fake Greengenes"
         self.version = "13_8"
 
         fd, self.seqs_fp = mkstemp(suffix="_seqs.fna")
