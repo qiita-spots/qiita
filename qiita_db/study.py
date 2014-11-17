@@ -146,7 +146,7 @@ class Study(QiitaStatusObject):
     def _lock_non_sandbox(self, conn_handler):
         """Raises QiitaDBStatusError if study is public"""
         if self.status != 'sandbox':
-            raise QiitaDBStatusError("Illegal operation on public study!")
+            raise QiitaDBStatusError("Illegal operation on non-sandbox study!")
 
     def _status_setter_checks(self, conn_handler):
         r"""Perform a check to make sure not setting status away from public
