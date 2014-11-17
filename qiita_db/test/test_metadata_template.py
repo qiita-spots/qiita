@@ -7,6 +7,7 @@
 # -----------------------------------------------------------------------------
 
 from future.builtins import zip
+from six import StringIO
 from unittest import TestCase, main
 from datetime import datetime
 from tempfile import mkstemp
@@ -31,7 +32,8 @@ from qiita_db.util import exists_table, get_db_files_base_dir
 from qiita_db.metadata_template import (_get_datatypes, _as_python_types,
                                         MetadataTemplate, SampleTemplate,
                                         PrepTemplate, BaseSample, PrepSample,
-                                        Sample, _prefix_sample_names_with_id)
+                                        Sample, _prefix_sample_names_with_id,
+                                        load_template_to_dataframe)
 
 
 class TestUtilMetadataMap(TestCase):
@@ -1087,8 +1089,7 @@ class TestPrepTemplate(TestCase):
         with self.assertRaises(QiitaDBColumnError):
             PrepTemplate.create(self.metadata, self.new_raw_data,
                                 self.test_study, self.data_type_id,
-                                'Not a term',
-                                investigation_type_ontology='ENA_test')
+                                'Not a term')
 
     def test_delete_error(self):
         """Try to delete a prep template that already has preprocessed data"""
@@ -1337,30 +1338,32 @@ class TestPrepTemplate(TestCase):
     def test_investigation_type_setter(self):
         """Able to update the investigation type"""
         pt = PrepTemplate.create(self.metadata, self.new_raw_data,
-                                 self.test_study, self.data_type_id,
-                                 investigation_type_ontology='ENA_test')
+                                 self.test_study, self.data_type_id)
         self.assertEqual(pt.investigation_type, None)
         pt.investigation_type = "Other"
         self.assertEqual(pt.investigation_type, 'Other')
         with self.assertRaises(QiitaDBColumnError):
             pt.investigation_type = "should fail"
 
-    def test_investigation_type_ontology(self):
-        pt = PrepTemplate(1)
-        self.assertEqual(pt._investigation_type_ontology, 'ENA')
-
-    def test_investigation_type_ontology_fails(self):
-        # this should fail because ENA is not valid in the test environments
-        pt = PrepTemplate(1)
-        with self.assertRaises(IncompetentQiitaDeveloperError):
-            pt.investigation_type = 'RNASeq'
-
     def test_investigation_type_instance_setter(self):
         pt = PrepTemplate(1)
-        # we need to check against the ontology test table
-        pt._investigation_type_ontology = 'ENA_test'
         pt.investigation_type = 'RNASeq'
         self.assertEqual(pt.investigation_type, 'RNASeq')
+
+
+class TestUtilities(TestCase):
+
+    def test_load_template_to_dataframe(self):
+        obs = load_template_to_dataframe(StringIO(EXP_SAMPLE_TEMPLATE))
+        exp = pd.DataFrame.from_dict(SAMPLE_TEMPLATE_DICT_FORM)
+        exp.index.name = 'sample_name'
+        assert_frame_equal(obs, exp)
+
+    def test_load_template_to_dataframe_scrubbing(self):
+        obs = load_template_to_dataframe(StringIO(EXP_SAMPLE_TEMPLATE_SPACES))
+        exp = pd.DataFrame.from_dict(SAMPLE_TEMPLATE_DICT_FORM)
+        exp.index.name = 'sample_name'
+        assert_frame_equal(obs, exp)
 
 
 EXP_SAMPLE_TEMPLATE = (
@@ -1378,6 +1381,55 @@ EXP_SAMPLE_TEMPLATE = (
     "True\tNotIdentified\t4.8\t4.41\tlocation1\treceived\ttype1\t"
     "Value for sample 3\n")
 
+EXP_SAMPLE_TEMPLATE_SPACES = (
+    "sample_name\tcollection_timestamp\tdescription\thas_extracted_data\t"
+    "has_physical_specimen\thost_subject_id\tlatitude\tlongitude\t"
+    "physical_location\trequired_sample_info_status\tsample_type\t"
+    "str_column\n"
+    "2.Sample1         \t2014-05-29 12:24:51\tTest Sample 1\tTrue\tTrue\t"
+    "NotIdentified\t42.42\t41.41\tlocation1\treceived\ttype1\t"
+    "Value for sample 1\n"
+    "2.Sample2  \t2014-05-29 12:24:51\t"
+    "Test Sample 2\tTrue\tTrue\tNotIdentified\t4.2\t1.1\tlocation1\treceived\t"
+    "type1\tValue for sample 2\n"
+    "2.Sample3\t2014-05-29 12:24:51\tTest Sample 3\tTrue\t"
+    "True\tNotIdentified\t4.8\t4.41\tlocation1\treceived\ttype1\t"
+    "Value for sample 3\n")
+
+SAMPLE_TEMPLATE_DICT_FORM = {
+    'collection_timestamp': {'2.Sample1': '2014-05-29 12:24:51',
+                             '2.Sample2': '2014-05-29 12:24:51',
+                             '2.Sample3': '2014-05-29 12:24:51'},
+    'description': {'2.Sample1': 'Test Sample 1',
+                    '2.Sample2': 'Test Sample 2',
+                    '2.Sample3': 'Test Sample 3'},
+    'has_extracted_data': {'2.Sample1': True,
+                           '2.Sample2': True,
+                           '2.Sample3': True},
+    'has_physical_specimen': {'2.Sample1': True,
+                              '2.Sample2': True,
+                              '2.Sample3': True},
+    'host_subject_id': {'2.Sample1': 'NotIdentified',
+                        '2.Sample2': 'NotIdentified',
+                        '2.Sample3': 'NotIdentified'},
+    'latitude': {'2.Sample1': 42.420000000000002,
+                 '2.Sample2': 4.2000000000000002,
+                 '2.Sample3': 4.7999999999999998},
+    'longitude': {'2.Sample1': 41.409999999999997,
+                  '2.Sample2': 1.1000000000000001,
+                  '2.Sample3': 4.4100000000000001},
+    'physical_location': {'2.Sample1': 'location1',
+                          '2.Sample2': 'location1',
+                          '2.Sample3': 'location1'},
+    'required_sample_info_status': {'2.Sample1': 'received',
+                                    '2.Sample2': 'received',
+                                    '2.Sample3': 'received'},
+    'sample_type': {'2.Sample1': 'type1',
+                    '2.Sample2': 'type1',
+                    '2.Sample3': 'type1'},
+    'str_column': {'2.Sample1': 'Value for sample 1',
+                   '2.Sample2': 'Value for sample 2',
+                   '2.Sample3': 'Value for sample 3'}}
 
 EXP_PREP_TEMPLATE = (
     'sample_name\tbarcodesequence\tcenter_name\tcenter_project_name\t'

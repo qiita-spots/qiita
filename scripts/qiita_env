@@ -12,7 +12,7 @@ import click
 
 from qiita_db.environment_manager import (
     make_environment, drop_environment, clean_test_environment,
-    DFLT_BASE_WORK_FOLDER, ENVIRONMENTS, CLUSTERS, patch as _patch)
+    CLUSTERS, patch as _patch)
 from qiita_core.environment_manager import (
     start_cluster as _start_cluster, stop_cluster as _stop_cluster)
 from qiita_core.configuration_manager import ConfigurationManager
@@ -43,7 +43,7 @@ def start_cluster(clusters):
 
 @env.command()
 @click.argument('clusters', required=True, type=click.Choice(CLUSTERS),
-                nargs=-1) 
+                nargs=-1)
 def stop_cluster(clusters):
     """Stop a compute environment"""
     for cluster in clusters:
@@ -58,7 +58,8 @@ def stop_cluster(clusters):
 
 @env.command()
 @click.option('--load-ontologies/--no-load-ontologies',
-              default=True, help='If True, ontologies will be loaded')
+              default=True, help='If True, ontologies will be loaded. '
+              'Cannot be True if this is a test environment.')
 @click.option('--download-reference/--no-download-reference',
               default=False, help='If True, greengenes reference files will '
                                   'be downloaded')
