@@ -1,3 +1,10 @@
+# -----------------------------------------------------------------------------
+# Copyright (c) 2014--, The Qiita Development Team.
+#
+# Distributed under the terms of the BSD 3-clause License.
+#
+# The full license is in the file LICENSE, distributed with this software.
+# -----------------------------------------------------------------------------
 from os.path import join
 from tempfile import mkdtemp
 from gzip import open as gzopen
@@ -19,6 +26,35 @@ from qiita_db.data import RawData
 from qiita_db.ontology import Ontology
 
 
+def moiable(f):
+    """Upstream decorator from moi 0.1.0, see #10
+
+    Attempt to call the function with moi specific keyword arguments, fallback
+    if a TypeError is thrown
+    """
+    # cannot source these from moi at this time as they are not defined out
+    # side of _redis_wrap
+    moi_kwargs = ['update_status', 'moi_context']
+
+    def func(*args, **kwargs):
+        # first attempt
+        try:
+            return f(*args, **kwargs)
+        except TypeError:
+            pass
+
+        # scrub moi kwargs
+        if kwargs is not None:
+            for k in moi_kwargs:
+                if k in kwargs:
+                    kwargs.pop(k)
+
+        # second attempt
+        return f(*args, **kwargs)
+    return func
+
+
+@moiable
 def preprocessor(study_id, prep_template_id, param_id, param_constructor):
     """Dispatch for preprocessor work"""
     study = Study(study_id)
@@ -36,6 +72,7 @@ def preprocessor(study_id, prep_template_id, param_id, param_constructor):
     return preprocess_out
 
 
+@moiable
 def submit_to_ebi(preprocessed_data_id, submission_type):
     """Submit a study to EBI"""
     from qiita_db.data import PreprocessedData
@@ -99,6 +136,7 @@ def submit_to_ebi(preprocessed_data_id, submission_type):
     return study_acc, submission_acc
 
 
+@moiable
 def run_analysis(user_id, analysis_id, commands, comm_opts=None,
                  rarefaction_depth=None):
     """Run a meta-analysis"""
@@ -107,6 +145,7 @@ def run_analysis(user_id, analysis_id, commands, comm_opts=None,
     return ar(user_id, analysis, commands, comm_opts, rarefaction_depth)
 
 
+@moiable
 def add_files_to_raw_data(raw_data_id, filepaths):
     """Add files to raw data
 
@@ -116,6 +155,7 @@ def add_files_to_raw_data(raw_data_id, filepaths):
     rd.add_filepaths(filepaths)
 
 
+@moiable
 def unlink_all_files(raw_data_id):
     """Removes all files from raw data
 
