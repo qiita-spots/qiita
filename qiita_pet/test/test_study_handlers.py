@@ -1,8 +1,79 @@
 from unittest import main
+from collections import namedtuple
 
 from qiita_pet.test.tornado_test_base import TestHandlerBase
-from qiita_db.study import StudyPerson
+from qiita_db.study import StudyPerson, Study
 from qiita_db.util import get_count, check_count
+from qiita_db.user import User
+from qiita_pet.handlers.study_handlers import (
+    _get_shared_links_for_study, _build_study_info)
+
+class TestHelpers(TestHandlerBase):
+    database = True
+
+    def test_get_shared_links_for_study(self):
+        obs = _get_shared_links_for_study(Study(1))
+        exp = '<a target="_blank" href="mailto:shared@foo.bar">Shared</a>'
+        self.assertEqual(obs, exp)
+
+    def test_build_study_info(self):
+        obs = _build_study_info('public', User('test@foo.bar'))
+        StudyTuple = namedtuple('StudyInfo', 'id title meta_complete '
+                                'num_samples_collected shared num_raw_data pi '
+                                'pmids owner status')
+        exp = [
+            StudyTuple(
+                id=1,
+                title='Identification of the Microbiomes for Cannabis Soils',
+                meta_complete=True, num_samples_collected=27,
+                shared='<a target="_blank" href="mailto:shared@foo.bar">'
+                       'Shared</a>',
+                num_raw_data=2,
+                pi='<a target="_blank" href="mailto:PI_dude@foo.bar">'
+                   'PIDude</a>',
+                pmids='<a target="_blank" href="http://www.ncbi.nlm.nih.gov/'
+                      'pubmed/123456">123456</a>, '
+                      '<a target="_blank" href="http://www.ncbi.nlm.nih.gov/'
+                      'pubmed/7891011">7891011</a>',
+                owner='<a target="_blank" href="mailto:test@foo.bar">'
+                      'test@foo.bar</a>',
+                status='public')]
+        self.assertEqual(obs, exp)
+
+    def test_build_study_info_new_study(self):
+        info = {
+            'timeseries_type_id': 1,
+            'portal_type_id': 1,
+            'lab_person_id': None,
+            'principal_investigator_id': 3,
+            'metadata_complete': False,
+            'mixs_compliant': True,
+            'study_description': 'desc',
+            'study_alias': 'alias',
+            'study_abstract': 'abstract'}
+        user = User('shared@foo.bar')
+
+        Study.create(user, 'test_study_1', efo=[1], info=info)
+
+        obs = _build_study_info('private', user)
+
+        StudyTuple = namedtuple('StudyInfo', 'id title meta_complete '
+                                'num_samples_collected shared num_raw_data pi '
+                                'pmids owner status')
+        exp = [
+            StudyTuple(
+                id=2,
+                title='test_study_1',
+                meta_complete=False, num_samples_collected=None,
+                shared='',
+                num_raw_data=0,
+                pi='<a target="_blank" href="mailto:PI_dude@foo.bar">'
+                   'PIDude</a>',
+                pmids='',
+                owner='<a target="_blank" href="mailto:shared@foo.bar">'
+                      'shared@foo.bar</a>',
+                status='sandbox')]
+        self.assertEqual(obs, exp)
 
 
 class TestCreateStudyForm(TestHandlerBase):
