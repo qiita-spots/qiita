@@ -972,7 +972,6 @@ class EBISubmission(object):
             print curl_result
             print "SUCCESS"
 
-            # TODO: insert these values into the database
             accessions = search('<STUDY accession="(?P<study>.+?)".*?'
                                 '<SUBMISSION accession="(?P<submission>.+?)"',
                                 curl_result)
@@ -990,7 +989,7 @@ class EBISubmission(object):
             else:
                 LogEntry.create('Runtime', ("However, the accession numbers "
                                             "could not be found in the output "
-                                            " above."))
+                                            "above."))
                 print ("However, the accession numbers could not be found in "
                        "the output above.")
         else:
