@@ -14,7 +14,7 @@ from psycopg2 import OperationalError
 from qiita_db.util import (get_filepath_types, get_filetypes,
                            get_data_types,
                            get_processed_params_tables,
-                           get_preprocessed_params_tables, convert_to_id)
+                           get_preprocessed_params_tables)
 from qiita_db.commands import (load_sample_template_from_cmd,
                                load_study_from_cmd,
                                load_raw_data_cmd, load_processed_data_cmd,
@@ -22,7 +22,6 @@ from qiita_db.commands import (load_sample_template_from_cmd,
                                load_prep_template_from_cmd)
 from qiita_db.sql_connection import SQLConnectionHandler
 from qiita_db.exceptions import QiitaDBConnectionError
-from qiita_db.ontology import Ontology
 from qiita_core.configuration_manager import ConfigurationManager
 from qiita_ware.commands import ebi_actions, submit_EBI as _submit_EBI
 
