@@ -515,6 +515,29 @@ class TestStudy(TestCase):
         exp = ['123456', '7891011', '4544444']
         self.assertEqual(self.study.pmids, exp)
 
+    def test_environmental_packages(self):
+        obs = self.study.environmental_packages
+        exp = ['soil', 'plant-associated']
+        self.assertEqual(sorted(obs), sorted(exp))
+
+    def test_environmental_packages_setter(self):
+        obs = self.study.environmental_packages
+        exp = ['soil', 'plant-associated']
+        self.assertEqual(sorted(obs), sorted(exp))
+
+        new_values = ['air', 'human-oral']
+        self.study.environmental_packages = new_values
+        obs = self.study.environmental_packages
+        self.assertEqual(sorted(obs), sorted(new_values))
+
+    def test_environmental_packages_setter_typeerror(self):
+        with self.assertRaises(TypeError):
+            self.study.environmental_packages = 'air'
+
+    def test_environmental_packages_setter_valueerror(self):
+        with self.assertRaises(ValueError):
+            self.study.environmental_packages = ['air', 'not a package']
+
 
 if __name__ == "__main__":
     main()

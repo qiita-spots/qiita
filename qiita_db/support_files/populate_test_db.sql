@@ -39,6 +39,9 @@ INSERT INTO qiita.study (email, study_status_id, emp_person_id, first_contact,
 	'This is a preliminary study to examine the microbiota associated with the Cannabis plant. Soils samples from the bulk soil, soil associated with the roots, and the rhizosphere were extracted and the DNA sequenced. Roots from three independent plants of different strains were examined. These roots were obtained November 11, 2011 from plants that had been harvested in the summer. Future studies will attempt to analyze the soils and rhizospheres from the same location at different time points in the plant lifecycle.',
 	NULL);
 
+-- Add some environmental packages to the study
+INSERT INTO qiita.study_environmental_package (study_id, environmental_package_name) VALUES (1, 'soil'), (1, 'plant-associated');
+
 -- Insert study_users (share study 1 with shared user)
 INSERT INTO qiita.study_users (study_id, email) VALUES (1, 'shared@foo.bar');
 
