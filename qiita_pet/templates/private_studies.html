@@ -107,12 +107,8 @@ function modify_sharing(study_id) {
                 <td><span class="glyphicon glyphicon-remove"></span></td>
                 {% end %}
                 {# Shared #}
-                {% if s.status == 'public' %}
-                <td>This study is public</td>
-                {% elif s.status == 'sandbox' %}
-                <td>This study is sandboxed</td>
-                {% elif s.status == 'awaiting_approval' %}
-                <td>This study is awaiting approval</td>
+                {% if s.status in {'public', 'sandbox', 'awaiting_approval'} %}
+                <td>Not available</td>
                 {% else %}
                 <td><span id="shared_html_{{ s.id }}">{% raw s.shared %}</span>
                 <br/>
