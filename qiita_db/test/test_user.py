@@ -251,6 +251,7 @@ class UserTest(TestCase):
     def test_change_pass(self):
         self.user._change_pass("newpassword")
         self._check_pass("newpassword")
+        self.assertIsNone(self.user.info["pass_reset_code"])
 
     def test_change_pass_short(self):
         with self.assertRaises(IncorrectPasswordError):
