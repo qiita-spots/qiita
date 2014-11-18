@@ -856,3 +856,23 @@ def get_environmental_packages(conn_handler=None):
     """
     conn = conn_handler if conn_handler else SQLConnectionHandler()
     return conn.execute_fetchall("SELECT * FROM qiita.environmental_package")
+
+
+def get_timeseries_types(conn_handler=None):
+    """Get the list of available timeseries types
+
+    Parameters
+    ----------
+    conn_handler : SQLConnectionHandler, optional
+        The handler connected to the database
+
+    Returns
+    -------
+    list of (str, str)
+        The available environmental packages. The first string is the
+        environmental package name and the second string is the table where
+        the metadata for the environmental package is stored
+    """
+    conn = conn_handler if conn_handler else SQLConnectionHandler()
+    return conn.execute_fetchall(
+        "SELECT * FROM qiita.timeseries_type ORDER BY timeseries_type_id")

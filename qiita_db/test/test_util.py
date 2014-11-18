@@ -26,7 +26,7 @@ from qiita_db.util import (exists_table, exists_dynamic_table, scrub_data,
                            get_emp_status, purge_filepaths, get_filepath_id,
                            get_lat_longs, get_mountpoint,
                            get_files_from_uploads_folders,
-                           get_environmental_packages)
+                           get_environmental_packages, get_timeseries_types)
 
 
 @qiita_test_checker()
@@ -496,6 +496,20 @@ class DBUtilTests(TestCase):
                ['wastewater/sludge', 'ep_wastewater_sludge'],
                ['water', 'ep_water']]
         self.assertEqual(sorted(obs), sorted(exp))
+
+    def test_get_timeseries_types(self):
+        obs = get_timeseries_types()
+        exp = [[1, 'None', 'None'],
+               [2, 'real', 'single intervention'],
+               [3, 'real', 'multiple intervention'],
+               [4, 'real', 'combo intervention'],
+               [5, 'pseudo', 'single intervention'],
+               [6, 'pseudo', 'multiple intervention'],
+               [7, 'pseudo', 'combo intervention'],
+               [8, 'mixed', 'single intervention'],
+               [9, 'mixed', 'multiple intervention'],
+               [10, 'mixed', 'combo intervention']]
+        self.assertEqual(obs, exp)
 
 
 class UtilTests(TestCase):
