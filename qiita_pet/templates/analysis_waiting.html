@@ -8,7 +8,7 @@
         noerror = true;
 
         websocket.onopen = function() {
-            websocket.send(JSON.stringify({'user': '{{user}}'}));
+            websocket.send(JSON.stringify({'user': '{{current_user}}'}));
         };
         websocket.onmessage = function(evt) {
             message = JSON.parse(evt.data);

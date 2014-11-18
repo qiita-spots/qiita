@@ -21,6 +21,7 @@
   </head>
   <body style="padding-top: 65px; height: 100%">
   {% set level = globals().get('level', '') %}
+  {% set user_level = globals().get('user_level', '') %}
   {% set message = globals().get('message', '') %}
 
   {% if message != '' %}
@@ -56,7 +57,7 @@
               </a>
             </li>
             <!-- meta-analysis menu -->
-            {% if user %}
+            {% if current_user %}
             <li class="dropdown">
               <a href="/analysis/1" data-toggle="dropdown" class="dropdown-toggle">Meta Analysis<b class="caret"></b></a>
               <ul class="dropdown-menu">
@@ -72,6 +73,22 @@
                 <li><a href="/study/public/">View Public Studies</a></li>
               </ul>
             </li>
+              {% if user_level == 'admin' %}
+            <li class="dropdown">
+              Admin<b class="caret"></b>
+              <ul class="dropdown-menu">
+                <li><a href="/admin/error/">View Errors</a></li>
+                <li><a href="/admin/approve/">View Studies awaiting approval</a></li>
+              </ul>
+            </li>
+              {% elif user_level == 'dev' %}
+            <li class="dropdown">
+              Dev<b class="caret"></b>
+              <ul class="dropdown-menu">
+                <li><a href="/admin/error/">View Errors</a></li>
+              </ul>
+            </li>
+              {% end %}
             {% end %}
             <!-- generic elements -->
             <li>
@@ -85,10 +102,10 @@
             </li>
           </ul>
           <!-- show user name and logout button if there's a user logged in -->
-          {% if user %}
+          {% if current_user %}
           <ul class="nav navbar-nav pull-right">
             <li>
-              <a href="/profile/">Welcome {{user}}</a>
+              <a href="/profile/">Welcome {{current_user}}</a>
             </li>
             <li class="pull-right">
               <a href="/auth/logout/">Log Out</a>
