@@ -68,12 +68,12 @@ function newInvestigationTypeChanged(rawDataID, isEdit){
       Samples: {{study_info['number_samples_promised']}}/{{study_info['number_samples_collected']}}
       <br/>
       Metadata: {{study_info['metadata_complete']}}
-      {% if can_upload and study_status != 'sandbox' %}
+      {% if can_upload and study_status == 'sandbox' %}
         <br/>
         <a href="/study/upload/{{study_id}}">Upload files</a>
       {% end %}
     </td>
-    <td>
+    <td style='padding: 10px;'>
       {% if study_status == 'sandbox' and ste and qiita_config.require_approval %}
         <a class="btn btn-primary" onClick="request_approval();">Request Study Approval</a>
       {% elif (user_level == 'admin' and study_status == 'awaiting_approval') or not qiita_config.require_approval %}
@@ -114,7 +114,9 @@ function newInvestigationTypeChanged(rawDataID, isEdit){
       {% end %}
     </select>
     <br/><br/>
+    {% if study_status == 'sandbox' %}
     <a class="btn btn-primary" onclick="process_sample_template();">Process sample template</a>
+    {% end %}
 
     <br/><br/>
     {% if ste %}
@@ -198,7 +200,9 @@ function newInvestigationTypeChanged(rawDataID, isEdit){
               </li>
             </ol>
             <br/>
+            {% if study_status == 'sandbox' %}
             <a class="btn btn-primary" onclick="add_prep_template({{r.id}});">Add prep template</a>
+            {% end %}
             <br/>
             <hr/>
             <h4>Prep templates uploaded</h4>
@@ -354,7 +358,9 @@ function newInvestigationTypeChanged(rawDataID, isEdit){
             {% end %}
             </table>
             <br/>
+            {% if study_status == 'sandbox' %}
             <a onclick="link_files_to_raw_data({{r.id}});" {% if r.link_filepaths_status in {'linking', 'unlinking'} %} class="btn btn-default" style=" pointer-events: none; cursor: default; background-color:grey;" {% else %} class="btn btn-primary" {% end %}>Link raw files to: {{r.filetype}} (ID: {{r.id}})</a>
+            {% end %}
           </td>
         </table>
     </div>
