@@ -89,10 +89,10 @@ class ForgotPasswordHandler(BaseHandler):
                            "the following URL to reset your password: "
                            "http://qiita.colorado.edu/auth/reset/%s" %
                            info["pass_reset_code"])
-                message = ("Password reset. Check your email for the reset "
-                           "code.")
+                message = ("Check your email for the reset code.")
             except Exception as e:
-                message = "Unable to send email. Error has been registered."
+                message = ("Unable to send email. Error has been registered. "
+                           "Your password has not been reset.")
                 level = "danger"
                 LogEntry.create('Runtime', "Unable to send forgot password "
                                 "email: %s" % str(e), info={'User': user.id})
@@ -107,7 +107,10 @@ class ChangeForgotPasswordHandler(BaseHandler):
 
     def post(self, code):
         message = ""
-        level = "success"
+        level = ""
+        page = "change_lost_pass.html"
+        user = None
+
         try:
             user = User(self.get_argument("email"))
         except QiitaDBUnknownIDError:
@@ -116,12 +119,15 @@ class ChangeForgotPasswordHandler(BaseHandler):
         else:
             newpass = self.get_argument("newpass")
             changed = user.change_forgot_password(code, newpass)
+            user = self.current_user
+
             if changed:
                 message = ("Password reset successful. Please log in to "
                            "continue.")
+                level = "success"
+                page = "index.html"
             else:
                 message = "Unable to reset password"
                 level = "danger"
 
-        self.render("change_lost_pass.html", user=None,
-                    message=message, level=level, code=code)
+        self.render(page, user=user, message=message, level=level, code=code)
