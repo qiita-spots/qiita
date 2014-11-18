@@ -76,8 +76,7 @@ function newInvestigationTypeChanged(rawDataID, isEdit){
     <td>
       {% if study_status == 'sandbox' and ste and qiita_config.require_approval %}
         <a class="btn btn-primary" onClick="request_approval();">Request Study Approval</a>
-      {% end %}
-      {% if (user_level == 'admin' and study_status == 'awaiting_approval') or not qiita_config.require_approval %}
+      {% elif (user_level == 'admin' and study_status == 'awaiting_approval') or not qiita_config.require_approval %}
         <a class="btn btn-primary" onClick="approve_study();">Approve Study</a>
       {% elif study_status == 'private' %}
        <a class="btn btn-primary" onClick="make_public();">Make Public</a>
@@ -96,7 +95,7 @@ function newInvestigationTypeChanged(rawDataID, isEdit){
 <!-- Nav tabs -->
 <ul class="nav nav-tabs" role="tablist" id="myTab">
   <li class="active"><a href="#add_sample_template" role="tab" data-toggle="tab">Add sample template</a></li>
-  {% if ste and study_status in {'sandbox', 'awaiting_approval'} %}
+  {% if ste and study_status == 'sandbox' %}
     <li><a href="#add_raw_data" role="tab" data-toggle="tab">Add raw data</a></li>
   {% end %}
 
@@ -125,7 +124,7 @@ function newInvestigationTypeChanged(rawDataID, isEdit){
     {% end %}
   </div>
 
-  {% if ste and study_status != 'public' %}
+  {% if ste and study_status == 'sandbox' %}
     <div class="tab-pane" id="add_raw_data" style="padding: 10px;">
       What file type is your raw data?
       <select id="filetype">
