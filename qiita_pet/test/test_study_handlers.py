@@ -119,6 +119,8 @@ class TestStudyEditHandler(TestHandlerBase):
 
 
 class TestCreateStudyAJAX(TestHandlerBase):
+    database = True
+
     def test_get(self):
 
         response = self.get('/check_study/', {'study_title': 'notreal'})
