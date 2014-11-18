@@ -65,6 +65,8 @@ function newInvestigationTypeChanged(rawDataID, isEdit){
     <td style="vertical-align: middle; text-align:left; width: 50%;" colspan="2">
       <b>{{study_title}} ({{study_info['study_alias']}})</b>
       <br/>
+      Status: {{study_status}} 
+      <br />
       Samples: {{study_info['number_samples_promised']}}/{{study_info['number_samples_collected']}}
       <br/>
       Metadata: {{study_info['metadata_complete']}}
@@ -94,8 +96,8 @@ function newInvestigationTypeChanged(rawDataID, isEdit){
 
 <!-- Nav tabs -->
 <ul class="nav nav-tabs" role="tablist" id="myTab">
-  <li class="active"><a href="#add_sample_template" role="tab" data-toggle="tab">Add sample template</a></li>
   {% if ste and study_status == 'sandbox' %}
+    <li class="active"><a href="#add_sample_template" role="tab" data-toggle="tab">Add sample template</a></li>
     <li><a href="#add_raw_data" role="tab" data-toggle="tab">Add raw data</a></li>
   {% end %}
 
@@ -213,44 +215,46 @@ function newInvestigationTypeChanged(rawDataID, isEdit){
                 <td style="padding:3px;">
                   <a class="btn btn-primary" href="/metadata_summary/?study_id={{study_id}}&prep_template={{prep.id}}">Show prep template summary</a>
                   <br/><br/>
-                  <table id="edit-investigation-type-table" name="edit-investigation-types" class="investigation-type-table">
-                    <tr>
-                      <td>
-                        Selected investigation type:
-                      </td>
-                      <td>
-                        <select id="edit-investigation-type-{{prep.id}}" onclick="investigationTypeChanged({{prep.id}}, true)" onchange="investigationTypeChanged({{prep.id}}, true)">
-                          <option value="Non selected">Non selected</option>
-                          {% raw ena_terms %}
-                        </select>
-                      </td>
-                    </tr>
-                    <tr id="edit-user-defined-investigation-types-{{prep.id}}" style="display:none;">
-                      <td>
-                        User defined investigation type:
-                      </td>
-                      <td>
-                        <select onclick="newInvestigationTypeChanged({{prep.id}}, true)" onchange="newInvestigationTypeChanged({{prep.id}}, true)" id="edit-user-defined-investigation-type-{{prep.id}}">
-                        {% for term in user_defined_terms %}
-                          <option value="{{term}}">{{term}}</option>
-                        {% end %}
-                        </select>
-                      </td>
-                    </tr>
-                    <tr id="edit-new-investigation-type-entry-{{prep.id}}" style="display:none;">
-                      <td>
-                        New investigation type:
-                      </td>
-                      <td>
-                        <input type="text" id="edit-new-investigation-type-{{prep.id}}" name="new-investigation-type" class="form-control">
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>
-                        <a class="btn btn-warning" onclick="update_investigation_type('{{prep.investigation_type}}', {{prep.id}})">Update Investigation Type</a>
-                      </td>
-                    </tr>
-                  </table>
+                  {% if ste and study_status == 'sandbox' %}
+                    <table id="edit-investigation-type-table" name="edit-investigation-types" class="investigation-type-table">
+                      <tr>
+                        <td>
+                          Selected investigation type:
+                        </td>
+                        <td>
+                          <select id="edit-investigation-type-{{prep.id}}" onclick="investigationTypeChanged({{prep.id}}, true)" onchange="investigationTypeChanged({{prep.id}}, true)">
+                            <option value="Non selected">Non selected</option>
+                            {% raw ena_terms %}
+                          </select>
+                        </td>
+                      </tr>
+                      <tr id="edit-user-defined-investigation-types-{{prep.id}}" style="display:none;">
+                        <td>
+                          User defined investigation type:
+                        </td>
+                        <td>
+                          <select onclick="newInvestigationTypeChanged({{prep.id}}, true)" onchange="newInvestigationTypeChanged({{prep.id}}, true)" id="edit-user-defined-investigation-type-{{prep.id}}">
+                          {% for term in user_defined_terms %}
+                            <option value="{{term}}">{{term}}</option>
+                          {% end %}
+                          </select>
+                        </td>
+                      </tr>
+                      <tr id="edit-new-investigation-type-entry-{{prep.id}}" style="display:none;">
+                        <td>
+                          New investigation type:
+                        </td>
+                        <td>
+                          <input type="text" id="edit-new-investigation-type-{{prep.id}}" name="new-investigation-type" class="form-control">
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <a class="btn btn-warning" onclick="update_investigation_type('{{prep.investigation_type}}', {{prep.id}})">Update Investigation Type</a>
+                        </td>
+                      </tr>
+                    </table>
+                  {% end %}
                   <!--
                     We need this JavaScript block here because the elements
                     that we modify only exist if the HTML code above has
@@ -323,36 +327,38 @@ function newInvestigationTypeChanged(rawDataID, isEdit){
           </td>
           <td style="vertical-align:top;padding:10px;">
             <h4>Linked files to this raw data</h4>
-            {% if r.get_filepaths() and r.link_filepaths_status not in {'linking', 'unlinking'} %}
-              <a class="btn btn-danger" onclick="unlink_all_files({{r.id}})">Unlink all files</a><br/>
-            {% end %}
-            {% if r.link_filepaths_status == 'linking' %}
-              <i><b style="color:red">Linking files...</b></i><br/>
-            {% elif r.link_filepaths_status == 'unlinking' %}
-              <i><b style="color:red">Unlinking files...</b></i><br/>
-            {% elif r.link_filepaths_status.startswith('failed') %}
-              <i><b style="color:red">Error (un)linking files: {{r.link_filepaths_status}} </b></i><br/>
-            {% end %}
-            {% for f, t in r.get_filepaths() %}
-              <i>{{basename(f)}}:</i> {{t[4:]}} <br/>
-            {% end %}
-            <br/>
-            <h4>Link uploaded files with raw data</h4>
-            <table border="0">
-              <tr>
-                <th>File</th>
-                <th>&nbsp;&nbsp;&nbsp;</th>
-                <th>File type</th>
-              </tr>
-            {% for f in files %}
-              <tr>
-                <td>{{f}}</td>
-                <td>&nbsp;</td>
-                <td>
-                  <select id="{{f}}" name="upload_file_{{r.id}}">
-                    <option value="">Ignore ...</option>
-                    {% raw filepath_types %}
-                  </select>
+            {% if study_status != "sandbox" %}
+              {% if r.get_filepaths() and r.link_filepaths_status not in {'linking', 'unlinking'} %}
+                <a class="btn btn-danger" onclick="unlink_all_files({{r.id}})">Unlink all files</a><br/>
+              {% end %}
+              {% if r.link_filepaths_status == 'linking' %}
+                <i><b style="color:red">Linking files...</b></i><br/>
+              {% elif r.link_filepaths_status == 'unlinking' %}
+                <i><b style="color:red">Unlinking files...</b></i><br/>
+              {% elif r.link_filepaths_status.startswith('failed') %}
+                <i><b style="color:red">Error (un)linking files: {{r.link_filepaths_status}} </b></i><br/>
+              {% end %}
+              {% for f, t in r.get_filepaths() %}
+                <i>{{basename(f)}}:</i> {{t[4:]}} <br/>
+              {% end %}
+              <br/>
+              <h4>Link uploaded files with raw data</h4>
+              <table border="0">
+                <tr>
+                  <th>File</th>
+                  <th>&nbsp;&nbsp;&nbsp;</th>
+                  <th>File type</th>
+                </tr>
+              {% for f in files %}
+                <tr>
+                  <td>{{f}}</td>
+                  <td>&nbsp;</td>
+                  <td>
+                    <select id="{{f}}" name="upload_file_{{r.id}}">
+                      <option value="">Ignore ...</option>
+                      {% raw filepath_types %}
+                    </select>
+                {% end %}
                 </td>
               </tr>
             {% end %}
@@ -576,7 +582,7 @@ function newInvestigationTypeChanged(rawDataID, isEdit){
   }
 
   function request_approval() {
-    if (confirm("Are you sure you want to ask for approval?")) {
+    if (confirm("Are you sure you want to ask for approval?<br />IMPORTANT: This will not allow you to add any new raw data or modifications to this study")) {
       var form = $("<form>")
         .attr("action", window.location.href)
         .attr("method", "post")
