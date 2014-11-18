@@ -1,6 +1,5 @@
 // http://www.9lessons.info/2012/04/bootstrap-registration-form-tutorial.html
-$(document).ready(function()
-{
+function dualpass_validator() {
   // Popover 
   $('.dualpass input').hover(function()
   {
@@ -32,4 +31,4 @@ $(document).ready(function()
         equalTo:"Password and Confirm Password must match"}
     }
   });
-});
+}
