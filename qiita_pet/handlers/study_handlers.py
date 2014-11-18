@@ -157,6 +157,7 @@ class CreateStudyForm(Form):
         self.lab_person.choices = choices
         self.principal_investigator.choices = choices
 
+        # Get the available timeseries types to populate the timeseries field
         choices = [[time_id, '%s, %s' % (int_t, time_t)]
                    for time_id, time_t, int_t in get_timeseries_types()]
         # Change None, None to 'No timeseries', just for GUI purposes
@@ -171,7 +172,7 @@ class CreateStudyForm(Form):
             self.study_alias.data = study_info['study_alias']
             self.pubmed_id.data = ",".join(study.pmids)
             self.environmental_packages.data = study.environmental_packages
-            # self.is_timeseries.data = not (study_info['timeseries_type_id'] == 1)
+            self.timeseries.data = study_info['timeseries_type_id']
             self.study_abstract.data = study_info['study_abstract']
             self.study_description.data = study_info['study_description']
             self.principal_investigator.data = study_info[
@@ -606,7 +607,7 @@ class CreateStudyHandler(BaseHandler):
         # TODO: Time series types; right now it's True/False; from emily?
         # TODO: MIXS compliant?  Always true, right?
         info = {
-            'timeseries_type_id': 1,
+            'timeseries_type_id': form_data.data['timeseries'][0],
             'portal_type_id': 1,
             'lab_person_id': lab_person,
             'principal_investigator_id': PI,
