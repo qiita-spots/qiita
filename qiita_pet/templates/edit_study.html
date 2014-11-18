@@ -161,7 +161,7 @@ $(document).ready(function() {
 
 function submit_create_study() {
     $("#create_study_submit").prop('disabled', true);
-    $.get('/check_study/', {study_title: $("#study_title")[0].value})
+    $.get('/check_study/', {study_title: $("#study_title")[0].value {%if study%}, old_study_title: '{{study.title}}'{%end%} })
         .done(function(data) {
             if (data == 'True') {
                 $("#create_study").submit();
@@ -209,7 +209,7 @@ function add_new_person(name, affiliation, email, phone, address) {
 {% end %}
 
 {% block content %}
-<h1>Create a new Study</h1>
+<h1>{% if study %}Edit study (ID: {{study.id}}) {% else %}Create a new Study{%end%}</h1>
 <h3>
     <font color="red">*</font> = Required Field
 </h3>
@@ -225,104 +225,62 @@ function add_new_person(name, affiliation, email, phone, address) {
         {% set additional_info = 'You can select multiple entries by control-clicking (mac: command-clicking)' %}
     {% end %}
   <tr>
-    <td width="20%">
-    {% raw form_item.label %} <br /> {{additional_info}}
-    </td>
-
-    <td width="30%">
-    {% raw form_item(**kwargs) %}
-    </td>
-    <td width="50%">
-    {% if form_item.flags.required %}
-        <font color="red"><h4>&nbsp;&nbsp;*</h4></font>
-    {% end %}
-    </td>
+    <td width="20%">{% raw form_item.label %} <br /> {{additional_info}}</td>
+    <td width="30%">{% raw form_item(**kwargs) %}</td>
+    <td width="50%">{% if form_item.flags.required %}<font color="red"><h4>&nbsp;&nbsp;*</h4></font>{% end %}</td>
   </tr>
-{% end %}
+  {% if form_item.label.text == 'Lab Person' %}
   <tr>
-    <td>
-    </td>
-    <td>
-    Can't find the person you're looking for? <a href="#bot" onclick='$("#new_person_div").show(400); return false;'>Add a person</a>
-    </td>
+    <td></td>
+    <td>Can't find the person you're looking for? <a href="#bot" onclick='$("#new_person_div").show(400); return false;'>Add a person</a></td>
   </tr>
   <tr>
-    <td>
-    </td>
+    <td></td>
     <td>
       <div name="new_person_div" id="new_person_div">
         <table>
           <tr>
-            <td>
-              Name:
-            </td>
-            <td>
-              <input type="text" id="new_person_name" name="new_person_name" class="form-control">
-            </td>
-            <td>
-              <h4>
-                  &nbsp;&nbsp;<font color="red">*</font>
-              </h4>
-            </td>
+            <td>Name:</td>
+            <td><input type="text" id="new_person_name" name="new_person_name" class="form-control"></td>
+            <td><h4>&nbsp;&nbsp;<font color="red">*</font></h4></td>
           </tr>
-            <td>
-              Affiliation:
-            </td>
-            <td>
-              <input type="text" id="new_person_affiliation" name="new_person_affiliation" class="form-control">
-            </td>
-            <td>
-              <h4>
-                  &nbsp;&nbsp;<font color="red">*</font>
-              </h4>
-            </td>
+            <td>Affiliation:</td>
+            <td><input type="text" id="new_person_affiliation" name="new_person_affiliation" class="form-control"></td>
+            <td><h4>&nbsp;&nbsp;<font color="red">*</font></h4></td>
+          </tr>
+          <tr>
+            <td>E-mail Address:</td>
+            <td><input type="text" id="new_person_email" name="new_person_email" class="form-control"></td>
+            <td><h4>&nbsp;&nbsp;<font color="red">*</font></h4></td>
+          </tr>
+          <tr>
+            <td>Phone:</td>
+            <td><input type="text" id="new_person_phone" name="new_person_phone" class="form-control"></td>
+          </tr>
+          <tr>
+            <td>Address:</td>
+            <td><input type="text" id="new_person_address" name="new_person_address" class="form-control"></td>
           </tr>
           <tr>
             <td>
-              E-mail Address:
-            </td>
-            <td>
-              <input type="text" id="new_person_email" name="new_person_email" class="form-control">
-            </td>
-            <td>
-              <h4>
-                  &nbsp;&nbsp;<font color="red">*</font>
-              </h4>
-            </td>
-          </tr>
-          <tr>
-            <td>
-              Phone:
-            </td>
-            <td>
-              <input type="text" id="new_person_phone" name="new_person_phone" class="form-control">
-            </td>
-          </tr>
-          <tr>
-            <td>
-              Address:
-            </td>
-            <td>
-              <input type="text" id="new_person_address" name="new_person_address" class="form-control">
-            </td>
-          </tr>
-          <tr>
-            <td>
-              <table><tr>
-              <td><input value="Add Person" type="button" class="btn btn-link" onclick='add_new_person(create_study.new_person_name, create_study.new_person_affiliation, create_study.new_person_email, create_study.new_person_phone, create_study.new_person_address);'></td>
-              <td><input value="Cancel" type="button" class="btn btn-link" onclick='$("#new_person_div").hide(400); return true;'></td>
-              </table></tr>
+              <table>
+                <tr>
+                  <td><input value="Add Person" type="button" class="btn btn-link" onclick='add_new_person(create_study.new_person_name, create_study.new_person_affiliation, create_study.new_person_email, create_study.new_person_phone, create_study.new_person_address);'></td>
+                  <td><input value="Cancel" type="button" class="btn btn-link" onclick='$("#new_person_div").hide(400); return true;'></td>
+                </tr>
+              </table>
             </td>
           </tr>
         </table>
       </div>
     </td>
+  {% end %}
+{% end %}
   </tr>
   <tr>
-    <td>
-      <a name="bot"><input type='button' id="create_study_submit" class='btn btn-primary' value="Create Study" onclick='submit_create_study();'>
-    </td>
+    <td><a name="bot"><input type='button' id="create_study_submit" class='btn btn-primary' value="{%if study%}Update{%else%}Create{%end%} Study" onclick='submit_create_study();'></td>
   </tr>
 </table>
+<input type="hidden" name="study" value={%if study%}{{study.id}}{%else%}''{%end%}>
 </form>
 {% end %}

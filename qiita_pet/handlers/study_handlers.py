@@ -120,14 +120,10 @@ def _check_owner(user, study):
                         (user, study.id))
 
 
-class CreateStudyForm(Form):
+class StudyEditorForm(Form):
     study_title = StringField('Study Title', [validators.required()])
     study_alias = StringField('Study Alias', [validators.required()])
     pubmed_id = StringField('PubMed ID')
-    environmental_packages = SelectMultipleField('Environmental Packages',
-                                                 [validators.required()])
-    timeseries = SelectField('Event-Based Data', [validators.required()],
-                             coerce=lambda x: x)
     study_abstract = TextAreaField('Study Abstract', [validators.required()])
     study_description = StringField('Study Description',
                                     [validators.required()])
@@ -138,15 +134,7 @@ class CreateStudyForm(Form):
     lab_person = SelectField('Lab Person', coerce=lambda x: x)
 
     def __init__(self, study=None, **kwargs):
-        super(CreateStudyForm, self).__init__(**kwargs)
-
-        # Populate the choices for the environmental packages
-        # Get environmental packages returns a list of tuples of the form
-        # (env package name, table name), but we need a list of
-        # (table name, env package name) so the actual environmental package
-        # name is displayed on the GUI
-        self.environmental_packages.choices = [
-            (name, name) for name, table in get_environmental_packages()]
+        super(StudyEditorForm, self).__init__(**kwargs)
 
         # Get people from the study_person table to populate the PI and
         # lab_person fields
@@ -156,6 +144,37 @@ class CreateStudyForm(Form):
 
         self.lab_person.choices = choices
         self.principal_investigator.choices = choices
+
+        # If a study is provided, put its values in the form
+        if study:
+            study_info = study.info
+
+            self.study_title.data = study.title
+            self.study_alias.data = study_info['study_alias']
+            self.pubmed_id.data = ",".join(study.pmids)
+            self.study_abstract.data = study_info['study_abstract']
+            self.study_description.data = study_info['study_description']
+            self.principal_investigator.data = study_info[
+                'principal_investigator_id']
+            self.lab_person.data = study_info['lab_person_id']
+
+
+class StudyEditorExtendedForm(StudyEditorForm):
+    environmental_packages = SelectMultipleField('Environmental Packages',
+                                                 [validators.required()])
+    timeseries = SelectField('Event-Based Data', [validators.required()],
+                             coerce=lambda x: x)
+
+    def __init__(self, study=None, **kwargs):
+        super(StudyEditorExtendedForm, self).__init__(study=study, **kwargs)
+
+        # Populate the choices for the environmental packages
+        # Get environmental packages returns a list of tuples of the form
+        # (env package name, table name), but we need a list of
+        # (table name, env package name) so the actual environmental package
+        # name is displayed on the GUI
+        self.environmental_packages.choices = [
+            (name, name) for name, table in get_environmental_packages()]
 
         # Get the available timeseries types to populate the timeseries field
         choices = [[time_id, '%s, %s' % (int_t, time_t)]
@@ -168,16 +187,8 @@ class CreateStudyForm(Form):
         if study:
             study_info = study.info
 
-            self.study_title.data = study.title
-            self.study_alias.data = study_info['study_alias']
-            self.pubmed_id.data = ",".join(study.pmids)
             self.environmental_packages.data = study.environmental_packages
             self.timeseries.data = study_info['timeseries_type_id']
-            self.study_abstract.data = study_info['study_abstract']
-            self.study_description.data = study_info['study_description']
-            self.principal_investigator.data = study_info[
-                'principal_investigator_id']
-            self.lab_person.data = study_info['lab_person_id']
 
 
 class PrivateStudiesHandler(BaseHandler):
@@ -539,29 +550,53 @@ class StudyDescriptionHandler(BaseHandler):
         self.display_template(study, msg, msg_level, tab_to_display)
 
 
-class CreateStudyHandler(BaseHandler):
+class StudyEditHandler(BaseHandler):
+
+    def _check_study_exists_and_user_access(self, study_id):
+        try:
+            study = Study(int(study_id))
+        except QiitaDBUnknownIDError:
+            # Study not in database so fail nicely
+            raise HTTPError(404, "Study %s does not exist" % study_id)
+
+        # We need to check if the user has access to the study
+        check_access(User(self.current_user), study)
+        return study
+
     @authenticated
     def get(self, study_id=None):
         study = None
+        form_factory = StudyEditorExtendedForm
         if study_id:
-            try:
-                study = Study(int(study_id))
-            except QiitaDBUnknownIDError:
-                # Study not in database so fail nicely
-                raise HTTPError(404, "Study %s does not exist" % study_id)
-            else:
-                check_access(User(self.current_user), study)
+            # Check study and user access
+            study = self._check_study_exists_and_user_access(study_id)
+            # If the study is public, we use the short version of the form
+            if study.status == 'public':
+                form_factory = StudyEditorForm
 
-        creation_form = CreateStudyForm(study=study)
+        creation_form = form_factory(study=study)
 
         # TODO: set the choices attributes on the environmental_package field
-        self.render('create_study.html', user=self.current_user,
-                    creation_form=creation_form)
+        self.render('edit_study.html', user=self.current_user,
+                    creation_form=creation_form, study=study)
 
     @authenticated
     def post(self):
+        # Get the study, if any - we pop it because the StudyEditorForm
+        # does not expect any study value
+        study = self.request.arguments.pop('study')[0]
+
+        theStudy = None
+        form_factory = StudyEditorExtendedForm
+        if study:
+            # Check study and user access
+            theStudy = self._check_study_exists_and_user_access(study_id)
+            # If the study is public, we use the short version of the form
+            if study.status == 'public':
+                form_factory = StudyEditorForm
+
         # Get the form data from the request arguments
-        form_data = CreateStudyForm()
+        form_data = form_factory()
         form_data.process(data=self.request.arguments)
 
         # Get information about new people that need to be added to the DB
@@ -602,9 +637,7 @@ class CreateStudyHandler(BaseHandler):
         else:
             lab_person = None
 
-        # create the study
         # TODO: Get the portal type from... somewhere
-        # TODO: Time series types; right now it's True/False; from emily?
         # TODO: MIXS compliant?  Always true, right?
         info = {
             'timeseries_type_id': form_data.data['timeseries'][0],
@@ -617,20 +650,33 @@ class CreateStudyHandler(BaseHandler):
             'study_alias': form_data.data['study_alias'][0],
             'study_abstract': form_data.data['study_abstract'][0]}
 
-        # TODO: Fix this EFO once ontology stuff from emily is added
-        theStudy = Study.create(User(self.current_user),
-                                form_data.data['study_title'][0],
-                                efo=[1], info=info)
+        study_title = form_data.data['study_title'][0]
+
+        if theStudy:
+            # We are under editing, so just update the values
+            theStudy.title = study_title
+            theStudy.info = info
+
+            msg = 'Study "%s" successfully updated' % (
+                form_data.data['study_title'][0])
+        else:
+            # create the study
+            # TODO: Fix this EFO once ontology stuff from emily is added
+            theStudy = Study.create(User(self.current_user), study_title,
+                                    efo=[1], info=info)
+
+            msg = 'Study "%s" successfully created' % (
+                form_data.data['study_title'][0])
 
         # Add the environmental packages
         theStudy.environmental_packages = form_data.data[
             'environmental_packages']
 
         if form_data.data['pubmed_id'][0]:
-            theStudy.add_pmid(form_data.data['pubmed_id'][0])
-
-        msg = 'Study "%s" successfully created' % (
-            form_data.data['study_title'][0])
+            # The user can provide a comma-seprated list
+            pmids = form_data.data['pubmed_id'][0].split(',')
+            # Make sure that we strip the spaces from the pubmed ids
+            theStudy.pmids = [pmid.strip() for pmid in pmids]
 
         self.render('index.html', message=msg, level='success',
                     user=self.current_user)
@@ -640,8 +686,18 @@ class CreateStudyAJAX(BaseHandler):
     @authenticated
     def get(self):
         study_title = self.get_argument('study_title', None)
+        old_study_title = self.get_argument('old_study_title', None)
+
+        print study_title
+        print old_study_title
+        print study_title == old_study_title
+
         if study_title is None:
             self.write('False')
+            return
+
+        if old_study_title and study_title == old_study_title:
+            self.write('True')
             return
 
         self.write('False' if Study.exists(study_title) else 'True')
