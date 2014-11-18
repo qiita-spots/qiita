@@ -1,5 +1,6 @@
 from tornado.web import RequestHandler
 from qiita_db.logger import LogEntry
+from qiita_db.user import User
 
 
 class BaseHandler(RequestHandler):
@@ -19,9 +20,12 @@ class BaseHandler(RequestHandler):
             # just use the 404 page as the error
             self.render("404.html", user=self.current_user)
             return
+
+        is_admin = User(self.current_user).level == 'admin'
+
         # render error page
         self.render('error.html', user=self.current_user,
-                    status_code=status_code)
+                    status_code=status_code, is_admin=is_admin)
 
         # log the error
         from traceback import format_exception
