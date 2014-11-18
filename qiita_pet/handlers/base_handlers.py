@@ -4,6 +4,10 @@ from qiita_db.user import User
 
 
 class BaseHandler(RequestHandler):
+    def user(self):
+        if self.current_user:
+            return User(self.current_user)
+        return None
 
     def get_current_user(self):
         '''Overrides default method of returning user curently connected'''
