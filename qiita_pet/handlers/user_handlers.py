@@ -83,7 +83,7 @@ class ForgotPasswordHandler(BaseHandler):
             user.generate_reset_code()
             info = user.info
             try:
-                send_email(user, "QIITA: Password Reset", "Please go to the "
+                send_email(user.id, "QIITA: Password Reset", "Please go to the "
                            "following URL to reset your password: "
                            "http://qiita.colorado.edu/auth/reset/%s" %
                            info["pass_reset_code"])
@@ -91,7 +91,7 @@ class ForgotPasswordHandler(BaseHandler):
             except Exception as e:
                 error = "Unable to send email."
                 LogEntry.create('Runtime', "Unable to send forgot password "
-                                "email" % str(e), info={'User': user.id})
+                                "email: %s" % str(e), info={'User': user.id})
         self.render("lost_pass.html", user=None, error=error)
 
 
