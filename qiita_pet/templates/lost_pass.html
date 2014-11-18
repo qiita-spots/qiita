@@ -5,7 +5,7 @@
 // http://www.9lessons.info/2012/04/bootstrap-registration-form-tutorial.html
 $(document).ready(function()
 {
-// Popover 
+// Popover
 $('#lost_pass input').hover(function()
 {
 $(this).popover('show')
@@ -41,7 +41,6 @@ $(element).parents('.control-group').addClass('success');
 <div style='width: 50%;'>
 <h1>Lost Password</h1>
 <h3>Enter email for account</h3>
-<div style="color:red;">{{error}}</div>
 <form class="form-horizontal" role="form" action="/auth/forgot/" method="post" id="lost_pass" name="lost_pass">
 <div class="form-group">
     <label for="email" class="col-sm-2 control-label">Email</label>
