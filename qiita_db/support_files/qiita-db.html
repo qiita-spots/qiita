@@ -422,7 +422,7 @@ table {
 	logging references severity ( severity_id )</title>
 </path>
 <text x='1447' y='1300' transform='rotate(0 1447,1300)' title='Foreign Key fk_logging_severity
-	logging references severity ( severity_id )' style='fill:#a1a0a0;'>severity_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1620 960 L 1687,960 Q 1695,960 1695,952 L 1695,712 Q 1695,705 1702,705 L 1807,705 Q 1815,705 1815,697 L 1815,435' >
+	logging references severity ( severity_id )' style='fill:#a1a0a0;'>severity_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1620 960 L 1687,960 Q 1695,960 1695,952 L 1695,727 Q 1695,720 1702,720 L 1807,720 Q 1815,720 1815,712 L 1815,435' >
 	<title>Foreign Key fk_study_processed_data
 	study_processed_data references study ( study_id )</title>
 </path>
@@ -1197,14 +1197,14 @@ Parameters used for processing illumina sequence data&#046;</title></a>
 Unique name for study</title></a>
 <a xlink:href='#study.study_id'><use id='ref' x='1953' y='86' xlink:href='#ref'/><title>Referred by investigation_study ( study_id ) 
 Referred by required_sample_info ( study_id ) 
+Referred by study_environmental_package ( study_id ) 
 Referred by study_experimental_factor ( study_id ) 
 Referred by study_pmid ( study_id ) 
 Referred by study_preprocessed_data ( study_id ) 
 Referred by study_processed_data ( study_id ) 
 Referred by study_raw_data ( study_id ) 
 Referred by study_sample_columns ( study_id ) 
-Referred by study_users ( study_id ) 
-Referred by study_environmental_package ( study_id ) </title></a>
+Referred by study_users ( study_id ) </title></a>
   <use id='nn' x='1787' y='102' xlink:href='#nn'/><a xlink:href='#study.email'><use id='idx' x='1787' y='101' xlink:href='#idx'/><title>Index  ( email ) </title></a>
 <a xlink:href='#study.email'><text x='1803' y='112'>email</text><title>email varchar not null
 Email of study owner</title></a>
@@ -1347,16 +1347,6 @@ All possible statuses for projects relating to EMP&#046; Whether they are part o
   <use id='nn' x='2072' y='552' xlink:href='#nn'/><a xlink:href='#study_status.status'><use id='unq' x='2072' y='551' xlink:href='#unq'/><title>Unique Index  ( status ) </title></a>
 <a xlink:href='#study_status.status'><text x='2088' y='562'>status</text><title>status varchar not null</title></a>
   <use id='nn' x='2072' y='567' xlink:href='#nn'/><a xlink:href='#study_status.description'><text x='2088' y='577'>description</text><title>description varchar not null</title></a>
-
-<!-- ============= Table 'timeseries_type' ============= -->
-<rect class='table' x='1650' y='608' width='135' height='75' rx='7' ry='7' />
-<path d='M 1650.50 634.50 L 1650.50 615.50 Q 1650.50 608.50 1657.50 608.50 L 1777.50 608.50 Q 1784.50 608.50 1784.50 615.50 L 1784.50 634.50 L1650.50 634.50 ' style='fill:url(#tableHeaderGradient1); stroke:none;' />
-<a xlink:href='#timeseries_type'><text x='1675' y='622' class='tableTitle'>timeseries_type</text><title>Table qiita.timeseries_type</title></a>
-  <use id='nn' x='1652' y='642' xlink:href='#nn'/><a xlink:href='#timeseries_type.timeseries_type_id'><use id='pk' x='1652' y='641' xlink:href='#pk'/><title>Primary Key  ( timeseries_type_id ) </title></a>
-<a xlink:href='#timeseries_type.timeseries_type_id'><text x='1668' y='652'>timeseries_type_id</text><title>timeseries_type_id bigserial not null</title></a>
-<a xlink:href='#timeseries_type.timeseries_type_id'><use id='ref' x='1773' y='641' xlink:href='#ref'/><title>Referred by study ( timeseries_type_id ) </title></a>
-  <use id='nn' x='1652' y='657' xlink:href='#nn'/><a xlink:href='#timeseries_type.timeseries_type'><use id='unq' x='1652' y='656' xlink:href='#unq'/><title>Unique Index  ( timeseries_type ) </title></a>
-<a xlink:href='#timeseries_type.timeseries_type'><text x='1668' y='667'>timeseries_type</text><title>timeseries_type varchar not null</title></a>
 
 <!-- ============= Table 'filetype' ============= -->
 <rect class='table' x='1530' y='593' width='90' height='75' rx='7' ry='7' />
@@ -1691,6 +1681,18 @@ Holds the 1 to many relationship between the study and the environmental&#095;pa
   <use id='nn' x='2222' y='87' xlink:href='#nn'/><a xlink:href='#study_environmental_package.environmental_package_name'><use id='pk' x='2222' y='86' xlink:href='#pk'/><title>Primary Key  ( study_id, environmental_package_name ) Index  ( environmental_package_name ) </title></a>
 <a xlink:href='#study_environmental_package.environmental_package_name'><text x='2238' y='97'>environmental_package_name</text><title>environmental_package_name varchar not null</title></a>
 <a xlink:href='#study_environmental_package.environmental_package_name'><use id='fk' x='2403' y='86' xlink:href='#fk'/><title>References environmental_package ( environmental_package_name ) </title></a>
+
+<!-- ============= Table 'timeseries_type' ============= -->
+<rect class='table' x='1650' y='608' width='135' height='90' rx='7' ry='7' />
+<path d='M 1650.50 634.50 L 1650.50 615.50 Q 1650.50 608.50 1657.50 608.50 L 1777.50 608.50 Q 1784.50 608.50 1784.50 615.50 L 1784.50 634.50 L1650.50 634.50 ' style='fill:url(#tableHeaderGradient1); stroke:none;' />
+<a xlink:href='#timeseries_type'><text x='1675' y='622' class='tableTitle'>timeseries_type</text><title>Table qiita.timeseries_type</title></a>
+  <use id='nn' x='1652' y='642' xlink:href='#nn'/><a xlink:href='#timeseries_type.timeseries_type_id'><use id='pk' x='1652' y='641' xlink:href='#pk'/><title>Primary Key  ( timeseries_type_id ) </title></a>
+<a xlink:href='#timeseries_type.timeseries_type_id'><text x='1668' y='652'>timeseries_type_id</text><title>timeseries_type_id bigserial not null</title></a>
+<a xlink:href='#timeseries_type.timeseries_type_id'><use id='ref' x='1773' y='641' xlink:href='#ref'/><title>Referred by study ( timeseries_type_id ) </title></a>
+  <use id='nn' x='1652' y='657' xlink:href='#nn'/><a xlink:href='#timeseries_type.timeseries_type'><use id='unq' x='1652' y='656' xlink:href='#unq'/><title>Unique Index  ( timeseries_type, intervention_type ) </title></a>
+<a xlink:href='#timeseries_type.timeseries_type'><text x='1668' y='667'>timeseries_type</text><title>timeseries_type varchar not null</title></a>
+  <use id='nn' x='1652' y='672' xlink:href='#nn'/><a xlink:href='#timeseries_type.intervention_type'><use id='unq' x='1652' y='671' xlink:href='#unq'/><title>Unique Index  ( timeseries_type, intervention_type ) </title></a>
+<a xlink:href='#timeseries_type.intervention_type'><text x='1668' y='682'>intervention_type</text><title>intervention_type varchar not null default &#039;None&#039;</title></a>
 
 </g></svg>
 
@@ -3840,34 +3842,6 @@ Controlled Vocabulary </td>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='3'><a name='timeseries_type'>Table timeseries_type</a></th></tr>
-</thead>
-<tbody>
-	<tr>
-		<td><a name='timeseries_type.timeseries_type_id'>timeseries&#095;type&#095;id</a></td>
-		<td> bigserial  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='timeseries_type.timeseries_type'>timeseries&#095;type</a></td>
-		<td> varchar  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-<tr><th colspan='3'><b>Indexes</b></th></tr>
-	<tr>		<td>pk&#095;timeseries&#095;type primary key</td>
-		<td> ON timeseries&#095;type&#095;id</td>
-		<td>  </td>
-	</tr>
-	<tr>		<td>idx&#095;timeseries&#095;type unique</td>
-		<td> ON timeseries&#095;type</td>
-		<td>  </td>
-	</tr>
-</tbody>
-</table>
-
-<br/><br/>
-<table class='bordered'>
-<thead>
 <tr><th colspan='3'><a name='filetype'>Table filetype</a></th></tr>
 <tr><td colspan='3'>Type of file &#040;FASTA&#044; FASTQ&#044; SPECTRA&#044; etc&#041; </td></tr>
 </thead>
@@ -4863,6 +4837,39 @@ Controlled Vocabulary </td>
 	<tr>
 		<td>fk_study_environmental_package_0</td>
 		<td > ( environmental&#095;package&#095;name ) ref <a href='#environmental&#095;package'>environmental&#095;package</a> (environmental&#095;package&#095;name) </td>
+		<td>  </td>
+	</tr>
+</tbody>
+</table>
+
+<br/><br/>
+<table class='bordered'>
+<thead>
+<tr><th colspan='3'><a name='timeseries_type'>Table timeseries_type</a></th></tr>
+</thead>
+<tbody>
+	<tr>
+		<td><a name='timeseries_type.timeseries_type_id'>timeseries&#095;type&#095;id</a></td>
+		<td> bigserial  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='timeseries_type.timeseries_type'>timeseries&#095;type</a></td>
+		<td> varchar  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='timeseries_type.intervention_type'>intervention&#095;type</a></td>
+		<td> varchar  NOT NULL  DEFO 'None' </td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;timeseries&#095;type primary key</td>
+		<td> ON timeseries&#095;type&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>idx&#095;timeseries&#095;type unique</td>
+		<td> ON timeseries&#095;type&#044; intervention&#095;type</td>
 		<td>  </td>
 	</tr>
 </tbody>
