@@ -111,7 +111,9 @@ function modify_sharing(study_id) {
                 <td>This study is public</td>
                 {% elif s.status == 'sandbox' %}
                 <td>This study is sandboxed</td>
-                {% elif s.status != 'awaiting_approval' %}
+                {% elif s.status == 'awaiting_approval' %}
+                <td>This study is awaiting approval</td>
+                {% else %}
                 <td><span id="shared_html_{{ s.id }}">{% raw s.shared %}</span>
                 <br/>
                 <a class="btn btn-primary" data-toggle="modal" data-target="#share-study-modal-view" onclick="modify_sharing({{ s.id }});">Modify</a>
