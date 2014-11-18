@@ -9,29 +9,22 @@ r"""Qitta study handlers for the Tornado webserver.
 # -----------------------------------------------------------------------------
 from __future__ import division
 from collections import namedtuple, defaultdict
+from json import dumps
+from os import remove
+from os.path import exists, join, basename
+from functools import partial
+from operator import itemgetter
+from traceback import format_exception_only
+from sys import exc_info
 
 from tornado.web import authenticated, HTTPError, asynchronous
 from tornado.gen import coroutine, Task
 from wtforms import (Form, StringField, SelectField, BooleanField,
                      SelectMultipleField, TextAreaField, validators)
-
+from pandas.parser import CParserError
 from future.utils import viewitems
 
-from operator import itemgetter
-
-from traceback import format_exception_only
-from sys import exc_info
-
-from json import dumps
-from os import remove
-from os.path import exists, join, basename
-from functools import partial
-from .base_handlers import BaseHandler
-
-from pandas.parser import CParserError
-
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
-from qiita_pet.util import linkify
 from qiita_ware.context import submit
 from qiita_ware.util import dataframe_from_template, stats_from_df
 from qiita_ware.demux import stats as demux_stats
@@ -47,6 +40,9 @@ from qiita_db.data import PreprocessedData, RawData
 from qiita_db.exceptions import (QiitaDBColumnError, QiitaDBExecutionError,
                                  QiitaDBDuplicateError, QiitaDBUnknownIDError)
 from qiita_db.ontology import Ontology
+
+from qiita_pet.util import linkify
+from .base_handlers import BaseHandler
 
 study_person_linkifier = partial(
     linkify, "<a target=\"_blank\" href=\"mailto:{0}\">{1}</a>")
