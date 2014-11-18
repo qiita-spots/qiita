@@ -85,11 +85,12 @@ class ForgotPasswordHandler(BaseHandler):
             user.generate_reset_code()
             info = user.info
             try:
-                send_email(user.id, "QIITA: Password Reset", "Please go to the "
-                           "following URL to reset your password: "
+                send_email(user.id, "QIITA: Password Reset", "Please go to "
+                           "the following URL to reset your password: "
                            "http://qiita.colorado.edu/auth/reset/%s" %
                            info["pass_reset_code"])
-                message = "Password reset. Check your email for the reset code."
+                message = ("Password reset. Check your email for the reset "
+                           "code.")
             except Exception as e:
                 message = "Unable to send email. Error has been registered."
                 level = "danger"
@@ -116,7 +117,8 @@ class ChangeForgotPasswordHandler(BaseHandler):
             newpass = self.get_argument("newpass")
             changed = user.change_forgot_password(code, newpass)
             if changed:
-                message = "Password reset successful. Please log in to continue."
+                message = ("Password reset successful. Please log in to "
+                           "continue.")
             else:
                 message = "Unable to reset password"
                 level = "danger"
