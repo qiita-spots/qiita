@@ -1,3 +1,6 @@
+-- Nov 14, 2014
+-- This patch initializes the controlled values for some of the tables in the database
+
 -- Populate user_level table
 INSERT INTO qiita.user_level (name, description) VALUES ('admin', 'Can access and do all the things'), ('dev', 'Can access all data and info about errors'), ('superuser', 'Can see all studies, can run analyses'), ('user', 'Can see own and public data, can run analyses'), ('unverified', 'Email not verified'), ('guest', 'Can view & download public data');
 
