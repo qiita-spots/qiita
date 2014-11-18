@@ -454,6 +454,19 @@ class TestStudy(TestCase):
                            'Microbiomes for Cannabis Soils', [1], self.info)
         self.assertEqual(new.pmids, [])
 
+    def test_pmids_setter(self):
+        exp = ['123456', '7891011']
+        self.assertEqual(self.study.pmids, exp)
+
+        new_values = ['654321', '1101987']
+        self.study.pmids = new_values
+        obs = self.study.environmental_packages
+        self.assertEqual(self.study.pmids, new_values)
+
+    def test_pmids_setter_typeerror(self):
+        with self.assertRaises(TypeError):
+            self.study.pmids = '123456'
+
     def test_retrieve_investigation(self):
         self.assertEqual(self.study.investigation, 1)
 
