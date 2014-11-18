@@ -43,7 +43,7 @@ from qiita_db.user import User
 from qiita_db.util import (get_filepath_types, get_data_types, get_filetypes,
                            convert_to_id, get_mountpoint,
                            get_files_from_uploads_folders,
-                           get_environmental_packages)
+                           get_environmental_packages, get_timeseries_types)
 from qiita_db.data import PreprocessedData, RawData
 from qiita_db.exceptions import (QiitaDBColumnError, QiitaDBExecutionError,
                                  QiitaDBDuplicateError, QiitaDBUnknownIDError)
@@ -126,7 +126,8 @@ class CreateStudyForm(Form):
     pubmed_id = StringField('PubMed ID')
     environmental_packages = SelectMultipleField('Environmental Packages',
                                                  [validators.required()])
-    is_timeseries = BooleanField('Includes Event-Based Data')
+    timeseries = SelectField('Event-Based Data', [validators.required()],
+                             coerce=lambda x: x)
     study_abstract = TextAreaField('Study Abstract', [validators.required()])
     study_description = StringField('Study Description',
                                     [validators.required()])
@@ -155,6 +156,12 @@ class CreateStudyForm(Form):
 
         self.lab_person.choices = choices
         self.principal_investigator.choices = choices
+
+        choices = [[time_id, '%s, %s' % (int_t, time_t)]
+                   for time_id, time_t, int_t in get_timeseries_types()]
+        # Change None, None to 'No timeseries', just for GUI purposes
+        choices[0][1] = 'No timeseries'
+        self.timeseries.choices = choices
 
         # If a study is provided, put its values in the form
         if study:
