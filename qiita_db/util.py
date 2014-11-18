@@ -839,11 +839,20 @@ def get_lat_longs():
     return conn.execute_fetchall(sql)
 
 
-def get_environmental_packages(return_table=True, conn_handler=None):
+def get_environmental_packages(conn_handler=None):
+    """Get the list of available environmental packages
+
+    Parameters
+    ----------
+    conn_handler : SQLConnectionHandler, optional
+        The handler connected to the database
+
+    Returns
+    -------
+    list of (str, str)
+        The available environmental packages. The first string is the
+        environmental package name and the second string is the table where
+        the metadata for the environmental package is stored
+    """
     conn = conn_handler if conn_handler else SQLConnectionHandler()
-
-    metadata_table = ", metadata_table" if return_table else ""
-
-    return conn.execute_fetchall(
-        "SELECT environmental_package_name{0} FROM "
-        "qiita.environmental_package".format(metadata_table))
+    return conn.execute_fetchall("SELECT * FROM qiita.environmental_package")

@@ -497,28 +497,6 @@ class DBUtilTests(TestCase):
                ['water', 'ep_water']]
         self.assertEqual(sorted(obs), sorted(exp))
 
-    def test_get_environmental_packages_wo_table(self):
-        obs = get_environmental_packages(return_table=False)
-        exp = [['air'],
-               ['built environment'],
-               ['host-associated'],
-               ['human-amniotic-fluid'],
-               ['human-associated'],
-               ['human-blood'],
-               ['human-gut'],
-               ['human-oral'],
-               ['human-skin'],
-               ['human-urine'],
-               ['human-vaginal'],
-               ['microbial mat/biofilm'],
-               ['miscellaneous natural or artificial environment'],
-               ['plant-associated'],
-               ['sediment'],
-               ['soil'],
-               ['wastewater/sludge'],
-               ['water']]
-        self.assertEqual(sorted(obs), sorted(exp))
-
 
 class UtilTests(TestCase):
     """Tests for the util functions that do not need to access the DB"""
