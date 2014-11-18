@@ -281,7 +281,8 @@ function newInvestigationTypeChanged(rawDataID, isEdit){
                       {% if pd.get_filepaths() %}
                         <tr>
                           <td style="padding:3px;">
-                            <a class="btn btn-primary" href="/preprocessing_summary/{{pdi}}">Preprocessing summary</a>
+                            <a class="btn btn-primary" href="/preprocessing_summary/{{pdi}}">Preprocessing summary</a><br/>
+                            <a class="btn btn-primary" href="/download/hello">Download the preprocessed data</a>
                           </td>
                           <td rowspan="2" style="padding:3px;">
                             EBI status: {{pd.submitted_to_insdc_status()}}<br/>
