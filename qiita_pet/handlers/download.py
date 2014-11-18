@@ -7,5 +7,5 @@ class DownloadHandler(BaseHandler):
     def get(self, filepath_id):
         self.set_header('X-Accel-Redirect',
                         '/protected/preprocessed_data/' +
-                        filepath)
+                        filepath_id)
         self.finish()
