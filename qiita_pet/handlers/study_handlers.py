@@ -42,7 +42,8 @@ from qiita_db.study import Study, StudyPerson
 from qiita_db.user import User
 from qiita_db.util import (get_filepath_types, get_data_types, get_filetypes,
                            convert_to_id, get_mountpoint,
-                           get_files_from_uploads_folders)
+                           get_files_from_uploads_folders,
+                           get_environmental_packages)
 from qiita_db.data import PreprocessedData, RawData
 from qiita_db.exceptions import (QiitaDBColumnError, QiitaDBExecutionError,
                                  QiitaDBDuplicateError, QiitaDBUnknownIDError)
@@ -123,31 +124,8 @@ class CreateStudyForm(Form):
     study_title = StringField('Study Title', [validators.required()])
     study_alias = StringField('Study Alias', [validators.required()])
     pubmed_id = StringField('PubMed ID')
-
-    # TODO:This can be filled from the database
-    # in oracle, this is in controlled_vocabs (ID 1),
-    #                       controlled_vocab_values with CVV IDs >= 0
-    environmental_packages = SelectMultipleField(
-        'Environmental Packages',
-        [validators.required()],
-        choices=[('air', 'air'),
-                 ('host_associated', 'host-associated'),
-                 ('human_amniotic_fluid', 'human-amniotic-fluid'),
-                 ('human_associated', 'human-associated'),
-                 ('human_blood', 'human-blood'),
-                 ('human_gut', 'human-gut'),
-                 ('human_oral', 'human-oral'),
-                 ('human_skin', 'human-skin'),
-                 ('human_urine', 'human-urine'),
-                 ('human_vaginal', 'human-vaginal'),
-                 ('biofilm', 'microbial mat/biofilm'),
-                 ('misc_env',
-                  'miscellaneous natural or artificial environment'),
-                 ('plant_associated', 'plant-associated'),
-                 ('sediment', 'sediment'),
-                 ('soil', 'soil'),
-                 ('wastewater_sludge', 'wastewater/sludge'),
-                 ('water', 'water')])
+    environmental_packages = SelectMultipleField('Environmental Packages',
+                                                 [validators.required()])
     is_timeseries = BooleanField('Includes Event-Based Data')
     study_abstract = TextAreaField('Study Abstract', [validators.required()])
     study_description = StringField('Study Description',
@@ -160,17 +138,25 @@ class CreateStudyForm(Form):
 
     def __init__(self, study=None, **kwargs):
         super(CreateStudyForm, self).__init__(**kwargs)
+
+        # Populate the choices for the environmental packages
+        # Get environmental packages returns a list of tuples of the form
+        # (env package name, table name), but we need a list of
+        # (table name, env package name) so the actual environmental package
+        # name is displayed on the GUI
+        self.environmental_packages.choices = [
+            (table, name) for name, table in get_environmental_packages()]
+
         # Get people from the study_person table to populate the PI and
         # lab_person fields
-        choices = [('', '')]
-        for study_person in StudyPerson.iter():
-            person = "{}, {}".format(study_person.name,
-                                     study_person.affiliation)
-            choices.append((study_person.id, person))
+        choices = [(sp.id, "%s, %s" % (sp.name, sp.affiliation))
+                   for sp in StudyPerson.iter()]
+        choices.insert(0, ('', ''))
 
         self.lab_person.choices = choices
         self.principal_investigator.choices = choices
 
+        # If a study is provided, put its values in the form
         if study:
             print "YAY:", study.id
 
