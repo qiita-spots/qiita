@@ -581,18 +581,14 @@ class StudyEditHandler(BaseHandler):
                     creation_form=creation_form, study=study)
 
     @authenticated
-    def post(self):
-        # Get the study, if any - we pop it because the StudyEditorForm
-        # does not expect any study value
-        study = self.request.arguments.pop('study')[0]
-
+    def post(self, study=None):
         theStudy = None
         form_factory = StudyEditorExtendedForm
         if study:
             # Check study and user access
-            theStudy = self._check_study_exists_and_user_access(study_id)
+            theStudy = self._check_study_exists_and_user_access(study)
             # If the study is public, we use the short version of the form
-            if study.status == 'public':
+            if theStudy.status == 'public':
                 form_factory = StudyEditorForm
 
         # Get the form data from the request arguments
@@ -640,7 +636,6 @@ class StudyEditHandler(BaseHandler):
         # TODO: Get the portal type from... somewhere
         # TODO: MIXS compliant?  Always true, right?
         info = {
-            'timeseries_type_id': form_data.data['timeseries'][0],
             'portal_type_id': 1,
             'lab_person_id': lab_person,
             'principal_investigator_id': PI,
@@ -649,6 +644,9 @@ class StudyEditHandler(BaseHandler):
             'study_description': form_data.data['study_description'][0],
             'study_alias': form_data.data['study_alias'][0],
             'study_abstract': form_data.data['study_abstract'][0]}
+
+        if 'timeseries' in form_data.data:
+            info['timeseries_type_id'] = form_data.data['timeseries'][0],
 
         study_title = form_data.data['study_title'][0]
 
@@ -669,8 +667,9 @@ class StudyEditHandler(BaseHandler):
                 form_data.data['study_title'][0])
 
         # Add the environmental packages
-        theStudy.environmental_packages = form_data.data[
-            'environmental_packages']
+        if 'environmental_packages' in form_data.data:
+            theStudy.environmental_packages = form_data.data[
+                'environmental_packages']
 
         if form_data.data['pubmed_id'][0]:
             # The user can provide a comma-seprated list
