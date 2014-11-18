@@ -562,16 +562,23 @@ class Study(QiitaStatusObject):
             raise ValueError('Environmetal packages not recognized: %s'
                              % missing)
 
+        # Create a queue for the operations that we need to do
+        queue = "%d_env_pkgs_setter" % self._id
+        conn_handler.create_queue(queue)
+
         # Delete the previous environmental packages associated with the study
-        conn_handler.execute(
-            "DELETE FROM qiita.study_environmental_package WHERE study_id=%s",
-            (self._id,))
+        sql = "DELETE FROM qiita.study_environmental_package WHERE study_id=%s"
+        sql_args = (self._id,)
+        conn_handler.add_to_queue(queue, sql, sql_args)
 
         # Set the new ones
-        conn_handler.executemany(
-            "INSERT INTO qiita.study_environmental_package "
-            "(study_id, environmental_package_name) VALUES (%s, %s)",
-            [(self._id, val) for val in values])
+        sql = ("INSERT INTO qiita.study_environmental_package "
+               "(study_id, environmental_package_name) VALUES (%s, %s)")
+        sql_args = [(self._id, val) for val in values]
+        conn_handler.add_to_queue(queue, sql, sql_args, many=True)
+
+        # Execute the queue
+        conn_handler.execute_queue(queue)
 
     # --- methods ---
     def raw_data(self, data_type=None):
