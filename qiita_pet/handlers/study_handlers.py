@@ -145,7 +145,7 @@ class CreateStudyForm(Form):
         # (table name, env package name) so the actual environmental package
         # name is displayed on the GUI
         self.environmental_packages.choices = [
-            (table, name) for name, table in get_environmental_packages()]
+            (name, name) for name, table in get_environmental_packages()]
 
         # Get people from the study_person table to populate the PI and
         # lab_person fields
@@ -158,7 +158,18 @@ class CreateStudyForm(Form):
 
         # If a study is provided, put its values in the form
         if study:
-            print "YAY:", study.id
+            study_info = study.info
+
+            self.study_title.data = study.title
+            self.study_alias.data = study_info['study_alias']
+            self.pubmed_id.data = ",".join(study.pmids)
+            self.environmental_packages.data = study.environmental_packages
+            # self.is_timeseries.data = not (study_info['timeseries_type_id'] == 1)
+            self.study_abstract.data = study_info['study_abstract']
+            self.study_description.data = study_info['study_description']
+            self.principal_investigator.data = study_info[
+                'principal_investigator_id']
+            self.lab_person.data = study_info['lab_person_id']
 
 
 class PrivateStudiesHandler(BaseHandler):
@@ -602,6 +613,10 @@ class CreateStudyHandler(BaseHandler):
         theStudy = Study.create(User(self.current_user),
                                 form_data.data['study_title'][0],
                                 efo=[1], info=info)
+
+        # Add the environmental packages
+        theStudy.environmental_packages = form_data.data[
+            'environmental_packages']
 
         if form_data.data['pubmed_id'][0]:
             theStudy.add_pmid(form_data.data['pubmed_id'][0])

@@ -70,6 +70,7 @@ class Application(tornado.web.Application):
             (r"/ebi_submission/(.*)", EBISubmitHandler),
             (r"/compute_complete/(.*)", ComputeCompleteHandler),
             (r"/study/create/", CreateStudyHandler),
+            (r"/study/create/(.*)", CreateStudyHandler),
             (r"/study/private/", PrivateStudiesHandler),
             (r"/study/public/", PublicStudiesHandler),
             (r"/study/add_files_to_raw_data", AddFilesToRawData),
