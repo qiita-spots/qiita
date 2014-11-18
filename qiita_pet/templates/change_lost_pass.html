@@ -15,18 +15,18 @@ $(document).ready(function()
   $("#lost_pass").validate({
     rules:{
       email:{required:true,email:true},
-      newpass:{required:true,minlength: 6},
-      newpass2:{required:true,minlength: 6,equalTo: "#newpass"},
+      newpass:{required:true,minlength: 8},
+      newpass2:{required:true,minlength: 8,equalTo: "#newpass"},
     },
 
     messages:{
       email:"Enter valid email address"},
       newpass:{
       required:"Enter your password",
-      minlength:"Password must be minimum 6 characters"},
+      minlength:"Password must be minimum 8 characters"},
       newpass2:{
       required:"Enter confirm password",
-      minlength:"Password must be minimum 6 characters",
+      minlength:"Password must be minimum 8 characters",
       equalTo:"Password and Confirm Password must match"}
   }
   );

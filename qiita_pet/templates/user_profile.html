@@ -15,18 +15,18 @@ $(document).ready(function()
   $("#change_pass").validate({
     rules:{
       oldpass:{required:true},
-      newpass:{required:true,minlength: 6},
-      newpass2:{required:true,minlength: 6,equalTo: "#newpass"},
+      newpass:{required:true,minlength: 8},
+      newpass2:{required:true,minlength: 8,equalTo: "#newpass"},
     },
 
     messages:{
       oldpass:"Enter your old password"},
       newpass:{
       required:"Enter your new password",
-      minlength:"Password must be minimum 6 characters"},
+      minlength:"Password must be minimum 8 characters"},
       newpass2:{
       required:"Enter new password again",
-      minlength:"Password must be minimum 6 characters",
+      minlength:"Password must be minimum 8 characters",
       equalTo:"Password and Confirm Password must match"}
     }
   );
