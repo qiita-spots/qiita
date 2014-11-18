@@ -156,7 +156,7 @@ class Study(QiitaStatusObject):
 
     @classmethod
     def get_by_status(cls, status):
-        """Returns study id for all public Studies
+        """Returns study id for all Studies with given status
 
         Parameters
         ----------
