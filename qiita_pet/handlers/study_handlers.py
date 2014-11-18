@@ -687,10 +687,6 @@ class CreateStudyAJAX(BaseHandler):
         study_title = self.get_argument('study_title', None)
         old_study_title = self.get_argument('old_study_title', None)
 
-        print study_title
-        print old_study_title
-        print study_title == old_study_title
-
         if study_title is None:
             self.write('False')
             return
