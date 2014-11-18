@@ -815,6 +815,15 @@ class TestSampleTemplate(TestCase):
             obs = f.read()
         self.assertEqual(obs, EXP_SAMPLE_TEMPLATE)
 
+        fd, fp = mkstemp()
+        close(fd)
+        st.to_file(fp, {'2.Sample1', '2.Sample3'})
+        self._clean_up_files.append(fp)
+
+        with open(fp, 'U') as f:
+            obs = f.read()
+        self.assertEqual(obs, EXP_SAMPLE_TEMPLATE_FEWER_SAMPLES)
+
 
 @qiita_test_checker()
 class TestPrepTemplate(TestCase):
@@ -1377,6 +1386,18 @@ EXP_SAMPLE_TEMPLATE = (
     "2.Sample2\t2014-05-29 12:24:51\t"
     "Test Sample 2\tTrue\tTrue\tNotIdentified\t4.2\t1.1\tlocation1\treceived\t"
     "type1\tValue for sample 2\n"
+    "2.Sample3\t2014-05-29 12:24:51\tTest Sample 3\tTrue\t"
+    "True\tNotIdentified\t4.8\t4.41\tlocation1\treceived\ttype1\t"
+    "Value for sample 3\n")
+
+EXP_SAMPLE_TEMPLATE_FEWER_SAMPLES = (
+    "sample_name\tcollection_timestamp\tdescription\thas_extracted_data\t"
+    "has_physical_specimen\thost_subject_id\tlatitude\tlongitude\t"
+    "physical_location\trequired_sample_info_status\tsample_type\t"
+    "str_column\n"
+    "2.Sample1\t2014-05-29 12:24:51\tTest Sample 1\tTrue\tTrue\t"
+    "NotIdentified\t42.42\t41.41\tlocation1\treceived\ttype1\t"
+    "Value for sample 1\n"
     "2.Sample3\t2014-05-29 12:24:51\tTest Sample 3\tTrue\t"
     "True\tNotIdentified\t4.8\t4.41\tlocation1\treceived\ttype1\t"
     "Value for sample 3\n")

@@ -919,7 +919,7 @@ class MetadataTemplate(QiitaObject):
 
         return result
 
-    def to_file(self, fp):
+    def to_file(self, fp, samples=None):
         r"""Writes the MetadataTemplate to the file `fp` in tab-delimited
         format
 
@@ -927,6 +927,9 @@ class MetadataTemplate(QiitaObject):
         ----------
         fp : str
             Path to the output file
+        samples : set, optional
+            If supplied, only the specified samples will be written to the
+            file
         """
         conn_handler = SQLConnectionHandler()
         metadata_map = self._transform_to_dict(conn_handler.execute_fetchall(
@@ -947,6 +950,13 @@ class MetadataTemplate(QiitaObject):
             except KeyError:
                 pass
 
+        # Remove samples that are not in the samples list, if it was supplied
+        if samples is not None:
+            for sid, d in metadata_map.items():
+                if sid not in samples:
+                    metadata_map.pop(sid)
+
+        # Write remaining samples to file
         headers = sorted(list(metadata_map.values())[0].keys())
         with open(fp, 'w') as f:
             # First write the headers
