@@ -459,7 +459,6 @@ class TestStudy(TestCase):
 
         new_values = ['654321', '1101987']
         self.study.pmids = new_values
-        obs = self.study.environmental_packages
         self.assertEqual(self.study.pmids, new_values)
 
     def test_pmids_setter_typeerror(self):

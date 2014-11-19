@@ -12,8 +12,8 @@ from collections import namedtuple, defaultdict
 
 from tornado.web import authenticated, HTTPError, asynchronous
 from tornado.gen import coroutine, Task
-from wtforms import (Form, StringField, SelectField, BooleanField,
-                     SelectMultipleField, TextAreaField, validators)
+from wtforms import (Form, StringField, SelectField, SelectMultipleField,
+                     TextAreaField, validators)
 
 from future.utils import viewitems
 
