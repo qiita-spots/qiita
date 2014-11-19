@@ -25,7 +25,8 @@ from qiita_db.util import (exists_table, exists_dynamic_table, scrub_data,
                            get_required_sample_info_status,
                            get_emp_status, purge_filepaths, get_filepath_id,
                            get_lat_longs, get_mountpoint,
-                           get_files_from_uploads_folders)
+                           get_files_from_uploads_folders,
+                           filepath_id_to_rel_path)
 
 
 @qiita_test_checker()
@@ -471,6 +472,15 @@ class DBUtilTests(TestCase):
         # nothing has been uploaded
         exp = []
         obs = get_files_from_uploads_folders("2")
+        self.assertEqual(obs, exp)
+
+    def test_filepath_id_to_rel_path(self):
+        obs = filepath_id_to_rel_path(1)
+        exp = 'raw_data/1_s_G1_L001_sequences.fastq.gz'
+        self.assertEqual(obs, exp)
+
+        obs = filepath_id_to_rel_path(5)
+        exp = 'preprocessed_data/1_seqs.fna'
         self.assertEqual(obs, exp)
 
 
