@@ -42,10 +42,10 @@ def _get_data_fpids(constructor, object_id):
 
     Returns
     -------
-    list of int
+    set of int
     """
     obj = constructor(object_id)
-    return [fpid for fpid, fp, fptid in obj.get_filepaths()]
+    return {fpid for fpid, _, _ in obj.get_filepaths()}
 
 
 def get_accessible_filepath_ids(user_id):
@@ -67,7 +67,7 @@ def get_accessible_filepath_ids(user_id):
     study_ids = Study.get_public() + user.private_studies + \
         user.shared_studies
 
-    filepath_ids = []
+    filepath_ids = set()
     for study_id in study_ids:
         study = Study(study_id)
 
@@ -76,16 +76,13 @@ def get_accessible_filepath_ids(user_id):
         preprocessed_data_ids = study.preprocessed_data()
         processed_data_ids = study.processed_data()
 
-        for raw_data_id in raw_data_ids:
-            filepath_ids.extend(_get_data_fpids(RawData, raw_data_id))
+        constructor_data_ids = ((RawData, raw_data_ids),
+                                (PreprocessedData, preprocessed_data_ids),
+                                (ProcessedData, processed_data_ids))
 
-        for preprocessed_data_id in preprocessed_data_ids:
-            filepath_ids.extend(_get_data_fpids(PreprocessedData,
-                                                preprocessed_data_id))
-
-        for processed_data_id in processed_data_ids:
-            filepath_ids.extend(_get_data_fpids(ProcessedData,
-                                                processed_data_id))
+        for constructor, data_ids in constructor_data_ids:
+            for data_id in data_ids:
+                filepath_ids.update(_get_data_fpids(constructor, data_id))
 
     # Next, analyses
     # Same as before, ther eare public, private, and shared
@@ -97,8 +94,8 @@ def get_accessible_filepath_ids(user_id):
 
         # For each analysis, there are mapping, biom, and job result filepaths
         # This call will get biom and mapping files
-        filepath_ids.extend(analysis.all_associated_filepath_ids)
+        filepath_ids.update(analysis.all_associated_filepath_ids)
 
         # TODO: add job filepaths. See github.com/biocore/qiita/issues/636
 
-    return set(filepath_ids)
+    return filepath_ids
