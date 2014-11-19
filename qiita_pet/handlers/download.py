@@ -22,6 +22,11 @@ class DownloadHandler(BaseHandler):
         relpath = filepath_id_to_rel_path(filepath_id)
         fname = basename(relpath)
 
+        # If we don't have nginx, write a file that indicates this
+        self.write("This installation of Qiita was not equipped with nginx, "
+                   "so it is incapable of serving files. The file you "
+                   "attempted to download is located at %s" % relpath)
+
         self.set_header('Content-Description', 'File Transfer')
         self.set_header('Content-Type', 'application/octet-stream')
         self.set_header('Content-Transfer-Encoding', 'binary')
