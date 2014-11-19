@@ -299,7 +299,6 @@ class Study(QiitaStatusObject):
             The new study title
         """
         conn_handler = SQLConnectionHandler()
-        self._lock_public(conn_handler)
         sql = ("UPDATE qiita.{0} SET study_title = %s WHERE "
                "study_id = %s".format(self._table))
         return conn_handler.execute(sql, (title, self._id))
@@ -351,7 +350,10 @@ class Study(QiitaStatusObject):
                                      self._non_info.intersection(info))
 
         conn_handler = SQLConnectionHandler()
-        self._lock_public(conn_handler)
+
+        if 'timeseries_type_id' in info:
+            # We only lock if the timeseries type changes
+            self._lock_public(conn_handler)
 
         # make sure dictionary only has keys for available columns in db
         check_table_cols(conn_handler, info, self._table)
@@ -551,6 +553,9 @@ class Study(QiitaStatusObject):
 
         # Get the connection to the database
         conn_handler = SQLConnectionHandler()
+
+        # The environmental packages cannot be changed if the study is public
+        self._lock_public(conn_handler)
 
         # Get all the environmental packages
         env_pkgs = [pkg[0] for pkg in get_environmental_packages(

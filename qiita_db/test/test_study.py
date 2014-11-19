@@ -358,11 +358,6 @@ class TestStudy(TestCase):
         new.title = "Cannabis soils"
         self.assertEqual(new.title, "Cannabis soils")
 
-    def test_set_title_public(self):
-        """Tests for fail if editing title of a public study"""
-        with self.assertRaises(QiitaDBStatusError):
-            self.study.title = "FAILBOAT"
-
     def test_get_efo(self):
         self.assertEqual(self.study.efo, [1])
 
@@ -417,8 +412,12 @@ class TestStudy(TestCase):
 
     def test_set_info_public(self):
         """Tests for fail if editing info of a public study"""
+        self.study.info = {"vamps_id": "12321312"}
+
+    def test_set_info_public_error(self):
+        """Tests for fail if trying to modify timeseries of a public study"""
         with self.assertRaises(QiitaDBStatusError):
-            self.study.info = {"vamps_id": "12321312"}
+            self.study.info = {"timeseries_type_id": 2}
 
     def test_set_info_disallowed_keys(self):
         """Tests for fail if sending non-info keys in info dict"""
@@ -534,22 +533,28 @@ class TestStudy(TestCase):
         self.assertEqual(sorted(obs), sorted(exp))
 
     def test_environmental_packages_setter(self):
-        obs = self.study.environmental_packages
-        exp = ['soil', 'plant-associated']
-        self.assertEqual(sorted(obs), sorted(exp))
+        new = Study.create(User('test@foo.bar'), 'NOT Identification of the '
+                           'Microbiomes for Cannabis Soils', [1], self.info)
+        obs = new.environmental_packages
+        exp = []
+        self.assertEqual(obs, exp)
 
         new_values = ['air', 'human-oral']
-        self.study.environmental_packages = new_values
-        obs = self.study.environmental_packages
+        new.environmental_packages = new_values
+        obs = new.environmental_packages
         self.assertEqual(sorted(obs), sorted(new_values))
 
     def test_environmental_packages_setter_typeerror(self):
+        new = Study.create(User('test@foo.bar'), 'NOT Identification of the '
+                           'Microbiomes for Cannabis Soils', [1], self.info)
         with self.assertRaises(TypeError):
-            self.study.environmental_packages = 'air'
+            new.environmental_packages = 'air'
 
     def test_environmental_packages_setter_valueerror(self):
+        new = Study.create(User('test@foo.bar'), 'NOT Identification of the '
+                           'Microbiomes for Cannabis Soils', [1], self.info)
         with self.assertRaises(ValueError):
-            self.study.environmental_packages = ['air', 'not a package']
+            new.environmental_packages = ['air', 'not a package']
 
 
 if __name__ == "__main__":
