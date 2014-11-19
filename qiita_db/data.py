@@ -451,7 +451,7 @@ class RawData(BaseData):
 
         self._set_link_filepaths_status("unlinking")
 
-        for fpid, fp, fp_type in self.get_filepaths():
+        for _, fp, _ in self.get_filepaths():
             self._remove_filepath(fp, conn_handler, queue)
 
         try:
