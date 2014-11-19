@@ -138,6 +138,10 @@ class TestAnalysis(TestCase):
         exp = {"18S": join(self.fp, "1_analysis_18S.biom")}
         self.assertEqual(self.analysis.biom_tables, exp)
 
+    def test_all_associated_filepaths(self):
+        exp = [14, 15]
+        self.assertEqual(self.analysis.all_associated_filepath_ids, exp)
+
     def test_retrieve_biom_tables_none(self):
         new = Analysis.create(User("admin@foo.bar"), "newAnalysis",
                               "A New Analysis", Analysis(1))
