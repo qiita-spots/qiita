@@ -18,6 +18,7 @@ class TestHelpers(TestHandlerBase):
         self.assertEqual(obs, exp)
 
     def test_build_study_info(self):
+        Study(1).status = 'public'
         obs = _build_study_info('public', User('test@foo.bar'))
         StudyTuple = namedtuple('StudyInfo', 'id title meta_complete '
                                 'num_samples_collected shared num_raw_data pi '
