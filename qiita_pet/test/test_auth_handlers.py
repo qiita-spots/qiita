@@ -11,8 +11,8 @@ class TestAuthCreateHandler(TestHandlerBase):
 
     def test_post(self):
         post_args = {
-            'username': 'newuser@foo.bar',
-            'pass': 'password'
+            'email': 'newuser@foo.bar',
+            'newpass': 'password'
         }
         response = self.post('/auth/create/', post_args)
         # Make sure page response loaded sucessfully

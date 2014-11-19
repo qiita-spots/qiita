@@ -420,6 +420,9 @@ class User(QiitaObject):
         return False
 
     def _change_pass(self, newpass, conn_handler=None):
+        if not validate_password(newpass):
+            raise IncorrectPasswordError("Bad password given!")
+
         sql = ("UPDATE qiita.{0} SET password=%s, pass_reset_code=NULL WHERE "
                "email = %s".format(self._table))
         conn_handler = conn_handler if conn_handler else SQLConnectionHandler()

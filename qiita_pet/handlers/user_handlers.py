@@ -57,13 +57,16 @@ class UserProfileHandler(BaseHandler):
             oldpass = self.get_argument("oldpass")
             newpass = self.get_argument("newpass")
             try:
-                user.change_password(oldpass, newpass)
+                changed = user.change_password(oldpass, newpass)
             except Exception as e:
                 passmsg = "ERROR: could not change password"
-                LogEntry.create('Runtime', "Cound not change password: %s" %
+                LogEntry.create('Runtime', "Could not change password: %s" %
                                 str(e), info={'User': user.id})
             else:
-                passmsg = "Password changed successfully"
+                if changed:
+                    passmsg = "Password changed successfully"
+                else:
+                    passmsg = "Incorrect old password"
         self.render("user_profile.html", user=user.id, profile=form_data,
                     msg=msg, passmsg=passmsg)
 
