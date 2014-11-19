@@ -21,7 +21,6 @@ from moi.group import get_id_from_user, create_info
 
 from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_ware.dispatchable import run_analysis
-from qiita_ware import r_server
 from qiita_db.user import User
 from qiita_db.analysis import Analysis
 from qiita_db.data import ProcessedData
@@ -316,14 +315,6 @@ class AnalysisResultsHandler(BaseHandler):
         self.render("analysis_results.html", user=self.current_user,
                     jobres=jobres, aname=analysis.name, dropped=dropped,
                     basefolder=get_db_files_base_dir())
-
-        # wipe out cached messages for this analysis
-        key = '%s:messages' % self.current_user
-        oldmessages = r_server.lrange(key, 0, -1)
-        if oldmessages is not None:
-            for message in oldmessages:
-                if '"analysis": %d' % analysis_id in message:
-                    r_server.lrem(key, message, 1)
 
 
 class ShowAnalysesHandler(BaseHandler):
