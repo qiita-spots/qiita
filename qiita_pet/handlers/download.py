@@ -1,6 +1,6 @@
 from tornado.web import authenticated
 
-from os.path import split
+from os.path import basename
 
 from .base_handlers import BaseHandler
 from qiita_pet.exceptions import QiitaPetAuthorizationError
@@ -20,7 +20,7 @@ class DownloadHandler(BaseHandler):
                 self.current_user, 'filepath id %d' % filepath_id)
 
         relpath = filepath_id_to_rel_path(filepath_id)
-        fname = split(relpath)[-1]
+        fname = basename(relpath)
 
         self.set_header('Content-Description', 'File Transfer')
         self.set_header('Content-Type', 'application/octet-stream')
