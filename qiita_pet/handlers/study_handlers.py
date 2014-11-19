@@ -255,9 +255,18 @@ class StudyDescriptionHandler(BaseHandler):
 
         SampleTemplate.create(load_template_to_dataframe(fp_rsp),
                               Study(study_id))
-        # TODO: do not remove but move to final storage space
-        # and keep there forever, issue #550
         remove(fp_rsp)
+
+        callback()
+
+    def remove_add_prep_template(self, fp_rpt, raw_data_id, study,
+                                 data_type_id, investigation_type, callback):
+        """add prep templates
+        """
+        PrepTemplate.create(load_template_to_dataframe(fp_rpt),
+                            RawData(raw_data_id), study, int(data_type_id),
+                            investigation_type=investigation_type)
+        remove(fp_rpt)
 
         callback()
 
@@ -461,10 +470,8 @@ class StudyDescriptionHandler(BaseHandler):
 
             try:
                 # inserting prep templates
-                PrepTemplate.create(load_template_to_dataframe(fp_rpt),
-                                    RawData(raw_data_id), study,
-                                    int(data_type_id),
-                                    investigation_type=investigation_type)
+                yield Task(self.remove_add_prep_template, fp_rpt, raw_data_id,
+                           study, data_type_id, investigation_type)
             except (TypeError, QiitaDBColumnError, QiitaDBExecutionError,
                     QiitaDBDuplicateError, IOError, ValueError,
                     CParserError) as e:
@@ -605,8 +612,8 @@ class CreateStudyHandler(BaseHandler):
         if form_data.data['pubmed_id'][0]:
             theStudy.add_pmid(form_data.data['pubmed_id'][0])
 
-        msg = 'Study "%s" successfully created' % (
-            form_data.data['study_title'][0])
+        msg = ('Study <a href="/study/description/%d">"%s"</a> successfully '
+               'created' % (theStudy.id, form_data.data['study_title'][0]))
 
         self.render('index.html', message=msg, level='success',
                     user=self.current_user)

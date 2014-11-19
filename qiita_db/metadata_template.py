@@ -45,6 +45,10 @@ from copy import deepcopy
 import pandas as pd
 import numpy as np
 
+from os.path import join
+
+from time import strftime
+
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from .exceptions import (QiitaDBDuplicateError, QiitaDBColumnError,
                          QiitaDBUnknownIDError, QiitaDBNotImplementedError,
@@ -54,7 +58,7 @@ from .sql_connection import SQLConnectionHandler
 from .ontology import Ontology
 from .util import (exists_table, get_table_cols, get_emp_status,
                    get_required_sample_info_status, convert_to_id,
-                   convert_from_id)
+                   convert_from_id, get_mountpoint)
 
 
 TARGET_GENE_DATA_TYPES = ['16S', '18S', 'ITS']
@@ -1122,7 +1126,14 @@ class SampleTemplate(MetadataTemplate):
                                       ', '.join(["%s"] * len(headers))),
             values)
 
-        return cls(study.id)
+        # figuring out the filepath of the backup
+        _id, fp = get_mountpoint('templates')[0]
+        fp = join(fp, '%d_%s' % (study.id, strftime("%Y%m%d-%H%M%S")))
+        # storing the backup
+        st = cls(study.id)
+        st.to_file(fp)
+
+        return st
 
     @property
     def study_id(self):
@@ -1288,7 +1299,15 @@ class PrepTemplate(MetadataTemplate):
                                       ', '.join(["%s"] * len(headers))),
             values)
 
-        return cls(prep_id)
+        # figuring out the filepath of the backup
+        _id, fp = get_mountpoint('templates')[0]
+        fp = join(fp, '%d_prep_%d_%s' % (study.id, prep_id,
+                  strftime("%Y%m%d-%H%M%S")))
+        # storing the backup
+        pt = cls(prep_id)
+        pt.to_file(fp)
+
+        return pt
 
     @classmethod
     def validate_investigation_type(self, investigation_type):
