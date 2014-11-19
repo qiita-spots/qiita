@@ -76,7 +76,7 @@ function newInvestigationTypeChanged(rawDataID, isEdit){
       {% end %}
     </td>
     <td style='padding: 10px;'>
-      {% if study_status == 'sandbox' and qiita_config.require_approval and r.get_filepaths() and r.link_filepaths_status not in {'linking', 'unlinking'} %}
+      {% if study_status == 'sandbox' and qiita_config.require_approval and available_raw_data and available_raw_data[0].link_filepaths_status not in {'linking', 'unlinking'} and available_prep_templates %}
         <a class="btn btn-primary" onClick="request_approval();">Request Study Approval</a>
       {% elif (user_level == 'admin' and study_status == 'awaiting_approval') or not qiita_config.require_approval %}
         <a class="btn btn-primary" onClick="approve_study();">Approve Study</a>
@@ -341,6 +341,7 @@ function newInvestigationTypeChanged(rawDataID, isEdit){
                 <i>{{basename(f)}}:</i> {{t[4:]}} <br/>
             {% end %}
               <br/>
+            {% if study_status == 'sandbox' or user_level == 'admin' %}
               <h4>Link uploaded files with raw data</h4>
               <table border="0">
                 <tr>
@@ -348,7 +349,7 @@ function newInvestigationTypeChanged(rawDataID, isEdit){
                   <th>&nbsp;&nbsp;&nbsp;</th>
                   <th>File type</th>
                 </tr>
-              {% for f in files %}
+                {% for f in files %}
                 <tr>
                   <td>{{f}}</td>
                   <td>&nbsp;</td>
@@ -357,12 +358,11 @@ function newInvestigationTypeChanged(rawDataID, isEdit){
                       <option value="">Ignore ...</option>
                       {% raw filepath_types %}
                     </select>
-                </td>
-              </tr>
-            {% end %}
+                  </td>
+                </tr>
+                {% end %}
             </table>
             <br/>
-            {% if study_status == 'sandbox' or user_level == 'admin' %}
             <a onclick="link_files_to_raw_data({{r.id}});" {% if r.link_filepaths_status in {'linking', 'unlinking'} %} class="btn btn-default" style=" pointer-events: none; cursor: default; background-color:grey;" {% else %} class="btn btn-primary" {% end %}>Link raw files to: {{r.filetype}} (ID: {{r.id}})</a>
             {% end %}
           </td>
