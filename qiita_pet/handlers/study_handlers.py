@@ -356,6 +356,9 @@ class StudyDescriptionHandler(BaseHandler):
                          raise_error=True)
 
         # vars to add sample template
+        msg = ''
+        msg_level = ''
+        tab_to_display = ''
         sample_template = self.get_argument('sample_template', None)
         # vars to add raw data
         filetype = self.get_argument('filetype', None)
@@ -427,12 +430,10 @@ class StudyDescriptionHandler(BaseHandler):
             tab_to_display = ""
 
         elif make_public:
-            # make sure user is admin, then make public
-            if user.level == 'admin' or not \
-                    qiita_config.require_approval:
-                study.status = 'public'
-                msg = "Study set to public"
-                tab_to_display = ""
+            msg = ''
+            study.status = 'public'
+            msg = "Study set to public"
+            tab_to_display = ""
 
         elif approve_study:
             # make sure user is admin, then make full private study
@@ -444,7 +445,6 @@ class StudyDescriptionHandler(BaseHandler):
 
         elif filetype or previous_raw_data:
             # adding blank raw data
-
             if filetype and previous_raw_data:
                 msg = ("You can not specify both a new raw data and a "
                        "previouly used one")

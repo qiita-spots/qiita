@@ -282,9 +282,11 @@ function newInvestigationTypeChanged(rawDataID, isEdit){
                 </td>
                 {% if not prep.preprocessed_data or prep.preprocessing_status.startswith('failed') %}
                   <td style="padding:3px;">
+                  {% if study_status == 'sandbox' %}
                     <input type="button" class="btn btn-primary" value="Split libraries" onclick="split_libraries({{prep.id}});">
                     <input type="checkbox" id="rev_comp_mapping_barcodes_{{prep.id}}"> Use rev_comp_mapping_barcodes
                     <hr/>
+                  {% end %}
                     <i>Status:</i> {{prep.preprocessing_status}}
                     <br>
                     {% if 'zero-size array' in prep.preprocessing_status %}
