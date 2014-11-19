@@ -1376,14 +1376,14 @@ class TestUtilities(TestCase):
 
     def test_load_template_to_dataframe_empty_columns(self):
         obs = load_template_to_dataframe(
-                StringIO(EXP_SAMPLE_TEMPLATE_SPACES_EMPTY_COLUMN))
+            StringIO(EXP_SAMPLE_TEMPLATE_SPACES_EMPTY_COLUMN))
         exp = pd.DataFrame.from_dict(SAMPLE_TEMPLATE_DICT_FORM)
         exp.index.name = 'sample_name'
         assert_frame_equal(obs, exp)
 
     def test_load_template_to_dataframe_empty_rows(self):
         obs = load_template_to_dataframe(
-                StringIO(EXP_SAMPLE_TEMPLATE_SPACES_EMPTY_ROW))
+            StringIO(EXP_SAMPLE_TEMPLATE_SPACES_EMPTY_ROW))
         exp = pd.DataFrame.from_dict(SAMPLE_TEMPLATE_DICT_FORM)
         exp.index.name = 'sample_name'
         assert_frame_equal(obs, exp)
