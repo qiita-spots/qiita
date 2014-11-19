@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 from __future__ import division
-from json import dumps
 from os.path import join
 from sys import stderr
 
@@ -135,9 +134,9 @@ class RunAnalysis(ParallelWrapper):
 
     def _failure_callback(self, msg=None):
         """Executed if something fails"""
-        from qiita_ware import r_server
         # set the analysis to errored
         self.analysis.status = 'error'
+        self._update_status("Failed")
 
         # set any jobs to errored if they didn't execute
         for job_id in self.analysis.jobs:
@@ -145,12 +144,4 @@ class RunAnalysis(ParallelWrapper):
             if job.status not in {'error', 'completed'}:
                 job.status = 'error'
 
-        # send completed signal to wait page
-        redis_msg = {
-            "msg": "allcomplete",
-            "analysis": self.analysis.id
-        }
-        user = self.analysis.owner
-        r_server.rpush(user + ":messages", dumps(redis_msg))
-        r_server.publish(user, dumps(redis_msg))
         LogEntry.create('Runtime', msg, info={'analysis': self.analysis.id})
