@@ -167,12 +167,27 @@ class ParallelWrapper(object):
         if self._logger != stderr:
             self._logger.close()
 
-    def _submit_with_deps(self, deps, name, cmd, *args, **kwargs):
+    def _submit_with_deps(self, deps, name, func, *args, **kwargs):
+        """Submit with dependencies
+
+        Parameters
+        ----------
+        deps : list of AsyncResult
+            AsyncResults that this new job depend on
+        name : str
+            A job name
+        func : function
+            The function to submit
+
+        Returns
+        -------
+        AsyncResult
+        """
         parent_id = self._group
         url = ''
 
         with self._context.bv.temp_flags(after=deps, block=False):
-            _, _, ar = submit(self._context, parent_id, name, url, cmd,
+            _, _, ar = submit(self._context, parent_id, name, url, func,
                               *args, **kwargs)
         return ar
 
