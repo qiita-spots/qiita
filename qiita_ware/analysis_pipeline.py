@@ -7,8 +7,7 @@ from sys import stderr
 from qiita_db.job import Job
 from qiita_db.logger import LogEntry
 from qiita_db.util import get_db_files_base_dir
-from qiita_ware.wrapper import ParallelWrapper
-from qiita_ware.context import system_call
+from qiita_ware.wrapper import ParallelWrapper, system_call_from_job
 
 
 # -----------------------------------------------------------------------------
@@ -19,57 +18,8 @@ from qiita_ware.context import system_call
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
-def _job_comm_wrapper(user, analysis_id, job):
-    """Wraps the job command execution to allow redis communication
 
-    Parameters
-    ----------
-    user : str
-        The user calling for the run
-    analysis_id : int
-        The analysis_id the job belongs to
-    job : Job object
-        The job to run
-    """
-    from qiita_ware import r_server
-    name, command = job.command
-    options = job.options
-    # create json base for websocket messages
-    msg = {
-        "analysis": analysis_id,
-        "msg": None,
-        "command": "%s: %s" % (job.datatype, name)
-    }
-
-    o_fmt = ' '.join(['%s %s' % (k, v) for k, v in options.items()])
-    c_fmt = "%s %s" % (command, o_fmt)
-
-    # send running message to user wait page
-    job.status = 'running'
-    msg["msg"] = "Running"
-    r_server.rpush(user + ":messages", dumps(msg))
-    r_server.publish(user, dumps(msg))
-
-    # run the command
-    try:
-        system_call(c_fmt)
-    except Exception as e:
-        # if ANYTHING goes wrong we want to catch it and set error status
-        msg["msg"] = "ERROR"
-        r_server.rpush(user + ":messages", dumps(msg))
-        r_server.publish(user, dumps(msg))
-        job.set_error(str(e))
-        return
-
-    # FIX THIS add_results should not be hard coded  Issue #269
-    job.add_results([(job.options["--output_dir"], "directory")])
-    job.status = 'completed'
-    msg["msg"] = "Completed"
-    r_server.rpush(user + ":messages", dumps(msg))
-    r_server.publish(user, dumps(msg))
-
-
-def _build_analysis_files(analysis, r_depth=None):
+def _build_analysis_files(analysis, r_depth=None, **kwargs):
     """Creates the biom tables and mapping file, then adds to jobs
 
     Parameters
@@ -98,48 +48,13 @@ def _build_analysis_files(analysis, r_depth=None):
             job.options = job_opts
 
 
-def _finish_analysis(user, analysis):
-    """Checks job statuses and finalized analysis and redis communication
-
-    Parameters
-    ----------
-    user : str
-        user running this analysis.
-    analysis: Analysis object
-        Analysis to finalize.
-    """
-    from qiita_ware import r_server
-    # check job exit statuses for analysis result status
-    all_good = True
-    for job_id in analysis.jobs:
-        if Job(job_id).status == "error":
-            all_good = False
-            break
-
-    # set final analysis status
-    if all_good:
-        analysis.status = "completed"
-    else:
-        analysis.status = "error"
-
-    # send websockets message that we are done running all jobs
-    msg = {
-        "msg": "allcomplete",
-        "analysis": analysis.id
-    }
-    r_server.rpush(user + ":messages", dumps(msg))
-    r_server.publish(user, dumps(msg))
-
-
 class RunAnalysis(ParallelWrapper):
-    def _construct_job_graph(self, user, analysis, commands, comm_opts=None,
+    def _construct_job_graph(self, analysis, commands, comm_opts=None,
                              rarefaction_depth=None):
         """Builds the job graph for running an analysis
 
         Parameters
         ----------
-        user : str
-            user running this analysis.
         analysis: Analysis object
             Analysis to finalize.
         commands : list of tuples
@@ -153,12 +68,15 @@ class RunAnalysis(ParallelWrapper):
         """
         self._logger = stderr
         self.analysis = analysis
+
         # Add jobs to analysis
         if comm_opts is None:
             comm_opts = {}
+
         for data_type, command in commands:
             # get opts set by user, else make it empty dict
             opts = comm_opts.get(command, {})
+
             # Add commands to analysis as jobs
             # HARD CODED HACKY THING FOR DEMO, FIX  Issue #164
             if (command == "Beta Diversity" or command == "Alpha Rarefaction"):
@@ -170,35 +88,47 @@ class RunAnalysis(ParallelWrapper):
                     opts["--parameter_fp"] = join(
                         get_db_files_base_dir(), "reference",
                         "params_qiime.txt")
+
             if command == "Alpha Rarefaction":
                 opts["-n"] = 4
+
             Job.create(data_type, command, opts, analysis,
                        return_existing=True)
 
         # Create the files for the jobs
         files_node_name = "%d_ANALYSISFILES" % analysis.id
         self._job_graph.add_node(files_node_name,
-                                 job=(_build_analysis_files,
-                                      analysis, rarefaction_depth),
+                                 func=_build_analysis_files,
+                                 args=(analysis, rarefaction_depth),
+                                 job_name='Build analysis',
                                  requires_deps=False)
+
         # Add the jobs
         job_nodes = []
         for job_id in analysis.jobs:
             job = Job(job_id)
             node_name = "%d_JOB_%d" % (analysis.id, job.id)
             job_nodes.append(node_name)
+            job_name = "%s %s" % (job.datatype, job.command[0])
             self._job_graph.add_node(node_name,
-                                     job=(_job_comm_wrapper, user, analysis.id,
-                                          job),
+                                     func=system_call_from_job,
+                                     args=(job_id,),
+                                     job_name=job_name,
                                      requires_deps=False)
+
             # Adding the dependency edges to the graph
             self._job_graph.add_edge(files_node_name, node_name)
 
-        # Finalize the analysis
+        # Finalize the analysis. This is a noop, but the ParallelWrapper
+        # seems to require a final node. Not clear if the baseclass should
+        # automatically include this or not.
         node_name = "FINISH_ANALYSIS_%d" % analysis.id
         self._job_graph.add_node(node_name,
-                                 job=(_finish_analysis, user, analysis),
+                                 func=lambda x: None,
+                                 args=(analysis,),
+                                 job_name='Finalize analysis',
                                  requires_deps=False)
+
         # Adding the dependency edges to the graph
         for job_node_name in job_nodes:
             self._job_graph.add_edge(job_node_name, node_name)
