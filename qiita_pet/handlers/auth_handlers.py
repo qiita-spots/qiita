@@ -23,8 +23,8 @@ class AuthCreateHandler(BaseHandler):
                     error=error_message)
 
     def post(self):
-        username = self.get_argument("username", "").strip().lower()
-        password = self.get_argument("pass", "")
+        username = self.get_argument("email", "").strip().lower()
+        password = self.get_argument("newpass", "")
         info = {}
         for info_column in ("name", "affiliation", "address", "phone"):
             hold = self.get_argument(info_column, None)
