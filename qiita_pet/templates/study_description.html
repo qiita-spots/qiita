@@ -70,13 +70,13 @@ function newInvestigationTypeChanged(rawDataID, isEdit){
       Samples: {{study_info['number_samples_promised']}}/{{study_info['number_samples_collected']}}
       <br/>
       Metadata: {{study_info['metadata_complete']}}
-      {% if can_upload and study_status == 'sandbox' %}
+      {% if can_upload and study_status == 'sandbox' or user_level == 'admin' %}
         <br/>
         <a href="/study/upload/{{study_id}}">Upload files</a>
       {% end %}
     </td>
     <td style='padding: 10px;'>
-      {% if study_status == 'sandbox' and ste and qiita_config.require_approval %}
+      {% if study_status == 'sandbox' or user_level == 'admin' and available_raw_data and qiita_config.require_approval %}
         <a class="btn btn-primary" onClick="request_approval();">Request Study Approval</a>
       {% elif (user_level == 'admin' and study_status == 'awaiting_approval') or not qiita_config.require_approval %}
         <a class="btn btn-primary" onClick="approve_study();">Approve Study</a>
@@ -96,7 +96,7 @@ function newInvestigationTypeChanged(rawDataID, isEdit){
 
 <!-- Nav tabs -->
 <ul class="nav nav-tabs" role="tablist" id="myTab">
-  {% if ste and study_status == 'sandbox' %}
+  {% if ste and study_status == 'sandbox' or user_level == 'admin' %}
     <li class="active"><a href="#add_sample_template" role="tab" data-toggle="tab">Add sample template</a></li>
     <li><a href="#add_raw_data" role="tab" data-toggle="tab">Add raw data</a></li>
   {% end %}
@@ -109,6 +109,7 @@ function newInvestigationTypeChanged(rawDataID, isEdit){
 <!-- Tab panes -->
 <div class="tab-content">
   <div class="tab-pane active" id="add_sample_template" style="padding: 10px;">
+    {% if study_status == 'sandbox' or user_level == 'admin' %}
     Select your sample template:
     <select id="sample_template">
       {% for f in files %}
@@ -116,7 +117,6 @@ function newInvestigationTypeChanged(rawDataID, isEdit){
       {% end %}
     </select>
     <br/><br/>
-    {% if study_status == 'sandbox' %}
     <a class="btn btn-primary" onclick="process_sample_template();">Process sample template</a>
     {% end %}
 
@@ -128,7 +128,7 @@ function newInvestigationTypeChanged(rawDataID, isEdit){
     {% end %}
   </div>
 
-  {% if ste and study_status == 'sandbox' %}
+  {% if (ste and study_status == 'sandbox') or user_level == 'admin' %}
     <div class="tab-pane" id="add_raw_data" style="padding: 10px;">
       What file type is your raw data?
       <select id="filetype">
@@ -202,7 +202,7 @@ function newInvestigationTypeChanged(rawDataID, isEdit){
               </li>
             </ol>
             <br/>
-            {% if study_status == 'sandbox' %}
+            {% if study_status == 'sandbox' or user_level == 'admin' %}
             <a class="btn btn-primary" onclick="add_prep_template({{r.id}});">Add prep template</a>
             {% end %}
             <br/>
@@ -215,7 +215,7 @@ function newInvestigationTypeChanged(rawDataID, isEdit){
                 <td style="padding:3px;">
                   <a class="btn btn-primary" href="/metadata_summary/?study_id={{study_id}}&prep_template={{prep.id}}">Show prep template summary</a>
                   <br/><br/>
-                  {% if ste and study_status == 'sandbox' %}
+                  {% if ste and study_status == 'sandbox' or user_level == 'admin' %}
                     <table id="edit-investigation-type-table" name="edit-investigation-types" class="investigation-type-table">
                       <tr>
                         <td>
@@ -364,7 +364,7 @@ function newInvestigationTypeChanged(rawDataID, isEdit){
             {% end %}
             </table>
             <br/>
-            {% if study_status == 'sandbox' %}
+            {% if study_status == 'sandbox' or user_level == 'admin' %}
             <a onclick="link_files_to_raw_data({{r.id}});" {% if r.link_filepaths_status in {'linking', 'unlinking'} %} class="btn btn-default" style=" pointer-events: none; cursor: default; background-color:grey;" {% else %} class="btn btn-primary" {% end %}>Link raw files to: {{r.filetype}} (ID: {{r.id}})</a>
             {% end %}
           </td>
@@ -582,7 +582,7 @@ function newInvestigationTypeChanged(rawDataID, isEdit){
   }
 
   function request_approval() {
-    if (confirm("Are you sure you want to ask for approval?<br />IMPORTANT: This will not allow you to add any new raw data or modifications to this study")) {
+    if (confirm("Are you sure you want to ask for approval? IMPORTANT: This will not allow you to add any new raw data or modifications to this study")) {
       var form = $("<form>")
         .attr("action", window.location.href)
         .attr("method", "post")
