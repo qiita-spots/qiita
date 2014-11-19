@@ -343,6 +343,8 @@ class StudyDescriptionHandler(BaseHandler):
 
         # New Type is for users to add a new user-defined investigation type
         user_defined_terms = ontology.user_defined_terms + ['New Type']
+        princ_inv = StudyPerson(study.info['principal_investigator_id'])
+        pi_link = study_person_linkifier((princ_inv.email, princ_inv.name))
         self.render('study_description.html', user=self.current_user,
                     study_title=study.title, study_info=study.info,
                     study_id=study.id, filetypes=''.join(filetypes),
@@ -356,7 +358,11 @@ class StudyDescriptionHandler(BaseHandler):
                     can_upload=check_access(user, study, no_public=True),
                     other_studies_rd=''.join(other_studies_rd),
                     user_defined_terms=user_defined_terms,
-                    files=get_files_from_uploads_folders(str(study.id)))
+                    files=get_files_from_uploads_folders(str(study.id)),
+                    is_public=study.status == 'public',
+                    pmids=", ".join([pubmed_linkifier([pmid])
+                                     for pmid in study.pmids]),
+                    principal_investigator=pi_link)
 
     @authenticated
     def get(self, study_id):

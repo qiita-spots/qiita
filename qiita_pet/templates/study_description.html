@@ -62,20 +62,24 @@ function newInvestigationTypeChanged(rawDataID, isEdit){
 <table border="0" style="vertical-align: middle; text-align:center; align:center;">
   <tr>
     <td style="vertical-align: middle; text-align:left; width: 50%;" colspan="2">
-      <b>{{study_title}} ({{study_info['study_alias']}})</b>
-      <br/>
-      Samples: {{study_info['number_samples_promised']}}/{{study_info['number_samples_collected']}}
-      <br/>
-      Metadata: {{study_info['metadata_complete']}}
+      <h1>{{study_title}}</h1>
+      <h2><i>{{study_info['study_alias']}} </i> {% if not is_public or user_level == "admin" %} <a class="glyphicon glyphicon-edit" href="/study/edit/{{study_id}}" title="Edit the study information"></a> {% end %}</h2>
+      <b>Abstract:</b> {{study_info['study_abstract']}} <br/>
+      <b>Description:</b> {{study_info['study_description']}} <br/>
+      <b>PubMed IDs:</b> {% raw pmids %} <br/>
+      <b>Principal investigator:</b> {% raw principal_investigator %} <br/>
+      <b>Samples:</b> {{study_info['number_samples_promised']}}/{{study_info['number_samples_collected']}}<br/>
+      <b>Metadata:</b> {{study_info['metadata_complete']}} <br/>
+      {% if ste %}
+        <a class="btn btn-primary" href="/metadata_summary/?study_id={{study_id}}&sample_template={{study_id}}">Show sample template summary</a>
+      {% end %}
       {% if can_upload %}
         <br/>
         <a href="/study/upload/{{study_id}}">Upload files</a>
       {% end %}
     </td>
     <td width="60px">
-      {% if ste %}
-        <a class="btn btn-primary" href="/metadata_summary/?study_id={{study_id}}&sample_template={{study_id}}">Show study template summary</a>
-      {% end %}
+      
     </td>
   </tr>
 </table>
