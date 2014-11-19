@@ -15,10 +15,12 @@ from collections import defaultdict, Counter
 
 from tornado.web import authenticated, HTTPError
 from pyparsing import ParseException
+from moi import ctx_default
+from moi.job import submit
+from moi.group import get_id_from_user, create_info
 
 from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_ware.dispatchable import run_analysis
-from qiita_ware.context import submit
 from qiita_ware import r_server
 from qiita_db.user import User
 from qiita_db.analysis import Analysis
@@ -276,10 +278,18 @@ class AnalysisWaitHandler(BaseHandler):
         command_args = self.get_arguments("commands")
         split = [x.split("#") for x in command_args]
         commands = ["%s: %s" % (s[0], s[1]) for s in split]
+
+        moi_user_id = get_id_from_user(user)
+        moi_group = create_info(analysis_id, 'group',url='/analysis/',
+                                parent=moi_user_id, store=True)
+        moi_name = 'analysis'
+        moi_result_url = '/analysis/subcommand/'
+        submit(ctx_default, moi_group['id'], moi_name, moi_result_url,
+               run_analysis, analysis_id, split,
+               rarefaction_depth=rarefaction_depth)
+
         self.render("analysis_waiting.html", user=user, aid=analysis_id,
                     aname=analysis.name, commands=commands)
-        submit(user, run_analysis, user, analysis_id, split, comm_opts={},
-               rarefaction_depth=rarefaction_depth)
 
 
 class AnalysisResultsHandler(BaseHandler):
