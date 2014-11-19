@@ -1374,6 +1374,20 @@ class TestUtilities(TestCase):
         exp.index.name = 'sample_name'
         assert_frame_equal(obs, exp)
 
+    def test_load_template_to_dataframe_empty_columns(self):
+        obs = load_template_to_dataframe(
+                StringIO(EXP_SAMPLE_TEMPLATE_SPACES_EMPTY_COLUMN))
+        exp = pd.DataFrame.from_dict(SAMPLE_TEMPLATE_DICT_FORM)
+        exp.index.name = 'sample_name'
+        assert_frame_equal(obs, exp)
+
+    def test_load_template_to_dataframe_empty_rows(self):
+        obs = load_template_to_dataframe(
+                StringIO(EXP_SAMPLE_TEMPLATE_SPACES_EMPTY_ROW))
+        exp = pd.DataFrame.from_dict(SAMPLE_TEMPLATE_DICT_FORM)
+        exp.index.name = 'sample_name'
+        assert_frame_equal(obs, exp)
+
 
 EXP_SAMPLE_TEMPLATE = (
     "sample_name\tcollection_timestamp\tdescription\thas_extracted_data\t"
@@ -1416,6 +1430,38 @@ EXP_SAMPLE_TEMPLATE_SPACES = (
     "2.Sample3\t2014-05-29 12:24:51\tTest Sample 3\tTrue\t"
     "True\tNotIdentified\t4.8\t4.41\tlocation1\treceived\ttype1\t"
     "Value for sample 3\n")
+
+EXP_SAMPLE_TEMPLATE_SPACES_EMPTY_ROW = (
+    "sample_name\tcollection_timestamp\tdescription\thas_extracted_data\t"
+    "has_physical_specimen\thost_subject_id\tlatitude\tlongitude\t"
+    "physical_location\trequired_sample_info_status\tsample_type\t"
+    "str_column\n"
+    "2.Sample1         \t2014-05-29 12:24:51\tTest Sample 1\tTrue\tTrue\t"
+    "NotIdentified\t42.42\t41.41\tlocation1\treceived\ttype1\t"
+    "Value for sample 1\n"
+    "2.Sample2  \t2014-05-29 12:24:51\t"
+    "Test Sample 2\tTrue\tTrue\tNotIdentified\t4.2\t1.1\tlocation1\treceived\t"
+    "type1\tValue for sample 2\n"
+    "2.Sample3\t2014-05-29 12:24:51\tTest Sample 3\tTrue\t"
+    "True\tNotIdentified\t4.8\t4.41\tlocation1\treceived\ttype1\t"
+    "Value for sample 3\n"
+    "\t\t\t\t\t\t\t\t\t\t\t\n"
+    "\t\t\t\t\t\t\t\t\t\t\t\n")
+
+EXP_SAMPLE_TEMPLATE_SPACES_EMPTY_COLUMN = (
+    "sample_name\tcollection_timestamp\tdescription\thas_extracted_data\t"
+    "has_physical_specimen\thost_subject_id\tlatitude\tlongitude\t"
+    "physical_location\trequired_sample_info_status\tsample_type\t"
+    "str_column\t\n"
+    "2.Sample1         \t2014-05-29 12:24:51\tTest Sample 1\tTrue\tTrue\t"
+    "NotIdentified\t42.42\t41.41\tlocation1\treceived\ttype1\t"
+    "Value for sample 1\t\n"
+    "2.Sample2  \t2014-05-29 12:24:51\t"
+    "Test Sample 2\tTrue\tTrue\tNotIdentified\t4.2\t1.1\tlocation1\treceived\t"
+    "type1\tValue for sample 2\t\n"
+    "2.Sample3\t2014-05-29 12:24:51\tTest Sample 3\tTrue\t"
+    "True\tNotIdentified\t4.8\t4.41\tlocation1\treceived\ttype1\t"
+    "Value for sample 3\t\n")
 
 SAMPLE_TEMPLATE_DICT_FORM = {
     'collection_timestamp': {'2.Sample1': '2014-05-29 12:24:51',
