@@ -599,7 +599,7 @@ class Analysis(QiitaStatusObject):
         for pid, samps in viewitems(samples):
             # one biom table attached to each processed data object
             proc_data = ProcessedData(pid)
-            proc_data_fp = proc_data.get_filepaths()[0][0]
+            proc_data_fp = proc_data.get_filepaths()[0][1]
             table_fp = join(base_fp, proc_data_fp)
             table = load_table(table_fp)
             # HACKY WORKAROUND FOR DEMO. Issue # 246

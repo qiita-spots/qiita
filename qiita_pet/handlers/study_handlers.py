@@ -210,7 +210,7 @@ class PreprocessingSummaryHandler(BaseHandler):
         files_tuples = ppd.get_filepaths()
         files = defaultdict(list)
 
-        for fp, fpt in files_tuples:
+        for fpid, fp, fpt in files_tuples:
             files[fpt].append(fp)
 
         with open(files['log'][0], 'U') as f:
