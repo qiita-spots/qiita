@@ -76,7 +76,7 @@ function newInvestigationTypeChanged(rawDataID, isEdit){
       {% end %}
     </td>
     <td style='padding: 10px;'>
-      {% if study_status == 'sandbox' and available_raw_data and qiita_config.require_approval %}
+      {% if study_status == 'sandbox' and qiita_config.require_approval and r.get_filepaths() and r.link_filepaths_status not in {'linking', 'unlinking'} %}
         <a class="btn btn-primary" onClick="request_approval();">Request Study Approval</a>
       {% elif (user_level == 'admin' and study_status == 'awaiting_approval') or not qiita_config.require_approval %}
         <a class="btn btn-primary" onClick="approve_study();">Approve Study</a>
