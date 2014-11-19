@@ -278,10 +278,14 @@ function newInvestigationTypeChanged(rawDataID, isEdit){
                     <table border="0">
                     {% for pdi in prep.preprocessed_data %}
                       {% set pd = PreprocessedData(pdi) %}
-                      {% if pd.get_filepaths() %}
+                      {% set filepaths = pd.get_filepaths() %}
+                      {% if filepaths %}
                         <tr>
                           <td style="padding:3px;">
                             <a class="btn btn-primary" href="/preprocessing_summary/{{pdi}}">Preprocessing summary</a>
+                            {% for fpid, fp, ft in filepaths %}
+                              <br/><a href="/download/{{fpid}}">{{basename(fp)}}</a>
+                            {% end %}
                           </td>
                           <td rowspan="2" style="padding:3px;">
                             Preprocessed Data ID: {{ pdi }}<br/>
@@ -319,7 +323,7 @@ function newInvestigationTypeChanged(rawDataID, isEdit){
             {% elif r.link_filepaths_status.startswith('failed') %}
               <i><b style="color:red">Error (un)linking files: {{r.link_filepaths_status}} </b></i><br/>
             {% end %}
-            {% for f, t in r.get_filepaths() %}
+            {% for fpid, f, t in r.get_filepaths() %}
               <i>{{basename(f)}}:</i> {{t[4:]}} <br/>
             {% end %}
             <br/>
