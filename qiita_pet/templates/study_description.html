@@ -327,8 +327,7 @@ function newInvestigationTypeChanged(rawDataID, isEdit){
           </td>
           <td style="vertical-align:top;padding:10px;">
             <h4>Linked files to this raw data</h4>
-            {% if study_status != "sandbox" %}
-              {% if r.get_filepaths() and r.link_filepaths_status not in {'linking', 'unlinking'} %}
+              {% if (study_status == 'sandbox' or user_level == 'admin') and r.get_filepaths() and r.link_filepaths_status not in {'linking', 'unlinking'} %}
                 <a class="btn btn-danger" onclick="unlink_all_files({{r.id}})">Unlink all files</a><br/>
               {% end %}
               {% if r.link_filepaths_status == 'linking' %}
@@ -338,9 +337,9 @@ function newInvestigationTypeChanged(rawDataID, isEdit){
               {% elif r.link_filepaths_status.startswith('failed') %}
                 <i><b style="color:red">Error (un)linking files: {{r.link_filepaths_status}} </b></i><br/>
               {% end %}
-              {% for f, t in r.get_filepaths() %}
+            {% for f, t in r.get_filepaths() %}
                 <i>{{basename(f)}}:</i> {{t[4:]}} <br/>
-              {% end %}
+            {% end %}
               <br/>
               <h4>Link uploaded files with raw data</h4>
               <table border="0">
@@ -358,7 +357,6 @@ function newInvestigationTypeChanged(rawDataID, isEdit){
                       <option value="">Ignore ...</option>
                       {% raw filepath_types %}
                     </select>
-                {% end %}
                 </td>
               </tr>
             {% end %}
