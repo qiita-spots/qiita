@@ -30,6 +30,24 @@ from .data import RawData, PreprocessedData, ProcessedData
 from .analysis import Analysis
 
 
+def _get_data_fpids(constructor, object_id):
+    """Small function for getting filepath IDS associated with data object
+
+    Parameters
+    ----------
+    constructor : a subclass of BaseData
+        E.g., RawData, PreprocessedData, or ProcessedData
+    object_id : int
+        The ID of the data object
+
+    Returns
+    -------
+    list of int
+    """
+    obj = constructor(object_id)
+    return [fpid for fpid, fp, fptid in obj.get_filepaths()]
+
+
 def get_accessible_filepath_ids(user_id):
     """Gets all filepaths that this user should have access to
 
@@ -49,10 +67,6 @@ def get_accessible_filepath_ids(user_id):
     study_ids = Study.get_public() + user.private_studies + \
         user.shared_studies
 
-    def _get_study_fpids(constructor, object_id):
-        obj = constructor(object_id)
-        return [fpid for fpid, fp, fptid in obj.get_filepaths()]
-
     filepath_ids = []
     for study_id in study_ids:
         study = Study(study_id)
@@ -63,15 +77,15 @@ def get_accessible_filepath_ids(user_id):
         processed_data_ids = study.processed_data()
 
         for raw_data_id in raw_data_ids:
-            filepath_ids.extend(_get_study_fpids(RawData, raw_data_id))
+            filepath_ids.extend(_get_data_fpids(RawData, raw_data_id))
 
         for preprocessed_data_id in preprocessed_data_ids:
-            filepath_ids.extend(_get_study_fpids(PreprocessedData,
-                                                 preprocessed_data_id))
+            filepath_ids.extend(_get_data_fpids(PreprocessedData,
+                                                preprocessed_data_id))
 
         for processed_data_id in processed_data_ids:
-            filepath_ids.extend(_get_study_fpids(ProcessedData,
-                                                 processed_data_id))
+            filepath_ids.extend(_get_data_fpids(ProcessedData,
+                                                processed_data_id))
 
     # Next, analyses
     # Same as before, ther eare public, private, and shared
