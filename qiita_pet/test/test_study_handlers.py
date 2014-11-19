@@ -5,7 +5,12 @@ from qiita_db.study import StudyPerson, Study
 from qiita_db.util import get_count, check_count
 
 
-class TestCreateStudyForm(TestHandlerBase):
+class TestStudyEditorForm(TestHandlerBase):
+    # TODO: add proper test for this once figure out how. Issue 567
+    pass
+
+
+class TestStudyEditorExtendedForm(TestHandlerBase):
     # TODO: add proper test for this once figure out how. Issue 567
     pass
 

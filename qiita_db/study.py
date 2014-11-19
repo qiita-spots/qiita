@@ -443,6 +443,11 @@ class Study(QiitaStatusObject):
         ----------
         values : list of str
             The list of pmids to associate with the study
+
+        Raises
+        ------
+        TypeError
+            If values is not a list
         """
         # Check that a list is actually passed
         if not isinstance(values, list):
@@ -546,6 +551,13 @@ class Study(QiitaStatusObject):
         ----------
         values : list of str
             The list of environmental package names to associate with the study
+
+        Raises
+        ------
+        TypeError
+            If values is not a list
+        ValueError
+            If any environmental packages listed on values is not recognized
         """
         # Check that a list is actually passed
         if not isinstance(values, list):
