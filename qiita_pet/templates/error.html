@@ -3,4 +3,7 @@
 {% block content%}
     <h1 style="text-align:center">ERROR: CODE {{status_code}}!</h1>
     <p style="text-align:center">The error has been logged and will be looked at.</p>
+    {% if is_admin %}
+    <p style="text-align:center">Go to the <a href="/error/">error page</a> to view the logs</p>
+    {% end %}
 {% end %}

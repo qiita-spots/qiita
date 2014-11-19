@@ -20,7 +20,7 @@ $(document).ready(function() {
   {% if logentries %}
     <div>
       <form id="records" method="post" action="/error/">
-      Number of entries: <input type="number" name="numrecords" value="100" class="form-">
+      Number of entries: <input type="number" name="numrecords" value="{{ len(logentries) }}" class="form-">
       </form>
     </div>
       <table id="error-table" class="display table-bordered table-hover">

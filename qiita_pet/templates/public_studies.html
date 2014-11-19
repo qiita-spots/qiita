@@ -30,8 +30,8 @@ $(document).ready(function() {
             {% for s in public_studies %}
             <tr>
                 <td><a href="/study/description/{{ s.id }}">{{ s.title }}</a></td>
-                {% if s.meta_complete %}
                 <td>{% raw s.owner %}</td>
+                {% if s.meta_complete %}
                 <td><span class="glyphicon glyphicon-ok"></span></td>
                 {% else %}
                 <td><span class="glyphicon glyphicon-remove"></span></td>
