@@ -284,7 +284,11 @@ function newInvestigationTypeChanged(rawDataID, isEdit){
                           <td style="padding:3px;">
                             <a class="btn btn-primary" href="/preprocessing_summary/{{pdi}}">Preprocessing summary</a>
                             {% for fpid, fp, ft in filepaths %}
-                              <br/><a href="/download/{{fpid}}">{{basename(fp)}}</a>
+                              {% if is_local_request %}
+                                <br/>{{fp}}
+                              {% else %}
+                                <br/><a href="/download/{{fpid}}">{{basename(fp)}}</a>
+                              {% end %}
                             {% end %}
                           </td>
                           <td rowspan="2" style="padding:3px;">

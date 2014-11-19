@@ -272,6 +272,10 @@ class StudyDescriptionHandler(BaseHandler):
     @coroutine
     def display_template(self, study, msg, msg_level, tab_to_display=""):
         """Simple function to avoid duplication of code"""
+        # Check if the request came from a local source
+        is_local_request = ('localhost' in self.request.headers['host'] or
+                            '127.0.0.1' in self.request.headers['host'])
+
         # getting raw filepath_ types
         fts = [k.split('_', 1)[1].replace('_', ' ')
                for k in get_filepath_types() if k.startswith('raw_')]
@@ -320,7 +324,8 @@ class StudyDescriptionHandler(BaseHandler):
                     can_upload=check_access(user, study, no_public=True),
                     other_studies_rd=''.join(other_studies_rd),
                     user_defined_terms=user_defined_terms,
-                    files=get_files_from_uploads_folders(str(study.id)))
+                    files=get_files_from_uploads_folders(str(study.id)),
+                    is_local_request=is_local_request)
 
     @authenticated
     def get(self, study_id):
