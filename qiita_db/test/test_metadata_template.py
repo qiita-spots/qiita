@@ -1388,6 +1388,16 @@ class TestUtilities(TestCase):
         exp.index.name = 'sample_name'
         assert_frame_equal(obs, exp)
 
+    def test_load_template_to_dataframe_no_sample_name_cast(self):
+        obs = load_template_to_dataframe(
+            StringIO(EXP_SAMPLE_TEMPLATE_NUMBER_SAMPLE_NAMES))
+        exp = pd.DataFrame.from_dict(
+            SAMPLE_TEMPLATE_NUMBER_SAMPLE_NAMES_DICT_FORM)
+        exp.index.name = 'sample_name'
+        obs.sort_index(inplace=True)
+        exp.sort_index(inplace=True)
+        assert_frame_equal(obs, exp)
+
 
 EXP_SAMPLE_TEMPLATE = (
     "sample_name\tcollection_timestamp\tdescription\thas_extracted_data\t"
@@ -1463,6 +1473,21 @@ EXP_SAMPLE_TEMPLATE_SPACES_EMPTY_COLUMN = (
     "True\tNotIdentified\t4.8\t4.41\tlocation1\treceived\ttype1\t"
     "Value for sample 3\t\n")
 
+EXP_SAMPLE_TEMPLATE_NUMBER_SAMPLE_NAMES = (
+    "sample_name\tcollection_timestamp\tdescription\thas_extracted_data\t"
+    "has_physical_specimen\thost_subject_id\tlatitude\tlongitude\t"
+    "physical_location\trequired_sample_info_status\tsample_type\t"
+    "str_column\n"
+    "002.000\t2014-05-29 12:24:51\tTest Sample 1\tTrue\tTrue\t"
+    "NotIdentified\t42.42\t41.41\tlocation1\treceived\ttype1\t"
+    "Value for sample 1\n"
+    "1.11111\t2014-05-29 12:24:51\t"
+    "Test Sample 2\tTrue\tTrue\tNotIdentified\t4.2\t1.1\tlocation1\treceived\t"
+    "type1\tValue for sample 2\n"
+    "0.12121\t2014-05-29 12:24:51\tTest Sample 3\tTrue\t"
+    "True\tNotIdentified\t4.8\t4.41\tlocation1\treceived\ttype1\t"
+    "Value for sample 3\n")
+
 SAMPLE_TEMPLATE_DICT_FORM = {
     'collection_timestamp': {'2.Sample1': '2014-05-29 12:24:51',
                              '2.Sample2': '2014-05-29 12:24:51',
@@ -1497,6 +1522,41 @@ SAMPLE_TEMPLATE_DICT_FORM = {
     'str_column': {'2.Sample1': 'Value for sample 1',
                    '2.Sample2': 'Value for sample 2',
                    '2.Sample3': 'Value for sample 3'}}
+
+SAMPLE_TEMPLATE_NUMBER_SAMPLE_NAMES_DICT_FORM = {
+    'collection_timestamp': {'002.000': '2014-05-29 12:24:51',
+                             '1.11111': '2014-05-29 12:24:51',
+                             '0.12121': '2014-05-29 12:24:51'},
+    'description': {'002.000': 'Test Sample 1',
+                    '1.11111': 'Test Sample 2',
+                    '0.12121': 'Test Sample 3'},
+    'has_extracted_data': {'002.000': True,
+                           '1.11111': True,
+                           '0.12121': True},
+    'has_physical_specimen': {'002.000': True,
+                              '1.11111': True,
+                              '0.12121': True},
+    'host_subject_id': {'002.000': 'NotIdentified',
+                        '1.11111': 'NotIdentified',
+                        '0.12121': 'NotIdentified'},
+    'latitude': {'002.000': 42.420000000000002,
+                 '1.11111': 4.2000000000000002,
+                 '0.12121': 4.7999999999999998},
+    'longitude': {'002.000': 41.409999999999997,
+                  '1.11111': 1.1000000000000001,
+                  '0.12121': 4.4100000000000001},
+    'physical_location': {'002.000': 'location1',
+                          '1.11111': 'location1',
+                          '0.12121': 'location1'},
+    'required_sample_info_status': {'002.000': 'received',
+                                    '1.11111': 'received',
+                                    '0.12121': 'received'},
+    'sample_type': {'002.000': 'type1',
+                    '1.11111': 'type1',
+                    '0.12121': 'type1'},
+    'str_column': {'002.000': 'Value for sample 1',
+                   '1.11111': 'Value for sample 2',
+                   '0.12121': 'Value for sample 3'}}
 
 EXP_PREP_TEMPLATE = (
     'sample_name\tbarcodesequence\tcenter_name\tcenter_project_name\t'
