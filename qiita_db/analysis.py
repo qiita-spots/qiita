@@ -287,8 +287,8 @@ class Analysis(QiitaStatusObject):
               FROM qiita.filepath f JOIN
               qiita.analysis_filepath af ON f.filepath_id = af.filepath_id
               WHERE af.analysis_id = %s"""
-        filepaths = [row[0]
-                     for row in conn_handler.execute_fetchall(sql, [self._id])]
+        filepaths = {row[0]
+                     for row in conn_handler.execute_fetchall(sql, [self._id])}
 
         return filepaths
 
