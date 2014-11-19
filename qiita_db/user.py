@@ -420,7 +420,7 @@ class User(QiitaObject):
         return False
 
     def _change_pass(self, newpass, conn_handler=None):
-        sql = ("UPDATE qiita.{0} SET password = %s WHERE "
+        sql = ("UPDATE qiita.{0} SET password=%s, pass_reset_code=NULL WHERE "
                "email = %s".format(self._table))
         conn_handler = conn_handler if conn_handler else SQLConnectionHandler()
         conn_handler.execute(sql, (hash_password(newpass), self._id))

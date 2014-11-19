@@ -237,7 +237,7 @@ class TestStudy(TestCase):
         after = datetime.now()
         self.assertEqual(obs.id, 2)
         exp = {'mixs_compliant': True, 'metadata_complete': True,
-               'reprocess': False, 'study_status_id': 1,
+               'reprocess': False, 'study_status_id': 4,
                'number_samples_promised': 28, 'emp_person_id': 2,
                'funding': None, 'vamps_id': None,
                'principal_investigator_id': 3,
@@ -295,7 +295,7 @@ class TestStudy(TestCase):
                            [1], self.info)
         self.assertEqual(obs.id, 3827)
         exp = {'mixs_compliant': True, 'metadata_complete': False,
-               'reprocess': True, 'study_status_id': 1,
+               'reprocess': True, 'study_status_id': 4,
                'number_samples_promised': 28, 'emp_person_id': 2,
                'funding': 'FundAgency', 'vamps_id': 'MBE_1111111',
                'first_contact': datetime(2014, 10, 24, 12, 47),
