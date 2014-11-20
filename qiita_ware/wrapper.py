@@ -57,7 +57,7 @@ class ParallelWrapper(object):
         self._filepaths_to_remove = []
         self._dirpaths_to_remove = []
         self._update_status = moi_update_status
-        self._context = ctxs.get(moi_context, ctx_default)
+        self._context = ctxs.get(moi_context, ctxs[ctx_default])
         self._group = moi_parent_id
 
     def _construct_job_graph(self, *args, **kwargs):
@@ -184,7 +184,7 @@ class ParallelWrapper(object):
         AsyncResult
         """
         parent_id = self._group
-        url = ''
+        url = None
 
         with self._context.bv.temp_flags(after=deps, block=False):
             _, _, ar = submit(self._context, parent_id, name, url, func,

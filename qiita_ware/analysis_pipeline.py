@@ -47,6 +47,28 @@ def _build_analysis_files(analysis, r_depth=None, **kwargs):
             job.options = job_opts
 
 
+def _finish_analysis(analysis, **kwargs):
+    """Checks job statuses and finalized analysis and redis communication
+
+    Parameters
+    ----------
+    analysis: Analysis
+        Analysis to finalize.
+    """
+    # check job exit statuses for analysis result status
+    all_good = True
+    for job_id in analysis.jobs:
+        if Job(job_id).status == "error":
+            all_good = False
+            break
+
+    # set final analysis status
+    if all_good:
+        analysis.status = "completed"
+    else:
+        analysis.status = "error"
+
+
 class RunAnalysis(ParallelWrapper):
     def _construct_job_graph(self, analysis, commands, comm_opts=None,
                              rarefaction_depth=None):
@@ -108,7 +130,7 @@ class RunAnalysis(ParallelWrapper):
             job = Job(job_id)
             node_name = "%d_JOB_%d" % (analysis.id, job.id)
             job_nodes.append(node_name)
-            job_name = "%s %s" % (job.datatype, job.command[0])
+            job_name = "%s: %s" % (job.datatype, job.command[0])
             self._job_graph.add_node(node_name,
                                      func=system_call_from_job,
                                      args=(job_id,),
@@ -123,7 +145,7 @@ class RunAnalysis(ParallelWrapper):
         # automatically include this or not.
         node_name = "FINISH_ANALYSIS_%d" % analysis.id
         self._job_graph.add_node(node_name,
-                                 func=lambda x: None,
+                                 func=_finish_analysis,
                                  args=(analysis,),
                                  job_name='Finalize analysis',
                                  requires_deps=False)
