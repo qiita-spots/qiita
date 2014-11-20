@@ -154,6 +154,7 @@ function newInvestigationTypeChanged(rawDataID, isEdit){
       <table border="0">
         <tr>
           <td style="vertical-align:top;padding:10px;">
+          {% if study_status == 'sandbox' or user_level == 'admin' %}
             <h4>Add prep template to this raw data</h4>
             To add a prep template you need to:
             <ol>
@@ -202,11 +203,10 @@ function newInvestigationTypeChanged(rawDataID, isEdit){
               </li>
             </ol>
             <br/>
-            {% if study_status == 'sandbox' or user_level == 'admin' %}
             <a class="btn btn-primary" onclick="add_prep_template({{r.id}});">Add prep template</a>
-            {% end %}
             <br/>
             <hr/>
+          {% end %}
             <h4>Prep templates uploaded</h4>
             <table border="1">
               {% for prep in available_prep_templates[r.id] %}
