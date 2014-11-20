@@ -737,19 +737,23 @@ class Analysis(QiitaStatusObject):
             else SQLConnectionHandler()
 
         # get required bookkeeping data for DB
-        _, base_fp = get_mountpoint(self._table)[0]
+        _, base_fp = get_mountpoint(self._table, conn_handler=conn_handler)[0]
         fptypeid = convert_to_id(filetype, "filepath_type", conn_handler)
         fullpath = join(base_fp, filename)
         with open(fullpath, 'rb') as f:
             checksum = crc32(f.read()) & 0xffffffff
 
+        analysis_dd_id, _ = get_mountpoint("analysis",
+                                           conn_handler=conn_handler)[0]
+
         # add  file to analysis
         sql = ("INSERT INTO qiita.filepath (filepath, filepath_type_id, "
-               "checksum, checksum_algorithm_id) VALUES (%s, %s, %s, %s) "
-               "RETURNING filepath_id")
+               "checksum, checksum_algorithm_id, data_directory_id) VALUES "
+               "(%s, %s, %s, %s, %s) RETURNING filepath_id")
         # magic number 1 is for crc32 checksum algorithm
         fpid = conn_handler.execute_fetchone(sql, (fullpath, fptypeid,
-                                                   checksum, 1))[0]
+                                                   checksum, 1,
+                                                   analysis_dd_id))[0]
 
         col = ""
         dtid = ""

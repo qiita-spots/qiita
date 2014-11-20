@@ -58,10 +58,11 @@ class QiitaDBUnknownIDError(QiitaDBError):
 
 class QiitaDBDuplicateHeaderError(QiitaDBError):
     """Exception for error when a MetadataTemplate has duplicate columns"""
-    def __init__(self):
+    def __init__(self, repeated_headers):
         super(QiitaDBDuplicateHeaderError, self).__init__()
         self.args = ("Duplicate headers found in MetadataTemplate. Note "
-                     "that the headers are not case-sensitive",)
+                     "that the headers are not case-sensitive, repeated "
+                     "header(s): %s." % ', '.join(repeated_headers),)
 
 
 class QiitaDBIncompatibleDatatypeError(QiitaDBError):
