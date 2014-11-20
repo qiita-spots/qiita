@@ -1537,10 +1537,24 @@ def load_template_to_dataframe(fn):
     -------
     DataFrame
         Pandas dataframe with the loaded information
+
+    Notes
+    -----
+    The index attribute of the DataFrame will be forced to be 'sample_name'
+    and will be casted to a string. Additionally rows that start with a '\t'
+    character will be ignored and columns that are empty will be removed.
     """
+
+    # index_col=False, otherwise it is casted as a float and we want a string
     template = pd.read_csv(fn, sep='\t', infer_datetime_format=True,
-                           index_col='sample_name', parse_dates=True,
+                           parse_dates=True, index_col=False, comment='\t',
                            converters={
                                'sample_name': lambda x: str(x).strip()})
+
+    # set the sample name as the index
+    template.set_index('sample_name', inplace=True)
+
+    # it is not uncommon to find templates that have empty columns
+    template.dropna(how='all', axis=1, inplace=True)
 
     return template

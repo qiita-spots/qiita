@@ -275,6 +275,24 @@ class Analysis(QiitaStatusObject):
         return [u[0] for u in conn_handler.execute_fetchall(sql, (self._id, ))]
 
     @property
+    def all_associated_filepath_ids(self):
+        """Get all associated filepath_ids EXCEPT job results filepaths
+
+        Returns
+        -------
+        list
+        """
+        conn_handler = SQLConnectionHandler()
+        sql = """SELECT f.filepath_id
+              FROM qiita.filepath f JOIN
+              qiita.analysis_filepath af ON f.filepath_id = af.filepath_id
+              WHERE af.analysis_id = %s"""
+        filepaths = {row[0]
+                     for row in conn_handler.execute_fetchall(sql, [self._id])}
+
+        return filepaths
+
+    @property
     def biom_tables(self):
         """The biom tables of the analysis
 
@@ -581,7 +599,7 @@ class Analysis(QiitaStatusObject):
         for pid, samps in viewitems(samples):
             # one biom table attached to each processed data object
             proc_data = ProcessedData(pid)
-            proc_data_fp = proc_data.get_filepaths()[0][0]
+            proc_data_fp = proc_data.get_filepaths()[0][1]
             table_fp = join(base_fp, proc_data_fp)
             table = load_table(table_fp)
             # HACKY WORKAROUND FOR DEMO. Issue # 246

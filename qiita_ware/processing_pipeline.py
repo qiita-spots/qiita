@@ -101,7 +101,7 @@ def _get_preprocess_fastq_cmd(raw_data, prep_template, params):
     forward_seqs = []
     reverse_seqs = []
     barcode_fps = []
-    for fp, fp_type in raw_data.get_filepaths():
+    for fpid, fp, fp_type in raw_data.get_filepaths():
         if fp_type == "raw_forward_seqs":
             forward_seqs.append(fp)
         elif fp_type == "raw_reverse_seqs":
