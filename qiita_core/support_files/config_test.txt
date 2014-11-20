@@ -13,7 +13,7 @@
 # ------------------------------ Main settings --------------------------------
 [main]
 # Change to FALSE in a production system
-TEST_ENVIRONMENT = FALSE
+TEST_ENVIRONMENT = TRUE
 
 # Whether studies require admin approval to be made available
 REQUIRE_APPROVAL = True
