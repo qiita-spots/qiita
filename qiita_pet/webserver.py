@@ -5,11 +5,11 @@ import tornado.httpserver
 import tornado.ioloop
 import tornado.options
 import tornado.web
-import tornado.websocket
 from tornado.options import define, options
 from os.path import dirname, join
 from base64 import b64encode
 from uuid import uuid4
+from moi.websocket import MOIMessageHandler
 
 from qiita_core.qiita_settings import qiita_config
 from qiita_pet.handlers.base_handlers import (MainHandler, NoPageHandler)
@@ -25,7 +25,6 @@ from qiita_pet.handlers.study_handlers import (
     StudyDescriptionHandler, MetadataSummaryHandler, EBISubmitHandler,
     CreateStudyAJAX, ShareStudyAJAX, PreprocessingSummaryHandler)
 from qiita_pet.handlers.logger_handlers import LogEntryViewerHandler
-from qiita_pet.handlers.websocket_handlers import MessageHandler
 from qiita_pet.handlers.upload import UploadFileHandler, StudyUploadFileHandler
 from qiita_pet.handlers.compute import (
     ComputeCompleteHandler, AddFilesToRawData, UnlinkAllFiles)
@@ -63,7 +62,7 @@ class Application(tornado.web.Application):
             (r"/analysis/wait/(.*)", AnalysisWaitHandler),
             (r"/analysis/results/(.*)", AnalysisResultsHandler),
             (r"/analysis/show/", ShowAnalysesHandler),
-            (r"/consumer/", MessageHandler),
+            (r"/moi-ws/", MOIMessageHandler),
             (r"/error/", LogEntryViewerHandler),
             (r"/metadata_summary/(.*)", MetadataSummaryHandler),
             (r"/preprocessing_summary/(.*)", PreprocessingSummaryHandler),
