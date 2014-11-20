@@ -10,8 +10,7 @@ from qiita_db.study import Study, StudyPerson
 from qiita_db.investigation import Investigation
 from qiita_db.user import User
 from qiita_db.data import RawData
-from qiita_db.exceptions import (QiitaDBColumnError, QiitaDBStatusError,
-                                 QiitaDBError)
+from qiita_db.exceptions import QiitaDBColumnError, QiitaDBStatusError
 
 # -----------------------------------------------------------------------------
 # Copyright (c) 2014--, The Qiita Development Team.
@@ -172,12 +171,18 @@ class TestStudy(TestCase):
 
     def _make_private(self):
         # make studies private
-        self.conn_handler.execute("UPDATE qiita.study SET study_status_id = 3")
+        self.conn_handler.execute("UPDATE qiita.study SET study_status_id = 4")
+
+    def _make_sandbox(self):
+        # make studies private
+        self.conn_handler.execute("UPDATE qiita.study SET study_status_id = 1")
 
     def test_has_access_public(self):
+        self.study.status = 'public'
         self.assertTrue(self.study.has_access(User("demo@microbio.me")))
 
     def test_has_access_no_public(self):
+        self.study.status = 'public'
         self.assertFalse(self.study.has_access(User("demo@microbio.me"), True))
 
     def test_owner(self):
@@ -218,10 +223,10 @@ class TestStudy(TestCase):
         self._make_private()
         self.assertFalse(self.study.has_access(User("demo@microbio.me")))
 
-    def test_get_public(self):
+    def test_get_by_status(self):
         Study.create(User('test@foo.bar'), 'NOT Identification of the '
                      'Microbiomes for Cannabis Soils', [1], self.info)
-        obs = Study.get_public()
+        obs = Study.get_by_status('private')
         self.assertEqual(obs, [1])
 
     def test_exists(self):
@@ -434,7 +439,7 @@ class TestStudy(TestCase):
             new.info = {}
 
     def test_retrieve_status(self):
-        self.assertEqual(self.study.status, "public")
+        self.assertEqual(self.study.status, "private")
 
     def test_set_status(self):
         new = Study.create(User('test@foo.bar'), 'NOT Identification of the '
@@ -482,6 +487,7 @@ class TestStudy(TestCase):
         self.assertEqual(new.raw_data(), [])
 
     def test_add_raw_data(self):
+        self._make_sandbox()
         new = Study.create(User('test@foo.bar'), 'NOT Identification of the '
                            'Microbiomes for Cannabis Soils', [1], self.info)
         new.add_raw_data([RawData(1), RawData(2)])
@@ -490,9 +496,12 @@ class TestStudy(TestCase):
             (new.id,))
         self.assertEqual(obs, [[new.id, 1], [new.id, 2]])
 
-    def test_add_raw_data_error(self):
-        with self.assertRaises(QiitaDBError):
-            self.study.add_raw_data([RawData(1)])
+    def test_add_raw_data_private(self):
+        new = Study.create(User('test@foo.bar'), 'NOT Identification of the '
+                           'Microbiomes for Cannabis Soils', [1], self.info)
+        new.status = 'private'
+        with self.assertRaises(QiitaDBStatusError):
+            new.add_raw_data([RawData(2)])
 
     def test_retrieve_preprocessed_data(self):
         self.assertEqual(self.study.preprocessed_data(), [1, 2])
@@ -511,6 +520,7 @@ class TestStudy(TestCase):
         self.assertEqual(new.processed_data(), [])
 
     def test_add_pmid(self):
+        self._make_private()
         self.study.add_pmid('4544444')
         exp = ['123456', '7891011', '4544444']
         self.assertEqual(self.study.pmids, exp)
