@@ -31,6 +31,7 @@ class DownloadHandler(BaseHandler):
         self.set_header('Content-Type', 'application/octet-stream')
         self.set_header('Content-Transfer-Encoding', 'binary')
         self.set_header('Expires',  '0')
+        self.set_header('Cache-Control',  'no-cache')
         self.set_header('X-Accel-Redirect', '/protected/' + relpath)
         self.set_header('Content-Disposition',
                         'attachment; filename=%s' % fname)
