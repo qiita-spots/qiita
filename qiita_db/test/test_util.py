@@ -475,7 +475,6 @@ class DBUtilTests(TestCase):
         obs = get_files_from_uploads_folders("2")
         self.assertEqual(obs, exp)
 
-<<<<<<< HEAD
     def test_get_environmental_packages(self):
         obs = get_environmental_packages()
         exp = [['air', 'ep_air'],

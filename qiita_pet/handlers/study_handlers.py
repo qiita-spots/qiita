@@ -704,7 +704,7 @@ class StudyEditHandler(BaseHandler):
             'study_alias': form_data.data['study_alias'][0],
             'study_abstract': form_data.data['study_abstract'][0]}
 
-        if 'timeseries' in form_data.data:
+        if 'timeseries' in form_data.data and form_data.data['timeseries']:
             info['timeseries_type_id'] = form_data.data['timeseries'][0]
 
         study_title = form_data.data['study_title'][0]
@@ -728,7 +728,8 @@ class StudyEditHandler(BaseHandler):
                    (theStudy.id, form_data.data['study_title'][0]))
 
         # Add the environmental packages
-        if 'environmental_packages' in form_data.data:
+        if ('environmental_packages' in form_data.data and
+                form_data.data['environmental_packages']):
             theStudy.environmental_packages = form_data.data[
                 'environmental_packages']
 
