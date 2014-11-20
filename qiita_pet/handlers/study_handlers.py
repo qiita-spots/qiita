@@ -25,6 +25,8 @@ from pandas.parser import CParserError
 from future.utils import viewitems
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
+from qiita_core.qiita_settings import qiita_config
+from qiita_pet.util import linkify
 from qiita_ware.context import submit
 from qiita_ware.util import dataframe_from_template, stats_from_df
 from qiita_ware.demux import stats as demux_stats
@@ -41,7 +43,6 @@ from qiita_db.exceptions import (QiitaDBColumnError, QiitaDBExecutionError,
                                  QiitaDBDuplicateError, QiitaDBUnknownIDError)
 from qiita_db.ontology import Ontology
 
-from qiita_pet.util import linkify
 from .base_handlers import BaseHandler
 
 study_person_linkifier = partial(
@@ -63,11 +64,11 @@ def _get_shared_links_for_study(study):
 def _build_study_info(studytype, user=None):
         """builds list of namedtuples for study listings"""
         if studytype == "private":
-            studylist = user.private_studies
+            studylist = user.user_studies
         elif studytype == "shared":
             studylist = user.shared_studies
         elif studytype == "public":
-            studylist = Study.get_public()
+            studylist = Study.get_by_status('public')
         else:
             raise IncompetentQiitaDeveloperError("Must use private, shared, "
                                                  "or public!")
@@ -262,7 +263,7 @@ class StudyDescriptionHandler(BaseHandler):
         raw_data
         """
         d = {}
-        for sid in user.private_studies:
+        for sid in user.user_studies:
             if sid == study.id:
                 continue
             for rdid in Study(sid).raw_data():
@@ -286,6 +287,17 @@ class StudyDescriptionHandler(BaseHandler):
         available_raw_data = yield Task(self.get_raw_data, study.raw_data())
         available_prep_templates = yield Task(self.get_prep_templates,
                                               available_raw_data)
+        # set variable holding if we have files attached to all raw data or not
+        raw_files = True if available_raw_data else False
+        for r in available_raw_data:
+            if not r.get_filepaths():
+                raw_files = False
+
+        # set variable holding if we have all prep templates or not
+        prep_templates = True if available_prep_templates else False
+        for key, val in viewitems(available_prep_templates):
+            if not val:
+                prep_templates = False
         # other general vars, note that we create the select options here
         # so we do not have to loop several times over them in the template
         data_types = sorted(viewitems(get_data_types()), key=itemgetter(1))
@@ -318,9 +330,11 @@ class StudyDescriptionHandler(BaseHandler):
                     available_raw_data=available_raw_data,
                     available_prep_templates=available_prep_templates,
                     ste=SampleTemplate.exists(study.id),
+                    study_status=study.status,
                     filepath_types=''.join(fts), ena_terms=''.join(ena_terms),
-                    tab_to_display=tab_to_display,
-                    level=msg_level, message=msg,
+                    tab_to_display=tab_to_display, level=msg_level,
+                    message=msg, prep_templates=prep_templates,
+                    raw_files=raw_files,
                     can_upload=check_access(user, study, no_public=True),
                     other_studies_rd=''.join(other_studies_rd),
                     user_defined_terms=user_defined_terms,
@@ -344,6 +358,7 @@ class StudyDescriptionHandler(BaseHandler):
     @coroutine
     def post(self, study_id):
         study_id = int(study_id)
+        user = User(self.current_user)
         try:
             study = Study(study_id)
         except QiitaDBUnknownIDError:
@@ -354,6 +369,9 @@ class StudyDescriptionHandler(BaseHandler):
                          raise_error=True)
 
         # vars to add sample template
+        msg = ''
+        msg_level = ''
+        tab_to_display = ''
         sample_template = self.get_argument('sample_template', None)
         # vars to add raw data
         filetype = self.get_argument('filetype', None)
@@ -362,6 +380,10 @@ class StudyDescriptionHandler(BaseHandler):
         add_prep_template = self.get_argument('add_prep_template', None)
         raw_data_id = self.get_argument('raw_data_id', None)
         data_type_id = self.get_argument('data_type_id', None)
+        make_public = self.get_argument('make_public', False)
+        make_sandbox = self.get_argument('make_sandbox', False)
+        approve_study = self.get_argument('approve_study', False)
+        request_approval = self.get_argument('request_approval', False)
         investigation_type = self.get_argument('investigation-type', None)
         user_defined_investigation_type = self.get_argument(
             'user-defined-investigation-type', None)
@@ -416,9 +438,33 @@ class StudyDescriptionHandler(BaseHandler):
                    sample_template)
             tab_to_display = ""
 
+        elif request_approval:
+            study.status = 'awaiting_approval'
+            msg = "Study sent to admin for approval"
+            tab_to_display = ""
+
+        elif make_public:
+            msg = ''
+            study.status = 'public'
+            msg = "Study set to public"
+            tab_to_display = ""
+
+        elif make_sandbox:
+            msg = ''
+            study.status = 'sandbox'
+            msg = "Study reverted to sandbox"
+            tab_to_display = ""
+
+        elif approve_study:
+            # make sure user is admin, then make full private study
+            if user.level == 'admin' or not \
+                    qiita_config.require_approval:
+                study.status = 'private'
+                msg = "Study approved"
+                tab_to_display = ""
+
         elif filetype or previous_raw_data:
             # adding blank raw data
-
             if filetype and previous_raw_data:
                 msg = ("You can not specify both a new raw data and a "
                        "previouly used one")
@@ -611,6 +657,22 @@ class CreateStudyHandler(BaseHandler):
 
         self.render('index.html', message=msg, level='success',
                     user=self.current_user)
+
+
+class StudyApprovalList(BaseHandler):
+    @authenticated
+    def get(self):
+        user = User(self.current_user)
+        if user.level != 'admin':
+            raise HTTPError(403, 'User %s is not admin' % self.current_user)
+
+        parsed_studies = []
+        for sid in Study.get_by_status('awaiting_approval'):
+            study = Study(sid)
+            parsed_studies.append((study.id, study.title, study.owner))
+
+        self.render('admin_approval.html', user=self.current_user,
+                    study_info=parsed_studies)
 
 
 class CreateStudyAJAX(BaseHandler):
