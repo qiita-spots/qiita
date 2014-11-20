@@ -60,6 +60,8 @@ function newInvestigationTypeChanged(rawDataID, isEdit){
 {% from qiita_core.qiita_settings import qiita_config %}
 {% from qiita_db.data import PreprocessedData %}
 
+
+
 <table border="0" style="vertical-align: middle; text-align:center; align:center;">
   <tr>
     <td style="vertical-align: middle; text-align:left; width: 50%;" colspan="2">
@@ -76,7 +78,7 @@ function newInvestigationTypeChanged(rawDataID, isEdit){
       {% end %}
     </td>
     <td style='padding: 10px;'>
-      {% if study_status == 'sandbox' and qiita_config.require_approval and raw_files and available_prep_templates.keys() and available_prep_templates[available_prep_templates.keys()[0]] %}
+      {% if study_status == 'sandbox' and qiita_config.require_approval and raw_files and prep_templates %}
         <a class="btn btn-primary" onClick="request_approval();" style="margin:5px">Request Study Approval</a><br />
       {% elif (user_level == 'admin' and study_status == 'awaiting_approval') or not qiita_config.require_approval %}
         <a class="btn btn-primary" onClick="approve_study();"s tyle="margin:5px">Approve Study</a><br />

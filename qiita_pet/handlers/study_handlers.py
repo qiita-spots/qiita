@@ -292,6 +292,12 @@ class StudyDescriptionHandler(BaseHandler):
         for r in available_raw_data:
             if not r.get_filepaths():
                 raw_files = False
+
+        # set variable holding if we have all prep templates or not
+        prep_templates = True
+        for key, val in viewitems(available_prep_templates):
+            if not val:
+                prep_templates = False
         # other general vars, note that we create the select options here
         # so we do not have to loop several times over them in the template
         data_types = sorted(viewitems(get_data_types()), key=itemgetter(1))
@@ -326,8 +332,9 @@ class StudyDescriptionHandler(BaseHandler):
                     ste=SampleTemplate.exists(study.id),
                     study_status=study.status,
                     filepath_types=''.join(fts), ena_terms=''.join(ena_terms),
-                    tab_to_display=tab_to_display,
-                    level=msg_level, message=msg, raw_files=raw_files,
+                    tab_to_display=tab_to_display, level=msg_level,
+                    message=msg, prep_templates=prep_templates,
+                    raw_files=raw_files,
                     can_upload=check_access(user, study, no_public=True),
                     other_studies_rd=''.join(other_studies_rd),
                     user_defined_terms=user_defined_terms,
