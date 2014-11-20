@@ -121,16 +121,17 @@ def _check_owner(user, study):
 
 
 class StudyEditorForm(Form):
-    study_title = StringField('Study Title', [validators.required()])
-    study_alias = StringField('Study Alias', [validators.required()])
+    study_title = StringField('Study Title', [validators.Required()])
+    study_alias = StringField('Study Alias', [validators.Required()])
     pubmed_id = StringField('PubMed ID')
-    study_abstract = TextAreaField('Study Abstract', [validators.required()])
+    study_abstract = TextAreaField('Study Abstract', [validators.Required()])
     study_description = StringField('Study Description',
-                                    [validators.required()])
+                                    [validators.Required()])
     # The choices for these "people" fields will be filled from the database
     principal_investigator = SelectField('Principal Investigator',
-                                         [validators.required()],
+                                         [validators.Required()],
                                          coerce=lambda x: x)
+
     lab_person = SelectField('Lab Person', coerce=lambda x: x)
 
     def __init__(self, study=None, **kwargs):
@@ -161,8 +162,8 @@ class StudyEditorForm(Form):
 
 class StudyEditorExtendedForm(StudyEditorForm):
     environmental_packages = SelectMultipleField('Environmental Packages',
-                                                 [validators.required()])
-    timeseries = SelectField('Event-Based Data', [validators.required()],
+                                                 [validators.Required()])
+    timeseries = SelectField('Event-Based Data', [validators.Required()],
                              coerce=lambda x: x)
 
     def __init__(self, study=None, **kwargs):
