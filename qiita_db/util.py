@@ -855,6 +855,7 @@ def get_lat_longs():
              from qiita.required_sample_info"""
     return conn.execute_fetchall(sql)
 
+
 def find_repeated(values):
     """Find repeated elements in the inputed list
 
