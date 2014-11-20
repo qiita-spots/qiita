@@ -33,7 +33,7 @@ INSERT INTO qiita.study (email, study_status_id, emp_person_id, first_contact,
 	number_samples_promised, portal_type_id, principal_investigator_id, reprocess,
 	spatial_series, study_title, study_alias, study_description,
 	study_abstract, vamps_id) VALUES
-	('test@foo.bar', 2, 2, '2014-05-19 16:10', NULL, 1, 1, TRUE, TRUE,
+	('test@foo.bar', 3, 2, '2014-05-19 16:10', NULL, 1, 1, TRUE, TRUE,
 	'2014-05-19 16:11', 27, 27, 2, 3, FALSE, FALSE,
 	'Identification of the Microbiomes for Cannabis Soils', 'Cannabis Soils', 'Analysis of the Cannabis Plant Microbiome',
 	'This is a preliminary study to examine the microbiota associated with the Cannabis plant. Soils samples from the bulk soil, soil associated with the roots, and the rhizosphere were extracted and the DNA sequenced. Roots from three independent plants of different strains were examined. These roots were obtained November 11, 2011 from plants that had been harvested in the summer. Future studies will attempt to analyze the soils and rhizospheres from the same location at different time points in the plant lifecycle.',

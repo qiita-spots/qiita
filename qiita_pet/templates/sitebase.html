@@ -72,6 +72,23 @@
                 <li><a href="/study/public/">View Public Studies</a></li>
               </ul>
             </li>
+            {% set user_level = handler.user().level %}
+            {% if user_level == 'admin' %}
+            <li class="dropdown">
+              <a href="/admin/error/" data-toggle="dropdown" class="dropdown-toggle">Admin<b class="caret"></b></a>
+              <ul class="dropdown-menu">
+                <li><a href="/admin/error/">View Errors</a></li>
+                <li><a href="/admin/approval/">View Studies awaiting approval</a></li>
+              </ul>
+            </li>
+              {% elif user_level == 'dev' %}
+            <li class="dropdown">
+              Dev<b class="caret"></b>
+              <ul class="dropdown-menu">
+                <li><a href="/admin/error/">View Errors</a></li>
+              </ul>
+            </li>
+              {% end %}
             {% end %}
             <!-- generic elements -->
             <li>
