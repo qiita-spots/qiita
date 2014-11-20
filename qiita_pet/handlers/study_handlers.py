@@ -287,6 +287,11 @@ class StudyDescriptionHandler(BaseHandler):
         available_raw_data = yield Task(self.get_raw_data, study.raw_data())
         available_prep_templates = yield Task(self.get_prep_templates,
                                               available_raw_data)
+        # set variable holding if we have files attached to all raw data or not
+        raw_files = True
+        for r in available_raw_data:
+            if not r.get_filepaths():
+                raw_files = False
         # other general vars, note that we create the select options here
         # so we do not have to loop several times over them in the template
         data_types = sorted(viewitems(get_data_types()), key=itemgetter(1))
@@ -322,7 +327,7 @@ class StudyDescriptionHandler(BaseHandler):
                     study_status=study.status,
                     filepath_types=''.join(fts), ena_terms=''.join(ena_terms),
                     tab_to_display=tab_to_display,
-                    level=msg_level, message=msg,
+                    level=msg_level, message=msg, raw_files=raw_files,
                     can_upload=check_access(user, study, no_public=True),
                     other_studies_rd=''.join(other_studies_rd),
                     user_defined_terms=user_defined_terms,
