@@ -166,7 +166,7 @@ function submit_create_study() {
     $.ajax({
       type: "GET",
       url: '/check_study/',
-      data: {study_title: $("#study_title")[0].value},
+      data: {study_title: $("#study_title")[0].value {% if study %}, old_study_title: '{{study.title}}'{% end %} },
       success: function(data) {
             if (data == 'True') {
                 res = true;

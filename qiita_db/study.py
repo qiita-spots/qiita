@@ -573,7 +573,7 @@ class Study(QiitaStatusObject):
         conn_handler = SQLConnectionHandler()
 
         # The environmental packages cannot be changed if the study is public
-        self._lock_public(conn_handler)
+        self._lock_non_sandbox(conn_handler)
 
         # Get all the environmental packages
         env_pkgs = [pkg[0] for pkg in get_environmental_packages(
