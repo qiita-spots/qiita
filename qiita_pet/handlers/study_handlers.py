@@ -43,7 +43,6 @@ from qiita_db.exceptions import (QiitaDBColumnError, QiitaDBExecutionError,
                                  QiitaDBDuplicateError, QiitaDBUnknownIDError)
 from qiita_db.ontology import Ontology
 
-from qiita_pet.util import linkify
 from .base_handlers import BaseHandler
 
 study_person_linkifier = partial(
