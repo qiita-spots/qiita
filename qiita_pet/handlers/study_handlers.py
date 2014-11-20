@@ -370,6 +370,7 @@ class StudyDescriptionHandler(BaseHandler):
         raw_data_id = self.get_argument('raw_data_id', None)
         data_type_id = self.get_argument('data_type_id', None)
         make_public = self.get_argument('make_public', False)
+        make_sandbox = self.get_argument('make_sandbox', False)
         approve_study = self.get_argument('approve_study', False)
         request_approval = self.get_argument('request_approval', False)
         investigation_type = self.get_argument('investigation-type', None)
@@ -435,6 +436,12 @@ class StudyDescriptionHandler(BaseHandler):
             msg = ''
             study.status = 'public'
             msg = "Study set to public"
+            tab_to_display = ""
+
+        elif make_sandbox:
+            msg = ''
+            study.status = 'sandbox'
+            msg = "Study reverted to sandbox"
             tab_to_display = ""
 
         elif approve_study:

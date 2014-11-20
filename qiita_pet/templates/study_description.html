@@ -77,11 +77,14 @@ function newInvestigationTypeChanged(rawDataID, isEdit){
     </td>
     <td style='padding: 10px;'>
       {% if study_status == 'sandbox' and qiita_config.require_approval and available_raw_data and available_raw_data[0].link_filepaths_status not in {'linking', 'unlinking'} and available_prep_templates.keys() and available_prep_templates[available_prep_templates.keys()[0]] %}
-        <a class="btn btn-primary" onClick="request_approval();">Request Study Approval</a>
+        <a class="btn btn-primary" onClick="request_approval();">Request Study Approval</a><br />
       {% elif (user_level == 'admin' and study_status == 'awaiting_approval') or not qiita_config.require_approval %}
-        <a class="btn btn-primary" onClick="approve_study();">Approve Study</a>
+        <a class="btn btn-primary" onClick="approve_study();">Approve Study</a><br />
       {% elif study_status == 'private' %}
-       <a class="btn btn-primary" onClick="make_public();">Make Public</a>
+       <a class="btn btn-primary" onClick="make_public();">Make Public</a><br />
+      {% end %}
+      {% if study_status not in {'sandbox', 'public'} %}
+        <a class="btn btn-primary" onClick="make_sandbox();">Revert to sandbox</a><br />
       {% end %}
     </td>
     <td width="60">
@@ -597,6 +600,20 @@ function newInvestigationTypeChanged(rawDataID, isEdit){
         .append($("<input>")
           .attr("type", "hidden")
           .attr("name", "request_approval")
+          .attr("value", true))
+      $("body").append(form);
+      form.submit();
+    }
+  }
+
+  function make_sandbox() {
+    if (confirm("Are you sure you want to revert to sandbox status?")) {
+      var form = $("<form>")
+        .attr("action", window.location.href)
+        .attr("method", "post")
+        .append($("<input>")
+          .attr("type", "hidden")
+          .attr("name", "make_sandbox")
           .attr("value", true))
       $("body").append(form);
       form.submit();
