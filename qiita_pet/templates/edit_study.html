@@ -161,19 +161,25 @@ $(document).ready(function() {
 });
 
 function submit_create_study() {
-    $("#create_study").validate()
     $("#create_study_submit").prop('disabled', true);
-    $.get('/check_study/', {study_title: $("#study_title")[0].value {%if study%}, old_study_title: '{{study.title}}'{%end%} })
-        .done(function(data) {
+    res = null;
+    $.ajax({
+      type: "GET",
+      url: '/check_study/',
+      data: {study_title: $("#study_title")[0].value},
+      success: function(data) {
             if (data == 'True') {
-                $("#create_study").submit();
+                res = true;
             }
             else {
-                $("#create_study_submit").prop('disabled', false);
                 alert("Study '" + $("#study_title")[0].value + "' already exists! Please choose a different name.");
-            };
-        });
-    $("#create_study_submit").prop('disabled', false);
+                $("#create_study_submit").prop('disabled', false);
+                res = false;
+            }
+          },
+      async: false
+    })
+    return res;
 };
 
 counter = -1;
@@ -217,7 +223,7 @@ function add_new_person(name, affiliation, email, phone, address) {
     <font color="red">*</font> = Required Field
 </h3>
 <br />
-<form id="create_study" name="create_study" action={%if study%}'/study/edit/{{study.id}}'{%else%}'/study/create/'{%end%} method="POST">
+<form id="create_study" name="create_study" action={%if study%}'/study/edit/{{study.id}}'{%else%}'/study/create/'{%end%} method="POST" onsubmit='return submit_create_study();'>
 <table>
 {% for idx, form_item in enumerate(creation_form, start=1) %}
     {% set kwargs = {'tabindex': idx, 'class_': 'form-control', 'required': form_item.flags.required} %}
@@ -281,7 +287,9 @@ function add_new_person(name, affiliation, email, phone, address) {
 {% end %}
   </tr>
   <tr>
-    <td><a name="bot"><input type='button' id="create_study_submit" class='btn btn-primary' value="{%if study%}Update{%else%}Create{%end%} Study" onclick='submit_create_study();'></td>
+    <td>
+      <a name="bot"><input type='submit' id="create_study_submit" class='btn btn-primary' value="{%if study%}Update{%else%}Create{%end%} Study">
+    </td>
   </tr>
 </table>
 </form>

@@ -23,7 +23,8 @@ from qiita_pet.handlers.analysis_handlers import (
 from qiita_pet.handlers.study_handlers import (
     StudyEditHandler, PrivateStudiesHandler, PublicStudiesHandler,
     StudyDescriptionHandler, MetadataSummaryHandler, EBISubmitHandler,
-    CreateStudyAJAX, ShareStudyAJAX, PreprocessingSummaryHandler)
+    CreateStudyAJAX, ShareStudyAJAX,  StudyApprovalList,
+    PreprocessingSummaryHandler)
 from qiita_pet.handlers.logger_handlers import LogEntryViewerHandler
 from qiita_pet.handlers.websocket_handlers import MessageHandler
 from qiita_pet.handlers.upload import UploadFileHandler, StudyUploadFileHandler
@@ -31,6 +32,7 @@ from qiita_pet.handlers.compute import (
     ComputeCompleteHandler, AddFilesToRawData, UnlinkAllFiles)
 from qiita_pet.handlers.preprocessing_handlers import PreprocessHandler
 from qiita_pet.handlers.stats import StatsHandler
+from qiita_pet.handlers.download import DownloadHandler
 from qiita_db.util import get_mountpoint
 
 define("port", default=8888, help="run on the given port", type=int)
@@ -64,7 +66,8 @@ class Application(tornado.web.Application):
             (r"/analysis/results/(.*)", AnalysisResultsHandler),
             (r"/analysis/show/", ShowAnalysesHandler),
             (r"/consumer/", MessageHandler),
-            (r"/error/", LogEntryViewerHandler),
+            (r"/admin/error/", LogEntryViewerHandler),
+            (r"/admin/approval/", StudyApprovalList),
             (r"/metadata_summary/(.*)", MetadataSummaryHandler),
             (r"/preprocessing_summary/(.*)", PreprocessingSummaryHandler),
             (r"/ebi_submission/(.*)", EBISubmitHandler),
@@ -82,6 +85,7 @@ class Application(tornado.web.Application):
             (r"/upload/", UploadFileHandler),
             (r"/check_study/", CreateStudyAJAX),
             (r"/stats/", StatsHandler),
+            (r"/download/(.*)", DownloadHandler),
             # 404 PAGE MUST BE LAST IN THIS LIST!
             (r".*", NoPageHandler)
         ]

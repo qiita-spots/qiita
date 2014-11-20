@@ -33,7 +33,7 @@ INSERT INTO qiita.study (email, study_status_id, emp_person_id, first_contact,
 	number_samples_promised, portal_type_id, principal_investigator_id, reprocess,
 	spatial_series, study_title, study_alias, study_description,
 	study_abstract, vamps_id) VALUES
-	('test@foo.bar', 2, 2, '2014-05-19 16:10', NULL, 1, 1, TRUE, TRUE,
+	('test@foo.bar', 3, 2, '2014-05-19 16:10', NULL, 1, 1, TRUE, TRUE,
 	'2014-05-19 16:11', 27, 27, 2, 3, FALSE, FALSE,
 	'Identification of the Microbiomes for Cannabis Soils', 'Cannabis Soils', 'Analysis of the Cannabis Plant Microbiome',
 	'This is a preliminary study to examine the microbiota associated with the Cannabis plant. Soils samples from the bulk soil, soil associated with the roots, and the rhizosphere were extracted and the DNA sequenced. Roots from three independent plants of different strains were examined. These roots were obtained November 11, 2011 from plants that had been harvested in the summer. Future studies will attempt to analyze the soils and rhizospheres from the same location at different time points in the plant lifecycle.',
@@ -59,7 +59,11 @@ INSERT INTO qiita.investigation_study (investigation_id, study_id) VALUES (1, 1)
 INSERT INTO qiita.study_experimental_factor (study_id, efo_id) VALUES (1, 1);
 
 -- Insert the raw data filepaths for study 1
-INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum, checksum_algorithm_id, data_directory_id) VALUES ('1_s_G1_L001_sequences.fastq.gz', 1, '852952723', 1, 5), ('1_s_G1_L001_sequences_barcodes.fastq.gz', 3, '852952723', 1, 5), ('2_sequences.fastq.gz', 1, '852952723', 1, 5), ('2_sequences_barcodes.fastq.gz', 3, '852952723', 1, 5);
+INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum, checksum_algorithm_id, data_directory_id) VALUES
+('1_s_G1_L001_sequences.fastq.gz', 1, '852952723', 1, 5),
+('1_s_G1_L001_sequences_barcodes.fastq.gz', 3, '852952723', 1, 5),
+('2_sequences.fastq.gz', 1, '852952723', 1, 5),
+('2_sequences_barcodes.fastq.gz', 3, '852952723', 1, 5);
 
 -- Insert the raw data information for study 1
 INSERT INTO qiita.raw_data (filetype_id) VALUES (3), (2);
@@ -299,7 +303,10 @@ INSERT INTO qiita.prep_template_preprocessed_data (prep_template_id, preprocesse
 INSERT INTO qiita.study_preprocessed_data (preprocessed_data_id, study_id) VALUES (1, 1), (2, 1);
 
 -- Insert the preprocessed filepath for raw data 1
-INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum, checksum_algorithm_id, data_directory_id) VALUES ('1_seqs.fna', 4, '852952723', 1, 3), ('1_seqs.qual', 5, '852952723', 1, 3), ('1_seqs.demux', 6, 852952723, 1, 3);
+INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum, checksum_algorithm_id, data_directory_id) VALUES
+('1_seqs.fna', 4, '852952723', 1, 3),
+('1_seqs.qual', 5, '852952723', 1, 3),
+('1_seqs.demux', 6, 852952723, 1, 3);
 
 -- Insert (link) the preprocessed data with the preprocessed filepaths
 INSERT INTO qiita.preprocessed_filepath (preprocessed_data_id, filepath_id) VALUES (1, 5), (1, 6), (1, 7);
@@ -314,7 +321,10 @@ INSERT INTO qiita.study_processed_data (processed_data_id, study_id) VALUES (1, 
 INSERT INTO qiita.preprocessed_processed_data (preprocessed_data_id, processed_data_id) VALUES (1, 1);
 
 -- Insert the reference files for reference 1
-INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum, checksum_algorithm_id, data_directory_id) VALUES ('GreenGenes_13_8_97_otus.fasta', 10, '852952723', 1, 6), ('GreenGenes_13_8_97_otu_taxonomy.txt', 11, '852952723', 1, 6), ('GreenGenes_13_8_97_otus.tree', 12, '852952723', 1, 6);
+INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum, checksum_algorithm_id, data_directory_id) VALUES
+('GreenGenes_13_8_97_otus.fasta', 10, '852952723', 1, 6),
+('GreenGenes_13_8_97_otu_taxonomy.txt', 11, '852952723', 1, 6),
+('GreenGenes_13_8_97_otus.tree', 12, '852952723', 1, 6);
 
 -- Populate the reference table
 INSERT INTO qiita.reference (reference_name, reference_version, sequence_filepath, taxonomy_filepath, tree_filepath) VALUES ('Greengenes', '13_8', 8, 9, 10);
@@ -323,13 +333,16 @@ INSERT INTO qiita.reference (reference_name, reference_version, sequence_filepat
 INSERT INTO qiita.processed_params_uclust (similarity, enable_rev_strand_match, suppress_new_clusters, reference_id) VALUES (0.97, TRUE, TRUE, 1);
 
 -- Insert the biom table filepath for processed data 1
-INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum, checksum_algorithm_id, data_directory_id) VALUES ('1_study_1001_closed_reference_otu_table.biom', 7, '852952723', 1, 4);
+INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum, checksum_algorithm_id, data_directory_id) VALUES
+('1_study_1001_closed_reference_otu_table.biom', 7, '852952723', 1, 4);
 
 -- Insert (link) the processed data with the processed filepath
 INSERT INTO qiita.processed_filepath (processed_data_id, filepath_id) VALUES (1, 11);
 
 -- Insert filepath for job results files
-INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum, checksum_algorithm_id, data_directory_id) VALUES ('1_job_result.txt', 9, '852952723', 1, 2), ('2_test_folder', 8, '852952723', 1, 2);
+INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum, checksum_algorithm_id, data_directory_id) VALUES
+('1_job_result.txt', 9, '852952723', 1, 2),
+('2_test_folder', 8, '852952723', 1, 2);
 
 -- Insert jobs
 INSERT INTO qiita.job (data_type_id, job_status_id, command_id, options) VALUES (2, 1, 1, '{"--otu_table_fp":1}'), (2, 3, 2, '{"--mapping_fp":1,"--otu_table_fp":1}'), (2, 1, 2, '{"--mapping_fp":1,"--otu_table_fp":1}');
@@ -344,7 +357,8 @@ INSERT INTO qiita.analysis_workflow (analysis_id, step) VALUES (1, 3), (2, 3);
 INSERT INTO qiita.analysis_job (analysis_id, job_id) VALUES (1, 1), (1, 2), (2, 3);
 
 -- Insert filepath for analysis biom files
-INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum, checksum_algorithm_id, data_directory_id) VALUES ('1_analysis_18S.biom', 7, '852952723', 1, 1), ('1_analysis_mapping.txt', 9, '852952723', 1, 1);
+INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum, checksum_algorithm_id, data_directory_id) VALUES
+('1_analysis_18S.biom', 7, '852952723', 1, 1), ('1_analysis_mapping.txt', 9, '852952723', 1, 1);
 
 -- Attach filepath to analysis
 INSERT INTO qiita.analysis_filepath (analysis_id, filepath_id, data_type_id) VALUES (1, 14, 2), (1, 15, NULL);

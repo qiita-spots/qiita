@@ -79,19 +79,24 @@ class Analysis(QiitaStatusObject):
             raise QiitaDBStatusError("Can't set status away from public!")
 
     @classmethod
-    def get_public(cls):
-        """Returns analysis id for all public Analyses
+    def get_by_status(cls, status):
+        """Returns analysis ids for all Analyses with given status
+
+        Parameters
+        ----------
+        status : str
+            Status to search analyses for
 
         Returns
         -------
         list of int
-            All public analysses in the database
+            All analyses in the database with the given status
         """
         conn_handler = SQLConnectionHandler()
-        sql = ("SELECT analysis_id FROM qiita.{0} WHERE "
-               "{0}_status_id = %s".format(cls._table))
-        # MAGIC NUMBER 6: status id for a public study
-        return [x[0] for x in conn_handler.execute_fetchall(sql, (6,))]
+        sql = ("SELECT analysis_id FROM qiita.{0} a JOIN qiita.{0}_status ans "
+               "ON a.analysis_status_id = ans.analysis_status_id WHERE "
+               "ans.status = %s".format(cls._table))
+        return [x[0] for x in conn_handler.execute_fetchall(sql, (status,))]
 
     @classmethod
     def create(cls, owner, name, description, parent=None):
@@ -275,6 +280,24 @@ class Analysis(QiitaStatusObject):
         return [u[0] for u in conn_handler.execute_fetchall(sql, (self._id, ))]
 
     @property
+    def all_associated_filepath_ids(self):
+        """Get all associated filepath_ids EXCEPT job results filepaths
+
+        Returns
+        -------
+        list
+        """
+        conn_handler = SQLConnectionHandler()
+        sql = """SELECT f.filepath_id
+              FROM qiita.filepath f JOIN
+              qiita.analysis_filepath af ON f.filepath_id = af.filepath_id
+              WHERE af.analysis_id = %s"""
+        filepaths = {row[0]
+                     for row in conn_handler.execute_fetchall(sql, [self._id])}
+
+        return filepaths
+
+    @property
     def biom_tables(self):
         """The biom tables of the analysis
 
@@ -429,8 +452,8 @@ class Analysis(QiitaStatusObject):
         if user.level in {'superuser', 'admin'}:
             return True
 
-        return self._id in Analysis.get_public() + user.private_analyses +\
-            user.shared_analyses
+        return self._id in Analysis.get_by_status('public') + \
+            user.private_analyses + user.shared_analyses
 
     def share(self, user):
         """Share the analysis with another user
@@ -581,7 +604,7 @@ class Analysis(QiitaStatusObject):
         for pid, samps in viewitems(samples):
             # one biom table attached to each processed data object
             proc_data = ProcessedData(pid)
-            proc_data_fp = proc_data.get_filepaths()[0][0]
+            proc_data_fp = proc_data.get_filepaths()[0][1]
             table_fp = join(base_fp, proc_data_fp)
             table = load_table(table_fp)
             # HACKY WORKAROUND FOR DEMO. Issue # 246
@@ -714,19 +737,23 @@ class Analysis(QiitaStatusObject):
             else SQLConnectionHandler()
 
         # get required bookkeeping data for DB
-        _, base_fp = get_mountpoint(self._table)[0]
+        _, base_fp = get_mountpoint(self._table, conn_handler=conn_handler)[0]
         fptypeid = convert_to_id(filetype, "filepath_type", conn_handler)
         fullpath = join(base_fp, filename)
         with open(fullpath, 'rb') as f:
             checksum = crc32(f.read()) & 0xffffffff
 
+        analysis_dd_id, _ = get_mountpoint("analysis",
+                                           conn_handler=conn_handler)[0]
+
         # add  file to analysis
         sql = ("INSERT INTO qiita.filepath (filepath, filepath_type_id, "
-               "checksum, checksum_algorithm_id) VALUES (%s, %s, %s, %s) "
-               "RETURNING filepath_id")
+               "checksum, checksum_algorithm_id, data_directory_id) VALUES "
+               "(%s, %s, %s, %s, %s) RETURNING filepath_id")
         # magic number 1 is for crc32 checksum algorithm
         fpid = conn_handler.execute_fetchone(sql, (fullpath, fptypeid,
-                                                   checksum, 1))[0]
+                                                   checksum, 1,
+                                                   analysis_dd_id))[0]
 
         col = ""
         dtid = ""

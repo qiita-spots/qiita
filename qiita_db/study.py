@@ -144,30 +144,36 @@ class Study(QiitaStatusObject):
     # The following columns are considered not part of the study info
     _non_info = {"email", "study_status_id", "study_title"}
 
-    def _lock_public(self, conn_handler):
+    def _lock_non_sandbox(self, conn_handler):
         """Raises QiitaDBStatusError if study is public"""
-        if self.check_status(("public", )):
-            raise QiitaDBStatusError("Illegal operation on public study!")
+        if self.status != 'sandbox':
+            raise QiitaDBStatusError("Illegal operation on non-sandbox study!")
 
     def _status_setter_checks(self, conn_handler):
         r"""Perform a check to make sure not setting status away from public
         """
-        self._lock_public(conn_handler)
+        if self.check_status(("public", )):
+            raise QiitaDBStatusError("Illegal operation on public study!")
 
     @classmethod
-    def get_public(cls):
-        """Returns study id for all public Studies
+    def get_by_status(cls, status):
+        """Returns study id for all Studies with given status
+
+        Parameters
+        ----------
+        status : str
+            Status setting to search for
 
         Returns
         -------
         list of Study objects
-            All public studies in the database
+            All studies in the database that match the given status
         """
         conn_handler = SQLConnectionHandler()
-        sql = ("SELECT study_id FROM qiita.{0} WHERE "
-               "{0}_status_id = %s".format(cls._table))
-        # MAGIC NUMBER 2: status id for a public study
-        return [x[0] for x in conn_handler.execute_fetchall(sql, (2, ))]
+        sql = ("SELECT study_id FROM qiita.{0} s JOIN qiita.{0}_status ss ON "
+               "s.study_status_id = ss.study_status_id WHERE "
+               "ss.status = %s".format(cls._table))
+        return [x[0] for x in conn_handler.execute_fetchall(sql, (status, ))]
 
     @classmethod
     def exists(cls, study_title):
@@ -353,7 +359,7 @@ class Study(QiitaStatusObject):
 
         if 'timeseries_type_id' in info:
             # We only lock if the timeseries type changes
-            self._lock_public(conn_handler)
+            self._lock_non_sandbox(conn_handler)
 
         # make sure dictionary only has keys for available columns in db
         check_table_cols(conn_handler, info, self._table)
@@ -397,7 +403,7 @@ class Study(QiitaStatusObject):
         if not efo_vals:
             raise IncompetentQiitaDeveloperError("Need EFO information!")
         conn_handler = SQLConnectionHandler()
-        self._lock_public(conn_handler)
+        self._lock_non_sandbox(conn_handler)
         # wipe out any EFOs currently attached to study
         sql = ("DELETE FROM qiita.{0}_experimental_factor WHERE "
                "study_id = %s".format(self._table))
@@ -633,6 +639,7 @@ class Study(QiitaStatusObject):
             If the raw_data is already linked to the current study
         """
         conn_handler = SQLConnectionHandler()
+        self._lock_non_sandbox(conn_handler)
         queue = "%d_add_raw_data" % self.id
         sql = ("SELECT EXISTS(SELECT * FROM qiita.study_raw_data WHERE "
                "study_id=%s AND raw_data_id=%s)")
@@ -727,10 +734,10 @@ class Study(QiitaStatusObject):
             return True
 
         if no_public:
-            return self._id in user.private_studies + user.shared_studies
+            return self._id in user.user_studies + user.shared_studies
         else:
-            return self._id in user.private_studies + user.shared_studies \
-                + self.get_public()
+            return self._id in user.user_studies + user.shared_studies \
+                + self.get_by_status('public')
 
     def share(self, user):
         """Share the study with another user
@@ -741,7 +748,6 @@ class Study(QiitaStatusObject):
             The user to share the study with
         """
         conn_handler = SQLConnectionHandler()
-        self._lock_public(conn_handler)
 
         # Make sure the study is not already shared with the given user
         if user.id in self.shared_with:
@@ -764,7 +770,6 @@ class Study(QiitaStatusObject):
             The user to unshare the study with
         """
         conn_handler = SQLConnectionHandler()
-        self._lock_public(conn_handler)
 
         sql = ("DELETE FROM qiita.study_users WHERE study_id = %s AND "
                "email = %s")

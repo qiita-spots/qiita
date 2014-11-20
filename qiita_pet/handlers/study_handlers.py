@@ -9,28 +9,21 @@ r"""Qitta study handlers for the Tornado webserver.
 # -----------------------------------------------------------------------------
 from __future__ import division
 from collections import namedtuple, defaultdict
+from json import dumps
+from os import remove
+from os.path import exists, join, basename
+from functools import partial
+from operator import itemgetter
 
 from tornado.web import authenticated, HTTPError, asynchronous
 from tornado.gen import coroutine, Task
 from wtforms import (Form, StringField, SelectField, SelectMultipleField,
                      TextAreaField, validators)
-
+from pandas.parser import CParserError
 from future.utils import viewitems
 
-from operator import itemgetter
-
-from traceback import format_exception_only
-from sys import exc_info
-
-from json import dumps
-from os import remove
-from os.path import exists, join, basename
-from functools import partial
-from .base_handlers import BaseHandler
-
-from pandas.parser import CParserError
-
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
+from qiita_core.qiita_settings import qiita_config
 from qiita_pet.util import linkify
 from qiita_ware.context import submit
 from qiita_ware.util import dataframe_from_template, stats_from_df
@@ -46,14 +39,18 @@ from qiita_db.util import (get_filepath_types, get_data_types, get_filetypes,
                            get_environmental_packages, get_timeseries_types)
 from qiita_db.data import PreprocessedData, RawData
 from qiita_db.exceptions import (QiitaDBColumnError, QiitaDBExecutionError,
-                                 QiitaDBDuplicateError, QiitaDBUnknownIDError)
+                                 QiitaDBDuplicateError, QiitaDBUnknownIDError,
+                                 QiitaDBDuplicateHeaderError)
 from qiita_db.ontology import Ontology
+
+from .base_handlers import BaseHandler
 
 study_person_linkifier = partial(
     linkify, "<a target=\"_blank\" href=\"mailto:{0}\">{1}</a>")
 pubmed_linkifier = partial(
     linkify, "<a target=\"_blank\" href=\"http://www.ncbi.nlm.nih.gov/"
     "pubmed/{0}\">{0}</a>")
+html_error_message = "<b>An error occurred %s %s</b></br>%s"
 
 
 def _get_shared_links_for_study(study):
@@ -68,11 +65,11 @@ def _get_shared_links_for_study(study):
 def _build_study_info(studytype, user=None):
         """builds list of namedtuples for study listings"""
         if studytype == "private":
-            studylist = user.private_studies
+            studylist = user.user_studies
         elif studytype == "shared":
             studylist = user.shared_studies
         elif studytype == "public":
-            studylist = Study.get_public()
+            studylist = Study.get_by_status('public')
         else:
             raise IncompetentQiitaDeveloperError("Must use private, shared, "
                                                  "or public!")
@@ -247,7 +244,7 @@ class PreprocessingSummaryHandler(BaseHandler):
         files_tuples = ppd.get_filepaths()
         files = defaultdict(list)
 
-        for fp, fpt in files_tuples:
+        for fpid, fp, fpt in files_tuples:
             files[fpt].append(fp)
 
         with open(files['log'][0], 'U') as f:
@@ -288,9 +285,18 @@ class StudyDescriptionHandler(BaseHandler):
 
         SampleTemplate.create(load_template_to_dataframe(fp_rsp),
                               Study(study_id))
-        # TODO: do not remove but move to final storage space
-        # and keep there forever, issue #550
         remove(fp_rsp)
+
+        callback()
+
+    def remove_add_prep_template(self, fp_rpt, raw_data_id, study,
+                                 data_type_id, investigation_type, callback):
+        """add prep templates
+        """
+        PrepTemplate.create(load_template_to_dataframe(fp_rpt),
+                            RawData(raw_data_id), study, int(data_type_id),
+                            investigation_type=investigation_type)
+        remove(fp_rpt)
 
         callback()
 
@@ -299,7 +305,7 @@ class StudyDescriptionHandler(BaseHandler):
         raw_data
         """
         d = {}
-        for sid in user.private_studies:
+        for sid in user.user_studies:
             if sid == study.id:
                 continue
             for rdid in Study(sid).raw_data():
@@ -309,6 +315,10 @@ class StudyDescriptionHandler(BaseHandler):
     @coroutine
     def display_template(self, study, msg, msg_level, tab_to_display=""):
         """Simple function to avoid duplication of code"""
+        # Check if the request came from a local source
+        is_local_request = ('localhost' in self.request.headers['host'] or
+                            '127.0.0.1' in self.request.headers['host'])
+
         # getting raw filepath_ types
         fts = [k.split('_', 1)[1].replace('_', ' ')
                for k in get_filepath_types() if k.startswith('raw_')]
@@ -319,6 +329,17 @@ class StudyDescriptionHandler(BaseHandler):
         available_raw_data = yield Task(self.get_raw_data, study.raw_data())
         available_prep_templates = yield Task(self.get_prep_templates,
                                               available_raw_data)
+        # set variable holding if we have files attached to all raw data or not
+        raw_files = True if available_raw_data else False
+        for r in available_raw_data:
+            if not r.get_filepaths():
+                raw_files = False
+
+        # set variable holding if we have all prep templates or not
+        prep_templates = True if available_prep_templates else False
+        for key, val in viewitems(available_prep_templates):
+            if not val:
+                prep_templates = False
         # other general vars, note that we create the select options here
         # so we do not have to loop several times over them in the template
         data_types = sorted(viewitems(get_data_types()), key=itemgetter(1))
@@ -353,9 +374,11 @@ class StudyDescriptionHandler(BaseHandler):
                     available_raw_data=available_raw_data,
                     available_prep_templates=available_prep_templates,
                     ste=SampleTemplate.exists(study.id),
+                    study_status=study.status,
                     filepath_types=''.join(fts), ena_terms=''.join(ena_terms),
-                    tab_to_display=tab_to_display,
-                    level=msg_level, message=msg,
+                    tab_to_display=tab_to_display, level=msg_level,
+                    message=msg, prep_templates=prep_templates,
+                    raw_files=raw_files,
                     can_upload=check_access(user, study, no_public=True),
                     other_studies_rd=''.join(other_studies_rd),
                     user_defined_terms=user_defined_terms,
@@ -363,7 +386,8 @@ class StudyDescriptionHandler(BaseHandler):
                     is_public=study.status == 'public',
                     pmids=", ".join([pubmed_linkifier([pmid])
                                      for pmid in study.pmids]),
-                    principal_investigator=pi_link)
+                    principal_investigator=pi_link,
+                    is_local_request=is_local_request)
 
     @authenticated
     def get(self, study_id):
@@ -382,6 +406,7 @@ class StudyDescriptionHandler(BaseHandler):
     @coroutine
     def post(self, study_id):
         study_id = int(study_id)
+        user = User(self.current_user)
         try:
             study = Study(study_id)
         except QiitaDBUnknownIDError:
@@ -392,6 +417,9 @@ class StudyDescriptionHandler(BaseHandler):
                          raise_error=True)
 
         # vars to add sample template
+        msg = ''
+        msg_level = ''
+        tab_to_display = ''
         sample_template = self.get_argument('sample_template', None)
         # vars to add raw data
         filetype = self.get_argument('filetype', None)
@@ -400,15 +428,19 @@ class StudyDescriptionHandler(BaseHandler):
         add_prep_template = self.get_argument('add_prep_template', None)
         raw_data_id = self.get_argument('raw_data_id', None)
         data_type_id = self.get_argument('data_type_id', None)
+        make_public = self.get_argument('make_public', False)
+        make_sandbox = self.get_argument('make_sandbox', False)
+        approve_study = self.get_argument('approve_study', False)
+        request_approval = self.get_argument('request_approval', False)
         investigation_type = self.get_argument('investigation-type', None)
         user_defined_investigation_type = self.get_argument(
             'user-defined-investigation-type', None)
         new_investigation_type = self.get_argument('new-investigation-type',
                                                    None)
 
-        # non selected is the equivalent to the user not specifying the info
+        # None Selected is the equivalent to the user not specifying the info
         # thus we should make the investigation_type None
-        if investigation_type == "" or investigation_type == "Non selected":
+        if investigation_type == "" or investigation_type == "None Selected":
             investigation_type = None
 
         # to update investigation type
@@ -421,10 +453,10 @@ class StudyDescriptionHandler(BaseHandler):
         edit_new_investigation_type = self.get_argument(
             'edit-new-investigation-type', None)
 
-        # non selected is the equivalent to the user not specifying the info
+        # None Selected is the equivalent to the user not specifying the info
         # thus we should make the investigation_type None
         if edit_investigation_type == "" or \
-                edit_investigation_type == "Non selected":
+                edit_investigation_type == "None Selected":
             edit_investigation_type = None
 
         msg_level = 'success'
@@ -443,10 +475,9 @@ class StudyDescriptionHandler(BaseHandler):
                            study_id, fp_rsp)
             except (TypeError, QiitaDBColumnError, QiitaDBExecutionError,
                     QiitaDBDuplicateError, IOError, ValueError, KeyError,
-                    CParserError) as e:
-                error_msg = ''.join(format_exception_only(e, exc_info()))
-                msg = ('<b>An error occurred parsing the sample template: '
-                       '%s</b><br/>%s' % (basename(fp_rsp), error_msg))
+                    CParserError, QiitaDBDuplicateHeaderError) as e:
+                msg = html_error_message % ('parsing the sample template:',
+                                            basename(fp_rsp), str(e))
                 self.display_template(study, msg, "danger")
                 return
 
@@ -454,9 +485,33 @@ class StudyDescriptionHandler(BaseHandler):
                    sample_template)
             tab_to_display = ""
 
+        elif request_approval:
+            study.status = 'awaiting_approval'
+            msg = "Study sent to admin for approval"
+            tab_to_display = ""
+
+        elif make_public:
+            msg = ''
+            study.status = 'public'
+            msg = "Study set to public"
+            tab_to_display = ""
+
+        elif make_sandbox:
+            msg = ''
+            study.status = 'sandbox'
+            msg = "Study reverted to sandbox"
+            tab_to_display = ""
+
+        elif approve_study:
+            # make sure user is admin, then make full private study
+            if user.level == 'admin' or not \
+                    qiita_config.require_approval:
+                study.status = 'private'
+                msg = "Study approved"
+                tab_to_display = ""
+
         elif filetype or previous_raw_data:
             # adding blank raw data
-
             if filetype and previous_raw_data:
                 msg = ("You can not specify both a new raw data and a "
                        "previouly used one")
@@ -466,9 +521,9 @@ class StudyDescriptionHandler(BaseHandler):
                 except (TypeError, QiitaDBColumnError, QiitaDBExecutionError,
                         QiitaDBDuplicateError, IOError, ValueError, KeyError,
                         CParserError) as e:
-                    error_msg = ''.join(format_exception_only(e, exc_info()))
-                    msg = ('An error occurred creating a new raw data'
-                           'object. %s' % (error_msg))
+                    msg = html_error_message % ("creating a new raw data "
+                                                "object for study:",
+                                                str(study.id), str(e))
                     self.display_template(study, msg, "danger")
                     return
                 msg = ""
@@ -500,16 +555,13 @@ class StudyDescriptionHandler(BaseHandler):
 
             try:
                 # inserting prep templates
-                PrepTemplate.create(load_template_to_dataframe(fp_rpt),
-                                    RawData(raw_data_id), study,
-                                    int(data_type_id),
-                                    investigation_type=investigation_type)
+                yield Task(self.remove_add_prep_template, fp_rpt, raw_data_id,
+                           study, data_type_id, investigation_type)
             except (TypeError, QiitaDBColumnError, QiitaDBExecutionError,
                     QiitaDBDuplicateError, IOError, ValueError,
                     CParserError) as e:
-                error_msg = ''.join(format_exception_only(e, exc_info()))
-                msg = ('An error occurred parsing the prep template: '
-                       '%s. %s' % (basename(fp_rpt), error_msg))
+                msg = html_error_message % ("parsing the prep template: ",
+                                            basename(fp_rpt), str(e))
                 self.display_template(study, msg, "danger",
                                       str(raw_data_id))
                 return
@@ -539,8 +591,8 @@ class StudyDescriptionHandler(BaseHandler):
             try:
                 pt.investigation_type = investigation_type
             except QiitaDBColumnError as e:
-                error_msg = ''.join(format_exception_only(e, exc_info()))
-                msg = 'Invalid investigation type: %s' % error_msg
+                msg = html_error_message % (", invalid investigation type: ",
+                                            investigation_type, str(e))
                 self.display_template(study, msg, "danger",
                                       str(pt.raw_data))
                 return
@@ -662,16 +714,18 @@ class StudyEditHandler(BaseHandler):
             theStudy.title = study_title
             theStudy.info = info
 
-            msg = 'Study "%s" successfully updated' % (
-                form_data.data['study_title'][0])
+            msg = ('Study <a href="/study/description/%d">"%s"</a> '
+                   'successfully updated' %
+                   (theStudy.id, form_data.data['study_title'][0]))
         else:
             # create the study
             # TODO: Fix this EFO once ontology stuff from emily is added
             theStudy = Study.create(User(self.current_user), study_title,
                                     efo=[1], info=info)
 
-            msg = 'Study "%s" successfully created' % (
-                form_data.data['study_title'][0])
+            msg = ('Study <a href="/study/description/%d">"%s"</a> '
+                   'successfully created' %
+                   (theStudy.id, form_data.data['study_title'][0]))
 
         # Add the environmental packages
         if 'environmental_packages' in form_data.data:
@@ -686,6 +740,22 @@ class StudyEditHandler(BaseHandler):
 
         self.render('index.html', message=msg, level='success',
                     user=self.current_user)
+
+
+class StudyApprovalList(BaseHandler):
+    @authenticated
+    def get(self):
+        user = User(self.current_user)
+        if user.level != 'admin':
+            raise HTTPError(403, 'User %s is not admin' % self.current_user)
+
+        parsed_studies = []
+        for sid in Study.get_by_status('awaiting_approval'):
+            study = Study(sid)
+            parsed_studies.append((study.id, study.title, study.owner))
+
+        self.render('admin_approval.html', user=self.current_user,
+                    study_info=parsed_studies)
 
 
 class CreateStudyAJAX(BaseHandler):

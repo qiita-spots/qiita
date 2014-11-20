@@ -41,10 +41,10 @@ class TestAnalysis(TestCase):
         with self.assertRaises(QiitaDBStatusError):
             self.analysis.status = "queued"
 
-    def test_get_public(self):
-        self.assertEqual(Analysis.get_public(), [])
+    def test_get_by_status(self):
+        self.assertEqual(Analysis.get_by_status('public'), [])
         self.analysis.status = "public"
-        self.assertEqual(Analysis.get_public(), [1])
+        self.assertEqual(Analysis.get_by_status('public'), [1])
 
     def test_has_access_public(self):
         self.conn_handler.execute("UPDATE qiita.analysis SET "
@@ -137,6 +137,10 @@ class TestAnalysis(TestCase):
     def test_retrieve_biom_tables(self):
         exp = {"18S": join(self.fp, "1_analysis_18S.biom")}
         self.assertEqual(self.analysis.biom_tables, exp)
+
+    def test_all_associated_filepaths(self):
+        exp = {14, 15}
+        self.assertEqual(self.analysis.all_associated_filepath_ids, exp)
 
     def test_retrieve_biom_tables_none(self):
         new = Analysis.create(User("admin@foo.bar"), "newAnalysis",

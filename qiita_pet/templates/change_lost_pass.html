@@ -1,36 +1,9 @@
 {%extends sitebase.html%}
 {%block head%}
 <script type="text/javascript" src="/static/vendor/js/jquery.validate.min.js"></script>
+<script type="text/javascript" src="/static/js/password_validation.js"></script>
 <script type="text/javascript">
-// http://www.9lessons.info/2012/04/bootstrap-registration-form-tutorial.html
-$(document).ready(function()
-{
-  // Popover
-  $('#lost_pass input').hover(function()
-  {
-    $(this).popover('show')
-  });
-
-  // Validation
-  $("#lost_pass").validate({
-    rules:{
-      email:{required:true,email:true},
-      newpass:{required:true,minlength: 6},
-      newpass2:{required:true,minlength: 6,equalTo: "#newpass"},
-    },
-
-    messages:{
-      email:"Enter valid email address"},
-      newpass:{
-      required:"Enter your password",
-      minlength:"Password must be minimum 6 characters"},
-      newpass2:{
-      required:"Enter confirm password",
-      minlength:"Password must be minimum 6 characters",
-      equalTo:"Password and Confirm Password must match"}
-  }
-  );
-});
+$( document ).ready(function() { dualpass_validator(); });
 </script>
 {%end%}
 
@@ -55,5 +28,4 @@ $(document).ready(function()
     <button class="btn btn-danger">Change Password</button>
     </form>
   {% end %}
-  </div>
 {% end %}

@@ -143,6 +143,7 @@ class ConfigurationManager(object):
             raise ValueError("The WORKING_DIR (%s) folder doesn't exist" %
                              self.working_dir)
         self.max_upload_size = config.getint('main', 'MAX_UPLOAD_SIZE')
+        self.require_approval = config.getboolean('main', 'REQUIRE_APPROVAL')
 
         self.valid_upload_extension = [ve.strip() for ve in config.get(
             'main', 'VALID_UPLOAD_EXTENSION').split(',')]

@@ -707,6 +707,24 @@ def get_filepath_id(table, fp, conn_handler):
     return fp_id[0]
 
 
+def filepath_id_to_rel_path(filepath_id):
+    """Gets the full path, relative to the base directory
+
+    Returns
+    -------
+    str
+    """
+    conn = SQLConnectionHandler()
+
+    sql = """SELECT dd.mountpoint, dd.subdirectory, fp.filepath
+          FROM qiita.filepath fp JOIN qiita.data_directory dd
+          ON fp.data_directory_id = dd.data_directory_id
+          WHERE fp.filepath_id = %s"""
+
+    result = join(*conn.execute_fetchone(sql, [filepath_id]))
+    return result
+
+
 def convert_to_id(value, table, conn_handler=None):
         """Converts a string value to it's corresponding table identifier
 
@@ -876,3 +894,25 @@ def get_timeseries_types(conn_handler=None):
     conn = conn_handler if conn_handler else SQLConnectionHandler()
     return conn.execute_fetchall(
         "SELECT * FROM qiita.timeseries_type ORDER BY timeseries_type_id")
+
+
+def find_repeated(values):
+    """Find repeated elements in the inputed list
+
+    Parameters
+    ----------
+    values : list
+        List of elements to find duplicates in
+
+    Returns
+    -------
+    set
+        Repeated elements in ``values``
+    """
+    seen, repeated = set(), set()
+    for value in values:
+        if value in seen:
+            repeated.add(value)
+        else:
+            seen.add(value)
+    return repeated

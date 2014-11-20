@@ -4,6 +4,10 @@ from qiita_db.user import User
 
 
 class BaseHandler(RequestHandler):
+    def user(self):
+        if self.current_user:
+            return User(self.current_user)
+        return None
 
     def get_current_user(self):
         '''Overrides default method of returning user curently connected'''
@@ -21,7 +25,10 @@ class BaseHandler(RequestHandler):
             self.render("404.html", user=self.current_user)
             return
 
-        is_admin = User(self.current_user).level == 'admin'
+        if self.current_user:
+            is_admin = User(self.current_user).level == 'admin'
+        else:
+            is_admin = False
 
         # render error page
         self.render('error.html', user=self.current_user,
