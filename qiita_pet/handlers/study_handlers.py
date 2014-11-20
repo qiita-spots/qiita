@@ -38,7 +38,8 @@ from qiita_db.util import (get_filepath_types, get_data_types, get_filetypes,
                            get_files_from_uploads_folders)
 from qiita_db.data import PreprocessedData, RawData
 from qiita_db.exceptions import (QiitaDBColumnError, QiitaDBExecutionError,
-                                 QiitaDBDuplicateError, QiitaDBUnknownIDError)
+                                 QiitaDBDuplicateError, QiitaDBUnknownIDError,
+                                 QiitaDBDuplicateHeaderError)
 from qiita_db.ontology import Ontology
 
 from qiita_pet.util import linkify
@@ -49,6 +50,7 @@ study_person_linkifier = partial(
 pubmed_linkifier = partial(
     linkify, "<a target=\"_blank\" href=\"http://www.ncbi.nlm.nih.gov/"
     "pubmed/{0}\">{0}</a>")
+html_error_message = "<b>An error occurred %s %s</b></br>%s"
 
 
 def _get_shared_links_for_study(study):
@@ -405,10 +407,9 @@ class StudyDescriptionHandler(BaseHandler):
                            study_id, fp_rsp)
             except (TypeError, QiitaDBColumnError, QiitaDBExecutionError,
                     QiitaDBDuplicateError, IOError, ValueError, KeyError,
-                    CParserError) as e:
-                error_msg = ''.join(format_exception_only(e, exc_info()))
-                msg = ('<b>An error occurred parsing the sample template: '
-                       '%s</b><br/>%s' % (basename(fp_rsp), error_msg))
+                    CParserError, QiitaDBDuplicateHeaderError) as e:
+                msg = html_error_message % ('parsing the sample template:',
+                                            basename(fp_rsp), str(e))
                 self.display_template(study, msg, "danger")
                 return
 
