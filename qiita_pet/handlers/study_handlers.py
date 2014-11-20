@@ -288,13 +288,13 @@ class StudyDescriptionHandler(BaseHandler):
         available_prep_templates = yield Task(self.get_prep_templates,
                                               available_raw_data)
         # set variable holding if we have files attached to all raw data or not
-        raw_files = True
+        raw_files = True if available_raw_data else False
         for r in available_raw_data:
             if not r.get_filepaths():
                 raw_files = False
 
         # set variable holding if we have all prep templates or not
-        prep_templates = True
+        prep_templates = True if available_prep_templates else False
         for key, val in viewitems(available_prep_templates):
             if not val:
                 prep_templates = False
