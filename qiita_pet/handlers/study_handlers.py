@@ -14,8 +14,6 @@ from os import remove
 from os.path import exists, join, basename
 from functools import partial
 from operator import itemgetter
-from traceback import format_exception_only
-from sys import exc_info
 
 from tornado.web import authenticated, HTTPError, asynchronous
 from tornado.gen import coroutine, Task
@@ -429,9 +427,9 @@ class StudyDescriptionHandler(BaseHandler):
                 except (TypeError, QiitaDBColumnError, QiitaDBExecutionError,
                         QiitaDBDuplicateError, IOError, ValueError, KeyError,
                         CParserError) as e:
-                    error_msg = ''.join(format_exception_only(e, exc_info()))
-                    msg = ('An error occurred creating a new raw data'
-                           'object. %s' % (error_msg))
+                    msg = html_error_message % ("creating a new raw data "
+                                                "object for study:",
+                                                str(study.id), str(e))
                     self.display_template(study, msg, "danger")
                     return
                 msg = ""
@@ -470,9 +468,8 @@ class StudyDescriptionHandler(BaseHandler):
             except (TypeError, QiitaDBColumnError, QiitaDBExecutionError,
                     QiitaDBDuplicateError, IOError, ValueError,
                     CParserError) as e:
-                error_msg = ''.join(format_exception_only(e, exc_info()))
-                msg = ('An error occurred parsing the prep template: '
-                       '%s. %s' % (basename(fp_rpt), error_msg))
+                msg = html_error_message % ("parsing the prep template: ",
+                                            basename(fp_rpt), str(e))
                 self.display_template(study, msg, "danger",
                                       str(raw_data_id))
                 return
@@ -502,8 +499,8 @@ class StudyDescriptionHandler(BaseHandler):
             try:
                 pt.investigation_type = investigation_type
             except QiitaDBColumnError as e:
-                error_msg = ''.join(format_exception_only(e, exc_info()))
-                msg = 'Invalid investigation type: %s' % error_msg
+                msg = html_error_message % (", invalid investigation type: ",
+                                            investigation_type, str(e))
                 self.display_template(study, msg, "danger",
                                       str(pt.raw_data))
                 return
