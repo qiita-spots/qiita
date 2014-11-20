@@ -58,21 +58,9 @@ class Dispatch(object):
 
     """
     def __init__(self):
-        self.reserved = Client(profile=qiita_config.ipyc_reserved)
-        self.general = Client(profile=qiita_config.ipyc_general)
-        self.demo = Client(profile=qiita_config.ipyc_demo)
-
-        self._stage_imports(self.reserved)
-        self._stage_imports(self.general)
-        self._stage_imports(self.demo)
-
-        self.reserved_lview = self.reserved.load_balanced_view()
-        self.general_lview = self.general.load_balanced_view()
+        from moi import ctx_default
+        self.demo = Client(profile=ctx_default)
         self.demo_lview = self.demo.load_balanced_view()
-
-    def _stage_imports(self, cluster):
-        with cluster[:].sync_imports(quiet=True):
-            from qiita_ware.context import system_call  # noqa
 
     def sync(self, data):
         """Sync data to engines
@@ -83,8 +71,6 @@ class Dispatch(object):
             dict of objects and to sync
 
         """
-        # self.reserved[:].update(data)
-        # self.general[:].update(data)
         self.demo[:].update(data)
 
     def submit_async(self, cmd, *args, **kwargs):
