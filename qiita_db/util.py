@@ -854,3 +854,24 @@ def get_lat_longs():
     sql = """select latitude, longitude
              from qiita.required_sample_info"""
     return conn.execute_fetchall(sql)
+
+def find_repeated(values):
+    """Find repeated elements in the inputed list
+
+    Parameters
+    ----------
+    values : list
+        List of elements to find duplicates in
+
+    Returns
+    -------
+    set
+        Repeated elements in ``values``
+    """
+    seen, repeated = set(), set()
+    for value in values:
+        if value in seen:
+            repeated.add(value)
+        else:
+            seen.add(value)
+    return repeated
