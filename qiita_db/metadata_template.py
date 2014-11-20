@@ -54,7 +54,7 @@ from .sql_connection import SQLConnectionHandler
 from .ontology import Ontology
 from .util import (exists_table, get_table_cols, get_emp_status,
                    get_required_sample_info_status, convert_to_id,
-                   convert_from_id)
+                   convert_from_id, find_repeated)
 
 
 TARGET_GENE_DATA_TYPES = ['16S', '18S', 'ITS']
@@ -1050,7 +1050,8 @@ class SampleTemplate(MetadataTemplate):
 
         # Check that we don't have duplicate columns
         if len(set(md_template.columns)) != len(md_template.columns):
-            raise QiitaDBDuplicateHeaderError()
+            raise QiitaDBDuplicateHeaderError(
+                find_repeated(md_template.columns))
 
         # We need to check for some special columns, that are not present on
         # the database, but depending on the data type are required.
@@ -1199,7 +1200,8 @@ class PrepTemplate(MetadataTemplate):
 
         # Check that we don't have duplicate columns
         if len(set(md_template.columns)) != len(md_template.columns):
-            raise QiitaDBDuplicateHeaderError()
+            raise QiitaDBDuplicateHeaderError(
+                find_repeated(md_template.columns))
 
         # Get a connection handler
         conn_handler = SQLConnectionHandler()
