@@ -140,9 +140,7 @@ class RunAnalysis(ParallelWrapper):
             # Adding the dependency edges to the graph
             self._job_graph.add_edge(files_node_name, node_name)
 
-        # Finalize the analysis. This is a noop, but the ParallelWrapper
-        # seems to require a final node. Not clear if the baseclass should
-        # automatically include this or not.
+        # Finalize the analysis.
         node_name = "FINISH_ANALYSIS_%d" % analysis.id
         self._job_graph.add_node(node_name,
                                  func=_finish_analysis,
