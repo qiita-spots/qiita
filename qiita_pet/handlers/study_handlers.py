@@ -14,8 +14,6 @@ from os import remove
 from os.path import exists, join, basename
 from functools import partial
 from operator import itemgetter
-from traceback import format_exception_only
-from sys import exc_info
 
 from tornado.web import authenticated, HTTPError, asynchronous
 from tornado.gen import coroutine, Task
@@ -40,7 +38,8 @@ from qiita_db.util import (get_filepath_types, get_data_types, get_filetypes,
                            get_files_from_uploads_folders)
 from qiita_db.data import PreprocessedData, RawData
 from qiita_db.exceptions import (QiitaDBColumnError, QiitaDBExecutionError,
-                                 QiitaDBDuplicateError, QiitaDBUnknownIDError)
+                                 QiitaDBDuplicateError, QiitaDBUnknownIDError,
+                                 QiitaDBDuplicateHeaderError)
 from qiita_db.ontology import Ontology
 
 from .base_handlers import BaseHandler
@@ -50,6 +49,7 @@ study_person_linkifier = partial(
 pubmed_linkifier = partial(
     linkify, "<a target=\"_blank\" href=\"http://www.ncbi.nlm.nih.gov/"
     "pubmed/{0}\">{0}</a>")
+html_error_message = "<b>An error occurred %s %s</b></br>%s"
 
 
 def _get_shared_links_for_study(study):
@@ -436,10 +436,9 @@ class StudyDescriptionHandler(BaseHandler):
                            study_id, fp_rsp)
             except (TypeError, QiitaDBColumnError, QiitaDBExecutionError,
                     QiitaDBDuplicateError, IOError, ValueError, KeyError,
-                    CParserError) as e:
-                error_msg = ''.join(format_exception_only(e, exc_info()))
-                msg = ('<b>An error occurred parsing the sample template: '
-                       '%s</b><br/>%s' % (basename(fp_rsp), error_msg))
+                    CParserError, QiitaDBDuplicateHeaderError) as e:
+                msg = html_error_message % ('parsing the sample template:',
+                                            basename(fp_rsp), str(e))
                 self.display_template(study, msg, "danger")
                 return
 
@@ -483,9 +482,9 @@ class StudyDescriptionHandler(BaseHandler):
                 except (TypeError, QiitaDBColumnError, QiitaDBExecutionError,
                         QiitaDBDuplicateError, IOError, ValueError, KeyError,
                         CParserError) as e:
-                    error_msg = ''.join(format_exception_only(e, exc_info()))
-                    msg = ('An error occurred creating a new raw data'
-                           'object. %s' % (error_msg))
+                    msg = html_error_message % ("creating a new raw data "
+                                                "object for study:",
+                                                str(study.id), str(e))
                     self.display_template(study, msg, "danger")
                     return
                 msg = ""
@@ -522,9 +521,8 @@ class StudyDescriptionHandler(BaseHandler):
             except (TypeError, QiitaDBColumnError, QiitaDBExecutionError,
                     QiitaDBDuplicateError, IOError, ValueError,
                     CParserError) as e:
-                error_msg = ''.join(format_exception_only(e, exc_info()))
-                msg = ('An error occurred parsing the prep template: '
-                       '%s. %s' % (basename(fp_rpt), error_msg))
+                msg = html_error_message % ("parsing the prep template: ",
+                                            basename(fp_rpt), str(e))
                 self.display_template(study, msg, "danger",
                                       str(raw_data_id))
                 return
@@ -554,8 +552,8 @@ class StudyDescriptionHandler(BaseHandler):
             try:
                 pt.investigation_type = investigation_type
             except QiitaDBColumnError as e:
-                error_msg = ''.join(format_exception_only(e, exc_info()))
-                msg = 'Invalid investigation type: %s' % error_msg
+                msg = html_error_message % (", invalid investigation type: ",
+                                            investigation_type, str(e))
                 self.display_template(study, msg, "danger",
                                       str(pt.raw_data))
                 return
