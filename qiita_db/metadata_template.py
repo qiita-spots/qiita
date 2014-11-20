@@ -41,13 +41,11 @@ from __future__ import division
 from future.builtins import zip
 from future.utils import viewitems
 from copy import deepcopy
+from os.path import join
+from time import strftime
 
 import pandas as pd
 import numpy as np
-
-from os.path import join
-
-from time import strftime
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from .exceptions import (QiitaDBDuplicateError, QiitaDBColumnError,
