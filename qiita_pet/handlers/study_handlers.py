@@ -399,9 +399,9 @@ class StudyDescriptionHandler(BaseHandler):
         new_investigation_type = self.get_argument('new-investigation-type',
                                                    None)
 
-        # non selected is the equivalent to the user not specifying the info
+        # None Selected is the equivalent to the user not specifying the info
         # thus we should make the investigation_type None
-        if investigation_type == "" or investigation_type == "Non selected":
+        if investigation_type == "" or investigation_type == "None Selected":
             investigation_type = None
 
         # to update investigation type
@@ -414,10 +414,10 @@ class StudyDescriptionHandler(BaseHandler):
         edit_new_investigation_type = self.get_argument(
             'edit-new-investigation-type', None)
 
-        # non selected is the equivalent to the user not specifying the info
+        # None Selected is the equivalent to the user not specifying the info
         # thus we should make the investigation_type None
         if edit_investigation_type == "" or \
-                edit_investigation_type == "Non selected":
+                edit_investigation_type == "None Selected":
             edit_investigation_type = None
 
         msg_level = 'success'
