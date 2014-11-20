@@ -298,16 +298,24 @@ function newInvestigationTypeChanged(rawDataID, isEdit){
                     <table border="0">
                     {% for pdi in prep.preprocessed_data %}
                       {% set pd = PreprocessedData(pdi) %}
-                      {% if pd.get_filepaths() %}
+                      {% set filepaths = pd.get_filepaths() %}
+                      {% if filepaths %}
                         <tr>
                           <td style="padding:3px;">
                             <a class="btn btn-primary" href="/preprocessing_summary/{{pdi}}">Preprocessing summary</a>
+                            {% for fpid, fp, ft in filepaths %}
+                              {% if is_local_request %}
+                                <br/>{{fp}}
+                              {% else %}
+                                <br/><a href="/download/{{fpid}}">{{basename(fp)}}</a>
+                              {% end %}
+                            {% end %}
                           </td>
                           <td rowspan="2" style="padding:3px;">
-                            Preprocessed Data ID: {{ pdi }}<br/>
-                            EBI status: {{pd.submitted_to_insdc_status()}}<br/>
-                            EBI study accession: {{pd.ebi_study_accession}}<br/>
-                            EBI submission accession: {{pd.ebi_submission_accession}}
+                            <b>Preprocessed Data ID:</b> {{ pdi }}<br/>
+                            <b>EBI status:</b> {{pd.submitted_to_insdc_status()}}<br/>
+                            <b>EBI study accession:</b> {{pd.ebi_study_accession}}<br/>
+                            <b>EBI submission accession:</b> {{pd.ebi_submission_accession}}
                           </td>
                         </tr>
                         {% if user_level == "admin" %}
@@ -339,7 +347,7 @@ function newInvestigationTypeChanged(rawDataID, isEdit){
               {% elif r.link_filepaths_status.startswith('failed') %}
                 <i><b style="color:red">Error (un)linking files: {{r.link_filepaths_status}} </b></i><br/>
               {% end %}
-            {% for f, t in r.get_filepaths() %}
+            {% for fpid, f, t in r.get_filepaths() %}
                 <i>{{basename(f)}}:</i> {{t[4:]}} <br/>
             {% end %}
               <br/>

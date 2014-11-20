@@ -9,26 +9,20 @@ r"""Qitta study handlers for the Tornado webserver.
 # -----------------------------------------------------------------------------
 from __future__ import division
 from collections import namedtuple, defaultdict
+from json import dumps
+from os import remove
+from os.path import exists, join, basename
+from functools import partial
+from operator import itemgetter
+from traceback import format_exception_only
+from sys import exc_info
 
 from tornado.web import authenticated, HTTPError, asynchronous
 from tornado.gen import coroutine, Task
 from wtforms import (Form, StringField, SelectField, BooleanField,
                      SelectMultipleField, TextAreaField, validators)
-
-from future.utils import viewitems
-
-from operator import itemgetter
-
-from traceback import format_exception_only
-from sys import exc_info
-
-from json import dumps
-from os import remove
-from os.path import exists, join, basename
-from functools import partial
-from .base_handlers import BaseHandler
-
 from pandas.parser import CParserError
+from future.utils import viewitems
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_core.qiita_settings import qiita_config
@@ -48,6 +42,9 @@ from qiita_db.data import PreprocessedData, RawData
 from qiita_db.exceptions import (QiitaDBColumnError, QiitaDBExecutionError,
                                  QiitaDBDuplicateError, QiitaDBUnknownIDError)
 from qiita_db.ontology import Ontology
+
+from qiita_pet.util import linkify
+from .base_handlers import BaseHandler
 
 study_person_linkifier = partial(
     linkify, "<a target=\"_blank\" href=\"mailto:{0}\">{1}</a>")
@@ -215,7 +212,7 @@ class PreprocessingSummaryHandler(BaseHandler):
         files_tuples = ppd.get_filepaths()
         files = defaultdict(list)
 
-        for fp, fpt in files_tuples:
+        for fpid, fp, fpt in files_tuples:
             files[fpt].append(fp)
 
         with open(files['log'][0], 'U') as f:
@@ -277,6 +274,10 @@ class StudyDescriptionHandler(BaseHandler):
     @coroutine
     def display_template(self, study, msg, msg_level, tab_to_display=""):
         """Simple function to avoid duplication of code"""
+        # Check if the request came from a local source
+        is_local_request = ('localhost' in self.request.headers['host'] or
+                            '127.0.0.1' in self.request.headers['host'])
+
         # getting raw filepath_ types
         fts = [k.split('_', 1)[1].replace('_', ' ')
                for k in get_filepath_types() if k.startswith('raw_')]
@@ -326,7 +327,8 @@ class StudyDescriptionHandler(BaseHandler):
                     can_upload=check_access(user, study, no_public=True),
                     other_studies_rd=''.join(other_studies_rd),
                     user_defined_terms=user_defined_terms,
-                    files=get_files_from_uploads_folders(str(study.id)))
+                    files=get_files_from_uploads_folders(str(study.id)),
+                    is_local_request=is_local_request)
 
     @authenticated
     def get(self, study_id):

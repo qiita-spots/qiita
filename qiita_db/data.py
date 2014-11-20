@@ -38,7 +38,7 @@ Inserting the raw data into the database:
 Retrieve the filepaths associated with the raw data
 
 >>> rd.get_filepaths() # doctest: +SKIP
-[('seqs.fastq', 'raw_sequences'), ('barcodes.fastq', 'raw_barcodes')]
+[(1, 'seqs.fastq', 'raw_sequences'), (2, 'barcodes.fastq', 'raw_barcodes')]
 
 Assume we have preprocessed the previous raw data files using the parameters
 under the first row in the 'preprocessed_sequence_illumina_params', and we
@@ -174,8 +174,8 @@ class BaseData(QiitaObject):
         Returns
         -------
         list of tuples
-            A list of (path, filetype) with all the paths associated with
-            the current data
+            A list of (filepath_id, path, filetype) with all the paths
+            associated with the current data
         """
         self._check_subclass()
         # We need a connection handler to the database
@@ -185,7 +185,8 @@ class BaseData(QiitaObject):
         # filepath ids of the filepath associated with the current data object.
         # We then can query the filepath table to get those paths.
         db_paths = conn_handler.execute_fetchall(
-            "SELECT filepath, filepath_type_id FROM qiita.{0} WHERE "
+            "SELECT filepath_id, filepath, filepath_type_id "
+            "FROM qiita.{0} WHERE "
             "filepath_id IN (SELECT filepath_id FROM qiita.{1} WHERE "
             "{2}=%(id)s)".format(self._filepath_table,
                                  self._data_filepath_table,
@@ -194,8 +195,8 @@ class BaseData(QiitaObject):
         _, fb = get_mountpoint(self._table, conn_handler)[0]
         base_fp = partial(join, fb)
 
-        return [(base_fp(fp), convert_from_id(fid, "filepath_type",
-                conn_handler)) for fp, fid in db_paths]
+        return [(fpid, base_fp(fp), convert_from_id(fid, "filepath_type",
+                conn_handler)) for fpid, fp, fid in db_paths]
 
     def get_filepath_ids(self):
         self._check_subclass()
@@ -450,7 +451,7 @@ class RawData(BaseData):
 
         self._set_link_filepaths_status("unlinking")
 
-        for fp, fp_type in self.get_filepaths():
+        for _, fp, _ in self.get_filepaths():
             self._remove_filepath(fp, conn_handler, queue)
 
         try:
