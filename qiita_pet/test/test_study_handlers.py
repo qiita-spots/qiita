@@ -127,11 +127,13 @@ class TestStudyEditHandler(TestHandlerBase):
         """Make sure the page loads when no arguments are passed"""
         response = self.get('/study/create/')
         self.assertEqual(response.code, 200)
+        self.assertNotEqual(str(response.body), "")
 
     def test_get_edit(self):
         """Make sure the page loads when we want to edit a study"""
         response = self.get('/study/edit/1')
         self.assertEqual(response.code, 200)
+        self.assertNotEqual(str(response.body), "")
 
     def test_post(self):
         person_count_before = get_count('qiita.study_person')
