@@ -206,8 +206,7 @@ class StudyEditorExtendedForm(StudyEditorForm):
     """
     environmental_packages = SelectMultipleField('Environmental Packages',
                                                  [validators.Required()])
-    timeseries = SelectField('Event-Based Data', [validators.Required()],
-                             coerce=lambda x: x)
+    timeseries = SelectField('Event-Based Data', coerce=lambda x: x)
 
     def __init__(self, study=None, **kwargs):
         super(StudyEditorExtendedForm, self).__init__(study=study, **kwargs)
