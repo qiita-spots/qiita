@@ -394,6 +394,11 @@ class PreprocessedDataTests(TestCase):
                 "preprocessed_demux")]
         self.assertEqual(obs, exp)
 
+    def test_processed_data(self):
+        """Correctly returns the processed data id"""
+        ppd = PreprocessedData(1)
+        self.assertEqual(ppd.processed_data, [1])
+
     def test_prep_template(self):
         """Correctly returns the prep template"""
         ppd = PreprocessedData(1)
