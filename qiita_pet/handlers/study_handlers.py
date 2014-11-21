@@ -246,7 +246,7 @@ class StudyDescriptionHandler(BaseHandler):
         """
         for rd in raw_data():
             for pt in rd.prep_templates:
-                if PrepTemplate.exists((pt)):
+                if PrepTemplate.exists(pt):
                     PrepTemplate.delete(pt)
         if SampleTemplate.exists(study_id):
             SampleTemplate.delete(study_id)
