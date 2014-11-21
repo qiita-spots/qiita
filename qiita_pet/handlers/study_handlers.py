@@ -323,6 +323,7 @@ class StudyDescriptionHandler(BaseHandler):
         """Replace prep templates, raw data, and sample template with a new one
         """
         for rd in raw_data():
+            rd = RawData(rd)
             for pt in rd.prep_templates:
                 if PrepTemplate.exists(pt):
                     PrepTemplate.delete(pt)
