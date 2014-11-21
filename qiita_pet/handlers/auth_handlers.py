@@ -90,7 +90,7 @@ class AuthLoginHandler(BaseHandler):
             msg = "Unknown user"
         except RuntimeError:
             # means DB not available, so set maintenance mode and failover
-            # redis key set to check expire and again in 10 min
+            # redis key set to expire and check again in 10 min
             r_server.setex("maintenance", "Database connection unavailable, "
                          "please try again later.", 600)
             self.redirect("/")
