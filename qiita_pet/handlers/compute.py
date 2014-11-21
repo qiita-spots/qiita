@@ -6,6 +6,7 @@ from moi import r_client
 from .base_handlers import BaseHandler
 from .study_handlers import check_access
 
+from qiita_ware.context import submit
 from qiita_ware.dispatchable import add_files_to_raw_data, unlink_all_files
 
 from qiita_db.study import Study
