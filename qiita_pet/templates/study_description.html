@@ -65,33 +65,27 @@ function newInvestigationTypeChanged(rawDataID, isEdit){
 <table border="0" style="vertical-align: middle; text-align:center; align:center;">
   <tr>
     <td style="vertical-align: middle; text-align:left; width: 50%;" colspan="2">
-      <b>{{study_title}} ({{study_info['study_alias']}})</b>
-      <br/>
-      Status: {{study_status}} 
-      <br />
-      Samples: {{study_info['number_samples_promised']}}/{{study_info['number_samples_collected']}}
-      <br/>
-      Metadata: {{study_info['metadata_complete']}}
-      {% if can_upload and study_status == 'sandbox' or user_level == 'admin' %}
-        <br/>
-        <a href="/study/upload/{{study_id}}">Upload files</a>
-      {% end %}
+      <h1>{{study_title}} </h1>
+      <h2><i>{{study_info['study_alias']}} </i> </h2>
     </td>
-    <td style='padding: 10px;'>
+  </tr>
+  <tr>
+    <td style="vertical-align: middle; text-align:left; width: 50%;" colspan="2">
+      {% if not is_public or user_level == "admin" %}
+        <a class="btn btn-default glyphicon glyphicon-edit" href="/study/edit/{{study_id}}" title="Edit the study information" style="margin:5px; word-spacing: -10px;"> Edit</a>
+      {% end %}
+      {% if can_upload and study_status == 'sandbox' or user_level == 'admin' %}
+        <a href="/study/upload/{{study_id}}" class="btn btn-default glyphicon glyphicon-upload" title="Upload study files" style="margin:5px; word-spacing: -10px;"> Upload</a>
+      {% end %}
       {% if study_status == 'sandbox' and qiita_config.require_approval and ste and raw_files and prep_templates %}
-        <a class="btn btn-primary" onClick="request_approval();" style="margin:5px">Request Study Approval</a><br />
+        <a class="btn btn-default glyphicon glyphicon-eye-open" onClick="request_approval();" style="margin:5px; word-spacing: -10px;"> Request Approval</a>
       {% elif (user_level == 'admin' and study_status == 'awaiting_approval') or not qiita_config.require_approval %}
-        <a class="btn btn-primary" onClick="approve_study();"s tyle="margin:5px">Approve Study</a><br />
+        <a class="btn btn-success glyphicon glyphicon-thumbs-up" onClick="approve_study();" style="margin:5px; word-spacing: -10px;"> Approve Study</a>
       {% elif study_status == 'private' %}
-       <a class="btn btn-primary" onClick="make_public();" style="margin:5px">Make Public</a><br />
+       <a class="btn btn-success glyphicon glyphicon-thumbs-up" onClick="make_public();" style="margin:5px; word-spacing: -10px;"> Make Public</a>
       {% end %}
       {% if study_status not in {'sandbox', 'public'} %}
-        <a class="btn btn-primary" onClick="make_sandbox();" style="margin:5px">Revert to sandbox</a><br />
-      {% end %}
-    </td>
-    <td width="60">
-      {% if ste %}
-        <a class="btn btn-primary" href="/metadata_summary/?study_id={{study_id}}&sample_template={{study_id}}">Show study template summary</a>
+        <a class="btn btn-default glyphicon glyphicon-backward" onClick="make_sandbox();" style="margin:5px; word-spacing: -10px;"> Revert to sandbox</a>
       {% end %}
     </td>
   </tr>
@@ -101,7 +95,8 @@ function newInvestigationTypeChanged(rawDataID, isEdit){
 
 <!-- Nav tabs -->
 <ul class="nav nav-tabs" role="tablist" id="myTab">
-    <li class="active"><a href="#add_sample_template" role="tab" data-toggle="tab">Add sample template</a></li>
+    <li class="active"><a href="#study_information_tab" role="tab" data-toggle="tab">Study information</a></li>
+    <li><a href="#add_sample_template" role="tab" data-toggle="tab">Sample template</a></li>
   {% if ste and (study_status == 'sandbox' or user_level == 'admin') %}
     <li><a href="#add_raw_data" role="tab" data-toggle="tab">Add raw data</a></li>
   {% end %}
@@ -113,7 +108,16 @@ function newInvestigationTypeChanged(rawDataID, isEdit){
 
 <!-- Tab panes -->
 <div class="tab-content">
-  <div class="tab-pane active" id="add_sample_template" style="padding: 10px;">
+  <div class="tab-pane active" id="study_information_tab" style="padding: 10px;">
+    <b>Abstract:</b> {{study_info['study_abstract']}} <br/>
+    <b>Description:</b> {{study_info['study_description']}} <br/>
+    <b>PubMed IDs:</b> {% raw pmids %} <br/>
+    <b>Principal investigator:</b> {% raw principal_investigator %} <br/>
+    <b>Samples:</b> {{study_info['number_samples_promised']}}/{{study_info['number_samples_collected']}}<br/>
+    <b>Metadata:</b> {{study_info['metadata_complete']}} <br/>
+  </div>
+
+  <div class="tab-pane" id="add_sample_template" style="padding: 10px;">
     {% if study_status == 'sandbox' or user_level == 'admin' %}
     Select your sample template:
     <select id="sample_template">
@@ -130,6 +134,8 @@ function newInvestigationTypeChanged(rawDataID, isEdit){
       You have a valid sample template, if you reprocess with a new file you <b>will loose</b> all prep and sequence information.
       <br/>
       You can modify a sample template <a onclick="alert('Not implemented! Coming soon.')">here</a>
+      <br/>
+      <a class="btn btn-primary" href="/metadata_summary/?study_id={{study_id}}&sample_template={{study_id}}">Show sample template summary</a>
     {% end %}
   </div>
 
@@ -180,7 +186,7 @@ function newInvestigationTypeChanged(rawDataID, isEdit){
               <li>
                 (optional but required for EBI submission) select an investigation type:
                 <select onclick="investigationTypeChanged({{r.id}})" onchange="investigationTypeChanged({{r.id}})" id="investigation-type-{{r.id}}">
-                  <option value="Non selected">Non selected</option>
+                  <option value="None Selected">None Selected</option>
                   {% raw ena_terms %}
                 </select>
                 <table id="investigation-type-table" name="investigation-types" class="investigation-type-table">
@@ -228,7 +234,7 @@ function newInvestigationTypeChanged(rawDataID, isEdit){
                         </td>
                         <td>
                           <select id="edit-investigation-type-{{prep.id}}" onclick="investigationTypeChanged({{prep.id}}, true)" onchange="investigationTypeChanged({{prep.id}}, true)">
-                            <option value="Non selected">Non selected</option>
+                            <option value="None Selected">None Selected</option>
                             {% raw ena_terms %}
                           </select>
                         </td>
@@ -281,7 +287,7 @@ function newInvestigationTypeChanged(rawDataID, isEdit){
                     }
                   }
                   else{
-                    $('#edit-investigation-type-{{prep.id}}').val("Non selected");
+                    $('#edit-investigation-type-{{prep.id}}').val("None Selected");
                   }
                   </script>
                 </td>
@@ -650,7 +656,10 @@ function newInvestigationTypeChanged(rawDataID, isEdit){
     }
   }
 
-  if ("{{tab_to_display}}") {
+  if ("{{tab_to_display}}" == "study_information_tab"){
+    $('#myTab a:[href="#study_information_tab"]').tab('show');
+  }
+  else if ("{{tab_to_display}}") {
     $('#myTab a[href="#raw_data_info_{{tab_to_display}}"]').tab('show');
   } else {
     $('#myTab a:last').tab('show');

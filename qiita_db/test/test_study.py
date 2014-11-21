@@ -363,11 +363,6 @@ class TestStudy(TestCase):
         new.title = "Cannabis soils"
         self.assertEqual(new.title, "Cannabis soils")
 
-    def test_set_title_public(self):
-        """Tests for fail if editing title of a public study"""
-        with self.assertRaises(QiitaDBStatusError):
-            self.study.title = "FAILBOAT"
-
     def test_get_efo(self):
         self.assertEqual(self.study.efo, [1])
 
@@ -422,8 +417,12 @@ class TestStudy(TestCase):
 
     def test_set_info_public(self):
         """Tests for fail if editing info of a public study"""
+        self.study.info = {"vamps_id": "12321312"}
+
+    def test_set_info_public_error(self):
+        """Tests for fail if trying to modify timeseries of a public study"""
         with self.assertRaises(QiitaDBStatusError):
-            self.study.info = {"vamps_id": "12321312"}
+            self.study.info = {"timeseries_type_id": 2}
 
     def test_set_info_disallowed_keys(self):
         """Tests for fail if sending non-info keys in info dict"""
@@ -458,6 +457,18 @@ class TestStudy(TestCase):
         new = Study.create(User('test@foo.bar'), 'NOT Identification of the '
                            'Microbiomes for Cannabis Soils', [1], self.info)
         self.assertEqual(new.pmids, [])
+
+    def test_pmids_setter(self):
+        exp = ['123456', '7891011']
+        self.assertEqual(self.study.pmids, exp)
+
+        new_values = ['654321', '1101987']
+        self.study.pmids = new_values
+        self.assertEqual(self.study.pmids, new_values)
+
+    def test_pmids_setter_typeerror(self):
+        with self.assertRaises(TypeError):
+            self.study.pmids = '123456'
 
     def test_retrieve_investigation(self):
         self.assertEqual(self.study.investigation, 1)
@@ -524,6 +535,39 @@ class TestStudy(TestCase):
         self.study.add_pmid('4544444')
         exp = ['123456', '7891011', '4544444']
         self.assertEqual(self.study.pmids, exp)
+
+    def test_environmental_packages(self):
+        obs = self.study.environmental_packages
+        exp = ['soil', 'plant-associated']
+        self.assertEqual(sorted(obs), sorted(exp))
+
+    def test_environmental_packages_setter(self):
+        new = Study.create(User('test@foo.bar'), 'NOT Identification of the '
+                           'Microbiomes for Cannabis Soils', [1], self.info)
+        obs = new.environmental_packages
+        exp = []
+        self.assertEqual(obs, exp)
+
+        new_values = ['air', 'human-oral']
+        new.environmental_packages = new_values
+        obs = new.environmental_packages
+        self.assertEqual(sorted(obs), sorted(new_values))
+
+    def test_environmental_packages_setter_typeerror(self):
+        new = Study.create(User('test@foo.bar'), 'NOT Identification of the '
+                           'Microbiomes for Cannabis Soils', [1], self.info)
+        with self.assertRaises(TypeError):
+            new.environmental_packages = 'air'
+
+    def test_environmental_packages_setter_valueerror(self):
+        new = Study.create(User('test@foo.bar'), 'NOT Identification of the '
+                           'Microbiomes for Cannabis Soils', [1], self.info)
+        with self.assertRaises(ValueError):
+            new.environmental_packages = ['air', 'not a package']
+
+    def test_environmental_packages_sandboxed(self):
+        with self.assertRaises(QiitaDBStatusError):
+            self.study.environmental_packages = ['air']
 
 
 if __name__ == "__main__":

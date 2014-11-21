@@ -26,6 +26,7 @@ Methods
     convert_from_id
     convert_to_id
     get_lat_longs
+    get_environmental_packages
 """
 # -----------------------------------------------------------------------------
 # Copyright (c) 2014--, The Qiita Development Team.
@@ -854,3 +855,63 @@ def get_lat_longs():
     sql = """select latitude, longitude
              from qiita.required_sample_info"""
     return conn.execute_fetchall(sql)
+
+
+def get_environmental_packages(conn_handler=None):
+    """Get the list of available environmental packages
+
+    Parameters
+    ----------
+    conn_handler : SQLConnectionHandler, optional
+        The handler connected to the database
+
+    Returns
+    -------
+    list of (str, str)
+        The available environmental packages. The first string is the
+        environmental package name and the second string is the table where
+        the metadata for the environmental package is stored
+    """
+    conn = conn_handler if conn_handler else SQLConnectionHandler()
+    return conn.execute_fetchall("SELECT * FROM qiita.environmental_package")
+
+
+def get_timeseries_types(conn_handler=None):
+    """Get the list of available timeseries types
+
+    Parameters
+    ----------
+    conn_handler : SQLConnectionHandler, optional
+        The handler connected to the database
+
+    Returns
+    -------
+    list of (int, str, str)
+        The available timeseries types. Each timeseries type is defined by the
+        tuple (timeseries_id, timeseries_type, intervention_type)
+    """
+    conn = conn_handler if conn_handler else SQLConnectionHandler()
+    return conn.execute_fetchall(
+        "SELECT * FROM qiita.timeseries_type ORDER BY timeseries_type_id")
+
+
+def find_repeated(values):
+    """Find repeated elements in the inputed list
+
+    Parameters
+    ----------
+    values : list
+        List of elements to find duplicates in
+
+    Returns
+    -------
+    set
+        Repeated elements in ``values``
+    """
+    seen, repeated = set(), set()
+    for value in values:
+        if value in seen:
+            repeated.add(value)
+        else:
+            seen.add(value)
+    return repeated

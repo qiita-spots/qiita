@@ -41,6 +41,8 @@ from __future__ import division
 from future.builtins import zip
 from future.utils import viewitems
 from copy import deepcopy
+from os.path import join
+from time import strftime
 
 import pandas as pd
 import numpy as np
@@ -54,7 +56,7 @@ from .sql_connection import SQLConnectionHandler
 from .ontology import Ontology
 from .util import (exists_table, get_table_cols, get_emp_status,
                    get_required_sample_info_status, convert_to_id,
-                   convert_from_id)
+                   convert_from_id, find_repeated, get_mountpoint)
 
 
 TARGET_GENE_DATA_TYPES = ['16S', '18S', 'ITS']
@@ -1050,7 +1052,8 @@ class SampleTemplate(MetadataTemplate):
 
         # Check that we don't have duplicate columns
         if len(set(md_template.columns)) != len(md_template.columns):
-            raise QiitaDBDuplicateHeaderError()
+            raise QiitaDBDuplicateHeaderError(
+                find_repeated(md_template.columns))
 
         # We need to check for some special columns, that are not present on
         # the database, but depending on the data type are required.
@@ -1122,7 +1125,14 @@ class SampleTemplate(MetadataTemplate):
                                       ', '.join(["%s"] * len(headers))),
             values)
 
-        return cls(study.id)
+        # figuring out the filepath of the backup
+        _id, fp = get_mountpoint('templates')[0]
+        fp = join(fp, '%d_%s' % (study.id, strftime("%Y%m%d-%H%M%S")))
+        # storing the backup
+        st = cls(study.id)
+        st.to_file(fp)
+
+        return st
 
     @property
     def study_id(self):
@@ -1199,7 +1209,8 @@ class PrepTemplate(MetadataTemplate):
 
         # Check that we don't have duplicate columns
         if len(set(md_template.columns)) != len(md_template.columns):
-            raise QiitaDBDuplicateHeaderError()
+            raise QiitaDBDuplicateHeaderError(
+                find_repeated(md_template.columns))
 
         # Get a connection handler
         conn_handler = SQLConnectionHandler()
@@ -1288,7 +1299,15 @@ class PrepTemplate(MetadataTemplate):
                                       ', '.join(["%s"] * len(headers))),
             values)
 
-        return cls(prep_id)
+        # figuring out the filepath of the backup
+        _id, fp = get_mountpoint('templates')[0]
+        fp = join(fp, '%d_prep_%d_%s' % (study.id, prep_id,
+                  strftime("%Y%m%d-%H%M%S")))
+        # storing the backup
+        pt = cls(prep_id)
+        pt.to_file(fp)
+
+        return pt
 
     @classmethod
     def validate_investigation_type(self, investigation_type):
