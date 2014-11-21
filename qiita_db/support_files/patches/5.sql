@@ -7,19 +7,11 @@ CREATE TABLE qiita.prep_template_filepath (
 	CONSTRAINT idx_prep_template_filepath PRIMARY KEY ( prep_template_id, filepath_id )
  ) ;
 
-CREATE INDEX idx_prep_template_filepath ON qiita.prep_template_filepath ( filepath_id ) ;
-
-CREATE INDEX idx_prep_template_filepath ON qiita.prep_template_filepath ( prep_template_id ) ;
-
 CREATE TABLE qiita.sample_template_filepath (
 	study_id             bigint  NOT NULL,
 	filepath_id          bigint  NOT NULL,
 	CONSTRAINT idx_sample_template_filepath PRIMARY KEY ( study_id, filepath_id )
  ) ;
-
-CREATE INDEX idx_sample_template_filepath_0 ON qiita.sample_template_filepath ( study_id ) ;
-
-CREATE INDEX idx_sample_template_filepath_1 ON qiita.sample_template_filepath ( filepath_id ) ;
 
 ALTER TABLE qiita.prep_template_filepath ADD CONSTRAINT fk_filepath_id FOREIGN KEY ( filepath_id ) REFERENCES qiita.filepath( filepath_id )    ;
 
