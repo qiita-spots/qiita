@@ -446,7 +446,8 @@ class StudyDescriptionHandler(BaseHandler):
             check_access(User(self.current_user), study,
                          raise_error=True)
 
-        self.display_template(study, "", 'info')
+        self.display_template(study, "", 'info',
+                              tab_to_display="study_information_tab")
 
     @authenticated
     @coroutine
@@ -760,7 +761,7 @@ class StudyEditHandler(BaseHandler):
             the_study.title = study_title
             the_study.info = info
 
-            msg = ('Study <a href="/study/description/%d">"%s"</a> '
+            msg = ('Study <a href="/study/description/%d">%s</a> '
                    'successfully updated' %
                    (the_study.id, form_data.data['study_title'][0]))
         else:
@@ -769,7 +770,7 @@ class StudyEditHandler(BaseHandler):
             the_study = Study.create(User(self.current_user), study_title,
                                      efo=[1], info=info)
 
-            msg = ('Study <a href="/study/description/%d">"%s"</a> '
+            msg = ('Study <a href="/study/description/%d">%s</a> '
                    'successfully created' %
                    (the_study.id, form_data.data['study_title'][0]))
 

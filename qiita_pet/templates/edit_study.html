@@ -213,6 +213,12 @@ function add_new_person(name, affiliation, email, phone, address) {
     counter -= 1;
 };
 
+function cancel_edition(){
+  if (confirm("Are you sure you want to go to the study description page? None of the changes will be stored")){
+    window.location.href = "/study/description/{{study.id}}";
+  }
+}
+
 </script>
 
 {% end %}
@@ -289,6 +295,7 @@ function add_new_person(name, affiliation, email, phone, address) {
   <tr>
     <td>
       <a name="bot"><input type='submit' id="create_study_submit" class='btn btn-primary' value="{%if study%}Update{%else%}Create{%end%} Study">
+      {%if study%} <input type='button' id="cancel_form" class='btn btn-primary' value="Cancel" onclick="cancel_edition()">{%end%}
     </td>
   </tr>
 </table>
