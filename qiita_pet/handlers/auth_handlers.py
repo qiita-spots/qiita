@@ -8,6 +8,7 @@ from qiita_core.exceptions import (IncorrectPasswordError, IncorrectEmailError,
                                    UnverifiedEmailError)
 from qiita_db.user import User
 from qiita_db.exceptions import QiitaDBUnknownIDError, QiitaDBDuplicateError
+from qiita_ware import r_server
 # login code modified from https://gist.github.com/guillaumevincent/4771570
 
 
@@ -87,6 +88,13 @@ class AuthLoginHandler(BaseHandler):
                 msg = "Email not verified"
         except QiitaDBUnknownIDError:
             msg = "Unknown user"
+        except RuntimeError:
+            # means DB not available, so set maintenance mode and failover
+            # redis key set to check expire and again in 10 min
+            r_server.setex("maintenance", "Database connection unavailable, "
+                         "please try again later.", 600)
+            self.redirect("/")
+            return
 
         # Check the login information
         login = None
