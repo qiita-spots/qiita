@@ -118,6 +118,32 @@ def _check_owner(user, study):
 
 
 class StudyEditorForm(Form):
+    r"""Reduced WTForm for editing the study information
+
+    Allows editing any study information that will not require a metadata
+    changes
+
+    Attributes
+    ----------
+    study_title
+    study_alias
+    pubmed_id
+    study_abstract
+    study_description
+    principal_investigator
+    lab_person
+
+    Parameters
+    ----------
+    study : Study, optional
+        The study to be modified. If not provided, the Form will not be
+        prepopulated and can be used for study creation
+
+    See Also
+    --------
+    StudyEditorExtendedForm
+    wtforms.Form
+    """
     study_title = StringField('Study Title', [validators.Required()])
     study_alias = StringField('Study Alias', [validators.Required()])
     pubmed_id = StringField('PubMed ID')
@@ -158,6 +184,26 @@ class StudyEditorForm(Form):
 
 
 class StudyEditorExtendedForm(StudyEditorForm):
+    r"""Extended WTForm for editing the study information
+
+    Allows editing all the study information
+
+    Attributes
+    ----------
+    environmental_packages
+    timeseries
+
+    Parameters
+    ----------
+    study : Study, optional
+        The study to be modified. If not provided, the Form will not be
+        prepopulated and can be used for study creation
+
+    See Also
+    --------
+    StudyEditorForm
+    wtforms.Form
+    """
     environmental_packages = SelectMultipleField('Environmental Packages',
                                                  [validators.Required()])
     timeseries = SelectField('Event-Based Data', [validators.Required()],
@@ -629,25 +675,25 @@ class StudyEditHandler(BaseHandler):
         if study_id:
             # Check study and user access
             study = self._check_study_exists_and_user_access(study_id)
-            # If the study is public, we use the short version of the form
-            if study.status == 'public':
+            # If the study is not sandboxed, we use the short
+            # version of the form
+            if study.status != 'sandbox':
                 form_factory = StudyEditorForm
 
         creation_form = form_factory(study=study)
 
-        # TODO: set the choices attributes on the environmental_package field
         self.render('edit_study.html', user=self.current_user,
                     creation_form=creation_form, study=study)
 
     @authenticated
     def post(self, study=None):
-        theStudy = None
+        the_study = None
         form_factory = StudyEditorExtendedForm
         if study:
             # Check study and user access
-            theStudy = self._check_study_exists_and_user_access(study)
+            the_study = self._check_study_exists_and_user_access(study)
             # If the study is public, we use the short version of the form
-            if theStudy.status == 'public':
+            if the_study.status == 'public':
                 form_factory = StudyEditorForm
 
         # Get the form data from the request arguments
@@ -709,35 +755,35 @@ class StudyEditHandler(BaseHandler):
 
         study_title = form_data.data['study_title'][0]
 
-        if theStudy:
+        if the_study:
             # We are under editing, so just update the values
-            theStudy.title = study_title
-            theStudy.info = info
+            the_study.title = study_title
+            the_study.info = info
 
             msg = ('Study <a href="/study/description/%d">"%s"</a> '
                    'successfully updated' %
-                   (theStudy.id, form_data.data['study_title'][0]))
+                   (the_study.id, form_data.data['study_title'][0]))
         else:
             # create the study
             # TODO: Fix this EFO once ontology stuff from emily is added
-            theStudy = Study.create(User(self.current_user), study_title,
-                                    efo=[1], info=info)
+            the_study = Study.create(User(self.current_user), study_title,
+                                     efo=[1], info=info)
 
             msg = ('Study <a href="/study/description/%d">"%s"</a> '
                    'successfully created' %
-                   (theStudy.id, form_data.data['study_title'][0]))
+                   (the_study.id, form_data.data['study_title'][0]))
 
         # Add the environmental packages
         if ('environmental_packages' in form_data.data and
                 form_data.data['environmental_packages']):
-            theStudy.environmental_packages = form_data.data[
+            the_study.environmental_packages = form_data.data[
                 'environmental_packages']
 
         if form_data.data['pubmed_id'][0]:
             # The user can provide a comma-seprated list
             pmids = form_data.data['pubmed_id'][0].split(',')
             # Make sure that we strip the spaces from the pubmed ids
-            theStudy.pmids = [pmid.strip() for pmid in pmids]
+            the_study.pmids = [pmid.strip() for pmid in pmids]
 
         self.render('index.html', message=msg, level='success',
                     user=self.current_user)

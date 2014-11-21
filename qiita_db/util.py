@@ -886,10 +886,9 @@ def get_timeseries_types(conn_handler=None):
 
     Returns
     -------
-    list of (str, str)
-        The available environmental packages. The first string is the
-        environmental package name and the second string is the table where
-        the metadata for the environmental package is stored
+    list of (int, str, str)
+        The available timeseries types. Each timeseries type is defined by the
+        tuple (timeseries_id, timeseries_type, intervention_type)
     """
     conn = conn_handler if conn_handler else SQLConnectionHandler()
     return conn.execute_fetchall(
