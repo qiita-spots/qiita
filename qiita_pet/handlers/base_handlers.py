@@ -25,10 +25,13 @@ class BaseHandler(RequestHandler):
             self.render("404.html", user=self.current_user)
             return
 
+        is_admin = False
         if self.current_user:
-            is_admin = User(self.current_user).level == 'admin'
-        else:
-            is_admin = False
+            try:
+                is_admin = User(self.current_user).level == 'admin'
+            except:
+                # Any issue with this check leaves default as not admin
+                is_admin = False
 
         # render error page
         self.render('error.html', user=self.current_user,
