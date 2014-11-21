@@ -417,6 +417,8 @@ class TestPatch(TestCase):
         exp = [[1], [100]]
         self.assertEqual(obs, exp)
 
+        self._assert_current_patch('10.sql')
+
 
 CONFIG_1 = """[required]
 timeseries_type_id = 1
