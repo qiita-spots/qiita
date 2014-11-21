@@ -26,6 +26,7 @@ from qiita_db.util import (exists_table, exists_dynamic_table, scrub_data,
                            get_emp_status, purge_filepaths, get_filepath_id,
                            get_lat_longs, get_mountpoint,
                            get_files_from_uploads_folders,
+                           get_environmental_packages, get_timeseries_types,
                            filepath_id_to_rel_path, find_repeated)
 
 
@@ -472,6 +473,43 @@ class DBUtilTests(TestCase):
         # nothing has been uploaded
         exp = []
         obs = get_files_from_uploads_folders("2")
+        self.assertEqual(obs, exp)
+
+    def test_get_environmental_packages(self):
+        obs = get_environmental_packages()
+        exp = [['air', 'ep_air'],
+               ['built environment', 'ep_built_environment'],
+               ['host-associated', 'ep_host_associated'],
+               ['human-amniotic-fluid', 'ep_human_amniotic_fluid'],
+               ['human-associated', 'ep_human_associated'],
+               ['human-blood', 'ep_human_blood'],
+               ['human-gut', 'ep_human_gut'],
+               ['human-oral', 'ep_human_oral'],
+               ['human-skin', 'ep_human_skin'],
+               ['human-urine', 'ep_human_urine'],
+               ['human-vaginal', 'ep_human_vaginal'],
+               ['microbial mat/biofilm', 'ep_microbial_mat_biofilm'],
+               ['miscellaneous natural or artificial environment',
+                'ep_misc_artif'],
+               ['plant-associated', 'ep_plant_associated'],
+               ['sediment', 'ep_sediment'],
+               ['soil', 'ep_soil'],
+               ['wastewater/sludge', 'ep_wastewater_sludge'],
+               ['water', 'ep_water']]
+        self.assertEqual(sorted(obs), sorted(exp))
+
+    def test_get_timeseries_types(self):
+        obs = get_timeseries_types()
+        exp = [[1, 'None', 'None'],
+               [2, 'real', 'single intervention'],
+               [3, 'real', 'multiple intervention'],
+               [4, 'real', 'combo intervention'],
+               [5, 'pseudo', 'single intervention'],
+               [6, 'pseudo', 'multiple intervention'],
+               [7, 'pseudo', 'combo intervention'],
+               [8, 'mixed', 'single intervention'],
+               [9, 'mixed', 'multiple intervention'],
+               [10, 'mixed', 'combo intervention']]
         self.assertEqual(obs, exp)
 
     def test_filepath_id_to_rel_path(self):

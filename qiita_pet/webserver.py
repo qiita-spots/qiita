@@ -21,7 +21,7 @@ from qiita_pet.handlers.analysis_handlers import (
     SelectCommandsHandler, AnalysisWaitHandler, AnalysisResultsHandler,
     ShowAnalysesHandler, SearchStudiesHandler)
 from qiita_pet.handlers.study_handlers import (
-    CreateStudyHandler, PrivateStudiesHandler, PublicStudiesHandler,
+    StudyEditHandler, PrivateStudiesHandler, PublicStudiesHandler,
     StudyDescriptionHandler, MetadataSummaryHandler, EBISubmitHandler,
     CreateStudyAJAX, ShareStudyAJAX,  StudyApprovalList,
     PreprocessingSummaryHandler)
@@ -72,7 +72,8 @@ class Application(tornado.web.Application):
             (r"/preprocessing_summary/(.*)", PreprocessingSummaryHandler),
             (r"/ebi_submission/(.*)", EBISubmitHandler),
             (r"/compute_complete/(.*)", ComputeCompleteHandler),
-            (r"/study/create/", CreateStudyHandler),
+            (r"/study/create/", StudyEditHandler),
+            (r"/study/edit/(.*)", StudyEditHandler),
             (r"/study/private/", PrivateStudiesHandler),
             (r"/study/public/", PublicStudiesHandler),
             (r"/study/add_files_to_raw_data", AddFilesToRawData),
