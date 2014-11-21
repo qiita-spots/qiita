@@ -8,8 +8,9 @@
 
 from sys import stderr
 
-from qiita_ware.wrapper import ParallelWrapper, system_call_from_job
+from moi.job import system_call
 
+from qiita_ware.wrapper import ParallelWrapper
 from qiita_db.logger import LogEntry
 from qiita_db.data import RawData
 
@@ -274,7 +275,7 @@ class StudyPreprocessor(ParallelWrapper):
 
         # Generate the command
         cmd, output_dir = cmd_generator(raw_data, self.prep_template, params)
-        self._job_graph.add_node(preprocess_node, func=system_call_from_job,
+        self._job_graph.add_node(preprocess_node, func=system_call,
                                  args=(cmd,),
                                  job_name="Construct preprocess command",
                                  requires_deps=False)
