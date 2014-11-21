@@ -657,7 +657,7 @@ function newInvestigationTypeChanged(rawDataID, isEdit){
   }
 
   if ("{{tab_to_display}}" == "study_information_tab"){
-    $('#myTab a:[href="#study_information_tab"]').tab('show');
+    $('#myTab a[href="#study_information_tab"]').tab('show');
   }
   else if ("{{tab_to_display}}") {
     $('#myTab a[href="#raw_data_info_{{tab_to_display}}"]').tab('show');
