@@ -92,7 +92,7 @@ class AuthLoginHandler(BaseHandler):
             # means DB not available, so set maintenance mode and failover
             # redis key set to expire and check again in 10 min
             r_server.setex("maintenance", "Database connection unavailable, "
-                         "please try again later.", 600)
+                           "please try again later.", 600)
             self.redirect("/")
             return
 
