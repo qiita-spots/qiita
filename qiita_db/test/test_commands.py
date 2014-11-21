@@ -6,7 +6,7 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
-from os import remove, close
+from os import remove, close, mkdir
 from os.path import exists, join, basename
 from tempfile import mkstemp, mkdtemp
 from shutil import rmtree
@@ -313,6 +313,8 @@ class TestLoadProcessedDataFromCmd(TestCase):
 class TestPatch(TestCase):
     def setUp(self):
         self.patches_dir = mkdtemp()
+        self.py_patches_dir = join(self.patches_dir, 'python_patches')
+        mkdir(self.py_patches_dir)
         patch2_fp = join(self.patches_dir, '2.sql')
         patch10_fp = join(self.patches_dir, '10.sql')
 
@@ -396,6 +398,27 @@ class TestPatch(TestCase):
         with self.assertRaises(RuntimeError):
             patch(self.patches_dir)
 
+    def test_python_patch(self):
+        # Write a test python patch
+        patch10_py_fp = join(self.py_patches_dir, '10.py')
+        with open(patch10_py_fp, 'w') as f:
+            f.write(PY_PATCH)
+
+        # Reset the settings table to the unpatched state
+        self.conn_handler.execute(
+            """UPDATE settings SET current_patch = 'unpatched'""")
+
+        self._assert_current_patch('unpatched')
+
+        patch(self.patches_dir)
+
+        obs = self.conn_handler.execute_fetchall(
+            """SELECT testing FROM qiita.patchtest10""")
+        exp = [[1], [100]]
+        self.assertEqual(obs, exp)
+
+        self._assert_current_patch('10.sql')
+
 
 CONFIG_1 = """[required]
 timeseries_type_id = 1
@@ -462,6 +485,15 @@ PREP_TEMPLATE = (
     'GTGCCAGCMGCCGCGGTAA\tts_G1_L001_sequences\tValue for sample 1\tA\tB\tC\n'
     'SKD8.640184\tCGTAGAGCTCTC\tANL\tTest Project\tskd8\tNone\tEMP\t'
     'GTGCCAGCMGCCGCGGTAA\tts_G1_L001_sequences\tValue for sample 2\tA\tB\tC\n')
+
+PY_PATCH = """
+from qiita_db.study import Study
+study = Study(1)
+conn = SQLConnectionHandler()
+conn.executemany(
+    "INSERT INTO qiita.patchtest10 (testing) VALUES (%s)",
+    [[study.id], [study.id*100]])
+"""
 
 if __name__ == "__main__":
     main()

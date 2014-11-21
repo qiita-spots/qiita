@@ -5,7 +5,7 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
-from os.path import abspath, dirname, join, exists, split
+from os.path import abspath, dirname, join, exists, basename, splitext
 from functools import partial
 from os import mkdir
 import gzip
@@ -339,28 +339,37 @@ def patch(patches_dir=PATCHES_DIR, verbose=False):
 
     current_patch = conn.execute_fetchone(
         "select current_patch from settings")[0]
-    current_patch_fp = join(patches_dir, current_patch)
+    current_sql_patch_fp = join(patches_dir, current_patch)
+    corresponding_py_patch = partial(join, patches_dir, 'python_patches')
 
     sql_glob = join(patches_dir, '*.sql')
-    patch_files = natsorted(glob(sql_glob))
+    sql_patch_files = natsorted(glob(sql_glob))
 
     if current_patch == 'unpatched':
         next_patch_index = 0
-    elif current_patch_fp not in patch_files:
+    elif current_sql_patch_fp not in sql_patch_files:
         raise RuntimeError("Cannot find patch file %s" % current_patch)
     else:
-        next_patch_index = patch_files.index(current_patch_fp) + 1
+        next_patch_index = sql_patch_files.index(current_sql_patch_fp) + 1
 
     patch_update_sql = "update settings set current_patch = %s"
 
-    for patch_fp in patch_files[next_patch_index:]:
-        patch_filename = split(patch_fp)[-1]
-        conn.create_queue(patch_filename)
-        with open(patch_fp, 'U') as patch_file:
+    for sql_patch_fp in sql_patch_files[next_patch_index:]:
+        sql_patch_filename = basename(sql_patch_fp)
+        py_patch_fp = corresponding_py_patch(
+            splitext(basename(sql_patch_fp))[0] + '.py')
+        py_patch_filename = basename(py_patch_fp)
+        conn.create_queue(sql_patch_filename)
+        with open(sql_patch_fp, 'U') as patch_file:
             if verbose:
-                print('\tApplying patch %s...' % patch_filename)
-            conn.add_to_queue(patch_filename, patch_file.read())
-            conn.add_to_queue(patch_filename, patch_update_sql,
-                              [patch_filename])
+                print('\tApplying patch %s...' % sql_patch_filename)
+            conn.add_to_queue(sql_patch_filename, patch_file.read())
+            conn.add_to_queue(sql_patch_filename, patch_update_sql,
+                              [sql_patch_filename])
 
-        conn.execute_queue(patch_filename)
+        conn.execute_queue(sql_patch_filename)
+
+        if exists(py_patch_fp):
+            if verbose:
+                print('\t\tApplying python patch %s...' % py_patch_filename)
+            execfile(py_patch_fp)
