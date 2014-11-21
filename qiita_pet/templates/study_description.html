@@ -65,19 +65,27 @@ function newInvestigationTypeChanged(rawDataID, isEdit){
 <table border="0" style="vertical-align: middle; text-align:center; align:center;">
   <tr>
     <td style="vertical-align: middle; text-align:left; width: 50%;" colspan="2">
-      <h1>{{study_title}} {% if not is_public or user_level == "admin" %} <a class="btn btn-default glyphicon glyphicon-edit" href="/study/edit/{{study_id}}" title="Edit the study information"> Edit</a> {% end %} {% if can_upload and study_status == 'sandbox' or user_level == 'admin' %}<a href="/study/upload/{{study_id}}" class="btn btn-default glyphicon glyphicon-upload" title="Upload study files"> Upload</a>{% end %}</h1>
+      <h1>{{study_title}} </h1>
       <h2><i>{{study_info['study_alias']}} </i> </h2>
     </td>
-    <td style='padding: 10px;'>
+  </tr>
+  <tr>
+    <td style="vertical-align: middle; text-align:left; width: 50%;" colspan="2">
+      {% if not is_public or user_level == "admin" %}
+        <a class="btn btn-default glyphicon glyphicon-edit" href="/study/edit/{{study_id}}" title="Edit the study information" style="margin:5px; word-spacing: -10px;"> Edit</a>
+      {% end %}
+      {% if can_upload and study_status == 'sandbox' or user_level == 'admin' %}
+        <a href="/study/upload/{{study_id}}" class="btn btn-default glyphicon glyphicon-upload" title="Upload study files" style="margin:5px; word-spacing: -10px;"> Upload</a>
+      {% end %}
       {% if study_status == 'sandbox' and qiita_config.require_approval and ste and raw_files and prep_templates %}
-        <a class="btn btn-primary" onClick="request_approval();" style="margin:5px">Request Study Approval</a><br />
+        <a class="btn btn-default glyphicon glyphicon-eye-open" onClick="request_approval();" style="margin:5px; word-spacing: -10px;"> Request Approval</a>
       {% elif (user_level == 'admin' and study_status == 'awaiting_approval') or not qiita_config.require_approval %}
-        <a class="btn btn-primary" onClick="approve_study();"s tyle="margin:5px">Approve Study</a><br />
+        <a class="btn btn-danger glyphicon glyphicon-thumbs-up" onClick="approve_study();" style="margin:5px; word-spacing: -10px;"> Approve Study</a>
       {% elif study_status == 'private' %}
-       <a class="btn btn-primary" onClick="make_public();" style="margin:5px">Make Public</a><br />
+       <a class="btn btn-danger glyphicon glyphicon-thumbs-up" onClick="make_public();" style="margin:5px; word-spacing: -10px;"> Make Public</a>
       {% end %}
       {% if study_status not in {'sandbox', 'public'} %}
-        <a class="btn btn-primary" onClick="make_sandbox();" style="margin:5px">Revert to sandbox</a><br />
+        <a class="btn btn-default glyphicon glyphicon-circle-arrow-down" onClick="make_sandbox();" style="margin:5px; word-spacing: -10px;"> Revert to sandbox</a>
       {% end %}
     </td>
   </tr>
