@@ -565,6 +565,10 @@ class TestStudy(TestCase):
         with self.assertRaises(ValueError):
             new.environmental_packages = ['air', 'not a package']
 
+    def test_environmental_packages_sandboxed(self):
+        with self.assertRaises(QiitaDBStatusError):
+            self.study.environmental_packages = ['air']
+
 
 if __name__ == "__main__":
     main()

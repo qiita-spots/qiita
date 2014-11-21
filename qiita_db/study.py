@@ -145,7 +145,7 @@ class Study(QiitaStatusObject):
     _non_info = {"email", "study_status_id", "study_title"}
 
     def _lock_non_sandbox(self, conn_handler):
-        """Raises QiitaDBStatusError if study is public"""
+        """Raises QiitaDBStatusError if study is non-sandboxed"""
         if self.status != 'sandbox':
             raise QiitaDBStatusError("Illegal operation on non-sandbox study!")
 
@@ -565,15 +565,16 @@ class Study(QiitaStatusObject):
         ValueError
             If any environmental packages listed on values is not recognized
         """
-        # Check that a list is actually passed
-        if not isinstance(values, list):
-            raise TypeError('Environmental packages should be a list')
-
         # Get the connection to the database
         conn_handler = SQLConnectionHandler()
 
-        # The environmental packages cannot be changed if the study is public
+        # The environmental packages can be changed only if the study is
+        # sandboxed
         self._lock_non_sandbox(conn_handler)
+
+        # Check that a list is actually passed
+        if not isinstance(values, list):
+            raise TypeError('Environmental packages should be a list')
 
         # Get all the environmental packages
         env_pkgs = [pkg[0] for pkg in get_environmental_packages(
@@ -582,8 +583,8 @@ class Study(QiitaStatusObject):
         # Check that all the passed values are valid environmental packages
         missing = set(values).difference(env_pkgs)
         if missing:
-            raise ValueError('Environmetal packages not recognized: %s'
-                             % missing)
+            raise ValueError('Environmetal package(s) not recognized: %s'
+                             % ', '.join(missing))
 
         # Create a queue for the operations that we need to do
         queue = "%d_env_pkgs_setter" % self._id
