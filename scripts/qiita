@@ -232,5 +232,16 @@ def unlock():
     r_server.delete('maintenance')
 
 
+@maintenance.command()
+def status():
+    status = r_server.get('maintenance')
+    if status is None:
+        print "Site is not in maintenance mode"
+    else:
+        print "Site is in maintenance mode:"
+        print status
+        print r_server.ttl('maintenance'), "seconds remaining"
+
+
 if __name__ == '__main__':
     qiita()
