@@ -43,6 +43,7 @@ from future.utils import viewitems
 from copy import deepcopy
 from os.path import join
 from time import strftime
+from functools import partial
 
 import pandas as pd
 import numpy as np
@@ -56,7 +57,9 @@ from .sql_connection import SQLConnectionHandler
 from .ontology import Ontology
 from .util import (exists_table, get_table_cols, get_emp_status,
                    get_required_sample_info_status, convert_to_id,
-                   convert_from_id, find_repeated, get_mountpoint)
+                   convert_from_id, find_repeated, get_mountpoint,
+                   insert_filepaths)
+from .logger import LogEntry
 
 
 TARGET_GENE_DATA_TYPES = ['16S', '18S', 'ITS']
@@ -600,6 +603,7 @@ class MetadataTemplate(QiitaObject):
     items
     get
     to_file
+    add_filepath
 
     See Also
     --------
@@ -693,6 +697,12 @@ class MetadataTemplate(QiitaObject):
 
         table_name = cls._table_name(id_)
         conn_handler = SQLConnectionHandler()
+
+        # Delete the sample template filepaths
+        conn_handler.execute(
+            "DELETE FROM qiita.sample_template_filepath WHERE "
+            "study_id = %s", (id_, ))
+
         conn_handler.execute(
             "DROP TABLE qiita.{0}".format(table_name))
         conn_handler.execute(
@@ -969,6 +979,78 @@ class MetadataTemplate(QiitaObject):
                 values.insert(0, sid)
                 f.write("%s\n" % '\t'.join(values))
 
+    def add_filepath(self, filepath, conn_handler=None):
+        r"""Populates the DB tables for storing the filepath and connects the
+        `self` objects with this filepath"""
+        # Check that this function has been called from a subclass
+        self._check_subclass()
+
+        # Check if the connection handler has been provided. Create a new
+        # one if not.
+        conn_handler = conn_handler if conn_handler else SQLConnectionHandler()
+
+        if self._table == 'required_sample_info':
+            fp_id = convert_to_id("sample_template", "filepath_type",
+                                  conn_handler)
+            table = 'sample_template_filepath'
+            column = 'study_id'
+        elif self._table == 'common_prep_info':
+            fp_id = convert_to_id("prep_template", "filepath_type",
+                                  conn_handler)
+            table = 'prep_template_filepath'
+            column = 'prep_template_id'
+        else:
+            raise QiitaDBNotImplementedError(
+                'add_filepath for %s' % self._table)
+
+        try:
+            fpp_id = insert_filepaths([(filepath, fp_id)], None, "templates",
+                                      "filepath", conn_handler,
+                                      move_files=False)[0]
+            values = (self._id, fpp_id)
+            conn_handler.execute(
+                "INSERT INTO qiita.{0} ({1}, filepath_id) "
+                "VALUES (%s, %s)".format(table, column), values)
+        except Exception as e:
+            LogEntry.create('Runtime', str(e),
+                            info={self.__class__.__name__: self.id})
+            raise e
+
+    def get_filepaths(self, conn_handler=None):
+        r"""Retrives the list of (filepath_id, filepath)"""
+        # Check that this function has been called from a subclass
+        self._check_subclass()
+
+        # Check if the connection handler has been provided. Create a new
+        # one if not.
+        conn_handler = conn_handler if conn_handler else SQLConnectionHandler()
+
+        if self._table == 'required_sample_info':
+            table = 'sample_template_filepath'
+            column = 'study_id'
+        elif self._table == 'common_prep_info':
+            table = 'prep_template_filepath'
+            column = 'prep_template_id'
+        else:
+            raise QiitaDBNotImplementedError(
+                'get_filepath for %s' % self._table)
+
+        try:
+            filepath_ids = conn_handler.execute_fetchall(
+                "SELECT filepath_id, filepath FROM qiita.filepath WHERE "
+                "filepath_id IN (SELECT filepath_id FROM qiita.{0} WHERE "
+                "{1}=%s) ORDER BY filepath_id DESC".format(table, column),
+                (self.id, ))
+        except Exception as e:
+            LogEntry.create('Runtime', str(e),
+                            info={self.__class__.__name__: self.id})
+            raise e
+
+        _, fb = get_mountpoint('templates', conn_handler)[0]
+        base_fp = partial(join, fb)
+
+        return [(fpid, base_fp(fp)) for fpid, fp in filepath_ids]
+
 
 class SampleTemplate(MetadataTemplate):
     r"""Represent the SampleTemplate of a study. Provides access to the
@@ -1127,10 +1209,13 @@ class SampleTemplate(MetadataTemplate):
 
         # figuring out the filepath of the backup
         _id, fp = get_mountpoint('templates')[0]
-        fp = join(fp, '%d_%s' % (study.id, strftime("%Y%m%d-%H%M%S")))
+        fp = join(fp, '%d_%s.txt' % (study.id, strftime("%Y%m%d-%H%M%S")))
         # storing the backup
         st = cls(study.id)
         st.to_file(fp)
+
+        # adding the fp to the object
+        st.add_filepath(fp)
 
         return st
 
@@ -1301,11 +1386,14 @@ class PrepTemplate(MetadataTemplate):
 
         # figuring out the filepath of the backup
         _id, fp = get_mountpoint('templates')[0]
-        fp = join(fp, '%d_prep_%d_%s' % (study.id, prep_id,
+        fp = join(fp, '%d_prep_%d_%s.txt' % (study.id, prep_id,
                   strftime("%Y%m%d-%H%M%S")))
         # storing the backup
         pt = cls(prep_id)
         pt.to_file(fp)
+
+        # adding the fp to the object
+        pt.add_filepath(fp)
 
         return pt
 
@@ -1395,6 +1483,11 @@ class PrepTemplate(MetadataTemplate):
             raise QiitaDBError("Cannot remove prep template %d because a "
                                "preprocessed data has been already generated "
                                "using it." % id_)
+
+        # Delete the prep template filepaths
+        conn_handler.execute(
+            "DELETE FROM qiita.prep_template_filepath WHERE "
+            "prep_template_id = %s", (id_, ))
 
         # Drop the prep_X table
         conn_handler.execute(

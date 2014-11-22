@@ -136,6 +136,14 @@ function newInvestigationTypeChanged(rawDataID, isEdit){
       You can modify a sample template <a onclick="alert('Not implemented! Coming soon.')">here</a>
       <br/>
       <a class="btn btn-primary" href="/metadata_summary/?study_id={{study_id}}&sample_template={{study_id}}">Show sample template summary</a>
+      </br>
+      {% for stid, stpath in sample_templates %}
+        {% if is_local_request %}
+          <br/>{{stpath}}
+        {% else %}
+          <br/><a href="/download/{{stid}}">Download sample template</a>
+        {% end %}
+      {% end %}
     {% end %}
   </div>
 
@@ -225,6 +233,14 @@ function newInvestigationTypeChanged(rawDataID, isEdit){
                 <td style="padding:3px;">{{prep.data_type()}}</td>
                 <td style="padding:3px;">
                   <a class="btn btn-primary" href="/metadata_summary/?study_id={{study_id}}&prep_template={{prep.id}}">Show prep template summary</a>
+                  <br/>
+                  {% for ptid, ptpath in prep.get_filepaths() %}
+                    {% if is_local_request %}
+                      <br/>{{ptpath}}
+                    {% else %}
+                      <br/><a href="/download/{{ptid}}">Download prep template</a>
+                    {% end %}
+                  {% end %}
                   <br/><br/>
                   {% if ste and study_status == 'sandbox' or user_level == 'admin' %}
                     <table id="edit-investigation-type-table" name="edit-investigation-types" class="investigation-type-table">

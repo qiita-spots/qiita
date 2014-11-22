@@ -29,11 +29,10 @@ from qiita_db.study import Study, StudyPerson
 from qiita_db.user import User
 from qiita_db.data import RawData
 from qiita_db.util import exists_table, get_db_files_base_dir
-from qiita_db.metadata_template import (_get_datatypes, _as_python_types,
-                                        MetadataTemplate, SampleTemplate,
-                                        PrepTemplate, BaseSample, PrepSample,
-                                        Sample, _prefix_sample_names_with_id,
-                                        load_template_to_dataframe)
+from qiita_db.metadata_template import (
+    _get_datatypes, _as_python_types, MetadataTemplate, SampleTemplate,
+    PrepTemplate, BaseSample, PrepSample, Sample, _prefix_sample_names_with_id,
+    load_template_to_dataframe)
 
 
 class TestUtilMetadataMap(TestCase):
@@ -823,6 +822,21 @@ class TestSampleTemplate(TestCase):
         with open(fp, 'U') as f:
             obs = f.read()
         self.assertEqual(obs, EXP_SAMPLE_TEMPLATE_FEWER_SAMPLES)
+
+    def test_get_filepath(self):
+        # we will check that there is a new id only because the path will
+        # change based on time and the same functionality is being tested
+        # in data.py
+        exp = 16
+        st = SampleTemplate.create(self.metadata, self.new_study)
+        self.assertEqual(st.get_filepaths()[0][0], exp)
+
+        # testing current functionaly, to add a new sample template
+        # you need to erase it first
+        SampleTemplate.delete(st.id)
+        exp = 17
+        st = SampleTemplate.create(self.metadata, self.new_study)
+        self.assertEqual(st.get_filepaths()[0][0], exp)
 
 
 @qiita_test_checker()
