@@ -10,7 +10,7 @@ conn_handler = SQLConnectionHandler()
 _id, fp_base = get_mountpoint('templates')[0]
 
 for study_id in conn_handler.execute_fetchall(
-    "SELECT study_id FROM qiita.study"):
+        "SELECT study_id FROM qiita.study"):
     study_id = study_id[0]
     if SampleTemplate.exists(study_id):
         st = SampleTemplate(study_id)
@@ -19,7 +19,7 @@ for study_id in conn_handler.execute_fetchall(
         st.add_filepath(fp)
 
 for prep_template_id in conn_handler.execute_fetchall(
-    "SELECT prep_template_id FROM qiita.prep_template"):
+        "SELECT prep_template_id FROM qiita.prep_template"):
     prep_template_id = prep_template_id[0]
     pt = PrepTemplate(prep_template_id)
     study_id = pt.study_id
