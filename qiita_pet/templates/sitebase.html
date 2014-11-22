@@ -1,3 +1,6 @@
+{% from qiita_ware import r_server %}
+{% set maintenance = r_server.get('maintenance') %}
+
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en-US">
   <head>
@@ -22,7 +25,10 @@
   <body style="padding-top: 65px; height: 100%">
   {% set level = globals().get('level', '') %}
   {% set message = globals().get('message', '') %}
-
+  {% if maintenance is not None %}
+    {% set level = 'danger' %}
+    {% set message = maintenance %}
+  {% end %}
   {% if message != '' %}
       {% if level not in {'danger', 'success', 'info'} %}
           {% set level = 'info' %}
@@ -112,7 +118,7 @@
             </li>
           </ul>
           <!-- otherwise show the login form -->
-          {% else %}
+          {% elif  maintenance is None %}
           <ul class="nav navbar-nav">
             <li>
               <a href="/auth/create/">New User</a>
@@ -121,7 +127,6 @@
               <a href="/auth/forgot/">Forgot Password</a>
             </li>
           </ul>
-
           <form class="navbar-form navbar-right" role="form" action="/auth/login/" method="post">
             <div class="form-group">
               <input tabindex="1" type="text" id="username" name="username" placeholder="Email" class="form-control">

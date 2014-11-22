@@ -24,6 +24,7 @@ from qiita_db.sql_connection import SQLConnectionHandler
 from qiita_db.exceptions import QiitaDBConnectionError
 from qiita_core.configuration_manager import ConfigurationManager
 from qiita_ware.commands import ebi_actions, submit_EBI as _submit_EBI
+from qiita_ware import r_server
 
 
 _CONFIG = ConfigurationManager()
@@ -49,6 +50,11 @@ def db():
 
 @qiita.group()
 def ebi():
+    pass
+
+
+@qiita.group()
+def maintenance():
     pass
 
 
@@ -206,6 +212,36 @@ def load_prep_template(fp, raw_data, study, data_type):
                                              resolve_path=True))
 def submit(preprocessed_data_id, action, send, fastq_dir):
     _submit_EBI(preprocessed_data_id, action, send, fastq_dir)
+
+
+# #############################################################################
+# MAINTENANCE COMMANDS
+# #############################################################################
+
+
+@maintenance.command()
+@click.option('--time', required=True, type=int,
+              help='The amount of time to lock the site, in seconds')
+@click.option('--message', required=True, type=str,
+              help="Message to show users")
+def lock(message, time):
+    r_server.setex('maintenance', message, time)
+
+
+@maintenance.command()
+def unlock():
+    r_server.delete('maintenance')
+
+
+@maintenance.command()
+def status():
+    status = r_server.get('maintenance')
+    if status is None:
+        print "Site is not in maintenance mode"
+    else:
+        print "Site is in maintenance mode:"
+        print status
+        print r_server.ttl('maintenance'), "seconds remaining"
 
 
 if __name__ == '__main__':
