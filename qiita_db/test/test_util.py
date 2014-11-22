@@ -200,7 +200,8 @@ class DBUtilTests(TestCase):
                'raw_barcodes': 3, 'preprocessed_fasta': 4,
                'preprocessed_fastq': 5, 'preprocessed_demux': 6, 'biom': 7,
                'directory': 8, 'plain_text': 9, 'reference_seqs': 10,
-               'reference_tax': 11, 'reference_tree': 12, 'log': 13}
+               'reference_tax': 11, 'reference_tree': 12, 'log': 13,
+               'sample_template': 14, 'prep_template': 15}
         self.assertEqual(obs, exp)
 
         obs = get_filepath_types(key='filepath_type_id')
