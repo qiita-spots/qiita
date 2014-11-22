@@ -1,3 +1,7 @@
+# Nov 22, 2014
+# This patch is to create all the prep/sample template files and link them in
+# the database so they are present for download
+
 from os.path import join
 from time import strftime
 
