@@ -58,7 +58,7 @@ function newInvestigationTypeChanged(rawDataID, isEdit){
 {% from future.utils import viewitems %}
 {% from os.path import basename %}
 {% from qiita_core.qiita_settings import qiita_config %}
-{% from qiita_db.data import PreprocessedData %}
+{% from qiita_db.data import PreprocessedData, ProcessedData %}
 
 
 
@@ -326,6 +326,10 @@ function newInvestigationTypeChanged(rawDataID, isEdit){
                     {% for pdi in prep.preprocessed_data %}
                       {% set pd = PreprocessedData(pdi) %}
                       {% set filepaths = pd.get_filepaths() %}
+                      {% for proc_id in pd.processed_data %}
+                        {% set proc_data = ProcessedData(proc_id) %}
+                        {% set filepaths.extend(proc_data.get_filepaths()) %}
+                      {% end %}
                       {% if filepaths %}
                         <tr>
                           <td style="padding:3px;">
