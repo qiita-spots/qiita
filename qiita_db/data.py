@@ -645,6 +645,15 @@ class PreprocessedData(BaseData):
         return ppd
 
     @property
+    def processed_data(self):
+        r"""The processed data list generated from this preprocessed data"""
+        conn_handler = SQLConnectionHandler()
+        processed_ids = conn_handler.execute_fetchall(
+            "SELECT processed_data_id FROM qiita.preprocessed_processed_data "
+            "WHERE preprocessed_data_id = %s", (self.id,))
+        return [pid[0] for pid in processed_ids]
+
+    @property
     def prep_template(self):
         r"""The prep template used to generate the preprocessed data"""
         conn_handler = SQLConnectionHandler()
