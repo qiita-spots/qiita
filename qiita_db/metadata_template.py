@@ -1017,7 +1017,7 @@ class MetadataTemplate(QiitaObject):
             raise e
 
     def get_filepaths(self, conn_handler=None):
-        r"""Retrives the filepath ids """
+        r"""Retrives the list of (filepath_id, filepath)"""
         # Check that this function has been called from a subclass
         self._check_subclass()
 
@@ -1395,6 +1395,9 @@ class PrepTemplate(MetadataTemplate):
         # adding the fp to the object
         pt.add_filepath(fp)
 
+        # creating qiime mapping file
+        pt.create_qiime_map(fp)
+
         return pt
 
     @classmethod
@@ -1635,6 +1638,101 @@ class PrepTemplate(MetadataTemplate):
         else:
             raise QiitaDBError("No studies found associated with prep "
                                "template ID %d" % self._id)
+
+    def create_qiime_map(self, prep_template_fp):
+        """ This creates the qiime mapping file and links it in the db.
+
+        Parameters
+        ----------
+        prep_template_fp : str
+            The filepath of the prep template we want to generate the qiime
+            mapping file
+
+        Raises
+        ------
+        QiitaDBColumnError
+            If the investigation type is not a valid ENA ontology
+        """
+        na_values = ['NA', 'N/A', 'unknown', '', 'na', 'no_data']
+        rename_cols = {
+            'BARCODE': 'BarcodeSequence',
+            'PRIMER': 'LinkerPrimerSequence',
+            'DESCRIPTION': 'Description',
+            'Barcode': 'BarcodeSequence'}
+
+        # getting the latest sample template
+        sample_template_fp = SampleTemplate(self.study_id).get_filepaths()[0]
+
+        # reading files via pandas
+        st = pd.read_csv(sample_template_fp, sep='\t', na_values=na_values)
+        pt = pd.read_csv(prep_template_fp, sep='\t', na_values=na_values)
+
+        # Adds the sample_name column as the index column so samples can be
+        # sorted easily
+        st.index = st.sample_name
+        pt.index = st.sample_name
+
+        st_sample_names = set(st.sample_name.tolist())
+        pt_sample_names = set(pt.sample_name.tolist())
+
+        if st_sample_names != pt_sample_names:
+            raise ValueError(
+                "Prep template and sample template does not have the same "
+                "sample names: %s %s" % (sample_template_fp, prep_template_fp))
+
+        # Removes the sample name column from the sample template
+        del pt['sample_name']
+
+        mapping = pt.join(st, lsuffix="_prep")
+        mapping.rename(columns=rename_cols, inplace=True)
+
+        ids = mapping.index.tolist()
+        unique_ids = set(ids)
+        name_tmp_column = 'this_is_a_temporal_name_for_qiime_data+creation'
+        while len(ids) != len(unique_ids):
+            # Get the list of duplicate ids
+            duplicates = [x for x in unique_ids if ids.count(x) > 1]
+            seen = []
+            values = []
+            # Add a .duplicate to all the samples that have duplicates
+            for idx in mapping.index:
+                if idx in duplicates:
+                    if idx in seen:
+                        values.append("%s.duplicate" % idx)
+                    else:
+                        seen.append(idx)
+                        values.append(idx)
+                else:
+                    values.append(idx)
+            mapping[name_tmp_column] = pd.Series(values, index=mapping.index)
+            mapping.index = mapping.name_tmp_column
+            del mapping[name_tmp_column]
+            # Update the values, in case that we've created new duplicates...
+            ids = mapping.index.tolist()
+            unique_ids = set(ids)
+
+        # Gets the orginal mapping columns and reajusts the order to comply
+        # with qiime requirements
+        cols = mapping.columns.values.tolist()
+        cols.remove('BarcodeSequence')
+        cols.remove('LinkerPrimerSequence')
+        cols.remove('Description')
+        new_cols = ['BarcodeSequence', 'LinkerPrimerSequence']
+        new_cols.extend(cols)
+        new_cols.append('Description')
+        mapping = mapping[new_cols]
+
+        # figuring out the filepath for the qiime map file
+        _id, fp = get_mountpoint('templates')[0]
+        mapping_fp = join(fp, '%d_prep_%d_qiime_%s.txt' % (self.study_id,
+                          self.id, strftime("%Y%m%d-%H%M%S")))
+
+        # Save the mapping file
+        mapping.to_csv(mapping_fp, index_label='#SampleID', na_rep='unknown',
+                       sep='\t')
+
+        # adding the fp to the object
+        pt.add_filepath(fp)
 
 
 def load_template_to_dataframe(fn):
