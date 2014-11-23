@@ -11,6 +11,7 @@ from six import StringIO
 from unittest import TestCase, main
 from datetime import datetime
 from tempfile import mkstemp
+from time import strftime
 from os import close, remove
 from os.path import join, basename
 from collections import Iterable
@@ -28,7 +29,7 @@ from qiita_db.exceptions import (QiitaDBDuplicateError, QiitaDBUnknownIDError,
 from qiita_db.study import Study, StudyPerson
 from qiita_db.user import User
 from qiita_db.data import RawData
-from qiita_db.util import exists_table, get_db_files_base_dir
+from qiita_db.util import exists_table, get_db_files_base_dir, get_mountpoint
 from qiita_db.metadata_template import (
     _get_datatypes, _as_python_types, MetadataTemplate, SampleTemplate,
     PrepTemplate, BaseSample, PrepSample, Sample, _prefix_sample_names_with_id,
@@ -1003,6 +1004,27 @@ class TestPrepTemplate(TestCase):
         self.assertEqual(len(filepaths), 2)
         self.assertEqual(filepaths[0][0], 20)
         self.assertEqual(filepaths[1][0], 19)
+
+    def test_create_qiime_map(self):
+        pt = PrepTemplate(1)
+
+        # creating prep template file
+        _id, fp = get_mountpoint('templates')[0]
+        fpp = join(fp, '%d_prep_%d_%s.txt' % (pt.study_id, pt.id,
+                   strftime("%Y%m%d-%H%M%S")))
+        pt.to_file(fpp)
+        pt.add_filepath(fpp)
+
+        _, filepath = pt.get_filepaths()[0]
+        obs_fp = pt.create_qiime_map(filepath)
+        exp_fp = join(fp, '1_prep_1_qiime_19700101-000000.txt')
+
+        with open(obs_fp, 'r') as obs_fh:
+            obs = obs_fh.read()
+        with open(exp_fp, 'r') as exp_fh:
+            exp = exp_fh.read()
+
+        self.assertEqual(obs, exp)
 
     def test_create_data_type_id(self):
         """Creates a new PrepTemplate passing the data_type_id"""

@@ -1648,6 +1648,11 @@ class PrepTemplate(MetadataTemplate):
             The filepath of the prep template we want to generate the qiime
             mapping file
 
+        Returns
+        -------
+        filepath : str
+            The filepath of the created qiime file
+
         Raises
         ------
         QiitaDBColumnError
@@ -1727,15 +1732,17 @@ class PrepTemplate(MetadataTemplate):
 
         # figuring out the filepath for the qiime map file
         _id, fp = get_mountpoint('templates')[0]
-        mapping_fp = join(fp, '%d_prep_%d_qiime_%s.txt' % (self.study_id,
-                          self.id, strftime("%Y%m%d-%H%M%S")))
+        filepath = join(fp, '%d_prep_%d_qiime_%s.txt' % (self.study_id,
+                        self.id, strftime("%Y%m%d-%H%M%S")))
 
         # Save the mapping file
-        mapping.to_csv(mapping_fp, index_label='#SampleID', na_rep='unknown',
+        mapping.to_csv(filepath, index_label='#SampleID', na_rep='unknown',
                        sep='\t')
 
         # adding the fp to the object
-        self.add_filepath(mapping_fp)
+        self.add_filepath(filepath)
+
+        return filepath
 
 
 def load_template_to_dataframe(fn):
