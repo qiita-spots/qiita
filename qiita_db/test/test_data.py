@@ -294,7 +294,8 @@ class PreprocessedDataTests(TestCase):
         # filepath_id, path, filepath_type_id
         exp = [[17, exp_fna_fp, 4, '852952723', 1, 3],
                [18, exp_qual_fp, 5, '852952723', 1, 3]]
-        [[16L, '1_19700101-000000.txt', 14L, '852952723', 1L, 9L], [17L, '3_tmpwX6OjW_seqs.fna', 4L, '852952723', 1L, 3L]]
+        [[16L, '1_19700101-000000.txt', 14L, '852952723', 1L, 9L],
+         [17L, '3_tmpwX6OjW_seqs.fna', 4L, '852952723', 1L, 3L]]
         self.assertEqual(obs, exp)
 
     def test_create_data_type_only(self):
