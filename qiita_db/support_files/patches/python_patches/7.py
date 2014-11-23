@@ -2,12 +2,9 @@
 # This patch creates all the qiime mapping files for the existing
 # prep templates
 
-from os.path import join
-from time import strftime
-
 from qiita_db.util import get_mountpoint
 from qiita_db.sql_connection import SQLConnectionHandler
-from qiita_db.metadata_template import SampleTemplate, PrepTemplate
+from qiita_db.metadata_template import PrepTemplate
 
 conn_handler = SQLConnectionHandler()
 

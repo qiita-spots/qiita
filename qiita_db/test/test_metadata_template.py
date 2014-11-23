@@ -1004,7 +1004,6 @@ class TestPrepTemplate(TestCase):
         self.assertEqual(filepaths[0][0], 20)
         self.assertEqual(filepaths[1][0], 19)
 
-
     def test_create_data_type_id(self):
         """Creates a new PrepTemplate passing the data_type_id"""
         pt = PrepTemplate.create(self.metadata, self.new_raw_data,
