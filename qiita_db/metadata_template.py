@@ -1629,9 +1629,9 @@ class PrepTemplate(MetadataTemplate):
             The ID of the study with which this prep template is associated
         """
         conn = SQLConnectionHandler()
-        sql = """SELECT srd.study_id
-                 FROM qiita.prep_template pt JOIN qiita.study_raw_data srd
-                 ON pt.raw_data_id = srd.raw_data_id"""
+        sql = ("SELECT srd.study_id FROM qiita.prep_template pt JOIN "
+               "qiita.study_raw_data srd ON pt.raw_data_id = srd.raw_data_id "
+               "WHERE prep_template_id = %d" % self.id)
         study_id = conn.execute_fetchone(sql)
         if study_id:
             return study_id[0]
@@ -1655,13 +1655,16 @@ class PrepTemplate(MetadataTemplate):
         """
         na_values = ['NA', 'N/A', 'unknown', '', 'na', 'no_data']
         rename_cols = {
-            'BARCODE': 'BarcodeSequence',
-            'PRIMER': 'LinkerPrimerSequence',
-            'DESCRIPTION': 'Description',
-            'Barcode': 'BarcodeSequence'}
+            'barcode': 'BarcodeSequence',
+            'barcodesequence': 'BarcodeSequence',
+            'primer': 'LinkerPrimerSequence',
+            'linkerprimersequence': 'LinkerPrimerSequence',
+            'description': 'Description',
+        }
 
         # getting the latest sample template
-        sample_template_fp = SampleTemplate(self.study_id).get_filepaths()[0]
+        _, sample_template_fp = SampleTemplate(
+            self.study_id).get_filepaths()[0]
 
         # reading files via pandas
         st = pd.read_csv(sample_template_fp, sep='\t', na_values=na_values)
@@ -1670,25 +1673,25 @@ class PrepTemplate(MetadataTemplate):
         # Adds the sample_name column as the index column so samples can be
         # sorted easily
         st.index = st.sample_name
-        pt.index = st.sample_name
+        pt.index = pt.sample_name
 
         st_sample_names = set(st.sample_name.tolist())
         pt_sample_names = set(pt.sample_name.tolist())
 
-        if st_sample_names != pt_sample_names:
+        if not pt_sample_names.issubset(st_sample_names):
             raise ValueError(
-                "Prep template and sample template does not have the same "
-                "sample names: %s %s" % (sample_template_fp, prep_template_fp))
+                "Prep template is not a sub set of the sample template, files:"
+                "%s %s" % (sample_template_fp, prep_template_fp))
 
         # Removes the sample name column from the sample template
         del pt['sample_name']
 
         mapping = pt.join(st, lsuffix="_prep")
-        mapping.rename(columns=rename_cols, inplace=True)
+        mapping.rename(columns=rename_cols, inplace=True, index=str.lower)
 
         ids = mapping.index.tolist()
         unique_ids = set(ids)
-        name_tmp_column = 'this_is_a_temporal_name_for_qiime_data+creation'
+        name_tmp_column = 'this_is_a_temporal_name_for_qiime_data_creation'
         while len(ids) != len(unique_ids):
             # Get the list of duplicate ids
             duplicates = [x for x in unique_ids if ids.count(x) > 1]
@@ -1732,7 +1735,7 @@ class PrepTemplate(MetadataTemplate):
                        sep='\t')
 
         # adding the fp to the object
-        pt.add_filepath(fp)
+        self.add_filepath(mapping_fp)
 
 
 def load_template_to_dataframe(fn):

@@ -827,14 +827,14 @@ class TestSampleTemplate(TestCase):
         # we will check that there is a new id only because the path will
         # change based on time and the same functionality is being tested
         # in data.py
-        exp = 16
+        exp = 17
         st = SampleTemplate.create(self.metadata, self.new_study)
         self.assertEqual(st.get_filepaths()[0][0], exp)
 
         # testing current functionaly, to add a new sample template
         # you need to erase it first
         SampleTemplate.delete(st.id)
-        exp = 17
+        exp = 18
         st = SampleTemplate.create(self.metadata, self.new_study)
         self.assertEqual(st.get_filepaths()[0][0], exp)
 
@@ -997,6 +997,13 @@ class TestPrepTemplate(TestCase):
                 's_G1_L001_sequences', 'CGTAGAGCTCTC', None,
                 'GTGCCAGCMGCCGCGGTAA', 'BBBB', 'AAAA']]
         self.assertEqual(sorted(obs), sorted(exp))
+
+        # prep and qiime files have been created
+        filepaths = pt.get_filepaths()
+        self.assertEqual(len(filepaths), 2)
+        self.assertEqual(filepaths[0][0], 20)
+        self.assertEqual(filepaths[1][0], 19)
+
 
     def test_create_data_type_id(self):
         """Creates a new PrepTemplate passing the data_type_id"""

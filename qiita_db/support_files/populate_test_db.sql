@@ -184,6 +184,10 @@ INSERT INTO qiita.sample_1 (sample_id, SEASON_ENVIRONMENT, ASSIGNED_FROM_GEO, TE
 	('1.SKD5.640186', 'winter', 'n', '66 sand, 16.3 silt, 17.7 clay', '939928', 0.15, '3483', 'rhizosphere metagenome', 0.178, 114, 15, 1.51, 7.1, 0, 'ENVO:Temperate grasslands, savannas, and shrubland biome', 'GAZ:United States of America', 6.8, 'SKD5', 4.32, 'Diesel Rhizo', 'ENVO:plant-associated habitat'),
 	('1.SKD1.640179', 'winter', 'n', '66 sand, 16.3 silt, 17.7 clay', '410658', 0.15, '3483', 'soil metagenome', 0.178, 114, 15, 1.51, 7.1, 0, 'ENVO:Temperate grasslands, savannas, and shrubland biome', 'GAZ:United States of America', 6.8, 'SKD1', 4.32, 'Diesel bulk', 'ENVO:plant-associated habitat');
 
+-- Create the new sample_template_filepath
+INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum, checksum_algorithm_id, data_directory_id) VALUES ('1_19700101-000000.txt', 14, '852952723', 1, 9);
+INSERT INTO qiita.sample_template_filepath VALUES (1, 5);
+
 -- Create a new prep template for the added raw data
 INSERT INTO qiita.prep_template (data_type_id, raw_data_id, preprocessing_status, investigation_type) VALUES (2, 1, 'success', 'Metagenomics');
 
