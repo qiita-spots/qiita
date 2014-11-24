@@ -123,7 +123,7 @@ def _build_study_info(studytype, user=None):
                 pmids = " ".join(pmids)
 
                 name, email = s[8].rsplit('&', 1)
-                owner = study_person_linkifier((email, name))
+                owner = study_person_linkifier((email, email))
 
                 status = s[9]
 
