@@ -27,7 +27,7 @@ from biom.util import biom_open
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from .sql_connection import SQLConnectionHandler
 from .base import QiitaStatusObject
-from .data import ProcessedData
+from .data import ProcessedData, RawData
 from .study import Study
 from .exceptions import QiitaDBStatusError  # QiitaDBNotImplementedError
 from .util import (convert_to_id, get_work_base_dir,
@@ -670,7 +670,7 @@ class Analysis(QiitaStatusObject):
             # you can have multiple different prep templates but we are only
             # using the one for 16S i. e. the last one ... sorry ;l
             # see issue https://github.com/biocore/qiita/issues/465
-            prep_template_id = s.raw_data()[0]
+            prep_template_id = RawData(s.raw_data()[0]).prep_templates[0]
 
             if study_id in all_studies:
                 # samples already added by other processed data file
