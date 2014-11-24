@@ -1005,7 +1005,7 @@ class TestPrepTemplate(TestCase):
         self.assertEqual(filepaths[0][0], 20)
         self.assertEqual(filepaths[1][0], 19)
 
-    def test_create_qiime_map(self):
+    def test_create_qiime_mapping_file(self):
         pt = PrepTemplate(1)
 
         # creating prep template file
@@ -1016,7 +1016,7 @@ class TestPrepTemplate(TestCase):
         pt.add_filepath(fpp)
 
         _, filepath = pt.get_filepaths()[0]
-        obs_fp = pt.create_qiime_map(filepath)
+        obs_fp = pt.create_qiime_mapping_file(filepath)
         exp_fp = join(fp, '1_prep_1_qiime_19700101-000000.txt')
 
         with open(obs_fp, 'r') as obs_fh:
@@ -1025,6 +1025,23 @@ class TestPrepTemplate(TestCase):
             exp = exp_fh.read()
 
         self.assertEqual(obs, exp)
+
+        # testing failure, first lest remove some lines of the prep template
+        with open(filepath, 'r') as filepath_fh:
+            data = filepath_fh.read().splitlines()
+        with open(filepath, 'w') as filepath_fh:
+            for i, d in enumerate(data):
+                if i == 4:
+                    # adding fake sample
+                    line = d.split('\t')
+                    line[0] = 'fake_sample'
+                    line = '\t'.join(line)
+                    filepath_fh.write(line + '\n')
+                    break
+                filepath_fh.write(d + '\n')
+
+        with self.assertRaises(ValueError):
+            pt.create_qiime_mapping_file(filepath)
 
     def test_create_data_type_id(self):
         """Creates a new PrepTemplate passing the data_type_id"""

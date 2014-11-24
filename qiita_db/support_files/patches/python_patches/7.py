@@ -17,4 +17,4 @@ for prep_template_id in conn_handler.execute_fetchall(
     study_id = pt.study_id
 
     for _, fpt in pt.get_filepaths():
-        pt.create_qiime_map(fpt)
+        pt.create_qiime_mapping_file(fpt)
