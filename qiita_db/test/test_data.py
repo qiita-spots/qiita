@@ -86,20 +86,20 @@ class RawDataTests(TestCase):
 
         # Check that the filepaths have been correctly added to the DB
         obs = self.conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.filepath WHERE filepath_id=16 or "
-            "filepath_id=17")
+            "SELECT * FROM qiita.filepath WHERE filepath_id=17 or "
+            "filepath_id=18")
         exp_seqs_fp = "3_%s" % basename(self.seqs_fp)
         exp_bc_fp = "3_%s" % basename(self.barcodes_fp)
         # filepath_id, path, filepath_type_id
-        exp = [[16, exp_seqs_fp, 1, '852952723', 1, 5],
-               [17, exp_bc_fp, 2, '852952723', 1, 5]]
+        exp = [[17, exp_seqs_fp, 1, '852952723', 1, 5],
+               [18, exp_bc_fp, 2, '852952723', 1, 5]]
         self.assertEqual(obs, exp)
 
         # Check that the raw data have been correctly linked with the filepaths
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.raw_filepath WHERE raw_data_id=3")
         # raw_data_id, filepath_id
-        self.assertEqual(obs, [[3, 16], [3, 17]])
+        self.assertEqual(obs, [[3, 17], [3, 18]])
 
     def test_create_no_filepaths(self):
         """Correctly creates a raw data object with no filepaths attached"""
@@ -201,10 +201,10 @@ class RawDataTests(TestCase):
         rd.remove_filepath(fp)
         self.assertFalse(self.conn_handler.execute_fetchone(
             "SELECT EXISTS(SELECT * FROM qiita.raw_filepath "
-            "WHERE filepath_id=16)")[0])
+            "WHERE filepath_id=17)")[0])
         self.assertTrue(self.conn_handler.execute_fetchone(
             "SELECT EXISTS(SELECT * FROM qiita.raw_filepath "
-            "WHERE filepath_id=17)")[0])
+            "WHERE filepath_id=18)")[0])
 
     def test_remove_filepath_error(self):
         fp = join(self.db_test_raw_dir, '1_s_G1_L001_sequences.fastq.gz')
@@ -287,13 +287,13 @@ class PreprocessedDataTests(TestCase):
 
         # Check that the filepaths have been correctly added to the DB
         obs = self.conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.filepath WHERE filepath_id=16 or "
-            "filepath_id=17")
+            "SELECT * FROM qiita.filepath WHERE filepath_id=17 or "
+            "filepath_id=18")
         exp_fna_fp = "3_%s" % basename(self.fna_fp)
         exp_qual_fp = "3_%s" % basename(self.qual_fp)
         # filepath_id, path, filepath_type_id
-        exp = [[16, exp_fna_fp, 4, '852952723', 1, 3],
-               [17, exp_qual_fp, 5, '852952723', 1, 3]]
+        exp = [[17, exp_fna_fp, 4, '852952723', 1, 3],
+               [18, exp_qual_fp, 5, '852952723', 1, 3]]
         self.assertEqual(obs, exp)
 
     def test_create_data_type_only(self):
@@ -335,13 +335,13 @@ class PreprocessedDataTests(TestCase):
 
         # Check that the filepaths have been correctly added to the DB
         obs = self.conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.filepath WHERE filepath_id=16 or "
-            "filepath_id=17")
+            "SELECT * FROM qiita.filepath WHERE filepath_id=17 or "
+            "filepath_id=18")
         exp_fna_fp = "3_%s" % basename(self.fna_fp)
         exp_qual_fp = "3_%s" % basename(self.qual_fp)
         # filepath_id, path, filepath_type_id
-        exp = [[16, exp_fna_fp, 4, '852952723', 1, 3],
-               [17, exp_qual_fp, 5, '852952723', 1, 3]]
+        exp = [[17, exp_fna_fp, 4, '852952723', 1, 3],
+               [18, exp_qual_fp, 5, '852952723', 1, 3]]
         self.assertEqual(obs, exp)
 
         # Check that the preprocessed data have been correctly
@@ -350,7 +350,7 @@ class PreprocessedDataTests(TestCase):
             "SELECT * FROM qiita.preprocessed_filepath WHERE "
             "preprocessed_data_id=3")
         # preprocessed_data_id, filepath_id
-        self.assertEqual(obs, [[3, 16], [3, 17]])
+        self.assertEqual(obs, [[3, 17], [3, 18]])
 
     def test_create_error_dynamic_table(self):
         """Raises an error if the preprocessed_params_table does not exist"""
@@ -543,10 +543,10 @@ class ProcessedDataTests(TestCase):
 
         # Check that the filepaths have been correctly added to the DB
         obs = self.conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.filepath WHERE filepath_id=16")
+            "SELECT * FROM qiita.filepath WHERE filepath_id=17")
         exp_biom_fp = "2_%s" % basename(self.biom_fp)
         # Filepath_id, path, filepath_type_id
-        exp = [[16, exp_biom_fp, 6, '852952723', 1, 4]]
+        exp = [[17, exp_biom_fp, 6, '852952723', 1, 4]]
         self.assertEqual(obs, exp)
 
         # Check that the processed data have been correctly linked
@@ -554,7 +554,7 @@ class ProcessedDataTests(TestCase):
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.processed_filepath WHERE processed_data_id=2")
         # processed_data_id, filepath_id
-        self.assertEqual(obs, [[2, 16]])
+        self.assertEqual(obs, [[2, 17]])
 
         # Check that the processed data have been correctly linked with the
         # study
@@ -613,10 +613,10 @@ class ProcessedDataTests(TestCase):
 
         # Check that the filepaths have been correctly added to the DB
         obs = self.conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.filepath WHERE filepath_id=16")
+            "SELECT * FROM qiita.filepath WHERE filepath_id=17")
         exp_biom_fp = "2_%s" % basename(self.biom_fp)
         # Filepath_id, path, filepath_type_id
-        exp = [[16, exp_biom_fp, 6, '852952723', 1, 4]]
+        exp = [[17, exp_biom_fp, 6, '852952723', 1, 4]]
         self.assertEqual(obs, exp)
 
         # Check that the processed data have been correctly linked

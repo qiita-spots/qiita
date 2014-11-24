@@ -1395,6 +1395,9 @@ class PrepTemplate(MetadataTemplate):
         # adding the fp to the object
         pt.add_filepath(fp)
 
+        # creating QIIME mapping file
+        pt.create_qiime_mapping_file(fp)
+
         return pt
 
     @classmethod
@@ -1626,15 +1629,86 @@ class PrepTemplate(MetadataTemplate):
             The ID of the study with which this prep template is associated
         """
         conn = SQLConnectionHandler()
-        sql = """SELECT srd.study_id
-                 FROM qiita.prep_template pt JOIN qiita.study_raw_data srd
-                 ON pt.raw_data_id = srd.raw_data_id"""
+        sql = ("SELECT srd.study_id FROM qiita.prep_template pt JOIN "
+               "qiita.study_raw_data srd ON pt.raw_data_id = srd.raw_data_id "
+               "WHERE prep_template_id = %d" % self.id)
         study_id = conn.execute_fetchone(sql)
         if study_id:
             return study_id[0]
         else:
             raise QiitaDBError("No studies found associated with prep "
                                "template ID %d" % self._id)
+
+    def create_qiime_mapping_file(self, prep_template_fp):
+        """This creates the QIIME mapping file and links it in the db.
+
+        Parameters
+        ----------
+        prep_template_fp : str
+            The prep template filepath that should be concatenated to the
+            sample template go used to generate a new  QIIME mapping file
+
+        Returns
+        -------
+        filepath : str
+            The filepath of the created QIIME mapping file
+
+        Raises
+        ------
+        ValueError
+            If the prep template is not a subset of the sample template
+        """
+        rename_cols = {
+            'barcode': 'BarcodeSequence',
+            'barcodesequence': 'BarcodeSequence',
+            'primer': 'LinkerPrimerSequence',
+            'linkerprimersequence': 'LinkerPrimerSequence',
+            'description': 'Description',
+        }
+
+        # getting the latest sample template
+        _, sample_template_fp = SampleTemplate(
+            self.study_id).get_filepaths()[0]
+
+        # reading files via pandas
+        st = load_template_to_dataframe(sample_template_fp)
+        pt = load_template_to_dataframe(prep_template_fp)
+        st_sample_names = set(st.index)
+        pt_sample_names = set(pt.index)
+
+        if not pt_sample_names.issubset(st_sample_names):
+            raise ValueError(
+                "Prep template is not a sub set of the sample template, files:"
+                "%s %s - samples: %s" % (sample_template_fp, prep_template_fp,
+                                         str(pt_sample_names-st_sample_names)))
+
+        mapping = pt.join(st, lsuffix="_prep")
+        mapping.rename(columns=rename_cols, inplace=True, index=str.lower)
+
+        # Gets the orginal mapping columns and readjust the order to comply
+        # with QIIME requirements
+        cols = mapping.columns.values.tolist()
+        cols.remove('BarcodeSequence')
+        cols.remove('LinkerPrimerSequence')
+        cols.remove('Description')
+        new_cols = ['BarcodeSequence', 'LinkerPrimerSequence']
+        new_cols.extend(cols)
+        new_cols.append('Description')
+        mapping = mapping[new_cols]
+
+        # figuring out the filepath for the QIIME map file
+        _id, fp = get_mountpoint('templates')[0]
+        filepath = join(fp, '%d_prep_%d_qiime_%s.txt' % (self.study_id,
+                        self.id, strftime("%Y%m%d-%H%M%S")))
+
+        # Save the mapping file
+        mapping.to_csv(filepath, index_label='#SampleID', na_rep='unknown',
+                       sep='\t')
+
+        # adding the fp to the object
+        self.add_filepath(filepath)
+
+        return filepath
 
 
 def load_template_to_dataframe(fn):
