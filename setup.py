@@ -64,9 +64,9 @@ setup(name='qiita',
       extras_require={'test': ["nose >= 0.10.1", "pep8", 'mock'],
                       'doc': ["Sphinx >= 1.2.2", "sphinx-bootstrap-theme"]},
       install_requires=['psycopg2', 'click == 1.0', 'future==0.13.0',
-                        'bcrypt', 'pandas', 'numpy >= 1.7', 'tornado==3.1.1',
-                        'toredis', 'redis', 'ipython[all]', 'pyparsing',
-                        'h5py >= 2.3.1', 'biom-format', 'natsort', 'networkx',
-                        'scikit-bio == 0.2.1', 'wtforms == 2.0.1'],
+                        'bcrypt', 'pandas >= 0.15', 'numpy >= 1.7',
+                        'tornado==3.1.1', 'toredis', 'redis', 'ipython[all]',
+                        'pyparsing', 'h5py >= 2.3.1', 'biom-format', 'natsort',
+                        'networkx', 'scikit-bio == 0.2.1', 'wtforms == 2.0.1'],
       classifiers=classifiers
       )
