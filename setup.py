@@ -8,14 +8,14 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
-__version__ = "0.1.0-dev"
+__version__ = "0.0.1"
 
 from setuptools import setup
 from glob import glob
 
 
 classes = """
-    Development Status :: 4 - Beta
+    Development Status :: 2 - Pre-Alpha
     License :: OSI Approved :: BSD License
     Topic :: Scientific/Engineering :: Bio-Informatics
     Topic :: Software Development :: Libraries :: Application Frameworks
@@ -23,12 +23,11 @@ classes = """
     Programming Language :: Python
     Programming Language :: Python :: 2.7
     Programming Language :: Python :: Implementation :: CPython
-    Operating System :: OS Independent
     Operating System :: POSIX :: Linux
     Operating System :: MacOS :: MacOS X
 """
 
-long_description = """Qiita is a databasing and UI effort for QIIME"""
+long_description = """Qiita: Spot Patterns"""
 
 classifiers = [s.strip() for s in classes.split('\n') if s]
 
@@ -36,10 +35,10 @@ setup(name='qiita',
       version=__version__,
       long_description=long_description,
       license="BSD",
-      description='Qiita',
+      description='Qiita: Spot Patterns',
       author="Qiita development team",
       author_email="mcdonadt@colorado.edu",
-      url='http://biocore.github.io/qiita',
+      url='https://github.com/biocore/qiita',
       test_suite='nose.collector',
       packages=['qiita_core',
                 'qiita_db',
