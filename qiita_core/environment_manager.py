@@ -4,12 +4,11 @@ from sys import exit
 from IPython.parallel.apps.ipclusterapp import IPClusterStart, IPClusterStop
 
 
-def start_cluster(profile, n):
+def start_cluster(profile):
     """Start a cluster"""
     me = fork()
     if me == 0:
         c = IPClusterStart(profile=profile, log_level=0, daemonize=True)
-        c.n = n
         c.initialize(argv=[])
         c.start()
 
