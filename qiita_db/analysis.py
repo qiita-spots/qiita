@@ -27,7 +27,7 @@ from biom.util import biom_open
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from .sql_connection import SQLConnectionHandler
 from .base import QiitaStatusObject
-from .data import ProcessedData
+from .data import ProcessedData, RawData
 from .study import Study
 from .exceptions import QiitaDBStatusError  # QiitaDBNotImplementedError
 from .util import (convert_to_id, get_work_base_dir,
