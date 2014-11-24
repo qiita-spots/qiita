@@ -625,15 +625,33 @@ class PreprocessedData(BaseData):
         # If the prep template was provided, connect the preprocessed data
         # with the prep_template
         if prep_template is not None:
-            conn_handler.execute(
+            q = conn_handler.get_temp_queue()
+            conn_handler.add_to_queue(
+                q,
                 "INSERT INTO qiita.{0} (prep_template_id, "
                 "preprocessed_data_id) VALUES "
                 "(%s, %s)".format(cls._template_preprocessed_table),
                 (prep_template.id, ppd_id))
+            conn_handler.add_to_queue(
+                q,
+                """UPDATE qiita.prep_template
+                SET preprocessing_status = 'success'
+                WHERE prep_template_id = %s""",
+                [prep_template.id])
+            conn_handler.execute_queue(q)
 
         # Add the filepaths to the database and connect them
         ppd.add_filepaths(filepaths, conn_handler)
         return ppd
+
+    @property
+    def processed_data(self):
+        r"""The processed data list generated from this preprocessed data"""
+        conn_handler = SQLConnectionHandler()
+        processed_ids = conn_handler.execute_fetchall(
+            "SELECT processed_data_id FROM qiita.preprocessed_processed_data "
+            "WHERE preprocessed_data_id = %s", (self.id,))
+        return [pid[0] for pid in processed_ids]
 
     @property
     def prep_template(self):

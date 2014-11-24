@@ -23,3 +23,9 @@ One drawback is that developers will need to have [DBSchema](http://www.dbschema
 ##Data Patches
 
 If you need to submit a patch that changes only data but does not alter the schema, you should still create a patch file with the next name (e.g., `2.sql`) with your changes. Note that a patch should *not* be created if the modifications do not apply to Qiita databases in general; data patches are only necessary in some cases, e.g., if the terms in an ontology change.
+
+##Python Patches
+
+Occasionally, SQL alone cannot effect the desired changes, and a corresponding python script must be run after the SQL patch is applied. If this is the case, a python file should be created in the `patches/python_patches` directory, and it should have the same basename as the SQL file. For example, if there is a patch `4.sql` in the `patches` directory, and this patch requires a python script be run after the SQL is applied, then the python file should be placed at `patches/python_patches/4.py`. Note that not every SQL patch will have a corresponding python patch, but every python patch will have a corresponding SQL patch.
+
+If in the future we discover a use-case where a python patch must be applied for which there *is no corresponding SQL patch*, then a blank SQL patch file will still need to created.

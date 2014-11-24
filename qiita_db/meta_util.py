@@ -28,6 +28,7 @@ from .user import User
 from .study import Study
 from .data import RawData, PreprocessedData, ProcessedData
 from .analysis import Analysis
+from .metadata_template import PrepTemplate, SampleTemplate
 
 
 def _get_data_fpids(constructor, object_id):
@@ -83,6 +84,18 @@ def get_accessible_filepath_ids(user_id):
         for constructor, data_ids in constructor_data_ids:
             for data_id in data_ids:
                 filepath_ids.update(_get_data_fpids(constructor, data_id))
+
+        # adding prep and sample templates
+        prep_fp_ids = []
+        for rdid in study.raw_data():
+            for pt_id in RawData(rdid).prep_templates:
+                for _id, _ in PrepTemplate(pt_id).get_filepaths():
+                    prep_fp_ids.append(_id)
+
+        filepath_ids.update(prep_fp_ids)
+        sample_fp_ids = [_id for _id, _
+                         in SampleTemplate(study_id).get_filepaths()]
+        filepath_ids.update(sample_fp_ids)
 
     # Next, analyses
     # Same as before, ther eare public, private, and shared

@@ -102,7 +102,8 @@ from copy import deepcopy
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from .base import QiitaStatusObject, QiitaObject
 from .exceptions import (QiitaDBStatusError, QiitaDBColumnError, QiitaDBError)
-from .util import check_required_columns, check_table_cols, convert_to_id
+from .util import (check_required_columns, check_table_cols, convert_to_id,
+                   get_environmental_packages)
 from .sql_connection import SQLConnectionHandler
 
 
@@ -144,7 +145,7 @@ class Study(QiitaStatusObject):
     _non_info = {"email", "study_status_id", "study_title"}
 
     def _lock_non_sandbox(self, conn_handler):
-        """Raises QiitaDBStatusError if study is public"""
+        """Raises QiitaDBStatusError if study is non-sandboxed"""
         if self.status != 'sandbox':
             raise QiitaDBStatusError("Illegal operation on non-sandbox study!")
 
@@ -304,7 +305,6 @@ class Study(QiitaStatusObject):
             The new study title
         """
         conn_handler = SQLConnectionHandler()
-        self._lock_non_sandbox(conn_handler)
         sql = ("UPDATE qiita.{0} SET study_title = %s WHERE "
                "study_id = %s".format(self._table))
         return conn_handler.execute(sql, (title, self._id))
@@ -356,7 +356,10 @@ class Study(QiitaStatusObject):
                                      self._non_info.intersection(info))
 
         conn_handler = SQLConnectionHandler()
-        self._lock_non_sandbox(conn_handler)
+
+        if 'timeseries_type_id' in info:
+            # We only lock if the timeseries type changes
+            self._lock_non_sandbox(conn_handler)
 
         # make sure dictionary only has keys for available columns in db
         check_table_cols(conn_handler, info, self._table)
@@ -438,6 +441,44 @@ class Study(QiitaStatusObject):
                "study_id = %s".format(self._table))
         return [x[0] for x in conn_handler.execute_fetchall(sql, (self._id, ))]
 
+    @pmids.setter
+    def pmids(self, values):
+        """Sets the pmids for the study
+
+        Parameters
+        ----------
+        values : list of str
+            The list of pmids to associate with the study
+
+        Raises
+        ------
+        TypeError
+            If values is not a list
+        """
+        # Check that a list is actually passed
+        if not isinstance(values, list):
+            raise TypeError('pmids should be a list')
+
+        # Get the connection to the database
+        conn_handler = SQLConnectionHandler()
+
+        # Create a queue for the operations that we need to do
+        queue = "%d_pmid_setter" % self._id
+        conn_handler.create_queue(queue)
+
+        # Delete the previous pmids associated with the study
+        sql = "DELETE FROM qiita.study_pmid WHERE study_id=%s"
+        sql_args = (self._id,)
+        conn_handler.add_to_queue(queue, sql, sql_args)
+
+        # Set the new ones
+        sql = "INSERT INTO qiita.study_pmid (study_id, pmid) VALUES (%s, %s)"
+        sql_args = [(self._id, val) for val in values]
+        conn_handler.add_to_queue(queue, sql, sql_args, many=True)
+
+        # Execute the queue
+        conn_handler.execute_queue(queue)
+
     @property
     def investigation(self):
         """ Returns Investigation this study is part of
@@ -491,6 +532,77 @@ class Study(QiitaStatusObject):
             self._table)
 
         return conn_handler.execute_fetchone(sql, [self._id])[0]
+
+    @property
+    def environmental_packages(self):
+        """Gets the environmental packages associated with the study
+
+        Returns
+        -------
+        list of str
+            The environmental package names associated with the study
+        """
+        conn_handler = SQLConnectionHandler()
+        env_pkgs = conn_handler.execute_fetchall(
+            "SELECT environmental_package_name FROM "
+            "qiita.study_environmental_package WHERE study_id = %s",
+            (self._id,))
+        return [pkg[0] for pkg in env_pkgs]
+
+    @environmental_packages.setter
+    def environmental_packages(self, values):
+        """Sets the environmental packages for the study
+
+        Parameters
+        ----------
+        values : list of str
+            The list of environmental package names to associate with the study
+
+        Raises
+        ------
+        TypeError
+            If values is not a list
+        ValueError
+            If any environmental packages listed on values is not recognized
+        """
+        # Get the connection to the database
+        conn_handler = SQLConnectionHandler()
+
+        # The environmental packages can be changed only if the study is
+        # sandboxed
+        self._lock_non_sandbox(conn_handler)
+
+        # Check that a list is actually passed
+        if not isinstance(values, list):
+            raise TypeError('Environmental packages should be a list')
+
+        # Get all the environmental packages
+        env_pkgs = [pkg[0] for pkg in get_environmental_packages(
+            conn_handler=conn_handler)]
+
+        # Check that all the passed values are valid environmental packages
+        missing = set(values).difference(env_pkgs)
+        if missing:
+            raise ValueError('Environmetal package(s) not recognized: %s'
+                             % ', '.join(missing))
+
+        # Create a queue for the operations that we need to do
+        queue = "%d_env_pkgs_setter" % self._id
+        conn_handler.create_queue(queue)
+
+        # Delete the previous environmental packages associated with the study
+        sql = "DELETE FROM qiita.study_environmental_package WHERE study_id=%s"
+        sql_args = (self._id,)
+        conn_handler.add_to_queue(queue, sql, sql_args)
+
+        # Set the new ones
+        sql = ("INSERT INTO qiita.study_environmental_package "
+               "(study_id, environmental_package_name) VALUES (%s, %s)")
+        sql_args = [(self._id, val) for val in values]
+        conn_handler.add_to_queue(queue, sql, sql_args, many=True)
+
+        # Execute the queue
+        conn_handler.execute_queue(queue)
 
     # --- methods ---
     def raw_data(self, data_type=None):

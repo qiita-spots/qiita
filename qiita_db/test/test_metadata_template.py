@@ -11,6 +11,7 @@ from six import StringIO
 from unittest import TestCase, main
 from datetime import datetime
 from tempfile import mkstemp
+from time import strftime
 from os import close, remove
 from os.path import join, basename
 from collections import Iterable
@@ -28,12 +29,11 @@ from qiita_db.exceptions import (QiitaDBDuplicateError, QiitaDBUnknownIDError,
 from qiita_db.study import Study, StudyPerson
 from qiita_db.user import User
 from qiita_db.data import RawData
-from qiita_db.util import exists_table, get_db_files_base_dir
-from qiita_db.metadata_template import (_get_datatypes, _as_python_types,
-                                        MetadataTemplate, SampleTemplate,
-                                        PrepTemplate, BaseSample, PrepSample,
-                                        Sample, _prefix_sample_names_with_id,
-                                        load_template_to_dataframe)
+from qiita_db.util import exists_table, get_db_files_base_dir, get_mountpoint
+from qiita_db.metadata_template import (
+    _get_datatypes, _as_python_types, MetadataTemplate, SampleTemplate,
+    PrepTemplate, BaseSample, PrepSample, Sample, _prefix_sample_names_with_id,
+    load_template_to_dataframe)
 
 
 class TestUtilMetadataMap(TestCase):
@@ -824,6 +824,21 @@ class TestSampleTemplate(TestCase):
             obs = f.read()
         self.assertEqual(obs, EXP_SAMPLE_TEMPLATE_FEWER_SAMPLES)
 
+    def test_get_filepath(self):
+        # we will check that there is a new id only because the path will
+        # change based on time and the same functionality is being tested
+        # in data.py
+        exp = 17
+        st = SampleTemplate.create(self.metadata, self.new_study)
+        self.assertEqual(st.get_filepaths()[0][0], exp)
+
+        # testing current functionaly, to add a new sample template
+        # you need to erase it first
+        SampleTemplate.delete(st.id)
+        exp = 18
+        st = SampleTemplate.create(self.metadata, self.new_study)
+        self.assertEqual(st.get_filepaths()[0][0], exp)
+
 
 @qiita_test_checker()
 class TestPrepTemplate(TestCase):
@@ -983,6 +998,50 @@ class TestPrepTemplate(TestCase):
                 's_G1_L001_sequences', 'CGTAGAGCTCTC', None,
                 'GTGCCAGCMGCCGCGGTAA', 'BBBB', 'AAAA']]
         self.assertEqual(sorted(obs), sorted(exp))
+
+        # prep and qiime files have been created
+        filepaths = pt.get_filepaths()
+        self.assertEqual(len(filepaths), 2)
+        self.assertEqual(filepaths[0][0], 20)
+        self.assertEqual(filepaths[1][0], 19)
+
+    def test_create_qiime_mapping_file(self):
+        pt = PrepTemplate(1)
+
+        # creating prep template file
+        _id, fp = get_mountpoint('templates')[0]
+        fpp = join(fp, '%d_prep_%d_%s.txt' % (pt.study_id, pt.id,
+                   strftime("%Y%m%d-%H%M%S")))
+        pt.to_file(fpp)
+        pt.add_filepath(fpp)
+
+        _, filepath = pt.get_filepaths()[0]
+        obs_fp = pt.create_qiime_mapping_file(filepath)
+        exp_fp = join(fp, '1_prep_1_qiime_19700101-000000.txt')
+
+        with open(obs_fp, 'r') as obs_fh:
+            obs = obs_fh.read()
+        with open(exp_fp, 'r') as exp_fh:
+            exp = exp_fh.read()
+
+        self.assertEqual(obs, exp)
+
+        # testing failure, first lest remove some lines of the prep template
+        with open(filepath, 'r') as filepath_fh:
+            data = filepath_fh.read().splitlines()
+        with open(filepath, 'w') as filepath_fh:
+            for i, d in enumerate(data):
+                if i == 4:
+                    # adding fake sample
+                    line = d.split('\t')
+                    line[0] = 'fake_sample'
+                    line = '\t'.join(line)
+                    filepath_fh.write(line + '\n')
+                    break
+                filepath_fh.write(d + '\n')
+
+        with self.assertRaises(ValueError):
+            pt.create_qiime_mapping_file(filepath)
 
     def test_create_data_type_id(self):
         """Creates a new PrepTemplate passing the data_type_id"""
