@@ -238,7 +238,7 @@ function newInvestigationTypeChanged(rawDataID, isEdit){
                     {% if is_local_request %}
                       <br/>{{ptpath}}
                     {% else %}
-                      <br/><a href="/download/{{ptid}}">Download prep template</a>
+                      <br/><a href="/download/{{ptid}}">{{basename(ptpath)}}</a>
                     {% end %}
                   {% end %}
                   <br/><br/>
