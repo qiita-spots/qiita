@@ -13,8 +13,8 @@ Qiita is a python package, with support for python 2.7 and 3.2, that depends on 
 * [Psycopg2](http://initd.org/psycopg/download/)
 * [click](http://click.pocoo.org/)
 * [NumPy](https://github.com/numpy/numpy)
-* [Pandas](http://pandas.pydata.org/)
-* [QIIME development version](https://github.com/biocore/qiime)
+* [Pandas >= 0.15](http://pandas.pydata.org/)
+* [QIIME 1.8.0-dev](https://github.com/biocore/qiime)
 * [future 0.13.0](http://python-future.org/)
 * [bcrypt](https://github.com/pyca/bcrypt/)
 * [redis](https://github.com/andymccurdy/redis-py)
@@ -22,7 +22,6 @@ Qiita is a python package, with support for python 2.7 and 3.2, that depends on 
 * [networkx](http://networkx.lanl.gov/index.html)
 * [WTForms 2.0.1](https://wtforms.readthedocs.org/en/latest/)
 * [Mock](http://www.voidspace.org.uk/python/mock/)  For running test code only
-* [qiime 1.8.0-dev](http://qiime.org)
 
 And on the following packages:
 
