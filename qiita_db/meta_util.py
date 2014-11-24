@@ -89,11 +89,11 @@ def get_accessible_filepath_ids(user_id):
         prep_fp_ids = []
         for rdid in study.raw_data():
             for pt_id in RawData(rdid).prep_templates:
-                for ids, _ in PrepTemplate(pt_id).get_filepaths():
-                    prep_fp_ids.append(ids)
+                for _id, _ in PrepTemplate(pt_id).get_filepaths():
+                    prep_fp_ids.append(_id)
 
         filepath_ids.update(prep_fp_ids)
-        sample_fp_ids = [ids for ids, _
+        sample_fp_ids = [_id for _id, _
                          in SampleTemplate(study_id).get_filepaths()]
         filepath_ids.update(sample_fp_ids)
 
