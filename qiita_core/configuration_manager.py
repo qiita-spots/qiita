@@ -112,7 +112,8 @@ class ConfigurationManager(object):
         with open(conf_fp, 'U') as conf_file:
             config.readfp(conf_file)
 
-        _required_sections = {'main', 'redis', 'postgres', 'smtp', 'ebi'}
+        _required_sections = {'main', 'redis', 'postgres', 'smtp', 'ebi',
+                              'ipython'}
         if not _required_sections.issubset(set(config.sections())):
             missing = _required_sections - set(config.sections())
             raise MissingConfigSection(', '.join(missing))
@@ -122,6 +123,7 @@ class ConfigurationManager(object):
         self._get_postgres(config)
         self._get_redis(config)
         self._get_ebi(config)
+        self._get_ipython(config)
 
     def _get_main(self, config):
         """Get the configuration of the main section"""
@@ -201,3 +203,7 @@ class ConfigurationManager(object):
         self.ebi_skip_curl_cert = sec_getbool('EBI_SKIP_CURL_CERT')
         self.ebi_center_name = sec_get('EBI_CENTER_NAME')
         self.ebi_organization_prefix = sec_get('EBI_ORGANIZATION_PREFIX')
+
+    def _get_ipython(self, config):
+        self.ipython_contexts = config.get('ipython', 'context').split(',')
+        self.ipython_default = config.get('ipython', 'default')
