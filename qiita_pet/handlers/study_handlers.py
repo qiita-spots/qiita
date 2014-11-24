@@ -415,6 +415,11 @@ class StudyDescriptionHandler(BaseHandler):
         princ_inv = StudyPerson(study.info['principal_investigator_id'])
         pi_link = study_person_linkifier((princ_inv.email, princ_inv.name))
 
+        if SampleTemplate.exists(study.id):
+            sample_templates = SampleTemplate(study.id).get_filepaths()
+        else:
+            sample_templates = []
+
         self.render('study_description.html', user=self.current_user,
                     study_title=study.title, study_info=study.info,
                     study_id=study.id, filetypes=''.join(filetypes),
@@ -436,7 +441,7 @@ class StudyDescriptionHandler(BaseHandler):
                                      for pmid in study.pmids]),
                     principal_investigator=pi_link,
                     is_local_request=is_local_request,
-                    sample_templates=SampleTemplate(study.id).get_filepaths())
+                    sample_templates=sample_templates)
 
     @authenticated
     def get(self, study_id):
