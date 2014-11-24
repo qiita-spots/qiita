@@ -1646,7 +1646,7 @@ class PrepTemplate(MetadataTemplate):
         ----------
         prep_template_fp : str
             The prep template filepath that should be concatenated to the
-            study template go used to generate a new  QIIME mapping file
+            sample template go used to generate a new  QIIME mapping file
 
         Returns
         -------
@@ -1684,26 +1684,6 @@ class PrepTemplate(MetadataTemplate):
 
         mapping = pt.join(st, lsuffix="_prep")
         mapping.rename(columns=rename_cols, inplace=True, index=str.lower)
-
-        ids = mapping.index.tolist()
-        unique_ids = set(ids)
-        name_tmp_column = 'this_is_a_temporal_name_for_qiime_data_creation'
-        while len(ids) != len(unique_ids):
-            # Get the list of duplicate ids
-            duplicates = find_repeated(ids)
-            seen = []
-            values = []
-            # Add a .duplicate to all the samples that have duplicates
-            for idx in mapping.index:
-                if idx in duplicates:
-                    if idx in seen:
-                        values.append("%s.duplicate" % idx)
-                    else:
-                        seen.append(idx)
-                        values.append(idx)
-                else:
-                    values.append(idx)
-            pd.set_index(name_tmp_column, verify_integrity=True)
 
         # Gets the orginal mapping columns and readjust the order to comply
         # with QIIME requirements
