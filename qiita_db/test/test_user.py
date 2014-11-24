@@ -216,6 +216,14 @@ class UserTest(TestCase):
         user = User('test@foo.bar')
         self.assertEqual(user.user_studies, [1])
 
+    def test_get_user_studies_for_display(self):
+        user = User('test@foo.bar')
+        exp = [[1, 'Identification of the Microbiomes for Cannabis Soils',
+                True, 27, 'Shared&shared@foo.bar', 2, 'PIDude&PI_dude@foo.bar',
+                '123456,7891011', 'Dude&test@foo.bar', 'private']]
+
+        self.assertEqual(user.user_studies_for_display, exp)
+
     def test_get_shared_studies(self):
         user = User('shared@foo.bar')
         self.assertEqual(user.shared_studies, [1])

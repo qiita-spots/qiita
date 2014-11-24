@@ -79,23 +79,58 @@ def _build_study_info(studytype, user=None):
                                 'pmids owner status')
 
         infolist = []
-        for s_id in studylist:
-            study = Study(s_id)
-            status = study.status
-            # Just passing the email address as the name here, since
-            # name is not a required field in qiita.qiita_user
-            owner = study_person_linkifier((study.owner, study.owner))
-            info = study.info
-            PI = StudyPerson(info['principal_investigator_id'])
-            PI = study_person_linkifier((PI.email, PI.name))
-            pmids = ", ".join([pubmed_linkifier([pmid])
-                               for pmid in study.pmids])
-            shared = _get_shared_links_for_study(study)
-            infolist.append(StudyTuple(study.id, study.title,
-                                       info["metadata_complete"],
-                                       info["number_samples_collected"],
-                                       shared, len(study.raw_data()),
-                                       PI, pmids, owner, status))
+        if not studytype == "private":
+            for s_id in studylist:
+                study = Study(s_id)
+                status = study.status
+                # Just passing the email address as the name here, since
+                # name is not a required field in qiita.qiita_user
+                owner = study_person_linkifier((study.owner, study.owner))
+                info = study.info
+                PI = StudyPerson(info['principal_investigator_id'])
+                PI = study_person_linkifier((PI.email, PI.name))
+                pmids = ", ".join([pubmed_linkifier([pmid])
+                                   for pmid in study.pmids])
+                shared = _get_shared_links_for_study(study)
+                infolist.append(StudyTuple(study.id, study.title,
+                                           info["metadata_complete"],
+                                           info["number_samples_collected"],
+                                           shared, len(study.raw_data()),
+                                           PI, pmids, owner, status))
+        else:
+            for s in user.user_studies_for_display:
+                study_id = s[0]
+                title = s[1]
+                metadata_complete = s[2]
+                samples_collected = s[3]
+
+                shared = []
+                if s[4]:
+                    for sh in s[4].split(','):
+                        name, email = sh.rsplit('&', 1)
+                        shared.append(study_person_linkifier((email, name)))
+                shared = " ".join(shared)
+
+                raw_data_count = s[5]
+
+                name, email = s[6].rsplit('&', 1)
+                pi = study_person_linkifier((email, name))
+
+                pmids = []
+                if s[7]:
+                    for sh in s[7].split(','):
+                        pmids.append(pubmed_linkifier((sh)))
+                pmids = " ".join(pmids)
+
+                name, email = s[8].rsplit('&', 1)
+                owner = study_person_linkifier((email, name))
+
+                status = s[9]
+
+                infolist.append(StudyTuple(study_id, title, metadata_complete,
+                                           samples_collected, shared,
+                                           raw_data_count, pi, pmids, owner,
+                                           status))
         return infolist
 
 
