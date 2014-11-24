@@ -91,11 +91,12 @@ def get_accessible_filepath_ids(user_id):
             for pt_id in RawData(rdid).prep_templates:
                 for _id, _ in PrepTemplate(pt_id).get_filepaths():
                     prep_fp_ids.append(_id)
-
         filepath_ids.update(prep_fp_ids)
-        sample_fp_ids = [_id for _id, _
-                         in SampleTemplate(study_id).get_filepaths()]
-        filepath_ids.update(sample_fp_ids)
+
+        if SampleTemplate.exists(study_id):
+            sample_fp_ids = [_id for _id, _
+                             in SampleTemplate(study_id).get_filepaths()]
+            filepath_ids.update(sample_fp_ids)
 
     # Next, analyses
     # Same as before, ther eare public, private, and shared
