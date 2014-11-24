@@ -43,7 +43,7 @@ class MetaUtilTests(TestCase):
         self.assertEqual(obs, set())
 
         # Test that it doesn't brake if the SampleTemplate hasn't been added
-        exp = set([1, 2, 3, 4, 5, 6, 7, 11L, 14, 15, 16])
+        exp = set([1, 2, 3, 4, 5, 6, 7, 11, 14, 15, 16])
         obs = get_accessible_filepath_ids('test@foo.bar')
         self.assertEqual(obs, exp)
 
