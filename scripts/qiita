@@ -27,7 +27,6 @@ from qiita_db.exceptions import QiitaDBConnectionError
 from qiita_core.configuration_manager import ConfigurationManager
 from qiita_ware.commands import ebi_actions, submit_EBI as _submit_EBI
 from qiita_ware import r_server
-from qiita_pet.webserver import Application
 
 
 _CONFIG = ConfigurationManager()
@@ -59,6 +58,7 @@ def ebi():
 @qiita.group()
 def maintenance():
     pass
+
 
 @qiita.group()
 def webserver():
@@ -259,6 +259,12 @@ def status():
 @click.option('--port', required=False, type=int, help='Port where the '
               'webserver will start', default=8888)
 def start(port):
+    # in order to use this command you need to have an IPython cluster running,
+    # for now this makes it so that you can use other sub-commands without
+    # having to do that. The solution will (perhaps) to move this subcommand
+    # into an entirely different script.
+    from qiita_pet.webserver import Application
+
     http_server = tornado.httpserver.HTTPServer(Application())
     http_server.listen(port)
     print("Qiita started on port", port)
