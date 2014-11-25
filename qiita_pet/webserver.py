@@ -1,10 +1,8 @@
 # login code modified from https://gist.github.com/guillaumevincent/4771570
 import tornado.auth
 import tornado.escape
-import tornado.options
 import tornado.web
 import tornado.websocket
-from tornado.options import define, options
 from os.path import dirname, join
 from base64 import b64encode
 from uuid import uuid4
@@ -33,7 +31,6 @@ from qiita_pet.handlers.stats import StatsHandler
 from qiita_pet.handlers.download import DownloadHandler
 from qiita_db.util import get_mountpoint
 
-define("port", default=8888, help="run on the given port", type=int)
 
 DIRNAME = dirname(__file__)
 STATIC_PATH = join(DIRNAME, "static")
