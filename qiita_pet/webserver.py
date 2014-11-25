@@ -1,8 +1,6 @@
 # login code modified from https://gist.github.com/guillaumevincent/4771570
 import tornado.auth
 import tornado.escape
-import tornado.httpserver
-import tornado.ioloop
 import tornado.options
 import tornado.web
 import tornado.websocket
@@ -96,14 +94,3 @@ class Application(tornado.web.Application):
             "login_url": "/auth/login/"
         }
         tornado.web.Application.__init__(self, handlers, **settings)
-
-
-def main():
-    tornado.options.parse_command_line()
-    http_server = tornado.httpserver.HTTPServer(Application())
-    http_server.listen(options.port)
-    print("Tornado started on port", options.port)
-    tornado.ioloop.IOLoop.instance().start()
-
-if __name__ == "__main__":
-    main()

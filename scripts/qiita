@@ -9,6 +9,8 @@
 # -----------------------------------------------------------------------------
 
 import click
+import tornado.httpserver
+import tornado.ioloop
 from psycopg2 import OperationalError
 
 from qiita_db.util import (get_filepath_types, get_filetypes,
@@ -25,6 +27,7 @@ from qiita_db.exceptions import QiitaDBConnectionError
 from qiita_core.configuration_manager import ConfigurationManager
 from qiita_ware.commands import ebi_actions, submit_EBI as _submit_EBI
 from qiita_ware import r_server
+from qiita_pet.webserver import Application
 
 
 _CONFIG = ConfigurationManager()
@@ -55,6 +58,10 @@ def ebi():
 
 @qiita.group()
 def maintenance():
+    pass
+
+@qiita.group()
+def webserver():
     pass
 
 
@@ -243,6 +250,19 @@ def status():
         print status
         print r_server.ttl('maintenance'), "seconds remaining"
 
+
+# #############################################################################
+# MAINTENANCE COMMANDS
+# #############################################################################
+
+@webserver.command()
+@click.option('--port', required=False, type=int, help='Port where the '
+              'webserver will start', default=8888)
+def start(port):
+    http_server = tornado.httpserver.HTTPServer(Application())
+    http_server.listen(port)
+    print("Qiita started on port", port)
+    tornado.ioloop.IOLoop.instance().start()
 
 if __name__ == '__main__':
     qiita()
