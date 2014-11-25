@@ -22,7 +22,6 @@ Qiita is a python package, with support for python 2.7, that depends on the foll
 * [networkx](http://networkx.lanl.gov/index.html)
 * [WTForms 2.0.1](https://wtforms.readthedocs.org/en/latest/)
 * [Mock](http://www.voidspace.org.uk/python/mock/)  For running test code only
-* [redis 2.8.0](https://pypi.python.org/pypi/redis/)
 
 And on the following packages:
 
@@ -51,7 +50,7 @@ wget https://github.com/biocore/qiita/blob/a0628e54aef85b1a064d40d57ca981aaf082a
 echo "export QIITA_CONFIG_FP=config_test.txt" >> ~/.bashrc
 source ~/.bashrc
 # (3) start a test environment
-qiita_env make --no-load-ontologies --add-demo-user
+qiita_env make --no-load-ontologies
 ```
 
 Finally you need to start the server:
