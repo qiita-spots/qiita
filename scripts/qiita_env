@@ -27,7 +27,7 @@ def env():
 
 
 @env.command()
-@click.argument('clusters', required=True, 
+@click.argument('clusters', required=True,
                 type=click.Choice(_CONFIG.ipython_contexts),
                 nargs=-1)
 def start_cluster(clusters):
@@ -38,7 +38,7 @@ def start_cluster(clusters):
 
 
 @env.command()
-@click.argument('clusters', required=True, 
+@click.argument('clusters', required=True,
                 type=click.Choice(_CONFIG.ipython_contexts),
                 nargs=-1)
 def stop_cluster(clusters):
