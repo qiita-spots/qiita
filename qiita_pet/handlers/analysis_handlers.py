@@ -15,11 +15,12 @@ from collections import defaultdict, Counter
 
 from tornado.web import authenticated, HTTPError
 from pyparsing import ParseException
+from moi import ctx_default, r_client
+from moi.job import submit
+from moi.group import get_id_from_user, create_info
 
 from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_ware.dispatchable import run_analysis
-from qiita_ware.context import submit
-from qiita_ware import r_server
 from qiita_db.user import User
 from qiita_db.analysis import Analysis
 from qiita_db.data import ProcessedData
@@ -251,14 +252,9 @@ class AnalysisWaitHandler(BaseHandler):
         else:
             check_analysis_access(User(user), analysis)
 
-        commands = []
-        for job in analysis.jobs:
-            jobject = Job(job)
-            commands.append("%s: %s" % (jobject.datatype, jobject.command[0]))
-
+        group_id = r_client.hget('analyis-map', analysis_id)
         self.render("analysis_waiting.html", user=user,
-                    aid=analysis_id, aname=analysis.name,
-                    commands=commands)
+                    group_id=group_id, aname=analysis.name)
 
     @authenticated
     def post(self, analysis_id):
@@ -275,11 +271,21 @@ class AnalysisWaitHandler(BaseHandler):
 
         command_args = self.get_arguments("commands")
         split = [x.split("#") for x in command_args]
-        commands = ["%s: %s" % (s[0], s[1]) for s in split]
-        self.render("analysis_waiting.html", user=user, aid=analysis_id,
-                    aname=analysis.name, commands=commands)
-        submit(user, run_analysis, user, analysis_id, split, comm_opts={},
+
+        moi_user_id = get_id_from_user(user)
+        moi_group = create_info(analysis_id, 'group', url='/analysis/',
+                                parent=moi_user_id, store=True)
+        moi_name = 'Creating %s' % analysis.name
+        moi_result_url = '/analysis/results/%d' % analysis_id
+
+        submit(ctx_default, moi_group['id'], moi_name,
+               moi_result_url, run_analysis, analysis_id, split,
                rarefaction_depth=rarefaction_depth)
+
+        r_client.hset('analyis-map', analysis_id, moi_group['id'])
+
+        self.render("analysis_waiting.html", user=user,
+                    group_id=moi_group['id'], aname=analysis.name)
 
 
 class AnalysisResultsHandler(BaseHandler):
@@ -306,14 +312,6 @@ class AnalysisResultsHandler(BaseHandler):
         self.render("analysis_results.html", user=self.current_user,
                     jobres=jobres, aname=analysis.name, dropped=dropped,
                     basefolder=get_db_files_base_dir())
-
-        # wipe out cached messages for this analysis
-        key = '%s:messages' % self.current_user
-        oldmessages = r_server.lrange(key, 0, -1)
-        if oldmessages is not None:
-            for message in oldmessages:
-                if '"analysis": %d' % analysis_id in message:
-                    r_server.lrem(key, message, 1)
 
 
 class ShowAnalysesHandler(BaseHandler):

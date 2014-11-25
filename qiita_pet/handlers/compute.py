@@ -1,11 +1,11 @@
 from json import loads
 
 from tornado.web import authenticated, HTTPError
+from moi import r_client
 
 from .base_handlers import BaseHandler
 from .study_handlers import check_access
 
-from qiita_ware import r_server
 from qiita_ware.context import submit
 from qiita_ware.dispatchable import add_files_to_raw_data, unlink_all_files
 
@@ -20,7 +20,7 @@ from os.path import join, exists
 class ComputeCompleteHandler(BaseHandler):
     @authenticated
     def get(self, job_id):
-        details = loads(r_server.get(job_id))
+        details = loads(r_client.get(job_id))
 
         if details['status_msg'] == 'Failed':
             # TODO: something smart
