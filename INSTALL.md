@@ -38,7 +38,7 @@ Once you have [PostgresSQL](http://www.postgresql.org/download/) and [redis](htt
 pip install numpy
 pip install cogent burrito qcli emperor pyzmq
 pip install https://github.com/biocore/qiime/archive/master.zip --no-deps
-pip install qiita
+pip install qiita-spots
 ```
 
 After these commands are executed, you will need (1) download a [sample Qiita configuration file](https://raw.githubusercontent.com/biocore/qiita/a0628e54aef85b1a064d40d57ca981aaf082a120/qiita_core/support_files/config_test.txt), (2) set the `QIITA_CONFIG_FP` environment variable and (3) proceed to initialize your environment:

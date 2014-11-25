@@ -31,7 +31,7 @@ long_description = """Qiita: Spot Patterns"""
 
 classifiers = [s.strip() for s in classes.split('\n') if s]
 
-setup(name='qiita',
+setup(name='qiita-spots',
       version=__version__,
       long_description=long_description,
       license="BSD",
