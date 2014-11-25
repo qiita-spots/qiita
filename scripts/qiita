@@ -261,7 +261,7 @@ def status():
 def start(port):
     # in order to use this command you need to have an IPython cluster running,
     # for now this makes it so that you can use other sub-commands without
-    # having to do that. The solution will (perhaps) to move this subcommand
+    # having to do that. The solution will (perhaps) be to move this subcommand
     # into an entirely different script.
     from qiita_pet.webserver import Application
 
