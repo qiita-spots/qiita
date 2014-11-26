@@ -65,6 +65,13 @@ class MetaUtilTests(TestCase):
         obs = get_accessible_filepath_ids('test@foo.bar')
         self.assertEqual(obs, exp)
 
+        # test in case there is a prep template that failed
+        self.conn_handler.execute(
+            "INSERT INTO qiita.prep_template (data_type_id, raw_data_id) "
+            "VALUES (2,1)")
+        obs = get_accessible_filepath_ids('test@foo.bar')
+        self.assertEqual(obs, exp)
+
 
 if __name__ == '__main__':
     main()
