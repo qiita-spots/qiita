@@ -19,7 +19,6 @@ class TestHandlerBase(AsyncHTTPTestCase):
 
     def get_app(self):
         BaseHandler.get_current_user = Mock(return_value="test@foo.bar")
-        #self.app = Application()
         return self.app
 
     def setUp(self):
