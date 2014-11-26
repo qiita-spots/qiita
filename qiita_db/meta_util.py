@@ -89,8 +89,11 @@ def get_accessible_filepath_ids(user_id):
         prep_fp_ids = []
         for rdid in study.raw_data():
             for pt_id in RawData(rdid).prep_templates:
-                for _id, _ in PrepTemplate(pt_id).get_filepaths():
-                    prep_fp_ids.append(_id)
+                # related to https://github.com/biocore/qiita/issues/596
+                # and https://github.com/biocore/qiita/issues/554
+                if PrepTemplate.exists(pt_id):
+                    for _id, _ in PrepTemplate(pt_id).get_filepaths():
+                        prep_fp_ids.append(_id)
         filepath_ids.update(prep_fp_ids)
 
         if SampleTemplate.exists(study_id):
