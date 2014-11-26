@@ -18,6 +18,7 @@ install:
   - pip install https://github.com/biocore/qiime/archive/master.zip --no-deps
   - pip install .
 script:
+  - export MOI_CONFIG_FP=`pwd`/qiita_core/support_files/config_test.txt
   - ipython profile create qiita_general --parallel
   - ipython profile create qiita_demo --parallel
   - ipython profile create qiita_reserved --parallel
