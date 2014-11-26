@@ -156,7 +156,9 @@ class RunAnalysis(ParallelWrapper):
         """Executed if something fails"""
         # set the analysis to errored
         self.analysis.status = 'error'
-        self._update_status("Failed")
+
+        if self._update_status is not None:
+            self._update_status("Failed")
 
         # set any jobs to errored if they didn't execute
         for job_id in self.analysis.jobs:
