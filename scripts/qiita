@@ -26,7 +26,7 @@ from qiita_db.sql_connection import SQLConnectionHandler
 from qiita_db.exceptions import QiitaDBConnectionError
 from qiita_core.configuration_manager import ConfigurationManager
 from qiita_ware.commands import ebi_actions, submit_EBI as _submit_EBI
-from qiita_ware import r_server
+from moi import r_client
 
 
 _CONFIG = ConfigurationManager()
