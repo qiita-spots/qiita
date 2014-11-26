@@ -38,8 +38,6 @@ var moi_list = new function () {
         results.href = info.url + '/' + info.id;
         results.innerHTML = info.status;
 
-        
-        console.log("TRYING TO SET RESULT STATUS ON: " + info.id);
         var state_node = document.getElementById(info.id + ":status");
         var para_node = state_node.parentNode;
         var remove_node = para_node.lastChild;
@@ -61,7 +59,6 @@ var moi_list = new function () {
         var para_node = document.createTextNode(info.name + ': ');
         
         var state = document.createElement("span");
-        console.log("CREATING STATUS ON: " + info.id);
         state.setAttribute("id", info.id + ":status");
         
         if(info.type == 'job') {   
@@ -107,7 +104,6 @@ var moi_list = new function () {
             setResult(info);
         }
         else {
-            console.log("TRYING TO SET STATUS ON: " + info.id);
             status_msg = document.getElementById(info.id + ":status");
             
             if (!(status_msg == null)) {

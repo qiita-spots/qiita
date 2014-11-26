@@ -4,8 +4,6 @@ from functools import partial
 
 from IPython.parallel import Client
 
-from qiita_core.qiita_settings import qiita_config
-
 from .exceptions import ComputeError
 
 

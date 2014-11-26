@@ -5,9 +5,6 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
-from os.path import join
-from tempfile import mkdtemp
-from gzip import open as gzopen
 from traceback import format_exception_only
 from sys import exc_info
 
