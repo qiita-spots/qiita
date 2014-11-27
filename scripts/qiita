@@ -232,23 +232,23 @@ def submit(preprocessed_data_id, action, send, fastq_dir):
 @click.option('--message', required=True, type=str,
               help="Message to show users")
 def lock(message, time):
-    r_server.setex('maintenance', message, time)
+    r_client.setex('maintenance', message, time)
 
 
 @maintenance.command()
 def unlock():
-    r_server.delete('maintenance')
+    r_client.delete('maintenance')
 
 
 @maintenance.command()
 def status():
-    status = r_server.get('maintenance')
+    status = r_client.get('maintenance')
     if status is None:
         print "Site is not in maintenance mode"
     else:
         print "Site is in maintenance mode:"
         print status
-        print r_server.ttl('maintenance'), "seconds remaining"
+        print r_client.ttl('maintenance'), "seconds remaining"
 
 
 # #############################################################################
