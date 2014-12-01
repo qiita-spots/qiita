@@ -96,9 +96,9 @@ function newInvestigationTypeChanged(rawDataID, isEdit){
 <!-- Nav tabs -->
 <ul class="nav nav-tabs" role="tablist" id="myTab">
     <li class="active"><a href="#study_information_tab" role="tab" data-toggle="tab">Study information</a></li>
-    <li><a href="#add_sample_template" role="tab" data-toggle="tab">Sample template</a></li>
+    <li><a href="#sample_template_tab" role="tab" data-toggle="tab">Sample template</a></li>
   {% if ste and (study_status == 'sandbox' or user_level == 'admin') %}
-    <li><a href="#add_raw_data" role="tab" data-toggle="tab">Add raw data</a></li>
+    <li><a href="#raw_data_tab" role="tab" data-toggle="tab">Raw data</a></li>
   {% end %}
 
   {% for r in available_raw_data %}
@@ -109,61 +109,16 @@ function newInvestigationTypeChanged(rawDataID, isEdit){
 <!-- Tab panes -->
 <div class="tab-content">
   <div class="tab-pane active" id="study_information_tab" style="padding: 10px;">
-    <b>Abstract:</b> {{study_info['study_abstract']}} <br/>
-    <b>Description:</b> {{study_info['study_description']}} <br/>
-    <b>PubMed IDs:</b> {% raw pmids %} <br/>
-    <b>Principal investigator:</b> {% raw principal_investigator %} <br/>
-    <b>Samples:</b> {{study_info['number_samples_promised']}}/{{study_info['number_samples_collected']}}<br/>
-    <b>Metadata:</b> {{study_info['metadata_complete']}} <br/>
+    {% module StudyInformationTab(study_id) %}
   </div>
 
-  <div class="tab-pane" id="add_sample_template" style="padding: 10px;">
-    {% if study_status == 'sandbox' or user_level == 'admin' %}
-    Select your sample template:
-    <select id="sample_template">
-      {% for f in files %}
-        <option value="{{f}}">{{f}}</option>
-      {% end %}
-    </select>
-    <br/><br/>
-    <a class="btn btn-primary" onclick="process_sample_template();">Process sample template</a>
-    {% end %}
-
-    <br/><br/>
-    {% if ste %}
-      You have a valid sample template, if you reprocess with a new file you <b>will lose</b> all prep and sequence information.
-      <br/>
-      You can modify a sample template <a onclick="alert('Not implemented! Coming soon.')">here</a>
-      <br/>
-      <a class="btn btn-primary" href="/metadata_summary/?study_id={{study_id}}&sample_template={{study_id}}">Show sample template summary</a>
-      </br>
-      {% for stid, stpath in sample_templates %}
-        {% if is_local_request %}
-          <br/>{{stpath}}
-        {% else %}
-          <br/><a href="/download/{{stid}}">Download sample template</a>
-        {% end %}
-      {% end %}
-    {% end %}
+  <div class="tab-pane" id="sample_template_tab" style="padding: 10px;">
+    {% module SampleTemplateTab(study_id) %}
   </div>
 
   {% if (ste and study_status == 'sandbox') or user_level == 'admin' %}
-    <div class="tab-pane" id="add_raw_data" style="padding: 10px;">
-      What file type is your raw data?
-      <select id="filetype">
-        <option value="">Not selected ...</option>
-        {% raw filetypes %}
-      </select>
-      {% if other_studies_rd %}
-        <br/><br/>
-        You could also select raw data from other studies that you have access to:
-        <br/>
-        <select multiple class="chosen-select" id="previous_raw_data" data-placeholder=" ">
-          {% raw other_studies_rd %}
-        </select>
-      {% end %}
-      <br/><br/>
-      <a class="btn btn-primary" onclick="create_raw_data();">Add raw data</a>
+    <div class="tab-pane" id="raw_data_tab" style="padding: 10px;">
+      {% module RawDataTab(study_id) %}
     </div>
   {% end %}
 
