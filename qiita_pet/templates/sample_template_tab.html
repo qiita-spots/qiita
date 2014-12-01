@@ -1,28 +1,30 @@
-{% if study_status == 'sandbox' or user_level == 'admin' %}
-  Select your sample template:
-  <select id="sample_template">
-    {% for f in files %}
-      <option value="{{f}}">{{f}}</option>
-    {% end %}
-  </select>
+<div class="tab-pane" id="sample_template_tab" style="padding: 10px;">
+  {% if study_status == 'sandbox' or user_level == 'admin' %}
+    Select your sample template:
+    <select id="sample_template">
+      {% for f in files %}
+        <option value="{{f}}">{{f}}</option>
+      {% end %}
+    </select>
+    <br/><br/>
+    <a class="btn btn-primary" onclick="process_sample_template();">Process sample template</a>
+  {% end %}
+
   <br/><br/>
-  <a class="btn btn-primary" onclick="process_sample_template();">Process sample template</a>
-{% end %}
 
-<br/><br/>
-
-{% if ste %}
-  You have a valid sample template, if you reprocess with a new file you <b>will lose</b> all prep and sequence information.
-  <br/>
-  You can modify a sample template <a onclick="alert('Not implemented! Coming soon.')">here</a>
-  <br/>
-  <a class="btn btn-primary" href="/metadata_summary/?study_id={{study_id}}&sample_template={{study_id}}">Show sample template summary</a>
-  </br>
-  {% for stid, stpath in sample_templates %}
-    {% if is_local_request %}
-      <br/>{{stpath}}
-    {% else %}
-      <br/><a href="/download/{{stid}}">Download sample template</a>
+  {% if ste %}
+    You have a valid sample template, if you reprocess with a new file you <b>will lose</b> all prep and sequence information.
+    <br/>
+    You can modify a sample template <a onclick="alert('Not implemented! Coming soon.')">here</a>
+    <br/>
+    <a class="btn btn-primary" href="/metadata_summary/?study_id={{study_id}}&sample_template={{study_id}}">Show sample template summary</a>
+    </br>
+    {% for stid, stpath in sample_templates %}
+      {% if is_local_request %}
+        <br/>{{stpath}}
+      {% else %}
+        <br/><a href="/download/{{stid}}">Download sample template</a>
+      {% end %}
     {% end %}
   {% end %}
-{% end %}
+</div>

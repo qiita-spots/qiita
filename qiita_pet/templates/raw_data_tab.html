@@ -1,15 +1,17 @@
-What file type is your raw data?
-<select id="filetype">
-  <option value="">Not selected ...</option>
-  {% raw filetypes %}
-</select>
-{% if other_studies_rd %}
-  <br/><br/>
-  You could also select raw data from other studies that you have access to:
-  <br/>
-  <select multiple class="chosen-select" id="previous_raw_data" data-placeholder=" ">
-    {% raw other_studies_rd %}
+<div class="tab-pane" id="raw_data_tab" style="padding: 10px;">
+  What file type is your raw data?
+  <select id="filetype">
+    <option value="">Not selected ...</option>
+    {% raw filetypes %}
   </select>
-{% end %}
-<br/><br/>
-<a class="btn btn-primary" onclick="create_raw_data();">Add raw data</a>
+  {% if other_studies_rd %}
+    <br/><br/>
+    You could also select raw data from other studies that you have access to:
+    <br/>
+    <select multiple class="chosen-select" id="previous_raw_data" data-placeholder=" ">
+      {% raw other_studies_rd %}
+    </select>
+  {% end %}
+  <br/><br/>
+  <a class="btn btn-primary" onclick="create_raw_data();">Add raw data</a>
+</div>

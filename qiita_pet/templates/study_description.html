@@ -108,18 +108,13 @@ function newInvestigationTypeChanged(rawDataID, isEdit){
 
 <!-- Tab panes -->
 <div class="tab-content">
-  <div class="tab-pane active" id="study_information_tab" style="padding: 10px;">
-    {% module StudyInformationTab(study_id) %}
-  </div>
-
-  <div class="tab-pane" id="sample_template_tab" style="padding: 10px;">
-    {% module SampleTemplateTab(study_id) %}
-  </div>
-
+  <!-- Show the study information tab -->
+  {% module StudyInformationTab(study_id) %}
+  <!-- Show the sample template tab -->
+  {% module SampleTemplateTab(study_id) %}  
+  <!-- Show the raw data tab -->
   {% if (ste and study_status == 'sandbox') or user_level == 'admin' %}
-    <div class="tab-pane" id="raw_data_tab" style="padding: 10px;">
-      {% module RawDataTab(study_id) %}
-    </div>
+    {% module RawDataTab(study_id) %}
   {% end %}
 
   <!-- Adding raw data to template -->
