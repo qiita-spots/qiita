@@ -3,7 +3,7 @@ from json import loads
 from tornado.web import authenticated, HTTPError
 
 from .base_handlers import BaseHandler
-from .study_handlers import check_access
+from .util import check_access
 
 from qiita_ware import r_server
 from qiita_ware.context import submit
