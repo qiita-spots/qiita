@@ -1160,6 +1160,7 @@ class SampleTemplate(MetadataTemplate):
         # Check that md_template has the required columns
         remaining = set(db_cols).difference(headers)
         missing = missing.union(remaining)
+        missing = missing.difference(cls.translate_cols_dict)
         if missing:
             raise QiitaDBColumnError("Missing columns: %s" % missing)
 
@@ -1330,6 +1331,7 @@ class PrepTemplate(MetadataTemplate):
         # Check that md_template has the required columns
         remaining = set(db_cols).difference(headers)
         missing = missing.union(remaining)
+        missing = missing.difference(cls.translate_cols_dict)
         if missing:
             raise QiitaDBColumnError("Missing columns: %s" % missing)
 
