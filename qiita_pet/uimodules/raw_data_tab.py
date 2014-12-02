@@ -33,6 +33,23 @@ def get_raw_data_from_other_studies(user, study):
     return d
 
 
+def get_raw_data(rdis):
+    """Get all raw data objects from a list of raw_data_ids"""
+    return [RawData(rdi) for rdi in rdis]
+
+
+def get_prep_templates(raw_data):
+    """Get all prep templates for a list of raw data objects"""
+    d = {}
+    for rd in raw_data:
+        # We neeed this so PrepTemplate(p) doesn't fail if that raw
+        # doesn't exist but raw data has the row: #554
+        prep_templates = sorted(rd.prep_templates)
+        d[rd.id] = [PrepTemplate(p) for p in prep_templates
+                    if PrepTemplate.exists(p)]
+    return d
+
+
 class RawDataTab(UIModule):
     def render(self, study_id):
         user = User(self.current_user)
@@ -49,24 +66,9 @@ class RawDataTab(UIModule):
         return self.render_string(
             "raw_data_tab.html",
             filetypes=filetypes,
-            other_studies_rd=other_studies_rd)
-
-
-def get_raw_data(rdis):
-    """Get all raw data objects from a list of raw_data_ids"""
-    return [RawData(rdi) for rdi in rdis]
-
-
-def get_prep_templates(raw_data):
-    """Get all prep templates for a list of raw data objects"""
-    d = {}
-    for rd in raw_data:
-        # We neeed this so PrepTemplate(p) doesn't fail if that raw
-        # doesn't exist but raw data has the row: #554
-        prep_templates = sorted(rd.prep_templates)
-        d[rd.id] = [PrepTemplate(p) for p in prep_templates
-                    if PrepTemplate.exists(p)]
-    return d
+            other_studies_rd=other_studies_rd,
+            available_raw_data=get_raw_data(study.raw_data()),
+            study_id=study_id)
 
 
 class RawDataEditorTab(UIModule):

@@ -96,10 +96,6 @@ function newInvestigationTypeChanged(rawDataID, isEdit){
   {% if ste and (study_status == 'sandbox' or user_level == 'admin') %}
     <li><a href="#raw_data_tab" role="tab" data-toggle="tab">Raw data</a></li>
   {% end %}
-
-  {% for r in available_raw_data %}
-    <li><a href="#raw_data_info_{{r.id}}" role="tab" data-toggle="tab">{{r.filetype}} (ID: {{r.id}})</a></li>
-  {% end %}
 </ul>
 
 <!-- Tab panes -->
@@ -111,11 +107,6 @@ function newInvestigationTypeChanged(rawDataID, isEdit){
   <!-- Show the raw data tab -->
   {% if (ste and study_status == 'sandbox') or user_level == 'admin' %}
     {% module RawDataTab(study_id) %}
-  {% end %}
-
-  <!-- Adding raw data to template -->
-  {% for r in available_raw_data %}
-    {% module RawDataEditorTab(study_id, r) %}
   {% end %}
 </div>
 

@@ -1,17 +1,40 @@
 <div class="tab-pane" id="raw_data_tab" style="padding: 10px;">
-  What file type is your raw data?
-  <select id="filetype">
-    <option value="">Not selected ...</option>
-    {% raw filetypes %}
-  </select>
-  {% if other_studies_rd %}
-    <br/><br/>
-    You could also select raw data from other studies that you have access to:
-    <br/>
-    <select multiple class="chosen-select" id="previous_raw_data" data-placeholder=" ">
-      {% raw other_studies_rd %}
-    </select>
+
+  <ul class="nav nav-tabs" role="tablist" id="raw_data_nav_tabs">
+    <!-- Nav tab: adding raw data -->
+    <li class="active"><a href="#add_raw_data_tab" role="tab" data-toggle="tab">Add raw data</a></li>
+    <!-- Nav tabs: one for each raw data available -->
+  {% for r in available_raw_data %}
+    <li><a href="#raw_data_info_{{r.id}}" role="tab" data-toggle="tab">{{r.filetype}} (ID: {{r.id}})</a></li>
   {% end %}
-  <br/><br/>
-  <a class="btn btn-primary" onclick="create_raw_data();">Add raw data</a>
+  </ul>
+
+  <!-- Tab panes -->
+  <div class="tab-content">
+    <!-- Show the add raw data tab -->
+    <div class="tab-pane active" id="add_raw_data_tab" style="padding: 10px;">
+      What file type is your raw data?
+      <select id="filetype">
+        <option value="">Not selected ...</option>
+        {% raw filetypes %}
+      </select>
+      {% if other_studies_rd %}
+        <br/><br/>
+        You could also select raw data from other studies that you have access to:
+        <br/>
+        <select multiple class="chosen-select" id="previous_raw_data" data-placeholder=" ">
+          {% raw other_studies_rd %}
+        </select>
+      {% end %}
+      <br/><br/>
+      <a class="btn btn-primary" onclick="create_raw_data();">Add raw data</a>
+    </div>
+
+    <!-- Show raw data editor tabs -->
+    {% for rd in available_raw_data %}
+      {% module RawDataEditorTab(study_id, rd) %}
+    {% end %}
+
+  </div>
+
 </div>
