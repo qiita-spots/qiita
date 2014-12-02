@@ -160,6 +160,8 @@ def _generate_demux_file(sl_out, **kwargs):
     ----------
     sl_out : str
         Path to the output directory of split libraries
+    kwargs: ignored
+        Necessary to include to support execution via moi.
 
     Raises
     ------
