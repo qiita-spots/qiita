@@ -1,9 +1,9 @@
 from tornado.web import authenticated
-from qiita_ware.context import submit
 
 from .base_handlers import BaseHandler
 from qiita_ware.dispatchable import preprocessor
 from qiita_db.parameters import PreprocessedIlluminaParams
+from qiita_ware.context import submit
 
 
 class PreprocessHandler(BaseHandler):
