@@ -182,6 +182,7 @@ class ParallelWrapper(object):
         Returns
         -------
         AsyncResult
+            The result returned by IPython's apply_async.
         """
         parent_id = self._group
         url = None
