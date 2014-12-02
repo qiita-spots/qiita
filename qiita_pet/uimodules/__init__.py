@@ -8,6 +8,7 @@
 
 from .study_information_tab import StudyInformationTab
 from .sample_template_tab import SampleTemplateTab
-from .raw_data_tab import RawDataTab
+from .raw_data_tab import RawDataTab, RawDataEditorTab
 
-__all__ = ['StudyInformationTab', 'SampleTemplateTab', 'RawDataTab']
+__all__ = ['StudyInformationTab', 'SampleTemplateTab', 'RawDataTab',
+           'RawDataEditorTab']
