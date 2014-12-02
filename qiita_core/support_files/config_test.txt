@@ -118,5 +118,5 @@ EBI_ORGANIZATION_PREFIX = qiime
 
 [ipython]
 # context is expected to be a comma separated list
-context=qiita_general,qiita_reserved,qiita_demo
+context=qiita_general
 default=qiita_general
