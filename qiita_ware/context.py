@@ -208,7 +208,7 @@ def _redis_wrap(f, redis_deets, *args, **kwargs):
 
         # Finally, we dump the payload keyed by job ID so that subsequent
         # handlers who are not listening on the channel can examine the results
-        r_client.set(job_id, serialized, ex=84600 * 7)  # expire at 1 week
+        r_client.set(job_id, serialized, ex=86400 * 7)  # expire at 1 week
 
     job_id = redis_deets['job_id']
     payload = {'job_id': job_id, 'status_msg': 'Running', 'return': None}
