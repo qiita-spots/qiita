@@ -22,6 +22,7 @@ Qiita is a python package, with support for python 2.7, that depends on the foll
 * [networkx](http://networkx.lanl.gov/index.html)
 * [WTForms 2.0.1](https://wtforms.readthedocs.org/en/latest/)
 * [Mock](http://www.voidspace.org.uk/python/mock/)  For running test code only
+* [moi 0.1.0-dev](https://github.com/biocore/mustached-octo-ironman/)
 
 And on the following packages:
 
@@ -38,6 +39,7 @@ Once you have [PostgresSQL](http://www.postgresql.org/download/) and [redis](htt
 pip install numpy
 pip install cogent burrito qcli emperor pyzmq
 pip install https://github.com/biocore/qiime/archive/master.zip --no-deps
+pip install https://github.com/biocore/mustached-octo-ironman/archive/master.zip --no-deps
 pip install qiita-spots
 ```
 
