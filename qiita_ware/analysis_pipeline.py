@@ -54,6 +54,8 @@ def _finish_analysis(analysis, **kwargs):
     ----------
     analysis: Analysis
         Analysis to finalize.
+    kwargs : ignored
+        Necessary to have in parameters to support execution via moi.
     """
     # check job exit statuses for analysis result status
     all_good = True
