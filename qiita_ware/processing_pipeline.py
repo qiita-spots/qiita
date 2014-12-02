@@ -197,6 +197,8 @@ def _insert_preprocessed_data_fastq(study, params, prep_template, slq_out,
         The prep template to use for the preprocessing
     slq_out : str
         Path to the split_libraries_fastq.py output directory
+    kwargs: ignored
+        Necessary to include to support execution via moi.
 
     Raises
     ------
