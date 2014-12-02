@@ -292,7 +292,7 @@ class AnalysisResultsHandler(BaseHandler):
     @authenticated
     def get(self, analysis_id):
         user = self.current_user
-        analysis_id = int(analysis_id)
+        analysis_id = int(analysis_id.split("/")[0])
         analysis = Analysis(analysis_id)
         check_analysis_access(User(user), analysis)
 
