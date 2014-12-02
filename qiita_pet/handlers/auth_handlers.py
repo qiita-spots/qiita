@@ -82,7 +82,10 @@ class AuthLoginHandler(BaseHandler):
         passwd = self.get_argument("password", "")
         nextpage = self.get_argument("next", None)
         if nextpage is None:
-            nextpage = self.request.headers['Referer']
+            if "auth" not in self.request.headers['Referer']:
+                nextpage = self.request.headers['Referer']
+            else:
+                nextpage = "/"
 
         msg = ""
         # check the user level
