@@ -117,5 +117,6 @@ EBI_CENTER_NAME = CCME-COLORADO
 EBI_ORGANIZATION_PREFIX = qiime
 
 [ipython]
+# context is expected to be a comma separated list
 context=qiita_general,qiita_reserved,qiita_demo
 default=qiita_general
