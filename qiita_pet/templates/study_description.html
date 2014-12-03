@@ -93,8 +93,9 @@ function newInvestigationTypeChanged(rawDataID, isEdit){
 <ul class="nav nav-tabs" role="tablist" id="myTab">
     <li class="active"><a href="#study_information_tab" role="tab" data-toggle="tab">Study information</a></li>
     <li><a href="#sample_template_tab" role="tab" data-toggle="tab">Sample template</a></li>
-  {% if ste and (study_status == 'sandbox' or user_level == 'admin') %}
+  {% if ste %}
     <li><a href="#raw_data_tab" role="tab" data-toggle="tab">Raw data</a></li>
+    <li><a href="#preprocessed_data_tab" role="tab" data-toggle="tab">Preprocessed data</a></li>
   {% end %}
 </ul>
 
@@ -104,9 +105,11 @@ function newInvestigationTypeChanged(rawDataID, isEdit){
   {% module StudyInformationTab(study_id) %}
   <!-- Show the sample template tab -->
   {% module SampleTemplateTab(study_id) %}  
-  <!-- Show the raw data tab -->
-  {% if (ste and study_status == 'sandbox') or user_level == 'admin' %}
+  {% if ste %}
+    <!-- Show the raw data tab -->
     {% module RawDataTab(study_id) %}
+    <!-- Show the preprocessed data tab -->
+    {% module PreprocessedDataTab(study_id) %}
   {% end %}
 </div>
 
