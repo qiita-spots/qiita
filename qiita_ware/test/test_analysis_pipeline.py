@@ -1,14 +1,15 @@
 from unittest import TestCase, main
-from os.path import exists, join
+from os.path import join
 from os import remove, rename
+
+from moi.group import get_id_from_user
+from moi import ctx_default
 
 from qiita_core.util import qiita_test_checker
 from qiita_db.analysis import Analysis
 from qiita_db.job import Job
 from qiita_db.util import get_db_files_base_dir
-from qiita_ware import r_server
-from qiita_ware.analysis_pipeline import (
-    RunAnalysis, _build_analysis_files, _job_comm_wrapper, _finish_analysis)
+from qiita_ware.analysis_pipeline import RunAnalysis
 
 
 # -----------------------------------------------------------------------------
@@ -29,20 +30,6 @@ class TestRun(TestCase):
         for delfile in self._del_files:
             remove(delfile)
 
-    def test_finish_analysis(self):
-        pubsub = r_server.pubsub()
-        pubsub.subscribe("demo@microbio.me")
-        msgs = []
-
-        _finish_analysis("demo@microbio.me", Analysis(1))
-        for msg in pubsub.listen():
-            if msg['type'] == 'message':
-                msgs.append(msg['data'])
-                if "allcomplete" in msg['data']:
-                    pubsub.unsubscribe("demo@microbio.me")
-                    break
-        self.assertEqual(msgs, ['{"msg": "allcomplete", "analysis": 1}'])
-
     def test_failure_callback(self):
         """Make sure failure at file creation step doesn't hang everything"""
         # rename a needed file for creating the biom table
@@ -50,12 +37,12 @@ class TestRun(TestCase):
         rename(join(base, "processed_data",
                     "1_study_1001_closed_reference_otu_table.biom"),
                join(base, "processed_data", "1_study_1001.bak"))
-
+        analysis = Analysis(2)
+        group = get_id_from_user("demo@microbio.me")
         try:
-            app = RunAnalysis()
-            app("demo@microbio.me", Analysis(2), [], rarefaction_depth=100)
-            # make sure analysis set to error
-            analysis = Analysis(2)
+            app = RunAnalysis(moi_context=ctx_default,
+                              moi_parent_id=group)
+            app(analysis, [], rarefaction_depth=100)
             self.assertEqual(analysis.status, 'error')
             for job_id in analysis.jobs:
                 self.assertEqual(Job(job_id).status, 'error')
@@ -64,61 +51,10 @@ class TestRun(TestCase):
                    join(base, "processed_data",
                         "1_study_1001_closed_reference_otu_table.biom"))
 
-    def test_build_files_job_comm_wrapper(self):
-        # basic setup needed for test
-        job = Job(3)
-
-        # create the files needed for job, testing _build_analysis_files
-        analysis = Analysis(2)
-        _build_analysis_files(analysis, 100)
-        self._del_files.append(join(get_db_files_base_dir(), "analysis",
-                                    "2_analysis_mapping.txt"))
-        self._del_files.append(join(get_db_files_base_dir(), "analysis",
-                                    "2_analysis_18S.biom"))
-        self.assertTrue(exists(join(get_db_files_base_dir(), "analysis",
-                                    "2_analysis_mapping.txt")))
-        self.assertTrue(exists(join(get_db_files_base_dir(), "analysis",
-                                    "2_analysis_18S.biom")))
-        self.assertEqual([3], analysis.jobs)
-
-        _job_comm_wrapper("demo@microbio.me", 2, job)
-
-        self.assertEqual(job.status, "error")
-
-    def test_redis_comms(self):
-        """Make sure redis communication happens"""
-        msgs = []
-        pubsub = r_server.pubsub()
-        pubsub.subscribe("demo@microbio.me")
-
-        app = RunAnalysis()
-        app("demo@microbio.me", Analysis(2), [], rarefaction_depth=100)
-        for msg in pubsub.listen():
-            if msg['type'] == 'message':
-                msgs.append(msg['data'])
-                if "allcomplete" in msg['data']:
-                    pubsub.unsubscribe("demo@microbio.me")
-                    break
-        self.assertEqual(
-            msgs,
-            ['{"msg": "Running", "command": "18S: Beta Diversity", '
-             '"analysis": 2}',
-             '{"msg": "ERROR", "command": "18S: Beta Diversity", '
-             '"analysis": 2}',
-             '{"msg": "allcomplete", "analysis": 2}'])
-        log = self.conn_handler.execute_fetchall(
-            "SELECT * from qiita.logging")
-        self.assertEqual(1, len(log))
-        log = log[0]
-        self.assertEqual(1, log[0])
-        self.assertEqual(2, log[2])
-        self.assertTrue(len(log[3]) > 0)
-        self.assertTrue('[{"job": 3, "analysis": 2}]')
-
     def test_add_jobs_in_construct_job_graphs(self):
         analysis = Analysis(2)
         RunAnalysis()._construct_job_graph(
-            "demo@microbio.me", analysis, [('18S', 'Summarize Taxa')],
+            analysis, [('18S', 'Summarize Taxa')],
             comm_opts={'Summarize Taxa': {'opt1': 5}})
         self.assertEqual(analysis.jobs, [3, 4])
         job = Job(4)

@@ -8,8 +8,9 @@
 
 from sys import stderr
 
-from qiita_ware.wrapper import ParallelWrapper
+from moi.job import system_call
 
+from qiita_ware.wrapper import ParallelWrapper
 from qiita_db.logger import LogEntry
 from qiita_db.data import RawData
 
@@ -152,13 +153,15 @@ def _get_preprocess_fastq_cmd(raw_data, prep_template, params):
     return (cmd, output_dir)
 
 
-def _generate_demux_file(sl_out):
+def _generate_demux_file(sl_out, **kwargs):
     """Creates the HDF5 demultiplexed file
 
     Parameters
     ----------
     sl_out : str
         Path to the output directory of split libraries
+    kwargs: ignored
+        Necessary to include to support execution via moi.
 
     Raises
     ------
@@ -180,7 +183,8 @@ def _generate_demux_file(sl_out):
         to_hdf5(fastq_fp, f)
 
 
-def _insert_preprocessed_data_fastq(study, params, prep_template, slq_out):
+def _insert_preprocessed_data_fastq(study, params, prep_template, slq_out,
+                                    **kwargs):
     """Inserts the preprocessed data to the database
 
     Parameters
@@ -193,6 +197,8 @@ def _insert_preprocessed_data_fastq(study, params, prep_template, slq_out):
         The prep template to use for the preprocessing
     slq_out : str
         Path to the split_libraries_fastq.py output directory
+    kwargs: ignored
+        Necessary to include to support execution via moi.
 
     Raises
     ------
@@ -273,7 +279,9 @@ class StudyPreprocessor(ParallelWrapper):
 
         # Generate the command
         cmd, output_dir = cmd_generator(raw_data, self.prep_template, params)
-        self._job_graph.add_node(preprocess_node, job=(cmd,),
+        self._job_graph.add_node(preprocess_node, func=system_call,
+                                 args=(cmd,),
+                                 job_name="Construct preprocess command",
                                  requires_deps=False)
 
         # This step is currently only for data types in which we need to store,
@@ -282,15 +290,19 @@ class StudyPreprocessor(ParallelWrapper):
         # become available, we will need to think a better way of doing this.
         demux_node = "GEN_DEMUX_FILE"
         self._job_graph.add_node(demux_node,
-                                 job=(_generate_demux_file, output_dir),
+                                 func=_generate_demux_file,
+                                 args=(output_dir,),
+                                 job_name="Generated demux file",
                                  requires_deps=False)
         self._job_graph.add_edge(preprocess_node, demux_node)
 
         # STEP 2: Add preprocessed data to DB
         insert_preprocessed_node = "INSERT_PREPROCESSED"
         self._job_graph.add_node(insert_preprocessed_node,
-                                 job=(insert_preprocessed_data, study, params,
-                                      self.prep_template, output_dir),
+                                 func=insert_preprocessed_data,
+                                 args=(study, params, self.prep_template,
+                                       output_dir),
+                                 job_name="Store preprocessed data",
                                  requires_deps=False)
         self._job_graph.add_edge(demux_node, insert_preprocessed_node)
 
