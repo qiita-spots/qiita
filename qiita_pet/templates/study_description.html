@@ -55,8 +55,6 @@ function newInvestigationTypeChanged(rawDataID, isEdit){
 
 {% block content %}
 
-{% from qiita_core.qiita_settings import qiita_config %}
-
 
 <table border="0" style="vertical-align: middle; text-align:center; align:center;">
   <tr>
@@ -73,9 +71,9 @@ function newInvestigationTypeChanged(rawDataID, isEdit){
       {% if can_upload and study_status == 'sandbox' or user_level == 'admin' %}
         <a href="/study/upload/{{study_id}}" class="btn btn-default glyphicon glyphicon-upload" title="Upload study files" style="margin:5px; word-spacing: -10px;"> Upload</a>
       {% end %}
-      {% if study_status == 'sandbox' and qiita_config.require_approval and ste and raw_files and prep_templates %}
+      {% if study_status == 'sandbox' and require_approval and ste and raw_files and prep_templates %}
         <a class="btn btn-default glyphicon glyphicon-eye-open" onClick="request_approval();" style="margin:5px; word-spacing: -10px;"> Request Approval</a>
-      {% elif (user_level == 'admin' and study_status == 'awaiting_approval') or not qiita_config.require_approval %}
+      {% elif (user_level == 'admin' and study_status == 'awaiting_approval') or not require_approval %}
         <a class="btn btn-success glyphicon glyphicon-thumbs-up" onClick="approve_study();" style="margin:5px; word-spacing: -10px;"> Approve Study</a>
       {% elif study_status == 'private' %}
        <a class="btn btn-success glyphicon glyphicon-thumbs-up" onClick="make_public();" style="margin:5px; word-spacing: -10px;"> Make Public</a>

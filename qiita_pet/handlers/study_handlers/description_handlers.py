@@ -9,7 +9,6 @@ from __future__ import division
 from os import remove
 from os.path import exists, join, basename
 from future.utils import viewitems
-from operator import itemgetter
 from collections import defaultdict
 
 from tornado.web import authenticated, HTTPError
@@ -17,21 +16,18 @@ from tornado.gen import coroutine, Task
 from pandas.parser import CParserError
 
 from qiita_core.qiita_settings import qiita_config
-from qiita_db.study import Study, StudyPerson
+from qiita_db.study import Study
 from qiita_db.user import User
 from qiita_db.data import RawData, PreprocessedData
 from qiita_db.ontology import Ontology
 from qiita_db.metadata_template import (PrepTemplate, SampleTemplate,
                                         load_template_to_dataframe)
-from qiita_db.util import (get_filepath_types, get_data_types, get_filetypes,
-                           convert_to_id, get_files_from_uploads_folders,
-                           get_mountpoint)
+from qiita_db.util import convert_to_id, get_mountpoint
 from qiita_db.exceptions import (QiitaDBUnknownIDError, QiitaDBColumnError,
                                  QiitaDBExecutionError, QiitaDBDuplicateError,
                                  QiitaDBDuplicateHeaderError)
 from qiita_pet.handlers.base_handlers import BaseHandler
-from qiita_pet.handlers.util import (study_person_linkifier, pubmed_linkifier,
-                                     check_access)
+from qiita_pet.handlers.util import check_access
 
 html_error_message = "<b>An error occurred %s %s</b></br>%s"
 
@@ -80,30 +76,9 @@ class StudyDescriptionHandler(BaseHandler):
 
         callback()
 
-    def get_raw_data_from_other_studies(self, user, study, callback):
-        """Retrieves a tuple of raw_data_id and the last study title for that
-        raw_data
-        """
-        d = {}
-        for sid in user.user_studies:
-            if sid == study.id:
-                continue
-            for rdid in Study(sid).raw_data():
-                d[rdid] = Study(RawData(rdid).studies[-1]).title
-        callback(d)
-
     @coroutine
     def display_template(self, study, msg, msg_level, tab_to_display=""):
         """Simple function to avoid duplication of code"""
-        # Check if the request came from a local source
-        is_local_request = ('localhost' in self.request.headers['host'] or
-                            '127.0.0.1' in self.request.headers['host'])
-
-        # getting raw filepath_ types
-        fts = [k.split('_', 1)[1].replace('_', ' ')
-               for k in get_filepath_types() if k.startswith('raw_')]
-        fts = ['<option value="%s">%s</option>' % (f, f) for f in fts]
-
         user = User(self.current_user)
         # getting the RawData and its prep templates
         available_raw_data = yield Task(self.get_raw_data, study.raw_data())
@@ -120,61 +95,21 @@ class StudyDescriptionHandler(BaseHandler):
         for key, val in viewitems(available_prep_templates):
             if not val:
                 prep_templates = False
-        # other general vars, note that we create the select options here
-        # so we do not have to loop several times over them in the template
-        data_types = sorted(viewitems(get_data_types()), key=itemgetter(1))
-        data_types = ['<option value="%s">%s</option>' % (v, k)
-                      for k, v in data_types]
-        filetypes = sorted(viewitems(get_filetypes()), key=itemgetter(1))
-        filetypes = ['<option value="%s">%s</option>' % (v, k)
-                     for k, v in filetypes]
-        other_studies_rd = yield Task(self.get_raw_data_from_other_studies,
-                                      user, study)
-        other_studies_rd = ['<option value="%s">%s</option>' % (k,
-                            "id: %d, study: %s" % (k, v))
-                            for k, v in viewitems(other_studies_rd)]
 
-        ontology = Ontology(convert_to_id('ENA', 'ontology'))
-
-        # make "Other" show at the bottom of the drop down menu
-        ena_terms = []
-        for v in sorted(ontology.terms):
-            if v != 'Other':
-                ena_terms.append('<option value="%s">%s</option>' % (v, v))
-        ena_terms.append('<option value="Other">Other</option>')
-
-        # New Type is for users to add a new user-defined investigation type
-        user_defined_terms = ontology.user_defined_terms + ['New Type']
-        princ_inv = StudyPerson(study.info['principal_investigator_id'])
-        pi_link = study_person_linkifier((princ_inv.email, princ_inv.name))
-
-        if SampleTemplate.exists(study.id):
-            sample_templates = SampleTemplate(study.id).get_filepaths()
-        else:
-            sample_templates = []
-
-        self.render('study_description.html', user=self.current_user,
-                    study_title=study.title, study_info=study.info,
-                    study_id=study.id, filetypes=''.join(filetypes),
-                    user_level=user.level, data_types=''.join(data_types),
-                    available_raw_data=available_raw_data,
-                    available_prep_templates=available_prep_templates,
-                    ste=SampleTemplate.exists(study.id),
+        self.render('study_description.html',
+                    user=self.current_user,
+                    study_title=study.title,
+                    study_info=study.info,
+                    study_id=study.id,
                     study_status=study.status,
-                    filepath_types=''.join(fts), ena_terms=''.join(ena_terms),
-                    tab_to_display=tab_to_display, level=msg_level,
-                    message=msg, prep_templates=prep_templates,
-                    raw_files=raw_files,
-                    can_upload=check_access(user, study, no_public=True),
-                    other_studies_rd=''.join(other_studies_rd),
-                    user_defined_terms=user_defined_terms,
-                    files=get_files_from_uploads_folders(str(study.id)),
                     is_public=study.status == 'public',
-                    pmids=", ".join([pubmed_linkifier([pmid])
-                                     for pmid in study.pmids]),
-                    principal_investigator=pi_link,
-                    is_local_request=is_local_request,
-                    sample_templates=sample_templates)
+                    user_level=user.level,
+                    can_upload=check_access(user, study, no_public=True),
+                    require_approval=qiita_config.require_approval,
+                    ste=SampleTemplate.exists(study.id),
+                    raw_files=raw_files,
+                    prep_templates=prep_templates,
+                    tab_to_display=tab_to_display)
 
     @authenticated
     def get(self, study_id):
