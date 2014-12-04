@@ -3,19 +3,19 @@
   {% if available_preprocessed_data %}
     <!-- Create the tabs for each preprocessed data -->
     <ul class="nav nav-tabs" role="tablist" id="preprocessed_data_nav_tabs">
-      {% for ppd in available_preprocessed_data %}
-        <li><a href="#preprocessed_data_info_{{ppd.id}}" role="tab" data-toggle="tab">ID: {{ppd.id}}</a></li>
+      {% for ppd_id, ppd in available_preprocessed_data %}
+        <li><a href="#preprocessed_data_info_{{ppd_id}}" role="tab" data-toggle="tab">ID: {{ppd_id}}</a></li>
       {% end %}
     </ul>
     <!-- Create the tab panes -->
     <div class="tab-content">
       <!-- Create one tab pane for each preprocessed data -->
-      {% for ppd in available_preprocessed_data %}
+      {% for ppd_id, ppd in available_preprocessed_data %}
         {% module PreprocessedDataInfoTab(study_id, ppd) %}
       {% end %}
     </div>
   {% else %}
     <!-- If there is no preprocessed data we just show a message -->
-    There is no preprocessed data available for the current study
+    There is no preprocessed data available
   {% end %}
 </div>

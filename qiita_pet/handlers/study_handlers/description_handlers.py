@@ -136,9 +136,9 @@ class StudyDescriptionHandler(BaseHandler):
 
         self.render('study_description.html',
                     user=self.current_user,
+                    study=study,
                     study_title=study.title,
                     study_alias=study.info['study_alias'],
-                    study_id=study.id,
                     show_edit_btn=show_edit_btn,
                     show_upload_btn=show_upload_btn,
                     show_revert_btn=show_revert_btn,

@@ -66,10 +66,10 @@ function newInvestigationTypeChanged(rawDataID, isEdit){
   <tr>
     <td style="vertical-align: middle; text-align:left; width: 50%;" colspan="2">
       {% if show_edit_btn %}
-        <a class="btn btn-default glyphicon glyphicon-edit" href="/study/edit/{{study_id}}" title="Edit the study information" style="margin:5px; word-spacing: -10px;"> Edit</a>
+        <a class="btn btn-default glyphicon glyphicon-edit" href="/study/edit/{{study.id}}" title="Edit the study information" style="margin:5px; word-spacing: -10px;"> Edit</a>
       {% end %}
       {% if show_upload_btn %}
-        <a href="/study/upload/{{study_id}}" class="btn btn-default glyphicon glyphicon-upload" title="Upload study files" style="margin:5px; word-spacing: -10px;"> Upload</a>
+        <a href="/study/upload/{{study.id}}" class="btn btn-default glyphicon glyphicon-upload" title="Upload study files" style="margin:5px; word-spacing: -10px;"> Upload</a>
       {% end %}
       {% if btn_to_show == 'request_approval' %}
         <a class="btn btn-default glyphicon glyphicon-eye-open" onClick="request_approval();" style="margin:5px; word-spacing: -10px;"> Request Approval</a>
@@ -100,14 +100,14 @@ function newInvestigationTypeChanged(rawDataID, isEdit){
 <!-- Tab panes -->
 <div class="tab-content">
   <!-- Show the study information tab -->
-  {% module StudyInformationTab(study_id) %}
+  {% module StudyInformationTab(study) %}
   <!-- Show the sample template tab -->
-  {% module SampleTemplateTab(study_id) %}  
+  {% module SampleTemplateTab(study) %}  
   {% if show_data_tabs %}
     <!-- Show the raw data tab -->
-    {% module RawDataTab(study_id) %}
+    {% module RawDataTab(study) %}
     <!-- Show the preprocessed data tab -->
-    {% module PreprocessedDataTab(study_id) %}
+    {% module PreprocessedDataTab(study) %}
   {% end %}
 </div>
 
@@ -232,8 +232,8 @@ function newInvestigationTypeChanged(rawDataID, isEdit){
           .attr("value", raw_data_id))
         .append($("<input>")
           .attr("type", "hidden")
-          .attr("name", "study_id")
-          .attr("value", {{study_id}}))
+          .attr("name", "study.id")
+          .attr("value", {{study.id}}))
         .append($("<input>")
           .attr("type", "hidden")
           .attr("name", "barcodes")
@@ -258,8 +258,8 @@ function newInvestigationTypeChanged(rawDataID, isEdit){
         .attr("method", "post")
         .append($("<input>")
           .attr("type", "hidden")
-          .attr("name", "study_id")
-          .attr("value", {{study_id}}))
+          .attr("name", "study.id")
+          .attr("value", {{study.id}}))
         .append($("<input>")
           .attr("type", "hidden")
           .attr("name", "raw_data_id")
@@ -276,8 +276,8 @@ function newInvestigationTypeChanged(rawDataID, isEdit){
         .attr("method", "post")
         .append($("<input>")
           .attr("type", "hidden")
-          .attr("name", "study_id")
-          .attr("value", {{study_id}}))
+          .attr("name", "study.id")
+          .attr("value", {{study.id}}))
           .append($("<input>")
             .attr("type", "hidden")
             .attr("name", "prep_template_id")

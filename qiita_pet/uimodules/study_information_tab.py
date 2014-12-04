@@ -10,7 +10,7 @@ from functools import partial
 
 from tornado.web import UIModule
 
-from qiita_db.study import Study, StudyPerson
+from qiita_db.study import StudyPerson
 from qiita_pet.util import linkify
 
 
@@ -22,13 +22,12 @@ pubmed_linkifier = partial(
 
 
 class StudyInformationTab(UIModule):
-    def render(self, study_id):
-        study = Study(int(study_id))
+    def render(self, study):
         study_info = study.info
         abstract = study_info['study_abstract']
         description = study_info['study_description']
         pmids = ", ".join([pubmed_linkifier([pmid]) for pmid in study.pmids])
-        princ_inv = StudyPerson(study.info['principal_investigator_id'])
+        princ_inv = StudyPerson(study_info['principal_investigator_id'])
         pi_link = study_person_linkifier((princ_inv.email, princ_inv.name))
         number_samples_promised = study_info['number_samples_promised']
         number_samples_collected = study_info['number_samples_collected']

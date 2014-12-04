@@ -51,9 +51,8 @@ def get_prep_templates(raw_data):
 
 
 class RawDataTab(UIModule):
-    def render(self, study_id):
+    def render(self, study):
         user = User(self.current_user)
-        study = Study(int(study_id))
 
         filetypes = sorted(viewitems(get_filetypes()), key=itemgetter(1))
         filetypes = ['<option value="%s">%s</option>' % (v, k)
@@ -68,7 +67,7 @@ class RawDataTab(UIModule):
             filetypes=filetypes,
             other_studies_rd=other_studies_rd,
             available_raw_data=get_raw_data(study.raw_data()),
-            study_id=study_id)
+            study_id=study.id)
 
 
 class RawDataEditorTab(UIModule):

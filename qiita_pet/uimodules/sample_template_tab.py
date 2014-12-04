@@ -8,16 +8,13 @@
 
 from tornado.web import UIModule
 
-from qiita_db.study import Study
 from qiita_db.user import User
 from qiita_db.metadata_template import SampleTemplate
 from qiita_db.util import get_files_from_uploads_folders
 
 
 class SampleTemplateTab(UIModule):
-    def render(self, study_id):
-        study = Study(int(study_id))
-
+    def render(self, study):
         study_status = study.status
         user = User(self.current_user)
         user_level = user.level
@@ -38,7 +35,7 @@ class SampleTemplateTab(UIModule):
             study_status=study_status,
             user_level=user_level,
             files=files,
-            study_id=study_id,
+            study_id=study.id,
             sample_templates=sample_templates,
             is_local_request=is_local_request,
             ste=ste)
