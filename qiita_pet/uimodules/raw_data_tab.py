@@ -38,18 +38,6 @@ def get_raw_data(rdis):
     return [RawData(rdi) for rdi in rdis]
 
 
-def get_prep_templates(raw_data):
-    """Get all prep templates for a list of raw data objects"""
-    d = {}
-    for rd in raw_data:
-        # We neeed this so PrepTemplate(p) doesn't fail if that raw
-        # doesn't exist but raw data has the row: #554
-        prep_templates = sorted(rd.prep_templates)
-        d[rd.id] = [PrepTemplate(p) for p in prep_templates
-                    if PrepTemplate.exists(p)]
-    return d
-
-
 class RawDataTab(UIModule):
     def render(self, study):
         user = User(self.current_user)
@@ -76,10 +64,11 @@ class RawDataEditorTab(UIModule):
         user_level = user.level
         raw_data_id = raw_data.id
         files = get_files_from_uploads_folders(str(study.id))
-        data_types = sorted(viewitems(get_data_types()), key=itemgetter(1))
-        data_types = ['<option value="%s">%s</option>' % (v, k)
-                      for k, v in data_types]
 
+        # Get the available prep template data types
+        data_types = sorted(viewitems(get_data_types()), key=itemgetter(1))
+
+        # Get all the ENA terms for the investigation type
         ontology = Ontology(convert_to_id('ENA', 'ontology'))
         # make "Other" show at the bottom of the drop down menu
         ena_terms = []
@@ -91,19 +80,21 @@ class RawDataEditorTab(UIModule):
         # New Type is for users to add a new user-defined investigation type
         user_defined_terms = ontology.user_defined_terms + ['New Type']
 
-        available_raw_data = get_raw_data(study.raw_data())
-        available_prep_templates = get_prep_templates(available_raw_data)
+        available_prep_templates = [PrepTemplate(p)
+                                    for p in sorted(raw_data.prep_templates)
+                                    if PrepTemplate.exists(p)]
 
         # Check if the request came from a local source
         is_local_request = ('localhost' in self.request.headers['host'] or
                             '127.0.0.1' in self.request.headers['host'])
 
-        ste = SampleTemplate.exists(study.id)
-
-        # getting raw filepath_ types
+        # getting filepath_types
         fts = [k.split('_', 1)[1].replace('_', ' ')
                for k in get_filepath_types() if k.startswith('raw_')]
-        fts = ['<option value="%s">%s</option>' % (f, f) for f in fts]
+
+        # The raw data can be edited (e.i. adding prep templates and files)
+        # only if the study is sandboxed or the current user is an admin
+        is_editable = study_status == 'sandbox' or user_level == 'admin'
 
         return self.render_string(
             "raw_data_editor_tab.html",
@@ -118,5 +109,5 @@ class RawDataEditorTab(UIModule):
             available_prep_templates=available_prep_templates,
             r=raw_data,
             is_local_request=is_local_request,
-            ste=ste,
-            filepath_types=fts)
+            filepath_types=fts,
+            is_editable=is_editable)

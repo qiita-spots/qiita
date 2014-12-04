@@ -5,10 +5,13 @@
   <table border="0">
     <tr>
       <td style="vertical-align:top;padding:10px;">
-      {% if study_status == 'sandbox' or user_level == 'admin' %}
+
+      <!-- Add prep template section -->
+      {% if is_editable %}
         <h4>Add prep template to this raw data</h4>
         To add a prep template you need to:
         <ol>
+          <!-- Step 1: choose the prep template file -->
           <li>
             select your prep template file
             <select id="add_prep_template_{{raw_data_id}}">
@@ -17,12 +20,16 @@
               {% end %}
             </select>,
           </li>
+          <!-- Step 2: choose the prep template data type -->
           <li>
             select the prep template data type
             <select id="data_type_{{raw_data_id}}">
-              {% raw data_types %}
-            </select>, and
+              {% for name, value in data_types %}
+                <option value="{{value}}">{{name}}</option>
+              {% end %}
+            </select>
           </li>
+          <!-- Step 3 (optional): select investigation type -->
           <li>
             (optional but required for EBI submission) select an investigation type:
             <select onclick="investigationTypeChanged({{raw_data_id}})" onchange="investigationTypeChanged({{raw_data_id}})" id="investigation-type-{{raw_data_id}}">
@@ -58,9 +65,12 @@
         <br/>
         <hr/>
       {% end %}
+
+
+        <!-- Uploaded prep templates (table) -->
         <h4>Prep templates uploaded</h4>
         <table border="1">
-          {% for prep in available_prep_templates[raw_data_id] %}
+          {% for prep in available_prep_templates %}
           <tr>
             <td style="padding:3px;">{{prep.data_type()}}</td>
             <td style="padding:3px;">
@@ -74,7 +84,7 @@
                 {% end %}
               {% end %}
               <br/><br/>
-              {% if ste and study_status == 'sandbox' or user_level == 'admin' %}
+              {% if is_editable %}
                 <table id="edit-investigation-type-table" name="edit-investigation-types" class="investigation-type-table">
                   <tr>
                     <td>
@@ -198,9 +208,11 @@
         </table>
         <br/>
       </td>
+
+      <!-- Files linked to the raw data -->
       <td style="vertical-align:top;padding:10px;">
         <h4>Linked files to this raw data</h4>
-          {% if (study_status == 'sandbox' or user_level == 'admin') and r.get_filepaths() and r.link_filepaths_status not in {'linking', 'unlinking'} %}
+          {% if is_editable and r.get_filepaths() and r.link_filepaths_status not in {'linking', 'unlinking'} %}
             <a class="btn btn-danger" onclick="unlink_all_files({{raw_data_id}})">Unlink all files</a><br/>
           {% end %}
           {% if r.link_filepaths_status == 'linking' %}
@@ -214,7 +226,7 @@
             <i>{{basename(f)}}:</i> {{t[4:]}} <br/>
         {% end %}
           <br/>
-        {% if study_status == 'sandbox' or user_level == 'admin' %}
+        {% if is_editable %}
           <h4>Link uploaded files with raw data</h4>
           <table border="0">
             <tr>
@@ -229,7 +241,9 @@
               <td>
                 <select id="{{f}}" name="upload_file_{{raw_data_id}}">
                   <option value="">Ignore ...</option>
-                  {% raw filepath_types %}
+                  {% for fp_type in filepath_types %}
+                    <option value="{{fp_type}}">{{fp_type}}</option>
+                  {% end %}
                 </select>
               </td>
             </tr>
