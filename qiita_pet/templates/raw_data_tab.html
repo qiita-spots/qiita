@@ -4,8 +4,8 @@
     <!-- Nav tab: adding raw data -->
     <li class="active"><a href="#add_raw_data_tab" role="tab" data-toggle="tab">Add raw data</a></li>
     <!-- Nav tabs: one for each raw data available -->
-  {% for r in available_raw_data %}
-    <li><a href="#raw_data_info_{{r.id}}" role="tab" data-toggle="tab">{{r.filetype}} (ID: {{r.id}})</a></li>
+  {% for rd_id, rd_filetype, _ in available_raw_data %}
+    <li><a href="#raw_data_info_{{rd_id}}" role="tab" data-toggle="tab">{{rd_filetype}} (ID: {{rd_id}})</a></li>
   {% end %}
   </ul>
 
@@ -16,14 +16,19 @@
       What file type is your raw data?
       <select id="filetype">
         <option value="">Not selected ...</option>
-        {% raw filetypes %}
+        {% for name, value in filetypes %}
+          <option value="{{value}}">{{name}}</option>
+        {% end %}
+        
       </select>
       {% if other_studies_rd %}
         <br/><br/>
         You could also select raw data from other studies that you have access to:
         <br/>
         <select multiple class="chosen-select" id="previous_raw_data" data-placeholder=" ">
-          {% raw other_studies_rd %}
+          {% for rd_id, study_name in other_studies_rd %}
+            <option value="{{rd_id}}">id: {{rd_id}}, study: {{study_name}}</option>
+          {% end %}
         </select>
       {% end %}
       <br/><br/>
@@ -31,7 +36,7 @@
     </div>
 
     <!-- Show raw data editor tabs -->
-    {% for rd in available_raw_data %}
+    {% for _, _, rd in available_raw_data %}
       {% module RawDataEditorTab(study_id, rd) %}
     {% end %}
 

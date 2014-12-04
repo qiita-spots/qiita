@@ -29,7 +29,7 @@ def get_raw_data_from_other_studies(user, study):
         if sid == study.id:
             continue
         for rdid in Study(sid).raw_data():
-            d[rdid] = Study(RawData(rdid).studies[-1]).title
+            d[int(rdid)] = Study(RawData(rdid).studies[-1]).title
     return d
 
 
@@ -55,18 +55,17 @@ class RawDataTab(UIModule):
         user = User(self.current_user)
 
         filetypes = sorted(viewitems(get_filetypes()), key=itemgetter(1))
-        filetypes = ['<option value="%s">%s</option>' % (v, k)
-                     for k, v in filetypes]
-        other_studies_rd = get_raw_data_from_other_studies(user, study)
-        other_studies_rd = ['<option value="%s">%s</option>' % (k,
-                            "id: %d, study: %s" % (k, v))
-                            for k, v in viewitems(other_studies_rd)]
+        other_studies_rd = sorted(viewitems(
+            get_raw_data_from_other_studies(user, study)))
+
+        raw_data_info = get_raw_data(study.raw_data())
+        raw_data_info = [(rd.id, rd.filetype, rd) for rd in raw_data_info]
 
         return self.render_string(
             "raw_data_tab.html",
             filetypes=filetypes,
             other_studies_rd=other_studies_rd,
-            available_raw_data=get_raw_data(study.raw_data()),
+            available_raw_data=raw_data_info,
             study_id=study.id)
 
 
