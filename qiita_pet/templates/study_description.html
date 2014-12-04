@@ -60,25 +60,25 @@ function newInvestigationTypeChanged(rawDataID, isEdit){
   <tr>
     <td style="vertical-align: middle; text-align:left; width: 50%;" colspan="2">
       <h1>{{study_title}} </h1>
-      <h2><i>{{study_info['study_alias']}} </i> </h2>
+      <h2><i>{{study_alias}}</i></h2>
     </td>
   </tr>
   <tr>
     <td style="vertical-align: middle; text-align:left; width: 50%;" colspan="2">
-      {% if not is_public or user_level == "admin" %}
+      {% if show_edit_btn %}
         <a class="btn btn-default glyphicon glyphicon-edit" href="/study/edit/{{study_id}}" title="Edit the study information" style="margin:5px; word-spacing: -10px;"> Edit</a>
       {% end %}
-      {% if can_upload and study_status == 'sandbox' or user_level == 'admin' %}
+      {% if show_upload_btn %}
         <a href="/study/upload/{{study_id}}" class="btn btn-default glyphicon glyphicon-upload" title="Upload study files" style="margin:5px; word-spacing: -10px;"> Upload</a>
       {% end %}
-      {% if study_status == 'sandbox' and require_approval and ste and raw_files and prep_templates %}
+      {% if btn_to_show == 'request_approval' %}
         <a class="btn btn-default glyphicon glyphicon-eye-open" onClick="request_approval();" style="margin:5px; word-spacing: -10px;"> Request Approval</a>
-      {% elif (user_level == 'admin' and study_status == 'awaiting_approval') or not require_approval %}
+      {% elif btn_to_show == 'approve_study' %}
         <a class="btn btn-success glyphicon glyphicon-thumbs-up" onClick="approve_study();" style="margin:5px; word-spacing: -10px;"> Approve Study</a>
-      {% elif study_status == 'private' %}
+      {% elif btn_to_show == 'make_public' %}
        <a class="btn btn-success glyphicon glyphicon-thumbs-up" onClick="make_public();" style="margin:5px; word-spacing: -10px;"> Make Public</a>
       {% end %}
-      {% if study_status not in {'sandbox', 'public'} %}
+      {% if show_revert_btn %}
         <a class="btn btn-default glyphicon glyphicon-backward" onClick="make_sandbox();" style="margin:5px; word-spacing: -10px;"> Revert to sandbox</a>
       {% end %}
     </td>
@@ -91,7 +91,7 @@ function newInvestigationTypeChanged(rawDataID, isEdit){
 <ul class="nav nav-tabs" role="tablist" id="myTab">
     <li class="active"><a href="#study_information_tab" role="tab" data-toggle="tab">Study information</a></li>
     <li><a href="#sample_template_tab" role="tab" data-toggle="tab">Sample template</a></li>
-  {% if ste %}
+  {% if show_data_tabs %}
     <li><a href="#raw_data_tab" role="tab" data-toggle="tab">Raw data</a></li>
     <li><a href="#preprocessed_data_tab" role="tab" data-toggle="tab">Preprocessed data</a></li>
   {% end %}
@@ -103,7 +103,7 @@ function newInvestigationTypeChanged(rawDataID, isEdit){
   {% module StudyInformationTab(study_id) %}
   <!-- Show the sample template tab -->
   {% module SampleTemplateTab(study_id) %}  
-  {% if ste %}
+  {% if show_data_tabs %}
     <!-- Show the raw data tab -->
     {% module RawDataTab(study_id) %}
     <!-- Show the preprocessed data tab -->
