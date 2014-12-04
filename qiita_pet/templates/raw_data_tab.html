@@ -37,7 +37,7 @@
 
     <!-- Show raw data editor tabs -->
     {% for _, _, rd in available_raw_data %}
-      {% module RawDataEditorTab(study_id, rd) %}
+      {% module RawDataEditorTab(study, rd) %}
     {% end %}
 
   </div>

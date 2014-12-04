@@ -66,13 +66,12 @@ class RawDataTab(UIModule):
             filetypes=filetypes,
             other_studies_rd=other_studies_rd,
             available_raw_data=raw_data_info,
-            study_id=study.id)
+            study=study)
 
 
 class RawDataEditorTab(UIModule):
-    def render(self, study_id, raw_data):
+    def render(self, study, raw_data):
         user = User(self.current_user)
-        study = Study(int(study_id))
         study_status = study.status
         user_level = user.level
         raw_data_id = raw_data.id
@@ -108,7 +107,7 @@ class RawDataEditorTab(UIModule):
 
         return self.render_string(
             "raw_data_editor_tab.html",
-            study_id=study_id,
+            study_id=study.id,
             study_status=study_status,
             user_level=user_level,
             raw_data_id=raw_data_id,
