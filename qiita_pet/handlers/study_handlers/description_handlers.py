@@ -139,7 +139,6 @@ class StudyDescriptionHandler(BaseHandler):
                     study_title=study.title,
                     study_alias=study.info['study_alias'],
                     study_id=study.id,
-                    study_status=study.status,
                     show_edit_btn=show_edit_btn,
                     show_upload_btn=show_upload_btn,
                     show_revert_btn=show_revert_btn,
