@@ -1,5 +1,28 @@
 <div class="tab-pane" id="preprocessed_data_info_{{ppd_id}}" style="padding: 10px;">
-  <b>EBI status:</b>{{ebi_status}}<br\>
-  <b>EBI study accession:</b>{{ebi_study_accession}}<br\>
-  <b>EBI submission accession:</b>{{ebi_submission_accession}}<br\>
+  <b>EBI status:</b> {{ebi_status}}<br/>
+  <b>EBI study accession:</b> {{ebi_study_accession}}<br/>
+  <b>EBI submission accession:</b> {{ebi_submission_accession}}<br/>
+  {% if show_ebi_btn %}
+    <a class="btn btn-primary glyphicon glyphicon-export" href="/ebi_submission/{{ppd_id}}" style="word-spacing: -10px;"> Submit to EBI</a><br/>
+  {% end %}
+  <b>Files:</b><br/>
+  <table border="0" style="margin-left: 10px;">
+    {% for fpid, fp, ft in filepaths %}
+      <tr>
+        <td style="padding:3px;">
+          {% if is_local_request %}
+            <b>{{ft.replace('_', ' ')}}:</b> {{fp}}
+          {% else %}
+            <a class="btn btn-default glyphicon glyphicon-download-alt" href="/download/{{fpid}}" style="word-spacing: -10px;"> {{ft.replace('_', ' ')}}</a>
+          {% end %}
+        </td>
+      </tr>
+    {% end %}
+      <tr>
+        <td style="padding:3px;">
+          <a class="btn btn-default glyphicon glyphicon-eye-open" href="/preprocessing_summary/{{ppd_id}}" style="word-spacing: -10px;"> preprocessing summary</a>
+        </td>
+      </tr>
+  </table>
+  <a class="btn btn-primary glyphicon glyphicon-play" onclick="alert('Not implemented! Coming soon.')" style="word-spacing: -10px;"> Process</a>
 </div>

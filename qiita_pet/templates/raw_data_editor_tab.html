@@ -164,43 +164,9 @@
               </td>
             {% else %}
               <td style="padding:3px;">
-                <table border="0">
-                {% for pdi in prep.preprocessed_data %}
-                  {% set pd = PreprocessedData(pdi) %}
-                  {% set filepaths = pd.get_filepaths() %}
-                  {% for proc_id in pd.processed_data %}
-                    {% set proc_data = ProcessedData(proc_id) %}
-                    {% set filepaths.extend(proc_data.get_filepaths()) %}
-                  {% end %}
-                  {% if filepaths %}
-                    <tr>
-                      <td style="padding:3px;">
-                        <a class="btn btn-primary" href="/preprocessing_summary/{{pdi}}">Preprocessing summary</a>
-                        {% for fpid, fp, ft in filepaths %}
-                          {% if is_local_request %}
-                            <br/>{{fp}}
-                          {% else %}
-                            <br/><a href="/download/{{fpid}}">{{basename(fp)}}</a>
-                          {% end %}
-                        {% end %}
-                      </td>
-                      <td rowspan="2" style="padding:3px;">
-                        <b>Preprocessed Data ID:</b> {{ pdi }}<br/>
-                        <b>EBI status:</b> {{pd.submitted_to_insdc_status()}}<br/>
-                        <b>EBI study accession:</b> {{pd.ebi_study_accession}}<br/>
-                        <b>EBI submission accession:</b> {{pd.ebi_submission_accession}}
-                      </td>
-                    </tr>
-                    {% if user_level == "admin" %}
-                    <tr>
-                      <td style="padding:3px;">
-                        <a class="btn btn-primary" href="/ebi_submission/{{pd.id}}">Submit to EBI</a>
-                      </td>
-                    </tr>
-                    {% end %}
-                  {% end %}
-                {% end %}
-                </table>
+              {% for pdi in prep.preprocessed_data %}
+                <b>{{pdi}},</b>
+              {% end %}
               </td>
             {% end %}
           </tr>

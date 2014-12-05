@@ -46,8 +46,8 @@ class RawDataTab(UIModule):
         other_studies_rd = sorted(viewitems(
             get_raw_data_from_other_studies(user, study)))
 
-        raw_data_info = get_raw_data(study.raw_data())
-        raw_data_info = [(rd.id, rd.filetype, rd) for rd in raw_data_info]
+        raw_data_info = [(rd.id, rd.filetype, rd)
+                         for rd in get_raw_data(study.raw_data())]
 
         return self.render_string(
             "raw_data_tab.html",
