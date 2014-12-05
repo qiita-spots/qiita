@@ -921,7 +921,7 @@ class EBISubmitHandler(BaseHandler):
                  ('Number of metadata headers',
                   len(sample_template.metadata_headers()))]
 
-        demux = [path for path, ftype in preprocessed_data.get_filepaths()
+        demux = [path for _, path, ftype in preprocessed_data.get_filepaths()
                  if ftype == 'preprocessed_demux']
 
         if not len(demux):
