@@ -80,6 +80,7 @@ class RawDataEditorTab(UIModule):
         # New Type is for users to add a new user-defined investigation type
         user_defined_terms = ontology.user_defined_terms + ['New Type']
 
+        # Get all the information about the prep templates
         available_prep_templates = [PrepTemplate(p)
                                     for p in sorted(raw_data.prep_templates)
                                     if PrepTemplate.exists(p)]

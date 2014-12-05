@@ -69,110 +69,123 @@
 
         <!-- Uploaded prep templates (table) -->
         <h4>Prep templates uploaded</h4>
-        <table border="1">
+        <div class="panel-group" id="prep-accordion">
+          {% set divcount = 1 %}
           {% for prep in available_prep_templates %}
-          <tr>
-            <td style="padding:3px;">{{prep.data_type()}}</td>
-            <td style="padding:3px;">
-              <a class="btn btn-primary" href="/metadata_summary/?study_id={{study_id}}&prep_template={{prep.id}}">Show prep template summary</a>
-              <br/>
-              {% for ptid, ptpath in prep.get_filepaths() %}
-                {% if is_local_request %}
-                  <br/>{{ptpath}}
-                {% else %}
-                  <br/><a href="/download/{{ptid}}">{{basename(ptpath)}}</a>
-                {% end %}
-              {% end %}
-              <br/><br/>
-              {% if is_editable %}
-                <table id="edit-investigation-type-table" name="edit-investigation-types" class="investigation-type-table">
-                  <tr>
-                    <td>
-                      Selected investigation type:
-                    </td>
-                    <td>
-                      <select id="edit-investigation-type-{{prep.id}}" onclick="investigationTypeChanged({{prep.id}}, true)" onchange="investigationTypeChanged({{prep.id}}, true)">
-                        <option value="None Selected">None Selected</option>
-                        {% raw ena_terms %}
-                      </select>
-                    </td>
-                  </tr>
-                  <tr id="edit-user-defined-investigation-types-{{prep.id}}" style="display:none;">
-                    <td>
-                      User defined investigation type:
-                    </td>
-                    <td>
-                      <select onclick="newInvestigationTypeChanged({{prep.id}}, true)" onchange="newInvestigationTypeChanged({{prep.id}}, true)" id="edit-user-defined-investigation-type-{{prep.id}}">
-                      {% for term in user_defined_terms %}
-                        <option value="{{term}}">{{term}}</option>
-                      {% end %}
-                      </select>
-                    </td>
-                  </tr>
-                  <tr id="edit-new-investigation-type-entry-{{prep.id}}" style="display:none;">
-                    <td>
-                      New investigation type:
-                    </td>
-                    <td>
-                      <input type="text" id="edit-new-investigation-type-{{prep.id}}" name="new-investigation-type" class="form-control">
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>
-                      <a class="btn btn-warning" onclick="update_investigation_type('{{prep.investigation_type}}', {{prep.id}})">Update Investigation Type</a>
-                    </td>
-                  </tr>
-                </table>
-              {% end %}
-              <!--
-                We need this JavaScript block here because the elements
-                that we modify only exist if the HTML code above has
-                been rendered
-              -->
-              <script>
-              if ("{{prep.investigation_type}}" !== "None") {
-                // if the investigation type is a known ENA term, set as needed
-                if ($("#edit-investigation-type-{{prep.id}} option[value='{{prep.investigation_type}}']").length > 0 ){
-                  $('#edit-investigation-type-{{prep.id}}').val("{{prep.investigation_type}}");
-                }
-                // else set as Other and load the fields to change the data
-                else{
-                  $('#edit-investigation-type-{{prep.id}}').val("Other");
-                  investigationTypeChanged({{prep.id}}, true);
-                  if ($("#edit-user-defined-investigation-type-{{prep.id}} option[value='{{prep.investigation_type}}']").length > 0 ){
-                    $('#edit-user-defined-investigation-type-{{prep.id}}').val("{{prep.investigation_type}}");
+            <div class="panel panel-default">
+              <div class="panel-heading">
+                <h4 class="panel-title">
+                  <a data-toggle="collapse" data-parent="#prep-accordion" href="#collapse{{divcount}}">{{prep.data_type()}} (ID: {{prep.id}})</a>
+                </h4>
+              </div>
+              <div id="collapse{{divcount}}" class="panel-collapse collapse">
+                <div class="panel-body">
+                  <b>Files:</b><br/>
+                  <table border="0" style="margin-left: 10px;">
+                    <tr>
+                      <td style="padding:3px;">
+                        <a class="btn btn-default glyphicon glyphicon-eye-open" href="/metadata_summary/?study_id={{study_id}}&prep_template={{prep.id}}" style="word-spacing: -10px;"> Show prep template summary</a>
+                      </td>
+                    </tr>
+                    {% for ptid, ptpath in prep.get_filepaths() %}
+                      <tr>
+                        <td>
+                          {% if is_local_request %}
+                            {{ptpath}}
+                          {% else %}
+                            <br/><a class="btn btn-default glyphicon glyphicon-download-alt" href="/download/{{ptid}}" style="word-spacing: -10px;"> {{basename(ptpath)}}</a>
+                          {% end %}
+                        </td>
+                      </tr>
+                    {% end %}
+                  </table>
+                  <br/>
+                  {% if is_editable %}
+                    <table id="edit-investigation-type-table" name="edit-investigation-types" class="investigation-type-table">
+                      <tr>
+                        <td>
+                          Selected investigation type:
+                        </td>
+                        <td>
+                          <select id="edit-investigation-type-{{prep.id}}" onclick="investigationTypeChanged({{prep.id}}, true)" onchange="investigationTypeChanged({{prep.id}}, true)">
+                            <option value="None Selected">None Selected</option>
+                            {% raw ena_terms %}
+                          </select>
+                        </td>
+                      </tr>
+                      <tr id="edit-user-defined-investigation-types-{{prep.id}}" style="display:none;">
+                        <td>
+                          User defined investigation type:
+                        </td>
+                        <td>
+                          <select onclick="newInvestigationTypeChanged({{prep.id}}, true)" onchange="newInvestigationTypeChanged({{prep.id}}, true)" id="edit-user-defined-investigation-type-{{prep.id}}">
+                          {% for term in user_defined_terms %}
+                            <option value="{{term}}">{{term}}</option>
+                          {% end %}
+                          </select>
+                        </td>
+                      </tr>
+                      <tr id="edit-new-investigation-type-entry-{{prep.id}}" style="display:none;">
+                        <td>
+                          New investigation type:
+                        </td>
+                        <td>
+                          <input type="text" id="edit-new-investigation-type-{{prep.id}}" name="new-investigation-type" class="form-control">
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <a class="btn btn-warning" onclick="update_investigation_type('{{prep.investigation_type}}', {{prep.id}})">Update Investigation Type</a>
+                        </td>
+                      </tr>
+                    </table>
+                  {% end %}
+                  <!--
+                    We need this JavaScript block here because the elements
+                    that we modify only exist if the HTML code above has
+                    been rendered
+                  -->
+                  <script>
+                  if ("{{prep.investigation_type}}" !== "None") {
+                    // if the investigation type is a known ENA term, set as needed
+                    if ($("#edit-investigation-type-{{prep.id}} option[value='{{prep.investigation_type}}']").length > 0 ){
+                      $('#edit-investigation-type-{{prep.id}}').val("{{prep.investigation_type}}");
+                    }
+                    // else set as Other and load the fields to change the data
+                    else{
+                      $('#edit-investigation-type-{{prep.id}}').val("Other");
+                      investigationTypeChanged({{prep.id}}, true);
+                      if ($("#edit-user-defined-investigation-type-{{prep.id}} option[value='{{prep.investigation_type}}']").length > 0 ){
+                        $('#edit-user-defined-investigation-type-{{prep.id}}').val("{{prep.investigation_type}}");
+                      }
+                    }
                   }
-                }
-              }
-              else{
-                $('#edit-investigation-type-{{prep.id}}').val("None Selected");
-              }
-              </script>
-            </td>
-            {% if not prep.preprocessed_data or prep.preprocessing_status.startswith('failed') %}
-              <td style="padding:3px;">
-              {% if study_status == 'sandbox' %}
-                <input type="button" class="btn btn-primary" value="Split libraries" onclick="split_libraries({{prep.id}});">
-                <input type="checkbox" id="rev_comp_mapping_barcodes_{{prep.id}}"> Use rev_comp_mapping_barcodes
-                <hr/>
-              {% end %}
-                <i>Status:</i> {{prep.preprocessing_status}}
-                <br>
-                {% if 'zero-size array' in prep.preprocessing_status %}
-                <b>Your barcodes do not seem to match your prep template info</b>
-                {% end %}
-              </td>
-            {% else %}
-              <td style="padding:3px;">
-              {% for pdi in prep.preprocessed_data %}
-                <b>{{pdi}},</b>
-              {% end %}
-              </td>
-            {% end %}
-          </tr>
+                  else{
+                    $('#edit-investigation-type-{{prep.id}}').val("None Selected");
+                  }
+                  </script>
+                  <br/>
+                  {% if not prep.preprocessed_data or prep.preprocessing_status.startswith('failed') %}
+                    {% if study_status == 'sandbox' %}
+                      <input type="button" class="btn btn-primary" value="Preprocess" onclick="split_libraries({{prep.id}});" style="word-spacing: -10px;">
+                      <input type="checkbox" id="rev_comp_mapping_barcodes_{{prep.id}}"> Use rev_comp_mapping_barcodes
+                    {% end %}
+                      <i>Status:</i> {{prep.preprocessing_status}}
+                      <br>
+                      {% if 'zero-size array' in prep.preprocessing_status %}
+                      <b>Your barcodes do not seem to match your prep template info</b>
+                      {% end %}
+                  {% else %}
+                    {% for pdi in prep.preprocessed_data %}
+                      <b>{{pdi}},</b>
+                    {% end %}
+                  {% end %}
+                </div>
+              </div>
+            </div>
+            {% set divcount += 1 %}
           {% end %}
-        </table>
-        <br/>
+        </div>
       </td>
 
       <!-- Files linked to the raw data -->
