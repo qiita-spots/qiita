@@ -176,8 +176,9 @@
                       <b>Your barcodes do not seem to match your prep template info</b>
                       {% end %}
                   {% else %}
+                    <b>Preprocessed data generated: </b>
                     {% for pdi in prep.preprocessed_data %}
-                      <b>{{pdi}},</b>
+                      {{pdi}},
                     {% end %}
                   {% end %}
                 </div>
