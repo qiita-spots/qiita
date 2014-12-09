@@ -85,10 +85,6 @@ class RawDataEditorTab(UIModule):
                                     for p in sorted(raw_data.prep_templates)
                                     if PrepTemplate.exists(p)]
 
-        # Check if the request came from a local source
-        is_local_request = ('localhost' in self.request.headers['host'] or
-                            '127.0.0.1' in self.request.headers['host'])
-
         # getting filepath_types
         fts = [k.split('_', 1)[1].replace('_', ' ')
                for k in get_filepath_types() if k.startswith('raw_')]
@@ -109,6 +105,36 @@ class RawDataEditorTab(UIModule):
             user_defined_terms=user_defined_terms,
             available_prep_templates=available_prep_templates,
             r=raw_data,
-            is_local_request=is_local_request,
             filepath_types=fts,
             is_editable=is_editable)
+
+
+class PrepTemplatePanel(UIModule):
+    def render(self, prep, divcount, study_id, is_editable, ena_terms,
+               study_status, user_defined_terms):
+        # Check if the request came from a local source
+        is_local_request = ('localhost' in self.request.headers['host'] or
+                            '127.0.0.1' in self.request.headers['host'])
+
+        prep_id = prep.id
+        data_type = prep.data_type()
+        filepaths = prep.get_filepaths()
+        investigation_type = prep.investigation_type
+        preprocessed_data = prep.preprocessed_data
+        preprocessing_status = prep.preprocessing_status
+
+        return self.render_string(
+            "prep_template_panel.html",
+            prep_id=prep_id,
+            data_type=data_type,
+            filepaths=filepaths,
+            investigation_type=investigation_type,
+            preprocessed_data=preprocessed_data,
+            preprocessing_status=preprocessing_status,
+            divcount=divcount,
+            study_id=study_id,
+            is_local_request=is_local_request,
+            is_editable=is_editable,
+            ena_terms=ena_terms,
+            study_status=study_status,
+            user_defined_terms=user_defined_terms)
