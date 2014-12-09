@@ -1,3 +1,10 @@
+# -----------------------------------------------------------------------------
+# Copyright (c) 2014--, The Qiita Development Team.
+#
+# Distributed under the terms of the BSD 3-clause License.
+#
+# The full license is in the file LICENSE, distributed with this software.
+# -----------------------------------------------------------------------------
 from traceback import format_exception_only
 from sys import exc_info
 
@@ -36,12 +43,12 @@ def submit_to_ebi(preprocessed_data_id, submission_type):
     return study_acc, submission_acc
 
 
-def run_analysis(user_id, analysis_id, commands, comm_opts=None,
-                 rarefaction_depth=None):
+def run_analysis(analysis_id, commands, comm_opts=None,
+                 rarefaction_depth=None, **kwargs):
     """Run a meta-analysis"""
     analysis = Analysis(analysis_id)
-    ar = RunAnalysis()
-    return ar(user_id, analysis, commands, comm_opts, rarefaction_depth)
+    ar = RunAnalysis(**kwargs)
+    return ar(analysis, commands, comm_opts, rarefaction_depth)
 
 
 def add_files_to_raw_data(raw_data_id, filepaths):

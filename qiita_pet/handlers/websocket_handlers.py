@@ -7,14 +7,14 @@ from tornado.web import authenticated
 from tornado.websocket import WebSocketHandler
 from tornado.gen import engine, Task
 
-from qiita_ware import r_server
+from moi import r_client
 
 
 class MessageHandler(WebSocketHandler):
     def __init__(self, *args, **kwargs):
         super(MessageHandler, self).__init__(*args, **kwargs)
         # The redis server
-        self.r_server = r_server
+        self.r_client = r_client
 
         # The toredis server that allows event-based message handling
         self.toredis = toredis.Client()
@@ -51,7 +51,7 @@ class MessageHandler(WebSocketHandler):
 
         # Potential race-condition where a separate process may have placed
         # messages into the queue before we've been able to attach listen.
-        oldmessages = self.r_server.lrange(self.channel_messages, 0, -1)
+        oldmessages = self.r_client.lrange(self.channel_messages, 0, -1)
         if oldmessages is not None:
             for message in oldmessages:
                 self.write_message(message)
@@ -68,5 +68,5 @@ class MessageHandler(WebSocketHandler):
     @engine
     def on_close(self):
         yield Task(self.toredis.unsubscribe, self.channel)
-        self.r_server.delete('%s:messages' % self.channel)
+        self.r_client.delete('%s:messages' % self.channel)
         self.redis.disconnect()
