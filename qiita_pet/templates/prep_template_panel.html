@@ -1,5 +1,43 @@
 {% from os.path import basename %}
 
+<!-- modal view to enter preprocessing parameters -->
+<div class="modal fade" id="preprocess-modal-view-{{prep_id}}" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title" id="myModalLabel">Choose preprocessing parameters</h4>
+      </div>
+      <form action="/study/preprocess" method="post" onsubmit='return submit_preprocess();'>
+        <div class="modal-body">
+          <div>
+            <div class="form-group">
+              <table>
+                {% for idx, form_item in enumerate(preprocess_form, start=1) %}
+                  {% set kwargs = {'tabindex': idx, 'class_': 'form-control'} %}
+                  <tr>
+                    <td width="50%">{% raw form_item.label %}</td>
+                    <td width="50%">{% raw form_item(**kwargs) %}</td>
+                  </tr>
+                {% end %}
+                <tr>
+                  <td>
+                    <input type='submit' id='start_preprocess_submit' class='btn btn-success' value="Start preprocessing">
+                    <input type='hidden' name='study_id' value="{{study_id}}">
+                    <input type='hidden' name='prep_template_id' value="{{prep_id}}">
+                  </td>
+                </tr>
+              </table>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
 <div class="panel panel-default">
   <div class="panel-heading">
     <h4 class="panel-title">
@@ -95,9 +133,9 @@
       <br/>
       {% if not preprocessed_data or preprocessing_status.startswith('failed') %}
         {% if study_status == 'sandbox' %}
-          <input type="button" class="btn btn-primary" value="Preprocess" onclick="split_libraries({{prep_id}});" style="word-spacing: -10px;">
-          <input type="checkbox" id="rev_comp_mapping_barcodes_{{prep_id}}"> Use rev_comp_mapping_barcodes
+          <a class="btn btn-primary glyphicon glyphicon-play" data-toggle="modal" data-target="#preprocess-modal-view-{{prep_id}}" style="word-spacing: -10px;"> Preprocess</a>
         {% end %}
+          <br>
           <i>Status:</i> {{preprocessing_status}}
           <br>
           {% if 'zero-size array' in preprocessing_status %}

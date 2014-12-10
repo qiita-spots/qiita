@@ -269,28 +269,6 @@ function newInvestigationTypeChanged(rawDataID, isEdit){
     }
   }
 
-  function split_libraries(prep_template_id) {
-    if (confirm("Are you sure you want to submit a split libraries job?")) {
-      var form = $("<form>")
-        .attr("action", "/study/preprocess")
-        .attr("method", "post")
-        .append($("<input>")
-          .attr("type", "hidden")
-          .attr("name", "study_id")
-          .attr("value", {{study.id}}))
-          .append($("<input>")
-            .attr("type", "hidden")
-            .attr("name", "prep_template_id")
-            .attr("value", prep_template_id))
-        .append($("<input>")
-          .attr("type", "hidden")
-          .attr("name", "rev_comp_mapping_barcodes")
-          .attr("value", $("#rev_comp_mapping_barcodes_" + prep_template_id).is(':checked')));
-      $("body").append(form);
-      form.submit();
-    }
-  }
-
   function make_public() {
     if (confirm("Are you sure you want to make this study public?")) {
       var form = $("<form>")
@@ -375,6 +353,13 @@ function newInvestigationTypeChanged(rawDataID, isEdit){
     }
   }
 
+  function submit_preprocess() {
+    if (confirm("Are you sure you want to submit a preprocessing job?")){
+      return true;
+    }
+    return  false;
+  };
+
   if ("{{tab_to_display}}" == "study_information_tab"){
     $('#myTab a[href="#study_information_tab"]').tab('show');
   }
@@ -383,5 +368,6 @@ function newInvestigationTypeChanged(rawDataID, isEdit){
   } else {
     $('#myTab a:last').tab('show');
   }
+
 </script>
 {% end %}

@@ -10,6 +10,7 @@ from operator import itemgetter
 
 from tornado.web import UIModule
 from future.utils import viewitems
+from wtforms import Form, BooleanField
 
 from qiita_db.util import (get_filetypes, get_files_from_uploads_folders,
                            get_data_types, convert_to_id, get_filepath_types)
@@ -36,6 +37,11 @@ def get_raw_data_from_other_studies(user, study):
 def get_raw_data(rdis):
     """Get all raw data objects from a list of raw_data_ids"""
     return [RawData(rdi) for rdi in rdis]
+
+
+class PreprocessParametersForm(Form):
+    r""""""
+    rev_comp_mapping_barcodes = BooleanField("rev_comp_mapping_barcodes")
 
 
 class RawDataTab(UIModule):
@@ -122,6 +128,7 @@ class PrepTemplatePanel(UIModule):
         investigation_type = prep.investigation_type
         preprocessed_data = prep.preprocessed_data
         preprocessing_status = prep.preprocessing_status
+        preprocess_form = PreprocessParametersForm()
 
         return self.render_string(
             "prep_template_panel.html",
@@ -137,4 +144,5 @@ class PrepTemplatePanel(UIModule):
             is_editable=is_editable,
             ena_terms=ena_terms,
             study_status=study_status,
-            user_defined_terms=user_defined_terms)
+            user_defined_terms=user_defined_terms,
+            preprocess_form=preprocess_form)
