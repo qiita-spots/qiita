@@ -262,8 +262,7 @@ class StudyDescriptionHandler(BaseHandler):
 
         elif approve_study:
             # make sure user is admin, then make full private study
-            if user.level == 'admin' or not \
-                    qiita_config.require_approval:
+            if user.level == 'admin' or not qiita_config.require_approval:
                 study.status = 'private'
                 msg = "Study approved"
                 tab_to_display = ""
