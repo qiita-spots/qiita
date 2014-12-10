@@ -360,6 +360,19 @@ function newInvestigationTypeChanged(rawDataID, isEdit){
     return  false;
   };
 
+  function display_tab(top_tab, sub_tab, prep_tab){
+    $('#myTab a[href="#'+top_tab+'"]').tab('show');
+    if (top_tab == "raw_data_tab"){
+      $('#raw_data_nav_tabs a[href="#raw_data_info_'+sub_tab+'"]').tab('show')
+      if (prep_tab !== undefined){
+        $('#collapse'+prep_tab).collapse()
+      }
+    }
+    else if (top_tab == "preprocessed_data_tab"){
+      $('#preprocessed_data_nav_tabs a[href="#preprocessed_data_info_'+sub_tab+'"]').tab('show')
+    }
+  }
+
   if ("{{tab_to_display}}" == "study_information_tab"){
     $('#myTab a[href="#study_information_tab"]').tab('show');
   }

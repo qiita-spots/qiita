@@ -41,10 +41,10 @@
 <div class="panel panel-default">
   <div class="panel-heading">
     <h4 class="panel-title">
-      <a data-toggle="collapse" data-parent="#prep-accordion" href="#collapse{{divcount}}">{{data_type}} (ID: {{prep_id}})</a>
+      <a data-toggle="collapse" data-parent="#prep-accordion" href="#collapse{{prep_id}}">{{data_type}} (ID: {{prep_id}})</a>
     </h4>
   </div>
-  <div id="collapse{{divcount}}" class="panel-collapse collapse">
+  <div id="collapse{{prep_id}}" class="panel-collapse collapse">
     <div class="panel-body">
       <b>Files:</b><br/>
       <table border="0" style="margin-left: 10px;">
@@ -143,8 +143,9 @@
           {% end %}
       {% else %}
         <b>Preprocessed data generated: </b>
-        {% for pdi in preprocessed_data %}
-          {{pdi}},
+        <a href="#" onClick="display_tab('preprocessed_data_tab', {{preprocessed_data[0]}});">{{preprocessed_data[0]}}</a>
+        {% for pdi in preprocessed_data[1:] %}
+          , <a href="#preprocessed_data_info_{{pdi}}">{{pdi}}</a>
         {% end %}
       {% end %}
     </div>

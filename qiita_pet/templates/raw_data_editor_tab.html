@@ -68,11 +68,9 @@
 
         <!-- Uploaded prep templates (table) -->
         <h4>Prep templates uploaded</h4>
-        <div class="panel-group" id="prep-accordion">
-          {% set divcount = 1 %}
+        <div class="panel-group" id="prep-accordion-{{raw_data_id}}">
           {% for prep in available_prep_templates %}
-            {% module PrepTemplatePanel(prep, divcount, study_id, is_editable, ena_terms, study_status, user_defined_terms) %}
-            {% set divcount += 1 %}
+            {% module PrepTemplatePanel(prep, study_id, is_editable, ena_terms, study_status, user_defined_terms) %}
           {% end %}
         </div>
       </td>

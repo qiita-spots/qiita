@@ -116,7 +116,7 @@ class RawDataEditorTab(UIModule):
 
 
 class PrepTemplatePanel(UIModule):
-    def render(self, prep, divcount, study_id, is_editable, ena_terms,
+    def render(self, prep, study_id, is_editable, ena_terms,
                study_status, user_defined_terms):
         # Check if the request came from a local source
         is_local_request = ('localhost' in self.request.headers['host'] or
@@ -138,7 +138,6 @@ class PrepTemplatePanel(UIModule):
             investigation_type=investigation_type,
             preprocessed_data=preprocessed_data,
             preprocessing_status=preprocessing_status,
-            divcount=divcount,
             study_id=study_id,
             is_local_request=is_local_request,
             is_editable=is_editable,
