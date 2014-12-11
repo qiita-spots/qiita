@@ -18,7 +18,7 @@ from qiita_db.study import Study
 from qiita_db.data import RawData
 from qiita_db.user import User
 from qiita_db.ontology import Ontology
-from qiita_db.metadata_template import PrepTemplate, SampleTemplate
+from qiita_db.metadata_template import PrepTemplate
 
 
 def get_raw_data_from_other_studies(user, study):
