@@ -33,6 +33,342 @@ html_error_message = "<b>An error occurred %s %s</b></br>%s"
 
 
 class StudyDescriptionHandler(BaseHandler):
+
+    def _get_sudy_and_check_access(self, study_id):
+        """Checks if the current user has access to the study
+
+        First tries to instantiate the study object. Then it checks if the
+        current user has access to such study.
+
+        Parameters
+        ----------
+        study_id : str
+            The current study
+
+        Returns
+        -------
+        The study object and the current user object
+
+        Raises
+        ------
+        HTTPError
+            If study_id does not correspond to any study in the system
+        """
+        user = User(self.current_user)
+
+        try:
+            study = Study(int(study_id))
+        except QiitaDBUnknownIDError:
+            # Study not in database so fail nicely
+            raise HTTPError(404, "Study %s does not exist" % study_id)
+        else:
+            check_access(user, study, raise_error=True)
+
+        return study, user
+
+    def _process_investigation_type(self, inv_type, user_def_type, new_type):
+        """Return the investigation_type and add it to the ontology if needed
+
+        Parameters
+        ----------
+        inv_type : str
+            The investigation type
+        user_def_type : str
+            The user-defined investigation type
+        new_type : str
+            The new user-defined investigation_type
+
+        Returns
+        -------
+        str
+            The investigation type chosen by the user
+        """
+        if inv_type == 'None Selected':
+            inv_type = None
+        elif inv_type == 'Other' and user_def_type == 'New Type':
+            # This is a nre user defined investigation type so store it
+            inv_type = new_type
+            ontology = Ontology(convert_to_id('ENA', 'ontology'))
+            ontology.add_user_defined_term(inv_type)
+        elif inv_type == 'Other' and user_def_type != 'New Type':
+            inv_type = user_def_type
+        return inv_type
+
+    def process_sample_template(self, study, user, callback):
+        """Process a sample template from the POST method
+
+        Parameters
+        ----------
+        study : Study
+            The current study object
+        user : User
+            The current user object
+        callback : function
+            The callback function to call with the results once the processing
+            is done
+
+        Raises
+        ------
+        HTTPError
+            If the sample template file does not exists
+        """
+        # If we are on this function, the argument "sample_template" must
+        # defined. If not, let tornado raise its error
+        sample_template = self.get_argument('sample_template')
+
+        # Define here the message and message level in case of success
+        msg = "The sample template '%s' has been added" % sample_template
+        msg_level = "success"
+        # Get the uploads folder
+        _, base_fp = get_mountpoint("uploads")[0]
+        # Get the path of the sample template in the uploads folder
+        fp_rsp = join(base_fp, str(study.id), sample_template)
+
+        if not exists(fp_rsp):
+            # The file does not exists, fail nicely
+            raise HTTPError(400, "This file doesn't exist: %s" % fp_rsp)
+
+        try:
+            # deleting previous uploads and inserting new one
+            self.remove_add_study_template(study.raw_data, study.id, fp_rsp)
+        except (TypeError, QiitaDBColumnError, QiitaDBExecutionError,
+                QiitaDBDuplicateError, IOError, ValueError, KeyError,
+                CParserError, QiitaDBDuplicateHeaderError) as e:
+            # Some error occurred while processing the sample template
+            # Show the error to the user so he can fix the template
+            msg = html_error_message % ('parsing the sample template:',
+                                        basename(fp_rsp), str(e))
+            msg_level = "danger"
+
+        callback((msg, msg_level, 'sample_template_tab', None, None))
+
+    def create_raw_data(self, study, user, callback):
+        """Adds a (new) raw data to the study
+
+        Parameters
+        ----------
+        study : Study
+            The current study object
+        user : User
+            The current user object
+        callback : function
+            The callback function to call with the results once the processing
+            is done
+        """
+        msg = "Raw data successfully added"
+        msg_level = "success"
+
+        # Get the arguments needed to create a raw data object
+        filetype = self.get_argument('filetype', None)
+        previous_raw_data = self.get_argument('previous_raw_data', None)
+
+        if filetype and previous_raw_data:
+            # The user selected a filetype and an existing raw data
+            msg = ("You can not specify both a new raw data and a previously "
+                   "used one")
+            msg_level = "danger"
+        elif filetype:
+            # We are creating a new raw data object
+            try:
+                rd_id = RawData.create(filetype, [study]).id
+            except (TypeError, QiitaDBColumnError, QiitaDBExecutionError,
+                    QiitaDBDuplicateError, IOError, ValueError, KeyError,
+                    CParserError) as e:
+                msg = html_error_message % (
+                    "creating a new raw data object for study:",
+                    str(study.id), str(e))
+                msg_level = "danger"
+        elif previous_raw_data:
+            raw_data = [RawData(rd) for rd in previous_raw_data]
+            study.add_raw_data(raw_data)
+            rd_id = raw_data[0].id
+        else:
+            # The user did not provide a filetype neither an existing raw data
+            # If using the interface, we should never reach this if, but
+            # better be safe than sorry
+            msg = ("You should choose a filetype for a new raw data or "
+                   "choose a raw data previously used")
+            msg_level = "danger"
+
+        callback((msg, msg_level, 'raw_data_tab', rd_id, None))
+
+    def add_prep_template(self, study, user, callback):
+        """Adds a prep template to the system
+
+        Parameters
+        ----------
+        study : Study
+            The current study object
+        user : User
+            The current user object
+        callback : function
+            The callback function to call with the results once the processing
+            is done
+        """
+        msg = "Your prep template was added"
+        msg_level = "success"
+
+        # If we are on this function, the arguments "raw_data_id",
+        # "prep_template" and "data_type_id" must be defined. If not,
+        # let tornado raise its error
+        raw_data_id = self.get_argument('raw_data_id')
+        prep_template = self.get_argument('prep_template')
+        data_type_id = self.get_argument('data_type_id')
+
+        # These parameters are optional
+        investigation_type = self.get_argument('investigation-type', None)
+        user_defined_investigation_type = self.get_argument(
+            'user-defined-investigation-type', None)
+        new_investigation_type = self.get_argument('new-investigation-type',
+                                                   None)
+
+        investigation_type = self._process_investigation_type(
+            investigation_type, user_defined_investigation_type,
+            new_investigation_type)
+
+        # Make sure that the id is an integer
+        raw_data_id = int(raw_data_id)
+        # Get the upload base directory
+        _, base_path = get_mountpoint("uploads")[0]
+        # Get the path to the prep template
+        fp_rpt = join(base_path, str(study.id), prep_template)
+        if not exists(fp_rpt):
+            # The file does not exists, fail nicely
+            raise HTTPError(400, "This file doesn't exist: %s" % fp_rpt)
+
+        try:
+            pt_id = self.remove_add_prep_template(fp_rpt, raw_data_id, study,
+                                                  data_type_id,
+                                                  investigation_type)
+        except (TypeError, QiitaDBColumnError, QiitaDBExecutionError,
+                QiitaDBDuplicateError, IOError, ValueError,
+                CParserError) as e:
+            # Some error occurred while processing the prep template
+            # Show the error to the user so he can fix the template
+            msg = html_error_message % ("parsing the prep template: ",
+                                        basename(fp_rpt), str(e))
+            msg_level = "danger"
+
+        callback((msg, msg_level, 'raw_data_tab', raw_data_id, pt_id))
+
+    def make_public(self, study, user, callback):
+        """Makes the current study public
+
+        Parameters
+        ----------
+        study : Study
+            The current study object
+        user : User
+            The current user object
+        callback : function
+            The callback function to call with the results once the processing
+            is done
+        """
+        study.status = 'public'
+        msg = "Study set to public"
+        msg_level = "success"
+        callback((msg, msg_level, "study_information_tab", None, None))
+
+    def approve_study(self, study, user, callback):
+        """Approves the current study if and only if the current user is admin
+
+        Parameters
+        ----------
+        study : Study
+            The current study object
+        user : User
+            The current user object
+        callback : function
+            The callback function to call with the results once the processing
+            is done
+        """
+        if ((user.level == 'admin' and qiita_config.require_approval)
+                or not qiita_config.require_approval):
+            study.status = 'private'
+            msg = "Study approved"
+            msg_level = "success"
+        else:
+            msg = ("The current user does not have permission to approve "
+                   "the study")
+            msg_level = "danger"
+        callback((msg, msg_level, "study_information_tab", None, None))
+
+    def request_approval(self, study, user, callback):
+        """Changes the status of the current study to "awaiting_approval"
+
+        Parameters
+        ----------
+        study : Study
+            The current study object
+        user : User
+            The current user object
+        callback : function
+            The callback function to call with the results once the processing
+            is done
+        """
+        study.status = 'awaiting_approval'
+        msg = "Study sent to admin for approval"
+        msg_level = "success"
+        callback((msg, msg_level, "study_information_tab", None, None))
+
+    def make_sandbox(self, study, user, callback):
+        """Reverts the current study to the 'sandbox' status
+
+        Parameters
+        ----------
+        study : Study
+            The current study object
+        user : User
+            The current user object
+        callback : function
+            The callback function to call with the results once the processing
+            is done
+        """
+        study.status = 'sandbox'
+        msg = "Study reverted to sandbox"
+        msg_level = "success"
+        callback((msg, msg_level, "study_information_tab", None, None))
+
+    def update_investigation_type(self, study, user, callback):
+        """Updates the investigation type of a prep template
+
+        Parameters
+        ----------
+        study : Study
+            The current study object
+        user : User
+            The current user object
+        callback : function
+            The callback function to call with the results once the processing
+            is done
+        """
+        msg = "investigation type successfully updated"
+        msg_level = "success"
+
+        prep_id = self.get_argument('prep_id')
+        edit_investigation_type = self.get_argument('edit-investigation-type',
+                                                    None)
+        edit_user_defined_investigation_type = self.get_argument(
+            'edit-user-defined-investigation-type', None)
+        edit_new_investigation_type = self.get_argument(
+            'edit-new-investigation-type', None)
+
+        pt = PrepTemplate(prep_id)
+        rd_id = pt.raw_data
+
+        investigation_type = self._process_investigation_type(
+            edit_investigation_type, edit_user_defined_investigation_type,
+            edit_new_investigation_type)
+
+        try:
+            pt.investigation_type = investigation_type
+        except QiitaDBColumnError as e:
+            msg = html_error_message % (", invalid investigation type: ",
+                                        investigation_type, str(e))
+            msg_level = "danger"
+
+        callback((msg, msg_level, "raw_data_tab", rd_id, prep_id))
+
     def get_raw_data(self, rdis, callback):
         """Get all raw data objects from a list of raw_data_ids"""
         callback([RawData(rdi) for rdi in rdis])
@@ -48,7 +384,7 @@ class StudyDescriptionHandler(BaseHandler):
                         if PrepTemplate.exists(p)]
         callback(d)
 
-    def remove_add_study_template(self, raw_data, study_id, fp_rsp, callback):
+    def remove_add_study_template(self, raw_data, study_id, fp_rsp):
         """Replace prep templates, raw data, and sample template with a new one
         """
         for rd in raw_data():
@@ -63,27 +399,25 @@ class StudyDescriptionHandler(BaseHandler):
                               Study(study_id))
         remove(fp_rsp)
 
-        callback()
-
     def remove_add_prep_template(self, fp_rpt, raw_data_id, study,
-                                 data_type_id, investigation_type, callback):
-        """add prep templates
-        """
-        PrepTemplate.create(load_template_to_dataframe(fp_rpt),
-                            RawData(raw_data_id), study, int(data_type_id),
-                            investigation_type=investigation_type)
+                                 data_type_id, investigation_type):
+        """add prep templates"""
+        pt_id = PrepTemplate.create(load_template_to_dataframe(fp_rpt),
+                                    RawData(raw_data_id), study,
+                                    int(data_type_id),
+                                    investigation_type=investigation_type).id
         remove(fp_rpt)
-
-        callback()
+        return pt_id
 
     @coroutine
-    def display_template(self, study, msg, msg_level, tab_to_display=""):
+    def display_template(self, study, user, msg, msg_level, top_tab=None,
+                         sub_tab=None, prep_tab=None):
         """Simple function to avoid duplication of code"""
-        user = User(self.current_user)
         # getting the RawData and its prep templates
         available_raw_data = yield Task(self.get_raw_data, study.raw_data())
         available_prep_templates = yield Task(self.get_prep_templates,
                                               available_raw_data)
+
         # set variable holding if we have files attached to all raw data or not
         raw_files = True if available_raw_data else False
         for r in available_raw_data:
@@ -135,6 +469,8 @@ class StudyDescriptionHandler(BaseHandler):
         show_revert_btn = study_status not in {'sandbox', 'public'}
 
         self.render('study_description.html',
+                    message=msg,
+                    level=msg_level,
                     user=self.current_user,
                     study=study,
                     study_title=study.title,
@@ -144,226 +480,55 @@ class StudyDescriptionHandler(BaseHandler):
                     show_revert_btn=show_revert_btn,
                     btn_to_show=btn_to_show,
                     show_data_tabs=sample_template_exists,
-                    tab_to_display=tab_to_display)
+                    top_tab=top_tab,
+                    sub_tab=sub_tab,
+                    prep_tab=prep_tab)
 
     @authenticated
     def get(self, study_id):
-        try:
-            study = Study(int(study_id))
-        except QiitaDBUnknownIDError:
-            # Study not in database so fail nicely
-            raise HTTPError(404, "Study %s does not exist" % study_id)
-        else:
-            check_access(User(self.current_user), study,
-                         raise_error=True)
+        study, user = self._get_sudy_and_check_access(study_id)
 
-        self.display_template(study, "", 'info',
-                              tab_to_display="study_information_tab")
+        self.display_template(study, user, "", 'info',
+                              top_tab="study_information_tab")
 
     @authenticated
     @coroutine
     def post(self, study_id):
-        study_id = int(study_id)
-        user = User(self.current_user)
-        try:
-            study = Study(study_id)
-        except QiitaDBUnknownIDError:
-            # Study not in database so fail nicely
-            raise HTTPError(404, "Study %d does not exist" % study_id)
-        else:
-            check_access(User(self.current_user), study,
-                         raise_error=True)
+        study, user = self._get_sudy_and_check_access(study_id)
 
-        # vars to add sample template
+        action = self.get_argument("action", None)
+
         msg = ''
         msg_level = ''
-        tab_to_display = ''
-        sample_template = self.get_argument('sample_template', None)
-        # vars to add raw data
-        filetype = self.get_argument('filetype', None)
-        previous_raw_data = self.get_argument('previous_raw_data', None)
-        # vars to add prep template
-        add_prep_template = self.get_argument('add_prep_template', None)
-        raw_data_id = self.get_argument('raw_data_id', None)
-        data_type_id = self.get_argument('data_type_id', None)
-        make_public = self.get_argument('make_public', False)
-        make_sandbox = self.get_argument('make_sandbox', False)
-        approve_study = self.get_argument('approve_study', False)
-        request_approval = self.get_argument('request_approval', False)
-        investigation_type = self.get_argument('investigation-type', None)
-        user_defined_investigation_type = self.get_argument(
-            'user-defined-investigation-type', None)
-        new_investigation_type = self.get_argument('new-investigation-type',
-                                                   None)
 
-        # None Selected is the equivalent to the user not specifying the info
-        # thus we should make the investigation_type None
-        if investigation_type == "" or investigation_type == "None Selected":
-            investigation_type = None
-
-        # to update investigation type
-        update_investigation_type = self.get_argument(
-            'update_investigation_type', None)
-        edit_investigation_type = self.get_argument('edit-investigation-type',
-                                                    None)
-        edit_user_defined_investigation_type = self.get_argument(
-            'edit-user-defined-investigation-type', None)
-        edit_new_investigation_type = self.get_argument(
-            'edit-new-investigation-type', None)
-
-        # None Selected is the equivalent to the user not specifying the info
-        # thus we should make the investigation_type None
-        if edit_investigation_type == "" or \
-                edit_investigation_type == "None Selected":
-            edit_investigation_type = None
-
-        msg_level = 'success'
-        if sample_template:
-            # processing sample templates
-
-            _, base_fp = get_mountpoint("uploads")[0]
-            fp_rsp = join(base_fp, str(study_id), sample_template)
-            if not exists(fp_rsp):
-                raise HTTPError(400, "This file doesn't exist: %s" % fp_rsp)
-
-            try:
-                # deleting previous uploads and inserting new one
-                yield Task(self.remove_add_study_template,
-                           study.raw_data,
-                           study_id, fp_rsp)
-            except (TypeError, QiitaDBColumnError, QiitaDBExecutionError,
-                    QiitaDBDuplicateError, IOError, ValueError, KeyError,
-                    CParserError, QiitaDBDuplicateHeaderError) as e:
-                msg = html_error_message % ('parsing the sample template:',
-                                            basename(fp_rsp), str(e))
-                self.display_template(study, msg, "danger")
-                return
-
-            msg = ("The sample template '%s' has been added" %
-                   sample_template)
-            tab_to_display = ""
-
-        elif request_approval:
-            study.status = 'awaiting_approval'
-            msg = "Study sent to admin for approval"
-            tab_to_display = ""
-
-        elif make_public:
-            msg = ''
-            study.status = 'public'
-            msg = "Study set to public"
-            tab_to_display = ""
-
-        elif make_sandbox:
-            msg = ''
-            study.status = 'sandbox'
-            msg = "Study reverted to sandbox"
-            tab_to_display = ""
-
-        elif approve_study:
-            # make sure user is admin, then make full private study
-            if user.level == 'admin' or not qiita_config.require_approval:
-                study.status = 'private'
-                msg = "Study approved"
-                tab_to_display = ""
-
-        elif filetype or previous_raw_data:
-            # adding blank raw data
-            if filetype and previous_raw_data:
-                msg = ("You can not specify both a new raw data and a "
-                       "previouly used one")
-            elif filetype:
-                try:
-                    RawData.create(filetype, [study])
-                except (TypeError, QiitaDBColumnError, QiitaDBExecutionError,
-                        QiitaDBDuplicateError, IOError, ValueError, KeyError,
-                        CParserError) as e:
-                    msg = html_error_message % ("creating a new raw data "
-                                                "object for study:",
-                                                str(study.id), str(e))
-                    self.display_template(study, msg, "danger")
-                    return
-                msg = ""
-            else:
-                raw_data = [RawData(rd) for rd in previous_raw_data]
-                study.add_raw_data(raw_data)
-                msg = ""
-            tab_to_display = ""
-
-        elif add_prep_template and raw_data_id and data_type_id:
-            # adding prep templates
-
-            if investigation_type == 'Other' and \
-                    user_defined_investigation_type == 'New Type':
-                investigation_type = new_investigation_type
-
-                # this is a new user defined investigation type so store it
-                ontology = Ontology(convert_to_id('ENA', 'ontology'))
-                ontology.add_user_defined_term(investigation_type)
-            elif investigation_type == 'Other' and \
-                    user_defined_investigation_type != 'New Type':
-                investigation_type = user_defined_investigation_type
-
-            raw_data_id = int(raw_data_id)
-            _, base_path = get_mountpoint("uploads")[0]
-            fp_rpt = join(base_path, str(study_id), add_prep_template)
-            if not exists(fp_rpt):
-                raise HTTPError(400, "This file doesn't exist: %s" % fp_rpt)
-
-            try:
-                # inserting prep templates
-                yield Task(self.remove_add_prep_template, fp_rpt, raw_data_id,
-                           study, data_type_id, investigation_type)
-            except (TypeError, QiitaDBColumnError, QiitaDBExecutionError,
-                    QiitaDBDuplicateError, IOError, ValueError,
-                    CParserError) as e:
-                msg = html_error_message % ("parsing the prep template: ",
-                                            basename(fp_rpt), str(e))
-                self.display_template(study, msg, "danger",
-                                      str(raw_data_id))
-                return
-
-            msg = "Your prep template was added"
-            tab_to_display = str(raw_data_id)
-
-        elif update_investigation_type:
-            # updating the prep template investigation type
-
-            pt = PrepTemplate(update_investigation_type)
-            investigation_type = edit_investigation_type
-
-            # figure out whether to add it as a user defined term or not
-            if edit_investigation_type == 'Other' and \
-                    edit_user_defined_investigation_type == 'New Type':
-                investigation_type = edit_new_investigation_type
-
-                # this is a new user defined investigation type so store it
-                ontology = Ontology(convert_to_id('ENA', 'ontology'))
-                ontology.add_user_defined_term(investigation_type)
-
-            elif investigation_type == 'Other' and \
-                    user_defined_investigation_type != 'New Type':
-                investigation_type = edit_user_defined_investigation_type
-
-            try:
-                pt.investigation_type = investigation_type
-            except QiitaDBColumnError as e:
-                msg = html_error_message % (", invalid investigation type: ",
-                                            investigation_type, str(e))
-                self.display_template(study, msg, "danger",
-                                      str(pt.raw_data))
-                return
-
-            msg = "The prep template has been updated!"
-            tab_to_display = str(pt.raw_data)
-
+        if action == 'process_sample_template':
+            result = yield Task(self.process_sample_template, study, user)
+        elif action == 'create_raw_data':
+            result = yield Task(self.create_raw_data, study, user)
+        elif action == 'add_prep_template':
+            result = yield Task(self.add_prep_template, study, user)
+        elif action == 'make_public':
+            result = yield Task(self.make_public, study, user)
+        elif action == 'approve_study':
+            result = yield Task(self.approve_study, study, user)
+        elif action == 'request_approval':
+            result = yield Task(self.request_approval, study, user)
+        elif action == 'make_sandbox':
+            result = yield Task(self.make_sandbox, study, user)
+        elif action == 'update_investigation_type':
+            result = yield Task(self.update_investigation_type, study, user)
         else:
-            msg = ("Error, did you select a valid uploaded file or are "
-                   "passing the correct parameters?")
-            msg_level = 'danger'
-            tab_to_display = ""
+            result = ("Error, did you select a valid uploaded file or are "
+                      "passing the correct parameters?",
+                      'danger',
+                      'study_information_tab',
+                      None,
+                      None)
 
-        self.display_template(study, msg, msg_level, tab_to_display)
+        msg, msg_level, top_tab, sub_tab, prep_tab = result
+
+        self.display_template(study, user, msg, msg_level, top_tab, sub_tab,
+                              prep_tab)
 
 
 class PreprocessingSummaryHandler(BaseHandler):
