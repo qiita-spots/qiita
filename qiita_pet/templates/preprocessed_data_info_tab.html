@@ -11,10 +11,11 @@
     {% for fpid, fp, ft in filepaths %}
       <tr>
         <td style="padding:3px;">
+          {% set ft = ft.replace('_', ' ') %}
           {% if is_local_request %}
-            <b>{{ft.replace('_', ' ')}}:</b> {{fp}}
+            <b>{{ft}}:</b> {{fp}}
           {% else %}
-            <a class="btn btn-default glyphicon glyphicon-download-alt" href="/download/{{fpid}}" style="word-spacing: -10px;"> {{ft.replace('_', ' ')}}</a>
+            <a class="btn btn-default glyphicon glyphicon-download-alt" href="/download/{{fpid}}" style="word-spacing: -10px;"> {{ft}}</a>
           {% end %}
         </td>
       </tr>

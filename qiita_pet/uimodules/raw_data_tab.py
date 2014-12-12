@@ -99,6 +99,39 @@ class RawDataEditorTab(UIModule):
         # only if the study is sandboxed or the current user is an admin
         is_editable = study_status == 'sandbox' or user_level == 'admin'
 
+        # Get the files linked with the raw_data
+        raw_data_files = raw_data.get_filepaths()
+
+        # Get the status of the data linking
+        raw_data_link_status = raw_data.link_filepaths_status
+
+        # By default don't show the unlink button
+        show_unlink_btn = False
+        # By default disable the the link file button
+        disable_link_btn = True
+        # Define the message for the link status
+        if raw_data_link_status == 'linking':
+            link_msg = "Linking files..."
+        elif raw_data_link_status == 'unlinking':
+            link_msg = "Unlinking files..."
+        else:
+            # The link button is only disable if raw data link status is
+            # linking or unlinking, so we can enable it here
+            disable_link_btn = False
+            # The unlink button is only shown if the study is editable, the raw
+            # data linking status is not in linking or unlinking, and there are
+            # files attached to the raw data. At this  point, we are sure that
+            # the raw data linking status is not in linking or unlinking so we
+            # still need to check if it is editable or there are files attached
+            show_unlink_btn = is_editable and raw_data_files
+            if raw_data_link_status.startswith('failed'):
+                link_msg = "Error (un)linkingfiles: %s" % raw_data_link_status
+            else:
+                link_msg = ""
+
+        # Get the raw_data filetype
+        raw_data_filetype = raw_data.filetype
+
         return self.render_string(
             "raw_data_editor_tab.html",
             study_id=study.id,
@@ -110,9 +143,13 @@ class RawDataEditorTab(UIModule):
             ena_terms=ena_terms,
             user_defined_terms=user_defined_terms,
             available_prep_templates=available_prep_templates,
-            r=raw_data,
             filepath_types=fts,
-            is_editable=is_editable)
+            is_editable=is_editable,
+            show_unlink_btn=show_unlink_btn,
+            link_msg=link_msg,
+            raw_data_files=raw_data_files,
+            raw_data_filetype=raw_data_filetype,
+            disable_link_btn=disable_link_btn)
 
 
 class PrepTemplatePanel(UIModule):

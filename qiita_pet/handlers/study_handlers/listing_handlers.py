@@ -144,7 +144,6 @@ class ShareStudyAJAX(BaseHandler):
         callback(study.unshare(user))
 
     @authenticated
-    @asynchronous
     @coroutine
     def get(self):
         study_id = int(self.get_argument('study_id'))

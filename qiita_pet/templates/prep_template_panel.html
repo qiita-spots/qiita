@@ -14,10 +14,9 @@
             <div class="form-group">
               <table>
                 {% for idx, form_item in enumerate(preprocess_form, start=1) %}
-                  {% set kwargs = {'tabindex': idx, 'class_': 'form-control'} %}
                   <tr>
                     <td width="50%">{% raw form_item.label %}</td>
-                    <td width="50%">{% raw form_item(**kwargs) %}</td>
+                    <td width="50%">{% raw form_item(tabindex=idx, class_='form-control') %}</td>
                   </tr>
                 {% end %}
                 <tr>
@@ -139,7 +138,7 @@
           <i>Status:</i> {{preprocessing_status}}
           <br>
           {% if 'zero-size array' in preprocessing_status %}
-          <b>Your barcodes do not seem to match your prep template info</b>
+            <b>Your barcodes do not seem to match your prep template info</b>
           {% end %}
       {% else %}
         <b>Preprocessed data generated: </b>
