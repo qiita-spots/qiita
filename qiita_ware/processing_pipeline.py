@@ -316,3 +316,41 @@ class StudyPreprocessor(ParallelWrapper):
         self.prep_template.preprocessing_status = 'failed: %s' % msg
         LogEntry.create('Fatal', msg,
                         info={'prep_template': self.prep_template.id})
+
+
+class StudyProcessor(ParallelWrapper):
+    def _construct_job_graph(self, study, preprocessed_data, params):
+        """Constructs the workflow graph to process a study
+
+        The steps performed to process a study are:
+        1) Execute pick_closed_reference_otus.py
+        2) Add the new processed data to the DB
+
+        Parameters
+        ----------
+        study : Study
+            The study to process
+        preprocessed_data : PreprocessedData
+            The preprocessed data to process
+        params : BaseParameters
+            The parameters to use for processing
+        """
+        self._logger = stderr
+
+        # Step 1: Process the study
+        process_node = "PROCESS"
+        cmd, output_dir = cmd_generator(preprocessed_data, params)
+        self._job_graph.add_node(process_node,
+                                 func=system_call,
+                                 args=(cmd,),
+                                 job_name="Process command",
+                                 requires_deps=False)
+
+        # Step 2: Add processed data to DB
+
+    def _failure_callback(self, msg=None):
+        """Callback to execute in case that any of the job nodes failed
+
+        Need to change the preprocessed data process status to 'failed'
+        """
+        LogEntry.create('Fatal', msg, info={})
