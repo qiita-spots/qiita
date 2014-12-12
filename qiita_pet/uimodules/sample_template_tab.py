@@ -6,14 +6,13 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
-from tornado.web import UIModule
-
 from qiita_db.user import User
 from qiita_db.metadata_template import SampleTemplate
 from qiita_db.util import get_files_from_uploads_folders
+from .base_uimodule import BaseUIModule
 
 
-class SampleTemplateTab(UIModule):
+class SampleTemplateTab(BaseUIModule):
     def render(self, study):
         # Retrieve the files from the uploads folder, so the user can choose
         # the sample template of the study
@@ -27,8 +26,7 @@ class SampleTemplateTab(UIModule):
             sample_templates = []
 
         # Check if the request came from a local source
-        is_local_request = ('localhost' in self.request.headers['host'] or
-                            '127.0.0.1' in self.request.headers['host'])
+        is_local_request = self._is_local()
 
         # The user can choose the sample template only if the study is
         # sandboxed or the current user is an admin

@@ -1,3 +1,5 @@
+{% from qiita_pet.handlers.util import download_link_or_path %}
+
 <div class="tab-pane" id="preprocessed_data_info_{{ppd_id}}" style="padding: 10px;">
   <b>Prep template of origin:</b> <a href="#" onclick="display_tab('raw_data_tab', {{raw_data_id}}, {{prep_template_id}});">{{prep_template_id}}</a><br/>
   <b>EBI status:</b> {{ebi_status}}<br/>
@@ -12,11 +14,7 @@
       <tr>
         <td style="padding:3px;">
           {% set ft = ft.replace('_', ' ') %}
-          {% if is_local_request %}
-            <b>{{ft}}:</b> {{fp}}
-          {% else %}
-            <a class="btn btn-default glyphicon glyphicon-download-alt" href="/download/{{fpid}}" style="word-spacing: -10px;"> {{ft}}</a>
-          {% end %}
+          {% raw download_link_or_path(is_local_request, fp, fpid, ft) %}
         </td>
       </tr>
     {% end %}

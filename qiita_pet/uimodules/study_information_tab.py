@@ -8,10 +8,9 @@
 
 from functools import partial
 
-from tornado.web import UIModule
-
 from qiita_db.study import StudyPerson
 from qiita_pet.util import linkify
+from .base_uimodule import BaseUIModule
 
 
 study_person_linkifier = partial(
@@ -21,7 +20,7 @@ pubmed_linkifier = partial(
     "pubmed/{0}\">{0}</a>")
 
 
-class StudyInformationTab(UIModule):
+class StudyInformationTab(BaseUIModule):
     def render(self, study):
         study_info = study.info
         abstract = study_info['study_abstract']

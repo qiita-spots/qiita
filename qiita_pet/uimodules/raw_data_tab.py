@@ -8,7 +8,6 @@
 
 from operator import itemgetter
 
-from tornado.web import UIModule
 from future.utils import viewitems
 from wtforms import Form, BooleanField
 
@@ -19,6 +18,7 @@ from qiita_db.data import RawData
 from qiita_db.user import User
 from qiita_db.ontology import Ontology
 from qiita_db.metadata_template import PrepTemplate
+from .base_uimodule import BaseUIModule
 
 
 def get_raw_data_from_other_studies(user, study):
@@ -40,11 +40,22 @@ def get_raw_data(rdis):
 
 
 class PreprocessParametersForm(Form):
-    r""""""
+    r"""WTForm for introducing the preprocessing parameters
+
+    Allows editing the split_libraries_fastq.py parameters
+
+    Attributes
+    ----------
+    rev_comp_mapping_barcodes
+
+    See Also
+    --------
+    wtforms.Form
+    """
     rev_comp_mapping_barcodes = BooleanField("rev_comp_mapping_barcodes")
 
 
-class RawDataTab(UIModule):
+class RawDataTab(BaseUIModule):
     def render(self, study):
         user = User(self.current_user)
 
@@ -63,7 +74,7 @@ class RawDataTab(UIModule):
             study=study)
 
 
-class RawDataEditorTab(UIModule):
+class RawDataEditorTab(BaseUIModule):
     def render(self, study, raw_data):
         user = User(self.current_user)
         study_status = study.status
@@ -152,12 +163,11 @@ class RawDataEditorTab(UIModule):
             disable_link_btn=disable_link_btn)
 
 
-class PrepTemplatePanel(UIModule):
+class PrepTemplatePanel(BaseUIModule):
     def render(self, prep, study_id, is_editable, ena_terms,
                study_status, user_defined_terms):
         # Check if the request came from a local source
-        is_local_request = ('localhost' in self.request.headers['host'] or
-                            '127.0.0.1' in self.request.headers['host'])
+        is_local_request = self._is_local()
 
         prep_id = prep.id
         data_type = prep.data_type()

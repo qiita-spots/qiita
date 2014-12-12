@@ -6,14 +6,13 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
-from tornado.web import UIModule
-
 from qiita_db.data import PreprocessedData
 from qiita_db.metadata_template import PrepTemplate
 from qiita_db.user import User
+from .base_uimodule import BaseUIModule
 
 
-class PreprocessedDataTab(UIModule):
+class PreprocessedDataTab(BaseUIModule):
     def render(self, study):
         avail_ppd = [(ppd_id, PreprocessedData(ppd_id))
                      for ppd_id in study.preprocessed_data()]
@@ -23,7 +22,7 @@ class PreprocessedDataTab(UIModule):
             study_id=study.id)
 
 
-class PreprocessedDataInfoTab(UIModule):
+class PreprocessedDataInfoTab(BaseUIModule):
     def render(self, study_id, preprocessed_data):
         user = User(self.current_user)
         ppd_id = preprocessed_data.id
@@ -31,8 +30,7 @@ class PreprocessedDataInfoTab(UIModule):
         ebi_study_accession = preprocessed_data.ebi_study_accession
         ebi_submission_accession = preprocessed_data.ebi_submission_accession
         filepaths = preprocessed_data.get_filepaths()
-        is_local_request = ('localhost' in self.request.headers['host'] or
-                            '127.0.0.1' in self.request.headers['host'])
+        is_local_request = self._is_local()
         show_ebi_btn = user.level == "admin"
 
         if PrepTemplate.exists(preprocessed_data.prep_template):

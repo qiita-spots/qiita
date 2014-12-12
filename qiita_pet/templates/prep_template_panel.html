@@ -1,4 +1,5 @@
 {% from os.path import basename %}
+{% from qiita_pet.handlers.util import download_link_or_path %}
 
 <!-- modal view to enter preprocessing parameters -->
 <div class="modal fade" id="preprocess-modal-view-{{prep_id}}" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
@@ -55,11 +56,7 @@
         {% for ptid, ptpath in filepaths %}
           <tr>
             <td>
-              {% if is_local_request %}
-                {{ptpath}}
-              {% else %}
-                <br/><a class="btn btn-default glyphicon glyphicon-download-alt" href="/download/{{ptid}}" style="word-spacing: -10px;"> {{basename(ptpath)}}</a>
-              {% end %}
+            {% raw download_link_or_path(is_local_request, ptpath, ptid, basename(ptpath)) %}
             </td>
           </tr>
         {% end %}
