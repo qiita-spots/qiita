@@ -35,10 +35,13 @@ class PreprocessedDataInfoTab(BaseUIModule):
 
         if PrepTemplate.exists(preprocessed_data.prep_template):
             prep_template_id = preprocessed_data.prep_template
-            raw_data_id = PrepTemplate(prep_template_id).raw_data
+            prep_template = PrepTemplate(prep_template_id)
+            raw_data_id = prep_template.raw_data
+            inv_type = prep_template.investigation_type or "None Selected"
         else:
             prep_template_id = None
             raw_data_id = None
+            inv_type = "None Selected"
 
         return self.render_string(
             "preprocessed_data_info_tab.html",
@@ -50,4 +53,5 @@ class PreprocessedDataInfoTab(BaseUIModule):
             filepaths=filepaths,
             is_local_request=is_local_request,
             prep_template_id=prep_template_id,
-            raw_data_id=raw_data_id)
+            raw_data_id=raw_data_id,
+            inv_type=inv_type)
