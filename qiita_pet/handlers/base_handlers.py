@@ -31,7 +31,7 @@ class BaseHandler(RequestHandler):
                 is_admin = User(self.current_user).level == 'admin'
             except:
                 # Any issue with this check leaves default as not admin
-                is_admin = False
+                pass
 
         # render error page
         self.render('error.html', user=self.current_user,
