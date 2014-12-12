@@ -53,10 +53,10 @@
             <a class="btn btn-default glyphicon glyphicon-eye-open" href="/metadata_summary/?study_id={{study_id}}&prep_template={{prep_id}}" style="word-spacing: -10px;"> Show prep template summary</a>
           </td>
         </tr>
-        {% for ptid, ptpath in filepaths %}
+        {% for ptid, ptpath, ptype in filepaths %}
           <tr>
             <td>
-            {% raw download_link_or_path(is_local_request, ptpath, ptid, basename(ptpath)) %}
+            {% raw download_link_or_path(is_local_request, ptpath, ptid, ptype) %}
             </td>
           </tr>
         {% end %}

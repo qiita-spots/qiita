@@ -7,6 +7,7 @@
 # -----------------------------------------------------------------------------
 
 from operator import itemgetter
+from os.path import basename
 
 from future.utils import viewitems
 from wtforms import Form, BooleanField
@@ -176,6 +177,13 @@ class PrepTemplatePanel(BaseUIModule):
         preprocessed_data = prep.preprocessed_data
         preprocessing_status = prep.preprocessing_status
         preprocess_form = PreprocessParametersForm()
+
+        # Unfortunately, both the prep template and the qiime mapping files
+        # have the sample type. The way to differentiate them is if we have
+        # the substring 'qiime' in the basename
+        _fp_type = (lambda fp: "Qiime mapping"
+                    if 'qiime' in basename(fp) else "Prep template")
+        filepaths = [(id_, fp, _fp_type(fp)) for id_, fp in filepaths]
 
         return self.render_string(
             "prep_template_panel.html",
