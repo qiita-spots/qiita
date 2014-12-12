@@ -85,7 +85,7 @@ def submit_EBI(preprocessed_data_id, action, send, fastq_dir_fp=None):
         # If the user does not specify a FASTQ directory, create one and
         # re-serialize the per-sample FASTQs from the demux file
         fastq_dir_fp = mkdtemp(prefix=qiita_config.working_dir)
-        demux = [path for path, ftype in preprocessed_data.get_filepaths()
+        demux = [path for _, path, ftype in preprocessed_data.get_filepaths()
                  if ftype == 'preprocessed_demux'][0]
 
         # Keep track of which files were actually in the demux file so that we
