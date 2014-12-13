@@ -200,3 +200,14 @@ class PrepTemplatePanel(BaseUIModule):
             study_status=study_status,
             user_defined_terms=user_defined_terms,
             preprocess_form=preprocess_form)
+
+
+class EditInvestigationType(BaseUIModule):
+    def render(self, ena_terms, user_defined_terms, prep_id, inv_type, ppd_id):
+        return self.render_string(
+            "study_description_templates/edit_investigation_type.html",
+            ena_terms=ena_terms,
+            user_defined_terms=user_defined_terms,
+            prep_id=prep_id,
+            investigation_type=inv_type,
+            ppd_id=ppd_id)
