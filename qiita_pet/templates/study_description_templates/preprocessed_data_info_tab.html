@@ -1,7 +1,7 @@
 {% from qiita_pet.handlers.util import download_link_or_path %}
 
 <div class="tab-pane" id="preprocessed_data_info_{{ppd_id}}" style="padding: 10px;">
-  <b>Prep template of origin:</b> <a href="#" onclick="display_tab('raw_data_tab', {{raw_data_id}}, {{prep_template_id}});">{{prep_template_id}}</a><br/>
+  <a href="#" onclick="display_tab('raw_data_tab', {{raw_data_id}}, {{prep_template_id}});">Prep template</a><br/>
   <b>EBI status:</b> {{ebi_status}}<br/>
   <b>EBI study accession:</b> {{ebi_study_accession}}<br/>
   <b>EBI submission accession:</b> {{ebi_submission_accession}}<br/>
