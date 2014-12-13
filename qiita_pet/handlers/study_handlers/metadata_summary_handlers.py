@@ -62,9 +62,15 @@ class MetadataSummaryHandler(BaseHandler):
         elif prep_template:
             # The prep template has been provided
             template = self._get_template(PrepTemplate, prep_template)
+            back_button_path = (
+                "/study/description/%s?top_tab=raw_data_tab&sub_tab=%s"
+                "&prep_tab=%s" % (study_id, template.raw_data, template.id))
         elif sample_template:
             # The sample template has been provided
             template = self._get_template(SampleTemplate, sample_template)
+            back_button_path = (
+                "/study/description/%s?top_tab=sample_template_tab"
+                % study_id)
         else:
             # Neither a sample template or a prep template has been provided
             # Fail nicely
@@ -83,4 +89,4 @@ class MetadataSummaryHandler(BaseHandler):
 
         self.render('metadata_summary.html', user=self.current_user,
                     study_title=study.title, stats=stats,
-                    study_id=study_id)
+                    back_button_path=back_button_path)

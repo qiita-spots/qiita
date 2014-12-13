@@ -607,7 +607,9 @@ class PreprocessingSummaryHandler(BaseHandler):
 
         # Get the return address
         back_button_path = self.get_argument(
-            'back_button_path', '/study/description/%d' % study.id)
+            'back_button_path',
+            '/study/description/%d?top_tab=preprocessed_data_tab&sub_tab=%s'
+            % (study.id, preprocessed_data_id))
 
         # Get all the filepaths attached to the preprocessed data
         files_tuples = ppd.get_filepaths()
