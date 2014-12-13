@@ -40,7 +40,7 @@ class MetadataSummaryHandler(BaseHandler):
         """
         try:
             template = constructor(int(template_id))
-        except QiitaDBUnknownIDError, ValueError:
+        except (QiitaDBUnknownIDError, ValueError):
             # By using __name__, it will either display 'SampleTemplate'
             # or 'PrepTemplate'
             raise HTTPError("%s %s does not exist" %
