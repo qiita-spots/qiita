@@ -30,6 +30,7 @@ from qiita_pet.handlers.compute import (
 from qiita_pet.handlers.preprocessing_handlers import PreprocessHandler
 from qiita_pet.handlers.stats import StatsHandler
 from qiita_pet.handlers.download import DownloadHandler
+from qiita_pet.handlers.vamps import VAMPSHandler
 from qiita_pet import uimodules
 from qiita_db.util import get_mountpoint
 
@@ -84,6 +85,7 @@ class Application(tornado.web.Application):
             (r"/check_study/", CreateStudyAJAX),
             (r"/stats/", StatsHandler),
             (r"/download/(.*)", DownloadHandler),
+            (r"/vamps/(.*)", VAMPSHandler),
             # 404 PAGE MUST BE LAST IN THIS LIST!
             (r".*", NoPageHandler)
         ]
