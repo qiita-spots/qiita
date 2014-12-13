@@ -385,6 +385,8 @@ class StudyDescriptionHandler(BaseHandler):
         msg = "investigation type successfully updated"
         msg_level = "success"
 
+        ppd_id = int(self.get_argument('ppd_id'))
+
         prep_id = self.get_argument('prep_id')
         edit_investigation_type = self.get_argument('edit-investigation-type',
                                                     None)
@@ -407,7 +409,16 @@ class StudyDescriptionHandler(BaseHandler):
                                         investigation_type, str(e))
             msg_level = "danger"
 
-        callback((msg, msg_level, "raw_data_tab", rd_id, prep_id))
+        if ppd_id == 0:
+            top_tab = "raw_data_tab"
+            sub_tab = rd_id
+            prep_tab = prep_id
+        else:
+            top_tab = "preprocessed_data_tab"
+            sub_tab = ppd_id
+            prep_tab = None
+
+        callback((msg, msg_level, top_tab, sub_tab, prep_tab))
 
     def unspecified_action(self, study, user, callback):
         """If the action is not recognized, we return an error message
@@ -607,7 +618,9 @@ class PreprocessingSummaryHandler(BaseHandler):
 
         # Get the return address
         back_button_path = self.get_argument(
-            'back_button_path', '/study/description/%d' % study.id)
+            'back_button_path',
+            '/study/description/%d?top_tab=preprocessed_data_tab&sub_tab=%s'
+            % (study.id, preprocessed_data_id))
 
         # Get all the filepaths attached to the preprocessed data
         files_tuples = ppd.get_filepaths()

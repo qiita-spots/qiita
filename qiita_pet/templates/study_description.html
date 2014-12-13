@@ -3,18 +3,18 @@
 <script>
 // Note that these two callbacks can come from the step where you are creating
 // a new prep template or when you are editing the prep template thus isEdit
-function investigationTypeChanged(rawDataID, isEdit){
+function investigationTypeChanged(rawDataID, prepDataID, isEdit){
 
   // whether the callback comes from an edit element
   var isEdit = isEdit !== undefined ? isEdit : false;
 
   if (isEdit){
-    if ($('#edit-investigation-type-'+rawDataID).val() === 'Other'){
-      $('#edit-user-defined-investigation-types-'+rawDataID).show()
+    if ($('#edit-investigation-type-'+rawDataID+'-'+prepDataID).val() === 'Other'){
+      $('#edit-user-defined-investigation-types-'+rawDataID+'-'+prepDataID).show()
     }
     else {
-      $('#edit-user-defined-investigation-types-'+rawDataID).hide()
-      $('#edit-new-investigation-type-entry-'+rawDataID).hide()
+      $('#edit-user-defined-investigation-types-'+rawDataID+'-'+prepDataID).hide()
+      $('#edit-new-investigation-type-entry-'+rawDataID+'-'+prepDataID).hide()
     }
   }
     else{
@@ -28,17 +28,17 @@ function investigationTypeChanged(rawDataID, isEdit){
   }
 }
 
-function newInvestigationTypeChanged(rawDataID, isEdit){
+function newInvestigationTypeChanged(rawDataID, prepDataID, isEdit){
 
   // whether the callback comes from an edit element
   var isEdit = isEdit !== undefined ? isEdit : false;
 
   if (isEdit){
-    if ($('#edit-user-defined-investigation-type-'+rawDataID).val() === 'New Type'){
-      $('#edit-new-investigation-type-entry-'+rawDataID).show()
+    if ($('#edit-user-defined-investigation-type-'+rawDataID+'-'+prepDataID).val() === 'New Type'){
+      $('#edit-new-investigation-type-entry-'+rawDataID+'-'+prepDataID).show()
     }
     else {
-      $('#edit-new-investigation-type-entry-'+rawDataID).hide()
+      $('#edit-new-investigation-type-entry-'+rawDataID+'-'+prepDataID).hide()
     }
   }
   else{
@@ -208,7 +208,7 @@ function make_sandbox() {
   }
 }
 
-function update_investigation_type(old_value, prep_template_id) {
+function update_investigation_type(old_value, prep_template_id, ppd_id) {
   if (confirm("Are you sure you want to update the investigation type?")) {
       var form = $("<form>")
         .attr("action", window.location.href)
@@ -220,19 +220,23 @@ function update_investigation_type(old_value, prep_template_id) {
         .append($("<input>")
           .attr("type", "hidden")
           .attr("name", "edit-user-defined-investigation-type")
-          .attr("value", $("#edit-user-defined-investigation-type-" + prep_template_id).val()))
+          .attr("value", $("#edit-user-defined-investigation-type-" + prep_template_id + "-" + ppd_id).val()))
         .append($("<input>")
           .attr("type", "hidden")
           .attr("name", "edit-new-investigation-type")
-          .attr("value", $("#edit-new-investigation-type-" + prep_template_id).val()))
+          .attr("value", $("#edit-new-investigation-type-" + prep_template_id + "-" + ppd_id).val()))
         .append($("<input>")
           .attr("type", "hidden")
           .attr("name", "edit-investigation-type")
-          .attr("value", $("#edit-investigation-type-" + prep_template_id).val()))
+          .attr("value", $("#edit-investigation-type-" + prep_template_id + "-" + ppd_id).val()))
+        .append($("<input>")
+          .attr("type", "hidden")
+          .attr("name", "ppd_id")
+          .attr("value", ppd_id))
         .append($("<input>")
           .attr("type", "hidden")
           .attr("name", "action")
-          .attr("value", "update_investigation_type"));;
+          .attr("value", "update_investigation_type"));
       $("body").append(form);
       form.submit();
   } else {

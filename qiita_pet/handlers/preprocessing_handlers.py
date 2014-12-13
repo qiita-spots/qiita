@@ -3,6 +3,7 @@ from tornado.web import authenticated
 from .base_handlers import BaseHandler
 from qiita_ware.dispatchable import preprocessor
 from qiita_db.parameters import PreprocessedIlluminaParams
+from qiita_db.metadata_template import PrepTemplate
 from qiita_ware.context import submit
 from qiita_pet.uimodules.raw_data_tab import PreprocessParametersForm
 
@@ -12,6 +13,7 @@ class PreprocessHandler(BaseHandler):
     def post(self):
         study_id = int(self.get_argument('study_id'))
         prep_template_id = int(self.get_argument('prep_template_id'))
+        raw_data_id = PrepTemplate(prep_template_id).raw_data
 
         # Get the preprocessing parameters
         form_data = PreprocessParametersForm()
@@ -38,4 +40,7 @@ class PreprocessHandler(BaseHandler):
 
         self.render('compute_wait.html', user=self.current_user,
                     job_id=job_id, title='Preprocessing',
-                    completion_redirect='/study/description/%d' % study_id)
+                    completion_redirect='/study/description/%d?top_tab='
+                                        'raw_data_tab&sub_tab=%s&prep_tab=%s'
+                                        % (study_id, raw_data_id,
+                                           prep_template_id))

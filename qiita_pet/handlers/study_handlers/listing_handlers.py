@@ -9,7 +9,7 @@ from __future__ import division
 from collections import namedtuple
 from json import dumps
 
-from tornado.web import authenticated, HTTPError, asynchronous
+from tornado.web import authenticated, HTTPError
 from tornado.gen import coroutine, Task
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError

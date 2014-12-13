@@ -9,6 +9,8 @@
 from qiita_db.data import PreprocessedData
 from qiita_db.metadata_template import PrepTemplate
 from qiita_db.user import User
+from qiita_db.ontology import Ontology
+from qiita_db.util import convert_to_id
 from .base_uimodule import BaseUIModule
 
 
@@ -33,6 +35,18 @@ class PreprocessedDataInfoTab(BaseUIModule):
         is_local_request = self._is_local()
         show_ebi_btn = user.level == "admin"
 
+        # Get all the ENA terms for the investigation type
+        ontology = Ontology(convert_to_id('ENA', 'ontology'))
+        # make "Other" show at the bottom of the drop down menu
+        ena_terms = []
+        for v in sorted(ontology.terms):
+            if v != 'Other':
+                ena_terms.append('<option value="%s">%s</option>' % (v, v))
+        ena_terms.append('<option value="Other">Other</option>')
+
+        # New Type is for users to add a new user-defined investigation type
+        user_defined_terms = ontology.user_defined_terms + ['New Type']
+
         if PrepTemplate.exists(preprocessed_data.prep_template):
             prep_template_id = preprocessed_data.prep_template
             prep_template = PrepTemplate(prep_template_id)
@@ -54,4 +68,6 @@ class PreprocessedDataInfoTab(BaseUIModule):
             is_local_request=is_local_request,
             prep_template_id=prep_template_id,
             raw_data_id=raw_data_id,
-            inv_type=inv_type)
+            inv_type=inv_type,
+            ena_terms=ena_terms,
+            user_defined_terms=user_defined_terms)
