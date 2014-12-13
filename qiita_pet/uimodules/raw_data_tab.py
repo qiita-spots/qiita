@@ -68,7 +68,7 @@ class RawDataTab(BaseUIModule):
                          for rd in get_raw_data(study.raw_data())]
 
         return self.render_string(
-            "raw_data_tab.html",
+            "study_description_templates/raw_data_tab.html",
             filetypes=filetypes,
             other_studies_rd=other_studies_rd,
             available_raw_data=raw_data_info,
@@ -145,7 +145,7 @@ class RawDataEditorTab(BaseUIModule):
         raw_data_filetype = raw_data.filetype
 
         return self.render_string(
-            "raw_data_editor_tab.html",
+            "study_description_templates/raw_data_editor_tab.html",
             study_id=study.id,
             study_status=study_status,
             user_level=user_level,
@@ -186,7 +186,7 @@ class PrepTemplatePanel(BaseUIModule):
         filepaths = [(id_, fp, _fp_type(fp)) for id_, fp in filepaths]
 
         return self.render_string(
-            "prep_template_panel.html",
+            "study_description_templates/prep_template_panel.html",
             prep_id=prep_id,
             data_type=data_type,
             filepaths=filepaths,

@@ -34,7 +34,7 @@ class SampleTemplateTab(BaseUIModule):
                               or User(self.current_user).level == 'admin')
 
         return self.render_string(
-            "sample_template_tab.html",
+            "study_description_templates/sample_template_tab.html",
             show_select_sample=show_select_sample,
             files=files,
             study_id=study.id,

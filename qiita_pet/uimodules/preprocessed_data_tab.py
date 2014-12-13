@@ -17,7 +17,7 @@ class PreprocessedDataTab(BaseUIModule):
         avail_ppd = [(ppd_id, PreprocessedData(ppd_id))
                      for ppd_id in study.preprocessed_data()]
         return self.render_string(
-            "preprocessed_data_tab.html",
+            "study_description_templates/preprocessed_data_tab.html",
             available_preprocessed_data=avail_ppd,
             study_id=study.id)
 
@@ -44,7 +44,7 @@ class PreprocessedDataInfoTab(BaseUIModule):
             inv_type = "None Selected"
 
         return self.render_string(
-            "preprocessed_data_info_tab.html",
+            "study_description_templates/preprocessed_data_info_tab.html",
             ppd_id=ppd_id,
             show_ebi_btn=show_ebi_btn,
             ebi_status=ebi_status,
