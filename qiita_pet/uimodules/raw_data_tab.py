@@ -7,8 +7,8 @@
 # -----------------------------------------------------------------------------
 
 from operator import itemgetter
+from os.path import basename
 
-from tornado.web import UIModule
 from future.utils import viewitems
 from wtforms import Form, BooleanField
 
@@ -19,6 +19,7 @@ from qiita_db.data import RawData
 from qiita_db.user import User
 from qiita_db.ontology import Ontology
 from qiita_db.metadata_template import PrepTemplate
+from .base_uimodule import BaseUIModule
 
 
 def get_raw_data_from_other_studies(user, study):
@@ -40,11 +41,22 @@ def get_raw_data(rdis):
 
 
 class PreprocessParametersForm(Form):
-    r""""""
+    r"""WTForm for introducing the preprocessing parameters
+
+    Allows editing the split_libraries_fastq.py parameters
+
+    Attributes
+    ----------
+    rev_comp_mapping_barcodes
+
+    See Also
+    --------
+    wtforms.Form
+    """
     rev_comp_mapping_barcodes = BooleanField("rev_comp_mapping_barcodes")
 
 
-class RawDataTab(UIModule):
+class RawDataTab(BaseUIModule):
     def render(self, study):
         user = User(self.current_user)
 
@@ -56,14 +68,14 @@ class RawDataTab(UIModule):
                          for rd in get_raw_data(study.raw_data())]
 
         return self.render_string(
-            "raw_data_tab.html",
+            "study_description_templates/raw_data_tab.html",
             filetypes=filetypes,
             other_studies_rd=other_studies_rd,
             available_raw_data=raw_data_info,
             study=study)
 
 
-class RawDataEditorTab(UIModule):
+class RawDataEditorTab(BaseUIModule):
     def render(self, study, raw_data):
         user = User(self.current_user)
         study_status = study.status
@@ -99,8 +111,41 @@ class RawDataEditorTab(UIModule):
         # only if the study is sandboxed or the current user is an admin
         is_editable = study_status == 'sandbox' or user_level == 'admin'
 
+        # Get the files linked with the raw_data
+        raw_data_files = raw_data.get_filepaths()
+
+        # Get the status of the data linking
+        raw_data_link_status = raw_data.link_filepaths_status
+
+        # By default don't show the unlink button
+        show_unlink_btn = False
+        # By default disable the the link file button
+        disable_link_btn = True
+        # Define the message for the link status
+        if raw_data_link_status == 'linking':
+            link_msg = "Linking files..."
+        elif raw_data_link_status == 'unlinking':
+            link_msg = "Unlinking files..."
+        else:
+            # The link button is only disable if raw data link status is
+            # linking or unlinking, so we can enable it here
+            disable_link_btn = False
+            # The unlink button is only shown if the study is editable, the raw
+            # data linking status is not in linking or unlinking, and there are
+            # files attached to the raw data. At this  point, we are sure that
+            # the raw data linking status is not in linking or unlinking so we
+            # still need to check if it is editable or there are files attached
+            show_unlink_btn = is_editable and raw_data_files
+            if raw_data_link_status.startswith('failed'):
+                link_msg = "Error (un)linkingfiles: %s" % raw_data_link_status
+            else:
+                link_msg = ""
+
+        # Get the raw_data filetype
+        raw_data_filetype = raw_data.filetype
+
         return self.render_string(
-            "raw_data_editor_tab.html",
+            "study_description_templates/raw_data_editor_tab.html",
             study_id=study.id,
             study_status=study_status,
             user_level=user_level,
@@ -110,17 +155,20 @@ class RawDataEditorTab(UIModule):
             ena_terms=ena_terms,
             user_defined_terms=user_defined_terms,
             available_prep_templates=available_prep_templates,
-            r=raw_data,
             filepath_types=fts,
-            is_editable=is_editable)
+            is_editable=is_editable,
+            show_unlink_btn=show_unlink_btn,
+            link_msg=link_msg,
+            raw_data_files=raw_data_files,
+            raw_data_filetype=raw_data_filetype,
+            disable_link_btn=disable_link_btn)
 
 
-class PrepTemplatePanel(UIModule):
+class PrepTemplatePanel(BaseUIModule):
     def render(self, prep, study_id, is_editable, ena_terms,
                study_status, user_defined_terms):
         # Check if the request came from a local source
-        is_local_request = ('localhost' in self.request.headers['host'] or
-                            '127.0.0.1' in self.request.headers['host'])
+        is_local_request = self._is_local()
 
         prep_id = prep.id
         data_type = prep.data_type()
@@ -130,8 +178,15 @@ class PrepTemplatePanel(UIModule):
         preprocessing_status = prep.preprocessing_status
         preprocess_form = PreprocessParametersForm()
 
+        # Unfortunately, both the prep template and the qiime mapping files
+        # have the sample type. The way to differentiate them is if we have
+        # the substring 'qiime' in the basename
+        _fp_type = (lambda fp: "Qiime mapping"
+                    if 'qiime' in basename(fp) else "Prep template")
+        filepaths = [(id_, fp, _fp_type(fp)) for id_, fp in filepaths]
+
         return self.render_string(
-            "prep_template_panel.html",
+            "study_description_templates/prep_template_panel.html",
             prep_id=prep_id,
             data_type=data_type,
             filepaths=filepaths,

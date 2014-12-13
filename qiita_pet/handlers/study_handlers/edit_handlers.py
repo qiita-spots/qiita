@@ -148,6 +148,31 @@ class StudyEditHandler(BaseHandler):
         check_access(User(self.current_user), study)
         return study
 
+    def _get_study_person_id(self, index, new_people_info):
+        """Returns the id of the study person, creating if needed
+
+        If index < 0, means that we need to create a new study person, and its
+        information is stored in new_people_info[index]
+
+        Parameters
+        ----------
+        index : int
+            The index of the study person
+        new_people_info : list of tuples
+            The information of the new study persons added through the
+            interface
+
+        Returns
+        -------
+        int
+            the study person id
+        """
+        # If the ID is less than 0, then this is a new person
+        if index < 0:
+            return StudyPerson.create(*new_people_info[index]).id
+
+        return index
+
     @authenticated
     def get(self, study_id=None):
         study = None
@@ -181,44 +206,31 @@ class StudyEditHandler(BaseHandler):
         form_data.process(data=self.request.arguments)
 
         # Get information about new people that need to be added to the DB
-        new_people_info = zip(self.get_arguments('new_people_names'),
-                              self.get_arguments('new_people_emails'),
-                              self.get_arguments('new_people_affiliations'),
-                              self.get_arguments('new_people_phones'),
-                              self.get_arguments('new_people_addresses'))
+        # Phones and addresses are optional, so make sure that we have None
+        # values instead of empty strings
+        new_people_info = [
+            (name, email, affiliation, phone or None, address or None)
+            for name, email, affiliation, phone, address in
+            zip(self.get_arguments('new_people_names'),
+                self.get_arguments('new_people_emails'),
+                self.get_arguments('new_people_affiliations'),
+                self.get_arguments('new_people_phones'),
+                self.get_arguments('new_people_addresses'))]
 
         # New people will be indexed with negative numbers, so we reverse
         # the list here
         new_people_info.reverse()
 
         index = int(form_data.data['principal_investigator'][0])
-        if index < 0:
-            # If the ID is less than 0, then this is a new person
-            PI = StudyPerson.create(
-                new_people_info[index][0],
-                new_people_info[index][1],
-                new_people_info[index][2],
-                new_people_info[index][3] or None,
-                new_people_info[index][4] or None).id
-        else:
-            PI = index
+        PI = self._get_study_person_id(index, new_people_info)
 
         if form_data.data['lab_person'][0]:
             index = int(form_data.data['lab_person'][0])
-            if index < 0:
-                # If the ID is less than 0, then this is a new person
-                lab_person = StudyPerson.create(
-                    new_people_info[index][0],
-                    new_people_info[index][1],
-                    new_people_info[index][2],
-                    new_people_info[index][3] or None,
-                    new_people_info[index][4] or None).id
-            else:
-                lab_person = index
+            lab_person = self._get_study_person_id(index, new_people_info)
         else:
             lab_person = None
 
-        # TODO: Get the portal type from... somewhere
+        # TODO: Get the portal type from... somewhere - See issue #720
         # TODO: MIXS compliant?  Always true, right?
         info = {
             'portal_type_id': 1,
@@ -254,14 +266,13 @@ class StudyEditHandler(BaseHandler):
                    (the_study.id, form_data.data['study_title'][0]))
 
         # Add the environmental packages
-        if ('environmental_packages' in form_data.data and
-                form_data.data['environmental_packages']):
-            the_study.environmental_packages = form_data.data[
-                'environmental_packages']
+        the_study.environmental_packages = form_data.data[
+            'environmental_packages']
 
-        if form_data.data['pubmed_id'][0]:
+        pubmed_ids = form_data.data['pubmed_id'][0]
+        if pubmed_ids:
             # The user can provide a comma-seprated list
-            pmids = form_data.data['pubmed_id'][0].split(',')
+            pmids = pubmed_ids.split(',')
             # Make sure that we strip the spaces from the pubmed ids
             the_study.pmids = [pmid.strip() for pmid in pmids]
 
@@ -276,11 +287,10 @@ class CreateStudyAJAX(BaseHandler):
         old_study_title = self.get_argument('old_study_title', None)
 
         if study_title is None:
-            self.write('False')
-            return
+            to_write = False
+        elif study_title == old_study_title:
+            to_write = True
+        else:
+            to_write = False if Study.exists(study_title) else True
 
-        if old_study_title and study_title == old_study_title:
-            self.write('True')
-            return
-
-        self.write('False' if Study.exists(study_title) else 'True')
+        self.write(str(to_write))

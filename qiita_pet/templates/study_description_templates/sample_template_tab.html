@@ -1,3 +1,5 @@
+{% from qiita_pet.handlers.util import download_link_or_path %}
+
 <div class="tab-pane" id="sample_template_tab" style="padding: 10px;">
   {% if show_select_sample %}
     Select your sample template:
@@ -20,11 +22,7 @@
     <a class="btn btn-primary" href="/metadata_summary/?study_id={{study_id}}&sample_template={{study_id}}">Show sample template summary</a>
     </br>
     {% for stid, stpath in sample_templates %}
-      {% if is_local_request %}
-        <br/>{{stpath}}
-      {% else %}
-        <br/><a href="/download/{{stid}}">Download sample template</a>
-      {% end %}
+      <br/>{% raw download_link_or_path(is_local_request, stpath, stid, "Sample template") %}
     {% end %}
   {% end %}
 </div>

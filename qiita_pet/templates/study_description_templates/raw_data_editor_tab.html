@@ -78,17 +78,11 @@
       <!-- Files linked to the raw data -->
       <td style="vertical-align:top;padding:10px;">
         <h4>Linked files to this raw data</h4>
-          {% if is_editable and r.get_filepaths() and r.link_filepaths_status not in {'linking', 'unlinking'} %}
+          {% if show_unlink_btn %}
             <a class="btn btn-danger" onclick="unlink_all_files({{raw_data_id}})">Unlink all files</a><br/>
           {% end %}
-          {% if r.link_filepaths_status == 'linking' %}
-            <i><b style="color:red">Linking files...</b></i><br/>
-          {% elif r.link_filepaths_status == 'unlinking' %}
-            <i><b style="color:red">Unlinking files...</b></i><br/>
-          {% elif r.link_filepaths_status.startswith('failed') %}
-            <i><b style="color:red">Error (un)linking files: {{r.link_filepaths_status}} </b></i><br/>
-          {% end %}
-        {% for fpid, f, t in r.get_filepaths() %}
+          <i><b style="color:red">{{link_msg}}</b></i><br/>
+        {% for fpid, f, t in raw_data_files %}
             <i>{{basename(f)}}:</i> {{t[4:]}} <br/>
         {% end %}
           <br/>
@@ -116,7 +110,14 @@
             {% end %}
         </table>
         <br/>
-        <a onclick="link_files_to_raw_data({{raw_data_id}});" {% if r.link_filepaths_status in {'linking', 'unlinking'} %} class="btn btn-default" style=" pointer-events: none; cursor: default; background-color:grey;" {% else %} class="btn btn-primary" {% end %}>Link raw files to: {{r.filetype}} (ID: {{raw_data_id}})</a>
+        <a onclick="link_files_to_raw_data({{raw_data_id}});"
+          {% if disable_link_btn %}
+            class="btn btn-default" style=" pointer-events: none; cursor: default; background-color:grey;"
+          {% else %}
+            class="btn btn-primary"
+          {% end %}>
+          Link raw files to: {{raw_data_filetype}} (ID: {{raw_data_id}})
+        </a>
         {% end %}
       </td>
     </table>

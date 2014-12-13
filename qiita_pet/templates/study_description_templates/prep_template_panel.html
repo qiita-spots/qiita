@@ -1,4 +1,5 @@
 {% from os.path import basename %}
+{% from qiita_pet.handlers.util import download_link_or_path %}
 
 <!-- modal view to enter preprocessing parameters -->
 <div class="modal fade" id="preprocess-modal-view-{{prep_id}}" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
@@ -14,10 +15,9 @@
             <div class="form-group">
               <table>
                 {% for idx, form_item in enumerate(preprocess_form, start=1) %}
-                  {% set kwargs = {'tabindex': idx, 'class_': 'form-control'} %}
                   <tr>
                     <td width="50%">{% raw form_item.label %}</td>
-                    <td width="50%">{% raw form_item(**kwargs) %}</td>
+                    <td width="50%">{% raw form_item(tabindex=idx, class_='form-control') %}</td>
                   </tr>
                 {% end %}
                 <tr>
@@ -53,14 +53,10 @@
             <a class="btn btn-default glyphicon glyphicon-eye-open" href="/metadata_summary/?study_id={{study_id}}&prep_template={{prep_id}}" style="word-spacing: -10px;"> Show prep template summary</a>
           </td>
         </tr>
-        {% for ptid, ptpath in filepaths %}
+        {% for ptid, ptpath, ptype in filepaths %}
           <tr>
             <td>
-              {% if is_local_request %}
-                {{ptpath}}
-              {% else %}
-                <br/><a class="btn btn-default glyphicon glyphicon-download-alt" href="/download/{{ptid}}" style="word-spacing: -10px;"> {{basename(ptpath)}}</a>
-              {% end %}
+            {% raw download_link_or_path(is_local_request, ptpath, ptid, ptype) %}
             </td>
           </tr>
         {% end %}
@@ -139,7 +135,7 @@
           <i>Status:</i> {{preprocessing_status}}
           <br>
           {% if 'zero-size array' in preprocessing_status %}
-          <b>Your barcodes do not seem to match your prep template info</b>
+            <b>Your barcodes do not seem to match your prep template info</b>
           {% end %}
       {% else %}
         <b>Preprocessed data generated: </b>

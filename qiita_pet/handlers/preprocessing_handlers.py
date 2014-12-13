@@ -17,11 +17,18 @@ class PreprocessHandler(BaseHandler):
         form_data = PreprocessParametersForm()
         form_data.process(data=self.request.arguments)
         rcomp_mapping_barcodes = form_data.data['rev_comp_mapping_barcodes']
-        # currently forcing these values
-        # param_constructor = self.get_argument('param_constructor')
+
+        # currently only allow the user to change a single parameter of split
+        # libraries: --rev_comp_mapping_barcodes. The parameter ids 1 and 2
+        # contain the same set of values except for that flag. If param_id = 1,
+        # the flag is not activated, while in param_id = 2; it is.
         if rcomp_mapping_barcodes:
+            # Choose the parameter set with the --rev_comp_mapping_barcodes
+            # flag activated
             param_id = 2
         else:
+            # Choose the parameter set with the --rev_comp_mapping_barcodes
+            # flag not activated
             param_id = 1
 
         param_constructor = PreprocessedIlluminaParams
