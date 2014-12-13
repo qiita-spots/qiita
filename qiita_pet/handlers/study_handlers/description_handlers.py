@@ -548,8 +548,12 @@ class StudyDescriptionHandler(BaseHandler):
     def get(self, study_id):
         study, user = self._get_sudy_and_check_access(study_id)
 
-        self.display_template(study, user, "", 'info',
-                              top_tab="study_information_tab")
+        top_tab = self.get_argument('top_tab', 'study_information_tab')
+        sub_tab = self.get_argument('sub_tab', None)
+        prep_tab = self.get_argument('prep_tab', None)
+
+        self.display_template(study, user, "", 'info', top_tab=top_tab,
+                              sub_tab=sub_tab, prep_tab=prep_tab)
 
     @authenticated
     @coroutine
