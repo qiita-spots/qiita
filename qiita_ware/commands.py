@@ -177,9 +177,9 @@ def submit_VAMPS(preprocessed_data_id):
 
     # Generating a tgz
     targz_folder = mkdtemp(prefix=qiita_config.working_dir)
-    targz_fp = join(targz_folder, 'test_%d_%d_%d.tgz' % (study.id,
-                                                         prep_template.id,
-                                                         preprocessed_data.id))
+    targz_fp = join(targz_folder, '%d_%d_%d.tgz' % (study.id,
+                                                    prep_template.id,
+                                                    preprocessed_data.id))
     targz = taropen(targz_fp, mode='w:gz')
 
     # adding sample/prep
@@ -215,5 +215,7 @@ def submit_VAMPS(preprocessed_data_id):
 
     if obs != exp:
         preprocessed_data.update_vamps_status('failure')
+        return False
     else:
         preprocessed_data.update_vamps_status('success')
+        return True

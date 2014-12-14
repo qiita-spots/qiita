@@ -82,8 +82,8 @@ class VAMPSHandler(BaseHandler):
             msg_level = 'danger'
         else:
             channel = self.current_user
-            job_id = submit(channel, submit_to_VAMPS, int(preprocessed_data_id),
-                            submission_type)
+            job_id = submit(channel, submit_to_VAMPS,
+                            int(preprocessed_data_id))
 
             self.render('compute_wait.html', user=self.current_user,
                         job_id=job_id, title='VAMPS Submission',

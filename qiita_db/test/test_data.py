@@ -514,7 +514,7 @@ class PreprocessedDataTests(TestCase):
         ppd = PreprocessedData(1)
 
         # verifying current value
-        self.assertEqual(ppd.submitted_to_vamps_status(), 'submitting')
+        self.assertEqual(ppd.submitted_to_vamps_status(), 'not submitted')
 
         # changing value and then verifying new value
         ppd.update_vamps_status('failed')
