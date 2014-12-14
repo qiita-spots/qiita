@@ -21,7 +21,7 @@ from qiita_pet.handlers.study_handlers import (
     StudyEditHandler, PrivateStudiesHandler, PublicStudiesHandler,
     StudyDescriptionHandler, MetadataSummaryHandler, EBISubmitHandler,
     CreateStudyAJAX, ShareStudyAJAX, StudyApprovalList,
-    PreprocessingSummaryHandler)
+    PreprocessingSummaryHandler, VAMPSHandler)
 from qiita_pet.handlers.websocket_handlers import MessageHandler
 from qiita_pet.handlers.logger_handlers import LogEntryViewerHandler
 from qiita_pet.handlers.upload import UploadFileHandler, StudyUploadFileHandler
@@ -30,7 +30,6 @@ from qiita_pet.handlers.compute import (
 from qiita_pet.handlers.preprocessing_handlers import PreprocessHandler
 from qiita_pet.handlers.stats import StatsHandler
 from qiita_pet.handlers.download import DownloadHandler
-from qiita_pet.handlers.vamps import VAMPSHandler
 from qiita_pet import uimodules
 from qiita_db.util import get_mountpoint
 

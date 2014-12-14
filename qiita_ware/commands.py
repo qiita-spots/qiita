@@ -169,17 +169,17 @@ def submit_VAMPS(preprocessed_data_id):
     sample_template = SampleTemplate(study.sample_template)
     prep_template = PrepTemplate(preprocessed_data.prep_template)
 
-    # status = preprocessed_data.submitted_to_vamps_status()
-    # if status in ('submitting', 'success'):
-    #     raise ValueError("Cannot resubmit! Current status is: %s" % status)
-    #
-    #     preprocessed_data.update_vamps_status('submitting')
+    status = preprocessed_data.submitted_to_vamps_status()
+    if status in ('submitting', 'success'):
+        raise ValueError("Cannot resubmit! Current status is: %s" % status)
+
+        preprocessed_data.update_vamps_status('submitting')
 
     # Generating a tgz
     targz_folder = mkdtemp(prefix=qiita_config.working_dir)
     targz_fp = join(targz_folder, 'test_%d_%d_%d.tgz' % (study.id,
-                                                   prep_template.id,
-                                                   preprocessed_data.id))
+                                                         prep_template.id,
+                                                         preprocessed_data.id))
     targz = taropen(targz_fp, mode='w:gz')
 
     # adding sample/prep
@@ -214,8 +214,6 @@ def submit_VAMPS(preprocessed_data_id):
     obs = open(cmd_fp).readlines()
 
     if obs != exp:
-        print 'failed'
-        # preprocessed_data.update_vamps_status('failure')
+        preprocessed_data.update_vamps_status('failure')
     else:
-        print 'success'
-        # preprocessed_data.update_vamps_status('success')
+        preprocessed_data.update_vamps_status('success')

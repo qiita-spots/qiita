@@ -43,6 +43,16 @@ def submit_to_ebi(preprocessed_data_id, submission_type):
     return study_acc, submission_acc
 
 
+def submit_to_vamps(preprocessed_data_id, submission_type):
+    """Submit a study to EBI"""
+    # study_acc, submission_acc = submit_EBI(preprocessed_data_id,
+    #                                        submission_type,
+    #                                        True)
+
+    return study_acc, submission_acc
+submit_to_VAMPS
+
+
 def run_analysis(analysis_id, commands, comm_opts=None,
                  rarefaction_depth=None, **kwargs):
     """Run a meta-analysis"""

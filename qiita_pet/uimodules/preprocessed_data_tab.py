@@ -31,6 +31,7 @@ class PreprocessedDataInfoTab(BaseUIModule):
         ebi_status = preprocessed_data.submitted_to_insdc_status()
         ebi_study_accession = preprocessed_data.ebi_study_accession
         ebi_submission_accession = preprocessed_data.ebi_submission_accession
+        vamps_status = preprocessed_data.submitted_to_vamps_status()
         filepaths = preprocessed_data.get_filepaths()
         is_local_request = self._is_local()
         show_ebi_btn = user.level == "admin"
@@ -70,4 +71,5 @@ class PreprocessedDataInfoTab(BaseUIModule):
             raw_data_id=raw_data_id,
             inv_type=inv_type,
             ena_terms=ena_terms,
+            vamps_status=vamps_status,
             user_defined_terms=user_defined_terms)
