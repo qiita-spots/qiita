@@ -7,7 +7,7 @@ before_install:
   - ./miniconda.sh -b
   - export PATH=/home/travis/anaconda/bin:$PATH
   # Update conda itself
-  # - conda update --yes conda
+  - conda update --yes conda
 install:
   - conda create --yes -n env_name python=$PYTHON_VERSION pip nose openpyxl=1.8.2 pandas>=0.15 ipython pyzmq flake8
   - conda install --yes -n env_name python=$PYTHON_VERSION h5py>=2.3.1
