@@ -99,7 +99,7 @@ class StudyDescriptionHandler(BaseHandler):
 
         try:
             study = Study(_to_int(study_id))
-        except QiitaDBUnknownIDError, HTTPError:
+        except (QiitaDBUnknownIDError, HTTPError):
             # Study not in database so fail nicely
             raise HTTPError(404, "Study %s does not exist" % study_id)
         else:
@@ -585,7 +585,8 @@ class StudyDescriptionHandler(BaseHandler):
 
         # Get the action that we need to perform
         action = self.get_argument("action", None)
-        action_f = actions.get(action)
+        action_f = actions[action]
+
         msg, msg_level, top_tab, sub_tab, prep_tab = yield Task(action_f,
                                                                 study, user)
 
