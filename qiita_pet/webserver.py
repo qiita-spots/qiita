@@ -6,6 +6,7 @@ import tornado.websocket
 from os.path import dirname, join
 from base64 import b64encode
 from uuid import uuid4
+from moi.websocket import MOIMessageHandler
 
 from qiita_core.qiita_settings import qiita_config
 from qiita_pet.handlers.base_handlers import (MainHandler, NoPageHandler)
@@ -19,16 +20,17 @@ from qiita_pet.handlers.analysis_handlers import (
 from qiita_pet.handlers.study_handlers import (
     StudyEditHandler, PrivateStudiesHandler, PublicStudiesHandler,
     StudyDescriptionHandler, MetadataSummaryHandler, EBISubmitHandler,
-    CreateStudyAJAX, ShareStudyAJAX,  StudyApprovalList,
+    CreateStudyAJAX, ShareStudyAJAX, StudyApprovalList,
     PreprocessingSummaryHandler)
-from qiita_pet.handlers.logger_handlers import LogEntryViewerHandler
 from qiita_pet.handlers.websocket_handlers import MessageHandler
+from qiita_pet.handlers.logger_handlers import LogEntryViewerHandler
 from qiita_pet.handlers.upload import UploadFileHandler, StudyUploadFileHandler
 from qiita_pet.handlers.compute import (
     ComputeCompleteHandler, AddFilesToRawData, UnlinkAllFiles)
 from qiita_pet.handlers.preprocessing_handlers import PreprocessHandler
 from qiita_pet.handlers.stats import StatsHandler
 from qiita_pet.handlers.download import DownloadHandler
+from qiita_pet import uimodules
 from qiita_db.util import get_mountpoint
 
 
@@ -60,6 +62,7 @@ class Application(tornado.web.Application):
             (r"/analysis/wait/(.*)", AnalysisWaitHandler),
             (r"/analysis/results/(.*)", AnalysisResultsHandler),
             (r"/analysis/show/", ShowAnalysesHandler),
+            (r"/moi-ws/", MOIMessageHandler),
             (r"/consumer/", MessageHandler),
             (r"/admin/error/", LogEntryViewerHandler),
             (r"/admin/approval/", StudyApprovalList),
@@ -88,6 +91,7 @@ class Application(tornado.web.Application):
             "template_path": TEMPLATE_PATH,
             "debug": DEBUG,
             "cookie_secret": COOKIE_SECRET,
-            "login_url": "/auth/login/"
+            "login_url": "/auth/login/",
+            "ui_modules": uimodules
         }
         tornado.web.Application.__init__(self, handlers, **settings)

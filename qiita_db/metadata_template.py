@@ -1160,8 +1160,10 @@ class SampleTemplate(MetadataTemplate):
         # Check that md_template has the required columns
         remaining = set(db_cols).difference(headers)
         missing = missing.union(remaining)
+        missing = missing.difference(cls.translate_cols_dict)
         if missing:
-            raise QiitaDBColumnError("Missing columns: %s" % missing)
+            raise QiitaDBColumnError("Missing columns: %s"
+                                     % ', '.join(missing))
 
         # Insert values on required columns
         values = _as_python_types(md_template, db_cols)
@@ -1330,8 +1332,10 @@ class PrepTemplate(MetadataTemplate):
         # Check that md_template has the required columns
         remaining = set(db_cols).difference(headers)
         missing = missing.union(remaining)
+        missing = missing.difference(cls.translate_cols_dict)
         if missing:
-            raise QiitaDBColumnError("Missing columns: %s" % missing)
+            raise QiitaDBColumnError("Missing columns: %s"
+                                     % ', '.join(missing))
 
         # Insert the metadata template
         prep_id = conn_handler.execute_fetchone(

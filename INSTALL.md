@@ -22,6 +22,7 @@ Qiita is a python package, with support for python 2.7, that depends on the foll
 * [networkx](http://networkx.lanl.gov/index.html)
 * [WTForms 2.0.1](https://wtforms.readthedocs.org/en/latest/)
 * [Mock](http://www.voidspace.org.uk/python/mock/)  For running test code only
+* [moi 0.1.0-dev](https://github.com/biocore/mustached-octo-ironman/)
 
 And on the following packages:
 
@@ -38,6 +39,7 @@ Once you have [PostgresSQL](http://www.postgresql.org/download/) and [redis](htt
 pip install numpy
 pip install cogent burrito qcli emperor pyzmq
 pip install https://github.com/biocore/qiime/archive/master.zip --no-deps
+pip install https://github.com/biocore/mustached-octo-ironman/archive/master.zip --no-deps
 pip install qiita-spots
 ```
 
@@ -48,6 +50,7 @@ After these commands are executed, you will need (1) download a [sample Qiita co
 wget https://github.com/biocore/qiita/blob/a0628e54aef85b1a064d40d57ca981aaf082a120/qiita_core/support_files/config_test.txt
 # (2) set the enviroment variable in your .bashrc
 echo "export QIITA_CONFIG_FP=config_test.txt" >> ~/.bashrc
+echo "export MOI_CONFIG_FP=$QIITA_CONFIG_FP" >> ~/.bashrc
 source ~/.bashrc
 # (3) start a test environment
 qiita_env make --no-load-ontologies

@@ -5,7 +5,7 @@ from os import makedirs, listdir
 
 from shutil import copyfileobj, rmtree
 
-from .study_handlers import check_access
+from .util import check_access
 from .base_handlers import BaseHandler
 
 from qiita_core.qiita_settings import qiita_config

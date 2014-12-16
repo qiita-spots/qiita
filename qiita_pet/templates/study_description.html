@@ -3,18 +3,18 @@
 <script>
 // Note that these two callbacks can come from the step where you are creating
 // a new prep template or when you are editing the prep template thus isEdit
-function investigationTypeChanged(rawDataID, isEdit){
+function investigationTypeChanged(rawDataID, prepDataID, isEdit){
 
   // whether the callback comes from an edit element
   var isEdit = isEdit !== undefined ? isEdit : false;
 
   if (isEdit){
-    if ($('#edit-investigation-type-'+rawDataID).val() === 'Other'){
-      $('#edit-user-defined-investigation-types-'+rawDataID).show()
+    if ($('#edit-investigation-type-'+rawDataID+'-'+prepDataID).val() === 'Other'){
+      $('#edit-user-defined-investigation-types-'+rawDataID+'-'+prepDataID).show()
     }
     else {
-      $('#edit-user-defined-investigation-types-'+rawDataID).hide()
-      $('#edit-new-investigation-type-entry-'+rawDataID).hide()
+      $('#edit-user-defined-investigation-types-'+rawDataID+'-'+prepDataID).hide()
+      $('#edit-new-investigation-type-entry-'+rawDataID+'-'+prepDataID).hide()
     }
   }
     else{
@@ -27,17 +27,18 @@ function investigationTypeChanged(rawDataID, isEdit){
     }
   }
 }
-function newInvestigationTypeChanged(rawDataID, isEdit){
+
+function newInvestigationTypeChanged(rawDataID, prepDataID, isEdit){
 
   // whether the callback comes from an edit element
   var isEdit = isEdit !== undefined ? isEdit : false;
 
   if (isEdit){
-    if ($('#edit-user-defined-investigation-type-'+rawDataID).val() === 'New Type'){
-      $('#edit-new-investigation-type-entry-'+rawDataID).show()
+    if ($('#edit-user-defined-investigation-type-'+rawDataID+'-'+prepDataID).val() === 'New Type'){
+      $('#edit-new-investigation-type-entry-'+rawDataID+'-'+prepDataID).show()
     }
     else {
-      $('#edit-new-investigation-type-entry-'+rawDataID).hide()
+      $('#edit-new-investigation-type-entry-'+rawDataID+'-'+prepDataID).hide()
     }
   }
   else{
@@ -49,42 +50,340 @@ function newInvestigationTypeChanged(rawDataID, isEdit){
     }
   }
 }
+
+// After spending +2 hours searching through internet, the best way to post
+// to a handler is by creating a form using jquery and submitting it.
+// If we use the $.post function from jquery, which is a shortcut for the ajax
+// function, the html created on the handler is returned here as a response
+// of the call, which is not refreshing the page
+
+// Creates the form to process a sample template
+function process_sample_template() {
+  if (confirm("Are you sure you want to (re)process the sample template?")) {
+    var form = $("<form>")
+      .attr("action", window.location.href)
+      .attr("method", "post")
+      .append($("<input>")
+        .attr("type", "hidden")
+        .attr("name", "sample_template")
+        .attr("value", $("#sample_template").val()))
+      .append($("<input>")
+        .attr("type", "hidden")
+        .attr("name", "action")
+        .attr("value", "process_sample_template"));
+    $("body").append(form);
+    form.submit();
+  }
+}
+
+function create_raw_data() {
+  if ($("#previous_raw_data").val() === null && $("#filetype").val() === "") {
+    alert("You need to select either a new file type or a raw data used in a previous study.");
+  } else if ((typeof $("#previous_raw_data").val() != 'undefined' && $("#previous_raw_data").val() !== null) && $("#filetype").val() !== "") {
+    alert("You can only select a new file type or one used in a previous study but not both.");
+  } else {
+    if (confirm("Are you sure you want to create a new raw data?")) {
+      if ($("#filetype").val() !== "") {
+        var form = $("<form>")
+          .attr("action", window.location.href)
+          .attr("method", "post")
+          .append($("<input>")
+            .attr("type", "hidden")
+            .attr("name", "filetype")
+            .attr("value", $("#filetype").val()))
+          .append($("<input>")
+            .attr("type", "hidden")
+            .attr("name", "action")
+            .attr("value", "create_raw_data"));
+      } else {
+        var form = $("<form>")
+          .attr("action", window.location.href)
+          .attr("method", "post")
+          .append($("<input>")
+            .attr("type", "hidden")
+            .attr("name", "previous_raw_data")
+            .attr("value", $("#previous_raw_data option:selected").map(function(){ return this.value }).get().join(",")))
+          .append($("<input>")
+            .attr("type", "hidden")
+            .attr("name", "action")
+            .attr("value", "create_raw_data"));
+      }
+      $("body").append(form);
+      form.submit();
+    }
+  }
+}
+
+function add_prep_template(raw_data_id) {
+  if (confirm("Are you sure you want to add a new prep template?")) {
+    var form = $("<form>")
+      .attr("action", window.location.href)
+      .attr("method", "post")
+      .append($("<input>")
+        .attr("type", "hidden")
+        .attr("name", "raw_data_id")
+        .attr("value", raw_data_id))
+      .append($("<input>")
+        .attr("type", "hidden")
+        .attr("name", "prep_template")
+        .attr("value", $("#add_prep_template_" + raw_data_id).val()))
+      .append($("<input>")
+        .attr("type", "hidden")
+        .attr("name", "investigation-type")
+        .attr("value", $("#investigation-type-" + raw_data_id).val()))
+      .append($("<input>")
+        .attr("type", "hidden")
+        .attr("name", "user-defined-investigation-type")
+        .attr("value", $("#user-defined-investigation-type-" + raw_data_id).val()))
+      .append($("<input>")
+        .attr("type", "hidden")
+        .attr("name", "new-investigation-type")
+        .attr("value", $("#new-investigation-type-" + raw_data_id).val()))
+      .append($("<input>")
+        .attr("type", "hidden")
+        .attr("name", "data_type_id")
+        .attr("value", $("#data_type_" + raw_data_id).val()))
+      .append($("<input>")
+            .attr("type", "hidden")
+            .attr("name", "action")
+            .attr("value", "add_prep_template"));
+    $("body").append(form);
+    form.submit();
+  }
+}
+
+function make_public() {
+  if (confirm("Are you sure you want to make this study public?")) {
+    var form = $("<form>")
+      .attr("action", window.location.href)
+      .attr("method", "post")
+      .append($("<input>")
+        .attr("type", "hidden")
+        .attr("name", "action")
+        .attr("value", "make_public"));
+    $("body").append(form);
+    form.submit();
+  }
+}
+
+function approve_study() {
+  if (confirm("Are you sure you want to approve this study?")) {
+    var form = $("<form>")
+      .attr("action", window.location.href)
+      .attr("method", "post")
+      .append($("<input>")
+        .attr("type", "hidden")
+        .attr("name", "action")
+        .attr("value", "approve_study"));
+    $("body").append(form);
+    form.submit();
+  }
+}
+
+function request_approval() {
+  if (confirm("Are you sure you want to ask for approval? IMPORTANT: This will not allow you to add any new raw data or modifications to this study")) {
+    var form = $("<form>")
+      .attr("action", window.location.href)
+      .attr("method", "post")
+      .append($("<input>")
+        .attr("type", "hidden")
+        .attr("name", "action")
+        .attr("value", "request_approval"));
+    $("body").append(form);
+    form.submit();
+  }
+}
+
+function make_sandbox() {
+  if (confirm("Are you sure you want to revert to sandbox status?")) {
+    var form = $("<form>")
+      .attr("action", window.location.href)
+      .attr("method", "post")
+      .append($("<input>")
+        .attr("type", "hidden")
+        .attr("name", "action")
+        .attr("value", "make_sandbox"));
+    $("body").append(form);
+    form.submit();
+  }
+}
+
+function update_investigation_type(old_value, prep_template_id, ppd_id) {
+  if (confirm("Are you sure you want to update the investigation type?")) {
+      var form = $("<form>")
+        .attr("action", window.location.href)
+        .attr("method", "post")
+        .append($("<input>")
+          .attr("type", "hidden")
+          .attr("name", "prep_id")
+          .attr("value", prep_template_id))
+        .append($("<input>")
+          .attr("type", "hidden")
+          .attr("name", "edit-user-defined-investigation-type")
+          .attr("value", $("#edit-user-defined-investigation-type-" + prep_template_id + "-" + ppd_id).val()))
+        .append($("<input>")
+          .attr("type", "hidden")
+          .attr("name", "edit-new-investigation-type")
+          .attr("value", $("#edit-new-investigation-type-" + prep_template_id + "-" + ppd_id).val()))
+        .append($("<input>")
+          .attr("type", "hidden")
+          .attr("name", "edit-investigation-type")
+          .attr("value", $("#edit-investigation-type-" + prep_template_id + "-" + ppd_id).val()))
+        .append($("<input>")
+          .attr("type", "hidden")
+          .attr("name", "ppd_id")
+          .attr("value", ppd_id))
+        .append($("<input>")
+          .attr("type", "hidden")
+          .attr("name", "action")
+          .attr("value", "update_investigation_type"));
+      $("body").append(form);
+      form.submit();
+  } else {
+    $("#investigation_type_prep_" + prep_template_id).val(old_value);
+  }
+}
+
+function link_files_to_raw_data(raw_data_id) {
+  var barcodes = [];
+  var forward = [];
+  var reverse = [];
+
+  all_files = document.getElementsByName("upload_file_" + raw_data_id);
+  for (var i = 0; i<all_files.length; i++) {
+    ele = all_files[i];
+    switch (ele.options[ele.selectedIndex].value) {
+      case "barcodes":
+        barcodes.push(ele.id);
+        break;
+      case "forward seqs":
+        forward.push(ele.id);
+        break;
+      case "reverse seqs":
+        reverse.push(ele.id);
+        break;
+    }
+  }
+
+  if (barcodes.length === 0 || forward.length === 0) {
+    alert("You need to select at least one barcode and one forward file.");
+  } else if (barcodes.length != forward.length) {
+    alert("You must select the same number of barcode and forward seq files.");
+  } else if (reverse.length !== 0 && reverse.length != forward.length) {
+    alert("If you select reverse seqs, they should have the same number than barcodes and forward files.");
+  } else {
+    var form = $("<form>")
+      .attr("action", "/study/add_files_to_raw_data")
+      .attr("method", "post")
+      .append($("<input>")
+        .attr("type", "hidden")
+        .attr("name", "raw_data_id")
+        .attr("value", raw_data_id))
+      .append($("<input>")
+        .attr("type", "hidden")
+        .attr("name", "study_id")
+        .attr("value", {{study.id}}))
+      .append($("<input>")
+        .attr("type", "hidden")
+        .attr("name", "barcodes")
+        .attr("value", barcodes.join()))
+      .append($("<input>")
+        .attr("type", "hidden")
+        .attr("name", "forward")
+        .attr("value", forward.join()))
+      .append($("<input>")
+        .attr("type", "hidden")
+        .attr("name", "reverse")
+        .attr("value", reverse.join()));
+    $("body").append(form);
+    form.submit();
+  }
+}
+
+function unlink_all_files(raw_data_id) {
+  if (confirm("Are you sure you want to unlink all files? They will be removed from the system")){
+    var form = $("<form>")
+      .attr("action", "/study/unlink_all_files")
+      .attr("method", "post")
+      .append($("<input>")
+        .attr("type", "hidden")
+        .attr("name", "study_id")
+        .attr("value", {{study.id}}))
+      .append($("<input>")
+        .attr("type", "hidden")
+        .attr("name", "raw_data_id")
+        .attr("value", raw_data_id))
+    $("body").append(form);
+    form.submit();
+  }
+}
+
+function submit_preprocess() {
+  if (confirm("Are you sure you want to submit a preprocessing job?")){
+    return true;
+  }
+  return  false;
+};
+
+function display_tab(top_tab, sub_tab, prep_tab){
+  $('#myTab a[href="#'+top_tab+'"]').tab('show');
+  if (top_tab == "raw_data_tab"){
+    if (sub_tab !== undefined){
+      $('#raw_data_nav_tabs a[href="#raw_data_info_'+sub_tab+'"]').tab('show')
+      if (prep_tab !== undefined){
+        $('#collapse'+prep_tab).collapse()
+      }
+    }
+  }
+  else if (top_tab == "preprocessed_data_tab"){
+    if (sub_tab !== undefined){
+      $('#preprocessed_data_nav_tabs a[href="#preprocessed_data_info_'+sub_tab+'"]').tab('show')
+    }
+  }
+}
+
+$(document).ready(function() {
+      $("#previous_raw_data").chosen({width: "100%"});
+      display_tab({% if top_tab %} "{{top_tab}}" {% end %}
+                  {% if sub_tab %}
+                    , "{{sub_tab}}"
+                    {% if prep_tab %}
+                     , "{{prep_tab}}"
+                    {% end %}
+                  {% end %})
+});
+
 </script>
-{% end %}
+
+{% end %} <!-- End head block -->
 
 
 {% block content %}
-
-{% from future.utils import viewitems %}
-{% from os.path import basename %}
-{% from qiita_core.qiita_settings import qiita_config %}
-{% from qiita_db.data import PreprocessedData, ProcessedData %}
-
 
 
 <table border="0" style="vertical-align: middle; text-align:center; align:center;">
   <tr>
     <td style="vertical-align: middle; text-align:left; width: 50%;" colspan="2">
       <h1>{{study_title}} </h1>
-      <h2><i>{{study_info['study_alias']}} </i> </h2>
+      <h2><i>{{study_alias}}</i></h2>
     </td>
   </tr>
   <tr>
     <td style="vertical-align: middle; text-align:left; width: 50%;" colspan="2">
-      {% if not is_public or user_level == "admin" %}
-        <a class="btn btn-default glyphicon glyphicon-edit" href="/study/edit/{{study_id}}" title="Edit the study information" style="margin:5px; word-spacing: -10px;"> Edit</a>
+      {% if show_edit_btn %}
+        <a class="btn btn-default glyphicon glyphicon-edit" href="/study/edit/{{study.id}}" title="Edit the study information" style="margin:5px; word-spacing: -10px;"> Edit</a>
       {% end %}
-      {% if can_upload and study_status == 'sandbox' or user_level == 'admin' %}
-        <a href="/study/upload/{{study_id}}" class="btn btn-default glyphicon glyphicon-upload" title="Upload study files" style="margin:5px; word-spacing: -10px;"> Upload</a>
+      {% if show_upload_btn %}
+        <a href="/study/upload/{{study.id}}" class="btn btn-default glyphicon glyphicon-upload" title="Upload study files" style="margin:5px; word-spacing: -10px;"> Upload</a>
       {% end %}
-      {% if study_status == 'sandbox' and qiita_config.require_approval and ste and raw_files and prep_templates %}
+      {% if btn_to_show == 'request_approval' %}
         <a class="btn btn-default glyphicon glyphicon-eye-open" onClick="request_approval();" style="margin:5px; word-spacing: -10px;"> Request Approval</a>
-      {% elif (user_level == 'admin' and study_status == 'awaiting_approval') or not qiita_config.require_approval %}
+      {% elif btn_to_show == 'approve_study' %}
         <a class="btn btn-success glyphicon glyphicon-thumbs-up" onClick="approve_study();" style="margin:5px; word-spacing: -10px;"> Approve Study</a>
-      {% elif study_status == 'private' %}
+      {% elif btn_to_show == 'make_public' %}
        <a class="btn btn-success glyphicon glyphicon-thumbs-up" onClick="make_public();" style="margin:5px; word-spacing: -10px;"> Make Public</a>
       {% end %}
-      {% if study_status not in {'sandbox', 'public'} %}
+      {% if show_revert_btn %}
         <a class="btn btn-default glyphicon glyphicon-backward" onClick="make_sandbox();" style="margin:5px; word-spacing: -10px;"> Revert to sandbox</a>
       {% end %}
     </td>
@@ -96,593 +395,25 @@ function newInvestigationTypeChanged(rawDataID, isEdit){
 <!-- Nav tabs -->
 <ul class="nav nav-tabs" role="tablist" id="myTab">
     <li class="active"><a href="#study_information_tab" role="tab" data-toggle="tab">Study information</a></li>
-    <li><a href="#add_sample_template" role="tab" data-toggle="tab">Sample template</a></li>
-  {% if ste and (study_status == 'sandbox' or user_level == 'admin') %}
-    <li><a href="#add_raw_data" role="tab" data-toggle="tab">Add raw data</a></li>
-  {% end %}
-
-  {% for r in available_raw_data %}
-    <li><a href="#raw_data_info_{{r.id}}" role="tab" data-toggle="tab">{{r.filetype}} (ID: {{r.id}})</a></li>
+    <li><a href="#sample_template_tab" role="tab" data-toggle="tab">Sample template</a></li>
+  {% if show_data_tabs %}
+    <li><a href="#raw_data_tab" role="tab" data-toggle="tab">Raw data</a></li>
+    <li><a href="#preprocessed_data_tab" role="tab" data-toggle="tab">Preprocessed data</a></li>
   {% end %}
 </ul>
 
 <!-- Tab panes -->
 <div class="tab-content">
-  <div class="tab-pane active" id="study_information_tab" style="padding: 10px;">
-    <b>Abstract:</b> {{study_info['study_abstract']}} <br/>
-    <b>Description:</b> {{study_info['study_description']}} <br/>
-    <b>PubMed IDs:</b> {% raw pmids %} <br/>
-    <b>Principal investigator:</b> {% raw principal_investigator %} <br/>
-    <b>Samples:</b> {{study_info['number_samples_promised']}}/{{study_info['number_samples_collected']}}<br/>
-    <b>Metadata:</b> {{study_info['metadata_complete']}} <br/>
-  </div>
-
-  <div class="tab-pane" id="add_sample_template" style="padding: 10px;">
-    {% if study_status == 'sandbox' or user_level == 'admin' %}
-    Select your sample template:
-    <select id="sample_template">
-      {% for f in files %}
-        <option value="{{f}}">{{f}}</option>
-      {% end %}
-    </select>
-    <br/><br/>
-    <a class="btn btn-primary" onclick="process_sample_template();">Process sample template</a>
-    {% end %}
-
-    <br/><br/>
-    {% if ste %}
-      You have a valid sample template, if you reprocess with a new file you <b>will lose</b> all prep and sequence information.
-      <br/>
-      You can modify a sample template <a onclick="alert('Not implemented! Coming soon.')">here</a>
-      <br/>
-      <a class="btn btn-primary" href="/metadata_summary/?study_id={{study_id}}&sample_template={{study_id}}">Show sample template summary</a>
-      </br>
-      {% for stid, stpath in sample_templates %}
-        {% if is_local_request %}
-          <br/>{{stpath}}
-        {% else %}
-          <br/><a href="/download/{{stid}}">Download sample template</a>
-        {% end %}
-      {% end %}
-    {% end %}
-  </div>
-
-  {% if (ste and study_status == 'sandbox') or user_level == 'admin' %}
-    <div class="tab-pane" id="add_raw_data" style="padding: 10px;">
-      What file type is your raw data?
-      <select id="filetype">
-        <option value="">Not selected ...</option>
-        {% raw filetypes %}
-      </select>
-      {% if other_studies_rd %}
-        <br/><br/>
-        You could also select raw data from other studies that you have access to:
-        <br/>
-        <select multiple class="chosen-select" id="previous_raw_data" data-placeholder=" ">
-          {% raw other_studies_rd %}
-        </select>
-      {% end %}
-      <br/><br/>
-      <a class="btn btn-primary" onclick="create_raw_data();">Add raw data</a>
-    </div>
-  {% end %}
-
-  <!-- Adding raw data to template -->
-  {% for r in available_raw_data %}
-    <div class="tab-pane" id="raw_data_info_{{r.id}}" style="padding: 10px;">
-      <table border="0">
-        <tr>
-          <td style="vertical-align:top;padding:10px;">
-          {% if study_status == 'sandbox' or user_level == 'admin' %}
-            <h4>Add prep template to this raw data</h4>
-            To add a prep template you need to:
-            <ol>
-              <li>
-                select your prep template file
-                <select id="add_prep_template_{{r.id}}">
-                  {% for f in files %}
-                    <option value="{{f}}">{{f}}</option>
-                  {% end %}
-                </select>,
-              </li>
-              <li>
-                select the prep template data type
-                <select id="data_type_{{r.id}}">
-                  {% raw data_types %}
-                </select>, and
-              </li>
-              <li>
-                (optional but required for EBI submission) select an investigation type:
-                <select onclick="investigationTypeChanged({{r.id}})" onchange="investigationTypeChanged({{r.id}})" id="investigation-type-{{r.id}}">
-                  <option value="None Selected">None Selected</option>
-                  {% raw ena_terms %}
-                </select>
-                <table id="investigation-type-table" name="investigation-types" class="investigation-type-table">
-                  <tr id="user-defined-investigation-types-{{r.id}}" style="display:none;">
-                    <td>
-                      Select one of the user defined investigation types:
-                    </td>
-                    <td>
-                      <select onclick="newInvestigationTypeChanged({{r.id}})" onchange="newInvestigationTypeChanged({{r.id}})" id="user-defined-investigation-type-{{r.id}}">
-                      {% for term in user_defined_terms %}
-                        <option value="{{term}}">{{term}}</option>
-                      {% end %}
-                      </select>
-                    </td>
-                  </tr>
-                  <tr id="new-investigation-type-entry-{{r.id}}" style="display:none;">
-                    <td>
-                      Enter a new investigation type:
-                    </td>
-                    <td>
-                      <input type="text" id="new-investigation-type-{{r.id}}" name="new-investigation-type" class="form-control">
-                    </td>
-                  </tr>
-                </table>
-              </li>
-            </ol>
-            <br/>
-            <a class="btn btn-primary" onclick="add_prep_template({{r.id}});">Add prep template</a>
-            <br/>
-            <hr/>
-          {% end %}
-            <h4>Prep templates uploaded</h4>
-            <table border="1">
-              {% for prep in available_prep_templates[r.id] %}
-              <tr>
-                <td style="padding:3px;">{{prep.data_type()}}</td>
-                <td style="padding:3px;">
-                  <a class="btn btn-primary" href="/metadata_summary/?study_id={{study_id}}&prep_template={{prep.id}}">Show prep template summary</a>
-                  <br/>
-                  {% for ptid, ptpath in prep.get_filepaths() %}
-                    {% if is_local_request %}
-                      <br/>{{ptpath}}
-                    {% else %}
-                      <br/><a href="/download/{{ptid}}">{{basename(ptpath)}}</a>
-                    {% end %}
-                  {% end %}
-                  <br/><br/>
-                  {% if ste and study_status == 'sandbox' or user_level == 'admin' %}
-                    <table id="edit-investigation-type-table" name="edit-investigation-types" class="investigation-type-table">
-                      <tr>
-                        <td>
-                          Selected investigation type:
-                        </td>
-                        <td>
-                          <select id="edit-investigation-type-{{prep.id}}" onclick="investigationTypeChanged({{prep.id}}, true)" onchange="investigationTypeChanged({{prep.id}}, true)">
-                            <option value="None Selected">None Selected</option>
-                            {% raw ena_terms %}
-                          </select>
-                        </td>
-                      </tr>
-                      <tr id="edit-user-defined-investigation-types-{{prep.id}}" style="display:none;">
-                        <td>
-                          User defined investigation type:
-                        </td>
-                        <td>
-                          <select onclick="newInvestigationTypeChanged({{prep.id}}, true)" onchange="newInvestigationTypeChanged({{prep.id}}, true)" id="edit-user-defined-investigation-type-{{prep.id}}">
-                          {% for term in user_defined_terms %}
-                            <option value="{{term}}">{{term}}</option>
-                          {% end %}
-                          </select>
-                        </td>
-                      </tr>
-                      <tr id="edit-new-investigation-type-entry-{{prep.id}}" style="display:none;">
-                        <td>
-                          New investigation type:
-                        </td>
-                        <td>
-                          <input type="text" id="edit-new-investigation-type-{{prep.id}}" name="new-investigation-type" class="form-control">
-                        </td>
-                      </tr>
-                      <tr>
-                        <td>
-                          <a class="btn btn-warning" onclick="update_investigation_type('{{prep.investigation_type}}', {{prep.id}})">Update Investigation Type</a>
-                        </td>
-                      </tr>
-                    </table>
-                  {% end %}
-                  <!--
-                    We need this JavaScript block here because the elements
-                    that we modify only exist if the HTML code above has
-                    been rendered
-                  -->
-                  <script>
-                  if ("{{prep.investigation_type}}" !== "None") {
-                    // if the investigation type is a known ENA term, set as needed
-                    if ($("#edit-investigation-type-{{prep.id}} option[value='{{prep.investigation_type}}']").length > 0 ){
-                      $('#edit-investigation-type-{{prep.id}}').val("{{prep.investigation_type}}");
-                    }
-                    // else set as Other and load the fields to change the data
-                    else{
-                      $('#edit-investigation-type-{{prep.id}}').val("Other");
-                      investigationTypeChanged({{prep.id}}, true);
-                      if ($("#edit-user-defined-investigation-type-{{prep.id}} option[value='{{prep.investigation_type}}']").length > 0 ){
-                        $('#edit-user-defined-investigation-type-{{prep.id}}').val("{{prep.investigation_type}}");
-                      }
-                    }
-                  }
-                  else{
-                    $('#edit-investigation-type-{{prep.id}}').val("None Selected");
-                  }
-                  </script>
-                </td>
-                {% if not prep.preprocessed_data or prep.preprocessing_status.startswith('failed') %}
-                  <td style="padding:3px;">
-                  {% if study_status == 'sandbox' %}
-                    <input type="button" class="btn btn-primary" value="Split libraries" onclick="split_libraries({{prep.id}});">
-                    <input type="checkbox" id="rev_comp_mapping_barcodes_{{prep.id}}"> Use rev_comp_mapping_barcodes
-                    <hr/>
-                  {% end %}
-                    <i>Status:</i> {{prep.preprocessing_status}}
-                    <br>
-                    {% if 'zero-size array' in prep.preprocessing_status %}
-                    <b>Your barcodes do not seem to match your prep template info</b>
-                    {% end %}
-                  </td>
-                {% else %}
-                  <td style="padding:3px;">
-                    <table border="0">
-                    {% for pdi in prep.preprocessed_data %}
-                      {% set pd = PreprocessedData(pdi) %}
-                      {% set filepaths = pd.get_filepaths() %}
-                      {% for proc_id in pd.processed_data %}
-                        {% set proc_data = ProcessedData(proc_id) %}
-                        {% set filepaths.extend(proc_data.get_filepaths()) %}
-                      {% end %}
-                      {% if filepaths %}
-                        <tr>
-                          <td style="padding:3px;">
-                            <a class="btn btn-primary" href="/preprocessing_summary/{{pdi}}">Preprocessing summary</a>
-                            {% for fpid, fp, ft in filepaths %}
-                              {% if is_local_request %}
-                                <br/>{{fp}}
-                              {% else %}
-                                <br/><a href="/download/{{fpid}}">{{basename(fp)}}</a>
-                              {% end %}
-                            {% end %}
-                          </td>
-                          <td rowspan="2" style="padding:3px;">
-                            <b>Preprocessed Data ID:</b> {{ pdi }}<br/>
-                            <b>EBI status:</b> {{pd.submitted_to_insdc_status()}}<br/>
-                            <b>EBI study accession:</b> {{pd.ebi_study_accession}}<br/>
-                            <b>EBI submission accession:</b> {{pd.ebi_submission_accession}}
-                          </td>
-                        </tr>
-                        {% if user_level == "admin" %}
-                        <tr>
-                          <td style="padding:3px;">
-                            <a class="btn btn-primary" href="/ebi_submission/{{pd.id}}">Submit to EBI</a>
-                          </td>
-                        </tr>
-                        {% end %}
-                      {% end %}
-                    {% end %}
-                    </table>
-                  </td>
-                {% end %}
-              </tr>
-              {% end %}
-            </table>
-            <br/>
-          </td>
-          <td style="vertical-align:top;padding:10px;">
-            <h4>Linked files to this raw data</h4>
-              {% if (study_status == 'sandbox' or user_level == 'admin') and r.get_filepaths() and r.link_filepaths_status not in {'linking', 'unlinking'} %}
-                <a class="btn btn-danger" onclick="unlink_all_files({{r.id}})">Unlink all files</a><br/>
-              {% end %}
-              {% if r.link_filepaths_status == 'linking' %}
-                <i><b style="color:red">Linking files...</b></i><br/>
-              {% elif r.link_filepaths_status == 'unlinking' %}
-                <i><b style="color:red">Unlinking files...</b></i><br/>
-              {% elif r.link_filepaths_status.startswith('failed') %}
-                <i><b style="color:red">Error (un)linking files: {{r.link_filepaths_status}} </b></i><br/>
-              {% end %}
-            {% for fpid, f, t in r.get_filepaths() %}
-                <i>{{basename(f)}}:</i> {{t[4:]}} <br/>
-            {% end %}
-              <br/>
-            {% if study_status == 'sandbox' or user_level == 'admin' %}
-              <h4>Link uploaded files with raw data</h4>
-              <table border="0">
-                <tr>
-                  <th>File</th>
-                  <th>&nbsp;&nbsp;&nbsp;</th>
-                  <th>File type</th>
-                </tr>
-                {% for f in files %}
-                <tr>
-                  <td>{{f}}</td>
-                  <td>&nbsp;</td>
-                  <td>
-                    <select id="{{f}}" name="upload_file_{{r.id}}">
-                      <option value="">Ignore ...</option>
-                      {% raw filepath_types %}
-                    </select>
-                  </td>
-                </tr>
-                {% end %}
-            </table>
-            <br/>
-            <a onclick="link_files_to_raw_data({{r.id}});" {% if r.link_filepaths_status in {'linking', 'unlinking'} %} class="btn btn-default" style=" pointer-events: none; cursor: default; background-color:grey;" {% else %} class="btn btn-primary" {% end %}>Link raw files to: {{r.filetype}} (ID: {{r.id}})</a>
-            {% end %}
-          </td>
-        </table>
-    </div>
+  <!-- Show the study information tab -->
+  {% module StudyInformationTab(study) %}
+  <!-- Show the sample template tab -->
+  {% module SampleTemplateTab(study) %}  
+  {% if show_data_tabs %}
+    <!-- Show the raw data tab -->
+    {% module RawDataTab(study) %}
+    <!-- Show the preprocessed data tab -->
+    {% module PreprocessedDataTab(study) %}
   {% end %}
 </div>
 
-<script type='text/javascript'>
-
-  $(document).ready(function() {
-        $("#previous_raw_data").chosen({width: "100%"});
-  });
-
-  function process_sample_template() {
-    if (confirm("Are you sure you want to (re)process the sample template?")) {
-      var form = $("<form>")
-        .attr("action", window.location.href)
-        .attr("method", "post")
-        .append($("<input>")
-          .attr("type", "hidden")
-          .attr("name", "sample_template")
-          .attr("value", $("#sample_template").val()));
-      $("body").append(form);
-      form.submit();
-    }
-  }
-
-  function create_raw_data() {
-    if ($("#previous_raw_data").val() === null && $("#filetype").val() === "") {
-      alert("You need to select either a new file type or a raw data used in a previous study.");
-    } else if ((typeof $("#previous_raw_data").val() != 'undefined' && $("#previous_raw_data").val() !== null) && $("#filetype").val() !== "") {
-      alert("You can only select a new file type or one used in a previous study but not both.");
-    } else {
-      if (confirm("Are you sure you want to create a new raw data?")) {
-        if ($("#filetype").val() !== "") {
-          var form = $("<form>")
-            .attr("action", window.location.href)
-            .attr("method", "post")
-            .append($("<input>")
-              .attr("type", "hidden")
-              .attr("name", "filetype")
-              .attr("value", $("#filetype").val()));
-        } else {
-          var form = $("<form>")
-            .attr("action", window.location.href)
-            .attr("method", "post")
-            .append($("<input>")
-              .attr("type", "hidden")
-              .attr("name", "previous_raw_data")
-              .attr("value", $("#previous_raw_data option:selected").map(function(){ return this.value }).get().join(",")));
-        }
-        $("body").append(form);
-        form.submit();
-      }
-    }
-  }
-
-  function add_prep_template(raw_data_id) {
-    if (confirm("Are you sure you want to add a new prep template?")) {
-      var form = $("<form>")
-        .attr("action", window.location.href)
-        .attr("method", "post")
-        .append($("<input>")
-          .attr("type", "hidden")
-          .attr("name", "raw_data_id")
-          .attr("value", raw_data_id))
-        .append($("<input>")
-          .attr("type", "hidden")
-          .attr("name", "add_prep_template")
-          .attr("value", $("#add_prep_template_" + raw_data_id).val()))
-        .append($("<input>")
-          .attr("type", "hidden")
-          .attr("name", "investigation-type")
-          .attr("value", $("#investigation-type-" + raw_data_id).val()))
-        .append($("<input>")
-          .attr("type", "hidden")
-          .attr("name", "user-defined-investigation-type")
-          .attr("value", $("#user-defined-investigation-type-" + raw_data_id).val()))
-        .append($("<input>")
-          .attr("type", "hidden")
-          .attr("name", "new-investigation-type")
-          .attr("value", $("#new-investigation-type-" + raw_data_id).val()))
-        .append($("<input>")
-          .attr("type", "hidden")
-          .attr("name", "data_type_id")
-          .attr("value", $("#data_type_" + raw_data_id).val()));
-      $("body").append(form);
-      form.submit();
-    }
-  }
-
-  function link_files_to_raw_data(raw_data_id) {
-    var barcodes = [];
-    var forward = [];
-    var reverse = [];
-
-    all_files = document.getElementsByName("upload_file_" + raw_data_id);
-    for (var i = 0; i<all_files.length; i++) {
-      ele = all_files[i];
-      switch (ele.options[ele.selectedIndex].value) {
-        case "barcodes":
-          barcodes.push(ele.id);
-          break;
-        case "forward seqs":
-          forward.push(ele.id);
-          break;
-        case "reverse seqs":
-          reverse.push(ele.id);
-          break;
-      }
-    }
-
-    if (barcodes.length === 0 || forward.length === 0) {
-      alert("You need to select at least one barcode and one forward file.");
-    } else if (barcodes.length != forward.length) {
-      alert("You must select the same number of barcode and forward seq files.");
-    } else if (reverse.length !== 0 && reverse.length != forward.length) {
-      alert("If you select reverse seqs, they should have the same number than barcodes and forward files.");
-    } else {
-      var form = $("<form>")
-        .attr("action", "/study/add_files_to_raw_data")
-        .attr("method", "post")
-        .append($("<input>")
-          .attr("type", "hidden")
-          .attr("name", "raw_data_id")
-          .attr("value", raw_data_id))
-        .append($("<input>")
-          .attr("type", "hidden")
-          .attr("name", "study_id")
-          .attr("value", {{study_id}}))
-        .append($("<input>")
-          .attr("type", "hidden")
-          .attr("name", "barcodes")
-          .attr("value", barcodes.join()))
-        .append($("<input>")
-          .attr("type", "hidden")
-          .attr("name", "forward")
-          .attr("value", forward.join()))
-        .append($("<input>")
-          .attr("type", "hidden")
-          .attr("name", "reverse")
-          .attr("value", reverse.join()));
-      $("body").append(form);
-      form.submit();
-    }
-  }
-
-  function unlink_all_files(raw_data_id) {
-    if (confirm("Are you sure you want to unlink all files? They will be removed from the system")){
-      var form = $("<form>")
-        .attr("action", "/study/unlink_all_files")
-        .attr("method", "post")
-        .append($("<input>")
-          .attr("type", "hidden")
-          .attr("name", "study_id")
-          .attr("value", {{study_id}}))
-        .append($("<input>")
-          .attr("type", "hidden")
-          .attr("name", "raw_data_id")
-          .attr("value", raw_data_id))
-      $("body").append(form);
-      form.submit();
-    }
-  }
-
-  function split_libraries(prep_template_id) {
-    if (confirm("Are you sure you want to submit a split libraries job?")) {
-      var form = $("<form>")
-        .attr("action", "/study/preprocess")
-        .attr("method", "post")
-        .append($("<input>")
-          .attr("type", "hidden")
-          .attr("name", "study_id")
-          .attr("value", {{study_id}}))
-          .append($("<input>")
-            .attr("type", "hidden")
-            .attr("name", "prep_template_id")
-            .attr("value", prep_template_id))
-        .append($("<input>")
-          .attr("type", "hidden")
-          .attr("name", "rev_comp_mapping_barcodes")
-          .attr("value", $("#rev_comp_mapping_barcodes_" + prep_template_id).is(':checked')));
-      $("body").append(form);
-      form.submit();
-    }
-  }
-
-  function make_public() {
-    if (confirm("Are you sure you want to make this study public?")) {
-      var form = $("<form>")
-        .attr("action", window.location.href)
-        .attr("method", "post")
-        .append($("<input>")
-          .attr("type", "hidden")
-          .attr("name", "make_public")
-          .attr("value", true))
-      $("body").append(form);
-      form.submit();
-    }
-  }
-
-  function approve_study() {
-    if (confirm("Are you sure you want to approve this study?")) {
-      var form = $("<form>")
-        .attr("action", window.location.href)
-        .attr("method", "post")
-        .append($("<input>")
-          .attr("type", "hidden")
-          .attr("name", "approve_study")
-          .attr("value", true))
-      $("body").append(form);
-      form.submit();
-    }
-  }
-
-  function request_approval() {
-    if (confirm("Are you sure you want to ask for approval? IMPORTANT: This will not allow you to add any new raw data or modifications to this study")) {
-      var form = $("<form>")
-        .attr("action", window.location.href)
-        .attr("method", "post")
-        .append($("<input>")
-          .attr("type", "hidden")
-          .attr("name", "request_approval")
-          .attr("value", true))
-      $("body").append(form);
-      form.submit();
-    }
-  }
-
-  function make_sandbox() {
-    if (confirm("Are you sure you want to revert to sandbox status?")) {
-      var form = $("<form>")
-        .attr("action", window.location.href)
-        .attr("method", "post")
-        .append($("<input>")
-          .attr("type", "hidden")
-          .attr("name", "make_sandbox")
-          .attr("value", true))
-      $("body").append(form);
-      form.submit();
-    }
-  }
-
-  function update_investigation_type(old_value, prep_template_id) {
-    if (confirm("Are you sure you want to update the investigation type?")) {
-        var form = $("<form>")
-          .attr("action", window.location.href)
-          .attr("method", "post")
-          .append($("<input>")
-            .attr("type", "hidden")
-            .attr("name", "update_investigation_type")
-            .attr("value", prep_template_id))
-          .append($("<input>")
-            .attr("type", "hidden")
-            .attr("name", "edit-user-defined-investigation-type")
-            .attr("value", $("#edit-user-defined-investigation-type-" + prep_template_id).val()))
-          .append($("<input>")
-            .attr("type", "hidden")
-            .attr("name", "edit-new-investigation-type")
-            .attr("value", $("#edit-new-investigation-type-" + prep_template_id).val()))
-          .append($("<input>")
-            .attr("type", "hidden")
-            .attr("name", "edit-investigation-type")
-            .attr("value", $("#edit-investigation-type-" + prep_template_id).val()));
-        $("body").append(form);
-        form.submit();
-    } else {
-      $("#investigation_type_prep_" + prep_template_id).val(old_value);
-    }
-  }
-
-  if ("{{tab_to_display}}" == "study_information_tab"){
-    $('#myTab a[href="#study_information_tab"]').tab('show');
-  }
-  else if ("{{tab_to_display}}") {
-    $('#myTab a[href="#raw_data_info_{{tab_to_display}}"]').tab('show');
-  } else {
-    $('#myTab a:last').tab('show');
-  }
-</script>
 {% end %}

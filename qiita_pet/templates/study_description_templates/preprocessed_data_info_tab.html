@@ -1,0 +1,29 @@
+{% from qiita_pet.handlers.util import download_link_or_path %}
+
+<div class="tab-pane" id="preprocessed_data_info_{{ppd_id}}" style="padding: 10px;">
+  <a href="#" onclick="display_tab('raw_data_tab', {{raw_data_id}}, {{prep_template_id}});">Prep template</a><br/>
+  <b>EBI status:</b> {{ebi_status}}<br/>
+  <b>EBI study accession:</b> {{ebi_study_accession}}<br/>
+  <b>EBI submission accession:</b> {{ebi_submission_accession}}<br/>
+  {% module EditInvestigationType(ena_terms, user_defined_terms, prep_template_id, inv_type, ppd_id) %}
+  {% if show_ebi_btn %}
+    <a class="btn btn-primary glyphicon glyphicon-export" href="/ebi_submission/{{ppd_id}}" style="word-spacing: -10px;"> Submit to EBI</a><br/>
+  {% end %}
+  <b>Files:</b><br/>
+  <table border="0" style="margin-left: 10px;">
+    {% for fpid, fp, ft in filepaths %}
+      <tr>
+        <td style="padding:3px;">
+          {% set ft = ft.replace('_', ' ') %}
+          {% raw download_link_or_path(is_local_request, fp, fpid, ft) %}
+        </td>
+      </tr>
+    {% end %}
+      <tr>
+        <td style="padding:3px;">
+          <a class="btn btn-default glyphicon glyphicon-eye-open" href="/preprocessing_summary/{{ppd_id}}" style="word-spacing: -10px;"> preprocessing summary</a>
+        </td>
+      </tr>
+  </table>
+  <a class="btn btn-primary glyphicon glyphicon-play" onclick="alert('Not implemented! Coming soon.')" style="word-spacing: -10px;"> Process</a>
+</div>

@@ -264,7 +264,8 @@ class PreprocessedDataTests(TestCase):
         # ebi_submission_accession, ebi_study_accession, data_type_id,
         # link_filepaths_status
         exp = [[3, "preprocessed_sequence_illumina_params", 1,
-                'not submitted', "EBI123456-A", "EBI123456-B", 2, 'idle']]
+                'not submitted', "EBI123456-A", "EBI123456-B", 2, 'idle',
+                'not submitted']]
         self.assertEqual(obs, exp)
 
         # Check that the preprocessed data has been linked with its study
@@ -312,7 +313,7 @@ class PreprocessedDataTests(TestCase):
         # ebi_submission_accession, ebi_study_accession, data_type_id,
         # link_filepaths_status
         exp = [[3, "preprocessed_sequence_illumina_params", 1,
-                'not submitted', None, None, 2, 'idle']]
+                'not submitted', None, None, 2, 'idle', 'not submitted']]
         self.assertEqual(obs, exp)
 
         # Check that the preprocessed data has been linked with its study

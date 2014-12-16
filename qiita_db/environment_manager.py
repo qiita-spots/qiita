@@ -34,7 +34,6 @@ SETTINGS_FP = get_support_file('qiita-db-settings.sql')
 LAYOUT_FP = get_support_file('qiita-db-unpatched.sql')
 POPULATE_FP = get_support_file('populate_test_db.sql')
 PATCHES_DIR = get_support_file('patches')
-CLUSTERS = ['demo', 'reserved', 'general']
 
 
 def _check_db_exists(db, conn_handler):

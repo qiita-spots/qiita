@@ -3,13 +3,14 @@
 from tornado.escape import url_escape, json_encode
 from tornado.web import HTTPError
 
+from moi import r_client
+
 from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_core.util import send_email
 from qiita_core.exceptions import (IncorrectPasswordError, IncorrectEmailError,
                                    UnverifiedEmailError)
 from qiita_db.user import User
 from qiita_db.exceptions import QiitaDBUnknownIDError, QiitaDBDuplicateError
-from qiita_ware import r_server
 # login code modified from https://gist.github.com/guillaumevincent/4771570
 
 
@@ -75,14 +76,17 @@ class AuthLoginHandler(BaseHandler):
         self.redirect("/")
 
     def post(self):
-        if r_server.get('maintenance') is not None:
+        if r_client.get('maintenance') is not None:
             raise HTTPError(503, "Site is down for maintenance")
 
         username = self.get_argument("username", "").strip().lower()
         passwd = self.get_argument("password", "")
         nextpage = self.get_argument("next", None)
         if nextpage is None:
-            nextpage = self.request.headers['Referer']
+            if "auth/" not in self.request.headers['Referer']:
+                nextpage = self.request.headers['Referer']
+            else:
+                nextpage = "/"
 
         msg = ""
         # check the user level
@@ -94,7 +98,7 @@ class AuthLoginHandler(BaseHandler):
             msg = "Unknown user"
         except RuntimeError:
             # means DB not available, so set maintenance mode and failover
-            r_server.set("maintenance", "Database connection unavailable, "
+            r_client.set("maintenance", "Database connection unavailable, "
                          "please try again later.")
             self.redirect("/")
             return
