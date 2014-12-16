@@ -5,9 +5,17 @@
   <b>EBI status:</b> {{ebi_status}}<br/>
   <b>EBI study accession:</b> {{ebi_study_accession}}<br/>
   <b>EBI submission accession:</b> {{ebi_submission_accession}}<br/>
+  <b>VAMPS status:</b> {{vamps_status}}<br/>
   {% module EditInvestigationType(ena_terms, user_defined_terms, prep_template_id, inv_type, ppd_id) %}
   {% if show_ebi_btn %}
-    <a class="btn btn-primary glyphicon glyphicon-export" href="/ebi_submission/{{ppd_id}}" style="word-spacing: -10px;"> Submit to EBI</a><br/>
+  <br/>
+  <table border="0" width="60%">
+    <tr>
+      <td><a class="btn btn-primary glyphicon glyphicon-export" href="/ebi_submission/{{ppd_id}}" style="word-spacing: -10px;"> Submit to EBI</a></td>
+      <td><a class="btn btn-primary glyphicon glyphicon-export" href="/vamps/{{ppd_id}}" style="word-spacing: -10px;"> Submit to VAMPS</a></td>
+    </tr>
+  </table>
+  <br/>
   {% end %}
   <b>Files:</b><br/>
   <table border="0" style="margin-left: 10px;">

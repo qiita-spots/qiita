@@ -10,7 +10,7 @@ from sys import exc_info
 
 from .processing_pipeline import StudyPreprocessor
 from .analysis_pipeline import RunAnalysis
-from qiita_ware.commands import submit_EBI
+from qiita_ware.commands import submit_EBI, submit_VAMPS
 from qiita_db.study import Study
 from qiita_db.analysis import Analysis
 from qiita_db.metadata_template import PrepTemplate
@@ -41,6 +41,11 @@ def submit_to_ebi(preprocessed_data_id, submission_type):
                                            True)
 
     return study_acc, submission_acc
+
+
+def submit_to_VAMPS(preprocessed_data_id):
+    """Submit a study to VAMPS"""
+    return submit_VAMPS(preprocessed_data_id)
 
 
 def run_analysis(analysis_id, commands, comm_opts=None,
