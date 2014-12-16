@@ -13,7 +13,7 @@ from tempfile import mkdtemp
 from gzip import open as gzopen
 from tarfile import open as taropen
 from shlex import split as shsplit
-from subprocess import system_call
+from moi.job import system_call
 
 from qiita_db.study import Study
 from qiita_db.data import PreprocessedData
