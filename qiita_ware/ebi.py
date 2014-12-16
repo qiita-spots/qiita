@@ -563,7 +563,7 @@ class EBISubmission(object):
             data_block = ET.SubElement(run, 'DATA_BLOCK')
             files = ET.SubElement(data_block, 'FILES')
             ET.SubElement(files, 'FILE', {
-                'filename': join('./', self.ebi_dir, basename(file_path)),
+                'filename': join(self.ebi_dir, basename(file_path)),
                 'filetype': file_type,
                 'quality_scoring_system': 'phred',
                 'checksum_method': 'MD5',

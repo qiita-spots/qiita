@@ -200,7 +200,8 @@ class DBUtilTests(TestCase):
                'raw_barcodes': 3, 'preprocessed_fasta': 4,
                'preprocessed_fastq': 5, 'preprocessed_demux': 6, 'biom': 7,
                'directory': 8, 'plain_text': 9, 'reference_seqs': 10,
-               'reference_tax': 11, 'reference_tree': 12, 'log': 13}
+               'reference_tax': 11, 'reference_tree': 12, 'log': 13,
+               'sample_template': 14, 'prep_template': 15, 'qiime_map': 16}
         self.assertEqual(obs, exp)
 
         obs = get_filepath_types(key='filepath_type_id')
@@ -268,7 +269,7 @@ class DBUtilTests(TestCase):
 
         obs = insert_filepaths([(fp, 1)], 1, "raw_data", "filepath",
                                self.conn_handler)
-        exp = [16]
+        exp = [17]
         self.assertEqual(obs, exp)
 
         # Check that the files have been copied correctly
@@ -279,9 +280,9 @@ class DBUtilTests(TestCase):
 
         # Check that the filepaths have been added to the DB
         obs = self.conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.filepath WHERE filepath_id=16")
+            "SELECT * FROM qiita.filepath WHERE filepath_id=17")
         exp_fp = "1_%s" % basename(fp)
-        exp = [[16, exp_fp, 1, '852952723', 1, 5]]
+        exp = [[17, exp_fp, 1, '852952723', 1, 5]]
         self.assertEqual(obs, exp)
 
     def test_insert_filepaths_string(self):
@@ -293,7 +294,7 @@ class DBUtilTests(TestCase):
 
         obs = insert_filepaths([(fp, "raw_forward_seqs")], 1, "raw_data",
                                "filepath", self.conn_handler)
-        exp = [16]
+        exp = [17]
         self.assertEqual(obs, exp)
 
         # Check that the files have been copied correctly
@@ -304,9 +305,9 @@ class DBUtilTests(TestCase):
 
         # Check that the filepaths have been added to the DB
         obs = self.conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.filepath WHERE filepath_id=16")
+            "SELECT * FROM qiita.filepath WHERE filepath_id=17")
         exp_fp = "1_%s" % basename(fp)
-        exp = [[16, exp_fp, 1, '852952723', 1, 5]]
+        exp = [[17, exp_fp, 1, '852952723', 1, 5]]
         self.assertEqual(obs, exp)
 
     def test_insert_filepaths_queue(self):
@@ -341,16 +342,16 @@ class DBUtilTests(TestCase):
 
         # Check that the filepaths have been added to the DB
         obs = self.conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.filepath WHERE filepath_id=16")
+            "SELECT * FROM qiita.filepath WHERE filepath_id=17")
         exp_fp = "1_%s" % basename(fp)
-        exp = [[16, exp_fp, 1, '852952723', 1, 5]]
+        exp = [[17, exp_fp, 1, '852952723', 1, 5]]
         self.assertEqual(obs, exp)
 
         # check that raw_filpath data was added to the DB
         obs = self.conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.raw_filepath WHERE filepath_id=16")
+            "SELECT * FROM qiita.raw_filepath WHERE filepath_id=17")
         exp_fp = "1_%s" % basename(fp)
-        exp = [[1, 16]]
+        exp = [[1, 17]]
         self.assertEqual(obs, exp)
 
     def test_purge_filepaths(self):
@@ -361,16 +362,15 @@ class DBUtilTests(TestCase):
             "INSERT INTO qiita.filepath "
             "(filepath, filepath_type_id, checksum, checksum_algorithm_id) "
             "VALUES (%s, %s, %s, %s) RETURNING filepath_id", (fp, 1, "", 1))[0]
-        self.assertEqual(fp_id, 16)
+        self.assertEqual(fp_id, 17)
 
         # Connect the just added filepath to a raw data
         self.conn_handler.execute(
             "INSERT INTO qiita.raw_filepath (raw_data_id, filepath_id) VALUES"
-            "(%s, %s)", (1, 16))
+            "(%s, %s)", (1, 17))
 
         # Get the filepaths so we can test if they've been removed or not
         sql_fp = "SELECT filepath FROM qiita.filepath WHERE filepath_id=%s"
-
         fp1 = self.conn_handler.execute_fetchone(sql_fp, (1,))[0]
         fp1 = join(get_db_files_base_dir(), fp1)
 
@@ -378,8 +378,8 @@ class DBUtilTests(TestCase):
         with open(fp1, 'w') as f:
             f.write('\n')
 
-        fp16 = self.conn_handler.execute_fetchone(sql_fp, (16,))[0]
-        fp16 = join(get_db_files_base_dir(), fp16)
+        fp17 = self.conn_handler.execute_fetchone(sql_fp, (17,))[0]
+        fp17 = join(get_db_files_base_dir(), fp17)
 
         # Nothing should be removed
         purge_filepaths(self.conn_handler)
@@ -388,16 +388,16 @@ class DBUtilTests(TestCase):
                    "filepath_id")
         obs = self.conn_handler.execute_fetchall(sql_ids)
         exp = [[1], [2], [3], [4], [5], [6], [7], [8], [9],
-               [10], [11], [12], [13], [14], [15], [16]]
+               [10], [11], [12], [13], [14], [15], [17]]
         self.assertEqual(obs, exp)
 
         # Check that the files still exist
         self.assertTrue(exists(fp1))
-        self.assertTrue(exists(fp16))
+        self.assertTrue(exists(fp17))
 
         # Unlink the filepath from the raw data
         self.conn_handler.execute(
-            "DELETE FROM qiita.raw_filepath WHERE filepath_id=%s", (16,))
+            "DELETE FROM qiita.raw_filepath WHERE filepath_id=%s", (17,))
 
         # Only filepath 16 should be removed
         purge_filepaths(self.conn_handler)
@@ -409,7 +409,7 @@ class DBUtilTests(TestCase):
 
         # Check that only the file for the removed filepath has been removed
         self.assertTrue(exists(fp1))
-        self.assertFalse(exists(fp16))
+        self.assertFalse(exists(fp17))
 
     def test_get_filepath_id(self):
         _, base = get_mountpoint("raw_data")[0]

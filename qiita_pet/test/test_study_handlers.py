@@ -5,7 +5,7 @@ from qiita_pet.test.tornado_test_base import TestHandlerBase
 from qiita_db.study import StudyPerson, Study
 from qiita_db.util import get_count, check_count
 from qiita_db.user import User
-from qiita_pet.handlers.study_handlers import (
+from qiita_pet.handlers.study_handlers.listing_handlers import (
     _get_shared_links_for_study, _build_study_info)
 
 
@@ -223,17 +223,30 @@ class TestCreateStudyAJAX(TestHandlerBase):
 
 
 class TestMetadataSummaryHandler(TestHandlerBase):
-    def test_get_exists(self):
+    def test_error_prep_and_sample(self):
         response = self.get('/metadata_summary/', {'sample_template': 1,
                                                    'prep_template': 1,
+                                                   'study_id': 1})
+        self.assertEqual(response.code, 500)
+
+    def test_error_no_prep_no_sample(self):
+        response = self.get('/metadata_summary/', {'study_id': 1})
+        self.assertEqual(response.code, 500)
+
+    def test_get_exists_prep(self):
+        response = self.get('/metadata_summary/', {'prep_template': 1,
+                                                   'study_id': 1})
+        self.assertEqual(response.code, 200)
+
+    def test_get_exists_sample(self):
+        response = self.get('/metadata_summary/', {'sample_template': 1,
                                                    'study_id': 1})
         self.assertEqual(response.code, 200)
 
     def test_get_no_exist(self):
         response = self.get('/metadata_summary/', {'sample_template': 237,
-                                                   'prep_template': 1,
                                                    'study_id': 237})
-        self.assertEqual(response.code, 404)
+        self.assertEqual(response.code, 500)
 
 
 class TestEBISubmitHandler(TestHandlerBase):

@@ -10,6 +10,8 @@ from unittest import TestCase, main
 
 from qiita_core.util import qiita_test_checker
 from qiita_db.meta_util import get_accessible_filepath_ids
+from qiita_db.study import Study
+from qiita_db.user import User
 
 
 @qiita_test_checker()
@@ -28,7 +30,7 @@ class MetaUtilTests(TestCase):
 
         # shared has access to all study files and analysis files
         obs = get_accessible_filepath_ids('shared@foo.bar')
-        self.assertEqual(obs, set([1, 2, 3, 4, 5, 6, 7, 11, 14, 15]))
+        self.assertEqual(obs, set([1, 2, 3, 4, 5, 6, 7, 11, 14, 15, 16]))
 
         # Now shared should not have access to the study files
         self._unshare_studies()
@@ -39,6 +41,37 @@ class MetaUtilTests(TestCase):
         self._unshare_analyses()
         obs = get_accessible_filepath_ids('shared@foo.bar')
         self.assertEqual(obs, set())
+
+        # Test that it doesn't brake if the SampleTemplate hasn't been added
+        exp = set([1, 2, 3, 4, 5, 6, 7, 11, 14, 15, 16])
+        obs = get_accessible_filepath_ids('test@foo.bar')
+        self.assertEqual(obs, exp)
+
+        info = {
+            "timeseries_type_id": 1,
+            "metadata_complete": True,
+            "mixs_compliant": True,
+            "number_samples_collected": 4,
+            "number_samples_promised": 4,
+            "portal_type_id": 3,
+            "study_alias": "TestStudy",
+            "study_description": "Description of a test study",
+            "study_abstract": "No abstract right now...",
+            "emp_person_id": 1,
+            "principal_investigator_id": 1,
+            "lab_person_id": 1
+        }
+        Study.create(User('test@foo.bar'), "Test study", [1], info)
+        obs = get_accessible_filepath_ids('test@foo.bar')
+        self.assertEqual(obs, exp)
+
+        # test in case there is a prep template that failed
+        self.conn_handler.execute(
+            "INSERT INTO qiita.prep_template (data_type_id, raw_data_id) "
+            "VALUES (2,1)")
+        obs = get_accessible_filepath_ids('test@foo.bar')
+        self.assertEqual(obs, exp)
+
 
 if __name__ == '__main__':
     main()

@@ -645,6 +645,15 @@ class PreprocessedData(BaseData):
         return ppd
 
     @property
+    def processed_data(self):
+        r"""The processed data list generated from this preprocessed data"""
+        conn_handler = SQLConnectionHandler()
+        processed_ids = conn_handler.execute_fetchall(
+            "SELECT processed_data_id FROM qiita.preprocessed_processed_data "
+            "WHERE preprocessed_data_id = %s", (self.id,))
+        return [pid[0] for pid in processed_ids]
+
+    @property
     def prep_template(self):
         r"""The prep template used to generate the preprocessed data"""
         conn_handler = SQLConnectionHandler()
@@ -804,6 +813,40 @@ class PreprocessedData(BaseData):
                 SET submitted_to_insdc_status = %s
                 WHERE preprocessed_data_id=%s""".format(self._table),
                                  (state, self.id))
+
+    def submitted_to_vamps_status(self):
+        r"""Tells if the raw data has been submitted to VAMPS
+
+        Returns
+        -------
+        str
+            One of {'not submitted', 'submitting', 'success', 'failed'}
+        """
+        conn_handler = SQLConnectionHandler()
+        return conn_handler.execute_fetchone(
+            "SELECT submitted_to_vamps_status FROM qiita.{0} "
+            "WHERE preprocessed_data_id=%s".format(self._table), (self.id,))[0]
+
+    def update_vamps_status(self, status):
+        r"""Update the VAMPS submission status
+
+        Parameters
+        ----------
+        status : str, {'not submitted', 'submitting', 'success', 'failed'}
+            The current status of submission
+
+        Raises
+        ------
+        ValueError
+            If the status is not known.
+        """
+        if status not in ('not submitted', 'submitting', 'success', 'failed'):
+            raise ValueError("Unknown status: %s" % status)
+
+        conn_handler = SQLConnectionHandler()
+        conn_handler.execute(
+            """UPDATE qiita.{0} SET submitted_to_vamps_status = %s WHERE
+            preprocessed_data_id=%s""".format(self._table), (status, self.id))
 
 
 class ProcessedData(BaseData):

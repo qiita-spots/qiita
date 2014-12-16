@@ -43,6 +43,7 @@ from future.utils import viewitems
 from copy import deepcopy
 from os.path import join
 from time import strftime
+from functools import partial
 
 import pandas as pd
 import numpy as np
@@ -56,7 +57,9 @@ from .sql_connection import SQLConnectionHandler
 from .ontology import Ontology
 from .util import (exists_table, get_table_cols, get_emp_status,
                    get_required_sample_info_status, convert_to_id,
-                   convert_from_id, find_repeated, get_mountpoint)
+                   convert_from_id, find_repeated, get_mountpoint,
+                   insert_filepaths)
+from .logger import LogEntry
 
 
 TARGET_GENE_DATA_TYPES = ['16S', '18S', 'ITS']
@@ -600,6 +603,7 @@ class MetadataTemplate(QiitaObject):
     items
     get
     to_file
+    add_filepath
 
     See Also
     --------
@@ -693,6 +697,12 @@ class MetadataTemplate(QiitaObject):
 
         table_name = cls._table_name(id_)
         conn_handler = SQLConnectionHandler()
+
+        # Delete the sample template filepaths
+        conn_handler.execute(
+            "DELETE FROM qiita.sample_template_filepath WHERE "
+            "study_id = %s", (id_, ))
+
         conn_handler.execute(
             "DROP TABLE qiita.{0}".format(table_name))
         conn_handler.execute(
@@ -969,6 +979,78 @@ class MetadataTemplate(QiitaObject):
                 values.insert(0, sid)
                 f.write("%s\n" % '\t'.join(values))
 
+    def add_filepath(self, filepath, conn_handler=None):
+        r"""Populates the DB tables for storing the filepath and connects the
+        `self` objects with this filepath"""
+        # Check that this function has been called from a subclass
+        self._check_subclass()
+
+        # Check if the connection handler has been provided. Create a new
+        # one if not.
+        conn_handler = conn_handler if conn_handler else SQLConnectionHandler()
+
+        if self._table == 'required_sample_info':
+            fp_id = convert_to_id("sample_template", "filepath_type",
+                                  conn_handler)
+            table = 'sample_template_filepath'
+            column = 'study_id'
+        elif self._table == 'common_prep_info':
+            fp_id = convert_to_id("prep_template", "filepath_type",
+                                  conn_handler)
+            table = 'prep_template_filepath'
+            column = 'prep_template_id'
+        else:
+            raise QiitaDBNotImplementedError(
+                'add_filepath for %s' % self._table)
+
+        try:
+            fpp_id = insert_filepaths([(filepath, fp_id)], None, "templates",
+                                      "filepath", conn_handler,
+                                      move_files=False)[0]
+            values = (self._id, fpp_id)
+            conn_handler.execute(
+                "INSERT INTO qiita.{0} ({1}, filepath_id) "
+                "VALUES (%s, %s)".format(table, column), values)
+        except Exception as e:
+            LogEntry.create('Runtime', str(e),
+                            info={self.__class__.__name__: self.id})
+            raise e
+
+    def get_filepaths(self, conn_handler=None):
+        r"""Retrives the list of (filepath_id, filepath)"""
+        # Check that this function has been called from a subclass
+        self._check_subclass()
+
+        # Check if the connection handler has been provided. Create a new
+        # one if not.
+        conn_handler = conn_handler if conn_handler else SQLConnectionHandler()
+
+        if self._table == 'required_sample_info':
+            table = 'sample_template_filepath'
+            column = 'study_id'
+        elif self._table == 'common_prep_info':
+            table = 'prep_template_filepath'
+            column = 'prep_template_id'
+        else:
+            raise QiitaDBNotImplementedError(
+                'get_filepath for %s' % self._table)
+
+        try:
+            filepath_ids = conn_handler.execute_fetchall(
+                "SELECT filepath_id, filepath FROM qiita.filepath WHERE "
+                "filepath_id IN (SELECT filepath_id FROM qiita.{0} WHERE "
+                "{1}=%s) ORDER BY filepath_id DESC".format(table, column),
+                (self.id, ))
+        except Exception as e:
+            LogEntry.create('Runtime', str(e),
+                            info={self.__class__.__name__: self.id})
+            raise e
+
+        _, fb = get_mountpoint('templates', conn_handler)[0]
+        base_fp = partial(join, fb)
+
+        return [(fpid, base_fp(fp)) for fpid, fp in filepath_ids]
+
 
 class SampleTemplate(MetadataTemplate):
     r"""Represent the SampleTemplate of a study. Provides access to the
@@ -1078,8 +1160,10 @@ class SampleTemplate(MetadataTemplate):
         # Check that md_template has the required columns
         remaining = set(db_cols).difference(headers)
         missing = missing.union(remaining)
+        missing = missing.difference(cls.translate_cols_dict)
         if missing:
-            raise QiitaDBColumnError("Missing columns: %s" % missing)
+            raise QiitaDBColumnError("Missing columns: %s"
+                                     % ', '.join(missing))
 
         # Insert values on required columns
         values = _as_python_types(md_template, db_cols)
@@ -1127,10 +1211,13 @@ class SampleTemplate(MetadataTemplate):
 
         # figuring out the filepath of the backup
         _id, fp = get_mountpoint('templates')[0]
-        fp = join(fp, '%d_%s' % (study.id, strftime("%Y%m%d-%H%M%S")))
+        fp = join(fp, '%d_%s.txt' % (study.id, strftime("%Y%m%d-%H%M%S")))
         # storing the backup
         st = cls(study.id)
         st.to_file(fp)
+
+        # adding the fp to the object
+        st.add_filepath(fp)
 
         return st
 
@@ -1245,8 +1332,10 @@ class PrepTemplate(MetadataTemplate):
         # Check that md_template has the required columns
         remaining = set(db_cols).difference(headers)
         missing = missing.union(remaining)
+        missing = missing.difference(cls.translate_cols_dict)
         if missing:
-            raise QiitaDBColumnError("Missing columns: %s" % missing)
+            raise QiitaDBColumnError("Missing columns: %s"
+                                     % ', '.join(missing))
 
         # Insert the metadata template
         prep_id = conn_handler.execute_fetchone(
@@ -1301,11 +1390,17 @@ class PrepTemplate(MetadataTemplate):
 
         # figuring out the filepath of the backup
         _id, fp = get_mountpoint('templates')[0]
-        fp = join(fp, '%d_prep_%d_%s' % (study.id, prep_id,
+        fp = join(fp, '%d_prep_%d_%s.txt' % (study.id, prep_id,
                   strftime("%Y%m%d-%H%M%S")))
         # storing the backup
         pt = cls(prep_id)
         pt.to_file(fp)
+
+        # adding the fp to the object
+        pt.add_filepath(fp)
+
+        # creating QIIME mapping file
+        pt.create_qiime_mapping_file(fp)
 
         return pt
 
@@ -1395,6 +1490,11 @@ class PrepTemplate(MetadataTemplate):
             raise QiitaDBError("Cannot remove prep template %d because a "
                                "preprocessed data has been already generated "
                                "using it." % id_)
+
+        # Delete the prep template filepaths
+        conn_handler.execute(
+            "DELETE FROM qiita.prep_template_filepath WHERE "
+            "prep_template_id = %s", (id_, ))
 
         # Drop the prep_X table
         conn_handler.execute(
@@ -1533,15 +1633,86 @@ class PrepTemplate(MetadataTemplate):
             The ID of the study with which this prep template is associated
         """
         conn = SQLConnectionHandler()
-        sql = """SELECT srd.study_id
-                 FROM qiita.prep_template pt JOIN qiita.study_raw_data srd
-                 ON pt.raw_data_id = srd.raw_data_id"""
+        sql = ("SELECT srd.study_id FROM qiita.prep_template pt JOIN "
+               "qiita.study_raw_data srd ON pt.raw_data_id = srd.raw_data_id "
+               "WHERE prep_template_id = %d" % self.id)
         study_id = conn.execute_fetchone(sql)
         if study_id:
             return study_id[0]
         else:
             raise QiitaDBError("No studies found associated with prep "
                                "template ID %d" % self._id)
+
+    def create_qiime_mapping_file(self, prep_template_fp):
+        """This creates the QIIME mapping file and links it in the db.
+
+        Parameters
+        ----------
+        prep_template_fp : str
+            The prep template filepath that should be concatenated to the
+            sample template go used to generate a new  QIIME mapping file
+
+        Returns
+        -------
+        filepath : str
+            The filepath of the created QIIME mapping file
+
+        Raises
+        ------
+        ValueError
+            If the prep template is not a subset of the sample template
+        """
+        rename_cols = {
+            'barcode': 'BarcodeSequence',
+            'barcodesequence': 'BarcodeSequence',
+            'primer': 'LinkerPrimerSequence',
+            'linkerprimersequence': 'LinkerPrimerSequence',
+            'description': 'Description',
+        }
+
+        # getting the latest sample template
+        _, sample_template_fp = SampleTemplate(
+            self.study_id).get_filepaths()[0]
+
+        # reading files via pandas
+        st = load_template_to_dataframe(sample_template_fp)
+        pt = load_template_to_dataframe(prep_template_fp)
+        st_sample_names = set(st.index)
+        pt_sample_names = set(pt.index)
+
+        if not pt_sample_names.issubset(st_sample_names):
+            raise ValueError(
+                "Prep template is not a sub set of the sample template, files:"
+                "%s %s - samples: %s" % (sample_template_fp, prep_template_fp,
+                                         str(pt_sample_names-st_sample_names)))
+
+        mapping = pt.join(st, lsuffix="_prep")
+        mapping.rename(columns=rename_cols, inplace=True, index=str.lower)
+
+        # Gets the orginal mapping columns and readjust the order to comply
+        # with QIIME requirements
+        cols = mapping.columns.values.tolist()
+        cols.remove('BarcodeSequence')
+        cols.remove('LinkerPrimerSequence')
+        cols.remove('Description')
+        new_cols = ['BarcodeSequence', 'LinkerPrimerSequence']
+        new_cols.extend(cols)
+        new_cols.append('Description')
+        mapping = mapping[new_cols]
+
+        # figuring out the filepath for the QIIME map file
+        _id, fp = get_mountpoint('templates')[0]
+        filepath = join(fp, '%d_prep_%d_qiime_%s.txt' % (self.study_id,
+                        self.id, strftime("%Y%m%d-%H%M%S")))
+
+        # Save the mapping file
+        mapping.to_csv(filepath, index_label='#SampleID', na_rep='unknown',
+                       sep='\t')
+
+        # adding the fp to the object
+        self.add_filepath(filepath)
+
+        return filepath
 
 
 def load_template_to_dataframe(fn):

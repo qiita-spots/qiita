@@ -1,0 +1,124 @@
+{% from os.path import basename %}
+
+<div class="tab-pane" id="raw_data_info_{{raw_data_id}}" style="padding: 10px;">
+  <table border="0">
+    <tr>
+      <td style="vertical-align:top;padding:10px;">
+
+      <!-- Add prep template section -->
+      {% if is_editable %}
+        <h4>Add prep template to this raw data</h4>
+        To add a prep template you need to:
+        <ol>
+          <!-- Step 1: choose the prep template file -->
+          <li>
+            select your prep template file
+            <select id="add_prep_template_{{raw_data_id}}">
+              {% for f in files %}
+                <option value="{{f}}">{{f}}</option>
+              {% end %}
+            </select>,
+          </li>
+          <!-- Step 2: choose the prep template data type -->
+          <li>
+            select the prep template data type
+            <select id="data_type_{{raw_data_id}}">
+              {% for name, value in data_types %}
+                <option value="{{value}}">{{name}}</option>
+              {% end %}
+            </select>
+          </li>
+          <!-- Step 3 (optional): select investigation type -->
+          <li>
+            (optional but required for EBI submission) select an investigation type:
+            <select onclick="investigationTypeChanged({{raw_data_id}})" onchange="investigationTypeChanged({{raw_data_id}})" id="investigation-type-{{raw_data_id}}">
+              <option value="None Selected">None Selected</option>
+              {% raw ena_terms %}
+            </select>
+            <table id="investigation-type-table" name="investigation-types" class="investigation-type-table">
+              <tr id="user-defined-investigation-types-{{raw_data_id}}" style="display:none;">
+                <td>
+                  Select one of the user defined investigation types:
+                </td>
+                <td>
+                  <select onclick="newInvestigationTypeChanged({{raw_data_id}})" onchange="newInvestigationTypeChanged({{raw_data_id}})" id="user-defined-investigation-type-{{raw_data_id}}">
+                  {% for term in user_defined_terms %}
+                    <option value="{{term}}">{{term}}</option>
+                  {% end %}
+                  </select>
+                </td>
+              </tr>
+              <tr id="new-investigation-type-entry-{{raw_data_id}}" style="display:none;">
+                <td>
+                  Enter a new investigation type:
+                </td>
+                <td>
+                  <input type="text" id="new-investigation-type-{{raw_data_id}}" name="new-investigation-type" class="form-control">
+                </td>
+              </tr>
+            </table>
+          </li>
+        </ol>
+        <br/>
+        <a class="btn btn-primary" onclick="add_prep_template({{raw_data_id}});">Add prep template</a>
+        <br/>
+        <hr/>
+      {% end %}
+
+
+        <!-- Uploaded prep templates (table) -->
+        <h4>Prep templates uploaded</h4>
+        <div class="panel-group" id="prep-accordion-{{raw_data_id}}">
+          {% for prep in available_prep_templates %}
+            {% module PrepTemplatePanel(prep, study_id, is_editable, ena_terms, study_status, user_defined_terms) %}
+          {% end %}
+        </div>
+      </td>
+
+      <!-- Files linked to the raw data -->
+      <td style="vertical-align:top;padding:10px;">
+        <h4>Linked files to this raw data</h4>
+          {% if show_unlink_btn %}
+            <a class="btn btn-danger" onclick="unlink_all_files({{raw_data_id}})">Unlink all files</a><br/>
+          {% end %}
+          <i><b style="color:red">{{link_msg}}</b></i><br/>
+        {% for fpid, f, t in raw_data_files %}
+            <i>{{basename(f)}}:</i> {{t[4:]}} <br/>
+        {% end %}
+          <br/>
+        {% if is_editable %}
+          <h4>Link uploaded files with raw data</h4>
+          <table border="0">
+            <tr>
+              <th>File</th>
+              <th>&nbsp;&nbsp;&nbsp;</th>
+              <th>File type</th>
+            </tr>
+            {% for f in files %}
+            <tr>
+              <td>{{f}}</td>
+              <td>&nbsp;</td>
+              <td>
+                <select id="{{f}}" name="upload_file_{{raw_data_id}}">
+                  <option value="">Ignore ...</option>
+                  {% for fp_type in filepath_types %}
+                    <option value="{{fp_type}}">{{fp_type}}</option>
+                  {% end %}
+                </select>
+              </td>
+            </tr>
+            {% end %}
+        </table>
+        <br/>
+        <a onclick="link_files_to_raw_data({{raw_data_id}});"
+          {% if disable_link_btn %}
+            class="btn btn-default" style=" pointer-events: none; cursor: default; background-color:grey;"
+          {% else %}
+            class="btn btn-primary"
+          {% end %}>
+          Link raw files to: {{raw_data_filetype}} (ID: {{raw_data_id}})
+        </a>
+        {% end %}
+      </td>
+    </table>
+</div>

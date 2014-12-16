@@ -33,19 +33,6 @@ BASE_DATA_DIR =
 # Valid upload extension, comma separated. Empty for no uploads
 VALID_UPLOAD_EXTENSION = fastq,fastq.gz,txt
 
-# ----------------------------- IPython settings ------------------------------
-[ipython]
-# ties to cluster profiles
-# Make sure that all the cluster size are bigger than 1, otherwise a deadlock can occur
-DEMO_CLUSTER = qiita_demo
-DEMO_CLUSTER_SIZE = 2
-
-RESERVED_CLUSTER = qiita_reserved
-RESERVED_CLUSTER_SIZE = 2
-
-GENERAL_CLUSTER = qiita_general
-GENERAL_CLUSTER_SIZE = 2
-
 # ----------------------------- SMTP settings -----------------------------
 [smtp]
 # The hostname to connect to
@@ -128,3 +115,14 @@ EBI_CENTER_NAME = CCME-COLORADO
 # This string (with an underscore) will be prefixed to your EBI submission and
 # study aliases
 EBI_ORGANIZATION_PREFIX = qiime
+
+[ipython]
+# context is expected to be a comma separated list
+context = qiita_general
+default = qiita_general
+
+[vamps]
+# general info to submit to vamps
+USER = user
+PASSWORD = password
+URL = https://vamps.mbl.edu/mobe_workshop/getfile.php

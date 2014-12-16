@@ -50,7 +50,7 @@ function setMarker(map, lat, lng, pinImage, pinShadow)
 {% end %}
 {% block content %}
 
-<div class="jumbotron">
+<div id="jumbotron" class="jumbotron">
   <table width="100%">
   <thead>
     <tr>
@@ -69,7 +69,7 @@ function setMarker(map, lat, lng, pinImage, pinShadow)
 <div id="map-canvas"></div>
 
 {% if random_study_id is not None %}
-    <div class="jumbotron">
+    <div id="jumbotron" class="jumbotron">
       <h2>Check out this random public study from the database!</h2>
       <h3>{{ random_study_title }}</h3>
       <p align="justify">{{ random_study_info['study_abstract'] }}</p>

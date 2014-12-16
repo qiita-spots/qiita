@@ -2,25 +2,24 @@ language: python
 env:
   - PYTHON_VERSION=2.7
 before_install:
-  - wget http://repo.continuum.io/miniconda/Miniconda-2.2.2-Linux-x86_64.sh -O miniconda.sh
+  - wget http://repo.continuum.io/miniconda/Miniconda3-3.7.3-Linux-x86_64.sh -O miniconda.sh
   - chmod +x miniconda.sh
   - ./miniconda.sh -b
-  - export PATH=/home/travis/anaconda/bin:$PATH
+  - export PATH=/home/travis/miniconda3/bin:$PATH
   # Update conda itself
   - conda update --yes conda
 install:
-  - conda create --yes -n env_name python=$PYTHON_VERSION pip nose openpyxl=1.8.2 pandas ipython pyzmq flake8
+  - conda create --yes -n env_name python=$PYTHON_VERSION pip nose openpyxl=1.8.2 pandas>=0.15 ipython pyzmq flake8
   - conda install --yes -n env_name python=$PYTHON_VERSION h5py>=2.3.1
   - source activate env_name
-  - pip install coveralls cogent burrito qcli
-  - pip install https://github.com/biocore/brokit/archive/master.zip
+  - pip install coveralls cogent burrito qcli burrito-fillings
+  - pip install https://github.com/biocore/mustached-octo-ironman/archive/master.zip
   - pip install https://github.com/biocore/qiime/archive/master.zip --no-deps
   - pip install .
 script:
+  - export MOI_CONFIG_FP=`pwd`/qiita_core/support_files/config_test.txt
   - ipython profile create qiita_general --parallel
-  - ipython profile create qiita_demo --parallel
-  - ipython profile create qiita_reserved --parallel
-  - qiita_env start_cluster general demo reserved
+  - qiita_env start_cluster qiita_general
   - qiita_env make --no-load-ontologies
   - nosetests --with-doctest --with-coverage
   - flake8 qiita_* setup.py scripts/qiita scripts/qiita_env

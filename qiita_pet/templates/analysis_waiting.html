@@ -1,48 +1,15 @@
 {% extends sitebase.html%}
 
 {%block head%}
+<script src="/static/vendor/js/moi.js"></script>
+<script src="/static/vendor/js/moi_list.js"></script>
 <script type="text/javascript">
-    window.onload = function() {
-        var host = 'ws://' + window.location.host + '/consumer/';
-        var websocket = new WebSocket(host);
-        noerror = true;
-
-        websocket.onopen = function() {
-            websocket.send(JSON.stringify({'user': '{{user}}'}));
-        };
-        websocket.onmessage = function(evt) {
-            message = JSON.parse(evt.data);
-            if(message.analysis == '{{aid}}') {
-                if(message.msg == 'allcomplete') { 
-                    window.location.replace("/analysis/results/{{aid}}");
-                }
-                list = document.getElementById(message.command);
-                if(message.msg.indexOf("ERROR") != -1) {
-                  list.style.color="Red";
-                  noerror=false;
-                }
-                else if(message.msg.indexOf("Completed") != -1) {
-                  list.style.color="Green";
-                }
-                else {
-                  list.style.color="Blue"; 
-                }
-                list.innerHTML = message.msg;
-            }
-        };
-        websocket.onerror = function(evt) { };
-};
-
+    window.onload = function() {moi_list.init("{{group_id}}");};
 </script>
 {% end %}
 
 {% block content %}
 <h1>Analysis {{aname}}</h1>
-  {% for command in commands%}
-    <p>
-    {{command}}: <span id='{{command}}'>Queued</span>
-    </p>
-  {% end %}
 <div id='error'></div>
 
 {% end %}
