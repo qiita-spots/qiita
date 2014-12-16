@@ -1,13 +1,12 @@
 {% extends sitebase.html %}
 {% block content %}
-{% from future.utils import viewitems %}
 
 <h1>Submission summary for study: <b>{{study_title}}</b></h1>
 
 <form role="form" action="/vamps/{{preprocessed_data_id}}" method="post">
     <div class="panel panel-default">
         <div class="panel-heading">
-            The  information below describes information contained in the sample
+            The information below describes information contained in the sample
             and prep templates which will be submitted to VAMPS.
         </div>
 

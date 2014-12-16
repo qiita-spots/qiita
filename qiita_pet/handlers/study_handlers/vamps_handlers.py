@@ -44,15 +44,16 @@ class VAMPSHandler(BaseHandler):
 
         demux = [path for _, path, ftype in preprocessed_data.get_filepaths()
                  if ftype == 'preprocessed_demux']
+        demux_length = len(demux)
 
-        if not len(demux):
+        if not demux_length:
             msg = ("Study does not appear to have demultiplexed "
                    "sequences associated")
             msg_level = 'danger'
-        elif len(demux) > 1:
+        elif demux_length > 1:
             msg = ("Study appears to have multiple demultiplexed files!")
             msg_level = 'danger'
-        elif msg == "":
+        elif demux_length == 1:
             demux_file = demux[0]
             demux_file_stats = demux_stats(demux_file)
             stats.append(('Number of sequences', demux_file_stats.n))
