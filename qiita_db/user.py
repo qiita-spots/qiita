@@ -349,6 +349,35 @@ class User(QiitaObject):
         return [s[0] for s in study_ids]
 
     @property
+    def user_studies_for_display(self):
+        """Returns a list of list with the studies owned by the user"""
+        sql = (
+            "SELECT qiita.study.study_id, study_title, metadata_complete, "
+            "number_samples_collected, array_to_string(array(SELECT "
+            "qiita.qiita_user.name || '&' || qiita.qiita_user.email FROM "
+            "qiita.qiita_user WHERE qiita.qiita_user.email IN (SELECT "
+            "qiita.study_users.email FROM qiita.study_users WHERE "
+            "qiita.study_users.study_id = qiita.study.study_id)), ',') AS "
+            "shared_with, count(raw_data_id), (SELECT qiita.study_person.name "
+            "|| '&' || qiita.study_person.email FROM qiita.study_person WHERE "
+            "qiita.study_person.study_person_id = "
+            "qiita.study.principal_investigator_id) AS pi, array_to_string("
+            "array(SELECT qiita.study_pmid.pmid FROM qiita.study_pmid WHERE "
+            "qiita.study_pmid.study_id = qiita.study.study_id), ',') AS "
+            "pmid, (SELECT qiita.qiita_user.name || '&' || "
+            "qiita.qiita_user.email FROM qiita.qiita_user WHERE "
+            "qiita.qiita_user.email = qiita.study.email), (SELECT "
+            "qiita.study_status.status FROM qiita.study_status WHERE "
+            "qiita.study_status.study_status_id = "
+            "qiita.study.study_status_id) FROM qiita.study LEFT JOIN "
+            "qiita.study_raw_data ON qiita.study.study_id = "
+            "qiita.study_raw_data.study_id WHERE email = %s GROUP BY "
+            "qiita.study.study_id ORDER BY qiita.study.study_id")
+        conn_handler = SQLConnectionHandler()
+        studies = conn_handler.execute_fetchall(sql, (self._id, ))
+        return studies
+
+    @property
     def shared_studies(self):
         """Returns a list of study ids shared with the user"""
         sql = ("SELECT study_id FROM qiita.study_users WHERE "
