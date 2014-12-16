@@ -83,8 +83,11 @@ class VAMPSHandler(BaseHandler):
                  if ftype == 'preprocessed_demux']
         demux_length = len(demux)
 
-        if state in ('submitting',  'success') or demux_length != 1:
+        if state in ('submitting',  'success'):
             msg = "Cannot resubmit! Current state is: %s" % state
+            msg_level = 'danger'
+        elif demux_length != 1:
+            msg = "The study doesn't have demux files or have too many" % state
             msg_level = 'danger'
         else:
             channel = self.current_user
