@@ -5,3 +5,9 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
+
+allowed_min_browser_versions = {
+    'chrome': 39,
+    'firefox': 34,
+    'safari': 7
+}
