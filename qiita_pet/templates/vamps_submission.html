@@ -23,7 +23,9 @@
         {% end %}
         </table>
     </div>
-    <input type="submit" class="btn btn-primary" value="Submit to VAMPS">
+    {% if not message  %}
+      <input type="submit" class="btn btn-primary" value="Submit to VAMPS">
+    {% end %}
     <br/><br/>
     <a class="btn btn-primary" href="/study/description/{{study_id}}?top_tab=preprocessed_data_tab&sub_tab={{preprocessed_data_id}}">Return to study</a>
 </form>

@@ -78,7 +78,12 @@ class VAMPSHandler(BaseHandler):
         msg_level = 'success'
         preprocessed_data = PreprocessedData(preprocessed_data_id)
         state = preprocessed_data.submitted_to_insdc_status()
-        if state in ('submitting',  'success'):
+
+        demux = [path for _, path, ftype in preprocessed_data.get_filepaths()
+                 if ftype == 'preprocessed_demux']
+        demux_length = len(demux)
+
+        if state in ('submitting',  'success') or demux_length != 1:
             msg = "Cannot resubmit! Current state is: %s" % state
             msg_level = 'danger'
         else:
