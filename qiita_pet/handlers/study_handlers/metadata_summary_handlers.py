@@ -43,8 +43,8 @@ class MetadataSummaryHandler(BaseHandler):
         except (QiitaDBUnknownIDError, ValueError):
             # By using __name__, it will either display 'SampleTemplate'
             # or 'PrepTemplate'
-            raise HTTPError("%s %s does not exist" %
-                            (constructor.__name__, template_id))
+            raise HTTPError(500, "%s %s does not exist" %
+                                 (constructor.__name__, template_id))
 
         return template
 
