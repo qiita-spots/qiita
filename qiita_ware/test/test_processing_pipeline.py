@@ -23,7 +23,7 @@ from qiita_db.study import Study
 from qiita_db.parameters import PreprocessedIlluminaParams
 from qiita_db.metadata_template import PrepTemplate
 from qiita_ware.processing_pipeline import (_get_preprocess_fastq_cmd,
-                                            _insert_preprocessed_data_fastq,
+                                            _insert_preprocessed_data,
                                             _generate_demux_file,
                                             _get_qiime_minimal_mapping)
 
@@ -146,7 +146,7 @@ class ProcessingPipelineTests(TestCase):
         self.assertEqual(obs_cmd_1, exp_cmd_1)
         self.assertEqual(obs_cmd_2, exp_cmd_2)
 
-    def test_insert_preprocessed_data_fastq(self):
+    def test_insert_preprocessed_data(self):
         study = Study(1)
         params = PreprocessedIlluminaParams(1)
         prep_template = PrepTemplate(1)
@@ -166,8 +166,8 @@ class ProcessingPipelineTests(TestCase):
             db_files.append(db_path_builder("3_%s" % f_suff))
         self.files_to_remove.extend(db_files)
 
-        _insert_preprocessed_data_fastq(study, params, prep_template,
-                                        prep_out_dir)
+        _insert_preprocessed_data(study, params, prep_template,
+                                  prep_out_dir)
 
         # Check that the files have been copied
         for fp in db_files:
