@@ -63,7 +63,15 @@ INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum, checksum_algor
 ('1_s_G1_L001_sequences.fastq.gz', 1, '852952723', 1, 5),
 ('1_s_G1_L001_sequences_barcodes.fastq.gz', 3, '852952723', 1, 5),
 ('2_sequences.fastq.gz', 1, '852952723', 1, 5),
-('2_sequences_barcodes.fastq.gz', 3, '852952723', 1, 5);
+('2_sequences_barcodes.fastq.gz', 3, '852952723', 1, 5),
+('preprocess_test1.sff', 17, '852952723', 1, 5),
+('preprocess_test2.sff', 17, '852952723', 1, 5);
+
+------------
+-- NEED TO ADD SFF, AND FASTA
+------------
+
+
 
 -- Insert the raw data information for study 1
 INSERT INTO qiita.raw_data (filetype_id) VALUES (3), (2);
