@@ -529,7 +529,7 @@ class PreprocessedDataTests(TestCase):
         """processing_status works correctly"""
         # Processed case
         ppd = PreprocessedData(1)
-        self.assertEqual(ppd.processing_status, 'processed')
+        self.assertEqual(ppd.processing_status, 'not_processed')
 
         # not processed case
         ppd = PreprocessedData.create(self.study, self.params_table,
@@ -548,13 +548,16 @@ class PreprocessedDataTests(TestCase):
         ppd.processing_status = 'processed'
         self.assertEqual(ppd.processing_status, 'processed')
         state = 'failed: some error message'
-        pt.processing_status = state
-        self.assertEqual(pt.processing_status, state)
+        ppd.processing_status = state
+        self.assertEqual(ppd.processing_status, state)
 
     def test_processing_status_setter_valueerror(self):
         """Raises an error if the processing status is not recognized"""
+        ppd = PreprocessedData.create(self.study, self.params_table,
+                                      self.params_id, self.filepaths,
+                                      data_type="18S")
         with self.assertRaises(ValueError):
-            self.tester.processing_status = 'not a valid state'
+            ppd.processing_status = 'not a valid state'
 
 
 @qiita_test_checker()
