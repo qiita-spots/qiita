@@ -699,6 +699,9 @@
 			<column name="submitted_to_vamps_status" type="varchar" jt="12" >
 				<defo>&#039;not submitted&#039;</defo>
 			</column>
+			<column name="processing_status" type="varchar" jt="12" mandatory="y" >
+				<defo>&#039;not_processed&#039;</defo>
+			</column>
 			<index name="pk_preprocessed_data" unique="PRIMARY_KEY" >
 				<column name="preprocessed_data_id" />
 			</index>
