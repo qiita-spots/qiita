@@ -77,7 +77,7 @@ class VAMPSHandler(BaseHandler):
         msg = ''
         msg_level = 'success'
         preprocessed_data = PreprocessedData(preprocessed_data_id)
-        state = preprocessed_data.submitted_to_insdc_status()
+        state = preprocessed_data.submitted_to_vamps_status()
 
         demux = [path for _, path, ftype in preprocessed_data.get_filepaths()
                  if ftype == 'preprocessed_demux']
