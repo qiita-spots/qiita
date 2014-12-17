@@ -210,6 +210,7 @@ def _get_preprocess_fasta_cmd(raw_data, prep_template, params):
 
         if quals:
             qual_str = ','.join(quals)
+            qual_str += ' -d'  # store resulting quals
         else:
             qual_str = ''
     else:
