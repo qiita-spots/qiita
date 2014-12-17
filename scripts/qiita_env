@@ -14,7 +14,8 @@ from qiita_db.environment_manager import (
     make_environment, drop_environment, clean_test_environment,
     patch as _patch)
 from qiita_core.environment_manager import (
-    start_cluster as _start_cluster, stop_cluster as _stop_cluster)
+    start_cluster as _start_cluster, stop_cluster as _stop_cluster,
+    test as _test, TEST_RUNNERS)
 from qiita_core.configuration_manager import ConfigurationManager
 
 
@@ -100,6 +101,21 @@ def patch():
     patches found in the patches directory.
     """
     _patch()
+
+
+@env.command()
+@click.option('--runner', required=False, type=click.Choice(TEST_RUNNERS),
+              default='all', help='Test runner to use')
+def test(runner):
+    """Test the environment
+
+    Check to make sure that basic services are up and working. These include
+    connectivity to postgres, redis, and the ability to submit jobs through
+    moi.
+
+    Tests are performed both on localhost and ipengines.
+    """
+    _test(runner)
 
 
 if __name__ == '__main__':
