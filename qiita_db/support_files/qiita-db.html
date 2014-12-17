@@ -45,13 +45,13 @@ table {
 }
 
 .bordered th {
-    background-color: #d7d7ea;
-    background-image: -webkit-gradient(linear, left top, left bottom, from(#f4f4fb), to(#d7d7ea));
-    background-image: -webkit-linear-gradient(top, #f4f4fb, #d7d7ea);
-    background-image:    -moz-linear-gradient(top, #f4f4fb, #d7d7ea);
-    background-image:     -ms-linear-gradient(top, #f4f4fb, #d7d7ea);
-    background-image:      -o-linear-gradient(top, #f4f4fb, #d7d7ea);
-    background-image:         linear-gradient(top, #f4f4fb, #d7d7ea);
+    background-color: #dce9f9;
+    background-image: -webkit-gradient(linear, left top, left bottom, from(#ebf3fc), to(#dce9f9));
+    background-image: -webkit-linear-gradient(top, #ebf3fc, #dce9f9);
+    background-image:    -moz-linear-gradient(top, #ebf3fc, #dce9f9);
+    background-image:     -ms-linear-gradient(top, #ebf3fc, #dce9f9);
+    background-image:      -o-linear-gradient(top, #ebf3fc, #dce9f9);
+    background-image:         linear-gradient(top, #ebf3fc, #dce9f9);
     -webkit-box-shadow: 0 1px 0 rgba(255,255,255,.8) inset;
     -moz-box-shadow:0 1px 0 rgba(255,255,255,.8) inset;
     box-shadow: 0 1px 0 rgba(255,255,255,.8) inset;
@@ -99,25 +99,24 @@ table {
 <body>
 <svg xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink'   width='2490' height='2015' viewbox='0 0 2490 2015' >
 <style type='text/css'>
-  text                { fill:#000000; font-family: 'trebuchet MS', 'Lucida sans', Dialog, Dialog, Arial; font-size:11px; stroke:#000000; stroke-width:0.1; }
+  text                { fill:#000000; font-family: Dialog, Dialog, Arial; font-size:11px; stroke:#000000; stroke-width:0.1; }
   text:hover          { fill:#a00000; font-size:12px;}
   text.colType        { fill:#a9bdc6; }
   text.tableTitle     { fill:#000000; }
-  path                { stroke:#5e554d; stroke-width:1.1; fill:none; }
-  rect.table          { fill:#ffffff; stroke:#222; stroke-width:0.2; filter:url(#shadow); }
-  line.table          { stroke:#222; stroke-width:0.2; }
+  path                { stroke:#5c5750; stroke-width:1.2; fill:none; }
+  rect.table          { fill:#ffffff; stroke:#4e4c4c; stroke-width:0.3; filter:url(#shadow); }
+  line.table          { stroke:#9ea1a4; stroke-width:0.3; }
   rect.callout        { fill:url(#calloutGradient); stroke:#bebdbd; stroke-width:0.5; }
   rect.grp            { opacity:0.5; stroke:#b1b1b1; stroke-width:1.7; }
 </style>
 <defs>
-  <pattern patternUnits='userSpaceOnUse' id='layoutBgA' width='10' height='20' x='0' y='0' viewBox='0 0 5 10'>  
-     <line x1='-2' y1='1' x2='7' y2='10' stroke='#f0f0f0' stroke-width='.5'/>  
-     <line x1='-2' y1='6' x2='7' y2='15' stroke='#f0f0f0' stroke-width='.5'/>  
-     <line x1='-2' y1='-4' x2='7' y2='5' stroke='#f0f0f0' stroke-width='.5'/>  
-  </pattern>  
-  <radialGradient id='layoutBgB' gradientUnits='userSpaceOnUse' cx='50%' cy='50%' r='75%' fx='46%' fy='22%'>
-     <stop offset='0%' stop-opacity='.2' stop-color='#f5f5f5' />  
-     <stop offset='100%' stop-color='#f0f0f0' />  
+  <pattern id='layoutGradient' patternUnits='userSpaceOnUse' x='0' y='0' width='7' height='7' viewBox='0 0 7 7'>
+    <rect x='0' y='0' width='7' height='7' style='fill:#f1efe8;' />
+    <line x1='5' y1='7' x2='5' y2='0' style='stroke:#b7b7b7;stroke-width:0.5;stroke-dasharray:1,9;'  />
+  </pattern>
+  <radialGradient id='layoutGradientOld' cx='20%' cy='20%' r='25%' fx='10%' fy='0%'>
+	   <stop offset='0%' stop-color='#ffffff' />
+    <stop offset='100%' stop-color='#efefef' />
   </radialGradient>
   <linearGradient id='tableHeaderGradient2' x1='0%' y1='0%' x2='0%' y2='90%' >
           <stop offset='0%' stop-color='#b2cdf7'/> 
@@ -145,22 +144,25 @@ table {
    </linearGradient>
   <radialGradient id='calloutGradient' cx='20%' cy='20%' r='100%' fx='10%' fy='10%'>
 	   <stop offset='0%' stop-color='#ffffff' />
-    <stop offset='100%' stop-color='#f8f6d1' />
+    <stop offset='100%' stop-color='#e8e8e7' />
   </radialGradient>
-  <filter id='shadow' width='120%' height='120%'> 
-      <feOffset result='offOut' in='SourceGraphic' dx='2' dy='2' /> 
-      <feColorMatrix result='matrixOut' in='offOut' type='matrix' 
-      values='0.1 0 0 0 0 0 0.1 0 0 0 0 0 0.1 0 0 0 0 0 0.5 0' /> 
-      <feGaussianBlur result='blurOut' in='matrixOut' stdDeviation='2' /> 
-      <feBlend in='SourceGraphic' in2='blurOut' mode='normal' /> 
-    </filter> 
-  <filter id='formerShadow' height='130%'> 
+  <filter id='shadow' height='130%'> 
     <feGaussianBlur in='SourceAlpha' stdDeviation='1.5'/> <!-- stdDeviation is how much to blur -->
-    <feOffset dx='1.2' dy='1.2' result='offsetblur'/> <!-- how much to offset -->
+    <feOffset dx='1.3' dy='1.3' result='offsetblur'/> <!-- how much to offset -->
     <feMerge>
     <feMergeNode/> <!-- this contains the offset blurred image -->
     <feMergeNode in='SourceGraphic'/> <!-- this contains the element that the filter is applied to -->
     </feMerge>
+  </filter>
+  <filter id='shadowOld' width='150%' height='150%'> 
+    <feGaussianBlur in='SourceAlpha' stdDeviation='2' result='image1' /> 
+    <feOffset in='image1' result='image2' dx='2' dy='2' />
+    <feColorMatrix type='matrix' in='image2' result='image3' 
+       values='1 1 1 0 0 
+               1 1 1 0 0 
+               1 1 1 0 0 
+               0 0 0 .5 0'/>
+    <feComposite in='SourceGraphic' in2='image3' operator='over' /> 
   </filter>
   <filter id='legendShadow' filterUnits='userSpaceOnUse' x='0' y='0' width='400' height='120'> 
      <feGaussianBlur in='SourceAlpha' stdDeviation='3' result='blur'/> 
@@ -176,16 +178,14 @@ table {
      </feMerge> 
   </filter> 
   <radialGradient id='legendGradient' fx='5%' fy='5%' r='75%' spreadMethod='pad'>
-          <stop offset='0%' stop-color='#eaeef6' stop-opacity='1'/> 
-          <stop offset='100%' stop-color='#cad2e3' stop-opacity='1' /> 
+          <stop offset='0%' stop-color='#cfd7f6' stop-opacity='1'/> 
+          <stop offset='100%' stop-color='#919dd0' stop-opacity='1' /> 
    </radialGradient>
   <symbol id='calloutArrowDown' overflow='visible' >
-      <path d='M 0,0 L 7,11 L 15,0 z' style='fill:#f8f6d1;stroke:none;' />
-      <path d='M 0,0 L 7,11 L 15,0' style='stroke:#bebdbd; stroke-width:0.5;' />
+      <path d='M 0,0 L 7,11 L 15,0 z' style='fill:#e8e8e7; stroke:#bebdbd; stroke-width:0.5;' />
   </symbol>
   <symbol id='calloutArrowUp' overflow='visible' >
-      <path d='M 0,15 L 7,3 L 15,15 z' style='fill:#ffffff; stroke:none;' />
-      <path d='M 0,15 L 7,3 L 15,15' style='stroke:#bebdbd; stroke-width:0.5;' />
+      <path d='M 0,15 L 7,3 L 15,15 z' style='fill:#e8e8e7; stroke:#bebdbd; stroke-width:0.5;' />
   </symbol>
   <symbol id='pk' overflow='visible' >
     <g transform='scale(0.99)'>
@@ -237,22 +237,23 @@ table {
           d='M 0,0 3,3 M 0,3 3,0 z'/>
   </symbol>
   <marker id='arrow' viewBox='0 0 7 7' refX='0' refY='3' markerUnits='strokeWidth' markerWidth='7' markerHeight='7' orient='auto'>
-    <path d='M 0,0 L 7, 3 L 0,7 z' style='fill:#584739; stroke-width:0px;' />
+    <path d='M 0,0 L 7, 3 L 0,7 z' style='fill:#5c5750; stroke-width:0px;' />
   </marker>
   <marker id='foot' viewBox='0 0 7 7' refX='7' refY='3' markerUnits='strokeWidth' markerWidth='7' markerHeight='7' orient='auto'>
-    <path d='M 0,3 L 15, 3 z' style='stroke:#584739;' />
+    <path d='M 0,3 L 15, 3 z' style='stroke:#5c5750;' />
   </marker>
 </defs>
 
 <!-- ============= Desktop ============= -->
-<rect x='1' y='1' width='2488' height='2013' rx='7' ry='7' style='fill:url(#layoutBgA); stroke:#333333; stroke-width:0.5;' />
-<rect width='120%' x='-10%' y='-10%' height='120%' fill='url(#layoutBgB)'/>
+<rect x='1' y='1' width='2488' height='2013' rx='7' ry='7' style='fill:url(#layoutGradient); stroke:#333333; stroke-width:0.5;' />
+
 <!-- ============= Legend ============= -->
 <g transform='translate(10,10)'>
-  <rect x='10' y='10' width='300' height='64' rx='6' ry='6' style='fill:url(#legendGradient);filter:url(#legendShadow);'/> 
-  <text x='20' y='30'><tspan>Project</tspan> qiita @ <a xlink:href='http://www.dbschema.com'>DbSchema</a></text> 
+  <rect x='10' y='10' width='320' height='76' rx='6' ry='6' style='fill:url(#legendGradient);filter:url(#legendShadow);'/> 
+  <text x='20' y='30'><tspan>Project</tspan> qiita</text> 
   <text x='20' y='44'><tspan>Layout</tspan> qiita</text> 
-  <text x='20' y='58' style='fill:#777'><tspan>Hint: Schema comments available as mouse-over tooltips.</tspan></text> 
+  <text x='20' y='58' style='fill:#777'><tspan>Hint: Read the column comments as mouse-over tooltips.</tspan></text> 
+  <text x='180' y='74'><tspan>Generated using <a xlink:href='http://www.dbschema.com'>DbSchema</a></tspan></text> 
 </g>
 
 <g transform='translate(0,110)'>
@@ -486,7 +487,7 @@ table {
 	processed_params_sortmerna references reference ( reference_id )</title>
 </path>
 <text x='2167' y='925' transform='rotate(0 2167,925)' title='Foreign Key fk_processed_params_sortmerna
-	processed_params_sortmerna references reference ( reference_id )' style='fill:#a1a0a0;'>reference_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1455 885 L 1462,885 Q 1470,885 1470,877 L 1470,847 Q 1470,840 1462,840 L 1455,840' >
+	processed_params_sortmerna references reference ( reference_id )' style='fill:#a1a0a0;'>reference_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1455 885 L 1462,885 Q 1470,885 1470,877 L 1470,862 Q 1470,855 1462,855 L 1455,855' >
 	<title>Foreign Key fk_preprocessed_processed_data
 	preprocessed_processed_data references preprocessed_data ( preprocessed_data_id )</title>
 </path>
@@ -686,16 +687,16 @@ table {
 	prep_template_preprocessed_data references prep_template ( prep_template_id )</title>
 </path>
 <text x='967' y='460' transform='rotate(0 967,460)' title='Foreign Key fk_prep_template_id
-	prep_template_preprocessed_data references prep_template ( prep_template_id )' style='fill:#a1a0a0;'>prep_template_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 960 510 L 997,510 Q 1005,510 1005,517 L 1005,877 Q 1005,885 1012,885 L 1207,885 Q 1215,885 1215,877 L 1215,832 Q 1215,825 1222,825 L 1245,825' >
+	prep_template_preprocessed_data references prep_template ( prep_template_id )' style='fill:#a1a0a0;'>prep_template_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 960 510 L 997,510 Q 1005,510 1005,517 L 1005,877 Q 1005,885 1012,885 L 1207,885 Q 1215,885 1215,877 L 1215,847 Q 1215,840 1222,840 L 1245,840' >
 	<title>Foreign Key fk_prep_template_preprocessed_data
 	prep_template_preprocessed_data references preprocessed_data ( preprocessed_data_id )</title>
 </path>
 <text x='967' y='505' transform='rotate(0 967,505)' title='Foreign Key fk_prep_template_preprocessed_data
-	prep_template_preprocessed_data references preprocessed_data ( preprocessed_data_id )' style='fill:#a1a0a0;'>preprocessed_data_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1455 825 L 1477,825 Q 1485,825 1485,832 L 1485,1102 Q 1485,1110 1477,1110 L 787,1110 Q 780,1110 780,1102 L 780,1095' >
+	prep_template_preprocessed_data references preprocessed_data ( preprocessed_data_id )' style='fill:#a1a0a0;'>preprocessed_data_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1455 840 L 1477,840 Q 1485,840 1485,847 L 1485,1102 Q 1485,1110 1477,1110 L 787,1110 Q 780,1110 780,1102 L 780,1095' >
 	<title>Foreign Key fk_preprocessed_data
 	preprocessed_data references data_type ( data_type_id )</title>
 </path>
-<text x='1462' y='820' transform='rotate(0 1462,820)' title='Foreign Key fk_preprocessed_data
+<text x='1462' y='835' transform='rotate(0 1462,835)' title='Foreign Key fk_preprocessed_data
 	preprocessed_data references data_type ( data_type_id )' style='fill:#a1a0a0;'>data_type_id</text><!-- ============= Table 'controlled_vocab_values' ============= -->
 <rect class='table' x='45' y='1538' width='150' height='120' rx='7' ry='7' />
 <path d='M 45.50 1564.50 L 45.50 1545.50 Q 45.50 1538.50 52.50 1538.50 L 187.50 1538.50 Q 194.50 1538.50 194.50 1545.50 L 194.50 1564.50 L45.50 1564.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
@@ -1709,7 +1710,7 @@ Longitude of the collection site</title></a>
 <a xlink:href='#prep_template_preprocessed_data.preprocessed_data_id'><use id='fk' x='948' y='491' xlink:href='#fk'/><title>References preprocessed_data ( preprocessed_data_id ) </title></a>
 
 <!-- ============= Table 'preprocessed_data' ============= -->
-<rect class='table' x='1260' y='668' width='195' height='180' rx='7' ry='7' />
+<rect class='table' x='1260' y='668' width='195' height='195' rx='7' ry='7' />
 <path d='M 1260.50 694.50 L 1260.50 675.50 Q 1260.50 668.50 1267.50 668.50 L 1447.50 668.50 Q 1454.50 668.50 1454.50 675.50 L 1454.50 694.50 L1260.50 694.50 ' style='fill:url(#tableHeaderGradient1); stroke:none;' />
 <a xlink:href='#preprocessed_data'><text x='1306' y='682' class='tableTitle'>preprocessed_data</text><title>Table qiita.preprocessed_data</title></a>
   <use id='nn' x='1262' y='702' xlink:href='#nn'/><a xlink:href='#preprocessed_data.preprocessed_data_id'><use id='pk' x='1262' y='701' xlink:href='#pk'/><title>Primary Key  ( preprocessed_data_id ) </title></a>
@@ -1729,57 +1730,53 @@ Name of table holding the params</title></a>
 <a xlink:href='#preprocessed_data.data_type_id'><use id='fk' x='1443' y='791' xlink:href='#fk'/><title>References data_type ( data_type_id ) </title></a>
   <use id='nn' x='1262' y='807' xlink:href='#nn'/><a xlink:href='#preprocessed_data.link_filepaths_status'><text x='1278' y='817'>link_filepaths_status</text><title>link_filepaths_status varchar not null default &#039;idle&#039;</title></a>
   <a xlink:href='#preprocessed_data.submitted_to_vamps_status'><text x='1278' y='832'>submitted_to_vamps_status</text><title>submitted_to_vamps_status varchar default &#039;not submitted&#039;</title></a>
+  <use id='nn' x='1262' y='837' xlink:href='#nn'/><a xlink:href='#preprocessed_data.processing_status'><text x='1278' y='847'>processing_status</text><title>processing_status varchar not null default &#039;not&#095;processed&#039;</title></a>
 
 </g></svg>
 
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='controlled_vocab_values'>Table controlled_vocab_values</a></th></tr>
+<tr><th colspan='3'><a name='controlled_vocab_values'>Table controlled_vocab_values</a></th></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='controlled_vocab_values.vocab_value_id'>vocab&#095;value&#095;id</a></td>
-		<td> bigserial   </td>
+		<td> bigserial  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='controlled_vocab_values.controlled_vocab_id'>controlled&#095;vocab&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='controlled_vocab_values.term'>term</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='controlled_vocab_values.order_by'>order&#095;by</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td>
 		<td><a name='controlled_vocab_values.default_item'>default&#095;item</a></td>
 		<td> varchar   </td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>pk&#095;controlled&#095;vocab&#095;values</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;controlled&#095;vocab&#095;values primary key</td>
 		<td> ON vocab&#095;value&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;controlled&#095;vocab&#095;values</td>
+	<tr>		<td>idx&#095;controlled&#095;vocab&#095;values </td>
 		<td> ON controlled&#095;vocab&#095;id</td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_controlled_vocab_values</td>
+		<td>fk_controlled_vocab_values</td>
 		<td > ( controlled&#095;vocab&#095;id ) ref <a href='#controlled&#095;vocab'>controlled&#095;vocab</a> (controlled&#095;vocab&#095;id) </td>
 		<td>  </td>
 	</tr>
@@ -1789,46 +1786,42 @@ Name of table holding the params</title></a>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='investigation'>Table investigation</a></th></tr>
+<tr><th colspan='3'><a name='investigation'>Table investigation</a></th></tr>
 <tr><td colspan='3'>Overarching investigation information&#046;An investigation comprises one or more individual studies&#046; </td></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='investigation.investigation_id'>investigation&#095;id</a></td>
-		<td> bigserial   </td>
+		<td> bigserial  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='investigation.name'>name</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='investigation.description'>description</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td> Describes the overarching goal of the investigation </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td>
 		<td><a name='investigation.contact_person_id'>contact&#095;person&#095;id</a></td>
 		<td> bigint   </td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>pk&#095;investigation</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;investigation primary key</td>
 		<td> ON investigation&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;investigation</td>
+	<tr>		<td>idx&#095;investigation </td>
 		<td> ON contact&#095;person&#095;id</td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_investigation_study_person</td>
+		<td>fk_investigation_study_person</td>
 		<td > ( contact&#095;person&#095;id ) ref <a href='#study&#095;person'>study&#095;person</a> (study&#095;person&#095;id) </td>
 		<td>  </td>
 	</tr>
@@ -1838,42 +1831,40 @@ Name of table holding the params</title></a>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='investigation_study'>Table investigation_study</a></th></tr>
+<tr><th colspan='3'><a name='investigation_study'>Table investigation_study</a></th></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='investigation_study.investigation_id'>investigation&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='investigation_study.study_id'>study&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>idx&#095;investigation&#095;study</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>idx&#095;investigation&#095;study primary key</td>
 		<td> ON investigation&#095;id&#044; study&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;investigation&#095;study&#095;investigation</td>
+	<tr>		<td>idx&#095;investigation&#095;study&#095;investigation </td>
 		<td> ON investigation&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;investigation&#095;study&#095;study</td>
+	<tr>		<td>idx&#095;investigation&#095;study&#095;study </td>
 		<td> ON study&#095;id</td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_investigation_study</td>
+		<td>fk_investigation_study</td>
 		<td > ( investigation&#095;id ) ref <a href='#investigation'>investigation</a> (investigation&#095;id) </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_investigation_study_study</td>
+		<td>fk_investigation_study_study</td>
 		<td > ( study&#095;id ) ref <a href='#study'>study</a> (study&#095;id) </td>
 		<td>  </td>
 	</tr>
@@ -1883,34 +1874,32 @@ Name of table holding the params</title></a>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='study_experimental_factor'>Table study_experimental_factor</a></th></tr>
+<tr><th colspan='3'><a name='study_experimental_factor'>Table study_experimental_factor</a></th></tr>
 <tr><td colspan='3'>EFO ontological link of experimental factors to studies </td></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='study_experimental_factor.study_id'>study&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='study_experimental_factor.efo_id'>efo&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>idx&#095;study&#095;experimental&#095;factor</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>idx&#095;study&#095;experimental&#095;factor primary key</td>
 		<td> ON study&#095;id&#044; efo&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;study&#095;experimental&#095;factor&#095;0</td>
+	<tr>		<td>idx&#095;study&#095;experimental&#095;factor&#095;0 </td>
 		<td> ON study&#095;id</td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_study_experimental_factor</td>
+		<td>fk_study_experimental_factor</td>
 		<td > ( study&#095;id ) ref <a href='#study'>study</a> (study&#095;id) </td>
 		<td>  </td>
 	</tr>
@@ -1920,34 +1909,32 @@ Name of table holding the params</title></a>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='study_pmid'>Table study_pmid</a></th></tr>
+<tr><th colspan='3'><a name='study_pmid'>Table study_pmid</a></th></tr>
 <tr><td colspan='3'>Links a study to all PMIDs for papers created from study </td></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='study_pmid.study_id'>study&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='study_pmid.pmid'>pmid</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>idx&#095;study&#095;pmid</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>idx&#095;study&#095;pmid primary key</td>
 		<td> ON study&#095;id&#044; pmid</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;study&#095;pmid&#095;0</td>
+	<tr>		<td>idx&#095;study&#095;pmid&#095;0 </td>
 		<td> ON study&#095;id</td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_study_pmid_study</td>
+		<td>fk_study_pmid_study</td>
 		<td > ( study&#095;id ) ref <a href='#study'>study</a> (study&#095;id) </td>
 		<td>  </td>
 	</tr>
@@ -1957,43 +1944,41 @@ Name of table holding the params</title></a>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='job_results_filepath'>Table job_results_filepath</a></th></tr>
+<tr><th colspan='3'><a name='job_results_filepath'>Table job_results_filepath</a></th></tr>
 <tr><td colspan='3'>Holds connection between jobs and the result filepaths </td></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='job_results_filepath.job_id'>job&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='job_results_filepath.filepath_id'>filepath&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>idx&#095;job&#095;results&#095;filepath</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>idx&#095;job&#095;results&#095;filepath primary key</td>
 		<td> ON job&#095;id&#044; filepath&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;job&#095;results&#095;filepath&#095;0</td>
+	<tr>		<td>idx&#095;job&#095;results&#095;filepath&#095;0 </td>
 		<td> ON job&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;job&#095;results&#095;filepath&#095;1</td>
+	<tr>		<td>idx&#095;job&#095;results&#095;filepath&#095;1 </td>
 		<td> ON filepath&#095;id</td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_job_results_filepath</td>
+		<td>fk_job_results_filepath</td>
 		<td > ( job&#095;id ) ref <a href='#job'>job</a> (job&#095;id) </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_job_results_filepath_0</td>
+		<td>fk_job_results_filepath_0</td>
 		<td > ( filepath&#095;id ) ref <a href='#filepath'>filepath</a> (filepath&#095;id) </td>
 		<td>  </td>
 	</tr>
@@ -2003,43 +1988,41 @@ Name of table holding the params</title></a>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='analysis_job'>Table analysis_job</a></th></tr>
+<tr><th colspan='3'><a name='analysis_job'>Table analysis_job</a></th></tr>
 <tr><td colspan='3'>Holds information for a one&#045;to&#045;many relation of analysis to the jobs in it </td></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='analysis_job.analysis_id'>analysis&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td> Id of the analysis </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='analysis_job.job_id'>job&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td> Id for a job that is part of the analysis </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>idx&#095;analysis&#095;jobs</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>idx&#095;analysis&#095;jobs primary key</td>
 		<td> ON analysis&#095;id&#044; job&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;analysis&#095;job</td>
+	<tr>		<td>idx&#095;analysis&#095;job </td>
 		<td> ON analysis&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;analysis&#095;job&#095;0</td>
+	<tr>		<td>idx&#095;analysis&#095;job&#095;0 </td>
 		<td> ON job&#095;id</td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_analysis_job_analysis</td>
+		<td>fk_analysis_job_analysis</td>
 		<td > ( analysis&#095;id ) ref <a href='#analysis'>analysis</a> (analysis&#095;id) </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_analysis_job_job</td>
+		<td>fk_analysis_job_job</td>
 		<td > ( job&#095;id ) ref <a href='#job'>job</a> (job&#095;id) </td>
 		<td>  </td>
 	</tr>
@@ -2049,43 +2032,41 @@ Name of table holding the params</title></a>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='analysis_chain'>Table analysis_chain</a></th></tr>
+<tr><th colspan='3'><a name='analysis_chain'>Table analysis_chain</a></th></tr>
 <tr><td colspan='3'>Keeps track of the chain of analysis edits&#046; Tracks what previous analysis a given analysis came from&#046;If a given analysis is not in child&#095;id&#044; it is the root of the chain&#046;  </td></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='analysis_chain.parent_id'>parent&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='analysis_chain.child_id'>child&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;analysis&#095;chain</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>idx&#095;analysis&#095;chain </td>
 		<td> ON parent&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;analysis&#095;chain&#095;0</td>
+	<tr>		<td>idx&#095;analysis&#095;chain&#095;0 </td>
 		<td> ON child&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>Pk</td><td>idx&#095;analysis&#095;chain&#095;1</td>
+	<tr>		<td>idx&#095;analysis&#095;chain&#095;1 primary key</td>
 		<td> ON parent&#095;id&#044; child&#095;id</td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_analysis_chain</td>
+		<td>fk_analysis_chain</td>
 		<td > ( parent&#095;id ) ref <a href='#analysis'>analysis</a> (analysis&#095;id) </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_analysis_chain_0</td>
+		<td>fk_analysis_chain_0</td>
 		<td > ( child&#095;id ) ref <a href='#analysis'>analysis</a> (analysis&#095;id) </td>
 		<td>  </td>
 	</tr>
@@ -2095,43 +2076,41 @@ Name of table holding the params</title></a>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='column_controlled_vocabularies'>Table column_controlled_vocabularies</a></th></tr>
+<tr><th colspan='3'><a name='column_controlled_vocabularies'>Table column_controlled_vocabularies</a></th></tr>
 <tr><td colspan='3'>Table relates a column with a controlled vocabulary&#046; </td></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='column_controlled_vocabularies.controlled_vocab_id'>controlled&#095;vocab&#095;id</a></td>
-		<td> bigserial   </td>
+		<td> bigserial  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='column_controlled_vocabularies.column_name'>column&#095;name</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>idx&#095;column&#095;controlled&#095;vocabularies</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>idx&#095;column&#095;controlled&#095;vocabularies primary key</td>
 		<td> ON controlled&#095;vocab&#095;id&#044; column&#095;name</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;column&#095;controlled&#095;vocabularies&#095;0</td>
+	<tr>		<td>idx&#095;column&#095;controlled&#095;vocabularies&#095;0 </td>
 		<td> ON column&#095;name</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;column&#095;controlled&#095;vocabularies&#095;1</td>
+	<tr>		<td>idx&#095;column&#095;controlled&#095;vocabularies&#095;1 </td>
 		<td> ON controlled&#095;vocab&#095;id</td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_column_controlled_vocabularies</td>
+		<td>fk_column_controlled_vocabularies</td>
 		<td > ( column&#095;name ) ref <a href='#mixs&#095;field&#095;description'>mixs&#095;field&#095;description</a> (column&#095;name) </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_column_controlled_vocab2</td>
+		<td>fk_column_controlled_vocab2</td>
 		<td > ( controlled&#095;vocab&#095;id ) ref <a href='#controlled&#095;vocab'>controlled&#095;vocab</a> (controlled&#095;vocab&#095;id) </td>
 		<td>  </td>
 	</tr>
@@ -2141,47 +2120,41 @@ Name of table holding the params</title></a>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='mixs_field_description'>Table mixs_field_description</a></th></tr>
+<tr><th colspan='3'><a name='mixs_field_description'>Table mixs_field_description</a></th></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='mixs_field_description.column_name'>column&#095;name</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='mixs_field_description.data_type'>data&#095;type</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='mixs_field_description.desc_or_value'>desc&#095;or&#095;value</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='mixs_field_description.definition'>definition</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td>
 		<td><a name='mixs_field_description.min_length'>min&#095;length</a></td>
 		<td> integer   </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='mixs_field_description.active'>active</a></td>
-		<td> integer   </td>
+		<td> integer  NOT NULL  </td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>pk&#095;mixs&#095;field&#095;description</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;mixs&#095;field&#095;description primary key</td>
 		<td> ON column&#095;name</td>
 		<td>  </td>
 	</tr>
@@ -2191,43 +2164,41 @@ Name of table holding the params</title></a>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='analysis_users'>Table analysis_users</a></th></tr>
+<tr><th colspan='3'><a name='analysis_users'>Table analysis_users</a></th></tr>
 <tr><td colspan='3'>Links analyses to the users they are shared with </td></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='analysis_users.analysis_id'>analysis&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='analysis_users.email'>email</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>idx&#095;analysis&#095;users</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>idx&#095;analysis&#095;users primary key</td>
 		<td> ON analysis&#095;id&#044; email</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;analysis&#095;users&#095;analysis</td>
+	<tr>		<td>idx&#095;analysis&#095;users&#095;analysis </td>
 		<td> ON analysis&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;analysis&#095;users&#095;email</td>
+	<tr>		<td>idx&#095;analysis&#095;users&#095;email </td>
 		<td> ON email</td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_analysis_users_analysis</td>
+		<td>fk_analysis_users_analysis</td>
 		<td > ( analysis&#095;id ) ref <a href='#analysis'>analysis</a> (analysis&#095;id) </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_analysis_users_user</td>
+		<td>fk_analysis_users_user</td>
 		<td > ( email ) ref <a href='#qiita&#095;user'>qiita&#095;user</a> (email) </td>
 		<td>  </td>
 	</tr>
@@ -2237,42 +2208,40 @@ Name of table holding the params</title></a>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='study_preprocessed_data'>Table study_preprocessed_data</a></th></tr>
+<tr><th colspan='3'><a name='study_preprocessed_data'>Table study_preprocessed_data</a></th></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='study_preprocessed_data.study_id'>study&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='study_preprocessed_data.preprocessed_data_id'>preprocessed&#095;data&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>idx&#095;study&#095;preprocessed&#095;data</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>idx&#095;study&#095;preprocessed&#095;data primary key</td>
 		<td> ON study&#095;id&#044; preprocessed&#095;data&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;study&#095;preprocessed&#095;data&#095;0</td>
+	<tr>		<td>idx&#095;study&#095;preprocessed&#095;data&#095;0 </td>
 		<td> ON study&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;study&#095;preprocessed&#095;data&#095;1</td>
+	<tr>		<td>idx&#095;study&#095;preprocessed&#095;data&#095;1 </td>
 		<td> ON preprocessed&#095;data&#095;id</td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_study_preprocessed_data</td>
+		<td>fk_study_preprocessed_data</td>
 		<td > ( study&#095;id ) ref <a href='#study'>study</a> (study&#095;id) </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_study_preprocessed_data_0</td>
+		<td>fk_study_preprocessed_data_0</td>
 		<td > ( preprocessed&#095;data&#095;id ) ref <a href='#preprocessed&#095;data'>preprocessed&#095;data</a> (preprocessed&#095;data&#095;id) </td>
 		<td>  </td>
 	</tr>
@@ -2282,43 +2251,41 @@ Name of table holding the params</title></a>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='study_users'>Table study_users</a></th></tr>
+<tr><th colspan='3'><a name='study_users'>Table study_users</a></th></tr>
 <tr><td colspan='3'>Links shared studies to users they are shared with </td></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='study_users.study_id'>study&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='study_users.email'>email</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>idx&#095;study&#095;users</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>idx&#095;study&#095;users primary key</td>
 		<td> ON study&#095;id&#044; email</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;study&#095;users&#095;0</td>
+	<tr>		<td>idx&#095;study&#095;users&#095;0 </td>
 		<td> ON study&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;study&#095;users&#095;1</td>
+	<tr>		<td>idx&#095;study&#095;users&#095;1 </td>
 		<td> ON email</td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_study_users_study</td>
+		<td>fk_study_users_study</td>
 		<td > ( study&#095;id ) ref <a href='#study'>study</a> (study&#095;id) </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_study_users_user</td>
+		<td>fk_study_users_user</td>
 		<td > ( email ) ref <a href='#qiita&#095;user'>qiita&#095;user</a> (email) </td>
 		<td>  </td>
 	</tr>
@@ -2328,30 +2295,27 @@ Name of table holding the params</title></a>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='sample_x'>Table sample_x</a></th></tr>
+<tr><th colspan='3'><a name='sample_x'>Table sample_x</a></th></tr>
 <tr><td colspan='3'>data for samples in study x &#040;sample template&#041;x is the study&#095;id from study tableMAKE SURE sample&#095;id IS FK TO sample&#095;id IN required&#095;sample&#095;info TABLE </td></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='sample_x.sample_id'>sample&#095;id</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='sample_x.description'>description</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td>
 		<td><a name='sample_x.other_mapping_columns'>other&#095;mapping&#095;columns</a></td>
 		<td> varchar   </td>
 		<td> Represents whatever other columns go with this study </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>pk&#095;study&#095;x&#095;y</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;study&#095;x&#095;y primary key</td>
 		<td> ON sample&#095;id</td>
 		<td>  </td>
 	</tr>
@@ -2361,40 +2325,37 @@ Name of table holding the params</title></a>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='study_sample_columns'>Table study_sample_columns</a></th></tr>
+<tr><th colspan='3'><a name='study_sample_columns'>Table study_sample_columns</a></th></tr>
 <tr><td colspan='3'>Holds information on which metadata columns are available for the study sample template </td></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='study_sample_columns.study_id'>study&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='study_sample_columns.column_name'>column&#095;name</a></td>
-		<td> varchar&#040; 100 &#041;   </td>
+		<td> varchar&#040; 100 &#041;  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='study_sample_columns.column_type'>column&#095;type</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>idx&#095;study&#095;mapping&#095;columns</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>idx&#095;study&#095;mapping&#095;columns primary key</td>
 		<td> ON study&#095;id&#044; column&#095;name&#044; column&#095;type</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;study&#095;mapping&#095;columns&#095;study&#095;id</td>
+	<tr>		<td>idx&#095;study&#095;mapping&#095;columns&#095;study&#095;id </td>
 		<td> ON study&#095;id</td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_study_mapping_columns_study</td>
+		<td>fk_study_mapping_columns_study</td>
 		<td > ( study&#095;id ) ref <a href='#study'>study</a> (study&#095;id) </td>
 		<td>  </td>
 	</tr>
@@ -2404,39 +2365,37 @@ Name of table holding the params</title></a>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='study_raw_data'>Table study_raw_data</a></th></tr>
+<tr><th colspan='3'><a name='study_raw_data'>Table study_raw_data</a></th></tr>
 <tr><td colspan='3'>links study to its raw data </td></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='study_raw_data.study_id'>study&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='study_raw_data.raw_data_id'>raw&#095;data&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;study&#095;raw&#095;data</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>idx&#095;study&#095;raw&#095;data </td>
 		<td> ON study&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>Pk</td><td>idx&#095;study&#095;raw&#095;data&#095;0</td>
+	<tr>		<td>idx&#095;study&#095;raw&#095;data&#095;0 primary key</td>
 		<td> ON study&#095;id&#044; raw&#095;data&#095;id</td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_study_raw_data_study</td>
+		<td>fk_study_raw_data_study</td>
 		<td > ( study&#095;id ) ref <a href='#study'>study</a> (study&#095;id) </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_study_raw_data_raw_data</td>
+		<td>fk_study_raw_data_raw_data</td>
 		<td > ( raw&#095;data&#095;id ) ref <a href='#raw&#095;data'>raw&#095;data</a> (raw&#095;data&#095;id) </td>
 		<td>  </td>
 	</tr>
@@ -2446,30 +2405,27 @@ Name of table holding the params</title></a>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='portal_type'>Table portal_type</a></th></tr>
+<tr><th colspan='3'><a name='portal_type'>Table portal_type</a></th></tr>
 <tr><td colspan='3'>What portals are available to show a study in </td></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='portal_type.portal_type_id'>portal&#095;type&#095;id</a></td>
-		<td> bigserial   </td>
+		<td> bigserial  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='portal_type.portal'>portal</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='portal_type.description'>description</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>pk&#095;portal&#095;type</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;portal&#095;type primary key</td>
 		<td> ON portal&#095;type&#095;id</td>
 		<td>  </td>
 	</tr>
@@ -2479,34 +2435,32 @@ Name of table holding the params</title></a>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='processed_filepath'>Table processed_filepath</a></th></tr>
+<tr><th colspan='3'><a name='processed_filepath'>Table processed_filepath</a></th></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='processed_filepath.processed_data_id'>processed&#095;data&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='processed_filepath.filepath_id'>filepath&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>idx&#095;processed&#095;filepath</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>idx&#095;processed&#095;filepath primary key</td>
 		<td> ON processed&#095;data&#095;id&#044; filepath&#095;id</td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_processed_data_filepath</td>
+		<td>fk_processed_data_filepath</td>
 		<td > ( processed&#095;data&#095;id ) ref <a href='#processed&#095;data'>processed&#095;data</a> (processed&#095;data&#095;id) </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_processed_data_filepath_0</td>
+		<td>fk_processed_data_filepath_0</td>
 		<td > ( filepath&#095;id ) ref <a href='#filepath'>filepath</a> (filepath&#095;id) </td>
 		<td>  </td>
 	</tr>
@@ -2516,54 +2470,47 @@ Name of table holding the params</title></a>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='command'>Table command</a></th></tr>
+<tr><th colspan='3'><a name='command'>Table command</a></th></tr>
 <tr><td colspan='3'>Available commands for jobs </td></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='command.command_id'>command&#095;id</a></td>
-		<td> bigserial   </td>
+		<td> bigserial  NOT NULL  </td>
 		<td> Unique identifier for function </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='command.name'>name</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='command.command'>command</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td> What command to call to run this function </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='command.input'>input</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td> JSON of input options for the command </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='command.required'>required</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td> JSON of required options for the command </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='command.optional'>optional</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td> JSON of optional options for command </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='command.output'>output</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td> JSON of output options for the command </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>pk&#095;command</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;command primary key</td>
 		<td> ON command&#095;id</td>
 		<td>  </td>
 	</tr>
@@ -2573,51 +2520,46 @@ Name of table holding the params</title></a>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='logging'>Table logging</a></th></tr>
+<tr><th colspan='3'><a name='logging'>Table logging</a></th></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='logging.logging_id'>logging&#095;id</a></td>
-		<td> bigserial   </td>
+		<td> bigserial  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='logging.time'>time</a></td>
-		<td> timestamp   </td>
+		<td> timestamp  NOT NULL  </td>
 		<td> Time the error was thrown </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='logging.severity_id'>severity&#095;id</a></td>
-		<td> integer   </td>
+		<td> integer  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='logging.msg'>msg</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td> Error message thrown </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td>
 		<td><a name='logging.information'>information</a></td>
 		<td> varchar   </td>
 		<td> Other applicable information &#040;depending on error&#041; </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;logging&#095;0</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>idx&#095;logging&#095;0 </td>
 		<td> ON severity&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>Pk</td><td>pk&#095;logging</td>
+	<tr>		<td>pk&#095;logging primary key</td>
 		<td> ON logging&#095;id</td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_logging_severity</td>
+		<td>fk_logging_severity</td>
 		<td > ( severity&#095;id ) ref <a href='#severity'>severity</a> (severity&#095;id) </td>
 		<td>  </td>
 	</tr>
@@ -2627,42 +2569,40 @@ Name of table holding the params</title></a>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='study_processed_data'>Table study_processed_data</a></th></tr>
+<tr><th colspan='3'><a name='study_processed_data'>Table study_processed_data</a></th></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='study_processed_data.study_id'>study&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='study_processed_data.processed_data_id'>processed&#095;data&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>idx&#095;study&#095;processed&#095;data</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>idx&#095;study&#095;processed&#095;data primary key</td>
 		<td> ON study&#095;id&#044; processed&#095;data&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;study&#095;processed&#095;data&#095;0</td>
+	<tr>		<td>idx&#095;study&#095;processed&#095;data&#095;0 </td>
 		<td> ON study&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>U</td><td>pk&#095;study&#095;processed&#095;data</td>
+	<tr>		<td>pk&#095;study&#095;processed&#095;data unique</td>
 		<td> ON processed&#095;data&#095;id</td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_study_processed_data</td>
+		<td>fk_study_processed_data</td>
 		<td > ( study&#095;id ) ref <a href='#study'>study</a> (study&#095;id) </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_study_processed_data_0</td>
+		<td>fk_study_processed_data_0</td>
 		<td > ( processed&#095;data&#095;id ) ref <a href='#processed&#095;data'>processed&#095;data</a> (processed&#095;data&#095;id) </td>
 		<td>  </td>
 	</tr>
@@ -2672,42 +2612,40 @@ Name of table holding the params</title></a>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='command_data_type'>Table command_data_type</a></th></tr>
+<tr><th colspan='3'><a name='command_data_type'>Table command_data_type</a></th></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='command_data_type.command_id'>command&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='command_data_type.data_type_id'>data&#095;type&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>idx&#095;command&#095;data&#095;type</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>idx&#095;command&#095;data&#095;type primary key</td>
 		<td> ON command&#095;id&#044; data&#095;type&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;command&#095;data&#095;type&#095;0</td>
+	<tr>		<td>idx&#095;command&#095;data&#095;type&#095;0 </td>
 		<td> ON command&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;command&#095;data&#095;type&#095;1</td>
+	<tr>		<td>idx&#095;command&#095;data&#095;type&#095;1 </td>
 		<td> ON data&#095;type&#095;id</td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_command_data_type</td>
+		<td>fk_command_data_type</td>
 		<td > ( command&#095;id ) ref <a href='#command'>command</a> (command&#095;id) </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_command_data_type_0</td>
+		<td>fk_command_data_type_0</td>
 		<td > ( data&#095;type&#095;id ) ref <a href='#data&#095;type'>data&#095;type</a> (data&#095;type&#095;id) </td>
 		<td>  </td>
 	</tr>
@@ -2717,42 +2655,40 @@ Name of table holding the params</title></a>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='preprocessed_filepath'>Table preprocessed_filepath</a></th></tr>
+<tr><th colspan='3'><a name='preprocessed_filepath'>Table preprocessed_filepath</a></th></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='preprocessed_filepath.preprocessed_data_id'>preprocessed&#095;data&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='preprocessed_filepath.filepath_id'>filepath&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>idx&#095;preprocessed&#095;filepath</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>idx&#095;preprocessed&#095;filepath primary key</td>
 		<td> ON preprocessed&#095;data&#095;id&#044; filepath&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;preprocessed&#095;filepath&#095;0</td>
+	<tr>		<td>idx&#095;preprocessed&#095;filepath&#095;0 </td>
 		<td> ON preprocessed&#095;data&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;preprocessed&#095;filepath&#095;1</td>
+	<tr>		<td>idx&#095;preprocessed&#095;filepath&#095;1 </td>
 		<td> ON filepath&#095;id</td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_preprocessed_filepath</td>
+		<td>fk_preprocessed_filepath</td>
 		<td > ( preprocessed&#095;data&#095;id ) ref <a href='#preprocessed&#095;data'>preprocessed&#095;data</a> (preprocessed&#095;data&#095;id) </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_preprocessed_filepath_0</td>
+		<td>fk_preprocessed_filepath_0</td>
 		<td > ( filepath&#095;id ) ref <a href='#filepath'>filepath</a> (filepath&#095;id) </td>
 		<td>  </td>
 	</tr>
@@ -2762,58 +2698,55 @@ Name of table holding the params</title></a>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='analysis_filepath'>Table analysis_filepath</a></th></tr>
+<tr><th colspan='3'><a name='analysis_filepath'>Table analysis_filepath</a></th></tr>
 <tr><td colspan='3'>Stores link between analysis and the data file used for the analysis&#046; </td></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='analysis_filepath.analysis_id'>analysis&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='analysis_filepath.filepath_id'>filepath&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td>
 		<td><a name='analysis_filepath.data_type_id'>data&#095;type&#095;id</a></td>
 		<td> bigint   </td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;analysis&#095;filepath</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>idx&#095;analysis&#095;filepath </td>
 		<td> ON analysis&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;analysis&#095;filepath&#095;0</td>
+	<tr>		<td>idx&#095;analysis&#095;filepath&#095;0 </td>
 		<td> ON filepath&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>Pk</td><td>idx&#095;analysis&#095;filepath&#095;1</td>
+	<tr>		<td>idx&#095;analysis&#095;filepath&#095;1 primary key</td>
 		<td> ON analysis&#095;id&#044; filepath&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;analysis&#095;filepath&#095;2</td>
+	<tr>		<td>idx&#095;analysis&#095;filepath&#095;2 </td>
 		<td> ON data&#095;type&#095;id</td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_analysis_filepath</td>
+		<td>fk_analysis_filepath</td>
 		<td > ( analysis&#095;id ) ref <a href='#analysis'>analysis</a> (analysis&#095;id) </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_analysis_filepath_0</td>
+		<td>fk_analysis_filepath_0</td>
 		<td > ( filepath&#095;id ) ref <a href='#filepath'>filepath</a> (filepath&#095;id) </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_analysis_filepath_1</td>
+		<td>fk_analysis_filepath_1</td>
 		<td > ( data&#095;type&#095;id ) ref <a href='#data&#095;type'>data&#095;type</a> (data&#095;type&#095;id) </td>
 		<td>  </td>
 	</tr>
@@ -2823,30 +2756,28 @@ Name of table holding the params</title></a>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='analysis_workflow'>Table analysis_workflow</a></th></tr>
+<tr><th colspan='3'><a name='analysis_workflow'>Table analysis_workflow</a></th></tr>
 <tr><td colspan='3'>Stores what step in&#095;production analyses are on&#046; </td></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='analysis_workflow.analysis_id'>analysis&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='analysis_workflow.step'>step</a></td>
-		<td> integer   </td>
+		<td> integer  NOT NULL  </td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>pk&#095;analysis&#095;workflow</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;analysis&#095;workflow primary key</td>
 		<td> ON analysis&#095;id</td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_analysis_workflow</td>
+		<td>fk_analysis_workflow</td>
 		<td > ( analysis&#095;id ) ref <a href='#analysis'>analysis</a> (analysis&#095;id) </td>
 		<td>  </td>
 	</tr>
@@ -2856,46 +2787,42 @@ Name of table holding the params</title></a>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='column_ontology'>Table column_ontology</a></th></tr>
+<tr><th colspan='3'><a name='column_ontology'>Table column_ontology</a></th></tr>
 <tr><td colspan='3'>This table relates a column with an ontology&#046; </td></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='column_ontology.column_name'>column&#095;name</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='column_ontology.ontology_short_name'>ontology&#095;short&#095;name</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='column_ontology.bioportal_id'>bioportal&#095;id</a></td>
-		<td> integer   </td>
+		<td> integer  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td>
 		<td><a name='column_ontology.ontology_branch_id'>ontology&#095;branch&#095;id</a></td>
 		<td> varchar   </td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>idx&#095;column&#095;ontology</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>idx&#095;column&#095;ontology primary key</td>
 		<td> ON column&#095;name&#044; ontology&#095;short&#095;name</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;column&#095;ontology&#095;0</td>
+	<tr>		<td>idx&#095;column&#095;ontology&#095;0 </td>
 		<td> ON column&#095;name</td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_column_ontology</td>
+		<td>fk_column_ontology</td>
 		<td > ( column&#095;name ) ref <a href='#mixs&#095;field&#095;description'>mixs&#095;field&#095;description</a> (column&#095;name) </td>
 		<td>  </td>
 	</tr>
@@ -2905,52 +2832,46 @@ Name of table holding the params</title></a>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='study_person'>Table study_person</a></th></tr>
+<tr><th colspan='3'><a name='study_person'>Table study_person</a></th></tr>
 <tr><td colspan='3'>Contact information for the various people involved in a study </td></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='study_person.study_person_id'>study&#095;person&#095;id</a></td>
-		<td> bigserial   </td>
+		<td> bigserial  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='study_person.name'>name</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='study_person.email'>email</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='study_person.affiliation'>affiliation</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td> The institution with which this person is affiliated </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td>
 		<td><a name='study_person.address'>address</a></td>
 		<td> varchar&#040; 100 &#041;   </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td>
 		<td><a name='study_person.phone'>phone</a></td>
 		<td> varchar   </td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>pk&#095;study&#095;person</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;study&#095;person primary key</td>
 		<td> ON study&#095;person&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>U</td><td>idx&#095;study&#095;person</td>
+	<tr>		<td>idx&#095;study&#095;person unique</td>
 		<td> ON name&#044; affiliation</td>
 		<td>  </td>
 	</tr>
@@ -2960,73 +2881,66 @@ Name of table holding the params</title></a>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='analysis'>Table analysis</a></th></tr>
+<tr><th colspan='3'><a name='analysis'>Table analysis</a></th></tr>
 <tr><td colspan='3'>hHolds analysis information </td></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='analysis.analysis_id'>analysis&#095;id</a></td>
-		<td> bigserial   </td>
+		<td> bigserial  NOT NULL  </td>
 		<td> Unique identifier for analysis </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='analysis.email'>email</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td> Email for user who owns the analysis </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='analysis.name'>name</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td> Name of the analysis </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='analysis.description'>description</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='analysis.analysis_status_id'>analysis&#095;status&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td>
 		<td><a name='analysis.pmid'>pmid</a></td>
 		<td> varchar   </td>
 		<td> PMID of paper from the analysis </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td>
 		<td><a name='analysis.timestamp'>timestamp</a></td>
 		<td> timestamptz   DEFO current_timestamp </td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>pk&#095;analysis</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;analysis primary key</td>
 		<td> ON analysis&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;analysis&#095;email</td>
+	<tr>		<td>idx&#095;analysis&#095;email </td>
 		<td> ON email</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;analysis&#095;status&#095;id</td>
+	<tr>		<td>idx&#095;analysis&#095;status&#095;id </td>
 		<td> ON analysis&#095;status&#095;id</td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_analysis_user</td>
+		<td>fk_analysis_user</td>
 		<td > ( email ) ref <a href='#qiita&#095;user'>qiita&#095;user</a> (email) </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_analysis_analysis_status</td>
+		<td>fk_analysis_analysis_status</td>
 		<td > ( analysis&#095;status&#095;id ) ref <a href='#analysis&#095;status'>analysis&#095;status</a> (analysis&#095;status&#095;id) </td>
 		<td>  </td>
 	</tr>
@@ -3036,23 +2950,21 @@ Name of table holding the params</title></a>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='controlled_vocab'>Table controlled_vocab</a></th></tr>
+<tr><th colspan='3'><a name='controlled_vocab'>Table controlled_vocab</a></th></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='controlled_vocab.controlled_vocab_id'>controlled&#095;vocab&#095;id</a></td>
-		<td> bigserial   </td>
+		<td> bigserial  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='controlled_vocab.controlled_vocab'>controlled&#095;vocab</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>pk&#095;controlled&#095;vocabularies</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;controlled&#095;vocabularies primary key</td>
 		<td> ON controlled&#095;vocab&#095;id</td>
 		<td>  </td>
 	</tr>
@@ -3062,63 +2974,55 @@ Name of table holding the params</title></a>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='ontology'>Table ontology</a></th></tr>
+<tr><th colspan='3'><a name='ontology'>Table ontology</a></th></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='ontology.ontology_id'>ontology&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='ontology.ontology'>ontology</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='ontology.fully_loaded'>fully&#095;loaded</a></td>
-		<td> bool   </td>
+		<td> bool  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td>
 		<td><a name='ontology.fullname'>fullname</a></td>
 		<td> varchar   </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td>
 		<td><a name='ontology.query_url'>query&#095;url</a></td>
 		<td> varchar   </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td>
 		<td><a name='ontology.source_url'>source&#095;url</a></td>
 		<td> varchar   </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td>
 		<td><a name='ontology.definition'>definition</a></td>
 		<td> text   </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='ontology.load_date'>load&#095;date</a></td>
-		<td> date   </td>
+		<td> date  NOT NULL  </td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>pk&#095;ontology</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;ontology primary key</td>
 		<td> ON ontology&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>U</td><td>idx&#095;ontology</td>
+	<tr>		<td>idx&#095;ontology unique</td>
 		<td> ON ontology</td>
 		<td>  </td>
 	</tr>
@@ -3128,24 +3032,22 @@ Name of table holding the params</title></a>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='preprocessed_sequence_454_params'>Table preprocessed_sequence_454_params</a></th></tr>
+<tr><th colspan='3'><a name='preprocessed_sequence_454_params'>Table preprocessed_sequence_454_params</a></th></tr>
 <tr><td colspan='3'>Parameters used for processing sequence data&#046; </td></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='preprocessed_sequence_454_params.preprocessed_params_id'>preprocessed&#095;params&#095;id</a></td>
-		<td> bigserial   </td>
+		<td> bigserial  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='preprocessed_sequence_454_params.trim_length'>trim&#095;length</a></td>
-		<td> integer   </td>
+		<td> integer  NOT NULL  </td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>pk&#095;preprocessed&#095;sequence&#095;454&#095;params</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;preprocessed&#095;sequence&#095;454&#095;params primary key</td>
 		<td> ON preprocessed&#095;params&#095;id</td>
 		<td>  </td>
 	</tr>
@@ -3155,24 +3057,22 @@ Name of table holding the params</title></a>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='preprocessed_spectra_params'>Table preprocessed_spectra_params</a></th></tr>
+<tr><th colspan='3'><a name='preprocessed_spectra_params'>Table preprocessed_spectra_params</a></th></tr>
 <tr><td colspan='3'>Parameters used for processing spectra data&#046; </td></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='preprocessed_spectra_params.preprocessed_params_id'>preprocessed&#095;params&#095;id</a></td>
-		<td> bigserial   </td>
+		<td> bigserial  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td>
 		<td><a name='preprocessed_spectra_params.col'>col</a></td>
 		<td> varchar   </td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>pk&#095;preprocessed&#095;spectra&#095;params</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;preprocessed&#095;spectra&#095;params primary key</td>
 		<td> ON preprocessed&#095;params&#095;id</td>
 		<td>  </td>
 	</tr>
@@ -3182,75 +3082,69 @@ Name of table holding the params</title></a>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='reference'>Table reference</a></th></tr>
+<tr><th colspan='3'><a name='reference'>Table reference</a></th></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='reference.reference_id'>reference&#095;id</a></td>
-		<td> bigserial   </td>
+		<td> bigserial  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='reference.reference_name'>reference&#095;name</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td>
 		<td><a name='reference.reference_version'>reference&#095;version</a></td>
 		<td> varchar   </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='reference.sequence_filepath'>sequence&#095;filepath</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td>
 		<td><a name='reference.taxonomy_filepath'>taxonomy&#095;filepath</a></td>
 		<td> bigint   </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td>
 		<td><a name='reference.tree_filepath'>tree&#095;filepath</a></td>
 		<td> bigint   </td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>pk&#095;reference</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;reference primary key</td>
 		<td> ON reference&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;reference</td>
+	<tr>		<td>idx&#095;reference </td>
 		<td> ON sequence&#095;filepath</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;reference&#095;0</td>
+	<tr>		<td>idx&#095;reference&#095;0 </td>
 		<td> ON taxonomy&#095;filepath</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;reference&#095;1</td>
+	<tr>		<td>idx&#095;reference&#095;1 </td>
 		<td> ON tree&#095;filepath</td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_reference_sequence_filepath</td>
+		<td>fk_reference_sequence_filepath</td>
 		<td > ( sequence&#095;filepath ) ref <a href='#filepath'>filepath</a> (filepath&#095;id) </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_reference_taxonomy_filepath</td>
+		<td>fk_reference_taxonomy_filepath</td>
 		<td > ( taxonomy&#095;filepath ) ref <a href='#filepath'>filepath</a> (filepath&#095;id) </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_reference_tree_filepath</td>
+		<td>fk_reference_tree_filepath</td>
 		<td > ( tree&#095;filepath ) ref <a href='#filepath'>filepath</a> (filepath&#095;id) </td>
 		<td>  </td>
 	</tr>
@@ -3260,52 +3154,47 @@ Name of table holding the params</title></a>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='processed_params_uclust'>Table processed_params_uclust</a></th></tr>
+<tr><th colspan='3'><a name='processed_params_uclust'>Table processed_params_uclust</a></th></tr>
 <tr><td colspan='3'>Parameters used for processing data using method uclust </td></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='processed_params_uclust.processed_params_id'>processed&#095;params&#095;id</a></td>
-		<td> bigserial   </td>
+		<td> bigserial  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='processed_params_uclust.reference_id'>reference&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td> What version of reference or type of reference used </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='processed_params_uclust.similarity'>similarity</a></td>
-		<td> float8   DEFO 0.97 </td>
+		<td> float8  NOT NULL  DEFO 0.97 </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='processed_params_uclust.enable_rev_strand_match'>enable&#095;rev&#095;strand&#095;match</a></td>
-		<td> bool   DEFO TRUE </td>
+		<td> bool  NOT NULL  DEFO TRUE </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='processed_params_uclust.suppress_new_clusters'>suppress&#095;new&#095;clusters</a></td>
-		<td> bool   DEFO TRUE </td>
+		<td> bool  NOT NULL  DEFO TRUE </td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>pk&#095;processed&#095;params&#095;uclust</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;processed&#095;params&#095;uclust primary key</td>
 		<td> ON processed&#095;params&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;processed&#095;params&#095;uclust</td>
+	<tr>		<td>idx&#095;processed&#095;params&#095;uclust </td>
 		<td> ON reference&#095;id</td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_processed_params_uclust</td>
+		<td>fk_processed_params_uclust</td>
 		<td > ( reference&#095;id ) ref <a href='#reference'>reference</a> (reference&#095;id) </td>
 		<td>  </td>
 	</tr>
@@ -3315,64 +3204,57 @@ Name of table holding the params</title></a>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='processed_params_sortmerna'>Table processed_params_sortmerna</a></th></tr>
+<tr><th colspan='3'><a name='processed_params_sortmerna'>Table processed_params_sortmerna</a></th></tr>
 <tr><td colspan='3'>Parameters used for processing data using method sortmerna </td></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='processed_params_sortmerna.processed_params_id'>processed&#095;params&#095;id</a></td>
-		<td> bigserial   </td>
+		<td> bigserial  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='processed_params_sortmerna.reference_id'>reference&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td> What version of reference or type of reference used </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='processed_params_sortmerna.evalue'>evalue</a></td>
-		<td> float8   </td>
+		<td> float8  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='processed_params_sortmerna.max_pos'>max&#095;pos</a></td>
-		<td> integer   </td>
+		<td> integer  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='processed_params_sortmerna.similarity'>similarity</a></td>
-		<td> float8   </td>
+		<td> float8  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='processed_params_sortmerna.coverage'>coverage</a></td>
-		<td> float8   </td>
+		<td> float8  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='processed_params_sortmerna.threads'>threads</a></td>
-		<td> integer   </td>
+		<td> integer  NOT NULL  </td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>pk&#095;processed&#095;params&#095;sortmerna</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;processed&#095;params&#095;sortmerna primary key</td>
 		<td> ON processed&#095;params&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;processed&#095;params&#095;sortmerna</td>
+	<tr>		<td>idx&#095;processed&#095;params&#095;sortmerna </td>
 		<td> ON reference&#095;id</td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_processed_params_sortmerna</td>
+		<td>fk_processed_params_sortmerna</td>
 		<td > ( reference&#095;id ) ref <a href='#reference'>reference</a> (reference&#095;id) </td>
 		<td>  </td>
 	</tr>
@@ -3382,72 +3264,62 @@ Name of table holding the params</title></a>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='preprocessed_sequence_illumina_params'>Table preprocessed_sequence_illumina_params</a></th></tr>
+<tr><th colspan='3'><a name='preprocessed_sequence_illumina_params'>Table preprocessed_sequence_illumina_params</a></th></tr>
 <tr><td colspan='3'>Parameters used for processing illumina sequence data&#046; </td></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='preprocessed_sequence_illumina_params.preprocessed_params_id'>preprocessed&#095;params&#095;id</a></td>
-		<td> bigserial   </td>
+		<td> bigserial  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='preprocessed_sequence_illumina_params.max_bad_run_length'>max&#095;bad&#095;run&#095;length</a></td>
-		<td> integer   DEFO 3 </td>
+		<td> integer  NOT NULL  DEFO 3 </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='preprocessed_sequence_illumina_params.min_per_read_length_fraction'>min&#095;per&#095;read&#095;length&#095;fraction</a></td>
-		<td> real   DEFO 0.75 </td>
+		<td> real  NOT NULL  DEFO 0.75 </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='preprocessed_sequence_illumina_params.sequence_max_n'>sequence&#095;max&#095;n</a></td>
-		<td> integer   DEFO 0 </td>
+		<td> integer  NOT NULL  DEFO 0 </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='preprocessed_sequence_illumina_params.rev_comp_barcode'>rev&#095;comp&#095;barcode</a></td>
-		<td> bool   DEFO FALSE </td>
+		<td> bool  NOT NULL  DEFO FALSE </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='preprocessed_sequence_illumina_params.rev_comp_mapping_barcodes'>rev&#095;comp&#095;mapping&#095;barcodes</a></td>
-		<td> bool   DEFO FALSE </td>
+		<td> bool  NOT NULL  DEFO FALSE </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='preprocessed_sequence_illumina_params.rev_comp'>rev&#095;comp</a></td>
-		<td> bool   DEFO FALSE </td>
+		<td> bool  NOT NULL  DEFO FALSE </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='preprocessed_sequence_illumina_params.phred_quality_threshold'>phred&#095;quality&#095;threshold</a></td>
-		<td> integer   DEFO 3 </td>
+		<td> integer  NOT NULL  DEFO 3 </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='preprocessed_sequence_illumina_params.barcode_type'>barcode&#095;type</a></td>
-		<td> varchar   DEFO 'golay_12' </td>
+		<td> varchar  NOT NULL  DEFO 'golay_12' </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='preprocessed_sequence_illumina_params.max_barcode_errors'>max&#095;barcode&#095;errors</a></td>
-		<td> real   DEFO 1.5 </td>
+		<td> real  NOT NULL  DEFO 1.5 </td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>pk&#095;preprocessed&#095;sequence&#095;illumina&#095;params</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;preprocessed&#095;sequence&#095;illumina&#095;params primary key</td>
 		<td> ON preprocessed&#095;params&#095;id</td>
 		<td>  </td>
 	</tr>
@@ -3457,42 +3329,40 @@ Name of table holding the params</title></a>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='preprocessed_processed_data'>Table preprocessed_processed_data</a></th></tr>
+<tr><th colspan='3'><a name='preprocessed_processed_data'>Table preprocessed_processed_data</a></th></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='preprocessed_processed_data.preprocessed_data_id'>preprocessed&#095;data&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='preprocessed_processed_data.processed_data_id'>processed&#095;data&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>idx&#095;preprocessed&#095;processed&#095;data</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>idx&#095;preprocessed&#095;processed&#095;data primary key</td>
 		<td> ON preprocessed&#095;data&#095;id&#044; processed&#095;data&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;preprocessed&#095;processed&#095;data&#095;0</td>
+	<tr>		<td>idx&#095;preprocessed&#095;processed&#095;data&#095;0 </td>
 		<td> ON preprocessed&#095;data&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;preprocessed&#095;processed&#095;data&#095;1</td>
+	<tr>		<td>idx&#095;preprocessed&#095;processed&#095;data&#095;1 </td>
 		<td> ON processed&#095;data&#095;id</td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_preprocessed_processed_data</td>
+		<td>fk_preprocessed_processed_data</td>
 		<td > ( preprocessed&#095;data&#095;id ) ref <a href='#preprocessed&#095;data'>preprocessed&#095;data</a> (preprocessed&#095;data&#095;id) </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_preprocessed_processed_data_0</td>
+		<td>fk_preprocessed_processed_data_0</td>
 		<td > ( processed&#095;data&#095;id ) ref <a href='#processed&#095;data'>processed&#095;data</a> (processed&#095;data&#095;id) </td>
 		<td>  </td>
 	</tr>
@@ -3502,212 +3372,190 @@ Name of table holding the params</title></a>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='study'>Table study</a></th></tr>
+<tr><th colspan='3'><a name='study'>Table study</a></th></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='study.study_id'>study&#095;id</a></td>
-		<td> bigserial   </td>
+		<td> bigserial  NOT NULL  </td>
 		<td> Unique name for study </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='study.email'>email</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td> Email of study owner </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='study.study_status_id'>study&#095;status&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td>
 		<td><a name='study.emp_person_id'>emp&#095;person&#095;id</a></td>
 		<td> bigint   </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='study.first_contact'>first&#095;contact</a></td>
-		<td> timestamp   DEFO current_timestamp </td>
+		<td> timestamp  NOT NULL  DEFO current_timestamp </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td>
 		<td><a name='study.funding'>funding</a></td>
 		<td> varchar   </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='study.timeseries_type_id'>timeseries&#095;type&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td> What type of timeseries this study is &#040;or is not&#041;
 Controlled Vocabulary </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td>
 		<td><a name='study.lab_person_id'>lab&#095;person&#095;id</a></td>
 		<td> bigint   </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='study.metadata_complete'>metadata&#095;complete</a></td>
-		<td> bool   </td>
+		<td> bool  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='study.mixs_compliant'>mixs&#095;compliant</a></td>
-		<td> bool   </td>
+		<td> bool  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td>
 		<td><a name='study.most_recent_contact'>most&#095;recent&#095;contact</a></td>
 		<td> timestamp   </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td>
 		<td><a name='study.number_samples_collected'>number&#095;samples&#095;collected</a></td>
 		<td> integer   </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td>
 		<td><a name='study.number_samples_promised'>number&#095;samples&#095;promised</a></td>
 		<td> integer   </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='study.portal_type_id'>portal&#095;type&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='study.principal_investigator_id'>principal&#095;investigator&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='study.reprocess'>reprocess</a></td>
-		<td> bool   </td>
+		<td> bool  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td>
 		<td><a name='study.spatial_series'>spatial&#095;series</a></td>
 		<td> bool   </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='study.study_title'>study&#095;title</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='study.study_alias'>study&#095;alias</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='study.study_description'>study&#095;description</a></td>
-		<td> text   </td>
+		<td> text  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='study.study_abstract'>study&#095;abstract</a></td>
-		<td> text   </td>
+		<td> text  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td>
 		<td><a name='study.vamps_id'>vamps&#095;id</a></td>
 		<td> varchar   </td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>pk&#095;study</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;study primary key</td>
 		<td> ON study&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;study</td>
+	<tr>		<td>idx&#095;study </td>
 		<td> ON email</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;study&#095;0</td>
+	<tr>		<td>idx&#095;study&#095;0 </td>
 		<td> ON study&#095;status&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;study&#095;1</td>
+	<tr>		<td>idx&#095;study&#095;1 </td>
 		<td> ON emp&#095;person&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;study&#095;2</td>
+	<tr>		<td>idx&#095;study&#095;2 </td>
 		<td> ON lab&#095;person&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;study&#095;3</td>
+	<tr>		<td>idx&#095;study&#095;3 </td>
 		<td> ON principal&#095;investigator&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;study&#095;4</td>
+	<tr>		<td>idx&#095;study&#095;4 </td>
 		<td> ON timeseries&#095;type&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;study&#095;5</td>
+	<tr>		<td>idx&#095;study&#095;5 </td>
 		<td> ON portal&#095;type&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>U</td><td>unique&#095;study&#095;title</td>
+	<tr>		<td>unique&#095;study&#095;title unique</td>
 		<td> ON study&#095;title</td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_study_user</td>
+		<td>fk_study_user</td>
 		<td > ( email ) ref <a href='#qiita&#095;user'>qiita&#095;user</a> (email) </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_study_study_status</td>
+		<td>fk_study_study_status</td>
 		<td > ( study&#095;status&#095;id ) ref <a href='#study&#095;status'>study&#095;status</a> (study&#095;status&#095;id) </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_study_study_emp_person</td>
+		<td>fk_study_study_emp_person</td>
 		<td > ( emp&#095;person&#095;id ) ref <a href='#study&#095;person'>study&#095;person</a> (study&#095;person&#095;id) </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_study_study_lab_person</td>
+		<td>fk_study_study_lab_person</td>
 		<td > ( lab&#095;person&#095;id ) ref <a href='#study&#095;person'>study&#095;person</a> (study&#095;person&#095;id) </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_study_study_pi_person</td>
+		<td>fk_study_study_pi_person</td>
 		<td > ( principal&#095;investigator&#095;id ) ref <a href='#study&#095;person'>study&#095;person</a> (study&#095;person&#095;id) </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_study_timeseries_type</td>
+		<td>fk_study_timeseries_type</td>
 		<td > ( timeseries&#095;type&#095;id ) ref <a href='#timeseries&#095;type'>timeseries&#095;type</a> (timeseries&#095;type&#095;id) </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_study</td>
+		<td>fk_study</td>
 		<td > ( portal&#095;type&#095;id ) ref <a href='#portal&#095;type'>portal&#095;type</a> (portal&#095;type&#095;id) </td>
 		<td>  </td>
 	</tr>
@@ -3717,82 +3565,72 @@ Controlled Vocabulary </td>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='qiita_user'>Table qiita_user</a></th></tr>
+<tr><th colspan='3'><a name='qiita_user'>Table qiita_user</a></th></tr>
 <tr><td colspan='3'>Holds all user information </td></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='qiita_user.email'>email</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='qiita_user.user_level_id'>user&#095;level&#095;id</a></td>
-		<td> integer   DEFO 5 </td>
+		<td> integer  NOT NULL  DEFO 5 </td>
 		<td> user level </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='qiita_user.password'>password</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td>
 		<td><a name='qiita_user.name'>name</a></td>
 		<td> varchar   </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td>
 		<td><a name='qiita_user.affiliation'>affiliation</a></td>
 		<td> varchar   </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td>
 		<td><a name='qiita_user.address'>address</a></td>
 		<td> varchar   </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td>
 		<td><a name='qiita_user.phone'>phone</a></td>
 		<td> varchar   </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td>
 		<td><a name='qiita_user.user_verify_code'>user&#095;verify&#095;code</a></td>
 		<td> varchar   </td>
 		<td> Code for initial user email verification </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td>
 		<td><a name='qiita_user.pass_reset_code'>pass&#095;reset&#095;code</a></td>
 		<td> varchar   </td>
 		<td> Randomly generated code for password reset </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td>
 		<td><a name='qiita_user.pass_reset_timestamp'>pass&#095;reset&#095;timestamp</a></td>
 		<td> timestamp   </td>
 		<td> Time the reset code was generated </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>pk&#095;user</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;user primary key</td>
 		<td> ON email</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;user</td>
+	<tr>		<td>idx&#095;user </td>
 		<td> ON user&#095;level&#095;id</td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_user_user_level</td>
+		<td>fk_user_user_level</td>
 		<td > ( user&#095;level&#095;id ) ref <a href='#user&#095;level'>user&#095;level</a> (user&#095;level&#095;id) </td>
 		<td>  </td>
 	</tr>
@@ -3802,24 +3640,22 @@ Controlled Vocabulary </td>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='prep_y'>Table prep_y</a></th></tr>
+<tr><th colspan='3'><a name='prep_y'>Table prep_y</a></th></tr>
 <tr><td colspan='3'>Information on how raw data y was prepared &#040;prep template&#041;Linked by y being raw&#095;data&#095;id from raw data table&#046; </td></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='prep_y.sample_id'>sample&#095;id</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td>
 		<td><a name='prep_y.data'>data</a></td>
 		<td> bigint   </td>
 		<td> STUFFFFF </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>pk&#095;prep&#095;y</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;prep&#095;y primary key</td>
 		<td> ON sample&#095;id</td>
 		<td>  </td>
 	</tr>
@@ -3829,39 +3665,36 @@ Controlled Vocabulary </td>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='prep_columns'>Table prep_columns</a></th></tr>
+<tr><th colspan='3'><a name='prep_columns'>Table prep_columns</a></th></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='prep_columns.prep_template_id'>prep&#095;template&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='prep_columns.column_name'>column&#095;name</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='prep_columns.column_type'>column&#095;type</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>idx&#095;prep&#095;columns&#095;0</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>idx&#095;prep&#095;columns&#095;0 primary key</td>
 		<td> ON prep&#095;template&#095;id&#044; column&#095;name&#044; column&#095;type</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;prep&#095;columns&#095;1</td>
+	<tr>		<td>idx&#095;prep&#095;columns&#095;1 </td>
 		<td> ON prep&#095;template&#095;id</td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_prep_columns_prep_template</td>
+		<td>fk_prep_columns_prep_template</td>
 		<td > ( prep&#095;template&#095;id ) ref <a href='#prep&#095;template'>prep&#095;template</a> (prep&#095;template&#095;id) </td>
 		<td>  </td>
 	</tr>
@@ -3871,42 +3704,40 @@ Controlled Vocabulary </td>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='raw_filepath'>Table raw_filepath</a></th></tr>
+<tr><th colspan='3'><a name='raw_filepath'>Table raw_filepath</a></th></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='raw_filepath.raw_data_id'>raw&#095;data&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='raw_filepath.filepath_id'>filepath&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>idx&#095;raw&#095;filepath</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>idx&#095;raw&#095;filepath primary key</td>
 		<td> ON raw&#095;data&#095;id&#044; filepath&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;raw&#095;filepath&#095;0</td>
+	<tr>		<td>idx&#095;raw&#095;filepath&#095;0 </td>
 		<td> ON filepath&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;raw&#095;filepath&#095;1</td>
+	<tr>		<td>idx&#095;raw&#095;filepath&#095;1 </td>
 		<td> ON raw&#095;data&#095;id</td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_raw_filepath</td>
+		<td>fk_raw_filepath</td>
 		<td > ( filepath&#095;id ) ref <a href='#filepath'>filepath</a> (filepath&#095;id) </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_raw_filepath_0</td>
+		<td>fk_raw_filepath_0</td>
 		<td > ( raw&#095;data&#095;id ) ref <a href='#raw&#095;data'>raw&#095;data</a> (raw&#095;data&#095;id) </td>
 		<td>  </td>
 	</tr>
@@ -3916,28 +3747,26 @@ Controlled Vocabulary </td>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='emp_status'>Table emp_status</a></th></tr>
+<tr><th colspan='3'><a name='emp_status'>Table emp_status</a></th></tr>
 <tr><td colspan='3'>All possible statuses for projects relating to EMP&#046; Whether they are part of&#044; processed in accordance to&#044; or not part of EMP&#046; </td></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='emp_status.emp_status_id'>emp&#095;status&#095;id</a></td>
-		<td> bigserial   </td>
+		<td> bigserial  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='emp_status.emp_status'>emp&#095;status</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>pk&#095;emp&#095;status</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;emp&#095;status primary key</td>
 		<td> ON emp&#095;status&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>U</td><td>idx&#095;emp&#095;status</td>
+	<tr>		<td>idx&#095;emp&#095;status unique</td>
 		<td> ON emp&#095;status</td>
 		<td>  </td>
 	</tr>
@@ -3947,27 +3776,25 @@ Controlled Vocabulary </td>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='required_sample_info_status'>Table required_sample_info_status</a></th></tr>
+<tr><th colspan='3'><a name='required_sample_info_status'>Table required_sample_info_status</a></th></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='required_sample_info_status.required_sample_info_status_id'>required&#095;sample&#095;info&#095;status&#095;id</a></td>
-		<td> bigserial   </td>
+		<td> bigserial  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td>
 		<td><a name='required_sample_info_status.status'>status</a></td>
 		<td> varchar   </td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>pk&#095;sample&#095;status</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;sample&#095;status primary key</td>
 		<td> ON required&#095;sample&#095;info&#095;status&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>U</td><td>idx&#095;required&#095;sample&#095;info&#095;status</td>
+	<tr>		<td>idx&#095;required&#095;sample&#095;info&#095;status unique</td>
 		<td> ON status</td>
 		<td>  </td>
 	</tr>
@@ -3977,33 +3804,30 @@ Controlled Vocabulary </td>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='study_status'>Table study_status</a></th></tr>
+<tr><th colspan='3'><a name='study_status'>Table study_status</a></th></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='study_status.study_status_id'>study&#095;status&#095;id</a></td>
-		<td> bigserial   </td>
+		<td> bigserial  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='study_status.status'>status</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='study_status.description'>description</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>pk&#095;study&#095;status</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;study&#095;status primary key</td>
 		<td> ON study&#095;status&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>U</td><td>idx&#095;study&#095;status</td>
+	<tr>		<td>idx&#095;study&#095;status unique</td>
 		<td> ON status</td>
 		<td>  </td>
 	</tr>
@@ -4013,28 +3837,26 @@ Controlled Vocabulary </td>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='filetype'>Table filetype</a></th></tr>
+<tr><th colspan='3'><a name='filetype'>Table filetype</a></th></tr>
 <tr><td colspan='3'>Type of file &#040;FASTA&#044; FASTQ&#044; SPECTRA&#044; etc&#041; </td></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='filetype.filetype_id'>filetype&#095;id</a></td>
-		<td> bigserial   </td>
+		<td> bigserial  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='filetype.type'>type</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>pk&#095;filetype</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;filetype primary key</td>
 		<td> ON filetype&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>U</td><td>idx&#095;filetype</td>
+	<tr>		<td>idx&#095;filetype unique</td>
 		<td> ON type</td>
 		<td>  </td>
 	</tr>
@@ -4044,27 +3866,25 @@ Controlled Vocabulary </td>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='filepath_type'>Table filepath_type</a></th></tr>
+<tr><th colspan='3'><a name='filepath_type'>Table filepath_type</a></th></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='filepath_type.filepath_type_id'>filepath&#095;type&#095;id</a></td>
-		<td> bigserial   </td>
+		<td> bigserial  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td>
 		<td><a name='filepath_type.filepath_type'>filepath&#095;type</a></td>
 		<td> varchar   </td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>pk&#095;filepath&#095;type</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;filepath&#095;type primary key</td>
 		<td> ON filepath&#095;type&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>U</td><td>idx&#095;filepath&#095;type</td>
+	<tr>		<td>idx&#095;filepath&#095;type unique</td>
 		<td> ON filepath&#095;type</td>
 		<td>  </td>
 	</tr>
@@ -4074,27 +3894,25 @@ Controlled Vocabulary </td>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='checksum_algorithm'>Table checksum_algorithm</a></th></tr>
+<tr><th colspan='3'><a name='checksum_algorithm'>Table checksum_algorithm</a></th></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='checksum_algorithm.checksum_algorithm_id'>checksum&#095;algorithm&#095;id</a></td>
-		<td> bigserial   </td>
+		<td> bigserial  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='checksum_algorithm.name'>name</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>pk&#095;checksum&#095;algorithm</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;checksum&#095;algorithm primary key</td>
 		<td> ON checksum&#095;algorithm&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>U</td><td>idx&#095;checksum&#095;algorithm</td>
+	<tr>		<td>idx&#095;checksum&#095;algorithm unique</td>
 		<td> ON name</td>
 		<td>  </td>
 	</tr>
@@ -4104,27 +3922,25 @@ Controlled Vocabulary </td>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='data_type'>Table data_type</a></th></tr>
+<tr><th colspan='3'><a name='data_type'>Table data_type</a></th></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='data_type.data_type_id'>data&#095;type&#095;id</a></td>
-		<td> bigserial   </td>
+		<td> bigserial  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='data_type.data_type'>data&#095;type</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td> Data type &#040;16S&#044; metabolome&#044; etc&#041; the job will use </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>pk&#095;data&#095;type</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;data&#095;type primary key</td>
 		<td> ON data&#095;type&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>U</td><td>idx&#095;data&#095;type</td>
+	<tr>		<td>idx&#095;data&#095;type unique</td>
 		<td> ON data&#095;type</td>
 		<td>  </td>
 	</tr>
@@ -4134,34 +3950,31 @@ Controlled Vocabulary </td>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='user_level'>Table user_level</a></th></tr>
+<tr><th colspan='3'><a name='user_level'>Table user_level</a></th></tr>
 <tr><td colspan='3'>Holds available user levels </td></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='user_level.user_level_id'>user&#095;level&#095;id</a></td>
-		<td> serial   </td>
+		<td> serial  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='user_level.name'>name</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td> One of the user levels &#040;admin&#044; user&#044; guest&#044; etc&#041; </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='user_level.description'>description</a></td>
-		<td> text   </td>
+		<td> text  NOT NULL  </td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>pk&#095;user&#095;level</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;user&#095;level primary key</td>
 		<td> ON user&#095;level&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>U</td><td>idx&#095;user&#095;level</td>
+	<tr>		<td>idx&#095;user&#095;level unique</td>
 		<td> ON name</td>
 		<td>  </td>
 	</tr>
@@ -4171,27 +3984,25 @@ Controlled Vocabulary </td>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='analysis_status'>Table analysis_status</a></th></tr>
+<tr><th colspan='3'><a name='analysis_status'>Table analysis_status</a></th></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='analysis_status.analysis_status_id'>analysis&#095;status&#095;id</a></td>
-		<td> bigserial   </td>
+		<td> bigserial  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='analysis_status.status'>status</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>pk&#095;analysis&#095;status</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;analysis&#095;status primary key</td>
 		<td> ON analysis&#095;status&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>U</td><td>idx&#095;analysis&#095;status</td>
+	<tr>		<td>idx&#095;analysis&#095;status unique</td>
 		<td> ON status</td>
 		<td>  </td>
 	</tr>
@@ -4201,27 +4012,25 @@ Controlled Vocabulary </td>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='job_status'>Table job_status</a></th></tr>
+<tr><th colspan='3'><a name='job_status'>Table job_status</a></th></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='job_status.job_status_id'>job&#095;status&#095;id</a></td>
-		<td> bigserial   </td>
+		<td> bigserial  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='job_status.status'>status</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>pk&#095;job&#095;status</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;job&#095;status primary key</td>
 		<td> ON job&#095;status&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>U</td><td>idx&#095;job&#095;status&#095;0</td>
+	<tr>		<td>idx&#095;job&#095;status&#095;0 unique</td>
 		<td> ON status</td>
 		<td>  </td>
 	</tr>
@@ -4231,27 +4040,25 @@ Controlled Vocabulary </td>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='severity'>Table severity</a></th></tr>
+<tr><th colspan='3'><a name='severity'>Table severity</a></th></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='severity.severity_id'>severity&#095;id</a></td>
-		<td> serial   </td>
+		<td> serial  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='severity.severity'>severity</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>pk&#095;severity</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;severity primary key</td>
 		<td> ON severity&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>U</td><td>idx&#095;severity</td>
+	<tr>		<td>idx&#095;severity unique</td>
 		<td> ON severity</td>
 		<td>  </td>
 	</tr>
@@ -4261,60 +4068,55 @@ Controlled Vocabulary </td>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='prep_template'>Table prep_template</a></th></tr>
+<tr><th colspan='3'><a name='prep_template'>Table prep_template</a></th></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='prep_template.prep_template_id'>prep&#095;template&#095;id</a></td>
-		<td> bigserial   </td>
+		<td> bigserial  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='prep_template.data_type_id'>data&#095;type&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='prep_template.raw_data_id'>raw&#095;data&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='prep_template.preprocessing_status'>preprocessing&#095;status</a></td>
-		<td> varchar   DEFO 'not_preprocessed' </td>
+		<td> varchar  NOT NULL  DEFO 'not_preprocessed' </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td>
 		<td><a name='prep_template.investigation_type'>investigation&#095;type</a></td>
 		<td> varchar   </td>
 		<td> The investigation type &#040;e&#046;g&#046;&#044; one of the values from EBI&#039;s set of known types&#041; </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>pk&#095;prep&#095;template</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;prep&#095;template primary key</td>
 		<td> ON prep&#095;template&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;prep&#095;template</td>
+	<tr>		<td>idx&#095;prep&#095;template </td>
 		<td> ON data&#095;type&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;prep&#095;template&#095;0</td>
+	<tr>		<td>idx&#095;prep&#095;template&#095;0 </td>
 		<td> ON raw&#095;data&#095;id</td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_prep_template_data_type</td>
+		<td>fk_prep_template_data_type</td>
 		<td > ( data&#095;type&#095;id ) ref <a href='#data&#095;type'>data&#095;type</a> (data&#095;type&#095;id) </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_prep_template_raw_data</td>
+		<td>fk_prep_template_raw_data</td>
 		<td > ( raw&#095;data&#095;id ) ref <a href='#raw&#095;data'>raw&#095;data</a> (raw&#095;data&#095;id) </td>
 		<td>  </td>
 	</tr>
@@ -4324,43 +4126,40 @@ Controlled Vocabulary </td>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='raw_data'>Table raw_data</a></th></tr>
+<tr><th colspan='3'><a name='raw_data'>Table raw_data</a></th></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='raw_data.raw_data_id'>raw&#095;data&#095;id</a></td>
-		<td> bigserial   </td>
+		<td> bigserial  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='raw_data.filetype_id'>filetype&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='raw_data.link_filepaths_status'>link&#095;filepaths&#095;status</a></td>
-		<td> varchar   DEFO 'idle' </td>
+		<td> varchar  NOT NULL  DEFO 'idle' </td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>U</td><td>pk&#095;raw&#095;data</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;raw&#095;data unique</td>
 		<td> ON raw&#095;data&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;raw&#095;data</td>
+	<tr>		<td>idx&#095;raw&#095;data </td>
 		<td> ON filetype&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>Pk</td><td>pk&#095;raw&#095;data&#095;0</td>
+	<tr>		<td>pk&#095;raw&#095;data&#095;0 primary key</td>
 		<td> ON raw&#095;data&#095;id</td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_raw_data_filetype</td>
+		<td>fk_raw_data_filetype</td>
 		<td > ( filetype&#095;id ) ref <a href='#filetype'>filetype</a> (filetype&#095;id) </td>
 		<td>  </td>
 	</tr>
@@ -4370,57 +4169,51 @@ Controlled Vocabulary </td>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='processed_data'>Table processed_data</a></th></tr>
+<tr><th colspan='3'><a name='processed_data'>Table processed_data</a></th></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='processed_data.processed_data_id'>processed&#095;data&#095;id</a></td>
-		<td> bigserial   </td>
+		<td> bigserial  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='processed_data.processed_params_table'>processed&#095;params&#095;table</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td> Name of table holding processing params </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='processed_data.processed_params_id'>processed&#095;params&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td> Link to a table with the parameters used to generate processed data </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='processed_data.processed_date'>processed&#095;date</a></td>
-		<td> timestamp   </td>
+		<td> timestamp  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='processed_data.data_type_id'>data&#095;type&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='processed_data.link_filepaths_status'>link&#095;filepaths&#095;status</a></td>
-		<td> varchar   DEFO 'idle' </td>
+		<td> varchar  NOT NULL  DEFO 'idle' </td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>pk&#095;processed&#095;data</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;processed&#095;data primary key</td>
 		<td> ON processed&#095;data&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;processed&#095;data</td>
+	<tr>		<td>idx&#095;processed&#095;data </td>
 		<td> ON data&#095;type&#095;id</td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_processed_data</td>
+		<td>fk_processed_data</td>
 		<td > ( data&#095;type&#095;id ) ref <a href='#data&#095;type'>data&#095;type</a> (data&#095;type&#095;id) </td>
 		<td>  </td>
 	</tr>
@@ -4430,84 +4223,78 @@ Controlled Vocabulary </td>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='job'>Table job</a></th></tr>
+<tr><th colspan='3'><a name='job'>Table job</a></th></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='job.job_id'>job&#095;id</a></td>
-		<td> bigserial   </td>
+		<td> bigserial  NOT NULL  </td>
 		<td> Unique identifier for job </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='job.data_type_id'>data&#095;type&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td> What datatype &#040;16s&#044; metabolome&#044; etc&#041; job is run on&#046; </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='job.job_status_id'>job&#095;status&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='job.command_id'>command&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td> The Qiime or other function being run &#040;alpha diversity&#044; etc&#041; </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td>
 		<td><a name='job.options'>options</a></td>
 		<td> varchar   </td>
 		<td> Holds all options set for the job as a json string </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td>
 		<td><a name='job.log_id'>log&#095;id</a></td>
 		<td> bigint   </td>
 		<td> Reference to error if status is error </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>pk&#095;job</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;job primary key</td>
 		<td> ON job&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;job&#095;command</td>
+	<tr>		<td>idx&#095;job&#095;command </td>
 		<td> ON command&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;job&#095;status</td>
+	<tr>		<td>idx&#095;job&#095;status </td>
 		<td> ON job&#095;status&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;job&#095;type</td>
+	<tr>		<td>idx&#095;job&#095;type </td>
 		<td> ON data&#095;type&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;job</td>
+	<tr>		<td>idx&#095;job </td>
 		<td> ON log&#095;id</td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_job_function</td>
+		<td>fk_job_function</td>
 		<td > ( command&#095;id ) ref <a href='#command'>command</a> (command&#095;id) </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_job_job_status_id</td>
+		<td>fk_job_job_status_id</td>
 		<td > ( job&#095;status&#095;id ) ref <a href='#job&#095;status'>job&#095;status</a> (job&#095;status&#095;id) </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_job_data_type</td>
+		<td>fk_job_data_type</td>
 		<td > ( data&#095;type&#095;id ) ref <a href='#data&#095;type'>data&#095;type</a> (data&#095;type&#095;id) </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_job</td>
+		<td>fk_job</td>
 		<td > ( log&#095;id ) ref <a href='#logging'>logging</a> (logging&#095;id) </td>
 		<td>  </td>
 	</tr>
@@ -4517,71 +4304,65 @@ Controlled Vocabulary </td>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='filepath'>Table filepath</a></th></tr>
+<tr><th colspan='3'><a name='filepath'>Table filepath</a></th></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='filepath.filepath_id'>filepath&#095;id</a></td>
-		<td> bigserial   </td>
+		<td> bigserial  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='filepath.filepath'>filepath</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='filepath.filepath_type_id'>filepath&#095;type&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='filepath.checksum'>checksum</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='filepath.checksum_algorithm_id'>checksum&#095;algorithm&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td>
 		<td><a name='filepath.data_directory_id'>data&#095;directory&#095;id</a></td>
 		<td> bigserial   </td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>pk&#095;filepath</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;filepath primary key</td>
 		<td> ON filepath&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;filepath</td>
+	<tr>		<td>idx&#095;filepath </td>
 		<td> ON filepath&#095;type&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;filepath&#095;0</td>
+	<tr>		<td>idx&#095;filepath&#095;0 </td>
 		<td> ON data&#095;directory&#095;id</td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_filepath</td>
+		<td>fk_filepath</td>
 		<td > ( filepath&#095;type&#095;id ) ref <a href='#filepath&#095;type'>filepath&#095;type</a> (filepath&#095;type&#095;id) </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_filepath_0</td>
+		<td>fk_filepath_0</td>
 		<td > ( checksum&#095;algorithm&#095;id ) ref <a href='#checksum&#095;algorithm'>checksum&#095;algorithm</a> (checksum&#095;algorithm&#095;id) </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_filepath_data_directory</td>
+		<td>fk_filepath_data_directory</td>
 		<td > ( data&#095;directory&#095;id ) ref <a href='#data&#095;directory'>data&#095;directory</a> (data&#095;directory&#095;id) </td>
 		<td>  </td>
 	</tr>
@@ -4591,41 +4372,36 @@ Controlled Vocabulary </td>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='data_directory'>Table data_directory</a></th></tr>
+<tr><th colspan='3'><a name='data_directory'>Table data_directory</a></th></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='data_directory.data_directory_id'>data&#095;directory&#095;id</a></td>
-		<td> bigserial   </td>
+		<td> bigserial  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='data_directory.data_type'>data&#095;type</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='data_directory.mountpoint'>mountpoint</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='data_directory.subdirectory'>subdirectory</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='data_directory.active'>active</a></td>
-		<td> bool   </td>
+		<td> bool  NOT NULL  </td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>pk&#095;data&#095;directory</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;data&#095;directory primary key</td>
 		<td> ON data&#095;directory&#095;id</td>
 		<td>  </td>
 	</tr>
@@ -4635,87 +4411,76 @@ Controlled Vocabulary </td>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='term'>Table term</a></th></tr>
+<tr><th colspan='3'><a name='term'>Table term</a></th></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='term.term_id'>term&#095;id</a></td>
-		<td> bigserial   </td>
+		<td> bigserial  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='term.ontology_id'>ontology&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td>
 		<td><a name='term.old_term_id'>old&#095;term&#095;id</a></td>
 		<td> bigint   DEFO NULL </td>
 		<td> Identifier used in the old system&#044; we are keeping this for consistency </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='term.term'>term</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td>
 		<td><a name='term.identifier'>identifier</a></td>
 		<td> varchar   </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td>
 		<td><a name='term.definition'>definition</a></td>
 		<td> varchar   </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td>
 		<td><a name='term.namespace'>namespace</a></td>
 		<td> varchar   </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td>
 		<td><a name='term.is_obsolete'>is&#095;obsolete</a></td>
 		<td> bool   DEFO 'false' </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td>
 		<td><a name='term.is_root_term'>is&#095;root&#095;term</a></td>
 		<td> bool   </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td>
 		<td><a name='term.is_leaf'>is&#095;leaf</a></td>
 		<td> bool   </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='term.user_defined'>user&#095;defined</a></td>
-		<td> bool   DEFO False </td>
+		<td> bool  NOT NULL  DEFO False </td>
 		<td> Whether or not this term was defined by a user </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>pk&#095;term</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;term primary key</td>
 		<td> ON term&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;term</td>
+	<tr>		<td>idx&#095;term </td>
 		<td> ON ontology&#095;id</td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_term_ontology</td>
+		<td>fk_term_ontology</td>
 		<td > ( ontology&#095;id ) ref <a href='#ontology'>ontology</a> (ontology&#095;id) </td>
 		<td>  </td>
 	</tr>
@@ -4725,73 +4490,68 @@ Controlled Vocabulary </td>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='common_prep_info'>Table common_prep_info</a></th></tr>
+<tr><th colspan='3'><a name='common_prep_info'>Table common_prep_info</a></th></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='common_prep_info.prep_template_id'>prep&#095;template&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td> The prep template identifier </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='common_prep_info.sample_id'>sample&#095;id</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td>
 		<td><a name='common_prep_info.center_name'>center&#095;name</a></td>
 		<td> varchar   </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td>
 		<td><a name='common_prep_info.center_project_name'>center&#095;project&#095;name</a></td>
 		<td> varchar   </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='common_prep_info.emp_status_id'>emp&#095;status&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;required&#095;prep&#095;info&#095;0</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>idx&#095;required&#095;prep&#095;info&#095;0 </td>
 		<td> ON emp&#095;status&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;required&#095;prep&#095;info&#095;2</td>
+	<tr>		<td>idx&#095;required&#095;prep&#095;info&#095;2 </td>
 		<td> ON sample&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;common&#095;prep&#095;info&#095;0</td>
+	<tr>		<td>idx&#095;common&#095;prep&#095;info&#095;0 </td>
 		<td> ON sample&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>Pk</td><td>idx&#095;common&#095;prep&#095;info</td>
+	<tr>		<td>idx&#095;common&#095;prep&#095;info primary key</td>
 		<td> ON prep&#095;template&#095;id&#044; sample&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;common&#095;prep&#095;info&#095;1</td>
+	<tr>		<td>idx&#095;common&#095;prep&#095;info&#095;1 </td>
 		<td> ON prep&#095;template&#095;id</td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_required_prep_info_emp_status</td>
+		<td>fk_required_prep_info_emp_status</td>
 		<td > ( emp&#095;status&#095;id ) ref <a href='#emp&#095;status'>emp&#095;status</a> (emp&#095;status&#095;id) </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_common_prep_info</td>
+		<td>fk_common_prep_info</td>
 		<td > ( sample&#095;id ) ref <a href='#required&#095;sample&#095;info'>required&#095;sample&#095;info</a> (sample&#095;id) </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_prep_template</td>
+		<td>fk_prep_template</td>
 		<td > ( prep&#095;template&#095;id ) ref <a href='#prep&#095;template'>prep&#095;template</a> (prep&#095;template&#095;id) </td>
 		<td>  </td>
 	</tr>
@@ -4801,53 +4561,50 @@ Controlled Vocabulary </td>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='analysis_sample'>Table analysis_sample</a></th></tr>
+<tr><th colspan='3'><a name='analysis_sample'>Table analysis_sample</a></th></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='analysis_sample.analysis_id'>analysis&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='analysis_sample.processed_data_id'>processed&#095;data&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='analysis_sample.sample_id'>sample&#095;id</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;analysis&#095;sample</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>idx&#095;analysis&#095;sample </td>
 		<td> ON analysis&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;analysis&#095;sample&#095;0</td>
+	<tr>		<td>idx&#095;analysis&#095;sample&#095;0 </td>
 		<td> ON processed&#095;data&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;analysis&#095;sample&#095;1</td>
+	<tr>		<td>idx&#095;analysis&#095;sample&#095;1 </td>
 		<td> ON sample&#095;id</td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_analysis_sample_analysis</td>
+		<td>fk_analysis_sample_analysis</td>
 		<td > ( analysis&#095;id ) ref <a href='#analysis'>analysis</a> (analysis&#095;id) </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_analysis_processed_data</td>
+		<td>fk_analysis_processed_data</td>
 		<td > ( processed&#095;data&#095;id ) ref <a href='#processed&#095;data'>processed&#095;data</a> (processed&#095;data&#095;id) </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_analysis_sample</td>
+		<td>fk_analysis_sample</td>
 		<td > ( sample&#095;id ) ref <a href='#required&#095;sample&#095;info'>required&#095;sample&#095;info</a> (sample&#095;id) </td>
 		<td>  </td>
 	</tr>
@@ -4857,23 +4614,21 @@ Controlled Vocabulary </td>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='environmental_package'>Table environmental_package</a></th></tr>
+<tr><th colspan='3'><a name='environmental_package'>Table environmental_package</a></th></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='environmental_package.environmental_package_name'>environmental&#095;package&#095;name</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td> The name of the environmental package </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='environmental_package.metadata_table'>metadata&#095;table</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td> Contains the name of the table that contains the pre&#045;defined metadata columns for the environmental package </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>pk&#095;environmental&#095;package</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;environmental&#095;package primary key</td>
 		<td> ON environmental&#095;package&#095;name</td>
 		<td>  </td>
 	</tr>
@@ -4883,43 +4638,41 @@ Controlled Vocabulary </td>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='study_environmental_package'>Table study_environmental_package</a></th></tr>
+<tr><th colspan='3'><a name='study_environmental_package'>Table study_environmental_package</a></th></tr>
 <tr><td colspan='3'>Holds the 1 to many relationship between the study and the environmental&#095;package </td></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='study_environmental_package.study_id'>study&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='study_environmental_package.environmental_package_name'>environmental&#095;package&#095;name</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>pk&#095;study&#095;environmental&#095;package</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;study&#095;environmental&#095;package primary key</td>
 		<td> ON study&#095;id&#044; environmental&#095;package&#095;name</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;study&#095;environmental&#095;package</td>
+	<tr>		<td>idx&#095;study&#095;environmental&#095;package </td>
 		<td> ON study&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;study&#095;environmental&#095;package&#095;0</td>
+	<tr>		<td>idx&#095;study&#095;environmental&#095;package&#095;0 </td>
 		<td> ON environmental&#095;package&#095;name</td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_study_environmental_package</td>
+		<td>fk_study_environmental_package</td>
 		<td > ( study&#095;id ) ref <a href='#study'>study</a> (study&#095;id) </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_study_environmental_package_0</td>
+		<td>fk_study_environmental_package_0</td>
 		<td > ( environmental&#095;package&#095;name ) ref <a href='#environmental&#095;package'>environmental&#095;package</a> (environmental&#095;package&#095;name) </td>
 		<td>  </td>
 	</tr>
@@ -4929,33 +4682,30 @@ Controlled Vocabulary </td>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='timeseries_type'>Table timeseries_type</a></th></tr>
+<tr><th colspan='3'><a name='timeseries_type'>Table timeseries_type</a></th></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='timeseries_type.timeseries_type_id'>timeseries&#095;type&#095;id</a></td>
-		<td> bigserial   </td>
+		<td> bigserial  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='timeseries_type.timeseries_type'>timeseries&#095;type</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='timeseries_type.intervention_type'>intervention&#095;type</a></td>
-		<td> varchar   DEFO 'None' </td>
+		<td> varchar  NOT NULL  DEFO 'None' </td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>pk&#095;timeseries&#095;type</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;timeseries&#095;type primary key</td>
 		<td> ON timeseries&#095;type&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>U</td><td>idx&#095;timeseries&#095;type</td>
+	<tr>		<td>idx&#095;timeseries&#095;type unique</td>
 		<td> ON timeseries&#095;type&#044; intervention&#095;type</td>
 		<td>  </td>
 	</tr>
@@ -4965,42 +4715,40 @@ Controlled Vocabulary </td>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='prep_template_filepath'>Table prep_template_filepath</a></th></tr>
+<tr><th colspan='3'><a name='prep_template_filepath'>Table prep_template_filepath</a></th></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='prep_template_filepath.prep_template_id'>prep&#095;template&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='prep_template_filepath.filepath_id'>filepath&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>idx&#095;prep&#095;template&#095;filepath</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>idx&#095;prep&#095;template&#095;filepath primary key</td>
 		<td> ON prep&#095;template&#095;id&#044; filepath&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;prep&#095;template&#095;filepath</td>
+	<tr>		<td>idx&#095;prep&#095;template&#095;filepath </td>
 		<td> ON filepath&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;prep&#095;template&#095;filepath</td>
+	<tr>		<td>idx&#095;prep&#095;template&#095;filepath </td>
 		<td> ON prep&#095;template&#095;id</td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_filepath_id</td>
+		<td>fk_filepath_id</td>
 		<td > ( filepath&#095;id ) ref <a href='#filepath'>filepath</a> (filepath&#095;id) </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_prep_template_id</td>
+		<td>fk_prep_template_id</td>
 		<td > ( prep&#095;template&#095;id ) ref <a href='#prep&#095;template'>prep&#095;template</a> (prep&#095;template&#095;id) </td>
 		<td>  </td>
 	</tr>
@@ -5010,103 +4758,91 @@ Controlled Vocabulary </td>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='required_sample_info'>Table required_sample_info</a></th></tr>
+<tr><th colspan='3'><a name='required_sample_info'>Table required_sample_info</a></th></tr>
 <tr><td colspan='3'>Required info for each sample&#046; One row is one sample&#046; </td></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='required_sample_info.sample_id'>sample&#095;id</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='required_sample_info.study_id'>study&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='required_sample_info.physical_location'>physical&#095;location</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td> Where the sample itself is stored </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='required_sample_info.has_physical_specimen'>has&#095;physical&#095;specimen</a></td>
-		<td> bool   </td>
+		<td> bool  NOT NULL  </td>
 		<td> Whether we have the full speciment or just DNA </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='required_sample_info.has_extracted_data'>has&#095;extracted&#095;data</a></td>
-		<td> bool   </td>
+		<td> bool  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='required_sample_info.sample_type'>sample&#095;type</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td> Controlled vocabulary of sample types </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='required_sample_info.required_sample_info_status_id'>required&#095;sample&#095;info&#095;status&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td> What step of the pipeline the samples are in </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='required_sample_info.collection_timestamp'>collection&#095;timestamp</a></td>
-		<td> timestamp   </td>
+		<td> timestamp  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='required_sample_info.host_subject_id'>host&#095;subject&#095;id</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='required_sample_info.description'>description</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='required_sample_info.latitude'>latitude</a></td>
-		<td> float8   </td>
+		<td> float8  NOT NULL  </td>
 		<td> Latitude of the collection site </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='required_sample_info.longitude'>longitude</a></td>
-		<td> float8   </td>
+		<td> float8  NOT NULL  </td>
 		<td> Longitude of the collection site </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;required&#095;sample&#095;info&#095;0</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>idx&#095;required&#095;sample&#095;info&#095;0 </td>
 		<td> ON required&#095;sample&#095;info&#095;status&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;required&#095;sample&#095;info</td>
+	<tr>		<td>idx&#095;required&#095;sample&#095;info </td>
 		<td> ON study&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>Pk</td><td>idx&#095;required&#095;sample&#095;info&#095;1</td>
+	<tr>		<td>idx&#095;required&#095;sample&#095;info&#095;1 primary key</td>
 		<td> ON sample&#095;id</td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_required_sample_info</td>
+		<td>fk_required_sample_info</td>
 		<td > ( required&#095;sample&#095;info&#095;status&#095;id ) ref <a href='#required&#095;sample&#095;info&#095;status'>required&#095;sample&#095;info&#095;status</a> (required&#095;sample&#095;info&#095;status&#095;id) </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_required_sample_info_study</td>
+		<td>fk_required_sample_info_study</td>
 		<td > ( study&#095;id ) ref <a href='#study'>study</a> (study&#095;id) </td>
 		<td>  </td>
 	</tr>
@@ -5116,42 +4852,40 @@ Controlled Vocabulary </td>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='sample_template_filepath'>Table sample_template_filepath</a></th></tr>
+<tr><th colspan='3'><a name='sample_template_filepath'>Table sample_template_filepath</a></th></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='sample_template_filepath.study_id'>study&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='sample_template_filepath.filepath_id'>filepath&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>idx&#095;sample&#095;template&#095;filepath</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>idx&#095;sample&#095;template&#095;filepath primary key</td>
 		<td> ON study&#095;id&#044; filepath&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;sample&#095;template&#095;filepath&#095;0</td>
+	<tr>		<td>idx&#095;sample&#095;template&#095;filepath&#095;0 </td>
 		<td> ON study&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;sample&#095;template&#095;filepath&#095;1</td>
+	<tr>		<td>idx&#095;sample&#095;template&#095;filepath&#095;1 </td>
 		<td> ON filepath&#095;id</td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_study_id</td>
+		<td>fk_study_id</td>
 		<td > ( study&#095;id ) ref <a href='#study'>study</a> (study&#095;id) </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_filepath_id</td>
+		<td>fk_filepath_id</td>
 		<td > ( filepath&#095;id ) ref <a href='#filepath'>filepath</a> (filepath&#095;id) </td>
 		<td>  </td>
 	</tr>
@@ -5161,42 +4895,40 @@ Controlled Vocabulary </td>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='prep_template_preprocessed_data'>Table prep_template_preprocessed_data</a></th></tr>
+<tr><th colspan='3'><a name='prep_template_preprocessed_data'>Table prep_template_preprocessed_data</a></th></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='prep_template_preprocessed_data.prep_template_id'>prep&#095;template&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='prep_template_preprocessed_data.preprocessed_data_id'>preprocessed&#095;data&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>idx&#095;prep&#095;template&#095;preprocessed&#095;data</td>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>idx&#095;prep&#095;template&#095;preprocessed&#095;data primary key</td>
 		<td> ON prep&#095;template&#095;id&#044; preprocessed&#095;data&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;prep&#095;template&#095;preprocessed&#095;data&#095;0</td>
+	<tr>		<td>idx&#095;prep&#095;template&#095;preprocessed&#095;data&#095;0 </td>
 		<td> ON prep&#095;template&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;prep&#095;template&#095;preprocessed&#095;data&#095;1</td>
+	<tr>		<td>idx&#095;prep&#095;template&#095;preprocessed&#095;data&#095;1 </td>
 		<td> ON preprocessed&#095;data&#095;id</td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_prep_template_id</td>
+		<td>fk_prep_template_id</td>
 		<td > ( prep&#095;template&#095;id ) ref <a href='#prep&#095;template'>prep&#095;template</a> (prep&#095;template&#095;id) </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_prep_template_preprocessed_data</td>
+		<td>fk_prep_template_preprocessed_data</td>
 		<td > ( preprocessed&#095;data&#095;id ) ref <a href='#preprocessed&#095;data'>preprocessed&#095;data</a> (preprocessed&#095;data&#095;id) </td>
 		<td>  </td>
 	</tr>
@@ -5206,75 +4938,71 @@ Controlled Vocabulary </td>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='4'><a name='preprocessed_data'>Table preprocessed_data</a></th></tr>
+<tr><th colspan='3'><a name='preprocessed_data'>Table preprocessed_data</a></th></tr>
 </thead>
 <tbody>
 	<tr>
-		<td>*</td>
 		<td><a name='preprocessed_data.preprocessed_data_id'>preprocessed&#095;data&#095;id</a></td>
-		<td> bigserial   </td>
+		<td> bigserial  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='preprocessed_data.preprocessed_params_table'>preprocessed&#095;params&#095;table</a></td>
-		<td> varchar   </td>
+		<td> varchar  NOT NULL  </td>
 		<td> Name of table holding the params </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='preprocessed_data.preprocessed_params_id'>preprocessed&#095;params&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='preprocessed_data.submitted_to_insdc_status'>submitted&#095;to&#095;insdc&#095;status</a></td>
-		<td> varchar   DEFO 'not submitted' </td>
+		<td> varchar  NOT NULL  DEFO 'not submitted' </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td>
 		<td><a name='preprocessed_data.ebi_submission_accession'>ebi&#095;submission&#095;accession</a></td>
 		<td> varchar   </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td>
 		<td><a name='preprocessed_data.ebi_study_accession'>ebi&#095;study&#095;accession</a></td>
 		<td> varchar   </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='preprocessed_data.data_type_id'>data&#095;type&#095;id</a></td>
-		<td> bigint   </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
 		<td><a name='preprocessed_data.link_filepaths_status'>link&#095;filepaths&#095;status</a></td>
-		<td> varchar   DEFO 'idle' </td>
+		<td> varchar  NOT NULL  DEFO 'idle' </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td>
 		<td><a name='preprocessed_data.submitted_to_vamps_status'>submitted&#095;to&#095;vamps&#095;status</a></td>
 		<td> varchar   DEFO 'not submitted' </td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>pk&#095;preprocessed&#095;data</td>
+	<tr>
+		<td><a name='preprocessed_data.processing_status'>processing&#095;status</a></td>
+		<td> varchar  NOT NULL  DEFO 'not_processed' </td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;preprocessed&#095;data primary key</td>
 		<td> ON preprocessed&#095;data&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;preprocessed&#095;data</td>
+	<tr>		<td>idx&#095;preprocessed&#095;data </td>
 		<td> ON data&#095;type&#095;id</td>
 		<td>  </td>
 	</tr>
-<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
 	<tr>
-		<td>&nbsp;</td><td>fk_preprocessed_data</td>
+		<td>fk_preprocessed_data</td>
 		<td > ( data&#095;type&#095;id ) ref <a href='#data&#095;type'>data&#095;type</a> (data&#095;type&#095;id) </td>
 		<td>  </td>
 	</tr>
