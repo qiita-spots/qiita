@@ -20,9 +20,11 @@ from qiita_core.util import qiita_test_checker
 from qiita_db.util import get_db_files_base_dir
 from qiita_db.data import RawData
 from qiita_db.study import Study
-from qiita_db.parameters import PreprocessedIlluminaParams
+from qiita_db.parameters import (PreprocessedIlluminaParams,
+                                 Preprocessed454Params)
 from qiita_db.metadata_template import PrepTemplate
 from qiita_ware.processing_pipeline import (_get_preprocess_fastq_cmd,
+                                            _get_preprocess_fasta_cmd,
                                             _insert_preprocessed_data,
                                             _generate_demux_file,
                                             _get_qiime_minimal_mapping)
@@ -145,6 +147,53 @@ class ProcessingPipelineTests(TestCase):
 
         self.assertEqual(obs_cmd_1, exp_cmd_1)
         self.assertEqual(obs_cmd_2, exp_cmd_2)
+
+    def test_get_preprocess_fasta_cmd_sff(self):
+        raw_data = RawData(3)
+        params = Preprocessed454Params(1)
+        prep_template = PrepTemplate(1)
+        obs_cmd, obs_output_dir = _get_preprocess_fasta_cmd(
+            raw_data, prep_template, params)
+
+        get_raw_path = partial(join, self.db_dir, 'raw_data')
+        seqs_fp = [get_raw_path('preprocess_test1.sff'),
+                   get_raw_path('preprocess_test2.sff')]
+
+        exp_cmd_1 = ' '.join(["process_sff.py",
+                              "-i %s" % seqs_fp[0],
+                              "-o %s" % obs_output_dir])
+        exp_cmd_2 = ' '.join(["process_sff.py",
+                              "-i %s" % seqs_fp[1],
+                              "-o %s" % obs_output_dir])
+
+        fasta_files = ','.join([join(obs_output_dir, "preprocess_test1.fna"),
+                                join(obs_output_dir, "preprocess_test2.fna")])
+        qual_files = ','.join([join(obs_output_dir, "preprocess_test1.qual"),
+                               join(obs_output_dir, "preprocess_test2.qual")])
+        exp_cmd_3 = ' '.join(["split_libraries.py",
+                              "-f %s" % fasta_files,
+                              "-m !TESTSPLIT!",
+                              "-q %s" % qual_files,
+                              "-o %s" % obs_output_dir])
+        exp_cmd_3a, exp_cmd_3b = exp_cmd_3.split('!TESTSPLIT!', 1)
+        exp_cmd_4 = ' '.join(["convert_fastaqual_fastq.py",
+                              "-f %s/seqs.fna" % obs_output_dir,
+                              "-q %s/seqs_filtered.qual" % obs_output_dir,
+                              "-o %s" % obs_output_dir])
+
+        obs_cmds = obs_cmd.split('; ')
+
+        # We are splitting the command into two parts because there is no way
+        # that we can know the filepath of the mapping file. We thus split the
+        # command on the mapping file path and we check that the two parts
+        # of the commands is correct
+        obs_cmd_3a, obs_cmd_3b = obs_cmds[2].split('!TESTSPLIT!', 1)
+
+        self.assertEqual(obs_cmd[0], exp_cmd_1)
+        self.assertEqual(obs_cmd[1], exp_cmd_2)
+        self.assertEqual(obs_cmd_3a, exp_cmd_3a)
+        self.assertEqual(obs_cmd_3b, exp_cmd_3b)
+        self.assertEqual(obs_cmd[3], exp_cmd_4)
 
     def test_insert_preprocessed_data(self):
         study = Study(1)
