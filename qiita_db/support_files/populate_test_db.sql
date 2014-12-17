@@ -394,3 +394,6 @@ INSERT INTO qiita.term (term_id, ontology_id, term, identifier, definition, name
 -- Create the new sample_template_filepath
 INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum, checksum_algorithm_id, data_directory_id) VALUES ('1_19700101-000000.txt', 14, '852952723', 1, 9);
 INSERT INTO qiita.sample_template_filepath VALUES (1, 16);
+
+-- Add processing parameters for sortmerna
+INSERT INTO qiita.processed_params_sortmerna (reference_id, evalue, max_pos, similarity, coverage, threads) VALUES (1, 1, 10000, 0.97, 0.97, 1);

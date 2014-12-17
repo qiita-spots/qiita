@@ -40,8 +40,15 @@ class BaseParameters(QiitaObject):
         conn_handler = (conn_handler if conn_handler is not None
                         else SQLConnectionHandler())
         return conn_handler.execute_fetchone(
-            "SELECT EXISTS(SELECT * FROM qiita.{0} WHERE "
-            "preprocessed_params_id = %s)".format(self._table), (id_, ))[0]
+            "SELECT EXISTS(SELECT * FROM qiita.{0} WHERE {1} = %s)".format(
+                self._table, self._column_id),
+            (id_, ))[0]
+
+    def _get_values_as_dict(self, conn_handler):
+        r""""""
+        return dict(conn_handler.execute_fetchone(
+                    "SELECT * FROM qiita.{0} WHERE {1}=%s".format(
+                        self._table, self._column_id), (self.id,)))
 
     def to_str(self):
         r"""Generates a string with the parameter values
@@ -53,14 +60,14 @@ class BaseParameters(QiitaObject):
         """
         conn_handler = SQLConnectionHandler()
         table_cols = get_table_cols_w_type(self._table)
-        table_cols.remove(["preprocessed_params_id", 'bigint'])
+        table_cols.remove([self._column_id, 'bigint'])
 
-        values = dict(conn_handler.execute_fetchone(
-            "SELECT * FROM qiita.{0} WHERE "
-            "preprocessed_params_id=%s".format(self._table), (self.id,)))
+        values = self._get_values_as_dict(conn_handler=conn_handler)
 
         result = []
         for p_name, p_type in sorted(table_cols):
+            if p_name in self._ignore_cols:
+                continue
             if p_type == 'boolean':
                 if values[p_name]:
                     result.append("--%s" % p_name)
@@ -73,4 +80,43 @@ class BaseParameters(QiitaObject):
 class PreprocessedIlluminaParams(BaseParameters):
     r"""Gives access to the preprocessed parameters of illumina data"""
 
+    _column_id = "preprocessed_params_id"
     _table = "preprocessed_sequence_illumina_params"
+    _ignore_cols = set()
+
+
+class ProcessedSortmernaParams(BaseParameters):
+    r"""Gives access to the processed parameters using SortMeRNA"""
+
+    _column_id = "processed_params_id"
+    _table = "processed_params_sortmerna"
+    _ignore_cols = {'reference_id'}
+
+    @property
+    def reference(self):
+        """"Returns the reference id used on this parameter set"""
+        conn_handler = SQLConnectionHandler()
+
+        return conn_handler.execute_fetchone(
+            "SELECT reference_id FROM qiita.{0} WHERE {1}=%s".format(
+                self._table, self._column_id), (self.id,))[0]
+
+    def to_file(self, f):
+        r"""Writes the parameters to a file in QIIME parameters file format
+
+        Parameters
+        ----------
+        f : file-like object
+            File-like object to write the parameters. Should support the write
+            operation
+        """
+        conn_handler = SQLConnectionHandler()
+        values = self._get_values_as_dict(conn_handler)
+
+        # Remove the id column
+        del values[self._column_id]
+
+        for key, value in values.items():
+            if key in self._ignore_cols:
+                continue
+            f.write("pick_otus:%s\t%s\n" % (key, value))
