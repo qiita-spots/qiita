@@ -524,6 +524,37 @@ class PreprocessedDataTests(TestCase):
         with self.assertRaises(ValueError):
             ppd.update_vamps_status('not a valid status')
 
+    def test_processing_status(self):
+        """processing_status works correctly"""
+        # Processed case
+        ppd = PreprocessedData(1)
+        self.assertEqual(ppd.processing_status, 'processed')
+
+        # not processed case
+        ppd = PreprocessedData.create(self.study, self.params_table,
+                                      self.params_id, self.filepaths,
+                                      data_type="18S")
+        self.assertEqual(ppd.processing_status, 'not_processed')
+
+    def test_processing_status_setter(self):
+        """Able to update the processing status"""
+        ppd = PreprocessedData.create(self.study, self.params_table,
+                                      self.params_id, self.filepaths,
+                                      data_type="18S")
+        self.assertEqual(ppd.processing_status, 'not_processed')
+        ppd.processing_status = 'processing'
+        self.assertEqual(ppd.processing_status, 'processing')
+        ppd.processing_status = 'processed'
+        self.assertEqual(ppd.processing_status, 'processed')
+        state = 'failed: some error message'
+        pt.processing_status = state
+        self.assertEqual(pt.processing_status, state)
+
+    def test_processing_status_setter_valueerror(self):
+        """Raises an error if the processing status is not recognized"""
+        with self.assertRaises(ValueError):
+            self.tester.processing_status = 'not a valid state'
+
 
 @qiita_test_checker()
 class ProcessedDataTests(TestCase):

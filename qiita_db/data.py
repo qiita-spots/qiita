@@ -848,6 +848,43 @@ class PreprocessedData(BaseData):
             """UPDATE qiita.{0} SET submitted_to_vamps_status = %s WHERE
             preprocessed_data_id=%s""".format(self._table), (status, self.id))
 
+    @property
+    def processing_status(self):
+        r"""Tells if the data has be processed or not
+
+        Returns
+        -------
+        str
+            One of {'not_processed', 'processing', 'processed', 'failed'}
+        """
+        conn_handler = SQLConnectionHandler()
+        return conn_handler.execute_fetchone(
+            "SELECT processing_status FROM qiita.{0} WHERE "
+            "preprocessed_data_id=%s".format(self._table), (self.id,))[0]
+
+    @processing_status.setter
+    def processing_status(self, state):
+        r"""Update the processing status
+
+        Parameters
+        ----------
+        state : str, {'not_processed', 'processing', 'processed', 'failed'}
+            The new status of processing
+
+        Raises
+        ------
+        ValueError
+            If the state is not known
+        """
+        if (state not in ('not_processed', 'processing', 'processed') and
+                not state.startswith('failed')):
+            raise ValueError('Unknown state: %s' % state)
+
+        conn_handler = SQLConnectionHandler()
+        conn_handler.execute(
+            "UPDATE qiita.{0} SET processing_status=%s WHERE "
+            "preprocessed_data_id=%s".format(self._table), (state, self.id))
+
 
 class ProcessedData(BaseData):
     r"""Object for dealing with processed data
