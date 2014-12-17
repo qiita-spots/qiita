@@ -118,5 +118,29 @@ def test(runner):
     _test(runner)
 
 
+@env.command()
+@click.option('--job', required=True, type=str, help='The job ID')
+def job_details(job):
+    """Pretty print moi job details"""
+    from json import loads
+    from moi import r_client
+    data = r_client.get(job)
+
+    if data is None:
+        click.echo("Job not found!")
+    else:
+        data = loads(data)
+        for k in sorted(data):
+            value = data[k]
+
+            if k == 'result':
+                if isinstance(value, list):
+                    value = ''.join(value)
+                else:
+                    value = str(value)
+
+            click.echo("%s : %s" % (k, value))
+
+
 if __name__ == '__main__':
     env()
