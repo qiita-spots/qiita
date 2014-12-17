@@ -8,6 +8,8 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
+from sys import exit
+
 import click
 
 from qiita_db.environment_manager import (
@@ -124,10 +126,16 @@ def job_details(job):
     """Pretty print moi job details"""
     from json import loads
     from moi import r_client
-    data = r_client.get(job)
+    from redis.exceptions import ResponseError
+
+    try:
+        data = r_client.get(job)
+    except ResponseError:
+        click.echo("ID does not appear to be a job")
+        exit(1)
 
     if data is None:
-        click.echo("Job not found!")
+        click.echo("Job cannot be found")
     else:
         data = loads(data)
         for k in sorted(data):
