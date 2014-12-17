@@ -74,3 +74,9 @@ class PreprocessedIlluminaParams(BaseParameters):
     r"""Gives access to the preprocessed parameters of illumina data"""
 
     _table = "preprocessed_sequence_illumina_params"
+
+
+class Preprocessed454Params(BaseParameters):
+    r"""Gives access to the preprocessed parameters of illumina data"""
+
+    _table = "preprocessed_sequence_454_params"
