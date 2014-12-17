@@ -8,9 +8,10 @@
 
 from .study_information_tab import StudyInformationTab
 from .sample_template_tab import SampleTemplateTab
-from .raw_data_tab import RawDataTab, RawDataEditorTab, PrepTemplatePanel
+from .raw_data_tab import (RawDataTab, RawDataEditorTab, PrepTemplatePanel,
+                           EditInvestigationType)
 from .preprocessed_data_tab import PreprocessedDataTab, PreprocessedDataInfoTab
 
 __all__ = ['StudyInformationTab', 'SampleTemplateTab', 'RawDataTab',
-           'RawDataEditorTab', 'PrepTemplatePanel', 'PreprocessedDataTab',
-           'PreprocessedDataInfoTab']
+           'RawDataEditorTab', 'PrepTemplatePanel', 'EditInvestigationType',
+           'PreprocessedDataTab', 'PreprocessedDataInfoTab']

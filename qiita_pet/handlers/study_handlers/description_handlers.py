@@ -8,7 +8,7 @@
 from __future__ import division
 from os import remove
 from os.path import exists, join, basename
-from future.utils import viewitems
+from future.utils import viewvalues
 from collections import defaultdict
 
 from tornado.web import authenticated, HTTPError
@@ -32,6 +32,47 @@ from qiita_pet.handlers.util import check_access
 html_error_message = "<b>An error occurred %s %s</b></br>%s"
 
 
+def _approve(level):
+    """Check if the study can be approved based on user level and configuration
+
+    Parameters
+    ----------
+    level : str
+        The level of the current user
+
+    Returns
+    -------
+    bool
+        Whether the study can be approved or not
+    """
+    return True if not qiita_config.require_approval else level == 'admin'
+
+
+def _to_int(value):
+    """Transforms `value` to an integer
+
+    Parameters
+    ----------
+    value : str or int
+        The value to transform
+
+    Returns
+    -------
+    int
+        `value` as an integer
+
+    Raises
+    ------
+    HTTPError
+        If `value` cannot be transformed to an integer
+    """
+    try:
+        res = int(value)
+    except ValueError:
+        raise HTTPError(500, "%s cannot be converted to an integer" % value)
+    return res
+
+
 class StudyDescriptionHandler(BaseHandler):
 
     def _get_sudy_and_check_access(self, study_id):
@@ -42,7 +83,7 @@ class StudyDescriptionHandler(BaseHandler):
 
         Parameters
         ----------
-        study_id : str
+        study_id : str or int
             The current study
 
         Returns
@@ -57,8 +98,8 @@ class StudyDescriptionHandler(BaseHandler):
         user = User(self.current_user)
 
         try:
-            study = Study(int(study_id))
-        except QiitaDBUnknownIDError:
+            study = Study(_to_int(study_id))
+        except (QiitaDBUnknownIDError, HTTPError):
             # Study not in database so fail nicely
             raise HTTPError(404, "Study %s does not exist" % study_id)
         else:
@@ -227,7 +268,7 @@ class StudyDescriptionHandler(BaseHandler):
             new_investigation_type)
 
         # Make sure that the id is an integer
-        raw_data_id = int(raw_data_id)
+        raw_data_id = _to_int(raw_data_id)
         # Get the upload base directory
         _, base_path = get_mountpoint("uploads")[0]
         # Get the path to the prep template
@@ -282,8 +323,7 @@ class StudyDescriptionHandler(BaseHandler):
             The callback function to call with the results once the processing
             is done
         """
-        if ((user.level == 'admin' and qiita_config.require_approval)
-                or not qiita_config.require_approval):
+        if _approve(user.level):
             study.status = 'private'
             msg = "Study approved"
             msg_level = "success"
@@ -345,6 +385,8 @@ class StudyDescriptionHandler(BaseHandler):
         msg = "investigation type successfully updated"
         msg_level = "success"
 
+        ppd_id = int(self.get_argument('ppd_id'))
+
         prep_id = self.get_argument('prep_id')
         edit_investigation_type = self.get_argument('edit-investigation-type',
                                                     None)
@@ -367,7 +409,34 @@ class StudyDescriptionHandler(BaseHandler):
                                         investigation_type, str(e))
             msg_level = "danger"
 
-        callback((msg, msg_level, "raw_data_tab", rd_id, prep_id))
+        if ppd_id == 0:
+            top_tab = "raw_data_tab"
+            sub_tab = rd_id
+            prep_tab = prep_id
+        else:
+            top_tab = "preprocessed_data_tab"
+            sub_tab = ppd_id
+            prep_tab = None
+
+        callback((msg, msg_level, top_tab, sub_tab, prep_tab))
+
+    def unspecified_action(self, study, user, callback):
+        """If the action is not recognized, we return an error message
+
+        Parameters
+        ----------
+        study : Study
+            The current study object
+        user : User
+            The current user object
+        callback : function
+            The callback function to call with the results once the processing
+            is done
+        """
+        msg = ("Error, did you select a valid uploaded file or are passing "
+               "the correct parameters?")
+        msg_level = 'danger'
+        callback((msg, msg_level, 'study_information_tab', None, None))
 
     def get_raw_data(self, rdis, callback):
         """Get all raw data objects from a list of raw_data_ids"""
@@ -404,7 +473,7 @@ class StudyDescriptionHandler(BaseHandler):
         """add prep templates"""
         pt_id = PrepTemplate.create(load_template_to_dataframe(fp_rpt),
                                     RawData(raw_data_id), study,
-                                    int(data_type_id),
+                                    _to_int(data_type_id),
                                     investigation_type=investigation_type).id
         remove(fp_rpt)
         return pt_id
@@ -425,17 +494,19 @@ class StudyDescriptionHandler(BaseHandler):
                 raw_files = False
 
         # set variable holding if we have all prep templates or not
-        prep_templates = True if available_prep_templates else False
-        for key, val in viewitems(available_prep_templates):
-            if not val:
-                prep_templates = False
+        if available_prep_templates:
+            _test = lambda item: not item
+            prep_templates = all(
+                [_test(val) for val in viewvalues(available_prep_templates)])
+        else:
+            prep_templates = False
 
         study_status = study.status
         user_level = user.level
         sample_template_exists = SampleTemplate.exists(study.id)
 
         # The general information of the study can be changed if the study is
-        # not public or if the user is an admin, in which case he can always
+        # not public or if the user is an admin, in which case they can always
         # modify the information of the study
         show_edit_btn = study_status != 'public' or user_level == 'admin'
 
@@ -488,72 +559,100 @@ class StudyDescriptionHandler(BaseHandler):
     def get(self, study_id):
         study, user = self._get_sudy_and_check_access(study_id)
 
-        self.display_template(study, user, "", 'info',
-                              top_tab="study_information_tab")
+        top_tab = self.get_argument('top_tab', 'study_information_tab')
+        sub_tab = self.get_argument('sub_tab', None)
+        prep_tab = self.get_argument('prep_tab', None)
+
+        self.display_template(study, user, "", 'info', top_tab=top_tab,
+                              sub_tab=sub_tab, prep_tab=prep_tab)
 
     @authenticated
     @coroutine
     def post(self, study_id):
         study, user = self._get_sudy_and_check_access(study_id)
 
+        # Define a dictionary with all the supported actions
+        actions = defaultdict(
+            lambda: self.unspecified_action,
+            process_sample_template=self.process_sample_template,
+            create_raw_data=self.create_raw_data,
+            add_prep_template=self.add_prep_template,
+            make_public=self.make_public,
+            approve_study=self.approve_study,
+            request_approval=self.request_approval,
+            make_sandbox=self.make_sandbox,
+            update_investigation_type=self.update_investigation_type)
+
+        # Get the action that we need to perform
         action = self.get_argument("action", None)
+        action_f = actions[action]
 
-        msg = ''
-        msg_level = ''
+        msg, msg_level, top_tab, sub_tab, prep_tab = yield Task(action_f,
+                                                                study, user)
 
-        if action == 'process_sample_template':
-            result = yield Task(self.process_sample_template, study, user)
-        elif action == 'create_raw_data':
-            result = yield Task(self.create_raw_data, study, user)
-        elif action == 'add_prep_template':
-            result = yield Task(self.add_prep_template, study, user)
-        elif action == 'make_public':
-            result = yield Task(self.make_public, study, user)
-        elif action == 'approve_study':
-            result = yield Task(self.approve_study, study, user)
-        elif action == 'request_approval':
-            result = yield Task(self.request_approval, study, user)
-        elif action == 'make_sandbox':
-            result = yield Task(self.make_sandbox, study, user)
-        elif action == 'update_investigation_type':
-            result = yield Task(self.update_investigation_type, study, user)
-        else:
-            result = ("Error, did you select a valid uploaded file or are "
-                      "passing the correct parameters?",
-                      'danger',
-                      'study_information_tab',
-                      None,
-                      None)
-
-        msg, msg_level, top_tab, sub_tab, prep_tab = result
-
+        # Display the function
         self.display_template(study, user, msg, msg_level, top_tab, sub_tab,
                               prep_tab)
 
 
 class PreprocessingSummaryHandler(BaseHandler):
-    @authenticated
-    def get(self, preprocessed_data_id):
-        ppd_id = int(preprocessed_data_id)
-        ppd = PreprocessedData(ppd_id)
+    def _get_template_variables(self, preprocessed_data_id, callback):
+        """Generates all the variables needed to render the template
+
+        Parameters
+        ----------
+        preprocessed_data_id : int
+            The preprocessed data identifier
+        callback : function
+            The callback function to call with the results once the processing
+            is done
+
+        Raises
+        ------
+        HTTPError
+            If the preprocessed data does not have a log file
+        """
+        # Get the objects and check user privileges
+        ppd = PreprocessedData(preprocessed_data_id)
         study = Study(ppd.study)
         check_access(User(self.current_user), study, raise_error=True)
 
+        # Get the return address
         back_button_path = self.get_argument(
-            'back_button_path', '/study/description/%d' % study.id)
+            'back_button_path',
+            '/study/description/%d?top_tab=preprocessed_data_tab&sub_tab=%s'
+            % (study.id, preprocessed_data_id))
 
+        # Get all the filepaths attached to the preprocessed data
         files_tuples = ppd.get_filepaths()
-        files = defaultdict(list)
 
-        for fpid, fp, fpt in files_tuples:
+        # Group the files by filepath type
+        files = defaultdict(list)
+        for _, fp, fpt in files_tuples:
             files[fpt].append(fp)
 
-        with open(files['log'][0], 'U') as f:
+        try:
+            log_path = files['log'][0]
+        except KeyError:
+            raise HTTPError(500, "Log file not found in preprocessed data %s"
+                                 % preprocessed_data_id)
+
+        with open(log_path, 'U') as f:
             contents = f.read()
             contents = contents.replace('\n', '<br/>')
             contents = contents.replace('\t', '&nbsp;&nbsp;&nbsp;&nbsp;')
 
-        title = ('Preprocessed Data: %d' % ppd_id)
+        title = 'Preprocessed Data: %d' % preprocessed_data_id
+
+        callback((title, contents, back_button_path))
+
+    @authenticated
+    @coroutine
+    def get(self, preprocessed_data_id):
+        ppd_id = _to_int(preprocessed_data_id)
+
+        title, contents, back_button_path = yield Task(
+            self._get_template_variables, ppd_id)
 
         self.render('text_file.html', title=title, contents=contents,
                     user=self.current_user, back_button_path=back_button_path)

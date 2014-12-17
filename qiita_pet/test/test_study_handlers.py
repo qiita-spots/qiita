@@ -223,17 +223,30 @@ class TestCreateStudyAJAX(TestHandlerBase):
 
 
 class TestMetadataSummaryHandler(TestHandlerBase):
-    def test_get_exists(self):
+    def test_error_prep_and_sample(self):
         response = self.get('/metadata_summary/', {'sample_template': 1,
                                                    'prep_template': 1,
+                                                   'study_id': 1})
+        self.assertEqual(response.code, 500)
+
+    def test_error_no_prep_no_sample(self):
+        response = self.get('/metadata_summary/', {'study_id': 1})
+        self.assertEqual(response.code, 500)
+
+    def test_get_exists_prep(self):
+        response = self.get('/metadata_summary/', {'prep_template': 1,
+                                                   'study_id': 1})
+        self.assertEqual(response.code, 200)
+
+    def test_get_exists_sample(self):
+        response = self.get('/metadata_summary/', {'sample_template': 1,
                                                    'study_id': 1})
         self.assertEqual(response.code, 200)
 
     def test_get_no_exist(self):
         response = self.get('/metadata_summary/', {'sample_template': 237,
-                                                   'prep_template': 1,
                                                    'study_id': 237})
-        self.assertEqual(response.code, 404)
+        self.assertEqual(response.code, 500)
 
 
 class TestEBISubmitHandler(TestHandlerBase):

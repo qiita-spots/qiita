@@ -9,7 +9,7 @@ from __future__ import division
 from collections import namedtuple
 from json import dumps
 
-from tornado.web import authenticated, HTTPError, asynchronous
+from tornado.web import authenticated, HTTPError
 from tornado.gen import coroutine, Task
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
@@ -144,7 +144,6 @@ class ShareStudyAJAX(BaseHandler):
         callback(study.unshare(user))
 
     @authenticated
-    @asynchronous
     @coroutine
     def get(self):
         study_id = int(self.get_argument('study_id'))

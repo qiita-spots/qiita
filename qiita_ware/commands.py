@@ -11,6 +11,9 @@ from os import makedirs
 from functools import partial
 from tempfile import mkdtemp
 from gzip import open as gzopen
+from tarfile import open as taropen
+from shlex import split as shsplit
+from moi.job import system_call
 
 from qiita_db.study import Study
 from qiita_db.data import PreprocessedData
@@ -85,7 +88,7 @@ def submit_EBI(preprocessed_data_id, action, send, fastq_dir_fp=None):
         # If the user does not specify a FASTQ directory, create one and
         # re-serialize the per-sample FASTQs from the demux file
         fastq_dir_fp = mkdtemp(prefix=qiita_config.working_dir)
-        demux = [path for path, ftype in preprocessed_data.get_filepaths()
+        demux = [path for _, path, ftype in preprocessed_data.get_filepaths()
                  if ftype == 'preprocessed_demux'][0]
 
         # Keep track of which files were actually in the demux file so that we
@@ -151,3 +154,68 @@ def submit_EBI(preprocessed_data_id, action, send, fastq_dir_fp=None):
 
 
 submit_EBI.__doc__ %= ebi_actions
+
+
+def submit_VAMPS(preprocessed_data_id):
+    """Submit preprocessed data to VAMPS
+
+    Parameters
+    ----------
+    preprocessed_data_id : int
+        The preprocesssed data id
+    """
+    preprocessed_data = PreprocessedData(preprocessed_data_id)
+    study = Study(preprocessed_data.study)
+    sample_template = SampleTemplate(study.sample_template)
+    prep_template = PrepTemplate(preprocessed_data.prep_template)
+
+    status = preprocessed_data.submitted_to_vamps_status()
+    if status in ('submitting', 'success'):
+        raise ValueError("Cannot resubmit! Current status is: %s" % status)
+
+        preprocessed_data.update_vamps_status('submitting')
+
+    # Generating a tgz
+    targz_folder = mkdtemp(prefix=qiita_config.working_dir)
+    targz_fp = join(targz_folder, '%d_%d_%d.tgz' % (study.id,
+                                                    prep_template.id,
+                                                    preprocessed_data.id))
+    targz = taropen(targz_fp, mode='w:gz')
+
+    # adding sample/prep
+    samp_fp = join(targz_folder, 'sample_metadata.txt')
+    sample_template.to_file(samp_fp)
+    targz.add(samp_fp, arcname='sample_metadata.txt')
+    prep_fp = join(targz_folder, 'prep_metadata.txt')
+    prep_template.to_file(prep_fp)
+    targz.add(prep_fp, arcname='prep_metadata.txt')
+
+    # adding preprocessed data
+    for _, fp, fp_type in preprocessed_data.get_filepaths():
+        if fp_type == 'preprocessed_fasta':
+            targz.add(fp, arcname='preprocessed_fasta.fna')
+
+    targz.close()
+
+    # submitting
+    cmd = ("curl -F user=%s -F pass='%s' -F uploadFile=@%s -F "
+           "press=UploadFile %s" % (qiita_config.vamps_user,
+                                    qiita_config.vamps_pass,
+                                    targz_fp,
+                                    qiita_config.vamps_url))
+
+    cmd_parts = shsplit(cmd)
+    cmd_fp = join(targz_folder, 'submitting.txt')
+    cmd_fh = open(cmd_fp, 'w')
+    system_call(cmd_parts, stdout=cmd_fh)
+
+    exp = ['<html>\n', '<head>\n', '<title>Process Uploaded File</title>\n',
+           '</head>\n', '<body>\n', '</body>\n', '</html>']
+    obs = open(cmd_fp).readlines()
+
+    if obs != exp:
+        preprocessed_data.update_vamps_status('failure')
+        return False
+    else:
+        preprocessed_data.update_vamps_status('success')
+        return True

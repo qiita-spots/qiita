@@ -13,9 +13,10 @@ from .description_handlers import (StudyDescriptionHandler,
                                    PreprocessingSummaryHandler)
 from .ebi_handlers import EBISubmitHandler
 from .metadata_summary_handlers import MetadataSummaryHandler
+from .vamps_handlers import VAMPSHandler
 
 __all__ = ['PrivateStudiesHandler', 'PublicStudiesHandler',
            'StudyApprovalList', 'ShareStudyAJAX', 'StudyEditHandler',
            'CreateStudyAJAX', 'StudyDescriptionHandler',
            'PreprocessingSummaryHandler', 'EBISubmitHandler',
-           'MetadataSummaryHandler']
+           'MetadataSummaryHandler', 'VAMPSHandler']

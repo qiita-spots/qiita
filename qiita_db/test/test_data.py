@@ -264,7 +264,8 @@ class PreprocessedDataTests(TestCase):
         # ebi_submission_accession, ebi_study_accession, data_type_id,
         # link_filepaths_status
         exp = [[3, "preprocessed_sequence_illumina_params", 1,
-                'not submitted', "EBI123456-A", "EBI123456-B", 2, 'idle']]
+                'not submitted', "EBI123456-A", "EBI123456-B", 2, 'idle',
+                'not submitted']]
         self.assertEqual(obs, exp)
 
         # Check that the preprocessed data has been linked with its study
@@ -312,7 +313,7 @@ class PreprocessedDataTests(TestCase):
         # ebi_submission_accession, ebi_study_accession, data_type_id,
         # link_filepaths_status
         exp = [[3, "preprocessed_sequence_illumina_params", 1,
-                'not submitted', None, None, 2, 'idle']]
+                'not submitted', None, None, 2, 'idle', 'not submitted']]
         self.assertEqual(obs, exp)
 
         # Check that the preprocessed data has been linked with its study
@@ -494,6 +495,34 @@ class PreprocessedDataTests(TestCase):
         ppd = PreprocessedData(1)
         with self.assertRaises(ValueError):
             ppd._set_link_filepaths_status('not a valid status')
+
+    def test_insdc_status(self):
+        ppd = PreprocessedData(1)
+
+        # verifying current value
+        self.assertEqual(ppd.submitted_to_insdc_status(), 'submitting')
+
+        # changing value and then verifying new value
+        ppd.update_insdc_status('failed')
+        self.assertEqual(ppd.submitted_to_insdc_status(), 'failed')
+
+        # checking failure
+        with self.assertRaises(ValueError):
+            ppd.update_insdc_status('not a valid status')
+
+    def test_vamps_status(self):
+        ppd = PreprocessedData(1)
+
+        # verifying current value
+        self.assertEqual(ppd.submitted_to_vamps_status(), 'not submitted')
+
+        # changing value and then verifying new value
+        ppd.update_vamps_status('failed')
+        self.assertEqual(ppd.submitted_to_vamps_status(), 'failed')
+
+        # checking failure
+        with self.assertRaises(ValueError):
+            ppd.update_vamps_status('not a valid status')
 
 
 @qiita_test_checker()
@@ -711,11 +740,6 @@ class ProcessedDataTests(TestCase):
         self.assertEqual(pd.link_filepaths_status, 'unlinking')
         pd._set_link_filepaths_status('failed: error')
         self.assertEqual(pd.link_filepaths_status, 'failed: error')
-
-    def test_link_filepaths_status_setter_error(self):
-        pd = ProcessedData(1)
-        with self.assertRaises(ValueError):
-            pd._set_link_filepaths_status('not a valid status')
 
 
 if __name__ == '__main__':

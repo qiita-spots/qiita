@@ -1,21 +1,29 @@
+{% from qiita_pet.handlers.util import download_link_or_path %}
+
 <div class="tab-pane" id="preprocessed_data_info_{{ppd_id}}" style="padding: 10px;">
-  <b>Prep template of origin:</b> <a href="#" onclick="display_tab('raw_data_tab', {{raw_data_id}}, {{prep_template_id}});">{{prep_template_id}}</a><br/>
+  <a href="#" onclick="display_tab('raw_data_tab', {{raw_data_id}}, {{prep_template_id}});">Prep template</a><br/>
   <b>EBI status:</b> {{ebi_status}}<br/>
   <b>EBI study accession:</b> {{ebi_study_accession}}<br/>
   <b>EBI submission accession:</b> {{ebi_submission_accession}}<br/>
+  <b>VAMPS status:</b> {{vamps_status}}<br/>
+  {% module EditInvestigationType(ena_terms, user_defined_terms, prep_template_id, inv_type, ppd_id) %}
   {% if show_ebi_btn %}
-    <a class="btn btn-primary glyphicon glyphicon-export" href="/ebi_submission/{{ppd_id}}" style="word-spacing: -10px;"> Submit to EBI</a><br/>
+  <br/>
+  <table border="0" width="60%">
+    <tr>
+      <td><a class="btn btn-primary glyphicon glyphicon-export" href="/ebi_submission/{{ppd_id}}" style="word-spacing: -10px;"> Submit to EBI</a></td>
+      <td><a class="btn btn-primary glyphicon glyphicon-export" href="/vamps/{{ppd_id}}" style="word-spacing: -10px;"> Submit to VAMPS</a></td>
+    </tr>
+  </table>
+  <br/>
   {% end %}
   <b>Files:</b><br/>
   <table border="0" style="margin-left: 10px;">
     {% for fpid, fp, ft in filepaths %}
       <tr>
         <td style="padding:3px;">
-          {% if is_local_request %}
-            <b>{{ft.replace('_', ' ')}}:</b> {{fp}}
-          {% else %}
-            <a class="btn btn-default glyphicon glyphicon-download-alt" href="/download/{{fpid}}" style="word-spacing: -10px;"> {{ft.replace('_', ' ')}}</a>
-          {% end %}
+          {% set ft = ft.replace('_', ' ') %}
+          {% raw download_link_or_path(is_local_request, fp, fpid, ft) %}
         </td>
       </tr>
     {% end %}

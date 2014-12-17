@@ -118,5 +118,11 @@ EBI_ORGANIZATION_PREFIX = qiime
 
 [ipython]
 # context is expected to be a comma separated list
-context=qiita_general
-default=qiita_general
+context = qiita_general
+default = qiita_general
+
+[vamps]
+# general info to submit to vamps
+USER = user
+PASSWORD = password
+URL = https://vamps.mbl.edu/mobe_workshop/getfile.php

@@ -18,22 +18,64 @@ from qiita_pet.handlers.base_handlers import BaseHandler
 
 
 class MetadataSummaryHandler(BaseHandler):
+    def _get_template(self, constructor, template_id):
+        """Given the id and the template constructor, instantiates the template
+
+        Parameters
+        ----------
+        constructor : {PrepTemplate or SampleTemplate}
+            The template constructor
+        template_id : str or int
+            The template id
+
+        Returns
+        -------
+        PrepTemplate or SampleTemplate instance
+            The instantiated object
+
+        Raises
+        ------
+        HTTPError
+            If the template does not exists
+        """
+        try:
+            template = constructor(int(template_id))
+        except (QiitaDBUnknownIDError, ValueError):
+            # By using __name__, it will either display 'SampleTemplate'
+            # or 'PrepTemplate'
+            raise HTTPError(500, "%s %s does not exist" %
+                                 (constructor.__name__, template_id))
+
+        return template
+
     @authenticated
     def get(self, arguments):
         study_id = int(self.get_argument('study_id'))
 
-        # this block is tricky because you can either pass the sample or the
-        # prep template and if none is passed then we will let an exception
-        # be raised because template will not be declared for the logic below
-        if self.get_argument('prep_template', None):
-            template = PrepTemplate(int(self.get_argument('prep_template')))
-        if self.get_argument('sample_template', None):
-            template = None
-            tid = int(self.get_argument('sample_template'))
-            try:
-                template = SampleTemplate(tid)
-            except QiitaDBUnknownIDError:
-                raise HTTPError(404, "SampleTemplate %d does not exist" % tid)
+        # Get the arguments
+        prep_template = self.get_argument('prep_template', None)
+        sample_template = self.get_argument('sample_template', None)
+
+        if prep_template and sample_template:
+            raise HTTPError(500, "You should provide either a sample template "
+                                 "or a prep template, but not both")
+        elif prep_template:
+            # The prep template has been provided
+            template = self._get_template(PrepTemplate, prep_template)
+            back_button_path = (
+                "/study/description/%s?top_tab=raw_data_tab&sub_tab=%s"
+                "&prep_tab=%s" % (study_id, template.raw_data, template.id))
+        elif sample_template:
+            # The sample template has been provided
+            template = self._get_template(SampleTemplate, sample_template)
+            back_button_path = (
+                "/study/description/%s?top_tab=sample_template_tab"
+                % study_id)
+        else:
+            # Neither a sample template or a prep template has been provided
+            # Fail nicely
+            raise HTTPError(500, "You should provide either a sample template "
+                                 "or a prep template")
 
         study = Study(template.study_id)
 
@@ -47,4 +89,4 @@ class MetadataSummaryHandler(BaseHandler):
 
         self.render('metadata_summary.html', user=self.current_user,
                     study_title=study.title, stats=stats,
-                    study_id=study_id)
+                    back_button_path=back_button_path)
