@@ -318,6 +318,9 @@ class StudyPreprocessor(ParallelWrapper):
                         info={'prep_template': self.prep_template.id})
 
 
+# <======== StudyProcessor helper functions ===========>
+
+
 class StudyProcessor(ParallelWrapper):
     def _construct_job_graph(self, study, preprocessed_data, params):
         """Constructs the workflow graph to process a study
@@ -336,6 +339,7 @@ class StudyProcessor(ParallelWrapper):
             The parameters to use for processing
         """
         self._logger = stderr
+        self._preprocessed_data = preprocessed_data
 
         # Step 1: Process the study
         process_node = "PROCESS"
@@ -347,10 +351,21 @@ class StudyProcessor(ParallelWrapper):
                                  requires_deps=False)
 
         # Step 2: Add processed data to DB
+        insert_processed_node = "INSERT_PROCESSED"
+        self._job_graph.add_node(insert_processed_node,
+                                 func=insert_processed_node,
+                                 args=(),
+                                 job_name="Store processed data",
+                                 requires_deps=False)
+        self._job_graph.add_edge(process_node, insert_processed_node)
+
+        self._dirpaths_to_remove.append(output_dir)
 
     def _failure_callback(self, msg=None):
         """Callback to execute in case that any of the job nodes failed
 
         Need to change the preprocessed data process status to 'failed'
         """
-        LogEntry.create('Fatal', msg, info={})
+        self.preprocessed_data.processing_status = 'failed: %s' % msg
+        LogEntry.create('Fatal', msg,
+                        info={'preprocessed_data': self.preprocessed_data.id})
