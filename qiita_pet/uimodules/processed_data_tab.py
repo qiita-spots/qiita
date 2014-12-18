@@ -26,9 +26,12 @@ class ProcessedDataInfoTab(BaseUIModule):
         preprocessed_data_id = processed_data.preprocessed_data
         process_date = processed_data.processed_date
         filepaths = processed_data.get_filepaths()
+        is_local_request = self._is_local()
+
         return self.render_string(
             "study_description_templates/processed_data_info_tab.html",
             pd_id=pd_id,
             preprocessed_data_id=preprocessed_data_id,
             process_date=process_date,
-            filepaths=filepaths)
+            filepaths=filepaths,
+            is_local_request=is_local_request)
