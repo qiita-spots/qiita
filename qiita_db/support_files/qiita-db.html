@@ -482,12 +482,7 @@ table {
 	processed_params_uclust references reference ( reference_id )</title>
 </path>
 <text x='2233' y='930' transform='rotate(90 2233,930)' title='Foreign Key fk_processed_params_uclust
-	processed_params_uclust references reference ( reference_id )' style='fill:#a1a0a0;'>reference_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 2160 930 L 2167,930 Q 2175,930 2175,937 L 2175,945' >
-	<title>Foreign Key fk_processed_params_sortmerna
-	processed_params_sortmerna references reference ( reference_id )</title>
-</path>
-<text x='2167' y='925' transform='rotate(0 2167,925)' title='Foreign Key fk_processed_params_sortmerna
-	processed_params_sortmerna references reference ( reference_id )' style='fill:#a1a0a0;'>reference_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1455 885 L 1462,885 Q 1470,885 1470,877 L 1470,862 Q 1470,855 1462,855 L 1455,855' >
+	processed_params_uclust references reference ( reference_id )' style='fill:#a1a0a0;'>reference_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1455 885 L 1462,885 Q 1470,885 1470,877 L 1470,862 Q 1470,855 1462,855 L 1455,855' >
 	<title>Foreign Key fk_preprocessed_processed_data
 	preprocessed_processed_data references preprocessed_data ( preprocessed_data_id )</title>
 </path>
@@ -697,7 +692,12 @@ table {
 	preprocessed_data references data_type ( data_type_id )</title>
 </path>
 <text x='1462' y='835' transform='rotate(0 1462,835)' title='Foreign Key fk_preprocessed_data
-	preprocessed_data references data_type ( data_type_id )' style='fill:#a1a0a0;'>data_type_id</text><!-- ============= Table 'controlled_vocab_values' ============= -->
+	preprocessed_data references data_type ( data_type_id )' style='fill:#a1a0a0;'>data_type_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 2160 930 L 2167,930 Q 2175,930 2175,937 L 2175,945' >
+	<title>Foreign Key fk_processed_params_sortmerna
+	processed_params_sortmerna references reference ( reference_id )</title>
+</path>
+<text x='2167' y='925' transform='rotate(0 2167,925)' title='Foreign Key fk_processed_params_sortmerna
+	processed_params_sortmerna references reference ( reference_id )' style='fill:#a1a0a0;'>reference_id</text><!-- ============= Table 'controlled_vocab_values' ============= -->
 <rect class='table' x='45' y='1538' width='150' height='120' rx='7' ry='7' />
 <path d='M 45.50 1564.50 L 45.50 1545.50 Q 45.50 1538.50 52.50 1538.50 L 187.50 1538.50 Q 194.50 1538.50 194.50 1545.50 L 194.50 1564.50 L45.50 1564.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
 <a xlink:href='#controlled_vocab_values'><text x='53' y='1552' class='tableTitle'>controlled_vocab_values</text><title>Table qiita.controlled_vocab_values</title></a>
@@ -1152,23 +1152,6 @@ What version of reference or type of reference used</title></a>
   <use id='nn' x='2207' y='867' xlink:href='#nn'/><a xlink:href='#processed_params_uclust.similarity'><text x='2223' y='877'>similarity</text><title>similarity float8 not null default 0&#046;97</title></a>
   <use id='nn' x='2207' y='882' xlink:href='#nn'/><a xlink:href='#processed_params_uclust.enable_rev_strand_match'><text x='2223' y='892'>enable_rev_strand_match</text><title>enable_rev_strand_match bool not null default TRUE</title></a>
   <use id='nn' x='2207' y='897' xlink:href='#nn'/><a xlink:href='#processed_params_uclust.suppress_new_clusters'><text x='2223' y='907'>suppress_new_clusters</text><title>suppress_new_clusters bool not null default TRUE</title></a>
-
-<!-- ============= Table 'processed_params_sortmerna' ============= -->
-<rect class='table' x='1980' y='803' width='180' height='150' rx='7' ry='7' />
-<path d='M 1980.50 829.50 L 1980.50 810.50 Q 1980.50 803.50 1987.50 803.50 L 2152.50 803.50 Q 2159.50 803.50 2159.50 810.50 L 2159.50 829.50 L1980.50 829.50 ' style='fill:url(#tableHeaderGradient3); stroke:none;' />
-<a xlink:href='#processed_params_sortmerna'><text x='1988' y='817' class='tableTitle'>processed_params_sortmerna</text><title>Table qiita.processed_params_sortmerna
-Parameters used for processing data using method sortmerna</title></a>
-  <use id='nn' x='1982' y='837' xlink:href='#nn'/><a xlink:href='#processed_params_sortmerna.processed_params_id'><use id='pk' x='1982' y='836' xlink:href='#pk'/><title>Primary Key  ( processed_params_id ) </title></a>
-<a xlink:href='#processed_params_sortmerna.processed_params_id'><text x='1998' y='847'>processed_params_id</text><title>processed_params_id bigserial not null</title></a>
-  <use id='nn' x='1982' y='852' xlink:href='#nn'/><a xlink:href='#processed_params_sortmerna.reference_id'><use id='idx' x='1982' y='851' xlink:href='#idx'/><title>Index  ( reference_id ) </title></a>
-<a xlink:href='#processed_params_sortmerna.reference_id'><text x='1998' y='862'>reference_id</text><title>reference_id bigint not null
-What version of reference or type of reference used</title></a>
-<a xlink:href='#processed_params_sortmerna.reference_id'><use id='fk' x='2148' y='851' xlink:href='#fk'/><title>References reference ( reference_id ) </title></a>
-  <use id='nn' x='1982' y='867' xlink:href='#nn'/><a xlink:href='#processed_params_sortmerna.evalue'><text x='1998' y='877'>evalue</text><title>evalue float8 not null</title></a>
-  <use id='nn' x='1982' y='882' xlink:href='#nn'/><a xlink:href='#processed_params_sortmerna.max_pos'><text x='1998' y='892'>max_pos</text><title>max_pos integer not null</title></a>
-  <use id='nn' x='1982' y='897' xlink:href='#nn'/><a xlink:href='#processed_params_sortmerna.similarity'><text x='1998' y='907'>similarity</text><title>similarity float8 not null</title></a>
-  <use id='nn' x='1982' y='912' xlink:href='#nn'/><a xlink:href='#processed_params_sortmerna.coverage'><text x='1998' y='922'>coverage</text><title>coverage float8 not null</title></a>
-  <use id='nn' x='1982' y='927' xlink:href='#nn'/><a xlink:href='#processed_params_sortmerna.threads'><text x='1998' y='937'>threads</text><title>threads integer not null</title></a>
 
 <!-- ============= Table 'preprocessed_sequence_illumina_params' ============= -->
 <rect class='table' x='1740' y='1028' width='240' height='195' rx='7' ry='7' />
@@ -1731,6 +1714,23 @@ Name of table holding the params</title></a>
   <use id='nn' x='1262' y='807' xlink:href='#nn'/><a xlink:href='#preprocessed_data.link_filepaths_status'><text x='1278' y='817'>link_filepaths_status</text><title>link_filepaths_status varchar not null default &#039;idle&#039;</title></a>
   <a xlink:href='#preprocessed_data.submitted_to_vamps_status'><text x='1278' y='832'>submitted_to_vamps_status</text><title>submitted_to_vamps_status varchar default &#039;not submitted&#039;</title></a>
   <use id='nn' x='1262' y='837' xlink:href='#nn'/><a xlink:href='#preprocessed_data.processing_status'><text x='1278' y='847'>processing_status</text><title>processing_status varchar not null default &#039;not&#095;processed&#039;</title></a>
+
+<!-- ============= Table 'processed_params_sortmerna' ============= -->
+<rect class='table' x='1980' y='803' width='180' height='150' rx='7' ry='7' />
+<path d='M 1980.50 829.50 L 1980.50 810.50 Q 1980.50 803.50 1987.50 803.50 L 2152.50 803.50 Q 2159.50 803.50 2159.50 810.50 L 2159.50 829.50 L1980.50 829.50 ' style='fill:url(#tableHeaderGradient3); stroke:none;' />
+<a xlink:href='#processed_params_sortmerna'><text x='1988' y='817' class='tableTitle'>processed_params_sortmerna</text><title>Table qiita.processed_params_sortmerna
+Parameters used for processing data using method sortmerna</title></a>
+  <use id='nn' x='1982' y='837' xlink:href='#nn'/><a xlink:href='#processed_params_sortmerna.processed_params_id'><use id='pk' x='1982' y='836' xlink:href='#pk'/><title>Primary Key  ( processed_params_id ) </title></a>
+<a xlink:href='#processed_params_sortmerna.processed_params_id'><text x='1998' y='847'>processed_params_id</text><title>processed_params_id bigserial not null</title></a>
+  <use id='nn' x='1982' y='852' xlink:href='#nn'/><a xlink:href='#processed_params_sortmerna.reference_id'><use id='idx' x='1982' y='851' xlink:href='#idx'/><title>Index  ( reference_id ) </title></a>
+<a xlink:href='#processed_params_sortmerna.reference_id'><text x='1998' y='862'>reference_id</text><title>reference_id bigint not null
+What version of reference or type of reference used</title></a>
+<a xlink:href='#processed_params_sortmerna.reference_id'><use id='fk' x='2148' y='851' xlink:href='#fk'/><title>References reference ( reference_id ) </title></a>
+  <use id='nn' x='1982' y='867' xlink:href='#nn'/><a xlink:href='#processed_params_sortmerna.sortmerna_e_value'><text x='1998' y='877'>sortmerna_e_value</text><title>sortmerna_e_value float8 not null</title></a>
+  <use id='nn' x='1982' y='882' xlink:href='#nn'/><a xlink:href='#processed_params_sortmerna.sortmerna_max_pos'><text x='1998' y='892'>sortmerna_max_pos</text><title>sortmerna_max_pos integer not null</title></a>
+  <use id='nn' x='1982' y='897' xlink:href='#nn'/><a xlink:href='#processed_params_sortmerna.similarity'><text x='1998' y='907'>similarity</text><title>similarity float8 not null</title></a>
+  <use id='nn' x='1982' y='912' xlink:href='#nn'/><a xlink:href='#processed_params_sortmerna.sortmerna_coverage'><text x='1998' y='922'>sortmerna_coverage</text><title>sortmerna_coverage float8 not null</title></a>
+  <use id='nn' x='1982' y='927' xlink:href='#nn'/><a xlink:href='#processed_params_sortmerna.threads'><text x='1998' y='937'>threads</text><title>threads integer not null</title></a>
 
 </g></svg>
 
@@ -3195,66 +3195,6 @@ Name of table holding the params</title></a>
 <tr><th colspan='3'><b>Foreign Keys</b></th></tr>
 	<tr>
 		<td>fk_processed_params_uclust</td>
-		<td > ( reference&#095;id ) ref <a href='#reference'>reference</a> (reference&#095;id) </td>
-		<td>  </td>
-	</tr>
-</tbody>
-</table>
-
-<br/><br/>
-<table class='bordered'>
-<thead>
-<tr><th colspan='3'><a name='processed_params_sortmerna'>Table processed_params_sortmerna</a></th></tr>
-<tr><td colspan='3'>Parameters used for processing data using method sortmerna </td></tr>
-</thead>
-<tbody>
-	<tr>
-		<td><a name='processed_params_sortmerna.processed_params_id'>processed&#095;params&#095;id</a></td>
-		<td> bigserial  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='processed_params_sortmerna.reference_id'>reference&#095;id</a></td>
-		<td> bigint  NOT NULL  </td>
-		<td> What version of reference or type of reference used </td>
-	</tr>
-	<tr>
-		<td><a name='processed_params_sortmerna.evalue'>evalue</a></td>
-		<td> float8  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='processed_params_sortmerna.max_pos'>max&#095;pos</a></td>
-		<td> integer  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='processed_params_sortmerna.similarity'>similarity</a></td>
-		<td> float8  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='processed_params_sortmerna.coverage'>coverage</a></td>
-		<td> float8  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='processed_params_sortmerna.threads'>threads</a></td>
-		<td> integer  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-<tr><th colspan='3'><b>Indexes</b></th></tr>
-	<tr>		<td>pk&#095;processed&#095;params&#095;sortmerna primary key</td>
-		<td> ON processed&#095;params&#095;id</td>
-		<td>  </td>
-	</tr>
-	<tr>		<td>idx&#095;processed&#095;params&#095;sortmerna </td>
-		<td> ON reference&#095;id</td>
-		<td>  </td>
-	</tr>
-<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
-	<tr>
-		<td>fk_processed_params_sortmerna</td>
 		<td > ( reference&#095;id ) ref <a href='#reference'>reference</a> (reference&#095;id) </td>
 		<td>  </td>
 	</tr>
@@ -5004,6 +4944,66 @@ Controlled Vocabulary </td>
 	<tr>
 		<td>fk_preprocessed_data</td>
 		<td > ( data&#095;type&#095;id ) ref <a href='#data&#095;type'>data&#095;type</a> (data&#095;type&#095;id) </td>
+		<td>  </td>
+	</tr>
+</tbody>
+</table>
+
+<br/><br/>
+<table class='bordered'>
+<thead>
+<tr><th colspan='3'><a name='processed_params_sortmerna'>Table processed_params_sortmerna</a></th></tr>
+<tr><td colspan='3'>Parameters used for processing data using method sortmerna </td></tr>
+</thead>
+<tbody>
+	<tr>
+		<td><a name='processed_params_sortmerna.processed_params_id'>processed&#095;params&#095;id</a></td>
+		<td> bigserial  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='processed_params_sortmerna.reference_id'>reference&#095;id</a></td>
+		<td> bigint  NOT NULL  </td>
+		<td> What version of reference or type of reference used </td>
+	</tr>
+	<tr>
+		<td><a name='processed_params_sortmerna.sortmerna_e_value'>sortmerna&#095;e&#095;value</a></td>
+		<td> float8  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='processed_params_sortmerna.sortmerna_max_pos'>sortmerna&#095;max&#095;pos</a></td>
+		<td> integer  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='processed_params_sortmerna.similarity'>similarity</a></td>
+		<td> float8  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='processed_params_sortmerna.sortmerna_coverage'>sortmerna&#095;coverage</a></td>
+		<td> float8  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='processed_params_sortmerna.threads'>threads</a></td>
+		<td> integer  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;processed&#095;params&#095;sortmerna primary key</td>
+		<td> ON processed&#095;params&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>idx&#095;processed&#095;params&#095;sortmerna </td>
+		<td> ON reference&#095;id</td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
+	<tr>
+		<td>fk_processed_params_sortmerna</td>
+		<td > ( reference&#095;id ) ref <a href='#reference'>reference</a> (reference&#095;id) </td>
 		<td>  </td>
 	</tr>
 </tbody>
