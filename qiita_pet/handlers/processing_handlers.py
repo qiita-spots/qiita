@@ -20,8 +20,6 @@ class ProcessHandler(BaseHandler):
         job_id = submit(self.current_user, processor, preprocessed_data_id,
                         param_id, param_constructor)
 
-        print study_id, preprocessed_data_id, job_id
-
         self.render('compute_wait.html', user=self.current_user,
                     job_id=job_id, title='Processing',
                     completion_redirect='/study/description/%d?top_tab='
