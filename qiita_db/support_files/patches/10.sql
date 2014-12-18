@@ -1,6 +1,6 @@
-# Dec 17, 2014
-# This patch renames the columns of the processed_params_sortmerna to match
-# the parameter names in the script
+--  Dec 17, 2014
+--  This patch renames the columns of the processed_params_sortmerna to match
+--  the parameter names in the script
 
 ALTER TABLE qiita.processed_params_sortmerna RENAME COLUMN evalue TO sortmerna_e_value;
 
