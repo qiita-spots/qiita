@@ -170,12 +170,13 @@ class ProcessingPipelineTests(TestCase):
                                 join(obs_output_dir, "preprocess_test2.fna")])
         qual_files = ','.join([join(obs_output_dir, "preprocess_test1.qual"),
                                join(obs_output_dir, "preprocess_test2.qual")])
-        exp_cmd_3 = ' '.join(["split_libraries.py",
-                              "-f %s" % fasta_files,
-                              "-m !TESTSPLIT!",
-                              "-q %s" % qual_files,
-                              "-o %s" % obs_output_dir])
-        exp_cmd_3a, exp_cmd_3b = exp_cmd_3.split('!TESTSPLIT!', 1)
+        exp_cmd_3a = ' '.join(["split_libraries.py",
+                               "-f %s" % fasta_files])
+
+        exp_cmd_3b = ' '.join(["-q %s" % qual_files,
+                               "-d",
+                               "-o %s" % obs_output_dir,
+                               params.to_str()])
         exp_cmd_4 = ' '.join(["convert_fastaqual_fastq.py",
                               "-f %s/seqs.fna" % obs_output_dir,
                               "-q %s/seqs_filtered.qual" % obs_output_dir,
@@ -187,13 +188,13 @@ class ProcessingPipelineTests(TestCase):
         # that we can know the filepath of the mapping file. We thus split the
         # command on the mapping file path and we check that the two parts
         # of the commands is correct
-        obs_cmd_3a, obs_cmd_3b = obs_cmds[2].split('!TESTSPLIT!', 1)
-
-        self.assertEqual(obs_cmd[0], exp_cmd_1)
-        self.assertEqual(obs_cmd[1], exp_cmd_2)
+        obs_cmd_3a, obs_cmd_3b_temp = obs_cmds[2].split(' -m ', 1)
+        obs_cmd_3b = obs_cmd_3b_temp.split(' ', 1)[1]
+        self.assertEqual(obs_cmds[0], exp_cmd_1)
+        self.assertEqual(obs_cmds[1], exp_cmd_2)
         self.assertEqual(obs_cmd_3a, exp_cmd_3a)
         self.assertEqual(obs_cmd_3b, exp_cmd_3b)
-        self.assertEqual(obs_cmd[3], exp_cmd_4)
+        self.assertEqual(obs_cmds[3], exp_cmd_4)
 
     def test_insert_preprocessed_data(self):
         study = Study(1)

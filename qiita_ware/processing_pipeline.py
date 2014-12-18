@@ -197,6 +197,10 @@ def _get_preprocess_fasta_cmd(raw_data, prep_template, params):
             raise NotImplementedError("Raw data file type not supported %s"
                                       % fp_type)
 
+    # Create a temporary directory to store the split libraries output
+    output_dir = mkdtemp(dir=qiita_config.working_dir, prefix='sl_out')
+
+    qual_str = ''
     prepreprocess_cmd = ''
     if seqs and sffs:
         raise ValueError("Cannot have SFF and raw fasta, on %s"
@@ -208,22 +212,18 @@ def _get_preprocess_fasta_cmd(raw_data, prep_template, params):
         seqs = sorted(seqs)
         quals = sorted(quals)
 
-        if quals:
-            qual_str = ','.join(quals)
-            qual_str += ' -d'  # store resulting quals
-        else:
-            qual_str = ''
     else:
-        fna_qual_dir = mkdtemp(dir=qiita_config.working_dir, prefix='sff_out')
         prepreprocess_cmds = []
         for sff in sffs:
             base = splitext(basename(sff))[0]
-            sff_cmd = "process_sff.py -i %s -o %s" % (sff, fna_qual_dir)
+            sff_cmd = "process_sff.py -i %s -o %s" % (sff, output_dir)
             prepreprocess_cmds.append(sff_cmd)
-            seqs.append(join(fna_qual_dir, '%s.fna' % base))
-            quals.append(join(fna_qual_dir, '%s.qual' % base))
+            seqs.append(join(output_dir, '%s.fna' % base))
+            quals.append(join(output_dir, '%s.qual' % base))
         prepreprocess_cmd = '; '.join(prepreprocess_cmds)
 
+    if quals:
+        qual_str = "-q %s -d" % ','.join(quals)
 
     # The minimal QIIME mapping files should be written to a directory,
     # so QIIME can consume them
@@ -231,10 +231,7 @@ def _get_preprocess_fasta_cmd(raw_data, prep_template, params):
                        prefix='MMF_%s' % prep_template.id)
 
     # Get the Minimal Mapping Files
-    mapping_fp = _get_qiime_minimal_mapping(prep_template, prep_dir)
-
-    # Create a temporary directory to store the split libraries output
-    output_dir = mkdtemp(dir=qiita_config.working_dir, prefix='sl_out')
+    mapping_fp = _get_qiime_minimal_mapping(prep_template, prep_dir)[0]
 
     # Add any other parameter needed to split libraries
     params_str = params.to_str()

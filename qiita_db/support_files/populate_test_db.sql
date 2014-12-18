@@ -63,15 +63,7 @@ INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum, checksum_algor
 ('1_s_G1_L001_sequences.fastq.gz', 1, '852952723', 1, 5),
 ('1_s_G1_L001_sequences_barcodes.fastq.gz', 3, '852952723', 1, 5),
 ('2_sequences.fastq.gz', 1, '852952723', 1, 5),
-('2_sequences_barcodes.fastq.gz', 3, '852952723', 1, 5),
-('preprocess_test1.sff', 17, '852952723', 1, 5),
-('preprocess_test2.sff', 17, '852952723', 1, 5);
-
-------------
--- NEED TO ADD SFF, AND FASTA
-------------
-
-
+('2_sequences_barcodes.fastq.gz', 3, '852952723', 1, 5);
 
 -- Insert the raw data information for study 1
 INSERT INTO qiita.raw_data (filetype_id) VALUES (3), (2);
@@ -402,3 +394,17 @@ INSERT INTO qiita.term (term_id, ontology_id, term, identifier, definition, name
 -- Create the new sample_template_filepath
 INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum, checksum_algorithm_id, data_directory_id) VALUES ('1_19700101-000000.txt', 14, '852952723', 1, 9);
 INSERT INTO qiita.sample_template_filepath VALUES (1, 16);
+
+-- Insert example data for test_get_preprocess_fasta_cmd_sff
+INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum, checksum_algorithm_id, data_directory_id) VALUES
+('preprocess_test1.sff', 17, '852952723', 1, 5),
+('preprocess_test2.sff', 17, '852952723', 1, 5);
+
+-- Insert the raw data information for study 1
+INSERT INTO qiita.raw_data (filetype_id) VALUES (1), (1);
+
+-- Insert (link) the raw data with the raw filepaths
+INSERT INTO qiita.raw_filepath (raw_data_id, filepath_id) VALUES (3, 17), (3, 18);
+
+-- Insert (link) the study with the raw data
+INSERT INTO qiita.study_raw_data (study_id, raw_data_id) VALUES (1, 3), (1, 4);
