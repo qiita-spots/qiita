@@ -778,7 +778,7 @@ class ProcessedDataTests(TestCase):
 
     def test_processed_date(self):
         pd = ProcessedData(1)
-        self.assertEqual(pd.processed_date, datetime(2014, 5, 29, 12, 24, 51))
+        self.assertEqual(pd.processed_date, datetime(2012, 10, 1, 9, 30, 27))
 
 
 if __name__ == '__main__':

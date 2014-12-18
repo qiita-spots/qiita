@@ -396,4 +396,4 @@ INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum, checksum_algor
 INSERT INTO qiita.sample_template_filepath VALUES (1, 16);
 
 -- Add processing parameters for sortmerna
-INSERT INTO qiita.processed_params_sortmerna (reference_id, evalue, max_pos, similarity, coverage, threads) VALUES (1, 1, 10000, 0.97, 0.97, 1);
+INSERT INTO qiita.processed_params_sortmerna (reference_id, sortmerna_e_value, sortmerna_max_pos, similarity, sortmerna_coverage, threads) VALUES (1, 1, 10000, 0.97, 0.97, 1);
