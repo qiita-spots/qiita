@@ -7,12 +7,17 @@
 # -----------------------------------------------------------------------------
 
 from sys import stderr
+from tempfile import mkdtemp, mkstemp
+from os import close
 
 from moi.job import system_call
 
+from qiita_core.qiita_settings import qiita_config
 from qiita_ware.wrapper import ParallelWrapper
 from qiita_db.logger import LogEntry
 from qiita_db.data import RawData
+from qiita_db.metadata_template import TARGET_GENE_DATA_TYPES
+from qiita_db.reference import Reference
 
 
 def _get_qiime_minimal_mapping(prep_template, out_dir):
@@ -321,8 +326,121 @@ class StudyPreprocessor(ParallelWrapper):
 # <======== StudyProcessor helper functions ===========>
 
 
+def _get_process_target_gene_cmd(preprocessed_data, params):
+    """Generates the pick_closed_reference_otus.py command
+
+    Parameters
+    ----------
+    preprocessed_data : PreprocessedData
+        The preprocessed_data to process
+    params : ProcessedSortmernaParams
+        The parameters to use for the processing
+
+    Returns
+    -------
+    tuple (str, str)
+        A 2-tuple of strings. The first string is the command to be executed.
+        The second string is the path to the command's output directory
+
+    Raises
+    ------
+    ValueError
+        If no sequence file is found on the preprocessed data
+    """
+    # Get the filepaths from the preprocessed data object
+    seqs_fp = None
+    for fpid, fp, fp_type in preprocessed_data.get_filepaths():
+        if fp_type == "preprocessed_fasta":
+            seqs_fp = fp
+            break
+
+    if not seqs_fp:
+        raise ValueError("No sequence file found on the preprocessed data %s"
+                         % preprocessed_data.id)
+
+    # Create a temporary directory to store the pick otus results
+    output_dir = mkdtemp(dir=qiita_config.working_dir,
+                         prefix='pick_otus_otu_%s_' % preprocessed_data.id)
+
+    # We need to generate a parameters file with the parameters for
+    # pick_otus.py
+    fd, param_fp = mkstemp(dir=qiita_config.working_dir,
+                           prefix='params_%s_' % preprocessed_data.id,
+                           suffix='.txt')
+
+    with open(param_fp, 'w') as f:
+        params.to_file(f)
+
+    ref = Reference(params.reference)
+
+    reference_fp = ref.sequence_fp
+    taxonomy_fp = ref.taxonomy_fp
+    if taxonomy_fp:
+        params_str = "-t %s" % taxonomy_fp
+    else:
+        params_str = ""
+
+    # Create the split_libraries_fastq.py command
+    cmd = str("pick_closed_reference_otus.py -i %s -r %s -o %s -p %s %s"
+              % (seqs_fp, reference_fp, output_dir, param_fp, params_str))
+
+    return (cmd, output_dir)
+
+
+def _insert_processed_data_target_gene(preprocessed_data, params,
+                                       pick_otus_out, **kwargs):
+    """Inserts the preprocessed data to the database
+
+    Parameters
+    ----------
+    preprocessed_data : PreprocessedData
+        The preprocessed_data to process
+    params : ProcessedSortmernaParams
+        The parameters to use for the processing
+    pick_otus_out : str
+        Path to the pick_closed_reference_otus.py output directory
+    kwargs: ignored
+        Necessary to include to support execution via moi.
+
+    Raises
+    ------
+    ValueError
+        If the processed output directory does not contain all the expected
+        files
+    """
+    from os.path import exists, join, isdir
+    from glob import glob
+    from functools import partial
+    from qiita_db.data import ProcessedData
+
+    # The filepaths that we are interested in are:
+    #   1) otu_table.biom -> the output OTU table
+    #   2) sortmerna_picked_otus -> intermediate output of pick_otus.py
+    #   3) log_20141217091339.log -> log file
+
+    path_builder = partial(join, pick_otus_out)
+    biom_fp = path_builder('otu_table.biom')
+    otus_dp = path_builder('sortmerna_picked_otus')
+    log_fp = glob(path_builder('log_*.txt'))[0]
+
+    # Check that all the files exist
+    if not (exists(biom_fp) and isdir(otus_dp) and exists(log_fp)):
+        raise ValueError("The output directory %s does not contain all the "
+                         "expected files." % pick_otus_out)
+
+    filepaths = [(biom_fp, "biom"),
+                 (otus_dp, "directory"),
+                 (log_fp, "log")]
+
+    ProcessedData.create(params._table, params.id, filepaths,
+                         preprocessed_data=preprocessed_data)
+
+    # Change the preprocessed_data status to processed
+    preprocessed_data.preprocessing_status = 'processed'
+
+
 class StudyProcessor(ParallelWrapper):
-    def _construct_job_graph(self, study, preprocessed_data, params):
+    def _construct_job_graph(self, preprocessed_data, params):
         """Constructs the workflow graph to process a study
 
         The steps performed to process a study are:
@@ -331,15 +449,17 @@ class StudyProcessor(ParallelWrapper):
 
         Parameters
         ----------
-        study : Study
-            The study to process
         preprocessed_data : PreprocessedData
             The preprocessed data to process
         params : BaseParameters
             The parameters to use for processing
         """
         self._logger = stderr
-        self._preprocessed_data = preprocessed_data
+        self.preprocessed_data = preprocessed_data
+
+        if preprocessed_data.data_type() in TARGET_GENE_DATA_TYPES:
+            cmd_generator = _get_process_target_gene_cmd
+            insert_processed_data = _insert_processed_data_target_gene
 
         # Step 1: Process the study
         process_node = "PROCESS"
@@ -353,8 +473,9 @@ class StudyProcessor(ParallelWrapper):
         # Step 2: Add processed data to DB
         insert_processed_node = "INSERT_PROCESSED"
         self._job_graph.add_node(insert_processed_node,
-                                 func=insert_processed_node,
-                                 args=(),
+                                 func=insert_processed_data,
+                                 args=(self.preprocessed_data, params,
+                                       output_dir),
                                  job_name="Store processed data",
                                  requires_deps=False)
         self._job_graph.add_edge(process_node, insert_processed_node)
