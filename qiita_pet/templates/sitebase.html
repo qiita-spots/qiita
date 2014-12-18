@@ -1,4 +1,5 @@
 {% from moi import r_client %}
+{% from qiita_pet import allowed_min_browser_versions %}
 {% set maintenance = r_client.get('maintenance') %}
 
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
@@ -20,9 +21,70 @@
 
     <link rel="shortcut icon" href="/static/img/favicon.ico">
 
+    <script>
+      $(document).ready(function() {
+        function overlay() {
+          overlay = document.getElementById("overlay");
+          overlay.style.visibility = "visible";
+          navbar = document.getElementById("navigation-bar");
+          navbar.style.visibility = "hidden";
+          jumbotron = document.getElementById("jumbotron");
+          jumbotron.style.visibility = "hidden";
+        }
+
+        // from http://mrbool.com/how-to-detect-different-browsers-and-their-versions-using-javascript/25424
+        var objappVersion = navigator.appVersion;
+        var objAgent = navigator.userAgent;
+        var objbrowserName = navigator.appName;
+        var objfullVersion = ''+parseFloat(navigator.appVersion);
+        var objBrMajorVersion = parseInt(navigator.appVersion,10);
+        var objOffsetName,objOffsetVersion,ix;
+        // In Chrome
+        if ((objOffsetVersion=objAgent.indexOf("Chrome"))!=-1) {
+          objbrowserName = "Chrome";
+          objfullVersion = objAgent.substring(objOffsetVersion+7);
+        } // In Firefox
+        else if ((objOffsetVersion=objAgent.indexOf("Firefox"))!=-1) {
+          objbrowserName = "Firefox";
+        } // In Safari
+        else if ((objOffsetVersion=objAgent.indexOf("Safari"))!=-1) {
+          objbrowserName = "Safari";
+          objfullVersion = objAgent.substring(objOffsetVersion+7);
+          if ((objOffsetVersion=objAgent.indexOf("Version"))!=-1)
+            objfullVersion = objAgent.substring(objOffsetVersion+8);
+        }
+        // trimming the fullVersion string at semicolon/space if present
+        if ((ix=objfullVersion.indexOf(";"))!=-1)
+          objfullVersion=objfullVersion.substring(0,ix);
+        if ((ix=objfullVersion.indexOf(" "))!=-1)
+          objfullVersion=objfullVersion.substring(0,ix);
+        objBrMajorVersion = parseInt(''+objfullVersion,10);
+        if (isNaN(objBrMajorVersion)) {
+          objfullVersion = ''+parseFloat(navigator.appVersion);
+          objBrMajorVersion = parseInt(navigator.appVersion,10);
+        }
+
+        if ((objbrowserName == "Chrome"  && objBrMajorVersion < {{allowed_min_browser_versions['chrome']}}) ||
+            (objbrowserName == "Firefox" && objBrMajorVersion < {{allowed_min_browser_versions['firefox']}}) ||
+            (objbrowserName == "Safari"  && objBrMajorVersion < {{allowed_min_browser_versions['safari']}})) {
+          overlay();
+        }
+
+      });
+    </script>
     {% block head %}{% end %}
   </head>
+
   <body style="padding-top: 65px; height: 100%">
+    <div id="overlay" class="navbar-brand" style="visibility: hidden; position: absolute; left: 0px; top: 0px; width: 100%; height: 100%; font-size: 13px; text-align: center; z-index: 1000; background-color: #333333; color: #FFFFFF;">
+      <div>
+        <img src="/static/img/logo-clear.png" alt="Emperor" id="small-logo"/>
+        <h1>This site only works on newer browsers.</h1>
+        <p id="explanation"><strong>Chrome >= {{allowed_min_browser_versions['chrome']}}:</strong> You can download Chrome from <a href="https://www.google.com/chrome/browser/">here</a> or you can find instructions on how to update it <a href="https://support.google.com/chrome/answer/95414?hl=en">here</a></p>
+        <p id="explanation"><strong>Safari >= {{allowed_min_browser_versions['safari']}}:</strong> You can update Safari following <a href="http://support.apple.com/en-us/HT6104">these</a> instructions.</p>
+        <p id="explanation"><strong>Firefox >= {{allowed_min_browser_versions['firefox']}}:</strong> For instructions on how to install or update Firefox go <a href="https://support.mozilla.org/en-US/kb/update-firefox-latest-version">here.</a></p>
+      </div>
+    </div>
   {% set level = globals().get('level', '') %}
   {% set message = globals().get('message', '') %}
   {% if maintenance is not None %}
@@ -41,7 +103,7 @@
       </div>
   {% end %}
 
-    <div class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+    <div id="navigation-bar" class="navbar navbar-inverse navbar-fixed-top" role="navigation">
       <div class="container">
         <div class="navbar-header">
           <!-- button that appears if the window is re-sized to a smaller size -->

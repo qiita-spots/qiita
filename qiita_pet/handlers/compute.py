@@ -4,7 +4,7 @@ from tornado.web import authenticated, HTTPError
 from moi import r_client
 
 from .base_handlers import BaseHandler
-from .study_handlers import check_access
+from .util import check_access
 
 from qiita_ware.context import submit
 from qiita_ware.dispatchable import add_files_to_raw_data, unlink_all_files
@@ -85,7 +85,9 @@ class AddFilesToRawData(BaseHandler):
 
         self.render('compute_wait.html', user=self.current_user,
                     job_id=job_id, title='Adding files to your raw data',
-                    completion_redirect='/study/description/%d' % study_id)
+                    completion_redirect=(
+                        '/study/description/%s?top_tab=raw_data_tab&sub_tab=%s'
+                        % (study_id, raw_data_id)))
 
 
 class UnlinkAllFiles(BaseHandler):
@@ -109,4 +111,6 @@ class UnlinkAllFiles(BaseHandler):
 
         self.render('compute_wait.html', user=self.current_user,
                     job_id=job_id, title='Removing files from your raw data',
-                    completion_redirect='/study/description/%d' % study_id)
+                    completion_redirect=(
+                        '/study/description/%s?top_tab=raw_data_tab&sub_tab=%s'
+                        % (study_id, raw_data_id)))

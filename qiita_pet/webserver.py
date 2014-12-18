@@ -21,7 +21,7 @@ from qiita_pet.handlers.study_handlers import (
     StudyEditHandler, PrivateStudiesHandler, PublicStudiesHandler,
     StudyDescriptionHandler, MetadataSummaryHandler, EBISubmitHandler,
     CreateStudyAJAX, ShareStudyAJAX, StudyApprovalList,
-    PreprocessingSummaryHandler)
+    PreprocessingSummaryHandler, VAMPSHandler)
 from qiita_pet.handlers.websocket_handlers import MessageHandler
 from qiita_pet.handlers.logger_handlers import LogEntryViewerHandler
 from qiita_pet.handlers.upload import UploadFileHandler, StudyUploadFileHandler
@@ -30,6 +30,7 @@ from qiita_pet.handlers.compute import (
 from qiita_pet.handlers.preprocessing_handlers import PreprocessHandler
 from qiita_pet.handlers.stats import StatsHandler
 from qiita_pet.handlers.download import DownloadHandler
+from qiita_pet import uimodules
 from qiita_db.util import get_mountpoint
 
 
@@ -83,6 +84,7 @@ class Application(tornado.web.Application):
             (r"/check_study/", CreateStudyAJAX),
             (r"/stats/", StatsHandler),
             (r"/download/(.*)", DownloadHandler),
+            (r"/vamps/(.*)", VAMPSHandler),
             # 404 PAGE MUST BE LAST IN THIS LIST!
             (r".*", NoPageHandler)
         ]
@@ -90,6 +92,7 @@ class Application(tornado.web.Application):
             "template_path": TEMPLATE_PATH,
             "debug": DEBUG,
             "cookie_secret": COOKIE_SECRET,
-            "login_url": "/auth/login/"
+            "login_url": "/auth/login/",
+            "ui_modules": uimodules
         }
         tornado.web.Application.__init__(self, handlers, **settings)

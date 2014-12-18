@@ -1,14 +1,13 @@
 {% extends sitebase.html %}
 {% block content %}
-{% from future.utils import viewitems %}
 
 <h1>Submission summary for study: <b>{{study_title}}</b></h1>
 
-<form role="form" action="/ebi_submission/{{preprocessed_data_id}}" method="post">
+<form role="form" action="/vamps/{{preprocessed_data_id}}" method="post">
     <div class="panel panel-default">
         <div class="panel-heading">
             The information below describes information contained in the sample
-            and prep templates which will be submitted to EBI.
+            and prep templates which will be submitted to VAMPS.
         </div>
 
         {% if not message  %}
@@ -24,21 +23,8 @@
         {% end %}
         </table>
     </div>
-    The investigation type is: <b>{{investigation_type}}</b>
-    <br/><br/>
-    {% if investigation_type %}
-      {% if not message %}
-        <br/>
-        What kind of submission do you want to do?
-        <select name="submission_type">
-          <option value="ADD">ADD</option>
-          <option value="MODIFY">MODIFY</option>
-        </select>
-        <br/><br/>
-        <input type="submit" class="btn btn-primary" value="Submit to EBI">
-      {% end %}
-    {% else %}
-      <b>You need to set an investigation type to continue!</b>
+    {% if not message  %}
+      <input type="submit" class="btn btn-primary" value="Submit to VAMPS">
     {% end %}
     <br/><br/>
     <a class="btn btn-primary" href="/study/description/{{study_id}}?top_tab=preprocessed_data_tab&sub_tab={{preprocessed_data_id}}">Return to study</a>

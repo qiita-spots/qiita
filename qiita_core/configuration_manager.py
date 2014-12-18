@@ -98,6 +98,12 @@ class ConfigurationManager(object):
         The password for redis
     redis_db : int
         The db for redis
+    vamps_user : str
+        The VAMPS user
+    vamps_pass : str
+        The VAMPS password
+    vamps_url : str
+        The VAMPS URL
     """
     def __init__(self):
         # If conf_fp is None, we default to the test configuration file
@@ -124,6 +130,7 @@ class ConfigurationManager(object):
         self._get_redis(config)
         self._get_ebi(config)
         self._get_ipython(config)
+        self._get_vamps(config)
 
     def _get_main(self, config):
         """Get the configuration of the main section"""
@@ -207,3 +214,8 @@ class ConfigurationManager(object):
     def _get_ipython(self, config):
         self.ipython_contexts = config.get('ipython', 'context').split(',')
         self.ipython_default = config.get('ipython', 'default')
+
+    def _get_vamps(self, config):
+        self.vamps_user = config.get('vamps', 'USER')
+        self.vamps_pass = config.get('vamps', 'PASSWORD')
+        self.vamps_url = config.get('vamps', 'URL')
