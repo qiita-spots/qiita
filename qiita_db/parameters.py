@@ -116,6 +116,10 @@ class ProcessedSortmernaParams(BaseParameters):
         # Remove the id column
         del values[self._column_id]
 
+        # We know that the execution method is SortMeRNA,
+        # add it to the parameter file
+        f.write("pick_otus:otu_picking_method\tsortmerna\n")
+
         for key, value in values.items():
             if key in self._ignore_cols:
                 continue

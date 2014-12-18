@@ -439,7 +439,7 @@ def _insert_processed_data_target_gene(preprocessed_data, params,
                          preprocessed_data=preprocessed_data)
 
     # Change the preprocessed_data status to processed
-    preprocessed_data.preprocessing_status = 'processed'
+    preprocessed_data.processing_status = 'processed'
 
 
 class StudyProcessor(ParallelWrapper):
