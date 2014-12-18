@@ -104,8 +104,8 @@ def _add_ontology_data(conn):
 
 def _insert_processed_params(conn, ref):
     sortmerna_sql = """INSERT INTO qiita.processed_params_sortmerna
-                       (reference_id, evalue, max_pos, similarity, coverage,
-                        threads)
+                       (reference_id, sortmerna_e_value, sortmerna_max_pos,
+                        similarity, sortmerna_coverage, threads)
                        VALUES
                        (%s, 1, 10000, 0.97, 0.97, 1)"""
 
