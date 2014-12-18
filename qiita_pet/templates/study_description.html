@@ -406,6 +406,7 @@ $(document).ready(function() {
   {% if show_data_tabs %}
     <li><a href="#raw_data_tab" role="tab" data-toggle="tab">Raw data</a></li>
     <li><a href="#preprocessed_data_tab" role="tab" data-toggle="tab">Preprocessed data</a></li>
+    <li><a href="#processed_data_tab" role="tab" data-toggle="tab">Processed data</a></li>
   {% end %}
 </ul>
 
@@ -420,6 +421,8 @@ $(document).ready(function() {
     {% module RawDataTab(study) %}
     <!-- Show the preprocessed data tab -->
     {% module PreprocessedDataTab(study) %}
+    <!-- Show the processed data tab -->
+    {% module ProcessedDataTab(study) %}
   {% end %}
 </div>
 

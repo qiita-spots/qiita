@@ -1055,3 +1055,11 @@ class ProcessedData(BaseData):
             " p.processed_data_id = %s".format(ret, self._table),
             (self._id, ))
         return data_type[0]
+
+    @property
+    def processed_date(self):
+        """Return the processed date"""
+        conn_handler = SQLConnectionHandler()
+        return conn_handler.execute_fetchone(
+            "SELECT processed_date FROM qiita.{0} WHERE "
+            "processed_data_id=%s".format(self._table), (self.id,))[0]

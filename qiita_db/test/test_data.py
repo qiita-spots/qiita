@@ -776,6 +776,10 @@ class ProcessedDataTests(TestCase):
         pd._set_link_filepaths_status('failed: error')
         self.assertEqual(pd.link_filepaths_status, 'failed: error')
 
+    def test_processed_date(self):
+        pd = ProcessedData(1)
+        self.assertEqual(pd.processed_date, datetime(2014, 5, 29, 12, 24, 51))
+
 
 if __name__ == '__main__':
     main()
