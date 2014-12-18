@@ -48,7 +48,7 @@ def _test_wrapper_moi(func):
 
 
 def _test_wrapper_remote(func):
-    """Execute a function direct through IPython on a remote ipengine"""
+    """Execute a function on a remote ipengine"""
     from IPython.parallel import Client
     from qiita_core.configuration_manager import ConfigurationManager
     config = ConfigurationManager()
@@ -87,9 +87,11 @@ def _test_result(test_type, name, state, result, expected):
     stderr.write('\n')
 
     if state == 'FAIL':
-        stderr.write('#' * 80); stderr.write('\n')
+        stderr.write('#' * 80)
+        stderr.write('\n')
         stderr.write(''.join(result))
-        stderr.write('#' * 80); stderr.write('\n')
+        stderr.write('#' * 80)
+        stderr.write('\n')
 
     stderr.write('\n')
 
@@ -141,8 +143,10 @@ def test(runner):
     def moi_test(**kwargs):
         """Submit a function via moi"""
         from moi.job import submit_nouser
+
         def inner(a, b, **kwargs):
             return a + b
+
         _, _, ar = submit_nouser(inner, 7, 35)
         state, result = _ipy_wait(ar)
         return result
