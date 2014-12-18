@@ -120,7 +120,7 @@ class ProcessedSortmernaParams(BaseParameters):
         # add it to the parameter file
         f.write("pick_otus:otu_picking_method\tsortmerna\n")
 
-        for key, value in values.items():
+        for key, value in sorted(values.items()):
             if key in self._ignore_cols:
                 continue
             f.write("pick_otus:%s\t%s\n" % (key, value))

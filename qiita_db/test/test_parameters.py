@@ -32,8 +32,8 @@ class ProcessedSortmernaParamsTests(TestCase):
     def test_to_str(self):
         params = ProcessedSortmernaParams(1)
         obs = params.to_str()
-        exp = ("--coverage 0.97 --evalue 1.0 --max_pos 10000 "
-               "--similarity 0.97 --threads 1")
+        exp = ("--similarity 0.97 --sortmerna_coverage 0.97 "
+               "--sortmerna_e_value 1.0 --sortmerna_max_pos 10000 --threads 1")
         self.assertEqual(obs, exp)
 
     def test_to_file(self):
@@ -47,10 +47,11 @@ class ProcessedSortmernaParamsTests(TestCase):
 
         self.assertEqual(obs, EXP_SMR_PARAMS_FILE)
 
-EXP_SMR_PARAMS_FILE = """pick_otus:max_pos\t10000
+EXP_SMR_PARAMS_FILE = """pick_otus:otu_picking_method\tsortmerna
 pick_otus:similarity\t0.97
-pick_otus:evalue\t1.0
-pick_otus:coverage\t0.97
+pick_otus:sortmerna_coverage\t0.97
+pick_otus:sortmerna_e_value\t1.0
+pick_otus:sortmerna_max_pos\t10000
 pick_otus:threads\t1
 """
 
