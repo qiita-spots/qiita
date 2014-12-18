@@ -1,0 +1,29 @@
+from tornado.web import authenticated
+
+from .base_handlers import BaseHandler
+from qiita_ware.dispatchable import processor
+from qiita_db.parameters import ProcessedSortmernaParams
+from qiita_ware.context import submit
+
+
+class ProcessHandler(BaseHandler):
+    @authenticated
+    def post(self):
+        study_id = int(self.get_argument('study_id'))
+        preprocessed_data_id = int(self.get_argument('preprocessed_data_id'))
+
+        # We currently do not support defining the parameters
+        # hard-coding them here
+        param_id = 1
+        param_constructor = ProcessedSortmernaParams
+
+        job_id = submit(self.current_user, processor, preprocessed_data_id,
+                        param_id, param_constructor)
+
+        print study_id, preprocessed_data_id, job_id
+
+        self.render('compute_wait.html', user=self.current_user,
+                    job_id=job_id, title='Processing',
+                    completion_redirect='/study/description/%d?top_tab='
+                                        'preprocessed_data_tab&sub_tab=%s'
+                                        % (study_id, preprocessed_data_id))

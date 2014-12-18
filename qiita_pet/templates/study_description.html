@@ -325,6 +325,13 @@ function submit_preprocess() {
   return  false;
 };
 
+function submit_process() {
+  if (confirm("Are you sure you want to submit a processing job?")){
+    return true;
+  }
+  return  false;
+};
+
 function display_tab(top_tab, sub_tab, prep_tab){
   $('#myTab a[href="#'+top_tab+'"]').tab('show');
   if (top_tab == "raw_data_tab"){

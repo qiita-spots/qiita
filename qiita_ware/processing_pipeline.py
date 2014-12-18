@@ -370,6 +370,7 @@ def _get_process_target_gene_cmd(preprocessed_data, params):
     fd, param_fp = mkstemp(dir=qiita_config.working_dir,
                            prefix='params_%s_' % preprocessed_data.id,
                            suffix='.txt')
+    close(fd)
 
     with open(param_fp, 'w') as f:
         params.to_file(f)

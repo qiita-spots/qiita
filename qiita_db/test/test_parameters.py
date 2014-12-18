@@ -39,6 +39,7 @@ class ProcessedSortmernaParamsTests(TestCase):
     def test_to_file(self):
         params = ProcessedSortmernaParams(1)
         fd, fp = mkstemp()
+        close(fd)
         with open(fp, 'w') as f:
             params.to_file(f)
         with open(fp, 'U') as f:

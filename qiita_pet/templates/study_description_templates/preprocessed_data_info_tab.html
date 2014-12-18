@@ -1,5 +1,48 @@
 {% from qiita_pet.handlers.util import download_link_or_path %}
 
+<!-- modal view to enter preprocessing parameters -->
+<div class="modal fade" id="process-modal-view-{{ppd_id}}" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title" id="myModalLabel">Choose processing parameters</h4>
+      </div>
+      <form action="/study/process" method="post" onsubmit='return submit_process();'>
+        <div class="modal-body">
+          <div>
+            <div class="form-group">
+              <table>
+                {% if process_form %}
+                  {% for idx, form_item in enumerate(process_form, start=1) %}
+                    <tr>
+                      <td width="50%">{% raw form_item.label %}</td>
+                      <td width="50%">{% raw form_item(tabindex=idx, class_='form-control') %}</td>
+                    </tr>
+                  {% end %}
+                {% else %}
+                  <tr>
+                    <td><b>No parameters can be customized. Running with default parameters.</b></td>
+                  </tr>
+                {% end %}
+                <tr>
+                  <td>
+                    <input type='submit' id='start_process_submit' class='btn btn-success' value="Start processing">
+                    <input type='hidden' name='study_id' value="{{study_id}}">
+                    <input type='hidden' name='preprocessed_data_id' value="{{ppd_id}}">
+                  </td>
+                </tr>
+              </table>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
 <div class="tab-pane" id="preprocessed_data_info_{{ppd_id}}" style="padding: 10px;">
   <a href="#" onclick="display_tab('raw_data_tab', {{raw_data_id}}, {{prep_template_id}});">Prep template</a><br/>
   <b>EBI status:</b> {{ebi_status}}<br/>
@@ -33,5 +76,16 @@
         </td>
       </tr>
   </table>
-  <a class="btn btn-primary glyphicon glyphicon-play" onclick="alert('Not implemented! Coming soon.')" style="word-spacing: -10px;"> Process</a>
+  {% if not processed_data or processing_status.startswith('failed') %}
+    <a class="btn btn-primary glyphicon glyphicon-play" data-toggle="modal" data-target="#process-modal-view-{{ppd_id}}" style="word-spacing: -10px;"> Process</a>
+    <br/>
+    <i>Status: </i> {{processing_status}}
+  {% else %}
+    <b> Processed data generated: </b>
+    <a href="#" onclick="display_tab('processed_data_tab', {{processed_data[0]}});">{{processed_data[0]}}</a>
+    {% for pdi in processed_data[1:] %}
+      , <a href="#" onclick="display_tab('processed_data_tab', {{pdi}});">{{pdi}}</a>
+    {% end %}
+  {% end %}
+  <br/>
 </div>
