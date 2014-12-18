@@ -12,7 +12,6 @@ from functools import partial
 from tempfile import mkdtemp
 from gzip import open as gzopen
 from tarfile import open as taropen
-from shlex import split as shsplit
 from moi.job import system_call
 
 from qiita_db.study import Study
@@ -203,15 +202,10 @@ def submit_VAMPS(preprocessed_data_id):
                                     qiita_config.vamps_pass,
                                     targz_fp,
                                     qiita_config.vamps_url))
+    obs, _, _ = system_call(cmd)
 
-    cmd_parts = shsplit(cmd)
-    cmd_fp = join(targz_folder, 'submitting.txt')
-    cmd_fh = open(cmd_fp, 'w')
-    system_call(cmd_parts, stdout=cmd_fh)
-
-    exp = ['<html>\n', '<head>\n', '<title>Process Uploaded File</title>\n',
-           '</head>\n', '<body>\n', '</body>\n', '</html>']
-    obs = open(cmd_fp).readlines()
+    exp = ("<html>\n<head>\n<title>Process Uploaded File</title>\n</head>\n"
+           "<body>\n</body>\n</html>")
 
     if obs != exp:
         preprocessed_data.update_vamps_status('failure')
