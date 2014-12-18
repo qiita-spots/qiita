@@ -8,7 +8,7 @@
 
 from sys import stderr
 from tempfile import mkdtemp, mkstemp
-from os import close
+from os import close, rmdir
 
 from moi.job import system_call
 
@@ -361,6 +361,9 @@ def _get_process_target_gene_cmd(preprocessed_data, params):
     # Create a temporary directory to store the pick otus results
     output_dir = mkdtemp(dir=qiita_config.working_dir,
                          prefix='pick_otus_otu_%s_' % preprocessed_data.id)
+    # mkdtemp creates the directory, so we remove it here so the script
+    # can safely run
+    rmdir(output_dir)
 
     # We need to generate a parameters file with the parameters for
     # pick_otus.py
