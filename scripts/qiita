@@ -236,6 +236,15 @@ def lock(message, time):
 
 
 @maintenance.command()
+@click.option('--time', required=True, type=int,
+              help='The amount of time to show message, in seconds')
+@click.option('--message', required=True, type=str,
+              help="Message to show users")
+def sysmessage(message, time):
+    r_client.setex('sysmessage', message, time)
+
+
+@maintenance.command()
 def unlock():
     r_client.delete('maintenance')
 
