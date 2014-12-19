@@ -190,11 +190,20 @@ class PrepTemplatePanel(BaseUIModule):
 
         prep_id = prep.id
         data_type = prep.data_type()
+        raw_data = RawData(prep.raw_data)
         filepaths = prep.get_filepaths()
         investigation_type = prep.investigation_type
         preprocessed_data = prep.preprocessed_data
         preprocessing_status = prep.preprocessing_status
-        preprocess_form = PreprocessParametersForm()
+
+        if raw_data.filetype in ('SFF', 'FASTA'):
+            preprocess_form = Preprocess454ParametersForm()
+        elif raw_data.filetype == 'FASTQ':
+            preprocess_form = PreprocessIlluminaParametersForm()
+        else:
+            raise ValueError("Don't know what to do but this exception will "
+                             "never actually get shown anywhere because why "
+                             "would you want to see tracebacks?")
 
         # Unfortunately, both the prep template and the qiime mapping files
         # have the sample type. The way to differentiate them is if we have
