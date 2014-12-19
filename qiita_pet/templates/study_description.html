@@ -297,6 +297,10 @@ function link_files_to_raw_data(raw_data_id) {
         .attr("value", forward.join()))
       .append($("<input>")
         .attr("type", "hidden")
+        .attr("name", "sff")
+        .attr("value", sff.join()))
+      .append($("<input>")
+        .attr("type", "hidden")
         .attr("name", "reverse")
         .attr("value", reverse.join()));
     $("body").append(form);
