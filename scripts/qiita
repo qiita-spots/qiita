@@ -236,6 +236,11 @@ def lock(message, time):
 
 
 @maintenance.command()
+def unlock():
+    r_client.delete('maintenance')
+
+
+@maintenance.command()
 @click.option('--time', required=True, type=int,
               help='The amount of time to show message, in seconds')
 @click.option('--message', required=True, type=str,
@@ -245,19 +250,28 @@ def sysmessage(message, time):
 
 
 @maintenance.command()
-def unlock():
-    r_client.delete('maintenance')
+def clear_sysmessage():
+    r_client.delete('sysmessage')
 
 
 @maintenance.command()
 def status():
-    status = r_client.get('maintenance')
-    if status is None:
+    maint_status = r_client.get('maintenance')
+    sys_status = r_client.get('sysmessage')
+
+    if maint_status is None:
         print "Site is not in maintenance mode"
     else:
         print "Site is in maintenance mode:"
-        print status
+        print maint_status
         print r_client.ttl('maintenance'), "seconds remaining"
+
+    if sys_status is None:
+        print "Site has no system message"
+    else:
+        print "Site has system message:"
+        print sys_status
+        print r_client.ttl('sysmessage'), "seconds remaining"
 
 
 # #############################################################################
