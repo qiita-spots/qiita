@@ -38,7 +38,8 @@ class AddFilesToRawData(BaseHandler):
         raw_data_id = self.get_argument('raw_data_id')
         barcodes_str = self.get_argument('barcodes')
         forward_reads_str = self.get_argument('forward')
-        reverse_reads_str = self.get_argument('reverse', None)
+        sff_str = self.get_argument('sff')
+        reverse_reads_str = self.get_argument('reverse')
 
         study_id = int(study_id)
         try:
@@ -49,36 +50,34 @@ class AddFilesToRawData(BaseHandler):
         else:
             check_access(User(self.current_user), study, raise_error=True)
 
-        barcodes, forward_reads, reverse_reads = [], [], []
+        _split = lambda x: x.split(',') if x else []
+        barcodes, fwd_reads, rev_reads, sff, fps = [], [], [], [], []
+        fps.append((_split(barcodes_str), 'raw_barcodes', barcodes))
+        fps.append((_split(forward_reads_str), 'raw_forward_seqs', fwd_reads))
+        fps.append((_split(reverse_reads_str), 'raw_reverse_seqs', rev_reads))
+        fps.append((_split(sff_str), 'raw_sff', sff))
+
         for _, f in get_mountpoint("uploads", retrive_all=True):
             f = join(f, str(study_id))
-            for t in barcodes_str.split(','):
-                ft = join(f, t)
-                if exists(ft):
-                    barcodes.append([ft, "raw_barcodes"])
-            for t in forward_reads_str.split(','):
-                ft = join(f, t)
-                if exists(ft):
-                    forward_reads.append([ft, "raw_forward_seqs"])
-            if reverse_reads_str:
-                for t in reverse_reads_str.split(','):
+            for fp_set, filetype, fps_to_keep in fps:
+                for t in fp_set:
                     ft = join(f, t)
                     if exists(ft):
-                        reverse_reads.append([ft, "raw_reverse_seqs"])
+                        fps_to_keep.append((ft, filetype))
 
         # this should never happen if following the GUI pipeline
         # but rather be save than sorry
-        if (len(barcodes) != len(forward_reads)
-           or (barcodes and len(barcodes) != len(forward_reads))):
+        if (len(barcodes) != len(fwd_reads)
+           or (barcodes and len(barcodes) != len(fwd_reads))):
             raise HTTPError(404, "user %s tried to submit a wrong pair of "
                                  "barcodes/forward/reverse reads" %
                                  self.current_user)
 
         # join all files to send on single var
         filepaths = barcodes
-        filepaths.extend(forward_reads)
-        if reverse_reads:
-            filepaths.extend(reverse_reads)
+        filepaths.extend(fwd_reads)
+        filepaths.extend(sff)
+        filepaths.extend(rev_reads)
 
         job_id = submit(self.current_user, add_files_to_raw_data, raw_data_id,
                         filepaths)
