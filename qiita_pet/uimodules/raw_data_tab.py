@@ -10,7 +10,7 @@ from operator import itemgetter
 from os.path import basename
 
 from future.utils import viewitems
-from wtforms import Form, BooleanField
+from wtforms import Form, BooleanField, SelectField
 
 from qiita_db.util import (get_filetypes, get_files_from_uploads_folders,
                            get_data_types, convert_to_id, get_filepath_types)
@@ -40,7 +40,7 @@ def get_raw_data(rdis):
     return [RawData(rdi) for rdi in rdis]
 
 
-class PreprocessParametersForm(Form):
+class PreprocessIlluminaParametersForm(Form):
     r"""WTForm for introducing the preprocessing parameters
 
     Allows editing the split_libraries_fastq.py parameters
@@ -54,6 +54,24 @@ class PreprocessParametersForm(Form):
     wtforms.Form
     """
     rev_comp_mapping_barcodes = BooleanField("rev_comp_mapping_barcodes")
+
+
+class Preprocess454ParametersForm(Form):
+    r"""WTForm for introducing the preprocessing parameters
+
+    Allows editing the split_libraries.py parameters
+
+    Attributes
+    ----------
+    barcode_type
+
+    See Also
+    --------
+    wtforms.Form
+    """
+    barcode_type = SelectField("barcode_type",
+                               choices=[('Golay 12', 'golay_12'),
+                                        ('Hamming 8', 'hamming_8')])
 
 
 class RawDataTab(BaseUIModule):
