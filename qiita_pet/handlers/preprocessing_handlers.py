@@ -19,7 +19,7 @@ class PreprocessHandler(BaseHandler):
         raw_data = RawData(PrepTemplate(prep_template_id).raw_data)
 
         # Get the preprocessing parameters
-        if raw_data.file_type == 'FASTQ':
+        if raw_data.filetype == 'FASTQ':
             form_data = PreprocessIlluminaParametersForm()
             form_data.process(data=self.request.arguments)
             rcomp_mapping_barcodes = form_data.data['rev_comp_mapping_barcodes']
@@ -36,18 +36,17 @@ class PreprocessHandler(BaseHandler):
                 # flag not activated
                 param_id = 1
             param_constructor = PreprocessedIlluminaParams
-        elif raw_data.file_type in ('FASTA', 'SFF'):
+        elif raw_data.filetype in ('FASTA', 'SFF'):
             form_data = Preprocess454ParametersForm()
             form_data.process(data=self.request.arguments)
             param_constructor = Preprocessed454Params
             barcode_type = form_data.data['barcode_type']
             if barcode_type == 'golay_12':
-                param_id = 3
+                param_id = 1
             else:
-                param_id = 4
+                param_id = 2
         else:
             raise ValueError('Unknown filetype')
-
 
         job_id = submit(self.current_user, preprocessor, study_id,
                         prep_template_id, param_id, param_constructor)
