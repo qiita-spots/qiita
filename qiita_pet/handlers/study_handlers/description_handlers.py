@@ -284,6 +284,7 @@ class StudyDescriptionHandler(BaseHandler):
         except (TypeError, QiitaDBColumnError, QiitaDBExecutionError,
                 QiitaDBDuplicateError, IOError, ValueError,
                 CParserError) as e:
+            pt_id = None
             # Some error occurred while processing the prep template
             # Show the error to the user so he can fix the template
             msg = html_error_message % ("parsing the prep template: ",
