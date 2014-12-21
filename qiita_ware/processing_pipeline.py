@@ -244,16 +244,17 @@ def _get_preprocess_fasta_cmd(raw_data, prep_template, params):
                     "-o %s" % output_dir,
                     params_str])
 
-    if prepreprocess_cmd:
-        fq_cmd = ''
-        if quals:
-            fq_cmd = ' '.join(["convert_fastaqual_fastq.py",
-                               "-f %s/seqs.fna" % output_dir,
-                               "-q %s/seqs_filtered.qual" % output_dir,
-                               "-o %s" % output_dir])
+    if quals:
+        fq_cmd = ' '.join(["convert_fastaqual_fastq.py",
+                           "-f %s/seqs.fna" % output_dir,
+                           "-q %s/seqs_filtered.qual" % output_dir,
+                           "-o %s" % output_dir,
+                           "-F"])
 
-        cmd = '; '.join([prepreprocess_cmd, cmd, fq_cmd])
-
+        if prepreprocess_cmd:
+            cmd = '; '.join([prepreprocess_cmd, cmd, fq_cmd])
+        else:
+            cmd = '; '.join([cmd, fq_cmd])
     return (cmd, output_dir)
 
 
@@ -375,10 +376,9 @@ class StudyPreprocessor(ParallelWrapper):
         # should use
         filetype = raw_data.filetype
         if filetype == "FASTQ":
-            pre_preprocess
             cmd_generator = _get_preprocess_fastq_cmd
             insert_preprocessed_data = _insert_preprocessed_data
-        elif filetype in ('FASTA', 'SFF'):
+        elif filetype in ('FASTA-Sanger', 'SFF'):
             cmd_generator = _get_preprocess_fasta_cmd
             insert_preprocessed_data = _insert_preprocessed_data
         else:

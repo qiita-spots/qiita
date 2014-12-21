@@ -70,8 +70,8 @@ class Preprocess454ParametersForm(Form):
     wtforms.Form
     """
     barcode_type = SelectField("barcode_type",
-                               choices=[('Golay 12', 'golay_12'),
-                                        ('Hamming 8', 'hamming_8')])
+                               choices=[('golay_12', 'golay_12'),
+                                        ('hamming_8', 'hamming_8')])
 
 
 class RawDataTab(BaseUIModule):
@@ -196,7 +196,7 @@ class PrepTemplatePanel(BaseUIModule):
         preprocessed_data = prep.preprocessed_data
         preprocessing_status = prep.preprocessing_status
 
-        if raw_data.filetype in ('SFF', 'FASTA'):
+        if raw_data.filetype in ('SFF', 'FASTA-Sanger'):
             preprocess_form = Preprocess454ParametersForm()
         elif raw_data.filetype == 'FASTQ':
             preprocess_form = PreprocessIlluminaParametersForm()

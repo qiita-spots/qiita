@@ -36,11 +36,11 @@ class PreprocessHandler(BaseHandler):
                 # flag not activated
                 param_id = 1
             param_constructor = PreprocessedIlluminaParams
-        elif raw_data.filetype in ('FASTA', 'SFF'):
+        elif raw_data.filetype in ('FASTA-Sanger', 'SFF'):
             form_data = Preprocess454ParametersForm()
             form_data.process(data=self.request.arguments)
             param_constructor = Preprocessed454Params
-            barcode_type = form_data.data['barcode_type']
+            barcode_type = form_data.data['barcode_type'].strip("[']")
             if barcode_type == 'golay_12':
                 param_id = 1
             else:
