@@ -230,6 +230,7 @@ class StudyDescriptionHandler(BaseHandler):
             msg = ("You should choose a filetype for a new raw data or "
                    "choose a raw data previously used")
             msg_level = "danger"
+            rd_id = None
 
         callback((msg, msg_level, 'raw_data_tab', rd_id, None))
 
