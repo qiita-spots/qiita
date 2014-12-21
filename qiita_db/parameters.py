@@ -54,6 +54,7 @@ class BaseParameters(QiitaObject):
         conn_handler = SQLConnectionHandler()
         table_cols = get_table_cols_w_type(self._table)
         table_cols.remove(["preprocessed_params_id", 'bigint'])
+        table_cols.remove(["param_set_name", 'character varying'])
 
         values = dict(conn_handler.execute_fetchone(
             "SELECT * FROM qiita.{0} WHERE "
@@ -61,6 +62,7 @@ class BaseParameters(QiitaObject):
 
         result = []
         for p_name, p_type in sorted(table_cols):
+
             if p_type == 'boolean':
                 if values[p_name]:
                     result.append("--%s" % p_name)
