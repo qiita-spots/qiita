@@ -3,6 +3,7 @@
 -- Adding 454 Parameters
 
 INSERT INTO qiita.filepath_type (filepath_type) VALUES ('raw_sff'), ('raw_fasta'), ('raw_qual');
+INSERT INTO qiita.filetype (type) VALUES ('FASTA');
 
 DROP TABLE qiita.preprocessed_sequence_454_params;
 CREATE TABLE qiita.preprocessed_sequence_454_params ( 
@@ -26,15 +27,23 @@ CREATE TABLE qiita.preprocessed_sequence_454_params (
 	CONSTRAINT pk_preprocessed_sequence_454_params PRIMARY KEY ( preprocessed_params_id )
  );
 
-COMMENT ON TABLE qiita.preprocessed_sequence_454_params IS 'Parameters used for processing 454 sequence data.';
+COMMENT ON TABLE qiita.preprocessed_sequence_454_params 
+    IS 'Parameters used for processing 454 sequence data.';
 
-INSERT INTO qiita.preprocessed_sequence_454_params (param_set_name, barcode_type) VALUES ('Defaults with Golay 12 barcodes', 'golay_12'), ('Defaults with Hamming 8 barcodes', 'hamming_8');
+INSERT INTO qiita.preprocessed_sequence_454_params (param_set_name, barcode_type) 
+    VALUES ('Defaults with Golay 12 barcodes', 'golay_12'), 
+           ('Defaults with Hamming 8 barcodes', 'hamming_8');
 
 -- add param set name to illumina sequence params. We're not setting defauft
 -- as we need to update the existing parameter sets and then add in the 
 -- default
-ALTER TABLE qiita.preprocessed_sequence_illumina_params ADD COLUMN param_set_name varchar;
-UPDATE qiita.preprocessed_sequence_illumina_params SET param_set_name='Defaults' WHERE preprocessed_params_id=1;
-UPDATE qiita.preprocessed_sequence_illumina_params SET param_set_name='Defaults with reverse complement mapping file barcodes' WHERE preprocessed_params_id=2;
-ALTER TABLE qiita.preprocessed_sequence_illumina_params ALTER COLUMN param_set_name SET NOT NULL; 
+ALTER TABLE qiita.preprocessed_sequence_illumina_params 
+    ADD COLUMN param_set_name varchar;
 
+UPDATE qiita.preprocessed_sequence_illumina_params 
+    SET param_set_name='Defaults' WHERE preprocessed_params_id=1;
+UPDATE qiita.preprocessed_sequence_illumina_params 
+    SET param_set_name='Defaults with reverse complement mapping file barcodes' WHERE preprocessed_params_id=2;
+
+ALTER TABLE qiita.preprocessed_sequence_illumina_params 
+    ALTER COLUMN param_set_name SET NOT NULL; 

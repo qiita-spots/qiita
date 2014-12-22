@@ -378,7 +378,7 @@ class StudyPreprocessor(ParallelWrapper):
         if filetype == "FASTQ":
             cmd_generator = _get_preprocess_fastq_cmd
             insert_preprocessed_data = _insert_preprocessed_data
-        elif filetype in ('FASTA-Sanger', 'SFF'):
+        elif filetype in ('FASTA', 'SFF'):
             cmd_generator = _get_preprocess_fasta_cmd
             insert_preprocessed_data = _insert_preprocessed_data
         else:

@@ -196,7 +196,7 @@ class PrepTemplatePanel(BaseUIModule):
         preprocessed_data = prep.preprocessed_data
         preprocessing_status = prep.preprocessing_status
 
-        if raw_data.filetype in ('SFF', 'FASTA-Sanger'):
+        if raw_data.filetype in ('SFF', 'FASTA'):
             preprocess_form = Preprocess454ParametersForm()
         elif raw_data.filetype == 'FASTQ':
             preprocess_form = PreprocessIlluminaParametersForm()
