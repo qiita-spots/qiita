@@ -22,12 +22,13 @@ class PreprocessHandler(BaseHandler):
         if raw_data.filetype == 'FASTQ':
             form_data = PreprocessIlluminaParametersForm()
             form_data.process(data=self.request.arguments)
-            rcomp_mapping_barcodes = form_data.data['rev_comp_mapping_barcodes']
-            # currently only allow the user to change a single parameter of split
-            # libraries: --rev_comp_mapping_barcodes. The parameter ids 1 and 2
-            # contain the same set of values except for that flag. If param_id = 1,
-            # the flag is not activated, while in param_id = 2; it is.
-            if rcomp_mapping_barcodes:
+            rcomp_mapping_bcs = form_data.data['rev_comp_mapping_barcodes']
+            # currently only allow the user to change a single parameter of
+            # split libraries: --rev_comp_mapping_barcodes. The parameter ids 1
+            # and 2 contain the same set of values except for that flag. If
+            # param_id = 1, the flag is not activated, while in param_id = 2;
+            # it is.
+            if rcomp_mapping_bcs:
                 # Choose the parameter set with the --rev_comp_mapping_barcodes
                 # flag activated
                 param_id = 2
@@ -36,7 +37,7 @@ class PreprocessHandler(BaseHandler):
                 # flag not activated
                 param_id = 1
             param_constructor = PreprocessedIlluminaParams
-        elif raw_data.filetype in ('FASTA-Sanger', 'SFF'):
+        elif raw_data.filetype in ('FASTA', 'SFF'):
             form_data = Preprocess454ParametersForm()
             form_data.process(data=self.request.arguments)
             param_constructor = Preprocessed454Params
