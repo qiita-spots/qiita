@@ -69,7 +69,7 @@ INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum, checksum_algor
 INSERT INTO qiita.raw_data (filetype_id) VALUES (3), (2);
 
 -- Insert (link) the raw data with the raw filepaths
-INSERT INTO qiita.raw_filepath (raw_data_id, filepath_id) VALUES (1, 1), (1, 2), (2, 3), (2, 4);
+INSERT INTO qiita.raw_filepath (raw_data_id, filepath_id) VALUES (1, 1), (1, 2);
 
 -- Insert (link) the study with the raw data
 INSERT INTO qiita.study_raw_data (study_id, raw_data_id) VALUES (1, 1), (1, 2);
