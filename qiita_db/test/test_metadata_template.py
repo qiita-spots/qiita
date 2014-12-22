@@ -1019,12 +1019,12 @@ class TestPrepTemplate(TestCase):
         obs_fp = pt.create_qiime_mapping_file(filepath)
         exp_fp = join(fp, '1_prep_1_qiime_19700101-000000.txt')
 
-        with open(obs_fp, 'r') as obs_fh:
-            obs = obs_fh.read()
-        with open(exp_fp, 'r') as exp_fh:
-            exp = exp_fh.read()
+        obs = pd.read_csv(obs_fp, sep='\t', infer_datetime_format=True,
+                          parse_dates=True, index_col=False, comment='\t')
+        exp = pd.read_csv(exp_fp, sep='\t', infer_datetime_format=True,
+                          parse_dates=True, index_col=False, comment='\t')
 
-        self.assertEqual(obs, exp)
+        assert_frame_equal(obs, exp)
 
         # testing failure, first lest remove some lines of the prep template
         with open(filepath, 'r') as filepath_fh:
