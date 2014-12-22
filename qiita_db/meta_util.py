@@ -56,6 +56,11 @@ def get_accessible_filepath_ids(user):
     that the user has access to, as well as all the mapping files and biom
     tables associated with the analyses that the user has access to.
 
+    Parameters
+    ----------
+    user : User object
+        The user we are interested in
+
 
     Returns
     -------
