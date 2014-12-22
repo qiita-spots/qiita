@@ -180,7 +180,8 @@ class ProcessingPipelineTests(TestCase):
         exp_cmd_4 = ' '.join(["convert_fastaqual_fastq.py",
                               "-f %s/seqs.fna" % obs_output_dir,
                               "-q %s/seqs_filtered.qual" % obs_output_dir,
-                              "-o %s" % obs_output_dir])
+                              "-o %s" % obs_output_dir,
+                              "-F"])
 
         obs_cmds = obs_cmd.split('; ')
 
