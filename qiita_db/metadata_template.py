@@ -1738,7 +1738,7 @@ def load_template_to_dataframe(fn):
     # index_col=False, otherwise it is casted as a float and we want a string
     template = pd.read_csv(fn, sep='\t', infer_datetime_format=True,
                            parse_dates=True, index_col=False, comment='\t',
-                           converters={
+                           mangle_dupe_cols=False, converters={
                                'sample_name': lambda x: str(x).strip()})
 
     # set the sample name as the index
