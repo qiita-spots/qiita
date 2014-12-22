@@ -24,7 +24,6 @@ Methods
 # -----------------------------------------------------------------------------
 from __future__ import division
 
-from .user import User
 from .study import Study
 from .data import RawData, PreprocessedData, ProcessedData
 from .analysis import Analysis
