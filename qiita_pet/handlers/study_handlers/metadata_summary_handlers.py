@@ -11,7 +11,6 @@ from tornado.web import authenticated, HTTPError
 
 from qiita_ware.util import dataframe_from_template, stats_from_df
 from qiita_db.study import Study
-from qiita_db.user import User
 from qiita_db.metadata_template import SampleTemplate, PrepTemplate
 from qiita_db.exceptions import QiitaDBUnknownIDError
 from qiita_pet.handlers.base_handlers import BaseHandler
@@ -80,13 +79,13 @@ class MetadataSummaryHandler(BaseHandler):
         study = Study(template.study_id)
 
         # check whether or not the user has access to the requested information
-        if not study.has_access(User(self.current_user)):
+        if not study.has_access(self.current_user):
             raise HTTPError(403, "You do not have access to access this "
                                  "information.")
 
         df = dataframe_from_template(template)
         stats = stats_from_df(df)
 
-        self.render('metadata_summary.html', user=self.current_user,
+        self.render('metadata_summary.html',
                     study_title=study.title, stats=stats,
                     back_button_path=back_button_path)

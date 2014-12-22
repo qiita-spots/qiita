@@ -35,10 +35,10 @@ class PreprocessHandler(BaseHandler):
 
         param_constructor = PreprocessedIlluminaParams
 
-        job_id = submit(self.current_user, preprocessor, study_id,
+        job_id = submit(str(self.current_user), preprocessor, study_id,
                         prep_template_id, param_id, param_constructor)
 
-        self.render('compute_wait.html', user=self.current_user,
+        self.render('compute_wait.html',
                     job_id=job_id, title='Preprocessing',
                     completion_redirect='/study/description/%d?top_tab='
                                         'raw_data_tab&sub_tab=%s&prep_tab=%s'

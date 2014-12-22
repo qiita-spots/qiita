@@ -20,17 +20,15 @@ class UserProfileHandler(BaseHandler):
     """Displays user profile page and handles profile updates"""
     @authenticated
     def get(self):
-        user = self.current_user
         profile = UserProfile()
-        profile.process(data=User(user).info)
-        self.render("user_profile.html", user=user, profile=profile, msg="",
-                    passmsg="")
+        profile.process(data=self.current_user.info)
+        self.render("user_profile.html", profile=profile, msg="", passmsg="")
 
     @authenticated
     def post(self):
         passmsg = ""
         msg = ""
-        user = User(self.current_user)
+        user = self.current_user
         action = self.get_argument("action")
         if action == "profile":
             # tuple of colmns available for profile
@@ -129,7 +127,6 @@ class ChangeForgotPasswordHandler(BaseHandler):
         else:
             newpass = self.get_argument("newpass")
             changed = user.change_forgot_password(code, newpass)
-            user = self.current_user
 
             if changed:
                 message = ("Password reset successful. Please log in to "
@@ -140,4 +137,4 @@ class ChangeForgotPasswordHandler(BaseHandler):
                 message = "Unable to reset password"
                 level = "danger"
 
-        self.render(page, user=user, message=message, level=level, code=code)
+        self.render(page, message=message, level=level, code=code)

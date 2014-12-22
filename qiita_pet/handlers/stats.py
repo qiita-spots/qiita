@@ -69,7 +69,7 @@ class StatsHandler(BaseHandler):
             random_study_title = study.title
             random_study_id = study.id
 
-        self.render('stats.html', user=self.current_user,
+        self.render('stats.html',
                     num_studies=num_studies, num_samples=num_samples,
                     num_users=num_users, lat_longs=lat_longs,
                     random_study_info=random_study_info,

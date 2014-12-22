@@ -49,19 +49,19 @@ def _get_data_fpids(constructor, object_id):
     return {fpid for fpid, _, _ in obj.get_filepaths()}
 
 
-def get_accessible_filepath_ids(user_id):
+def get_accessible_filepath_ids(user):
     """Gets all filepaths that this user should have access to
 
     This gets all raw, preprocessed, and processed filepaths, for studies
     that the user has access to, as well as all the mapping files and biom
     tables associated with the analyses that the user has access to.
 
+
     Returns
     -------
     set
         A set of filepath ids
     """
-    user = User(user_id)
 
     # First, the studies
     # There are public, private, and shared studies

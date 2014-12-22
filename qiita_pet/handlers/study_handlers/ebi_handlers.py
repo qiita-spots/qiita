@@ -12,7 +12,6 @@ from tornado.web import authenticated, HTTPError
 from qiita_ware.context import submit
 from qiita_ware.demux import stats as demux_stats
 from qiita_ware.dispatchable import submit_to_ebi
-from qiita_db.user import User
 from qiita_db.data import PreprocessedData
 from qiita_db.metadata_template import PrepTemplate, SampleTemplate
 from qiita_db.study import Study
@@ -30,7 +29,7 @@ class EBISubmitHandler(BaseHandler):
             raise HTTPError(404, "PreprocessedData %d does not exist!" %
                                  preprocessed_data_id)
         else:
-            user = User(self.current_user)
+            user = self.current_user
             if user.level != 'admin':
                 raise HTTPError(403, "No permissions of admin, "
                                      "get/EBISubmitHandler: %s!" % user.id)
@@ -59,7 +58,7 @@ class EBISubmitHandler(BaseHandler):
             stats.append(('Number of sequences', demux_file_stats.n))
             msg_level = 'success'
 
-        self.render('ebi_submission.html', user=self.current_user,
+        self.render('ebi_submission.html',
                     study_title=study.title, stats=stats, message=msg,
                     study_id=study.id, level=msg_level,
                     preprocessed_data_id=preprocessed_data_id,
@@ -71,15 +70,16 @@ class EBISubmitHandler(BaseHandler):
 
     @authenticated
     def post(self, preprocessed_data_id):
+        user = self.current_user
         # make sure user is admin and can therefore actually submit to EBI
-        if User(self.current_user).level != 'admin':
+        if self.current_user.level != 'admin':
             raise HTTPError(403, "User %s cannot submit to EBI!" %
-                            self.current_user)
+                            str(user))
         submission_type = self.get_argument('submission_type')
 
         if submission_type not in ['ADD', 'MODIFY']:
             raise HTTPError(403, "User: %s, %s is not a recognized submission "
-                            "type" % (self.current_user, submission_type))
+                            "type" % (str(user), submission_type))
 
         msg = ''
         msg_level = 'success'
@@ -92,11 +92,11 @@ class EBISubmitHandler(BaseHandler):
             msg = "Cannot resubmit! Current state is: %s, use MODIFY" % state
             msg_level = 'danger'
         else:
-            channel = self.current_user
+            channel = str(user)
             job_id = submit(channel, submit_to_ebi, int(preprocessed_data_id),
                             submission_type)
 
-            self.render('compute_wait.html', user=self.current_user,
+            self.render('compute_wait.html',
                         job_id=job_id, title='EBI Submission',
                         completion_redirect='/compute_complete/%s' % job_id)
             return

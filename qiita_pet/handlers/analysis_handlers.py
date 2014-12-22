@@ -21,7 +21,6 @@ from moi.group import get_id_from_user, create_info
 
 from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_ware.dispatchable import run_analysis
-from qiita_db.user import User
 from qiita_db.analysis import Analysis
 from qiita_db.data import ProcessedData
 from qiita_db.metadata_template import SampleTemplate
@@ -124,16 +123,15 @@ class SearchStudiesHandler(BaseHandler):
 
     @authenticated
     def get(self):
-        user = self.current_user
+        userobj = self.current_user
         analysis = Analysis(int(self.get_argument("aid")))
         # make sure user has access to the analysis
-        userobj = User(user)
         check_analysis_access(userobj, analysis)
 
         # get the dictionaries of selected samples and data types
         selproc_data, selsamples = self._selected_parser(analysis)
 
-        self.render('search_studies.html', user=user, aid=analysis.id,
+        self.render('search_studies.html', aid=analysis.id,
                     selsamples=selsamples, selproc_data=selproc_data,
                     counts={}, fullcounts={}, searchmsg="", query="",
                     results={}, availmeta=SampleTemplate.metadata_headers() +
@@ -156,20 +154,20 @@ class SearchStudiesHandler(BaseHandler):
         if action == "create":
             name = self.get_argument('name')
             description = self.get_argument('description')
-            analysis = Analysis.create(User(user), name, description)
+            analysis = Analysis.create(user, name, description)
             analysis_id = analysis.id
             # set to second step since this page is second step in workflow
             analysis.step = SELECT_SAMPLES
             # fill example studies by running query for specific studies
             search = QiitaStudySearch()
             def_query = 'study_id = 1 OR study_id = 2 OR study_id = 3'
-            results, meta_headers = search(def_query, user)
+            results, meta_headers = search(def_query, str(user))
             results, counts, fullcounts = self._parse_search_results(
                 results, selsamples, meta_headers)
         else:
             analysis_id = int(self.get_argument("analysis-id"))
             analysis = Analysis(analysis_id)
-            check_analysis_access(User(user), analysis)
+            check_analysis_access(user, analysis)
             selproc_data, selsamples = self._selected_parser(analysis)
 
         # run through action requested
@@ -221,12 +219,12 @@ class SelectCommandsHandler(BaseHandler):
     def get(self):
         analysis_id = int(self.get_argument('aid'))
         analysis = Analysis(analysis_id)
-        check_analysis_access(User(self.current_user), analysis)
+        check_analysis_access(self.current_user, analysis)
 
         data_types = analysis.data_types
         commands = Command.get_commands_by_datatype()
 
-        self.render('select_commands.html', user=self.current_user,
+        self.render('select_commands.html',
                     commands=commands, data_types=data_types, aid=analysis.id)
 
     @authenticated
@@ -236,29 +234,27 @@ class SelectCommandsHandler(BaseHandler):
         analysis.step = SELECT_COMMANDS
         data_types = analysis.data_types
         commands = Command.get_commands_by_datatype()
-        self.render('select_commands.html', user=self.current_user,
+        self.render('select_commands.html',
                     commands=commands, data_types=data_types, aid=analysis.id)
 
 
 class AnalysisWaitHandler(BaseHandler):
     @authenticated
     def get(self, analysis_id):
-        user = self.current_user
         analysis_id = int(analysis_id)
         try:
             analysis = Analysis(analysis_id)
         except QiitaDBUnknownIDError:
             raise HTTPError(404, "Analysis %d does not exist" % analysis_id)
         else:
-            check_analysis_access(User(user), analysis)
+            check_analysis_access(self.current_user, analysis)
 
         group_id = r_client.hget('analyis-map', analysis_id)
-        self.render("analysis_waiting.html", user=user,
+        self.render("analysis_waiting.html",
                     group_id=group_id, aname=analysis.name)
 
     @authenticated
     def post(self, analysis_id):
-        user = self.current_user
         analysis_id = int(analysis_id)
         rarefaction_depth = self.get_argument('rarefaction-depth')
         # convert to integer if rarefaction level given
@@ -267,12 +263,12 @@ class AnalysisWaitHandler(BaseHandler):
         else:
             rarefaction_depth = None
         analysis = Analysis(analysis_id)
-        check_analysis_access(User(user), analysis)
+        check_analysis_access(self.current_user, analysis)
 
         command_args = self.get_arguments("commands")
         split = [x.split("#") for x in command_args]
 
-        moi_user_id = get_id_from_user(user)
+        moi_user_id = get_id_from_user(str(self.current_user))
         moi_group = create_info(analysis_id, 'group', url='/analysis/',
                                 parent=moi_user_id, store=True)
         moi_name = 'Creating %s' % analysis.name
@@ -284,17 +280,16 @@ class AnalysisWaitHandler(BaseHandler):
 
         r_client.hset('analyis-map', analysis_id, moi_group['id'])
 
-        self.render("analysis_waiting.html", user=user,
+        self.render("analysis_waiting.html",
                     group_id=moi_group['id'], aname=analysis.name)
 
 
 class AnalysisResultsHandler(BaseHandler):
     @authenticated
     def get(self, analysis_id):
-        user = self.current_user
         analysis_id = int(analysis_id.split("/")[0])
         analysis = Analysis(analysis_id)
-        check_analysis_access(User(user), analysis)
+        check_analysis_access(self.current_user, analysis)
 
         jobres = defaultdict(list)
         for job in analysis.jobs:
@@ -318,10 +313,9 @@ class ShowAnalysesHandler(BaseHandler):
     """Shows the user's analyses"""
     @authenticated
     def get(self):
-        user_id = self.current_user
-        user = User(user_id)
+        user = self.current_user
 
         analyses = [Analysis(a) for a in
                     user.shared_analyses + user.private_analyses]
 
-        self.render("show_analyses.html", user=user_id, analyses=analyses)
+        self.render("show_analyses.html", analyses=analyses)

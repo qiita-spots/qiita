@@ -67,7 +67,7 @@ def _build_study_info(studytype, user=None):
 
 def _check_owner(user, study):
     """make sure user is the owner of the study requested"""
-    if not user == study.owner:
+    if not str(user) == study.owner:
         raise HTTPError(403, "User %s does not own study %d" %
                         (user, study.id))
 
@@ -78,12 +78,12 @@ class PrivateStudiesHandler(BaseHandler):
     def get(self):
         self.write(self.render_string('waiting.html'))
         self.flush()
-        user = User(self.current_user)
+        user = self.current_user
         user_studies = yield Task(self._get_private, user)
         shared_studies = yield Task(self._get_shared, user)
         all_emails_except_current = yield Task(self._get_all_emails)
-        all_emails_except_current.remove(self.current_user)
-        self.render('private_studies.html', user=self.current_user,
+        all_emails_except_current.remove(str(self.current_user))
+        self.render('private_studies.html',
                     user_studies=user_studies, shared_studies=shared_studies,
                     all_emails_except_current=all_emails_except_current)
 
@@ -105,7 +105,7 @@ class PublicStudiesHandler(BaseHandler):
         self.write(self.render_string('waiting.html'))
         self.flush()
         public_studies = yield Task(self._get_public)
-        self.render('public_studies.html', user=self.current_user,
+        self.render('public_studies.html',
                     public_studies=public_studies)
 
     def _get_public(self, callback):
@@ -116,7 +116,7 @@ class PublicStudiesHandler(BaseHandler):
 class StudyApprovalList(BaseHandler):
     @authenticated
     def get(self):
-        user = User(self.current_user)
+        user = self.current_user
         if user.level != 'admin':
             raise HTTPError(403, 'User %s is not admin' % self.current_user)
 
@@ -125,7 +125,7 @@ class StudyApprovalList(BaseHandler):
             study = Study(sid)
             parsed_studies.append((study.id, study.title, study.owner))
 
-        self.render('admin_approval.html', user=self.current_user,
+        self.render('admin_approval.html',
                     study_info=parsed_studies)
 
 
