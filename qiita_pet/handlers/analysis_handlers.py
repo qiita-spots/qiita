@@ -175,7 +175,7 @@ class SearchStudiesHandler(BaseHandler):
             search = QiitaStudySearch()
             query = str(self.get_argument("query"))
             try:
-                results, meta_headers = search(query, user)
+                results, meta_headers = search(query, str(user))
             except ParseException:
                 searchmsg = "Malformed search query, please read search help."
             except QiitaDBIncompatibleDatatypeError as e:
