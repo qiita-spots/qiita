@@ -5,7 +5,7 @@ from os import makedirs, remove
 
 from shutil import rmtree, move
 
-from .study_handlers import check_access
+from .util import check_access
 from .base_handlers import BaseHandler
 
 from qiita_core.qiita_settings import qiita_config

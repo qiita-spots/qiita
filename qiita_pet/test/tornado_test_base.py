@@ -14,16 +14,16 @@ from qiita_db.environment_manager import drop_and_rebuild_tst_database
 
 class TestHandlerBase(AsyncHTTPTestCase):
     database = False
+    conn_handler = SQLConnectionHandler()
+    app = Application()
 
     def get_app(self):
         BaseHandler.get_current_user = Mock(return_value="test@foo.bar")
-        self.app = Application()
         return self.app
 
     def setUp(self):
         if self.database:
             # First, we check that we are not in a production environment
-            self.conn_handler = SQLConnectionHandler()
             # It is possible that we are connecting to a production database
             test_db = self.conn_handler.execute_fetchone(
                 "SELECT test FROM settings")[0]
@@ -37,10 +37,6 @@ class TestHandlerBase(AsyncHTTPTestCase):
             drop_and_rebuild_tst_database(self.conn_handler)
 
         super(TestHandlerBase, self).setUp()
-
-    def tearDown(self):
-        if self.database:
-            del self.conn_handler
 
     # helpers from http://www.peterbe.com/plog/tricks-asynchttpclient-tornado
     def get(self, url, data=None, headers=None, doseq=True):

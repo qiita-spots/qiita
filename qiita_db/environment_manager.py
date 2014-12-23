@@ -34,7 +34,6 @@ SETTINGS_FP = get_support_file('qiita-db-settings.sql')
 LAYOUT_FP = get_support_file('qiita-db-unpatched.sql')
 POPULATE_FP = get_support_file('populate_test_db.sql')
 PATCHES_DIR = get_support_file('patches')
-CLUSTERS = ['demo', 'reserved', 'general']
 
 
 def _check_db_exists(db, conn_handler):
@@ -105,8 +104,8 @@ def _add_ontology_data(conn):
 
 def _insert_processed_params(conn, ref):
     sortmerna_sql = """INSERT INTO qiita.processed_params_sortmerna
-                       (reference_id, evalue, max_pos, similarity, coverage,
-                        threads)
+                       (reference_id, sortmerna_e_value, sortmerna_max_pos,
+                        similarity, sortmerna_coverage, threads)
                        VALUES
                        (%s, 1, 10000, 0.97, 0.97, 1)"""
 
