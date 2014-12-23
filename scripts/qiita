@@ -24,6 +24,7 @@ from qiita_db.commands import (load_sample_template_from_cmd,
                                load_prep_template_from_cmd)
 from qiita_db.sql_connection import SQLConnectionHandler
 from qiita_db.exceptions import QiitaDBConnectionError
+from qiita_db.reference import Reference
 from qiita_core.configuration_manager import ConfigurationManager
 from qiita_ware.commands import ebi_actions, submit_EBI as _submit_EBI
 from moi import r_client
@@ -199,6 +200,26 @@ def load_prep_template(fp, raw_data, study, data_type):
     prep_template = load_prep_template_from_cmd(fp, raw_data, study, data_type)
     print("Prep template successfully added to the database with id %s"
           % prep_template.id)
+
+
+@db.command()
+@click.option('--name', required=True, type=str,
+              help='The name of the new reference database')
+@click.option('--version', required=True, type=str,
+              help='the version of the reference database')
+@click.option('--seq_fp', required=True,
+              type=click.Path(resolve_path=True, readable=True, exists=True),
+              help="Path to the reference sequence file")
+@click.option('--tax_fp', required=False,
+              type=click.Path(resolve_path=True, readable=True, exists=True),
+              help="Path to the reference taxonomy file")
+@click.option('--tree_fp', required=False,
+              type=click.Path(resolve_path=True, readable=True, exists=True),
+              help="Path to the reference tree file")
+def load_reference_db(name, version, seq_fp, tax_fp, tree_fp):
+    reference = Reference(name, version, seq_fp, tax_fp, tree_fp)
+    print("Reference db successfully added to the database with id %s"
+          % reference.id)
 
 
 # #############################################################################
