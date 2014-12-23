@@ -31,7 +31,7 @@ class SampleTemplateTab(BaseUIModule):
         # The user can choose the sample template only if the study is
         # sandboxed or the current user is an admin
         show_select_sample = (study.status == 'sandbox'
-                              or User(self.current_user).level == 'admin')
+                              or self.current_user.level == 'admin')
 
         return self.render_string(
             "study_description_templates/sample_template_tab.html",

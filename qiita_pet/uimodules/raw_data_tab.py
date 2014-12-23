@@ -58,7 +58,7 @@ class PreprocessParametersForm(Form):
 
 class RawDataTab(BaseUIModule):
     def render(self, study):
-        user = User(self.current_user)
+        user = self.current_user
 
         filetypes = sorted(viewitems(get_filetypes()), key=itemgetter(1))
         other_studies_rd = sorted(viewitems(
@@ -77,7 +77,7 @@ class RawDataTab(BaseUIModule):
 
 class RawDataEditorTab(BaseUIModule):
     def render(self, study, raw_data):
-        user = User(self.current_user)
+        user = self.current_user
         study_status = study.status
         user_level = user.level
         raw_data_id = raw_data.id
