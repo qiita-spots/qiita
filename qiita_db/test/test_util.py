@@ -393,13 +393,7 @@ class DBUtilTests(TestCase):
         fp_exp_id = self.conn_handler.execute_fetchone(sql_fp, (exp_id,))[0]
         fp_exp_id = join(get_db_files_base_dir(), fp_exp_id)
 
-        # Nothing should be removed
-        sql = ("SELECT filepath_id FROM qiita.filepath ORDER BY "
-               "filepath_id")
-        exp_ids = [i[0] for i in self.conn_handler.execute_fetchall(sql)]
         purge_filepaths(self.conn_handler)
-        obs_ids = [i[0] for i in self.conn_handler.execute_fetchall(sql)]
-        self.assertEqual(obs_ids, exp_ids)
 
         # Check that the files still exist
         self.assertTrue(exists(fp1))
