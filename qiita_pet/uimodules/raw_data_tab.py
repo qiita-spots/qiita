@@ -10,7 +10,7 @@ from operator import itemgetter
 from os.path import basename
 
 from future.utils import viewitems
-from wtforms import Form, BooleanField
+from wtforms import Form, BooleanField, SelectField
 
 from qiita_db.util import (get_filetypes, get_files_from_uploads_folders,
                            get_data_types, convert_to_id, get_filepath_types)
@@ -40,7 +40,7 @@ def get_raw_data(rdis):
     return [RawData(rdi) for rdi in rdis]
 
 
-class PreprocessParametersForm(Form):
+class PreprocessIlluminaParametersForm(Form):
     r"""WTForm for introducing the preprocessing parameters
 
     Allows editing the split_libraries_fastq.py parameters
@@ -54,6 +54,24 @@ class PreprocessParametersForm(Form):
     wtforms.Form
     """
     rev_comp_mapping_barcodes = BooleanField("rev_comp_mapping_barcodes")
+
+
+class Preprocess454ParametersForm(Form):
+    r"""WTForm for introducing the preprocessing parameters
+
+    Allows editing the split_libraries.py parameters
+
+    Attributes
+    ----------
+    barcode_type
+
+    See Also
+    --------
+    wtforms.Form
+    """
+    barcode_type = SelectField("barcode_type",
+                               choices=[('golay_12', 'golay_12'),
+                                        ('hamming_8', 'hamming_8')])
 
 
 class RawDataTab(BaseUIModule):
@@ -104,8 +122,15 @@ class RawDataEditorTab(BaseUIModule):
                                     if PrepTemplate.exists(p)]
 
         # getting filepath_types
-        fts = [k.split('_', 1)[1].replace('_', ' ')
-               for k in get_filepath_types() if k.startswith('raw_')]
+        if raw_data.filetype == 'SFF':
+            fts = ['sff']
+        elif raw_data.filetype == 'FASTA':
+            fts = ['fasta', 'qual']
+        elif raw_data.filetype == 'FASTQ':
+            fts = ['barcodes', 'forward seqs', 'reverse seqs']
+        else:
+            fts = [k.split('_', 1)[1].replace('_', ' ')
+                   for k in get_filepath_types() if k.startswith('raw_')]
 
         # The raw data can be edited (e.i. adding prep templates and files)
         # only if the study is sandboxed or the current user is an admin
@@ -172,11 +197,20 @@ class PrepTemplatePanel(BaseUIModule):
 
         prep_id = prep.id
         data_type = prep.data_type()
+        raw_data = RawData(prep.raw_data)
         filepaths = prep.get_filepaths()
         investigation_type = prep.investigation_type
         preprocessed_data = prep.preprocessed_data
         preprocessing_status = prep.preprocessing_status
-        preprocess_form = PreprocessParametersForm()
+
+        if raw_data.filetype in ('SFF', 'FASTA'):
+            preprocess_form = Preprocess454ParametersForm()
+        elif raw_data.filetype == 'FASTQ':
+            preprocess_form = PreprocessIlluminaParametersForm()
+        else:
+            raise ValueError("Don't know what to do but this exception will "
+                             "never actually get shown anywhere because why "
+                             "would you want to see tracebacks?")
 
         # Unfortunately, both the prep template and the qiime mapping files
         # have the sample type. The way to differentiate them is if we have
