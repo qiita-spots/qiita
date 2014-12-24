@@ -122,8 +122,15 @@ class RawDataEditorTab(BaseUIModule):
                                     if PrepTemplate.exists(p)]
 
         # getting filepath_types
-        fts = [k.split('_', 1)[1].replace('_', ' ')
-               for k in get_filepath_types() if k.startswith('raw_')]
+        if raw_data.filetype == 'SFF':
+            fts = ['sff']
+        elif raw_data.filetype == 'FASTA':
+            fts = ['fasta', 'qual']
+        elif raw_data.filetype == 'FASTQ':
+            fts = ['barcodes', 'forward seqs', 'reverse seqs']
+        else:
+            fts = [k.split('_', 1)[1].replace('_', ' ')
+                   for k in get_filepath_types() if k.startswith('raw_')]
 
         # The raw data can be edited (e.i. adding prep templates and files)
         # only if the study is sandboxed or the current user is an admin
