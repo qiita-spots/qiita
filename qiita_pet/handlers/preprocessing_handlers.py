@@ -23,6 +23,7 @@ class PreprocessHandler(BaseHandler):
             form_data = PreprocessIlluminaParametersForm()
             form_data.process(data=self.request.arguments)
             rcomp_mapping_bcs = form_data.data['rev_comp_mapping_barcodes']
+            barcode_type = form_data.data['barcode_type'].strip("[']")
             # currently only allow the user to change a single parameter of
             # split libraries: --rev_comp_mapping_barcodes. The parameter ids 1
             # and 2 contain the same set of values except for that flag. If
@@ -31,11 +32,21 @@ class PreprocessHandler(BaseHandler):
             if rcomp_mapping_bcs:
                 # Choose the parameter set with the --rev_comp_mapping_barcodes
                 # flag activated
-                param_id = 2
+                if barcode_type == 'golay_12':
+                    param_id = 2
+                elif barcode_type == '8':
+                    param_id = 4
+                else:
+                    param_id = 6
             else:
                 # Choose the parameter set with the --rev_comp_mapping_barcodes
                 # flag not activated
-                param_id = 1
+                if barcode_type == 'golay_12':
+                    param_id = 1
+                elif barcode_type == '8':
+                    param_id = 3
+                else:
+                    param_id = 5
             param_constructor = PreprocessedIlluminaParams
         elif raw_data.filetype in ('FASTA', 'SFF'):
             form_data = Preprocess454ParametersForm()

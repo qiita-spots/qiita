@@ -48,12 +48,17 @@ class PreprocessIlluminaParametersForm(Form):
     Attributes
     ----------
     rev_comp_mapping_barcodes
+    barcode_type
 
     See Also
     --------
     wtforms.Form
     """
     rev_comp_mapping_barcodes = BooleanField("rev_comp_mapping_barcodes")
+    barcode_type = SelectField("barcode_type",
+                               choices=[('golay_12', 'golay_12'),
+                                        ('6', '6'),
+                                        ('8', '8')])
 
 
 class Preprocess454ParametersForm(Form):
