@@ -217,7 +217,8 @@ def load_prep_template(fp, raw_data, study, data_type):
               type=click.Path(resolve_path=True, readable=True, exists=True),
               help="Path to the reference tree file")
 def load_reference_db(name, version, seq_fp, tax_fp, tree_fp):
-    reference = Reference(name, version, seq_fp, tax_fp, tree_fp)
+    """Loads a reference db to the database"""
+    reference = Reference.create(name, version, seq_fp, tax_fp, tree_fp)
     print("Reference db successfully added to the database with id %s"
           % reference.id)
 
