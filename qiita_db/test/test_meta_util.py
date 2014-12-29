@@ -30,7 +30,7 @@ class MetaUtilTests(TestCase):
 
         # shared has access to all study files and analysis files
         obs = get_accessible_filepath_ids('shared@foo.bar')
-        self.assertEqual(obs, set([1, 2, 3, 4, 5, 6, 7, 11, 14, 15, 16]))
+        self.assertEqual(obs, set([1, 2, 5, 6, 7, 11, 14, 15, 16, 17, 18]))
 
         # Now shared should not have access to the study files
         self._unshare_studies()
@@ -42,8 +42,8 @@ class MetaUtilTests(TestCase):
         obs = get_accessible_filepath_ids('shared@foo.bar')
         self.assertEqual(obs, set())
 
-        # Test that it doesn't brake if the SampleTemplate hasn't been added
-        exp = set([1, 2, 3, 4, 5, 6, 7, 11, 14, 15, 16])
+        # Test that it doesn't break: if the SampleTemplate hasn't been added
+        exp = set([1, 2, 5, 6, 7, 11, 14, 15, 16, 17, 18])
         obs = get_accessible_filepath_ids('test@foo.bar')
         self.assertEqual(obs, exp)
 

@@ -828,16 +828,17 @@ class TestSampleTemplate(TestCase):
         # we will check that there is a new id only because the path will
         # change based on time and the same functionality is being tested
         # in data.py
-        exp = 17
+        exp_id = self.conn_handler.execute_fetchone(
+            "SELECT count(1) FROM qiita.filepath")[0] + 1
         st = SampleTemplate.create(self.metadata, self.new_study)
-        self.assertEqual(st.get_filepaths()[0][0], exp)
+        self.assertEqual(st.get_filepaths()[0][0], exp_id)
 
         # testing current functionaly, to add a new sample template
         # you need to erase it first
         SampleTemplate.delete(st.id)
-        exp = 18
+        exp_id += 1
         st = SampleTemplate.create(self.metadata, self.new_study)
-        self.assertEqual(st.get_filepaths()[0][0], exp)
+        self.assertEqual(st.get_filepaths()[0][0], exp_id)
 
 
 @qiita_test_checker()
@@ -897,8 +898,8 @@ class TestPrepTemplate(TestCase):
             f.write("\n")
         self.new_raw_data = RawData.create(2, [Study(1)], filepaths=filepaths)
         db_test_raw_dir = join(get_db_files_base_dir(), 'raw_data')
-        db_seqs_fp = join(db_test_raw_dir, "3_%s" % basename(seqs_fp))
-        db_barcodes_fp = join(db_test_raw_dir, "3_%s" % basename(barcodes_fp))
+        db_seqs_fp = join(db_test_raw_dir, "5_%s" % basename(seqs_fp))
+        db_barcodes_fp = join(db_test_raw_dir, "5_%s" % basename(barcodes_fp))
         self._clean_up_files = [db_seqs_fp, db_barcodes_fp]
 
         self.tester = PrepTemplate(1)
@@ -954,7 +955,7 @@ class TestPrepTemplate(TestCase):
             "SELECT * FROM qiita.prep_template WHERE prep_template_id=2")
         # prep_template_id, data_type_id, raw_data_id, preprocessing_status,
         # investigation_type
-        self.assertEqual(obs, [[2, 2, 3, 'not_preprocessed', None]])
+        self.assertEqual(obs, [[2, 2, 5, 'not_preprocessed', None]])
 
         # The relevant rows to common_prep_info have been added.
         obs = self.conn_handler.execute_fetchall(
@@ -1002,8 +1003,8 @@ class TestPrepTemplate(TestCase):
         # prep and qiime files have been created
         filepaths = pt.get_filepaths()
         self.assertEqual(len(filepaths), 2)
-        self.assertEqual(filepaths[0][0], 20)
-        self.assertEqual(filepaths[1][0], 19)
+        self.assertEqual(filepaths[0][0], 22)
+        self.assertEqual(filepaths[1][0], 21)
 
     def test_create_qiime_mapping_file(self):
         pt = PrepTemplate(1)
@@ -1019,12 +1020,12 @@ class TestPrepTemplate(TestCase):
         obs_fp = pt.create_qiime_mapping_file(filepath)
         exp_fp = join(fp, '1_prep_1_qiime_19700101-000000.txt')
 
-        with open(obs_fp, 'r') as obs_fh:
-            obs = obs_fh.read()
-        with open(exp_fp, 'r') as exp_fh:
-            exp = exp_fh.read()
+        obs = pd.read_csv(obs_fp, sep='\t', infer_datetime_format=True,
+                          parse_dates=True, index_col=False, comment='\t')
+        exp = pd.read_csv(exp_fp, sep='\t', infer_datetime_format=True,
+                          parse_dates=True, index_col=False, comment='\t')
 
-        self.assertEqual(obs, exp)
+        assert_frame_equal(obs, exp)
 
         # testing failure, first lest remove some lines of the prep template
         with open(filepath, 'r') as filepath_fh:
@@ -1055,7 +1056,7 @@ class TestPrepTemplate(TestCase):
             "SELECT * FROM qiita.prep_template WHERE prep_template_id=2")
         # prep_template_id, data_type_id, raw_data_id, preprocessing_status,
         # investigation_type
-        self.assertEqual(obs, [[2, 2, 3, 'not_preprocessed', None]])
+        self.assertEqual(obs, [[2, 2, 5, 'not_preprocessed', None]])
 
         # The relevant rows to common_prep_info have been added.
         obs = self.conn_handler.execute_fetchall(

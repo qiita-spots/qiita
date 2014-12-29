@@ -82,7 +82,14 @@ class PreprocessedIlluminaParams(BaseParameters):
 
     _column_id = "preprocessed_params_id"
     _table = "preprocessed_sequence_illumina_params"
-    _ignore_cols = set()
+    _ignore_cols = {"param_set_name"}
+
+
+class Preprocessed454Params(BaseParameters):
+    r"""Gives access to the preprocessed parameters of illumina data"""
+
+    _table = "preprocessed_sequence_454_params"
+    _ignore_cols = {"param_set_name"}
 
 
 class ProcessedSortmernaParams(BaseParameters):

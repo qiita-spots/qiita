@@ -21,10 +21,12 @@ from qiita_db.util import get_db_files_base_dir, get_mountpoint
 from qiita_db.data import RawData, PreprocessedData
 from qiita_db.study import Study
 from qiita_db.parameters import (PreprocessedIlluminaParams,
-                                 ProcessedSortmernaParams)
+                                 ProcessedSortmernaParams,
+                                 Preprocessed454Params)
 from qiita_db.metadata_template import PrepTemplate
 from qiita_ware.processing_pipeline import (_get_preprocess_fastq_cmd,
-                                            _insert_preprocessed_data_fastq,
+                                            _get_preprocess_fasta_cmd,
+                                            _insert_preprocessed_data,
                                             _generate_demux_file,
                                             _get_qiime_minimal_mapping,
                                             _get_process_target_gene_cmd,
@@ -149,7 +151,56 @@ class ProcessingPipelineTests(TestCase):
         self.assertEqual(obs_cmd_1, exp_cmd_1)
         self.assertEqual(obs_cmd_2, exp_cmd_2)
 
-    def test_insert_preprocessed_data_fastq(self):
+    def test_get_preprocess_fasta_cmd_sff(self):
+        raw_data = RawData(3)
+        params = Preprocessed454Params(1)
+        prep_template = PrepTemplate(1)
+        obs_cmd, obs_output_dir = _get_preprocess_fasta_cmd(
+            raw_data, prep_template, params)
+
+        get_raw_path = partial(join, self.db_dir, 'raw_data')
+        seqs_fp = [get_raw_path('preprocess_test1.sff'),
+                   get_raw_path('preprocess_test2.sff')]
+
+        exp_cmd_1 = ' '.join(["process_sff.py",
+                              "-i %s" % seqs_fp[0],
+                              "-o %s" % obs_output_dir])
+        exp_cmd_2 = ' '.join(["process_sff.py",
+                              "-i %s" % seqs_fp[1],
+                              "-o %s" % obs_output_dir])
+
+        fasta_files = ','.join([join(obs_output_dir, "preprocess_test1.fna"),
+                                join(obs_output_dir, "preprocess_test2.fna")])
+        qual_files = ','.join([join(obs_output_dir, "preprocess_test1.qual"),
+                               join(obs_output_dir, "preprocess_test2.qual")])
+        exp_cmd_3a = ' '.join(["split_libraries.py",
+                               "-f %s" % fasta_files])
+
+        exp_cmd_3b = ' '.join(["-q %s" % qual_files,
+                               "-d",
+                               "-o %s" % obs_output_dir,
+                               params.to_str()])
+        exp_cmd_4 = ' '.join(["convert_fastaqual_fastq.py",
+                              "-f %s/seqs.fna" % obs_output_dir,
+                              "-q %s/seqs_filtered.qual" % obs_output_dir,
+                              "-o %s" % obs_output_dir,
+                              "-F"])
+
+        obs_cmds = obs_cmd.split('; ')
+
+        # We are splitting the command into two parts because there is no way
+        # that we can know the filepath of the mapping file. We thus split the
+        # command on the mapping file path and we check that the two parts
+        # of the commands is correct
+        obs_cmd_3a, obs_cmd_3b_temp = obs_cmds[2].split(' -m ', 1)
+        obs_cmd_3b = obs_cmd_3b_temp.split(' ', 1)[1]
+        self.assertEqual(obs_cmds[0], exp_cmd_1)
+        self.assertEqual(obs_cmds[1], exp_cmd_2)
+        self.assertEqual(obs_cmd_3a, exp_cmd_3a)
+        self.assertEqual(obs_cmd_3b, exp_cmd_3b)
+        self.assertEqual(obs_cmds[3], exp_cmd_4)
+
+    def test_insert_preprocessed_data(self):
         study = Study(1)
         params = PreprocessedIlluminaParams(1)
         prep_template = PrepTemplate(1)
@@ -169,8 +220,8 @@ class ProcessingPipelineTests(TestCase):
             db_files.append(db_path_builder("3_%s" % f_suff))
         self.files_to_remove.extend(db_files)
 
-        _insert_preprocessed_data_fastq(study, params, prep_template,
-                                        prep_out_dir)
+        _insert_preprocessed_data(study, params, prep_template,
+                                  prep_out_dir)
 
         # Check that the files have been copied
         for fp in db_files:

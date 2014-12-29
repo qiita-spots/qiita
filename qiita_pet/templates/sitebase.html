@@ -1,6 +1,7 @@
 {% from moi import r_client %}
 {% from qiita_pet import allowed_min_browser_versions %}
 {% set maintenance = r_client.get('maintenance') %}
+{% set sysmessage = r_client.get('sysmessage') %}
 
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en-US">
@@ -88,8 +89,12 @@
   {% set level = globals().get('level', '') %}
   {% set message = globals().get('message', '') %}
   {% if maintenance is not None %}
+    {# maintenance mode takes precidence #}
     {% set level = 'danger' %}
     {% set message = maintenance %}
+  {% elif sysmessage is not None %}
+    {# since this is a systemwide message, allow regular messages as well #}
+    {% set message = sysmessage + "<br />" + str(message) %}
   {% end %}
   {% if message != '' %}
       {% if level not in {'danger', 'success', 'info'} %}
@@ -140,7 +145,8 @@
                 <li><a href="/study/public/">View Public Studies</a></li>
               </ul>
             </li>
-            {% set user_level = handler.user().level %}
+            {% set user_tmp = handler.user() %}
+            {% set user_level = user_tmp.level if user_tmp is not None else None %}
             {% if user_level == 'admin' %}
             <li class="dropdown">
               <a href="/admin/error/" data-toggle="dropdown" class="dropdown-toggle">Admin<b class="caret"></b></a>

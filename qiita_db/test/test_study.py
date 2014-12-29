@@ -490,7 +490,7 @@ class TestStudy(TestCase):
         self.assertEqual(new.data_types, [])
 
     def test_retrieve_raw_data(self):
-        self.assertEqual(self.study.raw_data(), [1, 2])
+        self.assertEqual(self.study.raw_data(), [1, 2, 3, 4])
 
     def test_retrieve_raw_data_none(self):
         new = Study.create(User('test@foo.bar'), 'NOT Identification of the '
