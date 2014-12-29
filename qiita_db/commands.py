@@ -20,6 +20,10 @@ from .util import get_filetypes, get_filepath_types
 from .data import RawData, PreprocessedData, ProcessedData
 from .metadata_template import (SampleTemplate, PrepTemplate,
                                 load_template_to_dataframe)
+from .parameters import PreprocessedIlluminaParams, Preprocessed454Params
+
+SUPPORTED_PARAMS = ['preprocessed_sequence_illumina_params',
+                    'preprocessed_sequence_454_params']
 
 
 def load_study_from_cmd(owner, title, info):
@@ -242,3 +246,58 @@ def load_processed_data_cmd(fps, fp_types, processed_params_table_name,
     return ProcessedData.create(processed_params_table_name,
                                 processed_params_id, list(zip(fps, fp_types)),
                                 preprocessed_data, study, processed_date)
+
+
+def load_parameters_from_cmd(fp, table):
+    """Add a new parameters entry on `table`
+
+    Parameters
+    ----------
+    fp : str
+        The filepath to the parameters file
+    table : str
+        The name of the table to add the parameters
+
+    Returns
+    -------
+    qiita_db.BaseParameters
+        The newly `qiita_db.BaseParameters` object
+
+    Raises
+    ------
+    ValueError
+        If the table does not exists on the DB
+        If the fp is not well formatted
+    """
+    if table not in SUPPORTED_PARAMS:
+        raise ValueError("Table %s not supported. Choose from: %s"
+                         % (table, ', '.join(SUPPORTED_PARAMS)))
+
+    # Build the dictionary to get the parameter constructor
+    constructor_dict = {}
+    constructor_dict[
+        'preprocessed_sequence_illumina_params'] = PreprocessedIlluminaParams
+    constructor_dict[
+        'preprocessed_sequence_454_params'] = Preprocessed454Params
+
+    constructor = constructor_dict[table]
+
+    # Parse the parameters file
+    params = {}
+    with open(fp, 'U') as f:
+        for line in f:
+            values = line.strip().split('\t')
+            if values:
+                if len(values) != 2:
+                    raise ValueError(
+                        "The format of the parameters files is not correct. "
+                        "The format is PARAMETER_NAME<tab>VALUE")
+                params[values[0]] = values[1]
+
+    db_cols = set(get_table_cols(table))
+    missing = db_cols.difference(params)
+
+    if missing:
+        raise ValueError("Missing parameters: %s" % ', '.join(missing))
+
+    return constructor.create(**params)

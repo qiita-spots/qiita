@@ -76,8 +76,18 @@ class PreprocessedIlluminaParams(BaseParameters):
 
     _table = "preprocessed_sequence_illumina_params"
 
+    @classmethod
+    def create(self):
+        r"""Adds a new parameter set to the DB"""
+        raise NotImplementedError("Operation not permitted")
+
 
 class Preprocessed454Params(BaseParameters):
     r"""Gives access to the preprocessed parameters of illumina data"""
 
     _table = "preprocessed_sequence_454_params"
+
+    @classmethod
+    def create(self):
+        r"""Adds a new parameter set to the DB"""
+        raise NotImplementedError("Operation not permitted")

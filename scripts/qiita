@@ -21,7 +21,8 @@ from qiita_db.commands import (load_sample_template_from_cmd,
                                load_study_from_cmd,
                                load_raw_data_cmd, load_processed_data_cmd,
                                load_preprocessed_data_from_cmd,
-                               load_prep_template_from_cmd)
+                               load_prep_template_from_cmd,
+                               load_parameters_from_cmd, SUPPORTED_PARAMS)
 from qiita_db.sql_connection import SQLConnectionHandler
 from qiita_db.exceptions import QiitaDBConnectionError
 from qiita_core.configuration_manager import ConfigurationManager
@@ -199,6 +200,18 @@ def load_prep_template(fp, raw_data, study, data_type):
     prep_template = load_prep_template_from_cmd(fp, raw_data, study, data_type)
     print("Prep template successfully added to the database with id %s"
           % prep_template.id)
+
+
+@db.command()
+@click.argument('fp', required=True,
+                type=click.Path(resolve_path=True, readable=True, exists=True))
+@click.option('--table', required=True, type=click.Choice(SUPPORTED_PARAMS),
+              help='The table to add the parameter set')
+def load_parameters(fp, table):
+    """Loads a parameter set to the database"""
+    param = load_parameters_from_cmd(fp, table)
+    print("Parameters successfully added to table %s with id %s"
+          % (table, param.id))
 
 
 # #############################################################################
