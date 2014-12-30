@@ -54,6 +54,7 @@ class BaseParameters(QiitaObject):
         conn_handler = SQLConnectionHandler()
         table_cols = get_table_cols_w_type(self._table)
         table_cols.remove(["preprocessed_params_id", 'bigint'])
+        table_cols.remove(["param_set_name", 'character varying'])
 
         values = dict(conn_handler.execute_fetchone(
             "SELECT * FROM qiita.{0} WHERE "
@@ -74,3 +75,9 @@ class PreprocessedIlluminaParams(BaseParameters):
     r"""Gives access to the preprocessed parameters of illumina data"""
 
     _table = "preprocessed_sequence_illumina_params"
+
+
+class Preprocessed454Params(BaseParameters):
+    r"""Gives access to the preprocessed parameters of illumina data"""
+
+    _table = "preprocessed_sequence_454_params"

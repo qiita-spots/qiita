@@ -30,7 +30,7 @@ class TestHelpers(TestHandlerBase):
                 meta_complete=True, num_samples_collected=27,
                 shared='<a target="_blank" href="mailto:shared@foo.bar">'
                        'Shared</a>',
-                num_raw_data=2,
+                num_raw_data=4,
                 pi='<a target="_blank" href="mailto:PI_dude@foo.bar">'
                    'PIDude</a>',
                 pmids='<a target="_blank" href="http://www.ncbi.nlm.nih.gov/'
