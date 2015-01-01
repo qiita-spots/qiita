@@ -17,7 +17,8 @@ from shutil import rmtree
 import pandas as pd
 
 from qiita_core.util import qiita_test_checker
-from qiita_db.util import get_db_files_base_dir, get_mountpoint
+from qiita_db.util import (get_db_files_base_dir, get_mountpoint,
+                           convert_to_id, get_count)
 from qiita_db.data import RawData, PreprocessedData
 from qiita_db.study import Study
 from qiita_db.parameters import (PreprocessedIlluminaParams,
@@ -251,29 +252,32 @@ class ProcessingPipelineTests(TestCase):
         _, ref_dir = get_mountpoint('reference')[0]
         _, preprocessed_dir = get_mountpoint('preprocessed_data')[0]
 
-        exp_cmd_1 = ("pick_closed_reference_otus.py -i {}1_seqs.fna -r "
-                     "{}GreenGenes_13_8_97_otus.fasta -o {}"
-                     " -p ".format(preprocessed_dir, ref_dir, obs_output_dir))
+        exp_cmd = ("pick_closed_reference_otus.py -i {}1_seqs.fna -r "
+                   "{}GreenGenes_13_8_97_otus.fasta -o {} -p placeholder -t "
+                   "{}GreenGenes_13_8_97_otu_taxonomy.txt".format(
+                       preprocessed_dir, ref_dir, obs_output_dir, ref_dir))
 
-        exp_cmd_2 = "-t {}GreenGenes_13_8_97_otu_taxonomy.txt".format(
-            ref_dir)
-
-        # We are splitting the command into two parts because there is no way
-        # that we can know the filepath of the mapping file. We thus split the
-        # command on the mapping file path and we check that the two parts
-        # of the commands is correct
-        obs_cmd_1 = obs_cmd[:len(exp_cmd_1)]
-        obs_cmd_2 = obs_cmd[len(exp_cmd_1):].split(" ", 1)[1]
-
-        self.assertEqual(obs_cmd_1, exp_cmd_1)
-        self.assertEqual(obs_cmd_2, exp_cmd_2)
+        obs_tokens = obs_cmd.split()[::-1]
+        exp_tokens = exp_cmd.split()[::-1]
+        self.assertEqual(len(obs_tokens), len(exp_tokens))
+        while obs_tokens:
+            o_t = obs_tokens.pop()
+            e_t = exp_tokens.pop()
+            if o_t == '-p':
+                # skip parameters file
+                obs_tokens.pop()
+                exp_tokens.pop()
+            else:
+                self.assertEqual(o_t, e_t)
 
     def test_insert_processed_data_target_gene(self):
         fd, fna_fp = mkstemp(suffix='_seqs.fna')
         close(fd)
         fd, qual_fp = mkstemp(suffix='_seqs.qual')
         close(fd)
-        filepaths = [(fna_fp, 4), (qual_fp, 5)]
+        filepaths = [
+            (fna_fp, convert_to_id('preprocessed_fasta', 'filepath_type')),
+            (qual_fp, convert_to_id('preprocessed_fastq', 'filepath_type'))]
 
         preprocessed_data = PreprocessedData.create(
             Study(1), "preprocessed_sequence_illumina_params", 1,
@@ -299,17 +303,19 @@ class ProcessingPipelineTests(TestCase):
 
         _insert_processed_data_target_gene(preprocessed_data, params, pick_dir)
 
+        new_id = get_count('qiita.processed_data')
+
         # Check that the files have been copied
-        db_files = [db_path_builder("2_otu_table.biom"),
-                    db_path_builder("2_sortmerna_picked_otus"),
-                    db_path_builder("2_%s" % basename(fp))]
+        db_files = [db_path_builder("%s_otu_table.biom" % new_id),
+                    db_path_builder("%s_sortmerna_picked_otus" % new_id),
+                    db_path_builder("%s_%s" % (new_id, basename(fp)))]
         for fp in db_files:
             self.assertTrue(exists(fp))
 
         # Check that a new preprocessed data has been created
         self.assertTrue(self.conn_handler.execute_fetchone(
             "SELECT EXISTS(SELECT * FROM qiita.processed_data WHERE "
-            "processed_data_id=%s)", (2, ))[0])
+            "processed_data_id=%s)", (new_id, ))[0])
 
 
 DEMUX_SEQS = """@a_1 orig_bc=abc new_bc=abc bc_diffs=0

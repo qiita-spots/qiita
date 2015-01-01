@@ -573,6 +573,11 @@ class StudyProcessor(ParallelWrapper):
         if preprocessed_data.data_type() in TARGET_GENE_DATA_TYPES:
             cmd_generator = _get_process_target_gene_cmd
             insert_processed_data = _insert_processed_data_target_gene
+        else:
+            raise NotImplementedError(
+                "Preprocessed data %s cannot be processed, data type %s "
+                "not supported"
+                % (preprocessed_data.id, preprocessed_data.data_type()))
 
         # Step 1: Process the study
         process_node = "PROCESS"
