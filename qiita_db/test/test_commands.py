@@ -21,7 +21,8 @@ from qiita_db.commands import (load_study_from_cmd, load_raw_data_cmd,
                                load_sample_template_from_cmd,
                                load_prep_template_from_cmd,
                                load_processed_data_cmd,
-                               load_preprocessed_data_from_cmd)
+                               load_preprocessed_data_from_cmd,
+                               load_parameters_from_cmd)
 from qiita_db.environment_manager import patch
 from qiita_db.study import Study, StudyPerson
 from qiita_db.user import User
@@ -310,6 +311,36 @@ class TestLoadProcessedDataFromCmd(TestCase):
 
 
 @qiita_test_checker()
+class TestLoadParametersFromCmd(TestCase):
+    def setUp(self):
+        fd, self.fp = mkstemp(suffix='_params.txt')
+        close(fd)
+
+        with open(self.fp, 'w') as f:
+            f.write(PARAMETERS)
+
+        self.files_to_remove = [self.fp]
+
+    def tearDown(self):
+        for fp in self.files_to_remove:
+            if exists(fp):
+                remove(fp)
+
+    def test_load_parameters_from_cmd_error(self):
+        with self.assertRaises(ValueError):
+            load_parameters_from_cmd("test", self.fp, "does_not_exist")
+
+    def test_load_parameters_from_cmd(self):
+        new = load_parameters_from_cmd(
+            "test", self.fp, "preprocessed_sequence_illumina_params")
+        obs = new.to_str()
+        exp = ("--barcode_type hamming_8 --max_bad_run_length 3 "
+               "--max_barcode_errors 1.5 --min_per_read_length_fraction 0.75 "
+               "--phred_quality_threshold 3 --sequence_max_n 0")
+        self.assertEqual(obs, exp)
+
+
+@qiita_test_checker()
 class TestPatch(TestCase):
     def setUp(self):
         self.patches_dir = mkdtemp()
@@ -493,6 +524,17 @@ conn = SQLConnectionHandler()
 conn.executemany(
     "INSERT INTO qiita.patchtest10 (testing) VALUES (%s)",
     [[study.id], [study.id*100]])
+"""
+
+PARAMETERS = """max_bad_run_length\t3
+min_per_read_length_fraction\t0.75
+sequence_max_n\t0
+rev_comp_barcode\tFalse
+rev_comp_mapping_barcodes\tFalse
+rev_comp\tFalse
+phred_quality_threshold\t3
+barcode_type\thamming_8
+max_barcode_errors\t1.5
 """
 
 if __name__ == "__main__":

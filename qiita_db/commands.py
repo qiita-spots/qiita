@@ -248,7 +248,7 @@ def load_processed_data_cmd(fps, fp_types, processed_params_table_name,
                                 preprocessed_data, study, processed_date)
 
 
-def load_parameters_from_cmd(fp, table):
+def load_parameters_from_cmd(name, fp, table):
     """Add a new parameters entry on `table`
 
     Parameters
@@ -294,4 +294,4 @@ def load_parameters_from_cmd(fp, table):
                         "The format is PARAMETER_NAME<tab>VALUE")
                 params[values[0]] = values[1]
 
-    return constructor.create(**params)
+    return constructor.create(name, **params)
