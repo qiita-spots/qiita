@@ -9,16 +9,36 @@ from __future__ import division
 
 from .base import QiitaObject
 from .sql_connection import SQLConnectionHandler
-from .util import get_table_cols_w_type
+from .util import get_table_cols_w_type, get_table_cols
 
 
 class BaseParameters(QiitaObject):
     r"""Base object to access to the parameters table"""
 
     @classmethod
-    def create(self):
+    def create(cls, param_set_name, **kwargs):
         r"""Adds a new parameter set to the DB"""
-        raise NotImplementedError("Operation not permitted")
+        db_cols = set(get_table_cols(cls._table))
+        db_cols.remove("param_set_name")
+        db_cols.remove("preprocessed_params_id")
+        missing = db_cols.difference(kwargs)
+
+        if missing:
+            raise ValueError("Missing columns: %s" % ', '.join(missing))
+
+        conn_handler = SQLConnectionHandler()
+
+        vals = kwargs.values()
+        vals.insert(0, param_set_name)
+
+        id_ = conn_handler.execute_fetchone(
+            "INSERT INTO qiita.{0} (param_set_name, {1}) VALUES (%s, {2}) "
+            "RETURNING preprocessed_params_id".format(
+                cls._table, ', '.join(kwargs),
+                ', '.join(['%s'] * len(kwargs))),
+            vals)[0]
+
+        return cls(id_)
 
     def _check_id(self, id_, conn_handler=None):
         r"""Check that the provided ID actually exists in the database
@@ -76,18 +96,8 @@ class PreprocessedIlluminaParams(BaseParameters):
 
     _table = "preprocessed_sequence_illumina_params"
 
-    @classmethod
-    def create(self):
-        r"""Adds a new parameter set to the DB"""
-        raise NotImplementedError("Operation not permitted")
-
 
 class Preprocessed454Params(BaseParameters):
     r"""Gives access to the preprocessed parameters of illumina data"""
 
     _table = "preprocessed_sequence_454_params"
-
-    @classmethod
-    def create(self):
-        r"""Adds a new parameter set to the DB"""
-        raise NotImplementedError("Operation not permitted")

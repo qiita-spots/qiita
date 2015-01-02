@@ -267,7 +267,7 @@ def load_parameters_from_cmd(fp, table):
     ------
     ValueError
         If the table does not exists on the DB
-        If the fp is not well formatted
+        If the fp is not correctly formatted
     """
     if table not in SUPPORTED_PARAMS:
         raise ValueError("Table %s not supported. Choose from: %s"
@@ -293,11 +293,5 @@ def load_parameters_from_cmd(fp, table):
                         "The format of the parameters files is not correct. "
                         "The format is PARAMETER_NAME<tab>VALUE")
                 params[values[0]] = values[1]
-
-    db_cols = set(get_table_cols(table))
-    missing = db_cols.difference(params)
-
-    if missing:
-        raise ValueError("Missing parameters: %s" % ', '.join(missing))
 
     return constructor.create(**params)
