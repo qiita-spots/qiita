@@ -1732,14 +1732,26 @@ def load_template_to_dataframe(fn):
     -----
     The index attribute of the DataFrame will be forced to be 'sample_name'
     and will be casted to a string. Additionally rows that start with a '\t'
-    character will be ignored and columns that are empty will be removed.
+    character will be ignored and columns that are empty will be removed. Empty
+    sample names will be removed from the DataFrame.
     """
 
-    # index_col=False, otherwise it is casted as a float and we want a string
+    # index_col:
+    #   is set as False, otherwise it is casted as a float and we want a string
+    # converters:
+    #   ensure that sample names are not converted into any other types but
+    #   strings and remove any trailing spaces.
+    # comment:
+    #   using the tab character as "comment" we remove rows that are
+    #   constituted only by delimiters i. e. empty rows.
     template = pd.read_csv(fn, sep='\t', infer_datetime_format=True,
                            parse_dates=True, index_col=False, comment='\t',
                            converters={
                                'sample_name': lambda x: str(x).strip()})
+
+    # remove rows that have no sample identifier but that may have other data
+    # in the rest of the columns
+    template.dropna(subset=['sample_name'], how='all', inplace=True)
 
     # set the sample name as the index
     template.set_index('sample_name', inplace=True)
