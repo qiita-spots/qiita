@@ -155,6 +155,16 @@ class DemuxTests(TestCase):
         exp = {'a': [1, 2, 3], 'b': [3, 4]}
         self.assertEqual(obs, exp)
 
+        with tempfile.NamedTemporaryFile('r+', suffix='.fna') as f:
+            f.write(seqdata_with_underscores)
+            f.flush()
+            f.seek(0)
+
+            obs = _per_sample_lengths(f.name)
+
+        exp = {'a_x': [1, 2, 3], 'b_x': [3, 4]}
+        self.assertEqual(obs, exp)
+
     def test_summarize_lengths(self):
         lens = {'a': [1, 2, 3], 'b': [3, 4]}
         exp = ({'a': stat(min=1, max=3, std=.81649658092772603, mean=2.0,
@@ -318,6 +328,18 @@ xy
 >a_2 orig_bc=abz new_bc=zbc bc_diffs=3
 xyz
 >b_2 orig_bc=abw new_bc=wbc bc_diffs=4
+abcd
+"""
+
+seqdata_with_underscores = """>a_x_1 orig_bc=abc new_bc=abc bc_diffs=0
+x
+>b_x_1 orig_bc=abx new_bc=xbc bc_diffs=1
+xyz
+>a_x_3 orig_bc=aby new_bc=ybc bc_diffs=2
+xy
+>a_x_2 orig_bc=abz new_bc=zbc bc_diffs=3
+xyz
+>b_x_2 orig_bc=abw new_bc=wbc bc_diffs=4
 abcd
 """
 
