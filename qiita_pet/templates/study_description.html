@@ -248,6 +248,9 @@ function link_files_to_raw_data(raw_data_id) {
   var barcodes = [];
   var forward = [];
   var reverse = [];
+  var sff = []
+  var fasta = []
+  var qual = []
 
   all_files = document.getElementsByName("upload_file_" + raw_data_id);
   for (var i = 0; i<all_files.length; i++) {
@@ -262,15 +265,26 @@ function link_files_to_raw_data(raw_data_id) {
       case "reverse seqs":
         reverse.push(ele.id);
         break;
+      case "sff":
+        sff.push(ele.id);
+        break;
+      case "fasta":
+        fasta.push(ele.id);
+        break;
+      case "qual":
+        qual.push(ele.id);
+        break;
     }
   }
 
-  if (barcodes.length === 0 || forward.length === 0) {
-    alert("You need to select at least one barcode and one forward file.");
-  } else if (barcodes.length != forward.length) {
+  if (sff.length === 0 && barcodes.length === 0 && forward.length === 0 && fasta.length === 0) {
+    alert("You need to select at least: one barcode and one forward file, one sff file or one fasta file.");
+  } else if (sff.length === 0 && barcodes.length != forward.length) {
     alert("You must select the same number of barcode and forward seq files.");
-  } else if (reverse.length !== 0 && reverse.length != forward.length) {
+  } else if (sff.length === 0 && (reverse.length !== 0 && reverse.length != forward.length)) {
     alert("If you select reverse seqs, they should have the same number than barcodes and forward files.");
+  } else if (sff.length === 0 && (fasta.length !== 0 && fasta.length != qual.length)) {
+    alert("If you select qual seqs, they should have the same number of qual and fasta files");
   } else {
     var form = $("<form>")
       .attr("action", "/study/add_files_to_raw_data")
@@ -291,6 +305,18 @@ function link_files_to_raw_data(raw_data_id) {
         .attr("type", "hidden")
         .attr("name", "forward")
         .attr("value", forward.join()))
+      .append($("<input>")
+        .attr("type", "hidden")
+        .attr("name", "sff")
+        .attr("value", sff.join()))
+      .append($("<input>")
+        .attr("type", "hidden")
+        .attr("name", "fasta")
+        .attr("value", fasta.join()))
+      .append($("<input>")
+        .attr("type", "hidden")
+        .attr("name", "qual")
+        .attr("value", qual.join()))
       .append($("<input>")
         .attr("type", "hidden")
         .attr("name", "reverse")
