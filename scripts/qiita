@@ -230,11 +230,13 @@ def load_reference_db(name, version, seq_fp, tax_fp, tree_fp):
                 type=click.Path(resolve_path=True, readable=True, exists=True))
 @click.option('--table', required=True, type=click.Choice(SUPPORTED_PARAMS),
               help='The table to add the parameter set')
-def load_parameters(fp, table):
+@click.option('--name', required=True, type=str,
+              help='The name of the parameters set')
+def load_parameters(fp, table, name):
     """Loads a parameter set to the database"""
-    param = load_parameters_from_cmd(fp, table)
-    print("Parameters successfully added to table %s with id %s"
-          % (table, param.id))
+    param = load_parameters_from_cmd(name, fp, table)
+    click.echo("Parameters successfully added to table %s with id %s"
+               % (table, param.id))
 
 
 # #############################################################################

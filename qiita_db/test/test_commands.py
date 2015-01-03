@@ -316,10 +316,16 @@ class TestLoadParametersFromCmd(TestCase):
         fd, self.fp = mkstemp(suffix='_params.txt')
         close(fd)
 
+        fd, self.fp_wrong = mkstemp(suffix='_params.txt')
+        close(fd)
+
         with open(self.fp, 'w') as f:
             f.write(PARAMETERS)
 
-        self.files_to_remove = [self.fp]
+        with open(self.fp_wrong, 'w') as f:
+            f.write(PARAMETERS_ERROR)
+
+        self.files_to_remove = [self.fp, self.fp_wrong]
 
     def tearDown(self):
         for fp in self.files_to_remove:
@@ -329,6 +335,11 @@ class TestLoadParametersFromCmd(TestCase):
     def test_load_parameters_from_cmd_error(self):
         with self.assertRaises(ValueError):
             load_parameters_from_cmd("test", self.fp, "does_not_exist")
+
+    def test_load_parameters_from_cmd_error_format(self):
+        with self.assertRaises(ValueError):
+            load_parameters_from_cmd("test", self.fp_wrong,
+                                     "preprocessed_sequence_illumina_params")
 
     def test_load_parameters_from_cmd(self):
         new = load_parameters_from_cmd(
@@ -528,6 +539,16 @@ conn.executemany(
 
 PARAMETERS = """max_bad_run_length\t3
 min_per_read_length_fraction\t0.75
+sequence_max_n\t0
+rev_comp_barcode\tFalse
+rev_comp_mapping_barcodes\tFalse
+rev_comp\tFalse
+phred_quality_threshold\t3
+barcode_type\thamming_8
+max_barcode_errors\t1.5
+"""
+
+PARAMETERS_ERROR = """max_bad_run_length\t3\tmin_per_read_length_fraction\t0.75
 sequence_max_n\t0
 rev_comp_barcode\tFalse
 rev_comp_mapping_barcodes\tFalse

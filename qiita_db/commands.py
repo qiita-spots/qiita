@@ -268,6 +268,13 @@ def load_parameters_from_cmd(name, fp, table):
     ValueError
         If the table does not exists on the DB
         If the fp is not correctly formatted
+
+    Notes
+    -----
+    `fp` should be a tab-delimited text file following this format:
+        parameter_1<TAB>value
+        parameter_2<TAB>value
+        ...
     """
     if table not in SUPPORTED_PARAMS:
         raise ValueError("Table %s not supported. Choose from: %s"
@@ -282,16 +289,10 @@ def load_parameters_from_cmd(name, fp, table):
 
     constructor = constructor_dict[table]
 
-    # Parse the parameters file
-    params = {}
-    with open(fp, 'U') as f:
-        for line in f:
-            values = line.strip().split('\t')
-            if values:
-                if len(values) != 2:
-                    raise ValueError(
-                        "The format of the parameters files is not correct. "
-                        "The format is PARAMETER_NAME<tab>VALUE")
-                params[values[0]] = values[1]
+    try:
+        params = dict(tuple(l.strip().split('\t')) for l in open(fp, 'U'))
+    except ValueError:
+        raise ValueError("The format of the parameters files is not correct. "
+                         "The format is PARAMETER_NAME<tab>VALUE")
 
     return constructor.create(name, **params)
