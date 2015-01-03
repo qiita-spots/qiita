@@ -6,7 +6,6 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
-from qiita_db.user import User
 from qiita_db.metadata_template import SampleTemplate
 from qiita_db.util import get_files_from_uploads_folders
 from .base_uimodule import BaseUIModule

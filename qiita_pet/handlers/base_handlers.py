@@ -6,9 +6,10 @@ from qiita_db.user import User
 class BaseHandler(RequestHandler):
     def get_current_user(self):
         '''Overrides default method of returning user curently connected'''
-        user = self.get_secure_cookie("user")
-        if user is not None:
-            return User(user.strip("\"' "))
+        username = self.get_secure_cookie("user")
+        if username is not None:
+            username = username.strip("\"' ")
+            return User(username)
         else:
             self.clear_cookie("user")
             return None
@@ -20,7 +21,7 @@ class BaseHandler(RequestHandler):
             self.render("404.html")
             return
 
-        user = self.current_user
+        user = self.get_current_user()
         if user:
             is_admin = user.level == 'admin'
         else:

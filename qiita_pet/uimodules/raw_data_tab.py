@@ -16,7 +16,6 @@ from qiita_db.util import (get_filetypes, get_files_from_uploads_folders,
                            get_data_types, convert_to_id, get_filepath_types)
 from qiita_db.study import Study
 from qiita_db.data import RawData
-from qiita_db.user import User
 from qiita_db.ontology import Ontology
 from qiita_db.metadata_template import PrepTemplate
 from .base_uimodule import BaseUIModule

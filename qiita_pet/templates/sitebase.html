@@ -146,7 +146,7 @@
                 <li><a href="/study/public/">View Public Studies</a></li>
               </ul>
             </li>
-            {% set user_level = user.level if user is not None else None %}
+            {% set user_level = user.level %}
             {% if user_level == 'admin' %}
             <li class="dropdown">
               <a href="/admin/error/" data-toggle="dropdown" class="dropdown-toggle">Admin<b class="caret"></b></a>

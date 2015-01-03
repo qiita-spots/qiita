@@ -161,7 +161,7 @@ class SearchStudiesHandler(BaseHandler):
             # fill example studies by running query for specific studies
             search = QiitaStudySearch()
             def_query = 'study_id = 1 OR study_id = 2 OR study_id = 3'
-            results, meta_headers = search(def_query, str(user))
+            results, meta_headers = search(def_query, user)
             results, counts, fullcounts = self._parse_search_results(
                 results, selsamples, meta_headers)
         else:
@@ -175,7 +175,7 @@ class SearchStudiesHandler(BaseHandler):
             search = QiitaStudySearch()
             query = str(self.get_argument("query"))
             try:
-                results, meta_headers = search(query, str(user))
+                results, meta_headers = search(query, user)
             except ParseException:
                 searchmsg = "Malformed search query, please read search help."
             except QiitaDBIncompatibleDatatypeError as e:
@@ -304,7 +304,7 @@ class AnalysisResultsHandler(BaseHandler):
                                                proc_data.study)
             dropped[key] = samples
 
-        self.render("analysis_results.html", user=self.current_user,
+        self.render("analysis_results.html",
                     jobres=jobres, aname=analysis.name, dropped=dropped,
                     basefolder=get_db_files_base_dir())
 
