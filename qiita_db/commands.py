@@ -23,7 +23,8 @@ from .metadata_template import (SampleTemplate, PrepTemplate,
 from .parameters import PreprocessedIlluminaParams, Preprocessed454Params
 
 SUPPORTED_PARAMS = ['preprocessed_sequence_illumina_params',
-                    'preprocessed_sequence_454_params']
+                    'preprocessed_sequence_454_params',
+                    'processed_params_sortmerna']
 
 
 def load_study_from_cmd(owner, title, info):
