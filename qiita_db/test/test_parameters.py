@@ -13,7 +13,6 @@ from os import close
 from qiita_core.util import qiita_test_checker
 from qiita_db.parameters import (PreprocessedIlluminaParams,
                                  ProcessedSortmernaParams)
-from qiita_db.parameters import PreprocessedIlluminaParams
 from qiita_db.exceptions import QiitaDBDuplicateError
 
 
