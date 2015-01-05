@@ -9,16 +9,62 @@ from __future__ import division
 
 from .base import QiitaObject
 from .sql_connection import SQLConnectionHandler
-from .util import get_table_cols_w_type
+from .util import get_table_cols_w_type, get_table_cols
+from .exceptions import QiitaDBDuplicateError
 
 
 class BaseParameters(QiitaObject):
     r"""Base object to access to the parameters table"""
 
     @classmethod
-    def create(self):
+    def _check_columns(cls, **kwargs):
+        db_cols = set(get_table_cols(cls._table))
+        db_cols.remove("param_set_name")
+        db_cols.remove("preprocessed_params_id")
+        missing = db_cols.difference(kwargs)
+
+        if missing:
+            raise ValueError("Missing columns: %s" % ', '.join(missing))
+
+        extra = set(kwargs).difference(db_cols)
+        if extra:
+            raise ValueError("Extra columns: %s" % ', '.join(extra))
+
+    @classmethod
+    def exists(cls, **kwargs):
+        r"""Check if the parameter set already exists on the DB"""
+        cls._check_columns(**kwargs)
+
+        conn_handler = SQLConnectionHandler()
+
+        cols = ["{} = %s".format(col) for col in kwargs]
+
+        return conn_handler.execute_fetchone(
+            "SELECT EXISTS(SELECT * FROM qiita.{0} WHERE {1})".format(
+                cls._table, ' AND '.join(cols)),
+            kwargs.values())[0]
+
+    @classmethod
+    def create(cls, param_set_name, **kwargs):
         r"""Adds a new parameter set to the DB"""
-        raise NotImplementedError("Operation not permitted")
+        cls._check_columns(**kwargs)
+
+        conn_handler = SQLConnectionHandler()
+
+        vals = kwargs.values()
+        vals.insert(0, param_set_name)
+
+        if cls.exists(**kwargs):
+            raise QiitaDBDuplicateError(cls.__name__, "Values: %s" % kwargs)
+
+        id_ = conn_handler.execute_fetchone(
+            "INSERT INTO qiita.{0} (param_set_name, {1}) VALUES (%s, {2}) "
+            "RETURNING preprocessed_params_id".format(
+                cls._table, ', '.join(kwargs),
+                ', '.join(['%s'] * len(kwargs))),
+            vals)[0]
+
+        return cls(id_)
 
     def _check_id(self, id_, conn_handler=None):
         r"""Check that the provided ID actually exists in the database
