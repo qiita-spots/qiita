@@ -20,7 +20,7 @@ script:
   - export MOI_CONFIG_FP=`pwd`/qiita_core/support_files/config_test.txt
   - ipython profile create qiita_general --parallel
   - qiita_env start_cluster qiita_general
-  - qiita_env make --no-load-ontologies
+  - qiita_env make --no-load-ontologies --download-reference
   - nosetests --with-doctest --with-coverage
   - flake8 qiita_* setup.py scripts/qiita scripts/qiita_env
   # we need to run the test suite from setup.py for coveralls to grab the info
