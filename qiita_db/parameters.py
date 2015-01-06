@@ -144,7 +144,7 @@ class ProcessedSortmernaParams(BaseParameters):
 
     _column_id = "processed_params_id"
     _table = "processed_params_sortmerna"
-    _ignore_cols = {'reference_id'}
+    _ignore_cols = {'reference_id', 'param_set_name'}
 
     @property
     def reference(self):
