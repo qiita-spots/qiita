@@ -20,7 +20,7 @@ class BaseParameters(QiitaObject):
     def _check_columns(cls, **kwargs):
         db_cols = set(get_table_cols(cls._table))
         db_cols.remove("param_set_name")
-        db_cols.remove("preprocessed_params_id")
+        db_cols.remove(cls._column_id)
         missing = db_cols.difference(kwargs)
 
         if missing:
@@ -59,9 +59,9 @@ class BaseParameters(QiitaObject):
 
         id_ = conn_handler.execute_fetchone(
             "INSERT INTO qiita.{0} (param_set_name, {1}) VALUES (%s, {2}) "
-            "RETURNING preprocessed_params_id".format(
+            "RETURNING {3}".format(
                 cls._table, ', '.join(kwargs),
-                ', '.join(['%s'] * len(kwargs))),
+                ', '.join(['%s'] * len(kwargs)), cls._column_id),
             vals)[0]
 
         return cls(id_)

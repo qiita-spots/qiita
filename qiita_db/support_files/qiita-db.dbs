@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<project name="qiita" id="Project669804" template="Default" database="PostgreSQL" >
-	<comment><![CDATA[Qiita-DB layout]]></comment>
+<project name="qiita" id="Project669804" database="PostgreSQL" >
+	<comment>Qiita-DB layout</comment>
 	<schema name="qiita" schemaname="qiita" defo="y" >
 		<table name="analysis" >
-			<comment><![CDATA[hHolds analysis information]]></comment>
+			<comment>hHolds analysis information</comment>
 			<column name="analysis_id" type="bigserial" jt="-5" mandatory="y" >
 				<comment><![CDATA[Unique identifier for analysis]]></comment>
 			</column>
@@ -38,7 +38,7 @@
 			</fk>
 		</table>
 		<table name="analysis_chain" >
-			<comment><![CDATA[Keeps track of the chain of analysis edits. Tracks what previous analysis a given analysis came from.If a given analysis is not in child_id, it is the root of the chain. ]]></comment>
+			<comment>Keeps track of the chain of analysis edits. Tracks what previous analysis a given analysis came from.If a given analysis is not in child_id, it is the root of the chain. </comment>
 			<column name="parent_id" type="bigint" jt="-5" mandatory="y" />
 			<column name="child_id" type="bigint" jt="-5" mandatory="y" />
 			<index name="idx_analysis_chain" unique="NORMAL" >
@@ -59,7 +59,7 @@
 			</fk>
 		</table>
 		<table name="analysis_filepath" >
-			<comment><![CDATA[Stores link between analysis and the data file used for the analysis.]]></comment>
+			<comment>Stores link between analysis and the data file used for the analysis.</comment>
 			<column name="analysis_id" type="bigint" jt="-5" mandatory="y" />
 			<column name="filepath_id" type="bigint" jt="-5" mandatory="y" />
 			<column name="data_type_id" type="bigint" jt="-5" />
@@ -87,7 +87,7 @@
 			</fk>
 		</table>
 		<table name="analysis_job" >
-			<comment><![CDATA[Holds information for a one-to-many relation of analysis to the jobs in it]]></comment>
+			<comment>Holds information for a one-to-many relation of analysis to the jobs in it</comment>
 			<column name="analysis_id" type="bigint" jt="-5" mandatory="y" >
 				<comment><![CDATA[Id of the analysis]]></comment>
 			</column>
@@ -145,7 +145,7 @@
 			</index>
 		</table>
 		<table name="analysis_users" >
-			<comment><![CDATA[Links analyses to the users they are shared with]]></comment>
+			<comment>Links analyses to the users they are shared with</comment>
 			<column name="analysis_id" type="bigint" jt="-5" mandatory="y" />
 			<column name="email" type="varchar" jt="12" mandatory="y" />
 			<index name="idx_analysis_users" unique="PRIMARY_KEY" >
@@ -166,7 +166,7 @@
 			</fk>
 		</table>
 		<table name="analysis_workflow" >
-			<comment><![CDATA[Stores what step in_production analyses are on.]]></comment>
+			<comment>Stores what step in_production analyses are on.</comment>
 			<column name="analysis_id" type="bigint" jt="-5" mandatory="y" />
 			<column name="step" type="integer" jt="4" mandatory="y" />
 			<index name="pk_analysis_workflow" unique="PRIMARY_KEY" >
@@ -187,7 +187,7 @@
 			</index>
 		</table>
 		<table name="column_controlled_vocabularies" >
-			<comment><![CDATA[Table relates a column with a controlled vocabulary.]]></comment>
+			<comment>Table relates a column with a controlled vocabulary.</comment>
 			<column name="controlled_vocab_id" type="bigserial" jt="-5" mandatory="y" />
 			<column name="column_name" type="varchar" jt="12" mandatory="y" />
 			<index name="idx_column_controlled_vocabularies" unique="PRIMARY_KEY" >
@@ -208,7 +208,7 @@
 			</fk>
 		</table>
 		<table name="column_ontology" >
-			<comment><![CDATA[This table relates a column with an ontology.]]></comment>
+			<comment>This table relates a column with an ontology.</comment>
 			<column name="column_name" type="varchar" jt="12" mandatory="y" />
 			<column name="ontology_short_name" type="varchar" jt="12" mandatory="y" />
 			<column name="bioportal_id" type="integer" jt="4" mandatory="y" />
@@ -225,7 +225,7 @@
 			</fk>
 		</table>
 		<table name="command" >
-			<comment><![CDATA[Available commands for jobs]]></comment>
+			<comment>Available commands for jobs</comment>
 			<column name="command_id" type="bigserial" jt="-5" mandatory="y" >
 				<comment><![CDATA[Unique identifier for function]]></comment>
 			</column>
@@ -349,7 +349,7 @@
 			</index>
 		</table>
 		<table name="emp_status" >
-			<comment><![CDATA[All possible statuses for projects relating to EMP. Whether they are part of, processed in accordance to, or not part of EMP.]]></comment>
+			<comment>All possible statuses for projects relating to EMP. Whether they are part of, processed in accordance to, or not part of EMP.</comment>
 			<column name="emp_status_id" type="bigserial" jt="-5" mandatory="y" />
 			<column name="emp_status" type="varchar" jt="12" mandatory="y" />
 			<index name="pk_emp_status" unique="PRIMARY_KEY" >
@@ -407,7 +407,7 @@
 			</index>
 		</table>
 		<table name="filetype" >
-			<comment><![CDATA[Type of file (FASTA, FASTQ, SPECTRA, etc)]]></comment>
+			<comment>Type of file (FASTA, FASTQ, SPECTRA, etc)</comment>
 			<column name="filetype_id" type="bigserial" jt="-5" mandatory="y" />
 			<column name="type" type="varchar" jt="12" mandatory="y" />
 			<index name="pk_filetype" unique="PRIMARY_KEY" >
@@ -418,7 +418,7 @@
 			</index>
 		</table>
 		<table name="investigation" >
-			<comment><![CDATA[Overarching investigation information.An investigation comprises one or more individual studies.]]></comment>
+			<comment>Overarching investigation information.An investigation comprises one or more individual studies.</comment>
 			<column name="investigation_id" type="bigserial" jt="-5" mandatory="y" />
 			<column name="name" type="varchar" jt="12" mandatory="y" />
 			<column name="description" type="varchar" jt="12" mandatory="y" >
@@ -501,7 +501,7 @@
 			</fk>
 		</table>
 		<table name="job_results_filepath" >
-			<comment><![CDATA[Holds connection between jobs and the result filepaths]]></comment>
+			<comment>Holds connection between jobs and the result filepaths</comment>
 			<column name="job_id" type="bigint" jt="-5" mandatory="y" />
 			<column name="filepath_id" type="bigint" jt="-5" mandatory="y" />
 			<index name="idx_job_results_filepath" unique="PRIMARY_KEY" >
@@ -581,7 +581,7 @@
 			</index>
 		</table>
 		<table name="portal_type" >
-			<comment><![CDATA[What portals are available to show a study in]]></comment>
+			<comment>What portals are available to show a study in</comment>
 			<column name="portal_type_id" type="bigserial" jt="-5" mandatory="y" />
 			<column name="portal" type="varchar" jt="12" mandatory="y" />
 			<column name="description" type="varchar" jt="12" mandatory="y" />
@@ -672,7 +672,7 @@
 			</fk>
 		</table>
 		<table name="prep_y" >
-			<comment><![CDATA[Information on how raw data y was prepared (prep template)Linked by y being raw_data_id from raw data table.]]></comment>
+			<comment>Information on how raw data y was prepared (prep template)Linked by y being raw_data_id from raw data table.</comment>
 			<column name="sample_id" type="varchar" jt="12" mandatory="y" />
 			<column name="data" type="bigint" jt="-5" >
 				<comment><![CDATA[STUFFFFF]]></comment>
@@ -753,7 +753,7 @@
 			</fk>
 		</table>
 		<table name="preprocessed_sequence_454_params" >
-			<comment><![CDATA[Parameters used for processing sequence data.]]></comment>
+			<comment>Parameters used for processing sequence data.</comment>
 			<column name="preprocessed_params_id" type="bigserial" jt="-5" mandatory="y" />
 			<column name="param_set_name" type="varchar" length="100" jt="12" mandatory="y" >
 				<comment><![CDATA[The name of the parameter set]]></comment>
@@ -823,7 +823,7 @@
 			</index>
 		</table>
 		<table name="preprocessed_sequence_illumina_params" >
-			<comment><![CDATA[Parameters used for processing illumina sequence data.]]></comment>
+			<comment>Parameters used for processing illumina sequence data.</comment>
 			<column name="preprocessed_params_id" type="bigserial" jt="-5" mandatory="y" />
 			<column name="max_bad_run_length" type="integer" jt="4" mandatory="y" >
 				<defo>3</defo>
@@ -860,7 +860,7 @@
 			</index>
 		</table>
 		<table name="preprocessed_spectra_params" >
-			<comment><![CDATA[Parameters used for processing spectra data.]]></comment>
+			<comment>Parameters used for processing spectra data.</comment>
 			<column name="preprocessed_params_id" type="bigserial" jt="-5" mandatory="y" />
 			<column name="col" type="varchar" jt="12" />
 			<index name="pk_preprocessed_spectra_params" unique="PRIMARY_KEY" >
@@ -905,7 +905,7 @@
 			</fk>
 		</table>
 		<table name="processed_params_sortmerna" >
-			<comment><![CDATA[Parameters used for processing data using method sortmerna]]></comment>
+			<comment>Parameters used for processing data using method sortmerna</comment>
 			<column name="processed_params_id" type="bigserial" jt="-5" mandatory="y" />
 			<column name="reference_id" type="bigint" jt="-5" mandatory="y" >
 				<comment><![CDATA[What version of reference or type of reference used]]></comment>
@@ -915,6 +915,10 @@
 			<column name="similarity" type="float8" jt="6" mandatory="y" />
 			<column name="sortmerna_coverage" type="float8" jt="6" mandatory="y" />
 			<column name="threads" type="integer" jt="4" mandatory="y" />
+			<column name="param_set_name" type="varchar" length="100" jt="12" mandatory="y" >
+				<defo>&#039;Default&#039;</defo>
+				<comment><![CDATA[The name of the parameter set]]></comment>
+			</column>
 			<index name="pk_processed_params_sortmerna" unique="PRIMARY_KEY" >
 				<column name="processed_params_id" />
 			</index>
@@ -926,7 +930,7 @@
 			</fk>
 		</table>
 		<table name="processed_params_uclust" >
-			<comment><![CDATA[Parameters used for processing data using method uclust]]></comment>
+			<comment>Parameters used for processing data using method uclust</comment>
 			<column name="processed_params_id" type="bigserial" jt="-5" mandatory="y" />
 			<column name="reference_id" type="bigint" jt="-5" mandatory="y" >
 				<comment><![CDATA[What version of reference or type of reference used]]></comment>
@@ -951,7 +955,7 @@
 			</fk>
 		</table>
 		<table name="qiita_user" >
-			<comment><![CDATA[Holds all user information]]></comment>
+			<comment>Holds all user information</comment>
 			<column name="email" type="varchar" jt="12" mandatory="y" />
 			<column name="user_level_id" type="integer" jt="4" mandatory="y" >
 				<defo>5</defo>
@@ -1050,7 +1054,7 @@
 			</fk>
 		</table>
 		<table name="required_sample_info" >
-			<comment><![CDATA[Required info for each sample. One row is one sample.]]></comment>
+			<comment>Required info for each sample. One row is one sample.</comment>
 			<column name="sample_id" type="varchar" jt="12" mandatory="y" />
 			<column name="study_id" type="bigint" jt="-5" mandatory="y" />
 			<column name="physical_location" type="varchar" jt="12" mandatory="y" >
@@ -1122,7 +1126,7 @@
 			</fk>
 		</table>
 		<table name="sample_x" >
-			<comment><![CDATA[data for samples in study x (sample template)x is the study_id from study tableMAKE SURE sample_id IS FK TO sample_id IN required_sample_info TABLE]]></comment>
+			<comment>data for samples in study x (sample template)x is the study_id from study tableMAKE SURE sample_id IS FK TO sample_id IN required_sample_info TABLE</comment>
 			<column name="sample_id" type="varchar" jt="12" mandatory="y" />
 			<column name="description" type="varchar" jt="12" mandatory="y" />
 			<column name="other_mapping_columns" type="varchar" jt="12" >
@@ -1224,7 +1228,7 @@ Controlled Vocabulary]]></comment>
 			</fk>
 		</table>
 		<table name="study_environmental_package" >
-			<comment><![CDATA[Holds the 1 to many relationship between the study and the environmental_package]]></comment>
+			<comment>Holds the 1 to many relationship between the study and the environmental_package</comment>
 			<column name="study_id" type="bigint" jt="-5" mandatory="y" />
 			<column name="environmental_package_name" type="varchar" jt="12" mandatory="y" />
 			<index name="pk_study_environmental_package" unique="PRIMARY_KEY" >
@@ -1245,7 +1249,7 @@ Controlled Vocabulary]]></comment>
 			</fk>
 		</table>
 		<table name="study_experimental_factor" >
-			<comment><![CDATA[EFO ontological link of experimental factors to studies]]></comment>
+			<comment>EFO ontological link of experimental factors to studies</comment>
 			<column name="study_id" type="bigint" jt="-5" mandatory="y" />
 			<column name="efo_id" type="bigint" jt="-5" mandatory="y" />
 			<index name="idx_study_experimental_factor" unique="PRIMARY_KEY" >
@@ -1260,7 +1264,7 @@ Controlled Vocabulary]]></comment>
 			</fk>
 		</table>
 		<table name="study_person" >
-			<comment><![CDATA[Contact information for the various people involved in a study]]></comment>
+			<comment>Contact information for the various people involved in a study</comment>
 			<column name="study_person_id" type="bigserial" jt="-5" mandatory="y" />
 			<column name="name" type="varchar" jt="12" mandatory="y" />
 			<column name="email" type="varchar" jt="12" mandatory="y" />
@@ -1278,7 +1282,7 @@ Controlled Vocabulary]]></comment>
 			</index>
 		</table>
 		<table name="study_pmid" >
-			<comment><![CDATA[Links a study to all PMIDs for papers created from study]]></comment>
+			<comment>Links a study to all PMIDs for papers created from study</comment>
 			<column name="study_id" type="bigint" jt="-5" mandatory="y" />
 			<column name="pmid" type="varchar" jt="12" mandatory="y" />
 			<index name="idx_study_pmid" unique="PRIMARY_KEY" >
@@ -1333,7 +1337,7 @@ Controlled Vocabulary]]></comment>
 			</fk>
 		</table>
 		<table name="study_raw_data" >
-			<comment><![CDATA[links study to its raw data]]></comment>
+			<comment>links study to its raw data</comment>
 			<column name="study_id" type="bigint" jt="-5" mandatory="y" />
 			<column name="raw_data_id" type="bigint" jt="-5" mandatory="y" />
 			<index name="idx_study_raw_data" unique="NORMAL" >
@@ -1351,7 +1355,7 @@ Controlled Vocabulary]]></comment>
 			</fk>
 		</table>
 		<table name="study_sample_columns" >
-			<comment><![CDATA[Holds information on which metadata columns are available for the study sample template]]></comment>
+			<comment>Holds information on which metadata columns are available for the study sample template</comment>
 			<column name="study_id" type="bigint" jt="-5" mandatory="y" />
 			<column name="column_name" type="varchar" length="100" jt="12" mandatory="y" />
 			<column name="column_type" type="varchar" jt="12" mandatory="y" />
@@ -1379,7 +1383,7 @@ Controlled Vocabulary]]></comment>
 			</index>
 		</table>
 		<table name="study_users" >
-			<comment><![CDATA[Links shared studies to users they are shared with]]></comment>
+			<comment>Links shared studies to users they are shared with</comment>
 			<column name="study_id" type="bigint" jt="-5" mandatory="y" />
 			<column name="email" type="varchar" jt="12" mandatory="y" />
 			<index name="idx_study_users" unique="PRIMARY_KEY" >
@@ -1444,7 +1448,7 @@ Controlled Vocabulary]]></comment>
 			</index>
 		</table>
 		<table name="user_level" >
-			<comment><![CDATA[Holds available user levels]]></comment>
+			<comment>Holds available user levels</comment>
 			<column name="user_level_id" type="serial" jt="4" mandatory="y" />
 			<column name="name" type="varchar" jt="12" mandatory="y" >
 				<comment><![CDATA[One of the user levels (admin, user, guest, etc)]]></comment>
@@ -1526,12 +1530,12 @@ Controlled Vocabulary]]></comment>
 		<entity schema="qiita" name="sample_template_filepath" color="b2cdf7" x="1050" y="795" />
 		<entity schema="qiita" name="prep_template_preprocessed_data" color="b2cdf7" x="750" y="450" />
 		<entity schema="qiita" name="preprocessed_data" color="c0d4f3" x="1260" y="675" />
-		<entity schema="qiita" name="processed_params_sortmerna" color="a8c4ef" x="1980" y="810" />
 		<entity schema="qiita" name="reference" color="c0d4f3" x="2280" y="960" />
-		<entity schema="qiita" name="preprocessed_sequence_illumina_params" color="d0def5" x="2025" y="1050" />
 		<entity schema="qiita" name="preprocessed_sequence_454_params" color="c0d4f3" x="1740" y="960" />
+		<entity schema="qiita" name="preprocessed_sequence_illumina_params" color="d0def5" x="2025" y="1050" />
+		<entity schema="qiita" name="processed_params_sortmerna" color="a8c4ef" x="1980" y="810" />
 		<group name="Group_analyses" color="c4e0f9" >
-			<comment><![CDATA[analysis tables]]></comment>
+			<comment>analysis tables</comment>
 			<entity schema="qiita" name="analysis" />
 			<entity schema="qiita" name="analysis_job" />
 			<entity schema="qiita" name="job" />
