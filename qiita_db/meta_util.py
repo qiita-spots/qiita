@@ -73,7 +73,7 @@ def get_accessible_filepath_ids(user_id):
         # admins have access all files
         conn_handler = SQLConnectionHandler()
         fpids = conn_handler.execute_fetchall("SELECT filepath_id FROM "
-                                                 "qiita.filepath")
+                                              "qiita.filepath")
         return set(f[0] for f in fpids)
 
     # First, the studies

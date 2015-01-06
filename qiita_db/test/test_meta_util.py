@@ -42,7 +42,6 @@ class MetaUtilTests(TestCase):
         obs = get_accessible_filepath_ids('shared@foo.bar')
         self.assertEqual(obs, set())
 
-
         # Test that it doesn't break: if the SampleTemplate hasn't been added
         exp = set([1, 2, 5, 6, 7, 11, 14, 15, 16, 17, 18])
         obs = get_accessible_filepath_ids('test@foo.bar')
@@ -77,7 +76,6 @@ class MetaUtilTests(TestCase):
         exp = set(x for x in range(1, 19))
         obs = get_accessible_filepath_ids('admin@foo.bar')
         self.assertEqual(obs, exp)
-
 
 
 if __name__ == '__main__':
