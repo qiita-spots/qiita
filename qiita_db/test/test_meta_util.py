@@ -73,7 +73,9 @@ class MetaUtilTests(TestCase):
         self.assertEqual(obs, exp)
 
         # admin should have access to everything
-        exp = set(x for x in range(1, 19))
+        count = self.conn_handler.execute_fetchone("SELECT count(*) FROM "
+                                                   "qiita.filepath")[0]
+        exp = set(range(1, count + 1))
         obs = get_accessible_filepath_ids('admin@foo.bar')
         self.assertEqual(obs, exp)
 
