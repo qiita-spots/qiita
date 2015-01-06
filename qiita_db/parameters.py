@@ -83,6 +83,13 @@ class BaseParameters(QiitaObject):
 
     @property
     def name(self):
+        """The name of the parameter set
+
+        Returns
+        -------
+        str
+            The name of the parameter set
+        """
         conn_handler = SQLConnectionHandler()
         return conn_handler.execute_fetchone(
             "SELECT param_set_name FROM qiita.{0} WHERE {1} = %s".format(
@@ -91,11 +98,20 @@ class BaseParameters(QiitaObject):
 
     @property
     def values(self):
+        """The values of the parameter set
+
+        Returns
+        -------
+        dict
+            Dictionary with the parameter values keyed by parameter name
+        """
         conn_handler = SQLConnectionHandler()
         result = dict(conn_handler.execute_fetchone(
             "SELECT * FROM qiita.{0} WHERE {1} = %s".format(
                 self._table, self._column_id),
             (self.id,)))
+        # Remove the parameter id and the parameter name as those are used
+        # internally, and they are not passed to the processing step
         del result[self._column_id]
         del result['param_set_name']
         return result
