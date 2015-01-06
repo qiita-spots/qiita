@@ -122,6 +122,21 @@ class BaseParameters(QiitaObject):
 
         return " ".join(result)
 
+    @classmethod
+    def iter(cls):
+        """Iterates over all parameters
+
+        Returns
+        -------
+        generator
+            Yields a parameter instance
+        """
+        conn_handler = SQLConnectionHandler()
+        sql = "SELECT {0} FROM qiita.{1}".format(cls._column_id, cls._table)
+
+        for result in conn_handler.execute_fetchall(sql):
+            yield cls(result[0])
+
 
 class PreprocessedIlluminaParams(BaseParameters):
     r"""Gives access to the preprocessed parameters of illumina data"""
