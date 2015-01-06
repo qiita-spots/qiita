@@ -22,7 +22,7 @@ function parameters_changed(obj, ppd_id){
         <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
         <h4 class="modal-title" id="myModalLabel">Choose processing parameters</h4>
       </div>
-      <form action="/study/process" method="post" onsubmit='return submit_process();'>
+      <form action="/study/process" method="post" onsubmit='return submit_process();' id="parameter-form-{{ppd_id}}">
         <div class="modal-body">
           <div>
             <div class="form-group">
@@ -31,7 +31,7 @@ function parameters_changed(obj, ppd_id){
                   <tr>
                     <td><b>Parameter set: </b></td>
                     <td>
-                      <select id="select-{{ppd_id}}" onchange="parameters_changed(this, {{ppd_id}});">
+                      <select id="parameter-set-{{ppd_id}}" name="parameter-set-{{ppd_id}}" onchange="parameters_changed(this, {{ppd_id}});">
                         <option value="{{default_params}}" selected="selected">{{process_params[default_params][1]}}</option>
                         {% for key in process_params %}
                           {% if key != default_params %}
