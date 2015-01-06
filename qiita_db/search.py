@@ -201,9 +201,10 @@ class QiitaStudySearch(object):
         study_ids = {x[0] for x in conn_handler.execute_fetchall(study_sql)}
         # strip to only studies user has access to
         userobj = User(user)
-        study_ids = study_ids.intersection(Study.get_by_status('public') +
-                                           userobj.user_studies +
-                                           userobj.shared_studies)
+        if userobj.level not in {'admin', 'dev'}:
+            study_ids = study_ids.intersection(Study.get_by_status('public') +
+                                               userobj.user_studies +
+                                               userobj.shared_studies)
         results = {}
         # run search on each study to get out the matching samples
         for sid in study_ids:
