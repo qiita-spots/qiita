@@ -89,6 +89,17 @@ class BaseParameters(QiitaObject):
                 self._table, self._column_id),
             (self.id,))[0]
 
+    @property
+    def values(self):
+        conn_handler = SQLConnectionHandler()
+        result = dict(conn_handler.execute_fetchone(
+            "SELECT * FROM qiita.{0} WHERE {1} = %s".format(
+                self._table, self._column_id),
+            (self.id,)))
+        del result[self._column_id]
+        del result['param_set_name']
+        return result
+
     def _check_id(self, id_, conn_handler=None):
         r"""Check that the provided ID actually exists in the database
 
