@@ -153,6 +153,111 @@ def _get_preprocess_fastq_cmd(raw_data, prep_template, params):
     return (cmd, output_dir)
 
 
+def _get_preprocess_fasta_cmd(raw_data, prep_template, params):
+    """Generates the split_libraries.py command for the raw-data
+
+    Parameters
+    ----------
+    raw_data : RawData
+        The raw data object to pre-process
+    prep_template : PrepTemplate
+        The prep template to pre-process
+    params : Preprocessed454Params
+        The parameters to use for the preprocessing
+
+    Returns
+    -------
+    tuple (str, str)
+        A 2-tuple of strings. The first string is the command to be executed.
+        The second string is the path to the command's output directory
+
+    Raises
+    ------
+    NotImplementedError
+        If any of the raw data input filepath type is not supported
+    ValueError
+        If the raw data object does not have any sequence file associated
+    """
+    from tempfile import mkdtemp
+    from os.path import basename, splitext, join
+    from qiita_core.qiita_settings import qiita_config
+
+    # Get the filepaths from the raw data object
+    sffs = []
+    seqs = []
+    quals = []
+    for fpid, fp, fp_type in raw_data.get_filepaths():
+        if fp_type == "raw_sff":
+            sffs.append(fp)
+        elif fp_type == "raw_fasta":
+            seqs.append(fp)
+        elif fp_type == "raw_qual":
+            quals.append(fp)
+        else:
+            raise NotImplementedError("Raw data file type not supported %s"
+                                      % fp_type)
+
+    # Create a temporary directory to store the split libraries output
+    output_dir = mkdtemp(dir=qiita_config.working_dir, prefix='sl_out')
+
+    qual_str = ''
+    prepreprocess_cmd = ''
+    if seqs and sffs:
+        raise ValueError("Cannot have SFF and raw fasta, on %s"
+                         % raw_data.id)
+    elif quals and not seqs:
+        raise ValueError("Cannot have just qual, on %s"
+                         % raw_data.id)
+    elif seqs:
+        seqs = sorted(seqs)
+        quals = sorted(quals)
+
+    else:
+        prepreprocess_cmds = []
+        for sff in sffs:
+            base = splitext(basename(sff))[0]
+            sff_cmd = "process_sff.py -i %s -o %s" % (sff, output_dir)
+            prepreprocess_cmds.append(sff_cmd)
+            seqs.append(join(output_dir, '%s.fna' % base))
+            quals.append(join(output_dir, '%s.qual' % base))
+        prepreprocess_cmd = '; '.join(prepreprocess_cmds)
+
+    if quals:
+        qual_str = "-q %s -d" % ','.join(quals)
+
+    # The minimal QIIME mapping files should be written to a directory,
+    # so QIIME can consume them
+    prep_dir = mkdtemp(dir=qiita_config.working_dir,
+                       prefix='MMF_%s' % prep_template.id)
+
+    # Get the Minimal Mapping Files
+    mapping_fp = _get_qiime_minimal_mapping(prep_template, prep_dir)[0]
+
+    # Add any other parameter needed to split libraries
+    params_str = params.to_str()
+
+    # Create the split_libraries_fastq.py command
+    cmd = ' '.join(["split_libraries.py",
+                    "-f %s" % ','.join(seqs),
+                    "-m %s" % mapping_fp,
+                    qual_str,
+                    "-o %s" % output_dir,
+                    params_str])
+
+    if quals:
+        fq_cmd = ' '.join(["convert_fastaqual_fastq.py",
+                           "-f %s/seqs.fna" % output_dir,
+                           "-q %s/seqs_filtered.qual" % output_dir,
+                           "-o %s" % output_dir,
+                           "-F"])
+
+        if prepreprocess_cmd:
+            cmd = '; '.join([prepreprocess_cmd, cmd, fq_cmd])
+        else:
+            cmd = '; '.join([cmd, fq_cmd])
+    return (cmd, output_dir)
+
+
 def _generate_demux_file(sl_out, **kwargs):
     """Creates the HDF5 demultiplexed file
 
@@ -183,8 +288,8 @@ def _generate_demux_file(sl_out, **kwargs):
         to_hdf5(fastq_fp, f)
 
 
-def _insert_preprocessed_data_fastq(study, params, prep_template, slq_out,
-                                    **kwargs):
+def _insert_preprocessed_data(study, params, prep_template, slq_out,
+                              **kwargs):
     """Inserts the preprocessed data to the database
 
     Parameters
@@ -222,15 +327,16 @@ def _insert_preprocessed_data_fastq(study, params, prep_template, slq_out,
     log_fp = path_builder('split_library_log.txt')
 
     # Check that all the files exist
-    if not (exists(fasta_fp) and exists(fastq_fp) and exists(demux_fp) and
-            exists(log_fp)):
+    if not (exists(fasta_fp) and exists(demux_fp) and exists(log_fp)):
         raise ValueError("The output directory %s does not contain all the "
                          "expected files." % slq_out)
 
     filepaths = [(fasta_fp, "preprocessed_fasta"),
-                 (fastq_fp, "preprocessed_fastq"),
                  (demux_fp, "preprocessed_demux"),
                  (log_fp, "log")]
+
+    if exists(fastq_fp):
+        filepaths.append((fastq_fp, "preprocessed_fastq"))
 
     PreprocessedData.create(study, params._table, params.id, filepaths,
                             prep_template)
@@ -271,7 +377,10 @@ class StudyPreprocessor(ParallelWrapper):
         filetype = raw_data.filetype
         if filetype == "FASTQ":
             cmd_generator = _get_preprocess_fastq_cmd
-            insert_preprocessed_data = _insert_preprocessed_data_fastq
+            insert_preprocessed_data = _insert_preprocessed_data
+        elif filetype in ('FASTA', 'SFF'):
+            cmd_generator = _get_preprocess_fasta_cmd
+            insert_preprocessed_data = _insert_preprocessed_data
         else:
             raise NotImplementedError(
                 "Raw data %s cannot be preprocessed, filetype %s not supported"

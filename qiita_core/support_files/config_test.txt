@@ -31,7 +31,7 @@ MAX_UPLOAD_SIZE = 100
 BASE_DATA_DIR =
 
 # Valid upload extension, comma separated. Empty for no uploads
-VALID_UPLOAD_EXTENSION = fastq,fastq.gz,txt
+VALID_UPLOAD_EXTENSION = fastq,fastq.gz,txt,sff,fna,qual
 
 # ----------------------------- SMTP settings -----------------------------
 [smtp]
