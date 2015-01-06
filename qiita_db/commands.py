@@ -20,7 +20,8 @@ from .util import get_filetypes, get_filepath_types
 from .data import RawData, PreprocessedData, ProcessedData
 from .metadata_template import (SampleTemplate, PrepTemplate,
                                 load_template_to_dataframe)
-from .parameters import PreprocessedIlluminaParams, Preprocessed454Params
+from .parameters import (PreprocessedIlluminaParams, Preprocessed454Params,
+                         ProcessedSortmernaParams)
 
 SUPPORTED_PARAMS = ['preprocessed_sequence_illumina_params',
                     'preprocessed_sequence_454_params',
@@ -287,6 +288,8 @@ def load_parameters_from_cmd(name, fp, table):
         'preprocessed_sequence_illumina_params'] = PreprocessedIlluminaParams
     constructor_dict[
         'preprocessed_sequence_454_params'] = Preprocessed454Params
+    constructor_dict[
+        'processed_params_sortmerna'] = ProcessedSortmernaParams
 
     constructor = constructor_dict[table]
 
