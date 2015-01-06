@@ -6,11 +6,15 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
+from wtforms import Form, SelectField
+
 from qiita_db.data import PreprocessedData
 from qiita_db.metadata_template import PrepTemplate
 from qiita_db.user import User
 from qiita_db.ontology import Ontology
 from qiita_db.util import convert_to_id
+from qiita_db.parameters import ProcessedSortmernaParams
+from qiita_pet.util import generate_param_str
 from .base_uimodule import BaseUIModule
 
 
@@ -60,10 +64,11 @@ class PreprocessedDataInfoTab(BaseUIModule):
             raw_data_id = None
             inv_type = "None Selected"
 
-        # Currently we don't support changing any parameter
-        # Define the process_form to None and the interface will show a
-        # useful message
-        process_form = None
+        process_params = {param.id: (generate_param_str(param), param.name)
+                          for param in ProcessedSortmernaParams.iter()}
+        # We just need to provide an ID for the default parameters,
+        # so we can initialize the interface
+        default_params = 1
 
         return self.render_string(
             "study_description_templates/preprocessed_data_info_tab.html",
@@ -80,7 +85,8 @@ class PreprocessedDataInfoTab(BaseUIModule):
             ena_terms=ena_terms,
             vamps_status=vamps_status,
             user_defined_terms=user_defined_terms,
-            process_form=process_form,
+            process_params=process_params,
+            default_params=1,
             study_id=preprocessed_data.study,
             processing_status=processing_status,
             processed_data=processed_data)
