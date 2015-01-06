@@ -8,26 +8,30 @@
 
 from __future__ import division
 from unittest import TestCase, main
-from tempfile import mkdtemp
-from os.path import exists, join
-from os import remove
+from tempfile import mkdtemp, mkstemp
+from os.path import exists, join, basename
+from os import remove, close, mkdir
 from functools import partial
 from shutil import rmtree
 
 import pandas as pd
 
 from qiita_core.util import qiita_test_checker
-from qiita_db.util import get_db_files_base_dir
-from qiita_db.data import RawData
+from qiita_db.util import (get_db_files_base_dir, get_mountpoint,
+                           convert_to_id, get_count)
+from qiita_db.data import RawData, PreprocessedData
 from qiita_db.study import Study
 from qiita_db.parameters import (PreprocessedIlluminaParams,
+                                 ProcessedSortmernaParams,
                                  Preprocessed454Params)
 from qiita_db.metadata_template import PrepTemplate
 from qiita_ware.processing_pipeline import (_get_preprocess_fastq_cmd,
                                             _get_preprocess_fasta_cmd,
                                             _insert_preprocessed_data,
                                             _generate_demux_file,
-                                            _get_qiime_minimal_mapping)
+                                            _get_qiime_minimal_mapping,
+                                            _get_process_target_gene_cmd,
+                                            _insert_processed_data_target_gene)
 
 
 @qiita_test_checker()
@@ -237,6 +241,81 @@ class ProcessingPipelineTests(TestCase):
         _generate_demux_file(prep_out_dir)
 
         self.assertTrue(exists(join(prep_out_dir, 'seqs.demux')))
+
+    def test_get_process_target_gene_cmd(self):
+        preprocessed_data = PreprocessedData(1)
+        params = ProcessedSortmernaParams(1)
+
+        obs_cmd, obs_output_dir = _get_process_target_gene_cmd(
+            preprocessed_data, params)
+
+        _, ref_dir = get_mountpoint('reference')[0]
+        _, preprocessed_dir = get_mountpoint('preprocessed_data')[0]
+
+        exp_cmd = ("pick_closed_reference_otus.py -i {}1_seqs.fna -r "
+                   "{}GreenGenes_13_8_97_otus.fasta -o {} -p placeholder -t "
+                   "{}GreenGenes_13_8_97_otu_taxonomy.txt".format(
+                       preprocessed_dir, ref_dir, obs_output_dir, ref_dir))
+
+        obs_tokens = obs_cmd.split()[::-1]
+        exp_tokens = exp_cmd.split()[::-1]
+        self.assertEqual(len(obs_tokens), len(exp_tokens))
+        while obs_tokens:
+            o_t = obs_tokens.pop()
+            e_t = exp_tokens.pop()
+            if o_t == '-p':
+                # skip parameters file
+                obs_tokens.pop()
+                exp_tokens.pop()
+            else:
+                self.assertEqual(o_t, e_t)
+
+    def test_insert_processed_data_target_gene(self):
+        fd, fna_fp = mkstemp(suffix='_seqs.fna')
+        close(fd)
+        fd, qual_fp = mkstemp(suffix='_seqs.qual')
+        close(fd)
+        filepaths = [
+            (fna_fp, convert_to_id('preprocessed_fasta', 'filepath_type')),
+            (qual_fp, convert_to_id('preprocessed_fastq', 'filepath_type'))]
+
+        preprocessed_data = PreprocessedData.create(
+            Study(1), "preprocessed_sequence_illumina_params", 1,
+            filepaths, data_type="18S")
+
+        params = ProcessedSortmernaParams(1)
+        pick_dir = mkdtemp()
+        path_builder = partial(join, pick_dir)
+        db_path_builder = partial(join, get_mountpoint('processed_data')[0][1])
+
+        # Create a placeholder for the otu table
+        with open(path_builder('otu_table.biom'), 'w') as f:
+            f.write('\n')
+
+        # Create a placeholder for the directory
+        mkdir(path_builder('sortmerna_picked_otus'))
+
+        # Create the log file
+        fd, fp = mkstemp(dir=pick_dir, prefix='log_', suffix='.txt')
+        close(fd)
+        with open(fp, 'w') as f:
+            f.write('\n')
+
+        _insert_processed_data_target_gene(preprocessed_data, params, pick_dir)
+
+        new_id = get_count('qiita.processed_data')
+
+        # Check that the files have been copied
+        db_files = [db_path_builder("%s_otu_table.biom" % new_id),
+                    db_path_builder("%s_sortmerna_picked_otus" % new_id),
+                    db_path_builder("%s_%s" % (new_id, basename(fp)))]
+        for fp in db_files:
+            self.assertTrue(exists(fp))
+
+        # Check that a new preprocessed data has been created
+        self.assertTrue(self.conn_handler.execute_fetchone(
+            "SELECT EXISTS(SELECT * FROM qiita.processed_data WHERE "
+            "processed_data_id=%s)", (new_id, ))[0])
 
 
 DEMUX_SEQS = """@a_1 orig_bc=abc new_bc=abc bc_diffs=0

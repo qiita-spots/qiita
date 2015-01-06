@@ -407,3 +407,6 @@ INSERT INTO qiita.raw_filepath (raw_data_id, filepath_id) VALUES (3, 17), (3, 18
 
 -- Insert (link) the study with the raw data
 INSERT INTO qiita.study_raw_data (study_id, raw_data_id) VALUES (1, 3), (1, 4);
+
+-- Add processing parameters for sortmerna
+INSERT INTO qiita.processed_params_sortmerna (reference_id, sortmerna_e_value, sortmerna_max_pos, similarity, sortmerna_coverage, threads) VALUES (1, 1, 10000, 0.97, 0.97, 1);
