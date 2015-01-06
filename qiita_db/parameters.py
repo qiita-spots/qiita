@@ -66,6 +66,29 @@ class BaseParameters(QiitaObject):
 
         return cls(id_)
 
+    @classmethod
+    def iter(cls):
+        """Iterates over all parameters
+
+        Returns
+        -------
+        generator
+            Yields a parameter instance
+        """
+        conn_handler = SQLConnectionHandler()
+        sql = "SELECT {0} FROM qiita.{1}".format(cls._column_id, cls._table)
+
+        for result in conn_handler.execute_fetchall(sql):
+            yield cls(result[0])
+
+    @property
+    def name(self):
+        conn_handler = SQLConnectionHandler()
+        return conn_handler.execute_fetchone(
+            "SELECT param_set_name FROM qiita.{0} WHERE {1} = %s".format(
+                self._table, self._column_id),
+            (self.id,))[0]
+
     def _check_id(self, id_, conn_handler=None):
         r"""Check that the provided ID actually exists in the database
 
@@ -121,21 +144,6 @@ class BaseParameters(QiitaObject):
                 result.append("--%s %s" % (p_name, values[p_name]))
 
         return " ".join(result)
-
-    @classmethod
-    def iter(cls):
-        """Iterates over all parameters
-
-        Returns
-        -------
-        generator
-            Yields a parameter instance
-        """
-        conn_handler = SQLConnectionHandler()
-        sql = "SELECT {0} FROM qiita.{1}".format(cls._column_id, cls._table)
-
-        for result in conn_handler.execute_fetchall(sql):
-            yield cls(result[0])
 
 
 class PreprocessedIlluminaParams(BaseParameters):

@@ -123,6 +123,10 @@ class PreprocessedIlluminaParamsTests(TestCase):
         for o, e in zip(obs, exp):
             self.assertEqual(o.id, e.id)
 
+    def test_name(self):
+        obs = PreprocessedIlluminaParams(1).name
+        self.assertEqual(obs, "Defaults")
+
 
 @qiita_test_checker()
 class ProcessedSortmernaParamsTests(TestCase):
