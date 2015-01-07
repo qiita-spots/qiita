@@ -11,10 +11,10 @@ class ProcessHandler(BaseHandler):
     def post(self):
         study_id = int(self.get_argument('study_id'))
         preprocessed_data_id = int(self.get_argument('preprocessed_data_id'))
+        param_id = self.get_argument('parameter-set-%s' % preprocessed_data_id)
 
-        # We currently do not support defining the parameters
-        # hard-coding them here
-        param_id = 1
+        # The only parameter type supported is the ProcessedSortmernaParams
+        # so we can hardcode the constructor here
         param_constructor = ProcessedSortmernaParams
 
         job_id = submit(self.current_user, processor, preprocessed_data_id,

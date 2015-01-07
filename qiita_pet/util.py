@@ -50,3 +50,21 @@ def clean_str(item):
         cleaned string
     """
     return str(item).replace(" ", "_").replace(":", "")
+
+
+def generate_param_str(param):
+    """Generate an html string with the parameter values
+
+    Parameters
+    ----------
+    param : BaseParameters
+        The parameter to generate the str
+
+    Returns
+    -------
+    str
+        The html string with the parameter set values
+    """
+    result = ["<b>%s:</b> %s" % (name, value)
+              for name, value in param.values.items()]
+    return "<br/>".join(result)

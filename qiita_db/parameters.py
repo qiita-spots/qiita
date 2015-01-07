@@ -66,6 +66,56 @@ class BaseParameters(QiitaObject):
 
         return cls(id_)
 
+    @classmethod
+    def iter(cls):
+        """Iterates over all parameters
+
+        Returns
+        -------
+        generator
+            Yields a parameter instance
+        """
+        conn_handler = SQLConnectionHandler()
+        sql = "SELECT {0} FROM qiita.{1}".format(cls._column_id, cls._table)
+
+        for result in conn_handler.execute_fetchall(sql):
+            yield cls(result[0])
+
+    @property
+    def name(self):
+        """The name of the parameter set
+
+        Returns
+        -------
+        str
+            The name of the parameter set
+        """
+        conn_handler = SQLConnectionHandler()
+        return conn_handler.execute_fetchone(
+            "SELECT param_set_name FROM qiita.{0} WHERE {1} = %s".format(
+                self._table, self._column_id),
+            (self.id,))[0]
+
+    @property
+    def values(self):
+        """The values of the parameter set
+
+        Returns
+        -------
+        dict
+            Dictionary with the parameter values keyed by parameter name
+        """
+        conn_handler = SQLConnectionHandler()
+        result = dict(conn_handler.execute_fetchone(
+            "SELECT * FROM qiita.{0} WHERE {1} = %s".format(
+                self._table, self._column_id),
+            (self.id,)))
+        # Remove the parameter id and the parameter name as those are used
+        # internally, and they are not passed to the processing step
+        del result[self._column_id]
+        del result['param_set_name']
+        return result
+
     def _check_id(self, id_, conn_handler=None):
         r"""Check that the provided ID actually exists in the database
 
