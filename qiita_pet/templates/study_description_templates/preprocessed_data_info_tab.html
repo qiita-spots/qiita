@@ -2,13 +2,14 @@
 
 <script>
 function parameters_changed(obj, ppd_id){
-  data = "foo"
   switch(obj.value){
     {% for key in process_params %}
       case "{{ key }}":
         data = "{% raw process_params[key][0] %}";
         break;
     {% end %}
+      default:
+        data = ""
   }
   $('#param-description-'+ppd_id).html(data);
 };
