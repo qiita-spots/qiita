@@ -10,9 +10,10 @@ from qiita_db.data import PreprocessedData
 from qiita_db.metadata_template import PrepTemplate
 from qiita_db.user import User
 from qiita_db.ontology import Ontology
-from qiita_db.util import convert_to_id, generate_param_str
+from qiita_db.util import convert_to_id
 from qiita_db.parameters import ProcessedSortmernaParams
 from .base_uimodule import BaseUIModule
+from qiita_pet.util import generate_param_str
 
 
 class PreprocessedDataTab(BaseUIModule):
