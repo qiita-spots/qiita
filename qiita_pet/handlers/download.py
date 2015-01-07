@@ -17,7 +17,7 @@ class DownloadHandler(BaseHandler):
 
         if filepath_id not in accessible_filepaths:
             raise QiitaPetAuthorizationError(
-                self.current_user, 'filepath id %d' % filepath_id)
+                self.current_user, 'filepath id %s' % str(filepath_id))
 
         relpath = filepath_id_to_rel_path(filepath_id)
         fname = basename(relpath)
