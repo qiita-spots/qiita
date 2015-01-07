@@ -226,13 +226,13 @@ class Analysis(QiitaStatusObject):
 
         Returns
         -------
-        dict of sets or None
+        dict of sets
             Format is {processed_data_id: {sample_id, sample_id, ...}, ...}
-            if no biom tables exist for the analysis, returns None
+            if no biom tables exist for the analysis, returns empty dict
         """
         bioms = self.biom_tables
         if not bioms:
-            return None
+            return {}
 
         # get all samples selected for the analysis, converting lists to
         # sets for fast searching. Overhead less this way for large analyses
