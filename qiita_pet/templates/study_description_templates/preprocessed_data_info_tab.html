@@ -77,11 +77,11 @@
       </tr>
   </table>
   {% if not processed_data or processing_status.startswith('failed') %}
-    <a data-toggle="modal" data-target="#process-modal-view-{{ppd_id}}" style="word-spacing: -10px;"
+    <a style="word-spacing: -10px;"
     {% if processing_status == "processing" %}
       class="btn btn-default glyphicon glyphicon-play" style=" pointer-events: none; cursor: default; background-color:grey;"
     {% else %}
-      class="btn btn-primary glyphicon glyphicon-play"
+      class="btn btn-primary glyphicon glyphicon-play" data-toggle="modal" data-target="#process-modal-view-{{ppd_id}}"
     {% end %}> Process</a>
     <br/>
     <i>Status: </i> {{processing_status}}
