@@ -569,6 +569,7 @@ class StudyProcessor(ParallelWrapper):
         """
         self._logger = stderr
         self.preprocessed_data = preprocessed_data
+        self.preprocessed_data.processing_status = "processing"
 
         if preprocessed_data.data_type() in TARGET_GENE_DATA_TYPES:
             cmd_generator = _get_process_target_gene_cmd
