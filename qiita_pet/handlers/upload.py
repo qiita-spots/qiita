@@ -58,8 +58,8 @@ class UploadFileHandler(BaseHandler):
         """
         if not filename.endswith(tuple(qiita_config.valid_upload_extension)):
             self.set_status(415)
-            raise HTTPError(415, "User %s is trying to upload %d" %
-                                 (self.current_user, filename))
+            raise HTTPError(415, "User %s is trying to upload %s" %
+                                 (self.current_user, str(filename)))
 
     @authenticated
     def post(self):
