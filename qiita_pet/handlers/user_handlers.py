@@ -93,8 +93,11 @@ class ForgotPasswordHandler(BaseHandler):
             info = user.info
             try:
                 send_email(user.id, "Qiita: Password Reset", "Please go to "
-                           "the following URL to reset your password: "
-                           "http://qiita.colorado.edu/auth/reset/%s" %
+                           "the following URL to reset your password: \n"
+                           "http://qiita.colorado.edu/auth/reset/%s  \nYou "
+                           "have 30 minutes from the time you requested a "
+                           "reset to change your password. After this period, "
+                           "you will have to request another reset." %
                            info["pass_reset_code"])
                 message = ("Check your email for the reset code.")
                 level = "success"
@@ -137,7 +140,9 @@ class ChangeForgotPasswordHandler(BaseHandler):
                 level = "success"
                 page = "index.html"
             else:
-                message = "Unable to reset password"
+                message = ("Unable to reset password. Most likely your email "
+                           "is incorrect or your reset window has timed out.")
+
                 level = "danger"
 
         self.render(page, user=user, message=message, level=level, code=code)
