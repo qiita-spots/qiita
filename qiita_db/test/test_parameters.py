@@ -116,6 +116,27 @@ class PreprocessedIlluminaParamsTests(TestCase):
                "--phred_quality_threshold 3 --sequence_max_n 0")
         self.assertEqual(obs, exp)
 
+    def test_iter(self):
+        obs = list(PreprocessedIlluminaParams.iter())
+        exp = [PreprocessedIlluminaParams(1)]
+
+        for o, e in zip(obs, exp):
+            self.assertEqual(o.id, e.id)
+
+    def test_name(self):
+        obs = PreprocessedIlluminaParams(1).name
+        self.assertEqual(obs, "Defaults")
+
+    def test_values(self):
+        obs = PreprocessedIlluminaParams(1).values
+        exp = {'max_barcode_errors': 1.5, 'sequence_max_n': 0,
+               'max_bad_run_length': 3, 'rev_comp': False,
+               'phred_quality_threshold': 3, 'rev_comp_barcode': False,
+               'rev_comp_mapping_barcodes': False,
+               'min_per_read_length_fraction': 0.75,
+               'barcode_type': 'golay_12'}
+        self.assertEqual(obs, exp)
+
 
 @qiita_test_checker()
 class ProcessedSortmernaParamsTests(TestCase):
