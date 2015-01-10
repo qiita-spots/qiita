@@ -39,9 +39,12 @@ class BaseHandler(RequestHandler):
         exc_info = kwargs["exc_info"]
         trace_info = ''.join(["%s\n" % line for line in
                              format_exception(*exc_info)])
+        req_dict = self.request.__dict__
+        # must trim body to 1024 chars to prevent huge error messages
+        req_dict['body'] = req_dict.get('body', '')[:1024]
         request_info = ''.join(["<strong>%s</strong>: %s\n" %
-                               (k, self.request.__dict__[k]) for k in
-                                self.request.__dict__.keys()])
+                               (k, req_dict[k]) for k in
+                                req_dict.keys()])
         error = exc_info[1]
         LogEntry.create(
             'Runtime',

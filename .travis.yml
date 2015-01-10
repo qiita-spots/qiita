@@ -9,10 +9,10 @@ before_install:
   # Update conda itself
   - conda update --yes conda
 install:
-  - conda create --yes -n env_name python=$PYTHON_VERSION pip nose openpyxl=1.8.2 pandas>=0.15 ipython pyzmq flake8
+  - conda create --yes -n env_name python=$PYTHON_VERSION pip nose openpyxl=1.8.2 pandas>=0.15 pyzmq flake8
   - conda install --yes -n env_name python=$PYTHON_VERSION h5py>=2.3.1
   - source activate env_name
-  - pip install coveralls cogent burrito qcli burrito-fillings
+  - pip install coveralls cogent burrito qcli burrito-fillings ipython[all]
   - pip install https://github.com/biocore/mustached-octo-ironman/archive/master.zip
   - pip install https://github.com/biocore/qiime/archive/master.zip --no-deps
   - pip install .
