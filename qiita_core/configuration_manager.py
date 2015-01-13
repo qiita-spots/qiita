@@ -28,6 +28,8 @@ class ConfigurationManager(object):
     ----------
     test_environment : bool
         If true, we are in a test environment.
+    base_url: str
+        base URL for the website, in the form http://SOMETHING.com
     base_data_dir : str
         Path to the base directorys where all data file are stored
     working_dir : str
