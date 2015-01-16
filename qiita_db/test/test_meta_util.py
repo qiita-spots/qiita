@@ -72,6 +72,13 @@ class MetaUtilTests(TestCase):
         obs = get_accessible_filepath_ids('test@foo.bar')
         self.assertEqual(obs, exp)
 
+        # admin should have access to everything
+        count = self.conn_handler.execute_fetchone("SELECT count(*) FROM "
+                                                   "qiita.filepath")[0]
+        exp = set(range(1, count + 1))
+        obs = get_accessible_filepath_ids('admin@foo.bar')
+        self.assertEqual(obs, exp)
+
 
 if __name__ == '__main__':
     main()

@@ -81,7 +81,7 @@
         <b>Preprocessed data generated: </b>
         <a href="#" onClick="display_tab('preprocessed_data_tab', {{preprocessed_data[0]}});">{{preprocessed_data[0]}}</a>
         {% for pdi in preprocessed_data[1:] %}
-          , <a href="#preprocessed_data_info_{{pdi}}">{{pdi}}</a>
+          , <a href="#" onClick="display_tab('preprocessed_data_tab', {{pdi}});">{{pdi}}</a>
         {% end %}
       {% end %}
     </div>

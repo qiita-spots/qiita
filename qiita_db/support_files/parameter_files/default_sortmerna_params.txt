@@ -1,0 +1,6 @@
+reference_id	1
+sortmerna_e_value	1
+sortmerna_max_pos	10000
+similarity	0.97
+sortmerna_coverage	0.97
+threads	1

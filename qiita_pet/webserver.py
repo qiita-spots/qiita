@@ -28,6 +28,7 @@ from qiita_pet.handlers.upload import UploadFileHandler, StudyUploadFileHandler
 from qiita_pet.handlers.compute import (
     ComputeCompleteHandler, AddFilesToRawData, UnlinkAllFiles)
 from qiita_pet.handlers.preprocessing_handlers import PreprocessHandler
+from qiita_pet.handlers.processing_handlers import ProcessHandler
 from qiita_pet.handlers.stats import StatsHandler
 from qiita_pet.handlers.download import DownloadHandler
 from qiita_pet import uimodules
@@ -77,6 +78,7 @@ class Application(tornado.web.Application):
             (r"/study/add_files_to_raw_data", AddFilesToRawData),
             (r"/study/unlink_all_files", UnlinkAllFiles),
             (r"/study/preprocess", PreprocessHandler),
+            (r"/study/process", ProcessHandler),
             (r"/study/sharing/", ShareStudyAJAX),
             (r"/study/description/(.*)", StudyDescriptionHandler),
             (r"/study/upload/(.*)", StudyUploadFileHandler),

@@ -203,7 +203,7 @@ def _per_sample_lengths(fp):
     """
     lengths = defaultdict(list)
     for record in load(fp):
-        sample_id = record['SequenceID'].split('_', 1)[0]
+        sample_id = record['SequenceID'].split(' ')[0].rsplit('_', 1)[0]
         lengths[sample_id].append(len(record['Sequence']))
 
     return lengths

@@ -21,9 +21,11 @@ from qiita_db.commands import (load_sample_template_from_cmd,
                                load_study_from_cmd,
                                load_raw_data_cmd, load_processed_data_cmd,
                                load_preprocessed_data_from_cmd,
-                               load_prep_template_from_cmd)
+                               load_prep_template_from_cmd,
+                               load_parameters_from_cmd, SUPPORTED_PARAMS)
 from qiita_db.sql_connection import SQLConnectionHandler
 from qiita_db.exceptions import QiitaDBConnectionError
+from qiita_db.reference import Reference
 from qiita_core.configuration_manager import ConfigurationManager
 from qiita_ware.commands import ebi_actions, submit_EBI as _submit_EBI
 from moi import r_client
@@ -80,7 +82,8 @@ def webserver():
 def load_study(owner, title, info):
     """Loads a study to the database"""
     study = load_study_from_cmd(owner, title, info)
-    print("Study successfully added to the database with id %s" % study.id)
+    click.echo("Study successfully added to the database with id %s"
+               % study.id)
 
 
 @db.command()
@@ -101,8 +104,8 @@ def load_study(owner, title, info):
 def load_raw(fp, fp_type, filetype, study):
     """Loads a raw data to the database"""
     raw_data = load_raw_data_cmd(fp, fp_type, filetype, study)
-    print("Raw data successfully added to the database with id %s"
-          % raw_data.id)
+    click.echo("Raw data successfully added to the database with id %s"
+               % raw_data.id)
 
 
 @db.command()
@@ -132,8 +135,8 @@ def load_preprocessed(study_id, params_table, filedir, filepathtype,
     preproc_data = load_preprocessed_data_from_cmd(
         study_id, params_table, filedir, filepathtype, params_id, insdc,
         prep_template_id, data_type)
-    print("Preprocessed data successfully added to the database with id %s"
-          % preproc_data.id)
+    click.echo("Preprocessed data successfully added to the database with "
+               "id %s" % preproc_data.id)
 
 
 @db.command()
@@ -168,8 +171,8 @@ def load_processed(fp, fp_type, processed_params_table,
                                         processed_params_id,
                                         preprocessed_data_id, study_id,
                                         processed_date)
-    print("Processed data successfully added to the database with id %s"
-          % proc_data.id)
+    click.echo("Processed data successfully added to the database with id %s"
+               % proc_data.id)
 
 
 @db.command()
@@ -180,8 +183,8 @@ def load_processed(fp, fp_type, processed_params_table,
 def load_sample_template(fp, study):
     """Loads a sample template to the database"""
     sample_temp = load_sample_template_from_cmd(fp, study)
-    print("Sample template successfully added to the database with id %s"
-          % sample_temp.id)
+    click.echo("Sample template successfully added to the database with id %s"
+               % sample_temp.id)
 
 
 @db.command()
@@ -197,8 +200,43 @@ def load_sample_template(fp, study):
 def load_prep_template(fp, raw_data, study, data_type):
     """Loads a sample template to the database"""
     prep_template = load_prep_template_from_cmd(fp, raw_data, study, data_type)
-    print("Prep template successfully added to the database with id %s"
-          % prep_template.id)
+    click.echo("Prep template successfully added to the database with id %s"
+               % prep_template.id)
+
+
+@db.command()
+@click.option('--name', required=True, type=str,
+              help='The name of the new reference database')
+@click.option('--version', required=True, type=str,
+              help='The version of the reference database')
+@click.option('--seq_fp', required=True,
+              type=click.Path(resolve_path=True, readable=True, exists=True),
+              help="Path to the reference sequences file")
+@click.option('--tax_fp', required=False,
+              type=click.Path(resolve_path=True, readable=True, exists=True),
+              help="Path to the reference taxonomy file")
+@click.option('--tree_fp', required=False,
+              type=click.Path(resolve_path=True, readable=True, exists=True),
+              help="Path to the reference tree file")
+def load_reference_db(name, version, seq_fp, tax_fp, tree_fp):
+    """Loads a reference db to the database"""
+    reference = Reference.create(name, version, seq_fp, tax_fp, tree_fp)
+    click.echo("Reference db successfully added to the database with id %s"
+               % reference.id)
+
+
+@db.command()
+@click.argument('fp', required=True,
+                type=click.Path(resolve_path=True, readable=True, exists=True))
+@click.option('--table', required=True, type=click.Choice(SUPPORTED_PARAMS),
+              help='The table to add the parameter set')
+@click.option('--name', required=True, type=str,
+              help='The name of the parameters set')
+def load_parameters(fp, table, name):
+    """Loads a parameter set to the database"""
+    param = load_parameters_from_cmd(name, fp, table)
+    click.echo("Parameters successfully added to table %s with id %s"
+               % (table, param.id))
 
 
 # #############################################################################
@@ -290,7 +328,7 @@ def start(port):
 
     http_server = tornado.httpserver.HTTPServer(Application())
     http_server.listen(port)
-    print("Qiita started on port", port)
+    click.echo("Qiita started on port %s" % port)
     tornado.ioloop.IOLoop.instance().start()
 
 if __name__ == '__main__':

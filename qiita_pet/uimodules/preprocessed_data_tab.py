@@ -35,6 +35,8 @@ class PreprocessedDataInfoTab(BaseUIModule):
         filepaths = preprocessed_data.get_filepaths()
         is_local_request = self._is_local()
         show_ebi_btn = user.level == "admin"
+        processing_status = preprocessed_data.processing_status
+        processed_data = preprocessed_data.processed_data
 
         # Get all the ENA terms for the investigation type
         ontology = Ontology(convert_to_id('ENA', 'ontology'))
@@ -58,6 +60,11 @@ class PreprocessedDataInfoTab(BaseUIModule):
             raw_data_id = None
             inv_type = "None Selected"
 
+        # Currently we don't support changing any parameter
+        # Define the process_form to None and the interface will show a
+        # useful message
+        process_form = None
+
         return self.render_string(
             "study_description_templates/preprocessed_data_info_tab.html",
             ppd_id=ppd_id,
@@ -72,4 +79,8 @@ class PreprocessedDataInfoTab(BaseUIModule):
             inv_type=inv_type,
             ena_terms=ena_terms,
             vamps_status=vamps_status,
-            user_defined_terms=user_defined_terms)
+            user_defined_terms=user_defined_terms,
+            process_form=process_form,
+            study_id=preprocessed_data.study,
+            processing_status=processing_status,
+            processed_data=processed_data)
