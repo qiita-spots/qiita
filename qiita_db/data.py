@@ -365,7 +365,7 @@ class RawData(BaseData):
     def prep_templates(self):
         conn_handler = SQLConnectionHandler()
         sql = ("SELECT prep_template_id FROM qiita.prep_template "
-               "WHERE raw_data_id = %s")
+               "WHERE raw_data_id = %s ORDER BY prep_template_id")
         return [x[0] for x in conn_handler.execute_fetchall(sql, (self._id,))]
 
     def _is_preprocessed(self, conn_handler=None):

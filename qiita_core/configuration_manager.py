@@ -28,6 +28,8 @@ class ConfigurationManager(object):
     ----------
     test_environment : bool
         If true, we are in a test environment.
+    base_url: str
+        base URL for the website, in the form http://SOMETHING.com
     base_data_dir : str
         Path to the base directorys where all data file are stored
     working_dir : str
@@ -140,6 +142,8 @@ class ConfigurationManager(object):
                                      'test_data')
         self.base_data_dir = config.get('main', 'BASE_DATA_DIR') or \
             default_base_data_dir
+
+        self.base_url = config.get('main', 'BASE_URL')
 
         if not isdir(self.base_data_dir):
             raise ValueError("The BASE_DATA_DIR (%s) folder doesn't exist" %

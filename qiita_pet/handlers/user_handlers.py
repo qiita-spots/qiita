@@ -7,6 +7,7 @@ from qiita_db.user import User
 from qiita_db.logger import LogEntry
 from qiita_db.exceptions import QiitaDBUnknownIDError
 from qiita_core.util import send_email
+from qiita_core.qiita_settings import qiita_config
 
 
 class UserProfile(Form):
@@ -93,9 +94,12 @@ class ForgotPasswordHandler(BaseHandler):
             info = user.info
             try:
                 send_email(user.id, "Qiita: Password Reset", "Please go to "
-                           "the following URL to reset your password: "
-                           "http://qiita.colorado.edu/auth/reset/%s" %
-                           info["pass_reset_code"])
+                           "the following URL to reset your password: \n"
+                           "%s/auth/reset/%s  \nYou "
+                           "have 30 minutes from the time you requested a "
+                           "reset to change your password. After this period, "
+                           "you will have to request another reset." %
+                           (qiita_config.base_url, info["pass_reset_code"]))
                 message = ("Check your email for the reset code.")
                 level = "success"
                 page = "index.html"
@@ -137,7 +141,9 @@ class ChangeForgotPasswordHandler(BaseHandler):
                 level = "success"
                 page = "index.html"
             else:
-                message = "Unable to reset password"
+                message = ("Unable to reset password. Most likely your email "
+                           "is incorrect or your reset window has timed out.")
+
                 level = "danger"
 
         self.render(page, user=user, message=message, level=level, code=code)
