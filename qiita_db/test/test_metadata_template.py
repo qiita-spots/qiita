@@ -1435,7 +1435,7 @@ class TestUtilities(TestCase):
                'has_physical_specimen', 'host_subject_id', 'latitude',
                'longitude', 'physical_location', 'required_sample_info_status',
                'sample_type', 'str_column', 'str_column']
-        assert obs == exp
+        self.assertEqual(obs, exp)
 
     def test_load_template_to_dataframe_scrubbing(self):
         obs = load_template_to_dataframe(StringIO(EXP_SAMPLE_TEMPLATE_SPACES))
