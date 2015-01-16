@@ -1746,7 +1746,7 @@ def load_template_to_dataframe(fn):
     #   constituted only by delimiters i. e. empty rows.
     template = pd.read_csv(fn, sep='\t', infer_datetime_format=True,
                            parse_dates=True, index_col=False, comment='\t',
-                           converters={
+                           mangle_dupe_cols=False, converters={
                                'sample_name': lambda x: str(x).strip()})
 
     # remove rows that have no sample identifier but that may have other data
