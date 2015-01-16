@@ -90,8 +90,8 @@ class UploadFileHandler(BaseHandler):
             remove(temporary_location)
 
         # append every transmitted chunk
-        with open(temporary_location, 'ab') as final_file:
-            final_file.write(bytes(data))
+        with open(temporary_location, 'ab') as tmp_file:
+            tmp_file.write(bytes(data))
 
         if resumable_chunk_number == resumable_total_chunks:
             final_location = join(base_fp, study_id, resumable_filename)
@@ -119,12 +119,8 @@ class UploadFileHandler(BaseHandler):
 
         self.validate_file_extension(resumable_filename)
 
-        # temporaly filename or chunck
-        _, fp = get_mountpoint("uploads")[0]
-        tfp = join(fp, study_id,
-                   resumable_filename + '.part.' + resumable_chunk_number)
-
-        if exists(tfp):
-            self.set_status(200)
-        else:
-            self.set_status(400)
+        # in the original version we used to check if a chunk was already
+        # uploaded and if it was we will send self.set_status(200). Now, as
+        # we are not chuncking by file we can simply pass the no exists
+        # response
+        self.set_status(400)

@@ -53,7 +53,7 @@
            simultaneousUploads: 1,
            target:'/upload/',
            query:{study_id:this.study_id},
-           prioritizeFirstAndLastChunk:true,
+           prioritizeFirstAndLastChunk:false,
            throttleProgressCallbacks:1
          });
        if(!this.resumable.support) {
