@@ -18,6 +18,9 @@ TEST_ENVIRONMENT = TRUE
 # Whether studies require admin approval to be made available
 REQUIRE_APPROVAL = True
 
+# Base URL: DO NOT ADD TRAILING SLASH
+BASE_URL = http://localhost
+
 # Download path files
 UPLOAD_DATA_DIR = /tmp/
 
