@@ -506,13 +506,15 @@ def compute_checksum(path):
     return crc & 0xffffffff
 
 
-def get_files_from_uploads_folders(study_id):
+def get_files_from_uploads_folders(study_id, ignore_hidden_and_folders=True):
     """Retrive files in upload folders
 
     Parameters
     ----------
     study_id : str
         The study id of which to retrive all upload folders
+    ignore_hidden_and_folders : bool
+        Ignore hidden files and folders
 
     Returns
     -------
@@ -523,7 +525,11 @@ def get_files_from_uploads_folders(study_id):
     for _, p in get_mountpoint("uploads", retrive_all=True):
         t = join(p, study_id)
         if exists(t):
-            fp.extend(listdir(t))
+            if not ignore_hidden_and_folders:
+                fp.extend(listdir(t))
+            else:
+                fp.extend([f for f in listdir(t) if not f.startswith('.') and
+                          not isdir(join(t, f))])
 
     return fp
 
