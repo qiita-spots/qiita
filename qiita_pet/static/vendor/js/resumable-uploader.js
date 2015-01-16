@@ -50,7 +50,7 @@
        this.resumable = new Resumable({
            chunkSize:3*1024*1024,
            maxFileSize:this.maxFileSize*1024*1024*1024,
-           simultaneousUploads: 6,
+           simultaneousUploads: 1,
            target:'/upload/',
            query:{study_id:this.study_id},
            prioritizeFirstAndLastChunk:true,

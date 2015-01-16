@@ -1,9 +1,9 @@
 from tornado.web import authenticated, HTTPError
 
 from os.path import isdir, join, exists
-from os import makedirs, listdir
+from os import makedirs, remove
 
-from shutil import copyfileobj, rmtree
+from shutil import rmtree, move
 
 from .util import check_access
 from .base_handlers import BaseHandler
@@ -76,30 +76,32 @@ class UploadFileHandler(BaseHandler):
         self.validate_file_extension(resumable_filename)
 
         _, base_fp = get_mountpoint("uploads")[0]
-        fp = join(base_fp, study_id, resumable_identifier)
-        # creating temporal folder for upload
-        if not isdir(fp):
-            makedirs(fp)
-        dfp = join(fp, '%s.part.%d' % (resumable_filename,
-                                       resumable_chunk_number))
 
-        # writting the output file
-        with open(dfp, 'wb') as f:
-            f.write(bytes(data))
+        # creating temporal folder for upload of the file
+        temp_dir = join(base_fp, study_id, resumable_identifier)
+        if not isdir(temp_dir):
+            makedirs(temp_dir)
 
-        # validating if all files have been uploaded
-        num_files = len([n for n in listdir(fp)])
-        if resumable_total_chunks == num_files:
-            # creating final destination
-            ffp = join(base_fp, study_id, resumable_filename)
-            with open(ffp, 'wb') as f:
-                for c in range(1, resumable_total_chunks+1):
-                    chunk = join(fp, '%s.part.%d' % (resumable_filename, c))
-                    copyfileobj(open(chunk, 'rb'), f)
+        # location of the file as it is transmitted
+        temporary_location = join(temp_dir, resumable_filename)
 
-                # deleting the tmp folder with contents and finish file
-                rmtree(fp)
-                self.set_status(200)
+        # this is the result of a failed upload
+        if resumable_chunk_number == 1 and exists(temporary_location):
+            remove(temporary_location)
+
+        # append every transmitted chunk
+        with open(temporary_location, 'ab') as final_file:
+            final_file.write(bytes(data))
+
+        if resumable_chunk_number == resumable_total_chunks:
+            final_location = join(base_fp, study_id, resumable_filename)
+
+            if exists(final_location):
+                remove(final_location)
+
+            move(temporary_location, final_location)
+            rmtree(temp_dir)
+            self.set_status(200)
 
     @authenticated
     def get(self):
