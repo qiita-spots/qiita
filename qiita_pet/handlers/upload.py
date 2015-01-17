@@ -112,7 +112,6 @@ class UploadFileHandler(BaseHandler):
         """
         study_id = self.get_argument('study_id')
         resumable_filename = self.get_argument('resumableFilename')
-        resumable_chunk_number = self.get_argument('resumableChunkNumber')
 
         check_access(User(self.current_user), Study(int(study_id)),
                      no_public=True, raise_error=True)
