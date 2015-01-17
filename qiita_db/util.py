@@ -524,8 +524,9 @@ def get_files_from_uploads_folders(study_id, ignore_hidden_and_folders=True):
     fp = []
     for _, p in get_mountpoint("uploads", retrive_all=True):
         t = join(p, study_id)
+        print '++++++++++', exists(t)
         if exists(t):
-            print listdir(t)
+            print '++++++++++', listdir(t)
             if not ignore_hidden_and_folders:
                 fp.extend(listdir(t))
             else:

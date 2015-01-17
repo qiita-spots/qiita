@@ -58,9 +58,8 @@ setup(name='qiita-spots',
                         'support_files/test_data/reference/*',
                         'support_files/test_data/job/*.txt',
                         'support_files/test_data/job/2_test_folder/*',
-                        'support_files/test_data/uploads/1/a_folder/*',
-                        'support_files/test_data/uploads/1/uploaded_file.txt'
-                        'support_files/test_data/uploads/1/.hidden_file',
+                        'support_files/test_data/uploads/1/a_folder/*.txt',
+                        'support_files/test_data/uploads/1/*.*.txt'
                         'support_files/test_data/templates/*',
                         'support_files/work_data/*'],
                     'qiita_pet': [
