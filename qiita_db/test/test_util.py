@@ -481,7 +481,7 @@ class DBUtilTests(TestCase):
         exp = ['.hidden_file.txt', 'a_folder', 'uploaded_file.txt']
         obs = get_files_from_uploads_folders("1",
                                              ignore_hidden_and_folders=False)
-        self.assertEqual(sorted(obs), sorted(exp))
+        self.assertItemsEqual(obs, exp)
 
         # nothing has been uploaded
         exp = []

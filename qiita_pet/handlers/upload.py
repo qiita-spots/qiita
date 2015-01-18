@@ -119,7 +119,7 @@ class UploadFileHandler(BaseHandler):
         self.validate_file_extension(resumable_filename)
 
         # in the original version we used to check if a chunk was already
-        # uploaded and if it was we will send self.set_status(200). Now, as
-        # we are not chuncking by file we can simply pass the no exists
+        # uploaded and if it was we would send self.set_status(200). Now, as
+        # we are not chunking by file we can simply pass the no exists
         # response
         self.set_status(400)
