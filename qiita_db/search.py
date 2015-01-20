@@ -69,7 +69,6 @@ from pyparsing import (alphas, nums, Word, dblQuotedString, oneOf, Optional,
 from qiita_db.util import scrub_data, typecast_string, get_table_cols
 from qiita_db.sql_connection import SQLConnectionHandler
 from qiita_db.study import Study
-from qiita_db.user import User
 from qiita_db.exceptions import QiitaDBIncompatibleDatatypeError
 
 
