@@ -26,6 +26,7 @@ script:
   # we need to run the test suite from setup.py for coveralls to grab the info
   # - coverage run setup.py test
   # - coverage report -m
+  - qiita_test_install
 services:
   - redis-server
 after_success:

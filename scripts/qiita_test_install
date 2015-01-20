@@ -17,7 +17,7 @@ from os import environ
 #
 # from os.path import isdir, exists, split, join
 # from sys import platform, version as python_version, executable, stdout
-# from unittest import TestLoader, TextTestRunner, TestCase
+from unittest import TestLoader, TextTestRunner, TestCase
 # from shutil import rmtree
 # from subprocess import Popen, PIPE, STDOUT
 # from optparse import SUPPRESS_HELP
@@ -87,9 +87,9 @@ except ImportError as e:
     raise ImportError("%s\n%s" % (e, core_dependency_missing_msg % 'wtforms'))
 
 try:
-    from Qiita import __version__ as Qiita_lib_version
+    from qiime import __version__ as qiime_lib_version
 except ImportError as e:
-    raise ImportError("%s\n%s" % (e, core_dependency_missing_msg % 'Qiita'))
+    raise ImportError("%s\n%s" % (e, core_dependency_missing_msg % 'qiime'))
 
 try:
     from mock import __version__ as mock_lib_version
@@ -106,16 +106,6 @@ try:
     from moi import __version__ as moi_lib_version
 except ImportError as e:
     raise ImportError("%s\n%s" % (e, core_dependency_missing_msg % 'moi'))
-
-try:
-    from IPython import __version__ as ipython_lib_version
-except ImportError as e:
-    raise ImportError("%s\n%s" % (e, core_dependency_missing_msg % 'ipython'))
-
-try:
-    from IPython import __version__ as ipython_lib_version
-except ImportError as e:
-    raise ImportError("%s\n%s" % (e, core_dependency_missing_msg % 'ipython'))
 
 try:
     from IPython import __version__ as ipython_lib_version
@@ -150,6 +140,11 @@ try:
 except ImportError as e:
     raise ImportError("%s\n%s" % (e, core_dependency_missing_msg %
                                   'qiita_ware_lib_version'))
+
+from qiita_core.configuration_manager import ConfigurationManager
+
+
+config = ConfigurationManager()
 
 
 # click
