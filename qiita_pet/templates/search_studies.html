@@ -98,17 +98,18 @@ function add_metacat(metacat) {
 
     <table class='table table-hover' style="width:100%">
       <tr><th>Data Types</th><th>Name</th><th>Selected</th><th>Description</th><th>Status</th></tr>
-      {% for sid, samples in viewitems(results) %}
-        {% set study = Study(sid) %}
+{% for sid, samples in viewitems(results) %}
+  {% set study = Study(sid) %}
         <tr id="study{{sid}}"><td>
-        {% for data_type in study.data_types %}
-        {# make sure processed data exists for the data_type before displaying#}
-          {% set pd = study.processed_data(data_type=data_type) %}
-          {% if pd %}
-            {% set data_type_id = pd[0] %}
+  {% for data_type in study.data_types %}
+    {# make sure processed data exists for the data_type before displaying#}
+    {% set pd = study.processed_data(data_type=data_type) %}
+    {% if pd %}
+      {% set data_type_id = pd[0] %}
             <input type='checkbox' name='availstudies' value='{{sid}}#{{data_type_id}}' onchange="select_deselect_samples_study({{sid}})"> 
             {{data_type}}<br />
-          {% end %}
+    {% end %}
+  {% end %}
           </td><td style='vertical-align:middle;'><a href="#" data-toggle="modal" data-target="#modal{{sid}}" id="modal-link-{{sid}}" disabled=true>{{study.title}}</a></td>
           <td style='vertical-align:middle;'>
             <span id="count{{sid}}">0</span>/{{len(samples)}}
@@ -116,8 +117,7 @@ function add_metacat(metacat) {
           <td style='vertical-align:middle;'>
           {{study.info["study_description"]}}</td>
           <td style='vertical-align:middle;'>{{study.status}}</td></tr>
-        {% end %}
-      {% end %}
+{% end %}
     </table>
     </div>
   </div>
