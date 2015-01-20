@@ -1,0 +1,17 @@
+{% from qiita_pet.handlers.util import download_link_or_path %}
+
+<div class="tab-pane" id="processed_data_info_{{pd_id}}" style="padding: 10px;">
+  <a href="#" onclick="display_tab('preprocessed_data_tab', {{preprocessed_data_id}});">Preprocessed data</a><br/>
+  <b>Processed data:</b> {{process_date}}<br/>
+  <b>Files:</b><br/>
+  <table border="0" style="margin-left: 10px;">
+    {% for fpid, fp, ft in filepaths %}
+      <tr>
+        <td style="padding:3px;">
+          {% set ft = ft.replace('_', ' ') %}
+          {% raw download_link_or_path(is_local_request, fp, fpid, ft) %}
+        </td>
+      </tr>
+    {% end %}
+  </table>
+</div>

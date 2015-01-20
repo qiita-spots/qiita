@@ -10,7 +10,9 @@ from qiita_db.data import PreprocessedData
 from qiita_db.metadata_template import PrepTemplate
 from qiita_db.ontology import Ontology
 from qiita_db.util import convert_to_id
+from qiita_db.parameters import ProcessedSortmernaParams
 from .base_uimodule import BaseUIModule
+from qiita_pet.util import generate_param_str
 
 
 class PreprocessedDataTab(BaseUIModule):
@@ -34,6 +36,8 @@ class PreprocessedDataInfoTab(BaseUIModule):
         filepaths = preprocessed_data.get_filepaths()
         is_local_request = self._is_local()
         show_ebi_btn = user.level == "admin"
+        processing_status = preprocessed_data.processing_status
+        processed_data = preprocessed_data.processed_data
 
         # Get all the ENA terms for the investigation type
         ontology = Ontology(convert_to_id('ENA', 'ontology'))
@@ -57,6 +61,12 @@ class PreprocessedDataInfoTab(BaseUIModule):
             raw_data_id = None
             inv_type = "None Selected"
 
+        process_params = {param.id: (generate_param_str(param), param.name)
+                          for param in ProcessedSortmernaParams.iter()}
+        # We just need to provide an ID for the default parameters,
+        # so we can initialize the interface
+        default_params = 1
+
         return self.render_string(
             "study_description_templates/preprocessed_data_info_tab.html",
             ppd_id=ppd_id,
@@ -71,4 +81,9 @@ class PreprocessedDataInfoTab(BaseUIModule):
             inv_type=inv_type,
             ena_terms=ena_terms,
             vamps_status=vamps_status,
-            user_defined_terms=user_defined_terms)
+            user_defined_terms=user_defined_terms,
+            process_params=process_params,
+            default_params=default_params,
+            study_id=preprocessed_data.study,
+            processing_status=processing_status,
+            processed_data=processed_data)

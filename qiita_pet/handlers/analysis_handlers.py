@@ -298,11 +298,13 @@ class AnalysisResultsHandler(BaseHandler):
                                              jobject.results))
 
         dropped = {}
-        for proc_data_id, samples in viewitems(analysis.dropped_samples):
-            proc_data = ProcessedData(proc_data_id)
-            key = "Data type %s, Study: %s" % (proc_data.data_type(),
-                                               proc_data.study)
-            dropped[key] = samples
+        dropped_samples = analysis.dropped_samples
+        if dropped_samples:
+            for proc_data_id, samples in viewitems(dropped_samples):
+                proc_data = ProcessedData(proc_data_id)
+                key = "Data type %s, Study: %s" % (proc_data.data_type(),
+                                                   proc_data.study)
+                dropped[key] = samples
 
         self.render("analysis_results.html",
                     jobres=jobres, aname=analysis.name, dropped=dropped,

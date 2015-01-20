@@ -1,5 +1,75 @@
 {% from qiita_pet.handlers.util import download_link_or_path %}
 
+<script>
+function parameters_changed(obj, ppd_id){
+  switch(obj.value){
+    {% for key in process_params %}
+      case "{{ key }}":
+        data = "{% raw process_params[key][0] %}";
+        break;
+    {% end %}
+      default:
+        data = ""
+  }
+  $('#param-description-'+ppd_id).html(data);
+};
+</script>
+
+<!-- modal view to enter preprocessing parameters -->
+<div class="modal fade" id="process-modal-view-{{ppd_id}}" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title" id="myModalLabel">Choose processing parameters</h4>
+      </div>
+      <form action="/study/process" method="post" onsubmit='return submit_process();' id="parameter-form-{{ppd_id}}">
+        <div class="modal-body">
+          <div>
+            <div class="form-group">
+              <table>
+                {% if process_params %}
+                  <tr>
+                    <td><b>Parameter set: </b></td>
+                    <td>
+                      <select id="parameter-set-{{ppd_id}}" name="parameter-set-{{ppd_id}}" onchange="parameters_changed(this, {{ppd_id}});">
+                        <option value="{{default_params}}" selected="selected">{{process_params[default_params][1]}}</option>
+                        {% for key in process_params %}
+                          {% if key != default_params %}
+                            <option value="{{key}}">{{process_params[key][1]}}</option>
+                          {% end %}
+                        {% end %}
+                      </select>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td id="param-description-{{ppd_id}}">
+                      {% raw process_params[default_params][0] %}
+                    </td>
+                  </tr>
+                {% else %}
+                  <tr>
+                    <td><b>No parameters can be customized. Running with default parameters.</b></td>
+                  </tr>
+                {% end %}
+                <tr>
+                  <td>
+                    <input type='submit' id='start_process_submit' class='btn btn-success' value="Start processing">
+                    <input type='hidden' name='study_id' value="{{study_id}}">
+                    <input type='hidden' name='preprocessed_data_id' value="{{ppd_id}}">
+                  </td>
+                </tr>
+              </table>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
 <div class="tab-pane" id="preprocessed_data_info_{{ppd_id}}" style="padding: 10px;">
   <a href="#" onclick="display_tab('raw_data_tab', {{raw_data_id}}, {{prep_template_id}});">Prep template</a><br/>
   <b>EBI status:</b> {{ebi_status}}<br/>
@@ -33,5 +103,21 @@
         </td>
       </tr>
   </table>
-  <a class="btn btn-primary glyphicon glyphicon-play" onclick="alert('Not implemented! Coming soon.')" style="word-spacing: -10px;"> Process</a>
+  {% if not processed_data or processing_status.startswith('failed') %}
+    <a style="word-spacing: -10px;"
+    {% if processing_status == "processing" %}
+      class="btn btn-default glyphicon glyphicon-play" style=" pointer-events: none; cursor: default; background-color:grey;"
+    {% else %}
+      class="btn btn-primary glyphicon glyphicon-play" data-toggle="modal" data-target="#process-modal-view-{{ppd_id}}"
+    {% end %}> Process</a>
+    <br/>
+    <i>Status: </i> {{processing_status}}
+  {% else %}
+    <b> Processed data generated: </b>
+    <a href="#" onclick="display_tab('processed_data_tab', {{processed_data[0]}});">{{processed_data[0]}}</a>
+    {% for pdi in processed_data[1:] %}
+      , <a href="#" onclick="display_tab('processed_data_tab', {{pdi}});">{{pdi}}</a>
+    {% end %}
+  {% end %}
+  <br/>
 </div>

@@ -11,7 +11,9 @@ from .sample_template_tab import SampleTemplateTab
 from .raw_data_tab import (RawDataTab, RawDataEditorTab, PrepTemplatePanel,
                            EditInvestigationType)
 from .preprocessed_data_tab import PreprocessedDataTab, PreprocessedDataInfoTab
+from .processed_data_tab import ProcessedDataTab, ProcessedDataInfoTab
 
 __all__ = ['StudyInformationTab', 'SampleTemplateTab', 'RawDataTab',
            'RawDataEditorTab', 'PrepTemplatePanel', 'EditInvestigationType',
-           'PreprocessedDataTab', 'PreprocessedDataInfoTab']
+           'PreprocessedDataTab', 'PreprocessedDataInfoTab',
+           'ProcessedDataTab', 'ProcessedDataInfoTab']

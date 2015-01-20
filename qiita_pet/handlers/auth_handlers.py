@@ -6,6 +6,7 @@ from tornado.web import HTTPError
 from moi import r_client
 
 from qiita_pet.handlers.base_handlers import BaseHandler
+from qiita_core.qiita_settings import qiita_config
 from qiita_core.util import send_email
 from qiita_core.exceptions import (IncorrectPasswordError, IncorrectEmailError,
                                    UnverifiedEmailError)
@@ -44,8 +45,9 @@ class AuthCreateHandler(BaseHandler):
             try:
                 send_email(username, "QIITA: Verify Email Address", "Please "
                            "click the following link to verify email address: "
-                           "http://qiita.colorado.edu/auth/verify/%s?email=%s"
-                           % (info['user_verify_code'], url_escape(username)))
+                           "%s/auth/verify/%s?email=%s"
+                           % (qiita_config.base_url, info['user_verify_code'],
+                              url_escape(username)))
             except:
                 msg = ("Unable to send verification email. Please contact the "
                        "qiita developers at <a href='mailto:qiita-help"

@@ -27,6 +27,7 @@ from __future__ import division
 from .study import Study
 from .data import RawData, PreprocessedData, ProcessedData
 from .analysis import Analysis
+from .sql_connection import SQLConnectionHandler
 from .metadata_template import PrepTemplate, SampleTemplate
 
 
@@ -65,7 +66,19 @@ def get_accessible_filepath_ids(user):
     -------
     set
         A set of filepath ids
+
+    Notes
+    -----
+    Admins have access to all files, so all filepath ids are returned for
+    admins
     """
+
+    if user.level == "admin":
+        # admins have access all files
+        conn_handler = SQLConnectionHandler()
+        fpids = conn_handler.execute_fetchall("SELECT filepath_id FROM "
+                                              "qiita.filepath")
+        return set(f[0] for f in fpids)
 
     # First, the studies
     # There are public, private, and shared studies
@@ -106,7 +119,7 @@ def get_accessible_filepath_ids(user):
             filepath_ids.update(sample_fp_ids)
 
     # Next, analyses
-    # Same as before, ther eare public, private, and shared
+    # Same as before, there are public, private, and shared
     analysis_ids = Analysis.get_by_status('public') + user.private_analyses + \
         user.shared_analyses
 

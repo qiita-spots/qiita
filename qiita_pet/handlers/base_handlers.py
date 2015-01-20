@@ -21,11 +21,14 @@ class BaseHandler(RequestHandler):
             self.render("404.html")
             return
 
+        is_admin = False
         user = self.get_current_user()
         if user:
-            is_admin = user.level == 'admin'
-        else:
-            is_admin = False
+            try:
+                is_admin = user.level == 'admin'
+            except:
+                # Any issue with this check leaves default as not admin
+                pass
 
         # render error page
         self.render('error.html', status_code=status_code, is_admin=is_admin)
@@ -35,9 +38,12 @@ class BaseHandler(RequestHandler):
         exc_info = kwargs["exc_info"]
         trace_info = ''.join(["%s\n" % line for line in
                              format_exception(*exc_info)])
+        req_dict = self.request.__dict__
+        # must trim body to 1024 chars to prevent huge error messages
+        req_dict['body'] = req_dict.get('body', '')[:1024]
         request_info = ''.join(["<strong>%s</strong>: %s\n" %
-                               (k, self.request.__dict__[k]) for k in
-                                self.request.__dict__.keys()])
+                               (k, req_dict[k]) for k in
+                                req_dict.keys()])
         error = exc_info[1]
         LogEntry.create(
             'Runtime',

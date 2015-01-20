@@ -23,8 +23,15 @@ def _get_shared_links_for_study(study):
     shared = []
     for person in study.shared_with:
         person = User(person)
-        shared.append(study_person_linkifier(
-            (person.email, person.info['name'])))
+        name = person.info['name']
+        email = person.email
+        # Name is optional, so default to email if non existant
+        if name:
+            shared.append(study_person_linkifier(
+                (email, name)))
+        else:
+            shared.append(study_person_linkifier(
+                (email, email)))
     return ", ".join(shared)
 
 

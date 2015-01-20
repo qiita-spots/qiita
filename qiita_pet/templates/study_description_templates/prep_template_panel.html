@@ -50,7 +50,7 @@
       <table border="0" style="margin-left: 10px;">
         <tr>
           <td style="padding:3px;">
-            <a class="btn btn-default glyphicon glyphicon-eye-open" href="/metadata_summary/?study_id={{study_id}}&prep_template={{prep_id}}" style="word-spacing: -10px;"> Show prep template summary</a>
+            <a class="btn btn-default glyphicon glyphicon-eye-open" href="/metadata_summary/?study_id={{study_id}}&prep_template={{prep_id}}" style="word-spacing: -10px;">Show prep template summary</a>
           </td>
         </tr>
         {% for ptid, ptpath, ptype in filepaths %}
@@ -81,7 +81,7 @@
         <b>Preprocessed data generated: </b>
         <a href="#" onClick="display_tab('preprocessed_data_tab', {{preprocessed_data[0]}});">{{preprocessed_data[0]}}</a>
         {% for pdi in preprocessed_data[1:] %}
-          , <a href="#preprocessed_data_info_{{pdi}}">{{pdi}}</a>
+          , <a href="#" onClick="display_tab('preprocessed_data_tab', {{pdi}});">{{pdi}}</a>
         {% end %}
       {% end %}
     </div>

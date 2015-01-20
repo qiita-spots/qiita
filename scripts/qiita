@@ -21,7 +21,8 @@ from qiita_db.commands import (load_sample_template_from_cmd,
                                load_study_from_cmd,
                                load_raw_data_cmd, load_processed_data_cmd,
                                load_preprocessed_data_from_cmd,
-                               load_prep_template_from_cmd)
+                               load_prep_template_from_cmd,
+                               load_parameters_from_cmd, SUPPORTED_PARAMS)
 from qiita_db.sql_connection import SQLConnectionHandler
 from qiita_db.exceptions import QiitaDBConnectionError
 from qiita_db.reference import Reference
@@ -222,6 +223,20 @@ def load_reference_db(name, version, seq_fp, tax_fp, tree_fp):
     reference = Reference.create(name, version, seq_fp, tax_fp, tree_fp)
     click.echo("Reference db successfully added to the database with id %s"
                % reference.id)
+
+
+@db.command()
+@click.argument('fp', required=True,
+                type=click.Path(resolve_path=True, readable=True, exists=True))
+@click.option('--table', required=True, type=click.Choice(SUPPORTED_PARAMS),
+              help='The table to add the parameter set')
+@click.option('--name', required=True, type=str,
+              help='The name of the parameters set')
+def load_parameters(fp, table, name):
+    """Loads a parameter set to the database"""
+    param = load_parameters_from_cmd(name, fp, table)
+    click.echo("Parameters successfully added to table %s with id %s"
+               % (table, param.id))
 
 
 # #############################################################################
