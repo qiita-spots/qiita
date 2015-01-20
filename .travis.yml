@@ -22,7 +22,7 @@ script:
   - qiita_env start_cluster qiita_general
   - qiita_env make --no-load-ontologies
   - nosetests --with-doctest --with-coverage
-  - flake8 qiita_* setup.py scripts/qiita scripts/qiita_env
+  - flake8 qiita_* setup.py scripts/qiita scripts/qiita_env scripts/qiita_test_install
   # we need to run the test suite from setup.py for coveralls to grab the info
   # - coverage run setup.py test
   # - coverage report -m
