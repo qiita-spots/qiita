@@ -513,7 +513,7 @@ def get_files_from_uploads_folders(study_id, ignore_hidden_and_folders=True):
     ----------
     study_id : str
         The study id of which to retrive all upload folders
-    ignore_hidden_and_folders : bool
+    ignore_hidden_and_folders : bool, optional
         Ignore hidden files and folders
 
     Returns
