@@ -200,12 +200,11 @@ class QiitaStudySearch(object):
         # get all studies containing the metadata headers requested
         study_ids = {x[0] for x in conn_handler.execute_fetchall(study_sql)}
         # strip to only studies user has access to
-
-        userobj = self.current_user
-        if userobj.level not in {'admin', 'dev', 'superuser'}:
+        if user.level not in {'admin', 'dev', 'superuser'}:
             study_ids = study_ids.intersection(Study.get_by_status('public') +
-                                               userobj.user_studies +
-                                               userobj.shared_studies)
+                                               user.user_studies +
+                                               user.shared_studies)
+
         results = {}
         # run search on each study to get out the matching samples
         for sid in study_ids:
