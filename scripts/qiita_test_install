@@ -85,7 +85,7 @@ except ImportError as e:
 try:
     from qiime import __version__ as qiime_lib_version
 except ImportError as e:
-    missing_packags.append((e, core_dependency_missing_msg % 'qiime'))
+    missing_deps_errors.append((e, core_dependency_missing_msg % 'qiime'))
 
 try:
     from mock import __version__ as mock_lib_version
