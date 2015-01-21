@@ -26,9 +26,10 @@ dependency_missing_msg = (
 missing_deps_errors = []
 missing_deps_warnings = []
 
-import click
-from  click import __version__ as b
+from click import __file__ as b
 print b
+from click import __version__ as click_lib_version
+print click_lib_version
 try:
     from click import __version__ as click_lib_version
 except ImportError as e:
