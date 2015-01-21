@@ -476,13 +476,6 @@ class DBUtilTests(TestCase):
         obs = get_files_from_uploads_folders("1")
         self.assertEqual(obs, exp)
 
-        # something has been uploaded and not ignoring hidden files/folders
-        # and folders
-        exp = ['.hidden_file.txt', 'a_folder', 'uploaded_file.txt']
-        obs = get_files_from_uploads_folders("1",
-                                             ignore_hidden_and_folders=False)
-        self.assertItemsEqual(obs, exp)
-
         # nothing has been uploaded
         exp = []
         obs = get_files_from_uploads_folders("2")
