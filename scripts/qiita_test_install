@@ -8,7 +8,6 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
-from warnings import warn, simplefilter
 from os import environ
 from sys import platform, version as python_version, exit, executable, stdout
 from unittest import TestLoader, TextTestRunner, TestCase
@@ -58,7 +57,8 @@ except ImportError as e:
     missing_deps_errors.append((e, core_dependency_missing_msg % 'redis'))
 
 try:
-    import toredis
+    from toredis import Client as toredis_client
+    toredis_client()
 except ImportError as e:
     missing_deps_errors.append((e, core_dependency_missing_msg % 'toredis'))
 
@@ -331,12 +331,12 @@ def main():
                          qiita_config.vamps_url != '' and
                          qiita_config.vamps_user != '')
     try:
-        conn_handler = SQLConnectionHandler()
+        SQLConnectionHandler()
         psql_running = True
     except:
         psql_running = False
     try:
-        r = StrictRedis(
+        StrictRedis(
             host=qiita_config.redis_host,
             password=qiita_config.redis_password,
             port=qiita_config.redis_port,
