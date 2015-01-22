@@ -12,6 +12,8 @@ install:
   - conda create --yes -n env_name python=$PYTHON_VERSION pip nose openpyxl=1.8.2 pandas>=0.15 pyzmq flake8
   - conda install --yes -n env_name python=$PYTHON_VERSION h5py>=2.3.1
   - source activate env_name
+  # remove click from conda so we can use the one from pip
+  - conda remove click
   - pip install coveralls cogent burrito qcli burrito-fillings ipython[all] 'click>=3.3'
   - pip install https://github.com/biocore/mustached-octo-ironman/archive/master.zip
   - pip install https://github.com/biocore/qiime/archive/master.zip --no-deps
