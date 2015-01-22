@@ -9,6 +9,7 @@
 # -----------------------------------------------------------------------------
 
 from os import environ
+from os.path import join, dirname, abspath
 from sys import platform, version as python_version, exit, executable, stdout
 from unittest import TestLoader, TextTestRunner, TestCase
 from smtplib import SMTP, SMTP_SSL
@@ -314,6 +315,11 @@ def main():
         print "%*s:\t%s" % (max_len, v[0], v[1])
 
     qiita_config = ConfigurationManager()
+    try:
+        qiita_conf_fp = environ['QIITA_CONFIG_FP']
+    except KeyError:
+        qiita_conf_fp = join(dirname(abspath(__file__)),
+                             'support_files/config_test.txt')
     smtp = SMTP_SSL() if qiita_config.smtp_ssl else SMTP()
     smtp.set_debuglevel(False)
     try:
@@ -362,7 +368,7 @@ def main():
         print e
         ipython_running = False
     qiita_config_info = [
-        ('QIITA_CONFIG_FP filepath', environ['QIITA_CONFIG_FP']),
+        ('QIITA_CONFIG_FP filepath', qiita_conf_fp),
         ('Test environment', str(qiita_config.test_environment)),
         ('Base URL', qiita_config.base_url),
         ('EBI credentials exist', ebi_credentials),
