@@ -23,6 +23,7 @@ Methods
 # -----------------------------------------------------------------------------
 from qiita_db.reference import Reference
 
+
 def linkify(link_template, item):
     """Formats a strings into a URL using string replacement
 
