@@ -16,8 +16,7 @@ install:
   - pip install https://github.com/biocore/mustached-octo-ironman/archive/master.zip
   - pip install https://github.com/biocore/qiime/archive/master.zip --no-deps
   - pip install .
-  # remove click from conda so we can use the one from pip
-  - conda remove click
+  - pip freeze
 script:
   - export MOI_CONFIG_FP=`pwd`/qiita_core/support_files/config_test.txt
   - ipython profile create qiita_general --parallel
