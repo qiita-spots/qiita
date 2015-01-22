@@ -21,7 +21,7 @@ Methods
 #
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
-
+from qiita_db.reference import Reference
 
 def linkify(link_template, item):
     """Formats a strings into a URL using string replacement
@@ -65,6 +65,8 @@ def generate_param_str(param):
     str
         The html string with the parameter set values
     """
-    result = ["<b>%s:</b> %s" % (name, value)
-              for name, value in param.values.items()]
+    ref = Reference(param.reference)
+    result = ["<b>Reference:</b> %s %s" % (ref.name, ref.version)]
+    result.extend("<b>%s:</b> %s" % (name, value)
+                  for name, value in param.values.items())
     return "<br/>".join(result)
