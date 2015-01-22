@@ -139,7 +139,6 @@ class Reference(QiitaObject):
             "reference_id = %s".format(self._table), (self._id,))[0]
         _, basefp = get_mountpoint('reference', conn_handler=conn_handler)[0]
 
-
     @property
     def sequence_fp(self):
         conn_handler = SQLConnectionHandler()

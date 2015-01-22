@@ -20,10 +20,10 @@ class TestUtil(TestCase):
     def test_generate_param_str(self):
         params = ProcessedSortmernaParams(1)
         obs = generate_param_str(params)
-        exp = ("<b>similarity:</b> 0.97<br/>"
+        exp = ("<b>Reference:</b> Greengenes 13_8<br/>"
+               "<b>similarity:</b> 0.97<br/>"
                "<b>sortmerna_e_value:</b> 1.0<br/>"
                "<b>sortmerna_max_pos:</b> 10000<br/>"
-               "<b>reference_id:</b> 1<br/>"
                "<b>threads:</b> 1<br/>"
                "<b>sortmerna_coverage:</b> 0.97")
         self.assertEqual(obs, exp)

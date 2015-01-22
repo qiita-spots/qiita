@@ -68,5 +68,6 @@ def generate_param_str(param):
     ref = Reference(param.reference)
     result = ["<b>Reference:</b> %s %s" % (ref.name, ref.version)]
     result.extend("<b>%s:</b> %s" % (name, value)
-                  for name, value in param.values.items())
+                  for name, value in param.values.items()
+                  if name != 'reference_id')
     return "<br/>".join(result)
