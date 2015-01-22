@@ -26,10 +26,6 @@ dependency_missing_msg = (
 missing_deps_errors = []
 missing_deps_warnings = []
 
-from click import __file__ as b
-print b
-from click import __version__ as click_lib_version
-print click_lib_version
 try:
     from click import __version__ as click_lib_version
 except ImportError as e:
@@ -137,10 +133,13 @@ try:
 except ImportError as e:
     missing_deps_errors.append((e, core_dependency_missing_msg % 'qiita_ware'))
 
-if 'QIITA_CONFIG_FP' not in environ:
-        missing_deps_errors.append((None, 'You need to add to your enviroment '
-                                    'the Qiita configuration using '
-                                    'QIITA_CONFIG_FP'))
+try:
+    from qiita_core.configuration_manager import ConfigurationManager
+    ConfigurationManager()
+except e:
+    missing_deps_errors.append((e, 'You need to add to your enviroment '
+                                'the Qiita configuration using '
+                                'QIITA_CONFIG_FP'))
 
 if missing_deps_errors:
     for e, t in missing_deps_errors:
@@ -151,7 +150,7 @@ if missing_deps_warnings:
     for e, t in missing_deps_errors:
         print '%s\n=============' % (t)
 
-from qiita_core.configuration_manager import ConfigurationManager
+
 from qiita_db.sql_connection import SQLConnectionHandler
 from redis import StrictRedis
 from moi.job import submit_nouser

@@ -16,9 +16,8 @@ install:
   - pip install https://github.com/biocore/mustached-octo-ironman/archive/master.zip
   - pip install https://github.com/biocore/qiime/archive/master.zip --no-deps
   - pip install .
-  # install a newer version of click
+  # upgrade click, older versions of click do not have __version__
   - pip install -U click
-  - pip freeze
 script:
   - export MOI_CONFIG_FP=`pwd`/qiita_core/support_files/config_test.txt
   - ipython profile create qiita_general --parallel
