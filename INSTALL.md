@@ -26,13 +26,13 @@ Qiita is a python package, with support for python 2.7, that depends on the foll
 
 And on the following packages:
 
-* [PostgresSQL 9.3](http://www.postgresql.org/download/)
-* [redis-server](http://redis.io)
+* [PostgreSQL 9.3](http://www.postgresql.org/download/)
+* [redis-server 2.8.17](http://redis.io)
 
 Install
 -------
 
-Once you have [PostgresSQL](http://www.postgresql.org/download/) and [redis](https://pypi.python.org/pypi/redis/) installed (follow the instruction on their web site), simply run these commands to install qiita and configure the demo environment, replacing $QIITA_DIR for the path where qiita is installed
+Once you have [PostgreSQL](http://www.postgresql.org/download/) and [redis](https://pypi.python.org/pypi/redis/) installed (follow the instruction on their web site), simply run these commands to install qiita and configure the demo environment, replacing $QIITA_DIR for the path where qiita is installed
 (note that if you are not using Ubuntu you might need to follow the instructions in the next section).
 
 ```bash

@@ -470,7 +470,8 @@ class DBUtilTests(TestCase):
         self.assertEqual(obs, exp)
 
     def test_get_files_from_uploads_folders(self):
-        # something has been uploaded
+        # something has been uploaded and ignoring hidden files/folders
+        # and folders
         exp = ['uploaded_file.txt']
         obs = get_files_from_uploads_folders("1")
         self.assertEqual(obs, exp)
