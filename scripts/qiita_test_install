@@ -19,6 +19,9 @@ core_dependency_missing_msg = (
     'Qiita Installation Guide: '
     'https://github.com/biocore/qiita/blob/master/INSTALL.md')
 
+extra_info = (core_dependency_missing_msg + '. It is also possible that you '
+    'have an old version of this package, if so, please update to the latest.')
+
 dependency_missing_msg = (
     '"%s" is missing but this is _not_ a core requirement, for more '
     'information see the Qiita Installation Guide: '
@@ -30,7 +33,7 @@ missing_deps_warnings = []
 try:
     from click import __version__ as click_lib_version
 except ImportError as e:
-    missing_deps_errors.append((e, core_dependency_missing_msg % 'click'))
+    missing_deps_errors.append((e, extra_info % 'click'))
 
 try:
     from future import __version__ as future_lib_version
@@ -314,6 +317,7 @@ def main():
     for v in version_info:
         print "%*s:\t%s" % (max_len, v[0], v[1])
 
+    extra_info = None
     qiita_config = ConfigurationManager()
     try:
         qiita_conf_fp = environ['QIITA_CONFIG_FP']
@@ -365,8 +369,9 @@ def main():
         else:
             ipython_running = False
     except e:
-        print e
         ipython_running = False
+        extra_info = ('IPython test failed, perhaps due to an old MOI '
+            'version, please review')
     qiita_config_info = [
         ('QIITA_CONFIG_FP filepath', qiita_conf_fp),
         ('Test environment', str(qiita_config.test_environment)),
@@ -380,12 +385,14 @@ def main():
          qiita_config.valid_upload_extension)),
         ('PostgreSQL is up and configuration can connect?', psql_running),
         ('Redis is up and configuracion can connect?', redis_running),
-        ('IPython is running', ipython_running)
+        ('IPython is running', ipython_running),
+        ('Extra info', extra_info)
     ]
     max_len = max([len(e[0]) for e in qiita_config_info])
-    print qiita_config_header
     for v in qiita_config_info:
-        print "%*s:\t%s" % (max_len, v[0], v[1])
+        if v != ('Extra info', None):
+            print "%*s:\t%s" % (max_len, v[0], v[1])
+
 
     print qiita_config_tests_header
     suite = TestLoader().loadTestsFromTestCase(QiitaConfig)
