@@ -20,7 +20,8 @@ core_dependency_missing_msg = (
     'https://github.com/biocore/qiita/blob/master/INSTALL.md')
 
 extra_info = (core_dependency_missing_msg + '. It is also possible that you '
-    'have an old version of this package, if so, please update to the latest.')
+              'have an old version of this package, if so, please update to '
+              'the latest.')
 
 dependency_missing_msg = (
     '"%s" is missing but this is _not_ a core requirement, for more '
@@ -371,7 +372,7 @@ def main():
     except e:
         ipython_running = False
         extra_info = ('IPython test failed, perhaps due to an old MOI '
-            'version, please review')
+                      'version, please review')
     qiita_config_info = [
         ('QIITA_CONFIG_FP filepath', qiita_conf_fp),
         ('Test environment', str(qiita_config.test_environment)),
@@ -392,7 +393,6 @@ def main():
     for v in qiita_config_info:
         if v != ('Extra info', None):
             print "%*s:\t%s" % (max_len, v[0], v[1])
-
 
     print qiita_config_tests_header
     suite = TestLoader().loadTestsFromTestCase(QiitaConfig)
