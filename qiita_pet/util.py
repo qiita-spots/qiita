@@ -21,6 +21,8 @@ Methods
 #
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
+from future.utils import viewitems
+
 from qiita_db.reference import Reference
 
 
@@ -69,6 +71,6 @@ def generate_param_str(param):
     ref = Reference(param.reference)
     result = ["<b>Reference:</b> %s %s" % (ref.name, ref.version)]
     result.extend("<b>%s:</b> %s" % (name, value)
-                  for name, value in param.values.items()
+                  for name, value in viewitems(param.values)
                   if name != 'reference_id')
     return "<br/>".join(result)
