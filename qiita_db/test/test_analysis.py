@@ -1,13 +1,20 @@
 from unittest import TestCase, main
 from os.path import exists, join
+from datetime import datetime
+from shutil import copy, move
+from os import remove
 
 from biom import load_table
+import pandas as pd
 
 from qiita_core.util import qiita_test_checker
 from qiita_db.analysis import Analysis
 from qiita_db.user import User
 from qiita_db.exceptions import QiitaDBStatusError
 from qiita_db.util import get_mountpoint
+from qiita_db.study import Study, StudyPerson
+from qiita_db.data import ProcessedData
+from qiita_db.metadata_template import SampleTemplate
 # -----------------------------------------------------------------------------
 # Copyright (c) 2014--, The Qiita Development Team.
 #
@@ -117,15 +124,96 @@ class TestAnalysis(TestCase):
 
     def test_retrieve_dropped_samples(self):
         biom_fp = join(self.fp, "1_analysis_18S.biom")
+
+        # Create and poppulate second study to do test with
+        info = {
+            "timeseries_type_id": 1,
+            "metadata_complete": True,
+            "mixs_compliant": True,
+            "number_samples_collected": 25,
+            "number_samples_promised": 28,
+            "portal_type_id": 3,
+            "study_alias": "FCM",
+            "study_description": "Microbiome of people who eat nothing but "
+                                 "fried chicken",
+            "study_abstract": "Exploring how a high fat diet changes the "
+                              "gut microbiome",
+            "emp_person_id": StudyPerson(2),
+            "principal_investigator_id": StudyPerson(3),
+            "lab_person_id": StudyPerson(1)
+        }
+        metadata_dict = {
+            'SKB8.640193': {'physical_location': 'location1',
+                              'has_physical_specimen': True,
+                              'has_extracted_data': True,
+                              'sample_type': 'type1',
+                              'required_sample_info_status': 'received',
+                              'collection_timestamp':
+                              datetime(2014, 5, 29, 12, 24, 51),
+                              'host_subject_id': 'NotIdentified',
+                              'Description': 'Test Sample 1',
+                              'str_column': 'Value for sample 1',
+                              'latitude': 42.42,
+                              'longitude': 41.41},
+            'SKD8.640184': {'physical_location': 'location1',
+                              'has_physical_specimen': True,
+                              'has_extracted_data': True,
+                              'sample_type': 'type1',
+                              'required_sample_info_status': 'received',
+                              'collection_timestamp':
+                              datetime(2014, 5, 29, 12, 24, 51),
+                              'host_subject_id': 'NotIdentified',
+                              'Description': 'Test Sample 2',
+                              'str_column': 'Value for sample 2',
+                              'latitude': 4.2,
+                              'longitude': 1.1},
+            'SKB7.640196': {'physical_location': 'location1',
+                              'has_physical_specimen': True,
+                              'has_extracted_data': True,
+                              'sample_type': 'type1',
+                              'required_sample_info_status': 'received',
+                              'collection_timestamp':
+                              datetime(2014, 5, 29, 12, 24, 51),
+                              'host_subject_id': 'NotIdentified',
+                              'Description': 'Test Sample 3',
+                              'str_column': 'Value for sample 3',
+                              'latitude': 4.8,
+                              'longitude': 4.41},
+            }
+        metadata = pd.DataFrame.from_dict(metadata_dict, orient='index')
+
+        Study.create(User("test@foo.bar"), "Test study 2", [1], info)
+
+        SampleTemplate.create(metadata, Study(2))
+
+        mp = get_mountpoint("processed_data")[0][1]
         try:
-            samples = {1: ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196']}
-            self.analysis._build_biom_tables(samples, 100,
+            study_fp = join(mp, "2_study_1001_closed_reference_otu_table.biom")
+            ProcessedData.create("processed_params_uclust", 1, [(study_fp, 6)],
+                                 study=Study(2), data_type="16S")
+            self.conn_handler.execute(
+                "INSERT INTO qiita.analysis_sample (analysis_id, "
+                "processed_data_id, sample_id) VALUES "
+                "(1,2,'2.SKB8.640193'), (1,2,'2.SKD8.640184'), "
+                "(1,2,'2.SKB7.640196')")
+        except Exception as e:
+            move(join(mp, "2_2_study_1001_closed_reference_otu_table.biom"),
+                 join(mp, "2_study_1001_closed_reference_otu_table.biom"))
+            raise RuntimeError(e)
+
+        try:
+            samples = {1: ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196'],
+                       2: ['2.SKB8.640193', '2.SKD8.640184']}
+            self.analysis._build_biom_tables(samples, 10000,
                                              conn_handler=self.conn_handler)
-            exp = {1: {'1.SKM4.640180', '1.SKM9.640192'}}
+            exp = {1: {'1.SKM4.640180', '1.SKM9.640192'},
+                   2: {'2.SKB7.640196'}}
             self.assertEqual(self.analysis.dropped_samples, exp)
         finally:
             with open(biom_fp, 'w') as f:
                 f.write("")
+            move(join(mp, "2_2_study_1001_closed_reference_otu_table.biom"),
+                 join(mp, "2_study_1001_closed_reference_otu_table.biom"))
 
     def test_retrieve_data_types(self):
         exp = ['18S']
