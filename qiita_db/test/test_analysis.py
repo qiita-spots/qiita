@@ -196,8 +196,10 @@ class TestAnalysis(TestCase):
                 "(1,2,'2.SKB8.640193'), (1,2,'2.SKD8.640184'), "
                 "(1,2,'2.SKB7.640196')")
         except Exception as e:
-            move(join(mp, "2_2_study_1001_closed_reference_otu_table.biom"),
-                 join(mp, "2_study_1001_closed_reference_otu_table.biom"))
+            sec_fp = join(mp, "2_2_study_1001_closed_reference_otu_table.biom")
+            if exists(sec_fp):
+                move(sec_fp,
+                     join(mp, "2_study_1001_closed_reference_otu_table.biom"))
             raise RuntimeError(e)
 
         try:
