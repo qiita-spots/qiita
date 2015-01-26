@@ -124,6 +124,22 @@ class Reference(QiitaObject):
             (name, version))[0]
 
     @property
+    def name(self):
+        conn_handler = SQLConnectionHandler()
+        return conn_handler.execute_fetchone(
+            "SELECT reference_name FROM qiita.{0} WHERE "
+            "reference_id = %s".format(self._table), (self._id,))[0]
+        _, basefp = get_mountpoint('reference', conn_handler=conn_handler)[0]
+
+    @property
+    def version(self):
+        conn_handler = SQLConnectionHandler()
+        return conn_handler.execute_fetchone(
+            "SELECT reference_version FROM qiita.{0} WHERE "
+            "reference_id = %s".format(self._table), (self._id,))[0]
+        _, basefp = get_mountpoint('reference', conn_handler=conn_handler)[0]
+
+    @property
     def sequence_fp(self):
         conn_handler = SQLConnectionHandler()
         rel_path = conn_handler.execute_fetchone(
