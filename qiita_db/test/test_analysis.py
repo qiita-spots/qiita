@@ -1,8 +1,7 @@
 from unittest import TestCase, main
 from os.path import exists, join
 from datetime import datetime
-from shutil import copy, move
-from os import remove
+from shutil import move
 
 from biom import load_table
 import pandas as pd
@@ -144,41 +143,41 @@ class TestAnalysis(TestCase):
         }
         metadata_dict = {
             'SKB8.640193': {'physical_location': 'location1',
-                              'has_physical_specimen': True,
-                              'has_extracted_data': True,
-                              'sample_type': 'type1',
-                              'required_sample_info_status': 'received',
-                              'collection_timestamp':
-                              datetime(2014, 5, 29, 12, 24, 51),
-                              'host_subject_id': 'NotIdentified',
-                              'Description': 'Test Sample 1',
-                              'str_column': 'Value for sample 1',
-                              'latitude': 42.42,
-                              'longitude': 41.41},
+                            'has_physical_specimen': True,
+                            'has_extracted_data': True,
+                            'sample_type': 'type1',
+                            'required_sample_info_status': 'received',
+                            'collection_timestamp':
+                            datetime(2014, 5, 29, 12, 24, 51),
+                            'host_subject_id': 'NotIdentified',
+                            'Description': 'Test Sample 1',
+                            'str_column': 'Value for sample 1',
+                            'latitude': 42.42,
+                            'longitude': 41.41},
             'SKD8.640184': {'physical_location': 'location1',
-                              'has_physical_specimen': True,
-                              'has_extracted_data': True,
-                              'sample_type': 'type1',
-                              'required_sample_info_status': 'received',
-                              'collection_timestamp':
-                              datetime(2014, 5, 29, 12, 24, 51),
-                              'host_subject_id': 'NotIdentified',
-                              'Description': 'Test Sample 2',
-                              'str_column': 'Value for sample 2',
-                              'latitude': 4.2,
-                              'longitude': 1.1},
+                            'has_physical_specimen': True,
+                            'has_extracted_data': True,
+                            'sample_type': 'type1',
+                            'required_sample_info_status': 'received',
+                            'collection_timestamp':
+                            datetime(2014, 5, 29, 12, 24, 51),
+                            'host_subject_id': 'NotIdentified',
+                            'Description': 'Test Sample 2',
+                            'str_column': 'Value for sample 2',
+                            'latitude': 4.2,
+                            'longitude': 1.1},
             'SKB7.640196': {'physical_location': 'location1',
-                              'has_physical_specimen': True,
-                              'has_extracted_data': True,
-                              'sample_type': 'type1',
-                              'required_sample_info_status': 'received',
-                              'collection_timestamp':
-                              datetime(2014, 5, 29, 12, 24, 51),
-                              'host_subject_id': 'NotIdentified',
-                              'Description': 'Test Sample 3',
-                              'str_column': 'Value for sample 3',
-                              'latitude': 4.8,
-                              'longitude': 4.41},
+                            'has_physical_specimen': True,
+                            'has_extracted_data': True,
+                            'sample_type': 'type1',
+                            'required_sample_info_status': 'received',
+                            'collection_timestamp':
+                            datetime(2014, 5, 29, 12, 24, 51),
+                            'host_subject_id': 'NotIdentified',
+                            'Description': 'Test Sample 3',
+                            'str_column': 'Value for sample 3',
+                            'latitude': 4.8,
+                            'longitude': 4.41},
             }
         metadata = pd.DataFrame.from_dict(metadata_dict, orient='index')
 
