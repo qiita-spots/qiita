@@ -268,7 +268,7 @@ class AnalysisWaitHandler(BaseHandler):
         command_args = self.get_arguments("commands")
         split = [x.split("#") for x in command_args]
 
-        moi_user_id = get_id_from_user(str(self.current_user))
+        moi_user_id = get_id_from_user(self.current_user.id)
         moi_group = create_info(analysis_id, 'group', url='/analysis/',
                                 parent=moi_user_id, store=True)
         moi_name = 'Creating %s' % analysis.name

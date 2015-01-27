@@ -68,7 +68,7 @@ class AddFilesToRawData(BaseHandler):
                     if exists(ft):
                         filepaths.append((ft, filetype))
 
-        job_id = submit(str(self.current_user), add_files_to_raw_data,
+        job_id = submit(self.current_user.id, add_files_to_raw_data,
                         raw_data_id, filepaths)
 
         self.render('compute_wait.html',
@@ -95,7 +95,7 @@ class UnlinkAllFiles(BaseHandler):
         else:
             check_access(self.current_user, study, raise_error=True)
 
-        job_id = submit(str(self.current_user), unlink_all_files, raw_data_id)
+        job_id = submit(self.current_user.id, unlink_all_files, raw_data_id)
 
         self.render('compute_wait.html', job_id=job_id,
                     title='Removing files from your raw data',

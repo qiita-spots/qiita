@@ -72,7 +72,7 @@ class VAMPSHandler(BaseHandler):
         # make sure user is admin and can therefore actually submit to VAMPS
         if self.current_user.level != 'admin':
             raise HTTPError(403, "User %s cannot submit to VAMPS!" %
-                            self.current_user)
+                            self.current_user.id)
         msg = ''
         msg_level = 'success'
         preprocessed_data = PreprocessedData(preprocessed_data_id)
@@ -89,7 +89,7 @@ class VAMPSHandler(BaseHandler):
             msg = "The study doesn't have demux files or have too many" % state
             msg_level = 'danger'
         else:
-            channel = str(self.current_user)
+            channel = self.current_user.id
             job_id = submit(channel, submit_to_VAMPS,
                             int(preprocessed_data_id))
 

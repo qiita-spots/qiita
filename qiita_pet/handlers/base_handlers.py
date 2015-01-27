@@ -8,6 +8,7 @@ class BaseHandler(RequestHandler):
         '''Overrides default method of returning user curently connected'''
         username = self.get_secure_cookie("user")
         if username is not None:
+            # strip off quotes added by get_secure_cookie
             username = username.strip("\"' ")
             return User(username)
         else:

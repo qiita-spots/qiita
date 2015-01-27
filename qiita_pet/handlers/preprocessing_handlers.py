@@ -60,7 +60,7 @@ class PreprocessHandler(BaseHandler):
         else:
             raise ValueError('Unknown filetype')
 
-        job_id = submit(str(self.current_user), preprocessor, study_id,
+        job_id = submit(self.current_user.id, preprocessor, study_id,
                         prep_template_id, param_id, param_constructor)
 
         self.render('compute_wait.html',

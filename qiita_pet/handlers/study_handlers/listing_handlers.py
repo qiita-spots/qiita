@@ -89,7 +89,7 @@ class PrivateStudiesHandler(BaseHandler):
         user_studies = yield Task(self._get_private, user)
         shared_studies = yield Task(self._get_shared, user)
         all_emails_except_current = yield Task(self._get_all_emails)
-        all_emails_except_current.remove(str(self.current_user))
+        all_emails_except_current.remove(self.current_user.id)
         self.render('private_studies.html',
                     user_studies=user_studies, shared_studies=shared_studies,
                     all_emails_except_current=all_emails_except_current)

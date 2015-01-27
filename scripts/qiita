@@ -328,7 +328,7 @@ def start(port):
 
     http_server = tornado.httpserver.HTTPServer(Application())
     http_server.listen(port)
-    click.echo("Qiita started on port " + str(port))
+    click.echo("Qiita started on port %d" % port)
     tornado.ioloop.IOLoop.instance().start()
 
 if __name__ == '__main__':

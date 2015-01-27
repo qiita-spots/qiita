@@ -44,7 +44,6 @@ class User(QiitaObject):
 
     Attributes
     ----------
-    __str__
     email
     level
     info
@@ -273,9 +272,6 @@ class User(QiitaObject):
                    "email = %s".format(cls._table))
             conn_handler.execute(sql, (level, email))
         return db_code == code
-
-    def __str__(self):
-        return self._id
 
     # ---properties---
     @property
