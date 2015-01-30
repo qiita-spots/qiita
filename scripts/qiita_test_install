@@ -369,7 +369,7 @@ def main():
             ipython_running = True
         else:
             ipython_running = False
-    except e:
+    except:
         ipython_running = False
         extra_info = ('IPython test failed, perhaps due to an old MOI '
                       'version, please review')
