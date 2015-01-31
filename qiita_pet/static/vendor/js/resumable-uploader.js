@@ -137,13 +137,7 @@
        }
 
        var listNode = $(document.createElement('div'));
-       var text = '';
-       // left gap
-       text += '<div class="col-md-4"></div>';
-       // name
-       text += '<div class="col-md-3">' + name + '</div>';
-       // add to main node
-       listNode.html('<div class="row">' + text + "</div>");
+       listNode.html('<div class="row">' + name + '</div>');
        this.uploaderList.append(listNode);
 
        var editNode = $(document.createElement('div'));

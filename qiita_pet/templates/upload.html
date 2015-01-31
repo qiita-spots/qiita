@@ -40,10 +40,10 @@
         </table>
       </div>
 
-      <div class="uploader-list-metadata" style="display:none;">
+      <div class="uploader-list" style="display:none;">
       </div>
 
-      <div class="file-edit-container-sequences" style="display:none;">
+      <div class="file-edit-container" style="display:none;">
       </div>
 
     </td>
@@ -62,7 +62,7 @@
   var maxFileSize = {{max_upload_size}}; // in GB
 
   uploader = (function($){
-      return (new ResumableUploader(meta, $('.resumable-browse-metadata'), $('.resumable-drop-metadata'), $('.progress-metadata'), $('.uploader-list-metadata'), $('.file-edit-container-metadata'), maxFileSize, "{{study_id}}", "{{extensions}}"));
+      return (new ResumableUploader(meta, $('.resumable-browse-metadata'), $('.resumable-drop-metadata'), $('.progress-metadata'), $('.uploader-list'), $('.file-edit-container'), maxFileSize, "{{study_id}}", "{{extensions}}"));
     })(jQuery);
 
   {% for f in files %}
