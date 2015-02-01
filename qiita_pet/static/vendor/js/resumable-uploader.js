@@ -117,11 +117,8 @@
      // Add a new file (or rather: glue between newly added resumable files and the UI)
      this.addFile = function(resumableFile){
        // A list and and edit item for the UI
-       if (typeof resumableFile == 'object') {
-         name = resumableFile.fileName
-       } else {
-         name = resumableFile
-       }
+       fileName = resumableFile.fileName
+       dirId = resumableFile.dirid
 
        // validating extensions
        is_valid = false;
@@ -137,7 +134,9 @@
        }
 
        var listNode = $(document.createElement('div'));
-       listNode.html('<div class="row">' + name + '</div>');
+       listNode.html('<div class="row" class="checkbox"><label>' + fileName +
+                     ' &nbsp; <input type="checkbox" value="' + dirId + '-' +
+                     fileName + '" name="files_to_erase"></label></div>');
        this.uploaderList.append(listNode);
 
        var editNode = $(document.createElement('div'));

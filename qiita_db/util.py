@@ -27,6 +27,7 @@ Methods
     convert_to_id
     get_lat_longs
     get_environmental_packages
+    move_upload_files_to_trash
 """
 # -----------------------------------------------------------------------------
 # Copyright (c) 2014--, The Qiita Development Team.
@@ -44,7 +45,7 @@ from binascii import crc32
 from bcrypt import hashpw, gensalt
 from functools import partial
 from os.path import join, basename, isdir, relpath, exists
-from os import walk, remove, listdir
+from os import walk, remove, listdir, makedirs, rename
 from shutil import move, rmtree
 from json import dumps
 
@@ -520,13 +521,51 @@ def get_files_from_uploads_folders(study_id):
         List of the filepaths for upload for that study
     """
     fp = []
-    for _, p in get_mountpoint("uploads", retrive_all=True):
+    for pid, p in get_mountpoint("uploads", retrive_all=True):
         t = join(p, study_id)
         if exists(t):
-            fp.extend([f for f in listdir(t) if not f.startswith('.') and
-                      not isdir(join(t, f))])
+            fp.extend([(pid, f) for f in listdir(t) if not f.startswith('.')
+                      and not isdir(join(t, f))])
 
     return fp
+
+
+def move_upload_files_to_trash(study_id, files_to_move):
+    """Retrive files in upload folders
+
+    Parameters
+    ----------
+    study_id : int
+        The study id of which to retrive all upload folders
+    files_to_move : list
+        List of tuples (folder_id, filename)
+
+    Raises
+    ------
+    QiitaDBError
+        If folder_id or the study folder don't exist
+    """
+    folders = {k: v for k, v in get_mountpoint("uploads", retrive_all=True)}
+
+    for fid, filename in files_to_move:
+        if fid not in folders:
+            raise QiitaDBError("Filepath not stored in the database")
+
+        foldername = join(folders[fid], str(study_id))
+        if not exists(foldername):
+            raise QiitaDBError("Filepath not stored in the database")
+
+        trashpath = join(foldername, 'trash')
+        if not exists(trashpath):
+            makedirs(trashpath)
+
+        fullpath = join(foldername, filename)
+        new_fullpath = join(foldername, 'trash', filename)
+
+        if not exists(fullpath):
+            raise QiitaDBError("Filepath not stored in the database")
+
+        rename(fullpath, new_fullpath)
 
 
 def get_mountpoint(mount_type, conn_handler=None, retrive_all=False):
