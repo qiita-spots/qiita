@@ -124,7 +124,7 @@ class TestAnalysis(TestCase):
     def test_retrieve_dropped_samples(self):
         biom_fp = join(self.fp, "1_analysis_18S.biom")
 
-        # Create and poppulate second study to do test with
+        # Create and populate second study to do test with
         info = {
             "timeseries_type_id": 1,
             "metadata_complete": True,
@@ -196,6 +196,7 @@ class TestAnalysis(TestCase):
                 "(1,2,'2.SKB8.640193'), (1,2,'2.SKD8.640184'), "
                 "(1,2,'2.SKB7.640196')")
         except Exception as e:
+            # clean up ProcessedData move of the biom table if create fails
             sec_fp = join(mp, "2_2_study_1001_closed_reference_otu_table.biom")
             if exists(sec_fp):
                 move(sec_fp,
@@ -211,6 +212,7 @@ class TestAnalysis(TestCase):
                    2: {'2.SKB7.640196'}}
             self.assertEqual(self.analysis.dropped_samples, exp)
         finally:
+            # Clean up analysis biom table and ProcessedData move
             with open(biom_fp, 'w') as f:
                 f.write("")
             move(join(mp, "2_2_study_1001_closed_reference_otu_table.biom"),
