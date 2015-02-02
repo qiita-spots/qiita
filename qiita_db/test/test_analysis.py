@@ -214,7 +214,7 @@ class TestAnalysis(TestCase):
         exp = {1: {'1.SKM4.640180', '1.SKM9.640192'},
                2: {'2.SKB7.640196'}}
         self.assertEqual(self.analysis.dropped_samples, exp)
-            
+
     def test_retrieve_data_types(self):
         exp = ['18S']
         self.assertEqual(self.analysis.data_types, exp)
