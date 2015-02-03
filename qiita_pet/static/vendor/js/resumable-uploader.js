@@ -123,13 +123,13 @@
        // validating extensions
        is_valid = false;
        _.each(this.valid_extensions, function(extension) {
-           if (extension != "" && S(name).endsWith(extension)) {
+           if (extension != "" && S(fileName).endsWith(extension)) {
              is_valid = true;
              return;
            }
        })
        if (!is_valid) {
-         alert('Not a valid extension: ' + name + '! Try again.');
+         alert('Not a valid extension: ' + fileName + '! Try again.');
          throw new Error("Not a valid extension");
        }
 
