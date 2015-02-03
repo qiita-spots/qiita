@@ -238,6 +238,8 @@ def _submit(ctx, channel, f, *args, **kwargs):
     ----------
     ctx : Dispatch
         A Dispatch object to submit through
+    channel : str
+        channel to submit the run to
     f : function
         The function to execute. Any returns from this function will be
         serialized and deposited into Redis using the uuid for a key.

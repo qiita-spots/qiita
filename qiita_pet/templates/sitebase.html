@@ -146,8 +146,8 @@
                 <li><a href="/study/public/">View Public Studies</a></li>
               </ul>
             </li>
-            {% set user_level = user.level %}
-            {% if user_level == 'admin' %}
+              {% set user_level = user.level %}
+              {% if user_level == 'admin' %}
             <li class="dropdown">
               <a href="/admin/error/" data-toggle="dropdown" class="dropdown-toggle">Admin<b class="caret"></b></a>
               <ul class="dropdown-menu">
@@ -179,7 +179,7 @@
           {% if user %}
           <ul class="nav navbar-nav pull-right">
             <li>
-              <a href="/profile/">Welcome {{user}}</a>
+              <a href="/profile/">Welcome {{user.id}}</a>
             </li>
             <li class="pull-right">
               <a href="/auth/logout/">Log Out</a>
