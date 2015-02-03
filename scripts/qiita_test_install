@@ -1,0 +1,403 @@
+#!/usr/bin/env python
+
+# -----------------------------------------------------------------------------
+# Copyright (c) 2014--, The Qiita Development Team.
+#
+# Distributed under the terms of the BSD 3-clause License.
+#
+# The full license is in the file LICENSE, distributed with this software.
+# -----------------------------------------------------------------------------
+
+from os import environ
+from os.path import join, dirname, abspath
+from sys import platform, version as python_version, exit, executable, stdout
+from unittest import TestLoader, TextTestRunner, TestCase
+from smtplib import SMTP, SMTP_SSL
+
+core_dependency_missing_msg = (
+    '"%s" is missing and is a core requirement, for more information see the '
+    'Qiita Installation Guide: '
+    'https://github.com/biocore/qiita/blob/master/INSTALL.md')
+
+extra_info = (core_dependency_missing_msg + '. It is also possible that you '
+              'have an old version of this package, if so, please update to '
+              'the latest.')
+
+dependency_missing_msg = (
+    '"%s" is missing but this is _not_ a core requirement, for more '
+    'information see the Qiita Installation Guide: '
+    'https://github.com/biocore/qiita/blob/master/INSTALL.md')
+
+missing_deps_errors = []
+missing_deps_warnings = []
+
+try:
+    from click import __version__ as click_lib_version
+except ImportError as e:
+    missing_deps_errors.append((e, extra_info % 'click'))
+
+try:
+    from future import __version__ as future_lib_version
+except ImportError as e:
+    missing_deps_errors.append((e, core_dependency_missing_msg % 'future'))
+
+try:
+    from numpy import __version__ as numpy_lib_version
+except ImportError as e:
+    missing_deps_errors.append((e, core_dependency_missing_msg % 'NumPy'))
+
+try:
+    from pandas import __version__ as pandas_lib_version
+except ImportError as e:
+    missing_deps_errors.append((e, core_dependency_missing_msg % 'pandas'))
+
+try:
+    from tornado import version as tornado_lib_version
+except ImportError as e:
+    missing_deps_errors.append((e, core_dependency_missing_msg % 'tornado'))
+
+try:
+    from redis import __version__ as redis_lib_version
+except ImportError as e:
+    missing_deps_errors.append((e, core_dependency_missing_msg % 'redis'))
+
+try:
+    from toredis import Client as toredis_client
+    toredis_client()
+except ImportError as e:
+    missing_deps_errors.append((e, core_dependency_missing_msg % 'toredis'))
+
+try:
+    from bcrypt import __version__ as bcrypt_lib_version
+except ImportError as e:
+    missing_deps_errors.append((e, core_dependency_missing_msg % 'bcrypt'))
+
+try:
+    from pyparsing import __version__ as pyparsing_lib_version
+except ImportError as e:
+    missing_deps_errors.append((e, core_dependency_missing_msg % 'pyparsing'))
+
+try:
+    from networkx import __version__ as networkx_lib_version
+except ImportError as e:
+    missing_deps_errors.append((e, core_dependency_missing_msg % 'networkx'))
+
+try:
+    from wtforms import __version__ as wtforms_lib_version
+except ImportError as e:
+    missing_deps_errors.append((e, core_dependency_missing_msg % 'wtforms'))
+
+try:
+    from qiime import __version__ as qiime_lib_version
+except ImportError as e:
+    missing_deps_errors.append((e, core_dependency_missing_msg % 'qiime'))
+
+try:
+    from mock import __version__ as mock_lib_version
+except ImportError as e:
+    missing_deps_warnings.append((e, dependency_missing_msg % 'mock'))
+    mock_lib_version = 'Not installed'
+
+try:
+    if 'MOI_CONFIG_FP' not in environ:
+        missing_deps_errors.append((None, 'You need to add to your enviroment '
+                                    'the MOI configuration using '
+                                    'MOI_CONFIG_FP'))
+
+    from moi import __version__ as moi_lib_version
+except ImportError as e:
+    missing_deps_errors.append((e, core_dependency_missing_msg % 'moi'))
+
+try:
+    from IPython import __version__ as ipython_lib_version
+except ImportError as e:
+    missing_deps_errors.append((e, core_dependency_missing_msg % 'ipython'))
+
+try:
+    from psycopg2 import __version__ as psycopg2_lib_version
+except ImportError as e:
+    missing_deps_errors.append((e, core_dependency_missing_msg % 'psycopg2'))
+
+try:
+    from qiita_core import __version__ as qiita_core_lib_version
+except ImportError as e:
+    missing_deps_errors.append((e, core_dependency_missing_msg % 'qiita_core'))
+
+try:
+    from qiita_db import __version__ as qiita_db_lib_version
+except ImportError as e:
+    missing_deps_errors.append((e, core_dependency_missing_msg % 'qiita_db'))
+
+try:
+    from qiita_pet import __version__ as qiita_pet_lib_version
+except ImportError as e:
+    missing_deps_errors.append((e, core_dependency_missing_msg % 'qiita_pet'))
+
+try:
+    from qiita_ware import __version__ as qiita_ware_lib_version
+except ImportError as e:
+    missing_deps_errors.append((e, core_dependency_missing_msg % 'qiita_ware'))
+
+try:
+    from qiita_core.configuration_manager import ConfigurationManager
+    ConfigurationManager()
+except e:
+    missing_deps_errors.append((e, 'You need to add to your enviroment '
+                                'the Qiita configuration using '
+                                'QIITA_CONFIG_FP'))
+
+if missing_deps_errors:
+    for e, t in missing_deps_errors:
+        print '%s\n=============' % (t)
+    exit('Missing core dependencies, can not continue.')
+
+if missing_deps_warnings:
+    for e, t in missing_deps_errors:
+        print '%s\n=============' % (t)
+
+
+from qiita_db.sql_connection import SQLConnectionHandler
+from redis import StrictRedis
+from moi.job import submit_nouser
+
+
+class QiitaConfig(TestCase):
+
+    def setUp(self):
+        self.config = ConfigurationManager()
+        try:
+            conn_handler = SQLConnectionHandler()
+            sql = "SELECT version();"
+            self.psql_version = conn_handler.execute_fetchone(sql)[0]
+        except:
+            self.psql_version = None
+        try:
+            r = StrictRedis(
+                host=self.config.redis_host,
+                password=self.config.redis_password,
+                port=self.config.redis_port,
+                db=self.config.redis_db)
+            self.redis_version = r.info()['redis_version']
+        except:
+            self.redis_version = None
+
+    def test_future_library_version(self):
+        acceptable_version = (0, 13, 0)
+        string_acceptable_version = '.'.join(map(str, acceptable_version))
+        version = tuple(map(int, future_lib_version.split('.')))
+
+        self.assertTrue(acceptable_version == version,
+                        'Unsupported future version. You have %s but %s is '
+                        'requiered' % (future_lib_version,
+                                       string_acceptable_version))
+
+    def test_pandas_library_version(self):
+        acceptable_version = (0, 15)
+        string_acceptable_version = '.'.join(map(str, acceptable_version))
+        version = tuple(map(int, pandas_lib_version.split('.')))
+
+        self.assertTrue(acceptable_version <= version,
+                        'Unsupported pandas version. You have %s but %s is '
+                        'requiered' % (pandas_lib_version,
+                                       string_acceptable_version))
+
+    def test_torando_library_version(self):
+        acceptable_version = (3, 1, 1)
+        string_acceptable_version = '.'.join(map(str, acceptable_version))
+        version = tuple(map(int, tornado_lib_version.split('.')))
+
+        self.assertTrue(acceptable_version <= version,
+                        'Unsupported tornado version. You have %s but %s is '
+                        'requiered' % (tornado_lib_version,
+                                       string_acceptable_version))
+
+    def test_pyparsing_library_version(self):
+        acceptable_version = (2, 0, 2)
+        string_acceptable_version = '.'.join(map(str, acceptable_version))
+        version = tuple(map(int, pyparsing_lib_version.split('.')))
+
+        self.assertTrue(acceptable_version <= version,
+                        'Unsupported pyparsing version. You have %s but %s is '
+                        'requiered' % (pyparsing_lib_version,
+                                       string_acceptable_version))
+
+    def test_wtforms_library_version(self):
+        acceptable_version = (2, 0, 1)
+        string_acceptable_version = '.'.join(map(str, acceptable_version))
+        version = tuple(map(int, wtforms_lib_version.split('.')))
+
+        self.assertTrue(acceptable_version <= version,
+                        'Unsupported WTForms version. You have %s but %s is '
+                        'requiered' % (wtforms_lib_version,
+                                       string_acceptable_version))
+
+    def test_postgresql_version(self):
+        if not self.psql_version:
+            self.assertTrue(False, 'PostgreSQL not running or configured')
+
+        acceptable_version = (9, 1, 14)
+        string_acceptable_version = '.'.join(map(str, acceptable_version))
+        version = tuple(map(int, self.psql_version.split(' ')[1].split('.')))
+
+        self.assertTrue(acceptable_version <= version,
+                        'Unsupported PostgreSQL version. You have %s but %s '
+                        'is requiered' % ('.'.join(map(str, version)),
+                                          string_acceptable_version))
+
+    def test_redis_version(self):
+        if not self.redis_version:
+            self.assertTrue(False, 'redis not running or configured')
+
+        acceptable_version = (2, 8, 17)
+        string_acceptable_version = '.'.join(map(str, acceptable_version))
+        version = tuple(map(int, self.redis_version.split('.')))
+
+        self.assertTrue(acceptable_version <= version,
+                        'Unsupported redis version. You have %s but %s is '
+                        'requiered' % ('.'.join(map(str, version)),
+                                       string_acceptable_version))
+
+system_info_header = """
+System information
+==================
+"""
+
+dependency_info_header = """
+Dependency versions
+===================
+"""
+
+qiita_config_header = """
+Qiita config
+============
+For definitions of these settings and to learn how to configure Qiita, visit:
+ https://github.com/biocore/qiita/blob/master/INSTALL.md#install
+"""
+
+qiita_config_tests_header = """
+Qiita version and configuration tests
+=====================================
+"""
+
+
+def main():
+    system_info = [
+        ("Platform", platform),
+        ("Python version", python_version.replace('\n', ' ')),
+        ("Python executable", executable)]
+    max_len = max([len(e[0]) for e in system_info])
+    print system_info_header
+    for v in system_info:
+        print "%*s:\t%s" % (max_len, v[0], v[1])
+
+    version_info = [
+        ('click library version', click_lib_version),
+        ('future library version', future_lib_version),
+        ('numpy library version', numpy_lib_version),
+        ('pandas library version', pandas_lib_version),
+        ('tornado library version', tornado_lib_version),
+        ('redis library version', redis_lib_version),
+        ('bcrypt library version', bcrypt_lib_version),
+        ('pyparsing library version', pyparsing_lib_version),
+        ('networkX library version', networkx_lib_version),
+        ('WTForms library version', wtforms_lib_version),
+        ('qiime library version', qiime_lib_version + ', for more info use '
+         'print_qiime_config.py'),
+        ('mock library version', mock_lib_version),
+        ('MOI library version', moi_lib_version),
+        ('MOI config file path', environ['MOI_CONFIG_FP']),
+        ('IPython library version', ipython_lib_version),
+        ('psycopg2 library version', psycopg2_lib_version),
+        ('Qiita core library version', qiita_core_lib_version),
+        ('Qiita db library version', qiita_db_lib_version),
+        ('Qiita pet library version', qiita_pet_lib_version),
+        ('Qiita ware library version', qiita_ware_lib_version)
+    ]
+    max_len = max([len(e[0]) for e in version_info])
+    print dependency_info_header
+    for v in version_info:
+        print "%*s:\t%s" % (max_len, v[0], v[1])
+
+    extra_info = None
+    qiita_config = ConfigurationManager()
+    try:
+        qiita_conf_fp = environ['QIITA_CONFIG_FP']
+    except KeyError:
+        qiita_conf_fp = join(dirname(abspath(__file__)),
+                             'support_files/config_test.txt')
+    smtp = SMTP_SSL() if qiita_config.smtp_ssl else SMTP()
+    smtp.set_debuglevel(False)
+    try:
+        smtp.connect(qiita_config.smtp_host, qiita_config.smtp_port)
+        smtp.verify
+        send_email = True
+    except:
+        send_email = False
+    ebi_credentials = (qiita_config.ebi_access_key != '' and
+                       qiita_config.ebi_center_name != '' and
+                       qiita_config.ebi_dropbox_url != '' and
+                       qiita_config.ebi_organization_prefix != '' and
+                       qiita_config.ebi_seq_xfer_pass != '' and
+                       qiita_config.ebi_seq_xfer_url != '' and
+                       qiita_config.ebi_seq_xfer_user != '' and
+                       qiita_config.ebi_skip_curl_cert != '')
+    vamps_credentials = (qiita_config.vamps_pass != '' and
+                         qiita_config.vamps_url != '' and
+                         qiita_config.vamps_user != '')
+    try:
+        SQLConnectionHandler()
+        psql_running = True
+    except:
+        psql_running = False
+    try:
+        StrictRedis(
+            host=qiita_config.redis_host,
+            password=qiita_config.redis_password,
+            port=qiita_config.redis_port,
+            db=qiita_config.redis_db)
+        redis_running = True
+    except:
+        redis_running = False
+    try:
+        def sum(a, b):
+            return a, b
+
+        _, _, ar = submit_nouser(sum, 1, 2)
+        # wait up to 5 secs to hear back
+        ar.wait(timeout=5)
+        if ar.ready():
+            ipython_running = True
+        else:
+            ipython_running = False
+    except:
+        ipython_running = False
+        extra_info = ('IPython test failed, perhaps due to an old MOI '
+                      'version, please review')
+    qiita_config_info = [
+        ('QIITA_CONFIG_FP filepath', qiita_conf_fp),
+        ('Test environment', str(qiita_config.test_environment)),
+        ('Base URL', qiita_config.base_url),
+        ('EBI credentials exist', ebi_credentials),
+        ('VAMPS credentials exist', vamps_credentials),
+        ('Can the system send emails?', str(send_email) + '. When true, '
+         'emails could still not be going out due to your network '
+         'configuration.'),
+        ('Valid file extensions for upload', ', '.join(
+         qiita_config.valid_upload_extension)),
+        ('PostgreSQL is up and configuration can connect?', psql_running),
+        ('Redis is up and configuracion can connect?', redis_running),
+        ('IPython is running', ipython_running),
+        ('Extra info', extra_info)
+    ]
+    max_len = max([len(e[0]) for e in qiita_config_info])
+    for v in qiita_config_info:
+        if v != ('Extra info', None):
+            print "%*s:\t%s" % (max_len, v[0], v[1])
+
+    print qiita_config_tests_header
+    suite = TestLoader().loadTestsFromTestCase(QiitaConfig)
+    TextTestRunner(stream=stdout, verbosity=1).run(suite)
+
+
+if __name__ == "__main__":
+    main()
