@@ -232,7 +232,7 @@ class JobTest(TestCase):
         self.assertEqual(new.id, 2)
 
     def test_retrieve_datatype(self):
-        """Makes sure datatype retrieveal is correct"""
+        """Makes sure datatype retrieval is correct"""
         self.assertEqual(self.job.datatype, '18S')
 
     def test_retrieve_command(self):

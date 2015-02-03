@@ -56,6 +56,11 @@ class StudyUploadFileHandler(BaseHandler):
         files_to_move = []
         for v in self.get_arguments('files_to_erase', strip=True):
             v = v.split('-', 1)
+            # if the file was just uploaded JS will not know which id the
+            # current upload folder has so we need to retrieve it
+            if v[0] == 'undefined':
+                v[0], _ = get_mountpoint("uploads")[0]
+
             files_to_move.append((int(v[0]), v[1]))
 
         move_upload_files_to_trash(study.id, files_to_move)

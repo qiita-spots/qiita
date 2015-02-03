@@ -130,6 +130,9 @@
        })
        if (!is_valid) {
          alert('Not a valid extension: ' + fileName + '! Try again.');
+         // Stop transfer - JS
+         resumableFile.cancel();
+         // Raise error so it doesn't go to the server - Python
          throw new Error("Not a valid extension");
        }
 

@@ -543,11 +543,17 @@ def move_upload_files_to_trash(study_id, files_to_move):
     Raises
     ------
     QiitaDBError
-        If folder_id or the study folder don't exist
+        If folder_id or the study folder don't exist and if the filename to
+        erase matches the trash_folder, internal variable
     """
+    trash_folder = 'trash'
     folders = {k: v for k, v in get_mountpoint("uploads", retrieve_all=True)}
 
     for fid, filename in files_to_move:
+        if filename == trash_folder:
+            raise QiitaDBError("You can not erase the trash folder: %s"
+                               % trash_folder)
+
         if fid not in folders:
             raise QiitaDBError("The filepath id: %d doesn't exist in the "
                                "database" % fid)
@@ -557,12 +563,12 @@ def move_upload_files_to_trash(study_id, files_to_move):
             raise QiitaDBError("The upload folder for study id: %d doesn't "
                                "exist" % study_id)
 
-        trashpath = join(foldername, 'trash')
+        trashpath = join(foldername, trash_folder)
         if not exists(trashpath):
             makedirs(trashpath)
 
         fullpath = join(foldername, filename)
-        new_fullpath = join(foldername, 'trash', filename)
+        new_fullpath = join(foldername, trash_folder, filename)
 
         if not exists(fullpath):
             raise QiitaDBError("The filepath %s doesn't exist in the system" %
