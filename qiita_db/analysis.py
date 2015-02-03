@@ -241,9 +241,11 @@ class Analysis(QiitaStatusObject):
         for biom, filepath in viewitems(bioms):
             table = load_table(filepath)
             # remove the samples from the sets as they are found in the table
-            proc_data_id = table.metadata()[0]['Processed_id']
+            proc_data_ids = set(sample['Processed_id']
+                                for sample in table.metadata())
             ids = set(table.ids())
-            all_samples[proc_data_id] = all_samples[proc_data_id] - ids
+            for proc_data_id in proc_data_ids:
+                all_samples[proc_data_id] = all_samples[proc_data_id] - ids
 
         # what's left are unprocessed samples, so return
         return all_samples
