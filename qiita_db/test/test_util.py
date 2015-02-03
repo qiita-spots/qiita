@@ -468,7 +468,7 @@ class DBUtilTests(TestCase):
         # testing multi returns
         exp = [(5, join(get_db_files_base_dir(), 'raw_data', '')),
                (11, join(get_db_files_base_dir(), 'raw_data', 'tmp'))]
-        obs = get_mountpoint("raw_data", retrive_all=True)
+        obs = get_mountpoint("raw_data", retrieve_all=True)
         self.assertEqual(obs, exp)
 
     def test_get_files_from_uploads_folders(self):

@@ -508,12 +508,12 @@ def compute_checksum(path):
 
 
 def get_files_from_uploads_folders(study_id):
-    """Retrive files in upload folders
+    """Retrieve files in upload folders
 
     Parameters
     ----------
     study_id : str
-        The study id of which to retrive all upload folders
+        The study id of which to retrieve all upload folders
 
     Returns
     -------
@@ -521,7 +521,7 @@ def get_files_from_uploads_folders(study_id):
         List of the filepaths for upload for that study
     """
     fp = []
-    for pid, p in get_mountpoint("uploads", retrive_all=True):
+    for pid, p in get_mountpoint("uploads", retrieve_all=True):
         t = join(p, study_id)
         if exists(t):
             fp.extend([(pid, f) for f in listdir(t) if not f.startswith('.')
@@ -531,12 +531,12 @@ def get_files_from_uploads_folders(study_id):
 
 
 def move_upload_files_to_trash(study_id, files_to_move):
-    """Retrive files in upload folders
+    """Move files to a trash folder within the study_id upload folder
 
     Parameters
     ----------
     study_id : int
-        The study id of which to retrive all upload folders
+        The study id
     files_to_move : list
         List of tuples (folder_id, filename)
 
@@ -545,15 +545,17 @@ def move_upload_files_to_trash(study_id, files_to_move):
     QiitaDBError
         If folder_id or the study folder don't exist
     """
-    folders = {k: v for k, v in get_mountpoint("uploads", retrive_all=True)}
+    folders = {k: v for k, v in get_mountpoint("uploads", retrieve_all=True)}
 
     for fid, filename in files_to_move:
         if fid not in folders:
-            raise QiitaDBError("Filepath not stored in the database")
+            raise QiitaDBError("The filepath id: %d doesn't exist in the "
+                               "database" % fid)
 
         foldername = join(folders[fid], str(study_id))
         if not exists(foldername):
-            raise QiitaDBError("Filepath not stored in the database")
+            raise QiitaDBError("The upload folder for study id: %d doesn't "
+                               "exist" % study_id)
 
         trashpath = join(foldername, 'trash')
         if not exists(trashpath):
@@ -563,12 +565,13 @@ def move_upload_files_to_trash(study_id, files_to_move):
         new_fullpath = join(foldername, 'trash', filename)
 
         if not exists(fullpath):
-            raise QiitaDBError("Filepath not stored in the database")
+            raise QiitaDBError("The filepath %s doesn't exist in the system" %
+                               fullpath)
 
         rename(fullpath, new_fullpath)
 
 
-def get_mountpoint(mount_type, conn_handler=None, retrive_all=False):
+def get_mountpoint(mount_type, conn_handler=None, retrieve_all=False):
     r""" Returns the most recent values from data directory for the given type
 
     Parameters
@@ -578,7 +581,7 @@ def get_mountpoint(mount_type, conn_handler=None, retrive_all=False):
     conn_handler : SQLConnectionHandler
         The connection handler object connected to the DB
     retrieve_all : bool
-        Retrive all the available mount points or just the active one
+        Retrieve all the available mount points or just the active one
 
     Returns
     -------
@@ -587,7 +590,7 @@ def get_mountpoint(mount_type, conn_handler=None, retrive_all=False):
     """
     conn_handler = (conn_handler if conn_handler is not None
                     else SQLConnectionHandler())
-    if retrive_all:
+    if retrieve_all:
         result = conn_handler.execute_fetchall(
             "SELECT data_directory_id, mountpoint, subdirectory FROM "
             "qiita.data_directory WHERE data_type='%s' ORDER BY active DESC"

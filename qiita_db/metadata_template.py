@@ -1017,7 +1017,7 @@ class MetadataTemplate(QiitaObject):
             raise e
 
     def get_filepaths(self, conn_handler=None):
-        r"""Retrives the list of (filepath_id, filepath)"""
+        r"""Retrieves the list of (filepath_id, filepath)"""
         # Check that this function has been called from a subclass
         self._check_subclass()
 
