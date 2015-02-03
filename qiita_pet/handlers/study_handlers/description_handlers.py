@@ -220,6 +220,7 @@ class StudyDescriptionHandler(BaseHandler):
                     str(study.id), str(e))
                 msg_level = "danger"
         elif previous_raw_data:
+            previous_raw_data = previous_raw_data.split(',')
             raw_data = [RawData(rd) for rd in previous_raw_data]
             study.add_raw_data(raw_data)
             rd_id = raw_data[0].id
