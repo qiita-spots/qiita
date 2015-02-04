@@ -72,14 +72,14 @@ class EBISubmitHandler(BaseHandler):
     def post(self, preprocessed_data_id):
         user = self.current_user
         # make sure user is admin and can therefore actually submit to EBI
-        if self.current_user.level != 'admin':
+        if user.level != 'admin':
             raise HTTPError(403, "User %s cannot submit to EBI!" %
-                            str(user))
+                            user.id)
         submission_type = self.get_argument('submission_type')
 
         if submission_type not in ['ADD', 'MODIFY']:
             raise HTTPError(403, "User: %s, %s is not a recognized submission "
-                            "type" % (str(user), submission_type))
+                            "type" % (user.id, submission_type))
 
         msg = ''
         msg_level = 'success'
@@ -92,7 +92,7 @@ class EBISubmitHandler(BaseHandler):
             msg = "Cannot resubmit! Current state is: %s, use MODIFY" % state
             msg_level = 'danger'
         else:
-            channel = str(user)
+            channel = user.id
             job_id = submit(channel, submit_to_ebi, int(preprocessed_data_id),
                             submission_type)
 

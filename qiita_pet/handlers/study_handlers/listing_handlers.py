@@ -74,7 +74,7 @@ def _build_study_info(studytype, user=None):
 
 def _check_owner(user, study):
     """make sure user is the owner of the study requested"""
-    if not str(user) == study.owner:
+    if not user.id == study.owner:
         raise HTTPError(403, "User %s does not own study %d" %
                         (user, study.id))
 
