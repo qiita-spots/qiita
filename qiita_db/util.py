@@ -523,7 +523,8 @@ def get_files_from_uploads_folders(study_id):
     for _, p in get_mountpoint("uploads", retrive_all=True):
         t = join(p, study_id)
         if exists(t):
-            fp.extend(listdir(t))
+            fp.extend([f for f in listdir(t) if not f.startswith('.') and
+                      not isdir(join(t, f))])
 
     return fp
 
