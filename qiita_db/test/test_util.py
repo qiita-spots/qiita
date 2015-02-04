@@ -14,6 +14,8 @@ from os.path import join, exists, basename
 from qiita_core.util import qiita_test_checker
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_db.exceptions import QiitaDBColumnError, QiitaDBError
+from qiita_db.data import RawData
+from qiita_db.study import Study
 from qiita_db.util import (exists_table, exists_dynamic_table, scrub_data,
                            compute_checksum, check_table_cols,
                            check_required_columns, convert_to_id,
@@ -27,7 +29,8 @@ from qiita_db.util import (exists_table, exists_dynamic_table, scrub_data,
                            get_lat_longs, get_mountpoint,
                            get_files_from_uploads_folders,
                            get_environmental_packages, get_timeseries_types,
-                           filepath_id_to_rel_path, find_repeated)
+                           filepath_id_to_rel_path, find_repeated,
+                           move_filepaths_to_upload_folder)
 
 
 @qiita_test_checker()
@@ -415,6 +418,33 @@ class DBUtilTests(TestCase):
         # Check that only the file for the removed filepath has been removed
         self.assertTrue(exists(fp1))
         self.assertFalse(exists(fp_exp_id))
+
+    def test_move_filepaths_to_upload_folder(self):
+        # setting up test, done here as this is the only test that uses these
+        # files
+        fd, seqs_fp = mkstemp(suffix='_seqs.fastq')
+        close(fd)
+        study_id = 1
+
+        rd = RawData.create(2, [Study(study_id)], [(seqs_fp, 1)])
+        filepaths = rd.get_filepaths()
+        # deleting reference so we can directly call
+        # move_filepaths_to_upload_folder
+        for fid, _, _ in filepaths:
+            self.conn_handler.execute(
+                "DELETE FROM qiita.raw_filepath WHERE filepath_id=%s", (fid,))
+
+        # moving filepaths
+        move_filepaths_to_upload_folder(study_id, filepaths, self.conn_handler)
+
+        # check that they do not exist in the old path but do in the new one
+        path_for_removal = join(get_mountpoint("uploads")[0][1], str(study_id))
+        for _, fp, _ in filepaths:
+            self.assertFalse(exists(fp))
+            new_fp = join(path_for_removal, basename(fp).split('_', 1)[1])
+            self.assertTrue(exists(new_fp))
+
+            self.files_to_remove.append(new_fp)
 
     def test_get_filepath_id(self):
         _, base = get_mountpoint("raw_data")[0]

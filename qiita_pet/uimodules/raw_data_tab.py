@@ -122,9 +122,13 @@ class RawDataEditorTab(BaseUIModule):
         user_defined_terms = ontology.user_defined_terms + ['New Type']
 
         # Get all the information about the prep templates
-        available_prep_templates = [PrepTemplate(p)
-                                    for p in sorted(raw_data.prep_templates)
-                                    if PrepTemplate.exists(p)]
+        available_prep_templates = []
+        for p in sorted(raw_data.prep_templates):
+            if PrepTemplate.exists(p):
+                pt = PrepTemplate(p)
+                # if the prep template doesn't belong to this study, skip
+                if study.id == pt.study_id:
+                    available_prep_templates.append(pt)
 
         # getting filepath_types
         if raw_data.filetype == 'SFF':
@@ -167,7 +171,7 @@ class RawDataEditorTab(BaseUIModule):
             # still need to check if it is editable or there are files attached
             show_unlink_btn = is_editable and raw_data_files
             if raw_data_link_status.startswith('failed'):
-                link_msg = "Error (un)linkingfiles: %s" % raw_data_link_status
+                link_msg = "Error (un)linking files: %s" % raw_data_link_status
             else:
                 link_msg = ""
 

@@ -27,6 +27,8 @@ Methods
     convert_to_id
     get_lat_longs
     get_environmental_packages
+    purge_filepaths
+    move_filepaths_to_upload_folder
 """
 # -----------------------------------------------------------------------------
 # Copyright (c) 2014--, The Qiita Development Team.
@@ -643,7 +645,7 @@ def purge_filepaths(conn_handler=None):
     Parameters
     ----------
     conn_handler : SQLConnectionHandler, optional
-            The connection handler object connected to the DB
+        The connection handler object connected to the DB
     """
     conn_handler = conn_handler if conn_handler else SQLConnectionHandler()
 
@@ -677,6 +679,36 @@ def purge_filepaths(conn_handler=None):
                 rmtree(fp)
             else:
                 remove(fp)
+
+
+def move_filepaths_to_upload_folder(study_id, filepaths, conn_handler=None):
+    r"""Goes over the filepaths list and moves all the filepaths that are not
+    used in any place to the upload folder of the study
+
+    Parameters
+    ----------
+    study_id : int
+        The study id to where the files should be returned to
+    filepaths : list
+        List of filepaths to move to the upload folder
+    conn_handler : SQLConnectionHandler, optional
+        The connection handler object connected to the DB
+    """
+    conn_handler = conn_handler if conn_handler else SQLConnectionHandler()
+    uploads_fp = join(get_mountpoint("uploads")[0][1], str(study_id))
+
+    # We can now go over and remove all the filepaths
+    for fp_id, fp, fp_type in filepaths:
+        conn_handler.execute("DELETE FROM qiita.sample_template_filepath "
+                             "WHERE filepath_id=%s", (fp_id,))
+        conn_handler.execute("DELETE FROM qiita.filepath WHERE filepath_id=%s",
+                             (fp_id,))
+
+        # removing id from the raw data filename
+        filename = basename(fp).split('_', 1)[1]
+        destination = join(uploads_fp, filename)
+
+        move(fp, destination)
 
 
 def get_filepath_id(table, fp, conn_handler):
