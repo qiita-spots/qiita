@@ -76,7 +76,7 @@ def _check_owner(user, study):
     """make sure user is the owner of the study requested"""
     if not user.id == study.owner:
         raise HTTPError(403, "User %s does not own study %d" %
-                        (user, study.id))
+                        (user.id, study.id))
 
 
 class PrivateStudiesHandler(BaseHandler):
