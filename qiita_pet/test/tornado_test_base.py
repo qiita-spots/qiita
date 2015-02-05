@@ -10,6 +10,7 @@ from qiita_pet.webserver import Application
 from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_db.sql_connection import SQLConnectionHandler
 from qiita_db.environment_manager import drop_and_rebuild_tst_database
+from qiita_db.user import User
 
 
 class TestHandlerBase(AsyncHTTPTestCase):
@@ -18,7 +19,7 @@ class TestHandlerBase(AsyncHTTPTestCase):
     app = Application()
 
     def get_app(self):
-        BaseHandler.get_current_user = Mock(return_value="test@foo.bar")
+        BaseHandler.get_current_user = Mock(return_value=User("test@foo.bar"))
         return self.app
 
     def setUp(self):

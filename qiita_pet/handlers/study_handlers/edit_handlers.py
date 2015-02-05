@@ -12,7 +12,6 @@ from wtforms import (Form, StringField, SelectField, SelectMultipleField,
                      TextAreaField, validators)
 
 from qiita_db.study import Study, StudyPerson
-from qiita_db.user import User
 from qiita_db.util import get_timeseries_types, get_environmental_packages
 from qiita_db.exceptions import QiitaDBUnknownIDError
 from qiita_pet.handlers.base_handlers import BaseHandler
@@ -145,7 +144,7 @@ class StudyEditHandler(BaseHandler):
             raise HTTPError(404, "Study %s does not exist" % study_id)
 
         # We need to check if the user has access to the study
-        check_access(User(self.current_user), study)
+        check_access(self.current_user, study)
         return study
 
     def _get_study_person_id(self, index, new_people_info):
@@ -187,7 +186,7 @@ class StudyEditHandler(BaseHandler):
 
         creation_form = form_factory(study=study)
 
-        self.render('edit_study.html', user=self.current_user,
+        self.render('edit_study.html',
                     creation_form=creation_form, study=study)
 
     @authenticated
@@ -258,7 +257,7 @@ class StudyEditHandler(BaseHandler):
         else:
             # create the study
             # TODO: Fix this EFO once ontology stuff from emily is added
-            the_study = Study.create(User(self.current_user), study_title,
+            the_study = Study.create(self.current_user, study_title,
                                      efo=[1], info=info)
 
             msg = ('Study <a href="/study/description/%d">%s</a> '
@@ -276,8 +275,7 @@ class StudyEditHandler(BaseHandler):
             # Make sure that we strip the spaces from the pubmed ids
             the_study.pmids = [pmid.strip() for pmid in pmids]
 
-        self.render('index.html', message=msg, level='success',
-                    user=self.current_user)
+        self.render('index.html', message=msg, level='success')
 
 
 class CreateStudyAJAX(BaseHandler):

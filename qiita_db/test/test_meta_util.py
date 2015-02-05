@@ -29,22 +29,23 @@ class MetaUtilTests(TestCase):
         self._set_studies_private()
 
         # shared has access to all study files and analysis files
-        obs = get_accessible_filepath_ids('shared@foo.bar')
+
+        obs = get_accessible_filepath_ids(User('shared@foo.bar'))
         self.assertEqual(obs, set([1, 2, 5, 6, 7, 11, 14, 15, 16, 17, 18]))
 
         # Now shared should not have access to the study files
         self._unshare_studies()
-        obs = get_accessible_filepath_ids('shared@foo.bar')
+        obs = get_accessible_filepath_ids(User('shared@foo.bar'))
         self.assertEqual(obs, set([14, 15]))
 
         # Now shared should not have access to any files
         self._unshare_analyses()
-        obs = get_accessible_filepath_ids('shared@foo.bar')
+        obs = get_accessible_filepath_ids(User('shared@foo.bar'))
         self.assertEqual(obs, set())
 
         # Test that it doesn't break: if the SampleTemplate hasn't been added
         exp = set([1, 2, 5, 6, 7, 11, 14, 15, 16, 17, 18])
-        obs = get_accessible_filepath_ids('test@foo.bar')
+        obs = get_accessible_filepath_ids(User('test@foo.bar'))
         self.assertEqual(obs, exp)
 
         info = {
@@ -62,21 +63,21 @@ class MetaUtilTests(TestCase):
             "lab_person_id": 1
         }
         Study.create(User('test@foo.bar'), "Test study", [1], info)
-        obs = get_accessible_filepath_ids('test@foo.bar')
+        obs = get_accessible_filepath_ids(User('test@foo.bar'))
         self.assertEqual(obs, exp)
 
         # test in case there is a prep template that failed
         self.conn_handler.execute(
             "INSERT INTO qiita.prep_template (data_type_id, raw_data_id) "
             "VALUES (2,1)")
-        obs = get_accessible_filepath_ids('test@foo.bar')
+        obs = get_accessible_filepath_ids(User('test@foo.bar'))
         self.assertEqual(obs, exp)
 
         # admin should have access to everything
         count = self.conn_handler.execute_fetchone("SELECT count(*) FROM "
                                                    "qiita.filepath")[0]
         exp = set(range(1, count + 1))
-        obs = get_accessible_filepath_ids('admin@foo.bar')
+        obs = get_accessible_filepath_ids(User('admin@foo.bar'))
         self.assertEqual(obs, exp)
 
 

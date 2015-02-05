@@ -17,7 +17,6 @@ from pandas.parser import CParserError
 
 from qiita_core.qiita_settings import qiita_config
 from qiita_db.study import Study
-from qiita_db.user import User
 from qiita_db.data import RawData, PreprocessedData
 from qiita_db.ontology import Ontology
 from qiita_db.metadata_template import (PrepTemplate, SampleTemplate,
@@ -95,7 +94,7 @@ class StudyDescriptionHandler(BaseHandler):
         HTTPError
             If study_id does not correspond to any study in the system
         """
-        user = User(self.current_user)
+        user = self.current_user
 
         try:
             study = Study(_to_int(study_id))
@@ -545,7 +544,6 @@ class StudyDescriptionHandler(BaseHandler):
         self.render('study_description.html',
                     message=msg,
                     level=msg_level,
-                    user=self.current_user,
                     study=study,
                     study_title=study.title,
                     study_alias=study.info['study_alias'],
@@ -618,7 +616,7 @@ class PreprocessingSummaryHandler(BaseHandler):
         # Get the objects and check user privileges
         ppd = PreprocessedData(preprocessed_data_id)
         study = Study(ppd.study)
-        check_access(User(self.current_user), study, raise_error=True)
+        check_access(self.current_user, study, raise_error=True)
 
         # Get the return address
         back_button_path = self.get_argument(
@@ -658,4 +656,4 @@ class PreprocessingSummaryHandler(BaseHandler):
             self._get_template_variables, ppd_id)
 
         self.render('text_file.html', title=title, contents=contents,
-                    user=self.current_user, back_button_path=back_button_path)
+                    back_button_path=back_button_path)
