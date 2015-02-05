@@ -693,13 +693,14 @@ class TestSampleTemplate(TestCase):
         with self.assertRaises(KeyError):
             self.tester['Not_a_Sample']
 
-    def test_setitem(self):
+    def test_update_category(self):
         """setitem raises an error (currently not allowed)"""
         with self.assertRaises(QiitaDBUnknownIDError):
-            self.tester['country'] = {"foo": "bar"}
+            self.tester.update_category('country', {"foo": "bar"})
 
         with self.assertRaises(QiitaDBColumnError):
-            self.tester['missing column'] = {'1.SKM7.640188': 'stuff'}
+            self.tester.update_category('missing column',
+                                        {'1.SKM7.640188': 'stuff'})
 
         negtest = self.tester['1.SKM7.640188']['country']
 
@@ -707,7 +708,7 @@ class TestSampleTemplate(TestCase):
                    '1.SKB5.640181': "2",
                    '1.SKD6.640190': "3"}
 
-        self.tester['country'] = mapping
+        self.tester.update_category('country', mapping)
 
         self.assertEqual(self.tester['1.SKB1.640202']['country'], "1")
         self.assertEqual(self.tester['1.SKB5.640181']['country'], "2")
@@ -766,14 +767,14 @@ class TestSampleTemplate(TestCase):
         obs = self.tester.categories()
         self.assertEqual(obs, exp)
 
-    def test_delitem(self):
+    def test_remove_category(self):
         with self.assertRaises(QiitaDBColumnError):
-            del self.tester['1.SKM7.640188']
+            self.tester.remove_category('does not exist')
 
         for v in self.tester.values():
             self.assertIn('elevation', v)
 
-        del self.tester['elevation']
+        self.tester.remove_category('elevation')
 
         for v in self.tester.values():
             self.assertNotIn('elevation', v)

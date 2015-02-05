@@ -1287,13 +1287,13 @@ class SampleTemplate(MetadataTemplate):
         """
         return self._id
 
-    def __delitem__(self, column):
-        """Remove a column from the sample template
+    def remove_category(self, category):
+        """Remove a category from the sample template
 
         Parameters
         ----------
-        column : str
-            The column to remove
+        category : str
+            The category to remove
 
         Raises
         ------
@@ -1303,24 +1303,24 @@ class SampleTemplate(MetadataTemplate):
         table_name = self._table_name(self.study_id)
         conn_handler = SQLConnectionHandler()
 
-        if column not in self.categories():
+        if category not in self.categories():
             raise QiitaDBColumnError("Column %s does not exist in %s" %
-                                     (column, table_name))
+                                     (category, table_name))
 
         # This operation may invalidate another user's perspective on the
         # table
         conn_handler.execute("""
             ALTER TABLE qiita.{0} DROP COLUMN {1}""".format(table_name,
-                                                            column))
+                                                            category))
 
-    def __setitem__(self, column, values):
+    def update_category(self, category, samples_and_values):
         """Update an existing column
 
         Parameters
         ----------
-        column : str
-            The column to add or update
-        values : dict
+        category : str
+            The category to update
+        samples_and_values : dict
             A mapping of {sample_id: value}
 
         Raises
@@ -1331,22 +1331,22 @@ class SampleTemplate(MetadataTemplate):
             If the column does not exist in the table. This is implicit, and
             can be thrown by the contained Samples.
         """
-        if not set(self.keys()).issuperset(values):
-            missing = set(self.keys()) - set(values)
+        if not set(self.keys()).issuperset(samples_and_values):
+            missing = set(self.keys()) - set(samples_and_values)
             table_name = self._table_name(self.study_id)
             raise QiitaDBUnknownIDError(missing, table_name)
 
-        for k, v in viewitems(values):
+        for k, v in viewitems(samples_and_values):
             sample = self[k]
-            sample[column] = v
+            sample[category] = v
 
-    def add_category(self, column, values, dtype, default):
+    def add_category(self, category, values, dtype, default):
         """Add a metadata category
 
         Parameters
         ----------
-        column : str
-            The column to add
+        category : str
+            The category to add
         values : dict
             A mapping of {sample_id: value}
         dtype : str
@@ -1363,13 +1363,13 @@ class SampleTemplate(MetadataTemplate):
         table_name = self._table_name(self.study_id)
         conn_handler = SQLConnectionHandler()
 
-        if column in self.categories():
+        if category in self.categories():
             raise QiitaDBDuplicateError(column, "N/A")
 
         conn_handler.execute("""
             ALTER TABLE qiita.{0}
             ADD COLUMN {1} {2}
-            NOT NULL DEFAULT '{3}'""".format(table_name, column, dtype,
+            NOT NULL DEFAULT '{3}'""".format(table_name, category, dtype,
                                              default))
 
         self[column] = values
