@@ -1372,7 +1372,7 @@ class SampleTemplate(MetadataTemplate):
             NOT NULL DEFAULT '{3}'""".format(table_name, category, dtype,
                                              default))
 
-        self[column] = values
+        self[category] = values
 
 
 class PrepTemplate(MetadataTemplate):
