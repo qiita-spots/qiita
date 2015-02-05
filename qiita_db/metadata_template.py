@@ -579,6 +579,40 @@ class Sample(BaseSample):
         if not isinstance(md_template, SampleTemplate):
             raise IncompetentQiitaDeveloperError()
 
+    def __setitem__(self, column, value):
+        r"""Sets the metadata value for the category `column`
+
+        Parameters
+        ----------
+        column : str
+            The column to update
+        value : str
+            The value to set. This is expected to be a str on the assumption
+            that psycopg2 will cast as necessary when updating.
+
+        Raises
+        ------
+        QiitaDBColumnError
+            If the column does not exist in the table
+        """
+        conn_handler = SQLConnectionHandler()
+
+        exists = conn_handler.execute_fetchone("""
+            SELECT column_name
+            FROM information_schema.columns
+            WHERE table_name='{0}'
+                AND column_name='{1}'""".format(self._dynamic_table, column))
+
+        if exists is None:
+            raise QiitaDBColumnError("Column %s does not exist in %s" %
+                                     (column, self._dynamic_table))
+
+        conn_handler.execute("""
+            UPDATE qiita.{0}
+            SET {1}={2}
+            WHERE sample_id='{3}'""".format(self._dynamic_table, column, value,
+                                            self._id))
+
 
 class MetadataTemplate(QiitaObject):
     r"""Metadata map object that accesses the db to get the sample/prep
@@ -1051,6 +1085,27 @@ class MetadataTemplate(QiitaObject):
 
         return [(fpid, base_fp(fp)) for fpid, fp in filepath_ids]
 
+    def categories(self):
+        """Get the categories associated with self
+
+        Returns
+        -------
+        set
+            The set of categories associated with self
+        """
+        conn_handler = SQLConnectionHandler()
+        table_name = self._table_name(self.study_id)
+
+        raw = conn_handler.execute_fetchall("""
+            SELECT column_name
+            FROM information_schema.columns
+            WHERE table_name='{0}'""".format(table_name))
+
+        categories = {c[0] for c in raw}
+        categories.remove('sample_id')
+
+        return categories
+
 
 class SampleTemplate(MetadataTemplate):
     r"""Represent the SampleTemplate of a study. Provides access to the
@@ -1231,6 +1286,93 @@ class SampleTemplate(MetadataTemplate):
             The ID of the study with which this sample template is associated
         """
         return self._id
+
+    def __delitem__(self, column):
+        """Remove a column from the sample template
+
+        Parameters
+        ----------
+        column : str
+            The column to remove
+
+        Raises
+        ------
+        QiitaDBColumnError
+            If the column does not exist in the table
+        """
+        table_name = self._table_name(self.study_id)
+        conn_handler = SQLConnectionHandler()
+
+        if column not in self.categories():
+            raise QiitaDBColumnError("Column %s does not exist in %s" %
+                                     (column, table_name))
+
+        # This operation may invalidate another user's perspective on the
+        # table
+        conn_handler.execute("""
+            ALTER TABLE qiita.{0} DROP COLUMN {1}""".format(table_name,
+                                                            column))
+
+    def __setitem__(self, column, values):
+        """Update an existing column
+
+        Parameters
+        ----------
+        column : str
+            The column to add or update
+        values : dict
+            A mapping of {sample_id: value}
+
+        Raises
+        ------
+        QiitaDBUnknownIDError
+            If a sample_id is included in values that is not in the template
+        QiitaDBColumnError
+            If the column does not exist in the table. This is implicit, and
+            can be thrown by the contained Samples.
+        """
+        if not set(self.keys()).issuperset(values):
+            missing = set(self.keys()) - set(values)
+            table_name = self._table_name(self.study_id)
+            raise QiitaDBUnknownIDError(missing, table_name)
+
+        for k, v in viewitems(values):
+            sample = self[k]
+            sample[column] = v
+
+    def add_category(self, column, values, dtype, default):
+        """Add a metadata category
+
+        Parameters
+        ----------
+        column : str
+            The column to add
+        values : dict
+            A mapping of {sample_id: value}
+        dtype : str
+            The datatype of the column
+        default : object
+            The default value associated with the column. This must be
+            specified as these columns are added "not null".
+
+        Raises
+        ------
+        QiitaDBDuplicateError
+            If the column already exists
+        """
+        table_name = self._table_name(self.study_id)
+        conn_handler = SQLConnectionHandler()
+
+        if column in self.categories():
+            raise QiitaDBDuplicateError(column, "N/A")
+
+        conn_handler.execute("""
+            ALTER TABLE qiita.{0}
+            ADD COLUMN {1} {2}
+            NOT NULL DEFAULT '{3}'""".format(table_name, column, dtype,
+                                             default))
+
+        self[column] = values
 
 
 class PrepTemplate(MetadataTemplate):
