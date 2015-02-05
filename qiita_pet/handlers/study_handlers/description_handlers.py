@@ -179,13 +179,13 @@ class StudyDescriptionHandler(BaseHandler):
 
                 # deleting previous uploads and inserting new one
                 self.remove_add_study_template(study.raw_data, study.id,
-                                              fp_rsp)
+                                               fp_rsp)
 
                 # join all the warning messages into one. Note that this info
                 # will be ignored if an exception is raised
                 if warns:
-                    msg = '; '.join([str(w.message) for w in warns])
                     msg_level = 'warning'
+                    msg = '; '.join([str(w.message) for w in warns])
 
         except (TypeError, QiitaDBColumnError, QiitaDBExecutionError,
                 QiitaDBDuplicateError, IOError, ValueError, KeyError,
