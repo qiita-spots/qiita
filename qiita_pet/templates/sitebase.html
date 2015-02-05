@@ -2,6 +2,7 @@
 {% from qiita_pet import allowed_min_browser_versions %}
 {% set maintenance = r_client.get('maintenance') %}
 {% set sysmessage = r_client.get('sysmessage') %}
+{% set user = current_user %}
 
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en-US">
@@ -145,9 +146,8 @@
                 <li><a href="/study/public/">View Public Studies</a></li>
               </ul>
             </li>
-            {% set user_tmp = handler.user() %}
-            {% set user_level = user_tmp.level if user_tmp is not None else None %}
-            {% if user_level == 'admin' %}
+              {% set user_level = user.level %}
+              {% if user_level == 'admin' %}
             <li class="dropdown">
               <a href="/admin/error/" data-toggle="dropdown" class="dropdown-toggle">Admin<b class="caret"></b></a>
               <ul class="dropdown-menu">
@@ -179,7 +179,7 @@
           {% if user %}
           <ul class="nav navbar-nav pull-right">
             <li>
-              <a href="/profile/">Welcome {{user}}</a>
+              <a href="/profile/">Welcome {{user.id}}</a>
             </li>
             <li class="pull-right">
               <a href="/auth/logout/">Log Out</a>
