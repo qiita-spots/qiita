@@ -6,6 +6,9 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 from __future__ import division
+
+import warnings
+
 from os import remove
 from os.path import exists, join, basename
 from future.utils import viewvalues
@@ -170,8 +173,20 @@ class StudyDescriptionHandler(BaseHandler):
             raise HTTPError(400, "This file doesn't exist: %s" % fp_rsp)
 
         try:
-            # deleting previous uploads and inserting new one
-            self.remove_add_study_template(study.raw_data, study.id, fp_rsp)
+            with warnings.catch_warnings(record=True) as warns:
+                # force all warnings to always be triggered
+                warnings.simplefilter("always")
+
+                # deleting previous uploads and inserting new one
+                self.remove_add_study_template(study.raw_data, study.id,
+                                              fp_rsp)
+
+                # join all the warning messages into one. Note that this info
+                # will be ignored if an exception is raised
+                if warns:
+                    msg = '; '.join([str(w.message) for w in warns])
+                    msg_level = 'warning'
+
         except (TypeError, QiitaDBColumnError, QiitaDBExecutionError,
                 QiitaDBDuplicateError, IOError, ValueError, KeyError,
                 CParserError, QiitaDBDuplicateHeaderError) as e:
@@ -280,9 +295,20 @@ class StudyDescriptionHandler(BaseHandler):
             raise HTTPError(400, "This file doesn't exist: %s" % fp_rpt)
 
         try:
-            pt_id = self.remove_add_prep_template(fp_rpt, raw_data_id, study,
-                                                  data_type_id,
-                                                  investigation_type)
+            with warnings.catch_warnings(record=True) as warns:
+                # force all warnings to always be triggered
+                warnings.simplefilter("always")
+
+                # deleting previous uploads and inserting new one
+                pt_id = self.remove_add_prep_template(fp_rpt, raw_data_id,
+                                                      study, data_type_id,
+                                                      investigation_type)
+
+                # join all the warning messages into one. Note that this info
+                # will be ignored if an exception is raised
+                if warns:
+                    msg = '; '.join([str(w.message) for w in warns])
+                    msg_level = 'danger'
         except (TypeError, QiitaDBColumnError, QiitaDBExecutionError,
                 QiitaDBDuplicateError, IOError, ValueError,
                 CParserError) as e:
