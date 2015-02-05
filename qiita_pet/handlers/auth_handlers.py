@@ -23,8 +23,7 @@ class AuthCreateHandler(BaseHandler):
         # Tornado can raise an Exception directly, not a defined type
         except:
             error_message = ""
-        self.render("create_user.html", user=self.current_user,
-                    error=error_message)
+        self.render("create_user.html", error=error_message)
 
     def post(self):
         username = self.get_argument("email", "").strip().lower()
@@ -69,7 +68,7 @@ class AuthVerifyHandler(BaseHandler):
             msg = "Successfully verified user! You are now free to log in."
         else:
             msg = "Code not valid!"
-        self.render("user_verified.html", user=None, msg=msg)
+        self.render("user_verified.html", msg=msg)
 
 
 class AuthLoginHandler(BaseHandler):
@@ -121,7 +120,7 @@ class AuthLoginHandler(BaseHandler):
             self.set_current_user(username)
             self.redirect(nextpage)
         else:
-            self.render("index.html", user=None, message=msg, level='danger')
+            self.render("index.html", message=msg, level='danger')
 
     def set_current_user(self, user):
         if user:

@@ -6,7 +6,6 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
-from qiita_db.user import User
 from qiita_db.metadata_template import SampleTemplate
 from qiita_db.util import get_files_from_uploads_folders
 from .base_uimodule import BaseUIModule
@@ -31,7 +30,7 @@ class SampleTemplateTab(BaseUIModule):
         # The user can choose the sample template only if the study is
         # sandboxed or the current user is an admin
         show_select_sample = (study.status == 'sandbox'
-                              or User(self.current_user).level == 'admin')
+                              or self.current_user.level == 'admin')
 
         return self.render_string(
             "study_description_templates/sample_template_tab.html",

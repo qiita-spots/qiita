@@ -24,7 +24,6 @@ Methods
 # -----------------------------------------------------------------------------
 from __future__ import division
 
-from .user import User
 from .study import Study
 from .data import RawData, PreprocessedData, ProcessedData
 from .analysis import Analysis
@@ -50,12 +49,18 @@ def _get_data_fpids(constructor, object_id):
     return {fpid for fpid, _, _ in obj.get_filepaths()}
 
 
-def get_accessible_filepath_ids(user_id):
+def get_accessible_filepath_ids(user):
     """Gets all filepaths that this user should have access to
 
     This gets all raw, preprocessed, and processed filepaths, for studies
     that the user has access to, as well as all the mapping files and biom
     tables associated with the analyses that the user has access to.
+
+    Parameters
+    ----------
+    user : User object
+        The user we are interested in
+
 
     Returns
     -------
@@ -67,7 +72,6 @@ def get_accessible_filepath_ids(user_id):
     Admins have access to all files, so all filepath ids are returned for
     admins
     """
-    user = User(user_id)
 
     if user.level == "admin":
         # admins have access all files

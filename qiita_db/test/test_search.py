@@ -8,6 +8,7 @@
 
 from unittest import TestCase, main
 
+from qiita_db.user import User
 from qiita_core.util import qiita_test_checker
 from qiita_db.search import QiitaStudySearch
 
@@ -141,7 +142,7 @@ class SearchTest(TestCase):
         obs_res, obs_meta = self.search(
             '(sample_type = ENVO:soil AND COMMON_NAME = "rhizosphere '
             'metagenome" ) AND NOT Description_duplicate includes Burmese',
-            "test@foo.bar")
+            User("test@foo.bar"))
         exp_meta = ["COMMON_NAME", "Description_duplicate", "sample_type"]
         exp_res = {1:
                    [['1.SKM4.640180', 'rhizosphere metagenome', 'Bucu Rhizo',
@@ -161,7 +162,7 @@ class SearchTest(TestCase):
 
     def test_call_bad_meta_category(self):
         obs_res, obs_meta = self.search(
-            'BAD_NAME_THING = ENVO:soil', "test@foo.bar")
+            'BAD_NAME_THING = ENVO:soil', User("test@foo.bar"))
         self.assertEqual(obs_res, {})
         self.assertEqual(obs_meta, ["BAD_NAME_THING"])
 
@@ -169,7 +170,7 @@ class SearchTest(TestCase):
         """makes sure a call on a required sample ID column that has no results
         actually returns no results"""
         obs_res, obs_meta = self.search('sample_type = unicorns_and_rainbows',
-                                        'test@foo.bar')
+                                        User('test@foo.bar'))
         self.assertEqual(obs_res, {})
         self.assertEqual(obs_meta, ['sample_type'])
 

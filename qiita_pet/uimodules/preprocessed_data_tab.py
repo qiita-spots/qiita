@@ -8,7 +8,6 @@
 
 from qiita_db.data import PreprocessedData
 from qiita_db.metadata_template import PrepTemplate
-from qiita_db.user import User
 from qiita_db.ontology import Ontology
 from qiita_db.util import convert_to_id
 from qiita_db.parameters import ProcessedSortmernaParams
@@ -28,7 +27,7 @@ class PreprocessedDataTab(BaseUIModule):
 
 class PreprocessedDataInfoTab(BaseUIModule):
     def render(self, study_id, preprocessed_data):
-        user = User(self.current_user)
+        user = self.current_user
         ppd_id = preprocessed_data.id
         ebi_status = preprocessed_data.submitted_to_insdc_status()
         ebi_study_accession = preprocessed_data.ebi_study_accession

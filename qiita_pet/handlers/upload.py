@@ -13,7 +13,6 @@ from qiita_core.qiita_settings import qiita_config
 from qiita_db.util import (get_files_from_uploads_folders,
                            get_mountpoint, move_upload_files_to_trash)
 from qiita_db.study import Study
-from qiita_db.user import User
 from qiita_db.exceptions import QiitaDBUnknownIDError
 
 
@@ -23,11 +22,11 @@ class StudyUploadFileHandler(BaseHandler):
         """Simple function to avoid duplication of code"""
         study_id = int(study_id)
         study = Study(study_id)
-        check_access(User(self.current_user), study, no_public=True,
+        check_access(self.current_user, study, no_public=True,
                      raise_error=True)
 
         # getting the ontologies
-        self.render('upload.html', user=self.current_user,
+        self.render('upload.html',
                     study_title=study.title, study_info=study.info,
                     study_id=study_id,
                     extensions=','.join(qiita_config.valid_upload_extension),
@@ -40,7 +39,7 @@ class StudyUploadFileHandler(BaseHandler):
             study = Study(int(study_id))
         except QiitaDBUnknownIDError:
             raise HTTPError(404, "Study %s does not exist" % study_id)
-        check_access(User(self.current_user), study, no_public=True,
+        check_access(self.current_user, study, no_public=True,
                      raise_error=True)
         self.display_template(study_id, "")
 
@@ -93,7 +92,7 @@ class UploadFileHandler(BaseHandler):
         study_id = self.get_argument('study_id')
         data = self.request.files['file'][0]['body']
 
-        check_access(User(self.current_user), Study(int(study_id)),
+        check_access(self.current_user, Study(int(study_id)),
                      no_public=True, raise_error=True)
 
         self.validate_file_extension(resumable_filename)
@@ -136,7 +135,7 @@ class UploadFileHandler(BaseHandler):
         study_id = self.get_argument('study_id')
         resumable_filename = self.get_argument('resumableFilename')
 
-        check_access(User(self.current_user), Study(int(study_id)),
+        check_access(self.current_user, Study(int(study_id)),
                      no_public=True, raise_error=True)
 
         self.validate_file_extension(resumable_filename)

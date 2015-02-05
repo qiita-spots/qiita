@@ -12,7 +12,6 @@ from tornado.web import authenticated, HTTPError
 from qiita_ware.context import submit
 from qiita_ware.demux import stats as demux_stats
 from qiita_ware.dispatchable import submit_to_VAMPS
-from qiita_db.user import User
 from qiita_db.data import PreprocessedData
 from qiita_db.metadata_template import PrepTemplate, SampleTemplate
 from qiita_db.study import Study
@@ -30,7 +29,7 @@ class VAMPSHandler(BaseHandler):
             raise HTTPError(404, "PreprocessedData %d does not exist!" %
                                  preprocessed_data_id)
         else:
-            user = User(self.current_user)
+            user = self.current_user
             if user.level != 'admin':
                 raise HTTPError(403, "No permissions of admin, "
                                      "get/VAMPSSubmitHandler: %s!" % user.id)
@@ -59,7 +58,7 @@ class VAMPSHandler(BaseHandler):
             stats.append(('Number of sequences', demux_file_stats.n))
             msg_level = 'success'
 
-        self.render('vamps_submission.html', user=self.current_user,
+        self.render('vamps_submission.html',
                     study_title=study.title, stats=stats, message=msg,
                     study_id=study.id, level=msg_level,
                     preprocessed_data_id=preprocessed_data_id)
@@ -71,9 +70,9 @@ class VAMPSHandler(BaseHandler):
     @authenticated
     def post(self, preprocessed_data_id):
         # make sure user is admin and can therefore actually submit to VAMPS
-        if User(self.current_user).level != 'admin':
+        if self.current_user.level != 'admin':
             raise HTTPError(403, "User %s cannot submit to VAMPS!" %
-                            self.current_user)
+                            self.current_user.id)
         msg = ''
         msg_level = 'success'
         preprocessed_data = PreprocessedData(preprocessed_data_id)
@@ -90,11 +89,11 @@ class VAMPSHandler(BaseHandler):
             msg = "The study doesn't have demux files or have too many" % state
             msg_level = 'danger'
         else:
-            channel = self.current_user
+            channel = self.current_user.id
             job_id = submit(channel, submit_to_VAMPS,
                             int(preprocessed_data_id))
 
-            self.render('compute_wait.html', user=self.current_user,
+            self.render('compute_wait.html',
                         job_id=job_id, title='VAMPS Submission',
                         completion_redirect='/compute_complete/%s' % job_id)
             return
