@@ -184,8 +184,8 @@ class StudyDescriptionHandler(BaseHandler):
                 # join all the warning messages into one. Note that this info
                 # will be ignored if an exception is raised
                 if warns:
-                    msg_level = 'warning'
                     msg = '; '.join([str(w.message) for w in warns])
+                    msg_level = 'warning'
 
         except (TypeError, QiitaDBColumnError, QiitaDBExecutionError,
                 QiitaDBDuplicateError, IOError, ValueError, KeyError,
@@ -308,7 +308,7 @@ class StudyDescriptionHandler(BaseHandler):
                 # will be ignored if an exception is raised
                 if warns:
                     msg = '; '.join([str(w.message) for w in warns])
-                    msg_level = 'danger'
+                    msg_level = 'warning'
         except (TypeError, QiitaDBColumnError, QiitaDBExecutionError,
                 QiitaDBDuplicateError, IOError, ValueError,
                 CParserError) as e:

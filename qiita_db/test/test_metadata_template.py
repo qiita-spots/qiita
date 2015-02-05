@@ -1483,12 +1483,11 @@ class TestUtilities(TestCase):
         assert_frame_equal(obs, exp)
 
     def test_load_template_to_dataframe_empty_column(self):
-
-            obs = npt.assert_warns(UserWarning, load_template_to_dataframe,
-                                   StringIO(SAMPLE_TEMPLATE_EMPTY_COLUMN))
-            exp = pd.DataFrame.from_dict(ST_EMPTY_COLUMN_DICT_FORM)
-            exp.index.name = 'sample_name'
-            assert_frame_equal(obs, exp)
+        obs = npt.assert_warns(UserWarning, load_template_to_dataframe,
+                               StringIO(SAMPLE_TEMPLATE_EMPTY_COLUMN))
+        exp = pd.DataFrame.from_dict(ST_EMPTY_COLUMN_DICT_FORM)
+        exp.index.name = 'sample_name'
+        assert_frame_equal(obs, exp)
 
     def test_load_template_to_dataframe_column_with_nas(self):
         obs = load_template_to_dataframe(
