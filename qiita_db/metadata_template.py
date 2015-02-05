@@ -1340,14 +1340,14 @@ class SampleTemplate(MetadataTemplate):
             sample = self[k]
             sample[category] = v
 
-    def add_category(self, category, values, dtype, default):
+    def add_category(self, category, samples_and_values, dtype, default):
         """Add a metadata category
 
         Parameters
         ----------
         category : str
             The category to add
-        values : dict
+        samples_and_values : dict
             A mapping of {sample_id: value}
         dtype : str
             The datatype of the column
@@ -1372,7 +1372,7 @@ class SampleTemplate(MetadataTemplate):
             NOT NULL DEFAULT '{3}'""".format(table_name, category, dtype,
                                              default))
 
-        self[category] = values
+        self.update_category(category, samples_and_values)
 
 
 class PrepTemplate(MetadataTemplate):
