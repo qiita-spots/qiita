@@ -16,6 +16,7 @@ from os import close, remove
 from os.path import join, basename
 from collections import Iterable
 
+import numpy.testing as npt
 import pandas as pd
 from pandas.util.testing import assert_frame_equal
 
@@ -1445,8 +1446,8 @@ class TestUtilities(TestCase):
         assert_frame_equal(obs, exp)
 
     def test_load_template_to_dataframe_empty_columns(self):
-        obs = load_template_to_dataframe(
-            StringIO(EXP_SAMPLE_TEMPLATE_SPACES_EMPTY_COLUMN))
+        obs = npt.assert_warns(UserWarning, load_template_to_dataframe,
+                               StringIO(EXP_ST_SPACES_EMPTY_COLUMN))
         exp = pd.DataFrame.from_dict(SAMPLE_TEMPLATE_DICT_FORM)
         exp.index.name = 'sample_name'
         assert_frame_equal(obs, exp)
@@ -1478,6 +1479,21 @@ class TestUtilities(TestCase):
         obs = load_template_to_dataframe(
             StringIO(SAMPLE_TEMPLATE_NO_SAMPLE_NAMES_SOME_SPACES))
         exp = pd.DataFrame.from_dict(SAMPLE_TEMPLATE_DICT_FORM)
+        exp.index.name = 'sample_name'
+        assert_frame_equal(obs, exp)
+
+    def test_load_template_to_dataframe_empty_column(self):
+
+            obs = npt.assert_warns(UserWarning, load_template_to_dataframe,
+                                   StringIO(SAMPLE_TEMPLATE_EMPTY_COLUMN))
+            exp = pd.DataFrame.from_dict(ST_EMPTY_COLUMN_DICT_FORM)
+            exp.index.name = 'sample_name'
+            assert_frame_equal(obs, exp)
+
+    def test_load_template_to_dataframe_column_with_nas(self):
+        obs = load_template_to_dataframe(
+            StringIO(SAMPLE_TEMPLATE_COLUMN_WITH_NAS))
+        exp = pd.DataFrame.from_dict(ST_COLUMN_WITH_NAS_DICT_FORM)
         exp.index.name = 'sample_name'
         assert_frame_equal(obs, exp)
 
@@ -1556,7 +1572,7 @@ EXP_SAMPLE_TEMPLATE_SPACES_EMPTY_ROW = (
     "\t\t\t\t\t\t\t\t\t\t\t\n"
     "\t\t\t\t\t\t\t\t\t\t\t\n")
 
-EXP_SAMPLE_TEMPLATE_SPACES_EMPTY_COLUMN = (
+EXP_ST_SPACES_EMPTY_COLUMN = (
     "sample_name\tcollection_timestamp\tdescription\thas_extracted_data\t"
     "has_physical_specimen\thost_subject_id\tlatitude\tlongitude\t"
     "physical_location\trequired_sample_info_status\tsample_type\t"
@@ -1623,6 +1639,35 @@ SAMPLE_TEMPLATE_NO_SAMPLE_NAMES_SOME_SPACES = (
     "\t\t\t\t\t \t\t\t\t \t\t\n"
     )
 
+SAMPLE_TEMPLATE_EMPTY_COLUMN = (
+    "sample_name\tcollection_timestamp\tdescription\thas_extracted_data\t"
+    "has_physical_specimen\thost_subject_id\tlatitude\tlongitude\t"
+    "physical_location\trequired_sample_info_status\tsample_type\t"
+    "str_column\n"
+    "2.Sample1\t2014-05-29 12:24:51\tTest Sample 1\tTrue\tTrue\t"
+    "NotIdentified\t42.42\t41.41\tlocation1\treceived\ttype1\t"
+    "\n"
+    "2.Sample2\t2014-05-29 12:24:51\t"
+    "Test Sample 2\tTrue\tTrue\tNotIdentified\t4.2\t1.1\tlocation1\treceived\t"
+    "type1\t\n"
+    "2.Sample3\t2014-05-29 12:24:51\tTest Sample 3\tTrue\t"
+    "True\tNotIdentified\t4.8\t4.41\tlocation1\treceived\ttype1\t"
+    "\n")
+
+SAMPLE_TEMPLATE_COLUMN_WITH_NAS = (
+    "sample_name\tcollection_timestamp\tdescription\thas_extracted_data\t"
+    "has_physical_specimen\thost_subject_id\tlatitude\tlongitude\t"
+    "physical_location\trequired_sample_info_status\tsample_type\t"
+    "str_column\n"
+    "2.Sample1\t2014-05-29 12:24:51\tTest Sample 1\tTrue\tTrue\t"
+    "NotIdentified\t42.42\t41.41\tlocation1\treceived\ttype1\t"
+    "NA\n"
+    "2.Sample2\t2014-05-29 12:24:51\t"
+    "Test Sample 2\tTrue\tTrue\tNotIdentified\t4.2\t1.1\tlocation1\treceived\t"
+    "type1\tNA\n"
+    "2.Sample3\t2014-05-29 12:24:51\tTest Sample 3\tTrue\t"
+    "True\tNotIdentified\t4.8\t4.41\tlocation1\treceived\ttype1\t"
+    "NA\n")
 
 SAMPLE_TEMPLATE_DICT_FORM = {
     'collection_timestamp': {'2.Sample1': '2014-05-29 12:24:51',
@@ -1693,6 +1738,71 @@ SAMPLE_TEMPLATE_NUMBER_SAMPLE_NAMES_DICT_FORM = {
     'str_column': {'002.000': 'Value for sample 1',
                    '1.11111': 'Value for sample 2',
                    '0.12121': 'Value for sample 3'}}
+
+ST_EMPTY_COLUMN_DICT_FORM = \
+    {'collection_timestamp': {'2.Sample1': '2014-05-29 12:24:51',
+                              '2.Sample2': '2014-05-29 12:24:51',
+                              '2.Sample3': '2014-05-29 12:24:51'},
+     'description': {'2.Sample1': 'Test Sample 1',
+                     '2.Sample2': 'Test Sample 2',
+                     '2.Sample3': 'Test Sample 3'},
+     'has_extracted_data': {'2.Sample1': True,
+                            '2.Sample2': True,
+                            '2.Sample3': True},
+     'has_physical_specimen': {'2.Sample1': True,
+                               '2.Sample2': True,
+                               '2.Sample3': True},
+     'host_subject_id': {'2.Sample1': 'NotIdentified',
+                         '2.Sample2': 'NotIdentified',
+                         '2.Sample3': 'NotIdentified'},
+     'latitude': {'2.Sample1': 42.420000000000002,
+                  '2.Sample2': 4.2000000000000002,
+                  '2.Sample3': 4.7999999999999998},
+     'longitude': {'2.Sample1': 41.409999999999997,
+                   '2.Sample2': 1.1000000000000001,
+                   '2.Sample3': 4.4100000000000001},
+     'physical_location': {'2.Sample1': 'location1',
+                           '2.Sample2': 'location1',
+                           '2.Sample3': 'location1'},
+     'required_sample_info_status': {'2.Sample1': 'received',
+                                     '2.Sample2': 'received',
+                                     '2.Sample3': 'received'},
+     'sample_type': {'2.Sample1': 'type1',
+                     '2.Sample2': 'type1',
+                     '2.Sample3': 'type1'}}
+
+ST_COLUMN_WITH_NAS_DICT_FORM = \
+    {'collection_timestamp': {'2.Sample1': '2014-05-29 12:24:51',
+                              '2.Sample2': '2014-05-29 12:24:51',
+                              '2.Sample3': '2014-05-29 12:24:51'},
+     'description': {'2.Sample1': 'Test Sample 1',
+                     '2.Sample2': 'Test Sample 2',
+                     '2.Sample3': 'Test Sample 3'},
+     'has_extracted_data': {'2.Sample1': True,
+                            '2.Sample2': True,
+                            '2.Sample3': True},
+     'has_physical_specimen': {'2.Sample1': True,
+                               '2.Sample2': True,
+                               '2.Sample3': True},
+     'host_subject_id': {'2.Sample1': 'NotIdentified',
+                         '2.Sample2': 'NotIdentified',
+                         '2.Sample3': 'NotIdentified'},
+     'latitude': {'2.Sample1': 42.420000000000002,
+                  '2.Sample2': 4.2000000000000002,
+                  '2.Sample3': 4.7999999999999998},
+     'longitude': {'2.Sample1': 41.409999999999997,
+                   '2.Sample2': 1.1000000000000001,
+                   '2.Sample3': 4.4100000000000001},
+     'physical_location': {'2.Sample1': 'location1',
+                           '2.Sample2': 'location1',
+                           '2.Sample3': 'location1'},
+     'required_sample_info_status': {'2.Sample1': 'received',
+                                     '2.Sample2': 'received',
+                                     '2.Sample3': 'received'},
+     'sample_type': {'2.Sample1': 'type1',
+                     '2.Sample2': 'type1',
+                     '2.Sample3': 'type1'},
+     'str_column': {'2.Sample1': 'NA', '2.Sample2': 'NA', '2.Sample3': 'NA'}}
 
 EXP_PREP_TEMPLATE = (
     'sample_name\tbarcodesequence\tcenter_name\tcenter_project_name\t'
