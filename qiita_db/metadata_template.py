@@ -1364,7 +1364,7 @@ class SampleTemplate(MetadataTemplate):
         conn_handler = SQLConnectionHandler()
 
         if category in self.categories():
-            raise QiitaDBDuplicateError(column, "N/A")
+            raise QiitaDBDuplicateError(category, "N/A")
 
         conn_handler.execute("""
             ALTER TABLE qiita.{0}
