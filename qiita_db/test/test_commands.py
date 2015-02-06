@@ -549,6 +549,13 @@ class TestUpdatePreprocessedDataFromCmd(TestCase):
     def test_update_preprocessed_data_from_cmd(self):
         exp_ppd = PreprocessedData(Study(1).preprocessed_data()[0])
         exp_fps = exp_ppd.get_filepaths()
+
+        # The original paths mush exist, but they're not included in the test
+        # so create them here
+        for _, fp, _ in exp_fps:
+            with open(fp, 'w') as f:
+                f.write("")
+
         next_fp_id = get_count('qiita.filepath') + 1
         exp_fps.append(
             (next_fp_id,
@@ -567,7 +574,6 @@ class TestUpdatePreprocessedDataFromCmd(TestCase):
         self.assertEqual(obs_fps, exp_fps)
 
         # Check that the checksums have been updated
-        exp_checksums = ['3532748626', '2958832064', '852952723', 4]
         sql = "SELECT checksum FROM qiita.filepath WHERE filepath_id=%s"
 
         # Checksum of the fasta file

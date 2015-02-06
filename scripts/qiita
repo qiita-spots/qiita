@@ -359,8 +359,8 @@ def start(port):
                 type=click.Path(resolve_path=True, readable=True, exists=True))
 def generate_demux(sl_out_dir):
     """Generates the demux file for the split libraries output sl_out_dir"""
-    generate_demux_file(dirpath)
-    cleck.echo("Demux file successfully generated")
+    generate_demux_file(sl_out_dir)
+    click.echo("Demux file successfully generated")
 
 if __name__ == '__main__':
     qiita()
