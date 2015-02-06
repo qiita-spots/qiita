@@ -60,7 +60,7 @@ class AddFilesToRawData(BaseHandler):
         fps.append((_split(reverse_reads_str), 'raw_reverse_seqs'))
         fps.append((_split(sff_str), 'raw_sff'))
 
-        for _, f in get_mountpoint("uploads", retrive_all=True):
+        for _, f in get_mountpoint("uploads", retrieve_all=True):
             f = join(f, str(study_id))
             for fp_set, filetype in fps:
                 for t in fp_set:
