@@ -103,7 +103,7 @@ class RawDataEditorTab(BaseUIModule):
         study_status = study.status
         user_level = user.level
         raw_data_id = raw_data.id
-        files = get_files_from_uploads_folders(str(study.id))
+        files = [f for _, f in get_files_from_uploads_folders(str(study.id))]
 
         # Get the available prep template data types
         data_types = sorted(viewitems(get_data_types()), key=itemgetter(1))

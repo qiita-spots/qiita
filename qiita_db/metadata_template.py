@@ -47,6 +47,7 @@ from functools import partial
 
 import pandas as pd
 import numpy as np
+import warnings
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from .exceptions import (QiitaDBDuplicateError, QiitaDBColumnError,
@@ -1017,7 +1018,7 @@ class MetadataTemplate(QiitaObject):
             raise e
 
     def get_filepaths(self, conn_handler=None):
-        r"""Retrives the list of (filepath_id, filepath)"""
+        r"""Retrieves the list of (filepath_id, filepath)"""
         # Check that this function has been called from a subclass
         self._check_subclass()
 
@@ -1728,6 +1729,11 @@ def load_template_to_dataframe(fn):
     DataFrame
         Pandas dataframe with the loaded information
 
+    Raises
+    ------
+    UserWarning
+        When columns are dropped because they have no content for any sample.
+
     Notes
     -----
     The index attribute of the DataFrame will be forced to be 'sample_name'
@@ -1738,6 +1744,12 @@ def load_template_to_dataframe(fn):
 
     # index_col:
     #   is set as False, otherwise it is casted as a float and we want a string
+    # keep_default:
+    #   is set as False, to avoid inferring empty/NA values with the defaults
+    #   that Pandas has.
+    # na_values:
+    #   the values that should be considered as empty, in this case only empty
+    #   strings.
     # converters:
     #   ensure that sample names are not converted into any other types but
     #   strings and remove any trailing spaces.
@@ -1745,9 +1757,12 @@ def load_template_to_dataframe(fn):
     #   using the tab character as "comment" we remove rows that are
     #   constituted only by delimiters i. e. empty rows.
     template = pd.read_csv(fn, sep='\t', infer_datetime_format=True,
+                           keep_default_na=False, na_values=[''],
                            parse_dates=True, index_col=False, comment='\t',
                            mangle_dupe_cols=False, converters={
                                'sample_name': lambda x: str(x).strip()})
+
+    initial_columns = set(template.columns)
 
     # remove rows that have no sample identifier but that may have other data
     # in the rest of the columns
@@ -1758,5 +1773,12 @@ def load_template_to_dataframe(fn):
 
     # it is not uncommon to find templates that have empty columns
     template.dropna(how='all', axis=1, inplace=True)
+
+    initial_columns.remove('sample_name')
+    dropped_cols = initial_columns - set(template.columns)
+    if dropped_cols:
+        warnings.warn('The following column(s) were removed from the template '
+                      'because all their values are empty: '
+                      '%s' % ', '.join(dropped_cols), UserWarning)
 
     return template

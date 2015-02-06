@@ -232,11 +232,11 @@ class JobTest(TestCase):
         self.assertEqual(new.id, 2)
 
     def test_retrieve_datatype(self):
-        """Makes sure datatype retriveal is correct"""
+        """Makes sure datatype retrieval is correct"""
         self.assertEqual(self.job.datatype, '18S')
 
     def test_retrieve_command(self):
-        """Makes sure command retriveal is correct"""
+        """Makes sure command retrieval is correct"""
         self.assertEqual(self.job.command, ['Summarize Taxa',
                                             'summarize_taxa_through_plots.py'])
 

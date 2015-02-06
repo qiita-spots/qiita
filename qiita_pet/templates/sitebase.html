@@ -98,7 +98,7 @@
     {% set message = sysmessage + "<br />" + str(message) %}
   {% end %}
   {% if message != '' %}
-      {% if level not in {'danger', 'success', 'info'} %}
+      {% if level not in {'danger', 'success', 'info', 'warning'} %}
           {% set level = 'info' %}
       {% end %}
       <div class="alert alert-{{ level }} alert-dismissable">
