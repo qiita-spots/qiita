@@ -265,7 +265,7 @@ class StudyEditHandler(BaseHandler):
                    (the_study.id, form_data.data['study_title'][0]))
 
         # Add the environmental packages, this attribute can only be edited
-        # if the study is public, otherwise this cannot be changed
+        # if the study is not public, otherwise this cannot be changed
         if isinstance(form_data, StudyEditorExtendedForm):
             the_study.environmental_packages = form_data.data[
                 'environmental_packages']
