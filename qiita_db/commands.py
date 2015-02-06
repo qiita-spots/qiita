@@ -7,22 +7,25 @@
 # -----------------------------------------------------------------------------
 
 from dateutil.parser import parse
-from os import listdir
-from os.path import join
+from os import listdir, remove
+from os.path import join, exists
 from functools import partial
 from future import standard_library
 from collections import defaultdict
+from shutil import move
 with standard_library.hooks():
     from configparser import ConfigParser
 
 from .study import Study, StudyPerson
 from .user import User
-from .util import get_filetypes, get_filepath_types
+from .util import (get_filetypes, get_filepath_types, compute_checksum,
+                   convert_to_id)
 from .data import RawData, PreprocessedData, ProcessedData
 from .metadata_template import (SampleTemplate, PrepTemplate,
                                 load_template_to_dataframe)
 from .parameters import (PreprocessedIlluminaParams, Preprocessed454Params,
                          ProcessedSortmernaParams)
+from .sql_connection import SQLConnectionHandler
 
 SUPPORTED_PARAMS = ['preprocessed_sequence_illumina_params',
                     'preprocessed_sequence_454_params',
@@ -332,15 +335,15 @@ def update_preprocessed_data_from_cmd(sl_out_dir, study_id):
     # Check that we have all the required files
     path_builder = partial(join, sl_out_dir)
     new_fps = {'preprocessed_fasta': path_builder('seqs.fna'),
-               'preprocessed_fastq': path_builder('seqs.fnq'),
+               'preprocessed_fastq': path_builder('seqs.fastq'),
                'preprocessed_demux': path_builder('seqs.demux'),
                'log': path_builder('split_library_log.txt')}
 
     missing_files = [key for key, val in new_fps.items() if not exists(val)]
     if missing_files:
         raise ValueError(
-            "The directory %s does not contain the following required files:"
-            % ', '.join(missing_files))
+            "The directory %s does not contain the following required files: "
+            "%s" % (sl_out_dir, ', '.join(missing_files)))
 
     # Get the preprocessed data to be updated
     study = Study(study_id)
@@ -353,7 +356,7 @@ def update_preprocessed_data_from_cmd(sl_out_dir, study_id):
     # We need to loop through the fps list to get the db filepaths that we
     # need to modify
     fps = defaultdict(list)
-    for fp_id, fp, fp_type in ppd.get_filepaths():
+    for fp_id, fp, fp_type in sorted(ppd.get_filepaths()):
         fps[fp_type].append((fp_id, fp))
 
     fps_to_add = []
@@ -376,7 +379,7 @@ def update_preprocessed_data_from_cmd(sl_out_dir, study_id):
 
     # Update the files and the database
     conn_handler = SQLConnectionHandler()
-    sql = "UPDATE qiita.filepath SET checksum=%s WHERE filepath_id=%a"
+    sql = "UPDATE qiita.filepath SET checksum=%s WHERE filepath_id=%s"
     for db_id, db_fp, new_fp, checksum in fps_to_modify:
         # Move the db_file in case something goes wrong
         bkp_fp = "%s.bkp" % db_fp
@@ -388,11 +391,14 @@ def update_preprocessed_data_from_cmd(sl_out_dir, study_id):
             move(new_fp, db_fp)
             # Update the checksum
             conn_handler.execute(sql, (checksum, db_id))
-        except Exception, e:
-            # Restore the db file
+        except Exception:
+            # We need to catch any exception so we can restore the db file
             move(bkp_fp, db_fp)
-            raise e
+            # Using just raise so the original traceback is shown
+            raise
 
         # Since the file and the database have been updated correctly,
         # remove the backup
         remove(bkp_fp)
+
+    return ppd

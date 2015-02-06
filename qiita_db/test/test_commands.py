@@ -27,9 +27,11 @@ from qiita_db.commands import (load_study_from_cmd, load_raw_data_cmd,
 from qiita_db.environment_manager import patch
 from qiita_db.study import Study, StudyPerson
 from qiita_db.user import User
-from qiita_db.data import RawData
-from qiita_db.util import get_count, check_count, get_db_files_base_dir
+from qiita_db.data import RawData, PreprocessedData
+from qiita_db.util import (get_count, check_count, get_db_files_base_dir,
+                           get_mountpoint)
 from qiita_core.util import qiita_test_checker
+from qiita_ware.processing_pipeline import generate_demux_file
 
 
 @qiita_test_checker()
@@ -464,18 +466,155 @@ class TestPatch(TestCase):
 
 
 @qiita_test_checker()
-class TestPreprocessedDataFromCmd(TestCase):
+class TestUpdatePreprocessedDataFromCmd(TestCase):
     def setUp(self):
-        pass
+        # Create a directory with the test split libraries output
+        self.test_slo = mkdtemp(prefix='test_slo_')
+        path_builder = partial(join, self.test_slo)
+        fna_fp = path_builder('seqs.fna')
+        fastq_fp = path_builder('seqs.fastq')
+        log_fp = path_builder('split_library_log.txt')
+        demux_fp = path_builder('seqs.demux')
+
+        with open(fna_fp, 'w') as f:
+            f.write(FASTA_SEQS)
+
+        with open(fastq_fp, 'w') as f:
+            f.write(FASTQ_SEQS)
+
+        with open(log_fp, 'w') as f:
+            f.write("Test log\n")
+
+        generate_demux_file(self.test_slo)
+
+        self._filepaths_to_remove = [fna_fp, fastq_fp, demux_fp, log_fp]
+        self._dirpaths_to_remove = [self.test_slo]
+
+        # Generate a directory with test split libraries output missing files
+        self.missing_slo = mkdtemp(prefix='test_missing_')
+        path_builder = partial(join, self.test_slo)
+        fna_fp = path_builder('seqs.fna')
+        fastq_fp = path_builder('seqs.fastq')
+
+        with open(fna_fp, 'w') as f:
+            f.write(FASTA_SEQS)
+
+        with open(fastq_fp, 'w') as f:
+            f.write(FASTQ_SEQS)
+
+        self._filepaths_to_remove.append(fna_fp)
+        self._filepaths_to_remove.append(fastq_fp)
+        self._dirpaths_to_remove.append(self.missing_slo)
+
+        # Create a study with no preprocessed data
+        info = {
+            "timeseries_type_id": 1,
+            "metadata_complete": True,
+            "mixs_compliant": True,
+            "number_samples_collected": 25,
+            "number_samples_promised": 28,
+            "portal_type_id": 3,
+            "study_alias": "FCM",
+            "study_description": "Microbiome of people who eat nothing but "
+                                 "fried chicken",
+            "study_abstract": "Exploring how a high fat diet changes the "
+                              "gut microbiome",
+            "emp_person_id": StudyPerson(2),
+            "principal_investigator_id": StudyPerson(3),
+            "lab_person_id": StudyPerson(1)
+        }
+        self.no_ppd_study = Study.create(
+            User('test@foo.bar'), "Test study", [1], info)
+
+        # Get the directory where the preprocessed data is usually copied.
+        _, self.db_ppd_dir = get_mountpoint('preprocessed_data')[0]
 
     def tearDown(self):
-        pass
+        for fp in self._filepaths_to_remove:
+            if exists(fp):
+                remove(fp)
+        for dp in self._dirpaths_to_remove:
+            if exists(fp):
+                rmtree(dp)
 
     def test_update_preprocessed_data_from_cmd_error_no_ppd(self):
-        pass
+        with self.assertRaises(ValueError):
+            update_preprocessed_data_from_cmd(self.test_slo,
+                                              self.no_ppd_study.id)
 
     def test_update_preprocessed_data_from_cmd_error_missing_files(self):
-        pass
+        with self.assertRaises(ValueError):
+            update_preprocessed_data_from_cmd(self.missing_slo, 1)
+
+    def test_update_preprocessed_data_from_cmd(self):
+        exp_ppd = PreprocessedData(Study(1).preprocessed_data()[0])
+        exp_fps = exp_ppd.get_filepaths()
+        next_fp_id = get_count('qiita.filepath') + 1
+        exp_fps.append(
+            (next_fp_id,
+             join(self.db_ppd_dir, "%s_split_library_log.txt" % exp_ppd.id),
+             'log'))
+
+        ppd = update_preprocessed_data_from_cmd(self.test_slo, 1)
+
+        # Check that the modified preprocessed data is the correct one
+        self.assertEqual(ppd.id, exp_ppd.id)
+
+        # Check that the filepaths returned are correct
+        # We need to sort the list returned from the db because the ordering
+        # on that list is based on db modification time, rather than id
+        obs_fps = sorted(ppd.get_filepaths())
+        self.assertEqual(obs_fps, exp_fps)
+
+        # Check that the checksums have been updated
+        exp_checksums = ['3532748626', '2958832064', '852952723', 4]
+        sql = "SELECT checksum FROM qiita.filepath WHERE filepath_id=%s"
+
+        # Checksum of the fasta file
+        obs_checksum = self.conn_handler.execute_fetchone(
+            sql, (obs_fps[0][0],))[0]
+        self.assertEqual(obs_checksum, '3532748626')
+
+        # Checksum of the fastq file
+        obs_checksum = self.conn_handler.execute_fetchone(
+            sql, (obs_fps[1][0],))[0]
+        self.assertEqual(obs_checksum, '2958832064')
+
+        # Checksum of the demux file
+        # The checksum is generated dynamically, so the checksum changes
+        # We are going to test that the checksum is not the one that was
+        # before, which correspond to an empty file
+        obs_checksum = self.conn_handler.execute_fetchone(
+            sql, (obs_fps[2][0],))[0]
+        self.assertNotEqual(obs_checksum, '852952723')
+
+        # Checksum of the log file
+        obs_checksum = self.conn_handler.execute_fetchone(
+            sql, (obs_fps[3][0],))[0]
+        self.assertEqual(obs_checksum, '626839734')
+
+
+FASTA_SEQS = """>a_1 orig_bc=abc new_bc=abc bc_diffs=0
+xyz
+>b_1 orig_bc=abw new_bc=wbc bc_diffs=4
+qwe
+>b_2 orig_bc=abw new_bc=wbc bc_diffs=4
+qwe
+"""
+
+FASTQ_SEQS = """@a_1 orig_bc=abc new_bc=abc bc_diffs=0
+xyz
++
+ABC
+@b_1 orig_bc=abw new_bc=wbc bc_diffs=4
+qwe
++
+DFG
+@b_2 orig_bc=abw new_bc=wbc bc_diffs=4
+qwe
++
+DEF
+"""
 
 
 CONFIG_1 = """[required]
