@@ -10,6 +10,7 @@ from unittest import TestCase, main
 from tempfile import mkstemp
 from os import close, remove
 from os.path import join, exists, basename
+from shutil import rmtree
 
 from qiita_core.util import qiita_test_checker
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
@@ -27,7 +28,8 @@ from qiita_db.util import (exists_table, exists_dynamic_table, scrub_data,
                            get_lat_longs, get_mountpoint,
                            get_files_from_uploads_folders,
                            get_environmental_packages, get_timeseries_types,
-                           filepath_id_to_rel_path, find_repeated)
+                           filepath_id_to_rel_path, find_repeated,
+                           move_upload_files_to_trash)
 
 
 @qiita_test_checker()
@@ -466,13 +468,13 @@ class DBUtilTests(TestCase):
         # testing multi returns
         exp = [(5, join(get_db_files_base_dir(), 'raw_data', '')),
                (11, join(get_db_files_base_dir(), 'raw_data', 'tmp'))]
-        obs = get_mountpoint("raw_data", retrive_all=True)
+        obs = get_mountpoint("raw_data", retrieve_all=True)
         self.assertEqual(obs, exp)
 
     def test_get_files_from_uploads_folders(self):
         # something has been uploaded and ignoring hidden files/folders
         # and folders
-        exp = ['uploaded_file.txt']
+        exp = [(7, 'uploaded_file.txt')]
         obs = get_files_from_uploads_folders("1")
         self.assertEqual(obs, exp)
 
@@ -480,6 +482,34 @@ class DBUtilTests(TestCase):
         exp = []
         obs = get_files_from_uploads_folders("2")
         self.assertEqual(obs, exp)
+
+    def test_move_upload_files_to_trash(self):
+        test_filename = 'this_is_a_test_file.txt'
+
+        # create file to move to trash
+        fid, folder = get_mountpoint("uploads")[0]
+        open(join(folder, '1', test_filename), 'w').write('test')
+
+        exp = [(fid, 'this_is_a_test_file.txt'), (fid, 'uploaded_file.txt')]
+        obs = get_files_from_uploads_folders("1")
+        self.assertItemsEqual(obs, exp)
+
+        # move file
+        move_upload_files_to_trash(1, [(fid, test_filename)])
+        exp = [(fid, 'uploaded_file.txt')]
+        obs = get_files_from_uploads_folders("1")
+        self.assertItemsEqual(obs, exp)
+
+        # testing errors
+        with self.assertRaises(QiitaDBError):
+            move_upload_files_to_trash(2, [(fid, test_filename)])
+        with self.assertRaises(QiitaDBError):
+            move_upload_files_to_trash(1, [(10, test_filename)])
+        with self.assertRaises(QiitaDBError):
+            move_upload_files_to_trash(1, [(fid, test_filename)])
+
+        # removing trash folder
+        rmtree(join(folder, '1', 'trash'))
 
     def test_get_environmental_packages(self):
         obs = get_environmental_packages()

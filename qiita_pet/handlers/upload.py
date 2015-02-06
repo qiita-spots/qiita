@@ -11,7 +11,7 @@ from .base_handlers import BaseHandler
 from qiita_core.qiita_settings import qiita_config
 
 from qiita_db.util import (get_files_from_uploads_folders,
-                           get_mountpoint)
+                           get_mountpoint, move_upload_files_to_trash)
 from qiita_db.study import Study
 from qiita_db.exceptions import QiitaDBUnknownIDError
 
@@ -41,6 +41,29 @@ class StudyUploadFileHandler(BaseHandler):
             raise HTTPError(404, "Study %s does not exist" % study_id)
         check_access(self.current_user, study, no_public=True,
                      raise_error=True)
+        self.display_template(study_id, "")
+
+    @authenticated
+    def post(self, study_id):
+        try:
+            study = Study(int(study_id))
+        except QiitaDBUnknownIDError:
+            raise HTTPError(404, "Study %s does not exist" % study_id)
+        check_access(self.current_user, study, no_public=True,
+                     raise_error=True)
+
+        files_to_move = []
+        for v in self.get_arguments('files_to_erase', strip=True):
+            v = v.split('-', 1)
+            # if the file was just uploaded JS will not know which id the
+            # current upload folder has so we need to retrieve it
+            if v[0] == 'undefined':
+                v[0], _ = get_mountpoint("uploads")[0]
+
+            files_to_move.append((int(v[0]), v[1]))
+
+        move_upload_files_to_trash(study.id, files_to_move)
+
         self.display_template(study_id, "")
 
 

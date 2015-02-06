@@ -252,7 +252,7 @@ class TestAnalysis(TestCase):
         obs = self.conn_handler.execute_fetchall(sql)
         self.assertEqual(obs, [[3, 4]])
 
-    def test_retrive_step(self):
+    def test_retrieve_step(self):
         new = Analysis.create(User("admin@foo.bar"), "newAnalysis",
                               "A New Analysis", Analysis(1))
         new.step = 2
