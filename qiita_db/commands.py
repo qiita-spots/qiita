@@ -11,6 +11,7 @@ from os import listdir
 from os.path import join
 from functools import partial
 from future import standard_library
+from collections import defaultdict
 with standard_library.hooks():
     from configparser import ConfigParser
 
@@ -300,3 +301,98 @@ def load_parameters_from_cmd(name, fp, table):
                          "The format is PARAMETER_NAME<tab>VALUE")
 
     return constructor.create(name, **params)
+
+
+def update_preprocessed_data_from_cmd(sl_out_dir, study_id):
+    """Updates the preprocessed data of the study 'study_id'
+
+    Parameters
+    ----------
+    sl_out_dir : str
+        The path to the split libraries output directory
+    study_id : int
+        The study_id of the study to be updated
+
+    Returns
+    -------
+    qiita_db.PreprocessedData
+        The updated preprocessed data
+
+    Raises
+    ------
+    ValueError
+        If sl_out_dir does not contain all the required files
+        If the study does not have any preprocessed data
+
+    Notes
+    -----
+    If the study has more than one preprocessed data, the one with lower id
+    is updated.
+    """
+    # Check that we have all the required files
+    path_builder = partial(join, sl_out_dir)
+    new_fps = {'preprocessed_fasta': path_builder('seqs.fna'),
+               'preprocessed_fastq': path_builder('seqs.fnq'),
+               'preprocessed_demux': path_builder('seqs.demux'),
+               'log': path_builder('split_library_log.txt')}
+
+    missing_files = [key for key, val in new_fps.items() if not exists(val)]
+    if missing_files:
+        raise ValueError(
+            "The directory %s does not contain the following required files:"
+            % ', '.join(missing_files))
+
+    # Get the preprocessed data to be updated
+    study = Study(study_id)
+    ppds = study.preprocessed_data()
+    if not ppds:
+        raise ValueError("Study %s does not have any preprocessed data")
+
+    ppd = PreprocessedData(sorted(ppds)[0])
+
+    # We need to loop through the fps list to get the db filepaths that we
+    # need to modify
+    fps = defaultdict(list)
+    for fp_id, fp, fp_type in ppd.get_filepaths():
+        fps[fp_type].append((fp_id, fp))
+
+    fps_to_add = []
+    fps_to_modify = []
+    keys = ['preprocessed_fasta', 'preprocessed_fastq', 'preprocessed_demux',
+            'log']
+
+    for key in keys:
+        if key in fps:
+            db_id, db_fp = fps[key][0]
+            fp_checksum = compute_checksum(new_fps[key])
+            fps_to_modify.append((db_id, db_fp, new_fps[key], fp_checksum))
+        else:
+            fps_to_add.append(
+                (new_fps[key], convert_to_id(key, 'filepath_type')))
+
+    # Insert the new files in the database, if any
+    if fps_to_add:
+        ppd.add_filepaths(fps_to_add)
+
+    # Update the files and the database
+    conn_handler = SQLConnectionHandler()
+    sql = "UPDATE qiita.filepath SET checksum=%s WHERE filepath_id=%a"
+    for db_id, db_fp, new_fp, checksum in fps_to_modify:
+        # Move the db_file in case something goes wrong
+        bkp_fp = "%s.bkp" % db_fp
+        move(db_fp, bkp_fp)
+
+        # Start the update for the current file
+        try:
+            # Move the file to the database location
+            move(new_fp, db_fp)
+            # Update the checksum
+            conn_handler.execute(sql, (checksum, db_id))
+        except Exception, e:
+            # Restore the db file
+            move(bkp_fp, db_fp)
+            raise e
+
+        # Since the file and the database have been updated correctly,
+        # remove the backup
+        remove(bkp_fp)

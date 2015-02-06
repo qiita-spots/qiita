@@ -22,7 +22,8 @@ from qiita_db.commands import (load_sample_template_from_cmd,
                                load_raw_data_cmd, load_processed_data_cmd,
                                load_preprocessed_data_from_cmd,
                                load_prep_template_from_cmd,
-                               load_parameters_from_cmd, SUPPORTED_PARAMS)
+                               load_parameters_from_cmd, SUPPORTED_PARAMS,
+                               update_preprocessed_data_from_cmd)
 from qiita_db.sql_connection import SQLConnectionHandler
 from qiita_db.exceptions import QiitaDBConnectionError
 from qiita_db.reference import Reference
@@ -243,6 +244,17 @@ def load_parameters(fp, table, name):
     param = load_parameters_from_cmd(name, fp, table)
     click.echo("Parameters successfully added to table %s with id %s"
                % (table, param.id))
+
+
+@db.command()
+@click.argument('sl_out_dir', required=True,
+                type=click.Path(resolve_path=True, readable=True, exists=True))
+@click.option('--study', required=True, type=int,
+              help='Study whose preprocessed data will be updated')
+def update_preprocessed_data(sl_out_dir, study):
+    """Updates the study with the preprocessed data in sl_out_dir"""
+    ppd = update_preprocessed_data_from_cmd(sl_out_dir, study)
+    click.echo("Preprocessed data %s successfully updated" % ppd.id)
 
 
 # #############################################################################

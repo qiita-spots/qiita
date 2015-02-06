@@ -22,7 +22,8 @@ from qiita_db.commands import (load_study_from_cmd, load_raw_data_cmd,
                                load_prep_template_from_cmd,
                                load_processed_data_cmd,
                                load_preprocessed_data_from_cmd,
-                               load_parameters_from_cmd)
+                               load_parameters_from_cmd,
+                               update_preprocessed_data_from_cmd)
 from qiita_db.environment_manager import patch
 from qiita_db.study import Study, StudyPerson
 from qiita_db.user import User
@@ -460,6 +461,21 @@ class TestPatch(TestCase):
         self.assertEqual(obs, exp)
 
         self._assert_current_patch('10.sql')
+
+
+@qiita_test_checker()
+class TestPreprocessedDataFromCmd(TestCase):
+    def setUp(self):
+        pass
+
+    def tearDown(self):
+        pass
+
+    def test_update_preprocessed_data_from_cmd_error_no_ppd(self):
+        pass
+
+    def test_update_preprocessed_data_from_cmd_error_missing_files(self):
+        pass
 
 
 CONFIG_1 = """[required]
