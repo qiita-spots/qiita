@@ -49,7 +49,7 @@ class StudyUploadFileHandler(BaseHandler):
             study = Study(int(study_id))
         except QiitaDBUnknownIDError:
             raise HTTPError(404, "Study %s does not exist" % study_id)
-        check_access(User(self.current_user), study, no_public=True,
+        check_access(self.current_user, study, no_public=True,
                      raise_error=True)
 
         files_to_move = []
