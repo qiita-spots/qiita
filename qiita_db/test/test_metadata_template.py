@@ -601,6 +601,13 @@ class TestSampleTemplate(TestCase):
         with self.assertRaises(QiitaDBDuplicateHeaderError):
             SampleTemplate.create(self.metadata, self.new_study)
 
+    def test_create_bad_sample_names(self):
+        """Create raises an error when duplicate headers are present"""
+        # set a horrible list of sample names
+        self.metadata.index = ['o()xxxx[{::::::::>', 'sample.1', 'sample.3']
+        with self.assertRaises(QiitaDBColumnError):
+            SampleTemplate.create(self.metadata, self.new_study)
+
     def test_create(self):
         """Creates a new SampleTemplate"""
         st = SampleTemplate.create(self.metadata, self.new_study)
@@ -941,6 +948,13 @@ class TestPrepTemplate(TestCase):
         self.metadata['STR_COLUMN'] = pd.Series(['', '', ''],
                                                 index=self.metadata.index)
         with self.assertRaises(QiitaDBDuplicateHeaderError):
+            PrepTemplate.create(self.metadata, self.new_raw_data,
+                                self.test_study, self.data_type)
+
+    def test_create_bad_sample_names(self):
+        # set a horrible list of sample names
+        self.metadata.index = ['o()xxxx[{::::::::>', 'sample.1', 'sample.3']
+        with self.assertRaises(QiitaDBColumnError):
             PrepTemplate.create(self.metadata, self.new_raw_data,
                                 self.test_study, self.data_type)
 

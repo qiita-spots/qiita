@@ -68,7 +68,6 @@ else:
     from string import letters, digits
 
 
-
 TARGET_GENE_DATA_TYPES = ['16S', '18S', 'ITS']
 REQUIRED_TARGET_GENE_COLS = {'barcodesequence', 'linkerprimersequence',
                              'run_prefix', 'library_construction_protocol',
@@ -1129,6 +1128,13 @@ class SampleTemplate(MetadataTemplate):
         if cls.exists(study.id):
             raise QiitaDBDuplicateError(cls.__name__, 'id: %d' % study.id)
 
+        invalid_ids = get_invalid_sample_names(md_template.index)
+        if invalid_ids:
+            raise QiitaDBColumnError("The following sample names in the sample"
+                                     " template contain invalid characters "
+                                     "(only alphanumeric characters or periods"
+                                     " are allowed): %s." %
+                                     ", ".join(invalid_ids))
         # We are going to modify the md_template. We create a copy so
         # we don't modify the user one
         md_template = deepcopy(md_template)
@@ -1290,6 +1296,14 @@ class PrepTemplate(MetadataTemplate):
         # the recognized investigation types
         if investigation_type is not None:
             cls.validate_investigation_type(investigation_type)
+
+        invalid_ids = get_invalid_sample_names(md_template.index)
+        if invalid_ids:
+            raise QiitaDBColumnError("The following sample names in the prep"
+                                     " template contain invalid characters "
+                                     "(only alphanumeric characters or periods"
+                                     " are allowed): %s." %
+                                     ", ".join(invalid_ids))
 
         # We are going to modify the md_template. We create a copy so
         # we don't modify the user one
