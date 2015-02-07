@@ -39,7 +39,7 @@ Methods
 
 from __future__ import division
 from future.builtins import zip
-from future.utils import viewitems
+from future.utils import viewitems, PY3
 from copy import deepcopy
 from os.path import join
 from time import strftime
@@ -61,6 +61,12 @@ from .util import (exists_table, get_table_cols, get_emp_status,
                    convert_from_id, find_repeated, get_mountpoint,
                    insert_filepaths)
 from .logger import LogEntry
+
+if PY3:
+    from string import ascii_letters as letters, digits
+else:
+    from string import letters, digits
+
 
 
 TARGET_GENE_DATA_TYPES = ['16S', '18S', 'ITS']
@@ -1782,3 +1788,33 @@ def load_template_to_dataframe(fn):
                       '%s' % ', '.join(dropped_cols), UserWarning)
 
     return template
+
+
+def get_invalid_sample_names(sample_names):
+    """Get a list of sample names that are not QIIME compliant
+
+    Parameters
+    ----------
+    sample_names : iterable
+        Iterable containing the sample names to check.
+
+    Returns
+    -------
+    list
+        List of str objects where each object is an invalid sample name.
+
+    References
+    ----------
+    .. [1] QIIME File Types documentaiton:
+    http://qiime.org/documentation/file_formats.html#mapping-file-overview.
+    """
+
+    # from the QIIME mapping file documentation
+    valid = set(letters+digits+'.')
+    inv = []
+
+    for s in sample_names:
+        if set(s) - valid:
+            inv.append(s)
+
+    return inv

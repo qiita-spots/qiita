@@ -34,7 +34,7 @@ from qiita_db.util import exists_table, get_db_files_base_dir, get_mountpoint
 from qiita_db.metadata_template import (
     _get_datatypes, _as_python_types, MetadataTemplate, SampleTemplate,
     PrepTemplate, BaseSample, PrepSample, Sample, _prefix_sample_names_with_id,
-    load_template_to_dataframe)
+    load_template_to_dataframe, get_invalid_sample_names)
 
 
 class TestUtilMetadataMap(TestCase):
@@ -1495,6 +1495,36 @@ class TestUtilities(TestCase):
         exp = pd.DataFrame.from_dict(ST_COLUMN_WITH_NAS_DICT_FORM)
         exp.index.name = 'sample_name'
         assert_frame_equal(obs, exp)
+
+    def test_get_invalid_sample_names(self):
+        all_valid = ['2.sample.1', 'foo.bar.baz', 'roses', 'are', 'red',
+                     'v10l3t5', '4r3', '81u3']
+        obs = get_invalid_sample_names(all_valid)
+        self.assertEqual(obs, [])
+
+        all_valid = ['sample.1', 'sample.2', 'SAMPLE.1', 'BOOOM']
+        obs = get_invalid_sample_names(all_valid)
+        self.assertEqual(obs, [])
+
+    def test_get_invalid_sample_names_str(self):
+        one_invalid = ['2.sample.1', 'foo.bar.baz', 'roses', 'are', 'red',
+                       'I am the chosen one', 'v10l3t5', '4r3', '81u3']
+        obs = get_invalid_sample_names(one_invalid)
+        self.assertItemsEqual(obs, ['I am the chosen one'])
+
+        one_invalid = ['2.sample.1', 'foo.bar.baz', 'roses', 'are', 'red',
+                       ':L{=<', ':L}=<', '4r3', '81u3']
+        obs = get_invalid_sample_names(one_invalid)
+        self.assertItemsEqual(obs, [':L{=<', ':L}=<'])
+
+    def test_get_get_invalid_sample_names_mixed(self):
+        one_invalid = ['.', '1', '2']
+        obs = get_invalid_sample_names(one_invalid)
+        self.assertItemsEqual(obs, [])
+
+        one_invalid = [' ', ' ', ' ']
+        obs = get_invalid_sample_names(one_invalid)
+        self.assertItemsEqual(obs, [' ', ' ', ' '])
 
 
 EXP_SAMPLE_TEMPLATE = (
