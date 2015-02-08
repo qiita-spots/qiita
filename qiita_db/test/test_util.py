@@ -33,7 +33,7 @@ from qiita_db.util import (exists_table, exists_dynamic_table, scrub_data,
                            filepath_id_to_rel_path, find_repeated,
                            move_filepaths_to_upload_folder,
                            move_upload_files_to_trash)
-                           
+
 
 @qiita_test_checker()
 class DBUtilTests(TestCase):
