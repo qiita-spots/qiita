@@ -191,9 +191,11 @@ class TestSample(TestCase):
             self.tester['Not_a_Category']
 
     def test_setitem(self):
-        """setitem raises an error (currently not allowed)"""
-        with self.assertRaises(QiitaDBNotImplementedError):
-            self.tester['DEPTH'] = 0.30
+        with self.assertRaises(QiitaDBColumnError):
+            self.tester['column that does not exist'] = 0.30
+        self.assertEqual(self.tester['tot_nitro'], 1.41)
+        self.tester['tot_nitro'] = '1234.5'
+        self.assertEqual(self.tester['tot_nitro'], 1234.5)
 
     def test_delitem(self):
         """delitem raises an error (currently not allowed)"""
@@ -692,15 +694,91 @@ class TestSampleTemplate(TestCase):
         with self.assertRaises(KeyError):
             self.tester['Not_a_Sample']
 
-    def test_setitem(self):
+    def test_update_category(self):
         """setitem raises an error (currently not allowed)"""
-        with self.assertRaises(QiitaDBNotImplementedError):
-            self.tester['1.SKM7.640188'] = Sample('1.SKM7.640188', self.tester)
+        with self.assertRaises(QiitaDBUnknownIDError):
+            self.tester.update_category('country', {"foo": "bar"})
 
-    def test_delitem(self):
-        """delitem raises an error (currently not allowed)"""
-        with self.assertRaises(QiitaDBNotImplementedError):
-            del self.tester['1.SKM7.640188']
+        with self.assertRaises(QiitaDBColumnError):
+            self.tester.update_category('missing column',
+                                        {'1.SKM7.640188': 'stuff'})
+
+        negtest = self.tester['1.SKM7.640188']['country']
+
+        mapping = {'1.SKB1.640202': "1",
+                   '1.SKB5.640181': "2",
+                   '1.SKD6.640190': "3"}
+
+        self.tester.update_category('country', mapping)
+
+        self.assertEqual(self.tester['1.SKB1.640202']['country'], "1")
+        self.assertEqual(self.tester['1.SKB5.640181']['country'], "2")
+        self.assertEqual(self.tester['1.SKD6.640190']['country'], "3")
+        self.assertEqual(self.tester['1.SKM7.640188']['country'], negtest)
+
+    def test_add_category(self):
+        column = "new_column"
+        dtype = "varchar"
+        default = "stuff"
+        mapping = {'1.SKB1.640202': "1",
+                   '1.SKB5.640181': "2",
+                   '1.SKD6.640190': "3"}
+
+        exp = {
+            '1.SKB1.640202': "1",
+            '1.SKB2.640194': "stuff",
+            '1.SKB3.640195': "stuff",
+            '1.SKB4.640189': "stuff",
+            '1.SKB5.640181': "2",
+            '1.SKB6.640176': "stuff",
+            '1.SKB7.640196': "stuff",
+            '1.SKB8.640193': "stuff",
+            '1.SKB9.640200': "stuff",
+            '1.SKD1.640179': "stuff",
+            '1.SKD2.640178': "stuff",
+            '1.SKD3.640198': "stuff",
+            '1.SKD4.640185': "stuff",
+            '1.SKD5.640186': "stuff",
+            '1.SKD6.640190': "3",
+            '1.SKD7.640191': "stuff",
+            '1.SKD8.640184': "stuff",
+            '1.SKD9.640182': "stuff",
+            '1.SKM1.640183': "stuff",
+            '1.SKM2.640199': "stuff",
+            '1.SKM3.640197': "stuff",
+            '1.SKM4.640180': "stuff",
+            '1.SKM5.640177': "stuff",
+            '1.SKM6.640187': "stuff",
+            '1.SKM7.640188': "stuff",
+            '1.SKM8.640201': "stuff",
+            '1.SKM9.640192': "stuff"}
+
+        self.tester.add_category(column, mapping, dtype, default)
+
+        obs = {k: v['new_column'] for k, v in self.tester.items()}
+        self.assertEqual(obs, exp)
+
+    def test_categories(self):
+        exp = {'season_environment',
+               'assigned_from_geo', 'texture', 'taxon_id', 'depth',
+               'host_taxid', 'common_name', 'water_content_soil', 'elevation',
+               'temp', 'tot_nitro', 'samp_salinity', 'altitude', 'env_biome',
+               'country', 'ph', 'anonymized_name', 'tot_org_carb',
+               'description_duplicate', 'env_feature'}
+        obs = self.tester.categories()
+        self.assertEqual(obs, exp)
+
+    def test_remove_category(self):
+        with self.assertRaises(QiitaDBColumnError):
+            self.tester.remove_category('does not exist')
+
+        for v in self.tester.values():
+            self.assertIn('elevation', v)
+
+        self.tester.remove_category('elevation')
+
+        for v in self.tester.values():
+            self.assertNotIn('elevation', v)
 
     def test_iter(self):
         """iter returns an iterator over the sample ids"""
