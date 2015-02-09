@@ -379,26 +379,37 @@ def update_preprocessed_data_from_cmd(sl_out_dir, study_id):
 
     # Update the files and the database
     conn_handler = SQLConnectionHandler()
+    # Create a queue so we can execute all the modifications on the DB in
+    # a transaction block
+    queue_name = "update_ppd_%d" % ppd.id
+    conn_handler.create_queue(queue_name)
     sql = "UPDATE qiita.filepath SET checksum=%s WHERE filepath_id=%s"
+    bkp_files = []
     for db_id, db_fp, new_fp, checksum in fps_to_modify:
         # Move the db_file in case something goes wrong
         bkp_fp = "%s.bkp" % db_fp
         move(db_fp, bkp_fp)
+        bkp_files.append((bkp_fp, db_fp))
 
         # Start the update for the current file
-        try:
-            # Move the file to the database location
-            move(new_fp, db_fp)
-            # Update the checksum
-            conn_handler.execute(sql, (checksum, db_id))
-        except Exception:
-            # We need to catch any exception so we can restore the db file
-            move(bkp_fp, db_fp)
-            # Using just raise so the original traceback is shown
-            raise
+        # Move the file to the database location
+        move(new_fp, db_fp)
+        # Add the SQL instruction to the DB
+        conn_handler.add_to_queue(queue_name, sql, (checksum, db_id))
 
-        # Since the file and the database have been updated correctly,
-        # remove the backup
+    # Execute the queue
+    try:
+        conn_handler.execute_queue(queue_name)
+    except Exception:
+        # We need to catch any exception so we can restore the db files
+        for bkp_fp, db_fp in bkp_files:
+            move(bkp_fp, db_fp)
+        # Using just raise so the original traceback is shown
+        raise
+
+    # Since the files and the database have been updated correctly,
+    # remove the backup files
+    for bkp_fp, _ in bkp_files:
         remove(bkp_fp)
 
     return ppd
