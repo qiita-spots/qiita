@@ -746,7 +746,7 @@ def move_filepaths_to_upload_folder(study_id, filepaths, conn_handler=None):
     uploads_fp = join(get_mountpoint("uploads")[0][1], str(study_id))
 
     # We can now go over and remove all the filepaths
-    for fp_id, fp, fp_type in filepaths:
+    for fp_id, fp, _ in filepaths:
         conn_handler.execute("DELETE FROM qiita.sample_template_filepath "
                              "WHERE filepath_id=%s", (fp_id,))
         conn_handler.execute("DELETE FROM qiita.filepath WHERE filepath_id=%s",
