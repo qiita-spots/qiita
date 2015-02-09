@@ -11,6 +11,7 @@ from os import listdir, remove
 from os.path import join, exists
 from functools import partial
 from future import standard_library
+from future.utils import viewitems
 from collections import defaultdict
 from shutil import move
 with standard_library.hooks():
@@ -323,14 +324,15 @@ def update_preprocessed_data_from_cmd(sl_out_dir, study_id):
 
     Raises
     ------
-    ValueError
+    IOError
         If sl_out_dir does not contain all the required files
+    ValueError
         If the study does not have any preprocessed data
 
     Notes
     -----
-    If the study has more than one preprocessed data, the one with lower id
-    is updated.
+    If the study has more than one preprocessed data, the one with the lowest
+    id is updated.
     """
     # Check that we have all the required files
     path_builder = partial(join, sl_out_dir)
@@ -339,9 +341,9 @@ def update_preprocessed_data_from_cmd(sl_out_dir, study_id):
                'preprocessed_demux': path_builder('seqs.demux'),
                'log': path_builder('split_library_log.txt')}
 
-    missing_files = [key for key, val in new_fps.items() if not exists(val)]
+    missing_files = [key for key, val in viewitems(new_fps) if not exists(val)]
     if missing_files:
-        raise ValueError(
+        raise IOError(
             "The directory %s does not contain the following required files: "
             "%s" % (sl_out_dir, ', '.join(missing_files)))
 

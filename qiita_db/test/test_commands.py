@@ -543,7 +543,7 @@ class TestUpdatePreprocessedDataFromCmd(TestCase):
                                               self.no_ppd_study.id)
 
     def test_update_preprocessed_data_from_cmd_error_missing_files(self):
-        with self.assertRaises(ValueError):
+        with self.assertRaises(IOError):
             update_preprocessed_data_from_cmd(self.missing_slo, 1)
 
     def test_update_preprocessed_data_from_cmd(self):
@@ -589,10 +589,12 @@ class TestUpdatePreprocessedDataFromCmd(TestCase):
         # Checksum of the demux file
         # The checksum is generated dynamically, so the checksum changes
         # We are going to test that the checksum is not the one that was
-        # before, which correspond to an empty file
+        # before, which corresponds to an empty file
         obs_checksum = self.conn_handler.execute_fetchone(
             sql, (obs_fps[2][0],))[0]
+        self.assertTrue(isinstance(obs_checksum, str))
         self.assertNotEqual(obs_checksum, '852952723')
+        self.assertTrue(len(obs_checksum) > 0)
 
         # Checksum of the log file
         obs_checksum = self.conn_handler.execute_fetchone(

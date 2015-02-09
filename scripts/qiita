@@ -248,7 +248,8 @@ def load_parameters(fp, table, name):
 
 @db.command()
 @click.argument('sl_out_dir', required=True,
-                type=click.Path(resolve_path=True, readable=True, exists=True))
+                type=click.Path(resolve_path=True, readable=True, exists=True,
+                                file_okay=False))
 @click.option('--study', required=True, type=int,
               help='Study whose preprocessed data will be updated')
 def update_preprocessed_data(sl_out_dir, study):
@@ -356,11 +357,12 @@ def start(port):
 
 @ware.command()
 @click.argument('sl_out_dir', required=True,
-                type=click.Path(resolve_path=True, readable=True, exists=True))
+                type=click.Path(resolve_path=True, readable=True, exists=True,
+                                file_okay=False))
 def generate_demux(sl_out_dir):
     """Generates the demux file for the split libraries output sl_out_dir"""
-    generate_demux_file(sl_out_dir)
-    click.echo("Demux file successfully generated")
+    demux_fp = generate_demux_file(sl_out_dir)
+    click.echo("Demux file successfully generated: %s" % demux_fp)
 
 if __name__ == '__main__':
     qiita()

@@ -292,6 +292,8 @@ def generate_demux_file(sl_out, **kwargs):
     with File(demux_fp, "w") as f:
         to_hdf5(fastq_fp, f)
 
+    return demux_fp
+
 
 def _insert_preprocessed_data(study, params, prep_template, slq_out,
                               **kwargs):

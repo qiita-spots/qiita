@@ -238,9 +238,11 @@ class ProcessingPipelineTests(TestCase):
         with open(join(prep_out_dir, 'seqs.fastq'), "w") as f:
             f.write(DEMUX_SEQS)
 
-        generate_demux_file(prep_out_dir)
+        obs_fp = generate_demux_file(prep_out_dir)
 
-        self.assertTrue(exists(join(prep_out_dir, 'seqs.demux')))
+        exp_fp = join(prep_out_dir, 'seqs.demux')
+        self.assertEqual(obs_fp, exp_fp)
+        self.assertTrue(exists(exp_fp))
 
     def test_get_process_target_gene_cmd(self):
         preprocessed_data = PreprocessedData(1)
