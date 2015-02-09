@@ -307,7 +307,7 @@ def load_parameters_from_cmd(name, fp, table):
     return constructor.create(name, **params)
 
 
-def update_preprocessed_data_from_cmd(sl_out_dir, study_id):
+def update_preprocessed_data_from_cmd(sl_out_dir, study_id, ppd_id=None):
     """Updates the preprocessed data of the study 'study_id'
 
     Parameters
@@ -316,6 +316,9 @@ def update_preprocessed_data_from_cmd(sl_out_dir, study_id):
         The path to the split libraries output directory
     study_id : int
         The study_id of the study to be updated
+    ppd_id : int
+        The id of the preprocessed_data to be updated. If not provided, the
+        preprocessed data with the lowest id in the study will be updated.
 
     Returns
     -------
@@ -328,6 +331,7 @@ def update_preprocessed_data_from_cmd(sl_out_dir, study_id):
         If sl_out_dir does not contain all the required files
     ValueError
         If the study does not have any preprocessed data
+        If ppd_id is provided and it does not belong to the given study
 
     Notes
     -----
@@ -353,7 +357,13 @@ def update_preprocessed_data_from_cmd(sl_out_dir, study_id):
     if not ppds:
         raise ValueError("Study %s does not have any preprocessed data")
 
-    ppd = PreprocessedData(sorted(ppds)[0])
+    if ppd_id:
+        if ppd_id not in ppds:
+            raise ValueError("The preprocessed data %d does not exist in "
+                             "study %d." % (ppd_id, study_id))
+        ppd = PreprocessedData(ppd_id)
+    else:
+        ppd = PreprocessedData(sorted(ppds)[0])
 
     # We need to loop through the fps list to get the db filepaths that we
     # need to modify

@@ -546,6 +546,10 @@ class TestUpdatePreprocessedDataFromCmd(TestCase):
         with self.assertRaises(IOError):
             update_preprocessed_data_from_cmd(self.missing_slo, 1)
 
+    def test_update_preprocessed_data_from_cmd_error_wrong_ppd(self):
+        with self.assertRaises(ValueError):
+            update_preprocessed_data_from_cmd(self.test_slo, 1, 100)
+
     def test_update_preprocessed_data_from_cmd(self):
         exp_ppd = PreprocessedData(Study(1).preprocessed_data()[0])
         exp_fps = exp_ppd.get_filepaths()
@@ -563,6 +567,60 @@ class TestUpdatePreprocessedDataFromCmd(TestCase):
              'log'))
 
         ppd = update_preprocessed_data_from_cmd(self.test_slo, 1)
+
+        # Check that the modified preprocessed data is the correct one
+        self.assertEqual(ppd.id, exp_ppd.id)
+
+        # Check that the filepaths returned are correct
+        # We need to sort the list returned from the db because the ordering
+        # on that list is based on db modification time, rather than id
+        obs_fps = sorted(ppd.get_filepaths())
+        self.assertEqual(obs_fps, exp_fps)
+
+        # Check that the checksums have been updated
+        sql = "SELECT checksum FROM qiita.filepath WHERE filepath_id=%s"
+
+        # Checksum of the fasta file
+        obs_checksum = self.conn_handler.execute_fetchone(
+            sql, (obs_fps[0][0],))[0]
+        self.assertEqual(obs_checksum, '3532748626')
+
+        # Checksum of the fastq file
+        obs_checksum = self.conn_handler.execute_fetchone(
+            sql, (obs_fps[1][0],))[0]
+        self.assertEqual(obs_checksum, '2958832064')
+
+        # Checksum of the demux file
+        # The checksum is generated dynamically, so the checksum changes
+        # We are going to test that the checksum is not the one that was
+        # before, which corresponds to an empty file
+        obs_checksum = self.conn_handler.execute_fetchone(
+            sql, (obs_fps[2][0],))[0]
+        self.assertTrue(isinstance(obs_checksum, str))
+        self.assertNotEqual(obs_checksum, '852952723')
+        self.assertTrue(len(obs_checksum) > 0)
+
+        # Checksum of the log file
+        obs_checksum = self.conn_handler.execute_fetchone(
+            sql, (obs_fps[3][0],))[0]
+        self.assertEqual(obs_checksum, '626839734')
+
+    def test_update_preprocessed_data_from_cmd_ppd(self):
+        exp_ppd = PreprocessedData(2)
+
+        next_fp_id = get_count('qiita.filepath') + 1
+        exp_fps = []
+        path_builder = partial(join, self.db_ppd_dir)
+        suffix_types = [("seqs.fna", "preprocessed_fasta"),
+                        ("seqs.fastq", "preprocessed_fastq"),
+                        ("seqs.demux", "preprocessed_demux"),
+                        ("split_library_log.txt", "log")]
+        for id_, vals in enumerate(suffix_types, start=next_fp_id):
+            suffix, fp_type = vals
+            exp_fps.append(
+                (id_, path_builder("%s_%s" % (exp_ppd.id, suffix)), fp_type))
+
+        ppd = update_preprocessed_data_from_cmd(self.test_slo, 1, 2)
 
         # Check that the modified preprocessed data is the correct one
         self.assertEqual(ppd.id, exp_ppd.id)
