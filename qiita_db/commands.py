@@ -316,7 +316,7 @@ def update_preprocessed_data_from_cmd(sl_out_dir, study_id, ppd_id=None):
         The path to the split libraries output directory
     study_id : int
         The study_id of the study to be updated
-    ppd_id : int
+    ppd_id : int, optional
         The id of the preprocessed_data to be updated. If not provided, the
         preprocessed data with the lowest id in the study will be updated.
 
@@ -332,11 +332,6 @@ def update_preprocessed_data_from_cmd(sl_out_dir, study_id, ppd_id=None):
     ValueError
         If the study does not have any preprocessed data
         If ppd_id is provided and it does not belong to the given study
-
-    Notes
-    -----
-    If the study has more than one preprocessed data, the one with the lowest
-    id is updated.
     """
     # Check that we have all the required files
     path_builder = partial(join, sl_out_dir)
@@ -360,7 +355,8 @@ def update_preprocessed_data_from_cmd(sl_out_dir, study_id, ppd_id=None):
     if ppd_id:
         if ppd_id not in ppds:
             raise ValueError("The preprocessed data %d does not exist in "
-                             "study %d." % (ppd_id, study_id))
+                             "study %d. Available preprocessed data: %s"
+                             % (ppd_id, study_id, ', '.join(ppds)))
         ppd = PreprocessedData(ppd_id)
     else:
         ppd = PreprocessedData(sorted(ppds)[0])
