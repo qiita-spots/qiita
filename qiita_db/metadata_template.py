@@ -602,6 +602,7 @@ class Sample(BaseSample):
             SELECT column_name
             FROM information_schema.columns
             WHERE table_name='{0}'
+                AND table_schema='qiita'
                 AND column_name='{1}'""".format(self._dynamic_table, column))
 
         if exists is None:
@@ -1100,7 +1101,8 @@ class MetadataTemplate(QiitaObject):
         raw = conn_handler.execute_fetchall("""
             SELECT column_name
             FROM information_schema.columns
-            WHERE table_name='{0}'""".format(table_name))
+            WHERE table_name='{0}'
+                AND table_schema='qiita'""".format(table_name))
 
         categories = {c[0] for c in raw}
         categories.remove('sample_id')
