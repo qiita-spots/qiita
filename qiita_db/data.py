@@ -88,7 +88,7 @@ from .sql_connection import SQLConnectionHandler
 from .exceptions import QiitaDBError
 from .util import (exists_dynamic_table, insert_filepaths, convert_to_id,
                    convert_from_id, purge_filepaths, get_filepath_id,
-                   get_mountpoint)
+                   get_mountpoint, move_filepaths_to_upload_folder)
 
 
 class BaseData(QiitaObject):
@@ -416,6 +416,17 @@ class RawData(BaseData):
             self._set_link_filepaths_status("failed: %s" % msg)
             raise QiitaDBError(msg)
 
+        # The filepath belongs to one or more studies
+        studies_linked = self.studies
+        if len(studies_linked) > 1:
+            msg = ("Can't clear all the filepaths from raw data %s because "
+                   "it has been shared with other studies: %s. If you want to "
+                   "remove it, first remove the raw data from the other "
+                   "studies." % (self._id,
+                                 ', '.join(map(str, studies_linked))))
+            self._set_link_filepaths_status("failed: %s" % msg)
+            raise QiitaDBError(msg)
+
         # Get the filpeath id
         fp_id = get_filepath_id(self._table, fp, conn_handler)
         fp_is_mine = conn_handler.execute_fetchone(
@@ -451,7 +462,8 @@ class RawData(BaseData):
 
         self._set_link_filepaths_status("unlinking")
 
-        for _, fp, _ in self.get_filepaths():
+        filepaths = self.get_filepaths()
+        for _, fp, _ in filepaths:
             self._remove_filepath(fp, conn_handler, queue)
 
         try:
@@ -464,12 +476,14 @@ class RawData(BaseData):
             raise e
 
         # We can already update the status to done, as the files have been
-        # unlinked, the purge_filepaths call will not change the status
-        # of the raw data object
+        # unlinked, the move_filepaths_to_upload_folder call will not change
+        # the status of the raw data object
         self._set_link_filepaths_status("idle")
 
-        # Delete the files, if they are not used anywhere
-        purge_filepaths(conn_handler)
+        # Move the files, if they are not used, if you get to this point
+        # self.studies should only have one element, thus self.studies[0]
+        move_filepaths_to_upload_folder(self.studies[0], filepaths,
+                                        conn_handler=conn_handler)
 
     def remove_filepath(self, fp):
         """Removes the filepath from the RawData
@@ -498,11 +512,11 @@ class RawData(BaseData):
             raise e
 
         # We can already update the status to done, as the files have been
-        # unlinked, the purge_filepaths call will not change the status
-        # of the raw data object
+        # unlinked, the move_filepaths_to_upload_folder call will not change
+        # the status of the raw data object
         self._set_link_filepaths_status("idle")
 
-        # Delete the file if it is not used anywhere
+        # Delete the files, if they are not used anywhere
         purge_filepaths(conn_handler)
 
 

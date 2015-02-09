@@ -15,7 +15,8 @@ from tempfile import mkstemp
 from qiita_core.util import qiita_test_checker
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_db.exceptions import QiitaDBError
-from qiita_db.study import Study
+from qiita_db.study import Study, StudyPerson
+from qiita_db.user import User
 from qiita_db.util import get_mountpoint
 from qiita_db.data import BaseData, RawData, PreprocessedData, ProcessedData
 from qiita_db.metadata_template import PrepTemplate
@@ -50,6 +51,25 @@ class RawDataTests(TestCase):
         with open(self.barcodes_fp, "w") as f:
             f.write("\n")
         self._clean_up_files = []
+
+        # Create a new study
+        info = {
+            "timeseries_type_id": 1,
+            "metadata_complete": True,
+            "mixs_compliant": True,
+            "number_samples_collected": 25,
+            "number_samples_promised": 28,
+            "portal_type_id": 3,
+            "study_alias": "FCM",
+            "study_description": "Microbiome of people who eat nothing but "
+                                 "fried chicken",
+            "study_abstract": "Exploring how a high fat diet changes the "
+                              "gut microbiome",
+            "emp_person_id": StudyPerson(2),
+            "principal_investigator_id": StudyPerson(3),
+            "lab_person_id": StudyPerson(1)
+        }
+        Study.create(User("test@foo.bar"), "Test study 2", [1], info)
 
     def tearDown(self):
         for f in self._clean_up_files:
@@ -192,6 +212,15 @@ class RawDataTests(TestCase):
         self.assertTrue(self.conn_handler.execute_fetchone(
             "SELECT EXISTS(SELECT * FROM qiita.raw_filepath "
             "WHERE raw_data_id=%s)", (rd.id,))[0])
+
+        # add files to clean before cleaning the filepaths
+        study_id = rd.studies[0]
+        path_for_removal = join(get_mountpoint("uploads")[0][1], str(study_id))
+        self._clean_up_files = [join(path_for_removal,
+                                     basename(f).split('_', 1)[1])
+                                for _, f, _ in rd.get_filepaths()]
+
+        # cleaning the filepaths
         rd.clear_filepaths()
         self.assertFalse(self.conn_handler.execute_fetchone(
             "SELECT EXISTS(SELECT * FROM qiita.raw_filepath "
@@ -217,14 +246,19 @@ class RawDataTests(TestCase):
             "SELECT EXISTS(SELECT * FROM qiita.raw_filepath "
             "WHERE filepath_id=%d)" % (top_id - 2))[0])
 
-    def test_remove_filepath_error(self):
+    def test_remove_filepath_errors(self):
         fp = join(self.db_test_raw_dir, '1_s_G1_L001_sequences.fastq.gz')
         with self.assertRaises(QiitaDBError):
             RawData(1).remove_filepath(fp)
 
-    def test_remove_filepath_error_fp(self):
-        fp = join(self.db_test_raw_dir, '1_s_G1_L001_sequences.fastq.gz')
+        # filepath doesn't belong to that raw data
         with self.assertRaises(ValueError):
+            RawData(2).remove_filepath(fp)
+
+        # the raw data has been linked to more than 1 study so it can't be
+        # unliked
+        Study(2).add_raw_data([RawData(2)])
+        with self.assertRaises(QiitaDBError):
             RawData(2).remove_filepath(fp)
 
 
