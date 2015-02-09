@@ -695,26 +695,36 @@ def purge_filepaths(conn_handler=None):
     """
     conn_handler = conn_handler if conn_handler else SQLConnectionHandler()
 
+    # Get all the (table, column) pairs that reference to the filepath table
+    # Code adapted from http://stackoverflow.com/questions/5347050/
+    # sql-to-list-all-the-tables-that-reference-a-particular-column-in-a-table
+    table_cols_pairs = conn_handler.execute_fetchall(
+        """SELECT R.TABLE_NAME, R.column_name
+        FROM INFORMATION_SCHEMA.CONSTRAINT_COLUMN_USAGE u
+        INNER JOIN INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS FK
+            ON U.CONSTRAINT_CATALOG = FK.UNIQUE_CONSTRAINT_CATALOG
+            AND U.CONSTRAINT_SCHEMA = FK.UNIQUE_CONSTRAINT_SCHEMA
+            AND U.CONSTRAINT_NAME = FK.UNIQUE_CONSTRAINT_NAME
+        INNER JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE R
+            ON R.CONSTRAINT_CATALOG = FK.CONSTRAINT_CATALOG
+            AND R.CONSTRAINT_SCHEMA = FK.CONSTRAINT_SCHEMA
+            AND R.CONSTRAINT_NAME = FK.CONSTRAINT_NAME
+        WHERE U.COLUMN_NAME = 'filepath_id'
+            AND U.TABLE_SCHEMA = 'qiita'
+            AND U.TABLE_NAME = 'filepath'""")
+
+    union_str = " UNION ".join(["SELECT %s FROM qiita.%s" % (col, table)
+                                for table, col in table_cols_pairs])
     # Get all the filepaths from the filepath table that are not
     # referenced from any place in the database
     fps = conn_handler.execute_fetchall(
         """SELECT filepath_id, filepath, filepath_type FROM qiita.filepath
         FP JOIN qiita.filepath_type FPT ON
         FP.filepath_type_id = FPT.filepath_type_id
-        WHERE filepath_id NOT IN (
-            SELECT filepath_id FROM qiita.raw_filepath UNION
-            SELECT filepath_id FROM qiita.preprocessed_filepath UNION
-            SELECT filepath_id FROM qiita.processed_filepath UNION
-            SELECT filepath_id FROM qiita.job_results_filepath UNION
-            SELECT filepath_id FROM qiita.analysis_filepath UNION
-            SELECT sequence_filepath FROM qiita.reference UNION
-            SELECT taxonomy_filepath FROM qiita.reference UNION
-            SELECT tree_filepath FROM qiita.reference)""")
+        WHERE filepath_id NOT IN (%s)""" % union_str)
 
     # We can now go over and remove all the filepaths
     for fp_id, fp, fp_type in fps:
-        conn_handler.execute("DELETE FROM qiita.sample_template_filepath "
-                             "WHERE filepath_id=%s", (fp_id,))
         conn_handler.execute("DELETE FROM qiita.filepath WHERE filepath_id=%s",
                              (fp_id,))
 
