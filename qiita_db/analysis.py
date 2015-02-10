@@ -753,7 +753,7 @@ class Analysis(QiitaStatusObject):
                "checksum, checksum_algorithm_id, data_directory_id) VALUES "
                "(%s, %s, %s, %s, %s) RETURNING filepath_id")
         # magic number 1 is for crc32 checksum algorithm
-        fpid = conn_handler.execute_fetchone(sql, (fullpath, fptypeid,
+        fpid = conn_handler.execute_fetchone(sql, (filename, fptypeid,
                                                    checksum, 1,
                                                    analysis_dd_id))[0]
 
