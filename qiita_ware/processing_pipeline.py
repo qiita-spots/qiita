@@ -263,7 +263,7 @@ def _get_preprocess_fasta_cmd(raw_data, prep_template, params):
     return (cmd, output_dir)
 
 
-def _generate_demux_file(sl_out, **kwargs):
+def generate_demux_file(sl_out, **kwargs):
     """Creates the HDF5 demultiplexed file
 
     Parameters
@@ -291,6 +291,8 @@ def _generate_demux_file(sl_out, **kwargs):
     demux_fp = join(sl_out, 'seqs.demux')
     with File(demux_fp, "w") as f:
         to_hdf5(fastq_fp, f)
+
+    return demux_fp
 
 
 def _insert_preprocessed_data(study, params, prep_template, slq_out,
@@ -404,7 +406,7 @@ class StudyPreprocessor(ParallelWrapper):
         # become available, we will need to think a better way of doing this.
         demux_node = "GEN_DEMUX_FILE"
         self._job_graph.add_node(demux_node,
-                                 func=_generate_demux_file,
+                                 func=generate_demux_file,
                                  args=(output_dir,),
                                  job_name="Generated demux file",
                                  requires_deps=False)
