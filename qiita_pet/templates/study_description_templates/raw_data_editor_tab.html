@@ -60,7 +60,19 @@
           </li>
         </ol>
         <br/>
-        <a class="btn btn-primary" onclick="add_prep_template({{raw_data_id}});">Add prep template</a>
+        <table border="0">
+          <tr>
+            <td>
+              <a class="btn btn-primary" onclick="add_prep_template({{raw_data_id}});">Add prep template</a>
+            </td>
+            <td>&nbsp; &nbsp;</td>
+            <td>
+              <a class="btn btn-danger" onclick="if ({{len(available_prep_templates)}} > 0) { alert('This raw data can\'t be erased. First remove the attached prep templates') } else { delete_raw_data({{raw_data_id}}) }">
+                <span class="glyphicon glyphicon-trash"></span> Delete raw data
+              </a>
+            </td>
+          </tr>
+        </table>
         <br/>
         <hr/>
       {% end %}

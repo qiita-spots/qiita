@@ -261,6 +261,28 @@ class RawDataTests(TestCase):
         with self.assertRaises(QiitaDBError):
             RawData(2).remove_filepath(fp)
 
+    def test_exists(self):
+        self.assertTrue(RawData.exists(1))
+        self.assertFalse(RawData.exists(1000))
+
+    def test_delete(self):
+        # the raw data doesn't exist
+        with self.assertRaises(ValueError):
+            RawData.delete(1000, 1)
+
+        # the raw data and the study id are not linked
+        with self.assertRaises(ValueError):
+            RawData.delete(1, 1000)
+
+        # the raw data has prep templates
+        with self.assertRaises(ValueError):
+            RawData.delete(1, 1)
+
+        # delete raw data
+        self.assertTrue(RawData.exists(2))
+        RawData.delete(2, 1)
+        self.assertFalse(RawData.exists(2))
+
 
 @qiita_test_checker()
 class PreprocessedDataTests(TestCase):
@@ -607,6 +629,10 @@ class PreprocessedDataTests(TestCase):
                                       data_type="18S")
         with self.assertRaises(ValueError):
             ppd.processing_status = 'not a valid state'
+
+    def test_exists(self):
+        self.assertTrue(PreprocessedData.exists(1))
+        self.assertFalse(PreprocessedData.exists(1000))
 
 
 @qiita_test_checker()
