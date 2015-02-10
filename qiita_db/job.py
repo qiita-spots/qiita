@@ -523,8 +523,7 @@ class Command(object):
     def __ne__(self, other):
         return not self.__eq__(other)
 
-    def __init__(self, name, command, input_opts, required_opts,
-                 optional_opts, output_opts):
+    def __init__(self, name, command):
         """Creates the command object
 
         Parameters:
@@ -532,18 +531,7 @@ class Command(object):
             Name of the command
         command: str
             python command to run
-        input_opts : str
-            JSON of input options for the command
-        required_opts : str
-            JSON of required options for the command
-        optional_opts : str
-            JSON of optional options for the command
-        output_opts : str
-            JSON of output options for the command
+        
         """
         self.name = name
         self.command = command
-        self.input_opts = loads(input_opts)
-        self.required_opts = loads(required_opts)
-        self.optional_opts = loads(optional_opts)
-        self.output_opts = loads(output_opts)

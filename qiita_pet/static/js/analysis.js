@@ -38,7 +38,7 @@ function select_deselect_samples_study(study) {
   var selected_datatypes = $('#study' + study + ' input:checkbox:checked').length;
   var sel = false;
   if (selected_datatypes > 0) { sel = true; }
-  select_deselect(study, sel)
+  select_deselect(study, sel);
 }
 
 function count_update(study) {
@@ -60,19 +60,20 @@ function count_update(study) {
 
 function select_deselect(study, select) {
   if(select == true) { 
-    $('.'+study).each(function() {this.checked = true;});
+    $('.sample.'+study).each(function() {this.checked = true;});
   }
   else { 
-    $('.'+study).each(function() {this.checked = false;});
+    $('.sample.'+study).each(function() {this.checked = false;});
   }
   count_update(study);
 }
 
 function select_inverse(study) {
-  $('.'+study).each(function() {
+  $('.sample.'+study).each(function() {
     if(this.checked == true) { this.checked = false; }
     else { this.checked = true; }
   });
+  count_update(study);
 }
 
 function pre_submit(action) {
