@@ -28,7 +28,7 @@ from qiita_db.metadata_template import PrepTemplate
 from qiita_ware.processing_pipeline import (_get_preprocess_fastq_cmd,
                                             _get_preprocess_fasta_cmd,
                                             _insert_preprocessed_data,
-                                            _generate_demux_file,
+                                            generate_demux_file,
                                             _get_qiime_minimal_mapping,
                                             _get_process_target_gene_cmd,
                                             _insert_processed_data_target_gene)
@@ -238,9 +238,11 @@ class ProcessingPipelineTests(TestCase):
         with open(join(prep_out_dir, 'seqs.fastq'), "w") as f:
             f.write(DEMUX_SEQS)
 
-        _generate_demux_file(prep_out_dir)
+        obs_fp = generate_demux_file(prep_out_dir)
 
-        self.assertTrue(exists(join(prep_out_dir, 'seqs.demux')))
+        exp_fp = join(prep_out_dir, 'seqs.demux')
+        self.assertEqual(obs_fp, exp_fp)
+        self.assertTrue(exists(exp_fp))
 
     def test_get_process_target_gene_cmd(self):
         preprocessed_data = PreprocessedData(1)

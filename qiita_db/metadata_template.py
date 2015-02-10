@@ -1895,6 +1895,8 @@ def load_template_to_dataframe(fn):
 
     Raises
     ------
+    QiitaDBColumnError
+        If the sample_name column is not present in the template.
     UserWarning
         When columns are dropped because they have no content for any sample.
 
@@ -1927,6 +1929,10 @@ def load_template_to_dataframe(fn):
                                'sample_name': lambda x: str(x).strip()})
 
     initial_columns = set(template.columns)
+
+    if 'sample_name' not in template.columns:
+        raise QiitaDBColumnError("The 'sample_name' column is missing from "
+                                 "your template, this file cannot be parsed.")
 
     # remove rows that have no sample identifier but that may have other data
     # in the rest of the columns
