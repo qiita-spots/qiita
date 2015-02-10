@@ -22,7 +22,7 @@ function displaySelected() {
 } 
 
 function select_category(category, study) {
-  if(study != '') { 
+  if(study !== '') { 
     $('.'+study+'.'+category).each(function() {this.checked = true;});
     count_update(study);
   }
@@ -47,19 +47,17 @@ function count_update(study) {
   document.getElementById('count' + study).innerHTML = selected;
   if(selected > 0) { 
     $('#study' + study).addClass('success');
-    studylink.disabled = false;
     studylink.style = "";
   }
   else {
     $('#study' + study).removeClass('success');
-    studylink.disabled = true;
     studylink.style = "text-decoration: none;";
     $('#study' + study + " input:checkbox").each(function() {this.checked = false;})
   }
 }
 
 function select_deselect(study, select) {
-  if(select == true) { 
+  if(select === true) { 
     $('.sample.'+study).each(function() {this.checked = true;});
   }
   else { 
@@ -70,7 +68,7 @@ function select_deselect(study, select) {
 
 function select_inverse(study) {
   $('.sample.'+study).each(function() {
-    if(this.checked == true) { this.checked = false; }
+    if(this.checked === true) { this.checked = false; }
     else { this.checked = true; }
   });
   count_update(study);
@@ -85,16 +83,57 @@ function pre_submit(action) {
     msgdiv.innerHTML = '<img src="/static/img/waiting.gif"> <b>Searching...</b>';
   } else if(action == 'continue') {
     var selected = $('#selected input:checkbox').length;
-    if(selected == 0) {
-      msgdiv.innerHTML = "Must select samples to continue!"
+    if(selected === 0) {
+      msgdiv.innerHTML = "Must select samples to continue!";
       return false;
     } else {
-    document.getElementById('results-form').action = '/analysis/3'
+    document.getElementById('results-form').action = '/analysis/3';
     }
+  } else if(action == "select") {
+    var selected = $('.sample').filter('input:checkbox:checked');
+    if(selected.length === 0) {
+      msgdiv.innerHTML = "Must select samples to add to study!";
+      return false;
+    }
+    //get studies with samples selected
+    var studies = new Array();
+    var selected = $('.sample').filter('input:checkbox:checked');
+    for (i=0;i<selected.length;i++) {
+      var samp = parseInt(selected[i].name);
+      if (studies.indexOf(samp) === -1) {
+        studies.push(samp);
+      }
+    }
+    studies.sort();
+    //get studies with datatypes selected
+    var dtStudies = new Array();
+    var selected = $('.datatype').filter('input:checkbox:checked');
+    for (i=0;i<selected.length;i++) {
+      var study = parseInt(selected[i].value.split('#')[0]);
+      if (dtStudies.indexOf(study) === -1) {
+        dtStudies.push(study);
+      }
+    }
+    dtStudies.sort();
+    //make sure the two arrays are equal
+    console.log(studies);
+    console.log(dtStudies);
+    //make sure the arrays are the same
+    if (dtStudies.length != studies.length) {
+      msgdiv.innerHTML = 'You must select datatypes for studies with samples selected!';
+      return false;
+    }
+    for (i=0;i<studies.length;i++) {
+      if (dtStudies[i] != studies[i]) {
+        msgdiv.innerHTML = 'You must select datatypes for studies with samples selected!';
+        return false;
+      }
+    }
+    return true;
   } else if(action == "deselect") {
     var selected = $('#selected input:checkbox:checked').length;
-    if(selected == 0) {
-      msgdiv.innerHTML = "Must select samples to remove from study!"
+    if(selected === 0) {
+      msgdiv.innerHTML = "Must select samples to remove from study!";
       return false;
     }
   }

@@ -106,7 +106,7 @@ function add_metacat(metacat) {
     {% set pd = study.processed_data(data_type=data_type) %}
     {% if pd %}
       {% set data_type_id = pd[0] %}
-            <input type='checkbox' name='availstudies' value='{{sid}}#{{data_type_id}}' onchange="select_deselect_samples_study({{sid}})"> 
+            <input type='checkbox' name='availstudies' value='{{sid}}#{{data_type_id}}' class='datatype'>
             {{data_type}}<br />
     {% end %}
   {% end %}
