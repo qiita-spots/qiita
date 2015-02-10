@@ -538,6 +538,88 @@ class TestSampleTemplate(TestCase):
             }
         self.metadata = pd.DataFrame.from_dict(metadata_dict, orient='index')
 
+        metadata_str_prefix_dict = {
+            'foo.Sample1': {'physical_location': 'location1',
+                            'has_physical_specimen': True,
+                            'has_extracted_data': True,
+                            'sample_type': 'type1',
+                            'required_sample_info_status': 'received',
+                            'collection_timestamp':
+                            datetime(2014, 5, 29, 12, 24, 51),
+                            'host_subject_id': 'NotIdentified',
+                            'Description': 'Test Sample 1',
+                            'str_column': 'Value for sample 1',
+                            'latitude': 42.42,
+                            'longitude': 41.41},
+            'bar.Sample2': {'physical_location': 'location1',
+                            'has_physical_specimen': True,
+                            'has_extracted_data': True,
+                            'sample_type': 'type1',
+                            'required_sample_info_status': 'received',
+                            'collection_timestamp':
+                            datetime(2014, 5, 29, 12, 24, 51),
+                            'host_subject_id': 'NotIdentified',
+                            'Description': 'Test Sample 2',
+                            'str_column': 'Value for sample 2',
+                            'latitude': 4.2,
+                            'longitude': 1.1},
+            'foo.Sample3': {'physical_location': 'location1',
+                            'has_physical_specimen': True,
+                            'has_extracted_data': True,
+                            'sample_type': 'type1',
+                            'required_sample_info_status': 'received',
+                            'collection_timestamp':
+                            datetime(2014, 5, 29, 12, 24, 51),
+                            'host_subject_id': 'NotIdentified',
+                            'Description': 'Test Sample 3',
+                            'str_column': 'Value for sample 3',
+                            'latitude': 4.8,
+                            'longitude': 4.41},
+            }
+        self.metadata_str_prefix = pd.DataFrame.from_dict(
+            metadata_str_prefix_dict, orient='index')
+
+        metadata_int_prefix_dict = {
+            '12.Sample1': {'physical_location': 'location1',
+                           'has_physical_specimen': True,
+                           'has_extracted_data': True,
+                           'sample_type': 'type1',
+                           'required_sample_info_status': 'received',
+                           'collection_timestamp':
+                           datetime(2014, 5, 29, 12, 24, 51),
+                           'host_subject_id': 'NotIdentified',
+                           'Description': 'Test Sample 1',
+                           'str_column': 'Value for sample 1',
+                           'latitude': 42.42,
+                           'longitude': 41.41},
+            '12.Sample2': {'physical_location': 'location1',
+                           'has_physical_specimen': True,
+                           'has_extracted_data': True,
+                           'sample_type': 'type1',
+                           'required_sample_info_status': 'received',
+                           'collection_timestamp':
+                           datetime(2014, 5, 29, 12, 24, 51),
+                           'host_subject_id': 'NotIdentified',
+                           'Description': 'Test Sample 2',
+                           'str_column': 'Value for sample 2',
+                           'latitude': 4.2,
+                           'longitude': 1.1},
+            '12.Sample3': {'physical_location': 'location1',
+                           'has_physical_specimen': True,
+                           'has_extracted_data': True,
+                           'sample_type': 'type1',
+                           'required_sample_info_status': 'received',
+                           'collection_timestamp':
+                           datetime(2014, 5, 29, 12, 24, 51),
+                           'host_subject_id': 'NotIdentified',
+                           'Description': 'Test Sample 3',
+                           'str_column': 'Value for sample 3',
+                           'latitude': 4.8,
+                           'longitude': 4.41},
+            }
+        self.metadata_int_pref = pd.DataFrame.from_dict(
+            metadata_int_prefix_dict, orient='index')
+
         metadata_prefixed_dict = {
             '2.Sample1': {'physical_location': 'location1',
                           'has_physical_specimen': True,
@@ -692,6 +774,90 @@ class TestSampleTemplate(TestCase):
                ['2.Sample2', "Value for sample 2"],
                ['2.Sample3', "Value for sample 3"]]
         self.assertEqual(obs, exp)
+
+    def test_create_int_prefix(self):
+        """Creates a new SampleTemplate"""
+        st = SampleTemplate.create(self.metadata_int_pref, self.new_study)
+        # The returned object has the correct id
+        self.assertEqual(st.id, 2)
+
+        # The relevant rows to required_sample_info have been added.
+        obs = self.conn_handler.execute_fetchall(
+            "SELECT * FROM qiita.required_sample_info WHERE study_id=2")
+        # sample_id study_id physical_location has_physical_specimen
+        # has_extracted_data sample_type required_sample_info_status_id
+        # collection_timestamp host_subject_id description
+        exp = [["2.12.Sample1", 2, "location1", True, True, "type1", 1,
+                datetime(2014, 5, 29, 12, 24, 51), "NotIdentified",
+                "Test Sample 1", 42.42, 41.41],
+               ["2.12.Sample2", 2, "location1", True, True, "type1", 1,
+                datetime(2014, 5, 29, 12, 24, 51), "NotIdentified",
+                "Test Sample 2", 4.2, 1.1],
+               ["2.12.Sample3", 2, "location1", True, True, "type1", 1,
+                datetime(2014, 5, 29, 12, 24, 51), "NotIdentified",
+                "Test Sample 3", 4.8, 4.41]]
+        self.assertEqual(obs, exp)
+
+        # The relevant rows have been added to the study_sample_columns
+        obs = self.conn_handler.execute_fetchall(
+            "SELECT * FROM qiita.study_sample_columns WHERE study_id=2")
+        # study_id, column_name, column_type
+        exp = [[2, "str_column", "varchar"]]
+        self.assertEqual(obs, exp)
+
+        # The new table exists
+        self.assertTrue(exists_table("sample_2", self.conn_handler))
+
+        # The new table hosts the correct values
+        obs = self.conn_handler.execute_fetchall(
+            "SELECT * FROM qiita.sample_2")
+        # sample_id, str_column
+        exp = [['2.12.Sample1', "Value for sample 1"],
+               ['2.12.Sample2', "Value for sample 2"],
+               ['2.12.Sample3', "Value for sample 3"]]
+        self.assertEqual(obs, exp)
+
+    def test_create_str_prefixes(self):
+        """Creates a new SampleTemplate"""
+        st = SampleTemplate.create(self.metadata_str_prefix, self.new_study)
+        # The returned object has the correct id
+        self.assertEqual(st.id, 2)
+
+        # The relevant rows to required_sample_info have been added.
+        obs = self.conn_handler.execute_fetchall(
+            "SELECT * FROM qiita.required_sample_info WHERE study_id=2")
+        # sample_id study_id physical_location has_physical_specimen
+        # has_extracted_data sample_type required_sample_info_status_id
+        # collection_timestamp host_subject_id description
+        exp = [["2.foo.Sample1", 2, "location1", True, True, "type1", 1,
+                datetime(2014, 5, 29, 12, 24, 51), "NotIdentified",
+                "Test Sample 1", 42.42, 41.41],
+               ["2.bar.Sample2", 2, "location1", True, True, "type1", 1,
+                datetime(2014, 5, 29, 12, 24, 51), "NotIdentified",
+                "Test Sample 2", 4.2, 1.1],
+               ["2.foo.Sample3", 2, "location1", True, True, "type1", 1,
+                datetime(2014, 5, 29, 12, 24, 51), "NotIdentified",
+                "Test Sample 3", 4.8, 4.41]]
+        self.assertEqual(sorted(obs), sorted(exp))
+
+        # The relevant rows have been added to the study_sample_columns
+        obs = self.conn_handler.execute_fetchall(
+            "SELECT * FROM qiita.study_sample_columns WHERE study_id=2")
+        # study_id, column_name, column_type
+        exp = [[2, "str_column", "varchar"]]
+        self.assertEqual(obs, exp)
+
+        # The new table exists
+        self.assertTrue(exists_table("sample_2", self.conn_handler))
+
+        # The new table hosts the correct values
+        obs = self.conn_handler.execute_fetchall(
+            "SELECT * FROM qiita.sample_2")
+        # sample_id, str_column
+        exp = [['2.foo.Sample1', "Value for sample 1"],
+               ['2.bar.Sample2', "Value for sample 2"],
+               ['2.foo.Sample3', "Value for sample 3"]]
+        self.assertEqual(sorted(obs), sorted(exp))
 
     def test_create_already_prefixed_samples(self):
         """Creates a new SampleTemplate with the samples already prefixed"""
