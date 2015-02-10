@@ -538,6 +538,47 @@ class TestSampleTemplate(TestCase):
             }
         self.metadata = pd.DataFrame.from_dict(metadata_dict, orient='index')
 
+        metadata_prefixed_dict = {
+            '2.Sample1': {'physical_location': 'location1',
+                          'has_physical_specimen': True,
+                          'has_extracted_data': True,
+                          'sample_type': 'type1',
+                          'required_sample_info_status': 'received',
+                          'collection_timestamp':
+                          datetime(2014, 5, 29, 12, 24, 51),
+                          'host_subject_id': 'NotIdentified',
+                          'Description': 'Test Sample 1',
+                          'str_column': 'Value for sample 1',
+                          'latitude': 42.42,
+                          'longitude': 41.41},
+            '2.Sample2': {'physical_location': 'location1',
+                          'has_physical_specimen': True,
+                          'has_extracted_data': True,
+                          'sample_type': 'type1',
+                          'required_sample_info_status': 'received',
+                          'collection_timestamp':
+                          datetime(2014, 5, 29, 12, 24, 51),
+                          'host_subject_id': 'NotIdentified',
+                          'Description': 'Test Sample 2',
+                          'str_column': 'Value for sample 2',
+                          'latitude': 4.2,
+                          'longitude': 1.1},
+            '2.Sample3': {'physical_location': 'location1',
+                          'has_physical_specimen': True,
+                          'has_extracted_data': True,
+                          'sample_type': 'type1',
+                          'required_sample_info_status': 'received',
+                          'collection_timestamp':
+                          datetime(2014, 5, 29, 12, 24, 51),
+                          'host_subject_id': 'NotIdentified',
+                          'Description': 'Test Sample 3',
+                          'str_column': 'Value for sample 3',
+                          'latitude': 4.8,
+                          'longitude': 4.41},
+            }
+        self.metadata_prefixed = pd.DataFrame.from_dict(
+            metadata_prefixed_dict, orient='index')
+
         self.test_study = Study(1)
         info = {
             "timeseries_type_id": 1,
@@ -613,6 +654,48 @@ class TestSampleTemplate(TestCase):
     def test_create(self):
         """Creates a new SampleTemplate"""
         st = SampleTemplate.create(self.metadata, self.new_study)
+        # The returned object has the correct id
+        self.assertEqual(st.id, 2)
+
+        # The relevant rows to required_sample_info have been added.
+        obs = self.conn_handler.execute_fetchall(
+            "SELECT * FROM qiita.required_sample_info WHERE study_id=2")
+        # sample_id study_id physical_location has_physical_specimen
+        # has_extracted_data sample_type required_sample_info_status_id
+        # collection_timestamp host_subject_id description
+        exp = [["2.Sample1", 2, "location1", True, True, "type1", 1,
+                datetime(2014, 5, 29, 12, 24, 51), "NotIdentified",
+                "Test Sample 1", 42.42, 41.41],
+               ["2.Sample2", 2, "location1", True, True, "type1", 1,
+                datetime(2014, 5, 29, 12, 24, 51), "NotIdentified",
+                "Test Sample 2", 4.2, 1.1],
+               ["2.Sample3", 2, "location1", True, True, "type1", 1,
+                datetime(2014, 5, 29, 12, 24, 51), "NotIdentified",
+                "Test Sample 3", 4.8, 4.41]]
+        self.assertEqual(obs, exp)
+
+        # The relevant rows have been added to the study_sample_columns
+        obs = self.conn_handler.execute_fetchall(
+            "SELECT * FROM qiita.study_sample_columns WHERE study_id=2")
+        # study_id, column_name, column_type
+        exp = [[2, "str_column", "varchar"]]
+        self.assertEqual(obs, exp)
+
+        # The new table exists
+        self.assertTrue(exists_table("sample_2", self.conn_handler))
+
+        # The new table hosts the correct values
+        obs = self.conn_handler.execute_fetchall(
+            "SELECT * FROM qiita.sample_2")
+        # sample_id, str_column
+        exp = [['2.Sample1', "Value for sample 1"],
+               ['2.Sample2', "Value for sample 2"],
+               ['2.Sample3', "Value for sample 3"]]
+        self.assertEqual(obs, exp)
+
+    def test_create_already_prefixed_samples(self):
+        """Creates a new SampleTemplate with the samples already prefixed"""
+        st = SampleTemplate.create(self.metadata_prefixed, self.new_study)
         # The returned object has the correct id
         self.assertEqual(st.id, 2)
 
@@ -968,6 +1051,45 @@ class TestPrepTemplate(TestCase):
                             'experiment_design_description': 'BBBB'}
             }
         self.metadata = pd.DataFrame.from_dict(metadata_dict, orient='index')
+
+        metadata_prefixed_dict = {
+            '1.SKB8.640193': {'center_name': 'ANL',
+                              'center_project_name': 'Test Project',
+                              'ebi_submission_accession': None,
+                              'EMP_status': 'EMP',
+                              'str_column': 'Value for sample 1',
+                              'linkerprimersequence': 'GTGCCAGCMGCCGCGGTAA',
+                              'barcodesequence': 'GTCCGCAAGTTA',
+                              'run_prefix': "s_G1_L001_sequences",
+                              'platform': 'ILLUMINA',
+                              'library_construction_protocol': 'AAAA',
+                              'experiment_design_description': 'BBBB'},
+            '1.SKD8.640184': {'center_name': 'ANL',
+                              'center_project_name': 'Test Project',
+                              'ebi_submission_accession': None,
+                              'EMP_status': 'EMP',
+                              'str_column': 'Value for sample 2',
+                              'linkerprimersequence': 'GTGCCAGCMGCCGCGGTAA',
+                              'barcodesequence': 'CGTAGAGCTCTC',
+                              'run_prefix': "s_G1_L001_sequences",
+                              'platform': 'ILLUMINA',
+                              'library_construction_protocol': 'AAAA',
+                              'experiment_design_description': 'BBBB'},
+            '1.SKB7.640196': {'center_name': 'ANL',
+                              'center_project_name': 'Test Project',
+                              'ebi_submission_accession': None,
+                              'EMP_status': 'EMP',
+                              'str_column': 'Value for sample 3',
+                              'linkerprimersequence': 'GTGCCAGCMGCCGCGGTAA',
+                              'barcodesequence': 'CCTCTGAGAGCT',
+                              'run_prefix': "s_G1_L002_sequences",
+                              'platform': 'ILLUMINA',
+                              'library_construction_protocol': 'AAAA',
+                              'experiment_design_description': 'BBBB'}
+            }
+        self.metadata_prefixed = pd.DataFrame.from_dict(metadata_prefixed_dict,
+                                                        orient='index')
+
         self.test_raw_data = RawData(1)
         self.test_study = Study(1)
         self.data_type = "18S"
@@ -1039,6 +1161,69 @@ class TestPrepTemplate(TestCase):
     def test_create(self):
         """Creates a new PrepTemplate"""
         pt = PrepTemplate.create(self.metadata, self.new_raw_data,
+                                 self.test_study, self.data_type)
+        # The returned object has the correct id
+        self.assertEqual(pt.id, 2)
+
+        # The row in the prep template table has been created
+        obs = self.conn_handler.execute_fetchall(
+            "SELECT * FROM qiita.prep_template WHERE prep_template_id=2")
+        # prep_template_id, data_type_id, raw_data_id, preprocessing_status,
+        # investigation_type
+        self.assertEqual(obs, [[2, 2, 5, 'not_preprocessed', None]])
+
+        # The relevant rows to common_prep_info have been added.
+        obs = self.conn_handler.execute_fetchall(
+            "SELECT * FROM qiita.common_prep_info WHERE prep_template_id=2")
+        # prep_template_id, sample_id, study_id, center_name,
+        # center_project_name, emp_status_id
+        exp = [[2, '1.SKB8.640193', 'ANL', 'Test Project', 1],
+               [2, '1.SKD8.640184', 'ANL', 'Test Project', 1],
+               [2, '1.SKB7.640196', 'ANL', 'Test Project', 1]]
+        self.assertEqual(sorted(obs), sorted(exp))
+
+        # The relevant rows have been added to the prep_columns table
+        obs = self.conn_handler.execute_fetchall(
+            "SELECT * FROM qiita.prep_columns WHERE prep_template_id=2")
+        # prep_template_id, column_name, column_type
+        exp = [[2, 'str_column', 'varchar'],
+               [2, 'ebi_submission_accession', 'varchar'],
+               [2, 'run_prefix', 'varchar'],
+               [2, 'barcodesequence', 'varchar'],
+               [2, 'linkerprimersequence', 'varchar'],
+               [2, 'platform', 'varchar'],
+               [2, 'experiment_design_description', 'varchar'],
+               [2, 'library_construction_protocol', 'varchar']]
+        self.assertEqual(sorted(obs), sorted(exp))
+
+        # The new table exists
+        self.assertTrue(exists_table("prep_2", self.conn_handler))
+
+        # The new table hosts the correct values
+        obs = self.conn_handler.execute_fetchall(
+            "SELECT * FROM qiita.prep_2")
+        # sample_id, study_id, str_column, ebi_submission_accession,
+        # run_prefix, barcodesequence, linkerprimersequence
+        exp = [['1.SKB7.640196', 'Value for sample 3', 'ILLUMINA',
+                's_G1_L002_sequences', 'CCTCTGAGAGCT', None,
+                'GTGCCAGCMGCCGCGGTAA', 'BBBB', 'AAAA'],
+               ['1.SKB8.640193', 'Value for sample 1', 'ILLUMINA',
+                's_G1_L001_sequences', 'GTCCGCAAGTTA', None,
+                'GTGCCAGCMGCCGCGGTAA', 'BBBB', 'AAAA'],
+               ['1.SKD8.640184', 'Value for sample 2', 'ILLUMINA',
+                's_G1_L001_sequences', 'CGTAGAGCTCTC', None,
+                'GTGCCAGCMGCCGCGGTAA', 'BBBB', 'AAAA']]
+        self.assertEqual(sorted(obs), sorted(exp))
+
+        # prep and qiime files have been created
+        filepaths = pt.get_filepaths()
+        self.assertEqual(len(filepaths), 2)
+        self.assertEqual(filepaths[0][0], 22)
+        self.assertEqual(filepaths[1][0], 21)
+
+    def test_create_already_prefixed_samples(self):
+        """Creates a new PrepTemplate"""
+        pt = PrepTemplate.create(self.metadata_prefixed, self.new_raw_data,
                                  self.test_study, self.data_type)
         # The returned object has the correct id
         self.assertEqual(pt.id, 2)
