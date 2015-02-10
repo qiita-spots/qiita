@@ -356,7 +356,7 @@ def update_preprocessed_data_from_cmd(sl_out_dir, study_id, ppd_id=None):
         if ppd_id not in ppds:
             raise ValueError("The preprocessed data %d does not exist in "
                              "study %d. Available preprocessed data: %s"
-                             % (ppd_id, study_id, ', '.join(ppds)))
+                             % (ppd_id, study_id, ', '.join(map(str, ppds))))
         ppd = PreprocessedData(ppd_id)
     else:
         ppd = PreprocessedData(sorted(ppds)[0])
