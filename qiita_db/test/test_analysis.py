@@ -38,6 +38,10 @@ class TestAnalysis(TestCase):
         with open(self.map_fp, 'w') as f:
                 f.write("")
 
+        fp = join(get_mountpoint('analysis')[0][1], 'testfile.txt')
+        if exists(fp):
+            remove(fp)
+
         mp = get_mountpoint("processed_data")[0][1]
         study2fp = join(mp, "2_2_study_1001_closed_reference_otu_table.biom")
         if exists(study2fp):
@@ -430,13 +434,9 @@ class TestAnalysis(TestCase):
 
     def test_add_file(self):
         fp = join(get_mountpoint('analysis')[0][1], 'testfile.txt')
-        try:
-            with open(fp, 'w') as f:
-                f.write('testfile!')
-            self.analysis._add_file('testfile.txt', 'plain_text', '18S')
-        finally:
-            if exists(fp):
-                remove(fp)
+        with open(fp, 'w') as f:
+            f.write('testfile!')
+        self.analysis._add_file('testfile.txt', 'plain_text', '18S')            
 
         obs = self.conn_handler.execute_fetchall(
             'SELECT * FROM qiita.filepath WHERE filepath_id = 19')
