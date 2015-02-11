@@ -595,19 +595,22 @@ class StudyDescriptionHandler(BaseHandler):
             The callback function to call with the results once the processing
             is done
         """
-        raw_data_id = self.get_argument('raw_data_id')
+        raw_data_id = int(self.get_argument('raw_data_id'))
 
         try:
             RawData.delete(raw_data_id, study.id)
-            msg = ("Raw data %s has been deleted from study: "
-                   "<b><i>%s</i></b>" % (str(raw_data_id), study.title))
+            msg = ("Raw data %d has been deleted from study: "
+                   "<b><i>%s</i></b>" % (raw_data_id, study.title))
             msg_level = "success"
+            tab = 'study_information_tab'
+            tab_id = None
         except Exception as e:
-            msg = "Couldn't remove %s raw data: %s" % (str(raw_data_id),
-                                                       str(e))
+            msg = "Couldn't remove %d raw data: %s" % (raw_data_id, str(e))
             msg_level = "danger"
-
-        callback((msg, msg_level, 'study_information_tab', None, None))
+            tab = 'raw_data_tab'
+            tab_id = raw_data_id
+            
+        callback((msg, msg_level, tab, tab_id, None))
 
     @authenticated
     def get(self, study_id):

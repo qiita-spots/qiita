@@ -85,7 +85,7 @@ from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from .base import QiitaObject
 from .logger import LogEntry
 from .sql_connection import SQLConnectionHandler
-from .exceptions import QiitaDBError
+from .exceptions import QiitaDBError, QiitaDBUnknownIDError
 from .util import (exists_dynamic_table, insert_filepaths, convert_to_id,
                    convert_from_id, purge_filepaths, get_filepath_id,
                    get_mountpoint, move_filepaths_to_upload_folder)
@@ -255,7 +255,7 @@ class BaseData(QiitaObject):
         Returns
         -------
         bool
-            True if already exists. False otherwise.
+            True if exists, false otherwise.
         """
         conn_handler = SQLConnectionHandler()
 
@@ -342,8 +342,9 @@ class RawData(BaseData):
 
         Raises
         ------
-        ValueError
+        QiitaDBUnknownIDError
             If the raw data id doesn't exist
+        QiitaDBError
             If the raw data is not linked to that study_id
             If the raw data has prep templates associated
         """
@@ -351,26 +352,41 @@ class RawData(BaseData):
 
         # check if the raw data exist
         if not cls.exists(raw_data_id):
-            raise ValueError("Raw data: %s doesn't exist." % str(raw_data_id))
+            raise QiitaDBUnknownIDError(raw_data_id, "raw data")
 
         study_raw_data_exists = conn_handler.execute_fetchone(
             "SELECT EXISTS(SELECT * FROM qiita.study_raw_data WHERE "
             "study_id = {0} AND raw_data_id = {1})".format(study_id,
                                                            raw_data_id))[0]
         if not study_raw_data_exists:
-            raise ValueError(
-                "Raw data %s is not linked to study %s" % (raw_data_id,
-                                                           study_id))
+            raise QiitaDBError(
+                "Raw data %d is not linked to study %d or the study "
+                "doesn't exist" % (raw_data_id, study_id))
 
-        # check if there are any prep templates
+        # check if there are any prep templates for this study
         prep_template_count = conn_handler.execute_fetchone(
-            "SELECT COUNT(*) FROM qiita.prep_template WHERE "
-            "raw_data_id = {0}".format(raw_data_id))[0]
+            """SELECT COUNT(*) FROM qiita.prep_template AS pt
+            LEFT JOIN qiita.common_prep_info AS cpi ON
+                (pt.prep_template_id=cpi.prep_template_id)
+            LEFT JOIN qiita.required_sample_info AS rsi ON
+                (cpi.sample_id=rsi.sample_id)
+            WHERE raw_data_id = {0} and study_id = {1}""".format(raw_data_id,
+                                                                 study_id))[0]
 
         if (prep_template_count > 0):
-            raise ValueError("Raw data: %s, has %d prep templates associated "
-                             "so it can't be erased." % (str(raw_data_id),
-                                                         prep_template_count))
+            raise QiitaDBError(
+                "Raw data %d has prep template(s) associated so it can't be "
+                "erased." % raw_data_id)
+
+        # check if how many raw data are left, if last one, check that there
+        # are no linked files
+        raw_data_count = conn_handler.execute_fetchone(
+            "SELECT COUNT(*) FROM qiita.study_raw_data WHERE "
+            "raw_data_id = {0}".format(raw_data_id))[0]
+        if raw_data_count == 1 and RawData(raw_data_id).get_filepath_ids():
+            raise QiitaDBError(
+                "Raw data (%d) can't be remove because it has linked files. "
+                "To remove it, first unlink files." % raw_data_id)
 
         # delete
         conn_handler.execute("DELETE FROM qiita.study_raw_data WHERE "

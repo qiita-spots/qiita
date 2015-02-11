@@ -154,7 +154,7 @@ function add_prep_template(raw_data_id) {
 
 
 function delete_raw_data(raw_data_id) {
-  if (confirm("Are you sure you want to delete this raw data?")) {
+  if (confirm("Are you sure you want to delete raw data " + raw_data_id + "?")) {
     var form = $("<form>")
     .attr("action", window.location.href)
     .attr("method", "post")

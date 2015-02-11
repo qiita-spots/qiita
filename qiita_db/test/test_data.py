@@ -14,7 +14,7 @@ from tempfile import mkstemp
 
 from qiita_core.util import qiita_test_checker
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
-from qiita_db.exceptions import QiitaDBError
+from qiita_db.exceptions import QiitaDBError, QiitaDBUnknownIDError
 from qiita_db.study import Study, StudyPerson
 from qiita_db.user import User
 from qiita_db.util import get_mountpoint
@@ -267,16 +267,25 @@ class RawDataTests(TestCase):
 
     def test_delete(self):
         # the raw data doesn't exist
-        with self.assertRaises(ValueError):
+        with self.assertRaises(QiitaDBUnknownIDError):
             RawData.delete(1000, 1)
 
-        # the raw data and the study id are not linked
-        with self.assertRaises(ValueError):
+        # the raw data and the study id are not linked or
+        # the study doesn't exits
+        with self.assertRaises(QiitaDBError):
             RawData.delete(1, 1000)
 
         # the raw data has prep templates
-        with self.assertRaises(ValueError):
+        with self.assertRaises(QiitaDBError):
             RawData.delete(1, 1)
+
+        # the raw data has linked files
+        with self.assertRaises(QiitaDBError):
+            RawData.delete(3, 1)
+
+        # the raw data is linked to a study that has not prep templates
+        Study(2).add_raw_data([RawData(3)])
+        RawData.delete(3, 2)
 
         # delete raw data
         self.assertTrue(RawData.exists(2))
