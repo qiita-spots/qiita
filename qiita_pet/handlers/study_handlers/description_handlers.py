@@ -609,7 +609,7 @@ class StudyDescriptionHandler(BaseHandler):
             msg_level = "danger"
             tab = 'raw_data_tab'
             tab_id = raw_data_id
-            
+
         callback((msg, msg_level, tab, tab_id, None))
 
     @authenticated
