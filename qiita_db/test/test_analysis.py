@@ -436,7 +436,7 @@ class TestAnalysis(TestCase):
         fp = join(get_mountpoint('analysis')[0][1], 'testfile.txt')
         with open(fp, 'w') as f:
             f.write('testfile!')
-        self.analysis._add_file('testfile.txt', 'plain_text', '18S')            
+        self.analysis._add_file('testfile.txt', 'plain_text', '18S')
 
         obs = self.conn_handler.execute_fetchall(
             'SELECT * FROM qiita.filepath WHERE filepath_id = 19')
