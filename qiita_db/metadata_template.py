@@ -48,6 +48,7 @@ from functools import partial
 import pandas as pd
 import numpy as np
 import warnings
+warnings.simplefilter('always', UserWarning)
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from .exceptions import (QiitaDBDuplicateError, QiitaDBColumnError,
@@ -145,13 +146,14 @@ def _prefix_sample_names_with_id(md_template, study):
         The study to which the metadata belongs to
     """
     # Get all the prefixes of the index, defined as any string before a '.'
-    prefixes = {idx.split('.')[0] for idx in md_template.index}
+    prefixes = {idx.split('.', 1)[0] for idx in md_template.index}
     # If the samples have been already prefixed with the study id, the prefixes
     # set will contain only one element and it will be the str representation
     # of the study id
     if len(prefixes) == 1 and prefixes.pop() == str(study.id):
         # The samples were already prefixed with the study id
-        warnings.warn("Sample names were already prefixed with the study id.")
+        warnings.warn("Sample names were already prefixed with the study id.",
+                      UserWarning)
     else:
         # Create a new pandas series in which all the values are the study_id
         # and it is indexed as the metadata template
