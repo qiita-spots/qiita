@@ -698,8 +698,7 @@ def purge_filepaths(conn_handler=None):
     conn_handler = conn_handler if conn_handler else SQLConnectionHandler()
 
     # Get all the (table, column) pairs that reference to the filepath table
-    # Code adapted from http://stackoverflow.com/questions/5347050/
-    # sql-to-list-all-the-tables-that-reference-a-particular-column-in-a-table
+    # Code adapted from http://stackoverflow.com/q/5347050/3746629
     table_cols_pairs = conn_handler.execute_fetchall(
         """SELECT R.TABLE_NAME, R.column_name
         FROM INFORMATION_SCHEMA.CONSTRAINT_COLUMN_USAGE u
