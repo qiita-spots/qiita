@@ -151,9 +151,9 @@ def _prefix_sample_names_with_id(md_template, study):
     # If the samples have been already prefixed with the study id, the prefixes
     # set will contain only one element and it will be the str representation
     # of the study id
-    if not (len(prefixes) == 1 and prefixes.pop() == str(study.id)):
-        warnings.warn("Sample names where not prefixed with the study id. "
-                      "Adding the study id as prefix")
+    if len(prefixes) == 1 and prefixes.pop() == str(study.id):
+        warnings.warn("Sample names were already prefixed with the study id.")
+    else:
         # The samples have not been prefixed, so prefix them with the study_id
         # Create a new pandas series in which all the values are the study_id
         # and it is indexed as the metadata template

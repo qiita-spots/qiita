@@ -861,7 +861,8 @@ class TestSampleTemplate(TestCase):
 
     def test_create_already_prefixed_samples(self):
         """Creates a new SampleTemplate with the samples already prefixed"""
-        st = SampleTemplate.create(self.metadata_prefixed, self.new_study)
+        st = npt.assert_warns(UserWarning, SampleTemplate.create,
+                              self.metadata_prefixed, self.new_study)
         # The returned object has the correct id
         self.assertEqual(st.id, 2)
 
@@ -1389,8 +1390,9 @@ class TestPrepTemplate(TestCase):
 
     def test_create_already_prefixed_samples(self):
         """Creates a new PrepTemplate"""
-        pt = PrepTemplate.create(self.metadata_prefixed, self.new_raw_data,
-                                 self.test_study, self.data_type)
+        pt = npt.assert_warns(UserWarning, PrepTemplate.create,
+                              self.metadata_prefixed, self.new_raw_data,
+                              self.test_study, self.data_type)
         # The returned object has the correct id
         self.assertEqual(pt.id, 2)
 
