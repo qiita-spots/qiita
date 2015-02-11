@@ -86,7 +86,7 @@
             <i>{{basename(f)}}:</i> {{t[4:]}} <br/>
         {% end %}
           <br/>
-        {% if is_editable %}
+        {% if is_editable and not show_unlink_btn %}
           <h4>Link uploaded files with raw data</h4>
           <table border="0">
             <tr>

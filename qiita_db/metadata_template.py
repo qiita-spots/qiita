@@ -39,7 +39,7 @@ Methods
 
 from __future__ import division
 from future.builtins import zip
-from future.utils import viewitems
+from future.utils import viewitems, PY3
 from copy import deepcopy
 from os.path import join
 from time import strftime
@@ -61,6 +61,11 @@ from .util import (exists_table, get_table_cols, get_emp_status,
                    convert_from_id, find_repeated, get_mountpoint,
                    insert_filepaths)
 from .logger import LogEntry
+
+if PY3:
+    from string import ascii_letters as letters, digits
+else:
+    from string import letters, digits
 
 
 TARGET_GENE_DATA_TYPES = ['16S', '18S', 'ITS']
@@ -580,6 +585,41 @@ class Sample(BaseSample):
         if not isinstance(md_template, SampleTemplate):
             raise IncompetentQiitaDeveloperError()
 
+    def __setitem__(self, column, value):
+        r"""Sets the metadata value for the category `column`
+
+        Parameters
+        ----------
+        column : str
+            The column to update
+        value : str
+            The value to set. This is expected to be a str on the assumption
+            that psycopg2 will cast as necessary when updating.
+
+        Raises
+        ------
+        QiitaDBColumnError
+            If the column does not exist in the table
+        """
+        conn_handler = SQLConnectionHandler()
+
+        exists = conn_handler.execute_fetchone("""
+            SELECT column_name
+            FROM information_schema.columns
+            WHERE table_name='{0}'
+                AND table_schema='qiita'
+                AND column_name='{1}'""".format(self._dynamic_table, column))
+
+        if exists is None:
+            raise QiitaDBColumnError("Column %s does not exist in %s" %
+                                     (column, self._dynamic_table))
+
+        conn_handler.execute("""
+            UPDATE qiita.{0}
+            SET {1}={2}
+            WHERE sample_id='{3}'""".format(self._dynamic_table, column, value,
+                                            self._id))
+
 
 class MetadataTemplate(QiitaObject):
     r"""Metadata map object that accesses the db to get the sample/prep
@@ -1052,6 +1092,28 @@ class MetadataTemplate(QiitaObject):
 
         return [(fpid, base_fp(fp)) for fpid, fp in filepath_ids]
 
+    def categories(self):
+        """Get the categories associated with self
+
+        Returns
+        -------
+        set
+            The set of categories associated with self
+        """
+        conn_handler = SQLConnectionHandler()
+        table_name = self._table_name(self.study_id)
+
+        raw = conn_handler.execute_fetchall("""
+            SELECT column_name
+            FROM information_schema.columns
+            WHERE table_name='{0}'
+                AND table_schema='qiita'""".format(table_name))
+
+        categories = {c[0] for c in raw}
+        categories.remove('sample_id')
+
+        return categories
+
 
 class SampleTemplate(MetadataTemplate):
     r"""Represent the SampleTemplate of a study. Provides access to the
@@ -1123,6 +1185,13 @@ class SampleTemplate(MetadataTemplate):
         if cls.exists(study.id):
             raise QiitaDBDuplicateError(cls.__name__, 'id: %d' % study.id)
 
+        invalid_ids = get_invalid_sample_names(md_template.index)
+        if invalid_ids:
+            raise QiitaDBColumnError("The following sample names in the sample"
+                                     " template contain invalid characters "
+                                     "(only alphanumeric characters or periods"
+                                     " are allowed): %s." %
+                                     ", ".join(invalid_ids))
         # We are going to modify the md_template. We create a copy so
         # we don't modify the user one
         md_template = deepcopy(md_template)
@@ -1233,6 +1302,93 @@ class SampleTemplate(MetadataTemplate):
         """
         return self._id
 
+    def remove_category(self, category):
+        """Remove a category from the sample template
+
+        Parameters
+        ----------
+        category : str
+            The category to remove
+
+        Raises
+        ------
+        QiitaDBColumnError
+            If the column does not exist in the table
+        """
+        table_name = self._table_name(self.study_id)
+        conn_handler = SQLConnectionHandler()
+
+        if category not in self.categories():
+            raise QiitaDBColumnError("Column %s does not exist in %s" %
+                                     (category, table_name))
+
+        # This operation may invalidate another user's perspective on the
+        # table
+        conn_handler.execute("""
+            ALTER TABLE qiita.{0} DROP COLUMN {1}""".format(table_name,
+                                                            category))
+
+    def update_category(self, category, samples_and_values):
+        """Update an existing column
+
+        Parameters
+        ----------
+        category : str
+            The category to update
+        samples_and_values : dict
+            A mapping of {sample_id: value}
+
+        Raises
+        ------
+        QiitaDBUnknownIDError
+            If a sample_id is included in values that is not in the template
+        QiitaDBColumnError
+            If the column does not exist in the table. This is implicit, and
+            can be thrown by the contained Samples.
+        """
+        if not set(self.keys()).issuperset(samples_and_values):
+            missing = set(self.keys()) - set(samples_and_values)
+            table_name = self._table_name(self.study_id)
+            raise QiitaDBUnknownIDError(missing, table_name)
+
+        for k, v in viewitems(samples_and_values):
+            sample = self[k]
+            sample[category] = v
+
+    def add_category(self, category, samples_and_values, dtype, default):
+        """Add a metadata category
+
+        Parameters
+        ----------
+        category : str
+            The category to add
+        samples_and_values : dict
+            A mapping of {sample_id: value}
+        dtype : str
+            The datatype of the column
+        default : object
+            The default value associated with the column. This must be
+            specified as these columns are added "not null".
+
+        Raises
+        ------
+        QiitaDBDuplicateError
+            If the column already exists
+        """
+        table_name = self._table_name(self.study_id)
+        conn_handler = SQLConnectionHandler()
+
+        if category in self.categories():
+            raise QiitaDBDuplicateError(category, "N/A")
+
+        conn_handler.execute("""
+            ALTER TABLE qiita.{0}
+            ADD COLUMN {1} {2}
+            NOT NULL DEFAULT '{3}'""".format(table_name, category, dtype,
+                                             default))
+
+        self.update_category(category, samples_and_values)
+
 
 class PrepTemplate(MetadataTemplate):
     r"""Represent the PrepTemplate of a raw dat. Provides access to the
@@ -1284,6 +1440,14 @@ class PrepTemplate(MetadataTemplate):
         # the recognized investigation types
         if investigation_type is not None:
             cls.validate_investigation_type(investigation_type)
+
+        invalid_ids = get_invalid_sample_names(md_template.index)
+        if invalid_ids:
+            raise QiitaDBColumnError("The following sample names in the prep"
+                                     " template contain invalid characters "
+                                     "(only alphanumeric characters or periods"
+                                     " are allowed): %s." %
+                                     ", ".join(invalid_ids))
 
         # We are going to modify the md_template. We create a copy so
         # we don't modify the user one
@@ -1731,6 +1895,8 @@ def load_template_to_dataframe(fn):
 
     Raises
     ------
+    QiitaDBColumnError
+        If the sample_name column is not present in the template.
     UserWarning
         When columns are dropped because they have no content for any sample.
 
@@ -1764,6 +1930,10 @@ def load_template_to_dataframe(fn):
 
     initial_columns = set(template.columns)
 
+    if 'sample_name' not in template.columns:
+        raise QiitaDBColumnError("The 'sample_name' column is missing from "
+                                 "your template, this file cannot be parsed.")
+
     # remove rows that have no sample identifier but that may have other data
     # in the rest of the columns
     template.dropna(subset=['sample_name'], how='all', inplace=True)
@@ -1782,3 +1952,33 @@ def load_template_to_dataframe(fn):
                       '%s' % ', '.join(dropped_cols), UserWarning)
 
     return template
+
+
+def get_invalid_sample_names(sample_names):
+    """Get a list of sample names that are not QIIME compliant
+
+    Parameters
+    ----------
+    sample_names : iterable
+        Iterable containing the sample names to check.
+
+    Returns
+    -------
+    list
+        List of str objects where each object is an invalid sample name.
+
+    References
+    ----------
+    .. [1] QIIME File Types documentaiton:
+    http://qiime.org/documentation/file_formats.html#mapping-file-overview.
+    """
+
+    # from the QIIME mapping file documentation
+    valid = set(letters+digits+'.')
+    inv = []
+
+    for s in sample_names:
+        if set(s) - valid:
+            inv.append(s)
+
+    return inv
