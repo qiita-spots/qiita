@@ -34,24 +34,25 @@
           jumbotron.style.visibility = "hidden";
         }
 
-        // from http://stackoverflow.com/questions/5916900/how-can-you-detect-the-version-of-a-browser
+        // from http://stackoverflow.com/q/5916900/379593
         var ua=navigator.userAgent,tem,M=ua.match(/(opera|chrome|safari|firefox|msie|trident(?=\/))\/?\s*(\d+)/i) || []; 
-    if(/trident/i.test(M[1])){
-        tem=/\brv[ :]+(\d+)/g.exec(ua) || []; 
-        return 'IE '+(tem[1]||'');
-        }   
-    if(M[1]==='Chrome'){
-        tem=ua.match(/\bOPR\/(\d+)/)
-        if(tem!=null)   {return 'Opera '+tem[1];}
-        }   
-    M=M[2]? [M[1], M[2]]: [navigator.appName, navigator.appVersion, '-?'];
-    if((tem=ua.match(/version\/(\d+)/i))!=null) {M.splice(1,1,tem[1]);}
-    objbrowserName = M[0];
-    objBrMajorVersion = M[1];
+        if(/trident/i.test(M[1])){
+            tem=/\brv[ :]+(\d+)/g.exec(ua) || []; 
+            return 'IE '+(tem[1]||'');
+            }   
+        if(M[1]==='Chrome'){
+            tem=ua.match(/\bOPR\/(\d+)/)
+            if(tem!=null)   {return 'Opera '+tem[1];}
+            }   
+        M=M[2]? [M[1], M[2]]: [navigator.appName, navigator.appVersion, '-?'];
+        if((tem=ua.match(/version\/(\d+)/i))!=null) {M.splice(1,1,tem[1]);}
+        objbrowserName = M[0];
+        objBrMajorVersion = M[1];
 
         if ((objbrowserName == "Chrome"  && objBrMajorVersion < {{allowed_min_browser_versions['chrome']}}) ||
             (objbrowserName == "Firefox" && objBrMajorVersion < {{allowed_min_browser_versions['firefox']}}) ||
-            (objbrowserName == "Safari"  && objBrMajorVersion < {{allowed_min_browser_versions['safari']}})) {
+            (objbrowserName == "Safari"  && objBrMajorVersion < {{allowed_min_browser_versions['safari']}}) ||
+            (objbrowserName == "IE" && objBrMajorVersion < {{allowed_min_browser_versions['IE']}})) {
           overlay();
         }
 
