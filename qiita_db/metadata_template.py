@@ -144,17 +144,15 @@ def _prefix_sample_names_with_id(md_template, study):
     study : Study
         The study to which the metadata belongs to
     """
-    # Before we prefix the sample names with the study id, we should check if
-    # they have already prefixed with it
     # Get all the prefixes of the index, defined as any string before a '.'
-    prefixes = set([idx.split('.')[0] for idx in md_template.index])
+    prefixes = {idx.split('.')[0] for idx in md_template.index}
     # If the samples have been already prefixed with the study id, the prefixes
     # set will contain only one element and it will be the str representation
     # of the study id
     if len(prefixes) == 1 and prefixes.pop() == str(study.id):
+        # The samples were already prefixed with the study id
         warnings.warn("Sample names were already prefixed with the study id.")
     else:
-        # The samples have not been prefixed, so prefix them with the study_id
         # Create a new pandas series in which all the values are the study_id
         # and it is indexed as the metadata template
         study_ids = pd.Series([str(study.id)] * len(md_template.index),
@@ -163,12 +161,10 @@ def _prefix_sample_names_with_id(md_template, study):
         # metadata template indexes prefixed with the study id
         md_template['sample_name_with_id'] = (study_ids + '.' +
                                               md_template.index)
-        # Assign the new previously created column as the new index
         md_template.index = md_template.sample_name_with_id
-        # Delete the previously created column
         del md_template['sample_name_with_id']
         # The original metadata template had the index column unnamed - remove
-        # the name of the index
+        # the name of the index for consistency
         md_template.index.name = None
 
 
