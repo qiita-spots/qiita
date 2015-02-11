@@ -627,7 +627,7 @@ def insert_filepaths(filepaths, obj_id, table, filepath_table, conn_handler,
             Id of the object calling the functions. Disregarded if move_files
             is False
         table : str
-            Table that holds the file data. Disregarded if move_files is False
+            Table that holds the file data.
         filepath_table : str
             Table that holds the filepath information
         conn_handler : SQLConnectionHandler
