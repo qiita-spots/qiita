@@ -1,4 +1,9 @@
 #!/usr/bin/env python
+from os import environ
+from os.path import join, dirname, abspath
+from sys import platform, version as python_version, exit, executable, stdout
+from unittest import TestLoader, TextTestRunner, TestCase
+from smtplib import SMTP, SMTP_SSL
 
 # -----------------------------------------------------------------------------
 # Copyright (c) 2014--, The Qiita Development Team.
@@ -7,12 +12,6 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
-
-from os import environ
-from os.path import join, dirname, abspath
-from sys import platform, version as python_version, exit, executable, stdout
-from unittest import TestLoader, TextTestRunner, TestCase
-from smtplib import SMTP, SMTP_SSL
 
 core_dependency_missing_msg = (
     '"%s" is missing and is a core requirement, for more information see the '
@@ -155,10 +154,13 @@ if missing_deps_warnings:
     for e, t in missing_deps_errors:
         print '%s\n=============' % (t)
 
-
-from qiita_db.sql_connection import SQLConnectionHandler
-from redis import StrictRedis
-from moi.job import submit_nouser
+# trick flake8 to not complain about module-level imports not being at the top
+# of the file. These imports can only really happen if none of the core
+# dependencies are missing
+if True:
+    from qiita_db.sql_connection import SQLConnectionHandler
+    from redis import StrictRedis
+    from moi.job import submit_nouser
 
 
 class QiitaConfig(TestCase):

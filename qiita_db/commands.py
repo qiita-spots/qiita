@@ -7,21 +7,28 @@
 # -----------------------------------------------------------------------------
 
 from dateutil.parser import parse
-from os import listdir
-from os.path import join
+from os import listdir, remove
+from os.path import join, exists
 from functools import partial
 from future import standard_library
-with standard_library.hooks():
-    from configparser import ConfigParser
+from future.utils import viewitems
+from collections import defaultdict
+from shutil import move
 
 from .study import Study, StudyPerson
 from .user import User
-from .util import get_filetypes, get_filepath_types
+from .util import (get_filetypes, get_filepath_types, compute_checksum,
+                   convert_to_id)
 from .data import RawData, PreprocessedData, ProcessedData
 from .metadata_template import (SampleTemplate, PrepTemplate,
                                 load_template_to_dataframe)
 from .parameters import (PreprocessedIlluminaParams, Preprocessed454Params,
                          ProcessedSortmernaParams)
+from .sql_connection import SQLConnectionHandler
+
+with standard_library.hooks():
+    from configparser import ConfigParser
+
 
 SUPPORTED_PARAMS = ['preprocessed_sequence_illumina_params',
                     'preprocessed_sequence_454_params',
@@ -46,7 +53,10 @@ def load_study_from_cmd(owner, title, info):
     config.readfp(info)
 
     optional = dict(config.items('optional'))
-    get_optional = lambda name: optional.get(name, None)
+
+    def get_optional(name):
+        return optional.get(name, None)
+
     get_required = partial(config.get, 'required')
     required_fields = ['timeseries_type_id', 'mixs_compliant',
                        'portal_type_id', 'reprocess', 'study_alias',
@@ -300,3 +310,119 @@ def load_parameters_from_cmd(name, fp, table):
                          "The format is PARAMETER_NAME<tab>VALUE")
 
     return constructor.create(name, **params)
+
+
+def update_preprocessed_data_from_cmd(sl_out_dir, study_id, ppd_id=None):
+    """Updates the preprocessed data of the study 'study_id'
+
+    Parameters
+    ----------
+    sl_out_dir : str
+        The path to the split libraries output directory
+    study_id : int
+        The study_id of the study to be updated
+    ppd_id : int, optional
+        The id of the preprocessed_data to be updated. If not provided, the
+        preprocessed data with the lowest id in the study will be updated.
+
+    Returns
+    -------
+    qiita_db.PreprocessedData
+        The updated preprocessed data
+
+    Raises
+    ------
+    IOError
+        If sl_out_dir does not contain all the required files
+    ValueError
+        If the study does not have any preprocessed data
+        If ppd_id is provided and it does not belong to the given study
+    """
+    # Check that we have all the required files
+    path_builder = partial(join, sl_out_dir)
+    new_fps = {'preprocessed_fasta': path_builder('seqs.fna'),
+               'preprocessed_fastq': path_builder('seqs.fastq'),
+               'preprocessed_demux': path_builder('seqs.demux'),
+               'log': path_builder('split_library_log.txt')}
+
+    missing_files = [key for key, val in viewitems(new_fps) if not exists(val)]
+    if missing_files:
+        raise IOError(
+            "The directory %s does not contain the following required files: "
+            "%s" % (sl_out_dir, ', '.join(missing_files)))
+
+    # Get the preprocessed data to be updated
+    study = Study(study_id)
+    ppds = study.preprocessed_data()
+    if not ppds:
+        raise ValueError("Study %s does not have any preprocessed data")
+
+    if ppd_id:
+        if ppd_id not in ppds:
+            raise ValueError("The preprocessed data %d does not exist in "
+                             "study %d. Available preprocessed data: %s"
+                             % (ppd_id, study_id, ', '.join(map(str, ppds))))
+        ppd = PreprocessedData(ppd_id)
+    else:
+        ppd = PreprocessedData(sorted(ppds)[0])
+
+    # We need to loop through the fps list to get the db filepaths that we
+    # need to modify
+    fps = defaultdict(list)
+    for fp_id, fp, fp_type in sorted(ppd.get_filepaths()):
+        fps[fp_type].append((fp_id, fp))
+
+    fps_to_add = []
+    fps_to_modify = []
+    keys = ['preprocessed_fasta', 'preprocessed_fastq', 'preprocessed_demux',
+            'log']
+
+    for key in keys:
+        if key in fps:
+            db_id, db_fp = fps[key][0]
+            fp_checksum = compute_checksum(new_fps[key])
+            fps_to_modify.append((db_id, db_fp, new_fps[key], fp_checksum))
+        else:
+            fps_to_add.append(
+                (new_fps[key], convert_to_id(key, 'filepath_type')))
+
+    # Insert the new files in the database, if any
+    if fps_to_add:
+        ppd.add_filepaths(fps_to_add)
+
+    # Update the files and the database
+    conn_handler = SQLConnectionHandler()
+    # Create a queue so we can execute all the modifications on the DB in
+    # a transaction block
+    queue_name = "update_ppd_%d" % ppd.id
+    conn_handler.create_queue(queue_name)
+    sql = "UPDATE qiita.filepath SET checksum=%s WHERE filepath_id=%s"
+    bkp_files = []
+    for db_id, db_fp, new_fp, checksum in fps_to_modify:
+        # Move the db_file in case something goes wrong
+        bkp_fp = "%s.bkp" % db_fp
+        move(db_fp, bkp_fp)
+        bkp_files.append((bkp_fp, db_fp))
+
+        # Start the update for the current file
+        # Move the file to the database location
+        move(new_fp, db_fp)
+        # Add the SQL instruction to the DB
+        conn_handler.add_to_queue(queue_name, sql, (checksum, db_id))
+
+    # Execute the queue
+    try:
+        conn_handler.execute_queue(queue_name)
+    except Exception:
+        # We need to catch any exception so we can restore the db files
+        for bkp_fp, db_fp in bkp_files:
+            move(bkp_fp, db_fp)
+        # Using just raise so the original traceback is shown
+        raise
+
+    # Since the files and the database have been updated correctly,
+    # remove the backup files
+    for bkp_fp, _ in bkp_files:
+        remove(bkp_fp)
+
+    return ppd

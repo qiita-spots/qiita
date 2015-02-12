@@ -51,7 +51,8 @@ class AddFilesToRawData(BaseHandler):
         else:
             check_access(self.current_user, study, raise_error=True)
 
-        _split = lambda x: x.split(',') if x else []
+        def _split(x):
+            return x.split(',') if x else []
         filepaths, fps = [], []
         fps.append((_split(barcodes_str), 'raw_barcodes'))
         fps.append((_split(fasta_str), 'raw_fasta'))
