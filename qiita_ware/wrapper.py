@@ -1,7 +1,5 @@
 from __future__ import division
 
-from qiita_db.job import Job
-
 from shutil import rmtree
 from os import remove
 from sys import stderr
@@ -9,6 +7,8 @@ from sys import stderr
 from skbio.util import flatten
 import networkx as nx
 from moi.job import system_call, submit, ctxs, ctx_default
+
+from qiita_db.job import Job
 
 
 def system_call_from_job(job_id, **kwargs):

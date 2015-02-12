@@ -6,6 +6,15 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
+from os import remove, close, mkdir
+from os.path import exists, join, basename
+from tempfile import mkstemp, mkdtemp
+from shutil import rmtree
+from unittest import TestCase, main
+from future.utils.six import StringIO
+from future import standard_library
+from functools import partial
+
 from qiita_db.commands import (load_study_from_cmd, load_raw_data_cmd,
                                load_sample_template_from_cmd,
                                load_prep_template_from_cmd,
@@ -22,14 +31,6 @@ from qiita_db.util import (get_count, check_count, get_db_files_base_dir,
 from qiita_core.util import qiita_test_checker
 from qiita_ware.processing_pipeline import generate_demux_file
 
-from os import remove, close, mkdir
-from os.path import exists, join, basename
-from tempfile import mkstemp, mkdtemp
-from shutil import rmtree
-from unittest import TestCase, main
-from future.utils.six import StringIO
-from future import standard_library
-from functools import partial
 with standard_library.hooks():
     import configparser
 

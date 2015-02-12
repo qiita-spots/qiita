@@ -6,6 +6,15 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
+from dateutil.parser import parse
+from os import listdir, remove
+from os.path import join, exists
+from functools import partial
+from future import standard_library
+from future.utils import viewitems
+from collections import defaultdict
+from shutil import move
+
 from .study import Study, StudyPerson
 from .user import User
 from .util import (get_filetypes, get_filepath_types, compute_checksum,
@@ -17,14 +26,6 @@ from .parameters import (PreprocessedIlluminaParams, Preprocessed454Params,
                          ProcessedSortmernaParams)
 from .sql_connection import SQLConnectionHandler
 
-from dateutil.parser import parse
-from os import listdir, remove
-from os.path import join, exists
-from functools import partial
-from future import standard_library
-from future.utils import viewitems
-from collections import defaultdict
-from shutil import move
 with standard_library.hooks():
     from configparser import ConfigParser
 

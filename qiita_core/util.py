@@ -5,12 +5,13 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
+from smtplib import SMTP, SMTP_SSL, SMTPException
+from future import standard_library
+
 from qiita_core.qiita_settings import qiita_config
 from qiita_db.sql_connection import SQLConnectionHandler
 from qiita_db.environment_manager import reset_test_database
 
-from smtplib import SMTP, SMTP_SSL, SMTPException
-from future import standard_library
 with standard_library.hooks():
     from email.mime.multipart import MIMEMultipart
     from email.mime.text import MIMEText
