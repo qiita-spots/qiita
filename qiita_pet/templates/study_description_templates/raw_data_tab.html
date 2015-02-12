@@ -7,7 +7,7 @@
   {% for rd_id, rd_filetype, _ in available_raw_data %}
     <li><a href="#raw_data_info_{{rd_id}}" role="tab" data-toggle="tab">
       {{rd_filetype}} (ID: {{rd_id}})
-      <button class="close" title="Remove this raw data" type="button" onclick="delete_raw_data({{rd_id}})">&nbsp; ×</button> 
+      <button class="close" title="Remove this raw data" type="button" onclick="delete_raw_data('{{rd_filetype}}', {{rd_id}})">&nbsp; ×</button> 
     </a></li>
   {% end %}
   </ul>

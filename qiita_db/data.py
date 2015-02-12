@@ -364,15 +364,18 @@ class RawData(BaseData):
                 "doesn't exist" % (raw_data_id, study_id))
 
         # check if there are any prep templates for this study
-        prep_template_count = conn_handler.execute_fetchone(
+        prep_template_exists = conn_handler.execute_fetchone(
             """
             SELECT EXISTS(
                 SELECT * FROM qiita.prep_template AS pt
-                    JOIN qiita.study_raw_data AS srd on
-                        pt.raw_data_id=srd.raw_data_id
-                WHERE srd.raw_data_id={0} AND srd.study_id={1})
+                    LEFT JOIN qiita.common_prep_info AS cpi ON
+                    (pt.prep_template_id=cpi.prep_template_id)
+                    LEFT JOIN qiita.required_sample_info AS rsi ON
+                    (cpi.sample_id=rsi.sample_id)
+                WHERE raw_data_id = {0} and study_id = {1}
+            )
             """.format(raw_data_id, study_id))[0]
-        if prep_template_count:
+        if prep_template_exists:
             raise QiitaDBError(
                 "Raw data %d has prep template(s) associated so it can't be "
                 "erased." % raw_data_id)

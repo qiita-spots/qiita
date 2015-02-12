@@ -284,8 +284,8 @@ class RawDataTests(TestCase):
             RawData.delete(3, 1)
 
         # the raw data is linked to a study that has not prep templates
-        Study(2).add_raw_data([RawData(3)])
-        RawData.delete(3, 2)
+        Study(2).add_raw_data([RawData(1)])
+        RawData.delete(1, 2)
 
         # delete raw data
         self.assertTrue(RawData.exists(2))
