@@ -11,16 +11,6 @@ import networkx as nx
 from moi.job import system_call, submit, ctxs, ctx_default
 
 
-__author__ = "Jose Antonio Navas Molina"
-__copyright__ = "Copyright 2011, The QIIME project"
-__credits__ = ["Jose Antonio Navas Molina"]
-__license__ = "BSD"
-__version__ = "1.8.0-dev"
-__maintainer__ = "Jose Navas Antonio Molina"
-# Taken from pull request #1616 in qiime, with permission from Jose
-# Permission was also given to release this code under the BSD licence
-
-
 def system_call_from_job(job_id, **kwargs):
     """Executes a system call described by a Job
 
