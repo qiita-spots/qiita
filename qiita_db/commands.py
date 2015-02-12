@@ -14,8 +14,6 @@ from future import standard_library
 from future.utils import viewitems
 from collections import defaultdict
 from shutil import move
-with standard_library.hooks():
-    from configparser import ConfigParser
 
 from .study import Study, StudyPerson
 from .user import User
@@ -27,6 +25,9 @@ from .metadata_template import (SampleTemplate, PrepTemplate,
 from .parameters import (PreprocessedIlluminaParams, Preprocessed454Params,
                          ProcessedSortmernaParams)
 from .sql_connection import SQLConnectionHandler
+
+with standard_library.hooks():
+    from configparser import ConfigParser
 
 SUPPORTED_PARAMS = ['preprocessed_sequence_illumina_params',
                     'preprocessed_sequence_454_params',
