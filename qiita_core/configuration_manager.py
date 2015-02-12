@@ -10,10 +10,11 @@ from functools import partial
 from os.path import join, dirname, abspath, isdir
 from os import environ
 from future import standard_library
-with standard_library.hooks():
-    from configparser import ConfigParser
 
 from .exceptions import MissingConfigSection
+
+with standard_library.hooks():
+    from configparser import ConfigParser
 
 
 class ConfigurationManager(object):
