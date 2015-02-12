@@ -6,6 +6,17 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
+from .study import Study, StudyPerson
+from .user import User
+from .util import (get_filetypes, get_filepath_types, compute_checksum,
+                   convert_to_id)
+from .data import RawData, PreprocessedData, ProcessedData
+from .metadata_template import (SampleTemplate, PrepTemplate,
+                                load_template_to_dataframe)
+from .parameters import (PreprocessedIlluminaParams, Preprocessed454Params,
+                         ProcessedSortmernaParams)
+from .sql_connection import SQLConnectionHandler
+
 from dateutil.parser import parse
 from os import listdir, remove
 from os.path import join, exists
@@ -17,16 +28,6 @@ from shutil import move
 with standard_library.hooks():
     from configparser import ConfigParser
 
-from .study import Study, StudyPerson
-from .user import User
-from .util import (get_filetypes, get_filepath_types, compute_checksum,
-                   convert_to_id)
-from .data import RawData, PreprocessedData, ProcessedData
-from .metadata_template import (SampleTemplate, PrepTemplate,
-                                load_template_to_dataframe)
-from .parameters import (PreprocessedIlluminaParams, Preprocessed454Params,
-                         ProcessedSortmernaParams)
-from .sql_connection import SQLConnectionHandler
 
 SUPPORTED_PARAMS = ['preprocessed_sequence_illumina_params',
                     'preprocessed_sequence_454_params',
@@ -51,7 +52,10 @@ def load_study_from_cmd(owner, title, info):
     config.readfp(info)
 
     optional = dict(config.items('optional'))
-    get_optional = lambda name: optional.get(name, None)
+
+    def get_optional(name):
+        return optional.get(name, None)
+
     get_required = partial(config.get, 'required')
     required_fields = ['timeseries_type_id', 'mixs_compliant',
                        'portal_type_id', 'reprocess', 'study_alias',

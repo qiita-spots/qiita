@@ -6,14 +6,14 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
+from .exceptions import MissingConfigSection
+
 from functools import partial
 from os.path import join, dirname, abspath, isdir
 from os import environ
 from future import standard_library
 with standard_library.hooks():
     from configparser import ConfigParser
-
-from .exceptions import MissingConfigSection
 
 
 class ConfigurationManager(object):

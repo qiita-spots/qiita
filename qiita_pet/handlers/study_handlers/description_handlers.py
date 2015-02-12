@@ -523,7 +523,8 @@ class StudyDescriptionHandler(BaseHandler):
 
         # set variable holding if we have all prep templates or not
         if available_prep_templates:
-            _test = lambda item: not item
+            def _test(item):
+                return not item
             prep_templates = all(
                 [_test(val) for val in viewvalues(available_prep_templates)])
         else:

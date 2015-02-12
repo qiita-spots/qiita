@@ -5,6 +5,15 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
+
+from qiita_core.exceptions import QiitaEnvironmentError
+from qiita_core.qiita_settings import qiita_config
+from .sql_connection import SQLConnectionHandler
+from .reference import Reference
+from natsort import natsorted
+
+from qiita_db.ontology import Ontology
+from qiita_db.util import convert_to_id
 from os.path import abspath, dirname, join, exists, basename, splitext
 from functools import partial
 from os import mkdir
@@ -15,14 +24,7 @@ from future import standard_library
 from future.utils import viewitems
 with standard_library.hooks():
     from urllib.request import urlretrieve
-from natsort import natsorted
 
-from qiita_core.exceptions import QiitaEnvironmentError
-from qiita_core.qiita_settings import qiita_config
-from .sql_connection import SQLConnectionHandler
-from .reference import Reference
-from qiita_db.ontology import Ontology
-from qiita_db.util import convert_to_id
 
 get_support_file = partial(join, join(dirname(abspath(__file__)),
                                       'support_files'))
