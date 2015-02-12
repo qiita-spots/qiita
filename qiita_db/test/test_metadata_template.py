@@ -26,7 +26,8 @@ from qiita_db.exceptions import (QiitaDBDuplicateError, QiitaDBUnknownIDError,
                                  QiitaDBNotImplementedError,
                                  QiitaDBDuplicateHeaderError,
                                  QiitaDBExecutionError,
-                                 QiitaDBColumnError, QiitaDBError)
+                                 QiitaDBColumnError, QiitaDBError,
+                                 QiitaDBWarning)
 from qiita_db.study import Study, StudyPerson
 from qiita_db.user import User
 from qiita_db.data import RawData
@@ -861,7 +862,7 @@ class TestSampleTemplate(TestCase):
 
     def test_create_already_prefixed_samples(self):
         """Creates a new SampleTemplate with the samples already prefixed"""
-        st = npt.assert_warns(UserWarning, SampleTemplate.create,
+        st = npt.assert_warns(QiitaDBWarning, SampleTemplate.create,
                               self.metadata_prefixed, self.new_study)
         # The returned object has the correct id
         self.assertEqual(st.id, 2)
@@ -1390,7 +1391,7 @@ class TestPrepTemplate(TestCase):
 
     def test_create_already_prefixed_samples(self):
         """Creates a new PrepTemplate"""
-        pt = npt.assert_warns(UserWarning, PrepTemplate.create,
+        pt = npt.assert_warns(QiitaDBWarning, PrepTemplate.create,
                               self.metadata_prefixed, self.new_raw_data,
                               self.test_study, self.data_type)
         # The returned object has the correct id
@@ -1891,7 +1892,7 @@ class TestUtilities(TestCase):
         assert_frame_equal(obs, exp)
 
     def test_load_template_to_dataframe_empty_columns(self):
-        obs = npt.assert_warns(UserWarning, load_template_to_dataframe,
+        obs = npt.assert_warns(QiitaDBWarning, load_template_to_dataframe,
                                StringIO(EXP_ST_SPACES_EMPTY_COLUMN))
         exp = pd.DataFrame.from_dict(SAMPLE_TEMPLATE_DICT_FORM)
         exp.index.name = 'sample_name'
@@ -1928,7 +1929,7 @@ class TestUtilities(TestCase):
         assert_frame_equal(obs, exp)
 
     def test_load_template_to_dataframe_empty_column(self):
-        obs = npt.assert_warns(UserWarning, load_template_to_dataframe,
+        obs = npt.assert_warns(QiitaDBWarning, load_template_to_dataframe,
                                StringIO(SAMPLE_TEMPLATE_EMPTY_COLUMN))
         exp = pd.DataFrame.from_dict(ST_EMPTY_COLUMN_DICT_FORM)
         exp.index.name = 'sample_name'
