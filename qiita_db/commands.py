@@ -11,8 +11,6 @@ from os import listdir
 from os.path import join
 from functools import partial
 from future import standard_library
-with standard_library.hooks():
-    from configparser import ConfigParser
 
 from .study import Study, StudyPerson
 from .user import User
@@ -22,6 +20,9 @@ from .metadata_template import (SampleTemplate, PrepTemplate,
                                 load_template_to_dataframe)
 from .parameters import (PreprocessedIlluminaParams, Preprocessed454Params,
                          ProcessedSortmernaParams)
+
+with standard_library.hooks():
+    from configparser import ConfigParser
 
 SUPPORTED_PARAMS = ['preprocessed_sequence_illumina_params',
                     'preprocessed_sequence_454_params',

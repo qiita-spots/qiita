@@ -13,8 +13,6 @@ from glob import glob
 
 from future import standard_library
 from future.utils import viewitems
-with standard_library.hooks():
-    from urllib.request import urlretrieve
 from natsort import natsorted
 
 from qiita_core.exceptions import QiitaEnvironmentError
@@ -23,6 +21,9 @@ from .sql_connection import SQLConnectionHandler
 from .reference import Reference
 from qiita_db.ontology import Ontology
 from qiita_db.util import convert_to_id
+
+with standard_library.hooks():
+    from urllib.request import urlretrieve
 
 get_support_file = partial(join, join(dirname(abspath(__file__)),
                                       'support_files'))
