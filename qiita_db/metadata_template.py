@@ -388,7 +388,13 @@ class BaseSample(QiitaObject):
         if key in self._get_categories(conn_handler):
             # It's possible that the key is asking for one of the *_id columns
             # that we have to do the translation
-            handler = lambda x: x
+            def handler(x):
+                return x
+
+            # prevent flake8 from complaining about the function not being
+            # used and a redefinition happening in the next few lines
+            handler(None)
+
             if key in self._md_template.translate_cols_dict.values():
                 handler = (
                     lambda x: self._md_template.str_cols_handlers[key][x])
