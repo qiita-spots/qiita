@@ -14,8 +14,6 @@ from unittest import TestCase, main
 from future.utils.six import StringIO
 from future import standard_library
 from functools import partial
-with standard_library.hooks():
-    import configparser
 
 from qiita_db.commands import (load_study_from_cmd, load_raw_data_cmd,
                                load_sample_template_from_cmd,
@@ -32,6 +30,9 @@ from qiita_db.util import (get_count, check_count, get_db_files_base_dir,
                            get_mountpoint)
 from qiita_core.util import qiita_test_checker
 from qiita_ware.processing_pipeline import generate_demux_file
+
+with standard_library.hooks():
+    import configparser
 
 
 @qiita_test_checker()
