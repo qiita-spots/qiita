@@ -630,7 +630,7 @@ class StudyDescriptionHandler(BaseHandler):
 
         try:
             PrepTemplate.delete(prep_template_id)
-            msg = ("Prep template %d has been deleted" % raw_data_id)
+            msg = ("Prep template %d has been deleted" % prep_template_id)
             msg_level = "success"
             tab = 'study_information_tab'
             tab_id = None
