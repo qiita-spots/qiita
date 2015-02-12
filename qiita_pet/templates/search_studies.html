@@ -34,7 +34,7 @@ function add_metacat(metacat) {
               <div class="modal-body">
         <p><a href="#" onclick="select_deselect('sel{{sid}}', true); return false;">Select all</a> | <a href="#" onclick="select_deselect('sel{{sid}}', false); return false;">Select none</a> | <a href="#" onclick="select_inverse('sel{{sid}}'); return false;">Select inverse</a></p>
         {% for samp in selsamples[sid] %}
-          <input type='checkbox' class='selected sel{{sid}}' name='sel{{sid}}' value='{{samp}}'> {{samp}}<br />
+          <input type='checkbox' class='selected sample sel{{sid}}' name='sel{{sid}}' value='{{samp}}'> {{samp}}<br />
        {% end %}
      </div>
             <div class="modal-footer">
@@ -106,7 +106,7 @@ function add_metacat(metacat) {
     {% set pd = study.processed_data(data_type=data_type) %}
     {% if pd %}
       {% set data_type_id = pd[0] %}
-            <input type='checkbox' name='availstudies' value='{{sid}}#{{data_type_id}}' onchange="select_deselect_samples_study({{sid}})"> 
+            <input type='checkbox' name='availstudies' value='{{sid}}#{{data_type_id}}' class='datatype'>
             {{data_type}}<br />
     {% end %}
   {% end %}
@@ -168,7 +168,7 @@ function add_metacat(metacat) {
               {% for sample in samples %}
                 <tr><td>
                 <input type='checkbox' name='{{sid}}'
-                value='{{sample[0]}}' class='{{sid}} {{ " ".join(clean_str(s) for s in sample[1:]) }}' onchange='count_update({{sid}})'>
+                value='{{sample[0]}}' class='sample {{sid}} {{ " ".join(clean_str(s) for s in sample[1:]) }}' onchange='count_update({{sid}})'>
                 </td><td>{{sample[0]}}</td>
                 {% for pos in range(len(meta_headers)) %}
                   <td>{{sample[pos+1]}}</td>
