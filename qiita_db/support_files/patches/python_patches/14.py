@@ -13,13 +13,13 @@ filepaths = conn_handler.execute_fetchall(
     'f.filepath_id = afp.filepath_id')
 
 # retrieve relative filepaths as dictionary for matching
-mountpoints = {m[1]: m[0] for m in get_mountpoint(
+mountpoints = {m[1].rstrip('/\\'): m[0] for m in get_mountpoint(
     'analysis', conn_handler=conn_handler, retrieve_all=True)}
 
 for filepath in filepaths:
     filename = basename(filepath['filepath'])
     # find the ID of the analysis filepath used
-    mp_id = mountpoints[dirname(filepath['filepath'])]
+    mp_id = mountpoints[dirname(filepath['filepath']).rstrip('/\\')]
     conn_handler.execute(
         'UPDATE qiita.filepath SET filepath = %s, data_directory_id = %s WHERE'
         ' filepath_id = %s',
