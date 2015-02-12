@@ -22,12 +22,14 @@ from qiita_db.commands import (load_sample_template_from_cmd,
                                load_raw_data_cmd, load_processed_data_cmd,
                                load_preprocessed_data_from_cmd,
                                load_prep_template_from_cmd,
-                               load_parameters_from_cmd, SUPPORTED_PARAMS)
+                               load_parameters_from_cmd, SUPPORTED_PARAMS,
+                               update_preprocessed_data_from_cmd)
 from qiita_db.sql_connection import SQLConnectionHandler
 from qiita_db.exceptions import QiitaDBConnectionError
 from qiita_db.reference import Reference
 from qiita_core.configuration_manager import ConfigurationManager
 from qiita_ware.commands import ebi_actions, submit_EBI as _submit_EBI
+from qiita_ware.processing_pipeline import generate_demux_file
 from moi import r_client
 
 
@@ -64,6 +66,11 @@ def maintenance():
 
 @qiita.group()
 def webserver():
+    pass
+
+
+@qiita.group()
+def ware():
     pass
 
 
@@ -239,6 +246,23 @@ def load_parameters(fp, table, name):
                % (table, param.id))
 
 
+@db.command()
+@click.argument('sl_out_dir', required=True,
+                type=click.Path(resolve_path=True, readable=True, exists=True,
+                                file_okay=False))
+@click.option('--study', required=True, type=int,
+              help='Study whose preprocessed data will be updated')
+@click.option('--preprocessed_data', required=False, type=int,
+              help='Preprocessed data to be updated. If not passed, the '
+                   'preprocessed data with lowest id in the study will '
+                   'be updated.')
+def update_preprocessed_data(sl_out_dir, study,  preprocessed_data):
+    """Updates the study with the preprocessed data in sl_out_dir"""
+    ppd = update_preprocessed_data_from_cmd(sl_out_dir, study,
+                                            preprocessed_data)
+    click.echo("Preprocessed data %s successfully updated" % ppd.id)
+
+
 # #############################################################################
 # EBI COMMANDS
 # #############################################################################
@@ -330,6 +354,20 @@ def start(port):
     http_server.listen(port)
     click.echo("Qiita started on port %d" % port)
     tornado.ioloop.IOLoop.instance().start()
+
+
+# #############################################################################
+# WARE COMMANDS
+# #############################################################################
+
+@ware.command()
+@click.argument('sl_out_dir', required=True,
+                type=click.Path(resolve_path=True, readable=True, exists=True,
+                                file_okay=False))
+def generate_demux(sl_out_dir):
+    """Generates the demux file for the split libraries output sl_out_dir"""
+    demux_fp = generate_demux_file(sl_out_dir)
+    click.echo("Demux file successfully generated: %s" % demux_fp)
 
 if __name__ == '__main__':
     qiita()
