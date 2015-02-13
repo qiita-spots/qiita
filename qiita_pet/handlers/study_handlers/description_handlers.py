@@ -639,7 +639,7 @@ class StudyDescriptionHandler(BaseHandler):
             msg_level = "danger"
             prep_id = prep_template_id
 
-        callback((msg, msg_level, 'raw_data_tab', tab_id, None))
+        callback((msg, msg_level, 'raw_data_tab', prep_id, None))
 
     @authenticated
     def get(self, study_id):
