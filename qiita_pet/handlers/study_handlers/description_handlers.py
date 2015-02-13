@@ -583,6 +583,36 @@ class StudyDescriptionHandler(BaseHandler):
                     sub_tab=sub_tab,
                     prep_tab=prep_tab)
 
+    def delete_raw_data(self, study, user, callback):
+        """Delete the selected raw data
+
+        Parameters
+        ----------
+        study : Study
+            The current study object
+        user : User
+            The current user object
+        callback : function
+            The callback function to call with the results once the processing
+            is done
+        """
+        raw_data_id = int(self.get_argument('raw_data_id'))
+
+        try:
+            RawData.delete(raw_data_id, study.id)
+            msg = ("Raw data %d has been deleted from study: "
+                   "<b><i>%s</i></b>" % (raw_data_id, study.title))
+            msg_level = "success"
+            tab = 'study_information_tab'
+            tab_id = None
+        except Exception as e:
+            msg = "Couldn't remove %d raw data: %s" % (raw_data_id, str(e))
+            msg_level = "danger"
+            tab = 'raw_data_tab'
+            tab_id = raw_data_id
+
+        callback((msg, msg_level, tab, tab_id, None))
+
     @authenticated
     def get(self, study_id):
         study, user = self._get_sudy_and_check_access(study_id)
@@ -609,7 +639,8 @@ class StudyDescriptionHandler(BaseHandler):
             approve_study=self.approve_study,
             request_approval=self.request_approval,
             make_sandbox=self.make_sandbox,
-            update_investigation_type=self.update_investigation_type)
+            update_investigation_type=self.update_investigation_type,
+            delete_raw_data=self.delete_raw_data)
 
         # Get the action that we need to perform
         action = self.get_argument("action", None)
