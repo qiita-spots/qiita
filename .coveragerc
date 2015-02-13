@@ -4,7 +4,12 @@
 omit =
     */test*
     */__init__.py
-source = qiita_core,qiita_ware,qiita_db,qiita_pet 
+
+    # these files will be ommited from coveralls because they contain test
+    # of the environment and methods they are executed regularly by travis,
+    # then there should not be concern over their "correctness".
+    qiita_core/environment_manager.py
+source = qiita_core,qiita_ware,qiita_db,qiita_pet
 branch = True
 include = */qiita_*/*
 
