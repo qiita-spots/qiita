@@ -632,12 +632,13 @@ class StudyDescriptionHandler(BaseHandler):
             PrepTemplate.delete(prep_template_id)
             msg = ("Prep template %d has been deleted" % prep_template_id)
             msg_level = "success"
+            tab_id = PrepTemplate(prep_template_id).raw_data
         except Exception as e:
             msg = ("Couldn't remove prep template: %s" % str(e))
             msg_level = "danger"
+            tab_id = None
 
-        callback((msg, msg_level, 'raw_data_tab',
-                  PrepTemplate(prep_template_id).raw_data, None))
+        callback((msg, msg_level, 'raw_data_tab', tab_id, None))
 
     @authenticated
     def get(self, study_id):
