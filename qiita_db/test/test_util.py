@@ -12,6 +12,8 @@ from os import close, remove
 from os.path import join, exists, basename
 from shutil import rmtree
 
+from skbio.util import flatten
+
 from qiita_core.util import qiita_test_checker
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_db.exceptions import QiitaDBColumnError, QiitaDBError
@@ -374,12 +376,9 @@ class DBUtilTests(TestCase):
         # Add a new filepath to the database
         fd, fp = mkstemp()
         close(fd)
-        exp_id = 1 + self.conn_handler.execute_fetchone(
-            "SELECT count(1) FROM qiita.filepath")[0]
-        fp_id = self.conn_handler.execute_fetchone(
-            "INSERT INTO qiita.filepath "
-            "(filepath, filepath_type_id, checksum, checksum_algorithm_id) "
-            "VALUES (%s, %s, %s, %s) RETURNING filepath_id", (fp, 1, "", 1))[0]
+        exp_id = get_count('qiita.filepath') + 1
+        fp_id = insert_filepaths([(fp, 1)], None, "raw_data", "filepath",
+                                 self.conn_handler, move_files=False)[0]
         self.assertEqual(fp_id, exp_id)
 
         # Connect the just added filepath to a raw data
@@ -412,10 +411,10 @@ class DBUtilTests(TestCase):
         # Only filepath 16 should be removed
         sql = ("SELECT filepath_id FROM qiita.filepath ORDER BY "
                "filepath_id")
-        exp_ids = [i[0] for i in self.conn_handler.execute_fetchall(sql)]
+        exp_ids = flatten(self.conn_handler.execute_fetchall(sql))
         exp_ids.pop()
         purge_filepaths(self.conn_handler)
-        obs_ids = [i[0] for i in self.conn_handler.execute_fetchall(sql)]
+        obs_ids = flatten(self.conn_handler.execute_fetchall(sql))
         self.assertEqual(obs_ids, exp_ids)
 
         # Check that only the file for the removed filepath has been removed
@@ -423,9 +422,8 @@ class DBUtilTests(TestCase):
         self.assertFalse(exists(fp_exp_id))
 
     def test_purge_filepaths_null_cols(self):
-        """Tests the nulls vs not in issue in purge_filepaths"""
-        # For more details about the issue:
-        # http://www.depesz.com/2008/08/13/nulls-vs-not-in/
+        # For more details about the source of the issue that motivates this
+        # test: http://www.depesz.com/2008/08/13/nulls-vs-not-in/
         # In the current set up, the only place where we can actually have a
         # null value in a filepath id is in the reference table. Add a new
         # reference without tree and taxonomy:
@@ -436,15 +434,12 @@ class DBUtilTests(TestCase):
         # Add a new filepath to the database
         fd, fp = mkstemp()
         close(fd)
-        exp_id = 1 + self.conn_handler.execute_fetchone(
-            "SELECT count(1) FROM qiita.filepath")[0]
-        fp_id = self.conn_handler.execute_fetchone(
-            "INSERT INTO qiita.filepath "
-            "(filepath, filepath_type_id, checksum, checksum_algorithm_id) "
-            "VALUES (%s, %s, %s, %s) RETURNING filepath_id", (fp, 1, "", 1))[0]
+        exp_id = get_count('qiita.filepath') + 1
+        fp_id = insert_filepaths([(fp, 1)], None, "raw_data", "filepath",
+                                 self.conn_handler, move_files=False)[0]
         self.assertEqual(fp_id, exp_id)
 
-        # Connect the just added filepath to a raw data
+        # Link the just added filepath to a raw data
         self.conn_handler.execute(
             "INSERT INTO qiita.raw_filepath (raw_data_id, filepath_id) VALUES"
             "(%s, %s)", (1, exp_id))
@@ -474,10 +469,10 @@ class DBUtilTests(TestCase):
         # Only filepath 16 should be removed
         sql = ("SELECT filepath_id FROM qiita.filepath ORDER BY "
                "filepath_id")
-        exp_ids = [i[0] for i in self.conn_handler.execute_fetchall(sql)]
+        exp_ids = flatten(self.conn_handler.execute_fetchall(sql))
         exp_ids.pop()
         purge_filepaths(self.conn_handler)
-        obs_ids = [i[0] for i in self.conn_handler.execute_fetchall(sql)]
+        obs_ids = flatten(self.conn_handler.execute_fetchall(sql))
         self.assertEqual(obs_ids, exp_ids)
 
         # Check that only the file for the removed filepath has been removed
