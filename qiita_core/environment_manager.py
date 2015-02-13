@@ -69,7 +69,7 @@ def _ipy_wait(ar):
     return result
 
 
-def _test_result(test_type, name, state, result, expected):
+def _test_result(test_type, name, state, result, expected, write_stderr=True):
     """Write out the results of the test"""
     correct_result = result == expected
 
@@ -83,17 +83,21 @@ def _test_result(test_type, name, state, result, expected):
         to_write.append('#### EXPECTED RESULT: %s' % str(expected))
         to_write.append('#### OBSERVED RESULT: %s' % str(result))
 
-    stderr.write('\n'.join(to_write))
-    stderr.write('\n')
+    to_write.append('')
 
     if state == 'FAIL':
-        stderr.write('#' * 80)
-        stderr.write('\n')
-        stderr.write(''.join(result))
-        stderr.write('#' * 80)
-        stderr.write('\n')
+        to_write.append('#' * 80)
+        to_write.append('')
+        to_write.append(''.join(result))
+        to_write.append('')
+        to_write.append('#' * 80)
+        to_write.append('')
 
-    stderr.write('\n')
+    to_write.append('')
+    if write_stderr:
+        stderr.write(to_write)
+    else:
+        return to_write
 
 
 def _test_runner(test_type, name, func, expected):
