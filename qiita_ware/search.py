@@ -1,6 +1,9 @@
-from itertools import chain
-from future.utils import viewvalues
 from collections import Counter
+
+from future.utils import viewvalues
+
+from qiita_db.study import Study
+from qiita_db.data import ProcessedData
 
 
 def count_metadata(results, meta_cols):
@@ -46,6 +49,49 @@ def count_metadata(results, meta_cols):
             studycount[study_id][meta_cols] = Counter(meta_vals[pos + 1])
 
     return fullcount, studycount
+
+
+def filter_by_processed_data(results, datatypes=None):
+    """Filters results to what is available in each processed data
+
+    Parameters
+    ----------
+    results : dict of lists of list
+        results in the format returned by the qiita_db search obj
+    datatypes : list of str, optional
+        Datatypes to selectively return. Default all datatypes available
+
+    Returns
+    -------
+    study_proc_ids : dict of lists
+        Processed data ids with samples for each study, in the format
+        {study_id: [proc_id, proc_id, ...], ...}
+    proc_data_samples : dict of lists of lists
+        Samples available in each processed data id, in the format
+        {proc_data_id: [[samp_id1, meta1, meta2, ...],
+                        [samp_id2, meta1, meta2, ...], ...}
+    """
+    study_proc_ids = {}
+    proc_data_samples = {}
+    for study_id in results:
+        study = Study(study_id)
+        study_proc_ids[study_id] = []
+        for proc_data_id in study.processed_data:
+            proc_data = ProcessedData(proc_data_id)
+            # skip processed data if it doesn't fit the given datatypes
+            if datatypes is not None and proc_data.datatype not in datatypes:
+                continue
+            proc_data_samples[proc_data_id] = []
+            samps_available = proc_data.samples
+            for sample in results[study_id]:
+                # filter to samples available in this proc data
+                if sample[0] in samps_available:
+                    proc_data_samples[proc_data_id].append(sample)
+            if proc_data_samples[proc_data_id] is []:
+                # all samples filtered so remove it as a result
+                del(proc_data_samples[proc_data_id])
+                study_proc_ids[study_id].pop(proc_data_id)
+    return study_proc_ids, proc_data_samples
 
 
 def search(searchstr, user):
