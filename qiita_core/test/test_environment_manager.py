@@ -10,7 +10,7 @@ from unittest import TestCase, main
 
 from qiita_core.util import qiita_test_checker
 from qiita_core.environment_manager import (
-    _test_wrapper_local, _test_wrapper_remote, _test_result, _test_runner)
+    _test_wrapper_local, _test_wrapper_remote, _test_result)
 
 
 @qiita_test_checker()
