@@ -39,7 +39,7 @@ Methods
 
 from __future__ import division
 from future.builtins import zip
-from future.utils import viewitems
+from future.utils import viewitems, PY3
 from copy import deepcopy
 from os.path import join
 from time import strftime
@@ -61,6 +61,11 @@ from .util import (exists_table, get_table_cols, get_emp_status,
                    convert_from_id, find_repeated, get_mountpoint,
                    insert_filepaths)
 from .logger import LogEntry
+
+if PY3:
+    from string import ascii_letters as letters, digits
+else:
+    from string import letters, digits
 
 
 TARGET_GENE_DATA_TYPES = ['16S', '18S', 'ITS']
@@ -383,7 +388,13 @@ class BaseSample(QiitaObject):
         if key in self._get_categories(conn_handler):
             # It's possible that the key is asking for one of the *_id columns
             # that we have to do the translation
-            handler = lambda x: x
+            def handler(x):
+                return x
+
+            # prevent flake8 from complaining about the function not being
+            # used and a redefinition happening in the next few lines
+            handler(None)
+
             if key in self._md_template.translate_cols_dict.values():
                 handler = (
                     lambda x: self._md_template.str_cols_handlers[key][x])
@@ -1180,6 +1191,13 @@ class SampleTemplate(MetadataTemplate):
         if cls.exists(study.id):
             raise QiitaDBDuplicateError(cls.__name__, 'id: %d' % study.id)
 
+        invalid_ids = get_invalid_sample_names(md_template.index)
+        if invalid_ids:
+            raise QiitaDBColumnError("The following sample names in the sample"
+                                     " template contain invalid characters "
+                                     "(only alphanumeric characters or periods"
+                                     " are allowed): %s." %
+                                     ", ".join(invalid_ids))
         # We are going to modify the md_template. We create a copy so
         # we don't modify the user one
         md_template = deepcopy(md_template)
@@ -1428,6 +1446,14 @@ class PrepTemplate(MetadataTemplate):
         # the recognized investigation types
         if investigation_type is not None:
             cls.validate_investigation_type(investigation_type)
+
+        invalid_ids = get_invalid_sample_names(md_template.index)
+        if invalid_ids:
+            raise QiitaDBColumnError("The following sample names in the prep"
+                                     " template contain invalid characters "
+                                     "(only alphanumeric characters or periods"
+                                     " are allowed): %s." %
+                                     ", ".join(invalid_ids))
 
         # We are going to modify the md_template. We create a copy so
         # we don't modify the user one
@@ -1832,7 +1858,7 @@ class PrepTemplate(MetadataTemplate):
                                          str(pt_sample_names-st_sample_names)))
 
         mapping = pt.join(st, lsuffix="_prep")
-        mapping.rename(columns=rename_cols, inplace=True, index=str.lower)
+        mapping.rename(columns=rename_cols, inplace=True)
 
         # Gets the orginal mapping columns and readjust the order to comply
         # with QIIME requirements
@@ -1875,6 +1901,8 @@ def load_template_to_dataframe(fn):
 
     Raises
     ------
+    QiitaDBColumnError
+        If the sample_name column is not present in the template.
     UserWarning
         When columns are dropped because they have no content for any sample.
 
@@ -1908,6 +1936,10 @@ def load_template_to_dataframe(fn):
 
     initial_columns = set(template.columns)
 
+    if 'sample_name' not in template.columns:
+        raise QiitaDBColumnError("The 'sample_name' column is missing from "
+                                 "your template, this file cannot be parsed.")
+
     # remove rows that have no sample identifier but that may have other data
     # in the rest of the columns
     template.dropna(subset=['sample_name'], how='all', inplace=True)
@@ -1926,3 +1958,33 @@ def load_template_to_dataframe(fn):
                       '%s' % ', '.join(dropped_cols), UserWarning)
 
     return template
+
+
+def get_invalid_sample_names(sample_names):
+    """Get a list of sample names that are not QIIME compliant
+
+    Parameters
+    ----------
+    sample_names : iterable
+        Iterable containing the sample names to check.
+
+    Returns
+    -------
+    list
+        List of str objects where each object is an invalid sample name.
+
+    References
+    ----------
+    .. [1] QIIME File Types documentaiton:
+    http://qiime.org/documentation/file_formats.html#mapping-file-overview.
+    """
+
+    # from the QIIME mapping file documentation
+    valid = set(letters+digits+'.')
+    inv = []
+
+    for s in sample_names:
+        if set(s) - valid:
+            inv.append(s)
+
+    return inv

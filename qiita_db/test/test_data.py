@@ -14,7 +14,7 @@ from tempfile import mkstemp
 
 from qiita_core.util import qiita_test_checker
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
-from qiita_db.exceptions import QiitaDBError
+from qiita_db.exceptions import QiitaDBError, QiitaDBUnknownIDError
 from qiita_db.study import Study, StudyPerson
 from qiita_db.user import User
 from qiita_db.util import get_mountpoint
@@ -260,6 +260,37 @@ class RawDataTests(TestCase):
         Study(2).add_raw_data([RawData(2)])
         with self.assertRaises(QiitaDBError):
             RawData(2).remove_filepath(fp)
+
+    def test_exists(self):
+        self.assertTrue(RawData.exists(1))
+        self.assertFalse(RawData.exists(1000))
+
+    def test_delete(self):
+        # the raw data doesn't exist
+        with self.assertRaises(QiitaDBUnknownIDError):
+            RawData.delete(1000, 1)
+
+        # the raw data and the study id are not linked or
+        # the study doesn't exits
+        with self.assertRaises(QiitaDBError):
+            RawData.delete(1, 1000)
+
+        # the raw data has prep templates
+        with self.assertRaises(QiitaDBError):
+            RawData.delete(1, 1)
+
+        # the raw data has linked files
+        with self.assertRaises(QiitaDBError):
+            RawData.delete(3, 1)
+
+        # the raw data is linked to a study that has not prep templates
+        Study(2).add_raw_data([RawData(1)])
+        RawData.delete(1, 2)
+
+        # delete raw data
+        self.assertTrue(RawData.exists(2))
+        RawData.delete(2, 1)
+        self.assertFalse(RawData.exists(2))
 
 
 @qiita_test_checker()
@@ -607,6 +638,10 @@ class PreprocessedDataTests(TestCase):
                                       data_type="18S")
         with self.assertRaises(ValueError):
             ppd.processing_status = 'not a valid state'
+
+    def test_exists(self):
+        self.assertTrue(PreprocessedData.exists(1))
+        self.assertFalse(PreprocessedData.exists(1000))
 
 
 @qiita_test_checker()

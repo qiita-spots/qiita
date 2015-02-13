@@ -34,7 +34,7 @@ from qiita_db.util import exists_table, get_db_files_base_dir, get_mountpoint
 from qiita_db.metadata_template import (
     _get_datatypes, _as_python_types, MetadataTemplate, SampleTemplate,
     PrepTemplate, BaseSample, PrepSample, Sample, _prefix_sample_names_with_id,
-    load_template_to_dataframe)
+    load_template_to_dataframe, get_invalid_sample_names)
 
 
 class TestUtilMetadataMap(TestCase):
@@ -603,6 +603,13 @@ class TestSampleTemplate(TestCase):
         with self.assertRaises(QiitaDBDuplicateHeaderError):
             SampleTemplate.create(self.metadata, self.new_study)
 
+    def test_create_bad_sample_names(self):
+        """Create raises an error when duplicate headers are present"""
+        # set a horrible list of sample names
+        self.metadata.index = ['o()xxxx[{::::::::>', 'sample.1', 'sample.3']
+        with self.assertRaises(QiitaDBColumnError):
+            SampleTemplate.create(self.metadata, self.new_study)
+
     def test_create(self):
         """Creates a new SampleTemplate"""
         st = SampleTemplate.create(self.metadata, self.new_study)
@@ -1019,6 +1026,13 @@ class TestPrepTemplate(TestCase):
         self.metadata['STR_COLUMN'] = pd.Series(['', '', ''],
                                                 index=self.metadata.index)
         with self.assertRaises(QiitaDBDuplicateHeaderError):
+            PrepTemplate.create(self.metadata, self.new_raw_data,
+                                self.test_study, self.data_type)
+
+    def test_create_bad_sample_names(self):
+        # set a horrible list of sample names
+        self.metadata.index = ['o()xxxx[{::::::::>', 'sample.1', 'sample.3']
+        with self.assertRaises(QiitaDBColumnError):
             PrepTemplate.create(self.metadata, self.new_raw_data,
                                 self.test_study, self.data_type)
 
@@ -1574,6 +1588,44 @@ class TestUtilities(TestCase):
         exp.index.name = 'sample_name'
         assert_frame_equal(obs, exp)
 
+    def test_load_template_to_dataframe_exception(self):
+        with self.assertRaises(QiitaDBColumnError):
+            x = load_template_to_dataframe(
+                StringIO(SAMPLE_TEMPLATE_NO_SAMPLE_NAME))
+
+            # prevent flake8 from complaining
+            x.strip()
+
+    def test_get_invalid_sample_names(self):
+        all_valid = ['2.sample.1', 'foo.bar.baz', 'roses', 'are', 'red',
+                     'v10l3t5', '4r3', '81u3']
+        obs = get_invalid_sample_names(all_valid)
+        self.assertEqual(obs, [])
+
+        all_valid = ['sample.1', 'sample.2', 'SAMPLE.1', 'BOOOM']
+        obs = get_invalid_sample_names(all_valid)
+        self.assertEqual(obs, [])
+
+    def test_get_invalid_sample_names_str(self):
+        one_invalid = ['2.sample.1', 'foo.bar.baz', 'roses', 'are', 'red',
+                       'I am the chosen one', 'v10l3t5', '4r3', '81u3']
+        obs = get_invalid_sample_names(one_invalid)
+        self.assertItemsEqual(obs, ['I am the chosen one'])
+
+        one_invalid = ['2.sample.1', 'foo.bar.baz', 'roses', 'are', 'red',
+                       ':L{=<', ':L}=<', '4r3', '81u3']
+        obs = get_invalid_sample_names(one_invalid)
+        self.assertItemsEqual(obs, [':L{=<', ':L}=<'])
+
+    def test_get_get_invalid_sample_names_mixed(self):
+        one_invalid = ['.', '1', '2']
+        obs = get_invalid_sample_names(one_invalid)
+        self.assertItemsEqual(obs, [])
+
+        one_invalid = [' ', ' ', ' ']
+        obs = get_invalid_sample_names(one_invalid)
+        self.assertItemsEqual(obs, [' ', ' ', ' '])
+
 
 EXP_SAMPLE_TEMPLATE = (
     "sample_name\tcollection_timestamp\tdescription\thas_extracted_data\t"
@@ -1733,6 +1785,21 @@ SAMPLE_TEMPLATE_EMPTY_COLUMN = (
 
 SAMPLE_TEMPLATE_COLUMN_WITH_NAS = (
     "sample_name\tcollection_timestamp\tdescription\thas_extracted_data\t"
+    "has_physical_specimen\thost_subject_id\tlatitude\tlongitude\t"
+    "physical_location\trequired_sample_info_status\tsample_type\t"
+    "str_column\n"
+    "2.Sample1\t2014-05-29 12:24:51\tTest Sample 1\tTrue\tTrue\t"
+    "NotIdentified\t42.42\t41.41\tlocation1\treceived\ttype1\t"
+    "NA\n"
+    "2.Sample2\t2014-05-29 12:24:51\t"
+    "Test Sample 2\tTrue\tTrue\tNotIdentified\t4.2\t1.1\tlocation1\treceived\t"
+    "type1\tNA\n"
+    "2.Sample3\t2014-05-29 12:24:51\tTest Sample 3\tTrue\t"
+    "True\tNotIdentified\t4.8\t4.41\tlocation1\treceived\ttype1\t"
+    "NA\n")
+
+SAMPLE_TEMPLATE_NO_SAMPLE_NAME = (
+    ":L}={\tcollection_timestamp\tdescription\thas_extracted_data\t"
     "has_physical_specimen\thost_subject_id\tlatitude\tlongitude\t"
     "physical_location\trequired_sample_info_status\tsample_type\t"
     "str_column\n"

@@ -661,9 +661,9 @@ def insert_filepaths(filepaths, obj_id, table, filepath_table, conn_handler,
             for old_fp, new_fp in zip(filepaths, new_filepaths):
                     move(old_fp[0], new_fp[0])
 
-        str_to_id = lambda x: (x if isinstance(x, (int, long))
-                               else convert_to_id(x, "filepath_type",
-                                                  conn_handler))
+        def str_to_id(x):
+            return (x if isinstance(x, (int, long))
+                    else convert_to_id(x, "filepath_type", conn_handler))
         paths_w_checksum = [(relpath(path, base_fp), str_to_id(id),
                             compute_checksum(path))
                             for path, id in new_filepaths]
