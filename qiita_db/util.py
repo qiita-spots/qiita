@@ -714,8 +714,9 @@ def purge_filepaths(conn_handler=None):
             AND U.TABLE_SCHEMA = 'qiita'
             AND U.TABLE_NAME = 'filepath'""")
 
-    union_str = " UNION ".join(["SELECT %s FROM qiita.%s" % (col, table)
-                                for table, col in table_cols_pairs])
+    union_str = " UNION ".join(
+        ["SELECT %s FROM qiita.%s WHERE %s IS NOT NULL" % (col, table, col)
+         for table, col in table_cols_pairs])
     # Get all the filepaths from the filepath table that are not
     # referenced from any place in the database
     fps = conn_handler.execute_fetchall(
