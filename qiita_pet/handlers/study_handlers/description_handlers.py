@@ -637,7 +637,7 @@ class StudyDescriptionHandler(BaseHandler):
         except Exception as e:
             msg = ("Couldn't remove prep template: %s" % str(e))
             msg_level = "danger"
-            prep_id = prep_template_id
+            prep_id = tab_id
 
         callback((msg, msg_level, 'raw_data_tab', prep_id, None))
 
