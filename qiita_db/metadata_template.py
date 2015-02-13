@@ -1858,7 +1858,7 @@ class PrepTemplate(MetadataTemplate):
                                          str(pt_sample_names-st_sample_names)))
 
         mapping = pt.join(st, lsuffix="_prep")
-        mapping.rename(columns=rename_cols, inplace=True, index=str.lower)
+        mapping.rename(columns=rename_cols, inplace=True)
 
         # Gets the orginal mapping columns and readjust the order to comply
         # with QIIME requirements
