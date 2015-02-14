@@ -627,7 +627,7 @@ class StudyDescriptionHandler(BaseHandler):
             is done
         """
         prep_template_id = int(self.get_argument('prep_template_id'))
-        tab_id = PrepTemplate(prep_template_id).raw_data
+        prep_id = PrepTemplate(prep_template_id).raw_data
 
         try:
             PrepTemplate.delete(prep_template_id)
@@ -637,7 +637,6 @@ class StudyDescriptionHandler(BaseHandler):
         except Exception as e:
             msg = ("Couldn't remove prep template: %s" % str(e))
             msg_level = "danger"
-            prep_id = tab_id
 
         callback((msg, msg_level, 'raw_data_tab', prep_id, None))
 

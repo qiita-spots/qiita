@@ -41,9 +41,9 @@
 <div class="panel panel-default">
   <div class="panel-heading">
     <h4 class="panel-title">
-      <a data-toggle="collapse" data-parent="#prep-accordion" href="#collapse{{prep_id}}">
+      <a data-parent="#prep-accordion" href="#collapse{{prep_id}}" style="pointer-events: none; cursor: default;">
         {{data_type}} (ID: {{prep_id}})
-        <button class="close" title="Remove this prep template" type="button" onclick="delete_prep_template('{{data_type}}', {{prep_id}})">&nbsp; ×</button> 
+        <button class="close" title="Remove this prep template" type="button" onclick="delete_prep_template('{{data_type}}', {{prep_id}})">&nbsp; ×</button>
       </a>
     </h4>
   </div>
