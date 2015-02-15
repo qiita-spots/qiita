@@ -25,7 +25,6 @@ def stop_cluster(profile):
         c = IPClusterStop(profile=profile, log_level=0)
         c.initialize(argv=[])
         c.start()
-        exit(0)
 
 
 def _test_wrapper_local(func):
@@ -95,7 +94,7 @@ def _test_result(test_type, name, state, result, expected, write_stderr=True):
 
     to_write.append('')
     if write_stderr:
-        stderr.write(to_write)
+        stderr.write('\n'.join(to_write))
     else:
         return to_write
 
