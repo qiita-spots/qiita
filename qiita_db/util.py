@@ -608,8 +608,8 @@ def get_mountpoint(mount_type, conn_handler=None, retrieve_all=False):
             "SELECT data_directory_id, mountpoint, subdirectory FROM "
             "qiita.data_directory WHERE data_type='%s' and active=true"
             % mount_type)]
-
-    return [(d, join(get_db_files_base_dir(), m, s)) for d, m, s in result]
+    basedir = get_db_files_base_dir()
+    return [(d, join(basedir, m, s)) for d, m, s in result]
 
 
 def insert_filepaths(filepaths, obj_id, table, filepath_table, conn_handler,
@@ -627,7 +627,7 @@ def insert_filepaths(filepaths, obj_id, table, filepath_table, conn_handler,
             Id of the object calling the functions. Disregarded if move_files
             is False
         table : str
-            Table that holds the file data. Disregarded if move_files is False
+            Table that holds the file data.
         filepath_table : str
             Table that holds the filepath information
         conn_handler : SQLConnectionHandler
