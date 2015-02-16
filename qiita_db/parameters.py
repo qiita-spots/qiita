@@ -172,6 +172,27 @@ class BaseParameters(QiitaObject):
 
         return " ".join(result)
 
+    @classmethod
+    def get_all_parameters(self):
+        r""" Generates a dictionary of all the available parameters
+
+        Returns
+        -------
+        dict
+            A dictionary of column_name: value
+        """
+        conn_handler = SQLConnectionHandler()
+
+        columns = [r[0] for r in conn_handler.execute_fetchall(
+            "SELECT column_name FROM information_schema.columns WHERE "
+            "table_name='{0}'".format(self._table))]
+
+        columns_str = ', '.join(columns)
+        result = [dict(zip(columns, v)) for v in conn_handler.execute_fetchall(
+            "SELECT {0} FROM qiita.{1}".format(columns_str, self._table))]
+
+        return result
+
 
 class PreprocessedIlluminaParams(BaseParameters):
     r"""Gives access to the preprocessed parameters of illumina data"""
