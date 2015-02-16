@@ -113,7 +113,7 @@ def _test_runner(test_type, name, func, expected):
     _test_result(test_type, name, state, result, expected)
 
 
-def test(runner):
+def environment_test(runner):
     """Test the environment
 
     * Verify redis connectivity indepedent of moi
@@ -149,7 +149,7 @@ def test(runner):
 
         def inner(a, b, **kwargs):
             return a + b
-
+        
         _, _, ar = submit_nouser(inner, 7, 35)
         state, result = _ipy_wait(ar)
         return result

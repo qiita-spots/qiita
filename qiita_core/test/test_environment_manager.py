@@ -13,7 +13,7 @@ from IPython.parallel import Client
 
 from qiita_core.environment_manager import (
     start_cluster, stop_cluster, _test_wrapper_local, _test_wrapper_remote,
-    _test_result, _test_wrapper_moi, _ipy_wait, _test_runner, test as em_test)
+    _test_result, _test_wrapper_moi, _ipy_wait, _test_runner, environment_test)
 from qiita_core.configuration_manager import ConfigurationManager
 
 
@@ -34,7 +34,7 @@ class EnvironmentManager(TestCase):
     """Tests the environment manager"""
 
     def setUp(self):
-        self.wait_time = 2
+        self.wait_time = 5
         self.config = ConfigurationManager()
 
     def test_start_and_stop_cluster(self):
@@ -118,18 +118,16 @@ class EnvironmentManager(TestCase):
                '#### OBSERVED RESULT: result', '', '']
         self.assertEqual(exp, obs)
 
-    def test__test_runner(self):
+    def test_testers(self):
+        # running the tests should be enough to test
         _test_runner('local', 'name', func_success, 4)
-        _test_runner('moi', 'name', func_success_moi, 4)
+        # _test_runner('moi', 'name', func_success_moi, 4)
         _test_runner('remote', 'name', func_success, 4)
 
         with self.assertRaises(ValueError):
             _test_runner('erorr', 'name', func_success, 4)
 
-    def test_test(self):
-        # running the test should be enough to test
-        em_test('all')
-        em_test('local')
+        # environment_test('all')
 
 if __name__ == '__main__':
     main()

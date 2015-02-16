@@ -17,7 +17,7 @@ from qiita_db.environment_manager import (
     patch as _patch)
 from qiita_core.environment_manager import (
     start_cluster as _start_cluster, stop_cluster as _stop_cluster,
-    test as _test, TEST_RUNNERS)
+    environment_test as _test, TEST_RUNNERS)
 from qiita_core.configuration_manager import ConfigurationManager
 
 
@@ -108,7 +108,7 @@ def patch():
 @env.command()
 @click.option('--runner', required=False, type=click.Choice(TEST_RUNNERS),
               default='all', help='Test runner to use')
-def test(runner):
+def environment_test(runner):
     """Test the environment
 
     Check to make sure that basic services are up and working. These include
