@@ -65,7 +65,7 @@ class SearchStudiesHandler(BaseHandler):
             topop = []
             for pos, sample in enumerate(samples):
                 if study in selsamples and sample[0] in selsamples[study]:
-                    topop.append(pos)
+                    #topop.append(pos)
                     # still add to full counts, but not study counts
                     for pos, meta in enumerate(meta_headers):
                         fullcounts[meta][sample[pos+1]] += 1
@@ -175,7 +175,9 @@ class SearchStudiesHandler(BaseHandler):
             search = QiitaStudySearch()
             query = str(self.get_argument("query"))
             try:
-                results, meta_headers = search(query, user)
+                results, meta_headers = search(query, user,
+                                               remove_selected=True,
+                                               analysis=analysis.id)
             except ParseException:
                 searchmsg = "Malformed search query, please read search help."
             except QiitaDBIncompatibleDatatypeError as e:

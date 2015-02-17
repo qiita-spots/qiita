@@ -70,6 +70,7 @@ from qiita_db.util import scrub_data, typecast_string, get_table_cols
 from qiita_db.sql_connection import SQLConnectionHandler
 from qiita_db.study import Study
 from qiita_db.exceptions import QiitaDBIncompatibleDatatypeError
+from qiita_core.exceptions import IncompetentQiitaDeveloperError
 
 
 # classes to be constructed at parse time, from intermediate ParseResults
@@ -167,7 +168,7 @@ class QiitaStudySearch(object):
     # column names from study table
     study_cols = set(get_table_cols("study"))
 
-    def __call__(self, searchstr, user):
+    def __call__(self, searchstr, user, remove_selected=False, analysis=None):
         """Runs a Study query and returns matching studies and samples
 
         Parameters
@@ -176,6 +177,11 @@ class QiitaStudySearch(object):
             Search string to use
         user : User object
             User making the search. Needed for permissions checks.
+        remove_selected : bool, optional
+            If search in on an analysis that already has selected samples,
+            remove the selected samples from the results. Default False.
+        analysis : int, optional
+            Analysis ID search is run for. Required of remove_selected is True
 
         Returns
         -------
@@ -194,7 +200,8 @@ class QiitaStudySearch(object):
         Metadata column names and string searches are case-sensitive
         """
         study_sql, sample_sql, meta_headers = \
-            self._parse_study_search_string(searchstr, True)
+            self._parse_study_search_string(searchstr, True, remove_selected,
+                                            analysis)
         conn_handler = SQLConnectionHandler()
         # get all studies containing the metadata headers requested
         study_ids = {x[0] for x in conn_handler.execute_fetchall(study_sql)}
@@ -214,7 +221,8 @@ class QiitaStudySearch(object):
         return results, meta_headers
 
     def _parse_study_search_string(self, searchstr,
-                                   only_with_processed_data=False):
+                                   only_with_processed_data=False,
+                                   remove_selected=False, analysis=None):
         """parses string into SQL query for study search
 
         Parameters
@@ -232,6 +240,11 @@ class QiitaStudySearch(object):
             SQL query for each study to get the sample ids that mach the query
         meta_headers : list
             metadata categories in the query string in alphabetical order
+        remove_selected : bool, optional
+            If search in on an analysis that already has selected samples,
+            remove the selected samples from the results. Default False.
+        analysis : int, optional
+            Analysis ID search is run for. Required of remove_selected is True
 
         Notes
         -----
@@ -241,6 +254,10 @@ class QiitaStudySearch(object):
         ----------
         .. [1] McGuire P (2007) Getting started with pyparsing.
         """
+        if remove_selected and analysis is None:
+            raise IncompetentQiitaDeveloperError(
+                "remove_selected set to True but no analysis ID given!")
+
         # build the parse grammar
         category = Word(alphas + nums + "_")
         seperator = oneOf("> < = >= <= !=") | CaselessLiteral("includes") | \
@@ -341,9 +358,18 @@ class QiitaStudySearch(object):
             else:
                 header_info.append("sa.%s" % meta)
         # build the SQL query
+        if remove_selected:
+            selected = (" LEFT JOIN qiita.analysis_sample asa ON "
+                        "(sa.sample_id = asa.sample_id AND "
+                        "asa.analysis_id = %d)" % analysis)
+            selected_filter = " AND asa.sample_id IS NULL"
+        else:
+            selected = ""
+            selected_filter = ""
         sample_sql = ("SELECT r.sample_id,%s FROM qiita.required_sample_info "
                       "r JOIN qiita.sample_{0} sa ON sa.sample_id = "
                       "r.sample_id JOIN qiita.study st ON st.study_id = "
-                      "r.study_id WHERE %s" %
-                      (','.join(header_info), sql_where))
+                      "r.study_id%s WHERE %s %s" %
+                      (','.join(header_info), selected,
+                       sql_where, selected_filter))
         return study_sql, sample_sql, meta_header_type_lookup.keys()
