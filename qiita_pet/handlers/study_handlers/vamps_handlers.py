@@ -44,29 +44,24 @@ class VAMPSHandler(BaseHandler):
         demux = [path for _, path, ftype in preprocessed_data.get_filepaths()
                  if ftype == 'preprocessed_demux']
         demux_length = len(demux)
-        display_body = True
 
         if not demux_length:
             msg = ("Study does not appear to have demultiplexed "
                    "sequences associated")
             msg_level = 'danger'
-            display_body = False
         elif demux_length > 1:
             msg = ("Study appears to have multiple demultiplexed files!")
             msg_level = 'danger'
-            display_body = False
         elif demux_length == 1:
             demux_file = demux[0]
             demux_file_stats = demux_stats(demux_file)
             stats.append(('Number of sequences', demux_file_stats.n))
             msg_level = 'success'
-            display_body = False
 
         self.render('vamps_submission.html',
                     study_title=study.title, stats=stats, message=msg,
                     study_id=study.id, level=msg_level,
-                    preprocessed_data_id=preprocessed_data_id,
-                    display_body=display_body)
+                    preprocessed_data_id=preprocessed_data_id)
 
     @authenticated
     def get(self, preprocessed_data_id):

@@ -11,7 +11,7 @@
             and prep templates which will be submitted to EBI.
         </div>
 
-        {% if display_body %}
+        {% if level != 'danger' and maintenance is None %}
             <table class="table">
             {% for category, summary in stats %}
                 <tr>
@@ -27,7 +27,7 @@
     The investigation type is: <b>{{investigation_type}}</b>
     <br/><br/>
     {% if investigation_type %}
-      {% if display_body %}
+      {% if level != 'danger' and maintenance is None %}
         <br/>
         What kind of submission do you want to do?
         <select name="submission_type">

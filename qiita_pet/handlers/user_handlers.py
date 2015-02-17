@@ -115,21 +115,19 @@ class ChangeForgotPasswordHandler(BaseHandler):
     """Displays change password page and handles password reset"""
     def get(self, code):
             self.render("change_lost_pass.html", user=None, message="",
-                        level="", code=code, display_body=True)
+                        level="", code=code)
 
     def post(self, code):
         message = ""
         level = ""
         page = "change_lost_pass.html"
         user = None
-        display_body = True
 
         try:
             user = User(self.get_argument("email"))
         except QiitaDBUnknownIDError:
             message = "Unable to reset password"
             level = "danger"
-            display_body = False
         else:
             newpass = self.get_argument("newpass")
             changed = user.change_forgot_password(code, newpass)
@@ -144,7 +142,5 @@ class ChangeForgotPasswordHandler(BaseHandler):
                            "is incorrect or your reset window has timed out.")
 
                 level = "danger"
-                display_body = True
 
-        self.render(page, message=message, level=level, code=code,
-                    display_body=display_body)
+        self.render(page, message=message, level=level, code=code)
