@@ -372,54 +372,60 @@ class DBUtilTests(TestCase):
         exp = [[1, exp_new_id]]
         self.assertEqual(obs, exp)
 
+    def _common_purge_filpeaths_test(self):
+        # Get all the filepaths so we can test if they've been removed or not
+        sql_fp = "SELECT filepath, data_directory_id FROM qiita.filepath"
+        fps = [join(get_mountpoint_path(dd_id), fp) for fp, dd_id in
+               self.conn_handler.execute_fetchall(sql_fp)]
+
+        # Make sure that the files exist - specially for travis
+        for fp in fps:
+            if not exists(fp):
+                with open(fp, 'w') as f:
+                    f.write('\n')
+                self.files_to_remove.append(fp)
+
+        _, raw_data_mp = get_mountpoint('raw_data')[0]
+
+        removed_fps = [
+            join(raw_data_mp, '2_sequences_barcodes.fastq.gz'),
+            join(raw_data_mp, '2_sequences.fastq.gz')]
+
+        fps = set(fps).difference(removed_fps)
+
+        # Check that the files exist
+        for fp in fps:
+            self.assertTrue(exists(fp))
+        for fp in removed_fps:
+            self.assertTrue(exists(fp))
+
+        exp_count = get_count("qiita.filepath") - 2
+
+        purge_filepaths(self.conn_handler)
+
+        obs_count = get_count("qiita.filepath")
+
+        # Check that only 2 rows have been removed
+        self.assertEqual(obs_count, exp_count)
+
+        # Check that the 2 rows that have been removed are the correct ones
+        sql = """SELECT EXISTS(
+                    SELECT * FROM qiita.filepath WHERE filepath_id = %s)"""
+        obs = self.conn_handler.execute_fetchone(sql, (3,))[0]
+        self.assertFalse(obs)
+        obs = self.conn_handler.execute_fetchone(sql, (4,))[0]
+        self.assertFalse(obs)
+
+        # Check that the files have been successfully removed
+        for fp in removed_fps:
+            self.assertFalse(exists(fp))
+
+        # Check that all the other files still exist
+        for fp in fps:
+            self.assertTrue(exists(fp))
+
     def test_purge_filepaths(self):
-        # Add a new filepath to the database
-        fd, fp = mkstemp()
-        close(fd)
-        exp_id = get_count('qiita.filepath') + 1
-        fp_id = insert_filepaths([(fp, 1)], None, "raw_data", "filepath",
-                                 self.conn_handler, move_files=False)[0]
-        self.assertEqual(fp_id, exp_id)
-
-        # Connect the just added filepath to a raw data
-        self.conn_handler.execute(
-            "INSERT INTO qiita.raw_filepath (raw_data_id, filepath_id) VALUES"
-            "(%s, %s)", (1, exp_id))
-
-        # Get the filepaths so we can test if they've been removed or not
-        sql_fp = "SELECT filepath FROM qiita.filepath WHERE filepath_id=%s"
-        fp1 = self.conn_handler.execute_fetchone(sql_fp, (1,))[0]
-        fp1 = join(get_db_files_base_dir(), fp1)
-
-        # Make sure that the file exists - specially for travis
-        with open(fp1, 'w') as f:
-            f.write('\n')
-
-        fp_exp_id = self.conn_handler.execute_fetchone(sql_fp, (exp_id,))[0]
-        fp_exp_id = join(get_db_files_base_dir(), fp_exp_id)
-
-        purge_filepaths(self.conn_handler)
-
-        # Check that the files still exist
-        self.assertTrue(exists(fp1))
-        self.assertTrue(exists(fp_exp_id))
-
-        # Unlink the filepath from the raw data
-        self.conn_handler.execute(
-            "DELETE FROM qiita.raw_filepath WHERE filepath_id=%s", (exp_id,))
-
-        # Only filepath 16 should be removed
-        sql = ("SELECT filepath_id FROM qiita.filepath ORDER BY "
-               "filepath_id")
-        exp_ids = flatten(self.conn_handler.execute_fetchall(sql))
-        exp_ids.pop()
-        purge_filepaths(self.conn_handler)
-        obs_ids = flatten(self.conn_handler.execute_fetchall(sql))
-        self.assertEqual(obs_ids, exp_ids)
-
-        # Check that only the file for the removed filepath has been removed
-        self.assertTrue(exists(fp1))
-        self.assertFalse(exists(fp_exp_id))
+        self._common_purge_filpeaths_test()
 
     def test_purge_filepaths_null_cols(self):
         # For more details about the source of the issue that motivates this
@@ -431,68 +437,8 @@ class DBUtilTests(TestCase):
         close(fd)
         ref = Reference.create("null_db", "13_2", seqs_fp)
         self.files_to_remove.append(ref.sequence_fp)
-        # Add a new filepath to the database
-        fd, fp = mkstemp()
-        close(fd)
-        exp_id = get_count('qiita.filepath') + 1
-        fp_id = insert_filepaths([(fp, 1)], None, "raw_data", "filepath",
-                                 self.conn_handler, move_files=False)[0]
-        self.assertEqual(fp_id, exp_id)
 
-        # Link the just added filepath to a raw data
-        self.conn_handler.execute(
-            "INSERT INTO qiita.raw_filepath (raw_data_id, filepath_id) VALUES"
-            "(%s, %s)", (1, exp_id))
-
-        # Get all the filepaths so we can test if they've been removed or not
-        sql_fp = """SELECT filepath, mountpoint, subdirectory
-                    FROM qiita.filepath fp JOIN qiita.data_directory dd
-                        ON fp.data_directory_id=dd.data_directory_id"""
-
-        db_dir = get_db_files_base_dir()
-        fps = [join(db_dir, m, s, fp) for fp, m, s in
-               self.conn_handler.execute_fetchall(sql_fp)]
-
-        # Make sure that the file exists - specially for travis
-        for fp in fps:
-            if not exists(fp):
-                with open(fp, 'w') as f:
-                    f.write('\n')
-                self.files_to_remove.append(fp)
-
-        fp_exp_id = self.conn_handler.execute_fetchone(sql_fp, (exp_id,))[0]
-        fp_exp_id = join(get_db_files_base_dir(), fp_exp_id)
-
-        purge_filepaths(self.conn_handler)
-
-        fps2 = [join(db_dir, m, s, fp) for fp, m, s in
-                self.conn_handler.execute_fetchall(sql_fp)]
-
-        print set(fps).difference(fps2)
-        print set(fps2).difference(fps)
-
-        # Check that the files still exist
-        for fp in fps:
-            self.assertTrue(exists(fp))
-        self.assertTrue(exists(fp_exp_id))
-
-        # # Unlink the filepath from the raw data
-        # self.conn_handler.execute(
-        #     "DELETE FROM qiita.raw_filepath WHERE filepath_id=%s", (exp_id,))
-
-        # # Only filepath 16 should be removed
-        # sql = ("SELECT filepath_id FROM qiita.filepath ORDER BY "
-        #        "filepath_id")
-        # exp_ids = flatten(self.conn_handler.execute_fetchall(sql))
-        # exp_ids.pop()
-        # purge_filepaths(self.conn_handler)
-        # obs_ids = flatten(self.conn_handler.execute_fetchall(sql))
-        # self.assertEqual(obs_ids, exp_ids)
-
-        # Check that only the file for the removed filepath has been removed
-        # for fp in fps:
-        #     self.assertTrue(exists(fp))
-        # self.assertFalse(exists(fp_exp_id))
+        self._common_purge_filpeaths_test()
 
     def test_move_filepaths_to_upload_folder(self):
         # setting up test, done here as this is the only test that uses these

@@ -742,18 +742,18 @@ def purge_filepaths(conn_handler=None):
     # Get all the filepaths from the filepath table that are not
     # referenced from any place in the database
     fps = conn_handler.execute_fetchall(
-        """SELECT filepath_id, filepath, filepath_type FROM qiita.filepath
-        FP JOIN qiita.filepath_type FPT ON
-        FP.filepath_type_id = FPT.filepath_type_id
+        """SELECT filepath_id, filepath, filepath_type, data_directory_id
+        FROM qiita.filepath FP JOIN qiita.filepath_type FPT
+            ON FP.filepath_type_id = FPT.filepath_type_id
         WHERE filepath_id NOT IN (%s)""" % union_str)
 
     # We can now go over and remove all the filepaths
-    for fp_id, fp, fp_type in fps:
+    for fp_id, fp, fp_type, dd_id in fps:
         conn_handler.execute("DELETE FROM qiita.filepath WHERE filepath_id=%s",
                              (fp_id,))
 
         # Remove the data
-        fp = join(get_db_files_base_dir(), fp)
+        fp = join(get_mountpoint_path(dd_id), fp)
         if exists(fp):
             if fp_type is 'directory':
                 rmtree(fp)
