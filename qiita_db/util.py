@@ -612,6 +612,28 @@ def get_mountpoint(mount_type, conn_handler=None, retrieve_all=False):
     return [(d, join(basedir, m, s)) for d, m, s in result]
 
 
+def get_mountpoint_path(mount_id, conn_handler=None):
+    r""" Returns the mountpoint path for the mountpoint with id = mount_id
+
+    Parameters
+    ----------
+    mount_id : int
+        The mountpoint id
+    conn_handler : SQLConnectionHandler
+        The connection handler object connected to the DB
+
+    Returns
+    -------
+    str
+        The mountpoint path
+    """
+    conn_handler = conn_handler if conn_handler else SQLConnectionHandler()
+    mountpoint, subdirectory = conn_handler.execute_fetchone(
+        """SELECT mountpoint, subdirectory FROM qiita.data_directory
+           WHERE data_directory_id=%s""", (mount_id,))
+    return join(get_db_files_base_dir(), mountpoint, subdirectory)
+
+
 def insert_filepaths(filepaths, obj_id, table, filepath_table, conn_handler,
                      move_files=True, queue=None):
         r"""Inserts `filepaths` in the DB connected with `conn_handler`. Since
