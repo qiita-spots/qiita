@@ -70,18 +70,24 @@ class BaseParameters(QiitaObject):
 
     @classmethod
     def iter(cls):
-        """Iterates over all parameters
+        r"""Iterates over available parameters
 
         Returns
         -------
         generator
-            Yields a parameter instance
+            Yields a dict for each parameter set with each parameter as
+            column_name: value
         """
         conn_handler = SQLConnectionHandler()
-        sql = "SELECT {0} FROM qiita.{1}".format(cls._column_id, cls._table)
 
+        columns = flatten(conn_handler.execute_fetchall(
+            "SELECT column_name FROM information_schema.columns WHERE "
+            "table_name='{0}' and table_schema='qiita'".format(cls._table)))
+
+        columns_str = ', '.join(columns)
+        sql = "SELECT {0} FROM qiita.{1}".format(columns_str, cls._table)
         for result in conn_handler.execute_fetchall(sql):
-            yield cls(result[0])
+            yield dict(zip(columns, result))
 
     @property
     def name(self):
@@ -173,27 +179,6 @@ class BaseParameters(QiitaObject):
                 result.append("--%s %s" % (p_name, values[p_name]))
 
         return " ".join(result)
-
-    @classmethod
-    def iter(cls):
-        r"""Iterates over available parameters
-
-        Returns
-        -------
-        generator
-            Yields a dict for each parameter set with each parameter as
-            column_name: value
-        """
-        conn_handler = SQLConnectionHandler()
-
-        columns = flatten(conn_handler.execute_fetchall(
-            "SELECT column_name FROM information_schema.columns WHERE "
-            "table_name='{0}' and table_schema='qiita'".format(cls._table)))
-
-        columns_str = ', '.join(columns)
-        sql = "SELECT {0} FROM qiita.{1}".format(columns_str, cls._table)
-        for result in conn_handler.execute_fetchall(sql):
-            yield dict(zip(columns, result))
 
 
 class PreprocessedIlluminaParams(BaseParameters):

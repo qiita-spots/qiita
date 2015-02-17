@@ -10,7 +10,6 @@ from operator import itemgetter
 from os.path import basename
 
 from future.utils import viewitems
-from wtforms import Form, BooleanField, SelectField
 
 from qiita_db.util import (get_filetypes, get_files_from_uploads_folders,
                            get_data_types, convert_to_id, get_filepath_types)
@@ -175,9 +174,9 @@ class PrepTemplatePanel(BaseUIModule):
         preprocessing_status = prep.preprocessing_status
 
         if raw_data.filetype in ('SFF', 'FASTA'):
-            all_params = Preprocessed454Params.get_all_parameters()
+            all_params = Preprocessed454Params.iter()
         elif raw_data.filetype == 'FASTQ':
-            all_params = PreprocessIlluminaParametersForm.get_all_parameters()
+            all_params = PreprocessedIlluminaParams.iter()
         else:
             raise ValueError("Don't know what to do but this exception will "
                              "never actually get shown anywhere because why "

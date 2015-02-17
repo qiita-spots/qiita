@@ -116,13 +116,6 @@ class PreprocessedIlluminaParamsTests(TestCase):
                "--phred_quality_threshold 3 --sequence_max_n 0")
         self.assertEqual(obs, exp)
 
-    def test_iter(self):
-        obs = list(PreprocessedIlluminaParams.iter())
-        exp = [PreprocessedIlluminaParams(1)]
-
-        for o, e in zip(obs, exp):
-            self.assertEqual(o.id, e.id)
-
     def test_name(self):
         obs = PreprocessedIlluminaParams(1).name
         self.assertEqual(obs, "Defaults")
