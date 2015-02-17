@@ -137,8 +137,8 @@ class PreprocessedIlluminaParamsTests(TestCase):
                'barcode_type': 'golay_12'}
         self.assertEqual(obs, exp)
 
-    def test_get_all_parameters(self):
-        obs = PreprocessedIlluminaParams.get_all_parameters()
+    def test_iter(self):
+        obs = list(PreprocessedIlluminaParams.iter())
         exp = [{'max_barcode_errors': 1.5, 'barcode_type': 'golay_12',
                 'max_bad_run_length': 3, 'preprocessed_params_id': 1L,
                 'rev_comp': False, 'phred_quality_threshold': 3,
@@ -201,8 +201,8 @@ class ProcessedSortmernaParamsTests(TestCase):
 
         self.assertEqual(obs, EXP_SMR_PARAMS_FILE)
 
-    def test_get_all_parameters(self):
-        obs = ProcessedSortmernaParams.get_all_parameters()
+    def test_iter(self):
+        obs = list(ProcessedSortmernaParams.iter())
         exp = [{'similarity': 0.97, 'sortmerna_e_value': 1.0,
                 'sortmerna_max_pos': 10000, 'processed_params_id': 1L,
                 'reference_id': 1L, 'threads': 1, 'sortmerna_coverage': 0.97,

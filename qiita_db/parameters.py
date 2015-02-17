@@ -7,6 +7,8 @@
 # -----------------------------------------------------------------------------
 from __future__ import division
 
+from skbio.util import flatten
+
 from .base import QiitaObject
 from .sql_connection import SQLConnectionHandler
 from .util import get_table_cols_w_type, get_table_cols
@@ -173,25 +175,25 @@ class BaseParameters(QiitaObject):
         return " ".join(result)
 
     @classmethod
-    def get_all_parameters(self):
-        r""" Generates a dictionary of all the available parameters
+    def iter(cls):
+        r"""Iterates over available parameters
 
         Returns
         -------
-        dict
-            A dictionary of column_name: value
+        generator
+            Yields a dict for each parameter set with each parameter as
+            column_name: value
         """
         conn_handler = SQLConnectionHandler()
 
-        columns = [r[0] for r in conn_handler.execute_fetchall(
+        columns = flatten(conn_handler.execute_fetchall(
             "SELECT column_name FROM information_schema.columns WHERE "
-            "table_name='{0}'".format(self._table))]
+            "table_name='{0}' and table_schema='qiita'".format(cls._table)))
 
         columns_str = ', '.join(columns)
-        result = [dict(zip(columns, v)) for v in conn_handler.execute_fetchall(
-            "SELECT {0} FROM qiita.{1}".format(columns_str, self._table))]
-
-        return result
+        sql = "SELECT {0} FROM qiita.{1}".format(columns_str, cls._table)
+        for result in conn_handler.execute_fetchall(sql):
+            yield dict(zip(columns, result))
 
 
 class PreprocessedIlluminaParams(BaseParameters):

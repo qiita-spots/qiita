@@ -383,8 +383,8 @@ function unlink_all_files(raw_data_id) {
 }
 
 function submit_preprocess() {
-  if ($("#preprocessing_parameters").children(":selected").attr("value") == 0) {
-    $("#display-extra-info").html('You need to select a valid preprocessing paramter to continue');
+  if ($("#preprocessing_parameters").children(":selected").attr("value") === 0) {
+    $("#display-extra-info").html('You need to select a valid preprocessing parameter to continue');
     return false;
   }
   return true;
