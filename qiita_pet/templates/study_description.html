@@ -383,10 +383,11 @@ function unlink_all_files(raw_data_id) {
 }
 
 function submit_preprocess() {
-  if (confirm("Are you sure you want to submit a preprocessing job?")){
-    return true;
+  if ($("#preprocessing_parameters").children(":selected").attr("value") === 0) {
+    $("#display-extra-info").html('You need to select a valid preprocessing parameter to continue');
+    return false;
   }
-  return  false;
+  return true;
 };
 
 function submit_process() {
@@ -419,6 +420,11 @@ $(document).ready(function() {
                      , "{{prep_tab}}"
                     {% end %}
                   {% end %})
+
+      $("#preprocessing_parameters").change(function() {
+        text = $(this).children(":selected").attr("extra-info");
+        $('#display-extra-info').html(text)
+      });
 });
 
 </script>

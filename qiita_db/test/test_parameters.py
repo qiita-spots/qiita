@@ -116,13 +116,6 @@ class PreprocessedIlluminaParamsTests(TestCase):
                "--phred_quality_threshold 3 --sequence_max_n 0")
         self.assertEqual(obs, exp)
 
-    def test_iter(self):
-        obs = list(PreprocessedIlluminaParams.iter())
-        exp = [PreprocessedIlluminaParams(1)]
-
-        for o, e in zip(obs, exp):
-            self.assertEqual(o.id, e.id)
-
     def test_name(self):
         obs = PreprocessedIlluminaParams(1).name
         self.assertEqual(obs, "Defaults")
@@ -135,6 +128,49 @@ class PreprocessedIlluminaParamsTests(TestCase):
                'rev_comp_mapping_barcodes': False,
                'min_per_read_length_fraction': 0.75,
                'barcode_type': 'golay_12'}
+        self.assertEqual(obs, exp)
+
+    def test_iter(self):
+        obs = list(PreprocessedIlluminaParams.iter())
+        exp = [{'max_barcode_errors': 1.5, 'barcode_type': 'golay_12',
+                'max_bad_run_length': 3, 'preprocessed_params_id': 1L,
+                'rev_comp': False, 'phred_quality_threshold': 3,
+                'rev_comp_barcode': False, 'rev_comp_mapping_barcodes': False,
+                'param_set_name': 'Defaults',
+                'min_per_read_length_fraction': 0.75, 'sequence_max_n': 0},
+               {'max_barcode_errors': 1.5, 'barcode_type': 'golay_12',
+                'max_bad_run_length': 3, 'preprocessed_params_id': 2L,
+                'rev_comp': False, 'phred_quality_threshold': 3,
+                'rev_comp_barcode': False, 'rev_comp_mapping_barcodes': True,
+                'param_set_name': ('Defaults with reverse complement mapping '
+                                   'file barcodes'),
+                'min_per_read_length_fraction': 0.75, 'sequence_max_n': 0},
+               {'max_barcode_errors': 1.5, 'barcode_type': '8',
+                'max_bad_run_length': 3, 'preprocessed_params_id': 3L,
+                'rev_comp': False, 'phred_quality_threshold': 3,
+                'rev_comp_barcode': False, 'rev_comp_mapping_barcodes': False,
+                'param_set_name': 'barcode_type 8, defaults',
+                'min_per_read_length_fraction': 0.75, 'sequence_max_n': 0},
+               {'max_barcode_errors': 1.5, 'barcode_type': '8',
+                'max_bad_run_length': 3, 'preprocessed_params_id': 4L,
+                'rev_comp': False, 'phred_quality_threshold': 3,
+                'rev_comp_barcode': False, 'rev_comp_mapping_barcodes': True,
+                'param_set_name': ('barcode_type 8, reverse complement '
+                                   'mapping file barcodes'),
+                'min_per_read_length_fraction': 0.75, 'sequence_max_n': 0},
+               {'max_barcode_errors': 1.5, 'barcode_type': '6',
+                'max_bad_run_length': 3, 'preprocessed_params_id': 5L,
+                'rev_comp': False, 'phred_quality_threshold': 3,
+                'rev_comp_barcode': False, 'rev_comp_mapping_barcodes': False,
+                'param_set_name': 'barcode_type 6, defaults',
+                'min_per_read_length_fraction': 0.75, 'sequence_max_n': 0},
+               {'max_barcode_errors': 1.5, 'barcode_type': '6',
+                'max_bad_run_length': 3, 'preprocessed_params_id': 6L,
+                'rev_comp': False, 'phred_quality_threshold': 3,
+                'rev_comp_barcode': False, 'rev_comp_mapping_barcodes': True,
+                'param_set_name': ('barcode_type 6, reverse complement '
+                                   'mapping file barcodes'),
+                'min_per_read_length_fraction': 0.75, 'sequence_max_n': 0}]
         self.assertEqual(obs, exp)
 
 
@@ -157,6 +193,14 @@ class ProcessedSortmernaParamsTests(TestCase):
             obs = f.read()
 
         self.assertEqual(obs, EXP_SMR_PARAMS_FILE)
+
+    def test_iter(self):
+        obs = list(ProcessedSortmernaParams.iter())
+        exp = [{'similarity': 0.97, 'sortmerna_e_value': 1.0,
+                'sortmerna_max_pos': 10000, 'processed_params_id': 1L,
+                'reference_id': 1L, 'threads': 1, 'sortmerna_coverage': 0.97,
+                'param_set_name': 'Default'}]
+        self.assertEqual(obs, exp)
 
 EXP_SMR_PARAMS_FILE = """pick_otus:otu_picking_method\tsortmerna
 pick_otus:similarity\t0.97

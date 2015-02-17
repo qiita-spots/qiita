@@ -7,6 +7,8 @@
 # -----------------------------------------------------------------------------
 from __future__ import division
 
+from skbio.util import flatten
+
 from .base import QiitaObject
 from .sql_connection import SQLConnectionHandler
 from .util import get_table_cols_w_type, get_table_cols
@@ -68,18 +70,24 @@ class BaseParameters(QiitaObject):
 
     @classmethod
     def iter(cls):
-        """Iterates over all parameters
+        r"""Iterates over available parameters
 
         Returns
         -------
         generator
-            Yields a parameter instance
+            Yields a dict for each parameter set with each parameter as
+            column_name: value
         """
         conn_handler = SQLConnectionHandler()
-        sql = "SELECT {0} FROM qiita.{1}".format(cls._column_id, cls._table)
 
+        columns = flatten(conn_handler.execute_fetchall(
+            "SELECT column_name FROM information_schema.columns WHERE "
+            "table_name='{0}' and table_schema='qiita'".format(cls._table)))
+
+        columns_str = ', '.join(columns)
+        sql = "SELECT {0} FROM qiita.{1}".format(columns_str, cls._table)
         for result in conn_handler.execute_fetchall(sql):
-            yield cls(result[0])
+            yield dict(zip(columns, result))
 
     @property
     def name(self):

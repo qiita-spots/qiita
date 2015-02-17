@@ -14,18 +14,25 @@
           <div>
             <div class="form-group">
               <table>
-                {% for idx, form_item in enumerate(preprocess_form, start=1) %}
-                  <tr>
-                    <td width="50%">{% raw form_item.label %}</td>
-                    <td width="50%">{% raw form_item(tabindex=idx, class_='form-control') %}</td>
-                  </tr>
-                {% end %}
                 <tr>
+                  <td>
+                    <select id="preprocessing_parameters" name="preprocessing_parameters_id" class="form-control">
+                      <option value="0" extra-info="">Select an option ...</option>
+                      {% for idx, name, text in preprocess_options %}
+                        <option value="{{idx}}" extra-info="{% raw text %}">{{name}}</option>
+                      {% end %}
+                    </select>
+                  </td>
+                  <td>&nbsp; &nbsp;</td>
                   <td>
                     <input type='submit' id='start_preprocess_submit' class='btn btn-success' value="Start preprocessing">
                     <input type='hidden' name='study_id' value="{{study_id}}">
                     <input type='hidden' name='prep_template_id' value="{{prep_id}}">
                   </td>
+                </tr>
+                <tr><td>&nbsp;</td></tr>
+                <tr>
+                  <td id="display-extra-info" colspan="2"></td>
                 </tr>
               </table>
             </div>
