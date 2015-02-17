@@ -17,7 +17,6 @@ Classes
 # -----------------------------------------------------------------------------
 from __future__ import division
 from collections import defaultdict
-from binascii import crc32
 from os.path import join
 
 from future.utils import viewitems
@@ -31,7 +30,7 @@ from .data import ProcessedData, RawData
 from .study import Study
 from .exceptions import QiitaDBStatusError  # QiitaDBNotImplementedError
 from .util import (convert_to_id, get_work_base_dir,
-                   get_mountpoint, get_table_cols)
+                   get_mountpoint, get_table_cols, insert_filepaths)
 
 
 class Analysis(QiitaStatusObject):
@@ -738,24 +737,11 @@ class Analysis(QiitaStatusObject):
         conn_handler = conn_handler if conn_handler is not None \
             else SQLConnectionHandler()
 
-        # get required bookkeeping data for DB
-        _, base_fp = get_mountpoint(self._table, conn_handler=conn_handler)[0]
-        fptypeid = convert_to_id(filetype, "filepath_type", conn_handler)
-        fullpath = join(base_fp, filename)
-        with open(fullpath, 'rb') as f:
-            checksum = crc32(f.read()) & 0xffffffff
-
-        analysis_dd_id, _ = get_mountpoint("analysis",
-                                           conn_handler=conn_handler)[0]
-
-        # add  file to analysis
-        sql = ("INSERT INTO qiita.filepath (filepath, filepath_type_id, "
-               "checksum, checksum_algorithm_id, data_directory_id) VALUES "
-               "(%s, %s, %s, %s, %s) RETURNING filepath_id")
-        # magic number 1 is for crc32 checksum algorithm
-        fpid = conn_handler.execute_fetchone(sql, (fullpath, fptypeid,
-                                                   checksum, 1,
-                                                   analysis_dd_id))[0]
+        filetype_id = convert_to_id(filetype, 'filepath_type', conn_handler)
+        _, mp = get_mountpoint('analysis', conn_handler)[0]
+        fpid = insert_filepaths([
+            (join(mp, filename), filetype_id)], -1, 'analysis', 'filepath',
+            conn_handler, move_files=False)[0]
 
         col = ""
         dtid = ""
