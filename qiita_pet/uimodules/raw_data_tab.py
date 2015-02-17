@@ -18,6 +18,8 @@ from qiita_db.study import Study
 from qiita_db.data import RawData
 from qiita_db.ontology import Ontology
 from qiita_db.metadata_template import PrepTemplate
+from qiita_db.parameters import (Preprocessed454Params,
+                                 PreprocessedIlluminaParams)
 from .base_uimodule import BaseUIModule
 
 
@@ -37,45 +39,6 @@ def get_raw_data_from_other_studies(user, study):
 def get_raw_data(rdis):
     """Get all raw data objects from a list of raw_data_ids"""
     return [RawData(rdi) for rdi in rdis]
-
-
-class PreprocessIlluminaParametersForm(Form):
-    r"""WTForm for introducing the preprocessing parameters
-
-    Allows editing the split_libraries_fastq.py parameters
-
-    Attributes
-    ----------
-    rev_comp_mapping_barcodes
-    barcode_type
-
-    See Also
-    --------
-    wtforms.Form
-    """
-    rev_comp_mapping_barcodes = BooleanField("rev_comp_mapping_barcodes")
-    barcode_type = SelectField("barcode_type",
-                               choices=[('golay_12', 'golay_12'),
-                                        ('6', '6'),
-                                        ('8', '8')])
-
-
-class Preprocess454ParametersForm(Form):
-    r"""WTForm for introducing the preprocessing parameters
-
-    Allows editing the split_libraries.py parameters
-
-    Attributes
-    ----------
-    barcode_type
-
-    See Also
-    --------
-    wtforms.Form
-    """
-    barcode_type = SelectField("barcode_type",
-                               choices=[('golay_12', 'golay_12'),
-                                        ('hamming_8', 'hamming_8')])
 
 
 class RawDataTab(BaseUIModule):
@@ -212,13 +175,25 @@ class PrepTemplatePanel(BaseUIModule):
         preprocessing_status = prep.preprocessing_status
 
         if raw_data.filetype in ('SFF', 'FASTA'):
-            preprocess_form = Preprocess454ParametersForm()
+            all_params = Preprocessed454Params.get_all_parameters()
         elif raw_data.filetype == 'FASTQ':
-            preprocess_form = PreprocessIlluminaParametersForm()
+            all_params = PreprocessIlluminaParametersForm.get_all_parameters()
         else:
             raise ValueError("Don't know what to do but this exception will "
                              "never actually get shown anywhere because why "
                              "would you want to see tracebacks?")
+
+        preprocess_options = []
+        for param in all_params:
+            text = []
+            for k, v in viewitems(param):
+                if k in ('preprocessed_params_id', 'param_set_name'):
+                    continue
+                text.append("<b>%s:</b> %s" % (k, v))
+
+            text = '<br>'.join(text)
+            preprocess_options.append((param['preprocessed_params_id'],
+                                       param['param_set_name'], text))
 
         # Unfortunately, both the prep template and the qiime mapping files
         # have the sample type. The way to differentiate them is if we have
@@ -241,7 +216,7 @@ class PrepTemplatePanel(BaseUIModule):
             ena_terms=ena_terms,
             study_status=study_status,
             user_defined_terms=user_defined_terms,
-            preprocess_form=preprocess_form)
+            preprocess_options=preprocess_options)
 
 
 class EditInvestigationType(BaseUIModule):
