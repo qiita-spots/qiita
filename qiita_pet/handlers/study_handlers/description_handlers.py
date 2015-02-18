@@ -77,7 +77,7 @@ def _to_int(value):
 
 class StudyDescriptionHandler(BaseHandler):
 
-    def _get_sudy_and_check_access(self, study_id):
+    def _get_study_and_check_access(self, study_id):
         """Checks if the current user has access to the study
 
         First tries to instantiate the study object. Then it checks if the
@@ -644,7 +644,7 @@ class StudyDescriptionHandler(BaseHandler):
 
     @authenticated
     def get(self, study_id):
-        study, user = self._get_sudy_and_check_access(study_id)
+        study, user = self._get_study_and_check_access(study_id)
 
         top_tab = self.get_argument('top_tab', 'study_information_tab')
         sub_tab = self.get_argument('sub_tab', None)
@@ -656,7 +656,7 @@ class StudyDescriptionHandler(BaseHandler):
     @authenticated
     @coroutine
     def post(self, study_id):
-        study, user = self._get_sudy_and_check_access(study_id)
+        study, user = self._get_study_and_check_access(study_id)
 
         # Define a dictionary with all the supported actions
         actions = defaultdict(

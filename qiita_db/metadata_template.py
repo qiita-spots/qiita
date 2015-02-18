@@ -1191,9 +1191,8 @@ class SampleTemplate(MetadataTemplate):
         ----------
         md_template : DataFrame
             The metadata template file contents indexed by samples Ids
-        study : Study or RawData
-            The study to which the metadata template belongs to. Study in case
-            of SampleTemplate and RawData in case of PrepTemplate
+        study : Study
+            The study to which the sample template belongs to.
         """
         cls._check_subclass()
 
