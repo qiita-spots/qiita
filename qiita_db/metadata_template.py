@@ -1218,6 +1218,8 @@ class SampleTemplate(MetadataTemplate):
         missing = cls._check_special_columns(md_template, study)
 
         conn_handler = SQLConnectionHandler()
+        queue_name = "CREATE_SAMPLE_TEMPLATE_%d" % study.id
+        conn_handler.create_queue(queue_name)
 
         # Get some useful information from the metadata template
         sample_ids = md_template.index.tolist()
@@ -1246,12 +1248,13 @@ class SampleTemplate(MetadataTemplate):
         values.insert(0, sample_ids)
         values.insert(0, [study.id] * num_samples)
         values = [v for v in zip(*values)]
-        conn_handler.executemany(
+        conn_handler.add_to_queue(
+            queue_name,
             "INSERT INTO qiita.{0} ({1}, sample_id, {2}) "
             "VALUES (%s, %s, {3})".format(cls._table, cls._id_column,
                                           ', '.join(db_cols),
                                           ', '.join(['%s'] * len(db_cols))),
-            values)
+            values, many=True)
 
         # Insert rows on *_columns table
         headers = list(set(headers).difference(db_cols))
@@ -1262,16 +1265,18 @@ class SampleTemplate(MetadataTemplate):
         # to create the list of tuples that psycopg2 requires.
         values = [
             v for v in zip([study.id] * len(headers), headers, datatypes)]
-        conn_handler.executemany(
+        conn_handler.add_to_queue(
+            queue_name,
             "INSERT INTO qiita.{0} ({1}, column_name, column_type) "
             "VALUES (%s, %s, %s)".format(cls._column_table, cls._id_column),
-            values)
+            values, many=True)
 
         # Create table with custom columns
         table_name = cls._table_name(study.id)
         column_datatype = ["%s %s" % (col, dtype)
                            for col, dtype in zip(headers, datatypes)]
-        conn_handler.execute(
+        conn_handler.add_to_queue(
+            queue_name,
             "CREATE TABLE qiita.{0} (sample_id varchar, {1})".format(
                 table_name, ', '.join(column_datatype)))
 
@@ -1279,11 +1284,13 @@ class SampleTemplate(MetadataTemplate):
         values = _as_python_types(md_template, headers)
         values.insert(0, sample_ids)
         values = [v for v in zip(*values)]
-        conn_handler.executemany(
+        conn_handler.add_to_queue(
+            queue_name,
             "INSERT INTO qiita.{0} (sample_id, {1}) "
             "VALUES (%s, {2})".format(table_name, ", ".join(headers),
                                       ', '.join(["%s"] * len(headers))),
-            values)
+            values, many=True)
+        conn_handler.execute_queue(queue_name)
 
         # figuring out the filepath of the backup
         _id, fp = get_mountpoint('templates')[0]
