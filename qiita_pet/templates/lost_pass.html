@@ -3,36 +3,28 @@
 <script type="text/javascript" src="/static/vendor/js/jquery.validate.min.js"></script>
 <script type="text/javascript">
 // http://www.9lessons.info/2012/04/bootstrap-registration-form-tutorial.html
-$(document).ready(function()
-{
-// Popover
-$('#lost_pass input').hover(function()
-{
-$(this).popover('show')
-});
+$(document).ready(function() {
+  // Popover
+  $('#lost_pass input').hover(function() {
+    $(this).popover('show')
+  });
 
-// Validation
-$("#lost_pass").validate({
-rules:{
-email:{required:true,email:true}
-},
+  // Validation
+  $("#lost_pass").validate({
+      rules:{ email:{ required:true, email:true } },
+      messages: { email:"Enter valid email address" }
+    },
 
-messages:{
-email:"Enter valid email address"}
-},
-
-errorClass: "help-inline",
-errorElement: "span",
-highlight:function(element, errorClass, validClass)
-{
-$(element).parents('.control-group').addClass('error');
-},
-unhighlight: function(element, errorClass, validClass)
-{
-$(element).parents('.control-group').removeClass('error');
-$(element).parents('.control-group').addClass('success');
-}
-});
+    errorClass: "help-inline",
+    errorElement: "span",
+    highlight:function(element, errorClass, validClass) {
+      $(element).parents('.control-group').addClass('error');
+    },
+    unhighlight: function(element, errorClass, validClass) {
+      $(element).parents('.control-group').removeClass('error');
+      $(element).parents('.control-group').addClass('success');
+    }
+  });
 });
 </script>
 {%end%}

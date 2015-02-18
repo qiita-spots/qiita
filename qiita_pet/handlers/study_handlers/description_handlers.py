@@ -547,15 +547,17 @@ class StudyDescriptionHandler(BaseHandler):
         # mutually exclusive. Only one of them will be shown, depending on the
         # current status of the study
         btn_to_show = None
-        if (study_status == 'sandbox' and qiita_config.require_approval
-                and sample_template_exists and raw_files and prep_templates):
+        if (study_status == 'sandbox' and
+                qiita_config.require_approval and sample_template_exists and
+                raw_files and prep_templates):
             # The request approval button only appears if the study is
             # sandboxed, the qiita_config specifies that the approval should
             # be requested and the sample template, raw files and prep
             # prep templates have been added to the study
             btn_to_show = 'request_approval'
-        elif (user_level == 'admin' and study_status == 'awaiting_approval'
-                and qiita_config.require_approval):
+        elif (user_level == 'admin' and
+                study_status == 'awaiting_approval' and
+                qiita_config.require_approval):
             # The approve study button only appears if the user is an admin,
             # the study is waiting approval and the qiita config requires
             # study approval
@@ -613,6 +615,33 @@ class StudyDescriptionHandler(BaseHandler):
 
         callback((msg, msg_level, tab, tab_id, None))
 
+    def delete_prep_template(self, study, user, callback):
+        """Delete the selected prep template
+
+        Parameters
+        ----------
+        study : Study
+            The current study object
+        user : User
+            The current user object
+        callback : function
+            The callback function to call with the results once the processing
+            is done
+        """
+        prep_template_id = int(self.get_argument('prep_template_id'))
+        prep_id = PrepTemplate(prep_template_id).raw_data
+
+        try:
+            PrepTemplate.delete(prep_template_id)
+            msg = ("Prep template %d has been deleted" % prep_template_id)
+            msg_level = "success"
+            prep_id = None
+        except Exception as e:
+            msg = ("Couldn't remove prep template: %s" % str(e))
+            msg_level = "danger"
+
+        callback((msg, msg_level, 'raw_data_tab', prep_id, None))
+
     @authenticated
     def get(self, study_id):
         study, user = self._get_sudy_and_check_access(study_id)
@@ -640,7 +669,8 @@ class StudyDescriptionHandler(BaseHandler):
             request_approval=self.request_approval,
             make_sandbox=self.make_sandbox,
             update_investigation_type=self.update_investigation_type,
-            delete_raw_data=self.delete_raw_data)
+            delete_raw_data=self.delete_raw_data,
+            delete_prep_template=self.delete_prep_template)
 
         # Get the action that we need to perform
         action = self.get_argument("action", None)

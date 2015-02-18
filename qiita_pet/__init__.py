@@ -9,7 +9,8 @@
 allowed_min_browser_versions = {
     'chrome': 39,
     'firefox': 34,
-    'safari': 7
+    'safari': 7,
+    'IE': 10
 }
 
 __version__ = "0.0.1-dev"

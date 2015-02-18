@@ -1,4 +1,7 @@
 from unittest import main
+
+from moi import r_client
+
 from qiita_pet.test.tornado_test_base import TestHandlerBase
 
 
@@ -22,6 +25,24 @@ class TestUserProfileHandler(TestHandlerBase):
         }
         response = self.post('/profile/', post_args)
         self.assertEqual(response.code, 200)
+
+    def test_post_select_samples(self):
+        # just making sure that the key is not set in redis
+        r_client.delete('maintenance')
+        response = self.get('/auth/reset/')
+        self.assertEqual(response.code, 200)
+        self.assertTrue(('<label for="newpass2" class="col-sm-10 '
+                         'control-label">Repeat New Password'
+                         '</label>') in response.body)
+
+        # not displaying due to maintenance
+        r_client.set('maintenance', 'This is my error message')
+        response = self.get('/auth/reset/')
+        self.assertEqual(response.code, 200)
+        self.assertFalse(('<label for="newpass2" class="col-sm-10 '
+                          'control-label">Repeat New Password'
+                          '</label>') in response.body)
+        r_client.delete('maintenance')
 
     def test_post_profile(self):
         post_args = {

@@ -1,4 +1,5 @@
 from unittest import TestCase, main
+from os import remove
 from os.path import exists, join
 from datetime import datetime
 from shutil import move
@@ -36,6 +37,10 @@ class TestAnalysis(TestCase):
                 f.write("")
         with open(self.map_fp, 'w') as f:
                 f.write("")
+
+        fp = join(get_mountpoint('analysis')[0][1], 'testfile.txt')
+        if exists(fp):
+            remove(fp)
 
         mp = get_mountpoint("processed_data")[0][1]
         study2fp = join(mp, "2_2_study_1001_closed_reference_otu_table.biom")
@@ -426,6 +431,22 @@ class TestAnalysis(TestCase):
 
         with self.assertRaises(ValueError):
             self.analysis.build_files(-10)
+
+    def test_add_file(self):
+        fp = join(get_mountpoint('analysis')[0][1], 'testfile.txt')
+        with open(fp, 'w') as f:
+            f.write('testfile!')
+        self.analysis._add_file('testfile.txt', 'plain_text', '18S')
+
+        obs = self.conn_handler.execute_fetchall(
+            'SELECT * FROM qiita.filepath WHERE filepath_id = 19')
+        exp = [[19, 'testfile.txt', 9, '3675007573', 1, 1]]
+        self.assertEqual(obs, exp)
+
+        obs = self.conn_handler.execute_fetchall(
+            'SELECT * FROM qiita.analysis_filepath WHERE filepath_id = 19')
+        exp = [[1, 19, 2]]
+        self.assertEqual(obs, exp)
 
 
 if __name__ == "__main__":
