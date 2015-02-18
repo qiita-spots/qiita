@@ -526,8 +526,9 @@ def get_files_from_uploads_folders(study_id):
     for pid, p in get_mountpoint("uploads", retrieve_all=True):
         t = join(p, study_id)
         if exists(t):
-            fp.extend([(pid, f) for f in listdir(t) if not f.startswith('.')
-                      and not isdir(join(t, f))])
+            fp.extend([(pid, f)
+                       for f in listdir(t)
+                       if not f.startswith('.') and not isdir(join(t, f))])
 
     return fp
 
@@ -610,6 +611,28 @@ def get_mountpoint(mount_type, conn_handler=None, retrieve_all=False):
             % mount_type)]
     basedir = get_db_files_base_dir()
     return [(d, join(basedir, m, s)) for d, m, s in result]
+
+
+def get_mountpoint_path_by_id(mount_id, conn_handler=None):
+    r""" Returns the mountpoint path for the mountpoint with id = mount_id
+
+    Parameters
+    ----------
+    mount_id : int
+        The mountpoint id
+    conn_handler : SQLConnectionHandler
+        The connection handler object connected to the DB
+
+    Returns
+    -------
+    str
+        The mountpoint path
+    """
+    conn_handler = conn_handler if conn_handler else SQLConnectionHandler()
+    mountpoint, subdirectory = conn_handler.execute_fetchone(
+        """SELECT mountpoint, subdirectory FROM qiita.data_directory
+           WHERE data_directory_id=%s""", (mount_id,))
+    return join(get_db_files_base_dir(), mountpoint, subdirectory)
 
 
 def insert_filepaths(filepaths, obj_id, table, filepath_table, conn_handler,
@@ -697,31 +720,41 @@ def purge_filepaths(conn_handler=None):
     """
     conn_handler = conn_handler if conn_handler else SQLConnectionHandler()
 
+    # Get all the (table, column) pairs that reference to the filepath table
+    # Code adapted from http://stackoverflow.com/q/5347050/3746629
+    table_cols_pairs = conn_handler.execute_fetchall(
+        """SELECT R.TABLE_NAME, R.column_name
+        FROM INFORMATION_SCHEMA.CONSTRAINT_COLUMN_USAGE u
+        INNER JOIN INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS FK
+            ON U.CONSTRAINT_CATALOG = FK.UNIQUE_CONSTRAINT_CATALOG
+            AND U.CONSTRAINT_SCHEMA = FK.UNIQUE_CONSTRAINT_SCHEMA
+            AND U.CONSTRAINT_NAME = FK.UNIQUE_CONSTRAINT_NAME
+        INNER JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE R
+            ON R.CONSTRAINT_CATALOG = FK.CONSTRAINT_CATALOG
+            AND R.CONSTRAINT_SCHEMA = FK.CONSTRAINT_SCHEMA
+            AND R.CONSTRAINT_NAME = FK.CONSTRAINT_NAME
+        WHERE U.COLUMN_NAME = 'filepath_id'
+            AND U.TABLE_SCHEMA = 'qiita'
+            AND U.TABLE_NAME = 'filepath'""")
+
+    union_str = " UNION ".join(
+        ["SELECT %s FROM qiita.%s WHERE %s IS NOT NULL" % (col, table, col)
+         for table, col in table_cols_pairs])
     # Get all the filepaths from the filepath table that are not
     # referenced from any place in the database
     fps = conn_handler.execute_fetchall(
-        """SELECT filepath_id, filepath, filepath_type FROM qiita.filepath
-        FP JOIN qiita.filepath_type FPT ON
-        FP.filepath_type_id = FPT.filepath_type_id
-        WHERE filepath_id NOT IN (
-            SELECT filepath_id FROM qiita.raw_filepath UNION
-            SELECT filepath_id FROM qiita.preprocessed_filepath UNION
-            SELECT filepath_id FROM qiita.processed_filepath UNION
-            SELECT filepath_id FROM qiita.job_results_filepath UNION
-            SELECT filepath_id FROM qiita.analysis_filepath UNION
-            SELECT sequence_filepath FROM qiita.reference UNION
-            SELECT taxonomy_filepath FROM qiita.reference UNION
-            SELECT tree_filepath FROM qiita.reference)""")
+        """SELECT filepath_id, filepath, filepath_type, data_directory_id
+        FROM qiita.filepath FP JOIN qiita.filepath_type FPT
+            ON FP.filepath_type_id = FPT.filepath_type_id
+        WHERE filepath_id NOT IN (%s)""" % union_str)
 
     # We can now go over and remove all the filepaths
-    for fp_id, fp, fp_type in fps:
-        conn_handler.execute("DELETE FROM qiita.sample_template_filepath "
-                             "WHERE filepath_id=%s", (fp_id,))
+    for fp_id, fp, fp_type, dd_id in fps:
         conn_handler.execute("DELETE FROM qiita.filepath WHERE filepath_id=%s",
                              (fp_id,))
 
         # Remove the data
-        fp = join(get_db_files_base_dir(), fp)
+        fp = join(get_mountpoint_path_by_id(dd_id), fp)
         if exists(fp):
             if fp_type is 'directory':
                 rmtree(fp)
@@ -747,8 +780,6 @@ def move_filepaths_to_upload_folder(study_id, filepaths, conn_handler=None):
 
     # We can now go over and remove all the filepaths
     for fp_id, fp, _ in filepaths:
-        conn_handler.execute("DELETE FROM qiita.sample_template_filepath "
-                             "WHERE filepath_id=%s", (fp_id,))
         conn_handler.execute("DELETE FROM qiita.filepath WHERE filepath_id=%s",
                              (fp_id,))
 

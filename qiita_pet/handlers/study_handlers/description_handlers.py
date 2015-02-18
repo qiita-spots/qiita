@@ -547,15 +547,17 @@ class StudyDescriptionHandler(BaseHandler):
         # mutually exclusive. Only one of them will be shown, depending on the
         # current status of the study
         btn_to_show = None
-        if (study_status == 'sandbox' and qiita_config.require_approval
-                and sample_template_exists and raw_files and prep_templates):
+        if (study_status == 'sandbox' and
+                qiita_config.require_approval and sample_template_exists and
+                raw_files and prep_templates):
             # The request approval button only appears if the study is
             # sandboxed, the qiita_config specifies that the approval should
             # be requested and the sample template, raw files and prep
             # prep templates have been added to the study
             btn_to_show = 'request_approval'
-        elif (user_level == 'admin' and study_status == 'awaiting_approval'
-                and qiita_config.require_approval):
+        elif (user_level == 'admin' and
+                study_status == 'awaiting_approval' and
+                qiita_config.require_approval):
             # The approve study button only appears if the user is an admin,
             # the study is waiting approval and the qiita config requires
             # study approval
