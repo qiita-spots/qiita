@@ -612,7 +612,7 @@ def get_mountpoint(mount_type, conn_handler=None, retrieve_all=False):
     return [(d, join(basedir, m, s)) for d, m, s in result]
 
 
-def get_mountpoint_path(mount_id, conn_handler=None):
+def get_mountpoint_path_by_id(mount_id, conn_handler=None):
     r""" Returns the mountpoint path for the mountpoint with id = mount_id
 
     Parameters
@@ -753,7 +753,7 @@ def purge_filepaths(conn_handler=None):
                              (fp_id,))
 
         # Remove the data
-        fp = join(get_mountpoint_path(dd_id), fp)
+        fp = join(get_mountpoint_path_by_id(dd_id), fp)
         if exists(fp):
             if fp_type is 'directory':
                 rmtree(fp)

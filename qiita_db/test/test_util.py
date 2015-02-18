@@ -28,7 +28,7 @@ from qiita_db.util import (exists_table, exists_dynamic_table, scrub_data,
                            get_db_files_base_dir, get_data_types,
                            get_required_sample_info_status,
                            get_emp_status, purge_filepaths, get_filepath_id,
-                           get_lat_longs, get_mountpoint, get_mountpoint_path,
+                           get_lat_longs, get_mountpoint, get_mountpoint_path_by_id,
                            get_files_from_uploads_folders,
                            get_environmental_packages, get_timeseries_types,
                            filepath_id_to_rel_path, find_repeated,
@@ -373,7 +373,7 @@ class DBUtilTests(TestCase):
     def _common_purge_filpeaths_test(self):
         # Get all the filepaths so we can test if they've been removed or not
         sql_fp = "SELECT filepath, data_directory_id FROM qiita.filepath"
-        fps = [join(get_mountpoint_path(dd_id), fp) for fp, dd_id in
+        fps = [join(get_mountpoint_path_by_id(dd_id), fp) for fp, dd_id in
                self.conn_handler.execute_fetchall(sql_fp)]
 
         # Make sure that the files exist - specially for travis
@@ -518,17 +518,17 @@ class DBUtilTests(TestCase):
         obs = get_mountpoint("raw_data", retrieve_all=True)
         self.assertEqual(obs, exp)
 
-    def test_get_mountpoint_path(self):
+    def test_get_mountpoint_path_by_id(self):
         exp = join(get_db_files_base_dir(), 'raw_data', '')
-        obs = get_mountpoint_path(5)
+        obs = get_mountpoint_path_by_id(5)
         self.assertEqual(obs, exp)
 
         exp = join(get_db_files_base_dir(), 'analysis', '')
-        obs = get_mountpoint_path(1)
+        obs = get_mountpoint_path_by_id(1)
         self.assertEqual(obs, exp)
 
         exp = join(get_db_files_base_dir(), 'job', '')
-        obs = get_mountpoint_path(2)
+        obs = get_mountpoint_path_by_id(2)
         self.assertEqual(obs, exp)
 
         # inserting new ones so we can test that it retrieves these and
@@ -543,16 +543,16 @@ class DBUtilTests(TestCase):
 
         # this should have been updated
         exp = join(get_db_files_base_dir(), 'analysis', 'tmp')
-        obs = get_mountpoint_path(10)
+        obs = get_mountpoint_path_by_id(10)
         self.assertEqual(obs, exp)
 
         # these 2 shouldn't
         exp = join(get_db_files_base_dir(), 'raw_data', '')
-        obs = get_mountpoint_path(5)
+        obs = get_mountpoint_path_by_id(5)
         self.assertEqual(obs, exp)
 
         exp = join(get_db_files_base_dir(), 'job', '')
-        obs = get_mountpoint_path(2)
+        obs = get_mountpoint_path_by_id(2)
         self.assertEqual(obs, exp)
 
     def test_get_files_from_uploads_folders(self):
