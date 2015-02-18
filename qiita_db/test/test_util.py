@@ -12,8 +12,6 @@ from os import close, remove
 from os.path import join, exists, basename
 from shutil import rmtree
 
-from skbio.util import flatten
-
 from qiita_core.util import qiita_test_checker
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_db.exceptions import QiitaDBColumnError, QiitaDBError
