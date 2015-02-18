@@ -59,8 +59,3 @@ SELECT setval('qiita.study_study_id_seq', 10000, false);
 -- The first row has the default values on QIIME
 -- The second row has the default values on QIIME but rev_comp_mapping_barcodes is set to true
 INSERT INTO qiita.preprocessed_sequence_illumina_params (rev_comp_mapping_barcodes) VALUES (false), (true);
-
--- Initializing preprocessed_sequence_illumina_params to have 2 rows
--- First to have golay_12
--- Second to have hamming_8
-INSERT INTO qiita.preprocessed_sequence_454_params (barcode_type) VALUES ('golay_12'), ('hamming_8');
