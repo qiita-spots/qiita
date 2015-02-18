@@ -369,7 +369,7 @@ class QiitaStudySearch(object):
         sample_sql = ("SELECT r.sample_id,%s FROM qiita.required_sample_info "
                       "r JOIN qiita.sample_{0} sa ON sa.sample_id = "
                       "r.sample_id JOIN qiita.study st ON st.study_id = "
-                      "r.study_id%s WHERE %s %s" %
+                      "r.study_id%s WHERE %s%s" %
                       (','.join(header_info), selected,
                        sql_where, selected_filter))
         return study_sql, sample_sql, meta_header_type_lookup.keys()

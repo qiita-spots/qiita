@@ -112,6 +112,25 @@ class SearchTest(TestCase):
         self.assertEqual(samp_sql, exp_samp_sql)
         self.assertEqual(meta, ['name'])
 
+        # test remove selected samples
+        st_sql, samp_sql, meta = \
+            self.search._parse_study_search_string(
+                "altitude > 0", remove_selected=True, analysis=1)
+        exp_st_sql = ("SELECT study_id FROM qiita.study_sample_columns WHERE "
+                      "lower(column_name) = lower('altitude') and column_type "
+                      "in ('integer', 'float8')")
+        exp_samp_sql = ("SELECT r.sample_id,sa.altitude FROM "
+                        "qiita.required_sample_info r JOIN "
+                        "qiita.sample_{0} sa ON sa.sample_id = r.sample_id "
+                        "JOIN qiita.study st ON st.study_id = r.study_id "
+                        "LEFT JOIN qiita.analysis_sample asa ON "
+                        "(sa.sample_id = asa.sample_id AND "
+                        "asa.analysis_id = 1) WHERE sa.altitude > 0 AND "
+                        "asa.sample_id IS NULL")
+        self.assertEqual(st_sql, exp_st_sql)
+        self.assertEqual(samp_sql, exp_samp_sql)
+        self.assertEqual(meta, ["altitude"])
+
         # test case sensitivity
         st_sql, samp_sql, meta = \
             self.search._parse_study_search_string("ph > 7 or pH < 9")

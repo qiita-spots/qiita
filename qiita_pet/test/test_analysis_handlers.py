@@ -75,10 +75,16 @@ class TestSearchStudiesHandler(TestHandlerBase):
         post_args = {
             'analysis-id': 1,
             'action': 'deselect',
-            'selstudies': '1',
-            'dt1': '1',
-            'sel1': 'SKB8.640193'}
+            'samples-sel': '1#SKB8.640193'}
 
+        # first make sure sample is there to begin with
+        response = self.get('/analysis/2?aid=1')
+        # Make sure page response loaded sucessfully
+        self.assertEqual(response.code, 200)
+        # make sure sample removed
+        self.assertFalse("SKB8.640193" not in str(response.body))
+
+        # now test deselect posting
         response = self.post('/analysis/2', post_args)
 
         # Make sure page response loaded sucessfully
@@ -102,9 +108,14 @@ class TestSearchStudiesHandler(TestHandlerBase):
         post_args = {
             'analysis-id': newaid,
             'action': 'select',
-            'availstudies': "1#1",
-            '1#1': 1,
-            '1': '1.SKD5.640186'}
+            'samples': '1#1.SKD5.640186'}
+
+        # first make sure sample is not there to begin with
+        response = self.get('/analysis/2?aid=1')
+        # Make sure page response loaded sucessfully
+        self.assertEqual(response.code, 200)
+        # make sure sample not there
+        self.assertFalse("SKD5.640186" in str(response.body))
 
         response = self.post('/analysis/2', post_args)
 
