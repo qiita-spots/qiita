@@ -1326,6 +1326,13 @@ class TestPrepTemplate(TestCase):
             PrepTemplate.create(self.metadata, self.new_raw_data,
                                 self.test_study, self.data_type)
 
+    def test_create_filter_sample_names(self):
+        # set a horrible list of sample names
+        self.metadata.index = ['SKB9.640200', 'NOTREAL', 'SKB1.640202']
+        with self.assertRaises(QiitaDBWarning):
+            PrepTemplate.create(self.metadata, self.new_raw_data,
+                                self.test_study, self.data_type)
+
     def test_create(self):
         """Creates a new PrepTemplate"""
         pt = PrepTemplate.create(self.metadata, self.new_raw_data,

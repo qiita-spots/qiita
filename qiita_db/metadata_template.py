@@ -1407,7 +1407,7 @@ class SampleTemplate(MetadataTemplate):
 
 
 class PrepTemplate(MetadataTemplate):
-    r"""Represent the PrepTemplate of a raw dat. Provides access to the
+    r"""Represent the PrepTemplate of a raw data. Provides access to the
     tables in the DB that holds the sample preparation information.
 
     See Also
@@ -1482,6 +1482,23 @@ class PrepTemplate(MetadataTemplate):
 
         # Get a connection handler
         conn_handler = SQLConnectionHandler()
+
+        # Check if there are sample IDs present here but not in sample template
+        sql = ("SELECT sample_id from qiita.required_sample_info WHERE "
+               "study_id = %s")
+        # Get list of study sample IDs, prep template study IDs,
+        # and their intersection
+        study_samples = set(s[0] for s in conn_handler.execute_fetchall(
+            sql, [study.id]))
+        prep_samples = set(md_template.index.values)
+        both_samples = study_samples.intersection(prep_samples)
+        # filter prep template to just samples available in the study
+        md_template = md_template.loc[both_samples]
+        if len(both_samples) != len(prep_samples):
+            prep_samples.difference_update(both_samples)
+            raise QiitaDBWarning(
+                'Samples found in prep template but not sample template: %s'
+                % ', '.join(prep_samples))
 
         # Check if the data_type is the id or the string
         if isinstance(data_type, (int, long)):
