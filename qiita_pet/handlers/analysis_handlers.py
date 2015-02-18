@@ -21,12 +21,12 @@ from moi.group import get_id_from_user, create_info
 
 from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_ware.dispatchable import run_analysis
+from qiita_ware.search import search, count_metadata, filter_by_processed_data
 from qiita_db.analysis import Analysis
 from qiita_db.data import ProcessedData
 from qiita_db.metadata_template import SampleTemplate
 from qiita_db.job import Job, Command
 from qiita_db.util import get_db_files_base_dir, get_table_cols
-from qiita_db.search import QiitaStudySearch
 from qiita_db.exceptions import (
     QiitaDBIncompatibleDatatypeError, QiitaDBUnknownIDError)
 
@@ -54,72 +54,30 @@ def check_analysis_access(user, analysis):
 
 
 class SearchStudiesHandler(BaseHandler):
-    def _parse_search_results(self, results, selsamples, meta_headers):
-        """remove already selected samples from results and count metadata"""
-        counts = {}
-        fullcounts = {meta: defaultdict(int) for meta in meta_headers}
-        studypop = []
-        for study, samples in viewitems(results):
-            counts[study] = {meta: Counter()
-                             for meta in meta_headers}
-            topop = []
-            for pos, sample in enumerate(samples):
-                if study in selsamples and sample[0] in selsamples[study]:
-                    #topop.append(pos)
-                    # still add to full counts, but not study counts
-                    for pos, meta in enumerate(meta_headers):
-                        fullcounts[meta][sample[pos+1]] += 1
-                else:
-                    for pos, meta in enumerate(meta_headers):
-                        counts[study][meta][sample[pos+1]] += 1
-                        fullcounts[meta][sample[pos+1]] += 1
-            # if no samples left, remove the study from results
-            if len(topop) == len(samples):
-                studypop.append(study)
-                continue
-            # remove already selected samples
-            topop.sort(reverse=True)
-            for pos in topop:
-                samples.pop(pos)
-        for study in studypop:
-            results.pop(study)
-        return results, counts, fullcounts
-
     def _selected_parser(self, analysis):
-        """builds dictionaries of selected samples from analysis object"""
-        selsamples = {}
-        selproc_data = defaultdict(list)
-        for proc_data_id, samps in viewitems(analysis.samples):
-            study = ProcessedData(proc_data_id).study
-            selproc_data[study].append(proc_data_id)
-            selsamples[study] = set(samps)
-        return selproc_data, selsamples
+        """returns the study_proc_id and proc_id_samples for the previously
+           selected samples"""
+        study_proc_data = defaultdict(lambda: defaultdict(list))
+        proc_data_samples = analysis.samples
+        for pid in proc_data_samples:
+            proc_data = ProcessedData(pid)
+            study_proc_data[proc_data.study][proc_data.data_type()].append(pid)
+        return study_proc_data, proc_data_samples
 
-    def _parse_form_select(self):
-        """parses selected checkboxes and yields the selected ones in
-        format accepted by Analysis.add_samples()
-        """
-        # get the selected studies and datatypes for studies
-        for s in self.get_arguments("availstudies"):
-            study_id, proc_data_id = s.split("#", 1)
-            proc_data_id = int(proc_data_id)
-            # get new selected samples for each study and yield with proc id
-            for sample in self.get_arguments(study_id):
-                yield (proc_data_id, sample)
+    def _parse_deselect_checkbox_data(self):
+        """splits the list values into proc_data_id and sample_id, then builds
+           dict of results as {proc_data_id: [ samp1, samp2, ...], ...} """
+        data = self.get_arguments('samples-sel')
+        res = defaultdict(list)
+        for val in data:
+            hold = val.split('#')
+            res[hold[0]].append(hold[1])
+        return res
 
-    def _parse_form_deselect(self):
-        """parses selected checkboxes and returns the selected ones in
-        format accepted by Analysis.remove_samples()
-        """
-        studyinfo = self.get_arguments("selstudies")
-        proc_data = []
-        samples = []
-        for sid in studyinfo:
-            # get the processed data ids and add it to the study
-            proc_data.extend(self.get_arguments("dt%s" % sid))
-            # get new selected samples for each study and add to study
-            samples.extend(self.get_arguments("sel%s" % sid))
-        return proc_data, samples
+    def _parse_select_checkbox_data(self):
+        for s in self.get_arguments('samples'):
+            hold = s.split('#', 1)
+            yield (int(hold[0]), hold[1])
 
     @authenticated
     def get(self):
@@ -129,10 +87,13 @@ class SearchStudiesHandler(BaseHandler):
         check_analysis_access(userobj, analysis)
 
         # get the dictionaries of selected samples and data types
-        selproc_data, selsamples = self._selected_parser(analysis)
+        selstudy_proc_data, selproc_data_samples = \
+            self._selected_parser(analysis)
 
         self.render('search_studies.html', aid=analysis.id,
-                    selsamples=selsamples, selproc_data=selproc_data,
+                    selstudy_proc_data=selstudy_proc_data,
+                    selproc_data_samples=selproc_data_samples,
+                    study_proc_data={}, proc_data_samples={},
                     counts={}, fullcounts={}, searchmsg="", query="",
                     results={}, availmeta=SampleTemplate.metadata_headers() +
                     get_table_cols("study"))
@@ -148,8 +109,10 @@ class SearchStudiesHandler(BaseHandler):
         fullcounts = {}
         query = ""
         searchmsg = ""
-        selsamples = {}
-        selproc_data = {}
+        selproc_data_samples = {}
+        selstudy_proc_data = {}
+        study_proc_data = {}
+        proc_data_samples = {}
         # get analysis and selected samples if exists, or create if necessary
         if action == "create":
             name = self.get_argument('name')
@@ -159,20 +122,20 @@ class SearchStudiesHandler(BaseHandler):
             # set to second step since this page is second step in workflow
             analysis.step = SELECT_SAMPLES
             # fill example studies by running query for specific studies
-            search = QiitaStudySearch()
             def_query = 'study_id = 1 OR study_id = 2 OR study_id = 3'
             results, meta_headers = search(def_query, user)
-            results, counts, fullcounts = self._parse_search_results(
-                results, selsamples, meta_headers)
+            study_proc_data, proc_data_samples = \
+                filter_by_processed_data(results)
+            fullcounts, counts = count_metadata(results, meta_headers)
         else:
             analysis_id = int(self.get_argument("analysis-id"))
             analysis = Analysis(analysis_id)
             check_analysis_access(user, analysis)
-            selproc_data, selsamples = self._selected_parser(analysis)
+            selstudy_proc_data, selproc_data_samples = \
+                self._selected_parser(analysis)
 
         # run through action requested
         if action == "search":
-            search = QiitaStudySearch()
             query = str(self.get_argument("query"))
             try:
                 results, meta_headers = search(query, user,
@@ -181,35 +144,41 @@ class SearchStudiesHandler(BaseHandler):
             except ParseException:
                 searchmsg = "Malformed search query, please read search help."
             except QiitaDBIncompatibleDatatypeError as e:
-                searchmsg = ''.join(e)
+                searchmsg = ('Cannot search over both string and number values'
+                             ' for the same field')
 
             if not results and not searchmsg:
                 searchmsg = "No results found."
             else:
-                results, counts, fullcounts = self._parse_search_results(
-                    results, selsamples, meta_headers)
+                study_proc_data, proc_data_samples = \
+                    filter_by_processed_data(results)
+                fullcounts, counts = count_metadata(results, meta_headers)
 
         elif action == "select":
-            analysis.add_samples(self._parse_form_select())
+            analysis.add_samples(self._parse_select_checkbox_data())
+            searchmsg = ""
 
             # rebuild the selected from database to reflect changes
-            selproc_data, selsamples = self._selected_parser(analysis)
+            selstudy_proc_data, selproc_data_samples = \
+                self._selected_parser(analysis)
 
         elif action == "deselect":
-            proc_data, samples = self._parse_form_deselect()
-            if proc_data:
-                analysis.remove_samples(proc_data=proc_data)
-            if samples:
-                analysis.remove_samples(samples=samples)
-            if not proc_data and not samples:
+            for proc_data, samples in viewitems(
+                    self._parse_deselect_checkbox_data()):
+                analysis.remove_samples(proc_data=proc_data, samples=samples)
+            else:
                 searchmsg = "Must select samples to remove from analysis!"
 
             # rebuild the selected from database to reflect changes
-            selproc_data, selsamples = self._selected_parser(analysis)
+            selstudy_proc_data, selproc_data_samples = \
+                self._selected_parser(analysis)
 
         self.render('search_studies.html', user=user, aid=analysis_id,
+                    study_proc_data=study_proc_data,
+                    proc_data_samples=proc_data_samples,
                     results=results, meta_headers=meta_headers,
-                    selsamples=selsamples, selproc_data=selproc_data,
+                    selproc_data_samples=selproc_data_samples,
+                    selstudy_proc_data=selstudy_proc_data,
                     counts=counts, fullcounts=fullcounts, searchmsg=searchmsg,
                     query=query, availmeta=SampleTemplate.metadata_headers() +
                     get_table_cols("study"))

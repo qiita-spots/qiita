@@ -1,41 +1,96 @@
 {%extends sitebase.html%}
 {%block head%}
-<link rel="stylesheet" href="/static/vendor/css/chosen.css" type="text/css">
-<script src="/static/vendor/js/chosen.jquery.min.js"></script>
-<script src="/static/js/analysis.js"></script>
+{% from future.utils import viewitems, viewkeys %}
+{% from qiita_db.study import Study %}
+{% from qiita_db.data import ProcessedData %}
+{% from qiita_pet.util import clean_str %}
 <script type="text/javascript">
-STUDIES = {{[int(i) for i in results.keys()]}};
+STUDIES = {{ list(str(s) for s in viewkeys(study_proc_data)) }};
 function add_metacat(metacat) {
   document.getElementById('query').value += (" " + metacat);
 }
 </script>
+
+<link rel="stylesheet" href="/static/vendor/css/chosen.css" type="text/css">
+<script src="/static/vendor/js/chosen.jquery.min.js"></script>
+<script src="/static/js/analysis.js"></script>
 {%end%}
 
 {%block content%}
-{% from future.utils import viewitems %}
-{% from qiita_db.study import Study %}
-{% from qiita_db.data import ProcessedData %}
-{% from qiita_pet.util import clean_str %}
 <!--dead easy preload for waiting image -->
 <img src="/static/img/waiting.gif" width="1" height="1" border="0">
 <form role="form" action="/analysis/2" id="results-form" method="post">
 <input type="hidden" name="action" id="action" value="search">
 <input type="hidden" name="analysis-id" value="{{aid}}">
 <div class="row">
-<div id="selected" class="col-sm-3" style="border-right:1px solid black;height:100%;">
+<div class="col-sm-9">
+<div id="availstudies" style="overflow : auto;">  <!-- Search results -->
+<h1>Search</h1>
+<p><a href="#" data-toggle="modal" data-target="#searchexample">Search help</a> | <a href="#" data-toggle="modal" data-target="#availmeta">Metadata categories</a></p>
+<p><input type="text" name="query" id="query" style="width:80%;white-space:nowrap;" value='{{query}}'><input type="submit" id="submitsearchbutton" class="btn btn-default" onclick="return pre_submit('search')" value="Search"></p>
+<div id='searchmsg' style="color:red;">{{searchmsg}}</div>
+
+
+{% if results %}
+  <div id="results-div">
+    <big>   Overall available samples for current search</big>
+    <div class="panel-group" id="accordion" style="width:50%">
+    {% set divcount = 1 %}
+    {% for meta_cat, sub_cats in viewitems(fullcounts) %}
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h4 class="panel-title">
+          <a data-toggle="collapse" data-parent="#accordion" href="#collapse{{divcount}}">
+            {{meta_cat}}
+          </a>
+        </h4>
+      </div>
+      <div id="collapse{{divcount}}" class="panel-collapse collapse">
+        <div class="panel-body">
+          <table class="table"><tr><th>Value</th><th>Samples</th><th></th></tr>
+      {% for sub_cat, count in viewitems(sub_cats) %}
+            <tr><td>{{sub_cat}}</td><td>{{count}}</td>
+            <td><a href='#' onclick="select_category('{{clean_str(sub_cat)}}', ''); return false;">Select category</a></td></tr>
+      {% end %}
+          </table>
+        </div>
+      </div>
+    </div>
+    {% set divcount += 1 %}
+    {% end %}
+  </div>
+
+      <table class='table table-hover' style="width:100%">
+        <tr><th>Data Types</th><th>Name</th><th>Description</th><th>Status</th></tr>
+    {% for sid, samples in viewitems(results) %}
+      {% set study = Study(sid) %}
+          <tr id="study{{sid}}"><td>
+      {% for data_type in study_proc_data[sid] %}
+        {{data_type}}<br />
+      {% end %}
+            </td><td style='vertical-align:middle;'><a href="#" data-toggle="modal" data-target="#modal{{sid}}" id="modal-link-{{sid}}">{{study.title}}</a></td>
+            <td style='vertical-align:middle;'>
+            {{study.info["study_description"]}}</td>
+            <td style='vertical-align:middle;'>{{study.status}}</td></tr>
+    {% end %}
+      </table>
+    </div>
+  {%end%}
+    </div>
+  </div>
+
+  <div id="selected" class="col-sm-3" style="border-left:1px solid black;height:100%;">
   <!-- Build the selected data modals -->
-{% for sid in selproc_data %}
+{% for sid in selstudy_proc_data %}
         <div class="modal fade" id='selmodal{{sid}}'>
-          <div class="modal-dialog modal-sm">
+          <div class="modal-dialog modal-md">
             <div class="modal-content">
               <div class="modal-header">
                 <h4 class="modal-title">Selected samples</h4>
               </div>
               <div class="modal-body">
         <p><a href="#" onclick="select_deselect('sel{{sid}}', true); return false;">Select all</a> | <a href="#" onclick="select_deselect('sel{{sid}}', false); return false;">Select none</a> | <a href="#" onclick="select_inverse('sel{{sid}}'); return false;">Select inverse</a></p>
-        {% for samp in selsamples[sid] %}
-          <input type='checkbox' class='selected sel{{sid}}' name='sel{{sid}}' value='{{samp}}'> {{samp}}<br />
-       {% end %}
+        {% module SearchSampleList(sid, [], selstudy_proc_data[sid], selproc_data_samples) %}
      </div>
             <div class="modal-footer">
               <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
@@ -48,80 +103,26 @@ function add_metacat(metacat) {
   <big>Selected Samples</big>
   <table class="table table-hover">
   <tr><th>Datatypes</th><th>Title</th></tr>
-  {% for sid, proc_ids in viewitems(selproc_data) %}
+  {% for sid, proc_ids in viewitems(selstudy_proc_data) %}
     {% set study = Study(sid) %}
     <tr><td>
-    {% for proc in proc_ids %}
-      {% set data_type = ProcessedData(proc).data_type() %}
-      <input type='hidden' name='selstudies' value='{{sid}}'> <input type='checkbox' class="selected" name='dt{{sid}}' value='{{proc}}'>{{data_type}} <br />
-      {% end %}
+    {% for datatype in proc_ids %}
+      {{datatype}}
+    {% end %}
     </td><td><a href="#" data-toggle="modal" data-target="#selmodal{{sid}}">{{study.title}}</a></td></tr>
   {%end%}
   </table>
 </div>
-
-<div class="col-sm-9">
-<div id="availstudies" style="overflow : auto;">  <!-- Search results -->
-<h1>Search</h1>
-<p><a href="#" data-toggle="modal" data-target="#searchexample">Search help</a> | <a href="#" data-toggle="modal" data-target="#availmeta">Metadata categories</a></p>
-<p><input type="text" name="query" id="query" style="width:80%;white-space:nowrap;" value='{{query}}'><input type="submit" id="submitsearchbutton" class="btn btn-default" onclick="return pre_submit('search')" value="Search"></p>
-<div id='searchmsg' style="color:red;">{{searchmsg}}</div>
-
-
-{% if results %}
-  <big>   Overall available samples for current search</big>
-  <div class="panel-group" id="accordion" style="width:50%">
-  {% set divcount = 1 %}
-  {% for meta_cat, sub_cats in viewitems(fullcounts) %}
-  <div class="panel panel-default">
-    <div class="panel-heading">
-      <h4 class="panel-title">
-        <a data-toggle="collapse" data-parent="#accordion" href="#collapse{{divcount}}">
-          {{meta_cat}}
-        </a>
-      </h4>
-    </div>
-    <div id="collapse{{divcount}}" class="panel-collapse collapse">
-      <div class="panel-body">
-        <table class="table"><tr><th>Value</th><th>Samples</th><th></th></tr>
-        {% for sub_cat, count in viewitems(sub_cats) %}
-          <tr><td>{{sub_cat}}</td><td>{{count}}</td>
-          <td><a href='#' onclick="select_category('{{clean_str(sub_cat)}}', ''); return false;">Select category</a></td></tr>
-        {% end %}
-        </table>
-      </div>
-    </div>
-  </div>
-  {% set divcount += 1 %}
-{% end %}
+</div>
+<div class="row">
+<div id="col-sm-12" style="position:fixed;height:32px;width:100%;padding:5px;top:50px;left:0px;background:white;">
+  <input type="submit" class="btn btn-default btn-xs" onclick="return pre_submit('select')" value="Select samples" style="vertical-align: middle;">
+    <input type="submit" class="btn btn-default btn-xs" onclick="return pre_submit('deselect')" value="Remove samples">
+    <input type="submit" class="btn btn-default btn-xs" onclick="return pre_submit('continue')" value="Continue">
+</div>
 </div>
 
-    <table class='table table-hover' style="width:100%">
-      <tr><th>Data Types</th><th>Name</th><th>Selected</th><th>Description</th><th>Status</th></tr>
-{% for sid, samples in viewitems(results) %}
-  {% set study = Study(sid) %}
-        <tr id="study{{sid}}"><td>
-  {% for data_type in study.data_types %}
-    {# make sure processed data exists for the data_type before displaying#}
-    {% set pd = study.processed_data(data_type=data_type) %}
-    {% if pd %}
-      {% set data_type_id = pd[0] %}
-            <input type='checkbox' name='availstudies' value='{{sid}}#{{data_type_id}}' onchange="select_deselect_samples_study({{sid}})"> 
-            {{data_type}}<br />
-    {% end %}
-  {% end %}
-          </td><td style='vertical-align:middle;'><a href="#" data-toggle="modal" data-target="#modal{{sid}}" id="modal-link-{{sid}}" disabled=true>{{study.title}}</a></td>
-          <td style='vertical-align:middle;'>
-            <span id="count{{sid}}">0</span>/{{len(samples)}}
-          </td>
-          <td style='vertical-align:middle;'>
-          {{study.info["study_description"]}}</td>
-          <td style='vertical-align:middle;'>{{study.status}}</td></tr>
-{% end %}
-    </table>
-    </div>
-  </div>
-</div>
+  <!--Results Study Modals-->
   {% for sid, samples in viewitems(results) %}
     {% set study = Study(sid) %}
     <div class="modal fade" id='modal{{sid}}'>
@@ -158,24 +159,7 @@ function add_metacat(metacat) {
                 {% set divcount += 1 %}
                 {% end %}
               </div>
-              <h3>Samples</h3>
-              <a href="#" onclick="select_deselect({{sid}}, true); return false;">Select all</a> | <a href="#" onclick="select_deselect({{sid}}, false); return false;">Select none</a> | <a href="#" onclick="select_inverse({{sid}}); return false;">Select inverse</a>
-              <table class='table table-hover'><td><th>Sample ID</th>
-              {% for meta in meta_headers %}
-                <th>{{meta}}</th>
-              {% end %}
-               </tr>
-              {% for sample in samples %}
-                <tr><td>
-                <input type='checkbox' name='{{sid}}'
-                value='{{sample[0]}}' class='{{sid}} {{ " ".join(clean_str(s) for s in sample[1:]) }}' onchange='count_update({{sid}})'>
-                </td><td>{{sample[0]}}</td>
-                {% for pos in range(len(meta_headers)) %}
-                  <td>{{sample[pos+1]}}</td>
-                {% end %}
-              </tr>
-              {% end %}
-              </table>
+              {% module SearchSampleList(sid, meta_headers, study_proc_data[sid], proc_data_samples) %}
             </div>
             <div class="modal-footer">
               <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
@@ -185,11 +169,6 @@ function add_metacat(metacat) {
       </div><!-- /.modal -->
   {% end %}
 {% end %}
-<div id="col-sm-12" style="position:fixed;height:32px;width:100%;padding:5px;top:50px;left:0px;background:white;">
-  <input type="submit" class="btn btn-default btn-xs" onclick="return pre_submit('select')" value="Select samples" style="vertical-align: middle;">
-    <input type="submit" class="btn btn-default btn-xs" onclick="return pre_submit('deselect')" value="Remove samples">
-    <input type="submit" class="btn btn-default btn-xs" onclick="return pre_submit('continue')" value="Continue">
-</div>
 </form>
 <div class="modal fade search-example-modal" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true" id="searchexample">
   <div class="modal-dialog modal-lg">
@@ -221,7 +200,9 @@ function add_metacat(metacat) {
 <div class="modal fade seaerch-example-modal" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true" id="availmeta">
   <div class="modal-dialog modal-sm">
     <div class="modal-content">
-      <div class="modal-header"><h2>Available metadata<h2></div>
+      <div class="modal-header">
+        <h2>Available metadata</h2>
+      </div>
       <div class="modal-body">
         {% for meta in availmeta %}
           <a href="#" onclick="add_metacat('{{meta}}')">{{meta}}</a><br />
@@ -230,4 +211,3 @@ function add_metacat(metacat) {
     </div>
   </div>
 </div>
-{%end%}

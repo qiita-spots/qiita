@@ -52,7 +52,7 @@ def clean_str(item):
     str
         cleaned string
     """
-    return str(item).replace(" ", "_").replace(":", "")
+    return str(item).replace(" ", "_").replace(":", "").replace(".", "")
 
 
 def generate_param_str(param):

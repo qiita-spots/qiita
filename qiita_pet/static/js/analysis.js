@@ -23,7 +23,7 @@ function displaySelected() {
 
 function select_category(category, study) {
   if(study != '') { 
-    $('.'+study+'.'+category).each(function() {this.checked = true;});
+    $('.study'+study+'.'+category).each(function() {this.checked = true;});
     count_update(study);
   }
   else { 
@@ -34,54 +34,41 @@ function select_category(category, study) {
   }
 }
 
-function select_deselect_samples_study(study) {
-  var selected_datatypes = $('#study' + study + ' input:checkbox:checked').length;
-  var sel = false;
-  if (selected_datatypes > 0) { sel = true; }
-  select_deselect(study, sel)
-}
-
 function count_update(study) {
   var selected = $('#modal' + study + ' input:checkbox:checked').length;
-  var studylink = document.getElementById('modal-link-' + study)
-  document.getElementById('count' + study).innerHTML = selected;
-  if(selected > 0) { 
-    $('#study' + study).addClass('success');
-    studylink.disabled = false;
-    studylink.style = "";
-  }
-  else {
-    $('#study' + study).removeClass('success');
-    studylink.disabled = true;
-    studylink.style = "text-decoration: none;";
-    $('#study' + study + " input:checkbox").each(function() {this.checked = false;})
-  }
+  if(selected > 0) { $('#study' + study).addClass('success'); }
+  else { $('#study' + study).removeClass('success'); }
 }
 
-function select_deselect(study, select) {
-  if(select == true) { 
-    $('.'+study).each(function() {this.checked = true;});
+function select_deselect(study, pdid, type, select) {
+  boxes = '.study'+study+'.proc'+pdid
+  if (type = '-sel') { boxes += '.-sel' }
+  if(select == true) {
+    $(boxes).each(function() {this.checked = true;});
   }
   else { 
-    $('.'+study).each(function() {this.checked = false;});
+    $(boxes).each(function() {this.checked = false;});
   }
   count_update(study);
 }
 
-function select_inverse(study) {
-  $('.'+study).each(function() {
+function select_inverse(study, pdid, type) {
+  boxes = '.study'+study+'.proc'+pdid
+  if (type = '-sel') { boxes += '.-sel' }
+  $(boxes).each(function() {
     if(this.checked == true) { this.checked = false; }
     else { this.checked = true; }
   });
 }
 
 function pre_submit(action) {
-  document.getElementById('action').value = action;
+  document.getElementById('search-action').value = action;
   var msgdiv = document.getElementById('searchmsg');
   if(action == 'search') {
     msgdiv.style.color = '';
     msgdiv.style.align = 'center';
     msgdiv.innerHTML = '<img src="/static/img/waiting.gif"> <b>Searching...</b>';
+    document.getElementById('results-div').hidden = true;
   } else if(action == 'continue') {
     var selected = $('#selected input:checkbox').length;
     if(selected == 0) {
