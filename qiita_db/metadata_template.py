@@ -52,7 +52,8 @@ import warnings
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from .exceptions import (QiitaDBDuplicateError, QiitaDBColumnError,
                          QiitaDBUnknownIDError, QiitaDBNotImplementedError,
-                         QiitaDBDuplicateHeaderError, QiitaDBError)
+                         QiitaDBDuplicateHeaderError, QiitaDBError,
+                         QiitaDBWarning)
 from .base import QiitaObject
 from .sql_connection import SQLConnectionHandler
 from .ontology import Ontology
@@ -144,20 +145,29 @@ def _prefix_sample_names_with_id(md_template, study):
     study : Study
         The study to which the metadata belongs to
     """
-    # Create a new pandas series in which all the values are the study_id and
-    # it is indexed as the metadata template
-    study_ids = pd.Series([str(study.id)] * len(md_template.index),
-                          index=md_template.index)
-    # Create a new column on the metadata template that includes the metadata
-    # template indexes prefixed with the study id
-    md_template['sample_name_with_id'] = study_ids + '.' + md_template.index
-    # Assign the new previously created column as the new index
-    md_template.index = md_template.sample_name_with_id
-    # Delete the previously created column
-    del md_template['sample_name_with_id']
-    # The original metadata template had the index column unnamed - remove
-    # the name of the index
-    md_template.index.name = None
+    # Get all the prefixes of the index, defined as any string before a '.'
+    prefixes = {idx.split('.', 1)[0] for idx in md_template.index}
+    # If the samples have been already prefixed with the study id, the prefixes
+    # set will contain only one element and it will be the str representation
+    # of the study id
+    if len(prefixes) == 1 and prefixes.pop() == str(study.id):
+        # The samples were already prefixed with the study id
+        warnings.warn("Sample names were already prefixed with the study id.",
+                      QiitaDBWarning)
+    else:
+        # Create a new pandas series in which all the values are the study_id
+        # and it is indexed as the metadata template
+        study_ids = pd.Series([str(study.id)] * len(md_template.index),
+                              index=md_template.index)
+        # Create a new column on the metadata template that includes the
+        # metadata template indexes prefixed with the study id
+        md_template['sample_name_with_id'] = (study_ids + '.' +
+                                              md_template.index)
+        md_template.index = md_template.sample_name_with_id
+        del md_template['sample_name_with_id']
+        # The original metadata template had the index column unnamed - remove
+        # the name of the index for consistency
+        md_template.index.name = None
 
 
 class BaseSample(QiitaObject):
@@ -1903,7 +1913,7 @@ def load_template_to_dataframe(fn):
     ------
     QiitaDBColumnError
         If the sample_name column is not present in the template.
-    UserWarning
+    QiitaDBWarning
         When columns are dropped because they have no content for any sample.
 
     Notes
@@ -1955,7 +1965,7 @@ def load_template_to_dataframe(fn):
     if dropped_cols:
         warnings.warn('The following column(s) were removed from the template '
                       'because all their values are empty: '
-                      '%s' % ', '.join(dropped_cols), UserWarning)
+                      '%s' % ', '.join(dropped_cols), QiitaDBWarning)
 
     return template
 

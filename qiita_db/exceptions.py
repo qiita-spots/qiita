@@ -7,6 +7,8 @@
 # -----------------------------------------------------------------------------
 
 from __future__ import division
+import warnings
+
 from qiita_core.exceptions import QiitaError
 
 
@@ -71,3 +73,10 @@ class QiitaDBIncompatibleDatatypeError(QiitaDBError):
         super(QiitaDBIncompatibleDatatypeError, self).__init__()
         self.args = ("The %s operator is not for use with data of type %s" %
                      (operator, str(argument_type)))
+
+
+class QiitaDBWarning(UserWarning):
+    """Warning specific for the QiitaDB domain"""
+    pass
+
+warnings.simplefilter('always', QiitaDBWarning)
