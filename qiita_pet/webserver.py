@@ -39,7 +39,8 @@ DIRNAME = dirname(__file__)
 STATIC_PATH = join(DIRNAME, "static")
 TEMPLATE_PATH = join(DIRNAME, "templates")  # base folder for webpages
 _, RES_PATH = get_mountpoint('job')[0]
-COOKIE_SECRET = b64encode(uuid4().bytes + uuid4().bytes)
+COOKIE_SECRET = 'TEST' if qiita_config.test_environment else \
+                b64encode(uuid4().bytes + uuid4().bytes)
 DEBUG = qiita_config.test_environment
 
 
