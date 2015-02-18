@@ -184,8 +184,8 @@ class PrepTemplatePanel(BaseUIModule):
 
         preprocess_options = []
         for param in param_iter:
-            text = ["<b>%s:</b> %s" % (k, v)
-                    for k, v in viewitems(param.values)]
+            text = ("<b>%s:</b> %s" % (k, v)
+                    for k, v in viewitems(param.values))
             preprocess_options.append((param.id,
                                        param.name,
                                        '<br>'.join(text)))
