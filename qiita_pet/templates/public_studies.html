@@ -6,7 +6,9 @@
 
 <script type="text/javascript">
 $(document).ready(function() {
-    $('#public-studies-table').dataTable({"order": [[1, "asc"]]});
+        $('#public-studies-table').dataTable({
+            order: [[1, "asc"]],
+           columnDefs: 'natural'});
     $("#waiting").hide();
 } );
 </script>

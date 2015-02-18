@@ -8,8 +8,12 @@
 var current_study;
 
 $(document).ready(function() {
-    $('#user-studies-table').dataTable({"order": [[ 1, "asc" ]]});
-    $('#shared-studies-table').dataTable({"order": [[ 1, "asc" ]]});
+        $('#user-studies-table').dataTable({
+            order: [[ 1, "asc" ]],
+            columnDefs: 'natural'});
+        $('#shared-studies-table').dataTable({
+            order: [[ 1, "asc" ]],
+            columnDefs: 'natural'});
     $('#waiting').hide();
     $('#users_list').chosen({width: "100%"});
     $('#users_list').on('change', function(evt, params) {
