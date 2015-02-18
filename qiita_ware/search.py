@@ -1,9 +1,10 @@
-from collections import Counter
+from collections import Counter, defaultdict
 
 from future.utils import viewvalues
 
 from qiita_db.study import Study
 from qiita_db.data import ProcessedData
+from qiita_db.search import QiitaStudySearch
 
 
 def count_metadata(results, meta_cols):
@@ -32,7 +33,7 @@ def count_metadata(results, meta_cols):
     for pos, cat in enumerate(meta_cols):
         # use Counter object to count all metadata values for a column
         # pos+1 so we skip the sample names list
-        fullcount[meta_cols] = Counter(meta_vals[pos + 1])
+        fullcount[cat] = Counter(meta_vals[pos + 1])
 
     # Now get metadata counts for each study, removing sample ids as before
     studycount = {}
@@ -40,13 +41,11 @@ def count_metadata(results, meta_cols):
         studycount[study_id] = {}
         # zip all samples for a given study so that each metadata column found
         # is its own list
-        meta_vals = zip(*[samples[sample] for samples in results[study_id]
-                        for sample in range(len(samples))])
-
+        meta_vals = zip(*(sample for sample in results[study_id]))
         for pos, cat in enumerate(meta_cols):
             # use Counter object to count all metadata values for a column
             # pos+1 so we skip the sample names list
-            studycount[study_id][meta_cols] = Counter(meta_vals[pos + 1])
+            studycount[study_id][cat] = Counter(meta_vals[pos + 1])
 
     return fullcount, studycount
 
@@ -63,9 +62,9 @@ def filter_by_processed_data(results, datatypes=None):
 
     Returns
     -------
-    study_proc_ids : dict of lists
+    study_proc_ids : dict of dicts of lists
         Processed data ids with samples for each study, in the format
-        {study_id: [proc_id, proc_id, ...], ...}
+        {study_id: {datatype: [proc_id, proc_id, ...], ...}, ...}
     proc_data_samples : dict of lists of lists
         Samples available in each processed data id, in the format
         {proc_data_id: [[samp_id1, meta1, meta2, ...],
@@ -75,11 +74,12 @@ def filter_by_processed_data(results, datatypes=None):
     proc_data_samples = {}
     for study_id in results:
         study = Study(study_id)
-        study_proc_ids[study_id] = []
-        for proc_data_id in study.processed_data:
+        study_proc_ids[study_id] = defaultdict(list)
+        for proc_data_id in study.processed_data():
             proc_data = ProcessedData(proc_data_id)
+            datatype = proc_data.data_type()
             # skip processed data if it doesn't fit the given datatypes
-            if datatypes is not None and proc_data.datatype not in datatypes:
+            if datatypes is not None and datatype not in datatypes:
                 continue
             proc_data_samples[proc_data_id] = []
             samps_available = proc_data.samples
@@ -90,34 +90,14 @@ def filter_by_processed_data(results, datatypes=None):
             if proc_data_samples[proc_data_id] is []:
                 # all samples filtered so remove it as a result
                 del(proc_data_samples[proc_data_id])
-                study_proc_ids[study_id].pop(proc_data_id)
+            else:
+                # add the processed data to the list for the study
+                study_proc_ids[study_id][datatype].append(proc_data_id)
     return study_proc_ids, proc_data_samples
 
 
-def search(searchstr, user):
-    """Runs a Study query and returns matching studies and samples
-
-        Parameters
-        ----------
-        searchstr : str
-            Search string to use
-        user : User object
-            User making the search. Needed for permissions checks.
-
-        Returns
-        -------
-        dict
-            Found samples in format
-            {study_id: [[samp_id1, meta1, meta2, ...],
-                        [samp_id2, meta1, meta2, ...], ...}
-        list
-            metadata column names searched for
-
-        Notes
-        -----
-        Metadata information for each sample is in the same order as the
-        metadata columns list returned
-
-        Metadata column names and string searches are case-sensitive
+def search(searchstr, user, remove_selected=False, analysis=None):
+    """ Passthrough for qiita_db search object. See object for documentation
     """
-    pass
+    search = QiitaStudySearch()
+    return search(searchstr, user, remove_selected, analysis)
