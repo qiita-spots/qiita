@@ -10,7 +10,7 @@
             and prep templates which will be submitted to VAMPS.
         </div>
 
-        {% if not message  %}
+        {% if level != 'danger' and maintenance is None  %}
             <table class="table">
             {% for category, summary in stats %}
                 <tr>
@@ -23,7 +23,7 @@
         {% end %}
         </table>
     </div>
-    {% if not message  %}
+    {% if level != 'danger' and maintenance is None  %}
       <input type="submit" class="btn btn-primary" value="Submit to VAMPS">
     {% end %}
     <br/><br/>
