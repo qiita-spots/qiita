@@ -382,18 +382,12 @@ function unlink_all_files(raw_data_id) {
   }
 }
 
-function submit_preprocess() {
-  if (confirm("Are you sure you want to submit a preprocessing job?")){
-    return true;
+function submit_preprocess(id) {
+  if ($("#preprocessing_parameters_" + id).children(":selected").attr("value") === "0") {
+    $("#display-extra-info-" + id).html('You need to select a valid preprocessing parameter to continue');
+    return false;
   }
-  return  false;
-};
-
-function submit_process() {
-  if (confirm("Are you sure you want to submit a processing job?")){
-    return true;
-  }
-  return  false;
+  return true;
 };
 
 function display_tab(top_tab, sub_tab, prep_tab){
@@ -411,14 +405,14 @@ function display_tab(top_tab, sub_tab, prep_tab){
 }
 
 $(document).ready(function() {
-      $("#previous_raw_data").chosen({width: "100%"});
-      display_tab({% if top_tab %} "{{top_tab}}" {% end %}
-                  {% if sub_tab %}
-                    , "{{sub_tab}}"
-                    {% if prep_tab %}
-                     , "{{prep_tab}}"
-                    {% end %}
-                  {% end %})
+  $("#previous_raw_data").chosen({width: "100%"});
+  display_tab({% if top_tab %} "{{top_tab}}" {% end %}
+              {% if sub_tab %}
+                , "{{sub_tab}}"
+                {% if prep_tab %}
+                 , "{{prep_tab}}"
+                {% end %}
+              {% end %})
 });
 
 </script>
