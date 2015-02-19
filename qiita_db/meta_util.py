@@ -127,9 +127,6 @@ def get_accessible_filepath_ids(user):
         analysis = Analysis(analysis_id)
 
         # For each analysis, there are mapping, biom, and job result filepaths
-        # This call will get biom and mapping files
         filepath_ids.update(analysis.all_associated_filepath_ids)
-
-        # TODO: add job filepaths. See github.com/biocore/qiita/issues/636
 
     return filepath_ids
