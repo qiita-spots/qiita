@@ -168,8 +168,6 @@ class SearchStudiesHandler(BaseHandler):
             for proc_data, samples in viewitems(
                     self._parse_deselect_checkbox_data()):
                 analysis.remove_samples(proc_data=proc_data, samples=samples)
-            else:
-                searchmsg = "Must select samples to remove from analysis!"
 
             # rebuild the selected from database to reflect changes
             selstudy_proc_data, selproc_data_samples = \
