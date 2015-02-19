@@ -9,7 +9,8 @@
 $(document).ready(function() {
         $('#public-studies-table').dataTable({
             order: [[1, "asc"]],
-           columnDefs: 'natural'});
+            columnDefs: [{type:'natural', targets:'_all'}]
+         });
     $("#waiting").hide();
 } );
 </script>
