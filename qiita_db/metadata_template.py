@@ -1191,9 +1191,8 @@ class SampleTemplate(MetadataTemplate):
         ----------
         md_template : DataFrame
             The metadata template file contents indexed by samples Ids
-        study : Study or RawData
-            The study to which the metadata template belongs to. Study in case
-            of SampleTemplate and RawData in case of PrepTemplate
+        study : Study
+            The study to which the sample template belongs to.
         """
         cls._check_subclass()
 
@@ -1228,6 +1227,8 @@ class SampleTemplate(MetadataTemplate):
         missing = cls._check_special_columns(md_template, study)
 
         conn_handler = SQLConnectionHandler()
+        queue_name = "CREATE_SAMPLE_TEMPLATE_%d" % study.id
+        conn_handler.create_queue(queue_name)
 
         # Get some useful information from the metadata template
         sample_ids = md_template.index.tolist()
@@ -1256,12 +1257,13 @@ class SampleTemplate(MetadataTemplate):
         values.insert(0, sample_ids)
         values.insert(0, [study.id] * num_samples)
         values = [v for v in zip(*values)]
-        conn_handler.executemany(
+        conn_handler.add_to_queue(
+            queue_name,
             "INSERT INTO qiita.{0} ({1}, sample_id, {2}) "
             "VALUES (%s, %s, {3})".format(cls._table, cls._id_column,
                                           ', '.join(db_cols),
                                           ', '.join(['%s'] * len(db_cols))),
-            values)
+            values, many=True)
 
         # Insert rows on *_columns table
         headers = list(set(headers).difference(db_cols))
@@ -1272,16 +1274,18 @@ class SampleTemplate(MetadataTemplate):
         # to create the list of tuples that psycopg2 requires.
         values = [
             v for v in zip([study.id] * len(headers), headers, datatypes)]
-        conn_handler.executemany(
+        conn_handler.add_to_queue(
+            queue_name,
             "INSERT INTO qiita.{0} ({1}, column_name, column_type) "
             "VALUES (%s, %s, %s)".format(cls._column_table, cls._id_column),
-            values)
+            values, many=True)
 
         # Create table with custom columns
         table_name = cls._table_name(study.id)
         column_datatype = ["%s %s" % (col, dtype)
                            for col, dtype in zip(headers, datatypes)]
-        conn_handler.execute(
+        conn_handler.add_to_queue(
+            queue_name,
             "CREATE TABLE qiita.{0} (sample_id varchar, {1})".format(
                 table_name, ', '.join(column_datatype)))
 
@@ -1289,11 +1293,13 @@ class SampleTemplate(MetadataTemplate):
         values = _as_python_types(md_template, headers)
         values.insert(0, sample_ids)
         values = [v for v in zip(*values)]
-        conn_handler.executemany(
+        conn_handler.add_to_queue(
+            queue_name,
             "INSERT INTO qiita.{0} (sample_id, {1}) "
             "VALUES (%s, {2})".format(table_name, ", ".join(headers),
                                       ', '.join(["%s"] * len(headers))),
-            values)
+            values, many=True)
+        conn_handler.execute_queue(queue_name)
 
         # figuring out the filepath of the backup
         _id, fp = get_mountpoint('templates')[0]
@@ -1482,6 +1488,8 @@ class PrepTemplate(MetadataTemplate):
 
         # Get a connection handler
         conn_handler = SQLConnectionHandler()
+        queue_name = "CREATE_PREP_TEMPLATE_%d" % raw_data.id
+        conn_handler.create_queue(queue_name)
 
         # Check if there are sample IDs present here but not in sample template
         sql = ("SELECT sample_id from qiita.required_sample_info WHERE "
@@ -1536,6 +1544,8 @@ class PrepTemplate(MetadataTemplate):
                                      % ', '.join(missing))
 
         # Insert the metadata template
+        # We need the prep_id for multiple calls below, which currently is not
+        # supported by the queue system. Thus, executing this outside the queue
         prep_id = conn_handler.execute_fetchone(
             "INSERT INTO qiita.prep_template (data_type_id, raw_data_id, "
             "investigation_type) VALUES (%s, %s, %s) RETURNING "
@@ -1547,12 +1557,13 @@ class PrepTemplate(MetadataTemplate):
         values.insert(0, sample_ids)
         values.insert(0, [prep_id] * num_samples)
         values = [v for v in zip(*values)]
-        conn_handler.executemany(
+        conn_handler.add_to_queue(
+            queue_name,
             "INSERT INTO qiita.{0} ({1}, sample_id, {2}) "
             "VALUES (%s, %s, {3})".format(
                 cls._table, cls._id_column, ', '.join(db_cols),
                 ', '.join(['%s'] * len(db_cols))),
-            values)
+            values, many=True)
 
         # Insert rows on *_columns table
         headers = list(set(headers).difference(db_cols))
@@ -1563,16 +1574,18 @@ class PrepTemplate(MetadataTemplate):
         # to create the list of tuples that psycopg2 requires.
         values = [
             v for v in zip([prep_id] * len(headers), headers, datatypes)]
-        conn_handler.executemany(
+        conn_handler.add_to_queue(
+            queue_name,
             "INSERT INTO qiita.{0} ({1}, column_name, column_type) "
             "VALUES (%s, %s, %s)".format(cls._column_table, cls._id_column),
-            values)
+            values, many=True)
 
         # Create table with custom columns
         table_name = cls._table_name(prep_id)
         column_datatype = ["%s %s" % (col, dtype)
                            for col, dtype in zip(headers, datatypes)]
-        conn_handler.execute(
+        conn_handler.add_to_queue(
+            queue_name,
             "CREATE TABLE qiita.{0} (sample_id varchar, "
             "{1})".format(table_name, ', '.join(column_datatype)))
 
@@ -1580,11 +1593,21 @@ class PrepTemplate(MetadataTemplate):
         values = _as_python_types(md_template, headers)
         values.insert(0, sample_ids)
         values = [v for v in zip(*values)]
-        conn_handler.executemany(
+        conn_handler.add_to_queue(
+            queue_name,
             "INSERT INTO qiita.{0} (sample_id, {1}) "
             "VALUES (%s, {2})".format(table_name, ", ".join(headers),
                                       ', '.join(["%s"] * len(headers))),
-            values)
+            values, many=True)
+
+        try:
+            conn_handler.execute_queue(queue_name)
+        except Exception:
+            # Clean up row from qiita.prep_template
+            conn_handler.execute(
+                "DELETE FROM qiita.prep_template where "
+                "{0} = %s".format(cls._id_column), (prep_id,))
+            raise
 
         # figuring out the filepath of the backup
         _id, fp = get_mountpoint('templates')[0]
