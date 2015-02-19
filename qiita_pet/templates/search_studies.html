@@ -5,10 +5,7 @@
 {% from qiita_db.data import ProcessedData %}
 {% from qiita_pet.util import clean_str %}
 <script type="text/javascript">
-STUDIES = {{ list(str(s) for s in viewkeys(study_proc_data)) }};
-function add_metacat(metacat) {
-  document.getElementById('query').value += (" " + metacat);
-}
+  STUDIES = {{[str(i) for i in results]}};
 </script>
 
 <link rel="stylesheet" href="/static/vendor/css/chosen.css" type="text/css">

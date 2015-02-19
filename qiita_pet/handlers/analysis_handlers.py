@@ -101,7 +101,9 @@ class SearchStudiesHandler(BaseHandler):
     @authenticated
     def post(self):
         user = self.current_user
-        action = self.get_argument("action")
+        # two action arguments on this page, since create analysis modal is on
+        # sitebase. Therefore, take first one as it's the submitted one
+        action = self.get_arguments("action")[0]
         # set required template variables
         results = {}
         meta_headers = []

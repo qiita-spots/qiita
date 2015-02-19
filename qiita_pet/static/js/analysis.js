@@ -62,7 +62,7 @@ function select_inverse(study, pdid, type) {
 }
 
 function pre_submit(action) {
-  document.getElementById('search-action').value = action;
+  document.getElementById('action').value = action;
   var msgdiv = document.getElementById('searchmsg');
   if(action == 'search') {
     msgdiv.style.color = '';
@@ -85,3 +85,8 @@ function pre_submit(action) {
     }
   }
 }
+
+function add_metacat(metacat) {
+  document.getElementById('query').value += (" " + metacat);
+}
+
