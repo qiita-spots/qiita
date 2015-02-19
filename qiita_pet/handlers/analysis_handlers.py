@@ -12,20 +12,24 @@ Qitta analysis handlers for the Tornado webserver.
 from __future__ import division
 from future.utils import viewitems
 from collections import defaultdict, Counter
+from os.path import join, isdir, sep
 
-from tornado.web import authenticated, HTTPError
+from tornado.web import authenticated, HTTPError, StaticFileHandler
 from pyparsing import ParseException
 from moi import ctx_default, r_client
 from moi.job import submit
 from moi.group import get_id_from_user, create_info
 
 from qiita_pet.handlers.base_handlers import BaseHandler
+from qiita_pet.exceptions import QiitaPetAuthorizationError
 from qiita_ware.dispatchable import run_analysis
 from qiita_db.analysis import Analysis
 from qiita_db.data import ProcessedData
 from qiita_db.metadata_template import SampleTemplate
 from qiita_db.job import Job, Command
-from qiita_db.util import get_db_files_base_dir, get_table_cols
+from qiita_db.util import (get_db_files_base_dir, get_table_cols,
+                           filepath_id_to_rel_path)
+from qiita_db.meta_util import get_accessible_filepath_ids
 from qiita_db.search import QiitaStudySearch
 from qiita_db.exceptions import (
     QiitaDBIncompatibleDatatypeError, QiitaDBUnknownIDError)
@@ -321,3 +325,31 @@ class ShowAnalysesHandler(BaseHandler):
                     user.shared_analyses + user.private_analyses]
 
         self.render("show_analyses.html", analyses=analyses)
+
+
+class ResultsHandler(StaticFileHandler, BaseHandler):
+    def validate_absolute_path(self, root, absolute_path):
+        """Overrides StaticFileHandler's method to include authentication
+        """
+        u = self.current_user
+
+        accessible_filepaths = get_accessible_filepath_ids(u)
+        accessible_filepaths = {join(get_db_files_base_dir(),
+                                     filepath_id_to_rel_path(fpid))
+                                for fpid in accessible_filepaths}
+
+        for accessible_filepath in accessible_filepaths:
+            access = False
+
+            if (accessible_filepath == absolute_path):
+                access = True
+
+            elif isdir(accessible_filepath) and \
+                    absolute_path.startswith(accessible_filepath + sep):
+                access = True
+
+            if access:
+                return super(ResultsHandler, self).validate_absolute_path(
+                    root, absolute_path)
+
+        raise QiitaPetAuthorizationError(u.id, absolute_path)
