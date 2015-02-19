@@ -11,7 +11,7 @@ Qitta analysis handlers for the Tornado webserver.
 # -----------------------------------------------------------------------------
 from __future__ import division
 from future.utils import viewitems
-from collections import defaultdict, Counter
+from collections import defaultdict
 
 from tornado.web import authenticated, HTTPError
 from pyparsing import ParseException
@@ -143,7 +143,7 @@ class SearchStudiesHandler(BaseHandler):
                                                analysis=analysis.id)
             except ParseException:
                 searchmsg = "Malformed search query, please read search help."
-            except QiitaDBIncompatibleDatatypeError as e:
+            except QiitaDBIncompatibleDatatypeError:
                 searchmsg = ('Cannot search over both string and number values'
                              ' for the same field')
 

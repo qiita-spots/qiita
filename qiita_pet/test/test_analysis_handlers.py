@@ -75,14 +75,14 @@ class TestSearchStudiesHandler(TestHandlerBase):
         post_args = {
             'analysis-id': 1,
             'action': 'deselect',
-            'samples-sel': '1#SKB8.640193'}
+            'samples-sel': '1#1.SKB8.640193'}
 
         # first make sure sample is there to begin with
         response = self.get('/analysis/2?aid=1')
         # Make sure page response loaded sucessfully
         self.assertEqual(response.code, 200)
         # make sure sample removed
-        self.assertFalse("SKB8.640193" not in str(response.body))
+        self.assertFalse("1.SKB8.640193" not in str(response.body))
 
         # now test deselect posting
         response = self.post('/analysis/2', post_args)
@@ -90,7 +90,7 @@ class TestSearchStudiesHandler(TestHandlerBase):
         # Make sure page response loaded sucessfully
         self.assertEqual(response.code, 200)
         # make sure sample removed
-        self.assertTrue("SKB8.640193" not in str(response.body))
+        self.assertTrue("1.SKB8.640193" not in str(response.body))
 
     def test_post_create_analysis(self):
         response = self.post('/analysis/2', {'name': 'Web test Analysis',
