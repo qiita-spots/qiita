@@ -1255,7 +1255,8 @@ class TestPrepTemplate(TestCase):
                             'library_construction_protocol': 'AAAA',
                             'experiment_design_description': 'BBBB'}
             }
-        self.metadata = pd.DataFrame.from_dict(self.metadata_dict, orient='index')
+        self.metadata = pd.DataFrame.from_dict(self.metadata_dict,
+                                               orient='index')
 
         metadata_prefixed_dict = {
             '1.SKB8.640193': {'center_name': 'ANL',
@@ -1369,17 +1370,20 @@ class TestPrepTemplate(TestCase):
         del self.metadata_dict['SKB7.640196']
         self.metadata = pd.DataFrame.from_dict(self.metadata_dict,
                                                orient='index')
-        with self.assertWarns(QiitaDBWarning) as warn:
-            print warn
-            PrepTemplate.create(self.metadata, self.new_raw_data,
-                                self.test_study, self.data_type)
+        # Test warning raised and correct warning given
+        with self.assertRaises(QiitaDBWarning) as cm:
+            pt = PrepTemplate.create(self.metadata, self.new_raw_data,
+                                     self.test_study, self.data_type)
+            self.assertEqual(
+                cm.exception, 'QiitaDBWarning: Samples found in prep template '
+                'but not sample template: 1.NOTREAL')
 
-        # make sure the two samples were added correctly
-        PrepTemplate(2)
-        obs = obs = self.conn_handler.execute_fetchall(
-            "SELECT sample_id FROM qiita.prep_2")
-        exp = [['1.SKB8.640193'], ['1.SKD8.640184']]
-        self.assertEqual(obs, exp)
+            # make sure the two samples were added correctly
+            self.assertEqual(pt.id, 2)
+            obs = self.conn_handler.execute_fetchall(
+                "SELECT sample_id FROM qiita.prep_2")
+            exp = [['1.SKB8.640193'], ['1.SKD8.640184']]
+            self.assertEqual(obs, exp)
 
     def test_create_error_cleanup(self):
         """Create does not modify the database if an error happens"""
