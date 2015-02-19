@@ -387,6 +387,7 @@ def patch(patches_dir=PATCHES_DIR, verbose=False):
                 raise
             else:
                 conn.execute(patch_update_py % current_py_base)
+        next_patch_index = sql_patch_files.index(current_sql_patch_fp) + 1
     else:
         next_patch_index = sql_patch_files.index(current_sql_patch_fp) + 1
 
