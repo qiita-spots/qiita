@@ -60,7 +60,7 @@ from .ontology import Ontology
 from .util import (exists_table, get_table_cols, get_emp_status,
                    get_required_sample_info_status, convert_to_id,
                    convert_from_id, find_repeated, get_mountpoint,
-                   insert_filepaths)
+                   insert_filepaths, scrub_data)
 from .logger import LogEntry
 
 if PY3:
@@ -135,14 +135,14 @@ def _as_python_types(metadata_map, headers):
     return values
 
 
-def _prefix_sample_names_with_id(md_template, study):
+def _prefix_sample_names_with_id(md_template, study_id):
     r"""prefix the sample_names in md_template with the study id
 
     Parameters
     ----------
     md_template : DataFrame
         The metadata template to modify
-    study : Study
+    study_id : int
         The study to which the metadata belongs to
     """
     # Get all the prefixes of the index, defined as any string before a '.'
@@ -150,14 +150,14 @@ def _prefix_sample_names_with_id(md_template, study):
     # If the samples have been already prefixed with the study id, the prefixes
     # set will contain only one element and it will be the str representation
     # of the study id
-    if len(prefixes) == 1 and prefixes.pop() == str(study.id):
+    if len(prefixes) == 1 and prefixes.pop() == str(study_id):
         # The samples were already prefixed with the study id
         warnings.warn("Sample names were already prefixed with the study id.",
                       QiitaDBWarning)
     else:
         # Create a new pandas series in which all the values are the study_id
         # and it is indexed as the metadata template
-        study_ids = pd.Series([str(study.id)] * len(md_template.index),
+        study_ids = pd.Series([str(study_id)] * len(md_template.index),
                               index=md_template.index)
         # Create a new column on the metadata template that includes the
         # metadata template indexes prefixed with the study id
@@ -1171,35 +1171,35 @@ class SampleTemplate(MetadataTemplate):
                 "ORDER BY column_name")]
 
     @classmethod
-    def _check_template_special_columns(cls, md_template, study):
+    def _check_template_special_columns(cls, md_template, study_id):
         r"""Checks for special columns based on obj type
 
         Parameters
         ----------
         md_template : DataFrame
             The metadata template file contents indexed by sample ids
-        study : Study
+        study_id : int
             The study to which the sample template belongs to.
         """
         return set()
 
     @classmethod
-    def create(cls, md_template, study):
-        r"""Creates the metadata template in the database
+    def _clean_validate_template(cls, md_template, study_id,
+                                 conn_handler=None):
+        """Takes care of all validation and cleaning of sample templates
 
         Parameters
         ----------
         md_template : DataFrame
-            The metadata template file contents indexed by samples Ids
-        study : Study
+            The metadata template file contents indexed by sample ids
+        study_id : int
             The study to which the sample template belongs to.
+
+        Returns
+        -------
+        md_template : DataFrame
+            Cleaned copy of the input md_template
         """
-        cls._check_subclass()
-
-        # Check that we don't have a MetadataTemplate for study
-        if cls.exists(study.id):
-            raise QiitaDBDuplicateError(cls.__name__, 'id: %d' % study.id)
-
         invalid_ids = get_invalid_sample_names(md_template.index)
         if invalid_ids:
             raise QiitaDBColumnError("The following sample names in the sample"
@@ -1212,7 +1212,7 @@ class SampleTemplate(MetadataTemplate):
         md_template = deepcopy(md_template)
 
         # Prefix the sample names with the study_id
-        _prefix_sample_names_with_id(md_template, study)
+        _prefix_sample_names_with_id(md_template, study_id)
 
         # In the database, all the column headers are lowercase
         md_template.columns = [c.lower() for c in md_template.columns]
@@ -1224,15 +1224,9 @@ class SampleTemplate(MetadataTemplate):
 
         # We need to check for some special columns, that are not present on
         # the database, but depending on the data type are required.
-        missing = cls._check_special_columns(md_template, study)
+        missing = cls._check_special_columns(md_template, study_id)
 
-        conn_handler = SQLConnectionHandler()
-        queue_name = "CREATE_SAMPLE_TEMPLATE_%d" % study.id
-        conn_handler.create_queue(queue_name)
-
-        # Get some useful information from the metadata template
-        sample_ids = md_template.index.tolist()
-        num_samples = len(sample_ids)
+        conn_handler = conn_handler if conn_handler else SQLConnectionHandler()
 
         # Get the required columns from the DB
         db_cols = get_table_cols(cls._table, conn_handler)
@@ -1251,6 +1245,43 @@ class SampleTemplate(MetadataTemplate):
         if missing:
             raise QiitaDBColumnError("Missing columns: %s"
                                      % ', '.join(missing))
+        return md_template
+
+    @classmethod
+    def create(cls, md_template, study):
+        r"""Creates the metadata template in the database
+
+        Parameters
+        ----------
+        md_template : DataFrame
+            The metadata template file contents indexed by samples Ids
+        study : Study
+            The study to which the sample template belongs to.
+        """
+        cls._check_subclass()
+
+        # Check that we don't have a MetadataTemplate for study
+        if cls.exists(study.id):
+            raise QiitaDBDuplicateError(cls.__name__, 'id: %d' % study.id)
+
+        conn_handler = SQLConnectionHandler()
+        queue_name = "CREATE_SAMPLE_TEMPLATE_%d" % study.id
+        conn_handler.create_queue(queue_name)
+
+        # Clean and validate the metadata template given
+        md_template = cls._clean_validate_template(md_template, study.id,
+                                                   conn_handler)
+
+        # Get some useful information from the metadata template
+        sample_ids = md_template.index.tolist()
+        num_samples = len(sample_ids)
+        headers = list(md_template.keys())
+
+        # Get the required columns from the DB
+        db_cols = get_table_cols(cls._table, conn_handler)
+        # Remove the sample_id and study_id columns
+        db_cols.remove('sample_id')
+        db_cols.remove(cls._id_column)
 
         # Insert values on required columns
         values = _as_python_types(md_template, db_cols)
@@ -1286,7 +1317,7 @@ class SampleTemplate(MetadataTemplate):
                            for col, dtype in zip(headers, datatypes)]
         conn_handler.add_to_queue(
             queue_name,
-            "CREATE TABLE qiita.{0} (sample_id varchar, {1})".format(
+            "CREATE TABLE qiita.{0} (sample_id varchar NOT NULL, {1})".format(
                 table_name, ', '.join(column_datatype)))
 
         # Insert values on custom table
@@ -1323,6 +1354,95 @@ class SampleTemplate(MetadataTemplate):
             The ID of the study with which this sample template is associated
         """
         return self._id
+
+    def extend(self, md_template):
+        """Adds the given sample template to the current one
+
+        Parameters
+        ----------
+        md_template : DataFrame
+            The metadata template file contents indexed by samples Ids
+        """
+        conn_handler = SQLConnectionHandler()
+        queue_name = "EXTEND_SAMPLE_TEMPLATE_%d" % self.id
+        conn_handler.create_queue(queue_name)
+
+        md_template = self._clean_validate_template(md_template, self.study_id,
+                                                    conn_handler)
+
+        # Get some useful information from the metadata template
+        sample_ids = md_template.index.tolist()
+        num_samples = len(sample_ids)
+        headers = list(md_template.keys())
+
+        # Make sure all samples being added are not already existing
+        sql = ("SELECT sample_id FROM qiita.required_sample_info WHERE "
+               "study_id = %d" % self.id)
+        curr_samples = set(s[0] for s in conn_handler.execute_fetchall(sql))
+        if len(curr_samples.intersection(sample_ids)) > 0:
+            raise QiitaDBDuplicateError(
+                "sample_id", ", ".join(curr_samples.intersection(sample_ids)))
+
+        # Get the required columns from the DB
+        db_cols = get_table_cols(self._table, conn_handler)
+        # Remove the sample_id and study_id columns
+        db_cols.remove('sample_id')
+        db_cols.remove(self._id_column)
+
+        # Insert values on required columns
+        values = _as_python_types(md_template, db_cols)
+        values.insert(0, sample_ids)
+        values.insert(0, [self.study_id] * num_samples)
+        values = [v for v in zip(*values)]
+        conn_handler.add_to_queue(
+            queue_name,
+            "INSERT INTO qiita.{0} ({1}, sample_id, {2}) "
+            "VALUES (%s, %s, {3})".format(self._table, self._id_column,
+                                          ', '.join(db_cols),
+                                          ', '.join(['%s'] * len(db_cols))),
+            values, many=True)
+
+        # Add missing columns to the sample template dynamic table
+        headers = list(set(headers).difference(db_cols))
+        datatypes = _get_datatypes(md_template.ix[:, headers])
+        table_name = self._table_name(self.study_id)
+        new_cols = set(md_template.columns).difference(
+            set(self.metadata_headers()))
+        dtypes_dict = dict(zip(md_template.ix[:, headers], datatypes))
+        for category in new_cols:
+            # Insert row on *_columns table
+            conn_handler.add_to_queue(
+                queue_name,
+                "INSERT INTO qiita.{0} ({1}, column_name, column_type) "
+                "VALUES (%s, %s, %s)".format(self._column_table,
+                                             self._id_column),
+                (self.study_id, category, dtypes_dict[category]))
+            # Insert row on dynamic table
+            conn_handler.add_to_queue(
+                queue_name,
+                "ALTER TABLE qiita.{0} ADD COLUMN {1} {2}".format(
+                    table_name, scrub_data(category), dtypes_dict[category]))
+
+        # Insert values on custom table
+        values = _as_python_types(md_template, headers)
+        values.insert(0, sample_ids)
+        values = [v for v in zip(*values)]
+        conn_handler.add_to_queue(
+            queue_name,
+            "INSERT INTO qiita.{0} (sample_id, {1}) "
+            "VALUES (%s, {2})".format(table_name, ", ".join(headers),
+                                      ', '.join(["%s"] * len(headers))),
+            values, many=True)
+        conn_handler.execute_queue(queue_name)
+
+        # figuring out the filepath of the backup
+        _id, fp = get_mountpoint('templates')[0]
+        fp = join(fp, '%d_%s.txt' % (self.id, strftime("%Y%m%d-%H%M%S")))
+        # storing the backup
+        self.to_file(fp)
+
+        # adding the fp to the object
+        self.add_filepath(fp)
 
     def remove_category(self, category):
         """Remove a category from the sample template
@@ -1476,7 +1596,7 @@ class PrepTemplate(MetadataTemplate):
         md_template = deepcopy(md_template)
 
         # Prefix the sample names with the study_id
-        _prefix_sample_names_with_id(md_template, study)
+        _prefix_sample_names_with_id(md_template, study.id)
 
         # In the database, all the column headers are lowercase
         md_template.columns = [c.lower() for c in md_template.columns]
