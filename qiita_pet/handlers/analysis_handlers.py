@@ -333,8 +333,9 @@ class ResultsHandler(StaticFileHandler, BaseHandler):
         """
         u = self.current_user
 
+        db_files_base_dir = get_db_files_base_dir()
         accessible_filepaths = get_accessible_filepath_ids(u)
-        accessible_filepaths = {join(get_db_files_base_dir(),
+        accessible_filepaths = {join(db_files_base_dir,
                                      filepath_id_to_rel_path(fpid))
                                 for fpid in accessible_filepaths}
 
