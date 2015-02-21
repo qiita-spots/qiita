@@ -2079,6 +2079,20 @@ class TestUtilities(TestCase):
         obs = get_invalid_sample_names(one_invalid)
         self.assertItemsEqual(obs, [' ', ' ', ' '])
 
+    def test_invalid_lat_long(self):
+
+        with self.assertRaises(QiitaDBColumnError):
+            obs = load_template_to_dataframe(
+                StringIO(SAMPLE_TEMPLATE_INVALID_LATITUDE_COLUMNS))
+            # prevent flake8 from complaining
+            str(obs)
+
+        with self.assertRaises(QiitaDBColumnError):
+            obs = load_template_to_dataframe(
+                StringIO(SAMPLE_TEMPLATE_INVALID_LONGITUDE_COLUMNS))
+            # prevent flake8 from complaining
+            str(obs)
+
 
 EXP_SAMPLE_TEMPLATE = (
     "sample_name\tcollection_timestamp\tdescription\thas_extracted_data\t"
@@ -2265,6 +2279,37 @@ SAMPLE_TEMPLATE_NO_SAMPLE_NAME = (
     "2.Sample3\t2014-05-29 12:24:51\tTest Sample 3\tTrue\t"
     "True\tNotIdentified\t4.8\t4.41\tlocation1\treceived\ttype1\t"
     "NA\n")
+
+SAMPLE_TEMPLATE_INVALID_LATITUDE_COLUMNS = (
+    "sample_name\tcollection_timestamp\tdescription\thas_extracted_data\t"
+    "has_physical_specimen\thost_subject_id\tlatitude\tlongitude\t"
+    "physical_location\trequired_sample_info_status\tsample_type\t"
+    "str_column\n"
+    "2.Sample1\t2014-05-29 12:24:51\tTest Sample 1\tTrue\tTrue\t"
+    "1\t42\t41.41\tlocation1\treceived\ttype1\t"
+    "Value for sample 1\n"
+    "2.Sample2\t2014-05-29 12:24:51\t"
+    "Test Sample 2\tTrue\tTrue\1\t4.2\t1.1\tlocation1\treceived\t"
+    "type1\tValue for sample 2\n"
+    "2.Sample3\t2014-05-29 12:24:51\tTest Sample 3\tTrue\t"
+    "True\1\tXXXXX4.8\t4.41\tlocation1\treceived\ttype1\t"
+    "Value for sample 3\n")
+
+SAMPLE_TEMPLATE_INVALID_LONGITUDE_COLUMNS = (
+    "sample_name\tcollection_timestamp\tdescription\thas_extracted_data\t"
+    "has_physical_specimen\thost_subject_id\tlatitude\tlongitude\t"
+    "physical_location\trequired_sample_info_status\tsample_type\t"
+    "str_column\n"
+    "2.Sample1\t2014-05-29 12:24:51\tTest Sample 1\tTrue\tTrue\t"
+    "1\t11.42\t41.41\tlocation1\treceived\ttype1\t"
+    "Value for sample 1\n"
+    "2.Sample2\t2014-05-29 12:24:51\t"
+    "Test Sample 2\tTrue\tTrue\1\t4.2\tXXX\tlocation1\treceived\t"
+    "type1\tValue for sample 2\n"
+    "2.Sample3\t2014-05-29 12:24:51\tTest Sample 3\tTrue\t"
+    "True\1\t4.8\t4.XXXXX41\tlocation1\treceived\ttype1\t"
+    "Value for sample 3\n")
+
 
 SAMPLE_TEMPLATE_DICT_FORM = {
     'collection_timestamp': {'2.Sample1': '2014-05-29 12:24:51',

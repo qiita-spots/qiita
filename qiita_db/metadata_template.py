@@ -1936,6 +1936,8 @@ def load_template_to_dataframe(fn):
     ------
     QiitaDBColumnError
         If the sample_name column is not present in the template.
+        If there's a value in one of the reserved columns that cannot be casted
+        to the needed type.
     QiitaDBWarning
         When columns are dropped because they have no content for any sample.
 
@@ -1945,6 +1947,31 @@ def load_template_to_dataframe(fn):
     and will be casted to a string. Additionally rows that start with a '\t'
     character will be ignored and columns that are empty will be removed. Empty
     sample names will be removed from the DataFrame.
+
+    The following table describes the data type per column that will be
+    enforced in `fn`.
+
+    +-----------------------+--------------+
+    |      Column Name      |  Python Type |
+    +=======================+==============+
+    |           sample_name |          str |
+    +-----------------------+--------------+
+    |     physical_location |          str |
+    +-----------------------+--------------+
+    | has_physical_specimen |         bool |
+    +-----------------------+--------------+
+    |    has_extracted_data |         bool |
+    +-----------------------+--------------+
+    |           sample_type |          str |
+    +-----------------------+--------------+
+    |       host_subject_id |          str |
+    +-----------------------+--------------+
+    |           description |          str |
+    +-----------------------+--------------+
+    |              latitude |        float |
+    +-----------------------+--------------+
+    |             longitude |        float |
+    +-----------------------+--------------+
     """
 
     # index_col:
@@ -1957,7 +1984,8 @@ def load_template_to_dataframe(fn):
     #   strings.
     # converters:
     #   ensure that sample names are not converted into any other types but
-    #   strings and remove any trailing spaces.
+    #   strings and remove any trailing spaces. Don't let pandas try to guess
+    #   the dtype of the other columns, force them to be a str.
     # comment:
     #   using the tab character as "comment" we remove rows that are
     #   constituted only by delimiters i. e. empty rows.
@@ -1965,7 +1993,29 @@ def load_template_to_dataframe(fn):
                            keep_default_na=False, na_values=[''],
                            parse_dates=True, index_col=False, comment='\t',
                            mangle_dupe_cols=False, converters={
-                               'sample_name': lambda x: str(x).strip()})
+                               'sample_name': lambda x: str(x).strip(),
+                               # required_sample_info
+                               'physical_location': str,
+                               'sample_type': str,
+                               # collection_timestamp is not added here
+                               'host_subject_id': str,
+                               'description': str,
+                               # common_prep_info
+                               'center_name': str,
+                               'center_projct_name': str})
+
+    # let pandas infer the dtypes of these columns, if the inference is
+    # not correct, then we have to raise an error
+    columns_to_dtype = [(['latitude', 'longitude'], np.float),
+                        (['has_physical_specimen', 'has_extracted_data'],
+                         np.bool)]
+    for columns, c_dtype in columns_to_dtype:
+        for n in columns:
+            if n in template.columns and not np.issubdtype(template[n].dtype,
+                                                           c_dtype):
+                raise QiitaDBColumnError("The '%s' column includes values that"
+                                         " cannot be casted into a %s "
+                                         "type." % (n, c_dtype))
 
     initial_columns = set(template.columns)
 
