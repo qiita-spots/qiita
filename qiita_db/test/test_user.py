@@ -212,9 +212,9 @@ class UserTest(TestCase):
         with self.assertRaises(QiitaDBColumnError):
             self.user.info = self.userinfo
 
-    def test_get_private_studies(self):
+    def test_get_user_studies(self):
         user = User('test@foo.bar')
-        self.assertEqual(user.private_studies, [1])
+        self.assertEqual(user.user_studies, [1])
 
     def test_get_shared_studies(self):
         user = User('shared@foo.bar')
@@ -249,12 +249,18 @@ class UserTest(TestCase):
         self.assertEqual(hash_password(passwd, obspass), obspass)
 
     def test_change_pass(self):
-        self.user._change_pass("newpass")
-        self._check_pass("newpass")
+        self.user._change_pass("newpassword")
+        self._check_pass("newpassword")
+        self.assertIsNone(self.user.info["pass_reset_code"])
+
+    def test_change_pass_short(self):
+        with self.assertRaises(IncorrectPasswordError):
+            self.user._change_pass("newpass")
+        self._check_pass("password")
 
     def test_change_password(self):
-        self.user.change_password("password", "newpass")
-        self._check_pass("newpass")
+        self.user.change_password("password", "newpassword")
+        self._check_pass("newpassword")
 
     def test_change_password_wrong_oldpass(self):
         self.user.change_password("WRONG", "newpass")
@@ -276,14 +282,14 @@ class UserTest(TestCase):
     def test_change_forgot_password(self):
         self.user.generate_reset_code()
         code = self.user.info["pass_reset_code"]
-        obsbool = self.user.change_forgot_password(code, "newpass")
+        obsbool = self.user.change_forgot_password(code, "newpassword")
         self.assertEqual(obsbool, True)
-        self._check_pass("newpass")
+        self._check_pass("newpassword")
 
     def test_change_forgot_password_bad_code(self):
         self.user.generate_reset_code()
         code = "AAAAAAA"
-        obsbool = self.user.change_forgot_password(code, "newpass")
+        obsbool = self.user.change_forgot_password(code, "newpassword")
         self.assertEqual(obsbool, False)
         self._check_pass("password")
 

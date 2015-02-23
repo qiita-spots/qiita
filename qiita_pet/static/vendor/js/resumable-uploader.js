@@ -50,10 +50,10 @@
        this.resumable = new Resumable({
            chunkSize:3*1024*1024,
            maxFileSize:this.maxFileSize*1024*1024*1024,
-           simultaneousUploads: 6,
+           simultaneousUploads: 1,
            target:'/upload/',
            query:{study_id:this.study_id},
-           prioritizeFirstAndLastChunk:true,
+           prioritizeFirstAndLastChunk:false,
            throttleProgressCallbacks:1
          });
        if(!this.resumable.support) {
@@ -117,33 +117,29 @@
      // Add a new file (or rather: glue between newly added resumable files and the UI)
      this.addFile = function(resumableFile){
        // A list and and edit item for the UI
-       if (typeof resumableFile == 'object') {
-         name = resumableFile.fileName
-       } else {
-         name = resumableFile
-       }
+       fileName = resumableFile.fileName
+       dirId = resumableFile.dirid
 
        // validating extensions
        is_valid = false;
        _.each(this.valid_extensions, function(extension) {
-           if (extension != "" && S(name).endsWith(extension)) {
+           if (extension != "" && S(fileName).endsWith(extension)) {
              is_valid = true;
              return;
            }
        })
        if (!is_valid) {
-         alert('Not a valid extension! Try again.');
+         alert('Not a valid extension: ' + fileName + '! Try again.');
+         // Stop transfer - JS
+         resumableFile.cancel();
+         // Raise error so it doesn't go to the server - Python
          throw new Error("Not a valid extension");
        }
 
        var listNode = $(document.createElement('div'));
-       var text = '';
-       // left gap
-       text += '<div class="col-md-4"></div>';
-       // name
-       text += '<div class="col-md-3">' + name + '</div>';
-       // add to main node
-       listNode.html('<div class="row">' + text + "</div>");
+       listNode.html('<div class="row" class="checkbox"><label>' + fileName +
+                     ' &nbsp; <input type="checkbox" value="' + dirId + '-' +
+                     fileName + '" name="files_to_erase"></label></div>');
        this.uploaderList.append(listNode);
 
        var editNode = $(document.createElement('div'));

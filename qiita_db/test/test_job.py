@@ -15,7 +15,7 @@ from datetime import datetime
 from qiita_core.util import qiita_test_checker
 from qiita_db.job import Job, Command
 from qiita_db.user import User
-from qiita_db.util import get_db_files_base_dir
+from qiita_db.util import get_mountpoint
 from qiita_db.analysis import Analysis
 from qiita_db.exceptions import (QiitaDBDuplicateError, QiitaDBStatusError,
                                  QiitaDBUnknownIDError)
@@ -30,6 +30,7 @@ class JobTest(TestCase):
         self.options = {"option1": False, "option2": 25, "option3": "NEW"}
         self._delete_path = []
         self._delete_dir = []
+        _, self._job_folder = get_mountpoint("job")[0]
 
     def tearDown(self):
         # needs to be this way because map does not play well with remove and
@@ -123,7 +124,7 @@ class JobTest(TestCase):
 
             obs = self.conn_handler.execute_fetchall(
                 "SELECT * FROM qiita.filepath WHERE filepath_id = 12 OR "
-                "filepath_id = 16")
+                "filepath_id = 19")
             self.assertEqual(obs, [])
 
             obs = self.conn_handler.execute_fetchall(
@@ -134,13 +135,12 @@ class JobTest(TestCase):
                 "SELECT * FROM qiita.analysis_job WHERE job_id = 1")
             self.assertEqual(obs, [])
 
-            self.assertFalse(exists(join(get_db_files_base_dir(),
-                                    "job/1_job_result.txt")))
+            self.assertFalse(exists(join(self._job_folder,
+                             "1_job_result.txt")))
         finally:
-            if not exists(join(get_db_files_base_dir(),
-                          "job/1_job_result.txt")):
-                with open(join(get_db_files_base_dir(),
-                          "job/1_job_result.txt"), 'w') as f:
+            f = join(self._job_folder, "1_job_result.txt")
+            if not exists(f):
+                with open(f, 'w') as f:
                     f.write("job1result.txt")
 
     def test_delete_folders(self):
@@ -161,21 +161,20 @@ class JobTest(TestCase):
                 "SELECT * FROM qiita.analysis_job WHERE job_id = 2")
             self.assertEqual(obs, [])
 
-            self.assertFalse(exists(join(get_db_files_base_dir(),
-                                    "job/2_test_folder")))
+            self.assertFalse(exists(join(self._job_folder, "2_test_folder")))
         finally:
             # put the test data back
-            basedir = get_db_files_base_dir()
-            if not exists(join(basedir, "job/2_test_folder")):
-                mkdir(join(basedir, "job", "2_test_folder"))
-                mkdir(join(basedir, "job", "2_test_folder", "subdir"))
-                with open(join(basedir, "job", "2_test_folder",
+            basedir = self._job_folder
+            if not exists(join(basedir, "2_test_folder")):
+                mkdir(join(basedir, "2_test_folder"))
+                mkdir(join(basedir, "2_test_folder", "subdir"))
+                with open(join(basedir, "2_test_folder",
                                "testfile.txt"), 'w') as f:
                     f.write("DATA")
-                with open(join(basedir, "job", "2_test_folder",
+                with open(join(basedir, "2_test_folder",
                                "testres.htm"), 'w') as f:
                     f.write("DATA")
-                with open(join(basedir, "job", "2_test_folder",
+                with open(join(basedir, "2_test_folder",
                                "subdir", "subres.html"), 'w') as f:
                     f.write("DATA")
 
@@ -233,36 +232,36 @@ class JobTest(TestCase):
         self.assertEqual(new.id, 2)
 
     def test_retrieve_datatype(self):
-        """Makes sure datatype retriveal is correct"""
+        """Makes sure datatype retrieval is correct"""
         self.assertEqual(self.job.datatype, '18S')
 
     def test_retrieve_command(self):
-        """Makes sure command retriveal is correct"""
+        """Makes sure command retrieval is correct"""
         self.assertEqual(self.job.command, ['Summarize Taxa',
                                             'summarize_taxa_through_plots.py'])
 
     def test_retrieve_options(self):
         self.assertEqual(self.job.options, {
             '--otu_table_fp': 1,
-            '--output_dir': join(get_db_files_base_dir(), 'job/'
-                                 '1_summarize_taxa_through_plots.py'
-                                 '_output_dir')})
+            '--output_dir': join(
+                self._job_folder,
+                '1_summarize_taxa_through_plots.py_output_dir')})
 
     def test_set_options(self):
         new = Job.create("18S", "Alpha Rarefaction", {"opt1": 4}, Analysis(1))
         new.options = self.options
-        self.options['--output_dir'] = join(get_db_files_base_dir(),
-                                            'job/4_alpha_rarefaction.'
+        self.options['--output_dir'] = join(self._job_folder,
+                                            '4_alpha_rarefaction.'
                                             'py_output_dir')
         self.assertEqual(new.options, self.options)
 
     def test_retrieve_results(self):
-        self.assertEqual(self.job.results, [join("job", "1_job_result.txt")])
+        self.assertEqual(self.job.results, ["1_job_result.txt"])
 
     def test_retrieve_results_folder(self):
         job = Job(2)
-        self.assertEqual(job.results, ['job/2_test_folder/testres.htm',
-                                       'job/2_test_folder/subdir/subres.html'])
+        self.assertEqual(job.results, ['2_test_folder/testres.htm',
+                                       '2_test_folder/subdir/subres.html'])
 
     def test_retrieve_results_empty(self):
         new = Job.create("18S", "Beta Diversity", {"opt1": 4}, Analysis(1))
@@ -293,18 +292,18 @@ class JobTest(TestCase):
         self.assertEqual(self.job.error.msg, "TESTERROR")
 
     def test_add_results(self):
-        self.job.add_results([(join(get_db_files_base_dir(), "job",
-                                    "1_job_result.txt"), "plain_text")])
+        self.job.add_results([(join(self._job_folder, "1_job_result.txt"),
+                             "plain_text")])
 
         # make sure files attached to job properly
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.job_results_filepath WHERE job_id = 1")
 
-        self.assertEqual(obs, [[1, 12], [1, 16]])
+        self.assertEqual(obs, [[1, 12], [1, 19]])
 
     def test_add_results_dir(self):
         # Create a test directory
-        test_dir = join(get_db_files_base_dir(), "job", "2_test_folder")
+        test_dir = join(self._job_folder, "2_test_folder")
 
         # add folder to job
         self.job.add_results([(test_dir, "directory")])
@@ -312,7 +311,7 @@ class JobTest(TestCase):
         # make sure files attached to job properly
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.job_results_filepath WHERE job_id = 1")
-        self.assertEqual(obs, [[1, 12], [1, 16]])
+        self.assertEqual(obs, [[1, 12], [1, 19]])
 
     def test_add_results_completed(self):
         self.job.status = "completed"

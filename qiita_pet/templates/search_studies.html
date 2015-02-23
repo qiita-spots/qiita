@@ -98,13 +98,18 @@ function add_metacat(metacat) {
 
     <table class='table table-hover' style="width:100%">
       <tr><th>Data Types</th><th>Name</th><th>Selected</th><th>Description</th><th>Status</th></tr>
-      {% for sid, samples in viewitems(results) %}
-        {% set study = Study(sid) %}
+{% for sid, samples in viewitems(results) %}
+  {% set study = Study(sid) %}
         <tr id="study{{sid}}"><td>
-        {% for data_type in study.data_types %}
-          {% set data_type_id = study.processed_data(data_type=data_type)[0] %}
-          <input type='checkbox' name='availstudies' value='{{sid}}#{{data_type_id}}' onchange="select_deselect_samples_study({{sid}})"> 
-          {{data_type}}<br />
+  {% for data_type in study.data_types %}
+    {# make sure processed data exists for the data_type before displaying#}
+    {% set pd = study.processed_data(data_type=data_type) %}
+    {% if pd %}
+      {% set data_type_id = pd[0] %}
+            <input type='checkbox' name='availstudies' value='{{sid}}#{{data_type_id}}' onchange="select_deselect_samples_study({{sid}})"> 
+            {{data_type}}<br />
+    {% end %}
+  {% end %}
           </td><td style='vertical-align:middle;'><a href="#" data-toggle="modal" data-target="#modal{{sid}}" id="modal-link-{{sid}}" disabled=true>{{study.title}}</a></td>
           <td style='vertical-align:middle;'>
             <span id="count{{sid}}">0</span>/{{len(samples)}}
@@ -112,8 +117,7 @@ function add_metacat(metacat) {
           <td style='vertical-align:middle;'>
           {{study.info["study_description"]}}</td>
           <td style='vertical-align:middle;'>{{study.status}}</td></tr>
-        {% end %}
-      {% end %}
+{% end %}
     </table>
     </div>
   </div>
@@ -193,7 +197,7 @@ function add_metacat(metacat) {
       <div class="modal-header"><h2>Search help<h2></div>
       <div class="modal-body">
         <p>A basic search consists of three parts: The metadata category to search over, the operator to use, and the value to use in the search. For example, to retrieve all soil samples in the database, the query would be:</p>
-        <p><b>sample_type = ENVO:soil</b></p>
+        <p><b>env_matter includes soil</b></p>
         <p>Valid operators for searches are:</p>
         <table class="table table-hover" style="width:60%">
         <tr><th>Operator</th><th>Function</th></tr>
@@ -206,7 +210,7 @@ function add_metacat(metacat) {
         <tr><td>includes</td><td>Partial string matching</td></tr>
         </table>
         <p>Complex queries can also be created by using AND, OR, and NOT operators. As an example, if we want all soil samples that are low or extremely high pH, we can use the following search:</p>
-        <p><b>sample_type = ENVO:soil AND (ph < 4 OR ph > 10)</b></p>
+        <p><b>env_matter includes soil AND (ph < 4 OR ph > 8)</b></p>
         <p>You can search for multi-word phrases using quotes. For example, to search for any study with "chicken pox" in the title, the query would be:</p>
         <p><b>study_title includes "chicken pox"</b></p>
         <p>Note that you can not use wild cards in any string searches. Only alphanumeric characters and colons are supported.</p>

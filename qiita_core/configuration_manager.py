@@ -10,10 +10,11 @@ from functools import partial
 from os.path import join, dirname, abspath, isdir
 from os import environ
 from future import standard_library
-with standard_library.hooks():
-    from configparser import ConfigParser
 
 from .exceptions import MissingConfigSection
+
+with standard_library.hooks():
+    from configparser import ConfigParser
 
 
 class ConfigurationManager(object):
@@ -28,9 +29,9 @@ class ConfigurationManager(object):
     ----------
     test_environment : bool
         If true, we are in a test environment.
+    base_url: str
+        base URL for the website, in the form http://SOMETHING.com
     base_data_dir : str
-        Path to the base directorys where all data file are stored
-    upload_data_dir : str
         Path to the base directorys where all data file are stored
     working_dir : str
         Path to the working directory
@@ -100,6 +101,12 @@ class ConfigurationManager(object):
         The password for redis
     redis_db : int
         The db for redis
+    vamps_user : str
+        The VAMPS user
+    vamps_pass : str
+        The VAMPS password
+    vamps_url : str
+        The VAMPS URL
     """
     def __init__(self):
         # If conf_fp is None, we default to the test configuration file
@@ -114,18 +121,19 @@ class ConfigurationManager(object):
         with open(conf_fp, 'U') as conf_file:
             config.readfp(conf_file)
 
-        _expected_sections = {'main', 'ipython', 'redis', 'postgres',
-                              'smtp', 'ebi'}
-        if set(config.sections()) != _expected_sections:
-            missing = _expected_sections - set(config.sections())
+        _required_sections = {'main', 'redis', 'postgres', 'smtp', 'ebi',
+                              'ipython'}
+        if not _required_sections.issubset(set(config.sections())):
+            missing = _required_sections - set(config.sections())
             raise MissingConfigSection(', '.join(missing))
 
         self._get_main(config)
         self._get_smtp(config)
         self._get_postgres(config)
         self._get_redis(config)
-        self._get_ipython(config)
         self._get_ebi(config)
+        self._get_ipython(config)
+        self._get_vamps(config)
 
     def _get_main(self, config):
         """Get the configuration of the main section"""
@@ -136,20 +144,18 @@ class ConfigurationManager(object):
         self.base_data_dir = config.get('main', 'BASE_DATA_DIR') or \
             default_base_data_dir
 
+        self.base_url = config.get('main', 'BASE_URL')
+
         if not isdir(self.base_data_dir):
             raise ValueError("The BASE_DATA_DIR (%s) folder doesn't exist" %
                              self.base_data_dir)
 
-        self.upload_data_dir = config.get('main', 'UPLOAD_DATA_DIR')
-        if not isdir(self.upload_data_dir):
-            raise ValueError("The UPLOAD_DATA_DIR (%s) folder doesn't exist" %
-                             self.upload_data_dir)
-
         self.working_dir = config.get('main', 'WORKING_DIR')
-        if not isdir(self.upload_data_dir):
+        if not isdir(self.working_dir):
             raise ValueError("The WORKING_DIR (%s) folder doesn't exist" %
-                             self.upload_data_dir)
+                             self.working_dir)
         self.max_upload_size = config.getint('main', 'MAX_UPLOAD_SIZE')
+        self.require_approval = config.getboolean('main', 'REQUIRE_APPROVAL')
 
         self.valid_upload_extension = [ve.strip() for ve in config.get(
             'main', 'VALID_UPLOAD_EXTENSION').split(',')]
@@ -185,19 +191,6 @@ class ConfigurationManager(object):
         self.redis_db = sec_getint('DB')
         self.redis_port = sec_getint('PORT')
 
-    def _get_ipython(self, config):
-        """Get the configuration of the ipython section"""
-        sec_get = partial(config.get, 'ipython')
-        sec_getint = partial(config.getint, 'ipython')
-
-        self.ipyc_demo = sec_get('DEMO_CLUSTER')
-        self.ipyc_reserved = sec_get('RESERVED_CLUSTER')
-        self.ipyc_general = sec_get('GENERAL_CLUSTER')
-
-        self.ipyc_demo_n = sec_getint('DEMO_CLUSTER_SIZE')
-        self.ipyc_reserved_n = sec_getint('RESERVED_CLUSTER_SIZE')
-        self.ipyc_general_n = sec_getint('GENERAL_CLUSTER_SIZE')
-
     def _get_smtp(self, config):
         sec_get = partial(config.get, 'smtp')
         sec_getint = partial(config.getint, 'smtp')
@@ -222,3 +215,12 @@ class ConfigurationManager(object):
         self.ebi_skip_curl_cert = sec_getbool('EBI_SKIP_CURL_CERT')
         self.ebi_center_name = sec_get('EBI_CENTER_NAME')
         self.ebi_organization_prefix = sec_get('EBI_ORGANIZATION_PREFIX')
+
+    def _get_ipython(self, config):
+        self.ipython_contexts = config.get('ipython', 'context').split(',')
+        self.ipython_default = config.get('ipython', 'default')
+
+    def _get_vamps(self, config):
+        self.vamps_user = config.get('vamps', 'USER')
+        self.vamps_pass = config.get('vamps', 'PASSWORD')
+        self.vamps_url = config.get('vamps', 'URL')

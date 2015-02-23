@@ -38,7 +38,7 @@ Inserting the raw data into the database:
 Retrieve the filepaths associated with the raw data
 
 >>> rd.get_filepaths() # doctest: +SKIP
-[('seqs.fastq', 'raw_sequences'), ('barcodes.fastq', 'raw_barcodes')]
+[(1, 'seqs.fastq', 'raw_sequences'), (2, 'barcodes.fastq', 'raw_barcodes')]
 
 Assume we have preprocessed the previous raw data files using the parameters
 under the first row in the 'preprocessed_sequence_illumina_params', and we
@@ -81,15 +81,14 @@ from datetime import datetime
 from os.path import join
 from functools import partial
 
-
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from .base import QiitaObject
 from .logger import LogEntry
 from .sql_connection import SQLConnectionHandler
-from .exceptions import QiitaDBError
-from .util import (exists_dynamic_table, get_db_files_base_dir,
-                   insert_filepaths, convert_to_id, convert_from_id,
-                   purge_filepaths, get_filepath_id)
+from .exceptions import QiitaDBError, QiitaDBUnknownIDError
+from .util import (exists_dynamic_table, insert_filepaths, convert_to_id,
+                   convert_from_id, purge_filepaths, get_filepath_id,
+                   get_mountpoint, move_filepaths_to_upload_folder)
 
 
 class BaseData(QiitaObject):
@@ -170,13 +169,13 @@ class BaseData(QiitaObject):
         self._set_link_filepaths_status("idle")
 
     def get_filepaths(self):
-        r"""Returns the filepath associated with the data object
+        r"""Returns the filepaths and filetypes associated with the data object
 
         Returns
         -------
         list of tuples
-            A list of (path, filetype id) with all the paths associated with
-            the current data
+            A list of (filepath_id, path, filetype) with all the paths
+            associated with the current data
         """
         self._check_subclass()
         # We need a connection handler to the database
@@ -184,17 +183,20 @@ class BaseData(QiitaObject):
         # Retrieve all the (path, id) tuples related with the current data
         # object. We need to first check the _data_filepath_table to get the
         # filepath ids of the filepath associated with the current data object.
-        # We then can query the filepath table to get those paths/
+        # We then can query the filepath table to get those paths.
         db_paths = conn_handler.execute_fetchall(
-            "SELECT filepath, filepath_type_id FROM qiita.{0} WHERE "
+            "SELECT filepath_id, filepath, filepath_type_id "
+            "FROM qiita.{0} WHERE "
             "filepath_id IN (SELECT filepath_id FROM qiita.{1} WHERE "
             "{2}=%(id)s)".format(self._filepath_table,
                                  self._data_filepath_table,
                                  self._data_filepath_column), {'id': self.id})
-        base_fp = partial(join, get_db_files_base_dir(conn_handler))
-        return [(base_fp(fp), convert_from_id(id, "filepath_type",
-                 conn_handler))
-                for fp, id in db_paths]
+
+        _, fb = get_mountpoint(self._table, conn_handler)[0]
+        base_fp = partial(join, fb)
+
+        return [(fpid, base_fp(fp), convert_from_id(fid, "filepath_type",
+                conn_handler)) for fpid, fp, fid in db_paths]
 
     def get_filepath_ids(self):
         self._check_subclass()
@@ -240,6 +242,27 @@ class BaseData(QiitaObject):
             "UPDATE qiita.{0} SET link_filepaths_status = %s "
             "WHERE {1} = %s".format(self._table, self._data_filepath_column),
             (status, self._id))
+
+    @classmethod
+    def exists(cls, object_id):
+        r"""Checks if the given object_id exists
+
+        Parameters
+        ----------
+        id : str
+            The id of the object we are searching for
+
+        Returns
+        -------
+        bool
+            True if exists, false otherwise.
+        """
+        conn_handler = SQLConnectionHandler()
+
+        return conn_handler.execute_fetchone(
+            "SELECT EXISTS(SELECT * FROM qiita.{0} WHERE "
+            "{1}=%s)".format(cls._table, cls._data_filepath_column),
+            (object_id, ))[0]
 
 
 class RawData(BaseData):
@@ -306,6 +329,81 @@ class RawData(BaseData):
 
         return rd
 
+    @classmethod
+    def delete(cls, raw_data_id, study_id):
+        """Removes the raw data with id raw_data_id
+
+        Parameters
+        ----------
+        raw_data_id : int
+            The raw data id
+        study_id : int
+            The study id
+
+        Raises
+        ------
+        QiitaDBUnknownIDError
+            If the raw data id doesn't exist
+        QiitaDBError
+            If the raw data is not linked to that study_id
+            If the raw data has prep templates associated
+        """
+        conn_handler = SQLConnectionHandler()
+
+        # check if the raw data exist
+        if not cls.exists(raw_data_id):
+            raise QiitaDBUnknownIDError(raw_data_id, "raw data")
+
+        study_raw_data_exists = conn_handler.execute_fetchone(
+            "SELECT EXISTS(SELECT * FROM qiita.study_raw_data WHERE "
+            "study_id = {0} AND raw_data_id = {1})".format(study_id,
+                                                           raw_data_id))[0]
+        if not study_raw_data_exists:
+            raise QiitaDBError(
+                "Raw data %d is not linked to study %d or the study "
+                "doesn't exist" % (raw_data_id, study_id))
+
+        # check if there are any prep templates for this study
+        prep_template_exists = conn_handler.execute_fetchone(
+            """
+            SELECT EXISTS(
+                SELECT * FROM qiita.prep_template AS pt
+                    LEFT JOIN qiita.common_prep_info AS cpi ON
+                    (pt.prep_template_id=cpi.prep_template_id)
+                    LEFT JOIN qiita.required_sample_info AS rsi ON
+                    (cpi.sample_id=rsi.sample_id)
+                WHERE raw_data_id = {0} and study_id = {1}
+            )
+            """.format(raw_data_id, study_id))[0]
+        if prep_template_exists:
+            raise QiitaDBError(
+                "Raw data %d has prep template(s) associated so it can't be "
+                "erased." % raw_data_id)
+
+        # check how many raw data are left, if last one, check that there
+        # are no linked files
+        raw_data_count = conn_handler.execute_fetchone(
+            "SELECT COUNT(*) FROM qiita.study_raw_data WHERE "
+            "raw_data_id = {0}".format(raw_data_id))[0]
+        if raw_data_count == 1 and RawData(raw_data_id).get_filepath_ids():
+            raise QiitaDBError(
+                "Raw data (%d) can't be remove because it has linked files. "
+                "To remove it, first unlink files." % raw_data_id)
+
+        # delete
+        conn_handler.execute("DELETE FROM qiita.study_raw_data WHERE "
+                             "raw_data_id = {0} AND "
+                             "study_id = {1}".format(raw_data_id, study_id))
+
+        # delete the connecting tables if there is no other study linked to
+        # the raw data
+        study_raw_data_count = conn_handler.execute_fetchone(
+            "SELECT COUNT(*) FROM qiita.study_raw_data WHERE "
+            "raw_data_id = {0}".format(raw_data_id))[0]
+        if study_raw_data_count == 0:
+            conn_handler.execute("DELETE FROM qiita.raw_data WHERE "
+                                 "raw_data_id = {0}".format(raw_data_id))
+
     @property
     def studies(self):
         r"""The IDs of the studies to which this raw data belongs
@@ -363,7 +461,7 @@ class RawData(BaseData):
     def prep_templates(self):
         conn_handler = SQLConnectionHandler()
         sql = ("SELECT prep_template_id FROM qiita.prep_template "
-               "WHERE raw_data_id = %s")
+               "WHERE raw_data_id = %s ORDER BY prep_template_id")
         return [x[0] for x in conn_handler.execute_fetchall(sql, (self._id,))]
 
     def _is_preprocessed(self, conn_handler=None):
@@ -414,8 +512,19 @@ class RawData(BaseData):
             self._set_link_filepaths_status("failed: %s" % msg)
             raise QiitaDBError(msg)
 
+        # The filepath belongs to one or more studies
+        studies_linked = self.studies
+        if len(studies_linked) > 1:
+            msg = ("Can't clear all the filepaths from raw data %s because "
+                   "it has been shared with other studies: %s. If you want to "
+                   "remove it, first remove the raw data from the other "
+                   "studies." % (self._id,
+                                 ', '.join(map(str, studies_linked))))
+            self._set_link_filepaths_status("failed: %s" % msg)
+            raise QiitaDBError(msg)
+
         # Get the filpeath id
-        fp_id = get_filepath_id(fp, conn_handler)
+        fp_id = get_filepath_id(self._table, fp, conn_handler)
         fp_is_mine = conn_handler.execute_fetchone(
             "SELECT EXISTS(SELECT * FROM qiita.{0} WHERE filepath_id=%s AND "
             "{1}=%s)".format(self._data_filepath_table,
@@ -449,7 +558,8 @@ class RawData(BaseData):
 
         self._set_link_filepaths_status("unlinking")
 
-        for fp, fp_type in self.get_filepaths():
+        filepaths = self.get_filepaths()
+        for _, fp, _ in filepaths:
             self._remove_filepath(fp, conn_handler, queue)
 
         try:
@@ -462,12 +572,14 @@ class RawData(BaseData):
             raise e
 
         # We can already update the status to done, as the files have been
-        # unlinked, the purge_filepaths call will not change the status
-        # of the raw data object
+        # unlinked, the move_filepaths_to_upload_folder call will not change
+        # the status of the raw data object
         self._set_link_filepaths_status("idle")
 
-        # Delete the files, if they are not used anywhere
-        purge_filepaths(conn_handler)
+        # Move the files, if they are not used, if you get to this point
+        # self.studies should only have one element, thus self.studies[0]
+        move_filepaths_to_upload_folder(self.studies[0], filepaths,
+                                        conn_handler=conn_handler)
 
     def remove_filepath(self, fp):
         """Removes the filepath from the RawData
@@ -496,11 +608,11 @@ class RawData(BaseData):
             raise e
 
         # We can already update the status to done, as the files have been
-        # unlinked, the purge_filepaths call will not change the status
-        # of the raw data object
+        # unlinked, the move_filepaths_to_upload_folder call will not change
+        # the status of the raw data object
         self._set_link_filepaths_status("idle")
 
-        # Delete the file if it is not used anywhere
+        # Delete the files, if they are not used anywhere
         purge_filepaths(conn_handler)
 
 
@@ -511,6 +623,10 @@ class PreprocessedData(BaseData):
     ----------
     raw_data
     study
+    prep_template
+    ebi_submission_accession
+    ebi_study_accession
+    files
 
     Methods
     -------
@@ -619,15 +735,33 @@ class PreprocessedData(BaseData):
         # If the prep template was provided, connect the preprocessed data
         # with the prep_template
         if prep_template is not None:
-            conn_handler.execute(
+            q = conn_handler.get_temp_queue()
+            conn_handler.add_to_queue(
+                q,
                 "INSERT INTO qiita.{0} (prep_template_id, "
                 "preprocessed_data_id) VALUES "
                 "(%s, %s)".format(cls._template_preprocessed_table),
                 (prep_template.id, ppd_id))
+            conn_handler.add_to_queue(
+                q,
+                """UPDATE qiita.prep_template
+                SET preprocessing_status = 'success'
+                WHERE prep_template_id = %s""",
+                [prep_template.id])
+            conn_handler.execute_queue(q)
 
         # Add the filepaths to the database and connect them
         ppd.add_filepaths(filepaths, conn_handler)
         return ppd
+
+    @property
+    def processed_data(self):
+        r"""The processed data list generated from this preprocessed data"""
+        conn_handler = SQLConnectionHandler()
+        processed_ids = conn_handler.execute_fetchall(
+            "SELECT processed_data_id FROM qiita.preprocessed_processed_data "
+            "WHERE preprocessed_data_id = %s", (self.id,))
+        return [pid[0] for pid in processed_ids]
 
     @property
     def prep_template(self):
@@ -789,6 +923,77 @@ class PreprocessedData(BaseData):
                 SET submitted_to_insdc_status = %s
                 WHERE preprocessed_data_id=%s""".format(self._table),
                                  (state, self.id))
+
+    def submitted_to_vamps_status(self):
+        r"""Tells if the raw data has been submitted to VAMPS
+
+        Returns
+        -------
+        str
+            One of {'not submitted', 'submitting', 'success', 'failed'}
+        """
+        conn_handler = SQLConnectionHandler()
+        return conn_handler.execute_fetchone(
+            "SELECT submitted_to_vamps_status FROM qiita.{0} "
+            "WHERE preprocessed_data_id=%s".format(self._table), (self.id,))[0]
+
+    def update_vamps_status(self, status):
+        r"""Update the VAMPS submission status
+
+        Parameters
+        ----------
+        status : str, {'not submitted', 'submitting', 'success', 'failed'}
+            The current status of submission
+
+        Raises
+        ------
+        ValueError
+            If the status is not known.
+        """
+        if status not in ('not submitted', 'submitting', 'success', 'failed'):
+            raise ValueError("Unknown status: %s" % status)
+
+        conn_handler = SQLConnectionHandler()
+        conn_handler.execute(
+            """UPDATE qiita.{0} SET submitted_to_vamps_status = %s WHERE
+            preprocessed_data_id=%s""".format(self._table), (status, self.id))
+
+    @property
+    def processing_status(self):
+        r"""Tells if the data has be processed or not
+
+        Returns
+        -------
+        str
+            One of {'not_processed', 'processing', 'processed', 'failed'}
+        """
+        conn_handler = SQLConnectionHandler()
+        return conn_handler.execute_fetchone(
+            "SELECT processing_status FROM qiita.{0} WHERE "
+            "preprocessed_data_id=%s".format(self._table), (self.id,))[0]
+
+    @processing_status.setter
+    def processing_status(self, state):
+        r"""Update the processing status
+
+        Parameters
+        ----------
+        state : str, {'not_processed', 'processing', 'processed', 'failed'}
+            The new status of processing
+
+        Raises
+        ------
+        ValueError
+            If the state is not known
+        """
+        if (state not in ('not_processed', 'processing', 'processed') and
+                not state.startswith('failed')):
+            raise ValueError('Unknown state: %s' % state)
+
+        conn_handler = SQLConnectionHandler()
+        conn_handler.execute(
+            "UPDATE qiita.{0} SET processing_status=%s WHERE "
+            "preprocessed_data_id=%s".format(self._table), (state, self.id))
 
 
 class ProcessedData(BaseData):
@@ -960,3 +1165,11 @@ class ProcessedData(BaseData):
             " p.processed_data_id = %s".format(ret, self._table),
             (self._id, ))
         return data_type[0]
+
+    @property
+    def processed_date(self):
+        """Return the processed date"""
+        conn_handler = SQLConnectionHandler()
+        return conn_handler.execute_fetchone(
+            "SELECT processed_date FROM qiita.{0} WHERE "
+            "processed_data_id=%s".format(self._table), (self.id,))[0]

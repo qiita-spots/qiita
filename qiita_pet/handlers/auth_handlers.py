@@ -1,8 +1,12 @@
 #!/usr/bin/env python
 
 from tornado.escape import url_escape, json_encode
+from tornado.web import HTTPError
+
+from moi import r_client
 
 from qiita_pet.handlers.base_handlers import BaseHandler
+from qiita_core.qiita_settings import qiita_config
 from qiita_core.util import send_email
 from qiita_core.exceptions import (IncorrectPasswordError, IncorrectEmailError,
                                    UnverifiedEmailError)
@@ -19,12 +23,11 @@ class AuthCreateHandler(BaseHandler):
         # Tornado can raise an Exception directly, not a defined type
         except:
             error_message = ""
-        self.render("create_user.html", user=self.current_user,
-                    error=error_message)
+        self.render("create_user.html", error=error_message)
 
     def post(self):
-        username = self.get_argument("username", "").strip().lower()
-        password = self.get_argument("pass", "")
+        username = self.get_argument("email", "").strip().lower()
+        password = self.get_argument("newpass", "")
         info = {}
         for info_column in ("name", "affiliation", "address", "phone"):
             hold = self.get_argument(info_column, None)
@@ -42,14 +45,15 @@ class AuthCreateHandler(BaseHandler):
             try:
                 send_email(username, "QIITA: Verify Email Address", "Please "
                            "click the following link to verify email address: "
-                           "http://qiita.colorado.edu/auth/verify/%s?email=%s"
-                           % (info['user_verify_code'], url_escape(username)))
+                           "%s/auth/verify/%s?email=%s"
+                           % (qiita_config.base_url, info['user_verify_code'],
+                              url_escape(username)))
             except:
                 msg = ("Unable to send verification email. Please contact the "
                        "qiita developers at <a href='mailto:qiita-help"
                        "@gmail.com'>qiita-help@gmail.com</a>")
                 error_msg = u"?error=" + url_escape(msg)
-                self.redirect(u"/auth/create/" + error_msg)
+                self.redirect(u"/?level=danger&message=" + error_msg)
                 return
             self.redirect(u"/")
         else:
@@ -64,7 +68,7 @@ class AuthVerifyHandler(BaseHandler):
             msg = "Successfully verified user! You are now free to log in."
         else:
             msg = "Code not valid!"
-        self.render("user_verified.html", user=None, msg=msg)
+        self.render("user_verified.html", msg=msg)
 
 
 class AuthLoginHandler(BaseHandler):
@@ -73,11 +77,17 @@ class AuthLoginHandler(BaseHandler):
         self.redirect("/")
 
     def post(self):
+        if r_client.get('maintenance') is not None:
+            raise HTTPError(503, "Site is down for maintenance")
+
         username = self.get_argument("username", "").strip().lower()
         passwd = self.get_argument("password", "")
         nextpage = self.get_argument("next", None)
         if nextpage is None:
-            nextpage = self.request.headers['Referer']
+            if "auth/" not in self.request.headers['Referer']:
+                nextpage = self.request.headers['Referer']
+            else:
+                nextpage = "/"
 
         msg = ""
         # check the user level
@@ -87,6 +97,12 @@ class AuthLoginHandler(BaseHandler):
                 msg = "Email not verified"
         except QiitaDBUnknownIDError:
             msg = "Unknown user"
+        except RuntimeError:
+            # means DB not available, so set maintenance mode and failover
+            r_client.set("maintenance", "Database connection unavailable, "
+                         "please try again later.")
+            self.redirect("/")
+            return
 
         # Check the login information
         login = None
@@ -104,7 +120,7 @@ class AuthLoginHandler(BaseHandler):
             self.set_current_user(username)
             self.redirect(nextpage)
         else:
-            self.render("index.html", user=None, message=msg, level='danger')
+            self.render("index.html", message=msg, level='danger')
 
     def set_current_user(self, user):
         if user:

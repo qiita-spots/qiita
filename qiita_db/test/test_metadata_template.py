@@ -7,13 +7,16 @@
 # -----------------------------------------------------------------------------
 
 from future.builtins import zip
+from six import StringIO
 from unittest import TestCase, main
 from datetime import datetime
 from tempfile import mkstemp
+from time import strftime
 from os import close, remove
 from os.path import join, basename
 from collections import Iterable
 
+import numpy.testing as npt
 import pandas as pd
 from pandas.util.testing import assert_frame_equal
 
@@ -23,15 +26,17 @@ from qiita_db.exceptions import (QiitaDBDuplicateError, QiitaDBUnknownIDError,
                                  QiitaDBNotImplementedError,
                                  QiitaDBDuplicateHeaderError,
                                  QiitaDBExecutionError,
-                                 QiitaDBColumnError, QiitaDBError)
+                                 QiitaDBColumnError, QiitaDBError,
+                                 QiitaDBWarning)
 from qiita_db.study import Study, StudyPerson
 from qiita_db.user import User
 from qiita_db.data import RawData
-from qiita_db.util import exists_table, get_db_files_base_dir
-from qiita_db.metadata_template import (_get_datatypes, _as_python_types,
-                                        MetadataTemplate, SampleTemplate,
-                                        PrepTemplate, BaseSample, PrepSample,
-                                        Sample, _prefix_sample_names_with_id)
+from qiita_db.util import (exists_table, get_db_files_base_dir, get_mountpoint,
+                           get_count)
+from qiita_db.metadata_template import (
+    _get_datatypes, _as_python_types, MetadataTemplate, SampleTemplate,
+    PrepTemplate, BaseSample, PrepSample, Sample, _prefix_sample_names_with_id,
+    load_template_to_dataframe, get_invalid_sample_names)
 
 
 class TestUtilMetadataMap(TestCase):
@@ -188,9 +193,11 @@ class TestSample(TestCase):
             self.tester['Not_a_Category']
 
     def test_setitem(self):
-        """setitem raises an error (currently not allowed)"""
-        with self.assertRaises(QiitaDBNotImplementedError):
-            self.tester['DEPTH'] = 0.30
+        with self.assertRaises(QiitaDBColumnError):
+            self.tester['column that does not exist'] = 0.30
+        self.assertEqual(self.tester['tot_nitro'], 1.41)
+        self.tester['tot_nitro'] = '1234.5'
+        self.assertEqual(self.tester['tot_nitro'], 1234.5)
 
     def test_delitem(self):
         """delitem raises an error (currently not allowed)"""
@@ -533,6 +540,129 @@ class TestSampleTemplate(TestCase):
             }
         self.metadata = pd.DataFrame.from_dict(metadata_dict, orient='index')
 
+        metadata_str_prefix_dict = {
+            'foo.Sample1': {'physical_location': 'location1',
+                            'has_physical_specimen': True,
+                            'has_extracted_data': True,
+                            'sample_type': 'type1',
+                            'required_sample_info_status': 'received',
+                            'collection_timestamp':
+                            datetime(2014, 5, 29, 12, 24, 51),
+                            'host_subject_id': 'NotIdentified',
+                            'Description': 'Test Sample 1',
+                            'str_column': 'Value for sample 1',
+                            'latitude': 42.42,
+                            'longitude': 41.41},
+            'bar.Sample2': {'physical_location': 'location1',
+                            'has_physical_specimen': True,
+                            'has_extracted_data': True,
+                            'sample_type': 'type1',
+                            'required_sample_info_status': 'received',
+                            'collection_timestamp':
+                            datetime(2014, 5, 29, 12, 24, 51),
+                            'host_subject_id': 'NotIdentified',
+                            'Description': 'Test Sample 2',
+                            'str_column': 'Value for sample 2',
+                            'latitude': 4.2,
+                            'longitude': 1.1},
+            'foo.Sample3': {'physical_location': 'location1',
+                            'has_physical_specimen': True,
+                            'has_extracted_data': True,
+                            'sample_type': 'type1',
+                            'required_sample_info_status': 'received',
+                            'collection_timestamp':
+                            datetime(2014, 5, 29, 12, 24, 51),
+                            'host_subject_id': 'NotIdentified',
+                            'Description': 'Test Sample 3',
+                            'str_column': 'Value for sample 3',
+                            'latitude': 4.8,
+                            'longitude': 4.41},
+            }
+        self.metadata_str_prefix = pd.DataFrame.from_dict(
+            metadata_str_prefix_dict, orient='index')
+
+        metadata_int_prefix_dict = {
+            '12.Sample1': {'physical_location': 'location1',
+                           'has_physical_specimen': True,
+                           'has_extracted_data': True,
+                           'sample_type': 'type1',
+                           'required_sample_info_status': 'received',
+                           'collection_timestamp':
+                           datetime(2014, 5, 29, 12, 24, 51),
+                           'host_subject_id': 'NotIdentified',
+                           'Description': 'Test Sample 1',
+                           'str_column': 'Value for sample 1',
+                           'latitude': 42.42,
+                           'longitude': 41.41},
+            '12.Sample2': {'physical_location': 'location1',
+                           'has_physical_specimen': True,
+                           'has_extracted_data': True,
+                           'sample_type': 'type1',
+                           'required_sample_info_status': 'received',
+                           'collection_timestamp':
+                           datetime(2014, 5, 29, 12, 24, 51),
+                           'host_subject_id': 'NotIdentified',
+                           'Description': 'Test Sample 2',
+                           'str_column': 'Value for sample 2',
+                           'latitude': 4.2,
+                           'longitude': 1.1},
+            '12.Sample3': {'physical_location': 'location1',
+                           'has_physical_specimen': True,
+                           'has_extracted_data': True,
+                           'sample_type': 'type1',
+                           'required_sample_info_status': 'received',
+                           'collection_timestamp':
+                           datetime(2014, 5, 29, 12, 24, 51),
+                           'host_subject_id': 'NotIdentified',
+                           'Description': 'Test Sample 3',
+                           'str_column': 'Value for sample 3',
+                           'latitude': 4.8,
+                           'longitude': 4.41},
+            }
+        self.metadata_int_pref = pd.DataFrame.from_dict(
+            metadata_int_prefix_dict, orient='index')
+
+        metadata_prefixed_dict = {
+            '2.Sample1': {'physical_location': 'location1',
+                          'has_physical_specimen': True,
+                          'has_extracted_data': True,
+                          'sample_type': 'type1',
+                          'required_sample_info_status': 'received',
+                          'collection_timestamp':
+                          datetime(2014, 5, 29, 12, 24, 51),
+                          'host_subject_id': 'NotIdentified',
+                          'Description': 'Test Sample 1',
+                          'str_column': 'Value for sample 1',
+                          'latitude': 42.42,
+                          'longitude': 41.41},
+            '2.Sample2': {'physical_location': 'location1',
+                          'has_physical_specimen': True,
+                          'has_extracted_data': True,
+                          'sample_type': 'type1',
+                          'required_sample_info_status': 'received',
+                          'collection_timestamp':
+                          datetime(2014, 5, 29, 12, 24, 51),
+                          'host_subject_id': 'NotIdentified',
+                          'Description': 'Test Sample 2',
+                          'str_column': 'Value for sample 2',
+                          'latitude': 4.2,
+                          'longitude': 1.1},
+            '2.Sample3': {'physical_location': 'location1',
+                          'has_physical_specimen': True,
+                          'has_extracted_data': True,
+                          'sample_type': 'type1',
+                          'required_sample_info_status': 'received',
+                          'collection_timestamp':
+                          datetime(2014, 5, 29, 12, 24, 51),
+                          'host_subject_id': 'NotIdentified',
+                          'Description': 'Test Sample 3',
+                          'str_column': 'Value for sample 3',
+                          'latitude': 4.8,
+                          'longitude': 4.41},
+            }
+        self.metadata_prefixed = pd.DataFrame.from_dict(
+            metadata_prefixed_dict, orient='index')
+
         self.test_study = Study(1)
         info = {
             "timeseries_type_id": 1,
@@ -598,9 +728,179 @@ class TestSampleTemplate(TestCase):
         with self.assertRaises(QiitaDBDuplicateHeaderError):
             SampleTemplate.create(self.metadata, self.new_study)
 
+    def test_create_bad_sample_names(self):
+        """Create raises an error when duplicate headers are present"""
+        # set a horrible list of sample names
+        self.metadata.index = ['o()xxxx[{::::::::>', 'sample.1', 'sample.3']
+        with self.assertRaises(QiitaDBColumnError):
+            SampleTemplate.create(self.metadata, self.new_study)
+
+    def test_create_error_cleanup(self):
+        """Create does not modify the database if an error happens"""
+        metadata_dict = {
+            'Sample1': {'physical_location': 'location1',
+                        'has_physical_specimen': True,
+                        'has_extracted_data': True,
+                        'sample_type': 'type1',
+                        'required_sample_info_status': 'received',
+                        'collection_timestamp':
+                        datetime(2014, 5, 29, 12, 24, 51),
+                        'host_subject_id': 'NotIdentified',
+                        'Description': 'Test Sample 1',
+                        'group': 'Forcing the creation to fail',
+                        'latitude': 42.42,
+                        'longitude': 41.41}
+            }
+        metadata = pd.DataFrame.from_dict(metadata_dict, orient='index')
+        with self.assertRaises(QiitaDBExecutionError):
+            SampleTemplate.create(metadata, self.new_study)
+
+        sql = """SELECT EXISTS(
+                    SELECT * FROM qiita.required_sample_info
+                    WHERE sample_id=%s)"""
+        sample_id = "%d.Sample1" % self.new_study.id
+        self.assertFalse(
+            self.conn_handler.execute_fetchone(sql, (sample_id,))[0])
+
+        sql = """SELECT EXISTS(
+                    SELECT * FROM qiita.study_sample_columns
+                    WHERE study_id=%s)"""
+        self.assertFalse(
+            self.conn_handler.execute_fetchone(sql, (self.new_study.id,))[0])
+
+        self.assertFalse(
+            exists_table("sample_%d" % self.new_study.id, self.conn_handler))
+
     def test_create(self):
         """Creates a new SampleTemplate"""
         st = SampleTemplate.create(self.metadata, self.new_study)
+        # The returned object has the correct id
+        self.assertEqual(st.id, 2)
+
+        # The relevant rows to required_sample_info have been added.
+        obs = self.conn_handler.execute_fetchall(
+            "SELECT * FROM qiita.required_sample_info WHERE study_id=2")
+        # sample_id study_id physical_location has_physical_specimen
+        # has_extracted_data sample_type required_sample_info_status_id
+        # collection_timestamp host_subject_id description
+        exp = [["2.Sample1", 2, "location1", True, True, "type1", 1,
+                datetime(2014, 5, 29, 12, 24, 51), "NotIdentified",
+                "Test Sample 1", 42.42, 41.41],
+               ["2.Sample2", 2, "location1", True, True, "type1", 1,
+                datetime(2014, 5, 29, 12, 24, 51), "NotIdentified",
+                "Test Sample 2", 4.2, 1.1],
+               ["2.Sample3", 2, "location1", True, True, "type1", 1,
+                datetime(2014, 5, 29, 12, 24, 51), "NotIdentified",
+                "Test Sample 3", 4.8, 4.41]]
+        self.assertEqual(obs, exp)
+
+        # The relevant rows have been added to the study_sample_columns
+        obs = self.conn_handler.execute_fetchall(
+            "SELECT * FROM qiita.study_sample_columns WHERE study_id=2")
+        # study_id, column_name, column_type
+        exp = [[2, "str_column", "varchar"]]
+        self.assertEqual(obs, exp)
+
+        # The new table exists
+        self.assertTrue(exists_table("sample_2", self.conn_handler))
+
+        # The new table hosts the correct values
+        obs = self.conn_handler.execute_fetchall(
+            "SELECT * FROM qiita.sample_2")
+        # sample_id, str_column
+        exp = [['2.Sample1', "Value for sample 1"],
+               ['2.Sample2', "Value for sample 2"],
+               ['2.Sample3', "Value for sample 3"]]
+        self.assertEqual(obs, exp)
+
+    def test_create_int_prefix(self):
+        """Creates a new SampleTemplate"""
+        st = SampleTemplate.create(self.metadata_int_pref, self.new_study)
+        # The returned object has the correct id
+        self.assertEqual(st.id, 2)
+
+        # The relevant rows to required_sample_info have been added.
+        obs = self.conn_handler.execute_fetchall(
+            "SELECT * FROM qiita.required_sample_info WHERE study_id=2")
+        # sample_id study_id physical_location has_physical_specimen
+        # has_extracted_data sample_type required_sample_info_status_id
+        # collection_timestamp host_subject_id description
+        exp = [["2.12.Sample1", 2, "location1", True, True, "type1", 1,
+                datetime(2014, 5, 29, 12, 24, 51), "NotIdentified",
+                "Test Sample 1", 42.42, 41.41],
+               ["2.12.Sample2", 2, "location1", True, True, "type1", 1,
+                datetime(2014, 5, 29, 12, 24, 51), "NotIdentified",
+                "Test Sample 2", 4.2, 1.1],
+               ["2.12.Sample3", 2, "location1", True, True, "type1", 1,
+                datetime(2014, 5, 29, 12, 24, 51), "NotIdentified",
+                "Test Sample 3", 4.8, 4.41]]
+        self.assertEqual(obs, exp)
+
+        # The relevant rows have been added to the study_sample_columns
+        obs = self.conn_handler.execute_fetchall(
+            "SELECT * FROM qiita.study_sample_columns WHERE study_id=2")
+        # study_id, column_name, column_type
+        exp = [[2, "str_column", "varchar"]]
+        self.assertEqual(obs, exp)
+
+        # The new table exists
+        self.assertTrue(exists_table("sample_2", self.conn_handler))
+
+        # The new table hosts the correct values
+        obs = self.conn_handler.execute_fetchall(
+            "SELECT * FROM qiita.sample_2")
+        # sample_id, str_column
+        exp = [['2.12.Sample1', "Value for sample 1"],
+               ['2.12.Sample2', "Value for sample 2"],
+               ['2.12.Sample3', "Value for sample 3"]]
+        self.assertEqual(obs, exp)
+
+    def test_create_str_prefixes(self):
+        """Creates a new SampleTemplate"""
+        st = SampleTemplate.create(self.metadata_str_prefix, self.new_study)
+        # The returned object has the correct id
+        self.assertEqual(st.id, 2)
+
+        # The relevant rows to required_sample_info have been added.
+        obs = self.conn_handler.execute_fetchall(
+            "SELECT * FROM qiita.required_sample_info WHERE study_id=2")
+        # sample_id study_id physical_location has_physical_specimen
+        # has_extracted_data sample_type required_sample_info_status_id
+        # collection_timestamp host_subject_id description
+        exp = [["2.foo.Sample1", 2, "location1", True, True, "type1", 1,
+                datetime(2014, 5, 29, 12, 24, 51), "NotIdentified",
+                "Test Sample 1", 42.42, 41.41],
+               ["2.bar.Sample2", 2, "location1", True, True, "type1", 1,
+                datetime(2014, 5, 29, 12, 24, 51), "NotIdentified",
+                "Test Sample 2", 4.2, 1.1],
+               ["2.foo.Sample3", 2, "location1", True, True, "type1", 1,
+                datetime(2014, 5, 29, 12, 24, 51), "NotIdentified",
+                "Test Sample 3", 4.8, 4.41]]
+        self.assertEqual(sorted(obs), sorted(exp))
+
+        # The relevant rows have been added to the study_sample_columns
+        obs = self.conn_handler.execute_fetchall(
+            "SELECT * FROM qiita.study_sample_columns WHERE study_id=2")
+        # study_id, column_name, column_type
+        exp = [[2, "str_column", "varchar"]]
+        self.assertEqual(obs, exp)
+
+        # The new table exists
+        self.assertTrue(exists_table("sample_2", self.conn_handler))
+
+        # The new table hosts the correct values
+        obs = self.conn_handler.execute_fetchall(
+            "SELECT * FROM qiita.sample_2")
+        # sample_id, str_column
+        exp = [['2.foo.Sample1', "Value for sample 1"],
+               ['2.bar.Sample2', "Value for sample 2"],
+               ['2.foo.Sample3', "Value for sample 3"]]
+        self.assertEqual(sorted(obs), sorted(exp))
+
+    def test_create_already_prefixed_samples(self):
+        """Creates a new SampleTemplate with the samples already prefixed"""
+        st = npt.assert_warns(QiitaDBWarning, SampleTemplate.create,
+                              self.metadata_prefixed, self.new_study)
         # The returned object has the correct id
         self.assertEqual(st.id, 2)
 
@@ -689,15 +989,91 @@ class TestSampleTemplate(TestCase):
         with self.assertRaises(KeyError):
             self.tester['Not_a_Sample']
 
-    def test_setitem(self):
+    def test_update_category(self):
         """setitem raises an error (currently not allowed)"""
-        with self.assertRaises(QiitaDBNotImplementedError):
-            self.tester['1.SKM7.640188'] = Sample('1.SKM7.640188', self.tester)
+        with self.assertRaises(QiitaDBUnknownIDError):
+            self.tester.update_category('country', {"foo": "bar"})
 
-    def test_delitem(self):
-        """delitem raises an error (currently not allowed)"""
-        with self.assertRaises(QiitaDBNotImplementedError):
-            del self.tester['1.SKM7.640188']
+        with self.assertRaises(QiitaDBColumnError):
+            self.tester.update_category('missing column',
+                                        {'1.SKM7.640188': 'stuff'})
+
+        negtest = self.tester['1.SKM7.640188']['country']
+
+        mapping = {'1.SKB1.640202': "1",
+                   '1.SKB5.640181': "2",
+                   '1.SKD6.640190': "3"}
+
+        self.tester.update_category('country', mapping)
+
+        self.assertEqual(self.tester['1.SKB1.640202']['country'], "1")
+        self.assertEqual(self.tester['1.SKB5.640181']['country'], "2")
+        self.assertEqual(self.tester['1.SKD6.640190']['country'], "3")
+        self.assertEqual(self.tester['1.SKM7.640188']['country'], negtest)
+
+    def test_add_category(self):
+        column = "new_column"
+        dtype = "varchar"
+        default = "stuff"
+        mapping = {'1.SKB1.640202': "1",
+                   '1.SKB5.640181': "2",
+                   '1.SKD6.640190': "3"}
+
+        exp = {
+            '1.SKB1.640202': "1",
+            '1.SKB2.640194': "stuff",
+            '1.SKB3.640195': "stuff",
+            '1.SKB4.640189': "stuff",
+            '1.SKB5.640181': "2",
+            '1.SKB6.640176': "stuff",
+            '1.SKB7.640196': "stuff",
+            '1.SKB8.640193': "stuff",
+            '1.SKB9.640200': "stuff",
+            '1.SKD1.640179': "stuff",
+            '1.SKD2.640178': "stuff",
+            '1.SKD3.640198': "stuff",
+            '1.SKD4.640185': "stuff",
+            '1.SKD5.640186': "stuff",
+            '1.SKD6.640190': "3",
+            '1.SKD7.640191': "stuff",
+            '1.SKD8.640184': "stuff",
+            '1.SKD9.640182': "stuff",
+            '1.SKM1.640183': "stuff",
+            '1.SKM2.640199': "stuff",
+            '1.SKM3.640197': "stuff",
+            '1.SKM4.640180': "stuff",
+            '1.SKM5.640177': "stuff",
+            '1.SKM6.640187': "stuff",
+            '1.SKM7.640188': "stuff",
+            '1.SKM8.640201': "stuff",
+            '1.SKM9.640192': "stuff"}
+
+        self.tester.add_category(column, mapping, dtype, default)
+
+        obs = {k: v['new_column'] for k, v in self.tester.items()}
+        self.assertEqual(obs, exp)
+
+    def test_categories(self):
+        exp = {'season_environment',
+               'assigned_from_geo', 'texture', 'taxon_id', 'depth',
+               'host_taxid', 'common_name', 'water_content_soil', 'elevation',
+               'temp', 'tot_nitro', 'samp_salinity', 'altitude', 'env_biome',
+               'country', 'ph', 'anonymized_name', 'tot_org_carb',
+               'description_duplicate', 'env_feature'}
+        obs = self.tester.categories()
+        self.assertEqual(obs, exp)
+
+    def test_remove_category(self):
+        with self.assertRaises(QiitaDBColumnError):
+            self.tester.remove_category('does not exist')
+
+        for v in self.tester.values():
+            self.assertIn('elevation', v)
+
+        self.tester.remove_category('elevation')
+
+        for v in self.tester.values():
+            self.assertNotIn('elevation', v)
 
     def test_iter(self):
         """iter returns an iterator over the sample ids"""
@@ -813,6 +1189,31 @@ class TestSampleTemplate(TestCase):
             obs = f.read()
         self.assertEqual(obs, EXP_SAMPLE_TEMPLATE)
 
+        fd, fp = mkstemp()
+        close(fd)
+        st.to_file(fp, {'2.Sample1', '2.Sample3'})
+        self._clean_up_files.append(fp)
+
+        with open(fp, 'U') as f:
+            obs = f.read()
+        self.assertEqual(obs, EXP_SAMPLE_TEMPLATE_FEWER_SAMPLES)
+
+    def test_get_filepath(self):
+        # we will check that there is a new id only because the path will
+        # change based on time and the same functionality is being tested
+        # in data.py
+        exp_id = self.conn_handler.execute_fetchone(
+            "SELECT count(1) FROM qiita.filepath")[0] + 1
+        st = SampleTemplate.create(self.metadata, self.new_study)
+        self.assertEqual(st.get_filepaths()[0][0], exp_id)
+
+        # testing current functionaly, to add a new sample template
+        # you need to erase it first
+        SampleTemplate.delete(st.id)
+        exp_id += 1
+        st = SampleTemplate.create(self.metadata, self.new_study)
+        self.assertEqual(st.get_filepaths()[0][0], exp_id)
+
 
 @qiita_test_checker()
 class TestPrepTemplate(TestCase):
@@ -855,6 +1256,45 @@ class TestPrepTemplate(TestCase):
                             'experiment_design_description': 'BBBB'}
             }
         self.metadata = pd.DataFrame.from_dict(metadata_dict, orient='index')
+
+        metadata_prefixed_dict = {
+            '1.SKB8.640193': {'center_name': 'ANL',
+                              'center_project_name': 'Test Project',
+                              'ebi_submission_accession': None,
+                              'EMP_status': 'EMP',
+                              'str_column': 'Value for sample 1',
+                              'linkerprimersequence': 'GTGCCAGCMGCCGCGGTAA',
+                              'barcodesequence': 'GTCCGCAAGTTA',
+                              'run_prefix': "s_G1_L001_sequences",
+                              'platform': 'ILLUMINA',
+                              'library_construction_protocol': 'AAAA',
+                              'experiment_design_description': 'BBBB'},
+            '1.SKD8.640184': {'center_name': 'ANL',
+                              'center_project_name': 'Test Project',
+                              'ebi_submission_accession': None,
+                              'EMP_status': 'EMP',
+                              'str_column': 'Value for sample 2',
+                              'linkerprimersequence': 'GTGCCAGCMGCCGCGGTAA',
+                              'barcodesequence': 'CGTAGAGCTCTC',
+                              'run_prefix': "s_G1_L001_sequences",
+                              'platform': 'ILLUMINA',
+                              'library_construction_protocol': 'AAAA',
+                              'experiment_design_description': 'BBBB'},
+            '1.SKB7.640196': {'center_name': 'ANL',
+                              'center_project_name': 'Test Project',
+                              'ebi_submission_accession': None,
+                              'EMP_status': 'EMP',
+                              'str_column': 'Value for sample 3',
+                              'linkerprimersequence': 'GTGCCAGCMGCCGCGGTAA',
+                              'barcodesequence': 'CCTCTGAGAGCT',
+                              'run_prefix': "s_G1_L002_sequences",
+                              'platform': 'ILLUMINA',
+                              'library_construction_protocol': 'AAAA',
+                              'experiment_design_description': 'BBBB'}
+            }
+        self.metadata_prefixed = pd.DataFrame.from_dict(metadata_prefixed_dict,
+                                                        orient='index')
+
         self.test_raw_data = RawData(1)
         self.test_study = Study(1)
         self.data_type = "18S"
@@ -871,8 +1311,8 @@ class TestPrepTemplate(TestCase):
             f.write("\n")
         self.new_raw_data = RawData.create(2, [Study(1)], filepaths=filepaths)
         db_test_raw_dir = join(get_db_files_base_dir(), 'raw_data')
-        db_seqs_fp = join(db_test_raw_dir, "3_%s" % basename(seqs_fp))
-        db_barcodes_fp = join(db_test_raw_dir, "3_%s" % basename(barcodes_fp))
+        db_seqs_fp = join(db_test_raw_dir, "5_%s" % basename(seqs_fp))
+        db_barcodes_fp = join(db_test_raw_dir, "5_%s" % basename(barcodes_fp))
         self._clean_up_files = [db_seqs_fp, db_barcodes_fp]
 
         self.tester = PrepTemplate(1)
@@ -916,6 +1356,75 @@ class TestPrepTemplate(TestCase):
             PrepTemplate.create(self.metadata, self.new_raw_data,
                                 self.test_study, self.data_type)
 
+    def test_create_bad_sample_names(self):
+        # set a horrible list of sample names
+        self.metadata.index = ['o()xxxx[{::::::::>', 'sample.1', 'sample.3']
+        with self.assertRaises(QiitaDBColumnError):
+            PrepTemplate.create(self.metadata, self.new_raw_data,
+                                self.test_study, self.data_type)
+
+    def test_create_error_cleanup(self):
+        """Create does not modify the database if an error happens"""
+        metadata_dict = {
+            'SKB8.640193': {'center_name': 'ANL',
+                            'center_project_name': 'Test Project',
+                            'ebi_submission_accession': None,
+                            'EMP_status': 'EMP',
+                            'group': 2,
+                            'linkerprimersequence': 'GTGCCAGCMGCCGCGGTAA',
+                            'barcodesequence': 'GTCCGCAAGTTA',
+                            'run_prefix': "s_G1_L001_sequences",
+                            'platform': 'ILLUMINA',
+                            'library_construction_protocol': 'AAAA',
+                            'experiment_design_description': 'BBBB'},
+            'SKD8.640184': {'center_name': 'ANL',
+                            'center_project_name': 'Test Project',
+                            'ebi_submission_accession': None,
+                            'EMP_status': 'EMP',
+                            'group': 1,
+                            'linkerprimersequence': 'GTGCCAGCMGCCGCGGTAA',
+                            'barcodesequence': 'CGTAGAGCTCTC',
+                            'run_prefix': "s_G1_L001_sequences",
+                            'platform': 'ILLUMINA',
+                            'library_construction_protocol': 'AAAA',
+                            'experiment_design_description': 'BBBB'},
+            'SKB7.640196': {'center_name': 'ANL',
+                            'center_project_name': 'Test Project',
+                            'ebi_submission_accession': None,
+                            'EMP_status': 'EMP',
+                            'group': 'Value for sample 3',
+                            'linkerprimersequence': 'GTGCCAGCMGCCGCGGTAA',
+                            'barcodesequence': 'CCTCTGAGAGCT',
+                            'run_prefix': "s_G1_L002_sequences",
+                            'platform': 'ILLUMINA',
+                            'library_construction_protocol': 'AAAA',
+                            'experiment_design_description': 'BBBB'}
+            }
+        metadata = pd.DataFrame.from_dict(metadata_dict, orient='index')
+
+        exp_id = get_count("qiita.prep_template") + 1
+
+        with self.assertRaises(QiitaDBExecutionError):
+            PrepTemplate.create(metadata, self.new_raw_data,
+                                self.test_study, self.data_type)
+
+        sql = """SELECT EXISTS(
+                    SELECT * FROM qiita.prep_template
+                    WHERE prep_template_id=%s)"""
+        self.assertFalse(self.conn_handler.execute_fetchone(sql, (exp_id,))[0])
+
+        sql = """SELECT EXISTS(
+                    SELECT * FROM qiita.common_prep_info
+                    WHERE prep_template_id=%s)"""
+        self.assertFalse(self.conn_handler.execute_fetchone(sql, (exp_id,))[0])
+
+        sql = """SELECT EXISTS(
+                    SELECT * FROM qiita.prep_columns
+                    WHERE prep_template_id=%s)"""
+        self.assertFalse(self.conn_handler.execute_fetchone(sql, (exp_id,))[0])
+
+        self.assertFalse(exists_table("prep_%d" % exp_id, self.conn_handler))
+
     def test_create(self):
         """Creates a new PrepTemplate"""
         pt = PrepTemplate.create(self.metadata, self.new_raw_data,
@@ -928,7 +1437,7 @@ class TestPrepTemplate(TestCase):
             "SELECT * FROM qiita.prep_template WHERE prep_template_id=2")
         # prep_template_id, data_type_id, raw_data_id, preprocessing_status,
         # investigation_type
-        self.assertEqual(obs, [[2, 2, 3, 'not_preprocessed', None]])
+        self.assertEqual(obs, [[2, 2, 5, 'not_preprocessed', None]])
 
         # The relevant rows to common_prep_info have been added.
         obs = self.conn_handler.execute_fetchall(
@@ -973,6 +1482,114 @@ class TestPrepTemplate(TestCase):
                 'GTGCCAGCMGCCGCGGTAA', 'BBBB', 'AAAA']]
         self.assertEqual(sorted(obs), sorted(exp))
 
+        # prep and qiime files have been created
+        filepaths = pt.get_filepaths()
+        self.assertEqual(len(filepaths), 2)
+        self.assertEqual(filepaths[0][0], 22)
+        self.assertEqual(filepaths[1][0], 21)
+
+    def test_create_already_prefixed_samples(self):
+        """Creates a new PrepTemplate"""
+        pt = npt.assert_warns(QiitaDBWarning, PrepTemplate.create,
+                              self.metadata_prefixed, self.new_raw_data,
+                              self.test_study, self.data_type)
+        # The returned object has the correct id
+        self.assertEqual(pt.id, 2)
+
+        # The row in the prep template table has been created
+        obs = self.conn_handler.execute_fetchall(
+            "SELECT * FROM qiita.prep_template WHERE prep_template_id=2")
+        # prep_template_id, data_type_id, raw_data_id, preprocessing_status,
+        # investigation_type
+        self.assertEqual(obs, [[2, 2, 5, 'not_preprocessed', None]])
+
+        # The relevant rows to common_prep_info have been added.
+        obs = self.conn_handler.execute_fetchall(
+            "SELECT * FROM qiita.common_prep_info WHERE prep_template_id=2")
+        # prep_template_id, sample_id, study_id, center_name,
+        # center_project_name, emp_status_id
+        exp = [[2, '1.SKB8.640193', 'ANL', 'Test Project', 1],
+               [2, '1.SKD8.640184', 'ANL', 'Test Project', 1],
+               [2, '1.SKB7.640196', 'ANL', 'Test Project', 1]]
+        self.assertEqual(sorted(obs), sorted(exp))
+
+        # The relevant rows have been added to the prep_columns table
+        obs = self.conn_handler.execute_fetchall(
+            "SELECT * FROM qiita.prep_columns WHERE prep_template_id=2")
+        # prep_template_id, column_name, column_type
+        exp = [[2, 'str_column', 'varchar'],
+               [2, 'ebi_submission_accession', 'varchar'],
+               [2, 'run_prefix', 'varchar'],
+               [2, 'barcodesequence', 'varchar'],
+               [2, 'linkerprimersequence', 'varchar'],
+               [2, 'platform', 'varchar'],
+               [2, 'experiment_design_description', 'varchar'],
+               [2, 'library_construction_protocol', 'varchar']]
+        self.assertEqual(sorted(obs), sorted(exp))
+
+        # The new table exists
+        self.assertTrue(exists_table("prep_2", self.conn_handler))
+
+        # The new table hosts the correct values
+        obs = self.conn_handler.execute_fetchall(
+            "SELECT * FROM qiita.prep_2")
+        # sample_id, study_id, str_column, ebi_submission_accession,
+        # run_prefix, barcodesequence, linkerprimersequence
+        exp = [['1.SKB7.640196', 'Value for sample 3', 'ILLUMINA',
+                's_G1_L002_sequences', 'CCTCTGAGAGCT', None,
+                'GTGCCAGCMGCCGCGGTAA', 'BBBB', 'AAAA'],
+               ['1.SKB8.640193', 'Value for sample 1', 'ILLUMINA',
+                's_G1_L001_sequences', 'GTCCGCAAGTTA', None,
+                'GTGCCAGCMGCCGCGGTAA', 'BBBB', 'AAAA'],
+               ['1.SKD8.640184', 'Value for sample 2', 'ILLUMINA',
+                's_G1_L001_sequences', 'CGTAGAGCTCTC', None,
+                'GTGCCAGCMGCCGCGGTAA', 'BBBB', 'AAAA']]
+        self.assertEqual(sorted(obs), sorted(exp))
+
+        # prep and qiime files have been created
+        filepaths = pt.get_filepaths()
+        self.assertEqual(len(filepaths), 2)
+        self.assertEqual(filepaths[0][0], 22)
+        self.assertEqual(filepaths[1][0], 21)
+
+    def test_create_qiime_mapping_file(self):
+        pt = PrepTemplate(1)
+
+        # creating prep template file
+        _id, fp = get_mountpoint('templates')[0]
+        fpp = join(fp, '%d_prep_%d_%s.txt' % (pt.study_id, pt.id,
+                   strftime("%Y%m%d-%H%M%S")))
+        pt.to_file(fpp)
+        pt.add_filepath(fpp)
+
+        _, filepath = pt.get_filepaths()[0]
+        obs_fp = pt.create_qiime_mapping_file(filepath)
+        exp_fp = join(fp, '1_prep_1_qiime_19700101-000000.txt')
+
+        obs = pd.read_csv(obs_fp, sep='\t', infer_datetime_format=True,
+                          parse_dates=True, index_col=False, comment='\t')
+        exp = pd.read_csv(exp_fp, sep='\t', infer_datetime_format=True,
+                          parse_dates=True, index_col=False, comment='\t')
+
+        assert_frame_equal(obs, exp)
+
+        # testing failure, first lest remove some lines of the prep template
+        with open(filepath, 'r') as filepath_fh:
+            data = filepath_fh.read().splitlines()
+        with open(filepath, 'w') as filepath_fh:
+            for i, d in enumerate(data):
+                if i == 4:
+                    # adding fake sample
+                    line = d.split('\t')
+                    line[0] = 'fake_sample'
+                    line = '\t'.join(line)
+                    filepath_fh.write(line + '\n')
+                    break
+                filepath_fh.write(d + '\n')
+
+        with self.assertRaises(ValueError):
+            pt.create_qiime_mapping_file(filepath)
+
     def test_create_data_type_id(self):
         """Creates a new PrepTemplate passing the data_type_id"""
         pt = PrepTemplate.create(self.metadata, self.new_raw_data,
@@ -985,7 +1602,7 @@ class TestPrepTemplate(TestCase):
             "SELECT * FROM qiita.prep_template WHERE prep_template_id=2")
         # prep_template_id, data_type_id, raw_data_id, preprocessing_status,
         # investigation_type
-        self.assertEqual(obs, [[2, 2, 3, 'not_preprocessed', None]])
+        self.assertEqual(obs, [[2, 2, 5, 'not_preprocessed', None]])
 
         # The relevant rows to common_prep_info have been added.
         obs = self.conn_handler.execute_fetchall(
@@ -1343,6 +1960,125 @@ class TestPrepTemplate(TestCase):
         with self.assertRaises(QiitaDBColumnError):
             pt.investigation_type = "should fail"
 
+    def test_investigation_type_instance_setter(self):
+        pt = PrepTemplate(1)
+        pt.investigation_type = 'RNASeq'
+        self.assertEqual(pt.investigation_type, 'RNASeq')
+
+
+class TestUtilities(TestCase):
+
+    def test_load_template_to_dataframe(self):
+        obs = load_template_to_dataframe(StringIO(EXP_SAMPLE_TEMPLATE))
+        exp = pd.DataFrame.from_dict(SAMPLE_TEMPLATE_DICT_FORM)
+        exp.index.name = 'sample_name'
+        assert_frame_equal(obs, exp)
+
+    def test_load_template_to_dataframe_duplicate_cols(self):
+        obs = load_template_to_dataframe(
+            StringIO(EXP_SAMPLE_TEMPLATE_DUPE_COLS))
+        obs = list(obs.columns)
+        exp = ['collection_timestamp', 'description', 'has_extracted_data',
+               'has_physical_specimen', 'host_subject_id', 'latitude',
+               'longitude', 'physical_location', 'required_sample_info_status',
+               'sample_type', 'str_column', 'str_column']
+        self.assertEqual(obs, exp)
+
+    def test_load_template_to_dataframe_scrubbing(self):
+        obs = load_template_to_dataframe(StringIO(EXP_SAMPLE_TEMPLATE_SPACES))
+        exp = pd.DataFrame.from_dict(SAMPLE_TEMPLATE_DICT_FORM)
+        exp.index.name = 'sample_name'
+        assert_frame_equal(obs, exp)
+
+    def test_load_template_to_dataframe_empty_columns(self):
+        obs = npt.assert_warns(QiitaDBWarning, load_template_to_dataframe,
+                               StringIO(EXP_ST_SPACES_EMPTY_COLUMN))
+        exp = pd.DataFrame.from_dict(SAMPLE_TEMPLATE_DICT_FORM)
+        exp.index.name = 'sample_name'
+        assert_frame_equal(obs, exp)
+
+    def test_load_template_to_dataframe_empty_rows(self):
+        obs = load_template_to_dataframe(
+            StringIO(EXP_SAMPLE_TEMPLATE_SPACES_EMPTY_ROW))
+        exp = pd.DataFrame.from_dict(SAMPLE_TEMPLATE_DICT_FORM)
+        exp.index.name = 'sample_name'
+        assert_frame_equal(obs, exp)
+
+    def test_load_template_to_dataframe_no_sample_name_cast(self):
+        obs = load_template_to_dataframe(
+            StringIO(EXP_SAMPLE_TEMPLATE_NUMBER_SAMPLE_NAMES))
+        exp = pd.DataFrame.from_dict(
+            SAMPLE_TEMPLATE_NUMBER_SAMPLE_NAMES_DICT_FORM)
+        exp.index.name = 'sample_name'
+        obs.sort_index(inplace=True)
+        exp.sort_index(inplace=True)
+        assert_frame_equal(obs, exp)
+
+    def test_load_template_to_dataframe_empty_sample_names(self):
+        obs = load_template_to_dataframe(
+            StringIO(SAMPLE_TEMPLATE_NO_SAMPLE_NAMES))
+        exp = pd.DataFrame.from_dict(SAMPLE_TEMPLATE_DICT_FORM)
+        exp.index.name = 'sample_name'
+        assert_frame_equal(obs, exp)
+
+        obs = load_template_to_dataframe(
+            StringIO(SAMPLE_TEMPLATE_NO_SAMPLE_NAMES_SOME_SPACES))
+        exp = pd.DataFrame.from_dict(SAMPLE_TEMPLATE_DICT_FORM)
+        exp.index.name = 'sample_name'
+        assert_frame_equal(obs, exp)
+
+    def test_load_template_to_dataframe_empty_column(self):
+        obs = npt.assert_warns(QiitaDBWarning, load_template_to_dataframe,
+                               StringIO(SAMPLE_TEMPLATE_EMPTY_COLUMN))
+        exp = pd.DataFrame.from_dict(ST_EMPTY_COLUMN_DICT_FORM)
+        exp.index.name = 'sample_name'
+        assert_frame_equal(obs, exp)
+
+    def test_load_template_to_dataframe_column_with_nas(self):
+        obs = load_template_to_dataframe(
+            StringIO(SAMPLE_TEMPLATE_COLUMN_WITH_NAS))
+        exp = pd.DataFrame.from_dict(ST_COLUMN_WITH_NAS_DICT_FORM)
+        exp.index.name = 'sample_name'
+        assert_frame_equal(obs, exp)
+
+    def test_load_template_to_dataframe_exception(self):
+        with self.assertRaises(QiitaDBColumnError):
+            x = load_template_to_dataframe(
+                StringIO(SAMPLE_TEMPLATE_NO_SAMPLE_NAME))
+
+            # prevent flake8 from complaining
+            x.strip()
+
+    def test_get_invalid_sample_names(self):
+        all_valid = ['2.sample.1', 'foo.bar.baz', 'roses', 'are', 'red',
+                     'v10l3t5', '4r3', '81u3']
+        obs = get_invalid_sample_names(all_valid)
+        self.assertEqual(obs, [])
+
+        all_valid = ['sample.1', 'sample.2', 'SAMPLE.1', 'BOOOM']
+        obs = get_invalid_sample_names(all_valid)
+        self.assertEqual(obs, [])
+
+    def test_get_invalid_sample_names_str(self):
+        one_invalid = ['2.sample.1', 'foo.bar.baz', 'roses', 'are', 'red',
+                       'I am the chosen one', 'v10l3t5', '4r3', '81u3']
+        obs = get_invalid_sample_names(one_invalid)
+        self.assertItemsEqual(obs, ['I am the chosen one'])
+
+        one_invalid = ['2.sample.1', 'foo.bar.baz', 'roses', 'are', 'red',
+                       ':L{=<', ':L}=<', '4r3', '81u3']
+        obs = get_invalid_sample_names(one_invalid)
+        self.assertItemsEqual(obs, [':L{=<', ':L}=<'])
+
+    def test_get_get_invalid_sample_names_mixed(self):
+        one_invalid = ['.', '1', '2']
+        obs = get_invalid_sample_names(one_invalid)
+        self.assertItemsEqual(obs, [])
+
+        one_invalid = [' ', ' ', ' ']
+        obs = get_invalid_sample_names(one_invalid)
+        self.assertItemsEqual(obs, [' ', ' ', ' '])
+
 
 EXP_SAMPLE_TEMPLATE = (
     "sample_name\tcollection_timestamp\tdescription\thas_extracted_data\t"
@@ -1359,6 +2095,311 @@ EXP_SAMPLE_TEMPLATE = (
     "True\tNotIdentified\t4.8\t4.41\tlocation1\treceived\ttype1\t"
     "Value for sample 3\n")
 
+EXP_SAMPLE_TEMPLATE_DUPE_COLS = (
+    "sample_name\tcollection_timestamp\tdescription\thas_extracted_data\t"
+    "has_physical_specimen\thost_subject_id\tlatitude\tlongitude\t"
+    "physical_location\trequired_sample_info_status\tsample_type\t"
+    "str_column\tstr_column\n"
+    "2.Sample1\t2014-05-29 12:24:51\tTest Sample 1\tTrue\tTrue\t"
+    "NotIdentified\t42.42\t41.41\tlocation1\treceived\ttype1\t"
+    "Value for sample 1\tValue for sample 1\n"
+    "2.Sample2\t2014-05-29 12:24:51\t"
+    "Test Sample 2\tTrue\tTrue\tNotIdentified\t4.2\t1.1\tlocation1\treceived\t"
+    "type1\tValue for sample 2\tValue for sample 2\n"
+    "2.Sample3\t2014-05-29 12:24:51\tTest Sample 3\tTrue\t"
+    "True\tNotIdentified\t4.8\t4.41\tlocation1\treceived\ttype1\t"
+    "Value for sample 3\tValue for sample 3\n")
+
+EXP_SAMPLE_TEMPLATE_FEWER_SAMPLES = (
+    "sample_name\tcollection_timestamp\tdescription\thas_extracted_data\t"
+    "has_physical_specimen\thost_subject_id\tlatitude\tlongitude\t"
+    "physical_location\trequired_sample_info_status\tsample_type\t"
+    "str_column\n"
+    "2.Sample1\t2014-05-29 12:24:51\tTest Sample 1\tTrue\tTrue\t"
+    "NotIdentified\t42.42\t41.41\tlocation1\treceived\ttype1\t"
+    "Value for sample 1\n"
+    "2.Sample3\t2014-05-29 12:24:51\tTest Sample 3\tTrue\t"
+    "True\tNotIdentified\t4.8\t4.41\tlocation1\treceived\ttype1\t"
+    "Value for sample 3\n")
+
+EXP_SAMPLE_TEMPLATE_SPACES = (
+    "sample_name\tcollection_timestamp\tdescription\thas_extracted_data\t"
+    "has_physical_specimen\thost_subject_id\tlatitude\tlongitude\t"
+    "physical_location\trequired_sample_info_status\tsample_type\t"
+    "str_column\n"
+    "2.Sample1         \t2014-05-29 12:24:51\tTest Sample 1\tTrue\tTrue\t"
+    "NotIdentified\t42.42\t41.41\tlocation1\treceived\ttype1\t"
+    "Value for sample 1\n"
+    "2.Sample2  \t2014-05-29 12:24:51\t"
+    "Test Sample 2\tTrue\tTrue\tNotIdentified\t4.2\t1.1\tlocation1\treceived\t"
+    "type1\tValue for sample 2\n"
+    "2.Sample3\t2014-05-29 12:24:51\tTest Sample 3\tTrue\t"
+    "True\tNotIdentified\t4.8\t4.41\tlocation1\treceived\ttype1\t"
+    "Value for sample 3\n")
+
+EXP_SAMPLE_TEMPLATE_SPACES_EMPTY_ROW = (
+    "sample_name\tcollection_timestamp\tdescription\thas_extracted_data\t"
+    "has_physical_specimen\thost_subject_id\tlatitude\tlongitude\t"
+    "physical_location\trequired_sample_info_status\tsample_type\t"
+    "str_column\n"
+    "2.Sample1         \t2014-05-29 12:24:51\tTest Sample 1\tTrue\tTrue\t"
+    "NotIdentified\t42.42\t41.41\tlocation1\treceived\ttype1\t"
+    "Value for sample 1\n"
+    "2.Sample2  \t2014-05-29 12:24:51\t"
+    "Test Sample 2\tTrue\tTrue\tNotIdentified\t4.2\t1.1\tlocation1\treceived\t"
+    "type1\tValue for sample 2\n"
+    "2.Sample3\t2014-05-29 12:24:51\tTest Sample 3\tTrue\t"
+    "True\tNotIdentified\t4.8\t4.41\tlocation1\treceived\ttype1\t"
+    "Value for sample 3\n"
+    "\t\t\t\t\t\t\t\t\t\t\t\n"
+    "\t\t\t\t\t\t\t\t\t\t\t\n")
+
+EXP_ST_SPACES_EMPTY_COLUMN = (
+    "sample_name\tcollection_timestamp\tdescription\thas_extracted_data\t"
+    "has_physical_specimen\thost_subject_id\tlatitude\tlongitude\t"
+    "physical_location\trequired_sample_info_status\tsample_type\t"
+    "str_column\t\n"
+    "2.Sample1         \t2014-05-29 12:24:51\tTest Sample 1\tTrue\tTrue\t"
+    "NotIdentified\t42.42\t41.41\tlocation1\treceived\ttype1\t"
+    "Value for sample 1\t\n"
+    "2.Sample2  \t2014-05-29 12:24:51\t"
+    "Test Sample 2\tTrue\tTrue\tNotIdentified\t4.2\t1.1\tlocation1\treceived\t"
+    "type1\tValue for sample 2\t\n"
+    "2.Sample3\t2014-05-29 12:24:51\tTest Sample 3\tTrue\t"
+    "True\tNotIdentified\t4.8\t4.41\tlocation1\treceived\ttype1\t"
+    "Value for sample 3\t\n")
+
+EXP_SAMPLE_TEMPLATE_NUMBER_SAMPLE_NAMES = (
+    "sample_name\tcollection_timestamp\tdescription\thas_extracted_data\t"
+    "has_physical_specimen\thost_subject_id\tlatitude\tlongitude\t"
+    "physical_location\trequired_sample_info_status\tsample_type\t"
+    "str_column\n"
+    "002.000\t2014-05-29 12:24:51\tTest Sample 1\tTrue\tTrue\t"
+    "NotIdentified\t42.42\t41.41\tlocation1\treceived\ttype1\t"
+    "Value for sample 1\n"
+    "1.11111\t2014-05-29 12:24:51\t"
+    "Test Sample 2\tTrue\tTrue\tNotIdentified\t4.2\t1.1\tlocation1\treceived\t"
+    "type1\tValue for sample 2\n"
+    "0.12121\t2014-05-29 12:24:51\tTest Sample 3\tTrue\t"
+    "True\tNotIdentified\t4.8\t4.41\tlocation1\treceived\ttype1\t"
+    "Value for sample 3\n")
+
+SAMPLE_TEMPLATE_NO_SAMPLE_NAMES = (
+    "sample_name\tcollection_timestamp\tdescription\thas_extracted_data\t"
+    "has_physical_specimen\thost_subject_id\tlatitude\tlongitude\t"
+    "physical_location\trequired_sample_info_status\tsample_type\t"
+    "str_column\n"
+    "2.Sample1\t2014-05-29 12:24:51\tTest Sample 1\tTrue\tTrue\t"
+    "NotIdentified\t42.42\t41.41\tlocation1\treceived\ttype1\t"
+    "Value for sample 1\n"
+    "2.Sample2\t2014-05-29 12:24:51\t"
+    "Test Sample 2\tTrue\tTrue\tNotIdentified\t4.2\t1.1\tlocation1\treceived\t"
+    "type1\tValue for sample 2\n"
+    "2.Sample3\t2014-05-29 12:24:51\tTest Sample 3\tTrue\t"
+    "True\tNotIdentified\t4.8\t4.41\tlocation1\treceived\ttype1\t"
+    "Value for sample 3\n"
+    "\t2014-05-29 12:24:51\tTest Sample 3\tTrue\t"
+    "True\tNotIdentified\t4.8\t4.41\tlocation1\treceived\ttype1\t"
+    "Value for sample 3\n"
+    "\t\t\t\t\t\t\t\t\t\t\t\n"
+    )
+
+SAMPLE_TEMPLATE_NO_SAMPLE_NAMES_SOME_SPACES = (
+    "sample_name\tcollection_timestamp\tdescription\thas_extracted_data\t"
+    "has_physical_specimen\thost_subject_id\tlatitude\tlongitude\t"
+    "physical_location\trequired_sample_info_status\tsample_type\t"
+    "str_column\n"
+    "2.Sample1\t2014-05-29 12:24:51\tTest Sample 1\tTrue\tTrue\t"
+    "NotIdentified\t42.42\t41.41\tlocation1\treceived\ttype1\t"
+    "Value for sample 1\n"
+    "2.Sample2\t2014-05-29 12:24:51\t"
+    "Test Sample 2\tTrue\tTrue\tNotIdentified\t4.2\t1.1\tlocation1\treceived\t"
+    "type1\tValue for sample 2\n"
+    "2.Sample3\t2014-05-29 12:24:51\tTest Sample 3\tTrue\t"
+    "True\tNotIdentified\t4.8\t4.41\tlocation1\treceived\ttype1\t"
+    "Value for sample 3\n"
+    "\t\t\t\t\t \t\t\t\t \t\t\n"
+    )
+
+SAMPLE_TEMPLATE_EMPTY_COLUMN = (
+    "sample_name\tcollection_timestamp\tdescription\thas_extracted_data\t"
+    "has_physical_specimen\thost_subject_id\tlatitude\tlongitude\t"
+    "physical_location\trequired_sample_info_status\tsample_type\t"
+    "str_column\n"
+    "2.Sample1\t2014-05-29 12:24:51\tTest Sample 1\tTrue\tTrue\t"
+    "NotIdentified\t42.42\t41.41\tlocation1\treceived\ttype1\t"
+    "\n"
+    "2.Sample2\t2014-05-29 12:24:51\t"
+    "Test Sample 2\tTrue\tTrue\tNotIdentified\t4.2\t1.1\tlocation1\treceived\t"
+    "type1\t\n"
+    "2.Sample3\t2014-05-29 12:24:51\tTest Sample 3\tTrue\t"
+    "True\tNotIdentified\t4.8\t4.41\tlocation1\treceived\ttype1\t"
+    "\n")
+
+SAMPLE_TEMPLATE_COLUMN_WITH_NAS = (
+    "sample_name\tcollection_timestamp\tdescription\thas_extracted_data\t"
+    "has_physical_specimen\thost_subject_id\tlatitude\tlongitude\t"
+    "physical_location\trequired_sample_info_status\tsample_type\t"
+    "str_column\n"
+    "2.Sample1\t2014-05-29 12:24:51\tTest Sample 1\tTrue\tTrue\t"
+    "NotIdentified\t42.42\t41.41\tlocation1\treceived\ttype1\t"
+    "NA\n"
+    "2.Sample2\t2014-05-29 12:24:51\t"
+    "Test Sample 2\tTrue\tTrue\tNotIdentified\t4.2\t1.1\tlocation1\treceived\t"
+    "type1\tNA\n"
+    "2.Sample3\t2014-05-29 12:24:51\tTest Sample 3\tTrue\t"
+    "True\tNotIdentified\t4.8\t4.41\tlocation1\treceived\ttype1\t"
+    "NA\n")
+
+SAMPLE_TEMPLATE_NO_SAMPLE_NAME = (
+    ":L}={\tcollection_timestamp\tdescription\thas_extracted_data\t"
+    "has_physical_specimen\thost_subject_id\tlatitude\tlongitude\t"
+    "physical_location\trequired_sample_info_status\tsample_type\t"
+    "str_column\n"
+    "2.Sample1\t2014-05-29 12:24:51\tTest Sample 1\tTrue\tTrue\t"
+    "NotIdentified\t42.42\t41.41\tlocation1\treceived\ttype1\t"
+    "NA\n"
+    "2.Sample2\t2014-05-29 12:24:51\t"
+    "Test Sample 2\tTrue\tTrue\tNotIdentified\t4.2\t1.1\tlocation1\treceived\t"
+    "type1\tNA\n"
+    "2.Sample3\t2014-05-29 12:24:51\tTest Sample 3\tTrue\t"
+    "True\tNotIdentified\t4.8\t4.41\tlocation1\treceived\ttype1\t"
+    "NA\n")
+
+SAMPLE_TEMPLATE_DICT_FORM = {
+    'collection_timestamp': {'2.Sample1': '2014-05-29 12:24:51',
+                             '2.Sample2': '2014-05-29 12:24:51',
+                             '2.Sample3': '2014-05-29 12:24:51'},
+    'description': {'2.Sample1': 'Test Sample 1',
+                    '2.Sample2': 'Test Sample 2',
+                    '2.Sample3': 'Test Sample 3'},
+    'has_extracted_data': {'2.Sample1': True,
+                           '2.Sample2': True,
+                           '2.Sample3': True},
+    'has_physical_specimen': {'2.Sample1': True,
+                              '2.Sample2': True,
+                              '2.Sample3': True},
+    'host_subject_id': {'2.Sample1': 'NotIdentified',
+                        '2.Sample2': 'NotIdentified',
+                        '2.Sample3': 'NotIdentified'},
+    'latitude': {'2.Sample1': 42.420000000000002,
+                 '2.Sample2': 4.2000000000000002,
+                 '2.Sample3': 4.7999999999999998},
+    'longitude': {'2.Sample1': 41.409999999999997,
+                  '2.Sample2': 1.1000000000000001,
+                  '2.Sample3': 4.4100000000000001},
+    'physical_location': {'2.Sample1': 'location1',
+                          '2.Sample2': 'location1',
+                          '2.Sample3': 'location1'},
+    'required_sample_info_status': {'2.Sample1': 'received',
+                                    '2.Sample2': 'received',
+                                    '2.Sample3': 'received'},
+    'sample_type': {'2.Sample1': 'type1',
+                    '2.Sample2': 'type1',
+                    '2.Sample3': 'type1'},
+    'str_column': {'2.Sample1': 'Value for sample 1',
+                   '2.Sample2': 'Value for sample 2',
+                   '2.Sample3': 'Value for sample 3'}}
+
+SAMPLE_TEMPLATE_NUMBER_SAMPLE_NAMES_DICT_FORM = {
+    'collection_timestamp': {'002.000': '2014-05-29 12:24:51',
+                             '1.11111': '2014-05-29 12:24:51',
+                             '0.12121': '2014-05-29 12:24:51'},
+    'description': {'002.000': 'Test Sample 1',
+                    '1.11111': 'Test Sample 2',
+                    '0.12121': 'Test Sample 3'},
+    'has_extracted_data': {'002.000': True,
+                           '1.11111': True,
+                           '0.12121': True},
+    'has_physical_specimen': {'002.000': True,
+                              '1.11111': True,
+                              '0.12121': True},
+    'host_subject_id': {'002.000': 'NotIdentified',
+                        '1.11111': 'NotIdentified',
+                        '0.12121': 'NotIdentified'},
+    'latitude': {'002.000': 42.420000000000002,
+                 '1.11111': 4.2000000000000002,
+                 '0.12121': 4.7999999999999998},
+    'longitude': {'002.000': 41.409999999999997,
+                  '1.11111': 1.1000000000000001,
+                  '0.12121': 4.4100000000000001},
+    'physical_location': {'002.000': 'location1',
+                          '1.11111': 'location1',
+                          '0.12121': 'location1'},
+    'required_sample_info_status': {'002.000': 'received',
+                                    '1.11111': 'received',
+                                    '0.12121': 'received'},
+    'sample_type': {'002.000': 'type1',
+                    '1.11111': 'type1',
+                    '0.12121': 'type1'},
+    'str_column': {'002.000': 'Value for sample 1',
+                   '1.11111': 'Value for sample 2',
+                   '0.12121': 'Value for sample 3'}}
+
+ST_EMPTY_COLUMN_DICT_FORM = \
+    {'collection_timestamp': {'2.Sample1': '2014-05-29 12:24:51',
+                              '2.Sample2': '2014-05-29 12:24:51',
+                              '2.Sample3': '2014-05-29 12:24:51'},
+     'description': {'2.Sample1': 'Test Sample 1',
+                     '2.Sample2': 'Test Sample 2',
+                     '2.Sample3': 'Test Sample 3'},
+     'has_extracted_data': {'2.Sample1': True,
+                            '2.Sample2': True,
+                            '2.Sample3': True},
+     'has_physical_specimen': {'2.Sample1': True,
+                               '2.Sample2': True,
+                               '2.Sample3': True},
+     'host_subject_id': {'2.Sample1': 'NotIdentified',
+                         '2.Sample2': 'NotIdentified',
+                         '2.Sample3': 'NotIdentified'},
+     'latitude': {'2.Sample1': 42.420000000000002,
+                  '2.Sample2': 4.2000000000000002,
+                  '2.Sample3': 4.7999999999999998},
+     'longitude': {'2.Sample1': 41.409999999999997,
+                   '2.Sample2': 1.1000000000000001,
+                   '2.Sample3': 4.4100000000000001},
+     'physical_location': {'2.Sample1': 'location1',
+                           '2.Sample2': 'location1',
+                           '2.Sample3': 'location1'},
+     'required_sample_info_status': {'2.Sample1': 'received',
+                                     '2.Sample2': 'received',
+                                     '2.Sample3': 'received'},
+     'sample_type': {'2.Sample1': 'type1',
+                     '2.Sample2': 'type1',
+                     '2.Sample3': 'type1'}}
+
+ST_COLUMN_WITH_NAS_DICT_FORM = \
+    {'collection_timestamp': {'2.Sample1': '2014-05-29 12:24:51',
+                              '2.Sample2': '2014-05-29 12:24:51',
+                              '2.Sample3': '2014-05-29 12:24:51'},
+     'description': {'2.Sample1': 'Test Sample 1',
+                     '2.Sample2': 'Test Sample 2',
+                     '2.Sample3': 'Test Sample 3'},
+     'has_extracted_data': {'2.Sample1': True,
+                            '2.Sample2': True,
+                            '2.Sample3': True},
+     'has_physical_specimen': {'2.Sample1': True,
+                               '2.Sample2': True,
+                               '2.Sample3': True},
+     'host_subject_id': {'2.Sample1': 'NotIdentified',
+                         '2.Sample2': 'NotIdentified',
+                         '2.Sample3': 'NotIdentified'},
+     'latitude': {'2.Sample1': 42.420000000000002,
+                  '2.Sample2': 4.2000000000000002,
+                  '2.Sample3': 4.7999999999999998},
+     'longitude': {'2.Sample1': 41.409999999999997,
+                   '2.Sample2': 1.1000000000000001,
+                   '2.Sample3': 4.4100000000000001},
+     'physical_location': {'2.Sample1': 'location1',
+                           '2.Sample2': 'location1',
+                           '2.Sample3': 'location1'},
+     'required_sample_info_status': {'2.Sample1': 'received',
+                                     '2.Sample2': 'received',
+                                     '2.Sample3': 'received'},
+     'sample_type': {'2.Sample1': 'type1',
+                     '2.Sample2': 'type1',
+                     '2.Sample3': 'type1'},
+     'str_column': {'2.Sample1': 'NA', '2.Sample2': 'NA', '2.Sample3': 'NA'}}
 
 EXP_PREP_TEMPLATE = (
     'sample_name\tbarcodesequence\tcenter_name\tcenter_project_name\t'

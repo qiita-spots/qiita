@@ -66,9 +66,9 @@ class LogEntry(QiitaObject):
         conn_handler = SQLConnectionHandler()
         sql = ("SELECT logging_id FROM qiita.{0} ORDER BY logging_id DESC "
                "LIMIT %s".format(cls._table))
-        ids = conn_handler.execute_fetchone(sql, (numrecords, ))
-        if ids is None:
-            return []
+        ids = [x[0]
+               for x in conn_handler.execute_fetchall(sql, (numrecords, ))]
+
         return [cls(i) for i in ids]
 
     @classmethod

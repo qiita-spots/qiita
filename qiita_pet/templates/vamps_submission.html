@@ -1,0 +1,32 @@
+{% extends sitebase.html %}
+{% block content %}
+
+<h1>Submission summary for study: <b>{{study_title}}</b></h1>
+
+<form role="form" action="/vamps/{{preprocessed_data_id}}" method="post">
+    <div class="panel panel-default">
+        <div class="panel-heading">
+            The information below describes information contained in the sample
+            and prep templates which will be submitted to VAMPS.
+        </div>
+
+        {% if level != 'danger' and maintenance is None  %}
+            <table class="table">
+            {% for category, summary in stats %}
+                <tr>
+                    <th colspan="2" align="center">{{category}}</th>
+                </tr>
+                <tr>
+                    <td>{{summary}}</td>
+                </tr>
+            {% end %}
+        {% end %}
+        </table>
+    </div>
+    {% if level != 'danger' and maintenance is None  %}
+      <input type="submit" class="btn btn-primary" value="Submit to VAMPS">
+    {% end %}
+    <br/><br/>
+    <a class="btn btn-primary" href="/study/description/{{study_id}}?top_tab=preprocessed_data_tab&sub_tab={{preprocessed_data_id}}">Return to study</a>
+</form>
+{% end %}

@@ -6,7 +6,7 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
-from os import remove, close
+from os import remove, close, mkdir
 from os.path import exists, join, basename
 from tempfile import mkstemp, mkdtemp
 from shutil import rmtree
@@ -14,20 +14,25 @@ from unittest import TestCase, main
 from future.utils.six import StringIO
 from future import standard_library
 from functools import partial
-with standard_library.hooks():
-    import configparser
 
 from qiita_db.commands import (load_study_from_cmd, load_raw_data_cmd,
                                load_sample_template_from_cmd,
                                load_prep_template_from_cmd,
                                load_processed_data_cmd,
-                               load_preprocessed_data_from_cmd)
+                               load_preprocessed_data_from_cmd,
+                               load_parameters_from_cmd,
+                               update_preprocessed_data_from_cmd)
 from qiita_db.environment_manager import patch
 from qiita_db.study import Study, StudyPerson
 from qiita_db.user import User
-from qiita_db.data import RawData
-from qiita_db.util import get_count, check_count, get_db_files_base_dir
+from qiita_db.data import RawData, PreprocessedData
+from qiita_db.util import (get_count, check_count, get_db_files_base_dir,
+                           get_mountpoint)
 from qiita_core.util import qiita_test_checker
+from qiita_ware.processing_pipeline import generate_demux_file
+
+with standard_library.hooks():
+    import configparser
 
 
 @qiita_test_checker()
@@ -310,9 +315,52 @@ class TestLoadProcessedDataFromCmd(TestCase):
 
 
 @qiita_test_checker()
+class TestLoadParametersFromCmd(TestCase):
+    def setUp(self):
+        fd, self.fp = mkstemp(suffix='_params.txt')
+        close(fd)
+
+        fd, self.fp_wrong = mkstemp(suffix='_params.txt')
+        close(fd)
+
+        with open(self.fp, 'w') as f:
+            f.write(PARAMETERS)
+
+        with open(self.fp_wrong, 'w') as f:
+            f.write(PARAMETERS_ERROR)
+
+        self.files_to_remove = [self.fp, self.fp_wrong]
+
+    def tearDown(self):
+        for fp in self.files_to_remove:
+            if exists(fp):
+                remove(fp)
+
+    def test_load_parameters_from_cmd_error(self):
+        with self.assertRaises(ValueError):
+            load_parameters_from_cmd("test", self.fp, "does_not_exist")
+
+    def test_load_parameters_from_cmd_error_format(self):
+        with self.assertRaises(ValueError):
+            load_parameters_from_cmd("test", self.fp_wrong,
+                                     "preprocessed_sequence_illumina_params")
+
+    def test_load_parameters_from_cmd(self):
+        new = load_parameters_from_cmd(
+            "test", self.fp, "preprocessed_sequence_illumina_params")
+        obs = new.to_str()
+        exp = ("--barcode_type hamming_8 --max_bad_run_length 3 "
+               "--max_barcode_errors 1.5 --min_per_read_length_fraction 0.75 "
+               "--phred_quality_threshold 3 --sequence_max_n 0")
+        self.assertEqual(obs, exp)
+
+
+@qiita_test_checker()
 class TestPatch(TestCase):
     def setUp(self):
         self.patches_dir = mkdtemp()
+        self.py_patches_dir = join(self.patches_dir, 'python_patches')
+        mkdir(self.py_patches_dir)
         patch2_fp = join(self.patches_dir, '2.sql')
         patch10_fp = join(self.patches_dir, '10.sql')
 
@@ -396,6 +444,245 @@ class TestPatch(TestCase):
         with self.assertRaises(RuntimeError):
             patch(self.patches_dir)
 
+    def test_python_patch(self):
+        # Write a test python patch
+        patch10_py_fp = join(self.py_patches_dir, '10.py')
+        with open(patch10_py_fp, 'w') as f:
+            f.write(PY_PATCH)
+
+        # Reset the settings table to the unpatched state
+        self.conn_handler.execute(
+            """UPDATE settings SET current_patch = 'unpatched'""")
+
+        self._assert_current_patch('unpatched')
+
+        patch(self.patches_dir)
+
+        obs = self.conn_handler.execute_fetchall(
+            """SELECT testing FROM qiita.patchtest10""")
+        exp = [[1], [100]]
+        self.assertEqual(obs, exp)
+
+        self._assert_current_patch('10.sql')
+
+
+@qiita_test_checker()
+class TestUpdatePreprocessedDataFromCmd(TestCase):
+    def setUp(self):
+        # Create a directory with the test split libraries output
+        self.test_slo = mkdtemp(prefix='test_slo_')
+        path_builder = partial(join, self.test_slo)
+        fna_fp = path_builder('seqs.fna')
+        fastq_fp = path_builder('seqs.fastq')
+        log_fp = path_builder('split_library_log.txt')
+        demux_fp = path_builder('seqs.demux')
+
+        with open(fna_fp, 'w') as f:
+            f.write(FASTA_SEQS)
+
+        with open(fastq_fp, 'w') as f:
+            f.write(FASTQ_SEQS)
+
+        with open(log_fp, 'w') as f:
+            f.write("Test log\n")
+
+        generate_demux_file(self.test_slo)
+
+        self._filepaths_to_remove = [fna_fp, fastq_fp, demux_fp, log_fp]
+        self._dirpaths_to_remove = [self.test_slo]
+
+        # Generate a directory with test split libraries output missing files
+        self.missing_slo = mkdtemp(prefix='test_missing_')
+        path_builder = partial(join, self.test_slo)
+        fna_fp = path_builder('seqs.fna')
+        fastq_fp = path_builder('seqs.fastq')
+
+        with open(fna_fp, 'w') as f:
+            f.write(FASTA_SEQS)
+
+        with open(fastq_fp, 'w') as f:
+            f.write(FASTQ_SEQS)
+
+        self._filepaths_to_remove.append(fna_fp)
+        self._filepaths_to_remove.append(fastq_fp)
+        self._dirpaths_to_remove.append(self.missing_slo)
+
+        # Create a study with no preprocessed data
+        info = {
+            "timeseries_type_id": 1,
+            "metadata_complete": True,
+            "mixs_compliant": True,
+            "number_samples_collected": 25,
+            "number_samples_promised": 28,
+            "portal_type_id": 3,
+            "study_alias": "FCM",
+            "study_description": "Microbiome of people who eat nothing but "
+                                 "fried chicken",
+            "study_abstract": "Exploring how a high fat diet changes the "
+                              "gut microbiome",
+            "emp_person_id": StudyPerson(2),
+            "principal_investigator_id": StudyPerson(3),
+            "lab_person_id": StudyPerson(1)
+        }
+        self.no_ppd_study = Study.create(
+            User('test@foo.bar'), "Test study", [1], info)
+
+        # Get the directory where the preprocessed data is usually copied.
+        _, self.db_ppd_dir = get_mountpoint('preprocessed_data')[0]
+
+    def tearDown(self):
+        for fp in self._filepaths_to_remove:
+            if exists(fp):
+                remove(fp)
+        for dp in self._dirpaths_to_remove:
+            if exists(fp):
+                rmtree(dp)
+
+    def test_update_preprocessed_data_from_cmd_error_no_ppd(self):
+        with self.assertRaises(ValueError):
+            update_preprocessed_data_from_cmd(self.test_slo,
+                                              self.no_ppd_study.id)
+
+    def test_update_preprocessed_data_from_cmd_error_missing_files(self):
+        with self.assertRaises(IOError):
+            update_preprocessed_data_from_cmd(self.missing_slo, 1)
+
+    def test_update_preprocessed_data_from_cmd_error_wrong_ppd(self):
+        with self.assertRaises(ValueError):
+            update_preprocessed_data_from_cmd(self.test_slo, 1, 100)
+
+    def test_update_preprocessed_data_from_cmd(self):
+        exp_ppd = PreprocessedData(Study(1).preprocessed_data()[0])
+        exp_fps = exp_ppd.get_filepaths()
+
+        # The original paths mush exist, but they're not included in the test
+        # so create them here
+        for _, fp, _ in exp_fps:
+            with open(fp, 'w') as f:
+                f.write("")
+
+        next_fp_id = get_count('qiita.filepath') + 1
+        exp_fps.append(
+            (next_fp_id,
+             join(self.db_ppd_dir, "%s_split_library_log.txt" % exp_ppd.id),
+             'log'))
+
+        ppd = update_preprocessed_data_from_cmd(self.test_slo, 1)
+
+        # Check that the modified preprocessed data is the correct one
+        self.assertEqual(ppd.id, exp_ppd.id)
+
+        # Check that the filepaths returned are correct
+        # We need to sort the list returned from the db because the ordering
+        # on that list is based on db modification time, rather than id
+        obs_fps = sorted(ppd.get_filepaths())
+        self.assertEqual(obs_fps, exp_fps)
+
+        # Check that the checksums have been updated
+        sql = "SELECT checksum FROM qiita.filepath WHERE filepath_id=%s"
+
+        # Checksum of the fasta file
+        obs_checksum = self.conn_handler.execute_fetchone(
+            sql, (obs_fps[0][0],))[0]
+        self.assertEqual(obs_checksum, '3532748626')
+
+        # Checksum of the fastq file
+        obs_checksum = self.conn_handler.execute_fetchone(
+            sql, (obs_fps[1][0],))[0]
+        self.assertEqual(obs_checksum, '2958832064')
+
+        # Checksum of the demux file
+        # The checksum is generated dynamically, so the checksum changes
+        # We are going to test that the checksum is not the one that was
+        # before, which corresponds to an empty file
+        obs_checksum = self.conn_handler.execute_fetchone(
+            sql, (obs_fps[2][0],))[0]
+        self.assertTrue(isinstance(obs_checksum, str))
+        self.assertNotEqual(obs_checksum, '852952723')
+        self.assertTrue(len(obs_checksum) > 0)
+
+        # Checksum of the log file
+        obs_checksum = self.conn_handler.execute_fetchone(
+            sql, (obs_fps[3][0],))[0]
+        self.assertEqual(obs_checksum, '626839734')
+
+    def test_update_preprocessed_data_from_cmd_ppd(self):
+        exp_ppd = PreprocessedData(2)
+
+        next_fp_id = get_count('qiita.filepath') + 1
+        exp_fps = []
+        path_builder = partial(join, self.db_ppd_dir)
+        suffix_types = [("seqs.fna", "preprocessed_fasta"),
+                        ("seqs.fastq", "preprocessed_fastq"),
+                        ("seqs.demux", "preprocessed_demux"),
+                        ("split_library_log.txt", "log")]
+        for id_, vals in enumerate(suffix_types, start=next_fp_id):
+            suffix, fp_type = vals
+            exp_fps.append(
+                (id_, path_builder("%s_%s" % (exp_ppd.id, suffix)), fp_type))
+
+        ppd = update_preprocessed_data_from_cmd(self.test_slo, 1, 2)
+
+        # Check that the modified preprocessed data is the correct one
+        self.assertEqual(ppd.id, exp_ppd.id)
+
+        # Check that the filepaths returned are correct
+        # We need to sort the list returned from the db because the ordering
+        # on that list is based on db modification time, rather than id
+        obs_fps = sorted(ppd.get_filepaths())
+        self.assertEqual(obs_fps, exp_fps)
+
+        # Check that the checksums have been updated
+        sql = "SELECT checksum FROM qiita.filepath WHERE filepath_id=%s"
+
+        # Checksum of the fasta file
+        obs_checksum = self.conn_handler.execute_fetchone(
+            sql, (obs_fps[0][0],))[0]
+        self.assertEqual(obs_checksum, '3532748626')
+
+        # Checksum of the fastq file
+        obs_checksum = self.conn_handler.execute_fetchone(
+            sql, (obs_fps[1][0],))[0]
+        self.assertEqual(obs_checksum, '2958832064')
+
+        # Checksum of the demux file
+        # The checksum is generated dynamically, so the checksum changes
+        # We are going to test that the checksum is not the one that was
+        # before, which corresponds to an empty file
+        obs_checksum = self.conn_handler.execute_fetchone(
+            sql, (obs_fps[2][0],))[0]
+        self.assertTrue(isinstance(obs_checksum, str))
+        self.assertNotEqual(obs_checksum, '852952723')
+        self.assertTrue(len(obs_checksum) > 0)
+
+        # Checksum of the log file
+        obs_checksum = self.conn_handler.execute_fetchone(
+            sql, (obs_fps[3][0],))[0]
+        self.assertEqual(obs_checksum, '626839734')
+
+
+FASTA_SEQS = """>a_1 orig_bc=abc new_bc=abc bc_diffs=0
+xyz
+>b_1 orig_bc=abw new_bc=wbc bc_diffs=4
+qwe
+>b_2 orig_bc=abw new_bc=wbc bc_diffs=4
+qwe
+"""
+
+FASTQ_SEQS = """@a_1 orig_bc=abc new_bc=abc bc_diffs=0
+xyz
++
+ABC
+@b_1 orig_bc=abw new_bc=wbc bc_diffs=4
+qwe
++
+DFG
+@b_2 orig_bc=abw new_bc=wbc bc_diffs=4
+qwe
++
+DEF
+"""
+
 
 CONFIG_1 = """[required]
 timeseries_type_id = 1
@@ -462,6 +749,36 @@ PREP_TEMPLATE = (
     'GTGCCAGCMGCCGCGGTAA\tts_G1_L001_sequences\tValue for sample 1\tA\tB\tC\n'
     'SKD8.640184\tCGTAGAGCTCTC\tANL\tTest Project\tskd8\tNone\tEMP\t'
     'GTGCCAGCMGCCGCGGTAA\tts_G1_L001_sequences\tValue for sample 2\tA\tB\tC\n')
+
+PY_PATCH = """
+from qiita_db.study import Study
+study = Study(1)
+conn = SQLConnectionHandler()
+conn.executemany(
+    "INSERT INTO qiita.patchtest10 (testing) VALUES (%s)",
+    [[study.id], [study.id*100]])
+"""
+
+PARAMETERS = """max_bad_run_length\t3
+min_per_read_length_fraction\t0.75
+sequence_max_n\t0
+rev_comp_barcode\tFalse
+rev_comp_mapping_barcodes\tFalse
+rev_comp\tFalse
+phred_quality_threshold\t3
+barcode_type\thamming_8
+max_barcode_errors\t1.5
+"""
+
+PARAMETERS_ERROR = """max_bad_run_length\t3\tmin_per_read_length_fraction\t0.75
+sequence_max_n\t0
+rev_comp_barcode\tFalse
+rev_comp_mapping_barcodes\tFalse
+rev_comp\tFalse
+phred_quality_threshold\t3
+barcode_type\thamming_8
+max_barcode_errors\t1.5
+"""
 
 if __name__ == "__main__":
     main()

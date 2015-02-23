@@ -5,7 +5,10 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
-from os.path import abspath, dirname, join, exists, split
+
+from qiita_db.ontology import Ontology
+from qiita_db.util import convert_to_id
+from os.path import abspath, dirname, join, exists, basename, splitext
 from functools import partial
 from os import mkdir
 import gzip
@@ -13,14 +16,16 @@ from glob import glob
 
 from future import standard_library
 from future.utils import viewitems
-with standard_library.hooks():
-    from urllib.request import urlretrieve
-from natsort import natsorted
 
 from qiita_core.exceptions import QiitaEnvironmentError
 from qiita_core.qiita_settings import qiita_config
 from .sql_connection import SQLConnectionHandler
 from .reference import Reference
+from natsort import natsorted
+
+with standard_library.hooks():
+    from urllib.request import urlretrieve
+
 
 get_support_file = partial(join, join(dirname(abspath(__file__)),
                                       'support_files'))
@@ -28,15 +33,10 @@ reference_base_dir = join(qiita_config.base_data_dir, "reference")
 get_reference_fp = partial(join, reference_base_dir)
 
 
-DFLT_BASE_WORK_FOLDER = get_support_file('work_data')
 SETTINGS_FP = get_support_file('qiita-db-settings.sql')
 LAYOUT_FP = get_support_file('qiita-db-unpatched.sql')
-INITIALIZE_FP = get_support_file('initialize.sql')
 POPULATE_FP = get_support_file('populate_test_db.sql')
 PATCHES_DIR = get_support_file('patches')
-ENVIRONMENTS = {'demo': 'qiita_demo', 'test': 'qiita_test',
-                'production': 'qiita'}
-CLUSTERS = ['demo', 'reserved', 'general']
 
 
 def _check_db_exists(db, conn_handler):
@@ -55,19 +55,25 @@ def _check_db_exists(db, conn_handler):
     return (db,) in dbs
 
 
-def _create_layout_and_init_db(conn):
-    print('Building SQL layout')
+def create_layout_and_patch(conn, verbose=False):
+    r"""Builds the SQL layout and applies all the patches
+
+    Parameters
+    ----------
+    conn : SQLConnectionHandler
+        The handler connected to the DB
+    verbose : bool, optional
+        If true, print the current step. Default: False.
+    """
+    if verbose:
+        print('Building SQL layout')
     # Create the schema
     with open(LAYOUT_FP, 'U') as f:
         conn.execute(f.read())
 
-    print('Patching Database...')
-    patch()
-
-    print('Initializing database')
-    # Initialize the database
-    with open(INITIALIZE_FP, 'U') as f:
-        conn.execute(f.read())
+    if verbose:
+        print('Patching Database...')
+    patch(verbose=verbose)
 
 
 def _populate_test_db(conn):
@@ -101,8 +107,8 @@ def _add_ontology_data(conn):
 
 def _insert_processed_params(conn, ref):
     sortmerna_sql = """INSERT INTO qiita.processed_params_sortmerna
-                       (reference_id, evalue, max_pos, similarity, coverage,
-                        threads)
+                       (reference_id, sortmerna_e_value, sortmerna_max_pos,
+                        similarity, sortmerna_coverage, threads)
                        VALUES
                        (%s, 1, 10000, 0.97, 0.97, 1)"""
 
@@ -164,6 +170,12 @@ def make_environment(load_ontologies, download_reference, add_demo_user):
     QiitaEnvironmentError
         If the environment already exists
     """
+    if load_ontologies and qiita_config.test_environment:
+        raise EnvironmentError("Cannot load ontologies in a test environment! "
+                               "Pass --no-load-ontologies, or set "
+                               "TEST_ENVIRONMENT = FALSE in your "
+                               "configuration")
+
     # Connect to the postgres server
     admin_conn = SQLConnectionHandler(admin='admin_without_database')
 
@@ -195,10 +207,16 @@ def make_environment(load_ontologies, download_reference, add_demo_user):
                  (qiita_config.test_environment, qiita_config.base_data_dir,
                   qiita_config.working_dir))
 
-    _create_layout_and_init_db(conn)
+    create_layout_and_patch(conn, verbose=True)
 
     if load_ontologies:
         _add_ontology_data(conn)
+
+        # these values can only be added if the environment is being loaded
+        # with the ontologies, thus this cannot exist inside intialize.sql
+        # because otherwise loading the ontologies would be a requirement
+        ontology = Ontology(convert_to_id('ENA', 'ontology'))
+        ontology.add_user_defined_term('Amplicon Sequencing')
 
     if download_reference:
         _download_reference_files(conn)
@@ -255,6 +273,25 @@ def drop_environment(ask_for_confirmation):
         print('ABORTING')
 
 
+def drop_and_rebuild_tst_database(conn_handler):
+    """Drops the qiita schema and rebuilds the test database
+
+    Parameters
+    ----------
+    conn_handler : SQLConnectionHandler
+        The handler connected to the database
+    """
+    # Drop the schema
+    conn_handler.execute("DROP SCHEMA IF EXISTS qiita CASCADE")
+    # Set the database to unpatched
+    conn_handler.execute("UPDATE settings SET current_patch = 'unpatched'")
+    # Create the database and apply patches
+    create_layout_and_patch(conn_handler)
+    # Populate the database
+    with open(POPULATE_FP, 'U') as f:
+        conn_handler.execute(f.read())
+
+
 def reset_test_database(wrapped_fn):
     """Decorator that drops the qiita schema, rebuilds and repopulates the
     schema with test data, then executes wrapped_fn
@@ -262,22 +299,8 @@ def reset_test_database(wrapped_fn):
     conn_handler = SQLConnectionHandler()
 
     def decorated_wrapped_fn(*args, **kwargs):
-        # Drop the schema
-        try:
-            conn_handler.execute("DROP SCHEMA qiita CASCADE")
-        except:
-            # ignore the failure of the drop if the schema already doesnt exist
-            # generic Error raised so can't catch specific error
-            pass
-        # Create the schema
-        with open(LAYOUT_FP, 'U') as f:
-            conn_handler.execute(f.read())
-        # Initialize the database
-        with open(INITIALIZE_FP, 'U') as f:
-            conn_handler.execute(f.read())
-        # Populate the database
-        with open(POPULATE_FP, 'U') as f:
-            conn_handler.execute(f.read())
+        # Reset the test database
+        drop_and_rebuild_tst_database(conn_handler)
         # Execute the wrapped function
         return wrapped_fn(*args, **kwargs)
 
@@ -296,9 +319,7 @@ def clean_test_environment():
     # It is possible that we are connecting to a production database
     test_db = conn_handler.execute_fetchone("SELECT test FROM settings")[0]
     # Or the loaded configuration file belongs to a production environment
-    # or the test database is not qiita_test
-    if not qiita_config.test_environment or not test_db \
-            or qiita_config.database != 'qiita_test':
+    if not qiita_config.test_environment or not test_db:
         raise RuntimeError("Working in a production environment. Not "
                            "executing the test cleanup to keep the production "
                            "database safe.")
@@ -310,7 +331,7 @@ def clean_test_environment():
     dummyfunc()
 
 
-def patch(patches_dir=PATCHES_DIR):
+def patch(patches_dir=PATCHES_DIR, verbose=False):
     """Patches the database schema based on the SETTINGS table
 
     Pulls the current patch from the settings table and applies all subsequent
@@ -320,27 +341,37 @@ def patch(patches_dir=PATCHES_DIR):
 
     current_patch = conn.execute_fetchone(
         "select current_patch from settings")[0]
-    current_patch_fp = join(patches_dir, current_patch)
+    current_sql_patch_fp = join(patches_dir, current_patch)
+    corresponding_py_patch = partial(join, patches_dir, 'python_patches')
 
     sql_glob = join(patches_dir, '*.sql')
-    patch_files = natsorted(glob(sql_glob))
+    sql_patch_files = natsorted(glob(sql_glob))
 
     if current_patch == 'unpatched':
         next_patch_index = 0
-    elif current_patch_fp not in patch_files:
+    elif current_sql_patch_fp not in sql_patch_files:
         raise RuntimeError("Cannot find patch file %s" % current_patch)
     else:
-        next_patch_index = patch_files.index(current_patch_fp) + 1
+        next_patch_index = sql_patch_files.index(current_sql_patch_fp) + 1
 
     patch_update_sql = "update settings set current_patch = %s"
 
-    for patch_fp in patch_files[next_patch_index:]:
-        patch_filename = split(patch_fp)[-1]
-        conn.create_queue(patch_filename)
-        with open(patch_fp, 'U') as patch_file:
-            print('\tApplying patch %s...' % patch_filename)
-            conn.add_to_queue(patch_filename, patch_file.read())
-            conn.add_to_queue(patch_filename, patch_update_sql,
-                              [patch_filename])
+    for sql_patch_fp in sql_patch_files[next_patch_index:]:
+        sql_patch_filename = basename(sql_patch_fp)
+        py_patch_fp = corresponding_py_patch(
+            splitext(basename(sql_patch_fp))[0] + '.py')
+        py_patch_filename = basename(py_patch_fp)
+        conn.create_queue(sql_patch_filename)
+        with open(sql_patch_fp, 'U') as patch_file:
+            if verbose:
+                print('\tApplying patch %s...' % sql_patch_filename)
+            conn.add_to_queue(sql_patch_filename, patch_file.read())
+            conn.add_to_queue(sql_patch_filename, patch_update_sql,
+                              [sql_patch_filename])
 
-        conn.execute_queue(patch_filename)
+        conn.execute_queue(sql_patch_filename)
+
+        if exists(py_patch_fp):
+            if verbose:
+                print('\t\tApplying python patch %s...' % py_patch_filename)
+            execfile(py_patch_fp)

@@ -10,7 +10,8 @@ from os.path import join
 
 from .base import QiitaObject
 from .exceptions import QiitaDBDuplicateError
-from .util import insert_filepaths, convert_to_id, get_db_files_base_dir
+from .util import (insert_filepaths, convert_to_id,
+                   get_mountpoint)
 from .sql_connection import SQLConnectionHandler
 
 
@@ -123,13 +124,30 @@ class Reference(QiitaObject):
             (name, version))[0]
 
     @property
+    def name(self):
+        conn_handler = SQLConnectionHandler()
+        return conn_handler.execute_fetchone(
+            "SELECT reference_name FROM qiita.{0} WHERE "
+            "reference_id = %s".format(self._table), (self._id,))[0]
+        _, basefp = get_mountpoint('reference', conn_handler=conn_handler)[0]
+
+    @property
+    def version(self):
+        conn_handler = SQLConnectionHandler()
+        return conn_handler.execute_fetchone(
+            "SELECT reference_version FROM qiita.{0} WHERE "
+            "reference_id = %s".format(self._table), (self._id,))[0]
+        _, basefp = get_mountpoint('reference', conn_handler=conn_handler)[0]
+
+    @property
     def sequence_fp(self):
         conn_handler = SQLConnectionHandler()
         rel_path = conn_handler.execute_fetchone(
             "SELECT f.filepath FROM qiita.filepath f JOIN qiita.{0} r ON "
             "r.sequence_filepath=f.filepath_id WHERE "
             "r.reference_id=%s".format(self._table), (self._id,))[0]
-        return join(get_db_files_base_dir(), rel_path)
+        _, basefp = get_mountpoint('reference', conn_handler=conn_handler)[0]
+        return join(basefp, rel_path)
 
     @property
     def taxonomy_fp(self):
@@ -138,7 +156,8 @@ class Reference(QiitaObject):
             "SELECT f.filepath FROM qiita.filepath f JOIN qiita.{0} r ON "
             "r.taxonomy_filepath=f.filepath_id WHERE "
             "r.reference_id=%s".format(self._table), (self._id,))[0]
-        return join(get_db_files_base_dir(), rel_path)
+        _, basefp = get_mountpoint('reference', conn_handler=conn_handler)[0]
+        return join(basefp, rel_path)
 
     @property
     def tree_fp(self):
@@ -147,4 +166,5 @@ class Reference(QiitaObject):
             "SELECT f.filepath FROM qiita.filepath f JOIN qiita.{0} r ON "
             "r.tree_filepath=f.filepath_id WHERE "
             "r.reference_id=%s".format(self._table), (self._id,))[0]
-        return join(get_db_files_base_dir(), rel_path)
+        _, basefp = get_mountpoint('reference', conn_handler=conn_handler)[0]
+        return join(basefp, rel_path)

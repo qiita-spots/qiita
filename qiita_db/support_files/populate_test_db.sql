@@ -33,11 +33,14 @@ INSERT INTO qiita.study (email, study_status_id, emp_person_id, first_contact,
 	number_samples_promised, portal_type_id, principal_investigator_id, reprocess,
 	spatial_series, study_title, study_alias, study_description,
 	study_abstract, vamps_id) VALUES
-	('test@foo.bar', 2, 2, '2014-05-19 16:10', NULL, 1, 1, TRUE, TRUE,
+	('test@foo.bar', 3, 2, '2014-05-19 16:10', NULL, 1, 1, TRUE, TRUE,
 	'2014-05-19 16:11', 27, 27, 2, 3, FALSE, FALSE,
 	'Identification of the Microbiomes for Cannabis Soils', 'Cannabis Soils', 'Analysis of the Cannabis Plant Microbiome',
 	'This is a preliminary study to examine the microbiota associated with the Cannabis plant. Soils samples from the bulk soil, soil associated with the roots, and the rhizosphere were extracted and the DNA sequenced. Roots from three independent plants of different strains were examined. These roots were obtained November 11, 2011 from plants that had been harvested in the summer. Future studies will attempt to analyze the soils and rhizospheres from the same location at different time points in the plant lifecycle.',
 	NULL);
+
+-- Add some environmental packages to the study
+INSERT INTO qiita.study_environmental_package (study_id, environmental_package_name) VALUES (1, 'soil'), (1, 'plant-associated');
 
 -- Insert study_users (share study 1 with shared user)
 INSERT INTO qiita.study_users (study_id, email) VALUES (1, 'shared@foo.bar');
@@ -56,13 +59,17 @@ INSERT INTO qiita.investigation_study (investigation_id, study_id) VALUES (1, 1)
 INSERT INTO qiita.study_experimental_factor (study_id, efo_id) VALUES (1, 1);
 
 -- Insert the raw data filepaths for study 1
-INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum, checksum_algorithm_id, data_directory_id) VALUES ('raw_data/1_s_G1_L001_sequences.fastq.gz', 1, '852952723', 1, 5), ('raw_data/1_s_G1_L001_sequences_barcodes.fastq.gz', 3, '852952723', 1, 5), ('raw_data/2_sequences.fastq.gz', 1, '852952723', 1, 5), ('raw_data/2_sequences_barcodes.fastq.gz', 3, '852952723', 1, 5);
+INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum, checksum_algorithm_id, data_directory_id) VALUES
+('1_s_G1_L001_sequences.fastq.gz', 1, '852952723', 1, 5),
+('1_s_G1_L001_sequences_barcodes.fastq.gz', 3, '852952723', 1, 5),
+('2_sequences.fastq.gz', 1, '852952723', 1, 5),
+('2_sequences_barcodes.fastq.gz', 3, '852952723', 1, 5);
 
 -- Insert the raw data information for study 1
 INSERT INTO qiita.raw_data (filetype_id) VALUES (3), (2);
 
 -- Insert (link) the raw data with the raw filepaths
-INSERT INTO qiita.raw_filepath (raw_data_id, filepath_id) VALUES (1, 1), (1, 2), (2, 3), (2, 4);
+INSERT INTO qiita.raw_filepath (raw_data_id, filepath_id) VALUES (1, 1), (1, 2);
 
 -- Insert (link) the study with the raw data
 INSERT INTO qiita.study_raw_data (study_id, raw_data_id) VALUES (1, 1), (1, 2);
@@ -296,7 +303,10 @@ INSERT INTO qiita.prep_template_preprocessed_data (prep_template_id, preprocesse
 INSERT INTO qiita.study_preprocessed_data (preprocessed_data_id, study_id) VALUES (1, 1), (2, 1);
 
 -- Insert the preprocessed filepath for raw data 1
-INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum, checksum_algorithm_id, data_directory_id) VALUES ('preprocessed_data/1_seqs.fna', 4, '852952723', 1, 3), ('preprocessed_data/1_seqs.qual', 5, '852952723', 1, 3), ('preprocessed_data/1_seqs.demux', 6, 852952723, 1, 3);
+INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum, checksum_algorithm_id, data_directory_id) VALUES
+('1_seqs.fna', 4, '852952723', 1, 3),
+('1_seqs.qual', 5, '852952723', 1, 3),
+('1_seqs.demux', 6, 852952723, 1, 3);
 
 -- Insert (link) the preprocessed data with the preprocessed filepaths
 INSERT INTO qiita.preprocessed_filepath (preprocessed_data_id, filepath_id) VALUES (1, 5), (1, 6), (1, 7);
@@ -311,22 +321,28 @@ INSERT INTO qiita.study_processed_data (processed_data_id, study_id) VALUES (1, 
 INSERT INTO qiita.preprocessed_processed_data (preprocessed_data_id, processed_data_id) VALUES (1, 1);
 
 -- Insert the reference files for reference 1
-INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum, checksum_algorithm_id, data_directory_id) VALUES ('reference/GreenGenes_13_8_97_otus.fasta', 10, '852952723', 1, 6), ('reference/GreenGenes_13_8_97_otu_taxonomy.txt', 11, '852952723', 1, 6), ('reference/GreenGenes_13_8_97_otus.tree', 12, '852952723', 1, 6);
+INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum, checksum_algorithm_id, data_directory_id) VALUES
+('GreenGenes_13_8_97_otus.fasta', 10, '852952723', 1, 6),
+('GreenGenes_13_8_97_otu_taxonomy.txt', 11, '852952723', 1, 6),
+('GreenGenes_13_8_97_otus.tree', 12, '852952723', 1, 6);
 
 -- Populate the reference table
-INSERT INTO qiita.reference (reference_name, reference_version, sequence_filepath, taxonomy_filepath, tree_filepath) VALUES ('GreenGenes', '13_8', 8, 9, 10);
+INSERT INTO qiita.reference (reference_name, reference_version, sequence_filepath, taxonomy_filepath, tree_filepath) VALUES ('Greengenes', '13_8', 8, 9, 10);
 
 -- Insert the processed params uclust used for preprocessed data 1
 INSERT INTO qiita.processed_params_uclust (similarity, enable_rev_strand_match, suppress_new_clusters, reference_id) VALUES (0.97, TRUE, TRUE, 1);
 
 -- Insert the biom table filepath for processed data 1
-INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum, checksum_algorithm_id, data_directory_id) VALUES ('processed_data/1_study_1001_closed_reference_otu_table.biom', 7, '852952723', 1, 4);
+INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum, checksum_algorithm_id, data_directory_id) VALUES
+('1_study_1001_closed_reference_otu_table.biom', 7, '852952723', 1, 4);
 
 -- Insert (link) the processed data with the processed filepath
 INSERT INTO qiita.processed_filepath (processed_data_id, filepath_id) VALUES (1, 11);
 
 -- Insert filepath for job results files
-INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum, checksum_algorithm_id, data_directory_id) VALUES ('job/1_job_result.txt', 9, '852952723', 1, 2), ('job/2_test_folder', 8, '852952723', 1, 2);
+INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum, checksum_algorithm_id, data_directory_id) VALUES
+('1_job_result.txt', 9, '852952723', 1, 2),
+('2_test_folder', 8, '852952723', 1, 2);
 
 -- Insert jobs
 INSERT INTO qiita.job (data_type_id, job_status_id, command_id, options) VALUES (2, 1, 1, '{"--otu_table_fp":1}'), (2, 3, 2, '{"--mapping_fp":1,"--otu_table_fp":1}'), (2, 1, 2, '{"--mapping_fp":1,"--otu_table_fp":1}');
@@ -334,11 +350,15 @@ INSERT INTO qiita.job (data_type_id, job_status_id, command_id, options) VALUES 
 -- Insert Analysis
 INSERT INTO qiita.analysis (email, name, description, analysis_status_id, pmid) VALUES ('test@foo.bar', 'SomeAnalysis', 'A test analysis', 1, '121112'), ('test@foo.bar', 'SomeSecondAnalysis', 'Another test analysis', 1, '22221112');
 
+-- Insert Analysis Workflow
+INSERT INTO qiita.analysis_workflow (analysis_id, step) VALUES (1, 3), (2, 3);
+
 -- Attach jobs to analysis
 INSERT INTO qiita.analysis_job (analysis_id, job_id) VALUES (1, 1), (1, 2), (2, 3);
 
 -- Insert filepath for analysis biom files
-INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum, checksum_algorithm_id, data_directory_id) VALUES ('analysis/1_analysis_18S.biom', 7, '852952723', 1, 1), ('analysis/1_analysis_mapping.txt', 9, '852952723', 1, 1);
+INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum, checksum_algorithm_id, data_directory_id) VALUES
+('1_analysis_18S.biom', 7, '852952723', 1, 1), ('1_analysis_mapping.txt', 9, '852952723', 1, 1);
 
 -- Attach filepath to analysis
 INSERT INTO qiita.analysis_filepath (analysis_id, filepath_id, data_type_id) VALUES (1, 14, 2), (1, 15, NULL);
@@ -353,20 +373,40 @@ INSERT INTO qiita.analysis_users (analysis_id, email) VALUES (1, 'shared@foo.bar
 INSERT INTO qiita.job_results_filepath (job_id, filepath_id) VALUES (1, 12), (2, 13);
 
 -- Add an ontology
-INSERT INTO qiita.ontology (ontology_id, ontology, fully_loaded, fullname, query_url, source_url, definition, load_date) VALUES (807481739, E'ENA', E'1', E'European Nucleotide Archive Submission Ontology', NULL, E'http://www.ebi.ac.uk/embl/Documentation/ENA-Reads.html', E'The ENA CV is to be used to annotate XML submissions to the ENA.', '2009-02-23 00:00:00');
+INSERT INTO qiita.ontology (ontology_id, ontology, fully_loaded, fullname, query_url, source_url, definition, load_date) VALUES (999999999, E'ENA', E'1', E'European Nucleotide Archive Submission Ontology', NULL, E'http://www.ebi.ac.uk/embl/Documentation/ENA-Reads.html', E'The ENA CV is to be used to annotate XML submissions to the ENA.', '2009-02-23 00:00:00');
 
 -- Add some ontology values
-INSERT INTO qiita.term (term_id, ontology_id, term, identifier, definition, namespace, is_obsolete, is_root_term, is_leaf) VALUES (2052508974, 807481739, E'Whole Genome Sequencing', E'ENA:0000059', NULL, NULL, NULL, NULL, NULL);
-INSERT INTO qiita.term (term_id, ontology_id, term, identifier, definition, namespace, is_obsolete, is_root_term, is_leaf) VALUES (2052508975, 807481739, E'Metagenomics', E'ENA:0000060', NULL, NULL, NULL, NULL, NULL);
-INSERT INTO qiita.term (term_id, ontology_id, term, identifier, definition, namespace, is_obsolete, is_root_term, is_leaf) VALUES (2052508976, 807481739, E'Transcriptome Analysis', E'ENA:0000061', NULL, NULL, NULL, NULL, NULL);
-INSERT INTO qiita.term (term_id, ontology_id, term, identifier, definition, namespace, is_obsolete, is_root_term, is_leaf) VALUES (2052508977, 807481739, E'Resequencing', E'ENA:0000062', NULL, NULL, NULL, NULL, NULL);
-INSERT INTO qiita.term (term_id, ontology_id, term, identifier, definition, namespace, is_obsolete, is_root_term, is_leaf) VALUES (2052508978, 807481739, E'Epigenetics', E'ENA:0000066', NULL, NULL, NULL, NULL, NULL);
-INSERT INTO qiita.term (term_id, ontology_id, term, identifier, definition, namespace, is_obsolete, is_root_term, is_leaf) VALUES (2052508979, 807481739, E'Synthetic Genomics', E'ENA:0000067', NULL, NULL, NULL, NULL, NULL);
-INSERT INTO qiita.term (term_id, ontology_id, term, identifier, definition, namespace, is_obsolete, is_root_term, is_leaf) VALUES (2052508980, 807481739, E'Forensic or Paleo-genomics', E'ENA:0000065', NULL, NULL, NULL, NULL, NULL);
-INSERT INTO qiita.term (term_id, ontology_id, term, identifier, definition, namespace, is_obsolete, is_root_term, is_leaf) VALUES (2052508981, 807481739, E'Gene Regulation Study', E'ENA:0000068', NULL, NULL, NULL, NULL, NULL);
-INSERT INTO qiita.term (term_id, ontology_id, term, identifier, definition, namespace, is_obsolete, is_root_term, is_leaf) VALUES (2052508982, 807481739, E'Cancer Genomics', E'ENA:0000063', NULL, NULL, NULL, NULL, NULL);
-INSERT INTO qiita.term (term_id, ontology_id, term, identifier, definition, namespace, is_obsolete, is_root_term, is_leaf) VALUES (2052508983, 807481739, E'Population Genomics', E'ENA:0000064', NULL, NULL, NULL, NULL, NULL);
-INSERT INTO qiita.term (term_id, ontology_id, term, identifier, definition, namespace, is_obsolete, is_root_term, is_leaf) VALUES (2052508984, 807481739, E'RNASeq', E'ENA:0000070', NULL, NULL, NULL, NULL, NULL);
-INSERT INTO qiita.term (term_id, ontology_id, term, identifier, definition, namespace, is_obsolete, is_root_term, is_leaf) VALUES (2052508985, 807481739, E'Exome Sequencing', E'ENA:0000071', NULL, NULL, NULL, NULL, NULL);
-INSERT INTO qiita.term (term_id, ontology_id, term, identifier, definition, namespace, is_obsolete, is_root_term, is_leaf) VALUES (2052508986, 807481739, E'Pooled Clone Sequencing', E'ENA:0000072', NULL, NULL, NULL, NULL, NULL);
-INSERT INTO qiita.term (term_id, ontology_id, term, identifier, definition, namespace, is_obsolete, is_root_term, is_leaf) VALUES (2052508987, 807481739, E'Other', E'ENA:0000069', NULL, NULL, NULL, NULL, NULL);
+INSERT INTO qiita.term (term_id, ontology_id, term, identifier, definition, namespace, is_obsolete, is_root_term, is_leaf) VALUES (2052508974, 999999999, E'Whole Genome Sequencing', E'ENA:0000059', NULL, NULL, NULL, NULL, NULL);
+INSERT INTO qiita.term (term_id, ontology_id, term, identifier, definition, namespace, is_obsolete, is_root_term, is_leaf) VALUES (2052508975, 999999999, E'Metagenomics', E'ENA:0000060', NULL, NULL, NULL, NULL, NULL);
+INSERT INTO qiita.term (term_id, ontology_id, term, identifier, definition, namespace, is_obsolete, is_root_term, is_leaf) VALUES (2052508976, 999999999, E'Transcriptome Analysis', E'ENA:0000061', NULL, NULL, NULL, NULL, NULL);
+INSERT INTO qiita.term (term_id, ontology_id, term, identifier, definition, namespace, is_obsolete, is_root_term, is_leaf) VALUES (2052508977, 999999999, E'Resequencing', E'ENA:0000062', NULL, NULL, NULL, NULL, NULL);
+INSERT INTO qiita.term (term_id, ontology_id, term, identifier, definition, namespace, is_obsolete, is_root_term, is_leaf) VALUES (2052508978, 999999999, E'Epigenetics', E'ENA:0000066', NULL, NULL, NULL, NULL, NULL);
+INSERT INTO qiita.term (term_id, ontology_id, term, identifier, definition, namespace, is_obsolete, is_root_term, is_leaf) VALUES (2052508979, 999999999, E'Synthetic Genomics', E'ENA:0000067', NULL, NULL, NULL, NULL, NULL);
+INSERT INTO qiita.term (term_id, ontology_id, term, identifier, definition, namespace, is_obsolete, is_root_term, is_leaf) VALUES (2052508980, 999999999, E'Forensic or Paleo-genomics', E'ENA:0000065', NULL, NULL, NULL, NULL, NULL);
+INSERT INTO qiita.term (term_id, ontology_id, term, identifier, definition, namespace, is_obsolete, is_root_term, is_leaf) VALUES (2052508981, 999999999, E'Gene Regulation Study', E'ENA:0000068', NULL, NULL, NULL, NULL, NULL);
+INSERT INTO qiita.term (term_id, ontology_id, term, identifier, definition, namespace, is_obsolete, is_root_term, is_leaf) VALUES (2052508982, 999999999, E'Cancer Genomics', E'ENA:0000063', NULL, NULL, NULL, NULL, NULL);
+INSERT INTO qiita.term (term_id, ontology_id, term, identifier, definition, namespace, is_obsolete, is_root_term, is_leaf) VALUES (2052508983, 999999999, E'Population Genomics', E'ENA:0000064', NULL, NULL, NULL, NULL, NULL);
+INSERT INTO qiita.term (term_id, ontology_id, term, identifier, definition, namespace, is_obsolete, is_root_term, is_leaf) VALUES (2052508984, 999999999, E'RNASeq', E'ENA:0000070', NULL, NULL, NULL, NULL, NULL);
+INSERT INTO qiita.term (term_id, ontology_id, term, identifier, definition, namespace, is_obsolete, is_root_term, is_leaf) VALUES (2052508985, 999999999, E'Exome Sequencing', E'ENA:0000071', NULL, NULL, NULL, NULL, NULL);
+INSERT INTO qiita.term (term_id, ontology_id, term, identifier, definition, namespace, is_obsolete, is_root_term, is_leaf) VALUES (2052508986, 999999999, E'Pooled Clone Sequencing', E'ENA:0000072', NULL, NULL, NULL, NULL, NULL);
+INSERT INTO qiita.term (term_id, ontology_id, term, identifier, definition, namespace, is_obsolete, is_root_term, is_leaf) VALUES (2052508987, 999999999, E'Other', E'ENA:0000069', NULL, NULL, NULL, NULL, NULL);
+
+-- Create the new sample_template_filepath
+INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum, checksum_algorithm_id, data_directory_id) VALUES ('1_19700101-000000.txt', 14, '852952723', 1, 9);
+INSERT INTO qiita.sample_template_filepath VALUES (1, 16);
+
+INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum, checksum_algorithm_id, data_directory_id) VALUES
+('preprocess_test1.sff', 17, '852952723', 1, 5),
+('preprocess_test2.sff', 17, '852952723', 1, 5);
+
+-- Insert the raw data information for study 1
+INSERT INTO qiita.raw_data (filetype_id) VALUES (1), (1);
+
+-- Insert (link) the raw data with the raw filepaths
+INSERT INTO qiita.raw_filepath (raw_data_id, filepath_id) VALUES (3, 17), (3, 18);
+
+-- Insert (link) the study with the raw data
+INSERT INTO qiita.study_raw_data (study_id, raw_data_id) VALUES (1, 3), (1, 4);
+
+-- Add processing parameters for sortmerna
+INSERT INTO qiita.processed_params_sortmerna (reference_id, sortmerna_e_value, sortmerna_max_pos, similarity, sortmerna_coverage, threads) VALUES (1, 1, 10000, 0.97, 0.97, 1);

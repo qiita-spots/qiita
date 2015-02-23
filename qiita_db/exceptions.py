@@ -7,6 +7,8 @@
 # -----------------------------------------------------------------------------
 
 from __future__ import division
+import warnings
+
 from qiita_core.exceptions import QiitaError
 
 
@@ -58,10 +60,11 @@ class QiitaDBUnknownIDError(QiitaDBError):
 
 class QiitaDBDuplicateHeaderError(QiitaDBError):
     """Exception for error when a MetadataTemplate has duplicate columns"""
-    def __init__(self):
+    def __init__(self, repeated_headers):
         super(QiitaDBDuplicateHeaderError, self).__init__()
         self.args = ("Duplicate headers found in MetadataTemplate. Note "
-                     "that the headers are not case-sensitive",)
+                     "that the headers are not case-sensitive, repeated "
+                     "header(s): %s." % ', '.join(repeated_headers),)
 
 
 class QiitaDBIncompatibleDatatypeError(QiitaDBError):
@@ -70,3 +73,10 @@ class QiitaDBIncompatibleDatatypeError(QiitaDBError):
         super(QiitaDBIncompatibleDatatypeError, self).__init__()
         self.args = ("The %s operator is not for use with data of type %s" %
                      (operator, str(argument_type)))
+
+
+class QiitaDBWarning(UserWarning):
+    """Warning specific for the QiitaDB domain"""
+    pass
+
+warnings.simplefilter('always', QiitaDBWarning)

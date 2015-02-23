@@ -15,6 +15,12 @@
 # Change to FALSE in a production system
 TEST_ENVIRONMENT = TRUE
 
+# Whether studies require admin approval to be made available
+REQUIRE_APPROVAL = True
+
+# Base URL: DO NOT ADD TRAILING SLASH
+BASE_URL = http://localhost
+
 # Download path files
 UPLOAD_DATA_DIR = /tmp/
 
@@ -28,20 +34,7 @@ MAX_UPLOAD_SIZE = 100
 BASE_DATA_DIR =
 
 # Valid upload extension, comma separated. Empty for no uploads
-VALID_UPLOAD_EXTENSION = fastq,fastq.gz,txt
-
-# ----------------------------- IPython settings ------------------------------
-[ipython]
-# ties to cluster profiles
-# Make sure that all the cluster size are bigger than 1, otherwise a deadlock can occur
-DEMO_CLUSTER = qiita_demo
-DEMO_CLUSTER_SIZE = 2
-
-RESERVED_CLUSTER = qiita_reserved
-RESERVED_CLUSTER_SIZE = 2
-
-GENERAL_CLUSTER = qiita_general
-GENERAL_CLUSTER_SIZE = 2
+VALID_UPLOAD_EXTENSION = fastq,fastq.gz,txt,sff,fna,qual
 
 # ----------------------------- SMTP settings -----------------------------
 [smtp]
@@ -125,3 +118,14 @@ EBI_CENTER_NAME = CCME-COLORADO
 # This string (with an underscore) will be prefixed to your EBI submission and
 # study aliases
 EBI_ORGANIZATION_PREFIX = qiime
+
+[ipython]
+# context is expected to be a comma separated list
+context = qiita_general
+default = qiita_general
+
+[vamps]
+# general info to submit to vamps
+USER = user
+PASSWORD = password
+URL = https://vamps.mbl.edu/mobe_workshop/getfile.php

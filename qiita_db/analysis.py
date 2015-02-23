@@ -17,7 +17,6 @@ Classes
 # -----------------------------------------------------------------------------
 from __future__ import division
 from collections import defaultdict
-from binascii import crc32
 from os.path import join
 
 from future.utils import viewitems
@@ -27,11 +26,11 @@ from biom.util import biom_open
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from .sql_connection import SQLConnectionHandler
 from .base import QiitaStatusObject
-from .data import ProcessedData
+from .data import ProcessedData, RawData
 from .study import Study
 from .exceptions import QiitaDBStatusError  # QiitaDBNotImplementedError
-from .util import (convert_to_id, get_work_base_dir, get_db_files_base_dir,
-                   get_table_cols)
+from .util import (convert_to_id, get_work_base_dir,
+                   get_mountpoint, get_table_cols, insert_filepaths)
 
 
 class Analysis(QiitaStatusObject):
@@ -79,19 +78,24 @@ class Analysis(QiitaStatusObject):
             raise QiitaDBStatusError("Can't set status away from public!")
 
     @classmethod
-    def get_public(cls):
-        """Returns analysis id for all public Analyses
+    def get_by_status(cls, status):
+        """Returns analysis ids for all Analyses with given status
+
+        Parameters
+        ----------
+        status : str
+            Status to search analyses for
 
         Returns
         -------
         list of int
-            All public analysses in the database
+            All analyses in the database with the given status
         """
         conn_handler = SQLConnectionHandler()
-        sql = ("SELECT analysis_id FROM qiita.{0} WHERE "
-               "{0}_status_id = %s".format(cls._table))
-        # MAGIC NUMBER 6: status id for a public study
-        return [x[0] for x in conn_handler.execute_fetchall(sql, (6,))]
+        sql = ("SELECT analysis_id FROM qiita.{0} a JOIN qiita.{0}_status ans "
+               "ON a.analysis_status_id = ans.analysis_status_id WHERE "
+               "ans.status = %s".format(cls._table))
+        return [x[0] for x in conn_handler.execute_fetchall(sql, (status,))]
 
     @classmethod
     def create(cls, owner, name, description, parent=None):
@@ -236,9 +240,11 @@ class Analysis(QiitaStatusObject):
         for biom, filepath in viewitems(bioms):
             table = load_table(filepath)
             # remove the samples from the sets as they are found in the table
-            proc_data_id = table.metadata()[0]['Processed_id']
+            proc_data_ids = set(sample['Processed_id']
+                                for sample in table.metadata())
             ids = set(table.ids())
-            all_samples[proc_data_id] = all_samples[proc_data_id] - ids
+            for proc_data_id in proc_data_ids:
+                all_samples[proc_data_id] = all_samples[proc_data_id] - ids
 
         # what's left are unprocessed samples, so return
         return all_samples
@@ -275,6 +281,24 @@ class Analysis(QiitaStatusObject):
         return [u[0] for u in conn_handler.execute_fetchall(sql, (self._id, ))]
 
     @property
+    def all_associated_filepath_ids(self):
+        """Get all associated filepath_ids EXCEPT job results filepaths
+
+        Returns
+        -------
+        list
+        """
+        conn_handler = SQLConnectionHandler()
+        sql = """SELECT f.filepath_id
+              FROM qiita.filepath f JOIN
+              qiita.analysis_filepath af ON f.filepath_id = af.filepath_id
+              WHERE af.analysis_id = %s"""
+        filepaths = {row[0]
+                     for row in conn_handler.execute_fetchall(sql, [self._id])}
+
+        return filepaths
+
+    @property
     def biom_tables(self):
         """The biom tables of the analysis
 
@@ -294,7 +318,7 @@ class Analysis(QiitaStatusObject):
         if not tables:
             return None
         ret_tables = {}
-        base_fp = get_db_files_base_dir()
+        _, base_fp = get_mountpoint(self._table)[0]
         for fp in tables:
             ret_tables[fp[0]] = join(base_fp, fp[1])
         return ret_tables
@@ -316,7 +340,9 @@ class Analysis(QiitaStatusObject):
         mapping_fp = conn_handler.execute_fetchone(sql, (self._id, fptypeid))
         if not mapping_fp:
             return None
-        return join(get_db_files_base_dir(), mapping_fp[0])
+
+        _, base_fp = get_mountpoint(self._table)[0]
+        return join(base_fp, mapping_fp[0])
 
     @property
     def step(self):
@@ -427,8 +453,8 @@ class Analysis(QiitaStatusObject):
         if user.level in {'superuser', 'admin'}:
             return True
 
-        return self._id in Analysis.get_public() + user.private_analyses +\
-            user.shared_analyses
+        return self._id in Analysis.get_by_status('public') + \
+            user.private_analyses + user.shared_analyses
 
     def share(self, user):
         """Share the analysis with another user
@@ -579,7 +605,7 @@ class Analysis(QiitaStatusObject):
         for pid, samps in viewitems(samples):
             # one biom table attached to each processed data object
             proc_data = ProcessedData(pid)
-            proc_data_fp = proc_data.get_filepaths()[0][0]
+            proc_data_fp = proc_data.get_filepaths()[0][1]
             table_fp = join(base_fp, proc_data_fp)
             table = load_table(table_fp)
             # HACKY WORKAROUND FOR DEMO. Issue # 246
@@ -603,14 +629,13 @@ class Analysis(QiitaStatusObject):
         # add the new tables to the analysis
         conn_handler = conn_handler if conn_handler is not None \
             else SQLConnectionHandler()
-        base_fp = get_db_files_base_dir(conn_handler)
+        _, base_fp = get_mountpoint(self._table)[0]
         for dt, biom_table in viewitems(new_tables):
             # rarefy, if specified
             if rarefaction_depth is not None:
                 biom_table = biom_table.subsample(rarefaction_depth)
             # write out the file
-            biom_fp = join(base_fp, "analysis", "%d_analysis_%s.biom" %
-                           (self._id, dt))
+            biom_fp = join(base_fp, "%d_analysis_%s.biom" % (self._id, dt))
             with biom_open(biom_fp, 'w') as f:
                 biom_table.to_hdf5(f, "Analysis %s Datatype %s" %
                                    (self._id, dt))
@@ -646,7 +671,7 @@ class Analysis(QiitaStatusObject):
             # you can have multiple different prep templates but we are only
             # using the one for 16S i. e. the last one ... sorry ;l
             # see issue https://github.com/biocore/qiita/issues/465
-            prep_template_id = s.raw_data()[0]
+            prep_template_id = RawData(s.raw_data()[0]).prep_templates[-1]
 
             if study_id in all_studies:
                 # samples already added by other processed data file
@@ -683,9 +708,8 @@ class Analysis(QiitaStatusObject):
         all_headers.append('Description')
 
         # write mapping file out
-        base_fp = get_db_files_base_dir(conn_handler)
-        mapping_fp = join(base_fp, "analysis", "%d_analysis_mapping.txt" %
-                          self._id)
+        _, base_fp = get_mountpoint(self._table)[0]
+        mapping_fp = join(base_fp, "%d_analysis_mapping.txt" % self._id)
         with open(mapping_fp, 'w') as f:
             f.write("#SampleID\t%s\n" % '\t'.join(all_headers))
             for sample, metadata in viewitems(merged_data):
@@ -713,19 +737,11 @@ class Analysis(QiitaStatusObject):
         conn_handler = conn_handler if conn_handler is not None \
             else SQLConnectionHandler()
 
-        # get required bookkeeping data for DB
-        fptypeid = convert_to_id(filetype, "filepath_type", conn_handler)
-        fullpath = join(get_db_files_base_dir(), "analysis", filename)
-        with open(fullpath, 'rb') as f:
-            checksum = crc32(f.read()) & 0xffffffff
-
-        # add  file to analysis
-        sql = ("INSERT INTO qiita.filepath (filepath, filepath_type_id, "
-               "checksum, checksum_algorithm_id) VALUES (%s, %s, %s, %s) "
-               "RETURNING filepath_id")
-        # magic number 1 is for crc32 checksum algorithm
-        fpid = conn_handler.execute_fetchone(sql, (fullpath, fptypeid,
-                                                   checksum, 1))[0]
+        filetype_id = convert_to_id(filetype, 'filepath_type', conn_handler)
+        _, mp = get_mountpoint('analysis', conn_handler)[0]
+        fpid = insert_filepaths([
+            (join(mp, filename), filetype_id)], -1, 'analysis', 'filepath',
+            conn_handler, move_files=False)[0]
 
         col = ""
         dtid = ""

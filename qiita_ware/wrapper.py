@@ -1,45 +1,55 @@
 from __future__ import division
 
-__author__ = "Jose Antonio Navas Molina"
-__copyright__ = "Copyright 2011, The QIIME project"
-__credits__ = ["Jose Antonio Navas Molina"]
-__license__ = "BSD"
-__version__ = "1.8.0-dev"
-__maintainer__ = "Jose Navas Antonio Molina"
-# Taken from pull request #1616 in qiime, with permission from Jose
-# Permission was also given to release this code under the BSD licence
-
 from shutil import rmtree
 from os import remove
 from sys import stderr
 
+from skbio.util import flatten
 import networkx as nx
+from moi.job import system_call, submit, ctxs, ctx_default
 
-from .context import context
+from qiita_db.job import Job
+
+
+def system_call_from_job(job_id, **kwargs):
+    """Executes a system call described by a Job
+
+    Parameters
+    ----------
+    job_id : int
+        The job object ID
+    """
+    job = Job(job_id)
+    name, command = job.command
+    options = job.options
+
+    cmd = [command]
+    cmd.extend(flatten(options.items()))
+    cmd_fmt = ' '.join((str(i) for i in cmd))
+
+    try:
+        so, se, status = system_call(cmd_fmt)
+    except Exception as e:
+        job.set_error(str(e))
+        raise
+
+    # FIX THIS add_results should not be hard coded  Issue #269
+    job.add_results([(job.options["--output_dir"], "directory")])
 
 
 class ParallelWrapper(object):
     """Base class for any parallel code"""
-    def __init__(self, retain_temp_files=False, block=True):
-        # Set if we have to delete the temporary files or keep them
+    def __init__(self, retain_temp_files=False, block=True,
+                 moi_update_status=None, moi_context=None, moi_parent_id=None):
         self._retain_temp_files = retain_temp_files
-        # Set if we have to wait until the job is done or we can submit
-        # the waiter as another job
         self._block = block
-        # self._job_graph: A networkx DAG holding the job workflow. Should be
-        # defined when calling the subclass' _construct_job_graph method. Each
-        # node should have two properties:
-        #     - "job": a tuple with the actual job to execute in the node
-        #     - "requires_deps": a boolean indicating if a dictionary with the
-        #       results of the previous jobs (keyed by node name) is passed to
-        #       the job using the kwargs argument with name 'dep_results'
         self._job_graph = nx.DiGraph()
-        # self._logger: A WorkflowLogger object. Should be defined when
-        # calling the subclass' _construct_job_graph method
         self._logger = None
-        # Clean up variables
         self._filepaths_to_remove = []
         self._dirpaths_to_remove = []
+        self._update_status = moi_update_status
+        self._context = ctxs.get(moi_context, ctxs[ctx_default])
+        self._group = moi_parent_id
 
     def _construct_job_graph(self, *args, **kwargs):
         """Constructs the workflow graph with the jobs to execute
@@ -80,16 +90,19 @@ class ParallelWrapper(object):
                 self._logger.write("Job %s: starting time not available"
                                    % node)
                 continue
+
             for parent in self._job_graph.predecessors(node):
                 finished = results[parent].metadata.completed
                 if finished is None:
                     self._logger.write("Job %s: finish time not available"
                                        % parent)
                     continue
+
                 if started < finished:
                     self._logger.write(
                         "Job order not respected: %s should have happened "
                         "after %s\n" % (node, parent))
+
         self._logger.write("Done\n")
 
     def _validate_job_status(self, results):
@@ -137,7 +150,7 @@ class ParallelWrapper(object):
     def _job_blocker(self, results):
         # Block until all jobs are done
         self._logger.write("\nWaiting for all jobs to finish... ")
-        context.wait(results.values())
+        self._context.bv.wait(results.values())
         self._logger.write("Done\n")
         self._validate_job_status(results)
         self._validate_execution_order(results)
@@ -145,34 +158,67 @@ class ParallelWrapper(object):
         if self._logger != stderr:
             self._logger.close()
 
+    def _submit_with_deps(self, deps, name, func, *args, **kwargs):
+        """Submit with dependencies
+
+        Parameters
+        ----------
+        deps : list of AsyncResult
+            AsyncResults that this new job depend on
+        name : str
+            A job name
+        func : function
+            The function to submit
+
+        Returns
+        -------
+        AsyncResult
+            The result returned by IPython's apply_async.
+        """
+        parent_id = self._group
+        url = None
+
+        with self._context.bv.temp_flags(after=deps, block=False):
+            _, _, ar = submit(self._context, parent_id, name, url, func,
+                              *args, **kwargs)
+        return ar
+
     def __call__(self, *args, **kwargs):
         self._construct_job_graph(*args, **kwargs)
 
-        if self._job_graph is None or self._logger is None:
-            raise RuntimeError(
-                "Job graph and/or logger not instantiated in the subclass")
+        if self._logger is None:
+            self._logger = stderr
 
-        # We need to submit the jobs to ipython in topological order, so we can
-        # actually define the dependencies between jobs. Adapted from
+        # Adapted from
         # http://ipython.org/ipython-doc/dev/parallel/dag_dependencies.html
-        results = {}
-        for node in nx.topological_sort(self._job_graph):
-            # Get the list of predecessor jobs
-            deps = [results[n] for n in self._job_graph.predecessors(node)]
-            # Get the tuple with the job to run
-            job = self._job_graph.node[node]['job']
-            # We can now submit the job taking into account the dependencies
-            self._logger.write("Submitting job %s: %s... " % (node, job))
-            if self._job_graph.node[node]['requires_deps']:
-                # The job requires the results of the previous jobs, get them
-                # and add them to a dict keyed by dependency node name
-                deps_dict = {n: results[n].get()
-                             for n in self._job_graph.predecessors(node)}
-                results[node] = context.submit_async_deps(
-                    deps, *job, dep_results=deps_dict)
-            else:
-                results[node] = context.submit_async_deps(deps, *job)
+        async_results = {}
+        for node_name in nx.topological_sort(self._job_graph):
+            node = self._job_graph.node[node_name]
+            requires_deps = node.get('requies_deps', False)
+
+            func = node['func']
+            args = node['args']
+            job_name = node['job_name']
+            kwargs = {}
+
+            deps = []
+            dep_results = {}
+            kwargs['dep_results'] = dep_results
+            for predecessor_name in self._job_graph.predecessors(node_name):
+                predecessor_result = async_results[predecessor_name]
+                deps.append(predecessor_result)
+
+                if requires_deps:
+                    dep_results[predecessor_name] = predecessor_result.get()
+
+            self._logger.write("Submitting %s: %s %s...\n " % (node_name,
+                                                               func.__name__,
+                                                               args))
+
+            async_results[node_name] = \
+                self._submit_with_deps(deps, job_name, func, *args, **kwargs)
+
             self._logger.write("Done\n")
 
         if self._block:
-            self._job_blocker(results)
+            self._job_blocker(async_results)

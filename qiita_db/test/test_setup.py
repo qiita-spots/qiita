@@ -37,20 +37,23 @@ class SetupTest(TestCase):
     def test_study_experimental_factor(self):
         self.assertEqual(get_count("qiita.study_experimental_factor"), 1)
 
+    def test_study_status(self):
+        self.assertEqual(get_count("qiita.study_status"), 4)
+
     def test_filepath(self):
-        self.assertEqual(get_count("qiita.filepath"), 15)
+        self.assertEqual(get_count("qiita.filepath"), 18)
 
     def test_filepath_type(self):
-        self.assertEqual(get_count("qiita.filepath_type"), 13)
+        self.assertEqual(get_count("qiita.filepath_type"), 19)
 
     def test_raw_data(self):
-        self.assertEqual(get_count("qiita.raw_data"), 2)
+        self.assertEqual(get_count("qiita.raw_data"), 4)
 
     def test_raw_filepath(self):
         self.assertEqual(get_count("qiita.raw_filepath"), 4)
 
     def test_study_raw_data(self):
-        self.assertEqual(get_count("qiita.study_raw_data"), 2)
+        self.assertEqual(get_count("qiita.study_raw_data"), 4)
 
     def test_required_sample_info(self):
         self.assertEqual(get_count("qiita.required_sample_info"), 27)
@@ -87,7 +90,7 @@ class SetupTest(TestCase):
 
     def test_preprocessed_sequence_illumina_params(self):
         self.assertEqual(
-            get_count("qiita.preprocessed_sequence_illumina_params"), 2)
+            get_count("qiita.preprocessed_sequence_illumina_params"), 6)
 
     def test_processed_data(self):
         self.assertEqual(get_count("qiita.processed_data"), 1)
@@ -112,6 +115,9 @@ class SetupTest(TestCase):
 
     def test_analysis_job(self):
         self.assertEqual(get_count("qiita.analysis_job"), 3)
+
+    def test_analysis_workflow(self):
+        self.assertEqual(get_count("qiita.analysis_workflow"), 2)
 
     def test_analysis_filepath(self):
         self.assertEqual(get_count("qiita.analysis_filepath"), 2)

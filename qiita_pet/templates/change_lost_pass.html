@@ -1,58 +1,31 @@
 {%extends sitebase.html%}
 {%block head%}
 <script type="text/javascript" src="/static/vendor/js/jquery.validate.min.js"></script>
+<script type="text/javascript" src="/static/js/password_validation.js"></script>
 <script type="text/javascript">
-// http://www.9lessons.info/2012/04/bootstrap-registration-form-tutorial.html
-$(document).ready(function()
-{
-  // Popover 
-  $('#lost_pass input').hover(function()
-  {
-    $(this).popover('show')
-  });
-
-  // Validation
-  $("#lost_pass").validate({
-    rules:{
-      email:{required:true,email:true},
-      newpass:{required:true,minlength: 6},
-      newpass2:{required:true,minlength: 6,equalTo: "#newpass"},
-    },
-
-    messages:{
-      email:"Enter valid email address"},
-      newpass:{
-      required:"Enter your password",
-      minlength:"Password must be minimum 6 characters"},
-      newpass2:{
-      required:"Enter confirm password",
-      minlength:"Password must be minimum 6 characters",
-      equalTo:"Password and Confirm Password must match"}
-  }
-  );
-});
+$( document ).ready(function() { dualpass_validator(); });
 </script>
 {%end%}
 
-{%block content%}
-<div style='width: 50%;'>
-<h1>Password Reset</h1>
-<h3>Enter new password below</h3>
-<form role="form" action="/auth/reset/{{code}}" method="post" id="lost_pass" name="lost_pass">
-<div class="form-group">
-    <label for="email" class="col-sm-10 control-label">Email</label>
-      <input type="email" class="form-control" id="email" name="email">
-</div>
-<div class="form-group">
-    <label for="newpass" class="col-sm-10 control-label">New Password</label>
-      <input type="password" class="form-control" id="newpass" name="newpass">
-</div>
-<div class="form-group">
-    <label for="newpass2" class="col-sm-10 control-label">Repeat New Password</label>
-      <input type="password" class="form-control" id="newpass2" name="newpass2">
-  </div>
-<div style="color:red;">{{error}}</div>
-<button class="btn btn-danger">Change Password</button>
-</form>
-</div>
-{%end%}
+{% block content %}
+  {% if level != 'danger' and maintenance is None %}
+    <div style='width: 50%;'>
+    <h1>Password Reset</h1>
+    <h3>Enter new password below</h3>
+    <form role="form" action="/auth/reset/{{code}}" method="post" id="lost_pass" name="lost_pass">
+    <div class="form-group">
+        <label for="email" class="col-sm-10 control-label">Email</label>
+          <input type="email" class="form-control" id="email" name="email">
+    </div>
+    <div class="form-group">
+        <label for="newpass" class="col-sm-10 control-label">New Password</label>
+          <input type="password" class="form-control" id="newpass" name="newpass">
+    </div>
+    <div class="form-group">
+        <label for="newpass2" class="col-sm-10 control-label">Repeat New Password</label>
+          <input type="password" class="form-control" id="newpass2" name="newpass2">
+      </div>
+    <button class="btn btn-danger">Change Password</button>
+    </form>
+  {% end %}
+{% end %}

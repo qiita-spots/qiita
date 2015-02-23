@@ -11,7 +11,7 @@
         <li>fastq or fastq.gz (gziped fastq) for sequences. Note that zip files can not be processed</li>
         <li>tab separed text files for sample and prep templates, the extention should be txt</li>
       </ul>
-      <a href="/study/description/{{study_id}}">Go to study descripion</a>
+      <a href="/study/description/{{study_id}}">Go to study description</a>
     </td>
   </tr>
 
@@ -40,12 +40,22 @@
         </table>
       </div>
 
-      <div class="uploader-list-metadata" style="display:none;">
-      </div>
+      <hr>
+      <form method="post" id="delete-files-form">
+        <div class="uploader-list" style="display:none;">
+        </div>
+      </form>
 
-      <div class="file-edit-container-sequences" style="display:none;">
+      <div class="file-edit-container" style="display:none;">
       </div>
-
+    </td>
+  </tr>
+  <tr><td>&nbsp;</td></tr>
+  <tr>
+    <td>
+      <button type="button" class="btn btn-danger" onclick="if(confirm('Are you sure you want to delete the selected files? You can not undo this action')) { $('#delete-files-form').submit() }">
+          <span class="glyphicon glyphicon-trash"></span> Delete selected files
+      </button>
     </td>
   </tr>
 </table>
@@ -62,13 +72,12 @@
   var maxFileSize = {{max_upload_size}}; // in GB
 
   uploader = (function($){
-      return (new ResumableUploader(meta, $('.resumable-browse-metadata'), $('.resumable-drop-metadata'), $('.progress-metadata'), $('.uploader-list-metadata'), $('.file-edit-container-metadata'), maxFileSize, "{{study_id}}", "{{extensions}}"));
+      return (new ResumableUploader(meta, $('.resumable-browse-metadata'), $('.resumable-drop-metadata'), $('.progress-metadata'), $('.uploader-list'), $('.file-edit-container'), maxFileSize, "{{study_id}}", "{{extensions}}"));
     })(jQuery);
 
-  {% for f in files %}
-    uploader.addFile("{{f}}");
+  {% for dirid, filename in files %}
+    uploader.addFile({ "dirid": "{{dirid}}", "fileName": "{{filename}}" });
   {% end  %}
-
 </script>
 
 {% end %}

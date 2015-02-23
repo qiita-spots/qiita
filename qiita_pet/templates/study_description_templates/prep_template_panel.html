@@ -1,0 +1,104 @@
+{% from os.path import basename %}
+{% from qiita_pet.handlers.util import download_link_or_path %}
+
+<!-- modal view to enter preprocessing parameters -->
+<div class="modal fade" id="preprocess-modal-view-{{prep_id}}" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title" id="myModalLabel">Choose preprocessing parameters</h4>
+      </div>
+      <form action="/study/preprocess" method="post" onsubmit='return submit_preprocess({{prep_id}});'>
+        <div class="modal-body">
+          <div>
+            <div class="form-group">
+              <table>
+                <tr>
+                  <td>
+                    <select id="preprocessing_parameters_{{prep_id}}" name="preprocessing_parameters_id" class="form-control" onchange="$('#display-extra-info-{{prep_id}}').html($(this).children(':selected').attr('extra-info'))">
+                      <option value="0" extra-info="">Select an option ...</option>
+                      {% for idx, name, text in preprocess_options %}
+                        <option value="{{idx}}" extra-info="{% raw text %}">{{name}}</option>
+                      {% end %}
+                    </select>
+                  </td>
+                  <td>&nbsp; &nbsp;</td>
+                  <td>
+                    <input type='submit' id='start_preprocess_submit' class='btn btn-success' value="Start preprocessing">
+                    <input type='hidden' name='study_id' value="{{study_id}}">
+                    <input type='hidden' name='prep_template_id' value="{{prep_id}}">
+                  </td>
+                </tr>
+                <tr><td>&nbsp;</td></tr>
+                <tr><td colspan="3">
+                  Here you are selecting the parameters to use for preprocessing. This is the demultiplexing and quality control
+                  step for multiplexed sequencing. For more information visit:
+                  <a target="_blank" href="http://qiime.org/scripts/split_libraries.html">454</a> and
+                  <a target="_blank" href="http://qiime.org/scripts/split_libraries_fastq.html">Illumina</a>.
+                </td></tr>
+                <tr><td>&nbsp;</td></tr>
+                <tr>
+                  <td id="display-extra-info-{{prep_id}}" colspan="2"></td>
+                </tr>
+              </table>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <h4 class="panel-title">
+      <a data-parent="#prep-accordion" href="#collapse{{prep_id}}" style="pointer-events: none; cursor: default;">{{data_type}} (ID: {{prep_id}})</a>
+        <button class="close" title="Remove this prep template" type="button" onclick="delete_prep_template('{{data_type}}', {{prep_id}})">&nbsp; ×</button>
+    </h4>
+  </div>
+  <div id="collapse{{prep_id}}" class="panel-collapse collapse in">
+    <div class="panel-body">
+      <b>Files:</b><br/>
+      <table border="0" style="margin-left: 10px;">
+        <tr>
+          <td style="padding:3px;">
+            <a class="btn btn-default glyphicon glyphicon-eye-open" href="/metadata_summary/?study_id={{study_id}}&prep_template={{prep_id}}" style="word-spacing: -10px;">Show prep template summary</a>
+          </td>
+        </tr>
+        {% for ptid, ptpath, ptype in filepaths %}
+          <tr>
+            <td>
+            {% raw download_link_or_path(is_local_request, ptpath, ptid, ptype) %}
+            </td>
+          </tr>
+        {% end %}
+      </table>
+      <br/>
+      {% if is_editable %}
+        <!-- We pass a 0 as a preprocessed data id here, since the preprocessed data 0 does not exists -->
+        {% module EditInvestigationType(ena_terms, user_defined_terms, prep_id, investigation_type, 0) %}
+      {% end %}
+      <br/>
+      {% if not preprocessed_data or preprocessing_status.startswith('failed') %}
+        {% if study_status == 'sandbox' %}
+          <a class="btn btn-primary glyphicon glyphicon-play" data-toggle="modal" data-target="#preprocess-modal-view-{{prep_id}}" style="word-spacing: -10px;"> Preprocess</a>
+        {% end %}
+          <br>
+          <i>Status:</i> {{preprocessing_status}}
+          <br>
+          {% if 'zero-size array' in preprocessing_status %}
+            <b>Your barcodes do not seem to match your prep template info</b>
+          {% end %}
+      {% else %}
+        <b>Preprocessed data generated: </b>
+        <a href="#" onClick="display_tab('preprocessed_data_tab', {{preprocessed_data[0]}});">{{preprocessed_data[0]}}</a>
+        {% for pdi in preprocessed_data[1:] %}
+          , <a href="#" onClick="display_tab('preprocessed_data_tab', {{pdi}});">{{pdi}}</a>
+        {% end %}
+      {% end %}
+    </div>
+  </div>
+</div>

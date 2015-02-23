@@ -135,6 +135,17 @@ class TestConnHandler(TestCase):
             "'%somebody@foo.bar%'")
         self.assertEqual(obs, [])
 
+    def test_get_temp_queue(self):
+        my_queue = self.conn_handler.get_temp_queue()
+        self.assertTrue(my_queue in self.conn_handler.list_queues())
+
+        self.conn_handler.add_to_queue(my_queue,
+                                       "SELECT * from qiita.qiita_user")
+        self.conn_handler.add_to_queue(my_queue,
+                                       "SELECT * from qiita.user_level")
+        self.conn_handler.execute_queue(my_queue)
+
+        self.assertTrue(my_queue not in self.conn_handler.list_queues())
 
 if __name__ == "__main__":
     main()

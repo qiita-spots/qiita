@@ -10,7 +10,7 @@
         // When the socket is opened, send a message from the client to the
         // server that indicates the current user. This is likely not secure.
         websocket.onopen = function() {
-            websocket.send(JSON.stringify({'user': '{{user}}'}));
+            websocket.send(JSON.stringify({'user': '{{user.id}}'}));
         };
 
         // When the web socket receives an event

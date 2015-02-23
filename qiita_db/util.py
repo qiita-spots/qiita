@@ -18,12 +18,18 @@ Methods
     exists_dynamic_table
     get_db_files_base_dir
     compute_checksum
+    get_files_from_uploads_folders
+    get_mountpoint
     insert_filepaths
     check_table_cols
     check_required_columns
     convert_from_id
     convert_to_id
     get_lat_longs
+    get_environmental_packages
+    purge_filepaths
+    move_filepaths_to_upload_folder
+    move_upload_files_to_trash
 """
 # -----------------------------------------------------------------------------
 # Copyright (c) 2014--, The Qiita Development Team.
@@ -41,12 +47,11 @@ from binascii import crc32
 from bcrypt import hashpw, gensalt
 from functools import partial
 from os.path import join, basename, isdir, relpath, exists
-from os import walk, remove
+from os import walk, remove, listdir, makedirs, rename
 from shutil import move, rmtree
 from json import dumps
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
-from qiita_core.qiita_settings import qiita_config
 from .exceptions import QiitaDBColumnError, QiitaDBError
 from .sql_connection import SQLConnectionHandler
 
@@ -504,31 +509,130 @@ def compute_checksum(path):
     return crc & 0xffffffff
 
 
-def retrive_latest_data_directory(data_type, conn_handler=None):
+def get_files_from_uploads_folders(study_id):
+    """Retrieve files in upload folders
+
+    Parameters
+    ----------
+    study_id : str
+        The study id of which to retrieve all upload folders
+
+    Returns
+    -------
+    list
+        List of the filepaths for upload for that study
+    """
+    fp = []
+    for pid, p in get_mountpoint("uploads", retrieve_all=True):
+        t = join(p, study_id)
+        if exists(t):
+            fp.extend([(pid, f)
+                       for f in listdir(t)
+                       if not f.startswith('.') and not isdir(join(t, f))])
+
+    return fp
+
+
+def move_upload_files_to_trash(study_id, files_to_move):
+    """Move files to a trash folder within the study_id upload folder
+
+    Parameters
+    ----------
+    study_id : int
+        The study id
+    files_to_move : list
+        List of tuples (folder_id, filename)
+
+    Raises
+    ------
+    QiitaDBError
+        If folder_id or the study folder don't exist and if the filename to
+        erase matches the trash_folder, internal variable
+    """
+    trash_folder = 'trash'
+    folders = {k: v for k, v in get_mountpoint("uploads", retrieve_all=True)}
+
+    for fid, filename in files_to_move:
+        if filename == trash_folder:
+            raise QiitaDBError("You can not erase the trash folder: %s"
+                               % trash_folder)
+
+        if fid not in folders:
+            raise QiitaDBError("The filepath id: %d doesn't exist in the "
+                               "database" % fid)
+
+        foldername = join(folders[fid], str(study_id))
+        if not exists(foldername):
+            raise QiitaDBError("The upload folder for study id: %d doesn't "
+                               "exist" % study_id)
+
+        trashpath = join(foldername, trash_folder)
+        if not exists(trashpath):
+            makedirs(trashpath)
+
+        fullpath = join(foldername, filename)
+        new_fullpath = join(foldername, trash_folder, filename)
+
+        if not exists(fullpath):
+            raise QiitaDBError("The filepath %s doesn't exist in the system" %
+                               fullpath)
+
+        rename(fullpath, new_fullpath)
+
+
+def get_mountpoint(mount_type, conn_handler=None, retrieve_all=False):
     r""" Returns the most recent values from data directory for the given type
 
     Parameters
     ----------
-    data_type : str
-        The data type
+    mount_type : str
+        The data mount type
+    conn_handler : SQLConnectionHandler
+        The connection handler object connected to the DB
+    retrieve_all : bool
+        Retrieve all the available mount points or just the active one
+
+    Returns
+    -------
+    list
+        List of tuple, where: [(id_mountpoint, filepath_of_mountpoint)]
+    """
+    conn_handler = (conn_handler if conn_handler is not None
+                    else SQLConnectionHandler())
+    if retrieve_all:
+        result = conn_handler.execute_fetchall(
+            "SELECT data_directory_id, mountpoint, subdirectory FROM "
+            "qiita.data_directory WHERE data_type='%s' ORDER BY active DESC"
+            % mount_type)
+    else:
+        result = [conn_handler.execute_fetchone(
+            "SELECT data_directory_id, mountpoint, subdirectory FROM "
+            "qiita.data_directory WHERE data_type='%s' and active=true"
+            % mount_type)]
+    basedir = get_db_files_base_dir()
+    return [(d, join(basedir, m, s)) for d, m, s in result]
+
+
+def get_mountpoint_path_by_id(mount_id, conn_handler=None):
+    r""" Returns the mountpoint path for the mountpoint with id = mount_id
+
+    Parameters
+    ----------
+    mount_id : int
+        The mountpoint id
     conn_handler : SQLConnectionHandler
         The connection handler object connected to the DB
 
     Returns
     -------
-    int
-        The id of the most recent entry for the given type
     str
-        The mountpoint for that entry in data_directory
-    str
-        The subdirectory for that entry in data_directory
+        The mountpoint path
     """
-    conn_handler = (conn_handler if conn_handler is not None
-                    else SQLConnectionHandler())
-    return conn_handler.execute_fetchone(
-        "SELECT data_directory_id, mountpoint, subdirectory FROM "
-        "qiita.data_directory WHERE data_type='%s' and active=true"
-        % data_type)
+    conn_handler = conn_handler if conn_handler else SQLConnectionHandler()
+    mountpoint, subdirectory = conn_handler.execute_fetchone(
+        """SELECT mountpoint, subdirectory FROM qiita.data_directory
+           WHERE data_directory_id=%s""", (mount_id,))
+    return join(get_db_files_base_dir(), mountpoint, subdirectory)
 
 
 def insert_filepaths(filepaths, obj_id, table, filepath_table, conn_handler,
@@ -546,7 +650,7 @@ def insert_filepaths(filepaths, obj_id, table, filepath_table, conn_handler,
             Id of the object calling the functions. Disregarded if move_files
             is False
         table : str
-            Table that holds the file data. Disregarded if move_files is False
+            Table that holds the file data.
         filepath_table : str
             Table that holds the filepath information
         conn_handler : SQLConnectionHandler
@@ -564,15 +668,15 @@ def insert_filepaths(filepaths, obj_id, table, filepath_table, conn_handler,
             queue not specified, or no return value if queue specified
         """
         new_filepaths = filepaths
-        base_fp = get_db_files_base_dir()
-        dd_id, mp, sd = retrive_latest_data_directory(table, conn_handler)
+
+        dd_id, mp = get_mountpoint(table, conn_handler)[0]
+        base_fp = join(get_db_files_base_dir(), mp)
+
         if move_files:
-            # Get the base directory in which the type of data is stored
-            base_data_dir = join(get_db_files_base_dir(), mp, sd)
             # Generate the new fileapths. Format: DataId_OriginalName
             # Keeping the original name is useful for checking if the RawData
             # alrady exists on the DB
-            db_path = partial(join, base_data_dir)
+            db_path = partial(join, base_fp)
             new_filepaths = [
                 (db_path("%s_%s" % (obj_id, basename(path))), id)
                 for path, id in filepaths]
@@ -580,15 +684,16 @@ def insert_filepaths(filepaths, obj_id, table, filepath_table, conn_handler,
             for old_fp, new_fp in zip(filepaths, new_filepaths):
                     move(old_fp[0], new_fp[0])
 
-        str_to_id = lambda x: (x if isinstance(x, (int, long))
-                               else convert_to_id(x, "filepath_type",
-                                                  conn_handler))
+        def str_to_id(x):
+            return (x if isinstance(x, (int, long))
+                    else convert_to_id(x, "filepath_type", conn_handler))
         paths_w_checksum = [(relpath(path, base_fp), str_to_id(id),
                             compute_checksum(path))
                             for path, id in new_filepaths]
         # Create the list of SQL values to add
-        values = ["('%s', %s, '%s', %s, %s)" % (scrub_data(path), id, checksum,
-                  1, dd_id) for path, id, checksum in paths_w_checksum]
+        values = ["('%s', %s, '%s', %s, %s)" % (scrub_data(path), pid,
+                  checksum, 1, dd_id) for path, pid, checksum in
+                  paths_w_checksum]
         # Insert all the filepaths at once and get the filepath_id back
         sql = ("INSERT INTO qiita.{0} (filepath, filepath_type_id, checksum, "
                "checksum_algorithm_id, data_directory_id) VALUES {1} RETURNING"
@@ -611,33 +716,45 @@ def purge_filepaths(conn_handler=None):
     Parameters
     ----------
     conn_handler : SQLConnectionHandler, optional
-            The connection handler object connected to the DB
+        The connection handler object connected to the DB
     """
     conn_handler = conn_handler if conn_handler else SQLConnectionHandler()
 
+    # Get all the (table, column) pairs that reference to the filepath table
+    # Code adapted from http://stackoverflow.com/q/5347050/3746629
+    table_cols_pairs = conn_handler.execute_fetchall(
+        """SELECT R.TABLE_NAME, R.column_name
+        FROM INFORMATION_SCHEMA.CONSTRAINT_COLUMN_USAGE u
+        INNER JOIN INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS FK
+            ON U.CONSTRAINT_CATALOG = FK.UNIQUE_CONSTRAINT_CATALOG
+            AND U.CONSTRAINT_SCHEMA = FK.UNIQUE_CONSTRAINT_SCHEMA
+            AND U.CONSTRAINT_NAME = FK.UNIQUE_CONSTRAINT_NAME
+        INNER JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE R
+            ON R.CONSTRAINT_CATALOG = FK.CONSTRAINT_CATALOG
+            AND R.CONSTRAINT_SCHEMA = FK.CONSTRAINT_SCHEMA
+            AND R.CONSTRAINT_NAME = FK.CONSTRAINT_NAME
+        WHERE U.COLUMN_NAME = 'filepath_id'
+            AND U.TABLE_SCHEMA = 'qiita'
+            AND U.TABLE_NAME = 'filepath'""")
+
+    union_str = " UNION ".join(
+        ["SELECT %s FROM qiita.%s WHERE %s IS NOT NULL" % (col, table, col)
+         for table, col in table_cols_pairs])
     # Get all the filepaths from the filepath table that are not
     # referenced from any place in the database
     fps = conn_handler.execute_fetchall(
-        """SELECT filepath_id, filepath, filepath_type FROM qiita.filepath
-        FP JOIN qiita.filepath_type FPT ON
-        FP.filepath_type_id = FPT.filepath_type_id
-        WHERE filepath_id NOT IN (
-            SELECT filepath_id FROM qiita.raw_filepath UNION
-            SELECT filepath_id FROM qiita.preprocessed_filepath UNION
-            SELECT filepath_id FROM qiita.processed_filepath UNION
-            SELECT filepath_id FROM qiita.job_results_filepath UNION
-            SELECT filepath_id FROM qiita.analysis_filepath UNION
-            SELECT sequence_filepath FROM qiita.reference UNION
-            SELECT taxonomy_filepath FROM qiita.reference UNION
-            SELECT tree_filepath FROM qiita.reference)""")
+        """SELECT filepath_id, filepath, filepath_type, data_directory_id
+        FROM qiita.filepath FP JOIN qiita.filepath_type FPT
+            ON FP.filepath_type_id = FPT.filepath_type_id
+        WHERE filepath_id NOT IN (%s)""" % union_str)
 
     # We can now go over and remove all the filepaths
-    for fp_id, fp, fp_type in fps:
+    for fp_id, fp, fp_type, dd_id in fps:
         conn_handler.execute("DELETE FROM qiita.filepath WHERE filepath_id=%s",
                              (fp_id,))
 
         # Remove the data
-        fp = join(get_db_files_base_dir(), fp)
+        fp = join(get_mountpoint_path_by_id(dd_id), fp)
         if exists(fp):
             if fp_type is 'directory':
                 rmtree(fp)
@@ -645,11 +762,41 @@ def purge_filepaths(conn_handler=None):
                 remove(fp)
 
 
-def get_filepath_id(fp, conn_handler):
+def move_filepaths_to_upload_folder(study_id, filepaths, conn_handler=None):
+    r"""Goes over the filepaths list and moves all the filepaths that are not
+    used in any place to the upload folder of the study
+
+    Parameters
+    ----------
+    study_id : int
+        The study id to where the files should be returned to
+    filepaths : list
+        List of filepaths to move to the upload folder
+    conn_handler : SQLConnectionHandler, optional
+        The connection handler object connected to the DB
+    """
+    conn_handler = conn_handler if conn_handler else SQLConnectionHandler()
+    uploads_fp = join(get_mountpoint("uploads")[0][1], str(study_id))
+
+    # We can now go over and remove all the filepaths
+    for fp_id, fp, _ in filepaths:
+        conn_handler.execute("DELETE FROM qiita.filepath WHERE filepath_id=%s",
+                             (fp_id,))
+
+        # removing id from the raw data filename
+        filename = basename(fp).split('_', 1)[1]
+        destination = join(uploads_fp, filename)
+
+        move(fp, destination)
+
+
+def get_filepath_id(table, fp, conn_handler):
     """Return the filepath_id of fp
 
     Parameters
     ----------
+    table : str
+        The table type so we can search on this one
     fp : str
         The filepath
     conn_handler : SQLConnectionHandler
@@ -660,15 +807,36 @@ def get_filepath_id(fp, conn_handler):
     QiitaDBError
         If fp is not stored in the DB.
     """
+    _, mp = get_mountpoint(table, conn_handler)[0]
+    base_fp = join(get_db_files_base_dir(), mp)
+
     fp_id = conn_handler.execute_fetchone(
         "SELECT filepath_id FROM qiita.filepath WHERE filepath=%s",
-        (relpath(fp, get_db_files_base_dir()),))
+        (relpath(fp, base_fp),))
 
     # check if the query has actually returned something
     if not fp_id:
         raise QiitaDBError("Filepath not stored in the database")
 
     return fp_id[0]
+
+
+def filepath_id_to_rel_path(filepath_id):
+    """Gets the full path, relative to the base directory
+
+    Returns
+    -------
+    str
+    """
+    conn = SQLConnectionHandler()
+
+    sql = """SELECT dd.mountpoint, dd.subdirectory, fp.filepath
+          FROM qiita.filepath fp JOIN qiita.data_directory dd
+          ON fp.data_directory_id = dd.data_directory_id
+          WHERE fp.filepath_id = %s"""
+
+    result = join(*conn.execute_fetchone(sql, [filepath_id]))
+    return result
 
 
 def convert_to_id(value, table, conn_handler=None):
@@ -796,47 +964,46 @@ def get_processed_params_tables():
     return sorted([x[2] for x in conn.execute_fetchall(sql)])
 
 
-def get_user_fp(email):
-    """Returns the user's working filepath
-
-    Parameters
-    ----------
-    email : str
-        The email of the user
-
-    Returns
-    -------
-    str
-        The user's working filepath, a join of the
-        qiita_config.upload_data_dir and the host and name of the user's email
-    """
-    fp_vals = email.split('@')
-    fp = join(qiita_config.upload_data_dir, fp_vals[1], fp_vals[0])
-
-    return fp
-
-
-def get_study_fp(study_id):
-    """Returns the study's working filepath
-
-    Parameters
-    ----------
-    study_id : int
-        The study id
-
-    Returns
-    -------
-    str
-        The study's working filepath, a join of the
-        qiita_config.upload_data_dir and the study's email
-    """
-    fp = join(qiita_config.upload_data_dir, str(study_id))
-
-    return fp
-
-
 def get_lat_longs():
     conn = SQLConnectionHandler()
     sql = """select latitude, longitude
              from qiita.required_sample_info"""
     return conn.execute_fetchall(sql)
+
+
+def get_environmental_packages(conn_handler=None):
+    """Get the list of available environmental packages
+
+    Parameters
+    ----------
+    conn_handler : SQLConnectionHandler, optional
+        The handler connected to the database
+
+    Returns
+    -------
+    list of (str, str)
+        The available environmental packages. The first string is the
+        environmental package name and the second string is the table where
+        the metadata for the environmental package is stored
+    """
+    conn = conn_handler if conn_handler else SQLConnectionHandler()
+    return conn.execute_fetchall("SELECT * FROM qiita.environmental_package")
+
+
+def get_timeseries_types(conn_handler=None):
+    """Get the list of available timeseries types
+
+    Parameters
+    ----------
+    conn_handler : SQLConnectionHandler, optional
+        The handler connected to the database
+
+    Returns
+    -------
+    list of (int, str, str)
+        The available timeseries types. Each timeseries type is defined by the
+        tuple (timeseries_id, timeseries_type, intervention_type)
+    """
+    conn = conn_handler if conn_handler else SQLConnectionHandler()
+    return conn.execute_fetchall(
+        "SELECT * FROM qiita.timeseries_type ORDER BY timeseries_type_id")

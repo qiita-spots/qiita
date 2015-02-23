@@ -78,6 +78,8 @@ conn_handler.execute_fetchall(
 # -----------------------------------------------------------------------------
 from __future__ import division
 from contextlib import contextmanager
+from itertools import chain
+from tempfile import mktemp
 
 from psycopg2 import connect, ProgrammingError, Error as PostgresError
 from psycopg2.extras import DictCursor
@@ -471,3 +473,19 @@ class SQLConnectionHandler(object):
         """
         with self._sql_executor(sql, sql_args_list, True):
             pass
+
+    def get_temp_queue(self):
+        """Get a queue name that did not exist when this function was called
+
+        Returns
+        -------
+        str
+            The name of the queue
+        """
+        temp_queue_name = mktemp()
+        while temp_queue_name in self.queues:
+            temp_queue_name = mktemp()
+
+        self.create_queue(temp_queue_name)
+
+        return temp_queue_name

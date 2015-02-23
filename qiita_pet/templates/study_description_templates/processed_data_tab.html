@@ -1,0 +1,27 @@
+<div class="tab-pane" id="processed_data_tab" style="padding: 10px;">
+  <!-- Check if we have any preprocessed data -->
+  {% if available_processed_data %}
+    <ul class="nav nav-tabs" role="tablist" id="processed_data_nav_tabs">
+      <!-- Adding a processed data -->
+      <li class="active"><a href="#add_processed_data_tab" role="tab" data-toggle="tab">Add processed data</a></li>
+      <!-- Create the tabs for each processed data -->
+      {% for pd_id, pd in available_processed_data %}
+        <li><a href="#processed_data_info_{{pd_id}}" role="tab" data-toggle="tab">ID: {{pd_id}}</a></li>
+      {% end %}
+    </ul>
+    <!-- Create the tab panes -->
+    <div class="tab-content">
+      <!-- Show the add processed data tab -->
+      <div class="tab-pane active" id="add_processed_data_tab" style="padding: 10px;">
+        <b>Not implemented! Coming soon...</b>
+      </div>
+      <!-- Create one tab pane for each processed data -->
+      {% for pd_id, pd in available_processed_data %}
+        {% module ProcessedDataInfoTab(study_id, pd) %}
+      {% end %}
+    </div>
+  {% else %}
+    <!-- If there is no processed data we just show a message -->
+    There is no processed data available
+  {% end %}
+</div>

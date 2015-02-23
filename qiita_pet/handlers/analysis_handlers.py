@@ -15,19 +15,20 @@ from collections import defaultdict, Counter
 
 from tornado.web import authenticated, HTTPError
 from pyparsing import ParseException
+from moi import ctx_default, r_client
+from moi.job import submit
+from moi.group import get_id_from_user, create_info
 
 from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_ware.dispatchable import run_analysis
-from qiita_ware.context import submit
-from qiita_ware import r_server
-from qiita_db.user import User
 from qiita_db.analysis import Analysis
 from qiita_db.data import ProcessedData
 from qiita_db.metadata_template import SampleTemplate
 from qiita_db.job import Job, Command
 from qiita_db.util import get_db_files_base_dir, get_table_cols
 from qiita_db.search import QiitaStudySearch
-from qiita_db.exceptions import QiitaDBIncompatibleDatatypeError
+from qiita_db.exceptions import (
+    QiitaDBIncompatibleDatatypeError, QiitaDBUnknownIDError)
 
 SELECT_SAMPLES = 2
 SELECT_COMMANDS = 3
@@ -122,16 +123,15 @@ class SearchStudiesHandler(BaseHandler):
 
     @authenticated
     def get(self):
-        user = self.current_user
+        userobj = self.current_user
         analysis = Analysis(int(self.get_argument("aid")))
         # make sure user has access to the analysis
-        userobj = User(user)
         check_analysis_access(userobj, analysis)
 
         # get the dictionaries of selected samples and data types
         selproc_data, selsamples = self._selected_parser(analysis)
 
-        self.render('search_studies.html', user=user, aid=analysis.id,
+        self.render('search_studies.html', aid=analysis.id,
                     selsamples=selsamples, selproc_data=selproc_data,
                     counts={}, fullcounts={}, searchmsg="", query="",
                     results={}, availmeta=SampleTemplate.metadata_headers() +
@@ -154,7 +154,7 @@ class SearchStudiesHandler(BaseHandler):
         if action == "create":
             name = self.get_argument('name')
             description = self.get_argument('description')
-            analysis = Analysis.create(User(user), name, description)
+            analysis = Analysis.create(user, name, description)
             analysis_id = analysis.id
             # set to second step since this page is second step in workflow
             analysis.step = SELECT_SAMPLES
@@ -167,7 +167,7 @@ class SearchStudiesHandler(BaseHandler):
         else:
             analysis_id = int(self.get_argument("analysis-id"))
             analysis = Analysis(analysis_id)
-            check_analysis_access(User(user), analysis)
+            check_analysis_access(user, analysis)
             selproc_data, selsamples = self._selected_parser(analysis)
 
         # run through action requested
@@ -219,12 +219,12 @@ class SelectCommandsHandler(BaseHandler):
     def get(self):
         analysis_id = int(self.get_argument('aid'))
         analysis = Analysis(analysis_id)
-        check_analysis_access(User(self.current_user), analysis)
+        check_analysis_access(self.current_user, analysis)
 
         data_types = analysis.data_types
         commands = Command.get_commands_by_datatype()
 
-        self.render('select_commands.html', user=self.current_user,
+        self.render('select_commands.html',
                     commands=commands, data_types=data_types, aid=analysis.id)
 
     @authenticated
@@ -234,30 +234,27 @@ class SelectCommandsHandler(BaseHandler):
         analysis.step = SELECT_COMMANDS
         data_types = analysis.data_types
         commands = Command.get_commands_by_datatype()
-        self.render('select_commands.html', user=self.current_user,
+        self.render('select_commands.html',
                     commands=commands, data_types=data_types, aid=analysis.id)
 
 
 class AnalysisWaitHandler(BaseHandler):
     @authenticated
     def get(self, analysis_id):
-        user = self.current_user
         analysis_id = int(analysis_id)
-        analysis = Analysis(analysis_id)
-        check_analysis_access(User(user), analysis)
+        try:
+            analysis = Analysis(analysis_id)
+        except QiitaDBUnknownIDError:
+            raise HTTPError(404, "Analysis %d does not exist" % analysis_id)
+        else:
+            check_analysis_access(self.current_user, analysis)
 
-        commands = []
-        for job in analysis.jobs:
-            jobject = Job(job)
-            commands.append("%s: %s" % (jobject.datatype, jobject.command[0]))
-
-        self.render("analysis_waiting.html", user=user,
-                    aid=analysis_id, aname=analysis.name,
-                    commands=commands)
+        group_id = r_client.hget('analyis-map', analysis_id)
+        self.render("analysis_waiting.html",
+                    group_id=group_id, aname=analysis.name)
 
     @authenticated
     def post(self, analysis_id):
-        user = self.current_user
         analysis_id = int(analysis_id)
         rarefaction_depth = self.get_argument('rarefaction-depth')
         # convert to integer if rarefaction level given
@@ -266,24 +263,33 @@ class AnalysisWaitHandler(BaseHandler):
         else:
             rarefaction_depth = None
         analysis = Analysis(analysis_id)
-        check_analysis_access(User(user), analysis)
+        check_analysis_access(self.current_user, analysis)
 
         command_args = self.get_arguments("commands")
         split = [x.split("#") for x in command_args]
-        commands = ["%s: %s" % (s[0], s[1]) for s in split]
-        self.render("analysis_waiting.html", user=user, aid=analysis_id,
-                    aname=analysis.name, commands=commands)
-        submit(user, run_analysis, user, analysis_id, split, comm_opts={},
+
+        moi_user_id = get_id_from_user(self.current_user.id)
+        moi_group = create_info(analysis_id, 'group', url='/analysis/',
+                                parent=moi_user_id, store=True)
+        moi_name = 'Creating %s' % analysis.name
+        moi_result_url = '/analysis/results/%d' % analysis_id
+
+        submit(ctx_default, moi_group['id'], moi_name,
+               moi_result_url, run_analysis, analysis_id, split,
                rarefaction_depth=rarefaction_depth)
+
+        r_client.hset('analyis-map', analysis_id, moi_group['id'])
+
+        self.render("analysis_waiting.html",
+                    group_id=moi_group['id'], aname=analysis.name)
 
 
 class AnalysisResultsHandler(BaseHandler):
     @authenticated
     def get(self, analysis_id):
-        user = self.current_user
-        analysis_id = int(analysis_id)
+        analysis_id = int(analysis_id.split("/")[0])
         analysis = Analysis(analysis_id)
-        check_analysis_access(User(user), analysis)
+        check_analysis_access(self.current_user, analysis)
 
         jobres = defaultdict(list)
         for job in analysis.jobs:
@@ -292,33 +298,26 @@ class AnalysisResultsHandler(BaseHandler):
                                              jobject.results))
 
         dropped = {}
-        for proc_data_id, samples in viewitems(analysis.dropped_samples):
-            proc_data = ProcessedData(proc_data_id)
-            key = "Data type %s, Study: %s" % (proc_data.data_type(),
-                                               proc_data.study)
-            dropped[key] = samples
+        dropped_samples = analysis.dropped_samples
+        if dropped_samples:
+            for proc_data_id, samples in viewitems(dropped_samples):
+                proc_data = ProcessedData(proc_data_id)
+                key = "Data type %s, Study: %s" % (proc_data.data_type(),
+                                                   proc_data.study)
+                dropped[key] = samples
 
-        self.render("analysis_results.html", user=self.current_user,
+        self.render("analysis_results.html",
                     jobres=jobres, aname=analysis.name, dropped=dropped,
                     basefolder=get_db_files_base_dir())
-
-        # wipe out cached messages for this analysis
-        key = '%s:messages' % self.current_user
-        oldmessages = r_server.lrange(key, 0, -1)
-        if oldmessages is not None:
-            for message in oldmessages:
-                if '"analysis": %d' % analysis_id in message:
-                    r_server.lrem(key, message, 1)
 
 
 class ShowAnalysesHandler(BaseHandler):
     """Shows the user's analyses"""
     @authenticated
     def get(self):
-        user_id = self.current_user
-        user = User(user_id)
+        user = self.current_user
 
         analyses = [Analysis(a) for a in
                     user.shared_analyses + user.private_analyses]
 
-        self.render("show_analyses.html", user=user_id, analyses=analyses)
+        self.render("show_analyses.html", analyses=analyses)

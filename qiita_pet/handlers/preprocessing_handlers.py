@@ -2,8 +2,11 @@ from tornado.web import authenticated
 
 from .base_handlers import BaseHandler
 from qiita_ware.dispatchable import preprocessor
+from qiita_db.data import RawData
+from qiita_db.parameters import (PreprocessedIlluminaParams,
+                                 Preprocessed454Params)
+from qiita_db.metadata_template import PrepTemplate
 from qiita_ware.context import submit
-from qiita_db.parameters import PreprocessedIlluminaParams
 
 
 class PreprocessHandler(BaseHandler):
@@ -11,19 +14,23 @@ class PreprocessHandler(BaseHandler):
     def post(self):
         study_id = int(self.get_argument('study_id'))
         prep_template_id = int(self.get_argument('prep_template_id'))
-        rcomp_mapping_barcodes = self.get_argument('rev_comp_mapping_barcodes')
-        # currently forcing these values
-        # param_constructor = self.get_argument('param_constructor')
-        if rcomp_mapping_barcodes == 'false':
-            param_id = 1
+        raw_data = RawData(PrepTemplate(prep_template_id).raw_data)
+        param_id = int(self.get_argument('preprocessing_parameters_id'))
+
+        # Get the preprocessing parameters
+        if raw_data.filetype == 'FASTQ':
+            param_constructor = PreprocessedIlluminaParams
+        elif raw_data.filetype in ('FASTA', 'SFF'):
+            param_constructor = Preprocessed454Params
         else:
-            param_id = 2
+            raise ValueError('Unknown filetype')
 
-        param_constructor = PreprocessedIlluminaParams
-
-        job_id = submit(self.current_user, preprocessor, study_id,
+        job_id = submit(self.current_user.id, preprocessor, study_id,
                         prep_template_id, param_id, param_constructor)
 
-        self.render('compute_wait.html', user=self.current_user,
+        self.render('compute_wait.html',
                     job_id=job_id, title='Preprocessing',
-                    completion_redirect='/study/description/%d' % study_id)
+                    completion_redirect='/study/description/%d?top_tab='
+                                        'raw_data_tab&sub_tab=%s&prep_tab=%s'
+                                        % (study_id, raw_data.id,
+                                           prep_template_id))

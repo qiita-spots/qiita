@@ -69,7 +69,6 @@ from pyparsing import (alphas, nums, Word, dblQuotedString, oneOf, Optional,
 from qiita_db.util import scrub_data, typecast_string, get_table_cols
 from qiita_db.sql_connection import SQLConnectionHandler
 from qiita_db.study import Study
-from qiita_db.user import User
 from qiita_db.exceptions import QiitaDBIncompatibleDatatypeError
 
 
@@ -175,7 +174,7 @@ class QiitaStudySearch(object):
         ----------
         searchstr : str
             Search string to use
-        user : str
+        user : User object
             User making the search. Needed for permissions checks.
 
         Returns
@@ -200,10 +199,11 @@ class QiitaStudySearch(object):
         # get all studies containing the metadata headers requested
         study_ids = {x[0] for x in conn_handler.execute_fetchall(study_sql)}
         # strip to only studies user has access to
-        userobj = User(user)
-        study_ids = study_ids.intersection(Study.get_public() +
-                                           userobj.private_studies +
-                                           userobj.shared_studies)
+        if user.level not in {'admin', 'dev', 'superuser'}:
+            study_ids = study_ids.intersection(Study.get_by_status('public') +
+                                               user.user_studies +
+                                               user.shared_studies)
+
         results = {}
         # run search on each study to get out the matching samples
         for sid in study_ids:

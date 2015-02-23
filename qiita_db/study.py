@@ -102,7 +102,8 @@ from copy import deepcopy
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from .base import QiitaStatusObject, QiitaObject
 from .exceptions import (QiitaDBStatusError, QiitaDBColumnError, QiitaDBError)
-from .util import check_required_columns, check_table_cols, convert_to_id
+from .util import (check_required_columns, check_table_cols, convert_to_id,
+                   get_environmental_packages)
 from .sql_connection import SQLConnectionHandler
 
 
@@ -143,30 +144,36 @@ class Study(QiitaStatusObject):
     # The following columns are considered not part of the study info
     _non_info = {"email", "study_status_id", "study_title"}
 
-    def _lock_public(self, conn_handler):
-        """Raises QiitaDBStatusError if study is public"""
-        if self.check_status(("public", )):
-            raise QiitaDBStatusError("Illegal operation on public study!")
+    def _lock_non_sandbox(self, conn_handler):
+        """Raises QiitaDBStatusError if study is non-sandboxed"""
+        if self.status != 'sandbox':
+            raise QiitaDBStatusError("Illegal operation on non-sandbox study!")
 
     def _status_setter_checks(self, conn_handler):
         r"""Perform a check to make sure not setting status away from public
         """
-        self._lock_public(conn_handler)
+        if self.check_status(("public", )):
+            raise QiitaDBStatusError("Illegal operation on public study!")
 
     @classmethod
-    def get_public(cls):
-        """Returns study id for all public Studies
+    def get_by_status(cls, status):
+        """Returns study id for all Studies with given status
+
+        Parameters
+        ----------
+        status : str
+            Status setting to search for
 
         Returns
         -------
         list of Study objects
-            All public studies in the database
+            All studies in the database that match the given status
         """
         conn_handler = SQLConnectionHandler()
-        sql = ("SELECT study_id FROM qiita.{0} WHERE "
-               "{0}_status_id = %s".format(cls._table))
-        # MAGIC NUMBER 2: status id for a public study
-        return [x[0] for x in conn_handler.execute_fetchall(sql, (2, ))]
+        sql = ("SELECT study_id FROM qiita.{0} s JOIN qiita.{0}_status ss ON "
+               "s.study_status_id = ss.study_status_id WHERE "
+               "ss.status = %s".format(cls._table))
+        return [x[0] for x in conn_handler.execute_fetchall(sql, (status, ))]
 
     @classmethod
     def exists(cls, study_title):
@@ -234,8 +241,8 @@ class Study(QiitaStatusObject):
         insertdict['study_title'] = title
         if "reprocess" not in insertdict:
             insertdict['reprocess'] = False
-        # default to awaiting_approval status
-        insertdict['study_status_id'] = 1
+        # default to sandboxed status
+        insertdict['study_status_id'] = 4
 
         # No nuns allowed
         insertdict = {k: v for k, v in viewitems(insertdict) if v is not None}
@@ -298,7 +305,6 @@ class Study(QiitaStatusObject):
             The new study title
         """
         conn_handler = SQLConnectionHandler()
-        self._lock_public(conn_handler)
         sql = ("UPDATE qiita.{0} SET study_title = %s WHERE "
                "study_id = %s".format(self._table))
         return conn_handler.execute(sql, (title, self._id))
@@ -350,7 +356,10 @@ class Study(QiitaStatusObject):
                                      self._non_info.intersection(info))
 
         conn_handler = SQLConnectionHandler()
-        self._lock_public(conn_handler)
+
+        if 'timeseries_type_id' in info:
+            # We only lock if the timeseries type changes
+            self._lock_non_sandbox(conn_handler)
 
         # make sure dictionary only has keys for available columns in db
         check_table_cols(conn_handler, info, self._table)
@@ -394,7 +403,7 @@ class Study(QiitaStatusObject):
         if not efo_vals:
             raise IncompetentQiitaDeveloperError("Need EFO information!")
         conn_handler = SQLConnectionHandler()
-        self._lock_public(conn_handler)
+        self._lock_non_sandbox(conn_handler)
         # wipe out any EFOs currently attached to study
         sql = ("DELETE FROM qiita.{0}_experimental_factor WHERE "
                "study_id = %s".format(self._table))
@@ -431,6 +440,44 @@ class Study(QiitaStatusObject):
         sql = ("SELECT pmid FROM qiita.{0}_pmid WHERE "
                "study_id = %s".format(self._table))
         return [x[0] for x in conn_handler.execute_fetchall(sql, (self._id, ))]
+
+    @pmids.setter
+    def pmids(self, values):
+        """Sets the pmids for the study
+
+        Parameters
+        ----------
+        values : list of str
+            The list of pmids to associate with the study
+
+        Raises
+        ------
+        TypeError
+            If values is not a list
+        """
+        # Check that a list is actually passed
+        if not isinstance(values, list):
+            raise TypeError('pmids should be a list')
+
+        # Get the connection to the database
+        conn_handler = SQLConnectionHandler()
+
+        # Create a queue for the operations that we need to do
+        queue = "%d_pmid_setter" % self._id
+        conn_handler.create_queue(queue)
+
+        # Delete the previous pmids associated with the study
+        sql = "DELETE FROM qiita.study_pmid WHERE study_id=%s"
+        sql_args = (self._id,)
+        conn_handler.add_to_queue(queue, sql, sql_args)
+
+        # Set the new ones
+        sql = "INSERT INTO qiita.study_pmid (study_id, pmid) VALUES (%s, %s)"
+        sql_args = [(self._id, val) for val in values]
+        conn_handler.add_to_queue(queue, sql, sql_args, many=True)
+
+        # Execute the queue
+        conn_handler.execute_queue(queue)
 
     @property
     def investigation(self):
@@ -486,6 +533,77 @@ class Study(QiitaStatusObject):
 
         return conn_handler.execute_fetchone(sql, [self._id])[0]
 
+    @property
+    def environmental_packages(self):
+        """Gets the environmental packages associated with the study
+
+        Returns
+        -------
+        list of str
+            The environmental package names associated with the study
+        """
+        conn_handler = SQLConnectionHandler()
+        env_pkgs = conn_handler.execute_fetchall(
+            "SELECT environmental_package_name FROM "
+            "qiita.study_environmental_package WHERE study_id = %s",
+            (self._id,))
+        return [pkg[0] for pkg in env_pkgs]
+
+    @environmental_packages.setter
+    def environmental_packages(self, values):
+        """Sets the environmental packages for the study
+
+        Parameters
+        ----------
+        values : list of str
+            The list of environmental package names to associate with the study
+
+        Raises
+        ------
+        TypeError
+            If values is not a list
+        ValueError
+            If any environmental packages listed on values is not recognized
+        """
+        # Get the connection to the database
+        conn_handler = SQLConnectionHandler()
+
+        # The environmental packages can be changed only if the study is
+        # sandboxed
+        self._lock_non_sandbox(conn_handler)
+
+        # Check that a list is actually passed
+        if not isinstance(values, list):
+            raise TypeError('Environmental packages should be a list')
+
+        # Get all the environmental packages
+        env_pkgs = [pkg[0] for pkg in get_environmental_packages(
+            conn_handler=conn_handler)]
+
+        # Check that all the passed values are valid environmental packages
+        missing = set(values).difference(env_pkgs)
+        if missing:
+            raise ValueError('Environmetal package(s) not recognized: %s'
+                             % ', '.join(missing))
+
+        # Create a queue for the operations that we need to do
+        queue = "%d_env_pkgs_setter" % self._id
+        conn_handler.create_queue(queue)
+
+        # Delete the previous environmental packages associated with the study
+        sql = "DELETE FROM qiita.study_environmental_package WHERE study_id=%s"
+        sql_args = (self._id,)
+        conn_handler.add_to_queue(queue, sql, sql_args)
+
+        # Set the new ones
+        sql = ("INSERT INTO qiita.study_environmental_package "
+               "(study_id, environmental_package_name) VALUES (%s, %s)")
+        sql_args = [(self._id, val) for val in values]
+        conn_handler.add_to_queue(queue, sql, sql_args, many=True)
+
+        # Execute the queue
+        conn_handler.execute_queue(queue)
+
     # --- methods ---
     def raw_data(self, data_type=None):
         """ Returns list of data ids for raw data info
@@ -522,6 +640,7 @@ class Study(QiitaStatusObject):
             If the raw_data is already linked to the current study
         """
         conn_handler = SQLConnectionHandler()
+        self._lock_non_sandbox(conn_handler)
         queue = "%d_add_raw_data" % self.id
         sql = ("SELECT EXISTS(SELECT * FROM qiita.study_raw_data WHERE "
                "study_id=%s AND raw_data_id=%s)")
@@ -616,10 +735,10 @@ class Study(QiitaStatusObject):
             return True
 
         if no_public:
-            return self._id in user.private_studies + user.shared_studies
+            return self._id in user.user_studies + user.shared_studies
         else:
-            return self._id in user.private_studies + user.shared_studies \
-                + self.get_public()
+            return self._id in user.user_studies + user.shared_studies \
+                + self.get_by_status('public')
 
     def share(self, user):
         """Share the study with another user
@@ -630,7 +749,6 @@ class Study(QiitaStatusObject):
             The user to share the study with
         """
         conn_handler = SQLConnectionHandler()
-        self._lock_public(conn_handler)
 
         # Make sure the study is not already shared with the given user
         if user.id in self.shared_with:
@@ -653,7 +771,6 @@ class Study(QiitaStatusObject):
             The user to unshare the study with
         """
         conn_handler = SQLConnectionHandler()
-        self._lock_public(conn_handler)
 
         sql = ("DELETE FROM qiita.study_users WHERE study_id = %s AND "
                "email = %s")

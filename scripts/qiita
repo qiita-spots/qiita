@@ -8,9 +8,9 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
-from os import makedirs
-
 import click
+import tornado.httpserver
+import tornado.ioloop
 from psycopg2 import OperationalError
 
 from qiita_db.util import (get_filepath_types, get_filetypes,
@@ -21,13 +21,16 @@ from qiita_db.commands import (load_sample_template_from_cmd,
                                load_study_from_cmd,
                                load_raw_data_cmd, load_processed_data_cmd,
                                load_preprocessed_data_from_cmd,
-                               load_prep_template_from_cmd)
+                               load_prep_template_from_cmd,
+                               load_parameters_from_cmd, SUPPORTED_PARAMS,
+                               update_preprocessed_data_from_cmd)
 from qiita_db.sql_connection import SQLConnectionHandler
 from qiita_db.exceptions import QiitaDBConnectionError
+from qiita_db.reference import Reference
 from qiita_core.configuration_manager import ConfigurationManager
-from qiita_ware.commands import (
-    ebi_actions,
-    submit_EBI_from_files as submit_EBI_from_files_command)
+from qiita_ware.commands import ebi_actions, submit_EBI as _submit_EBI
+from qiita_ware.processing_pipeline import generate_demux_file
+from moi import r_client
 
 
 _CONFIG = ConfigurationManager()
@@ -56,6 +59,21 @@ def ebi():
     pass
 
 
+@qiita.group()
+def maintenance():
+    pass
+
+
+@qiita.group()
+def webserver():
+    pass
+
+
+@qiita.group()
+def ware():
+    pass
+
+
 # #############################################################################
 # DB COMMANDS
 # #############################################################################
@@ -71,7 +89,8 @@ def ebi():
 def load_study(owner, title, info):
     """Loads a study to the database"""
     study = load_study_from_cmd(owner, title, info)
-    print("Study successfully added to the database with id %s" % study.id)
+    click.echo("Study successfully added to the database with id %s"
+               % study.id)
 
 
 @db.command()
@@ -92,8 +111,8 @@ def load_study(owner, title, info):
 def load_raw(fp, fp_type, filetype, study):
     """Loads a raw data to the database"""
     raw_data = load_raw_data_cmd(fp, fp_type, filetype, study)
-    print("Raw data successfully added to the database with id %s"
-          % raw_data.id)
+    click.echo("Raw data successfully added to the database with id %s"
+               % raw_data.id)
 
 
 @db.command()
@@ -123,8 +142,8 @@ def load_preprocessed(study_id, params_table, filedir, filepathtype,
     preproc_data = load_preprocessed_data_from_cmd(
         study_id, params_table, filedir, filepathtype, params_id, insdc,
         prep_template_id, data_type)
-    print("Preprocessed data successfully added to the database with id %s"
-          % preproc_data.id)
+    click.echo("Preprocessed data successfully added to the database with "
+               "id %s" % preproc_data.id)
 
 
 @db.command()
@@ -159,8 +178,8 @@ def load_processed(fp, fp_type, processed_params_table,
                                         processed_params_id,
                                         preprocessed_data_id, study_id,
                                         processed_date)
-    print("Processed data successfully added to the database with id %s"
-          % proc_data.id)
+    click.echo("Processed data successfully added to the database with id %s"
+               % proc_data.id)
 
 
 @db.command()
@@ -171,8 +190,8 @@ def load_processed(fp, fp_type, processed_params_table,
 def load_sample_template(fp, study):
     """Loads a sample template to the database"""
     sample_temp = load_sample_template_from_cmd(fp, study)
-    print("Sample template successfully added to the database with id %s"
-          % sample_temp.id)
+    click.echo("Sample template successfully added to the database with id %s"
+               % sample_temp.id)
 
 
 @db.command()
@@ -188,8 +207,60 @@ def load_sample_template(fp, study):
 def load_prep_template(fp, raw_data, study, data_type):
     """Loads a sample template to the database"""
     prep_template = load_prep_template_from_cmd(fp, raw_data, study, data_type)
-    print("Prep template successfully added to the database with id %s"
-          % prep_template.id)
+    click.echo("Prep template successfully added to the database with id %s"
+               % prep_template.id)
+
+
+@db.command()
+@click.option('--name', required=True, type=str,
+              help='The name of the new reference database')
+@click.option('--version', required=True, type=str,
+              help='The version of the reference database')
+@click.option('--seq_fp', required=True,
+              type=click.Path(resolve_path=True, readable=True, exists=True),
+              help="Path to the reference sequences file")
+@click.option('--tax_fp', required=False,
+              type=click.Path(resolve_path=True, readable=True, exists=True),
+              help="Path to the reference taxonomy file")
+@click.option('--tree_fp', required=False,
+              type=click.Path(resolve_path=True, readable=True, exists=True),
+              help="Path to the reference tree file")
+def load_reference_db(name, version, seq_fp, tax_fp, tree_fp):
+    """Loads a reference db to the database"""
+    reference = Reference.create(name, version, seq_fp, tax_fp, tree_fp)
+    click.echo("Reference db successfully added to the database with id %s"
+               % reference.id)
+
+
+@db.command()
+@click.argument('fp', required=True,
+                type=click.Path(resolve_path=True, readable=True, exists=True))
+@click.option('--table', required=True, type=click.Choice(SUPPORTED_PARAMS),
+              help='The table to add the parameter set')
+@click.option('--name', required=True, type=str,
+              help='The name of the parameters set')
+def load_parameters(fp, table, name):
+    """Loads a parameter set to the database"""
+    param = load_parameters_from_cmd(name, fp, table)
+    click.echo("Parameters successfully added to table %s with id %s"
+               % (table, param.id))
+
+
+@db.command()
+@click.argument('sl_out_dir', required=True,
+                type=click.Path(resolve_path=True, readable=True, exists=True,
+                                file_okay=False))
+@click.option('--study', required=True, type=int,
+              help='Study whose preprocessed data will be updated')
+@click.option('--preprocessed_data', required=False, type=int,
+              help='Preprocessed data to be updated. If not passed, the '
+                   'preprocessed data with lowest id in the study will '
+                   'be updated.')
+def update_preprocessed_data(sl_out_dir, study,  preprocessed_data):
+    """Updates the study with the preprocessed data in sl_out_dir"""
+    ppd = update_preprocessed_data_from_cmd(sl_out_dir, study,
+                                            preprocessed_data)
+    click.echo("Preprocessed data %s successfully updated" % ppd.id)
 
 
 # #############################################################################
@@ -198,19 +269,7 @@ def load_prep_template(fp, raw_data, study, data_type):
 
 
 @ebi.command()
-@click.option('--study', required=True, type=int)
-@click.option('--sample-template', required=True,
-              type=click.File())
-@click.option('--prep-template', required=True,
-              type=click.File())
-@click.option('--fastq_dir', required=True,
-              type=click.Path(exists=True, file_okay=False,
-                              resolve_path=True))
-@click.option('--output-dir', required=True,
-              type=click.Path(file_okay=False, writable=True,
-                              resolve_path=True))
-@click.option('--investigation-type', required=True,
-              type=click.Choice(['mimarks-survey', 'metagenome']))
+@click.option('--preprocessed_data_id', required=True, type=int)
 @click.option('--action', type=click.Choice(ebi_actions),
               default='submit', help='The generated XML files will specify '
               'this "action", which controls how the EBI servers handle the '
@@ -218,12 +277,97 @@ def load_prep_template(fp, raw_data, study, data_type):
 @click.option('--send/--no-send', default=False, help="Controls whether or "
               "not sequence files and metadata will actually be sent to EBI "
               "(default is to generate all the files, but not to send)")
-def submit_EBI_from_files(study, sample_template, prep_template, fastq_dir,
-                          output_dir, investigation_type, action, send):
-    submit_EBI_from_files_command(study, sample_template, prep_template,
-                                  fastq_dir, output_dir, investigation_type,
-                                  action, send)
+@click.option('--fastq-dir', type=click.Path(exists=True, file_okay=False,
+                                             resolve_path=True))
+def submit(preprocessed_data_id, action, send, fastq_dir):
+    _submit_EBI(preprocessed_data_id, action, send, fastq_dir)
 
+
+# #############################################################################
+# MAINTENANCE COMMANDS
+# #############################################################################
+
+
+@maintenance.command()
+@click.option('--time', required=True, type=int,
+              help='The amount of time to lock the site, in seconds')
+@click.option('--message', required=True, type=str,
+              help="Message to show users")
+def lock(message, time):
+    r_client.setex('maintenance', message, time)
+
+
+@maintenance.command()
+def unlock():
+    r_client.delete('maintenance')
+
+
+@maintenance.command()
+@click.option('--time', required=True, type=int,
+              help='The amount of time to show message, in seconds')
+@click.option('--message', required=True, type=str,
+              help="Message to show users")
+def sysmessage(message, time):
+    r_client.setex('sysmessage', message, time)
+
+
+@maintenance.command()
+def clear_sysmessage():
+    r_client.delete('sysmessage')
+
+
+@maintenance.command()
+def status():
+    maint_status = r_client.get('maintenance')
+    sys_status = r_client.get('sysmessage')
+
+    if maint_status is None:
+        click.echo("Site is not in maintenance mode")
+    else:
+        click.echo("Site is in maintenance mode:")
+        click.echo(maint_status)
+        click.echo(r_client.ttl('maintenance'), "seconds remaining")
+
+    if sys_status is None:
+        click.echo("Site has no system message")
+    else:
+        click.echo("Site has system message:")
+        click.echo(sys_status)
+        click.echo(r_client.ttl('sysmessage'), "seconds remaining")
+
+
+# #############################################################################
+# WEBSERVER COMMANDS
+# #############################################################################
+
+@webserver.command()
+@click.option('--port', required=False, type=int, help='Port where the '
+              'webserver will start', default=8888)
+def start(port):
+    # in order to use this command you need to have an IPython cluster running,
+    # for now this makes it so that you can use other sub-commands without
+    # having to do that. The solution will (perhaps) be to move this subcommand
+    # into an entirely different script.
+    from qiita_pet.webserver import Application
+
+    http_server = tornado.httpserver.HTTPServer(Application())
+    http_server.listen(port)
+    click.echo("Qiita started on port %d" % port)
+    tornado.ioloop.IOLoop.instance().start()
+
+
+# #############################################################################
+# WARE COMMANDS
+# #############################################################################
+
+@ware.command()
+@click.argument('sl_out_dir', required=True,
+                type=click.Path(resolve_path=True, readable=True, exists=True,
+                                file_okay=False))
+def generate_demux(sl_out_dir):
+    """Generates the demux file for the split libraries output sl_out_dir"""
+    demux_fp = generate_demux_file(sl_out_dir)
+    click.echo("Demux file successfully generated: %s" % demux_fp)
 
 if __name__ == '__main__':
     qiita()

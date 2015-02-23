@@ -1,6 +1,3 @@
-#!/usr/bin/env python
-from __future__ import division
-
 # -----------------------------------------------------------------------------
 # Copyright (c) 2014--, The Qiita Development Team.
 #
@@ -8,3 +5,12 @@ from __future__ import division
 #
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
+
+allowed_min_browser_versions = {
+    'chrome': 39,
+    'firefox': 34,
+    'safari': 7,
+    'IE': 10
+}
+
+__version__ = "0.0.1-dev"
