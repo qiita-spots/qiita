@@ -82,7 +82,7 @@ def filter_by_processed_data(results, datatypes=None):
             if datatypes is not None and datatype not in datatypes:
                 continue
             proc_data_samples[proc_data_id] = []
-            samps_available = proc_data.samples
+            samps_available = set(proc_data.samples)
             for sample in results[study_id]:
                 # filter to samples available in this proc data
                 if sample[0] in samps_available:

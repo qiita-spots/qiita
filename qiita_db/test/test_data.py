@@ -866,7 +866,7 @@ class ProcessedDataTests(TestCase):
 
     def test_samples(self):
         pd = ProcessedData(1)
-        obs = pd.samples
+        obs = set(pd.samples)
         exp = {'1.SKB1.640202', '1.SKB2.640194', '1.SKB3.640195',
                '1.SKB4.640189', '1.SKB5.640181', '1.SKB6.640176',
                '1.SKB7.640196', '1.SKB8.640193', '1.SKB9.640200',
