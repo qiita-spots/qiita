@@ -26,14 +26,14 @@ def count_metadata(results, meta_cols):
         counts for each found metadata value for each study, in the format
         {study_id: {meta_col1: {value1: count, value2: count, ...}, ...}, ...}
     """
+    def double_comprehension(results):
+        for samples in viewvalues(results):
+            for sample in samples:
+                yield sample
 
     fullcount = {}
     # rearrange all samples so that each metadata column found is its own list
-    meta_vals = [[] for x in range(len(meta_cols)+1)]
-    for samples in viewvalues(results):
-        for sample in samples:
-            for pos, val in enumerate(sample):
-                meta_vals[pos].append(val)
+    meta_vals = zip(*double_comprehension(results))
     for pos, cat in enumerate(meta_cols):
         # use Counter object to count all metadata values for a column
         # pos+1 so we skip the sample names list
