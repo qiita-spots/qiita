@@ -1370,7 +1370,7 @@ class TestPrepTemplate(TestCase):
         del self.metadata_dict['SKB7.640196']
         self.metadata = pd.DataFrame.from_dict(self.metadata_dict,
                                                orient='index')
-        # Test warning raised and correct warning given
+        # Test error raised and correct error given
         with self.assertRaises(QiitaDBExecutionError) as er:
             PrepTemplate.create(self.metadata, self.new_raw_data,
                                 self.test_study, self.data_type)
