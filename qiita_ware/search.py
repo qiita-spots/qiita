@@ -29,10 +29,10 @@ def count_metadata(results, meta_cols):
 
     fullcount = {}
     # rearrange all samples so that each metadata column found is its own list
-    meta_vals = [[] for x in range(len(meta_cols))]
+    meta_vals = [[] for x in range(len(meta_cols)+1)]
     for samples in viewvalues(results):
-        for sample in range(len(meta_cols)):
-            for pos, val in enumerate(samples[sample]):
+        for sample in samples:
+            for pos, val in enumerate(sample):
                 meta_vals[pos].append(val)
     for pos, cat in enumerate(meta_cols):
         # use Counter object to count all metadata values for a column
