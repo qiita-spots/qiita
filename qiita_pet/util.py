@@ -40,7 +40,7 @@ def linkify(link_template, item):
 
 
 def clean_str(item):
-    """Converts input to string and replaces spaces with underscores
+    """Converts input to string and cleans to jQuery-compatible string
 
     Parameters
     ----------
@@ -51,6 +51,11 @@ def clean_str(item):
     -------
     str
         cleaned string
+
+    Notes
+    -----
+    This function removes colons and periods from strings, and replaces spaces
+    with underscores.
     """
     return str(item).replace(" ", "_").replace(":", "").replace(".", "")
 

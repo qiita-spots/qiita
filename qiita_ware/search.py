@@ -26,10 +26,14 @@ def count_metadata(results, meta_cols):
         counts for each found metadata value for each study, in the format
         {study_id: {meta_col1: {value1: count, value2: count, ...}, ...}, ...}
     """
+
     fullcount = {}
-    # zip all samples so that each metadata column found is its own list
-    meta_vals = zip(*[samples[sample] for samples in viewvalues(results)
-                    for sample in range(len(samples))])
+    # rearrange all samples so that each metadata column found is its own list
+    meta_vals = [[] for x in range(len(meta_cols))]
+    for samples in viewvalues(results):
+        for sample in range(len(meta_cols)):
+            for pos, val in enumerate(samples[sample]):
+                meta_vals[pos].append(val)
     for pos, cat in enumerate(meta_cols):
         # use Counter object to count all metadata values for a column
         # pos+1 so we skip the sample names list
@@ -87,7 +91,7 @@ def filter_by_processed_data(results, datatypes=None):
                 # filter to samples available in this proc data
                 if sample[0] in samps_available:
                     proc_data_samples[proc_data_id].append(sample)
-            if proc_data_samples[proc_data_id] is []:
+            if proc_data_samples[proc_data_id] == []:
                 # all samples filtered so remove it as a result
                 del(proc_data_samples[proc_data_id])
             else:

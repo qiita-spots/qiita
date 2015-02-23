@@ -1172,7 +1172,7 @@ class ProcessedData(BaseData):
 
         Returns
         -------
-        set of str
+        generator of str
             Sample_ids available according to the prep template
         """
         # Get the samples available for the prep template

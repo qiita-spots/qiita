@@ -178,10 +178,10 @@ class QiitaStudySearch(object):
         user : User object
             User making the search. Needed for permissions checks.
         remove_selected : bool, optional
-            If search in on an analysis that already has selected samples,
+            If search is on an analysis that already has selected samples,
             remove the selected samples from the results. Default False.
         analysis : int, optional
-            Analysis ID search is run for. Required of remove_selected is True
+            Analysis ID search is run for. Required if remove_selected is True
 
         Returns
         -------
@@ -241,10 +241,10 @@ class QiitaStudySearch(object):
         meta_headers : list
             metadata categories in the query string in alphabetical order
         remove_selected : bool, optional
-            If search in on an analysis that already has selected samples,
+            If search is on an analysis that already has selected samples,
             remove the selected samples from the results. Default False.
         analysis : int, optional
-            Analysis ID search is run for. Required of remove_selected is True
+            Analysis ID search is run for. Required if remove_selected is True
 
         Notes
         -----

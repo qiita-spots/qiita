@@ -5,7 +5,7 @@
 {% from qiita_db.data import ProcessedData %}
 {% from qiita_pet.util import clean_str %}
 <script type="text/javascript">
-  STUDIES = {{[str(i) for i in results]}};
+  STUDIES = ['{{ [i for i in results] }}'];
 </script>
 
 <link rel="stylesheet" href="/static/vendor/css/chosen.css" type="text/css">
