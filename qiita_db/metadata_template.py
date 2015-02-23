@@ -119,7 +119,7 @@ def _as_python_types(metadata_map, headers):
     Returns
     -------
     list of lists
-        The values of the columns in metadata_map pointed by headers casted to
+        The values of the columns in metadata_map pointed by headers cast to
         python types.
     """
     values = []
@@ -1936,7 +1936,7 @@ def load_template_to_dataframe(fn):
     ------
     QiitaDBColumnError
         If the sample_name column is not present in the template.
-        If there's a value in one of the reserved columns that cannot be casted
+        If there's a value in one of the reserved columns that cannot be cast
         to the needed type.
     QiitaDBWarning
         When columns are dropped because they have no content for any sample.
@@ -1944,7 +1944,7 @@ def load_template_to_dataframe(fn):
     Notes
     -----
     The index attribute of the DataFrame will be forced to be 'sample_name'
-    and will be casted to a string. Additionally rows that start with a '\t'
+    and will be cast to a string. Additionally rows that start with a '\t'
     character will be ignored and columns that are empty will be removed. Empty
     sample names will be removed from the DataFrame.
 
@@ -1975,7 +1975,7 @@ def load_template_to_dataframe(fn):
     """
 
     # index_col:
-    #   is set as False, otherwise it is casted as a float and we want a string
+    #   is set as False, otherwise it is cast as a float and we want a string
     # keep_default:
     #   is set as False, to avoid inferring empty/NA values with the defaults
     #   that Pandas has.
@@ -2014,7 +2014,7 @@ def load_template_to_dataframe(fn):
             if n in template.columns and not np.issubdtype(template[n].dtype,
                                                            c_dtype):
                 raise QiitaDBColumnError("The '%s' column includes values that"
-                                         " cannot be casted into a %s "
+                                         " cannot be cast into a %s "
                                          "type." % (n, c_dtype))
 
     initial_columns = set(template.columns)
