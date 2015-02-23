@@ -1364,26 +1364,34 @@ class TestPrepTemplate(TestCase):
             PrepTemplate.create(self.metadata, self.new_raw_data,
                                 self.test_study, self.data_type)
 
-    def test_create_filter_sample_names(self):
+    def test_create_unknown_sample_names(self):
         # set two real and one fake sample name
         self.metadata_dict['NOTREAL'] = self.metadata_dict['SKB7.640196']
         del self.metadata_dict['SKB7.640196']
         self.metadata = pd.DataFrame.from_dict(self.metadata_dict,
                                                orient='index')
         # Test warning raised and correct warning given
-        with self.assertRaises(QiitaDBWarning) as cm:
-            pt = PrepTemplate.create(self.metadata, self.new_raw_data,
-                                     self.test_study, self.data_type)
+        with self.assertRaises(QiitaDBExecutionError) as er:
+            PrepTemplate.create(self.metadata, self.new_raw_data,
+                                self.test_study, self.data_type)
             self.assertEqual(
-                cm.exception, 'QiitaDBWarning: Samples found in prep template '
-                'but not sample template: 1.NOTREAL')
+                er.exception, 'QiitaDBExecutionError: Samples found in prep '
+                'template but not sample template: 1.NOTREAL')
 
-            # make sure the two samples were added correctly
-            self.assertEqual(pt.id, 2)
-            obs = self.conn_handler.execute_fetchall(
-                "SELECT sample_id FROM qiita.prep_2")
-            exp = [['1.SKB8.640193'], ['1.SKD8.640184']]
-            self.assertEqual(obs, exp)
+    def test_create_shorter_prep_template(self):
+        # remove one sample so not all samples in the prep template
+        del self.metadata_dict['SKB7.640196']
+        self.metadata = pd.DataFrame.from_dict(self.metadata_dict,
+                                               orient='index')
+        pt = PrepTemplate.create(self.metadata, self.new_raw_data,
+                                 self.test_study, self.data_type)
+
+        # make sure the two samples were added correctly
+        self.assertEqual(pt.id, 2)
+        obs = self.conn_handler.execute_fetchall(
+            "SELECT sample_id FROM qiita.prep_2")
+        exp = [['1.SKB8.640193'], ['1.SKD8.640184']]
+        self.assertEqual(obs, exp)
 
     def test_create_error_cleanup(self):
         """Create does not modify the database if an error happens"""
