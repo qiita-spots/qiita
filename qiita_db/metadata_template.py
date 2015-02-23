@@ -48,6 +48,7 @@ from functools import partial
 import pandas as pd
 import numpy as np
 import warnings
+from skbio.util import find_duplicates
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from .exceptions import (QiitaDBDuplicateError, QiitaDBColumnError,
@@ -59,7 +60,7 @@ from .sql_connection import SQLConnectionHandler
 from .ontology import Ontology
 from .util import (exists_table, get_table_cols, get_emp_status,
                    get_required_sample_info_status, convert_to_id,
-                   convert_from_id, find_repeated, get_mountpoint,
+                   convert_from_id, get_mountpoint,
                    insert_filepaths, scrub_data)
 from .logger import LogEntry
 
@@ -1220,7 +1221,7 @@ class SampleTemplate(MetadataTemplate):
         # Check that we don't have duplicate columns
         if len(set(md_template.columns)) != len(md_template.columns):
             raise QiitaDBDuplicateHeaderError(
-                find_repeated(md_template.columns))
+                find_duplicates(md_template.columns))
 
         # We need to check for some special columns, that are not present on
         # the database, but depending on the data type are required.
@@ -1604,7 +1605,7 @@ class PrepTemplate(MetadataTemplate):
         # Check that we don't have duplicate columns
         if len(set(md_template.columns)) != len(md_template.columns):
             raise QiitaDBDuplicateHeaderError(
-                find_repeated(md_template.columns))
+                find_duplicates(md_template.columns))
 
         # Get a connection handler
         conn_handler = SQLConnectionHandler()

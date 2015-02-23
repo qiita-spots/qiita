@@ -1007,25 +1007,3 @@ def get_timeseries_types(conn_handler=None):
     conn = conn_handler if conn_handler else SQLConnectionHandler()
     return conn.execute_fetchall(
         "SELECT * FROM qiita.timeseries_type ORDER BY timeseries_type_id")
-
-
-def find_repeated(values):
-    """Find repeated elements in the inputed list
-
-    Parameters
-    ----------
-    values : list
-        List of elements to find duplicates in
-
-    Returns
-    -------
-    set
-        Repeated elements in ``values``
-    """
-    seen, repeated = set(), set()
-    for value in values:
-        if value in seen:
-            repeated.add(value)
-        else:
-            seen.add(value)
-    return repeated
