@@ -10,10 +10,10 @@ conn_handler = SQLConnectionHandler()
 ids = conn_handler.execute_fetchall(
     "SELECT processed_data_id, study_id FROM qiita.study_processed_data")
 
-udpate_sql = """UPDATE qiita.processed_data
-                SET processed_data_status_id = (
-                    SELECT study_status_id FROM qiita.study WHERE study_id=1)
-            WHERE processed_data_id = 1"""
+sql = """UPDATE qiita.processed_data
+         SET processed_data_status_id = (
+            SELECT study_status_id FROM qiita.study WHERE study_id=1)
+         WHERE processed_data_id = 1"""
 
 for vals in ids:
-    conn_handler.execute(sql, vals)
+    conn_handler.execute(sql, tuple(vals))
