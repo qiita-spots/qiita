@@ -85,12 +85,9 @@ def filter_by_processed_data(results, datatypes=None):
             # skip processed data if it doesn't fit the given datatypes
             if datatypes is not None and datatype not in datatypes:
                 continue
-            proc_data_samples[proc_data_id] = []
             samps_available = set(proc_data.samples)
-            for sample in results[study_id]:
-                # filter to samples available in this proc data
-                if sample[0] in samps_available:
-                    proc_data_samples[proc_data_id].append(sample)
+            proc_data_samples[proc_data_id] = [s for s in results[study_id]
+                                               if s[0] in samps_available]
             if proc_data_samples[proc_data_id] == []:
                 # all samples filtered so remove it as a result
                 del(proc_data_samples[proc_data_id])

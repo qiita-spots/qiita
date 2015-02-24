@@ -22,7 +22,7 @@ function displaySelected() {
 } 
 
 function select_category(category, study) {
-  if(study != '') { 
+  if(study !== '') { 
     $('.study'+study+'.'+category).each(function() {this.checked = true;});
     count_update(study);
   }
@@ -41,9 +41,9 @@ function count_update(study) {
 }
 
 function select_deselect(study, pdid, type, select) {
-  boxes = '.study'+study+'.proc'+pdid
-  if (type = '-sel') { boxes += '.-sel' }
-  if(select == true) {
+  boxes = '.study'+study+'.proc'+pdid;
+  if (type === '-sel') { boxes += '.-sel'; }
+  if(select === true) {
     $(boxes).each(function() {this.checked = true;});
   }
   else { 
@@ -53,10 +53,10 @@ function select_deselect(study, pdid, type, select) {
 }
 
 function select_inverse(study, pdid, type) {
-  boxes = '.study'+study+'.proc'+pdid
-  if (type = '-sel') { boxes += '.-sel' }
+  boxes = '.study'+study+'.proc'+pdid;
+  if (type === '-sel') { boxes += '.-sel'; }
   $(boxes).each(function() {
-    if(this.checked == true) { this.checked = false; }
+    if(this.checked === true) { this.checked = false; }
     else { this.checked = true; }
   });
 }
@@ -71,16 +71,16 @@ function pre_submit(action) {
     document.getElementById('results-div').hidden = true;
   } else if(action == 'continue') {
     var selected = $('#selected input:checkbox').length;
-    if(selected == 0) {
-      msgdiv.innerHTML = "Must select samples to continue!"
+    if(selected === 0) {
+      msgdiv.innerHTML = "Must select samples to continue!";
       return false;
     } else {
-    document.getElementById('results-form').action = '/analysis/3'
+    document.getElementById('results-form').action = '/analysis/3';
     }
   } else if(action == "deselect") {
     var selected = $('#selected input:checkbox:checked').length;
-    if(selected == 0) {
-      msgdiv.innerHTML = "Must select samples to remove from study!"
+    if(selected === 0) {
+      msgdiv.innerHTML = "Must select samples to remove from study!";
       return false;
     }
   }

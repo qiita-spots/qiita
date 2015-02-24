@@ -21,6 +21,8 @@ Methods
 #
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
+import re
+
 from future.utils import viewitems
 
 from qiita_db.reference import Reference
@@ -37,6 +39,9 @@ def linkify(link_template, item):
         The strings that will be inserted into the template
     """
     return link_template.format(*item)
+
+# global compiled regex so compiled once and super fast after that
+clean_str_regex = re.compile("(\.|:)")
 
 
 def clean_str(item):
@@ -57,7 +62,7 @@ def clean_str(item):
     This function removes colons and periods from strings, and replaces spaces
     with underscores.
     """
-    return str(item).replace(" ", "_").replace(":", "").replace(".", "")
+    return re.sub(clean_str_regex, "", str(item).replace(" ", "_"))
 
 
 def generate_param_str(param):

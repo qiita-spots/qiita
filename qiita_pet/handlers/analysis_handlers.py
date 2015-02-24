@@ -70,7 +70,7 @@ class SearchStudiesHandler(BaseHandler):
         data = self.get_arguments('samples-sel')
         res = defaultdict(list)
         for val in data:
-            hold = val.split('#')
+            hold = val.split('#', 1)
             res[hold[0]].append(hold[1])
         return res
 

@@ -14,8 +14,8 @@ from qiita_pet.util import clean_str, generate_param_str
 
 class TestUtil(TestCase):
     def test_clean_str(self):
-        obs = clean_str("Remove Spaces From:String")
-        self.assertEqual(obs, "Remove_Spaces_FromString")
+        obs = clean_str("Remove Spaces And:colons:,ALSO.periods.From_String")
+        self.assertEqual(obs, "Remove_Spaces_Andcolons,ALSOperiodsFrom_String")
 
     def test_generate_param_str(self):
         params = ProcessedSortmernaParams(1)

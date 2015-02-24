@@ -1179,8 +1179,7 @@ class ProcessedData(BaseData):
         pid = PreprocessedData(self.preprocessed_data).prep_template
         conn_handler = SQLConnectionHandler()
         sql = "SELECT sample_id FROM qiita.prep_{0}".format(pid)
-        for x in conn_handler.execute_fetchall(sql):
-            yield x[0]
+        return (x[0] for x in conn_handler.execute_fetchall(sql))
 
     @property
     def processed_date(self):
