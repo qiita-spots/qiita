@@ -44,8 +44,8 @@
       <input type='checkbox' name='samples{{sel}}'
       value='{{pid}}#{{sample[0]}}' class='study{{sid}} proc{{pid}} {{ " ".join(clean_str(s) for s in sample) }} {{sel}}' onchange='count_update({{sid}})'></td>
       <td><a href="#" onclick="select_category('{{clean_str(sample[0])}}', '')">All Datatypes</a></td>
-        {% for pos in range(len(sample)) %}
-      <td>{{sample[pos]}}</td>
+        {% for val in sample %}
+      <td>{{ val }}</td>
         {% end %}
     </tr>
       {% end %}
