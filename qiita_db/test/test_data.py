@@ -679,8 +679,9 @@ class ProcessedDataTests(TestCase):
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.processed_data WHERE processed_data_id=2")
         # processed_data_id, processed_params_table, processed_params_id,
-        # processed_date, data_type_id, link_filepaths_status
-        exp = [[2, "processed_params_uclust", 1, self.date, 2, 'idle']]
+        # processed_date, data_type_id, link_filepaths_status,
+        # processed_data_status_id
+        exp = [[2, "processed_params_uclust", 1, self.date, 2, 'idle', 4]]
         self.assertEqual(obs, exp)
 
         # Check that the files have been copied to right location
@@ -751,8 +752,9 @@ class ProcessedDataTests(TestCase):
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.processed_data WHERE processed_data_id=2")
         # processed_data_id, processed_params_table, processed_params_id,
-        # processed_date, data_type_id, link_filepaths_status
-        exp = [[2, "processed_params_uclust", 1, self.date, 2, 'idle']]
+        # processed_date, data_type_id, link_filepaths_status,
+        # processed_data_status_id
+        exp = [[2, "processed_params_uclust", 1, self.date, 2, 'idle', 4]]
         self.assertEqual(obs, exp)
 
         # Check that the files have been copied to right location
