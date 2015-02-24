@@ -31,7 +31,8 @@ from qiita_db.exceptions import (QiitaDBDuplicateError, QiitaDBUnknownIDError,
 from qiita_db.study import Study, StudyPerson
 from qiita_db.user import User
 from qiita_db.data import RawData
-from qiita_db.util import exists_table, get_db_files_base_dir, get_mountpoint
+from qiita_db.util import (exists_table, get_db_files_base_dir, get_mountpoint,
+                           get_count)
 from qiita_db.metadata_template import (
     _get_datatypes, _as_python_types, MetadataTemplate, SampleTemplate,
     PrepTemplate, BaseSample, PrepSample, Sample, _prefix_sample_names_with_id,
@@ -734,6 +735,42 @@ class TestSampleTemplate(TestCase):
         with self.assertRaises(QiitaDBColumnError):
             SampleTemplate.create(self.metadata, self.new_study)
 
+    def test_create_error_cleanup(self):
+        """Create does not modify the database if an error happens"""
+        metadata_dict = {
+            'Sample1': {'physical_location': 'location1',
+                        'has_physical_specimen': True,
+                        'has_extracted_data': True,
+                        'sample_type': 'type1',
+                        'required_sample_info_status': 'received',
+                        'collection_timestamp':
+                        datetime(2014, 5, 29, 12, 24, 51),
+                        'host_subject_id': 'NotIdentified',
+                        'Description': 'Test Sample 1',
+                        'group': 'Forcing the creation to fail',
+                        'latitude': 42.42,
+                        'longitude': 41.41}
+            }
+        metadata = pd.DataFrame.from_dict(metadata_dict, orient='index')
+        with self.assertRaises(QiitaDBExecutionError):
+            SampleTemplate.create(metadata, self.new_study)
+
+        sql = """SELECT EXISTS(
+                    SELECT * FROM qiita.required_sample_info
+                    WHERE sample_id=%s)"""
+        sample_id = "%d.Sample1" % self.new_study.id
+        self.assertFalse(
+            self.conn_handler.execute_fetchone(sql, (sample_id,))[0])
+
+        sql = """SELECT EXISTS(
+                    SELECT * FROM qiita.study_sample_columns
+                    WHERE study_id=%s)"""
+        self.assertFalse(
+            self.conn_handler.execute_fetchone(sql, (self.new_study.id,))[0])
+
+        self.assertFalse(
+            exists_table("sample_%d" % self.new_study.id, self.conn_handler))
+
     def test_create(self):
         """Creates a new SampleTemplate"""
         st = SampleTemplate.create(self.metadata, self.new_study)
@@ -1325,6 +1362,68 @@ class TestPrepTemplate(TestCase):
         with self.assertRaises(QiitaDBColumnError):
             PrepTemplate.create(self.metadata, self.new_raw_data,
                                 self.test_study, self.data_type)
+
+    def test_create_error_cleanup(self):
+        """Create does not modify the database if an error happens"""
+        metadata_dict = {
+            'SKB8.640193': {'center_name': 'ANL',
+                            'center_project_name': 'Test Project',
+                            'ebi_submission_accession': None,
+                            'EMP_status': 'EMP',
+                            'group': 2,
+                            'linkerprimersequence': 'GTGCCAGCMGCCGCGGTAA',
+                            'barcodesequence': 'GTCCGCAAGTTA',
+                            'run_prefix': "s_G1_L001_sequences",
+                            'platform': 'ILLUMINA',
+                            'library_construction_protocol': 'AAAA',
+                            'experiment_design_description': 'BBBB'},
+            'SKD8.640184': {'center_name': 'ANL',
+                            'center_project_name': 'Test Project',
+                            'ebi_submission_accession': None,
+                            'EMP_status': 'EMP',
+                            'group': 1,
+                            'linkerprimersequence': 'GTGCCAGCMGCCGCGGTAA',
+                            'barcodesequence': 'CGTAGAGCTCTC',
+                            'run_prefix': "s_G1_L001_sequences",
+                            'platform': 'ILLUMINA',
+                            'library_construction_protocol': 'AAAA',
+                            'experiment_design_description': 'BBBB'},
+            'SKB7.640196': {'center_name': 'ANL',
+                            'center_project_name': 'Test Project',
+                            'ebi_submission_accession': None,
+                            'EMP_status': 'EMP',
+                            'group': 'Value for sample 3',
+                            'linkerprimersequence': 'GTGCCAGCMGCCGCGGTAA',
+                            'barcodesequence': 'CCTCTGAGAGCT',
+                            'run_prefix': "s_G1_L002_sequences",
+                            'platform': 'ILLUMINA',
+                            'library_construction_protocol': 'AAAA',
+                            'experiment_design_description': 'BBBB'}
+            }
+        metadata = pd.DataFrame.from_dict(metadata_dict, orient='index')
+
+        exp_id = get_count("qiita.prep_template") + 1
+
+        with self.assertRaises(QiitaDBExecutionError):
+            PrepTemplate.create(metadata, self.new_raw_data,
+                                self.test_study, self.data_type)
+
+        sql = """SELECT EXISTS(
+                    SELECT * FROM qiita.prep_template
+                    WHERE prep_template_id=%s)"""
+        self.assertFalse(self.conn_handler.execute_fetchone(sql, (exp_id,))[0])
+
+        sql = """SELECT EXISTS(
+                    SELECT * FROM qiita.common_prep_info
+                    WHERE prep_template_id=%s)"""
+        self.assertFalse(self.conn_handler.execute_fetchone(sql, (exp_id,))[0])
+
+        sql = """SELECT EXISTS(
+                    SELECT * FROM qiita.prep_columns
+                    WHERE prep_template_id=%s)"""
+        self.assertFalse(self.conn_handler.execute_fetchone(sql, (exp_id,))[0])
+
+        self.assertFalse(exists_table("prep_%d" % exp_id, self.conn_handler))
 
     def test_create(self):
         """Creates a new PrepTemplate"""
@@ -1980,6 +2079,20 @@ class TestUtilities(TestCase):
         obs = get_invalid_sample_names(one_invalid)
         self.assertItemsEqual(obs, [' ', ' ', ' '])
 
+    def test_invalid_lat_long(self):
+
+        with self.assertRaises(QiitaDBColumnError):
+            obs = load_template_to_dataframe(
+                StringIO(SAMPLE_TEMPLATE_INVALID_LATITUDE_COLUMNS))
+            # prevent flake8 from complaining
+            str(obs)
+
+        with self.assertRaises(QiitaDBColumnError):
+            obs = load_template_to_dataframe(
+                StringIO(SAMPLE_TEMPLATE_INVALID_LONGITUDE_COLUMNS))
+            # prevent flake8 from complaining
+            str(obs)
+
 
 EXP_SAMPLE_TEMPLATE = (
     "sample_name\tcollection_timestamp\tdescription\thas_extracted_data\t"
@@ -2166,6 +2279,37 @@ SAMPLE_TEMPLATE_NO_SAMPLE_NAME = (
     "2.Sample3\t2014-05-29 12:24:51\tTest Sample 3\tTrue\t"
     "True\tNotIdentified\t4.8\t4.41\tlocation1\treceived\ttype1\t"
     "NA\n")
+
+SAMPLE_TEMPLATE_INVALID_LATITUDE_COLUMNS = (
+    "sample_name\tcollection_timestamp\tdescription\thas_extracted_data\t"
+    "has_physical_specimen\thost_subject_id\tlatitude\tlongitude\t"
+    "physical_location\trequired_sample_info_status\tsample_type\t"
+    "str_column\n"
+    "2.Sample1\t2014-05-29 12:24:51\tTest Sample 1\tTrue\tTrue\t"
+    "1\t42\t41.41\tlocation1\treceived\ttype1\t"
+    "Value for sample 1\n"
+    "2.Sample2\t2014-05-29 12:24:51\t"
+    "Test Sample 2\tTrue\tTrue\1\t4.2\t1.1\tlocation1\treceived\t"
+    "type1\tValue for sample 2\n"
+    "2.Sample3\t2014-05-29 12:24:51\tTest Sample 3\tTrue\t"
+    "True\1\tXXXXX4.8\t4.41\tlocation1\treceived\ttype1\t"
+    "Value for sample 3\n")
+
+SAMPLE_TEMPLATE_INVALID_LONGITUDE_COLUMNS = (
+    "sample_name\tcollection_timestamp\tdescription\thas_extracted_data\t"
+    "has_physical_specimen\thost_subject_id\tlatitude\tlongitude\t"
+    "physical_location\trequired_sample_info_status\tsample_type\t"
+    "str_column\n"
+    "2.Sample1\t2014-05-29 12:24:51\tTest Sample 1\tTrue\tTrue\t"
+    "1\t11.42\t41.41\tlocation1\treceived\ttype1\t"
+    "Value for sample 1\n"
+    "2.Sample2\t2014-05-29 12:24:51\t"
+    "Test Sample 2\tTrue\tTrue\1\t4.2\tXXX\tlocation1\treceived\t"
+    "type1\tValue for sample 2\n"
+    "2.Sample3\t2014-05-29 12:24:51\tTest Sample 3\tTrue\t"
+    "True\1\t4.8\t4.XXXXX41\tlocation1\treceived\ttype1\t"
+    "Value for sample 3\n")
+
 
 SAMPLE_TEMPLATE_DICT_FORM = {
     'collection_timestamp': {'2.Sample1': '2014-05-29 12:24:51',

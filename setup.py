@@ -79,6 +79,7 @@ setup(name='qiita-spots',
                         'bcrypt', 'pandas >= 0.15', 'numpy >= 1.7',
                         'tornado==3.1.1', 'toredis', 'redis', 'ipython[all]',
                         'pyparsing', 'h5py >= 2.3.1', 'biom-format', 'natsort',
-                        'networkx', 'scikit-bio == 0.2.1', 'wtforms == 2.0.1'],
+                        'networkx', 'scikit-bio >= 0.2.3, < 0.3.0',
+                        'wtforms == 2.0.1'],
       classifiers=classifiers
       )
