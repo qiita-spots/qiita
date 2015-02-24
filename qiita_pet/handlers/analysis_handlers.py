@@ -337,7 +337,16 @@ class ResultsHandler(StaticFileHandler, BaseHandler):
         len_prefix = len(commonprefix([root, absolute_path]))
         base_requested_fp = absolute_path[len_prefix:].split(sep, 1)[0]
 
-        user_id = self.current_user.id
+        current_user = self.current_user
+
+        # If the user is an admin, then allow access
+        if current_user.level == 'admin':
+            return super(ResultsHandler, self).validate_absolute_path(
+                root, absolute_path)
+
+        # otherwise, we have to check if they have access to the requested
+        # resource
+        user_id = current_user.id
         accessible_filepaths = check_access_to_analysis_result(
             user_id, base_requested_fp)
 
