@@ -20,9 +20,9 @@ class SearchTest(TestCase):
     def setUp(self):
         self.search = QiitaStudySearch()
 
-    def test_parse_study_search_string(self):
+    def test_build_sql(self):
         st_sql, samp_sql, meta = \
-            self.search._parse_study_search_string("altitude > 0")
+            self.search._build_sql("altitude > 0")
         exp_st_sql = ("SELECT study_id FROM qiita.study_sample_columns WHERE "
                       "lower(column_name) = lower('altitude') and column_type "
                       "in ('integer', 'float8')")
@@ -36,7 +36,7 @@ class SearchTest(TestCase):
 
         # test NOT
         st_sql, samp_sql, meta = \
-            self.search._parse_study_search_string("NOT altitude > 0")
+            self.search._build_sql("NOT altitude > 0")
         exp_st_sql = ("SELECT study_id FROM qiita.study_sample_columns WHERE "
                       "lower(column_name) = lower('altitude') and column_type "
                       "in ('integer', 'float8')")
@@ -51,7 +51,7 @@ class SearchTest(TestCase):
 
         # test AND
         st_sql, samp_sql, meta = \
-            self.search._parse_study_search_string("ph > 7 and ph < 9")
+            self.search._build_sql("ph > 7 and ph < 9")
         exp_st_sql = ("SELECT study_id FROM qiita.study_sample_columns WHERE "
                       "lower(column_name) = lower('ph') and column_type in "
                       "('integer', 'float8')")
@@ -66,7 +66,7 @@ class SearchTest(TestCase):
 
         # test OR
         st_sql, samp_sql, meta = \
-            self.search._parse_study_search_string("ph > 7 or ph < 9")
+            self.search._build_sql("ph > 7 or ph < 9")
         exp_st_sql = ("SELECT study_id FROM qiita.study_sample_columns WHERE "
                       "lower(column_name) = lower('ph') and column_type in "
                       "('integer', 'float8')")
@@ -81,7 +81,7 @@ class SearchTest(TestCase):
 
         # test includes
         st_sql, samp_sql, meta = \
-            self.search._parse_study_search_string(
+            self.search._build_sql(
                 'host_subject_id includes "Chicken little"')
         exp_st_sql = "SELECT study_id FROM qiita.study_sample_columns"
         exp_samp_sql = ("SELECT r.sample_id,r.host_subject_id FROM "
@@ -95,7 +95,7 @@ class SearchTest(TestCase):
 
         # test complex query
         st_sql, samp_sql, meta = \
-            self.search._parse_study_search_string(
+            self.search._build_sql(
                 'name = "Billy Bob" or name = "Timmy" or name=Jimbo and '
                 'name > 25 or name < 5')
         exp_st_sql = (
@@ -114,7 +114,7 @@ class SearchTest(TestCase):
 
         # test remove selected samples
         st_sql, samp_sql, meta = \
-            self.search._parse_study_search_string(
+            self.search._build_sql(
                 "altitude > 0", remove_selected=True, analysis=1)
         exp_st_sql = ("SELECT study_id FROM qiita.study_sample_columns WHERE "
                       "lower(column_name) = lower('altitude') and column_type "
@@ -133,7 +133,7 @@ class SearchTest(TestCase):
 
         # test case sensitivity
         st_sql, samp_sql, meta = \
-            self.search._parse_study_search_string("ph > 7 or pH < 9")
+            self.search._build_sql("ph > 7 or pH < 9")
         # need to split sql because set used to create so can't guarantee order
         st_sql = st_sql.split(" INTERSECT ")
 

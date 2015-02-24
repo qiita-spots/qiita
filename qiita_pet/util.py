@@ -21,7 +21,7 @@ Methods
 #
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
-import re
+from string import maketrans
 
 from future.utils import viewitems
 
@@ -40,8 +40,8 @@ def linkify(link_template, item):
     """
     return link_template.format(*item)
 
-# global compiled regex so compiled once and super fast after that
-clean_str_regex = re.compile("(\.|:)")
+# global created table so only created once
+clean_str_table = maketrans(" ", "_")
 
 
 def clean_str(item):
@@ -62,7 +62,7 @@ def clean_str(item):
     This function removes colons and periods from strings, and replaces spaces
     with underscores.
     """
-    return re.sub(clean_str_regex, "", str(item).replace(" ", "_"))
+    return str(item).translate(clean_str_table, ".:")
 
 
 def generate_param_str(param):
