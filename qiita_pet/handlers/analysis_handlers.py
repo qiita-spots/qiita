@@ -27,7 +27,9 @@ from qiita_db.analysis import Analysis
 from qiita_db.data import ProcessedData
 from qiita_db.metadata_template import SampleTemplate
 from qiita_db.job import Job, Command
-from qiita_db.util import (get_db_files_base_dir, get_table_cols,
+from qiita_db.util import (get_db_files_base_dir,
+                           check_access_to_analysis_result,
+                           get_table_cols,
                            filepath_id_to_rel_path)
 from qiita_db.search import QiitaStudySearch
 from qiita_db.exceptions import (
@@ -336,30 +338,9 @@ class ResultsHandler(StaticFileHandler, BaseHandler):
         base_requested_fp = absolute_path[len_prefix:].split(sep, 1)[0]
 
         user_id = self.current_user.id
+        accessible_filepaths = check_access_to_analysis_result(
+            user_id, base_requested_fp)
 
-        conn = SQLConnectionHandler()
-
-        # Get all filepath ids associated with analyses that the user has
-        # access to where the filepath is the base_requested_fp from above
-        sql = """select fp.filepath_id
-                 from qiita.analysis_job aj join (
-                    select analysis_id from qiita.analysis A
-                    join qiita.analysis_status stat
-                    on A.analysis_status_id = stat.analysis_status_id
-                    where stat.analysis_status_id = 6
-                    UNION
-                    select analysis_id from qiita.analysis_users
-                    where email = %s
-                    UNION
-                    select analysis_id from qiita.analysis where email = %s
-                 ) ids on aj.analysis_id = ids.analysis_id
-                 join qiita.job_results_filepath jrfp on
-                    aj.job_id = jrfp.job_id
-                 join qiita.filepath fp on jrfp.filepath_id = fp.filepath_id
-                 where fp.filepath = %s"""
-
-        accessible_filepaths = [row[0] for row in conn.execute_fetchall(
-                                sql, [user_id, user_id, base_requested_fp])]
 
         # Turn these filepath IDs into absolute paths
         db_files_base_dir = get_db_files_base_dir()

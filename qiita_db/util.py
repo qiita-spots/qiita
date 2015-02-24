@@ -1029,3 +1029,47 @@ def find_repeated(values):
         else:
             seen.add(value)
     return repeated
+
+def check_access_to_analysis_result(user_id, requested_path):
+    """Get filepath IDs for a particular requested_path, if user has access
+
+    This function is only applicable for analysis results.
+
+    Parameters
+    ----------
+    user_id : str
+        The ID (email address) that identifies the user
+    requested_path : str
+        The path that the user requested
+
+    Returns
+    -------
+    list of int
+        The filepath IDs associated with the requested path
+    """
+    conn = SQLConnectionHandler()
+
+    # Get all filepath ids associated with analyses that the user has
+    # access to where the filepath is the base_requested_fp from above.
+    # There should typically be only one matching filepath ID, but for safety
+    # we allow for the possibility of multiple.
+    sql = """select fp.filepath_id
+             from qiita.analysis_job aj join (
+                select analysis_id from qiita.analysis A
+                join qiita.analysis_status stat
+                on A.analysis_status_id = stat.analysis_status_id
+                where stat.analysis_status_id = 6
+                UNION
+                select analysis_id from qiita.analysis_users
+                where email = %s
+                UNION
+                select analysis_id from qiita.analysis where email = %s
+             ) ids on aj.analysis_id = ids.analysis_id
+             join qiita.job_results_filepath jrfp on
+                aj.job_id = jrfp.job_id
+             join qiita.filepath fp on jrfp.filepath_id = fp.filepath_id
+             where fp.filepath = %s"""
+
+    return [row[0] for row in conn.execute_fetchall(
+            sql, [user_id, user_id, requested_path])]
+

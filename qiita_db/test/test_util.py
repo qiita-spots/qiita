@@ -34,7 +34,8 @@ from qiita_db.util import (exists_table, exists_dynamic_table, scrub_data,
                            get_environmental_packages, get_timeseries_types,
                            filepath_id_to_rel_path, find_repeated,
                            move_filepaths_to_upload_folder,
-                           move_upload_files_to_trash)
+                           move_upload_files_to_trash,
+                           check_access_to_analysis_result)
 
 
 @qiita_test_checker()
@@ -642,6 +643,12 @@ class DBUtilTests(TestCase):
         exp = 'preprocessed_data/1_seqs.fna'
         self.assertEqual(obs, exp)
 
+    def test_check_access_to_analysis_result(self):
+        obs = check_access_to_analysis_result('test@foo.bar',
+                                              '1_job_result.txt')
+        exp = [12]
+
+        self.assertEqual(obs, exp)
 
 class UtilTests(TestCase):
     """Tests for the util functions that do not need to access the DB"""
