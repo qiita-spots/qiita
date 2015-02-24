@@ -10,11 +10,11 @@ var current_study;
 
 $(document).ready(function() {
         $('#user-studies-table').dataTable({
-            order: [[ 1, "asc" ]],
+            order: [[ 0, "asc" ]],
             columnDefs: [{type:'natural', targets:'_all'}]
         });
         $('#shared-studies-table').dataTable({
-            order: [[ 1, "asc" ]],
+            order: [[ 0, "asc" ]],
             columnDefs: [{type:'natural', targets:'_all'}]
         });
     $('#waiting').hide();
