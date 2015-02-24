@@ -30,11 +30,10 @@ from qiita_db.job import Job, Command
 from qiita_db.util import (get_db_files_base_dir,
                            check_access_to_analysis_result,
                            get_table_cols,
-                           filepath_id_to_rel_path)
+                           filepath_ids_to_rel_paths)
 from qiita_db.search import QiitaStudySearch
 from qiita_db.exceptions import (
     QiitaDBIncompatibleDatatypeError, QiitaDBUnknownIDError)
-from qiita_db.sql_connection import SQLConnectionHandler
 
 SELECT_SAMPLES = 2
 SELECT_COMMANDS = 3
@@ -350,12 +349,12 @@ class ResultsHandler(StaticFileHandler, BaseHandler):
         accessible_filepaths = check_access_to_analysis_result(
             user_id, base_requested_fp)
 
-
         # Turn these filepath IDs into absolute paths
         db_files_base_dir = get_db_files_base_dir()
-        accessible_filepaths = {join(db_files_base_dir,
-                                     filepath_id_to_rel_path(fpid))
-                                for fpid in accessible_filepaths}
+        relpaths = filepath_ids_to_rel_paths(accessible_filepaths)
+
+        accessible_filepaths = {join(db_files_base_dir, relpath)
+                                for relpath in relpaths.values()}
 
         # check if the requested resource is a file (or is in a directory) that
         # the user has access to

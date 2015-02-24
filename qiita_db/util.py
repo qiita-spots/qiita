@@ -839,6 +839,35 @@ def filepath_id_to_rel_path(filepath_id):
     return result
 
 
+def filepath_ids_to_rel_paths(filepath_ids):
+    """Gets the full paths, relative to the base directory
+
+    Parameters
+    ----------
+    filepath_ids : list of int
+
+    Returns
+    -------
+    dict where keys are ints and values are str
+        {filepath_id: relative_path}
+    """
+    conn = SQLConnectionHandler()
+
+    sql = """SELECT fp.filepath_id, dd.mountpoint, dd.subdirectory, fp.filepath
+          FROM qiita.filepath fp JOIN qiita.data_directory dd
+          ON fp.data_directory_id = dd.data_directory_id
+          WHERE fp.filepath_id in ({})""".format(
+          ', '.join([str(fpid) for fpid in filepath_ids]))
+
+    if filepath_ids:
+        result = {row[0]: join(*row[1:])
+                  for row in conn.execute_fetchall(sql)}
+
+        return result
+    else:
+        return {}
+
+
 def convert_to_id(value, table, conn_handler=None):
         """Converts a string value to it's corresponding table identifier
 
@@ -1030,6 +1059,7 @@ def find_repeated(values):
             seen.add(value)
     return repeated
 
+
 def check_access_to_analysis_result(user_id, requested_path):
     """Get filepath IDs for a particular requested_path, if user has access
 
@@ -1072,4 +1102,3 @@ def check_access_to_analysis_result(user_id, requested_path):
 
     return [row[0] for row in conn.execute_fetchall(
             sql, [user_id, user_id, requested_path])]
-
