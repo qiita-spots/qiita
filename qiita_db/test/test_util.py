@@ -32,7 +32,7 @@ from qiita_db.util import (exists_table, exists_dynamic_table, scrub_data,
                            get_mountpoint_path_by_id,
                            get_files_from_uploads_folders,
                            get_environmental_packages, get_timeseries_types,
-                           filepath_id_to_rel_path, find_repeated,
+                           filepath_id_to_rel_path,
                            move_filepaths_to_upload_folder,
                            move_upload_files_to_trash)
 
@@ -669,19 +669,6 @@ class UtilTests(TestCase):
     def test_scrub_data_single_quote(self):
         """Correctly removes single quotes from the string"""
         self.assertEqual(scrub_data("'quotes'"), "quotes")
-
-    def test_find_repeated(self):
-        self.assertEqual(find_repeated([]), set([]))
-
-        not_sorted_vals = ['e', 'b', 'd', 'b', 'a', 'a', '1', '2']
-        self.assertEqual(find_repeated(not_sorted_vals), set(['b', 'a']))
-
-        sorted_vals = ['a', 'a', 'b', 'b', 'c', 'd', '1', '2']
-        self.assertEqual(find_repeated(sorted_vals), set(['a', 'b']))
-
-    def test_find_repeated_different_types(self):
-        vals = [1, 2, 3, 4, 1, 1, 1, 1, 3, 3, 'a', 'b', 'a', 'x']
-        self.assertEqual(find_repeated(vals), set([1, 3, 'a']))
 
 if __name__ == '__main__':
     main()
