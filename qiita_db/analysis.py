@@ -752,3 +752,116 @@ class Analysis(QiitaStatusObject):
         sql = ("INSERT INTO qiita.analysis_filepath (analysis_id, filepath_id"
                "{0}) VALUES (%s, %s{1})".format(col, dtid))
         conn_handler.execute(sql, (self._id, fpid))
+
+
+class Collection(QiitaStatusObject):
+    """
+    Analysis overview object to track a multi-analysis collection.
+
+    Attributes
+    ----------
+    name: str
+        Name of the Collection
+    description: str
+        Description of what the collection is investigating
+    owner: User object
+        Owner of the Collection
+    analyses: list of Analysis Objects
+        all analyses that are part of the collection
+    highlights : list of Job objects
+        Important job results related to the collection
+
+    Methods
+    -------
+    add_analysis
+    remove_analysis
+    highlight_job
+    remove_highlight
+    """
+    _table = "collection"
+
+    @classmethod
+    def create(cls, owner, name, description=None):
+        """Creates a new collection on the database
+
+        Parameters
+        ----------
+        owner : User object
+            Owner of the collection
+        name : str
+            Name of the collection
+        description : str, optional
+            Brief description of the collecton's overarching goal
+        """
+        raise NotImplementedError()
+
+    @classmethod
+    def delete(cls, id_):
+        """Deletes a collection from the database"""
+        raise NotImplementedError()
+
+    # --- Properties ---
+    @property
+    def name(self):
+        raise NotImplementedError()
+
+    @name.setter
+    def name(self, value):
+        raise NotImplementedError()
+
+    @property
+    def description(self):
+        raise NotImplementedError()
+
+    @description.setter
+    def description(self, value):
+        raise NotImplementedError()
+
+    @property
+    def owner(self):
+        raise NotImplementedError()
+
+    @property
+    def analyses(self):
+        raise NotImplementedError()
+
+    @property
+    def highlights(self):
+        raise NotImplementedError()
+
+    # --- Functions ---
+    def add_analysis(self, analysis):
+        """Adds an analysis to the collection object
+
+        Parameters
+        ----------
+        analysis : Analysis object
+        """
+        raise NotImplementedError()
+
+    def remove_analysis(self, analysis):
+        """Remove an analysis from the collection object
+
+        Parameters
+        ----------
+        analysis : Analysis object
+        """
+        raise NotImplementedError()
+
+    def highlight_job(self, job):
+        """Marks a job as important to the collection
+
+        Parameters
+        ----------
+        job : Job object
+        """
+        raise NotImplementedError()
+
+    def remove_highlight(self, job):
+        """Removes job importance from the collection
+
+        Parameters
+        ----------
+        job : Job object
+        """
+        raise NotImplementedError()
