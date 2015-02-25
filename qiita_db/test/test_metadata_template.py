@@ -1371,6 +1371,10 @@ class TestPrepTemplate(TestCase):
         self.metadata = pd.DataFrame.from_dict(self.metadata_dict,
                                                orient='index')
         # Test error raised and correct error given
+        with self.assertRaises(QiitaDBExecutionError):
+            PrepTemplate.create(self.metadata, self.new_raw_data,
+                                self.test_study, self.data_type)
+
         # Try/Except used so can test the text of the error raised
         try:
             PrepTemplate.create(self.metadata, self.new_raw_data,
