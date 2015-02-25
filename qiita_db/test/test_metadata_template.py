@@ -1371,12 +1371,15 @@ class TestPrepTemplate(TestCase):
         self.metadata = pd.DataFrame.from_dict(self.metadata_dict,
                                                orient='index')
         # Test error raised and correct error given
-        with self.assertRaises(QiitaDBExecutionError) as er:
+        # Try/Except used so can test the text of the error raised
+        try:
             PrepTemplate.create(self.metadata, self.new_raw_data,
                                 self.test_study, self.data_type)
+        except Exception as e:
+            self.assertIsInstance(e, QiitaDBExecutionError)
             self.assertEqual(
-                er.exception, 'QiitaDBExecutionError: Samples found in prep '
-                'template but not sample template: 1.NOTREAL')
+                str(e), 'Samples found in prep template but not sample '
+                'template: 1.NOTREAL')
 
     def test_create_shorter_prep_template(self):
         # remove one sample so not all samples in the prep template

@@ -1596,17 +1596,13 @@ class PrepTemplate(MetadataTemplate):
                    "study_id = %s")
             # Get list of study sample IDs, prep template study IDs,
             # and their intersection
-            study_samples = set(s[0] for s in conn_handler.execute_fetchall(
-                sql, [study.id]))
             prep_samples = set(md_template.index.values)
-            both_samples = study_samples.intersection(prep_samples)
-            # filter prep template to just samples available in the study
-            md_template = md_template.loc[both_samples]
-            if len(both_samples) != len(prep_samples):
-                prep_samples.difference_update(both_samples)
+            unknown_samples = prep_samples.difference(
+                s[0] for s in conn_handler.execute_fetchall(sql, [study.id]))
+            if unknown_samples:
                 raise QiitaDBExecutionError(
                     'Samples found in prep template but not sample template: '
-                    '%s' % ', '.join(prep_samples))
+                    '%s' % ', '.join(unknown_samples))
 
             # some other error we haven't seen before so raise it
             raise
