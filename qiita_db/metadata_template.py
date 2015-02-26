@@ -54,7 +54,7 @@ from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from .exceptions import (QiitaDBDuplicateError, QiitaDBColumnError,
                          QiitaDBUnknownIDError, QiitaDBNotImplementedError,
                          QiitaDBDuplicateHeaderError, QiitaDBError,
-                         QiitaDBWarning)
+                         QiitaDBWarning, QiitaDBExecutionError)
 from .base import QiitaObject
 from .sql_connection import SQLConnectionHandler
 from .ontology import Ontology
@@ -1413,7 +1413,7 @@ class SampleTemplate(MetadataTemplate):
 
 
 class PrepTemplate(MetadataTemplate):
-    r"""Represent the PrepTemplate of a raw dat. Provides access to the
+    r"""Represent the PrepTemplate of a raw data. Provides access to the
     tables in the DB that holds the sample preparation information.
 
     See Also
@@ -1590,6 +1590,21 @@ class PrepTemplate(MetadataTemplate):
             conn_handler.execute(
                 "DELETE FROM qiita.prep_template where "
                 "{0} = %s".format(cls._id_column), (prep_id,))
+
+            # Check if sample IDs present here but not in sample template
+            sql = ("SELECT sample_id from qiita.required_sample_info WHERE "
+                   "study_id = %s")
+            # Get list of study sample IDs, prep template study IDs,
+            # and their intersection
+            prep_samples = set(md_template.index.values)
+            unknown_samples = prep_samples.difference(
+                s[0] for s in conn_handler.execute_fetchall(sql, [study.id]))
+            if unknown_samples:
+                raise QiitaDBExecutionError(
+                    'Samples found in prep template but not sample template: '
+                    '%s' % ', '.join(unknown_samples))
+
+            # some other error we haven't seen before so raise it
             raise
 
         # figuring out the filepath of the backup

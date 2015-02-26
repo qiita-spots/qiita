@@ -1220,7 +1220,7 @@ class TestPrepTemplate(TestCase):
     """Tests the PrepTemplate class"""
 
     def setUp(self):
-        metadata_dict = {
+        self.metadata_dict = {
             'SKB8.640193': {'center_name': 'ANL',
                             'center_project_name': 'Test Project',
                             'ebi_submission_accession': None,
@@ -1255,7 +1255,8 @@ class TestPrepTemplate(TestCase):
                             'library_construction_protocol': 'AAAA',
                             'experiment_design_description': 'BBBB'}
             }
-        self.metadata = pd.DataFrame.from_dict(metadata_dict, orient='index')
+        self.metadata = pd.DataFrame.from_dict(self.metadata_dict,
+                                               orient='index')
 
         metadata_prefixed_dict = {
             '1.SKB8.640193': {'center_name': 'ANL',
@@ -1362,6 +1363,35 @@ class TestPrepTemplate(TestCase):
         with self.assertRaises(QiitaDBColumnError):
             PrepTemplate.create(self.metadata, self.new_raw_data,
                                 self.test_study, self.data_type)
+
+    def test_create_unknown_sample_names(self):
+        # set two real and one fake sample name
+        self.metadata_dict['NOTREAL'] = self.metadata_dict['SKB7.640196']
+        del self.metadata_dict['SKB7.640196']
+        self.metadata = pd.DataFrame.from_dict(self.metadata_dict,
+                                               orient='index')
+        # Test error raised and correct error given
+        with self.assertRaises(QiitaDBExecutionError) as err:
+            PrepTemplate.create(self.metadata, self.new_raw_data,
+                                self.test_study, self.data_type)
+        self.assertEqual(
+            str(err.exception), 'Samples found in prep template but not sample'
+            ' template: 1.NOTREAL')
+
+    def test_create_shorter_prep_template(self):
+        # remove one sample so not all samples in the prep template
+        del self.metadata_dict['SKB7.640196']
+        self.metadata = pd.DataFrame.from_dict(self.metadata_dict,
+                                               orient='index')
+        pt = PrepTemplate.create(self.metadata, self.new_raw_data,
+                                 self.test_study, self.data_type)
+
+        # make sure the two samples were added correctly
+        self.assertEqual(pt.id, 2)
+        obs = self.conn_handler.execute_fetchall(
+            "SELECT sample_id FROM qiita.prep_2")
+        exp = [['1.SKB8.640193'], ['1.SKD8.640184']]
+        self.assertEqual(obs, exp)
 
     def test_create_error_cleanup(self):
         """Create does not modify the database if an error happens"""
