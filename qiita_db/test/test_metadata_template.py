@@ -1281,8 +1281,10 @@ class TestSampleTemplate(TestCase):
         self.assertEqual(obs, exp)
 
     def test_extend_duplicated_samples(self):
+        # First add new samples to template
+        self.tester.extend(self.metadata)
         with self.assertRaises(QiitaDBDuplicateError):
-            self.tester.extend(self.metadata)
+            # Make sure adding duplicate samples raises error
             self.tester.extend(self.metadata)
 
 
