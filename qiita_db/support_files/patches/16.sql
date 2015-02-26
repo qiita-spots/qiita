@@ -75,3 +75,26 @@ ALTER TABLE qiita.collection_users ADD CONSTRAINT fk_collection_user_email FOREI
 
 --Insert collection statuses
 INSERT INTO qiita.collection_status (status) VALUES ('private'), ('public');
+
+--Add Trigger to make sure jobs added to the collection_job table belong to the collection
+CREATE FUNCTION qiita.check_collection_access() RETURNS TRIGGER AS $job_access$
+    BEGIN
+        IF NOT EXISTS (
+           SELECT aj.* FROM  qiita.analysis_job aj
+           LEFT JOIN qiita.collection_analysis ca
+           ON aj.analysis_id = ca.analysis_id
+           WHERE aj.job_id = NEW.job_id and ca.collection_id = NEW.collection_id
+         ) THEN
+        	RAISE EXCEPTION 'Jobs inserted that do not belong to collection' USING ERRCODE = 'unique_violation';
+        	RETURN OLD;
+        ELSE
+        	RETURN NEW;
+        END IF;
+        RETURN NULL;
+    END;
+    $job_access$ LANGUAGE plpgsql STABLE;
+
+CREATE TRIGGER verify_job_in_collection
+    BEFORE INSERT ON qiita.collection_job
+    FOR EACH ROW
+    EXECUTE PROCEDURE qiita.check_collection_access();
