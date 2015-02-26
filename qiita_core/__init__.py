@@ -6,4 +6,8 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
+import sys
+reload(sys)
+sys.setdefaultencoding('utf-8')
+
 __version__ = "0.0.1-dev"
