@@ -2,7 +2,6 @@
 from os import environ
 from os.path import join, dirname, abspath
 from sys import platform, version as python_version, exit, executable, stdout
-from sys import getdefaultencoding
 from unittest import TestLoader, TextTestRunner, TestCase
 from smtplib import SMTP, SMTP_SSL
 
@@ -287,8 +286,7 @@ def main():
     system_info = [
         ("Platform", platform),
         ("Python version", python_version.replace('\n', ' ')),
-        ("Python executable", executable),
-        ("Encoding", getdefaultencoding())]
+        ("Python executable", executable)]
     max_len = max([len(e[0]) for e in system_info])
     print system_info_header
     for v in system_info:
