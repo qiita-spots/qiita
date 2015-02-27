@@ -282,7 +282,7 @@ class Analysis(QiitaStatusObject):
 
     @property
     def all_associated_filepath_ids(self):
-        """Get all associated filepath_ids EXCEPT job results filepaths
+        """Get all associated filepath_ids
 
         Returns
         -------
@@ -295,6 +295,19 @@ class Analysis(QiitaStatusObject):
               WHERE af.analysis_id = %s"""
         filepaths = {row[0]
                      for row in conn_handler.execute_fetchall(sql, [self._id])}
+
+        sql = """SELECT fp.filepath_id
+              FROM qiita.analysis_job aj
+                JOIN qiita.job j ON aj.job_id = j.job_id
+                JOIN qiita.job_results_filepath jrfp ON aj.job_id = jrfp.job_id
+                JOIN qiita.filepath fp ON jrfp.filepath_id = fp.filepath_id
+              WHERE aj.analysis_id = %s"""
+
+        job_filepaths = {row[0]
+                         for row in conn_handler.execute_fetchall(sql,
+                                                                  [self._id])}
+
+        filepaths = filepaths.union(job_filepaths)
 
         return filepaths
 

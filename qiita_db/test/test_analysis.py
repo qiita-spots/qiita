@@ -232,7 +232,7 @@ class TestAnalysis(TestCase):
         self.assertEqual(self.analysis.biom_tables, exp)
 
     def test_all_associated_filepaths(self):
-        exp = {14, 15}
+        exp = {12, 13, 14, 15}
         self.assertEqual(self.analysis.all_associated_filepath_ids, exp)
 
     def test_retrieve_biom_tables_none(self):

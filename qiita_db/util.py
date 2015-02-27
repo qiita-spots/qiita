@@ -839,6 +839,35 @@ def filepath_id_to_rel_path(filepath_id):
     return result
 
 
+def filepath_ids_to_rel_paths(filepath_ids):
+    """Gets the full paths, relative to the base directory
+
+    Parameters
+    ----------
+    filepath_ids : list of int
+
+    Returns
+    -------
+    dict where keys are ints and values are str
+        {filepath_id: relative_path}
+    """
+    conn = SQLConnectionHandler()
+
+    sql = """SELECT fp.filepath_id, dd.mountpoint, dd.subdirectory, fp.filepath
+          FROM qiita.filepath fp JOIN qiita.data_directory dd
+          ON fp.data_directory_id = dd.data_directory_id
+          WHERE fp.filepath_id in ({})""".format(
+          ', '.join([str(fpid) for fpid in filepath_ids]))
+
+    if filepath_ids:
+        result = {row[0]: join(*row[1:])
+                  for row in conn.execute_fetchall(sql)}
+
+        return result
+    else:
+        return {}
+
+
 def convert_to_id(value, table, conn_handler=None):
         """Converts a string value to it's corresponding table identifier
 
@@ -1007,3 +1036,69 @@ def get_timeseries_types(conn_handler=None):
     conn = conn_handler if conn_handler else SQLConnectionHandler()
     return conn.execute_fetchall(
         "SELECT * FROM qiita.timeseries_type ORDER BY timeseries_type_id")
+
+
+def find_repeated(values):
+    """Find repeated elements in the inputed list
+
+    Parameters
+    ----------
+    values : list
+        List of elements to find duplicates in
+
+    Returns
+    -------
+    set
+        Repeated elements in ``values``
+    """
+    seen, repeated = set(), set()
+    for value in values:
+        if value in seen:
+            repeated.add(value)
+        else:
+            seen.add(value)
+    return repeated
+
+
+def check_access_to_analysis_result(user_id, requested_path):
+    """Get filepath IDs for a particular requested_path, if user has access
+
+    This function is only applicable for analysis results.
+
+    Parameters
+    ----------
+    user_id : str
+        The ID (email address) that identifies the user
+    requested_path : str
+        The path that the user requested
+
+    Returns
+    -------
+    list of int
+        The filepath IDs associated with the requested path
+    """
+    conn = SQLConnectionHandler()
+
+    # Get all filepath ids associated with analyses that the user has
+    # access to where the filepath is the base_requested_fp from above.
+    # There should typically be only one matching filepath ID, but for safety
+    # we allow for the possibility of multiple.
+    sql = """select fp.filepath_id
+             from qiita.analysis_job aj join (
+                select analysis_id from qiita.analysis A
+                join qiita.analysis_status stat
+                on A.analysis_status_id = stat.analysis_status_id
+                where stat.analysis_status_id = 6
+                UNION
+                select analysis_id from qiita.analysis_users
+                where email = %s
+                UNION
+                select analysis_id from qiita.analysis where email = %s
+             ) ids on aj.analysis_id = ids.analysis_id
+             join qiita.job_results_filepath jrfp on
+                aj.job_id = jrfp.job_id
+             join qiita.filepath fp on jrfp.filepath_id = fp.filepath_id
+             where fp.filepath = %s"""
+
+    return [row[0] for row in conn.execute_fetchall(
+            sql, [user_id, user_id, requested_path])]

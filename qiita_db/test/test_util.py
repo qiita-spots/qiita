@@ -32,9 +32,10 @@ from qiita_db.util import (exists_table, exists_dynamic_table, scrub_data,
                            get_mountpoint_path_by_id,
                            get_files_from_uploads_folders,
                            get_environmental_packages, get_timeseries_types,
-                           filepath_id_to_rel_path,
+                           filepath_id_to_rel_path, filepath_ids_to_rel_paths,
                            move_filepaths_to_upload_folder,
-                           move_upload_files_to_trash)
+                           move_upload_files_to_trash,
+                           check_access_to_analysis_result)
 
 
 @qiita_test_checker()
@@ -640,6 +641,20 @@ class DBUtilTests(TestCase):
 
         obs = filepath_id_to_rel_path(5)
         exp = 'preprocessed_data/1_seqs.fna'
+        self.assertEqual(obs, exp)
+
+    def test_filepath_ids_to_rel_paths(self):
+        obs = filepath_ids_to_rel_paths([1, 3])
+        exp = {1: 'raw_data/1_s_G1_L001_sequences.fastq.gz',
+               3: 'raw_data/2_sequences.fastq.gz'}
+
+        self.assertEqual(obs, exp)
+
+    def test_check_access_to_analysis_result(self):
+        obs = check_access_to_analysis_result('test@foo.bar',
+                                              '1_job_result.txt')
+        exp = [12]
+
         self.assertEqual(obs, exp)
 
 
