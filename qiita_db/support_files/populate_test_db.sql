@@ -410,3 +410,13 @@ INSERT INTO qiita.study_raw_data (study_id, raw_data_id) VALUES (1, 3), (1, 4);
 
 -- Add processing parameters for sortmerna
 INSERT INTO qiita.processed_params_sortmerna (reference_id, sortmerna_e_value, sortmerna_max_pos, similarity, sortmerna_coverage, threads) VALUES (1, 1, 10000, 0.97, 0.97, 1);
+
+--add collection to the database
+INSERT INTO qiita.collection (email, name, description) VALUES ('test@foo.bar', 'TEST_COLLECTION', 'collection for testing purposes');
+
+--associate analyses and jobs with collection
+INSERT INTO qiita.collection_analysis (collection_id, analysis_id) VALUES (1, 1);
+INSERT INTO qiita.collection_job (collection_id, job_id) VALUES (1, 1);
+
+--share collection with shared user
+INSERT INTO qiita.collection_users (email, collection_id) VALUES ('shared@foo.bar', 1);

@@ -186,6 +186,101 @@
 				<column name="name" />
 			</index>
 		</table>
+		<table name="collection" >
+			<comment>Tracks a group of analyses and important jobs for an overarching goal.</comment>
+			<column name="collection_id" type="bigserial" jt="-5" mandatory="y" />
+			<column name="email" type="varchar" jt="12" mandatory="y" />
+			<column name="name" type="varchar" length="100" jt="12" mandatory="y" />
+			<column name="description" type="varchar" jt="12" />
+			<column name="collection_status_id" type="bigint" jt="-5" mandatory="y" >
+				<defo>1</defo>
+			</column>
+			<index name="pk_collection" unique="PRIMARY_KEY" >
+				<column name="collection_id" />
+			</index>
+			<index name="idx_collection" unique="NORMAL" >
+				<column name="email" />
+			</index>
+			<index name="idx_collection_0" unique="NORMAL" >
+				<column name="collection_status_id" />
+			</index>
+			<fk name="fk_collection" to_schema="qiita" to_table="qiita_user" >
+				<fk_column name="email" pk="email" />
+			</fk>
+			<fk name="fk_collection_0" to_schema="qiita" to_table="collection_status" >
+				<fk_column name="collection_status_id" pk="collection_status_id" />
+			</fk>
+		</table>
+		<table name="collection_analysis" >
+			<comment>Matches collection to analyses as one to many.</comment>
+			<column name="collection_id" type="bigint" jt="-5" mandatory="y" />
+			<column name="analysis_id" type="bigint" jt="-5" mandatory="y" />
+			<index name="idx_collection_analysis" unique="PRIMARY_KEY" >
+				<column name="collection_id" />
+				<column name="analysis_id" />
+			</index>
+			<index name="idx_collection_analysis_0" unique="NORMAL" >
+				<column name="collection_id" />
+			</index>
+			<index name="idx_collection_analysis_1" unique="NORMAL" >
+				<column name="analysis_id" />
+			</index>
+			<fk name="fk_collection_analysis" to_schema="qiita" to_table="collection" >
+				<fk_column name="collection_id" pk="collection_id" />
+			</fk>
+			<fk name="fk_collection_analysis_0" to_schema="qiita" to_table="analysis" >
+				<fk_column name="analysis_id" pk="analysis_id" />
+			</fk>
+		</table>
+		<table name="collection_job" >
+			<comment>Matches collection important jobs as one to many.</comment>
+			<column name="collection_id" type="bigint" jt="-5" mandatory="y" />
+			<column name="job_id" type="bigint" jt="-5" mandatory="y" />
+			<index name="idx_collection_job" unique="NORMAL" >
+				<column name="collection_id" />
+			</index>
+			<index name="idx_collection_job_0" unique="NORMAL" >
+				<column name="job_id" />
+			</index>
+			<index name="idx_collection_job_1" unique="PRIMARY_KEY" >
+				<column name="collection_id" />
+				<column name="job_id" />
+			</index>
+			<fk name="fk_collection_job" to_schema="qiita" to_table="collection" >
+				<fk_column name="collection_id" pk="collection_id" />
+			</fk>
+			<fk name="fk_collection_job_0" to_schema="qiita" to_table="job" >
+				<fk_column name="job_id" pk="job_id" />
+			</fk>
+		</table>
+		<table name="collection_status" >
+			<column name="collection_status_id" type="bigserial" length="1" jt="-5" mandatory="y" />
+			<column name="status" type="varchar" length="1" jt="12" mandatory="y" />
+			<index name="pk_collection_status" unique="PRIMARY_KEY" >
+				<column name="collection_status_id" />
+			</index>
+		</table>
+		<table name="collection_users" >
+			<comment>Allows sharing of a collection</comment>
+			<column name="collection_id" type="bigint" jt="-5" mandatory="y" />
+			<column name="email" type="varchar" jt="12" mandatory="y" />
+			<index name="idx_collection_user" unique="PRIMARY_KEY" >
+				<column name="collection_id" />
+				<column name="email" />
+			</index>
+			<index name="idx_collection_user_0" unique="NORMAL" >
+				<column name="collection_id" />
+			</index>
+			<index name="idx_collection_user_1" unique="NORMAL" >
+				<column name="email" />
+			</index>
+			<fk name="fk_collection_user" to_schema="qiita" to_table="collection" >
+				<fk_column name="collection_id" pk="collection_id" />
+			</fk>
+			<fk name="fk_collection_user_email" to_schema="qiita" to_table="qiita_user" >
+				<fk_column name="email" pk="email" />
+			</fk>
+		</table>
 		<table name="column_controlled_vocabularies" >
 			<comment>Table relates a column with a controlled vocabulary.</comment>
 			<column name="controlled_vocab_id" type="bigserial" jt="-5" mandatory="y" />
@@ -1510,7 +1605,6 @@ Controlled Vocabulary]]></comment>
 		<entity schema="qiita" name="checksum_algorithm" color="b2cdf7" x="735" y="885" />
 		<entity schema="qiita" name="data_type" color="d0def5" x="690" y="1020" />
 		<entity schema="qiita" name="user_level" color="d0def5" x="165" y="75" />
-		<entity schema="qiita" name="analysis_status" color="d0def5" x="45" y="825" />
 		<entity schema="qiita" name="job_status" color="d0def5" x="210" y="1020" />
 		<entity schema="qiita" name="severity" color="c0d4f3" x="1470" y="1290" />
 		<entity schema="qiita" name="prep_template" color="b2cdf7" x="1065" y="360" />
@@ -1534,6 +1628,12 @@ Controlled Vocabulary]]></comment>
 		<entity schema="qiita" name="preprocessed_sequence_454_params" color="c0d4f3" x="1740" y="960" />
 		<entity schema="qiita" name="preprocessed_sequence_illumina_params" color="d0def5" x="2025" y="1050" />
 		<entity schema="qiita" name="processed_params_sortmerna" color="a8c4ef" x="1980" y="810" />
+		<entity schema="qiita" name="analysis_status" color="d0def5" x="45" y="825" />
+		<entity schema="qiita" name="collection_job" color="a8c4ef" x="255" y="510" />
+		<entity schema="qiita" name="collection_analysis" color="a8c4ef" x="255" y="435" />
+		<entity schema="qiita" name="collection_status" color="a8c4ef" x="45" y="510" />
+		<entity schema="qiita" name="collection" color="a8c4ef" x="45" y="360" />
+		<entity schema="qiita" name="collection_users" color="a8c4ef" x="255" y="345" />
 		<group name="Group_analyses" color="c4e0f9" >
 			<comment>analysis tables</comment>
 			<entity schema="qiita" name="analysis" />
@@ -1614,6 +1714,13 @@ Controlled Vocabulary]]></comment>
 			<entity schema="qiita" name="filepath_type" />
 			<entity schema="qiita" name="checksum_algorithm" />
 			<entity schema="qiita" name="data_directory" />
+		</group>
+		<group name="Group_collection" color="00cccc" >
+			<entity schema="qiita" name="collection" />
+			<entity schema="qiita" name="collection_status" />
+			<entity schema="qiita" name="collection_users" />
+			<entity schema="qiita" name="collection_analysis" />
+			<entity schema="qiita" name="collection_job" />
 		</group>
 	</layout>
 </project>
