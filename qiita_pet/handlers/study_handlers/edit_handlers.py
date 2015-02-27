@@ -63,7 +63,9 @@ class StudyEditorForm(Form):
 
         # Get people from the study_person table to populate the PI and
         # lab_person fields
-        choices = [(sp.id, "%s, %s" % (sp.name, sp.affiliation))
+        choices = [(sp.id, u"%s, %s"
+                    % (sp.name.decode('utf-8'),
+                       sp.affiliation.decode('utf-8')))
                    for sp in StudyPerson.iter()]
         choices.insert(0, ('', ''))
 

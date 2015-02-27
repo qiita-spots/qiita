@@ -12,21 +12,26 @@ Qitta analysis handlers for the Tornado webserver.
 from __future__ import division
 from future.utils import viewitems
 from collections import defaultdict
+from os.path import join, sep, commonprefix
 
-from tornado.web import authenticated, HTTPError
+from tornado.web import authenticated, HTTPError, StaticFileHandler
 from pyparsing import ParseException
 from moi import ctx_default, r_client
 from moi.job import submit
 from moi.group import get_id_from_user, create_info
 
 from qiita_pet.handlers.base_handlers import BaseHandler
+from qiita_pet.exceptions import QiitaPetAuthorizationError
 from qiita_ware.dispatchable import run_analysis
 from qiita_ware.search import search, count_metadata, filter_by_processed_data
 from qiita_db.analysis import Analysis
 from qiita_db.data import ProcessedData
 from qiita_db.metadata_template import SampleTemplate
 from qiita_db.job import Job, Command
-from qiita_db.util import get_db_files_base_dir, get_table_cols
+from qiita_db.util import (get_db_files_base_dir,
+                           check_access_to_analysis_result,
+                           get_table_cols,
+                           filepath_ids_to_rel_paths)
 from qiita_db.exceptions import (
     QiitaDBIncompatibleDatatypeError, QiitaDBUnknownIDError)
 
@@ -292,3 +297,40 @@ class ShowAnalysesHandler(BaseHandler):
                     user.shared_analyses + user.private_analyses]
 
         self.render("show_analyses.html", analyses=analyses)
+
+
+class ResultsHandler(StaticFileHandler, BaseHandler):
+    def validate_absolute_path(self, root, absolute_path):
+        """Overrides StaticFileHandler's method to include authentication
+        """
+        # Get the filename (or the base directory) of the result
+        len_prefix = len(commonprefix([root, absolute_path]))
+        base_requested_fp = absolute_path[len_prefix:].split(sep, 1)[0]
+
+        current_user = self.current_user
+
+        # If the user is an admin, then allow access
+        if current_user.level == 'admin':
+            return super(ResultsHandler, self).validate_absolute_path(
+                root, absolute_path)
+
+        # otherwise, we have to check if they have access to the requested
+        # resource
+        user_id = current_user.id
+        accessible_filepaths = check_access_to_analysis_result(
+            user_id, base_requested_fp)
+
+        # Turn these filepath IDs into absolute paths
+        db_files_base_dir = get_db_files_base_dir()
+        relpaths = filepath_ids_to_rel_paths(accessible_filepaths)
+
+        accessible_filepaths = {join(db_files_base_dir, relpath)
+                                for relpath in relpaths.values()}
+
+        # check if the requested resource is a file (or is in a directory) that
+        # the user has access to
+        if join(root, base_requested_fp) in accessible_filepaths:
+            return super(ResultsHandler, self).validate_absolute_path(
+                root, absolute_path)
+        else:
+            raise QiitaPetAuthorizationError(user_id, absolute_path)

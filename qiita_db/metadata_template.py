@@ -48,18 +48,19 @@ from functools import partial
 import pandas as pd
 import numpy as np
 import warnings
+from skbio.util import find_duplicates
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from .exceptions import (QiitaDBDuplicateError, QiitaDBColumnError,
                          QiitaDBUnknownIDError, QiitaDBNotImplementedError,
-                         QiitaDBDuplicateHeaderError, QiitaDBError)
+                         QiitaDBDuplicateHeaderError, QiitaDBError,
+                         QiitaDBWarning, QiitaDBExecutionError)
 from .base import QiitaObject
 from .sql_connection import SQLConnectionHandler
 from .ontology import Ontology
 from .util import (exists_table, get_table_cols, get_emp_status,
                    get_required_sample_info_status, convert_to_id,
-                   convert_from_id, find_repeated, get_mountpoint,
-                   insert_filepaths)
+                   convert_from_id,  get_mountpoint, insert_filepaths)
 from .logger import LogEntry
 
 if PY3:
@@ -118,7 +119,7 @@ def _as_python_types(metadata_map, headers):
     Returns
     -------
     list of lists
-        The values of the columns in metadata_map pointed by headers casted to
+        The values of the columns in metadata_map pointed by headers cast to
         python types.
     """
     values = []
@@ -144,20 +145,29 @@ def _prefix_sample_names_with_id(md_template, study):
     study : Study
         The study to which the metadata belongs to
     """
-    # Create a new pandas series in which all the values are the study_id and
-    # it is indexed as the metadata template
-    study_ids = pd.Series([str(study.id)] * len(md_template.index),
-                          index=md_template.index)
-    # Create a new column on the metadata template that includes the metadata
-    # template indexes prefixed with the study id
-    md_template['sample_name_with_id'] = study_ids + '.' + md_template.index
-    # Assign the new previously created column as the new index
-    md_template.index = md_template.sample_name_with_id
-    # Delete the previously created column
-    del md_template['sample_name_with_id']
-    # The original metadata template had the index column unnamed - remove
-    # the name of the index
-    md_template.index.name = None
+    # Get all the prefixes of the index, defined as any string before a '.'
+    prefixes = {idx.split('.', 1)[0] for idx in md_template.index}
+    # If the samples have been already prefixed with the study id, the prefixes
+    # set will contain only one element and it will be the str representation
+    # of the study id
+    if len(prefixes) == 1 and prefixes.pop() == str(study.id):
+        # The samples were already prefixed with the study id
+        warnings.warn("Sample names were already prefixed with the study id.",
+                      QiitaDBWarning)
+    else:
+        # Create a new pandas series in which all the values are the study_id
+        # and it is indexed as the metadata template
+        study_ids = pd.Series([str(study.id)] * len(md_template.index),
+                              index=md_template.index)
+        # Create a new column on the metadata template that includes the
+        # metadata template indexes prefixed with the study id
+        md_template['sample_name_with_id'] = (study_ids + '.' +
+                                              md_template.index)
+        md_template.index = md_template.sample_name_with_id
+        del md_template['sample_name_with_id']
+        # The original metadata template had the index column unnamed - remove
+        # the name of the index for consistency
+        md_template.index.name = None
 
 
 class BaseSample(QiitaObject):
@@ -1181,9 +1191,8 @@ class SampleTemplate(MetadataTemplate):
         ----------
         md_template : DataFrame
             The metadata template file contents indexed by samples Ids
-        study : Study or RawData
-            The study to which the metadata template belongs to. Study in case
-            of SampleTemplate and RawData in case of PrepTemplate
+        study : Study
+            The study to which the sample template belongs to.
         """
         cls._check_subclass()
 
@@ -1211,13 +1220,15 @@ class SampleTemplate(MetadataTemplate):
         # Check that we don't have duplicate columns
         if len(set(md_template.columns)) != len(md_template.columns):
             raise QiitaDBDuplicateHeaderError(
-                find_repeated(md_template.columns))
+                find_duplicates(md_template.columns))
 
         # We need to check for some special columns, that are not present on
         # the database, but depending on the data type are required.
         missing = cls._check_special_columns(md_template, study)
 
         conn_handler = SQLConnectionHandler()
+        queue_name = "CREATE_SAMPLE_TEMPLATE_%d" % study.id
+        conn_handler.create_queue(queue_name)
 
         # Get some useful information from the metadata template
         sample_ids = md_template.index.tolist()
@@ -1246,12 +1257,13 @@ class SampleTemplate(MetadataTemplate):
         values.insert(0, sample_ids)
         values.insert(0, [study.id] * num_samples)
         values = [v for v in zip(*values)]
-        conn_handler.executemany(
+        conn_handler.add_to_queue(
+            queue_name,
             "INSERT INTO qiita.{0} ({1}, sample_id, {2}) "
             "VALUES (%s, %s, {3})".format(cls._table, cls._id_column,
                                           ', '.join(db_cols),
                                           ', '.join(['%s'] * len(db_cols))),
-            values)
+            values, many=True)
 
         # Insert rows on *_columns table
         headers = list(set(headers).difference(db_cols))
@@ -1262,16 +1274,18 @@ class SampleTemplate(MetadataTemplate):
         # to create the list of tuples that psycopg2 requires.
         values = [
             v for v in zip([study.id] * len(headers), headers, datatypes)]
-        conn_handler.executemany(
+        conn_handler.add_to_queue(
+            queue_name,
             "INSERT INTO qiita.{0} ({1}, column_name, column_type) "
             "VALUES (%s, %s, %s)".format(cls._column_table, cls._id_column),
-            values)
+            values, many=True)
 
         # Create table with custom columns
         table_name = cls._table_name(study.id)
         column_datatype = ["%s %s" % (col, dtype)
                            for col, dtype in zip(headers, datatypes)]
-        conn_handler.execute(
+        conn_handler.add_to_queue(
+            queue_name,
             "CREATE TABLE qiita.{0} (sample_id varchar, {1})".format(
                 table_name, ', '.join(column_datatype)))
 
@@ -1279,11 +1293,13 @@ class SampleTemplate(MetadataTemplate):
         values = _as_python_types(md_template, headers)
         values.insert(0, sample_ids)
         values = [v for v in zip(*values)]
-        conn_handler.executemany(
+        conn_handler.add_to_queue(
+            queue_name,
             "INSERT INTO qiita.{0} (sample_id, {1}) "
             "VALUES (%s, {2})".format(table_name, ", ".join(headers),
                                       ', '.join(["%s"] * len(headers))),
-            values)
+            values, many=True)
+        conn_handler.execute_queue(queue_name)
 
         # figuring out the filepath of the backup
         _id, fp = get_mountpoint('templates')[0]
@@ -1397,7 +1413,7 @@ class SampleTemplate(MetadataTemplate):
 
 
 class PrepTemplate(MetadataTemplate):
-    r"""Represent the PrepTemplate of a raw dat. Provides access to the
+    r"""Represent the PrepTemplate of a raw data. Provides access to the
     tables in the DB that holds the sample preparation information.
 
     See Also
@@ -1468,10 +1484,12 @@ class PrepTemplate(MetadataTemplate):
         # Check that we don't have duplicate columns
         if len(set(md_template.columns)) != len(md_template.columns):
             raise QiitaDBDuplicateHeaderError(
-                find_repeated(md_template.columns))
+                find_duplicates(md_template.columns))
 
         # Get a connection handler
         conn_handler = SQLConnectionHandler()
+        queue_name = "CREATE_PREP_TEMPLATE_%d" % raw_data.id
+        conn_handler.create_queue(queue_name)
 
         # Check if the data_type is the id or the string
         if isinstance(data_type, (int, long)):
@@ -1509,6 +1527,8 @@ class PrepTemplate(MetadataTemplate):
                                      % ', '.join(missing))
 
         # Insert the metadata template
+        # We need the prep_id for multiple calls below, which currently is not
+        # supported by the queue system. Thus, executing this outside the queue
         prep_id = conn_handler.execute_fetchone(
             "INSERT INTO qiita.prep_template (data_type_id, raw_data_id, "
             "investigation_type) VALUES (%s, %s, %s) RETURNING "
@@ -1520,12 +1540,13 @@ class PrepTemplate(MetadataTemplate):
         values.insert(0, sample_ids)
         values.insert(0, [prep_id] * num_samples)
         values = [v for v in zip(*values)]
-        conn_handler.executemany(
+        conn_handler.add_to_queue(
+            queue_name,
             "INSERT INTO qiita.{0} ({1}, sample_id, {2}) "
             "VALUES (%s, %s, {3})".format(
                 cls._table, cls._id_column, ', '.join(db_cols),
                 ', '.join(['%s'] * len(db_cols))),
-            values)
+            values, many=True)
 
         # Insert rows on *_columns table
         headers = list(set(headers).difference(db_cols))
@@ -1536,16 +1557,18 @@ class PrepTemplate(MetadataTemplate):
         # to create the list of tuples that psycopg2 requires.
         values = [
             v for v in zip([prep_id] * len(headers), headers, datatypes)]
-        conn_handler.executemany(
+        conn_handler.add_to_queue(
+            queue_name,
             "INSERT INTO qiita.{0} ({1}, column_name, column_type) "
             "VALUES (%s, %s, %s)".format(cls._column_table, cls._id_column),
-            values)
+            values, many=True)
 
         # Create table with custom columns
         table_name = cls._table_name(prep_id)
         column_datatype = ["%s %s" % (col, dtype)
                            for col, dtype in zip(headers, datatypes)]
-        conn_handler.execute(
+        conn_handler.add_to_queue(
+            queue_name,
             "CREATE TABLE qiita.{0} (sample_id varchar, "
             "{1})".format(table_name, ', '.join(column_datatype)))
 
@@ -1553,11 +1576,36 @@ class PrepTemplate(MetadataTemplate):
         values = _as_python_types(md_template, headers)
         values.insert(0, sample_ids)
         values = [v for v in zip(*values)]
-        conn_handler.executemany(
+        conn_handler.add_to_queue(
+            queue_name,
             "INSERT INTO qiita.{0} (sample_id, {1}) "
             "VALUES (%s, {2})".format(table_name, ", ".join(headers),
                                       ', '.join(["%s"] * len(headers))),
-            values)
+            values, many=True)
+
+        try:
+            conn_handler.execute_queue(queue_name)
+        except Exception:
+            # Clean up row from qiita.prep_template
+            conn_handler.execute(
+                "DELETE FROM qiita.prep_template where "
+                "{0} = %s".format(cls._id_column), (prep_id,))
+
+            # Check if sample IDs present here but not in sample template
+            sql = ("SELECT sample_id from qiita.required_sample_info WHERE "
+                   "study_id = %s")
+            # Get list of study sample IDs, prep template study IDs,
+            # and their intersection
+            prep_samples = set(md_template.index.values)
+            unknown_samples = prep_samples.difference(
+                s[0] for s in conn_handler.execute_fetchall(sql, [study.id]))
+            if unknown_samples:
+                raise QiitaDBExecutionError(
+                    'Samples found in prep template but not sample template: '
+                    '%s' % ', '.join(unknown_samples))
+
+            # some other error we haven't seen before so raise it
+            raise
 
         # figuring out the filepath of the backup
         _id, fp = get_mountpoint('templates')[0]
@@ -1903,19 +1951,46 @@ def load_template_to_dataframe(fn):
     ------
     QiitaDBColumnError
         If the sample_name column is not present in the template.
-    UserWarning
+        If there's a value in one of the reserved columns that cannot be cast
+        to the needed type.
+    QiitaDBWarning
         When columns are dropped because they have no content for any sample.
 
     Notes
     -----
     The index attribute of the DataFrame will be forced to be 'sample_name'
-    and will be casted to a string. Additionally rows that start with a '\t'
+    and will be cast to a string. Additionally rows that start with a '\t'
     character will be ignored and columns that are empty will be removed. Empty
     sample names will be removed from the DataFrame.
+
+    The following table describes the data type per column that will be
+    enforced in `fn`.
+
+    +-----------------------+--------------+
+    |      Column Name      |  Python Type |
+    +=======================+==============+
+    |           sample_name |          str |
+    +-----------------------+--------------+
+    |     physical_location |          str |
+    +-----------------------+--------------+
+    | has_physical_specimen |         bool |
+    +-----------------------+--------------+
+    |    has_extracted_data |         bool |
+    +-----------------------+--------------+
+    |           sample_type |          str |
+    +-----------------------+--------------+
+    |       host_subject_id |          str |
+    +-----------------------+--------------+
+    |           description |          str |
+    +-----------------------+--------------+
+    |              latitude |        float |
+    +-----------------------+--------------+
+    |             longitude |        float |
+    +-----------------------+--------------+
     """
 
     # index_col:
-    #   is set as False, otherwise it is casted as a float and we want a string
+    #   is set as False, otherwise it is cast as a float and we want a string
     # keep_default:
     #   is set as False, to avoid inferring empty/NA values with the defaults
     #   that Pandas has.
@@ -1924,7 +1999,8 @@ def load_template_to_dataframe(fn):
     #   strings.
     # converters:
     #   ensure that sample names are not converted into any other types but
-    #   strings and remove any trailing spaces.
+    #   strings and remove any trailing spaces. Don't let pandas try to guess
+    #   the dtype of the other columns, force them to be a str.
     # comment:
     #   using the tab character as "comment" we remove rows that are
     #   constituted only by delimiters i. e. empty rows.
@@ -1932,7 +2008,29 @@ def load_template_to_dataframe(fn):
                            keep_default_na=False, na_values=[''],
                            parse_dates=True, index_col=False, comment='\t',
                            mangle_dupe_cols=False, converters={
-                               'sample_name': lambda x: str(x).strip()})
+                               'sample_name': lambda x: str(x).strip(),
+                               # required_sample_info
+                               'physical_location': str,
+                               'sample_type': str,
+                               # collection_timestamp is not added here
+                               'host_subject_id': str,
+                               'description': str,
+                               # common_prep_info
+                               'center_name': str,
+                               'center_projct_name': str})
+
+    # let pandas infer the dtypes of these columns, if the inference is
+    # not correct, then we have to raise an error
+    columns_to_dtype = [(['latitude', 'longitude'], np.float),
+                        (['has_physical_specimen', 'has_extracted_data'],
+                         np.bool)]
+    for columns, c_dtype in columns_to_dtype:
+        for n in columns:
+            if n in template.columns and not np.issubdtype(template[n].dtype,
+                                                           c_dtype):
+                raise QiitaDBColumnError("The '%s' column includes values that"
+                                         " cannot be cast into a %s "
+                                         "type." % (n, c_dtype))
 
     initial_columns = set(template.columns)
 
@@ -1955,7 +2053,7 @@ def load_template_to_dataframe(fn):
     if dropped_cols:
         warnings.warn('The following column(s) were removed from the template '
                       'because all their values are empty: '
-                      '%s' % ', '.join(dropped_cols), UserWarning)
+                      '%s' % ', '.join(dropped_cols), QiitaDBWarning)
 
     return template
 
