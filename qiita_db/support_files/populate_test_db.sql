@@ -27,13 +27,13 @@ INSERT INTO qiita.study_person (name, email, affiliation, address, phone) VALUES
 	('PIDude', 'PI_dude@foo.bar', 'Wash U', '123 PI street', NULL);
 
 -- Insert a study: EMP 1001
-INSERT INTO qiita.study (email, study_status_id, emp_person_id, first_contact,
+INSERT INTO qiita.study (email, emp_person_id, first_contact,
 	funding, timeseries_type_id, lab_person_id, metadata_complete,
 	mixs_compliant, most_recent_contact, number_samples_collected,
 	number_samples_promised, portal_type_id, principal_investigator_id, reprocess,
 	spatial_series, study_title, study_alias, study_description,
 	study_abstract, vamps_id) VALUES
-	('test@foo.bar', 3, 2, '2014-05-19 16:10', NULL, 1, 1, TRUE, TRUE,
+	('test@foo.bar', 2, '2014-05-19 16:10', NULL, 1, 1, TRUE, TRUE,
 	'2014-05-19 16:11', 27, 27, 2, 3, FALSE, FALSE,
 	'Identification of the Microbiomes for Cannabis Soils', 'Cannabis Soils', 'Analysis of the Cannabis Plant Microbiome',
 	'This is a preliminary study to examine the microbiota associated with the Cannabis plant. Soils samples from the bulk soil, soil associated with the roots, and the rhizosphere were extracted and the DNA sequenced. Roots from three independent plants of different strains were examined. These roots were obtained November 11, 2011 from plants that had been harvested in the summer. Future studies will attempt to analyze the soils and rhizospheres from the same location at different time points in the plant lifecycle.',
@@ -312,7 +312,7 @@ INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum, checksum_algor
 INSERT INTO qiita.preprocessed_filepath (preprocessed_data_id, filepath_id) VALUES (1, 5), (1, 6), (1, 7);
 
 -- Insert processed information for study 0 and processed data 1
-INSERT INTO qiita.processed_data (processed_params_table, processed_params_id, processed_date, data_type_id) VALUES ('processed_params_uclust', 1, 'Mon Oct 1 09:30:27 2012', 2);
+INSERT INTO qiita.processed_data (processed_params_table, processed_params_id, processed_date, data_type_id, processed_data_status_id) VALUES ('processed_params_uclust', 1, 'Mon Oct 1 09:30:27 2012', 2, 3);
 
 -- Insert (link) processed information to study 1
 INSERT INTO qiita.study_processed_data (processed_data_id, study_id) VALUES (1, 1);
