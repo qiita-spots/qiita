@@ -11,11 +11,11 @@ var current_study;
 $(document).ready(function() {
         $('#user-studies-table').dataTable({
             order: [[ 0, "asc" ]],
-            columnDefs: [{type:'natural', targets:'_all'}]
+            columnDefs: [{type:'natural', targets:[1,2,3,7]}]
         });
         $('#shared-studies-table').dataTable({
             order: [[ 0, "asc" ]],
-            columnDefs: [{type:'natural', targets:'_all'}]
+            columnDefs: [{type:'natural', targets:[1,2,3,7]}]
         });
     $('#waiting').hide();
     $('#users_list').chosen({width: "100%"});

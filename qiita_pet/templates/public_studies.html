@@ -9,7 +9,7 @@
 $(document).ready(function() {
         $('#public-studies-table').dataTable({
             order: [[0, "asc"]],
-            columnDefs: [{type:'natural', targets:'_all'}]
+            columnDefs: [{type:'natural', targets:[2,3,4]}]
          });
     $("#waiting").hide();
 } );
