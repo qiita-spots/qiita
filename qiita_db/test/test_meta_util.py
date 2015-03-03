@@ -17,7 +17,8 @@ from qiita_db.user import User
 @qiita_test_checker()
 class MetaUtilTests(TestCase):
     def _set_studies_private(self):
-        self.conn_handler.execute("UPDATE qiita.study SET study_status_id=3")
+        self.conn_handler.execute(
+            "UPDATE qiita.processed_data SET processed_data_status_id=3")
 
     def _unshare_studies(self):
         self.conn_handler.execute("DELETE FROM qiita.study_users")
