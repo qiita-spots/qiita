@@ -7,7 +7,7 @@ Qiita is a python package, with support for python 2.7, that depends on the foll
 * [pgbouncer](http://pgfoundry.org/projects/pgbouncer)
 -->
 
-* [IPython](https://github.com/ipython/ipython)
+* [IPython 2.4.1](https://github.com/ipython/ipython)
 * [tornado 3.1.1](http://www.tornadoweb.org/en/stable/)
 * [toredis](https://pypi.python.org/pypi/toredis)
 * [Psycopg2](http://initd.org/psycopg/download/)
