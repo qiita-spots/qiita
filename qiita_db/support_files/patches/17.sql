@@ -4,6 +4,7 @@
 -- Modify the study_status_table so it becomes the processed_data_status table
 ALTER TABLE qiita.study_status RENAME TO processed_data_status;
 ALTER TABLE qiita.processed_data_status RENAME COLUMN study_status_id TO processed_data_status_id;
+ALTER TABLE qiita.processed_data_status RENAME COLUMN status TO processed_data_status;
 
 -- The description of the statuses are referencing to the study, update them
 -- so they refer to the processed data

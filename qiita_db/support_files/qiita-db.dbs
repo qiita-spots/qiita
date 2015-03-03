@@ -996,13 +996,13 @@
 		</table>
 		<table name="processed_data_status" >
 			<column name="processed_data_status_id" type="bigserial" jt="-5" mandatory="y" />
-			<column name="status" type="varchar" jt="12" mandatory="y" />
+			<column name="processed_data_status" type="varchar" jt="12" mandatory="y" />
 			<column name="description" type="varchar" jt="12" mandatory="y" />
 			<index name="pk_study_status" unique="PRIMARY_KEY" >
 				<column name="processed_data_status_id" />
 			</index>
 			<index name="idx_study_status" unique="UNIQUE" >
-				<column name="status" />
+				<column name="processed_data_status" />
 			</index>
 		</table>
 		<table name="processed_filepath" >

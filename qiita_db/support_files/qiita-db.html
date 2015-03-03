@@ -1895,10 +1895,9 @@ Link to a table with the parameters used to generate processed data</title></a>
 <a xlink:href='#processed_data_status'><text x='1513' y='1042' class='tableTitle'>processed_data_status</text><title>Table qiita.processed_data_status</title></a>
   <use id='nn' x='1487' y='1062' xlink:href='#nn'/><a xlink:href='#processed_data_status.processed_data_status_id'><use id='pk' x='1487' y='1061' xlink:href='#pk'/><title>Primary Key  ( processed_data_status_id ) </title></a>
 <a xlink:href='#processed_data_status.processed_data_status_id'><text x='1503' y='1072'>processed_data_status_id</text><title>processed_data_status_id bigserial not null</title></a>
-<a xlink:href='#processed_data_status.processed_data_status_id'><use id='ref' x='1653' y='1061' xlink:href='#ref'/><title>Referred by processed_data ( processed_data_status_id ) 
-Referred by processed_data ( processed_data_status_id ) </title></a>
-  <use id='nn' x='1487' y='1077' xlink:href='#nn'/><a xlink:href='#processed_data_status.status'><use id='unq' x='1487' y='1076' xlink:href='#unq'/><title>Unique Index  ( status ) </title></a>
-<a xlink:href='#processed_data_status.status'><text x='1503' y='1087'>status</text><title>status varchar not null</title></a>
+<a xlink:href='#processed_data_status.processed_data_status_id'><use id='ref' x='1653' y='1061' xlink:href='#ref'/><title>Referred by processed_data ( processed_data_status_id ) </title></a>
+  <use id='nn' x='1487' y='1077' xlink:href='#nn'/><a xlink:href='#processed_data_status.processed_data_status'><use id='unq' x='1487' y='1076' xlink:href='#unq'/><title>Unique Index  ( processed_data_status ) </title></a>
+<a xlink:href='#processed_data_status.processed_data_status'><text x='1503' y='1087'>processed_data_status</text><title>processed_data_status varchar not null</title></a>
   <use id='nn' x='1487' y='1092' xlink:href='#nn'/><a xlink:href='#processed_data_status.description'><text x='1503' y='1102'>description</text><title>description varchar not null</title></a>
 
 </g></svg>
@@ -5457,7 +5456,7 @@ Controlled Vocabulary </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td><a name='processed_data_status.status'>status</a></td>
+		<td><a name='processed_data_status.processed_data_status'>processed&#095;data&#095;status</a></td>
 		<td> varchar  NOT NULL  </td>
 		<td>  </td>
 	</tr>
@@ -5472,7 +5471,7 @@ Controlled Vocabulary </td>
 		<td>  </td>
 	</tr>
 	<tr>		<td>idx&#095;study&#095;status unique</td>
-		<td> ON status</td>
+		<td> ON processed&#095;data&#095;status</td>
 		<td>  </td>
 	</tr>
 </tbody>
