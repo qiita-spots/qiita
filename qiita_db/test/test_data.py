@@ -14,7 +14,8 @@ from tempfile import mkstemp
 
 from qiita_core.util import qiita_test_checker
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
-from qiita_db.exceptions import QiitaDBError, QiitaDBUnknownIDError
+from qiita_db.exceptions import (QiitaDBError, QiitaDBUnknownIDError,
+                                 QiitaDBStatusError)
 from qiita_db.study import Study, StudyPerson
 from qiita_db.user import User
 from qiita_db.util import get_mountpoint
@@ -679,8 +680,9 @@ class ProcessedDataTests(TestCase):
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.processed_data WHERE processed_data_id=2")
         # processed_data_id, processed_params_table, processed_params_id,
-        # processed_date, data_type_id, link_filepaths_status
-        exp = [[2, "processed_params_uclust", 1, self.date, 2, 'idle']]
+        # processed_date, data_type_id, link_filepaths_status,
+        # processed_data_status_id
+        exp = [[2, "processed_params_uclust", 1, self.date, 2, 'idle', 4]]
         self.assertEqual(obs, exp)
 
         # Check that the files have been copied to right location
@@ -751,8 +753,9 @@ class ProcessedDataTests(TestCase):
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.processed_data WHERE processed_data_id=2")
         # processed_data_id, processed_params_table, processed_params_id,
-        # processed_date, data_type_id, link_filepaths_status
-        exp = [[2, "processed_params_uclust", 1, self.date, 2, 'idle']]
+        # processed_date, data_type_id, link_filepaths_status,
+        # processed_data_status_id
+        exp = [[2, "processed_params_uclust", 1, self.date, 2, 'idle', 4]]
         self.assertEqual(obs, exp)
 
         # Check that the files have been copied to right location
@@ -867,6 +870,30 @@ class ProcessedDataTests(TestCase):
     def test_processed_date(self):
         pd = ProcessedData(1)
         self.assertEqual(pd.processed_date, datetime(2012, 10, 1, 9, 30, 27))
+
+    def test_status(self):
+        pd = ProcessedData(1)
+        self.assertEqual(pd.status, 'private')
+
+        pd = ProcessedData.create(self.params_table, self.params_id,
+                                  self.filepaths,
+                                  preprocessed_data=self.preprocessed_data)
+        self.assertEqual(pd.status, 'sandbox')
+
+    def test_status_setter(self):
+        pd = ProcessedData(1)
+        self.assertEqual(pd.status, 'private')
+
+        pd.status = 'sandbox'
+        self.assertEqual(pd.status, 'sandbox')
+
+    def test_status_setter_error(self):
+        pd = ProcessedData(1)
+        pd.status = 'public'
+        self.assertEqual(pd.status, 'public')
+
+        with self.assertRaises(QiitaDBStatusError):
+            pd.status = 'sandbox'
 
 
 if __name__ == '__main__':

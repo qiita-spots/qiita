@@ -85,7 +85,7 @@ from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from .base import QiitaObject
 from .logger import LogEntry
 from .sql_connection import SQLConnectionHandler
-from .exceptions import QiitaDBError, QiitaDBUnknownIDError
+from .exceptions import QiitaDBError, QiitaDBUnknownIDError, QiitaDBStatusError
 from .util import (exists_dynamic_table, insert_filepaths, convert_to_id,
                    convert_from_id, purge_filepaths, get_filepath_id,
                    get_mountpoint, move_filepaths_to_upload_folder)
@@ -1173,3 +1173,39 @@ class ProcessedData(BaseData):
         return conn_handler.execute_fetchone(
             "SELECT processed_date FROM qiita.{0} WHERE "
             "processed_data_id=%s".format(self._table), (self.id,))[0]
+
+    @property
+    def status(self):
+        conn_handler = SQLConnectionHandler()
+        sql = """SELECT processed_data_status
+                FROM qiita.processed_data_status pds
+                  JOIN qiita.processed_data pd
+                    ON pd.processed_data_status_id=pds.processed_data_status_id
+                WHERE pd.processed_data_id=%s"""
+        return conn_handler.execute_fetchone(sql, (self._id,))[0]
+
+    @status.setter
+    def status(self, status):
+        """Set the status value
+
+        Parameters
+        ----------
+        status : str
+            The new status
+
+        Raises
+        ------
+        QiitaDBStatusError
+            If the processed data status is public
+        """
+        if self.status == 'public':
+            raise QiitaDBStatusError(
+                "Illegal operation on public processed data")
+
+        conn_handler = SQLConnectionHandler()
+        sql = """UPDATE qiita.{0} SET processed_data_status_id = (
+                    SELECT processed_data_status_id
+                        FROM qiita.processed_data_status
+                        WHERE processed_data_status=%s)
+                 WHERE processed_data_id=%s""".format(self._table)
+        conn_handler.execute(sql, (status, self._id))
