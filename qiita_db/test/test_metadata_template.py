@@ -1258,7 +1258,7 @@ class TestSampleTemplate(TestCase):
                'samp_salinity', 'altitude', 'env_biome', 'country', 'ph',
                'anonymized_name', 'tot_org_carb', 'description_duplicate',
                'env_feature', 'newcol', 'str_column']
-        self.assertEqual(obs, exp)
+        self.assertItemsEqual(obs, exp)
 
         sql = "SELECT * FROM qiita.study_sample_columns WHERE study_id = 1"
         obs = self.conn_handler.execute_fetchall(sql)
@@ -1278,7 +1278,7 @@ class TestSampleTemplate(TestCase):
                [1, 'ASSIGNED_FROM_GEO', 'varchar'],
                [1, 'SEASON_ENVIRONMENT', 'varchar'],
                [1, 'sample_id', 'varchar']]
-        self.assertEqual(obs, exp)
+        self.assertItemsEqual(obs, exp)
 
     def test_extend_duplicated_samples(self):
         # First add new samples to template
