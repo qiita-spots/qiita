@@ -30,8 +30,8 @@ WORKING_DIR = /tmp/
 # Maximum upload size (in Gb)
 MAX_UPLOAD_SIZE = 100
 
-# Path to the base directory where the data files are going to be stored, uncomment to set
-# BASE_DATA_DIR =
+# Path to the base directory where the data files are going to be stored
+BASE_DATA_DIR =
 
 # Valid upload extension, comma separated. Empty for no uploads
 VALID_UPLOAD_EXTENSION = fastq,fastq.gz,txt,sff,fna,qual
