@@ -662,6 +662,7 @@ class StudyDescriptionHandler(BaseHandler):
         actions = defaultdict(
             lambda: self.unspecified_action,
             process_sample_template=self.process_sample_template,
+            update_sample_template=self.update_sample_template,
             create_raw_data=self.create_raw_data,
             add_prep_template=self.add_prep_template,
             make_public=self.make_public,
