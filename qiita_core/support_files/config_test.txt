@@ -64,8 +64,8 @@ EMAIL = donotreply@qiita.colorado.edu
 HOST = localhost
 PORT = 6379
 PASSWORD =
-# The database you will use. Qiita should have its own database
-DB = 81
+# The database you will use, redis max = 16. Qiita should have its own database
+DB = 13
 
 # ----------------------------- Postgres settings -----------------------------
 [postgres]
