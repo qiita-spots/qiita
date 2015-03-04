@@ -181,6 +181,8 @@ class Job(QiitaStatusObject):
         # remove job
         conn_handler.execute("DELETE FROM qiita.analysis_job WHERE "
                              "job_id = %s", [jobid])
+        conn_handler.execute("DELETE FROM qiita.collection_job WHERE "
+                             "job_id = %s", [jobid])
         conn_handler.execute("DELETE FROM qiita.job WHERE job_id = %s",
                              [jobid])
 

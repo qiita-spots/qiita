@@ -32,7 +32,7 @@ from qiita_db.study import Study, StudyPerson
 from qiita_db.user import User
 from qiita_db.data import RawData
 from qiita_db.util import (exists_table, get_db_files_base_dir, get_mountpoint,
-                           get_count)
+                           get_count, get_table_cols)
 from qiita_db.metadata_template import (
     _get_datatypes, _as_python_types, MetadataTemplate, SampleTemplate,
     PrepTemplate, BaseSample, PrepSample, Sample, _prefix_sample_names_with_id,
@@ -72,7 +72,7 @@ class TestUtilMetadataMap(TestCase):
             '1.Sample3': {'int_col': 3, 'float_col': 3, 'str_col': 'string30'},
         }
         exp_df = pd.DataFrame.from_dict(exp_metadata_dict, orient='index')
-        _prefix_sample_names_with_id(self.metadata_map, Study(1))
+        _prefix_sample_names_with_id(self.metadata_map, 1)
         self.metadata_map.sort_index(inplace=True)
         exp_df.sort_index(inplace=True)
         assert_frame_equal(self.metadata_map, exp_df)
@@ -1213,6 +1213,79 @@ class TestSampleTemplate(TestCase):
         exp_id += 1
         st = SampleTemplate.create(self.metadata, self.new_study)
         self.assertEqual(st.get_filepaths()[0][0], exp_id)
+
+    def test_extend(self):
+        # add new column and delete one that exists
+        self.metadata['NEWCOL'] = pd.Series(['val1', 'val2', 'val3'],
+                                            index=self.metadata.index)
+        self.tester.extend(self.metadata)
+
+        # test samples were appended successfully
+        sql = ("SELECT sample_id FROM qiita.required_sample_info WHERE "
+               "study_id = 1")
+        obs = self.conn_handler.execute_fetchall(sql)
+        exp = [['1.SKB8.640193'], ['1.SKD8.640184'], ['1.SKB7.640196'],
+               ['1.SKM9.640192'], ['1.SKM4.640180'], ['1.SKM5.640177'],
+               ['1.SKB5.640181'], ['1.SKD6.640190'], ['1.SKB2.640194'],
+               ['1.SKD2.640178'], ['1.SKM7.640188'], ['1.SKB1.640202'],
+               ['1.SKD1.640179'], ['1.SKD3.640198'], ['1.SKM8.640201'],
+               ['1.SKM2.640199'], ['1.SKB9.640200'], ['1.SKD5.640186'],
+               ['1.SKM3.640197'], ['1.SKD9.640182'], ['1.SKB4.640189'],
+               ['1.SKD7.640191'], ['1.SKM6.640187'], ['1.SKD4.640185'],
+               ['1.SKB3.640195'], ['1.SKB6.640176'], ['1.SKM1.640183'],
+               ['1.Sample1'], ['1.Sample2'], ['1.Sample3']]
+        self.assertEqual(obs, exp)
+
+        sql = "SELECT sample_id FROM qiita.sample_1"
+        obs = self.conn_handler.execute_fetchall(sql)
+        exp = [['1.SKM7.640188'], ['1.SKD9.640182'], ['1.SKM8.640201'],
+               ['1.SKB8.640193'], ['1.SKD2.640178'], ['1.SKM3.640197'],
+               ['1.SKM4.640180'], ['1.SKB9.640200'], ['1.SKB4.640189'],
+               ['1.SKB5.640181'], ['1.SKB6.640176'], ['1.SKM2.640199'],
+               ['1.SKM5.640177'], ['1.SKB1.640202'], ['1.SKD8.640184'],
+               ['1.SKD4.640185'], ['1.SKB3.640195'], ['1.SKM1.640183'],
+               ['1.SKB7.640196'], ['1.SKD3.640198'], ['1.SKD7.640191'],
+               ['1.SKD6.640190'], ['1.SKB2.640194'], ['1.SKM9.640192'],
+               ['1.SKM6.640187'], ['1.SKD5.640186'], ['1.SKD1.640179'],
+               ['1.Sample1'], ['1.Sample2'], ['1.Sample3']]
+        self.assertEqual(obs, exp)
+
+        # test new columns were added to *_cols table and dynamic table
+        obs = get_table_cols('sample_1', self.conn_handler)
+        exp = ['sample_id', 'season_environment', 'assigned_from_geo',
+               'texture', 'taxon_id', 'depth', 'host_taxid', 'common_name',
+               'water_content_soil', 'elevation', 'temp', 'tot_nitro',
+               'samp_salinity', 'altitude', 'env_biome', 'country', 'ph',
+               'anonymized_name', 'tot_org_carb', 'description_duplicate',
+               'env_feature', 'newcol', 'str_column']
+        self.assertItemsEqual(obs, exp)
+
+        sql = "SELECT * FROM qiita.study_sample_columns WHERE study_id = 1"
+        obs = self.conn_handler.execute_fetchall(sql)
+        exp = [[1, 'str_column', 'varchar'], [1, 'newcol', 'varchar'],
+               [1, 'ENV_FEATURE', 'varchar'],
+               [1, 'Description_duplicate', 'varchar'],
+               [1, 'TOT_ORG_CARB', 'float8'],
+               [1, 'ANONYMIZED_NAME', 'varchar'], [1, 'PH', 'float8'],
+               [1, 'COUNTRY', 'varchar'], [1, 'ENV_BIOME', 'varchar'],
+               [1, 'ALTITUDE', 'float8'], [1, 'SAMP_SALINITY', 'float8'],
+               [1, 'TOT_NITRO', 'float8'], [1, 'TEMP', 'float8'],
+               [1, 'ELEVATION', 'float8'],
+               [1, 'WATER_CONTENT_SOIL', 'float8'],
+               [1, 'COMMON_NAME', 'varchar'], [1, 'HOST_TAXID', 'varchar'],
+               [1, 'DEPTH', 'float8'], [1, 'TAXON_ID', 'varchar'],
+               [1, 'TEXTURE', 'varchar'],
+               [1, 'ASSIGNED_FROM_GEO', 'varchar'],
+               [1, 'SEASON_ENVIRONMENT', 'varchar'],
+               [1, 'sample_id', 'varchar']]
+        self.assertItemsEqual(obs, exp)
+
+    def test_extend_duplicated_samples(self):
+        # First add new samples to template
+        self.tester.extend(self.metadata)
+        with self.assertRaises(QiitaDBDuplicateError):
+            # Make sure adding duplicate samples raises error
+            self.tester.extend(self.metadata)
 
 
 @qiita_test_checker()

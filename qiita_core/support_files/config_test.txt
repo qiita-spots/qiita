@@ -30,7 +30,7 @@ WORKING_DIR = /tmp/
 # Maximum upload size (in Gb)
 MAX_UPLOAD_SIZE = 100
 
-# Path to the base directory where the data files are going to be stored, uncomment to set
+# Path to the base directory where the data files are going to be stored
 BASE_DATA_DIR =
 
 # Valid upload extension, comma separated. Empty for no uploads
@@ -39,14 +39,15 @@ VALID_UPLOAD_EXTENSION = fastq,fastq.gz,txt,sff,fna,qual
 # ----------------------------- SMTP settings -----------------------------
 [smtp]
 # The hostname to connect to
-#Google: smtp.google.com
+# Google: smtp.google.com
 HOST = localhost
 
 # The port to connect to the database
-#Google: 587
+# Google: 587
 PORT = 25
 
-#SSL needed (True or False)
+# SSL needed (True or False)
+# Google: True
 SSL = False
 
 # The user name to connect with
@@ -63,7 +64,9 @@ EMAIL = donotreply@qiita.colorado.edu
 HOST = localhost
 PORT = 6379
 PASSWORD =
-DB = 0
+# The redis database you will use, redis has a max of 16.
+# Qiita should have its own database
+DB = 13
 
 # ----------------------------- Postgres settings -----------------------------
 [postgres]
