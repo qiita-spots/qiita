@@ -1376,13 +1376,17 @@ class SampleTemplate(MetadataTemplate):
         num_samples = len(sample_ids)
         headers = list(md_template.keys())
 
-        # Make sure all samples being added are not already existing
+        # Raise warning and filter out existing samples
         sql = ("SELECT sample_id FROM qiita.required_sample_info WHERE "
                "study_id = %d" % self.id)
         curr_samples = set(s[0] for s in conn_handler.execute_fetchall(sql))
-        if len(curr_samples.intersection(sample_ids)) > 0:
-            raise QiitaDBDuplicateError(
-                "sample_id", ", ".join(curr_samples.intersection(sample_ids)))
+        existing_samples = curr_samples.intersection(sample_ids)
+        if len(existing_samples) > 0:
+            raise QiitaDBWarning(
+                "The following samples already exist and will be ignored: "
+                "%s" % ", ".join(curr_samples.intersection(
+                                 sorted(existing_samples))))
+            md_template.drop(existing_samples)
 
         # Get the required columns from the DB
         db_cols = get_table_cols(self._table, conn_handler)
