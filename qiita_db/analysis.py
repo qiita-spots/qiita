@@ -832,13 +832,13 @@ class Collection(QiitaStatusObject):
             raise QiitaDBStatusError("Can't delete public study!")
 
         queue = "remove_collection_%d" % id_
-        conn_handler.add_queue(queue)
+        conn_handler.create_queue(queue)
 
         for table in (cls._analysis_table, cls._highlight_table,
                       cls._share_table, cls._table):
             conn_handler.add_to_queue(
                 queue, "DELETE FROM qiita.{0} WHERE "
-                "collecton_id = %s".format(table), [id_])
+                "collection_id = %s".format(table), [id_])
 
         conn_handler.execute_queue(queue)
 
@@ -893,6 +893,13 @@ class Collection(QiitaStatusObject):
     def highlights(self):
         sql = ("SELECT job_id FROM qiita.{0} WHERE "
                "collection_id = %s".format(self._highlight_table))
+        conn_handler = SQLConnectionHandler()
+        return [x[0] for x in conn_handler.execute_fetchall(sql, [self._id])]
+
+    @property
+    def shared_with(self):
+        sql = ("SELECT email FROM qiita.{0} WHERE "
+               "collection_id = %s".format(self._share_table))
         conn_handler = SQLConnectionHandler()
         return [x[0] for x in conn_handler.execute_fetchall(sql, [self._id])]
 
