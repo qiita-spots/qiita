@@ -1297,7 +1297,7 @@ class TestSampleTemplate(TestCase):
             'latitude': 45.45,
             'longitude': 44.44}
         new_metadata = pd.DataFrame.from_dict(self.metadata_dict,
-                                               orient='index')
+                                              orient='index')
 
         with self.assertRaises(QiitaDBWarning) as w:
             # Make sure adding duplicate samples raises warning
