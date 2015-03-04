@@ -103,14 +103,14 @@
             <!-- meta-analysis menu -->
             {% if user %}
             <li class="dropdown">
-              <a href="/analysis/1" data-toggle="dropdown" class="dropdown-toggle">Meta Analysis<b class="caret"></b></a>
+              <a href="#" data-toggle="dropdown" class="dropdown-toggle">Meta Analysis<b class="caret"></b></a>
               <ul class="dropdown-menu">
                 <li><a data-toggle="modal" data-target="#create-analysis-modal-view">Create Meta Analysis</a></li>
                 <li><a href="/analysis/show/">See Previous Analyses</a></li>
               </ul>
             </li>
             <li class="dropdown">
-              <a href="/study/create/" data-toggle="dropdown" class="dropdown-toggle">Study<b class="caret"></b></a>
+              <a href="#" data-toggle="dropdown" class="dropdown-toggle">Study<b class="caret"></b></a>
               <ul class="dropdown-menu">
                 <li><a href="/study/create/">Create Study</a></li>
                 <li><a href="/study/private/">View My Studies</a></li>
@@ -120,7 +120,7 @@
               {% set user_level = user.level %}
               {% if user_level == 'admin' %}
             <li class="dropdown">
-              <a href="/admin/error/" data-toggle="dropdown" class="dropdown-toggle">Admin<b class="caret"></b></a>
+              <a href="#" data-toggle="dropdown" class="dropdown-toggle">Admin<b class="caret"></b></a>
               <ul class="dropdown-menu">
                 <li><a href="/admin/error/">View Errors</a></li>
                 <li><a href="/admin/approval/">View Studies awaiting approval</a></li>
@@ -128,23 +128,13 @@
             </li>
               {% elif user_level == 'dev' %}
             <li class="dropdown">
-              Dev<b class="caret"></b>
+              <a href="#" data-toggle="dropdown" class="dropdown-toggle">Dev<b class="caret"></b></a>
               <ul class="dropdown-menu">
                 <li><a href="/admin/error/">View Errors</a></li>
               </ul>
             </li>
               {% end %}
             {% end %}
-            <!-- generic elements -->
-            <li>
-              <a href="https://github.com/biocore/qiita/wiki">Help</a>
-            </li>
-            <li>
-              <a href="/stats/">Stats</a>
-            </li>
-            <li>
-              <a href="http://github.com/biocore/qiita">GitHub</a>
-            </li>
           </ul>
           <!-- show user name and logout button if there's a user logged in -->
           {% if user %}
@@ -176,6 +166,23 @@
             <button tabindex="3" type="submit" class="btn btn-success">Sign in</button>
           </form>
           {% end %}
+          <ul class="nav navbar-nav">
+            <!-- generic elements -->
+            <li class="dropdown">
+              <a href="#" data-toggle="dropdown" class="dropdown-toggle">More Info<b class="caret"></b></a>
+              <ul class="dropdown-menu">
+                <li>
+                  <a href="https://github.com/biocore/qiita/wiki">Help</a>
+                </li>
+                <li>
+                  <a href="/stats/">Stats</a>
+                </li>
+                <li>
+                  <a href="http://github.com/biocore/qiita">GitHub</a>
+                </li>
+              </ul>
+            </li>
+          </ul>
         </div><!--/.navbar-collapse -->
       </div>
     </div> <!--/.main nav-bar -->

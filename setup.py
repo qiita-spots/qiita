@@ -77,9 +77,9 @@ setup(name='qiita-spots',
                       'doc': ["Sphinx >= 1.2.2", "sphinx-bootstrap-theme"]},
       install_requires=['psycopg2', 'click == 1.0', 'future==0.13.0',
                         'bcrypt', 'pandas >= 0.15', 'numpy >= 1.7',
-                        'tornado==3.1.1', 'toredis', 'redis', 'ipython[all]',
-                        'pyparsing', 'h5py >= 2.3.1', 'biom-format', 'natsort',
-                        'networkx', 'scikit-bio >= 0.2.3, < 0.3.0',
-                        'wtforms == 2.0.1'],
+                        'tornado==3.1.1', 'toredis', 'redis',
+                        'ipython[all] >= 2.4.1, < 2.5', 'pyparsing',
+                        'h5py >= 2.3.1', 'biom-format', 'natsort', 'networkx',
+                        'scikit-bio >= 0.2.3, < 0.3.0', 'wtforms == 2.0.1'],
       classifiers=classifiers
       )
