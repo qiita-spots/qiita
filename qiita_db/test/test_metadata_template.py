@@ -2152,6 +2152,13 @@ class TestUtilities(TestCase):
             # prevent flake8 from complaining
             x.strip()
 
+    def test_load_template_to_dataframe_whitespace(self):
+        obs = load_template_to_dataframe(
+            StringIO(EXP_SAMPLE_TEMPLATE_WHITESPACE))
+        exp = pd.DataFrame.from_dict(SAMPLE_TEMPLATE_DICT_FORM)
+        exp.index.name = 'sample_name'
+        assert_frame_equal(obs, exp)
+
     def test_get_invalid_sample_names(self):
         all_valid = ['2.sample.1', 'foo.bar.baz', 'roses', 'are', 'red',
                      'v10l3t5', '4r3', '81u3']
@@ -2251,6 +2258,21 @@ EXP_SAMPLE_TEMPLATE_SPACES = (
     "Test Sample 2\tTrue\tTrue\tNotIdentified\t4.2\t1.1\tlocation1\treceived\t"
     "type1\tValue for sample 2\n"
     "2.Sample3\t2014-05-29 12:24:51\tTest Sample 3\tTrue\t"
+    "True\tNotIdentified\t4.8\t4.41\tlocation1\treceived\ttype1\t"
+    "Value for sample 3\n")
+
+EXP_SAMPLE_TEMPLATE_WHITESPACE = (
+    "sample_name \tcollection_timestamp\t description \thas_extracted_data\t"
+    "has_physical_specimen\thost_subject_id\tlatitude\tlongitude\t"
+    "physical_location\trequired_sample_info_status\tsample_type\t"
+    "str_column\n"
+    "2.Sample1\t2014-05-29 12:24:51\tTest Sample 1\tTrue\tTrue\t"
+    "NotIdentified\t42.42\t41.41\tlocation1\treceived\ttype1\t"
+    "Value for sample 1\n"
+    "2.Sample2\t      2014-05-29 12:24:51 \t"
+    "Test Sample 2\tTrue\tTrue\tNotIdentified\t4.2\t1.1\tlocation1\treceived\t"
+    "type1\t Value for sample 2\n"
+    "2.Sample3\t2014-05-29 12:24:51\t   Test Sample 3 \tTrue\t"
     "True\tNotIdentified\t4.8\t4.41\tlocation1\treceived\ttype1\t"
     "Value for sample 3\n")
 
