@@ -692,6 +692,141 @@ class TestSampleTemplate(TestCase):
             '1.SKM3.640197', '1.SKM4.640180', '1.SKM5.640177', '1.SKM6.640187',
             '1.SKM7.640188', '1.SKM8.640201', '1.SKM9.640192'}
         self._clean_up_files = []
+        self.metadata_dict_updated_dict = {
+            'Sample1': {'physical_location': 'location1',
+                        'has_physical_specimen': True,
+                        'has_extracted_data': True,
+                        'sample_type': '6',
+                        'required_sample_info_status': 'received',
+                        'collection_timestamp':
+                        datetime(2014, 5, 29, 12, 24, 51),
+                        'host_subject_id': 'NotIdentified',
+                        'Description': 'Test Sample 1',
+                        'str_column': 'Value for sample 1',
+                        'latitude': 42.42,
+                        'longitude': 41.41},
+            'Sample2': {'physical_location': 'location1',
+                        'has_physical_specimen': True,
+                        'has_extracted_data': True,
+                        'sample_type': '5',
+                        'required_sample_info_status': 'received',
+                        'collection_timestamp':
+                        datetime(2014, 5, 29, 12, 24, 51),
+                        'host_subject_id': 'the only one',
+                        'Description': 'Test Sample 2',
+                        'str_column': 'Value for sample 2',
+                        'latitude': 4.2,
+                        'longitude': 1.1},
+            'Sample3': {'physical_location': 'new location',
+                        'has_physical_specimen': True,
+                        'has_extracted_data': True,
+                        'sample_type': '10',
+                        'required_sample_info_status': 'received',
+                        'collection_timestamp':
+                        datetime(2014, 5, 29, 12, 24, 51),
+                        'host_subject_id': 'NotIdentified',
+                        'Description': 'Test Sample 3',
+                        'str_column': 'Value for sample 3',
+                        'latitude': 4.8,
+                        'longitude': 4.41},
+            }
+        self.metadata_dict_updated = pd.DataFrame.from_dict(
+            self.metadata_dict_updated_dict, orient='index')
+        metadata_dict_updated_sample_error = {
+            'Sample1': {'physical_location': 'location1',
+                        'has_physical_specimen': True,
+                        'has_extracted_data': True,
+                        'sample_type': '6',
+                        'required_sample_info_status': 'received',
+                        'collection_timestamp':
+                        datetime(2014, 5, 29, 12, 24, 51),
+                        'host_subject_id': 'NotIdentified',
+                        'Description': 'Test Sample 1',
+                        'str_column': 'Value for sample 1',
+                        'latitude': 42.42,
+                        'longitude': 41.41},
+            'Sample2': {'physical_location': 'location1',
+                        'has_physical_specimen': True,
+                        'has_extracted_data': True,
+                        'sample_type': '5',
+                        'required_sample_info_status': 'received',
+                        'collection_timestamp':
+                        datetime(2014, 5, 29, 12, 24, 51),
+                        'host_subject_id': 'the only one',
+                        'Description': 'Test Sample 2',
+                        'str_column': 'Value for sample 2',
+                        'latitude': 4.2,
+                        'longitude': 1.1},
+            'Sample3': {'physical_location': 'new location',
+                        'has_physical_specimen': True,
+                        'has_extracted_data': True,
+                        'sample_type': '10',
+                        'required_sample_info_status': 'received',
+                        'collection_timestamp':
+                        datetime(2014, 5, 29, 12, 24, 51),
+                        'host_subject_id': 'NotIdentified',
+                        'Description': 'Test Sample 3',
+                        'str_column': 'Value for sample 3',
+                        'latitude': 4.8,
+                        'longitude': 4.41},
+            'Sample4': {'physical_location': 'new location',
+                        'has_physical_specimen': True,
+                        'has_extracted_data': True,
+                        'sample_type': '10',
+                        'required_sample_info_status': 'received',
+                        'collection_timestamp':
+                        datetime(2014, 5, 29, 12, 24, 51),
+                        'host_subject_id': 'NotIdentified',
+                        'Description': 'Test Sample 3',
+                        'str_column': 'Value for sample 3',
+                        'latitude': 4.8,
+                        'longitude': 4.41}
+            }
+        self.metadata_dict_updated_sample_error = pd.DataFrame.from_dict(
+            metadata_dict_updated_sample_error, orient='index')
+        metadata_dict_updated_column_error = {
+            'Sample1': {'physical_location': 'location1',
+                        'has_physical_specimen': True,
+                        'has_extracted_data': True,
+                        'sample_type': '6',
+                        'required_sample_info_status': 'received',
+                        'collection_timestamp':
+                        datetime(2014, 5, 29, 12, 24, 51),
+                        'host_subject_id': 'NotIdentified',
+                        'Description': 'Test Sample 1',
+                        'str_column': 'Value for sample 1',
+                        'latitude': 42.42,
+                        'longitude': 41.41,
+                        'extra_col': True},
+            'Sample2': {'physical_location': 'location1',
+                        'has_physical_specimen': True,
+                        'has_extracted_data': True,
+                        'sample_type': '5',
+                        'required_sample_info_status': 'received',
+                        'collection_timestamp':
+                        datetime(2014, 5, 29, 12, 24, 51),
+                        'host_subject_id': 'the only one',
+                        'Description': 'Test Sample 2',
+                        'str_column': 'Value for sample 2',
+                        'latitude': 4.2,
+                        'longitude': 1.1,
+                        'extra_col': True},
+            'Sample3': {'physical_location': 'new location',
+                        'has_physical_specimen': True,
+                        'has_extracted_data': True,
+                        'sample_type': '10',
+                        'required_sample_info_status': 'received',
+                        'collection_timestamp':
+                        datetime(2014, 5, 29, 12, 24, 51),
+                        'host_subject_id': 'NotIdentified',
+                        'Description': 'Test Sample 3',
+                        'str_column': 'Value for sample 3',
+                        'latitude': 4.8,
+                        'longitude': 4.41,
+                        'extra_col': True},
+            }
+        self.metadata_dict_updated_column_error = pd.DataFrame.from_dict(
+            metadata_dict_updated_column_error, orient='index')
 
     def tearDown(self):
         for f in self._clean_up_files:
@@ -1010,6 +1145,50 @@ class TestSampleTemplate(TestCase):
         self.assertEqual(self.tester['1.SKB5.640181']['country'], "2")
         self.assertEqual(self.tester['1.SKD6.640190']['country'], "3")
         self.assertEqual(self.tester['1.SKM7.640188']['country'], negtest)
+
+        # test updating a required_sample_info
+        mapping = {'1.SKB1.640202': "1",
+                   '1.SKB5.640181': "2",
+                   '1.SKD6.640190': "3"}
+        self.tester.update_category('required_sample_info_status_id', mapping)
+        self.assertEqual(
+            self.tester['1.SKB1.640202']['required_sample_info_status'],
+            "received")
+        self.assertEqual(
+            self.tester['1.SKB5.640181']['required_sample_info_status'],
+            "in_preparation")
+        self.assertEqual(
+            self.tester['1.SKD6.640190']['required_sample_info_status'],
+            "running")
+        self.assertEqual(
+            self.tester['1.SKM7.640188']['required_sample_info_status'],
+            "completed")
+
+    def test_update(self):
+        """Updates values in existing mapping file"""
+        # creating a new sample template
+        st = SampleTemplate.create(self.metadata, self.new_study)
+        # updating the sample template
+        st.update(self.metadata_dict_updated)
+
+        # validating values
+        exp = self.metadata_dict_updated_dict['Sample1'].values()
+        obs = st.get('2.Sample1').values()
+        self.assertItemsEqual(obs, exp)
+
+        exp = self.metadata_dict_updated_dict['Sample2'].values()
+        obs = st.get('2.Sample2').values()
+        self.assertItemsEqual(obs, exp)
+
+        exp = self.metadata_dict_updated_dict['Sample3'].values()
+        obs = st.get('2.Sample3').values()
+        self.assertItemsEqual(obs, exp)
+
+        # checking errors
+        with self.assertRaises(QiitaDBError):
+            st.update(self.metadata_dict_updated_sample_error)
+        with self.assertRaises(QiitaDBError):
+            st.update(self.metadata_dict_updated_column_error)
 
     def test_add_category(self):
         column = "new_column"

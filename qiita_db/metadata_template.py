@@ -25,8 +25,6 @@ Methods
 
 ..autosummary::
     :toctree: generated/
-
-    sample_template_adder
 """
 
 # -----------------------------------------------------------------------------
@@ -62,6 +60,8 @@ from .util import (exists_table, get_table_cols, get_emp_status,
                    get_required_sample_info_status, convert_to_id,
                    convert_from_id, get_mountpoint,
                    insert_filepaths, scrub_data)
+from .study import Study
+from .data import RawData
 from .logger import LogEntry
 
 if PY3:
@@ -620,22 +620,36 @@ class Sample(BaseSample):
         """
         conn_handler = SQLConnectionHandler()
 
-        exists = conn_handler.execute_fetchone("""
+        # try dynamic tables
+        exists_dynamic = conn_handler.execute_fetchone("""
             SELECT column_name
             FROM information_schema.columns
             WHERE table_name='{0}'
                 AND table_schema='qiita'
                 AND column_name='{1}'""".format(self._dynamic_table, column))
+        # try required_sample_info
+        exists_required = conn_handler.execute_fetchone("""
+            SELECT column_name
+            FROM information_schema.columns
+            WHERE table_name='required_sample_info'
+                AND table_schema='qiita'
+                AND column_name='{0}'""".format(column))
 
-        if exists is None:
+        if exists_dynamic is not None:
+            conn_handler.execute("""
+                UPDATE qiita.{0}
+                SET {1}={2}
+                WHERE sample_id='{3}'""".format(self._dynamic_table, column,
+                                                value, self._id))
+        elif exists_required is not None:
+            conn_handler.execute("""
+                UPDATE qiita.required_sample_info
+                SET {0}='{1}'
+                WHERE sample_id='{2}'
+                """.format(column, value, self._id))
+        else:
             raise QiitaDBColumnError("Column %s does not exist in %s" %
                                      (column, self._dynamic_table))
-
-        conn_handler.execute("""
-            UPDATE qiita.{0}
-            SET {1}={2}
-            WHERE sample_id='{3}'""".format(self._dynamic_table, column, value,
-                                            self._id))
 
 
 class MetadataTemplate(QiitaObject):
@@ -1250,7 +1264,7 @@ class SampleTemplate(MetadataTemplate):
 
     @classmethod
     def create(cls, md_template, study):
-        r"""Creates the metadata template in the database
+        r"""Creates the sample metadata template in the database
 
         Parameters
         ----------
@@ -1444,6 +1458,88 @@ class SampleTemplate(MetadataTemplate):
 
         # adding the fp to the object
         self.add_filepath(fp)
+
+    def update(self, md_template):
+        r"""Update values in the sample metadata template
+
+        Parameters
+        ----------
+        md_template : DataFrame
+            The metadata template file contents indexed by samples Ids
+
+        Raises
+        ------
+        QiitaDBError
+            If md_template and db do not have the same sample ids
+            If md_template and db do not have the same column headers
+        """
+        conn_handler = SQLConnectionHandler()
+
+        # Clean and validate the metadata template given
+        new_map = self._clean_validate_template(md_template, self.id,
+                                                conn_handler)
+        # Retrieving current metadata
+        current_map = self._transform_to_dict(conn_handler.execute_fetchall(
+            "SELECT * FROM qiita.{0} WHERE {1}=%s".format(self._table,
+                                                          self._id_column),
+            (self.id,)))
+        dyn_vals = self._transform_to_dict(conn_handler.execute_fetchall(
+            "SELECT * FROM qiita.{0}".format(self._table_name(self.id))))
+
+        for k in current_map:
+            current_map[k].update(dyn_vals[k])
+            try:
+                del current_map[k]['study_id']
+            except KeyError:
+                pass
+
+        # converting sql results to dataframe
+        current_map = pd.DataFrame.from_dict(current_map, orient='index')
+
+        # simple validations of sample ids and column names
+        samples_diff = set(
+            new_map.index.tolist()) - set(current_map.index.tolist())
+        if samples_diff:
+            raise QiitaDBError('The new sample template differs from what is '
+                               'stored in database by these samples names: %s'
+                               % ', '.join(samples_diff))
+        columns_diff = set(new_map.columns) - set(current_map.columns)
+        if columns_diff:
+            raise QiitaDBError('The new sample template differs from what is '
+                               'stored in database by these columns names: %s'
+                               % ', '.join(columns_diff))
+
+        # here we are comparing two dataframes following:
+        # http://stackoverflow.com/questions/24495695
+        current_map.sort(axis=0, inplace=True)
+        current_map.sort(axis=1, inplace=True)
+        new_map.sort(axis=0, inplace=True)
+        new_map.sort(axis=1, inplace=True)
+        map_diff = (current_map != new_map).stack()
+        map_diff = map_diff[map_diff]
+        map_diff.index.names = ['id', 'column']
+        changed_cols = map_diff.index.get_level_values('column').unique()
+
+        for col in changed_cols:
+            self.update_category(col, new_map[col].to_dict())
+
+        # figuring out the filepath of the backup
+        _id, fp = get_mountpoint('templates')[0]
+        fp = join(fp, '%d_%s.txt' % (self.id, strftime("%Y%m%d-%H%M%S")))
+        # storing the backup
+        self.to_file(fp)
+
+        # adding the fp to the object
+        self.add_filepath(fp)
+
+        # generating all new QIIME mapping files
+        for rd_id in Study(self.id).raw_data():
+            for pt_id in RawData(rd_id).prep_templates:
+                # the difference between a prep and a qiime template is the
+                # word qiime within the name of the file
+                pt = PrepTemplate(pt_id)
+                fps = [pt.create_qiime_mapping_file(fp)
+                       for _, fp in pt.get_filepaths() if 'qiime' not in fp]
 
     def remove_category(self, category):
         """Remove a category from the sample template

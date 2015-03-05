@@ -27,7 +27,7 @@ from qiita_db.metadata_template import (PrepTemplate, SampleTemplate,
 from qiita_db.util import convert_to_id, get_mountpoint
 from qiita_db.exceptions import (QiitaDBUnknownIDError, QiitaDBColumnError,
                                  QiitaDBExecutionError, QiitaDBDuplicateError,
-                                 QiitaDBDuplicateHeaderError)
+                                 QiitaDBDuplicateHeaderError, QiitaDBError)
 from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_pet.handlers.util import check_access
 
@@ -189,6 +189,66 @@ class StudyDescriptionHandler(BaseHandler):
         except (TypeError, QiitaDBColumnError, QiitaDBExecutionError,
                 QiitaDBDuplicateError, IOError, ValueError, KeyError,
                 CParserError, QiitaDBDuplicateHeaderError) as e:
+            # Some error occurred while processing the sample template
+            # Show the error to the user so he can fix the template
+            msg = html_error_message % ('parsing the sample template:',
+                                        basename(fp_rsp), str(e))
+            msg_level = "danger"
+
+        callback((msg, msg_level, 'sample_template_tab', None, None))
+
+    def update_sample_template(self, study, user, callback):
+        """Update a sample template from the POST method
+
+        Parameters
+        ----------
+        study : Study
+            The current study object
+        user : User
+            The current user object
+        callback : function
+            The callback function to call with the results once the processing
+            is done
+
+        Raises
+        ------
+        HTTPError
+            If the sample template file does not exists
+        """
+        # If we are on this function, the argument "sample_template" must
+        # defined. If not, let tornado raise its error
+        sample_template = self.get_argument('sample_template')
+
+        # Define here the message and message level in case of success
+        msg = "The sample template '%s' has been updated" % sample_template
+        msg_level = "success"
+        # Get the uploads folder
+        _, base_fp = get_mountpoint("uploads")[0]
+        # Get the path of the sample template in the uploads folder
+        fp_rsp = join(base_fp, str(study.id), sample_template)
+
+        if not exists(fp_rsp):
+            # The file does not exists, fail nicely
+            raise HTTPError(400, "This file doesn't exist: %s" % fp_rsp)
+
+        try:
+            with warnings.catch_warnings(record=True) as warns:
+                # force all warnings to always be triggered
+                warnings.simplefilter("always")
+
+                # deleting previous uploads and inserting new one
+                st = SampleTemplate(study.id)
+                st.update(load_template_to_dataframe(fp_rsp))
+
+                # join all the warning messages into one. Note that this info
+                # will be ignored if an exception is raised
+                if warns:
+                    msg = '; '.join([str(w.message) for w in warns])
+                    msg_level = 'warning'
+
+        except (TypeError, QiitaDBColumnError, QiitaDBExecutionError,
+                QiitaDBDuplicateError, IOError, ValueError, KeyError,
+                CParserError, QiitaDBDuplicateHeaderError, QiitaDBError) as e:
             # Some error occurred while processing the sample template
             # Show the error to the user so he can fix the template
             msg = html_error_message % ('parsing the sample template:',
