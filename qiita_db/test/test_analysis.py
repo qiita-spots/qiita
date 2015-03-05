@@ -479,6 +479,17 @@ class TestCollection(TestCase):
         exp = []
         self.assertEqual(obs, exp)
 
+    def test_delete_public(self):
+        self.collection.status = 'public'
+        with self.assertRaises(QiitaDBStatusError):
+            Collection.delete(1)
+
+        obs = self.conn_handler.execute_fetchall(
+            'SELECT * FROM qiita.collection')
+        exp = [[1, 'test@foo.bar', 'TEST_COLLECTION',
+                'collection for testing purposes', 2]]
+        self.assertEqual(obs, exp)
+
     def test_retrieve_name(self):
         obs = self.collection.name
         exp = "TEST_COLLECTION"

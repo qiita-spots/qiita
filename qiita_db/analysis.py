@@ -826,7 +826,18 @@ class Collection(QiitaStatusObject):
 
     @classmethod
     def delete(cls, id_):
-        """Deletes a collection from the database"""
+        """Deletes a collection from the database
+
+        Parameters
+        ----------
+        id_ : int
+            ID of the collection to delete
+
+        Raises
+        ------
+        QiitaDBStatusError
+            Trying to delete a public collection
+        """
         conn_handler = SQLConnectionHandler()
         if cls(id_).status == "public":
             raise QiitaDBStatusError("Can't delete public collection!")
