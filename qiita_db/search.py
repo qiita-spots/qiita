@@ -114,9 +114,9 @@ class SearchNot(UnaryOperation):
 class SearchHelper(object):
     """allows for helper functions to propogate over other search classes"""
     # column names from required_sample_info table
-    required_samp_cols = tuple(get_table_cols("required_sample_info"))
+    required_samp_cols = frozenset(get_table_cols("required_sample_info"))
     # column names from study table
-    study_cols = tuple(get_table_cols("study"))
+    study_cols = frozenset(get_table_cols("study"))
 
     def _prepend_table(self, meta):
         """prepends the proper SQL table label to the metadata column given"""
@@ -354,8 +354,7 @@ class QiitaStudySearch(SearchHelper):
 
         # create the study finding SQL
         # remove metadata headers that are in non-dynamic tables
-        meta_headers = meta_headers.difference(
-            self.required_samp_cols).difference(self.study_cols)
+        meta_headers = meta_headers - self.required_samp_cols - self.study_cols
 
         # get all study ids that contain all metadata categories searched for
         sql = []
