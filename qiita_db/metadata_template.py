@@ -1535,11 +1535,12 @@ class SampleTemplate(MetadataTemplate):
         # generating all new QIIME mapping files
         for rd_id in Study(self.id).raw_data():
             for pt_id in RawData(rd_id).prep_templates:
-                # the difference between a prep and a qiime template is the
-                # word qiime within the name of the file
                 pt = PrepTemplate(pt_id)
-                fps = [pt.create_qiime_mapping_file(fp)
-                       for _, fp in pt.get_filepaths() if 'qiime' not in fp]
+                for _, fp in pt.get_filepaths():
+                    # the difference between a prep and a qiime template is the
+                    # word qiime within the name of the file
+                    if 'qiime' not in fp:
+                        pt.create_qiime_mapping_file(fp)
 
     def remove_category(self, category):
         """Remove a category from the sample template
