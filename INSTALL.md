@@ -80,3 +80,5 @@ If you receive the following error, you can ignore this step and continue with t
 ```bash
 createuser: creation of new role failed: ERROR:  role "postgres" already exists
 ```
+
+**Note**: if you are using Postgres.app under OSX, a database user will already be created for your username. If you want to use this, you will need to use this identity, change the `USER` setting under the `[postgres]` section of your Qiita config file.
