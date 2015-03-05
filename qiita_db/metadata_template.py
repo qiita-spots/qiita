@@ -1371,22 +1371,23 @@ class SampleTemplate(MetadataTemplate):
         md_template = self._clean_validate_template(md_template, self.study_id,
                                                     conn_handler)
 
-        # Get some useful information from the metadata template
-        sample_ids = md_template.index.tolist()
-        num_samples = len(sample_ids)
-        headers = list(md_template.keys())
-
         # Raise warning and filter out existing samples
+        sample_ids = md_template.index.tolist()
         sql = ("SELECT sample_id FROM qiita.required_sample_info WHERE "
                "study_id = %d" % self.id)
         curr_samples = set(s[0] for s in conn_handler.execute_fetchall(sql))
         existing_samples = curr_samples.intersection(sample_ids)
-        if len(existing_samples) > 0:
-            raise QiitaDBWarning(
+        if existing_samples:
+            warnings.warn(
                 "The following samples already exist and will be ignored: "
                 "%s" % ", ".join(curr_samples.intersection(
-                                 sorted(existing_samples))))
-            md_template.drop(existing_samples)
+                                 sorted(existing_samples))), QiitaDBWarning)
+            md_template.drop(existing_samples, inplace=True)
+
+        # Get some useful information from the metadata template
+        sample_ids = md_template.index.tolist()
+        num_samples = len(sample_ids)
+        headers = list(md_template.keys())
 
         # Get the required columns from the DB
         db_cols = get_table_cols(self._table, conn_handler)

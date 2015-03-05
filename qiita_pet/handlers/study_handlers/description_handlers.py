@@ -168,14 +168,11 @@ class StudyDescriptionHandler(BaseHandler):
         fp_rsp = join(base_fp, str(study.id), sample_template)
 
         if not exists(fp_rsp):
-            # The file does not exists, fail nicely
-            raise HTTPError(400, "This file doesn't exist: %s" % fp_rsp)
+            # The file does not exist, fail nicely
+            raise HTTPError(404, "This file doesn't exist: %s" % fp_rsp)
 
         try:
             with warnings.catch_warnings(record=True) as warns:
-                # force all warnings to always be triggered
-                warnings.simplefilter("always")
-
                 # deleting previous uploads and inserting new one
                 self.remove_add_study_template(study.raw_data, study.id,
                                                fp_rsp)
@@ -229,14 +226,11 @@ class StudyDescriptionHandler(BaseHandler):
         fp_rsp = join(base_fp, str(study.id), sample_template)
 
         if not exists(fp_rsp):
-            # The file does not exists, fail nicely
-            raise HTTPError(400, "This file doesn't exist: %s" % fp_rsp)
+            # The file does not exist, fail nicely
+            raise HTTPError(404, "This file doesn't exist: %s" % fp_rsp)
 
         try:
             with warnings.catch_warnings(record=True) as warns:
-                # force all warnings to always be triggered
-                warnings.simplefilter("always")
-
                 # extending previous sample template given
                 self._extend_sample_template(study.sample_template, fp_rsp)
 
