@@ -1,12 +1,12 @@
-
 """
 Objects for dealing with Qiita analyses
 
-This module provides the implementation of the Analysis class.
+This module provides the implementation of the Analysis and Collection classes.
 
 Classes
 -------
 - `Analysis` -- A Qiita Analysis class
+- `Colection` -- A Qiita Collection class for grouping multiple analyses
 """
 
 # -----------------------------------------------------------------------------
@@ -829,7 +829,7 @@ class Collection(QiitaStatusObject):
         """Deletes a collection from the database"""
         conn_handler = SQLConnectionHandler()
         if cls(id_).status == "public":
-            raise QiitaDBStatusError("Can't delete public study!")
+            raise QiitaDBStatusError("Can't delete public collection!")
 
         queue = "remove_collection_%d" % id_
         conn_handler.create_queue(queue)
