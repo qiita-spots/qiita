@@ -114,9 +114,9 @@ class SearchNot(UnaryOperation):
 class SearchHelper(object):
     """allows for helper functions to propogate over other search classes"""
     # column names from required_sample_info table
-    required_samp_cols = set(get_table_cols("required_sample_info"))
+    required_samp_cols = tuple(get_table_cols("required_sample_info"))
     # column names from study table
-    study_cols = set(get_table_cols("study"))
+    study_cols = tuple(get_table_cols("study"))
 
     def _prepend_table(self, meta):
         """prepends the proper SQL table label to the metadata column given"""
@@ -199,7 +199,7 @@ class QiitaStudySearch(SearchHelper):
         Metadata information for each sample is in the same order as the
         metadata columns list returned
 
-        Metadata column names and string searches are case-sensitive
+        Metadata column names and string searches are case-insensitive
         """
         study_sql, sample_sql, meta_headers = \
             self._build_sql(searchstr, True, remove_selected, analysis)
@@ -248,7 +248,7 @@ class QiitaStudySearch(SearchHelper):
 
         Notes
         -----
-        All searches are NOT case-sensitive
+        All searches are case-insensitive
 
         References
         ----------
@@ -320,7 +320,6 @@ class QiitaStudySearch(SearchHelper):
         analysis : int, optional
             Analysis ID search is run for. Required if remove_selected is True
 
-
         Returns
         -------
         study_sql : str
@@ -332,7 +331,7 @@ class QiitaStudySearch(SearchHelper):
 
         Notes
         -----
-        All searches are NOT case-sensitive
+        All searches are case-insensitive
         """
 
         sql_where, all_headers, all_types = self._parse_query(

@@ -129,11 +129,14 @@ class SearchStudiesHandler(BaseHandler):
             # set to second step since this page is second step in workflow
             analysis.step = SELECT_SAMPLES
             # fill example studies by running query for specific studies
-            def_query = 'study_id = 1 OR study_id = 2 OR study_id = 3'
+            def_query = 'study_id = 1001 OR study_id = 1222'
             results, meta_headers = search(def_query, user)
-            study_proc_data, proc_data_samples = \
-                filter_by_processed_data(results)
-            fullcounts, counts = count_metadata(results, meta_headers)
+            if not results and not searchmsg:
+                searchmsg = "No results found."
+            else:
+                study_proc_data, proc_data_samples = \
+                    filter_by_processed_data(results)
+                fullcounts, counts = count_metadata(results, meta_headers)
         else:
             analysis_id = int(self.get_argument("analysis-id"))
             analysis = Analysis(analysis_id)
