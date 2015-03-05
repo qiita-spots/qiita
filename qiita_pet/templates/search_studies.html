@@ -86,7 +86,6 @@
                 <h4 class="modal-title">Selected samples</h4>
               </div>
               <div class="modal-body">
-        <p><a href="#" onclick="select_deselect('sel{{sid}}', true); return false;">Select all</a> | <a href="#" onclick="select_deselect('sel{{sid}}', false); return false;">Select none</a> | <a href="#" onclick="select_inverse('sel{{sid}}'); return false;">Select inverse</a></p>
         {% module SearchSampleList(sid, [], selstudy_proc_data[sid], selproc_data_samples) %}
      </div>
             <div class="modal-footer">
