@@ -8,9 +8,9 @@ This document covers what you should do to get started with contributing to Qiit
 
 Adding source code to Qiita, can take place in three different modules:
 
-* `qiita_pet`: Contains the graphical user interface layer of the system.
-* `qiita_db`: Contains the bridge layer between the python objects and the SQL database.
-* `qiita_ware`: Contains the logic of the system and functions that can generally be called from a python script (see the scripts directory).
+* `qiita_pet`: Contains the graphical user interface layer of the system, mainly written in Python, JavaScript and HTML (see [Tornado templates](http://tornado.readthedocs.org/en/latest/template.html)).
+* `qiita_db`: Contains the bridge layer between the Python objects and the SQL database. In general this subpackage is mainly written in Python with a fair amount of inline PostgreSQL statements (see the section below on how to make database changes).
+* `qiita_ware`: Contains the logic of the system and functions that can generally be called from a Python script (see the scripts directory), and it is mostly written in Python. Several workflows that can be achieved using the GUI, can also be reproduced through the command line using this subpackage.
 
 ###Configuration file
 
