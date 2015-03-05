@@ -622,31 +622,34 @@ class Sample(BaseSample):
 
         # try dynamic tables
         exists_dynamic = conn_handler.execute_fetchone("""
+        SELECT EXISTS (
             SELECT column_name
             FROM information_schema.columns
             WHERE table_name='{0}'
                 AND table_schema='qiita'
-                AND column_name='{1}'""".format(self._dynamic_table, column))
+                AND column_name='{1}')""".format(self._dynamic_table,
+                                                 column))[0]
         # try required_sample_info
         exists_required = conn_handler.execute_fetchone("""
+        SELECT EXISTS (
             SELECT column_name
             FROM information_schema.columns
             WHERE table_name='required_sample_info'
                 AND table_schema='qiita'
-                AND column_name='{0}'""".format(column))
+                AND column_name='{0}')""".format(column))[0]
 
-        if exists_dynamic is not None:
+        if exists_dynamic:
             conn_handler.execute("""
                 UPDATE qiita.{0}
-                SET {1}={2}
-                WHERE sample_id='{3}'""".format(self._dynamic_table, column,
-                                                value, self._id))
-        elif exists_required is not None:
+                SET {1}=%s
+                WHERE sample_id=%s""".format(self._dynamic_table,
+                                             column), (value, self._id))
+        elif exists_required:
             conn_handler.execute("""
                 UPDATE qiita.required_sample_info
-                SET {0}='{1}'
-                WHERE sample_id='{2}'
-                """.format(column, value, self._id))
+                SET {0}=%s
+                WHERE sample_id=%s
+                """.format(column), (value, self._id))
         else:
             raise QiitaDBColumnError("Column %s does not exist in %s" %
                                      (column, self._dynamic_table))
