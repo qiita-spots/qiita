@@ -20,7 +20,7 @@ from pandas.parser import CParserError
 
 from qiita_core.qiita_settings import qiita_config
 from qiita_db.study import Study
-from qiita_db.data import RawData, PreprocessedData
+from qiita_db.data import RawData, PreprocessedData, ProcessedData
 from qiita_db.ontology import Ontology
 from qiita_db.metadata_template import (PrepTemplate, SampleTemplate,
                                         load_template_to_dataframe)
@@ -333,10 +333,12 @@ class StudyDescriptionHandler(BaseHandler):
             The callback function to call with the results once the processing
             is done
         """
-        study.status = 'public'
-        msg = "Study set to public"
+        pd_id = int(self.get_argument('pd_id'))
+        pd = ProcessedData(pd_id)
+        pd.status = 'public'
+        msg = "Processed data set to public"
         msg_level = "success"
-        callback((msg, msg_level, "study_information_tab", None, None))
+        callback((msg, msg_level, "processed_data_tab", pd_id, None))
 
     def approve_study(self, study, user, callback):
         """Approves the current study if and only if the current user is admin
@@ -352,14 +354,16 @@ class StudyDescriptionHandler(BaseHandler):
             is done
         """
         if _approve(user.level):
-            study.status = 'private'
-            msg = "Study approved"
+            pd_id = int(self.get_argument('pd_id'))
+            pd = ProcessedData(pd_id)
+            pd.status = 'private'
+            msg = "Processed data approved"
             msg_level = "success"
         else:
             msg = ("The current user does not have permission to approve "
-                   "the study")
+                   "the processed data")
             msg_level = "danger"
-        callback((msg, msg_level, "study_information_tab", None, None))
+        callback((msg, msg_level, "processed_data_tab", pd_id, None))
 
     def request_approval(self, study, user, callback):
         """Changes the status of the current study to "awaiting_approval"
@@ -374,10 +378,12 @@ class StudyDescriptionHandler(BaseHandler):
             The callback function to call with the results once the processing
             is done
         """
-        study.status = 'awaiting_approval'
-        msg = "Study sent to admin for approval"
+        pd_id = int(self.get_argument('pd_id'))
+        pd = ProcessedData(pd_id)
+        pd.status = 'awaiting_approval'
+        msg = "Processed data sent to admin for approval"
         msg_level = "success"
-        callback((msg, msg_level, "study_information_tab", None, None))
+        callback((msg, msg_level, "processed_data_tab", pd_id, None))
 
     def make_sandbox(self, study, user, callback):
         """Reverts the current study to the 'sandbox' status
@@ -392,10 +398,12 @@ class StudyDescriptionHandler(BaseHandler):
             The callback function to call with the results once the processing
             is done
         """
-        study.status = 'sandbox'
-        msg = "Study reverted to sandbox"
+        pd_id = int(self.get_argument('pd_id'))
+        pd = ProcessedData(pd_id)
+        pd.status = 'sandbox'
+        msg = "Processed data reverted to sandbox"
         msg_level = "success"
-        callback((msg, msg_level, "study_information_tab", None, None))
+        callback((msg, msg_level, "processed_data_tab", pd_id, None))
 
     def update_investigation_type(self, study, user, callback):
         """Updates the investigation type of a prep template
@@ -539,37 +547,6 @@ class StudyDescriptionHandler(BaseHandler):
         # modify the information of the study
         show_edit_btn = study_status != 'public' or user_level == 'admin'
 
-        # Files can be added to a study only if the study is sandboxed
-        # or if the user is the admin
-        show_upload_btn = study_status == 'sandbox' or user_level == 'admin'
-
-        # The request approval, approve study and make public buttons are
-        # mutually exclusive. Only one of them will be shown, depending on the
-        # current status of the study
-        btn_to_show = None
-        if (study_status == 'sandbox' and
-                qiita_config.require_approval and sample_template_exists and
-                raw_files and prep_templates):
-            # The request approval button only appears if the study is
-            # sandboxed, the qiita_config specifies that the approval should
-            # be requested and the sample template, raw files and prep
-            # prep templates have been added to the study
-            btn_to_show = 'request_approval'
-        elif (user_level == 'admin' and
-                study_status == 'awaiting_approval' and
-                qiita_config.require_approval):
-            # The approve study button only appears if the user is an admin,
-            # the study is waiting approval and the qiita config requires
-            # study approval
-            btn_to_show = 'approve_study'
-        elif study_status == 'private':
-            # The make public button only appers if the study is private
-            btn_to_show = 'make_public'
-
-        # The revert to sandbox button only appears if the study is not
-        # sandboxed or public
-        show_revert_btn = study_status not in {'sandbox', 'public'}
-
         self.render('study_description.html',
                     message=msg,
                     level=msg_level,
@@ -577,9 +554,6 @@ class StudyDescriptionHandler(BaseHandler):
                     study_title=study.title,
                     study_alias=study.info['study_alias'],
                     show_edit_btn=show_edit_btn,
-                    show_upload_btn=show_upload_btn,
-                    show_revert_btn=show_revert_btn,
-                    btn_to_show=btn_to_show,
                     show_data_tabs=sample_template_exists,
                     top_tab=top_tab,
                     sub_tab=sub_tab,
