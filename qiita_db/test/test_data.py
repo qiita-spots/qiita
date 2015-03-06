@@ -644,6 +644,24 @@ class PreprocessedDataTests(TestCase):
         self.assertTrue(PreprocessedData.exists(1))
         self.assertFalse(PreprocessedData.exists(1000))
 
+    def test_status(self):
+        ppd = PreprocessedData(1)
+        self.assertEqual(ppd.status, 'private')
+
+        # Since the status is inferred from the processed data, change the
+        # status of the processed data so we can check how it changes in the
+        # preprocessed data
+        pd = ProcessedData(1)
+        pd.status = 'public'
+        self.assertEqual(pd.status, 'public')
+
+        # Check that new preprocessed data has sandbox as status since no
+        # processed data exists for them
+        ppd = PreprocessedData.create(self.study, self.params_table,
+                                      self.params_id, self.filepaths,
+                                      data_type="16S")
+        self.assertEqual(ppd.status, 'sandbox')
+
 
 @qiita_test_checker()
 class ProcessedDataTests(TestCase):

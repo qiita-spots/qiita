@@ -995,6 +995,48 @@ class PreprocessedData(BaseData):
             "UPDATE qiita.{0} SET processing_status=%s WHERE "
             "preprocessed_data_id=%s".format(self._table), (state, self.id))
 
+    @property
+    def status(self):
+        """The status of the preprocessed data
+
+        Returns
+        -------
+        str
+            The status of the preprocessed_data
+
+        Notes
+        -----
+        The status of a processed data is inferred by the status of the
+        processed data generated from this preprocessed data. If no processed
+        data has been generated with this preprocessed data; then the status
+        is 'sandbox'.
+        """
+        conn_handler = SQLConnectionHandler()
+        sql = """SELECT processed_data_status
+                FROM qiita.processed_data_status pds
+                  JOIN qiita.processed_data pd
+                    ON pds.processed_data_status_id=pd.processed_data_status_id
+                  JOIN qiita.preprocessed_processed_data ppd_pd
+                    ON ppd_pd.processed_data_id=pd.processed_data_id
+                WHERE ppd_pd.preprocessed_data_id=%s"""
+        pd_statuses = conn_handler.execute_fetchall(sql, (self._id,))
+
+        if not pd_statuses:
+            # If there are no processed data, then the status is sandbox
+            status = 'sandbox'
+        else:
+            pd_statuses = set(s[0] for s in pd_statuses)
+            if 'public' in pd_statuses:
+                status = 'public'
+            elif 'private' in pd_statuses:
+                status = 'private'
+            elif 'awaiting_approval' in pd_statuses:
+                status = 'awaiting_approval'
+            else:
+                status = 'sandbox'
+
+        return status
+
 
 class ProcessedData(BaseData):
     r"""Object for dealing with processed data
