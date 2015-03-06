@@ -5,8 +5,10 @@
       <!-- Adding a preprocessed data -->
       <li class="active"><a href="#add_preprocessed_data_tab" role="tab" data-toggle="tab">Add preprocessed data</a></li>
       <!-- Create the tabs for each preprocessed data -->
-      {% for ppd_id, ppd in available_preprocessed_data %}
-        <li><a href="#preprocessed_data_info_{{ppd_id}}" role="tab" data-toggle="tab">ID: {{ppd_id}}</a></li>
+      {% for ppd_id, ppd, (class_icon, color) in available_preprocessed_data %}
+        <li><a href="#preprocessed_data_info_{{ppd_id}}" role="tab" data-toggle="tab">ID: {{ppd_id}}
+          <div class="{{class_icon}}" style="color: {{color}};"></div>
+        </a></li>
       {% end %}
     </ul>
     <!-- Create the tab panes -->
@@ -16,7 +18,7 @@
         <b>Not implemented! Coming soon...</b>
       </div>
       <!-- Create one tab pane for each preprocessed data -->
-      {% for ppd_id, ppd in available_preprocessed_data %}
+      {% for ppd_id, ppd, _ in available_preprocessed_data %}
         {% module PreprocessedDataInfoTab(study_id, ppd) %}
       {% end %}
     </div>
