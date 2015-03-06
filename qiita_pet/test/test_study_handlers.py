@@ -145,9 +145,17 @@ class TestStudyDescriptionHandler(TestHandlerBase):
         response = self.post('/study/description/1', post_args)
         self.assertEqual(response.code, 200)
 
-        # testing an error due to previous raw data not existing
+        # testing an error due to previous raw data already added
         post_args = {
             'previous_raw_data': '1',
+            'action': 'create_raw_data'
+        }
+        response = self.post('/study/description/1', post_args)
+        self.assertEqual(response.code, 500)
+
+        # testing an error due to previous_raw_data not existing
+        post_args = {
+            'previous_raw_data': '5',
             'action': 'create_raw_data'
         }
         response = self.post('/study/description/1', post_args)

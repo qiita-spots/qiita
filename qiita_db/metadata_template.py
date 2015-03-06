@@ -1267,7 +1267,7 @@ class SampleTemplate(MetadataTemplate):
 
     @classmethod
     def create(cls, md_template, study):
-        r"""Creates the sample metadata template in the database
+        r"""Creates the sample template in the database
 
         Parameters
         ----------
@@ -1463,7 +1463,7 @@ class SampleTemplate(MetadataTemplate):
         self.add_filepath(fp)
 
     def update(self, md_template):
-        r"""Update values in the sample metadata template
+        r"""Update values in the sample template
 
         Parameters
         ----------
@@ -1513,7 +1513,7 @@ class SampleTemplate(MetadataTemplate):
                                % ', '.join(columns_diff))
 
         # here we are comparing two dataframes following:
-        # http://stackoverflow.com/questions/24495695
+        # http://stackoverflow.com/a/17095620/4228285
         current_map.sort(axis=0, inplace=True)
         current_map.sort(axis=1, inplace=True)
         new_map.sort(axis=0, inplace=True)
@@ -1542,7 +1542,7 @@ class SampleTemplate(MetadataTemplate):
                 for _, fp in pt.get_filepaths():
                     # the difference between a prep and a qiime template is the
                     # word qiime within the name of the file
-                    if 'qiime' not in fp:
+                    if '_qiime_' not in fp:
                         pt.create_qiime_mapping_file(fp)
 
     def remove_category(self, category):

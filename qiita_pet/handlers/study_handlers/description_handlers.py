@@ -233,9 +233,6 @@ class StudyDescriptionHandler(BaseHandler):
 
         try:
             with warnings.catch_warnings(record=True) as warns:
-                # force all warnings to always be triggered
-                warnings.simplefilter("always")
-
                 # deleting previous uploads and inserting new one
                 st = SampleTemplate(study.id)
                 st.update(load_template_to_dataframe(fp_rsp))
@@ -251,7 +248,7 @@ class StudyDescriptionHandler(BaseHandler):
                 CParserError, QiitaDBDuplicateHeaderError, QiitaDBError) as e:
             # Some error occurred while processing the sample template
             # Show the error to the user so he can fix the template
-            msg = html_error_message % ('parsing the sample template:',
+            msg = html_error_message % ('updating the sample template:',
                                         basename(fp_rsp), str(e))
             msg_level = "danger"
 
