@@ -346,14 +346,9 @@ class BaseSample(QiitaObject):
             "sample_id=%s".format(self._dynamic_table),
             (self._id, )))
         d.update(dynamic_d)
-        del d['sample_id']
         del d[self._id_column]
-        try:
-            # The study_id could potentially be already removed with _id_column
-            # so wrapping in a try except
-            del d['study_id']
-        except KeyError:
-            pass
+        d.pop('study_id', None)
+
         # Modify all the *_id columns to include the string instead of the id
         for k, v in viewitems(self._md_template.translate_cols_dict):
             d[v] = self._md_template.str_cols_handlers[k][d[k]]
@@ -1032,10 +1027,7 @@ class MetadataTemplate(QiitaObject):
                 metadata_map[k][value] = self.str_cols_handlers[key][id_]
                 del metadata_map[k][key]
             metadata_map[k].update(dyn_vals[k])
-            try:
-                del metadata_map[k]['study_id']
-            except KeyError:
-                pass
+            metadata_map[k].pop('study_id', None)
 
         # Remove samples that are not in the samples list, if it was supplied
         if samples is not None:
@@ -1491,10 +1483,7 @@ class SampleTemplate(MetadataTemplate):
 
         for k in current_map:
             current_map[k].update(dyn_vals[k])
-            try:
-                del current_map[k]['study_id']
-            except KeyError:
-                pass
+            current_map[k].pop('study_id', None)
 
         # converting sql results to dataframe
         current_map = pd.DataFrame.from_dict(current_map, orient='index')
