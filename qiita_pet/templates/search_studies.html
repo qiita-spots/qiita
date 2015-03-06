@@ -5,7 +5,7 @@
 {% from qiita_db.data import ProcessedData %}
 {% from qiita_pet.util import clean_str %}
 <script type="text/javascript">
-  STUDIES = ['{{ [i for i in results] }}'];
+  STUDIES = {{ [int(i) for i in results.keys()] }};
 </script>
 
 <link rel="stylesheet" href="/static/vendor/css/chosen.css" type="text/css">
@@ -20,8 +20,9 @@
 <input type="hidden" name="action" id="action" value="search">
 <input type="hidden" name="analysis-id" value="{{aid}}">
 <div class="row">
+<!-- Search results -->
 <div class="col-sm-9">
-<div id="availstudies" style="overflow : auto;">  <!-- Search results -->
+<div id="availstudies" style="overflow : auto;">
 <h1>Search</h1>
 <p><a href="#" data-toggle="modal" data-target="#searchexample">Search help</a> | <a href="#" data-toggle="modal" data-target="#availmeta">Metadata categories</a></p>
 <p><input type="text" name="query" id="query" style="width:80%;white-space:nowrap;" value='{{query}}'><input type="submit" id="submitsearchbutton" class="btn btn-default" onclick="return pre_submit('search')" value="Search"></p>
@@ -33,6 +34,25 @@
     <big>   Overall available samples for current search</big>
     <div class="panel-group" id="accordion" style="width:50%">
     {% set divcount = 1 %}
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h4 class="panel-title">
+          <a data-toggle="collapse" data-parent="#accordion" href="#collapse0">
+            Datatypes
+          </a>
+        </h4>
+      </div>
+      <div id="collapse0" class="panel-collapse collapse">
+        <div class="panel-body">
+          <table class="table"><tr><th>Value</th><th>Samples</th><th></th></tr>
+      {% for sub_cat, count in viewitems(dtcounts) %}
+            <tr><td>{{sub_cat}}</td><td>{{count}}</td>
+            <td><a href='#' onclick="select_category('{{clean_str(sub_cat)}}', ''); return false;">Select category</a></td></tr>
+      {% end %}
+          </table>
+        </div>
+      </div>
+    </div>
     {% for meta_cat, sub_cats in viewitems(fullcounts) %}
     <div class="panel panel-default">
       <div class="panel-heading">

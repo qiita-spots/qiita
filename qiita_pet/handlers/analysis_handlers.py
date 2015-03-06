@@ -120,6 +120,7 @@ class SearchStudiesHandler(BaseHandler):
         selstudy_proc_data = {}
         study_proc_data = {}
         proc_data_samples = {}
+        dtcounts = {}
         # get analysis and selected samples if exists, or create if necessary
         if action == "create":
             name = self.get_argument('name')
@@ -128,15 +129,6 @@ class SearchStudiesHandler(BaseHandler):
             analysis_id = analysis.id
             # set to second step since this page is second step in workflow
             analysis.step = SELECT_SAMPLES
-            # fill example studies by running query for specific studies
-            def_query = 'study_id = 1001 OR study_id = 1222'
-            results, meta_headers = search(def_query, user)
-            if not results and not searchmsg:
-                searchmsg = "No results found."
-            else:
-                study_proc_data, proc_data_samples = \
-                    filter_by_processed_data(results)
-                fullcounts, counts = count_metadata(results, meta_headers)
         else:
             analysis_id = int(self.get_argument("analysis-id"))
             analysis = Analysis(analysis_id)
@@ -160,7 +152,7 @@ class SearchStudiesHandler(BaseHandler):
             if not results and not searchmsg:
                 searchmsg = "No results found."
             else:
-                study_proc_data, proc_data_samples = \
+                study_proc_data, proc_data_samples, dtcounts = \
                     filter_by_processed_data(results)
                 fullcounts, counts = count_metadata(results, meta_headers)
 
@@ -189,7 +181,7 @@ class SearchStudiesHandler(BaseHandler):
                     selstudy_proc_data=selstudy_proc_data,
                     counts=counts, fullcounts=fullcounts, searchmsg=searchmsg,
                     query=query, availmeta=SampleTemplate.metadata_headers() +
-                    get_table_cols("study"))
+                    get_table_cols("study"), dtcounts=dtcounts)
 
 
 class SelectCommandsHandler(BaseHandler):
