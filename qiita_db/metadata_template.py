@@ -2058,14 +2058,14 @@ class PrepTemplate(MetadataTemplate):
         return filepath
 
 
-def load_template_to_dataframe(fn, strip_values=True):
+def load_template_to_dataframe(fn, strip_whitespace=True):
     """Load a sample or a prep template into a data frame
 
     Parameters
     ----------
     fn : str
         filename of the template to load
-    strip_values : bool, optional
+    strip_whitespace : bool, optional
         Defaults to True. Whether or not to strip whitespace from values in the
         input file
 
@@ -2117,7 +2117,7 @@ def load_template_to_dataframe(fn, strip_values=True):
     """
 
     # First, strip all values from the cells in the input file, if requested
-    if strip_values:
+    if strip_whitespace:
         fd, fp = mkstemp()
         close(fd)
 
