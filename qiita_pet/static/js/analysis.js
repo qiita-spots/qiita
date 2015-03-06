@@ -42,8 +42,7 @@ function count_update(study) {
 
 function select_deselect(study, filter, sel, select) {
   filter = '.study' + study + filter;
-  if(sel == '') { filter = filter + ' .-sel'; }
-  else { filter = filter + '.-sel'; }
+  if(sel == '-sel') { filter = filter + ' .-sel'; }
   if(select === true) {
     $(filter).each(function() {this.checked = true;});
   }
