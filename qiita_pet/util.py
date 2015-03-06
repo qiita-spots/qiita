@@ -26,6 +26,13 @@ from future.utils import viewitems
 from qiita_db.reference import Reference
 
 
+status_styler = {
+    'sandbox': ('glyphicon glyphicon-eye-close', 'gray'),
+    'awaiting_approval': ('glyphicon glyphicon-eye-open', 'peru'),
+    'private': ('glyphicon glyphicon-eye-open', 'gray'),
+    'public': ('glyphicon glyphicon-eye-open', 'green')}
+
+
 def linkify(link_template, item):
     """Formats a strings into a URL using string replacement
 
