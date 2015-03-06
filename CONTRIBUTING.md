@@ -14,7 +14,7 @@ Adding source code to Qiita, can take place in three different modules:
 
 ###Configuration file
 
-The Qiita configuration file determines how the package interacts with your system’s resources (redis, postgres and the IPython cluster). Thus you should review the documentation detailed here (WE ARE STILL MISSING THIS LINK), but especially bear in mind the following points:
+The Qiita configuration file determines how the package interacts with your system’s resources (redis, postgres and the IPython cluster). Thus you should review the documentation detailed [here](https://docs.google.com/document/d/1u7kwLP31NM513-8xwpwvLbSQxYu0ehI6Jau1APR13e0/edit#), but especially bear in mind the following points:
 
 * An example version of this file can be found here `qiita_core/support_files/qiita_config.txt` and if you don’t set a `QIITA_CONFIG_FP` environment variable, that’s the file that Qiita will use.
 * The `[main]` section sets a `TEST_ENVIRONMENT` variable, which determines whether your system will be running unit tests or if it a demo/production system. You will want to set the value to TRUE if you are running the unit tests.
