@@ -28,7 +28,7 @@
   <div class="tab-content" id="pane-{{sid}}-{{data_type}}-{{pid}}{{sel}}">
     <!--samples list-->
     <h3>Samples</h3>
-    <a href="#" onclick="select_deselect({{sid}}, {{pid}}, '{{sel}}', true); return false;">Select all</a> | <a href="#" onclick="select_deselect({{sid}}, {{pid}}, '{{sel}}', false); return false;">Select none</a> | <a href="#" onclick="select_inverse({{sid}}, {{pid}}, '{{sel}}'); return false;">Select inverse</a>
+    <a href="#" onclick="select_deselect({{sid}}, '.proc{{pid}}', '{{sel}}', true); return false;">Select all</a> | <a href="#" onclick="select_deselect({{sid}}, '.proc{{pid}}', '{{sel}}', false); return false;">Select none</a> | <a href="#" onclick="select_inverse({{sid}}, '.proc{{pid}}.{{sel}}'); return false;">Select inverse</a>
   <table class='table table-hover'>
     <tr>
       <th></th>

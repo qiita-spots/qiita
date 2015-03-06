@@ -81,9 +81,9 @@
         <tr><th>Data Types</th><th>Name</th><th>Description</th><th>Status</th></tr>
     {% for sid, samples in viewitems(results) %}
       {% set study = Study(sid) %}
-          <tr id="study{{sid}}"><td>
+          <tr id="study{{sid}}"><td style="white-space: nowrap;">
       {% for data_type in study_proc_data[sid] %}
-        {{data_type}}<br />
+        {{data_type}} <a href="#" onclick="select_deselect({{sid}}, '.{{data_type}}', '', true)">All</a> | <a href="#" onclick="select_deselect({{sid}}, '.{{data_type}}', '', false)">None</a><br />
       {% end %}
             </td><td style='vertical-align:middle;'><a href="#" data-toggle="modal" data-target="#modal{{sid}}" id="modal-link-{{sid}}">{{study.title}}</a></td>
             <td style='vertical-align:middle;'>
@@ -213,7 +213,7 @@
     </div>
   </div>
 </div>
-<div class="modal fade seaerch-example-modal" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true" id="availmeta">
+<div class="modal fade metadata-modal" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true" id="availmeta">
   <div class="modal-dialog modal-sm">
     <div class="modal-content">
       <div class="modal-header">

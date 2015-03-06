@@ -40,22 +40,21 @@ function count_update(study) {
   else { $('#study' + study).removeClass('success'); }
 }
 
-function select_deselect(study, pdid, type, select) {
-  boxes = '.study'+study+'.proc'+pdid;
-  if (type === '-sel') { boxes += '.-sel'; }
+function select_deselect(study, filter, sel, select) {
+  filter = '.study' + study + filter;
+  if(sel == '') { filter = filter + ' .-sel'; }
+  else { filter = filter + '.-sel'; }
   if(select === true) {
-    $(boxes).each(function() {this.checked = true;});
+    $(filter).each(function() {this.checked = true;});
   }
   else { 
-    $(boxes).each(function() {this.checked = false;});
+    $(filter).each(function() {this.checked = false;});
   }
   count_update(study);
 }
 
-function select_inverse(study, pdid, type) {
-  boxes = '.study'+study+'.proc'+pdid;
-  if (type === '-sel') { boxes += '.-sel'; }
-  $(boxes).each(function() {
+function select_inverse(filter, type) {
+  $(filter).each(function() {
     if(this.checked === true) { this.checked = false; }
     else { this.checked = true; }
   });
