@@ -8,7 +8,8 @@ from biom import load_table
 import pandas as pd
 
 from qiita_core.util import qiita_test_checker
-from qiita_db.analysis import Analysis
+from qiita_db.analysis import Analysis, Collection
+from qiita_db.job import Job
 from qiita_db.user import User
 from qiita_db.exceptions import QiitaDBStatusError
 from qiita_db.util import get_mountpoint
@@ -446,6 +447,131 @@ class TestAnalysis(TestCase):
         obs = self.conn_handler.execute_fetchall(
             'SELECT * FROM qiita.analysis_filepath WHERE filepath_id = 19')
         exp = [[1, 19, 2]]
+        self.assertEqual(obs, exp)
+
+
+@qiita_test_checker()
+class TestCollection(TestCase):
+    def setUp(self):
+        self.collection = Collection(1)
+
+    def test_create(self):
+        Collection.create(User('test@foo.bar'), 'TestCollection2', 'Some desc')
+
+        obs = self.conn_handler.execute_fetchall(
+            'SELECT * FROM qiita.collection WHERE collection_id = 2')
+        exp = [[2, 'test@foo.bar', 'TestCollection2', 'Some desc', 1]]
+        self.assertEqual(obs, exp)
+
+    def test_create_no_desc(self):
+        Collection.create(User('test@foo.bar'), 'Test Collection2')
+
+        obs = self.conn_handler.execute_fetchall(
+            'SELECT * FROM qiita.collection WHERE collection_id = 2')
+        exp = [[2, 'test@foo.bar', 'Test Collection2', None, 1]]
+        self.assertEqual(obs, exp)
+
+    def test_delete(self):
+        Collection.delete(1)
+
+        obs = self.conn_handler.execute_fetchall(
+            'SELECT * FROM qiita.collection')
+        exp = []
+        self.assertEqual(obs, exp)
+
+    def test_delete_public(self):
+        self.collection.status = 'public'
+        with self.assertRaises(QiitaDBStatusError):
+            Collection.delete(1)
+
+        obs = self.conn_handler.execute_fetchall(
+            'SELECT * FROM qiita.collection')
+        exp = [[1, 'test@foo.bar', 'TEST_COLLECTION',
+                'collection for testing purposes', 2]]
+        self.assertEqual(obs, exp)
+
+    def test_retrieve_name(self):
+        obs = self.collection.name
+        exp = "TEST_COLLECTION"
+        self.assertEqual(obs, exp)
+
+    def test_set_name(self):
+        self.collection.name = "NeW NaMe 123"
+        self.assertEqual(self.collection.name, "NeW NaMe 123")
+
+    def test_set_name_public(self):
+        self.collection.status = "public"
+        with self.assertRaises(QiitaDBStatusError):
+            self.collection.name = "FAILBOAT"
+
+    def test_retrieve_desc(self):
+        obs = self.collection.description
+        exp = "collection for testing purposes"
+        self.assertEqual(obs, exp)
+
+    def test_set_desc(self):
+        self.collection.description = "NeW DeSc 123"
+        self.assertEqual(self.collection.description, "NeW DeSc 123")
+
+    def test_set_desc_public(self):
+        self.collection.status = "public"
+        with self.assertRaises(QiitaDBStatusError):
+            self.collection.description = "FAILBOAT"
+
+    def test_retrieve_owner(self):
+        obs = self.collection.owner
+        exp = "test@foo.bar"
+        self.assertEqual(obs, exp)
+
+    def test_retrieve_analyses(self):
+        obs = self.collection.analyses
+        exp = [1]
+        self.assertEqual(obs, exp)
+
+    def test_retrieve_highlights(self):
+        obs = self.collection.highlights
+        exp = [1]
+        self.assertEqual(obs, exp)
+
+    def test_retrieve_shared_with(self):
+        obs = self.collection.shared_with
+        exp = ["shared@foo.bar"]
+        self.assertEqual(obs, exp)
+
+    def test_add_analysis(self):
+        self.collection.add_analysis(Analysis(2))
+        obs = self.collection.analyses
+        exp = [1, 2]
+        self.assertEqual(obs, exp)
+
+    def test_remove_analysis(self):
+        self.collection.remove_analysis(Analysis(1))
+        obs = self.collection.analyses
+        exp = []
+        self.assertEqual(obs, exp)
+
+    def test_highlight_job(self):
+        self.collection.highlight_job(Job(2))
+        obs = self.collection.highlights
+        exp = [1, 2]
+        self.assertEqual(obs, exp)
+
+    def test_remove_highlight(self):
+        self.collection.remove_highlight(Job(1))
+        obs = self.collection.highlights
+        exp = []
+        self.assertEqual(obs, exp)
+
+    def test_share(self):
+        self.collection.share(User("admin@foo.bar"))
+        obs = self.collection.shared_with
+        exp = ["shared@foo.bar", "admin@foo.bar"]
+        self.assertEqual(obs, exp)
+
+    def test_unshare(self):
+        self.collection.unshare(User("shared@foo.bar"))
+        obs = self.collection.shared_with
+        exp = []
         self.assertEqual(obs, exp)
 
 
