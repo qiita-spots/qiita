@@ -16,7 +16,8 @@ class SearchTest(TestCase):
 
     def test_filter_by_processed_data(self):
         results, meta_cols = search('study_id = 1', User('test@foo.bar'))
-        study_proc_ids, proc_data_samples = filter_by_processed_data(results)
+        study_proc_ids, proc_data_samples, dtcounts = filter_by_processed_data(
+            results)
         exp_spid = {1: {'18S': [1]}}
         exp_pds = {1: [['1.SKM7.640188', 1], ['1.SKD9.640182', 1],
                        ['1.SKM8.640201', 1], ['1.SKB8.640193', 1],
@@ -32,8 +33,10 @@ class SearchTest(TestCase):
                        ['1.SKB2.640194', 1], ['1.SKM9.640192', 1],
                        ['1.SKM6.640187', 1], ['1.SKD5.640186', 1],
                        ['1.SKD1.640179', 1]]}
+        exp_dtc = {'18S': 27}
         self.assertEqual(study_proc_ids, exp_spid)
         self.assertEqual(proc_data_samples, exp_pds)
+        self.assertEqual(dtcounts, exp_dtc)
 
     def test_count_metadata(self):
         results, meta_cols = search('study_id = 1 AND ph > 0',

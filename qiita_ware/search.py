@@ -1,6 +1,6 @@
 from collections import Counter, defaultdict
 
-from future.utils import viewvalues
+from future.utils import viewvalues, viewitems
 
 from qiita_db.study import Study
 from qiita_db.data import ProcessedData
@@ -73,9 +73,11 @@ def filter_by_processed_data(results, datatypes=None):
         Samples available in each processed data id, in the format
         {proc_data_id: [[samp_id1, meta1, meta2, ...],
                         [samp_id2, meta1, meta2, ...], ...}
+    dtcount : count of all samples available for each datatype
     """
     study_proc_ids = {}
     proc_data_samples = {}
+    dtcount = defaultdict(int)
     for study_id in results:
         study = Study(study_id)
         study_proc_ids[study_id] = defaultdict(list)
@@ -88,13 +90,15 @@ def filter_by_processed_data(results, datatypes=None):
             samps_available = set(proc_data.samples)
             proc_data_samples[proc_data_id] = [s for s in results[study_id]
                                                if s[0] in samps_available]
+            # Add number of samples left to the total for that datatype
+            dtcount[datatype] += len(proc_data_samples[proc_data_id])
             if proc_data_samples[proc_data_id] == []:
                 # all samples filtered so remove it as a result
                 del(proc_data_samples[proc_data_id])
             else:
                 # add the processed data to the list for the study
                 study_proc_ids[study_id][datatype].append(proc_data_id)
-    return study_proc_ids, proc_data_samples
+    return study_proc_ids, proc_data_samples, dtcount
 
 
 def search(searchstr, user, remove_selected=False, analysis=None):
