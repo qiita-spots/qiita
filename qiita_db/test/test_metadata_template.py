@@ -500,7 +500,7 @@ class TestSampleTemplate(TestCase):
     """Tests the SampleTemplate class"""
 
     def setUp(self):
-        metadata_dict = {
+        self.metadata_dict = {
             'Sample1': {'physical_location': 'location1',
                         'has_physical_specimen': True,
                         'has_extracted_data': True,
@@ -538,7 +538,8 @@ class TestSampleTemplate(TestCase):
                         'latitude': 4.8,
                         'longitude': 4.41},
             }
-        self.metadata = pd.DataFrame.from_dict(metadata_dict, orient='index')
+        self.metadata = pd.DataFrame.from_dict(self.metadata_dict,
+                                               orient='index')
 
         metadata_str_prefix_dict = {
             'foo.Sample1': {'physical_location': 'location1',
@@ -1283,9 +1284,37 @@ class TestSampleTemplate(TestCase):
     def test_extend_duplicated_samples(self):
         # First add new samples to template
         self.tester.extend(self.metadata)
-        with self.assertRaises(QiitaDBDuplicateError):
-            # Make sure adding duplicate samples raises error
-            self.tester.extend(self.metadata)
+        self.metadata_dict['Sample5'] = {
+            'physical_location': 'location5',
+            'has_physical_specimen': True,
+            'has_extracted_data': True,
+            'sample_type': 'type5',
+            'required_sample_info_status': 'received',
+            'collection_timestamp': datetime(2014, 5, 29, 12, 24, 51),
+            'host_subject_id': 'NotIdentified',
+            'Description': 'Test Sample 5',
+            'str_column': 'Value for sample 5',
+            'latitude': 45.45,
+            'longitude': 44.44}
+        new_metadata = pd.DataFrame.from_dict(self.metadata_dict,
+                                              orient='index')
+        # Make sure adding duplicate samples raises warning
+        npt.assert_warns(QiitaDBWarning, self.tester.extend, new_metadata)
+
+        # Make sure unknown sample still added to the study
+        sql = "SELECT sample_id FROM qiita.sample_1"
+        obs = self.conn_handler.execute_fetchall(sql)
+        exp = [['1.SKM7.640188'], ['1.SKD9.640182'], ['1.SKM8.640201'],
+               ['1.SKB8.640193'], ['1.SKD2.640178'], ['1.SKM3.640197'],
+               ['1.SKM4.640180'], ['1.SKB9.640200'], ['1.SKB4.640189'],
+               ['1.SKB5.640181'], ['1.SKB6.640176'], ['1.SKM2.640199'],
+               ['1.SKM5.640177'], ['1.SKB1.640202'], ['1.SKD8.640184'],
+               ['1.SKD4.640185'], ['1.SKB3.640195'], ['1.SKM1.640183'],
+               ['1.SKB7.640196'], ['1.SKD3.640198'], ['1.SKD7.640191'],
+               ['1.SKD6.640190'], ['1.SKB2.640194'], ['1.SKM9.640192'],
+               ['1.SKM6.640187'], ['1.SKD5.640186'], ['1.SKD1.640179'],
+               ['1.Sample1'], ['1.Sample2'], ['1.Sample3'], ['1.Sample5']]
+        self.assertEqual(obs, exp)
 
 
 @qiita_test_checker()
