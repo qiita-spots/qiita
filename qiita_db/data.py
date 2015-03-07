@@ -1006,7 +1006,7 @@ class PreprocessedData(BaseData):
 
         Notes
         -----
-        The status of a processed data is inferred by the status of the
+        The status of a preprocessed data is inferred by the status of the
         processed data generated from this preprocessed data. If no processed
         data has been generated with this preprocessed data; then the status
         is 'sandbox'.

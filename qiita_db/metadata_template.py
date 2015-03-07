@@ -2054,6 +2054,50 @@ class PrepTemplate(MetadataTemplate):
 
         return filepath
 
+    @property
+    def status(self):
+        """The status of the prep template
+
+        Returns
+        -------
+        str
+            The status of the prep template
+
+        Notes
+        -----
+        The status of a prep template is inferred by the status of the
+        processed data generated from this prep template. If no processed
+        data has been generated with this prep template; then the status
+        is 'sandbox'.
+        """
+        conn_handler = SQLConnectionHandler()
+        sql = """SELECT processed_data_status
+                FROM qiita.processed_data_status pds
+                  JOIN qiita.processed_data pd
+                    ON pds.processed_data_status_id=pd.processed_data_status_id
+                  JOIN qiita.preprocessed_processed_data ppd_pd
+                    ON ppd_pd.processed_data_id=pd.processed_data_id
+                  JOIN qiita.prep_template_preprocessed_data pt_ppd
+                    ON pt_ppd.preprocessed_data_id=ppd_pd.preprocessed_data_id
+                WHERE pt_ppd.prep_template_id=%s"""
+        pd_statuses = conn_handler.execute_fetchall(sql, (self._id,))
+
+        if not pd_statuses:
+            # If there are no processed data, then the status is sandbox
+            status = 'sandbox'
+        else:
+            pd_statuses = set(s[0] for s in pd_statuses)
+            if 'public' in pd_statuses:
+                status = 'public'
+            elif 'private' in pd_statuses:
+                status = 'private'
+            elif 'awaiting_approval' in pd_statuses:
+                status = 'awaiting_approval'
+            else:
+                status = 'sandbox'
+
+        return status
+
 
 def load_template_to_dataframe(fn):
     """Load a sample or a prep template into a data frame
