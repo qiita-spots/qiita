@@ -1497,6 +1497,7 @@ class TestSampleTemplate(TestCase):
             'host_subject_id': 'NotIdentified',
             'Description': 'Test Sample 5',
             'str_column': 'Value for sample 5',
+            'int_column': 5,
             'latitude': 45.45,
             'longitude': 44.44}
         new_metadata = pd.DataFrame.from_dict(self.metadata_dict,
@@ -2489,17 +2490,17 @@ EXP_SAMPLE_TEMPLATE_SPACES = (
 
 EXP_SAMPLE_TEMPLATE_WHITESPACE = (
     "sample_name \tcollection_timestamp\t description \thas_extracted_data\t"
-    "has_physical_specimen\thost_subject_id\tlatitude\tlongitude\t"
+    "has_physical_specimen\thost_subject_id\tint_column\tlatitude\tlongitude\t"
     "physical_location\trequired_sample_info_status\tsample_type\t"
     "str_column\n"
     "2.Sample1\t2014-05-29 12:24:51\tTest Sample 1\tTrue\tTrue\t"
-    "NotIdentified\t42.42\t41.41\tlocation1\treceived\ttype1\t"
+    "NotIdentified\t1\t42.42\t41.41\tlocation1\treceived\ttype1\t"
     "Value for sample 1\n"
     "2.Sample2\t      2014-05-29 12:24:51 \t"
-    "Test Sample 2\tTrue\tTrue\tNotIdentified\t4.2\t1.1\tlocation1\treceived\t"
-    "type1\t Value for sample 2\n"
+    "Test Sample 2\tTrue\tTrue\tNotIdentified\t2\t4.2\t1.1\tlocation1\t"
+    "received\ttype1\t Value for sample 2\n"
     "2.Sample3\t2014-05-29 12:24:51\t   Test Sample 3 \tTrue\t"
-    "True\tNotIdentified\t4.8\t4.41\tlocation1\treceived\ttype1\t"
+    "True\tNotIdentified\t3\t4.8\t4.41\tlocation1\treceived\ttype1\t"
     "Value for sample 3\n")
 
 EXP_SAMPLE_TEMPLATE_SPACES_EMPTY_ROW = (
