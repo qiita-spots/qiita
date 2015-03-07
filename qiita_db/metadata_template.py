@@ -346,6 +346,7 @@ class BaseSample(QiitaObject):
             "sample_id=%s".format(self._dynamic_table),
             (self._id, )))
         d.update(dynamic_d)
+        del d['sample_id']
         del d[self._id_column]
         d.pop('study_id', None)
 
@@ -634,12 +635,34 @@ class Sample(BaseSample):
                 AND column_name='{0}')""".format(column))[0]
 
         if exists_dynamic:
-            conn_handler.execute("""
-                UPDATE qiita.{0}
-                SET {1}=%s
-                WHERE sample_id=%s""".format(self._dynamic_table,
-                                             column), (value, self._id))
+            # catching error so we can check if the error is due to different
+            # column type or something else
+            try:
+                conn_handler.execute("""
+                    UPDATE qiita.{0}
+                    SET {1}=%s
+                    WHERE sample_id=%s""".format(self._dynamic_table,
+                                                 column), (value, self._id))
+            except Exception as e:
+                column_type = conn_handler.execute_fetchone("""
+                    SELECT data_type
+                    FROM information_schema.columns
+                    WHERE column_name=%s AND table_schema='qiita'
+                    """, (column,))[0]
+                value_type = type(value).__name__
+
+                if column_type != value_type:
+                    raise ValueError("""The new value being added to column:
+                        "{0}" is "{1}" (type: "{2}"). However, this
+                        column in the DB is of type "{3}". Please change the
+                        value in your updated template or reprocess your sample
+                        template.""".format(column, value, value_type,
+                                            column_type))
+                else:
+                    raise e
         elif exists_required:
+            # here is not required the type check as the required fields have
+            # an explicit type check
             conn_handler.execute("""
                 UPDATE qiita.required_sample_info
                 SET {0}=%s
