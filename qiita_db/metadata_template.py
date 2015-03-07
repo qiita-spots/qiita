@@ -40,13 +40,16 @@ from future.builtins import zip
 from future.utils import viewitems, PY3
 from copy import deepcopy
 from os.path import join
+from os import close
 from time import strftime
 from functools import partial
+from tempfile import mkstemp
 
 import pandas as pd
 import numpy as np
 import warnings
 from skbio.util import find_duplicates
+from skbio.io.util import open_file
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from .exceptions import (QiitaDBDuplicateError, QiitaDBColumnError,
@@ -1403,18 +1406,23 @@ class SampleTemplate(MetadataTemplate):
         md_template = self._clean_validate_template(md_template, self.study_id,
                                                     conn_handler)
 
+        # Raise warning and filter out existing samples
+        sample_ids = md_template.index.tolist()
+        sql = ("SELECT sample_id FROM qiita.required_sample_info WHERE "
+               "study_id = %d" % self.id)
+        curr_samples = set(s[0] for s in conn_handler.execute_fetchall(sql))
+        existing_samples = curr_samples.intersection(sample_ids)
+        if existing_samples:
+            warnings.warn(
+                "The following samples already exist and will be ignored: "
+                "%s" % ", ".join(curr_samples.intersection(
+                                 sorted(existing_samples))), QiitaDBWarning)
+            md_template.drop(existing_samples, inplace=True)
+
         # Get some useful information from the metadata template
         sample_ids = md_template.index.tolist()
         num_samples = len(sample_ids)
         headers = list(md_template.keys())
-
-        # Make sure all samples being added are not already existing
-        sql = ("SELECT sample_id FROM qiita.required_sample_info WHERE "
-               "study_id = %d" % self.id)
-        curr_samples = set(s[0] for s in conn_handler.execute_fetchall(sql))
-        if len(curr_samples.intersection(sample_ids)) > 0:
-            raise QiitaDBDuplicateError(
-                "sample_id", ", ".join(curr_samples.intersection(sample_ids)))
 
         # Get the required columns from the DB
         db_cols = get_table_cols(self._table, conn_handler)
@@ -2167,13 +2175,16 @@ class PrepTemplate(MetadataTemplate):
         return filepath
 
 
-def load_template_to_dataframe(fn):
+def load_template_to_dataframe(fn, strip_whitespace=True):
     """Load a sample or a prep template into a data frame
 
     Parameters
     ----------
     fn : str
         filename of the template to load
+    strip_whitespace : bool, optional
+        Defaults to True. Whether or not to strip whitespace from values in the
+        input file
 
     Returns
     -------
@@ -2221,6 +2232,19 @@ def load_template_to_dataframe(fn):
     |             longitude |        float |
     +-----------------------+--------------+
     """
+
+    # First, strip all values from the cells in the input file, if requested
+    if strip_whitespace:
+        fd, fp = mkstemp()
+        close(fd)
+
+        with open_file(fn, 'U') as input_f, open(fp, 'w') as new_f:
+            for line in input_f:
+                line_elements = [x.strip()
+                                 for x in line.rstrip('\n').split('\t')]
+                new_f.write('\t'.join(line_elements) + '\n')
+
+        fn = fp
 
     # index_col:
     #   is set as False, otherwise it is cast as a float and we want a string

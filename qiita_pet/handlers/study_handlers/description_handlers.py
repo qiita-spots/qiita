@@ -168,14 +168,11 @@ class StudyDescriptionHandler(BaseHandler):
         fp_rsp = join(base_fp, str(study.id), sample_template)
 
         if not exists(fp_rsp):
-            # The file does not exists, fail nicely
-            raise HTTPError(400, "This file doesn't exist: %s" % fp_rsp)
+            # The file does not exist, fail nicely
+            raise HTTPError(404, "This file doesn't exist: %s" % fp_rsp)
 
         try:
             with warnings.catch_warnings(record=True) as warns:
-                # force all warnings to always be triggered
-                warnings.simplefilter("always")
-
                 # deleting previous uploads and inserting new one
                 self.remove_add_study_template(study.raw_data, study.id,
                                                fp_rsp)
@@ -230,7 +227,6 @@ class StudyDescriptionHandler(BaseHandler):
         if not exists(fp_rsp):
             # The file does not exists, fail nicely
             raise HTTPError(400, "This file doesn't exist: %s" % fp_rsp)
-
         try:
             with warnings.catch_warnings(record=True) as warns:
                 # deleting previous uploads and inserting new one
@@ -249,6 +245,62 @@ class StudyDescriptionHandler(BaseHandler):
             # Some error occurred while processing the sample template
             # Show the error to the user so he can fix the template
             msg = html_error_message % ('updating the sample template:',
+                                        basename(fp_rsp), str(e))
+            msg_level = "danger"
+        callback((msg, msg_level, 'sample_template_tab', None, None))
+
+    def add_to_sample_template(self, study, user, callback):
+        """Process a sample template from the POST method
+
+        Parameters
+        ----------
+        study : Study
+            The current study object
+        user : User
+            The current user object
+        callback : function
+            The callback function to call with the results once the processing
+            is done
+
+        Raises
+        ------
+        HTTPError
+            If the sample template file does not exists
+        """
+        # If we are on this function, the argument "sample_template" must
+        # defined. If not, let tornado raise its error
+        sample_template = self.get_argument('sample_template')
+
+        # Define here the message and message level in case of success
+        msg = ("The samples in sample template '%s' have been "
+               "added" % sample_template)
+        msg_level = "success"
+        # Get the uploads folder
+        _, base_fp = get_mountpoint("uploads")[0]
+        # Get the path of the sample template in the uploads folder
+        fp_rsp = join(base_fp, str(study.id), sample_template)
+
+        if not exists(fp_rsp):
+            # The file does not exist, fail nicely
+            raise HTTPError(404, "This file doesn't exist: %s" % fp_rsp)
+
+        try:
+            with warnings.catch_warnings(record=True) as warns:
+                # extending previous sample template given
+                self._extend_sample_template(study.sample_template, fp_rsp)
+
+                # join all the warning messages into one. Note that this info
+                # will be ignored if an exception is raised
+                if warns:
+                    msg = '; '.join([str(w.message) for w in warns])
+                    msg_level = 'warning'
+
+        except (TypeError, QiitaDBColumnError, QiitaDBExecutionError,
+                QiitaDBDuplicateError, IOError, ValueError, KeyError,
+                CParserError, QiitaDBDuplicateHeaderError) as e:
+            # Some error occurred while processing the sample template
+            # Show the error to the user so he can fix the template
+            msg = html_error_message % ('extending the sample template:',
                                         basename(fp_rsp), str(e))
             msg_level = "danger"
 
@@ -563,6 +615,9 @@ class StudyDescriptionHandler(BaseHandler):
         remove(fp_rpt)
         return pt_id
 
+    def _extend_sample_template(self, st_id, fp_rpt):
+        SampleTemplate(st_id).extend(load_template_to_dataframe(fp_rpt))
+
     @coroutine
     def display_template(self, study, user, msg, msg_level, top_tab=None,
                          sub_tab=None, prep_tab=None):
@@ -720,6 +775,7 @@ class StudyDescriptionHandler(BaseHandler):
             lambda: self.unspecified_action,
             process_sample_template=self.process_sample_template,
             update_sample_template=self.update_sample_template,
+            extend_sample_template=self.add_to_sample_template,
             create_raw_data=self.create_raw_data,
             add_prep_template=self.add_prep_template,
             make_public=self.make_public,
