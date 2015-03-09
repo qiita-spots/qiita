@@ -37,7 +37,6 @@ Once you have [PostgreSQL](http://www.postgresql.org/download/) and [redis](http
 
 ```bash
 pip install numpy
-pip install qiime pyzmq
 pip install https://github.com/biocore/mustached-octo-ironman/archive/master.zip --no-deps
 pip install qiita-spots
 ```
