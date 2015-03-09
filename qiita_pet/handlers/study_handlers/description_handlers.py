@@ -187,7 +187,7 @@ class StudyDescriptionHandler(BaseHandler):
                 QiitaDBDuplicateError, IOError, ValueError, KeyError,
                 CParserError, QiitaDBDuplicateHeaderError) as e:
             # Some error occurred while processing the sample template
-            # Show the error to the user so he can fix the template
+            # Show the error to the user so they can fix the template
             msg = html_error_message % ('parsing the sample template:',
                                         basename(fp_rsp), str(e))
             msg_level = "danger"
@@ -225,7 +225,7 @@ class StudyDescriptionHandler(BaseHandler):
         fp_rsp = join(base_fp, str(study.id), sample_template)
 
         if not exists(fp_rsp):
-            # The file does not exists, fail nicely
+            # The file does not exist, fail nicely
             raise HTTPError(400, "This file doesn't exist: %s" % fp_rsp)
         try:
             with warnings.catch_warnings(record=True) as warns:
@@ -243,7 +243,7 @@ class StudyDescriptionHandler(BaseHandler):
                 QiitaDBDuplicateError, IOError, ValueError, KeyError,
                 CParserError, QiitaDBDuplicateHeaderError, QiitaDBError) as e:
             # Some error occurred while processing the sample template
-            # Show the error to the user so he can fix the template
+            # Show the error to the user so they can fix the template
             msg = html_error_message % ('updating the sample template:',
                                         basename(fp_rsp), str(e))
             msg_level = "danger"

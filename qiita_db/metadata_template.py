@@ -44,6 +44,7 @@ from os import close
 from time import strftime
 from functools import partial
 from tempfile import mkstemp
+from os.path import basename
 
 import pandas as pd
 import numpy as np
@@ -655,12 +656,12 @@ class Sample(BaseSample):
                 value_type = type(value).__name__
 
                 if column_type != value_type:
-                    raise ValueError("""The new value being added to column:
-                        "{0}" is "{1}" (type: "{2}"). However, this
-                        column in the DB is of type "{3}". Please change the
-                        value in your updated template or reprocess your sample
-                        template.""".format(column, value, value_type,
-                                            column_type))
+                    raise ValueError(
+                        'The new value being added to column: "{0}" is "{1}" '
+                        '(type: "{2}"). However, this column in the DB is of '
+                        'type "{3}". Please change the value in your updated '
+                        'template or reprocess your sample template.'.format(
+                            column, value, value_type, column_type))
                 else:
                     raise e
         elif exists_required:
@@ -1562,7 +1563,7 @@ class SampleTemplate(MetadataTemplate):
                 for _, fp in pt.get_filepaths():
                     # the difference between a prep and a qiime template is the
                     # word qiime within the name of the file
-                    if '_qiime_' not in fp:
+                    if '_qiime_' not in basename(fp):
                         pt.create_qiime_mapping_file(fp)
 
     def remove_category(self, category):
