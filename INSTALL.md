@@ -32,15 +32,16 @@ And on the following packages:
 Install
 -------
 
-Your ``$PATH`` environment variable must include postgres binaries, and if running on OS X you should make sure that the xcode command line tools are installed.
+* Install [PostgreSQL](http://www.postgresql.org/download/) and ensure that your ``$PATH`` environment variable includes the postgres binaries. Do this following the instructions on their website.
+* Install [redis](https://pypi.python.org/pypi/redis/). Do this following the instructions on their website.
 
-Once you have [PostgreSQL](http://www.postgresql.org/download/) and [redis](https://pypi.python.org/pypi/redis/) installed (follow the instruction on their web site), simply run these commands to install qiita and configure the demo environment (note that if you are not using Ubuntu you might need to follow the instructions in the next section).
+* Then, install ``qiita-spots`` and it's python dependencies following as follows:
 
-```bash
-pip install numpy
+    ```bash
+    pip install numpy
 pip install https://github.com/biocore/mustached-octo-ironman/archive/master.zip --no-deps
 pip install qiita-spots
-```
+    ```
 
 After these commands are executed, you will need (1) download a [sample Qiita configuration file](https://raw.githubusercontent.com/biocore/qiita/master/qiita_core/support_files/config_test.txt), this file is included in the `pip` installation, (2) set the `QIITA_CONFIG_FP` environment variable and (3) proceed to initialize your environment:
 
@@ -67,17 +68,12 @@ qiita webserver start
 If all the above commands executed correctly, you should be able to go to http://localhost:8888 in your browser, to login use `demo@microbio.me` and `password` as the credentials.
 
 
-## If using other operating systems that are not Ubuntu
+## Troubleshooting installation on non-Ubuntu operating systems
 
-You will need to add the postgres user to the database. In order to do this, run:
+### xcode
 
-```bash
-createuser -s postgres -d
-```
+If running on OS X you should make sure that the Xcode and the Xcode command line tools are installed.
 
-If you receive the following error, you can ignore this step and continue with the qiita installation:
-```bash
-createuser: creation of new role failed: ERROR:  role "postgres" already exists
-```
+### postgres
 
-**Note**: if you are using Postgres.app under OSX, a database user will already be created for your username. If you want to use this, you will need to use this identity, change the `USER` setting under the `[postgres]` section of your Qiita config file.
+If you are using Postgres.app under OSX, a database user will already be created for your username. If you want to use this, you will need to use this identity, change the `USER` setting under the `[postgres]` section of your Qiita config file.
