@@ -65,7 +65,7 @@ qiita webserver start
 
 ```
 
-If all the above commands executed correctly, you should be able to go to http://localhost:8888 in your browser, to login use `demo@microbio.me` and `password` as the credentials.
+If all the above commands executed correctly, you should be able to go to http://localhost:21174 in your browser, to login use `demo@microbio.me` and `password` as the credentials.
 
 
 ## If using other operating systems that are not Ubuntu
