@@ -76,4 +76,4 @@ If running on OS X you should make sure that the Xcode and the Xcode command lin
 
 ### postgres
 
-If you are using Postgres.app under OSX, a database user will already be created for your username. If you want to use this, you will need to use this identity, change the `USER` setting under the `[postgres]` section of your Qiita config file.
+If you are using Postgres.app under OSX, a database user will already be created for your username. If you want to use this, you will need to use this identity, change the `USER` and `ADMIN_USER` setting under the `[postgres]` section of your Qiita config file.
