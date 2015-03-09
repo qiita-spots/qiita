@@ -119,6 +119,48 @@ class TestStudyDescriptionHandler(TestHandlerBase):
         response = self.post('/study/description/245', post_args)
         self.assertEqual(response.code, 404)
 
+    def test_update_sample_template(self):
+        # not sending file
+        post_args = {
+            'sample_template': '',
+            'action': 'update_sample_template'
+        }
+        response = self.post('/study/description/1', post_args)
+        self.assertEqual(response.code, 200)
+
+        # sending blank file
+        post_args = {
+            'sample_template': 'uploaded_file.txt',
+            'action': 'update_sample_template'
+        }
+        response = self.post('/study/description/1', post_args)
+        self.assertEqual(response.code, 200)
+
+    def test_create_raw_data(self):
+        # testing adding new raw data
+        post_args = {
+            'filetype': '1',
+            'action': 'create_raw_data'
+        }
+        response = self.post('/study/description/1', post_args)
+        self.assertEqual(response.code, 200)
+
+        # testing an error due to previous raw data already added
+        post_args = {
+            'previous_raw_data': '1',
+            'action': 'create_raw_data'
+        }
+        response = self.post('/study/description/1', post_args)
+        self.assertEqual(response.code, 500)
+
+        # testing an error due to previous_raw_data not existing
+        post_args = {
+            'previous_raw_data': '5',
+            'action': 'create_raw_data'
+        }
+        response = self.post('/study/description/1', post_args)
+        self.assertEqual(response.code, 500)
+
 
 class TestStudyEditHandler(TestHandlerBase):
     database = True
