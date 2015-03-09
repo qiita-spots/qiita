@@ -28,7 +28,7 @@
   <div class="tab-content" id="pane-{{sid}}-{{data_type}}-{{pid}}{{sel}}">
     <!--samples list-->
     <h3>Samples</h3>
-    <a href="#" onclick="select_deselect({{sid}}, '.proc{{pid}}', '{{sel}}', true); return false;">Select all</a> | <a href="#" onclick="select_deselect({{sid}}, '.proc{{pid}}', '{{sel}}', false); return false;">Select none</a> | <a href="#" onclick="select_inverse({{sid}}, '.proc{{pid}}.{{sel}}'); return false;">Select inverse</a>
+    <a href="#" onclick="select_deselect({{sid}}, '.proc{{pid}}', '{{sel}}', true); return false;">Select all</a> | <a href="#" onclick="select_deselect({{sid}}, '.proc{{pid}}', '{{sel}}', false); return false;">Select none</a> | <a href="#" onclick="select_inverse({{sid}}, '.proc{{pid}}', '{{sel}}'); return false;">Select inverse</a>
   <table class='table table-hover'>
     <tr>
       <th></th>
@@ -42,8 +42,8 @@
       {% for sample in proc_data_samples[pid]%}
     <tr><td>
       <input type='checkbox' name='samples{{sel}}'
-      value='{{pid}}#{{sample[0]}}' class='study{{sid}} proc{{pid}} {{data_type}} {{ " ".join(clean_str(s) for s in sample) }} {{sel}}' onchange='count_update({{sid}})'></td>
-      <td><a href="#" onclick="select_category('{{clean_str(sample[0])}}', '')">All Datatypes</a></td>
+      value='{{pid}}#{{sample[0]}}' class='study{{sid}} proc{{pid}} {{data_type}} {{ " ".join(clean_str(s) for s in sample) }} {{sel}}' onchange="count_update({{sid}}, '{{sel}}'')""></td>
+      <td><a href="#" onclick="select_category('{{clean_str(sample[0])}}', ''); return false;">All Datatypes</a></td>
     <td>{% raw "</td><td>".join(str(s) for s in sample) %}</td>
     </tr>
       {% end %}
@@ -52,8 +52,8 @@
       {% set clean_sample = clean_str(sample) %}
     <tr><td>
       <input type='checkbox' name='samples{{sel}}'
-      value='{{pid}}#{{sample}}' class='study{{sid}} proc{{pid}} {{data_type}} {{ clean_sample }} {{sel}}' onchange='count_update({{sid}})'>
-      <td><a href="#" onclick="select_category('{{clean_sample}}','')">All Datatypes</a></td>
+      value='{{pid}}#{{sample}}' class='study{{sid}} proc{{pid}} {{data_type}} {{ clean_sample }} {{sel}}' onchange="count_update({{sid}}, '{{sel}}')">
+      <td><a href="#" onclick="select_category('{{clean_sample}}',''); return false;">All Datatypes</a></td>
       </td><td>{{sample}}</td></tr>
       {% end %}
     {% end %}

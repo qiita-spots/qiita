@@ -24,39 +24,47 @@ function displaySelected() {
 function select_category(category, study) {
   if(study !== '') { 
     $('.study'+study+'.'+category).each(function() {this.checked = true;});
-    count_update(study);
+    count_update(study, '');
   }
   else { 
     $('.'+category).each(function() {this.checked = true;});
     for(i=0; i<STUDIES.length; i++) {
-      count_update(STUDIES[i]);
+      count_update(STUDIES[i], '');
     }
   }
 }
 
-function count_update(study) {
-  var selected = $('#modal' + study + ' input:checkbox:checked').length;
-  if(selected > 0) { $('#study' + study).addClass('success'); }
-  else { $('#study' + study).removeClass('success'); }
+function count_update(study, sel) {
+  format = '#modal' + study;
+  if(sel == "-sel") { format = format + "-sel" }
+    format = format + ' input:checkbox:checked';
+  var selected = $(format).length;
+  if(selected > 0 && sel != "-sel") { $('#study' + study).addClass('success'); }
+  else if(sel != "-sel") { $('#study' + study).removeClass('success'); }
+  else if(selected > 0 && sel == "-sel") { $('#study' + study+"-sel").addClass('danger'); }
+  else if(sel == "-sel") { $('#study' + study + "-sel").removeClass('danger'); }
 }
 
 function select_deselect(study, filter, sel, select) {
   filter = '.study' + study + filter;
-  if(sel == '-sel') { filter = filter + ' .-sel'; }
+  if(sel == '-sel') { filter = filter + '.-sel'; }
   if(select === true) {
     $(filter).each(function() {this.checked = true;});
   }
   else { 
     $(filter).each(function() {this.checked = false;});
   }
-  count_update(study);
+  count_update(study, sel);
 }
 
-function select_inverse(filter, type) {
+function select_inverse(study, filter, sel, type) {
+  filter = filter + ".study" + study;
+  if(sel == "-sel") { filter += ".-sel"; }
   $(filter).each(function() {
     if(this.checked === true) { this.checked = false; }
     else { this.checked = true; }
   });
+  count_update(study, sel);
 }
 
 function pre_submit(action) {

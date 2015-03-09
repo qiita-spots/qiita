@@ -83,7 +83,7 @@
       {% set study = Study(sid) %}
           <tr id="study{{sid}}"><td style="white-space: nowrap;">
       {% for data_type in study_proc_data[sid] %}
-        {{data_type}} <a href="#" onclick="select_deselect({{sid}}, '.{{data_type}}', '', true)">All</a> | <a href="#" onclick="select_deselect({{sid}}, '.{{data_type}}', '', false)">None</a><br />
+        {{data_type}} <a href="#" onclick="select_deselect({{sid}}, '.{{data_type}}', '', true); return false;">All</a> | <a href="#" onclick="select_deselect({{sid}}, '.{{data_type}}', '', false); return false;">None</a><br />
       {% end %}
             </td><td style='vertical-align:middle;'><a href="#" data-toggle="modal" data-target="#modal{{sid}}" id="modal-link-{{sid}}">{{study.title}}</a></td>
             <td style='vertical-align:middle;'>
@@ -99,7 +99,7 @@
   <div id="selected" class="col-sm-3" style="border-left:1px solid black;height:100%;">
   <!-- Build the selected data modals -->
 {% for sid in selstudy_proc_data %}
-        <div class="modal fade" id='selmodal{{sid}}'>
+        <div class="modal fade" id='modal{{sid}}-sel'>
           <div class="modal-dialog modal-md">
             <div class="modal-content">
               <div class="modal-header">
@@ -121,11 +121,11 @@
   <tr><th>Datatypes</th><th>Title</th></tr>
   {% for sid, proc_ids in viewitems(selstudy_proc_data) %}
     {% set study = Study(sid) %}
-    <tr><td>
-    {% for datatype in proc_ids %}
-      {{datatype}}
+    <tr id="study{{sid}}-sel"><td style="white-space: nowrap;">
+    {% for data_type in proc_ids %}
+      {{data_type}} <a href="#" onclick="select_deselect({{sid}}, '.{{data_type}}', '-sel', true); return false;">All</a> | <a href="#" onclick="select_deselect({{sid}}, '.{{data_type}}', '-sel', false); return false;">None</a><br />
     {% end %}
-    </td><td><a href="#" data-toggle="modal" data-target="#selmodal{{sid}}">{{study.title}}</a></td></tr>
+    </td><td><a href="#" data-toggle="modal" data-target="#modal{{sid}}-sel">{{study.title}}</a></td></tr>
   {%end%}
   </table>
 </div>
