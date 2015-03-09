@@ -32,8 +32,9 @@ And on the following packages:
 Install
 -------
 
-Once you have [PostgreSQL](http://www.postgresql.org/download/) and [redis](https://pypi.python.org/pypi/redis/) installed (follow the instruction on their web site), simply run these commands to install qiita and configure the demo environment, replacing $QIITA_DIR for the path where qiita is installed
-(note that if you are not using Ubuntu you might need to follow the instructions in the next section).
+Your ``$PATH`` environment variable must include postgres binaries, and if running on OS X you should make sure that the xcode command line tools are installed.
+
+Once you have [PostgreSQL](http://www.postgresql.org/download/) and [redis](https://pypi.python.org/pypi/redis/) installed (follow the instruction on their web site), simply run these commands to install qiita and configure the demo environment (note that if you are not using Ubuntu you might need to follow the instructions in the next section).
 
 ```bash
 pip install numpy
