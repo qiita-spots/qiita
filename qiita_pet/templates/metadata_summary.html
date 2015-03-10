@@ -3,7 +3,15 @@
 {% from future.utils import viewitems %}
 
 <h1>Metadata Summary for Study {{study_title}}</h1>
-<a class="glyphicon glyphicon-arrow-left" href="{{back_button_path}}">Back</a>
+
+<div>
+    <a class="glyphicon glyphicon-arrow-left" href="{{back_button_path}}">Back</a>
+</div>
+
+<div>
+    <p>There are <strong>{{num_samples}}</strong> samples in this study.</p>
+</div>
+
 <div class="panel panel-default">
     <div class="panel-heading">
         The  information below describes information contained in the sample
