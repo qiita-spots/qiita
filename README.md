@@ -8,6 +8,6 @@ Qiita
 
 Qiita (canonically pronounced *cheetah*) is a meta-analysis environment for microbiome (and other "comparative -omics") datasets. You can find the public Qiita server at [qiita.microbio.me](qiita.microbio.me).
 
-Qiita is currently in pre-alpha status. We are very open to community contributions and feedback. If you're interested in contributing to Qiita, see [Contributing.md](https://github.com/biocore/qiita/blob/master/CONTRIBUTING.md). If you'd like to report bugs or request features, you can do that in the [Qiita issue tracker](https://github.com/biocore/qiita/issues).
+Qiita is currently in pre-alpha status. We are very open to community contributions and feedback. If you're interested in contributing to Qiita, see [CONTRIBUTING.md](https://github.com/biocore/qiita/blob/master/CONTRIBUTING.md). If you'd like to report bugs or request features, you can do that in the [Qiita issue tracker](https://github.com/biocore/qiita/issues).
 
 To install and configure your own Qiita server, see [INSTALL.md](https://github.com/biocore/qiita/blob/master/INSTALL.md).
