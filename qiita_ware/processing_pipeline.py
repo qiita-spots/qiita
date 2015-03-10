@@ -44,8 +44,8 @@ def _get_qiime_minimal_mapping(prep_template, out_dir):
     import pandas as pd
 
     # Get the data in a pandas DataFrame, so it is easier to manage
-    pt = pd.DataFrame.from_dict(prep_template.to_dataframe(),
-                                orient='index')
+    pt = prep_template.to_dataframe()
+
     # We now need to rename some columns to be QIIME compliant.
     # Hopefully, this conversion won't be needed if QIIME relaxes its
     # constraints
