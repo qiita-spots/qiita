@@ -39,7 +39,7 @@ class LogEntry(QiitaObject):
     severity
     time
     info
-    message
+    msg
 
     Methods
     -------
