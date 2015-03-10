@@ -1074,6 +1074,13 @@ class MetadataTemplate(QiitaObject):
                 f.write("%s\n" % '\t'.join(values))
 
     def to_dataframe(self):
+        """Returns the metadata template as a dataframe
+
+        Returns
+        -------
+        pandas DataFrame
+            The metadata in the template,indexed on sample id
+        """
         conn_handler = SQLConnectionHandler()
         cols = get_table_cols(self._table, conn_handler)
         dyncols = get_table_cols(self._table_name(self._id), conn_handler)
