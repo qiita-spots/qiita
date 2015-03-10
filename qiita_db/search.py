@@ -319,6 +319,9 @@ class QiitaStudySearch(SearchHelper):
             remove the selected samples from the results. Default False.
         analysis : int, optional
             Analysis ID search is run for. Required if remove_selected is True
+        only_with_processed_data : bool, optional
+            Whether to only search over studies with processed data.
+            Default False
 
         Returns
         -------

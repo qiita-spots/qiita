@@ -91,8 +91,9 @@ def filter_by_processed_data(results, datatypes=None):
             proc_data_samples[proc_data_id] = [s for s in results[study_id]
                                                if s[0] in samps_available]
             # Add number of samples left to the total for that datatype
-            dtcount[datatype] += len(proc_data_samples[proc_data_id])
-            if proc_data_samples[proc_data_id] == []:
+            pidlen = len(proc_data_samples[proc_data_id])
+            dtcount[datatype] += pidlen
+            if pidlen == 0:
                 # all samples filtered so remove it as a result
                 del(proc_data_samples[proc_data_id])
             else:

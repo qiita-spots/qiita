@@ -75,12 +75,14 @@ class SearchStudiesHandler(BaseHandler):
         data = self.get_arguments('samples-sel')
         res = defaultdict(list)
         for val in data:
+            # Values come in as proc_data_id#sample_id so split on #
             hold = val.split('#', 1)
             res[hold[0]].append(hold[1])
         return res
 
     def _parse_select_checkbox_data(self):
         for s in self.get_arguments('samples'):
+            # Values come in as proc_data_id#sample_id so split on #
             hold = s.split('#', 1)
             yield (int(hold[0]), hold[1])
 

@@ -36,13 +36,13 @@ function select_category(category, study) {
 
 function count_update(study, sel) {
   format = '#modal' + study;
-  if(sel == "-sel") { format = format + "-sel" }
+  if(sel === "-sel") { format = format + "-sel"; }
     format = format + ' input:checkbox:checked';
   var selected = $(format).length;
-  if(selected > 0 && sel != "-sel") { $('#study' + study).addClass('success'); }
-  else if(sel != "-sel") { $('#study' + study).removeClass('success'); }
-  else if(selected > 0 && sel == "-sel") { $('#study' + study+"-sel").addClass('danger'); }
-  else if(sel == "-sel") { $('#study' + study + "-sel").removeClass('danger'); }
+  if(selected > 0 && sel !== "-sel") { $('#study' + study).addClass('success'); }
+  else if(sel !== "-sel") { $('#study' + study).removeClass('success'); }
+  else if(selected > 0 && sel === "-sel") { $('#study' + study+"-sel").addClass('danger'); }
+  else if(sel === "-sel") { $('#study' + study + "-sel").removeClass('danger'); }
 }
 
 function select_deselect(study, filter, sel, select) {
@@ -59,7 +59,7 @@ function select_deselect(study, filter, sel, select) {
 
 function select_inverse(study, filter, sel, type) {
   filter = filter + ".study" + study;
-  if(sel == "-sel") { filter += ".-sel"; }
+  if(sel === "-sel") { filter += ".-sel"; }
   $(filter).each(function() {
     if(this.checked === true) { this.checked = false; }
     else { this.checked = true; }
@@ -70,12 +70,12 @@ function select_inverse(study, filter, sel, type) {
 function pre_submit(action) {
   document.getElementById('action').value = action;
   var msgdiv = document.getElementById('searchmsg');
-  if(action == 'search') {
+  if(action === 'search') {
     msgdiv.style.color = '';
     msgdiv.style.align = 'center';
     msgdiv.innerHTML = '<img src="/static/img/waiting.gif"> <b>Searching...</b>';
     document.getElementById('results-div').hidden = true;
-  } else if(action == 'continue') {
+  } else if(action === 'continue') {
     var selected = $('#selected input:checkbox').length;
     if(selected === 0) {
       msgdiv.innerHTML = "Must select samples to continue!";

@@ -2,9 +2,9 @@
 {% from future.utils import viewitems %}
 {% from qiita_pet.util import clean_str %}
 {% set sel = "" %}
-{% if selected is True %}
+{% if  not meta_headers %}
     {% set sel = "-sel" %}
-  {% end %}
+{% end %}
 
 <ul class="nav nav-tabs" role="tablist" id="dt-tabs-{{sid}}{{sel}}">
 {% for data_type in proc_data_dict %}
