@@ -8,7 +8,7 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
-from sys import exit, stderr
+from sys import exit
 
 import click
 
