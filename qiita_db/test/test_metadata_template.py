@@ -948,7 +948,9 @@ class TestSampleTemplate(TestCase):
 
         # The relevant rows have been added to the study_sample_columns
         obs = self.conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.study_sample_columns WHERE study_id=2")
+            "SELECT study_id, column_name, column_type FROM "
+            "qiita.study_sample_columns WHERE study_id=2")
+
         # study_id, column_name, column_type
         exp = [[2, "str_column", "varchar"], [2L, 'int_column', 'integer']]
         self.assertEqual(obs, exp)
