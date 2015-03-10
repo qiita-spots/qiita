@@ -492,7 +492,6 @@ $(document).ready(function() {
 <!-- Nav tabs -->
 <ul class="nav nav-tabs" role="tablist" id="myTab">
     <li class="active"><a href="#study_information_tab" role="tab" data-toggle="tab">Study information</a></li>
-    <li><a href="#sample_template_tab" role="tab" data-toggle="tab">Sample template</a></li>
   {% if show_data_tabs %}
     <li><a href="#raw_data_tab" role="tab" data-toggle="tab">Raw data</a></li>
     <li><a href="#preprocessed_data_tab" role="tab" data-toggle="tab">Preprocessed data</a></li>
@@ -504,8 +503,6 @@ $(document).ready(function() {
 <div class="tab-content">
   <!-- Show the study information tab -->
   {% module StudyInformationTab(study) %}
-  <!-- Show the sample template tab -->
-  {% module SampleTemplateTab(study) %}
   {% if show_data_tabs %}
     <!-- Show the raw data tab -->
     {% module RawDataTab(study) %}
