@@ -345,6 +345,7 @@ def status():
         click.echo(sys_status)
         click.echo(r_client.ttl('sysmessage'), "seconds remaining")
 
+
 @log.command()
 @click.argument('entries', required=False, type=int, default=10)
 def get(entries):
@@ -368,6 +369,7 @@ def get(entries):
 # #############################################################################
 # WEBSERVER COMMANDS
 # #############################################################################
+
 
 @webserver.command()
 @click.option('--port', required=False, type=int, help='Port where the '
