@@ -623,10 +623,12 @@ class StudyDescriptionHandler(BaseHandler):
                          sub_tab=None, prep_tab=None):
         """Simple function to avoid duplication of code"""
         # getting the RawData and its prep templates
-        available_raw_data = yield Task(self.get_raw_data, study.raw_data())
-        available_prep_templates = yield Task(self.get_prep_templates,
-                                              available_raw_data)
-
+        available_raw_data = [RawData(rdi) for rdi in study.raw_data]
+        available_prep_templates = {}
+        for rd in available_raw_data:
+            prep_templates = sorted(rd.prep_templates)
+            available_prep_templates[rd.id] = [
+                PrepTemplate(p) for p in prep_templates]
         # set variable holding if we have files attached to all raw data or not
         raw_files = True if available_raw_data else False
         for r in available_raw_data:
