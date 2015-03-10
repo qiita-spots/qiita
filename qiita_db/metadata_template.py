@@ -1453,6 +1453,15 @@ class SampleTemplate(MetadataTemplate):
         # adding the fp to the object
         self.add_filepath(fp)
 
+    @property
+    def headers(self):
+        """Identifies the metadata columns present in a template"""
+
+        cols = get_table_cols(self._table_name(self._id))
+        cols.extend(get_table_cols(self._table)[1:])
+
+        return cols
+
     def remove_category(self, category):
         """Remove a category from the sample template
 
