@@ -42,10 +42,9 @@ def _get_qiime_minimal_mapping(prep_template, out_dir):
     from functools import partial
     from os.path import join
     import pandas as pd
-    from qiita_ware.util import template_to_dict
 
     # Get the data in a pandas DataFrame, so it is easier to manage
-    pt = pd.DataFrame.from_dict(template_to_dict(prep_template),
+    pt = pd.DataFrame.from_dict(prep_template.to_dataframe(),
                                 orient='index')
     # We now need to rename some columns to be QIIME compliant.
     # Hopefully, this conversion won't be needed if QIIME relaxes its

@@ -60,7 +60,7 @@ from .sql_connection import SQLConnectionHandler
 from .ontology import Ontology
 from .util import (exists_table, get_table_cols, get_emp_status,
                    get_required_sample_info_status, convert_to_id,
-                   convert_from_id, get_mountpoint,
+                   convert_from_id, get_mountpoint, typecast_string,
                    insert_filepaths, scrub_data)
 from .logger import LogEntry
 
@@ -1036,6 +1036,33 @@ class MetadataTemplate(QiitaObject):
                 values = [str(d[h]) for h in headers]
                 values.insert(0, sid)
                 f.write("%s\n" % '\t'.join(values))
+
+    def to_dataframe(self):
+        conn_handler = SQLConnectionHandler()
+        cols = get_table_cols(self._table, conn_handler)
+        dyncols = get_table_cols(self._table_name(self._id), conn_handler)
+        # remove sample_id from dyncols so not repeated
+        dyncols.remove('sample_id')
+        # Get all metadata for the template
+        sql = """SELECT {0}, {1} FROM qiita.{2} req
+            INNER JOIN qiita.{3} dyn on req.sample_id = dyn.sample_id
+            WHERE req.{4} = %s""".format(
+                ", ".join("req.%s" % c for c in cols),
+                ", ".join("dyn.%s" % d for d in dyncols),
+                self._table, self._table_name(self._id), self._id_column)
+        meta, types = conn_handler.execute_fetchall(sql, [self._id],
+                                                    return_types=True)
+        cols = cols + dyncols
+
+        # Create the dataframe and clean it up a bit
+        df = pd.DataFrame((list(x) for x in meta), columns=cols)
+        df.set_index('sample_id', inplace=True, drop=True)
+        # Turn id cols to value cols
+        for col, value in viewitems(self.str_cols_handlers):
+            df[col].replace(value, inplace=True)
+        df.rename(columns=self.translate_cols_dict, inplace=True)
+
+        return df
 
     def add_filepath(self, filepath, conn_handler=None):
         r"""Populates the DB tables for storing the filepath and connects the

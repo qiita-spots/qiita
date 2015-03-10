@@ -50,6 +50,7 @@ from os.path import join, basename, isdir, relpath, exists
 from os import walk, remove, listdir, makedirs, rename
 from shutil import move, rmtree
 from json import dumps
+from datetime import datetime
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from .exceptions import QiitaDBColumnError, QiitaDBError
@@ -106,6 +107,8 @@ def typecast_string(string):
     The function first tries to convert to an int. If that fails, it tries to
     convert to a float. If that fails it returns the original string.
     """
+    if isinstance(string, datetime):
+        return str(string)
     try:
         return int(string)
     except ValueError:

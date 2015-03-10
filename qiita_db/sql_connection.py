@@ -80,6 +80,7 @@ from __future__ import division
 from contextlib import contextmanager
 from itertools import chain
 from tempfile import mktemp
+from datetime import date, time, datetime
 
 from psycopg2 import connect, ProgrammingError, Error as PostgresError
 from psycopg2.extras import DictCursor
@@ -97,6 +98,29 @@ def flatten(listOfLists):
 
 
 class SQLConnectionHandler(object):
+    # From http://osdir.com/ml/sqlalchemy/2011-05/msg00094.html
+    TYPE_CODES = pg_types = {
+        16: bool,
+        17: bytes,
+        19: str,  # name type
+        20: int,
+        21: int,
+        23: int,
+        25: str,  # TEXT type
+        26: float,  # oid type
+        700: float,
+        701: float,
+        829: str,  # MACADDR type
+        1042: str,  # CHAR type
+        1043: str,  # VARCHAR type
+        1082: date,
+        1083: time,
+        1114: datetime,
+        1184: datetime,  # timestamp w/ tz
+        1700: float,
+        2275: str,  # cstring
+    }
+
     """Encapsulates the DB connection with the Postgres DB
 
     Parameters
@@ -375,7 +399,7 @@ class SQLConnectionHandler(object):
             self._check_sql_args(sql_args)
             self.queues[queue].append((sql, sql_args))
 
-    def execute_fetchall(self, sql, sql_args=None):
+    def execute_fetchall(self, sql, sql_args=None, return_types=False):
         """ Executes a fetchall SQL query
 
         Parameters
@@ -384,11 +408,15 @@ class SQLConnectionHandler(object):
             The SQL query
         sql_args : tuple or list, optional
             The arguments for the SQL query
+        return_types : bool, optional
+            Whether to return dict of column types. Default False.
 
         Returns
         ------
         list of tuples
             The results of the fetchall query
+        dict, optional
+            dictionary in the form of {column: type}
 
         Raises
         ------
@@ -402,9 +430,16 @@ class SQLConnectionHandler(object):
         """
         with self._sql_executor(sql, sql_args) as pgcursor:
             result = pgcursor.fetchall()
-        return result
+            if return_types:
+                types = {desc[0]: self.TYPE_CODES[desc[1]]
+                         for desc in pgcursor.description}
 
-    def execute_fetchone(self, sql, sql_args=None):
+        if return_types:
+            return result, types
+        else:
+            return result
+
+    def execute_fetchone(self, sql, sql_args=None, return_types=False):
         """ Executes a fetchone SQL query
 
         Parameters
@@ -413,11 +448,15 @@ class SQLConnectionHandler(object):
             The SQL query
         sql_args : tuple or list, optional
             The arguments for the SQL query
+        return_types : bool, optional
+            Whether to return dict of column types. Default False.
 
         Returns
         -------
         Tuple
             The results of the fetchone query
+        dict, optional
+            dictionary in the form of {column: type}
 
         Raises
         ------
@@ -431,7 +470,14 @@ class SQLConnectionHandler(object):
         """
         with self._sql_executor(sql, sql_args) as pgcursor:
             result = pgcursor.fetchone()
-        return result
+            if return_types:
+                types = {desc[0]: self.TYPE_CODES[desc[1]]
+                         for desc in pgcursor.description}
+
+        if return_types:
+            return result, types
+        else:
+            return result
 
     def execute(self, sql, sql_args=None):
         """ Executes an SQL query with no results
