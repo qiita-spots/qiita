@@ -49,8 +49,9 @@ class RawDataTab(BaseUIModule):
         other_studies_rd = sorted(viewitems(
             get_raw_data_from_other_studies(user, study)))
 
-        raw_data_info = [(rd.id, rd.filetype, rd)
-                         for rd in get_raw_data(study.raw_data())]
+        raw_data_info = [
+            (rd.id, rd.filetype, rd, status_styler[rd.status(study)])
+            for rd in get_raw_data(study.raw_data())]
 
         return self.render_string(
             "study_description_templates/raw_data_tab.html",

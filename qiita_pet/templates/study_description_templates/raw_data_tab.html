@@ -4,9 +4,10 @@
     <!-- Nav tab: adding raw data -->
     <li class="active"><a href="#add_raw_data_tab" role="tab" data-toggle="tab">Add raw data</a></li>
     <!-- Nav tabs: one for each raw data available -->
-  {% for rd_id, rd_filetype, _ in available_raw_data %}
+  {% for rd_id, rd_filetype, _, (class_icon, color) in available_raw_data %}
     <li><a href="#raw_data_info_{{rd_id}}" role="tab" data-toggle="tab">
-      {{rd_filetype}} (ID: {{rd_id}})
+      {{rd_filetype}} (ID: {{rd_id}})&nbsp;
+        <div class="{{class_icon}}" style="color: {{color}};"></div>
       <button class="close" title="Remove this raw data" type="button" onclick="delete_raw_data('{{rd_filetype}}', {{rd_id}})">&nbsp; ×</button> 
     </a></li>
   {% end %}
@@ -39,7 +40,7 @@
     </div>
 
     <!-- Show raw data editor tabs -->
-    {% for _, _, rd in available_raw_data %}
+    {% for _, _, rd, _ in available_raw_data %}
       {% module RawDataEditorTab(study, rd) %}
     {% end %}
 
