@@ -293,6 +293,49 @@ class RawDataTests(TestCase):
         RawData.delete(2, 1)
         self.assertFalse(RawData.exists(2))
 
+    def test_status(self):
+        rd = RawData(1)
+        s = Study(1)
+        self.assertEqual(rd.status(s), 'private')
+
+        # Since the status is inferred from the processed data, change the
+        # status of the processed data so we can check how it changes in the
+        # preprocessed data
+        pd = ProcessedData(1)
+        pd.status = 'public'
+        self.assertEqual(rd.status(s), 'public')
+
+        # Check that new raw data has sandbox as status since no
+        # processed data exists for them
+        rd = RawData.create(self.filetype, self.studies, self.filepaths)
+        self.assertEqual(rd.status(s), 'sandbox')
+
+    def test_status_error(self):
+        # Let's create a new study, so we can check that the error is raised
+        # because the new study does not have access to the raw data
+        info = {
+            "timeseries_type_id": 1,
+            "metadata_complete": True,
+            "mixs_compliant": True,
+            "number_samples_collected": 25,
+            "number_samples_promised": 28,
+            "portal_type_id": 3,
+            "study_alias": "FCM",
+            "study_description": "Microbiome of people who eat nothing but "
+                                 "fried chicken",
+            "study_abstract": "Exploring how a high fat diet changes the "
+                              "gut microbiome",
+            "emp_person_id": StudyPerson(2),
+            "principal_investigator_id": StudyPerson(3),
+            "lab_person_id": StudyPerson(1)
+        }
+        s = Study.create(User('test@foo.bar'), "Fried chicken microbiome",
+                         [1], info)
+        rd = RawData(1)
+
+        with self.assertRaises(QiitaDBStatusError):
+            rd.status(s)
+
 
 @qiita_test_checker()
 class PreprocessedDataTests(TestCase):
@@ -653,7 +696,7 @@ class PreprocessedDataTests(TestCase):
         # preprocessed data
         pd = ProcessedData(1)
         pd.status = 'public'
-        self.assertEqual(pd.status, 'public')
+        self.assertEqual(ppd.status, 'public')
 
         # Check that new preprocessed data has sandbox as status since no
         # processed data exists for them

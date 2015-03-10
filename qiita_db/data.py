@@ -615,6 +615,68 @@ class RawData(BaseData):
         # Delete the files, if they are not used anywhere
         purge_filepaths(conn_handler)
 
+    def status(self, study):
+        """The status of the raw data within the given study
+
+        Parameters
+        ----------
+        study : Study
+            The study that is looking to the raw data status
+
+        Returns
+        -------
+        str
+            The status of the raw data
+
+        Raises
+        ------
+
+        Notes
+        -----
+        The status of the raw data is inferred by the status of the processed
+        data generated from this raw data. Since the raw data can be shared by
+        multiple studies; the raw data can have multiple status, so the status
+        is defined by the view from a study. If not processed data was
+        generated on the given study from this raw data; then the status is
+        'sandbox'.
+        """
+        if self._id not in study.raw_data():
+            raise QiitaDBStatusError(
+                "The study %s do not have access to the raw data %s"
+                % (study.id, self.id))
+
+        conn_handler = SQLConnectionHandler()
+        sql = """SELECT processed_data_status
+                FROM qiita.processed_data_status pds
+                  JOIN qiita.processed_data pd
+                    ON pds.processed_data_status_id=pd.processed_data_status_id
+                  JOIN qiita.preprocessed_processed_data ppd_pd
+                    ON ppd_pd.processed_data_id=pd.processed_data_id
+                  JOIN qiita.prep_template_preprocessed_data pt_ppd
+                    ON pt_ppd.preprocessed_data_id=ppd_pd.preprocessed_data_id
+                  JOIN qiita.prep_template pt
+                    ON pt.prep_template_id=pt_ppd.prep_template_id
+                  JOIN qiita.study_raw_data srd
+                    ON srd.raw_data_id=pt.raw_data_id
+                WHERE pt.raw_data_id=%s AND srd.study_id=%s"""
+        pd_statuses = conn_handler.execute_fetchall(sql, (self._id, study.id))
+
+        if not pd_statuses:
+            # If there are no processed data, then the status is sandbox
+            status = 'sandbox'
+        else:
+            pd_statuses = set(s[0] for s in pd_statuses)
+            if 'public' in pd_statuses:
+                status = 'public'
+            elif 'private' in pd_statuses:
+                status = 'private'
+            elif 'awaiting_approval' in pd_statuses:
+                status = 'awaiting_approval'
+            else:
+                status = 'sandbox'
+
+        return status
+
 
 class PreprocessedData(BaseData):
     r"""Object for dealing with preprocessed data
