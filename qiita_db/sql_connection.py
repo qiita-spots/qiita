@@ -89,6 +89,8 @@ from psycopg2.extensions import (
 from .exceptions import QiitaDBExecutionError, QiitaDBConnectionError
 from qiita_core.qiita_settings import qiita_config
 
+from os import environ
+
 
 def flatten(listOfLists):
     # https://docs.python.org/2/library/itertools.html
@@ -150,9 +152,19 @@ class SQLConnectionHandler(object):
 
         try:
             self._connection = connect(**args)
-        except Exception as e:
+        except Exception:
             # catch any exception and raise as runtime error
-            raise RuntimeError("Cannot connect to database: %s" % str(e))
+            # attempt to point the user to their config file
+            conf_fp = environ['QIITA_CONFIG_FP']
+            error_text = ("Can't connect to database; user `%s` is not known. "
+                          "Your QIITA configuration file, located at `%s` must"
+                          " specify the correct user, via the `USER` parameter"
+                          " under the `[postgres]` header. The correct `USER` "
+                          "value is likely the same as your local username. "
+                          "Please refer to `INSTALL.md` in the QIITA base "
+                          "directory.")
+            error_text = error_text % (qiita_config.user, conf_fp)
+            raise RuntimeError(error_text)
 
     @contextmanager
     def get_postgres_cursor(self):
