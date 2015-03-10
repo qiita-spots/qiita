@@ -3,8 +3,8 @@ Qiita installation
 
 Qiita is pip installable, but depends on some non-python packages that must be installed first.
 
-Install non-python dependencies
--------------------------------
+Install the non-python dependencies
+-----------------------------------
 
 * [PostgreSQL](http://www.postgresql.org/download/) (we have tested most extensively with 9.3)
 * [redis-server](http://redis.io) (we have tested most extensively with 2.8.17)
@@ -14,7 +14,7 @@ Install both of these packages according to the instructions on their websites. 
 Install Qiita and its python dependencies
 -----------------------------------------
 
-Then, just ``pip install qiita-spots``, which will include installation of its python dependencies following:
+Then, you can use pip to install Qiita, which will also install its python dependencies.
 
 ```bash
 pip install numpy
