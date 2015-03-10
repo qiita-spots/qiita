@@ -1,11 +1,12 @@
 """
 Objects for dealing with Qiita analyses
 
-This module provides the implementation of the Analysis class.
+This module provides the implementation of the Analysis and Collection classes.
 
 Classes
 -------
 - `Analysis` -- A Qiita Analysis class
+- `Colection` -- A Qiita Collection class for grouping multiple analyses
 """
 
 # -----------------------------------------------------------------------------
@@ -790,8 +791,19 @@ class Collection(QiitaStatusObject):
     remove_analysis
     highlight_job
     remove_highlight
+    share
+    unshare
     """
     _table = "collection"
+    _analysis_table = "collection_analysis"
+    _highlight_table = "collection_job"
+    _share_table = "collection_users"
+
+    def _status_setter_checks(self, conn_handler):
+        r"""Perform a check to make sure not setting status away from public
+        """
+        if self.check_status(("public", )):
+            raise QiitaDBStatusError("Illegal operation on public collection!")
 
     @classmethod
     def create(cls, owner, name, description=None):
@@ -806,41 +818,101 @@ class Collection(QiitaStatusObject):
         description : str, optional
             Brief description of the collecton's overarching goal
         """
-        raise NotImplementedError()
+        conn_handler = SQLConnectionHandler()
+
+        sql = ("INSERT INTO qiita.{0} (email, name, description) "
+               "VALUES (%s, %s, %s)".format(cls._table))
+        conn_handler.execute(sql, [owner.id, name, description])
 
     @classmethod
     def delete(cls, id_):
-        """Deletes a collection from the database"""
-        raise NotImplementedError()
+        """Deletes a collection from the database
+
+        Parameters
+        ----------
+        id_ : int
+            ID of the collection to delete
+
+        Raises
+        ------
+        QiitaDBStatusError
+            Trying to delete a public collection
+        """
+        conn_handler = SQLConnectionHandler()
+        if cls(id_).status == "public":
+            raise QiitaDBStatusError("Can't delete public collection!")
+
+        queue = "remove_collection_%d" % id_
+        conn_handler.create_queue(queue)
+
+        for table in (cls._analysis_table, cls._highlight_table,
+                      cls._share_table, cls._table):
+            conn_handler.add_to_queue(
+                queue, "DELETE FROM qiita.{0} WHERE "
+                "collection_id = %s".format(table), [id_])
+
+        conn_handler.execute_queue(queue)
 
     # --- Properties ---
     @property
     def name(self):
-        raise NotImplementedError()
+        sql = ("SELECT name FROM qiita.{0} WHERE "
+               "collection_id = %s".format(self._table))
+        conn_handler = SQLConnectionHandler()
+        return conn_handler.execute_fetchone(sql, [self._id])[0]
 
     @name.setter
     def name(self, value):
-        raise NotImplementedError()
+        conn_handler = SQLConnectionHandler()
+        self._status_setter_checks(conn_handler)
+
+        sql = ("UPDATE qiita.{0} SET name = %s WHERE "
+               "collection_id = %s".format(self._table))
+        conn_handler.execute(sql, [value, self._id])
 
     @property
     def description(self):
-        raise NotImplementedError()
+        sql = ("SELECT description FROM qiita.{0} WHERE "
+               "collection_id = %s".format(self._table))
+        conn_handler = SQLConnectionHandler()
+        return conn_handler.execute_fetchone(sql, [self._id])[0]
 
     @description.setter
     def description(self, value):
-        raise NotImplementedError()
+        conn_handler = SQLConnectionHandler()
+        self._status_setter_checks(conn_handler)
+
+        sql = ("UPDATE qiita.{0} SET description = %s WHERE "
+               "collection_id = %s".format(self._table))
+        conn_handler.execute(sql, [value, self._id])
 
     @property
     def owner(self):
-        raise NotImplementedError()
+        sql = ("SELECT email FROM qiita.{0} WHERE "
+               "collection_id = %s".format(self._table))
+        conn_handler = SQLConnectionHandler()
+        return conn_handler.execute_fetchone(sql, [self._id])[0]
 
     @property
     def analyses(self):
-        raise NotImplementedError()
+        sql = ("SELECT analysis_id FROM qiita.{0} WHERE "
+               "collection_id = %s".format(self._analysis_table))
+        conn_handler = SQLConnectionHandler()
+        return [x[0] for x in conn_handler.execute_fetchall(sql, [self._id])]
 
     @property
     def highlights(self):
-        raise NotImplementedError()
+        sql = ("SELECT job_id FROM qiita.{0} WHERE "
+               "collection_id = %s".format(self._highlight_table))
+        conn_handler = SQLConnectionHandler()
+        return [x[0] for x in conn_handler.execute_fetchall(sql, [self._id])]
+
+    @property
+    def shared_with(self):
+        sql = ("SELECT email FROM qiita.{0} WHERE "
+               "collection_id = %s".format(self._share_table))
+        conn_handler = SQLConnectionHandler()
+        return [x[0] for x in conn_handler.execute_fetchall(sql, [self._id])]
 
     # --- Functions ---
     def add_analysis(self, analysis):
@@ -850,7 +922,12 @@ class Collection(QiitaStatusObject):
         ----------
         analysis : Analysis object
         """
-        raise NotImplementedError()
+        conn_handler = SQLConnectionHandler()
+        self._status_setter_checks(conn_handler)
+
+        sql = ("INSERT INTO qiita.{0} (analysis_id, collection_id) "
+               "VALUES (%s, %s)".format(self._analysis_table))
+        conn_handler.execute(sql, [analysis.id, self._id])
 
     def remove_analysis(self, analysis):
         """Remove an analysis from the collection object
@@ -859,7 +936,13 @@ class Collection(QiitaStatusObject):
         ----------
         analysis : Analysis object
         """
-        raise NotImplementedError()
+        conn_handler = SQLConnectionHandler()
+        self._status_setter_checks(conn_handler)
+
+        sql = ("DELETE FROM qiita.{0} WHERE analysis_id = %s AND "
+               "collection_id = %s".format(self._analysis_table))
+        conn_handler = SQLConnectionHandler()
+        conn_handler.execute(sql, [analysis.id, self._id])
 
     def highlight_job(self, job):
         """Marks a job as important to the collection
@@ -868,7 +951,13 @@ class Collection(QiitaStatusObject):
         ----------
         job : Job object
         """
-        raise NotImplementedError()
+        conn_handler = SQLConnectionHandler()
+        self._status_setter_checks(conn_handler)
+
+        sql = ("INSERT INTO qiita.{0} (job_id, collection_id) "
+               "VALUES (%s, %s)".format(self._highlight_table))
+        conn_handler = SQLConnectionHandler()
+        conn_handler.execute(sql, [job.id, self._id])
 
     def remove_highlight(self, job):
         """Removes job importance from the collection
@@ -877,4 +966,40 @@ class Collection(QiitaStatusObject):
         ----------
         job : Job object
         """
-        raise NotImplementedError()
+        conn_handler = SQLConnectionHandler()
+        self._status_setter_checks(conn_handler)
+
+        sql = ("DELETE FROM qiita.{0} WHERE job_id = %s AND "
+               "collection_id = %s".format(self._highlight_table))
+        conn_handler = SQLConnectionHandler()
+        conn_handler.execute(sql, [job.id, self._id])
+
+    def share(self, user):
+        """Shares the collection with another user
+
+        Parameters
+        ----------
+        user : User object
+        """
+        conn_handler = SQLConnectionHandler()
+        self._status_setter_checks(conn_handler)
+
+        sql = ("INSERT INTO qiita.{0} (email, collection_id) "
+               "VALUES (%s, %s)".format(self._share_table))
+        conn_handler = SQLConnectionHandler()
+        conn_handler.execute(sql, [user.id, self._id])
+
+    def unshare(self, user):
+        """Unshares the collection with another user
+
+        Parameters
+        ----------
+        user : User object
+        """
+        conn_handler = SQLConnectionHandler()
+        self._status_setter_checks(conn_handler)
+
+        sql = ("DELETE FROM qiita.{0} WHERE "
+               "email = %s AND collection_id = %s".format(self._share_table))
+        conn_handler = SQLConnectionHandler()
+        conn_handler.execute(sql, [user.id, self._id])

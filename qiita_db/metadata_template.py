@@ -25,8 +25,6 @@ Methods
 
 ..autosummary::
     :toctree: generated/
-
-    sample_template_adder
 """
 
 # -----------------------------------------------------------------------------
@@ -42,13 +40,17 @@ from future.builtins import zip
 from future.utils import viewitems, PY3
 from copy import deepcopy
 from os.path import join
+from os import close
 from time import strftime
 from functools import partial
+from tempfile import mkstemp
+from os.path import basename
 
 import pandas as pd
 import numpy as np
 import warnings
 from skbio.util import find_duplicates
+from skbio.io.util import open_file
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from .exceptions import (QiitaDBDuplicateError, QiitaDBColumnError,
@@ -62,6 +64,8 @@ from .util import (exists_table, get_table_cols, get_emp_status,
                    get_required_sample_info_status, convert_to_id,
                    convert_from_id, get_mountpoint, typecast_string,
                    insert_filepaths, scrub_data)
+from .study import Study
+from .data import RawData
 from .logger import LogEntry
 
 if PY3:
@@ -348,12 +352,8 @@ class BaseSample(QiitaObject):
         d.update(dynamic_d)
         del d['sample_id']
         del d[self._id_column]
-        try:
-            # The study_id could potentially be already removed with _id_column
-            # so wrapping in a try except
-            del d['study_id']
-        except KeyError:
-            pass
+        d.pop('study_id', None)
+
         # Modify all the *_id columns to include the string instead of the id
         for k, v in viewitems(self._md_template.translate_cols_dict):
             d[v] = self._md_template.str_cols_handlers[k][d[k]]
@@ -620,22 +620,61 @@ class Sample(BaseSample):
         """
         conn_handler = SQLConnectionHandler()
 
-        exists = conn_handler.execute_fetchone("""
+        # try dynamic tables
+        exists_dynamic = conn_handler.execute_fetchone("""
+        SELECT EXISTS (
             SELECT column_name
             FROM information_schema.columns
             WHERE table_name='{0}'
                 AND table_schema='qiita'
-                AND column_name='{1}'""".format(self._dynamic_table, column))
+                AND column_name='{1}')""".format(self._dynamic_table,
+                                                 column))[0]
+        # try required_sample_info
+        exists_required = conn_handler.execute_fetchone("""
+        SELECT EXISTS (
+            SELECT column_name
+            FROM information_schema.columns
+            WHERE table_name='required_sample_info'
+                AND table_schema='qiita'
+                AND column_name='{0}')""".format(column))[0]
 
-        if exists is None:
+        if exists_dynamic:
+            # catching error so we can check if the error is due to different
+            # column type or something else
+            try:
+                conn_handler.execute("""
+                    UPDATE qiita.{0}
+                    SET {1}=%s
+                    WHERE sample_id=%s""".format(self._dynamic_table,
+                                                 column), (value, self._id))
+            except Exception as e:
+                column_type = conn_handler.execute_fetchone("""
+                    SELECT data_type
+                    FROM information_schema.columns
+                    WHERE column_name=%s AND table_schema='qiita'
+                    """, (column,))[0]
+                value_type = type(value).__name__
+
+                if column_type != value_type:
+                    raise ValueError(
+                        'The new value being added to column: "{0}" is "{1}" '
+                        '(type: "{2}"). However, this column in the DB is of '
+                        'type "{3}". Please change the value in your updated '
+                        'template or reprocess your sample template.'.format(
+                            column, value, value_type, column_type))
+                else:
+                    raise e
+        elif exists_required:
+            # here is not required the type check as the required fields have
+            # an explicit type check
+            conn_handler.execute("""
+                UPDATE qiita.required_sample_info
+                SET {0}=%s
+                WHERE sample_id=%s
+                """.format(column), (value, self._id))
+        else:
             raise QiitaDBColumnError("Column %s does not exist in %s" %
                                      (column, self._dynamic_table))
-
-        conn_handler.execute("""
-            UPDATE qiita.{0}
-            SET {1}={2}
-            WHERE sample_id='{3}'""".format(self._dynamic_table, column, value,
-                                            self._id))
 
 
 class MetadataTemplate(QiitaObject):
@@ -1015,10 +1054,7 @@ class MetadataTemplate(QiitaObject):
                 metadata_map[k][value] = self.str_cols_handlers[key][id_]
                 del metadata_map[k][key]
             metadata_map[k].update(dyn_vals[k])
-            try:
-                del metadata_map[k]['study_id']
-            except KeyError:
-                pass
+            metadata_map[k].pop('study_id', None)
 
         # Remove samples that are not in the samples list, if it was supplied
         if samples is not None:
@@ -1277,7 +1313,7 @@ class SampleTemplate(MetadataTemplate):
 
     @classmethod
     def create(cls, md_template, study):
-        r"""Creates the metadata template in the database
+        r"""Creates the sample template in the database
 
         Parameters
         ----------
@@ -1398,18 +1434,23 @@ class SampleTemplate(MetadataTemplate):
         md_template = self._clean_validate_template(md_template, self.study_id,
                                                     conn_handler)
 
+        # Raise warning and filter out existing samples
+        sample_ids = md_template.index.tolist()
+        sql = ("SELECT sample_id FROM qiita.required_sample_info WHERE "
+               "study_id = %d" % self.id)
+        curr_samples = set(s[0] for s in conn_handler.execute_fetchall(sql))
+        existing_samples = curr_samples.intersection(sample_ids)
+        if existing_samples:
+            warnings.warn(
+                "The following samples already exist and will be ignored: "
+                "%s" % ", ".join(curr_samples.intersection(
+                                 sorted(existing_samples))), QiitaDBWarning)
+            md_template.drop(existing_samples, inplace=True)
+
         # Get some useful information from the metadata template
         sample_ids = md_template.index.tolist()
         num_samples = len(sample_ids)
         headers = list(md_template.keys())
-
-        # Make sure all samples being added are not already existing
-        sql = ("SELECT sample_id FROM qiita.required_sample_info WHERE "
-               "study_id = %d" % self.id)
-        curr_samples = set(s[0] for s in conn_handler.execute_fetchall(sql))
-        if len(curr_samples.intersection(sample_ids)) > 0:
-            raise QiitaDBDuplicateError(
-                "sample_id", ", ".join(curr_samples.intersection(sample_ids)))
 
         # Get the required columns from the DB
         db_cols = get_table_cols(self._table, conn_handler)
@@ -1471,6 +1512,86 @@ class SampleTemplate(MetadataTemplate):
 
         # adding the fp to the object
         self.add_filepath(fp)
+
+    def update(self, md_template):
+        r"""Update values in the sample template
+
+        Parameters
+        ----------
+        md_template : DataFrame
+            The metadata template file contents indexed by samples Ids
+
+        Raises
+        ------
+        QiitaDBError
+            If md_template and db do not have the same sample ids
+            If md_template and db do not have the same column headers
+        """
+        conn_handler = SQLConnectionHandler()
+
+        # Clean and validate the metadata template given
+        new_map = self._clean_validate_template(md_template, self.id,
+                                                conn_handler)
+        # Retrieving current metadata
+        current_map = self._transform_to_dict(conn_handler.execute_fetchall(
+            "SELECT * FROM qiita.{0} WHERE {1}=%s".format(self._table,
+                                                          self._id_column),
+            (self.id,)))
+        dyn_vals = self._transform_to_dict(conn_handler.execute_fetchall(
+            "SELECT * FROM qiita.{0}".format(self._table_name(self.id))))
+
+        for k in current_map:
+            current_map[k].update(dyn_vals[k])
+            current_map[k].pop('study_id', None)
+
+        # converting sql results to dataframe
+        current_map = pd.DataFrame.from_dict(current_map, orient='index')
+
+        # simple validations of sample ids and column names
+        samples_diff = set(
+            new_map.index.tolist()) - set(current_map.index.tolist())
+        if samples_diff:
+            raise QiitaDBError('The new sample template differs from what is '
+                               'stored in database by these samples names: %s'
+                               % ', '.join(samples_diff))
+        columns_diff = set(new_map.columns) - set(current_map.columns)
+        if columns_diff:
+            raise QiitaDBError('The new sample template differs from what is '
+                               'stored in database by these columns names: %s'
+                               % ', '.join(columns_diff))
+
+        # here we are comparing two dataframes following:
+        # http://stackoverflow.com/a/17095620/4228285
+        current_map.sort(axis=0, inplace=True)
+        current_map.sort(axis=1, inplace=True)
+        new_map.sort(axis=0, inplace=True)
+        new_map.sort(axis=1, inplace=True)
+        map_diff = (current_map != new_map).stack()
+        map_diff = map_diff[map_diff]
+        map_diff.index.names = ['id', 'column']
+        changed_cols = map_diff.index.get_level_values('column').unique()
+
+        for col in changed_cols:
+            self.update_category(col, new_map[col].to_dict())
+
+        # figuring out the filepath of the backup
+        _id, fp = get_mountpoint('templates')[0]
+        fp = join(fp, '%d_%s.txt' % (self.id, strftime("%Y%m%d-%H%M%S")))
+        # storing the backup
+        self.to_file(fp)
+
+        # adding the fp to the object
+        self.add_filepath(fp)
+
+        # generating all new QIIME mapping files
+        for rd_id in Study(self.id).raw_data():
+            for pt_id in RawData(rd_id).prep_templates:
+                pt = PrepTemplate(pt_id)
+                for _, fp in pt.get_filepaths():
+                    # the difference between a prep and a qiime template is the
+                    # word qiime within the name of the file
+                    if '_qiime_' not in basename(fp):
+                        pt.create_qiime_mapping_file(fp)
 
     def remove_category(self, category):
         """Remove a category from the sample template
@@ -2082,13 +2203,16 @@ class PrepTemplate(MetadataTemplate):
         return filepath
 
 
-def load_template_to_dataframe(fn):
+def load_template_to_dataframe(fn, strip_whitespace=True):
     """Load a sample or a prep template into a data frame
 
     Parameters
     ----------
     fn : str
         filename of the template to load
+    strip_whitespace : bool, optional
+        Defaults to True. Whether or not to strip whitespace from values in the
+        input file
 
     Returns
     -------
@@ -2136,6 +2260,19 @@ def load_template_to_dataframe(fn):
     |             longitude |        float |
     +-----------------------+--------------+
     """
+
+    # First, strip all values from the cells in the input file, if requested
+    if strip_whitespace:
+        fd, fp = mkstemp()
+        close(fd)
+
+        with open_file(fn, 'U') as input_f, open(fp, 'w') as new_f:
+            for line in input_f:
+                line_elements = [x.strip()
+                                 for x in line.rstrip('\n').split('\t')]
+                new_f.write('\t'.join(line_elements) + '\n')
+
+        fn = fp
 
     # index_col:
     #   is set as False, otherwise it is cast as a float and we want a string

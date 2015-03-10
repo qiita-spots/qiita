@@ -8,6 +8,9 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
+import errno
+import socket
+
 import click
 import tornado.httpserver
 import tornado.ioloop
@@ -342,7 +345,8 @@ def status():
 
 @webserver.command()
 @click.option('--port', required=False, type=int, help='Port where the '
-              'webserver will start', default=8888)
+              'webserver will start', default=21174)
+# (cursive Q)iita = 21174 in 1337sp34k
 def start(port):
     # in order to use this command you need to have an IPython cluster running,
     # for now this makes it so that you can use other sub-commands without
@@ -351,7 +355,17 @@ def start(port):
     from qiita_pet.webserver import Application
 
     http_server = tornado.httpserver.HTTPServer(Application())
-    http_server.listen(port)
+
+    try:
+        http_server.listen(port)
+    except socket.error as e:
+        if e.errno == errno.EADDRINUSE:
+            raise ValueError(
+                "Port %d is already in use. Please choose another port with "
+                "--port." % port)
+        else:
+            raise
+
     click.echo("Qiita started on port %d" % port)
     tornado.ioloop.IOLoop.instance().start()
 
