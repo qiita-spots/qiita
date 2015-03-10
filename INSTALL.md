@@ -1,7 +1,7 @@
-Qiita is pip installable, but depends on the following non-python packages that must be installed first.  
-
 Qiita installation
 ==================
+
+Qiita is pip installable, but depends on some non-python packages that must be installed first.
 
 Install non-python dependencies (install these first)
 -----------------------------------------------------
