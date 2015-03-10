@@ -39,7 +39,7 @@ class VAMPSHandler(BaseHandler):
         study = Study(preprocessed_data.study)
         stats = [('Number of samples', len(prep_template)),
                  ('Number of metadata headers',
-                  len(sample_template.header))]
+                  len(sample_template.headers))]
 
         demux = [path for _, path, ftype in preprocessed_data.get_filepaths()
                  if ftype == 'preprocessed_demux']
