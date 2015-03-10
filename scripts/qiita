@@ -8,10 +8,14 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
+import errno
+import socket
+
 import click
 import tornado.httpserver
 import tornado.ioloop
 from psycopg2 import OperationalError
+from future.utils import viewitems
 
 from qiita_db.util import (get_filepath_types, get_filetypes,
                            get_data_types,
@@ -27,6 +31,7 @@ from qiita_db.commands import (load_sample_template_from_cmd,
 from qiita_db.sql_connection import SQLConnectionHandler
 from qiita_db.exceptions import QiitaDBConnectionError
 from qiita_db.reference import Reference
+from qiita_db.logger import LogEntry
 from qiita_core.configuration_manager import ConfigurationManager
 from qiita_ware.commands import ebi_actions, submit_EBI as _submit_EBI
 from qiita_ware.processing_pipeline import generate_demux_file
@@ -71,6 +76,11 @@ def webserver():
 
 @qiita.group()
 def ware():
+    pass
+
+
+@qiita.group()
+def log():
     pass
 
 
@@ -336,13 +346,35 @@ def status():
         click.echo(r_client.ttl('sysmessage'), "seconds remaining")
 
 
+@log.command()
+@click.argument('entries', required=False, type=int, default=10)
+def get(entries):
+
+    width = click.get_terminal_size()[0]
+
+    template = width*"=" + "\nTime: {}\nMessage:\n{}\nInfo:{}\n"
+
+    lines = []
+    for e in LogEntry.newest_records(entries):
+
+        info = []
+        for i in e.info:
+            for field, value in viewitems(i):
+                info.append('{}:{}'.format(field, value))
+
+        lines.append(template.format(e.time, e.msg, '\n'.join(info)))
+
+    click.echo_via_pager('\n'.join(lines))
+
 # #############################################################################
 # WEBSERVER COMMANDS
 # #############################################################################
 
+
 @webserver.command()
 @click.option('--port', required=False, type=int, help='Port where the '
-              'webserver will start', default=8888)
+              'webserver will start', default=21174)
+# (cursive Q)iita = 21174 in 1337sp34k
 def start(port):
     # in order to use this command you need to have an IPython cluster running,
     # for now this makes it so that you can use other sub-commands without
@@ -351,7 +383,17 @@ def start(port):
     from qiita_pet.webserver import Application
 
     http_server = tornado.httpserver.HTTPServer(Application())
-    http_server.listen(port)
+
+    try:
+        http_server.listen(port)
+    except socket.error as e:
+        if e.errno == errno.EADDRINUSE:
+            raise ValueError(
+                "Port %d is already in use. Please choose another port with "
+                "--port." % port)
+        else:
+            raise
+
     click.echo("Qiita started on port %d" % port)
     tornado.ioloop.IOLoop.instance().start()
 

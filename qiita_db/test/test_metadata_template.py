@@ -511,12 +511,14 @@ class TestSampleTemplate(TestCase):
                         'host_subject_id': 'NotIdentified',
                         'Description': 'Test Sample 1',
                         'str_column': 'Value for sample 1',
+                        'int_column': 1,
                         'latitude': 42.42,
                         'longitude': 41.41},
             'Sample2': {'physical_location': 'location1',
                         'has_physical_specimen': True,
                         'has_extracted_data': True,
                         'sample_type': 'type1',
+                        'int_column': 2,
                         'required_sample_info_status': 'received',
                         'collection_timestamp':
                         datetime(2014, 5, 29, 12, 24, 51),
@@ -535,6 +537,7 @@ class TestSampleTemplate(TestCase):
                         'host_subject_id': 'NotIdentified',
                         'Description': 'Test Sample 3',
                         'str_column': 'Value for sample 3',
+                        'int_column': 3,
                         'latitude': 4.8,
                         'longitude': 4.41},
             }
@@ -705,6 +708,154 @@ class TestSampleTemplate(TestCase):
                         'collection_timestamp', 'host_subject_id',
                         'description', 'latitude', 'longitude']
 
+        self.metadata_dict_updated_dict = {
+            'Sample1': {'physical_location': 'location1',
+                        'has_physical_specimen': True,
+                        'has_extracted_data': True,
+                        'sample_type': '6',
+                        'required_sample_info_status': 'received',
+                        'collection_timestamp':
+                        datetime(2014, 5, 29, 12, 24, 51),
+                        'host_subject_id': 'NotIdentified',
+                        'Description': 'Test Sample 1',
+                        'str_column': 'Value for sample 1',
+                        'int_column': 1,
+                        'latitude': 42.42,
+                        'longitude': 41.41},
+            'Sample2': {'physical_location': 'location1',
+                        'has_physical_specimen': True,
+                        'has_extracted_data': True,
+                        'sample_type': '5',
+                        'required_sample_info_status': 'received',
+                        'collection_timestamp':
+                        datetime(2014, 5, 29, 12, 24, 51),
+                        'host_subject_id': 'the only one',
+                        'Description': 'Test Sample 2',
+                        'str_column': 'Value for sample 2',
+                        'int_column': 2,
+                        'latitude': 4.2,
+                        'longitude': 1.1},
+            'Sample3': {'physical_location': 'new location',
+                        'has_physical_specimen': True,
+                        'has_extracted_data': True,
+                        'sample_type': '10',
+                        'required_sample_info_status': 'received',
+                        'collection_timestamp':
+                        datetime(2014, 5, 29, 12, 24, 51),
+                        'host_subject_id': 'NotIdentified',
+                        'Description': 'Test Sample 3',
+                        'str_column': 'Value for sample 3',
+                        'int_column': 3,
+                        'latitude': 4.8,
+                        'longitude': 4.41},
+            }
+        self.metadata_dict_updated = pd.DataFrame.from_dict(
+            self.metadata_dict_updated_dict, orient='index')
+
+        metadata_dict_updated_sample_error = {
+            'Sample1': {'physical_location': 'location1',
+                        'has_physical_specimen': True,
+                        'has_extracted_data': True,
+                        'sample_type': '6',
+                        'required_sample_info_status': 'received',
+                        'collection_timestamp':
+                        datetime(2014, 5, 29, 12, 24, 51),
+                        'host_subject_id': 'NotIdentified',
+                        'Description': 'Test Sample 1',
+                        'str_column': 'Value for sample 1',
+                        'int_column': 1,
+                        'latitude': 42.42,
+                        'longitude': 41.41},
+            'Sample2': {'physical_location': 'location1',
+                        'has_physical_specimen': True,
+                        'has_extracted_data': True,
+                        'sample_type': '5',
+                        'required_sample_info_status': 'received',
+                        'collection_timestamp':
+                        datetime(2014, 5, 29, 12, 24, 51),
+                        'host_subject_id': 'the only one',
+                        'Description': 'Test Sample 2',
+                        'str_column': 'Value for sample 2',
+                        'int_column': 2,
+                        'latitude': 4.2,
+                        'longitude': 1.1},
+            'Sample3': {'physical_location': 'new location',
+                        'has_physical_specimen': True,
+                        'has_extracted_data': True,
+                        'sample_type': '10',
+                        'required_sample_info_status': 'received',
+                        'collection_timestamp':
+                        datetime(2014, 5, 29, 12, 24, 51),
+                        'host_subject_id': 'NotIdentified',
+                        'Description': 'Test Sample 3',
+                        'str_column': 'Value for sample 3',
+                        'int_column': 3,
+                        'latitude': 4.8,
+                        'longitude': 4.41},
+            'Sample4': {'physical_location': 'new location',
+                        'has_physical_specimen': True,
+                        'has_extracted_data': True,
+                        'sample_type': '10',
+                        'required_sample_info_status': 'received',
+                        'collection_timestamp':
+                        datetime(2014, 5, 29, 12, 24, 51),
+                        'host_subject_id': 'NotIdentified',
+                        'Description': 'Test Sample 4',
+                        'str_column': 'Value for sample 4',
+                        'int_column': 4,
+                        'latitude': 4.8,
+                        'longitude': 4.41}
+            }
+        self.metadata_dict_updated_sample_error = pd.DataFrame.from_dict(
+            metadata_dict_updated_sample_error, orient='index')
+
+        metadata_dict_updated_column_error = {
+            'Sample1': {'physical_location': 'location1',
+                        'has_physical_specimen': True,
+                        'has_extracted_data': True,
+                        'sample_type': '6',
+                        'required_sample_info_status': 'received',
+                        'collection_timestamp':
+                        datetime(2014, 5, 29, 12, 24, 51),
+                        'host_subject_id': 'NotIdentified',
+                        'Description': 'Test Sample 1',
+                        'str_column': 'Value for sample 1',
+                        'int_column': 1,
+                        'latitude': 42.42,
+                        'longitude': 41.41,
+                        'extra_col': True},
+            'Sample2': {'physical_location': 'location1',
+                        'has_physical_specimen': True,
+                        'has_extracted_data': True,
+                        'sample_type': '5',
+                        'required_sample_info_status': 'received',
+                        'collection_timestamp':
+                        datetime(2014, 5, 29, 12, 24, 51),
+                        'host_subject_id': 'the only one',
+                        'Description': 'Test Sample 2',
+                        'str_column': 'Value for sample 2',
+                        'int_column': 2,
+                        'latitude': 4.2,
+                        'longitude': 1.1,
+                        'extra_col': True},
+            'Sample3': {'physical_location': 'new location',
+                        'has_physical_specimen': True,
+                        'has_extracted_data': True,
+                        'sample_type': '10',
+                        'required_sample_info_status': 'received',
+                        'collection_timestamp':
+                        datetime(2014, 5, 29, 12, 24, 51),
+                        'host_subject_id': 'NotIdentified',
+                        'Description': 'Test Sample 3',
+                        'str_column': 'Value for sample 3',
+                        'int_column': 3,
+                        'latitude': 4.8,
+                        'longitude': 4.41,
+                        'extra_col': True},
+            }
+        self.metadata_dict_updated_column_error = pd.DataFrame.from_dict(
+            metadata_dict_updated_column_error, orient='index')
+
     def tearDown(self):
         for f in self._clean_up_files:
             remove(f)
@@ -810,7 +961,7 @@ class TestSampleTemplate(TestCase):
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.study_sample_columns WHERE study_id=2")
         # study_id, column_name, column_type
-        exp = [[2, "str_column", "varchar"]]
+        exp = [[2, "str_column", "varchar"], [2L, 'int_column', 'integer']]
         self.assertEqual(obs, exp)
 
         # The new table exists
@@ -820,9 +971,9 @@ class TestSampleTemplate(TestCase):
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.sample_2")
         # sample_id, str_column
-        exp = [['2.Sample1', "Value for sample 1"],
-               ['2.Sample2', "Value for sample 2"],
-               ['2.Sample3', "Value for sample 3"]]
+        exp = [['2.Sample1', 1, "Value for sample 1"],
+               ['2.Sample2', 2, "Value for sample 2"],
+               ['2.Sample3', 3, "Value for sample 3"]]
         self.assertEqual(obs, exp)
 
     def test_create_int_prefix(self):
@@ -1022,6 +1173,57 @@ class TestSampleTemplate(TestCase):
         self.assertEqual(self.tester['1.SKB5.640181']['country'], "2")
         self.assertEqual(self.tester['1.SKD6.640190']['country'], "3")
         self.assertEqual(self.tester['1.SKM7.640188']['country'], negtest)
+
+        # test updating a required_sample_info
+        mapping = {'1.SKB1.640202': "1",
+                   '1.SKB5.640181': "2",
+                   '1.SKD6.640190': "3"}
+        self.tester.update_category('required_sample_info_status_id', mapping)
+        self.assertEqual(
+            self.tester['1.SKB1.640202']['required_sample_info_status'],
+            "received")
+        self.assertEqual(
+            self.tester['1.SKB5.640181']['required_sample_info_status'],
+            "in_preparation")
+        self.assertEqual(
+            self.tester['1.SKD6.640190']['required_sample_info_status'],
+            "running")
+        self.assertEqual(
+            self.tester['1.SKM7.640188']['required_sample_info_status'],
+            "completed")
+
+        # testing that if fails when trying to change an int column value
+        # to str
+        st = SampleTemplate.create(self.metadata, self.new_study)
+        mapping = {'2.Sample1': "no_value"}
+        with self.assertRaises(ValueError):
+            st.update_category('int_column', mapping)
+
+    def test_update(self):
+        """Updates values in existing mapping file"""
+        # creating a new sample template
+        st = SampleTemplate.create(self.metadata, self.new_study)
+        # updating the sample template
+        st.update(self.metadata_dict_updated)
+
+        # validating values
+        exp = self.metadata_dict_updated_dict['Sample1'].values()
+        obs = st.get('2.Sample1').values()
+        self.assertItemsEqual(obs, exp)
+
+        exp = self.metadata_dict_updated_dict['Sample2'].values()
+        obs = st.get('2.Sample2').values()
+        self.assertItemsEqual(obs, exp)
+
+        exp = self.metadata_dict_updated_dict['Sample3'].values()
+        obs = st.get('2.Sample3').values()
+        self.assertItemsEqual(obs, exp)
+
+        # checking errors
+        with self.assertRaises(QiitaDBError):
+            st.update(self.metadata_dict_updated_sample_error)
+        with self.assertRaises(QiitaDBError):
+            st.update(self.metadata_dict_updated_column_error)
 
     def test_add_category(self):
         column = "new_column"
@@ -1272,7 +1474,7 @@ class TestSampleTemplate(TestCase):
                'water_content_soil', 'elevation', 'temp', 'tot_nitro',
                'samp_salinity', 'altitude', 'env_biome', 'country', 'ph',
                'anonymized_name', 'tot_org_carb', 'description_duplicate',
-               'env_feature', 'newcol', 'str_column']
+               'env_feature', 'newcol', 'str_column', 'int_column']
         self.assertItemsEqual(obs, exp)
 
         sql = "SELECT * FROM qiita.study_sample_columns WHERE study_id = 1"
@@ -1292,7 +1494,8 @@ class TestSampleTemplate(TestCase):
                [1, 'TEXTURE', 'varchar'],
                [1, 'ASSIGNED_FROM_GEO', 'varchar'],
                [1, 'SEASON_ENVIRONMENT', 'varchar'],
-               [1, 'sample_id', 'varchar']]
+               [1, 'sample_id', 'varchar'],
+               [1L, 'int_column', 'integer']]
         self.assertItemsEqual(obs, exp)
 
     def test_extend_duplicated_samples(self):
@@ -1308,6 +1511,7 @@ class TestSampleTemplate(TestCase):
             'host_subject_id': 'NotIdentified',
             'Description': 'Test Sample 5',
             'str_column': 'Value for sample 5',
+            'int_column': 5,
             'latitude': 45.45,
             'longitude': 44.44}
         new_metadata = pd.DataFrame.from_dict(self.metadata_dict,
@@ -2249,18 +2453,14 @@ class TestUtilities(TestCase):
 
 EXP_SAMPLE_TEMPLATE = (
     "sample_name\tcollection_timestamp\tdescription\thas_extracted_data\t"
-    "has_physical_specimen\thost_subject_id\tlatitude\tlongitude\t"
-    "physical_location\trequired_sample_info_status\tsample_type\t"
-    "str_column\n"
-    "2.Sample1\t2014-05-29 12:24:51\tTest Sample 1\tTrue\tTrue\t"
-    "NotIdentified\t42.42\t41.41\tlocation1\treceived\ttype1\t"
-    "Value for sample 1\n"
-    "2.Sample2\t2014-05-29 12:24:51\t"
-    "Test Sample 2\tTrue\tTrue\tNotIdentified\t4.2\t1.1\tlocation1\treceived\t"
-    "type1\tValue for sample 2\n"
-    "2.Sample3\t2014-05-29 12:24:51\tTest Sample 3\tTrue\t"
-    "True\tNotIdentified\t4.8\t4.41\tlocation1\treceived\ttype1\t"
-    "Value for sample 3\n")
+    "has_physical_specimen\thost_subject_id\tint_column\tlatitude\tlongitude\t"
+    "physical_location\trequired_sample_info_status\tsample_type\tstr_column\n"
+    "2.Sample1\t2014-05-29 12:24:51\tTest Sample 1\tTrue\tTrue\tNotIdentified"
+    "\t1\t42.42\t41.41\tlocation1\treceived\ttype1\tValue for sample 1\n"
+    "2.Sample2\t2014-05-29 12:24:51\tTest Sample 2\tTrue\tTrue\tNotIdentified"
+    "\t2\t4.2\t1.1\tlocation1\treceived\ttype1\tValue for sample 2\n"
+    "2.Sample3\t2014-05-29 12:24:51\tTest Sample 3\tTrue\tTrue\tNotIdentified"
+    "\t3\t4.8\t4.41\tlocation1\treceived\ttype1\tValue for sample 3\n")
 
 EXP_SAMPLE_TEMPLATE_DUPE_COLS = (
     "sample_name\tcollection_timestamp\tdescription\thas_extracted_data\t"
@@ -2279,76 +2479,74 @@ EXP_SAMPLE_TEMPLATE_DUPE_COLS = (
 
 EXP_SAMPLE_TEMPLATE_FEWER_SAMPLES = (
     "sample_name\tcollection_timestamp\tdescription\thas_extracted_data\t"
-    "has_physical_specimen\thost_subject_id\tlatitude\tlongitude\t"
-    "physical_location\trequired_sample_info_status\tsample_type\t"
+    "has_physical_specimen\thost_subject_id\tint_column\tlatitude\t"
+    "longitude\tphysical_location\trequired_sample_info_status\tsample_type\t"
     "str_column\n"
-    "2.Sample1\t2014-05-29 12:24:51\tTest Sample 1\tTrue\tTrue\t"
-    "NotIdentified\t42.42\t41.41\tlocation1\treceived\ttype1\t"
-    "Value for sample 1\n"
-    "2.Sample3\t2014-05-29 12:24:51\tTest Sample 3\tTrue\t"
-    "True\tNotIdentified\t4.8\t4.41\tlocation1\treceived\ttype1\t"
-    "Value for sample 3\n")
+    "2.Sample1\t2014-05-29 12:24:51\tTest Sample 1\tTrue\tTrue\tNotIdentified"
+    "\t1\t42.42\t41.41\tlocation1\treceived\ttype1\tValue for sample 1\n"
+    "2.Sample3\t2014-05-29 12:24:51\tTest Sample 3\tTrue\tTrue\tNotIdentified"
+    "\t3\t4.8\t4.41\tlocation1\treceived\ttype1\tValue for sample 3\n")
 
 EXP_SAMPLE_TEMPLATE_SPACES = (
     "sample_name\tcollection_timestamp\tdescription\thas_extracted_data\t"
-    "has_physical_specimen\thost_subject_id\tlatitude\tlongitude\t"
+    "has_physical_specimen\thost_subject_id\tint_column\tlatitude\tlongitude\t"
     "physical_location\trequired_sample_info_status\tsample_type\t"
     "str_column\n"
     "2.Sample1         \t2014-05-29 12:24:51\tTest Sample 1\tTrue\tTrue\t"
-    "NotIdentified\t42.42\t41.41\tlocation1\treceived\ttype1\t"
+    "NotIdentified\t1\t42.42\t41.41\tlocation1\treceived\ttype1\t"
     "Value for sample 1\n"
     "2.Sample2  \t2014-05-29 12:24:51\t"
-    "Test Sample 2\tTrue\tTrue\tNotIdentified\t4.2\t1.1\tlocation1\treceived\t"
-    "type1\tValue for sample 2\n"
+    "Test Sample 2\tTrue\tTrue\tNotIdentified\t2\t4.2\t1.1\tlocation1\t"
+    "received\ttype1\tValue for sample 2\n"
     "2.Sample3\t2014-05-29 12:24:51\tTest Sample 3\tTrue\t"
-    "True\tNotIdentified\t4.8\t4.41\tlocation1\treceived\ttype1\t"
+    "True\tNotIdentified\t3\t4.8\t4.41\tlocation1\treceived\ttype1\t"
     "Value for sample 3\n")
 
 EXP_SAMPLE_TEMPLATE_WHITESPACE = (
     "sample_name \tcollection_timestamp\t description \thas_extracted_data\t"
-    "has_physical_specimen\thost_subject_id\tlatitude\tlongitude\t"
+    "has_physical_specimen\thost_subject_id\tint_column\tlatitude\tlongitude\t"
     "physical_location\trequired_sample_info_status\tsample_type\t"
     "str_column\n"
     "2.Sample1\t2014-05-29 12:24:51\tTest Sample 1\tTrue\tTrue\t"
-    "NotIdentified\t42.42\t41.41\tlocation1\treceived\ttype1\t"
+    "NotIdentified\t1\t42.42\t41.41\tlocation1\treceived\ttype1\t"
     "Value for sample 1\n"
     "2.Sample2\t      2014-05-29 12:24:51 \t"
-    "Test Sample 2\tTrue\tTrue\tNotIdentified\t4.2\t1.1\tlocation1\treceived\t"
-    "type1\t Value for sample 2\n"
+    "Test Sample 2\tTrue\tTrue\tNotIdentified\t2\t4.2\t1.1\tlocation1\t"
+    "received\ttype1\t Value for sample 2\n"
     "2.Sample3\t2014-05-29 12:24:51\t   Test Sample 3 \tTrue\t"
-    "True\tNotIdentified\t4.8\t4.41\tlocation1\treceived\ttype1\t"
+    "True\tNotIdentified\t3\t4.8\t4.41\tlocation1\treceived\ttype1\t"
     "Value for sample 3\n")
 
 EXP_SAMPLE_TEMPLATE_SPACES_EMPTY_ROW = (
     "sample_name\tcollection_timestamp\tdescription\thas_extracted_data\t"
-    "has_physical_specimen\thost_subject_id\tlatitude\tlongitude\t"
+    "has_physical_specimen\thost_subject_id\tint_column\tlatitude\tlongitude\t"
     "physical_location\trequired_sample_info_status\tsample_type\t"
     "str_column\n"
     "2.Sample1         \t2014-05-29 12:24:51\tTest Sample 1\tTrue\tTrue\t"
-    "NotIdentified\t42.42\t41.41\tlocation1\treceived\ttype1\t"
+    "NotIdentified\t1\t42.42\t41.41\tlocation1\treceived\ttype1\t"
     "Value for sample 1\n"
     "2.Sample2  \t2014-05-29 12:24:51\t"
-    "Test Sample 2\tTrue\tTrue\tNotIdentified\t4.2\t1.1\tlocation1\treceived\t"
-    "type1\tValue for sample 2\n"
+    "Test Sample 2\tTrue\tTrue\tNotIdentified\t2\t4.2\t1.1\tlocation1\t"
+    "received\ttype1\tValue for sample 2\n"
     "2.Sample3\t2014-05-29 12:24:51\tTest Sample 3\tTrue\t"
-    "True\tNotIdentified\t4.8\t4.41\tlocation1\treceived\ttype1\t"
+    "True\tNotIdentified\t3\t4.8\t4.41\tlocation1\treceived\ttype1\t"
     "Value for sample 3\n"
-    "\t\t\t\t\t\t\t\t\t\t\t\n"
-    "\t\t\t\t\t\t\t\t\t\t\t\n")
+    "\t\t\t\t\t\t\t\t\t\t\t\t\n"
+    "\t\t\t\t\t\t\t\t\t\t\t\t\n")
 
 EXP_ST_SPACES_EMPTY_COLUMN = (
     "sample_name\tcollection_timestamp\tdescription\thas_extracted_data\t"
-    "has_physical_specimen\thost_subject_id\tlatitude\tlongitude\t"
+    "has_physical_specimen\thost_subject_id\tint_column\tlatitude\tlongitude\t"
     "physical_location\trequired_sample_info_status\tsample_type\t"
     "str_column\t\n"
     "2.Sample1         \t2014-05-29 12:24:51\tTest Sample 1\tTrue\tTrue\t"
-    "NotIdentified\t42.42\t41.41\tlocation1\treceived\ttype1\t"
+    "NotIdentified\t1\t42.42\t41.41\tlocation1\treceived\ttype1\t"
     "Value for sample 1\t\n"
     "2.Sample2  \t2014-05-29 12:24:51\t"
-    "Test Sample 2\tTrue\tTrue\tNotIdentified\t4.2\t1.1\tlocation1\treceived\t"
-    "type1\tValue for sample 2\t\n"
+    "Test Sample 2\tTrue\tTrue\tNotIdentified\t2\t4.2\t1.1\tlocation1\t"
+    "received\ttype1\tValue for sample 2\t\n"
     "2.Sample3\t2014-05-29 12:24:51\tTest Sample 3\tTrue\t"
-    "True\tNotIdentified\t4.8\t4.41\tlocation1\treceived\ttype1\t"
+    "True\tNotIdentified\t3\t4.8\t4.41\tlocation1\treceived\ttype1\t"
     "Value for sample 3\t\n")
 
 EXP_SAMPLE_TEMPLATE_NUMBER_SAMPLE_NAMES = (
@@ -2368,17 +2566,17 @@ EXP_SAMPLE_TEMPLATE_NUMBER_SAMPLE_NAMES = (
 
 SAMPLE_TEMPLATE_NO_SAMPLE_NAMES = (
     "sample_name\tcollection_timestamp\tdescription\thas_extracted_data\t"
-    "has_physical_specimen\thost_subject_id\tlatitude\tlongitude\t"
+    "has_physical_specimen\thost_subject_id\tint_column\tlatitude\tlongitude\t"
     "physical_location\trequired_sample_info_status\tsample_type\t"
     "str_column\n"
     "2.Sample1\t2014-05-29 12:24:51\tTest Sample 1\tTrue\tTrue\t"
-    "NotIdentified\t42.42\t41.41\tlocation1\treceived\ttype1\t"
+    "NotIdentified\t1\t42.42\t41.41\tlocation1\treceived\ttype1\t"
     "Value for sample 1\n"
     "2.Sample2\t2014-05-29 12:24:51\t"
-    "Test Sample 2\tTrue\tTrue\tNotIdentified\t4.2\t1.1\tlocation1\treceived\t"
-    "type1\tValue for sample 2\n"
+    "Test Sample 2\tTrue\tTrue\tNotIdentified\t2\t4.2\t1.1\tlocation1\t"
+    "received\ttype1\tValue for sample 2\n"
     "2.Sample3\t2014-05-29 12:24:51\tTest Sample 3\tTrue\t"
-    "True\tNotIdentified\t4.8\t4.41\tlocation1\treceived\ttype1\t"
+    "True\tNotIdentified\t3\t4.8\t4.41\tlocation1\treceived\ttype1\t"
     "Value for sample 3\n"
     "\t2014-05-29 12:24:51\tTest Sample 3\tTrue\t"
     "True\tNotIdentified\t4.8\t4.41\tlocation1\treceived\ttype1\t"
@@ -2388,19 +2586,19 @@ SAMPLE_TEMPLATE_NO_SAMPLE_NAMES = (
 
 SAMPLE_TEMPLATE_NO_SAMPLE_NAMES_SOME_SPACES = (
     "sample_name\tcollection_timestamp\tdescription\thas_extracted_data\t"
-    "has_physical_specimen\thost_subject_id\tlatitude\tlongitude\t"
+    "has_physical_specimen\thost_subject_id\tint_column\tlatitude\tlongitude\t"
     "physical_location\trequired_sample_info_status\tsample_type\t"
     "str_column\n"
     "2.Sample1\t2014-05-29 12:24:51\tTest Sample 1\tTrue\tTrue\t"
-    "NotIdentified\t42.42\t41.41\tlocation1\treceived\ttype1\t"
+    "NotIdentified\t1\t42.42\t41.41\tlocation1\treceived\ttype1\t"
     "Value for sample 1\n"
     "2.Sample2\t2014-05-29 12:24:51\t"
-    "Test Sample 2\tTrue\tTrue\tNotIdentified\t4.2\t1.1\tlocation1\treceived\t"
-    "type1\tValue for sample 2\n"
+    "Test Sample 2\tTrue\tTrue\tNotIdentified\t2\t4.2\t1.1\tlocation1\t"
+    "received\ttype1\tValue for sample 2\n"
     "2.Sample3\t2014-05-29 12:24:51\tTest Sample 3\tTrue\t"
-    "True\tNotIdentified\t4.8\t4.41\tlocation1\treceived\ttype1\t"
+    "True\tNotIdentified\t3\t4.8\t4.41\tlocation1\treceived\ttype1\t"
     "Value for sample 3\n"
-    "\t\t\t\t\t \t\t\t\t \t\t\n"
+    "\t\t\t\t\t \t\t\t\t\t \t\t\n"
     )
 
 SAMPLE_TEMPLATE_EMPTY_COLUMN = (
@@ -2512,7 +2710,11 @@ SAMPLE_TEMPLATE_DICT_FORM = {
                     '2.Sample3': 'type1'},
     'str_column': {'2.Sample1': 'Value for sample 1',
                    '2.Sample2': 'Value for sample 2',
-                   '2.Sample3': 'Value for sample 3'}}
+                   '2.Sample3': 'Value for sample 3'},
+    'int_column': {'2.Sample1': 1,
+                   '2.Sample2': 2,
+                   '2.Sample3': 3}
+    }
 
 SAMPLE_TEMPLATE_NUMBER_SAMPLE_NAMES_DICT_FORM = {
     'collection_timestamp': {'002.000': '2014-05-29 12:24:51',

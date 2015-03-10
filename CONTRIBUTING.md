@@ -37,7 +37,7 @@ Scripts in Qiita are located inside the scripts directory, their actions will re
 * `qiita_env drop` will delete the environment (as specified by the Qiita config file).
 * `qiita_env start_cluster qiita_general`, starts an IPython cluster named ‘qiita_general’. Normally you’ll want to wait a few seconds for the engines to start and become responsive (30-40 seconds depending on your system).
 * `qiita_env stop_cluster qiita_general`, terminates a cluster named ‘qiita_general’.
-* `qiita webserver start`, will start the Qiita web-application running on port 8888, you can change this using the `--port` flag, for example `--port=7532`.
+* `qiita webserver start`, will start the Qiita web-application running on port 21174, you can change this using the `--port` flag, for example `--port=7532`.
 
 ##Making Database Changes
 After the initial production release of Qiita, changes to the database schema will require patches; the database can no longer be dropped and recreated using the most recent schema because all the data would be lost! Therefore, patches must be applied instead.
