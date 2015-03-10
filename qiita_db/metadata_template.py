@@ -1493,6 +1493,10 @@ class SampleTemplate(MetadataTemplate):
         cols = get_table_cols(self._table_name(self._id))
         cols.extend(get_table_cols(self._table)[1:])
 
+        for idx, c in enumerate(cols):
+            if c in self.translate_cols_dict:
+                cols[idx] = self.translate_cols_dict[c]
+
         return cols
 
     def update(self, md_template):

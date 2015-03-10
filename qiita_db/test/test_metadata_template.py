@@ -704,7 +704,7 @@ class TestSampleTemplate(TestCase):
                         'tot_org_carb', 'description_duplicate', 'env_feature',
                         'study_id', 'physical_location',
                         'has_physical_specimen', 'has_extracted_data',
-                        'sample_type', 'required_sample_info_status_id',
+                        'sample_type', 'required_sample_info_status',
                         'collection_timestamp', 'host_subject_id',
                         'description', 'latitude', 'longitude']
 
