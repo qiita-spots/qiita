@@ -107,11 +107,12 @@ def stats_from_df(df):
 
     Returns
     -------
-    dict
-        Dictionary object where the keys are the names of the metadata
-        categories and the keys are tuples where the first element is the name
+    dict of list of tuples
+        Dictionary object where the keys are the metadata categories
+        and the values are list of tuples where the first element is the name
         of a metadata value in category and the second element is the number of
-        times that value was seen.
+        times that value was seen
+        Format {category: [(val1, count1), (val2, count2), ...], ...}
     """
     out = {}
 
