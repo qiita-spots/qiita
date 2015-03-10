@@ -8,7 +8,9 @@
 
 from functools import partial
 
+from qiita_db.util import get_files_from_uploads_folders
 from qiita_db.study import StudyPerson
+from qiita_db.metadata_template import SampleTemplate
 from qiita_pet.util import linkify
 from .base_uimodule import BaseUIModule
 
@@ -32,6 +34,25 @@ class StudyInformationTab(BaseUIModule):
         number_samples_collected = study_info['number_samples_collected']
         metadata_complete = study_info['metadata_complete']
 
+        # Retrieve the files from the uploads folder, so the user can choose
+        # the sample template of the study
+        files = [f for _, f in get_files_from_uploads_folders(str(study.id))]
+
+        # If the sample template exists, retrieve all its filepaths
+        if SampleTemplate.exists(study.id):
+            sample_templates = SampleTemplate(study.id).get_filepaths()
+        else:
+            # If the sample template does not exist, just pass an empty list
+            sample_templates = []
+
+        # Check if the request came from a local source
+        is_local_request = self._is_local()
+
+        # The user can choose the sample template only if the study is
+        # sandboxed or the current user is an admin
+        show_select_sample = (
+            study.status == 'sandbox' or self.current_user.level == 'admin')
+
         return self.render_string(
             "study_description_templates/study_information_tab.html",
             abstract=abstract,
@@ -40,4 +61,9 @@ class StudyInformationTab(BaseUIModule):
             principal_investigator=pi_link,
             number_samples_promised=number_samples_promised,
             number_samples_collected=number_samples_collected,
-            metadata_complete=metadata_complete)
+            metadata_complete=metadata_complete,
+            show_select_sample=show_select_sample,
+            files=files,
+            study_id=study.id,
+            sample_templates=sample_templates,
+            is_local_request=is_local_request)
