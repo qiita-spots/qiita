@@ -1,6 +1,8 @@
 Qiita
 =====
 
+[![Join the chat at https://gitter.im/biocore/qiita](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/biocore/qiita?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 [![Build Status](https://travis-ci.org/biocore/qiita.png?branch=master)](https://travis-ci.org/biocore/qiita)
 [![Coverage Status](https://coveralls.io/repos/biocore/qiita/badge.png?branch=master)](https://coveralls.io/r/biocore/qiita)
 
