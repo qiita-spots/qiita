@@ -15,7 +15,6 @@ from contextlib import contextmanager
 
 import h5py
 import numpy as np
-import pandas as pd
 from skbio.io.util import _is_string_or_bytes
 from future.utils import viewitems
 from natsort import natsorted

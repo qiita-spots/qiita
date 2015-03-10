@@ -950,7 +950,7 @@ class TestSampleTemplate(TestCase):
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.study_sample_columns WHERE study_id=2")
         # study_id, column_name, column_type
-        exp = [[2, "str_column", "varchar"], [2L, 'int_column', 'integer']]
+        exp = [[2, "str_column", "varchar"], [2, 'int_column', 'integer']]
         self.assertEqual(obs, exp)
 
         # The new table exists

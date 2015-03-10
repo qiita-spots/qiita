@@ -62,8 +62,8 @@ from .sql_connection import SQLConnectionHandler
 from .ontology import Ontology
 from .util import (exists_table, get_table_cols, get_emp_status,
                    get_required_sample_info_status, convert_to_id,
-                   convert_from_id, get_mountpoint, typecast_string,
-                   insert_filepaths, scrub_data)
+                   convert_from_id, get_mountpoint, insert_filepaths,
+                   scrub_data)
 from .study import Study
 from .data import RawData
 from .logger import LogEntry

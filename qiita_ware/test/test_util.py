@@ -79,8 +79,6 @@ class UtilTests(TestCase):
 
     def test_stats_from_df(self):
         obs = stats_from_df(SampleTemplate(1).to_dataframe())
-        #self.assertTrue('study_id' in obs)
-        #self.assertTrue('study_id' in SUMMARY_STATS)
         for k in obs:
             self.assertEqual(obs[k], SUMMARY_STATS[k])
 
