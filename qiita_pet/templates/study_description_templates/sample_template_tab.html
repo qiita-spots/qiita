@@ -5,7 +5,9 @@
     Select your sample template:
     <select id="sample_template">
       {% for f in files %}
+        {% if f.endswith(('txt', 'tsv')) %}
         <option value="{{f}}">{{f}}</option>
+        {% end %}
       {% end %}
     </select>
   {% end %}
