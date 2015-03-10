@@ -19,6 +19,7 @@ from qiita_db.ontology import Ontology
 from qiita_db.metadata_template import PrepTemplate
 from qiita_db.parameters import (Preprocessed454Params,
                                  PreprocessedIlluminaParams)
+from qiita_pet.util import status_styler
 from .base_uimodule import BaseUIModule
 
 
@@ -166,6 +167,7 @@ class PrepTemplatePanel(BaseUIModule):
         is_local_request = self._is_local()
 
         prep_id = prep.id
+        status_class, status_color = status_styler[prep.status]
         data_type = prep.data_type()
         raw_data = RawData(prep.raw_data)
         filepaths = prep.get_filepaths()
@@ -200,6 +202,8 @@ class PrepTemplatePanel(BaseUIModule):
         return self.render_string(
             "study_description_templates/prep_template_panel.html",
             prep_id=prep_id,
+            status_class=status_class,
+            status_color=status_color,
             data_type=data_type,
             filepaths=filepaths,
             investigation_type=investigation_type,
