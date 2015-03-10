@@ -84,8 +84,9 @@ class MetadataSummaryHandler(BaseHandler):
                                  "information.")
 
         df = dataframe_from_template(template)
+        num_samples = df.shape[0]
         stats = stats_from_df(df)
 
         self.render('metadata_summary.html',
                     study_title=study.title, stats=stats,
-                    back_button_path=back_button_path)
+                    num_samples=num_samples, back_button_path=back_button_path)
