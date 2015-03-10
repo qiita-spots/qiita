@@ -3,12 +3,12 @@
 {% from future.utils import viewitems %}
 
 <h1>Metadata Summary for Study {{study_title}}</h1>
-
+<a class="glyphicon glyphicon-arrow-left" href="{{back_button_path}}">Back</a>
 <div class="panel panel-default">
     <div class="panel-heading">
         The  information below describes information contained in the sample
         and prep templates.
-    </div> 
+    </div>
 
     <table class="table">
     {% for category, summary in viewitems(stats) %}
@@ -36,11 +36,6 @@
             {% end %}
         {% end %}
     {% end %}
-    <tr>
-        <td style="vertical-align: middle; text-align:center;" colspan="2">
-            <a class="btn btn-primary" href="{{back_button_path}}">Back</a>
-        </td>
-    </tr>
     </table>
 </div>
 {% end %}
