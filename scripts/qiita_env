@@ -84,8 +84,7 @@ def drop(ask_for_confirmation):
     try:
         drop_environment(ask_for_confirmation)
     except RuntimeError as e:
-        click.echo(str(e), stderr, False)
-        exit(1)
+        raise click.ClickException(str(e))
 
 
 @env.command()
