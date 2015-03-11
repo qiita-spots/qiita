@@ -107,6 +107,8 @@ class ConfigurationManager(object):
         The VAMPS password
     vamps_url : str
         The VAMPS URL
+    conf_fp : str
+        The filepath for the configuration file that is loaded
     """
     def __init__(self):
         # If conf_fp is None, we default to the test configuration file
@@ -115,6 +117,7 @@ class ConfigurationManager(object):
         except KeyError:
             conf_fp = join(dirname(abspath(__file__)),
                            'support_files/config_test.txt')
+        self.conf_fp = conf_fp
 
         # Parse the configuration file
         config = ConfigParser()
