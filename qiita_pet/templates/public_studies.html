@@ -9,7 +9,14 @@
 $(document).ready(function() {
         $('#public-studies-table').dataTable({
             order: [[0, "asc"]],
-            columnDefs: [{type:'natural', targets:[2,3,4]}]
+            columnDefs: [
+            {
+                type:'natural', targets:[3,4,5]
+            },
+            {
+                "targets": [ 1 ],
+                "visible": false
+            }]
          });
     $("#waiting").hide();
 } );
@@ -22,6 +29,7 @@ $(document).ready(function() {
         <thead>
             <tr>
                 <th>Title</th>
+                <th>Abstract</th>
                 <th>Owner</th>
                 <th>Metadata Complete</th>
                 <th>Samples</th>
@@ -31,9 +39,10 @@ $(document).ready(function() {
             </tr>
         </thead>
         <tbody>
-            {% for s in public_studies %}
+{% for s in public_studies %}
             <tr>
-                <td><a href="/study/description/{{ s.id }}">{{ s.title }}</a></td>
+                <td><a href="#" data-toggle="modal" data-target="#study{{s.id}}-modal"><span class="glyphicon glyphicon-file" aria-hidden="true"></span></a> | <a href="/study/description/{{ s.id }}">{{ s.title }}</a></td>
+                <td>{% raw s.abstract %}</td>
                 <td>{% raw s.owner %}</td>
                 {% if s.meta_complete %}
                 <td><span class="glyphicon glyphicon-ok"></span></td>
@@ -49,9 +58,27 @@ $(document).ready(function() {
                 <td>{% raw s.pi %}</td>
                 <td>{% raw s.pmids %}</td>
             </tr>
-            {% end %}
+{% end %}
         </tbody>
     </table>
+
+    <!--Abstract Modals-->
+{% for s in public_studies %}
+<div class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true" id="study{{s.id}}-modal">
+  <div class="modal-dialog modal-med">
+    <div class="modal-content">
+    <div class="modal-header">
+       <h3>{{ s.title }}</h3>
+    </div>
+    <div class="modal-body">
+        {% raw s.abstract %}
+      </div>
+    </div>
+  </div>
+</div>
+{% end %}
+
+
 {% else %}
     <div id="jumbotron" class="jumbotron">
         <h1><span class="glyphicon glyphicon-thumbs-down"></span> There are no studies available</h1>
