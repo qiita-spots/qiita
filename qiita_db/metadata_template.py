@@ -1090,11 +1090,10 @@ class MetadataTemplate(QiitaObject):
         sql = """SELECT {0}, {1} FROM qiita.{2} req
             INNER JOIN qiita.{3} dyn on req.sample_id = dyn.sample_id
             WHERE req.{4} = %s""".format(
-                ", ".join("req.%s" % c for c in cols),
-                ", ".join("dyn.%s" % d for d in dyncols),
-                self._table, self._table_name(self._id), self._id_column)
-        meta, types = conn_handler.execute_fetchall(sql, [self._id],
-                                                    return_types=True)
+            ", ".join("req.%s" % c for c in cols),
+            ", ".join("dyn.%s" % d for d in dyncols),
+            self._table, self._table_name(self._id), self._id_column)
+        meta = conn_handler.execute_fetchall(sql, [self._id])
         cols = cols + dyncols
 
         # Create the dataframe and clean it up a bit
