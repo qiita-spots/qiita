@@ -2395,6 +2395,13 @@ class TestUtilities(TestCase):
         exp.index.name = 'sample_name'
         assert_frame_equal(obs, exp)
 
+    def test_load_template_to_dataframe_lowercase(self):
+        obs = load_template_to_dataframe(
+            StringIO(EXP_SAMPLE_TEMPLATE_MULTICASE))
+        exp = pd.DataFrame.from_dict(SAMPLE_TEMPLATE_DICT_FORM)
+        exp.index.name = 'sample_name'
+        assert_frame_equal(obs, exp)
+
     def test_get_invalid_sample_names(self):
         all_valid = ['2.sample.1', 'foo.bar.baz', 'roses', 'are', 'red',
                      'v10l3t5', '4r3', '81u3']
@@ -2443,6 +2450,17 @@ class TestUtilities(TestCase):
 EXP_SAMPLE_TEMPLATE = (
     "sample_name\tcollection_timestamp\tdescription\thas_extracted_data\t"
     "has_physical_specimen\thost_subject_id\tint_column\tlatitude\tlongitude\t"
+    "physical_location\trequired_sample_info_status\tsample_type\tstr_column\n"
+    "2.Sample1\t2014-05-29 12:24:51\tTest Sample 1\tTrue\tTrue\tNotIdentified"
+    "\t1\t42.42\t41.41\tlocation1\treceived\ttype1\tValue for sample 1\n"
+    "2.Sample2\t2014-05-29 12:24:51\tTest Sample 2\tTrue\tTrue\tNotIdentified"
+    "\t2\t4.2\t1.1\tlocation1\treceived\ttype1\tValue for sample 2\n"
+    "2.Sample3\t2014-05-29 12:24:51\tTest Sample 3\tTrue\tTrue\tNotIdentified"
+    "\t3\t4.8\t4.41\tlocation1\treceived\ttype1\tValue for sample 3\n")
+
+EXP_SAMPLE_TEMPLATE_MULTICASE = (
+    "Sample_naMe\tcoLLection_timestamp\tdesCription\thas_exTracted_data\t"
+    "has_physical_specimen\thost_subject_id\tint_column\tlatiTude\tlongitude\t"
     "physical_location\trequired_sample_info_status\tsample_type\tstr_column\n"
     "2.Sample1\t2014-05-29 12:24:51\tTest Sample 1\tTrue\tTrue\tNotIdentified"
     "\t1\t42.42\t41.41\tlocation1\treceived\ttype1\tValue for sample 1\n"

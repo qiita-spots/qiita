@@ -2208,7 +2208,8 @@ def load_template_to_dataframe(fn, strip_whitespace=True):
     sample names will be removed from the DataFrame.
 
     The following table describes the data type per column that will be
-    enforced in `fn`.
+    enforced in `fn`. Column names are case-insensitive but will be lowercased
+    on addition to the database.
 
     +-----------------------+--------------+
     |      Column Name      |  Python Type |
@@ -2288,6 +2289,15 @@ def load_template_to_dataframe(fn, strip_whitespace=True):
                 raise QiitaDBColumnError("The '%s' column includes values that"
                                          " cannot be cast into a %s "
                                          "type." % (n, c_dtype))
+
+    # get and clean the required columns
+    reqcols = set(get_table_cols("required_sample_info"))
+    reqcols.add('sample_name')
+    reqcols.add('required_sample_info_status')
+    reqcols.discard('required_sample_info_status_id')
+    # lowercase the required columns for easy matching
+    template.rename(columns=lambda x: x.lower() if x.lower() in reqcols else x,
+                    inplace=True)
 
     initial_columns = set(template.columns)
 
