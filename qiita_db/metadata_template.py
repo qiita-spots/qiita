@@ -1146,26 +1146,22 @@ class MetadataTemplate(QiitaObject):
         return [(fpid, base_fp(fp)) for fpid, fp in filepath_ids]
 
     def categories(self):
-        """Get the categories associated with self
+        """Identifies the metadata columns present in a template
 
         Returns
         -------
-        set
-            The set of categories associated with self
+        cols : list
+            The static and dynamic category fields
+
         """
-        conn_handler = SQLConnectionHandler()
-        table_name = self._table_name(self.study_id)
+        cols = get_table_cols(self._table_name(self._id))
+        cols.extend(get_table_cols(self._table)[1:])
 
-        raw = conn_handler.execute_fetchall("""
-            SELECT column_name
-            FROM information_schema.columns
-            WHERE table_name='{0}'
-                AND table_schema='qiita'""".format(table_name))
+        for idx, c in enumerate(cols):
+            if c in self.translate_cols_dict:
+                cols[idx] = self.translate_cols_dict[c]
 
-        categories = {c[0] for c in raw}
-        categories.remove('sample_id')
-
-        return categories
+        return set(cols)
 
 
 class SampleTemplate(MetadataTemplate):
@@ -1485,19 +1481,6 @@ class SampleTemplate(MetadataTemplate):
 
         # adding the fp to the object
         self.add_filepath(fp)
-
-    @property
-    def headers(self):
-        """Identifies the metadata columns present in a template"""
-
-        cols = get_table_cols(self._table_name(self._id))
-        cols.extend(get_table_cols(self._table)[1:])
-
-        for idx, c in enumerate(cols):
-            if c in self.translate_cols_dict:
-                cols[idx] = self.translate_cols_dict[c]
-
-        return cols
 
     def update(self, md_template):
         r"""Update values in the sample template

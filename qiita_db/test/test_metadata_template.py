@@ -696,17 +696,6 @@ class TestSampleTemplate(TestCase):
             '1.SKM3.640197', '1.SKM4.640180', '1.SKM5.640177', '1.SKM6.640187',
             '1.SKM7.640188', '1.SKM8.640201', '1.SKM9.640192'}
         self._clean_up_files = []
-        self.columns = ['sample_id', 'season_environment', 'assigned_from_geo',
-                        'texture', 'taxon_id', 'depth', 'host_taxid',
-                        'common_name', 'water_content_soil', 'elevation',
-                        'temp', 'tot_nitro', 'samp_salinity', 'altitude',
-                        'env_biome', 'country', 'ph', 'anonymized_name',
-                        'tot_org_carb', 'description_duplicate', 'env_feature',
-                        'study_id', 'physical_location',
-                        'has_physical_specimen', 'has_extracted_data',
-                        'sample_type', 'required_sample_info_status',
-                        'collection_timestamp', 'host_subject_id',
-                        'description', 'latitude', 'longitude']
 
         self.metadata_dict_updated_dict = {
             'Sample1': {'physical_location': 'location1',
@@ -1268,12 +1257,17 @@ class TestSampleTemplate(TestCase):
         self.assertEqual(obs, exp)
 
     def test_categories(self):
-        exp = {'season_environment',
-               'assigned_from_geo', 'texture', 'taxon_id', 'depth',
-               'host_taxid', 'common_name', 'water_content_soil', 'elevation',
-               'temp', 'tot_nitro', 'samp_salinity', 'altitude', 'env_biome',
-               'country', 'ph', 'anonymized_name', 'tot_org_carb',
-               'description_duplicate', 'env_feature'}
+        exp = set(['sample_id', 'season_environment', 'assigned_from_geo',
+                   'texture', 'taxon_id', 'depth', 'host_taxid',
+                   'common_name', 'water_content_soil', 'elevation',
+                   'temp', 'tot_nitro', 'samp_salinity', 'altitude',
+                   'env_biome', 'country', 'ph', 'anonymized_name',
+                   'tot_org_carb', 'description_duplicate', 'env_feature',
+                   'study_id', 'physical_location',
+                   'has_physical_specimen', 'has_extracted_data',
+                   'sample_type', 'required_sample_info_status',
+                   'collection_timestamp', 'host_subject_id',
+                   'description', 'latitude', 'longitude'])
         obs = self.tester.categories()
         self.assertEqual(obs, exp)
 
@@ -1288,9 +1282,6 @@ class TestSampleTemplate(TestCase):
 
         for v in self.tester.values():
             self.assertNotIn('elevation', v)
-
-    def test_headers(self):
-        self.assertEqual(self.tester.headers, self.columns)
 
     def test_iter(self):
         """iter returns an iterator over the sample ids"""
