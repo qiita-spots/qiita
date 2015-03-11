@@ -11,11 +11,11 @@ var current_study;
 $(document).ready(function() {
         $('#user-studies-table').dataTable({
             order: [[ 0, "asc" ]],
-            columnDefs: [{type:'natural', targets:[1,2,3,7]}]
+            columnDefs: [{type:'natural', targets:[2,3,4,8]}, {"targets": [ 1 ],"visible": false}]
         });
         $('#shared-studies-table').dataTable({
             order: [[ 0, "asc" ]],
-            columnDefs: [{type:'natural', targets:[2,3,4]}]
+            columnDefs: [{type:'natural', targets:[3,4,5]}, {"targets": [ 1 ],"visible": false}]
         });
     $('#waiting').hide();
     $('#users_list').chosen({width: "100%"});
@@ -81,13 +81,14 @@ function modify_sharing(study_id) {
     </div>
   </div>
 </div>
-
+<!--User Studies-->
 <h1>Your Studies</h1>
 {% if len(user_studies) %}
     <table id="user-studies-table" class="display table-bordered table-hover">
         <thead>
             <tr>
                 <th>Title</th>
+                <th>Abstract</th>
                 <th>Metadata Complete</th>
                 <th>Samples</th>
                 <th>Sequence Files</th>
@@ -101,7 +102,9 @@ function modify_sharing(study_id) {
             {% for s in user_studies %}
             <tr>
                 {# Title #}
-                <td><a href="/study/description/{{ s.id }}">{{ s.title }}</a></td>
+                <td><a href="/study/description/{{ s.id }}"><a href="#" data-toggle="modal" data-target="#study{{s.id}}-modal"><span class="glyphicon glyphicon-file" aria-hidden="true"></span></a> | {{ s.title }}</a></td>
+                {# Abstract (hidden on page) #}
+                <td>{% raw s.abstract %}</td>
                 {# Metadata Comlete #}
                 {% if s.meta_complete %}
                 <td><span class="glyphicon glyphicon-ok"></span></td>
@@ -134,6 +137,22 @@ function modify_sharing(study_id) {
             {% end %}
         </tbody>
     </table>
+
+<!--User study Modals-->
+{% for s in user_studies %}
+<div class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true" id="study{{s.id}}-modal">
+  <div class="modal-dialog modal-med">
+    <div class="modal-content">
+    <div class="modal-header">
+       <h3>{{ s.title }}</h3>
+    </div>
+    <div class="modal-body">
+        {% raw s.abstract %}
+      </div>
+    </div>
+  </div>
+</div>
+{% end %}
 {% else %}
     <div id="jumbotron" class="jumbotron">
         <h1><span class="glyphicon glyphicon-thumbs-down"></span> There are no studies available.</h1>
@@ -142,13 +161,14 @@ function modify_sharing(study_id) {
         </p>
 </div>
 {% end %}
-
+<!--Shared Studies-->
 <h1>Shared Studies</h1>
 {% if len(shared_studies) %}
     <table id="shared-studies-table" class="display table-bordered table-hover">
         <thead>
             <tr>
                 <th>Title</th>
+                <th>Abstract</th>
                 <th>Owner</th>
                 <th>Metadata Complete</th>
                 <th>Samples</th>
@@ -160,7 +180,8 @@ function modify_sharing(study_id) {
         <tbody>
             {% for s in shared_studies %}
             <tr>
-                <td><a href="/study/description/{{ s.id }}">{{ s.title }}</a></td>
+                <td><a href="#" data-toggle="modal" data-target="#study{{s.id}}-modal"><span class="glyphicon glyphicon-file" aria-hidden="true"></span></a> | <a href="/study/description/{{ s.id }}">{{ s.title }}</a></td>
+                <td>{% raw s.abstract %}</a></td>
                 <td>{% raw s.owner %}</td>
                 {% if s.meta_complete %}
                 <td><span class="glyphicon glyphicon-ok"></span></td>
@@ -179,6 +200,22 @@ function modify_sharing(study_id) {
             {% end %}
         </tbody>
     </table>
+
+<!--Shared study Modals-->
+{% for s in shared_studies %}
+<div class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true" id="study{{s.id}}-modal">
+  <div class="modal-dialog modal-med">
+    <div class="modal-content">
+    <div class="modal-header">
+       <h3>{{ s.title }}</h3>
+    </div>
+    <div class="modal-body">
+        {% raw s.abstract %}
+      </div>
+    </div>
+  </div>
+</div>
+{% end %}
 {% else %}
     <div id="jumbotron" class="jumbotron">
         <h1><span class="glyphicon glyphicon-thumbs-down"></span> There are no studies available.</h1>
