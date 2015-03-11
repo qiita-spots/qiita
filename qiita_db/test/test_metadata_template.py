@@ -2044,7 +2044,7 @@ class TestPrepTemplate(TestCase):
 
     def test_delete_error(self):
         """Try to delete a prep template that already has preprocessed data"""
-        with self.assertRaises(QiitaDBError):
+        with self.assertRaises(QiitaDBExecutionError):
             PrepTemplate.delete(1)
 
     def test_delete_unkonwn_id_error(self):
