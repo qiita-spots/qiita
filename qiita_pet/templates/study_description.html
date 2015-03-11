@@ -517,11 +517,11 @@ $(document).ready(function() {
   {% module SampleTemplateTab(study) %}
   {% if show_data_tabs %}
     <!-- Show the raw data tab -->
-    {% module RawDataTab(study) %}
+    {% module RawDataTab(study, full_access) %}
     <!-- Show the preprocessed data tab -->
-    {% module PreprocessedDataTab(study) %}
+    {% module PreprocessedDataTab(study, full_access) %}
     <!-- Show the processed data tab -->
-    {% module ProcessedDataTab(study) %}
+    {% module ProcessedDataTab(study, full_access) %}
   {% end %}
 </div>
 

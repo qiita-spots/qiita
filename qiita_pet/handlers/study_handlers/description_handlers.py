@@ -90,7 +90,8 @@ class StudyDescriptionHandler(BaseHandler):
 
         Returns
         -------
-        The study object and the current user object
+        The study object, the current user object and a boolean indicating if
+        the user has full access to the study or only to public data
 
         Raises
         ------
@@ -107,7 +108,9 @@ class StudyDescriptionHandler(BaseHandler):
         else:
             check_access(user, study, raise_error=True)
 
-        return study, user
+        full_access = study.id in user.user_studies + user.shared_studies
+
+        return study, user, full_access
 
     def _process_investigation_type(self, inv_type, user_def_type, new_type):
         """Return the investigation_type and add it to the ontology if needed
@@ -627,8 +630,8 @@ class StudyDescriptionHandler(BaseHandler):
         SampleTemplate(st_id).extend(load_template_to_dataframe(fp_rpt))
 
     @coroutine
-    def display_template(self, study, user, msg, msg_level, top_tab=None,
-                         sub_tab=None, prep_tab=None):
+    def display_template(self, study, user, msg, msg_level, full_access,
+                         top_tab=None, sub_tab=None, prep_tab=None):
         """Simple function to avoid duplication of code"""
         # getting the RawData and its prep templates
         available_raw_data = yield Task(self.get_raw_data, study.raw_data())
@@ -667,6 +670,7 @@ class StudyDescriptionHandler(BaseHandler):
                     study_alias=study.info['study_alias'],
                     show_edit_btn=show_edit_btn,
                     show_data_tabs=sample_template_exists,
+                    full_access=full_access,
                     top_tab=top_tab,
                     sub_tab=sub_tab,
                     prep_tab=prep_tab)
@@ -730,19 +734,20 @@ class StudyDescriptionHandler(BaseHandler):
 
     @authenticated
     def get(self, study_id):
-        study, user = self._get_study_and_check_access(study_id)
+        study, user, full_access = self._get_study_and_check_access(study_id)
 
         top_tab = self.get_argument('top_tab', 'study_information_tab')
         sub_tab = self.get_argument('sub_tab', None)
         prep_tab = self.get_argument('prep_tab', None)
 
-        self.display_template(study, user, "", 'info', top_tab=top_tab,
-                              sub_tab=sub_tab, prep_tab=prep_tab)
+        self.display_template(study, user, "", 'info', full_access,
+                              top_tab=top_tab, sub_tab=sub_tab,
+                              prep_tab=prep_tab)
 
     @authenticated
     @coroutine
     def post(self, study_id):
-        study, user = self._get_study_and_check_access(study_id)
+        study, user, full_access = self._get_study_and_check_access(study_id)
 
         # Define a dictionary with all the supported actions
         actions = defaultdict(
@@ -768,8 +773,8 @@ class StudyDescriptionHandler(BaseHandler):
                                                                 study, user)
 
         # Display the function
-        self.display_template(study, user, msg, msg_level, top_tab, sub_tab,
-                              prep_tab)
+        self.display_template(study, user, msg, msg_level, full_access,
+                              top_tab, sub_tab, prep_tab)
 
 
 class PreprocessingSummaryHandler(BaseHandler):

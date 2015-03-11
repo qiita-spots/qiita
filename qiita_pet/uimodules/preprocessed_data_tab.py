@@ -16,11 +16,12 @@ from qiita_pet.util import generate_param_str, status_styler
 
 
 class PreprocessedDataTab(BaseUIModule):
-    def render(self, study):
+    def render(self, study, full_access):
         ppd_gen = (PreprocessedData(ppd_id)
                    for ppd_id in study.preprocessed_data())
         avail_ppd = [(ppd.id, ppd, status_styler[ppd.status])
-                     for ppd in ppd_gen]
+                     for ppd in ppd_gen
+                     if full_access or ppd.status == 'public']
         return self.render_string(
             "study_description_templates/preprocessed_data_tab.html",
             available_preprocessed_data=avail_ppd,

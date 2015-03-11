@@ -13,9 +13,10 @@ from .base_uimodule import BaseUIModule
 
 
 class ProcessedDataTab(BaseUIModule):
-    def render(self, study):
+    def render(self, study, full_access):
         pd_gen = (ProcessedData(pd_id) for pd_id in study.processed_data())
-        avail_pd = [(pd.id, pd, status_styler[pd.status]) for pd in pd_gen]
+        avail_pd = [(pd.id, pd, status_styler[pd.status]) for pd in pd_gen
+                    if full_access or pd.status == 'public']
 
         return self.render_string(
             "study_description_templates/processed_data_tab.html",
