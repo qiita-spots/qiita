@@ -1257,17 +1257,17 @@ class TestSampleTemplate(TestCase):
         self.assertEqual(obs, exp)
 
     def test_categories(self):
-        exp = set(['sample_id', 'season_environment', 'assigned_from_geo',
-                   'texture', 'taxon_id', 'depth', 'host_taxid',
-                   'common_name', 'water_content_soil', 'elevation',
-                   'temp', 'tot_nitro', 'samp_salinity', 'altitude',
-                   'env_biome', 'country', 'ph', 'anonymized_name',
-                   'tot_org_carb', 'description_duplicate', 'env_feature',
-                   'study_id', 'physical_location',
-                   'has_physical_specimen', 'has_extracted_data',
-                   'sample_type', 'required_sample_info_status',
-                   'collection_timestamp', 'host_subject_id',
-                   'description', 'latitude', 'longitude'])
+        exp = ['sample_id', 'season_environment', 'assigned_from_geo',
+               'texture', 'taxon_id', 'depth', 'host_taxid',
+               'common_name', 'water_content_soil', 'elevation',
+               'temp', 'tot_nitro', 'samp_salinity', 'altitude',
+               'env_biome', 'country', 'ph', 'anonymized_name',
+               'tot_org_carb', 'description_duplicate', 'env_feature',
+               'study_id', 'physical_location',
+               'has_physical_specimen', 'has_extracted_data',
+               'sample_type', 'required_sample_info_status',
+               'collection_timestamp', 'host_subject_id',
+               'description', 'latitude', 'longitude']
         obs = self.tester.categories()
         self.assertEqual(obs, exp)
 

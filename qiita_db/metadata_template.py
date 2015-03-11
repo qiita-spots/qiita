@@ -1161,7 +1161,7 @@ class MetadataTemplate(QiitaObject):
             if c in self.translate_cols_dict:
                 cols[idx] = self.translate_cols_dict[c]
 
-        return set(cols)
+        return cols
 
 
 class SampleTemplate(MetadataTemplate):
