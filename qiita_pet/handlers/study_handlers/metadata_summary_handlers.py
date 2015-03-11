@@ -68,7 +68,7 @@ class MetadataSummaryHandler(BaseHandler):
             # The sample template has been provided
             template = self._get_template(SampleTemplate, sample_template)
             back_button_path = (
-                "/study/description/%s?top_tab=sample_template_tab"
+                "/study/description/%s"
                 % study_id)
         else:
             # Neither a sample template or a prep template has been provided
@@ -84,8 +84,9 @@ class MetadataSummaryHandler(BaseHandler):
                                  "information.")
 
         df = dataframe_from_template(template)
+        num_samples = df.shape[0]
         stats = stats_from_df(df)
 
         self.render('metadata_summary.html',
                     study_title=study.title, stats=stats,
-                    back_button_path=back_button_path)
+                    num_samples=num_samples, back_button_path=back_button_path)
