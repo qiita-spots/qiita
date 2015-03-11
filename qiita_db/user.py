@@ -346,7 +346,7 @@ class User(QiitaObject):
                "email = %s".format(self._table))
         conn_handler = SQLConnectionHandler()
         study_ids = conn_handler.execute_fetchall(sql, (self._id, ))
-        return [s[0] for s in study_ids]
+        return {s[0] for s in study_ids}
 
     @property
     def shared_studies(self):
@@ -355,7 +355,7 @@ class User(QiitaObject):
                "email = %s".format(self._table))
         conn_handler = SQLConnectionHandler()
         study_ids = conn_handler.execute_fetchall(sql, (self._id, ))
-        return [s[0] for s in study_ids]
+        return {s[0] for s in study_ids}
 
     @property
     def private_analyses(self):
@@ -364,7 +364,7 @@ class User(QiitaObject):
                "analysis_status_id <> 6")
         conn_handler = SQLConnectionHandler()
         analysis_ids = conn_handler.execute_fetchall(sql, (self._id, ))
-        return [a[0] for a in analysis_ids]
+        return {a[0] for a in analysis_ids}
 
     @property
     def shared_analyses(self):
@@ -373,7 +373,7 @@ class User(QiitaObject):
                "email = %s".format(self._table))
         conn_handler = SQLConnectionHandler()
         analysis_ids = conn_handler.execute_fetchall(sql, (self._id, ))
-        return [a[0] for a in analysis_ids]
+        return {a[0] for a in analysis_ids}
 
     # ------- methods ---------
     def change_password(self, oldpass, newpass):

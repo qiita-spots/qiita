@@ -214,17 +214,17 @@ class UserTest(TestCase):
 
     def test_get_user_studies(self):
         user = User('test@foo.bar')
-        self.assertEqual(user.user_studies, [1])
+        self.assertEqual(user.user_studies, {1})
 
     def test_get_shared_studies(self):
         user = User('shared@foo.bar')
-        self.assertEqual(user.shared_studies, [1])
+        self.assertEqual(user.shared_studies, {1})
 
     def test_get_private_analyses(self):
-        self.assertEqual(self.user.private_analyses, [])
+        self.assertEqual(self.user.private_analyses, set([]))
 
     def test_get_shared_analyses(self):
-        self.assertEqual(self.user.shared_analyses, [])
+        self.assertEqual(self.user.shared_analyses, set([]))
 
     def test_verify_code(self):
         sql = ("insert into qiita.qiita_user values ('test@user.com', '1', "

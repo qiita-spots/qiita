@@ -82,7 +82,7 @@ def get_accessible_filepath_ids(user):
 
     # First, the studies
     # There are public, private, and shared studies
-    study_ids = Study.get_by_status('public') + user.user_studies + \
+    study_ids = Study.get_by_status('public') | user.user_studies | \
         user.shared_studies
 
     filepath_ids = set()
@@ -120,7 +120,7 @@ def get_accessible_filepath_ids(user):
 
     # Next, analyses
     # Same as before, there are public, private, and shared
-    analysis_ids = Analysis.get_by_status('public') + user.private_analyses + \
+    analysis_ids = Analysis.get_by_status('public') | user.private_analyses | \
         user.shared_analyses
 
     for analysis_id in analysis_ids:
