@@ -151,13 +151,13 @@ class SQLConnectionHandler(object):
         try:
             self._connection = connect(**args)
         except Exception as e:
-            # catch any exception and raise as runtime error
-            ebase = ('An error with the following text occurred\n\n\t%s\n%s'
-                     ' Please review `INSTALL.md`.')
+            # catch threee known common exceptions and raise runtime errors
+            ebase = ('An error with the following text occurred\n\n\t%s\n%s '
+                     'Please review `INSTALL.md`.')
             # parse string of expected errors - if too weird, we can't suggest
             # a solution
             try:
-                etype = str(e).split(':')[1].split('"')[0].strip()
+                etype = str(e).split(':')[1].split()[0]
                 if etype == 'database':
                     etext = ('This is likely because the database has not been'
                              ' created or has been dropped.')
@@ -166,6 +166,10 @@ class SQLConnectionHandler(object):
                              'supplied in your configuration file `%s` is '
                              'incorrect or not an authorized postgres user.' %
                              (qiita_config.user, qiita_config.conf_fp))
+                elif etype == 'Connection':
+                    etext = ('This is likely because `postgres.app` isn\'t '
+                             'running. Check that postgres.app is correctly '
+                             'installed and is running.')
                 else:
                     # we recieved a really unanticipated error
                     etext = ''
