@@ -150,16 +150,23 @@ class SQLConnectionHandler(object):
 
         try:
             self._connection = connect(**args)
-        except Exception:
+        except Exception as e:
             # catch any exception and raise as runtime error
-            # attempt to point the user to their config file
-            error_text = ("Can't connect to database; user `%s` is not known. "
-                          "Your QIITA configuration file, located at `%s` must"
-                          " specify the correct user, via the `USER` parameter"
-                          " under the `[postgres]` header. Please refer to "
-                          "`INSTALL.md` in the QIITA base directory.")
-            error_text = error_text % (qiita_config.user, qiita_config.conf_fp)
-            raise RuntimeError(error_text)
+            ebase = ('An error with the following text occurred\n\n\t%s\n%s'
+                     ' Please review `INSTALL.md`.')
+            etype = str(e).split(':')[1].split('"')[0].strip()
+            if etype == 'database':
+                etext = ('This is likely because the database has not been '
+                         'created or has been dropped.')
+            elif etype == 'role':
+                etext = ('This is likely because the user string `%s` supplied'
+                         ' in your configuration file `%s` is incorrect or not'
+                         ' an authorized postgres user.' %
+                         (qiita_config.user, qiita_config.conf_fp))
+            else:
+                # we recieved a really unanticipated error
+                etext = ''
+            raise RuntimeError(ebase % (e, etext))
 
     @contextmanager
     def get_postgres_cursor(self):
