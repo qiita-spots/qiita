@@ -213,6 +213,12 @@ def _get_preprocess_fasta_cmd(raw_data, prep_template, params):
     elif quals and not seqs:
         raise ValueError("Cannot have just qual, on %s"
                          % raw_data.id)
+    elif seqs and not quals:
+        raise ValueError("It is not currently possible to process "
+                         "fasta file(s) without qual file(s). This will "
+                         "be supported in the future. You can track progress "
+                         "on this by following: "
+                         "https://github.com/biocore/qiita/issues/953")
     elif seqs:
         seqs = sorted(seqs)
         quals = sorted(quals)
@@ -229,12 +235,6 @@ def _get_preprocess_fasta_cmd(raw_data, prep_template, params):
 
     if quals:
         qual_str = "-q %s -d" % ','.join(quals)
-    else:
-        raise ValueError("It is not currently possible to process "
-                         "fasta file(s) without qual file(s). This will "
-                         "be supported in the future. You can track progress "
-                         "on this by following: "
-                         "https://github.com/biocore/qiita/issues/953")
 
     # The minimal QIIME mapping files should be written to a directory,
     # so QIIME can consume them
