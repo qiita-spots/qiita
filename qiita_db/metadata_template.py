@@ -1964,7 +1964,7 @@ class PrepTemplate(MetadataTemplate):
 
         Raises
         ------
-        QiitaDBError
+        QiitaDBExecutionError
             If the prep template already has a preprocessed data
         QiitaDBUnknownIDError
             If no prep template with id = id_ exists
@@ -1975,15 +1975,14 @@ class PrepTemplate(MetadataTemplate):
         if not cls.exists(id_):
             raise QiitaDBUnknownIDError(id_, cls.__name__)
 
-        # TODO: Should we cascade to preprocessed data? See issue #537
         preprocessed_data_exists = conn_handler.execute_fetchone(
             "SELECT EXISTS(SELECT * FROM qiita.prep_template_preprocessed_data"
             " WHERE prep_template_id=%s)", (id_,))[0]
 
         if preprocessed_data_exists:
-            raise QiitaDBError("Cannot remove prep template %d because a "
-                               "preprocessed data has been already generated "
-                               "using it." % id_)
+            raise QiitaDBExecutionError("Cannot remove prep template %d "
+                                        "because a preprocessed data has been"
+                                        " already generated using it." % id_)
 
         # Delete the prep template filepaths
         conn_handler.execute(

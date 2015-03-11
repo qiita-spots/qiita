@@ -269,53 +269,53 @@ def get_emp_status(key='emp_status'):
 
 
 def create_rand_string(length, punct=True):
-        """Returns a string of random ascii characters
+    """Returns a string of random ascii characters
 
-        Parameters
-        ----------
-        length: int
-            Length of string to return
-        punct: bool, optional
-            Include punctiation as well as letters and numbers. Default True.
-        """
-        chars = ''.join((ascii_letters, digits))
-        if punct:
-            chars = ''.join((chars, punctuation))
-        return ''.join(choice(chars) for i in range(length))
+    Parameters
+    ----------
+    length: int
+        Length of string to return
+    punct: bool, optional
+        Include punctuation as well as letters and numbers. Default True.
+    """
+    chars = ''.join((ascii_letters, digits))
+    if punct:
+        chars = ''.join((chars, punctuation))
+    return ''.join(choice(chars) for i in range(length))
 
 
 def hash_password(password, hashedpw=None):
-        """ Hashes password
+    """Hashes password
 
-        Parameters
-        ----------
-        password: str
-            Plaintext password
-        hashedpw: str, optional
-            Previously hashed password for bcrypt to pull salt from. If not
-            given, salt generated before hash
+    Parameters
+    ----------
+    password: str
+        Plaintext password
+    hashedpw: str, optional
+        Previously hashed password for bcrypt to pull salt from. If not
+        given, salt generated before hash
 
-        Returns
-        -------
-        str
-            Hashed password
+    Returns
+    -------
+    str
+        Hashed password
 
-        Notes
-        -----
-        Relies on bcrypt library to hash passwords, which stores the salt as
-        part of the hashed password. Don't need to actually store the salt
-        because of this.
-        """
-        # all the encode/decode as a python 3 workaround for bcrypt
-        if hashedpw is None:
-            hashedpw = gensalt()
-        else:
-            hashedpw = hashedpw.encode('utf-8')
-        password = password.encode('utf-8')
-        output = hashpw(password, hashedpw)
-        if isinstance(output, bytes):
-            output = output.decode("utf-8")
-        return output
+    Notes
+    -----
+    Relies on bcrypt library to hash passwords, which stores the salt as
+    part of the hashed password. Don't need to actually store the salt
+    because of this.
+    """
+    # all the encode/decode as a python 3 workaround for bcrypt
+    if hashedpw is None:
+        hashedpw = gensalt()
+    else:
+        hashedpw = hashedpw.encode('utf-8')
+    password = password.encode('utf-8')
+    output = hashpw(password, hashedpw)
+    if isinstance(output, bytes):
+        output = output.decode("utf-8")
+    return output
 
 
 def check_required_columns(conn_handler, keys, table):
@@ -651,76 +651,76 @@ def get_mountpoint_path_by_id(mount_id, conn_handler=None):
 
 def insert_filepaths(filepaths, obj_id, table, filepath_table, conn_handler,
                      move_files=True, queue=None):
-        r"""Inserts `filepaths` in the DB connected with `conn_handler`. Since
-        the files live outside the database, the directory in which the files
-        lives is controlled by the database, so it copies the filepaths from
-        its original location to the controlled directory.
+    r"""Inserts `filepaths` in the DB connected with `conn_handler`. Since
+    the files live outside the database, the directory in which the files
+    lives is controlled by the database, so it copies the filepaths from
+    its original location to the controlled directory.
 
-        Parameters
-        ----------
-        filepaths : iterable of tuples (str, int)
-            The list of paths to the raw files and its filepath type identifier
-        obj_id : int
-            Id of the object calling the functions. Disregarded if move_files
-            is False
-        table : str
-            Table that holds the file data.
-        filepath_table : str
-            Table that holds the filepath information
-        conn_handler : SQLConnectionHandler
-            The connection handler object connected to the DB
-        move_files : bool, optional
-            Whether or not to copy from the given filepaths to the db filepaths
-            default: True
-        queue : str, optional
-            The queue to add this transaction to. Default return list of ids
+    Parameters
+    ----------
+    filepaths : iterable of tuples (str, int)
+        The list of paths to the raw files and its filepath type identifier
+    obj_id : int
+        Id of the object calling the functions. Disregarded if move_files
+        is False
+    table : str
+        Table that holds the file data.
+    filepath_table : str
+        Table that holds the filepath information
+    conn_handler : SQLConnectionHandler
+        The connection handler object connected to the DB
+    move_files : bool, optional
+        Whether or not to copy from the given filepaths to the db filepaths
+        default: True
+    queue : str, optional
+        The queue to add this transaction to. Default return list of ids
 
-        Returns
-        -------
-        list or None
-            List of the filepath_id in the database for each added filepath if
-            queue not specified, or no return value if queue specified
-        """
-        new_filepaths = filepaths
+    Returns
+    -------
+    list or None
+        List of the filepath_id in the database for each added filepath if
+        queue not specified, or no return value if queue specified
+    """
+    new_filepaths = filepaths
 
-        dd_id, mp = get_mountpoint(table, conn_handler)[0]
-        base_fp = join(get_db_files_base_dir(), mp)
+    dd_id, mp = get_mountpoint(table, conn_handler)[0]
+    base_fp = join(get_db_files_base_dir(), mp)
 
-        if move_files:
-            # Generate the new fileapths. Format: DataId_OriginalName
-            # Keeping the original name is useful for checking if the RawData
-            # alrady exists on the DB
-            db_path = partial(join, base_fp)
-            new_filepaths = [
-                (db_path("%s_%s" % (obj_id, basename(path))), id)
-                for path, id in filepaths]
-            # Move the original files to the controlled DB directory
-            for old_fp, new_fp in zip(filepaths, new_filepaths):
-                    move(old_fp[0], new_fp[0])
+    if move_files:
+        # Generate the new fileapths. Format: DataId_OriginalName
+        # Keeping the original name is useful for checking if the RawData
+        # alrady exists on the DB
+        db_path = partial(join, base_fp)
+        new_filepaths = [
+            (db_path("%s_%s" % (obj_id, basename(path))), id)
+            for path, id in filepaths]
+        # Move the original files to the controlled DB directory
+        for old_fp, new_fp in zip(filepaths, new_filepaths):
+                move(old_fp[0], new_fp[0])
 
-        def str_to_id(x):
-            return (x if isinstance(x, (int, long))
-                    else convert_to_id(x, "filepath_type", conn_handler))
-        paths_w_checksum = [(relpath(path, base_fp), str_to_id(id),
-                            compute_checksum(path))
-                            for path, id in new_filepaths]
-        # Create the list of SQL values to add
-        values = ["('%s', %s, '%s', %s, %s)" % (scrub_data(path), pid,
-                  checksum, 1, dd_id) for path, pid, checksum in
-                  paths_w_checksum]
-        # Insert all the filepaths at once and get the filepath_id back
-        sql = ("INSERT INTO qiita.{0} (filepath, filepath_type_id, checksum, "
-               "checksum_algorithm_id, data_directory_id) VALUES {1} RETURNING"
-               " filepath_id".format(filepath_table, ', '.join(values)))
-        if queue is not None:
-            # Drop the sql into the given queue
-            conn_handler.add_to_queue(queue, sql, None)
-        else:
-            ids = conn_handler.execute_fetchall(sql)
+    def str_to_id(x):
+        return (x if isinstance(x, (int, long))
+                else convert_to_id(x, "filepath_type", conn_handler))
+    paths_w_checksum = [(relpath(path, base_fp), str_to_id(id),
+                        compute_checksum(path))
+                        for path, id in new_filepaths]
+    # Create the list of SQL values to add
+    values = ["('%s', %s, '%s', %s, %s)" % (scrub_data(path), pid,
+              checksum, 1, dd_id) for path, pid, checksum in
+              paths_w_checksum]
+    # Insert all the filepaths at once and get the filepath_id back
+    sql = ("INSERT INTO qiita.{0} (filepath, filepath_type_id, checksum, "
+           "checksum_algorithm_id, data_directory_id) VALUES {1} RETURNING"
+           " filepath_id".format(filepath_table, ', '.join(values)))
+    if queue is not None:
+        # Drop the sql into the given queue
+        conn_handler.add_to_queue(queue, sql, None)
+    else:
+        ids = conn_handler.execute_fetchall(sql)
 
-            # we will receive a list of lists with a single element on it
-            # (the id), transform it to a list of ids
-            return [id[0] for id in ids]
+        # we will receive a list of lists with a single element on it
+        # (the id), transform it to a list of ids
+        return [id[0] for id in ids]
 
 
 def purge_filepaths(conn_handler=None):
@@ -883,66 +883,66 @@ def filepath_ids_to_rel_paths(filepath_ids):
 
 
 def convert_to_id(value, table, conn_handler=None):
-        """Converts a string value to it's corresponding table identifier
+    """Converts a string value to its corresponding table identifier
 
-        Parameters
-        ----------
-        value : str
-            The string value to convert
-        table : str
-            The table that has the conversion
-        conn_handler : SQLConnectionHandler, optional
-            The sql connection object
+    Parameters
+    ----------
+    value : str
+        The string value to convert
+    table : str
+        The table that has the conversion
+    conn_handler : SQLConnectionHandler, optional
+        The sql connection object
 
-        Returns
-        -------
-        int
-            The id correspinding to the string
+    Returns
+    -------
+    int
+        The id correspinding to the string
 
-        Raises
-        ------
-        IncompetentQiitaDeveloperError
-            The passed string has no associated id
-        """
-        conn_handler = conn_handler if conn_handler else SQLConnectionHandler()
-        _id = conn_handler.execute_fetchone(
-            "SELECT {0}_id FROM qiita.{0} WHERE {0} = %s".format(table),
-            (value, ))
-        if _id is None:
-            raise IncompetentQiitaDeveloperError("%s not valid for table %s"
-                                                 % (value, table))
-        return _id[0]
+    Raises
+    ------
+    IncompetentQiitaDeveloperError
+        The passed string has no associated id
+    """
+    conn_handler = conn_handler if conn_handler else SQLConnectionHandler()
+    _id = conn_handler.execute_fetchone(
+        "SELECT {0}_id FROM qiita.{0} WHERE {0} = %s".format(table),
+        (value, ))
+    if _id is None:
+        raise IncompetentQiitaDeveloperError("%s not valid for table %s"
+                                             % (value, table))
+    return _id[0]
 
 
 def convert_from_id(value, table, conn_handler=None):
-        """Converts an id value to it's corresponding string value
+    """Converts an id value to its corresponding string value
 
-        Parameters
-        ----------
-        value : int
-            The id value to convert
-        table : str
-            The table that has the conversion
-        conn_handler : SQLConnectionHandler, optional
-            The sql connection object
+    Parameters
+    ----------
+    value : int
+        The id value to convert
+    table : str
+        The table that has the conversion
+    conn_handler : SQLConnectionHandler, optional
+        The sql connection object
 
-        Returns
-        -------
-        str
-            The string correspinding to the id
+    Returns
+    -------
+    str
+        The string correspinding to the id
 
-        Raises
-        ------
-        ValueError
-            The passed id has no associated string
-        """
-        conn_handler = conn_handler if conn_handler else SQLConnectionHandler()
-        string = conn_handler.execute_fetchone(
-            "SELECT {0} FROM qiita.{0} WHERE {0}_id = %s".format(table),
-            (value, ))
-        if string is None:
-            raise ValueError("%s not valid for table %s" % (value, table))
-        return string[0]
+    Raises
+    ------
+    ValueError
+        The passed id has no associated string
+    """
+    conn_handler = conn_handler if conn_handler else SQLConnectionHandler()
+    string = conn_handler.execute_fetchone(
+        "SELECT {0} FROM qiita.{0} WHERE {0}_id = %s".format(table),
+        (value, ))
+    if string is None:
+        raise ValueError("%s not valid for table %s" % (value, table))
+    return string[0]
 
 
 def get_count(table):
