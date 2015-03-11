@@ -113,78 +113,75 @@ function extend_sample_template() {
 
 function create_raw_data() {
   if ($("#previous_raw_data").val() === null && $("#filetype").val() === "") {
-    alert("You need to select either a new file type or a raw data used in a previous study.");
+    bootstrapAlert("You need to select either a new file type or a raw data used in a previous study.");
   } else if ((typeof $("#previous_raw_data").val() != 'undefined' && $("#previous_raw_data").val() !== null) && $("#filetype").val() !== "") {
-    alert("You can only select a new file type or one used in a previous study but not both.");
+    bootstrapAlert("You can only select a new file type or one used in a previous study but not both.");
   } else {
-    if (confirm("Are you sure you want to create a new raw data?")) {
-      if ($("#filetype").val() !== "") {
-        var form = $("<form>")
-          .attr("action", window.location.href)
-          .attr("method", "post")
-          .append($("<input>")
-            .attr("type", "hidden")
-            .attr("name", "filetype")
-            .attr("value", $("#filetype").val()))
-          .append($("<input>")
-            .attr("type", "hidden")
-            .attr("name", "action")
-            .attr("value", "create_raw_data"));
-      } else {
-        var form = $("<form>")
-          .attr("action", window.location.href)
-          .attr("method", "post")
-          .append($("<input>")
-            .attr("type", "hidden")
-            .attr("name", "previous_raw_data")
-            .attr("value", $("#previous_raw_data option:selected").map(function(){ return this.value }).get().join(",")))
-          .append($("<input>")
-            .attr("type", "hidden")
-            .attr("name", "action")
-            .attr("value", "create_raw_data"));
-      }
-      $("body").append(form);
-      form.submit();
+    if ($("#filetype").val() !== "") {
+      var form = $("<form>")
+        .attr("action", window.location.href)
+        .attr("method", "post")
+        .append($("<input>")
+          .attr("type", "hidden")
+          .attr("name", "filetype")
+          .attr("value", $("#filetype").val()))
+        .append($("<input>")
+          .attr("type", "hidden")
+          .attr("name", "action")
+          .attr("value", "create_raw_data"));
+    } else {
+      var form = $("<form>")
+        .attr("action", window.location.href)
+        .attr("method", "post")
+        .append($("<input>")
+          .attr("type", "hidden")
+          .attr("name", "previous_raw_data")
+          .attr("value", $("#previous_raw_data option:selected").map(function(){ return this.value }).get().join(",")))
+        .append($("<input>")
+          .attr("type", "hidden")
+          .attr("name", "action")
+          .attr("value", "create_raw_data"));
     }
+    $("body").append(form);
+    form.submit();
+
   }
 }
 
 function add_prep_template(raw_data_id) {
-  if (confirm("Are you sure you want to add a new prep template?")) {
-    var form = $("<form>")
-      .attr("action", window.location.href)
-      .attr("method", "post")
-      .append($("<input>")
-        .attr("type", "hidden")
-        .attr("name", "raw_data_id")
-        .attr("value", raw_data_id))
-      .append($("<input>")
-        .attr("type", "hidden")
-        .attr("name", "prep_template")
-        .attr("value", $("#add_prep_template_" + raw_data_id).val()))
-      .append($("<input>")
-        .attr("type", "hidden")
-        .attr("name", "investigation-type")
-        .attr("value", $("#investigation-type-" + raw_data_id).val()))
-      .append($("<input>")
-        .attr("type", "hidden")
-        .attr("name", "user-defined-investigation-type")
-        .attr("value", $("#user-defined-investigation-type-" + raw_data_id).val()))
-      .append($("<input>")
-        .attr("type", "hidden")
-        .attr("name", "new-investigation-type")
-        .attr("value", $("#new-investigation-type-" + raw_data_id).val()))
-      .append($("<input>")
-        .attr("type", "hidden")
-        .attr("name", "data_type_id")
-        .attr("value", $("#data_type_" + raw_data_id).val()))
-      .append($("<input>")
-            .attr("type", "hidden")
-            .attr("name", "action")
-            .attr("value", "add_prep_template"));
-    $("body").append(form);
-    form.submit();
-  }
+  var form = $("<form>")
+    .attr("action", window.location.href)
+    .attr("method", "post")
+    .append($("<input>")
+      .attr("type", "hidden")
+      .attr("name", "raw_data_id")
+      .attr("value", raw_data_id))
+    .append($("<input>")
+      .attr("type", "hidden")
+      .attr("name", "prep_template")
+      .attr("value", $("#add_prep_template_" + raw_data_id).val()))
+    .append($("<input>")
+      .attr("type", "hidden")
+      .attr("name", "investigation-type")
+      .attr("value", $("#investigation-type-" + raw_data_id).val()))
+    .append($("<input>")
+      .attr("type", "hidden")
+      .attr("name", "user-defined-investigation-type")
+      .attr("value", $("#user-defined-investigation-type-" + raw_data_id).val()))
+    .append($("<input>")
+      .attr("type", "hidden")
+      .attr("name", "new-investigation-type")
+      .attr("value", $("#new-investigation-type-" + raw_data_id).val()))
+    .append($("<input>")
+      .attr("type", "hidden")
+      .attr("name", "data_type_id")
+      .attr("value", $("#data_type_" + raw_data_id).val()))
+    .append($("<input>")
+          .attr("type", "hidden")
+          .attr("name", "action")
+          .attr("value", "add_prep_template"));
+  $("body").append(form);
+  form.submit();
 }
 
 function delete_raw_data(raw_data_filetype, raw_data_id) {
@@ -337,11 +334,12 @@ function link_files_to_raw_data(raw_data_id) {
   var barcodes = [];
   var forward = [];
   var reverse = [];
-  var sff = []
-  var fasta = []
-  var qual = []
+  var sff = [];
+  var fasta = [];
+  var qual = [];
 
-  all_files = document.getElementsByName("upload_file_" + raw_data_id);
+  var all_files = document.getElementsByName("upload_file_" + raw_data_id);
+
   for (var i = 0; i<all_files.length; i++) {
     ele = all_files[i];
     switch (ele.options[ele.selectedIndex].value) {
@@ -365,15 +363,14 @@ function link_files_to_raw_data(raw_data_id) {
         break;
     }
   }
-
   if (sff.length === 0 && barcodes.length === 0 && forward.length === 0 && fasta.length === 0) {
-    alert("You need to select at least: one barcode and one forward file, one sff file or one fasta file.");
+    bootstrapAlert("You need to select at least: one barcode and one forward file, one sff file or one fasta file.");
   } else if (sff.length === 0 && barcodes.length != forward.length) {
-    alert("You must select the same number of barcode and forward seq files.");
+    bootstrapAlert("You must select the same number of barcode and forward seq files.");
   } else if (sff.length === 0 && (reverse.length !== 0 && reverse.length != forward.length)) {
-    alert("If you select reverse seqs, they should have the same number than barcodes and forward files.");
+    bootstrapAlert("If you select reverse seqs, they should have the same number than barcodes and forward files.");
   } else if (sff.length === 0 && (fasta.length !== 0 && fasta.length != qual.length)) {
-    alert("If you select qual seqs, they should have the same number of qual and fasta files");
+    bootstrapAlert("If you select qual seqs, they should have the same number of qual and fasta files");
   } else {
     var form = $("<form>")
       .attr("action", "/study/add_files_to_raw_data")
@@ -501,7 +498,6 @@ $(document).ready(function() {
 <!-- Nav tabs -->
 <ul class="nav nav-tabs" role="tablist" id="myTab">
     <li class="active"><a href="#study_information_tab" role="tab" data-toggle="tab">Study information</a></li>
-    <li><a href="#sample_template_tab" role="tab" data-toggle="tab">Sample template</a></li>
   {% if show_data_tabs %}
     <li><a href="#raw_data_tab" role="tab" data-toggle="tab">Raw data</a></li>
     <li><a href="#preprocessed_data_tab" role="tab" data-toggle="tab">Preprocessed data</a></li>
@@ -513,8 +509,6 @@ $(document).ready(function() {
 <div class="tab-content">
   <!-- Show the study information tab -->
   {% module StudyInformationTab(study) %}
-  <!-- Show the sample template tab -->
-  {% module SampleTemplateTab(study) %}
   {% if show_data_tabs %}
     <!-- Show the raw data tab -->
     {% module RawDataTab(study, full_access) %}

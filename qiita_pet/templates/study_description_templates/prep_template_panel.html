@@ -66,7 +66,9 @@
       <table border="0" style="margin-left: 10px;">
         <tr>
           <td style="padding:3px;">
-            <a class="btn btn-default glyphicon glyphicon-eye-open" href="/metadata_summary/?study_id={{study_id}}&prep_template={{prep_id}}" style="word-spacing: -10px;">Show prep template summary</a>
+            <a class="btn btn-default" href="/metadata_summary/?study_id={{study_id}}&prep_template={{prep_id}}">
+                <span class="glyphicon glyphicon-eye-open"></span> Show prep template summary
+            </a>
           </td>
         </tr>
         {% for ptid, ptpath, ptype in filepaths %}

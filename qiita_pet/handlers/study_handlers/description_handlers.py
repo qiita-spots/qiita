@@ -195,7 +195,7 @@ class StudyDescriptionHandler(BaseHandler):
                                         basename(fp_rsp), str(e))
             msg_level = "danger"
 
-        callback((msg, msg_level, 'sample_template_tab', None, None))
+        callback((msg, msg_level, None, None, None))
 
     def update_sample_template(self, study, user, callback):
         """Update a sample template from the POST method
@@ -250,7 +250,7 @@ class StudyDescriptionHandler(BaseHandler):
             msg = html_error_message % ('updating the sample template:',
                                         basename(fp_rsp), str(e))
             msg_level = "danger"
-        callback((msg, msg_level, 'sample_template_tab', None, None))
+        callback((msg, msg_level, None, None, None))
 
     def add_to_sample_template(self, study, user, callback):
         """Process a sample template from the POST method
@@ -307,7 +307,7 @@ class StudyDescriptionHandler(BaseHandler):
                                         basename(fp_rsp), str(e))
             msg_level = "danger"
 
-        callback((msg, msg_level, 'sample_template_tab', None, None))
+        callback((msg, msg_level, None, None, None))
 
     def create_raw_data(self, study, user, callback):
         """Adds a (new) raw data to the study

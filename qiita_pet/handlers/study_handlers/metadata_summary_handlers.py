@@ -68,7 +68,7 @@ class MetadataSummaryHandler(BaseHandler):
             # The sample template has been provided
             template = self._get_template(SampleTemplate, sample_template)
             back_button_path = (
-                "/study/description/%s?top_tab=sample_template_tab"
+                "/study/description/%s"
                 % study_id)
         else:
             # Neither a sample template or a prep template has been provided

@@ -81,7 +81,10 @@ def drop(ask_for_confirmation):
     # Or figure out a way to use
     # http://click.pocoo.org/3/options/#password-prompts
     # and have it work with Travis...
-    drop_environment(ask_for_confirmation)
+    try:
+        drop_environment(ask_for_confirmation)
+    except RuntimeError as e:
+        raise click.ClickException(str(e))
 
 
 @env.command()
