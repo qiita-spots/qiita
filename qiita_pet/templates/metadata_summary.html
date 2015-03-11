@@ -5,6 +5,12 @@
 <h1>Metadata Summary for Study {{study_title}}</h1>
 
 <div>
+    <a class="btn btn-default" href="{{back_button_path}}">
+        <span class="glyphicon glyphicon-arrow-left"></span> Back
+    </a>
+</div>
+
+<div>
     <p>There are <strong>{{num_samples}}</strong> samples in this study.</p>
 </div>
 
@@ -12,7 +18,7 @@
     <div class="panel-heading">
         The  information below describes information contained in the sample
         and prep templates.
-    </div> 
+    </div>
 
     <table class="table">
     {% for category, summary in viewitems(stats) %}
@@ -40,11 +46,6 @@
             {% end %}
         {% end %}
     {% end %}
-    <tr>
-        <td style="vertical-align: middle; text-align:center;" colspan="2">
-            <a class="btn btn-primary" href="{{back_button_path}}">Back</a>
-        </td>
-    </tr>
     </table>
 </div>
 {% end %}
