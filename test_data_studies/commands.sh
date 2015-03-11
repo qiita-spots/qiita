@@ -18,10 +18,10 @@ base_id=0
 for i in ${studies[@]}; do
     base_id=$((base_id+1))
     # Get all needed filepaths for the study
-    conf_fp=studies/$i/study_config.txt
-    sample_file=studies/$i/sample_template_$i.txt
-    prep_file=studies/$i/prep_template_$i.txt
-    otu_table=studies/$i/otu_table.biom
+    conf_fp=test_data_studies/studies/$i/study_config.txt
+    sample_file=test_data_studies/studies/$i/sample_template_$i.txt
+    prep_file=test_data_studies/studies/$i/prep_template_$i.txt
+    otu_table=test_data_studies/studies/$i/otu_table.biom
 
     echo "Study $i:"
     # Generate the study config file
