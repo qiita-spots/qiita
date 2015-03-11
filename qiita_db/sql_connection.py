@@ -399,7 +399,7 @@ class SQLConnectionHandler(object):
             self._check_sql_args(sql_args)
             self.queues[queue].append((sql, sql_args))
 
-    def execute_fetchall(self, sql, sql_args=None, return_types=False):
+    def execute_fetchall(self, sql, sql_args=None):
         """ Executes a fetchall SQL query
 
         Parameters
@@ -408,14 +408,72 @@ class SQLConnectionHandler(object):
             The SQL query
         sql_args : tuple or list, optional
             The arguments for the SQL query
-        return_types : bool, optional
-            Whether to return dict of column types. Default False.
 
         Returns
         ------
         list of tuples
             The results of the fetchall query
-        dict, optional
+
+        Raises
+        ------
+        QiitaDBExecutionError
+            If there is some error executing the SQL query
+
+        Note: from psycopg2 documentation, only variable values should be bound
+            via sql_args, it shouldn't be used to set table or field names. For
+            those elements, ordinary string formatting should be used before
+            running execute.
+        """
+        with self._sql_executor(sql, sql_args) as pgcursor:
+            result = pgcursor.fetchall()
+
+        return result
+
+    def execute_fetchone(self, sql, sql_args=None):
+        """ Executes a fetchone SQL query
+
+        Parameters
+        ----------
+        sql : str
+            The SQL query
+        sql_args : tuple or list, optional
+            The arguments for the SQL query
+
+        Returns
+        -------
+        Tuple
+            The results of the fetchone query
+
+        Raises
+        ------
+        QiitaDBExecutionError
+            if there is some error executing the SQL query
+
+        Note: from psycopg2 documentation, only variable values should be bound
+            via sql_args, it shouldn't be used to set table or field names. For
+            those elements, ordinary string formatting should be used before
+            running execute.
+        """
+        with self._sql_executor(sql, sql_args) as pgcursor:
+            result = pgcursor.fetchone()
+
+        return result
+
+    def fetchall_with_types(self, sql, sql_args=None):
+        """ Executes a fetchall SQL query with column information
+
+        Parameters
+        ----------
+        sql : str
+            The SQL query
+        sql_args : tuple or list, optional
+            The arguments for the SQL query
+
+        Returns
+        ------
+        list of tuples
+            The results of the fetchall query
+        dict
             dictionary in the form of {column: type}
 
         Raises
@@ -430,17 +488,13 @@ class SQLConnectionHandler(object):
         """
         with self._sql_executor(sql, sql_args) as pgcursor:
             result = pgcursor.fetchall()
-            if return_types:
-                types = {desc[0]: self.TYPE_CODES[desc[1]]
-                         for desc in pgcursor.description}
+            types = {desc[0]: self.TYPE_CODES[desc[1]]
+                     for desc in pgcursor.description}
 
-        if return_types:
-            return result, types
-        else:
-            return result
+        return result, types
 
-    def execute_fetchone(self, sql, sql_args=None, return_types=False):
-        """ Executes a fetchone SQL query
+        def fetchone_with_types(self, sql, sql_args=None):
+            """ Executes a fetchone SQL query with column information
 
         Parameters
         ----------
@@ -448,14 +502,12 @@ class SQLConnectionHandler(object):
             The SQL query
         sql_args : tuple or list, optional
             The arguments for the SQL query
-        return_types : bool, optional
-            Whether to return dict of column types. Default False.
 
         Returns
         -------
         Tuple
             The results of the fetchone query
-        dict, optional
+        dict
             dictionary in the form of {column: type}
 
         Raises
@@ -470,14 +522,10 @@ class SQLConnectionHandler(object):
         """
         with self._sql_executor(sql, sql_args) as pgcursor:
             result = pgcursor.fetchone()
-            if return_types:
-                types = {desc[0]: self.TYPE_CODES[desc[1]]
-                         for desc in pgcursor.description}
+            types = {desc[0]: self.TYPE_CODES[desc[1]]
+                     for desc in pgcursor.description}
 
-        if return_types:
-            return result, types
-        else:
-            return result
+        return result, types
 
     def execute(self, sql, sql_args=None):
         """ Executes an SQL query with no results

@@ -89,33 +89,44 @@ def scrub_data(s):
     return ret
 
 
-def typecast_string(string):
-    """Converts a string to a number if possible
+def typecast_string(obj):
+    """Converts a passed item to int, float, or str in that order
 
     Parameters
     ----------
-    string : str
-        String to evaluate
+    obj : object
+        object to evaluate
 
     Returns
     -------
-    float, int, or str
-        Re-typed information from string
+    int, float, or str
+        Re-typed information from obj
+
+    Raises
+    ------
+    IncompetentQiitaDeveloperError
+        Object can't be converted to int, float, or string
 
     Notes
     -----
     The function first tries to convert to an int. If that fails, it tries to
     convert to a float. If that fails it returns the original string.
     """
-    if isinstance(string, datetime):
-        return str(string)
-    try:
-        return int(string)
-    except ValueError:
-        try:
-            return float(string)
-        except ValueError:
-            return string
+    item = None
+    if isinstance(obj, datetime):
+        item = str(obj)
+    else:
+        for fn in (int, float, str):
+            try:
+                item = fn(obj)
+            except ValueError:
+                continue
+            else:
+                break
+    if item is None:
+        raise IncompetentQiitaDeveloperError("Can't convert item of type %s!" %
+                                             str(type(obj)))
+    return item
 
 
 def get_filetypes(key='type'):

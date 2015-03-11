@@ -111,13 +111,13 @@ def stats_from_df(df):
         Dictionary object where the keys are the metadata categories
         and the values are list of tuples where the first element is the name
         of a metadata value in category and the second element is the number of
-        times that value was seen
+        times that value was seen.
         Format {category: [(val1, count1), (val2, count2), ...], ...}
     """
     out = {}
 
     for column in natsorted(df.columns):
-        if column in {'study_id'}:
+        if column == 'study_id':
             continue
         counts = df[column].value_counts()
 
