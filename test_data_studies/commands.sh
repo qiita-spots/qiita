@@ -32,30 +32,32 @@ for i in ${studies[@]}; do
     # Insert the study
     echo "\tloading study... "
     title=`awk -F '\t' -v col=TITLE 'NR==1{for(i=1;i<=NF;i++){if($i==col){c=i;break}} print $c} NR>1{print $c}' ${sample_file} | sort | uniq | grep -vw TITLE | head -n 1`
-    qiita db load_study --owner demo@microbio.me --title "$title" --info $conf_fp
+    output="`qiita db load_study --owner demo@microbio.me --title "$title" --info $conf_fp`"
+    study_id=`echo -e "${output}" | cut -d " " -f 9`
     echo "Ok"
 
     # Insert the sample template
     echo "\tloading sample template... "
-    qiita db load_sample_template $sample_file --study $i
+    qiita db load_sample_template $sample_file --study $study_id
     echo "Ok"
 
     # Loading raw data
     echo "\tloading raw data... "
     echo -e ">seq\nAAAA" > seqs.fna
-    qiita db load_raw --fp seqs.fna --fp_type raw_forward_seqs --filetype FASTQ --study $i
+    output="`qiita db load_raw --fp seqs.fna --fp_type raw_forward_seqs --filetype FASTQ --study $i`"
+    raw_id=`echo -e "${output}" | cut -d " " -f 10`
     echo "Ok"
 
     # Loading prep template
     echo "\tloading prep template... "
-    qiita db load_prep_template $prep_file --raw_data $base_id --study $i --data_type "16S"
+    qiita db load_prep_template $prep_file --raw_data $raw_id --study $study_id --data_type "16S"
     echo "Ok"
 
     # Loading preprocessed data
     echo "\tloading preprocessed data... "
     mkdir -p temp
     echo -e ">seq\nAAAA" > temp/seqs.fna
-    qiita db load_preprocessed --study_id $i --params_table preprocessed_sequence_454_params --filedir temp/ --filepathtype preprocessed_fasta --params_id 1 --prep_template_id $base_id
+    qiita db load_preprocessed --study_id $study_id --params_table preprocessed_sequence_454_params --filedir temp/ --filepathtype preprocessed_fasta --params_id 1 --prep_template_id $base_id
     echo "Ok"
 
     # Loading processed data
@@ -67,6 +69,6 @@ for i in ${studies[@]}; do
 
     # # Making study public
     echo "\tmaking study public... "
-    echo -e "from qiita_db.study import Study\nStudy(${i}).status = 'public'\n\n" | python
+    echo -e "from qiita_db.study import Study\nStudy(${study_id}).status = 'public'\n\n" | python
     echo "Ok"
 done
