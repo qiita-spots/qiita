@@ -113,9 +113,9 @@ function extend_sample_template() {
 
 function create_raw_data() {
   if ($("#previous_raw_data").val() === null && $("#filetype").val() === "") {
-    alert("You need to select either a new file type or a raw data used in a previous study.");
+    bootstrapAlert("You need to select either a new file type or a raw data used in a previous study.");
   } else if ((typeof $("#previous_raw_data").val() != 'undefined' && $("#previous_raw_data").val() !== null) && $("#filetype").val() !== "") {
-    alert("You can only select a new file type or one used in a previous study but not both.");
+    bootstrapAlert("You can only select a new file type or one used in a previous study but not both.");
   } else {
     if ($("#filetype").val() !== "") {
       var form = $("<form>")
@@ -318,11 +318,12 @@ function link_files_to_raw_data(raw_data_id) {
   var barcodes = [];
   var forward = [];
   var reverse = [];
-  var sff = []
-  var fasta = []
-  var qual = []
+  var sff = [];
+  var fasta = [];
+  var qual = [];
 
-  all_files = document.getElementsByName("upload_file_" + raw_data_id);
+  var all_files = document.getElementsByName("upload_file_" + raw_data_id);
+
   for (var i = 0; i<all_files.length; i++) {
     ele = all_files[i];
     switch (ele.options[ele.selectedIndex].value) {
@@ -346,15 +347,14 @@ function link_files_to_raw_data(raw_data_id) {
         break;
     }
   }
-
   if (sff.length === 0 && barcodes.length === 0 && forward.length === 0 && fasta.length === 0) {
-    alert("You need to select at least: one barcode and one forward file, one sff file or one fasta file.");
+    bootstrapAlert("You need to select at least: one barcode and one forward file, one sff file or one fasta file.");
   } else if (sff.length === 0 && barcodes.length != forward.length) {
-    alert("You must select the same number of barcode and forward seq files.");
+    bootstrapAlert("You must select the same number of barcode and forward seq files.");
   } else if (sff.length === 0 && (reverse.length !== 0 && reverse.length != forward.length)) {
-    alert("If you select reverse seqs, they should have the same number than barcodes and forward files.");
+    bootstrapAlert("If you select reverse seqs, they should have the same number than barcodes and forward files.");
   } else if (sff.length === 0 && (fasta.length !== 0 && fasta.length != qual.length)) {
-    alert("If you select qual seqs, they should have the same number of qual and fasta files");
+    bootstrapAlert("If you select qual seqs, they should have the same number of qual and fasta files");
   } else {
     var form = $("<form>")
       .attr("action", "/study/add_files_to_raw_data")
