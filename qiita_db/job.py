@@ -348,8 +348,7 @@ class Job(QiitaStatusObject):
                 result_fps.append(relpath(res, basedir))
 
         def add_beta_diversity(basedir, check_dir, result_fps):
-            for res in glob(join(basedir, check_dir, "*_dm.txt")) + \
-                    glob(join(basedir, check_dir, "*_dm.txt")):
+            for res in glob(join(basedir, check_dir, "*_dm.txt")):
                 result_fps.append(relpath(res, basedir))
 
         # create new list, with relative paths from db base
