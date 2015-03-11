@@ -11,10 +11,12 @@
   <hr>
 
   {% if show_select_sample %}
-    Select your sample template:
+    Select your sample template (only files with the "txt" and "tsv" file extensions will be displayed here):
     <select id="sample_template">
       {% for f in files %}
+        {% if f.endswith(('txt', 'tsv')) %}
         <option value="{{f}}">{{f}}</option>
+        {% end %}
       {% end %}
     </select>
   {% end %}
