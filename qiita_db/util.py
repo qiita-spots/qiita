@@ -262,7 +262,7 @@ def create_rand_string(length, punct=True):
     length: int
         Length of string to return
     punct: bool, optional
-        Include punctiation as well as letters and numbers. Default True.
+        Include punctuation as well as letters and numbers. Default True.
     """
     chars = ''.join((ascii_letters, digits))
     if punct:
@@ -271,7 +271,7 @@ def create_rand_string(length, punct=True):
 
 
 def hash_password(password, hashedpw=None):
-    """ Hashes password
+    """Hashes password
 
     Parameters
     ----------
@@ -869,7 +869,7 @@ def filepath_ids_to_rel_paths(filepath_ids):
 
 
 def convert_to_id(value, table, conn_handler=None):
-    """Converts a string value to it's corresponding table identifier
+    """Converts a string value to its corresponding table identifier
 
     Parameters
     ----------
@@ -901,7 +901,7 @@ def convert_to_id(value, table, conn_handler=None):
 
 
 def convert_from_id(value, table, conn_handler=None):
-    """Converts an id value to it's corresponding string value
+    """Converts an id value to its corresponding string value
 
     Parameters
     ----------
