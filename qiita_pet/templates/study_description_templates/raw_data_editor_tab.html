@@ -12,10 +12,13 @@
         <ol>
           <!-- Step 1: choose the prep template file -->
           <li>
-            select your prep template file
+            Select your prep template file <br/>
+            (only files with the "txt" and "tsv" file extensions will be displayed here):
             <select id="add_prep_template_{{raw_data_id}}">
               {% for f in files %}
+                {% if f.endswith(('txt', 'tsv')) %}
                 <option value="{{f}}">{{f}}</option>
+                {% end %}
               {% end %}
             </select>,
           </li>
