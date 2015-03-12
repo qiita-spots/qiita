@@ -59,7 +59,7 @@ If all the above commands executed correctly, you should be able to go to http:/
 
 ### `fe_sendauth: no password supplied`
 
-If you get a traceback similar to this one when starting up qiita
+If you get a traceback similar to this one when starting up Qiita
 ```
 File "/home/jorge/code/qiita/scripts/qiita_env", line 71, in make
   make_environment(load_ontologies, download_reference, add_demo_user)
