@@ -153,7 +153,11 @@ class SQLConnectionHandler(object):
             self._connection = connect(**args)
         except OperationalError as e:
             # catch threee known common exceptions and raise runtime errors
-            etype = e.message.split(':')[1].split()[0]
+            try:
+                etype = e.message.split(':')[1].split()[0]
+            except IndexError:
+                # we recieved a really unanticipated error without a colon
+                etype = ''
             if etype == 'database':
                 etext = ('This is likely because the database `%s` has not '
                          'been created or has been dropped.' %
@@ -168,11 +172,10 @@ class SQLConnectionHandler(object):
                          'running. Check that postgres is correctly '
                          'installed and is running.')
             else:
-                # we recieved a really unanticipated error
-                etext = ''
-            ebase = ('An OperationalError with the following message occured '
+                # we recieved a really unanticipated error with a colon
+            ebase = ('An OperationalError with the following message occured'
                      '\n\n\t%s\n%s For more information, review `INSTALL.md`'
-                     ' in the QIITA installation base directory.')
+                     ' in the Qiita installation base directory.')
             raise RuntimeError(ebase % (e.message, etext))
 
     @contextmanager
