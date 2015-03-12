@@ -14,6 +14,7 @@ echo "Ok"
 
 # Inserting all the information for each study
 echo "INSERTING STUDIES"
+mkdir -p temp
 base_id=0
 for i in ${studies[@]}; do
     base_id=$((base_id+1))
@@ -26,7 +27,7 @@ for i in ${studies[@]}; do
     echo "Study $i:"
     # Generate the study config file
     echo "\tgenerating config file... "
-    echo -e "[required]\ntimeseries_type_id = 1\nmetadata_complete = True\nmixs_compliant = True\nportal_type_id = 3\nprincipal_investigator = Earth Microbiome Project, emp@earthmicrobiome.org, CU Boulder\nreprocess = False\nstudy_alias = $title\nstudy_description = $description\nstudy_abstract = $description\nefo_ids = 1\n[optional]\nstudy_id = $i" > $conf_fp
+    echo -e "[required]\ntimeseries_type_id = 1\nmetadata_complete = True\nmixs_compliant = True\nportal_type_id = 3\nprincipal_investigator = Earth Microbiome Project, emp@earthmicrobiome.org, UCSD\nreprocess = False\nstudy_alias = $title\nstudy_description = $description\nstudy_abstract = $description\nefo_ids = 1\n[optional]\nstudy_id = $i" > $conf_fp
     echo "Ok"
 
     # Insert the study
@@ -55,7 +56,6 @@ for i in ${studies[@]}; do
 
     # Loading preprocessed data
     echo "\tloading preprocessed data... "
-    mkdir -p temp
     echo -e ">seq\nAAAA" > temp/seqs.fna
     qiita db load_preprocessed --study_id $study_id --params_table preprocessed_sequence_454_params --filedir temp/ --filepathtype preprocessed_fasta --params_id 1 --prep_template_id $base_id
     echo "Ok"
@@ -72,3 +72,4 @@ for i in ${studies[@]}; do
     echo -e "from qiita_db.study import Study\nStudy(${study_id}).status = 'public'\n\n" | python
     echo "Ok"
 done
+rmdir temp
