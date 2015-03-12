@@ -23,14 +23,45 @@
 $(document).ready(function() {
     $("#new_person_div").hide();
      $( "#{{creation_form.principal_investigator.id}}" ).chosen({
-        allow_single_deselect: true,
+        allow_single_deselect: true
      });
     $( "#{{creation_form.lab_person.id}}" ).chosen({
         allow_single_deselect: true
       });
     $("#create_study").validate({
       ignore: "",
-      submitHandler: submit_create_study,
+      submitHandler: function (form) {
+        //from http://stackoverflow.com/a/18265708
+        // let's disable the inputs for the duration of the ajax request
+        $("#create_study_submit").prop('disabled', true);
+
+        // fire off ajax the request
+        request = $.ajax({
+          type: "GET",
+          url: '/check_study/',
+          data: {study_title: $("#study_title")[0].value {% if study %}, old_study_title: '{{study.title}}'{% end %} }
+        });
+
+        // callback handler that will be called on success
+        request.done(function (response, textStatus, jqXHR) {
+            if (response == 'True') {
+                form.submit();
+            }
+            else {
+                $("#create_study_submit").prop('disabled', false);
+                $("#messagespan").text("Study '" + $("#study_title")[0].value + "' already exists! Please choose a different name.");
+                alert($("#messagespan").text());
+            }
+        });
+
+        // callback handler that will be called on failure
+        request.fail(function (jqXHR, textStatus, errorThrown) {
+            // log the error to the console
+            console.error(
+                "The following error occured: " + textStatus, errorThrown);
+            $("#create_study_submit").prop('disabled', false);
+        });
+    },
       rules:{
 {% for idx, form_item in enumerate(creation_form, start=1) %}
   {% if form_item.flags.required %}
@@ -49,31 +80,6 @@ $(document).ready(function() {
       wrapper: "li",
     });
 });
-
-function submit_create_study(form) {
-    $("#create_study_submit").prop('disabled', true);
-    res = null;
-    $.ajax({
-      type: "GET",
-      url: '/check_study/',
-      data: {study_title: $("#study_title")[0].value {% if study %}, old_study_title: '{{study.title}}'{% end %} },
-      success: function(data) {
-            if (data == 'True') {
-                res = true;
-            }
-            else {
-                res = false;
-            }
-          },
-      async: false
-    })
-    if(res) {
-      form.submit();
-    } else {
-      alert("Study '" + $("#study_title")[0].value + "' already exists! Please choose a different name.");
-      $("#create_study_submit").prop('disabled', false);
-    }
-};
 
 counter = -1;
 
@@ -96,7 +102,7 @@ function add_new_person(name, affiliation, email, phone, address) {
     $("#{{creation_form.principal_investigator.id}}").append(new_element);
     $("#{{creation_form.lab_person.id}}" ).append(new_element);
     $("#{{creation_form.principal_investigator.id}}").trigger("chosen:updated");
-      $("#{{creation_form.lab_person.id}}" ).trigger("chosen:updated");
+    $("#{{creation_form.lab_person.id}}" ).trigger("chosen:updated");
     $("#new_person_div").hide(400);
 
     $("#create_study").append('<input type="hidden" name="new_people_names" value="' + name.value + '">');
@@ -126,6 +132,7 @@ function cancel_edition(){
     <font color="red">*</font> = Required Field
 </h3>
 <span id="errorspan" name="errorspan" style="color: red"></span>
+<span id="messagespan" name="messagespan" style="color: red"></span>
 <br />
 <form id="create_study" name="create_study" action={%if study%}'/study/edit/{{study.id}}'{%else%}'/study/create/'{%end%} method="POST" onsubmit='return submit_create_study();'>
 <table>
