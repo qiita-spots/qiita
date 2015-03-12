@@ -1260,7 +1260,7 @@ class TestSampleTemplate(TestCase):
         self.assertEqual(obs, exp)
 
     def test_categories(self):
-        exp = ['sample_id', 'season_environment', 'assigned_from_geo',
+        exp = {'sample_id', 'season_environment', 'assigned_from_geo',
                'texture', 'taxon_id', 'depth', 'host_taxid',
                'common_name', 'water_content_soil', 'elevation',
                'temp', 'tot_nitro', 'samp_salinity', 'altitude',
@@ -1270,8 +1270,8 @@ class TestSampleTemplate(TestCase):
                'has_physical_specimen', 'has_extracted_data',
                'sample_type', 'required_sample_info_status',
                'collection_timestamp', 'host_subject_id',
-               'description', 'latitude', 'longitude']
-        obs = self.tester.categories()
+               'description', 'latitude', 'longitude'}
+        obs = set(self.tester.categories())
         self.assertEqual(obs, exp)
 
     def test_remove_category(self):
