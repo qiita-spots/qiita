@@ -173,6 +173,7 @@ class SQLConnectionHandler(object):
                          'installed and is running.')
             else:
                 # we recieved a really unanticipated error with a colon
+                etext = ''
             ebase = ('An OperationalError with the following message occured'
                      '\n\n\t%s\n%s For more information, review `INSTALL.md`'
                      ' in the Qiita installation base directory.')
