@@ -9,7 +9,7 @@ qiita_env drop --no-ask-for-confirmation
 echo "Ok"
 
 echo "MAKING ENV... "
-qiita_env make --add-demo-user --no-load-ontologies # --download-reference
+qiita_env make --add-demo-user --no-load-ontologies
 echo "Ok"
 
 # Inserting all the information for each study
