@@ -20,6 +20,11 @@ $(document).ready(function() {
          });
     $("#waiting").hide();
 } );
+
+function fillabstract(table, row) {
+    $('#title-text-area').text($('#study' + row + "-title").text());
+    $('#abstract-text-area').text($('#'+table).dataTable().fnGetData(row, 1));
+}
 </script>
 
 {% end %}
@@ -39,9 +44,10 @@ $(document).ready(function() {
             </tr>
         </thead>
         <tbody>
+{% set row = 0 %}
 {% for s in public_studies %}
             <tr>
-                <td><a href="#" data-toggle="modal" data-target="#study{{s.id}}-modal"><span class="glyphicon glyphicon-file" aria-hidden="true"></span></a> | <a href="/study/description/{{ s.id }}">{{ s.title }}</a></td>
+                <td><a href="#" data-toggle="modal" data-target="#study-abstract-modal" onclick="fillabstract('public-studies-table', {{row}})"><span class="glyphicon glyphicon-file" aria-hidden="true"></span></a> | <a href="/study/description/{{ s.id }}" id="study{{row}}-title">{{ s.title }}</a></td>
                 <td>{% raw s.abstract %}</td>
                 <td>{% raw s.owner %}</td>
                 {% if s.meta_complete %}
@@ -58,20 +64,19 @@ $(document).ready(function() {
                 <td>{% raw s.pi %}</td>
                 <td>{% raw s.pmids %}</td>
             </tr>
+    {% set row = row + 1%}
 {% end %}
         </tbody>
     </table>
 
-    <!--Abstract Modals-->
-{% for s in public_studies %}
-<div class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true" id="study{{s.id}}-modal">
+<!--Abstract Modal-->
+<div class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true" id="study-abstract-modal">
   <div class="modal-dialog modal-med">
     <div class="modal-content">
     <div class="modal-header">
-       <h3>{{ s.title }}</h3>
+       <h3 id="title-text-area"></h3>
     </div>
-    <div class="modal-body">
-        {% raw s.abstract %}
+    <div class="modal-body" id="abstract-text-area">
       </div>
     <div class="modal-footer">
       <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
@@ -79,7 +84,6 @@ $(document).ready(function() {
     </div>
   </div>
 </div>
-{% end %}
 {% else %}
     <div id="jumbotron" class="jumbotron">
         <h1><span class="glyphicon glyphicon-thumbs-down"></span> There are no studies available</h1>
