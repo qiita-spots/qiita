@@ -2278,7 +2278,7 @@ def load_template_to_dataframe(fn, strip_whitespace=True):
 
     # let pandas infer the dtypes of these columns, if the inference is
     # not correct, then we have to raise an error
-    columns_to_dtype = [(['latitude', 'longitude'], np.float),
+    columns_to_dtype = [(['latitude', 'longitude'], np.number),
                         (['has_physical_specimen', 'has_extracted_data'],
                          np.bool)]
     for columns, c_dtype in columns_to_dtype:
