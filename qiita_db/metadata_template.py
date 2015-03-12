@@ -2244,6 +2244,11 @@ def load_template_to_dataframe(fn, strip_whitespace=True):
         # open file passed
         holdfile = fn.readlines()
 
+    # Strip all values in the cells in the input file, if requested
+    if strip_whitespace:
+        for pos, line in enumerate(holdfile):
+            holdfile[pos] = '\t'.join(d.strip(' ') for d in line.split('\t'))
+
     # get and clean the required columns
     reqcols = set(get_table_cols("required_sample_info"))
     reqcols.add('sample_name')
@@ -2253,12 +2258,6 @@ def load_template_to_dataframe(fn, strip_whitespace=True):
     cols = holdfile[0].split('\t')
     holdfile[0] = '\t'.join(c.lower() if c.lower() in reqcols else c
                             for c in cols)
-
-    # Strip all values in the cells in the input file, if requested
-    if strip_whitespace:
-        for pos, line in enumerate(holdfile):
-            holdfile[pos] = '\t'.join(d.strip(' ') for d in line.split('\t'))
-
     # index_col:
     #   is set as False, otherwise it is cast as a float and we want a string
     # keep_default:
