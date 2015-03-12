@@ -81,7 +81,8 @@ from contextlib import contextmanager
 from itertools import chain
 from tempfile import mktemp
 
-from psycopg2 import connect, ProgrammingError, Error as PostgresError
+from psycopg2 import (connect, ProgrammingError, Error as PostgresError,
+                      OperationalError)
 from psycopg2.extras import DictCursor
 from psycopg2.extensions import (
     ISOLATION_LEVEL_AUTOCOMMIT, ISOLATION_LEVEL_READ_COMMITTED)
@@ -150,32 +151,29 @@ class SQLConnectionHandler(object):
 
         try:
             self._connection = connect(**args)
-        except Exception as e:
+        except OperationalError as e:
             # catch threee known common exceptions and raise runtime errors
-            ebase = ('An error with the following text occurred\n\n\t%s\n%s '
-                     'Please review `INSTALL.md`.')
-            # parse string of expected errors - if too weird, we can't suggest
-            # a solution
-            try:
-                etype = str(e).split(':')[1].split()[0]
-                if etype == 'database':
-                    etext = ('This is likely because the database has not been'
-                             ' created or has been dropped.')
-                elif etype == 'role':
-                    etext = ('This is likely because the user string `%s` '
-                             'supplied in your configuration file `%s` is '
-                             'incorrect or not an authorized postgres user.' %
-                             (qiita_config.user, qiita_config.conf_fp))
-                elif etype == 'Connection':
-                    etext = ('This is likely because `postgres.app` isn\'t '
-                             'running. Check that postgres.app is correctly '
-                             'installed and is running.')
-                else:
-                    # we recieved a really unanticipated error
-                    etext = ''
-            except AttributeError:
+            etype = e.message.split(':')[1].split()[0]
+            if etype == 'database':
+                etext = ('This is likely because the database `%s` has not '
+                         'been created or has been dropped.' %
+                         qiita_config.database)
+            elif etype == 'role':
+                etext = ('This is likely because the user string `%s` '
+                         'supplied in your configuration file `%s` is '
+                         'incorrect or not an authorized postgres user.' %
+                         (qiita_config.user, qiita_config.conf_fp))
+            elif etype == 'Connection':
+                etext = ('This is likely because postgres isn\'t '
+                         'running. Check that postgres is correctly '
+                         'installed and is running.')
+            else:
+                # we recieved a really unanticipated error
                 etext = ''
-            raise RuntimeError(ebase % (e, etext))
+            ebase = ('An OperationalError with the following message occured '
+                     '\n\n\t%s\n%s For more information, review `INSTALL.md`'
+                     ' in the QIITA installation base directory.')
+            raise RuntimeError(ebase % (e.message, etext))
 
     @contextmanager
     def get_postgres_cursor(self):
