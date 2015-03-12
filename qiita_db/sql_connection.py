@@ -426,10 +426,12 @@ class SQLConnectionHandler(object):
         QiitaDBExecutionError
             If there is some error executing the SQL query
 
-        Note: from psycopg2 documentation, only variable values should be bound
-            via sql_args, it shouldn't be used to set table or field names. For
-            those elements, ordinary string formatting should be used before
-            running execute.
+        Notes
+        -----
+        from psycopg2 documentation, only variable values should be bound
+        via sql_args, it shouldn't be used to set table or field names. For
+        those elements, ordinary string formatting should be used before
+        running execute.
         """
         with self._sql_executor(sql, sql_args) as pgcursor:
             result = pgcursor.fetchall()
@@ -456,10 +458,12 @@ class SQLConnectionHandler(object):
         QiitaDBExecutionError
             if there is some error executing the SQL query
 
-        Note: from psycopg2 documentation, only variable values should be bound
-            via sql_args, it shouldn't be used to set table or field names. For
-            those elements, ordinary string formatting should be used before
-            running execute.
+        Notes
+        -----
+        from psycopg2 documentation, only variable values should be bound
+        via sql_args, it shouldn't be used to set table or field names. For
+        those elements, ordinary string formatting should be used before
+        running execute.
         """
         with self._sql_executor(sql, sql_args) as pgcursor:
             result = pgcursor.fetchone()
@@ -467,7 +471,7 @@ class SQLConnectionHandler(object):
         return result
 
     def fetchall_with_types(self, sql, sql_args=None):
-        """ Executes a fetchall SQL query with column information
+        """Executes a fetchall SQL query with column information
 
         Parameters
         ----------
@@ -488,10 +492,12 @@ class SQLConnectionHandler(object):
         QiitaDBExecutionError
             If there is some error executing the SQL query
 
-        Note: from psycopg2 documentation, only variable values should be bound
-            via sql_args, it shouldn't be used to set table or field names. For
-            those elements, ordinary string formatting should be used before
-            running execute.
+        Notes
+        -----
+        from psycopg2 documentation, only variable values should be bound
+        via sql_args, it shouldn't be used to set table or field names. For
+        those elements, ordinary string formatting should be used before
+        running execute.
         """
         with self._sql_executor(sql, sql_args) as pgcursor:
             result = pgcursor.fetchall()
@@ -500,8 +506,8 @@ class SQLConnectionHandler(object):
 
         return result, types
 
-        def fetchone_with_types(self, sql, sql_args=None):
-            """ Executes a fetchone SQL query with column information
+    def fetchone_with_types(self, sql, sql_args=None):
+        """Executes a fetchone SQL query with column information
 
         Parameters
         ----------
@@ -522,10 +528,12 @@ class SQLConnectionHandler(object):
         QiitaDBExecutionError
             if there is some error executing the SQL query
 
-        Note: from psycopg2 documentation, only variable values should be bound
-            via sql_args, it shouldn't be used to set table or field names. For
-            those elements, ordinary string formatting should be used before
-            running execute.
+        Notes
+        -----
+        from psycopg2 documentation, only variable values should be bound
+        via sql_args, it shouldn't be used to set table or field names. For
+        those elements, ordinary string formatting should be used before
+        running execute.
         """
         with self._sql_executor(sql, sql_args) as pgcursor:
             result = pgcursor.fetchone()

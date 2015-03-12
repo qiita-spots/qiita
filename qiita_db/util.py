@@ -89,7 +89,7 @@ def scrub_data(s):
     return ret
 
 
-def typecast_string(obj):
+def convert_type(obj):
     """Converts a passed item to int, float, or str in that order
 
     Parameters
@@ -105,7 +105,7 @@ def typecast_string(obj):
     Raises
     ------
     IncompetentQiitaDeveloperError
-        Object can't be converted to int, float, or string
+        If the object can't be converted to int, float, or string
 
     Notes
     -----

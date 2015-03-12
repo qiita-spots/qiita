@@ -109,16 +109,14 @@ def stats_from_df(df):
     -------
     dict of list of tuples
         Dictionary object where the keys are the metadata categories
-        and the values are list of tuples where the first element is the name
-        of a metadata value in category and the second element is the number of
-        times that value was seen.
+        and the values are list of tuples. Each tuple is an observed value in
+        the category and the number of times its seen.
         Format {category: [(val1, count1), (val2, count2), ...], ...}
     """
     out = {}
-
-    for column in natsorted(df.columns):
-        if column == 'study_id':
-            continue
+    cols = list(df.columns)
+    cols.remove('study_id')
+    for column in cols:
         counts = df[column].value_counts()
 
         # get a pandas series of the value-count pairs
