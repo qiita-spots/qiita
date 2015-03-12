@@ -45,7 +45,7 @@ from time import strftime
 from functools import partial
 from tempfile import mkstemp
 from os.path import basename
-from StringIO import StringIO
+from future.utils.six import StringIO
 
 import pandas as pd
 import numpy as np
@@ -2181,7 +2181,7 @@ def load_template_to_dataframe(fn, strip_whitespace=True):
 
     Parameters
     ----------
-    fn : str or open file
+    fn : str or file-like object
         filename of the template to load, or an already open template file
     strip_whitespace : bool, optional
         Defaults to True. Whether or not to strip whitespace from values in the
@@ -2236,7 +2236,7 @@ def load_template_to_dataframe(fn, strip_whitespace=True):
     """
     # Load in file lines
     holdfile = None
-    if isinstance(fn, str):
+    if isinstance(fn, (str, unicode)):
         # filepath passed
         with open(fn) as f:
             holdfile = f.readlines()
