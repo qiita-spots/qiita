@@ -45,6 +45,7 @@ from time import strftime
 from functools import partial
 from tempfile import mkstemp
 from os.path import basename
+from StringIO import StringIO
 
 import pandas as pd
 import numpy as np
@@ -2180,8 +2181,8 @@ def load_template_to_dataframe(fn, strip_whitespace=True):
 
     Parameters
     ----------
-    fn : str
-        filename of the template to load
+    fn : str or open file
+        filename of the template to load, or an already open template file
     strip_whitespace : bool, optional
         Defaults to True. Whether or not to strip whitespace from values in the
         input file
@@ -2233,19 +2234,30 @@ def load_template_to_dataframe(fn, strip_whitespace=True):
     |             longitude |        float |
     +-----------------------+--------------+
     """
+    # Load in file lines
+    holdfile = None
+    if isinstance(fn, str):
+        # filepath passed
+        with open(fn) as f:
+            holdfile = f.readlines()
+    else:
+        # open file passed
+        holdfile = fn.readlines()
 
-    # First, strip all values from the cells in the input file, if requested
+    # get and clean the required columns
+    reqcols = set(get_table_cols("required_sample_info"))
+    reqcols.add('sample_name')
+    reqcols.add('required_sample_info_status')
+    reqcols.discard('required_sample_info_status_id')
+    # clean all the column names
+    cols = holdfile[0].split('\t')
+    holdfile[0] = '\t'.join(c.lower() if c.lower() in reqcols else c
+                            for c in cols)
+
+    # Strip all values in the cells in the input file, if requested
     if strip_whitespace:
-        fd, fp = mkstemp()
-        close(fd)
-
-        with open_file(fn, 'U') as input_f, open(fp, 'w') as new_f:
-            for line in input_f:
-                line_elements = [x.strip()
-                                 for x in line.rstrip('\n').split('\t')]
-                new_f.write('\t'.join(line_elements) + '\n')
-
-        fn = fp
+        for pos, line in enumerate(holdfile):
+            holdfile[pos] = '\t'.join(d.strip(' ') for d in line.split('\t'))
 
     # index_col:
     #   is set as False, otherwise it is cast as a float and we want a string
@@ -2262,7 +2274,8 @@ def load_template_to_dataframe(fn, strip_whitespace=True):
     # comment:
     #   using the tab character as "comment" we remove rows that are
     #   constituted only by delimiters i. e. empty rows.
-    template = pd.read_csv(fn, sep='\t', infer_datetime_format=True,
+    template = pd.read_csv(StringIO(''.join(holdfile)), sep='\t',
+                           infer_datetime_format=True,
                            keep_default_na=False, na_values=[''],
                            parse_dates=True, index_col=False, comment='\t',
                            mangle_dupe_cols=False, converters={
@@ -2289,15 +2302,6 @@ def load_template_to_dataframe(fn, strip_whitespace=True):
                 raise QiitaDBColumnError("The '%s' column includes values that"
                                          " cannot be cast into a %s "
                                          "type." % (n, c_dtype))
-
-    # get and clean the required columns
-    reqcols = set(get_table_cols("required_sample_info"))
-    reqcols.add('sample_name')
-    reqcols.add('required_sample_info_status')
-    reqcols.discard('required_sample_info_status_id')
-    # lowercase the required columns for easy matching
-    template.rename(columns=lambda x: x.lower() if x.lower() in reqcols else x,
-                    inplace=True)
 
     initial_columns = set(template.columns)
 
