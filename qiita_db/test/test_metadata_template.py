@@ -2395,6 +2395,21 @@ class TestUtilities(TestCase):
         exp.index.name = 'sample_name'
         assert_frame_equal(obs, exp)
 
+    def test_load_template_to_dataframe_typechecking(self):
+        obs = load_template_to_dataframe(
+            StringIO(EXP_SAMPLE_TEMPLATE_LAT_ALL_INT))
+
+        exp = pd.DataFrame.from_dict(SAMPLE_TEMPLATE_LAT_ALL_INT_DICT)
+        exp.index.name = 'sample_name'
+        assert_frame_equal(obs, exp)
+
+        obs = load_template_to_dataframe(
+            StringIO(EXP_SAMPLE_TEMPLATE_LAT_MIXED_FLOAT_INT))
+
+        exp = pd.DataFrame.from_dict(SAMPLE_TEMPLATE_MIXED_FLOAT_INT_DICT)
+        exp.index.name = 'sample_name'
+        assert_frame_equal(obs, exp)
+
     def test_get_invalid_sample_names(self):
         all_valid = ['2.sample.1', 'foo.bar.baz', 'roses', 'are', 'red',
                      'v10l3t5', '4r3', '81u3']
@@ -2448,6 +2463,28 @@ EXP_SAMPLE_TEMPLATE = (
     "\t1\t42.42\t41.41\tlocation1\treceived\ttype1\tValue for sample 1\n"
     "2.Sample2\t2014-05-29 12:24:51\tTest Sample 2\tTrue\tTrue\tNotIdentified"
     "\t2\t4.2\t1.1\tlocation1\treceived\ttype1\tValue for sample 2\n"
+    "2.Sample3\t2014-05-29 12:24:51\tTest Sample 3\tTrue\tTrue\tNotIdentified"
+    "\t3\t4.8\t4.41\tlocation1\treceived\ttype1\tValue for sample 3\n")
+
+EXP_SAMPLE_TEMPLATE_LAT_ALL_INT = (
+    "sample_name\tcollection_timestamp\tdescription\thas_extracted_data\t"
+    "has_physical_specimen\thost_subject_id\tint_column\tlatitude\tlongitude\t"
+    "physical_location\trequired_sample_info_status\tsample_type\tstr_column\n"
+    "2.Sample1\t2014-05-29 12:24:51\tTest Sample 1\tTrue\tTrue\tNotIdentified"
+    "\t1\t42\t41.41\tlocation1\treceived\ttype1\tValue for sample 1\n"
+    "2.Sample2\t2014-05-29 12:24:51\tTest Sample 2\tTrue\tTrue\tNotIdentified"
+    "\t2\t4\t1.1\tlocation1\treceived\ttype1\tValue for sample 2\n"
+    "2.Sample3\t2014-05-29 12:24:51\tTest Sample 3\tTrue\tTrue\tNotIdentified"
+    "\t3\t4\t4.41\tlocation1\treceived\ttype1\tValue for sample 3\n")
+
+EXP_SAMPLE_TEMPLATE_LAT_MIXED_FLOAT_INT = (
+    "sample_name\tcollection_timestamp\tdescription\thas_extracted_data\t"
+    "has_physical_specimen\thost_subject_id\tint_column\tlatitude\tlongitude\t"
+    "physical_location\trequired_sample_info_status\tsample_type\tstr_column\n"
+    "2.Sample1\t2014-05-29 12:24:51\tTest Sample 1\tTrue\tTrue\tNotIdentified"
+    "\t1\t42\t41.41\tlocation1\treceived\ttype1\tValue for sample 1\n"
+    "2.Sample2\t2014-05-29 12:24:51\tTest Sample 2\tTrue\tTrue\tNotIdentified"
+    "\t2\t4\t1.1\tlocation1\treceived\ttype1\tValue for sample 2\n"
     "2.Sample3\t2014-05-29 12:24:51\tTest Sample 3\tTrue\tTrue\tNotIdentified"
     "\t3\t4.8\t4.41\tlocation1\treceived\ttype1\tValue for sample 3\n")
 
@@ -2685,6 +2722,84 @@ SAMPLE_TEMPLATE_DICT_FORM = {
     'latitude': {'2.Sample1': 42.420000000000002,
                  '2.Sample2': 4.2000000000000002,
                  '2.Sample3': 4.7999999999999998},
+    'longitude': {'2.Sample1': 41.409999999999997,
+                  '2.Sample2': 1.1000000000000001,
+                  '2.Sample3': 4.4100000000000001},
+    'physical_location': {'2.Sample1': 'location1',
+                          '2.Sample2': 'location1',
+                          '2.Sample3': 'location1'},
+    'required_sample_info_status': {'2.Sample1': 'received',
+                                    '2.Sample2': 'received',
+                                    '2.Sample3': 'received'},
+    'sample_type': {'2.Sample1': 'type1',
+                    '2.Sample2': 'type1',
+                    '2.Sample3': 'type1'},
+    'str_column': {'2.Sample1': 'Value for sample 1',
+                   '2.Sample2': 'Value for sample 2',
+                   '2.Sample3': 'Value for sample 3'},
+    'int_column': {'2.Sample1': 1,
+                   '2.Sample2': 2,
+                   '2.Sample3': 3}
+    }
+
+SAMPLE_TEMPLATE_LAT_ALL_INT_DICT = {
+    'collection_timestamp': {'2.Sample1': '2014-05-29 12:24:51',
+                             '2.Sample2': '2014-05-29 12:24:51',
+                             '2.Sample3': '2014-05-29 12:24:51'},
+    'description': {'2.Sample1': 'Test Sample 1',
+                    '2.Sample2': 'Test Sample 2',
+                    '2.Sample3': 'Test Sample 3'},
+    'has_extracted_data': {'2.Sample1': True,
+                           '2.Sample2': True,
+                           '2.Sample3': True},
+    'has_physical_specimen': {'2.Sample1': True,
+                              '2.Sample2': True,
+                              '2.Sample3': True},
+    'host_subject_id': {'2.Sample1': 'NotIdentified',
+                        '2.Sample2': 'NotIdentified',
+                        '2.Sample3': 'NotIdentified'},
+    'latitude': {'2.Sample1': 42,
+                 '2.Sample2': 4,
+                 '2.Sample3': 4},
+    'longitude': {'2.Sample1': 41.409999999999997,
+                  '2.Sample2': 1.1000000000000001,
+                  '2.Sample3': 4.4100000000000001},
+    'physical_location': {'2.Sample1': 'location1',
+                          '2.Sample2': 'location1',
+                          '2.Sample3': 'location1'},
+    'required_sample_info_status': {'2.Sample1': 'received',
+                                    '2.Sample2': 'received',
+                                    '2.Sample3': 'received'},
+    'sample_type': {'2.Sample1': 'type1',
+                    '2.Sample2': 'type1',
+                    '2.Sample3': 'type1'},
+    'str_column': {'2.Sample1': 'Value for sample 1',
+                   '2.Sample2': 'Value for sample 2',
+                   '2.Sample3': 'Value for sample 3'},
+    'int_column': {'2.Sample1': 1,
+                   '2.Sample2': 2,
+                   '2.Sample3': 3}
+    }
+
+SAMPLE_TEMPLATE_MIXED_FLOAT_INT_DICT = {
+    'collection_timestamp': {'2.Sample1': '2014-05-29 12:24:51',
+                             '2.Sample2': '2014-05-29 12:24:51',
+                             '2.Sample3': '2014-05-29 12:24:51'},
+    'description': {'2.Sample1': 'Test Sample 1',
+                    '2.Sample2': 'Test Sample 2',
+                    '2.Sample3': 'Test Sample 3'},
+    'has_extracted_data': {'2.Sample1': True,
+                           '2.Sample2': True,
+                           '2.Sample3': True},
+    'has_physical_specimen': {'2.Sample1': True,
+                              '2.Sample2': True,
+                              '2.Sample3': True},
+    'host_subject_id': {'2.Sample1': 'NotIdentified',
+                        '2.Sample2': 'NotIdentified',
+                        '2.Sample3': 'NotIdentified'},
+    'latitude': {'2.Sample1': 42.0,
+                 '2.Sample2': 4.0,
+                 '2.Sample3': 4.8},
     'longitude': {'2.Sample1': 41.409999999999997,
                   '2.Sample2': 1.1000000000000001,
                   '2.Sample3': 4.4100000000000001},
