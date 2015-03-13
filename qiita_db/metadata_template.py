@@ -40,10 +40,8 @@ from future.builtins import zip
 from future.utils import viewitems, PY3
 from copy import deepcopy
 from os.path import join
-from os import close
 from time import strftime
 from functools import partial
-from tempfile import mkstemp
 from os.path import basename
 from future.utils.six import StringIO
 
@@ -51,7 +49,6 @@ import pandas as pd
 import numpy as np
 import warnings
 from skbio.util import find_duplicates
-from skbio.io.util import open_file
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from .exceptions import (QiitaDBDuplicateError, QiitaDBColumnError,
@@ -1147,26 +1144,22 @@ class MetadataTemplate(QiitaObject):
         return [(fpid, base_fp(fp)) for fpid, fp in filepath_ids]
 
     def categories(self):
-        """Get the categories associated with self
+        """Identifies the metadata columns present in a template
 
         Returns
         -------
-        set
-            The set of categories associated with self
+        cols : list
+            The static and dynamic category fields
+
         """
-        conn_handler = SQLConnectionHandler()
-        table_name = self._table_name(self.study_id)
+        cols = get_table_cols(self._table_name(self._id))
+        cols.extend(get_table_cols(self._table)[1:])
 
-        raw = conn_handler.execute_fetchall("""
-            SELECT column_name
-            FROM information_schema.columns
-            WHERE table_name='{0}'
-                AND table_schema='qiita'""".format(table_name))
+        for idx, c in enumerate(cols):
+            if c in self.translate_cols_dict:
+                cols[idx] = self.translate_cols_dict[c]
 
-        categories = {c[0] for c in raw}
-        categories.remove('sample_id')
-
-        return categories
+        return cols
 
 
 class SampleTemplate(MetadataTemplate):
@@ -2246,8 +2239,7 @@ def load_template_to_dataframe(fn, strip_whitespace=True):
         # open file passed
         holdfile = fn.readlines()
     if len(holdfile) == 0:
-        # Empty file passed
-        raise ValueError('Empty file passed!: %s' % str(fn))
+        raise ValueError('Empty file passed!')
 
     # Strip all values in the cells in the input file, if requested
     if strip_whitespace:
@@ -2296,16 +2288,17 @@ def load_template_to_dataframe(fn, strip_whitespace=True):
 
     # let pandas infer the dtypes of these columns, if the inference is
     # not correct, then we have to raise an error
-    columns_to_dtype = [(['latitude', 'longitude'], np.float),
+    columns_to_dtype = [(['latitude', 'longitude'], (np.int, np.float),
+                         'integer or decimal'),
                         (['has_physical_specimen', 'has_extracted_data'],
-                         np.bool)]
-    for columns, c_dtype in columns_to_dtype:
+                         np.bool_, 'boolean')]
+    for columns, c_dtype, english_desc in columns_to_dtype:
         for n in columns:
-            if n in template.columns and not np.issubdtype(template[n].dtype,
-                                                           c_dtype):
-                raise QiitaDBColumnError("The '%s' column includes values that"
-                                         " cannot be cast into a %s "
-                                         "type." % (n, c_dtype))
+            if n in template.columns and not all([isinstance(val, c_dtype)
+                                                  for val in template[n]]):
+                raise QiitaDBColumnError("The '%s' column includes values "
+                                         "that cannot be cast into a %s "
+                                         "value " % (n, english_desc))
 
     initial_columns = set(template.columns)
 
