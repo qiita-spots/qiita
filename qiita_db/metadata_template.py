@@ -2238,13 +2238,14 @@ def load_template_to_dataframe(fn, strip_whitespace=True):
     else:
         # open file passed
         holdfile = fn.readlines()
-    if len(holdfile) == 0:
+    if not holdfile:
         raise ValueError('Empty file passed!')
 
     # Strip all values in the cells in the input file, if requested
     if strip_whitespace:
         for pos, line in enumerate(holdfile):
-            holdfile[pos] = '\t'.join(d.strip(' ') for d in line.split('\t'))
+            holdfile[pos] = '\t'.join(d.strip(" \r\x0b\x0c")
+                                      for d in line.split('\t'))
 
     # get and clean the required columns
     reqcols = set(get_table_cols("required_sample_info"))
