@@ -115,7 +115,6 @@ def stats_from_df(df):
     """
     out = {}
     cols = list(df.columns)
-    cols.remove('study_id')
     for column in cols:
         counts = df[column].value_counts()
 
