@@ -80,6 +80,7 @@ from __future__ import division
 from contextlib import contextmanager
 from itertools import chain
 from tempfile import mktemp
+from datetime import date, time, datetime
 
 from psycopg2 import (connect, ProgrammingError, Error as PostgresError,
                       OperationalError)
@@ -98,6 +99,29 @@ def flatten(listOfLists):
 
 
 class SQLConnectionHandler(object):
+    # From http://osdir.com/ml/sqlalchemy/2011-05/msg00094.html
+    TYPE_CODES = pg_types = {
+        16: bool,
+        17: bytes,
+        19: str,  # name type
+        20: int,
+        21: int,
+        23: int,
+        25: str,  # TEXT type
+        26: float,  # oid type
+        700: float,
+        701: float,
+        829: str,  # MACADDR type
+        1042: str,  # CHAR type
+        1043: str,  # VARCHAR type
+        1082: date,
+        1083: time,
+        1114: datetime,
+        1184: datetime,  # timestamp w/ tz
+        1700: float,
+        2275: str,  # cstring
+    }
+
     """Encapsulates the DB connection with the Postgres DB
 
     Parameters
@@ -420,13 +444,16 @@ class SQLConnectionHandler(object):
         QiitaDBExecutionError
             If there is some error executing the SQL query
 
-        Note: from psycopg2 documentation, only variable values should be bound
-            via sql_args, it shouldn't be used to set table or field names. For
-            those elements, ordinary string formatting should be used before
-            running execute.
+        Notes
+        -----
+        from psycopg2 documentation, only variable values should be bound
+        via sql_args, it shouldn't be used to set table or field names. For
+        those elements, ordinary string formatting should be used before
+        running execute.
         """
         with self._sql_executor(sql, sql_args) as pgcursor:
             result = pgcursor.fetchall()
+
         return result
 
     def execute_fetchone(self, sql, sql_args=None):
@@ -449,14 +476,89 @@ class SQLConnectionHandler(object):
         QiitaDBExecutionError
             if there is some error executing the SQL query
 
-        Note: from psycopg2 documentation, only variable values should be bound
-            via sql_args, it shouldn't be used to set table or field names. For
-            those elements, ordinary string formatting should be used before
-            running execute.
+        Notes
+        -----
+        from psycopg2 documentation, only variable values should be bound
+        via sql_args, it shouldn't be used to set table or field names. For
+        those elements, ordinary string formatting should be used before
+        running execute.
         """
         with self._sql_executor(sql, sql_args) as pgcursor:
             result = pgcursor.fetchone()
+
         return result
+
+    def fetchall_with_types(self, sql, sql_args=None):
+        """Executes a fetchall SQL query with column information
+
+        Parameters
+        ----------
+        sql : str
+            The SQL query
+        sql_args : tuple or list, optional
+            The arguments for the SQL query
+
+        Returns
+        ------
+        list of tuples
+            The results of the fetchall query
+        dict
+            dictionary in the form of {column: type}
+
+        Raises
+        ------
+        QiitaDBExecutionError
+            If there is some error executing the SQL query
+
+        Notes
+        -----
+        from psycopg2 documentation, only variable values should be bound
+        via sql_args, it shouldn't be used to set table or field names. For
+        those elements, ordinary string formatting should be used before
+        running execute.
+        """
+        with self._sql_executor(sql, sql_args) as pgcursor:
+            result = pgcursor.fetchall()
+            types = {desc[0]: self.TYPE_CODES[desc[1]]
+                     for desc in pgcursor.description}
+
+        return result, types
+
+    def fetchone_with_types(self, sql, sql_args=None):
+        """Executes a fetchone SQL query with column information
+
+        Parameters
+        ----------
+        sql : str
+            The SQL query
+        sql_args : tuple or list, optional
+            The arguments for the SQL query
+
+        Returns
+        -------
+        Tuple
+            The results of the fetchone query
+        dict
+            dictionary in the form of {column: type}
+
+        Raises
+        ------
+        QiitaDBExecutionError
+            if there is some error executing the SQL query
+
+        Notes
+        -----
+        from psycopg2 documentation, only variable values should be bound
+        via sql_args, it shouldn't be used to set table or field names. For
+        those elements, ordinary string formatting should be used before
+        running execute.
+        """
+        with self._sql_executor(sql, sql_args) as pgcursor:
+            result = pgcursor.fetchone()
+            types = {desc[0]: self.TYPE_CODES[desc[1]]
+                     for desc in pgcursor.description}
+
+        return result, types
 
     def execute(self, sql, sql_args=None):
         """ Executes an SQL query with no results

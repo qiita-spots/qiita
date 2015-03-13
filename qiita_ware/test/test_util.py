@@ -19,11 +19,8 @@ import numpy as np
 from future.utils.six import StringIO, BytesIO
 
 from qiita_db.metadata_template import SampleTemplate, PrepTemplate
-from qiita_ware.util import (per_sample_sequences, template_to_dict,
-                             metadata_stats_from_sample_and_prep_templates,
-                             metadata_map_from_sample_and_prep_templates,
-                             stats_from_df, dataframe_from_template,
-                             open_file, _is_string_or_bytes)
+from qiita_ware.util import (per_sample_sequences, stats_from_df, open_file,
+                             _is_string_or_bytes)
 
 
 def mock_sequence_iter(items):
@@ -80,81 +77,14 @@ class UtilTests(TestCase):
         obs = per_sample_sequences(mock_sequence_iter(sequences), max_seqs)
         self.assertEqual(sorted(obs), exp)
 
-    def test_metadata_stats_from_sample_and_prep_templates(self):
-        obs = metadata_stats_from_sample_and_prep_templates(SampleTemplate(1),
-                                                            PrepTemplate(1))
-        for k in obs:
-            self.assertEqual(obs[k], SUMMARY_STATS[k])
-
-    def test_metadata_map_from_sample_and_prep_templates(self):
-        obs = metadata_map_from_sample_and_prep_templates(SampleTemplate(1),
-                                                          PrepTemplate(1))
-
-        # We don't test the specific values as this would blow up the size
-        # of this file as the amount of lines would go to ~1000
-
-        # 27 samples
-        self.assertEqual(len(obs), 27)
-        self.assertTrue(set(obs.index), {
-            u'SKB1.640202', u'SKB2.640194', u'SKB3.640195', u'SKB4.640189',
-            u'SKB5.640181', u'SKB6.640176', u'SKB7.640196', u'SKB8.640193',
-            u'SKB9.640200', u'SKD1.640179', u'SKD2.640178', u'SKD3.640198',
-            u'SKD4.640185', u'SKD5.640186', u'SKD6.640190', u'SKD7.640191',
-            u'SKD8.640184', u'SKD9.640182', u'SKM1.640183', u'SKM2.640199',
-            u'SKM3.640197', u'SKM4.640180', u'SKM5.640177', u'SKM6.640187',
-            u'SKM7.640188', u'SKM8.640201', u'SKM9.640192'})
-
-        self.assertTrue(set(obs.columns), {
-            u'tot_org_carb', u'common_name', u'has_extracted_data',
-            u'required_sample_info_status', u'water_content_soil',
-            u'env_feature', u'assigned_from_geo', u'altitude', u'env_biome',
-            u'texture', u'has_physical_specimen', u'description_duplicate',
-            u'physical_location', u'latitude', u'ph', u'host_taxid',
-            u'elevation', u'description', u'collection_timestamp',
-            u'taxon_id', u'samp_salinity', u'host_subject_id', u'sample_type',
-            u'season_environment', u'temp', u'country', u'longitude',
-            u'tot_nitro', u'depth', u'anonymized_name', u'target_subfragment',
-            u'sample_center', u'samp_size', u'run_date', u'experiment_center',
-            u'pcr_primers', u'center_name', u'barcodesequence', u'run_center',
-            u'run_prefix', u'library_construction_protocol', u'emp_status',
-            u'linkerprimersequence', u'experiment_design_description',
-            u'target_gene', u'center_project_name', u'illumina_technology',
-            u'sequencing_meth', u'platform', u'experiment_title',
-            u'study_center'})
-
-    def template_to_dict(self):
-        template = PrepTemplate(1)
-        obs = template_to_dict(template)
-
-        # We don't test the specific values as this would blow up the size
-        # of this file as the amount of lines would go to ~1000
-
-        # twenty seven samples
-        self.assertEqual(len(obs.keys()), 27)
-
-        # the mapping file has 24 columns
-        for key, value in obs.items():
-            # check there are exatly these column names in the dictionary
-            self.assertItemsEqual(value.keys(), [
-                'experiment_center', 'center_name', 'run_center',
-                'run_prefix', 'data_type_id', 'target_gene',
-                'sequencing_meth', 'run_date', 'pcr_primers',
-                'ebi_submission_accession', 'linkerprimersequence',
-                'platform', 'library_construction_protocol',
-                'experiment_design_description', 'study_center',
-                'center_project_name', 'sample_center', 'samp_size',
-                'illumina_technology', 'experiment_title', 'emp_status',
-                'target_subfragment', 'barcodesequence',
-                'ebi_study_accession'])
-
     def test_stats_from_df(self):
-        obs = stats_from_df(dataframe_from_template(SampleTemplate(1)))
+        obs = stats_from_df(SampleTemplate(1).to_dataframe())
         for k in obs:
             self.assertEqual(obs[k], SUMMARY_STATS[k])
 
     def test_dataframe_from_template(self):
         template = PrepTemplate(1)
-        obs = dataframe_from_template(template)
+        obs = template.to_dataframe()
 
         # 27 samples
         self.assertEqual(len(obs), 27)

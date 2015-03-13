@@ -66,7 +66,7 @@ from pyparsing import (alphas, nums, Word, dblQuotedString, oneOf, Optional,
                        opAssoc, CaselessLiteral, removeQuotes, Group,
                        operatorPrecedence, stringEnd)
 
-from qiita_db.util import scrub_data, typecast_string, get_table_cols
+from qiita_db.util import scrub_data, convert_type, get_table_cols
 from qiita_db.sql_connection import SQLConnectionHandler
 from qiita_db.study import Study
 from qiita_db.exceptions import QiitaDBIncompatibleDatatypeError
@@ -126,7 +126,7 @@ class SearchTerm(object):
         # we can assume that the metadata is either in required_sample_info
         # or the study-specific table
         column_name, operator, argument = self.term
-        argument_type = type(typecast_string(argument))
+        argument_type = type(convert_type(argument))
 
         allowable_types = {int: {'<', '<=', '=', '>=', '>'},
                            float: {'<', '<=', '=', '>=', '>'},
@@ -276,7 +276,7 @@ class QiitaStudySearch(object):
         meta_headers = set(all_headers)
         all_types = [c[0][0].term[2] for c in
                      (criterion + optional_seps).scanString(searchstr)]
-        all_types = [type_lookup[type(typecast_string(s))] for s in all_types]
+        all_types = [type_lookup[type(convert_type(s))] for s in all_types]
 
         # sort headers and types so they return in same order every time.
         # Should be a relatively short list so very quick

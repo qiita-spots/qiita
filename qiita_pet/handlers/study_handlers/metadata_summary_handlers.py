@@ -9,7 +9,7 @@ from __future__ import division
 
 from tornado.web import authenticated, HTTPError
 
-from qiita_ware.util import dataframe_from_template, stats_from_df
+from qiita_ware.util import stats_from_df
 from qiita_db.study import Study
 from qiita_db.metadata_template import SampleTemplate, PrepTemplate
 from qiita_db.exceptions import QiitaDBUnknownIDError
@@ -83,7 +83,7 @@ class MetadataSummaryHandler(BaseHandler):
             raise HTTPError(403, "You do not have access to access this "
                                  "information.")
 
-        df = dataframe_from_template(template)
+        df = template.to_dataframe()
         num_samples = df.shape[0]
         stats = stats_from_df(df)
 

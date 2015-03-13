@@ -494,6 +494,12 @@ class TestMetadataTemplate(TestCase):
         with self.assertRaises(IncompetentQiitaDeveloperError):
             MetadataTemplate._table_name(self.study)
 
+    def test_to_dataframe(self):
+        """to dataframeraises an error because it's not called from a subclass
+        """
+        with self.assertRaises(TypeError):
+            MetadataTemplate.to_dataframe()
+
 
 @qiita_test_checker()
 class TestSampleTemplate(TestCase):
@@ -953,7 +959,7 @@ class TestSampleTemplate(TestCase):
             "order by column_name")
 
         # study_id, column_name, column_type
-        exp = [[2L, 'int_column', 'integer'], [2, "str_column", "varchar"]]
+        exp = [[2, 'int_column', 'integer'], [2, 'str_column', 'varchar']]
         self.assertEqual(obs, exp)
 
         # The new table exists
@@ -1216,6 +1222,36 @@ class TestSampleTemplate(TestCase):
             st.update(self.metadata_dict_updated_sample_error)
         with self.assertRaises(QiitaDBError):
             st.update(self.metadata_dict_updated_column_error)
+
+    def test_to_dataframe(self):
+        obs = self.tester.to_dataframe()
+        # We don't test the specific values as this would blow up the size
+        # of this file as the amount of lines would go to ~1000
+
+        # 27 samples
+        self.assertEqual(len(obs), 27)
+        self.assertEqual(set(obs.index), {
+            u'1.SKB1.640202', u'1.SKB2.640194', u'1.SKB3.640195',
+            u'1.SKB4.640189', u'1.SKB5.640181', u'1.SKB6.640176',
+            u'1.SKB7.640196', u'1.SKB8.640193', u'1.SKB9.640200',
+            u'1.SKD1.640179', u'1.SKD2.640178', u'1.SKD3.640198',
+            u'1.SKD4.640185', u'1.SKD5.640186', u'1.SKD6.640190',
+            u'1.SKD7.640191', u'1.SKD8.640184', u'1.SKD9.640182',
+            u'1.SKM1.640183', u'1.SKM2.640199', u'1.SKM3.640197',
+            u'1.SKM4.640180', u'1.SKM5.640177', u'1.SKM6.640187',
+            u'1.SKM7.640188', u'1.SKM8.640201', u'1.SKM9.640192'})
+
+        self.assertEqual(set(obs.columns), {
+            u'physical_location', u'has_physical_specimen',
+            u'has_extracted_data', u'sample_type',
+            u'required_sample_info_status', u'collection_timestamp',
+            u'host_subject_id', u'description', u'latitude', u'longitude',
+            u'season_environment', u'assigned_from_geo', u'texture',
+            u'taxon_id', u'depth', u'host_taxid', u'common_name',
+            u'water_content_soil', u'elevation', u'temp', u'tot_nitro',
+            u'samp_salinity', u'altitude', u'env_biome', u'country', u'ph',
+            u'anonymized_name', u'tot_org_carb', u'description_duplicate',
+            u'env_feature'})
 
     def test_add_category(self):
         column = "new_column"
@@ -2308,6 +2344,34 @@ class TestPrepTemplate(TestCase):
         pt = PrepTemplate(1)
         pt.investigation_type = 'RNASeq'
         self.assertEqual(pt.investigation_type, 'RNASeq')
+
+    def test_to_dataframe(self):
+        obs = self.tester.to_dataframe()
+        # We don't test the specific values as this would blow up the size
+        # of this file as the amount of lines would go to ~1000
+
+        # 27 samples
+        self.assertEqual(len(obs), 27)
+        self.assertEqual(set(obs.index), {
+            u'1.SKB1.640202', u'1.SKB2.640194', u'1.SKB3.640195',
+            u'1.SKB4.640189', u'1.SKB5.640181', u'1.SKB6.640176',
+            u'1.SKB7.640196', u'1.SKB8.640193', u'1.SKB9.640200',
+            u'1.SKD1.640179', u'1.SKD2.640178', u'1.SKD3.640198',
+            u'1.SKD4.640185', u'1.SKD5.640186', u'1.SKD6.640190',
+            u'1.SKD7.640191', u'1.SKD8.640184', u'1.SKD9.640182',
+            u'1.SKM1.640183', u'1.SKM2.640199', u'1.SKM3.640197',
+            u'1.SKM4.640180', u'1.SKM5.640177', u'1.SKM6.640187',
+            u'1.SKM7.640188', u'1.SKM8.640201', u'1.SKM9.640192'})
+
+        self.assertEqual(set(obs.columns), {
+            u'prep_template_id', u'center_name', u'center_project_name',
+            u'emp_status', u'barcodesequence',
+            u'library_construction_protocol', u'linkerprimersequence',
+            u'target_subfragment', u'target_gene', u'run_center',
+            u'run_prefix', u'run_date', u'experiment_center',
+            u'experiment_design_description', u'experiment_title', u'platform',
+            u'samp_size', u'sequencing_meth', u'illumina_technology',
+            u'sample_center', u'pcr_primers', u'study_center'})
 
 
 class TestUtilities(TestCase):
