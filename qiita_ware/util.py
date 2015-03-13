@@ -114,6 +114,10 @@ def stats_from_df(df):
         Format {category: [(val1, count1), (val2, count2), ...], ...}
     """
     out = {}
+
+    # drop the study_id column if it exists
+    if 'study_id' in df.columns:
+        df.drop('study_id', axis=1, inplace=True)
     cols = list(df.columns)
     for column in cols:
         counts = df[column].value_counts()

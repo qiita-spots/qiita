@@ -1251,7 +1251,7 @@ class TestSampleTemplate(TestCase):
             u'water_content_soil', u'elevation', u'temp', u'tot_nitro',
             u'samp_salinity', u'altitude', u'env_biome', u'country', u'ph',
             u'anonymized_name', u'tot_org_carb', u'description_duplicate',
-            u'env_feature', u'study_id'})
+            u'env_feature'})
 
     def test_add_category(self):
         column = "new_column"

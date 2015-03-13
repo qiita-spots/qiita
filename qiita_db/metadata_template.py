@@ -1085,6 +1085,8 @@ class MetadataTemplate(QiitaObject):
         self._check_subclass()
         conn_handler = SQLConnectionHandler()
         cols = get_table_cols(self._table, conn_handler)
+        if 'study_id' in cols:
+            cols.remove('study_id')
         dyncols = get_table_cols(self._table_name(self._id), conn_handler)
         # remove sample_id from dyncols so not repeated
         dyncols.remove('sample_id')
