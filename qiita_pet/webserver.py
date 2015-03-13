@@ -8,7 +8,6 @@ from base64 import b64encode
 from uuid import uuid4
 from moi.websocket import MOIMessageHandler
 
-from qiita_core.qiita_settings import qiita_config
 from qiita_pet.handlers.base_handlers import (MainHandler, NoPageHandler)
 from qiita_pet.handlers.auth_handlers import (
     AuthCreateHandler, AuthLoginHandler, AuthLogoutHandler, AuthVerifyHandler)
@@ -40,7 +39,7 @@ STATIC_PATH = join(DIRNAME, "static")
 TEMPLATE_PATH = join(DIRNAME, "templates")  # base folder for webpages
 _, RES_PATH = get_mountpoint('job')[0]
 COOKIE_SECRET = b64encode(uuid4().bytes + uuid4().bytes)
-DEBUG = qiita_config.test_environment
+DEBUG = False
 
 
 class Application(tornado.web.Application):
