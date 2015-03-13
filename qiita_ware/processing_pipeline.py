@@ -213,6 +213,12 @@ def _get_preprocess_fasta_cmd(raw_data, prep_template, params):
     elif quals and not seqs:
         raise ValueError("Cannot have just qual, on %s"
                          % raw_data.id)
+    elif seqs and not quals:
+        raise ValueError("It is not currently possible to process "
+                         "fasta file(s) without qual file(s). This will "
+                         "be supported in the future. You can track progress "
+                         "on this by following: "
+                         "https://github.com/biocore/qiita/issues/953")
     elif seqs:
         seqs = sorted(seqs)
         quals = sorted(quals)
@@ -286,7 +292,7 @@ def generate_demux_file(sl_out, **kwargs):
     fastq_fp = join(sl_out, 'seqs.fastq')
     if not exists(fastq_fp):
         raise ValueError("The split libraries output directory does not "
-                         "contain the demultiplexed fastq file")
+                         "contain the demultiplexed fastq file.")
 
     demux_fp = join(sl_out, 'seqs.demux')
     with File(demux_fp, "w") as f:
@@ -429,7 +435,7 @@ class StudyPreprocessor(ParallelWrapper):
 
         Need to change the prep_template preprocessing status to 'failed'
         """
-        self.prep_template.preprocessing_status = 'failed: %s' % msg
+        self.prep_template.preprocessing_status = 'failed:\n %s' % msg
         LogEntry.create('Fatal', msg,
                         info={'prep_template': self.prep_template.id})
 

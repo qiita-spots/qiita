@@ -386,7 +386,7 @@ def get_table_cols(table, conn_handler=None):
     conn_handler = conn_handler if conn_handler else SQLConnectionHandler()
     headers = conn_handler.execute_fetchall(
         "SELECT column_name FROM information_schema.columns WHERE "
-        "table_name=%s", (table, ))
+        "table_name=%s AND table_schema='qiita'", (table, ))
     return [h[0] for h in headers]
 
 
