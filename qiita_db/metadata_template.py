@@ -2194,6 +2194,8 @@ def load_template_to_dataframe(fn, strip_whitespace=True):
 
     Raises
     ------
+    ValueError
+        Empty file passed
     QiitaDBColumnError
         If the sample_name column is not present in the template.
         If there's a value in one of the reserved columns that cannot be cast
@@ -2243,6 +2245,9 @@ def load_template_to_dataframe(fn, strip_whitespace=True):
     else:
         # open file passed
         holdfile = fn.readlines()
+    if len(holdfile) == 0:
+        # Empty file passed
+        raise ValueError('Empty file passed!: %s' % str(fn))
 
     # Strip all values in the cells in the input file, if requested
     if strip_whitespace:
