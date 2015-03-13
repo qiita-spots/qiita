@@ -2274,16 +2274,17 @@ def load_template_to_dataframe(fn, strip_whitespace=True):
 
     # let pandas infer the dtypes of these columns, if the inference is
     # not correct, then we have to raise an error
-    columns_to_dtype = [(['latitude', 'longitude'], np.float),
+    columns_to_dtype = [(['latitude', 'longitude'], (np.int, np.float),
+                         'integer or decimal'),
                         (['has_physical_specimen', 'has_extracted_data'],
-                         np.bool)]
-    for columns, c_dtype in columns_to_dtype:
+                         np.bool_, 'boolean')]
+    for columns, c_dtype, english_desc in columns_to_dtype:
         for n in columns:
-            if n in template.columns and not np.issubdtype(template[n].dtype,
-                                                           c_dtype):
-                raise QiitaDBColumnError("The '%s' column includes values that"
-                                         " cannot be cast into a %s "
-                                         "type." % (n, c_dtype))
+            if n in template.columns and not all([isinstance(val, c_dtype)
+                                                  for val in template[n]]):
+                raise QiitaDBColumnError("The '%s' column includes values "
+                                         "that cannot be cast into a %s "
+                                         "value " % (n, english_desc))
 
     initial_columns = set(template.columns)
 
