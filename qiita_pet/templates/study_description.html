@@ -353,8 +353,8 @@ function link_files_to_raw_data(raw_data_id) {
     bootstrapAlert("You must select the same number of barcode and forward seq files.");
   } else if (sff.length === 0 && (reverse.length !== 0 && reverse.length != forward.length)) {
     bootstrapAlert("If you select reverse seqs, they should have the same number than barcodes and forward files.");
-  } else if (sff.length === 0 && (fasta.length !== 0 && fasta.length != qual.length)) {
-    bootstrapAlert("If you select qual seqs, they should have the same number of qual and fasta files");
+  } else if (sff.length === 0 && (qual.length !== 0 && fasta.length != qual.length)) {
+    bootstrapAlert("If you select qual, you must have the same number of fasta and qual files.");
   } else {
     var form = $("<form>")
       .attr("action", "/study/add_files_to_raw_data")
