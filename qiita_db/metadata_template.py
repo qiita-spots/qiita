@@ -49,6 +49,7 @@ import pandas as pd
 import numpy as np
 import warnings
 from skbio.util import find_duplicates
+from skbio.io.util import open_file
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from .exceptions import (QiitaDBDuplicateError, QiitaDBColumnError,
@@ -2231,13 +2232,8 @@ def load_template_to_dataframe(fn, strip_whitespace=True):
     """
     # Load in file lines
     holdfile = None
-    if isinstance(fn, (str, unicode)):
-        # filepath passed
-        with open(fn) as f:
-            holdfile = f.readlines()
-    else:
-        # open file passed
-        holdfile = fn.readlines()
+    with open_file(fn) as f:
+        holdfile = f.readlines()
     if not holdfile:
         raise ValueError('Empty file passed!')
 
