@@ -40,11 +40,10 @@ from future.builtins import zip
 from future.utils import viewitems, PY3
 from copy import deepcopy
 from os.path import join
-from os import close
 from time import strftime
 from functools import partial
-from tempfile import mkstemp
 from os.path import basename
+from future.utils.six import StringIO
 
 import pandas as pd
 import numpy as np
@@ -2213,8 +2212,8 @@ def load_template_to_dataframe(fn, strip_whitespace=True):
 
     Parameters
     ----------
-    fn : str
-        filename of the template to load
+    fn : str or file-like object
+        filename of the template to load, or an already open template file
     strip_whitespace : bool, optional
         Defaults to True. Whether or not to strip whitespace from values in the
         input file
@@ -2226,6 +2225,8 @@ def load_template_to_dataframe(fn, strip_whitespace=True):
 
     Raises
     ------
+    ValueError
+        Empty file passed
     QiitaDBColumnError
         If the sample_name column is not present in the template.
         If there's a value in one of the reserved columns that cannot be cast
@@ -2241,7 +2242,8 @@ def load_template_to_dataframe(fn, strip_whitespace=True):
     sample names will be removed from the DataFrame.
 
     The following table describes the data type per column that will be
-    enforced in `fn`.
+    enforced in `fn`. Column names are case-insensitive but will be lowercased
+    on addition to the database.
 
     +-----------------------+--------------+
     |      Column Name      |  Python Type |
@@ -2265,20 +2267,28 @@ def load_template_to_dataframe(fn, strip_whitespace=True):
     |             longitude |        float |
     +-----------------------+--------------+
     """
+    # Load in file lines
+    holdfile = None
+    with open_file(fn) as f:
+        holdfile = f.readlines()
+    if not holdfile:
+        raise ValueError('Empty file passed!')
 
-    # First, strip all values from the cells in the input file, if requested
+    # Strip all values in the cells in the input file, if requested
     if strip_whitespace:
-        fd, fp = mkstemp()
-        close(fd)
+        for pos, line in enumerate(holdfile):
+            holdfile[pos] = '\t'.join(d.strip(" \r\x0b\x0c")
+                                      for d in line.split('\t'))
 
-        with open_file(fn, 'U') as input_f, open(fp, 'w') as new_f:
-            for line in input_f:
-                line_elements = [x.strip()
-                                 for x in line.rstrip('\n').split('\t')]
-                new_f.write('\t'.join(line_elements) + '\n')
-
-        fn = fp
-
+    # get and clean the required columns
+    reqcols = set(get_table_cols("required_sample_info"))
+    reqcols.add('sample_name')
+    reqcols.add('required_sample_info_status')
+    reqcols.discard('required_sample_info_status_id')
+    # clean all the column names
+    cols = holdfile[0].split('\t')
+    holdfile[0] = '\t'.join(c.lower() if c.lower() in reqcols else c
+                            for c in cols)
     # index_col:
     #   is set as False, otherwise it is cast as a float and we want a string
     # keep_default:
@@ -2294,7 +2304,8 @@ def load_template_to_dataframe(fn, strip_whitespace=True):
     # comment:
     #   using the tab character as "comment" we remove rows that are
     #   constituted only by delimiters i. e. empty rows.
-    template = pd.read_csv(fn, sep='\t', infer_datetime_format=True,
+    template = pd.read_csv(StringIO(''.join(holdfile)), sep='\t',
+                           infer_datetime_format=True,
                            keep_default_na=False, na_values=[''],
                            parse_dates=True, index_col=False, comment='\t',
                            mangle_dupe_cols=False, converters={
