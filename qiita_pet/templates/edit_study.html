@@ -23,7 +23,7 @@
 $(document).ready(function() {
     $("#new_person_div").hide();
      $( "#{{creation_form.principal_investigator.id}}" ).chosen({
-        allow_single_deselect: true
+        allow_single_deselect: true,
      });
     $( "#{{creation_form.lab_person.id}}" ).chosen({
         allow_single_deselect: true
@@ -78,6 +78,10 @@ $(document).ready(function() {
       },
       errorLabelContainer: "#errorspan",
       wrapper: "li",
+    });
+
+    $('#{{creation_form.principal_investigator.id}}').on('change', function(e) {
+      $("#create_study").validate().element("#{{creation_form.principal_investigator.id}}");
     });
 });
 
@@ -134,7 +138,7 @@ function cancel_edition(){
 <span id="errorspan" name="errorspan" style="color: red"></span>
 <span id="messagespan" name="messagespan" style="color: red"></span>
 <br />
-<form id="create_study" name="create_study" action={%if study%}'/study/edit/{{study.id}}'{%else%}'/study/create/'{%end%} method="POST" onsubmit='return submit_create_study();'>
+<form id="create_study" name="create_study" action={%if study%}'/study/edit/{{study.id}}'{%else%}'/study/create/'{%end%} method="POST">
 <table>
 {% for idx, form_item in enumerate(creation_form, start=1) %}
     {% set kwargs = {'tabindex': idx, 'class_': 'form-control'} %}
@@ -143,6 +147,8 @@ function cancel_edition(){
     {% if form_item.label.text == 'Environmental Packages' %}
         {% set kwargs['size'] = len(form_item.choices) %}
         {% set additional_info = 'You can select multiple entries by control-clicking (mac: command-clicking)' %}
+    {% elif form_item.label.text == 'Principan Investigator'%}
+        {% set kwargs['class_'] = kwargs['class_'] + ' chzn-select' %}
     {% end %}
   <tr>
     <td width="20%">{% raw form_item.label %} <br /> {{additional_info}}</td>
