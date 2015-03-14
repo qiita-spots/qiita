@@ -1,6 +1,8 @@
 from unittest import main
 from collections import namedtuple
 
+from tornado.ioloop import IOLoop
+
 from qiita_pet.test.tornado_test_base import TestHandlerBase
 from qiita_db.study import StudyPerson, Study
 from qiita_db.util import get_count, check_count
@@ -101,6 +103,9 @@ class TestPublicStudiesHandler(TestHandlerBase):
 
 
 class TestStudyDescriptionHandler(TestHandlerBase):
+    def get_new_ioloop(self):
+        return IOLoop.instance()
+
     def test_get_exists(self):
         response = self.get('/study/description/1')
         self.assertEqual(response.code, 200)
