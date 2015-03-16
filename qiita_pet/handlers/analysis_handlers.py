@@ -11,7 +11,7 @@ Qitta analysis handlers for the Tornado webserver.
 # -----------------------------------------------------------------------------
 from __future__ import division
 from future.utils import viewitems
-from collections import defaultdict, Counter
+from collections import defaultdict
 from os.path import join, sep, commonprefix
 
 from tornado.web import authenticated, HTTPError, StaticFileHandler

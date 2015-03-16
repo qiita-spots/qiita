@@ -50,7 +50,6 @@ from os.path import join, basename, isdir, relpath, exists
 from os import walk, remove, listdir, makedirs, rename
 from shutil import move, rmtree
 from json import dumps
-from datetime import datetime
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from .exceptions import QiitaDBColumnError, QiitaDBError
