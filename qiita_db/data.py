@@ -1144,6 +1144,21 @@ class ProcessedData(BaseData):
             "processed_data_id=%s".format(self._study_processed_table),
             [self._id])[0]
 
+    @property
+    def samples(self):
+        """Returns samples available in this processed data
+
+        Returns
+        -------
+        generator of str
+            Sample_ids available according to the prep template
+        """
+        # Get the samples available for the prep template
+        pid = PreprocessedData(self.preprocessed_data).prep_template
+        conn_handler = SQLConnectionHandler()
+        sql = "SELECT sample_id FROM qiita.prep_{0}".format(pid)
+        return (x[0] for x in conn_handler.execute_fetchall(sql))
+
     def data_type(self, ret_id=False):
         """Returns the data_type or data_type_id
 
