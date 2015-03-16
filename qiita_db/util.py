@@ -113,16 +113,13 @@ def convert_type(obj):
     convert to a float. If that fails it returns the original string.
     """
     item = None
-    if isinstance(obj, datetime):
-        item = str(obj)
-    else:
-        for fn in (int, float, str):
-            try:
-                item = fn(obj)
-            except ValueError:
-                continue
-            else:
-                break
+    for fn in (int, float, str):
+        try:
+            item = fn(obj)
+        except ValueError:
+            continue
+        else:
+            break
     if item is None:
         raise IncompetentQiitaDeveloperError("Can't convert item of type %s!" %
                                              str(type(obj)))

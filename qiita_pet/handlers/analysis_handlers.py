@@ -31,7 +31,7 @@ from qiita_db.util import (get_db_files_base_dir,
                            check_access_to_analysis_result,
                            get_table_cols,
                            filepath_ids_to_rel_paths)
-from qiita_db.search import QiitaStudySearch
+from qiita_ware.search import search, count_metadata
 from qiita_db.exceptions import (
     QiitaDBIncompatibleDatatypeError, QiitaDBUnknownIDError)
 
@@ -59,37 +59,6 @@ def check_analysis_access(user, analysis):
 
 
 class SearchStudiesHandler(BaseHandler):
-    def _parse_search_results(self, results, selsamples, meta_headers):
-        """remove already selected samples from results and count metadata"""
-        counts = {}
-        fullcounts = {meta: defaultdict(int) for meta in meta_headers}
-        studypop = []
-        for study, samples in viewitems(results):
-            counts[study] = {meta: Counter()
-                             for meta in meta_headers}
-            topop = []
-            for pos, sample in enumerate(samples):
-                if study in selsamples and sample[0] in selsamples[study]:
-                    topop.append(pos)
-                    # still add to full counts, but not study counts
-                    for pos, meta in enumerate(meta_headers):
-                        fullcounts[meta][sample[pos+1]] += 1
-                else:
-                    for pos, meta in enumerate(meta_headers):
-                        counts[study][meta][sample[pos+1]] += 1
-                        fullcounts[meta][sample[pos+1]] += 1
-            # if no samples left, remove the study from results
-            if len(topop) == len(samples):
-                studypop.append(study)
-                continue
-            # remove already selected samples
-            topop.sort(reverse=True)
-            for pos in topop:
-                samples.pop(pos)
-        for study in studypop:
-            results.pop(study)
-        return results, counts, fullcounts
-
     def _selected_parser(self, analysis):
         """builds dictionaries of selected samples from analysis object"""
         selsamples = {}
@@ -163,12 +132,6 @@ class SearchStudiesHandler(BaseHandler):
             analysis_id = analysis.id
             # set to second step since this page is second step in workflow
             analysis.step = SELECT_SAMPLES
-            # fill example studies by running query for specific studies
-            search = QiitaStudySearch()
-            def_query = 'study_id = 1 OR study_id = 2 OR study_id = 3'
-            results, meta_headers = search(def_query, user)
-            results, counts, fullcounts = self._parse_search_results(
-                results, selsamples, meta_headers)
         else:
             analysis_id = int(self.get_argument("analysis-id"))
             analysis = Analysis(analysis_id)
@@ -177,7 +140,6 @@ class SearchStudiesHandler(BaseHandler):
 
         # run through action requested
         if action == "search":
-            search = QiitaStudySearch()
             query = str(self.get_argument("query"))
             try:
                 results, meta_headers = search(query, user)
@@ -189,8 +151,7 @@ class SearchStudiesHandler(BaseHandler):
             if not results and not searchmsg:
                 searchmsg = "No results found."
             else:
-                results, counts, fullcounts = self._parse_search_results(
-                    results, selsamples, meta_headers)
+                fullcounts, counts = count_metadata(results, meta_headers)
 
         elif action == "select":
             analysis.add_samples(self._parse_form_select())
