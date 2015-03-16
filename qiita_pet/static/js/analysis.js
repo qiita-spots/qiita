@@ -22,79 +22,77 @@ function displaySelected() {
 } 
 
 function select_category(category, study) {
-  if(study != '') { 
-    $('.'+study+'.'+category).each(function() {this.checked = true;});
-    count_update(study);
+  if(study !== '') { 
+    $('.study'+study+'.'+category).each(function() {this.checked = true;});
+    count_update(study, '');
   }
   else { 
     $('.'+category).each(function() {this.checked = true;});
     for(i=0; i<STUDIES.length; i++) {
-      count_update(STUDIES[i]);
+      count_update(STUDIES[i], '');
     }
   }
 }
 
-function select_deselect_samples_study(study) {
-  var selected_datatypes = $('#study' + study + ' input:checkbox:checked').length;
-  var sel = false;
-  if (selected_datatypes > 0) { sel = true; }
-  select_deselect(study, sel)
+function count_update(study, sel) {
+  format = '#modal' + study;
+  if(sel === "-sel") { format = format + "-sel"; }
+    format = format + ' input:checkbox:checked';
+  var selected = $(format).length;
+  if(selected > 0 && sel !== "-sel") { $('#study' + study).addClass('success'); }
+  else if(sel !== "-sel") { $('#study' + study).removeClass('success'); }
+  else if(selected > 0 && sel === "-sel") { $('#study' + study+"-sel").addClass('danger'); }
+  else if(sel === "-sel") { $('#study' + study + "-sel").removeClass('danger'); }
 }
 
-function count_update(study) {
-  var selected = $('#modal' + study + ' input:checkbox:checked').length;
-  var studylink = document.getElementById('modal-link-' + study)
-  document.getElementById('count' + study).innerHTML = selected;
-  if(selected > 0) { 
-    $('#study' + study).addClass('success');
-    studylink.disabled = false;
-    studylink.style = "";
-  }
-  else {
-    $('#study' + study).removeClass('success');
-    studylink.disabled = true;
-    studylink.style = "text-decoration: none;";
-    $('#study' + study + " input:checkbox").each(function() {this.checked = false;})
-  }
-}
-
-function select_deselect(study, select) {
-  if(select == true) { 
-    $('.'+study).each(function() {this.checked = true;});
+function select_deselect(study, filter, sel, select) {
+  filter = '.study' + study + filter;
+  if(sel === '-sel') { filter = filter + '.-sel'; }
+  if(select === true) {
+    $(filter).each(function() {this.checked = true;});
   }
   else { 
-    $('.'+study).each(function() {this.checked = false;});
+    $(filter).each(function() {this.checked = false;});
   }
-  count_update(study);
+  count_update(study, sel);
 }
 
-function select_inverse(study) {
-  $('.'+study).each(function() {
-    if(this.checked == true) { this.checked = false; }
+function select_inverse(study, filter, sel, type) {
+  filter = filter + ".study" + study;
+  if(sel === "-sel") { filter += ".-sel"; }
+  $(filter).each(function() {
+    if(this.checked === true) { this.checked = false; }
     else { this.checked = true; }
   });
+  count_update(study, sel);
 }
 
 function pre_submit(action) {
   document.getElementById('action').value = action;
   var msgdiv = document.getElementById('searchmsg');
-  if(action == 'search') {
+  if(action === 'search') {
     msgdiv.style.color = '';
     msgdiv.style.align = 'center';
     msgdiv.innerHTML = '<img src="/static/img/waiting.gif"> <b>Searching...</b>';
-  } else if(action == 'continue') {
+    document.getElementById('results-div').hidden = true;
+  } else if(action === 'continue') {
     var selected = $('#selected input:checkbox').length;
-    if(selected == 0) {
-      msgdiv.innerHTML = "Must select samples to continue!"
+    if(selected === 0) {
+      msgdiv.innerHTML = "Must select samples to continue!";
       return false;
     } else {
-    document.getElementById('results-form').action = '/analysis/3'
+    document.getElementById('results-form').action = '/analysis/3';
     }
   } else if(action == "deselect") {
     var selected = $('#selected input:checkbox:checked').length;
-    if(selected == 0) {
-      msgdiv.innerHTML = "Must select samples to remove from study!"
+    if(selected === 0) {
+      msgdiv.innerHTML = "Must select samples to remove from study!";
       return false;
     }
   }
 }
+
+function add_metacat(metacat) {
+  document.getElementById('query').value += (" " + metacat);
+}
+

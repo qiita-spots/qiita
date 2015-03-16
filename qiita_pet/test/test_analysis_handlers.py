@@ -28,7 +28,7 @@ class TestSearchStudiesHandler(TestHandlerBase):
         # Make sure page response loaded sucessfully
         self.assertEqual(response.code, 200)
         # make sure we have proper samples being pulled out
-        self.assertTrue("SKB8.640193" in str(response.body))
+        self.assertIn("SKB8.640193", str(response.body))
 
     def test_post_search_no_results(self):
         post_args = {
@@ -41,7 +41,7 @@ class TestSearchStudiesHandler(TestHandlerBase):
         # Make sure page response loaded sucessfully
         self.assertEqual(response.code, 200)
         # make sure we have proper error message
-        self.assertTrue("No results found." in str(response.body))
+        self.assertIn("No results found.", str(response.body))
 
     def test_post_malformed_search(self):
         post_args = {
@@ -54,8 +54,8 @@ class TestSearchStudiesHandler(TestHandlerBase):
         # Make sure page response loaded sucessfully
         self.assertEqual(response.code, 200)
         # make sure we have proper error message
-        self.assertTrue("Malformed search query, please read search help."
-                        in str(response.body))
+        self.assertIn("Malformed search query, please read search help.",
+                      str(response.body))
 
     def test_post_search_studies(self):
         post_args = {
@@ -75,16 +75,22 @@ class TestSearchStudiesHandler(TestHandlerBase):
         post_args = {
             'analysis-id': 1,
             'action': 'deselect',
-            'selstudies': '1',
-            'dt1': '1',
-            'sel1': 'SKB8.640193'}
+            'samples-sel': '1#1.SKB8.640193'}
 
+        # first make sure sample is there to begin with
+        response = self.get('/analysis/2?aid=1')
+        # Make sure page response loaded sucessfully
+        self.assertEqual(response.code, 200)
+        # make sure sample removed
+        self.assertIn("1.SKB8.640193", str(response.body))
+
+        # now test deselect posting
         response = self.post('/analysis/2', post_args)
 
         # Make sure page response loaded sucessfully
         self.assertEqual(response.code, 200)
         # make sure sample removed
-        self.assertTrue("SKB8.640193" not in str(response.body))
+        self.assertNotIn("1.SKB8.640193", str(response.body))
 
     def test_post_create_analysis(self):
         response = self.post('/analysis/2', {'name': 'Web test Analysis',
@@ -102,16 +108,21 @@ class TestSearchStudiesHandler(TestHandlerBase):
         post_args = {
             'analysis-id': newaid,
             'action': 'select',
-            'availstudies': "1#1",
-            '1#1': 1,
-            '1': '1.SKD5.640186'}
+            'samples': '1#1.SKD5.640186'}
+
+        # first make sure sample is not there to begin with
+        response = self.get('/analysis/2?aid=1')
+        # Make sure page response loaded sucessfully
+        self.assertEqual(response.code, 200)
+        # make sure sample not there
+        self.assertNotIn("SKD5.640186", str(response.body))
 
         response = self.post('/analysis/2', post_args)
 
         # Make sure page response loaded sucessfully
         self.assertEqual(response.code, 200)
         # make sure sample added
-        self.assertTrue("SKD5.640186" in str(response.body))
+        self.assertIn("SKD5.640186", str(response.body))
 
 
 class TestSelectCommandsHandler(TestHandlerBase):

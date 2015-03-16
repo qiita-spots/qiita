@@ -21,6 +21,8 @@ Methods
 #
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
+from string import maketrans
+
 from future.utils import viewitems
 
 from qiita_db.reference import Reference
@@ -38,9 +40,12 @@ def linkify(link_template, item):
     """
     return link_template.format(*item)
 
+# global created table so only created once
+clean_str_table = maketrans(" ", "_")
+
 
 def clean_str(item):
-    """Converts input to string and replaces spaces with underscores
+    """Converts input to string and cleans to jQuery-compatible string
 
     Parameters
     ----------
@@ -51,8 +56,13 @@ def clean_str(item):
     -------
     str
         cleaned string
+
+    Notes
+    -----
+    This function removes colons and periods from strings, and replaces spaces
+    with underscores.
     """
-    return str(item).replace(" ", "_").replace(":", "")
+    return str(item).translate(clean_str_table, ".:")
 
 
 def generate_param_str(param):

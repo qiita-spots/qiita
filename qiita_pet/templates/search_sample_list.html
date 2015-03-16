@@ -1,0 +1,63 @@
+<!--Study datatypes tabs-->
+{% from future.utils import viewitems %}
+{% from qiita_pet.util import clean_str %}
+{% set sel = "" %}
+{% if  not meta_headers %}
+    {% set sel = "-sel" %}
+{% end %}
+<ul class="nav nav-tabs" role="tablist" id="dt-tabs-{{sid}}{{sel}}">
+{% for data_type, proc_data in viewitems(proc_data_dict) %}
+  <li><a href="#{{sid}}-{{data_type}}{{sel}}" role="tab" data-toggle="tab">{{data_type}}</a></li>
+{% end %}
+</ul>
+
+<div class="tab-content">
+{% for data_type, proc_data in viewitems(proc_data_dict) %}
+  <div class="tab-pane fade in" id="{{sid}}-{{data_type}}{{sel}}">
+    <ul class="nav nav-tabs" role="tablist" id="dt-tabs-{{sid}}{{sel}}">
+  {% for pid in proc_data %}
+      <li><a href="#{{sid}}-{{data_type}}-{{pid}}{{sel}}" role="tab" data-toggle="tab">Data {{pid}}</a></li>
+  {% end %}
+    </ul>
+    <div class="tab-content">
+  {% for pid in proc_data %}
+      <div class="tab-pane fade in" id="{{sid}}-{{data_type}}-{{pid}}{{sel}}">
+
+        <h3>Samples</h3>
+        <a href="#" onclick="select_deselect({{sid}}, '.proc{{pid}}', '{{sel}}', true); return false;">Select all</a> | <a href="#" onclick="select_deselect({{sid}}, '.proc{{pid}}', '{{sel}}', false); return false;">Select none</a> | <a href="#" onclick="select_inverse({{sid}}, '.proc{{pid}}', '{{sel}}'); return false;">Select inverse</a>
+        <table class='table table-hover'>
+          <tr>
+            <th></th>
+            <th></th>
+            <th>Sample ID</th>  
+          {% for meta in meta_headers %}
+            <th>{{meta}}</th>
+          {% end %}
+          </tr>
+          {% if meta_headers %}
+            {% for sample in proc_data_samples[pid]%}
+          <tr><td>
+            <input type='checkbox' name='samples{{sel}}'
+            value='{{pid}}#{{sample[0]}}' class='study{{sid}} proc{{pid}} {{data_type}} {{ " ".join(clean_str(s) for s in sample) }} {{sel}}' onchange="count_update({{sid}}, '{{sel}}'')""></td>
+            <td><a href="#" onclick="select_category('{{clean_str(sample[0])}}', ''); return false;">All Datatypes</a></td>
+          <td>{% raw "</td><td>".join(str(s) for s in sample) %}</td>
+          </tr>
+            {% end %}
+          {% else %}
+            {% for sample in proc_data_samples[pid]%}
+            {% set clean_sample = clean_str(sample) %}
+          <tr><td>
+            <input type='checkbox' name='samples{{sel}}'
+            value='{{pid}}#{{sample}}' class='study{{sid}} proc{{pid}} {{data_type}} {{ clean_sample }} {{sel}}' onchange="count_update({{sid}}, '{{sel}}')">
+            <td><a href="#" onclick="select_category('{{clean_sample}}',''); return false;">All Datatypes</a></td>
+            </td><td>{{sample}}</td></tr>
+            {% end %}
+          {% end %}
+        </table>
+
+      </div>
+  {% end %}
+    </div>
+  </div>
+{% end %}
+</div>
