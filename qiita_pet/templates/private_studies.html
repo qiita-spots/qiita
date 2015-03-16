@@ -11,11 +11,11 @@ var current_study;
 $(document).ready(function() {
         $('#user-studies-table').dataTable({
             order: [[ 0, "asc" ]],
-            columnDefs: [{type:'natural', targets:[1,2,3,7]}]
+            columnDefs: [{type:'natural', targets:[2,3,4,8]}, {"targets": [ 1 ],"visible": false}]
         });
         $('#shared-studies-table').dataTable({
             order: [[ 0, "asc" ]],
-            columnDefs: [{type:'natural', targets:[2,3,4]}]
+            columnDefs: [{type:'natural', targets:[3,4,5]}, {"targets": [ 1 ],"visible": false}]
         });
     $('#waiting').hide();
     $('#users_list').chosen({width: "100%"});
@@ -44,13 +44,11 @@ function modify_sharing(study_id) {
             $("#users_list").trigger("chosen:updated");
 
         });
-};
-
+}
 </script>
 
 {% end %}
 {% block content %}
-
 <!-- modal view to enter sharing settings -->
 <div class="modal fade" id="share-study-modal-view" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
   <div class="modal-dialog">
@@ -81,13 +79,14 @@ function modify_sharing(study_id) {
     </div>
   </div>
 </div>
-
+<!--User Studies-->
 <h1>Your Studies</h1>
 {% if len(user_studies) %}
     <table id="user-studies-table" class="display table-bordered table-hover">
         <thead>
             <tr>
                 <th>Title</th>
+                <th>Abstract</th>
                 <th>Metadata Complete</th>
                 <th>Samples</th>
                 <th>Sequence Files</th>
@@ -98,10 +97,13 @@ function modify_sharing(study_id) {
             </tr>
         </thead>
         <tbody>
+            {% set row = 0 %}
             {% for s in user_studies %}
             <tr>
                 {# Title #}
-                <td><a href="/study/description/{{ s.id }}">{{ s.title }}</a></td>
+                <td><a href="#" data-toggle="modal" data-target="#study-abstract-modal" onclick="fillAbstract('user-studies-table', {{row}})"><span class="glyphicon glyphicon-file" aria-hidden="true"></span></a> | <a href="/study/description/{{ s.id }}" id="study{{row}}-title">{{ s.title }}</a></td>
+                {# Abstract (hidden on page) #}
+                <td>{% raw s.abstract %}</td>
                 {# Metadata Comlete #}
                 {% if s.meta_complete %}
                 <td><span class="glyphicon glyphicon-ok"></span></td>
@@ -131,6 +133,7 @@ function modify_sharing(study_id) {
                 <td>{% raw s.pmids %}</td>
                 <td>{{ s.status }}</td>
             </tr>
+            {% set row = row + 1 %}
             {% end %}
         </tbody>
     </table>
@@ -142,13 +145,14 @@ function modify_sharing(study_id) {
         </p>
 </div>
 {% end %}
-
+<!--Shared Studies-->
 <h1>Shared Studies</h1>
 {% if len(shared_studies) %}
     <table id="shared-studies-table" class="display table-bordered table-hover">
         <thead>
             <tr>
                 <th>Title</th>
+                <th>Abstract</th>
                 <th>Owner</th>
                 <th>Metadata Complete</th>
                 <th>Samples</th>
@@ -158,9 +162,11 @@ function modify_sharing(study_id) {
             </tr>
         </thead>
         <tbody>
+            {% set row = 0 %}
             {% for s in shared_studies %}
             <tr>
-                <td><a href="/study/description/{{ s.id }}">{{ s.title }}</a></td>
+                <td><a href="#" data-toggle="modal" data-target="#study-abstract-modal" onclick="fillAbstract('shared-studies-table', {{row}})"><span class="glyphicon glyphicon-file" aria-hidden="true"></span></a> | <a href="/study/description/{{ s.id }}" id="study{{row}}-title">{{ s.title }}</a></td>
+                <td>{% raw s.abstract %}</a></td>
                 <td>{% raw s.owner %}</td>
                 {% if s.meta_complete %}
                 <td><span class="glyphicon glyphicon-ok"></span></td>
@@ -176,6 +182,7 @@ function modify_sharing(study_id) {
                 <td>{% raw s.pi %}</td>
                 <td>{% raw s.pmids %}</td>
             </tr>
+            {% set row = row + 1 %}
             {% end %}
         </tbody>
     </table>
@@ -187,4 +194,19 @@ function modify_sharing(study_id) {
         </p>
 </div>
 {% end %}
+<!--Abstract Modal-->
+<div class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true" id="study-abstract-modal">
+  <div class="modal-dialog modal-med">
+    <div class="modal-content">
+    <div class="modal-header">
+       <h3 id="title-text-area"></h3>
+    </div>
+    <div class="modal-body" id="abstract-text-area">
+      </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+    </div>
+    </div>
+  </div>
+</div>
 {% end %}

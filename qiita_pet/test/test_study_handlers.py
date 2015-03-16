@@ -22,7 +22,7 @@ class TestHelpers(TestHandlerBase):
         obs = _build_study_info('public', User('test@foo.bar'))
         StudyTuple = namedtuple('StudyInfo', 'id title meta_complete '
                                 'num_samples_collected shared num_raw_data pi '
-                                'pmids owner status')
+                                'pmids owner status, abstract')
         exp = [
             StudyTuple(
                 id=1,
@@ -39,7 +39,16 @@ class TestHelpers(TestHandlerBase):
                       'pubmed/7891011">7891011</a>',
                 owner='<a target="_blank" href="mailto:test@foo.bar">'
                       'test@foo.bar</a>',
-                status='public')]
+                status='public',
+                abstract='This is a preliminary study to examine the '
+                'microbiota associated with the Cannabis plant. Soils samples '
+                'from the bulk soil, soil associated with the roots, and the '
+                'rhizosphere were extracted and the DNA sequenced. Roots from '
+                'three independent plants of different strains were examined. '
+                'These roots were obtained November 11, 2011 from plants that '
+                'had been harvested in the summer. Future studies will '
+                'attempt to analyze the soils and rhizospheres from the same '
+                'location at different time points in the plant lifecycle.')]
         self.assertEqual(obs, exp)
 
     def test_build_study_info_new_study(self):
@@ -61,7 +70,7 @@ class TestHelpers(TestHandlerBase):
 
         StudyTuple = namedtuple('StudyInfo', 'id title meta_complete '
                                 'num_samples_collected shared num_raw_data pi '
-                                'pmids owner status')
+                                'pmids owner status, abstract')
         exp = [
             StudyTuple(
                 id=2,
@@ -74,7 +83,8 @@ class TestHelpers(TestHandlerBase):
                 pmids='',
                 owner='<a target="_blank" href="mailto:shared@foo.bar">'
                       'shared@foo.bar</a>',
-                status='sandbox')]
+                status='sandbox',
+                abstract='abstract')]
         self.assertEqual(obs, exp)
 
 

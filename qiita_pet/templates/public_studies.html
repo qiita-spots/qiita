@@ -9,7 +9,14 @@
 $(document).ready(function() {
         $('#public-studies-table').dataTable({
             order: [[0, "asc"]],
-            columnDefs: [{type:'natural', targets:[2,3,4]}]
+            columnDefs: [
+            {
+                type:'natural', targets:[3,4,5]
+            },
+            {
+                "targets": [ 1 ],
+                "visible": false
+            }]
          });
     $("#waiting").hide();
 } );
@@ -22,6 +29,7 @@ $(document).ready(function() {
         <thead>
             <tr>
                 <th>Title</th>
+                <th>Abstract</th>
                 <th>Owner</th>
                 <th>Metadata Complete</th>
                 <th>Samples</th>
@@ -31,9 +39,11 @@ $(document).ready(function() {
             </tr>
         </thead>
         <tbody>
-            {% for s in public_studies %}
+{% set row = 0 %}
+{% for s in public_studies %}
             <tr>
-                <td><a href="/study/description/{{ s.id }}">{{ s.title }}</a></td>
+                <td><a href="#" data-toggle="modal" data-target="#study-abstract-modal" onclick="fillAbstract('public-studies-table', {{row}})"><span class="glyphicon glyphicon-file" aria-hidden="true"></span></a> | <a href="/study/description/{{ s.id }}" id="study{{row}}-title">{{ s.title }}</a></td>
+                <td>{% raw s.abstract %}</td>
                 <td>{% raw s.owner %}</td>
                 {% if s.meta_complete %}
                 <td><span class="glyphicon glyphicon-ok"></span></td>
@@ -49,9 +59,26 @@ $(document).ready(function() {
                 <td>{% raw s.pi %}</td>
                 <td>{% raw s.pmids %}</td>
             </tr>
-            {% end %}
+    {% set row = row + 1%}
+{% end %}
         </tbody>
     </table>
+
+<!--Abstract Modal-->
+<div class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true" id="study-abstract-modal">
+  <div class="modal-dialog modal-med">
+    <div class="modal-content">
+    <div class="modal-header">
+       <h3 id="title-text-area"></h3>
+    </div>
+    <div class="modal-body" id="abstract-text-area">
+      </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+    </div>
+    </div>
+  </div>
+</div>
 {% else %}
     <div id="jumbotron" class="jumbotron">
         <h1><span class="glyphicon glyphicon-thumbs-down"></span> There are no studies available</h1>
