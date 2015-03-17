@@ -1727,7 +1727,7 @@ class TestPrepTemplate(TestCase):
         df = pd.DataFrame.from_dict(self.metadata_dict, orient='index')
         with self.assertRaises(QiitaDBColumnError):
             PrepTemplate.create(df, self.new_raw_data,
-                               self.test_study, self.data_type)
+                                self.test_study, self.data_type)
 
     def test_create_unknown_sample_names(self):
         # set two real and one fake sample name
