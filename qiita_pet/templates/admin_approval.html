@@ -19,7 +19,7 @@ $(document).ready(function() {
 	</thead>
 {% for study_id, study_title, study_owner, pds in study_info %}
 	<tr>
-	  <td><a href='/study/description/{{study_id}}'>{{study_title}}</a></td>
+	  <td><a href='/study/description/{{study_id}}?top_tab=processed_data_tab'>{{study_title}}</a></td>
 	  <td>{{study_owner}}</td>
 	  <td>
 	  	<a href="/study/description/{{study_id}}?top_tab=processed_data_tab&sub_tab={{pds[0]}}">{{pds[0]}}</a>

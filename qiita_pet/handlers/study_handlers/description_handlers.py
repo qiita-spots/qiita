@@ -108,7 +108,8 @@ class StudyDescriptionHandler(BaseHandler):
         else:
             check_access(user, study, raise_error=True)
 
-        full_access = study.id in user.user_studies + user.shared_studies
+        full_access = (study.id in user.user_studies + user.shared_studies or
+                       user.level == 'admin')
 
         return study, user, full_access
 
