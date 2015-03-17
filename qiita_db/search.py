@@ -203,15 +203,10 @@ class QiitaStudySearch(object):
                 raise ParseException('Can not search over string and '
                                      'integer/float for same field!')
 
-        dyn_headers = meta_headers - self.req_samp_cols - self.study_cols - \
-            self.prep_info_cols
-
         # remove metadata headers that come from non-dynamic tables
         # get the list of dynamic table columns for sample + prep templates
-        conn_handler = SQLConnectionHandler()
-        sql = """SELECT DISTINCT column_name FROM qiita.study_sample_columns"""
-        sample_headers = meta_headers.intersection(
-            c[0] for c in conn_handler.execute_fetchall(sql))
+        dyn_headers = meta_headers - self.req_samp_cols - self.study_cols - \
+            self.prep_info_cols
 
         if study:
             sql = ["%d" % study.id]
@@ -227,8 +222,10 @@ class QiitaStudySearch(object):
         if user.level == 'user':
             # trim to accessable studies
             sql.append("SELECT study_id FROM qiita.study_users WHERE "
-                       "email = '{0}' UNION SELECT study_id FROM qiita.study WHERE email = '{0}' OR"
-                       " study_status_id = {1}".format(user.id, convert_to_id('public', 'study_status')))
+                       "email = '{0}' UNION SELECT study_id "
+                       "FROM qiita.study WHERE email = '{0}' OR"
+                       " study_status_id = {1}".format(
+                           user.id, convert_to_id('public', 'study_status')))
         if sql:
             st_sql = " WHERE srd.study_id in (%s)" % ' INTERSECT '.join(sql)
         else:
@@ -238,8 +235,8 @@ class QiitaStudySearch(object):
                "ORDER BY srd.study_id) FROM qiita.study_raw_data srd "
                "JOIN qiita.prep_template pt USING (raw_data_id)%s "
                "GROUP BY study_id" % st_sql)
+        conn_handler = SQLConnectionHandler()
         studies = conn_handler.execute_fetchall(sql)
-        print studies
 
         if not studies:
             # No studies found, so no need to continue
@@ -273,7 +270,6 @@ class QiitaStudySearch(object):
 
             conn_handler.add_to_queue('search', ' '.join(sql).format(
                                       ','.join(header_info)))
-        print 'search', ' '.join(sql).format(','.join(header_info))
         results = self._process_to_dict(conn_handler.execute_queue('search'),
                                         len(header_info))
         return results, meta_headers
