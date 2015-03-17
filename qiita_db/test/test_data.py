@@ -956,6 +956,35 @@ class ProcessedDataTests(TestCase):
         with self.assertRaises(QiitaDBStatusError):
             pd.status = 'sandbox'
 
+    def test_get_by_status(self):
+        pds = ProcessedData.get_by_status('sandbox')
+        self.assertEqual(pds, [])
+
+        pds = ProcessedData.get_by_status('private')
+        self.assertEqual(pds, [1])
+
+        ProcessedData.create(self.params_table, self.params_id,
+                             self.filepaths,
+                             preprocessed_data=self.preprocessed_data)
+        pds = ProcessedData.get_by_status('sandbox')
+        self.assertEqual(pds, [2])
+
+        pds = ProcessedData.get_by_status('private')
+        self.assertEqual(pds, [1])
+
+    def test_get_by_status_grouped_by_study(self):
+        obs = ProcessedData.get_by_status_grouped_by_study('sandbox')
+        self.assertEqual(obs, dict())
+
+        obs = ProcessedData.get_by_status_grouped_by_study('private')
+        self.assertEqual(obs, {1: [1]})
+
+        ProcessedData.create(self.params_table, self.params_id,
+                             self.filepaths,
+                             preprocessed_data=self.preprocessed_data)
+        obs = ProcessedData.get_by_status_grouped_by_study('sandbox')
+        self.assertEqual(obs, {1: [2]})
+
 
 if __name__ == '__main__':
     main()

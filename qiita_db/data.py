@@ -1125,6 +1125,61 @@ class ProcessedData(BaseData):
     _preprocessed_processed_table = "preprocessed_processed_data"
 
     @classmethod
+    def get_by_status(cls, status):
+        """Returns id for all ProcessedData with given status
+
+        Parameters
+        ----------
+        status : str
+            Status to search for
+
+        Returns
+        -------
+        list of int
+            All the processed data id that match the given status
+        """
+        conn_handler = SQLConnectionHandler()
+        sql = """SELECT processed_data_id FROM qiita.processed_data pd
+                JOIN qiita.processed_data_status pds
+                    ON pds.processed_data_status_id=pd.processed_data_status_id
+                WHERE pds.processed_data_status=%s"""
+        result = conn_handler.execute_fetchall(sql, (status,))
+        if result:
+            pds = [x[0] for x in result]
+        else:
+            pds = []
+
+        return pds
+
+    @classmethod
+    def get_by_status_grouped_by_study(cls, status):
+        """Returns id for all ProcessedData with given status grouped by study
+
+        Parameters
+        ----------
+        status : str
+            Status to search for
+
+        Returns
+        -------
+        dict of list of int
+            A dictionary keyed by study id in which the values are the
+            processed data ids that belong to that study and match the given
+            status
+        """
+        conn_handler = SQLConnectionHandler()
+        sql = """SELECT spd.study_id,
+            array_agg(pd.processed_data_id ORDER BY pd.processed_data_id)
+            FROM qiita.processed_data pd
+                JOIN qiita.processed_data_status pds
+                    ON pd.processed_data_status_id=pds.processed_data_status_id
+                JOIN qiita.study_processed_data spd
+                    ON spd.processed_data_id=pd.processed_data_id
+            WHERE pds.processed_data_status = %s
+            GROUP BY study_id;"""
+        return dict(conn_handler.execute_fetchall(sql, (status,)))
+
+    @classmethod
     def create(cls, processed_params_table, processed_params_id, filepaths,
                preprocessed_data=None, study=None, processed_date=None,
                data_type=None):
