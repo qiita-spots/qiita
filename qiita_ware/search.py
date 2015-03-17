@@ -102,8 +102,8 @@ def filter_by_processed_data(results, datatypes=None):
     return study_proc_ids, proc_data_samples, dtcount
 
 
-def search(searchstr, user, remove_selected=False, analysis=None):
+def search(searchstr, user, study=None):
     """ Passthrough for qiita_db search object. See object for documentation
     """
     search = QiitaStudySearch()
-    return search(searchstr, user, remove_selected, analysis)
+    return search(searchstr, user, study)

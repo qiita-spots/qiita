@@ -900,10 +900,12 @@ def convert_to_id(value, table, conn_handler=None):
     IncompetentQiitaDeveloperError
         The passed string has no associated id
     """
+    if "status" in table:
+        sql = "SELECT {0}_id FROM qiita.{0} WHERE status = %s"
+    else:
+        sql = "SELECT {0}_id FROM qiita.{0} WHERE {0} = %s"
     conn_handler = conn_handler if conn_handler else SQLConnectionHandler()
-    _id = conn_handler.execute_fetchone(
-        "SELECT {0}_id FROM qiita.{0} WHERE {0} = %s".format(table),
-        (value, ))
+    _id = conn_handler.execute_fetchone(sql.format(table), (value, ))
     if _id is None:
         raise IncompetentQiitaDeveloperError("%s not valid for table %s"
                                              % (value, table))

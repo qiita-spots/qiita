@@ -68,7 +68,8 @@ from pyparsing import (alphas, nums, Word, dblQuotedString, oneOf, Optional,
                        opAssoc, CaselessLiteral, removeQuotes, Group,
                        operatorPrecedence, stringEnd, ParseException)
 
-from qiita_db.util import scrub_data, convert_type
+from qiita_db.util import (scrub_data, convert_type, get_table_cols,
+                           convert_to_id)
 from qiita_db.sql_connection import SQLConnectionHandler
 from qiita_db.exceptions import QiitaDBIncompatibleDatatypeError
 
@@ -152,6 +153,10 @@ class SearchTerm(object):
 
 class QiitaStudySearch(object):
     """QiitaStudySearch object to parse and run searches on studies."""
+    study_cols = frozenset(get_table_cols('study'))
+    req_samp_cols = frozenset(get_table_cols('required_sample_info'))
+    prep_info_cols = frozenset(get_table_cols('common_prep_info'))
+
     def __call__(self, searchstr, user, study=None):
         """parses search string into SQL where clause and metadata information
 
@@ -198,54 +203,82 @@ class QiitaStudySearch(object):
                 raise ParseException('Can not search over string and '
                                      'integer/float for same field!')
 
+        dyn_headers = meta_headers - self.req_samp_cols - self.study_cols - \
+            self.prep_info_cols
+
         # remove metadata headers that come from non-dynamic tables
         # get the list of dynamic table columns for sample + prep templates
         conn_handler = SQLConnectionHandler()
         sql = """SELECT DISTINCT column_name FROM qiita.study_sample_columns"""
-        sample_headers = meta_headers & {c[0] for c in
-                                         conn_handler.execute_fetchall(sql)}
+        sample_headers = meta_headers.intersection(
+            c[0] for c in conn_handler.execute_fetchall(sql))
 
-        # create the study finding SQL
-        # get all study ids that contain all metadata categories searched for
-        sql = []
-        for meta in sample_headers:
-            sql.append("SELECT study_id FROM qiita.study_sample_columns "
-                       "WHERE lower(column_name) = lower('{0}') and "
-                       "column_type in {1}".format(scrub_data(meta),
-                                                   meta_types[meta]))
-
+        if study:
+            sql = ["%d" % study.id]
+        else:
+            # get all study ids that contain metadata categories searched for
+            sql = []
+            for meta in dyn_headers:
+                sql.append("SELECT study_id FROM "
+                           "qiita.study_sample_columns WHERE "
+                           "lower(column_name) = lower('{0}') and "
+                           "column_type in {1}".format(scrub_data(meta),
+                                                       meta_types[meta]))
+        if user.level == 'user':
+            # trim to accessable studies
+            sql.append("SELECT study_id FROM qiita.study_users WHERE "
+                       "email = '{0}' UNION SELECT study_id FROM qiita.study WHERE email = '{0}' OR"
+                       " study_status_id = {1}".format(user.id, convert_to_id('public', 'study_status')))
+        if sql:
+            st_sql = " WHERE srd.study_id in (%s)" % ' INTERSECT '.join(sql)
+        else:
+            st_sql = ""
         # get all studies and processed_data_ids for the studies
-        studies = conn_handler.execute_fetchall(
-            "SELECT DISTINCT study_id, array_agg(processed_data_id ORDER BY  "
-            "study_id) FROM qiita.study_processed_data "
-            "WHERE study_id IN (%s) GROUP BY study_id" % ' INTERSECT '.join(sql))
+        sql = ("SELECT DISTINCT srd.study_id, array_agg(pt.prep_template_id "
+               "ORDER BY srd.study_id) FROM qiita.study_raw_data srd "
+               "JOIN qiita.prep_template pt USING (raw_data_id)%s "
+               "GROUP BY study_id" % st_sql)
+        studies = conn_handler.execute_fetchall(sql)
+        print studies
+
+        if not studies:
+            # No studies found, so no need to continue
+            return {}, meta_headers
 
         # create  the sample finding SQL, getting both sample id and values
         # build the sql formatted list of result headers
         meta_headers = sorted(meta_headers)
         header_info = ['sr.study_id', 'sr.processed_data_id', 'sr.sample_id']
         header_info.extend('sr.%s' % meta.lower() for meta in meta_headers)
+        headers = ','.join(header_info)
+        conn_handler.create_queue('search')
 
-        # build giant join table of all metadata from found studies,
-        # then search over that table for all samples meeting criteria
-        sql = ["SELECT {0} FROM ("
-               "SELECT * FROM qiita.study s "
-               "JOIN qiita.required_sample_info USING (study_id) "
-               "JOIN qiita.common_prep_info cpi USING (sample_id)"
-               "LEFT JOIN qiita.study_processed_data USING (study_id)"]
-        for s, prep_templates in studies:
-            sql.append(
-                "JOIN qiita.sample_{} USING (sample_id)".format(s))
+        for study, prep_templates in studies:
+
+            # build giant join table of all metadata from found studies,
+            # then search over that table for all samples meeting criteria
+            sql = ["SELECT {0} FROM ("
+                   "SELECT * FROM qiita.study s "
+                   "RIGHT JOIN qiita.study_processed_data USING (study_id) "
+                   "JOIN qiita.required_sample_info USING (study_id) "
+                   "JOIN qiita.common_prep_info USING (sample_id) "
+                   "JOIN qiita.processed_data USING (processed_data_id) "
+                   "JOIN qiita.data_type USING (data_type_id) "
+                   "JOIN qiita.sample_{1} USING (sample_id)".format(
+                       headers, study)]
             for p in prep_templates:
-                sql.append(
-                    "JOIN qiita.prep_{} USING (sample_id)".format(p))
+                sql.append("JOIN qiita.prep_{0} USING (sample_id)".format(p))
             sql.append(") AS sr WHERE")
             sql.append(sql_where)
-        result = conn_handler.execute_fetchall(' '.join(sql).format(
-            ','.join(header_info)))
-        return self._process_to_dict(result), meta_headers
 
-    def _process_to_dict(self, result):
+            conn_handler.add_to_queue('search', ' '.join(sql).format(
+                                      ','.join(header_info)))
+        print 'search', ' '.join(sql).format(','.join(header_info))
+        results = self._process_to_dict(conn_handler.execute_queue('search'),
+                                        len(header_info))
+        return results, meta_headers
+
+    def _process_to_dict(self, result, rowlen):
         """Processes results to more usable format
 
         Returns
@@ -255,8 +288,9 @@ class QiitaStudySearch(object):
             {study_id: [[samp1, m1, m2, m3], [samp2, m1, m2, m3], ...], ...}
         """
         study_processed = defaultdict(list)
-        for row in result:
-            study_processed[row[0]].append(row[2:])
+        # queue flattens all results, so need to loop by position
+        for row in range(0, len(result), rowlen):
+            study_processed[result[row]].append(result[row+2:row+rowlen])
         return study_processed
 
     def _parse_search(self, searchstr):
