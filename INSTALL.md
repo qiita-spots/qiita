@@ -55,6 +55,32 @@ After these commands are executed, you will need to:
 
 If all the above commands executed correctly, you should be able to go to http://localhost:21174 in your browser, to login use `demo@microbio.me` and `password` as the credentials. (In the future, we will have a *single user mode* that will allow you to use a local Qiita server without logging in. You can track progress on this on issue [#920](https://github.com/biocore/qiita/issues/920).)
 
+## Installation issues on Ubuntu 14.04
+
+### `fe_sendauth: no password supplied`
+
+If you get a traceback similar to this one when starting up Qiita
+```python
+File "/home/jorge/code/qiita/scripts/qiita_env", line 71, in make
+  make_environment(load_ontologies, download_reference, add_demo_user)
+File "/home/jorge/code/qiita/qiita_db/environment_manager.py", line 180, in make_environment
+  admin_conn = SQLConnectionHandler(admin='admin_without_database')
+File "/home/jorge/code/qiita/qiita_db/sql_connection.py", line 120, in __init__
+  self._open_connection()
+File "/home/jorge/code/qiita/qiita_db/sql_connection.py", line 155, in _open_connection
+  raise RuntimeError("Cannot connect to database: %s" % str(e))
+RuntimeError: Cannot connect to database: fe_sendauth: no password supplied
+```
+it can be solved by setting a password for the database (replace `postgres` with the actual name of the database qiita is configured to use):
+```
+$ psql postgres
+ALTER USER postgres PASSWORD 'supersecurepassword';
+\q
+```
+
+It might be necessary to restart postgresql: `sudo service postgresql restart`.
+
+Furthermore, the `pg_hba.conf` file can be modified to change authentication type for local users to trust (rather than, e.g., md5) but we haven't tested this solution.
 
 ## Troubleshooting installation on non-Ubuntu operating systems
 

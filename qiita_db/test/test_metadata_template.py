@@ -494,6 +494,12 @@ class TestMetadataTemplate(TestCase):
         with self.assertRaises(IncompetentQiitaDeveloperError):
             MetadataTemplate._table_name(self.study)
 
+    def test_to_dataframe(self):
+        """to dataframeraises an error because it's not called from a subclass
+        """
+        with self.assertRaises(TypeError):
+            MetadataTemplate.to_dataframe()
+
 
 @qiita_test_checker()
 class TestSampleTemplate(TestCase):
@@ -953,7 +959,7 @@ class TestSampleTemplate(TestCase):
             "order by column_name")
 
         # study_id, column_name, column_type
-        exp = [[2L, 'int_column', 'integer'], [2, "str_column", "varchar"]]
+        exp = [[2, 'int_column', 'integer'], [2, 'str_column', 'varchar']]
         self.assertEqual(obs, exp)
 
         # The new table exists
@@ -1217,6 +1223,36 @@ class TestSampleTemplate(TestCase):
         with self.assertRaises(QiitaDBError):
             st.update(self.metadata_dict_updated_column_error)
 
+    def test_to_dataframe(self):
+        obs = self.tester.to_dataframe()
+        # We don't test the specific values as this would blow up the size
+        # of this file as the amount of lines would go to ~1000
+
+        # 27 samples
+        self.assertEqual(len(obs), 27)
+        self.assertEqual(set(obs.index), {
+            u'1.SKB1.640202', u'1.SKB2.640194', u'1.SKB3.640195',
+            u'1.SKB4.640189', u'1.SKB5.640181', u'1.SKB6.640176',
+            u'1.SKB7.640196', u'1.SKB8.640193', u'1.SKB9.640200',
+            u'1.SKD1.640179', u'1.SKD2.640178', u'1.SKD3.640198',
+            u'1.SKD4.640185', u'1.SKD5.640186', u'1.SKD6.640190',
+            u'1.SKD7.640191', u'1.SKD8.640184', u'1.SKD9.640182',
+            u'1.SKM1.640183', u'1.SKM2.640199', u'1.SKM3.640197',
+            u'1.SKM4.640180', u'1.SKM5.640177', u'1.SKM6.640187',
+            u'1.SKM7.640188', u'1.SKM8.640201', u'1.SKM9.640192'})
+
+        self.assertEqual(set(obs.columns), {
+            u'physical_location', u'has_physical_specimen',
+            u'has_extracted_data', u'sample_type',
+            u'required_sample_info_status', u'collection_timestamp',
+            u'host_subject_id', u'description', u'latitude', u'longitude',
+            u'season_environment', u'assigned_from_geo', u'texture',
+            u'taxon_id', u'depth', u'host_taxid', u'common_name',
+            u'water_content_soil', u'elevation', u'temp', u'tot_nitro',
+            u'samp_salinity', u'altitude', u'env_biome', u'country', u'ph',
+            u'anonymized_name', u'tot_org_carb', u'description_duplicate',
+            u'env_feature'})
+
     def test_add_category(self):
         column = "new_column"
         dtype = "varchar"
@@ -1260,13 +1296,18 @@ class TestSampleTemplate(TestCase):
         self.assertEqual(obs, exp)
 
     def test_categories(self):
-        exp = {'season_environment',
-               'assigned_from_geo', 'texture', 'taxon_id', 'depth',
-               'host_taxid', 'common_name', 'water_content_soil', 'elevation',
-               'temp', 'tot_nitro', 'samp_salinity', 'altitude', 'env_biome',
-               'country', 'ph', 'anonymized_name', 'tot_org_carb',
-               'description_duplicate', 'env_feature'}
-        obs = self.tester.categories()
+        exp = {'sample_id', 'season_environment', 'assigned_from_geo',
+               'texture', 'taxon_id', 'depth', 'host_taxid',
+               'common_name', 'water_content_soil', 'elevation',
+               'temp', 'tot_nitro', 'samp_salinity', 'altitude',
+               'env_biome', 'country', 'ph', 'anonymized_name',
+               'tot_org_carb', 'description_duplicate', 'env_feature',
+               'study_id', 'physical_location',
+               'has_physical_specimen', 'has_extracted_data',
+               'sample_type', 'required_sample_info_status',
+               'collection_timestamp', 'host_subject_id',
+               'description', 'latitude', 'longitude'}
+        obs = set(self.tester.categories())
         self.assertEqual(obs, exp)
 
     def test_remove_category(self):
@@ -2320,6 +2361,34 @@ class TestPrepTemplate(TestCase):
                                  self.test_study, self.data_type_id)
         self.assertEqual(pt.status, 'sandbox')
 
+    def test_to_dataframe(self):
+        obs = self.tester.to_dataframe()
+        # We don't test the specific values as this would blow up the size
+        # of this file as the amount of lines would go to ~1000
+
+        # 27 samples
+        self.assertEqual(len(obs), 27)
+        self.assertEqual(set(obs.index), {
+            u'1.SKB1.640202', u'1.SKB2.640194', u'1.SKB3.640195',
+            u'1.SKB4.640189', u'1.SKB5.640181', u'1.SKB6.640176',
+            u'1.SKB7.640196', u'1.SKB8.640193', u'1.SKB9.640200',
+            u'1.SKD1.640179', u'1.SKD2.640178', u'1.SKD3.640198',
+            u'1.SKD4.640185', u'1.SKD5.640186', u'1.SKD6.640190',
+            u'1.SKD7.640191', u'1.SKD8.640184', u'1.SKD9.640182',
+            u'1.SKM1.640183', u'1.SKM2.640199', u'1.SKM3.640197',
+            u'1.SKM4.640180', u'1.SKM5.640177', u'1.SKM6.640187',
+            u'1.SKM7.640188', u'1.SKM8.640201', u'1.SKM9.640192'})
+
+        self.assertEqual(set(obs.columns), {
+            u'prep_template_id', u'center_name', u'center_project_name',
+            u'emp_status', u'barcodesequence',
+            u'library_construction_protocol', u'linkerprimersequence',
+            u'target_subfragment', u'target_gene', u'run_center',
+            u'run_prefix', u'run_date', u'experiment_center',
+            u'experiment_design_description', u'experiment_title', u'platform',
+            u'samp_size', u'sequencing_meth', u'illumina_technology',
+            u'sample_center', u'pcr_primers', u'study_center'})
+
 
 class TestUtilities(TestCase):
 
@@ -2411,6 +2480,29 @@ class TestUtilities(TestCase):
         exp.index.name = 'sample_name'
         assert_frame_equal(obs, exp)
 
+    def test_load_template_to_dataframe_lowercase(self):
+        obs = load_template_to_dataframe(
+            StringIO(EXP_SAMPLE_TEMPLATE_MULTICASE))
+        exp = pd.DataFrame.from_dict(SAMPLE_TEMPLATE_DICT_FORM)
+        exp.index.name = 'sample_name'
+        exp.rename(columns={"str_column": "str_CoLumn"}, inplace=True)
+        assert_frame_equal(obs, exp)
+
+    def test_load_template_to_dataframe_typechecking(self):
+        obs = load_template_to_dataframe(
+            StringIO(EXP_SAMPLE_TEMPLATE_LAT_ALL_INT))
+
+        exp = pd.DataFrame.from_dict(SAMPLE_TEMPLATE_LAT_ALL_INT_DICT)
+        exp.index.name = 'sample_name'
+        assert_frame_equal(obs, exp)
+
+        obs = load_template_to_dataframe(
+            StringIO(EXP_SAMPLE_TEMPLATE_LAT_MIXED_FLOAT_INT))
+
+        exp = pd.DataFrame.from_dict(SAMPLE_TEMPLATE_MIXED_FLOAT_INT_DICT)
+        exp.index.name = 'sample_name'
+        assert_frame_equal(obs, exp)
+
     def test_get_invalid_sample_names(self):
         all_valid = ['2.sample.1', 'foo.bar.baz', 'roses', 'are', 'red',
                      'v10l3t5', '4r3', '81u3']
@@ -2464,6 +2556,39 @@ EXP_SAMPLE_TEMPLATE = (
     "\t1\t42.42\t41.41\tlocation1\treceived\ttype1\tValue for sample 1\n"
     "2.Sample2\t2014-05-29 12:24:51\tTest Sample 2\tTrue\tTrue\tNotIdentified"
     "\t2\t4.2\t1.1\tlocation1\treceived\ttype1\tValue for sample 2\n"
+    "2.Sample3\t2014-05-29 12:24:51\tTest Sample 3\tTrue\tTrue\tNotIdentified"
+    "\t3\t4.8\t4.41\tlocation1\treceived\ttype1\tValue for sample 3\n")
+
+EXP_SAMPLE_TEMPLATE_MULTICASE = (
+    "sAmPle_Name\tcollection_timestamp\tDescription\thas_extracted_data\t"
+    "has_physical_specimen\thost_Subject_id\tint_column\tlatitude\tLongitude\t"
+    "physical_location\trequired_sample_info_status\tsample_type\tstr_CoLumn\n"
+    "2.Sample1\t2014-05-29 12:24:51\tTest Sample 1\tTrue\tTrue\tNotIdentified"
+    "\t1\t42.42\t41.41\tlocation1\treceived\ttype1\tValue for sample 1\n"
+    "2.Sample2\t2014-05-29 12:24:51\tTest Sample 2\tTrue\tTrue\tNotIdentified"
+    "\t2\t4.2\t1.1\tlocation1\treceived\ttype1\tValue for sample 2\n"
+    "2.Sample3\t2014-05-29 12:24:51\tTest Sample 3\tTrue\tTrue\tNotIdentified"
+    "\t3\t4.8\t4.41\tlocation1\treceived\ttype1\tValue for sample 3\n")
+
+EXP_SAMPLE_TEMPLATE_LAT_ALL_INT = (
+    "sample_name\tcollection_timestamp\tdescription\thas_extracted_data\t"
+    "has_physical_specimen\thost_subject_id\tint_column\tlatitude\tlongitude\t"
+    "physical_location\trequired_sample_info_status\tsample_type\tstr_column\n"
+    "2.Sample1\t2014-05-29 12:24:51\tTest Sample 1\tTrue\tTrue\tNotIdentified"
+    "\t1\t42\t41.41\tlocation1\treceived\ttype1\tValue for sample 1\n"
+    "2.Sample2\t2014-05-29 12:24:51\tTest Sample 2\tTrue\tTrue\tNotIdentified"
+    "\t2\t4\t1.1\tlocation1\treceived\ttype1\tValue for sample 2\n"
+    "2.Sample3\t2014-05-29 12:24:51\tTest Sample 3\tTrue\tTrue\tNotIdentified"
+    "\t3\t4\t4.41\tlocation1\treceived\ttype1\tValue for sample 3\n")
+
+EXP_SAMPLE_TEMPLATE_LAT_MIXED_FLOAT_INT = (
+    "sample_name\tcollection_timestamp\tdescription\thas_extracted_data\t"
+    "has_physical_specimen\thost_subject_id\tint_column\tlatitude\tlongitude\t"
+    "physical_location\trequired_sample_info_status\tsample_type\tstr_column\n"
+    "2.Sample1\t2014-05-29 12:24:51\tTest Sample 1\tTrue\tTrue\tNotIdentified"
+    "\t1\t42\t41.41\tlocation1\treceived\ttype1\tValue for sample 1\n"
+    "2.Sample2\t2014-05-29 12:24:51\tTest Sample 2\tTrue\tTrue\tNotIdentified"
+    "\t2\t4\t1.1\tlocation1\treceived\ttype1\tValue for sample 2\n"
     "2.Sample3\t2014-05-29 12:24:51\tTest Sample 3\tTrue\tTrue\tNotIdentified"
     "\t3\t4.8\t4.41\tlocation1\treceived\ttype1\tValue for sample 3\n")
 
@@ -2701,6 +2826,84 @@ SAMPLE_TEMPLATE_DICT_FORM = {
     'latitude': {'2.Sample1': 42.420000000000002,
                  '2.Sample2': 4.2000000000000002,
                  '2.Sample3': 4.7999999999999998},
+    'longitude': {'2.Sample1': 41.409999999999997,
+                  '2.Sample2': 1.1000000000000001,
+                  '2.Sample3': 4.4100000000000001},
+    'physical_location': {'2.Sample1': 'location1',
+                          '2.Sample2': 'location1',
+                          '2.Sample3': 'location1'},
+    'required_sample_info_status': {'2.Sample1': 'received',
+                                    '2.Sample2': 'received',
+                                    '2.Sample3': 'received'},
+    'sample_type': {'2.Sample1': 'type1',
+                    '2.Sample2': 'type1',
+                    '2.Sample3': 'type1'},
+    'str_column': {'2.Sample1': 'Value for sample 1',
+                   '2.Sample2': 'Value for sample 2',
+                   '2.Sample3': 'Value for sample 3'},
+    'int_column': {'2.Sample1': 1,
+                   '2.Sample2': 2,
+                   '2.Sample3': 3}
+    }
+
+SAMPLE_TEMPLATE_LAT_ALL_INT_DICT = {
+    'collection_timestamp': {'2.Sample1': '2014-05-29 12:24:51',
+                             '2.Sample2': '2014-05-29 12:24:51',
+                             '2.Sample3': '2014-05-29 12:24:51'},
+    'description': {'2.Sample1': 'Test Sample 1',
+                    '2.Sample2': 'Test Sample 2',
+                    '2.Sample3': 'Test Sample 3'},
+    'has_extracted_data': {'2.Sample1': True,
+                           '2.Sample2': True,
+                           '2.Sample3': True},
+    'has_physical_specimen': {'2.Sample1': True,
+                              '2.Sample2': True,
+                              '2.Sample3': True},
+    'host_subject_id': {'2.Sample1': 'NotIdentified',
+                        '2.Sample2': 'NotIdentified',
+                        '2.Sample3': 'NotIdentified'},
+    'latitude': {'2.Sample1': 42,
+                 '2.Sample2': 4,
+                 '2.Sample3': 4},
+    'longitude': {'2.Sample1': 41.409999999999997,
+                  '2.Sample2': 1.1000000000000001,
+                  '2.Sample3': 4.4100000000000001},
+    'physical_location': {'2.Sample1': 'location1',
+                          '2.Sample2': 'location1',
+                          '2.Sample3': 'location1'},
+    'required_sample_info_status': {'2.Sample1': 'received',
+                                    '2.Sample2': 'received',
+                                    '2.Sample3': 'received'},
+    'sample_type': {'2.Sample1': 'type1',
+                    '2.Sample2': 'type1',
+                    '2.Sample3': 'type1'},
+    'str_column': {'2.Sample1': 'Value for sample 1',
+                   '2.Sample2': 'Value for sample 2',
+                   '2.Sample3': 'Value for sample 3'},
+    'int_column': {'2.Sample1': 1,
+                   '2.Sample2': 2,
+                   '2.Sample3': 3}
+    }
+
+SAMPLE_TEMPLATE_MIXED_FLOAT_INT_DICT = {
+    'collection_timestamp': {'2.Sample1': '2014-05-29 12:24:51',
+                             '2.Sample2': '2014-05-29 12:24:51',
+                             '2.Sample3': '2014-05-29 12:24:51'},
+    'description': {'2.Sample1': 'Test Sample 1',
+                    '2.Sample2': 'Test Sample 2',
+                    '2.Sample3': 'Test Sample 3'},
+    'has_extracted_data': {'2.Sample1': True,
+                           '2.Sample2': True,
+                           '2.Sample3': True},
+    'has_physical_specimen': {'2.Sample1': True,
+                              '2.Sample2': True,
+                              '2.Sample3': True},
+    'host_subject_id': {'2.Sample1': 'NotIdentified',
+                        '2.Sample2': 'NotIdentified',
+                        '2.Sample3': 'NotIdentified'},
+    'latitude': {'2.Sample1': 42.0,
+                 '2.Sample2': 4.0,
+                 '2.Sample3': 4.8},
     'longitude': {'2.Sample1': 41.409999999999997,
                   '2.Sample2': 1.1000000000000001,
                   '2.Sample3': 4.4100000000000001},

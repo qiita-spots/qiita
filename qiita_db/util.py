@@ -50,6 +50,7 @@ from os.path import join, basename, isdir, relpath, exists
 from os import walk, remove, listdir, makedirs, rename
 from shutil import move, rmtree
 from json import dumps
+from datetime import datetime
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from .exceptions import QiitaDBColumnError, QiitaDBError
@@ -88,31 +89,44 @@ def scrub_data(s):
     return ret
 
 
-def typecast_string(string):
-    """Converts a string to a number if possible
+def convert_type(obj):
+    """Converts a passed item to int, float, or str in that order
 
     Parameters
     ----------
-    string : str
-        String to evaluate
+    obj : object
+        object to evaluate
 
     Returns
     -------
-    float, int, or str
-        Re-typed information from string
+    int, float, or str
+        Re-typed information from obj
+
+    Raises
+    ------
+    IncompetentQiitaDeveloperError
+        If the object can't be converted to int, float, or string
 
     Notes
     -----
     The function first tries to convert to an int. If that fails, it tries to
     convert to a float. If that fails it returns the original string.
     """
-    try:
-        return int(string)
-    except ValueError:
-        try:
-            return float(string)
-        except ValueError:
-            return string
+    item = None
+    if isinstance(obj, datetime):
+        item = str(obj)
+    else:
+        for fn in (int, float, str):
+            try:
+                item = fn(obj)
+            except ValueError:
+                continue
+            else:
+                break
+    if item is None:
+        raise IncompetentQiitaDeveloperError("Can't convert item of type %s!" %
+                                             str(type(obj)))
+    return item
 
 
 def get_filetypes(key='type'):
@@ -386,7 +400,7 @@ def get_table_cols(table, conn_handler=None):
     conn_handler = conn_handler if conn_handler else SQLConnectionHandler()
     headers = conn_handler.execute_fetchall(
         "SELECT column_name FROM information_schema.columns WHERE "
-        "table_name=%s", (table, ))
+        "table_name=%s AND table_schema='qiita'", (table, ))
     return [h[0] for h in headers]
 
 

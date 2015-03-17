@@ -42,11 +42,10 @@ def _get_qiime_minimal_mapping(prep_template, out_dir):
     from functools import partial
     from os.path import join
     import pandas as pd
-    from qiita_ware.util import template_to_dict
 
     # Get the data in a pandas DataFrame, so it is easier to manage
-    pt = pd.DataFrame.from_dict(template_to_dict(prep_template),
-                                orient='index')
+    pt = prep_template.to_dataframe()
+
     # We now need to rename some columns to be QIIME compliant.
     # Hopefully, this conversion won't be needed if QIIME relaxes its
     # constraints
@@ -213,6 +212,12 @@ def _get_preprocess_fasta_cmd(raw_data, prep_template, params):
     elif quals and not seqs:
         raise ValueError("Cannot have just qual, on %s"
                          % raw_data.id)
+    elif seqs and not quals:
+        raise ValueError("It is not currently possible to process "
+                         "fasta file(s) without qual file(s). This will "
+                         "be supported in the future. You can track progress "
+                         "on this by following: "
+                         "https://github.com/biocore/qiita/issues/953")
     elif seqs:
         seqs = sorted(seqs)
         quals = sorted(quals)
@@ -286,7 +291,7 @@ def generate_demux_file(sl_out, **kwargs):
     fastq_fp = join(sl_out, 'seqs.fastq')
     if not exists(fastq_fp):
         raise ValueError("The split libraries output directory does not "
-                         "contain the demultiplexed fastq file")
+                         "contain the demultiplexed fastq file.")
 
     demux_fp = join(sl_out, 'seqs.demux')
     with File(demux_fp, "w") as f:
@@ -429,7 +434,7 @@ class StudyPreprocessor(ParallelWrapper):
 
         Need to change the prep_template preprocessing status to 'failed'
         """
-        self.prep_template.preprocessing_status = 'failed: %s' % msg
+        self.prep_template.preprocessing_status = 'failed:\n %s' % msg
         LogEntry.create('Fatal', msg,
                         info={'prep_template': self.prep_template.id})
 
