@@ -25,6 +25,7 @@ pubmed_linkifier = partial(
 class StudyInformationTab(BaseUIModule):
     def render(self, study):
         study_info = study.info
+        id = study.id
         abstract = study_info['study_abstract']
         description = study_info['study_description']
         pmids = ", ".join([pubmed_linkifier([pmid]) for pmid in study.pmids])
@@ -57,6 +58,7 @@ class StudyInformationTab(BaseUIModule):
             "study_description_templates/study_information_tab.html",
             abstract=abstract,
             description=description,
+            id=id,
             pmids=pmids,
             principal_investigator=pi_link,
             number_samples_promised=number_samples_promised,
