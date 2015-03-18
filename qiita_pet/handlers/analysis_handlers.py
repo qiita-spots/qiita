@@ -31,7 +31,8 @@ from qiita_db.util import (get_db_files_base_dir,
                            check_access_to_analysis_result,
                            get_table_cols,
                            filepath_ids_to_rel_paths)
-from qiita_ware.search import search, count_metadata
+from qiita_db.search import QiitaStudySearch
+from qiita_ware.search import count_metadata
 from qiita_db.exceptions import (
     QiitaDBIncompatibleDatatypeError, QiitaDBUnknownIDError)
 
@@ -140,6 +141,7 @@ class SearchStudiesHandler(BaseHandler):
 
         # run through action requested
         if action == "search":
+            search = QiitaStudySearch()
             query = str(self.get_argument("query"))
             try:
                 results, meta_headers = search(query, user)

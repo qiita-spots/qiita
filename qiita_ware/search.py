@@ -2,8 +2,6 @@ from collections import Counter
 
 from future.utils import viewvalues
 
-from qiita_db.search import QiitaStudySearch
-
 
 def count_metadata(results, meta_cols):
     """Counts the metadata found in a search, and returns these counts
@@ -50,10 +48,3 @@ def count_metadata(results, meta_cols):
             studycount[study_id][cat] = Counter(meta_vals[pos + 1])
 
     return fullcount, studycount
-
-
-def search(searchstr, user, study=None):
-    """ Passthrough for qiita_db search object. See object for documentation
-    """
-    search = QiitaStudySearch()
-    return search(searchstr, user, study)
