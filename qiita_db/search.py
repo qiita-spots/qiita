@@ -189,7 +189,8 @@ class QiitaStudySearch(object):
         ----------
         .. [1] McGuire P (2007) Getting started with pyparsing.
         """
-        sql_where, all_headers, meta_headers = self._parse_search(searchstr)
+        sql_where, all_headers = self._parse_search(searchstr)
+        meta_headers = set(h[0] for h in all_headers)
 
         # At this point it is possible that a metadata header has been
         # reference more than once in the query. We are explicitly disallowing
@@ -203,8 +204,7 @@ class QiitaStudySearch(object):
                 raise ParseException('Can not search over string and '
                                      'integer/float for same field!')
 
-        # remove metadata headers that come from non-dynamic tables
-        # get the list of dynamic table columns for sample + prep templates
+        # remove searchable metadata headers that come from non-dynamic tables
         dyn_headers = meta_headers - self.req_samp_cols - self.study_cols - \
             self.prep_info_cols
 
@@ -225,7 +225,7 @@ class QiitaStudySearch(object):
             for meta in dyn_headers:
                 sql.append("SELECT study_id FROM "
                            "qiita.study_sample_columns WHERE "
-                           "lower(column_name) = lower('{0}') and "
+                           "lower(column_name) = '{0}' and "
                            "column_type in {1}".format(scrub_data(meta),
                                                        meta_types[meta]))
 
@@ -238,13 +238,13 @@ class QiitaStudySearch(object):
         conn_handler = SQLConnectionHandler()
         studies = conn_handler.execute_fetchall(sql)
 
+        meta_headers = sorted(meta_headers)
         if not studies:
             # No studies found, so no need to continue
             return {}, meta_headers
 
         # create  the sample finding SQL, getting both sample id and values
         # build the sql formatted list of result headers
-        meta_headers = sorted(meta_headers)
 
         # IF MORE HARD-CODED COLS ADDED, REMEMBER TO ADD THEM TO
         # THE '_check_special_columns' FUNCTION IN 'qiita_db/data.py'
@@ -325,10 +325,9 @@ class QiitaStudySearch(object):
 
         # parse out all metadata headers we need to have in a study, and
         # their corresponding types
-        all_headers = [(c[0][0].term[0],
+        all_headers = [(c[0][0].term[0].lower(),
                         type_lookup[type(convert_type(c[0][0].term[2]))])
                        for c in
                        (criterion + optional_seps).scanString(searchstr)]
-        meta_headers = set(h[0] for h in all_headers)
 
-        return sql_where, all_headers, meta_headers
+        return sql_where, all_headers
