@@ -71,5 +71,6 @@ for i in ${studies[@]}; do
     echo "\tmaking study public... "
     echo -e "from qiita_db.study import Study\nStudy(${study_id}).status = 'public'\n\n" | python
     echo "Ok"
+    rm $conf_fp
 done
 rmdir temp
