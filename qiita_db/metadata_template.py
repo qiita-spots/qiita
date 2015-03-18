@@ -750,7 +750,7 @@ class MetadataTemplate(QiitaObject):
 
     @classmethod
     def _check_special_columns(cls, md_template, obj):
-        r"""Checks for special columns based on obj type
+        r"""Checks for special columns based on obj type, and invalid col names
 
         Parameters
         ----------
@@ -760,6 +760,13 @@ class MetadataTemplate(QiitaObject):
             The obj to which the metadata template belongs to. Study in case
             of SampleTemplate and RawData in case of PrepTemplate
         """
+        # Check disallowed col names
+        disallowed = {'study_id', 'processed_data_id'}
+        invalid = disallowed.intersection(md_template.columns)
+        if len(invalid) > 0:
+            raise QiitaDBColumnError("Disallowed column names found! "
+                                     "Please change these column names: %s" %
+                                     ", ".join(invalid))
         # Check required columns
         missing = set(cls.translate_cols_dict.values()).difference(md_template)
         if not missing:
