@@ -1101,6 +1101,13 @@ class TestSampleTemplate(TestCase):
                ['2.Sample3', "Value for sample 3"]]
         self.assertEqual(obs, exp)
 
+    def test_create_disallowed_column(self):
+        for key in self.metadata_dict:
+            self.metadata_dict[key].update({"study_id": "NOOOOOOOOO"})
+        df = pd.DataFrame.from_dict(self.metadata_dict, orient='index')
+        with self.assertRaises(QiitaDBColumnError):
+            SampleTemplate.create(df, self.new_study)
+
     def test_delete(self):
         """Deletes Sample template 1"""
         SampleTemplate.create(self.metadata, self.new_study)
@@ -1712,6 +1719,14 @@ class TestPrepTemplate(TestCase):
         self.metadata.index = ['o()xxxx[{::::::::>', 'sample.1', 'sample.3']
         with self.assertRaises(QiitaDBColumnError):
             PrepTemplate.create(self.metadata, self.new_raw_data,
+                                self.test_study, self.data_type)
+
+    def test_create_disallowed_column(self):
+        for key in self.metadata_dict:
+            self.metadata_dict[key].update({"study_id": "NOOOOOOOOO"})
+        df = pd.DataFrame.from_dict(self.metadata_dict, orient='index')
+        with self.assertRaises(QiitaDBColumnError):
+            PrepTemplate.create(df, self.new_raw_data,
                                 self.test_study, self.data_type)
 
     def test_create_unknown_sample_names(self):

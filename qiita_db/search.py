@@ -62,13 +62,15 @@ headers returned.
 #
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
+from collections import defaultdict
+
 from pyparsing import (alphas, nums, Word, dblQuotedString, oneOf, Optional,
                        opAssoc, CaselessLiteral, removeQuotes, Group,
-                       operatorPrecedence, stringEnd)
+                       operatorPrecedence, stringEnd, ParseException)
 
-from qiita_db.util import scrub_data, convert_type, get_table_cols
+from qiita_db.util import (scrub_data, convert_type, get_table_cols,
+                           convert_to_id)
 from qiita_db.sql_connection import SQLConnectionHandler
-from qiita_db.study import Study
 from qiita_db.exceptions import QiitaDBIncompatibleDatatypeError
 
 
@@ -111,11 +113,6 @@ class SearchNot(UnaryOperation):
 
 
 class SearchTerm(object):
-    # column names from required_sample_info table
-    required_cols = set(get_table_cols("required_sample_info"))
-    # column names from study table
-    study_cols = set(get_table_cols("study"))
-
     def __init__(self, tokens):
         self.term = tokens[0]
         # clean all the inputs
@@ -135,12 +132,7 @@ class SearchTerm(object):
         if operator not in allowable_types[argument_type]:
             raise QiitaDBIncompatibleDatatypeError(operator, argument_type)
 
-        if column_name in self.required_cols:
-            column_name = "r.%s" % column_name.lower()
-        elif column_name in self.study_cols:
-            column_name = "st.%s" % column_name.lower()
-        else:
-            column_name = "sa.%s" % column_name.lower()
+        column_name = 'sr.%s' % column_name.lower()
 
         if operator == "includes":
             # substring search, so create proper query for it
@@ -161,21 +153,22 @@ class SearchTerm(object):
 
 class QiitaStudySearch(object):
     """QiitaStudySearch object to parse and run searches on studies."""
+    study_cols = frozenset(get_table_cols('study'))
+    req_samp_cols = frozenset(get_table_cols('required_sample_info'))
+    prep_info_cols = frozenset(get_table_cols('common_prep_info'))
+    static_search_cols = ['study_id', 'processed_data_id']
 
-    # column names from required_sample_info table
-    required_cols = set(get_table_cols("required_sample_info"))
-    # column names from study table
-    study_cols = set(get_table_cols("study"))
-
-    def __call__(self, searchstr, user):
-        """Runs a Study query and returns matching studies and samples
+    def __call__(self, searchstr, user, study=None):
+        """Runs search over metadata for studies with processed data
 
         Parameters
         ----------
         searchstr : str
-            Search string to use
+            The string to parse
         user : User object
-            User making the search. Needed for permissions checks.
+            The user performing the search
+        study : Study object, optional
+            If passed, only search over this study
 
         Returns
         -------
@@ -191,56 +184,113 @@ class QiitaStudySearch(object):
         Metadata information for each sample is in the same order as the
         metadata columns list returned
 
-        Metadata column names and string searches are case-sensitive
-        """
-        study_sql, sample_sql, meta_headers = \
-            self._parse_study_search_string(searchstr, True)
-        conn_handler = SQLConnectionHandler()
-        # get all studies containing the metadata headers requested
-        study_ids = {x[0] for x in conn_handler.execute_fetchall(study_sql)}
-        # strip to only studies user has access to
-        if user.level not in {'admin', 'dev', 'superuser'}:
-            study_ids = study_ids.intersection(Study.get_by_status('public') |
-                                               user.user_studies |
-                                               user.shared_studies)
-
-        results = {}
-        # run search on each study to get out the matching samples
-        for sid in study_ids:
-            study_res = conn_handler.execute_fetchall(sample_sql.format(sid))
-            if study_res:
-                # only add study to results if actually has samples in results
-                results[sid] = study_res
-        return results, meta_headers
-
-    def _parse_study_search_string(self, searchstr,
-                                   only_with_processed_data=False):
-        """parses string into SQL query for study search
-
-        Parameters
-        ----------
-        searchstr : str
-            The string to parse
-        only_with_processed_data : bool
-            Whether or not to return studies with processed data.
-
-        Returns
-        -------
-        study_sql : str
-            SQL query for selecting studies with the required metadata columns
-        sample_sql : str
-            SQL query for each study to get the sample ids that mach the query
-        meta_headers : list
-            metadata categories in the query string in alphabetical order
-
-        Notes
-        -----
-        All searches are case-sensitive
+        Metadata column names and string searches are case-insensitive
 
         References
         ----------
         .. [1] McGuire P (2007) Getting started with pyparsing.
         """
+        sql_where, all_headers = self._parse_search(searchstr)
+        meta_headers = set(h[0] for h in all_headers)
+
+        # At this point it is possible that a metadata header has been
+        # reference more than once in the query. We are explicitly disallowing
+        # varchar and int/float mixed searches over the same field right now,
+        # so raise malformed query error.
+        meta_types = {}
+        for header, header_type in all_headers:
+            if header not in meta_types:
+                meta_types[header] = header_type
+            elif meta_types[header] != header_type:
+                raise ParseException('Can not search over string and '
+                                     'integer/float for same field!')
+
+        # remove searchable metadata headers that come from non-dynamic tables
+        dyn_headers = meta_headers - self.req_samp_cols - self.study_cols - \
+            self.prep_info_cols
+
+        if study:
+            sql = ["%d" % study.id]
+        else:
+            # get all study ids that contain metadata categories searched for
+            sql = ['SELECT study_id from qiita.study_processed_data']
+            if user.level == 'user':
+                # trim to accessable studies
+                sql.append("(SELECT study_id FROM qiita.study_users WHERE "
+                           "email = '{0}' UNION SELECT study_id "
+                           "FROM qiita.study WHERE email = '{0}' OR"
+                           " study_status_id = {1})".format(
+                               user.id, convert_to_id(
+                                   'public', 'study_status')))
+
+            for meta in dyn_headers:
+                sql.append("SELECT study_id FROM "
+                           "qiita.study_sample_columns WHERE "
+                           "lower(column_name) = '{0}' and "
+                           "column_type in {1}".format(scrub_data(meta),
+                                                       meta_types[meta]))
+
+        # get all studies and processed_data_ids for the studies
+        sql = ("SELECT DISTINCT srd.study_id, array_agg(pt.prep_template_id "
+               "ORDER BY srd.study_id) FROM qiita.study_raw_data srd "
+               "JOIN qiita.prep_template pt USING (raw_data_id)  "
+               "WHERE srd.study_id in (%s)"
+               "GROUP BY study_id" % ' INTERSECT '.join(sql))
+        conn_handler = SQLConnectionHandler()
+        studies = conn_handler.execute_fetchall(sql)
+
+        meta_headers = sorted(meta_headers)
+        if not studies:
+            # No studies found, so no need to continue
+            return {}, meta_headers
+
+        # create  the sample finding SQL, getting both sample id and values
+        # build the sql formatted list of result headers
+        header_info = ['sr.%s' % s for s in self.static_search_cols]
+        header_info.append('sr.sample_id')
+        header_info.extend('sr.%s' % meta.lower() for meta in meta_headers)
+        headers = ','.join(header_info)
+        conn_handler.create_queue('search')
+
+        for study, prep_templates in studies:
+            # build giant join table of all metadata from found studies,
+            # then search over that table for all samples meeting criteria
+            sql = ["SELECT {0} FROM ("
+                   "SELECT * FROM qiita.study s "
+                   "RIGHT JOIN qiita.study_processed_data USING (study_id) "
+                   "JOIN qiita.required_sample_info USING (study_id) "
+                   "JOIN qiita.common_prep_info USING (sample_id) "
+                   "JOIN qiita.processed_data USING (processed_data_id) "
+                   "JOIN qiita.data_type USING (data_type_id) "
+                   "JOIN qiita.sample_{1} USING (sample_id)".format(
+                       headers, study)]
+            for p in prep_templates:
+                sql.append("JOIN qiita.prep_{0} USING (sample_id)".format(p))
+            sql.append(") AS sr WHERE")
+            sql.append(sql_where)
+
+            conn_handler.add_to_queue('search', ' '.join(sql).format(
+                                      ','.join(header_info)))
+        results = self._process_to_dict(conn_handler.execute_queue('search'),
+                                        len(header_info))
+        return results, meta_headers
+
+    def _process_to_dict(self, result, rowlen):
+        """Processes results to more usable format
+
+        Returns
+        -------
+        study_processed : dict of list of list
+            found samples belonging to a study, with metadata. Format
+            {study_id: [[samp1, m1, m2, m3], [samp2, m1, m2, m3], ...], ...}
+        """
+        study_processed = defaultdict(list)
+        # queue flattens all results, so need to loop by position
+        for row in range(0, len(result), rowlen):
+            study_processed[result[row]].append(result[row+2:row+rowlen])
+        return study_processed
+
+    def _parse_search(self, searchstr):
         # build the parse grammar
         category = Word(alphas + nums + "_")
         seperator = oneOf("> < = >= <= !=") | CaselessLiteral("includes") | \
@@ -267,83 +317,16 @@ class QiitaStudySearch(object):
 
         # this lookup will be used to select only studies with columns
         # of the correct type
-        type_lookup = {int: 'integer', float: 'float8', str: 'varchar'}
+        type_lookup = {
+            int: "('integer', 'float8')",
+            float: "('integer', 'float8')",
+            str: "('varchar')"}
 
         # parse out all metadata headers we need to have in a study, and
         # their corresponding types
-        all_headers = [c[0][0].term[0] for c in
+        all_headers = [(c[0][0].term[0].lower(),
+                        type_lookup[type(convert_type(c[0][0].term[2]))])
+                       for c in
                        (criterion + optional_seps).scanString(searchstr)]
-        meta_headers = set(all_headers)
-        all_types = [c[0][0].term[2] for c in
-                     (criterion + optional_seps).scanString(searchstr)]
-        all_types = [type_lookup[type(convert_type(s))] for s in all_types]
 
-        # sort headers and types so they return in same order every time.
-        # Should be a relatively short list so very quick
-        # argsort implementation taken from
-        # http://stackoverflow.com/questions/3382352/
-        # equivalent-of-numpy-argsort-in-basic-python
-        sort_order = sorted(range(len(all_headers)),
-                            key=all_headers.__getitem__)
-        all_types = [all_types[x] for x in sort_order]
-        all_headers.sort()
-
-        # At this point it is possible that a metadata header has been
-        # reference more than once in the query. If the types agree, then we
-        # do not need to do anything. If the types do not agree (specifically,
-        # if it appears to be numerical in one case and string in another),
-        # then we need to give varchar the precedence.
-        meta_header_type_lookup = dict()
-        for header, header_type in zip(all_headers, all_types):
-            if header not in meta_header_type_lookup:
-                meta_header_type_lookup[header] = header_type
-            else:
-                if header_type == 'varchar' or \
-                        meta_header_type_lookup[header] == 'varchar':
-                    meta_header_type_lookup[header] = 'varchar'
-
-        # create the study finding SQL
-        # remove metadata headers that are in required_sample_info table
-        meta_headers = meta_headers.difference(self.required_cols).difference(
-            self.study_cols)
-
-        # get all study ids that contain all metadata categories searched for
-        sql = []
-        if meta_headers:
-            # have study-specific metadata, so need to find specific studies
-            for meta in meta_headers:
-                if meta_header_type_lookup[meta] in ('integer', 'float8'):
-                    allowable_types = "('integer', 'float8')"
-                else:
-                    allowable_types = "('varchar')"
-
-                sql.append("SELECT study_id FROM qiita.study_sample_columns "
-                           "WHERE lower(column_name) = lower('%s') and "
-                           "column_type in %s" %
-                           (scrub_data(meta), allowable_types))
-        else:
-            # no study-specific metadata, so need all studies
-            sql.append("SELECT study_id FROM qiita.study_sample_columns")
-
-        # combine the query
-        if only_with_processed_data:
-            sql.append('SELECT study_id FROM qiita.study_processed_data')
-        study_sql = ' INTERSECT '.join(sql)
-
-        # create  the sample finding SQL, getting both sample id and values
-        # build the sql formatted list of metadata headers
-        header_info = []
-        for meta in meta_header_type_lookup:
-            if meta in self.required_cols:
-                header_info.append("r.%s" % meta)
-            elif meta in self.study_cols:
-                header_info.append("st.%s" % meta)
-            else:
-                header_info.append("sa.%s" % meta)
-        # build the SQL query
-        sample_sql = ("SELECT r.sample_id,%s FROM qiita.required_sample_info "
-                      "r JOIN qiita.sample_{0} sa ON sa.sample_id = "
-                      "r.sample_id JOIN qiita.study st ON st.study_id = "
-                      "r.study_id WHERE %s" %
-                      (','.join(header_info), sql_where))
-        return study_sql, sample_sql, meta_header_type_lookup.keys()
+        return sql_where, all_headers
