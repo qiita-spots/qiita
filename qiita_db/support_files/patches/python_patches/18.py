@@ -18,10 +18,13 @@ for t in tables:
     # we know it has at least one of the columns, so drop both, and ignore
     # error if dropping non-existant column
     try:
-        conn_handler.execute("ALTER TABLE qiita.%s DROP COLUMN study_id" % t)
+        conn_handler.execute("ALTER TABLE qiita.%s RENAME COLUMN study_id TO "
+                             "study_id_template" % t)
     except PostgresError:
         pass
     try:
-        conn_handler.execute("ALTER TABLE qiita.%s DROP COLUMN processed_data_id" % t)
+        conn_handler.execute("ALTER TABLE qiita.%s RENAME COLUMN "
+                             "processed_data_id TO "
+                             "processed_data_id_template" % t)
     except PostgresError:
         pass
