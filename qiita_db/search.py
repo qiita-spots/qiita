@@ -158,7 +158,7 @@ class QiitaStudySearch(object):
     prep_info_cols = frozenset(get_table_cols('common_prep_info'))
 
     def __call__(self, searchstr, user, study=None):
-        """parses search string into SQL where clause and metadata information
+        """Runs search over metadata for studies with processed data
 
         Parameters
         ----------
@@ -212,29 +212,29 @@ class QiitaStudySearch(object):
             sql = ["%d" % study.id]
         else:
             # get all study ids that contain metadata categories searched for
-            sql = []
+            sql = ['SELECT study_id from qiita.study_processed_data']
+            if user.level == 'user':
+                # trim to accessable studies
+                sql.append("(SELECT study_id FROM qiita.study_users WHERE "
+                           "email = '{0}' UNION SELECT study_id "
+                           "FROM qiita.study WHERE email = '{0}' OR"
+                           " study_status_id = {1})".format(
+                               user.id, convert_to_id(
+                                   'public', 'study_status')))
+
             for meta in dyn_headers:
                 sql.append("SELECT study_id FROM "
                            "qiita.study_sample_columns WHERE "
                            "lower(column_name) = lower('{0}') and "
                            "column_type in {1}".format(scrub_data(meta),
                                                        meta_types[meta]))
-        if user.level == 'user':
-            # trim to accessable studies
-            sql.append("SELECT study_id FROM qiita.study_users WHERE "
-                       "email = '{0}' UNION SELECT study_id "
-                       "FROM qiita.study WHERE email = '{0}' OR"
-                       " study_status_id = {1}".format(
-                           user.id, convert_to_id('public', 'study_status')))
-        if sql:
-            st_sql = " WHERE srd.study_id in (%s)" % ' INTERSECT '.join(sql)
-        else:
-            st_sql = ""
+
         # get all studies and processed_data_ids for the studies
         sql = ("SELECT DISTINCT srd.study_id, array_agg(pt.prep_template_id "
                "ORDER BY srd.study_id) FROM qiita.study_raw_data srd "
-               "JOIN qiita.prep_template pt USING (raw_data_id)%s "
-               "GROUP BY study_id" % st_sql)
+               "JOIN qiita.prep_template pt USING (raw_data_id)  "
+               "WHERE srd.study_id in (%s)"
+               "GROUP BY study_id" % ' INTERSECT '.join(sql))
         conn_handler = SQLConnectionHandler()
         studies = conn_handler.execute_fetchall(sql)
 
@@ -245,13 +245,15 @@ class QiitaStudySearch(object):
         # create  the sample finding SQL, getting both sample id and values
         # build the sql formatted list of result headers
         meta_headers = sorted(meta_headers)
+
+        # IF MORE HARD-CODED COLS ADDED, REMEMBER TO ADD THEM TO
+        # THE '_check_special_columns' FUNCTION IN 'qiita_db/data.py'
         header_info = ['sr.study_id', 'sr.processed_data_id', 'sr.sample_id']
         header_info.extend('sr.%s' % meta.lower() for meta in meta_headers)
         headers = ','.join(header_info)
         conn_handler.create_queue('search')
 
         for study, prep_templates in studies:
-
             # build giant join table of all metadata from found studies,
             # then search over that table for all samples meeting criteria
             sql = ["SELECT {0} FROM ("
