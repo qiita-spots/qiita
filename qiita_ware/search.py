@@ -54,54 +54,6 @@ def count_metadata(results, meta_cols):
     return fullcount, studycount
 
 
-def filter_by_processed_data(results, datatypes=None):
-    """Filters results to what is available in each processed data
-
-    Parameters
-    ----------
-    results : dict of lists of list
-        results in the format returned by the qiita_db search obj
-    datatypes : list of str, optional
-        Datatypes to selectively return. Default all datatypes available
-
-    Returns
-    -------
-    study_proc_ids : dict of dicts of lists
-        Processed data ids with samples for each study, in the format
-        {study_id: {datatype: [proc_id, proc_id, ...], ...}, ...}
-    proc_data_samples : dict of lists of lists
-        Samples available in each processed data id, in the format
-        {proc_data_id: [[samp_id1, meta1, meta2, ...],
-                        [samp_id2, meta1, meta2, ...], ...}
-    dtcount : count of all samples available for each datatype
-    """
-    study_proc_ids = {}
-    proc_data_samples = {}
-    dtcount = defaultdict(int)
-    for study_id in results:
-        study = Study(study_id)
-        study_proc_ids[study_id] = defaultdict(list)
-        for proc_data_id in study.processed_data():
-            proc_data = ProcessedData(proc_data_id)
-            datatype = proc_data.data_type()
-            # skip processed data if it doesn't fit the given datatypes
-            if datatypes is not None and datatype not in datatypes:
-                continue
-            samps_available = set(proc_data.samples)
-            proc_data_samples[proc_data_id] = [s for s in results[study_id]
-                                               if s[0] in samps_available]
-            # Add number of samples left to the total for that datatype
-            pidlen = len(proc_data_samples[proc_data_id])
-            dtcount[datatype] += pidlen
-            if pidlen == 0:
-                # all samples filtered so remove it as a result
-                del(proc_data_samples[proc_data_id])
-            else:
-                # add the processed data to the list for the study
-                study_proc_ids[study_id][datatype].append(proc_data_id)
-    return study_proc_ids, proc_data_samples, dtcount
-
-
 def search(searchstr, user, study=None):
     """ Passthrough for qiita_db search object. See object for documentation
     """
