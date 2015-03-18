@@ -200,8 +200,8 @@ class QiitaStudySearch(object):
         study_ids = {x[0] for x in conn_handler.execute_fetchall(study_sql)}
         # strip to only studies user has access to
         if user.level not in {'admin', 'dev', 'superuser'}:
-            study_ids = study_ids.intersection(Study.get_by_status('public') +
-                                               user.user_studies +
+            study_ids = study_ids.intersection(Study.get_by_status('public') |
+                                               user.user_studies |
                                                user.shared_studies)
 
         results = {}

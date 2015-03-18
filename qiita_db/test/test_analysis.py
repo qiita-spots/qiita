@@ -68,9 +68,9 @@ class TestAnalysis(TestCase):
             self.analysis.status = "queued"
 
     def test_get_by_status(self):
-        self.assertEqual(Analysis.get_by_status('public'), [])
+        self.assertEqual(Analysis.get_by_status('public'), set([]))
         self.analysis.status = "public"
-        self.assertEqual(Analysis.get_by_status('public'), [1])
+        self.assertEqual(Analysis.get_by_status('public'), {1})
 
     def test_has_access_public(self):
         self.conn_handler.execute("UPDATE qiita.analysis SET "

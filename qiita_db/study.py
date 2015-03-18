@@ -190,8 +190,8 @@ class Study(QiitaObject):
 
         Returns
         -------
-        list of Study objects
-            All studies in the database that match the given status
+        set of int
+            All study ids in the database that match the given status
         """
         conn_handler = SQLConnectionHandler()
         sql = """SELECT study_id FROM qiita.study_processed_data spd
@@ -200,15 +200,15 @@ class Study(QiitaObject):
                 JOIN qiita.processed_data_status pds
                     ON pds.processed_data_status_id=pd.processed_data_status_id
                 WHERE pds.processed_data_status=%s"""
-        studies = [x[0] for x in
-                   conn_handler.execute_fetchall(sql, (status, ))]
+        studies = {x[0] for x in
+                   conn_handler.execute_fetchall(sql, (status, ))}
         # If status is sandbox, all the studies that are not present in the
         # study_processed_data are also sandbox
         if status == 'sandbox':
             sql = """SELECT study_id FROM qiita.study WHERE study_id NOT IN (
                      SELECT study_id FROM qiita.study_processed_data)"""
-            extra_studies = [x[0] for x in conn_handler.execute_fetchall(sql)]
-            studies.extend(extra_studies)
+            extra_studies = {x[0] for x in conn_handler.execute_fetchall(sql)}
+            studies = studies.union(extra_studies)
 
         return studies
 
@@ -770,10 +770,10 @@ class Study(QiitaObject):
             return True
 
         if no_public:
-            return self._id in user.user_studies + user.shared_studies
+            return self._id in user.user_studies | user.shared_studies
         else:
-            return self._id in user.user_studies + user.shared_studies \
-                + self.get_by_status('public')
+            return self._id in user.user_studies | user.shared_studies \
+                | self.get_by_status('public')
 
     def share(self, user):
         """Share the study with another user

@@ -69,7 +69,7 @@ function modify_sharing(study_id) {
               </select>
               <br>
               <br>
-              Adding or removing email addresses automatically updates who the study is shared with. Once you click the `X` or give mouse focus to the `Your Studies` page you'll see your new sharing settings. 
+              Adding or removing email addresses automatically updates who the study is shared with. Once you click the `X` or give mouse focus to the `Your Studies` page you'll see your new sharing settings.
             </div>
           </div>
         </div>
@@ -87,6 +87,7 @@ function modify_sharing(study_id) {
             <tr>
                 <th>Title</th>
                 <th>Abstract</th>
+                <th>Study ID</th>
                 <th>Metadata Complete</th>
                 <th>Samples</th>
                 <th>Sequence Files</th>
@@ -104,6 +105,8 @@ function modify_sharing(study_id) {
                 <td><a href="#" data-toggle="modal" data-target="#study-abstract-modal" onclick="fillAbstract('user-studies-table', {{row}})"><span class="glyphicon glyphicon-file" aria-hidden="true"></span></a> | <a href="/study/description/{{ s.id }}" id="study{{row}}-title">{{ s.title }}</a></td>
                 {# Abstract (hidden on page) #}
                 <td>{% raw s.abstract %}</td>
+                {# Study ID #}
+                <td>{% raw s.id %}</td>
                 {# Metadata Comlete #}
                 {% if s.meta_complete %}
                 <td><span class="glyphicon glyphicon-ok"></span></td>
@@ -153,6 +156,7 @@ function modify_sharing(study_id) {
             <tr>
                 <th>Title</th>
                 <th>Abstract</th>
+                <th>Study ID</th>
                 <th>Owner</th>
                 <th>Metadata Complete</th>
                 <th>Samples</th>
@@ -167,6 +171,7 @@ function modify_sharing(study_id) {
             <tr>
                 <td><a href="#" data-toggle="modal" data-target="#study-abstract-modal" onclick="fillAbstract('shared-studies-table', {{row}})"><span class="glyphicon glyphicon-file" aria-hidden="true"></span></a> | <a href="/study/description/{{ s.id }}" id="study{{row}}-title">{{ s.title }}</a></td>
                 <td>{% raw s.abstract %}</a></td>
+                <td>{% raw s.id %}</td>
                 <td>{% raw s.owner %}</td>
                 {% if s.meta_complete %}
                 <td><span class="glyphicon glyphicon-ok"></span></td>

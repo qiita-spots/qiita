@@ -30,6 +30,7 @@ $(document).ready(function() {
             <tr>
                 <th>Title</th>
                 <th>Abstract</th>
+                <th>Study ID</th>
                 <th>Owner</th>
                 <th>Metadata Complete</th>
                 <th>Samples</th>
@@ -44,6 +45,7 @@ $(document).ready(function() {
             <tr>
                 <td><a href="#" data-toggle="modal" data-target="#study-abstract-modal" onclick="fillAbstract('public-studies-table', {{row}})"><span class="glyphicon glyphicon-file" aria-hidden="true"></span></a> | <a href="/study/description/{{ s.id }}" id="study{{row}}-title">{{ s.title }}</a></td>
                 <td>{% raw s.abstract %}</td>
+                <td>{% raw s.id %}</td>
                 <td>{% raw s.owner %}</td>
                 {% if s.meta_complete %}
                 <td><span class="glyphicon glyphicon-ok"></span></td>

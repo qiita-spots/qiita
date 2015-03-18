@@ -227,21 +227,21 @@ class TestStudy(TestCase):
 
     def test_get_by_status(self):
         obs = Study.get_by_status('sandbox')
-        self.assertEqual(obs, [])
+        self.assertEqual(obs, set())
 
         Study.create(User('test@foo.bar'), 'NOT Identification of the '
                      'Microbiomes for Cannabis Soils', [1], self.info)
         obs = Study.get_by_status('private')
-        self.assertEqual(obs, [1])
+        self.assertEqual(obs, {1})
 
         obs = Study.get_by_status('sandbox')
-        self.assertEqual(obs, [2])
+        self.assertEqual(obs, {2})
 
         obs = Study.get_by_status('public')
-        self.assertEqual(obs, [])
+        self.assertEqual(obs, set())
 
         obs = Study.get_by_status('awaiting_approval')
-        self.assertEqual(obs, [])
+        self.assertEqual(obs, set())
 
     def test_exists(self):
         self.assertTrue(Study.exists('Identification of the Microbiomes for '
