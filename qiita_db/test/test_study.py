@@ -227,7 +227,7 @@ class TestStudy(TestCase):
         Study.create(User('test@foo.bar'), 'NOT Identification of the '
                      'Microbiomes for Cannabis Soils', [1], self.info)
         obs = Study.get_by_status('private')
-        self.assertEqual(obs, [1])
+        self.assertEqual(obs, {1})
 
     def test_exists(self):
         self.assertTrue(Study.exists('Identification of the Microbiomes for '

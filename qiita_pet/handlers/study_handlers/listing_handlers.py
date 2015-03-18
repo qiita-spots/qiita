@@ -49,7 +49,7 @@ def _build_study_info(studytype, user=None):
 
     StudyTuple = namedtuple('StudyInfo', 'id title meta_complete '
                             'num_samples_collected shared num_raw_data pi '
-                            'pmids owner status')
+                            'pmids owner status abstract')
 
     infolist = []
     for s_id in studylist:
@@ -68,7 +68,8 @@ def _build_study_info(studytype, user=None):
                                    info["metadata_complete"],
                                    info["number_samples_collected"],
                                    shared, len(study.raw_data()),
-                                   PI, pmids, owner, status))
+                                   PI, pmids, owner, status,
+                                   info["study_abstract"]))
     return infolist
 
 
