@@ -156,6 +156,7 @@ class QiitaStudySearch(object):
     study_cols = frozenset(get_table_cols('study'))
     req_samp_cols = frozenset(get_table_cols('required_sample_info'))
     prep_info_cols = frozenset(get_table_cols('common_prep_info'))
+    static_search_cols = ['study_id', 'processed_data_id']
 
     def __call__(self, searchstr, user, study=None):
         """Runs search over metadata for studies with processed data
@@ -245,10 +246,8 @@ class QiitaStudySearch(object):
 
         # create  the sample finding SQL, getting both sample id and values
         # build the sql formatted list of result headers
-
-        # IF MORE HARD-CODED COLS ADDED, REMEMBER TO ADD THEM TO
-        # THE '_check_special_columns' FUNCTION IN 'qiita_db/data.py'
-        header_info = ['sr.study_id', 'sr.processed_data_id', 'sr.sample_id']
+        header_info = ['sr.%s' % s for s in self.static_search_cols]
+        header_info.append('sr.sample_id')
         header_info.extend('sr.%s' % meta.lower() for meta in meta_headers)
         headers = ','.join(header_info)
         conn_handler.create_queue('search')

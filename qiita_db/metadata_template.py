@@ -65,6 +65,7 @@ from .util import (exists_table, get_table_cols, get_emp_status,
                    scrub_data)
 from .study import Study
 from .data import RawData
+from .search import QiitaStudySearch
 from .logger import LogEntry
 
 if PY3:
@@ -750,7 +751,7 @@ class MetadataTemplate(QiitaObject):
 
     @classmethod
     def _check_special_columns(cls, md_template, obj):
-        r"""Checks for special columns based on obj type
+        r"""Checks for special columns based on obj type, and invalid col names
 
         Parameters
         ----------
@@ -760,6 +761,14 @@ class MetadataTemplate(QiitaObject):
             The obj to which the metadata template belongs to. Study in case
             of SampleTemplate and RawData in case of PrepTemplate
         """
+        # Check disallowed columns
+        disallowed = set(QiitaStudySearch.static_search_cols)
+        invalid = disallowed.intersection(md_template.columns)
+        if len(invalid) > 0:
+            raise QiitaDBColumnError("Disallowed column names found! "
+                                     "Please change these column names: %s" %
+                                     ", ".join(invalid))
+
         # Check required columns
         missing = set(cls.translate_cols_dict.values()).difference(md_template)
         if not missing:
