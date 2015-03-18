@@ -1,6 +1,10 @@
 language: python
 env:
-  - PYTHON_VERSION=2.7
+  global:
+    - PYTHON_VERSION=2.7
+  matrix:
+    - TEST_ADD_STUDIES=False
+    - TEST_ADD_STUDIES=True
 before_install:
   - redis-server --version
   - wget http://repo.continuum.io/miniconda/Miniconda3-3.7.3-Linux-x86_64.sh -O miniconda.sh
@@ -24,13 +28,14 @@ script:
   - ipython profile create qiita_general --parallel
   - qiita_env start_cluster qiita_general
   - qiita_env make --no-load-ontologies
-  - qiita_test_install
-  - nosetests --with-doctest --with-coverage
-  - flake8 qiita_* setup.py scripts/qiita scripts/qiita_env scripts/qiita_test_install
+  - if [ ${TEST_ADD_STUDIES} == "True" ]; then test_data_studies/commands.sh ; fi
+  - if [ ${TEST_ADD_STUDIES} == "False" ]; then qiita_test_install ; fi
+  - if [ ${TEST_ADD_STUDIES} == "False" ]; then nosetests --with-doctest --with-coverage ; fi
+  - if [ ${TEST_ADD_STUDIES} == "False" ]; then flake8 qiita_* setup.py scripts/qiita scripts/qiita_env scripts/qiita_test_install ; fi
   # we need to run the test suite from setup.py for coveralls to grab the info
   # - coverage run setup.py test
   # - coverage report -m
 services:
   - redis-server
 after_success:
-  - coveralls
+  - if [ ${TEST_ADD_STUDIES} == "False" ]; then coveralls ; fi
