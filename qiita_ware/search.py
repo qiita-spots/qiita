@@ -1,9 +1,7 @@
-from collections import Counter, defaultdict
+from collections import Counter
 
 from future.utils import viewvalues
 
-from qiita_db.study import Study
-from qiita_db.data import ProcessedData
 from qiita_db.search import QiitaStudySearch
 
 
