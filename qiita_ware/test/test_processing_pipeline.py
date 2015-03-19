@@ -19,11 +19,14 @@ import pandas as pd
 from qiita_core.util import qiita_test_checker
 from qiita_db.util import (get_db_files_base_dir, get_mountpoint,
                            convert_to_id, get_count)
+
+from qiita_db.sql_connection import SQLConnectionHandler
 from qiita_db.data import RawData, PreprocessedData
 from qiita_db.study import Study
 from qiita_db.parameters import (PreprocessedIlluminaParams,
                                  ProcessedSortmernaParams,
                                  Preprocessed454Params)
+
 from qiita_db.metadata_template import PrepTemplate
 from qiita_ware.processing_pipeline import (_get_preprocess_fastq_cmd,
                                             _get_preprocess_fasta_cmd,
@@ -152,7 +155,7 @@ class ProcessingPipelineTests(TestCase):
         self.assertEqual(obs_cmd_1, exp_cmd_1)
         self.assertEqual(obs_cmd_2, exp_cmd_2)
 
-    def test_get_preprocess_fasta_cmd_sff(self):
+    def test_get_preprocess_fasta_cmd_sff_no_run_prefix(self):
         raw_data = RawData(3)
         params = Preprocessed454Params(1)
         prep_template = PrepTemplate(1)
@@ -200,6 +203,43 @@ class ProcessingPipelineTests(TestCase):
         self.assertEqual(obs_cmd_3a, exp_cmd_3a)
         self.assertEqual(obs_cmd_3b, exp_cmd_3b)
         self.assertEqual(obs_cmds[3], exp_cmd_4)
+
+    def test_get_preprocess_fasta_cmd_sff_run_prefix(self):
+        # Need to alter the run_prefix of one sample so we can test the
+        # multiple values
+        conn_handler = SQLConnectionHandler()
+        sql = ("UPDATE qiita.prep_1 SET run_prefix='test' WHERE "
+               "sample_id ='1.SKM9.640192'")
+        conn_handler.execute(sql)
+
+        raw_data = RawData(3)
+        params = Preprocessed454Params(1)
+        prep_template = PrepTemplate(1)
+
+        obs_cmd, obs_output_dir = _get_preprocess_fasta_cmd(
+            raw_data, prep_template, params)
+
+        get_raw_path = partial(join, self.db_dir, 'raw_data')
+        seqs_fp = [get_raw_path('preprocess_test1.sff'),
+                   get_raw_path('preprocess_test2.sff')]
+
+        obs_cmds = obs_cmd.split('; ')
+        # assumming that test_get_preprocess_fasta_cmd_sff_no_run_prefix is
+        # working we only need to test for the commands being ran and
+        # that n is valid
+        self.assertTrue(len(obs_cmds) == 8)
+        self.assertTrue(obs_cmds[0].startswith('process_sff.py'))
+        self.assertTrue(obs_cmds[1].startswith('process_sff.py'))
+        self.assertTrue(obs_cmds[2].startswith('split_libraries.py'))
+        self.assertTrue('-n 1' in obs_cmds[2])
+        self.assertTrue(obs_cmds[3].startswith('split_libraries.py'))
+        self.assertTrue('-n 800000' in obs_cmds[3])
+        self.assertTrue(obs_cmds[4].startswith('cat'))
+        self.assertTrue('split_library_log.txt' in obs_cmds[4])
+        self.assertTrue(obs_cmds[5].startswith('cat'))
+        self.assertTrue('seqs.fna' in obs_cmds[5])
+        self.assertTrue(obs_cmds[6].startswith('cat'))
+        self.assertTrue('seqs_filtered.qual' in obs_cmds[6])
 
     def test_insert_preprocessed_data(self):
         study = Study(1)
