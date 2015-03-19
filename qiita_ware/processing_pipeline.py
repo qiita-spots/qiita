@@ -272,9 +272,11 @@ def _get_preprocess_fasta_cmd(raw_data, prep_template, params):
             n = (i + 1) * 800000
 
         # files to cat from multiple split libraries
-        to_cat = ['split_library_log.txt', 'seqs.fna', 'seqs_filtered.qual']
+        to_cat = ['split_library_log.txt', 'seqs.fna']
+        if quals:
+            to_cat.append('seqs_filtered.qual')
         for tc in to_cat:
-            files = map(lambda x: join(x, tc), output_folders)
+            files = [join(x, tc) for x in output_folders]
             cmd.append("cat %s > %s" % (' '.join(files),
                                         join(output_dir, tc)))
 
