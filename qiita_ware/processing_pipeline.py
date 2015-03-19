@@ -243,7 +243,8 @@ def _get_preprocess_fasta_cmd(raw_data, prep_template, params):
     params_str = params.to_str()
 
     # Create the split_libraries_fastq.py command
-    # len(mapping_fps) will be == 1 when there is no run_prefix
+    # len(mapping_fps) will be == 1 when there is no run_prefix or it has
+    # the same value in all the rows
     if len(mapping_fps) == 1:
         qual_str = "-q %s -d" % ','.join(quals) if quals else ""
         cmd = ' '.join(["split_libraries.py",
