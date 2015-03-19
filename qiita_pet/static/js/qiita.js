@@ -23,6 +23,6 @@ function bootstrapAlert(message, severity){
 }
 
 function fillAbstract(table, row) {
-    $('#title-text-area').text($('#study' + row + "-title").text());
+    $('#title-text-area').text($('#' + table).find('#study' + row + "-title").text());
     $('#abstract-text-area').text($('#'+table).dataTable().fnGetData(row, 2));
 }
