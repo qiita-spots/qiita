@@ -20,6 +20,10 @@ class MetaUtilTests(TestCase):
         self.conn_handler.execute(
             "UPDATE qiita.processed_data SET processed_data_status_id=3")
 
+    def _set_studies_public(self):
+        self.conn_handler.execute(
+            "UPDATE qiita.processed_data SET processed_data_status_id=2")
+
     def _unshare_studies(self):
         self.conn_handler.execute("DELETE FROM qiita.study_users")
 
@@ -44,6 +48,11 @@ class MetaUtilTests(TestCase):
         self._unshare_analyses()
         obs = get_accessible_filepath_ids(User('shared@foo.bar'))
         self.assertEqual(obs, set())
+
+        # Now shared has access to public study files
+        self._set_studies_public()
+        obs = get_accessible_filepath_ids(User('shared@foo.bar'))
+        self.assertEqual(obs, set([1, 2, 5, 6, 7, 11, 16]))
 
         # Test that it doesn't break: if the SampleTemplate hasn't been added
         exp = set([1, 2, 5, 6, 7, 11, 12, 13, 14, 15, 16, 17, 18])
