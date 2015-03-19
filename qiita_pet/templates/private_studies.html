@@ -10,12 +10,18 @@ var current_study;
 
 $(document).ready(function() {
         $('#user-studies-table').dataTable({
-            order: [[ 0, "asc" ]],
-            columnDefs: [{type:'natural', targets:[2,3,4,8]}, {"targets": [ 1 ],"visible": false}]
+            order: [[9, "asc"], [ 0, "asc" ]],
+            columnDefs: [{type:'natural', targets:[2,3,4,8]}, {"targets": [ 1 ],"visible": false}],
+            "oLanguage": {
+                "sSearch": "Refine search results:"
+            }
         });
         $('#shared-studies-table').dataTable({
             order: [[ 0, "asc" ]],
-            columnDefs: [{type:'natural', targets:[3,4,5]}, {"targets": [ 1 ],"visible": false}]
+            columnDefs: [{type:'natural', targets:[3,4,5]}, {"targets": [ 1 ],"visible": false}],
+            "oLanguage": {
+                "sSearch": "Refine search results:"
+            }
         });
     $('#waiting').hide();
     $('#users_list').chosen({width: "100%"});
@@ -80,7 +86,9 @@ function modify_sharing(study_id) {
   </div>
 </div>
 <!--User Studies-->
-<h1>Your Studies</h1>
+<div class="row">
+  <div class="col-sm-12">
+    <h1>Your Studies</h1>
 {% if len(user_studies) %}
     <table id="user-studies-table" class="display table-bordered table-hover">
         <thead>
@@ -146,10 +154,14 @@ function modify_sharing(study_id) {
         <p>
         This means that you have not yet created a study. <a href="/study/create/">Create a study</a>.
         </p>
+    </div>
+  </div>
 </div>
 {% end %}
 <!--Shared Studies-->
-<h1>Shared Studies</h1>
+<div class="row">
+  <div class="col-sm-12">
+    <h1>Shared Studies</h1>
 {% if len(shared_studies) %}
     <table id="shared-studies-table" class="display table-bordered table-hover">
         <thead>
@@ -197,6 +209,8 @@ function modify_sharing(study_id) {
         <p>
         This means that no one has shared any studies with you yet.
         </p>
+    </div>
+  </div>
 </div>
 {% end %}
 <!--Abstract Modal-->

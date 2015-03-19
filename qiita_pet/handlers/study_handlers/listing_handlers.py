@@ -37,12 +37,10 @@ def _get_shared_links_for_study(study):
 
 def _build_study_info(studytype, user=None):
     """builds list of namedtuples for study listings"""
-    if studytype == "private":
-        studylist = user.user_studies
+    if studytype == "standard":
+        studylist = user.user_studies | Study.get_by_status('public')
     elif studytype == "shared":
         studylist = user.shared_studies
-    elif studytype == "public":
-        studylist = Study.get_by_status('public')
     else:
         raise IncompetentQiitaDeveloperError("Must use private, shared, "
                                              "or public!")
@@ -56,7 +54,7 @@ def _build_study_info(studytype, user=None):
             'pmid', 'study_title', 'metadata_complete',
             'number_samples_collected', 'study_abstract']
     study_info = Study.get_info(studylist, cols)
-    infolist = []
+    infolist = set()
     for info in study_info:
         study = Study(info['study_id'])
         # Just passing the email address as the name here, since
@@ -67,12 +65,10 @@ def _build_study_info(studytype, user=None):
         pmids = ", ".join([pubmed_linkifier([p])
                            for p in info['pmid']])
         shared = _get_shared_links_for_study(study)
-        infolist.append(StudyTuple(study.id, study.title,
-                                   info["metadata_complete"],
-                                   info["number_samples_collected"],
-                                   shared, len(study.raw_data()),
-                                   PI, pmids, owner, info["status"],
-                                   info["study_abstract"]))
+        infolist.add(StudyTuple(
+            study.id, study.title, info["metadata_complete"],
+            info["number_samples_collected"], shared, len(study.raw_data()),
+            PI, pmids, owner, info["status"], info["study_abstract"]))
     return infolist
 
 
@@ -83,14 +79,14 @@ def _check_owner(user, study):
                         (user.id, study.id))
 
 
-class PrivateStudiesHandler(BaseHandler):
+class ListStudiesHandler(BaseHandler):
     @authenticated
     @coroutine
     def get(self):
         self.write(self.render_string('waiting.html'))
         self.flush()
         user = self.current_user
-        user_studies = yield Task(self._get_private, user)
+        user_studies = yield Task(self._get_standard, user)
         shared_studies = yield Task(self._get_shared, user)
         all_emails_except_current = yield Task(self._get_all_emails)
         all_emails_except_current.remove(self.current_user.id)
@@ -98,8 +94,8 @@ class PrivateStudiesHandler(BaseHandler):
                     user_studies=user_studies, shared_studies=shared_studies,
                     all_emails_except_current=all_emails_except_current)
 
-    def _get_private(self, user, callback):
-        callback(_build_study_info("private", user))
+    def _get_standard(self, user, callback):
+        callback(_build_study_info("standard", user))
 
     def _get_shared(self, user, callback):
         """builds list of tuples for studies that are shared with user"""
@@ -107,21 +103,6 @@ class PrivateStudiesHandler(BaseHandler):
 
     def _get_all_emails(self, callback):
         callback(list(User.iter()))
-
-
-class PublicStudiesHandler(BaseHandler):
-    @authenticated
-    @coroutine
-    def get(self):
-        self.write(self.render_string('waiting.html'))
-        self.flush()
-        public_studies = yield Task(self._get_public)
-        self.render('public_studies.html',
-                    public_studies=public_studies)
-
-    def _get_public(self, callback):
-        """builds list of tuples for studies that are public"""
-        callback(_build_study_info("public"))
 
 
 class StudyApprovalList(BaseHandler):
