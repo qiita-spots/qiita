@@ -46,29 +46,32 @@ def _build_study_info(studytype, user=None):
     else:
         raise IncompetentQiitaDeveloperError("Must use private, shared, "
                                              "or public!")
+    if not studylist:
+        return []
 
     StudyTuple = namedtuple('StudyInfo', 'id title meta_complete '
                             'num_samples_collected shared num_raw_data pi '
                             'pmids owner status abstract')
-
+    cols = ['study_id', 'status', 'email', 'principal_investigator_id',
+            'pmid', 'study_title', 'metadata_complete',
+            'number_samples_collected', 'study_abstract']
+    study_info = Study.get_info(studylist, cols)
     infolist = []
-    for s_id in studylist:
-        study = Study(s_id)
-        status = study.status
+    for info in study_info:
+        study = Study(info['study_id'])
         # Just passing the email address as the name here, since
         # name is not a required field in qiita.qiita_user
-        owner = study_person_linkifier((study.owner, study.owner))
-        info = study.info
+        owner = study_person_linkifier((info['email'], info['email']))
         PI = StudyPerson(info['principal_investigator_id'])
         PI = study_person_linkifier((PI.email, PI.name))
-        pmids = ", ".join([pubmed_linkifier([pmid])
-                           for pmid in study.pmids])
+        pmids = ", ".join([pubmed_linkifier([p])
+                           for p in info['pmid']])
         shared = _get_shared_links_for_study(study)
         infolist.append(StudyTuple(study.id, study.title,
                                    info["metadata_complete"],
                                    info["number_samples_collected"],
                                    shared, len(study.raw_data()),
-                                   PI, pmids, owner, status,
+                                   PI, pmids, owner, info["status"],
                                    info["study_abstract"]))
     return infolist
 
