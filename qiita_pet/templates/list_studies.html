@@ -10,15 +10,15 @@ var current_study;
 
 $(document).ready(function() {
         $('#user-studies-table').dataTable({
-            order: [[9, "asc"], [ 0, "asc" ]],
-            columnDefs: [{type:'natural', targets:[2,3,4,8]}, {"targets": [ 1 ],"visible": false}],
+            order: [[10, "asc"], [ 1, "asc" ]],
+            columnDefs: [{type:'natural', targets:[3,4,5,9]}, {"targets": [ 2 ],"visible": false}],
             "oLanguage": {
                 "sSearch": "Refine search results:"
             }
         });
         $('#shared-studies-table').dataTable({
-            order: [[ 0, "asc" ]],
-            columnDefs: [{type:'natural', targets:[3,4,5]}, {"targets": [ 1 ],"visible": false}],
+            order: [[ 1, "asc" ]],
+            columnDefs: [{type:'natural', targets:[4,5,6]}, {"targets": [ 2 ],"visible": false}],
             "oLanguage": {
                 "sSearch": "Refine search results:"
             }
@@ -55,35 +55,17 @@ function modify_sharing(study_id) {
 
 {% end %}
 {% block content %}
-<!-- modal view to enter sharing settings -->
-<div class="modal fade" id="share-study-modal-view" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-        <h4 class="modal-title" id="myModalLabel">Modify Sharing Settings</h4>
-      </div>
-      <form role="form" action="/study/sharing/" method="post">
-        <div class="modal-body">
-          <div>
-            <div class="form-group">
-              <label for="users_list">Add/Remove Users</label>
-              <select multiple class="chosen-select" id="users_list" data-placeholder=" ">
-                {% for email in all_emails_except_current %}
-                <option value="{{ email }}">{{ email }} </option>
-                {% end %}
-              </select>
-              <br>
-              <br>
-              Adding or removing email addresses automatically updates who the study is shared with. Once you click the `X` or give mouse focus to the `Your Studies` page you'll see your new sharing settings.
-            </div>
-          </div>
-        </div>
-        <div class="modal-footer">
-        </div>
-      </form>
-    </div>
+<!--Search div-->
+<div class="row">
+  <div class="col-sm-12">
+    <h1>Search</h1>
+    <p><a href="#" data-toggle="modal" data-target="#searchexample">Search help</a></p>
+    <form id="search-form" name="search-form" class="form-inline" method="POST" action="/study/search/">
+        <input type="textbox" id="searchbox" name="searchbox" class="form-control" style="width:80%;white-space:nowrap;" value='{{query}}' />
+      <button type="submit" class="btn btn-default">Submit</button>
+    </form>
   </div>
+  <div class="col-sm-12" id="searchmsg" name="searchmsg"></div>
 </div>
 <!--User Studies-->
 <div class="row">
@@ -93,6 +75,7 @@ function modify_sharing(study_id) {
     <table id="user-studies-table" class="display table-bordered table-hover">
         <thead>
             <tr>
+                <th></th>
                 <th>Title</th>
                 <th>Abstract</th>
                 <th>Study ID</th>
@@ -109,6 +92,7 @@ function modify_sharing(study_id) {
             {% set row = 0 %}
             {% for s in user_studies %}
             <tr>
+                <td><input type="checkbox" value="{{s.id}}"></td>
                 {# Title #}
                 <td><a href="#" data-toggle="modal" data-target="#study-abstract-modal" onclick="fillAbstract('user-studies-table', {{row}})"><span class="glyphicon glyphicon-file" aria-hidden="true"></span></a> | <a href="/study/description/{{ s.id }}" id="study{{row}}-title">{{ s.title }}</a></td>
                 {# Abstract (hidden on page) #}
@@ -159,6 +143,7 @@ function modify_sharing(study_id) {
 </div>
 {% end %}
 <!--Shared Studies-->
+<form id="study-sel-form" name="study-sel-form">
 <div class="row">
   <div class="col-sm-12">
     <h1>Shared Studies</h1>
@@ -166,6 +151,7 @@ function modify_sharing(study_id) {
     <table id="shared-studies-table" class="display table-bordered table-hover">
         <thead>
             <tr>
+                <th></th>
                 <th>Title</th>
                 <th>Abstract</th>
                 <th>Study ID</th>
@@ -181,6 +167,7 @@ function modify_sharing(study_id) {
             {% set row = 0 %}
             {% for s in shared_studies %}
             <tr>
+                <td><input type="checkbox" value="{{s.id}}"></td>
                 <td><a href="#" data-toggle="modal" data-target="#study-abstract-modal" onclick="fillAbstract('shared-studies-table', {{row}})"><span class="glyphicon glyphicon-file" aria-hidden="true"></span></a> | <a href="/study/description/{{ s.id }}" id="study{{row}}-title">{{ s.title }}</a></td>
                 <td>{% raw s.abstract %}</a></td>
                 <td>{% raw s.id %}</td>
@@ -225,6 +212,65 @@ function modify_sharing(study_id) {
     <div class="modal-footer">
       <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
     </div>
+    </div>
+  </div>
+</div>
+</form>
+<!--Search help modal-->
+<div class="modal fade search-example-modal" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true" id="searchexample">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header"><h2>Search help<h2></div>
+      <div class="modal-body">
+        <p>A basic search consists of three parts: The metadata category to search over, the operator to use, and the value to use in the search. For example, to retrieve all soil samples in the database, the query would be:</p>
+        <p><b>env_matter includes soil</b></p>
+        <p>Valid operators for searches are:</p>
+        <table class="table table-hover" style="width:60%">
+        <tr><th>Operator</th><th>Function</th></tr>
+        <tr><td><</td><td> Less than (for integer and float values)</td></tr>
+        <tr><td>></td><td> Greater than (for integer and float values)</td></tr>
+        <tr><td><=</td><td> Less than or equal (for integer and float values)</td></tr>
+        <tr><td>>=</td><td> Greater than or equal (for integer and float values)</td></tr>
+        <tr><td>=</td><td> Equals (matches exact number or string)</td></tr>
+        <tr><td>!=</td><td> Not equals (matches opposite of exact number or string)</td></tr>
+        <tr><td>includes</td><td>Partial string matching</td></tr>
+        </table>
+        <p>Complex queries can also be created by using AND, OR, and NOT operators. As an example, if we want all soil samples that are low or extremely high pH, we can use the following search:</p>
+        <p><b>env_matter includes soil AND (ph < 4 OR ph > 8)</b></p>
+        <p>You can search for multi-word phrases using quotes. For example, to search for any study with "chicken pox" in the title, the query would be:</p>
+        <p><b>study_title includes "chicken pox"</b></p>
+        <p>Note that you can not use wild cards in any string searches. Only alphanumeric characters and colons are supported.</p>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- modal view to enter sharing settings -->
+<div class="modal fade" id="share-study-modal-view" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title" id="myModalLabel">Modify Sharing Settings</h4>
+      </div>
+      <form role="form" action="/study/sharing/" method="post">
+        <div class="modal-body">
+          <div>
+            <div class="form-group">
+              <label for="users_list">Add/Remove Users</label>
+              <select multiple class="chosen-select" id="users_list" data-placeholder=" ">
+                {% for email in all_emails_except_current %}
+                <option value="{{ email }}">{{ email }} </option>
+                {% end %}
+              </select>
+              <br>
+              <br>
+              Adding or removing email addresses automatically updates who the study is shared with. Once you click the `X` or give mouse focus to the `Your Studies` page you'll see your new sharing settings.
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+        </div>
+      </form>
     </div>
   </div>
 </div>

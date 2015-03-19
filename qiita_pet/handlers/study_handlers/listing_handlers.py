@@ -90,9 +90,10 @@ class ListStudiesHandler(BaseHandler):
         shared_studies = yield Task(self._get_shared, user)
         all_emails_except_current = yield Task(self._get_all_emails)
         all_emails_except_current.remove(self.current_user.id)
-        self.render('private_studies.html',
+        self.render('list_studies.html',
                     user_studies=user_studies, shared_studies=shared_studies,
-                    all_emails_except_current=all_emails_except_current)
+                    all_emails_except_current=all_emails_except_current,
+                    query='')
 
     def _get_standard(self, user, callback):
         callback(_build_study_info("standard", user))
