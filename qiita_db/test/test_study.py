@@ -210,6 +210,16 @@ class TestStudy(TestCase):
         self.assertItemsEqual(obs[0].keys(), exp_keys)
         self.assertItemsEqual(obs[0], exp_vals)
 
+        exp_keys = ['metadata_complete', 'reprocess', 'timeseries_type',
+                    'portal_description', 'pmid', 'study_title']
+        obs = Study.get_info([1], exp_keys)
+        self.assertEqual(len(obs), 1)
+        exp_vals = [
+            True, 'EMP portal', False, 'Identification of the Microbiomes for '
+            'Cannabis Soils', 'None', ['123456', '7891011']]
+        self.assertItemsEqual(obs[0].keys(), exp_keys)
+        self.assertItemsEqual(obs[0], exp_vals)
+
     def test_has_access_public(self):
         self.study.status = 'public'
         self.assertTrue(self.study.has_access(User("demo@microbio.me")))

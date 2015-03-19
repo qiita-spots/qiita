@@ -185,6 +185,8 @@ class Study(QiitaStatusObject):
     def get_info(cls, study_ids, info_cols=None):
         if info_cols is None:
             info_cols = [s for s in cls._info_cols]
+        else:
+            info_cols = deepcopy(info_cols)
 
         if "pmid" in info_cols:
             # special case because we need to array_agg the PMIDs
@@ -194,7 +196,6 @@ class Study(QiitaStatusObject):
         else:
             search_cols = sorted(cls._info_cols.intersection(info_cols))
         search_cols = ",".join(search_cols)
-
 
         sql = """SELECT {0} FROM (
             qiita.study
