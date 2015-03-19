@@ -219,10 +219,6 @@ class ProcessingPipelineTests(TestCase):
         obs_cmd, obs_output_dir = _get_preprocess_fasta_cmd(
             raw_data, prep_template, params)
 
-        get_raw_path = partial(join, self.db_dir, 'raw_data')
-        seqs_fp = [get_raw_path('preprocess_test1.sff'),
-                   get_raw_path('preprocess_test2.sff')]
-
         obs_cmds = obs_cmd.split('; ')
         # assumming that test_get_preprocess_fasta_cmd_sff_no_run_prefix is
         # working we only need to test for the commands being ran and
