@@ -135,14 +135,6 @@ class StudyApprovalList(BaseHandler):
         study_generator = ((Study(sid), pds) for sid, pds in result_generator)
         parsed_studies = [(s.id, s.title, s.owner, pds)
                           for s, pds in study_generator]
-        # parsed_studies = []
-        # for sid, pd_ids in ProcessedData.get_by_status_grouped_by_study(
-        #         'awaiting_approval'):
-        #     study = Study(sid)
-        #     parsed_studies.append((su))
-        # for sid in Study.get_by_status('awaiting_approval'):
-        #     study = Study(sid)
-        #     parsed_studies.append((study.id, study.title, study.owner))
 
         self.render('admin_approval.html',
                     study_info=parsed_studies)
