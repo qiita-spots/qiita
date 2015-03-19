@@ -1308,7 +1308,7 @@ class TestSampleTemplate(TestCase):
                'collection_timestamp', 'host_subject_id',
                'description', 'latitude', 'longitude'}
         obs = set(self.tester.categories())
-        self.assertEqual(obs, exp)
+        self.assertItemsEqual(obs, exp)
 
     def test_remove_category(self):
         with self.assertRaises(QiitaDBColumnError):
