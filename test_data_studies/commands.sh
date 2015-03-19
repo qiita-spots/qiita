@@ -63,13 +63,14 @@ for i in ${studies[@]}; do
     # Loading processed data
     echo "\tloading processed data... "
     cp $otu_table ${otu_table}_backup
-    qiita db load_processed --fp $otu_table --fp_type biom --processed_params_table processed_params_sortmerna --processed_params_id 1 --preprocessed_data_id ${base_id}
+    output="`qiita db load_processed --fp $otu_table --fp_type biom --processed_params_table processed_params_sortmerna --processed_params_id 1 --preprocessed_data_id ${base_id}`"
+    pd_id=`echo -e "${output}" | cut -d " " -f 10`
     mv ${otu_table}_backup $otu_table
     echo "Ok"
 
-    # # Making study public
+    # Making study public by making its processed data public
     echo "\tmaking study public... "
-    echo -e "from qiita_db.study import Study\nStudy(${study_id}).status = 'public'\n\n" | python
+    echo -e "from qiita_db.data import ProcessedData\nProcessedData(${pd_id}).status = 'public'\n\n" | python
     echo "Ok"
     rm $conf_fp
 done
