@@ -204,7 +204,6 @@ def _get_preprocess_fasta_cmd(raw_data, prep_template, params):
     # Create a temporary directory to store the split libraries output
     output_dir = mkdtemp(dir=qiita_config.working_dir, prefix='sl_out')
 
-    qual_str = ''
     prepreprocess_cmd = ''
     if seqs and sffs:
         raise ValueError("Cannot have SFF and raw fasta, on %s"
@@ -232,27 +231,56 @@ def _get_preprocess_fasta_cmd(raw_data, prep_template, params):
             quals.append(join(output_dir, '%s.qual' % base))
         prepreprocess_cmd = '; '.join(prepreprocess_cmds)
 
-    if quals:
-        qual_str = "-q %s -d" % ','.join(quals)
-
     # The minimal QIIME mapping files should be written to a directory,
     # so QIIME can consume them
     prep_dir = mkdtemp(dir=qiita_config.working_dir,
                        prefix='MMF_%s' % prep_template.id)
 
     # Get the Minimal Mapping Files
-    mapping_fp = _get_qiime_minimal_mapping(prep_template, prep_dir)[0]
+    mapping_fps = sorted(_get_qiime_minimal_mapping(prep_template, prep_dir))
 
     # Add any other parameter needed to split libraries
     params_str = params.to_str()
 
     # Create the split_libraries_fastq.py command
-    cmd = ' '.join(["split_libraries.py",
-                    "-f %s" % ','.join(seqs),
-                    "-m %s" % mapping_fp,
-                    qual_str,
-                    "-o %s" % output_dir,
-                    params_str])
+    # len(mapping_fps) will be == 1 when there is no run_prefix or it has
+    # the same value in all the rows
+    if len(mapping_fps) == 1:
+        qual_str = "-q %s -d" % ','.join(quals) if quals else ""
+        cmd = ' '.join(["split_libraries.py",
+                        "-f %s" % ','.join(seqs),
+                        "-m %s" % mapping_fps[0],
+                        qual_str,
+                        "-o %s" % output_dir,
+                        params_str])
+    else:
+        cmd, output_folders, n = [], [], 1
+        for i, (seq, mapping) in enumerate(zip(seqs, mapping_fps)):
+            qual_str = "-q %s -d" % quals[i] if quals else ""
+            split_dir = join(output_dir, basename(mapping))
+            output_folders.append(split_dir)
+
+            cmd.append(' '.join(["split_libraries.py",
+                                 "-f %s" % seq,
+                                 "-m %s" % mapping,
+                                 qual_str,
+                                 "-o %s" % split_dir,
+                                 "-n %d" % n,
+                                 params_str]))
+            # Number comes from (100K larger than amplicon):
+            # http://454.com/products/gs-FLX-system/index.asp
+            n = (i + 1) * 800000
+
+        # files to cat from multiple split libraries
+        to_cat = ['split_library_log.txt', 'seqs.fna']
+        if quals:
+            to_cat.append('seqs_filtered.qual')
+        for tc in to_cat:
+            files = [join(x, tc) for x in output_folders]
+            cmd.append("cat %s > %s" % (' '.join(files),
+                                        join(output_dir, tc)))
+
+        cmd = '; '.join(cmd)
 
     if quals:
         fq_cmd = ' '.join(["convert_fastaqual_fastq.py",
