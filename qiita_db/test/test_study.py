@@ -177,6 +177,39 @@ class TestStudy(TestCase):
         # make studies private
         self.conn_handler.execute("UPDATE qiita.study SET study_status_id = 1")
 
+    def test_get_info(self):
+        obs = Study.get_info([1])
+        self.assertEqual(len(obs), 1)
+        exp_keys = ['mixs_compliant', 'metadata_complete', 'reprocess',
+                    'timeseries_type', 'portal_description', 'emp_person_id',
+                    'number_samples_promised', 'funding', 'vamps_id',
+                    'first_contact', 'principal_investigator_id',
+                    'study_status_id', 'timeseries_type_id', 'study_abstract',
+                    'pmid', 'study_alias', 'status', 'spatial_series',
+                    'study_description', 'portal', 'status_description',
+                    'portal_type_id', 'intervention_type', 'email', 'study_id',
+                    'most_recent_contact', 'lab_person_id', 'study_title',
+                    'number_samples_collected']
+        exp_vals = [
+            ['123456', '7891011'], 'test@foo.bar', 2,
+            datetime(2014, 5, 19, 16, 10), None, 'None', 1, True, True,
+            datetime(2014, 5, 19, 16, 11), 27, 27, 'EMP', 'EMP portal', 2, 3,
+            False, False, 'private',
+            'Only owner and shared users can see this study',
+            'This is a preliminary study to examine the microbiota associated '
+            'with the Cannabis plant. Soils samples from the bulk soil, soil '
+            'associated with the roots, and the rhizosphere were extracted and'
+            ' the DNA sequenced. Roots from three independent plants of '
+            'different strains were examined. These roots were obtained '
+            'November 11, 2011 from plants that had been harvested in the '
+            'summer. Future studies will attempt to analyze the soils and '
+            'rhizospheres from the same location at different time points in '
+            'the plant lifecycle.', 'Cannabis Soils', 'Analysis of the '
+            'Cannabis Plant Microbiome', 1, 3, 'Identification of the '
+            'Microbiomes for Cannabis Soils', 'None', 1, None]
+        self.assertItemsEqual(obs[0].keys(), exp_keys)
+        self.assertItemsEqual(obs[0], exp_vals)
+
     def test_has_access_public(self):
         self.study.status = 'public'
         self.assertTrue(self.study.has_access(User("demo@microbio.me")))

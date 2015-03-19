@@ -98,12 +98,13 @@ object while creating the study.
 from __future__ import division
 from future.utils import viewitems
 from copy import deepcopy
+from itertools import chain
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from .base import QiitaStatusObject, QiitaObject
 from .exceptions import (QiitaDBStatusError, QiitaDBColumnError, QiitaDBError)
 from .util import (check_required_columns, check_table_cols, convert_to_id,
-                   get_environmental_packages)
+                   get_environmental_packages, get_table_cols)
 from .sql_connection import SQLConnectionHandler
 
 
@@ -143,6 +144,11 @@ class Study(QiitaStatusObject):
     _table = "study"
     # The following columns are considered not part of the study info
     _non_info = {"email", "study_status_id", "study_title"}
+    # The following tables are considered part of info
+    _info_cols = frozenset(chain(
+        get_table_cols('study'), get_table_cols('study_status'),
+        get_table_cols('timeseries_type'), get_table_cols('portal_type'),
+        get_table_cols('study_pmid')))
 
     def _lock_non_sandbox(self, conn_handler):
         """Raises QiitaDBStatusError if study is non-sandboxed"""
@@ -174,6 +180,34 @@ class Study(QiitaStatusObject):
                "s.study_status_id = ss.study_status_id WHERE "
                "ss.status = %s".format(cls._table))
         return {x[0] for x in conn_handler.execute_fetchall(sql, (status, ))}
+
+    @classmethod
+    def get_info(cls, study_ids, info_cols=None):
+        if info_cols is None:
+            info_cols = [s for s in cls._info_cols]
+
+        if "pmid" in info_cols:
+            # special case because we need to array_agg the PMIDs
+            info_cols.remove("pmid")
+            search_cols = sorted(cls._info_cols.intersection(info_cols))
+            search_cols.append("array_agg(pmid ORDER BY study_id) as pmid")
+        else:
+            search_cols = sorted(cls._info_cols.intersection(info_cols))
+        search_cols = ",".join(search_cols)
+
+
+        sql = """SELECT {0} FROM (
+            qiita.study
+            JOIN qiita.study_status USING (study_status_id)
+            JOIN qiita.timeseries_type  USING (timeseries_type_id)
+            JOIN qiita.portal_type USING (portal_type_id)
+            JOIN qiita.study_pmid USING (study_id)
+            ) WHERE study_id in ({1}) GROUP BY {2}""".format(
+            search_cols, ','.join(str(s) for s in study_ids),
+            ",".join(info_cols))
+
+        conn_handler = SQLConnectionHandler()
+        return conn_handler.execute_fetchall(sql)
 
     @classmethod
     def exists(cls, study_title):
