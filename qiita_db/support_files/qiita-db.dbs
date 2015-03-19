@@ -21,6 +21,9 @@
 			<column name="timestamp" type="timestamptz" jt="93" >
 				<defo>current_timestamp</defo>
 			</column>
+			<column name="dflt" type="bool" jt="-7" mandatory="y" >
+				<defo>false</defo>
+			</column>
 			<index name="pk_analysis" unique="PRIMARY_KEY" >
 				<column name="analysis_id" />
 			</index>
@@ -1585,7 +1588,6 @@ Controlled Vocabulary]]></comment>
 		<entity schema="qiita" name="analysis_workflow" color="c0d4f3" x="390" y="645" />
 		<entity schema="qiita" name="column_ontology" color="d0def5" x="285" y="1725" />
 		<entity schema="qiita" name="study_person" color="c0d4f3" x="2100" y="105" />
-		<entity schema="qiita" name="analysis" color="d0def5" x="225" y="720" />
 		<entity schema="qiita" name="controlled_vocab" color="d0def5" x="45" y="1335" />
 		<entity schema="qiita" name="ontology" color="d0def5" x="780" y="1350" />
 		<entity schema="qiita" name="preprocessed_spectra_params" color="d0def5" x="1770" y="855" />
@@ -1634,6 +1636,7 @@ Controlled Vocabulary]]></comment>
 		<entity schema="qiita" name="collection" color="a8c4ef" x="45" y="360" />
 		<entity schema="qiita" name="collection_users" color="a8c4ef" x="255" y="345" />
 		<entity schema="qiita" name="study_sample_columns" color="d0def5" x="1635" y="285" />
+		<entity schema="qiita" name="analysis" color="d0def5" x="225" y="720" />
 		<group name="Group_analyses" color="c4e0f9" >
 			<comment>analysis tables</comment>
 			<entity schema="qiita" name="analysis" />
