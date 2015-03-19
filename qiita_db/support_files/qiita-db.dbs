@@ -21,7 +21,7 @@
 			<column name="timestamp" type="timestamptz" jt="93" >
 				<defo>current_timestamp</defo>
 			</column>
-			<column name="def" type="bool" jt="-7" mandatory="y" >
+			<column name="dflt" type="bool" jt="-7" mandatory="y" >
 				<defo>false</defo>
 			</column>
 			<index name="pk_analysis" unique="PRIMARY_KEY" >
