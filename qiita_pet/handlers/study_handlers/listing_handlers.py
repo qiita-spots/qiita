@@ -181,21 +181,18 @@ class SearchStudiesAJAX(BaseHandler):
             try:
                 res, meta = search(query, User(user))
             except ParseException:
-                print ">>>>>>ParseException"
                 self.clear()
                 self.set_status(400)
                 self.write('Malformed search query. Please read "search help" '
                            'and try again.')
                 return
             except QiitaDBIncompatibleDatatypeError as e:
-                print ">>>>>>QiitaDBIncompatibleDatatypeError"
                 self.clear()
                 self.set_status(400)
-                searchmsg = 'BUUUUUTS'
+                searchmsg = ''.join(e)
                 self.write(searchmsg)
                 return
             except:
-                print ">>>>>>GENERIC ERROR"
                 # catch any other error as generic server error
                 self.set_status(500)
                 self.write("Server error during search. Please try again "

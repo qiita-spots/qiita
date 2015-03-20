@@ -1,5 +1,6 @@
 from unittest import main
 from collections import namedtuple
+from json import loads
 
 from qiita_pet.test.tornado_test_base import TestHandlerBase
 from qiita_db.study import StudyPerson, Study
@@ -12,19 +13,13 @@ from qiita_pet.handlers.study_handlers.listing_handlers import (
 class TestHelpers(TestHandlerBase):
     database = True
 
-    def test_get_shared_links_for_study(self):
-        obs = _get_shared_links_for_study(Study(1))
-        exp = '<a target="_blank" href="mailto:shared@foo.bar">Shared</a>'
-        self.assertEqual(obs, exp)
-
-    def test_build_study_info(self):
-        Study(1).status = 'public'
-        obs = _build_study_info('public', User('test@foo.bar'))
-        StudyTuple = namedtuple('StudyInfo', 'id title meta_complete '
-                                'num_samples_collected shared num_raw_data pi '
-                                'pmids owner status, abstract')
-        exp = [
-            StudyTuple(
+    def setUp(self):
+        self.StudyTuple = namedtuple('StudyInfo', 'id title meta_complete '
+                                     'num_samples_collected shared '
+                                     'num_raw_data pi pmids owner status '
+                                     'abstract')
+        self.exp_studies = {
+            self.StudyTuple(
                 id=1,
                 title='Identification of the Microbiomes for Cannabis Soils',
                 meta_complete=True, num_samples_collected=27,
@@ -48,8 +43,18 @@ class TestHelpers(TestHandlerBase):
                 'These roots were obtained November 11, 2011 from plants that '
                 'had been harvested in the summer. Future studies will '
                 'attempt to analyze the soils and rhizospheres from the same '
-                'location at different time points in the plant lifecycle.')]
+                'location at different time points in the plant lifecycle.')}
+        super(TestHelpers, self).setUp()
+
+    def test_get_shared_links_for_study(self):
+        obs = _get_shared_links_for_study(Study(1))
+        exp = '<a target="_blank" href="mailto:shared@foo.bar">Shared</a>'
         self.assertEqual(obs, exp)
+
+    def test_build_study_info(self):
+        Study(1).status = 'public'
+        obs = _build_study_info('standard', User('test@foo.bar'))
+        self.assertItemsEqual(obs, self.exp_studies)
 
     def test_build_study_info_new_study(self):
         info = {
@@ -62,30 +67,20 @@ class TestHelpers(TestHandlerBase):
             'study_description': 'desc',
             'study_alias': 'alias',
             'study_abstract': 'abstract'}
-        user = User('shared@foo.bar')
+        user = User('test@foo.bar')
 
         Study.create(user, 'test_study_1', efo=[1], info=info)
 
-        obs = _build_study_info('private', user)
-
-        StudyTuple = namedtuple('StudyInfo', 'id title meta_complete '
-                                'num_samples_collected shared num_raw_data pi '
-                                'pmids owner status, abstract')
-        exp = [
-            StudyTuple(
-                id=2,
-                title='test_study_1',
-                meta_complete=False, num_samples_collected=None,
-                shared='',
-                num_raw_data=0,
+        obs = _build_study_info('standard', user)
+        self.exp_studies.add(
+            self.StudyTuple(
+                id=2, title='test_study_1', meta_complete=False,
+                num_samples_collected=None, shared='', num_raw_data=0,
                 pi='<a target="_blank" href="mailto:PI_dude@foo.bar">'
-                   'PIDude</a>',
-                pmids='',
-                owner='<a target="_blank" href="mailto:shared@foo.bar">'
-                      'shared@foo.bar</a>',
-                status='sandbox',
-                abstract='abstract')]
-        self.assertEqual(obs, exp)
+                'PIDude</a>', pmids='', owner='<a target="_blank" '
+                'href="mailto:test@foo.bar">test@foo.bar</a>',
+                status='sandbox', abstract='abstract'))
+        self.assertItemsEqual(obs, self.exp_studies)
 
 
 class TestStudyEditorForm(TestHandlerBase):
@@ -98,15 +93,9 @@ class TestStudyEditorExtendedForm(TestHandlerBase):
     pass
 
 
-class TestPrivateStudiesHandler(TestHandlerBase):
+class TestListStudiesHandler(TestHandlerBase):
     def test_get(self):
-        response = self.get('/study/private/')
-        self.assertEqual(response.code, 200)
-
-
-class TestPublicStudiesHandler(TestHandlerBase):
-    def test_get(self):
-        response = self.get('/study/public/')
+        response = self.get('/study/list/')
         self.assertEqual(response.code, 200)
 
 
@@ -272,6 +261,87 @@ class TestCreateStudyAJAX(TestHandlerBase):
         self.assertEqual(response.code, 200)
         # make sure responds properly
         self.assertEqual(response.body, 'False')
+
+
+class TestSearchStudiesAJAX(TestHandlerBase):
+    database = False
+
+    json = {
+        'iTotalRecords': 1,
+        'aaData': [[
+            "<input type='checkbox' value='1'>",
+            '<a href=\'#\'\' data-toggle=\'modal\' data-target=\'#study-'
+            'abstract-modal\' onclick=\'fillAbstract("user-studies-table", 0)'
+            '\'><span class=\'glyphicon glyphicon-file\' aria-hidden=\'true\''
+            '></span></a> | <a href=\'/study/description/1\' id=\'study0-title'
+            '\'>Identification of the Microbiomes for Cannabis Soils</a>',
+            'This is a preliminary study to examine the microbiota associated '
+            'with the Cannabis plant. Soils samples from the bulk soil, soil '
+            'associated with the roots, and the rhizosphere were extracted and'
+            ' the DNA sequenced. Roots from three independent plants of '
+            'different strains were examined. These roots were obtained '
+            'November 11, 2011 from plants that had been harvested in the '
+            'summer. Future studies will attempt to analyze the soils and '
+            'rhizospheres from the same location at different time points in '
+            'the plant lifecycle.', 1,
+            "<span class='glyphicon glyphicon-ok'></span>", 27, 4,
+            '<span id=\'shared_html_1\'><a target="_blank" href="mailto:shared'
+            '@foo.bar">Shared</a></span><br/><a class=\'btn btn-primary\' '
+            'data-toggle=\'modal\' data-target=\'#share-study-modal-view\' '
+            'onclick=\'modify_sharing(1);\'>Modify</a>',
+            '<a target="_blank" href="mailto:PI_dude@foo.bar">PIDude</a>',
+            '<a target="_blank" href="http://www.ncbi.nlm.nih.gov/pubmed/'
+            '123456">123456</a>, <a target="_blank" href="http://www.ncbi.nlm.'
+            'nih.gov/pubmed/7891011">7891011</a>', 'private']],
+        'sEcho': 1021, 'iTotalDisplayRecords': 1}
+
+    empty = {'aaData': [],
+             'iTotalDisplayRecords': 0,
+             'iTotalRecords': 0,
+             'sEcho': 1021}
+
+    def test_get(self):
+        response = self.get('/study/search/', {
+            'type': 'standard',
+            'user': 'test@foo.bar',
+            'query': '',
+            'sEcho': '1021'
+            })
+        self.assertEqual(response.code, 200)
+        # make sure responds properly
+        self.assertEqual(loads(response.body), self.json)
+
+        response = self.get('/study/search/', {
+            'type': 'shared',
+            'user': 'test@foo.bar',
+            'query': '',
+            'sEcho': '1021'
+            })
+        self.assertEqual(response.code, 200)
+        # make sure responds properly
+        self.assertEqual(loads(response.body), self.empty)
+
+        response = self.get('/study/search/', {
+            'type': 'standard',
+            'user': 'test@foo.bar',
+            'query': 'ph > 50',
+            'sEcho': '1021'
+            })
+        self.assertEqual(response.code, 200)
+        # make sure responds properly
+        self.assertEqual(loads(response.body), self.empty)
+
+    def test_get_failure(self):
+        response = self.get('/study/search/', {
+            'type': 'standard',
+            'user': 'test@foo.bar',
+            'query': 'ph',
+            'sEcho': '1021'
+            })
+        self.assertEqual(response.code, 400)
+        # make sure responds properly
+        self.assertEqual(response.body, 'Malformed search query. '
+                         'Please read "search help" and try again.')
 
 
 class TestMetadataSummaryHandler(TestHandlerBase):
