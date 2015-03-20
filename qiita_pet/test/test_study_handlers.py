@@ -18,32 +18,6 @@ class TestHelpers(TestHandlerBase):
                                      'num_samples_collected shared '
                                      'num_raw_data pi pmids owner status '
                                      'abstract')
-        self.exp_studies = {
-            self.StudyTuple(
-                id=1,
-                title='Identification of the Microbiomes for Cannabis Soils',
-                meta_complete=True, num_samples_collected=27,
-                shared='<a target="_blank" href="mailto:shared@foo.bar">'
-                       'Shared</a>',
-                num_raw_data=4,
-                pi='<a target="_blank" href="mailto:PI_dude@foo.bar">'
-                   'PIDude</a>',
-                pmids='<a target="_blank" href="http://www.ncbi.nlm.nih.gov/'
-                      'pubmed/123456">123456</a>, '
-                      '<a target="_blank" href="http://www.ncbi.nlm.nih.gov/'
-                      'pubmed/7891011">7891011</a>',
-                owner='<a target="_blank" href="mailto:test@foo.bar">'
-                      'test@foo.bar</a>',
-                status='public',
-                abstract='This is a preliminary study to examine the '
-                'microbiota associated with the Cannabis plant. Soils samples '
-                'from the bulk soil, soil associated with the roots, and the '
-                'rhizosphere were extracted and the DNA sequenced. Roots from '
-                'three independent plants of different strains were examined. '
-                'These roots were obtained November 11, 2011 from plants that '
-                'had been harvested in the summer. Future studies will '
-                'attempt to analyze the soils and rhizospheres from the same '
-                'location at different time points in the plant lifecycle.')}
         super(TestHelpers, self).setUp()
 
     def test_get_shared_links_for_study(self):
@@ -52,11 +26,39 @@ class TestHelpers(TestHandlerBase):
         self.assertEqual(obs, exp)
 
     def test_build_study_info(self):
+        self.maxDiff = None
         Study(1).status = 'public'
         obs = _build_study_info('standard', User('test@foo.bar'))
-        self.assertItemsEqual(obs, self.exp_studies)
+        exp = {self.StudyTuple(
+            id=1,
+            title='Identification of the Microbiomes for Cannabis Soils',
+            meta_complete=True, num_samples_collected=27,
+            shared='<a target="_blank" href="mailto:shared@foo.bar">'
+                   'Shared</a>',
+            num_raw_data=4,
+            pi='<a target="_blank" href="mailto:PI_dude@foo.bar">'
+               'PIDude</a>',
+            pmids='<a target="_blank" href="http://www.ncbi.nlm.nih.gov/'
+                  'pubmed/123456">123456</a>, '
+                  '<a target="_blank" href="http://www.ncbi.nlm.nih.gov/'
+                  'pubmed/7891011">7891011</a>',
+            owner='<a target="_blank" href="mailto:test@foo.bar">'
+                  'test@foo.bar</a>',
+            status='public',
+            abstract='This is a preliminary study to examine the '
+            'microbiota associated with the Cannabis plant. Soils samples '
+            'from the bulk soil, soil associated with the roots, and the '
+            'rhizosphere were extracted and the DNA sequenced. Roots from '
+            'three independent plants of different strains were examined. '
+            'These roots were obtained November 11, 2011 from plants that '
+            'had been harvested in the summer. Future studies will '
+            'attempt to analyze the soils and rhizospheres from the same '
+            'location at different time points in the plant lifecycle.')}
+        self.assertItemsEqual(obs, exp)
 
     def test_build_study_info_new_study(self):
+        self.maxDiff = None
+        Study(1).status = 'public'
         info = {
             'timeseries_type_id': 1,
             'portal_type_id': 1,
@@ -70,17 +72,41 @@ class TestHelpers(TestHandlerBase):
         user = User('test@foo.bar')
 
         Study.create(user, 'test_study_1', efo=[1], info=info)
-
         obs = _build_study_info('standard', user)
-        self.exp_studies.add(
+        exp = {
+            self.StudyTuple(
+                id=1,
+                title='Identification of the Microbiomes for Cannabis Soils',
+                meta_complete=True, num_samples_collected=27,
+                shared='<a target="_blank" href="mailto:shared@foo.bar">'
+                       'Shared</a>',
+                num_raw_data=4,
+                pi='<a target="_blank" href="mailto:PI_dude@foo.bar">'
+                   'PIDude</a>',
+                pmids='<a target="_blank" href="http://www.ncbi.nlm.nih.gov/'
+                      'pubmed/7891011">7891011</a>, '
+                      '<a target="_blank" href="http://www.ncbi.nlm.nih.gov/'
+                      'pubmed/123456">123456</a>',
+                owner='<a target="_blank" href="mailto:test@foo.bar">'
+                      'test@foo.bar</a>',
+                status='public',
+                abstract='This is a preliminary study to examine the '
+                'microbiota associated with the Cannabis plant. Soils samples '
+                'from the bulk soil, soil associated with the roots, and the '
+                'rhizosphere were extracted and the DNA sequenced. Roots from '
+                'three independent plants of different strains were examined. '
+                'These roots were obtained November 11, 2011 from plants that '
+                'had been harvested in the summer. Future studies will '
+                'attempt to analyze the soils and rhizospheres from the same '
+                'location at different time points in the plant lifecycle.'),
             self.StudyTuple(
                 id=2, title='test_study_1', meta_complete=False,
                 num_samples_collected=None, shared='', num_raw_data=0,
                 pi='<a target="_blank" href="mailto:PI_dude@foo.bar">'
                 'PIDude</a>', pmids='', owner='<a target="_blank" '
                 'href="mailto:test@foo.bar">test@foo.bar</a>',
-                status='sandbox', abstract='abstract'))
-        self.assertItemsEqual(obs, self.exp_studies)
+                status='sandbox', abstract='abstract')}
+        self.assertItemsEqual(obs, exp)
 
 
 class TestStudyEditorForm(TestHandlerBase):

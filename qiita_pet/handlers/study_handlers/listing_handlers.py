@@ -194,6 +194,7 @@ class SearchStudiesAJAX(BaseHandler):
                 return
             except:
                 # catch any other error as generic server error
+                self.clear()
                 self.set_status(500)
                 self.write("Server error during search. Please try again "
                            "later")
