@@ -642,7 +642,7 @@ class RawData(BaseData):
         """
         if self._id not in study.raw_data():
             raise QiitaDBStatusError(
-                "The study %s do not have access to the raw data %s"
+                "The study %s does not have access to the raw data %s"
                 % (study.id, self.id))
 
         conn_handler = SQLConnectionHandler()
@@ -1176,7 +1176,7 @@ class ProcessedData(BaseData):
                 JOIN qiita.study_processed_data spd
                     ON spd.processed_data_id=pd.processed_data_id
             WHERE pds.processed_data_status = %s
-            GROUP BY study_id;"""
+            GROUP BY spd.study_id;"""
         return dict(conn_handler.execute_fetchall(sql, (status,)))
 
     @classmethod
@@ -1336,7 +1336,7 @@ class ProcessedData(BaseData):
     @property
     def status(self):
         conn_handler = SQLConnectionHandler()
-        sql = """SELECT processed_data_status
+        sql = """SELECT pds.processed_data_status
                 FROM qiita.processed_data_status pds
                   JOIN qiita.processed_data pd
                     ON pd.processed_data_status_id=pds.processed_data_status_id
