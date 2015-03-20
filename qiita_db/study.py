@@ -188,24 +188,17 @@ class Study(QiitaStatusObject):
         else:
             info_cols = deepcopy(info_cols)
 
-        if "pmid" in info_cols:
-            # special case because we need to array_agg the PMIDs
-            info_cols.remove("pmid")
-            search_cols = sorted(cls._info_cols.intersection(info_cols))
-            search_cols.append("array_agg(pmid ORDER BY study_id) as pmid")
-        else:
-            search_cols = sorted(cls._info_cols.intersection(info_cols))
-        search_cols = ",".join(search_cols)
+        search_cols = ",".join(sorted(cls._info_cols.intersection(info_cols)))
 
         sql = """SELECT {0} FROM (
             qiita.study
             JOIN qiita.study_status USING (study_status_id)
             JOIN qiita.timeseries_type  USING (timeseries_type_id)
             JOIN qiita.portal_type USING (portal_type_id)
-            JOIN qiita.study_pmid USING (study_id)
-            ) WHERE study_id in ({1}) GROUP BY {2}""".format(
-            search_cols, ','.join(str(s) for s in study_ids),
-            ",".join(info_cols))
+            LEFT JOIN (SELECT study_id, array_agg(pmid ORDER BY study_id) as
+            pmid FROM qiita.study_pmid GROUP BY study_id) sp USING (study_id)
+            ) WHERE study_id in ({1})""".format(
+            search_cols, ','.join(str(s) for s in study_ids))
 
         conn_handler = SQLConnectionHandler()
         return conn_handler.execute_fetchall(sql)
