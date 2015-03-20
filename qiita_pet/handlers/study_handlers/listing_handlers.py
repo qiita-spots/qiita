@@ -16,6 +16,8 @@ from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_db.user import User
 from qiita_db.study import Study, StudyPerson
 from qiita_db.search import QiitaStudySearch
+from qiita_db.metadata_template import SampleTemplate
+from qiita_db.util import get_table_cols
 from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_pet.handlers.util import study_person_linkifier, pubmed_linkifier
 
@@ -53,10 +55,8 @@ def _build_study_info(studytype,  user, studies=None):
         studylist = user.user_studies | Study.get_by_status('public')
     elif studytype == "shared":
         studylist = user.shared_studies
-
     if not studylist:
         return set()
-
     StudyTuple = namedtuple('StudyInfo', 'id title meta_complete '
                             'num_samples_collected shared num_raw_data pi '
                             'pmids owner status abstract')
@@ -72,8 +72,11 @@ def _build_study_info(studytype,  user, studies=None):
         owner = study_person_linkifier((info['email'], info['email']))
         PI = StudyPerson(info['principal_investigator_id'])
         PI = study_person_linkifier((PI.email, PI.name))
-        pmids = ", ".join([pubmed_linkifier([p])
-                           for p in info['pmid']])
+        if info['pmid'] is not None:
+            pmids = ", ".join([pubmed_linkifier([p])
+                               for p in info['pmid']])
+        else:
+            pmids = ""
         shared = _get_shared_links_for_study(study)
         infolist.add(StudyTuple(
             study.id, study.title, info["metadata_complete"],
@@ -95,7 +98,9 @@ class ListStudiesHandler(BaseHandler):
     def get(self):
         all_emails_except_current = yield Task(self._get_all_emails)
         all_emails_except_current.remove(self.current_user.id)
-        self.render('list_studies.html',
+        availmeta = SampleTemplate.metadata_headers() +\
+            get_table_cols("study")
+        self.render('list_studies.html', availmeta=availmeta,
                     all_emails_except_current=all_emails_except_current)
 
     def _get_all_emails(self, callback):
@@ -177,7 +182,6 @@ class SearchStudiesAJAX(BaseHandler):
         else:
             # show everything
             info = _build_study_info(search_type, self.current_user)
-        print ">>>>>AJAX", len(info)
         # build the table json
         results = {
             "sEcho": echo,

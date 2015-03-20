@@ -68,6 +68,10 @@ function modify_sharing(study_id) {
 
         });
 }
+
+function add_metacat(metacat) {
+  document.getElementById('searchbox').value += (" " + metacat);
+}
 </script>
 
 {% end %}
@@ -76,10 +80,10 @@ function modify_sharing(study_id) {
 <div class="row">
   <div class="col-sm-12">
     <h1>Search</h1>
-    <p><a href="#" data-toggle="modal" data-target="#searchexample">Search help</a></p>
+    <p><a href="#" data-toggle="modal" data-target="#searchexample">Search help</a> | <a href="#" data-toggle="modal" data-target="#availmeta">Available Metadata</a></p>
     <form id="search-form" name="search-form" class="form-inline">
         <input type="textbox" id="searchbox" name="searchbox" class="form-control" style="width:80%;white-space:nowrap;" />
-      <button type="submit" class="btn btn-default">Submit</button>
+      <button type="submit" id="submit-button" class="btn btn-default">Submit</button>
     </form>
   </div>
   <div class="col-sm-12" id="searchmsg" name="searchmsg"></div>
@@ -208,6 +212,19 @@ function modify_sharing(study_id) {
         <div class="modal-footer">
         </div>
       </form>
+    </div>
+  </div>
+</div>
+<!--Available metadata modal-->
+<div class="modal fade seaerch-example-modal" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true" id="availmeta">
+  <div class="modal-dialog modal-sm">
+    <div class="modal-content">
+      <div class="modal-header"><h2>Available metadata<h2></div>
+      <div class="modal-body">
+        {% for meta in availmeta %}
+          <a href="#" onclick="add_metacat('{{meta}}')">{{meta}}</a><br />
+        {% end %}
+      </div>
     </div>
   </div>
 </div>
