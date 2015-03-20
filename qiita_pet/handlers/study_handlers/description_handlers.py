@@ -11,7 +11,6 @@ import warnings
 
 from os import remove
 from os.path import exists, join, basename
-from future.utils import viewvalues
 from collections import defaultdict
 
 from tornado.web import authenticated, HTTPError
@@ -587,21 +586,6 @@ class StudyDescriptionHandler(BaseHandler):
         msg_level = 'danger'
         callback((msg, msg_level, 'study_information_tab', None, None))
 
-    def get_raw_data(self, rdis, callback):
-        """Get all raw data objects from a list of raw_data_ids"""
-        callback([RawData(rdi) for rdi in rdis])
-
-    def get_prep_templates(self, raw_data, callback):
-        """Get all prep templates for a list of raw data objects"""
-        d = {}
-        for rd in raw_data:
-            # We neeed this so PrepTemplate(p) doesn't fail if that raw
-            # doesn't exist but raw data has the row: #554
-            prep_templates = sorted(rd.prep_templates)
-            d[rd.id] = [PrepTemplate(p) for p in prep_templates
-                        if PrepTemplate.exists(p)]
-        callback(d)
-
     def remove_add_study_template(self, raw_data, study_id, fp_rsp):
         """Replace prep templates, raw data, and sample template with a new one
         """
@@ -634,11 +618,6 @@ class StudyDescriptionHandler(BaseHandler):
     def display_template(self, study, user, msg, msg_level, full_access,
                          top_tab=None, sub_tab=None, prep_tab=None):
         """Simple function to avoid duplication of code"""
-        # getting the RawData and its prep templates
-        available_raw_data = yield Task(self.get_raw_data, study.raw_data())
-        available_prep_templates = yield Task(self.get_prep_templates,
-                                              available_raw_data)
-
         study_status = study.status
         user_level = user.level
         sample_template_exists = SampleTemplate.exists(study.id)
