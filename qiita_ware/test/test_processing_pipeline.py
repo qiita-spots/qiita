@@ -223,19 +223,19 @@ class ProcessingPipelineTests(TestCase):
         # assumming that test_get_preprocess_fasta_cmd_sff_no_run_prefix is
         # working we only need to test for the commands being ran and
         # that n is valid
-        self.assertTrue(len(obs_cmds) == 8)
+        self.assertEqual(len(obs_cmds), 8)
         self.assertTrue(obs_cmds[0].startswith('process_sff.py'))
         self.assertTrue(obs_cmds[1].startswith('process_sff.py'))
         self.assertTrue(obs_cmds[2].startswith('split_libraries.py'))
-        self.assertTrue('-n 1' in obs_cmds[2])
+        self.assertIn('-n 1', obs_cmds[2])
         self.assertTrue(obs_cmds[3].startswith('split_libraries.py'))
-        self.assertTrue('-n 800000' in obs_cmds[3])
+        self.assertIn('-n 800000', obs_cmds[3])
         self.assertTrue(obs_cmds[4].startswith('cat'))
-        self.assertTrue('split_library_log.txt' in obs_cmds[4])
+        self.assertIn('split_library_log.txt', obs_cmds[4])
         self.assertTrue(obs_cmds[5].startswith('cat'))
-        self.assertTrue('seqs.fna' in obs_cmds[5])
+        self.assertTrue('seqs.fna', obs_cmds[5])
         self.assertTrue(obs_cmds[6].startswith('cat'))
-        self.assertTrue('seqs_filtered.qual' in obs_cmds[6])
+        self.assertIn('seqs_filtered.qual', obs_cmds[6])
 
     def test_get_preprocess_fasta_cmd_sff_run_prefix_match(self):
         # Test that the run prefixes in the prep_template and the file names
@@ -264,22 +264,22 @@ class ProcessingPipelineTests(TestCase):
         # assumming that test_get_preprocess_fasta_cmd_sff_no_run_prefix is
         # working we only need to test for the commands being ran and
         # that n is valid
-        self.assertTrue(len(obs_cmds) == 9)
+        self.assertEqual(len(obs_cmds), 9)
         self.assertTrue(obs_cmds[0].startswith('process_sff.py'))
         self.assertTrue(obs_cmds[1].startswith('process_sff.py'))
         self.assertTrue(obs_cmds[2].startswith('process_sff.py'))
         self.assertTrue(obs_cmds[3].startswith('split_libraries.py'))
-        self.assertTrue('-n 1' in obs_cmds[3])
+        self.assertIn('-n 1', obs_cmds[3])
         self.assertTrue(obs_cmds[4].startswith('split_libraries.py'))
-        self.assertTrue('-n 800000' in obs_cmds[4])
+        self.assertIn('-n 800000', obs_cmds[4])
         self.assertTrue(obs_cmds[5].startswith('cat'))
-        self.assertTrue('split_library_log.txt' in obs_cmds[5])
+        self.assertIn('split_library_log.txt', obs_cmds[5])
         self.assertTrue(obs_cmds[6].startswith('cat'))
-        self.assertTrue('seqs.fna' in obs_cmds[6])
-        self.assertTrue(len(obs_cmds[6].split(' ')) == 5)
+        self.assertIn('seqs.fna', obs_cmds[6])
+        self.assertEqual(len(obs_cmds[6].split(' ')), 5)
         self.assertTrue(obs_cmds[7].startswith('cat'))
-        self.assertTrue('seqs_filtered.qual' in obs_cmds[7])
-        self.assertTrue(len(obs_cmds[7].split(' ')) == 5)
+        self.assertIn('seqs_filtered.qual', obs_cmds[7])
+        self.assertEqual(len(obs_cmds[7].split(' ')), 5)
 
     def test_get_preprocess_fasta_cmd_sff_run_prefix_match_error_1(self):
         # Test that the run prefixes in the prep_template and the file names

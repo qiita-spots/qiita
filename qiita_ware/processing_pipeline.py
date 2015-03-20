@@ -269,12 +269,12 @@ def _get_preprocess_fasta_cmd(raw_data, prep_template, params):
             prefixes = {m: {'prefix': basename(m)[:-8], 'seqs': [],
                             'quals': []} for m in mapping_fps}
             counter = 0
-            for p in prefixes:
+            for p in prefixes.values():
                 for i, s in enumerate(seqs):
-                    if basename(s).startswith(prefixes[p]['prefix']):
-                        prefixes[p]['seqs'].append(s)
+                    if basename(s).startswith(p['prefix']):
+                        p['seqs'].append(s)
                         if quals:
-                            prefixes[p]['quals'].append(quals[i])
+                            p['quals'].append(quals[i])
                         counter = counter + 1
 
             if counter != len_seqs:
@@ -284,9 +284,9 @@ def _get_preprocess_fasta_cmd(raw_data, prep_template, params):
                     (', '.join(mapping_fps), ', '.join(sffs)))
 
             mapping_fps = prefixes.keys()
-            seqs = [','.join(prefixes[p]['seqs']) for p in prefixes]
+            seqs = [','.join(p['seqs']) for p in prefixes.values()]
             if quals:
-                quals = [','.join(prefixes[p]['quals']) for p in prefixes]
+                quals = [','.join(p['quals']) for p in prefixes.values()]
 
         cmd, output_folders, n = [], [], 1
         for i, (seq, mapping) in enumerate(zip(seqs, mapping_fps)):
