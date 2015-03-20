@@ -1,0 +1,50 @@
+{% extends sitebase.html %}
+{% block head %}
+<script type="text/javascript">
+$(document).on('click','.close_box',function(){
+    $(this).parent().remove();
+});
+</script>
+{% end %}
+
+{% block content %}
+{% from qiita_db.study import Study %}
+{% from qiita_db.data import ProcessedData %}
+{% from future.utils import viewitems %}
+{% for sid, proc_datas in viewitems(seldata) %}
+  {% set study = Study(sid) %}
+<div class="row" id="study{{study.id}}">
+	<div class="col-md-12">
+	  <a href="/study/description/{{sid}}"><h2>{{study.title}}</h2></a>
+    <div class="row" style="padding:10px">
+	{% for pid, samples in viewitems(proc_datas) %}
+		  <div class="col-sm-2" id="proc{{pid}}" style="border-left: 1px solid;border-right: 1px solid;padding=5px;">
+		  	<span class="close_box" style="float:right">X</span>
+		    <h4>PID {{pid}} | 16S</h4>
+		    <p><strong>Processing Parameters</strong></p>
+		    Processed: DATE<br />
+		    Algorithm: ALG<br />
+		    Reference: REF VER<br />
+		    Method: closed<br />
+		    <a href="#" onclick="$('#proc{{pid}}-samples').toggle(); return false;">Show/Hide samples</a>
+		    <div style="width:100%" id="proc{{pid}}-samples" hidden>
+		    <div class="seperator"></div>
+		    <table class="table table-striped">
+			    <thead>
+			 		  <tr><th></th><th>Sample ID</th></tr>
+			 		</thead>
+			 		<tbody>
+		{% for samp in samples %}
+		      	<tr><td><input type="checkbox" name="selsamples" id="{{pid}}#{{samp}}" value="{{pid}}#{{samp}}"></td><td><label for="{{pid}}#{{samp}}">{{samp}}</label></td></tr>
+		{% end %}
+					</tbody>
+				</table>
+		    </div>
+		  </div>
+	{% end %}
+	  </div>
+	</div>
+	}
+</div>
+{% end %}
+{% end %}

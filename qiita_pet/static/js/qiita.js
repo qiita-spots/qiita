@@ -26,3 +26,7 @@ function fillAbstract(table, row) {
     $('#title-text-area').text($('#study' + row + "-title").text());
     $('#abstract-text-area').text($('#'+table).dataTable().fnGetData(row, 1));
 }
+
+function show_hide(div) {
+	$('#' + div).toggle();
+}

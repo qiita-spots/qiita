@@ -363,3 +363,14 @@ class ResultsHandler(StaticFileHandler, BaseHandler):
                 root, absolute_path)
         else:
             raise QiitaPetAuthorizationError(user_id, absolute_path)
+
+
+class SelectedSamplesHandler(BaseHandler):
+    def get(self):
+        seldata = {
+            1: {1: ['sample %d' % i for i in range(40)], 2: ['sample %d' % i for i in range(40)], 3: ['sample %d' % i for i in range(40)]}
+        }
+        self.render("analysis_selected.html", seldata=seldata, info={})
+
+    def post(self):
+        pass
