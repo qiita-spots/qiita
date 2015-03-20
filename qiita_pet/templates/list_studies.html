@@ -7,9 +7,8 @@
 
 <script type="text/javascript">
 var current_study;
-var query = "";
+var ajaxURL = "/study/search/?&user={{current_user.id}}&sEcho=" + Math.floor(Math.random()*1001);
 $(document).ready(function() {
-        var randomnumber=Math.floor(Math.random()*11);
         $('#user-studies-table').dataTable({
             order: [[10, "asc"], [ 1, "asc" ]],
             columnDefs: [{type:'natural', targets:[3,4,5,9]}, {"targets": [ 2 ],"visible": false}],
@@ -19,7 +18,7 @@ $(document).ready(function() {
                 "sZeroRecords": "No studies found"
             }, 
             "ajax": {
-                "url": "/study/search/?type=standard&user={{current_user.id}}&query=" + query + "&sEcho=" + randomnumber
+                "url": ajaxURL + "&type=standard&query="
             }  
         });
         $('#shared-studies-table').dataTable({
@@ -31,10 +30,9 @@ $(document).ready(function() {
                 "sZeroRecords": "No studies found"
             },
             "ajax": {
-                "url": "/study/search/?type=shared&user={{current_user.id}}&query=" + query + "&sEcho=" + randomnumber
+                "url": ajaxURL + "&type=shared&query=",
             }
         });
-    $('#waiting').hide();
     $('#users_list').chosen({width: "100%"});
     $('#users_list').on('change', function(evt, params) {
         params['study_id'] = current_study;
@@ -46,6 +44,14 @@ $(document).ready(function() {
             }
         );
     });
+    $("#search-form").submit(function(event)  {
+        event.preventDefault();
+        $("#submit-button").prop("disabled",true);
+        query = $("#searchbox").val();
+        $("#user-studies-table").DataTable().ajax.url(ajaxURL + "&type=standard&query=" + query).load(function() {$("#submit-button").prop("disabled",false);}, true);
+        $("#shared-studies-table").DataTable().ajax.url(ajaxURL + "&type=shared&query=" + query).load(function() {$("#submit-button").prop("disabled",false);}, true);
+        return false;
+    });
 } );
 
 function modify_sharing(study_id) {
@@ -55,7 +61,7 @@ function modify_sharing(study_id) {
     $.get('/study/sharing/', {study_id: study_id})
         .done(function(data) {
             users_links = JSON.parse(data);
-            users = users_links['users']
+            users = users_links['users'];
 
             $("#users_list").val(users);
             $("#users_list").trigger("chosen:updated");
@@ -71,7 +77,7 @@ function modify_sharing(study_id) {
   <div class="col-sm-12">
     <h1>Search</h1>
     <p><a href="#" data-toggle="modal" data-target="#searchexample">Search help</a></p>
-    <form id="search-form" name="search-form" class="form-inline" method="POST" action="/study/search/">
+    <form id="search-form" name="search-form" class="form-inline">
         <input type="textbox" id="searchbox" name="searchbox" class="form-control" style="width:80%;white-space:nowrap;" />
       <button type="submit" class="btn btn-default">Submit</button>
     </form>
@@ -146,20 +152,27 @@ function modify_sharing(study_id) {
     <div class="modal-content">
       <div class="modal-header"><h2>Search help<h2></div>
       <div class="modal-body">
-        <p>A basic search consists of three parts: The metadata category to search over, the operator to use, and the value to use in the search. For example, to retrieve all soil samples in the database, the query would be:</p>
+        <p>A basic search argument consists of three parts: The metadata category to search over, the operator to use, and the value to use in the search. For example, to retrieve all soil samples in the database, the search argument would be:</p>
         <p><b>env_matter includes soil</b></p>
         <p>Valid operators for searches are:</p>
         <table class="table table-hover" style="width:60%">
         <tr><th>Operator</th><th>Function</th></tr>
-        <tr><td><</td><td> Less than (for integer and float values)</td></tr>
-        <tr><td>></td><td> Greater than (for integer and float values)</td></tr>
-        <tr><td><=</td><td> Less than or equal (for integer and float values)</td></tr>
-        <tr><td>>=</td><td> Greater than or equal (for integer and float values)</td></tr>
-        <tr><td>=</td><td> Equals (matches exact number or string)</td></tr>
-        <tr><td>!=</td><td> Not equals (matches opposite of exact number or string)</td></tr>
+        <tr><td><</td><td> Less than (for numeric values)</td></tr>
+        <tr><td>></td><td> Greater than (for numeric values)</td></tr>
+        <tr><td><=</td><td> Less than or equal (for numeric values)</td></tr>
+        <tr><td>>=</td><td> Greater than or equal (for numeric values)</td></tr>
+        <tr><td>=</td><td> Equals (matches exact numberic value or string)</td></tr>
         <tr><td>includes</td><td>Partial string matching</td></tr>
         </table>
-        <p>Complex queries can also be created by using AND, OR, and NOT operators. As an example, if we want all soil samples that are low or extremely high pH, we can use the following search:</p>
+        <p>Complex queries can also be created by using AND, OR, and NOT logic words words. These connect search arguments into larger search queries.</p>
+        <table class="table table-hover" style="width:60%">
+        <tr><th>Logic</th><th>Function</th></tr>
+        <tr><td>AND</td><td>Find samples that fit both search arguments</td></tr>
+        <tr><td>OR</td><td>Find samples that fit either search argument</td></tr>
+        <tr><td>NOT</td><td>Find samples that don't include the value of the next search argument</td></tr>
+        </table>
+
+        <p>As an example, if we want all soil samples that are low or extremely high pH, we can use the following search:</p>
         <p><b>env_matter includes soil AND (ph < 4 OR ph > 8)</b></p>
         <p>You can search for multi-word phrases using quotes. For example, to search for any study with "chicken pox" in the title, the query would be:</p>
         <p><b>study_title includes "chicken pox"</b></p>

@@ -42,7 +42,7 @@ def _build_study_info(studytype,  user, studies=None):
         raise IncompetentQiitaDeveloperError("Must use private, shared, "
                                              "or public!")
     # get list of studies for table
-    if studies:
+    if studies is not None:
         # filter info to given studies
         if studytype == "standard":
             studylist = (user.user_studies |
@@ -55,7 +55,7 @@ def _build_study_info(studytype,  user, studies=None):
         studylist = user.shared_studies
 
     if not studylist:
-        return []
+        return set()
 
     StudyTuple = namedtuple('StudyInfo', 'id title meta_complete '
                             'num_samples_collected shared num_raw_data pi '
@@ -93,8 +93,6 @@ class ListStudiesHandler(BaseHandler):
     @authenticated
     @coroutine
     def get(self):
-        self.write(self.render_string('waiting.html'))
-        self.flush()
         all_emails_except_current = yield Task(self._get_all_emails)
         all_emails_except_current.remove(self.current_user.id)
         self.render('list_studies.html',
@@ -173,13 +171,13 @@ class SearchStudiesAJAX(BaseHandler):
         if query != "":
             # Search for samples matching the query
             search = QiitaStudySearch()
-            res, meta = search(query)
+            res, meta = search(query, User(user))
             info = _build_study_info(search_type, self.current_user,
-                                     studies=search.keys())
+                                     studies=res.keys())
         else:
             # show everything
             info = _build_study_info(search_type, self.current_user)
-
+        print ">>>>>AJAX", len(info)
         # build the table json
         results = {
             "sEcho": echo,
@@ -221,7 +219,7 @@ class SearchStudiesAJAX(BaseHandler):
                     s.pmids,
                     s.status
                 ])
-        elif search_type == "shared": 
+        elif search_type == "shared":
             for row, s in enumerate(info):
                 # build the HTML elements needed for table cell
                 meta_complete = "ok" if s.meta_complete else "remove"
