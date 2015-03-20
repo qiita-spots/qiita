@@ -11,12 +11,14 @@ from json import dumps
 
 from tornado.web import authenticated, HTTPError
 from tornado.gen import coroutine, Task
+from pyparsing import ParseException
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_db.user import User
 from qiita_db.study import Study, StudyPerson
 from qiita_db.search import QiitaStudySearch
 from qiita_db.metadata_template import SampleTemplate
+from qiita_db.exceptions import QiitaDBIncompatibleDatatypeError
 from qiita_db.util import get_table_cols
 from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_pet.handlers.util import study_person_linkifier, pubmed_linkifier
@@ -176,7 +178,30 @@ class SearchStudiesAJAX(BaseHandler):
         if query != "":
             # Search for samples matching the query
             search = QiitaStudySearch()
-            res, meta = search(query, User(user))
+            try:
+                res, meta = search(query, User(user))
+            except ParseException:
+                print ">>>>>>ParseException"
+                self.clear()
+                self.set_status(400)
+                self.write('Malformed search query. Please read "search help" '
+                           'and try again.')
+                return
+            except QiitaDBIncompatibleDatatypeError as e:
+                print ">>>>>>QiitaDBIncompatibleDatatypeError"
+                self.clear()
+                self.set_status(400)
+                searchmsg = 'BUUUUUTS'
+                self.write(searchmsg)
+                return
+            except:
+                print ">>>>>>GENERIC ERROR"
+                # catch any other error as generic server error
+                self.set_status(500)
+                self.write("Server error during search. Please try again "
+                           "later")
+            if not res:
+                res = {}
             info = _build_study_info(search_type, self.current_user,
                                      studies=res.keys())
         else:

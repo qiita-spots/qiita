@@ -18,8 +18,12 @@ $(document).ready(function() {
                 "sZeroRecords": "No studies found"
             }, 
             "ajax": {
-                "url": ajaxURL + "&type=standard&query="
-            }  
+                "url": ajaxURL + "&type=standard&query=",
+                "error": function(jqXHR, textStatus, ex) {
+                    $("#submit-button").prop("disabled",false);
+                    $("#search-error").text(jqXHR.responseText);
+                } 
+            } 
         });
         $('#shared-studies-table').dataTable({
             order: [[ 1, "asc" ]],
@@ -31,8 +35,13 @@ $(document).ready(function() {
             },
             "ajax": {
                 "url": ajaxURL + "&type=shared&query=",
-            }
+                "error": function(jqXHR, textStatus, ex) {
+                    $("#submit-button").prop("disabled",false);
+                    $("#search-error").text(jqXHR.responseText);
+                } 
+            } 
         });
+
     $('#users_list').chosen({width: "100%"});
     $('#users_list').on('change', function(evt, params) {
         params['study_id'] = current_study;
@@ -47,6 +56,7 @@ $(document).ready(function() {
     $("#search-form").submit(function(event)  {
         event.preventDefault();
         $("#submit-button").prop("disabled",true);
+        $("#search-error").text('');
         query = $("#searchbox").val();
         $("#user-studies-table").DataTable().ajax.url(ajaxURL + "&type=standard&query=" + query).load(function() {$("#submit-button").prop("disabled",false);}, true);
         $("#shared-studies-table").DataTable().ajax.url(ajaxURL + "&type=shared&query=" + query).load(function() {$("#submit-button").prop("disabled",false);}, true);
@@ -85,6 +95,7 @@ function add_metacat(metacat) {
         <input type="textbox" id="searchbox" name="searchbox" class="form-control" style="width:80%;white-space:nowrap;" />
       <button type="submit" id="submit-button" class="btn btn-default">Submit</button>
     </form>
+    <span id="search-error" style="color:red"></span>
   </div>
   <div class="col-sm-12" id="searchmsg" name="searchmsg"></div>
 </div>
