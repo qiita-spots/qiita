@@ -254,6 +254,40 @@ def _get_preprocess_fasta_cmd(raw_data, prep_template, params):
                         "-o %s" % output_dir,
                         params_str])
     else:
+        len_seqs = len(seqs)
+        len_mapping_fps = len(mapping_fps)
+
+        if len_mapping_fps > len_seqs:
+            mapping_fps = [basename(m) for m in mapping_fps]
+            sffs = [basename(s) for s in sffs]
+            raise ValueError(
+                'Your prep template defines: "%s" but you only have "%s" as '
+                'files' % (', '.join(mapping_fps), ', '.join(sffs)))
+
+        if len_seqs != len_mapping_fps:
+            # -8 is to remove the _MMF.txt
+            prefixes = {m: {'prefix': basename(m)[:-8], 'seqs': [],
+                            'quals': []} for m in mapping_fps}
+            counter = 0
+            for p in prefixes:
+                for i, s in enumerate(seqs):
+                    if basename(s).startswith(prefixes[p]['prefix']):
+                        prefixes[p]['seqs'].append(s)
+                        if quals:
+                            prefixes[p]['quals'].append(quals[i])
+                        counter = counter + 1
+
+            if counter != len_seqs:
+                raise ValueError(
+                    'Your run prefixes in your prep template '
+                    '"%s" do not match your file names "%s"' %
+                    (', '.join(mapping_fps), ', '.join(sffs)))
+
+            mapping_fps = prefixes.keys()
+            seqs = [','.join(prefixes[p]['seqs']) for p in prefixes]
+            if quals:
+                quals = [','.join(prefixes[p]['quals']) for p in prefixes]
+
         cmd, output_folders, n = [], [], 1
         for i, (seq, mapping) in enumerate(zip(seqs, mapping_fps)):
             qual_str = "-q %s -d" % quals[i] if quals else ""
