@@ -13,7 +13,7 @@ $(document).ready(function() {
             order: [[10, "asc"], [ 1, "asc" ]],
             columnDefs: [{type:'natural', targets:[3,4,5,9]}, {"targets": [ 2 ],"visible": false}],
             "oLanguage": {
-                "sSearch": "Refine search results:",
+                "sSearch": "Narrow search results by column data (Title, abstract, PI, etc):",
                 "sLoadingRecords": "Loading table data",
                 "sZeroRecords": "No studies found"
             }, 
@@ -22,23 +22,20 @@ $(document).ready(function() {
                 "error": function(jqXHR, textStatus, ex) {
                     $("#submit-button").prop("disabled",false);
                     $("#search-error").text(jqXHR.responseText);
-                } 
+                }
             } 
         });
         $('#shared-studies-table').dataTable({
             order: [[ 1, "asc" ]],
             columnDefs: [{type:'natural', targets:[4,5,6]}, {"targets": [ 2 ],"visible": false}],
             "oLanguage": {
-                "sSearch": "Refine search results:",
+                "sSearch": "Narrow search results by column data (Title, abstract, PI, etc):",
                 "sLoadingRecords": "Loading table data",
                 "sZeroRecords": "No studies found"
             },
             "ajax": {
                 "url": ajaxURL + "&type=shared&query=",
-                "error": function(jqXHR, textStatus, ex) {
-                    $("#submit-button").prop("disabled",false);
-                    $("#search-error").text(jqXHR.responseText);
-                } 
+                "error": function(jqXHR, textStatus, ex) {} 
             } 
         });
 
@@ -89,7 +86,9 @@ function add_metacat(metacat) {
 <!--Search div-->
 <div class="row">
   <div class="col-sm-12">
-    <h1>Search</h1>
+    <h1>Metadata Search</h1>
+    A basic search consists of: (category)  (operator) (value)<br/>
+    Example search: env_matter = soil<br />
     <p><a href="#" data-toggle="modal" data-target="#searchexample">Search help</a> | <a href="#" data-toggle="modal" data-target="#availmeta">Available Metadata</a></p>
     <form id="search-form" name="search-form" class="form-inline">
         <input type="textbox" id="searchbox" name="searchbox" class="form-control" style="width:80%;white-space:nowrap;" />
