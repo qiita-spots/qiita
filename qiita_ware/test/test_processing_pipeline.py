@@ -163,8 +163,8 @@ class ProcessingPipelineTests(TestCase):
             raw_data, prep_template, params)
 
         get_raw_path = partial(join, self.db_dir, 'raw_data')
-        seqs_fp = [get_raw_path('preprocess_test1.sff'),
-                   get_raw_path('preprocess_test2.sff')]
+        seqs_fp = [get_raw_path('1_preprocess_test1.sff'),
+                   get_raw_path('1_preprocess_test2.sff')]
 
         exp_cmd_1 = ' '.join(["process_sff.py",
                               "-i %s" % seqs_fp[0],
@@ -173,10 +173,12 @@ class ProcessingPipelineTests(TestCase):
                               "-i %s" % seqs_fp[1],
                               "-o %s" % obs_output_dir])
 
-        fasta_files = ','.join([join(obs_output_dir, "preprocess_test1.fna"),
-                                join(obs_output_dir, "preprocess_test2.fna")])
-        qual_files = ','.join([join(obs_output_dir, "preprocess_test1.qual"),
-                               join(obs_output_dir, "preprocess_test2.qual")])
+        fasta_files = ','.join([
+            join(obs_output_dir, "1_preprocess_test1.fna"),
+            join(obs_output_dir, "1_preprocess_test2.fna")])
+        qual_files = ','.join([
+            join(obs_output_dir, "1_preprocess_test1.qual"),
+            join(obs_output_dir, "1_preprocess_test2.qual")])
         exp_cmd_3a = ' '.join(["split_libraries.py",
                                "-f %s" % fasta_files])
 
@@ -244,7 +246,8 @@ class ProcessingPipelineTests(TestCase):
         sql = ("""
             INSERT INTO qiita.filepath (filepath_id, filepath,
                 filepath_type_id, checksum, checksum_algorithm_id,
-                data_directory_id) VALUES (19, 'new.sff', 17, 852952723, 1, 5);
+                data_directory_id) VALUES (19, '1_new.sff', 17, 852952723, 1,
+                5);
             INSERT INTO qiita.raw_filepath (raw_data_id , filepath_id) VALUES
                 (3, 19);
             UPDATE qiita.prep_1 SET run_prefix='preprocess_test';
@@ -288,12 +291,13 @@ class ProcessingPipelineTests(TestCase):
         sql = ("""
             INSERT INTO qiita.filepath (filepath_id, filepath,
                 filepath_type_id, checksum, checksum_algorithm_id,
-                data_directory_id) VALUES (19, 'new.sff', 17, 852952723, 1, 5);
+                data_directory_id) VALUES (19, '1_new.sff', 17, 852952723, 1,
+                5);
             INSERT INTO qiita.raw_filepath (raw_data_id , filepath_id) VALUES
                 (3, 19);
             INSERT INTO qiita.filepath (filepath_id, filepath,
                 filepath_type_id, checksum, checksum_algorithm_id,
-                data_directory_id) VALUES (20, 'error.sff', 17, 852952723,
+                data_directory_id) VALUES (20, '1_error.sff', 17, 852952723,
                 1, 5);
             INSERT INTO qiita.raw_filepath (raw_data_id , filepath_id) VALUES
                 (3, 20);

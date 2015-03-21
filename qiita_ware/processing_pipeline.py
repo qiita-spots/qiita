@@ -261,8 +261,8 @@ def _get_preprocess_fasta_cmd(raw_data, prep_template, params):
             mapping_fps = [basename(m) for m in mapping_fps]
             sffs = [basename(s) for s in sffs]
             raise ValueError(
-                'Your prep template defines: "%s" but you only have "%s" as '
-                'files' % (', '.join(mapping_fps), ', '.join(sffs)))
+                'The prep template defines: "%s" but you only have "%s" as '
+                'sequence files' % (', '.join(mapping_fps), ', '.join(sffs)))
 
         if len_seqs != len_mapping_fps:
             # -8 is to remove the _MMF.txt
@@ -271,7 +271,8 @@ def _get_preprocess_fasta_cmd(raw_data, prep_template, params):
             counter = 0
             for p in prefixes.values():
                 for i, s in enumerate(seqs):
-                    if basename(s).startswith(p['prefix']):
+                    # the files are prefixed with raw_data_id
+                    if basename(s).split('_', 1)[1].startswith(p['prefix']):
                         p['seqs'].append(s)
                         if quals:
                             p['quals'].append(quals[i])
@@ -279,7 +280,7 @@ def _get_preprocess_fasta_cmd(raw_data, prep_template, params):
 
             if counter != len_seqs:
                 raise ValueError(
-                    'Your run prefixes in your prep template '
+                    'The run prefixes in your prep template '
                     '"%s" do not match your file names "%s"' %
                     (', '.join(mapping_fps), ', '.join(sffs)))
 
