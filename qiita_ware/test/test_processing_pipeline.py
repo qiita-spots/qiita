@@ -163,8 +163,8 @@ class ProcessingPipelineTests(TestCase):
             raw_data, prep_template, params)
 
         get_raw_path = partial(join, self.db_dir, 'raw_data')
-        seqs_fp = [get_raw_path('preprocess_test1.sff'),
-                   get_raw_path('preprocess_test2.sff')]
+        seqs_fp = [get_raw_path('1_preprocess_test1.sff'),
+                   get_raw_path('1_preprocess_test2.sff')]
 
         exp_cmd_1 = ' '.join(["process_sff.py",
                               "-i %s" % seqs_fp[0],
@@ -173,10 +173,12 @@ class ProcessingPipelineTests(TestCase):
                               "-i %s" % seqs_fp[1],
                               "-o %s" % obs_output_dir])
 
-        fasta_files = ','.join([join(obs_output_dir, "preprocess_test1.fna"),
-                                join(obs_output_dir, "preprocess_test2.fna")])
-        qual_files = ','.join([join(obs_output_dir, "preprocess_test1.qual"),
-                               join(obs_output_dir, "preprocess_test2.qual")])
+        fasta_files = ','.join([
+            join(obs_output_dir, "1_preprocess_test1.fna"),
+            join(obs_output_dir, "1_preprocess_test2.fna")])
+        qual_files = ','.join([
+            join(obs_output_dir, "1_preprocess_test1.qual"),
+            join(obs_output_dir, "1_preprocess_test2.qual")])
         exp_cmd_3a = ' '.join(["split_libraries.py",
                                "-f %s" % fasta_files])
 
@@ -208,8 +210,8 @@ class ProcessingPipelineTests(TestCase):
         # Need to alter the run_prefix of one sample so we can test the
         # multiple values
         conn_handler = SQLConnectionHandler()
-        sql = ("UPDATE qiita.prep_1 SET run_prefix='test' WHERE "
-               "sample_id ='1.SKM9.640192'")
+        sql = ("UPDATE qiita.prep_1 SET run_prefix='test1' WHERE "
+               "sample_id = '1.SKM9.640192'")
         conn_handler.execute(sql)
 
         raw_data = RawData(3)
@@ -223,19 +225,113 @@ class ProcessingPipelineTests(TestCase):
         # assumming that test_get_preprocess_fasta_cmd_sff_no_run_prefix is
         # working we only need to test for the commands being ran and
         # that n is valid
-        self.assertTrue(len(obs_cmds) == 8)
+        self.assertEqual(len(obs_cmds), 8)
         self.assertTrue(obs_cmds[0].startswith('process_sff.py'))
         self.assertTrue(obs_cmds[1].startswith('process_sff.py'))
         self.assertTrue(obs_cmds[2].startswith('split_libraries.py'))
-        self.assertTrue('-n 1' in obs_cmds[2])
+        self.assertIn('-n 1', obs_cmds[2])
         self.assertTrue(obs_cmds[3].startswith('split_libraries.py'))
-        self.assertTrue('-n 800000' in obs_cmds[3])
+        self.assertIn('-n 800000', obs_cmds[3])
         self.assertTrue(obs_cmds[4].startswith('cat'))
-        self.assertTrue('split_library_log.txt' in obs_cmds[4])
+        self.assertIn('split_library_log.txt', obs_cmds[4])
         self.assertTrue(obs_cmds[5].startswith('cat'))
-        self.assertTrue('seqs.fna' in obs_cmds[5])
+        self.assertTrue('seqs.fna', obs_cmds[5])
         self.assertTrue(obs_cmds[6].startswith('cat'))
-        self.assertTrue('seqs_filtered.qual' in obs_cmds[6])
+        self.assertIn('seqs_filtered.qual', obs_cmds[6])
+
+    def test_get_preprocess_fasta_cmd_sff_run_prefix_match(self):
+        # Test that the run prefixes in the prep_template and the file names
+        # actually match and raise an error if not
+        conn_handler = SQLConnectionHandler()
+        sql = ("""
+            INSERT INTO qiita.filepath (filepath_id, filepath,
+                filepath_type_id, checksum, checksum_algorithm_id,
+                data_directory_id) VALUES (19, '1_new.sff', 17, 852952723, 1,
+                5);
+            INSERT INTO qiita.raw_filepath (raw_data_id , filepath_id) VALUES
+                (3, 19);
+            UPDATE qiita.prep_1 SET run_prefix='preprocess_test';
+            UPDATE qiita.prep_1 SET run_prefix='new' WHERE
+                sample_id = '1.SKB8.640193';
+        """)
+        conn_handler.execute(sql)
+
+        raw_data = RawData(3)
+        params = Preprocessed454Params(1)
+        prep_template = PrepTemplate(1)
+
+        obs_cmd, obs_output_dir = _get_preprocess_fasta_cmd(
+            raw_data, prep_template, params)
+
+        obs_cmds = obs_cmd.split('; ')
+        # assumming that test_get_preprocess_fasta_cmd_sff_no_run_prefix is
+        # working we only need to test for the commands being ran and
+        # that n is valid
+        self.assertEqual(len(obs_cmds), 9)
+        self.assertTrue(obs_cmds[0].startswith('process_sff.py'))
+        self.assertTrue(obs_cmds[1].startswith('process_sff.py'))
+        self.assertTrue(obs_cmds[2].startswith('process_sff.py'))
+        self.assertTrue(obs_cmds[3].startswith('split_libraries.py'))
+        self.assertIn('-n 1', obs_cmds[3])
+        self.assertTrue(obs_cmds[4].startswith('split_libraries.py'))
+        self.assertIn('-n 800000', obs_cmds[4])
+        self.assertTrue(obs_cmds[5].startswith('cat'))
+        self.assertIn('split_library_log.txt', obs_cmds[5])
+        self.assertTrue(obs_cmds[6].startswith('cat'))
+        self.assertIn('seqs.fna', obs_cmds[6])
+        self.assertEqual(len(obs_cmds[6].split(' ')), 5)
+        self.assertTrue(obs_cmds[7].startswith('cat'))
+        self.assertIn('seqs_filtered.qual', obs_cmds[7])
+        self.assertEqual(len(obs_cmds[7].split(' ')), 5)
+
+    def test_get_preprocess_fasta_cmd_sff_run_prefix_match_error_1(self):
+        # Test that the run prefixes in the prep_template and the file names
+        # actually match and raise an error if not
+        conn_handler = SQLConnectionHandler()
+        sql = ("""
+            INSERT INTO qiita.filepath (filepath_id, filepath,
+                filepath_type_id, checksum, checksum_algorithm_id,
+                data_directory_id) VALUES (19, '1_new.sff', 17, 852952723, 1,
+                5);
+            INSERT INTO qiita.raw_filepath (raw_data_id , filepath_id) VALUES
+                (3, 19);
+            INSERT INTO qiita.filepath (filepath_id, filepath,
+                filepath_type_id, checksum, checksum_algorithm_id,
+                data_directory_id) VALUES (20, '1_error.sff', 17, 852952723,
+                1, 5);
+            INSERT INTO qiita.raw_filepath (raw_data_id , filepath_id) VALUES
+                (3, 20);
+            UPDATE qiita.prep_1 SET run_prefix='preprocess_test';
+            UPDATE qiita.prep_1 SET run_prefix='new' WHERE
+                sample_id = '1.SKB8.640193';
+        """)
+        conn_handler.execute(sql)
+
+        raw_data = RawData(3)
+        params = Preprocessed454Params(1)
+        prep_template = PrepTemplate(1)
+
+        with self.assertRaises(ValueError):
+            _get_preprocess_fasta_cmd(raw_data, prep_template, params)
+
+    def test_get_preprocess_fasta_cmd_sff_run_prefix_match_error_2(self):
+        # Should raise error
+        conn_handler = SQLConnectionHandler()
+        sql = ("""
+            UPDATE qiita.prep_1 SET run_prefix='test1';
+            UPDATE qiita.prep_1 SET run_prefix='test2' WHERE
+                sample_id = '1.SKB2.640194';
+            UPDATE qiita.prep_1 SET run_prefix='error' WHERE
+                sample_id = '1.SKB8.640193';
+        """)
+        conn_handler.execute(sql)
+
+        raw_data = RawData(3)
+        params = Preprocessed454Params(1)
+        prep_template = PrepTemplate(1)
+
+        with self.assertRaises(ValueError):
+            _get_preprocess_fasta_cmd(raw_data, prep_template, params)
 
     def test_insert_preprocessed_data(self):
         study = Study(1)

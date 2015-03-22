@@ -396,8 +396,8 @@ INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum, checksum_algor
 INSERT INTO qiita.sample_template_filepath VALUES (1, 16);
 
 INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum, checksum_algorithm_id, data_directory_id) VALUES
-('preprocess_test1.sff', 17, '852952723', 1, 5),
-('preprocess_test2.sff', 17, '852952723', 1, 5);
+('1_preprocess_test1.sff', 17, '852952723', 1, 5),
+('1_preprocess_test2.sff', 17, '852952723', 1, 5);
 
 -- Insert the raw data information for study 1
 INSERT INTO qiita.raw_data (filetype_id) VALUES (1), (1);
