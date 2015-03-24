@@ -183,10 +183,23 @@ class Study(QiitaStatusObject):
 
     @classmethod
     def get_info(cls, study_ids, info_cols=None):
+        """Returns study data for a set of study_ids
+
+        Parameters
+        ----------
+        study_cols : list of ints
+            Studies to get information for.
+        info_cols: list of str, optional
+            Information columns to retrieve. Defaults to all study data
+
+        Returns
+        -------
+        list of DictCursor
+            Table-like structure of metadata, one study per row. Can be
+            accessed as a list of dictionaries.
+        """
         if info_cols is None:
-            info_cols = [s for s in cls._info_cols]
-        else:
-            info_cols = deepcopy(info_cols)
+            info_cols = cls._info_cols
 
         search_cols = ",".join(sorted(cls._info_cols.intersection(info_cols)))
 

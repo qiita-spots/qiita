@@ -9,7 +9,20 @@
 var current_study;
 var ajaxURL = "/study/search/?&user={{current_user.id}}&sEcho=" + Math.floor(Math.random()*1001);
 $(document).ready(function() {
-        $('#user-studies-table').dataTable({
+        $('#standard-studies-table').dataTable({
+            "columns": [
+              { "data": "checkbox" },
+              { "data": "title" },
+              { "data": "abstract" },
+              { "data": "id" },
+              { "data": "meta_complete" },
+              { "data": "num_samples" },
+              { "data": "num_raw_data" },
+              { "data": "shared" },
+              { "data": "pi" },
+              { "data": "pmid" },
+              { "data": "status" }
+            ],
             order: [[10, "asc"], [ 1, "asc" ]],
             columnDefs: [{type:'natural', targets:[3,4,5,9]}, {"targets": [ 2 ],"visible": false}],
             "oLanguage": {
@@ -26,6 +39,18 @@ $(document).ready(function() {
             } 
         });
         $('#shared-studies-table').dataTable({
+          "columns": [
+              { "data": "checkbox" },
+              { "data": "title" },
+              { "data": "abstract" },
+              { "data": "id" },
+              { "data": "owner" },
+              { "data": "meta_complete" },
+              { "data": "num_samples" },
+              { "data": "num_raw_data" },
+              { "data": "pi" },
+              { "data": "pmid" }
+            ],
             order: [[ 1, "asc" ]],
             columnDefs: [{type:'natural', targets:[4,5,6]}, {"targets": [ 2 ],"visible": false}],
             "oLanguage": {
@@ -55,8 +80,8 @@ $(document).ready(function() {
         $("#submit-button").prop("disabled",true);
         $("#search-error").text('');
         query = $("#searchbox").val();
-        $("#user-studies-table").DataTable().ajax.url(ajaxURL + "&type=standard&query=" + query).load(function() {$("#submit-button").prop("disabled",false);}, true);
-        $("#shared-studies-table").DataTable().ajax.url(ajaxURL + "&type=shared&query=" + query).load(function() {$("#submit-button").prop("disabled",false);}, true);
+        $("#standard-studies-table").DataTable().ajax.url(ajaxURL + "&type=standard&query=" + query).load(function() {$("#submit-button").prop("disabled",false);}, true);
+        $("#shared-studies-table").DataTable().ajax.url(ajaxURL + "&type=shared&query=" + query).load();
         return false;
     });
 } );
@@ -102,7 +127,7 @@ function add_metacat(metacat) {
 <div class="row">
   <div class="col-sm-12" id="user-studies-div">
     <h1>Your Studies</h1>
-    <table id="user-studies-table" class="display table-bordered table-hover">
+    <table id="standard-studies-table" class="display table-bordered table-hover">
         <thead>
             <tr>
                 <th></th>

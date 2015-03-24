@@ -6,7 +6,6 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 from __future__ import division
-from collections import namedtuple
 from json import dumps
 
 from tornado.web import authenticated, HTTPError
@@ -40,34 +39,30 @@ def _get_shared_links_for_study(study):
     return ", ".join(shared)
 
 
-def _build_study_info(studytype,  user, studies=None):
+def _build_study_info(studytype,  user, results=None):
     """builds list of namedtuples for study listings"""
     if studytype not in {"standard", "shared"}:
         raise IncompetentQiitaDeveloperError("Must use private, shared, "
                                              "or public!")
     # get list of studies for table
-    if studies is not None:
-        # filter info to given studies
-        if studytype == "standard":
-            studylist = (user.user_studies |
-                         Study.get_by_status('public')).intersection(studies)
-        elif studytype == "shared":
-            studylist = user.shared_studies.intersection(studies)
-    elif studytype == "standard":
+    if studytype == "standard":
         studylist = user.user_studies | Study.get_by_status('public')
     elif studytype == "shared":
         studylist = user.shared_studies
+    if results:
+        studylist = studylist.intersection(results)
     if not studylist:
-        return set()
-    StudyTuple = namedtuple('StudyInfo', 'id title meta_complete '
-                            'num_samples_collected shared num_raw_data pi '
-                            'pmids owner status abstract')
+        # No studies lleft so no need to continue
+        return {}
+
+    # get info for the studies
     cols = ['study_id', 'status', 'email', 'principal_investigator_id',
             'pmid', 'study_title', 'metadata_complete',
             'number_samples_collected', 'study_abstract']
     study_info = Study.get_info(studylist, cols)
-    infolist = set()
-    for info in study_info:
+
+    infolist = []
+    for row, info in enumerate(study_info):
         study = Study(info['study_id'])
         # Just passing the email address as the name here, since
         # name is not a required field in qiita.qiita_user
@@ -79,11 +74,43 @@ def _build_study_info(studytype,  user, studies=None):
                                for p in info['pmid']])
         else:
             pmids = ""
+        if info["number_samples_collected"] is None:
+            info["number_samples_collected"] = "None"
         shared = _get_shared_links_for_study(study)
-        infolist.add(StudyTuple(
-            study.id, study.title, info["metadata_complete"],
-            info["number_samples_collected"], shared, len(study.raw_data()),
-            PI, pmids, owner, info["status"], info["study_abstract"]))
+        meta_complete = "ok" if info["metadata_complete"] else "remove"
+        # build the HTML elements needed for table cell
+        title = ("<a href='#'' data-toggle='modal' "
+                 "data-target='#study-abstract-modal' "
+                 "onclick='fillAbstract(\"{0}-studies-table\", {1})'>"
+                 "<span class=\'glyphicon glyphicon-file\' "
+                 "aria-hidden=\'true\'></span></a> | "
+                 "<a href=\'/study/description/{2}\' "
+                 "id=\'study{1}-title\'>{3}</a>".format(
+                     studytype, str(row), str(study.id), info["study_title"])),
+        meta_complete = "<span class='glyphicon glyphicon-%s'></span>" % \
+            meta_complete
+        shared = "Not Available" if info["status"] == 'public' else \
+            ("<span id='shared_html_{0}'>{1}</span><br/>"
+             "<a class='btn btn-primary' data-toggle='modal' "
+             "data-target='#share-study-modal-view' "
+             "onclick='modify_sharing({0});'>Modify</a>".format(
+                 study.id, shared))
+
+        infolist.append({
+            "checkbox": "<input type='checkbox' value='%d' />" % study.id,
+            "id": study.id,
+            "title": title,
+            "meta_complete": meta_complete,
+            "num_samples": info["number_samples_collected"],
+            "shared": shared,
+            "num_raw_data": len(study.raw_data()),
+            "pi": PI,
+            "pmid": pmids,
+            "owner": owner,
+            "status": info["status"],
+            "abstract": info["study_abstract"]
+
+        })
     return infolist
 
 
@@ -198,10 +225,11 @@ class SearchStudiesAJAX(BaseHandler):
                 self.set_status(500)
                 self.write("Server error during search. Please try again "
                            "later")
+                return
             if not res:
                 res = {}
             info = _build_study_info(search_type, self.current_user,
-                                     studies=res.keys())
+                                     results=res)
         else:
             # show everything
             info = _build_study_info(search_type, self.current_user)
@@ -210,69 +238,8 @@ class SearchStudiesAJAX(BaseHandler):
             "sEcho": echo,
             "iTotalRecords": len(info),
             "iTotalDisplayRecords": len(info),
-            "aaData": []
+            "aaData": info
         }
-        if search_type == "standard":
-            for row, s in enumerate(info):
-                # build the HTML elements needed for table cell
-                meta_complete = "ok" if s.meta_complete else "remove"
-                share = "Not Available" if s.status == 'public' else \
-                    ("<span id='shared_html_{0}'>{1}</span><br/>"
-                     "<a class='btn btn-primary' data-toggle='modal' "
-                     "data-target='#share-study-modal-view' "
-                     "onclick='modify_sharing({0});'>Modify</a>".format(
-                        s.id, s.shared))
-                # add study to table
-                results['aaData'].append([
-                    "<input type='checkbox' value='%s'>" % s.id,
 
-                    "<a href='#'' data-toggle='modal' "
-                    "data-target='#study-abstract-modal' "
-                    "onclick='fillAbstract(\"user-studies-table\", {0})'>"
-                    "<span class=\'glyphicon glyphicon-file\' "
-                    "aria-hidden=\'true\'></span></a> | "
-                    "<a href=\'/study/description/{1}\' "
-                    "id=\'study{0}-title\'>{2}</a>".format(
-                        str(row), str(s.id), s.title),
-
-                    s.abstract,
-                    s.id,
-                    "<span class='glyphicon glyphicon-%s'></span>" %
-                    meta_complete,
-                    s.num_samples_collected,
-                    s.num_raw_data,
-                    share,
-                    s.pi,
-                    s.pmids,
-                    s.status
-                ])
-        elif search_type == "shared":
-            for row, s in enumerate(info):
-                # build the HTML elements needed for table cell
-                meta_complete = "ok" if s.meta_complete else "remove"
-                # add study to table
-                results['aaData'].append([
-                    "<input type='checkbox' value='%s'>" % s.id,
-
-                    "<a href='#'' data-toggle='modal' "
-                    "data-target='#study-abstract-modal' "
-                    "onclick='fillAbstract(\"shared-studies-table\", {0})'>"
-                    "<span class=\'glyphicon glyphicon-file\' "
-                    "aria-hidden=\'true\'></span></a> | "
-                    "<a href=\'/study/description/{1}\' "
-                    "id=\'study{0}-title\'>{2}</a>".format(
-                        str(row), str(s.id), s.title),
-
-                    s.abstract,
-                    s.id,
-                    s.owner,
-                    "<span class='glyphicon glyphicon-%s'></span>" %
-                    meta_complete,
-                    s.num_samples_collected,
-                    s.num_raw_data,
-                    s.pi,
-                    s.pmids
-                ])
-
-        # return the json
-        self.write(dumps(results))
+        # return the json in compact form to save transmit size
+        self.write(dumps(results, separators=(',', ':')))
