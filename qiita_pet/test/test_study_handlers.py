@@ -1,8 +1,6 @@
 from unittest import main
 from json import loads
 
-from future.utils import viewitems
-
 from qiita_pet.test.tornado_test_base import TestHandlerBase
 from qiita_db.study import StudyPerson, Study
 from qiita_db.util import get_count, check_count
