@@ -13,13 +13,6 @@ from qiita_pet.handlers.study_handlers.listing_handlers import (
 class TestHelpers(TestHandlerBase):
     database = True
 
-    def setUp(self):
-        self.StudyTuple = namedtuple('StudyInfo', 'id title meta_complete '
-                                     'num_samples_collected shared '
-                                     'num_raw_data pi pmids owner status '
-                                     'abstract')
-        super(TestHelpers, self).setUp()
-
     def test_get_shared_links_for_study(self):
         obs = _get_shared_links_for_study(Study(1))
         exp = '<a target="_blank" href="mailto:shared@foo.bar">Shared</a>'
@@ -29,32 +22,35 @@ class TestHelpers(TestHandlerBase):
         self.maxDiff = None
         Study(1).status = 'public'
         obs = _build_study_info('standard', User('test@foo.bar'))
-        exp = {self.StudyTuple(
-            id=1,
-            title='Identification of the Microbiomes for Cannabis Soils',
-            meta_complete=True, num_samples_collected=27,
-            shared='<a target="_blank" href="mailto:shared@foo.bar">'
-                   'Shared</a>',
-            num_raw_data=4,
-            pi='<a target="_blank" href="mailto:PI_dude@foo.bar">'
-               'PIDude</a>',
-            pmids='<a target="_blank" href="http://www.ncbi.nlm.nih.gov/'
-                  'pubmed/123456">123456</a>, '
-                  '<a target="_blank" href="http://www.ncbi.nlm.nih.gov/'
-                  'pubmed/7891011">7891011</a>',
-            owner='<a target="_blank" href="mailto:test@foo.bar">'
-                  'test@foo.bar</a>',
-            status='public',
-            abstract='This is a preliminary study to examine the '
-            'microbiota associated with the Cannabis plant. Soils samples '
-            'from the bulk soil, soil associated with the roots, and the '
-            'rhizosphere were extracted and the DNA sequenced. Roots from '
-            'three independent plants of different strains were examined. '
-            'These roots were obtained November 11, 2011 from plants that '
-            'had been harvested in the summer. Future studies will '
-            'attempt to analyze the soils and rhizospheres from the same '
-            'location at different time points in the plant lifecycle.')}
-        self.assertItemsEqual(obs, exp)
+        exp = [{
+            'status': 'public',
+            'checkbox': "<input type='checkbox' value='1' />",
+            'abstract': 'This is a preliminary study to examine the microbiota'
+            ' associated with the Cannabis plant. Soils samples from the bulk '
+            'soil, soil associated with the roots, and the rhizosphere were '
+            'extracted and the DNA sequenced. Roots from three independent '
+            'plants of different strains were examined. These roots were '
+            'obtained November 11, 2011 from plants that had been harvested in'
+            ' the summer. Future studies will attempt to analyze the soils and'
+            ' rhizospheres from the same location at different time points in'
+            ' the plant lifecycle.',
+            'owner': '<a target="_blank" href="mailto:test@foo.bar">test@foo.'
+            'bar</a>',
+            'meta_complete': "<span class='glyphicon glyphicon-ok'></span>",
+            'title': '<a href=\'#\' data-toggle=\'modal\' data-target=\''
+            '#study-abstract-modal\' onclick=\'fillAbstract("standard-studies-'
+            'table", 0)\'><span class=\'glyphicon glyphicon-file\' aria-hidden'
+            '=\'true\'></span></a> | <a href=\'/study/description/1\' id=\''
+            'study0-title\'>Identification of the Microbiomes for Cannabis '
+            'Soils</a>',
+            'num_raw_data': 4, 'id': 1, 'num_samples': 27,
+            'shared': 'Not Available',
+            'pmid': '<a target="_blank" href="http://www.ncbi.nlm.nih.gov/'
+            'pubmed/123456">123456</a>, <a target="_blank" href="http://www.'
+            'ncbi.nlm.nih.gov/pubmed/7891011">7891011</a>',
+            'pi': '<a target="_blank" href="mailto:PI_dude@foo.bar">PIDude</a>'
+        }]
+        self.assertEqual(obs, exp)
 
     def test_build_study_info_new_study(self):
         self.maxDiff = None
@@ -73,39 +69,52 @@ class TestHelpers(TestHandlerBase):
 
         Study.create(user, 'test_study_1', efo=[1], info=info)
         obs = _build_study_info('standard', user)
-        exp = {
-            self.StudyTuple(
-                id=1,
-                title='Identification of the Microbiomes for Cannabis Soils',
-                meta_complete=True, num_samples_collected=27,
-                shared='<a target="_blank" href="mailto:shared@foo.bar">'
-                       'Shared</a>',
-                num_raw_data=4,
-                pi='<a target="_blank" href="mailto:PI_dude@foo.bar">'
-                   'PIDude</a>',
-                pmids='<a target="_blank" href="http://www.ncbi.nlm.nih.gov/'
-                      'pubmed/7891011">7891011</a>, '
-                      '<a target="_blank" href="http://www.ncbi.nlm.nih.gov/'
-                      'pubmed/123456">123456</a>',
-                owner='<a target="_blank" href="mailto:test@foo.bar">'
-                      'test@foo.bar</a>',
-                status='public',
-                abstract='This is a preliminary study to examine the '
-                'microbiota associated with the Cannabis plant. Soils samples '
-                'from the bulk soil, soil associated with the roots, and the '
-                'rhizosphere were extracted and the DNA sequenced. Roots from '
-                'three independent plants of different strains were examined. '
-                'These roots were obtained November 11, 2011 from plants that '
-                'had been harvested in the summer. Future studies will '
-                'attempt to analyze the soils and rhizospheres from the same '
-                'location at different time points in the plant lifecycle.'),
-            self.StudyTuple(
-                id=2, title='test_study_1', meta_complete=False,
-                num_samples_collected=None, shared='', num_raw_data=0,
-                pi='<a target="_blank" href="mailto:PI_dude@foo.bar">'
-                'PIDude</a>', pmids='', owner='<a target="_blank" '
-                'href="mailto:test@foo.bar">test@foo.bar</a>',
-                status='sandbox', abstract='abstract')}
+        exp = [{
+            'status': 'public',
+            'checkbox': "<input type='checkbox' value='1' />",
+            'abstract': 'This is a preliminary study to examine the microbiota'
+            ' associated with the Cannabis plant. Soils samples from the bulk '
+            'soil, soil associated with the roots, and the rhizosphere were '
+            'extracted and the DNA sequenced. Roots from three independent '
+            'plants of different strains were examined. These roots were '
+            'obtained November 11, 2011 from plants that had been harvested in'
+            ' the summer. Future studies will attempt to analyze the soils and'
+            ' rhizospheres from the same location at different time points in'
+            ' the plant lifecycle.',
+            'owner': '<a target="_blank" href="mailto:test@foo.bar">test@foo.'
+            'bar</a>',
+            'meta_complete': "<span class='glyphicon glyphicon-ok'></span>",
+            'title': '<a href=\'#\' data-toggle=\'modal\' data-target=\''
+            '#study-abstract-modal\' onclick=\'fillAbstract("standard-studies-'
+            'table", 0)\'><span class=\'glyphicon glyphicon-file\' aria-hidden'
+            '=\'true\'></span></a> | <a href=\'/study/description/1\' id=\''
+            'study0-title\'>Identification of the Microbiomes for Cannabis '
+            'Soils</a>',
+            'num_raw_data': 4, 'id': 1, 'num_samples': 27,
+            'shared': 'Not Available',
+            'pmid': '<a target="_blank" href="http://www.ncbi.nlm.nih.gov/'
+            'pubmed/7891011">7891011</a>, <a target="_blank" href="http://www.'
+            'ncbi.nlm.nih.gov/pubmed/123456">123456</a>',
+            'pi': '<a target="_blank" href="mailto:PI_dude@foo.bar">PIDude</a>'
+        }, {
+            'status': 'sandbox',
+            'checkbox': "<input type='checkbox' value='2' />",
+            'abstract': 'abstract',
+            'owner': '<a target="_blank" href="mailto:test@foo.bar">test@foo.'
+            'bar</a>',
+            'meta_complete': "<span class='glyphicon glyphicon-remove'>"
+            "</span>",
+            'title': '<a href=\'#\' data-toggle=\'modal\' data-target=\'#study'
+            '-abstract-modal\' onclick=\'fillAbstract("standard-studies-table"'
+            ', 1)\'><span class=\'glyphicon glyphicon-file\' aria-hidden=\''
+            'true\'></span></a> | <a href=\'/study/description/2\' id=\''
+            'study1-title\'>test_study_1</a>',
+            'num_raw_data': 0, 'id': 2L, 'num_samples': 'None',
+            'shared': "<span id='shared_html_2'></span><br/><a class='btn "
+            "btn-primary' data-toggle='modal' data-target='#share-study-modal-"
+            "view' onclick='modify_sharing(2);'>Modify</a>",
+            'pmid': '', 'pi':
+            '<a target="_blank" href="mailto:PI_dude@foo.bar">PIDude</a>'}]
         self.assertItemsEqual(obs, exp)
 
 
@@ -293,34 +302,40 @@ class TestSearchStudiesAJAX(TestHandlerBase):
     database = False
 
     json = {
-        'iTotalRecords': 1,
-        'aaData': [[
-            "<input type='checkbox' value='1'>",
-            '<a href=\'#\'\' data-toggle=\'modal\' data-target=\'#study-'
-            'abstract-modal\' onclick=\'fillAbstract("user-studies-table", 0)'
-            '\'><span class=\'glyphicon glyphicon-file\' aria-hidden=\'true\''
-            '></span></a> | <a href=\'/study/description/1\' id=\'study0-title'
-            '\'>Identification of the Microbiomes for Cannabis Soils</a>',
-            'This is a preliminary study to examine the microbiota associated '
-            'with the Cannabis plant. Soils samples from the bulk soil, soil '
-            'associated with the roots, and the rhizosphere were extracted and'
-            ' the DNA sequenced. Roots from three independent plants of '
-            'different strains were examined. These roots were obtained '
-            'November 11, 2011 from plants that had been harvested in the '
-            'summer. Future studies will attempt to analyze the soils and '
-            'rhizospheres from the same location at different time points in '
-            'the plant lifecycle.', 1,
-            "<span class='glyphicon glyphicon-ok'></span>", 27, 4,
-            '<span id=\'shared_html_1\'><a target="_blank" href="mailto:shared'
-            '@foo.bar">Shared</a></span><br/><a class=\'btn btn-primary\' '
-            'data-toggle=\'modal\' data-target=\'#share-study-modal-view\' '
-            'onclick=\'modify_sharing(1);\'>Modify</a>',
-            '<a target="_blank" href="mailto:PI_dude@foo.bar">PIDude</a>',
-            '<a target="_blank" href="http://www.ncbi.nlm.nih.gov/pubmed/'
-            '123456">123456</a>, <a target="_blank" href="http://www.ncbi.nlm.'
-            'nih.gov/pubmed/7891011">7891011</a>', 'private']],
-        'sEcho': 1021, 'iTotalDisplayRecords': 1}
-
+        'iTotalRecords': 1, 'sEcho': 1021, 'iTotalDisplayRecords': 1,
+        'aaData': [{
+            'status': 'private',
+            'checkbox': "<input type='checkbox' value='1' />",
+            'title': '<a href=\'#\' data-toggle=\'modal\' data-target=\'#study'
+            '-abstract-modal\' onclick=\'fillAbstract("standard-studies-table"'
+            ', 0)\'><span class=\'glyphicon glyphicon-file\' aria-hidden=\''
+            'true\'></span></a> | <a href=\'/study/description/1\' id=\''
+            'study0-title\'>dummy title</a>',
+            'abstract': 'This is a preliminary study to examine the microbiota'
+            ' associated with the Cannabis plant. Soils samples from the bulk'
+            ' soil, soil associated with the roots, and the rhizosphere were '
+            'extracted and the DNA sequenced. Roots from three independent '
+            'plants of different strains were examined. These roots were '
+            'obtained November 11, 2011 from plants that had been harvested in'
+            ' the summer. Future studies will attempt to analyze the soils and'
+            ' rhizospheres from the same location at different time points in '
+            'the plant lifecycle.',
+            'pi': '<a target="_blank" href="mailto:PI_dude@foo.bar">PIDude'
+            '</a>',
+            'id': 1,
+            'num_samples': 27,
+            'owner': '<a target="_blank" href="mailto:test@foo.bar">test@foo.'
+            'bar</a>',
+            'shared': '<span id=\'shared_html_1\'><a target="_blank" href="'
+            'mailto:shared@foo.bar">Shared</a></span><br/><a class=\'btn '
+            'btn-primary\' data-toggle=\'modal\' data-target=\'#share-study-'
+            'modal-view\' onclick=\'modify_sharing(1);\'>Modify</a>',
+            'meta_complete': "<span class='glyphicon glyphicon-remove'>"
+            "</span>",
+            'pmid': '<a target="_blank" href="http://www.ncbi.nlm.nih.gov/'
+            'pubmed/123456">123456</a>, <a target="_blank" href="http://www.'
+            'ncbi.nlm.nih.gov/pubmed/7891011">7891011</a>',
+            'num_raw_data': 4}]}
     empty = {'aaData': [],
              'iTotalDisplayRecords': 0,
              'iTotalRecords': 0,

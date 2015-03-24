@@ -49,11 +49,11 @@ def _build_study_info(studytype,  user, results=None):
         studylist = user.user_studies | Study.get_by_status('public')
     elif studytype == "shared":
         studylist = user.shared_studies
-    if results:
+    if results is not None:
         studylist = studylist.intersection(results)
     if not studylist:
         # No studies lleft so no need to continue
-        return {}
+        return []
 
     # get info for the studies
     cols = ['study_id', 'status', 'email', 'principal_investigator_id',
@@ -79,14 +79,14 @@ def _build_study_info(studytype,  user, results=None):
         shared = _get_shared_links_for_study(study)
         meta_complete = "ok" if info["metadata_complete"] else "remove"
         # build the HTML elements needed for table cell
-        title = ("<a href='#'' data-toggle='modal' "
+        title = ("<a href='#' data-toggle='modal' "
                  "data-target='#study-abstract-modal' "
                  "onclick='fillAbstract(\"{0}-studies-table\", {1})'>"
-                 "<span class=\'glyphicon glyphicon-file\' "
-                 "aria-hidden=\'true\'></span></a> | "
-                 "<a href=\'/study/description/{2}\' "
-                 "id=\'study{1}-title\'>{3}</a>".format(
-                     studytype, str(row), str(study.id), info["study_title"])),
+                 "<span class='glyphicon glyphicon-file' "
+                 "aria-hidden='true'></span></a> | "
+                 "<a href='/study/description/{2}' "
+                 "id='study{1}-title'>{3}</a>").format(
+                     studytype, str(row), str(study.id), info["study_title"])
         meta_complete = "<span class='glyphicon glyphicon-%s'></span>" % \
             meta_complete
         shared = "Not Available" if info["status"] == 'public' else \
