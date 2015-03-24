@@ -208,7 +208,7 @@ class Study(QiitaStatusObject):
             JOIN qiita.study_status USING (study_status_id)
             JOIN qiita.timeseries_type  USING (timeseries_type_id)
             JOIN qiita.portal_type USING (portal_type_id)
-            LEFT JOIN (SELECT study_id, array_agg(pmid ORDER BY study_id) as
+            LEFT JOIN (SELECT study_id, array_agg(pmid ORDER BY pmid) as
             pmid FROM qiita.study_pmid GROUP BY study_id) sp USING (study_id)
             ) WHERE study_id in ({1})""".format(
             search_cols, ','.join(str(s) for s in study_ids))

@@ -1,6 +1,7 @@
 from unittest import main
-from collections import namedtuple
 from json import loads
+
+from future.utils import viewitems
 
 from qiita_pet.test.tornado_test_base import TestHandlerBase
 from qiita_db.study import StudyPerson, Study
@@ -13,16 +14,8 @@ from qiita_pet.handlers.study_handlers.listing_handlers import (
 class TestHelpers(TestHandlerBase):
     database = True
 
-    def test_get_shared_links_for_study(self):
-        obs = _get_shared_links_for_study(Study(1))
-        exp = '<a target="_blank" href="mailto:shared@foo.bar">Shared</a>'
-        self.assertEqual(obs, exp)
-
-    def test_build_study_info(self):
-        self.maxDiff = None
-        Study(1).status = 'public'
-        obs = _build_study_info('standard', User('test@foo.bar'))
-        exp = [{
+    def setUp(self):
+        self.exp = [{
             'status': 'public',
             'checkbox': "<input type='checkbox' value='1' />",
             'abstract': 'This is a preliminary study to examine the microbiota'
@@ -50,7 +43,18 @@ class TestHelpers(TestHandlerBase):
             'ncbi.nlm.nih.gov/pubmed/7891011">7891011</a>',
             'pi': '<a target="_blank" href="mailto:PI_dude@foo.bar">PIDude</a>'
         }]
+        super(TestHelpers, self).setUp()
+
+    def test_get_shared_links_for_study(self):
+        obs = _get_shared_links_for_study(Study(1))
+        exp = '<a target="_blank" href="mailto:shared@foo.bar">Shared</a>'
         self.assertEqual(obs, exp)
+
+    def test_build_study_info(self):
+        self.maxDiff = None
+        Study(1).status = 'public'
+        obs = _build_study_info('standard', User('test@foo.bar'))
+        self.assertEqual(obs, self.exp)
 
     def test_build_study_info_new_study(self):
         self.maxDiff = None
@@ -69,34 +73,7 @@ class TestHelpers(TestHandlerBase):
 
         Study.create(user, 'test_study_1', efo=[1], info=info)
         obs = _build_study_info('standard', user)
-        exp = [{
-            'status': 'public',
-            'checkbox': "<input type='checkbox' value='1' />",
-            'abstract': 'This is a preliminary study to examine the microbiota'
-            ' associated with the Cannabis plant. Soils samples from the bulk '
-            'soil, soil associated with the roots, and the rhizosphere were '
-            'extracted and the DNA sequenced. Roots from three independent '
-            'plants of different strains were examined. These roots were '
-            'obtained November 11, 2011 from plants that had been harvested in'
-            ' the summer. Future studies will attempt to analyze the soils and'
-            ' rhizospheres from the same location at different time points in'
-            ' the plant lifecycle.',
-            'owner': '<a target="_blank" href="mailto:test@foo.bar">test@foo.'
-            'bar</a>',
-            'meta_complete': "<span class='glyphicon glyphicon-ok'></span>",
-            'title': '<a href=\'#\' data-toggle=\'modal\' data-target=\''
-            '#study-abstract-modal\' onclick=\'fillAbstract("standard-studies-'
-            'table", 0)\'><span class=\'glyphicon glyphicon-file\' aria-hidden'
-            '=\'true\'></span></a> | <a href=\'/study/description/1\' id=\''
-            'study0-title\'>Identification of the Microbiomes for Cannabis '
-            'Soils</a>',
-            'num_raw_data': 4, 'id': 1, 'num_samples': 27,
-            'shared': 'Not Available',
-            'pmid': '<a target="_blank" href="http://www.ncbi.nlm.nih.gov/'
-            'pubmed/7891011">7891011</a>, <a target="_blank" href="http://www.'
-            'ncbi.nlm.nih.gov/pubmed/123456">123456</a>',
-            'pi': '<a target="_blank" href="mailto:PI_dude@foo.bar">PIDude</a>'
-        }, {
+        self.exp.append({
             'status': 'sandbox',
             'checkbox': "<input type='checkbox' value='2' />",
             'abstract': 'abstract',
@@ -114,8 +91,8 @@ class TestHelpers(TestHandlerBase):
             "btn-primary' data-toggle='modal' data-target='#share-study-modal-"
             "view' onclick='modify_sharing(2);'>Modify</a>",
             'pmid': '', 'pi':
-            '<a target="_blank" href="mailto:PI_dude@foo.bar">PIDude</a>'}]
-        self.assertItemsEqual(obs, exp)
+            '<a target="_blank" href="mailto:PI_dude@foo.bar">PIDude</a>'})
+        self.assertEqual(obs, self.exp)
 
 
 class TestStudyEditorForm(TestHandlerBase):
@@ -310,7 +287,8 @@ class TestSearchStudiesAJAX(TestHandlerBase):
             '-abstract-modal\' onclick=\'fillAbstract("standard-studies-table"'
             ', 0)\'><span class=\'glyphicon glyphicon-file\' aria-hidden=\''
             'true\'></span></a> | <a href=\'/study/description/1\' id=\''
-            'study0-title\'>dummy title</a>',
+            'study0-title\'>Identification of the Microbiomes for Cannabis '
+            'Soils</a>',
             'abstract': 'This is a preliminary study to examine the microbiota'
             ' associated with the Cannabis plant. Soils samples from the bulk'
             ' soil, soil associated with the roots, and the rhizosphere were '
@@ -330,7 +308,7 @@ class TestSearchStudiesAJAX(TestHandlerBase):
             'mailto:shared@foo.bar">Shared</a></span><br/><a class=\'btn '
             'btn-primary\' data-toggle=\'modal\' data-target=\'#share-study-'
             'modal-view\' onclick=\'modify_sharing(1);\'>Modify</a>',
-            'meta_complete': "<span class='glyphicon glyphicon-remove'>"
+            'meta_complete': "<span class='glyphicon glyphicon-ok'>"
             "</span>",
             'pmid': '<a target="_blank" href="http://www.ncbi.nlm.nih.gov/'
             'pubmed/123456">123456</a>, <a target="_blank" href="http://www.'
@@ -342,6 +320,7 @@ class TestSearchStudiesAJAX(TestHandlerBase):
              'sEcho': 1021}
 
     def test_get(self):
+        self.maxDiff = None
         response = self.get('/study/search/', {
             'type': 'standard',
             'user': 'test@foo.bar',
