@@ -956,6 +956,11 @@ class ProcessedDataTests(TestCase):
         with self.assertRaises(QiitaDBStatusError):
             pd.status = 'sandbox'
 
+    def test_status_setter_error_not_existant(self):
+        pd = ProcessedData(1)
+        with self.assertRaises(IncompetentQiitaDeveloperError):
+            pd.status = 'does-not-exist'
+
     def test_get_by_status(self):
         pds = ProcessedData.get_by_status('sandbox')
         self.assertEqual(pds, [])

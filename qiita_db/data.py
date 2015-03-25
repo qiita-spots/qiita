@@ -1335,9 +1335,10 @@ class ProcessedData(BaseData):
                 "Illegal operation on public processed data")
 
         conn_handler = SQLConnectionHandler()
-        sql = """UPDATE qiita.{0} SET processed_data_status_id = (
-                    SELECT processed_data_status_id
-                        FROM qiita.processed_data_status
-                        WHERE processed_data_status=%s)
+
+        status_id = convert_to_id(status, 'processed_data_status',
+                                  conn_handler=conn_handler)
+
+        sql = """UPDATE qiita.{0} SET processed_data_status_id = %s
                  WHERE processed_data_id=%s""".format(self._table)
-        conn_handler.execute(sql, (status, self._id))
+        conn_handler.execute(sql, (status_id, self._id))
