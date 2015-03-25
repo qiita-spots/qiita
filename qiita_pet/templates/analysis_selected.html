@@ -2,7 +2,7 @@
 {% block head %}
 <script type="text/javascript">
 $(document).on('click','.close_box',function(){
-    $(this).parent().remove();
+		if(confirm('Are you sure you want to remove all samples for this processed data?')) { $(this).parent().remove(); }
 });
 </script>
 {% end %}
