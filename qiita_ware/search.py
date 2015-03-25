@@ -1,6 +1,6 @@
 from collections import Counter, defaultdict
 
-from future.utils import viewvalues
+from future.utils import viewvalues, viewitems
 
 from qiita_db.study import Study
 from qiita_db.data import ProcessedData
@@ -64,17 +64,19 @@ def filter_by_processed_data(results, datatypes=None):
     study_proc_ids : dict of dicts of lists
         Processed data ids with samples for each study, in the format
         {study_id: {datatype: [proc_id, proc_id, ...], ...}, ...}
-    proc_data_samples : dict of lists of lists
+    proc_data_samples : dict of lists
         Samples available in each processed data id, in the format
-        {proc_data_id: [[samp_id1, meta1, meta2, ...],
-                        [samp_id2, meta1, meta2, ...], ...}
-    dtcount : count of all samples available for each datatype
+        {proc_data_id: [samp_id1, samp_id2, ...], ...}
+    samples_meta : dict of lists
+        sample metadata in same order as the metadata given by search
+        Format {samp_id: [meta1, meta2, ...], ...}
     """
     study_proc_ids = {}
     proc_data_samples = {}
-    dtcount = defaultdict(int)
-    for study_id in results:
+    samples_meta = {}
+    for study_id, study_samples in viewitems(results):
         study = Study(study_id)
+        samples_meta.update({s[0]: s[1:] for s in study_samples})
         study_proc_ids[study_id] = defaultdict(list)
         for proc_data_id in study.processed_data():
             proc_data = ProcessedData(proc_data_id)
@@ -82,16 +84,13 @@ def filter_by_processed_data(results, datatypes=None):
             # skip processed data if it doesn't fit the given datatypes
             if datatypes is not None and datatype not in datatypes:
                 continue
-            samps_available = set(proc_data.samples)
-            proc_data_samples[proc_data_id] = [s for s in results[study_id]
+            samps_available = proc_data.samples
+            proc_data_samples[proc_data_id] = [s[0] for s in study_samples
                                                if s[0] in samps_available]
-            # Add number of samples left to the total for that datatype
-            pidlen = len(proc_data_samples[proc_data_id])
-            dtcount[datatype] += pidlen
-            if pidlen == 0:
+            if len(proc_data_samples[proc_data_id]) == 0:
                 # all samples filtered so remove it as a result
                 del(proc_data_samples[proc_data_id])
             else:
                 # add the processed data to the list for the study
                 study_proc_ids[study_id][datatype].append(proc_data_id)
-    return study_proc_ids, proc_data_samples, dtcount
+    return study_proc_ids, proc_data_samples, samples_meta

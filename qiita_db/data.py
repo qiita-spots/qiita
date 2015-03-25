@@ -1173,3 +1173,24 @@ class ProcessedData(BaseData):
         return conn_handler.execute_fetchone(
             "SELECT processed_date FROM qiita.{0} WHERE "
             "processed_data_id=%s".format(self._table), (self.id,))[0]
+
+    @property
+    def samples(self):
+        """Return the samples available according to prep template
+
+        Returns
+        -------
+        set
+            all sample_ids available for the processed data
+        """
+        conn_handler = SQLConnectionHandler()
+        # Get the prep template id for teh dynamic table lookup
+        sql = """SELECT ptp.prep_template_id FROM
+            qiita.prep_template_preprocessed_data ptp JOIN
+            qiita.preprocessed_processed_data ppd USING (preprocessed_data_id)
+            WHERE ppd.processed_data_id = %s"""
+        prep_id = conn_handler.execute_fetchone(sql, [self._id])[0]
+
+        # Get samples from dynamic table
+        sql = "SELECT sample_id FROM qiita.prep_%d" % prep_id
+        return set(s[0] for s in conn_handler.execute_fetchall(sql))
