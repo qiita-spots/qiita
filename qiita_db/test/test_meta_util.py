@@ -16,11 +16,11 @@ from qiita_db.user import User
 
 @qiita_test_checker()
 class MetaUtilTests(TestCase):
-    def _set_studies_private(self):
+    def _set_processed_data_private(self):
         self.conn_handler.execute(
             "UPDATE qiita.processed_data SET processed_data_status_id=3")
 
-    def _set_studies_public(self):
+    def _set_processed_data_public(self):
         self.conn_handler.execute(
             "UPDATE qiita.processed_data SET processed_data_status_id=2")
 
@@ -31,7 +31,7 @@ class MetaUtilTests(TestCase):
         self.conn_handler.execute("DELETE FROM qiita.analysis_users")
 
     def test_get_accessible_filepath_ids(self):
-        self._set_studies_private()
+        self._set_processed_data_private()
 
         # shared has access to all study files and analysis files
 
@@ -50,7 +50,7 @@ class MetaUtilTests(TestCase):
         self.assertEqual(obs, set())
 
         # Now shared has access to public study files
-        self._set_studies_public()
+        self._set_processed_data_public()
         obs = get_accessible_filepath_ids(User('shared@foo.bar'))
         self.assertEqual(obs, set([1, 2, 5, 6, 7, 11, 16]))
 
