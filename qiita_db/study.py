@@ -103,7 +103,7 @@ from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from .base import QiitaObject
 from .exceptions import (QiitaDBStatusError, QiitaDBColumnError, QiitaDBError)
 from .util import (check_required_columns, check_table_cols, convert_to_id,
-                   get_environmental_packages)
+                   get_environmental_packages, infer_status)
 from .sql_connection import SQLConnectionHandler
 
 
@@ -163,21 +163,7 @@ class Study(QiitaObject):
                 WHERE spd.study_id = %s"""
         pd_statuses = conn_handler.execute_fetchall(sql, (self._id,))
 
-        if not pd_statuses:
-            # If there are no processed data, then the status is sandbox
-            study_status = 'sandbox'
-        else:
-            pd_statuses = set(s[0] for s in pd_statuses)
-            if 'public' in pd_statuses:
-                study_status = 'public'
-            elif 'private' in pd_statuses:
-                study_status = 'private'
-            elif 'awaiting_approval' in pd_statuses:
-                study_status = 'awaiting_approval'
-            else:
-                study_status = 'sandbox'
-
-        return study_status
+        return infer_status(pd_statuses)
 
     @classmethod
     def get_by_status(cls, status):

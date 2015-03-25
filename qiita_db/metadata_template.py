@@ -62,7 +62,7 @@ from .ontology import Ontology
 from .util import (exists_table, get_table_cols, get_emp_status,
                    get_required_sample_info_status, convert_to_id,
                    convert_from_id, get_mountpoint, insert_filepaths,
-                   scrub_data)
+                   scrub_data, infer_status)
 from .study import Study
 from .data import RawData
 from .logger import LogEntry
@@ -2234,21 +2234,7 @@ class PrepTemplate(MetadataTemplate):
                 WHERE pt_ppd.prep_template_id=%s"""
         pd_statuses = conn_handler.execute_fetchall(sql, (self._id,))
 
-        if not pd_statuses:
-            # If there are no processed data, then the status is sandbox
-            status = 'sandbox'
-        else:
-            pd_statuses = set(s[0] for s in pd_statuses)
-            if 'public' in pd_statuses:
-                status = 'public'
-            elif 'private' in pd_statuses:
-                status = 'private'
-            elif 'awaiting_approval' in pd_statuses:
-                status = 'awaiting_approval'
-            else:
-                status = 'sandbox'
-
-        return status
+        return infer_status(pd_statuses)
 
 
 def load_template_to_dataframe(fn, strip_whitespace=True):

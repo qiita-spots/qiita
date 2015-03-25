@@ -88,7 +88,8 @@ from .sql_connection import SQLConnectionHandler
 from .exceptions import QiitaDBError, QiitaDBUnknownIDError, QiitaDBStatusError
 from .util import (exists_dynamic_table, insert_filepaths, convert_to_id,
                    convert_from_id, purge_filepaths, get_filepath_id,
-                   get_mountpoint, move_filepaths_to_upload_folder)
+                   get_mountpoint, move_filepaths_to_upload_folder,
+                   infer_status)
 
 
 class BaseData(QiitaObject):
@@ -661,21 +662,7 @@ class RawData(BaseData):
                 WHERE pt.raw_data_id=%s AND srd.study_id=%s"""
         pd_statuses = conn_handler.execute_fetchall(sql, (self._id, study.id))
 
-        if not pd_statuses:
-            # If there are no processed data, then the status is sandbox
-            status = 'sandbox'
-        else:
-            pd_statuses = set(s[0] for s in pd_statuses)
-            if 'public' in pd_statuses:
-                status = 'public'
-            elif 'private' in pd_statuses:
-                status = 'private'
-            elif 'awaiting_approval' in pd_statuses:
-                status = 'awaiting_approval'
-            else:
-                status = 'sandbox'
-
-        return status
+        return infer_status(pd_statuses)
 
 
 class PreprocessedData(BaseData):
@@ -1083,21 +1070,7 @@ class PreprocessedData(BaseData):
                 WHERE ppd_pd.preprocessed_data_id=%s"""
         pd_statuses = conn_handler.execute_fetchall(sql, (self._id,))
 
-        if not pd_statuses:
-            # If there are no processed data, then the status is sandbox
-            status = 'sandbox'
-        else:
-            pd_statuses = set(s[0] for s in pd_statuses)
-            if 'public' in pd_statuses:
-                status = 'public'
-            elif 'private' in pd_statuses:
-                status = 'private'
-            elif 'awaiting_approval' in pd_statuses:
-                status = 'awaiting_approval'
-            else:
-                status = 'sandbox'
-
-        return status
+        return infer_status(pd_statuses)
 
 
 class ProcessedData(BaseData):
