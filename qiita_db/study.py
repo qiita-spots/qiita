@@ -157,9 +157,9 @@ class Study(QiitaObject):
         sql = """SELECT processed_data_status
                 FROM qiita.processed_data_status pds
                   JOIN qiita.processed_data pd
-                    ON pds.processed_data_status_id=pd.processed_data_status_id
+                    USING (processed_data_status_id)
                   JOIN qiita.study_processed_data spd
-                    ON spd.processed_data_id=pd.processed_data_id
+                    USING (processed_data_id)
                 WHERE spd.study_id = %s"""
         pd_statuses = conn_handler.execute_fetchall(sql, (self._id,))
 

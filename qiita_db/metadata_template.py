@@ -2226,11 +2226,11 @@ class PrepTemplate(MetadataTemplate):
         sql = """SELECT processed_data_status
                 FROM qiita.processed_data_status pds
                   JOIN qiita.processed_data pd
-                    ON pds.processed_data_status_id=pd.processed_data_status_id
+                    USING (processed_data_status_id)
                   JOIN qiita.preprocessed_processed_data ppd_pd
-                    ON ppd_pd.processed_data_id=pd.processed_data_id
+                    USING (processed_data_id)
                   JOIN qiita.prep_template_preprocessed_data pt_ppd
-                    ON pt_ppd.preprocessed_data_id=ppd_pd.preprocessed_data_id
+                    USING (preprocessed_data_id)
                 WHERE pt_ppd.prep_template_id=%s"""
         pd_statuses = conn_handler.execute_fetchall(sql, (self._id,))
 

@@ -649,15 +649,15 @@ class RawData(BaseData):
         sql = """SELECT processed_data_status
                 FROM qiita.processed_data_status pds
                   JOIN qiita.processed_data pd
-                    ON pds.processed_data_status_id=pd.processed_data_status_id
+                    USING (processed_data_status_id)
                   JOIN qiita.preprocessed_processed_data ppd_pd
-                    ON ppd_pd.processed_data_id=pd.processed_data_id
+                    USING (processed_data_id)
                   JOIN qiita.prep_template_preprocessed_data pt_ppd
-                    ON pt_ppd.preprocessed_data_id=ppd_pd.preprocessed_data_id
+                    USING (preprocessed_data_id)
                   JOIN qiita.prep_template pt
-                    ON pt.prep_template_id=pt_ppd.prep_template_id
+                    USING (prep_template_id)
                   JOIN qiita.study_raw_data srd
-                    ON srd.raw_data_id=pt.raw_data_id
+                    USING (raw_data_id)
                 WHERE pt.raw_data_id=%s AND srd.study_id=%s"""
         pd_statuses = conn_handler.execute_fetchall(sql, (self._id, study.id))
 
@@ -1077,9 +1077,9 @@ class PreprocessedData(BaseData):
         sql = """SELECT processed_data_status
                 FROM qiita.processed_data_status pds
                   JOIN qiita.processed_data pd
-                    ON pds.processed_data_status_id=pd.processed_data_status_id
+                    USING (processed_data_status_id)
                   JOIN qiita.preprocessed_processed_data ppd_pd
-                    ON ppd_pd.processed_data_id=pd.processed_data_id
+                    USING (processed_data_id)
                 WHERE ppd_pd.preprocessed_data_id=%s"""
         pd_statuses = conn_handler.execute_fetchall(sql, (self._id,))
 
@@ -1141,7 +1141,7 @@ class ProcessedData(BaseData):
         conn_handler = SQLConnectionHandler()
         sql = """SELECT processed_data_id FROM qiita.processed_data pd
                 JOIN qiita.processed_data_status pds
-                    ON pds.processed_data_status_id=pd.processed_data_status_id
+                    USING (processed_data_status_id)
                 WHERE pds.processed_data_status=%s"""
         result = conn_handler.execute_fetchall(sql, (status,))
         if result:
@@ -1172,9 +1172,9 @@ class ProcessedData(BaseData):
             array_agg(pd.processed_data_id ORDER BY pd.processed_data_id)
             FROM qiita.processed_data pd
                 JOIN qiita.processed_data_status pds
-                    ON pd.processed_data_status_id=pds.processed_data_status_id
+                    USING (processed_data_status_id)
                 JOIN qiita.study_processed_data spd
-                    ON spd.processed_data_id=pd.processed_data_id
+                    USING (processed_data_id)
             WHERE pds.processed_data_status = %s
             GROUP BY spd.study_id;"""
         return dict(conn_handler.execute_fetchall(sql, (status,)))
@@ -1339,7 +1339,7 @@ class ProcessedData(BaseData):
         sql = """SELECT pds.processed_data_status
                 FROM qiita.processed_data_status pds
                   JOIN qiita.processed_data pd
-                    ON pd.processed_data_status_id=pds.processed_data_status_id
+                    USING (processed_data_status_id)
                 WHERE pd.processed_data_id=%s"""
         return conn_handler.execute_fetchone(sql, (self._id,))[0]
 
