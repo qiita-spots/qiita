@@ -49,13 +49,11 @@ class TestHelpers(TestHandlerBase):
         self.assertEqual(obs, exp)
 
     def test_build_study_info(self):
-        self.maxDiff = None
         Study(1).status = 'public'
         obs = _build_study_info('standard', User('test@foo.bar'))
         self.assertEqual(obs, self.exp)
 
     def test_build_study_info_new_study(self):
-        self.maxDiff = None
         Study(1).status = 'public'
         info = {
             'timeseries_type_id': 1,
@@ -318,7 +316,6 @@ class TestSearchStudiesAJAX(TestHandlerBase):
              'sEcho': 1021}
 
     def test_get(self):
-        self.maxDiff = None
         response = self.get('/study/search/', {
             'type': 'standard',
             'user': 'test@foo.bar',

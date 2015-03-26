@@ -99,6 +99,7 @@ from __future__ import division
 from future.utils import viewitems
 from copy import deepcopy
 from itertools import chain
+import warnings
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from .base import QiitaStatusObject, QiitaObject
@@ -200,6 +201,9 @@ class Study(QiitaStatusObject):
         """
         if info_cols is None:
             info_cols = cls._info_cols
+        elif not cls._info_cols.issuperset(info_cols):
+            warnings.warn("Non-info columns passed: %s" % ", ".join(
+                set(info_cols) - cls._info_cols))
 
         search_cols = ",".join(sorted(cls._info_cols.intersection(info_cols)))
 

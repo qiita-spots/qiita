@@ -39,7 +39,7 @@ def _get_shared_links_for_study(study):
     return ", ".join(shared)
 
 
-def _build_study_info(studytype,  user, results=None):
+def _build_study_info(studytype, user, results=None):
     """builds list of namedtuples for study listings"""
     if studytype not in {"standard", "shared"}:
         raise IncompetentQiitaDeveloperError("Must use private, shared, "
@@ -52,7 +52,7 @@ def _build_study_info(studytype,  user, results=None):
     if results is not None:
         studylist = studylist.intersection(results)
     if not studylist:
-        # No studies lleft so no need to continue
+        # No studies left so no need to continue
         return []
 
     # get info for the studies

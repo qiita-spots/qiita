@@ -180,45 +180,52 @@ class TestStudy(TestCase):
     def test_get_info(self):
         obs = Study.get_info([1])
         self.assertEqual(len(obs), 1)
-        exp_keys = ['mixs_compliant', 'metadata_complete', 'reprocess',
-                    'timeseries_type', 'portal_description', 'emp_person_id',
-                    'number_samples_promised', 'funding', 'vamps_id',
-                    'first_contact', 'principal_investigator_id',
-                    'study_status_id', 'timeseries_type_id', 'study_abstract',
-                    'pmid', 'study_alias', 'status', 'spatial_series',
-                    'study_description', 'portal', 'status_description',
-                    'portal_type_id', 'intervention_type', 'email', 'study_id',
-                    'most_recent_contact', 'lab_person_id', 'study_title',
-                    'number_samples_collected']
-        exp_vals = [
-            ['123456', '7891011'], 'test@foo.bar', 2,
-            datetime(2014, 5, 19, 16, 10), None, 'None', 1, True, True,
-            datetime(2014, 5, 19, 16, 11), 27, 27, 'EMP', 'EMP portal', 2, 3,
-            False, False, 'private',
-            'Only owner and shared users can see this study',
-            'This is a preliminary study to examine the microbiota associated '
-            'with the Cannabis plant. Soils samples from the bulk soil, soil '
-            'associated with the roots, and the rhizosphere were extracted and'
-            ' the DNA sequenced. Roots from three independent plants of '
-            'different strains were examined. These roots were obtained '
-            'November 11, 2011 from plants that had been harvested in the '
-            'summer. Future studies will attempt to analyze the soils and '
-            'rhizospheres from the same location at different time points in '
-            'the plant lifecycle.', 'Cannabis Soils', 'Analysis of the '
-            'Cannabis Plant Microbiome', 1, 3, 'Identification of the '
-            'Microbiomes for Cannabis Soils', 'None', 1, None]
-        self.assertItemsEqual(obs[0].keys(), exp_keys)
-        self.assertItemsEqual(obs[0], exp_vals)
+        obs = dict(obs[0])
+        exp = {
+            'mixs_compliant': True, 'metadata_complete': True,
+            'reprocess': False, 'timeseries_type': 'None',
+            'portal_description': 'EMP portal', 'study_status_id': 3,
+            'number_samples_promised': 27, 'emp_person_id': 2,
+            'funding': None, 'vamps_id': None,
+            'first_contact': datetime(2014, 5, 19, 16, 10),
+            'principal_investigator_id': 3, 'timeseries_type_id': 1,
+            'pmid': ['123456', '7891011'], 'study_alias': 'Cannabis Soils',
+            'status': 'private', 'spatial_series': False,
+            'study_abstract': 'This is a preliminary study to examine the '
+            'microbiota associated with the Cannabis plant. Soils samples from'
+            ' the bulk soil, soil associated with the roots, and the '
+            'rhizosphere were extracted and the DNA sequenced. Roots from '
+            'three independent plants of different strains were examined. '
+            'These roots were obtained November 11, 2011 from plants that had '
+            'been harvested in the summer. Future studies will attempt to '
+            'analyze the soils and rhizospheres from the same location at '
+            'different time points in the plant lifecycle.',
+            'study_description': 'Analysis of the Cannabis Plant Microbiome',
+            'portal': 'EMP',
+            'status_description': 'Only owner and shared users can see this'
+            ' study',
+            'portal_type_id': 2,
+            'intervention_type': 'None', 'email': 'test@foo.bar',
+            'study_id': 1,
+            'most_recent_contact': datetime(2014, 5, 19, 16, 11),
+            'lab_person_id': 1,
+            'study_title': 'Identification of the Microbiomes for Cannabis '
+            'Soils', 'number_samples_collected': 27}
+        self.assertItemsEqual(obs, exp)
 
         exp_keys = ['metadata_complete', 'reprocess', 'timeseries_type',
                     'portal_description', 'pmid', 'study_title']
         obs = Study.get_info([1], exp_keys)
         self.assertEqual(len(obs), 1)
-        exp_vals = [
-            True, 'EMP portal', False, 'Identification of the Microbiomes for '
-            'Cannabis Soils', 'None', ['123456', '7891011']]
-        self.assertItemsEqual(obs[0].keys(), exp_keys)
-        self.assertItemsEqual(obs[0], exp_vals)
+        obs = dict(obs[0])
+        exp = {
+            'metadata_complete': True, 'reprocess': False,
+            'timeseries_type': 'None',
+            'portal_description': 'EMP portal',
+            'pmid': ['123456', '7891011'],
+            'study_title': 'Identification of the Microbiomes for Cannabis '
+            'Soils'}
+        self.assertItemsEqual(obs, exp)
 
     def test_has_access_public(self):
         self.study.status = 'public'
