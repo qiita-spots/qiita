@@ -1,5 +1,4 @@
 from collections import Counter, defaultdict
-from itertools import izip
 
 from future.utils import viewvalues, viewitems
 
