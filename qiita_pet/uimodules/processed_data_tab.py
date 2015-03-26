@@ -8,14 +8,14 @@
 
 from qiita_core.qiita_settings import qiita_config
 from qiita_db.data import ProcessedData
-from qiita_pet.util import status_styler
+from qiita_pet.util import STATUS_STYLER
 from .base_uimodule import BaseUIModule
 
 
 class ProcessedDataTab(BaseUIModule):
     def render(self, study, full_access):
         pd_gen = (ProcessedData(pd_id) for pd_id in study.processed_data())
-        avail_pd = [(pd.id, pd, status_styler[pd.status]) for pd in pd_gen
+        avail_pd = [(pd.id, pd, STATUS_STYLER[pd.status]) for pd in pd_gen
                     if full_access or pd.status == 'public']
 
         return self.render_string(

@@ -19,7 +19,7 @@ from qiita_db.ontology import Ontology
 from qiita_db.metadata_template import PrepTemplate
 from qiita_db.parameters import (Preprocessed454Params,
                                  PreprocessedIlluminaParams)
-from qiita_pet.util import status_styler
+from qiita_pet.util import STATUS_STYLER
 from .base_uimodule import BaseUIModule
 
 
@@ -50,7 +50,7 @@ class RawDataTab(BaseUIModule):
             get_raw_data_from_other_studies(user, study)))
 
         raw_data_info = [
-            (rd.id, rd.filetype, rd, status_styler[rd.status(study)])
+            (rd.id, rd.filetype, rd, STATUS_STYLER[rd.status(study)])
             for rd in get_raw_data(study.raw_data())
             if full_access or rd.status(study) == 'public']
 
@@ -171,7 +171,7 @@ class PrepTemplatePanel(BaseUIModule):
         is_local_request = self._is_local()
 
         prep_id = prep.id
-        status_class, status_color = status_styler[prep.status]
+        status_class, status_color = STATUS_STYLER[prep.status]
         data_type = prep.data_type()
         raw_data = RawData(prep.raw_data)
         filepaths = prep.get_filepaths()

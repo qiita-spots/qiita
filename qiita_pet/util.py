@@ -26,7 +26,7 @@ from future.utils import viewitems
 from qiita_db.reference import Reference
 
 
-status_styler = {
+STATUS_STYLER = {
     'sandbox': ('glyphicon glyphicon-eye-close', 'gray'),
     'awaiting_approval': ('glyphicon glyphicon-eye-open', 'peru'),
     'private': ('glyphicon glyphicon-eye-open', 'gray'),

@@ -631,15 +631,17 @@ class RawData(BaseData):
 
         Raises
         ------
+        QiitaDBStatusError
+            If the raw data does not belong to the passed study
 
         Notes
         -----
-        The status of the raw data is inferred by the status of the processed
-        data generated from this raw data. Since the raw data can be shared by
-        multiple studies; the raw data can have multiple status, so the status
-        is defined by the view from a study. If not processed data was
-        generated on the given study from this raw data; then the status is
-        'sandbox'.
+        Given that a raw data can be shared by multiple studies, we need to
+        know under which context (study) we want to check the raw data status.
+        The rationale is that a raw data object can contain data from multiple
+        studies, so the raw data can have multiple status at the same time.
+        We then check the processed data generated to infer the status of the
+        raw data.
         """
         if self._id not in study.raw_data():
             raise QiitaDBStatusError(
@@ -657,9 +659,11 @@ class RawData(BaseData):
                     USING (preprocessed_data_id)
                   JOIN qiita.prep_template pt
                     USING (prep_template_id)
-                  JOIN qiita.study_raw_data srd
+                  JOIN qiita.raw_data rd
                     USING (raw_data_id)
-                WHERE pt.raw_data_id=%s AND srd.study_id=%s"""
+                  JOIN qiita.study_processed_data spd
+                    USING (processed_data_id)
+                WHERE pt.raw_data_id=%s AND spd.study_id=%s"""
         pd_statuses = conn_handler.execute_fetchall(sql, (self._id, study.id))
 
         return infer_status(pd_statuses)
@@ -1109,7 +1113,7 @@ class ProcessedData(BaseData):
         Returns
         -------
         list of int
-            All the processed data id that match the given status
+            All the processed data ids that match the given status
         """
         conn_handler = SQLConnectionHandler()
         sql = """SELECT processed_data_id FROM qiita.processed_data pd
@@ -1118,9 +1122,9 @@ class ProcessedData(BaseData):
                 WHERE pds.processed_data_status=%s"""
         result = conn_handler.execute_fetchall(sql, (status,))
         if result:
-            pds = [x[0] for x in result]
+            pds = set(x[0] for x in result)
         else:
-            pds = []
+            pds = set()
 
         return pds
 

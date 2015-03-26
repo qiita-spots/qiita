@@ -963,19 +963,19 @@ class ProcessedDataTests(TestCase):
 
     def test_get_by_status(self):
         pds = ProcessedData.get_by_status('sandbox')
-        self.assertEqual(pds, [])
+        self.assertEqual(pds, set())
 
         pds = ProcessedData.get_by_status('private')
-        self.assertEqual(pds, [1])
+        self.assertEqual(pds, set([1]))
 
         ProcessedData.create(self.params_table, self.params_id,
                              self.filepaths,
                              preprocessed_data=self.preprocessed_data)
         pds = ProcessedData.get_by_status('sandbox')
-        self.assertEqual(pds, [2])
+        self.assertEqual(pds, set([2]))
 
         pds = ProcessedData.get_by_status('private')
-        self.assertEqual(pds, [1])
+        self.assertEqual(pds, set([1]))
 
     def test_get_by_status_grouped_by_study(self):
         obs = ProcessedData.get_by_status_grouped_by_study('sandbox')

@@ -12,14 +12,14 @@ from qiita_db.ontology import Ontology
 from qiita_db.util import convert_to_id
 from qiita_db.parameters import ProcessedSortmernaParams
 from .base_uimodule import BaseUIModule
-from qiita_pet.util import generate_param_str, status_styler
+from qiita_pet.util import generate_param_str, STATUS_STYLER
 
 
 class PreprocessedDataTab(BaseUIModule):
     def render(self, study, full_access):
         ppd_gen = (PreprocessedData(ppd_id)
                    for ppd_id in study.preprocessed_data())
-        avail_ppd = [(ppd.id, ppd, status_styler[ppd.status])
+        avail_ppd = [(ppd.id, ppd, STATUS_STYLER[ppd.status])
                      for ppd in ppd_gen
                      if full_access or ppd.status == 'public']
         return self.render_string(
