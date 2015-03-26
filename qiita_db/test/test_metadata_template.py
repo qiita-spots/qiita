@@ -15,6 +15,7 @@ from time import strftime
 from os import close, remove
 from os.path import join, basename
 from collections import Iterable
+import warnings
 
 import numpy.testing as npt
 import pandas as pd
@@ -1217,11 +1218,25 @@ class TestSampleTemplate(TestCase):
         obs = st.get('2.Sample3').values()
         self.assertItemsEqual(obs, exp)
 
+        # add columns to the sample template
+        self.metadata_dict_updated_dict['Sample1']['newcol'] = 1
+        self.metadata_dict_updated_dict['Sample2']['newcol'] = 2
+        self.metadata_dict_updated_dict['Sample3']['newcol'] = 3
+        meta_newcol = pd.DataFrame.from_dict(self.metadata_dict_updated_dict,
+                                             orient='index')
+        with warnings.catch_warnings(record=True) as w:
+            st.update(meta_newcol)
+            self.assertIn('newcol', st.categories())
+            self.assertEqual(len(w), 1)
+            self.assertEqual(str(w[0].message),
+                             'Added the following metadata columns: newcol')
+            obs = self.conn_handler.execute_fetchall(
+                "SELECT newcol FROM qiita.sample_2")
+            self.assertEqual(obs, [[3], [2], [1]])
+
         # checking errors
         with self.assertRaises(QiitaDBError):
             st.update(self.metadata_dict_updated_sample_error)
-        with self.assertRaises(QiitaDBError):
-            st.update(self.metadata_dict_updated_column_error)
 
     def test_to_dataframe(self):
         obs = self.tester.to_dataframe()
