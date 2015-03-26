@@ -27,10 +27,15 @@ from qiita_db.reference import Reference
 
 
 STATUS_STYLER = {
-    'sandbox': ('glyphicon glyphicon-eye-close', 'gray'),
-    'awaiting_approval': ('glyphicon glyphicon-eye-open', 'peru'),
-    'private': ('glyphicon glyphicon-eye-open', 'gray'),
-    'public': ('glyphicon glyphicon-eye-open', 'green')}
+    'sandbox':
+        ('glyphicon glyphicon-eye-close', 'glyphicon glyphicon-lock', 'gray'),
+    'awaiting_approval':
+        ('glyphicon glyphicon-eye-open', 'glyphicon glyphicon-lock', 'peru'),
+    'private':
+        ('glyphicon glyphicon-eye-open', 'glyphicon glyphicon-lock',
+         '#3599FD'),
+    'public':
+        ('glyphicon glyphicon-eye-open', 'glyphicon glyphicon-globe', 'green')}
 
 
 def linkify(link_template, item):
