@@ -188,7 +188,7 @@ class Study(QiitaStatusObject):
 
         Parameters
         ----------
-        study_cols : list of ints
+        study_ids : list of ints
             Studies to get information for.
         info_cols: list of str, optional
             Information columns to retrieve. Defaults to all study data

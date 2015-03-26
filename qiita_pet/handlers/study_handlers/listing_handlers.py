@@ -17,6 +17,7 @@ from qiita_db.user import User
 from qiita_db.study import Study, StudyPerson
 from qiita_db.search import QiitaStudySearch
 from qiita_db.metadata_template import SampleTemplate
+from qiita_db.logger import LogEntry
 from qiita_db.exceptions import QiitaDBIncompatibleDatatypeError
 from qiita_db.util import get_table_cols
 from qiita_pet.handlers.base_handlers import BaseHandler
@@ -42,11 +43,10 @@ def _get_shared_links_for_study(study):
 def _build_study_info(studytype, user, results=None):
     """builds list of namedtuples for study listings"""
     if studytype not in {"standard", "shared"}:
-        raise IncompetentQiitaDeveloperError("Must use private, shared, "
-                                             "or public!")
+        raise IncompetentQiitaDeveloperError("Must use standard or shared!")
     # get list of studies for table
     if studytype == "standard":
-        studylist = user.user_studies | Study.get_by_status('public')
+        studylist = user.user_studies.union(Study.get_by_status('public'))
     elif studytype == "shared":
         studylist = user.shared_studies
     if results is not None:
@@ -74,10 +74,10 @@ def _build_study_info(studytype, user, results=None):
                                for p in info['pmid']])
         else:
             pmids = ""
-        if info["number_samples_collected"] is None:
-            info["number_samples_collected"] = "None"
+        if info["number_samples_collected"] is '':
+            info["number_samples_collected"] = "0"
         shared = _get_shared_links_for_study(study)
-        meta_complete = "ok" if info["metadata_complete"] else "remove"
+        meta_complete_glyph = "ok" if info["metadata_complete"] else "remove"
         # build the HTML elements needed for table cell
         title = ("<a href='#' data-toggle='modal' "
                  "data-target='#study-abstract-modal' "
@@ -88,13 +88,15 @@ def _build_study_info(studytype, user, results=None):
                  "id='study{1}-title'>{3}</a>").format(
                      studytype, str(row), str(study.id), info["study_title"])
         meta_complete = "<span class='glyphicon glyphicon-%s'></span>" % \
-            meta_complete
-        shared = "Not Available" if info["status"] == 'public' else \
-            ("<span id='shared_html_{0}'>{1}</span><br/>"
-             "<a class='btn btn-primary' data-toggle='modal' "
-             "data-target='#share-study-modal-view' "
-             "onclick='modify_sharing({0});'>Modify</a>".format(
-                 study.id, shared))
+            meta_complete_glyph
+        if info["status"] == 'public':
+            shared = "Not Available"
+        else:
+            shared = ("<span id='shared_html_{0}'>{1}</span><br/>"
+                      "<a class='btn btn-primary' data-toggle='modal' "
+                      "data-target='#share-study-modal-view' "
+                      "onclick='modify_sharing({0});'>Modify</a>".format(
+                          study.id, shared))
 
         infolist.append({
             "checkbox": "<input type='checkbox' value='%d' />" % study.id,
@@ -201,8 +203,10 @@ class SearchStudiesAJAX(BaseHandler):
         query = self.get_argument('query')
         echo = int(self.get_argument('sEcho'))
 
+        if user != self.current_user:
+            raise HTTPError(403, 'Unauthorized search!')
         res = None
-        if query != "":
+        if query:
             # Search for samples matching the query
             search = QiitaStudySearch()
             try:
@@ -219,20 +223,20 @@ class SearchStudiesAJAX(BaseHandler):
                 searchmsg = ''.join(e)
                 self.write(searchmsg)
                 return
-            except:
+            except Exception as e:
                 # catch any other error as generic server error
                 self.clear()
                 self.set_status(500)
                 self.write("Server error during search. Please try again "
                            "later")
+                LogEntry.create('Runtime', str(e),
+                                info={'User': self.current_user.id,
+                                      'query': query})
                 return
             if not res:
                 res = {}
-            info = _build_study_info(search_type, self.current_user,
-                                     results=res)
-        else:
-            # show everything
-            info = _build_study_info(search_type, self.current_user)
+        info = _build_study_info(search_type, self.current_user,
+                                 results=res)
         # build the table json
         results = {
             "sEcho": echo,

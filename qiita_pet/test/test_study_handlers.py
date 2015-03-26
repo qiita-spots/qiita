@@ -17,28 +17,30 @@ class TestHelpers(TestHandlerBase):
             'status': 'public',
             'checkbox': "<input type='checkbox' value='1' />",
             'abstract': 'This is a preliminary study to examine the microbiota'
-            ' associated with the Cannabis plant. Soils samples from the bulk '
-            'soil, soil associated with the roots, and the rhizosphere were '
-            'extracted and the DNA sequenced. Roots from three independent '
-            'plants of different strains were examined. These roots were '
-            'obtained November 11, 2011 from plants that had been harvested in'
-            ' the summer. Future studies will attempt to analyze the soils and'
-            ' rhizospheres from the same location at different time points in'
-            ' the plant lifecycle.',
+                        ' associated with the Cannabis plant. Soils samples '
+                        'from the bulk soil, soil associated with the roots, '
+                        'and the rhizosphere were extracted and the DNA '
+                        'sequenced. Roots from three independent plants of '
+                        'different strains were examined. These roots were '
+                        'obtained November 11, 2011 from plants that had been '
+                        'harvested in the summer. Future studies will attempt '
+                        'to analyze the soils and rhizospheres from the same '
+                        'location at different time points in the plant '
+                        'lifecycle.',
             'owner': '<a target="_blank" href="mailto:test@foo.bar">test@foo.'
-            'bar</a>',
+                     'bar</a>',
             'meta_complete': "<span class='glyphicon glyphicon-ok'></span>",
             'title': '<a href=\'#\' data-toggle=\'modal\' data-target=\''
-            '#study-abstract-modal\' onclick=\'fillAbstract("standard-studies-'
-            'table", 0)\'><span class=\'glyphicon glyphicon-file\' aria-hidden'
-            '=\'true\'></span></a> | <a href=\'/study/description/1\' id=\''
-            'study0-title\'>Identification of the Microbiomes for Cannabis '
-            'Soils</a>',
+                     '#study-abstract-modal\' onclick=\'fillAbstract("standard'
+                     '-studies-table", 0)\'><span class=\'glyphicon glyphicon'
+                     '-file\' aria-hidden=\'true\'></span></a> | <a href=\'/'
+                     'study/description/1\' id=\'study0-title\'>Identification'
+                     ' of the Microbiomes for Cannabis Soils</a>',
             'num_raw_data': 4, 'id': 1, 'num_samples': 27,
             'shared': 'Not Available',
             'pmid': '<a target="_blank" href="http://www.ncbi.nlm.nih.gov/'
-            'pubmed/123456">123456</a>, <a target="_blank" href="http://www.'
-            'ncbi.nlm.nih.gov/pubmed/7891011">7891011</a>',
+                    'pubmed/123456">123456</a>, <a target="_blank" href="http:'
+                    '//www.ncbi.nlm.nih.gov/pubmed/7891011">7891011</a>',
             'pi': '<a target="_blank" href="mailto:PI_dude@foo.bar">PIDude</a>'
         }]
         super(TestHelpers, self).setUp()
