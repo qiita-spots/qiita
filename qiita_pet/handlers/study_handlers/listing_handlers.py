@@ -112,7 +112,7 @@ def _build_study_info(studytype, user, results=None):
             "pi": PI,
             "pmid": pmids,
             "owner": owner,
-            "status": info["status"],
+            "status": study.status,
             "abstract": info["study_abstract"]
 
         })

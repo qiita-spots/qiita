@@ -186,13 +186,13 @@ class TestStudy(TestCase):
         exp = {
             'mixs_compliant': True, 'metadata_complete': True,
             'reprocess': False, 'timeseries_type': 'None',
-            'portal_description': 'EMP portal', 'study_status_id': 3,
+            'portal_description': 'EMP portal',
             'number_samples_promised': 27, 'emp_person_id': 2,
             'funding': None, 'vamps_id': None,
             'first_contact': datetime(2014, 5, 19, 16, 10),
             'principal_investigator_id': 3, 'timeseries_type_id': 1,
             'pmid': ['123456', '7891011'], 'study_alias': 'Cannabis Soils',
-            'status': 'private', 'spatial_series': False,
+            'spatial_series': False,
             'study_abstract': 'This is a preliminary study to examine the '
             'microbiota associated with the Cannabis plant. Soils samples from'
             ' the bulk soil, soil associated with the roots, and the '
@@ -204,8 +204,6 @@ class TestStudy(TestCase):
             'different time points in the plant lifecycle.',
             'study_description': 'Analysis of the Cannabis Plant Microbiome',
             'portal': 'EMP',
-            'status_description': 'Only owner and shared users can see this'
-            ' study',
             'portal_type_id': 2,
             'intervention_type': 'None', 'email': 'test@foo.bar',
             'study_id': 1,

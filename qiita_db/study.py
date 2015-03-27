@@ -232,7 +232,6 @@ class Study(QiitaObject):
 
         sql = """SELECT {0} FROM (
             qiita.study
-            JOIN qiita.study_status USING (study_status_id)
             JOIN qiita.timeseries_type  USING (timeseries_type_id)
             JOIN qiita.portal_type USING (portal_type_id)
             LEFT JOIN (SELECT study_id, array_agg(pmid ORDER BY pmid) as
