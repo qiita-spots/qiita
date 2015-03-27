@@ -16,8 +16,13 @@ from qiita_db.user import User
 
 @qiita_test_checker()
 class MetaUtilTests(TestCase):
-    def _set_studies_private(self):
-        self.conn_handler.execute("UPDATE qiita.study SET study_status_id=3")
+    def _set_processed_data_private(self):
+        self.conn_handler.execute(
+            "UPDATE qiita.processed_data SET processed_data_status_id=3")
+
+    def _set_processed_data_public(self):
+        self.conn_handler.execute(
+            "UPDATE qiita.processed_data SET processed_data_status_id=2")
 
     def _unshare_studies(self):
         self.conn_handler.execute("DELETE FROM qiita.study_users")
@@ -26,7 +31,7 @@ class MetaUtilTests(TestCase):
         self.conn_handler.execute("DELETE FROM qiita.analysis_users")
 
     def test_get_accessible_filepath_ids(self):
-        self._set_studies_private()
+        self._set_processed_data_private()
 
         # shared has access to all study files and analysis files
 
@@ -43,6 +48,11 @@ class MetaUtilTests(TestCase):
         self._unshare_analyses()
         obs = get_accessible_filepath_ids(User('shared@foo.bar'))
         self.assertEqual(obs, set())
+
+        # Now shared has access to public study files
+        self._set_processed_data_public()
+        obs = get_accessible_filepath_ids(User('shared@foo.bar'))
+        self.assertEqual(obs, set([1, 2, 5, 6, 7, 11, 16]))
 
         # Test that it doesn't break: if the SampleTemplate hasn't been added
         exp = set([1, 2, 5, 6, 7, 11, 12, 13, 14, 15, 16, 17, 18])

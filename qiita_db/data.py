@@ -85,10 +85,11 @@ from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from .base import QiitaObject
 from .logger import LogEntry
 from .sql_connection import SQLConnectionHandler
-from .exceptions import QiitaDBError, QiitaDBUnknownIDError
+from .exceptions import QiitaDBError, QiitaDBUnknownIDError, QiitaDBStatusError
 from .util import (exists_dynamic_table, insert_filepaths, convert_to_id,
                    convert_from_id, purge_filepaths, get_filepath_id,
-                   get_mountpoint, move_filepaths_to_upload_folder)
+                   get_mountpoint, move_filepaths_to_upload_folder,
+                   infer_status)
 
 
 class BaseData(QiitaObject):
@@ -615,6 +616,58 @@ class RawData(BaseData):
         # Delete the files, if they are not used anywhere
         purge_filepaths(conn_handler)
 
+    def status(self, study):
+        """The status of the raw data within the given study
+
+        Parameters
+        ----------
+        study : Study
+            The study that is looking to the raw data status
+
+        Returns
+        -------
+        str
+            The status of the raw data
+
+        Raises
+        ------
+        QiitaDBStatusError
+            If the raw data does not belong to the passed study
+
+        Notes
+        -----
+        Given that a raw data can be shared by multiple studies, we need to
+        know under which context (study) we want to check the raw data status.
+        The rationale is that a raw data object can contain data from multiple
+        studies, so the raw data can have multiple status at the same time.
+        We then check the processed data generated to infer the status of the
+        raw data.
+        """
+        if self._id not in study.raw_data():
+            raise QiitaDBStatusError(
+                "The study %s does not have access to the raw data %s"
+                % (study.id, self.id))
+
+        conn_handler = SQLConnectionHandler()
+        sql = """SELECT processed_data_status
+                FROM qiita.processed_data_status pds
+                  JOIN qiita.processed_data pd
+                    USING (processed_data_status_id)
+                  JOIN qiita.preprocessed_processed_data ppd_pd
+                    USING (processed_data_id)
+                  JOIN qiita.prep_template_preprocessed_data pt_ppd
+                    USING (preprocessed_data_id)
+                  JOIN qiita.prep_template pt
+                    USING (prep_template_id)
+                  JOIN qiita.raw_data rd
+                    USING (raw_data_id)
+                  JOIN qiita.study_processed_data spd
+                    USING (processed_data_id)
+                WHERE pt.raw_data_id=%s AND spd.study_id=%s"""
+        pd_statuses = conn_handler.execute_fetchall(sql, (self._id, study.id))
+
+        return infer_status(pd_statuses)
+
 
 class PreprocessedData(BaseData):
     r"""Object for dealing with preprocessed data
@@ -995,6 +1048,34 @@ class PreprocessedData(BaseData):
             "UPDATE qiita.{0} SET processing_status=%s WHERE "
             "preprocessed_data_id=%s".format(self._table), (state, self.id))
 
+    @property
+    def status(self):
+        """The status of the preprocessed data
+
+        Returns
+        -------
+        str
+            The status of the preprocessed_data
+
+        Notes
+        -----
+        The status of a preprocessed data is inferred by the status of the
+        processed data generated from this preprocessed data. If no processed
+        data has been generated with this preprocessed data; then the status
+        is 'sandbox'.
+        """
+        conn_handler = SQLConnectionHandler()
+        sql = """SELECT processed_data_status
+                FROM qiita.processed_data_status pds
+                  JOIN qiita.processed_data pd
+                    USING (processed_data_status_id)
+                  JOIN qiita.preprocessed_processed_data ppd_pd
+                    USING (processed_data_id)
+                WHERE ppd_pd.preprocessed_data_id=%s"""
+        pd_statuses = conn_handler.execute_fetchall(sql, (self._id,))
+
+        return infer_status(pd_statuses)
+
 
 class ProcessedData(BaseData):
     r"""Object for dealing with processed data
@@ -1019,6 +1100,61 @@ class ProcessedData(BaseData):
     _data_filepath_column = "processed_data_id"
     _study_processed_table = "study_processed_data"
     _preprocessed_processed_table = "preprocessed_processed_data"
+
+    @classmethod
+    def get_by_status(cls, status):
+        """Returns id for all ProcessedData with given status
+
+        Parameters
+        ----------
+        status : str
+            Status to search for
+
+        Returns
+        -------
+        list of int
+            All the processed data ids that match the given status
+        """
+        conn_handler = SQLConnectionHandler()
+        sql = """SELECT processed_data_id FROM qiita.processed_data pd
+                JOIN qiita.processed_data_status pds
+                    USING (processed_data_status_id)
+                WHERE pds.processed_data_status=%s"""
+        result = conn_handler.execute_fetchall(sql, (status,))
+        if result:
+            pds = set(x[0] for x in result)
+        else:
+            pds = set()
+
+        return pds
+
+    @classmethod
+    def get_by_status_grouped_by_study(cls, status):
+        """Returns id for all ProcessedData with given status grouped by study
+
+        Parameters
+        ----------
+        status : str
+            Status to search for
+
+        Returns
+        -------
+        dict of list of int
+            A dictionary keyed by study id in which the values are the
+            processed data ids that belong to that study and match the given
+            status
+        """
+        conn_handler = SQLConnectionHandler()
+        sql = """SELECT spd.study_id,
+            array_agg(pd.processed_data_id ORDER BY pd.processed_data_id)
+            FROM qiita.processed_data pd
+                JOIN qiita.processed_data_status pds
+                    USING (processed_data_status_id)
+                JOIN qiita.study_processed_data spd
+                    USING (processed_data_id)
+            WHERE pds.processed_data_status = %s
+            GROUP BY spd.study_id;"""
+        return dict(conn_handler.execute_fetchall(sql, (status,)))
 
     @classmethod
     def create(cls, processed_params_table, processed_params_id, filepaths,
@@ -1194,3 +1330,40 @@ class ProcessedData(BaseData):
         # Get samples from dynamic table
         sql = "SELECT sample_id FROM qiita.prep_%d" % prep_id
         return set(s[0] for s in conn_handler.execute_fetchall(sql))
+
+    @property
+    def status(self):
+        conn_handler = SQLConnectionHandler()
+        sql = """SELECT pds.processed_data_status
+                FROM qiita.processed_data_status pds
+                  JOIN qiita.processed_data pd
+                    USING (processed_data_status_id)
+                WHERE pd.processed_data_id=%s"""
+        return conn_handler.execute_fetchone(sql, (self._id,))[0]
+
+    @status.setter
+    def status(self, status):
+        """Set the status value
+
+        Parameters
+        ----------
+        status : str
+            The new status
+
+        Raises
+        ------
+        QiitaDBStatusError
+            If the processed data status is public
+        """
+        if self.status == 'public':
+            raise QiitaDBStatusError(
+                "Illegal operation on public processed data")
+
+        conn_handler = SQLConnectionHandler()
+
+        status_id = convert_to_id(status, 'processed_data_status',
+                                  conn_handler=conn_handler)
+
+        sql = """UPDATE qiita.{0} SET processed_data_status_id = %s
+                 WHERE processed_data_id=%s""".format(self._table)
+        conn_handler.execute(sql, (status_id, self._id))

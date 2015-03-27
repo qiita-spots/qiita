@@ -3,6 +3,7 @@ from collections import namedtuple
 
 from qiita_pet.test.tornado_test_base import TestHandlerBase
 from qiita_db.study import StudyPerson, Study
+from qiita_db.data import ProcessedData
 from qiita_db.util import get_count, check_count
 from qiita_db.user import User
 from qiita_pet.handlers.study_handlers.listing_handlers import (
@@ -18,7 +19,7 @@ class TestHelpers(TestHandlerBase):
         self.assertEqual(obs, exp)
 
     def test_build_study_info(self):
-        Study(1).status = 'public'
+        ProcessedData(1).status = 'public'
         obs = _build_study_info('public', User('test@foo.bar'))
         StudyTuple = namedtuple('StudyInfo', 'id title meta_complete '
                                 'num_samples_collected shared num_raw_data pi '

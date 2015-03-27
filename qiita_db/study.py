@@ -100,14 +100,14 @@ from future.utils import viewitems
 from copy import deepcopy
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
-from .base import QiitaStatusObject, QiitaObject
+from .base import QiitaObject
 from .exceptions import (QiitaDBStatusError, QiitaDBColumnError, QiitaDBError)
 from .util import (check_required_columns, check_table_cols, convert_to_id,
-                   get_environmental_packages)
+                   get_environmental_packages, infer_status)
 from .sql_connection import SQLConnectionHandler
 
 
-class Study(QiitaStatusObject):
+class Study(QiitaObject):
     r"""Study object to access to the Qiita Study information
 
     Attributes
@@ -142,18 +142,28 @@ class Study(QiitaStatusObject):
     """
     _table = "study"
     # The following columns are considered not part of the study info
-    _non_info = {"email", "study_status_id", "study_title"}
+    _non_info = {"email", "study_title"}
 
     def _lock_non_sandbox(self, conn_handler):
         """Raises QiitaDBStatusError if study is non-sandboxed"""
         if self.status != 'sandbox':
             raise QiitaDBStatusError("Illegal operation on non-sandbox study!")
 
-    def _status_setter_checks(self, conn_handler):
-        r"""Perform a check to make sure not setting status away from public
-        """
-        if self.check_status(("public", )):
-            raise QiitaDBStatusError("Illegal operation on public study!")
+    @property
+    def status(self):
+        r"""The status is inferred by the status of its processed data"""
+        conn_handler = SQLConnectionHandler()
+        # Get the status of all its processed data
+        sql = """SELECT processed_data_status
+                FROM qiita.processed_data_status pds
+                  JOIN qiita.processed_data pd
+                    USING (processed_data_status_id)
+                  JOIN qiita.study_processed_data spd
+                    USING (processed_data_id)
+                WHERE spd.study_id = %s"""
+        pd_statuses = conn_handler.execute_fetchall(sql, (self._id,))
+
+        return infer_status(pd_statuses)
 
     @classmethod
     def get_by_status(cls, status):
@@ -166,14 +176,27 @@ class Study(QiitaStatusObject):
 
         Returns
         -------
-        set of Study objects
-            All studies in the database that match the given status
+        set of int
+            All study ids in the database that match the given status
         """
         conn_handler = SQLConnectionHandler()
-        sql = ("SELECT study_id FROM qiita.{0} s JOIN qiita.{0}_status ss ON "
-               "s.study_status_id = ss.study_status_id WHERE "
-               "ss.status = %s".format(cls._table))
-        return {x[0] for x in conn_handler.execute_fetchall(sql, (status, ))}
+        sql = """SELECT study_id FROM qiita.study_processed_data spd
+                JOIN qiita.processed_data pd
+                    ON spd.processed_data_id=pd.processed_data_id
+                JOIN qiita.processed_data_status pds
+                    ON pds.processed_data_status_id=pd.processed_data_status_id
+                WHERE pds.processed_data_status=%s"""
+        studies = {x[0] for x in
+                   conn_handler.execute_fetchall(sql, (status, ))}
+        # If status is sandbox, all the studies that are not present in the
+        # study_processed_data are also sandbox
+        if status == 'sandbox':
+            sql = """SELECT study_id FROM qiita.study WHERE study_id NOT IN (
+                     SELECT study_id FROM qiita.study_processed_data)"""
+            extra_studies = {x[0] for x in conn_handler.execute_fetchall(sql)}
+            studies = studies.union(extra_studies)
+
+        return studies
 
     @classmethod
     def exists(cls, study_title):
@@ -241,8 +264,6 @@ class Study(QiitaStatusObject):
         insertdict['study_title'] = title
         if "reprocess" not in insertdict:
             insertdict['reprocess'] = False
-        # default to sandboxed status
-        insertdict['study_status_id'] = 4
 
         # No nuns allowed
         insertdict = {k: v for k, v in viewitems(insertdict) if v is not None}

@@ -1116,3 +1116,38 @@ def check_access_to_analysis_result(user_id, requested_path):
 
     return [row[0] for row in conn.execute_fetchall(
             sql, [user_id, user_id, requested_path])]
+
+
+def infer_status(statuses):
+    """Infers an object status from the statuses passed in
+
+    Parameters
+    ----------
+    statuses : list of lists of strings or empty list
+        The list of statuses used to infer the resulting status (the result
+        of execute_fetchall)
+
+    Returns
+    -------
+    str
+        The inferred status
+
+    Notes
+    -----
+    The inference is done in the following priority (high to low):
+        (1) public
+        (2) private
+        (3) awaiting_approval
+        (4) sandbox
+    """
+    if statuses:
+        statuses = set(s[0] for s in statuses)
+        if 'public' in statuses:
+            return 'public'
+        if 'private' in statuses:
+            return 'private'
+        if 'awaiting_approval' in statuses:
+            return 'awaiting_approval'
+    # If there are no statuses, or any of the previous ones have been found
+    # then the inferred status is 'sandbox'
+    return 'sandbox'

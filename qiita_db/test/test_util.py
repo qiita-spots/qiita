@@ -35,7 +35,7 @@ from qiita_db.util import (exists_table, exists_dynamic_table, scrub_data,
                            filepath_id_to_rel_path, filepath_ids_to_rel_paths,
                            move_filepaths_to_upload_folder,
                            move_upload_files_to_trash,
-                           check_access_to_analysis_result)
+                           check_access_to_analysis_result, infer_status)
 
 
 @qiita_test_checker()
@@ -45,9 +45,9 @@ class DBUtilTests(TestCase):
         self.required = [
             'number_samples_promised', 'study_title', 'mixs_compliant',
             'metadata_complete', 'study_description', 'first_contact',
-            'reprocess', 'study_status_id', 'portal_type_id',
-            'timeseries_type_id', 'study_alias', 'study_abstract',
-            'principal_investigator_id', 'email', 'number_samples_collected']
+            'reprocess', 'portal_type_id', 'timeseries_type_id', 'study_alias',
+            'study_abstract', 'principal_investigator_id', 'email',
+            'number_samples_collected']
         self.files_to_remove = []
 
     def tearDown(self):
@@ -684,6 +684,22 @@ class UtilTests(TestCase):
     def test_scrub_data_single_quote(self):
         """Correctly removes single quotes from the string"""
         self.assertEqual(scrub_data("'quotes'"), "quotes")
+
+    def test_infer_status(self):
+        obs = infer_status([])
+        self.assertEqual(obs, 'sandbox')
+
+        obs = infer_status([['private']])
+        self.assertEqual(obs, 'private')
+
+        obs = infer_status([['private'], ['public']])
+        self.assertEqual(obs, 'public')
+
+        obs = infer_status([['sandbox'], ['awaiting_approval']])
+        self.assertEqual(obs, 'awaiting_approval')
+
+        obs = infer_status([['sandbox'], ['sandbox']])
+        self.assertEqual(obs, 'sandbox')
 
 if __name__ == '__main__':
     main()
