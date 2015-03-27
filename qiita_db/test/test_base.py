@@ -14,6 +14,7 @@ from qiita_db.base import QiitaObject, QiitaStatusObject
 from qiita_db.exceptions import QiitaDBUnknownIDError
 from qiita_db.data import RawData
 from qiita_db.study import Study
+from qiita_db.analysis import Analysis
 
 
 @qiita_test_checker()
@@ -77,19 +78,19 @@ class QiitaStatusObjectTest(TestCase):
 
     def setUp(self):
         # We need an actual subclass in order to test the equality functions
-        self.tester = Study(1)
+        self.tester = Analysis(1)
 
     def test_status(self):
         """Correctly returns the status of the object"""
-        self.assertEqual(self.tester.status, "private")
+        self.assertEqual(self.tester.status, "in_construction")
 
     def test_check_status_single(self):
         """check_status works passing a single status"""
-        self.assertTrue(self.tester.check_status(["private"]))
-        self.assertTrue(self.tester.check_status(["private"],
+        self.assertTrue(self.tester.check_status(["in_construction"]))
+        self.assertTrue(self.tester.check_status(["in_construction"],
                         conn_handler=self.conn_handler))
-        self.assertFalse(self.tester.check_status(["public"]))
-        self.assertFalse(self.tester.check_status(["public"],
+        self.assertFalse(self.tester.check_status(["queued"]))
+        self.assertFalse(self.tester.check_status(["queued"],
                          conn_handler=self.conn_handler))
 
     def test_check_status_exclude_single(self):
@@ -97,32 +98,34 @@ class QiitaStatusObjectTest(TestCase):
         self.assertTrue(self.tester.check_status(["public"], exclude=True))
         self.assertTrue(self.tester.check_status(["public"], exclude=True,
                         conn_handler=self.conn_handler))
-        self.assertFalse(self.tester.check_status(["private"], exclude=True))
-        self.assertFalse(self.tester.check_status(["private"], exclude=True,
-                         conn_handler=self.conn_handler))
+        self.assertFalse(self.tester.check_status(["in_construction"],
+                         exclude=True))
+        self.assertFalse(self.tester.check_status(["in_construction"],
+                         exclude=True, conn_handler=self.conn_handler))
 
     def test_check_status_list(self):
         """check_status work passing a list of status"""
         self.assertTrue(self.tester.check_status(
-            ["private", "awaiting_approval"]))
+            ["in_construction", "queued"]))
         self.assertTrue(self.tester.check_status(
-            ["private", "awaiting_approval"], conn_handler=self.conn_handler))
+            ["in_construction", "queued"],
+            conn_handler=self.conn_handler))
         self.assertFalse(self.tester.check_status(
-            ["public", "awaiting_approval"]))
+            ["public", "queued"]))
         self.assertFalse(self.tester.check_status(
-            ["public", "awaiting_approval"], conn_handler=self.conn_handler))
+            ["public", "queued"], conn_handler=self.conn_handler))
 
     def test_check_status_exclude_list(self):
         """check_status work passing a list of status and the exclude flag"""
         self.assertTrue(self.tester.check_status(
-            ["public", "awaiting_approval"], exclude=True))
+            ["public", "queued"], exclude=True))
         self.assertTrue(self.tester.check_status(
-            ["public", "awaiting_approval"], exclude=True,
+            ["public", "queued"], exclude=True,
             conn_handler=self.conn_handler))
         self.assertFalse(self.tester.check_status(
-            ["private", "awaiting_approval"], exclude=True))
+            ["in_construction", "queued"], exclude=True))
         self.assertFalse(self.tester.check_status(
-            ["private", "awaiting_approval"], exclude=True,
+            ["in_construction", "queued"], exclude=True,
             conn_handler=self.conn_handler))
 
     def test_check_status_unknown_status(self):

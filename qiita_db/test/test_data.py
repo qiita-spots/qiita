@@ -14,7 +14,8 @@ from tempfile import mkstemp
 
 from qiita_core.util import qiita_test_checker
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
-from qiita_db.exceptions import QiitaDBError, QiitaDBUnknownIDError
+from qiita_db.exceptions import (QiitaDBError, QiitaDBUnknownIDError,
+                                 QiitaDBStatusError)
 from qiita_db.study import Study, StudyPerson
 from qiita_db.user import User
 from qiita_db.util import get_mountpoint
@@ -291,6 +292,49 @@ class RawDataTests(TestCase):
         self.assertTrue(RawData.exists(2))
         RawData.delete(2, 1)
         self.assertFalse(RawData.exists(2))
+
+    def test_status(self):
+        rd = RawData(1)
+        s = Study(1)
+        self.assertEqual(rd.status(s), 'private')
+
+        # Since the status is inferred from the processed data, change the
+        # status of the processed data so we can check how it changes in the
+        # preprocessed data
+        pd = ProcessedData(1)
+        pd.status = 'public'
+        self.assertEqual(rd.status(s), 'public')
+
+        # Check that new raw data has sandbox as status since no
+        # processed data exists for them
+        rd = RawData.create(self.filetype, self.studies, self.filepaths)
+        self.assertEqual(rd.status(s), 'sandbox')
+
+    def test_status_error(self):
+        # Let's create a new study, so we can check that the error is raised
+        # because the new study does not have access to the raw data
+        info = {
+            "timeseries_type_id": 1,
+            "metadata_complete": True,
+            "mixs_compliant": True,
+            "number_samples_collected": 25,
+            "number_samples_promised": 28,
+            "portal_type_id": 3,
+            "study_alias": "FCM",
+            "study_description": "Microbiome of people who eat nothing but "
+                                 "fried chicken",
+            "study_abstract": "Exploring how a high fat diet changes the "
+                              "gut microbiome",
+            "emp_person_id": StudyPerson(2),
+            "principal_investigator_id": StudyPerson(3),
+            "lab_person_id": StudyPerson(1)
+        }
+        s = Study.create(User('test@foo.bar'), "Fried chicken microbiome",
+                         [1], info)
+        rd = RawData(1)
+
+        with self.assertRaises(QiitaDBStatusError):
+            rd.status(s)
 
 
 @qiita_test_checker()
@@ -643,6 +687,24 @@ class PreprocessedDataTests(TestCase):
         self.assertTrue(PreprocessedData.exists(1))
         self.assertFalse(PreprocessedData.exists(1000))
 
+    def test_status(self):
+        ppd = PreprocessedData(1)
+        self.assertEqual(ppd.status, 'private')
+
+        # Since the status is inferred from the processed data, change the
+        # status of the processed data so we can check how it changes in the
+        # preprocessed data
+        pd = ProcessedData(1)
+        pd.status = 'public'
+        self.assertEqual(ppd.status, 'public')
+
+        # Check that new preprocessed data has sandbox as status since no
+        # processed data exists for them
+        ppd = PreprocessedData.create(self.study, self.params_table,
+                                      self.params_id, self.filepaths,
+                                      data_type="16S")
+        self.assertEqual(ppd.status, 'sandbox')
+
 
 @qiita_test_checker()
 class ProcessedDataTests(TestCase):
@@ -679,8 +741,9 @@ class ProcessedDataTests(TestCase):
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.processed_data WHERE processed_data_id=2")
         # processed_data_id, processed_params_table, processed_params_id,
-        # processed_date, data_type_id, link_filepaths_status
-        exp = [[2, "processed_params_uclust", 1, self.date, 2, 'idle']]
+        # processed_date, data_type_id, link_filepaths_status,
+        # processed_data_status_id
+        exp = [[2, "processed_params_uclust", 1, self.date, 2, 'idle', 4]]
         self.assertEqual(obs, exp)
 
         # Check that the files have been copied to right location
@@ -751,8 +814,9 @@ class ProcessedDataTests(TestCase):
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.processed_data WHERE processed_data_id=2")
         # processed_data_id, processed_params_table, processed_params_id,
-        # processed_date, data_type_id, link_filepaths_status
-        exp = [[2, "processed_params_uclust", 1, self.date, 2, 'idle']]
+        # processed_date, data_type_id, link_filepaths_status,
+        # processed_data_status_id
+        exp = [[2, "processed_params_uclust", 1, self.date, 2, 'idle', 4]]
         self.assertEqual(obs, exp)
 
         # Check that the files have been copied to right location
@@ -867,6 +931,64 @@ class ProcessedDataTests(TestCase):
     def test_processed_date(self):
         pd = ProcessedData(1)
         self.assertEqual(pd.processed_date, datetime(2012, 10, 1, 9, 30, 27))
+
+    def test_status(self):
+        pd = ProcessedData(1)
+        self.assertEqual(pd.status, 'private')
+
+        pd = ProcessedData.create(self.params_table, self.params_id,
+                                  self.filepaths,
+                                  preprocessed_data=self.preprocessed_data)
+        self.assertEqual(pd.status, 'sandbox')
+
+    def test_status_setter(self):
+        pd = ProcessedData(1)
+        self.assertEqual(pd.status, 'private')
+
+        pd.status = 'sandbox'
+        self.assertEqual(pd.status, 'sandbox')
+
+    def test_status_setter_error(self):
+        pd = ProcessedData(1)
+        pd.status = 'public'
+        self.assertEqual(pd.status, 'public')
+
+        with self.assertRaises(QiitaDBStatusError):
+            pd.status = 'sandbox'
+
+    def test_status_setter_error_not_existant(self):
+        pd = ProcessedData(1)
+        with self.assertRaises(IncompetentQiitaDeveloperError):
+            pd.status = 'does-not-exist'
+
+    def test_get_by_status(self):
+        pds = ProcessedData.get_by_status('sandbox')
+        self.assertEqual(pds, set())
+
+        pds = ProcessedData.get_by_status('private')
+        self.assertEqual(pds, set([1]))
+
+        ProcessedData.create(self.params_table, self.params_id,
+                             self.filepaths,
+                             preprocessed_data=self.preprocessed_data)
+        pds = ProcessedData.get_by_status('sandbox')
+        self.assertEqual(pds, set([2]))
+
+        pds = ProcessedData.get_by_status('private')
+        self.assertEqual(pds, set([1]))
+
+    def test_get_by_status_grouped_by_study(self):
+        obs = ProcessedData.get_by_status_grouped_by_study('sandbox')
+        self.assertEqual(obs, dict())
+
+        obs = ProcessedData.get_by_status_grouped_by_study('private')
+        self.assertEqual(obs, {1: [1]})
+
+        ProcessedData.create(self.params_table, self.params_id,
+                             self.filepaths,
+                             preprocessed_data=self.preprocessed_data)
+        obs = ProcessedData.get_by_status_grouped_by_study('sandbox')
+        self.assertEqual(obs, {1: [2]})
 
 
 if __name__ == '__main__':
