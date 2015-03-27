@@ -65,10 +65,10 @@ headers returned.
 from pyparsing import (alphas, nums, Word, dblQuotedString, oneOf, Optional,
                        opAssoc, CaselessLiteral, removeQuotes, Group,
                        operatorPrecedence, stringEnd)
-from collections import Counter, defaultdict
+from collections import defaultdict
 
 import pandas as pd
-from future.utils import viewitems, viewvalues
+from future.utils import viewitems
 
 from qiita_db.util import scrub_data, convert_type, get_table_cols
 from qiita_db.sql_connection import SQLConnectionHandler
