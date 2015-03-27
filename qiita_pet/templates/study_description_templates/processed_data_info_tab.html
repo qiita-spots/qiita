@@ -14,4 +14,14 @@
       </tr>
     {% end %}
   </table>
+  {% if btn_to_show == 'request_approval' %}
+    <a class="btn btn-default glyphicon glyphicon-eye-open" onClick="request_approval({{pd_id}});" style="word-spacing: -10px;"> Request making this data private</a>
+  {% elif btn_to_show == 'approve' %}
+    <a class="btn btn-success glyphicon glyphicon-thumbs-up" onClick="approve_study({{pd_id}});" style="word-spacing: -10px;"> Approve this data to be private</a>
+  {% elif btn_to_show == 'make_public' %}
+    <a class="btn btn-success glyphicon glyphicon-thumbs-up" onClick="make_public({{pd_id}});" style="word-spacing: -10px;"> Make this data public</a>
+  {% end %}
+  {% if show_revert_btn %}
+    <a class="btn btn-default glyphicon glyphicon-backward" onClick="make_sandbox({{pd_id}});" style="word-spacing: -10px;"> Revert this data to sandbox</a>
+  {% end %}
 </div>

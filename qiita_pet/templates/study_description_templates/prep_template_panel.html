@@ -55,7 +55,9 @@
 <div class="panel panel-default">
   <div class="panel-heading">
     <h4 class="panel-title">
-      <a data-parent="#prep-accordion" href="#collapse{{prep_id}}" style="pointer-events: none; cursor: default;">{{data_type}} (ID: {{prep_id}})</a>
+      <a data-parent="#prep-accordion" href="#collapse{{prep_id}}" style="pointer-events: none; cursor: default;">{{data_type}} (ID: {{prep_id}})</a>&nbsp;
+        <div class="{{status_class1}}" style="color: {{status_color}};"></div>
+        <div class="{{status_class2}}" style="color: {{status_color}};"></div>
         <button class="close" title="Remove this prep template" type="button" onclick="delete_prep_template('{{data_type}}', {{prep_id}})">&nbsp; ×</button>
     </h4>
   </div>
@@ -66,7 +68,7 @@
         <tr>
           <td style="padding:3px;">
             <a class="btn btn-default" href="/metadata_summary/?study_id={{study_id}}&prep_template={{prep_id}}">
-                <span class="glyphicon glyphicon-eye-open"></span> Show prep template summary
+                Show prep template summary
             </a>
           </td>
         </tr>
