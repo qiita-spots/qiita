@@ -67,6 +67,7 @@ def _build_study_info(studytype, user, results=None):
     infolist = []
     for row, info in enumerate(study_info):
         study = Study(info['study_id'])
+        status = study.status
         # Just passing the email address as the name here, since
         # name is not a required field in qiita.qiita_user
         owner = study_person_linkifier((info['email'], info['email']))
@@ -77,7 +78,7 @@ def _build_study_info(studytype, user, results=None):
                                for p in info['pmid']])
         else:
             pmids = ""
-        if info["number_samples_collected"] is '':
+        if info["number_samples_collected"] is None:
             info["number_samples_collected"] = "0"
         shared = _get_shared_links_for_study(study)
         meta_complete_glyph = "ok" if info["metadata_complete"] else "remove"
@@ -92,11 +93,11 @@ def _build_study_info(studytype, user, results=None):
                      studytype, str(row), str(study.id), info["study_title"])
         meta_complete = "<span class='glyphicon glyphicon-%s'></span>" % \
             meta_complete_glyph
-        if info["status"] == 'public':
+        if status == 'public':
             shared = "Not Available"
         else:
             shared = ("<span id='shared_html_{0}'>{1}</span><br/>"
-                      "<a class='btn btn-primary' data-toggle='modal' "
+                      "<a class='btn btn-primary btn-xs' data-toggle='modal' "
                       "data-target='#share-study-modal-view' "
                       "onclick='modify_sharing({0});'>Modify</a>".format(
                           study.id, shared))
@@ -112,7 +113,7 @@ def _build_study_info(studytype, user, results=None):
             "pi": PI,
             "pmid": pmids,
             "owner": owner,
-            "status": study.status,
+            "status": status,
             "abstract": info["study_abstract"]
 
         })
@@ -207,7 +208,7 @@ class SearchStudiesAJAX(BaseHandler):
         query = self.get_argument('query')
         echo = int(self.get_argument('sEcho'))
 
-        if user != self.current_user:
+        if user != self.current_user.id:
             raise HTTPError(403, 'Unauthorized search!')
         res = None
         if query:

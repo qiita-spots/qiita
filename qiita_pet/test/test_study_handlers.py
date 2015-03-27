@@ -57,7 +57,7 @@ class TestHelpers(TestHandlerBase):
         self.assertEqual(obs, self.exp)
 
     def test_build_study_info_new_study(self):
-        Study(1).status = 'public'
+        ProcessedData(1).status = 'public'
         info = {
             'timeseries_type_id': 1,
             'portal_type_id': 1,
@@ -85,10 +85,10 @@ class TestHelpers(TestHandlerBase):
             ', 1)\'><span class=\'glyphicon glyphicon-file\' aria-hidden=\''
             'true\'></span></a> | <a href=\'/study/description/2\' id=\''
             'study1-title\'>test_study_1</a>',
-            'num_raw_data': 0, 'id': 2L, 'num_samples': 'None',
+            'num_raw_data': 0, 'id': 2, 'num_samples': '0',
             'shared': "<span id='shared_html_2'></span><br/><a class='btn "
-            "btn-primary' data-toggle='modal' data-target='#share-study-modal-"
-            "view' onclick='modify_sharing(2);'>Modify</a>",
+            "btn-primary btn-xs' data-toggle='modal' data-target='#share-study"
+            "-modal-view' onclick='modify_sharing(2);'>Modify</a>",
             'pmid': '', 'pi':
             '<a target="_blank" href="mailto:PI_dude@foo.bar">PIDude</a>'})
         self.assertEqual(obs, self.exp)
@@ -305,8 +305,8 @@ class TestSearchStudiesAJAX(TestHandlerBase):
             'bar</a>',
             'shared': '<span id=\'shared_html_1\'><a target="_blank" href="'
             'mailto:shared@foo.bar">Shared</a></span><br/><a class=\'btn '
-            'btn-primary\' data-toggle=\'modal\' data-target=\'#share-study-'
-            'modal-view\' onclick=\'modify_sharing(1);\'>Modify</a>',
+            'btn-primary btn-xs\' data-toggle=\'modal\' data-target=\'#share'
+            '-study-modal-view\' onclick=\'modify_sharing(1);\'>Modify</a>',
             'meta_complete': "<span class='glyphicon glyphicon-ok'>"
             "</span>",
             'pmid': '<a target="_blank" href="http://www.ncbi.nlm.nih.gov/'
@@ -360,6 +360,14 @@ class TestSearchStudiesAJAX(TestHandlerBase):
         # make sure responds properly
         self.assertEqual(response.body, 'Malformed search query. '
                          'Please read "search help" and try again.')
+
+        response = self.get('/study/search/', {
+            'type': 'standard',
+            'user': 'FAKE@foo.bar',
+            'query': 'ph',
+            'sEcho': '1021'
+            })
+        self.assertEqual(response.code, 403)
 
 
 class TestMetadataSummaryHandler(TestHandlerBase):
