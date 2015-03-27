@@ -7,6 +7,7 @@
 # -----------------------------------------------------------------------------
 from __future__ import division
 from json import dumps
+from future.utils import viewitems
 
 from tornado.web import authenticated, HTTPError
 from tornado.gen import coroutine, Task
@@ -20,6 +21,8 @@ from qiita_db.metadata_template import SampleTemplate
 from qiita_db.logger import LogEntry
 from qiita_db.exceptions import QiitaDBIncompatibleDatatypeError
 from qiita_db.util import get_table_cols
+from qiita_db.data import ProcessedData
+
 from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_pet.handlers.util import study_person_linkifier, pubmed_linkifier
 
@@ -145,10 +148,11 @@ class StudyApprovalList(BaseHandler):
         if user.level != 'admin':
             raise HTTPError(403, 'User %s is not admin' % self.current_user)
 
-        parsed_studies = []
-        for sid in Study.get_by_status('awaiting_approval'):
-            study = Study(sid)
-            parsed_studies.append((study.id, study.title, study.owner))
+        result_generator = viewitems(
+            ProcessedData.get_by_status_grouped_by_study('awaiting_approval'))
+        study_generator = ((Study(sid), pds) for sid, pds in result_generator)
+        parsed_studies = [(s.id, s.title, s.owner, pds)
+                          for s, pds in study_generator]
 
         self.render('admin_approval.html',
                     study_info=parsed_studies)

@@ -19,6 +19,7 @@ from qiita_db.ontology import Ontology
 from qiita_db.metadata_template import PrepTemplate
 from qiita_db.parameters import (Preprocessed454Params,
                                  PreprocessedIlluminaParams)
+from qiita_pet.util import STATUS_STYLER
 from .base_uimodule import BaseUIModule
 
 
@@ -41,26 +42,29 @@ def get_raw_data(rdis):
 
 
 class RawDataTab(BaseUIModule):
-    def render(self, study):
+    def render(self, study, full_access):
         user = self.current_user
 
         filetypes = sorted(viewitems(get_filetypes()), key=itemgetter(1))
         other_studies_rd = sorted(viewitems(
             get_raw_data_from_other_studies(user, study)))
 
-        raw_data_info = [(rd.id, rd.filetype, rd)
-                         for rd in get_raw_data(study.raw_data())]
+        raw_data_info = [
+            (rd.id, rd.filetype, rd, STATUS_STYLER[rd.status(study)])
+            for rd in get_raw_data(study.raw_data())
+            if full_access or rd.status(study) == 'public']
 
         return self.render_string(
             "study_description_templates/raw_data_tab.html",
             filetypes=filetypes,
             other_studies_rd=other_studies_rd,
             available_raw_data=raw_data_info,
-            study=study)
+            study=study,
+            full_access=full_access)
 
 
 class RawDataEditorTab(BaseUIModule):
-    def render(self, study, raw_data):
+    def render(self, study, raw_data, full_access):
         user = self.current_user
         study_status = study.status
         user_level = user.level
@@ -88,7 +92,8 @@ class RawDataEditorTab(BaseUIModule):
             if PrepTemplate.exists(p):
                 pt = PrepTemplate(p)
                 # if the prep template doesn't belong to this study, skip
-                if study.id == pt.study_id:
+                if (study.id == pt.study_id and
+                        (full_access or pt.status == 'public')):
                     available_prep_templates.append(pt)
 
         # getting filepath_types
@@ -166,6 +171,7 @@ class PrepTemplatePanel(BaseUIModule):
         is_local_request = self._is_local()
 
         prep_id = prep.id
+        status_class1, status_class2, status_color = STATUS_STYLER[prep.status]
         data_type = prep.data_type()
         raw_data = RawData(prep.raw_data)
         filepaths = prep.get_filepaths()
@@ -200,6 +206,9 @@ class PrepTemplatePanel(BaseUIModule):
         return self.render_string(
             "study_description_templates/prep_template_panel.html",
             prep_id=prep_id,
+            status_class1=status_class1,
+            status_class2=status_class2,
+            status_color=status_color,
             data_type=data_type,
             filepaths=filepaths,
             investigation_type=investigation_type,

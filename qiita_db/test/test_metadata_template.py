@@ -30,7 +30,7 @@ from qiita_db.exceptions import (QiitaDBDuplicateError, QiitaDBUnknownIDError,
                                  QiitaDBWarning)
 from qiita_db.study import Study, StudyPerson
 from qiita_db.user import User
-from qiita_db.data import RawData
+from qiita_db.data import RawData, ProcessedData
 from qiita_db.util import (exists_table, get_db_files_base_dir, get_mountpoint,
                            get_count, get_table_cols)
 from qiita_db.metadata_template import (
@@ -2344,6 +2344,22 @@ class TestPrepTemplate(TestCase):
         pt = PrepTemplate(1)
         pt.investigation_type = 'RNASeq'
         self.assertEqual(pt.investigation_type, 'RNASeq')
+
+    def test_status(self):
+        pt = PrepTemplate(1)
+        self.assertEqual(pt.status, 'private')
+
+        # Check that changing the status of the processed data, the status
+        # of the prep template changes
+        pd = ProcessedData(1)
+        pd.status = 'public'
+        self.assertEqual(pt.status, 'public')
+
+        # New prep templates have the status to sandbox because there is no
+        # processed data associated with them
+        pt = PrepTemplate.create(self.metadata, self.new_raw_data,
+                                 self.test_study, self.data_type_id)
+        self.assertEqual(pt.status, 'sandbox')
 
     def test_to_dataframe(self):
         obs = self.tester.to_dataframe()

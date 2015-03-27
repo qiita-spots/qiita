@@ -62,7 +62,7 @@ from .ontology import Ontology
 from .util import (exists_table, get_table_cols, get_emp_status,
                    get_required_sample_info_status, convert_to_id,
                    convert_from_id, get_mountpoint, insert_filepaths,
-                   scrub_data)
+                   scrub_data, infer_status)
 from .study import Study
 from .data import RawData
 from .logger import LogEntry
@@ -2205,6 +2205,36 @@ class PrepTemplate(MetadataTemplate):
         self.add_filepath(filepath)
 
         return filepath
+
+    @property
+    def status(self):
+        """The status of the prep template
+
+        Returns
+        -------
+        str
+            The status of the prep template
+
+        Notes
+        -----
+        The status of a prep template is inferred by the status of the
+        processed data generated from this prep template. If no processed
+        data has been generated with this prep template; then the status
+        is 'sandbox'.
+        """
+        conn_handler = SQLConnectionHandler()
+        sql = """SELECT processed_data_status
+                FROM qiita.processed_data_status pds
+                  JOIN qiita.processed_data pd
+                    USING (processed_data_status_id)
+                  JOIN qiita.preprocessed_processed_data ppd_pd
+                    USING (processed_data_id)
+                  JOIN qiita.prep_template_preprocessed_data pt_ppd
+                    USING (preprocessed_data_id)
+                WHERE pt_ppd.prep_template_id=%s"""
+        pd_statuses = conn_handler.execute_fetchall(sql, (self._id,))
+
+        return infer_status(pd_statuses)
 
 
 def load_template_to_dataframe(fn, strip_whitespace=True):

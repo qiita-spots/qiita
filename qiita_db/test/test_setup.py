@@ -37,8 +37,8 @@ class SetupTest(TestCase):
     def test_study_experimental_factor(self):
         self.assertEqual(get_count("qiita.study_experimental_factor"), 1)
 
-    def test_study_status(self):
-        self.assertEqual(get_count("qiita.study_status"), 4)
+    def test_processed_data_status(self):
+        self.assertEqual(get_count("qiita.processed_data_status"), 4)
 
     def test_filepath(self):
         self.assertEqual(get_count("qiita.filepath"), 18)
