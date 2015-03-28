@@ -28,12 +28,10 @@ class TestHelpers(TestHandlerBase):
                         'to analyze the soils and rhizospheres from the same '
                         'location at different time points in the plant '
                         'lifecycle.',
-            'owner': '<a target="_blank" href="mailto:test@foo.bar">test@foo.'
-                     'bar</a>',
             'meta_complete': "<span class='glyphicon glyphicon-ok'></span>",
             'title': '<a href=\'#\' data-toggle=\'modal\' data-target=\''
-                     '#study-abstract-modal\' onclick=\'fillAbstract("standard'
-                     '-studies-table", 0)\'><span class=\'glyphicon glyphicon'
+                     '#study-abstract-modal\' onclick=\'fillAbstract("studies-'
+                     'table", 0)\'><span class=\'glyphicon glyphicon'
                      '-file\' aria-hidden=\'true\'></span></a> | <a href=\'/'
                      'study/description/1\' id=\'study0-title\'>Identification'
                      ' of the Microbiomes for Cannabis Soils</a>',
@@ -53,7 +51,7 @@ class TestHelpers(TestHandlerBase):
 
     def test_build_study_info(self):
         ProcessedData(1).status = 'public'
-        obs = _build_study_info('standard', User('test@foo.bar'))
+        obs = _build_study_info(User('test@foo.bar'))
         self.assertEqual(obs, self.exp)
 
     def test_build_study_info_new_study(self):
@@ -71,17 +69,15 @@ class TestHelpers(TestHandlerBase):
         user = User('test@foo.bar')
 
         Study.create(user, 'test_study_1', efo=[1], info=info)
-        obs = _build_study_info('standard', user)
+        obs = _build_study_info(user)
         self.exp.append({
             'status': 'sandbox',
             'checkbox': "<input type='checkbox' value='2' />",
             'abstract': 'abstract',
-            'owner': '<a target="_blank" href="mailto:test@foo.bar">test@foo.'
-            'bar</a>',
             'meta_complete': "<span class='glyphicon glyphicon-remove'>"
             "</span>",
             'title': '<a href=\'#\' data-toggle=\'modal\' data-target=\'#study'
-            '-abstract-modal\' onclick=\'fillAbstract("standard-studies-table"'
+            '-abstract-modal\' onclick=\'fillAbstract("studies-table"'
             ', 1)\'><span class=\'glyphicon glyphicon-file\' aria-hidden=\''
             'true\'></span></a> | <a href=\'/study/description/2\' id=\''
             'study1-title\'>test_study_1</a>',
@@ -283,7 +279,7 @@ class TestSearchStudiesAJAX(TestHandlerBase):
             'status': 'private',
             'checkbox': "<input type='checkbox' value='1' />",
             'title': '<a href=\'#\' data-toggle=\'modal\' data-target=\'#study'
-            '-abstract-modal\' onclick=\'fillAbstract("standard-studies-table"'
+            '-abstract-modal\' onclick=\'fillAbstract("studies-table"'
             ', 0)\'><span class=\'glyphicon glyphicon-file\' aria-hidden=\''
             'true\'></span></a> | <a href=\'/study/description/1\' id=\''
             'study0-title\'>Identification of the Microbiomes for Cannabis '
@@ -301,8 +297,6 @@ class TestSearchStudiesAJAX(TestHandlerBase):
             '</a>',
             'id': 1,
             'num_samples': 27,
-            'owner': '<a target="_blank" href="mailto:test@foo.bar">test@foo.'
-            'bar</a>',
             'shared': '<span id=\'shared_html_1\'><a target="_blank" href="'
             'mailto:shared@foo.bar">Shared</a></span><br/><a class=\'btn '
             'btn-primary btn-xs\' data-toggle=\'modal\' data-target=\'#share'
@@ -320,7 +314,6 @@ class TestSearchStudiesAJAX(TestHandlerBase):
 
     def test_get(self):
         response = self.get('/study/search/', {
-            'type': 'standard',
             'user': 'test@foo.bar',
             'query': '',
             'sEcho': '1021'
@@ -330,17 +323,6 @@ class TestSearchStudiesAJAX(TestHandlerBase):
         self.assertEqual(loads(response.body), self.json)
 
         response = self.get('/study/search/', {
-            'type': 'shared',
-            'user': 'test@foo.bar',
-            'query': '',
-            'sEcho': '1021'
-            })
-        self.assertEqual(response.code, 200)
-        # make sure responds properly
-        self.assertEqual(loads(response.body), self.empty)
-
-        response = self.get('/study/search/', {
-            'type': 'standard',
             'user': 'test@foo.bar',
             'query': 'ph > 50',
             'sEcho': '1021'
@@ -351,7 +333,6 @@ class TestSearchStudiesAJAX(TestHandlerBase):
 
     def test_get_failure(self):
         response = self.get('/study/search/', {
-            'type': 'standard',
             'user': 'test@foo.bar',
             'query': 'ph',
             'sEcho': '1021'
@@ -362,7 +343,6 @@ class TestSearchStudiesAJAX(TestHandlerBase):
                          'Please read "search help" and try again.')
 
         response = self.get('/study/search/', {
-            'type': 'standard',
             'user': 'FAKE@foo.bar',
             'query': 'ph',
             'sEcho': '1021'
