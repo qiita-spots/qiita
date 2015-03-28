@@ -9,7 +9,7 @@
 var current_study;
 var ajaxURL = "/study/search/?&user={{current_user.id}}&sEcho=" + Math.floor(Math.random()*1001);
 $(document).ready(function() {
-        $('#standard-studies-table').dataTable({
+        $('#studies-table').dataTable({
             "columns": [
               { "data": "checkbox" },
               { "data": "title" },
@@ -23,7 +23,7 @@ $(document).ready(function() {
               { "data": "pmid" },
               { "data": "status" }
             ],
-            order: [[10, "asc"], [ 1, "asc" ]],
+            order: [[10, "desc"], [ 1, "asc" ]],
             columnDefs: [{type:'natural', targets:[3,4,5,9]}, {"targets": [ 2 ],"visible": false}],
             "oLanguage": {
                 "sSearch": "Narrow search results by column data (Title, abstract, PI, etc):",
@@ -31,36 +31,12 @@ $(document).ready(function() {
                 "sZeroRecords": "No studies found"
             }, 
             "ajax": {
-                "url": ajaxURL + "&type=standard&query=",
+                "url": ajaxURL + "&query=",
                 "error": function(jqXHR, textStatus, ex) {
                     $("#submit-button").prop("disabled",false);
-                    $("#search-error").text(jqXHR.responseText);
+                    if(jqXHR.status === 500) { $("#search-error").text("Internal Server Error, please try again later"); }
+                    else { $("#search-error").text(jqXHR.responseText); }
                 }
-            } 
-        });
-        $('#shared-studies-table').dataTable({
-          "columns": [
-              { "data": "checkbox" },
-              { "data": "title" },
-              { "data": "abstract" },
-              { "data": "id" },
-              { "data": "owner" },
-              { "data": "meta_complete" },
-              { "data": "num_samples" },
-              { "data": "num_raw_data" },
-              { "data": "pi" },
-              { "data": "pmid" }
-            ],
-            order: [[ 1, "asc" ]],
-            columnDefs: [{type:'natural', targets:[4,5,6]}, {"targets": [ 2 ],"visible": false}],
-            "oLanguage": {
-                "sSearch": "Narrow search results by column data (Title, abstract, PI, etc):",
-                "sLoadingRecords": "Loading table data",
-                "sZeroRecords": "No studies found"
-            },
-            "ajax": {
-                "url": ajaxURL + "&type=shared&query=",
-                "error": function(jqXHR, textStatus, ex) {} 
             } 
         });
 
@@ -80,8 +56,7 @@ $(document).ready(function() {
         $("#submit-button").prop("disabled",true);
         $("#search-error").text('');
         query = $("#searchbox").val();
-        $("#standard-studies-table").DataTable().ajax.url(ajaxURL + "&type=standard&query=" + query).load(function() {$("#submit-button").prop("disabled",false);}, true);
-        $("#shared-studies-table").DataTable().ajax.url(ajaxURL + "&type=shared&query=" + query).load();
+        $("#standard-studies-table").DataTable().ajax.url(ajaxURL + "&query=" + query).load(function() {$("#submit-button").prop("disabled",false);}, true);
         return false;
     });
 } );
@@ -126,8 +101,8 @@ function add_metacat(metacat) {
 <!--User Studies-->
 <div class="row">
   <div class="col-sm-12" id="user-studies-div">
-    <h1>Your Studies</h1>
-    <table id="standard-studies-table" class="display table-bordered table-hover">
+    <h1>Available Studies</h1>
+    <table id="studies-table" class="display table-bordered table-hover">
         <thead>
             <tr>
                 <th></th>
@@ -141,29 +116,6 @@ function add_metacat(metacat) {
                 <th>Principal Investigator</th>
                 <th>Pubmed ID(s)</th>
                 <th>Status</th>
-            </tr>
-        </thead>
-        <tbody>
-        </tbody>
-    </table>
-<!--Shared Studies-->
-<form id="study-sel-form" name="study-sel-form">
-<div class="row">
-  <div class="col-sm-12" id="user-studies-div">
-    <h1>Shared Studies</h1>
-    <table id="shared-studies-table" class="display table-bordered table-hover">
-        <thead>
-            <tr>
-                <th></th>
-                <th>Title</th>
-                <th>Abstract</th>
-                <th>Study ID</th>
-                <th>Owner</th>
-                <th>Metadata Complete</th>
-                <th>Samples</th>
-                <th>Sequence Files</th>
-                <th>Principal Investigator</th>
-                <th>Pubmed ID(s)</th>
             </tr>
         </thead>
         <tbody>

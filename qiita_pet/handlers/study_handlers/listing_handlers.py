@@ -13,7 +13,6 @@ from tornado.web import authenticated, HTTPError
 from tornado.gen import coroutine, Task
 from pyparsing import ParseException
 
-from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_db.user import User
 from qiita_db.study import Study, StudyPerson
 from qiita_db.search import QiitaStudySearch
@@ -43,26 +42,22 @@ def _get_shared_links_for_study(study):
     return ", ".join(shared)
 
 
-def _build_study_info(studytype, user, results=None):
-    """builds list of namedtuples for study listings"""
-    if studytype not in {"standard", "shared"}:
-        raise IncompetentQiitaDeveloperError("Must use standard or shared!")
+def _build_study_info(user, results=None):
+    """builds list of dicts for studies table, with all html formatted"""
     # get list of studies for table
-    if studytype == "standard":
-        studylist = user.user_studies.union(Study.get_by_status('public'))
-    elif studytype == "shared":
-        studylist = user.shared_studies
+    study_list = user.user_studies.union(
+        Study.get_by_status('public')).union(user.shared_studies)
     if results is not None:
-        studylist = studylist.intersection(results)
-    if not studylist:
+        study_list = study_list.intersection(results)
+    if not study_list:
         # No studies left so no need to continue
         return []
 
     # get info for the studies
-    cols = ['study_id', 'status', 'email', 'principal_investigator_id',
+    cols = ['study_id', 'email', 'principal_investigator_id',
             'pmid', 'study_title', 'metadata_complete',
             'number_samples_collected', 'study_abstract']
-    study_info = Study.get_info(studylist, cols)
+    study_info = Study.get_info(study_list, cols)
 
     infolist = []
     for row, info in enumerate(study_info):
@@ -70,7 +65,6 @@ def _build_study_info(studytype, user, results=None):
         status = study.status
         # Just passing the email address as the name here, since
         # name is not a required field in qiita.qiita_user
-        owner = study_person_linkifier((info['email'], info['email']))
         PI = StudyPerson(info['principal_investigator_id'])
         PI = study_person_linkifier((PI.email, PI.name))
         if info['pmid'] is not None:
@@ -85,12 +79,12 @@ def _build_study_info(studytype, user, results=None):
         # build the HTML elements needed for table cell
         title = ("<a href='#' data-toggle='modal' "
                  "data-target='#study-abstract-modal' "
-                 "onclick='fillAbstract(\"{0}-studies-table\", {1})'>"
+                 "onclick='fillAbstract(\"studies-table\", {0})'>"
                  "<span class='glyphicon glyphicon-file' "
                  "aria-hidden='true'></span></a> | "
-                 "<a href='/study/description/{2}' "
-                 "id='study{1}-title'>{3}</a>").format(
-                     studytype, str(row), str(study.id), info["study_title"])
+                 "<a href='/study/description/{1}' "
+                 "id='study{0}-title'>{2}</a>").format(
+                     str(row), str(study.id), info["study_title"])
         meta_complete = "<span class='glyphicon glyphicon-%s'></span>" % \
             meta_complete_glyph
         if status == 'public':
@@ -112,7 +106,6 @@ def _build_study_info(studytype, user, results=None):
             "num_raw_data": len(study.raw_data()),
             "pi": PI,
             "pmid": pmids,
-            "owner": owner,
             "status": status,
             "abstract": info["study_abstract"]
 
@@ -133,9 +126,9 @@ class ListStudiesHandler(BaseHandler):
     def get(self):
         all_emails_except_current = yield Task(self._get_all_emails)
         all_emails_except_current.remove(self.current_user.id)
-        availmeta = SampleTemplate.metadata_headers() +\
+        avail_meta = SampleTemplate.metadata_headers() +\
             get_table_cols("study")
-        self.render('list_studies.html', availmeta=availmeta,
+        self.render('list_studies.html', availmeta=avail_meta,
                     all_emails_except_current=all_emails_except_current)
 
     def _get_all_emails(self, callback):
@@ -194,16 +187,8 @@ class ShareStudyAJAX(BaseHandler):
 
 
 class SearchStudiesAJAX(BaseHandler):
-    def _get_standard(self, user, callback):
-        callback(_build_study_info("standard", user))
-
-    def _get_shared(self, user, callback):
-        """builds list of tuples for studies that are shared with user"""
-        callback(_build_study_info("shared", user))
-
     @authenticated
     def get(self, ignore):
-        search_type = self.get_argument('type')
         user = self.get_argument('user')
         query = self.get_argument('query')
         echo = int(self.get_argument('sEcho'))
@@ -215,7 +200,7 @@ class SearchStudiesAJAX(BaseHandler):
             # Search for samples matching the query
             search = QiitaStudySearch()
             try:
-                res, meta = search(query, User(user))
+                res, meta = search(query, self.current_user)
             except ParseException:
                 self.clear()
                 self.set_status(400)
@@ -240,8 +225,7 @@ class SearchStudiesAJAX(BaseHandler):
                 return
             if not res:
                 res = {}
-        info = _build_study_info(search_type, self.current_user,
-                                 results=res)
+        info = _build_study_info(self.current_user, results=res)
         # build the table json
         results = {
             "sEcho": echo,

@@ -180,6 +180,7 @@ class TestStudy(TestCase):
             (id_status,))
 
     def test_get_info(self):
+        # Test get all info for single study
         obs = Study.get_info([1])
         self.assertEqual(len(obs), 1)
         obs = dict(obs[0])
@@ -213,6 +214,7 @@ class TestStudy(TestCase):
             'Soils', 'number_samples_collected': 27}
         self.assertItemsEqual(obs, exp)
 
+        # Test get specific keys for single study
         exp_keys = ['metadata_complete', 'reprocess', 'timeseries_type',
                     'portal_description', 'pmid', 'study_title']
         obs = Study.get_info([1], exp_keys)
@@ -226,6 +228,27 @@ class TestStudy(TestCase):
             'study_title': 'Identification of the Microbiomes for Cannabis '
             'Soils'}
         self.assertItemsEqual(obs, exp)
+
+        # Test get specific keys for all studies
+        info = {
+            'timeseries_type_id': 1,
+            'portal_type_id': 1,
+            'lab_person_id': None,
+            'principal_investigator_id': 3,
+            'metadata_complete': False,
+            'mixs_compliant': True,
+            'study_description': 'desc',
+            'study_alias': 'alias',
+            'study_abstract': 'abstract'}
+        user = User('test@foo.bar')
+
+        Study.create(user, 'test_study_1', efo=[1], info=info)
+        obs = Study.get_info(info_cols=exp_keys)
+        exp = [[True, ['123456', '7891011'], 'EMP portal', False,
+                'Identification of the Microbiomes for Cannabis Soils',
+                'None'],
+               [False, None, 'QIIME portal', False, 'test_study_1', 'None']]
+        self.assertEqual(obs, exp)
 
     def test_has_access_public(self):
         self._change_processed_data_status('public')

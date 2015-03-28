@@ -206,13 +206,13 @@ class Study(QiitaObject):
         return studies
 
     @classmethod
-    def get_info(cls, study_ids, info_cols=None):
+    def get_info(cls, study_ids=None, info_cols=None):
         """Returns study data for a set of study_ids
 
         Parameters
         ----------
-        study_ids : list of ints
-            Studies to get information for.
+        study_ids : list of ints, optional
+            Studies to get information for. Defauls to all studies
         info_cols: list of str, optional
             Information columns to retrieve. Defaults to all study data
 
@@ -220,7 +220,7 @@ class Study(QiitaObject):
         -------
         list of DictCursor
             Table-like structure of metadata, one study per row. Can be
-            accessed as a list of dictionaries.
+            accessed as a list of dictionaries, keyed on column name.
         """
         if info_cols is None:
             info_cols = cls._info_cols
@@ -236,8 +236,10 @@ class Study(QiitaObject):
             JOIN qiita.portal_type USING (portal_type_id)
             LEFT JOIN (SELECT study_id, array_agg(pmid ORDER BY pmid) as
             pmid FROM qiita.study_pmid GROUP BY study_id) sp USING (study_id)
-            ) WHERE study_id in ({1})""".format(
-            search_cols, ','.join(str(s) for s in study_ids))
+            )""".format(search_cols)
+        if study_ids is not None:
+            sql = "{0} WHERE study_id in ({1})".format(
+                sql, ','.join(str(s) for s in study_ids))
 
         conn_handler = SQLConnectionHandler()
         return conn_handler.execute_fetchall(sql)
