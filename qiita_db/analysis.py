@@ -79,6 +79,26 @@ class Analysis(QiitaStatusObject):
             raise QiitaDBStatusError("Can't set status away from public!")
 
     @classmethod
+    def get_user_default(cls, user):
+        """Returns the analysis object being used as default sample holder
+
+        Parameters
+        ----------
+        user : User object
+            The user to get the default for
+
+        Returns
+        -------
+        Analysis object
+            The analysis used as default
+        """
+        conn_handler = SQLConnectionHandler()
+        aid = conn_handler.execute_fetchone(
+            "SELECT analysis_id FROM qiita.analysis WHERE "
+            "email = %s AND dflt = true", [user.id])[0]
+        return cls(aid)
+
+    @classmethod
     def get_by_status(cls, status):
         """Returns analysis ids for all Analyses with given status
 

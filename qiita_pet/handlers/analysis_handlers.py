@@ -367,10 +367,8 @@ class ResultsHandler(StaticFileHandler, BaseHandler):
 
 class SelectedSamplesHandler(BaseHandler):
     def get(self):
-        seldata = {
-            1: {1: ['sample %d' % i for i in range(40)], 2: ['sample %d' % i for i in range(40)], 3: ['sample %d' % i for i in range(40)]}
-        }
-        self.render("analysis_selected.html", seldata=seldata, info={})
+        seldata = Analysis.get_user_queue(self.current_user).samples
+        self.render("analysis_selected.html", seldata=seldata)
 
     def post(self):
         pass

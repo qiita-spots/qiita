@@ -224,10 +224,21 @@ class User(QiitaObject):
         # for sql insertion
         columns = info.keys()
         values = [info[col] for col in columns]
-
+        queue = "add_user_%s" % email
+        conn_handler.create_queue(queue)
+        # crete user
         sql = ("INSERT INTO qiita.%s (%s) VALUES (%s)" %
                (cls._table, ','.join(columns), ','.join(['%s'] * len(values))))
-        conn_handler.execute(sql, values)
+        conn_handler.add_to_queue(queue, sql, values)
+        # create user default sample holder
+        sql = ("INSERT INTO qiita.analysis "
+               "(email, name, description, dflt, analysis_status_id) "
+               "VALUES (%s, %s, %s, %s, 1)")
+        conn_handler.add_to_queue(queue, sql,
+                                  (email, '%s-dflt' % email, 'dflt', True))
+
+        conn_handler.execute_queue(queue)
+
         return cls(email)
 
     @classmethod
