@@ -1,4 +1,5 @@
 language: python
+sudo: false
 env:
   global:
     - PYTHON_VERSION=2.7
@@ -14,15 +15,13 @@ before_install:
   # Update conda itself
   - conda update --yes conda
 install:
-  - conda create --yes -n env_name python=$PYTHON_VERSION pip nose openpyxl=1.8.2 pandas>=0.15 pyzmq flake8
-  - conda install --yes -n env_name python=$PYTHON_VERSION h5py>=2.3.1
+  # install a few of the dependencies that pip would otherwise try to install
+  # when intalling scikit-bio
+  - conda create --yes -n env_name python=$PYTHON_VERSION pip nose flake8 pyzmq networkx pyparsing natsort mock 'pandas>=0.15' 'matplotlib>=1.1.0' 'scipy>0.13.0' 'numpy>= 1.7' 'h5py>=2.3.1' 'future==0.13.0'
   - source activate env_name
-  - pip install coveralls cogent burrito qcli burrito-fillings ipython[all]==2.4.1
+  - pip install coveralls ipython[all]==2.4.1
   - pip install https://github.com/biocore/mustached-octo-ironman/archive/master.zip
-  - pip install https://github.com/biocore/qiime/archive/master.zip --no-deps
   - pip install .
-  # upgrade click, older versions of click do not have __version__
-  - pip install -U click
 script:
   - export MOI_CONFIG_FP=`pwd`/qiita_core/support_files/config_test.txt
   - ipython profile create qiita_general --parallel
@@ -32,9 +31,6 @@ script:
   - if [ ${TEST_ADD_STUDIES} == "False" ]; then qiita_test_install ; fi
   - if [ ${TEST_ADD_STUDIES} == "False" ]; then nosetests --with-doctest --with-coverage ; fi
   - if [ ${TEST_ADD_STUDIES} == "False" ]; then flake8 qiita_* setup.py scripts/qiita scripts/qiita_env scripts/qiita_test_install ; fi
-  # we need to run the test suite from setup.py for coveralls to grab the info
-  # - coverage run setup.py test
-  # - coverage report -m
 services:
   - redis-server
 after_success:

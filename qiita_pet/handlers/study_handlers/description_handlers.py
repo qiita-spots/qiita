@@ -11,7 +11,6 @@ import warnings
 
 from os import remove
 from os.path import exists, join, basename
-from future.utils import viewvalues
 from collections import defaultdict
 
 from tornado.web import authenticated, HTTPError
@@ -20,7 +19,7 @@ from pandas.parser import CParserError
 
 from qiita_core.qiita_settings import qiita_config
 from qiita_db.study import Study
-from qiita_db.data import RawData, PreprocessedData
+from qiita_db.data import RawData, PreprocessedData, ProcessedData
 from qiita_db.ontology import Ontology
 from qiita_db.metadata_template import (PrepTemplate, SampleTemplate,
                                         load_template_to_dataframe)
@@ -90,7 +89,8 @@ class StudyDescriptionHandler(BaseHandler):
 
         Returns
         -------
-        The study object and the current user object
+        The study object, the current user object and a boolean indicating if
+        the user has full access to the study or only to public data
 
         Raises
         ------
@@ -107,7 +107,10 @@ class StudyDescriptionHandler(BaseHandler):
         else:
             check_access(user, study, raise_error=True)
 
-        return study, user
+        full_access = (user.level == 'admin' or
+                       study.id in user.user_studies | user.shared_studies)
+
+        return study, user, full_access
 
     def _process_investigation_type(self, inv_type, user_def_type, new_type):
         """Return the investigation_type and add it to the ontology if needed
@@ -442,10 +445,12 @@ class StudyDescriptionHandler(BaseHandler):
             The callback function to call with the results once the processing
             is done
         """
-        study.status = 'public'
-        msg = "Study set to public"
+        pd_id = int(self.get_argument('pd_id'))
+        pd = ProcessedData(pd_id)
+        pd.status = 'public'
+        msg = "Processed data set to public"
         msg_level = "success"
-        callback((msg, msg_level, "study_information_tab", None, None))
+        callback((msg, msg_level, "processed_data_tab", pd_id, None))
 
     def approve_study(self, study, user, callback):
         """Approves the current study if and only if the current user is admin
@@ -461,14 +466,16 @@ class StudyDescriptionHandler(BaseHandler):
             is done
         """
         if _approve(user.level):
-            study.status = 'private'
-            msg = "Study approved"
+            pd_id = int(self.get_argument('pd_id'))
+            pd = ProcessedData(pd_id)
+            pd.status = 'private'
+            msg = "Processed data approved"
             msg_level = "success"
         else:
             msg = ("The current user does not have permission to approve "
-                   "the study")
+                   "the processed data")
             msg_level = "danger"
-        callback((msg, msg_level, "study_information_tab", None, None))
+        callback((msg, msg_level, "processed_data_tab", pd_id, None))
 
     def request_approval(self, study, user, callback):
         """Changes the status of the current study to "awaiting_approval"
@@ -483,10 +490,12 @@ class StudyDescriptionHandler(BaseHandler):
             The callback function to call with the results once the processing
             is done
         """
-        study.status = 'awaiting_approval'
-        msg = "Study sent to admin for approval"
+        pd_id = int(self.get_argument('pd_id'))
+        pd = ProcessedData(pd_id)
+        pd.status = 'awaiting_approval'
+        msg = "Processed data sent to admin for approval"
         msg_level = "success"
-        callback((msg, msg_level, "study_information_tab", None, None))
+        callback((msg, msg_level, "processed_data_tab", pd_id, None))
 
     def make_sandbox(self, study, user, callback):
         """Reverts the current study to the 'sandbox' status
@@ -501,10 +510,12 @@ class StudyDescriptionHandler(BaseHandler):
             The callback function to call with the results once the processing
             is done
         """
-        study.status = 'sandbox'
-        msg = "Study reverted to sandbox"
+        pd_id = int(self.get_argument('pd_id'))
+        pd = ProcessedData(pd_id)
+        pd.status = 'sandbox'
+        msg = "Processed data reverted to sandbox"
         msg_level = "success"
-        callback((msg, msg_level, "study_information_tab", None, None))
+        callback((msg, msg_level, "processed_data_tab", pd_id, None))
 
     def update_investigation_type(self, study, user, callback):
         """Updates the investigation type of a prep template
@@ -575,21 +586,6 @@ class StudyDescriptionHandler(BaseHandler):
         msg_level = 'danger'
         callback((msg, msg_level, 'study_information_tab', None, None))
 
-    def get_raw_data(self, rdis, callback):
-        """Get all raw data objects from a list of raw_data_ids"""
-        callback([RawData(rdi) for rdi in rdis])
-
-    def get_prep_templates(self, raw_data, callback):
-        """Get all prep templates for a list of raw data objects"""
-        d = {}
-        for rd in raw_data:
-            # We neeed this so PrepTemplate(p) doesn't fail if that raw
-            # doesn't exist but raw data has the row: #554
-            prep_templates = sorted(rd.prep_templates)
-            d[rd.id] = [PrepTemplate(p) for p in prep_templates
-                        if PrepTemplate.exists(p)]
-        callback(d)
-
     def remove_add_study_template(self, raw_data, study_id, fp_rsp):
         """Replace prep templates, raw data, and sample template with a new one
         """
@@ -619,29 +615,9 @@ class StudyDescriptionHandler(BaseHandler):
         SampleTemplate(st_id).extend(load_template_to_dataframe(fp_rpt))
 
     @coroutine
-    def display_template(self, study, user, msg, msg_level, top_tab=None,
-                         sub_tab=None, prep_tab=None):
+    def display_template(self, study, user, msg, msg_level, full_access,
+                         top_tab=None, sub_tab=None, prep_tab=None):
         """Simple function to avoid duplication of code"""
-        # getting the RawData and its prep templates
-        available_raw_data = yield Task(self.get_raw_data, study.raw_data())
-        available_prep_templates = yield Task(self.get_prep_templates,
-                                              available_raw_data)
-
-        # set variable holding if we have files attached to all raw data or not
-        raw_files = True if available_raw_data else False
-        for r in available_raw_data:
-            if not r.get_filepaths():
-                raw_files = False
-
-        # set variable holding if we have all prep templates or not
-        if available_prep_templates:
-            def _test(item):
-                return not item
-            prep_templates = all(
-                [_test(val) for val in viewvalues(available_prep_templates)])
-        else:
-            prep_templates = False
-
         study_status = study.status
         user_level = user.level
         sample_template_exists = SampleTemplate.exists(study.id)
@@ -651,37 +627,6 @@ class StudyDescriptionHandler(BaseHandler):
         # modify the information of the study
         show_edit_btn = study_status != 'public' or user_level == 'admin'
 
-        # Files can be added to a study only if the study is sandboxed
-        # or if the user is the admin
-        show_upload_btn = study_status == 'sandbox' or user_level == 'admin'
-
-        # The request approval, approve study and make public buttons are
-        # mutually exclusive. Only one of them will be shown, depending on the
-        # current status of the study
-        btn_to_show = None
-        if (study_status == 'sandbox' and
-                qiita_config.require_approval and sample_template_exists and
-                raw_files and prep_templates):
-            # The request approval button only appears if the study is
-            # sandboxed, the qiita_config specifies that the approval should
-            # be requested and the sample template, raw files and prep
-            # prep templates have been added to the study
-            btn_to_show = 'request_approval'
-        elif (user_level == 'admin' and
-                study_status == 'awaiting_approval' and
-                qiita_config.require_approval):
-            # The approve study button only appears if the user is an admin,
-            # the study is waiting approval and the qiita config requires
-            # study approval
-            btn_to_show = 'approve_study'
-        elif study_status == 'private':
-            # The make public button only appers if the study is private
-            btn_to_show = 'make_public'
-
-        # The revert to sandbox button only appears if the study is not
-        # sandboxed or public
-        show_revert_btn = study_status not in {'sandbox', 'public'}
-
         self.render('study_description.html',
                     message=msg,
                     level=msg_level,
@@ -689,10 +634,8 @@ class StudyDescriptionHandler(BaseHandler):
                     study_title=study.title,
                     study_alias=study.info['study_alias'],
                     show_edit_btn=show_edit_btn,
-                    show_upload_btn=show_upload_btn,
-                    show_revert_btn=show_revert_btn,
-                    btn_to_show=btn_to_show,
                     show_data_tabs=sample_template_exists,
+                    full_access=full_access,
                     top_tab=top_tab,
                     sub_tab=sub_tab,
                     prep_tab=prep_tab)
@@ -756,19 +699,20 @@ class StudyDescriptionHandler(BaseHandler):
 
     @authenticated
     def get(self, study_id):
-        study, user = self._get_study_and_check_access(study_id)
+        study, user, full_access = self._get_study_and_check_access(study_id)
 
         top_tab = self.get_argument('top_tab', 'study_information_tab')
         sub_tab = self.get_argument('sub_tab', None)
         prep_tab = self.get_argument('prep_tab', None)
 
-        self.display_template(study, user, "", 'info', top_tab=top_tab,
-                              sub_tab=sub_tab, prep_tab=prep_tab)
+        self.display_template(study, user, "", 'info', full_access,
+                              top_tab=top_tab, sub_tab=sub_tab,
+                              prep_tab=prep_tab)
 
     @authenticated
     @coroutine
     def post(self, study_id):
-        study, user = self._get_study_and_check_access(study_id)
+        study, user, full_access = self._get_study_and_check_access(study_id)
 
         # Define a dictionary with all the supported actions
         actions = defaultdict(
@@ -794,8 +738,8 @@ class StudyDescriptionHandler(BaseHandler):
                                                                 study, user)
 
         # Display the function
-        self.display_template(study, user, msg, msg_level, top_tab, sub_tab,
-                              prep_tab)
+        self.display_template(study, user, msg, msg_level, full_access,
+                              top_tab, sub_tab, prep_tab)
 
 
 class PreprocessingSummaryHandler(BaseHandler):

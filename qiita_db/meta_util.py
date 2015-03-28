@@ -81,9 +81,8 @@ def get_accessible_filepath_ids(user):
         return set(f[0] for f in fpids)
 
     # First, the studies
-    # There are public, private, and shared studies
-    study_ids = Study.get_by_status('public') | user.user_studies | \
-        user.shared_studies
+    # There are private and shared studies
+    study_ids = user.user_studies | user.shared_studies
 
     filepath_ids = set()
     for study_id in study_ids:
@@ -107,7 +106,6 @@ def get_accessible_filepath_ids(user):
         for rdid in study.raw_data():
             for pt_id in RawData(rdid).prep_templates:
                 # related to https://github.com/biocore/qiita/issues/596
-                # and https://github.com/biocore/qiita/issues/554
                 if PrepTemplate.exists(pt_id):
                     for _id, _ in PrepTemplate(pt_id).get_filepaths():
                         prep_fp_ids.append(_id)
@@ -116,6 +114,40 @@ def get_accessible_filepath_ids(user):
         if SampleTemplate.exists(study_id):
             sample_fp_ids = [_id for _id, _
                              in SampleTemplate(study_id).get_filepaths()]
+            filepath_ids.update(sample_fp_ids)
+
+    # Next, the public processed data
+    processed_data_ids = ProcessedData.get_by_status('public')
+    for pd_id in processed_data_ids:
+        processed_data = ProcessedData(pd_id)
+
+        # Add the filepaths of the processed data
+        pd_fps = (fpid for fpid, _, _ in processed_data.get_filepaths())
+        filepath_ids.update(pd_fps)
+
+        # Each processed data has a preprocessed data
+        ppd = PreprocessedData(processed_data.preprocessed_data)
+        ppd_fps = (fpid for fpid, _, _ in ppd.get_filepaths())
+        filepath_ids.update(ppd_fps)
+
+        # Each preprocessed data has a prep template
+        pt_id = ppd.prep_template
+        # related to https://github.com/biocore/qiita/issues/596
+        if PrepTemplate.exists(pt_id):
+            pt = PrepTemplate(pt_id)
+            pt_fps = (fpid for fpid, _ in pt.get_filepaths())
+            filepath_ids.update(pt_fps)
+
+            # Each prep template has a raw data
+            rd = RawData(pt.raw_data)
+            rd_fps = (fpid for fpid, _, _ in rd.get_filepaths())
+            filepath_ids.update(rd_fps)
+
+        # And each processed data has a study, which has a sample template
+        st_id = processed_data.study
+        if SampleTemplate.exists(st_id):
+            sample_fp_ids = (_id for _id, _
+                             in SampleTemplate(st_id).get_filepaths())
             filepath_ids.update(sample_fp_ids)
 
     # Next, analyses

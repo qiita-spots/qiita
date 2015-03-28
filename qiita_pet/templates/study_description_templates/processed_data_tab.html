@@ -5,8 +5,11 @@
       <!-- Adding a processed data -->
       <li class="active"><a href="#add_processed_data_tab" role="tab" data-toggle="tab">Add processed data</a></li>
       <!-- Create the tabs for each processed data -->
-      {% for pd_id, pd in available_processed_data %}
-        <li><a href="#processed_data_info_{{pd_id}}" role="tab" data-toggle="tab">ID: {{pd_id}}</a></li>
+      {% for pd_id, pd, (class_icon1, class_icon2, color) in available_processed_data %}
+        <li><a href="#processed_data_info_{{pd_id}}" role="tab" data-toggle="tab">ID: {{pd_id}}&nbsp;
+          <div class="{{class_icon1}}" style="color: {{color}};"></div>
+          <div class="{{class_icon2}}" style="color: {{color}};"></div>
+        </a></li>
       {% end %}
     </ul>
     <!-- Create the tab panes -->
@@ -16,7 +19,7 @@
         <b>Not implemented! Coming soon...</b>
       </div>
       <!-- Create one tab pane for each processed data -->
-      {% for pd_id, pd in available_processed_data %}
+      {% for pd_id, pd, _ in available_processed_data %}
         {% module ProcessedDataInfoTab(study_id, pd) %}
       {% end %}
     </div>
