@@ -1696,11 +1696,11 @@ class SampleTemplate(MetadataTemplate):
         # add the column to the sample template
         sql = """ALTER TABLE qiita.{0}
             ADD COLUMN {1} {2}""".format(table_name, category, dtype)
+        sql_args = None
         if default is not None:
-            # mogrify the sql and add to end
-            with conn_handler.get_postgres_cursor() as cur:
-                sql = sql + cur.mogrify(" NOT NULL DEFAULT %s", [default])
-        conn_handler.add_to_queue(queue, sql)
+                sql = sql + " NOT NULL DEFAULT %s"
+                sql_args = [default]
+        conn_handler.add_to_queue(queue, sql, sql_args)
 
         # add the column to the column listings table
         conn_handler.add_to_queue(
