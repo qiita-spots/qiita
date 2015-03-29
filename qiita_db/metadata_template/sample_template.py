@@ -9,30 +9,23 @@
 from __future__ import division
 from future.builtins import zip
 from future.utils import viewitems
-from copy import deepcopy
 from os.path import join
 from time import strftime
 from os.path import basename
 
 import pandas as pd
 import warnings
-from skbio.util import find_duplicates
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_db.exceptions import (QiitaDBDuplicateError, QiitaDBColumnError,
-                                 QiitaDBUnknownIDError,
-                                 QiitaDBDuplicateHeaderError, QiitaDBError,
+                                 QiitaDBUnknownIDError, QiitaDBError,
                                  QiitaDBWarning)
 from qiita_db.sql_connection import SQLConnectionHandler
-from qiita_db.util import (get_table_cols,
-                           get_required_sample_info_status,
-                           get_mountpoint,
-                           scrub_data)
+from qiita_db.util import get_mountpoint, scrub_data
 from qiita_db.study import Study
 from qiita_db.data import RawData
 from .base_metadata_template import BaseSample, MetadataTemplate
-from .util import (as_python_types, get_invalid_sample_names, get_datatypes,
-                   prefix_sample_names_with_id)
+from .util import as_python_types, get_datatypes
 from .prep_template import PrepTemplate
 
 SAMPLE_TEMPLATE_EBI_COLS = {
@@ -110,64 +103,6 @@ class SampleTemplate(MetadataTemplate):
         return set()
 
     @classmethod
-    def _clean_validate_template(cls, md_template, study_id,
-                                 conn_handler=None):
-        """Takes care of all validation and cleaning of sample templates
-
-        Parameters
-        ----------
-        md_template : DataFrame
-            The metadata template file contents indexed by sample ids
-        study_id : int
-            The study to which the sample template belongs to.
-
-        Returns
-        -------
-        md_template : DataFrame
-            Cleaned copy of the input md_template
-        """
-        invalid_ids = get_invalid_sample_names(md_template.index)
-        if invalid_ids:
-            raise QiitaDBColumnError("The following sample names in the sample"
-                                     " template contain invalid characters "
-                                     "(only alphanumeric characters or periods"
-                                     " are allowed): %s." %
-                                     ", ".join(invalid_ids))
-        # We are going to modify the md_template. We create a copy so
-        # we don't modify the user one
-        md_template = deepcopy(md_template)
-
-        # Prefix the sample names with the study_id
-        prefix_sample_names_with_id(md_template, study_id)
-
-        # In the database, all the column headers are lowercase
-        md_template.columns = [c.lower() for c in md_template.columns]
-
-        # Check that we don't have duplicate columns
-        if len(set(md_template.columns)) != len(md_template.columns):
-            raise QiitaDBDuplicateHeaderError(
-                find_duplicates(md_template.columns))
-
-        conn_handler = conn_handler if conn_handler else SQLConnectionHandler()
-
-        # Get the required columns from the DB
-        db_cols = get_table_cols(cls._table, conn_handler)
-
-        # Remove the sample_id and study_id columns
-        db_cols.remove('sample_id')
-        db_cols.remove(cls._id_column)
-
-        # Retrieve the headers of the metadata template
-        headers = list(md_template.keys())
-
-        # Check that md_template has the required columns
-        missing = set(db_cols).difference(headers)
-        if missing:
-            raise QiitaDBColumnError("Missing columns: %s"
-                                     % ', '.join(missing))
-        return md_template
-
-    @classmethod
     def create(cls, md_template, study):
         r"""Creates the sample template in the database
 
@@ -194,7 +129,6 @@ class SampleTemplate(MetadataTemplate):
 
         # Get some useful information from the metadata template
         sample_ids = md_template.index.tolist()
-        num_samples = len(sample_ids)
         headers = list(md_template.keys())
 
         # Insert values on required columns
@@ -286,7 +220,6 @@ class SampleTemplate(MetadataTemplate):
 
         # Get some useful information from the metadata template
         sample_ids = md_template.index.tolist()
-        num_samples = len(sample_ids)
         headers = list(md_template.keys())
 
         # Insert values on required columns

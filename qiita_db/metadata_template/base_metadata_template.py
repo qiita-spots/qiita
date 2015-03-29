@@ -9,17 +9,21 @@
 from __future__ import division
 from os.path import join
 from functools import partial
+from copy import deepcopy
 
 import pandas as pd
+from skbio.util import find_duplicates
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_db.exceptions import (QiitaDBUnknownIDError, QiitaDBColumnError,
-                                 QiitaDBNotImplementedError)
+                                 QiitaDBNotImplementedError,
+                                 QiitaDBDuplicateHeaderError)
 from qiita_db.base import QiitaObject
 from qiita_db.sql_connection import SQLConnectionHandler
 from qiita_db.util import (exists_table, get_table_cols, convert_to_id,
                            get_mountpoint, insert_filepaths)
 from qiita_db.logger import LogEntry
+from .util import get_invalid_sample_names, prefix_sample_names_with_id
 
 
 class BaseSample(QiitaObject):
@@ -855,3 +859,46 @@ class MetadataTemplate(QiitaObject):
 
         """
         return get_table_cols(self._table_name(self._id))
+
+    @classmethod
+    def _clean_validate_template(cls, md_template, study_id,
+                                 conn_handler=None):
+        """Takes care of all validation and cleaning of templates
+
+        Parameters
+        ----------
+        md_template : DataFrame
+            The metadata template file contents indexed by sample ids
+        study_id : int
+            The study to which the template belongs to.
+
+        Returns
+        -------
+        md_template : DataFrame
+            Cleaned copy of the input md_template
+        """
+        invalid_ids = get_invalid_sample_names(md_template.index)
+        if invalid_ids:
+            raise QiitaDBColumnError("The following sample names in the sample"
+                                     " template contain invalid characters "
+                                     "(only alphanumeric characters or periods"
+                                     " are allowed): %s." %
+                                     ", ".join(invalid_ids))
+        # We are going to modify the md_template. We create a copy so
+        # we don't modify the user one
+        md_template = deepcopy(md_template)
+
+        # Prefix the sample names with the study_id
+        prefix_sample_names_with_id(md_template, study_id)
+
+        # In the database, all the column headers are lowercase
+        md_template.columns = [c.lower() for c in md_template.columns]
+
+        # Check that we don't have duplicate columns
+        if len(set(md_template.columns)) != len(md_template.columns):
+            raise QiitaDBDuplicateHeaderError(
+                find_duplicates(md_template.columns))
+
+        conn_handler = conn_handler if conn_handler else SQLConnectionHandler()
+
+        return md_template
