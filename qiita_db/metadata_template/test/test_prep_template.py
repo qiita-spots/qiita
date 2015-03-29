@@ -471,10 +471,7 @@ class TestPrepTemplate(TestCase):
 
         self.assertFalse(exists_table("prep_%d" % exp_id, self.conn_handler))
 
-    def test_create(self):
-        """Creates a new PrepTemplate"""
-        pt = PrepTemplate.create(self.metadata, self.new_raw_data,
-                                 self.test_study, self.data_type)
+    def _common_creation_tests(self, pt):
         # The returned object has the correct id
         self.assertEqual(pt.id, 2)
 
@@ -488,11 +485,10 @@ class TestPrepTemplate(TestCase):
         # The relevant rows to common_prep_info have been added.
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.common_prep_info WHERE prep_template_id=2")
-        # prep_template_id, sample_id, study_id, center_name,
-        # center_project_name, emp_status_id
-        exp = [[2, '1.SKB8.640193', 'ANL', 'Test Project', 1],
-               [2, '1.SKD8.640184', 'ANL', 'Test Project', 1],
-               [2, '1.SKB7.640196', 'ANL', 'Test Project', 1]]
+        # prep_template_id, sample_id
+        exp = [[2, '1.SKB8.640193'],
+               [2, '1.SKD8.640184'],
+               [2, '1.SKB7.640196']]
         self.assertEqual(sorted(obs), sorted(exp))
 
         # The relevant rows have been added to the prep_columns table
@@ -506,26 +502,56 @@ class TestPrepTemplate(TestCase):
                [2, 'linkerprimersequence', 'varchar'],
                [2, 'platform', 'varchar'],
                [2, 'experiment_design_description', 'varchar'],
-               [2, 'library_construction_protocol', 'varchar']]
+               [2, 'library_construction_protocol', 'varchar'],
+               [2, 'center_name', 'varchar'],
+               [2, 'center_project_name', 'varchar'],
+               [2, 'emp_status', 'varchar']]
         self.assertEqual(sorted(obs), sorted(exp))
 
         # The new table exists
         self.assertTrue(exists_table("prep_2", self.conn_handler))
 
         # The new table hosts the correct values
-        obs = self.conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.prep_2")
-        # sample_id, study_id, str_column, ebi_submission_accession,
-        # run_prefix, barcodesequence, linkerprimersequence
-        exp = [['1.SKB7.640196', 'Value for sample 3', 'ILLUMINA',
-                's_G1_L002_sequences', 'CCTCTGAGAGCT', None,
-                'GTGCCAGCMGCCGCGGTAA', 'BBBB', 'AAAA'],
-               ['1.SKB8.640193', 'Value for sample 1', 'ILLUMINA',
-                's_G1_L001_sequences', 'GTCCGCAAGTTA', None,
-                'GTGCCAGCMGCCGCGGTAA', 'BBBB', 'AAAA'],
-               ['1.SKD8.640184', 'Value for sample 2', 'ILLUMINA',
-                's_G1_L001_sequences', 'CGTAGAGCTCTC', None,
-                'GTGCCAGCMGCCGCGGTAA', 'BBBB', 'AAAA']]
+        sql = "SELECT * FROM qiita.prep_2"
+        obs = [dict(o) for o in self.conn_handler.execute_fetchall(sql)]
+
+        exp = [
+            {'sample_id': '1.SKB8.640193',
+             'center_name': 'ANL',
+             'center_project_name': 'Test Project',
+             'ebi_submission_accession': None,
+             'emp_status': 'EMP',
+             'str_column': 'Value for sample 1',
+             'linkerprimersequence': 'GTGCCAGCMGCCGCGGTAA',
+             'barcodesequence': 'GTCCGCAAGTTA',
+             'run_prefix': "s_G1_L001_sequences",
+             'platform': 'ILLUMINA',
+             'library_construction_protocol': 'AAAA',
+             'experiment_design_description': 'BBBB'},
+            {'sample_id': '1.SKD8.640184',
+             'center_name': 'ANL',
+             'center_project_name': 'Test Project',
+             'ebi_submission_accession': None,
+             'emp_status': 'EMP',
+             'str_column': 'Value for sample 2',
+             'linkerprimersequence': 'GTGCCAGCMGCCGCGGTAA',
+             'barcodesequence': 'CGTAGAGCTCTC',
+             'run_prefix': "s_G1_L001_sequences",
+             'platform': 'ILLUMINA',
+             'library_construction_protocol': 'AAAA',
+             'experiment_design_description': 'BBBB'},
+            {'sample_id': '1.SKB7.640196',
+             'center_name': 'ANL',
+             'center_project_name': 'Test Project',
+             'ebi_submission_accession': None,
+             'emp_status': 'EMP',
+             'str_column': 'Value for sample 3',
+             'linkerprimersequence': 'GTGCCAGCMGCCGCGGTAA',
+             'barcodesequence': 'CCTCTGAGAGCT',
+             'run_prefix': "s_G1_L002_sequences",
+             'platform': 'ILLUMINA',
+             'library_construction_protocol': 'AAAA',
+             'experiment_design_description': 'BBBB'}]
         self.assertEqual(sorted(obs), sorted(exp))
 
         # prep and qiime files have been created
@@ -533,165 +559,25 @@ class TestPrepTemplate(TestCase):
         self.assertEqual(len(filepaths), 2)
         self.assertEqual(filepaths[0][0], 22)
         self.assertEqual(filepaths[1][0], 21)
+
+    def test_create(self):
+        """Creates a new PrepTemplate"""
+        pt = PrepTemplate.create(self.metadata, self.new_raw_data,
+                                 self.test_study, self.data_type)
+        self._common_creation_tests(pt)
 
     def test_create_already_prefixed_samples(self):
         """Creates a new PrepTemplate"""
         pt = npt.assert_warns(QiitaDBWarning, PrepTemplate.create,
                               self.metadata_prefixed, self.new_raw_data,
                               self.test_study, self.data_type)
-        # The returned object has the correct id
-        self.assertEqual(pt.id, 2)
-
-        # The row in the prep template table has been created
-        obs = self.conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.prep_template WHERE prep_template_id=2")
-        # prep_template_id, data_type_id, raw_data_id, preprocessing_status,
-        # investigation_type
-        self.assertEqual(obs, [[2, 2, 5, 'not_preprocessed', None]])
-
-        # The relevant rows to common_prep_info have been added.
-        obs = self.conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.common_prep_info WHERE prep_template_id=2")
-        # prep_template_id, sample_id, study_id, center_name,
-        # center_project_name, emp_status_id
-        exp = [[2, '1.SKB8.640193', 'ANL', 'Test Project', 1],
-               [2, '1.SKD8.640184', 'ANL', 'Test Project', 1],
-               [2, '1.SKB7.640196', 'ANL', 'Test Project', 1]]
-        self.assertEqual(sorted(obs), sorted(exp))
-
-        # The relevant rows have been added to the prep_columns table
-        obs = self.conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.prep_columns WHERE prep_template_id=2")
-        # prep_template_id, column_name, column_type
-        exp = [[2, 'str_column', 'varchar'],
-               [2, 'ebi_submission_accession', 'varchar'],
-               [2, 'run_prefix', 'varchar'],
-               [2, 'barcodesequence', 'varchar'],
-               [2, 'linkerprimersequence', 'varchar'],
-               [2, 'platform', 'varchar'],
-               [2, 'experiment_design_description', 'varchar'],
-               [2, 'library_construction_protocol', 'varchar']]
-        self.assertEqual(sorted(obs), sorted(exp))
-
-        # The new table exists
-        self.assertTrue(exists_table("prep_2", self.conn_handler))
-
-        # The new table hosts the correct values
-        obs = self.conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.prep_2")
-        # sample_id, study_id, str_column, ebi_submission_accession,
-        # run_prefix, barcodesequence, linkerprimersequence
-        exp = [['1.SKB7.640196', 'Value for sample 3', 'ILLUMINA',
-                's_G1_L002_sequences', 'CCTCTGAGAGCT', None,
-                'GTGCCAGCMGCCGCGGTAA', 'BBBB', 'AAAA'],
-               ['1.SKB8.640193', 'Value for sample 1', 'ILLUMINA',
-                's_G1_L001_sequences', 'GTCCGCAAGTTA', None,
-                'GTGCCAGCMGCCGCGGTAA', 'BBBB', 'AAAA'],
-               ['1.SKD8.640184', 'Value for sample 2', 'ILLUMINA',
-                's_G1_L001_sequences', 'CGTAGAGCTCTC', None,
-                'GTGCCAGCMGCCGCGGTAA', 'BBBB', 'AAAA']]
-        self.assertEqual(sorted(obs), sorted(exp))
-
-        # prep and qiime files have been created
-        filepaths = pt.get_filepaths()
-        self.assertEqual(len(filepaths), 2)
-        self.assertEqual(filepaths[0][0], 22)
-        self.assertEqual(filepaths[1][0], 21)
-
-    def test_create_qiime_mapping_file(self):
-        pt = PrepTemplate(1)
-
-        # creating prep template file
-        _id, fp = get_mountpoint('templates')[0]
-        fpp = join(fp, '%d_prep_%d_%s.txt' % (pt.study_id, pt.id,
-                   strftime("%Y%m%d-%H%M%S")))
-        pt.to_file(fpp)
-        pt.add_filepath(fpp)
-
-        _, filepath = pt.get_filepaths()[0]
-        obs_fp = pt.create_qiime_mapping_file(filepath)
-        exp_fp = join(fp, '1_prep_1_qiime_19700101-000000.txt')
-
-        obs = pd.read_csv(obs_fp, sep='\t', infer_datetime_format=True,
-                          parse_dates=True, index_col=False, comment='\t')
-        exp = pd.read_csv(exp_fp, sep='\t', infer_datetime_format=True,
-                          parse_dates=True, index_col=False, comment='\t')
-
-        assert_frame_equal(obs, exp)
-
-        # testing failure, first lest remove some lines of the prep template
-        with open(filepath, 'r') as filepath_fh:
-            data = filepath_fh.read().splitlines()
-        with open(filepath, 'w') as filepath_fh:
-            for i, d in enumerate(data):
-                if i == 4:
-                    # adding fake sample
-                    line = d.split('\t')
-                    line[0] = 'fake_sample'
-                    line = '\t'.join(line)
-                    filepath_fh.write(line + '\n')
-                    break
-                filepath_fh.write(d + '\n')
-
-        with self.assertRaises(ValueError):
-            pt.create_qiime_mapping_file(filepath)
+        self._common_creation_tests(pt)
 
     def test_create_data_type_id(self):
         """Creates a new PrepTemplate passing the data_type_id"""
         pt = PrepTemplate.create(self.metadata, self.new_raw_data,
                                  self.test_study, self.data_type_id)
-        # The returned object has the correct id
-        self.assertEqual(pt.id, 2)
-
-        # The row in the prep template table have been created
-        obs = self.conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.prep_template WHERE prep_template_id=2")
-        # prep_template_id, data_type_id, raw_data_id, preprocessing_status,
-        # investigation_type
-        self.assertEqual(obs, [[2, 2, 5, 'not_preprocessed', None]])
-
-        # The relevant rows to common_prep_info have been added.
-        obs = self.conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.common_prep_info WHERE prep_template_id=2")
-        # prep_template_id, sample_id, center_name,
-        # center_project_name, emp_status_id
-        exp = [[2, '1.SKB8.640193', 'ANL', 'Test Project', 1],
-               [2, '1.SKD8.640184', 'ANL', 'Test Project', 1],
-               [2, '1.SKB7.640196', 'ANL', 'Test Project', 1]]
-        self.assertEqual(sorted(obs), sorted(exp))
-
-        # The relevant rows have been added to the prep_columns table
-        obs = self.conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.prep_columns WHERE prep_template_id=2")
-        # prep_template_id, column_name, column_type
-        exp = [[2, 'str_column', 'varchar'],
-               [2, 'ebi_submission_accession', 'varchar'],
-               [2, 'run_prefix', 'varchar'],
-               [2, 'barcodesequence', 'varchar'],
-               [2, 'linkerprimersequence', 'varchar'],
-               [2, 'platform', 'varchar'],
-               [2, 'experiment_design_description', 'varchar'],
-               [2, 'library_construction_protocol', 'varchar']]
-        self.assertEqual(sorted(obs), sorted(exp))
-
-        # The new table exists
-        self.assertTrue(exists_table("prep_2", self.conn_handler))
-
-        # The new table hosts the correct values
-        obs = self.conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.prep_2")
-        # sample_id, str_column, ebi_submission_accession,
-        # run_prefix, barcodesequence, linkerprimersequence
-        exp = [['1.SKB7.640196', 'Value for sample 3', 'ILLUMINA',
-                's_G1_L002_sequences', 'CCTCTGAGAGCT', None,
-                'GTGCCAGCMGCCGCGGTAA', 'BBBB', 'AAAA'],
-               ['1.SKB8.640193', 'Value for sample 1', 'ILLUMINA',
-                's_G1_L001_sequences', 'GTCCGCAAGTTA', None,
-                'GTGCCAGCMGCCGCGGTAA', 'BBBB', 'AAAA'],
-               ['1.SKD8.640184', 'Value for sample 2', 'ILLUMINA',
-                's_G1_L001_sequences', 'CGTAGAGCTCTC', None,
-                'GTGCCAGCMGCCGCGGTAA', 'BBBB', 'AAAA']]
-        self.assertEqual(sorted(obs), sorted(exp))
+        self._common_creation_tests(pt)
 
     def test_create_error(self):
         """Create raises an error if any required columns are missing
@@ -751,6 +637,44 @@ class TestPrepTemplate(TestCase):
             PrepTemplate.create(self.metadata, self.new_raw_data,
                                 self.test_study, self.data_type_id,
                                 'Not a term')
+
+    def test_create_qiime_mapping_file(self):
+        pt = PrepTemplate(1)
+
+        # creating prep template file
+        _id, fp = get_mountpoint('templates')[0]
+        fpp = join(fp, '%d_prep_%d_%s.txt' % (pt.study_id, pt.id,
+                   strftime("%Y%m%d-%H%M%S")))
+        pt.to_file(fpp)
+        pt.add_filepath(fpp)
+
+        _, filepath = pt.get_filepaths()[0]
+        obs_fp = pt.create_qiime_mapping_file(filepath)
+        exp_fp = join(fp, '1_prep_1_qiime_19700101-000000.txt')
+
+        obs = pd.read_csv(obs_fp, sep='\t', infer_datetime_format=True,
+                          parse_dates=True, index_col=False, comment='\t')
+        exp = pd.read_csv(exp_fp, sep='\t', infer_datetime_format=True,
+                          parse_dates=True, index_col=False, comment='\t')
+
+        assert_frame_equal(obs, exp)
+
+        # testing failure, first lest remove some lines of the prep template
+        with open(filepath, 'r') as filepath_fh:
+            data = filepath_fh.read().splitlines()
+        with open(filepath, 'w') as filepath_fh:
+            for i, d in enumerate(data):
+                if i == 4:
+                    # adding fake sample
+                    line = d.split('\t')
+                    line[0] = 'fake_sample'
+                    line = '\t'.join(line)
+                    filepath_fh.write(line + '\n')
+                    break
+                filepath_fh.write(d + '\n')
+
+        with self.assertRaises(ValueError):
+            pt.create_qiime_mapping_file(filepath)
 
     def test_delete_error(self):
         """Try to delete a prep template that already has preprocessed data"""
@@ -1046,649 +970,13 @@ class TestPrepTemplate(TestCase):
             u'1.SKM7.640188', u'1.SKM8.640201', u'1.SKM9.640192'})
 
         self.assertEqual(set(obs.columns), {
-            u'prep_template_id', u'center_name', u'center_project_name',
-            u'emp_status', u'barcodesequence',
-            u'library_construction_protocol', u'linkerprimersequence',
-            u'target_subfragment', u'target_gene', u'run_center',
-            u'run_prefix', u'run_date', u'experiment_center',
+            u'center_name', u'center_project_name', u'emp_status',
+            u'barcodesequence', u'library_construction_protocol',
+            u'linkerprimersequence', u'target_subfragment', u'target_gene',
+            u'run_center', u'run_prefix', u'run_date', u'experiment_center',
             u'experiment_design_description', u'experiment_title', u'platform',
             u'samp_size', u'sequencing_meth', u'illumina_technology',
             u'sample_center', u'pcr_primers', u'study_center'})
-
-
-class TestUtilities(TestCase):
-
-    def test_load_template_to_dataframe(self):
-        obs = load_template_to_dataframe(StringIO(EXP_SAMPLE_TEMPLATE))
-        exp = pd.DataFrame.from_dict(SAMPLE_TEMPLATE_DICT_FORM)
-        exp.index.name = 'sample_name'
-        assert_frame_equal(obs, exp)
-
-    def test_load_template_to_dataframe_duplicate_cols(self):
-        obs = load_template_to_dataframe(
-            StringIO(EXP_SAMPLE_TEMPLATE_DUPE_COLS))
-        obs = list(obs.columns)
-        exp = ['collection_timestamp', 'description', 'has_extracted_data',
-               'has_physical_specimen', 'host_subject_id', 'latitude',
-               'longitude', 'physical_location', 'required_sample_info_status',
-               'sample_type', 'str_column', 'str_column']
-        self.assertEqual(obs, exp)
-
-    def test_load_template_to_dataframe_scrubbing(self):
-        obs = load_template_to_dataframe(StringIO(EXP_SAMPLE_TEMPLATE_SPACES))
-        exp = pd.DataFrame.from_dict(SAMPLE_TEMPLATE_DICT_FORM)
-        exp.index.name = 'sample_name'
-        assert_frame_equal(obs, exp)
-
-    def test_load_template_to_dataframe_empty_columns(self):
-        obs = npt.assert_warns(QiitaDBWarning, load_template_to_dataframe,
-                               StringIO(EXP_ST_SPACES_EMPTY_COLUMN))
-        exp = pd.DataFrame.from_dict(SAMPLE_TEMPLATE_DICT_FORM)
-        exp.index.name = 'sample_name'
-        assert_frame_equal(obs, exp)
-
-    def test_load_template_to_dataframe_empty_rows(self):
-        obs = load_template_to_dataframe(
-            StringIO(EXP_SAMPLE_TEMPLATE_SPACES_EMPTY_ROW))
-        exp = pd.DataFrame.from_dict(SAMPLE_TEMPLATE_DICT_FORM)
-        exp.index.name = 'sample_name'
-        assert_frame_equal(obs, exp)
-
-    def test_load_template_to_dataframe_no_sample_name_cast(self):
-        obs = load_template_to_dataframe(
-            StringIO(EXP_SAMPLE_TEMPLATE_NUMBER_SAMPLE_NAMES))
-        exp = pd.DataFrame.from_dict(
-            SAMPLE_TEMPLATE_NUMBER_SAMPLE_NAMES_DICT_FORM)
-        exp.index.name = 'sample_name'
-        obs.sort_index(inplace=True)
-        exp.sort_index(inplace=True)
-        assert_frame_equal(obs, exp)
-
-    def test_load_template_to_dataframe_empty_sample_names(self):
-        obs = load_template_to_dataframe(
-            StringIO(SAMPLE_TEMPLATE_NO_SAMPLE_NAMES))
-        exp = pd.DataFrame.from_dict(SAMPLE_TEMPLATE_DICT_FORM)
-        exp.index.name = 'sample_name'
-        assert_frame_equal(obs, exp)
-
-        obs = load_template_to_dataframe(
-            StringIO(SAMPLE_TEMPLATE_NO_SAMPLE_NAMES_SOME_SPACES))
-        exp = pd.DataFrame.from_dict(SAMPLE_TEMPLATE_DICT_FORM)
-        exp.index.name = 'sample_name'
-        assert_frame_equal(obs, exp)
-
-    def test_load_template_to_dataframe_empty_column(self):
-        obs = npt.assert_warns(QiitaDBWarning, load_template_to_dataframe,
-                               StringIO(SAMPLE_TEMPLATE_EMPTY_COLUMN))
-        exp = pd.DataFrame.from_dict(ST_EMPTY_COLUMN_DICT_FORM)
-        exp.index.name = 'sample_name'
-        assert_frame_equal(obs, exp)
-
-    def test_load_template_to_dataframe_column_with_nas(self):
-        obs = load_template_to_dataframe(
-            StringIO(SAMPLE_TEMPLATE_COLUMN_WITH_NAS))
-        exp = pd.DataFrame.from_dict(ST_COLUMN_WITH_NAS_DICT_FORM)
-        exp.index.name = 'sample_name'
-        assert_frame_equal(obs, exp)
-
-    def test_load_template_to_dataframe_exception(self):
-        with self.assertRaises(QiitaDBColumnError):
-            x = load_template_to_dataframe(
-                StringIO(SAMPLE_TEMPLATE_NO_SAMPLE_NAME))
-
-            # prevent flake8 from complaining
-            x.strip()
-
-    def test_load_template_to_dataframe_whitespace(self):
-        obs = load_template_to_dataframe(
-            StringIO(EXP_SAMPLE_TEMPLATE_WHITESPACE))
-        exp = pd.DataFrame.from_dict(SAMPLE_TEMPLATE_DICT_FORM)
-        exp.index.name = 'sample_name'
-        assert_frame_equal(obs, exp)
-
-    def test_load_template_to_dataframe_lowercase(self):
-        obs = load_template_to_dataframe(
-            StringIO(EXP_SAMPLE_TEMPLATE_MULTICASE))
-        exp = pd.DataFrame.from_dict(SAMPLE_TEMPLATE_DICT_FORM)
-        exp.index.name = 'sample_name'
-        exp.rename(columns={"str_column": "str_CoLumn"}, inplace=True)
-        assert_frame_equal(obs, exp)
-
-    def test_load_template_to_dataframe_typechecking(self):
-        obs = load_template_to_dataframe(
-            StringIO(EXP_SAMPLE_TEMPLATE_LAT_ALL_INT))
-
-        exp = pd.DataFrame.from_dict(SAMPLE_TEMPLATE_LAT_ALL_INT_DICT)
-        exp.index.name = 'sample_name'
-        assert_frame_equal(obs, exp)
-
-        obs = load_template_to_dataframe(
-            StringIO(EXP_SAMPLE_TEMPLATE_LAT_MIXED_FLOAT_INT))
-
-        exp = pd.DataFrame.from_dict(SAMPLE_TEMPLATE_MIXED_FLOAT_INT_DICT)
-        exp.index.name = 'sample_name'
-        assert_frame_equal(obs, exp)
-
-    def test_get_invalid_sample_names(self):
-        all_valid = ['2.sample.1', 'foo.bar.baz', 'roses', 'are', 'red',
-                     'v10l3t5', '4r3', '81u3']
-        obs = get_invalid_sample_names(all_valid)
-        self.assertEqual(obs, [])
-
-        all_valid = ['sample.1', 'sample.2', 'SAMPLE.1', 'BOOOM']
-        obs = get_invalid_sample_names(all_valid)
-        self.assertEqual(obs, [])
-
-    def test_get_invalid_sample_names_str(self):
-        one_invalid = ['2.sample.1', 'foo.bar.baz', 'roses', 'are', 'red',
-                       'I am the chosen one', 'v10l3t5', '4r3', '81u3']
-        obs = get_invalid_sample_names(one_invalid)
-        self.assertItemsEqual(obs, ['I am the chosen one'])
-
-        one_invalid = ['2.sample.1', 'foo.bar.baz', 'roses', 'are', 'red',
-                       ':L{=<', ':L}=<', '4r3', '81u3']
-        obs = get_invalid_sample_names(one_invalid)
-        self.assertItemsEqual(obs, [':L{=<', ':L}=<'])
-
-    def test_get_get_invalid_sample_names_mixed(self):
-        one_invalid = ['.', '1', '2']
-        obs = get_invalid_sample_names(one_invalid)
-        self.assertItemsEqual(obs, [])
-
-        one_invalid = [' ', ' ', ' ']
-        obs = get_invalid_sample_names(one_invalid)
-        self.assertItemsEqual(obs, [' ', ' ', ' '])
-
-    def test_invalid_lat_long(self):
-
-        with self.assertRaises(QiitaDBColumnError):
-            obs = load_template_to_dataframe(
-                StringIO(SAMPLE_TEMPLATE_INVALID_LATITUDE_COLUMNS))
-            # prevent flake8 from complaining
-            str(obs)
-
-        with self.assertRaises(QiitaDBColumnError):
-            obs = load_template_to_dataframe(
-                StringIO(SAMPLE_TEMPLATE_INVALID_LONGITUDE_COLUMNS))
-            # prevent flake8 from complaining
-            str(obs)
-
-
-EXP_SAMPLE_TEMPLATE = (
-    "sample_name\tcollection_timestamp\tdescription\thas_extracted_data\t"
-    "has_physical_specimen\thost_subject_id\tint_column\tlatitude\tlongitude\t"
-    "physical_location\trequired_sample_info_status\tsample_type\tstr_column\n"
-    "2.Sample1\t2014-05-29 12:24:51\tTest Sample 1\tTrue\tTrue\tNotIdentified"
-    "\t1\t42.42\t41.41\tlocation1\treceived\ttype1\tValue for sample 1\n"
-    "2.Sample2\t2014-05-29 12:24:51\tTest Sample 2\tTrue\tTrue\tNotIdentified"
-    "\t2\t4.2\t1.1\tlocation1\treceived\ttype1\tValue for sample 2\n"
-    "2.Sample3\t2014-05-29 12:24:51\tTest Sample 3\tTrue\tTrue\tNotIdentified"
-    "\t3\t4.8\t4.41\tlocation1\treceived\ttype1\tValue for sample 3\n")
-
-EXP_SAMPLE_TEMPLATE_MULTICASE = (
-    "sAmPle_Name\tcollection_timestamp\tDescription\thas_extracted_data\t"
-    "has_physical_specimen\thost_Subject_id\tint_column\tlatitude\tLongitude\t"
-    "physical_location\trequired_sample_info_status\tsample_type\tstr_CoLumn\n"
-    "2.Sample1\t2014-05-29 12:24:51\tTest Sample 1\tTrue\tTrue\tNotIdentified"
-    "\t1\t42.42\t41.41\tlocation1\treceived\ttype1\tValue for sample 1\n"
-    "2.Sample2\t2014-05-29 12:24:51\tTest Sample 2\tTrue\tTrue\tNotIdentified"
-    "\t2\t4.2\t1.1\tlocation1\treceived\ttype1\tValue for sample 2\n"
-    "2.Sample3\t2014-05-29 12:24:51\tTest Sample 3\tTrue\tTrue\tNotIdentified"
-    "\t3\t4.8\t4.41\tlocation1\treceived\ttype1\tValue for sample 3\n")
-
-EXP_SAMPLE_TEMPLATE_LAT_ALL_INT = (
-    "sample_name\tcollection_timestamp\tdescription\thas_extracted_data\t"
-    "has_physical_specimen\thost_subject_id\tint_column\tlatitude\tlongitude\t"
-    "physical_location\trequired_sample_info_status\tsample_type\tstr_column\n"
-    "2.Sample1\t2014-05-29 12:24:51\tTest Sample 1\tTrue\tTrue\tNotIdentified"
-    "\t1\t42\t41.41\tlocation1\treceived\ttype1\tValue for sample 1\n"
-    "2.Sample2\t2014-05-29 12:24:51\tTest Sample 2\tTrue\tTrue\tNotIdentified"
-    "\t2\t4\t1.1\tlocation1\treceived\ttype1\tValue for sample 2\n"
-    "2.Sample3\t2014-05-29 12:24:51\tTest Sample 3\tTrue\tTrue\tNotIdentified"
-    "\t3\t4\t4.41\tlocation1\treceived\ttype1\tValue for sample 3\n")
-
-EXP_SAMPLE_TEMPLATE_LAT_MIXED_FLOAT_INT = (
-    "sample_name\tcollection_timestamp\tdescription\thas_extracted_data\t"
-    "has_physical_specimen\thost_subject_id\tint_column\tlatitude\tlongitude\t"
-    "physical_location\trequired_sample_info_status\tsample_type\tstr_column\n"
-    "2.Sample1\t2014-05-29 12:24:51\tTest Sample 1\tTrue\tTrue\tNotIdentified"
-    "\t1\t42\t41.41\tlocation1\treceived\ttype1\tValue for sample 1\n"
-    "2.Sample2\t2014-05-29 12:24:51\tTest Sample 2\tTrue\tTrue\tNotIdentified"
-    "\t2\t4\t1.1\tlocation1\treceived\ttype1\tValue for sample 2\n"
-    "2.Sample3\t2014-05-29 12:24:51\tTest Sample 3\tTrue\tTrue\tNotIdentified"
-    "\t3\t4.8\t4.41\tlocation1\treceived\ttype1\tValue for sample 3\n")
-
-EXP_SAMPLE_TEMPLATE_DUPE_COLS = (
-    "sample_name\tcollection_timestamp\tdescription\thas_extracted_data\t"
-    "has_physical_specimen\thost_subject_id\tlatitude\tlongitude\t"
-    "physical_location\trequired_sample_info_status\tsample_type\t"
-    "str_column\tstr_column\n"
-    "2.Sample1\t2014-05-29 12:24:51\tTest Sample 1\tTrue\tTrue\t"
-    "NotIdentified\t42.42\t41.41\tlocation1\treceived\ttype1\t"
-    "Value for sample 1\tValue for sample 1\n"
-    "2.Sample2\t2014-05-29 12:24:51\t"
-    "Test Sample 2\tTrue\tTrue\tNotIdentified\t4.2\t1.1\tlocation1\treceived\t"
-    "type1\tValue for sample 2\tValue for sample 2\n"
-    "2.Sample3\t2014-05-29 12:24:51\tTest Sample 3\tTrue\t"
-    "True\tNotIdentified\t4.8\t4.41\tlocation1\treceived\ttype1\t"
-    "Value for sample 3\tValue for sample 3\n")
-
-EXP_SAMPLE_TEMPLATE_FEWER_SAMPLES = (
-    "sample_name\tcollection_timestamp\tdescription\thas_extracted_data\t"
-    "has_physical_specimen\thost_subject_id\tint_column\tlatitude\t"
-    "longitude\tphysical_location\trequired_sample_info_status\tsample_type\t"
-    "str_column\n"
-    "2.Sample1\t2014-05-29 12:24:51\tTest Sample 1\tTrue\tTrue\tNotIdentified"
-    "\t1\t42.42\t41.41\tlocation1\treceived\ttype1\tValue for sample 1\n"
-    "2.Sample3\t2014-05-29 12:24:51\tTest Sample 3\tTrue\tTrue\tNotIdentified"
-    "\t3\t4.8\t4.41\tlocation1\treceived\ttype1\tValue for sample 3\n")
-
-EXP_SAMPLE_TEMPLATE_SPACES = (
-    "sample_name\tcollection_timestamp\tdescription\thas_extracted_data\t"
-    "has_physical_specimen\thost_subject_id\tint_column\tlatitude\tlongitude\t"
-    "physical_location\trequired_sample_info_status\tsample_type\t"
-    "str_column\n"
-    "2.Sample1         \t2014-05-29 12:24:51\tTest Sample 1\tTrue\tTrue\t"
-    "NotIdentified\t1\t42.42\t41.41\tlocation1\treceived\ttype1\t"
-    "Value for sample 1\n"
-    "2.Sample2  \t2014-05-29 12:24:51\t"
-    "Test Sample 2\tTrue\tTrue\tNotIdentified\t2\t4.2\t1.1\tlocation1\t"
-    "received\ttype1\tValue for sample 2\n"
-    "2.Sample3\t2014-05-29 12:24:51\tTest Sample 3\tTrue\t"
-    "True\tNotIdentified\t3\t4.8\t4.41\tlocation1\treceived\ttype1\t"
-    "Value for sample 3\n")
-
-EXP_SAMPLE_TEMPLATE_WHITESPACE = (
-    "sample_name \tcollection_timestamp\t description \thas_extracted_data\t"
-    "has_physical_specimen\thost_subject_id\tint_column\tlatitude\tlongitude\t"
-    "physical_location\trequired_sample_info_status\tsample_type\t"
-    "str_column\n"
-    "2.Sample1\t2014-05-29 12:24:51\tTest Sample 1\tTrue\tTrue\t"
-    "NotIdentified\t1\t42.42\t41.41\tlocation1\treceived\ttype1\t"
-    "Value for sample 1\n"
-    "2.Sample2\t      2014-05-29 12:24:51 \t"
-    "Test Sample 2\tTrue\tTrue\tNotIdentified\t2\t4.2\t1.1\tlocation1\t"
-    "received\ttype1\t Value for sample 2\n"
-    "2.Sample3\t2014-05-29 12:24:51\t   Test Sample 3 \tTrue\t"
-    "True\tNotIdentified\t3\t4.8\t4.41\tlocation1\treceived\ttype1\t"
-    "Value for sample 3\n")
-
-EXP_SAMPLE_TEMPLATE_SPACES_EMPTY_ROW = (
-    "sample_name\tcollection_timestamp\tdescription\thas_extracted_data\t"
-    "has_physical_specimen\thost_subject_id\tint_column\tlatitude\tlongitude\t"
-    "physical_location\trequired_sample_info_status\tsample_type\t"
-    "str_column\n"
-    "2.Sample1         \t2014-05-29 12:24:51\tTest Sample 1\tTrue\tTrue\t"
-    "NotIdentified\t1\t42.42\t41.41\tlocation1\treceived\ttype1\t"
-    "Value for sample 1\n"
-    "2.Sample2  \t2014-05-29 12:24:51\t"
-    "Test Sample 2\tTrue\tTrue\tNotIdentified\t2\t4.2\t1.1\tlocation1\t"
-    "received\ttype1\tValue for sample 2\n"
-    "2.Sample3\t2014-05-29 12:24:51\tTest Sample 3\tTrue\t"
-    "True\tNotIdentified\t3\t4.8\t4.41\tlocation1\treceived\ttype1\t"
-    "Value for sample 3\n"
-    "\t\t\t\t\t\t\t\t\t\t\t\t\n"
-    "\t\t\t\t\t\t\t\t\t\t\t\t\n")
-
-EXP_ST_SPACES_EMPTY_COLUMN = (
-    "sample_name\tcollection_timestamp\tdescription\thas_extracted_data\t"
-    "has_physical_specimen\thost_subject_id\tint_column\tlatitude\tlongitude\t"
-    "physical_location\trequired_sample_info_status\tsample_type\t"
-    "str_column\t\n"
-    "2.Sample1         \t2014-05-29 12:24:51\tTest Sample 1\tTrue\tTrue\t"
-    "NotIdentified\t1\t42.42\t41.41\tlocation1\treceived\ttype1\t"
-    "Value for sample 1\t\n"
-    "2.Sample2  \t2014-05-29 12:24:51\t"
-    "Test Sample 2\tTrue\tTrue\tNotIdentified\t2\t4.2\t1.1\tlocation1\t"
-    "received\ttype1\tValue for sample 2\t\n"
-    "2.Sample3\t2014-05-29 12:24:51\tTest Sample 3\tTrue\t"
-    "True\tNotIdentified\t3\t4.8\t4.41\tlocation1\treceived\ttype1\t"
-    "Value for sample 3\t\n")
-
-EXP_SAMPLE_TEMPLATE_NUMBER_SAMPLE_NAMES = (
-    "sample_name\tcollection_timestamp\tdescription\thas_extracted_data\t"
-    "has_physical_specimen\thost_subject_id\tlatitude\tlongitude\t"
-    "physical_location\trequired_sample_info_status\tsample_type\t"
-    "str_column\n"
-    "002.000\t2014-05-29 12:24:51\tTest Sample 1\tTrue\tTrue\t"
-    "NotIdentified\t42.42\t41.41\tlocation1\treceived\ttype1\t"
-    "Value for sample 1\n"
-    "1.11111\t2014-05-29 12:24:51\t"
-    "Test Sample 2\tTrue\tTrue\tNotIdentified\t4.2\t1.1\tlocation1\treceived\t"
-    "type1\tValue for sample 2\n"
-    "0.12121\t2014-05-29 12:24:51\tTest Sample 3\tTrue\t"
-    "True\tNotIdentified\t4.8\t4.41\tlocation1\treceived\ttype1\t"
-    "Value for sample 3\n")
-
-SAMPLE_TEMPLATE_NO_SAMPLE_NAMES = (
-    "sample_name\tcollection_timestamp\tdescription\thas_extracted_data\t"
-    "has_physical_specimen\thost_subject_id\tint_column\tlatitude\tlongitude\t"
-    "physical_location\trequired_sample_info_status\tsample_type\t"
-    "str_column\n"
-    "2.Sample1\t2014-05-29 12:24:51\tTest Sample 1\tTrue\tTrue\t"
-    "NotIdentified\t1\t42.42\t41.41\tlocation1\treceived\ttype1\t"
-    "Value for sample 1\n"
-    "2.Sample2\t2014-05-29 12:24:51\t"
-    "Test Sample 2\tTrue\tTrue\tNotIdentified\t2\t4.2\t1.1\tlocation1\t"
-    "received\ttype1\tValue for sample 2\n"
-    "2.Sample3\t2014-05-29 12:24:51\tTest Sample 3\tTrue\t"
-    "True\tNotIdentified\t3\t4.8\t4.41\tlocation1\treceived\ttype1\t"
-    "Value for sample 3\n"
-    "\t2014-05-29 12:24:51\tTest Sample 3\tTrue\t"
-    "True\tNotIdentified\t4.8\t4.41\tlocation1\treceived\ttype1\t"
-    "Value for sample 3\n"
-    "\t\t\t\t\t\t\t\t\t\t\t\n"
-    )
-
-SAMPLE_TEMPLATE_NO_SAMPLE_NAMES_SOME_SPACES = (
-    "sample_name\tcollection_timestamp\tdescription\thas_extracted_data\t"
-    "has_physical_specimen\thost_subject_id\tint_column\tlatitude\tlongitude\t"
-    "physical_location\trequired_sample_info_status\tsample_type\t"
-    "str_column\n"
-    "2.Sample1\t2014-05-29 12:24:51\tTest Sample 1\tTrue\tTrue\t"
-    "NotIdentified\t1\t42.42\t41.41\tlocation1\treceived\ttype1\t"
-    "Value for sample 1\n"
-    "2.Sample2\t2014-05-29 12:24:51\t"
-    "Test Sample 2\tTrue\tTrue\tNotIdentified\t2\t4.2\t1.1\tlocation1\t"
-    "received\ttype1\tValue for sample 2\n"
-    "2.Sample3\t2014-05-29 12:24:51\tTest Sample 3\tTrue\t"
-    "True\tNotIdentified\t3\t4.8\t4.41\tlocation1\treceived\ttype1\t"
-    "Value for sample 3\n"
-    "\t\t\t\t\t \t\t\t\t\t \t\t\n"
-    )
-
-SAMPLE_TEMPLATE_EMPTY_COLUMN = (
-    "sample_name\tcollection_timestamp\tdescription\thas_extracted_data\t"
-    "has_physical_specimen\thost_subject_id\tlatitude\tlongitude\t"
-    "physical_location\trequired_sample_info_status\tsample_type\t"
-    "str_column\n"
-    "2.Sample1\t2014-05-29 12:24:51\tTest Sample 1\tTrue\tTrue\t"
-    "NotIdentified\t42.42\t41.41\tlocation1\treceived\ttype1\t"
-    "\n"
-    "2.Sample2\t2014-05-29 12:24:51\t"
-    "Test Sample 2\tTrue\tTrue\tNotIdentified\t4.2\t1.1\tlocation1\treceived\t"
-    "type1\t\n"
-    "2.Sample3\t2014-05-29 12:24:51\tTest Sample 3\tTrue\t"
-    "True\tNotIdentified\t4.8\t4.41\tlocation1\treceived\ttype1\t"
-    "\n")
-
-SAMPLE_TEMPLATE_COLUMN_WITH_NAS = (
-    "sample_name\tcollection_timestamp\tdescription\thas_extracted_data\t"
-    "has_physical_specimen\thost_subject_id\tlatitude\tlongitude\t"
-    "physical_location\trequired_sample_info_status\tsample_type\t"
-    "str_column\n"
-    "2.Sample1\t2014-05-29 12:24:51\tTest Sample 1\tTrue\tTrue\t"
-    "NotIdentified\t42.42\t41.41\tlocation1\treceived\ttype1\t"
-    "NA\n"
-    "2.Sample2\t2014-05-29 12:24:51\t"
-    "Test Sample 2\tTrue\tTrue\tNotIdentified\t4.2\t1.1\tlocation1\treceived\t"
-    "type1\tNA\n"
-    "2.Sample3\t2014-05-29 12:24:51\tTest Sample 3\tTrue\t"
-    "True\tNotIdentified\t4.8\t4.41\tlocation1\treceived\ttype1\t"
-    "NA\n")
-
-SAMPLE_TEMPLATE_NO_SAMPLE_NAME = (
-    ":L}={\tcollection_timestamp\tdescription\thas_extracted_data\t"
-    "has_physical_specimen\thost_subject_id\tlatitude\tlongitude\t"
-    "physical_location\trequired_sample_info_status\tsample_type\t"
-    "str_column\n"
-    "2.Sample1\t2014-05-29 12:24:51\tTest Sample 1\tTrue\tTrue\t"
-    "NotIdentified\t42.42\t41.41\tlocation1\treceived\ttype1\t"
-    "NA\n"
-    "2.Sample2\t2014-05-29 12:24:51\t"
-    "Test Sample 2\tTrue\tTrue\tNotIdentified\t4.2\t1.1\tlocation1\treceived\t"
-    "type1\tNA\n"
-    "2.Sample3\t2014-05-29 12:24:51\tTest Sample 3\tTrue\t"
-    "True\tNotIdentified\t4.8\t4.41\tlocation1\treceived\ttype1\t"
-    "NA\n")
-
-SAMPLE_TEMPLATE_INVALID_LATITUDE_COLUMNS = (
-    "sample_name\tcollection_timestamp\tdescription\thas_extracted_data\t"
-    "has_physical_specimen\thost_subject_id\tlatitude\tlongitude\t"
-    "physical_location\trequired_sample_info_status\tsample_type\t"
-    "str_column\n"
-    "2.Sample1\t2014-05-29 12:24:51\tTest Sample 1\tTrue\tTrue\t"
-    "1\t42\t41.41\tlocation1\treceived\ttype1\t"
-    "Value for sample 1\n"
-    "2.Sample2\t2014-05-29 12:24:51\t"
-    "Test Sample 2\tTrue\tTrue\1\t4.2\t1.1\tlocation1\treceived\t"
-    "type1\tValue for sample 2\n"
-    "2.Sample3\t2014-05-29 12:24:51\tTest Sample 3\tTrue\t"
-    "True\1\tXXXXX4.8\t4.41\tlocation1\treceived\ttype1\t"
-    "Value for sample 3\n")
-
-SAMPLE_TEMPLATE_INVALID_LONGITUDE_COLUMNS = (
-    "sample_name\tcollection_timestamp\tdescription\thas_extracted_data\t"
-    "has_physical_specimen\thost_subject_id\tlatitude\tlongitude\t"
-    "physical_location\trequired_sample_info_status\tsample_type\t"
-    "str_column\n"
-    "2.Sample1\t2014-05-29 12:24:51\tTest Sample 1\tTrue\tTrue\t"
-    "1\t11.42\t41.41\tlocation1\treceived\ttype1\t"
-    "Value for sample 1\n"
-    "2.Sample2\t2014-05-29 12:24:51\t"
-    "Test Sample 2\tTrue\tTrue\1\t4.2\tXXX\tlocation1\treceived\t"
-    "type1\tValue for sample 2\n"
-    "2.Sample3\t2014-05-29 12:24:51\tTest Sample 3\tTrue\t"
-    "True\1\t4.8\t4.XXXXX41\tlocation1\treceived\ttype1\t"
-    "Value for sample 3\n")
-
-
-SAMPLE_TEMPLATE_DICT_FORM = {
-    'collection_timestamp': {'2.Sample1': '2014-05-29 12:24:51',
-                             '2.Sample2': '2014-05-29 12:24:51',
-                             '2.Sample3': '2014-05-29 12:24:51'},
-    'description': {'2.Sample1': 'Test Sample 1',
-                    '2.Sample2': 'Test Sample 2',
-                    '2.Sample3': 'Test Sample 3'},
-    'has_extracted_data': {'2.Sample1': True,
-                           '2.Sample2': True,
-                           '2.Sample3': True},
-    'has_physical_specimen': {'2.Sample1': True,
-                              '2.Sample2': True,
-                              '2.Sample3': True},
-    'host_subject_id': {'2.Sample1': 'NotIdentified',
-                        '2.Sample2': 'NotIdentified',
-                        '2.Sample3': 'NotIdentified'},
-    'latitude': {'2.Sample1': 42.420000000000002,
-                 '2.Sample2': 4.2000000000000002,
-                 '2.Sample3': 4.7999999999999998},
-    'longitude': {'2.Sample1': 41.409999999999997,
-                  '2.Sample2': 1.1000000000000001,
-                  '2.Sample3': 4.4100000000000001},
-    'physical_location': {'2.Sample1': 'location1',
-                          '2.Sample2': 'location1',
-                          '2.Sample3': 'location1'},
-    'required_sample_info_status': {'2.Sample1': 'received',
-                                    '2.Sample2': 'received',
-                                    '2.Sample3': 'received'},
-    'sample_type': {'2.Sample1': 'type1',
-                    '2.Sample2': 'type1',
-                    '2.Sample3': 'type1'},
-    'str_column': {'2.Sample1': 'Value for sample 1',
-                   '2.Sample2': 'Value for sample 2',
-                   '2.Sample3': 'Value for sample 3'},
-    'int_column': {'2.Sample1': 1,
-                   '2.Sample2': 2,
-                   '2.Sample3': 3}
-    }
-
-SAMPLE_TEMPLATE_LAT_ALL_INT_DICT = {
-    'collection_timestamp': {'2.Sample1': '2014-05-29 12:24:51',
-                             '2.Sample2': '2014-05-29 12:24:51',
-                             '2.Sample3': '2014-05-29 12:24:51'},
-    'description': {'2.Sample1': 'Test Sample 1',
-                    '2.Sample2': 'Test Sample 2',
-                    '2.Sample3': 'Test Sample 3'},
-    'has_extracted_data': {'2.Sample1': True,
-                           '2.Sample2': True,
-                           '2.Sample3': True},
-    'has_physical_specimen': {'2.Sample1': True,
-                              '2.Sample2': True,
-                              '2.Sample3': True},
-    'host_subject_id': {'2.Sample1': 'NotIdentified',
-                        '2.Sample2': 'NotIdentified',
-                        '2.Sample3': 'NotIdentified'},
-    'latitude': {'2.Sample1': 42,
-                 '2.Sample2': 4,
-                 '2.Sample3': 4},
-    'longitude': {'2.Sample1': 41.409999999999997,
-                  '2.Sample2': 1.1000000000000001,
-                  '2.Sample3': 4.4100000000000001},
-    'physical_location': {'2.Sample1': 'location1',
-                          '2.Sample2': 'location1',
-                          '2.Sample3': 'location1'},
-    'required_sample_info_status': {'2.Sample1': 'received',
-                                    '2.Sample2': 'received',
-                                    '2.Sample3': 'received'},
-    'sample_type': {'2.Sample1': 'type1',
-                    '2.Sample2': 'type1',
-                    '2.Sample3': 'type1'},
-    'str_column': {'2.Sample1': 'Value for sample 1',
-                   '2.Sample2': 'Value for sample 2',
-                   '2.Sample3': 'Value for sample 3'},
-    'int_column': {'2.Sample1': 1,
-                   '2.Sample2': 2,
-                   '2.Sample3': 3}
-    }
-
-SAMPLE_TEMPLATE_MIXED_FLOAT_INT_DICT = {
-    'collection_timestamp': {'2.Sample1': '2014-05-29 12:24:51',
-                             '2.Sample2': '2014-05-29 12:24:51',
-                             '2.Sample3': '2014-05-29 12:24:51'},
-    'description': {'2.Sample1': 'Test Sample 1',
-                    '2.Sample2': 'Test Sample 2',
-                    '2.Sample3': 'Test Sample 3'},
-    'has_extracted_data': {'2.Sample1': True,
-                           '2.Sample2': True,
-                           '2.Sample3': True},
-    'has_physical_specimen': {'2.Sample1': True,
-                              '2.Sample2': True,
-                              '2.Sample3': True},
-    'host_subject_id': {'2.Sample1': 'NotIdentified',
-                        '2.Sample2': 'NotIdentified',
-                        '2.Sample3': 'NotIdentified'},
-    'latitude': {'2.Sample1': 42.0,
-                 '2.Sample2': 4.0,
-                 '2.Sample3': 4.8},
-    'longitude': {'2.Sample1': 41.409999999999997,
-                  '2.Sample2': 1.1000000000000001,
-                  '2.Sample3': 4.4100000000000001},
-    'physical_location': {'2.Sample1': 'location1',
-                          '2.Sample2': 'location1',
-                          '2.Sample3': 'location1'},
-    'required_sample_info_status': {'2.Sample1': 'received',
-                                    '2.Sample2': 'received',
-                                    '2.Sample3': 'received'},
-    'sample_type': {'2.Sample1': 'type1',
-                    '2.Sample2': 'type1',
-                    '2.Sample3': 'type1'},
-    'str_column': {'2.Sample1': 'Value for sample 1',
-                   '2.Sample2': 'Value for sample 2',
-                   '2.Sample3': 'Value for sample 3'},
-    'int_column': {'2.Sample1': 1,
-                   '2.Sample2': 2,
-                   '2.Sample3': 3}
-    }
-
-SAMPLE_TEMPLATE_NUMBER_SAMPLE_NAMES_DICT_FORM = {
-    'collection_timestamp': {'002.000': '2014-05-29 12:24:51',
-                             '1.11111': '2014-05-29 12:24:51',
-                             '0.12121': '2014-05-29 12:24:51'},
-    'description': {'002.000': 'Test Sample 1',
-                    '1.11111': 'Test Sample 2',
-                    '0.12121': 'Test Sample 3'},
-    'has_extracted_data': {'002.000': True,
-                           '1.11111': True,
-                           '0.12121': True},
-    'has_physical_specimen': {'002.000': True,
-                              '1.11111': True,
-                              '0.12121': True},
-    'host_subject_id': {'002.000': 'NotIdentified',
-                        '1.11111': 'NotIdentified',
-                        '0.12121': 'NotIdentified'},
-    'latitude': {'002.000': 42.420000000000002,
-                 '1.11111': 4.2000000000000002,
-                 '0.12121': 4.7999999999999998},
-    'longitude': {'002.000': 41.409999999999997,
-                  '1.11111': 1.1000000000000001,
-                  '0.12121': 4.4100000000000001},
-    'physical_location': {'002.000': 'location1',
-                          '1.11111': 'location1',
-                          '0.12121': 'location1'},
-    'required_sample_info_status': {'002.000': 'received',
-                                    '1.11111': 'received',
-                                    '0.12121': 'received'},
-    'sample_type': {'002.000': 'type1',
-                    '1.11111': 'type1',
-                    '0.12121': 'type1'},
-    'str_column': {'002.000': 'Value for sample 1',
-                   '1.11111': 'Value for sample 2',
-                   '0.12121': 'Value for sample 3'}}
-
-ST_EMPTY_COLUMN_DICT_FORM = \
-    {'collection_timestamp': {'2.Sample1': '2014-05-29 12:24:51',
-                              '2.Sample2': '2014-05-29 12:24:51',
-                              '2.Sample3': '2014-05-29 12:24:51'},
-     'description': {'2.Sample1': 'Test Sample 1',
-                     '2.Sample2': 'Test Sample 2',
-                     '2.Sample3': 'Test Sample 3'},
-     'has_extracted_data': {'2.Sample1': True,
-                            '2.Sample2': True,
-                            '2.Sample3': True},
-     'has_physical_specimen': {'2.Sample1': True,
-                               '2.Sample2': True,
-                               '2.Sample3': True},
-     'host_subject_id': {'2.Sample1': 'NotIdentified',
-                         '2.Sample2': 'NotIdentified',
-                         '2.Sample3': 'NotIdentified'},
-     'latitude': {'2.Sample1': 42.420000000000002,
-                  '2.Sample2': 4.2000000000000002,
-                  '2.Sample3': 4.7999999999999998},
-     'longitude': {'2.Sample1': 41.409999999999997,
-                   '2.Sample2': 1.1000000000000001,
-                   '2.Sample3': 4.4100000000000001},
-     'physical_location': {'2.Sample1': 'location1',
-                           '2.Sample2': 'location1',
-                           '2.Sample3': 'location1'},
-     'required_sample_info_status': {'2.Sample1': 'received',
-                                     '2.Sample2': 'received',
-                                     '2.Sample3': 'received'},
-     'sample_type': {'2.Sample1': 'type1',
-                     '2.Sample2': 'type1',
-                     '2.Sample3': 'type1'}}
-
-ST_COLUMN_WITH_NAS_DICT_FORM = \
-    {'collection_timestamp': {'2.Sample1': '2014-05-29 12:24:51',
-                              '2.Sample2': '2014-05-29 12:24:51',
-                              '2.Sample3': '2014-05-29 12:24:51'},
-     'description': {'2.Sample1': 'Test Sample 1',
-                     '2.Sample2': 'Test Sample 2',
-                     '2.Sample3': 'Test Sample 3'},
-     'has_extracted_data': {'2.Sample1': True,
-                            '2.Sample2': True,
-                            '2.Sample3': True},
-     'has_physical_specimen': {'2.Sample1': True,
-                               '2.Sample2': True,
-                               '2.Sample3': True},
-     'host_subject_id': {'2.Sample1': 'NotIdentified',
-                         '2.Sample2': 'NotIdentified',
-                         '2.Sample3': 'NotIdentified'},
-     'latitude': {'2.Sample1': 42.420000000000002,
-                  '2.Sample2': 4.2000000000000002,
-                  '2.Sample3': 4.7999999999999998},
-     'longitude': {'2.Sample1': 41.409999999999997,
-                   '2.Sample2': 1.1000000000000001,
-                   '2.Sample3': 4.4100000000000001},
-     'physical_location': {'2.Sample1': 'location1',
-                           '2.Sample2': 'location1',
-                           '2.Sample3': 'location1'},
-     'required_sample_info_status': {'2.Sample1': 'received',
-                                     '2.Sample2': 'received',
-                                     '2.Sample3': 'received'},
-     'sample_type': {'2.Sample1': 'type1',
-                     '2.Sample2': 'type1',
-                     '2.Sample3': 'type1'},
-     'str_column': {'2.Sample1': 'NA', '2.Sample2': 'NA', '2.Sample3': 'NA'}}
 
 EXP_PREP_TEMPLATE = (
     'sample_name\tbarcodesequence\tcenter_name\tcenter_project_name\t'
