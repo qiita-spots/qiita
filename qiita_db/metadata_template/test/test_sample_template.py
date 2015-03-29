@@ -214,11 +214,9 @@ class TestSample(SetUpTestSample):
             del self.tester['DEPTH']
 
 
-@qiita_test_checker()
-class TestSampleTemplate(TestCase):
-    """Tests the SampleTemplate class"""
-
-    def setUp(self):
+class SetUpSampleTemplate(TestCase):
+    """Base class for the Sample Template Tests"""
+    def common_set_up(self):
         self.metadata_dict = {
             'Sample1': {'physical_specimen_location': 'location1',
                         'physical_specimen_remaining': True,
@@ -375,24 +373,7 @@ class TestSampleTemplate(TestCase):
             metadata_prefixed_dict, orient='index')
 
         self.test_study = Study(1)
-        info = {
-            "timeseries_type_id": 1,
-            "metadata_complete": True,
-            "mixs_compliant": True,
-            "number_samples_collected": 25,
-            "number_samples_promised": 28,
-            "portal_type_id": 3,
-            "study_alias": "FCM",
-            "study_description": "Microbiome of people who eat nothing but "
-                                 "fried chicken",
-            "study_abstract": "Exploring how a high fat diet changes the "
-                              "gut microbiome",
-            "emp_person_id": StudyPerson(2),
-            "principal_investigator_id": StudyPerson(3),
-            "lab_person_id": StudyPerson(1)
-        }
-        self.new_study = Study.create(User('test@foo.bar'),
-                                      "Fried Chicken Microbiome", [1], info)
+
         self.tester = SampleTemplate(1)
         self.exp_sample_ids = {
             '1.SKB1.640202', '1.SKB2.640194', '1.SKB3.640195', '1.SKB4.640189',
@@ -549,9 +530,10 @@ class TestSampleTemplate(TestCase):
         self.metadata_dict_updated_column_error = pd.DataFrame.from_dict(
             metadata_dict_updated_column_error, orient='index')
 
-    def tearDown(self):
-        for f in self._clean_up_files:
-            remove(f)
+
+class TestSampleTemplateReadOnly(SetUpSampleTemplate):
+    def setUp(self):
+        self.common_set_up()
 
     def test_study_id(self):
         """Ensure that the correct study ID is returned"""
@@ -571,6 +553,207 @@ class TestSampleTemplate(TestCase):
         """Table name return the correct string"""
         obs = SampleTemplate._table_name(self.test_study.id)
         self.assertEqual(obs, "sample_1")
+
+    def test_exists_true(self):
+        """Exists returns true when the SampleTemplate already exists"""
+        self.assertTrue(SampleTemplate.exists(self.test_study.id))
+
+    def test_get_sample_ids(self):
+        """get_sample_ids returns the correct set of sample ids"""
+        conn_handler = SQLConnectionHandler()
+        obs = self.tester._get_sample_ids(conn_handler)
+        self.assertEqual(obs, self.exp_sample_ids)
+
+    def test_len(self):
+        """Len returns the correct number of sample ids"""
+        self.assertEqual(len(self.tester), 27)
+
+    def test_getitem(self):
+        """Get item returns the correct sample object"""
+        obs = self.tester['1.SKM7.640188']
+        exp = Sample('1.SKM7.640188', self.tester)
+        self.assertEqual(obs, exp)
+
+    def test_getitem_error(self):
+        """Get item raises an error if key does not exists"""
+        with self.assertRaises(KeyError):
+            self.tester['Not_a_Sample']
+
+    def test_iter(self):
+        """iter returns an iterator over the sample ids"""
+        obs = self.tester.__iter__()
+        self.assertTrue(isinstance(obs, Iterable))
+        self.assertEqual(set(obs), self.exp_sample_ids)
+
+    def test_contains_true(self):
+        """contains returns true if the sample id exists"""
+        self.assertTrue('1.SKM7.640188' in self.tester)
+
+    def test_contains_false(self):
+        """contains returns false if the sample id does not exists"""
+        self.assertFalse('Not_a_Sample' in self.tester)
+
+    def test_keys(self):
+        """keys returns an iterator over the sample ids"""
+        obs = self.tester.keys()
+        self.assertTrue(isinstance(obs, Iterable))
+        self.assertEqual(set(obs), self.exp_sample_ids)
+
+    def test_values(self):
+        """values returns an iterator over the values"""
+        obs = self.tester.values()
+        self.assertTrue(isinstance(obs, Iterable))
+        exp = {Sample('1.SKB1.640202', self.tester),
+               Sample('1.SKB2.640194', self.tester),
+               Sample('1.SKB3.640195', self.tester),
+               Sample('1.SKB4.640189', self.tester),
+               Sample('1.SKB5.640181', self.tester),
+               Sample('1.SKB6.640176', self.tester),
+               Sample('1.SKB7.640196', self.tester),
+               Sample('1.SKB8.640193', self.tester),
+               Sample('1.SKB9.640200', self.tester),
+               Sample('1.SKD1.640179', self.tester),
+               Sample('1.SKD2.640178', self.tester),
+               Sample('1.SKD3.640198', self.tester),
+               Sample('1.SKD4.640185', self.tester),
+               Sample('1.SKD5.640186', self.tester),
+               Sample('1.SKD6.640190', self.tester),
+               Sample('1.SKD7.640191', self.tester),
+               Sample('1.SKD8.640184', self.tester),
+               Sample('1.SKD9.640182', self.tester),
+               Sample('1.SKM1.640183', self.tester),
+               Sample('1.SKM2.640199', self.tester),
+               Sample('1.SKM3.640197', self.tester),
+               Sample('1.SKM4.640180', self.tester),
+               Sample('1.SKM5.640177', self.tester),
+               Sample('1.SKM6.640187', self.tester),
+               Sample('1.SKM7.640188', self.tester),
+               Sample('1.SKM8.640201', self.tester),
+               Sample('1.SKM9.640192', self.tester)}
+        # Creating a list and looping over it since unittest does not call
+        # the __eq__ function on the objects
+        for o, e in zip(sorted(list(obs), key=lambda x: x.id),
+                        sorted(exp, key=lambda x: x.id)):
+            self.assertEqual(o, e)
+
+    def test_items(self):
+        """items returns an iterator over the (key, value) tuples"""
+        obs = self.tester.items()
+        self.assertTrue(isinstance(obs, Iterable))
+        exp = [('1.SKB1.640202', Sample('1.SKB1.640202', self.tester)),
+               ('1.SKB2.640194', Sample('1.SKB2.640194', self.tester)),
+               ('1.SKB3.640195', Sample('1.SKB3.640195', self.tester)),
+               ('1.SKB4.640189', Sample('1.SKB4.640189', self.tester)),
+               ('1.SKB5.640181', Sample('1.SKB5.640181', self.tester)),
+               ('1.SKB6.640176', Sample('1.SKB6.640176', self.tester)),
+               ('1.SKB7.640196', Sample('1.SKB7.640196', self.tester)),
+               ('1.SKB8.640193', Sample('1.SKB8.640193', self.tester)),
+               ('1.SKB9.640200', Sample('1.SKB9.640200', self.tester)),
+               ('1.SKD1.640179', Sample('1.SKD1.640179', self.tester)),
+               ('1.SKD2.640178', Sample('1.SKD2.640178', self.tester)),
+               ('1.SKD3.640198', Sample('1.SKD3.640198', self.tester)),
+               ('1.SKD4.640185', Sample('1.SKD4.640185', self.tester)),
+               ('1.SKD5.640186', Sample('1.SKD5.640186', self.tester)),
+               ('1.SKD6.640190', Sample('1.SKD6.640190', self.tester)),
+               ('1.SKD7.640191', Sample('1.SKD7.640191', self.tester)),
+               ('1.SKD8.640184', Sample('1.SKD8.640184', self.tester)),
+               ('1.SKD9.640182', Sample('1.SKD9.640182', self.tester)),
+               ('1.SKM1.640183', Sample('1.SKM1.640183', self.tester)),
+               ('1.SKM2.640199', Sample('1.SKM2.640199', self.tester)),
+               ('1.SKM3.640197', Sample('1.SKM3.640197', self.tester)),
+               ('1.SKM4.640180', Sample('1.SKM4.640180', self.tester)),
+               ('1.SKM5.640177', Sample('1.SKM5.640177', self.tester)),
+               ('1.SKM6.640187', Sample('1.SKM6.640187', self.tester)),
+               ('1.SKM7.640188', Sample('1.SKM7.640188', self.tester)),
+               ('1.SKM8.640201', Sample('1.SKM8.640201', self.tester)),
+               ('1.SKM9.640192', Sample('1.SKM9.640192', self.tester))]
+        # Creating a list and looping over it since unittest does not call
+        # the __eq__ function on the objects
+        for o, e in zip(sorted(list(obs)), sorted(exp)):
+            self.assertEqual(o, e)
+
+    def test_get(self):
+        """get returns the correct sample object"""
+        obs = self.tester.get('1.SKM7.640188')
+        exp = Sample('1.SKM7.640188', self.tester)
+        self.assertEqual(obs, exp)
+
+    def test_get_none(self):
+        """get returns none if the sample id is not present"""
+        self.assertTrue(self.tester.get('Not_a_Sample') is None)
+
+    def test_categories(self):
+        exp = {'sample_id', 'season_environment', 'assigned_from_geo',
+               'texture', 'taxon_id', 'depth', 'host_taxid',
+               'common_name', 'water_content_soil', 'elevation',
+               'temp', 'tot_nitro', 'samp_salinity', 'altitude',
+               'env_biome', 'country', 'ph', 'anonymized_name',
+               'tot_org_carb', 'description_duplicate', 'env_feature',
+               'physical_specimen_location', 'physical_specimen_remaining',
+               'dna_extracted', 'sample_type', 'collection_timestamp',
+               'host_subject_id', 'description', 'latitude', 'longitude'}
+        obs = set(self.tester.categories())
+        self.assertEqual(obs, exp)
+
+    def test_to_dataframe(self):
+        obs = self.tester.to_dataframe()
+        # We don't test the specific values as this would blow up the size
+        # of this file as the amount of lines would go to ~1000
+
+        # 27 samples
+        self.assertEqual(len(obs), 27)
+        self.assertEqual(set(obs.index), {
+            u'1.SKB1.640202', u'1.SKB2.640194', u'1.SKB3.640195',
+            u'1.SKB4.640189', u'1.SKB5.640181', u'1.SKB6.640176',
+            u'1.SKB7.640196', u'1.SKB8.640193', u'1.SKB9.640200',
+            u'1.SKD1.640179', u'1.SKD2.640178', u'1.SKD3.640198',
+            u'1.SKD4.640185', u'1.SKD5.640186', u'1.SKD6.640190',
+            u'1.SKD7.640191', u'1.SKD8.640184', u'1.SKD9.640182',
+            u'1.SKM1.640183', u'1.SKM2.640199', u'1.SKM3.640197',
+            u'1.SKM4.640180', u'1.SKM5.640177', u'1.SKM6.640187',
+            u'1.SKM7.640188', u'1.SKM8.640201', u'1.SKM9.640192'})
+
+        self.assertEqual(set(obs.columns), {
+            u'physical_specimen_location', u'physical_specimen_remaining',
+            u'dna_extracted', u'sample_type',
+            u'collection_timestamp',
+            u'host_subject_id', u'description', u'latitude', u'longitude',
+            u'season_environment', u'assigned_from_geo', u'texture',
+            u'taxon_id', u'depth', u'host_taxid', u'common_name',
+            u'water_content_soil', u'elevation', u'temp', u'tot_nitro',
+            u'samp_salinity', u'altitude', u'env_biome', u'country', u'ph',
+            u'anonymized_name', u'tot_org_carb', u'description_duplicate',
+            u'env_feature'})
+
+
+@qiita_test_checker()
+class TestSampleTemplate(SetUpSampleTemplate):
+    """Tests the SampleTemplate class"""
+
+    def setUp(self):
+        self.common_set_up()
+        info = {
+            "timeseries_type_id": 1,
+            "metadata_complete": True,
+            "mixs_compliant": True,
+            "number_samples_collected": 25,
+            "number_samples_promised": 28,
+            "portal_type_id": 3,
+            "study_alias": "FCM",
+            "study_description": "Microbiome of people who eat nothing but "
+                                 "fried chicken",
+            "study_abstract": "Exploring how a high fat diet changes the "
+                              "gut microbiome",
+            "emp_person_id": StudyPerson(2),
+            "principal_investigator_id": StudyPerson(3),
+            "lab_person_id": StudyPerson(1)
+        }
+        self.new_study = Study.create(User('test@foo.bar'),
+                                      "Fried Chicken Microbiome", [1], info)
+
+    def tearDown(self):
+        for f in self._clean_up_files:
+            remove(f)
 
     def test_create_duplicate(self):
         """Create raises an error when creating a duplicated SampleTemplate"""
@@ -942,34 +1125,6 @@ class TestSampleTemplate(TestCase):
         with self.assertRaises(QiitaDBUnknownIDError):
             SampleTemplate.delete(5)
 
-    def test_exists_true(self):
-        """Exists returns true when the SampleTemplate already exists"""
-        self.assertTrue(SampleTemplate.exists(self.test_study.id))
-
-    def test_exists_false(self):
-        """Exists returns false when the SampleTemplate does not exists"""
-        self.assertFalse(SampleTemplate.exists(self.new_study.id))
-
-    def test_get_sample_ids(self):
-        """get_sample_ids returns the correct set of sample ids"""
-        obs = self.tester._get_sample_ids(self.conn_handler)
-        self.assertEqual(obs, self.exp_sample_ids)
-
-    def test_len(self):
-        """Len returns the correct number of sample ids"""
-        self.assertEqual(len(self.tester), 27)
-
-    def test_getitem(self):
-        """Get item returns the correct sample object"""
-        obs = self.tester['1.SKM7.640188']
-        exp = Sample('1.SKM7.640188', self.tester)
-        self.assertEqual(obs, exp)
-
-    def test_getitem_error(self):
-        """Get item raises an error if key does not exists"""
-        with self.assertRaises(KeyError):
-            self.tester['Not_a_Sample']
-
     def test_update_category(self):
         """The category is successfully updated"""
         with self.assertRaises(QiitaDBUnknownIDError):
@@ -1037,36 +1192,6 @@ class TestSampleTemplate(TestCase):
         with self.assertRaises(QiitaDBError):
             st.update(self.metadata_dict_updated_column_error)
 
-    def test_to_dataframe(self):
-        obs = self.tester.to_dataframe()
-        # We don't test the specific values as this would blow up the size
-        # of this file as the amount of lines would go to ~1000
-
-        # 27 samples
-        self.assertEqual(len(obs), 27)
-        self.assertEqual(set(obs.index), {
-            u'1.SKB1.640202', u'1.SKB2.640194', u'1.SKB3.640195',
-            u'1.SKB4.640189', u'1.SKB5.640181', u'1.SKB6.640176',
-            u'1.SKB7.640196', u'1.SKB8.640193', u'1.SKB9.640200',
-            u'1.SKD1.640179', u'1.SKD2.640178', u'1.SKD3.640198',
-            u'1.SKD4.640185', u'1.SKD5.640186', u'1.SKD6.640190',
-            u'1.SKD7.640191', u'1.SKD8.640184', u'1.SKD9.640182',
-            u'1.SKM1.640183', u'1.SKM2.640199', u'1.SKM3.640197',
-            u'1.SKM4.640180', u'1.SKM5.640177', u'1.SKM6.640187',
-            u'1.SKM7.640188', u'1.SKM8.640201', u'1.SKM9.640192'})
-
-        self.assertEqual(set(obs.columns), {
-            u'physical_specimen_location', u'physical_specimen_remaining',
-            u'dna_extracted', u'sample_type',
-            u'collection_timestamp',
-            u'host_subject_id', u'description', u'latitude', u'longitude',
-            u'season_environment', u'assigned_from_geo', u'texture',
-            u'taxon_id', u'depth', u'host_taxid', u'common_name',
-            u'water_content_soil', u'elevation', u'temp', u'tot_nitro',
-            u'samp_salinity', u'altitude', u'env_biome', u'country', u'ph',
-            u'anonymized_name', u'tot_org_carb', u'description_duplicate',
-            u'env_feature'})
-
     def test_add_category(self):
         column = "new_column"
         dtype = "varchar"
@@ -1109,19 +1234,6 @@ class TestSampleTemplate(TestCase):
         obs = {k: v['new_column'] for k, v in self.tester.items()}
         self.assertEqual(obs, exp)
 
-    def test_categories(self):
-        exp = {'sample_id', 'season_environment', 'assigned_from_geo',
-               'texture', 'taxon_id', 'depth', 'host_taxid',
-               'common_name', 'water_content_soil', 'elevation',
-               'temp', 'tot_nitro', 'samp_salinity', 'altitude',
-               'env_biome', 'country', 'ph', 'anonymized_name',
-               'tot_org_carb', 'description_duplicate', 'env_feature',
-               'physical_specimen_location', 'physical_specimen_remaining',
-               'dna_extracted', 'sample_type', 'collection_timestamp',
-               'host_subject_id', 'description', 'latitude', 'longitude'}
-        obs = set(self.tester.categories())
-        self.assertEqual(obs, exp)
-
     def test_remove_category(self):
         with self.assertRaises(QiitaDBColumnError):
             self.tester.remove_category('does not exist')
@@ -1133,129 +1245,6 @@ class TestSampleTemplate(TestCase):
 
         for v in self.tester.values():
             self.assertNotIn('elevation', v)
-
-    def test_iter(self):
-        """iter returns an iterator over the sample ids"""
-        obs = self.tester.__iter__()
-        self.assertTrue(isinstance(obs, Iterable))
-        self.assertEqual(set(obs), self.exp_sample_ids)
-
-    def test_contains_true(self):
-        """contains returns true if the sample id exists"""
-        self.assertTrue('1.SKM7.640188' in self.tester)
-
-    def test_contains_false(self):
-        """contains returns false if the sample id does not exists"""
-        self.assertFalse('Not_a_Sample' in self.tester)
-
-    def test_keys(self):
-        """keys returns an iterator over the sample ids"""
-        obs = self.tester.keys()
-        self.assertTrue(isinstance(obs, Iterable))
-        self.assertEqual(set(obs), self.exp_sample_ids)
-
-    def test_values(self):
-        """values returns an iterator over the values"""
-        obs = self.tester.values()
-        self.assertTrue(isinstance(obs, Iterable))
-        exp = {Sample('1.SKB1.640202', self.tester),
-               Sample('1.SKB2.640194', self.tester),
-               Sample('1.SKB3.640195', self.tester),
-               Sample('1.SKB4.640189', self.tester),
-               Sample('1.SKB5.640181', self.tester),
-               Sample('1.SKB6.640176', self.tester),
-               Sample('1.SKB7.640196', self.tester),
-               Sample('1.SKB8.640193', self.tester),
-               Sample('1.SKB9.640200', self.tester),
-               Sample('1.SKD1.640179', self.tester),
-               Sample('1.SKD2.640178', self.tester),
-               Sample('1.SKD3.640198', self.tester),
-               Sample('1.SKD4.640185', self.tester),
-               Sample('1.SKD5.640186', self.tester),
-               Sample('1.SKD6.640190', self.tester),
-               Sample('1.SKD7.640191', self.tester),
-               Sample('1.SKD8.640184', self.tester),
-               Sample('1.SKD9.640182', self.tester),
-               Sample('1.SKM1.640183', self.tester),
-               Sample('1.SKM2.640199', self.tester),
-               Sample('1.SKM3.640197', self.tester),
-               Sample('1.SKM4.640180', self.tester),
-               Sample('1.SKM5.640177', self.tester),
-               Sample('1.SKM6.640187', self.tester),
-               Sample('1.SKM7.640188', self.tester),
-               Sample('1.SKM8.640201', self.tester),
-               Sample('1.SKM9.640192', self.tester)}
-        # Creating a list and looping over it since unittest does not call
-        # the __eq__ function on the objects
-        for o, e in zip(sorted(list(obs), key=lambda x: x.id),
-                        sorted(exp, key=lambda x: x.id)):
-            self.assertEqual(o, e)
-
-    def test_items(self):
-        """items returns an iterator over the (key, value) tuples"""
-        obs = self.tester.items()
-        self.assertTrue(isinstance(obs, Iterable))
-        exp = [('1.SKB1.640202', Sample('1.SKB1.640202', self.tester)),
-               ('1.SKB2.640194', Sample('1.SKB2.640194', self.tester)),
-               ('1.SKB3.640195', Sample('1.SKB3.640195', self.tester)),
-               ('1.SKB4.640189', Sample('1.SKB4.640189', self.tester)),
-               ('1.SKB5.640181', Sample('1.SKB5.640181', self.tester)),
-               ('1.SKB6.640176', Sample('1.SKB6.640176', self.tester)),
-               ('1.SKB7.640196', Sample('1.SKB7.640196', self.tester)),
-               ('1.SKB8.640193', Sample('1.SKB8.640193', self.tester)),
-               ('1.SKB9.640200', Sample('1.SKB9.640200', self.tester)),
-               ('1.SKD1.640179', Sample('1.SKD1.640179', self.tester)),
-               ('1.SKD2.640178', Sample('1.SKD2.640178', self.tester)),
-               ('1.SKD3.640198', Sample('1.SKD3.640198', self.tester)),
-               ('1.SKD4.640185', Sample('1.SKD4.640185', self.tester)),
-               ('1.SKD5.640186', Sample('1.SKD5.640186', self.tester)),
-               ('1.SKD6.640190', Sample('1.SKD6.640190', self.tester)),
-               ('1.SKD7.640191', Sample('1.SKD7.640191', self.tester)),
-               ('1.SKD8.640184', Sample('1.SKD8.640184', self.tester)),
-               ('1.SKD9.640182', Sample('1.SKD9.640182', self.tester)),
-               ('1.SKM1.640183', Sample('1.SKM1.640183', self.tester)),
-               ('1.SKM2.640199', Sample('1.SKM2.640199', self.tester)),
-               ('1.SKM3.640197', Sample('1.SKM3.640197', self.tester)),
-               ('1.SKM4.640180', Sample('1.SKM4.640180', self.tester)),
-               ('1.SKM5.640177', Sample('1.SKM5.640177', self.tester)),
-               ('1.SKM6.640187', Sample('1.SKM6.640187', self.tester)),
-               ('1.SKM7.640188', Sample('1.SKM7.640188', self.tester)),
-               ('1.SKM8.640201', Sample('1.SKM8.640201', self.tester)),
-               ('1.SKM9.640192', Sample('1.SKM9.640192', self.tester))]
-        # Creating a list and looping over it since unittest does not call
-        # the __eq__ function on the objects
-        for o, e in zip(sorted(list(obs)), sorted(exp)):
-            self.assertEqual(o, e)
-
-    def test_get(self):
-        """get returns the correct sample object"""
-        obs = self.tester.get('1.SKM7.640188')
-        exp = Sample('1.SKM7.640188', self.tester)
-        self.assertEqual(obs, exp)
-
-    def test_get_none(self):
-        """get returns none if the sample id is not present"""
-        self.assertTrue(self.tester.get('Not_a_Sample') is None)
-
-    def test_to_file(self):
-        """to file writes a tab delimited file with all the metadata"""
-        fd, fp = mkstemp()
-        close(fd)
-        st = SampleTemplate.create(self.metadata, self.new_study)
-        st.to_file(fp)
-        self._clean_up_files.append(fp)
-        with open(fp, 'U') as f:
-            obs = f.read()
-        self.assertEqual(obs, EXP_SAMPLE_TEMPLATE)
-
-        fd, fp = mkstemp()
-        close(fd)
-        st.to_file(fp, {'2.Sample1', '2.Sample3'})
-        self._clean_up_files.append(fp)
-
-        with open(fp, 'U') as f:
-            obs = f.read()
-        self.assertEqual(obs, EXP_SAMPLE_TEMPLATE_FEWER_SAMPLES)
 
     def test_get_filepath(self):
         # we will check that there is a new id only because the path will
@@ -1388,6 +1377,30 @@ class TestSampleTemplate(TestCase):
                ['1.SKM6.640187'], ['1.SKD5.640186'], ['1.SKD1.640179'],
                ['1.Sample1'], ['1.Sample2'], ['1.Sample3'], ['1.Sample5']]
         self.assertEqual(obs, exp)
+
+    def test_to_file(self):
+        """to file writes a tab delimited file with all the metadata"""
+        fd, fp = mkstemp()
+        close(fd)
+        st = SampleTemplate.create(self.metadata, self.new_study)
+        st.to_file(fp)
+        self._clean_up_files.append(fp)
+        with open(fp, 'U') as f:
+            obs = f.read()
+        self.assertEqual(obs, EXP_SAMPLE_TEMPLATE)
+
+        fd, fp = mkstemp()
+        close(fd)
+        st.to_file(fp, {'2.Sample1', '2.Sample3'})
+        self._clean_up_files.append(fp)
+
+        with open(fp, 'U') as f:
+            obs = f.read()
+        self.assertEqual(obs, EXP_SAMPLE_TEMPLATE_FEWER_SAMPLES)
+
+    def test_exists_false(self):
+        """Exists returns false when the SampleTemplate does not exists"""
+        self.assertFalse(SampleTemplate.exists(self.new_study.id))
 
 
 EXP_SAMPLE_TEMPLATE = (
