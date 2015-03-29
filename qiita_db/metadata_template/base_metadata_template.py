@@ -13,7 +13,7 @@ from functools import partial
 import pandas as pd
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
-from qiita_db.exceptions import (QiitaDBUnknownIDError,
+from qiita_db.exceptions import (QiitaDBUnknownIDError, QiitaDBColumnError,
                                  QiitaDBNotImplementedError)
 from qiita_db.base import QiitaObject
 from qiita_db.sql_connection import SQLConnectionHandler
@@ -234,7 +234,48 @@ class BaseSample(QiitaObject):
         value : obj
             The new value for the category
         """
-        raise QiitaDBNotImplementedError()
+        conn_handler = SQLConnectionHandler()
+
+        # try dynamic tables
+        sql = """SELECT EXISTS (
+            SELECT column_name
+                FROM information_schema.columns
+                WHERE table_name=%s
+                    AND table_schema=%s
+                    AND column_name=%s)"""
+        exists = conn_handler.execute_fetchone(
+            sql, (self._dynamic_table, 'qiita', key))[0]
+
+        if not exists:
+            raise QiitaDBColumnError("Column %s does not exist in %s" %
+                                     (key, self._dynamic_table))
+
+        # catching error so we can check if the error is due to different
+        # column type or something else
+        try:
+            sql = """UPDATE qiita.{0} SET {1}=%s
+                    WHERE sample_id=%s""".format(self._dynamic_table, key)
+            conn_handler.execute(sql, (value, self._id))
+        except Exception as e:
+            sql = """SELECT data_type
+                        FROM information_schema.columns
+                        WHERE table_name=%s
+                            AND table_schema=%s
+                            AND column_name=%s"""
+            print sql, self._dynamic_table, 'qiita', key
+            column_type = conn_handler.execute_fetchone(
+                sql, (self._dynamic_table, 'qiita', key))[0]
+            value_type = type(value).__name__
+
+            if column_type != value_type:
+                raise ValueError(
+                    'The new value being added to column: "{0}" is "{1}" '
+                    '(type: "{2}"). However, this column in the DB is of '
+                    'type "{3}". Please change the value in your updated '
+                    'template or reprocess your sample template.'.format(
+                        key, value, value_type, column_type))
+            else:
+                raise e
 
     def __delitem__(self, key):
         r"""Removes the sample with sample id `key` from the database
@@ -385,6 +426,21 @@ class MetadataTemplate(QiitaObject):
             "SELECT EXISTS(SELECT * FROM qiita.{0} WHERE "
             "{1}=%s)".format(self._table, self._id_column),
             (id_, ))[0]
+
+    @classmethod
+    def metadata_headers(cls):
+        """Returns metadata headers available
+
+        Returns
+        -------
+        list
+            Alphabetical list of all metadata headers available
+        """
+        cls._check_subclass()
+        conn_handler = SQLConnectionHandler()
+        sql = """SELECT DISTINCT column_name FROM qiita.{0}
+                 ORDER BY column_name""".format(self._column_table)
+        return [x[0] for x in conn_handler.execute_fetchall(sql)]
 
     @classmethod
     def _table_name(cls, obj_id):
