@@ -7,9 +7,7 @@
 # -----------------------------------------------------------------------------
 
 from future.builtins import zip
-from six import StringIO
 from unittest import TestCase, main
-from datetime import datetime
 from tempfile import mkstemp
 from time import strftime
 from os import close, remove
@@ -22,17 +20,14 @@ from pandas.util.testing import assert_frame_equal
 
 from qiita_core.util import qiita_test_checker
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
-from qiita_db.exceptions import (QiitaDBDuplicateError, QiitaDBUnknownIDError,
+from qiita_db.exceptions import (QiitaDBUnknownIDError, QiitaDBWarning,
                                  QiitaDBNotImplementedError,
                                  QiitaDBDuplicateHeaderError,
-                                 QiitaDBExecutionError,
-                                 QiitaDBColumnError, QiitaDBError,
-                                 QiitaDBWarning)
-from qiita_db.study import Study, StudyPerson
-from qiita_db.user import User
+                                 QiitaDBExecutionError, QiitaDBColumnError)
+from qiita_db.study import Study
 from qiita_db.data import RawData, ProcessedData
 from qiita_db.util import (exists_table, get_db_files_base_dir, get_mountpoint,
-                           get_count, get_table_cols)
+                           get_count)
 from qiita_db.metadata_template.prep_template import PrepTemplate, PrepSample
 from qiita_db.metadata_template.sample_template import SampleTemplate, Sample
 
