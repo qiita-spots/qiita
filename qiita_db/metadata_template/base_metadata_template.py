@@ -262,7 +262,6 @@ class BaseSample(QiitaObject):
                         WHERE table_name=%s
                             AND table_schema=%s
                             AND column_name=%s"""
-            print sql, self._dynamic_table, 'qiita', key
             column_type = conn_handler.execute_fetchone(
                 sql, (self._dynamic_table, 'qiita', key))[0]
             value_type = type(value).__name__
@@ -439,7 +438,7 @@ class MetadataTemplate(QiitaObject):
         cls._check_subclass()
         conn_handler = SQLConnectionHandler()
         sql = """SELECT DISTINCT column_name FROM qiita.{0}
-                 ORDER BY column_name""".format(self._column_table)
+                 ORDER BY column_name""".format(cls._column_table)
         return [x[0] for x in conn_handler.execute_fetchall(sql)]
 
     @classmethod

@@ -289,56 +289,37 @@ class SampleTemplate(MetadataTemplate):
         num_samples = len(sample_ids)
         headers = list(md_template.keys())
 
-        # Get the required columns from the DB
-        db_cols = get_table_cols(self._table, conn_handler)
-        # Remove the sample_id and study_id columns
-        db_cols.remove('sample_id')
-        db_cols.remove(self._id_column)
-
         # Insert values on required columns
-        values = as_python_types(md_template, db_cols)
-        values.insert(0, sample_ids)
-        values.insert(0, [self.study_id] * num_samples)
-        values = [v for v in zip(*values)]
-        conn_handler.add_to_queue(
-            queue_name,
-            "INSERT INTO qiita.{0} ({1}, sample_id, {2}) "
-            "VALUES (%s, %s, {3})".format(self._table, self._id_column,
-                                          ', '.join(db_cols),
-                                          ', '.join(['%s'] * len(db_cols))),
-            values, many=True)
+        values = [(self.study_id, s_id) for s_id in sample_ids]
+        sql = "INSERT INTO qiita.{0} ({1}, sample_id) VALUES (%s, %s)".format(
+            self._table, self._id_column)
+        conn_handler.add_to_queue(queue_name, sql, values, many=True)
 
         # Add missing columns to the sample template dynamic table
-        headers = list(set(headers).difference(db_cols))
-        datatypes = get_datatypes(md_template.ix[:, headers])
-        table_name = self._table_name(self.study_id)
         new_cols = set(md_template.columns).difference(
-            set(self.metadata_headers()))
-        dtypes_dict = dict(zip(md_template.ix[:, headers], datatypes))
-        for category in new_cols:
+            set(self.categories()))
+        datatypes = get_datatypes(md_template.ix[:, new_cols])
+        table_name = self._table_name(self.study_id)
+        dtypes_dict = dict(zip(md_template.ix[:, new_cols], datatypes))
+        sql_insert = """INSERT INTO qiita.{0} ({1}, column_name, column_type)
+                        VALUES (%s, %s, %s)""".format(self._column_table,
+                                                      self._id_column)
+        for category, dtype in viewitems(dtypes_dict):
             # Insert row on *_columns table
             conn_handler.add_to_queue(
-                queue_name,
-                "INSERT INTO qiita.{0} ({1}, column_name, column_type) "
-                "VALUES (%s, %s, %s)".format(self._column_table,
-                                             self._id_column),
-                (self.study_id, category, dtypes_dict[category]))
+                queue_name, sql_insert, (self.study_id, category, dtype))
             # Insert row on dynamic table
-            conn_handler.add_to_queue(
-                queue_name,
-                "ALTER TABLE qiita.{0} ADD COLUMN {1} {2}".format(
-                    table_name, scrub_data(category), dtypes_dict[category]))
+            sql_alter = "ALTER TABLE qiita.{0} ADD COLUMN {1} {2}".format(
+                table_name, scrub_data(category), dtype)
+            conn_handler.add_to_queue(queue_name, sql_alter)
 
         # Insert values on custom table
         values = as_python_types(md_template, headers)
         values.insert(0, sample_ids)
         values = [v for v in zip(*values)]
-        conn_handler.add_to_queue(
-            queue_name,
-            "INSERT INTO qiita.{0} (sample_id, {1}) "
-            "VALUES (%s, {2})".format(table_name, ", ".join(headers),
-                                      ', '.join(["%s"] * len(headers))),
-            values, many=True)
+        sql = "INSERT INTO qiita.{0} (sample_id, {1}) VALUES (%s, {2})".format(
+            table_name, ", ".join(headers), ', '.join(["%s"] * len(headers)))
+        conn_handler.add_to_queue(queue_name, sql, values, many=True)
         conn_handler.execute_queue(queue_name)
 
         # figuring out the filepath of the backup

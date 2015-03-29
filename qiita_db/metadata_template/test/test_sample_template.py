@@ -409,7 +409,6 @@ class TestSampleTemplate(TestCase):
                         'physical_specimen_remaining': True,
                         'dna_extracted': True,
                         'sample_type': '6',
-                        'required_sample_info_status': 'received',
                         'collection_timestamp':
                         datetime(2014, 5, 29, 12, 24, 51),
                         'host_subject_id': 'NotIdentified',
@@ -422,7 +421,6 @@ class TestSampleTemplate(TestCase):
                         'physical_specimen_remaining': True,
                         'dna_extracted': True,
                         'sample_type': '5',
-                        'required_sample_info_status': 'received',
                         'collection_timestamp':
                         datetime(2014, 5, 29, 12, 24, 51),
                         'host_subject_id': 'the only one',
@@ -435,7 +433,6 @@ class TestSampleTemplate(TestCase):
                         'physical_specimen_remaining': True,
                         'dna_extracted': True,
                         'sample_type': '10',
-                        'required_sample_info_status': 'received',
                         'collection_timestamp':
                         datetime(2014, 5, 29, 12, 24, 51),
                         'host_subject_id': 'NotIdentified',
@@ -974,7 +971,7 @@ class TestSampleTemplate(TestCase):
             self.tester['Not_a_Sample']
 
     def test_update_category(self):
-        """setitem raises an error (currently not allowed)"""
+        """The category is successfully updated"""
         with self.assertRaises(QiitaDBUnknownIDError):
             self.tester.update_category('country', {"foo": "bar"})
 
@@ -995,24 +992,18 @@ class TestSampleTemplate(TestCase):
         self.assertEqual(self.tester['1.SKD6.640190']['country'], "3")
         self.assertEqual(self.tester['1.SKM7.640188']['country'], negtest)
 
-        # test updating a required_sample_info
-        mapping = {'1.SKB1.640202': "1",
-                   '1.SKB5.640181': "2",
-                   '1.SKD6.640190': "3"}
-        self.tester.update_category('required_sample_info_status_id', mapping)
-        self.assertEqual(
-            self.tester['1.SKB1.640202']['required_sample_info_status'],
-            "received")
-        self.assertEqual(
-            self.tester['1.SKB5.640181']['required_sample_info_status'],
-            "in_preparation")
-        self.assertEqual(
-            self.tester['1.SKD6.640190']['required_sample_info_status'],
-            "running")
-        self.assertEqual(
-            self.tester['1.SKM7.640188']['required_sample_info_status'],
-            "completed")
+        # test updating a required information
+        mapping = {'1.SKB1.640202': 14,
+                   '1.SKB5.640181': 15,
+                   '1.SKD6.640190': 16}
+        negtest = self.tester['1.SKM7.640188']['latitude']
+        self.tester.update_category('latitude', mapping)
+        self.assertEqual(self.tester['1.SKB1.640202']['latitude'], 14)
+        self.assertEqual(self.tester['1.SKB5.640181']['latitude'], 15)
+        self.assertEqual(self.tester['1.SKD6.640190']['latitude'], 16)
+        self.assertEqual(self.tester['1.SKM7.640188']['latitude'], negtest)
 
+    def test_update_category_error(self):
         # testing that if fails when trying to change an int column value
         # to str
         st = SampleTemplate.create(self.metadata, self.new_study)
@@ -1067,7 +1058,7 @@ class TestSampleTemplate(TestCase):
         self.assertEqual(set(obs.columns), {
             u'physical_specimen_location', u'physical_specimen_remaining',
             u'dna_extracted', u'sample_type',
-            u'required_sample_info_status', u'collection_timestamp',
+            u'collection_timestamp',
             u'host_subject_id', u'description', u'latitude', u'longitude',
             u'season_environment', u'assigned_from_geo', u'texture',
             u'taxon_id', u'depth', u'host_taxid', u'common_name',
@@ -1125,13 +1116,11 @@ class TestSampleTemplate(TestCase):
                'temp', 'tot_nitro', 'samp_salinity', 'altitude',
                'env_biome', 'country', 'ph', 'anonymized_name',
                'tot_org_carb', 'description_duplicate', 'env_feature',
-               'study_id', 'physical_specimen_location',
-               'physical_specimen_remaining', 'dna_extracted',
-               'sample_type', 'required_sample_info_status',
-               'collection_timestamp', 'host_subject_id',
-               'description', 'latitude', 'longitude'}
+               'physical_specimen_location', 'physical_specimen_remaining',
+               'dna_extracted', 'sample_type', 'collection_timestamp',
+               'host_subject_id', 'description', 'latitude', 'longitude'}
         obs = set(self.tester.categories())
-        self.assertItemsEqual(obs, exp)
+        self.assertEqual(obs, exp)
 
     def test_remove_category(self):
         with self.assertRaises(QiitaDBColumnError):
@@ -1327,8 +1316,12 @@ class TestSampleTemplate(TestCase):
                'water_content_soil', 'elevation', 'temp', 'tot_nitro',
                'samp_salinity', 'altitude', 'env_biome', 'country', 'ph',
                'anonymized_name', 'tot_org_carb', 'description_duplicate',
-               'env_feature', 'newcol', 'str_column', 'int_column']
-        self.assertItemsEqual(obs, exp)
+               'env_feature', 'newcol', 'str_column', 'int_column',
+               'description', 'physical_specimen_location',
+               'collection_timestamp', 'physical_specimen_remaining',
+               'dna_extracted', 'sample_type', 'longitude', 'latitude',
+               'host_subject_id']
+        self.assertEqual(set(obs), set(exp))
 
         sql = "SELECT * FROM qiita.study_sample_columns WHERE study_id = 1"
         obs = self.conn_handler.execute_fetchall(sql)
@@ -1348,8 +1341,17 @@ class TestSampleTemplate(TestCase):
                [1, 'ASSIGNED_FROM_GEO', 'varchar'],
                [1, 'SEASON_ENVIRONMENT', 'varchar'],
                [1, 'sample_id', 'varchar'],
-               [1L, 'int_column', 'integer']]
-        self.assertItemsEqual(obs, exp)
+               [1, 'int_column', 'integer'],
+               [1, 'collection_timestamp', 'timestamp'],
+               [1, 'description', 'varchar'],
+               [1, 'dna_extracted', 'bool'],
+               [1, 'host_subject_id', 'varchar'],
+               [1, 'latitude', 'float8'],
+               [1, 'longitude', 'float8'],
+               [1, 'physical_specimen_location', 'varchar'],
+               [1, 'physical_specimen_remaining', 'bool'],
+               [1, 'sample_type', 'varchar']]
+        self.assertItemsEqual(sorted(obs), sorted(exp))
 
     def test_extend_duplicated_samples(self):
         # First add new samples to template
@@ -1390,24 +1392,25 @@ class TestSampleTemplate(TestCase):
 
 EXP_SAMPLE_TEMPLATE = (
     "sample_name\tcollection_timestamp\tdescription\tdna_extracted\t"
-    "physical_specimen_remaining\thost_subject_id\tint_column\tlatitude\tlongitude\t"
-    "physical_specimen_location\trequired_sample_info_status\tsample_type\tstr_column\n"
-    "2.Sample1\t2014-05-29 12:24:51\tTest Sample 1\tTrue\tTrue\tNotIdentified"
-    "\t1\t42.42\t41.41\tlocation1\treceived\ttype1\tValue for sample 1\n"
-    "2.Sample2\t2014-05-29 12:24:51\tTest Sample 2\tTrue\tTrue\tNotIdentified"
-    "\t2\t4.2\t1.1\tlocation1\treceived\ttype1\tValue for sample 2\n"
-    "2.Sample3\t2014-05-29 12:24:51\tTest Sample 3\tTrue\tTrue\tNotIdentified"
-    "\t3\t4.8\t4.41\tlocation1\treceived\ttype1\tValue for sample 3\n")
+    "host_subject_id\tint_column\tlatitude\tlongitude\t"
+    "physical_specimen_location\tphysical_specimen_remaining\tsample_type\t"
+    "str_column\n"
+    "2.Sample1\t2014-05-29 12:24:51\tTest Sample 1\tTrue\tNotIdentified\t1\t"
+    "42.42\t41.41\tlocation1\tTrue\ttype1\tValue for sample 1\n"
+    "2.Sample2\t2014-05-29 12:24:51\tTest Sample 2\tTrue\tNotIdentified\t2\t"
+    "4.2\t1.1\tlocation1\tTrue\ttype1\tValue for sample 2\n"
+    "2.Sample3\t2014-05-29 12:24:51\tTest Sample 3\tTrue\tNotIdentified\t3\t"
+    "4.8\t4.41\tlocation1\tTrue\ttype1\tValue for sample 3\n")
 
 EXP_SAMPLE_TEMPLATE_FEWER_SAMPLES = (
     "sample_name\tcollection_timestamp\tdescription\tdna_extracted\t"
-    "physical_specimen_remaining\thost_subject_id\tint_column\tlatitude\t"
-    "longitude\tphysical_specimen_location\trequired_sample_info_status\tsample_type\t"
+    "host_subject_id\tint_column\tlatitude\tlongitude\t"
+    "physical_specimen_location\tphysical_specimen_remaining\tsample_type\t"
     "str_column\n"
-    "2.Sample1\t2014-05-29 12:24:51\tTest Sample 1\tTrue\tTrue\tNotIdentified"
-    "\t1\t42.42\t41.41\tlocation1\treceived\ttype1\tValue for sample 1\n"
-    "2.Sample3\t2014-05-29 12:24:51\tTest Sample 3\tTrue\tTrue\tNotIdentified"
-    "\t3\t4.8\t4.41\tlocation1\treceived\ttype1\tValue for sample 3\n")
+    "2.Sample1\t2014-05-29 12:24:51\tTest Sample 1\tTrue\tNotIdentified\t1\t"
+    "42.42\t41.41\tlocation1\tTrue\ttype1\tValue for sample 1\n"
+    "2.Sample3\t2014-05-29 12:24:51\tTest Sample 3\tTrue\tNotIdentified\t3\t"
+    "4.8\t4.41\tlocation1\tTrue\ttype1\tValue for sample 3\n")
 
 if __name__ == '__main__':
     main()
