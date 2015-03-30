@@ -24,6 +24,7 @@ from qiita_db.exceptions import (QiitaDBUnknownIDError, QiitaDBWarning,
                                  QiitaDBNotImplementedError,
                                  QiitaDBDuplicateHeaderError,
                                  QiitaDBExecutionError, QiitaDBColumnError)
+from qiita_db.sql_connection import SQLConnectionHandler
 from qiita_db.study import Study
 from qiita_db.data import RawData, ProcessedData
 from qiita_db.util import (exists_table, get_db_files_base_dir, get_mountpoint,
@@ -32,9 +33,8 @@ from qiita_db.metadata_template.prep_template import PrepTemplate, PrepSample
 from qiita_db.metadata_template.sample_template import SampleTemplate, Sample
 
 
-@qiita_test_checker()
-class TestPrepSample(TestCase):
-    """Tests the PrepSample class"""
+class SetUpTestPrepSample(TestCase):
+    """Base class for the PrepSample Tests"""
 
     def setUp(self):
         self.prep_template = PrepTemplate(1)
@@ -50,6 +50,10 @@ class TestPrepSample(TestCase):
                                'experiment_title', 'platform', 'samp_size',
                                'sequencing_meth', 'illumina_technology',
                                'sample_center', 'pcr_primers', 'study_center'}
+
+
+class TestPrepSampleReadOnly(SetUpTestPrepSample):
+    """Tests the PrepSample class"""
 
     def test_init_unknown_error(self):
         """Init errors if the PrepSample id is not found in the template"""
@@ -96,7 +100,8 @@ class TestPrepSample(TestCase):
 
     def test_get_categories(self):
         """Correctly returns the set of category headers"""
-        obs = self.tester._get_categories(self.conn_handler)
+        conn_handler = SQLConnectionHandler()
+        obs = self.tester._get_categories(conn_handler)
         self.assertEqual(obs, self.exp_categories)
 
     def test_len(self):
@@ -125,19 +130,6 @@ class TestPrepSample(TestCase):
         """Get item raises an error if category does not exists"""
         with self.assertRaises(KeyError):
             self.tester['Not_a_Category']
-
-    def test_setitem(self):
-        """setitem raises an error (currently not allowed)"""
-        with self.assertRaises(QiitaDBColumnError):
-            self.tester['column that does not exist'] = 'Foo'
-        self.assertEqual(self.tester['barcodesequence'], 'AGCGCTCACATC')
-        self.tester['barcodesequence'] = 'GTCCGCAAGTTA'
-        self.assertEqual(self.tester['barcodesequence'], 'GTCCGCAAGTTA')
-
-    def test_delitem(self):
-        """delitem raises an error (currently not allowed)"""
-        with self.assertRaises(QiitaDBNotImplementedError):
-            del self.tester['pcr_primers']
 
     def test_iter(self):
         """iter returns an iterator over the category headers"""
@@ -227,10 +219,24 @@ class TestPrepSample(TestCase):
 
 
 @qiita_test_checker()
-class TestPrepTemplate(TestCase):
-    """Tests the PrepTemplate class"""
+class TestPrepSample(SetUpTestPrepSample):
+    def test_setitem(self):
+        """setitem raises an error (currently not allowed)"""
+        with self.assertRaises(QiitaDBColumnError):
+            self.tester['column that does not exist'] = 'Foo'
+        self.assertEqual(self.tester['barcodesequence'], 'AGCGCTCACATC')
+        self.tester['barcodesequence'] = 'GTCCGCAAGTTA'
+        self.assertEqual(self.tester['barcodesequence'], 'GTCCGCAAGTTA')
 
-    def setUp(self):
+    def test_delitem(self):
+        """delitem raises an error (currently not allowed)"""
+        with self.assertRaises(QiitaDBNotImplementedError):
+            del self.tester['pcr_primers']
+
+
+class SetUpTestPrepTemplate(TestCase):
+    """Base class for the Prep Template tests"""
+    def common_set_up(self):
         self.metadata_dict = {
             'SKB8.640193': {'center_name': 'ANL',
                             'center_project_name': 'Test Project',
@@ -312,21 +318,6 @@ class TestPrepTemplate(TestCase):
         self.data_type = "18S"
         self.data_type_id = 2
 
-        fd, seqs_fp = mkstemp(suffix='_seqs.fastq')
-        close(fd)
-        fd, barcodes_fp = mkstemp(suffix='_barcodes.fastq')
-        close(fd)
-        filepaths = [(seqs_fp, 1), (barcodes_fp, 2)]
-        with open(seqs_fp, "w") as f:
-            f.write("\n")
-        with open(barcodes_fp, "w") as f:
-            f.write("\n")
-        self.new_raw_data = RawData.create(2, [Study(1)], filepaths=filepaths)
-        db_test_raw_dir = join(get_db_files_base_dir(), 'raw_data')
-        db_seqs_fp = join(db_test_raw_dir, "5_%s" % basename(seqs_fp))
-        db_barcodes_fp = join(db_test_raw_dir, "5_%s" % basename(barcodes_fp))
-        self._clean_up_files = [db_seqs_fp, db_barcodes_fp]
-
         self.tester = PrepTemplate(1)
         self.exp_sample_ids = {
             '1.SKB1.640202', '1.SKB2.640194', '1.SKB3.640195', '1.SKB4.640189',
@@ -337,9 +328,10 @@ class TestPrepTemplate(TestCase):
             '1.SKM3.640197', '1.SKM4.640180', '1.SKM5.640177', '1.SKM6.640187',
             '1.SKM7.640188', '1.SKM8.640201', '1.SKM9.640192'}
 
-    def tearDown(self):
-        for f in self._clean_up_files:
-            remove(f)
+
+class TestPrepTemplateReadOnly(SetUpTestPrepTemplate):
+    def setUp(self):
+        self.common_set_up()
 
     def test_study_id(self):
         """Ensure that the correct study ID is returned"""
@@ -359,6 +351,212 @@ class TestPrepTemplate(TestCase):
         """Table name return the correct string"""
         obs = PrepTemplate._table_name(1)
         self.assertEqual(obs, "prep_1")
+
+    def test_exists_true(self):
+        """Exists returns true when the PrepTemplate already exists"""
+        self.assertTrue(PrepTemplate.exists(1))
+
+    def test_exists_false(self):
+        """Exists returns false when the PrepTemplate does not exists"""
+        self.assertFalse(PrepTemplate.exists(2))
+
+    def test_get_sample_ids(self):
+        """get_sample_ids returns the correct set of sample ids"""
+        conn_handler = SQLConnectionHandler()
+        obs = self.tester._get_sample_ids(conn_handler)
+        self.assertEqual(obs, self.exp_sample_ids)
+
+    def test_len(self):
+        """Len returns the correct number of sample ids"""
+        self.assertEqual(len(self.tester), 27)
+
+    def test_getitem(self):
+        """Get item returns the correct sample object"""
+        obs = self.tester['1.SKM7.640188']
+        exp = PrepSample('1.SKM7.640188', self.tester)
+        self.assertEqual(obs, exp)
+
+    def test_getitem_error(self):
+        """Get item raises an error if key does not exists"""
+        with self.assertRaises(KeyError):
+            self.tester['Not_a_Sample']
+
+    def test_iter(self):
+        """iter returns an iterator over the sample ids"""
+        obs = self.tester.__iter__()
+        self.assertTrue(isinstance(obs, Iterable))
+        self.assertEqual(set(obs), self.exp_sample_ids)
+
+    def test_contains_true(self):
+        """contains returns true if the sample id exists"""
+        self.assertTrue('1.SKM7.640188' in self.tester)
+
+    def test_contains_false(self):
+        """contains returns false if the sample id does not exists"""
+        self.assertFalse('Not_a_Sample' in self.tester)
+
+    def test_keys(self):
+        """keys returns an iterator over the sample ids"""
+        obs = self.tester.keys()
+        self.assertTrue(isinstance(obs, Iterable))
+        self.assertEqual(set(obs), self.exp_sample_ids)
+
+    def test_values(self):
+        """values returns an iterator over the values"""
+        obs = self.tester.values()
+        self.assertTrue(isinstance(obs, Iterable))
+        exp = {PrepSample('1.SKB1.640202', self.tester),
+               PrepSample('1.SKB2.640194', self.tester),
+               PrepSample('1.SKB3.640195', self.tester),
+               PrepSample('1.SKB4.640189', self.tester),
+               PrepSample('1.SKB5.640181', self.tester),
+               PrepSample('1.SKB6.640176', self.tester),
+               PrepSample('1.SKB7.640196', self.tester),
+               PrepSample('1.SKB8.640193', self.tester),
+               PrepSample('1.SKB9.640200', self.tester),
+               PrepSample('1.SKD1.640179', self.tester),
+               PrepSample('1.SKD2.640178', self.tester),
+               PrepSample('1.SKD3.640198', self.tester),
+               PrepSample('1.SKD4.640185', self.tester),
+               PrepSample('1.SKD5.640186', self.tester),
+               PrepSample('1.SKD6.640190', self.tester),
+               PrepSample('1.SKD7.640191', self.tester),
+               PrepSample('1.SKD8.640184', self.tester),
+               PrepSample('1.SKD9.640182', self.tester),
+               PrepSample('1.SKM1.640183', self.tester),
+               PrepSample('1.SKM2.640199', self.tester),
+               PrepSample('1.SKM3.640197', self.tester),
+               PrepSample('1.SKM4.640180', self.tester),
+               PrepSample('1.SKM5.640177', self.tester),
+               PrepSample('1.SKM6.640187', self.tester),
+               PrepSample('1.SKM7.640188', self.tester),
+               PrepSample('1.SKM8.640201', self.tester),
+               PrepSample('1.SKM9.640192', self.tester)}
+        # Creating a list and looping over it since unittest does not call
+        # the __eq__ function on the objects
+        for o, e in zip(sorted(list(obs), key=lambda x: x.id),
+                        sorted(exp, key=lambda x: x.id)):
+            self.assertEqual(o, e)
+
+    def test_items(self):
+        """items returns an iterator over the (key, value) tuples"""
+        obs = self.tester.items()
+        self.assertTrue(isinstance(obs, Iterable))
+        exp = [('1.SKB1.640202', PrepSample('1.SKB1.640202', self.tester)),
+               ('1.SKB2.640194', PrepSample('1.SKB2.640194', self.tester)),
+               ('1.SKB3.640195', PrepSample('1.SKB3.640195', self.tester)),
+               ('1.SKB4.640189', PrepSample('1.SKB4.640189', self.tester)),
+               ('1.SKB5.640181', PrepSample('1.SKB5.640181', self.tester)),
+               ('1.SKB6.640176', PrepSample('1.SKB6.640176', self.tester)),
+               ('1.SKB7.640196', PrepSample('1.SKB7.640196', self.tester)),
+               ('1.SKB8.640193', PrepSample('1.SKB8.640193', self.tester)),
+               ('1.SKB9.640200', PrepSample('1.SKB9.640200', self.tester)),
+               ('1.SKD1.640179', PrepSample('1.SKD1.640179', self.tester)),
+               ('1.SKD2.640178', PrepSample('1.SKD2.640178', self.tester)),
+               ('1.SKD3.640198', PrepSample('1.SKD3.640198', self.tester)),
+               ('1.SKD4.640185', PrepSample('1.SKD4.640185', self.tester)),
+               ('1.SKD5.640186', PrepSample('1.SKD5.640186', self.tester)),
+               ('1.SKD6.640190', PrepSample('1.SKD6.640190', self.tester)),
+               ('1.SKD7.640191', PrepSample('1.SKD7.640191', self.tester)),
+               ('1.SKD8.640184', PrepSample('1.SKD8.640184', self.tester)),
+               ('1.SKD9.640182', PrepSample('1.SKD9.640182', self.tester)),
+               ('1.SKM1.640183', PrepSample('1.SKM1.640183', self.tester)),
+               ('1.SKM2.640199', PrepSample('1.SKM2.640199', self.tester)),
+               ('1.SKM3.640197', PrepSample('1.SKM3.640197', self.tester)),
+               ('1.SKM4.640180', PrepSample('1.SKM4.640180', self.tester)),
+               ('1.SKM5.640177', PrepSample('1.SKM5.640177', self.tester)),
+               ('1.SKM6.640187', PrepSample('1.SKM6.640187', self.tester)),
+               ('1.SKM7.640188', PrepSample('1.SKM7.640188', self.tester)),
+               ('1.SKM8.640201', PrepSample('1.SKM8.640201', self.tester)),
+               ('1.SKM9.640192', PrepSample('1.SKM9.640192', self.tester))]
+        # Creating a list and looping over it since unittest does not call
+        # the __eq__ function on the objects
+        for o, e in zip(sorted(list(obs)), sorted(exp)):
+            self.assertEqual(o, e)
+
+    def test_get(self):
+        """get returns the correct PrepSample object"""
+        obs = self.tester.get('1.SKM7.640188')
+        exp = PrepSample('1.SKM7.640188', self.tester)
+        self.assertEqual(obs, exp)
+
+    def test_get_none(self):
+        """get returns none if the sample id is not present"""
+        self.assertTrue(self.tester.get('Not_a_Sample') is None)
+
+    def test_data_type(self):
+        """data_type returns the string with the data_type"""
+        self.assertTrue(self.tester.data_type(), "18S")
+
+    def test_data_type_id(self):
+        """data_type returns the int with the data_type_id"""
+        self.assertTrue(self.tester.data_type(ret_id=True), 2)
+
+    def test_raw_data(self):
+        """Returns the raw_data associated with the prep template"""
+        self.assertEqual(self.tester.raw_data, 1)
+
+    def test_preprocessed_data(self):
+        """Returns the preprocessed data list generated from this template"""
+        self.assertEqual(self.tester.preprocessed_data, [1, 2])
+
+    def test_investigation_type(self):
+        """investigation_type works correctly"""
+        self.assertEqual(self.tester.investigation_type, "Metagenomics")
+
+    def test_to_dataframe(self):
+        obs = self.tester.to_dataframe()
+        # We don't test the specific values as this would blow up the size
+        # of this file as the amount of lines would go to ~1000
+
+        # 27 samples
+        self.assertEqual(len(obs), 27)
+        self.assertEqual(set(obs.index), {
+            u'1.SKB1.640202', u'1.SKB2.640194', u'1.SKB3.640195',
+            u'1.SKB4.640189', u'1.SKB5.640181', u'1.SKB6.640176',
+            u'1.SKB7.640196', u'1.SKB8.640193', u'1.SKB9.640200',
+            u'1.SKD1.640179', u'1.SKD2.640178', u'1.SKD3.640198',
+            u'1.SKD4.640185', u'1.SKD5.640186', u'1.SKD6.640190',
+            u'1.SKD7.640191', u'1.SKD8.640184', u'1.SKD9.640182',
+            u'1.SKM1.640183', u'1.SKM2.640199', u'1.SKM3.640197',
+            u'1.SKM4.640180', u'1.SKM5.640177', u'1.SKM6.640187',
+            u'1.SKM7.640188', u'1.SKM8.640201', u'1.SKM9.640192'})
+
+        self.assertEqual(set(obs.columns), {
+            u'center_name', u'center_project_name', u'emp_status',
+            u'barcodesequence', u'library_construction_protocol',
+            u'linkerprimersequence', u'target_subfragment', u'target_gene',
+            u'run_center', u'run_prefix', u'run_date', u'experiment_center',
+            u'experiment_design_description', u'experiment_title', u'platform',
+            u'samp_size', u'sequencing_meth', u'illumina_technology',
+            u'sample_center', u'pcr_primers', u'study_center'})
+
+
+@qiita_test_checker()
+class TestPrepTemplate(SetUpTestPrepTemplate):
+    """Tests the PrepTemplate class"""
+
+    def setUp(self):
+        self.common_set_up()
+
+        fd, seqs_fp = mkstemp(suffix='_seqs.fastq')
+        close(fd)
+        fd, barcodes_fp = mkstemp(suffix='_barcodes.fastq')
+        close(fd)
+        filepaths = [(seqs_fp, 1), (barcodes_fp, 2)]
+        with open(seqs_fp, "w") as f:
+            f.write("\n")
+        with open(barcodes_fp, "w") as f:
+            f.write("\n")
+        self.new_raw_data = RawData.create(2, [Study(1)], filepaths=filepaths)
+        db_test_raw_dir = join(get_db_files_base_dir(), 'raw_data')
+        db_seqs_fp = join(db_test_raw_dir, "5_%s" % basename(seqs_fp))
+        db_barcodes_fp = join(db_test_raw_dir, "5_%s" % basename(barcodes_fp))
+        self._clean_up_files = [db_seqs_fp, db_barcodes_fp]
+
+    def tearDown(self):
+        for f in self._clean_up_files:
+            remove(f)
 
     def test_create_duplicate_header(self):
         """Create raises an error when duplicate headers are present"""
@@ -706,34 +904,6 @@ class TestPrepTemplate(TestCase):
             self.conn_handler.execute_fetchall(
                 "SELECT * FROM qiita.prep_2")
 
-    def test_exists_true(self):
-        """Exists returns true when the PrepTemplate already exists"""
-        self.assertTrue(PrepTemplate.exists(1))
-
-    def test_exists_false(self):
-        """Exists returns false when the PrepTemplate does not exists"""
-        self.assertFalse(PrepTemplate.exists(2))
-
-    def test_get_sample_ids(self):
-        """get_sample_ids returns the correct set of sample ids"""
-        obs = self.tester._get_sample_ids(self.conn_handler)
-        self.assertEqual(obs, self.exp_sample_ids)
-
-    def test_len(self):
-        """Len returns the correct number of sample ids"""
-        self.assertEqual(len(self.tester), 27)
-
-    def test_getitem(self):
-        """Get item returns the correct sample object"""
-        obs = self.tester['1.SKM7.640188']
-        exp = PrepSample('1.SKM7.640188', self.tester)
-        self.assertEqual(obs, exp)
-
-    def test_getitem_error(self):
-        """Get item raises an error if key does not exists"""
-        with self.assertRaises(KeyError):
-            self.tester['Not_a_Sample']
-
     def test_setitem(self):
         """setitem raises an error (currently not allowed)"""
         with self.assertRaises(QiitaDBNotImplementedError):
@@ -744,109 +914,6 @@ class TestPrepTemplate(TestCase):
         """delitem raises an error (currently not allowed)"""
         with self.assertRaises(QiitaDBNotImplementedError):
             del self.tester['1.SKM7.640188']
-
-    def test_iter(self):
-        """iter returns an iterator over the sample ids"""
-        obs = self.tester.__iter__()
-        self.assertTrue(isinstance(obs, Iterable))
-        self.assertEqual(set(obs), self.exp_sample_ids)
-
-    def test_contains_true(self):
-        """contains returns true if the sample id exists"""
-        self.assertTrue('1.SKM7.640188' in self.tester)
-
-    def test_contains_false(self):
-        """contains returns false if the sample id does not exists"""
-        self.assertFalse('Not_a_Sample' in self.tester)
-
-    def test_keys(self):
-        """keys returns an iterator over the sample ids"""
-        obs = self.tester.keys()
-        self.assertTrue(isinstance(obs, Iterable))
-        self.assertEqual(set(obs), self.exp_sample_ids)
-
-    def test_values(self):
-        """values returns an iterator over the values"""
-        obs = self.tester.values()
-        self.assertTrue(isinstance(obs, Iterable))
-        exp = {PrepSample('1.SKB1.640202', self.tester),
-               PrepSample('1.SKB2.640194', self.tester),
-               PrepSample('1.SKB3.640195', self.tester),
-               PrepSample('1.SKB4.640189', self.tester),
-               PrepSample('1.SKB5.640181', self.tester),
-               PrepSample('1.SKB6.640176', self.tester),
-               PrepSample('1.SKB7.640196', self.tester),
-               PrepSample('1.SKB8.640193', self.tester),
-               PrepSample('1.SKB9.640200', self.tester),
-               PrepSample('1.SKD1.640179', self.tester),
-               PrepSample('1.SKD2.640178', self.tester),
-               PrepSample('1.SKD3.640198', self.tester),
-               PrepSample('1.SKD4.640185', self.tester),
-               PrepSample('1.SKD5.640186', self.tester),
-               PrepSample('1.SKD6.640190', self.tester),
-               PrepSample('1.SKD7.640191', self.tester),
-               PrepSample('1.SKD8.640184', self.tester),
-               PrepSample('1.SKD9.640182', self.tester),
-               PrepSample('1.SKM1.640183', self.tester),
-               PrepSample('1.SKM2.640199', self.tester),
-               PrepSample('1.SKM3.640197', self.tester),
-               PrepSample('1.SKM4.640180', self.tester),
-               PrepSample('1.SKM5.640177', self.tester),
-               PrepSample('1.SKM6.640187', self.tester),
-               PrepSample('1.SKM7.640188', self.tester),
-               PrepSample('1.SKM8.640201', self.tester),
-               PrepSample('1.SKM9.640192', self.tester)}
-        # Creating a list and looping over it since unittest does not call
-        # the __eq__ function on the objects
-        for o, e in zip(sorted(list(obs), key=lambda x: x.id),
-                        sorted(exp, key=lambda x: x.id)):
-            self.assertEqual(o, e)
-
-    def test_items(self):
-        """items returns an iterator over the (key, value) tuples"""
-        obs = self.tester.items()
-        self.assertTrue(isinstance(obs, Iterable))
-        exp = [('1.SKB1.640202', PrepSample('1.SKB1.640202', self.tester)),
-               ('1.SKB2.640194', PrepSample('1.SKB2.640194', self.tester)),
-               ('1.SKB3.640195', PrepSample('1.SKB3.640195', self.tester)),
-               ('1.SKB4.640189', PrepSample('1.SKB4.640189', self.tester)),
-               ('1.SKB5.640181', PrepSample('1.SKB5.640181', self.tester)),
-               ('1.SKB6.640176', PrepSample('1.SKB6.640176', self.tester)),
-               ('1.SKB7.640196', PrepSample('1.SKB7.640196', self.tester)),
-               ('1.SKB8.640193', PrepSample('1.SKB8.640193', self.tester)),
-               ('1.SKB9.640200', PrepSample('1.SKB9.640200', self.tester)),
-               ('1.SKD1.640179', PrepSample('1.SKD1.640179', self.tester)),
-               ('1.SKD2.640178', PrepSample('1.SKD2.640178', self.tester)),
-               ('1.SKD3.640198', PrepSample('1.SKD3.640198', self.tester)),
-               ('1.SKD4.640185', PrepSample('1.SKD4.640185', self.tester)),
-               ('1.SKD5.640186', PrepSample('1.SKD5.640186', self.tester)),
-               ('1.SKD6.640190', PrepSample('1.SKD6.640190', self.tester)),
-               ('1.SKD7.640191', PrepSample('1.SKD7.640191', self.tester)),
-               ('1.SKD8.640184', PrepSample('1.SKD8.640184', self.tester)),
-               ('1.SKD9.640182', PrepSample('1.SKD9.640182', self.tester)),
-               ('1.SKM1.640183', PrepSample('1.SKM1.640183', self.tester)),
-               ('1.SKM2.640199', PrepSample('1.SKM2.640199', self.tester)),
-               ('1.SKM3.640197', PrepSample('1.SKM3.640197', self.tester)),
-               ('1.SKM4.640180', PrepSample('1.SKM4.640180', self.tester)),
-               ('1.SKM5.640177', PrepSample('1.SKM5.640177', self.tester)),
-               ('1.SKM6.640187', PrepSample('1.SKM6.640187', self.tester)),
-               ('1.SKM7.640188', PrepSample('1.SKM7.640188', self.tester)),
-               ('1.SKM8.640201', PrepSample('1.SKM8.640201', self.tester)),
-               ('1.SKM9.640192', PrepSample('1.SKM9.640192', self.tester))]
-        # Creating a list and looping over it since unittest does not call
-        # the __eq__ function on the objects
-        for o, e in zip(sorted(list(obs)), sorted(exp)):
-            self.assertEqual(o, e)
-
-    def test_get(self):
-        """get returns the correct PrepSample object"""
-        obs = self.tester.get('1.SKM7.640188')
-        exp = PrepSample('1.SKM7.640188', self.tester)
-        self.assertEqual(obs, exp)
-
-    def test_get_none(self):
-        """get returns none if the sample id is not present"""
-        self.assertTrue(self.tester.get('Not_a_Sample') is None)
 
     def test_to_file(self):
         """to file writes a tab delimited file with all the metadata"""
@@ -859,22 +926,6 @@ class TestPrepTemplate(TestCase):
         with open(fp, 'U') as f:
             obs = f.read()
         self.assertEqual(obs, EXP_PREP_TEMPLATE)
-
-    def test_data_type(self):
-        """data_type returns the string with the data_type"""
-        self.assertTrue(self.tester.data_type(), "18S")
-
-    def test_data_type_id(self):
-        """data_type returns the int with the data_type_id"""
-        self.assertTrue(self.tester.data_type(ret_id=True), 2)
-
-    def test_raw_data(self):
-        """Returns the raw_data associated with the prep template"""
-        self.assertEqual(self.tester.raw_data, 1)
-
-    def test_preprocessed_data(self):
-        """Returns the preprocessed data list generated from this template"""
-        self.assertEqual(self.tester.preprocessed_data, [1, 2])
 
     def test_preprocessing_status(self):
         """preprocessing_status works correctly"""
@@ -911,10 +962,6 @@ class TestPrepTemplate(TestCase):
         with self.assertRaises(ValueError):
             self.tester.preprocessing_status = 'not a valid state'
 
-    def test_investigation_type(self):
-        """investigation_type works correctly"""
-        self.assertEqual(self.tester.investigation_type, "Metagenomics")
-
     def test_investigation_type_setter(self):
         """Able to update the investigation type"""
         pt = PrepTemplate.create(self.metadata, self.new_raw_data,
@@ -945,33 +992,6 @@ class TestPrepTemplate(TestCase):
         pt = PrepTemplate.create(self.metadata, self.new_raw_data,
                                  self.test_study, self.data_type_id)
         self.assertEqual(pt.status, 'sandbox')
-
-    def test_to_dataframe(self):
-        obs = self.tester.to_dataframe()
-        # We don't test the specific values as this would blow up the size
-        # of this file as the amount of lines would go to ~1000
-
-        # 27 samples
-        self.assertEqual(len(obs), 27)
-        self.assertEqual(set(obs.index), {
-            u'1.SKB1.640202', u'1.SKB2.640194', u'1.SKB3.640195',
-            u'1.SKB4.640189', u'1.SKB5.640181', u'1.SKB6.640176',
-            u'1.SKB7.640196', u'1.SKB8.640193', u'1.SKB9.640200',
-            u'1.SKD1.640179', u'1.SKD2.640178', u'1.SKD3.640198',
-            u'1.SKD4.640185', u'1.SKD5.640186', u'1.SKD6.640190',
-            u'1.SKD7.640191', u'1.SKD8.640184', u'1.SKD9.640182',
-            u'1.SKM1.640183', u'1.SKM2.640199', u'1.SKM3.640197',
-            u'1.SKM4.640180', u'1.SKM5.640177', u'1.SKM6.640187',
-            u'1.SKM7.640188', u'1.SKM8.640201', u'1.SKM9.640192'})
-
-        self.assertEqual(set(obs.columns), {
-            u'center_name', u'center_project_name', u'emp_status',
-            u'barcodesequence', u'library_construction_protocol',
-            u'linkerprimersequence', u'target_subfragment', u'target_gene',
-            u'run_center', u'run_prefix', u'run_date', u'experiment_center',
-            u'experiment_design_description', u'experiment_title', u'platform',
-            u'samp_size', u'sequencing_meth', u'illumina_technology',
-            u'sample_center', u'pcr_primers', u'study_center'})
 
 EXP_PREP_TEMPLATE = (
     'sample_name\tbarcodesequence\tcenter_name\tcenter_project_name\t'
