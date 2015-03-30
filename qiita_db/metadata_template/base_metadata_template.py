@@ -270,6 +270,9 @@ class BaseSample(QiitaObject):
                 sql, (self._dynamic_table, 'qiita', key))[0]
             value_type = type(value).__name__
 
+            if value_type == "bool_":
+                value_type = "boolean"
+
             if column_type != value_type:
                 raise ValueError(
                     'The new value being added to column: "{0}" is "{1}" '

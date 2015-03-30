@@ -283,7 +283,7 @@ class SampleTemplate(MetadataTemplate):
         # converting sql results to dataframe
         current_map = pd.DataFrame.from_dict(current_map, orient='index')
 
-        # simple validations of sample ids and column names
+        # simple validations of sample ids
         samples_diff = set(
             new_map.index.tolist()) - set(current_map.index.tolist())
         if samples_diff:
@@ -292,9 +292,16 @@ class SampleTemplate(MetadataTemplate):
                                % ', '.join(samples_diff))
         columns_diff = set(new_map.columns) - set(current_map.columns)
         if columns_diff:
-            raise QiitaDBError('The new sample template differs from what is '
-                               'stored in database by these columns names: %s'
-                               % ', '.join(columns_diff))
+            queue = 'add_cols_%d' % self._id
+            datatypes = dict(zip(new_map.columns, get_datatypes(new_map)))
+            conn_handler.create_queue(queue)
+
+            for col in columns_diff:
+                self.add_category(col, new_map[col].to_dict(), datatypes[col])
+                new_map.drop(col, axis=1, inplace=True)
+
+            warnings.warn('Added the following metadata columns: %s'
+                          % ', '.join(columns_diff))
 
         # here we are comparing two dataframes following:
         # http://stackoverflow.com/a/17095620/4228285
@@ -382,7 +389,7 @@ class SampleTemplate(MetadataTemplate):
             sample = self[k]
             sample[category] = v
 
-    def add_category(self, category, samples_and_values, dtype, default):
+    def add_category(self, category, samples_and_values, dtype, default=None):
         """Add a metadata category
 
         Parameters
@@ -393,9 +400,9 @@ class SampleTemplate(MetadataTemplate):
             A mapping of {sample_id: value}
         dtype : str
             The datatype of the column
-        default : object
-            The default value associated with the column. This must be
-            specified as these columns are added "not null".
+        default : object, optional
+            The default value associated with the column. If specified,
+            the column will be added as "not null".
 
         Raises
         ------
@@ -403,15 +410,28 @@ class SampleTemplate(MetadataTemplate):
             If the column already exists
         """
         table_name = self._table_name(self.study_id)
-        conn_handler = SQLConnectionHandler()
 
         if category in self.categories():
             raise QiitaDBDuplicateError(category, "N/A")
+        conn_handler = SQLConnectionHandler()
+        queue = 'add_col_%d' % self._id
+        conn_handler.create_queue(queue)
 
-        conn_handler.execute("""
-            ALTER TABLE qiita.{0}
-            ADD COLUMN {1} {2}
-            NOT NULL DEFAULT '{3}'""".format(table_name, category, dtype,
-                                             default))
+        # Add the column to the sample template
+        sql = """ALTER TABLE qiita.{0}
+            ADD COLUMN {1} {2}""".format(table_name, category, dtype)
+        sql_args = None
+        if default is not None:
+            sql = sql + " NOT NULL DEFAULT %s"
+            sql_args = [default]
+        conn_handler.add_to_queue(queue, sql, sql_args)
+
+        # Add the column to the column listings table
+        sql = """INSERT INTO qiita.{0} ({1}, column_name, column_type)
+                 VALUES (%s, %s, %s)""".format(self._column_table,
+                                               self._id_column)
+        conn_handler.add_to_queue(queue, sql, (self.study_id, category, dtype))
+
+        conn_handler.execute_queue(queue)
 
         self.update_category(category, samples_and_values)
