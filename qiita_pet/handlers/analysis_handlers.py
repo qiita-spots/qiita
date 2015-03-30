@@ -366,9 +366,17 @@ class ResultsHandler(StaticFileHandler, BaseHandler):
 
 
 class SelectedSamplesHandler(BaseHandler):
+    @authenticated
     def get(self):
-        seldata = Analysis.get_user_queue(self.current_user).samples
-        self.render("analysis_selected.html", seldata=seldata)
-
-    def post(self):
-        pass
+        # Format seldata to get study IDs for the processed data
+        seldata = defaultdict(dict)
+        proc_data_info = {}
+        selsamps = Analysis.get_user_default(self.current_user).samples
+        for pid, samps in viewitems(selsamps):
+            proc_data = ProcessedData(pid)
+            seldata[proc_data.study][pid] = samps
+            # Also get processed data info
+            proc_data_info[pid] = proc_data.processing_info
+            proc_data_info[pid]['data_type'] = proc_data.data_type()
+        self.render("analysis_selected.html", seldata=seldata,
+                    proc_info=proc_data_info)

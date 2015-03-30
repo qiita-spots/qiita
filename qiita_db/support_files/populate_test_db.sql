@@ -420,3 +420,9 @@ INSERT INTO qiita.collection_job (collection_id, job_id) VALUES (1, 1);
 
 --share collection with shared user
 INSERT INTO qiita.collection_users (email, collection_id) VALUES ('shared@foo.bar', 1);
+
+--add default analysis for test user
+INSERT INTO qiita.analysis (email, name, description, dflt, analysis_status_id) VALUES ('test@foo.bar', 'test@foo.bar-dflt', 'dflt', true, 1);
+
+-- Attach samples to analysis
+INSERT INTO qiita.analysis_sample (analysis_id, processed_data_id, sample_id) VALUES (3,1,'1.SKD8.640184'), (3,1,'1.SKB7.640196'), (3,1,'1.SKM9.640192'), (3,1,'1.SKM4.640180')

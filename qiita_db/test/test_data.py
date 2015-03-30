@@ -928,9 +928,20 @@ class ProcessedDataTests(TestCase):
         pd._set_link_filepaths_status('failed: error')
         self.assertEqual(pd.link_filepaths_status, 'failed: error')
 
-    def test_processed_date(self):
+    def test_processing_info(self):
         pd = ProcessedData(1)
-        self.assertEqual(pd.processed_date, datetime(2012, 10, 1, 9, 30, 27))
+        exp = {
+            'algorithm': 'uclust',
+            'processed_date': datetime(2012, 10, 1, 9, 30, 27),
+            'enable_rev_strand_match': True,
+            'similarity': 0.97,
+            'suppress_new_clusters': True,
+            'reference_name': 'Greengenes',
+            'reference_version': '13_8',
+            'sequence_filepath': 'GreenGenes_13_8_97_otus.fasta',
+            'taxonomy_filepath': 'GreenGenes_13_8_97_otu_taxonomy.txt',
+            'tree_filepath': 'GreenGenes_13_8_97_otus.tree'}
+        self.assertEqual(pd.processing_info, exp)
 
     def test_status(self):
         pd = ProcessedData(1)

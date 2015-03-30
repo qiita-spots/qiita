@@ -1,5 +1,5 @@
 # March 28, 2015
-# Add cart analyses for all existing users
+# Add default analyses for all existing users
 from qiita_db.sql_connection import SQLConnectionHandler
 
 conn_handler = SQLConnectionHandler()

@@ -1,50 +1,55 @@
 {% extends sitebase.html %}
 {% block head %}
 <script type="text/javascript">
-$(document).on('click','.close_box',function(){
-		if(confirm('Are you sure you want to remove all samples for this processed data?')) { $(this).parent().remove(); }
-});
+function remove_proc_data(pid, sid) {
+	if(confirm('Are you sure you want to remove all samples for this processed data?')) { 
+		$('#proc' + pid).remove();
+		$('#proc' + pid + '-samples').remove();
+		if($('#study'+ sid + '-table tbody').children().length === 1) { $('#study'+sid).remove(); }
+	}
+}
+
+function remove_sample(pid, sample) {
+		document.getElementById(pid + '@' + sample).remove();
+		if($('#proc' + pid + '-samples-table tbody').children().length === 0) { $('#proc'+pid).remove(); }
+}
+
 </script>
 {% end %}
 
 {% block content %}
 {% from qiita_db.study import Study %}
-{% from qiita_db.data import ProcessedData %}
 {% from future.utils import viewitems %}
+<h1>Selected Samples</h1>
 {% for sid, proc_datas in viewitems(seldata) %}
   {% set study = Study(sid) %}
-<div class="row" id="study{{study.id}}">
+<div class="row" id="study{{sid}}">
 	<div class="col-md-12">
-	  <a href="/study/description/{{sid}}"><h2>{{study.title}}</h2></a>
-    <div class="row" style="padding:10px">
+	  <h2><a href="/study/description/{{sid}}">{{study.title}}</a></h2>
+	  <table class='table' id='study{{sid}}-table'>
+	  <tr>
+	  	<th></th><th>id</th><th>Datatype</th><th>Processed Date</th><th>Algorithm</th><th>Reference</th><th></th>
+	  </tr>
 	{% for pid, samples in viewitems(proc_datas) %}
-		  <div class="col-sm-2" id="proc{{pid}}" style="border-left: 1px solid;border-right: 1px solid;padding=5px;">
-		  	<span class="close_box" style="float:right">X</span>
-		    <h4>PID {{pid}} | 16S</h4>
-		    <p><strong>Processing Parameters</strong></p>
-		    Processed: DATE<br />
-		    Algorithm: ALG<br />
-		    Reference: REF VER<br />
-		    Method: closed<br />
-		    <a href="#" onclick="$('#proc{{pid}}-samples').toggle(); return false;">Show/Hide samples</a>
-		    <div style="width:100%" id="proc{{pid}}-samples" hidden>
-		    <div class="seperator"></div>
-		    <table class="table table-striped">
-			    <thead>
-			 		  <tr><th></th><th>Sample ID</th></tr>
-			 		</thead>
-			 		<tbody>
+		<tr id="proc{{pid}}">
+			<td><a href="#" onclick = 'remove_proc_data({{pid}}, {{sid}})'>Remove</a></td>
+	    <td>{{pid}}</td>
+	    <td>{{proc_info[pid]["data_type"]}}</td>
+	    <td>{{proc_info[pid]["processed_date"]}}</td>
+	    <td>{{proc_info[pid]["algorithm"]}}</td>
+	    <td>{{proc_info[pid]["reference_name"]}} {{proc_info[pid]["reference_version"]}}</td>
+	    <td><a href="#" onclick="$('#proc{{pid}}-samples').toggle(); return false;">Show/Hide samples</a></td>
+		 </tr>
+		 <tr id="proc{{pid}}-samples" hidden><td colspan=7>
+		 <table class="table sample-table" id="proc{{pid}}-samples-table" style="width:50%">
 		{% for samp in samples %}
-		      	<tr><td><input type="checkbox" name="selsamples" id="{{pid}}#{{samp}}" value="{{pid}}#{{samp}}"></td><td><label for="{{pid}}#{{samp}}">{{samp}}</label></td></tr>
+		 	<tr id="{{pid}}@{{samp}}"><td><a href="#" onclick="remove_sample('{{pid}}', '{{samp}}')">Remove</a></td><td>{{samp}}</td></tr>
 		{% end %}
-					</tbody>
-				</table>
-		    </div>
-		  </div>
+		</table>
+		</td></tr>
 	{% end %}
-	  </div>
+	</table>
 	</div>
-	}
 </div>
 {% end %}
 {% end %}
