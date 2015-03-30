@@ -422,6 +422,7 @@ class MetadataTemplate(QiitaObject):
     _column_table = None
     _id_column = None
     _sample_cls = None
+    _filepath_table = None
 
     def _check_id(self, id_, conn_handler=None):
         r"""Checks that the MetadataTemplate id_ exists on the database"""
@@ -474,12 +475,46 @@ class MetadataTemplate(QiitaObject):
         return "%s%d" % (cls._table_prefix, obj_id)
 
     @classmethod
+    def _delete_checks(cls, id_, conn_handler=None):
+        r"""Performs the checks to know if a MetadataTemplate can be deleted
+
+        Parameters
+        ----------
+        id_ : obj id
+            The object identifier
+        conn_handler : SQLConnectionHandler, optional
+            The connection handler connected to the DB
+
+        Raises
+        ------
+        IncompetentQiitaDeveloperError
+            Should be implemented in the subclasses
+        """
+        raise IncompetentQiitaDeveloperError(
+            "_delete_checks should be implemtented in the subclasses")
+
+    @classmethod
+    def _add_delete_extra_cleanup(cls, id_, conn_handler, queue):
+        r"""Adds any extra needed clean up to the queue
+
+        Parameters
+        ----------
+        id_ : obj id
+            The object identifier
+        conn_handler : SQLConnectionHandler
+            The connection handler connected to the DB
+        queue : str
+            The queue from conn_handler to add the extra clean up sql commands
+        """
+        pass
+
+    @classmethod
     def delete(cls, id_):
         r"""Deletes the metadata template from the database
 
         Parameters
         ----------
-        id_ : obj
+        id_ : int
             The object identifier
 
         Raises
@@ -491,26 +526,38 @@ class MetadataTemplate(QiitaObject):
         if not cls.exists(id_):
             raise QiitaDBUnknownIDError(id_, cls.__name__)
 
-        table_name = cls._table_name(id_)
         conn_handler = SQLConnectionHandler()
 
-        # Delete the sample template filepaths
-        # TODO: move the removal of the filepath to a template specific
-        # function
-        conn_handler.execute(
-            "DELETE FROM qiita.sample_template_filepath WHERE "
-            "study_id = %s", (id_, ))
+        # Let each type of template to handle their checks. If they fail,
+        # they will raise a useful error.
+        cls._delete_checks(id_, conn_handler)
+        table_name = cls._table_name(id_)
 
-        conn_handler.execute(
-            "DROP TABLE qiita.{0}".format(table_name))
-        conn_handler.execute(
-            "DELETE FROM qiita.{0} where {1} = %s".format(cls._table,
-                                                          cls._id_column),
-            (id_,))
-        conn_handler.execute(
-            "DELETE FROM qiita.{0} where {1} = %s".format(cls._column_table,
-                                                          cls._id_column),
-            (id_,))
+        queue = "DELETE_%s_%d" % (cls.__name__, id_)
+        conn_handler.create_queue(queue)
+
+        # Delete the connection between the metadata template and its filepath
+        sql = "DELETE FROM qiita.{0} WHERE {1} = %s".format(
+            cls._filepath_table, cls._id_column)
+        conn_handler.add_to_queue(queue, sql, (id_,))
+
+        # Drop the dynamic table
+        sql = "DROP TABLE qiita.{0}".format(table_name)
+        conn_handler.add_to_queue(queue, sql)
+
+        # Drop the rows from table with required values
+        sql = "DELETE FROM qiita.{0} where {1} = %s".format(cls._table,
+                                                            cls._id_column)
+        conn_handler.add_to_queue(queue, sql, (id_,))
+
+        # Drop the rows from the table with the column type information
+        sql = "DELETE FROM qiita.{0} where {1} = %s".format(cls._column_table,
+                                                            cls._id_column)
+        conn_handler.add_to_queue(queue, sql, (id_,))
+
+        cls._add_delete_extra_cleanup(id_, conn_handler, queue)
+
+        conn_handler.execute_queue(queue)
 
     @classmethod
     def exists(cls, obj_id):

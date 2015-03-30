@@ -56,6 +56,10 @@ class TestMetadataTemplate(TestCase):
         with self.assertRaises(IncompetentQiitaDeveloperError):
             MetadataTemplate._table_name(self.study)
 
+    def test_delete_checks(self):
+        with self.assertRaises(IncompetentQiitaDeveloperError):
+            MetadataTemplate._delete_checks(1)
+
     def test_delete(self):
         """Delete raises an error because it's not called from a subclass"""
         with self.assertRaises(IncompetentQiitaDeveloperError):

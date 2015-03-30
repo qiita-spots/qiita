@@ -512,24 +512,24 @@ class TestPrepTemplateReadOnly(SetUpTestPrepTemplate):
         # 27 samples
         self.assertEqual(len(obs), 27)
         self.assertEqual(set(obs.index), {
-            u'1.SKB1.640202', u'1.SKB2.640194', u'1.SKB3.640195',
-            u'1.SKB4.640189', u'1.SKB5.640181', u'1.SKB6.640176',
-            u'1.SKB7.640196', u'1.SKB8.640193', u'1.SKB9.640200',
-            u'1.SKD1.640179', u'1.SKD2.640178', u'1.SKD3.640198',
-            u'1.SKD4.640185', u'1.SKD5.640186', u'1.SKD6.640190',
-            u'1.SKD7.640191', u'1.SKD8.640184', u'1.SKD9.640182',
-            u'1.SKM1.640183', u'1.SKM2.640199', u'1.SKM3.640197',
-            u'1.SKM4.640180', u'1.SKM5.640177', u'1.SKM6.640187',
-            u'1.SKM7.640188', u'1.SKM8.640201', u'1.SKM9.640192'})
+            '1.SKB1.640202', '1.SKB2.640194', '1.SKB3.640195',
+            '1.SKB4.640189', '1.SKB5.640181', '1.SKB6.640176',
+            '1.SKB7.640196', '1.SKB8.640193', '1.SKB9.640200',
+            '1.SKD1.640179', '1.SKD2.640178', '1.SKD3.640198',
+            '1.SKD4.640185', '1.SKD5.640186', '1.SKD6.640190',
+            '1.SKD7.640191', '1.SKD8.640184', '1.SKD9.640182',
+            '1.SKM1.640183', '1.SKM2.640199', '1.SKM3.640197',
+            '1.SKM4.640180', '1.SKM5.640177', '1.SKM6.640187',
+            '1.SKM7.640188', '1.SKM8.640201', '1.SKM9.640192'})
 
         self.assertEqual(set(obs.columns), {
-            u'center_name', u'center_project_name', u'emp_status',
-            u'barcodesequence', u'library_construction_protocol',
-            u'linkerprimersequence', u'target_subfragment', u'target_gene',
-            u'run_center', u'run_prefix', u'run_date', u'experiment_center',
-            u'experiment_design_description', u'experiment_title', u'platform',
-            u'samp_size', u'sequencing_meth', u'illumina_technology',
-            u'sample_center', u'pcr_primers', u'study_center'})
+            'center_name', 'center_project_name', 'emp_status',
+            'barcodesequence', 'library_construction_protocol',
+            'linkerprimersequence', 'target_subfragment', 'target_gene',
+            'run_center', 'run_prefix', 'run_date', 'experiment_center',
+            'experiment_design_description', 'experiment_title', 'platform',
+            'samp_size', 'sequencing_meth', 'illumina_technology',
+            'sample_center', 'pcr_primers', 'study_center'})
 
 
 @qiita_test_checker()
@@ -868,6 +868,17 @@ class TestPrepTemplate(SetUpTestPrepTemplate):
 
         with self.assertRaises(ValueError):
             pt.create_qiime_mapping_file(filepath)
+
+    def test_delete_checks(self):
+        with self.assertRaises(QiitaDBExecutionError):
+            PrepTemplate._delete_checks(1, self.conn_handler)
+
+        pt = PrepTemplate.create(self.metadata, self.new_raw_data,
+                                 self.test_study, self.data_type_id)
+        # No error should be raised here, so we are just putting an assert at
+        # the end to make sure that the execution finishes
+        PrepTemplate._delete_checks(pt.id, self.conn_handler)
+        self.assertTrue(True)
 
     def test_delete_error(self):
         """Try to delete a prep template that already has preprocessed data"""

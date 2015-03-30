@@ -1105,6 +1105,16 @@ class TestSampleTemplate(SetUpSampleTemplate):
              'longitude': 4.41}]
         self.assertEqual(obs, exp)
 
+    def test_delete_checks(self):
+        with self.assertRaises(QiitaDBExecutionError):
+            SampleTemplate._delete_checks(1, self.conn_handler)
+
+        st = SampleTemplate.create(self.metadata, self.new_study)
+        # No error should be raised here, so we are just putting an assert at
+        # the end to make sure that the execution finishes
+        SampleTemplate._delete_checks(st.id, self.conn_handler)
+        self.assertTrue(True)
+
     def test_delete(self):
         """Deletes Sample template 1"""
         SampleTemplate.create(self.metadata, self.new_study)
@@ -1125,6 +1135,11 @@ class TestSampleTemplate(SetUpSampleTemplate):
         """Try to delete a non existent prep template"""
         with self.assertRaises(QiitaDBUnknownIDError):
             SampleTemplate.delete(5)
+
+    def test_delete_error(self):
+        """Try to delete a sample template that has been referenced"""
+        with self.assertRaises(QiitaDBExecutionError):
+            SampleTemplate.delete(1)
 
     def test_update_category(self):
         """The category is successfully updated"""

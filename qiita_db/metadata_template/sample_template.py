@@ -19,7 +19,7 @@ import warnings
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_db.exceptions import (QiitaDBDuplicateError, QiitaDBColumnError,
                                  QiitaDBUnknownIDError, QiitaDBError,
-                                 QiitaDBWarning)
+                                 QiitaDBWarning, QiitaDBExecutionError)
 from qiita_db.sql_connection import SQLConnectionHandler
 from qiita_db.util import get_mountpoint, scrub_data
 from qiita_db.study import Study
@@ -73,6 +73,37 @@ class SampleTemplate(MetadataTemplate):
     _column_table = "study_sample_columns"
     _id_column = "study_id"
     _sample_cls = Sample
+    _filepath_table = "sample_template_filepath"
+
+    @classmethod
+    def _delete_checks(cls, id_, conn_handler=None):
+        r"""Performs the checks to know if a SampleTemplate can be deleted
+
+        A sample template cannot be removed if there is a prep template
+        referencing it.
+
+        Parameters
+        ----------
+        id_ : int
+            The sample template identifier
+        conn_handler : SQLConnectionHandler, optional
+            The connection handler connected to the DB
+
+        Raises
+        ------
+        QiitaDBExecutionError
+            If the sample template cannot be removed
+        """
+        sql = """SELECT EXISTS(
+                    SELECT *
+                    FROM qiita.prep_template
+                        JOIN qiita.study_raw_data USING (raw_data_id)
+                    WHERE study_id=%s)"""
+        exists = conn_handler.execute_fetchone(sql, (id_,))[0]
+        if exists:
+            raise QiitaDBExecutionError(
+                "Cannot remove sample template %d because a prep template "
+                "referencing to it has been already added." % id_)
 
     @classmethod
     def _check_template_special_columns(cls, md_template, study_id):

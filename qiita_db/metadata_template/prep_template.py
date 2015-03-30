@@ -73,6 +73,7 @@ class PrepTemplate(MetadataTemplate):
     _column_table = "prep_columns"
     _id_column = "prep_template_id"
     _sample_cls = PrepSample
+    _filepath_table = "prep_template_filepath"
 
     @classmethod
     def create(cls, md_template, raw_data, study, data_type,
@@ -297,61 +298,51 @@ class PrepTemplate(MetadataTemplate):
         return missing_cols
 
     @classmethod
-    def delete(cls, id_):
-        r"""Deletes the table from the database
+    def _delete_checks(cls, id_, conn_handler=None):
+        r"""Performs the checks to know if a PrepTemplate can be deleted
+
+        A prep template cannot be removed if a preprocessed data has been
+        generated using it
 
         Parameters
         ----------
-        id_ : obj
-            The object identifier
+        id_ : int
+            The prep template identifier
+        conn_handler : SQLConnectionHandler, optional
+            The connection handler connected to the DB
 
         Raises
         ------
         QiitaDBExecutionError
-            If the prep template already has a preprocessed data
-        QiitaDBUnknownIDError
-            If no prep template with id = id_ exists
+            Should be implemented in the subclasses
         """
-        table_name = cls._table_name(id_)
-        conn_handler = SQLConnectionHandler()
+        sql = """SELECT EXISTS(
+                    SELECT *
+                    FROM qiita.prep_template_preprocessed_data
+                    WHERE prep_template_id=%s)"""
+        exists = conn_handler.execute_fetchone(sql, (id_,))[0]
+        if exists:
+            raise QiitaDBExecutionError(
+                "Cannot remove prep template %d because a preprocessed data "
+                "has been already generated using it." % id_)
 
-        if not cls.exists(id_):
-            raise QiitaDBUnknownIDError(id_, cls.__name__)
+    @classmethod
+    def _add_delete_extra_cleanup(cls, id_, conn_handler, queue):
+        r"""Adds any extra needed clean up to the queue
 
-        preprocessed_data_exists = conn_handler.execute_fetchone(
-            "SELECT EXISTS(SELECT * FROM qiita.prep_template_preprocessed_data"
-            " WHERE prep_template_id=%s)", (id_,))[0]
-
-        if preprocessed_data_exists:
-            raise QiitaDBExecutionError("Cannot remove prep template %d "
-                                        "because a preprocessed data has been"
-                                        " already generated using it." % id_)
-
-        # Delete the prep template filepaths
-        conn_handler.execute(
-            "DELETE FROM qiita.prep_template_filepath WHERE "
-            "prep_template_id = %s", (id_, ))
-
-        # Drop the prep_X table
-        conn_handler.execute(
-            "DROP TABLE qiita.{0}".format(table_name))
-
-        # Remove the rows from common_prep_info
-        conn_handler.execute(
-            "DELETE FROM qiita.{0} where {1} = %s".format(cls._table,
-                                                          cls._id_column),
-            (id_,))
-
-        # Remove the rows from prep_columns
-        conn_handler.execute(
-            "DELETE FROM qiita.{0} where {1} = %s".format(cls._column_table,
-                                                          cls._id_column),
-            (id_,))
-
+        Parameters
+        ----------
+        id_ : obj id
+            The object identifier
+        conn_handler : SQLConnectionHandler
+            The connection handler connected to the DB
+        queue : str
+            The queue from conn_handler to add the extra clean up sql commands
+        """
         # Remove the row from prep_template
-        conn_handler.execute(
-            "DELETE FROM qiita.prep_template where "
-            "{0} = %s".format(cls._id_column), (id_,))
+        sql = "DELETE FROM qiita.prep_template where {0} = %s".format(
+            cls._id_column)
+        conn_handler.add_to_queue(queue, sql, (id_,))
 
     def data_type(self, ret_id=False):
         """Returns the data_type or the data_type id
