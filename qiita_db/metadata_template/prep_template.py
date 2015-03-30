@@ -25,14 +25,8 @@ from qiita_db.util import (convert_to_id, convert_from_id, get_mountpoint,
 from .base_metadata_template import BaseSample, MetadataTemplate
 from .util import (as_python_types, get_invalid_sample_names, get_datatypes,
                    prefix_sample_names_with_id, load_template_to_dataframe)
-
-
-TARGET_GENE_DATA_TYPES = ['16S', '18S', 'ITS']
-REQUIRED_TARGET_GENE_COLS = {'barcodesequence', 'linkerprimersequence',
-                             'run_prefix', 'library_construction_protocol',
-                             'experiment_design_description', 'platform'}
-RENAME_COLS_DICT = {'barcode': 'barcodesequence',
-                    'primer': 'linkerprimersequence'}
+from .constants import (TARGET_GENE_DATA_TYPES, REQUIRED_TARGET_GENE_COLS,
+                        RENAME_COLS_DICT)
 
 
 class PrepSample(BaseSample):

@@ -28,21 +28,6 @@ from .base_metadata_template import BaseSample, MetadataTemplate
 from .util import as_python_types, get_datatypes
 from .prep_template import PrepTemplate
 
-SAMPLE_TEMPLATE_EBI_COLS = {
-    'collection_timestamp': 'timestamp',
-    'physical_specimen_location': 'varchar'
-}
-
-SAMPLE_TEMPLATE_MAIN_COLS = {
-    'sample_type': 'varchar',
-    'description': 'varchar',
-    'physical_specimen_remaining': 'bool',
-    'dna_extracted': 'bool',
-    'latitude': 'float8',
-    'longitude': 'float8',
-    'host_subject_id': 'varchar'
-}
-
 
 class Sample(BaseSample):
     r"""Class that models a sample present in a SampleTemplate.
