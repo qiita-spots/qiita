@@ -223,9 +223,9 @@ class JobTest(TestCase):
         self.conn_handler.execute(
             "INSERT INTO qiita.analysis_sample "
             "(analysis_id, processed_data_id, sample_id) VALUES "
-            "(3, 1, '1.SKB8.640193'), (3, 1, '1.SKD8.640184'), "
-            "(3, 1, '1.SKB7.640196'), (3, 1, '1.SKM9.640192'), "
-            "(3, 1, '1.SKM4.640180')")
+            "(7, 1, '1.SKB8.640193'), (7, 1, '1.SKD8.640184'), "
+            "(7, 1, '1.SKB7.640196'), (7, 1, '1.SKM9.640192'), "
+            "(7, 1, '1.SKM4.640180')")
         new = Job.create("18S", "Beta Diversity",
                          {"--otu_table_fp": 1, "--mapping_fp": 1},
                          Analysis(3), return_existing=True)

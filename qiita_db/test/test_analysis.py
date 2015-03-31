@@ -72,6 +72,11 @@ class TestAnalysis(TestCase):
         self.analysis.status = "public"
         self.assertEqual(Analysis.get_by_status('public'), {1})
 
+    def test_get_user_default(self):
+        obs = Analysis.get_user_default(User('admin@foo.bar'))
+        exp = Analysis(4)
+        self.assertEqual(obs.id, exp.id)
+
     def test_has_access_public(self):
         self.conn_handler.execute("UPDATE qiita.analysis SET "
                                   "analysis_status_id = 6")
@@ -95,12 +100,12 @@ class TestAnalysis(TestCase):
 
         new = Analysis.create(User("admin@foo.bar"), "newAnalysis",
                               "A New Analysis")
-        self.assertEqual(new.id, 3)
+        self.assertEqual(new.id, 7)
         sql = ("SELECT analysis_id, email, name, description, "
                "analysis_status_id, pmid, EXTRACT(EPOCH FROM timestamp) "
-               "FROM qiita.analysis WHERE analysis_id = 3")
+               "FROM qiita.analysis WHERE analysis_id = 7")
         obs = self.conn_handler.execute_fetchall(sql)
-        self.assertEqual(obs[0][:-1], [3, 'admin@foo.bar', 'newAnalysis',
+        self.assertEqual(obs[0][:-1], [7, 'admin@foo.bar', 'newAnalysis',
                                        'A New Analysis', 1, None])
         self.assertTrue(time1 < float(obs[0][-1]))
 
@@ -110,18 +115,18 @@ class TestAnalysis(TestCase):
 
         new = Analysis.create(User("admin@foo.bar"), "newAnalysis",
                               "A New Analysis", Analysis(1))
-        self.assertEqual(new.id, 3)
+        self.assertEqual(new.id, 7)
         sql = ("SELECT analysis_id, email, name, description, "
                "analysis_status_id, pmid, EXTRACT(EPOCH FROM timestamp) "
-               "FROM qiita.analysis WHERE analysis_id = 3")
+               "FROM qiita.analysis WHERE analysis_id = 7")
         obs = self.conn_handler.execute_fetchall(sql)
-        self.assertEqual(obs[0][:-1], [3, 'admin@foo.bar', 'newAnalysis',
+        self.assertEqual(obs[0][:-1], [7, 'admin@foo.bar', 'newAnalysis',
                                        'A New Analysis', 1, None])
         self.assertTrue(time1 < float(obs[0][-1]))
 
-        sql = "SELECT * FROM qiita.analysis_chain WHERE child_id = 3"
+        sql = "SELECT * FROM qiita.analysis_chain WHERE child_id = 7"
         obs = self.conn_handler.execute_fetchall(sql)
-        self.assertEqual(obs, [[1, 3]])
+        self.assertEqual(obs, [[1, 7]])
 
     def test_retrieve_owner(self):
         self.assertEqual(self.analysis.owner, "test@foo.bar")
@@ -245,18 +250,18 @@ class TestAnalysis(TestCase):
         new = Analysis.create(User("admin@foo.bar"), "newAnalysis",
                               "A New Analysis", Analysis(1))
         new.step = 2
-        sql = "SELECT * FROM qiita.analysis_workflow WHERE analysis_id = 3"
+        sql = "SELECT * FROM qiita.analysis_workflow WHERE analysis_id = 7"
         obs = self.conn_handler.execute_fetchall(sql)
-        self.assertEqual(obs, [[3, 2]])
+        self.assertEqual(obs, [[7, 2]])
 
     def test_set_step_twice(self):
         new = Analysis.create(User("admin@foo.bar"), "newAnalysis",
                               "A New Analysis", Analysis(1))
         new.step = 2
         new.step = 4
-        sql = "SELECT * FROM qiita.analysis_workflow WHERE analysis_id = 3"
+        sql = "SELECT * FROM qiita.analysis_workflow WHERE analysis_id = 7"
         obs = self.conn_handler.execute_fetchall(sql)
-        self.assertEqual(obs, [[3, 4]])
+        self.assertEqual(obs, [[7, 4]])
 
     def test_retrieve_step(self):
         new = Analysis.create(User("admin@foo.bar"), "newAnalysis",

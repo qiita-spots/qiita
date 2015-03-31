@@ -36,18 +36,18 @@ function remove_sample(sid, pid, sample) {
 	  </tr>
 	{% for pid, samples in viewitems(proc_datas) %}
 		<tr id="proc{{pid}}">
-			<td><a href="#" onclick = 'remove_proc_data({{pid}}, {{sid}})'>Remove</a></td>
+		  <td><a href="#" onclick="$('#proc{{pid}}-samples').toggle(); return false;">Show/Hide samples</a></td>
 	    <td>{{pid}}</td>
 	    <td>{{proc_info[pid]["data_type"]}}</td>
 	    <td>{{proc_info[pid]["processed_date"]}}</td>
 	    <td>{{proc_info[pid]["algorithm"]}}</td>
 	    <td>{{proc_info[pid]["reference_name"]}} {{proc_info[pid]["reference_version"]}}</td>
-	    <td><a href="#" onclick="$('#proc{{pid}}-samples').toggle(); return false;">Show/Hide samples</a></td>
+	    <td><a href="#" onclick = 'remove_proc_data({{pid}}, {{sid}})'>Remove</a></td>
 		 </tr>
 		 <tr id="proc{{pid}}-samples" hidden><td colspan=7>
 		 <table class="table table-striped sample-table" id="proc{{pid}}-samples-table" style="width:50%">
 		{% for samp in samples %}
-		 	<tr id="{{pid}}@{{samp}}"><td><a href="#" onclick="remove_sample('{{sid}}', '{{pid}}', '{{samp}}')">Remove</a></td><td>{{samp}}</td></tr>
+		 	<tr id="{{pid}}@{{samp}}"><td>{{samp}}</td><td><a href="#" onclick="remove_sample('{{sid}}', '{{pid}}', '{{samp}}')">Remove</a></td></tr>
 		{% end %}
 		</table>
 		</td></tr>
