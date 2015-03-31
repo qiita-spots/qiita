@@ -10,5 +10,6 @@ __version__ = "0.0.1-dev"
 
 from .sample_template import SampleTemplate
 from .prep_template import PrepTemplate
+from .util import load_template_to_dataframe
 
-__all__ = ['SampleTemplate', 'PrepTemplate']
+__all__ = ['SampleTemplate', 'PrepTemplate', 'load_template_to_dataframe']

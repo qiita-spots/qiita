@@ -23,8 +23,7 @@ SAMPLE_TEMPLATE_COLUMNS = {
                                        'latitude': 'float8',
                                        'longitude': 'float8',
                                        'host_subject_id': 'varchar'},
-                              error_msg="Any processed data generated from "
-                                        "this study will not be approved")
+                              error_msg="Processed data approval disabled")
 }
 
 # A dict containing the restrictions that apply to the sample templates
