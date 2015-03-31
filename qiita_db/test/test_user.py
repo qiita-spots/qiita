@@ -228,7 +228,7 @@ class UserTest(TestCase):
         self.assertEqual(user.shared_studies, {1})
 
     def test_get_private_analyses(self):
-        self.assertEqual(self.user.private_analyses, set([4]))
+        self.assertEqual(self.user.private_analyses, set([]))
 
     def test_get_shared_analyses(self):
         self.assertEqual(self.user.shared_analyses, set([]))
