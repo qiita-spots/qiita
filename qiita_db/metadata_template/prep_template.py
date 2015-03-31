@@ -130,10 +130,6 @@ class PrepTemplate(MetadataTemplate):
         md_template = cls._clean_validate_template(md_template, study.id,
                                                    pt_cols)
 
-        # Get some useful information from the metadata template
-        sample_ids = md_template.index.tolist()
-        headers = list(md_template.keys())
-
         # Insert the metadata template
         # We need the prep_id for multiple calls below, which currently is not
         # supported by the queue system. Thus, executing this outside the queue
@@ -144,40 +140,8 @@ class PrepTemplate(MetadataTemplate):
         prep_id = conn_handler.execute_fetchone(
             sql, (data_type_id, raw_data.id, investigation_type))[0]
 
-        # Insert values on required columns
-        values = [(prep_id, s_id) for s_id in sample_ids]
-        sql = "INSERT INTO qiita.{0} ({1}, sample_id) VALUES (%s, %s)".format(
-            cls._table, cls._id_column)
-        conn_handler.add_to_queue(queue_name, sql, values, many=True)
-
-        # Insert rows on *_columns table
-        datatypes = get_datatypes(md_template.ix[:, headers])
-        # psycopg2 requires a list of tuples, in which each tuple is a set
-        # of values to use in the string formatting of the query. We have all
-        # the values in different lists (but in the same order) so use zip
-        # to create the list of tuples that psycopg2 requires.
-        values = [(prep_id, h, d) for h, d in zip(headers, datatypes)]
-        sql = """INSERT INTO qiita.{0} ({1}, column_name, column_type)
-                 VALUES (%s, %s, %s)""".format(cls._column_table,
-                                               cls._id_column)
-        conn_handler.add_to_queue(queue_name, sql, values, many=True)
-
-        # Create table with custom columns
-        table_name = cls._table_name(prep_id)
-        column_datatype = ["%s %s" % (col, dtype)
-                           for col, dtype in zip(headers, datatypes)]
-        conn_handler.add_to_queue(
-            queue_name,
-            "CREATE TABLE qiita.{0} (sample_id varchar, {1})".format(
-                table_name, ', '.join(column_datatype)))
-
-        # Insert values on custom table
-        values = as_python_types(md_template, headers)
-        values.insert(0, sample_ids)
-        values = [v for v in zip(*values)]
-        sql = "INSERT INTO qiita.{0} (sample_id, {1}) VALUES (%s, {2})".format(
-            table_name, ", ".join(headers), ', '.join(["%s"] * len(headers)))
-        conn_handler.add_to_queue(queue_name, sql, values, many=True)
+        cls._add_common_creation_steps(prep_id, md_template, conn_handler,
+                                       queue_name)
 
         try:
             conn_handler.execute_queue(queue_name)

@@ -25,7 +25,8 @@ from qiita_db.sql_connection import SQLConnectionHandler
 from qiita_db.util import (exists_table, get_table_cols, get_mountpoint,
                            insert_filepaths)
 from qiita_db.logger import LogEntry
-from .util import get_invalid_sample_names, prefix_sample_names_with_id
+from .util import (get_invalid_sample_names, prefix_sample_names_with_id,
+                   get_datatypes, as_python_types)
 
 
 class BaseSample(QiitaObject):
@@ -476,6 +477,48 @@ class MetadataTemplate(QiitaObject):
             raise IncompetentQiitaDeveloperError(
                 "_table_prefix should be defined in the subclasses")
         return "%s%d" % (cls._table_prefix, obj_id)
+
+    @classmethod
+    def _add_common_creation_steps(cls, obj_id, md_template, conn_handler,
+                                   queue):
+        cls._check_subclass()
+        # Get some useful information from the metadata template
+        sample_ids = md_template.index.tolist()
+        headers = list(md_template.keys())
+        # Insert values on required columns
+        values = [(obj_id, s_id) for s_id in sample_ids]
+        sql = "INSERT INTO qiita.{0} ({1}, sample_id) VALUES (%s, %s)".format(
+            cls._table, cls._id_column)
+        conn_handler.add_to_queue(queue, sql, values, many=True)
+
+        # Insert rows on *_columns table
+        datatypes = get_datatypes(md_template.ix[:, headers])
+        # psycopg2 requires a list of tuples, in which each tuple contains
+        # the values to use in the string formatting of the query. We have all
+        # the values in different lists (but in the same order) so use zip
+        # to create the list of tuples that psycopg2 requires.
+        values = [(obj_id, h, d) for h, d in zip(headers, datatypes)]
+        sql = """INSERT INTO qiita.{0} ({1}, column_name, column_type)
+                 VALUES (%s, %s, %s)""".format(cls._column_table,
+                                               cls._id_column)
+        conn_handler.add_to_queue(queue, sql, values, many=True)
+
+        # Create table with custom columns
+        table_name = cls._table_name(obj_id)
+        column_datatype = ["%s %s" % (col, dtype)
+                           for col, dtype in zip(headers, datatypes)]
+        conn_handler.add_to_queue(
+            queue,
+            "CREATE TABLE qiita.{0} (sample_id varchar NOT NULL, {1})".format(
+                table_name, ', '.join(column_datatype)))
+
+        # Insert values on custom table
+        values = as_python_types(md_template, headers)
+        values.insert(0, sample_ids)
+        values = [v for v in zip(*values)]
+        sql = "INSERT INTO qiita.{0} (sample_id, {1}) VALUES (%s, {2})".format(
+            table_name, ", ".join(headers), ', '.join(["%s"] * len(headers)))
+        conn_handler.add_to_queue(queue, sql, values, many=True)
 
     @classmethod
     def _delete_checks(cls, id_, conn_handler=None):

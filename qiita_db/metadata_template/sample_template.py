@@ -102,44 +102,9 @@ class SampleTemplate(MetadataTemplate):
         md_template = cls._clean_validate_template(md_template, study.id,
                                                    SAMPLE_TEMPLATE_COLUMNS)
 
-        # Get some useful information from the metadata template
-        sample_ids = md_template.index.tolist()
-        headers = list(md_template.keys())
+        cls._add_common_creation_steps(study.id, md_template, conn_handler,
+                                       queue_name)
 
-        # Insert values on required columns
-        values = [(study.id, s_id) for s_id in sample_ids]
-        sql = "INSERT INTO qiita.{0} ({1}, sample_id) VALUES (%s, %s)".format(
-            cls._table, cls._id_column)
-        conn_handler.add_to_queue(queue_name, sql, values, many=True)
-
-        # Insert rows on *_columns table
-        datatypes = get_datatypes(md_template.ix[:, headers])
-        # psycopg2 requires a list of tuples, in which each tuple contains
-        # the values to use in the string formatting of the query. We have all
-        # the values in different lists (but in the same order) so use zip
-        # to create the list of tuples that psycopg2 requires.
-        values = [(study.id, h, d) for h, d in zip(headers, datatypes)]
-        sql = """INSERT INTO qiita.{0} ({1}, column_name, column_type)
-                 VALUES (%s, %s, %s)""".format(cls._column_table,
-                                               cls._id_column)
-        conn_handler.add_to_queue(queue_name, sql, values, many=True)
-
-        # Create table with custom columns
-        table_name = cls._table_name(study.id)
-        column_datatype = ["%s %s" % (col, dtype)
-                           for col, dtype in zip(headers, datatypes)]
-        conn_handler.add_to_queue(
-            queue_name,
-            "CREATE TABLE qiita.{0} (sample_id varchar NOT NULL, {1})".format(
-                table_name, ', '.join(column_datatype)))
-
-        # Insert values on custom table
-        values = as_python_types(md_template, headers)
-        values.insert(0, sample_ids)
-        values = [v for v in zip(*values)]
-        sql = "INSERT INTO qiita.{0} (sample_id, {1}) VALUES (%s, {2})".format(
-            table_name, ", ".join(headers), ', '.join(["%s"] * len(headers)))
-        conn_handler.add_to_queue(queue_name, sql, values, many=True)
         conn_handler.execute_queue(queue_name)
 
         # figuring out the filepath of the backup
