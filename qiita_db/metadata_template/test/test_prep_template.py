@@ -773,48 +773,66 @@ class TestPrepTemplate(SetUpTestPrepTemplate):
 
     def test_create_warning_missing_col(self):
         """Create raises a warning if there is any missing column"""
+        # missing cols
+        # library_construction_protocol and experiment_design_description
         metadata_dict = {
             '1.SKB8.640193': {'center_name': 'ANL',
                               'center_project_name': 'Test Project',
-                              'ebi_submission_accession': None,
+                              'primer': 'GTGCCAGCMGCCGCGGTAA',
+                              'barcode': 'GTCCGCAAGTTA',
+                              'platform': 'ILLUMINA',
                               'EMP_status': 'EMP',
+                              'run_prefix': "s_G1_L002_sequences",
                               'str_column': 'Value for sample 1'},
             '1.SKD8.640184': {'center_name': 'ANL',
                               'center_project_name': 'Test Project',
-                              'ebi_submission_accession': None,
+                              'primer': 'GTGCCAGCMGCCGCGGTAA',
+                              'barcode': 'CGTAGAGCTCTC',
+                              'platform': 'ILLUMINA',
                               'EMP_status': 'EMP',
+                              'run_prefix': "s_G1_L002_sequences",
                               'str_column': 'Value for sample 2'},
             '1.SKB7.640196': {'center_name': 'ANL',
                               'center_project_name': 'Test Project',
-                              'ebi_submission_accession': None,
+                              'primer': 'GTGCCAGCMGCCGCGGTAA',
+                              'barcode': 'CCTCTGAGAGCT',
+                              'platform': 'ILLUMINA',
                               'EMP_status': 'EMP',
+                              'run_prefix': "s_G1_L002_sequences",
                               'str_column': 'Value for sample 3'}
             }
         metadata = pd.DataFrame.from_dict(metadata_dict, orient='index')
         npt.assert_warns(QiitaDBWarning, PrepTemplate.create, metadata,
                          self.new_raw_data, self.test_study, self.data_type)
 
-    def test_create_error_template_special(self):
-        """Create raises an error if not all columns are on the template"""
+    def test_create_warning_data_type_missing_col(self):
+        """Create raises a warning if there is a datatype missing column"""
+        # missing cols barcode and run_prefix
         metadata_dict = {
             '1.SKB8.640193': {'center_name': 'ANL',
                               'center_project_name': 'Test Project',
-                              'ebi_submission_accession': None,
+                              'primer': 'GTGCCAGCMGCCGCGGTAA',
+                              'platform': 'ILLUMINA',
                               'EMP_status': 'EMP',
                               'str_column': 'Value for sample 1',
-                              'barcode': 'GTCCGCAAGTTA'},
+                              'library_construction_protocol': 'AAAA',
+                              'experiment_design_description': 'BBBB'},
             '1.SKD8.640184': {'center_name': 'ANL',
                               'center_project_name': 'Test Project',
-                              'ebi_submission_accession': None,
+                              'primer': 'GTGCCAGCMGCCGCGGTAA',
+                              'platform': 'ILLUMINA',
                               'EMP_status': 'EMP',
                               'str_column': 'Value for sample 2',
-                              'barcode': 'CGTAGAGCTCTC'},
+                              'library_construction_protocol': 'AAAA',
+                              'experiment_design_description': 'BBBB'},
             '1.SKB7.640196': {'center_name': 'ANL',
                               'center_project_name': 'Test Project',
-                              'ebi_submission_accession': None,
+                              'primer': 'GTGCCAGCMGCCGCGGTAA',
+                              'platform': 'ILLUMINA',
                               'EMP_status': 'EMP',
                               'str_column': 'Value for sample 3',
-                              'barcode': 'CCTCTGAGAGCT'}
+                              'library_construction_protocol': 'AAAA',
+                              'experiment_design_description': 'BBBB'}
             }
         metadata = pd.DataFrame.from_dict(metadata_dict, orient='index')
         npt.assert_warns(QiitaDBWarning, PrepTemplate.create, metadata,

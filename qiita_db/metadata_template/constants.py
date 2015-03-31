@@ -34,21 +34,20 @@ PREP_TEMPLATE_COLUMNS = {
                  'platform': 'varchar',
                  'library_construction_protocol': 'varchar',
                  'experiment_design_description': 'varchar'},
-        error_msg="EBI submission disabled"),
+        error_msg="EBI submission disabled")
+}
+
+PREP_TEMPLATE_COLUMNS_TARGET_GENE = {
     'Demultiplex': Restriction(
         columns={'barcode': 'varchar',
                  'primer': 'varchar'},
-        error_msg="Demultiplexing disabled. If the data type of your raw data "
-                  "is one of the target gene datatypes (%s), you will not be "
-                  "able to preprocess your raw data"
-                  % ', '.join(TARGET_GENE_DATA_TYPES)),
+        error_msg="Demultiplexing disabled. You will not be able to "
+                  "preprocess your raw data"),
     'Demultiplex_multiple': Restriction(
         columns={'barcode': 'varchar',
                  'primer': 'varchar',
                  'run_prefix': 'varchar'},
-        error_msg="Demultiplexing with multiple input files disabled. If the "
-                  "data type of your raw data is one of the target gene "
-                  "datatypes (%s) and includes multiple raw input files, "
-                  "you will not be able to preprocess your raw data"
-                  % ', '.join(TARGET_GENE_DATA_TYPES)),
+        error_msg="Demultiplexing with multiple input files disabled. If your "
+                  "raw data includes multiple raw input files, you will not "
+                  "be able to preprocess your raw data")
 }

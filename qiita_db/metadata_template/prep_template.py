@@ -9,25 +9,23 @@
 from __future__ import division
 from future.builtins import zip
 from future.utils import viewvalues
-from copy import deepcopy
 from os.path import join
 from time import strftime
+from copy import deepcopy
 
-from skbio.util import find_duplicates
 import pandas as pd
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
-from qiita_db.exceptions import (QiitaDBColumnError, QiitaDBUnknownIDError,
-                                 QiitaDBDuplicateHeaderError, QiitaDBError,
+from qiita_db.exceptions import (QiitaDBColumnError, QiitaDBError,
                                  QiitaDBExecutionError)
 from qiita_db.sql_connection import SQLConnectionHandler
 from qiita_db.ontology import Ontology
 from qiita_db.util import (convert_to_id, convert_from_id, get_mountpoint,
                            infer_status)
 from .base_metadata_template import BaseSample, MetadataTemplate
-from .util import (as_python_types, get_invalid_sample_names, get_datatypes,
-                   prefix_sample_names_with_id, load_template_to_dataframe)
-from .constants import TARGET_GENE_DATA_TYPES, PREP_TEMPLATE_COLUMNS
+from .util import as_python_types, get_datatypes, load_template_to_dataframe
+from .constants import (TARGET_GENE_DATA_TYPES, PREP_TEMPLATE_COLUMNS,
+                        PREP_TEMPLATE_COLUMNS_TARGET_GENE)
 
 
 class PrepSample(BaseSample):
@@ -114,13 +112,22 @@ class PrepTemplate(MetadataTemplate):
         queue_name = "CREATE_PREP_TEMPLATE_%d" % raw_data.id
         conn_handler.create_queue(queue_name)
 
-        md_template = cls._clean_validate_template(md_template, study.id,
-                                                   PREP_TEMPLATE_COLUMNS)
-
         # Check if the data_type is the id or the string
-        data_type_id = (data_type if isinstance(data_type, (int, long))
-                        else convert_to_id(data_type, "data_type",
-                                           conn_handler))
+        if isinstance(data_type, (int, long)):
+            data_type_id = data_type
+            data_type_str = convert_from_id(data_type, "data_type",
+                                            conn_handler)
+        else:
+            data_type_id = convert_to_id(data_type, "data_type", conn_handler)
+            data_type_str = data_type
+
+        pt_cols = PREP_TEMPLATE_COLUMNS
+        if data_type_str in TARGET_GENE_DATA_TYPES:
+            pt_cols = deepcopy(PREP_TEMPLATE_COLUMNS)
+            pt_cols.update(PREP_TEMPLATE_COLUMNS_TARGET_GENE)
+
+        md_template = cls._clean_validate_template(md_template, study.id,
+                                                   pt_cols)
 
         # Get some useful information from the metadata template
         sample_ids = md_template.index.tolist()
