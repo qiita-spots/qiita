@@ -21,7 +21,7 @@ from qiita_db.exceptions import (QiitaDBDuplicateError, QiitaDBColumnError,
                                  QiitaDBUnknownIDError, QiitaDBError,
                                  QiitaDBWarning, QiitaDBExecutionError)
 from qiita_db.sql_connection import SQLConnectionHandler
-from qiita_db.util import get_mountpoint, scrub_data
+from qiita_db.util import get_mountpoint, scrub_data, convert_to_id
 from qiita_db.study import Study
 from qiita_db.data import RawData
 from .base_metadata_template import BaseSample, MetadataTemplate
@@ -75,49 +75,7 @@ class SampleTemplate(MetadataTemplate):
     _id_column = "study_id"
     _sample_cls = Sample
     _filepath_table = "sample_template_filepath"
-
-    @classmethod
-    def _delete_checks(cls, id_, conn_handler=None):
-        r"""Performs the checks to know if a SampleTemplate can be deleted
-
-        A sample template cannot be removed if there is a prep template
-        referencing it.
-
-        Parameters
-        ----------
-        id_ : int
-            The sample template identifier
-        conn_handler : SQLConnectionHandler, optional
-            The connection handler connected to the DB
-
-        Raises
-        ------
-        QiitaDBExecutionError
-            If the sample template cannot be removed
-        """
-        sql = """SELECT EXISTS(
-                    SELECT *
-                    FROM qiita.prep_template
-                        JOIN qiita.study_raw_data USING (raw_data_id)
-                    WHERE study_id=%s)"""
-        exists = conn_handler.execute_fetchone(sql, (id_,))[0]
-        if exists:
-            raise QiitaDBExecutionError(
-                "Cannot remove sample template %d because a prep template "
-                "referencing to it has been already added." % id_)
-
-    @classmethod
-    def _check_template_special_columns(cls, md_template, study_id):
-        r"""Checks for special columns based on obj type
-
-        Parameters
-        ----------
-        md_template : DataFrame
-            The metadata template file contents indexed by sample ids
-        study_id : int
-            The study to which the sample template belongs to.
-        """
-        return set()
+    _filepath_type = convert_to_id("sample_template", "filepath_type")
 
     @classmethod
     def create(cls, md_template, study):
@@ -195,6 +153,49 @@ class SampleTemplate(MetadataTemplate):
         st.add_filepath(fp)
 
         return st
+
+    @classmethod
+    def _delete_checks(cls, id_, conn_handler=None):
+        r"""Performs the checks to know if a SampleTemplate can be deleted
+
+        A sample template cannot be removed if there is a prep template
+        referencing it.
+
+        Parameters
+        ----------
+        id_ : int
+            The sample template identifier
+        conn_handler : SQLConnectionHandler, optional
+            The connection handler connected to the DB
+
+        Raises
+        ------
+        QiitaDBExecutionError
+            If the sample template cannot be removed
+        """
+        sql = """SELECT EXISTS(
+                    SELECT *
+                    FROM qiita.prep_template
+                        JOIN qiita.study_raw_data USING (raw_data_id)
+                    WHERE study_id=%s)"""
+        exists = conn_handler.execute_fetchone(sql, (id_,))[0]
+        if exists:
+            raise QiitaDBExecutionError(
+                "Cannot remove sample template %d because a prep template "
+                "referencing to it has been already added." % id_)
+
+    @classmethod
+    def _check_template_special_columns(cls, md_template, study_id):
+        r"""Checks for special columns based on obj type
+
+        Parameters
+        ----------
+        md_template : DataFrame
+            The metadata template file contents indexed by sample ids
+        study_id : int
+            The study to which the sample template belongs to.
+        """
+        return set()
 
     @property
     def study_id(self):

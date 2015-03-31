@@ -22,8 +22,8 @@ from qiita_db.exceptions import (QiitaDBUnknownIDError, QiitaDBColumnError,
                                  QiitaDBDuplicateHeaderError)
 from qiita_db.base import QiitaObject
 from qiita_db.sql_connection import SQLConnectionHandler
-from qiita_db.util import (exists_table, get_table_cols, convert_to_id,
-                           get_mountpoint, insert_filepaths)
+from qiita_db.util import (exists_table, get_table_cols, get_mountpoint,
+                           insert_filepaths)
 from qiita_db.logger import LogEntry
 from .util import get_invalid_sample_names, prefix_sample_names_with_id
 
@@ -425,6 +425,7 @@ class MetadataTemplate(QiitaObject):
     _id_column = None
     _sample_cls = None
     _filepath_table = None
+    _filepath_type = None
 
     def _check_id(self, id_, conn_handler=None):
         r"""Checks that the MetadataTemplate id_ exists on the database"""
@@ -839,28 +840,19 @@ class MetadataTemplate(QiitaObject):
         # one if not.
         conn_handler = conn_handler if conn_handler else SQLConnectionHandler()
 
-        if self._table == 'required_sample_info':
-            fp_id = convert_to_id("sample_template", "filepath_type",
-                                  conn_handler)
-            table = 'sample_template_filepath'
-            column = 'study_id'
-        elif self._table == 'common_prep_info':
-            fp_id = convert_to_id("prep_template", "filepath_type",
-                                  conn_handler)
-            table = 'prep_template_filepath'
-            column = 'prep_template_id'
-        else:
-            raise QiitaDBNotImplementedError(
-                'add_filepath for %s' % self._table)
-
         try:
-            fpp_id = insert_filepaths([(filepath, fp_id)], None, "templates",
-                                      "filepath", conn_handler,
+            fpp_id = insert_filepaths([(filepath, self._filepath_type)], None,
+                                      "templates", "filepath", conn_handler,
                                       move_files=False)[0]
             values = (self._id, fpp_id)
-            conn_handler.execute(
-                "INSERT INTO qiita.{0} ({1}, filepath_id) "
-                "VALUES (%s, %s)".format(table, column), values)
+            sql = """INSERT INTO qiita.{0} ({1}, filepath_id)
+                     VALUES (%s, %s)""".format(self._filepath_table,
+                                               self._id_column)
+            # If this call fails, filepaths will have been added to the DB,
+            # but they're not linked to anything. However, this is not a
+            # problem, as any subsequent call to purge_filepaths will remove
+            # those filepaths
+            conn_handler.execute(sql, values)
         except Exception as e:
             LogEntry.create('Runtime', str(e),
                             info={self.__class__.__name__: self.id})
@@ -875,22 +867,16 @@ class MetadataTemplate(QiitaObject):
         # one if not.
         conn_handler = conn_handler if conn_handler else SQLConnectionHandler()
 
-        if self._table == 'required_sample_info':
-            table = 'sample_template_filepath'
-            column = 'study_id'
-        elif self._table == 'common_prep_info':
-            table = 'prep_template_filepath'
-            column = 'prep_template_id'
-        else:
-            raise QiitaDBNotImplementedError(
-                'get_filepath for %s' % self._table)
-
+        sql = """SELECT filepath_id, filepath
+                 FROM qiita.filepath
+                 WHERE filepath_id IN (
+                    SELECT filepath_id
+                    FROM qiita.{0}
+                    WHERE {1}=%s)
+                ORDER BY filepath_id DESC""".format(self._filepath_table,
+                                                    self._id_column)
         try:
-            filepath_ids = conn_handler.execute_fetchall(
-                "SELECT filepath_id, filepath FROM qiita.filepath WHERE "
-                "filepath_id IN (SELECT filepath_id FROM qiita.{0} WHERE "
-                "{1}=%s) ORDER BY filepath_id DESC".format(table, column),
-                (self.id, ))
+            filepath_ids = conn_handler.execute_fetchall(sql, (self.id, ))
         except Exception as e:
             LogEntry.create('Runtime', str(e),
                             info={self.__class__.__name__: self.id})
