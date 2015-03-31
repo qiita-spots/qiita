@@ -8,11 +8,13 @@
 
 from __future__ import division
 from future.builtins import zip
+from future.utils import viewvalues
 from copy import deepcopy
 from os.path import join
 from time import strftime
 
 from skbio.util import find_duplicates
+import pandas as pd
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_db.exceptions import (QiitaDBColumnError, QiitaDBUnknownIDError,
@@ -25,8 +27,7 @@ from qiita_db.util import (convert_to_id, convert_from_id, get_mountpoint,
 from .base_metadata_template import BaseSample, MetadataTemplate
 from .util import (as_python_types, get_invalid_sample_names, get_datatypes,
                    prefix_sample_names_with_id, load_template_to_dataframe)
-from .constants import (TARGET_GENE_DATA_TYPES, REQUIRED_TARGET_GENE_COLS,
-                        RENAME_COLS_DICT)
+from .constants import TARGET_GENE_DATA_TYPES, PREP_TEMPLATE_COLUMNS
 
 
 class PrepSample(BaseSample):
@@ -108,49 +109,18 @@ class PrepTemplate(MetadataTemplate):
         if investigation_type is not None:
             cls.validate_investigation_type(investigation_type)
 
-        invalid_ids = get_invalid_sample_names(md_template.index)
-        if invalid_ids:
-            raise QiitaDBColumnError("The following sample names in the prep"
-                                     " template contain invalid characters "
-                                     "(only alphanumeric characters or periods"
-                                     " are allowed): %s." %
-                                     ", ".join(invalid_ids))
-        # We are going to modify the md_template. We create a copy so
-        # we don't modify the user one
-        md_template = deepcopy(md_template)
-
-        # Prefix the sample names with the study_id
-        prefix_sample_names_with_id(md_template, study.id)
-
-        # In the database, all the column headers are lowercase
-        md_template.columns = [c.lower() for c in md_template.columns]
-
-        # Check that we don't have duplicate columns
-        if len(set(md_template.columns)) != len(md_template.columns):
-            raise QiitaDBDuplicateHeaderError(
-                find_duplicates(md_template.columns))
-
         # Get a connection handler
         conn_handler = SQLConnectionHandler()
         queue_name = "CREATE_PREP_TEMPLATE_%d" % raw_data.id
         conn_handler.create_queue(queue_name)
 
-        # Check if the data_type is the id or the string
-        if isinstance(data_type, (int, long)):
-            data_type_id = data_type
-            data_type_str = convert_from_id(data_type, "data_type",
-                                            conn_handler)
-        else:
-            data_type_id = convert_to_id(data_type, "data_type", conn_handler)
-            data_type_str = data_type
+        md_template = cls._clean_validate_template(md_template, study.id,
+                                                   PREP_TEMPLATE_COLUMNS)
 
-        # We need to check for some special columns, that are not present on
-        # the database, but depending on the data type are required.
-        missing = cls._check_template_special_columns(md_template,
-                                                      data_type_str)
-        if missing:
-            raise QiitaDBColumnError("Missing columns: %s"
-                                     % ', '.join(missing))
+        # Check if the data_type is the id or the string
+        data_type_id = (data_type if isinstance(data_type, (int, long))
+                        else convert_to_id(data_type, "data_type",
+                                           conn_handler))
 
         # Get some useful information from the metadata template
         sample_ids = md_template.index.tolist()
@@ -262,40 +232,6 @@ class PrepTemplate(MetadataTemplate):
             raise QiitaDBColumnError("'%s' is Not a valid investigation_type. "
                                      "Choose from: %s" % (investigation_type,
                                                           ', '.join(terms)))
-
-    @classmethod
-    def _check_template_special_columns(cls, md_template, data_type):
-        r"""Checks for special columns based on obj type
-
-        Parameters
-        ----------
-        md_template : DataFrame
-            The metadata template file contents indexed by sample ids
-        data_type : str
-            The data_type of the template.
-
-        Returns
-        -------
-        set
-            The set of missing columns
-
-        Notes
-        -----
-        Sometimes people use different names for the same columns. We just
-        rename them to use the naming that we expect, so this is normalized
-        across studies.
-        """
-        # We only have column requirements if the data type of the raw data
-        # is one of the target gene types
-        missing_cols = set()
-        if data_type in TARGET_GENE_DATA_TYPES:
-            md_template.rename(columns=RENAME_COLS_DICT, inplace=True)
-
-            # Check for all required columns for target genes studies
-            missing_cols = REQUIRED_TARGET_GENE_COLS.difference(
-                md_template.columns)
-
-        return missing_cols
 
     @classmethod
     def _delete_checks(cls, id_, conn_handler=None):
@@ -491,20 +427,17 @@ class PrepTemplate(MetadataTemplate):
         """
         rename_cols = {
             'barcode': 'BarcodeSequence',
-            'barcodesequence': 'BarcodeSequence',
             'primer': 'LinkerPrimerSequence',
-            'linkerprimersequence': 'LinkerPrimerSequence',
             'description': 'Description',
         }
 
+        # getting the latest sample template
         sql = """SELECT filepath_id, filepath
                  FROM qiita.filepath
                     JOIN qiita.sample_template_filepath
                     USING (filepath_id)
                  WHERE study_id=%s
                  ORDER BY filepath_id DESC"""
-
-        # getting the latest sample template
         conn_handler = SQLConnectionHandler()
         sample_template_fname = conn_handler.execute_fetchall(
             sql, (self.study_id,))[0][1]
@@ -526,6 +459,17 @@ class PrepTemplate(MetadataTemplate):
 
         mapping = pt.join(st, lsuffix="_prep")
         mapping.rename(columns=rename_cols, inplace=True)
+
+        # We cannot ensure that the QIIME-required columns are present in the
+        # metadata map. However, we have to generate a QIIME-compliant mapping
+        # file. Since the user may need a QIIME mapping file, but not these
+        # QIIME-required columns, we are going to create them here and
+        # populate them with the value XXQIITAXX
+        index = mapping.index
+        placeholder = ['XXQIITAXX'] * len(index)
+        for val in viewvalues(rename_cols):
+            if val not in mapping:
+                mapping[val] = pd.Series(placeholder, index=index)
 
         # Gets the orginal mapping columns and readjust the order to comply
         # with QIIME requirements

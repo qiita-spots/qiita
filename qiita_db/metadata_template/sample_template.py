@@ -27,6 +27,7 @@ from qiita_db.data import RawData
 from .base_metadata_template import BaseSample, MetadataTemplate
 from .util import as_python_types, get_datatypes
 from .prep_template import PrepTemplate
+from .constants import SAMPLE_TEMPLATE_COLUMNS
 
 
 class Sample(BaseSample):
@@ -141,7 +142,7 @@ class SampleTemplate(MetadataTemplate):
 
         # Clean and validate the metadata template given
         md_template = cls._clean_validate_template(md_template, study.id,
-                                                   conn_handler)
+                                                   SAMPLE_TEMPLATE_COLUMNS)
 
         # Get some useful information from the metadata template
         sample_ids = md_template.index.tolist()
@@ -219,7 +220,7 @@ class SampleTemplate(MetadataTemplate):
         conn_handler.create_queue(queue_name)
 
         md_template = self._clean_validate_template(md_template, self.study_id,
-                                                    conn_handler)
+                                                    SAMPLE_TEMPLATE_COLUMNS)
 
         # Raise warning and filter out existing samples
         sample_ids = md_template.index.tolist()
@@ -298,7 +299,7 @@ class SampleTemplate(MetadataTemplate):
 
         # Clean and validate the metadata template given
         new_map = self._clean_validate_template(md_template, self.id,
-                                                conn_handler)
+                                                SAMPLE_TEMPLATE_COLUMNS)
         # Retrieving current metadata
         current_map = self._transform_to_dict(conn_handler.execute_fetchall(
             "SELECT * FROM qiita.{0} WHERE {1}=%s".format(self._table,

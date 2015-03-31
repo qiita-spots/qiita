@@ -41,9 +41,9 @@ class SetUpTestPrepSample(TestCase):
         self.sample_id = '1.SKB8.640193'
         self.tester = PrepSample(self.sample_id, self.prep_template)
         self.exp_categories = {'center_name', 'center_project_name',
-                               'emp_status', 'barcodesequence',
+                               'emp_status', 'barcode',
                                'library_construction_protocol',
-                               'linkerprimersequence', 'target_subfragment',
+                               'primer', 'target_subfragment',
                                'target_gene', 'run_center', 'run_prefix',
                                'run_date', 'experiment_center',
                                'experiment_design_description',
@@ -119,7 +119,7 @@ class TestPrepSampleReadOnly(SetUpTestPrepSample):
         """
         self.assertEqual(self.tester['pcr_primers'],
                          'FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT')
-        self.assertEqual(self.tester['barcodesequence'], 'AGCGCTCACATC')
+        self.assertEqual(self.tester['barcode'], 'AGCGCTCACATC')
 
     def test_getitem_id_column(self):
         """Get item returns the correct metadata value from the changed column
@@ -139,8 +139,8 @@ class TestPrepSampleReadOnly(SetUpTestPrepSample):
 
     def test_contains_true(self):
         """contains returns true if the category header exists"""
-        self.assertTrue('BarcodeSequence' in self.tester)
-        self.assertTrue('barcodesequence' in self.tester)
+        self.assertTrue('barcode' in self.tester)
+        self.assertTrue('barcode' in self.tester)
 
     def test_contains_false(self):
         """contains returns false if the category header does not exists"""
@@ -181,7 +181,7 @@ class TestPrepSampleReadOnly(SetUpTestPrepSample):
         obs = self.tester.items()
         self.assertTrue(isinstance(obs, Iterable))
         exp = {('center_name', 'ANL'), ('center_project_name', None),
-               ('emp_status', 'EMP'), ('barcodesequence', 'AGCGCTCACATC'),
+               ('emp_status', 'EMP'), ('barcode', 'AGCGCTCACATC'),
                ('library_construction_protocol',
                 'This analysis was done as in Caporaso et al 2011 Genome '
                 'research. The PCR primers (F515/R806) were developed against '
@@ -194,7 +194,7 @@ class TestPrepSampleReadOnly(SetUpTestPrepSample):
                 'PCR primer is barcoded with a 12-base error-correcting Golay '
                 'code to facilitate multiplexing of up to 1,500 samples per '
                 'lane, and both PCR primers contain sequencer adapter '
-                'regions.'), ('linkerprimersequence', 'GTGCCAGCMGCCGCGGTAA'),
+                'regions.'), ('primer', 'GTGCCAGCMGCCGCGGTAA'),
                ('target_subfragment', 'V4'), ('target_gene', '16S rRNA'),
                ('run_center', 'ANL'), ('run_prefix', 's_G1_L001_sequences'),
                ('run_date', '8/1/12'), ('experiment_center', 'ANL'),
@@ -211,7 +211,7 @@ class TestPrepSampleReadOnly(SetUpTestPrepSample):
 
     def test_get(self):
         """get returns the correct sample object"""
-        self.assertEqual(self.tester.get('barcodesequence'), 'AGCGCTCACATC')
+        self.assertEqual(self.tester.get('barcode'), 'AGCGCTCACATC')
 
     def test_get_none(self):
         """get returns none if the sample id is not present"""
@@ -221,12 +221,11 @@ class TestPrepSampleReadOnly(SetUpTestPrepSample):
 @qiita_test_checker()
 class TestPrepSample(SetUpTestPrepSample):
     def test_setitem(self):
-        """setitem raises an error (currently not allowed)"""
         with self.assertRaises(QiitaDBColumnError):
             self.tester['column that does not exist'] = 'Foo'
-        self.assertEqual(self.tester['barcodesequence'], 'AGCGCTCACATC')
-        self.tester['barcodesequence'] = 'GTCCGCAAGTTA'
-        self.assertEqual(self.tester['barcodesequence'], 'GTCCGCAAGTTA')
+        self.assertEqual(self.tester['barcode'], 'AGCGCTCACATC')
+        self.tester['barcode'] = 'GTCCGCAAGTTA'
+        self.assertEqual(self.tester['barcode'], 'GTCCGCAAGTTA')
 
     def test_delitem(self):
         """delitem raises an error (currently not allowed)"""
@@ -243,8 +242,8 @@ class SetUpTestPrepTemplate(TestCase):
                             'ebi_submission_accession': None,
                             'EMP_status': 'EMP',
                             'str_column': 'Value for sample 1',
-                            'linkerprimersequence': 'GTGCCAGCMGCCGCGGTAA',
-                            'barcodesequence': 'GTCCGCAAGTTA',
+                            'primer': 'GTGCCAGCMGCCGCGGTAA',
+                            'barcode': 'GTCCGCAAGTTA',
                             'run_prefix': "s_G1_L001_sequences",
                             'platform': 'ILLUMINA',
                             'library_construction_protocol': 'AAAA',
@@ -254,8 +253,8 @@ class SetUpTestPrepTemplate(TestCase):
                             'ebi_submission_accession': None,
                             'EMP_status': 'EMP',
                             'str_column': 'Value for sample 2',
-                            'linkerprimersequence': 'GTGCCAGCMGCCGCGGTAA',
-                            'barcodesequence': 'CGTAGAGCTCTC',
+                            'primer': 'GTGCCAGCMGCCGCGGTAA',
+                            'barcode': 'CGTAGAGCTCTC',
                             'run_prefix': "s_G1_L001_sequences",
                             'platform': 'ILLUMINA',
                             'library_construction_protocol': 'AAAA',
@@ -265,8 +264,8 @@ class SetUpTestPrepTemplate(TestCase):
                             'ebi_submission_accession': None,
                             'EMP_status': 'EMP',
                             'str_column': 'Value for sample 3',
-                            'linkerprimersequence': 'GTGCCAGCMGCCGCGGTAA',
-                            'barcodesequence': 'CCTCTGAGAGCT',
+                            'primer': 'GTGCCAGCMGCCGCGGTAA',
+                            'barcode': 'CCTCTGAGAGCT',
                             'run_prefix': "s_G1_L002_sequences",
                             'platform': 'ILLUMINA',
                             'library_construction_protocol': 'AAAA',
@@ -281,8 +280,8 @@ class SetUpTestPrepTemplate(TestCase):
                               'ebi_submission_accession': None,
                               'EMP_status': 'EMP',
                               'str_column': 'Value for sample 1',
-                              'linkerprimersequence': 'GTGCCAGCMGCCGCGGTAA',
-                              'barcodesequence': 'GTCCGCAAGTTA',
+                              'primer': 'GTGCCAGCMGCCGCGGTAA',
+                              'barcode': 'GTCCGCAAGTTA',
                               'run_prefix': "s_G1_L001_sequences",
                               'platform': 'ILLUMINA',
                               'library_construction_protocol': 'AAAA',
@@ -292,8 +291,8 @@ class SetUpTestPrepTemplate(TestCase):
                               'ebi_submission_accession': None,
                               'EMP_status': 'EMP',
                               'str_column': 'Value for sample 2',
-                              'linkerprimersequence': 'GTGCCAGCMGCCGCGGTAA',
-                              'barcodesequence': 'CGTAGAGCTCTC',
+                              'primer': 'GTGCCAGCMGCCGCGGTAA',
+                              'barcode': 'CGTAGAGCTCTC',
                               'run_prefix': "s_G1_L001_sequences",
                               'platform': 'ILLUMINA',
                               'library_construction_protocol': 'AAAA',
@@ -303,8 +302,8 @@ class SetUpTestPrepTemplate(TestCase):
                               'ebi_submission_accession': None,
                               'EMP_status': 'EMP',
                               'str_column': 'Value for sample 3',
-                              'linkerprimersequence': 'GTGCCAGCMGCCGCGGTAA',
-                              'barcodesequence': 'CCTCTGAGAGCT',
+                              'primer': 'GTGCCAGCMGCCGCGGTAA',
+                              'barcode': 'CCTCTGAGAGCT',
                               'run_prefix': "s_G1_L002_sequences",
                               'platform': 'ILLUMINA',
                               'library_construction_protocol': 'AAAA',
@@ -524,8 +523,8 @@ class TestPrepTemplateReadOnly(SetUpTestPrepTemplate):
 
         self.assertEqual(set(obs.columns), {
             'center_name', 'center_project_name', 'emp_status',
-            'barcodesequence', 'library_construction_protocol',
-            'linkerprimersequence', 'target_subfragment', 'target_gene',
+            'barcode', 'library_construction_protocol',
+            'primer', 'target_subfragment', 'target_gene',
             'run_center', 'run_prefix', 'run_date', 'experiment_center',
             'experiment_design_description', 'experiment_title', 'platform',
             'samp_size', 'sequencing_meth', 'illumina_technology',
@@ -610,8 +609,8 @@ class TestPrepTemplate(SetUpTestPrepTemplate):
                             'ebi_submission_accession': None,
                             'EMP_status': 'EMP',
                             'group': 2,
-                            'linkerprimersequence': 'GTGCCAGCMGCCGCGGTAA',
-                            'barcodesequence': 'GTCCGCAAGTTA',
+                            'primer': 'GTGCCAGCMGCCGCGGTAA',
+                            'barcode': 'GTCCGCAAGTTA',
                             'run_prefix': "s_G1_L001_sequences",
                             'platform': 'ILLUMINA',
                             'library_construction_protocol': 'AAAA',
@@ -621,8 +620,8 @@ class TestPrepTemplate(SetUpTestPrepTemplate):
                             'ebi_submission_accession': None,
                             'EMP_status': 'EMP',
                             'group': 1,
-                            'linkerprimersequence': 'GTGCCAGCMGCCGCGGTAA',
-                            'barcodesequence': 'CGTAGAGCTCTC',
+                            'primer': 'GTGCCAGCMGCCGCGGTAA',
+                            'barcode': 'CGTAGAGCTCTC',
                             'run_prefix': "s_G1_L001_sequences",
                             'platform': 'ILLUMINA',
                             'library_construction_protocol': 'AAAA',
@@ -632,8 +631,8 @@ class TestPrepTemplate(SetUpTestPrepTemplate):
                             'ebi_submission_accession': None,
                             'EMP_status': 'EMP',
                             'group': 'Value for sample 3',
-                            'linkerprimersequence': 'GTGCCAGCMGCCGCGGTAA',
-                            'barcodesequence': 'CCTCTGAGAGCT',
+                            'primer': 'GTGCCAGCMGCCGCGGTAA',
+                            'barcode': 'CCTCTGAGAGCT',
                             'run_prefix': "s_G1_L002_sequences",
                             'platform': 'ILLUMINA',
                             'library_construction_protocol': 'AAAA',
@@ -691,8 +690,8 @@ class TestPrepTemplate(SetUpTestPrepTemplate):
         exp = [[2, 'str_column', 'varchar'],
                [2, 'ebi_submission_accession', 'varchar'],
                [2, 'run_prefix', 'varchar'],
-               [2, 'barcodesequence', 'varchar'],
-               [2, 'linkerprimersequence', 'varchar'],
+               [2, 'barcode', 'varchar'],
+               [2, 'primer', 'varchar'],
                [2, 'platform', 'varchar'],
                [2, 'experiment_design_description', 'varchar'],
                [2, 'library_construction_protocol', 'varchar'],
@@ -715,8 +714,8 @@ class TestPrepTemplate(SetUpTestPrepTemplate):
              'ebi_submission_accession': None,
              'emp_status': 'EMP',
              'str_column': 'Value for sample 1',
-             'linkerprimersequence': 'GTGCCAGCMGCCGCGGTAA',
-             'barcodesequence': 'GTCCGCAAGTTA',
+             'primer': 'GTGCCAGCMGCCGCGGTAA',
+             'barcode': 'GTCCGCAAGTTA',
              'run_prefix': "s_G1_L001_sequences",
              'platform': 'ILLUMINA',
              'library_construction_protocol': 'AAAA',
@@ -727,8 +726,8 @@ class TestPrepTemplate(SetUpTestPrepTemplate):
              'ebi_submission_accession': None,
              'emp_status': 'EMP',
              'str_column': 'Value for sample 2',
-             'linkerprimersequence': 'GTGCCAGCMGCCGCGGTAA',
-             'barcodesequence': 'CGTAGAGCTCTC',
+             'primer': 'GTGCCAGCMGCCGCGGTAA',
+             'barcode': 'CGTAGAGCTCTC',
              'run_prefix': "s_G1_L001_sequences",
              'platform': 'ILLUMINA',
              'library_construction_protocol': 'AAAA',
@@ -739,8 +738,8 @@ class TestPrepTemplate(SetUpTestPrepTemplate):
              'ebi_submission_accession': None,
              'emp_status': 'EMP',
              'str_column': 'Value for sample 3',
-             'linkerprimersequence': 'GTGCCAGCMGCCGCGGTAA',
-             'barcodesequence': 'CCTCTGAGAGCT',
+             'primer': 'GTGCCAGCMGCCGCGGTAA',
+             'barcode': 'CCTCTGAGAGCT',
              'run_prefix': "s_G1_L002_sequences",
              'platform': 'ILLUMINA',
              'library_construction_protocol': 'AAAA',
@@ -772,30 +771,28 @@ class TestPrepTemplate(SetUpTestPrepTemplate):
                                  self.test_study, self.data_type_id)
         self._common_creation_tests(pt)
 
-    def test_create_error(self):
-        """Create raises an error if any required columns are missing
-        """
+    def test_create_warning_missing_col(self):
+        """Create raises a warning if there is any missing column"""
         metadata_dict = {
             '1.SKB8.640193': {'center_name': 'ANL',
                               'center_project_name': 'Test Project',
                               'ebi_submission_accession': None,
-                              'EMP_status_id': 1,
+                              'EMP_status': 'EMP',
                               'str_column': 'Value for sample 1'},
             '1.SKD8.640184': {'center_name': 'ANL',
                               'center_project_name': 'Test Project',
                               'ebi_submission_accession': None,
-                              'EMP_status_id': 1,
+                              'EMP_status': 'EMP',
                               'str_column': 'Value for sample 2'},
             '1.SKB7.640196': {'center_name': 'ANL',
                               'center_project_name': 'Test Project',
                               'ebi_submission_accession': None,
-                              'EMP_status_id': 1,
+                              'EMP_status': 'EMP',
                               'str_column': 'Value for sample 3'}
             }
         metadata = pd.DataFrame.from_dict(metadata_dict, orient='index')
-        with self.assertRaises(QiitaDBColumnError):
-            PrepTemplate.create(metadata, self.new_raw_data, self.test_study,
-                                self.data_type)
+        npt.assert_warns(QiitaDBWarning, PrepTemplate.create, metadata,
+                         self.new_raw_data, self.test_study, self.data_type)
 
     def test_create_error_template_special(self):
         """Create raises an error if not all columns are on the template"""
@@ -805,24 +802,23 @@ class TestPrepTemplate(SetUpTestPrepTemplate):
                               'ebi_submission_accession': None,
                               'EMP_status': 'EMP',
                               'str_column': 'Value for sample 1',
-                              'barcodesequence': 'GTCCGCAAGTTA'},
+                              'barcode': 'GTCCGCAAGTTA'},
             '1.SKD8.640184': {'center_name': 'ANL',
                               'center_project_name': 'Test Project',
                               'ebi_submission_accession': None,
                               'EMP_status': 'EMP',
                               'str_column': 'Value for sample 2',
-                              'barcodesequence': 'CGTAGAGCTCTC'},
+                              'barcode': 'CGTAGAGCTCTC'},
             '1.SKB7.640196': {'center_name': 'ANL',
                               'center_project_name': 'Test Project',
                               'ebi_submission_accession': None,
                               'EMP_status': 'EMP',
                               'str_column': 'Value for sample 3',
-                              'barcodesequence': 'CCTCTGAGAGCT'}
+                              'barcode': 'CCTCTGAGAGCT'}
             }
         metadata = pd.DataFrame.from_dict(metadata_dict, orient='index')
-        with self.assertRaises(QiitaDBColumnError):
-            PrepTemplate.create(metadata, self.new_raw_data, self.test_study,
-                                self.data_type)
+        npt.assert_warns(QiitaDBWarning, PrepTemplate.create, metadata,
+                         self.new_raw_data, self.test_study, self.data_type)
 
     def test_create_investigation_type_error(self):
         """Create raises an error if the investigation_type does not exists"""
@@ -1005,16 +1001,16 @@ class TestPrepTemplate(SetUpTestPrepTemplate):
         self.assertEqual(pt.status, 'sandbox')
 
 EXP_PREP_TEMPLATE = (
-    'sample_name\tbarcodesequence\tcenter_name\tcenter_project_name\t'
+    'sample_name\tbarcode\tcenter_name\tcenter_project_name\t'
     'ebi_submission_accession\temp_status\texperiment_design_description\t'
-    'library_construction_protocol\tlinkerprimersequence\tplatform\t'
+    'library_construction_protocol\tplatform\tprimer\t'
     'run_prefix\tstr_column\n'
     '1.SKB7.640196\tCCTCTGAGAGCT\tANL\tTest Project\tNone\tEMP\tBBBB\tAAAA\t'
-    'GTGCCAGCMGCCGCGGTAA\tILLUMINA\ts_G1_L002_sequences\tValue for sample 3\n'
+    'ILLUMINA\tGTGCCAGCMGCCGCGGTAA\ts_G1_L002_sequences\tValue for sample 3\n'
     '1.SKB8.640193\tGTCCGCAAGTTA\tANL\tTest Project\tNone\tEMP\tBBBB\tAAAA\t'
-    'GTGCCAGCMGCCGCGGTAA\tILLUMINA\ts_G1_L001_sequences\tValue for sample 1\n'
+    'ILLUMINA\tGTGCCAGCMGCCGCGGTAA\ts_G1_L001_sequences\tValue for sample 1\n'
     '1.SKD8.640184\tCGTAGAGCTCTC\tANL\tTest Project\tNone\tEMP\tBBBB\tAAAA\t'
-    'GTGCCAGCMGCCGCGGTAA\tILLUMINA\ts_G1_L001_sequences\tValue for sample 2\n')
+    'ILLUMINA\tGTGCCAGCMGCCGCGGTAA\ts_G1_L001_sequences\tValue for sample 2\n')
 
 if __name__ == '__main__':
     main()
