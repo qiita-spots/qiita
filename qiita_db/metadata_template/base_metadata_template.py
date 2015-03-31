@@ -7,16 +7,18 @@
 # -----------------------------------------------------------------------------
 
 from __future__ import division
+from future.utils import viewitems
 from os.path import join
 from functools import partial
 from copy import deepcopy
+import warnings
 
 import pandas as pd
 from skbio.util import find_duplicates
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_db.exceptions import (QiitaDBUnknownIDError, QiitaDBColumnError,
-                                 QiitaDBNotImplementedError,
+                                 QiitaDBNotImplementedError, QiitaDBWarning,
                                  QiitaDBDuplicateHeaderError)
 from qiita_db.base import QiitaObject
 from qiita_db.sql_connection import SQLConnectionHandler
@@ -911,8 +913,7 @@ class MetadataTemplate(QiitaObject):
         return get_table_cols(self._table_name(self._id))
 
     @classmethod
-    def _clean_validate_template(cls, md_template, study_id,
-                                 conn_handler=None):
+    def _clean_validate_template(cls, md_template, study_id, restriction_dict):
         """Takes care of all validation and cleaning of templates
 
         Parameters
@@ -921,6 +922,8 @@ class MetadataTemplate(QiitaObject):
             The metadata template file contents indexed by sample ids
         study_id : int
             The study to which the template belongs to.
+        restriction_dict : dict of {str: Restriction}
+            A dictionary with the restrictions that apply to the metadata
 
         Returns
         -------
@@ -929,11 +932,11 @@ class MetadataTemplate(QiitaObject):
         """
         invalid_ids = get_invalid_sample_names(md_template.index)
         if invalid_ids:
-            raise QiitaDBColumnError("The following sample names in the sample"
-                                     " template contain invalid characters "
-                                     "(only alphanumeric characters or periods"
-                                     " are allowed): %s." %
-                                     ", ".join(invalid_ids))
+            raise QiitaDBColumnError(
+                "The following sample names in the %s contain invalid "
+                "characters (only alphanumeric characters or periods are "
+                "allowed): %s." % (cls.__name__, ", ".join(invalid_ids)))
+
         # We are going to modify the md_template. We create a copy so
         # we don't modify the user one
         md_template = deepcopy(md_template)
@@ -949,6 +952,19 @@ class MetadataTemplate(QiitaObject):
             raise QiitaDBDuplicateHeaderError(
                 find_duplicates(md_template.columns))
 
-        conn_handler = conn_handler if conn_handler else SQLConnectionHandler()
+        # Check if we have the columns needed for some functionality
+        warning_msg = []
+        for key, restriction in viewitems(restriction_dict):
+            missing = [col for col in restriction.columns
+                       if col not in md_template]
+            if missing:
+                warning_msg.append(
+                    "%s: %s" % (restriction.error_msg, ', '.join(missing)))
+
+        if warning_msg:
+            warnings.warn(
+                "Some functionality will be disabled due to missing "
+                "columns:\n\t%s" % "\n\t".join(warning_msg),
+                QiitaDBWarning)
 
         return md_template
