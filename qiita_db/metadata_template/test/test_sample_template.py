@@ -15,6 +15,7 @@ import warnings
 
 import numpy.testing as npt
 import pandas as pd
+from pandas.util.testing import assert_frame_equal
 
 from qiita_core.util import qiita_test_checker
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
@@ -695,36 +696,6 @@ class TestSampleTemplateReadOnly(SetUpSampleTemplate):
                'host_subject_id', 'description', 'latitude', 'longitude'}
         obs = set(self.tester.categories())
         self.assertEqual(obs, exp)
-
-    def test_to_dataframe(self):
-        obs = self.tester.to_dataframe()
-        # We don't test the specific values as this would blow up the size
-        # of this file as the amount of lines would go to ~1000
-
-        # 27 samples
-        self.assertEqual(len(obs), 27)
-        self.assertEqual(set(obs.index), {
-            u'1.SKB1.640202', u'1.SKB2.640194', u'1.SKB3.640195',
-            u'1.SKB4.640189', u'1.SKB5.640181', u'1.SKB6.640176',
-            u'1.SKB7.640196', u'1.SKB8.640193', u'1.SKB9.640200',
-            u'1.SKD1.640179', u'1.SKD2.640178', u'1.SKD3.640198',
-            u'1.SKD4.640185', u'1.SKD5.640186', u'1.SKD6.640190',
-            u'1.SKD7.640191', u'1.SKD8.640184', u'1.SKD9.640182',
-            u'1.SKM1.640183', u'1.SKM2.640199', u'1.SKM3.640197',
-            u'1.SKM4.640180', u'1.SKM5.640177', u'1.SKM6.640187',
-            u'1.SKM7.640188', u'1.SKM8.640201', u'1.SKM9.640192'})
-
-        self.assertEqual(set(obs.columns), {
-            u'physical_specimen_location', u'physical_specimen_remaining',
-            u'dna_extracted', u'sample_type',
-            u'collection_timestamp',
-            u'host_subject_id', u'description', u'latitude', u'longitude',
-            u'season_environment', u'assigned_from_geo', u'texture',
-            u'taxon_id', u'depth', u'host_taxid', u'common_name',
-            u'water_content_soil', u'elevation', u'temp', u'tot_nitro',
-            u'samp_salinity', u'altitude', u'env_biome', u'country', u'ph',
-            u'anonymized_name', u'tot_org_carb', u'description_duplicate',
-            u'env_feature'})
 
 
 @qiita_test_checker()
@@ -1429,6 +1400,95 @@ class TestSampleTemplate(SetUpSampleTemplate):
         with open(fp, 'U') as f:
             obs = f.read()
         self.assertEqual(obs, EXP_SAMPLE_TEMPLATE_FEWER_SAMPLES)
+
+    def test_to_dataframe(self):
+        st = SampleTemplate.create(self.metadata, self.new_study)
+        obs = st.to_dataframe()
+        metadata_dict = {
+            '2.Sample1': {'physical_specimen_location': 'location1',
+                          'physical_specimen_remaining': True,
+                          'dna_extracted': True,
+                          'sample_type': 'type1',
+                          'collection_timestamp':
+                          datetime(2014, 5, 29, 12, 24, 51),
+                          'host_subject_id': 'NotIdentified',
+                          'description': 'Test Sample 1',
+                          'str_column': 'Value for sample 1',
+                          'int_column': 1,
+                          'latitude': 42.42,
+                          'longitude': 41.41},
+            '2.Sample2': {'physical_specimen_location': 'location1',
+                          'physical_specimen_remaining': True,
+                          'dna_extracted': True,
+                          'sample_type': 'type1',
+                          'int_column': 2,
+                          'collection_timestamp':
+                          datetime(2014, 5, 29, 12, 24, 51),
+                          'host_subject_id': 'NotIdentified',
+                          'description': 'Test Sample 2',
+                          'str_column': 'Value for sample 2',
+                          'latitude': 4.2,
+                          'longitude': 1.1},
+            '2.Sample3': {'physical_specimen_location': 'location1',
+                          'physical_specimen_remaining': True,
+                          'dna_extracted': True,
+                          'sample_type': 'type1',
+                          'collection_timestamp':
+                          datetime(2014, 5, 29, 12, 24, 51),
+                          'host_subject_id': 'NotIdentified',
+                          'description': 'Test Sample 3',
+                          'str_column': 'Value for sample 3',
+                          'int_column': 3,
+                          'latitude': 4.8,
+                          'longitude': 4.41},
+            }
+        exp = pd.DataFrame.from_dict(metadata_dict, orient='index')
+        exp.index.name = "sample_id"
+        obs.sort_index(axis=0, inplace=True)
+        exp.sort_index(axis=0, inplace=True)
+        obs.sort_index(axis=1, inplace=True)
+        exp.sort_index(axis=1, inplace=True)
+        assert_frame_equal(obs, exp)
+
+        # Test passing some samples
+        samples = {'2.Sample1', '2.Sample2'}
+        obs = st.to_dataframe(samples)
+        del metadata_dict['2.Sample3']
+        exp = pd.DataFrame.from_dict(metadata_dict, orient='index')
+        exp.index.name = "sample_id"
+        obs.sort_index(axis=0, inplace=True)
+        exp.sort_index(axis=0, inplace=True)
+        obs.sort_index(axis=1, inplace=True)
+        exp.sort_index(axis=1, inplace=True)
+        assert_frame_equal(obs, exp)
+
+        obs = self.tester.to_dataframe()
+        # We don't test the specific values as this would blow up the size
+        # of this file as the amount of lines would go to ~1000
+        # 27 samples
+        self.assertEqual(len(obs), 27)
+        self.assertEqual(set(obs.index), {
+            '1.SKB1.640202', '1.SKB2.640194', '1.SKB3.640195',
+            '1.SKB4.640189', '1.SKB5.640181', '1.SKB6.640176',
+            '1.SKB7.640196', '1.SKB8.640193', '1.SKB9.640200',
+            '1.SKD1.640179', '1.SKD2.640178', '1.SKD3.640198',
+            '1.SKD4.640185', '1.SKD5.640186', '1.SKD6.640190',
+            '1.SKD7.640191', '1.SKD8.640184', '1.SKD9.640182',
+            '1.SKM1.640183', '1.SKM2.640199', '1.SKM3.640197',
+            '1.SKM4.640180', '1.SKM5.640177', '1.SKM6.640187',
+            '1.SKM7.640188', '1.SKM8.640201', '1.SKM9.640192'})
+
+        self.assertEqual(set(obs.columns), {
+            'physical_specimen_location', 'physical_specimen_remaining',
+            'dna_extracted', 'sample_type',
+            'collection_timestamp',
+            'host_subject_id', 'description', 'latitude', 'longitude',
+            'season_environment', 'assigned_from_geo', 'texture',
+            'taxon_id', 'depth', 'host_taxid', 'common_name',
+            'water_content_soil', 'elevation', 'temp', 'tot_nitro',
+            'samp_salinity', 'altitude', 'env_biome', 'country', 'ph',
+            'anonymized_name', 'tot_org_carb', 'description_duplicate',
+            'env_feature'})
 
     def test_exists_false(self):
         """Exists returns false when the SampleTemplate does not exists"""

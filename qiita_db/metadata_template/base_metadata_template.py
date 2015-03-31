@@ -479,6 +479,64 @@ class MetadataTemplate(QiitaObject):
         return "%s%d" % (cls._table_prefix, obj_id)
 
     @classmethod
+    def _clean_validate_template(cls, md_template, study_id, restriction_dict):
+        """Takes care of all validation and cleaning of templates
+
+        Parameters
+        ----------
+        md_template : DataFrame
+            The metadata template file contents indexed by sample ids
+        study_id : int
+            The study to which the template belongs to.
+        restriction_dict : dict of {str: Restriction}
+            A dictionary with the restrictions that apply to the metadata
+
+        Returns
+        -------
+        md_template : DataFrame
+            Cleaned copy of the input md_template
+        """
+        cls._check_subclass()
+        invalid_ids = get_invalid_sample_names(md_template.index)
+        if invalid_ids:
+            raise QiitaDBColumnError(
+                "The following sample names in the %s contain invalid "
+                "characters (only alphanumeric characters or periods are "
+                "allowed): %s." % (cls.__name__, ", ".join(invalid_ids)))
+
+        # We are going to modify the md_template. We create a copy so
+        # we don't modify the user one
+        md_template = deepcopy(md_template)
+
+        # Prefix the sample names with the study_id
+        prefix_sample_names_with_id(md_template, study_id)
+
+        # In the database, all the column headers are lowercase
+        md_template.columns = [c.lower() for c in md_template.columns]
+
+        # Check that we don't have duplicate columns
+        if len(set(md_template.columns)) != len(md_template.columns):
+            raise QiitaDBDuplicateHeaderError(
+                find_duplicates(md_template.columns))
+
+        # Check if we have the columns needed for some functionality
+        warning_msg = []
+        for key, restriction in viewitems(restriction_dict):
+            missing = [col for col in restriction.columns
+                       if col not in md_template]
+            if missing:
+                warning_msg.append(
+                    "%s: %s" % (restriction.error_msg, ', '.join(missing)))
+
+        if warning_msg:
+            warnings.warn(
+                "Some functionality will be disabled due to missing "
+                "columns:\n\t%s" % "\n\t".join(warning_msg),
+                QiitaDBWarning)
+
+        return md_template
+
+    @classmethod
     def _add_common_creation_steps(cls, obj_id, md_template, conn_handler,
                                    queue):
         cls._check_subclass()
@@ -831,29 +889,19 @@ class MetadataTemplate(QiitaObject):
             If supplied, only the specified samples will be written to the
             file
         """
-        conn_handler = SQLConnectionHandler()
-        metadata_map = self._transform_to_dict(conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.{0}".format(self._table_name(self.id))))
+        df = self.to_dataframe(samples)
+        df.sort_index(axis=0, inplace=True)
+        df.sort_index(axis=1, inplace=True)
+        df.to_csv(fp, index_label='sample_name', na_rep='', sep='\t')
 
-        # Remove samples that are not in the samples list, if it was supplied
-        if samples is not None:
-            to_remove = set(metadata_map).difference(samples)
-            for sid in to_remove:
-                metadata_map.pop(sid)
-
-        # Write remaining samples to file
-        headers = sorted(list(metadata_map.values())[0].keys())
-        with open(fp, 'w') as f:
-            # First write the headers
-            f.write("sample_name\t%s\n" % '\t'.join(headers))
-            # Write the values for each sample id
-            for sid, d in sorted(metadata_map.items()):
-                values = [str(d[h]) for h in headers]
-                values.insert(0, sid)
-                f.write("%s\n" % '\t'.join(values))
-
-    def to_dataframe(self):
+    def to_dataframe(self, samples=None):
         """Returns the metadata template as a dataframe
+
+        Parameters
+        ----------
+        samples : set, optional
+            If supplied, only the specified samples will be written to the
+            file
 
         Returns
         -------
@@ -866,7 +914,14 @@ class MetadataTemplate(QiitaObject):
         # but passing the columns will ensure the column order
         sql = "SELECT {0} FROM qiita.{1}".format(
             ','.join(cols), self._table_name(self.id))
-        meta = conn_handler.execute_fetchall(sql)
+        sql_args = None
+
+        if samples is not None:
+            sql = sql + " WHERE sample_id IN ({0})".format(
+                ', '.join(['%s'] * len(samples)))
+            sql_args = list(samples)
+
+        meta = conn_handler.execute_fetchall(sql, sql_args)
 
         # Create the dataframe and clean it up a bit
         df = pd.DataFrame((list(x) for x in meta), columns=cols)
@@ -940,60 +995,3 @@ class MetadataTemplate(QiitaObject):
 
         """
         return get_table_cols(self._table_name(self._id))
-
-    @classmethod
-    def _clean_validate_template(cls, md_template, study_id, restriction_dict):
-        """Takes care of all validation and cleaning of templates
-
-        Parameters
-        ----------
-        md_template : DataFrame
-            The metadata template file contents indexed by sample ids
-        study_id : int
-            The study to which the template belongs to.
-        restriction_dict : dict of {str: Restriction}
-            A dictionary with the restrictions that apply to the metadata
-
-        Returns
-        -------
-        md_template : DataFrame
-            Cleaned copy of the input md_template
-        """
-        invalid_ids = get_invalid_sample_names(md_template.index)
-        if invalid_ids:
-            raise QiitaDBColumnError(
-                "The following sample names in the %s contain invalid "
-                "characters (only alphanumeric characters or periods are "
-                "allowed): %s." % (cls.__name__, ", ".join(invalid_ids)))
-
-        # We are going to modify the md_template. We create a copy so
-        # we don't modify the user one
-        md_template = deepcopy(md_template)
-
-        # Prefix the sample names with the study_id
-        prefix_sample_names_with_id(md_template, study_id)
-
-        # In the database, all the column headers are lowercase
-        md_template.columns = [c.lower() for c in md_template.columns]
-
-        # Check that we don't have duplicate columns
-        if len(set(md_template.columns)) != len(md_template.columns):
-            raise QiitaDBDuplicateHeaderError(
-                find_duplicates(md_template.columns))
-
-        # Check if we have the columns needed for some functionality
-        warning_msg = []
-        for key, restriction in viewitems(restriction_dict):
-            missing = [col for col in restriction.columns
-                       if col not in md_template]
-            if missing:
-                warning_msg.append(
-                    "%s: %s" % (restriction.error_msg, ', '.join(missing)))
-
-        if warning_msg:
-            warnings.warn(
-                "Some functionality will be disabled due to missing "
-                "columns:\n\t%s" % "\n\t".join(warning_msg),
-                QiitaDBWarning)
-
-        return md_template
