@@ -228,7 +228,7 @@ class JobTest(TestCase):
             "(7, 1, '1.SKM4.640180')")
         new = Job.create("18S", "Beta Diversity",
                          {"--otu_table_fp": 1, "--mapping_fp": 1},
-                         Analysis(3), return_existing=True)
+                         Analysis(7), return_existing=True)
         self.assertEqual(new.id, 2)
 
     def test_retrieve_datatype(self):
