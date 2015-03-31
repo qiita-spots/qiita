@@ -24,8 +24,8 @@ from qiita_db.util import (convert_to_id, convert_from_id, get_mountpoint,
                            infer_status)
 from .base_metadata_template import BaseSample, MetadataTemplate
 from .util import as_python_types, get_datatypes, load_template_to_dataframe
-from .constants import (TARGET_GENE_DATA_TYPES, PREP_TEMPLATE_COLUMNS,
-                        PREP_TEMPLATE_COLUMNS_TARGET_GENE)
+from .column_restriction import (TARGET_GENE_DATA_TYPES, PREP_TEMPLATE_COLUMNS,
+                                 PREP_TEMPLATE_COLUMNS_TARGET_GENE)
 
 
 class PrepSample(BaseSample):

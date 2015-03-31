@@ -27,7 +27,7 @@ from qiita_db.data import RawData
 from .base_metadata_template import BaseSample, MetadataTemplate
 from .util import as_python_types, get_datatypes
 from .prep_template import PrepTemplate
-from .constants import SAMPLE_TEMPLATE_COLUMNS
+from .column_restriction import SAMPLE_TEMPLATE_COLUMNS
 
 
 class Sample(BaseSample):

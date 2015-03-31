@@ -7,6 +7,7 @@
 # -----------------------------------------------------------------------------
 
 from collections import namedtuple
+from future.utils import viewkeys, viewvalues
 
 Restriction = namedtuple('Restriction', ['columns', 'error_msg'])
 
@@ -59,6 +60,15 @@ PREP_TEMPLATE_COLUMNS_TARGET_GENE = {
 
 # This list is useful to have if we want to loop through all the restrictions
 # in a template-independent manner
-
 ALL_RESTRICTIONS = [SAMPLE_TEMPLATE_COLUMNS, PREP_TEMPLATE_COLUMNS,
                     PREP_TEMPLATE_COLUMNS_TARGET_GENE]
+
+
+# A set holding all the controlled columns, useful to avoid recalculating it
+def _col_iterator():
+    for r_set in ALL_RESTRICTIONS:
+        for restriction in viewvalues(r_set):
+            for cols in viewkeys(restriction.columns):
+                yield cols
+
+CONTROLLED_COLS = set(col for col in _col_iterator())
