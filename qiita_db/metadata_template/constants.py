@@ -10,8 +10,7 @@ from collections import namedtuple
 
 Restriction = namedtuple('Restriction', ['columns', 'error_msg'])
 
-TARGET_GENE_DATA_TYPES = ['16S', '18S', 'ITS']
-
+# A dict containing the restrictions that apply to the sample templates
 SAMPLE_TEMPLATE_COLUMNS = {
     'EBI': Restriction(columns={'collection_timestamp': 'timestamp',
                                 'physical_specimen_location': 'varchar'},
@@ -27,6 +26,7 @@ SAMPLE_TEMPLATE_COLUMNS = {
                                         "this study will not be approved")
 }
 
+# A dict containing the restrictions that apply to the sample templates
 PREP_TEMPLATE_COLUMNS = {
     'EBI': Restriction(
         columns={'primer': 'varchar',
@@ -36,6 +36,11 @@ PREP_TEMPLATE_COLUMNS = {
                  'experiment_design_description': 'varchar'},
         error_msg="EBI submission disabled")
 }
+
+# Different prep templates have different requirements depending on the data
+# type. We create a dictionary for each of these special datatypes
+
+TARGET_GENE_DATA_TYPES = ['16S', '18S', 'ITS']
 
 PREP_TEMPLATE_COLUMNS_TARGET_GENE = {
     'Demultiplex': Restriction(
@@ -51,3 +56,9 @@ PREP_TEMPLATE_COLUMNS_TARGET_GENE = {
                   "raw data includes multiple raw input files, you will not "
                   "be able to preprocess your raw data")
 }
+
+# This list is useful to have if we want to loop through all the restrictions
+# in a template-independent manner
+
+ALL_RESTRICTIONS = [SAMPLE_TEMPLATE_COLUMNS, PREP_TEMPLATE_COLUMNS,
+                    PREP_TEMPLATE_COLUMNS_TARGET_GENE]
