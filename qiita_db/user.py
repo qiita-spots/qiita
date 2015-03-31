@@ -371,8 +371,8 @@ class User(QiitaObject):
     @property
     def private_analyses(self):
         """Returns a list of private analysis ids owned by the user"""
-        sql = ("Select analysis_id from qiita.analysis WHERE email = %s AND "
-               "analysis_status_id <> 6")
+        sql = ("Select analysis_id from qiita.analysis "
+               "WHERE email = %s AND dflt = false")
         conn_handler = SQLConnectionHandler()
         analysis_ids = conn_handler.execute_fetchall(sql, (self._id, ))
         return {a[0] for a in analysis_ids}
