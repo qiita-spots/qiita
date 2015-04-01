@@ -700,9 +700,8 @@ class TestSampleTemplateReadOnly(SetUpSampleTemplate):
         self.assertEqual(obs, exp)
 
     def test_check_restrictions(self):
-        obs_bool, obs_list = self.tester.check_restrictions(
+        obs_list = self.tester.check_restrictions(
             [SAMPLE_TEMPLATE_COLUMNS['EBI']])
-        self.assertEqual(obs_bool, True)
         self.assertEqual(obs_list, [])
 
 

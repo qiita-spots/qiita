@@ -1007,8 +1007,6 @@ class MetadataTemplate(QiitaObject):
 
         Returns
         -------
-        bool
-            A boolean indicating whether the restrictions have been fulfilled
         list of str
             The list of missing columns
         """
@@ -1018,4 +1016,4 @@ class MetadataTemplate(QiitaObject):
                     yield col
         categories = self.categories()
         missing = [col for col in _col_iter() if col not in categories]
-        return len(missing) == 0, missing
+        return missing
