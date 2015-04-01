@@ -167,19 +167,8 @@ class PrepTemplate(MetadataTemplate):
             # some other error we haven't seen before so raise it
             raise
 
-        # figuring out the filepath of the backup
-        _id, fp = get_mountpoint('templates')[0]
-        fp = join(fp, '%d_prep_%d_%s.txt' % (study.id, prep_id,
-                  strftime("%Y%m%d-%H%M%S")))
-        # storing the backup
         pt = cls(prep_id)
-        pt.to_file(fp)
-
-        # adding the fp to the object
-        pt.add_filepath(fp)
-
-        # creating QIIME mapping file
-        pt.create_qiime_mapping_file(fp)
+        pt.regenerate_files()
 
         return pt
 
@@ -498,6 +487,13 @@ class PrepTemplate(MetadataTemplate):
 
     @property
     def qiime_map_fp(self):
+        """The QIIME mapping file path of the prep template
+
+        Returns
+        -------
+        str
+            The filepath of the QIIME mapping file
+        """
         conn_handler = SQLConnectionHandler()
 
         sql = """SELECT filepath_id, filepath
@@ -510,3 +506,18 @@ class PrepTemplate(MetadataTemplate):
         fn = conn_handler.execute_fetchall(sql, (self._id,))[0][1]
         base_dir = get_mountpoint('templates')[0][1]
         return join(base_dir, fn)
+
+    def regenerate_files(self):
+        """Regenerates the prep template files and the QIIME mapping file"""
+        # figuring out the filepath of the backup
+        _id, fp = get_mountpoint('templates')[0]
+        fp = join(fp, '%d_prep_%d_%s.txt' % (self.study_id, self._id,
+                  strftime("%Y%m%d-%H%M%S")))
+        # storing the backup
+        self.to_file(fp)
+
+        # adding the fp to the object
+        self.add_filepath(fp)
+
+        # creating QIIME mapping file
+        self.create_qiime_mapping_file(fp)
