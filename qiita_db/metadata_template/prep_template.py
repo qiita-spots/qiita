@@ -72,7 +72,7 @@ class PrepTemplate(MetadataTemplate):
     _id_column = "prep_template_id"
     _sample_cls = PrepSample
     _filepath_table = "prep_template_filepath"
-    _filepath_type = convert_to_id("sample_template", "filepath_type")
+    _filepath_type = convert_to_id("prep_template", "filepath_type")
 
     @classmethod
     def create(cls, md_template, raw_data, study, data_type,
@@ -451,7 +451,8 @@ class PrepTemplate(MetadataTemplate):
                        sep='\t')
 
         # adding the fp to the object
-        self.add_filepath(filepath)
+        self.add_filepath(filepath,
+                          convert_to_id("qiime_map", "filepath_type"))
 
         return filepath
 
@@ -517,7 +518,7 @@ class PrepTemplate(MetadataTemplate):
         self.to_file(fp)
 
         # adding the fp to the object
-        self.add_filepath(fp)
+        self.add_filepath(fp, self._filepath_type)
 
         # creating QIIME mapping file
         self.create_qiime_mapping_file(fp)

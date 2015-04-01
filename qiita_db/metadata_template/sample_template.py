@@ -115,7 +115,7 @@ class SampleTemplate(MetadataTemplate):
         st.to_file(fp)
 
         # adding the fp to the object
-        st.add_filepath(fp)
+        st.add_filepath(fp, cls._filepath_type)
 
         return st
 
@@ -245,7 +245,7 @@ class SampleTemplate(MetadataTemplate):
         self.to_file(fp)
 
         # adding the fp to the object
-        self.add_filepath(fp)
+        self.add_filepath(fp, self._filepath_type)
 
     def update(self, md_template):
         r"""Update values in the sample template
@@ -322,7 +322,7 @@ class SampleTemplate(MetadataTemplate):
         self.to_file(fp)
 
         # adding the fp to the object
-        self.add_filepath(fp)
+        self.add_filepath(fp, self._filepath_type)
 
         # generating all new QIIME mapping files
         for rd_id in Study(self.id).raw_data():

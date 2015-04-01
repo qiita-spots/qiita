@@ -928,7 +928,7 @@ class MetadataTemplate(QiitaObject):
         df.set_index('sample_id', inplace=True, drop=True)
         return df
 
-    def add_filepath(self, filepath, conn_handler=None):
+    def add_filepath(self, filepath, filepath_type, conn_handler=None):
         r"""Populates the DB tables for storing the filepath and connects the
         `self` objects with this filepath"""
         # Check that this function has been called from a subclass
@@ -939,7 +939,7 @@ class MetadataTemplate(QiitaObject):
         conn_handler = conn_handler if conn_handler else SQLConnectionHandler()
 
         try:
-            fpp_id = insert_filepaths([(filepath, self._filepath_type)], None,
+            fpp_id = insert_filepaths([(filepath, filepath_type)], None,
                                       "templates", "filepath", conn_handler,
                                       move_files=False)[0]
             values = (self._id, fpp_id)
