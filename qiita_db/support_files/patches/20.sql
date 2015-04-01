@@ -1,14 +1,6 @@
--- March 28, 2015
--- Add default analyses for all existing users
-DO $do$
-DECLARE 
-	eml varchar;
-	aid bigint;
-BEGIN
-FOR eml IN
-	SELECT email FROM qiita.qiita_user
-LOOP
-	INSERT INTO qiita.analysis (email, name, description, dflt, analysis_status_id) VALUES (eml, eml || '-dflt', 'dflt', true, 1) RETURNING analysis_id INTO aid;
-	INSERT INTO qiita.analysis_workflow (analysis_id, step) VALUES (aid, 2);
-END LOOP;
-END $do$;
+-- March 19, 2015
+-- Rename columns to be more descriptive and allow easier joins
+ALTER TABLE qiita.processed_data_status RENAME COLUMN description TO processed_data_status_description;
+ALTER TABLE qiita.portal_type RENAME COLUMN description TO portal_description;
+ALTER TABLE qiita.investigation RENAME COLUMN description TO investigation_description;
+ALTER TABLE qiita.investigation RENAME COLUMN name TO investigation_name;

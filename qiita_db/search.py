@@ -65,10 +65,15 @@ headers returned.
 from pyparsing import (alphas, nums, Word, dblQuotedString, oneOf, Optional,
                        opAssoc, CaselessLiteral, removeQuotes, Group,
                        operatorPrecedence, stringEnd)
+from collections import defaultdict
+
+import pandas as pd
+from future.utils import viewitems
 
 from qiita_db.util import scrub_data, convert_type, get_table_cols
 from qiita_db.sql_connection import SQLConnectionHandler
 from qiita_db.study import Study
+from qiita_db.data import ProcessedData
 from qiita_db.exceptions import QiitaDBIncompatibleDatatypeError
 
 
@@ -211,6 +216,8 @@ class QiitaStudySearch(object):
             if study_res:
                 # only add study to results if actually has samples in results
                 results[sid] = study_res
+        self.results = results
+        self.meta_headers = meta_headers
         return results, meta_headers
 
     def _parse_study_search_string(self, searchstr,
@@ -304,8 +311,8 @@ class QiitaStudySearch(object):
 
         # create the study finding SQL
         # remove metadata headers that are in required_sample_info table
-        meta_headers = meta_headers.difference(self.required_cols).difference(
-            self.study_cols)
+        meta_headers = tuple(meta_headers.difference(
+            self.required_cols).difference(self.study_cols))
 
         # get all study ids that contain all metadata categories searched for
         sql = []
@@ -347,3 +354,54 @@ class QiitaStudySearch(object):
                       "r.study_id WHERE %s" %
                       (','.join(header_info), sql_where))
         return study_sql, sample_sql, meta_header_type_lookup.keys()
+
+    def filter_by_processed_data(self, datatypes=None):
+        """Filters results to what is available in each processed data
+
+        Parameters
+        ----------
+        datatypes : list of str, optional
+            Datatypes to selectively return. Default all datatypes available
+
+        Returns
+        -------
+        study_proc_ids : dict of dicts of lists
+            Processed data ids with samples for each study, in the format
+            {study_id: {datatype: [proc_id, proc_id, ...], ...}, ...}
+        proc_data_samples : dict of lists
+            Samples available in each processed data id, in the format
+            {proc_data_id: [samp_id1, samp_id2, ...], ...}
+        samples_meta : dict of pandas DataFrames
+            metadata for the found samples, keyed by study. Pandas indexed on
+            sample_id, column headers are the metadata categories searched
+            over
+        """
+        if datatypes is not None:
+            # convert to set for easy lookups
+            datatypes = set(datatypes)
+        study_proc_ids = {}
+        proc_data_samples = {}
+        samples_meta = {}
+        headers = {c: val for c, val in enumerate(self.meta_headers)}
+        for study_id, study_meta in viewitems(self.results):
+            # add metadata to dataframe and dict
+            # use from_dict because pandas doesn't like cursor objects
+            samples_meta[study_id] = pd.DataFrame.from_dict(
+                {s[0]: s[1:] for s in study_meta}, orient='index')
+            samples_meta[study_id].rename(columns=headers, inplace=True)
+            # set up study-based data needed
+            study = Study(study_id)
+            study_sample_ids = {s[0] for s in study_meta}
+            study_proc_ids[study_id] = defaultdict(list)
+            for proc_data_id in study.processed_data():
+                proc_data = ProcessedData(proc_data_id)
+                datatype = proc_data.data_type()
+                # skip processed data if it doesn't fit the given datatypes
+                if datatypes is not None and datatype not in datatypes:
+                    continue
+                filter_samps = proc_data.samples.intersection(study_sample_ids)
+                if filter_samps:
+                    proc_data_samples[proc_data_id] = sorted(filter_samps)
+                    study_proc_ids[study_id][datatype].append(proc_data_id)
+
+        return study_proc_ids, proc_data_samples, samples_meta

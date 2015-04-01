@@ -98,12 +98,14 @@ object while creating the study.
 from __future__ import division
 from future.utils import viewitems
 from copy import deepcopy
+from itertools import chain
+import warnings
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from .base import QiitaObject
 from .exceptions import (QiitaDBStatusError, QiitaDBColumnError, QiitaDBError)
 from .util import (check_required_columns, check_table_cols, convert_to_id,
-                   get_environmental_packages, infer_status)
+                   get_environmental_packages, get_table_cols, infer_status)
 from .sql_connection import SQLConnectionHandler
 
 
@@ -142,7 +144,12 @@ class Study(QiitaObject):
     """
     _table = "study"
     # The following columns are considered not part of the study info
-    _non_info = {"email", "study_title"}
+    _non_info = frozenset(["email", "study_title"])
+    # The following tables are considered part of info
+    _info_cols = frozenset(chain(
+        get_table_cols('study'), get_table_cols('study_status'),
+        get_table_cols('timeseries_type'), get_table_cols('portal_type'),
+        get_table_cols('study_pmid')))
 
     def _lock_non_sandbox(self, conn_handler):
         """Raises QiitaDBStatusError if study is non-sandboxed"""
@@ -197,6 +204,45 @@ class Study(QiitaObject):
             studies = studies.union(extra_studies)
 
         return studies
+
+    @classmethod
+    def get_info(cls, study_ids=None, info_cols=None):
+        """Returns study data for a set of study_ids
+
+        Parameters
+        ----------
+        study_ids : list of ints, optional
+            Studies to get information for. Defauls to all studies
+        info_cols: list of str, optional
+            Information columns to retrieve. Defaults to all study data
+
+        Returns
+        -------
+        list of DictCursor
+            Table-like structure of metadata, one study per row. Can be
+            accessed as a list of dictionaries, keyed on column name.
+        """
+        if info_cols is None:
+            info_cols = cls._info_cols
+        elif not cls._info_cols.issuperset(info_cols):
+            warnings.warn("Non-info columns passed: %s" % ", ".join(
+                set(info_cols) - cls._info_cols))
+
+        search_cols = ",".join(sorted(cls._info_cols.intersection(info_cols)))
+
+        sql = """SELECT {0} FROM (
+            qiita.study
+            JOIN qiita.timeseries_type  USING (timeseries_type_id)
+            JOIN qiita.portal_type USING (portal_type_id)
+            LEFT JOIN (SELECT study_id, array_agg(pmid ORDER BY pmid) as
+            pmid FROM qiita.study_pmid GROUP BY study_id) sp USING (study_id)
+            )""".format(search_cols)
+        if study_ids is not None:
+            sql = "{0} WHERE study_id in ({1})".format(
+                sql, ','.join(str(s) for s in study_ids))
+
+        conn_handler = SQLConnectionHandler()
+        return conn_handler.execute_fetchall(sql)
 
     @classmethod
     def exists(cls, study_title):
