@@ -123,7 +123,7 @@ def as_python_types(metadata_map, headers):
     return values
 
 
-def load_template_to_dataframe(fn, strip_whitespace=True):
+def load_template_to_dataframe(fn, strip_whitespace=True, drop_empty=True):
     """Load a sample or a prep template into a data frame
 
     Parameters
@@ -133,6 +133,8 @@ def load_template_to_dataframe(fn, strip_whitespace=True):
     strip_whitespace : bool, optional
         Defaults to True. Whether or not to strip whitespace from values in the
         input file
+    drop_empty : bool, optional
+        Defaults to True. Whether or not to drop empty columns
 
     Returns
     -------
@@ -260,15 +262,17 @@ def load_template_to_dataframe(fn, strip_whitespace=True):
     # set the sample name as the index
     template.set_index('sample_name', inplace=True)
 
-    # it is not uncommon to find templates that have empty columns
-    template.dropna(how='all', axis=1, inplace=True)
+    if drop_empty:
+        # it is not uncommon to find templates that have empty columns
+        template.dropna(how='all', axis=1, inplace=True)
 
-    initial_columns.remove('sample_name')
-    dropped_cols = initial_columns - set(template.columns)
-    if dropped_cols:
-        warnings.warn('The following column(s) were removed from the template '
-                      'because all their values are empty: '
-                      '%s' % ', '.join(dropped_cols), QiitaDBWarning)
+        initial_columns.remove('sample_name')
+        dropped_cols = initial_columns - set(template.columns)
+        if dropped_cols:
+            warnings.warn(
+                'The following column(s) were removed from the template '
+                'because all their values are empty: '
+                '%s' % ', '.join(dropped_cols), QiitaDBWarning)
 
     return template
 

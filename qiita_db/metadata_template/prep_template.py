@@ -417,8 +417,8 @@ class PrepTemplate(MetadataTemplate):
         sample_template_fp = join(fp, sample_template_fname)
 
         # reading files via pandas
-        st = load_template_to_dataframe(sample_template_fp)
-        pt = load_template_to_dataframe(prep_template_fp)
+        st = load_template_to_dataframe(sample_template_fp, drop_empty=False)
+        pt = load_template_to_dataframe(prep_template_fp, drop_empty=False)
         st_sample_names = set(st.index)
         pt_sample_names = set(pt.index)
 

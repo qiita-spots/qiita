@@ -13,7 +13,7 @@ from tempfile import mkstemp
 
 from qiita_core.util import qiita_test_checker
 from qiita_db.reference import Reference
-from qiita_db.util import get_mountpoint
+from qiita_db.util import get_mountpoint, get_count
 
 
 @qiita_test_checker()
@@ -40,29 +40,33 @@ class ReferenceTests(TestCase):
     def test_create(self):
         """Correctly creates the rows in the DB for the reference"""
         # Check that the returned object has the correct id
+        file_count = get_count('qiita.filepath')
         obs = Reference.create(self.name, self.version, self.seqs_fp,
                                self.tax_fp, self.tree_fp)
         self.assertEqual(obs.id, 2)
 
         # Check that the information on the database is correct
+        seq_id = file_count + 1
+        tax_id = file_count + 2
+        tree_id = file_count + 3
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.reference WHERE reference_id=2")
-        exp = [[2, self.name, self.version, 19, 20, 21]]
+        exp = [[2, self.name, self.version, seq_id, tax_id, tree_id]]
         self.assertEqual(obs, exp)
 
         # Check that the filepaths have been correctly added to the DB
         obs = self.conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.filepath WHERE filepath_id=19 or "
-            "filepath_id=20 or filepath_id=21")
+            "SELECT * FROM qiita.filepath WHERE filepath_id=%s or "
+            "filepath_id=%s or filepath_id=%s", [seq_id, tax_id, tree_id])
         exp_seq = "%s_%s_%s" % (self.name, self.version,
                                 basename(self.seqs_fp))
         exp_tax = "%s_%s_%s" % (self.name, self.version,
                                 basename(self.tax_fp))
         exp_tree = "%s_%s_%s" % (self.name, self.version,
                                  basename(self.tree_fp))
-        exp = [[19, exp_seq, 10, '0', 1, 6],
-               [20, exp_tax, 11, '0', 1, 6],
-               [21, exp_tree, 12, '0', 1, 6]]
+        exp = [[seq_id, exp_seq, 10, '0', 1, 6],
+               [tax_id, exp_tax, 11, '0', 1, 6],
+               [tree_id, exp_tree, 12, '0', 1, 6]]
         self.assertEqual(obs, exp)
 
     def test_sequence_fp(self):

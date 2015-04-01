@@ -444,3 +444,9 @@ INSERT INTO qiita.collection_job (collection_id, job_id) VALUES (1, 1);
 
 --share collection with shared user
 INSERT INTO qiita.collection_users (email, collection_id) VALUES ('shared@foo.bar', 1);
+
+-- Create the prep_template_filepath and its QIIME filepath
+INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum, checksum_algorithm_id, data_directory_id) VALUES ('1_prep_1_19700101-000000.txt', 15, '852952723', 1, 9);
+INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum, checksum_algorithm_id, data_directory_id) VALUES ('1_prep_1_qiime_19700101-000000.txt', 16, '852952723', 1, 9);
+INSERT INTO qiita.prep_template_filepath VALUES (1, 19);
+INSERT INTO qiita.prep_template_filepath VALUES (1, 20);

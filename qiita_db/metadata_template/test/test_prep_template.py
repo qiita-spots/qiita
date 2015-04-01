@@ -663,7 +663,7 @@ class TestPrepTemplate(SetUpTestPrepTemplate):
 
         self.assertFalse(exists_table("prep_%d" % exp_id, self.conn_handler))
 
-    def _common_creation_tests(self, pt):
+    def _common_creation_tests(self, pt, file_count):
         # The returned object has the correct id
         self.assertEqual(pt.id, 2)
 
@@ -749,27 +749,30 @@ class TestPrepTemplate(SetUpTestPrepTemplate):
         # prep and qiime files have been created
         filepaths = pt.get_filepaths()
         self.assertEqual(len(filepaths), 2)
-        self.assertEqual(filepaths[0][0], 22)
-        self.assertEqual(filepaths[1][0], 21)
+        self.assertEqual(filepaths[0][0], file_count+2)
+        self.assertEqual(filepaths[1][0], file_count+1)
 
     def test_create(self):
         """Creates a new PrepTemplate"""
+        file_count = get_count('qiita.filepath')
         pt = PrepTemplate.create(self.metadata, self.new_raw_data,
                                  self.test_study, self.data_type)
-        self._common_creation_tests(pt)
+        self._common_creation_tests(pt, file_count)
 
     def test_create_already_prefixed_samples(self):
         """Creates a new PrepTemplate"""
+        file_count = get_count('qiita.filepath')
         pt = npt.assert_warns(QiitaDBWarning, PrepTemplate.create,
                               self.metadata_prefixed, self.new_raw_data,
                               self.test_study, self.data_type)
-        self._common_creation_tests(pt)
+        self._common_creation_tests(pt, file_count)
 
     def test_create_data_type_id(self):
+        file_count = get_count('qiita.filepath')
         """Creates a new PrepTemplate passing the data_type_id"""
         pt = PrepTemplate.create(self.metadata, self.new_raw_data,
                                  self.test_study, self.data_type_id)
-        self._common_creation_tests(pt)
+        self._common_creation_tests(pt, file_count)
 
     def test_create_warning_missing_col(self):
         """Create raises a warning if there is any missing column"""
@@ -1023,11 +1026,11 @@ EXP_PREP_TEMPLATE = (
     'ebi_submission_accession\temp_status\texperiment_design_description\t'
     'library_construction_protocol\tplatform\tprimer\t'
     'run_prefix\tstr_column\n'
-    '1.SKB7.640196\tCCTCTGAGAGCT\tANL\tTest Project\tNone\tEMP\tBBBB\tAAAA\t'
+    '1.SKB7.640196\tCCTCTGAGAGCT\tANL\tTest Project\t\tEMP\tBBBB\tAAAA\t'
     'ILLUMINA\tGTGCCAGCMGCCGCGGTAA\ts_G1_L002_sequences\tValue for sample 3\n'
-    '1.SKB8.640193\tGTCCGCAAGTTA\tANL\tTest Project\tNone\tEMP\tBBBB\tAAAA\t'
+    '1.SKB8.640193\tGTCCGCAAGTTA\tANL\tTest Project\t\tEMP\tBBBB\tAAAA\t'
     'ILLUMINA\tGTGCCAGCMGCCGCGGTAA\ts_G1_L001_sequences\tValue for sample 1\n'
-    '1.SKD8.640184\tCGTAGAGCTCTC\tANL\tTest Project\tNone\tEMP\tBBBB\tAAAA\t'
+    '1.SKD8.640184\tCGTAGAGCTCTC\tANL\tTest Project\t\tEMP\tBBBB\tAAAA\t'
     'ILLUMINA\tGTGCCAGCMGCCGCGGTAA\ts_G1_L001_sequences\tValue for sample 2\n')
 
 if __name__ == '__main__':

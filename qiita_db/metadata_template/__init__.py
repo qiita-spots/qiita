@@ -11,5 +11,7 @@ __version__ = "0.0.1-dev"
 from .sample_template import SampleTemplate
 from .prep_template import PrepTemplate
 from .util import load_template_to_dataframe
+from .column_restriction import TARGET_GENE_DATA_TYPES
 
-__all__ = ['SampleTemplate', 'PrepTemplate', 'load_template_to_dataframe']
+__all__ = ['SampleTemplate', 'PrepTemplate', 'load_template_to_dataframe'
+           'TARGET_GENE_DATA_TYPES']
