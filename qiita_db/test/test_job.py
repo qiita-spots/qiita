@@ -15,7 +15,7 @@ from datetime import datetime
 from qiita_core.util import qiita_test_checker
 from qiita_db.job import Job, Command
 from qiita_db.user import User
-from qiita_db.util import get_mountpoint
+from qiita_db.util import get_mountpoint, get_count
 from qiita_db.analysis import Analysis
 from qiita_db.exceptions import (QiitaDBDuplicateError, QiitaDBStatusError,
                                  QiitaDBUnknownIDError)
@@ -123,8 +123,7 @@ class JobTest(TestCase):
                 Job(1)
 
             obs = self.conn_handler.execute_fetchall(
-                "SELECT * FROM qiita.filepath WHERE filepath_id = 12 OR "
-                "filepath_id = 19")
+                "SELECT * FROM qiita.filepath WHERE filepath_id = 12")
             self.assertEqual(obs, [])
 
             obs = self.conn_handler.execute_fetchall(
@@ -292,6 +291,7 @@ class JobTest(TestCase):
         self.assertEqual(self.job.error.msg, "TESTERROR")
 
     def test_add_results(self):
+        file_count = get_count('qiita.filepath')
         self.job.add_results([(join(self._job_folder, "1_job_result.txt"),
                              "plain_text")])
 
@@ -299,9 +299,10 @@ class JobTest(TestCase):
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.job_results_filepath WHERE job_id = 1")
 
-        self.assertEqual(obs, [[1, 12], [1, 19]])
+        self.assertEqual(obs, [[1, 12], [1, file_count+1]])
 
     def test_add_results_dir(self):
+        file_count = get_count('qiita.filepath')
         # Create a test directory
         test_dir = join(self._job_folder, "2_test_folder")
 
@@ -311,7 +312,7 @@ class JobTest(TestCase):
         # make sure files attached to job properly
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.job_results_filepath WHERE job_id = 1")
-        self.assertEqual(obs, [[1, 12], [1, 19]])
+        self.assertEqual(obs, [[1, 12], [1, file_count+1]])
 
     def test_add_results_completed(self):
         self.job.status = "completed"

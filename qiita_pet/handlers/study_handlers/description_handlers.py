@@ -22,7 +22,8 @@ from qiita_db.study import Study
 from qiita_db.data import RawData, PreprocessedData, ProcessedData
 from qiita_db.ontology import Ontology
 from qiita_db.metadata_template import (PrepTemplate, SampleTemplate,
-                                        load_template_to_dataframe)
+                                        load_template_to_dataframe,
+                                        SAMPLE_TEMPLATE_COLUMNS)
 from qiita_db.util import convert_to_id, get_mountpoint
 from qiita_db.exceptions import (QiitaDBUnknownIDError, QiitaDBColumnError,
                                  QiitaDBExecutionError, QiitaDBDuplicateError,
@@ -622,6 +623,18 @@ class StudyDescriptionHandler(BaseHandler):
         user_level = user.level
         sample_template_exists = SampleTemplate.exists(study.id)
 
+        if sample_template_exists:
+            st = SampleTemplate(study.id)
+            missing_cols = st.check_restrictions(
+                [SAMPLE_TEMPLATE_COLUMNS['Qiita_main']])
+            allow_approval = len(missing_cols) == 0
+            approval_deny_msg = ("Processed data approval request is disabled "
+                                 "due to missing columns in the sample "
+                                 "template: %s" % ', '.join(missing_cols))
+        else:
+            allow_approval = False
+            approval_deny_msg = ""
+
         # The general information of the study can be changed if the study is
         # not public or if the user is an admin, in which case they can always
         # modify the information of the study
@@ -636,6 +649,8 @@ class StudyDescriptionHandler(BaseHandler):
                     show_edit_btn=show_edit_btn,
                     show_data_tabs=sample_template_exists,
                     full_access=full_access,
+                    allow_approval=allow_approval,
+                    approval_deny_msg=approval_deny_msg,
                     top_tab=top_tab,
                     sub_tab=sub_tab,
                     prep_tab=prep_tab)

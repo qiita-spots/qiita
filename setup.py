@@ -41,6 +41,7 @@ setup(name='qiita-spots',
       test_suite='nose.collector',
       packages=['qiita_core',
                 'qiita_db',
+                'qiita_db/metadata_template',
                 'qiita_pet',
                 'qiita_pet/handlers',
                 'qiita_ware'

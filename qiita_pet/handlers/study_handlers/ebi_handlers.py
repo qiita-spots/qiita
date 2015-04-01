@@ -13,7 +13,9 @@ from qiita_ware.context import submit
 from qiita_ware.demux import stats as demux_stats
 from qiita_ware.dispatchable import submit_to_ebi
 from qiita_db.data import PreprocessedData
-from qiita_db.metadata_template import PrepTemplate, SampleTemplate
+from qiita_db.metadata_template import (PrepTemplate, SampleTemplate,
+                                        SAMPLE_TEMPLATE_COLUMNS,
+                                        PREP_TEMPLATE_COLUMNS)
 from qiita_db.study import Study
 from qiita_db.exceptions import QiitaDBUnknownIDError
 from qiita_pet.handlers.base_handlers import BaseHandler
@@ -58,11 +60,36 @@ class EBISubmitHandler(BaseHandler):
             stats.append(('Number of sequences', demux_file_stats.n))
             msg_level = 'success'
 
+        # Check if the templates have all the required columns for EBI
+        pt_missing_cols = prep_template.check_restrictions(
+            [PREP_TEMPLATE_COLUMNS['EBI']])
+        st_missing_cols = sample_template.check_restrictions(
+            [SAMPLE_TEMPLATE_COLUMNS['EBI']])
+        allow_submission = (len(pt_missing_cols) == 0 and
+                            len(st_missing_cols) == 0)
+
+        if not allow_submission:
+            no_submission_msg_list = [
+                "Submission to EBI is disabled due to missing columns:"]
+            if len(pt_missing_cols) > 0:
+                no_submission_msg_list.append(
+                    "Columns missing in prep template: %s"
+                    % ', '.join(pt_missing_cols))
+            if len(st_missing_cols) > 0:
+                no_submission_msg_list.append(
+                    "Columns missing in sample template: %s"
+                    % ', '.join(st_missing_cols))
+            no_submission_msg = "<br/>".join(no_submission_msg_list)
+        else:
+            no_submission_msg = None
+
         self.render('ebi_submission.html',
                     study_title=study.title, stats=stats, message=msg,
                     study_id=study.id, level=msg_level,
                     preprocessed_data_id=preprocessed_data_id,
-                    investigation_type=prep_template.investigation_type)
+                    investigation_type=prep_template.investigation_type,
+                    allow_submission=allow_submission,
+                    no_submission_msg=no_submission_msg)
 
     @authenticated
     def get(self, preprocessed_data_id):
