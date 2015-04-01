@@ -207,16 +207,19 @@ class ProcessingPipelineTests(TestCase):
         self.assertEqual(obs_cmds[3], exp_cmd_4)
 
     def test_get_preprocess_fasta_cmd_sff_run_prefix(self):
+        raw_data = RawData(3)
+        params = Preprocessed454Params(1)
+        prep_template = PrepTemplate(1)
+
         # Need to alter the run_prefix of one sample so we can test the
         # multiple values
         conn_handler = SQLConnectionHandler()
         sql = ("UPDATE qiita.prep_1 SET run_prefix='test1' WHERE "
                "sample_id = '1.SKM9.640192'")
         conn_handler.execute(sql)
-
-        raw_data = RawData(3)
-        params = Preprocessed454Params(1)
-        prep_template = PrepTemplate(1)
+        # Since we change the prep template, we need to re-generated the
+        # prep and qiime mapping files
+        prep_template.regenerate_files()
 
         obs_cmd, obs_output_dir = _get_preprocess_fasta_cmd(
             raw_data, prep_template, params)
@@ -242,23 +245,25 @@ class ProcessingPipelineTests(TestCase):
     def test_get_preprocess_fasta_cmd_sff_run_prefix_match(self):
         # Test that the run prefixes in the prep_template and the file names
         # actually match and raise an error if not
+        file_count = get_count('qiita.filepath')
         conn_handler = SQLConnectionHandler()
-        sql = ("""
-            INSERT INTO qiita.filepath (filepath_id, filepath,
-                filepath_type_id, checksum, checksum_algorithm_id,
-                data_directory_id) VALUES (19, '1_new.sff', 17, 852952723, 1,
-                5);
-            INSERT INTO qiita.raw_filepath (raw_data_id , filepath_id) VALUES
-                (3, 19);
-            UPDATE qiita.prep_1 SET run_prefix='preprocess_test';
-            UPDATE qiita.prep_1 SET run_prefix='new' WHERE
-                sample_id = '1.SKB8.640193';
-        """)
-        conn_handler.execute(sql)
+        sql = """INSERT INTO qiita.filepath (filepath, filepath_type_id,
+                        checksum, checksum_algorithm_id, data_directory_id)
+                    VALUES ('1_new.sff', 17, 852952723, 1, 5);
+                INSERT INTO qiita.raw_filepath (raw_data_id , filepath_id)
+                    VALUES (3, %s);
+                UPDATE qiita.prep_1 SET run_prefix='preprocess_test';
+                UPDATE qiita.prep_1 SET run_prefix='new'
+                    WHERE sample_id = '1.SKB8.640193';"""
+        fp_id = file_count + 1
+        conn_handler.execute(sql, (fp_id,))
 
         raw_data = RawData(3)
         params = Preprocessed454Params(1)
         prep_template = PrepTemplate(1)
+        # Since we change the prep template, we need to re-generated the
+        # prep and qiime mapping files
+        prep_template.regenerate_files()
 
         obs_cmd, obs_output_dir = _get_preprocess_fasta_cmd(
             raw_data, prep_template, params)
@@ -287,29 +292,27 @@ class ProcessingPipelineTests(TestCase):
     def test_get_preprocess_fasta_cmd_sff_run_prefix_match_error_1(self):
         # Test that the run prefixes in the prep_template and the file names
         # actually match and raise an error if not
+        file_count = get_count('qiita.filepath')
         conn_handler = SQLConnectionHandler()
-        sql = ("""
-            INSERT INTO qiita.filepath (filepath_id, filepath,
-                filepath_type_id, checksum, checksum_algorithm_id,
-                data_directory_id) VALUES (19, '1_new.sff', 17, 852952723, 1,
-                5);
-            INSERT INTO qiita.raw_filepath (raw_data_id , filepath_id) VALUES
-                (3, 19);
-            INSERT INTO qiita.filepath (filepath_id, filepath,
-                filepath_type_id, checksum, checksum_algorithm_id,
-                data_directory_id) VALUES (20, '1_error.sff', 17, 852952723,
-                1, 5);
-            INSERT INTO qiita.raw_filepath (raw_data_id , filepath_id) VALUES
-                (3, 20);
-            UPDATE qiita.prep_1 SET run_prefix='preprocess_test';
-            UPDATE qiita.prep_1 SET run_prefix='new' WHERE
-                sample_id = '1.SKB8.640193';
-        """)
-        conn_handler.execute(sql)
+        sql = """INSERT INTO qiita.filepath (filepath, filepath_type_id,
+                        checksum, checksum_algorithm_id, data_directory_id)
+                    VALUES ('1_new.sff', 17, 852952723, 1, 5);
+                INSERT INTO qiita.raw_filepath (raw_data_id , filepath_id)
+                    VALUES (3, %s);
+                INSERT INTO qiita.filepath (filepath, filepath_type_id,
+                        checksum, checksum_algorithm_id, data_directory_id)
+                    VALUES ('1_error.sff', 17, 852952723, 1, 5);
+                INSERT INTO qiita.raw_filepath (raw_data_id , filepath_id)
+                    VALUES (3, %s);
+                UPDATE qiita.prep_1 SET run_prefix='preprocess_test';
+                UPDATE qiita.prep_1 SET run_prefix='new'
+                    WHERE sample_id = '1.SKB8.640193';"""
+        conn_handler.execute(sql, (file_count + 1, file_count + 2))
 
         raw_data = RawData(3)
         params = Preprocessed454Params(1)
         prep_template = PrepTemplate(1)
+        prep_template.regenerate_files()
 
         with self.assertRaises(ValueError):
             _get_preprocess_fasta_cmd(raw_data, prep_template, params)
@@ -317,18 +320,17 @@ class ProcessingPipelineTests(TestCase):
     def test_get_preprocess_fasta_cmd_sff_run_prefix_match_error_2(self):
         # Should raise error
         conn_handler = SQLConnectionHandler()
-        sql = ("""
-            UPDATE qiita.prep_1 SET run_prefix='test1';
-            UPDATE qiita.prep_1 SET run_prefix='test2' WHERE
-                sample_id = '1.SKB2.640194';
-            UPDATE qiita.prep_1 SET run_prefix='error' WHERE
-                sample_id = '1.SKB8.640193';
-        """)
+        sql = """UPDATE qiita.prep_1 SET run_prefix='test1';
+                 UPDATE qiita.prep_1 SET run_prefix='test2'
+                    WHERE sample_id = '1.SKB2.640194';
+                 UPDATE qiita.prep_1 SET run_prefix='error'
+                    WHERE sample_id = '1.SKB8.640193';"""
         conn_handler.execute(sql)
 
         raw_data = RawData(3)
         params = Preprocessed454Params(1)
         prep_template = PrepTemplate(1)
+        prep_template.regenerate_files()
 
         with self.assertRaises(ValueError):
             _get_preprocess_fasta_cmd(raw_data, prep_template, params)

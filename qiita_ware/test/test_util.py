@@ -98,11 +98,12 @@ class UtilTests(TestCase):
             u'SKM7.640188', u'SKM8.640201', u'SKM9.640192'})
 
         self.assertTrue(set(obs.columns), {
-            u'tot_org_carb', u'common_name', u'has_extracted_data',
+            u'tot_org_carb', u'common_name', u'dna_extracted',
             u'required_sample_info_status', u'water_content_soil',
             u'env_feature', u'assigned_from_geo', u'altitude', u'env_biome',
-            u'texture', u'has_physical_specimen', u'description_duplicate',
-            u'physical_location', u'latitude', u'ph', u'host_taxid',
+            u'texture', u'physical_specimen_remaining',
+            u'description_duplicate', u'physical_specimen_location',
+            u'latitude', u'ph', u'host_taxid',
             u'elevation', u'description', u'collection_timestamp',
             u'taxon_id', u'samp_salinity', u'host_subject_id', u'sample_type',
             u'season_environment', u'temp', u'country', u'longitude',
@@ -288,8 +289,8 @@ SUMMARY_STATS = {
     'experiment_design_description': [('micro biome of soil and rhizosphere '
                                        'of cannabis plants from CA', 27)],
     'experiment_title': [('Cannabis Soil Microbiome', 27)],
-    'has_extracted_data': [('True', 27)],
-    'has_physical_specimen': [('True', 27)],
+    'dna_extracted': [('True', 27)],
+    'physical_specimen_remaining': [('True', 27)],
     'host_subject_id': [('1001:B1', 1),
                         ('1001:B2', 1),
                         ('1001:B3', 1),
@@ -397,7 +398,7 @@ SUMMARY_STATS = {
         ('96.0693176066', 1)],
     'pcr_primers': [('FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT', 27)],
     'ph': [('6.8', 9), ('6.82', 10), ('6.94', 8)],
-    'physical_location': [('ANL', 27)],
+    'physical_specimen_location': [('ANL', 27)],
     'platform': [('Illumina', 27)],
     'required_sample_info_status': [('completed', 27)],
     'run_center': [('ANL', 27)],
