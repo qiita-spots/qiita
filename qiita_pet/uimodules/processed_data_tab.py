@@ -13,7 +13,7 @@ from .base_uimodule import BaseUIModule
 
 
 class ProcessedDataTab(BaseUIModule):
-    def render(self, study, full_access):
+    def render(self, study, full_access, allow_approval, approval_deny_msg):
         pd_gen = (ProcessedData(pd_id) for pd_id in study.processed_data())
         avail_pd = [(pd.id, pd, STATUS_STYLER[pd.status]) for pd in pd_gen
                     if full_access or pd.status == 'public']
@@ -21,11 +21,14 @@ class ProcessedDataTab(BaseUIModule):
         return self.render_string(
             "study_description_templates/processed_data_tab.html",
             available_processed_data=avail_pd,
-            study_id=study.id)
+            study_id=study.id,
+            allow_approval=allow_approval,
+            approval_deny_msg=approval_deny_msg,)
 
 
 class ProcessedDataInfoTab(BaseUIModule):
-    def render(self, study_id, processed_data):
+    def render(self, study_id, processed_data, allow_approval,
+               approval_deny_msg):
         user = self.current_user
         # The request approval, approve processed data and make public buttons
         # are mutually exclusive. Only one of them will be shown, depending on
@@ -65,4 +68,6 @@ class ProcessedDataInfoTab(BaseUIModule):
             filepaths=filepaths,
             is_local_request=is_local_request,
             btn_to_show=btn_to_show,
-            show_revert_btn=show_revert_btn)
+            show_revert_btn=show_revert_btn,
+            allow_approval=allow_approval,
+            approval_deny_msg=approval_deny_msg,)

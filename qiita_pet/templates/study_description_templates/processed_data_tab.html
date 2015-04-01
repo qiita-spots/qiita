@@ -20,7 +20,7 @@
       </div>
       <!-- Create one tab pane for each processed data -->
       {% for pd_id, pd, _ in available_processed_data %}
-        {% module ProcessedDataInfoTab(study_id, pd) %}
+        {% module ProcessedDataInfoTab(study_id, pd, allow_approval, approval_deny_msg) %}
       {% end %}
     </div>
   {% else %}
