@@ -95,43 +95,17 @@ for s_id in study_ids:
 conn_handler.add_to_queue(
     queue_name,
     """ALTER TABLE qiita.required_sample_info
-        DROP COLUMN physical_location""")
-conn_handler.add_to_queue(
-    queue_name,
-    """ALTER TABLE qiita.required_sample_info
-        DROP COLUMN has_physical_specimen""")
-conn_handler.add_to_queue(
-    queue_name,
-    """ALTER TABLE qiita.required_sample_info
-        DROP COLUMN has_extracted_data""")
-conn_handler.add_to_queue(
-    queue_name,
-    """ALTER TABLE qiita.required_sample_info
-        DROP COLUMN sample_type""")
-conn_handler.add_to_queue(
-    queue_name,
-    """ALTER TABLE qiita.required_sample_info
-        DROP COLUMN required_sample_info_status_id""")
-conn_handler.add_to_queue(
-    queue_name,
-    """ALTER TABLE qiita.required_sample_info
-        DROP COLUMN collection_timestamp""")
-conn_handler.add_to_queue(
-    queue_name,
-    """ALTER TABLE qiita.required_sample_info
-        DROP COLUMN host_subject_id""")
-conn_handler.add_to_queue(
-    queue_name,
-    """ALTER TABLE qiita.required_sample_info
-        DROP COLUMN description""")
-conn_handler.add_to_queue(
-    queue_name,
-    """ALTER TABLE qiita.required_sample_info
-        DROP COLUMN latitude""")
-conn_handler.add_to_queue(
-    queue_name,
-    """ALTER TABLE qiita.required_sample_info
+        DROP COLUMN physical_location,
+        DROP COLUMN has_physical_specimen,
+        DROP COLUMN has_extracted_data,
+        DROP COLUMN sample_type,
+        DROP COLUMN required_sample_info_status_id,
+        DROP COLUMN collection_timestamp,
+        DROP COLUMN host_subject_id,
+        DROP COLUMN description,
+        DROP COLUMN latitude,
         DROP COLUMN longitude""")
+
 conn_handler.add_to_queue(
     queue_name, """DROP TABLE qiita.required_sample_info_status""")
 
@@ -190,13 +164,11 @@ for p_id in prep_ids:
 # common_prep_info table; and drop the emp_status table
 conn_handler.add_to_queue(
     queue_name,
-    """ALTER TABLE qiita.common_prep_info DROP COLUMN center_name""")
-conn_handler.add_to_queue(
-    queue_name,
-    """ALTER TABLE qiita.common_prep_info DROP COLUMN center_project_name""")
-conn_handler.add_to_queue(
-    queue_name,
-    """ALTER TABLE qiita.common_prep_info DROP COLUMN emp_status_id""")
+    """ALTER TABLE qiita.common_prep_info
+        DROP COLUMN center_name,
+        DROP COLUMN center_project_name,
+        DROP COLUMN emp_status_id""")
+
 conn_handler.add_to_queue(
     queue_name, """DROP TABLE qiita.emp_status""")
 
