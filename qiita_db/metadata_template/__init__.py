@@ -15,6 +15,6 @@ from .column_restriction import (TARGET_GENE_DATA_TYPES, PREP_TEMPLATE_COLUMNS,
 
 __version__ = "0.0.1-dev"
 
-__all__ = ['SampleTemplate', 'PrepTemplate', 'load_template_to_dataframe'
+__all__ = ['SampleTemplate', 'PrepTemplate', 'load_template_to_dataframe',
            'TARGET_GENE_DATA_TYPES', 'SAMPLE_TEMPLATE_COLUMNS',
            'PREP_TEMPLATE_COLUMNS_TARGET_GENE', 'PREP_TEMPLATE_COLUMNS']
