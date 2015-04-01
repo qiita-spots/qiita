@@ -28,11 +28,11 @@ import pandas as pd
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from .sql_connection import SQLConnectionHandler
 from .base import QiitaStatusObject
-from .data import ProcessedData, RawData
+from .data import ProcessedData
 from .study import Study
 from .exceptions import QiitaDBStatusError, QiitaDBError
 from .util import (convert_to_id, get_work_base_dir,
-                   get_mountpoint, get_table_cols, insert_filepaths)
+                   get_mountpoint, insert_filepaths)
 
 
 class Analysis(QiitaStatusObject):
@@ -662,12 +662,8 @@ class Analysis(QiitaStatusObject):
            Code modified slightly from qiime.util.MetadataMap.__add__"""
         conn_handler = conn_handler if conn_handler is not None \
             else SQLConnectionHandler()
-        # We will keep track of all unique sample_ids and metadata headers
-        # we have seen as we go, as well as studies already seen
-        all_sample_ids = set()
-        # all_headers = set(get_table_cols("required_sample_info", conn_handler))
-        # all_studies = set()
 
+        all_sample_ids = set()
         sql = """SELECT filepath_id, filepath
                  FROM qiita.filepath
                     JOIN qiita.prep_template_filepath USING (filepath_id)
@@ -682,7 +678,6 @@ class Analysis(QiitaStatusObject):
         _id, fp = get_mountpoint('templates')[0]
         to_concat = []
 
-        merged_data = defaultdict(lambda: defaultdict(lambda: None))
         for pid, samples in viewitems(samples):
             if len(samples) != len(set(samples)):
                 duplicates = [s for s in samples if samples.count(s) > 1]

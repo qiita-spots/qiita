@@ -7,7 +7,6 @@
 # -----------------------------------------------------------------------------
 
 from __future__ import division
-from future.builtins import zip
 from future.utils import viewvalues
 from os.path import join
 from time import strftime
@@ -23,7 +22,7 @@ from qiita_db.ontology import Ontology
 from qiita_db.util import (convert_to_id, convert_from_id, get_mountpoint,
                            infer_status)
 from .base_metadata_template import BaseSample, MetadataTemplate
-from .util import as_python_types, get_datatypes, load_template_to_dataframe
+from .util import load_template_to_dataframe
 from .column_restriction import (TARGET_GENE_DATA_TYPES, PREP_TEMPLATE_COLUMNS,
                                  PREP_TEMPLATE_COLUMNS_TARGET_GENE)
 
@@ -496,3 +495,18 @@ class PrepTemplate(MetadataTemplate):
         pd_statuses = conn_handler.execute_fetchall(sql, (self._id,))
 
         return infer_status(pd_statuses)
+
+    @property
+    def qiime_map_fp(self):
+        conn_handler = SQLConnectionHandler()
+
+        sql = """SELECT filepath_id, filepath
+                 FROM qiita.filepath
+                    JOIN qiita.{0} USING (filepath_id)
+                    JOIN qiita.filepath_type USING (filepath_type_id)
+                 WHERE {1} = %s AND filepath_type = 'qiime_map'
+                 ORDER BY filepath_id DESC""".format(self._filepath_table,
+                                                     self._id_column)
+        fn = conn_handler.execute_fetchall(sql, (self._id,))[0][1]
+        base_dir = get_mountpoint('templates')[0][1]
+        return join(base_dir, fn)

@@ -530,6 +530,12 @@ class TestPrepTemplateReadOnly(SetUpTestPrepTemplate):
             'samp_size', 'sequencing_meth', 'illumina_technology',
             'sample_center', 'pcr_primers', 'study_center'})
 
+    def test_qiime_map_fp(self):
+        pt = PrepTemplate(1)
+        exp = join(get_mountpoint('templates')[0][1],
+                   '1_prep_1_qiime_19700101-000000.txt')
+        self.assertEqual(pt.qiime_map_fp, exp)
+
 
 @qiita_test_checker()
 class TestPrepTemplate(SetUpTestPrepTemplate):
@@ -1020,6 +1026,7 @@ class TestPrepTemplate(SetUpTestPrepTemplate):
         pt = PrepTemplate.create(self.metadata, self.new_raw_data,
                                  self.test_study, self.data_type_id)
         self.assertEqual(pt.status, 'sandbox')
+
 
 EXP_PREP_TEMPLATE = (
     'sample_name\tbarcode\tcenter_name\tcenter_project_name\t'
