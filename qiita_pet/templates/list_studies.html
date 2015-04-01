@@ -55,8 +55,11 @@ $(document).ready(function() {
         event.preventDefault();
         $("#submit-button").prop("disabled",true);
         $("#search-error").text('');
-        query = $("#searchbox").val();
-        $("#standard-studies-table").DataTable().ajax.url(ajaxURL + "&query=" + query).load(function() {$("#submit-button").prop("disabled",false);}, true);
+        var query = $("#searchbox").val();
+        var table = $('#studies-table').DataTable();
+        table.ajax.url(ajaxURL + "&query=" + query).load(function() {$("#submit-button").prop("disabled",false);}, true);
+        table.search( '' ).columns().search( '' ).draw();
+
         return false;
     });
 } );
