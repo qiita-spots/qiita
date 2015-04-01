@@ -531,7 +531,9 @@ class MetadataTemplate(QiitaObject):
         if warning_msg:
             warnings.warn(
                 "Some functionality will be disabled due to missing "
-                "columns:\n\t%s" % "\n\t".join(warning_msg),
+                "columns:\n\t%s.\nCheck https://github.com/biocore/qiita/wiki"
+                "/Preparing-Qiita-template-files for a description of these "
+                "fields." % ";\n\t".join(warning_msg),
                 QiitaDBWarning)
 
         return md_template
@@ -995,3 +997,25 @@ class MetadataTemplate(QiitaObject):
 
         """
         return get_table_cols(self._table_name(self._id))
+
+    def check_restrictions(self, restrictions):
+        """
+        Parameters
+        ----------
+        restrictions : list of Restriction
+            The restriction to test if the metadata template fulfills
+
+        Returns
+        -------
+        bool
+            A boolean indicating whether the restrictions have been fulfilled
+        list of str
+            The list of missing columns
+        """
+        def _col_iter():
+            for restriction in restrictions:
+                for col in restriction.columns:
+                    yield col
+        categories = self.categories()
+        missing = [col for col in _col_iter() if col not in categories]
+        return len(missing) == 0, missing

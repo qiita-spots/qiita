@@ -31,6 +31,8 @@ from qiita_db.user import User
 from qiita_db.util import exists_table, get_table_cols
 from qiita_db.metadata_template.sample_template import Sample, SampleTemplate
 from qiita_db.metadata_template.prep_template import PrepSample, PrepTemplate
+from qiita_db.metadata_template.column_restriction import (
+    SAMPLE_TEMPLATE_COLUMNS)
 
 
 class SetUpTestSample(TestCase):
@@ -696,6 +698,12 @@ class TestSampleTemplateReadOnly(SetUpSampleTemplate):
                'host_subject_id', 'description', 'latitude', 'longitude'}
         obs = set(self.tester.categories())
         self.assertEqual(obs, exp)
+
+    def test_check_restrictions(self):
+        obs_bool, obs_list = self.tester.check_restrictions(
+            [SAMPLE_TEMPLATE_COLUMNS['EBI']])
+        self.assertEqual(obs_bool, True)
+        self.assertEqual(obs_list, [])
 
 
 @qiita_test_checker()
