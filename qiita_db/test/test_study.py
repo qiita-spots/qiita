@@ -179,6 +179,77 @@ class TestStudy(TestCase):
             "UPDATE qiita.processed_data SET processed_data_status_id = %s",
             (id_status,))
 
+    def test_get_info(self):
+        # Test get all info for single study
+        obs = Study.get_info([1])
+        self.assertEqual(len(obs), 1)
+        obs = dict(obs[0])
+        exp = {
+            'mixs_compliant': True, 'metadata_complete': True,
+            'reprocess': False, 'timeseries_type': 'None',
+            'portal_description': 'EMP portal',
+            'number_samples_promised': 27, 'emp_person_id': 2,
+            'funding': None, 'vamps_id': None,
+            'first_contact': datetime(2014, 5, 19, 16, 10),
+            'principal_investigator_id': 3, 'timeseries_type_id': 1,
+            'pmid': ['123456', '7891011'], 'study_alias': 'Cannabis Soils',
+            'spatial_series': False,
+            'study_abstract': 'This is a preliminary study to examine the '
+            'microbiota associated with the Cannabis plant. Soils samples from'
+            ' the bulk soil, soil associated with the roots, and the '
+            'rhizosphere were extracted and the DNA sequenced. Roots from '
+            'three independent plants of different strains were examined. '
+            'These roots were obtained November 11, 2011 from plants that had '
+            'been harvested in the summer. Future studies will attempt to '
+            'analyze the soils and rhizospheres from the same location at '
+            'different time points in the plant lifecycle.',
+            'study_description': 'Analysis of the Cannabis Plant Microbiome',
+            'portal': 'EMP',
+            'portal_type_id': 2,
+            'intervention_type': 'None', 'email': 'test@foo.bar',
+            'study_id': 1,
+            'most_recent_contact': datetime(2014, 5, 19, 16, 11),
+            'lab_person_id': 1,
+            'study_title': 'Identification of the Microbiomes for Cannabis '
+            'Soils', 'number_samples_collected': 27}
+        self.assertItemsEqual(obs, exp)
+
+        # Test get specific keys for single study
+        exp_keys = ['metadata_complete', 'reprocess', 'timeseries_type',
+                    'portal_description', 'pmid', 'study_title']
+        obs = Study.get_info([1], exp_keys)
+        self.assertEqual(len(obs), 1)
+        obs = dict(obs[0])
+        exp = {
+            'metadata_complete': True, 'reprocess': False,
+            'timeseries_type': 'None',
+            'portal_description': 'EMP portal',
+            'pmid': ['123456', '7891011'],
+            'study_title': 'Identification of the Microbiomes for Cannabis '
+            'Soils'}
+        self.assertItemsEqual(obs, exp)
+
+        # Test get specific keys for all studies
+        info = {
+            'timeseries_type_id': 1,
+            'portal_type_id': 1,
+            'lab_person_id': None,
+            'principal_investigator_id': 3,
+            'metadata_complete': False,
+            'mixs_compliant': True,
+            'study_description': 'desc',
+            'study_alias': 'alias',
+            'study_abstract': 'abstract'}
+        user = User('test@foo.bar')
+
+        Study.create(user, 'test_study_1', efo=[1], info=info)
+        obs = Study.get_info(info_cols=exp_keys)
+        exp = [[True, ['123456', '7891011'], 'EMP portal', False,
+                'Identification of the Microbiomes for Cannabis Soils',
+                'None'],
+               [False, None, 'QIIME portal', False, 'test_study_1', 'None']]
+        self.assertEqual(obs, exp)
+
     def test_has_access_public(self):
         self._change_processed_data_status('public')
         self.assertTrue(self.study.has_access(User("demo@microbio.me")))

@@ -49,7 +49,7 @@ INSERT INTO qiita.study_users (study_id, email) VALUES (1, 'shared@foo.bar');
 INSERT INTO qiita.study_pmid (study_id, pmid) VALUES (1, '123456'), (1, '7891011');
 
 -- Insert an investigation
-INSERT INTO qiita.investigation (name, description, contact_person_id) VALUES
+INSERT INTO qiita.investigation (investigation_name, investigation_description, contact_person_id) VALUES
 	('TestInvestigation', 'An investigation for testing purposes', 3);
 
 -- Insert investigation_study (link study 1 with investigation 1)

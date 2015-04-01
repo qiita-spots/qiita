@@ -1,0 +1,221 @@
+{% extends sitebase.html %}
+{% block head %}
+<link rel="stylesheet" href="/static/vendor/css/jquery.dataTables.css" type="text/css">
+
+<script src="/static/vendor/js/jquery.dataTables.min.js"></script>
+<script src="/static/vendor/js/jquery.dataTables.plugin.natural.js"></script>
+
+<script type="text/javascript">
+var current_study;
+var ajaxURL = "/study/search/?&user={{current_user.id}}&sEcho=" + Math.floor(Math.random()*1001);
+$(document).ready(function() {
+        $('#studies-table').dataTable({
+            "columns": [
+              { "data": "checkbox" },
+              { "data": "title" },
+              { "data": "abstract" },
+              { "data": "id" },
+              { "data": "meta_complete" },
+              { "data": "num_samples" },
+              { "data": "num_raw_data" },
+              { "data": "shared" },
+              { "data": "pi" },
+              { "data": "pmid" },
+              { "data": "status" }
+            ],
+            order: [[10, "desc"], [ 1, "asc" ]],
+            columnDefs: [{type:'natural', targets:[3,4,5,9]}, {"targets": [ 2 ],"visible": false}],
+            "oLanguage": {
+                "sSearch": "Narrow search results by column data (Title, abstract, PI, etc):",
+                "sLoadingRecords": "Loading table data",
+                "sZeroRecords": "No studies found"
+            }, 
+            "ajax": {
+                "url": ajaxURL + "&query=",
+                "error": function(jqXHR, textStatus, ex) {
+                    $("#submit-button").prop("disabled",false);
+                    if(jqXHR.status === 500) { $("#search-error").text("Internal Server Error, please try again later"); }
+                    else { $("#search-error").text(jqXHR.responseText); }
+                }
+            } 
+        });
+
+    $('#users_list').chosen({width: "100%"});
+    $('#users_list').on('change', function(evt, params) {
+        params['study_id'] = current_study;
+        $.get('/study/sharing/', params)
+            .done(function(data) {
+                users_links = JSON.parse(data);
+                links = users_links['links'];
+                document.getElementById("shared_html_"+current_study).innerHTML = links;
+            }
+        );
+    });
+    $("#search-form").submit(function(event)  {
+        event.preventDefault();
+        $("#submit-button").prop("disabled",true);
+        $("#search-error").text('');
+        var query = $("#searchbox").val();
+        var table = $('#studies-table').DataTable();
+        table.ajax.url(ajaxURL + "&query=" + query).load(function() {$("#submit-button").prop("disabled",false);}, true);
+        table.search( '' ).columns().search( '' ).draw();
+
+        return false;
+    });
+} );
+
+function modify_sharing(study_id) {
+    var shared_list;
+    current_study = study_id;
+
+    $.get('/study/sharing/', {study_id: study_id})
+        .done(function(data) {
+            users_links = JSON.parse(data);
+            users = users_links['users'];
+
+            $("#users_list").val(users);
+            $("#users_list").trigger("chosen:updated");
+
+        });
+}
+
+function add_metacat(metacat) {
+  document.getElementById('searchbox').value += (" " + metacat);
+}
+</script>
+
+{% end %}
+{% block content %}
+<!--Search div-->
+<div class="row">
+  <div class="col-sm-12">
+    <h1>Metadata Search</h1>
+    A basic search consists of: (category)  (operator) (value)<br/>
+    Example search: env_matter = soil<br />
+    <p><a href="#" data-toggle="modal" data-target="#searchexample">Search help</a> | <a href="#" data-toggle="modal" data-target="#availmeta">Available Metadata</a></p>
+    <form id="search-form" name="search-form" class="form-inline">
+        <input type="textbox" id="searchbox" name="searchbox" class="form-control" style="width:80%;white-space:nowrap;" />
+      <button type="submit" id="submit-button" class="btn btn-default">Submit</button>
+    </form>
+    <span id="search-error" style="color:red"></span>
+  </div>
+  <div class="col-sm-12" id="searchmsg" name="searchmsg"></div>
+</div>
+<!--User Studies-->
+<div class="row">
+  <div class="col-sm-12" id="user-studies-div">
+    <h1>Available Studies</h1>
+    <table id="studies-table" class="display table-bordered table-hover">
+        <thead>
+            <tr>
+                <th></th>
+                <th>Title</th>
+                <th>Abstract</th>
+                <th>Study ID</th>
+                <th>Metadata Complete</th>
+                <th>Samples</th>
+                <th>Sequence Files</th>
+                <th>Shared With These Users</th>
+                <th>Principal Investigator</th>
+                <th>Pubmed ID(s)</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+<!--Abstract Modal-->
+<div class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true" id="study-abstract-modal">
+  <div class="modal-dialog modal-med">
+    <div class="modal-content">
+    <div class="modal-header">
+       <h3 id="title-text-area"></h3>
+    </div>
+    <div class="modal-body" id="abstract-text-area">
+      </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+    </div>
+    </div>
+  </div>
+</div>
+</form>
+<!--Search help modal-->
+<div class="modal fade search-example-modal" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true" id="searchexample">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header"><h2>Search help<h2></div>
+      <div class="modal-body">
+        <p>A basic search argument consists of three parts: The metadata category to search over, the operator to use, and the value to use in the search. For example, to retrieve all soil samples in the database, the search argument would be:</p>
+        <p><b>env_matter includes soil</b></p>
+        <p>Valid operators for searches are:</p>
+        <table class="table table-hover" style="width:60%">
+        <tr><th>Operator</th><th>Function</th></tr>
+        <tr><td><</td><td> Less than (for numeric values)</td></tr>
+        <tr><td>></td><td> Greater than (for numeric values)</td></tr>
+        <tr><td><=</td><td> Less than or equal (for numeric values)</td></tr>
+        <tr><td>>=</td><td> Greater than or equal (for numeric values)</td></tr>
+        <tr><td>=</td><td> Equals (matches exact numberic value or string)</td></tr>
+        <tr><td>includes</td><td>Partial string matching</td></tr>
+        </table>
+        <p>Complex queries can also be created by using AND, OR, and NOT logic words words. These connect search arguments into larger search queries.</p>
+        <table class="table table-hover" style="width:60%">
+        <tr><th>Logic</th><th>Function</th></tr>
+        <tr><td>AND</td><td>Find samples that fit both search arguments</td></tr>
+        <tr><td>OR</td><td>Find samples that fit either search argument</td></tr>
+        <tr><td>NOT</td><td>Find samples that don't include the value of the next search argument</td></tr>
+        </table>
+
+        <p>As an example, if we want all soil samples that are low or extremely high pH, we can use the following search:</p>
+        <p><b>env_matter includes soil AND (ph < 4 OR ph > 8)</b></p>
+        <p>You can search for multi-word phrases using quotes. For example, to search for any study with "chicken pox" in the title, the query would be:</p>
+        <p><b>study_title includes "chicken pox"</b></p>
+        <p>Note that you can not use wild cards in any string searches. Only alphanumeric characters and colons are supported.</p>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- modal view to enter sharing settings -->
+<div class="modal fade" id="share-study-modal-view" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title" id="myModalLabel">Modify Sharing Settings</h4>
+      </div>
+      <form role="form" action="/study/sharing/" method="post">
+        <div class="modal-body">
+          <div>
+            <div class="form-group">
+              <label for="users_list">Add/Remove Users</label>
+              <select multiple class="chosen-select" id="users_list" data-placeholder=" ">
+                {% for email in all_emails_except_current %}
+                <option value="{{ email }}">{{ email }} </option>
+                {% end %}
+              </select>
+              <br>
+              <br>
+              Adding or removing email addresses automatically updates who the study is shared with. Once you click the `X` or give mouse focus to the `Your Studies` page you'll see your new sharing settings.
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+<!--Available metadata modal-->
+<div class="modal fade seaerch-example-modal" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true" id="availmeta">
+  <div class="modal-dialog modal-sm">
+    <div class="modal-content">
+      <div class="modal-header"><h2>Available metadata<h2></div>
+      <div class="modal-body">
+        {% for meta in availmeta %}
+          <a href="#" onclick="add_metacat('{{meta}}')">{{meta}}</a><br />
+        {% end %}
+      </div>
+    </div>
+  </div>
+</div>
+{% end %}
