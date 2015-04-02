@@ -79,11 +79,6 @@ def ware():
     pass
 
 
-@qiita.group()
-def log():
-    pass
-
-
 # #############################################################################
 # DB COMMANDS
 # #############################################################################
@@ -346,16 +341,18 @@ def status():
         click.echo(r_client.ttl('sysmessage'), "seconds remaining")
 
 
-@log.command()
-@click.argument('entries', required=False, type=int, default=10)
-def get(entries):
+@qiita.command()
+@click.option('--n', required=False, type=click.IntRange(0, None), default=10,
+              help="Number of most recent log entries to retrieve.",
+              show_default=True)
+def log(n):
 
     width = click.get_terminal_size()[0]
 
     template = width*"=" + "\nTime: {}\nMessage:\n{}\nInfo:{}\n"
 
     lines = []
-    for e in LogEntry.newest_records(entries):
+    for e in LogEntry.newest_records(n):
 
         info = []
         for i in e.info:
