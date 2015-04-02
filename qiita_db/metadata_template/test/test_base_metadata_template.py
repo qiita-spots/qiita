@@ -53,11 +53,5 @@ class TestMetadataTemplate(TestCase):
         with self.assertRaises(IncompetentQiitaDeveloperError):
             MetadataTemplate._table_name(self.study)
 
-    def test_to_dataframe(self):
-        """to dataframeraises an error because it's not called from a subclass
-        """
-        with self.assertRaises(TypeError):
-            MetadataTemplate.to_dataframe()
-
 if __name__ == '__main__':
     main()

@@ -824,8 +824,6 @@ class MetadataTemplate(QiitaObject):
         pandas DataFrame
             The metadata in the template,indexed on sample id
         """
-        # Check that we are not instantiating the base class
-        self._check_subclass()
         conn_handler = SQLConnectionHandler()
         cols = get_table_cols(self._table, conn_handler)
         if 'study_id' in cols:
