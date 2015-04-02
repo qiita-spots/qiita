@@ -10,7 +10,6 @@ from unittest import TestCase, main
 
 from qiita_core.util import qiita_test_checker
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
-from qiita_db.exceptions import QiitaDBNotImplementedError
 from qiita_db.study import Study
 from qiita_db.metadata_template.base_metadata_template import (
     MetadataTemplate, BaseSample)
