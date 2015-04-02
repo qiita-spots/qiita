@@ -533,6 +533,94 @@ class TestPrepTemplateReadOnly(BaseTestPrepTemplate):
             u'samp_size', u'sequencing_meth', u'illumina_technology',
             u'sample_center', u'pcr_primers', u'study_center'})
 
+    def test_add_common_creation_steps_to_queue(self):
+        """add_common_creation_steps_to_queue adds the correct sql statements
+        """
+        metadata_dict = {
+            '2.SKB8.640193': {'center_name': 'ANL',
+                              'center_project_name': 'Test Project',
+                              'emp_status_id': 1,
+                              'str_column': 'Value for sample 1',
+                              'linkerprimersequence': 'GTGCCAGCMGCCGCGGTAA',
+                              'barcodesequence': 'GTCCGCAAGTTA',
+                              'run_prefix': "s_G1_L001_sequences",
+                              'platform': 'ILLUMINA',
+                              'library_construction_protocol': 'AAAA',
+                              'experiment_design_description': 'BBBB'},
+            '2.SKD8.640184': {'center_name': 'ANL',
+                              'center_project_name': 'Test Project',
+                              'emp_status_id': 1,
+                              'str_column': 'Value for sample 2',
+                              'linkerprimersequence': 'GTGCCAGCMGCCGCGGTAA',
+                              'barcodesequence': 'CGTAGAGCTCTC',
+                              'run_prefix': "s_G1_L001_sequences",
+                              'platform': 'ILLUMINA',
+                              'library_construction_protocol': 'AAAA',
+                              'experiment_design_description': 'BBBB'},
+            }
+        metadata = pd.DataFrame.from_dict(metadata_dict, orient='index')
+
+        conn_handler = SQLConnectionHandler()
+        queue_name = "TEST_QUEUE"
+        conn_handler.create_queue(queue_name)
+        PrepTemplate._add_common_creation_steps_to_queue(
+            metadata, 2, conn_handler, queue_name)
+
+        sql_insert_common = (
+            'INSERT INTO qiita.common_prep_info '
+            '(prep_template_id, sample_id, center_name, center_project_name, '
+            'emp_status_id) '
+            'VALUES (%s, %s, %s, %s, %s)')
+        sql_insert_common_params_1 = (2, '2.SKB8.640193', 'ANL',
+                                      'Test Project', 1)
+        sql_insert_common_params_2 = (2, '2.SKD8.640184', 'ANL',
+                                      'Test Project', 1)
+
+        sql_insert_prep_columns = (
+            'INSERT INTO qiita.prep_columns '
+            '(prep_template_id, column_name, column_type) '
+            'VALUES (%s, %s, %s)')
+
+        sql_create_table = (
+            'CREATE TABLE qiita.prep_2 '
+            '(sample_id varchar NOT NULL, str_column varchar, '
+            'run_prefix varchar, barcodesequence varchar, platform varchar, '
+            'linkerprimersequence varchar, '
+            'experiment_design_description varchar, '
+            'library_construction_protocol varchar)')
+
+        sql_insert_dynamic = (
+            'INSERT INTO qiita.prep_2 '
+            '(sample_id, str_column, run_prefix, barcodesequence, platform, '
+            'linkerprimersequence, experiment_design_description, '
+            'library_construction_protocol) '
+            'VALUES (%s, %s, %s, %s, %s, %s, %s, %s)')
+
+        sql_insert_dynamic_params_1 = (
+            '2.SKB8.640193', 'Value for sample 1', 's_G1_L001_sequences',
+            'GTCCGCAAGTTA', 'ILLUMINA', 'GTGCCAGCMGCCGCGGTAA', 'BBBB', 'AAAA')
+        sql_insert_dynamic_params_2 = (
+            '2.SKD8.640184', 'Value for sample 2', 's_G1_L001_sequences',
+            'CGTAGAGCTCTC', 'ILLUMINA', 'GTGCCAGCMGCCGCGGTAA', 'BBBB', 'AAAA')
+
+        exp = [
+            (sql_insert_common, sql_insert_common_params_1),
+            (sql_insert_common, sql_insert_common_params_2),
+            (sql_insert_prep_columns, (2, 'str_column', 'varchar')),
+            (sql_insert_prep_columns, (2, 'run_prefix', 'varchar')),
+            (sql_insert_prep_columns, (2, 'barcodesequence', 'varchar')),
+            (sql_insert_prep_columns, (2, 'platform', 'varchar')),
+            (sql_insert_prep_columns, (2, 'linkerprimersequence', 'varchar')),
+            (sql_insert_prep_columns,
+                (2, 'experiment_design_description', 'varchar')),
+            (sql_insert_prep_columns,
+                (2, 'library_construction_protocol', 'varchar')),
+            (sql_create_table, None),
+            (sql_insert_dynamic, sql_insert_dynamic_params_1),
+            (sql_insert_dynamic, sql_insert_dynamic_params_2)]
+
+        self.assertEqual(conn_handler.queues[queue_name], exp)
+
 
 @qiita_test_checker()
 class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
