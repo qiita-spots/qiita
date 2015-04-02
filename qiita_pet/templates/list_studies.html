@@ -9,9 +9,21 @@
 var current_study;
 var ajaxURL = "/study/search/?&user={{current_user.id}}&sEcho=" + Math.floor(Math.random()*1001);
 $(document).ready(function() {
+
+        function format ( d ) {
+            // `d` is the original data object for the row
+            var proc_data_table = '<table cellpadding="5" cellspacing="0" border="0" style="padding-left:50px;"><tr><th></th><th>ID</th><th>Data type</th><th>Processed Date</th><th>Reference</th></tr>';
+            for(i=0;i<d.proc_data_info.length;i++) {
+              var proc_data = d.proc_data_info[i];
+              proc_data_table += '<tr><td><input type="checkbox"></td><td>' + proc_data.pid + '</td><td>' + proc_data.data_type + '</td><td>' + proc_data.processed_date + '</td><td>' + proc_data.refrence + ' ' + proc_data.reference_version + '</td></tr>';
+            }
+            proc_data_table += '</table>';
+            return proc_data_table;
+        }
+
         $('#studies-table').dataTable({
             "columns": [
-              { "data": "checkbox" },
+              {"className": 'details-control', "orderable": false, "data": null, "defaultContent": ''},
               { "data": "title" },
               { "data": "abstract" },
               { "data": "id" },
@@ -39,6 +51,22 @@ $(document).ready(function() {
                 }
             } 
         });
+    // Add event listener for opening and closing details
+    $('#studies-table tbody').on('click', 'td.details-control', function () {
+        var tr = $(this).closest('tr');
+        var row = table.row( tr );
+ 
+        if ( row.child.isShown() ) {
+            // This row is already open - close it
+            row.child.hide();
+            tr.removeClass('shown');
+        }
+        else {
+            // Open this row
+            row.child( format(row.data()) ).show();
+            tr.addClass('shown');
+        }
+    } );
 
     $('#users_list').chosen({width: "100%"});
     $('#users_list').on('change', function(evt, params) {

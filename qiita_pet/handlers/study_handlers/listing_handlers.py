@@ -21,6 +21,7 @@ from qiita_db.logger import LogEntry
 from qiita_db.exceptions import QiitaDBIncompatibleDatatypeError
 from qiita_db.util import get_table_cols
 from qiita_db.data import ProcessedData
+from qiita_core.exceptions import IncompetentQiitaDeveloperError
 
 from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_pet.handlers.util import study_person_linkifier, pubmed_linkifier
@@ -42,13 +43,37 @@ def _get_shared_links_for_study(study):
     return ", ".join(shared)
 
 
-def _build_study_info(user, results=None):
-    """builds list of dicts for studies table, with all html formatted"""
+def _build_study_info(user, study_proc=None, proc_samples=None):
+    """builds list of dicts for studies table, with all html formatted
+
+    Parameters
+    ----------
+    user : User object
+        logged in user
+    study_proc : dict of lists
+        Dictionary keyed on study_id that lists all processed data associated
+        with that study.
+    proc_samples : dict of lists
+        Dictionary keyed on proc_data_id that lists all samples associated with
+        that processed data.
+
+    Notes
+    -----
+    Both study_proc and proc_samples must be passed, or neither passed.
+    """
+    # Logic check to make sure both needed parts passed
+    if study_proc is not None and proc_samples is None:
+        raise IncompetentQiitaDeveloperError(
+            'Must pass proc_samples when study_proc given')
+    elif proc_samples is not None and study_proc is None:
+        raise IncompetentQiitaDeveloperError(
+            'Must pass study_proc when proc_samples given')
+
     # get list of studies for table
     study_list = user.user_studies.union(
         Study.get_by_status('public')).union(user.shared_studies)
-    if results is not None:
-        study_list = study_list.intersection(results)
+    if study_proc is not None:
+        study_list = study_list.intersection(study_proc)
     if not study_list:
         # No studies left so no need to continue
         return []
@@ -63,6 +88,13 @@ def _build_study_info(user, results=None):
     for row, info in enumerate(study_info):
         study = Study(info['study_id'])
         status = study.status
+        # if needed, get all the proc data info since no search results passed
+        if study_proc is None:
+            proc_data = study.processed_data()
+            proc_samples = {}
+            study_proc = {study.id: proc_data}
+            for pid in proc_data:
+                proc_samples[pid] = ProcessedData(pid).samples
         # Just passing the email address as the name here, since
         # name is not a required field in qiita.qiita_user
         PI = StudyPerson(info['principal_investigator_id'])
@@ -95,6 +127,14 @@ def _build_study_info(user, results=None):
                       "data-target='#share-study-modal-view' "
                       "onclick='modify_sharing({0});'>Modify</a>".format(
                           study.id, shared))
+        # Build the proc data info list for the child row in datatable
+        proc_data_info = []
+        for pid in study_proc[study.id]:
+            proc_data = ProcessedData(pid)
+            info = proc_data.processing_info
+            info['pid'] = pid
+            info['samples'] = proc_samples[pid]
+            proc_data_info.append(info)
 
         infolist.append({
             "checkbox": "<input type='checkbox' value='%d' />" % study.id,
@@ -107,8 +147,8 @@ def _build_study_info(user, results=None):
             "pi": PI,
             "pmid": pmids,
             "status": status,
-            "abstract": info["study_abstract"]
-
+            "abstract": info["study_abstract"],
+            "proc_data_info": proc_data_info
         })
     return infolist
 
@@ -200,7 +240,8 @@ class SearchStudiesAJAX(BaseHandler):
             # Search for samples matching the query
             search = QiitaStudySearch()
             try:
-                res, meta = search(query, self.current_user)
+                search(query, self.current_user)
+                study_proc, proc_samples, _ = search.filter_by_processed_data()
             except ParseException:
                 self.clear()
                 self.set_status(400)
@@ -223,9 +264,10 @@ class SearchStudiesAJAX(BaseHandler):
                                 info={'User': self.current_user.id,
                                       'query': query})
                 return
-            if not res:
-                res = {}
-        info = _build_study_info(self.current_user, results=res)
+        else:
+            study_proc = proc_samples = None
+        info = _build_study_info(self.current_user, study_proc=study_proc,
+                                 proc_samples=proc_samples)
         # build the table json
         results = {
             "sEcho": echo,
