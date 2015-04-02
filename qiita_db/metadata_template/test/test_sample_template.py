@@ -7,18 +7,14 @@
 # -----------------------------------------------------------------------------
 
 from future.builtins import zip
-from six import StringIO
 from unittest import TestCase, main
 from datetime import datetime
 from tempfile import mkstemp
-from time import strftime
 from os import close, remove
-from os.path import join, basename
 from collections import Iterable
 
 import numpy.testing as npt
 import pandas as pd
-from pandas.util.testing import assert_frame_equal
 
 from qiita_core.util import qiita_test_checker
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
@@ -30,10 +26,9 @@ from qiita_db.exceptions import (QiitaDBDuplicateError, QiitaDBUnknownIDError,
                                  QiitaDBWarning)
 from qiita_db.study import Study, StudyPerson
 from qiita_db.user import User
-from qiita_db.data import RawData, ProcessedData
-from qiita_db.util import (exists_table, get_db_files_base_dir, get_mountpoint,
-                           get_count, get_table_cols)
-from qiita_db.metadata_template.smaple_template import SampleTemplate, Sample
+from qiita_db.util import exists_table, get_table_cols
+from qiita_db.metadata_template.sample_template import SampleTemplate, Sample
+from qiita_db.metadata_template.prep_template import PrepTemplate, PrepSample
 
 
 @qiita_test_checker()
@@ -1281,6 +1276,28 @@ class TestSampleTemplate(TestCase):
                ['1.SKM6.640187'], ['1.SKD5.640186'], ['1.SKD1.640179'],
                ['1.Sample1'], ['1.Sample2'], ['1.Sample3'], ['1.Sample5']]
         self.assertEqual(obs, exp)
+
+
+EXP_SAMPLE_TEMPLATE = (
+    "sample_name\tcollection_timestamp\tdescription\thas_extracted_data\t"
+    "has_physical_specimen\thost_subject_id\tint_column\tlatitude\tlongitude\t"
+    "physical_location\trequired_sample_info_status\tsample_type\tstr_column\n"
+    "2.Sample1\t2014-05-29 12:24:51\tTest Sample 1\tTrue\tTrue\tNotIdentified"
+    "\t1\t42.42\t41.41\tlocation1\treceived\ttype1\tValue for sample 1\n"
+    "2.Sample2\t2014-05-29 12:24:51\tTest Sample 2\tTrue\tTrue\tNotIdentified"
+    "\t2\t4.2\t1.1\tlocation1\treceived\ttype1\tValue for sample 2\n"
+    "2.Sample3\t2014-05-29 12:24:51\tTest Sample 3\tTrue\tTrue\tNotIdentified"
+    "\t3\t4.8\t4.41\tlocation1\treceived\ttype1\tValue for sample 3\n")
+
+EXP_SAMPLE_TEMPLATE_FEWER_SAMPLES = (
+    "sample_name\tcollection_timestamp\tdescription\thas_extracted_data\t"
+    "has_physical_specimen\thost_subject_id\tint_column\tlatitude\t"
+    "longitude\tphysical_location\trequired_sample_info_status\tsample_type\t"
+    "str_column\n"
+    "2.Sample1\t2014-05-29 12:24:51\tTest Sample 1\tTrue\tTrue\tNotIdentified"
+    "\t1\t42.42\t41.41\tlocation1\treceived\ttype1\tValue for sample 1\n"
+    "2.Sample3\t2014-05-29 12:24:51\tTest Sample 3\tTrue\tTrue\tNotIdentified"
+    "\t3\t4.8\t4.41\tlocation1\treceived\ttype1\tValue for sample 3\n")
 
 
 if __name__ == '__main__':

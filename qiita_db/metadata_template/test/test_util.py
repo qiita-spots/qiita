@@ -272,16 +272,6 @@ EXP_SAMPLE_TEMPLATE_DUPE_COLS = (
     "True\tNotIdentified\t4.8\t4.41\tlocation1\treceived\ttype1\t"
     "Value for sample 3\tValue for sample 3\n")
 
-EXP_SAMPLE_TEMPLATE_FEWER_SAMPLES = (
-    "sample_name\tcollection_timestamp\tdescription\thas_extracted_data\t"
-    "has_physical_specimen\thost_subject_id\tint_column\tlatitude\t"
-    "longitude\tphysical_location\trequired_sample_info_status\tsample_type\t"
-    "str_column\n"
-    "2.Sample1\t2014-05-29 12:24:51\tTest Sample 1\tTrue\tTrue\tNotIdentified"
-    "\t1\t42.42\t41.41\tlocation1\treceived\ttype1\tValue for sample 1\n"
-    "2.Sample3\t2014-05-29 12:24:51\tTest Sample 3\tTrue\tTrue\tNotIdentified"
-    "\t3\t4.8\t4.41\tlocation1\treceived\ttype1\tValue for sample 3\n")
-
 EXP_SAMPLE_TEMPLATE_SPACES = (
     "sample_name\tcollection_timestamp\tdescription\thas_extracted_data\t"
     "has_physical_specimen\thost_subject_id\tint_column\tlatitude\tlongitude\t"

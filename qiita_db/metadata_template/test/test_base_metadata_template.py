@@ -14,7 +14,7 @@ from qiita_db.exceptions import QiitaDBNotImplementedError
 from qiita_db.study import Study
 from qiita_db.metadata_template.base_metadata_template import (
     MetadataTemplate, BaseSample)
-from qiita_db.metadata_template.smaple_template import SampleTemplate
+from qiita_db.metadata_template.sample_template import SampleTemplate
 
 
 @qiita_test_checker()
