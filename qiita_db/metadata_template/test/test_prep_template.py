@@ -26,6 +26,7 @@ from qiita_db.exceptions import (QiitaDBUnknownIDError,
                                  QiitaDBExecutionError,
                                  QiitaDBColumnError,
                                  QiitaDBWarning)
+from qiita_db.sql_connection import SQLConnectionHandler
 from qiita_db.study import Study
 from qiita_db.data import RawData, ProcessedData
 from qiita_db.util import (exists_table, get_db_files_base_dir, get_mountpoint,
@@ -34,10 +35,7 @@ from qiita_db.metadata_template.prep_template import PrepTemplate, PrepSample
 from qiita_db.metadata_template.sample_template import SampleTemplate, Sample
 
 
-@qiita_test_checker()
-class TestPrepSample(TestCase):
-    """Tests the PrepSample class"""
-
+class SetUpTestPrepSample(TestCase):
     def setUp(self):
         self.prep_template = PrepTemplate(1)
         self.sample_id = '1.SKB8.640193'
@@ -53,6 +51,8 @@ class TestPrepSample(TestCase):
                                'sequencing_meth', 'illumina_technology',
                                'sample_center', 'pcr_primers', 'study_center'}
 
+
+class TestPrepSampleReadOnly(SetUpTestPrepSample):
     def test_init_unknown_error(self):
         """Init errors if the PrepSample id is not found in the template"""
         with self.assertRaises(QiitaDBUnknownIDError):
@@ -98,7 +98,8 @@ class TestPrepSample(TestCase):
 
     def test_get_categories(self):
         """Correctly returns the set of category headers"""
-        obs = self.tester._get_categories(self.conn_handler)
+        conn_handler = SQLConnectionHandler()
+        obs = self.tester._get_categories(conn_handler)
         self.assertEqual(obs, self.exp_categories)
 
     def test_len(self):
@@ -127,16 +128,6 @@ class TestPrepSample(TestCase):
         """Get item raises an error if category does not exists"""
         with self.assertRaises(KeyError):
             self.tester['Not_a_Category']
-
-    def test_setitem(self):
-        """setitem raises an error (currently not allowed)"""
-        with self.assertRaises(QiitaDBNotImplementedError):
-            self.tester['barcodesequence'] = 'GTCCGCAAGTTA'
-
-    def test_delitem(self):
-        """delitem raises an error (currently not allowed)"""
-        with self.assertRaises(QiitaDBNotImplementedError):
-            del self.tester['pcr_primers']
 
     def test_iter(self):
         """iter returns an iterator over the category headers"""
@@ -223,6 +214,20 @@ class TestPrepSample(TestCase):
     def test_get_none(self):
         """get returns none if the sample id is not present"""
         self.assertTrue(self.tester.get('Not_a_Category') is None)
+
+
+@qiita_test_checker()
+class TestPrepSampleReadWrite(SetUpTestPrepSample):
+    """Tests the PrepSample class"""
+    def test_setitem(self):
+        """setitem raises an error (currently not allowed)"""
+        with self.assertRaises(QiitaDBNotImplementedError):
+            self.tester['barcodesequence'] = 'GTCCGCAAGTTA'
+
+    def test_delitem(self):
+        """delitem raises an error (currently not allowed)"""
+        with self.assertRaises(QiitaDBNotImplementedError):
+            del self.tester['pcr_primers']
 
 
 @qiita_test_checker()
