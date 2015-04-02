@@ -25,7 +25,7 @@ function remove_sample(sid, pid, sample) {
 {% from qiita_db.study import Study %}
 {% from future.utils import viewitems %}
 <h1>Selected Samples</h1>
-{% for sid, proc_datas in viewitems(seldata) %}
+{% for sid, proc_datas in viewitems(sel_data) %}
   {% set study = Study(sid) %}
 <div class="row" id="study{{sid}}">
 	<div class="col-md-12" style="border:2px solid #a1a1a1; border-radius: 15px;">
