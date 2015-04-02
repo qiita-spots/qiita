@@ -43,11 +43,6 @@ class TestMetadataTemplate(TestCase):
         with self.assertRaises(IncompetentQiitaDeveloperError):
             MetadataTemplate(1)
 
-    def test_create(self):
-        """Create raises an error because it's not called from a subclass"""
-        with self.assertRaises(QiitaDBNotImplementedError):
-            MetadataTemplate.create()
-
     def test_exist(self):
         """Exists raises an error because it's not called from a subclass"""
         with self.assertRaises(IncompetentQiitaDeveloperError):

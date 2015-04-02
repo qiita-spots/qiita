@@ -431,7 +431,6 @@ class MetadataTemplate(QiitaObject):
 
     Methods
     -------
-    create
     exists
     __len__
     __getitem__
