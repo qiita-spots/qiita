@@ -24,6 +24,7 @@ from qiita_db.exceptions import (QiitaDBDuplicateError, QiitaDBUnknownIDError,
                                  QiitaDBExecutionError,
                                  QiitaDBColumnError, QiitaDBError,
                                  QiitaDBWarning)
+from qiita_db.sql_connection import SQLConnectionHandler
 from qiita_db.study import Study, StudyPerson
 from qiita_db.user import User
 from qiita_db.util import exists_table, get_table_cols
@@ -31,10 +32,7 @@ from qiita_db.metadata_template.sample_template import SampleTemplate, Sample
 from qiita_db.metadata_template.prep_template import PrepTemplate, PrepSample
 
 
-@qiita_test_checker()
-class TestSample(TestCase):
-    """Tests the Sample class"""
-
+class SetUpTestSample(TestCase):
     def setUp(self):
         self.sample_template = SampleTemplate(1)
         self.sample_id = '1.SKB8.640193'
@@ -52,6 +50,8 @@ class TestSample(TestCase):
                                'tot_org_carb', 'description_duplicate',
                                'env_feature', 'latitude', 'longitude'}
 
+
+class TestSampleReadOnly(SetUpTestSample):
     def test_init_unknown_error(self):
         """Init raises an error if the sample id is not found in the template
         """
@@ -98,7 +98,8 @@ class TestSample(TestCase):
 
     def test_get_categories(self):
         """Correctly returns the set of category headers"""
-        obs = self.tester._get_categories(self.conn_handler)
+        conn_handler = SQLConnectionHandler()
+        obs = self.tester._get_categories(conn_handler)
         self.assertEqual(obs, self.exp_categories)
 
     def test_len(self):
@@ -129,18 +130,6 @@ class TestSample(TestCase):
         """Get item raises an error if category does not exists"""
         with self.assertRaises(KeyError):
             self.tester['Not_a_Category']
-
-    def test_setitem(self):
-        with self.assertRaises(QiitaDBColumnError):
-            self.tester['column that does not exist'] = 0.30
-        self.assertEqual(self.tester['tot_nitro'], 1.41)
-        self.tester['tot_nitro'] = '1234.5'
-        self.assertEqual(self.tester['tot_nitro'], 1234.5)
-
-    def test_delitem(self):
-        """delitem raises an error (currently not allowed)"""
-        with self.assertRaises(QiitaDBNotImplementedError):
-            del self.tester['DEPTH']
 
     def test_iter(self):
         """iter returns an iterator over the category headers"""
@@ -212,6 +201,21 @@ class TestSample(TestCase):
     def test_get_none(self):
         """get returns none if the sample id is not present"""
         self.assertTrue(self.tester.get('Not_a_Category') is None)
+
+
+@qiita_test_checker()
+class TestSampleReadWrite(SetUpTestSample):
+    def test_setitem(self):
+        with self.assertRaises(QiitaDBColumnError):
+            self.tester['column that does not exist'] = 0.30
+        self.assertEqual(self.tester['tot_nitro'], 1.41)
+        self.tester['tot_nitro'] = '1234.5'
+        self.assertEqual(self.tester['tot_nitro'], 1234.5)
+
+    def test_delitem(self):
+        """delitem raises an error (currently not allowed)"""
+        with self.assertRaises(QiitaDBNotImplementedError):
+            del self.tester['DEPTH']
 
 
 @qiita_test_checker()
