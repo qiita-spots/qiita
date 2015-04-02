@@ -23,8 +23,8 @@ from qiita_db.ontology import Ontology
 from qiita_db.util import (get_table_cols, get_emp_status, convert_to_id,
                            convert_from_id, get_mountpoint, infer_status)
 from .base_metadata_template import BaseSample, MetadataTemplate
-from .util import (get_invalid_sample_names, _prefix_sample_names_with_id,
-                   _as_python_types, _get_datatypes,
+from .util import (get_invalid_sample_names, prefix_sample_names_with_id,
+                   as_python_types, get_datatypes,
                    load_template_to_dataframe)
 from .constants import (TARGET_GENE_DATA_TYPES, RENAME_COLS_DICT,
                         REQUIRED_TARGET_GENE_COLS)
@@ -124,7 +124,7 @@ class PrepTemplate(MetadataTemplate):
         md_template = deepcopy(md_template)
 
         # Prefix the sample names with the study_id
-        _prefix_sample_names_with_id(md_template, study.id)
+        prefix_sample_names_with_id(md_template, study.id)
 
         # In the database, all the column headers are lowercase
         md_template.columns = [c.lower() for c in md_template.columns]
@@ -184,7 +184,7 @@ class PrepTemplate(MetadataTemplate):
                                  investigation_type))[0]
 
         # Insert values on required columns
-        values = _as_python_types(md_template, db_cols)
+        values = as_python_types(md_template, db_cols)
         values.insert(0, sample_ids)
         values.insert(0, [prep_id] * num_samples)
         values = [v for v in zip(*values)]
@@ -198,7 +198,7 @@ class PrepTemplate(MetadataTemplate):
 
         # Insert rows on *_columns table
         headers = list(set(headers).difference(db_cols))
-        datatypes = _get_datatypes(md_template.ix[:, headers])
+        datatypes = get_datatypes(md_template.ix[:, headers])
         # psycopg2 requires a list of tuples, in which each tuple is a set
         # of values to use in the string formatting of the query. We have all
         # the values in different lists (but in the same order) so use zip
@@ -221,7 +221,7 @@ class PrepTemplate(MetadataTemplate):
             "{1})".format(table_name, ', '.join(column_datatype)))
 
         # Insert values on custom table
-        values = _as_python_types(md_template, headers)
+        values = as_python_types(md_template, headers)
         values.insert(0, sample_ids)
         values = [v for v in zip(*values)]
         conn_handler.add_to_queue(

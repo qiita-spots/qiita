@@ -29,8 +29,8 @@ from qiita_db.util import (get_table_cols, get_required_sample_info_status,
 from qiita_db.study import Study
 from qiita_db.data import RawData
 from .base_metadata_template import BaseSample, MetadataTemplate
-from .util import (get_invalid_sample_names, _prefix_sample_names_with_id,
-                   _as_python_types, _get_datatypes)
+from .util import (get_invalid_sample_names, prefix_sample_names_with_id,
+                   as_python_types, get_datatypes)
 from .prep_template import PrepTemplate
 
 
@@ -219,7 +219,7 @@ class SampleTemplate(MetadataTemplate):
         md_template = deepcopy(md_template)
 
         # Prefix the sample names with the study_id
-        _prefix_sample_names_with_id(md_template, study_id)
+        prefix_sample_names_with_id(md_template, study_id)
 
         # In the database, all the column headers are lowercase
         md_template.columns = [c.lower() for c in md_template.columns]
@@ -291,7 +291,7 @@ class SampleTemplate(MetadataTemplate):
         db_cols.remove(cls._id_column)
 
         # Insert values on required columns
-        values = _as_python_types(md_template, db_cols)
+        values = as_python_types(md_template, db_cols)
         values.insert(0, sample_ids)
         values.insert(0, [study.id] * num_samples)
         values = [v for v in zip(*values)]
@@ -305,7 +305,7 @@ class SampleTemplate(MetadataTemplate):
 
         # Insert rows on *_columns table
         headers = list(set(headers).difference(db_cols))
-        datatypes = _get_datatypes(md_template.ix[:, headers])
+        datatypes = get_datatypes(md_template.ix[:, headers])
         # psycopg2 requires a list of tuples, in which each tuple is a set
         # of values to use in the string formatting of the query. We have all
         # the values in different lists (but in the same order) so use zip
@@ -328,7 +328,7 @@ class SampleTemplate(MetadataTemplate):
                 table_name, ', '.join(column_datatype)))
 
         # Insert values on custom table
-        values = _as_python_types(md_template, headers)
+        values = as_python_types(md_template, headers)
         values.insert(0, sample_ids)
         values = [v for v in zip(*values)]
         conn_handler.add_to_queue(
@@ -402,7 +402,7 @@ class SampleTemplate(MetadataTemplate):
         db_cols.remove(self._id_column)
 
         # Insert values on required columns
-        values = _as_python_types(md_template, db_cols)
+        values = as_python_types(md_template, db_cols)
         values.insert(0, sample_ids)
         values.insert(0, [self.study_id] * num_samples)
         values = [v for v in zip(*values)]
@@ -416,7 +416,7 @@ class SampleTemplate(MetadataTemplate):
 
         # Add missing columns to the sample template dynamic table
         headers = list(set(headers).difference(db_cols))
-        datatypes = _get_datatypes(md_template.ix[:, headers])
+        datatypes = get_datatypes(md_template.ix[:, headers])
         table_name = self._table_name(self.study_id)
         new_cols = set(md_template.columns).difference(
             set(self.metadata_headers()))
@@ -436,7 +436,7 @@ class SampleTemplate(MetadataTemplate):
                     table_name, scrub_data(category), dtypes_dict[category]))
 
         # Insert values on custom table
-        values = _as_python_types(md_template, headers)
+        values = as_python_types(md_template, headers)
         values.insert(0, sample_ids)
         values = [v for v in zip(*values)]
         conn_handler.add_to_queue(

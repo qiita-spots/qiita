@@ -15,7 +15,7 @@ from pandas.util.testing import assert_frame_equal
 
 from qiita_db.exceptions import QiitaDBColumnError, QiitaDBWarning
 from qiita_db.metadata_template.util import (
-    _get_datatypes, _as_python_types, _prefix_sample_names_with_id,
+    get_datatypes, as_python_types, prefix_sample_names_with_id,
     load_template_to_dataframe, get_invalid_sample_names)
 
 
@@ -33,13 +33,13 @@ class TestUtil(TestCase):
 
     def test_get_datatypes(self):
         """Correctly returns the data types of each column"""
-        obs = _get_datatypes(self.metadata_map.ix[:, self.headers])
+        obs = get_datatypes(self.metadata_map.ix[:, self.headers])
         exp = ['float8', 'varchar', 'integer']
         self.assertEqual(obs, exp)
 
     def test_as_python_types(self):
         """Correctly returns the columns as python types"""
-        obs = _as_python_types(self.metadata_map, self.headers)
+        obs = as_python_types(self.metadata_map, self.headers)
         exp = [[2.1, 3.1, 3],
                ['str1', '200', 'string30'],
                [1, 2, 3]]
@@ -52,7 +52,7 @@ class TestUtil(TestCase):
             '1.Sample3': {'int_col': 3, 'float_col': 3, 'str_col': 'string30'},
         }
         exp_df = pd.DataFrame.from_dict(exp_metadata_dict, orient='index')
-        _prefix_sample_names_with_id(self.metadata_map, 1)
+        prefix_sample_names_with_id(self.metadata_map, 1)
         self.metadata_map.sort_index(inplace=True)
         exp_df.sort_index(inplace=True)
         assert_frame_equal(self.metadata_map, exp_df)

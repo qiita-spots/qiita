@@ -24,7 +24,7 @@ else:
     from string import letters, digits
 
 
-def _get_datatypes(metadata_map):
+def get_datatypes(metadata_map):
     r"""Returns the datatype of each metadata_map column
 
     Parameters
@@ -48,7 +48,7 @@ def _get_datatypes(metadata_map):
     return datatypes
 
 
-def _as_python_types(metadata_map, headers):
+def as_python_types(metadata_map, headers):
     r"""Converts the values of metadata_map pointed by headers from numpy types
     to python types.
 
@@ -82,7 +82,7 @@ def _as_python_types(metadata_map, headers):
     return values
 
 
-def _prefix_sample_names_with_id(md_template, study_id):
+def prefix_sample_names_with_id(md_template, study_id):
     r"""prefix the sample_names in md_template with the study id
 
     Parameters
