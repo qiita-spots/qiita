@@ -537,8 +537,17 @@ class PrepTemplate(MetadataTemplate):
         }
 
         # getting the latest sample template
-        _, sample_template_fp = SampleTemplate(
-            self.study_id).get_filepaths()[0]
+        conn_handler = SQLConnectionHandler()
+        sql = """SELECT filepath_id, filepath
+                 FROM qiita.filepath
+                    JOIN qiita.sample_template_filepath
+                    USING (filepath_id)
+                 WHERE study_id=%s
+                 ORDER BY filepath_id DESC"""
+        sample_template_fname = conn_handler.execute_fetchall(
+            sql, (self.study_id,))[0][1]
+        _, fp = get_mountpoint('templates')[0]
+        sample_template_fp = join(fp, sample_template_fname)
 
         # reading files via pandas
         st = load_template_to_dataframe(sample_template_fp)
