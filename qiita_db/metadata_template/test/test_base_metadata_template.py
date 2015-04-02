@@ -17,7 +17,6 @@ from qiita_db.metadata_template.base_metadata_template import (
 from qiita_db.metadata_template.sample_template import SampleTemplate
 
 
-@qiita_test_checker()
 class TestBaseSample(TestCase):
     """Tests the BaseSample class"""
 
@@ -32,8 +31,7 @@ class TestBaseSample(TestCase):
             BaseSample.exists('SKM7.640188', SampleTemplate(1))
 
 
-@qiita_test_checker()
-class TestMetadataTemplate(TestCase):
+class TestMetadataTemplateReadOnly(TestCase):
     """Tests the MetadataTemplate base class"""
     def setUp(self):
         self.study = Study(1)
@@ -42,11 +40,6 @@ class TestMetadataTemplate(TestCase):
         """Init raises an error because it's not called from a subclass"""
         with self.assertRaises(IncompetentQiitaDeveloperError):
             MetadataTemplate(1)
-
-    def test_create(self):
-        """Create raises an error because it's not called from a subclass"""
-        with self.assertRaises(QiitaDBNotImplementedError):
-            MetadataTemplate.create()
 
     def test_exist(self):
         """Exists raises an error because it's not called from a subclass"""
@@ -59,11 +52,13 @@ class TestMetadataTemplate(TestCase):
         with self.assertRaises(IncompetentQiitaDeveloperError):
             MetadataTemplate._table_name(self.study)
 
-    def test_to_dataframe(self):
-        """to dataframeraises an error because it's not called from a subclass
-        """
-        with self.assertRaises(TypeError):
-            MetadataTemplate.to_dataframe()
+
+@qiita_test_checker()
+class TestMetadataTemplateReadWrite(TestCase):
+    def test_delete(self):
+        """delete raises an error because it's not called from a subclass"""
+        with self.assertRaises(IncompetentQiitaDeveloperError):
+            MetadataTemplate.delete(1)
 
 if __name__ == '__main__':
     main()
