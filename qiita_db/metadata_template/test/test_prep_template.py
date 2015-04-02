@@ -31,7 +31,7 @@ from qiita_db.data import RawData, ProcessedData
 from qiita_db.util import (exists_table, get_db_files_base_dir, get_mountpoint,
                            get_count)
 from qiita_db.metadata_template.prep_template import PrepTemplate, PrepSample
-from qiita_db.metadata_template.smaple_template import SampleTemplate, Sample
+from qiita_db.metadata_template.sample_template import SampleTemplate, Sample
 
 
 @qiita_test_checker()
