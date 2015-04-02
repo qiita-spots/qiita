@@ -72,11 +72,6 @@ class TestAnalysis(TestCase):
         self.analysis.status = "public"
         self.assertEqual(Analysis.get_by_status('public'), {1})
 
-    def test_get_user_default(self):
-        obs = Analysis.get_user_default(User('admin@foo.bar'))
-        exp = Analysis(4)
-        self.assertEqual(obs.id, exp.id)
-
     def test_has_access_public(self):
         self.conn_handler.execute("UPDATE qiita.analysis SET "
                                   "analysis_status_id = 6")

@@ -219,6 +219,10 @@ class UserTest(TestCase):
         with self.assertRaises(QiitaDBColumnError):
             self.user.info = self.userinfo
 
+    def test_default_analysis(self):
+        obs = self.user.default_analysis
+        self.assertEqual(obs, 4)
+
     def test_get_user_studies(self):
         user = User('test@foo.bar')
         self.assertEqual(user.user_studies, {1})

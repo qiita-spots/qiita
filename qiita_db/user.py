@@ -341,6 +341,13 @@ class User(QiitaObject):
         conn_handler.execute(sql, data)
 
     @property
+    def default_analysis(self):
+        sql = ("SELECT analysis_id FROM qiita.analysis WHERE email = %s AND "
+               "dflt = true")
+        conn_handler = SQLConnectionHandler()
+        return conn_handler.execute_fetchone(sql, [self._id])[0]
+
+    @property
     def sandbox_studies(self):
         """Returns a list of sandboxed study ids owned by the user"""
         sql = ("SELECT study_id FROM qiita.study s JOIN qiita.study_status ss "
