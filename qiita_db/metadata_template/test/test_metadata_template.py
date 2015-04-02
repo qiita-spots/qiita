@@ -33,7 +33,7 @@ from qiita_db.user import User
 from qiita_db.data import RawData, ProcessedData
 from qiita_db.util import (exists_table, get_db_files_base_dir, get_mountpoint,
                            get_count, get_table_cols)
-from qiita_db.metadata_template import (
+from qiita_db.metadata_template.metadata_template import (
     _get_datatypes, _as_python_types, MetadataTemplate, SampleTemplate,
     PrepTemplate, BaseSample, PrepSample, Sample, _prefix_sample_names_with_id,
     load_template_to_dataframe, get_invalid_sample_names)

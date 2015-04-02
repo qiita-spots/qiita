@@ -52,20 +52,21 @@ from skbio.util import find_duplicates
 from skbio.io.util import open_file
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
-from .exceptions import (QiitaDBDuplicateError, QiitaDBColumnError,
-                         QiitaDBUnknownIDError, QiitaDBNotImplementedError,
-                         QiitaDBDuplicateHeaderError, QiitaDBError,
-                         QiitaDBWarning, QiitaDBExecutionError)
-from .base import QiitaObject
-from .sql_connection import SQLConnectionHandler
-from .ontology import Ontology
-from .util import (exists_table, get_table_cols, get_emp_status,
-                   get_required_sample_info_status, convert_to_id,
-                   convert_from_id, get_mountpoint, insert_filepaths,
-                   scrub_data, infer_status)
-from .study import Study
-from .data import RawData
-from .logger import LogEntry
+from qiita_db.exceptions import (QiitaDBDuplicateError, QiitaDBColumnError,
+                                 QiitaDBUnknownIDError,
+                                 QiitaDBNotImplementedError,
+                                 QiitaDBDuplicateHeaderError, QiitaDBError,
+                                 QiitaDBWarning, QiitaDBExecutionError)
+from qiita_db.base import QiitaObject
+from qiita_db.sql_connection import SQLConnectionHandler
+from qiita_db.ontology import Ontology
+from qiita_db.util import (exists_table, get_table_cols, get_emp_status,
+                           get_required_sample_info_status, convert_to_id,
+                           convert_from_id, get_mountpoint, insert_filepaths,
+                           scrub_data, infer_status)
+from qiita_db.study import Study
+from qiita_db.data import RawData
+from qiita_db.logger import LogEntry
 
 if PY3:
     from string import ascii_letters as letters, digits
