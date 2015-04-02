@@ -51,6 +51,7 @@ from qiita_db.util import (exists_table, get_table_cols,
                            convert_to_id,
                            get_mountpoint, insert_filepaths)
 from qiita_db.logger import LogEntry
+from .util import as_python_types, get_datatypes
 
 
 class BaseSample(QiitaObject):
@@ -518,6 +519,81 @@ class MetadataTemplate(QiitaObject):
 
         return missing.union(
             cls._check_template_special_columns(md_template, obj))
+
+    @classmethod
+    def _add_common_creation_steps_to_queue(cls, md_template, obj_id,
+                                            conn_handler, queue_name):
+        r"""Adds the common creation steps to the queue in conn_handler
+
+        Parameters
+        ----------
+        md_template : DataFrame
+            The metadata template file contents indexed by sample ids
+        obj_id : int
+            The id of the object being created
+        conn_handler : SQLConnectionHandler
+            The connection handler object connected to the DB
+        queue_name : str
+            The queue where the SQL statements will be added
+        """
+        # Get some useful information from the metadata template
+        sample_ids = md_template.index.tolist()
+        num_samples = len(sample_ids)
+        headers = list(md_template.keys())
+
+        # Get the required columns from the DB
+        db_cols = get_table_cols(cls._table, conn_handler)
+        # Remove the sample_id and _id_column columns
+        db_cols.remove('sample_id')
+        db_cols.remove(cls._id_column)
+
+        # Insert values on required columns
+        values = as_python_types(md_template, db_cols)
+        values.insert(0, sample_ids)
+        values.insert(0, [obj_id] * num_samples)
+        values = [v for v in zip(*values)]
+        conn_handler.add_to_queue(
+            queue_name,
+            "INSERT INTO qiita.{0} ({1}, sample_id, {2}) "
+            "VALUES (%s, %s, {3})".format(cls._table, cls._id_column,
+                                          ', '.join(db_cols),
+                                          ', '.join(['%s'] * len(db_cols))),
+            values, many=True)
+
+        # Insert rows on *_columns table
+        headers = list(set(headers).difference(db_cols))
+        datatypes = get_datatypes(md_template.ix[:, headers])
+        # psycopg2 requires a list of tuples, in which each tuple is a set
+        # of values to use in the string formatting of the query. We have all
+        # the values in different lists (but in the same order) so use zip
+        # to create the list of tuples that psycopg2 requires.
+        values = [
+            v for v in zip([obj_id] * len(headers), headers, datatypes)]
+        conn_handler.add_to_queue(
+            queue_name,
+            "INSERT INTO qiita.{0} ({1}, column_name, column_type) "
+            "VALUES (%s, %s, %s)".format(cls._column_table, cls._id_column),
+            values, many=True)
+
+        # Create table with custom columns
+        table_name = cls._table_name(obj_id)
+        column_datatype = ["%s %s" % (col, dtype)
+                           for col, dtype in zip(headers, datatypes)]
+        conn_handler.add_to_queue(
+            queue_name,
+            "CREATE TABLE qiita.{0} (sample_id varchar NOT NULL, {1})".format(
+                table_name, ', '.join(column_datatype)))
+
+        # Insert values on custom table
+        values = as_python_types(md_template, headers)
+        values.insert(0, sample_ids)
+        values = [v for v in zip(*values)]
+        conn_handler.add_to_queue(
+            queue_name,
+            "INSERT INTO qiita.{0} (sample_id, {1}) "
+            "VALUES (%s, {2})".format(table_name, ", ".join(headers),
+                                      ', '.join(["%s"] * len(headers))),
+            values, many=True)
 
     @classmethod
     def delete(cls, id_):
