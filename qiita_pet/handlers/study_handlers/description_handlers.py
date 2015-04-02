@@ -697,6 +697,33 @@ class StudyDescriptionHandler(BaseHandler):
 
         callback((msg, msg_level, 'raw_data_tab', prep_id, None))
 
+    def delete_processed_data(self, study, user, callback):
+        """Delete the selected processed data
+
+        Parameters
+        ----------
+        study : Study
+            The current study object
+        user : User
+            The current user object
+        callback : function
+            The callback function to call with the results once the processing
+            is done
+        """
+        pd_id = int(self.get_argument('processed_data_id'))
+
+        try:
+            ProcessedData.delete(pd_id)
+            msg = ("Processed data %d has been deleted" % prep_template_id)
+            msg_level = "success"
+            pd_id = None
+        except Exception as e:
+            msg = ("Couldn't remove processed data %d: %s" %
+                   (pd_id, str(e)))
+            msg_level = "danger"
+
+        callback((msg, msg_level, 'processed_data_tab', pd_id, None))
+
     @authenticated
     def get(self, study_id):
         study, user, full_access = self._get_study_and_check_access(study_id)
@@ -728,7 +755,8 @@ class StudyDescriptionHandler(BaseHandler):
             make_sandbox=self.make_sandbox,
             update_investigation_type=self.update_investigation_type,
             delete_raw_data=self.delete_raw_data,
-            delete_prep_template=self.delete_prep_template)
+            delete_prep_template=self.delete_prep_template,
+            delete_processed_data=self.delete_processed_data)
 
         # Get the action that we need to perform
         action = self.get_argument("action", None)
