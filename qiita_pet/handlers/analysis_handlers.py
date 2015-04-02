@@ -371,7 +371,7 @@ class SelectedSamplesHandler(BaseHandler):
         # Format seldata to get study IDs for the processed data
         seldata = defaultdict(dict)
         proc_data_info = {}
-        selsamps = Analysis.get_user_default(self.current_user).samples
+        selsamps = Analysis(self.current_user.default_analysis).samples
         for pid, samps in viewitems(selsamps):
             proc_data = ProcessedData(pid)
             seldata[proc_data.study][pid] = samps

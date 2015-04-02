@@ -49,6 +49,7 @@ class User(QiitaObject):
     info
     user_studies
     shared_studies
+    default_analysis
     private_analyses
     shared_analyses
 
