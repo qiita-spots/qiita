@@ -532,6 +532,7 @@ class MetadataTemplate(QiitaObject):
         QiitaDBUnknownIDError
             If no metadata_template with id id_ exists
         """
+        cls._check_subclass()
         if not cls.exists(id_):
             raise QiitaDBUnknownIDError(id_, cls.__name__)
 
