@@ -17,7 +17,6 @@ from qiita_db.metadata_template.base_metadata_template import (
 from qiita_db.metadata_template.sample_template import SampleTemplate
 
 
-@qiita_test_checker()
 class TestBaseSample(TestCase):
     """Tests the BaseSample class"""
 
