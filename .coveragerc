@@ -6,7 +6,7 @@ omit =
     */__init__.py
 source = qiita_core,qiita_ware,qiita_db,qiita_pet 
 branch = True
-include = */qiita_*/*
+include = */qiita_*/*,qiita_db/metadata_template/*
 
 [report]
 exclude_lines =
