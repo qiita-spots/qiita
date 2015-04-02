@@ -535,6 +535,7 @@ class MetadataTemplate(QiitaObject):
         queue_name : str
             The queue where the SQL statements will be added
         """
+        cls._check_subclass()
         # Get some useful information from the metadata template
         sample_ids = md_template.index.tolist()
         num_samples = len(sample_ids)
