@@ -748,6 +748,102 @@ class TestSampleTemplateReadOnly(SetUpTestSampleTemplate):
         """get returns none if the sample id is not present"""
         self.assertTrue(self.tester.get('Not_a_Sample') is None)
 
+    def test_add_common_creation_steps_to_queue(self):
+        """add_common_creation_steps_to_queue adds the correct sql statements
+        """
+        metadata_dict = {
+            '2.Sample1': {'physical_location': 'location1',
+                          'has_physical_specimen': True,
+                          'has_extracted_data': True,
+                          'sample_type': 'type1',
+                          'required_sample_info_status_id': 1,
+                          'collection_timestamp':
+                          datetime(2014, 5, 29, 12, 24, 51),
+                          'host_subject_id': 'NotIdentified',
+                          'description': 'Test Sample 1',
+                          'str_column': 'Value for sample 1',
+                          'int_column': 1,
+                          'latitude': 42.42,
+                          'longitude': 41.41},
+            '2.Sample2': {'physical_location': 'location1',
+                          'has_physical_specimen': True,
+                          'has_extracted_data': True,
+                          'sample_type': 'type1',
+                          'int_column': 2,
+                          'required_sample_info_status_id': 1,
+                          'collection_timestamp':
+                          datetime(2014, 5, 29, 12, 24, 51),
+                          'host_subject_id': 'NotIdentified',
+                          'description': 'Test Sample 2',
+                          'str_column': 'Value for sample 2',
+                          'latitude': 4.2,
+                          'longitude': 1.1},
+            '2.Sample3': {'physical_location': 'location1',
+                          'has_physical_specimen': True,
+                          'has_extracted_data': True,
+                          'sample_type': 'type1',
+                          'required_sample_info_status_id': 1,
+                          'collection_timestamp':
+                          datetime(2014, 5, 29, 12, 24, 51),
+                          'host_subject_id': 'NotIdentified',
+                          'description': 'Test Sample 3',
+                          'str_column': 'Value for sample 3',
+                          'int_column': 3,
+                          'latitude': 4.8,
+                          'longitude': 4.41},
+            }
+        metadata = pd.DataFrame.from_dict(metadata_dict, orient='index')
+
+        conn_handler = SQLConnectionHandler()
+        queue_name = "TEST_QUEUE"
+        conn_handler.create_queue(queue_name)
+        SampleTemplate._add_common_creation_steps_to_queue(
+            metadata, 2, conn_handler, queue_name)
+
+        sql_insert_required = (
+            'INSERT INTO qiita.required_sample_info '
+            '(study_id, sample_id, physical_location, has_physical_specimen, '
+            'has_extracted_data, sample_type, required_sample_info_status_id, '
+            'collection_timestamp, host_subject_id, description, latitude, '
+            'longitude) '
+            'VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)')
+        sql_insert_required_params_1 = (
+            2, '2.Sample1', 'location1', True, True, 'type1', 1,
+            datetime(2014, 5, 29, 12, 24, 51), 'NotIdentified',
+            'Test Sample 1', 42.42, 41.41)
+        sql_insert_required_params_2 = (
+            2, '2.Sample2', 'location1', True, True, 'type1', 1,
+            datetime(2014, 5, 29, 12, 24, 51), 'NotIdentified',
+            'Test Sample 2', 4.2, 1.1)
+        sql_insert_required_params_3 = (
+            2, '2.Sample3', 'location1', True, True, 'type1', 1,
+            datetime(2014, 5, 29, 12, 24, 51), 'NotIdentified',
+            'Test Sample 3', 4.8, 4.41)
+
+        sql_insert_sample_cols = (
+            'INSERT INTO qiita.study_sample_columns '
+            '(study_id, column_name, column_type) '
+            'VALUES (%s, %s, %s)')
+        sql_crate_table = (
+            'CREATE TABLE qiita.sample_2 '
+            '(sample_id varchar NOT NULL, int_column integer, '
+            'str_column varchar)')
+
+        sql_insert_dynamic = (
+            'INSERT INTO qiita.sample_2 (sample_id, int_column, str_column) '
+            'VALUES (%s, %s, %s)')
+        exp = [
+            (sql_insert_required, sql_insert_required_params_1),
+            (sql_insert_required, sql_insert_required_params_2),
+            (sql_insert_required, sql_insert_required_params_3),
+            (sql_insert_sample_cols, (2, 'int_column', 'integer')),
+            (sql_insert_sample_cols, (2, 'str_column', 'varchar')),
+            (sql_crate_table, None),
+            (sql_insert_dynamic, ('2.Sample1', 1, 'Value for sample 1')),
+            (sql_insert_dynamic, ('2.Sample2', 2, 'Value for sample 2')),
+            (sql_insert_dynamic, ('2.Sample3', 3, 'Value for sample 3'))]
+        self.assertEqual(conn_handler.queues[queue_name], exp)
+
 
 @qiita_test_checker()
 class TestSampleTemplateReadWrite(SetUpTestSampleTemplate):
