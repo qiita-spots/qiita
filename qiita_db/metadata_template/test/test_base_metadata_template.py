@@ -31,8 +31,7 @@ class TestBaseSample(TestCase):
             BaseSample.exists('SKM7.640188', SampleTemplate(1))
 
 
-@qiita_test_checker()
-class TestMetadataTemplate(TestCase):
+class TestMetadataTemplateReadOnly(TestCase):
     """Tests the MetadataTemplate base class"""
     def setUp(self):
         self.study = Study(1)
@@ -53,6 +52,9 @@ class TestMetadataTemplate(TestCase):
         with self.assertRaises(IncompetentQiitaDeveloperError):
             MetadataTemplate._table_name(self.study)
 
+
+@qiita_test_checker()
+class TestMetadataTemplateReadWrite(TestCase):
     def test_delete(self):
         """delete raises an error because it's not called from a subclass"""
         with self.assertRaises(IncompetentQiitaDeveloperError):
