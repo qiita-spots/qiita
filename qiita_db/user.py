@@ -228,8 +228,8 @@ class User(QiitaObject):
         queue = "add_user_%s" % email
         conn_handler.create_queue(queue)
         # crete user
-        sql = ("INSERT INTO qiita.%s (%s) VALUES (%s)" %
-               (cls._table, ','.join(columns), ','.join(['%s'] * len(values))))
+        sql = "INSERT INTO qiita.{0} ({1}) VALUES ({2})".format(
+            cls._table, ','.join(columns), ','.join(['%s'] * len(values)))
         conn_handler.add_to_queue(queue, sql, values)
         # create user default sample holder
         sql = ("INSERT INTO qiita.analysis "
@@ -379,7 +379,7 @@ class User(QiitaObject):
     @property
     def private_analyses(self):
         """Returns a list of private analysis ids owned by the user"""
-        sql = ("Select analysis_id from qiita.analysis "
+        sql = ("SELECT analysis_id FROM qiita.analysis "
                "WHERE email = %s AND dflt = false")
         conn_handler = SQLConnectionHandler()
         analysis_ids = conn_handler.execute_fetchall(sql, (self._id, ))

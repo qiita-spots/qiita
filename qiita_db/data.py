@@ -1322,14 +1322,13 @@ class ProcessedData(BaseData):
         # Get the info from the dynamic table, including reference used
         sql = """SELECT * from qiita.{0}
             JOIN qiita.reference USING (reference_id)
-            WHERE processed_params_id = {1} AND reference_id = (
-            SELECT reference_id FROM qiita.{0} WHERE processed_params_id = {1})
+            WHERE processed_params_id = {1}
             """.format(static_info['processed_params_table'],
                        static_info['processed_params_id'])
         dynamic_info = dict(conn_handler.execute_fetchone(sql))
 
         # replace reference filepath_ids with full filepaths
-        # fiugre out what columns have filepaths and what don't
+        # figure out what columns have filepaths and what don't
         ref_fp_cols = {'sequence_filepath', 'taxonomy_filepath',
                        'tree_filepath'}
         fp_ids = [str(dynamic_info[col]) for col in ref_fp_cols
