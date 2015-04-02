@@ -32,7 +32,7 @@ from qiita_db.metadata_template.sample_template import SampleTemplate, Sample
 from qiita_db.metadata_template.prep_template import PrepTemplate, PrepSample
 
 
-class SetUpTestSample(TestCase):
+class BaseTestSample(TestCase):
     def setUp(self):
         self.sample_template = SampleTemplate(1)
         self.sample_id = '1.SKB8.640193'
@@ -51,7 +51,7 @@ class SetUpTestSample(TestCase):
                                'env_feature', 'latitude', 'longitude'}
 
 
-class TestSampleReadOnly(SetUpTestSample):
+class TestSampleReadOnly(BaseTestSample):
     def test_init_unknown_error(self):
         """Init raises an error if the sample id is not found in the template
         """
@@ -204,7 +204,7 @@ class TestSampleReadOnly(SetUpTestSample):
 
 
 @qiita_test_checker()
-class TestSampleReadWrite(SetUpTestSample):
+class TestSampleReadWrite(BaseTestSample):
     def test_setitem(self):
         with self.assertRaises(QiitaDBColumnError):
             self.tester['column that does not exist'] = 0.30
@@ -218,7 +218,7 @@ class TestSampleReadWrite(SetUpTestSample):
             del self.tester['DEPTH']
 
 
-class SetUpTestSampleTemplate(TestCase):
+class BaseTestSampleTemplate(TestCase):
     def _set_up(self):
         self.metadata_dict = {
             'Sample1': {'physical_location': 'location1',
@@ -552,7 +552,7 @@ class SetUpTestSampleTemplate(TestCase):
             remove(f)
 
 
-class TestSampleTemplateReadOnly(SetUpTestSampleTemplate):
+class TestSampleTemplateReadOnly(BaseTestSampleTemplate):
     def setUp(self):
         self._set_up()
 
@@ -750,7 +750,7 @@ class TestSampleTemplateReadOnly(SetUpTestSampleTemplate):
 
 
 @qiita_test_checker()
-class TestSampleTemplateReadWrite(SetUpTestSampleTemplate):
+class TestSampleTemplateReadWrite(BaseTestSampleTemplate):
     """Tests the SampleTemplate class"""
 
     def setUp(self):

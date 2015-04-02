@@ -35,7 +35,7 @@ from qiita_db.metadata_template.prep_template import PrepTemplate, PrepSample
 from qiita_db.metadata_template.sample_template import SampleTemplate, Sample
 
 
-class SetUpTestPrepSample(TestCase):
+class BaseTestPrepSample(TestCase):
     def setUp(self):
         self.prep_template = PrepTemplate(1)
         self.sample_id = '1.SKB8.640193'
@@ -52,7 +52,7 @@ class SetUpTestPrepSample(TestCase):
                                'sample_center', 'pcr_primers', 'study_center'}
 
 
-class TestPrepSampleReadOnly(SetUpTestPrepSample):
+class TestPrepSampleReadOnly(BaseTestPrepSample):
     def test_init_unknown_error(self):
         """Init errors if the PrepSample id is not found in the template"""
         with self.assertRaises(QiitaDBUnknownIDError):
@@ -217,7 +217,7 @@ class TestPrepSampleReadOnly(SetUpTestPrepSample):
 
 
 @qiita_test_checker()
-class TestPrepSampleReadWrite(SetUpTestPrepSample):
+class TestPrepSampleReadWrite(BaseTestPrepSample):
     """Tests the PrepSample class"""
     def test_setitem(self):
         """setitem raises an error (currently not allowed)"""
@@ -230,7 +230,7 @@ class TestPrepSampleReadWrite(SetUpTestPrepSample):
             del self.tester['pcr_primers']
 
 
-class SetUpTestPrepTemplate(TestCase):
+class BaseTestPrepTemplate(TestCase):
     def _set_up(self):
         self.metadata_dict = {
             'SKB8.640193': {'center_name': 'ANL',
@@ -330,7 +330,7 @@ class SetUpTestPrepTemplate(TestCase):
             remove(f)
 
 
-class TestPrepTemplateReadOnly(SetUpTestPrepTemplate):
+class TestPrepTemplateReadOnly(BaseTestPrepTemplate):
     def setUp(self):
         self._set_up()
 
@@ -535,7 +535,7 @@ class TestPrepTemplateReadOnly(SetUpTestPrepTemplate):
 
 
 @qiita_test_checker()
-class TestPrepTemplateReadWrite(SetUpTestPrepTemplate):
+class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
     """Tests the PrepTemplate class"""
 
     def setUp(self):
