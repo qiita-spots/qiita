@@ -1270,14 +1270,14 @@ class ProcessedData(BaseData):
         ------
         QiitaDBUnknownIDError
             If the processed data id doesn't exist
-        QiitaDBError
-            If the processed data has been used in an analysis
+        QiitaDBStatusError
+            If the processed data status is not sandbox
         """
-        conn_handler = SQLConnectionHandler()
+        if cls(processed_data_id).status != 'sandbox':
+            raise QiitaDBStatusError(
+                "Illegal operation on public processed data")
 
-        # check if the raw data exist
-        if not cls.exists(processed_data_id):
-            raise QiitaDBUnknownIDError(processed_data_id, "processed data")
+        conn_handler = SQLConnectionHandler()
 
         analysis_ids = [str(_id[0]) for _id in conn_handler.execute_fetchall(
             "SELECT DISTINCT analysis_id FROM qiita.analysis_sample WHERE "
