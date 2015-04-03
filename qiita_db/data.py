@@ -1268,10 +1268,10 @@ class ProcessedData(BaseData):
 
         Raises
         ------
-        QiitaDBUnknownIDError
-            If the processed data id doesn't exist
         QiitaDBStatusError
             If the processed data status is not sandbox
+        QiitaDBError
+            If the processed data has (meta)analyses
         """
         if cls(processed_data_id).status != 'sandbox':
             raise QiitaDBStatusError(
@@ -1279,15 +1279,16 @@ class ProcessedData(BaseData):
 
         conn_handler = SQLConnectionHandler()
 
-        analysis_ids = [str(_id[0]) for _id in conn_handler.execute_fetchall(
-            "SELECT DISTINCT analysis_id FROM qiita.analysis_sample WHERE "
-            "processed_data_id = {0} ORDER BY "
-            "analysis_id".format(processed_data_id))]
+        analyses = [str(n[0]) for n in conn_handler.execute_fetchall(
+            "SELECT DISTINCT name FROM qiita.analysis JOIN "
+            "qiita.analysis_sample USING (analysis_id) WHERE "
+            "processed_data_id = {0} ORDER BY name".format(processed_data_id))]
 
-        if analysis_ids:
+        if analyses:
             raise QiitaDBError(
-                "Processed data %d is linked to (meta)analyses: %s" %
-                (processed_data_id, ", ".join(analysis_ids)))
+                "Processed data %d cannot be removed because it is linked to "
+                "the following (meta)analysis: %s" % (processed_data_id,
+                                                      ', '.join(analyses)))
 
         # delete
         queue = "delete_processed_data_%d" % processed_data_id
