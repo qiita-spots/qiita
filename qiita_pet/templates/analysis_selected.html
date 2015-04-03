@@ -41,7 +41,7 @@ function remove_sample(sid, pid, sample) {
 	  </tr>
 	{% for pid, samples in viewitems(proc_datas) %}
 		<tr id="proc{{pid}}">
-	    <td>{{pid}} <a href="#" data-toggle="modal" data-target="#proc{{pid}}-settings-modal" onclick="return false;"><img src="/static/img/info_button.gif"></a></td>
+	    <td>{{pid}} <a href="#" data-toggle="modal" data-target="#proc{{pid}}-settings-modal" onclick="return false;"><span class="glyphicon glyphicon-info-sign"></span></a></td>
 	    <td>{{proc_info[pid]["data_type"]}}</td>
 	    <td>{{proc_info[pid]["processed_date"]}}</td>
 	    <td>{{proc_info[pid]["algorithm"]}}</td>
