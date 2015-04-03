@@ -16,7 +16,8 @@ from qiita_pet.handlers.user_handlers import (
     ChangeForgotPasswordHandler, ForgotPasswordHandler, UserProfileHandler)
 from qiita_pet.handlers.analysis_handlers import (
     SelectCommandsHandler, AnalysisWaitHandler, AnalysisResultsHandler,
-    ShowAnalysesHandler, SearchStudiesHandler, ResultsHandler)
+    ShowAnalysesHandler, SearchStudiesHandler, ResultsHandler,
+    SelectedSamplesHandler)
 from qiita_pet.handlers.study_handlers import (
     StudyEditHandler, ListStudiesHandler, SearchStudiesAJAX,
     StudyDescriptionHandler, MetadataSummaryHandler, EBISubmitHandler,
@@ -63,6 +64,7 @@ class Application(tornado.web.Application):
             (r"/analysis/wait/(.*)", AnalysisWaitHandler),
             (r"/analysis/results/(.*)", AnalysisResultsHandler),
             (r"/analysis/show/", ShowAnalysesHandler),
+            (r"/analysis/selected/", SelectedSamplesHandler),
             (r"/moi-ws/", MOIMessageHandler),
             (r"/consumer/", MessageHandler),
             (r"/admin/error/", LogEntryViewerHandler),
