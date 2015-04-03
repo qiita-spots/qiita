@@ -785,6 +785,20 @@ class ProcessedDataTests(TestCase):
         # preprocessed_data_id, processed_Data_id
         self.assertEqual(obs, [[1, 2]])
 
+    def test_delete(self):
+        """Correctly deletes a processed data and raises an error if id doesn't
+        exists or if it has been used in a (meta)analysis"""
+        pd = ProcessedData.create(self.params_table, self.params_id,
+                                  self.filepaths,
+                                  preprocessed_data=self.preprocessed_data,
+                                  processed_date=self.date)
+        ProcessedData.delete(pd.id)
+        with self.assertRaises(QiitaDBUnknownIDError):
+            ProcessedData.delete(pd.id)
+
+        with self.assertRaises(QiitaDBError):
+            ProcessedData.delete(1)
+
     def test_create_no_date(self):
         """Correctly adds a processed data with no date on it"""
         # All the other settings have been already tested on test_create
