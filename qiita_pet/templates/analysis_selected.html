@@ -12,6 +12,9 @@ function remove_proc_data(pid, sid) {
 
 function remove_sample(sid, pid, sample) {
 		document.getElementById(pid + '@' + sample).remove();
+		//decriment sample count for pid
+		var count = $('#proc' + pid + '-sample-count');
+		count.text(parseInt(count.text(), 10) - 1);
 		// remove proc data if all samples removed
 		if($('#proc' + pid + '-samples-table tbody').children().length === 0) { $('#proc'+pid).remove(); $('#proc' + pid + '-samples').remove(); }
 		// remove study if all proc data removed
@@ -31,20 +34,21 @@ function remove_sample(sid, pid, sample) {
 <div class="row" id="study{{sid}}">
 	<div class="col-md-12" style="border:2px solid #a1a1a1; border-radius: 15px;">
 	  <h2><a href="/study/description/{{sid}}">{{study.title}}</a></h2>
+	  <h3>Processed Data</h3>
 	  <table class='table table-striped' id='study{{sid}}-table'>
 	  <tr>
-	  	<th class="col-sm-2">Processed Data</th><th class="col-sm-1">id</th><th class="col-sm-1">Datatype</th><th class="col-sm-2">Processed Date</th><th class="col-sm-2">Algorithm</th><th class="col-sm-2">Reference</th><th></th>
+	  	<th class="col-sm-1">id</th><th class="col-sm-1">Datatype</th><th class="col-sm-2">Processed Date</th><th class="col-sm-2">Algorithm</th><th class="col-sm-2">Reference</th><th class="col-sm-1">Samples</th><th></th><th></th>
 	  </tr>
 	{% for pid, samples in viewitems(proc_datas) %}
 		<tr id="proc{{pid}}">
-		  <td><a href="#" onclick="$('#proc{{pid}}-samples').toggle(); return false;">Show/Hide samples</a></td>
 	    <td>{{pid}} <a data-toggle="modal" data-target="#proc{{pid}}-settings-modal"><img src="/static/img/info_button.gif"></a></td>
 	    <td>{{proc_info[pid]["data_type"]}}</td>
 	    <td>{{proc_info[pid]["processed_date"]}}</td>
 	    <td>{{proc_info[pid]["algorithm"]}}</td>
 	    <td>{{proc_info[pid]["reference_name"]}} {{proc_info[pid]["reference_version"]}}</td>
-	    <td> 
-	    	<a href="#" onclick = 'remove_proc_data({{pid}}, {{sid}})'>Remove</a></td>
+	    <td><span id="proc{{pid}}-sample-count">{% raw len(samples) %}</span></td>
+	    <td><a href="#" onclick="$('#proc{{pid}}-samples').toggle(); return false;">Show/Hide samples</a></td>
+	    <td><a href="#" onclick = 'remove_proc_data({{pid}}, {{sid}})'>Remove</a></td>
 		 </tr>
 		 <tr id="proc{{pid}}-samples" hidden><td colspan=7>
 		 <table class="table table-striped sample-table" id="proc{{pid}}-samples-table" style="width:50%">
