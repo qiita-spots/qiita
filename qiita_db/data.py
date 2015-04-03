@@ -1257,6 +1257,61 @@ class ProcessedData(BaseData):
         pd.add_filepaths(filepaths, conn_handler)
         return cls(pd_id)
 
+    @classmethod
+    def delete(cls, processed_data_id):
+        """Removes the processed data with id processed_data_id
+
+        Parameters
+        ----------
+        processed_data_id : int
+            The processed data id
+
+        Raises
+        ------
+        QiitaDBStatusError
+            If the processed data status is not sandbox
+        QiitaDBError
+            If the processed data has (meta)analyses
+        """
+        if cls(processed_data_id).status != 'sandbox':
+            raise QiitaDBStatusError(
+                "Illegal operation on non sandbox processed data")
+
+        conn_handler = SQLConnectionHandler()
+
+        analyses = [str(n[0]) for n in conn_handler.execute_fetchall(
+            "SELECT DISTINCT name FROM qiita.analysis JOIN "
+            "qiita.analysis_sample USING (analysis_id) WHERE "
+            "processed_data_id = {0} ORDER BY name".format(processed_data_id))]
+
+        if analyses:
+            raise QiitaDBError(
+                "Processed data %d cannot be removed because it is linked to "
+                "the following (meta)analysis: %s" % (processed_data_id,
+                                                      ', '.join(analyses)))
+
+        # delete
+        queue = "delete_processed_data_%d" % processed_data_id
+        conn_handler.create_queue(queue)
+
+        sql = ("DELETE FROM qiita.preprocessed_processed_data WHERE "
+               "processed_data_id = {0}".format(processed_data_id))
+        conn_handler.add_to_queue(queue, sql)
+
+        sql = ("DELETE FROM qiita.processed_filepath WHERE "
+               "processed_data_id = {0}".format(processed_data_id))
+        conn_handler.add_to_queue(queue, sql)
+
+        sql = ("DELETE FROM qiita.study_processed_data WHERE "
+               "processed_data_id = {0}".format(processed_data_id))
+        conn_handler.add_to_queue(queue, sql)
+
+        sql = ("DELETE FROM qiita.processed_data WHERE "
+               "processed_data_id = {0}".format(processed_data_id))
+        conn_handler.add_to_queue(queue, sql)
+
+        conn_handler.execute_queue(queue)
+
     @property
     def preprocessed_data(self):
         r"""The preprocessed data id used to generate the processed data"""
