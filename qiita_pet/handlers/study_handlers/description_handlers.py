@@ -714,7 +714,7 @@ class StudyDescriptionHandler(BaseHandler):
 
         try:
             ProcessedData.delete(pd_id)
-            msg = ("Processed data %d has been deleted" % prep_template_id)
+            msg = ("Processed data %d has been deleted" % pd_id)
             msg_level = "success"
             pd_id = None
         except Exception as e:
