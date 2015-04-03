@@ -1275,7 +1275,7 @@ class ProcessedData(BaseData):
         """
         if cls(processed_data_id).status != 'sandbox':
             raise QiitaDBStatusError(
-                "Illegal operation on public processed data")
+                "Illegal operation on non sandbox processed data")
 
         conn_handler = SQLConnectionHandler()
 
