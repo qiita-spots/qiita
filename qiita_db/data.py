@@ -1257,6 +1257,61 @@ class ProcessedData(BaseData):
         pd.add_filepaths(filepaths, conn_handler)
         return cls(pd_id)
 
+    @classmethod
+    def delete(cls, processed_data_id):
+        """Removes the processed data with id processed_data_id
+
+        Parameters
+        ----------
+        processed_data_id : int
+            The processed data id
+
+        Raises
+        ------
+        QiitaDBStatusError
+            If the processed data status is not sandbox
+        QiitaDBError
+            If the processed data has (meta)analyses
+        """
+        if cls(processed_data_id).status != 'sandbox':
+            raise QiitaDBStatusError(
+                "Illegal operation on non sandbox processed data")
+
+        conn_handler = SQLConnectionHandler()
+
+        analyses = [str(n[0]) for n in conn_handler.execute_fetchall(
+            "SELECT DISTINCT name FROM qiita.analysis JOIN "
+            "qiita.analysis_sample USING (analysis_id) WHERE "
+            "processed_data_id = {0} ORDER BY name".format(processed_data_id))]
+
+        if analyses:
+            raise QiitaDBError(
+                "Processed data %d cannot be removed because it is linked to "
+                "the following (meta)analysis: %s" % (processed_data_id,
+                                                      ', '.join(analyses)))
+
+        # delete
+        queue = "delete_processed_data_%d" % processed_data_id
+        conn_handler.create_queue(queue)
+
+        sql = ("DELETE FROM qiita.preprocessed_processed_data WHERE "
+               "processed_data_id = {0}".format(processed_data_id))
+        conn_handler.add_to_queue(queue, sql)
+
+        sql = ("DELETE FROM qiita.processed_filepath WHERE "
+               "processed_data_id = {0}".format(processed_data_id))
+        conn_handler.add_to_queue(queue, sql)
+
+        sql = ("DELETE FROM qiita.study_processed_data WHERE "
+               "processed_data_id = {0}".format(processed_data_id))
+        conn_handler.add_to_queue(queue, sql)
+
+        sql = ("DELETE FROM qiita.processed_data WHERE "
+               "processed_data_id = {0}".format(processed_data_id))
+        conn_handler.add_to_queue(queue, sql)
+
+        conn_handler.execute_queue(queue)
+
     @property
     def preprocessed_data(self):
         r"""The preprocessed data id used to generate the processed data"""
@@ -1303,12 +1358,53 @@ class ProcessedData(BaseData):
         return data_type[0]
 
     @property
-    def processed_date(self):
-        """Return the processed date"""
+    def processing_info(self):
+        """Return the processing item and settings used to create the data
+
+        Returns
+        -------
+        dict
+            Parameter settings keyed to the parameter, along with date and
+            algorithm used
+        """
+        # Get processed date and the info for the dynamic table
         conn_handler = SQLConnectionHandler()
-        return conn_handler.execute_fetchone(
-            "SELECT processed_date FROM qiita.{0} WHERE "
-            "processed_data_id=%s".format(self._table), (self.id,))[0]
+        sql = """SELECT processed_date, processed_params_table,
+            processed_params_id FROM qiita.{0}
+            WHERE processed_data_id=%s""".format(self._table)
+        static_info = conn_handler.execute_fetchone(sql, (self.id,))
+
+        # Get the info from the dynamic table, including reference used
+        sql = """SELECT * from qiita.{0}
+            JOIN qiita.reference USING (reference_id)
+            WHERE processed_params_id = {1}
+            """.format(static_info['processed_params_table'],
+                       static_info['processed_params_id'])
+        dynamic_info = dict(conn_handler.execute_fetchone(sql))
+
+        # replace reference filepath_ids with full filepaths
+        # figure out what columns have filepaths and what don't
+        ref_fp_cols = {'sequence_filepath', 'taxonomy_filepath',
+                       'tree_filepath'}
+        fp_ids = [str(dynamic_info[col]) for col in ref_fp_cols
+                  if dynamic_info[col] is not None]
+        # Get the filepaths and create dict of fpid to filepath
+        sql = ("SELECT filepath_id, filepath FROM qiita.filepath WHERE "
+               "filepath_id IN ({})").format(','.join(fp_ids))
+        lookup = {fp[0]: fp[1] for fp in conn_handler.execute_fetchall(sql)}
+        # Loop through and replace ids
+        for key in ref_fp_cols:
+            if dynamic_info[key] is not None:
+                dynamic_info[key] = lookup[dynamic_info[key]]
+
+        # add missing info to the dictionary and remove id column info
+        dynamic_info['processed_date'] = static_info['processed_date']
+        dynamic_info['algorithm'] = static_info[
+            'processed_params_table'].split('_')[-1]
+        del dynamic_info['processed_params_id']
+        del dynamic_info['reference_id']
+
+        return dynamic_info
 
     @property
     def samples(self):

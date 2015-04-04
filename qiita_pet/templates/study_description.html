@@ -222,6 +222,26 @@ function delete_prep_template(data_type, prep_template_id) {
   }
 }
 
+function delete_processed_data(processed_data_id) {
+  if (confirm('Are you sure you want to delete processed data ID: ' + processed_data_id + '?')) {
+    var form = $("<form>")
+    .attr("action", window.location.href)
+    .attr("method", "post")
+    .append($("<input>")
+    .attr("type", "hidden")
+    .attr("name", "processed_data_id")
+    .attr("value", processed_data_id))
+    .append($("<input>")
+    .attr("type", "hidden")
+    .attr("name", "action")
+    .attr("value", "delete_processed_data"));
+    $("body").append(form);
+    form.submit();
+  } else {
+    return false;
+  }
+}
+
 function make_public(pd_id) {
   if (confirm("Are you sure you want to make this study public?")) {
     var form = $("<form>")

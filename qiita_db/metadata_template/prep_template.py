@@ -7,7 +7,6 @@
 # -----------------------------------------------------------------------------
 
 from __future__ import division
-from future.builtins import zip
 from copy import deepcopy
 from os.path import join
 from time import strftime
@@ -24,7 +23,6 @@ from qiita_db.util import (get_table_cols, get_emp_status, convert_to_id,
                            convert_from_id, get_mountpoint, infer_status)
 from .base_metadata_template import BaseSample, MetadataTemplate
 from .util import (get_invalid_sample_names, prefix_sample_names_with_id,
-                   as_python_types, get_datatypes,
                    load_template_to_dataframe)
 from .constants import (TARGET_GENE_DATA_TYPES, RENAME_COLS_DICT,
                         REQUIRED_TARGET_GENE_COLS)
@@ -152,10 +150,6 @@ class PrepTemplate(MetadataTemplate):
         # the database, but depending on the data type are required.
         missing = cls._check_special_columns(md_template, data_type_str)
 
-        # Get some useful information from the metadata template
-        sample_ids = md_template.index.tolist()
-        num_samples = len(sample_ids)
-
         # Get the required columns from the DB
         db_cols = get_table_cols(cls._table, conn_handler)
 
@@ -183,53 +177,8 @@ class PrepTemplate(MetadataTemplate):
             "prep_template_id", (data_type_id, raw_data.id,
                                  investigation_type))[0]
 
-        # Insert values on required columns
-        values = as_python_types(md_template, db_cols)
-        values.insert(0, sample_ids)
-        values.insert(0, [prep_id] * num_samples)
-        values = [v for v in zip(*values)]
-        conn_handler.add_to_queue(
-            queue_name,
-            "INSERT INTO qiita.{0} ({1}, sample_id, {2}) "
-            "VALUES (%s, %s, {3})".format(
-                cls._table, cls._id_column, ', '.join(db_cols),
-                ', '.join(['%s'] * len(db_cols))),
-            values, many=True)
-
-        # Insert rows on *_columns table
-        headers = list(set(headers).difference(db_cols))
-        datatypes = get_datatypes(md_template.ix[:, headers])
-        # psycopg2 requires a list of tuples, in which each tuple is a set
-        # of values to use in the string formatting of the query. We have all
-        # the values in different lists (but in the same order) so use zip
-        # to create the list of tuples that psycopg2 requires.
-        values = [
-            v for v in zip([prep_id] * len(headers), headers, datatypes)]
-        conn_handler.add_to_queue(
-            queue_name,
-            "INSERT INTO qiita.{0} ({1}, column_name, column_type) "
-            "VALUES (%s, %s, %s)".format(cls._column_table, cls._id_column),
-            values, many=True)
-
-        # Create table with custom columns
-        table_name = cls._table_name(prep_id)
-        column_datatype = ["%s %s" % (col, dtype)
-                           for col, dtype in zip(headers, datatypes)]
-        conn_handler.add_to_queue(
-            queue_name,
-            "CREATE TABLE qiita.{0} (sample_id varchar, "
-            "{1})".format(table_name, ', '.join(column_datatype)))
-
-        # Insert values on custom table
-        values = as_python_types(md_template, headers)
-        values.insert(0, sample_ids)
-        values = [v for v in zip(*values)]
-        conn_handler.add_to_queue(
-            queue_name,
-            "INSERT INTO qiita.{0} (sample_id, {1}) "
-            "VALUES (%s, {2})".format(table_name, ", ".join(headers),
-                                      ', '.join(["%s"] * len(headers))),
-            values, many=True)
+        cls._add_common_creation_steps_to_queue(md_template, prep_id,
+                                                conn_handler, queue_name)
 
         try:
             conn_handler.execute_queue(queue_name)
