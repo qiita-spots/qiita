@@ -40,7 +40,31 @@ class TestHelpers(TestHandlerBase):
             'pmid': '<a target="_blank" href="http://www.ncbi.nlm.nih.gov/'
                     'pubmed/123456">123456</a>, <a target="_blank" href="http:'
                     '//www.ncbi.nlm.nih.gov/pubmed/7891011">7891011</a>',
-            'pi': '<a target="_blank" href="mailto:PI_dude@foo.bar">PIDude</a>'
+            'pi': '<a target="_blank" href="mailto:PI_dude@foo.bar">'
+                  'PIDude</a>',
+            'proc_data_info': [{
+                'pid': 1,
+                'processed_date': '2012-10-01 09:30:27',
+                'data_type': '18S',
+                'algorithm': 'uclust',
+                'reference_name': 'Greengenes',
+                'reference_version': '13_8',
+                'taxonomy_filepath': 'GreenGenes_13_8_97_otu_taxonomy.txt',
+                'sequence_filepath': 'GreenGenes_13_8_97_otus.fasta',
+                'tree_filepath': 'GreenGenes_13_8_97_otus.tree',
+                'similarity': 0.97,
+                'enable_rev_strand_match': True,
+                'suppress_new_clusters': True,
+                'samples': ['1.SKB1.640202', '1.SKB2.640194', '1.SKB3.640195',
+                            '1.SKB4.640189', '1.SKB5.640181', '1.SKB6.640176',
+                            '1.SKB7.640196', '1.SKB8.640193', '1.SKB9.640200',
+                            '1.SKD1.640179', '1.SKD2.640178', '1.SKD3.640198',
+                            '1.SKD4.640185', '1.SKD5.640186', '1.SKD6.640190',
+                            '1.SKD7.640191', '1.SKD8.640184', '1.SKD9.640182',
+                            '1.SKM1.640183', '1.SKM2.640199', '1.SKM3.640197',
+                            '1.SKM4.640180', '1.SKM5.640177', '1.SKM6.640187',
+                            '1.SKM7.640188', '1.SKM8.640201', '1.SKM9.640192']
+                }]
         }]
         super(TestHelpers, self).setUp()
 
@@ -86,7 +110,8 @@ class TestHelpers(TestHandlerBase):
             "btn-primary btn-xs' data-toggle='modal' data-target='#share-study"
             "-modal-view' onclick='modify_sharing(2);'>Modify</a>",
             'pmid': '', 'pi':
-            '<a target="_blank" href="mailto:PI_dude@foo.bar">PIDude</a>'})
+            '<a target="_blank" href="mailto:PI_dude@foo.bar">PIDude</a>',
+            'proc_data_info': []})
         self.assertEqual(obs, self.exp)
 
 
@@ -306,7 +331,30 @@ class TestSearchStudiesAJAX(TestHandlerBase):
             'pmid': '<a target="_blank" href="http://www.ncbi.nlm.nih.gov/'
             'pubmed/123456">123456</a>, <a target="_blank" href="http://www.'
             'ncbi.nlm.nih.gov/pubmed/7891011">7891011</a>',
-            'num_raw_data': 4}]}
+            'num_raw_data': 4,
+            'proc_data_info': [{
+                'pid': 1,
+                'processed_date': '2012-10-01 09:30:27',
+                'data_type': '18S',
+                'algorithm': 'uclust',
+                'reference_name': 'Greengenes',
+                'reference_version': '13_8',
+                'taxonomy_filepath': 'GreenGenes_13_8_97_otu_taxonomy.txt',
+                'sequence_filepath': 'GreenGenes_13_8_97_otus.fasta',
+                'tree_filepath': 'GreenGenes_13_8_97_otus.tree',
+                'similarity': 0.97,
+                'enable_rev_strand_match': True,
+                'suppress_new_clusters': True,
+                'samples': ['1.SKB1.640202', '1.SKB2.640194', '1.SKB3.640195',
+                            '1.SKB4.640189', '1.SKB5.640181', '1.SKB6.640176',
+                            '1.SKB7.640196', '1.SKB8.640193', '1.SKB9.640200',
+                            '1.SKD1.640179', '1.SKD2.640178', '1.SKD3.640198',
+                            '1.SKD4.640185', '1.SKD5.640186', '1.SKD6.640190',
+                            '1.SKD7.640191', '1.SKD8.640184', '1.SKD9.640182',
+                            '1.SKM1.640183', '1.SKM2.640199', '1.SKM3.640197',
+                            '1.SKM4.640180', '1.SKM5.640177', '1.SKM6.640187',
+                            '1.SKM7.640188', '1.SKM8.640201', '1.SKM9.640192']
+                }]}]}
     empty = {'aaData': [],
              'iTotalDisplayRecords': 0,
              'iTotalRecords': 0,

@@ -62,12 +62,15 @@ def _build_study_info(user, study_proc=None, proc_samples=None):
     Both study_proc and proc_samples must be passed, or neither passed.
     """
     # Logic check to make sure both needed parts passed
+    build_info = False
     if study_proc is not None and proc_samples is None:
         raise IncompetentQiitaDeveloperError(
             'Must pass proc_samples when study_proc given')
     elif proc_samples is not None and study_proc is None:
         raise IncompetentQiitaDeveloperError(
             'Must pass study_proc when proc_samples given')
+    elif proc_samples is None:
+        build_info = True
 
     # get list of studies for table
     study_list = user.user_studies.union(
@@ -89,7 +92,7 @@ def _build_study_info(user, study_proc=None, proc_samples=None):
         study = Study(info['study_id'])
         status = study.status
         # if needed, get all the proc data info since no search results passed
-        if study_proc is None:
+        if build_info:
             proc_data = study.processed_data()
             proc_samples = {}
             study_proc = {study.id: proc_data}
