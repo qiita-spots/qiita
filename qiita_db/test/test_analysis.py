@@ -12,7 +12,7 @@ from qiita_db.analysis import Analysis, Collection
 from qiita_db.job import Job
 from qiita_db.user import User
 from qiita_db.exceptions import QiitaDBStatusError
-from qiita_db.util import get_mountpoint
+from qiita_db.util import get_mountpoint, get_count
 from qiita_db.study import Study, StudyPerson
 from qiita_db.data import ProcessedData
 from qiita_db.metadata_template import SampleTemplate
@@ -92,36 +92,56 @@ class TestAnalysis(TestCase):
     def test_create(self):
         sql = "SELECT EXTRACT(EPOCH FROM NOW())"
         time1 = float(self.conn_handler.execute_fetchall(sql)[0][0])
-
+        new_id = get_count("qiita.analysis") + 1
         new = Analysis.create(User("admin@foo.bar"), "newAnalysis",
                               "A New Analysis")
-        self.assertEqual(new.id, 3)
+        self.assertEqual(new.id, new_id)
         sql = ("SELECT analysis_id, email, name, description, "
                "analysis_status_id, pmid, EXTRACT(EPOCH FROM timestamp) "
-               "FROM qiita.analysis WHERE analysis_id = 3")
-        obs = self.conn_handler.execute_fetchall(sql)
-        self.assertEqual(obs[0][:-1], [3, 'admin@foo.bar', 'newAnalysis',
+               "FROM qiita.analysis WHERE analysis_id = %s")
+        obs = self.conn_handler.execute_fetchall(sql, [new_id])
+        self.assertEqual(obs[0][:-1], [new_id, 'admin@foo.bar', 'newAnalysis',
                                        'A New Analysis', 1, None])
         self.assertTrue(time1 < float(obs[0][-1]))
 
     def test_create_parent(self):
         sql = "SELECT EXTRACT(EPOCH FROM NOW())"
         time1 = float(self.conn_handler.execute_fetchall(sql)[0][0])
-
+        new_id = get_count("qiita.analysis") + 1
         new = Analysis.create(User("admin@foo.bar"), "newAnalysis",
                               "A New Analysis", Analysis(1))
-        self.assertEqual(new.id, 3)
+        self.assertEqual(new.id, new_id)
         sql = ("SELECT analysis_id, email, name, description, "
                "analysis_status_id, pmid, EXTRACT(EPOCH FROM timestamp) "
-               "FROM qiita.analysis WHERE analysis_id = 3")
-        obs = self.conn_handler.execute_fetchall(sql)
-        self.assertEqual(obs[0][:-1], [3, 'admin@foo.bar', 'newAnalysis',
+               "FROM qiita.analysis WHERE analysis_id = %s")
+        obs = self.conn_handler.execute_fetchall(sql, [new_id])
+        self.assertEqual(obs[0][:-1], [new_id, 'admin@foo.bar', 'newAnalysis',
                                        'A New Analysis', 1, None])
         self.assertTrue(time1 < float(obs[0][-1]))
 
-        sql = "SELECT * FROM qiita.analysis_chain WHERE child_id = 3"
-        obs = self.conn_handler.execute_fetchall(sql)
-        self.assertEqual(obs, [[1, 3]])
+        sql = "SELECT * FROM qiita.analysis_chain WHERE child_id = %s"
+        obs = self.conn_handler.execute_fetchall(sql, [new_id])
+        self.assertEqual(obs, [[1, new_id]])
+
+    def test_create_from_default(self):
+        new_id = get_count("qiita.analysis") + 1
+        owner = User("test@foo.bar")
+        new = Analysis.create(owner, "newAnalysis",
+                              "A New Analysis", from_default=True)
+        self.assertEqual(new.id, new_id)
+
+        # Make sure samples were transfered properly
+        sql = "SELECT * FROM qiita.analysis_sample WHERE analysis_id = %s"
+        obs = self.conn_handler.execute_fetchall(sql, [owner.default_analysis])
+        exp = []
+        self.assertEqual(obs, exp)
+        sql = "SELECT * FROM qiita.analysis_sample WHERE analysis_id = %s"
+        obs = self.conn_handler.execute_fetchall(sql, [new_id])
+        exp = [[new_id, 1, '1.SKD8.640184'],
+               [new_id, 1, '1.SKB7.640196'],
+               [new_id, 1, '1.SKM9.640192'],
+               [new_id, 1, '1.SKM4.640180']]
+        self.assertEqual(obs, exp)
 
     def test_retrieve_owner(self):
         self.assertEqual(self.analysis.owner, "test@foo.bar")
@@ -242,21 +262,23 @@ class TestAnalysis(TestCase):
         self.assertEqual(new.biom_tables, None)
 
     def test_set_step(self):
+        new_id = get_count("qiita.analysis") + 1
         new = Analysis.create(User("admin@foo.bar"), "newAnalysis",
                               "A New Analysis", Analysis(1))
         new.step = 2
-        sql = "SELECT * FROM qiita.analysis_workflow WHERE analysis_id = 3"
-        obs = self.conn_handler.execute_fetchall(sql)
-        self.assertEqual(obs, [[3, 2]])
+        sql = "SELECT * FROM qiita.analysis_workflow WHERE analysis_id = %s"
+        obs = self.conn_handler.execute_fetchall(sql, [new_id])
+        self.assertEqual(obs, [[new_id, 2]])
 
     def test_set_step_twice(self):
+        new_id = get_count("qiita.analysis") + 1
         new = Analysis.create(User("admin@foo.bar"), "newAnalysis",
                               "A New Analysis", Analysis(1))
         new.step = 2
         new.step = 4
-        sql = "SELECT * FROM qiita.analysis_workflow WHERE analysis_id = 3"
-        obs = self.conn_handler.execute_fetchall(sql)
-        self.assertEqual(obs, [[3, 4]])
+        sql = "SELECT * FROM qiita.analysis_workflow WHERE analysis_id = %s"
+        obs = self.conn_handler.execute_fetchall(sql, [new_id])
+        self.assertEqual(obs, [[new_id, 4]])
 
     def test_retrieve_step(self):
         new = Analysis.create(User("admin@foo.bar"), "newAnalysis",
