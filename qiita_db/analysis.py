@@ -118,39 +118,36 @@ class Analysis(QiitaStatusObject):
         """
         queue = "create_analysis"
         conn_handler = SQLConnectionHandler()
+        conn_handler.create_queue(queue)
         # TODO after demo: if exists()
 
         if from_default:
             # insert analysis and move samples into that new analysis
             dflt_id = owner.default_analysis
-            sql = \
-                """ DO $do$
-                DECLARE
-                    aid = varchar;
-                BEGIN
-                    INSERT INTO qiita.{0}
+            sql = """INSERT INTO qiita.{0}
                     (email, name, description, analysis_status_id)
                     VALUES (%s, %s, %s, 3)
-                    RETURNING analysis_id INTO aid;
-                    UPDATE qiita.analysis_sample SET analysis_id = aid
-                    WHERE analysis_id = {1};
-                    RETURN aid;
-                END $do$""".format(cls._table, dflt_id)
-            a_id = conn_handler.add_to_queue(
-                queue, sql, (owner.id, name, description))
+                    RETURNING analysis_id""".format(cls._table)
+            conn_handler.add_to_queue(queue, sql, (owner.id, name,
+                                                   description))
+            sql = """UPDATE qiita.analysis_sample 
+                     SET analysis_id = %s
+                     WHERE analysis_id = %s RETURNING %s"""
+            conn_handler.add_to_queue(queue, sql, ['{0}', dflt_id, '{0}'])
         else:
             # insert analysis information into table as "in construction"
-            sql = ("""INSERT INTO qiita.{0} (email, name, description, "
-                   "analysis_status_id) VALUES (%s, %s, %s, 1) "
-                   "RETURNING analysis_id""".format(cls._table))
-            a_id = conn_handler.add_to_queue(
-                queue, sql, (owner.id, name, description))[0]
+            sql = """INSERT INTO qiita.{0} 
+                  (email, name, description, analysis_status_id)
+                  VALUES (%s, %s, %s, 1)
+                  RETURNING analysis_id""".format(cls._table)
+            conn_handler.add_to_queue(
+                queue, sql, (owner.id, name, description))
 
         # add parent if necessary
         if parent:
             sql = ("INSERT INTO qiita.analysis_chain (parent_id, child_id) "
-                   "VALUES (%s, {0}) RETURNING child_id")
-            conn_handler.add_to_queue(queue, sql, [parent.id])
+                   "VALUES (%s, %s) RETURNING child_id")
+            conn_handler.add_to_queue(queue, sql, [parent.id, '{0}'])
 
         a_id = conn_handler.execute_queue(queue)[0]
         return cls(a_id)

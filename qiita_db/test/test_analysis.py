@@ -124,30 +124,23 @@ class TestAnalysis(TestCase):
         self.assertEqual(obs, [[1, new_id]])
 
     def test_create_from_default(self):
-        sql = "SELECT EXTRACT(EPOCH FROM NOW())"
-        time1 = float(self.conn_handler.execute_fetchall(sql)[0][0])
+        new_id = get_count("qiita.analysis") + 1
         owner = User("test@foo.bar")
         new = Analysis.create(owner, "newAnalysis",
                               "A New Analysis", from_default=True)
-        self.assertEqual(new.id, 3)
-        sql = ("SELECT analysis_id, email, name, description, "
-               "analysis_status_id, pmid, EXTRACT(EPOCH FROM timestamp) "
-               "FROM qiita.analysis WHERE analysis_id = 3")
-        obs = self.conn_handler.execute_fetchall(sql)
-        self.assertEqual(obs[0][:-1], [3, 'admin@foo.bar', 'newAnalysis',
-                                       'A New Analysis', 3, None])
-        self.assertTrue(time1 < float(obs[0][-1]))
+        self.assertEqual(new.id, new_id)
+
         # Make sure samples were transfered properly
-        sql = "SELECT * FROM analysis_sample WHERE analysis_id = %s"
+        sql = "SELECT * FROM qiita.analysis_sample WHERE analysis_id = %s"
         obs = self.conn_handler.execute_fetchall(sql, [owner.default_analysis])
         exp = []
         self.assertEqual(obs, exp)
-        sql = "SELECT * FROM analysis_sample WHERE analysis_id = 3"
-        obs = self.conn_handler.execute_fetchall(sql)
-        exp = [[3, 1, '1.SKD8.640184'],
-               [3, 1, '1.SKB7.640196'],
-               [3, 1, '1.SKM9.640192'],
-               [3, 1, '1.SKM4.640180']]
+        sql = "SELECT * FROM qiita.analysis_sample WHERE analysis_id = %s"
+        obs = self.conn_handler.execute_fetchall(sql, [new_id])
+        exp = [[new_id, 1, '1.SKD8.640184'],
+               [new_id, 1, '1.SKB7.640196'],
+               [new_id, 1, '1.SKM9.640192'],
+               [new_id, 1, '1.SKM4.640180']]
         self.assertEqual(obs, exp)
 
     def test_retrieve_owner(self):
