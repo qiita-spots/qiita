@@ -1,7 +1,11 @@
 {% extends sitebase.html %}
 {% block head %}
 <link rel="stylesheet" href="/static/vendor/css/jquery.dataTables.css" type="text/css">
-
+<style>
+td.details-control {
+  cursor: pointer;
+}
+</style>
 <script src="/static/vendor/js/jquery.dataTables.min.js"></script>
 <script src="/static/vendor/js/jquery.dataTables.plugin.natural.js"></script>
 
@@ -12,10 +16,10 @@ $(document).ready(function() {
 
         function format ( d ) {
             // `d` is the original data object for the row
-            var proc_data_table = '<table cellpadding="5" cellspacing="0" border="0" style="padding-left:50px;"><tr><th></th><th>ID</th><th>Data type</th><th>Processed Date</th><th>Reference</th></tr>';
+            var proc_data_table = '<h4>Processed Data</h4><table class="table" cellpadding="5" cellspacing="0" border="0" style="padding-left:50px;"><tr><th></th><th>ID</th><th>Data type</th><th>Processed Date</th><th>Algorithm</th><th>Reference</th><th>Samples</th></tr>';
             for(i=0;i<d.proc_data_info.length;i++) {
               var proc_data = d.proc_data_info[i];
-              proc_data_table += '<tr><td><input type="checkbox"></td><td>' + proc_data.pid + '</td><td>' + proc_data.data_type + '</td><td>' + proc_data.processed_date + '</td><td>' + proc_data.refrence + ' ' + proc_data.reference_version + '</td></tr>';
+              proc_data_table += '<tr><td><input type="checkbox"></td><td>' + proc_data.pid + '</td><td>' + proc_data.data_type + '</td><td>' + proc_data.processed_date + '</td><td>' + proc_data.algorithm + '</td><td>' + proc_data.reference_name + ' ' + proc_data.reference_version + '</td><td>' + proc_data.samples.length + '</td></tr>';
             }
             proc_data_table += '</table>';
             return proc_data_table;
@@ -23,7 +27,7 @@ $(document).ready(function() {
 
         $('#studies-table').dataTable({
             "columns": [
-              {"className": 'details-control', "orderable": false, "data": null, "defaultContent": ''},
+              { "data": "checkbox", "orderable": false},
               { "data": "title" },
               { "data": "abstract" },
               { "data": "id" },
@@ -33,7 +37,8 @@ $(document).ready(function() {
               { "data": "shared" },
               { "data": "pi" },
               { "data": "pmid" },
-              { "data": "status" }
+              { "data": "status" },
+              {"className": 'details-control', "orderable": false, "data": null, "defaultContent": '<span class="glyphicon glyphicon-chevron-down"></span>'}
             ],
             order: [[10, "desc"], [ 1, "asc" ]],
             columnDefs: [{type:'natural', targets:[3,4,5,9]}, {"targets": [ 2 ],"visible": false}],
@@ -53,6 +58,7 @@ $(document).ready(function() {
         });
     // Add event listener for opening and closing details
     $('#studies-table tbody').on('click', 'td.details-control', function () {
+      var table = $('#studies-table').DataTable();
         var tr = $(this).closest('tr');
         var row = table.row( tr );
  
@@ -133,7 +139,7 @@ function add_metacat(metacat) {
 <div class="row">
   <div class="col-sm-12" id="user-studies-div">
     <h1>Available Studies</h1>
-    <table id="studies-table" class="display table-bordered table-hover">
+    <table id="studies-table" class="table table-bordered">
         <thead>
             <tr>
                 <th></th>
@@ -147,10 +153,9 @@ function add_metacat(metacat) {
                 <th>Principal Investigator</th>
                 <th>Pubmed ID(s)</th>
                 <th>Status</th>
+                <th></th>
             </tr>
         </thead>
-        <tbody>
-        </tbody>
     </table>
 <!--Abstract Modal-->
 <div class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true" id="study-abstract-modal">

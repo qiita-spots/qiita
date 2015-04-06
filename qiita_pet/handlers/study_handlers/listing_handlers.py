@@ -131,10 +131,12 @@ def _build_study_info(user, study_proc=None, proc_samples=None):
         proc_data_info = []
         for pid in study_proc[study.id]:
             proc_data = ProcessedData(pid)
-            info = proc_data.processing_info
-            info['pid'] = pid
-            info['samples'] = proc_samples[pid]
-            proc_data_info.append(info)
+            proc_info = proc_data.processing_info
+            proc_info['pid'] = pid
+            proc_info['data_type'] = proc_data.data_type()
+            proc_info['samples'] = sorted(proc_samples[pid])
+            proc_info['processed_date'] = str(proc_info['processed_date'])
+            proc_data_info.append(proc_info)
 
         infolist.append({
             "checkbox": "<input type='checkbox' value='%d' />" % study.id,
@@ -235,7 +237,6 @@ class SearchStudiesAJAX(BaseHandler):
 
         if user != self.current_user.id:
             raise HTTPError(403, 'Unauthorized search!')
-        res = None
         if query:
             # Search for samples matching the query
             search = QiitaStudySearch()
