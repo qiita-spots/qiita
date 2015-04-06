@@ -130,13 +130,13 @@ class Analysis(QiitaStatusObject):
                     RETURNING analysis_id""".format(cls._table)
             conn_handler.add_to_queue(queue, sql, (owner.id, name,
                                                    description))
-            sql = """UPDATE qiita.analysis_sample 
+            sql = """UPDATE qiita.analysis_sample
                      SET analysis_id = %s
                      WHERE analysis_id = %s RETURNING %s"""
             conn_handler.add_to_queue(queue, sql, ['{0}', dflt_id, '{0}'])
         else:
             # insert analysis information into table as "in construction"
-            sql = """INSERT INTO qiita.{0} 
+            sql = """INSERT INTO qiita.{0}
                   (email, name, description, analysis_status_id)
                   VALUES (%s, %s, %s, 1)
                   RETURNING analysis_id""".format(cls._table)
