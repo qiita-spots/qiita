@@ -136,22 +136,23 @@ class Analysis(QiitaStatusObject):
                     WHERE analysis_id = {1};
                     RETURN aid;
                 END $do$""".format(cls._table, dflt_id)
-            a_id = conn_handler.execute_fetchone(
-                sql, (owner.id, name, description))[0]
+            a_id = conn_handler.add_to_queue(
+                queue, sql, (owner.id, name, description))
         else:
             # insert analysis information into table as "in construction"
             sql = ("""INSERT INTO qiita.{0} (email, name, description, "
                    "analysis_status_id) VALUES (%s, %s, %s, 1) "
                    "RETURNING analysis_id""".format(cls._table))
-            a_id = conn_handler.execute_fetchone(
-                sql, (owner.id, name, description))[0]
+            a_id = conn_handler.add_to_queue(
+                queue, sql, (owner.id, name, description))[0]
 
         # add parent if necessary
         if parent:
             sql = ("INSERT INTO qiita.analysis_chain (parent_id, child_id) "
-                   "VALUES (%s, %s)")
-            conn_handler.execute(sql, (parent.id, a_id))
+                   "VALUES (%s, {0}) RETURNING child_id")
+            conn_handler.add_to_queue(queue, sql, [parent.id])
 
+        a_id = conn_handler.execute_queue(queue)[0]
         return cls(a_id)
 
     # ---- Properties ----
