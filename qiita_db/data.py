@@ -823,7 +823,7 @@ class PreprocessedData(BaseData):
             preprocessed data EBI and VAMPS submission is not in a valid state
             ['not submitted', 'failed']
         QiitaDBError
-            If the preprocessed data has (meta)analyses
+            If the preprocessed data has been processed
         """
         valid_submission_states = ['not submitted', 'failed']
         ppd = cls(ppd_id)
