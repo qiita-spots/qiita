@@ -478,7 +478,7 @@ class PreprocessedDataTests(TestCase):
         # preprocessed_data_id, filepath_id
         self.assertEqual(obs, [[3, obs_id - 1], [3, obs_id]])
 
-    def test_delete(self):
+    def test_delete_basic(self):
         """Correctly deletes a preprocessed data"""
         # testing regular delete
         ppd = PreprocessedData.create(
@@ -496,18 +496,24 @@ class PreprocessedDataTests(TestCase):
         with self.assertRaises(QiitaDBStatusError):
             PreprocessedData.delete(1)
 
+    def test_delete_advance(self):
         # testing that we can not remove cause preprocessed data has been
         # submitted to EBI or VAMPS
-        pd = ProcessedData(1)
-        pd.status = 'sandbox'
-        with self.assertRaises(QiitaDBError):
-            PreprocessedData.delete(pd.preprocessed_data)
+        ppd = PreprocessedData.create(
+            self.study, self.params_table,
+            self.params_id, self.filepaths, prep_template=self.prep_template,
+            ebi_submission_accession=self.ebi_submission_accession,
+            ebi_study_accession=self.ebi_study_accession)
 
-        # testing that we can not remove cause preprocessed data has processed
-        # data
-        ppd = PreprocessedData(pd.preprocessed_data)
-        ppd.update_insdc_status('not submitted')
-        with self.assertRaises(QiitaDBError):
+        # fails due to VAMPS submission
+        ppd.update_vamps_status('success')
+        with self.assertRaises(QiitaDBStatusError):
+            PreprocessedData.delete(ppd.id)
+        ppd.update_vamps_status('failed')
+
+        # fails due to EBI submission
+        ppd.update_insdc_status('success', 'AAAA', 'AAAA')
+        with self.assertRaises(QiitaDBStatusError):
             PreprocessedData.delete(ppd.id)
 
     def test_create_error_dynamic_table(self):

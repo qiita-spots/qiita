@@ -830,13 +830,14 @@ class PreprocessedData(BaseData):
         if ppd.status != 'sandbox':
             raise QiitaDBStatusError(
                 "Illegal operation on non sandbox preprocessed data")
-        elif (ppd.submitted_to_vamps_status() not in valid_submission_states or
-              ppd.submitted_to_insdc_status() not in valid_submission_states):
+        elif ppd.submitted_to_vamps_status() not in valid_submission_states:
             raise QiitaDBStatusError(
-                "Illegal operation due to EBI submission status ('%s') or "
-                "VAMPS submission status ('%s')" % (
-                    ppd.submitted_to_insdc_status(),
-                    ppd.submitted_to_vamps_status()))
+                "Illegal operation. This preprocessed data has or is being "
+                "added to VAMPS.")
+        elif ppd.submitted_to_insdc_status() not in valid_submission_states:
+            raise QiitaDBStatusError(
+                "Illegal operation. This preprocessed data has or is being "
+                "added to EBI.")
 
         conn_handler = SQLConnectionHandler()
 
