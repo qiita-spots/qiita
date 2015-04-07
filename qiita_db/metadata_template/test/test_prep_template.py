@@ -582,39 +582,40 @@ class TestPrepTemplateReadOnly(BaseTestPrepTemplate):
             'VALUES (%s, %s, %s)')
 
         sql_create_table = (
-            'CREATE TABLE qiita.prep_2 '
-            '(sample_id varchar NOT NULL, str_column varchar, '
-            'run_prefix varchar, barcodesequence varchar, platform varchar, '
-            'linkerprimersequence varchar, '
-            'experiment_design_description varchar, '
-            'library_construction_protocol varchar)')
+            'CREATE TABLE qiita.prep_2 (sample_id varchar NOT NULL, '
+            'barcodesequence varchar, experiment_design_description varchar, '
+            'library_construction_protocol varchar, '
+            'linkerprimersequence varchar, platform varchar, '
+            'run_prefix varchar, str_column varchar)')
 
         sql_insert_dynamic = (
             'INSERT INTO qiita.prep_2 '
-            '(sample_id, str_column, run_prefix, barcodesequence, platform, '
-            'linkerprimersequence, experiment_design_description, '
-            'library_construction_protocol) '
+            '(sample_id, barcodesequence, experiment_design_description, '
+            'library_construction_protocol, linkerprimersequence, platform, '
+            'run_prefix, str_column) '
             'VALUES (%s, %s, %s, %s, %s, %s, %s, %s)')
 
         sql_insert_dynamic_params_1 = (
-            '2.SKB8.640193', 'Value for sample 1', 's_G1_L001_sequences',
-            'GTCCGCAAGTTA', 'ILLUMINA', 'GTGCCAGCMGCCGCGGTAA', 'BBBB', 'AAAA')
+            '2.SKB8.640193', 'GTCCGCAAGTTA', 'BBBB', 'AAAA',
+            'GTGCCAGCMGCCGCGGTAA', 'ILLUMINA', 's_G1_L001_sequences',
+            'Value for sample 1')
         sql_insert_dynamic_params_2 = (
-            '2.SKD8.640184', 'Value for sample 2', 's_G1_L001_sequences',
-            'CGTAGAGCTCTC', 'ILLUMINA', 'GTGCCAGCMGCCGCGGTAA', 'BBBB', 'AAAA')
+            '2.SKD8.640184', 'CGTAGAGCTCTC', 'BBBB', 'AAAA',
+            'GTGCCAGCMGCCGCGGTAA', 'ILLUMINA', 's_G1_L001_sequences',
+            'Value for sample 2')
 
         exp = [
             (sql_insert_common, sql_insert_common_params_1),
             (sql_insert_common, sql_insert_common_params_2),
-            (sql_insert_prep_columns, (2, 'str_column', 'varchar')),
-            (sql_insert_prep_columns, (2, 'run_prefix', 'varchar')),
             (sql_insert_prep_columns, (2, 'barcodesequence', 'varchar')),
-            (sql_insert_prep_columns, (2, 'platform', 'varchar')),
-            (sql_insert_prep_columns, (2, 'linkerprimersequence', 'varchar')),
             (sql_insert_prep_columns,
                 (2, 'experiment_design_description', 'varchar')),
             (sql_insert_prep_columns,
                 (2, 'library_construction_protocol', 'varchar')),
+            (sql_insert_prep_columns, (2, 'linkerprimersequence', 'varchar')),
+            (sql_insert_prep_columns, (2, 'platform', 'varchar')),
+            (sql_insert_prep_columns, (2, 'run_prefix', 'varchar')),
+            (sql_insert_prep_columns, (2, 'str_column', 'varchar')),
             (sql_create_table, None),
             (sql_insert_dynamic, sql_insert_dynamic_params_1),
             (sql_insert_dynamic, sql_insert_dynamic_params_2)]
@@ -794,17 +795,20 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
         # The new table hosts the correct values
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.prep_2")
-        # sample_id, study_id, str_column, ebi_submission_accession,
-        # run_prefix, barcodesequence, linkerprimersequence
-        exp = [['1.SKB7.640196', 'Value for sample 3', 'ILLUMINA',
-                's_G1_L002_sequences', 'CCTCTGAGAGCT', None,
-                'GTGCCAGCMGCCGCGGTAA', 'BBBB', 'AAAA'],
-               ['1.SKB8.640193', 'Value for sample 1', 'ILLUMINA',
-                's_G1_L001_sequences', 'GTCCGCAAGTTA', None,
-                'GTGCCAGCMGCCGCGGTAA', 'BBBB', 'AAAA'],
-               ['1.SKD8.640184', 'Value for sample 2', 'ILLUMINA',
-                's_G1_L001_sequences', 'CGTAGAGCTCTC', None,
-                'GTGCCAGCMGCCGCGGTAA', 'BBBB', 'AAAA']]
+
+        # barcodesequence, ebi_submission_accession,
+        # experiment_design_description, library_construction_protocol,
+        # linkerprimersequence, platform, run_prefix, str_column
+        exp = [['1.SKB7.640196', 'CCTCTGAGAGCT', None, 'BBBB', 'AAAA',
+                'GTGCCAGCMGCCGCGGTAA', 'ILLUMINA', 's_G1_L002_sequences',
+                'Value for sample 3'],
+               ['1.SKB8.640193', 'GTCCGCAAGTTA', None, 'BBBB', 'AAAA',
+                'GTGCCAGCMGCCGCGGTAA', 'ILLUMINA', 's_G1_L001_sequences',
+                'Value for sample 1'],
+               ['1.SKD8.640184', 'CGTAGAGCTCTC', None, 'BBBB', 'AAAA',
+                'GTGCCAGCMGCCGCGGTAA', 'ILLUMINA', 's_G1_L001_sequences',
+                'Value for sample 2']]
+
         self.assertEqual(sorted(obs), sorted(exp))
 
         # prep and qiime files have been created
@@ -858,17 +862,18 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
         # The new table hosts the correct values
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.prep_2")
-        # sample_id, study_id, str_column, ebi_submission_accession,
-        # run_prefix, barcodesequence, linkerprimersequence
-        exp = [['1.SKB7.640196', 'Value for sample 3', 'ILLUMINA',
-                's_G1_L002_sequences', 'CCTCTGAGAGCT', None,
-                'GTGCCAGCMGCCGCGGTAA', 'BBBB', 'AAAA'],
-               ['1.SKB8.640193', 'Value for sample 1', 'ILLUMINA',
-                's_G1_L001_sequences', 'GTCCGCAAGTTA', None,
-                'GTGCCAGCMGCCGCGGTAA', 'BBBB', 'AAAA'],
-               ['1.SKD8.640184', 'Value for sample 2', 'ILLUMINA',
-                's_G1_L001_sequences', 'CGTAGAGCTCTC', None,
-                'GTGCCAGCMGCCGCGGTAA', 'BBBB', 'AAAA']]
+        # barcodesequence, ebi_submission_accession,
+        # experiment_design_description, library_construction_protocol,
+        # linkerprimersequence, platform, run_prefix, str_column
+        exp = [['1.SKB7.640196', 'CCTCTGAGAGCT', None, 'BBBB', 'AAAA',
+                'GTGCCAGCMGCCGCGGTAA', 'ILLUMINA', 's_G1_L002_sequences',
+                'Value for sample 3'],
+               ['1.SKB8.640193', 'GTCCGCAAGTTA', None, 'BBBB', 'AAAA',
+                'GTGCCAGCMGCCGCGGTAA', 'ILLUMINA', 's_G1_L001_sequences',
+                'Value for sample 1'],
+               ['1.SKD8.640184', 'CGTAGAGCTCTC', None, 'BBBB', 'AAAA',
+                'GTGCCAGCMGCCGCGGTAA', 'ILLUMINA', 's_G1_L001_sequences',
+                'Value for sample 2']]
         self.assertEqual(sorted(obs), sorted(exp))
 
         # prep and qiime files have been created
@@ -959,17 +964,18 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
         # The new table hosts the correct values
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.prep_2")
-        # sample_id, str_column, ebi_submission_accession,
-        # run_prefix, barcodesequence, linkerprimersequence
-        exp = [['1.SKB7.640196', 'Value for sample 3', 'ILLUMINA',
-                's_G1_L002_sequences', 'CCTCTGAGAGCT', None,
-                'GTGCCAGCMGCCGCGGTAA', 'BBBB', 'AAAA'],
-               ['1.SKB8.640193', 'Value for sample 1', 'ILLUMINA',
-                's_G1_L001_sequences', 'GTCCGCAAGTTA', None,
-                'GTGCCAGCMGCCGCGGTAA', 'BBBB', 'AAAA'],
-               ['1.SKD8.640184', 'Value for sample 2', 'ILLUMINA',
-                's_G1_L001_sequences', 'CGTAGAGCTCTC', None,
-                'GTGCCAGCMGCCGCGGTAA', 'BBBB', 'AAAA']]
+        # barcodesequence, ebi_submission_accession,
+        # experiment_design_description, library_construction_protocol,
+        # linkerprimersequence, platform, run_prefix, str_column
+        exp = [['1.SKB7.640196', 'CCTCTGAGAGCT', None, 'BBBB', 'AAAA',
+                'GTGCCAGCMGCCGCGGTAA', 'ILLUMINA', 's_G1_L002_sequences',
+                'Value for sample 3'],
+               ['1.SKB8.640193', 'GTCCGCAAGTTA', None, 'BBBB', 'AAAA',
+                'GTGCCAGCMGCCGCGGTAA', 'ILLUMINA', 's_G1_L001_sequences',
+                'Value for sample 1'],
+               ['1.SKD8.640184', 'CGTAGAGCTCTC', None, 'BBBB', 'AAAA',
+                'GTGCCAGCMGCCGCGGTAA', 'ILLUMINA', 's_G1_L001_sequences',
+                'Value for sample 2']]
         self.assertEqual(sorted(obs), sorted(exp))
 
     def test_create_error(self):
