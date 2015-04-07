@@ -1237,18 +1237,6 @@ class TestSampleTemplateReadWrite(BaseTestSampleTemplate):
         obs = {k: v['new_column'] for k, v in self.tester.items()}
         self.assertEqual(obs, exp)
 
-    def test_remove_category(self):
-        with self.assertRaises(QiitaDBColumnError):
-            self.tester.remove_category('does not exist')
-
-        for v in self.tester.values():
-            self.assertIn('elevation', v)
-
-        self.tester.remove_category('elevation')
-
-        for v in self.tester.values():
-            self.assertNotIn('elevation', v)
-
     def test_to_file(self):
         """to file writes a tab delimited file with all the metadata"""
         fd, fp = mkstemp()
