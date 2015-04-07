@@ -505,9 +505,8 @@ class MetadataTemplate(QiitaObject):
         ----------
         md_template : DataFrame
             The metadata template file contents indexed by sample ids
-        obj : Study or RawData
-            The obj to which the metadata template belongs to. Study in case
-            of SampleTemplate and RawData in case of PrepTemplate
+        obj : object
+            Any extra object needed by the template to perform any extra check
         """
         # Check required columns
         missing = set(cls.translate_cols_dict.values()).difference(md_template)
@@ -541,6 +540,15 @@ class MetadataTemplate(QiitaObject):
         -------
         md_template : DataFrame
             Cleaned copy of the input md_template
+
+        Raises
+        ------
+        QiitaDBColumnError
+            If the sample names in md_template contains invalid names
+        QiitaDBDuplicateHeaderError
+            If md_template contains duplicate headers
+        QiitaDBColumnError
+            If md_template is missing a required column
         """
         cls._check_subclass()
         invalid_ids = get_invalid_sample_names(md_template.index)
