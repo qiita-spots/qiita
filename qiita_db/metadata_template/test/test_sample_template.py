@@ -15,6 +15,7 @@ from collections import Iterable
 
 import numpy.testing as npt
 import pandas as pd
+from pandas.util.testing import assert_frame_equal
 
 from qiita_core.util import qiita_test_checker
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
@@ -843,6 +844,95 @@ class TestSampleTemplateReadOnly(BaseTestSampleTemplate):
             (sql_insert_dynamic, ('2.Sample2', 2, 'Value for sample 2')),
             (sql_insert_dynamic, ('2.Sample3', 3, 'Value for sample 3'))]
         self.assertEqual(conn_handler.queues[queue_name], exp)
+
+    def test_clean_validate_template_error_bad_chars(self):
+        """Raises an error if there are invalid characters in the sample names
+        """
+        conn_handler = SQLConnectionHandler()
+        self.metadata.index = ['o()xxxx[{::::::::>', 'sample.1', 'sample.3']
+        with self.assertRaises(QiitaDBColumnError):
+            SampleTemplate._clean_validate_template(self.metadata, 2, 2,
+                                                    conn_handler)
+
+    def test_clean_validate_template_error_duplicate_cols(self):
+        """Raises an error if there are duplicated columns in the template"""
+        conn_handler = SQLConnectionHandler()
+        self.metadata['STR_COLUMN'] = pd.Series(['', '', ''],
+                                                index=self.metadata.index)
+        with self.assertRaises(QiitaDBDuplicateHeaderError):
+            SampleTemplate._clean_validate_template(self.metadata, 2, 2,
+                                                    conn_handler)
+
+    def test_clean_valdate_template_error_missing(self):
+        """Raises an error if the template is missing a required column"""
+        conn_handler = SQLConnectionHandler()
+        metadata_dict = {
+            'Sample1': {'physical_location': 'location1',
+                        'has_physical_specimen': True,
+                        'has_extracted_data': True,
+                        'sample_type': 'type1',
+                        'required_sample_info_status': 'received',
+                        'host_subject_id': 'NotIdentified',
+                        'Description': 'Test Sample 1',
+                        'latitude': 42.42,
+                        'longitude': 41.41}
+            }
+        metadata = pd.DataFrame.from_dict(metadata_dict, orient='index')
+        with self.assertRaises(QiitaDBColumnError):
+            SampleTemplate._clean_validate_template(metadata, 2, 2,
+                                                    conn_handler)
+
+    def test_clean_valdate_template(self):
+        conn_handler = SQLConnectionHandler()
+        obs = SampleTemplate._clean_validate_template(self.metadata, 2, 2,
+                                                      conn_handler)
+        metadata_dict = {
+            '2.Sample1': {'physical_location': 'location1',
+                          'has_physical_specimen': True,
+                          'has_extracted_data': True,
+                          'sample_type': 'type1',
+                          'required_sample_info_status_id': 1,
+                          'collection_timestamp':
+                          datetime(2014, 5, 29, 12, 24, 51),
+                          'host_subject_id': 'NotIdentified',
+                          'description': 'Test Sample 1',
+                          'str_column': 'Value for sample 1',
+                          'int_column': 1,
+                          'latitude': 42.42,
+                          'longitude': 41.41},
+            '2.Sample2': {'physical_location': 'location1',
+                          'has_physical_specimen': True,
+                          'has_extracted_data': True,
+                          'sample_type': 'type1',
+                          'int_column': 2,
+                          'required_sample_info_status_id': 1,
+                          'collection_timestamp':
+                          datetime(2014, 5, 29, 12, 24, 51),
+                          'host_subject_id': 'NotIdentified',
+                          'description': 'Test Sample 2',
+                          'str_column': 'Value for sample 2',
+                          'latitude': 4.2,
+                          'longitude': 1.1},
+            '2.Sample3': {'physical_location': 'location1',
+                          'has_physical_specimen': True,
+                          'has_extracted_data': True,
+                          'sample_type': 'type1',
+                          'required_sample_info_status_id': 1,
+                          'collection_timestamp':
+                          datetime(2014, 5, 29, 12, 24, 51),
+                          'host_subject_id': 'NotIdentified',
+                          'description': 'Test Sample 3',
+                          'str_column': 'Value for sample 3',
+                          'int_column': 3,
+                          'latitude': 4.8,
+                          'longitude': 4.41},
+            }
+        exp = pd.DataFrame.from_dict(metadata_dict, orient='index')
+        obs.sort_index(axis=0, inplace=True)
+        obs.sort_index(axis=1, inplace=True)
+        exp.sort_index(axis=0, inplace=True)
+        exp.sort_index(axis=1, inplace=True)
+        assert_frame_equal(obs, exp)
 
 
 @qiita_test_checker()
