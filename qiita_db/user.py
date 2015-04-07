@@ -49,6 +49,7 @@ class User(QiitaObject):
     info
     user_studies
     shared_studies
+    default_analysis
     private_analyses
     shared_analyses
 
@@ -224,10 +225,21 @@ class User(QiitaObject):
         # for sql insertion
         columns = info.keys()
         values = [info[col] for col in columns]
+        queue = "add_user_%s" % email
+        conn_handler.create_queue(queue)
+        # crete user
+        sql = "INSERT INTO qiita.{0} ({1}) VALUES ({2})".format(
+            cls._table, ','.join(columns), ','.join(['%s'] * len(values)))
+        conn_handler.add_to_queue(queue, sql, values)
+        # create user default sample holder
+        sql = ("INSERT INTO qiita.analysis "
+               "(email, name, description, dflt, analysis_status_id) "
+               "VALUES (%s, %s, %s, %s, 1)")
+        conn_handler.add_to_queue(queue, sql,
+                                  (email, '%s-dflt' % email, 'dflt', True))
 
-        sql = ("INSERT INTO qiita.%s (%s) VALUES (%s)" %
-               (cls._table, ','.join(columns), ','.join(['%s'] * len(values))))
-        conn_handler.execute(sql, values)
+        conn_handler.execute_queue(queue)
+
         return cls(email)
 
     @classmethod
@@ -330,6 +342,13 @@ class User(QiitaObject):
         conn_handler.execute(sql, data)
 
     @property
+    def default_analysis(self):
+        sql = ("SELECT analysis_id FROM qiita.analysis WHERE email = %s AND "
+               "dflt = true")
+        conn_handler = SQLConnectionHandler()
+        return conn_handler.execute_fetchone(sql, [self._id])[0]
+
+    @property
     def sandbox_studies(self):
         """Returns a list of sandboxed study ids owned by the user"""
         sql = ("SELECT study_id FROM qiita.study s JOIN qiita.study_status ss "
@@ -360,8 +379,8 @@ class User(QiitaObject):
     @property
     def private_analyses(self):
         """Returns a list of private analysis ids owned by the user"""
-        sql = ("Select analysis_id from qiita.analysis WHERE email = %s AND "
-               "analysis_status_id <> 6")
+        sql = ("SELECT analysis_id FROM qiita.analysis "
+               "WHERE email = %s AND dflt = false")
         conn_handler = SQLConnectionHandler()
         analysis_ids = conn_handler.execute_fetchall(sql, (self._id, ))
         return {a[0] for a in analysis_ids}
