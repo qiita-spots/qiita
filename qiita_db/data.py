@@ -103,7 +103,7 @@ class BaseData(QiitaObject):
     --------
     RawData
     PreprocessedData
-    PreprocessedData
+    ProcessedData
     """
     _filepath_table = "filepath"
 
@@ -806,6 +806,72 @@ class PreprocessedData(BaseData):
         # Add the filepaths to the database and connect them
         ppd.add_filepaths(filepaths, conn_handler)
         return ppd
+
+    @classmethod
+    def delete(cls, ppd_id):
+        """Removes the preprocessed data with id ppd_id
+
+        Parameters
+        ----------
+        ppd_id : int
+            The preprocessed data id
+
+        Raises
+        ------
+        QiitaDBStatusError
+            If the preprocessed data status is not sandbox or if the
+            preprocessed data EBI and VAMPS submission is not in a valid state
+            ['not submitted', 'failed']
+        QiitaDBError
+            If the preprocessed data has (meta)analyses
+        """
+        valid_submission_states = ['not submitted', 'failed']
+        ppd = cls(ppd_id)
+        if ppd.status != 'sandbox':
+            raise QiitaDBStatusError(
+                "Illegal operation on non sandbox preprocessed data")
+        elif (ppd.submitted_to_vamps_status() not in valid_submission_states or
+              ppd.submitted_to_insdc_status() not in valid_submission_states):
+            raise QiitaDBStatusError(
+                "Illegal operation due to EBI submission status ('%s') or "
+                "VAMPS submission status ('%s')" % (
+                    ppd.submitted_to_insdc_status(),
+                    ppd.submitted_to_vamps_status()))
+
+        conn_handler = SQLConnectionHandler()
+
+        processed_data = [str(n[0]) for n in conn_handler.execute_fetchall(
+            "SELECT processed_data_id FROM qiita.preprocessed_processed_data "
+            "WHERE preprocessed_data_id = {0} ORDER BY "
+            "processed_data_id".format(ppd_id))]
+
+        if processed_data:
+            raise QiitaDBError(
+                "Preprocessed data %d cannot be removed because it was used "
+                "to generate the following processed data: %s" % (
+                    ppd_id, ', '.join(processed_data)))
+
+        # delete
+        queue = "delete_preprocessed_data_%d" % ppd_id
+        conn_handler.create_queue(queue)
+
+        sql = ("DELETE FROM qiita.prep_template_preprocessed_data WHERE "
+               "preprocessed_data_id = {0}".format(ppd_id))
+        conn_handler.add_to_queue(queue, sql)
+
+        sql = ("DELETE FROM qiita.preprocessed_filepath WHERE "
+               "preprocessed_data_id = {0}".format(ppd_id))
+        conn_handler.add_to_queue(queue, sql)
+
+        sql = ("DELETE FROM qiita.study_preprocessed_data WHERE "
+               "preprocessed_data_id = {0}".format(ppd_id))
+        conn_handler.add_to_queue(queue, sql)
+
+        sql = ("DELETE FROM qiita.preprocessed_data WHERE "
+               "preprocessed_data_id = {0}".format(ppd_id))
+        conn_handler.add_to_queue(queue, sql)
+
+        conn_handler.execute_queue(queue)
 
     @property
     def processed_data(self):

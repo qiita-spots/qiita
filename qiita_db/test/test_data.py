@@ -478,6 +478,38 @@ class PreprocessedDataTests(TestCase):
         # preprocessed_data_id, filepath_id
         self.assertEqual(obs, [[3, obs_id - 1], [3, obs_id]])
 
+    def test_delete(self):
+        """Correctly deletes a preprocessed data"""
+        # testing regular delete
+        ppd = PreprocessedData.create(
+            self.study, self.params_table,
+            self.params_id, self.filepaths, prep_template=self.prep_template,
+            ebi_submission_accession=self.ebi_submission_accession,
+            ebi_study_accession=self.ebi_study_accession)
+        PreprocessedData.delete(ppd.id)
+
+        # testing that it raises an error if ID doesn't exist
+        with self.assertRaises(QiitaDBUnknownIDError):
+            PreprocessedData.delete(ppd.id)
+
+        # testing that we can not remove cause the preprocessed data != sandbox
+        with self.assertRaises(QiitaDBStatusError):
+            PreprocessedData.delete(1)
+
+        # testing that we can not remove cause preprocessed data has been
+        # submitted to EBI or VAMPS
+        pd = ProcessedData(1)
+        pd.status = 'sandbox'
+        with self.assertRaises(QiitaDBError):
+            PreprocessedData.delete(pd.preprocessed_data)
+
+        # testing that we can not remove cause preprocessed data has processed
+        # data
+        ppd = PreprocessedData(pd.preprocessed_data)
+        ppd.update_insdc_status('not submitted')
+        with self.assertRaises(QiitaDBError):
+            PreprocessedData.delete(ppd.id)
+
     def test_create_error_dynamic_table(self):
         """Raises an error if the preprocessed_params_table does not exist"""
         with self.assertRaises(IncompetentQiitaDeveloperError):
