@@ -324,6 +324,8 @@ class BaseSample(QiitaObject):
         ------
         QiitaDBColumnError
             If the column does not exist in the table
+        ValueError
+            If the value type does not match the one in the DB
         """
         conn_handler = SQLConnectionHandler()
 
@@ -347,41 +349,41 @@ class BaseSample(QiitaObject):
             sql, (self._table, column))[0]
 
         if exists_dynamic:
-            # catching error so we can check if the error is due to different
-            # column type or something else
-            try:
                 sql = """UPDATE qiita.{0}
                          SET {1}=%s
                          WHERE sample_id=%s""".format(self._dynamic_table,
                                                       column)
-                conn_handler.execute(sql, (value, self._id))
-            except Exception as e:
-                column_type = conn_handler.execute_fetchone(
-                    """SELECT data_type
-                       FROM information_schema.columns
-                       WHERE column_name=%s AND table_schema='qiita'
-                    """, (column,))[0]
-                value_type = type(value).__name__
-
-                if column_type != value_type:
-                    raise ValueError(
-                        'The new value being added to column: "{0}" is "{1}" '
-                        '(type: "{2}"). However, this column in the DB is of '
-                        'type "{3}". Please change the value in your updated '
-                        'template or reprocess your sample template.'.format(
-                            column, value, value_type, column_type))
-                else:
-                    raise e
         elif exists_required:
             # here is not required the type check as the required fields have
             # an explicit type check
             sql = """UPDATE qiita.{0}
                      SET {1}=%s
                      WHERE sample_id=%s""".format(self._table, column)
-            conn_handler.execute(sql, (value, self._id))
         else:
             raise QiitaDBColumnError("Column %s does not exist in %s" %
                                      (column, self._dynamic_table))
+
+        try:
+            conn_handler.execute(sql, (value, self._id))
+        except Exception as e:
+            # catching error so we can check if the error is due to different
+            # column type or something else
+            column_type = conn_handler.execute_fetchone(
+                """SELECT data_type
+                   FROM information_schema.columns
+                   WHERE column_name=%s AND table_schema='qiita'
+                """, (column,))[0]
+            value_type = type(value).__name__
+
+            if column_type != value_type:
+                raise ValueError(
+                    'The new value being added to column: "{0}" is "{1}" '
+                    '(type: "{2}"). However, this column in the DB is of '
+                    'type "{3}". Please change the value in your updated '
+                    'template or reprocess your sample template.'.format(
+                        column, value, value_type, column_type))
+            else:
+                raise e
 
     def __delitem__(self, key):
         r"""Removes the sample with sample id `key` from the database
