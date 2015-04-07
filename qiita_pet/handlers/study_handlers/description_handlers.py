@@ -716,7 +716,7 @@ class StudyDescriptionHandler(BaseHandler):
             PreprocessedData.delete(ppd_id)
             msg = ("Preprocessed data %d has been deleted" % ppd_id)
             msg_level = "success"
-            pd_id = None
+            ppd_id = None
         except Exception as e:
             msg = ("Couldn't remove preprocessed data %d: %s" %
                    (ppd_id, str(e)))
