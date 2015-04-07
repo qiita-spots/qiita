@@ -621,6 +621,89 @@ class TestPrepTemplateReadOnly(BaseTestPrepTemplate):
 
         self.assertEqual(conn_handler.queues[queue_name], exp)
 
+    def test_clean_validate_template_error_bad_chars(self):
+        """Raises an error if there are invalid characters in the sample names
+        """
+        conn_handler = SQLConnectionHandler()
+        self.metadata.index = ['o()xxxx[{::::::::>', 'sample.1', 'sample.3']
+        with self.assertRaises(QiitaDBColumnError):
+            PrepTemplate._clean_validate_template(self.metadata, 2, "16S",
+                                                  conn_handler)
+
+    def test_clean_validate_template_error_duplicate_cols(self):
+        """Raises an error if there are duplicated columns in the template"""
+        conn_handler = SQLConnectionHandler()
+        self.metadata['STR_COLUMN'] = pd.Series(['', '', ''],
+                                                index=self.metadata.index)
+        with self.assertRaises(QiitaDBDuplicateHeaderError):
+            PrepTemplate._clean_validate_template(self.metadata, 2, "16S",
+                                                  conn_handler)
+
+    def test_clean_validate_template_error_missing(self):
+        """Raises an error if the template is missing a required column"""
+        conn_handler = SQLConnectionHandler()
+        metadata_dict = {
+            'SKB8.640193': {'center_name': 'ANL',
+                            'center_project_name': 'Test Project',
+                            'ebi_submission_accession': None,
+                            'linkerprimersequence': 'GTGCCAGCMGCCGCGGTAA',
+                            'barcodesequence': 'GTCCGCAAGTTA',
+                            'run_prefix': "s_G1_L001_sequences",
+                            'platform': 'ILLUMINA',
+                            'library_construction_protocol': 'AAAA',
+                            'experiment_design_description': 'BBBB'}
+            }
+        metadata = pd.DataFrame.from_dict(metadata_dict, orient='index')
+        with self.assertRaises(QiitaDBColumnError):
+            PrepTemplate._clean_validate_template(metadata, 2, "16S",
+                                                  conn_handler)
+
+    def test_clean_validate_template(self):
+        conn_handler = SQLConnectionHandler()
+        obs = PrepTemplate._clean_validate_template(self.metadata, 2, "16S",
+                                                    conn_handler)
+        metadata_dict = {
+            '2.SKB8.640193': {'center_name': 'ANL',
+                              'center_project_name': 'Test Project',
+                              'ebi_submission_accession': None,
+                              'emp_status_id': 1,
+                              'str_column': 'Value for sample 1',
+                              'linkerprimersequence': 'GTGCCAGCMGCCGCGGTAA',
+                              'barcodesequence': 'GTCCGCAAGTTA',
+                              'run_prefix': "s_G1_L001_sequences",
+                              'platform': 'ILLUMINA',
+                              'library_construction_protocol': 'AAAA',
+                              'experiment_design_description': 'BBBB'},
+            '2.SKD8.640184': {'center_name': 'ANL',
+                              'center_project_name': 'Test Project',
+                              'ebi_submission_accession': None,
+                              'emp_status_id': 1,
+                              'str_column': 'Value for sample 2',
+                              'linkerprimersequence': 'GTGCCAGCMGCCGCGGTAA',
+                              'barcodesequence': 'CGTAGAGCTCTC',
+                              'run_prefix': "s_G1_L001_sequences",
+                              'platform': 'ILLUMINA',
+                              'library_construction_protocol': 'AAAA',
+                              'experiment_design_description': 'BBBB'},
+            '2.SKB7.640196': {'center_name': 'ANL',
+                              'center_project_name': 'Test Project',
+                              'ebi_submission_accession': None,
+                              'emp_status_id': 1,
+                              'str_column': 'Value for sample 3',
+                              'linkerprimersequence': 'GTGCCAGCMGCCGCGGTAA',
+                              'barcodesequence': 'CCTCTGAGAGCT',
+                              'run_prefix': "s_G1_L002_sequences",
+                              'platform': 'ILLUMINA',
+                              'library_construction_protocol': 'AAAA',
+                              'experiment_design_description': 'BBBB'}
+            }
+        exp = pd.DataFrame.from_dict(metadata_dict, orient='index')
+        obs.sort_index(axis=0, inplace=True)
+        obs.sort_index(axis=1, inplace=True)
+        exp.sort_index(axis=0, inplace=True)
+        exp.sort_index(axis=1, inplace=True)
+        assert_frame_equal(obs, exp)
+
 
 @qiita_test_checker()
 class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
