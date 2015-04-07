@@ -220,9 +220,11 @@ class TestPrepSampleReadOnly(BaseTestPrepSample):
 class TestPrepSampleReadWrite(BaseTestPrepSample):
     """Tests the PrepSample class"""
     def test_setitem(self):
-        """setitem raises an error (currently not allowed)"""
-        with self.assertRaises(QiitaDBNotImplementedError):
-            self.tester['barcodesequence'] = 'GTCCGCAAGTTA'
+        with self.assertRaises(QiitaDBColumnError):
+            self.tester['column that does not exist'] = 0.3
+        self.assertEqual(self.tester['center_name'], 'ANL')
+        self.tester['center_name'] = "FOO"
+        self.assertEqual(self.tester['center_name'], "FOO")
 
     def test_delitem(self):
         """delitem raises an error (currently not allowed)"""
