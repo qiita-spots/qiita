@@ -129,6 +129,7 @@ class TestAnalysis(TestCase):
         new = Analysis.create(owner, "newAnalysis",
                               "A New Analysis", from_default=True)
         self.assertEqual(new.id, new_id)
+        self.assertEqual(new.step, 3)
 
         # Make sure samples were transfered properly
         sql = "SELECT * FROM qiita.analysis_sample WHERE analysis_id = %s"

@@ -120,16 +120,25 @@ class Analysis(QiitaStatusObject):
         conn_handler = SQLConnectionHandler()
         conn_handler.create_queue(queue)
         # TODO after demo: if exists()
-
+        # Needed since issue #292 exists
+        status_id = conn_handler.execute_fetchone(
+            "SELECT analysis_status_id from qiita.analysis_status WHERE "
+            "status = 'in_construction'")[0]
         if from_default:
             # insert analysis and move samples into that new analysis
             dflt_id = owner.default_analysis
             sql = """INSERT INTO qiita.{0}
                     (email, name, description, analysis_status_id)
-                    VALUES (%s, %s, %s, 3)
+                    VALUES (%s, %s, %s, %s)
                     RETURNING analysis_id""".format(cls._table)
             conn_handler.add_to_queue(queue, sql, (owner.id, name,
-                                                   description))
+                                                   description, status_id))
+            # MAGIC NUMBER 3: command selection step
+            # needed so we skip the sample selection step
+            sql = """INSERT INTO qiita.analysis_workflow
+                    (analysis_id, step) VALUES (%s, %s)
+                    RETURNING %s"""
+            conn_handler.add_to_queue(queue, sql, ['{0}', 3, '{0}'])
             sql = """UPDATE qiita.analysis_sample
                      SET analysis_id = %s
                      WHERE analysis_id = %s RETURNING %s"""
@@ -138,10 +147,10 @@ class Analysis(QiitaStatusObject):
             # insert analysis information into table as "in construction"
             sql = """INSERT INTO qiita.{0}
                   (email, name, description, analysis_status_id)
-                  VALUES (%s, %s, %s, 1)
+                  VALUES (%s, %s, %s, %s)
                   RETURNING analysis_id""".format(cls._table)
             conn_handler.add_to_queue(
-                queue, sql, (owner.id, name, description))
+                queue, sql, (owner.id, name, description, status_id))
 
         # add parent if necessary
         if parent:
