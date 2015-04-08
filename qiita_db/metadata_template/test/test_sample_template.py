@@ -806,23 +806,20 @@ class TestSampleTemplateReadOnly(BaseTestSampleTemplate):
 
         sql_insert_required = (
             'INSERT INTO qiita.required_sample_info '
-            '(study_id, sample_id, physical_location, has_physical_specimen, '
-            'has_extracted_data, sample_type, required_sample_info_status_id, '
-            'collection_timestamp, host_subject_id, description, latitude, '
-            'longitude) '
+            '(study_id, sample_id, collection_timestamp, description, '
+            'has_extracted_data, has_physical_specimen, host_subject_id, '
+            'latitude, longitude, physical_location, '
+            'required_sample_info_status_id, sample_type) '
             'VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)')
         sql_insert_required_params_1 = (
-            2, '2.Sample1', 'location1', True, True, 'type1', 1,
-            datetime(2014, 5, 29, 12, 24, 51), 'NotIdentified',
-            'Test Sample 1', 42.42, 41.41)
+            2, '2.Sample1', datetime(2014, 5, 29, 12, 24, 51), 'Test Sample 1',
+            True, True, 'NotIdentified', 42.42, 41.41, 'location1', 1, 'type1')
         sql_insert_required_params_2 = (
-            2, '2.Sample2', 'location1', True, True, 'type1', 1,
-            datetime(2014, 5, 29, 12, 24, 51), 'NotIdentified',
-            'Test Sample 2', 4.2, 1.1)
+            2, '2.Sample2', datetime(2014, 5, 29, 12, 24, 51), 'Test Sample 2',
+            True, True, 'NotIdentified', 4.2, 1.1, 'location1', 1, 'type1')
         sql_insert_required_params_3 = (
-            2, '2.Sample3', 'location1', True, True, 'type1', 1,
-            datetime(2014, 5, 29, 12, 24, 51), 'NotIdentified',
-            'Test Sample 3', 4.8, 4.41)
+            2, '2.Sample3', datetime(2014, 5, 29, 12, 24, 51), 'Test Sample 3',
+            True, True, 'NotIdentified', 4.8, 4.41, 'location1', 1, 'type1')
 
         sql_insert_sample_cols = (
             'INSERT INTO qiita.study_sample_columns '
@@ -1240,18 +1237,6 @@ class TestSampleTemplateReadWrite(BaseTestSampleTemplate):
 
         obs = {k: v['new_column'] for k, v in self.tester.items()}
         self.assertEqual(obs, exp)
-
-    def test_remove_category(self):
-        with self.assertRaises(QiitaDBColumnError):
-            self.tester.remove_category('does not exist')
-
-        for v in self.tester.values():
-            self.assertIn('elevation', v)
-
-        self.tester.remove_category('elevation')
-
-        for v in self.tester.values():
-            self.assertNotIn('elevation', v)
 
     def test_to_file(self):
         """to file writes a tab delimited file with all the metadata"""

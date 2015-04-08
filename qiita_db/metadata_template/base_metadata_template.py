@@ -607,7 +607,7 @@ class MetadataTemplate(QiitaObject):
         headers = list(md_template.keys())
 
         # Get the required columns from the DB
-        db_cols = get_table_cols(cls._table, conn_handler)
+        db_cols = sorted(get_table_cols(cls._table, conn_handler))
         # Remove the sample_id and _id_column columns
         db_cols.remove('sample_id')
         db_cols.remove(cls._id_column)
@@ -626,7 +626,7 @@ class MetadataTemplate(QiitaObject):
             values, many=True)
 
         # Insert rows on *_columns table
-        headers = list(set(headers).difference(db_cols))
+        headers = sorted(set(headers).difference(db_cols))
         datatypes = get_datatypes(md_template.ix[:, headers])
         # psycopg2 requires a list of tuples, in which each tuple is a set
         # of values to use in the string formatting of the query. We have all

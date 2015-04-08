@@ -407,32 +407,6 @@ class SampleTemplate(MetadataTemplate):
                     if '_qiime_' not in basename(fp):
                         pt.create_qiime_mapping_file(fp)
 
-    def remove_category(self, category):
-        """Remove a category from the sample template
-
-        Parameters
-        ----------
-        category : str
-            The category to remove
-
-        Raises
-        ------
-        QiitaDBColumnError
-            If the column does not exist in the table
-        """
-        table_name = self._table_name(self.study_id)
-        conn_handler = SQLConnectionHandler()
-
-        if category not in self.categories():
-            raise QiitaDBColumnError("Column %s does not exist in %s" %
-                                     (category, table_name))
-
-        # This operation may invalidate another user's perspective on the
-        # table
-        conn_handler.execute("""
-            ALTER TABLE qiita.{0} DROP COLUMN {1}""".format(table_name,
-                                                            category))
-
     def update_category(self, category, samples_and_values):
         """Update an existing column
 
