@@ -8,7 +8,6 @@
 
 from __future__ import division
 from future.builtins import zip
-from future.utils import viewitems
 from copy import deepcopy
 from os.path import join
 from time import strftime
@@ -20,7 +19,6 @@ from skbio.util import find_duplicates
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_db.exceptions import (QiitaDBDuplicateError, QiitaDBColumnError,
-                                 QiitaDBUnknownIDError,
                                  QiitaDBDuplicateHeaderError, QiitaDBError,
                                  QiitaDBWarning)
 from qiita_db.sql_connection import SQLConnectionHandler
