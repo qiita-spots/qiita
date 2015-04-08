@@ -829,7 +829,7 @@ class PreprocessedData(BaseData):
         ppd = cls(ppd_id)
         if ppd.status != 'sandbox':
             raise QiitaDBStatusError(
-                "Illegal operation on non sandbox preprocessed data")
+                "Illegal operation on non sandboxed preprocessed data")
         elif ppd.submitted_to_vamps_status() not in valid_submission_states:
             raise QiitaDBStatusError(
                 "Illegal operation. This preprocessed data has or is being "
@@ -1342,7 +1342,7 @@ class ProcessedData(BaseData):
         """
         if cls(processed_data_id).status != 'sandbox':
             raise QiitaDBStatusError(
-                "Illegal operation on non sandbox processed data")
+                "Illegal operation on non sandboxed processed data")
 
         conn_handler = SQLConnectionHandler()
 

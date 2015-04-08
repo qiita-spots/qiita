@@ -488,7 +488,11 @@ class PreprocessedDataTests(TestCase):
             ebi_study_accession=self.ebi_study_accession)
         PreprocessedData.delete(ppd.id)
 
-        # testing that it raises an error if ID doesn't exist
+        # testing that the deleted preprocessed data can't be instantiated
+        with self.assertRaises(QiitaDBUnknownIDError):
+            PreprocessedData(ppd.id)
+        # and for completeness testing that it raises an error if ID
+        # doesn't exist
         with self.assertRaises(QiitaDBUnknownIDError):
             PreprocessedData.delete(ppd.id)
 
@@ -496,7 +500,7 @@ class PreprocessedDataTests(TestCase):
         with self.assertRaises(QiitaDBStatusError):
             PreprocessedData.delete(1)
 
-    def test_delete_advance(self):
+    def test_delete_advanced(self):
         # testing that we can not remove cause preprocessed data has been
         # submitted to EBI or VAMPS
         ppd = PreprocessedData.create(
