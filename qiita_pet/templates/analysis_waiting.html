@@ -4,7 +4,9 @@
 <script src="/static/vendor/js/moi.js"></script>
 <script src="/static/vendor/js/moi_list.js"></script>
 <script type="text/javascript">
-    window.onload = function() {moi_list.init("{{group_id}}");};
+    $(document).ready(function() {
+      moi_list.init("{{group_id}}");
+    });
 </script>
 {% end %}
 
