@@ -1167,6 +1167,37 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
                                  self.test_study, self.data_type_id)
         self.assertEqual(pt.status, 'sandbox')
 
+    def test_update_category(self):
+        with self.assertRaises(QiitaDBUnknownIDError):
+            self.tester.update_category('barcodesequence', {"foo": "bar"})
+
+        with self.assertRaises(QiitaDBColumnError):
+            self.tester.update_category('missing column',
+                                        {'1.SKB7.640196': 'bar'})
+
+        neg_test = self.tester['1.SKB7.640196']['barcodesequence']
+        mapping = {'1.SKB8.640193': 'AAAAAAAAAAAA',
+                   '1.SKD8.640184': 'CCCCCCCCCCCC'}
+
+        self.tester.update_category('barcodesequence', mapping)
+
+        self.assertEqual(self.tester['1.SKB7.640196']['barcodesequence'],
+                         neg_test)
+        self.assertEqual(self.tester['1.SKB8.640193']['barcodesequence'],
+                         'AAAAAAAAAAAA')
+        self.assertEqual(self.tester['1.SKD8.640184']['barcodesequence'],
+                         'CCCCCCCCCCCC')
+
+        neg_test = self.tester['1.SKB7.640196']['center_name']
+        mapping = {'1.SKB8.640193': 'FOO',
+                   '1.SKD8.640184': 'BAR'}
+
+        self.tester.update_category('center_name', mapping)
+
+        self.assertEqual(self.tester['1.SKB7.640196']['center_name'], neg_test)
+        self.assertEqual(self.tester['1.SKB8.640193']['center_name'], 'FOO')
+        self.assertEqual(self.tester['1.SKD8.640184']['center_name'], 'BAR')
+
 
 EXP_PREP_TEMPLATE = (
     'sample_name\tbarcodesequence\tcenter_name\tcenter_project_name\t'
