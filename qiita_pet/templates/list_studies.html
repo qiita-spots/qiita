@@ -57,7 +57,13 @@ $(document).ready(function() {
                     var glyph = 'remove';
                     if(data === true) { glyph = 'ok' } 
                     return "<span class='glyphicon glyphicon-"+ glyph +"'></span>";
-              }, targets: [4]}
+              }, targets: [4]},
+              // render the shared with cell
+              {"render": function ( data, type, row, meta ) {
+                    var glyph = 'remove';
+                    if(data === true) { glyph = 'ok' } 
+                    return "<span id='shared_html_"+ data.study_id +"'>"+ data +"</span><br/><a class='btn btn-primary btn-xs' data-toggle='modal' data-target='#share-study-modal-view' onclick='modify_sharing("+ data.study_id +");'>Modify</a>";
+              }, targets: [7]},
               ],
             "oLanguage": {
                 "sSearch": "Narrow search results by column data (Title, abstract, PI, etc):",

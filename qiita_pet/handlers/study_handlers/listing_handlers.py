@@ -120,6 +120,8 @@ def _build_study_info(user, study_proc=None, proc_samples=None):
         info["status"] = status
         info["study_id"] = study.id
         info["pi"] = study_person_linkifier((PI.email, PI.name))
+        del info["principal_investigator_id"]
+        del info["email"]
         # Build the proc data info list for the child row in datatable
         proc_data_info = []
         for pid in study_proc[study.id]:
