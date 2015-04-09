@@ -618,8 +618,8 @@ class MetadataTemplate(QiitaObject):
         cls._check_subclass()
         invalid_ids = get_invalid_sample_names(md_template.index)
         if invalid_ids:
-            raise QiitaDBColumnError("The following sample names in the sample"
-                                     " template contain invalid characters "
+            raise QiitaDBColumnError("The following sample names in the "
+                                     "template contain invalid characters "
                                      "(only alphanumeric characters or periods"
                                      " are allowed): %s." %
                                      ", ".join(invalid_ids))
