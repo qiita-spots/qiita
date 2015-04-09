@@ -309,8 +309,8 @@ class BaseSample(QiitaObject):
                            " in template %d" %
                            (key, self._id, self._md_template.id))
 
-    def __setitem__(self, column, value):
-        r"""Sets the metadata value for the category `column`
+    def add_setitem_queries(self, column, value, conn_handler, queue):
+        """Adds the SQL queries needed to set and item to the queue
 
         Parameters
         ----------
@@ -319,16 +319,16 @@ class BaseSample(QiitaObject):
         value : str
             The value to set. This is expected to be a str on the assumption
             that psycopg2 will cast as necessary when updating.
+        conn_handler : SQLConnectionHandler
+            The connection handler object connected to the DB
+        queue : str
+            The queue where the SQL statements will be added
 
         Raises
         ------
         QiitaDBColumnError
             If the column does not exist in the table
-        ValueError
-            If the value type does not match the one in the DB
         """
-        conn_handler = SQLConnectionHandler()
-
         # try dynamic tables
         sql = """SELECT EXISTS (
                     SELECT column_name
@@ -363,8 +363,32 @@ class BaseSample(QiitaObject):
             raise QiitaDBColumnError("Column %s does not exist in %s" %
                                      (column, self._dynamic_table))
 
+        conn_handler.add_to_queue(queue, sql, (value, self._id))
+
+    def __setitem__(self, column, value):
+        r"""Sets the metadata value for the category `column`
+
+        Parameters
+        ----------
+        column : str
+            The column to update
+        value : str
+            The value to set. This is expected to be a str on the assumption
+            that psycopg2 will cast as necessary when updating.
+
+        Raises
+        ------
+        ValueError
+            If the value type does not match the one in the DB
+        """
+        conn_handler = SQLConnectionHandler()
+        queue_name = "set_item_%s" % self._id
+        conn_handler.create_queue(queue_name)
+
+        self.add_setitem_queries(column, value, conn_handler, queue_name)
+
         try:
-            conn_handler.execute(sql, (value, self._id))
+            conn_handler.execute_queue(queue_name)
         except Exception as e:
             # catching error so we can check if the error is due to different
             # column type or something else
