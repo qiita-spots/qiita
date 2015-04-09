@@ -15,28 +15,27 @@ class TestHelpers(TestHandlerBase):
 
     def setUp(self):
         self.exp = [{
+            'study_id': 1,
             'status': 'public',
-            'checkbox': "<input type='checkbox' value='1' />",
-            'abstract': 'This is a preliminary study to examine the microbiota'
-                        ' associated with the Cannabis plant. Soils samples '
-                        'from the bulk soil, soil associated with the roots, '
-                        'and the rhizosphere were extracted and the DNA '
-                        'sequenced. Roots from three independent plants of '
-                        'different strains were examined. These roots were '
-                        'obtained November 11, 2011 from plants that had been '
-                        'harvested in the summer. Future studies will attempt '
-                        'to analyze the soils and rhizospheres from the same '
-                        'location at different time points in the plant '
-                        'lifecycle.',
-            'meta_complete': "<span class='glyphicon glyphicon-ok'></span>",
-            'title': '<a href=\'#\' data-toggle=\'modal\' data-target=\''
-                     '#study-abstract-modal\' onclick=\'fillAbstract("studies-'
-                     'table", 0)\'><span class=\'glyphicon glyphicon'
-                     '-file\' aria-hidden=\'true\'></span></a> | <a href=\'/'
-                     'study/description/1\' id=\'study0-title\'>Identification'
-                     ' of the Microbiomes for Cannabis Soils</a>',
-            'num_raw_data': 4, 'id': 1, 'num_samples': 27,
-            'shared': 'Not Available',
+            'study_abstract':
+                'This is a preliminary study to examine the microbiota '
+                'associated with the Cannabis plant. Soils samples '
+                'from the bulk soil, soil associated with the roots, '
+                'and the rhizosphere were extracted and the DNA '
+                'sequenced. Roots from three independent plants of '
+                'different strains were examined. These roots were '
+                'obtained November 11, 2011 from plants that had been '
+                'harvested in the summer. Future studies will attempt '
+                'to analyze the soils and rhizospheres from the same '
+                'location at different time points in the plant '
+                'lifecycle.',
+            'metadata_complete': True,
+            'study_title':
+                'Identification of the Microbiomes for Cannabis Soils',
+            'num_raw_data': 4,
+            'number_samples_collected': 27,
+            'shared': 
+                '<a target="_blank" href="mailto:shared@foo.bar">Shared</a>',
             'pmid': '<a target="_blank" href="http://www.ncbi.nlm.nih.gov/'
                     'pubmed/123456">123456</a>, <a target="_blank" href="http:'
                     '//www.ncbi.nlm.nih.gov/pubmed/7891011">7891011</a>',
@@ -95,23 +94,22 @@ class TestHelpers(TestHandlerBase):
         Study.create(user, 'test_study_1', efo=[1], info=info)
         obs = _build_study_info(user)
         self.exp.append({
+            'study_id': 2,
             'status': 'sandbox',
-            'checkbox': "<input type='checkbox' value='2' />",
-            'abstract': 'abstract',
-            'meta_complete': "<span class='glyphicon glyphicon-remove'>"
-            "</span>",
-            'title': '<a href=\'#\' data-toggle=\'modal\' data-target=\'#study'
-            '-abstract-modal\' onclick=\'fillAbstract("studies-table"'
-            ', 1)\'><span class=\'glyphicon glyphicon-file\' aria-hidden=\''
-            'true\'></span></a> | <a href=\'/study/description/2\' id=\''
-            'study1-title\'>test_study_1</a>',
-            'num_raw_data': 0, 'id': 2, 'num_samples': '0',
-            'shared': "<span id='shared_html_2'></span><br/><a class='btn "
-            "btn-primary btn-xs' data-toggle='modal' data-target='#share-study"
-            "-modal-view' onclick='modify_sharing(2);'>Modify</a>",
-            'pmid': '', 'pi':
-            '<a target="_blank" href="mailto:PI_dude@foo.bar">PIDude</a>',
+            'study_abstract': 'abstract',
+            'metadata_complete': False,
+            'study_title': 'test_study_1',
+            'num_raw_data': 0,
+            'number_samples_collected': 0,
+            'shared': '',
+            'pmid': '',
+            'pi':
+                '<a target="_blank" href="mailto:PI_dude@foo.bar">PIDude</a>',
             'proc_data_info': []})
+        for key, val in obs[1].iteritems():
+            if self.exp[1][key] != val:
+                print key
+                print self.exp[1][key], val
         self.assertEqual(obs, self.exp)
 
 
@@ -296,38 +294,33 @@ class TestCreateStudyAJAX(TestHandlerBase):
 
 
 class TestSearchStudiesAJAX(TestHandlerBase):
-    database = False
+    database = True
 
     json = {
         'iTotalRecords': 1, 'sEcho': 1021, 'iTotalDisplayRecords': 1,
         'aaData': [{
             'status': 'private',
-            'checkbox': "<input type='checkbox' value='1' />",
-            'title': '<a href=\'#\' data-toggle=\'modal\' data-target=\'#study'
-            '-abstract-modal\' onclick=\'fillAbstract("studies-table"'
-            ', 0)\'><span class=\'glyphicon glyphicon-file\' aria-hidden=\''
-            'true\'></span></a> | <a href=\'/study/description/1\' id=\''
-            'study0-title\'>Identification of the Microbiomes for Cannabis '
-            'Soils</a>',
-            'abstract': 'This is a preliminary study to examine the microbiota'
-            ' associated with the Cannabis plant. Soils samples from the bulk'
-            ' soil, soil associated with the roots, and the rhizosphere were '
-            'extracted and the DNA sequenced. Roots from three independent '
-            'plants of different strains were examined. These roots were '
-            'obtained November 11, 2011 from plants that had been harvested in'
-            ' the summer. Future studies will attempt to analyze the soils and'
-            ' rhizospheres from the same location at different time points in '
-            'the plant lifecycle.',
-            'pi': '<a target="_blank" href="mailto:PI_dude@foo.bar">PIDude'
-            '</a>',
-            'id': 1,
-            'num_samples': 27,
-            'shared': '<span id=\'shared_html_1\'><a target="_blank" href="'
-            'mailto:shared@foo.bar">Shared</a></span><br/><a class=\'btn '
-            'btn-primary btn-xs\' data-toggle=\'modal\' data-target=\'#share'
-            '-study-modal-view\' onclick=\'modify_sharing(1);\'>Modify</a>',
-            'meta_complete': "<span class='glyphicon glyphicon-ok'>"
-            "</span>",
+            'study_title':
+                'Identification of the Microbiomes for Cannabis Soils',
+            'study_abstract':
+                'This is a preliminary study to examine the microbiota '
+                'associated with the Cannabis plant. Soils samples '
+                'from the bulk soil, soil associated with the roots, '
+                'and the rhizosphere were extracted and the DNA '
+                'sequenced. Roots from three independent plants of '
+                'different strains were examined. These roots were '
+                'obtained November 11, 2011 from plants that had been '
+                'harvested in the summer. Future studies will attempt '
+                'to analyze the soils and rhizospheres from the same '
+                'location at different time points in the plant '
+                'lifecycle.',
+            'pi':
+                '<a target="_blank" href="mailto:PI_dude@foo.bar">PIDude</a>',
+            'study_id': 1,
+            'number_samples_collected': 27,
+            'shared': 
+                '<a target="_blank" href="mailto:shared@foo.bar">Shared</a>',
+            'metadata_complete': True,
             'pmid': '<a target="_blank" href="http://www.ncbi.nlm.nih.gov/'
             'pubmed/123456">123456</a>, <a target="_blank" href="http://www.'
             'ncbi.nlm.nih.gov/pubmed/7891011">7891011</a>',
@@ -368,6 +361,11 @@ class TestSearchStudiesAJAX(TestHandlerBase):
             })
         self.assertEqual(response.code, 200)
         # make sure responds properly
+        obs = loads(response.body)
+        for key, val in self.json['aaData'][0].viewitems():
+            if obs['aaData'][0][key] != val:
+                print key
+                print obs['aaData'][0][key], "<><><>", val
         self.assertEqual(loads(response.body), self.json)
 
         response = self.get('/study/search/', {
