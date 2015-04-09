@@ -43,6 +43,41 @@ def _get_shared_links_for_study(study):
     return ", ".join(shared)
 
 
+def _build_single_study_info(study, info):
+    # Clean up and add to the study info for HTML purposes
+    PI = StudyPerson(info['principal_investigator_id'])
+    status = study.status
+    if info['pmid'] is not None:
+        info['pmid'] = ", ".join([pubmed_linkifier([p])
+                                  for p in info['pmid']])
+    else:
+        info['pmid'] = ""
+    if info["number_samples_collected"] is None:
+        info["number_samples_collected"] = 0
+    info["shared"] = _get_shared_links_for_study(study)
+    info["num_raw_data"] = len(study.raw_data())
+    info["status"] = status
+    info["study_id"] = study.id
+    info["pi"] = study_person_linkifier((PI.email, PI.name))
+    del info["principal_investigator_id"]
+    del info["email"]
+    return info
+
+
+def _build_proc_data_info(study, study_proc, proc_samples):
+    # Build the proc data info list for the child row in datatable
+    proc_data_info = []
+    for pid in study_proc[study.id]:
+        proc_data = ProcessedData(pid)
+        proc_info = proc_data.processing_info
+        proc_info['pid'] = pid
+        proc_info['data_type'] = proc_data.data_type()
+        proc_info['samples'] = sorted(proc_samples[pid])
+        proc_info['processed_date'] = str(proc_info['processed_date'])
+        proc_data_info.append(proc_info)
+    return proc_data_info
+
+
 def _build_study_info(user, study_proc=None, proc_samples=None):
     """builds list of dicts for studies table, with all html formatted
 
@@ -61,21 +96,22 @@ def _build_study_info(user, study_proc=None, proc_samples=None):
     -------
     infolist: list of dict of lists and dicts
         study and processed data info for JSON serialiation for datatables
+        Each dict in the list is a single study, and contains the text
 
     Notes
     -----
     Both study_proc and proc_samples must be passed, or neither passed.
     """
+    build_samples = False
     # Logic check to make sure both needed parts passed
-    build_info = False
     if study_proc is not None and proc_samples is None:
         raise IncompetentQiitaDeveloperError(
             'Must pass proc_samples when study_proc given')
     elif proc_samples is not None and study_proc is None:
         raise IncompetentQiitaDeveloperError(
             'Must pass study_proc when proc_samples given')
-    elif proc_samples is None:
-        build_info = True
+    elif study_proc is None:
+        build_samples = True
 
     # get list of studies for table
     study_set = user.user_studies.union(
@@ -93,48 +129,24 @@ def _build_study_info(user, study_proc=None, proc_samples=None):
     study_info = Study.get_info(study_set, cols)
 
     infolist = []
-    for row, info in enumerate(study_info):
+    for info in study_info:
         # Convert DictCursor to proper dict
         info = dict(info)
         study = Study(info['study_id'])
-        PI = StudyPerson(info['principal_investigator_id'])
-        status = study.status
-        # if needed, get all the proc data info since no search results passed
-        if build_info:
-            proc_data = study.processed_data()
-            proc_samples = {}
-            study_proc = {study.id: proc_data}
-            for pid in proc_data:
-                proc_samples[pid] = ProcessedData(pid).samples
+        # Build the processed data info for the study if none passed
+        if build_samples:
+                proc_data = study.processed_data()
+                proc_samples = {}
+                study_proc = {study.id: proc_data}
+                for pid in proc_data:
+                    proc_samples[pid] = ProcessedData(pid).samples
 
-        # Clean up and add to the study info for HTML purposes
-        if info['pmid'] is not None:
-            info['pmid'] = ", ".join([pubmed_linkifier([p])
-                                      for p in info['pmid']])
-        else:
-            info['pmid'] = ""
-        if info["number_samples_collected"] is None:
-            info["number_samples_collected"] = 0
-        info["shared"] = _get_shared_links_for_study(study)
-        info["num_raw_data"] = len(study.raw_data())
-        info["status"] = status
-        info["study_id"] = study.id
-        info["pi"] = study_person_linkifier((PI.email, PI.name))
-        del info["principal_investigator_id"]
-        del info["email"]
+        study_info = _build_single_study_info(study, info)
         # Build the proc data info list for the child row in datatable
-        proc_data_info = []
-        for pid in study_proc[study.id]:
-            proc_data = ProcessedData(pid)
-            proc_info = proc_data.processing_info
-            proc_info['pid'] = pid
-            proc_info['data_type'] = proc_data.data_type()
-            proc_info['samples'] = sorted(proc_samples[pid])
-            proc_info['processed_date'] = str(proc_info['processed_date'])
-            proc_data_info.append(proc_info)
-        info["proc_data_info"] = proc_data_info
+        study_info["proc_data_info"] = _build_proc_data_info(study, study_proc,
+                                                             proc_samples)
 
-        infolist.append(info)
+        infolist.append(study_info)
     return infolist
 
 
