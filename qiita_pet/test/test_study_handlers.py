@@ -34,7 +34,7 @@ class TestHelpers(TestHandlerBase):
                 'Identification of the Microbiomes for Cannabis Soils',
             'num_raw_data': 4,
             'number_samples_collected': 27,
-            'shared': 
+            'shared':
                 '<a target="_blank" href="mailto:shared@foo.bar">Shared</a>',
             'pmid': '<a target="_blank" href="http://www.ncbi.nlm.nih.gov/'
                     'pubmed/123456">123456</a>, <a target="_blank" href="http:'
@@ -106,10 +106,6 @@ class TestHelpers(TestHandlerBase):
             'pi':
                 '<a target="_blank" href="mailto:PI_dude@foo.bar">PIDude</a>',
             'proc_data_info': []})
-        for key, val in obs[1].iteritems():
-            if self.exp[1][key] != val:
-                print key
-                print self.exp[1][key], val
         self.assertEqual(obs, self.exp)
 
 
@@ -318,7 +314,7 @@ class TestSearchStudiesAJAX(TestHandlerBase):
                 '<a target="_blank" href="mailto:PI_dude@foo.bar">PIDude</a>',
             'study_id': 1,
             'number_samples_collected': 27,
-            'shared': 
+            'shared':
                 '<a target="_blank" href="mailto:shared@foo.bar">Shared</a>',
             'metadata_complete': True,
             'pmid': '<a target="_blank" href="http://www.ncbi.nlm.nih.gov/'
@@ -361,11 +357,6 @@ class TestSearchStudiesAJAX(TestHandlerBase):
             })
         self.assertEqual(response.code, 200)
         # make sure responds properly
-        obs = loads(response.body)
-        for key, val in self.json['aaData'][0].viewitems():
-            if obs['aaData'][0][key] != val:
-                print key
-                print obs['aaData'][0][key], "<><><>", val
         self.assertEqual(loads(response.body), self.json)
 
         response = self.get('/study/search/', {
