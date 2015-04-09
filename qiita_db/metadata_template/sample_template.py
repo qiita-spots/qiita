@@ -17,9 +17,8 @@ import pandas as pd
 import warnings
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
-from qiita_db.exceptions import (QiitaDBDuplicateError, QiitaDBColumnError,
-                                 QiitaDBUnknownIDError, QiitaDBError,
-                                 QiitaDBWarning)
+from qiita_db.exceptions import (QiitaDBDuplicateError, QiitaDBUnknownIDError,
+                                 QiitaDBError, QiitaDBWarning)
 from qiita_db.sql_connection import SQLConnectionHandler
 from qiita_db.util import (get_table_cols, get_required_sample_info_status,
                            get_mountpoint, scrub_data)
