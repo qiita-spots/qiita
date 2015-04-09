@@ -697,6 +697,33 @@ class StudyDescriptionHandler(BaseHandler):
 
         callback((msg, msg_level, 'raw_data_tab', prep_id, None))
 
+    def delete_preprocessed_data(self, study, user, callback):
+        """Delete the selected preprocessed data
+
+        Parameters
+        ----------
+        study : Study
+            The current study object
+        user : User
+            The current user object
+        callback : function
+            The callback function to call with the results once the processing
+            is done
+        """
+        ppd_id = int(self.get_argument('preprocessed_data_id'))
+
+        try:
+            PreprocessedData.delete(ppd_id)
+            msg = ("Preprocessed data %d has been deleted" % ppd_id)
+            msg_level = "success"
+            ppd_id = None
+        except Exception as e:
+            msg = ("Couldn't remove preprocessed data %d: %s" %
+                   (ppd_id, str(e)))
+            msg_level = "danger"
+
+        callback((msg, msg_level, 'preprocessed_data_tab', ppd_id, None))
+
     def delete_processed_data(self, study, user, callback):
         """Delete the selected processed data
 
@@ -756,6 +783,7 @@ class StudyDescriptionHandler(BaseHandler):
             update_investigation_type=self.update_investigation_type,
             delete_raw_data=self.delete_raw_data,
             delete_prep_template=self.delete_prep_template,
+            delete_preprocessed_data=self.delete_preprocessed_data,
             delete_processed_data=self.delete_processed_data)
 
         # Get the action that we need to perform

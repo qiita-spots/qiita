@@ -45,6 +45,7 @@ import pandas as pd
 from skbio.util import find_duplicates
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
+
 from qiita_db.exceptions import (QiitaDBUnknownIDError, QiitaDBColumnError,
                                  QiitaDBNotImplementedError,
                                  QiitaDBDuplicateHeaderError)
@@ -312,17 +313,81 @@ class BaseSample(QiitaObject):
                            " in template %d" %
                            (key, self._id, self._md_template.id))
 
-    def __setitem__(self, key, value):
-        r"""Sets the metadata value for the category `key`
+    def __setitem__(self, column, value):
+        r"""Sets the metadata value for the category `column`
 
         Parameters
         ----------
-        key : str
-            The metadata category
-        value : obj
-            The new value for the category
+        column : str
+            The column to update
+        value : str
+            The value to set. This is expected to be a str on the assumption
+            that psycopg2 will cast as necessary when updating.
+
+        Raises
+        ------
+        QiitaDBColumnError
+            If the column does not exist in the table
+        ValueError
+            If the value type does not match the one in the DB
         """
-        raise QiitaDBNotImplementedError()
+        conn_handler = SQLConnectionHandler()
+
+        # try dynamic tables
+        sql = """SELECT EXISTS (
+                    SELECT column_name
+                    FROM information_schema.columns
+                    WHERE table_name=%s
+                        AND table_schema='qiita'
+                        AND column_name=%s)"""
+        exists_dynamic = conn_handler.execute_fetchone(
+            sql, (self._dynamic_table, column))[0]
+        # try required_sample_info
+        sql = """SELECT EXISTS (
+                    SELECT column_name
+                    FROM information_schema.columns
+                    WHERE table_name=%s
+                        AND table_schema='qiita'
+                        AND column_name=%s)"""
+        exists_required = conn_handler.execute_fetchone(
+            sql, (self._table, column))[0]
+
+        if exists_dynamic:
+                sql = """UPDATE qiita.{0}
+                         SET {1}=%s
+                         WHERE sample_id=%s""".format(self._dynamic_table,
+                                                      column)
+        elif exists_required:
+            # here is not required the type check as the required fields have
+            # an explicit type check
+            sql = """UPDATE qiita.{0}
+                     SET {1}=%s
+                     WHERE sample_id=%s""".format(self._table, column)
+        else:
+            raise QiitaDBColumnError("Column %s does not exist in %s" %
+                                     (column, self._dynamic_table))
+
+        try:
+            conn_handler.execute(sql, (value, self._id))
+        except Exception as e:
+            # catching error so we can check if the error is due to different
+            # column type or something else
+            column_type = conn_handler.execute_fetchone(
+                """SELECT data_type
+                   FROM information_schema.columns
+                   WHERE column_name=%s AND table_schema='qiita'
+                """, (column,))[0]
+            value_type = type(value).__name__
+
+            if column_type != value_type:
+                raise ValueError(
+                    'The new value being added to column: "{0}" is "{1}" '
+                    '(type: "{2}"). However, this column in the DB is of '
+                    'type "{3}". Please change the value in your updated '
+                    'template or reprocess your sample template.'.format(
+                        column, value, value_type, column_type))
+            else:
+                raise e
 
     def __delitem__(self, key):
         r"""Removes the sample with sample id `key` from the database

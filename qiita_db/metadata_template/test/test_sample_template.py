@@ -209,6 +209,10 @@ class TestSampleReadWrite(BaseTestSample):
     def test_setitem(self):
         with self.assertRaises(QiitaDBColumnError):
             self.tester['column that does not exist'] = 0.30
+
+        with self.assertRaises(ValueError):
+            self.tester['collection_timestamp'] = "Error!"
+
         self.assertEqual(self.tester['tot_nitro'], 1.41)
         self.tester['tot_nitro'] = '1234.5'
         self.assertEqual(self.tester['tot_nitro'], 1234.5)
