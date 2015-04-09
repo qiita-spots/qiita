@@ -8,7 +8,6 @@
 
 from __future__ import division
 from future.builtins import zip
-from future.utils import viewitems
 from os.path import join
 from time import strftime
 from os.path import basename
@@ -17,8 +16,8 @@ import pandas as pd
 import warnings
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
-from qiita_db.exceptions import (QiitaDBDuplicateError, QiitaDBUnknownIDError,
-                                 QiitaDBError, QiitaDBWarning)
+from qiita_db.exceptions import (QiitaDBDuplicateError, QiitaDBError,
+                                 QiitaDBWarning)
 from qiita_db.sql_connection import SQLConnectionHandler
 from qiita_db.util import (get_table_cols, get_required_sample_info_status,
                            get_mountpoint, scrub_data)
@@ -337,33 +336,6 @@ class SampleTemplate(MetadataTemplate):
                     # word qiime within the name of the file
                     if '_qiime_' not in basename(fp):
                         pt.create_qiime_mapping_file(fp)
-
-    def update_category(self, category, samples_and_values):
-        """Update an existing column
-
-        Parameters
-        ----------
-        category : str
-            The category to update
-        samples_and_values : dict
-            A mapping of {sample_id: value}
-
-        Raises
-        ------
-        QiitaDBUnknownIDError
-            If a sample_id is included in values that is not in the template
-        QiitaDBColumnError
-            If the column does not exist in the table. This is implicit, and
-            can be thrown by the contained Samples.
-        """
-        if not set(self.keys()).issuperset(samples_and_values):
-            missing = set(self.keys()) - set(samples_and_values)
-            table_name = self._table_name(self.study_id)
-            raise QiitaDBUnknownIDError(missing, table_name)
-
-        for k, v in viewitems(samples_and_values):
-            sample = self[k]
-            sample[category] = v
 
     def add_category(self, category, samples_and_values, dtype, default):
         """Add a metadata category
