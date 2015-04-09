@@ -433,37 +433,3 @@ class SampleTemplate(MetadataTemplate):
         for k, v in viewitems(samples_and_values):
             sample = self[k]
             sample[category] = v
-
-    def add_category(self, category, samples_and_values, dtype, default):
-        """Add a metadata category
-
-        Parameters
-        ----------
-        category : str
-            The category to add
-        samples_and_values : dict
-            A mapping of {sample_id: value}
-        dtype : str
-            The datatype of the column
-        default : object
-            The default value associated with the column. This must be
-            specified as these columns are added "not null".
-
-        Raises
-        ------
-        QiitaDBDuplicateError
-            If the column already exists
-        """
-        table_name = self._table_name(self.study_id)
-        conn_handler = SQLConnectionHandler()
-
-        if category in self.categories():
-            raise QiitaDBDuplicateError(category, "N/A")
-
-        conn_handler.execute("""
-            ALTER TABLE qiita.{0}
-            ADD COLUMN {1} {2}
-            NOT NULL DEFAULT '{3}'""".format(table_name, category, dtype,
-                                             default))
-
-        self.update_category(category, samples_and_values)
