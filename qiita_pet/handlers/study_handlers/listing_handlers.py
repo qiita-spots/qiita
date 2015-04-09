@@ -50,12 +50,17 @@ def _build_study_info(user, study_proc=None, proc_samples=None):
     ----------
     user : User object
         logged in user
-    study_proc : dict of lists
+    study_proc : dict of lists, optional
         Dictionary keyed on study_id that lists all processed data associated
-        with that study.
-    proc_samples : dict of lists
+        with that study. Required if proc_samples given.
+    proc_samples : dict of lists, optional
         Dictionary keyed on proc_data_id that lists all samples associated with
-        that processed data.
+        that processed data. Rquired if study_proc given.
+
+    Returns
+    -------
+    infolist: list of dict of lists and dicts
+        study and processed data info for JSON serialiation for datatables
 
     Notes
     -----
@@ -73,11 +78,11 @@ def _build_study_info(user, study_proc=None, proc_samples=None):
         build_info = True
 
     # get list of studies for table
-    study_list = user.user_studies.union(
+    study_set = user.user_studies.union(
         Study.get_by_status('public')).union(user.shared_studies)
     if study_proc is not None:
-        study_list = study_list.intersection(study_proc)
-    if not study_list:
+        study_set = study_set.intersection(study_proc)
+    if not study_set:
         # No studies left so no need to continue
         return []
 
@@ -85,11 +90,14 @@ def _build_study_info(user, study_proc=None, proc_samples=None):
     cols = ['study_id', 'email', 'principal_investigator_id',
             'pmid', 'study_title', 'metadata_complete',
             'number_samples_collected', 'study_abstract']
-    study_info = Study.get_info(study_list, cols)
+    study_info = Study.get_info(study_set, cols)
 
     infolist = []
     for row, info in enumerate(study_info):
+        # Convert DictCursor to proper dict
+        info = dict(info)
         study = Study(info['study_id'])
+        PI = StudyPerson(info['principal_investigator_id'])
         status = study.status
         # if needed, get all the proc data info since no search results passed
         if build_info:
@@ -98,38 +106,20 @@ def _build_study_info(user, study_proc=None, proc_samples=None):
             study_proc = {study.id: proc_data}
             for pid in proc_data:
                 proc_samples[pid] = ProcessedData(pid).samples
-        # Just passing the email address as the name here, since
-        # name is not a required field in qiita.qiita_user
-        PI = StudyPerson(info['principal_investigator_id'])
-        PI = study_person_linkifier((PI.email, PI.name))
+
+        # Clean up and add to the study info for HTML purposes
         if info['pmid'] is not None:
-            pmids = ", ".join([pubmed_linkifier([p])
-                               for p in info['pmid']])
+            info['pmid'] = ", ".join([pubmed_linkifier([p])
+                                      for p in info['pmid']])
         else:
-            pmids = ""
+            info['pmid'] = ""
         if info["number_samples_collected"] is None:
-            info["number_samples_collected"] = "0"
-        shared = _get_shared_links_for_study(study)
-        meta_complete_glyph = "ok" if info["metadata_complete"] else "remove"
-        # build the HTML elements needed for table cell
-        title = ("<a href='#' data-toggle='modal' "
-                 "data-target='#study-abstract-modal' "
-                 "onclick='fillAbstract(\"studies-table\", {0})'>"
-                 "<span class='glyphicon glyphicon-file' "
-                 "aria-hidden='true'></span></a> | "
-                 "<a href='/study/description/{1}' "
-                 "id='study{0}-title'>{2}</a>").format(
-                     str(row), str(study.id), info["study_title"])
-        meta_complete = "<span class='glyphicon glyphicon-%s'></span>" % \
-            meta_complete_glyph
-        if status == 'public':
-            shared = "Not Available"
-        else:
-            shared = ("<span id='shared_html_{0}'>{1}</span><br/>"
-                      "<a class='btn btn-primary btn-xs' data-toggle='modal' "
-                      "data-target='#share-study-modal-view' "
-                      "onclick='modify_sharing({0});'>Modify</a>".format(
-                          study.id, shared))
+            info["number_samples_collected"] = 0
+        info["shared"] = _get_shared_links_for_study(study)
+        info["num_raw_data"] = len(study.raw_data())
+        info["status"] = status
+        info["study_id"] = study.id
+        info["pi"] = study_person_linkifier((PI.email, PI.name))
         # Build the proc data info list for the child row in datatable
         proc_data_info = []
         for pid in study_proc[study.id]:
@@ -140,21 +130,9 @@ def _build_study_info(user, study_proc=None, proc_samples=None):
             proc_info['samples'] = sorted(proc_samples[pid])
             proc_info['processed_date'] = str(proc_info['processed_date'])
             proc_data_info.append(proc_info)
+        info["proc_data_info"] = proc_data_info
 
-        infolist.append({
-            "checkbox": "<input type='checkbox' value='%d' />" % study.id,
-            "id": study.id,
-            "title": title,
-            "meta_complete": meta_complete,
-            "num_samples": info["number_samples_collected"],
-            "shared": shared,
-            "num_raw_data": len(study.raw_data()),
-            "pi": PI,
-            "pmid": pmids,
-            "status": status,
-            "abstract": info["study_abstract"],
-            "proc_data_info": proc_data_info
-        })
+        infolist.append(info)
     return infolist
 
 

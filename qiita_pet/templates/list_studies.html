@@ -27,12 +27,12 @@ $(document).ready(function() {
 
         $('#studies-table').dataTable({
             "columns": [
-              { "data": "checkbox", "orderable": false},
-              { "data": "title" },
-              { "data": "abstract" },
-              { "data": "id" },
-              { "data": "meta_complete" },
-              { "data": "num_samples" },
+              { "className": 'details-control', "orderable": false},
+              { "data": "study_title" },
+              { "data": "study_abstract" },
+              { "data": "study_id" },
+              { "data": "metadata_complete" },
+              { "data": "number_samples_collected" },
               { "data": "num_raw_data" },
               { "data": "shared" },
               { "data": "pi" },
@@ -41,12 +41,29 @@ $(document).ready(function() {
               {"className": 'details-control', "orderable": false, "data": null, "defaultContent": '<span class="glyphicon glyphicon-chevron-down"></span>'}
             ],
             order: [[10, "desc"], [ 1, "asc" ]],
-            columnDefs: [{type:'natural', targets:[3,4,5,9]}, {"targets": [ 2 ],"visible": false}],
+            columnDefs: [
+              {type:'natural', targets:[3,4,5,9]},
+              {"targets": [ 2 ],"visible": false},
+              // render the study checkbox cell
+              {"render": function ( data, type, row, meta ) {
+                    return "<input type='checkbox' value='"+ row.study_id +"'>";
+              }, targets: [0]},
+              // render the title cell
+              {"render": function ( data, type, row, meta ) {
+                    return "<a href='#' data-toggle='modal' data-target='#study-abstract-modal' onclick=\"fillAbstract('studies-table', "+ meta.row +")\"><span class='glyphicon glyphicon-file' aria-hidden='true'></span></a> | <a href='/study/description/"+ row.study_id +"' id='study"+ meta.row +"-title'>"+ data +"</a>";
+              }, targets: [1]},
+              // render the metadata complete cell
+              {"render": function ( data, type, row, meta ) {
+                    var glyph = 'remove';
+                    if(data === true) { glyph = 'ok' } 
+                    return "<span class='glyphicon glyphicon-"+ glyph +"'></span>";
+              }, targets: [4]}
+              ],
             "oLanguage": {
                 "sSearch": "Narrow search results by column data (Title, abstract, PI, etc):",
                 "sLoadingRecords": "Loading table data",
                 "sZeroRecords": "No studies found"
-            }, 
+            },
             "ajax": {
                 "url": ajaxURL + "&query=",
                 "error": function(jqXHR, textStatus, ex) {
@@ -153,7 +170,7 @@ function add_metacat(metacat) {
                 <th>Principal Investigator</th>
                 <th>Pubmed ID(s)</th>
                 <th>Status</th>
-                <th></th>
+                <th>Expand</th>
             </tr>
         </thead>
     </table>
