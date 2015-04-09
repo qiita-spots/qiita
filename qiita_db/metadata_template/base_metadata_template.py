@@ -36,7 +36,7 @@ Methods
 # -----------------------------------------------------------------------------
 
 from __future__ import division
-from future.utils import viewitems
+from future.utils import viewitems, viewvalues
 from os.path import join
 from functools import partial
 
@@ -45,7 +45,8 @@ import pandas as pd
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_db.exceptions import (QiitaDBUnknownIDError,
                                  QiitaDBNotImplementedError,
-                                 QiitaDBColumnError)
+                                 QiitaDBColumnError,
+                                 QiitaDBExecutionError)
 from qiita_db.base import QiitaObject
 from qiita_db.sql_connection import SQLConnectionHandler
 from qiita_db.util import (exists_table, get_table_cols,
@@ -389,25 +390,25 @@ class BaseSample(QiitaObject):
 
         try:
             conn_handler.execute_queue(queue_name)
-        except Exception as e:
+        except QiitaDBExecutionError as e:
             # catching error so we can check if the error is due to different
             # column type or something else
-            column_type = conn_handler.execute_fetchone(
-                """SELECT data_type
-                   FROM information_schema.columns
-                   WHERE column_name=%s AND table_schema='qiita'
-                """, (column,))[0]
-            value_type = type(value).__name__
+            if "invalid input syntax for" in str(e):
+                column_type = conn_handler.execute_fetchone(
+                    """SELECT data_type
+                       FROM information_schema.columns
+                       WHERE column_name=%s AND table_schema='qiita'
+                    """, (column,))[0]
+                value_type = type(value).__name__
 
-            if column_type != value_type:
                 raise ValueError(
                     'The new value being added to column: "{0}" is "{1}" '
                     '(type: "{2}"). However, this column in the DB is of '
                     'type "{3}". Please change the value in your updated '
-                    'template or reprocess your sample template.'.format(
+                    'template or reprocess your template.'.format(
                         column, value, value_type, column_type))
-            else:
-                raise e
+
+            raise e
 
     def __delitem__(self, key):
         r"""Removes the sample with sample id `key` from the database
@@ -1125,12 +1126,44 @@ class MetadataTemplate(QiitaObject):
         QiitaDBColumnError
             If the column does not exist in the table. This is implicit, and
             can be thrown by the contained Samples.
+        ValueError
+            If one of the new values cannot be inserted in the DB due to
+            different types
         """
         if not set(self.keys()).issuperset(samples_and_values):
             missing = set(self.keys()) - set(samples_and_values)
             table_name = self._table_name(self.study_id)
             raise QiitaDBUnknownIDError(missing, table_name)
 
+        conn_handler = SQLConnectionHandler()
+        queue_name = "update_category_%s_%s" % (self._id, category)
+        conn_handler.create_queue(queue_name)
+
         for k, v in viewitems(samples_and_values):
             sample = self[k]
-            sample[category] = v
+            sample.add_setitem_queries(category, v, conn_handler, queue_name)
+
+        try:
+            conn_handler.execute_queue(queue_name)
+        except QiitaDBExecutionError as e:
+            # catching error so we can check if the error is due to different
+            # column type or something else
+            if "invalid input syntax for" in str(e):
+                column_type = conn_handler.execute_fetchone(
+                    """SELECT data_type
+                       FROM information_schema.columns
+                       WHERE column_name=%s AND table_schema='qiita'
+                    """, (category,))[0]
+                value_types = set(type(value).__name__
+                                  for value in viewvalues(samples_and_values))
+                value_types_str = ', '.join(value_types)
+                value_str = ', '.join(
+                    [v for value in viewvalues(samples_and_values)])
+
+                raise ValueError(
+                    'The new values being added to column: "%s" are "%s" '
+                    '(type: "%s"). However, this column in the DB is of '
+                    'type "%s". Please change the value in your updated '
+                    'template or reprocess your template.'
+                    % (category, value_str, value_types_str, column_type))
+            raise e
