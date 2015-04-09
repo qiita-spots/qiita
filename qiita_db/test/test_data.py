@@ -478,6 +478,48 @@ class PreprocessedDataTests(TestCase):
         # preprocessed_data_id, filepath_id
         self.assertEqual(obs, [[3, obs_id - 1], [3, obs_id]])
 
+    def test_delete_basic(self):
+        """Correctly deletes a preprocessed data"""
+        # testing regular delete
+        ppd = PreprocessedData.create(
+            self.study, self.params_table,
+            self.params_id, self.filepaths, prep_template=self.prep_template,
+            ebi_submission_accession=self.ebi_submission_accession,
+            ebi_study_accession=self.ebi_study_accession)
+        PreprocessedData.delete(ppd.id)
+
+        # testing that the deleted preprocessed data can't be instantiated
+        with self.assertRaises(QiitaDBUnknownIDError):
+            PreprocessedData(ppd.id)
+        # and for completeness testing that it raises an error if ID
+        # doesn't exist
+        with self.assertRaises(QiitaDBUnknownIDError):
+            PreprocessedData.delete(ppd.id)
+
+        # testing that we can not remove cause the preprocessed data != sandbox
+        with self.assertRaises(QiitaDBStatusError):
+            PreprocessedData.delete(1)
+
+    def test_delete_advanced(self):
+        # testing that we can not remove cause preprocessed data has been
+        # submitted to EBI or VAMPS
+        ppd = PreprocessedData.create(
+            self.study, self.params_table,
+            self.params_id, self.filepaths, prep_template=self.prep_template,
+            ebi_submission_accession=self.ebi_submission_accession,
+            ebi_study_accession=self.ebi_study_accession)
+
+        # fails due to VAMPS submission
+        ppd.update_vamps_status('success')
+        with self.assertRaises(QiitaDBStatusError):
+            PreprocessedData.delete(ppd.id)
+        ppd.update_vamps_status('failed')
+
+        # fails due to EBI submission
+        ppd.update_insdc_status('success', 'AAAA', 'AAAA')
+        with self.assertRaises(QiitaDBStatusError):
+            PreprocessedData.delete(ppd.id)
+
     def test_create_error_dynamic_table(self):
         """Raises an error if the preprocessed_params_table does not exist"""
         with self.assertRaises(IncompetentQiitaDeveloperError):
