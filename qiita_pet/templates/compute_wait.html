@@ -2,7 +2,7 @@
 
 {%block head%}
 <script type="text/javascript">
-    window.onload = function() {
+    $(document).ready(function() {
 
         var host = 'ws://' + window.location.host + '/consumer/';
         var websocket = new WebSocket(host);
@@ -34,7 +34,7 @@
             }
         };
         websocket.onerror = function(evt) { };
-      };
+      });
 </script>
 {% end %}
 
