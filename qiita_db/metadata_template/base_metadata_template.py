@@ -39,6 +39,7 @@ from __future__ import division
 from future.utils import viewitems, viewvalues
 from os.path import join
 from functools import partial
+from collections import defaultdict
 
 import pandas as pd
 
@@ -393,14 +394,21 @@ class BaseSample(QiitaObject):
         except QiitaDBExecutionError as e:
             # catching error so we can check if the error is due to different
             # column type or something else
-            if "invalid input syntax for" in str(e):
-                column_type = conn_handler.execute_fetchone(
-                    """SELECT data_type
-                       FROM information_schema.columns
-                       WHERE column_name=%s AND table_schema='qiita'
-                    """, (column,))[0]
-                value_type = type(value).__name__
+            type_lookup = defaultdict(lambda: 'varchar')
+            type_lookup[int] = 'integer'
+            type_lookup[float] = 'float8'
+            type_lookup[str] = 'varchar'
+            value_type = type_lookup[type(value)]
 
+            sql = """SELECT udt_name
+                     FROM information_schema.columns
+                     WHERE column_name = %s
+                        AND table_schema = 'qiita'
+                        AND (table_name = %s OR table_name = %s)"""
+            column_type = conn_handler.execute_fetchone(
+                sql, (column, self._table, self._dynamic_table))
+
+            if column_type != value_type:
                 raise ValueError(
                     'The new value being added to column: "{0}" is "{1}" '
                     '(type: "{2}"). However, this column in the DB is of '
@@ -1148,22 +1156,31 @@ class MetadataTemplate(QiitaObject):
         except QiitaDBExecutionError as e:
             # catching error so we can check if the error is due to different
             # column type or something else
-            if "invalid input syntax for" in str(e):
-                column_type = conn_handler.execute_fetchone(
-                    """SELECT data_type
-                       FROM information_schema.columns
-                       WHERE column_name=%s AND table_schema='qiita'
-                    """, (category,))[0]
-                value_types = set(type(value).__name__
-                                  for value in viewvalues(samples_and_values))
-                value_types_str = ', '.join(value_types)
+            type_lookup = defaultdict(lambda: 'varchar')
+            type_lookup[int] = 'integer'
+            type_lookup[float] = 'float8'
+            type_lookup[str] = 'varchar'
+            value_types = set(type_lookup[type(value)]
+                              for value in viewvalues(samples_and_values))
+
+            sql = """SELECT udt_name
+                     FROM information_schema.columns
+                     WHERE column_name = %s
+                        AND table_schema = 'qiita'
+                        AND (table_name = %s OR table_name = %s)"""
+            column_type = conn_handler.execute_fetchone(
+                sql, (category, self._table, self._table_name(self._id)))
+
+            if any([column_type != vt for vt in value_types]):
                 value_str = ', '.join(
                     [v for value in viewvalues(samples_and_values)])
+                value_types_str = ', '.join(value_types)
 
                 raise ValueError(
                     'The new values being added to column: "%s" are "%s" '
-                    '(type: "%s"). However, this column in the DB is of '
-                    'type "%s". Please change the value in your updated '
+                    '(types: "%s"). However, this column in the DB is of '
+                    'type "%s". Please change the values in your updated '
                     'template or reprocess your template.'
                     % (category, value_str, value_types_str, column_type))
+
             raise e
