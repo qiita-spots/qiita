@@ -7,23 +7,18 @@
 # -----------------------------------------------------------------------------
 
 from __future__ import division
-from copy import deepcopy
 from os.path import join
 from time import strftime
 
-from skbio.util import find_duplicates
-
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_db.exceptions import (QiitaDBColumnError, QiitaDBUnknownIDError,
-                                 QiitaDBDuplicateHeaderError, QiitaDBError,
-                                 QiitaDBExecutionError)
+                                 QiitaDBError, QiitaDBExecutionError)
 from qiita_db.sql_connection import SQLConnectionHandler
 from qiita_db.ontology import Ontology
-from qiita_db.util import (get_table_cols, get_emp_status, convert_to_id,
+from qiita_db.util import (get_emp_status, convert_to_id,
                            convert_from_id, get_mountpoint, infer_status)
 from .base_metadata_template import BaseSample, MetadataTemplate
-from .util import (get_invalid_sample_names, prefix_sample_names_with_id,
-                   load_template_to_dataframe)
+from .util import load_template_to_dataframe
 from .constants import (TARGET_GENE_DATA_TYPES, RENAME_COLS_DICT,
                         REQUIRED_TARGET_GENE_COLS)
 
@@ -109,29 +104,6 @@ class PrepTemplate(MetadataTemplate):
         if investigation_type is not None:
             cls.validate_investigation_type(investigation_type)
 
-        invalid_ids = get_invalid_sample_names(md_template.index)
-        if invalid_ids:
-            raise QiitaDBColumnError("The following sample names in the prep"
-                                     " template contain invalid characters "
-                                     "(only alphanumeric characters or periods"
-                                     " are allowed): %s." %
-                                     ", ".join(invalid_ids))
-
-        # We are going to modify the md_template. We create a copy so
-        # we don't modify the user one
-        md_template = deepcopy(md_template)
-
-        # Prefix the sample names with the study_id
-        prefix_sample_names_with_id(md_template, study.id)
-
-        # In the database, all the column headers are lowercase
-        md_template.columns = [c.lower() for c in md_template.columns]
-
-        # Check that we don't have duplicate columns
-        if len(set(md_template.columns)) != len(md_template.columns):
-            raise QiitaDBDuplicateHeaderError(
-                find_duplicates(md_template.columns))
-
         # Get a connection handler
         conn_handler = SQLConnectionHandler()
         queue_name = "CREATE_PREP_TEMPLATE_%d" % raw_data.id
@@ -146,27 +118,8 @@ class PrepTemplate(MetadataTemplate):
             data_type_id = convert_to_id(data_type, "data_type", conn_handler)
             data_type_str = data_type
 
-        # We need to check for some special columns, that are not present on
-        # the database, but depending on the data type are required.
-        missing = cls._check_special_columns(md_template, data_type_str)
-
-        # Get the required columns from the DB
-        db_cols = get_table_cols(cls._table, conn_handler)
-
-        # Remove the sample_id and study_id columns
-        db_cols.remove('sample_id')
-        db_cols.remove(cls._id_column)
-
-        # Retrieve the headers of the metadata template
-        headers = list(md_template.keys())
-
-        # Check that md_template has the required columns
-        remaining = set(db_cols).difference(headers)
-        missing = missing.union(remaining)
-        missing = missing.difference(cls.translate_cols_dict)
-        if missing:
-            raise QiitaDBColumnError("Missing columns: %s"
-                                     % ', '.join(missing))
+        md_template = cls._clean_validate_template(md_template, study.id,
+                                                   data_type_str, conn_handler)
 
         # Insert the metadata template
         # We need the prep_id for multiple calls below, which currently is not

@@ -40,21 +40,25 @@ from future.utils import viewitems, viewvalues
 from os.path import join
 from functools import partial
 from collections import defaultdict
+from copy import deepcopy
 
 import pandas as pd
+from skbio.util import find_duplicates
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
-from qiita_db.exceptions import (QiitaDBUnknownIDError,
+
+from qiita_db.exceptions import (QiitaDBUnknownIDError, QiitaDBColumnError,
                                  QiitaDBNotImplementedError,
-                                 QiitaDBColumnError,
-                                 QiitaDBExecutionError)
+                                 QiitaDBExecutionError,
+                                 QiitaDBDuplicateHeaderError)
 from qiita_db.base import QiitaObject
 from qiita_db.sql_connection import SQLConnectionHandler
 from qiita_db.util import (exists_table, get_table_cols,
                            convert_to_id,
                            get_mountpoint, insert_filepaths)
 from qiita_db.logger import LogEntry
-from .util import as_python_types, get_datatypes
+from .util import (as_python_types, get_datatypes, get_invalid_sample_names,
+                   prefix_sample_names_with_id)
 
 
 class BaseSample(QiitaObject):
@@ -599,9 +603,8 @@ class MetadataTemplate(QiitaObject):
         ----------
         md_template : DataFrame
             The metadata template file contents indexed by sample ids
-        obj : Study or RawData
-            The obj to which the metadata template belongs to. Study in case
-            of SampleTemplate and RawData in case of PrepTemplate
+        obj : object
+            Any extra object needed by the template to perform any extra check
         """
         # Check required columns
         missing = set(cls.translate_cols_dict.values()).difference(md_template)
@@ -616,6 +619,82 @@ class MetadataTemplate(QiitaObject):
 
         return missing.union(
             cls._check_template_special_columns(md_template, obj))
+
+    @classmethod
+    def _clean_validate_template(cls, md_template, study_id, obj,
+                                 conn_handler=None):
+        """Takes care of all validation and cleaning of metadata templates
+
+        Parameters
+        ----------
+        md_template : DataFrame
+            The metadata template file contents indexed by sample ids
+        study_id : int
+            The study to which the metadata template belongs to.
+        obj : object
+            Any extra object needed by the template to perform any extra check
+
+        Returns
+        -------
+        md_template : DataFrame
+            Cleaned copy of the input md_template
+
+        Raises
+        ------
+        QiitaDBColumnError
+            If the sample names in md_template contains invalid names
+        QiitaDBDuplicateHeaderError
+            If md_template contains duplicate headers
+        QiitaDBColumnError
+            If md_template is missing a required column
+        """
+        cls._check_subclass()
+        invalid_ids = get_invalid_sample_names(md_template.index)
+        if invalid_ids:
+            raise QiitaDBColumnError("The following sample names in the "
+                                     "template contain invalid characters "
+                                     "(only alphanumeric characters or periods"
+                                     " are allowed): %s." %
+                                     ", ".join(invalid_ids))
+        # We are going to modify the md_template. We create a copy so
+        # we don't modify the user one
+        md_template = deepcopy(md_template)
+
+        # Prefix the sample names with the study_id
+        prefix_sample_names_with_id(md_template, study_id)
+
+        # In the database, all the column headers are lowercase
+        md_template.columns = [c.lower() for c in md_template.columns]
+
+        # Check that we don't have duplicate columns
+        if len(set(md_template.columns)) != len(md_template.columns):
+            raise QiitaDBDuplicateHeaderError(
+                find_duplicates(md_template.columns))
+
+        # We need to check for some special columns, that are not present on
+        # the database, but depending on the data type are required.
+        missing = cls._check_special_columns(md_template, obj)
+
+        conn_handler = conn_handler if conn_handler else SQLConnectionHandler()
+
+        # Get the required columns from the DB
+        db_cols = get_table_cols(cls._table, conn_handler)
+
+        # Remove the sample_id and study_id columns
+        db_cols.remove('sample_id')
+        db_cols.remove(cls._id_column)
+
+        # Retrieve the headers of the metadata template
+        headers = list(md_template.keys())
+
+        # Check that md_template has the required columns
+        remaining = set(db_cols).difference(headers)
+        missing = missing.union(remaining)
+        missing = missing.difference(cls.translate_cols_dict)
+        if missing:
+            raise QiitaDBColumnError("Missing columns: %s"
+                                     % ', '.join(missing))
+        return md_template
 
     @classmethod
     def _add_common_creation_steps_to_queue(cls, md_template, obj_id,

@@ -8,18 +8,15 @@
 
 from __future__ import division
 from future.builtins import zip
-from copy import deepcopy
 from os.path import join
 from time import strftime
 from os.path import basename
 
 import pandas as pd
 import warnings
-from skbio.util import find_duplicates
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
-from qiita_db.exceptions import (QiitaDBDuplicateError, QiitaDBColumnError,
-                                 QiitaDBDuplicateHeaderError, QiitaDBError,
+from qiita_db.exceptions import (QiitaDBDuplicateError, QiitaDBError,
                                  QiitaDBWarning)
 from qiita_db.sql_connection import SQLConnectionHandler
 from qiita_db.util import (get_table_cols, get_required_sample_info_status,
@@ -27,8 +24,7 @@ from qiita_db.util import (get_table_cols, get_required_sample_info_status,
 from qiita_db.study import Study
 from qiita_db.data import RawData
 from .base_metadata_template import BaseSample, MetadataTemplate
-from .util import (get_invalid_sample_names, prefix_sample_names_with_id,
-                   as_python_types, get_datatypes)
+from .util import as_python_types, get_datatypes
 from .prep_template import PrepTemplate
 
 
@@ -115,70 +111,6 @@ class SampleTemplate(MetadataTemplate):
         return set()
 
     @classmethod
-    def _clean_validate_template(cls, md_template, study_id,
-                                 conn_handler=None):
-        """Takes care of all validation and cleaning of sample templates
-
-        Parameters
-        ----------
-        md_template : DataFrame
-            The metadata template file contents indexed by sample ids
-        study_id : int
-            The study to which the sample template belongs to.
-
-        Returns
-        -------
-        md_template : DataFrame
-            Cleaned copy of the input md_template
-        """
-        invalid_ids = get_invalid_sample_names(md_template.index)
-        if invalid_ids:
-            raise QiitaDBColumnError("The following sample names in the sample"
-                                     " template contain invalid characters "
-                                     "(only alphanumeric characters or periods"
-                                     " are allowed): %s." %
-                                     ", ".join(invalid_ids))
-        # We are going to modify the md_template. We create a copy so
-        # we don't modify the user one
-        md_template = deepcopy(md_template)
-
-        # Prefix the sample names with the study_id
-        prefix_sample_names_with_id(md_template, study_id)
-
-        # In the database, all the column headers are lowercase
-        md_template.columns = [c.lower() for c in md_template.columns]
-
-        # Check that we don't have duplicate columns
-        if len(set(md_template.columns)) != len(md_template.columns):
-            raise QiitaDBDuplicateHeaderError(
-                find_duplicates(md_template.columns))
-
-        # We need to check for some special columns, that are not present on
-        # the database, but depending on the data type are required.
-        missing = cls._check_special_columns(md_template, study_id)
-
-        conn_handler = conn_handler if conn_handler else SQLConnectionHandler()
-
-        # Get the required columns from the DB
-        db_cols = get_table_cols(cls._table, conn_handler)
-
-        # Remove the sample_id and study_id columns
-        db_cols.remove('sample_id')
-        db_cols.remove(cls._id_column)
-
-        # Retrieve the headers of the metadata template
-        headers = list(md_template.keys())
-
-        # Check that md_template has the required columns
-        remaining = set(db_cols).difference(headers)
-        missing = missing.union(remaining)
-        missing = missing.difference(cls.translate_cols_dict)
-        if missing:
-            raise QiitaDBColumnError("Missing columns: %s"
-                                     % ', '.join(missing))
-        return md_template
-
-    @classmethod
     def create(cls, md_template, study):
         r"""Creates the sample template in the database
 
@@ -201,7 +133,7 @@ class SampleTemplate(MetadataTemplate):
 
         # Clean and validate the metadata template given
         md_template = cls._clean_validate_template(md_template, study.id,
-                                                   conn_handler)
+                                                   study.id, conn_handler)
 
         cls._add_common_creation_steps_to_queue(md_template, study.id,
                                                 conn_handler, queue_name)
@@ -404,37 +336,3 @@ class SampleTemplate(MetadataTemplate):
                     # word qiime within the name of the file
                     if '_qiime_' not in basename(fp):
                         pt.create_qiime_mapping_file(fp)
-
-    def add_category(self, category, samples_and_values, dtype, default):
-        """Add a metadata category
-
-        Parameters
-        ----------
-        category : str
-            The category to add
-        samples_and_values : dict
-            A mapping of {sample_id: value}
-        dtype : str
-            The datatype of the column
-        default : object
-            The default value associated with the column. This must be
-            specified as these columns are added "not null".
-
-        Raises
-        ------
-        QiitaDBDuplicateError
-            If the column already exists
-        """
-        table_name = self._table_name(self.study_id)
-        conn_handler = SQLConnectionHandler()
-
-        if category in self.categories():
-            raise QiitaDBDuplicateError(category, "N/A")
-
-        conn_handler.execute("""
-            ALTER TABLE qiita.{0}
-            ADD COLUMN {1} {2}
-            NOT NULL DEFAULT '{3}'""".format(table_name, category, dtype,
-                                             default))
-
-        self.update_category(category, samples_and_values)

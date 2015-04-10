@@ -15,6 +15,7 @@ from collections import Iterable
 
 import numpy.testing as npt
 import pandas as pd
+from pandas.util.testing import assert_frame_equal
 
 from qiita_core.util import qiita_test_checker
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
@@ -845,6 +846,95 @@ class TestSampleTemplateReadOnly(BaseTestSampleTemplate):
             (sql_insert_dynamic, ('2.Sample3', 3, 'Value for sample 3'))]
         self.assertEqual(conn_handler.queues[queue_name], exp)
 
+    def test_clean_validate_template_error_bad_chars(self):
+        """Raises an error if there are invalid characters in the sample names
+        """
+        conn_handler = SQLConnectionHandler()
+        self.metadata.index = ['o()xxxx[{::::::::>', 'sample.1', 'sample.3']
+        with self.assertRaises(QiitaDBColumnError):
+            SampleTemplate._clean_validate_template(self.metadata, 2, 2,
+                                                    conn_handler)
+
+    def test_clean_validate_template_error_duplicate_cols(self):
+        """Raises an error if there are duplicated columns in the template"""
+        conn_handler = SQLConnectionHandler()
+        self.metadata['STR_COLUMN'] = pd.Series(['', '', ''],
+                                                index=self.metadata.index)
+        with self.assertRaises(QiitaDBDuplicateHeaderError):
+            SampleTemplate._clean_validate_template(self.metadata, 2, 2,
+                                                    conn_handler)
+
+    def test_clean_valdate_template_error_missing(self):
+        """Raises an error if the template is missing a required column"""
+        conn_handler = SQLConnectionHandler()
+        metadata_dict = {
+            'Sample1': {'physical_location': 'location1',
+                        'has_physical_specimen': True,
+                        'has_extracted_data': True,
+                        'sample_type': 'type1',
+                        'required_sample_info_status': 'received',
+                        'host_subject_id': 'NotIdentified',
+                        'Description': 'Test Sample 1',
+                        'latitude': 42.42,
+                        'longitude': 41.41}
+            }
+        metadata = pd.DataFrame.from_dict(metadata_dict, orient='index')
+        with self.assertRaises(QiitaDBColumnError):
+            SampleTemplate._clean_validate_template(metadata, 2, 2,
+                                                    conn_handler)
+
+    def test_clean_valdate_template(self):
+        conn_handler = SQLConnectionHandler()
+        obs = SampleTemplate._clean_validate_template(self.metadata, 2, 2,
+                                                      conn_handler)
+        metadata_dict = {
+            '2.Sample1': {'physical_location': 'location1',
+                          'has_physical_specimen': True,
+                          'has_extracted_data': True,
+                          'sample_type': 'type1',
+                          'required_sample_info_status_id': 1,
+                          'collection_timestamp':
+                          datetime(2014, 5, 29, 12, 24, 51),
+                          'host_subject_id': 'NotIdentified',
+                          'description': 'Test Sample 1',
+                          'str_column': 'Value for sample 1',
+                          'int_column': 1,
+                          'latitude': 42.42,
+                          'longitude': 41.41},
+            '2.Sample2': {'physical_location': 'location1',
+                          'has_physical_specimen': True,
+                          'has_extracted_data': True,
+                          'sample_type': 'type1',
+                          'int_column': 2,
+                          'required_sample_info_status_id': 1,
+                          'collection_timestamp':
+                          datetime(2014, 5, 29, 12, 24, 51),
+                          'host_subject_id': 'NotIdentified',
+                          'description': 'Test Sample 2',
+                          'str_column': 'Value for sample 2',
+                          'latitude': 4.2,
+                          'longitude': 1.1},
+            '2.Sample3': {'physical_location': 'location1',
+                          'has_physical_specimen': True,
+                          'has_extracted_data': True,
+                          'sample_type': 'type1',
+                          'required_sample_info_status_id': 1,
+                          'collection_timestamp':
+                          datetime(2014, 5, 29, 12, 24, 51),
+                          'host_subject_id': 'NotIdentified',
+                          'description': 'Test Sample 3',
+                          'str_column': 'Value for sample 3',
+                          'int_column': 3,
+                          'latitude': 4.8,
+                          'longitude': 4.41},
+            }
+        exp = pd.DataFrame.from_dict(metadata_dict, orient='index')
+        obs.sort_index(axis=0, inplace=True)
+        obs.sort_index(axis=1, inplace=True)
+        exp.sort_index(axis=0, inplace=True)
+        exp.sort_index(axis=1, inplace=True)
+        assert_frame_equal(obs, exp)
+
 
 @qiita_test_checker()
 class TestSampleTemplateReadWrite(BaseTestSampleTemplate):
@@ -1195,48 +1285,6 @@ class TestSampleTemplateReadWrite(BaseTestSampleTemplate):
             st.update(self.metadata_dict_updated_sample_error)
         with self.assertRaises(QiitaDBError):
             st.update(self.metadata_dict_updated_column_error)
-
-    def test_add_category(self):
-        column = "new_column"
-        dtype = "varchar"
-        default = "stuff"
-        mapping = {'1.SKB1.640202': "1",
-                   '1.SKB5.640181': "2",
-                   '1.SKD6.640190': "3"}
-
-        exp = {
-            '1.SKB1.640202': "1",
-            '1.SKB2.640194': "stuff",
-            '1.SKB3.640195': "stuff",
-            '1.SKB4.640189': "stuff",
-            '1.SKB5.640181': "2",
-            '1.SKB6.640176': "stuff",
-            '1.SKB7.640196': "stuff",
-            '1.SKB8.640193': "stuff",
-            '1.SKB9.640200': "stuff",
-            '1.SKD1.640179': "stuff",
-            '1.SKD2.640178': "stuff",
-            '1.SKD3.640198': "stuff",
-            '1.SKD4.640185': "stuff",
-            '1.SKD5.640186': "stuff",
-            '1.SKD6.640190': "3",
-            '1.SKD7.640191': "stuff",
-            '1.SKD8.640184': "stuff",
-            '1.SKD9.640182': "stuff",
-            '1.SKM1.640183': "stuff",
-            '1.SKM2.640199': "stuff",
-            '1.SKM3.640197': "stuff",
-            '1.SKM4.640180': "stuff",
-            '1.SKM5.640177': "stuff",
-            '1.SKM6.640187': "stuff",
-            '1.SKM7.640188': "stuff",
-            '1.SKM8.640201': "stuff",
-            '1.SKM9.640192': "stuff"}
-
-        self.tester.add_category(column, mapping, dtype, default)
-
-        obs = {k: v['new_column'] for k, v in self.tester.items()}
-        self.assertEqual(obs, exp)
 
     def test_to_file(self):
         """to file writes a tab delimited file with all the metadata"""
