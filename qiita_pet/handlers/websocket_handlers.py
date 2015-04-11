@@ -1,7 +1,6 @@
 # adapted from
 # https://github.com/leporo/tornado-redis/blob/master/demos/websockets
 from json import loads
-from itertools import product
 
 import toredis
 from tornado.web import authenticated

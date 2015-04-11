@@ -1,7 +1,5 @@
 from unittest import main
 from qiita_pet.test.tornado_test_base import TestHandlerBase
-from qiita_db.analysis import Analysis
-from qiita_db.user import User
 
 
 class TestSelectCommandsHandler(TestHandlerBase):

@@ -27,10 +27,8 @@ from qiita_db.data import ProcessedData
 from qiita_db.job import Job, Command
 from qiita_db.util import (get_db_files_base_dir,
                            check_access_to_analysis_result,
-                           get_table_cols,
                            filepath_ids_to_rel_paths)
-from qiita_db.exceptions import (
-    QiitaDBIncompatibleDatatypeError, QiitaDBUnknownIDError)
+from qiita_db.exceptions import QiitaDBUnknownIDError
 
 SELECT_SAMPLES = 2
 SELECT_COMMANDS = 3
