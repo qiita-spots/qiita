@@ -44,7 +44,21 @@ def _get_shared_links_for_study(study):
 
 
 def _build_single_study_info(study, info):
-    # Clean up and add to the study info for HTML purposes
+    """Clean up and add to the study info for HTML purposes
+
+    Parameters
+    ----------
+    study : Study object
+        The study to build information for
+    info : dict
+        Information from Study.get_info
+
+    Returns
+    -------
+    dict
+        info-information + extra information for the study,
+        slightly HTML formatted
+    """
     PI = StudyPerson(info['principal_investigator_id'])
     status = study.status
     if info['pmid'] is not None:
@@ -64,8 +78,27 @@ def _build_single_study_info(study, info):
     return info
 
 
-def _build_proc_data_info(study, study_proc, proc_samples):
-    # Build the proc data info list for the child row in datatable
+def _build_single_proc_data_info(study, study_proc, proc_samples):
+    """Build the proc data info list for the child row in datatable
+
+
+    Parameters
+    ----------
+    study : Study object
+        The study to build information for
+    study_proc : dict of lists
+        The processed data attached to he study, in the form
+        {study_id: [proc_data_id, proc_data_id, ...], ...}
+    proc_samples : dict of lists
+        The samples available in the processed data, in the form
+        {proc_data_id: [samp1, samp2, ...], ...}
+
+    Returns
+    -------
+    dict of dicts
+        The information for the processed data, in the form
+        {proc_data_id: {info: value, ...}, ...}
+    """
     proc_data_info = []
     for pid in study_proc[study.id]:
         proc_data = ProcessedData(pid)
@@ -143,8 +176,8 @@ def _build_study_info(user, study_proc=None, proc_samples=None):
 
         study_info = _build_single_study_info(study, info)
         # Build the proc data info list for the child row in datatable
-        study_info["proc_data_info"] = _build_proc_data_info(study, study_proc,
-                                                             proc_samples)
+        study_info["proc_data_info"] = _build_single_proc_data_info(
+            study, study_proc, proc_samples)
 
         infolist.append(study_info)
     return infolist
