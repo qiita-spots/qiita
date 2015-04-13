@@ -15,6 +15,29 @@ class TestHelpers(TestHandlerBase):
     database = True
 
     def setUp(self):
+        self.proc_data_exp = [{
+            'pid': 1,
+            'processed_date': '2012-10-01 09:30:27',
+            'data_type': '18S',
+            'algorithm': 'uclust',
+            'reference_name': 'Greengenes',
+            'reference_version': '13_8',
+            'taxonomy_filepath': 'GreenGenes_13_8_97_otu_taxonomy.txt',
+            'sequence_filepath': 'GreenGenes_13_8_97_otus.fasta',
+            'tree_filepath': 'GreenGenes_13_8_97_otus.tree',
+            'similarity': 0.97,
+            'enable_rev_strand_match': True,
+            'suppress_new_clusters': True,
+            'samples': ['1.SKB1.640202', '1.SKB2.640194', '1.SKB3.640195',
+                        '1.SKB4.640189', '1.SKB5.640181', '1.SKB6.640176',
+                        '1.SKB7.640196', '1.SKB8.640193', '1.SKB9.640200',
+                        '1.SKD1.640179', '1.SKD2.640178', '1.SKD3.640198',
+                        '1.SKD4.640185', '1.SKD5.640186', '1.SKD6.640190',
+                        '1.SKD7.640191', '1.SKD8.640184', '1.SKD9.640182',
+                        '1.SKM1.640183', '1.SKM2.640199', '1.SKM3.640197',
+                        '1.SKM4.640180', '1.SKM5.640177', '1.SKM6.640187',
+                        '1.SKM7.640188', '1.SKM8.640201', '1.SKM9.640192']
+        }]
         self.single_exp = {
             'study_id': 1,
             'status': 'private',
@@ -41,82 +64,10 @@ class TestHelpers(TestHandlerBase):
                     'pubmed/123456">123456</a>, <a target="_blank" href="http:'
                     '//www.ncbi.nlm.nih.gov/pubmed/7891011">7891011</a>',
             'pi': '<a target="_blank" href="mailto:PI_dude@foo.bar">'
-                  'PIDude</a>'
-        }
-        self.proc_data_exp = [{
-            'pid': 1,
-            'processed_date': '2012-10-01 09:30:27',
-            'data_type': '18S',
-            'algorithm': 'uclust',
-            'reference_name': 'Greengenes',
-            'reference_version': '13_8',
-            'taxonomy_filepath': 'GreenGenes_13_8_97_otu_taxonomy.txt',
-            'sequence_filepath': 'GreenGenes_13_8_97_otus.fasta',
-            'tree_filepath': 'GreenGenes_13_8_97_otus.tree',
-            'similarity': 0.97,
-            'enable_rev_strand_match': True,
-            'suppress_new_clusters': True,
-            'samples': ['1.SKB1.640202', '1.SKB2.640194', '1.SKB3.640195',
-                        '1.SKB4.640189', '1.SKB5.640181', '1.SKB6.640176',
-                        '1.SKB7.640196', '1.SKB8.640193', '1.SKB9.640200',
-                        '1.SKD1.640179', '1.SKD2.640178', '1.SKD3.640198',
-                        '1.SKD4.640185', '1.SKD5.640186', '1.SKD6.640190',
-                        '1.SKD7.640191', '1.SKD8.640184', '1.SKD9.640182',
-                        '1.SKM1.640183', '1.SKM2.640199', '1.SKM3.640197',
-                        '1.SKM4.640180', '1.SKM5.640177', '1.SKM6.640187',
-                        '1.SKM7.640188', '1.SKM8.640201', '1.SKM9.640192']
-        }]
-        self.exp = [{
-            'study_id': 1,
-            'status': 'public',
-            'study_abstract':
-                'This is a preliminary study to examine the microbiota '
-                'associated with the Cannabis plant. Soils samples '
-                'from the bulk soil, soil associated with the roots, '
-                'and the rhizosphere were extracted and the DNA '
-                'sequenced. Roots from three independent plants of '
-                'different strains were examined. These roots were '
-                'obtained November 11, 2011 from plants that had been '
-                'harvested in the summer. Future studies will attempt '
-                'to analyze the soils and rhizospheres from the same '
-                'location at different time points in the plant '
-                'lifecycle.',
-            'metadata_complete': True,
-            'study_title':
-                'Identification of the Microbiomes for Cannabis Soils',
-            'num_raw_data': 4,
-            'number_samples_collected': 27,
-            'shared':
-                '<a target="_blank" href="mailto:shared@foo.bar">Shared</a>',
-            'pmid': '<a target="_blank" href="http://www.ncbi.nlm.nih.gov/'
-                    'pubmed/123456">123456</a>, <a target="_blank" href="http:'
-                    '//www.ncbi.nlm.nih.gov/pubmed/7891011">7891011</a>',
-            'pi': '<a target="_blank" href="mailto:PI_dude@foo.bar">'
                   'PIDude</a>',
-            'proc_data_info': [{
-                'pid': 1,
-                'processed_date': '2012-10-01 09:30:27',
-                'data_type': '18S',
-                'algorithm': 'uclust',
-                'reference_name': 'Greengenes',
-                'reference_version': '13_8',
-                'taxonomy_filepath': 'GreenGenes_13_8_97_otu_taxonomy.txt',
-                'sequence_filepath': 'GreenGenes_13_8_97_otus.fasta',
-                'tree_filepath': 'GreenGenes_13_8_97_otus.tree',
-                'similarity': 0.97,
-                'enable_rev_strand_match': True,
-                'suppress_new_clusters': True,
-                'samples': ['1.SKB1.640202', '1.SKB2.640194', '1.SKB3.640195',
-                            '1.SKB4.640189', '1.SKB5.640181', '1.SKB6.640176',
-                            '1.SKB7.640196', '1.SKB8.640193', '1.SKB9.640200',
-                            '1.SKD1.640179', '1.SKD2.640178', '1.SKD3.640198',
-                            '1.SKD4.640185', '1.SKD5.640186', '1.SKD6.640190',
-                            '1.SKD7.640191', '1.SKD8.640184', '1.SKD9.640182',
-                            '1.SKM1.640183', '1.SKM2.640199', '1.SKM3.640197',
-                            '1.SKM4.640180', '1.SKM5.640177', '1.SKM6.640187',
-                            '1.SKM7.640188', '1.SKM8.640201', '1.SKM9.640192']
-                }]
-        }]
+            'proc_data_info': self.proc_data_exp
+        }
+        self.exp = [self.single_exp]
         super(TestHelpers, self).setUp()
 
     def test_get_shared_links_for_study(self):
@@ -125,6 +76,8 @@ class TestHelpers(TestHandlerBase):
         self.assertEqual(obs, exp)
 
     def test_build_single_study_info(self):
+        study_proc = {1: [1]}
+        proc_samples = {1: self.proc_data_exp[0]['samples']}
         study_info = {
             'study_id': 1,
             'email': 'test@foo.bar',
@@ -147,7 +100,8 @@ class TestHelpers(TestHandlerBase):
                 'location at different time points in the plant '
                 'lifecycle.'
             }
-        obs = _build_single_study_info(Study(1), study_info)
+        obs = _build_single_study_info(Study(1), study_info, study_proc,
+                                       proc_samples)
         self.assertEqual(obs, self.single_exp)
 
     def test_build_single_proc_data_info(self):
@@ -157,12 +111,10 @@ class TestHelpers(TestHandlerBase):
         self.assertEqual(obs, self.proc_data_exp)
 
     def test_build_study_info(self):
-        ProcessedData(1).status = 'public'
         obs = _build_study_info(User('test@foo.bar'))
         self.assertEqual(obs, self.exp)
 
     def test_build_study_info_new_study(self):
-        ProcessedData(1).status = 'public'
         info = {
             'timeseries_type_id': 1,
             'portal_type_id': 1,

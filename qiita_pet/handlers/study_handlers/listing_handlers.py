@@ -43,7 +43,7 @@ def _get_shared_links_for_study(study):
     return ", ".join(shared)
 
 
-def _build_single_study_info(study, info):
+def _build_single_study_info(study, info, study_proc, proc_samples):
     """Clean up and add to the study info for HTML purposes
 
     Parameters
@@ -75,6 +75,9 @@ def _build_single_study_info(study, info):
     info["pi"] = study_person_linkifier((PI.email, PI.name))
     del info["principal_investigator_id"]
     del info["email"]
+    # Build the proc data info list for the child row in datatable
+    info["proc_data_info"] = _build_single_proc_data_info(
+        study, study_proc, proc_samples)
     return info
 
 
@@ -174,11 +177,8 @@ def _build_study_info(user, study_proc=None, proc_samples=None):
                 for pid in proc_data:
                     proc_samples[pid] = ProcessedData(pid).samples
 
-        study_info = _build_single_study_info(study, info)
-        # Build the proc data info list for the child row in datatable
-        study_info["proc_data_info"] = _build_single_proc_data_info(
-            study, study_proc, proc_samples)
-
+        study_info = _build_single_study_info(study, info, study_proc,
+                                              proc_samples)
         infolist.append(study_info)
     return infolist
 
