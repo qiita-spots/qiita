@@ -8,11 +8,9 @@
 
 from unittest import TestCase, main
 
-from qiita_core.util import qiita_test_checker
 from qiita_db.util import get_count, check_count
 
 
-@qiita_test_checker()
 class SetupTest(TestCase):
     """Tests that the test database have been successfully populated"""
 
@@ -111,7 +109,7 @@ class SetupTest(TestCase):
         self.assertEqual(get_count("qiita.job"), 3)
 
     def test_analysis(self):
-        self.assertEqual(get_count("qiita.analysis"), 2)
+        self.assertEqual(get_count("qiita.analysis"), 6)
 
     def test_analysis_job(self):
         self.assertEqual(get_count("qiita.analysis_job"), 3)
@@ -123,7 +121,7 @@ class SetupTest(TestCase):
         self.assertEqual(get_count("qiita.analysis_filepath"), 2)
 
     def test_analysis_sample(self):
-        self.assertEqual(get_count("qiita.analysis_sample"), 9)
+        self.assertEqual(get_count("qiita.analysis_sample"), 13)
 
     def test_analysis_users(self):
         self.assertEqual(get_count("qiita.analysis_users"), 1)

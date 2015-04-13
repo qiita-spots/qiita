@@ -8,6 +8,8 @@ from tornado.websocket import WebSocketHandler
 from tornado.gen import engine, Task
 
 from moi import r_client
+from qiita_pet.handlers.base_handlers import BaseHandler
+from qiita_db.analysis import Analysis
 
 
 class MessageHandler(WebSocketHandler):
@@ -70,3 +72,18 @@ class MessageHandler(WebSocketHandler):
         yield Task(self.toredis.unsubscribe, self.channel)
         self.r_client.delete('%s:messages' % self.channel)
         self.redis.disconnect()
+
+
+class SelectedSocketHandler(WebSocketHandler, BaseHandler):
+    @authenticated
+    def on_message(self, msg):
+        # When the websocket receives a message from the javascript client,
+        # parse into JSON
+        msginfo = loads(msg)
+        default = Analysis(self.current_user.default_analysis)
+        if 'samples' not in msginfo:
+            default.remove_samples([msginfo['proc_data']])
+        else:
+            default.remove_samples([msginfo['proc_data']], msginfo['samples'])
+
+        self.write_message('true')

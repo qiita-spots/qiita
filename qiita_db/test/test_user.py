@@ -109,6 +109,13 @@ class UserTest(TestCase):
             'email': 'new@test.bar'}
         self._check_correct_info(obs, exp)
 
+        # make sure default analysis created
+        sql = ("SELECT email, name, description, dflt FROM qiita.analysis "
+               "WHERE email = 'new@test.bar'")
+        obs = self.conn_handler.execute_fetchall(sql)
+        exp = [['new@test.bar', 'new@test.bar-dflt', 'dflt', True]]
+        self.assertEqual(obs, exp)
+
     def test_create_user_info(self):
         user = User.create('new@test.bar', 'password', self.userinfo)
         self.assertEqual(user.id, 'new@test.bar')
@@ -211,6 +218,10 @@ class UserTest(TestCase):
         self.userinfo["BADTHING"] = "FAIL"
         with self.assertRaises(QiitaDBColumnError):
             self.user.info = self.userinfo
+
+    def test_default_analysis(self):
+        obs = self.user.default_analysis
+        self.assertEqual(obs, 4)
 
     def test_get_user_studies(self):
         user = User('test@foo.bar')
