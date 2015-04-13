@@ -316,7 +316,7 @@ class BaseSample(QiitaObject):
                            (key, self._id, self._md_template.id))
 
     def add_setitem_queries(self, column, value, conn_handler, queue):
-        """Adds the SQL queries needed to set and item to the queue
+        """Adds the SQL queries needed to set a value to the provided queue
 
         Parameters
         ----------
