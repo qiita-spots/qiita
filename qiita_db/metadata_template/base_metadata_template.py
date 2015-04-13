@@ -761,20 +761,35 @@ class MetadataTemplate(QiitaObject):
         conn_handler = SQLConnectionHandler()
 
         # Delete the sample template filepaths
-        conn_handler.execute(
-            "DELETE FROM qiita.sample_template_filepath WHERE "
-            "study_id = %s", (id_, ))
+        queue = "delete_sample_template_%d" % id_
+        conn_handler.create_queue(queue)
 
-        conn_handler.execute(
-            "DROP TABLE qiita.{0}".format(table_name))
-        conn_handler.execute(
+        conn_handler.add_to_queue(
+            queue,
+            "DELETE FROM qiita.sample_template_filepath WHERE study_id = %s",
+            (id_, ))
+
+        conn_handler.add_to_queue(
+            queue,
+            "DROP TABLE IF EXISTS qiita.{0}".format(table_name))
+
+        conn_handler.add_to_queue(
+            queue,
+            "DROP TABLE IF EXISTS qiita.{0}".format(table_name))
+
+        conn_handler.add_to_queue(
+            queue,
             "DELETE FROM qiita.{0} where {1} = %s".format(cls._table,
                                                           cls._id_column),
             (id_,))
-        conn_handler.execute(
+
+        conn_handler.add_to_queue(
+            queue,
             "DELETE FROM qiita.{0} where {1} = %s".format(cls._column_table,
                                                           cls._id_column),
             (id_,))
+
+        conn_handler.execute_queue(queue)
 
     @classmethod
     def exists(cls, obj_id):

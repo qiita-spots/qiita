@@ -43,10 +43,12 @@
 
   <table>
     <tr>
+      {% if not sample_templates %}
       <td>
         <a class="btn btn-primary" onclick="process_sample_template();">Process sample template</a>
       </td>
       <td>&nbsp; &nbsp;</td>
+      {% end %}
       {% if sample_templates %}
       <td>
         <a class="btn btn-primary" onclick="update_sample_template();">Update sample template</a>

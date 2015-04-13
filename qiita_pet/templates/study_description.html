@@ -184,6 +184,24 @@ function add_prep_template(raw_data_id) {
   form.submit();
 }
 
+function delete_sample_template(sample_template_id) {
+  if (confirm('Are you sure you want to delete sample template ID: ' + sample_template_id + '?')) {
+    var form = $("<form>")
+    .attr("action", window.location.href)
+    .attr("method", "post")
+    .append($("<input>")
+    .attr("type", "hidden")
+    .attr("name", "sample_template_id")
+    .attr("value", sample_template_id))
+    .append($("<input>")
+    .attr("type", "hidden")
+    .attr("name", "action")
+    .attr("value", "delete_sample_template"));
+    $("body").append(form);
+    form.submit();
+  }
+}
+
 function delete_raw_data(raw_data_filetype, raw_data_id) {
   if (confirm('Are you sure you want to delete raw data: ' + raw_data_filetype + ' (ID: ' + raw_data_id + ')?')) {
     var form = $("<form>")
@@ -537,7 +555,12 @@ $(document).ready(function() {
 
 <!-- Nav tabs -->
 <ul class="nav nav-tabs" role="tablist" id="myTab">
-    <li class="active"><a href="#study_information_tab" role="tab" data-toggle="tab">Study information</a></li>
+    <li class="active">
+      <a href="#study_information_tab" role="tab" data-toggle="tab">
+        Study information
+        <button class="close" title="Remove this sample template" type="button" onclick="delete_sample_template({{study.sample_template}})">&nbsp; ×</button>
+      </a>
+    </li>
   {% if show_data_tabs %}
     <li><a href="#raw_data_tab" role="tab" data-toggle="tab">Raw data</a></li>
     <li><a href="#preprocessed_data_tab" role="tab" data-toggle="tab">Preprocessed data</a></li>
