@@ -35,6 +35,7 @@ from qiita_db.search import QiitaStudySearch
 from qiita_db.exceptions import (
     QiitaDBIncompatibleDatatypeError, QiitaDBUnknownIDError)
 
+SELECT_SAMPLES = 2
 SELECT_COMMANDS = 3
 
 
