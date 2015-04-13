@@ -36,9 +36,10 @@ Methods
 # -----------------------------------------------------------------------------
 
 from __future__ import division
-from future.utils import viewitems
+from future.utils import viewitems, viewvalues
 from os.path import join
 from functools import partial
+from collections import defaultdict
 from copy import deepcopy
 
 import pandas as pd
@@ -48,6 +49,7 @@ from qiita_core.exceptions import IncompetentQiitaDeveloperError
 
 from qiita_db.exceptions import (QiitaDBUnknownIDError, QiitaDBColumnError,
                                  QiitaDBNotImplementedError,
+                                 QiitaDBExecutionError,
                                  QiitaDBDuplicateHeaderError)
 from qiita_db.base import QiitaObject
 from qiita_db.sql_connection import SQLConnectionHandler
@@ -313,8 +315,8 @@ class BaseSample(QiitaObject):
                            " in template %d" %
                            (key, self._id, self._md_template.id))
 
-    def __setitem__(self, column, value):
-        r"""Sets the metadata value for the category `column`
+    def add_setitem_queries(self, column, value, conn_handler, queue):
+        """Adds the SQL queries needed to set a value to the provided queue
 
         Parameters
         ----------
@@ -323,16 +325,16 @@ class BaseSample(QiitaObject):
         value : str
             The value to set. This is expected to be a str on the assumption
             that psycopg2 will cast as necessary when updating.
+        conn_handler : SQLConnectionHandler
+            The connection handler object connected to the DB
+        queue : str
+            The queue where the SQL statements will be added
 
         Raises
         ------
         QiitaDBColumnError
             If the column does not exist in the table
-        ValueError
-            If the value type does not match the one in the DB
         """
-        conn_handler = SQLConnectionHandler()
-
         # try dynamic tables
         sql = """SELECT EXISTS (
                     SELECT column_name
@@ -367,27 +369,58 @@ class BaseSample(QiitaObject):
             raise QiitaDBColumnError("Column %s does not exist in %s" %
                                      (column, self._dynamic_table))
 
+        conn_handler.add_to_queue(queue, sql, (value, self._id))
+
+    def __setitem__(self, column, value):
+        r"""Sets the metadata value for the category `column`
+
+        Parameters
+        ----------
+        column : str
+            The column to update
+        value : str
+            The value to set. This is expected to be a str on the assumption
+            that psycopg2 will cast as necessary when updating.
+
+        Raises
+        ------
+        ValueError
+            If the value type does not match the one in the DB
+        """
+        conn_handler = SQLConnectionHandler()
+        queue_name = "set_item_%s" % self._id
+        conn_handler.create_queue(queue_name)
+
+        self.add_setitem_queries(column, value, conn_handler, queue_name)
+
         try:
-            conn_handler.execute(sql, (value, self._id))
-        except Exception as e:
+            conn_handler.execute_queue(queue_name)
+        except QiitaDBExecutionError as e:
             # catching error so we can check if the error is due to different
             # column type or something else
+            type_lookup = defaultdict(lambda: 'varchar')
+            type_lookup[int] = 'integer'
+            type_lookup[float] = 'float8'
+            type_lookup[str] = 'varchar'
+            value_type = type_lookup[type(value)]
+
+            sql = """SELECT udt_name
+                     FROM information_schema.columns
+                     WHERE column_name = %s
+                        AND table_schema = 'qiita'
+                        AND (table_name = %s OR table_name = %s)"""
             column_type = conn_handler.execute_fetchone(
-                """SELECT data_type
-                   FROM information_schema.columns
-                   WHERE column_name=%s AND table_schema='qiita'
-                """, (column,))[0]
-            value_type = type(value).__name__
+                sql, (column, self._table, self._dynamic_table))
 
             if column_type != value_type:
                 raise ValueError(
                     'The new value being added to column: "{0}" is "{1}" '
                     '(type: "{2}"). However, this column in the DB is of '
                     'type "{3}". Please change the value in your updated '
-                    'template or reprocess your sample template.'.format(
+                    'template or reprocess your template.'.format(
                         column, value, value_type, column_type))
-            else:
-                raise e
+
+            raise e
 
     def __delitem__(self, key):
         r"""Removes the sample with sample id `key` from the database
@@ -1180,12 +1213,53 @@ class MetadataTemplate(QiitaObject):
         QiitaDBColumnError
             If the column does not exist in the table. This is implicit, and
             can be thrown by the contained Samples.
+        ValueError
+            If one of the new values cannot be inserted in the DB due to
+            different types
         """
         if not set(self.keys()).issuperset(samples_and_values):
             missing = set(self.keys()) - set(samples_and_values)
             table_name = self._table_name(self.study_id)
             raise QiitaDBUnknownIDError(missing, table_name)
 
+        conn_handler = SQLConnectionHandler()
+        queue_name = "update_category_%s_%s" % (self._id, category)
+        conn_handler.create_queue(queue_name)
+
         for k, v in viewitems(samples_and_values):
             sample = self[k]
-            sample[category] = v
+            sample.add_setitem_queries(category, v, conn_handler, queue_name)
+
+        try:
+            conn_handler.execute_queue(queue_name)
+        except QiitaDBExecutionError as e:
+            # catching error so we can check if the error is due to different
+            # column type or something else
+            type_lookup = defaultdict(lambda: 'varchar')
+            type_lookup[int] = 'integer'
+            type_lookup[float] = 'float8'
+            type_lookup[str] = 'varchar'
+            value_types = set(type_lookup[type(value)]
+                              for value in viewvalues(samples_and_values))
+
+            sql = """SELECT udt_name
+                     FROM information_schema.columns
+                     WHERE column_name = %s
+                        AND table_schema = 'qiita'
+                        AND (table_name = %s OR table_name = %s)"""
+            column_type = conn_handler.execute_fetchone(
+                sql, (category, self._table, self._table_name(self._id)))
+
+            if any([column_type != vt for vt in value_types]):
+                value_str = ', '.join(
+                    [str(value) for value in viewvalues(samples_and_values)])
+                value_types_str = ', '.join(value_types)
+
+                raise ValueError(
+                    'The new values being added to column: "%s" are "%s" '
+                    '(types: "%s"). However, this column in the DB is of '
+                    'type "%s". Please change the values in your updated '
+                    'template or reprocess your template.'
+                    % (category, value_str, value_types_str, column_type))
+
+            raise e
