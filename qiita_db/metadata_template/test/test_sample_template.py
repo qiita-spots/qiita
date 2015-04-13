@@ -61,9 +61,8 @@ class TestSampleReadOnly(BaseTestSample):
         with self.assertRaises(QiitaDBColumnError):
             self.tester.add_setitem_queries(
                 'COL_DOES_NOT_EXIST', 0.30, conn_handler, queue)
-            self.tester['column that does not exist'] = 0.30
 
-    def test_add_setitem_queries_dynamic(self):
+    def test_add_setitem_queries_required(self):
         conn_handler = SQLConnectionHandler()
         queue = "test_queue"
         conn_handler.create_queue(queue)
@@ -78,7 +77,7 @@ class TestSampleReadOnly(BaseTestSample):
         exp = [(sql, (True, '1.SKB8.640193'))]
         self.assertEqual(obs, exp)
 
-    def test_add_setitem_queries_required(self):
+    def test_add_setitem_queries_dynamic(self):
         conn_handler = SQLConnectionHandler()
         queue = "test_queue"
         conn_handler.create_queue(queue)

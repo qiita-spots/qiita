@@ -53,6 +53,45 @@ class BaseTestPrepSample(TestCase):
 
 
 class TestPrepSampleReadOnly(BaseTestPrepSample):
+    def test_add_setitem_queries_error(self):
+        conn_handler = SQLConnectionHandler()
+        queue = "test_queue"
+        conn_handler.create_queue(queue)
+
+        with self.assertRaises(QiitaDBColumnError):
+            self.tester.add_setitem_queries(
+                'COL_DOES_NOT_EXIST', 'Foo', conn_handler, queue)
+
+    def test_add_setitem_queries_required(self):
+        conn_handler = SQLConnectionHandler()
+        queue = "test_queue"
+        conn_handler.create_queue(queue)
+
+        self.tester.add_setitem_queries(
+            'center_name', 'FOO', conn_handler, queue)
+
+        obs = conn_handler.queues[queue]
+        sql = """UPDATE qiita.common_prep_info
+                     SET center_name=%s
+                     WHERE sample_id=%s"""
+        exp = [(sql, ('FOO', '1.SKB8.640193'))]
+        self.assertEqual(obs, exp)
+
+    def test_add_setitem_queries_dynamic(self):
+        conn_handler = SQLConnectionHandler()
+        queue = "test_queue"
+        conn_handler.create_queue(queue)
+
+        self.tester.add_setitem_queries(
+            'barcodesequence', 'AAAAAAAAAAAA', conn_handler, queue)
+
+        obs = conn_handler.queues[queue]
+        sql = """UPDATE qiita.prep_1
+                         SET barcodesequence=%s
+                         WHERE sample_id=%s"""
+        exp = [(sql, ('AAAAAAAAAAAA', '1.SKB8.640193'))]
+        self.assertEqual(obs, exp)
+
     def test_init_unknown_error(self):
         """Init errors if the PrepSample id is not found in the template"""
         with self.assertRaises(QiitaDBUnknownIDError):
