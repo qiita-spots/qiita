@@ -363,3 +363,20 @@ class ResultsHandler(StaticFileHandler, BaseHandler):
                 root, absolute_path)
         else:
             raise QiitaPetAuthorizationError(user_id, absolute_path)
+
+
+class SelectedSamplesHandler(BaseHandler):
+    @authenticated
+    def get(self):
+        # Format sel_data to get study IDs for the processed data
+        sel_data = defaultdict(dict)
+        proc_data_info = {}
+        sel_samps = Analysis(self.current_user.default_analysis).samples
+        for pid, samps in viewitems(sel_samps):
+            proc_data = ProcessedData(pid)
+            sel_data[proc_data.study][pid] = samps
+            # Also get processed data info
+            proc_data_info[pid] = proc_data.processing_info
+            proc_data_info[pid]['data_type'] = proc_data.data_type()
+        self.render("analysis_selected.html", sel_data=sel_data,
+                    proc_info=proc_data_info)

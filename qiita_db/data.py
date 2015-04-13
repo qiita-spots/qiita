@@ -1425,12 +1425,53 @@ class ProcessedData(BaseData):
         return data_type[0]
 
     @property
-    def processed_date(self):
-        """Return the processed date"""
+    def processing_info(self):
+        """Return the processing item and settings used to create the data
+
+        Returns
+        -------
+        dict
+            Parameter settings keyed to the parameter, along with date and
+            algorithm used
+        """
+        # Get processed date and the info for the dynamic table
         conn_handler = SQLConnectionHandler()
-        return conn_handler.execute_fetchone(
-            "SELECT processed_date FROM qiita.{0} WHERE "
-            "processed_data_id=%s".format(self._table), (self.id,))[0]
+        sql = """SELECT processed_date, processed_params_table,
+            processed_params_id FROM qiita.{0}
+            WHERE processed_data_id=%s""".format(self._table)
+        static_info = conn_handler.execute_fetchone(sql, (self.id,))
+
+        # Get the info from the dynamic table, including reference used
+        sql = """SELECT * from qiita.{0}
+            JOIN qiita.reference USING (reference_id)
+            WHERE processed_params_id = {1}
+            """.format(static_info['processed_params_table'],
+                       static_info['processed_params_id'])
+        dynamic_info = dict(conn_handler.execute_fetchone(sql))
+
+        # replace reference filepath_ids with full filepaths
+        # figure out what columns have filepaths and what don't
+        ref_fp_cols = {'sequence_filepath', 'taxonomy_filepath',
+                       'tree_filepath'}
+        fp_ids = [str(dynamic_info[col]) for col in ref_fp_cols
+                  if dynamic_info[col] is not None]
+        # Get the filepaths and create dict of fpid to filepath
+        sql = ("SELECT filepath_id, filepath FROM qiita.filepath WHERE "
+               "filepath_id IN ({})").format(','.join(fp_ids))
+        lookup = {fp[0]: fp[1] for fp in conn_handler.execute_fetchall(sql)}
+        # Loop through and replace ids
+        for key in ref_fp_cols:
+            if dynamic_info[key] is not None:
+                dynamic_info[key] = lookup[dynamic_info[key]]
+
+        # add missing info to the dictionary and remove id column info
+        dynamic_info['processed_date'] = static_info['processed_date']
+        dynamic_info['algorithm'] = static_info[
+            'processed_params_table'].split('_')[-1]
+        del dynamic_info['processed_params_id']
+        del dynamic_info['reference_id']
+
+        return dynamic_info
 
     @property
     def samples(self):
