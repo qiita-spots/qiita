@@ -52,6 +52,12 @@ def _build_single_study_info(study, info, study_proc, proc_samples):
         The study to build information for
     info : dict
         Information from Study.get_info
+    study_proc : dict of lists
+        Dictionary keyed on study_id that lists all processed data associated
+        with that study.
+    proc_samples : dict of lists
+        Dictionary keyed on proc_data_id that lists all samples associated with
+        that processed data.
 
     Returns
     -------
@@ -76,20 +82,18 @@ def _build_single_study_info(study, info, study_proc, proc_samples):
     del info["principal_investigator_id"]
     del info["email"]
     # Build the proc data info list for the child row in datatable
-    info["proc_data_info"] = _build_single_proc_data_info(
-        study, study_proc, proc_samples)
+    info["proc_data_info"] = [
+        _build_single_proc_data_info(pd_id, proc_samples[pd_id])
+        for pd_id in study_proc[study.id]]
     return info
 
 
-def _build_single_proc_data_info(study, study_proc, proc_samples):
+def _build_single_proc_data_info(proc_data_id, samples):
     """Build the proc data info list for the child row in datatable
-
 
     Parameters
     ----------
-    study : Study object
-        The study to build information for
-    study_proc : dict of lists
+    proc_data_id : int
         The processed data attached to he study, in the form
         {study_id: [proc_data_id, proc_data_id, ...], ...}
     proc_samples : dict of lists
@@ -98,24 +102,20 @@ def _build_single_proc_data_info(study, study_proc, proc_samples):
 
     Returns
     -------
-    dict of dicts
-        The information for the processed data, in the form
-        {proc_data_id: {info: value, ...}, ...}
+    dict
+        The information for the processed data, in the form {info: value, ...}
     """
-    proc_data_info = []
-    for pid in study_proc[study.id]:
-        proc_data = ProcessedData(pid)
-        proc_info = proc_data.processing_info
-        proc_info['pid'] = pid
-        proc_info['data_type'] = proc_data.data_type()
-        proc_info['samples'] = sorted(proc_samples[pid])
-        proc_info['processed_date'] = str(proc_info['processed_date'])
-        proc_data_info.append(proc_info)
-    return proc_data_info
+    proc_data = ProcessedData(proc_data_id)
+    proc_info = proc_data.processing_info
+    proc_info['pid'] = proc_data_id
+    proc_info['data_type'] = proc_data.data_type()
+    proc_info['samples'] = sorted(samples)
+    proc_info['processed_date'] = str(proc_info['processed_date'])
+    return proc_info
 
 
 def _build_study_info(user, study_proc=None, proc_samples=None):
-    """builds list of dicts for studies table, with all html formatted
+    """Builds list of dicts for studies table, with all HTML formatted
 
     Parameters
     ----------
@@ -171,11 +171,11 @@ def _build_study_info(user, study_proc=None, proc_samples=None):
         study = Study(info['study_id'])
         # Build the processed data info for the study if none passed
         if build_samples:
-                proc_data = study.processed_data()
-                proc_samples = {}
-                study_proc = {study.id: proc_data}
-                for pid in proc_data:
-                    proc_samples[pid] = ProcessedData(pid).samples
+            proc_data = study.processed_data()
+            proc_samples = {}
+            study_proc = {study.id: proc_data}
+            for pid in proc_data:
+                proc_samples[pid] = ProcessedData(pid).samples
 
         study_info = _build_single_study_info(study, info, study_proc,
                                               proc_samples)

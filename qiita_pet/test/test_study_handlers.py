@@ -2,6 +2,7 @@ from unittest import main
 from json import loads
 
 from qiita_pet.test.tornado_test_base import TestHandlerBase
+from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_db.study import StudyPerson, Study
 from qiita_db.util import get_count, check_count
 from qiita_db.user import User
@@ -14,7 +15,7 @@ class TestHelpers(TestHandlerBase):
     database = True
 
     def setUp(self):
-        self.proc_data_exp = [{
+        self.proc_data_exp = {
             'pid': 1,
             'processed_date': '2012-10-01 09:30:27',
             'data_type': '18S',
@@ -36,7 +37,7 @@ class TestHelpers(TestHandlerBase):
                         '1.SKM1.640183', '1.SKM2.640199', '1.SKM3.640197',
                         '1.SKM4.640180', '1.SKM5.640177', '1.SKM6.640187',
                         '1.SKM7.640188', '1.SKM8.640201', '1.SKM9.640192']
-        }]
+        }
         self.single_exp = {
             'study_id': 1,
             'status': 'private',
@@ -64,7 +65,7 @@ class TestHelpers(TestHandlerBase):
                     '//www.ncbi.nlm.nih.gov/pubmed/7891011">7891011</a>',
             'pi': '<a target="_blank" href="mailto:PI_dude@foo.bar">'
                   'PIDude</a>',
-            'proc_data_info': self.proc_data_exp
+            'proc_data_info': [self.proc_data_exp]
         }
         self.exp = [self.single_exp]
         super(TestHelpers, self).setUp()
@@ -76,7 +77,7 @@ class TestHelpers(TestHandlerBase):
 
     def test_build_single_study_info(self):
         study_proc = {1: [1]}
-        proc_samples = {1: self.proc_data_exp[0]['samples']}
+        proc_samples = {1: self.proc_data_exp['samples']}
         study_info = {
             'study_id': 1,
             'email': 'test@foo.bar',
@@ -104,14 +105,17 @@ class TestHelpers(TestHandlerBase):
         self.assertEqual(obs, self.single_exp)
 
     def test_build_single_proc_data_info(self):
-        study_proc = {1: [1]}
-        proc_samples = {1: self.proc_data_exp[0]['samples']}
-        obs = _build_single_proc_data_info(Study(1), study_proc, proc_samples)
+        obs = _build_single_proc_data_info(1, self.proc_data_exp['samples'])
         self.assertEqual(obs, self.proc_data_exp)
 
     def test_build_study_info(self):
         obs = _build_study_info(User('test@foo.bar'))
         self.assertEqual(obs, self.exp)
+
+        with self.assertRaises(IncompetentQiitaDeveloperError):
+            obs = _build_study_info(User('test@foo.bar'), study_proc={})
+        with self.assertRaises(IncompetentQiitaDeveloperError):
+            obs = _build_study_info(User('test@foo.bar'), proc_samples={})
 
     def test_build_study_info_new_study(self):
         info = {

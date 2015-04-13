@@ -81,7 +81,7 @@ $(document).ready(function() {
         });
     // Add event listener for opening and closing details
     $('#studies-table tbody').on('click', 'td.details-control', function () {
-      var table = $('#studies-table').DataTable();
+        var table = $('#studies-table').DataTable();
         var tr = $(this).closest('tr');
         var row = table.row( tr );
  
