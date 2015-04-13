@@ -106,7 +106,7 @@
             <li class="dropdown">
               <a href="#" data-toggle="dropdown" class="dropdown-toggle">Meta Analysis<b class="caret"></b></a>
               <ul class="dropdown-menu">
-                <li><a data-toggle="modal" data-target="#create-analysis-modal-view">Create Meta Analysis</a></li>
+                <li><a href="/analysis/selected/">View Selected Samples</a></li>
                 <li><a href="/analysis/show/">See Previous Analyses</a></li>
               </ul>
             </li>
@@ -190,36 +190,6 @@
     <!-- all templates should override this portion to present their main content -->
     <div id="template-content" class="container" style="width:99%">
       {% block content %}{% end %}
-    </div>
-
-    <!-- modal view to enter analysis information -->
-    <div class="modal fade" id="create-analysis-modal-view" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-      <div class="modal-dialog">
-        <div class="modal-content">
-          <div class="modal-header">
-            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-            <h4 class="modal-title" id="myModalLabel">Create new meta-analysis</h4>
-          </div>
-          <form role="form" action="/analysis/2" method="post">
-          <input type="hidden" name="action" value="create">
-            <div class="modal-body">
-              <div>
-                <div class="form-group">
-                  <label for="name">Analysis name</label>
-                  <input type="text" class="form-control" id="name" name="name" placeholder="Analysis name">
-                </div>
-                <div class="form-group">
-                  <label for="description">Description</label>
-                  <input type="text" class="form-control" id="description" name="description" placeholder="Short description">
-                </div>
-              </div>
-            </div>
-            <div class="modal-footer">
-              <button type="submit" class="btn btn-primary">Create analysis</button>
-            </div>
-          </form>
-        </div>
-      </div>
     </div>
 
     <div id="footer">
