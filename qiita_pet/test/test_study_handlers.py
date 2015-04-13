@@ -382,5 +382,36 @@ class TestEBISubmitHandler(TestHandlerBase):
     pass
 
 
+class TestDelete(TestHandlerBase):
+    def test_delete_sample_template(self):
+        response = self.post('/study/description/1',
+                             {'sample_template_id': 1,
+                              'action': 'delete_sample_template'})
+        self.assertEqual(response.code, 200)
+
+    def test_delete_raw_data(self):
+        response = self.post('/study/description/1',
+                             {'raw_data_id': 1,
+                              'action': 'delete_raw_data'})
+        self.assertEqual(response.code, 200)
+
+    def test_delete_prep_template(self):
+        response = self.post('/study/description/1',
+                             {'prep_template_id': 1,
+                              'action': 'delete_prep_template'})
+        self.assertEqual(response.code, 200)
+
+    def test_delete_preprocessed_data(self):
+        response = self.post('/study/description/1',
+                             {'preprocessed_data_id': 1,
+                              'action': 'delete_preprocessed_data'})
+        self.assertEqual(response.code, 200)
+
+    def test_delete_processed_data(self):
+        response = self.post('/study/description/1',
+                             {'processed_data_id': 1,
+                              'action': 'delete_processed_data'})
+        self.assertEqual(response.code, 200)
+
 if __name__ == "__main__":
     main()
