@@ -1253,7 +1253,6 @@ class TestSampleTemplateReadWrite(BaseTestSampleTemplate):
         self.assertFalse(SampleTemplate.exists(self.new_study.id))
 
     def test_update_category(self):
-        """setitem raises an error (currently not allowed)"""
         with self.assertRaises(QiitaDBUnknownIDError):
             self.tester.update_category('country', {"foo": "bar"})
 
@@ -1295,9 +1294,17 @@ class TestSampleTemplateReadWrite(BaseTestSampleTemplate):
         # testing that if fails when trying to change an int column value
         # to str
         st = SampleTemplate.create(self.metadata, self.new_study)
-        mapping = {'2.Sample1': "no_value"}
+
+        sql = """SELECT * FROM qiita.sample_2 ORDER BY sample_id"""
+        before = self.conn_handler.execute_fetchall(sql)
+        mapping = {'2.Sample1': 1, '2.Sample2': "no_value"}
+
         with self.assertRaises(ValueError):
             st.update_category('int_column', mapping)
+
+        after = self.conn_handler.execute_fetchall(sql)
+
+        self.assertEqual(before, after)
 
     def test_update(self):
         """Updates values in existing mapping file"""

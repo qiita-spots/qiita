@@ -1252,7 +1252,7 @@ class MetadataTemplate(QiitaObject):
 
             if any([column_type != vt for vt in value_types]):
                 value_str = ', '.join(
-                    [v for value in viewvalues(samples_and_values)])
+                    [str(value) for value in viewvalues(samples_and_values)])
                 value_types_str = ', '.join(value_types)
 
                 raise ValueError(
