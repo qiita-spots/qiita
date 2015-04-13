@@ -123,6 +123,27 @@ class TestAnalysis(TestCase):
         obs = self.conn_handler.execute_fetchall(sql, [new_id])
         self.assertEqual(obs, [[1, new_id]])
 
+    def test_create_from_default(self):
+        new_id = get_count("qiita.analysis") + 1
+        owner = User("test@foo.bar")
+        new = Analysis.create(owner, "newAnalysis",
+                              "A New Analysis", from_default=True)
+        self.assertEqual(new.id, new_id)
+        self.assertEqual(new.step, 3)
+
+        # Make sure samples were transfered properly
+        sql = "SELECT * FROM qiita.analysis_sample WHERE analysis_id = %s"
+        obs = self.conn_handler.execute_fetchall(sql, [owner.default_analysis])
+        exp = []
+        self.assertEqual(obs, exp)
+        sql = "SELECT * FROM qiita.analysis_sample WHERE analysis_id = %s"
+        obs = self.conn_handler.execute_fetchall(sql, [new_id])
+        exp = [[new_id, 1, '1.SKD8.640184'],
+               [new_id, 1, '1.SKB7.640196'],
+               [new_id, 1, '1.SKM9.640192'],
+               [new_id, 1, '1.SKM4.640180']]
+        self.assertEqual(obs, exp)
+
     def test_retrieve_owner(self):
         self.assertEqual(self.analysis.owner, "test@foo.bar")
 

@@ -100,7 +100,7 @@ class Analysis(QiitaStatusObject):
         return {x[0] for x in conn_handler.execute_fetchall(sql, (status,))}
 
     @classmethod
-    def create(cls, owner, name, description, parent=None):
+    def create(cls, owner, name, description, parent=None, from_default=False):
         """Creates a new analysis on the database
 
         Parameters
@@ -113,23 +113,53 @@ class Analysis(QiitaStatusObject):
             Description of the analysis
         parent : Analysis object, optional
             The analysis this one was forked from
+        from_default : bool, optional
+            If True, use the default analysis to populate selected samples.
+            Default False.
         """
+        queue = "create_analysis"
         conn_handler = SQLConnectionHandler()
+        conn_handler.create_queue(queue)
         # TODO after demo: if exists()
-
-        # insert analysis information into table with "in construction" status
-        sql = ("INSERT INTO qiita.{0} (email, name, description, "
-               "analysis_status_id) VALUES (%s, %s, %s, 1) "
-               "RETURNING analysis_id".format(cls._table))
-        a_id = conn_handler.execute_fetchone(
-            sql, (owner.id, name, description))[0]
+        # Needed since issue #292 exists
+        status_id = conn_handler.execute_fetchone(
+            "SELECT analysis_status_id from qiita.analysis_status WHERE "
+            "status = 'in_construction'")[0]
+        if from_default:
+            # insert analysis and move samples into that new analysis
+            dflt_id = owner.default_analysis
+            sql = """INSERT INTO qiita.{0}
+                    (email, name, description, analysis_status_id)
+                    VALUES (%s, %s, %s, %s)
+                    RETURNING analysis_id""".format(cls._table)
+            conn_handler.add_to_queue(queue, sql, (owner.id, name,
+                                                   description, status_id))
+            # MAGIC NUMBER 3: command selection step
+            # needed so we skip the sample selection step
+            sql = """INSERT INTO qiita.analysis_workflow
+                    (analysis_id, step) VALUES (%s, %s)
+                    RETURNING %s"""
+            conn_handler.add_to_queue(queue, sql, ['{0}', 3, '{0}'])
+            sql = """UPDATE qiita.analysis_sample
+                     SET analysis_id = %s
+                     WHERE analysis_id = %s RETURNING %s"""
+            conn_handler.add_to_queue(queue, sql, ['{0}', dflt_id, '{0}'])
+        else:
+            # insert analysis information into table as "in construction"
+            sql = """INSERT INTO qiita.{0}
+                  (email, name, description, analysis_status_id)
+                  VALUES (%s, %s, %s, %s)
+                  RETURNING analysis_id""".format(cls._table)
+            conn_handler.add_to_queue(
+                queue, sql, (owner.id, name, description, status_id))
 
         # add parent if necessary
         if parent:
             sql = ("INSERT INTO qiita.analysis_chain (parent_id, child_id) "
-                   "VALUES (%s, %s)")
-            conn_handler.execute(sql, (parent.id, a_id))
+                   "VALUES (%s, %s) RETURNING child_id")
+            conn_handler.add_to_queue(queue, sql, [parent.id, '{0}'])
 
+        a_id = conn_handler.execute_queue(queue)[0]
         return cls(a_id)
 
     # ---- Properties ----

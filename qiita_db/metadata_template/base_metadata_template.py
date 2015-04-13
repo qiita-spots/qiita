@@ -39,19 +39,24 @@ from __future__ import division
 from future.utils import viewitems
 from os.path import join
 from functools import partial
+from copy import deepcopy
 
 import pandas as pd
+from skbio.util import find_duplicates
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
-from qiita_db.exceptions import (QiitaDBUnknownIDError,
-                                 QiitaDBNotImplementedError)
+
+from qiita_db.exceptions import (QiitaDBUnknownIDError, QiitaDBColumnError,
+                                 QiitaDBNotImplementedError,
+                                 QiitaDBDuplicateHeaderError)
 from qiita_db.base import QiitaObject
 from qiita_db.sql_connection import SQLConnectionHandler
 from qiita_db.util import (exists_table, get_table_cols,
                            convert_to_id,
                            get_mountpoint, insert_filepaths)
 from qiita_db.logger import LogEntry
-from .util import as_python_types, get_datatypes
+from .util import (as_python_types, get_datatypes, get_invalid_sample_names,
+                   prefix_sample_names_with_id)
 
 
 class BaseSample(QiitaObject):
@@ -308,17 +313,81 @@ class BaseSample(QiitaObject):
                            " in template %d" %
                            (key, self._id, self._md_template.id))
 
-    def __setitem__(self, key, value):
-        r"""Sets the metadata value for the category `key`
+    def __setitem__(self, column, value):
+        r"""Sets the metadata value for the category `column`
 
         Parameters
         ----------
-        key : str
-            The metadata category
-        value : obj
-            The new value for the category
+        column : str
+            The column to update
+        value : str
+            The value to set. This is expected to be a str on the assumption
+            that psycopg2 will cast as necessary when updating.
+
+        Raises
+        ------
+        QiitaDBColumnError
+            If the column does not exist in the table
+        ValueError
+            If the value type does not match the one in the DB
         """
-        raise QiitaDBNotImplementedError()
+        conn_handler = SQLConnectionHandler()
+
+        # try dynamic tables
+        sql = """SELECT EXISTS (
+                    SELECT column_name
+                    FROM information_schema.columns
+                    WHERE table_name=%s
+                        AND table_schema='qiita'
+                        AND column_name=%s)"""
+        exists_dynamic = conn_handler.execute_fetchone(
+            sql, (self._dynamic_table, column))[0]
+        # try required_sample_info
+        sql = """SELECT EXISTS (
+                    SELECT column_name
+                    FROM information_schema.columns
+                    WHERE table_name=%s
+                        AND table_schema='qiita'
+                        AND column_name=%s)"""
+        exists_required = conn_handler.execute_fetchone(
+            sql, (self._table, column))[0]
+
+        if exists_dynamic:
+                sql = """UPDATE qiita.{0}
+                         SET {1}=%s
+                         WHERE sample_id=%s""".format(self._dynamic_table,
+                                                      column)
+        elif exists_required:
+            # here is not required the type check as the required fields have
+            # an explicit type check
+            sql = """UPDATE qiita.{0}
+                     SET {1}=%s
+                     WHERE sample_id=%s""".format(self._table, column)
+        else:
+            raise QiitaDBColumnError("Column %s does not exist in %s" %
+                                     (column, self._dynamic_table))
+
+        try:
+            conn_handler.execute(sql, (value, self._id))
+        except Exception as e:
+            # catching error so we can check if the error is due to different
+            # column type or something else
+            column_type = conn_handler.execute_fetchone(
+                """SELECT data_type
+                   FROM information_schema.columns
+                   WHERE column_name=%s AND table_schema='qiita'
+                """, (column,))[0]
+            value_type = type(value).__name__
+
+            if column_type != value_type:
+                raise ValueError(
+                    'The new value being added to column: "{0}" is "{1}" '
+                    '(type: "{2}"). However, this column in the DB is of '
+                    'type "{3}". Please change the value in your updated '
+                    'template or reprocess your sample template.'.format(
+                        column, value, value_type, column_type))
+            else:
+                raise e
 
     def __delitem__(self, key):
         r"""Removes the sample with sample id `key` from the database
@@ -501,9 +570,8 @@ class MetadataTemplate(QiitaObject):
         ----------
         md_template : DataFrame
             The metadata template file contents indexed by sample ids
-        obj : Study or RawData
-            The obj to which the metadata template belongs to. Study in case
-            of SampleTemplate and RawData in case of PrepTemplate
+        obj : object
+            Any extra object needed by the template to perform any extra check
         """
         # Check required columns
         missing = set(cls.translate_cols_dict.values()).difference(md_template)
@@ -518,6 +586,82 @@ class MetadataTemplate(QiitaObject):
 
         return missing.union(
             cls._check_template_special_columns(md_template, obj))
+
+    @classmethod
+    def _clean_validate_template(cls, md_template, study_id, obj,
+                                 conn_handler=None):
+        """Takes care of all validation and cleaning of metadata templates
+
+        Parameters
+        ----------
+        md_template : DataFrame
+            The metadata template file contents indexed by sample ids
+        study_id : int
+            The study to which the metadata template belongs to.
+        obj : object
+            Any extra object needed by the template to perform any extra check
+
+        Returns
+        -------
+        md_template : DataFrame
+            Cleaned copy of the input md_template
+
+        Raises
+        ------
+        QiitaDBColumnError
+            If the sample names in md_template contains invalid names
+        QiitaDBDuplicateHeaderError
+            If md_template contains duplicate headers
+        QiitaDBColumnError
+            If md_template is missing a required column
+        """
+        cls._check_subclass()
+        invalid_ids = get_invalid_sample_names(md_template.index)
+        if invalid_ids:
+            raise QiitaDBColumnError("The following sample names in the "
+                                     "template contain invalid characters "
+                                     "(only alphanumeric characters or periods"
+                                     " are allowed): %s." %
+                                     ", ".join(invalid_ids))
+        # We are going to modify the md_template. We create a copy so
+        # we don't modify the user one
+        md_template = deepcopy(md_template)
+
+        # Prefix the sample names with the study_id
+        prefix_sample_names_with_id(md_template, study_id)
+
+        # In the database, all the column headers are lowercase
+        md_template.columns = [c.lower() for c in md_template.columns]
+
+        # Check that we don't have duplicate columns
+        if len(set(md_template.columns)) != len(md_template.columns):
+            raise QiitaDBDuplicateHeaderError(
+                find_duplicates(md_template.columns))
+
+        # We need to check for some special columns, that are not present on
+        # the database, but depending on the data type are required.
+        missing = cls._check_special_columns(md_template, obj)
+
+        conn_handler = conn_handler if conn_handler else SQLConnectionHandler()
+
+        # Get the required columns from the DB
+        db_cols = get_table_cols(cls._table, conn_handler)
+
+        # Remove the sample_id and study_id columns
+        db_cols.remove('sample_id')
+        db_cols.remove(cls._id_column)
+
+        # Retrieve the headers of the metadata template
+        headers = list(md_template.keys())
+
+        # Check that md_template has the required columns
+        remaining = set(db_cols).difference(headers)
+        missing = missing.union(remaining)
+        missing = missing.difference(cls.translate_cols_dict)
+        if missing:
+            raise QiitaDBColumnError("Missing columns: %s"
+                                     % ', '.join(missing))
+        return md_template
 
     @classmethod
     def _add_common_creation_steps_to_queue(cls, md_template, obj_id,
@@ -1018,3 +1162,30 @@ class MetadataTemplate(QiitaObject):
                 cols[idx] = self.translate_cols_dict[c]
 
         return cols
+
+    def update_category(self, category, samples_and_values):
+        """Update an existing column
+
+        Parameters
+        ----------
+        category : str
+            The category to update
+        samples_and_values : dict
+            A mapping of {sample_id: value}
+
+        Raises
+        ------
+        QiitaDBUnknownIDError
+            If a sample_id is included in values that is not in the template
+        QiitaDBColumnError
+            If the column does not exist in the table. This is implicit, and
+            can be thrown by the contained Samples.
+        """
+        if not set(self.keys()).issuperset(samples_and_values):
+            missing = set(self.keys()) - set(samples_and_values)
+            table_name = self._table_name(self.study_id)
+            raise QiitaDBUnknownIDError(missing, table_name)
+
+        for k, v in viewitems(samples_and_values):
+            sample = self[k]
+            sample[category] = v
