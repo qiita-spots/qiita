@@ -771,11 +771,7 @@ class MetadataTemplate(QiitaObject):
 
         conn_handler.add_to_queue(
             queue,
-            "DROP TABLE IF EXISTS qiita.{0}".format(table_name))
-
-        conn_handler.add_to_queue(
-            queue,
-            "DROP TABLE IF EXISTS qiita.{0}".format(table_name))
+            "DROP TABLE qiita.{0}".format(table_name))
 
         conn_handler.add_to_queue(
             queue,

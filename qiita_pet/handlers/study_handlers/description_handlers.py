@@ -661,8 +661,8 @@ class StudyDescriptionHandler(BaseHandler):
                    "<b><i>%s</i></b>" % (sample_template_id, study.title))
             msg_level = "success"
         except Exception as e:
-            msg = "Couldn't remove %d raw data: %s" % (sample_template_id,
-                                                       str(e))
+            msg = "Couldn't remove %d sample template: %s" % (
+                sample_template_id, str(e))
             msg_level = "danger"
 
         callback((msg, msg_level, 'study_information_tab', None, None))
