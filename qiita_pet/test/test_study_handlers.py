@@ -8,7 +8,7 @@ from qiita_db.util import get_count, check_count
 from qiita_db.user import User
 from qiita_pet.handlers.study_handlers.listing_handlers import (
     _get_shared_links_for_study, _build_study_info, _build_single_study_info,
-    _build_proc_data_info)
+    _build_single_proc_data_info)
 
 
 class TestHelpers(TestHandlerBase):
@@ -148,16 +148,12 @@ class TestHelpers(TestHandlerBase):
                 'lifecycle.'
             }
         obs = _build_single_study_info(Study(1), study_info)
-        for key, val in self.single_exp.iteritems():
-            if obs[key] != val:
-                print key
-                print obs[key], val
         self.assertEqual(obs, self.single_exp)
 
-    def test_build_proc_data_info(self):
+    def test_build_single_proc_data_info(self):
         study_proc = {1: [1]}
         proc_samples = {1: self.proc_data_exp[0]['samples']}
-        obs = _build_proc_data_info(Study(1), study_proc, proc_samples)
+        obs = _build_single_proc_data_info(Study(1), study_proc, proc_samples)
         self.assertEqual(obs, self.proc_data_exp)
 
     def test_build_study_info(self):

@@ -123,7 +123,7 @@ def _build_study_info(user, study_proc=None, proc_samples=None):
         with that study. Required if proc_samples given.
     proc_samples : dict of lists, optional
         Dictionary keyed on proc_data_id that lists all samples associated with
-        that processed data. Rquired if study_proc given.
+        that processed data. Required if study_proc given.
 
     Returns
     -------
