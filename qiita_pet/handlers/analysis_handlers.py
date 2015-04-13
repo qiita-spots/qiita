@@ -35,7 +35,6 @@ from qiita_db.search import QiitaStudySearch
 from qiita_db.exceptions import (
     QiitaDBIncompatibleDatatypeError, QiitaDBUnknownIDError)
 
-SELECT_SAMPLES = 2
 SELECT_COMMANDS = 3
 
 
@@ -234,7 +233,10 @@ class SelectCommandsHandler(BaseHandler):
 
     @authenticated
     def post(self):
-        analysis = Analysis(int(self.get_argument('analysis-id')))
+        name = self.get_argument('name')
+        desc = self.get_argument('description')
+        analysis = Analysis.create(self.current_user, name, desc,
+                                   from_default=True)
         # set to third step since this page is third step in workflow
         analysis.step = SELECT_COMMANDS
         data_types = analysis.data_types
