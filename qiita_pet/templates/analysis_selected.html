@@ -1,8 +1,15 @@
 {% extends sitebase.html %}
 {% block head %}
 <script type="text/javascript">
+var ws = new WebSocket('ws://' + window.location.host + '/analysis/selected/socket/');
+ws.onmessage = function(evt) { if(evt.data != 'true') {ws.close();} };
+ws.onerror = function(evt) { $('#search-error').html("<b>Server communication error. Sample selection will not be recorded. Please try again later.</b>"); };
+ws.onclose = function(evt) { $('#search-error').html("<b>Server communication error. Sample selection will not be recorded. Please try again later.</b>"); };
+
+
 function remove_proc_data(pid, sid) {
 	if(confirm('Are you sure you want to remove all samples for this processed data?')) { 
+		ws.send(JSON.stringify({'proc_data': pid}));
 		$('#proc' + pid).remove();
 		$('#proc' + pid + '-samples').remove();
 		// remove study if all proc data removed
@@ -11,6 +18,7 @@ function remove_proc_data(pid, sid) {
 }
 
 function remove_sample(sid, pid, sample) {
+		ws.send(JSON.stringify({'proc_data': pid, 'samples': [sample]}));
 		document.getElementById(pid + '@' + sample).remove();
 		//decriment sample count for pid
 		var count = $('#proc' + pid + '-sample-count');
@@ -29,6 +37,7 @@ function remove_sample(sid, pid, sample) {
 {% from future.utils import viewitems %}
 {% set static_info = {'data_type', 'processed_date', 'algorithm', 'reference_name', 'reference_version', 'sequence_filepath', 'taxonomy_filepath', 'tree_filepath'}%}
 <h1>Selected Samples</h1>
+<span id="ws-error" style="color:red"></span>
 {% for sid, proc_datas in viewitems(sel_data) %}
   {% set study = Study(sid) %}
 <div class="row" id="study{{sid}}">
