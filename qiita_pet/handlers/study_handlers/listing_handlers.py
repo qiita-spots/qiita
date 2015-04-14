@@ -8,6 +8,7 @@
 from __future__ import division
 from json import dumps
 from future.utils import viewitems
+from collections import defaultdict
 
 from tornado.web import authenticated, HTTPError
 from tornado.gen import coroutine, Task
@@ -52,9 +53,9 @@ def _build_single_study_info(study, info, study_proc, proc_samples):
         The study to build information for
     info : dict
         Information from Study.get_info
-    study_proc : dict of lists
+    study_proc : dict of dict of lists
         Dictionary keyed on study_id that lists all processed data associated
-        with that study.
+        with that study. This list of processed data ids is keyed by data type
     proc_samples : dict of lists
         Dictionary keyed on proc_data_id that lists all samples associated with
         that processed data.
@@ -82,13 +83,14 @@ def _build_single_study_info(study, info, study_proc, proc_samples):
     del info["principal_investigator_id"]
     del info["email"]
     # Build the proc data info list for the child row in datatable
-    info["proc_data_info"] = [
-        _build_single_proc_data_info(pd_id, proc_samples[pd_id])
-        for pd_id in study_proc[study.id]]
+    for data_type, proc_datas in viewitems(study_proc[study.id]):
+        info["proc_data_info"] = [
+            _build_single_proc_data_info(pd_id, data_type, proc_samples[pd_id])
+            for pd_id in proc_datas]
     return info
 
 
-def _build_single_proc_data_info(proc_data_id, samples):
+def _build_single_proc_data_info(proc_data_id, data_type, samples):
     """Build the proc data info list for the child row in datatable
 
     Parameters
@@ -96,6 +98,8 @@ def _build_single_proc_data_info(proc_data_id, samples):
     proc_data_id : int
         The processed data attached to he study, in the form
         {study_id: [proc_data_id, proc_data_id, ...], ...}
+    data_type : str
+        Data type of the processed data
     proc_samples : dict of lists
         The samples available in the processed data, in the form
         {proc_data_id: [samp1, samp2, ...], ...}
@@ -108,7 +112,7 @@ def _build_single_proc_data_info(proc_data_id, samples):
     proc_data = ProcessedData(proc_data_id)
     proc_info = proc_data.processing_info
     proc_info['pid'] = proc_data_id
-    proc_info['data_type'] = proc_data.data_type()
+    proc_info['data_type'] = data_type
     proc_info['samples'] = sorted(samples)
     proc_info['processed_date'] = str(proc_info['processed_date'])
     return proc_info
@@ -171,11 +175,13 @@ def _build_study_info(user, study_proc=None, proc_samples=None):
         study = Study(info['study_id'])
         # Build the processed data info for the study if none passed
         if build_samples:
-            proc_data = study.processed_data()
+            proc_data_list = study.processed_data()
             proc_samples = {}
-            study_proc = {study.id: proc_data}
-            for pid in proc_data:
-                proc_samples[pid] = ProcessedData(pid).samples
+            study_proc = {study.id: defaultdict(list)}
+            for pid in proc_data_list:
+                proc_data = ProcessedData(pid)
+                study_proc[study.id][proc_data.data_type()].append(pid)
+                proc_samples[pid] = proc_data.samples
 
         study_info = _build_single_study_info(study, info, study_proc,
                                               proc_samples)
