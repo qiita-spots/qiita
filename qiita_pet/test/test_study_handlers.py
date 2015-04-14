@@ -76,7 +76,7 @@ class TestHelpers(TestHandlerBase):
         self.assertEqual(obs, exp)
 
     def test_build_single_study_info(self):
-        study_proc = {1: [1]}
+        study_proc = {1: {'18S': [1]}}
         proc_samples = {1: self.proc_data_exp['samples']}
         study_info = {
             'study_id': 1,
@@ -105,7 +105,8 @@ class TestHelpers(TestHandlerBase):
         self.assertEqual(obs, self.single_exp)
 
     def test_build_single_proc_data_info(self):
-        obs = _build_single_proc_data_info(1, self.proc_data_exp['samples'])
+        obs = _build_single_proc_data_info(1, '18S',
+                                           self.proc_data_exp['samples'])
         self.assertEqual(obs, self.proc_data_exp)
 
     def test_build_study_info(self):

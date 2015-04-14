@@ -83,10 +83,11 @@ def _build_single_study_info(study, info, study_proc, proc_samples):
     del info["principal_investigator_id"]
     del info["email"]
     # Build the proc data info list for the child row in datatable
+    info["proc_data_info"] = []
     for data_type, proc_datas in viewitems(study_proc[study.id]):
-        info["proc_data_info"] = [
+        info["proc_data_info"].extend([
             _build_single_proc_data_info(pd_id, data_type, proc_samples[pd_id])
-            for pd_id in proc_datas]
+            for pd_id in proc_datas])
     return info
 
 
