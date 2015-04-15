@@ -107,6 +107,7 @@ from .exceptions import (QiitaDBStatusError, QiitaDBColumnError, QiitaDBError)
 from .util import (check_required_columns, check_table_cols, convert_to_id,
                    get_environmental_packages, get_table_cols, infer_status)
 from .sql_connection import SQLConnectionHandler
+from .util import exists_table
 
 
 class Study(QiitaObject):
@@ -346,6 +347,58 @@ class Study(QiitaObject):
             conn_handler.execute(sql, (investigation.id, study_id))
 
         return cls(study_id)
+
+    @classmethod
+    def delete(cls, id_):
+        r"""Deletes the study from the database
+
+        Parameters
+        ----------
+        id_ : integer
+            The object identifier
+
+        Raises
+        ------
+        QiitaDBError
+            If the sample_(_id) table exists == a sample template exists
+        """
+        cls._check_subclass()
+
+        study = cls(id_)
+
+        conn_handler = SQLConnectionHandler()
+        if exists_table('sample_%d' % id_, conn_handler):
+            raise QiitaDBError('Study "%s" can not be erased because it has a '
+                               'sample template' % cls(id_).title)
+
+        queue = "delete_study_%d" % id_
+        conn_handler.create_queue(queue)
+
+        conn_handler.add_to_queue(
+            queue,
+            "DELETE FROM qiita.study_sample_columns WHERE study_id = %s",
+            (id_, ))
+
+        conn_handler.add_to_queue(
+            queue,
+            "DELETE FROM qiita.study_experimental_factor WHERE study_id = %s",
+            (id_, ))
+
+        conn_handler.add_to_queue(
+            queue,
+            "DELETE FROM qiita.study_pmid WHERE study_id = %s", (id_, ))
+
+        conn_handler.add_to_queue(
+            queue,
+            "DELETE FROM qiita.study_environmental_package WHERE study_id = "
+            "%s", (id_, ))
+
+        conn_handler.add_to_queue(
+            queue,
+            "DELETE FROM qiita.study WHERE study_id = %s", (id_, ))
+
+        conn_handler.execute_queue(queue)
+
 
 # --- Attributes ---
     @property
