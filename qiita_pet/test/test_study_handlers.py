@@ -384,7 +384,7 @@ class TestEBISubmitHandler(TestHandlerBase):
 
 class TestDelete(TestHandlerBase):
     database = True
-    
+
     def test_delete_sample_template(self):
         response = self.post('/study/description/1',
                              {'sample_template_id': 1,
