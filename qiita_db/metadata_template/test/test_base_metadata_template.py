@@ -64,12 +64,5 @@ class TestMetadataTemplateReadOnly(TestCase):
             MetadataTemplate._clean_validate_template(None, 1, None, None)
 
 
-@qiita_test_checker()
-class TestMetadataTemplateReadWrite(TestCase):
-    def test_delete(self):
-        """delete raises an error because it's not called from a subclass"""
-        with self.assertRaises(IncompetentQiitaDeveloperError):
-            MetadataTemplate.delete(1)
-
 if __name__ == '__main__':
     main()

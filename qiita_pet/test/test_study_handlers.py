@@ -389,11 +389,19 @@ class TestDelete(TestHandlerBase):
                               'action': 'delete_sample_template'})
         self.assertEqual(response.code, 200)
 
+        # checking that the action was sent
+        self.assertIn("Sample template can not be erased because there are "
+                      "raw datas", response.body)
+
     def test_delete_raw_data(self):
         response = self.post('/study/description/1',
                              {'raw_data_id': 1,
                               'action': 'delete_raw_data'})
         self.assertEqual(response.code, 200)
+
+        # checking that the action was sent
+        self.assertIn("Raw data 1 has prep template(s) associated so it can't "
+                      "be erased", response.body)
 
     def test_delete_prep_template(self):
         response = self.post('/study/description/1',
@@ -401,17 +409,30 @@ class TestDelete(TestHandlerBase):
                               'action': 'delete_prep_template'})
         self.assertEqual(response.code, 200)
 
+        # checking that the action was sent
+        self.assertIn('Cannot remove prep template 1 because a preprocessed '
+                      'data has been already generated using it.',
+                      response.body)
+
     def test_delete_preprocessed_data(self):
         response = self.post('/study/description/1',
                              {'preprocessed_data_id': 1,
                               'action': 'delete_preprocessed_data'})
         self.assertEqual(response.code, 200)
 
+        # checking that the action was sent
+        self.assertIn('Illegal operation on non sandboxed preprocessed data',
+                      response.body)
+
     def test_delete_processed_data(self):
         response = self.post('/study/description/1',
                              {'processed_data_id': 1,
                               'action': 'delete_processed_data'})
         self.assertEqual(response.code, 200)
+
+        # checking that the action was sent
+        self.assertIn('Illegal operation on non sandboxed processed data',
+                      response.body)
 
 if __name__ == "__main__":
     main()
