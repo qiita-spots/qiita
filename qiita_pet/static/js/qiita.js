@@ -4,6 +4,7 @@
  *
  * @param message: Message to display
  * @param severit: One of 'danger', 'info', 'warning' or 'success'.
+ * @param timeout: OPTIONAL. When given, time (in ms) before alert fades out
  *
  */
 function bootstrapAlert(message, severity, timeout){
@@ -12,7 +13,7 @@ function bootstrapAlert(message, severity, timeout){
 
   severity = typeof severity !== 'undefined' ? severity : 'danger';
 
-  var alertDiv = $('<div>', { 'class': 'alert alert-'+severity, 'role': 'alert', 'id': 'bootstrap-alert'});
+  var alertDiv = $('<div>', { 'class': 'alert fade in alert-'+severity, 'role': 'alert', 'id': 'bootstrap-alert'});
 
   alertDiv.append('<a href="#" class="close" data-dismiss="alert">&times;</a>');
   alertDiv.append('<span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>');

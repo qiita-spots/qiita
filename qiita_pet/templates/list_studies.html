@@ -24,7 +24,7 @@ function sel_desel_study(box) {
   var proc_data = [];
   var samples = [];
   // Build list of processed data and associated samples for entire study
-  for(i=0;i<data.proc_data_info.length;i++) {
+  for(var i=0;i<data.proc_data_info.length;i++) {
     proc_data.push(data.proc_data_info[i].pid);
     samples.push(data.proc_data_info[i].samples);
   }
@@ -36,7 +36,7 @@ function sel_desel_proc_data(box, row, pid) {
   if(box.checked) { action = "select"; }
   data = $('#studies-table').dataTable().fnGetData(row);
   var samples = [];
-  for(i=0;i<data.proc_data_info.length;i++) {
+  for(var i=0;i<data.proc_data_info.length;i++) {
     if(data.proc_data_info[i].pid == pid) {
       samples = data.proc_data_info[i].samples;
       break;
@@ -118,7 +118,7 @@ $(document).ready(function() {
                     else { $("#search-error").text(jqXHR.responseText); }
                 }
             }
-        });    
+        });
     // Add event listener for opening and closing details
     $('#studies-table tbody').on('click', 'td.details-control', function () {
         var table = $('#studies-table').DataTable();
