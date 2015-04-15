@@ -28,7 +28,7 @@ from qiita_db.exceptions import (QiitaDBDuplicateError, QiitaDBUnknownIDError,
 from qiita_db.sql_connection import SQLConnectionHandler
 from qiita_db.study import Study, StudyPerson
 from qiita_db.user import User
-from qiita_db.util import exists_table, get_table_cols
+from qiita_db.util import exists_table, get_table_cols, get_count
 from qiita_db.metadata_template.sample_template import SampleTemplate, Sample
 from qiita_db.metadata_template.prep_template import PrepTemplate, PrepSample
 
@@ -1331,6 +1331,14 @@ class TestSampleTemplateReadWrite(BaseTestSampleTemplate):
             st.update(self.metadata_dict_updated_sample_error)
         with self.assertRaises(QiitaDBError):
             st.update(self.metadata_dict_updated_column_error)
+
+    def test_generate_files(self):
+        fp_count = get_count("qiita.filepath")
+        self.tester.generate_files()
+        obs = get_count("qiita.filepath")
+        # We just make sure that the count has been increased by 2, since
+        # the contents of the files have been tested elsewhere.
+        self.assertEqual(obs, fp_count + 3)
 
     def test_to_file(self):
         """to file writes a tab delimited file with all the metadata"""

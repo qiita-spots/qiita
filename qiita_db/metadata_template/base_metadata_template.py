@@ -1026,6 +1026,17 @@ class MetadataTemplate(QiitaObject):
 
         return result
 
+    def generate_files(self):
+        r"""Generates all the files that contain data from this template
+
+        Raises
+        ------
+        QiitaDBNotImplementedError
+            This method should be implemented by the subclasses
+        """
+        raise QiitaDBNotImplementedError(
+            "generate_files should be implemented in the subclass!")
+
     def to_file(self, fp, samples=None):
         r"""Writes the MetadataTemplate to the file `fp` in tab-delimited
         format
