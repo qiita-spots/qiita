@@ -773,43 +773,6 @@ class MetadataTemplate(QiitaObject):
             values, many=True)
 
     @classmethod
-    def delete(cls, id_):
-        r"""Deletes the table from the database
-
-        Parameters
-        ----------
-        id_ : obj
-            The object identifier
-
-        Raises
-        ------
-        QiitaDBUnknownIDError
-            If no metadata_template with id id_ exists
-        """
-        cls._check_subclass()
-        if not cls.exists(id_):
-            raise QiitaDBUnknownIDError(id_, cls.__name__)
-
-        table_name = cls._table_name(id_)
-        conn_handler = SQLConnectionHandler()
-
-        # Delete the sample template filepaths
-        conn_handler.execute(
-            "DELETE FROM qiita.sample_template_filepath WHERE "
-            "study_id = %s", (id_, ))
-
-        conn_handler.execute(
-            "DROP TABLE qiita.{0}".format(table_name))
-        conn_handler.execute(
-            "DELETE FROM qiita.{0} where {1} = %s".format(cls._table,
-                                                          cls._id_column),
-            (id_,))
-        conn_handler.execute(
-            "DELETE FROM qiita.{0} where {1} = %s".format(cls._column_table,
-                                                          cls._id_column),
-            (id_,))
-
-    @classmethod
     def exists(cls, obj_id):
         r"""Checks if already exists a MetadataTemplate for the provided object
 

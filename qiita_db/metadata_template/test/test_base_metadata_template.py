@@ -8,7 +8,6 @@
 
 from unittest import TestCase, main
 
-from qiita_core.util import qiita_test_checker
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_db.study import Study
 from qiita_db.metadata_template.base_metadata_template import (
@@ -63,13 +62,6 @@ class TestMetadataTemplateReadOnly(TestCase):
         with self.assertRaises(IncompetentQiitaDeveloperError):
             MetadataTemplate._clean_validate_template(None, 1, None, None)
 
-
-@qiita_test_checker()
-class TestMetadataTemplateReadWrite(TestCase):
-    def test_delete(self):
-        """delete raises an error because it's not called from a subclass"""
-        with self.assertRaises(IncompetentQiitaDeveloperError):
-            MetadataTemplate.delete(1)
 
 if __name__ == '__main__':
     main()
