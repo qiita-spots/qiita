@@ -10,7 +10,6 @@ from __future__ import division
 from future.builtins import zip
 from os.path import join
 from time import strftime
-from os.path import basename
 
 import pandas as pd
 import warnings
@@ -171,7 +170,7 @@ class SampleTemplate(MetadataTemplate):
         # generating all new QIIME mapping files
         for rd_id in Study(self.id).raw_data():
             for pt_id in RawData(rd_id).prep_templates:
-                pt = PrepTemplate(pt_id).generate_files()
+                PrepTemplate(pt_id).generate_files()
 
     def extend(self, md_template):
         """Adds the given sample template to the current one
