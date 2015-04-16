@@ -77,6 +77,15 @@ class MessageHandler(WebSocketHandler):
 class SelectSamplesHandler(WebSocketHandler, BaseHandler):
     @authenticated
     def on_message(self, msg):
+        """Selects or deselects samples on a message from the user
+
+        Parameters
+        ----------
+        msg : JSON str
+            Message containing sample and prc_data information, in the form
+            {'action': action, 'proc_data': [p1, ...], 'samples': [[s1], ...]}
+            Where proc data in p1 matches to samples list in s1
+        """
         # When the websocket receives a message from the javascript client,
         # parse into JSON
         msginfo = loads(msg)
