@@ -44,18 +44,18 @@ from copy import deepcopy
 
 import pandas as pd
 from skbio.util import find_duplicates
+import warnings
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 
 from qiita_db.exceptions import (QiitaDBUnknownIDError, QiitaDBColumnError,
                                  QiitaDBNotImplementedError,
-                                 QiitaDBExecutionError,
+                                 QiitaDBExecutionError, QiitaDBWarning,
                                  QiitaDBDuplicateHeaderError)
 from qiita_db.base import QiitaObject
 from qiita_db.sql_connection import SQLConnectionHandler
-from qiita_db.util import (exists_table, get_table_cols,
-                           convert_to_id,
-                           get_mountpoint, insert_filepaths)
+from qiita_db.util import (exists_table, get_table_cols, convert_to_id,
+                           get_mountpoint, insert_filepaths, scrub_data)
 from qiita_db.logger import LogEntry
 from .util import (as_python_types, get_datatypes, get_invalid_sample_names,
                    prefix_sample_names_with_id)
@@ -772,6 +772,90 @@ class MetadataTemplate(QiitaObject):
                                       ', '.join(["%s"] * len(headers))),
             values, many=True)
 
+    def _add_common_extend_steps_to_queue(self, md_template, conn_handler,
+                                          queue_name):
+        r"""Adds the common extend steps to the queue in conn_handler
+
+        Parameters
+        ----------
+        md_template : DataFrame
+            The metadata template file contents indexed by sample ids
+        conn_handler : SQLConnectionHandler
+            The connection handler object connected to the DB
+        queue_name : str
+            The queue where the SQL statements will be added
+        """
+        # Raise warning and filter out existing samples
+        sample_ids = md_template.index.tolist()
+        sql = """SELECT sample_id FROM qiita.{0}
+                 WHERE {1}=%s""".format(self._table, self._id_column)
+        curr_samples = set(
+            s[0] for s in conn_handler.execute_fetchall(sql, (self._id,)))
+        existing_samples = curr_samples.intersection(sample_ids)
+
+        # TODO: if new columns are being added, is not OK to drop those samples
+        if existing_samples:
+            warnings.warn(
+                "The following samples already exist and will be ignored: "
+                "%s" % ", ".join(sorted(existing_samples)), QiitaDBWarning)
+            md_template.drop(existing_samples, inplace=True)
+
+        # Get some useful information from the metadata template
+        sample_ids = md_template.index.tolist()
+        num_samples = len(sample_ids)
+        headers = list(md_template.keys())
+
+        # Get the required columns from the DB
+        db_cols = get_table_cols(self._table, conn_handler)
+        # Remove the sample_id and _id_column columns
+        db_cols.remove('sample_id')
+        db_cols.remove(self._id_column)
+
+        # Insert values on required columns
+        values = as_python_types(md_template, db_cols)
+        values.insert(0, sample_ids)
+        values.insert(0, [self._id] * num_samples)
+        values = [v for v in zip(*values)]
+        conn_handler.add_to_queue(
+            queue_name,
+            "INSERT INTO qiita.{0} ({1}, sample_id, {2}) "
+            "VALUES (%s, %s, {3})".format(self._table, self._id_column,
+                                          ', '.join(db_cols),
+                                          ', '.join(['%s'] * len(db_cols))),
+            values, many=True)
+
+        # Add missing columns to the sample template dynamic table
+        headers = list(set(headers).difference(db_cols))
+        datatypes = get_datatypes(md_template.ix[:, headers])
+        table_name = self._table_name(self._id)
+        new_cols = set(md_template.columns).difference(
+            set(self.metadata_headers()))
+        dtypes_dict = dict(zip(md_template.ix[:, headers], datatypes))
+        for category in new_cols:
+            # Insert row on *_columns table
+            conn_handler.add_to_queue(
+                queue_name,
+                "INSERT INTO qiita.{0} ({1}, column_name, column_type) "
+                "VALUES (%s, %s, %s)".format(self._column_table,
+                                             self._id_column),
+                (self._id, category, dtypes_dict[category]))
+            # Insert row on dynamic table
+            conn_handler.add_to_queue(
+                queue_name,
+                "ALTER TABLE qiita.{0} ADD COLUMN {1} {2}".format(
+                    table_name, scrub_data(category), dtypes_dict[category]))
+
+        # Insert values on custom table
+        values = as_python_types(md_template, headers)
+        values.insert(0, sample_ids)
+        values = [v for v in zip(*values)]
+        conn_handler.add_to_queue(
+            queue_name,
+            "INSERT INTO qiita.{0} (sample_id, {1}) "
+            "VALUES (%s, {2})".format(table_name, ", ".join(headers),
+                                      ', '.join(["%s"] * len(headers))),
+            values, many=True)
+
     @classmethod
     def exists(cls, obj_id):
         r"""Checks if already exists a MetadataTemplate for the provided object
@@ -1193,7 +1277,7 @@ class MetadataTemplate(QiitaObject):
         """
         if not set(self.keys()).issuperset(samples_and_values):
             missing = set(self.keys()) - set(samples_and_values)
-            table_name = self._table_name(self.study_id)
+            table_name = self._table_name(self._id)
             raise QiitaDBUnknownIDError(missing, table_name)
 
         conn_handler = SQLConnectionHandler()
