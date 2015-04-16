@@ -660,8 +660,7 @@ class StudyDescriptionHandler(BaseHandler):
             Study.delete(study_id)
             self.redirect('/study/list/')
         except Exception as e:
-            msg = "Couldn't remove study ID: %d <i>%s</i> : %s" % (
-                study_id, study_title, str(e))
+            msg = "Couldn't remove study %d: %s" % (study_id, str(e))
             msg_level = "danger"
 
             callback((msg, msg_level, 'study_information_tab', None, None))
