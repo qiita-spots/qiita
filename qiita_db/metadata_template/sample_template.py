@@ -16,7 +16,7 @@ import warnings
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_db.exceptions import (QiitaDBDuplicateError, QiitaDBError,
-                                 QiitaDBWarning)
+                                 QiitaDBWarning, QiitaDBUnknownIDError)
 from qiita_db.sql_connection import SQLConnectionHandler
 from qiita_db.util import (get_table_cols, get_required_sample_info_status,
                            get_mountpoint, scrub_data)
@@ -143,6 +143,63 @@ class SampleTemplate(MetadataTemplate):
         st.generate_files()
 
         return st
+
+    @classmethod
+    def delete(cls, id_):
+        r"""Deletes the table from the database
+
+        Parameters
+        ----------
+        id_ : integer
+            The object identifier
+
+        Raises
+        ------
+        QiitaDBUnknownIDError
+            If no sample template with id id_ exists
+        QiitaDBError
+            If the study that owns this sample template has raw datas
+        """
+        cls._check_subclass()
+
+        if not cls.exists(id_):
+            raise QiitaDBUnknownIDError(id_, cls.__name__)
+
+        raw_datas = [str(rd) for rd in Study(cls(id_).study_id).raw_data()]
+        if raw_datas:
+            raise QiitaDBError("Sample template can not be erased because "
+                               "there are raw datas (%s) associated." %
+                               ', '.join(raw_datas))
+
+        table_name = cls._table_name(id_)
+        conn_handler = SQLConnectionHandler()
+
+        # Delete the sample template filepaths
+        queue = "delete_sample_template_%d" % id_
+        conn_handler.create_queue(queue)
+
+        conn_handler.add_to_queue(
+            queue,
+            "DELETE FROM qiita.sample_template_filepath WHERE study_id = %s",
+            (id_, ))
+
+        conn_handler.add_to_queue(
+            queue,
+            "DROP TABLE qiita.{0}".format(table_name))
+
+        conn_handler.add_to_queue(
+            queue,
+            "DELETE FROM qiita.{0} where {1} = %s".format(cls._table,
+                                                          cls._id_column),
+            (id_,))
+
+        conn_handler.add_to_queue(
+            queue,
+            "DELETE FROM qiita.{0} where {1} = %s".format(cls._column_table,
+                                                          cls._id_column),
+            (id_,))
+
+        conn_handler.execute_queue(queue)
 
     @property
     def study_id(self):

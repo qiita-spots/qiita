@@ -1229,19 +1229,25 @@ class TestSampleTemplateReadWrite(BaseTestSampleTemplate):
 
     def test_delete(self):
         """Deletes Sample template 1"""
-        SampleTemplate.create(self.metadata, self.new_study)
-        SampleTemplate.delete(2)
+        st = SampleTemplate.create(self.metadata, self.new_study)
+        SampleTemplate.delete(st.id)
+
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.required_sample_info WHERE study_id=2")
         exp = []
         self.assertEqual(obs, exp)
+
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.study_sample_columns WHERE study_id=2")
         exp = []
         self.assertEqual(obs, exp)
+
         with self.assertRaises(QiitaDBExecutionError):
             self.conn_handler.execute_fetchall(
                 "SELECT * FROM qiita.sample_2")
+
+        with self.assertRaises(QiitaDBError):
+            SampleTemplate.delete(1)
 
     def test_delete_unkonwn_id_error(self):
         """Try to delete a non existent prep template"""
