@@ -553,9 +553,9 @@ class Analysis(QiitaStatusObject):
             # get previously selected samples  for pid and filter them out
             sql = """SELECT sample_id FROM qiita.analysis_sample
                 WHERE processed_data_id = %s and analysis_id = %s"""
-            prev_selected = conn_handler.execute_fetchone(sql, (pid, self._id))
-            if prev_selected is None:
-                prev_selected = []
+            prev_selected = [x[0] for x in
+                             conn_handler.execute_fetchall(sql,
+                                                           (pid, self._id))]
 
             select = set(samps).difference(prev_selected)
             sql = ("INSERT INTO qiita.analysis_sample "
