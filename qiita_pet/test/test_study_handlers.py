@@ -392,7 +392,6 @@ class TestDelete(TestHandlerBase):
         self.assertEqual(response.code, 200)
 
         # checking that the action was sent
-        index = response.body.index('Study')
         self.assertIn("Couldn't remove study", response.body)
 
     def test_delete_sample_template(self):

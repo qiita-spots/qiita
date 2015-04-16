@@ -654,7 +654,6 @@ class StudyDescriptionHandler(BaseHandler):
             is done and it fails
         """
         study_id = study.id
-        study_title = study.title
 
         try:
             Study.delete(study_id)
