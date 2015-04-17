@@ -71,9 +71,9 @@ class TestPrepSampleReadOnly(BaseTestPrepSample):
             'center_name', 'FOO', conn_handler, queue)
 
         obs = conn_handler.queues[queue]
-        sql = """UPDATE qiita.common_prep_info
-                     SET center_name=%s
-                     WHERE sample_id=%s"""
+        sql = """UPDATE qiita.prep_1
+                 SET center_name=%s
+                 WHERE sample_id=%s"""
         exp = [(sql, ('FOO', '1.SKB8.640193'))]
         self.assertEqual(obs, exp)
 
@@ -87,8 +87,8 @@ class TestPrepSampleReadOnly(BaseTestPrepSample):
 
         obs = conn_handler.queues[queue]
         sql = """UPDATE qiita.prep_1
-                         SET barcodesequence=%s
-                         WHERE sample_id=%s"""
+                 SET barcodesequence=%s
+                 WHERE sample_id=%s"""
         exp = [(sql, ('AAAAAAAAAAAA', '1.SKB8.640193'))]
         self.assertEqual(obs, exp)
 
