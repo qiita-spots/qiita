@@ -16,8 +16,7 @@ from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_db.exceptions import (QiitaDBDuplicateError, QiitaDBError,
                                  QiitaDBUnknownIDError)
 from qiita_db.sql_connection import SQLConnectionHandler
-from qiita_db.util import (get_required_sample_info_status, get_mountpoint,
-                           convert_to_id)
+from qiita_db.util import get_mountpoint, convert_to_id
 from qiita_db.study import Study
 from qiita_db.data import RawData
 from .base_metadata_template import BaseSample, MetadataTemplate
@@ -88,19 +87,6 @@ class SampleTemplate(MetadataTemplate):
                 "UNION SELECT column_name FROM information_schema.columns "
                 "WHERE table_name = 'required_sample_info' "
                 "ORDER BY column_name")]
-
-    @classmethod
-    def _check_template_special_columns(cls, md_template, study_id):
-        r"""Checks for special columns based on obj type
-
-        Parameters
-        ----------
-        md_template : DataFrame
-            The metadata template file contents indexed by sample ids
-        study_id : int
-            The study to which the sample template belongs to.
-        """
-        return set()
 
     @classmethod
     def create(cls, md_template, study):

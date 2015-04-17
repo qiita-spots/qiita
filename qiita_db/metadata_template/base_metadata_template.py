@@ -524,19 +524,6 @@ class MetadataTemplate(QiitaObject):
         return "%s%d" % (cls._table_prefix, obj_id)
 
     @classmethod
-    def _check_special_columns(cls, md_template, obj):
-        r"""Checks for special columns based on obj type
-
-        Parameters
-        ----------
-        md_template : DataFrame
-            The metadata template file contents indexed by sample ids
-        obj : object
-            Any extra object needed by the template to perform any extra check
-        """
-        return cls._check_template_special_columns(md_template, obj)
-
-    @classmethod
     def _clean_validate_template(cls, md_template, study_id, restriction_dict):
         """Takes care of all validation and cleaning of metadata templates
 

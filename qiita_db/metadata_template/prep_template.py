@@ -10,6 +10,7 @@ from __future__ import division
 from future.utils import viewvalues
 from os.path import join
 from time import strftime
+from copy import deepcopy
 
 import pandas as pd
 
@@ -22,8 +23,8 @@ from qiita_db.util import (convert_to_id,
                            convert_from_id, get_mountpoint, infer_status)
 from .base_metadata_template import BaseSample, MetadataTemplate
 from .util import load_template_to_dataframe
-from .constants import (TARGET_GENE_DATA_TYPES, RENAME_COLS_DICT,
-                        REQUIRED_TARGET_GENE_COLS, PREP_TEMPLATE_COLUMNS)
+from .constants import (TARGET_GENE_DATA_TYPES, PREP_TEMPLATE_COLUMNS,
+                        PREP_TEMPLATE_COLUMNS_TARGET_GENE)
 
 
 class PrepSample(BaseSample):
@@ -69,7 +70,6 @@ class PrepTemplate(MetadataTemplate):
     _table_prefix = "prep_"
     _column_table = "prep_columns"
     _id_column = "prep_template_id"
-    translate_cols_dict = {'emp_status_id': 'emp_status'}
     _sample_cls = PrepSample
     _fp_id = convert_to_id("prep_template", "filepath_type")
     _filepath_table = 'prep_template_filepath'
@@ -120,6 +120,11 @@ class PrepTemplate(MetadataTemplate):
         else:
             data_type_id = convert_to_id(data_type, "data_type", conn_handler)
             data_type_str = data_type
+
+        pt_cols = PREP_TEMPLATE_COLUMNS
+        if data_type_str in TARGET_GENE_DATA_TYPES:
+            pt_cols = deepcopy(PREP_TEMPLATE_COLUMNS)
+            pt_cols.update(PREP_TEMPLATE_COLUMNS_TARGET_GENE)
 
         md_template = cls._clean_validate_template(md_template, study.id,
                                                    PREP_TEMPLATE_COLUMNS)
@@ -185,40 +190,6 @@ class PrepTemplate(MetadataTemplate):
             raise QiitaDBColumnError("'%s' is Not a valid investigation_type. "
                                      "Choose from: %s" % (investigation_type,
                                                           ', '.join(terms)))
-
-    @classmethod
-    def _check_template_special_columns(cls, md_template, data_type):
-        r"""Checks for special columns based on obj type
-
-        Parameters
-        ----------
-        md_template : DataFrame
-            The metadata template file contents indexed by sample ids
-        data_type : str
-            The data_type of the template.
-
-        Returns
-        -------
-        set
-            The set of missing columns
-
-        Notes
-        -----
-        Sometimes people use different names for the same columns. We just
-        rename them to use the naming that we expect, so this is normalized
-        across studies.
-        """
-        # We only have column requirements if the data type of the raw data
-        # is one of the target gene types
-        missing_cols = set()
-        if data_type in TARGET_GENE_DATA_TYPES:
-            md_template.rename(columns=RENAME_COLS_DICT, inplace=True)
-
-            # Check for all required columns for target genes studies
-            missing_cols = REQUIRED_TARGET_GENE_COLS.difference(
-                md_template.columns)
-
-        return missing_cols
 
     @classmethod
     def delete(cls, id_):
