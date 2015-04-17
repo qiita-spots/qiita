@@ -640,6 +640,33 @@ class StudyDescriptionHandler(BaseHandler):
                     sub_tab=sub_tab,
                     prep_tab=prep_tab)
 
+    def delete_sample_template(self, study, user, callback):
+        """Delete sample template
+
+        Parameters
+        ----------
+        study : Study
+            The current study object
+        user : User
+            The current user object
+        callback : function
+            The callback function to call with the results once the processing
+            is done
+        """
+        sample_template_id = int(self.get_argument('sample_template_id'))
+
+        try:
+            SampleTemplate.delete(sample_template_id)
+            msg = ("Sample template %d has been deleted from study: "
+                   "<b><i>%s</i></b>" % (sample_template_id, study.title))
+            msg_level = "success"
+        except Exception as e:
+            msg = "Couldn't remove %d sample template: %s" % (
+                sample_template_id, str(e))
+            msg_level = "danger"
+
+        callback((msg, msg_level, 'study_information_tab', None, None))
+
     def delete_raw_data(self, study, user, callback):
         """Delete the selected raw data
 
@@ -781,6 +808,7 @@ class StudyDescriptionHandler(BaseHandler):
             request_approval=self.request_approval,
             make_sandbox=self.make_sandbox,
             update_investigation_type=self.update_investigation_type,
+            delete_sample_template=self.delete_sample_template,
             delete_raw_data=self.delete_raw_data,
             delete_prep_template=self.delete_prep_template,
             delete_preprocessed_data=self.delete_preprocessed_data,
