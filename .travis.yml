@@ -1,4 +1,5 @@
 language: python
+sudo: false
 env:
   global:
     - PYTHON_VERSION=2.7
@@ -7,6 +8,7 @@ env:
     - TEST_ADD_STUDIES=True
 before_install:
   - redis-server --version
+  - wget ftp://mirrors.kernel.org/gnu/flex/flex.README
   - wget http://repo.continuum.io/miniconda/Miniconda3-3.7.3-Linux-x86_64.sh -O miniconda.sh
   - chmod +x miniconda.sh
   - ./miniconda.sh -b
