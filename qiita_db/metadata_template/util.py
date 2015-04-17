@@ -43,6 +43,10 @@ def get_datatypes(metadata_map):
             datatypes.append('integer')
         elif dtype in [np.float16, np.float32, np.float64]:
             datatypes.append('float8')
+        elif np.issubdtype(dtype, np.datetime64):
+            datatypes.append('timestamp')
+        elif dtype == np.bool:
+            datatypes.append('bool')
         else:
             datatypes.append('varchar')
     return datatypes

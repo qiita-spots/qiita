@@ -21,6 +21,7 @@ from qiita_db.study import Study
 from qiita_db.data import RawData
 from .base_metadata_template import BaseSample, MetadataTemplate
 from .prep_template import PrepTemplate
+from .column_restriction import SAMPLE_TEMPLATE_COLUMNS
 
 
 class Sample(BaseSample):
@@ -66,8 +67,6 @@ class SampleTemplate(MetadataTemplate):
     _table_prefix = "sample_"
     _column_table = "study_sample_columns"
     _id_column = "study_id"
-    translate_cols_dict = {
-        'required_sample_info_status_id': 'required_sample_info_status'}
     _sample_cls = Sample
 
     @staticmethod
@@ -123,7 +122,7 @@ class SampleTemplate(MetadataTemplate):
 
         # Clean and validate the metadata template given
         md_template = cls._clean_validate_template(md_template, study.id,
-                                                   study.id, conn_handler)
+                                                   SAMPLE_TEMPLATE_COLUMNS)
 
         cls._add_common_creation_steps_to_queue(md_template, study.id,
                                                 conn_handler, queue_name)
