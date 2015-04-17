@@ -20,7 +20,7 @@ from qiita_db.util import (convert_to_id,
 from .base_metadata_template import BaseSample, MetadataTemplate
 from .util import load_template_to_dataframe
 from .constants import (TARGET_GENE_DATA_TYPES, RENAME_COLS_DICT,
-                        REQUIRED_TARGET_GENE_COLS)
+                        REQUIRED_TARGET_GENE_COLS, PREP_TEMPLATE_COLUMNS)
 
 
 class PrepSample(BaseSample):
@@ -119,7 +119,7 @@ class PrepTemplate(MetadataTemplate):
             data_type_str = data_type
 
         md_template = cls._clean_validate_template(md_template, study.id,
-                                                   data_type_str, conn_handler)
+                                                   PREP_TEMPLATE_COLUMNS)
 
         # Insert the metadata template
         # We need the prep_id for multiple calls below, which currently is not

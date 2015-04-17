@@ -33,6 +33,7 @@ from qiita_db.util import (exists_table, get_db_files_base_dir, get_mountpoint,
                            get_count)
 from qiita_db.metadata_template.prep_template import PrepTemplate, PrepSample
 from qiita_db.metadata_template.sample_template import SampleTemplate, Sample
+from qiita_db.metadata_template.constants import PREP_TEMPLATE_COLUMNS
 
 
 class BaseTestPrepSample(TestCase):
@@ -566,7 +567,7 @@ class TestPrepTemplateReadOnly(BaseTestPrepTemplate):
             u'1.SKM7.640188', u'1.SKM8.640201', u'1.SKM9.640192'})
 
         self.assertEqual(set(obs.columns), {
-            u'prep_template_id', u'center_name', u'center_project_name',
+            u'center_name', u'center_project_name',
             u'emp_status', u'barcodesequence',
             u'library_construction_protocol', u'linkerprimersequence',
             u'target_subfragment', u'target_gene', u'run_center',
@@ -581,7 +582,7 @@ class TestPrepTemplateReadOnly(BaseTestPrepTemplate):
         metadata_dict = {
             '2.SKB8.640193': {'center_name': 'ANL',
                               'center_project_name': 'Test Project',
-                              'emp_status_id': 1,
+                              'emp_status': 'EMP',
                               'str_column': 'Value for sample 1',
                               'linkerprimersequence': 'GTGCCAGCMGCCGCGGTAA',
                               'barcodesequence': 'GTCCGCAAGTTA',
@@ -591,7 +592,7 @@ class TestPrepTemplateReadOnly(BaseTestPrepTemplate):
                               'experiment_design_description': 'BBBB'},
             '2.SKD8.640184': {'center_name': 'ANL',
                               'center_project_name': 'Test Project',
-                              'emp_status_id': 1,
+                              'emp_status': 'EMP',
                               'str_column': 'Value for sample 2',
                               'linkerprimersequence': 'GTGCCAGCMGCCGCGGTAA',
                               'barcodesequence': 'CGTAGAGCTCTC',
@@ -609,14 +610,10 @@ class TestPrepTemplateReadOnly(BaseTestPrepTemplate):
             metadata, 2, conn_handler, queue_name)
 
         sql_insert_common = (
-            'INSERT INTO qiita.common_prep_info '
-            '(prep_template_id, sample_id, center_name, center_project_name, '
-            'emp_status_id) '
-            'VALUES (%s, %s, %s, %s, %s)')
-        sql_insert_common_params_1 = (2, '2.SKB8.640193', 'ANL',
-                                      'Test Project', 1)
-        sql_insert_common_params_2 = (2, '2.SKD8.640184', 'ANL',
-                                      'Test Project', 1)
+            'INSERT INTO qiita.prep_template_sample '
+            '(prep_template_id, sample_id) VALUES (%s, %s)')
+        sql_insert_common_params_1 = (2, '2.SKB8.640193')
+        sql_insert_common_params_2 = (2, '2.SKD8.640184')
 
         sql_insert_prep_columns = (
             'INSERT INTO qiita.prep_columns '
@@ -624,32 +621,38 @@ class TestPrepTemplateReadOnly(BaseTestPrepTemplate):
             'VALUES (%s, %s, %s)')
 
         sql_create_table = (
-            'CREATE TABLE qiita.prep_2 (sample_id varchar NOT NULL, '
-            'barcodesequence varchar, experiment_design_description varchar, '
+            'CREATE TABLE qiita.prep_2 '
+            '(sample_id varchar NOT NULL, barcodesequence varchar, '
+            'center_name varchar, center_project_name varchar, '
+            'emp_status varchar, experiment_design_description varchar, '
             'library_construction_protocol varchar, '
             'linkerprimersequence varchar, platform varchar, '
             'run_prefix varchar, str_column varchar)')
 
         sql_insert_dynamic = (
             'INSERT INTO qiita.prep_2 '
-            '(sample_id, barcodesequence, experiment_design_description, '
+            '(sample_id, barcodesequence, center_name, center_project_name, '
+            'emp_status, experiment_design_description, '
             'library_construction_protocol, linkerprimersequence, platform, '
             'run_prefix, str_column) '
-            'VALUES (%s, %s, %s, %s, %s, %s, %s, %s)')
+            'VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)')
 
         sql_insert_dynamic_params_1 = (
-            '2.SKB8.640193', 'GTCCGCAAGTTA', 'BBBB', 'AAAA',
-            'GTGCCAGCMGCCGCGGTAA', 'ILLUMINA', 's_G1_L001_sequences',
-            'Value for sample 1')
+            '2.SKB8.640193', 'GTCCGCAAGTTA', 'ANL', 'Test Project', 'EMP',
+            'BBBB', 'AAAA', 'GTGCCAGCMGCCGCGGTAA', 'ILLUMINA',
+            's_G1_L001_sequences', 'Value for sample 1')
         sql_insert_dynamic_params_2 = (
-            '2.SKD8.640184', 'CGTAGAGCTCTC', 'BBBB', 'AAAA',
-            'GTGCCAGCMGCCGCGGTAA', 'ILLUMINA', 's_G1_L001_sequences',
-            'Value for sample 2')
+            '2.SKD8.640184', 'CGTAGAGCTCTC', 'ANL', 'Test Project', 'EMP',
+            'BBBB', 'AAAA', 'GTGCCAGCMGCCGCGGTAA', 'ILLUMINA',
+            's_G1_L001_sequences', 'Value for sample 2')
 
         exp = [
             (sql_insert_common, sql_insert_common_params_1),
             (sql_insert_common, sql_insert_common_params_2),
             (sql_insert_prep_columns, (2, 'barcodesequence', 'varchar')),
+            (sql_insert_prep_columns, (2, 'center_name', 'varchar')),
+            (sql_insert_prep_columns, (2, 'center_project_name', 'varchar')),
+            (sql_insert_prep_columns, (2, 'emp_status', 'varchar')),
             (sql_insert_prep_columns,
                 (2, 'experiment_design_description', 'varchar')),
             (sql_insert_prep_columns,
@@ -670,8 +673,8 @@ class TestPrepTemplateReadOnly(BaseTestPrepTemplate):
         conn_handler = SQLConnectionHandler()
         self.metadata.index = ['o()xxxx[{::::::::>', 'sample.1', 'sample.3']
         with self.assertRaises(QiitaDBColumnError):
-            PrepTemplate._clean_validate_template(self.metadata, 2, "16S",
-                                                  conn_handler)
+            PrepTemplate._clean_validate_template(self.metadata, 2,
+                                                  PREP_TEMPLATE_COLUMNS)
 
     def test_clean_validate_template_error_duplicate_cols(self):
         """Raises an error if there are duplicated columns in the template"""
@@ -679,10 +682,10 @@ class TestPrepTemplateReadOnly(BaseTestPrepTemplate):
         self.metadata['STR_COLUMN'] = pd.Series(['', '', ''],
                                                 index=self.metadata.index)
         with self.assertRaises(QiitaDBDuplicateHeaderError):
-            PrepTemplate._clean_validate_template(self.metadata, 2, "16S",
-                                                  conn_handler)
+            PrepTemplate._clean_validate_template(self.metadata, 2,
+                                                  PREP_TEMPLATE_COLUMNS)
 
-    def test_clean_validate_template_error_missing(self):
+    def test_clean_validate_template_warning_missing(self):
         """Raises an error if the template is missing a required column"""
         conn_handler = SQLConnectionHandler()
         metadata_dict = {
@@ -697,19 +700,19 @@ class TestPrepTemplateReadOnly(BaseTestPrepTemplate):
                             'experiment_design_description': 'BBBB'}
             }
         metadata = pd.DataFrame.from_dict(metadata_dict, orient='index')
-        with self.assertRaises(QiitaDBColumnError):
-            PrepTemplate._clean_validate_template(metadata, 2, "16S",
-                                                  conn_handler)
+        obs = npt.assert_warns(
+            QiitaDBWarning, PrepTemplate._clean_validate_template, metadata, 2,
+            PREP_TEMPLATE_COLUMNS)
 
     def test_clean_validate_template(self):
         conn_handler = SQLConnectionHandler()
-        obs = PrepTemplate._clean_validate_template(self.metadata, 2, "16S",
-                                                    conn_handler)
+        obs = PrepTemplate._clean_validate_template(self.metadata, 2,
+                                                    PREP_TEMPLATE_COLUMNS)
         metadata_dict = {
             '2.SKB8.640193': {'center_name': 'ANL',
                               'center_project_name': 'Test Project',
                               'ebi_submission_accession': None,
-                              'emp_status_id': 1,
+                              'emp_status': 'EMP',
                               'str_column': 'Value for sample 1',
                               'linkerprimersequence': 'GTGCCAGCMGCCGCGGTAA',
                               'barcodesequence': 'GTCCGCAAGTTA',
@@ -720,7 +723,7 @@ class TestPrepTemplateReadOnly(BaseTestPrepTemplate):
             '2.SKD8.640184': {'center_name': 'ANL',
                               'center_project_name': 'Test Project',
                               'ebi_submission_accession': None,
-                              'emp_status_id': 1,
+                              'emp_status': 'EMP',
                               'str_column': 'Value for sample 2',
                               'linkerprimersequence': 'GTGCCAGCMGCCGCGGTAA',
                               'barcodesequence': 'CGTAGAGCTCTC',
@@ -731,7 +734,7 @@ class TestPrepTemplateReadOnly(BaseTestPrepTemplate):
             '2.SKB7.640196': {'center_name': 'ANL',
                               'center_project_name': 'Test Project',
                               'ebi_submission_accession': None,
-                              'emp_status_id': 1,
+                              'emp_status': 'EMP',
                               'str_column': 'Value for sample 3',
                               'linkerprimersequence': 'GTGCCAGCMGCCGCGGTAA',
                               'barcodesequence': 'CCTCTGAGAGCT',
