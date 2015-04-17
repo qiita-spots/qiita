@@ -7,23 +7,19 @@
 # -----------------------------------------------------------------------------
 
 from __future__ import division
-from future.builtins import zip
 from os.path import join
 from time import strftime
 
 import pandas as pd
-import warnings
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_db.exceptions import (QiitaDBDuplicateError, QiitaDBError,
-                                 QiitaDBWarning, QiitaDBUnknownIDError)
+                                 QiitaDBUnknownIDError)
 from qiita_db.sql_connection import SQLConnectionHandler
-from qiita_db.util import (get_table_cols, get_required_sample_info_status,
-                           get_mountpoint, scrub_data)
+from qiita_db.util import get_required_sample_info_status, get_mountpoint
 from qiita_db.study import Study
 from qiita_db.data import RawData
 from .base_metadata_template import BaseSample, MetadataTemplate
-from .util import as_python_types, get_datatypes
 from .prep_template import PrepTemplate
 
 

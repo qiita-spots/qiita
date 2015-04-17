@@ -37,6 +37,7 @@ Methods
 
 from __future__ import division
 from future.utils import viewitems, viewvalues
+from future.builtins import zip
 from os.path import join
 from functools import partial
 from collections import defaultdict
@@ -55,7 +56,7 @@ from qiita_db.exceptions import (QiitaDBUnknownIDError, QiitaDBColumnError,
 from qiita_db.base import QiitaObject
 from qiita_db.sql_connection import SQLConnectionHandler
 from qiita_db.util import (exists_table, get_table_cols, convert_to_id,
-                           get_mountpoint, insert_filepaths, scrub_data)
+                           get_mountpoint, insert_filepaths)
 from qiita_db.logger import LogEntry
 from .util import (as_python_types, get_datatypes, get_invalid_sample_names,
                    prefix_sample_names_with_id)
