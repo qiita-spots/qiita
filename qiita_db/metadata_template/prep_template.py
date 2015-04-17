@@ -68,6 +68,8 @@ class PrepTemplate(MetadataTemplate):
     _id_column = "prep_template_id"
     translate_cols_dict = {'emp_status_id': 'emp_status'}
     _sample_cls = PrepSample
+    _fp_id = convert_to_id("prep_template", "filepath_type")
+    _filepath_table = 'prep_template_filepath'
 
     @classmethod
     def create(cls, md_template, raw_data, study, data_type,

@@ -684,18 +684,8 @@ class MetadataTemplate(QiitaObject):
         new_samples = set(sample_ids).difference(existing_samples)
 
         # Check if we are adding new columns
-        table_name = self._table_name(self._id)
-        # Get the required columns from the DB
-        db_cols = sorted(get_table_cols(self._table, conn_handler))
-        # Remove the sample_id and _id_column columns
-        db_cols.remove('sample_id')
-        db_cols.remove(self._id_column)
-        # Get the columns from the dynamic table and do the union with the db
-        curr_cols = set(
-            get_table_cols(table_name, conn_handler)).union(db_cols)
         headers = md_template.keys().tolist()
-        existing_cols = curr_cols.intersection(headers)
-        new_cols = set(headers).difference(existing_cols)
+        new_cols = set(headers).difference(self.categories())
 
         if not new_cols and not new_samples:
             raise QiitaDBError(
@@ -703,6 +693,7 @@ class MetadataTemplate(QiitaObject):
                 "want to update existing values, you should use the 'update' "
                 "functionality.")
 
+        table_name = self._table_name(self._id)
         if new_cols:
             # If we are adding new columns, add them first (simplifies code)
             # Sorting the new columns to enforce an order
@@ -751,17 +742,10 @@ class MetadataTemplate(QiitaObject):
             md_template = md_template.loc[new_samples]
 
             # Insert values on required columns
-            values = as_python_types(md_template, db_cols)
-            values.insert(0, new_samples)
-            values.insert(0, [self._id] * num_samples)
-            values = [v for v in zip(*values)]
-            sql = """INSERT INTO qiita.{0} ({1}, sample_id, {2})
-                     VALUES (%s, %s, {3})""".format(
-                self._table, self._id_column, ', '.join(db_cols),
-                ', '.join(['%s'] * len(db_cols)))
+            values = [(self._id, s_id) for s_id in new_samples]
+            sql = """INSERT INTO qiita.{0} ({1}, sample_id)
+                     VALUES (%s, %s)""".format(self._table, self._id_column)
             conn_handler.add_to_queue(queue_name, sql, values, many=True)
-
-            headers = sorted(set(headers).difference(db_cols))
 
             # Insert values on custom table
             values = as_python_types(md_template, headers)
@@ -1013,38 +997,16 @@ class MetadataTemplate(QiitaObject):
             If supplied, only the specified samples will be written to the
             file
         """
-        conn_handler = SQLConnectionHandler()
-        metadata_map = self._transform_to_dict(conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.{0} WHERE {1}=%s".format(self._table,
-                                                          self._id_column),
-            (self.id,)))
-        dyn_vals = self._transform_to_dict(conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.{0}".format(self._table_name(self.id))))
-
-        for k in metadata_map:
-            for key, value in viewitems(self.translate_cols_dict):
-                id_ = metadata_map[k][key]
-                metadata_map[k][value] = self.str_cols_handlers[key][id_]
-                del metadata_map[k][key]
-            metadata_map[k].update(dyn_vals[k])
-            metadata_map[k].pop('study_id', None)
-
-        # Remove samples that are not in the samples list, if it was supplied
+        df = self.to_dataframe()
         if samples is not None:
-            for sid, d in metadata_map.items():
-                if sid not in samples:
-                    metadata_map.pop(sid)
+            df = df.loc[samples]
 
-        # Write remaining samples to file
-        headers = sorted(list(metadata_map.values())[0].keys())
-        with open(fp, 'w') as f:
-            # First write the headers
-            f.write("sample_name\t%s\n" % '\t'.join(headers))
-            # Write the values for each sample id
-            for sid, d in sorted(metadata_map.items()):
-                values = [str(d[h]) for h in headers]
-                values.insert(0, sid)
-                f.write("%s\n" % '\t'.join(values))
+        # Apply some sorting to the dataframe
+        df.sort_index(axis=0, inplace=True)
+        df.sort_index(axis=1, inplace=True)
+
+        # Store the template in a file
+        df.to_csv(fp, index_label='sample_name', na_rep="", sep='\t')
 
     def to_dataframe(self):
         """Returns the metadata template as a dataframe
@@ -1055,12 +1017,13 @@ class MetadataTemplate(QiitaObject):
             The metadata in the template,indexed on sample id
         """
         conn_handler = SQLConnectionHandler()
-        cols = get_table_cols(self._table_name(self._id), conn_handler)
+        cols = sorted(get_table_cols(self._table_name(self._id), conn_handler))
         # Get all metadata for the template
-        sql = """SELECT *
-                 FROM qiita.{0}
-                 JOIN qiita.{1} USING (sample_id)
-                 WHERE {2} = %s""".format(self._table,
+        sql = """SELECT {0}
+                 FROM qiita.{1}
+                 JOIN qiita.{2} USING (sample_id)
+                 WHERE {3} = %s""".format(", ".join(cols),
+                                          self._table,
                                           self._table_name(self.id),
                                           self._id_column)
         meta = conn_handler.execute_fetchall(sql, (self._id,))
@@ -1081,28 +1044,15 @@ class MetadataTemplate(QiitaObject):
         # one if not.
         conn_handler = conn_handler if conn_handler else SQLConnectionHandler()
 
-        if self._table == 'required_sample_info':
-            fp_id = convert_to_id("sample_template", "filepath_type",
-                                  conn_handler)
-            table = 'sample_template_filepath'
-            column = 'study_id'
-        elif self._table == 'common_prep_info':
-            fp_id = convert_to_id("prep_template", "filepath_type",
-                                  conn_handler)
-            table = 'prep_template_filepath'
-            column = 'prep_template_id'
-        else:
-            raise QiitaDBNotImplementedError(
-                'add_filepath for %s' % self._table)
-
         try:
-            fpp_id = insert_filepaths([(filepath, fp_id)], None, "templates",
-                                      "filepath", conn_handler,
+            fpp_id = insert_filepaths([(filepath, self._fp_id)], None,
+                                      "templates", "filepath", conn_handler,
                                       move_files=False)[0]
             values = (self._id, fpp_id)
             conn_handler.execute(
                 "INSERT INTO qiita.{0} ({1}, filepath_id) "
-                "VALUES (%s, %s)".format(table, column), values)
+                "VALUES (%s, %s)".format(
+                    self._filepath_table, self._id_column), values)
         except Exception as e:
             LogEntry.create('Runtime', str(e),
                             info={self.__class__.__name__: self.id})
@@ -1117,21 +1067,12 @@ class MetadataTemplate(QiitaObject):
         # one if not.
         conn_handler = conn_handler if conn_handler else SQLConnectionHandler()
 
-        if self._table == 'required_sample_info':
-            table = 'sample_template_filepath'
-            column = 'study_id'
-        elif self._table == 'common_prep_info':
-            table = 'prep_template_filepath'
-            column = 'prep_template_id'
-        else:
-            raise QiitaDBNotImplementedError(
-                'get_filepath for %s' % self._table)
-
         try:
             filepath_ids = conn_handler.execute_fetchall(
                 "SELECT filepath_id, filepath FROM qiita.filepath WHERE "
                 "filepath_id IN (SELECT filepath_id FROM qiita.{0} WHERE "
-                "{1}=%s) ORDER BY filepath_id DESC".format(table, column),
+                "{1}=%s) ORDER BY filepath_id DESC".format(
+                    self._filepath_table, self._id_column),
                 (self.id, ))
         except Exception as e:
             LogEntry.create('Runtime', str(e),

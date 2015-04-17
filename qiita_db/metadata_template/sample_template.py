@@ -16,7 +16,8 @@ from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_db.exceptions import (QiitaDBDuplicateError, QiitaDBError,
                                  QiitaDBUnknownIDError)
 from qiita_db.sql_connection import SQLConnectionHandler
-from qiita_db.util import get_required_sample_info_status, get_mountpoint
+from qiita_db.util import (get_required_sample_info_status, get_mountpoint,
+                           convert_to_id)
 from qiita_db.study import Study
 from qiita_db.data import RawData
 from .base_metadata_template import BaseSample, MetadataTemplate
@@ -68,6 +69,8 @@ class SampleTemplate(MetadataTemplate):
     _column_table = "study_sample_columns"
     _id_column = "study_id"
     _sample_cls = Sample
+    _fp_id = convert_to_id("sample_template", "filepath_type")
+    _filepath_table = 'sample_template_filepath'
 
     @staticmethod
     def metadata_headers():
@@ -232,8 +235,7 @@ class SampleTemplate(MetadataTemplate):
         conn_handler.create_queue(queue_name)
 
         md_template = self._clean_validate_template(md_template, self.study_id,
-                                                    self.study_id,
-                                                    conn_handler)
+                                                    SAMPLE_TEMPLATE_COLUMNS)
 
         self._add_common_extend_steps_to_queue(md_template, conn_handler,
                                                queue_name)
@@ -259,7 +261,7 @@ class SampleTemplate(MetadataTemplate):
 
         # Clean and validate the metadata template given
         new_map = self._clean_validate_template(md_template, self.id,
-                                                conn_handler)
+                                                SAMPLE_TEMPLATE_COLUMNS)
         # Retrieving current metadata
         current_map = self._transform_to_dict(conn_handler.execute_fetchall(
             "SELECT * FROM qiita.{0} WHERE {1}=%s".format(self._table,
