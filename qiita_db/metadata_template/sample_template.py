@@ -22,7 +22,7 @@ from qiita_db.study import Study
 from qiita_db.data import RawData
 from .base_metadata_template import BaseSample, MetadataTemplate
 from .prep_template import PrepTemplate
-from .column_restriction import SAMPLE_TEMPLATE_COLUMNS
+from .constants import SAMPLE_TEMPLATE_COLUMNS
 
 
 class Sample(BaseSample):

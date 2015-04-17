@@ -31,8 +31,7 @@ from qiita_db.user import User
 from qiita_db.util import exists_table, get_count
 from qiita_db.metadata_template.sample_template import SampleTemplate, Sample
 from qiita_db.metadata_template.prep_template import PrepTemplate, PrepSample
-from qiita_db.metadata_template.column_restriction import (
-    SAMPLE_TEMPLATE_COLUMNS)
+from qiita_db.metadata_template.constants import SAMPLE_TEMPLATE_COLUMNS
 
 
 class BaseTestSample(TestCase):
