@@ -28,7 +28,7 @@ from qiita_db.exceptions import (QiitaDBDuplicateError, QiitaDBUnknownIDError,
 from qiita_db.sql_connection import SQLConnectionHandler
 from qiita_db.study import Study, StudyPerson
 from qiita_db.user import User
-from qiita_db.util import exists_table, get_table_cols
+from qiita_db.util import exists_table, get_table_cols, get_count
 from qiita_db.metadata_template.sample_template import SampleTemplate, Sample
 from qiita_db.metadata_template.prep_template import PrepTemplate, PrepSample
 
@@ -53,6 +53,45 @@ class BaseTestSample(TestCase):
 
 
 class TestSampleReadOnly(BaseTestSample):
+    def test_add_setitem_queries_error(self):
+        conn_handler = SQLConnectionHandler()
+        queue = "test_queue"
+        conn_handler.create_queue(queue)
+
+        with self.assertRaises(QiitaDBColumnError):
+            self.tester.add_setitem_queries(
+                'COL_DOES_NOT_EXIST', 0.30, conn_handler, queue)
+
+    def test_add_setitem_queries_required(self):
+        conn_handler = SQLConnectionHandler()
+        queue = "test_queue"
+        conn_handler.create_queue(queue)
+
+        self.tester.add_setitem_queries(
+            'has_physical_specimen', True, conn_handler, queue)
+
+        obs = conn_handler.queues[queue]
+        sql = """UPDATE qiita.required_sample_info
+                     SET has_physical_specimen=%s
+                     WHERE sample_id=%s"""
+        exp = [(sql, (True, '1.SKB8.640193'))]
+        self.assertEqual(obs, exp)
+
+    def test_add_setitem_queries_dynamic(self):
+        conn_handler = SQLConnectionHandler()
+        queue = "test_queue"
+        conn_handler.create_queue(queue)
+
+        self.tester.add_setitem_queries(
+            'tot_nitro', '1234.5', conn_handler, queue)
+
+        obs = conn_handler.queues[queue]
+        sql = """UPDATE qiita.sample_1
+                         SET tot_nitro=%s
+                         WHERE sample_id=%s"""
+        exp = [(sql, ('1234.5', '1.SKB8.640193'))]
+        self.assertEqual(obs, exp)
+
     def test_init_unknown_error(self):
         """Init raises an error if the sample id is not found in the template
         """
@@ -1190,19 +1229,25 @@ class TestSampleTemplateReadWrite(BaseTestSampleTemplate):
 
     def test_delete(self):
         """Deletes Sample template 1"""
-        SampleTemplate.create(self.metadata, self.new_study)
-        SampleTemplate.delete(2)
+        st = SampleTemplate.create(self.metadata, self.new_study)
+        SampleTemplate.delete(st.id)
+
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.required_sample_info WHERE study_id=2")
         exp = []
         self.assertEqual(obs, exp)
+
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.study_sample_columns WHERE study_id=2")
         exp = []
         self.assertEqual(obs, exp)
+
         with self.assertRaises(QiitaDBExecutionError):
             self.conn_handler.execute_fetchall(
                 "SELECT * FROM qiita.sample_2")
+
+        with self.assertRaises(QiitaDBError):
+            SampleTemplate.delete(1)
 
     def test_delete_unkonwn_id_error(self):
         """Try to delete a non existent prep template"""
@@ -1214,7 +1259,6 @@ class TestSampleTemplateReadWrite(BaseTestSampleTemplate):
         self.assertFalse(SampleTemplate.exists(self.new_study.id))
 
     def test_update_category(self):
-        """setitem raises an error (currently not allowed)"""
         with self.assertRaises(QiitaDBUnknownIDError):
             self.tester.update_category('country', {"foo": "bar"})
 
@@ -1256,9 +1300,17 @@ class TestSampleTemplateReadWrite(BaseTestSampleTemplate):
         # testing that if fails when trying to change an int column value
         # to str
         st = SampleTemplate.create(self.metadata, self.new_study)
-        mapping = {'2.Sample1': "no_value"}
+
+        sql = """SELECT * FROM qiita.sample_2 ORDER BY sample_id"""
+        before = self.conn_handler.execute_fetchall(sql)
+        mapping = {'2.Sample1': 1, '2.Sample2': "no_value"}
+
         with self.assertRaises(ValueError):
             st.update_category('int_column', mapping)
+
+        after = self.conn_handler.execute_fetchall(sql)
+
+        self.assertEqual(before, after)
 
     def test_update(self):
         """Updates values in existing mapping file"""
@@ -1285,6 +1337,14 @@ class TestSampleTemplateReadWrite(BaseTestSampleTemplate):
             st.update(self.metadata_dict_updated_sample_error)
         with self.assertRaises(QiitaDBError):
             st.update(self.metadata_dict_updated_column_error)
+
+    def test_generate_files(self):
+        fp_count = get_count("qiita.filepath")
+        self.tester.generate_files()
+        obs = get_count("qiita.filepath")
+        # We just make sure that the count has been increased by 2, since
+        # the contents of the files have been tested elsewhere.
+        self.assertEqual(obs, fp_count + 3)
 
     def test_to_file(self):
         """to file writes a tab delimited file with all the metadata"""

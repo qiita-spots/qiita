@@ -1,7 +1,11 @@
 {% extends sitebase.html %}
 {% block head %}
 <link rel="stylesheet" href="/static/vendor/css/jquery.dataTables.css" type="text/css">
-
+<style>
+td.details-control {
+  cursor: pointer;
+}
+</style>
 <script src="/static/vendor/js/jquery.dataTables.min.js"></script>
 <script src="/static/vendor/js/jquery.dataTables.plugin.natural.js"></script>
 
@@ -13,28 +17,104 @@ ws.onerror = function(evt) { $('#search-error').html("<b>Server communication er
 ws.onclose = function(evt) { $('#search-error').html("<b>Server communication error. Sample selection will not be recorded. Please try again later.</b>"); };
 
 var ajaxURL = "/study/search/?&user={{current_user.id}}&sEcho=" + Math.floor(Math.random()*1001);
+var ws = new WebSocket('ws://' + window.location.host + '/analysis/select-socket/');
+ws.onmessage = function(evt) { bootstrapAlert(evt.data, "success", 1500); };
+ws.onerror = function(evt) { $('#search-error').html("<b>Server communication error. Sample selection will not be recorded. Please try again later.</b>"); };
+ws.onclose = function(evt) { $('#search-error').html("<b>Server communication error. Sample selection will not be recorded. Please try again later.</b>"); };
+
+function sel_desel_study(box) {
+  var action = "deselect";
+  if(box.checked) { action = "select"; }
+  data = $('#studies-table').dataTable().fnGetData(box.value);
+  var proc_data = [];
+  var samples = [];
+  // Build list of processed data and associated samples for entire study
+  for(var i=0;i<data.proc_data_info.length;i++) {
+    proc_data.push(data.proc_data_info[i].pid);
+    samples.push(data.proc_data_info[i].samples);
+  }
+  send_ws(action, proc_data, samples);
+}
+
+function sel_desel_proc_data(box, row, pid) {
+  var action = "deselect";
+  if(box.checked) { action = "select"; }
+  data = $('#studies-table').dataTable().fnGetData(row);
+  var samples = [];
+  for(var i=0;i<data.proc_data_info.length;i++) {
+    if(data.proc_data_info[i].pid == pid) {
+      samples = data.proc_data_info[i].samples;
+      break;
+    }
+  }
+  send_ws(action, [pid], [samples]);
+}
+
+function send_ws(action, proc_data, samples) {
+  ws.send(JSON.stringify({'action': action, 'proc_data':proc_data, 'samples':samples}));
+}
+
 $(document).ready(function() {
+        function format ( d, row ) {
+            // `d` is the original data object for the row
+            //assess if study checked.  Needed to see if all child proc data checkboxes should default to checked
+            check = "";
+            if(document.getElementById("study"+d.study_id+"-checkbox").checked) {check = "checked"; }
+            // create formatted cell with proc data table
+            var proc_data_table = '<h4>Processed Data</h4><table class="table" cellpadding="5" cellspacing="0" border="0" style="padding-left:50px;"><tr><th></th><th>ID</th><th>Data type</th><th>Processed Date</th><th>Algorithm</th><th>Reference</th><th>Samples</th></tr>';
+            for(i=0;i<d.proc_data_info.length;i++) {
+              var proc_data = d.proc_data_info[i];
+              proc_data_table += '<tr><td><input type="checkbox" '+ check +' class="proc-checkbox" onchange="sel_desel_proc_data(this,'+ row +','+ proc_data.pid +')"></td><td>' + proc_data.pid + '</td><td>' + proc_data.data_type + '</td><td>' + proc_data.processed_date + '</td><td>' + proc_data.algorithm + '</td><td>' + proc_data.reference_name + ' ' + proc_data.reference_version + '</td><td>' + proc_data.samples.length + '</td></tr>';
+            }
+            proc_data_table += '</table>';
+            return proc_data_table;
+        }
+
         $('#studies-table').dataTable({
             "columns": [
-              { "data": "checkbox" },
-              { "data": "title" },
-              { "data": "abstract" },
-              { "data": "id" },
-              { "data": "meta_complete" },
-              { "data": "num_samples" },
+              { "orderable": false},
+              { "data": "study_title" },
+              { "data": "study_abstract" },
+              { "data": "study_id" },
+              { "data": "metadata_complete" },
+              { "data": "number_samples_collected" },
               { "data": "num_raw_data" },
               { "data": "shared" },
               { "data": "pi" },
               { "data": "pmid" },
-              { "data": "status" }
+              { "data": "status" },
+              {"className": 'details-control', "orderable": false, "data": null, "defaultContent": '<span class="glyphicon glyphicon-chevron-down"></span>'}
             ],
             order: [[10, "desc"], [ 1, "asc" ]],
-            columnDefs: [{type:'natural', targets:[3,4,5,9]}, {"targets": [ 2 ],"visible": false}],
+            columnDefs: [
+              {type:'natural', targets:[3,4,5,9]},
+              {"targets": [ 2 ],"visible": false},
+              // render the study checkbox cell
+              {"render": function ( data, type, row, meta ) {
+                    return "<input type='checkbox' value='"+ meta.row +"' id='study"+row.study_id+"-checkbox' class='study-checkbox' onchange='sel_desel_study(this)'>";
+              }, targets: [0]},
+              // render the title cell
+              {"render": function ( data, type, row, meta ) {
+                    return "<a href='#' data-toggle='modal' data-target='#study-abstract-modal' onclick=\"fillAbstract('studies-table', "+ meta.row +")\"><span class='glyphicon glyphicon-file' aria-hidden='true'></span></a> | <a href='/study/description/"+ row.study_id +"' id='study"+ meta.row +"-title'>"+ data +"</a>";
+              }, targets: [1]},
+              // render the metadata complete cell
+              {"render": function ( data, type, row, meta ) {
+                    var glyph = 'remove';
+                    if(data === true) { glyph = 'ok' } 
+                    return "<span class='glyphicon glyphicon-"+ glyph +"'></span>";
+              }, targets: [4]},
+              // render the shared with cell
+              {"render": function ( data, type, row, meta ) {
+                    var glyph = 'remove';
+                    if(data === true) { glyph = 'ok' } 
+                    return "<span id='shared_html_"+ row.study_id +"'>"+ data +"</span><br/><a class='btn btn-primary btn-xs' data-toggle='modal' data-target='#share-study-modal-view' onclick='modify_sharing("+ row.study_id +");'>Modify</a>";
+              }, targets: [7]},
+              ],
             "oLanguage": {
                 "sSearch": "Narrow search results by column data (Title, abstract, PI, etc):",
                 "sLoadingRecords": "Loading table data",
                 "sZeroRecords": "No studies found"
-            }, 
+            },
             "ajax": {
                 "url": ajaxURL + "&query=",
                 "error": function(jqXHR, textStatus, ex) {
@@ -42,8 +122,25 @@ $(document).ready(function() {
                     if(jqXHR.status === 500) { $("#search-error").text("Internal Server Error, please try again later"); }
                     else { $("#search-error").text(jqXHR.responseText); }
                 }
-            } 
+            }
         });
+    // Add event listener for opening and closing details
+    $('#studies-table tbody').on('click', 'td.details-control', function () {
+        var table = $('#studies-table').DataTable();
+        var tr = $(this).closest('tr');
+        var row = table.row( tr );
+ 
+        if ( row.child.isShown() ) {
+            // This row is already open - close it
+            row.child.hide();
+            tr.removeClass('shown');
+        }
+        else {
+            // Open this row
+            row.child( format(row.data(), row.index()) ).show();
+            tr.addClass('shown');
+        }
+    } );
 
     $('#users_list').chosen({width: "100%"});
     $('#users_list').on('change', function(evt, params) {
@@ -80,7 +177,6 @@ function modify_sharing(study_id) {
 
             $("#users_list").val(users);
             $("#users_list").trigger("chosen:updated");
-
         });
 }
 
@@ -110,7 +206,7 @@ function add_metacat(metacat) {
 <div class="row">
   <div class="col-sm-12" id="user-studies-div">
     <h1>Available Studies</h1>
-    <table id="studies-table" class="display table-bordered table-hover">
+    <table id="studies-table" class="table table-bordered">
         <thead>
             <tr>
                 <th></th>
@@ -124,10 +220,9 @@ function add_metacat(metacat) {
                 <th>Principal Investigator</th>
                 <th>Pubmed ID(s)</th>
                 <th>Status</th>
+                <th>Expand</th>
             </tr>
         </thead>
-        <tbody>
-        </tbody>
     </table>
 <!--Abstract Modal-->
 <div class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true" id="study-abstract-modal">

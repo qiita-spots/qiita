@@ -339,9 +339,10 @@ class TestAnalysis(TestCase):
     def test_add_samples(self):
         new = Analysis.create(User("admin@foo.bar"), "newAnalysis",
                               "A New Analysis")
-        new.add_samples([(1, '1.SKB8.640193'), (1, '1.SKD5.640186')])
-        exp = {1: ['1.SKB8.640193', '1.SKD5.640186']}
-        self.assertEqual(new.samples, exp)
+        new.add_samples({1: ['1.SKB8.640193', '1.SKD5.640186']})
+        obs = new.samples
+        self.assertEqual(obs.keys(), [1])
+        self.assertItemsEqual(obs[1], ['1.SKB8.640193', '1.SKD5.640186'])
 
     def test_remove_samples_both(self):
         self.analysis.remove_samples(proc_data=(1, ),

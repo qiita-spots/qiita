@@ -18,6 +18,7 @@ Classes
 # -----------------------------------------------------------------------------
 from __future__ import division
 from collections import defaultdict
+from itertools import product
 from os.path import join
 
 from future.utils import viewitems
@@ -541,17 +542,26 @@ class Analysis(QiitaStatusObject):
 
         Parameters
         ----------
-        samples : list of tuples of (int, str)
+        samples : dictionary of lists
             samples and the processed data id they come from in form
-            [(processed_data_id, sample_id), ...]
+            {processed_data_id: [sample1, sample2, ...], ...}
         """
         conn_handler = SQLConnectionHandler()
         self._lock_check(conn_handler)
-        sql = ("INSERT INTO qiita.analysis_sample "
-               "(analysis_id, processed_data_id, sample_id) VALUES "
-               "(%s, %s, %s)")
-        conn_handler.executemany(sql, [(self._id, s[0], s[1])
-                                       for s in samples])
+
+        for pid, samps in viewitems(samples):
+            # get previously selected samples  for pid and filter them out
+            sql = """SELECT sample_id FROM qiita.analysis_sample
+                WHERE processed_data_id = %s and analysis_id = %s"""
+            prev_selected = [x[0] for x in
+                             conn_handler.execute_fetchall(sql,
+                                                           (pid, self._id))]
+
+            select = set(samps).difference(prev_selected)
+            sql = ("INSERT INTO qiita.analysis_sample "
+                   "(analysis_id, processed_data_id, sample_id) VALUES "
+                   "({}, %s, %s)".format(self._id))
+            conn_handler.executemany(sql, [x for x in product([pid], select)])
 
     def remove_samples(self, proc_data=None, samples=None):
         """Removes samples from the analysis

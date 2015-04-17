@@ -16,15 +16,14 @@ from qiita_pet.handlers.user_handlers import (
     ChangeForgotPasswordHandler, ForgotPasswordHandler, UserProfileHandler)
 from qiita_pet.handlers.analysis_handlers import (
     SelectCommandsHandler, AnalysisWaitHandler, AnalysisResultsHandler,
-    ShowAnalysesHandler, SearchStudiesHandler, ResultsHandler,
-    SelectedSamplesHandler)
+    ShowAnalysesHandler, ResultsHandler, SelectedSamplesHandler)
 from qiita_pet.handlers.study_handlers import (
     StudyEditHandler, ListStudiesHandler, SearchStudiesAJAX,
     StudyDescriptionHandler, MetadataSummaryHandler, EBISubmitHandler,
     CreateStudyAJAX, ShareStudyAJAX, StudyApprovalList,
     PreprocessingSummaryHandler, VAMPSHandler)
 from qiita_pet.handlers.websocket_handlers import (
-    MessageHandler, SelectedSocketHandler)
+    MessageHandler, SelectedSocketHandler, SelectSamplesHandler)
 from qiita_pet.handlers.logger_handlers import LogEntryViewerHandler
 from qiita_pet.handlers.upload import UploadFileHandler, StudyUploadFileHandler
 from qiita_pet.handlers.compute import (
@@ -60,13 +59,13 @@ class Application(tornado.web.Application):
              {"path": RES_PATH}),
             (r"/static/(.*)", tornado.web.StaticFileHandler,
              {"path": STATIC_PATH}),
-            (r"/analysis/2", SearchStudiesHandler),
             (r"/analysis/3", SelectCommandsHandler),
             (r"/analysis/wait/(.*)", AnalysisWaitHandler),
             (r"/analysis/results/(.*)", AnalysisResultsHandler),
             (r"/analysis/show/", ShowAnalysesHandler),
             (r"/analysis/selected/", SelectedSamplesHandler),
             (r"/analysis/selected/socket/", SelectedSocketHandler),
+            (r"/analysis/select-socket/", SelectSamplesHandler),
             (r"/moi-ws/", MOIMessageHandler),
             (r"/consumer/", MessageHandler),
             (r"/admin/error/", LogEntryViewerHandler),

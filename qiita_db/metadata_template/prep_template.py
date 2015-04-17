@@ -157,19 +157,8 @@ class PrepTemplate(MetadataTemplate):
             # some other error we haven't seen before so raise it
             raise
 
-        # figuring out the filepath of the backup
-        _id, fp = get_mountpoint('templates')[0]
-        fp = join(fp, '%d_prep_%d_%s.txt' % (study.id, prep_id,
-                  strftime("%Y%m%d-%H%M%S")))
-        # storing the backup
         pt = cls(prep_id)
-        pt.to_file(fp)
-
-        # adding the fp to the object
-        pt.add_filepath(fp)
-
-        # creating QIIME mapping file
-        pt.create_qiime_mapping_file(fp)
+        pt.generate_files()
 
         return pt
 
@@ -410,6 +399,22 @@ class PrepTemplate(MetadataTemplate):
         else:
             raise QiitaDBError("No studies found associated with prep "
                                "template ID %d" % self._id)
+
+    def generate_files(self):
+        r"""Generates all the files that contain data from this template
+        """
+        # figuring out the filepath of the prep template
+        _id, fp = get_mountpoint('templates')[0]
+        fp = join(fp, '%d_prep_%d_%s.txt' % (self.study_id, self._id,
+                  strftime("%Y%m%d-%H%M%S")))
+        # storing the template
+        self.to_file(fp)
+
+        # adding the fp to the object
+        self.add_filepath(fp)
+
+        # creating QIIME mapping file
+        self.create_qiime_mapping_file(fp)
 
     def create_qiime_mapping_file(self, prep_template_fp):
         """This creates the QIIME mapping file and links it in the db.

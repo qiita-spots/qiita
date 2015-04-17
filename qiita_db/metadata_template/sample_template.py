@@ -10,14 +10,13 @@ from __future__ import division
 from future.builtins import zip
 from os.path import join
 from time import strftime
-from os.path import basename
 
 import pandas as pd
 import warnings
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_db.exceptions import (QiitaDBDuplicateError, QiitaDBError,
-                                 QiitaDBWarning)
+                                 QiitaDBWarning, QiitaDBUnknownIDError)
 from qiita_db.sql_connection import SQLConnectionHandler
 from qiita_db.util import (get_table_cols, get_required_sample_info_status,
                            get_mountpoint, scrub_data)
@@ -140,17 +139,67 @@ class SampleTemplate(MetadataTemplate):
 
         conn_handler.execute_queue(queue_name)
 
-        # figuring out the filepath of the backup
-        _id, fp = get_mountpoint('templates')[0]
-        fp = join(fp, '%d_%s.txt' % (study.id, strftime("%Y%m%d-%H%M%S")))
-        # storing the backup
         st = cls(study.id)
-        st.to_file(fp)
-
-        # adding the fp to the object
-        st.add_filepath(fp)
+        st.generate_files()
 
         return st
+
+    @classmethod
+    def delete(cls, id_):
+        r"""Deletes the table from the database
+
+        Parameters
+        ----------
+        id_ : integer
+            The object identifier
+
+        Raises
+        ------
+        QiitaDBUnknownIDError
+            If no sample template with id id_ exists
+        QiitaDBError
+            If the study that owns this sample template has raw datas
+        """
+        cls._check_subclass()
+
+        if not cls.exists(id_):
+            raise QiitaDBUnknownIDError(id_, cls.__name__)
+
+        raw_datas = [str(rd) for rd in Study(cls(id_).study_id).raw_data()]
+        if raw_datas:
+            raise QiitaDBError("Sample template can not be erased because "
+                               "there are raw datas (%s) associated." %
+                               ', '.join(raw_datas))
+
+        table_name = cls._table_name(id_)
+        conn_handler = SQLConnectionHandler()
+
+        # Delete the sample template filepaths
+        queue = "delete_sample_template_%d" % id_
+        conn_handler.create_queue(queue)
+
+        conn_handler.add_to_queue(
+            queue,
+            "DELETE FROM qiita.sample_template_filepath WHERE study_id = %s",
+            (id_, ))
+
+        conn_handler.add_to_queue(
+            queue,
+            "DROP TABLE qiita.{0}".format(table_name))
+
+        conn_handler.add_to_queue(
+            queue,
+            "DELETE FROM qiita.{0} where {1} = %s".format(cls._table,
+                                                          cls._id_column),
+            (id_,))
+
+        conn_handler.add_to_queue(
+            queue,
+            "DELETE FROM qiita.{0} where {1} = %s".format(cls._column_table,
+                                                          cls._id_column),
+            (id_,))
+
+        conn_handler.execute_queue(queue)
 
     @property
     def study_id(self):
@@ -162,6 +211,23 @@ class SampleTemplate(MetadataTemplate):
             The ID of the study with which this sample template is associated
         """
         return self._id
+
+    def generate_files(self):
+        r"""Generates all the files that contain data from this template
+        """
+        # figuring out the filepath of the sample template
+        _id, fp = get_mountpoint('templates')[0]
+        fp = join(fp, '%d_%s.txt' % (self.id, strftime("%Y%m%d-%H%M%S")))
+        # storing the sample template
+        self.to_file(fp)
+
+        # adding the fp to the object
+        self.add_filepath(fp)
+
+        # generating all new QIIME mapping files
+        for rd_id in Study(self.id).raw_data():
+            for pt_id in RawData(rd_id).prep_templates:
+                PrepTemplate(pt_id).generate_files()
 
     def extend(self, md_template):
         """Adds the given sample template to the current one
@@ -248,14 +314,7 @@ class SampleTemplate(MetadataTemplate):
             values, many=True)
         conn_handler.execute_queue(queue_name)
 
-        # figuring out the filepath of the backup
-        _id, fp = get_mountpoint('templates')[0]
-        fp = join(fp, '%d_%s.txt' % (self.id, strftime("%Y%m%d-%H%M%S")))
-        # storing the backup
-        self.to_file(fp)
-
-        # adding the fp to the object
-        self.add_filepath(fp)
+        self.generate_files()
 
     def update(self, md_template):
         r"""Update values in the sample template
@@ -318,21 +377,4 @@ class SampleTemplate(MetadataTemplate):
         for col in changed_cols:
             self.update_category(col, new_map[col].to_dict())
 
-        # figuring out the filepath of the backup
-        _id, fp = get_mountpoint('templates')[0]
-        fp = join(fp, '%d_%s.txt' % (self.id, strftime("%Y%m%d-%H%M%S")))
-        # storing the backup
-        self.to_file(fp)
-
-        # adding the fp to the object
-        self.add_filepath(fp)
-
-        # generating all new QIIME mapping files
-        for rd_id in Study(self.id).raw_data():
-            for pt_id in RawData(rd_id).prep_templates:
-                pt = PrepTemplate(pt_id)
-                for _, fp in pt.get_filepaths():
-                    # the difference between a prep and a qiime template is the
-                    # word qiime within the name of the file
-                    if '_qiime_' not in basename(fp):
-                        pt.create_qiime_mapping_file(fp)
+        self.generate_files()
