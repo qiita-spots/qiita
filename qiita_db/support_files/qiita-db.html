@@ -564,10 +564,10 @@ table {
 <text x='178' y='1260' transform='rotate(90 178,1260)' title='Foreign Key fk_analysis_processed_data
 	analysis_sample references processed_data ( processed_data_id )' style='fill:#a1a0a0;'>processed_data_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 150 1260 L 150,1282 Q 150,1290 157,1290 L 1222,1290 Q 1230,1290 1230,1282 L 1230,307 Q 1230,300 1237,300 L 1417,300 Q 1425,300 1425,292 L 1425,195' >
 	<title>Foreign Key fk_analysis_sample
-	analysis_sample references required_sample_info ( sample_id )</title>
+	analysis_sample references study_sample ( sample_id )</title>
 </path>
 <text x='163' y='1260' transform='rotate(90 163,1260)' title='Foreign Key fk_analysis_sample
-	analysis_sample references required_sample_info ( sample_id )' style='fill:#a1a0a0;'>sample_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 2235 75 L 1995,75' >
+	analysis_sample references study_sample ( sample_id )' style='fill:#a1a0a0;'>sample_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 2235 75 L 1995,75' >
 	<title>Foreign Key fk_study_environmental_package
 	study_environmental_package references study ( study_id )</title>
 </path>
@@ -727,22 +727,22 @@ table {
 	investigation references study_person ( contact_person_id -> study_person_id )</title>
 </path>
 <text x='2222' y='235' transform='rotate(270 2222,235)' title='Foreign Key fk_investigation_study_person
-	investigation references study_person ( contact_person_id -> study_person_id )' style='fill:#a1a0a0;'>contact_person_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1545 135 L 1800,135' >
-	<title>Foreign Key fk_required_sample_info_study
-	required_sample_info references study ( study_id )</title>
-</path>
-<text x='1552' y='130' transform='rotate(0 1552,130)' title='Foreign Key fk_required_sample_info_study
-	required_sample_info references study ( study_id )' style='fill:#a1a0a0;'>study_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1185 180 L 1192,180 Q 1200,180 1200,172 L 1200,172 Q 1200,165 1207,165 L 1395,165' >
+	investigation references study_person ( contact_person_id -> study_person_id )' style='fill:#a1a0a0;'>contact_person_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1185 180 L 1192,180 Q 1200,180 1200,172 L 1200,172 Q 1200,165 1207,165 L 1395,165' >
 	<title>Foreign Key fk_common_prep_info
-	common_prep_info references required_sample_info ( sample_id )</title>
+	prep_template_sample references study_sample ( sample_id )</title>
 </path>
 <text x='1192' y='175' transform='rotate(0 1192,175)' title='Foreign Key fk_common_prep_info
-	common_prep_info references required_sample_info ( sample_id )' style='fill:#a1a0a0;'>sample_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1080 240 L 1080,345' >
+	prep_template_sample references study_sample ( sample_id )' style='fill:#a1a0a0;'>sample_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1080 240 L 1080,345' >
 	<title>Foreign Key fk_prep_template
-	common_prep_info references prep_template ( prep_template_id )</title>
+	prep_template_sample references prep_template ( prep_template_id )</title>
 </path>
 <text x='1093' y='240' transform='rotate(90 1093,240)' title='Foreign Key fk_prep_template
-	common_prep_info references prep_template ( prep_template_id )' style='fill:#a1a0a0;'>prep_template_id</text><!-- ============= Table 'controlled_vocab_values' ============= -->
+	prep_template_sample references prep_template ( prep_template_id )' style='fill:#a1a0a0;'>prep_template_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1500 135 L 1800,135' >
+	<title>Foreign Key fk_required_sample_info_study
+	study_sample references study ( study_id )</title>
+</path>
+<text x='1507' y='130' transform='rotate(0 1507,130)' title='Foreign Key fk_required_sample_info_study
+	study_sample references study ( study_id )' style='fill:#a1a0a0;'>study_id</text><!-- ============= Table 'controlled_vocab_values' ============= -->
 <rect class='table' x='45' y='1538' width='150' height='120' rx='7' ry='7' />
 <path d='M 45.50 1564.50 L 45.50 1545.50 Q 45.50 1538.50 52.50 1538.50 L 187.50 1538.50 Q 194.50 1538.50 194.50 1545.50 L 194.50 1564.50 L45.50 1564.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
 <a xlink:href='#controlled_vocab_values'><text x='53' y='1552' class='tableTitle'>controlled_vocab_values</text><title>Table qiita.controlled_vocab_values</title></a>
@@ -1238,7 +1238,7 @@ One of the user levels &#040;admin&#044; user&#044; guest&#044; etc&#041;</title
 <a xlink:href='#prep_template'><text x='1101' y='367' class='tableTitle'>prep_template</text><title>Table qiita.prep_template</title></a>
   <use id='nn' x='1067' y='387' xlink:href='#nn'/><a xlink:href='#prep_template.prep_template_id'><use id='pk' x='1067' y='386' xlink:href='#pk'/><title>Primary Key  ( prep_template_id ) </title></a>
 <a xlink:href='#prep_template.prep_template_id'><text x='1083' y='397'>prep_template_id</text><title>prep_template_id bigserial not null</title></a>
-<a xlink:href='#prep_template.prep_template_id'><use id='ref' x='1203' y='386' xlink:href='#ref'/><title>Referred by common_prep_info ( prep_template_id ) 
+<a xlink:href='#prep_template.prep_template_id'><use id='ref' x='1203' y='386' xlink:href='#ref'/><title>Referred by prep_template_sample ( prep_template_id ) 
 Referred by prep_columns ( prep_template_id ) 
 Referred by prep_template_filepath ( prep_template_id ) 
 Referred by prep_template_preprocessed_data ( prep_template_id ) </title></a>
@@ -1366,7 +1366,7 @@ Whether or not this term was defined by a user</title></a>
 <a xlink:href='#analysis_sample.processed_data_id'><use id='fk' x='168' y='1211' xlink:href='#fk'/><title>References processed_data ( processed_data_id ) </title></a>
   <use id='nn' x='47' y='1227' xlink:href='#nn'/><a xlink:href='#analysis_sample.sample_id'><use id='idx' x='47' y='1226' xlink:href='#idx'/><title>Index  ( sample_id ) </title></a>
 <a xlink:href='#analysis_sample.sample_id'><text x='63' y='1237'>sample_id</text><title>sample_id varchar not null</title></a>
-<a xlink:href='#analysis_sample.sample_id'><use id='fk' x='168' y='1226' xlink:href='#fk'/><title>References required_sample_info ( sample_id ) </title></a>
+<a xlink:href='#analysis_sample.sample_id'><use id='fk' x='168' y='1226' xlink:href='#fk'/><title>References study_sample ( sample_id ) </title></a>
 
 <!-- ============= Table 'environmental_package' ============= -->
 <rect class='table' x='2250' y='143' width='195' height='75' rx='7' ry='7' />
@@ -1705,7 +1705,7 @@ Links a study to all PMIDs for papers created from study</title></a>
 <a xlink:href='#study.study_id'><text x='1833' y='97'>study_id</text><title>study_id bigserial not null
 Unique name for study</title></a>
 <a xlink:href='#study.study_id'><use id='ref' x='1983' y='86' xlink:href='#ref'/><title>Referred by investigation_study ( study_id ) 
-Referred by required_sample_info ( study_id ) 
+Referred by study_sample ( study_id ) 
 Referred by sample_template_filepath ( study_id ) 
 Referred by study_environmental_package ( study_id ) 
 Referred by study_experimental_factor ( study_id ) 
@@ -1812,30 +1812,30 @@ What portals are available to show a study in</title></a>
   <use id='nn' x='1997' y='702' xlink:href='#nn'/><a xlink:href='#portal_type.portal'><text x='2013' y='712'>portal</text><title>portal varchar not null</title></a>
   <use id='nn' x='1997' y='717' xlink:href='#nn'/><a xlink:href='#portal_type.portal_description'><text x='2013' y='727'>portal_description</text><title>portal_description varchar not null</title></a>
 
-<!-- ============= Table 'required_sample_info' ============= -->
-<rect class='table' x='1410' y='113' width='135' height='75' rx='7' ry='7' />
-<path d='M 1410.50 139.50 L 1410.50 120.50 Q 1410.50 113.50 1417.50 113.50 L 1537.50 113.50 Q 1544.50 113.50 1544.50 120.50 L 1544.50 139.50 L1410.50 139.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
-<a xlink:href='#required_sample_info'><text x='1419' y='127' class='tableTitle'>required_sample_info</text><title>Table qiita.required_sample_info
-Required info for each sample&#046; One row is one sample&#046;</title></a>
-  <use id='nn' x='1412' y='147' xlink:href='#nn'/><a xlink:href='#required_sample_info.sample_id'><use id='pk' x='1412' y='146' xlink:href='#pk'/><title>Primary Key  ( sample_id ) </title></a>
-<a xlink:href='#required_sample_info.sample_id'><text x='1428' y='157'>sample_id</text><title>sample_id varchar not null</title></a>
-<a xlink:href='#required_sample_info.sample_id'><use id='ref' x='1533' y='146' xlink:href='#ref'/><title>Referred by analysis_sample ( sample_id ) 
-Referred by common_prep_info ( sample_id ) </title></a>
-  <use id='nn' x='1412' y='162' xlink:href='#nn'/><a xlink:href='#required_sample_info.study_id'><use id='idx' x='1412' y='161' xlink:href='#idx'/><title>Index  ( study_id ) </title></a>
-<a xlink:href='#required_sample_info.study_id'><text x='1428' y='172'>study_id</text><title>study_id bigint not null</title></a>
-<a xlink:href='#required_sample_info.study_id'><use id='fk' x='1533' y='161' xlink:href='#fk'/><title>References study ( study_id ) </title></a>
-
-<!-- ============= Table 'common_prep_info' ============= -->
+<!-- ============= Table 'prep_template_sample' ============= -->
 <rect class='table' x='1050' y='158' width='135' height='75' rx='7' ry='7' />
 <path d='M 1050.50 184.50 L 1050.50 165.50 Q 1050.50 158.50 1057.50 158.50 L 1177.50 158.50 Q 1184.50 158.50 1184.50 165.50 L 1184.50 184.50 L1050.50 184.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
-<a xlink:href='#common_prep_info'><text x='1065' y='172' class='tableTitle'>common_prep_info</text><title>Table qiita.common_prep_info</title></a>
-  <use id='nn' x='1052' y='192' xlink:href='#nn'/><a xlink:href='#common_prep_info.prep_template_id'><use id='pk' x='1052' y='191' xlink:href='#pk'/><title>Primary Key  ( prep_template_id, sample_id ) Index  ( prep_template_id ) </title></a>
-<a xlink:href='#common_prep_info.prep_template_id'><text x='1068' y='202'>prep_template_id</text><title>prep_template_id bigint not null
+<a xlink:href='#prep_template_sample'><text x='1057' y='172' class='tableTitle'>prep_template_sample</text><title>Table qiita.prep_template_sample</title></a>
+  <use id='nn' x='1052' y='192' xlink:href='#nn'/><a xlink:href='#prep_template_sample.prep_template_id'><use id='pk' x='1052' y='191' xlink:href='#pk'/><title>Primary Key  ( prep_template_id, sample_id ) Index  ( prep_template_id ) </title></a>
+<a xlink:href='#prep_template_sample.prep_template_id'><text x='1068' y='202'>prep_template_id</text><title>prep_template_id bigint not null
 The prep template identifier</title></a>
-<a xlink:href='#common_prep_info.prep_template_id'><use id='fk' x='1173' y='191' xlink:href='#fk'/><title>References prep_template ( prep_template_id ) </title></a>
-  <use id='nn' x='1052' y='207' xlink:href='#nn'/><a xlink:href='#common_prep_info.sample_id'><use id='pk' x='1052' y='206' xlink:href='#pk'/><title>Index  ( sample_id ) Index  ( sample_id ) Primary Key  ( prep_template_id, sample_id ) </title></a>
-<a xlink:href='#common_prep_info.sample_id'><text x='1068' y='217'>sample_id</text><title>sample_id varchar not null</title></a>
-<a xlink:href='#common_prep_info.sample_id'><use id='fk' x='1173' y='206' xlink:href='#fk'/><title>References required_sample_info ( sample_id ) </title></a>
+<a xlink:href='#prep_template_sample.prep_template_id'><use id='fk' x='1173' y='191' xlink:href='#fk'/><title>References prep_template ( prep_template_id ) </title></a>
+  <use id='nn' x='1052' y='207' xlink:href='#nn'/><a xlink:href='#prep_template_sample.sample_id'><use id='pk' x='1052' y='206' xlink:href='#pk'/><title>Index  ( sample_id ) Index  ( sample_id ) Primary Key  ( prep_template_id, sample_id ) </title></a>
+<a xlink:href='#prep_template_sample.sample_id'><text x='1068' y='217'>sample_id</text><title>sample_id varchar not null</title></a>
+<a xlink:href='#prep_template_sample.sample_id'><use id='fk' x='1173' y='206' xlink:href='#fk'/><title>References study_sample ( sample_id ) </title></a>
+
+<!-- ============= Table 'study_sample' ============= -->
+<rect class='table' x='1410' y='113' width='90' height='75' rx='7' ry='7' />
+<path d='M 1410.50 139.50 L 1410.50 120.50 Q 1410.50 113.50 1417.50 113.50 L 1492.50 113.50 Q 1499.50 113.50 1499.50 120.50 L 1499.50 139.50 L1410.50 139.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
+<a xlink:href='#study_sample'><text x='1418' y='127' class='tableTitle'>study_sample</text><title>Table qiita.study_sample
+Required info for each sample&#046; One row is one sample&#046;</title></a>
+  <use id='nn' x='1412' y='147' xlink:href='#nn'/><a xlink:href='#study_sample.sample_id'><use id='pk' x='1412' y='146' xlink:href='#pk'/><title>Primary Key  ( sample_id ) </title></a>
+<a xlink:href='#study_sample.sample_id'><text x='1428' y='157'>sample_id</text><title>sample_id varchar not null</title></a>
+<a xlink:href='#study_sample.sample_id'><use id='ref' x='1488' y='146' xlink:href='#ref'/><title>Referred by analysis_sample ( sample_id ) 
+Referred by prep_template_sample ( sample_id ) </title></a>
+  <use id='nn' x='1412' y='162' xlink:href='#nn'/><a xlink:href='#study_sample.study_id'><use id='idx' x='1412' y='161' xlink:href='#idx'/><title>Index  ( study_id ) </title></a>
+<a xlink:href='#study_sample.study_id'><text x='1428' y='172'>study_id</text><title>study_id bigint not null</title></a>
+<a xlink:href='#study_sample.study_id'><use id='fk' x='1488' y='161' xlink:href='#fk'/><title>References study ( study_id ) </title></a>
 
 </g></svg>
 
@@ -3798,7 +3798,7 @@ The prep template identifier</title></a>
 	</tr>
 	<tr>
 		<td>fk_analysis_sample</td>
-		<td > ( sample&#095;id ) ref <a href='#required&#095;sample&#095;info'>required&#095;sample&#095;info</a> (sample&#095;id) </td>
+		<td > ( sample&#095;id ) ref <a href='#study&#095;sample'>study&#095;sample</a> (sample&#095;id) </td>
 		<td>  </td>
 	</tr>
 </tbody>
@@ -5200,51 +5200,16 @@ Controlled Vocabulary </td>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='3'><a name='required_sample_info'>Table required_sample_info</a></th></tr>
-<tr><td colspan='3'>Required info for each sample&#046; One row is one sample&#046; </td></tr>
+<tr><th colspan='3'><a name='prep_template_sample'>Table prep_template_sample</a></th></tr>
 </thead>
 <tbody>
 	<tr>
-		<td><a name='required_sample_info.sample_id'>sample&#095;id</a></td>
-		<td> varchar  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='required_sample_info.study_id'>study&#095;id</a></td>
-		<td> bigint  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-<tr><th colspan='3'><b>Indexes</b></th></tr>
-	<tr>		<td>idx&#095;required&#095;sample&#095;info </td>
-		<td> ON study&#095;id</td>
-		<td>  </td>
-	</tr>
-	<tr>		<td>idx&#095;required&#095;sample&#095;info&#095;1 primary key</td>
-		<td> ON sample&#095;id</td>
-		<td>  </td>
-	</tr>
-<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
-	<tr>
-		<td>fk_required_sample_info_study</td>
-		<td > ( study&#095;id ) ref <a href='#study'>study</a> (study&#095;id) </td>
-		<td>  </td>
-	</tr>
-</tbody>
-</table>
-
-<br/><br/>
-<table class='bordered'>
-<thead>
-<tr><th colspan='3'><a name='common_prep_info'>Table common_prep_info</a></th></tr>
-</thead>
-<tbody>
-	<tr>
-		<td><a name='common_prep_info.prep_template_id'>prep&#095;template&#095;id</a></td>
+		<td><a name='prep_template_sample.prep_template_id'>prep&#095;template&#095;id</a></td>
 		<td> bigint  NOT NULL  </td>
 		<td> The prep template identifier </td>
 	</tr>
 	<tr>
-		<td><a name='common_prep_info.sample_id'>sample&#095;id</a></td>
+		<td><a name='prep_template_sample.sample_id'>sample&#095;id</a></td>
 		<td> varchar  NOT NULL  </td>
 		<td>  </td>
 	</tr>
@@ -5268,12 +5233,47 @@ Controlled Vocabulary </td>
 <tr><th colspan='3'><b>Foreign Keys</b></th></tr>
 	<tr>
 		<td>fk_common_prep_info</td>
-		<td > ( sample&#095;id ) ref <a href='#required&#095;sample&#095;info'>required&#095;sample&#095;info</a> (sample&#095;id) </td>
+		<td > ( sample&#095;id ) ref <a href='#study&#095;sample'>study&#095;sample</a> (sample&#095;id) </td>
 		<td>  </td>
 	</tr>
 	<tr>
 		<td>fk_prep_template</td>
 		<td > ( prep&#095;template&#095;id ) ref <a href='#prep&#095;template'>prep&#095;template</a> (prep&#095;template&#095;id) </td>
+		<td>  </td>
+	</tr>
+</tbody>
+</table>
+
+<br/><br/>
+<table class='bordered'>
+<thead>
+<tr><th colspan='3'><a name='study_sample'>Table study_sample</a></th></tr>
+<tr><td colspan='3'>Required info for each sample&#046; One row is one sample&#046; </td></tr>
+</thead>
+<tbody>
+	<tr>
+		<td><a name='study_sample.sample_id'>sample&#095;id</a></td>
+		<td> varchar  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='study_sample.study_id'>study&#095;id</a></td>
+		<td> bigint  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>idx&#095;required&#095;sample&#095;info </td>
+		<td> ON study&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>idx&#095;required&#095;sample&#095;info&#095;1 primary key</td>
+		<td> ON sample&#095;id</td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
+	<tr>
+		<td>fk_required_sample_info_study</td>
+		<td > ( study&#095;id ) ref <a href='#study'>study</a> (study&#095;id) </td>
 		<td>  </td>
 	</tr>
 </tbody>

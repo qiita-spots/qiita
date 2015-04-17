@@ -74,8 +74,8 @@ INSERT INTO qiita.raw_filepath (raw_data_id, filepath_id) VALUES (1, 1), (1, 2);
 -- Insert (link) the study with the raw data
 INSERT INTO qiita.study_raw_data (study_id, raw_data_id) VALUES (1, 1), (1, 2);
 
--- Add the required_sample_info for study 1
-INSERT INTO qiita.required_sample_info (study_id, sample_id) VALUES
+-- Add the study_sample for study 1
+INSERT INTO qiita.study_sample (study_id, sample_id) VALUES
 	(1, '1.SKB8.640193'),
 	(1, '1.SKD8.640184'),
 	(1, '1.SKB7.640196'),
@@ -206,7 +206,7 @@ INSERT INTO qiita.sample_1 (sample_id, SEASON_ENVIRONMENT, ASSIGNED_FROM_GEO, TE
 INSERT INTO qiita.prep_template (data_type_id, raw_data_id, preprocessing_status, investigation_type) VALUES (2, 1, 'success', 'Metagenomics');
 
 -- Add the common prep info for study 1
-INSERT INTO qiita.common_prep_info (prep_template_id, sample_id) VALUES
+INSERT INTO qiita.prep_template_sample (prep_template_id, sample_id) VALUES
 	(1, '1.SKB8.640193'),
 	(1, '1.SKD8.640184'),
 	(1, '1.SKB7.640196'),

@@ -100,19 +100,24 @@ for s_id in study_ids:
 
 # Once all data has been moved, we can drop the columns from the
 # requried_sample_info table; and drop the required_sample_info_status table
-conn_handler.add_to_queue(
-    queue_name,
-    """ALTER TABLE qiita.required_sample_info
-        DROP COLUMN physical_location,
-        DROP COLUMN has_physical_specimen,
-        DROP COLUMN has_extracted_data,
-        DROP COLUMN sample_type,
-        DROP COLUMN required_sample_info_status_id,
-        DROP COLUMN collection_timestamp,
-        DROP COLUMN host_subject_id,
-        DROP COLUMN description,
-        DROP COLUMN latitude,
-        DROP COLUMN longitude""")
+sql = """ALTER TABLE qiita.required_sample_info
+            DROP COLUMN physical_location,
+            DROP COLUMN has_physical_specimen,
+            DROP COLUMN has_extracted_data,
+            DROP COLUMN sample_type,
+            DROP COLUMN required_sample_info_status_id,
+            DROP COLUMN collection_timestamp,
+            DROP COLUMN host_subject_id,
+            DROP COLUMN description,
+            DROP COLUMN latitude,
+            DROP COLUMN longitude"""
+conn_handler.add_to_queue(queue_name, sql)
+
+# Since that table no longer stores required metadata,
+# we are going to rename it
+sql = """ALTER TABLE qiita.required_sample_info
+            RENAME TO study_sample"""
+conn_handler.add_to_queue(queue_name, sql)
 
 conn_handler.add_to_queue(
     queue_name, """DROP TABLE qiita.required_sample_info_status""")
@@ -176,6 +181,12 @@ conn_handler.add_to_queue(
         DROP COLUMN center_name,
         DROP COLUMN center_project_name,
         DROP COLUMN emp_status_id""")
+
+# Since that table no longer stores common prep template metadata,
+# we are going to rename it
+sql = """ALTER TABLE qiita.common_prep_info
+            RENAME TO prep_template_sample"""
+conn_handler.add_to_queue(queue_name, sql)
 
 conn_handler.add_to_queue(
     queue_name, """DROP TABLE qiita.emp_status""")
