@@ -49,7 +49,7 @@ import warnings
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 
 from qiita_db.exceptions import (QiitaDBUnknownIDError, QiitaDBColumnError,
-                                 QiitaDBNotImplementedError,
+                                 QiitaDBNotImplementedError, QiitaDBError,
                                  QiitaDBExecutionError, QiitaDBWarning,
                                  QiitaDBDuplicateHeaderError)
 from qiita_db.base import QiitaObject
@@ -784,77 +784,110 @@ class MetadataTemplate(QiitaObject):
             The connection handler object connected to the DB
         queue_name : str
             The queue where the SQL statements will be added
+
+        Raises
+        ------
+        QiitaDBError
+            If no new samples or new columns are present in `md_template`
         """
-        # Raise warning and filter out existing samples
+        # Check if we are adding new samples
         sample_ids = md_template.index.tolist()
         sql = """SELECT sample_id FROM qiita.{0}
                  WHERE {1}=%s""".format(self._table, self._id_column)
         curr_samples = set(
             s[0] for s in conn_handler.execute_fetchall(sql, (self._id,)))
         existing_samples = curr_samples.intersection(sample_ids)
+        new_samples = set(sample_ids).difference(existing_samples)
 
-        # TODO: if new columns are being added, is not OK to drop those samples
-        if existing_samples:
-            warnings.warn(
-                "The following samples already exist and will be ignored: "
-                "%s" % ", ".join(sorted(existing_samples)), QiitaDBWarning)
-            md_template.drop(existing_samples, inplace=True)
-
-        # Get some useful information from the metadata template
-        sample_ids = md_template.index.tolist()
-        num_samples = len(sample_ids)
-        headers = list(md_template.keys())
-
+        # Check if we are adding new columns
+        table_name = self._table_name(self._id)
         # Get the required columns from the DB
-        db_cols = get_table_cols(self._table, conn_handler)
+        db_cols = sorted(get_table_cols(self._table, conn_handler))
         # Remove the sample_id and _id_column columns
         db_cols.remove('sample_id')
         db_cols.remove(self._id_column)
+        # Get the columns from the dynamic table and do the union with the db
+        curr_cols = set(
+            get_table_cols(table_name, conn_handler)).union(db_cols)
+        headers = md_template.keys().tolist()
+        existing_cols = curr_cols.intersection(headers)
+        new_cols = set(headers).difference(existing_cols)
 
-        # Insert values on required columns
-        values = as_python_types(md_template, db_cols)
-        values.insert(0, sample_ids)
-        values.insert(0, [self._id] * num_samples)
-        values = [v for v in zip(*values)]
-        conn_handler.add_to_queue(
-            queue_name,
-            "INSERT INTO qiita.{0} ({1}, sample_id, {2}) "
-            "VALUES (%s, %s, {3})".format(self._table, self._id_column,
-                                          ', '.join(db_cols),
-                                          ', '.join(['%s'] * len(db_cols))),
-            values, many=True)
+        if not new_cols and not new_samples:
+            raise QiitaDBError(
+                "No new samples or new columns found in the template. If you "
+                "want to update existing values, you should use the 'update' "
+                "functionality.")
 
-        # Add missing columns to the sample template dynamic table
-        headers = list(set(headers).difference(db_cols))
-        datatypes = get_datatypes(md_template.ix[:, headers])
-        table_name = self._table_name(self._id)
-        new_cols = set(md_template.columns).difference(
-            set(self.metadata_headers()))
-        dtypes_dict = dict(zip(md_template.ix[:, headers], datatypes))
-        for category in new_cols:
-            # Insert row on *_columns table
-            conn_handler.add_to_queue(
-                queue_name,
-                "INSERT INTO qiita.{0} ({1}, column_name, column_type) "
-                "VALUES (%s, %s, %s)".format(self._column_table,
-                                             self._id_column),
-                (self._id, category, dtypes_dict[category]))
-            # Insert row on dynamic table
-            conn_handler.add_to_queue(
-                queue_name,
-                "ALTER TABLE qiita.{0} ADD COLUMN {1} {2}".format(
-                    table_name, scrub_data(category), dtypes_dict[category]))
+        if new_cols:
+            # If we are adding new columns, add them first (simplifies code)
+            # Sorting the new columns to enforce an order
+            new_cols = sorted(new_cols)
+            datatypes = get_datatypes(md_template.ix[:, new_cols])
+            sql_cols = """INSERT INTO qiita.{0} ({1}, column_name, column_type)
+                          VALUES (%s, %s, %s)""".format(self._column_table,
+                                                        self._id_column)
+            sql_alter = """ALTER TABLE qiita.{0} ADD COLUMN {1} {2}"""
+            for category, dtype in zip(new_cols, datatypes):
+                conn_handler.add_to_queue(
+                    queue_name, sql_cols, (self._id, category, dtype))
+                conn_handler.add_to_queue(
+                    queue_name, sql_alter.format(table_name, category, dtype))
 
-        # Insert values on custom table
-        values = as_python_types(md_template, headers)
-        values.insert(0, sample_ids)
-        values = [v for v in zip(*values)]
-        conn_handler.add_to_queue(
-            queue_name,
-            "INSERT INTO qiita.{0} (sample_id, {1}) "
-            "VALUES (%s, {2})".format(table_name, ", ".join(headers),
-                                      ', '.join(["%s"] * len(headers))),
-            values, many=True)
+            if existing_samples:
+                warnings.warn(
+                    "The new columns '%s' have been added to the existing "
+                    "samples '%s'. Any other value of these samples have been "
+                    "modified." % (", ".join(new_cols),
+                                   ", ".join(existing_samples)),
+                    QiitaDBWarning)
+                # The values for the new columns are the only ones that get
+                # added to the database. None of the existing values will be
+                # modified (see update for that functionality)
+                min_md_template = md_template[new_cols].loc[existing_samples]
+                values = as_python_types(min_md_template, new_cols)
+                values.append(existing_samples)
+                values = [v for v in zip(*values)]
+                set_str = ["{0} = %s".format(col) for col in new_cols]
+                sql = """UPDATE qiita.{0}
+                         SET {1}
+                         WHERE sample_id=%s""".format(table_name,
+                                                      ",".join(set_str))
+                conn_handler.add_to_queue(queue_name, sql, values, many=True)
+        elif existing_samples:
+            warnings.warn(
+                "The following samples already exist in the template and "
+                "will be ignored: %s" % ", ".join(existing_samples),
+                QiitaDBWarning)
+
+        if new_samples:
+            num_samples = len(new_samples)
+            new_samples = sorted(new_samples)
+            # At this point we only want the information from the new samples
+            md_template = md_template.loc[new_samples]
+
+            # Insert values on required columns
+            values = as_python_types(md_template, db_cols)
+            values.insert(0, new_samples)
+            values.insert(0, [self._id] * num_samples)
+            values = [v for v in zip(*values)]
+            sql = """INSERT INTO qiita.{0} ({1}, sample_id, {2})
+                     VALUES (%s, %s, {3})""".format(
+                self._table, self._id_column, ', '.join(db_cols),
+                ', '.join(['%s'] * len(db_cols)))
+            conn_handler.add_to_queue(queue_name, sql, values, many=True)
+
+            headers = sorted(set(headers).difference(db_cols))
+
+            # Insert values on custom table
+            values = as_python_types(md_template, headers)
+            values.insert(0, new_samples)
+            values = [v for v in zip(*values)]
+            sql = """INSERT INTO qiita.{0} (sample_id, {1})
+                     VALUES (%s, {2})""".format(
+                table_name, ", ".join(headers),
+                ', '.join(["%s"] * len(headers)))
+            conn_handler.add_to_queue(queue_name, sql, values, many=True)
 
     @classmethod
     def exists(cls, obj_id):
