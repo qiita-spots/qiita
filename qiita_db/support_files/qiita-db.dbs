@@ -372,12 +372,6 @@
 				<comment><![CDATA[The prep template identifier]]></comment>
 			</column>
 			<column name="sample_id" type="varchar" jt="12" mandatory="y" />
-			<column name="center_name" type="varchar" jt="12" />
-			<column name="center_project_name" type="varchar" jt="12" />
-			<column name="emp_status_id" type="bigint" jt="-5" mandatory="y" />
-			<index name="idx_required_prep_info_0" unique="NORMAL" >
-				<column name="emp_status_id" />
-			</index>
 			<index name="idx_required_prep_info_2" unique="NORMAL" >
 				<column name="sample_id" />
 			</index>
@@ -391,9 +385,6 @@
 			<index name="idx_common_prep_info_1" unique="NORMAL" >
 				<column name="prep_template_id" />
 			</index>
-			<fk name="fk_required_prep_info_emp_status" to_schema="qiita" to_table="emp_status" >
-				<fk_column name="emp_status_id" pk="emp_status_id" />
-			</fk>
 			<fk name="fk_common_prep_info" to_schema="qiita" to_table="required_sample_info" >
 				<fk_column name="sample_id" pk="sample_id" />
 			</fk>
@@ -444,17 +435,6 @@
 			</index>
 			<index name="idx_data_type" unique="UNIQUE" >
 				<column name="data_type" />
-			</index>
-		</table>
-		<table name="emp_status" >
-			<comment>All possible statuses for projects relating to EMP. Whether they are part of, processed in accordance to, or not part of EMP.</comment>
-			<column name="emp_status_id" type="bigserial" jt="-5" mandatory="y" />
-			<column name="emp_status" type="varchar" jt="12" mandatory="y" />
-			<index name="pk_emp_status" unique="PRIMARY_KEY" >
-				<column name="emp_status_id" />
-			</index>
-			<index name="idx_emp_status" unique="UNIQUE" >
-				<column name="emp_status" />
 			</index>
 		</table>
 		<table name="environmental_package" >
@@ -1175,53 +1155,15 @@
 			<comment>Required info for each sample. One row is one sample.</comment>
 			<column name="sample_id" type="varchar" jt="12" mandatory="y" />
 			<column name="study_id" type="bigint" jt="-5" mandatory="y" />
-			<column name="physical_location" type="varchar" jt="12" mandatory="y" >
-				<comment><![CDATA[Where the sample itself is stored]]></comment>
-			</column>
-			<column name="has_physical_specimen" type="bool" jt="-7" mandatory="y" >
-				<comment><![CDATA[Whether we have the full speciment or just DNA]]></comment>
-			</column>
-			<column name="has_extracted_data" type="bool" jt="-7" mandatory="y" />
-			<column name="sample_type" type="varchar" jt="12" mandatory="y" >
-				<comment><![CDATA[Controlled vocabulary of sample types]]></comment>
-			</column>
-			<column name="required_sample_info_status_id" type="bigint" jt="-5" mandatory="y" >
-				<comment><![CDATA[What step of the pipeline the samples are in]]></comment>
-			</column>
-			<column name="collection_timestamp" type="timestamp" jt="93" mandatory="y" />
-			<column name="host_subject_id" type="varchar" jt="12" mandatory="y" />
-			<column name="description" type="varchar" jt="12" mandatory="y" />
-			<column name="latitude" type="float8" jt="6" mandatory="y" >
-				<comment><![CDATA[Latitude of the collection site]]></comment>
-			</column>
-			<column name="longitude" type="float8" jt="6" mandatory="y" >
-				<comment><![CDATA[Longitude of the collection site]]></comment>
-			</column>
-			<index name="idx_required_sample_info_0" unique="NORMAL" >
-				<column name="required_sample_info_status_id" />
-			</index>
 			<index name="idx_required_sample_info" unique="NORMAL" >
 				<column name="study_id" />
 			</index>
 			<index name="idx_required_sample_info_1" unique="PRIMARY_KEY" >
 				<column name="sample_id" />
 			</index>
-			<fk name="fk_required_sample_info" to_schema="qiita" to_table="required_sample_info_status" >
-				<fk_column name="required_sample_info_status_id" pk="required_sample_info_status_id" />
-			</fk>
 			<fk name="fk_required_sample_info_study" to_schema="qiita" to_table="study" >
 				<fk_column name="study_id" pk="study_id" />
 			</fk>
-		</table>
-		<table name="required_sample_info_status" >
-			<column name="required_sample_info_status_id" type="bigserial" jt="-5" mandatory="y" />
-			<column name="status" type="varchar" jt="12" />
-			<index name="pk_sample_status" unique="PRIMARY_KEY" >
-				<column name="required_sample_info_status_id" />
-			</index>
-			<index name="idx_required_sample_info_status" unique="UNIQUE" >
-				<column name="status" />
-			</index>
 		</table>
 		<table name="sample_template_filepath" >
 			<column name="study_id" type="bigint" jt="-5" mandatory="y" />
@@ -1595,8 +1537,6 @@ Controlled Vocabulary]]></comment>
 		<entity schema="qiita" name="prep_y" color="d0def5" x="1230" y="195" />
 		<entity schema="qiita" name="prep_columns" color="b2cdf7" x="1275" y="345" />
 		<entity schema="qiita" name="raw_filepath" color="c0d4f3" x="1080" y="510" />
-		<entity schema="qiita" name="emp_status" color="c0d4f3" x="1230" y="120" />
-		<entity schema="qiita" name="required_sample_info_status" color="c0d4f3" x="1545" y="405" />
 		<entity schema="qiita" name="filetype" color="d0def5" x="1560" y="600" />
 		<entity schema="qiita" name="filepath_type" color="c0d4f3" x="585" y="885" />
 		<entity schema="qiita" name="checksum_algorithm" color="b2cdf7" x="735" y="885" />
@@ -1610,13 +1550,11 @@ Controlled Vocabulary]]></comment>
 		<entity schema="qiita" name="filepath" color="c0d4f3" x="645" y="675" />
 		<entity schema="qiita" name="data_directory" color="b2cdf7" x="840" y="585" />
 		<entity schema="qiita" name="term" color="d0def5" x="810" y="1650" />
-		<entity schema="qiita" name="common_prep_info" color="d0def5" x="1050" y="165" />
 		<entity schema="qiita" name="analysis_sample" color="d0def5" x="45" y="1170" />
 		<entity schema="qiita" name="environmental_package" color="b2cdf7" x="2250" y="150" />
 		<entity schema="qiita" name="study_environmental_package" color="b2cdf7" x="2250" y="45" />
 		<entity schema="qiita" name="timeseries_type" color="c0d4f3" x="1680" y="615" />
 		<entity schema="qiita" name="prep_template_filepath" color="b2cdf7" x="1035" y="600" />
-		<entity schema="qiita" name="required_sample_info" color="d0def5" x="1410" y="120" />
 		<entity schema="qiita" name="sample_template_filepath" color="b2cdf7" x="1050" y="795" />
 		<entity schema="qiita" name="prep_template_preprocessed_data" color="b2cdf7" x="750" y="450" />
 		<entity schema="qiita" name="preprocessed_data" color="c0d4f3" x="1260" y="675" />
@@ -1639,6 +1577,8 @@ Controlled Vocabulary]]></comment>
 		<entity schema="qiita" name="investigation" color="c0d4f3" x="2100" y="255" />
 		<entity schema="qiita" name="processed_data_status" color="c0d4f3" x="1500" y="1050" />
 		<entity schema="qiita" name="portal_type" color="c0d4f3" x="1995" y="660" />
+		<entity schema="qiita" name="required_sample_info" color="d0def5" x="1410" y="120" />
+		<entity schema="qiita" name="common_prep_info" color="d0def5" x="1050" y="165" />
 		<group name="Group_analyses" color="c4e0f9" >
 			<comment>analysis tables</comment>
 			<entity schema="qiita" name="analysis" />
@@ -1680,11 +1620,9 @@ Controlled Vocabulary]]></comment>
 			<entity schema="qiita" name="investigation" />
 			<entity schema="qiita" name="preprocessed_sequence_454_params" />
 			<entity schema="qiita" name="preprocessed_data" />
-			<entity schema="qiita" name="emp_status" />
 			<entity schema="qiita" name="processed_data_status" />
 			<entity schema="qiita" name="study_person" />
 			<entity schema="qiita" name="timeseries_type" />
-			<entity schema="qiita" name="required_sample_info_status" />
 			<entity schema="qiita" name="preprocessed_filepath" />
 			<entity schema="qiita" name="raw_filepath" />
 			<entity schema="qiita" name="processed_filepath" />
