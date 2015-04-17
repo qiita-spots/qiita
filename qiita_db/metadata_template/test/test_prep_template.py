@@ -262,9 +262,6 @@ class TestPrepSampleReadWrite(BaseTestPrepSample):
         with self.assertRaises(QiitaDBColumnError):
             self.tester['column that does not exist'] = 0.3
 
-        with self.assertRaises(ValueError):
-            self.tester['emp_status_id'] = "Error!"
-
         self.assertEqual(self.tester['center_name'], 'ANL')
         self.tester['center_name'] = "FOO"
         self.assertEqual(self.tester['center_name'], "FOO")
