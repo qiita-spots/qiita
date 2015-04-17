@@ -7,8 +7,11 @@
 # -----------------------------------------------------------------------------
 
 from __future__ import division
+from future.utils import viewvalues
 from os.path import join
 from time import strftime
+
+import pandas as pd
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_db.exceptions import (QiitaDBColumnError, QiitaDBUnknownIDError,
@@ -142,7 +145,7 @@ class PrepTemplate(MetadataTemplate):
                 "{0} = %s".format(cls._id_column), (prep_id,))
 
             # Check if sample IDs present here but not in sample template
-            sql = ("SELECT sample_id from qiita.required_sample_info WHERE "
+            sql = ("SELECT sample_id from qiita.study_sample WHERE "
                    "study_id = %s")
             # Get list of study sample IDs, prep template study IDs,
             # and their intersection
@@ -414,16 +417,10 @@ class PrepTemplate(MetadataTemplate):
         self.add_filepath(fp)
 
         # creating QIIME mapping file
-        self.create_qiime_mapping_file(fp)
+        self.create_qiime_mapping_file()
 
-    def create_qiime_mapping_file(self, prep_template_fp):
+    def create_qiime_mapping_file(self):
         """This creates the QIIME mapping file and links it in the db.
-
-        Parameters
-        ----------
-        prep_template_fp : str
-            The prep template filepath that should be concatenated to the
-            sample template go used to generate a new  QIIME mapping file
 
         Returns
         -------
@@ -458,7 +455,9 @@ class PrepTemplate(MetadataTemplate):
 
         # reading files via pandas
         st = load_template_to_dataframe(sample_template_fp)
-        pt = load_template_to_dataframe(prep_template_fp)
+        pt = self.to_dataframe()
+
+        # pt = load_template_to_dataframe(prep_template_fp)
         st_sample_names = set(st.index)
         pt_sample_names = set(pt.index)
 
@@ -470,6 +469,17 @@ class PrepTemplate(MetadataTemplate):
 
         mapping = pt.join(st, lsuffix="_prep")
         mapping.rename(columns=rename_cols, inplace=True)
+
+        # We cannot ensure that the QIIME-required columns are present in the
+        # metadata map. However, we have to generate a QIIME-compliant mapping
+        # file. Since the user may need a QIIME mapping file, but not these
+        # QIIME-required columns, we are going to create them here and
+        # populate them with the value XXQIITAXX
+        index = mapping.index
+        placeholder = ['XXQIITAXX'] * len(index)
+        for val in viewvalues(rename_cols):
+            if val not in mapping:
+                mapping[val] = pd.Series(placeholder, index=index)
 
         # Gets the orginal mapping columns and readjust the order to comply
         # with QIIME requirements
@@ -488,7 +498,7 @@ class PrepTemplate(MetadataTemplate):
                         self.id, strftime("%Y%m%d-%H%M%S")))
 
         # Save the mapping file
-        mapping.to_csv(filepath, index_label='#SampleID', na_rep='unknown',
+        mapping.to_csv(filepath, index_label='#SampleID', na_rep='',
                        sep='\t')
 
         # adding the fp to the object
