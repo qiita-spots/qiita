@@ -134,8 +134,8 @@ INSERT INTO qiita.study_sample_columns (study_id, column_name, column_type) VALU
 	(1, 'collection_timestamp', 'timestamp'),
 	(1, 'host_subject_id', 'varchar'),
 	(1, 'description', 'varchar'),
-	(1, 'latitude', 'varchar'),
-	(1, 'longitude', 'varchar');
+	(1, 'latitude', 'float8'),
+	(1, 'longitude', 'float8');
 
 -- Crate the sample_1 dynamic table
 CREATE TABLE qiita.sample_1 (
@@ -167,8 +167,8 @@ CREATE TABLE qiita.sample_1 (
 	collection_timestamp			timestamp,
 	host_subject_id					varchar,
 	description						varchar,
-	latitude						varchar,
-	longitude						varchar,
+	latitude						float8,
+	longitude						float8,
 	CONSTRAINT pk_sample_1 PRIMARY KEY ( sample_id )
 );
 
