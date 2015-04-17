@@ -1010,6 +1010,14 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
         self.assertEqual(filepaths[0][0], 22)
         self.assertEqual(filepaths[1][0], 21)
 
+    def test_generate_files(self):
+        fp_count = get_count("qiita.filepath")
+        self.tester.generate_files()
+        obs = get_count("qiita.filepath")
+        # We just make sure that the count has been increased by 2, since
+        # the contents of the files have been tested elsewhere.
+        self.assertEqual(obs, fp_count + 2)
+
     def test_create_qiime_mapping_file(self):
         pt = PrepTemplate(1)
 

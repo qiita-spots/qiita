@@ -10,7 +10,6 @@ from __future__ import division
 from future.builtins import zip
 from os.path import join
 from time import strftime
-from os.path import basename
 
 import pandas as pd
 import warnings
@@ -140,15 +139,8 @@ class SampleTemplate(MetadataTemplate):
 
         conn_handler.execute_queue(queue_name)
 
-        # figuring out the filepath of the backup
-        _id, fp = get_mountpoint('templates')[0]
-        fp = join(fp, '%d_%s.txt' % (study.id, strftime("%Y%m%d-%H%M%S")))
-        # storing the backup
         st = cls(study.id)
-        st.to_file(fp)
-
-        # adding the fp to the object
-        st.add_filepath(fp)
+        st.generate_files()
 
         return st
 
@@ -219,6 +211,23 @@ class SampleTemplate(MetadataTemplate):
             The ID of the study with which this sample template is associated
         """
         return self._id
+
+    def generate_files(self):
+        r"""Generates all the files that contain data from this template
+        """
+        # figuring out the filepath of the sample template
+        _id, fp = get_mountpoint('templates')[0]
+        fp = join(fp, '%d_%s.txt' % (self.id, strftime("%Y%m%d-%H%M%S")))
+        # storing the sample template
+        self.to_file(fp)
+
+        # adding the fp to the object
+        self.add_filepath(fp)
+
+        # generating all new QIIME mapping files
+        for rd_id in Study(self.id).raw_data():
+            for pt_id in RawData(rd_id).prep_templates:
+                PrepTemplate(pt_id).generate_files()
 
     def extend(self, md_template):
         """Adds the given sample template to the current one
@@ -305,14 +314,7 @@ class SampleTemplate(MetadataTemplate):
             values, many=True)
         conn_handler.execute_queue(queue_name)
 
-        # figuring out the filepath of the backup
-        _id, fp = get_mountpoint('templates')[0]
-        fp = join(fp, '%d_%s.txt' % (self.id, strftime("%Y%m%d-%H%M%S")))
-        # storing the backup
-        self.to_file(fp)
-
-        # adding the fp to the object
-        self.add_filepath(fp)
+        self.generate_files()
 
     def update(self, md_template):
         r"""Update values in the sample template
@@ -375,21 +377,4 @@ class SampleTemplate(MetadataTemplate):
         for col in changed_cols:
             self.update_category(col, new_map[col].to_dict())
 
-        # figuring out the filepath of the backup
-        _id, fp = get_mountpoint('templates')[0]
-        fp = join(fp, '%d_%s.txt' % (self.id, strftime("%Y%m%d-%H%M%S")))
-        # storing the backup
-        self.to_file(fp)
-
-        # adding the fp to the object
-        self.add_filepath(fp)
-
-        # generating all new QIIME mapping files
-        for rd_id in Study(self.id).raw_data():
-            for pt_id in RawData(rd_id).prep_templates:
-                pt = PrepTemplate(pt_id)
-                for _, fp in pt.get_filepaths():
-                    # the difference between a prep and a qiime template is the
-                    # word qiime within the name of the file
-                    if '_qiime_' not in basename(fp):
-                        pt.create_qiime_mapping_file(fp)
+        self.generate_files()
