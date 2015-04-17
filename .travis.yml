@@ -8,7 +8,7 @@ env:
     - TEST_ADD_STUDIES=True
 before_install:
   - hostname
-  - ifconfig
+  - /sbin/ifconfig
   - curl -O -v ftp://ftp.microbio.me/pub/QIIME-v1.9.0-dependencies/suma_package_V_1.0.00.tar.gz
   - redis-server --version
   - wget http://repo.continuum.io/miniconda/Miniconda3-3.7.3-Linux-x86_64.sh -O miniconda.sh
