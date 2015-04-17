@@ -16,7 +16,6 @@ import warnings
 from skbio.io.util import open_file
 
 from qiita_db.exceptions import QiitaDBColumnError, QiitaDBWarning
-from qiita_db.util import get_table_cols
 from .constants import CONTROLLED_COLS
 
 if PY3:

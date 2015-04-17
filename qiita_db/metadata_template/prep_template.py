@@ -428,15 +428,14 @@ class PrepTemplate(MetadataTemplate):
         st = load_template_to_dataframe(sample_template_fp)
         pt = self.to_dataframe()
 
-        # pt = load_template_to_dataframe(prep_template_fp)
         st_sample_names = set(st.index)
         pt_sample_names = set(pt.index)
 
         if not pt_sample_names.issubset(st_sample_names):
             raise ValueError(
-                "Prep template is not a sub set of the sample template, files:"
-                "%s %s - samples: %s" % (sample_template_fp, prep_template_fp,
-                                         str(pt_sample_names-st_sample_names)))
+                "Prep template is not a sub set of the sample template, files"
+                "%s - samples: %s" % (sample_template_fp,
+                                      str(pt_sample_names-st_sample_names)))
 
         mapping = pt.join(st, lsuffix="_prep")
         mapping.rename(columns=rename_cols, inplace=True)

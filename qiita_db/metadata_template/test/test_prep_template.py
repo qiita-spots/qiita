@@ -9,7 +9,6 @@
 from future.builtins import zip
 from unittest import TestCase, main
 from tempfile import mkstemp
-from time import strftime
 from os import close, remove
 from os.path import join, basename
 from collections import Iterable
@@ -670,7 +669,6 @@ class TestPrepTemplateReadOnly(BaseTestPrepTemplate):
     def test_clean_validate_template_error_bad_chars(self):
         """Raises an error if there are invalid characters in the sample names
         """
-        conn_handler = SQLConnectionHandler()
         self.metadata.index = ['o()xxxx[{::::::::>', 'sample.1', 'sample.3']
         with self.assertRaises(QiitaDBColumnError):
             PrepTemplate._clean_validate_template(self.metadata, 2,
@@ -678,7 +676,6 @@ class TestPrepTemplateReadOnly(BaseTestPrepTemplate):
 
     def test_clean_validate_template_error_duplicate_cols(self):
         """Raises an error if there are duplicated columns in the template"""
-        conn_handler = SQLConnectionHandler()
         self.metadata['STR_COLUMN'] = pd.Series(['', '', ''],
                                                 index=self.metadata.index)
         with self.assertRaises(QiitaDBDuplicateHeaderError):
@@ -687,7 +684,6 @@ class TestPrepTemplateReadOnly(BaseTestPrepTemplate):
 
     def test_clean_validate_template_warning_missing(self):
         """Raises an error if the template is missing a required column"""
-        conn_handler = SQLConnectionHandler()
         metadata_dict = {
             'SKB8.640193': {'center_name': 'ANL',
                             'center_project_name': 'Test Project',
@@ -704,8 +700,25 @@ class TestPrepTemplateReadOnly(BaseTestPrepTemplate):
             QiitaDBWarning, PrepTemplate._clean_validate_template, metadata, 2,
             PREP_TEMPLATE_COLUMNS)
 
+        metadata_dict = {
+            '2.SKB8.640193': {'center_name': 'ANL',
+                              'center_project_name': 'Test Project',
+                              'ebi_submission_accession': None,
+                              'linkerprimersequence': 'GTGCCAGCMGCCGCGGTAA',
+                              'barcodesequence': 'GTCCGCAAGTTA',
+                              'run_prefix': "s_G1_L001_sequences",
+                              'platform': 'ILLUMINA',
+                              'library_construction_protocol': 'AAAA',
+                              'experiment_design_description': 'BBBB'}
+            }
+        exp = pd.DataFrame.from_dict(metadata_dict, orient='index')
+        obs.sort_index(axis=0, inplace=True)
+        obs.sort_index(axis=1, inplace=True)
+        exp.sort_index(axis=0, inplace=True)
+        exp.sort_index(axis=1, inplace=True)
+        assert_frame_equal(obs, exp)
+
     def test_clean_validate_template(self):
-        conn_handler = SQLConnectionHandler()
         obs = PrepTemplate._clean_validate_template(self.metadata, 2,
                                                     PREP_TEMPLATE_COLUMNS)
         metadata_dict = {

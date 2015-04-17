@@ -55,7 +55,7 @@ from qiita_db.exceptions import (QiitaDBUnknownIDError, QiitaDBColumnError,
                                  QiitaDBDuplicateHeaderError)
 from qiita_db.base import QiitaObject
 from qiita_db.sql_connection import SQLConnectionHandler
-from qiita_db.util import (exists_table, get_table_cols, convert_to_id,
+from qiita_db.util import (exists_table, get_table_cols,
                            get_mountpoint, insert_filepaths)
 from qiita_db.logger import LogEntry
 from .util import (as_python_types, get_datatypes, get_invalid_sample_names,
@@ -723,7 +723,6 @@ class MetadataTemplate(QiitaObject):
                 QiitaDBWarning)
 
         if new_samples:
-            num_samples = len(new_samples)
             new_samples = sorted(new_samples)
             # At this point we only want the information from the new samples
             md_template = md_template.loc[new_samples]

@@ -848,7 +848,6 @@ class TestSampleTemplateReadOnly(BaseTestSampleTemplate):
     def test_clean_validate_template_error_bad_chars(self):
         """Raises an error if there are invalid characters in the sample names
         """
-        conn_handler = SQLConnectionHandler()
         self.metadata.index = ['o()xxxx[{::::::::>', 'sample.1', 'sample.3']
         with self.assertRaises(QiitaDBColumnError):
             SampleTemplate._clean_validate_template(self.metadata, 2,
@@ -856,7 +855,6 @@ class TestSampleTemplateReadOnly(BaseTestSampleTemplate):
 
     def test_clean_validate_template_error_duplicate_cols(self):
         """Raises an error if there are duplicated columns in the template"""
-        conn_handler = SQLConnectionHandler()
         self.metadata['STR_COLUMN'] = pd.Series(['foo', 'bar', 'foobar'],
                                                 index=self.metadata.index)
 
@@ -866,7 +864,6 @@ class TestSampleTemplateReadOnly(BaseTestSampleTemplate):
 
     def test_clean_valdate_template_warning_missing(self):
         """Warns if the template is missing a required column"""
-        conn_handler = SQLConnectionHandler()
         metadata_dict = {
             'Sample1': {'physical_specimen_location': 'location1',
                         'physical_specimen_remaining': True,
@@ -899,7 +896,6 @@ class TestSampleTemplateReadOnly(BaseTestSampleTemplate):
         assert_frame_equal(obs, exp)
 
     def test_clean_valdate_template(self):
-        conn_handler = SQLConnectionHandler()
         obs = SampleTemplate._clean_validate_template(self.metadata, 2,
                                                       SAMPLE_TEMPLATE_COLUMNS)
         metadata_dict = {

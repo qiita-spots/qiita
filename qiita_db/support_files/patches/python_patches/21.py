@@ -8,7 +8,6 @@
 # schema changes) are done in a single transaction block
 
 from qiita_db.sql_connection import SQLConnectionHandler
-from qiita_db.metadata_template import SampleTemplate, PrepTemplate
 
 conn_handler = SQLConnectionHandler()
 
