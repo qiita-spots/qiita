@@ -9,7 +9,7 @@ ws.onclose = function(evt) { $('#ws-error').html("<b>Server communication error.
 
 function remove_proc_data(pid, sid) {
 	if(confirm('Are you sure you want to remove all samples for this processed data?')) { 
-		ws.send(JSON.stringify({'proc_data': pid}));
+		ws.send(JSON.stringify({'proc_data': pid, 'samples': []}));
 		$('#proc' + pid).remove();
 		$('#proc' + pid + '-samples').remove();
 		// remove study if all proc data removed
@@ -66,17 +66,7 @@ function remove_sample(sid, pid, sample) {
 		{% end %}
 		</table>
 		</td></tr>
-	{% end %}
-	</table>
-	</div>
-</div>
-{% end %}
-
-<button type="button" class="btn btn-primary btn-lg" data-toggle="modal" data-target="#create-analysis-modal-view">
-  Create Analysis
-</button>
-
-{% for pid in proc_datas%}
+		{% for pid in proc_datas%}
 <!-- modal view to enter analysis information -->
     <div class="modal fade" id="proc{{pid}}-settings-modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
       <div class="modal-dialog">
@@ -104,6 +94,18 @@ function remove_sample(sid, pid, sample) {
       </div>
     </div>
   {% end %}
+	{% end %}
+	</table>
+	</div>
+</div>
+{% end %}
+
+{% if sel_data %}
+<button type="button" class="btn btn-success btn-lg" data-toggle="modal" data-target="#create-analysis-modal-view">
+  Create Analysis
+</button>
+{% end %}
+
 <!-- modal view to enter analysis information -->
     <div class="modal fade" id="create-analysis-modal-view" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
       <div class="modal-dialog">

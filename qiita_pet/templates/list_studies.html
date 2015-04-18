@@ -11,13 +11,8 @@ td.details-control {
 
 <script type="text/javascript">
 var current_study;
-var ws = new WebSocket('ws://' + window.location.host + '/analysis/selected/socket/');
-ws.onmessage = function(evt) { bootstrapAlert(evt.data, "success", 1500); };
-ws.onerror = function(evt) { $('#search-error').html("<b>Server communication error. Sample selection will not be recorded. Please try again later.</b>"); };
-ws.onclose = function(evt) { $('#search-error').html("<b>Server communication error. Sample selection will not be recorded. Please try again later.</b>"); };
-
 var ajaxURL = "/study/search/?&user={{current_user.id}}&sEcho=" + Math.floor(Math.random()*1001);
-var ws = new WebSocket('ws://' + window.location.host + '/analysis/select-socket/');
+var ws = init_websocket(window.location.host + '/study/list/socket/');
 ws.onmessage = function(evt) { bootstrapAlert(evt.data, "success", 1500); };
 ws.onerror = function(evt) { $('#search-error').html("<b>Server communication error. Sample selection will not be recorded. Please try again later.</b>"); };
 ws.onclose = function(evt) { $('#search-error').html("<b>Server communication error. Sample selection will not be recorded. Please try again later.</b>"); };

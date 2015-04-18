@@ -82,10 +82,10 @@ class SelectedSocketHandler(WebSocketHandler, BaseHandler):
         # parse into JSON
         msginfo = loads(msg)
         default = Analysis(self.current_user.default_analysis)
-        if 'samples' not in msginfo:
-            default.remove_samples([msginfo['proc_data']])
-        else:
+        if msginfo['samples']:
             default.remove_samples([msginfo['proc_data']], msginfo['samples'])
+        else:
+            default.remove_samples([msginfo['proc_data']])
 
         self.write_message('true')
 
