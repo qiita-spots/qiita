@@ -360,13 +360,13 @@ class Study(QiitaObject):
         Raises
         ------
         QiitaDBError
-            If the sample_(_id) table exists == a sample template exists
+            If the sample_(id_) table exists means a sample template exists
         """
         cls._check_subclass()
 
         conn_handler = SQLConnectionHandler()
         if exists_table('sample_%d' % id_, conn_handler):
-            raise QiitaDBError('Study "%s" can not be erased because it has a '
+            raise QiitaDBError('Study "%s" cannot be erased because it has a '
                                'sample template' % cls(id_).title)
 
         queue = "delete_study_%d" % id_
