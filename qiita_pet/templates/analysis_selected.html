@@ -1,7 +1,7 @@
 {% extends sitebase.html %}
 {% block head %}
 <script type="text/javascript">
-var ws = new WebSocket('ws://' + window.location.host + '/analysis/selected/socket/');
+var ws = init_websocket(window.location.host + '/analysis/selected/socket/');
 ws.onmessage = function(evt) { if(evt.data != 'true') {ws.close();} };
 ws.onerror = function(evt) { $('#ws-error').html("<b>Server communication error. Sample removal will not be recorded. Please try again later.</b>"); };
 ws.onclose = function(evt) { $('#ws-error').html("<b>Server communication error. Sample removal will not be recorded. Please try again later.</b>"); };
