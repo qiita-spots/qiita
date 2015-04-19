@@ -12,7 +12,8 @@ from qiita_db.user import User
 from qiita_db.data import RawData
 from qiita_db.util import convert_to_id
 from qiita_db.exceptions import (
-    QiitaDBColumnError, QiitaDBStatusError, QiitaDBError)
+    QiitaDBColumnError, QiitaDBStatusError, QiitaDBError,
+    QiitaDBUnknownIDError)
 
 # -----------------------------------------------------------------------------
 # Copyright (c) 2014--, The Qiita Development Team.
@@ -447,6 +448,9 @@ class TestStudy(TestCase):
 
         with self.assertRaises(QiitaDBError):
             Study.delete(1)
+
+        with self.assertRaises(QiitaDBUnknownIDError):
+            Study.delete(41)
 
     def test_retrieve_title(self):
         self.assertEqual(self.study.title, 'Identification of the Microbiomes'

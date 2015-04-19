@@ -364,6 +364,9 @@ class Study(QiitaObject):
         """
         cls._check_subclass()
 
+        # checking that the id_ exists
+        cls(id_)
+
         conn_handler = SQLConnectionHandler()
         if exists_table('sample_%d' % id_, conn_handler):
             raise QiitaDBError('Study "%s" cannot be erased because it has a '
