@@ -29,6 +29,8 @@ from qiita_db.exceptions import (QiitaDBUnknownIDError, QiitaDBColumnError,
                                  QiitaDBDuplicateHeaderError, QiitaDBError)
 from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_pet.handlers.util import check_access
+from qiita_pet.handlers.study_handlers.listing_handlers import (
+    ListStudiesHandler)
 
 html_error_message = "<b>An error occurred %s %s</b></br>%s"
 
@@ -654,10 +656,18 @@ class StudyDescriptionHandler(BaseHandler):
             is done and it fails
         """
         study_id = study.id
+        study_title = study.title
 
         try:
             Study.delete(study_id)
-            self.redirect('/study/list/')
+
+            # redirecting to list but also passing messages
+            # we need to change the request.method to GET
+            self.request.method = 'GET'
+            ListStudiesHandler(self.application, self.request)._execute(
+                [t(self.request) for t in self.application.transforms],
+                message=('Study "%s" has been deleted' % study_title),
+                msg_level='success')
         except Exception as e:
             msg = "Couldn't remove study %d: %s" % (study_id, str(e))
             msg_level = "danger"
