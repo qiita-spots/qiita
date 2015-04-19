@@ -793,17 +793,14 @@ class MetadataTemplate(QiitaObject):
         """
         # Check if we are adding new samples
         sample_ids = md_template.index.tolist()
-        sql = """SELECT sample_id FROM qiita.{0}
-                 WHERE {1}=%s""".format(self._table, self._id_column)
-        curr_samples = set(
-            s[0] for s in conn_handler.execute_fetchall(sql, (self._id,)))
+        curr_samples = set(self.keys())
         existing_samples = curr_samples.intersection(sample_ids)
         new_samples = set(sample_ids).difference(existing_samples)
 
         # Check if we are adding new columns
         table_name = self._table_name(self._id)
         # Get the required columns from the DB
-        db_cols = sorted(get_table_cols(self._table, conn_handler))
+        db_cols = get_table_cols(self._table, conn_handler)
         # Remove the sample_id and _id_column columns
         db_cols.remove('sample_id')
         db_cols.remove(self._id_column)
@@ -837,10 +834,9 @@ class MetadataTemplate(QiitaObject):
 
             if existing_samples:
                 warnings.warn(
-                    "The new columns '%s' have been added to the existing "
-                    "samples '%s'. Any other value of these samples have been "
-                    "modified." % (", ".join(new_cols),
-                                   ", ".join(existing_samples)),
+                    "No values have been modified for samples '%s'. However, "
+                    "the following columns have been added to them: '%s'"
+                    % (", ".join(existing_samples), ", ".join(new_cols)),
                     QiitaDBWarning)
                 # The values for the new columns are the only ones that get
                 # added to the database. None of the existing values will be
