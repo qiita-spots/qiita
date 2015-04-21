@@ -7,23 +7,19 @@
 # -----------------------------------------------------------------------------
 
 from __future__ import division
-from future.builtins import zip
 from os.path import join
 from time import strftime
 
 import pandas as pd
-import warnings
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_db.exceptions import (QiitaDBDuplicateError, QiitaDBError,
-                                 QiitaDBWarning, QiitaDBUnknownIDError)
+                                 QiitaDBUnknownIDError)
 from qiita_db.sql_connection import SQLConnectionHandler
-from qiita_db.util import (get_table_cols, get_required_sample_info_status,
-                           get_mountpoint, scrub_data)
+from qiita_db.util import get_required_sample_info_status, get_mountpoint
 from qiita_db.study import Study
 from qiita_db.data import RawData
 from .base_metadata_template import BaseSample, MetadataTemplate
-from .util import as_python_types, get_datatypes
 from .prep_template import PrepTemplate
 
 
@@ -242,76 +238,11 @@ class SampleTemplate(MetadataTemplate):
         conn_handler.create_queue(queue_name)
 
         md_template = self._clean_validate_template(md_template, self.study_id,
+                                                    self.study_id,
                                                     conn_handler)
 
-        # Raise warning and filter out existing samples
-        sample_ids = md_template.index.tolist()
-        sql = ("SELECT sample_id FROM qiita.required_sample_info WHERE "
-               "study_id = %d" % self.id)
-        curr_samples = set(s[0] for s in conn_handler.execute_fetchall(sql))
-        existing_samples = curr_samples.intersection(sample_ids)
-        if existing_samples:
-            warnings.warn(
-                "The following samples already exist and will be ignored: "
-                "%s" % ", ".join(curr_samples.intersection(
-                                 sorted(existing_samples))), QiitaDBWarning)
-            md_template.drop(existing_samples, inplace=True)
-
-        # Get some useful information from the metadata template
-        sample_ids = md_template.index.tolist()
-        num_samples = len(sample_ids)
-        headers = list(md_template.keys())
-
-        # Get the required columns from the DB
-        db_cols = get_table_cols(self._table, conn_handler)
-        # Remove the sample_id and study_id columns
-        db_cols.remove('sample_id')
-        db_cols.remove(self._id_column)
-
-        # Insert values on required columns
-        values = as_python_types(md_template, db_cols)
-        values.insert(0, sample_ids)
-        values.insert(0, [self.study_id] * num_samples)
-        values = [v for v in zip(*values)]
-        conn_handler.add_to_queue(
-            queue_name,
-            "INSERT INTO qiita.{0} ({1}, sample_id, {2}) "
-            "VALUES (%s, %s, {3})".format(self._table, self._id_column,
-                                          ', '.join(db_cols),
-                                          ', '.join(['%s'] * len(db_cols))),
-            values, many=True)
-
-        # Add missing columns to the sample template dynamic table
-        headers = list(set(headers).difference(db_cols))
-        datatypes = get_datatypes(md_template.ix[:, headers])
-        table_name = self._table_name(self.study_id)
-        new_cols = set(md_template.columns).difference(
-            set(self.metadata_headers()))
-        dtypes_dict = dict(zip(md_template.ix[:, headers], datatypes))
-        for category in new_cols:
-            # Insert row on *_columns table
-            conn_handler.add_to_queue(
-                queue_name,
-                "INSERT INTO qiita.{0} ({1}, column_name, column_type) "
-                "VALUES (%s, %s, %s)".format(self._column_table,
-                                             self._id_column),
-                (self.study_id, category, dtypes_dict[category]))
-            # Insert row on dynamic table
-            conn_handler.add_to_queue(
-                queue_name,
-                "ALTER TABLE qiita.{0} ADD COLUMN {1} {2}".format(
-                    table_name, scrub_data(category), dtypes_dict[category]))
-
-        # Insert values on custom table
-        values = as_python_types(md_template, headers)
-        values.insert(0, sample_ids)
-        values = [v for v in zip(*values)]
-        conn_handler.add_to_queue(
-            queue_name,
-            "INSERT INTO qiita.{0} (sample_id, {1}) "
-            "VALUES (%s, {2})".format(table_name, ", ".join(headers),
-                                      ', '.join(["%s"] * len(headers))),
-            values, many=True)
+        self._add_common_extend_steps_to_queue(md_template, conn_handler,
+                                               queue_name)
         conn_handler.execute_queue(queue_name)
 
         self.generate_files()

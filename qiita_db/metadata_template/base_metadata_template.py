@@ -37,6 +37,7 @@ Methods
 
 from __future__ import division
 from future.utils import viewitems, viewvalues
+from future.builtins import zip
 from os.path import join
 from functools import partial
 from collections import defaultdict
@@ -44,17 +45,17 @@ from copy import deepcopy
 
 import pandas as pd
 from skbio.util import find_duplicates
+import warnings
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 
 from qiita_db.exceptions import (QiitaDBUnknownIDError, QiitaDBColumnError,
-                                 QiitaDBNotImplementedError,
-                                 QiitaDBExecutionError,
+                                 QiitaDBNotImplementedError, QiitaDBError,
+                                 QiitaDBExecutionError, QiitaDBWarning,
                                  QiitaDBDuplicateHeaderError)
 from qiita_db.base import QiitaObject
 from qiita_db.sql_connection import SQLConnectionHandler
-from qiita_db.util import (exists_table, get_table_cols,
-                           convert_to_id,
+from qiita_db.util import (exists_table, get_table_cols, convert_to_id,
                            get_mountpoint, insert_filepaths)
 from qiita_db.logger import LogEntry
 from .util import (as_python_types, get_datatypes, get_invalid_sample_names,
@@ -772,6 +773,126 @@ class MetadataTemplate(QiitaObject):
                                       ', '.join(["%s"] * len(headers))),
             values, many=True)
 
+    def _add_common_extend_steps_to_queue(self, md_template, conn_handler,
+                                          queue_name):
+        r"""Adds the common extend steps to the queue in conn_handler
+
+        Parameters
+        ----------
+        md_template : DataFrame
+            The metadata template file contents indexed by sample ids
+        conn_handler : SQLConnectionHandler
+            The connection handler object connected to the DB
+        queue_name : str
+            The queue where the SQL statements will be added
+
+        Raises
+        ------
+        QiitaDBError
+            If no new samples or new columns are present in `md_template`
+        """
+        # Check if we are adding new samples
+        sample_ids = md_template.index.tolist()
+        curr_samples = set(self.keys())
+        existing_samples = curr_samples.intersection(sample_ids)
+        new_samples = set(sample_ids).difference(existing_samples)
+
+        # Check if we are adding new columns, by getting all the columns from
+        # the database
+        table_name = self._table_name(self._id)
+        db_cols = get_table_cols(self._table, conn_handler)
+        db_cols.remove('sample_id')
+        db_cols.remove(self._id_column)
+        curr_cols = set(
+            get_table_cols(table_name, conn_handler)).union(db_cols)
+        headers = md_template.keys().tolist()
+        existing_cols = curr_cols.intersection(headers)
+        new_cols = set(headers).difference(existing_cols)
+
+        if not new_cols and not new_samples:
+            raise QiitaDBError(
+                "No new samples or new columns found in the template. If you "
+                "want to update existing values, you should use the 'update' "
+                "functionality.")
+
+        if new_cols:
+            # If we are adding new columns, add them first (simplifies code)
+            # Sorting the new columns to enforce an order
+            new_cols = sorted(new_cols)
+            datatypes = get_datatypes(md_template.ix[:, new_cols])
+            sql_cols = """INSERT INTO qiita.{0} ({1}, column_name, column_type)
+                          VALUES (%s, %s, %s)""".format(self._column_table,
+                                                        self._id_column)
+            sql_alter = """ALTER TABLE qiita.{0} ADD COLUMN {1} {2}"""
+            for category, dtype in zip(new_cols, datatypes):
+                conn_handler.add_to_queue(
+                    queue_name, sql_cols, (self._id, category, dtype))
+                conn_handler.add_to_queue(
+                    queue_name, sql_alter.format(table_name, category, dtype))
+
+            if existing_samples:
+                warnings.warn(
+                    "No values have been modified for samples '%s'. However, "
+                    "the following columns have been added to them: '%s'"
+                    % (", ".join(existing_samples), ", ".join(new_cols)),
+                    QiitaDBWarning)
+                # The values for the new columns are the only ones that get
+                # added to the database. None of the existing values will be
+                # modified (see update for that functionality)
+                min_md_template = md_template[new_cols].loc[existing_samples]
+                values = as_python_types(min_md_template, new_cols)
+                values.append(existing_samples)
+                # psycopg2 requires a list of tuples, in which each tuple is a
+                # set of values to use in the string formatting of the query.
+                # We have all the values in different lists (but in the same
+                # order) so use zip to create the list of tuples that psycopg2
+                # requires.
+                values = [v for v in zip(*values)]
+                set_str = ["{0} = %s".format(col) for col in new_cols]
+                sql = """UPDATE qiita.{0}
+                         SET {1}
+                         WHERE sample_id=%s""".format(table_name,
+                                                      ",".join(set_str))
+                conn_handler.add_to_queue(queue_name, sql, values, many=True)
+        elif existing_samples:
+            warnings.warn(
+                "The following samples already exist in the template and "
+                "will be ignored: %s" % ", ".join(existing_samples),
+                QiitaDBWarning)
+
+        if new_samples:
+            num_samples = len(new_samples)
+            new_samples = sorted(new_samples)
+            # At this point we only want the information from the new samples
+            md_template = md_template.loc[new_samples]
+
+            # Insert values on required columns
+            values = as_python_types(md_template, db_cols)
+            values.insert(0, new_samples)
+            values.insert(0, [self._id] * num_samples)
+            # psycopg2 requires a list of tuples, in which each tuple is a
+            # tuple of values to use in the string formatting of the query. We
+            # have all the values in different lists (but in the same order) so
+            # use zip to create the list of tuples that psycopg2 requires.
+            values = [v for v in zip(*values)]
+            sql = """INSERT INTO qiita.{0} ({1}, sample_id, {2})
+                     VALUES (%s, %s, {3})""".format(
+                self._table, self._id_column, ', '.join(db_cols),
+                ', '.join(['%s'] * len(db_cols)))
+            conn_handler.add_to_queue(queue_name, sql, values, many=True)
+
+            headers = sorted(set(headers).difference(db_cols))
+
+            # Insert values on custom table
+            values = as_python_types(md_template, headers)
+            values.insert(0, new_samples)
+            values = [v for v in zip(*values)]
+            sql = """INSERT INTO qiita.{0} (sample_id, {1})
+                     VALUES (%s, {2})""".format(
+                table_name, ", ".join(headers),
+                ', '.join(["%s"] * len(headers)))
+            conn_handler.add_to_queue(queue_name, sql, values, many=True)
+
     @classmethod
     def exists(cls, obj_id):
         r"""Checks if already exists a MetadataTemplate for the provided object
@@ -1193,7 +1314,7 @@ class MetadataTemplate(QiitaObject):
         """
         if not set(self.keys()).issuperset(samples_and_values):
             missing = set(self.keys()) - set(samples_and_values)
-            table_name = self._table_name(self.study_id)
+            table_name = self._table_name(self._id)
             raise QiitaDBUnknownIDError(missing, table_name)
 
         conn_handler = SQLConnectionHandler()
