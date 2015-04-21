@@ -396,6 +396,15 @@ class Study(QiitaObject):
 
         conn_handler.add_to_queue(
             queue,
+            "DELETE FROM qiita.study_users WHERE study_id = %s", (id_, ))
+
+        conn_handler.add_to_queue(
+            queue,
+            "DELETE FROM qiita.investigation_study WHERE study_id = "
+            "%s", (id_, ))
+
+        conn_handler.add_to_queue(
+            queue,
             "DELETE FROM qiita.study WHERE study_id = %s", (id_, ))
 
         conn_handler.execute_queue(queue)
