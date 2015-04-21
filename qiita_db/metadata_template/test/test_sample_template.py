@@ -28,7 +28,7 @@ from qiita_db.exceptions import (QiitaDBDuplicateError, QiitaDBUnknownIDError,
 from qiita_db.sql_connection import SQLConnectionHandler
 from qiita_db.study import Study, StudyPerson
 from qiita_db.user import User
-from qiita_db.util import exists_table, get_table_cols, get_count
+from qiita_db.util import exists_table, get_count
 from qiita_db.metadata_template.sample_template import SampleTemplate, Sample
 from qiita_db.metadata_template.prep_template import PrepTemplate, PrepSample
 
@@ -1382,108 +1382,428 @@ class TestSampleTemplateReadWrite(BaseTestSampleTemplate):
         st = SampleTemplate.create(self.metadata, self.new_study)
         self.assertEqual(st.get_filepaths()[0][0], exp_id)
 
-    def test_extend(self):
-        # add new column and delete one that exists
-        self.metadata['NEWCOL'] = pd.Series(['val1', 'val2', 'val3'],
-                                            index=self.metadata.index)
-        self.tester.extend(self.metadata)
+    def test_extend_error(self):
+        """extend raises an error if no new columns/samples are added"""
+        st = SampleTemplate.create(self.metadata, self.new_study)
+        with self.assertRaises(QiitaDBError):
+            st.extend(self.metadata)
 
-        # test samples were appended successfully
-        sql = ("SELECT sample_id FROM qiita.required_sample_info WHERE "
-               "study_id = 1")
-        obs = self.conn_handler.execute_fetchall(sql)
-        exp = [['1.SKB8.640193'], ['1.SKD8.640184'], ['1.SKB7.640196'],
-               ['1.SKM9.640192'], ['1.SKM4.640180'], ['1.SKM5.640177'],
-               ['1.SKB5.640181'], ['1.SKD6.640190'], ['1.SKB2.640194'],
-               ['1.SKD2.640178'], ['1.SKM7.640188'], ['1.SKB1.640202'],
-               ['1.SKD1.640179'], ['1.SKD3.640198'], ['1.SKM8.640201'],
-               ['1.SKM2.640199'], ['1.SKB9.640200'], ['1.SKD5.640186'],
-               ['1.SKM3.640197'], ['1.SKD9.640182'], ['1.SKB4.640189'],
-               ['1.SKD7.640191'], ['1.SKM6.640187'], ['1.SKD4.640185'],
-               ['1.SKB3.640195'], ['1.SKB6.640176'], ['1.SKM1.640183'],
-               ['1.Sample1'], ['1.Sample2'], ['1.Sample3']]
-        self.assertEqual(obs, exp)
+    def test_extend_add_samples(self):
+        """extend correctly works adding new samples"""
+        st = SampleTemplate.create(self.metadata, self.new_study)
 
-        sql = "SELECT sample_id FROM qiita.sample_1"
-        obs = self.conn_handler.execute_fetchall(sql)
-        exp = [['1.SKM7.640188'], ['1.SKD9.640182'], ['1.SKM8.640201'],
-               ['1.SKB8.640193'], ['1.SKD2.640178'], ['1.SKM3.640197'],
-               ['1.SKM4.640180'], ['1.SKB9.640200'], ['1.SKB4.640189'],
-               ['1.SKB5.640181'], ['1.SKB6.640176'], ['1.SKM2.640199'],
-               ['1.SKM5.640177'], ['1.SKB1.640202'], ['1.SKD8.640184'],
-               ['1.SKD4.640185'], ['1.SKB3.640195'], ['1.SKM1.640183'],
-               ['1.SKB7.640196'], ['1.SKD3.640198'], ['1.SKD7.640191'],
-               ['1.SKD6.640190'], ['1.SKB2.640194'], ['1.SKM9.640192'],
-               ['1.SKM6.640187'], ['1.SKD5.640186'], ['1.SKD1.640179'],
-               ['1.Sample1'], ['1.Sample2'], ['1.Sample3']]
-        self.assertEqual(obs, exp)
+        md_dict = {
+            'Sample4': {'physical_location': 'location1',
+                        'has_physical_specimen': True,
+                        'has_extracted_data': True,
+                        'sample_type': 'type1',
+                        'required_sample_info_status': 'received',
+                        'collection_timestamp':
+                        datetime(2014, 5, 29, 12, 24, 51),
+                        'host_subject_id': 'NotIdentified',
+                        'Description': 'Test Sample 4',
+                        'str_column': 'Value for sample 4',
+                        'int_column': 4,
+                        'latitude': 42.42,
+                        'longitude': 41.41},
+            'Sample5': {'physical_location': 'location1',
+                        'has_physical_specimen': True,
+                        'has_extracted_data': True,
+                        'sample_type': 'type1',
+                        'required_sample_info_status': 'received',
+                        'collection_timestamp':
+                        datetime(2014, 5, 29, 12, 24, 51),
+                        'host_subject_id': 'NotIdentified',
+                        'Description': 'Test Sample 5',
+                        'str_column': 'Value for sample 5',
+                        'int_column': 5,
+                        'latitude': 42.42,
+                        'longitude': 41.41}}
+        md_ext = pd.DataFrame.from_dict(md_dict, orient='index')
 
-        # test new columns were added to *_cols table and dynamic table
-        obs = get_table_cols('sample_1', self.conn_handler)
-        exp = ['sample_id', 'season_environment', 'assigned_from_geo',
-               'texture', 'taxon_id', 'depth', 'host_taxid', 'common_name',
-               'water_content_soil', 'elevation', 'temp', 'tot_nitro',
-               'samp_salinity', 'altitude', 'env_biome', 'country', 'ph',
-               'anonymized_name', 'tot_org_carb', 'description_duplicate',
-               'env_feature', 'newcol', 'str_column', 'int_column']
+        st.extend(md_ext)
+
+        # Test samples were appended successfully to the required sample info
+        # table
+        study_id = self.new_study.id
+        sql = """SELECT *
+                 FROM qiita.required_sample_info
+                 WHERE study_id=%s"""
+        obs = [dict(o)
+               for o in self.conn_handler.execute_fetchall(sql, (study_id,))]
+        exp = [{'sample_id': '2.Sample1',
+                'study_id': 2,
+                'physical_location': 'location1',
+                'has_physical_specimen': True,
+                'has_extracted_data': True,
+                'sample_type': 'type1',
+                'required_sample_info_status_id': 1,
+                'collection_timestamp': datetime(2014, 5, 29, 12, 24, 51),
+                'host_subject_id': 'NotIdentified',
+                'description': 'Test Sample 1',
+                'latitude': 42.42,
+                'longitude': 41.41},
+               {'sample_id': '2.Sample2',
+                'study_id': 2,
+                'physical_location': 'location1',
+                'has_physical_specimen': True,
+                'has_extracted_data': True,
+                'sample_type': 'type1',
+                'required_sample_info_status_id': 1,
+                'collection_timestamp': datetime(2014, 5, 29, 12, 24, 51),
+                'host_subject_id': 'NotIdentified',
+                'description': 'Test Sample 2',
+                'latitude': 4.2,
+                'longitude': 1.1},
+               {'sample_id': '2.Sample3',
+                'study_id': 2,
+                'physical_location': 'location1',
+                'has_physical_specimen': True,
+                'has_extracted_data': True,
+                'sample_type': 'type1',
+                'required_sample_info_status_id': 1,
+                'collection_timestamp': datetime(2014, 5, 29, 12, 24, 51),
+                'host_subject_id': 'NotIdentified',
+                'description': 'Test Sample 3',
+                'latitude': 4.8,
+                'longitude': 4.41},
+               {'sample_id': '2.Sample4',
+                'study_id': 2,
+                'physical_location': 'location1',
+                'has_physical_specimen': True,
+                'has_extracted_data': True,
+                'sample_type': 'type1',
+                'required_sample_info_status_id': 1,
+                'collection_timestamp': datetime(2014, 5, 29, 12, 24, 51),
+                'host_subject_id': 'NotIdentified',
+                'description': 'Test Sample 4',
+                'latitude': 42.42,
+                'longitude': 41.41},
+               {'sample_id': '2.Sample5',
+                'study_id': 2,
+                'physical_location': 'location1',
+                'has_physical_specimen': True,
+                'has_extracted_data': True,
+                'sample_type': 'type1',
+                'required_sample_info_status_id': 1,
+                'collection_timestamp': datetime(2014, 5, 29, 12, 24, 51),
+                'host_subject_id': 'NotIdentified',
+                'description': 'Test Sample 5',
+                'latitude': 42.42,
+                'longitude': 41.41}]
         self.assertItemsEqual(obs, exp)
 
-        sql = "SELECT * FROM qiita.study_sample_columns WHERE study_id = 1"
-        obs = self.conn_handler.execute_fetchall(sql)
-        exp = [[1, 'str_column', 'varchar'], [1, 'newcol', 'varchar'],
-               [1, 'ENV_FEATURE', 'varchar'],
-               [1, 'Description_duplicate', 'varchar'],
-               [1, 'TOT_ORG_CARB', 'float8'],
-               [1, 'ANONYMIZED_NAME', 'varchar'], [1, 'PH', 'float8'],
-               [1, 'COUNTRY', 'varchar'], [1, 'ENV_BIOME', 'varchar'],
-               [1, 'ALTITUDE', 'float8'], [1, 'SAMP_SALINITY', 'float8'],
-               [1, 'TOT_NITRO', 'float8'], [1, 'TEMP', 'float8'],
-               [1, 'ELEVATION', 'float8'],
-               [1, 'WATER_CONTENT_SOIL', 'float8'],
-               [1, 'COMMON_NAME', 'varchar'], [1, 'HOST_TAXID', 'varchar'],
-               [1, 'DEPTH', 'float8'], [1, 'TAXON_ID', 'varchar'],
-               [1, 'TEXTURE', 'varchar'],
-               [1, 'ASSIGNED_FROM_GEO', 'varchar'],
-               [1, 'SEASON_ENVIRONMENT', 'varchar'],
-               [1, 'sample_id', 'varchar'],
-               [1L, 'int_column', 'integer']]
+        # Test samples were appended successfully to the dynamic table
+        sql = "SELECT * FROM qiita.sample_{0}".format(study_id)
+        obs = [dict(o) for o in self.conn_handler.execute_fetchall(sql)]
+        exp = [{'sample_id': '2.Sample1',
+                'int_column': 1,
+                'str_column': 'Value for sample 1'},
+               {'sample_id': '2.Sample2',
+                'int_column': 2,
+                'str_column': 'Value for sample 2'},
+               {'sample_id': '2.Sample3',
+                'int_column': 3,
+                'str_column': 'Value for sample 3'},
+               {'sample_id': '2.Sample4',
+                'int_column': 4,
+                'str_column': 'Value for sample 4'},
+               {'sample_id': '2.Sample5',
+                'int_column': 5,
+                'str_column': 'Value for sample 5'}]
         self.assertItemsEqual(obs, exp)
 
-    def test_extend_duplicated_samples(self):
-        # First add new samples to template
-        self.tester.extend(self.metadata)
-        self.metadata_dict['Sample5'] = {
-            'physical_location': 'location5',
+    def test_extend_add_duplicate_samples(self):
+        """extend correctly works adding new samples and warns for duplicates
+        """
+        st = SampleTemplate.create(self.metadata, self.new_study)
+
+        self.metadata_dict['Sample4'] = {
+            'physical_location': 'location1',
             'has_physical_specimen': True,
             'has_extracted_data': True,
-            'sample_type': 'type5',
+            'sample_type': 'type1',
             'required_sample_info_status': 'received',
             'collection_timestamp': datetime(2014, 5, 29, 12, 24, 51),
             'host_subject_id': 'NotIdentified',
-            'Description': 'Test Sample 5',
-            'str_column': 'Value for sample 5',
-            'int_column': 5,
-            'latitude': 45.45,
-            'longitude': 44.44}
-        new_metadata = pd.DataFrame.from_dict(self.metadata_dict,
-                                              orient='index')
-        # Make sure adding duplicate samples raises warning
-        npt.assert_warns(QiitaDBWarning, self.tester.extend, new_metadata)
+            'Description': 'Test Sample 4',
+            'str_column': 'Value for sample 4',
+            'int_column': 4,
+            'latitude': 42.42,
+            'longitude': 41.41}
 
-        # Make sure unknown sample still added to the study
-        sql = "SELECT sample_id FROM qiita.sample_1"
-        obs = self.conn_handler.execute_fetchall(sql)
-        exp = [['1.SKM7.640188'], ['1.SKD9.640182'], ['1.SKM8.640201'],
-               ['1.SKB8.640193'], ['1.SKD2.640178'], ['1.SKM3.640197'],
-               ['1.SKM4.640180'], ['1.SKB9.640200'], ['1.SKB4.640189'],
-               ['1.SKB5.640181'], ['1.SKB6.640176'], ['1.SKM2.640199'],
-               ['1.SKM5.640177'], ['1.SKB1.640202'], ['1.SKD8.640184'],
-               ['1.SKD4.640185'], ['1.SKB3.640195'], ['1.SKM1.640183'],
-               ['1.SKB7.640196'], ['1.SKD3.640198'], ['1.SKD7.640191'],
-               ['1.SKD6.640190'], ['1.SKB2.640194'], ['1.SKM9.640192'],
-               ['1.SKM6.640187'], ['1.SKD5.640186'], ['1.SKD1.640179'],
-               ['1.Sample1'], ['1.Sample2'], ['1.Sample3'], ['1.Sample5']]
-        self.assertEqual(obs, exp)
+        # Change a couple of values on the existent samples to test that
+        # they remain unchanged
+        self.metadata_dict['Sample1']['Description'] = 'Changed'
+        self.metadata_dict['Sample2']['str_column'] = 'Changed dynamic'
+
+        md_ext = pd.DataFrame.from_dict(self.metadata_dict, orient='index')
+        # Make sure adding duplicate samples raises warning
+        npt.assert_warns(QiitaDBWarning, st.extend, md_ext)
+
+        # Make sure the new sample has been added and the values for the
+        # existent samples did not change
+        study_id = self.new_study.id
+        sql = """SELECT *
+                 FROM qiita.required_sample_info
+                 WHERE study_id=%s"""
+        obs = [dict(o)
+               for o in self.conn_handler.execute_fetchall(sql, (study_id,))]
+        exp = [{'sample_id': '%s.Sample1' % study_id,
+                'study_id': 2,
+                'physical_location': 'location1',
+                'has_physical_specimen': True,
+                'has_extracted_data': True,
+                'sample_type': 'type1',
+                'required_sample_info_status_id': 1,
+                'collection_timestamp': datetime(2014, 5, 29, 12, 24, 51),
+                'host_subject_id': 'NotIdentified',
+                'description': 'Test Sample 1',
+                'latitude': 42.42,
+                'longitude': 41.41},
+               {'sample_id': '%s.Sample2' % study_id,
+                'study_id': 2,
+                'physical_location': 'location1',
+                'has_physical_specimen': True,
+                'has_extracted_data': True,
+                'sample_type': 'type1',
+                'required_sample_info_status_id': 1,
+                'collection_timestamp': datetime(2014, 5, 29, 12, 24, 51),
+                'host_subject_id': 'NotIdentified',
+                'description': 'Test Sample 2',
+                'latitude': 4.2,
+                'longitude': 1.1},
+               {'sample_id': '%s.Sample3' % study_id,
+                'study_id': 2,
+                'physical_location': 'location1',
+                'has_physical_specimen': True,
+                'has_extracted_data': True,
+                'sample_type': 'type1',
+                'required_sample_info_status_id': 1,
+                'collection_timestamp': datetime(2014, 5, 29, 12, 24, 51),
+                'host_subject_id': 'NotIdentified',
+                'description': 'Test Sample 3',
+                'latitude': 4.8,
+                'longitude': 4.41},
+               {'sample_id': '%s.Sample4' % study_id,
+                'study_id': 2,
+                'physical_location': 'location1',
+                'has_physical_specimen': True,
+                'has_extracted_data': True,
+                'sample_type': 'type1',
+                'required_sample_info_status_id': 1,
+                'collection_timestamp': datetime(2014, 5, 29, 12, 24, 51),
+                'host_subject_id': 'NotIdentified',
+                'description': 'Test Sample 4',
+                'latitude': 42.42,
+                'longitude': 41.41}]
+        self.assertItemsEqual(obs, exp)
+
+        # Test samples were appended successfully to the dynamic table
+        sql = "SELECT * FROM qiita.sample_{0}".format(study_id)
+        obs = [dict(o) for o in self.conn_handler.execute_fetchall(sql)]
+        exp = [{'sample_id': '%s.Sample1' % study_id,
+                'int_column': 1,
+                'str_column': 'Value for sample 1'},
+               {'sample_id': '%s.Sample2' % study_id,
+                'int_column': 2,
+                'str_column': 'Value for sample 2'},
+               {'sample_id': '%s.Sample3' % study_id,
+                'int_column': 3,
+                'str_column': 'Value for sample 3'},
+               {'sample_id': '%s.Sample4' % study_id,
+                'int_column': 4,
+                'str_column': 'Value for sample 4'}]
+        self.assertItemsEqual(obs, exp)
+
+    def test_extend_new_columns(self):
+        """extend correctly adds a new column"""
+        st = SampleTemplate.create(self.metadata, self.new_study)
+
+        self.metadata['NEWCOL'] = pd.Series(['val1', 'val2', 'val3'],
+                                            index=self.metadata.index)
+        self.metadata['NEW_COL'] = pd.Series(['val_1', 'val_2', 'val_3'],
+                                             index=self.metadata.index)
+
+        # Change some values to make sure that they do not change on extend
+        self.metadata_dict['Sample1']['Description'] = 'Changed'
+        self.metadata_dict['Sample2']['str_column'] = 'Changed dynamic'
+
+        # Make sure it raises a warning indicating that the new columns will
+        # be added for the existing samples
+        npt.assert_warns(QiitaDBWarning, st.extend, self.metadata)
+
+        study_id = self.new_study.id
+        sql = "SELECT * FROM qiita.sample_{0}".format(study_id)
+        obs = [dict(o) for o in self.conn_handler.execute_fetchall(sql)]
+        exp = [{'sample_id': '%s.Sample1' % study_id,
+                'int_column': 1,
+                'str_column': 'Value for sample 1',
+                'newcol': 'val1',
+                'new_col': 'val_1'},
+               {'sample_id': '%s.Sample2' % study_id,
+                'int_column': 2,
+                'str_column': 'Value for sample 2',
+                'newcol': 'val2',
+                'new_col': 'val_2'},
+               {'sample_id': '%s.Sample3' % study_id,
+                'int_column': 3,
+                'str_column': 'Value for sample 3',
+                'newcol': 'val3',
+                'new_col': 'val_3'}]
+        self.assertItemsEqual(obs, exp)
+
+        # Make sure that any of the other values changed
+        sql = """SELECT *
+                 FROM qiita.required_sample_info
+                 WHERE study_id=%s"""
+        obs = [dict(o)
+               for o in self.conn_handler.execute_fetchall(sql, (study_id,))]
+        exp = [{'sample_id': '%s.Sample1' % study_id,
+                'study_id': 2,
+                'physical_location': 'location1',
+                'has_physical_specimen': True,
+                'has_extracted_data': True,
+                'sample_type': 'type1',
+                'required_sample_info_status_id': 1,
+                'collection_timestamp': datetime(2014, 5, 29, 12, 24, 51),
+                'host_subject_id': 'NotIdentified',
+                'description': 'Test Sample 1',
+                'latitude': 42.42,
+                'longitude': 41.41},
+               {'sample_id': '%s.Sample2' % study_id,
+                'study_id': 2,
+                'physical_location': 'location1',
+                'has_physical_specimen': True,
+                'has_extracted_data': True,
+                'sample_type': 'type1',
+                'required_sample_info_status_id': 1,
+                'collection_timestamp': datetime(2014, 5, 29, 12, 24, 51),
+                'host_subject_id': 'NotIdentified',
+                'description': 'Test Sample 2',
+                'latitude': 4.2,
+                'longitude': 1.1},
+               {'sample_id': '%s.Sample3' % study_id,
+                'study_id': 2,
+                'physical_location': 'location1',
+                'has_physical_specimen': True,
+                'has_extracted_data': True,
+                'sample_type': 'type1',
+                'required_sample_info_status_id': 1,
+                'collection_timestamp': datetime(2014, 5, 29, 12, 24, 51),
+                'host_subject_id': 'NotIdentified',
+                'description': 'Test Sample 3',
+                'latitude': 4.8,
+                'longitude': 4.41}]
+        self.assertItemsEqual(obs, exp)
+
+    def test_extend_new_samples_and_columns(self):
+        """extend correctly adds new samples and columns at the same time"""
+        st = SampleTemplate.create(self.metadata, self.new_study)
+
+        self.metadata_dict['Sample4'] = {
+            'physical_location': 'location1',
+            'has_physical_specimen': True,
+            'has_extracted_data': True,
+            'sample_type': 'type1',
+            'required_sample_info_status': 'received',
+            'collection_timestamp': datetime(2014, 5, 29, 12, 24, 51),
+            'host_subject_id': 'NotIdentified',
+            'Description': 'Test Sample 4',
+            'str_column': 'Value for sample 4',
+            'int_column': 4,
+            'latitude': 42.42,
+            'longitude': 41.41}
+
+        # Change a couple of values on the existent samples to test that
+        # they remain unchanged
+        self.metadata_dict['Sample1']['Description'] = 'Changed'
+        self.metadata_dict['Sample2']['str_column'] = 'Changed dynamic'
+
+        md_ext = pd.DataFrame.from_dict(self.metadata_dict, orient='index')
+
+        md_ext['NEWCOL'] = pd.Series(['val1', 'val2', 'val3', 'val4'],
+                                     index=md_ext.index)
+        # Make sure adding duplicate samples raises warning
+        npt.assert_warns(QiitaDBWarning, st.extend, md_ext)
+
+        # Make sure the new sample and column have been added and the values
+        # for the existent samples did not change
+        study_id = self.new_study.id
+        sql = """SELECT *
+                 FROM qiita.required_sample_info
+                 WHERE study_id=%s"""
+        obs = [dict(o)
+               for o in self.conn_handler.execute_fetchall(sql, (study_id,))]
+        exp = [{'sample_id': '%s.Sample1' % study_id,
+                'study_id': 2,
+                'physical_location': 'location1',
+                'has_physical_specimen': True,
+                'has_extracted_data': True,
+                'sample_type': 'type1',
+                'required_sample_info_status_id': 1,
+                'collection_timestamp': datetime(2014, 5, 29, 12, 24, 51),
+                'host_subject_id': 'NotIdentified',
+                'description': 'Test Sample 1',
+                'latitude': 42.42,
+                'longitude': 41.41},
+               {'sample_id': '%s.Sample2' % study_id,
+                'study_id': 2,
+                'physical_location': 'location1',
+                'has_physical_specimen': True,
+                'has_extracted_data': True,
+                'sample_type': 'type1',
+                'required_sample_info_status_id': 1,
+                'collection_timestamp': datetime(2014, 5, 29, 12, 24, 51),
+                'host_subject_id': 'NotIdentified',
+                'description': 'Test Sample 2',
+                'latitude': 4.2,
+                'longitude': 1.1},
+               {'sample_id': '%s.Sample3' % study_id,
+                'study_id': 2,
+                'physical_location': 'location1',
+                'has_physical_specimen': True,
+                'has_extracted_data': True,
+                'sample_type': 'type1',
+                'required_sample_info_status_id': 1,
+                'collection_timestamp': datetime(2014, 5, 29, 12, 24, 51),
+                'host_subject_id': 'NotIdentified',
+                'description': 'Test Sample 3',
+                'latitude': 4.8,
+                'longitude': 4.41},
+               {'sample_id': '%s.Sample4' % study_id,
+                'study_id': 2,
+                'physical_location': 'location1',
+                'has_physical_specimen': True,
+                'has_extracted_data': True,
+                'sample_type': 'type1',
+                'required_sample_info_status_id': 1,
+                'collection_timestamp': datetime(2014, 5, 29, 12, 24, 51),
+                'host_subject_id': 'NotIdentified',
+                'description': 'Test Sample 4',
+                'latitude': 42.42,
+                'longitude': 41.41}]
+        self.assertItemsEqual(obs, exp)
+
+        sql = "SELECT * FROM qiita.sample_{0}".format(study_id)
+        obs = [dict(o) for o in self.conn_handler.execute_fetchall(sql)]
+        exp = [{'sample_id': '%s.Sample1' % study_id,
+                'int_column': 1,
+                'str_column': 'Value for sample 1',
+                'newcol': 'val1'},
+               {'sample_id': '%s.Sample2' % study_id,
+                'int_column': 2,
+                'str_column': 'Value for sample 2',
+                'newcol': 'val2'},
+               {'sample_id': '%s.Sample3' % study_id,
+                'int_column': 3,
+                'str_column': 'Value for sample 3',
+                'newcol': 'val3'},
+               {'sample_id': '%s.Sample4' % study_id,
+                'int_column': 4,
+                'str_column': 'Value for sample 4',
+                'newcol': 'val4'}]
+        self.assertItemsEqual(obs, exp)
 
 
 EXP_SAMPLE_TEMPLATE = (
