@@ -797,14 +797,12 @@ class MetadataTemplate(QiitaObject):
         existing_samples = curr_samples.intersection(sample_ids)
         new_samples = set(sample_ids).difference(existing_samples)
 
-        # Check if we are adding new columns
+        # Check if we are adding new columns, by getting all the columns from
+        # the database
         table_name = self._table_name(self._id)
-        # Get the required columns from the DB
         db_cols = get_table_cols(self._table, conn_handler)
-        # Remove the sample_id and _id_column columns
         db_cols.remove('sample_id')
         db_cols.remove(self._id_column)
-        # Get the columns from the dynamic table and do the union with the db
         curr_cols = set(
             get_table_cols(table_name, conn_handler)).union(db_cols)
         headers = md_template.keys().tolist()
@@ -867,6 +865,10 @@ class MetadataTemplate(QiitaObject):
             values = as_python_types(md_template, db_cols)
             values.insert(0, new_samples)
             values.insert(0, [self._id] * num_samples)
+            # psycopg2 requires a list of tuples, in which each tuple is a
+            # tuple of values to use in the string formatting of the query. We
+            # have all the values in different lists (but in the same order) so
+            # use zip to create the list of tuples that psycopg2 requires.
             values = [v for v in zip(*values)]
             sql = """INSERT INTO qiita.{0} ({1}, sample_id, {2})
                      VALUES (%s, %s, {3})""".format(
