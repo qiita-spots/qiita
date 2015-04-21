@@ -12,6 +12,17 @@ Adding source code to Qiita, can take place in three different modules:
 * `qiita_db`: Contains the bridge layer between the Python objects and the SQL database. In general this subpackage is mainly written in Python with a fair amount of inline PostgreSQL statements (see the section below on how to make database changes).
 * `qiita_ware`: Contains the logic of the system and functions that can generally be called from a Python script (see the scripts directory), and it is mostly written in Python. Several workflows that can be achieved using the GUI, can also be reproduced through the command line using this subpackage.
 
+###The Qiita development rules
+
+Since Qiita is a package that is continuously growing, we found ourselves in a position where development rules needed to be established so we can reduce both development and reviewer time. These rules are:
+
+1. Pull Requests should be small: maximum 200 lines
+  a. HTML files and DBS files (from DBSchema) do not count, but JavaScript does
+  b. Test data do not count toward the line limit
+  c. Pull Requests over this limit will only be allowed if it has been discussed with the developer team and it can potentially be done in a different branch.
+2. The code
+
+
 ###Configuration file
 
 The Qiita configuration file determines how the package interacts with your system’s resources (redis, postgres and the IPython cluster). Thus you should review the documentation detailed [here](https://docs.google.com/document/d/1u7kwLP31NM513-8xwpwvLbSQxYu0ehI6Jau1APR13e0/edit#), but especially bear in mind the following points:
