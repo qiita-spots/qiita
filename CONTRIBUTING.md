@@ -16,11 +16,29 @@ Adding source code to Qiita, can take place in three different modules:
 
 Since Qiita is a package that is continuously growing, we found ourselves in a position where development rules needed to be established so we can reduce both development and reviewer time. These rules are:
 
-1. Pull Requests should be small: maximum 200 lines
-  a. HTML files and DBS files (from DBSchema) do not count, but JavaScript does
-  b. Test data do not count toward the line limit
-  c. Pull Requests over this limit will only be allowed if it has been discussed with the developer team and it can potentially be done in a different branch.
-2. The code
+1. Pull Requests (PR) should be small: maximum 200 lines
+  1. HTML files and DBS files (from DBSchema) do not count, but JavaScript does
+  2. Test data do not count toward the line limit
+  3. PR over this limit will only be allowed if it has been discussed with the developer team and it can potentially be done in a different branch.
+2. The code in the master branch should always be consistent. If your PR is leaving master in an inconsistent state, it's a red flag that more changes need to be done, and the code has to go to its own branch until all modifications get in (see 1.1). Ideally, these branches should exist for a short period of time (~24h) before getting merged into master again, in order to avoid merge conflicts. This means that both developers and reviewers agree on working/reviewing these issues fast.
+3. If you are changing code and the reviewers provide suggestions on how to improve the code, make the change unless you can demonstrate that your current implementation is better than the suggestion. Suggested changes must also explain why they are better when given, and make a reasonable case for the change. Examples:
+  * For performance improvements, the reviewer should provide code using IPython's `%timeit` magic (or similar).
+  * Point to the [Contributing.md](https://github.com/biocore/qiita/blob/master/CONTRIBUTING.md) and/or the Code Guidelines (under construction).
+  * For User Interface (UI) changes, explain how usability will be improved or describe the difficulties you found in your first interaction with the interface.
+  * Code readability improvements, as code that is difficult to understand is hard to maintain. If the first time a reviewer reads the code does not understand the code at all, it is a red flag that the code is not going to be maintained.
+4. Avoid competing PR. If you're working on an issue that can conflict with another developer, coordinate with him/her to get the work done. If coordination proves difficult, include the rest of the development team in the discussion to determine the best way to proceed.
+5. If you find an issue while working on a PR, you must either:
+  * if it's a small change and completely unrelated to your PR, stage your changes, create a new branch and submit a PR. It will likely be merged fast and will reduce the time that issue is going to be present in the code base.
+  * if it's a big issue, create an issue on GitHub, make sure someone is assigned to the issue, and add a comment in the code with the issue number (e.g. `# See issue #XXX`). This will help other developers to identify the the source of the issue and it will likely be solved faster.
+6. Group issues in blocks that can be solved together. Using the GitHub's label system will be the best way to do this.
+7. When you start working in a complex issue, discussing the path that you're going to take to solve it with other developers will help to identify potential problems in your solution and to make a correct definition of the issue scope. Starting the discussion in the GitHub issue tracker is recommended. If no consensus could be reached in some solution, moving the discussion to a meeting will be the path to move forward.
+8. UI development is tricky and really subjective. In order to smooth the progress, this should be the path to develop the UI:
+  1. Discuss as a group (in meetings or in the issue tracker) the overall design of the new UI.
+  2. The developer assigned to the issue, will mock up some view in straight HTML or with a static tornado page, and shares the view with the rest of the developer team.
+  3. The developer team reach a consensus in the new UI layout, by modifying the mock up and/or providing constructive feedback to the assigned developer. After all, the developer team will be the first users of the new UI, so if something smells fishy it will become a bigger problem for the end users.
+  4. After a consensus is reached, the assigned developer implements the new UI.
+  5. Once the PR is issued, another round of improvements can be done until a consensus is reached. Sometimes, the first consensus is not the best layout; and new ideas/improvements are always welcome!
+9. Last but not least, you are working as part of a team and you should try to help others when possible.
 
 
 ###Configuration file
