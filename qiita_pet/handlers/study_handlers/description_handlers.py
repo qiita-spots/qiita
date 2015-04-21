@@ -29,6 +29,8 @@ from qiita_db.exceptions import (QiitaDBUnknownIDError, QiitaDBColumnError,
                                  QiitaDBDuplicateHeaderError, QiitaDBError)
 from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_pet.handlers.util import check_access
+from qiita_pet.handlers.study_handlers.listing_handlers import (
+    ListStudiesHandler)
 
 html_error_message = "<b>An error occurred %s %s</b></br>%s"
 
@@ -640,6 +642,38 @@ class StudyDescriptionHandler(BaseHandler):
                     sub_tab=sub_tab,
                     prep_tab=prep_tab)
 
+    def delete_study(self, study, user, callback):
+        """Delete study
+
+        Parameters
+        ----------
+        study : Study
+            The current study object
+        user : User
+            The current user object
+        callback : function
+            The callback function to call with the results once the processing
+            is done and it fails
+        """
+        study_id = study.id
+        study_title = study.title
+
+        try:
+            Study.delete(study_id)
+
+            # redirecting to list but also passing messages
+            # we need to change the request.method to GET
+            self.request.method = 'GET'
+            ListStudiesHandler(self.application, self.request)._execute(
+                [t(self.request) for t in self.application.transforms],
+                message=('Study "%s" has been deleted' % study_title),
+                msg_level='success')
+        except Exception as e:
+            msg = "Couldn't remove study %d: %s" % (study_id, str(e))
+            msg_level = "danger"
+
+            callback((msg, msg_level, 'study_information_tab', None, None))
+
     def delete_sample_template(self, study, user, callback):
         """Delete sample template
 
@@ -808,6 +842,7 @@ class StudyDescriptionHandler(BaseHandler):
             request_approval=self.request_approval,
             make_sandbox=self.make_sandbox,
             update_investigation_type=self.update_investigation_type,
+            delete_study=self.delete_study,
             delete_sample_template=self.delete_sample_template,
             delete_raw_data=self.delete_raw_data,
             delete_prep_template=self.delete_prep_template,

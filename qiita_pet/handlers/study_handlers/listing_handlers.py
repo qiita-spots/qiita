@@ -123,13 +123,16 @@ def _check_owner(user, study):
 class ListStudiesHandler(BaseHandler):
     @authenticated
     @coroutine
-    def get(self):
+    def get(self, message="", msg_level=None):
         all_emails_except_current = yield Task(self._get_all_emails)
         all_emails_except_current.remove(self.current_user.id)
         avail_meta = SampleTemplate.metadata_headers() +\
             get_table_cols("study")
-        self.render('list_studies.html', availmeta=avail_meta,
-                    all_emails_except_current=all_emails_except_current)
+        self.render('list_studies.html',
+                    availmeta=avail_meta,
+                    all_emails_except_current=all_emails_except_current,
+                    message=message,
+                    msg_level=msg_level)
 
     def _get_all_emails(self, callback):
         callback(list(User.iter()))
