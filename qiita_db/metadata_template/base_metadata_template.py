@@ -842,6 +842,11 @@ class MetadataTemplate(QiitaObject):
                 min_md_template = md_template[new_cols].loc[existing_samples]
                 values = as_python_types(min_md_template, new_cols)
                 values.append(existing_samples)
+                # psycopg2 requires a list of tuples, in which each tuple is a
+                # set of values to use in the string formatting of the query.
+                # We have all the values in different lists (but in the same
+                # order) so use zip to create the list of tuples that psycopg2
+                # requires.
                 values = [v for v in zip(*values)]
                 set_str = ["{0} = %s".format(col) for col in new_cols]
                 sql = """UPDATE qiita.{0}
