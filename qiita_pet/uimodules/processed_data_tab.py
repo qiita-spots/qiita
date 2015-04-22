@@ -53,7 +53,7 @@ class ProcessedDataInfoTab(BaseUIModule):
 
         pd_id = processed_data.id
         preprocessed_data_id = processed_data.preprocessed_data
-        process_date = processed_data.processed_date
+        process_date = processed_data.processing_info['processed_date']
         filepaths = processed_data.get_filepaths()
         is_local_request = self._is_local()
 

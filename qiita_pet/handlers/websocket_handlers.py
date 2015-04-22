@@ -8,6 +8,8 @@ from tornado.websocket import WebSocketHandler
 from tornado.gen import engine, Task
 
 from moi import r_client
+from qiita_db.analysis import Analysis
+from qiita_pet.handlers.base_handlers import BaseHandler
 
 
 class MessageHandler(WebSocketHandler):
@@ -70,3 +72,35 @@ class MessageHandler(WebSocketHandler):
         yield Task(self.toredis.unsubscribe, self.channel)
         self.r_client.delete('%s:messages' % self.channel)
         self.redis.disconnect()
+
+
+class SelectSamplesHandler(WebSocketHandler, BaseHandler):
+    @authenticated
+    def on_message(self, msg):
+        """Selects or deselects samples on a message from the user
+
+        Parameters
+        ----------
+        msg : JSON str
+            Message containing sample and prc_data information, in the form
+            {'action': action, 'proc_data': [p1, ...], 'samples': [[s1], ...]}
+            Where proc data in p1 matches to samples list in s1
+        """
+        # When the websocket receives a message from the javascript client,
+        # parse into JSON
+        msginfo = loads(msg)
+        num_samples = sum(len(x) for x in msginfo["samples"])
+        default = Analysis(self.current_user.default_analysis)
+        if msginfo["action"] == "select":
+            # match proc data with samples and add them
+            select = {}
+            for pid, samples in zip(msginfo["proc_data"], msginfo["samples"]):
+                select[pid] = samples
+                default.add_samples(select)
+            self.write_message("%d samples selected" % num_samples)
+        elif msginfo["action"] == "deselect":
+            for pid, samples in zip(msginfo["proc_data"], msginfo["samples"]):
+                default.remove_samples([pid], samples)
+            self.write_message("%d samples removed" % num_samples)
+        else:
+            raise ValueError("Unknown action: %s" % msginfo["action"])
