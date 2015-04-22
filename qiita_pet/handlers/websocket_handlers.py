@@ -1,6 +1,6 @@
 # adapted from
 # https://github.com/leporo/tornado-redis/blob/master/demos/websockets
-from json import loads
+from json import loads, dumps
 
 import toredis
 from tornado.web import authenticated
@@ -82,12 +82,14 @@ class SelectedSocketHandler(WebSocketHandler, BaseHandler):
         # parse into JSON
         msginfo = loads(msg)
         default = Analysis(self.current_user.default_analysis)
-        if msginfo['samples']:
-            default.remove_samples([msginfo['proc_data']], msginfo['samples'])
-        else:
-            default.remove_samples([msginfo['proc_data']])
 
-        self.write_message('true')
+        if 'remove_sample' in msginfo:
+            data = msginfo['remove_sample']
+            default.remove_samples([data['proc_data']], data['samples'])
+        elif 'remove_pd' in msginfo:
+            data = msginfo['remove_pd']
+            default.remove_samples([data['proc_data']])
+        self.write_message(msg)
 
 
 class SelectSamplesHandler(WebSocketHandler, BaseHandler):
