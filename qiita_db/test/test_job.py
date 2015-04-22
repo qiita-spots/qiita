@@ -15,7 +15,7 @@ from datetime import datetime
 from qiita_core.util import qiita_test_checker
 from qiita_db.job import Job, Command
 from qiita_db.user import User
-from qiita_db.util import get_mountpoint
+from qiita_db.util import get_mountpoint, get_count
 from qiita_db.analysis import Analysis
 from qiita_db.exceptions import (QiitaDBDuplicateError, QiitaDBStatusError,
                                  QiitaDBUnknownIDError)
@@ -219,16 +219,17 @@ class JobTest(TestCase):
 
     def test_create_exists_return_existing(self):
         """Makes sure creation doesn't duplicate a job by returning existing"""
+        new_id = get_count("qiita.analysis") + 1
         Analysis.create(User("demo@microbio.me"), "new", "desc")
         self.conn_handler.execute(
             "INSERT INTO qiita.analysis_sample "
             "(analysis_id, processed_data_id, sample_id) VALUES "
-            "(3, 1, '1.SKB8.640193'), (3, 1, '1.SKD8.640184'), "
-            "(3, 1, '1.SKB7.640196'), (3, 1, '1.SKM9.640192'), "
-            "(3, 1, '1.SKM4.640180')")
+            "({0}, 1, '1.SKB8.640193'), ({0}, 1, '1.SKD8.640184'), "
+            "({0}, 1, '1.SKB7.640196'), ({0}, 1, '1.SKM9.640192'), "
+            "({0}, 1, '1.SKM4.640180')".format(new_id))
         new = Job.create("18S", "Beta Diversity",
                          {"--otu_table_fp": 1, "--mapping_fp": 1},
-                         Analysis(3), return_existing=True)
+                         Analysis(new_id), return_existing=True)
         self.assertEqual(new.id, 2)
 
     def test_retrieve_datatype(self):
