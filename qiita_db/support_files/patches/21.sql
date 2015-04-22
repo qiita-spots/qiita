@@ -1,5 +1,14 @@
--- Apr 16, 2015
--- Given the complexity of this path, although it is changing the schema, it
--- is going to be completely implemented on python so the data can be moved
--- around without any problem.
-select 42;
+-- March 28, 2015
+-- Add default analyses for all existing users
+DO $do$
+DECLARE 
+	eml varchar;
+	aid bigint;
+BEGIN
+FOR eml IN
+	SELECT email FROM qiita.qiita_user
+LOOP
+	INSERT INTO qiita.analysis (email, name, description, dflt, analysis_status_id) VALUES (eml, eml || '-dflt', 'dflt', true, 1) RETURNING analysis_id INTO aid;
+	INSERT INTO qiita.analysis_workflow (analysis_id, step) VALUES (aid, 2);
+END LOOP;
+END $do$;

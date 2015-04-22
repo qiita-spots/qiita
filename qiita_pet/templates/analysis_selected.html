@@ -1,0 +1,95 @@
+{% extends sitebase.html %}
+{% block head %}
+<script type="text/javascript">
+function remove_proc_data(pid, sid) {
+	if(confirm('Are you sure you want to remove all samples for this processed data?')) { 
+		$('#proc' + pid).remove();
+		$('#proc' + pid + '-samples').remove();
+		// remove study if all proc data removed
+		if($('#study'+ sid + '-table tbody').children().length === 1) { $('#study'+sid).remove(); }
+	}
+}
+
+function remove_sample(sid, pid, sample) {
+		document.getElementById(pid + '@' + sample).remove();
+		//decriment sample count for pid
+		var count = $('#proc' + pid + '-sample-count');
+		count.text(parseInt(count.text(), 10) - 1);
+		// remove proc data if all samples removed
+		if($('#proc' + pid + '-samples-table tbody').children().length === 0) { $('#proc'+pid).remove(); $('#proc' + pid + '-samples').remove(); }
+		// remove study if all proc data removed
+		if($('#study'+ sid + '-table tbody').children().length === 1) { $('#study'+sid).remove(); }
+}
+
+</script>
+{% end %}
+
+{% block content %}
+{% from qiita_db.study import Study %}
+{% from future.utils import viewitems %}
+{% set static_info = {'data_type', 'processed_date', 'algorithm', 'reference_name', 'reference_version', 'sequence_filepath', 'taxonomy_filepath', 'tree_filepath'}%}
+<h1>Selected Samples</h1>
+{% for sid, proc_datas in viewitems(sel_data) %}
+  {% set study = Study(sid) %}
+<div class="row" id="study{{sid}}">
+	<div class="col-md-12" style="border:2px solid #a1a1a1; border-radius: 15px;">
+	  <h2><a href="/study/description/{{sid}}">{{study.title}}</a></h2>
+	  <h4>Processed Data</h4>
+	  <table class='table table-striped' id='study{{sid}}-table'>
+	  <tr>
+	  	<th class="col-sm-1">id</th><th class="col-sm-1">Datatype</th><th class="col-sm-2">Processed Date</th><th class="col-sm-2">Algorithm</th><th class="col-sm-2">Reference</th><th class="col-sm-1">Samples</th><th></th><th></th>
+	  </tr>
+	{% for pid, samples in viewitems(proc_datas) %}
+		<tr id="proc{{pid}}">
+	    <td>{{pid}} <a href="#" data-toggle="modal" data-target="#proc{{pid}}-settings-modal" onclick="return false;"><span class="glyphicon glyphicon-info-sign"></span></a></td>
+	    <td>{{proc_info[pid]["data_type"]}}</td>
+	    <td>{{proc_info[pid]["processed_date"]}}</td>
+	    <td>{{proc_info[pid]["algorithm"]}}</td>
+	    <td>{{proc_info[pid]["reference_name"]}} {{proc_info[pid]["reference_version"]}}</td>
+	    <td><span id="proc{{pid}}-sample-count">{% raw len(samples) %}</span></td>
+	    <td><a href="#" onclick="$('#proc{{pid}}-samples').toggle(); return false;">Show/Hide samples</a></td>
+	    <td><a href="#" onclick = 'remove_proc_data({{pid}}, {{sid}})'>Remove</a></td>
+		 </tr>
+		 <tr id="proc{{pid}}-samples" hidden><td colspan=7>
+		 <table class="table table-striped sample-table" id="proc{{pid}}-samples-table" style="width:50%">
+		{% for samp in samples %}
+		 	<tr id="{{pid}}@{{samp}}"><td>{{samp}}</td><td><a href="#" onclick="remove_sample('{{sid}}', '{{pid}}', '{{samp}}')">Remove</a></td></tr>
+		{% end %}
+		</table>
+		</td></tr>
+	{% end %}
+	</table>
+	</div>
+</div>
+{% end %}
+
+{% for pid in proc_datas%}
+<!-- modal view to enter analysis information -->
+    <div class="modal fade" id="proc{{pid}}-settings-modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+            <h4 class="modal-title" id="myModalLabel">Processed Data {{pid}}</h4>
+          </div>
+          <form role="form" action="/analysis/2" method="post">
+          <input type="hidden" name="action" value="create">
+            <div class="modal-body">
+							<b>Datatype</b>: {{proc_info[pid]["data_type"]}} <br/>
+							<b>Processed Date</b>: {{proc_info[pid]["processed_date"]}} <br/>
+							<b>Algorithm</b>: {{proc_info[pid]["algorithm"]}} <br/>
+							<b>Reference</b>: {{proc_info[pid]["reference_name"]}} {{proc_info[pid]["reference_version"]}}<br/>
+	{% for key, val in viewitems(proc_info[pid]) %}
+		{% if key not in static_info %}
+			<b>{{key}}</b>: {{val}} <br/>
+		{% end %}
+	{% end %}
+            </div>
+            <div class="modal-footer">
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  {% end %}
+{% end %}

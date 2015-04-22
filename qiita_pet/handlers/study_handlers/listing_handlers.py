@@ -8,6 +8,7 @@
 from __future__ import division
 from json import dumps
 from future.utils import viewitems
+from collections import defaultdict
 
 from tornado.web import authenticated, HTTPError
 from tornado.gen import coroutine, Task
@@ -21,6 +22,7 @@ from qiita_db.logger import LogEntry
 from qiita_db.exceptions import QiitaDBIncompatibleDatatypeError
 from qiita_db.util import get_table_cols
 from qiita_db.data import ProcessedData
+from qiita_core.exceptions import IncompetentQiitaDeveloperError
 
 from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_pet.handlers.util import study_person_linkifier, pubmed_linkifier
@@ -42,14 +44,122 @@ def _get_shared_links_for_study(study):
     return ", ".join(shared)
 
 
-def _build_study_info(user, results=None):
-    """builds list of dicts for studies table, with all html formatted"""
+def _build_single_study_info(study, info, study_proc, proc_samples):
+    """Clean up and add to the study info for HTML purposes
+
+    Parameters
+    ----------
+    study : Study object
+        The study to build information for
+    info : dict
+        Information from Study.get_info
+    study_proc : dict of dict of lists
+        Dictionary keyed on study_id that lists all processed data associated
+        with that study. This list of processed data ids is keyed by data type
+    proc_samples : dict of lists
+        Dictionary keyed on proc_data_id that lists all samples associated with
+        that processed data.
+
+    Returns
+    -------
+    dict
+        info-information + extra information for the study,
+        slightly HTML formatted
+    """
+    PI = StudyPerson(info['principal_investigator_id'])
+    status = study.status
+    if info['pmid'] is not None:
+        info['pmid'] = ", ".join([pubmed_linkifier([p])
+                                  for p in info['pmid']])
+    else:
+        info['pmid'] = ""
+    if info["number_samples_collected"] is None:
+        info["number_samples_collected"] = 0
+    info["shared"] = _get_shared_links_for_study(study)
+    info["num_raw_data"] = len(study.raw_data())
+    info["status"] = status
+    info["study_id"] = study.id
+    info["pi"] = study_person_linkifier((PI.email, PI.name))
+    del info["principal_investigator_id"]
+    del info["email"]
+    # Build the proc data info list for the child row in datatable
+    info["proc_data_info"] = []
+    for data_type, proc_datas in viewitems(study_proc[study.id]):
+        info["proc_data_info"].extend([
+            _build_single_proc_data_info(pd_id, data_type, proc_samples[pd_id])
+            for pd_id in proc_datas])
+    return info
+
+
+def _build_single_proc_data_info(proc_data_id, data_type, samples):
+    """Build the proc data info list for the child row in datatable
+
+    Parameters
+    ----------
+    proc_data_id : int
+        The processed data attached to he study, in the form
+        {study_id: [proc_data_id, proc_data_id, ...], ...}
+    data_type : str
+        Data type of the processed data
+    proc_samples : dict of lists
+        The samples available in the processed data, in the form
+        {proc_data_id: [samp1, samp2, ...], ...}
+
+    Returns
+    -------
+    dict
+        The information for the processed data, in the form {info: value, ...}
+    """
+    proc_data = ProcessedData(proc_data_id)
+    proc_info = proc_data.processing_info
+    proc_info['pid'] = proc_data_id
+    proc_info['data_type'] = data_type
+    proc_info['samples'] = sorted(samples)
+    proc_info['processed_date'] = str(proc_info['processed_date'])
+    return proc_info
+
+
+def _build_study_info(user, study_proc=None, proc_samples=None):
+    """Builds list of dicts for studies table, with all HTML formatted
+
+    Parameters
+    ----------
+    user : User object
+        logged in user
+    study_proc : dict of lists, optional
+        Dictionary keyed on study_id that lists all processed data associated
+        with that study. Required if proc_samples given.
+    proc_samples : dict of lists, optional
+        Dictionary keyed on proc_data_id that lists all samples associated with
+        that processed data. Required if study_proc given.
+
+    Returns
+    -------
+    infolist: list of dict of lists and dicts
+        study and processed data info for JSON serialiation for datatables
+        Each dict in the list is a single study, and contains the text
+
+    Notes
+    -----
+    Both study_proc and proc_samples must be passed, or neither passed.
+    """
+    build_samples = False
+    # Logic check to make sure both needed parts passed
+    if study_proc is not None and proc_samples is None:
+        raise IncompetentQiitaDeveloperError(
+            'Must pass proc_samples when study_proc given')
+    elif proc_samples is not None and study_proc is None:
+        raise IncompetentQiitaDeveloperError(
+            'Must pass study_proc when proc_samples given')
+    elif study_proc is None:
+        build_samples = True
+
     # get list of studies for table
-    study_list = user.user_studies.union(
+    study_set = user.user_studies.union(
         Study.get_by_status('public')).union(user.shared_studies)
-    if results is not None:
-        study_list = study_list.intersection(results)
-    if not study_list:
+    if study_proc is not None:
+        study_set = study_set.intersection(study_proc)
+    if not study_set:
         # No studies left so no need to continue
         return []
 
@@ -57,59 +167,26 @@ def _build_study_info(user, results=None):
     cols = ['study_id', 'email', 'principal_investigator_id',
             'pmid', 'study_title', 'metadata_complete',
             'number_samples_collected', 'study_abstract']
-    study_info = Study.get_info(study_list, cols)
+    study_info = Study.get_info(study_set, cols)
 
     infolist = []
-    for row, info in enumerate(study_info):
+    for info in study_info:
+        # Convert DictCursor to proper dict
+        info = dict(info)
         study = Study(info['study_id'])
-        status = study.status
-        # Just passing the email address as the name here, since
-        # name is not a required field in qiita.qiita_user
-        PI = StudyPerson(info['principal_investigator_id'])
-        PI = study_person_linkifier((PI.email, PI.name))
-        if info['pmid'] is not None:
-            pmids = ", ".join([pubmed_linkifier([p])
-                               for p in info['pmid']])
-        else:
-            pmids = ""
-        if info["number_samples_collected"] is None:
-            info["number_samples_collected"] = "0"
-        shared = _get_shared_links_for_study(study)
-        meta_complete_glyph = "ok" if info["metadata_complete"] else "remove"
-        # build the HTML elements needed for table cell
-        title = ("<a href='#' data-toggle='modal' "
-                 "data-target='#study-abstract-modal' "
-                 "onclick='fillAbstract(\"studies-table\", {0})'>"
-                 "<span class='glyphicon glyphicon-file' "
-                 "aria-hidden='true'></span></a> | "
-                 "<a href='/study/description/{1}' "
-                 "id='study{0}-title'>{2}</a>").format(
-                     str(row), str(study.id), info["study_title"])
-        meta_complete = "<span class='glyphicon glyphicon-%s'></span>" % \
-            meta_complete_glyph
-        if status == 'public':
-            shared = "Not Available"
-        else:
-            shared = ("<span id='shared_html_{0}'>{1}</span><br/>"
-                      "<a class='btn btn-primary btn-xs' data-toggle='modal' "
-                      "data-target='#share-study-modal-view' "
-                      "onclick='modify_sharing({0});'>Modify</a>".format(
-                          study.id, shared))
+        # Build the processed data info for the study if none passed
+        if build_samples:
+            proc_data_list = study.processed_data()
+            proc_samples = {}
+            study_proc = {study.id: defaultdict(list)}
+            for pid in proc_data_list:
+                proc_data = ProcessedData(pid)
+                study_proc[study.id][proc_data.data_type()].append(pid)
+                proc_samples[pid] = proc_data.samples
 
-        infolist.append({
-            "checkbox": "<input type='checkbox' value='%d' />" % study.id,
-            "id": study.id,
-            "title": title,
-            "meta_complete": meta_complete,
-            "num_samples": info["number_samples_collected"],
-            "shared": shared,
-            "num_raw_data": len(study.raw_data()),
-            "pi": PI,
-            "pmid": pmids,
-            "status": status,
-            "abstract": info["study_abstract"]
-
-        })
+        study_info = _build_single_study_info(study, info, study_proc,
+                                              proc_samples)
+        infolist.append(study_info)
     return infolist
 
 
@@ -198,12 +275,12 @@ class SearchStudiesAJAX(BaseHandler):
 
         if user != self.current_user.id:
             raise HTTPError(403, 'Unauthorized search!')
-        res = None
         if query:
             # Search for samples matching the query
             search = QiitaStudySearch()
             try:
-                res, meta = search(query, self.current_user)
+                search(query, self.current_user)
+                study_proc, proc_samples, _ = search.filter_by_processed_data()
             except ParseException:
                 self.clear()
                 self.set_status(400)
@@ -226,9 +303,10 @@ class SearchStudiesAJAX(BaseHandler):
                                 info={'User': self.current_user.id,
                                       'query': query})
                 return
-            if not res:
-                res = {}
-        info = _build_study_info(self.current_user, results=res)
+        else:
+            study_proc = proc_samples = None
+        info = _build_study_info(self.current_user, study_proc=study_proc,
+                                 proc_samples=proc_samples)
         # build the table json
         results = {
             "sEcho": echo,
