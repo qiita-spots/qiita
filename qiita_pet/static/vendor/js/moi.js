@@ -18,12 +18,23 @@
  * @class manages WebSocket for job and group information
  *
  */
+function init_websocket(host) {
+    if (!("WebSocket" in window)) {
+        alert("Your browser does not appear to support websockets!");
+        return;
+    }
+    //check if we need regular or secure websocket
+    socket = 'ws://';
+    if(host.indexOf('https:') === 0) { socket = 'wss://'; }
+    return new WebSocket(socket + host);
+}
+
 var moi = new function () {
     this.VERSION = '0.1.0-dev';
 
     var
       /* the server end of the websocket */
-      host = 'ws://' + window.location.host + '/moi-ws/',
+      host = window.location.host + '/moi-ws/',
       
       /* the websocket */     
       ws = null,
@@ -70,12 +81,8 @@ var moi = new function () {
      * all records associated with the user. 
      */
     this.init = function(group_id) {
-        if (!("WebSocket" in window)) {
-            alert("Your browser does not appear to support websockets!");
-            return;
-        }
-        ws = new WebSocket(host);
-        
+        ws = init_websocket(host);
+
         var on_open_message = null;
         if (group_id == null) {
             on_open_message = [];

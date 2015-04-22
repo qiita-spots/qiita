@@ -36,12 +36,3 @@ function fillAbstract(table, row) {
 function show_hide(div) {
 	$('#' + div).toggle();
 }
-
-function init_websocket(host) {
-    if (!("WebSocket" in window)) {
-        alert("Your browser does not appear to support websockets! Site functionality will not work!");
-        return;
-    }
-    //TODO: add secure websocket connection check here
-    return new WebSocket('ws://' + host);
-}

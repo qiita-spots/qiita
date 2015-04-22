@@ -1,5 +1,6 @@
 {% extends sitebase.html %}
 {% block head %}
+<script src="/static/vendor/js/moi.js"></script>
 <script type="text/javascript">
 var ws = init_websocket(window.location.host + '/analysis/selected/socket/');
 ws.onmessage = function(evt) { if(evt.data != 'true') {ws.close();} };
