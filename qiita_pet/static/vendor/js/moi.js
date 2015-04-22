@@ -18,24 +18,13 @@
  * @class manages WebSocket for job and group information
  *
  */
-function init_websocket(host) {
-    if (!("WebSocket" in window)) {
-        alert("Your browser does not appear to support websockets!");
-        return;
-    }
-    //check if we need regular or secure websocket
-    socket = 'ws://';
-    if(host.indexOf('https:') === 0) { socket = 'wss://'; }
-    return new WebSocket(socket + host);
-}
 
 var moi = new function () {
     this.VERSION = '0.1.0-dev';
 
     var
       /* the server end of the websocket */
-      host = window.location.host + '/moi-ws/',
-      
+      host = null,
       /* the websocket */     
       ws = null,
 
@@ -77,11 +66,24 @@ var moi = new function () {
      * websocket. On construction, this method will send a message over the
      * socket to get all known job information associated with this client.
      *
-     * @param {group_id} A group ID to get initial data from, or null to fetch 
-     * all records associated with the user. 
+     * @param {host} The URL for the websocket, minus the ws:// header, or null
+     * to use the default moi-ws.
+     * @param {group_id} A group ID to get initial data from, or null to fetch
+     * all records associated with the user.
+     * @param {on_open} Optional function for action when websocket is opened.
+     * @param {on_close} Optional function for action when websocket is closed.
+     * @param {on_error} Optional function for action when websocket errors.
      */
-    this.init = function(group_id) {
-        ws = init_websocket(host);
+    this.init = function(host, group_id, on_open, on_close, on_error) {
+        host = host || window.location.host + '/moi-ws/';
+        if (!("WebSocket" in window)) {
+            alert("Your browser does not appear to support websockets!");
+            return;
+        }
+        //check if we need regular or secure websocket
+        socket = 'ws://';
+        if(window.location.protocol == "https:") { socket = 'wss://'; }
+        ws = new WebSocket(socket + host);
 
         var on_open_message = null;
         if (group_id == null) {
@@ -90,15 +92,21 @@ var moi = new function () {
             on_open_message = [group_id];
         }
 
-        ws.onopen = function() {ws.send(encode({"get": on_open_message}))};
-        ws.onclose = function(evt) {ws.send(encode({"close": null}))};
-        ws.onerror = function(evt) {};
+        on_open = on_open || function() { ws.send(encode({"get": on_open_message})); };
+        on_close = on_close || function(evt) { ws.send(encode({"close": null})); };
+        on_error = on_error || function(evt) {};
+
+        ws.onopen = on_open;
+        ws.onclose = on_close;
+        ws.onerror = on_error;
 
         ws.onmessage = function(evt) {
             message = decode(evt.data);
-            for(var action in message) 
-                if(action in callbacks) 
+            for(var action in message) {
+                if(action in callbacks) {
                     callbacks[action](message[action]);
+                }
+            }
         };
     };
 };
