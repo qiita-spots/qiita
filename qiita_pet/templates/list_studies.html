@@ -40,6 +40,11 @@ function sel_proc_data(row, pid) {
 
 function show_alert(data) { bootstrapAlert(data + ' samples selected.', "success", 2000); }
 
+function fillAbstract(table, row) {
+    $('#title-text-area').text($('#' + table).find('#study' + row + "-title").text());
+    $('#abstract-text-area').text($('#'+table).dataTable().fnGetData(row, 3));
+}
+
 $(document).ready(function() {
         moi.init(window.location.host + '/study/list/socket/', null, function(){}, error, error);
         moi.add_callback('sel', show_alert);
