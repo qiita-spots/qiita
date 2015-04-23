@@ -8,58 +8,48 @@ td.details-control {
 </style>
 <script src="/static/vendor/js/jquery.dataTables.min.js"></script>
 <script src="/static/vendor/js/jquery.dataTables.plugin.natural.js"></script>
+<script src="/static/vendor/js/moi.js"></script>
 
 <script type="text/javascript">
 var current_study;
 var ajaxURL = "/study/search/?&user={{current_user.id}}&sEcho=" + Math.floor(Math.random()*1001);
-var ws = new WebSocket('ws://' + window.location.host + '/analysis/select-socket/');
-ws.onmessage = function(evt) { bootstrapAlert(evt.data, "success", 1500); };
-ws.onerror = function(evt) { $('#search-error').html("<b>Server communication error. Sample selection will not be recorded. Please try again later.</b>"); };
-ws.onclose = function(evt) { $('#search-error').html("<b>Server communication error. Sample selection will not be recorded. Please try again later.</b>"); };
+function error(evt) { $('#search-error').html("<b>Server communication error. Sample selection will not be recorded. Please try again later.</b>"); }
 
-function sel_desel_study(box) {
-  var action = "deselect";
-  if(box.checked) { action = "select"; }
-  data = $('#studies-table').dataTable().fnGetData(box.value);
-  var proc_data = [];
-  var samples = [];
+function sel_study(row) {
+  data = $('#studies-table').dataTable().fnGetData(row);
+  var proc_data = {};
   // Build list of processed data and associated samples for entire study
   for(var i=0;i<data.proc_data_info.length;i++) {
-    proc_data.push(data.proc_data_info[i].pid);
-    samples.push(data.proc_data_info[i].samples);
+    proc_data[data.proc_data_info[i].pid] = data.proc_data_info[i].samples;
   }
-  send_ws(action, proc_data, samples);
+  moi.send('sel', proc_data);
 }
 
-function sel_desel_proc_data(box, row, pid) {
-  var action = "deselect";
-  if(box.checked) { action = "select"; }
+function sel_proc_data(row, pid) {
   data = $('#studies-table').dataTable().fnGetData(row);
-  var samples = [];
+  var proc_data = {};
   for(var i=0;i<data.proc_data_info.length;i++) {
+    // Find the processed data and send associated samples
     if(data.proc_data_info[i].pid == pid) {
-      samples = data.proc_data_info[i].samples;
+      proc_data[pid] = data.proc_data_info[i].samples;
       break;
     }
   }
-  send_ws(action, [pid], [samples]);
+  moi.send('sel', proc_data);
 }
 
-function send_ws(action, proc_data, samples) {
-  ws.send(JSON.stringify({'action': action, 'proc_data':proc_data, 'samples':samples}));
-}
+function show_alert(data) { bootstrapAlert(data + ' samples selected.', "success", 2000); }
 
 $(document).ready(function() {
+        moi.init(window.location.host + '/study/list/socket/', null, function(){}, error, error);
+        moi.add_callback('sel', show_alert);
         function format ( d, row ) {
             // `d` is the original data object for the row
-            //assess if study checked.  Needed to see if all child proc data checkboxes should default to checked
-            check = "";
-            if(document.getElementById("study"+d.study_id+"-checkbox").checked) {check = "checked"; }
             // create formatted cell with proc data table
             var proc_data_table = '<h4>Processed Data</h4><table class="table" cellpadding="5" cellspacing="0" border="0" style="padding-left:50px;"><tr><th></th><th>ID</th><th>Data type</th><th>Processed Date</th><th>Algorithm</th><th>Reference</th><th>Samples</th></tr>';
             for(i=0;i<d.proc_data_info.length;i++) {
               var proc_data = d.proc_data_info[i];
-              proc_data_table += '<tr><td><input type="checkbox" '+ check +' class="proc-checkbox" onchange="sel_desel_proc_data(this,'+ row +','+ proc_data.pid +')"></td><td>' + proc_data.pid + '</td><td>' + proc_data.data_type + '</td><td>' + proc_data.processed_date + '</td><td>' + proc_data.algorithm + '</td><td>' + proc_data.reference_name + ' ' + proc_data.reference_version + '</td><td>' + proc_data.samples.length + '</td></tr>';
+              proc_data_table += '<tr><td><input type="button" class="btn btn-sm" value="Add" onclick="sel_proc_data('+ row +','+ proc_data.pid +')"></td><td>' + proc_data.pid + '</td><td>' + proc_data.data_type + '</td><td>' + proc_data.processed_date + '</td><td>' + proc_data.algorithm + '</td><td>' + proc_data.reference_name + ' ' + proc_data.reference_version + '</td><td>' + proc_data.samples.length + '</td></tr>';
             }
             proc_data_table += '</table>';
             return proc_data_table;
@@ -86,7 +76,7 @@ $(document).ready(function() {
               {"targets": [ 2 ],"visible": false},
               // render the study checkbox cell
               {"render": function ( data, type, row, meta ) {
-                    return "<input type='checkbox' value='"+ meta.row +"' id='study"+row.study_id+"-checkbox' class='study-checkbox' onchange='sel_desel_study(this)'>";
+                    return "<input type='button' id='study"+row.study_id+"-checkbox' class='btn btn-sm' value='Add' onclick='sel_study("+ meta.row +")'>";
               }, targets: [0]},
               // render the title cell
               {"render": function ( data, type, row, meta ) {

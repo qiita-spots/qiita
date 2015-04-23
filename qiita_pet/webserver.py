@@ -23,7 +23,7 @@ from qiita_pet.handlers.study_handlers import (
     CreateStudyAJAX, ShareStudyAJAX, StudyApprovalList,
     PreprocessingSummaryHandler, VAMPSHandler)
 from qiita_pet.handlers.websocket_handlers import (
-    MessageHandler, SelectSamplesHandler)
+    MessageHandler, SelectedSocketHandler, SelectSamplesHandler)
 from qiita_pet.handlers.logger_handlers import LogEntryViewerHandler
 from qiita_pet.handlers.upload import UploadFileHandler, StudyUploadFileHandler
 from qiita_pet.handlers.compute import (
@@ -64,7 +64,7 @@ class Application(tornado.web.Application):
             (r"/analysis/results/(.*)", AnalysisResultsHandler),
             (r"/analysis/show/", ShowAnalysesHandler),
             (r"/analysis/selected/", SelectedSamplesHandler),
-            (r"/analysis/select-socket/", SelectSamplesHandler),
+            (r"/analysis/selected/socket/", SelectedSocketHandler),
             (r"/moi-ws/", MOIMessageHandler),
             (r"/consumer/", MessageHandler),
             (r"/admin/error/", LogEntryViewerHandler),
@@ -76,6 +76,7 @@ class Application(tornado.web.Application):
             (r"/study/create/", StudyEditHandler),
             (r"/study/edit/(.*)", StudyEditHandler),
             (r"/study/list/", ListStudiesHandler),
+            (r"/study/list/socket/", SelectSamplesHandler),
             (r"/study/search/(.*)", SearchStudiesAJAX),
             (r"/study/add_files_to_raw_data", AddFilesToRawData),
             (r"/study/unlink_all_files", UnlinkAllFiles),
