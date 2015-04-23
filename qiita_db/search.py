@@ -116,8 +116,8 @@ class SearchNot(UnaryOperation):
 
 
 class SearchTerm(object):
-    # column names from required_sample_info table
-    required_cols = set(get_table_cols("required_sample_info"))
+    # column names from study_sample table
+    required_cols = set(get_table_cols("study_sample"))
     # column names from study table
     study_cols = set(get_table_cols("study"))
 
@@ -128,7 +128,7 @@ class SearchTerm(object):
             self.term[pos] = scrub_data(term)
 
     def generate_sql(self):
-        # we can assume that the metadata is either in required_sample_info
+        # we can assume that the metadata is either in study_sample
         # or the study-specific table
         column_name, operator, argument = self.term
         argument_type = type(convert_type(argument))
@@ -167,8 +167,8 @@ class SearchTerm(object):
 class QiitaStudySearch(object):
     """QiitaStudySearch object to parse and run searches on studies."""
 
-    # column names from required_sample_info table
-    required_cols = set(get_table_cols("required_sample_info"))
+    # column names from study_sample table
+    required_cols = set(get_table_cols("study_sample"))
     # column names from study table
     study_cols = set(get_table_cols("study"))
 
@@ -310,7 +310,7 @@ class QiitaStudySearch(object):
                     meta_header_type_lookup[header] = 'varchar'
 
         # create the study finding SQL
-        # remove metadata headers that are in required_sample_info table
+        # remove metadata headers that are in study_sample table
         meta_headers = tuple(meta_headers.difference(
             self.required_cols).difference(self.study_cols))
 
@@ -348,7 +348,7 @@ class QiitaStudySearch(object):
             else:
                 header_info.append("sa.%s" % meta)
         # build the SQL query
-        sample_sql = ("SELECT r.sample_id,%s FROM qiita.required_sample_info "
+        sample_sql = ("SELECT r.sample_id,%s FROM qiita.study_sample "
                       "r JOIN qiita.sample_{0} sa ON sa.sample_id = "
                       "r.sample_id JOIN qiita.study st ON st.study_id = "
                       "r.study_id WHERE %s" %

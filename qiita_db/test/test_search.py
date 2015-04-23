@@ -28,7 +28,7 @@ class SearchTest(TestCase):
                       "lower(column_name) = lower('altitude') and column_type "
                       "in ('integer', 'float8')")
         exp_samp_sql = ("SELECT r.sample_id,sa.altitude FROM "
-                        "qiita.required_sample_info r JOIN qiita.sample_{0} sa"
+                        "qiita.study_sample r JOIN qiita.sample_{0} sa"
                         " ON sa.sample_id = r.sample_id JOIN qiita.study st ON"
                         " st.study_id = r.study_id WHERE sa.altitude > 0")
         self.assertEqual(st_sql, exp_st_sql)
@@ -42,7 +42,7 @@ class SearchTest(TestCase):
                       "lower(column_name) = lower('altitude') and column_type "
                       "in ('integer', 'float8')")
         exp_samp_sql = ("SELECT r.sample_id,sa.altitude FROM "
-                        "qiita.required_sample_info r JOIN qiita.sample_{0} sa"
+                        "qiita.study_sample r JOIN qiita.sample_{0} sa"
                         " ON sa.sample_id = r.sample_id JOIN qiita.study st ON"
                         " st.study_id = r.study_id WHERE NOT "
                         "sa.altitude > 0")
@@ -57,7 +57,7 @@ class SearchTest(TestCase):
                       "lower(column_name) = lower('ph') and column_type in "
                       "('integer', 'float8')")
         exp_samp_sql = ("SELECT r.sample_id,sa.ph FROM "
-                        "qiita.required_sample_info r JOIN qiita.sample_{0} sa"
+                        "qiita.study_sample r JOIN qiita.sample_{0} sa"
                         " ON sa.sample_id = r.sample_id JOIN qiita.study st ON"
                         " st.study_id = r.study_id WHERE (sa.ph > 7 AND "
                         "sa.ph < 9)")
@@ -72,7 +72,7 @@ class SearchTest(TestCase):
                       "lower(column_name) = lower('ph') and column_type in "
                       "('integer', 'float8')")
         exp_samp_sql = ("SELECT r.sample_id,sa.ph FROM "
-                        "qiita.required_sample_info r JOIN qiita.sample_{0} sa"
+                        "qiita.study_sample r JOIN qiita.sample_{0} sa"
                         " ON sa.sample_id = r.sample_id JOIN qiita.study st ON"
                         " st.study_id = r.study_id WHERE (sa.ph > 7 OR "
                         "sa.ph < 9)")
@@ -84,12 +84,14 @@ class SearchTest(TestCase):
         st_sql, samp_sql, meta = \
             self.search._parse_study_search_string(
                 'host_subject_id includes "Chicken little"')
-        exp_st_sql = "SELECT study_id FROM qiita.study_sample_columns"
-        exp_samp_sql = ("SELECT r.sample_id,r.host_subject_id FROM "
-                        "qiita.required_sample_info r JOIN qiita.sample_{0} sa"
+        exp_st_sql = ("SELECT study_id FROM qiita.study_sample_columns "
+                      "WHERE lower(column_name) = lower('host_subject_id') "
+                      "and column_type in ('varchar')")
+        exp_samp_sql = ("SELECT r.sample_id,sa.host_subject_id FROM "
+                        "qiita.study_sample r JOIN qiita.sample_{0} sa"
                         " ON sa.sample_id = r.sample_id JOIN qiita.study st ON"
                         " st.study_id = r.study_id WHERE "
-                        "LOWER(r.host_subject_id) LIKE '%chicken little%'")
+                        "LOWER(sa.host_subject_id) LIKE '%chicken little%'")
         self.assertEqual(st_sql, exp_st_sql)
         self.assertEqual(samp_sql, exp_samp_sql)
         self.assertEqual(meta, ["host_subject_id"])
@@ -104,7 +106,7 @@ class SearchTest(TestCase):
             "lower(column_name) = lower('name') and column_type in "
             "('varchar')")
         exp_samp_sql = (
-            "SELECT r.sample_id,sa.name FROM qiita.required_sample_info r JOIN"
+            "SELECT r.sample_id,sa.name FROM qiita.study_sample r JOIN"
             " qiita.sample_{0} sa ON sa.sample_id = r.sample_id JOIN "
             "qiita.study st ON st.study_id = r.study_id WHERE (sa.name = "
             "'Billy Bob' OR sa.name = 'Timmy' OR (sa.name = 'Jimbo' AND "
@@ -125,7 +127,7 @@ class SearchTest(TestCase):
                       "qiita.study_sample_columns WHERE lower(column_name) = "
                       "lower('ph') and column_type in ('integer', 'float8')"]
         exp_samp_sql = ("SELECT r.sample_id,sa.pH,sa.ph FROM "
-                        "qiita.required_sample_info r JOIN qiita.sample_{0} sa"
+                        "qiita.study_sample r JOIN qiita.sample_{0} sa"
                         " ON sa.sample_id = r.sample_id JOIN qiita.study st ON"
                         " st.study_id = r.study_id WHERE (sa.ph > 7 OR "
                         "sa.ph < 9)")
