@@ -13,6 +13,7 @@ from __future__ import division
 from future.utils import viewitems
 from collections import defaultdict
 from os.path import join, sep, commonprefix
+from json import dumps
 
 from tornado.web import authenticated, HTTPError, StaticFileHandler
 from moi import ctx_default, r_client
@@ -218,3 +219,10 @@ class SelectedSamplesHandler(BaseHandler):
             proc_data_info[pid]['data_type'] = proc_data.data_type()
         self.render("analysis_selected.html", sel_data=sel_data,
                     proc_info=proc_data_info)
+
+
+class AnalysisSummaryAJAX(BaseHandler):
+    @authenticated
+    def get(self):
+        info = Analysis(self.current_user.default_analysis).summary_data()
+        self.write(dumps(info))

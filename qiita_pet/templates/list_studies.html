@@ -40,6 +40,11 @@ function sel_proc_data(row, pid) {
 
 function show_alert(data) { bootstrapAlert(data + ' samples selected.', "success", 2000); }
 
+function fillAbstract(table, row) {
+    $('#title-text-area').text($('#' + table).find('#study' + row + "-title").text());
+    $('#abstract-text-area').text($('#'+table).dataTable().fnGetData(row, 3));
+}
+
 $(document).ready(function() {
         moi.init(window.location.host + '/study/list/socket/', null, function(){}, error, error);
         moi.add_callback('sel', show_alert);
@@ -57,6 +62,7 @@ $(document).ready(function() {
 
         $('#studies-table').dataTable({
             "columns": [
+              {"className": 'details-control', "orderable": false, "data": null, "defaultContent": '<span class="glyphicon glyphicon-chevron-down"></span>'},
               { "orderable": false},
               { "data": "study_title" },
               { "data": "study_abstract" },
@@ -67,33 +73,35 @@ $(document).ready(function() {
               { "data": "shared" },
               { "data": "pi" },
               { "data": "pmid" },
-              { "data": "status" },
-              {"className": 'details-control', "orderable": false, "data": null, "defaultContent": '<span class="glyphicon glyphicon-chevron-down"></span>'}
+              { "data": "status" }
             ],
-            order: [[10, "desc"], [ 1, "asc" ]],
+            order: [[11, "desc"], [ 2, "asc" ]],
             columnDefs: [
-              {type:'natural', targets:[3,4,5,9]},
-              {"targets": [ 2 ],"visible": false},
+              {type:'natural', targets:[4,5,6,10]},
+              {"targets": [ 3 ],"visible": false},
               // render the study checkbox cell
               {"render": function ( data, type, row, meta ) {
-                    return "<input type='button' id='study"+row.study_id+"-checkbox' class='btn btn-sm' value='Add' onclick='sel_study("+ meta.row +")'>";
-              }, targets: [0]},
+                    if(row.proc_data_info.length > 0) {
+                        return "<input type='button' id='study"+row.study_id+"-checkbox' class='btn btn-sm' value='Add' onclick='sel_study("+ meta.row +")'>";
+                    }
+                    else { return ''; }
+              }, targets: [1]},
               // render the title cell
               {"render": function ( data, type, row, meta ) {
                     return "<a href='#' data-toggle='modal' data-target='#study-abstract-modal' onclick=\"fillAbstract('studies-table', "+ meta.row +")\"><span class='glyphicon glyphicon-file' aria-hidden='true'></span></a> | <a href='/study/description/"+ row.study_id +"' id='study"+ meta.row +"-title'>"+ data +"</a>";
-              }, targets: [1]},
+              }, targets: [2]},
               // render the metadata complete cell
               {"render": function ( data, type, row, meta ) {
                     var glyph = 'remove';
                     if(data === true) { glyph = 'ok' } 
                     return "<span class='glyphicon glyphicon-"+ glyph +"'></span>";
-              }, targets: [4]},
+              }, targets: [5]},
               // render the shared with cell
               {"render": function ( data, type, row, meta ) {
                     var glyph = 'remove';
                     if(data === true) { glyph = 'ok' } 
                     return "<span id='shared_html_"+ row.study_id +"'>"+ data +"</span><br/><a class='btn btn-primary btn-xs' data-toggle='modal' data-target='#share-study-modal-view' onclick='modify_sharing("+ row.study_id +");'>Modify</a>";
-              }, targets: [7]},
+              }, targets: [8]},
               ],
             "oLanguage": {
                 "sSearch": "Narrow search results by column data (Title, abstract, PI, etc):",
@@ -194,7 +202,8 @@ function add_metacat(metacat) {
     <table id="studies-table" class="table table-bordered">
         <thead>
             <tr>
-                <th></th>
+                <th>Expand</th>
+                <th>Add to analysis</th>
                 <th>Title</th>
                 <th>Abstract</th>
                 <th>Study ID</th>
@@ -205,7 +214,6 @@ function add_metacat(metacat) {
                 <th>Principal Investigator</th>
                 <th>Pubmed ID(s)</th>
                 <th>Status</th>
-                <th>Expand</th>
             </tr>
         </thead>
     </table>

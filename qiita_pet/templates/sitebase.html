@@ -54,6 +54,17 @@
           jumbotron.style.visibility = "hidden";
         }
       }
+
+      $(document).ready(function() {
+        // Load default analysis summary data when displayed in menu
+        $("#dflt-sel-info").mouseover(function() {
+          $.getJSON("/analysis/dflt/sumary/", function(result) {
+            $("#dflt-study-count").text(result.studies);
+            $("#dflt-pd-count").text(result.processed_data);
+            $("#dflt-samp-count").text(result.samples);
+          });
+        });
+      });
       </script>
     {% block head %}{% end %}
   </head>
@@ -138,12 +149,20 @@
           </ul>
           <!-- show user name and logout button if there's a user logged in -->
           {% if user %}
-          <ul class="nav navbar-nav pull-right">
+          <ul class="nav navbar-nav navbar-right">
             <li>
               <a href="/profile/">Welcome {{user.id}}</a>
             </li>
-            <li class="pull-right">
+            <li>
               <a href="/auth/logout/">Log Out</a>
+            </li>
+            <li class="dropdown">
+              <a href="/analysis/selected/" id="dflt-sel-info"><span class="glyphicon glyphicon-list-alt"></span> Selected</a>
+              <ul class="dropdown-menu" style="padding: 5px">
+                <li> <span id="dflt-study-count"></span> Studies</li>
+                <li><span id="dflt-pd-count"></span> Processed Data</li>
+                <li><span id="dflt-samp-count"></span> Samples</li>
+              </ul>
             </li>
           </ul>
           <!-- otherwise show the login form -->
