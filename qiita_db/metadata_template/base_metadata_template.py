@@ -663,10 +663,7 @@ class MetadataTemplate(QiitaObject):
         """
         # Check if we are adding new samples
         sample_ids = md_template.index.tolist()
-        sql = """SELECT sample_id FROM qiita.{0}
-                 WHERE {1}=%s""".format(self._table, self._id_column)
-        curr_samples = set(
-            s[0] for s in conn_handler.execute_fetchall(sql, (self._id,)))
+        curr_samples = set(self.keys())
         existing_samples = curr_samples.intersection(sample_ids)
         new_samples = set(sample_ids).difference(existing_samples)
 
@@ -698,10 +695,9 @@ class MetadataTemplate(QiitaObject):
 
             if existing_samples:
                 warnings.warn(
-                    "The new columns '%s' have been added to the existing "
-                    "samples '%s'. Any other value of these samples have been "
-                    "modified." % (", ".join(new_cols),
-                                   ", ".join(existing_samples)),
+                    "No values have been modified for samples '%s'. However, "
+                    "the following columns have been added to them: '%s'"
+                    % (", ".join(existing_samples), ", ".join(new_cols)),
                     QiitaDBWarning)
                 # The values for the new columns are the only ones that get
                 # added to the database. None of the existing values will be
@@ -709,6 +705,11 @@ class MetadataTemplate(QiitaObject):
                 min_md_template = md_template[new_cols].loc[existing_samples]
                 values = as_python_types(min_md_template, new_cols)
                 values.append(existing_samples)
+                # psycopg2 requires a list of tuples, in which each tuple is a
+                # set of values to use in the string formatting of the query.
+                # We have all the values in different lists (but in the same
+                # order) so use zip to create the list of tuples that psycopg2
+                # requires.
                 values = [v for v in zip(*values)]
                 set_str = ["{0} = %s".format(col) for col in new_cols]
                 sql = """UPDATE qiita.{0}

@@ -184,6 +184,36 @@ function add_prep_template(raw_data_id) {
   form.submit();
 }
 
+function validate_delete_study_text() {
+  if ($("#study-alias").val() == "{{study_alias}}") {
+    $('#delete-study-button').prop('disabled', false);
+  } else {
+    $('#delete-study-button').prop('disabled', true);
+  }
+}
+
+function delete_study() {
+  if ($("#study-alias").val() != "{{study_alias}}") {
+    alert("The added name doesn't match the study alias");
+    return false;
+  }
+  if (confirm('Are you sure you want to delete "{{study_title}}"?')) {
+    var form = $("<form>")
+    .attr("action", window.location.href)
+    .attr("method", "post")
+    .append($("<input>")
+    .attr("type", "hidden")
+    .attr("name", "study_id")
+    .attr("value", {{study.id}}))
+    .append($("<input>")
+    .attr("type", "hidden")
+    .attr("name", "action")
+    .attr("value", "delete_study"));
+    $("body").append(form);
+    form.submit();
+  }
+}
+
 function delete_sample_template() {
   sample_template_id = {{study.sample_template}};
   if (confirm('Are you sure you want to delete sample template ID: ' + sample_template_id + '?')) {
@@ -548,6 +578,7 @@ $(document).ready(function() {
         <a class="btn btn-default glyphicon glyphicon-edit" href="/study/edit/{{study.id}}" title="Edit the study information" style="margin:5px; word-spacing: -10px;"> Edit</a>
       {% end %}
       <a href="/study/upload/{{study.id}}" class="btn btn-default glyphicon glyphicon-upload" title="Upload study files" style="margin:5px; word-spacing: -10px;"> Upload</a>
+      <a class="btn btn-danger glyphicon glyphicon-trash" style="display: inline-block;" data-toggle="modal" data-target="#delete-study"> Delete-study</a>
     </td>
   </tr>
 </table>
@@ -578,6 +609,26 @@ $(document).ready(function() {
     <!-- Show the processed data tab -->
     {% module ProcessedDataTab(study, full_access) %}
   {% end %}
+</div>
+
+
+<div class="modal fade delete-study" tabindex="-1" role="dialog" id="delete-study">
+  <div class="modal-dialog modal-sm">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h3>Deleting:<br/></h3><h4>{{study_title}}</h4>
+      </div>
+      <div class="modal-body">
+        You will only be able to delete a study that has no data associated with it.
+      </div>
+      <div class="modal-footer">
+        To continue you need to write the alias name of the study:
+        <input type="text" name="study-alias" id="study-alias" onkeyup="validate_delete_study_text();">
+        <button class="btn btn-danger glyphicon glyphicon-trash" onclick="delete_study();" id="delete-study-button" disabled></button>
+      </div>
+    </div>
+  </div>
 </div>
 
 {% end %}
