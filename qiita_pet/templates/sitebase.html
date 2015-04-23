@@ -54,6 +54,10 @@
           jumbotron.style.visibility = "hidden";
         }
       }
+
+      $(document).ready(function() {
+        $("#dflt-sel-info").mouseover(function() {});
+      });
       </script>
     {% block head %}{% end %}
   </head>
@@ -138,12 +142,22 @@
           </ul>
           <!-- show user name and logout button if there's a user logged in -->
           {% if user %}
-          <ul class="nav navbar-nav pull-right">
+          <ul class="nav navbar-nav navbar-right">
             <li>
               <a href="/profile/">Welcome {{user.id}}</a>
             </li>
-            <li class="pull-right">
+            <li>
               <a href="/auth/logout/">Log Out</a>
+            </li>
+            <li class="dropdown">
+                <a href="#" id="dflt-sel-info"><span class="glyphicon glyphicon-list-alt"></span> Selected</a>
+                <ul class="dropdown-menu">
+                  <li>
+                    <span id="dflt-study-count">5</span> Studies<br/>
+                    <span id="dflt-pd-count">5</span> Processed Data<br/>
+                    <span id="dflt-samp-count">100</span> Samples
+                  </li>
+                </ul>
             </li>
           </ul>
           <!-- otherwise show the login form -->
