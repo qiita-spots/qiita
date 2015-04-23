@@ -17,7 +17,7 @@ conn_handler = SQLConnectionHandler()
 sql = """SELECT DISTINCT study_id from qiita.required_sample_info"""
 study_ids = set(s[0] for s in conn_handler.execute_fetchall(sql))
 
-queue_name = "PATCH_21"
+queue_name = "PATCH_23"
 conn_handler.create_queue(queue_name)
 
 sql_select = """SELECT sample_id, physical_location, has_physical_specimen,
