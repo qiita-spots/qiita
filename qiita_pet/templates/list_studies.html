@@ -84,6 +84,7 @@ $(document).ready(function() {
                     if(row.proc_data_info.length > 0) {
                         return "<input type='button' id='study"+row.study_id+"-checkbox' class='btn btn-sm' value='Add' onclick='sel_study("+ meta.row +")'>";
                     }
+                    else { return ''; }
               }, targets: [1]},
               // render the title cell
               {"render": function ( data, type, row, meta ) {
