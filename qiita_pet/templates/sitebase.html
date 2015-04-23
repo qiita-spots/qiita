@@ -56,7 +56,14 @@
       }
 
       $(document).ready(function() {
-        $("#dflt-sel-info").mouseover(function() {});
+        // Load default analysis summary data when displayed in menu
+        $("#dflt-sel-info").mouseover(function() {
+          $.getJSON("/analysis/dflt/sumary/", function(result) {
+            $("#dflt-study-count").text(result.studies);
+            $("#dflt-pd-count").text(result.processed_data);
+            $("#dflt-samp-count").text(result.samples);
+          });
+        });
       });
       </script>
     {% block head %}{% end %}
@@ -150,12 +157,12 @@
               <a href="/auth/logout/">Log Out</a>
             </li>
             <li class="dropdown">
-                <a href="#" id="dflt-sel-info"><span class="glyphicon glyphicon-list-alt"></span> Selected</a>
+                <a href="/analysis/selected/" id="dflt-sel-info"><span class="glyphicon glyphicon-list-alt"></span> Selected</a>
                 <ul class="dropdown-menu">
                   <li>
-                    <span id="dflt-study-count">5</span> Studies<br/>
-                    <span id="dflt-pd-count">5</span> Processed Data<br/>
-                    <span id="dflt-samp-count">100</span> Samples
+                    <span id="dflt-study-count"></span> Studies<br/>
+                    <span id="dflt-pd-count"></span> Processed Data<br/>
+                    <span id="dflt-samp-count"></span> Samples
                   </li>
                 </ul>
             </li>
