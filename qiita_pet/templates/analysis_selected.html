@@ -4,7 +4,10 @@
 <script type="text/javascript">
 function error(evt) { $('#ws-error').html("<b>Server communication error. Sample removal will not be recorded. Please try again later.</b>"); };
 function check_color() {
-  if($('.row').length === 0) { $('#dflt-sel-info').removeAttr('style'); }
+  if($('.row').length === 0) {
+    $('#dflt-sel-info').removeAttr('style');
+    $('#create-button').remove();
+  }
 }
 
 function remove_proc_data(pid, sid) {
@@ -115,7 +118,7 @@ $(document).ready(function() {
 {% end %}
 
 {% if sel_data %}
-<button type="button" class="btn btn-success btn-lg" data-toggle="modal" data-target="#create-analysis-modal-view">
+<button type="button" class="btn btn-success btn-lg" id="create-button" name="create-button" data-toggle="modal" data-target="#create-analysis-modal-view">
   Create Analysis
 </button>
 {% end %}
