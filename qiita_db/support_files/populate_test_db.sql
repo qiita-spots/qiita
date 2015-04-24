@@ -453,3 +453,4 @@ INSERT INTO qiita.analysis_sample (analysis_id, processed_data_id, sample_id) VA
 
 -- Create the new prep_template_filepath
 INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum, checksum_algorithm_id, data_directory_id) VALUES ('1_prep_1_19700101-000000.txt', 16, '3703494589', 1, 9);
+INSERT INTO qiita.prep_template_filepath VALUES (1, 19);
