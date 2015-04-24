@@ -24,13 +24,14 @@ from os.path import join
 from future.utils import viewitems
 from biom import load_table
 from biom.util import biom_open
+import pandas as pd
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from .sql_connection import SQLConnectionHandler
 from .base import QiitaStatusObject
 from .data import ProcessedData, RawData
 from .study import Study
-from .exceptions import QiitaDBStatusError  # QiitaDBNotImplementedError
+from .exceptions import QiitaDBStatusError, QiitaDBError
 from .util import (convert_to_id, get_work_base_dir,
                    get_mountpoint, get_table_cols, insert_filepaths)
 
@@ -701,81 +702,61 @@ class Analysis(QiitaStatusObject):
            Code modified slightly from qiime.util.MetadataMap.__add__"""
         conn_handler = conn_handler if conn_handler is not None \
             else SQLConnectionHandler()
-        # We will keep track of all unique sample_ids and metadata headers
-        # we have seen as we go, as well as studies already seen
+
         all_sample_ids = set()
-        all_headers = set(get_table_cols("required_sample_info", conn_handler))
-        all_studies = set()
+        sql = """SELECT filepath_id, filepath
+                 FROM qiita.filepath
+                    JOIN qiita.prep_template_filepath USING (filepath_id)
+                    JOIN qiita.prep_template_preprocessed_data
+                        USING (prep_template_id)
+                    JOIN qiita.preprocessed_processed_data
+                        USING (preprocessed_data_id)
+                    JOIN qiita.filepath_type USING (filepath_type_id)
+                 WHERE processed_data_id = %s
+                    AND filepath_type = 'qiime_map'
+                 ORDER BY filepath_id DESC"""
+        _id, fp = get_mountpoint('templates')[0]
+        to_concat = []
 
-        merged_data = defaultdict(lambda: defaultdict(lambda: None))
         for pid, samples in viewitems(samples):
-            if any([all_sample_ids.intersection(samples),
-                   len(set(samples)) != len(samples)]):
-                # duplicate samples so raise error
-                raise ValueError("Duplicate sample ids found: %s" %
-                                 str(all_sample_ids.intersection(samples)))
-            all_sample_ids.update(samples)
-            study_id = ProcessedData(pid).study
+            if len(samples) != len(set(samples)):
+                duplicates = [s for s in samples if samples.count(s) > 1]
+                raise QiitaDBError("Duplicate sample ids found: %s"
+                                   % ', '.join(duplicates))
+            # Get the QIIME mapping file
+            qiime_map_fp = conn_handler.execute_fetchall(sql, (pid,))[0][1]
+            # Parse the mapping file
+            qiime_map = pd.read_csv(
+                join(fp, qiime_map_fp), sep='\t', infer_datetime_format=True,
+                keep_default_na=False, na_values=['unknown'], parse_dates=True,
+                index_col=False)
+            qiime_map.set_index('#SampleID', inplace=True, drop=True)
+            qiime_map = qiime_map.loc[samples]
 
-            # create a convenience study object
-            s = Study(study_id)
+            duplicates = all_sample_ids.intersection(qiime_map.index)
+            if duplicates or len(samples) != len(set(samples)):
+                # Duplicate samples so raise error
+                raise QiitaDBError("Duplicate sample ids found: %s"
+                                   % ', '.join(duplicates))
+            all_sample_ids.update(qiime_map.index)
+            to_concat.append(qiime_map)
 
-            # get the ids to retrieve the data from the sample and prep tables
-            sample_template_id = s.sample_template
-            # you can have multiple different prep templates but we are only
-            # using the one for 16S i. e. the last one ... sorry ;l
-            # see issue https://github.com/biocore/qiita/issues/465
-            prep_template_id = RawData(s.raw_data()[0]).prep_templates[-1]
+        merged_map = pd.concat(to_concat)
 
-            if study_id in all_studies:
-                # samples already added by other processed data file
-                # with the study_id
-                continue
-            all_studies.add(study_id)
-            # add headers to set of all headers found
-            all_headers.update(get_table_cols("sample_%d" % sample_template_id,
-                               conn_handler))
-            all_headers.update(get_table_cols("prep_%d" % prep_template_id,
-                               conn_handler))
-            # NEED TO ADD COMMON PREP INFO Issue #247
-            sql = ("SELECT rs.*, p.*, ss.* "
-                   "FROM qiita.required_sample_info rs JOIN qiita.sample_{0} "
-                   "ss USING(sample_id) JOIN qiita.prep_{1} p USING(sample_id)"
-                   " WHERE rs.sample_id IN {2} AND rs.study_id = {3}".format(
-                       sample_template_id, prep_template_id,
-                       "(%s)" % ",".join("'%s'" % s for s in samples),
-                       study_id))
-            metadata = conn_handler.execute_fetchall(sql)
-            # add all the metadata to merged_data
-            for data in metadata:
-                sample_id = data['sample_id']
-                for header, value in viewitems(data):
-                    if header in {'sample_id'}:
-                        continue
-                    merged_data[sample_id][header] = str(value)
+        cols = merged_map.columns.values.tolist()
+        cols.remove('BarcodeSequence')
+        cols.remove('LinkerPrimerSequence')
+        cols.remove('Description')
+        new_cols = ['BarcodeSequence', 'LinkerPrimerSequence']
+        new_cols.extend(cols)
+        new_cols.append('Description')
+        merged_map = merged_map[new_cols]
 
-        # prep headers, making sure they follow mapping file format rules
-        all_headers = list(all_headers - {'linkerprimersequence',
-                           'barcodesequence', 'description', 'sample_id'})
-        all_headers.sort()
-        all_headers = ['BarcodeSequence', 'LinkerPrimerSequence'] + all_headers
-        all_headers.append('Description')
-
-        # write mapping file out
+        # Save the mapping file
         _, base_fp = get_mountpoint(self._table)[0]
         mapping_fp = join(base_fp, "%d_analysis_mapping.txt" % self._id)
-        with open(mapping_fp, 'w') as f:
-            f.write("#SampleID\t%s\n" % '\t'.join(all_headers))
-            for sample, metadata in viewitems(merged_data):
-                data = [sample]
-                for header in all_headers:
-                    l_head = header.lower()
-                    data.append(metadata[l_head] if
-                                metadata[l_head] is not None else "no_data")
-                f.write("%s\n" % "\t".join(data))
-
-        self._add_file("%d_analysis_mapping.txt" % self._id,
-                       "plain_text", conn_handler=conn_handler)
+        merged_map.to_csv(mapping_fp, index_label='#SampleID',
+                          na_rep='unknown', sep='\t')
 
     def _add_file(self, filename, filetype, data_type=None, conn_handler=None):
         """adds analysis item to database
