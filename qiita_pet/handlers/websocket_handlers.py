@@ -91,6 +91,9 @@ class SelectedSocketHandler(WebSocketHandler, BaseHandler):
         elif 'remove_pd' in msginfo:
             data = msginfo['remove_pd']
             default.remove_samples([data['proc_data']])
+        elif 'clear' in msginfo:
+            data = msginfo['clear']
+            default.remove_samples(data['pids'])
         self.write_message(msg)
 
 

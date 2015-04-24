@@ -2,6 +2,12 @@
 {% block head %}
 <link rel="stylesheet" href="/static/vendor/css/jquery.dataTables.css" type="text/css">
 <style>
+.alert {
+  position: fixed;
+  top: 50px;
+  left: 40px;
+  z-index:100;
+}
 td.details-control {
   cursor: pointer;
 }
@@ -38,7 +44,10 @@ function sel_proc_data(row, pid) {
   moi.send('sel', proc_data);
 }
 
-function show_alert(data) { bootstrapAlert(data + ' samples selected.', "success", 2000); }
+function show_alert(data) {
+  bootstrapAlert(data + ' samples selected.', "success", 2000);
+   $('#dflt-sel-info').css('color', 'rgb(0, 160, 0)');
+}
 
 function fillAbstract(table, row) {
     $('#title-text-area').text($('#' + table).find('#study' + row + "-title").text());
@@ -51,7 +60,7 @@ $(document).ready(function() {
         function format ( d, row ) {
             // `d` is the original data object for the row
             // create formatted cell with proc data table
-            var proc_data_table = '<h4>Processed Data</h4><table class="table" cellpadding="5" cellspacing="0" border="0" style="padding-left:50px;"><tr><th></th><th>ID</th><th>Data type</th><th>Processed Date</th><th>Algorithm</th><th>Reference</th><th>Samples</th></tr>';
+            var proc_data_table = '<h4>Processed Data</h4><table class="table" cellpadding="5" cellspacing="0" border="0" style="padding-left:50px;width:80%"><tr><th></th><th>ID</th><th>Data type</th><th>Processed Date</th><th>Algorithm</th><th>Reference</th><th>Samples</th></tr>';
             for(i=0;i<d.proc_data_info.length;i++) {
               var proc_data = d.proc_data_info[i];
               proc_data_table += '<tr><td><input type="button" class="btn btn-sm" value="Add" onclick="sel_proc_data('+ row +','+ proc_data.pid +')"></td><td>' + proc_data.pid + '</td><td>' + proc_data.data_type + '</td><td>' + proc_data.processed_date + '</td><td>' + proc_data.algorithm + '</td><td>' + proc_data.reference_name + ' ' + proc_data.reference_version + '</td><td>' + proc_data.samples.length + '</td></tr>';

@@ -56,6 +56,11 @@
       }
 
       $(document).ready(function() {
+        $.getJSON("/analysis/dflt/sumary/", function(result) {
+            if(parseInt(result.studies) > 0) {
+                $('#dflt-sel-info').css('color', 'rgb(0, 160, 0)');
+            }
+        });
         // Load default analysis summary data when displayed in menu
         $("#dflt-sel-info").mouseover(function() {
           $.getJSON("/analysis/dflt/sumary/", function(result) {

@@ -1,8 +1,29 @@
 {% extends sitebase.html %}
 {% block head %}
+{% from future.utils import viewitems %}
+{% from itertools import chain %}
 <script src="/static/vendor/js/moi.js"></script>
 <script type="text/javascript">
+
 function error(evt) { $('#ws-error').html("<b>Server communication error. Sample removal will not be recorded. Please try again later.</b>"); };
+function check_color() {
+  if($('.row').length === 0) {
+    $('#dflt-sel-info').removeAttr('style');
+    $('#create-button').remove();
+    $('#clear-button').remove();
+  }
+}
+
+function clear() {
+  if(confirm('Are you sure you want to remove all samples?')) {
+    moi.send('clear', {'pids': {% raw [int(p) for p in chain.from_iterable(pid.keys() for sid, pid in viewitems(sel_data))] %} });
+  }
+}
+
+function clear_from_html(data) {
+  $.each($('.row'), function(index, value) { value.remove(); });
+  check_color();
+}
 
 function remove_proc_data(pid, sid) {
   if(confirm('Are you sure you want to remove all samples for this processed data?')) {
@@ -17,15 +38,16 @@ function remove_pd_from_html(data) {
     $('#proc' + pid + '-samples').remove();
     // remove study if all proc data removed
     if($('#study'+ sid + '-table tbody').children().length === 1) { $('#study'+sid).remove(); }
+    check_color();
 }
 
 function remove_sample(sid, pid, sample) { moi.send('remove_sample', {'proc_data': pid, 'samples': [sample], 'sid': sid}); }
 
 function remove_sample_from_html(data) {
-  pid = data.proc_data;
-  sample = data.samples[0];
-  sid = data.sid;
-  document.getElementById(pid + '@' + sample).remove();
+    pid = data.proc_data;
+    sample = data.samples[0];
+    sid = data.sid;
+    document.getElementById(pid + '@' + sample).remove();
     //decriment sample count for pid
     var count = $('#proc' + pid + '-sample-count');
     count.text(parseInt(count.text(), 10) - 1);
@@ -33,18 +55,20 @@ function remove_sample_from_html(data) {
     if($('#proc' + pid + '-samples-table tbody').children().length === 0) { $('#proc'+pid).remove(); $('#proc' + pid + '-samples').remove(); }
     // remove study if all proc data removed
     if($('#study'+ sid + '-table tbody').children().length === 1) { $('#study'+sid).remove(); }
+    check_color();
 }
 $(document).ready(function() {
       moi.init(window.location.host + '/analysis/selected/socket/', null, function(){}, error, error);
       moi.add_callback('remove_pd', remove_pd_from_html);
       moi.add_callback('remove_sample', remove_sample_from_html);
+      moi.add_callback('clear', clear_from_html);
+      $('#clear-button').on('click', clear);
     });
 </script>
 {% end %}
 
 {% block content %}
 {% from qiita_db.study import Study %}
-{% from future.utils import viewitems %}
 {% set static_info = {'data_type', 'processed_date', 'algorithm', 'reference_name', 'reference_version', 'sequence_filepath', 'taxonomy_filepath', 'tree_filepath'}%}
 <h1>Selected Samples</h1>
 <span id="ws-error" style="color:red"></span>
@@ -111,8 +135,11 @@ $(document).ready(function() {
 {% end %}
 
 {% if sel_data %}
-<button type="button" class="btn btn-success btn-lg" data-toggle="modal" data-target="#create-analysis-modal-view">
+<button type="button" class="btn btn-success btn-lg" id="create-button" name="create-button" data-toggle="modal" data-target="#create-analysis-modal-view">
   Create Analysis
+</button>
+<button type="button" class="btn btn-danger btn-lg" id="clear-button" name="clear-button">
+  Clear Selected
 </button>
 {% end %}
 
