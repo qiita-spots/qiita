@@ -44,7 +44,7 @@ function sel_proc_data(row, pid) {
   moi.send('sel', proc_data);
 }
 
-function show_alert(data) { bootstrapAlert(data + ' samples selected.', "success", 2000); }
+function show_alert(data) { bootstrapAlert(data + ' samples selected.', "success", 2000); $('#dflt-sel-info').css('color', 'rgb(0, 160, 0)');}
 
 function fillAbstract(table, row) {
     $('#title-text-area').text($('#' + table).find('#study' + row + "-title").text());
