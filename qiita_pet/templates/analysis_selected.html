@@ -40,6 +40,7 @@ function remove_sample_from_html(data) {
     if($('#proc' + pid + '-samples-table tbody').children().length === 0) { $('#proc'+pid).remove(); $('#proc' + pid + '-samples').remove(); }
     // remove study if all proc data removed
     if($('#study'+ sid + '-table tbody').children().length === 1) { $('#study'+sid).remove(); }
+    check_color();
 }
 $(document).ready(function() {
       moi.init(window.location.host + '/analysis/selected/socket/', null, function(){}, error, error);
