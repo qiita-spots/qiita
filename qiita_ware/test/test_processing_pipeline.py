@@ -242,19 +242,20 @@ class ProcessingPipelineTests(TestCase):
     def test_get_preprocess_fasta_cmd_sff_run_prefix_match(self):
         # Test that the run prefixes in the prep_template and the file names
         # actually match and raise an error if not
+        new_fp_id = get_count('qiita.filepath') + 1
         conn_handler = SQLConnectionHandler()
         sql = ("""
             INSERT INTO qiita.filepath (filepath_id, filepath,
                 filepath_type_id, checksum, checksum_algorithm_id,
-                data_directory_id) VALUES (19, '1_new.sff', 17, 852952723, 1,
+                data_directory_id) VALUES (%s, '1_new.sff', 17, 852952723, 1,
                 5);
             INSERT INTO qiita.raw_filepath (raw_data_id , filepath_id) VALUES
-                (3, 19);
+                (3, %s);
             UPDATE qiita.prep_1 SET run_prefix='preprocess_test';
             UPDATE qiita.prep_1 SET run_prefix='new' WHERE
                 sample_id = '1.SKB8.640193';
         """)
-        conn_handler.execute(sql)
+        conn_handler.execute(sql, (new_fp_id, new_fp_id))
 
         raw_data = RawData(3)
         params = Preprocessed454Params(1)
@@ -287,25 +288,27 @@ class ProcessingPipelineTests(TestCase):
     def test_get_preprocess_fasta_cmd_sff_run_prefix_match_error_1(self):
         # Test that the run prefixes in the prep_template and the file names
         # actually match and raise an error if not
+        fp_count = get_count('qiita.filepath')
         conn_handler = SQLConnectionHandler()
         sql = ("""
             INSERT INTO qiita.filepath (filepath_id, filepath,
                 filepath_type_id, checksum, checksum_algorithm_id,
-                data_directory_id) VALUES (19, '1_new.sff', 17, 852952723, 1,
+                data_directory_id) VALUES (%s, '1_new.sff', 17, 852952723, 1,
                 5);
             INSERT INTO qiita.raw_filepath (raw_data_id , filepath_id) VALUES
-                (3, 19);
+                (3, %s);
             INSERT INTO qiita.filepath (filepath_id, filepath,
                 filepath_type_id, checksum, checksum_algorithm_id,
-                data_directory_id) VALUES (20, '1_error.sff', 17, 852952723,
+                data_directory_id) VALUES (%s, '1_error.sff', 17, 852952723,
                 1, 5);
             INSERT INTO qiita.raw_filepath (raw_data_id , filepath_id) VALUES
-                (3, 20);
+                (3, %s);
             UPDATE qiita.prep_1 SET run_prefix='preprocess_test';
             UPDATE qiita.prep_1 SET run_prefix='new' WHERE
                 sample_id = '1.SKB8.640193';
         """)
-        conn_handler.execute(sql)
+        conn_handler.execute(
+            sql, (fp_count + 1, fp_count + 1, fp_count + 2, fp_count + 2))
 
         raw_data = RawData(3)
         params = Preprocessed454Params(1)
