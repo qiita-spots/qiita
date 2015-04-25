@@ -29,11 +29,11 @@ import pandas as pd
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from .sql_connection import SQLConnectionHandler
 from .base import QiitaStatusObject
-from .data import ProcessedData, RawData
+from .data import ProcessedData
 from .study import Study
 from .exceptions import QiitaDBStatusError, QiitaDBError
 from .util import (convert_to_id, get_work_base_dir,
-                   get_mountpoint, get_table_cols, insert_filepaths)
+                   get_mountpoint, insert_filepaths)
 
 
 class Analysis(QiitaStatusObject):
