@@ -49,11 +49,10 @@ LOOP
 
     -- Copy the values from the required_sample_info table to the dynamic table
     EXECUTE '
-        WITH sample_values AS (SELECT *
-                               FROM qiita.required_sample_info
-                               JOIN qiita.required_sample_info_status
-                                    USING (required_sample_info_status_id)
-                               WHERE study_id = ' || st_id || ')
+        WITH sv AS (SELECT * FROM qiita.required_sample_info
+                    JOIN qiita.required_sample_info_status
+                        USING (required_sample_info_status_id)
+                    WHERE study_id = ' || st_id || ')
         UPDATE ' || dyn_table || '
             SET physical_specimen_location=sv.physical_location,
                 physical_specimen_remaining=sv.has_physical_specimen,
@@ -65,7 +64,7 @@ LOOP
                 latitude=sv.latitude,
                 longitude=sv.longitude,
                 required_sample_info_status=sv.status
-            FROM sample_values sv
+            FROM sv
             WHERE ' || dyn_table || '.sample_id = sv.sample_id;';
 
 END LOOP;
@@ -125,15 +124,14 @@ LOOP
 
     -- Copy the values from the common_prep_info table to the dynamic table
     EXECUTE '
-        WITH sample_values AS (SELECT *
-                               FROM qiita.common_prep_info
-                                    JOIN qiita.emp_status USING (emp_status_id)
-                               WHERE prep_template_id = ' || prep_id || ')
+        WITH sv AS (SELECT * FROM qiita.common_prep_info
+                        JOIN qiita.emp_status USING (emp_status_id)
+                    WHERE prep_template_id = ' || prep_id || ')
         UPDATE ' || dyn_table || '
             SET center_name=sv.center_name,
                 center_project_name=sv.center_project_name,
                 emp_status=sv.emp_status
-            FROM sample_values sv
+            FROM sv
             WHERE ' || dyn_table || '.sample_id=sv.sample_id;';
 
 END LOOP;

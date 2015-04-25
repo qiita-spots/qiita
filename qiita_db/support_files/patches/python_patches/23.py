@@ -2,6 +2,7 @@
 # Need to re-generate the files, given that some headers have changed
 
 from qiita_db.sql_connection import SQLConnectionHandler
+from qiita_db.metadata_template import SampleTemplate, PrepTemplate
 
 conn_handler = SQLConnectionHandler()
 
