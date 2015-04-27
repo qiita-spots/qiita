@@ -82,6 +82,17 @@ It might be necessary to restart postgresql: `sudo service postgresql restart`.
 
 Furthermore, the `pg_hba.conf` file can be modified to change authentication type for local users to trust (rather than, e.g., md5) but we haven't tested this solution.
 
+Installing optional qiita dependencies
+--------------------------------------
+
+For large scale systems, pgbouncer is preferable to a straight postgres connection as it removes postgresql connection overhead. To install pgbouncer, you will need libevent. Installation instructions for OSX are available [here](http://mac-dev-env.patrickbougie.com/libevent/).
+
+Once libevent is installed, you can install pgbouncer. Source code is available [here](https://pgbouncer.github.io/downloads/). If libevent was installed using the instructions above, run config using 
+```
+./configure --prefix=/usr/local --with-libevent=/usr/local/libevent
+```
+Then make and make install as usual. Configuration and usage instructions are at [pgbouncer's homepage](https://pgbouncer.github.io/).
+
 ## Troubleshooting installation on non-Ubuntu operating systems
 
 ### xcode
