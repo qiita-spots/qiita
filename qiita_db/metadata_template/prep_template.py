@@ -472,7 +472,9 @@ class PrepTemplate(MetadataTemplate):
                        sep='\t')
 
         # adding the fp to the object
-        self.add_filepath(filepath)
+        self.add_filepath(
+            filepath, conn_handler=conn_handler,
+            fp_id=convert_to_id("qiime_map", "filepath_type"))
 
         return filepath
 
