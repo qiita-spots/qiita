@@ -127,7 +127,7 @@ class PrepTemplate(MetadataTemplate):
             pt_cols.update(PREP_TEMPLATE_COLUMNS_TARGET_GENE)
 
         md_template = cls._clean_validate_template(md_template, study.id,
-                                                   PREP_TEMPLATE_COLUMNS)
+                                                   pt_cols)
 
         # Insert the metadata template
         # We need the prep_id for multiple calls below, which currently is not
