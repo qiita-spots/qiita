@@ -1338,7 +1338,7 @@ class ProcessedData(BaseData):
         QiitaDBStatusError
             If the processed data status is not sandbox
         QiitaDBError
-            If the processed data has (meta)analyses
+            If the processed data has analyses
         """
         if cls(processed_data_id).status != 'sandbox':
             raise QiitaDBStatusError(
@@ -1354,8 +1354,8 @@ class ProcessedData(BaseData):
         if analyses:
             raise QiitaDBError(
                 "Processed data %d cannot be removed because it is linked to "
-                "the following (meta)analysis: %s" % (processed_data_id,
-                                                      ', '.join(analyses)))
+                "the following analysis: %s" % (processed_data_id,
+                                                ', '.join(analyses)))
 
         # delete
         queue = "delete_processed_data_%d" % processed_data_id

@@ -66,7 +66,7 @@ def submit_to_VAMPS(preprocessed_data_id):
 
 def run_analysis(analysis_id, commands, comm_opts=None,
                  rarefaction_depth=None, **kwargs):
-    """Run a meta-analysis"""
+    """Run an analysis"""
     analysis = Analysis(analysis_id)
     ar = RunAnalysis(**kwargs)
     return ar(analysis, commands, comm_opts, rarefaction_depth)
