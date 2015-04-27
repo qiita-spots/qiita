@@ -540,6 +540,13 @@ class MetadataTemplate(QiitaObject):
         -------
         md_template : DataFrame
             Cleaned copy of the input md_template
+
+        Raises
+        ------
+        QiitaDBColumnError
+            If the sample names in md_template contains invalid names
+        QiitaDBWarning
+            If there are missing columns required for some functionality
         """
         cls._check_subclass()
         invalid_ids = get_invalid_sample_names(md_template.index)
@@ -988,7 +995,8 @@ class MetadataTemplate(QiitaObject):
         if samples is not None:
             df = df.loc[samples]
 
-        # Apply some sorting to the dataframe
+        # Sorting the dataframe so multiple serializations of the metadata
+        # template are consistent.
         df.sort_index(axis=0, inplace=True)
         df.sort_index(axis=1, inplace=True)
 
