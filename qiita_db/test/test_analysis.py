@@ -336,6 +336,13 @@ class TestAnalysis(TestCase):
     # def test_get_children(self):
     #     raise NotImplementedError()
 
+    def test_summary_data(self):
+        obs = self.analysis.summary_data()
+        exp = {'studies': 1,
+               'processed_data': 1,
+               'samples': 5}
+        self.assertEqual(obs, exp)
+
     def test_add_samples(self):
         new = Analysis.create(User("admin@foo.bar"), "newAnalysis",
                               "A New Analysis")

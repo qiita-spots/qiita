@@ -1,15 +1,17 @@
 # adapted from
 # https://github.com/leporo/tornado-redis/blob/master/demos/websockets
-from json import loads
+from json import loads, dumps
+from itertools import chain
 
 import toredis
 from tornado.web import authenticated
 from tornado.websocket import WebSocketHandler
 from tornado.gen import engine, Task
+from future.utils import viewvalues
 
 from moi import r_client
-from qiita_db.analysis import Analysis
 from qiita_pet.handlers.base_handlers import BaseHandler
+from qiita_db.analysis import Analysis
 
 
 class MessageHandler(WebSocketHandler):
@@ -74,33 +76,44 @@ class MessageHandler(WebSocketHandler):
         self.redis.disconnect()
 
 
-class SelectSamplesHandler(WebSocketHandler, BaseHandler):
+class SelectedSocketHandler(WebSocketHandler, BaseHandler):
+    """Websocket for removing samples on default analysis display page"""
     @authenticated
     def on_message(self, msg):
-        """Selects or deselects samples on a message from the user
+        # When the websocket receives a message from the javascript client,
+        # parse into JSON
+        msginfo = loads(msg)
+        default = Analysis(self.current_user.default_analysis)
+
+        if 'remove_sample' in msginfo:
+            data = msginfo['remove_sample']
+            default.remove_samples([data['proc_data']], data['samples'])
+        elif 'remove_pd' in msginfo:
+            data = msginfo['remove_pd']
+            default.remove_samples([data['proc_data']])
+        elif 'clear' in msginfo:
+            data = msginfo['clear']
+            default.remove_samples(data['pids'])
+        self.write_message(msg)
+
+
+class SelectSamplesHandler(WebSocketHandler, BaseHandler):
+    """Websocket for selecting and deselecting samples on list studies page"""
+    @authenticated
+    def on_message(self, msg):
+        """Selects samples on a message from the user
 
         Parameters
         ----------
         msg : JSON str
             Message containing sample and prc_data information, in the form
-            {'action': action, 'proc_data': [p1, ...], 'samples': [[s1], ...]}
-            Where proc data in p1 matches to samples list in s1
+            {proc_data_id': [s1, s2, ...], ...]}
         """
-        # When the websocket receives a message from the javascript client,
-        # parse into JSON
         msginfo = loads(msg)
-        num_samples = sum(len(x) for x in msginfo["samples"])
         default = Analysis(self.current_user.default_analysis)
-        if msginfo["action"] == "select":
-            # match proc data with samples and add them
-            select = {}
-            for pid, samples in zip(msginfo["proc_data"], msginfo["samples"]):
-                select[pid] = samples
-                default.add_samples(select)
-            self.write_message("%d samples selected" % num_samples)
-        elif msginfo["action"] == "deselect":
-            for pid, samples in zip(msginfo["proc_data"], msginfo["samples"]):
-                default.remove_samples([pid], samples)
-            self.write_message("%d samples removed" % num_samples)
-        else:
-            raise ValueError("Unknown action: %s" % msginfo["action"])
+        default.add_samples(msginfo['sel'])
+        # Count total number of unique samples selected and return
+        self.write_message(dumps({
+            'sel': len(set(
+                chain.from_iterable(s for s in viewvalues(msginfo['sel']))))
+        }))
