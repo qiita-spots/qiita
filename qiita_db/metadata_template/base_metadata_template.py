@@ -194,30 +194,13 @@ class BaseSample(QiitaObject):
         set of str
             The set of all available metadata categories
         """
-        # Get all the required columns
-        required_cols = get_table_cols(self._table, conn_handler)
-        # Get all the the columns in the dynamic table
-        dynamic_cols = get_table_cols(self._dynamic_table, conn_handler)
-        # Get the union of the two previous lists
-        cols = set(required_cols).union(dynamic_cols)
-        # Remove the sample_id column and the study_id/raw_data_id columns,
-        # as this columns are used internally for data storage and they don't
-        # actually belong to the metadata
+        # Get all the columns
+        cols = get_table_cols(self._dynamic_table, conn_handler)
+        # Remove the sample_id column as this column is used internally for
+        # data storage and it doesn't actually belong to the metadata
         cols.remove('sample_id')
-        cols.remove(self._id_column)
-        try:
-            # study_id could be potentially removed by _id_column, so wrap
-            # in a try except
-            cols.remove('study_id')
-        except KeyError:
-            pass
-        # Change the *_id columns, as this is for convenience internally,
-        # and add the original categories
-        for key, value in viewitems(self._md_template.translate_cols_dict):
-            cols.remove(key)
-            cols.add(value)
 
-        return cols
+        return set(cols)
 
     def _to_dict(self):
         r"""Returns the categories and their values in a dictionary
@@ -229,22 +212,13 @@ class BaseSample(QiitaObject):
         """
         conn_handler = SQLConnectionHandler()
         d = dict(conn_handler.execute_fetchone(
-            "SELECT * FROM qiita.{0} WHERE {1}=%s AND "
-            "sample_id=%s".format(self._table, self._id_column),
-            (self._md_template.id, self._id)))
-        dynamic_d = dict(conn_handler.execute_fetchone(
             "SELECT * from qiita.{0} WHERE "
             "sample_id=%s".format(self._dynamic_table),
             (self._id, )))
-        d.update(dynamic_d)
-        del d['sample_id']
-        del d[self._id_column]
-        d.pop('study_id', None)
 
-        # Modify all the *_id columns to include the string instead of the id
-        for k, v in viewitems(self._md_template.translate_cols_dict):
-            d[v] = self._md_template.str_cols_handlers[k][d[k]]
-            del d[k]
+        # Remove the sample_id, is not part of the metadata
+        del d['sample_id']
+
         return d
 
     def __len__(self):
@@ -283,38 +257,16 @@ class BaseSample(QiitaObject):
         """
         conn_handler = SQLConnectionHandler()
         key = key.lower()
-        if key in self._get_categories(conn_handler):
-            # It's possible that the key is asking for one of the *_id columns
-            # that we have to do the translation
-            def handler(x):
-                return x
-
-            # prevent flake8 from complaining about the function not being
-            # used and a redefinition happening in the next few lines
-            handler(None)
-
-            if key in self._md_template.translate_cols_dict.values():
-                handler = (
-                    lambda x: self._md_template.str_cols_handlers[key][x])
-                key = "%s_id" % key
-            # Check if we have either to query the table with required columns
-            # or the dynamic table
-            if key in get_table_cols(self._table, conn_handler):
-                result = conn_handler.execute_fetchone(
-                    "SELECT {0} FROM qiita.{1} WHERE {2}=%s AND "
-                    "sample_id=%s".format(key, self._table, self._id_column),
-                    (self._md_template.id, self._id))[0]
-                return handler(result)
-            else:
-                return conn_handler.execute_fetchone(
-                    "SELECT {0} FROM qiita.{1} WHERE "
-                    "sample_id=%s".format(key, self._dynamic_table),
-                    (self._id, ))[0]
-        else:
+        if key not in self._get_categories(conn_handler):
             # The key is not available for the sample, so raise a KeyError
             raise KeyError("Metadata category %s does not exists for sample %s"
                            " in template %d" %
                            (key, self._id, self._md_template.id))
+
+        sql = """SELECT {0} FROM qiita.{1}
+                 WHERE sample_id=%s""".format(key, self._dynamic_table)
+
+        return conn_handler.execute_fetchone(sql, (self._id, ))[0]
 
     def add_setitem_queries(self, column, value, conn_handler, queue):
         """Adds the SQL queries needed to set a value to the provided queue
@@ -336,39 +288,14 @@ class BaseSample(QiitaObject):
         QiitaDBColumnError
             If the column does not exist in the table
         """
-        # try dynamic tables
-        sql = """SELECT EXISTS (
-                    SELECT column_name
-                    FROM information_schema.columns
-                    WHERE table_name=%s
-                        AND table_schema='qiita'
-                        AND column_name=%s)"""
-        exists_dynamic = conn_handler.execute_fetchone(
-            sql, (self._dynamic_table, column))[0]
-        # try required_sample_info
-        sql = """SELECT EXISTS (
-                    SELECT column_name
-                    FROM information_schema.columns
-                    WHERE table_name=%s
-                        AND table_schema='qiita'
-                        AND column_name=%s)"""
-        exists_required = conn_handler.execute_fetchone(
-            sql, (self._table, column))[0]
-
-        if exists_dynamic:
-                sql = """UPDATE qiita.{0}
-                         SET {1}=%s
-                         WHERE sample_id=%s""".format(self._dynamic_table,
-                                                      column)
-        elif exists_required:
-            # here is not required the type check as the required fields have
-            # an explicit type check
-            sql = """UPDATE qiita.{0}
-                     SET {1}=%s
-                     WHERE sample_id=%s""".format(self._table, column)
-        else:
+        # Check if the column exist in the table
+        if column not in self._get_categories(conn_handler):
             raise QiitaDBColumnError("Column %s does not exist in %s" %
                                      (column, self._dynamic_table))
+
+        sql = """UPDATE qiita.{0}
+                 SET {1}=%s
+                 WHERE sample_id=%s""".format(self._dynamic_table, column)
 
         conn_handler.add_to_queue(queue, sql, (value, self._id))
 

@@ -38,9 +38,9 @@ class BaseTestSample(TestCase):
         self.sample_template = SampleTemplate(1)
         self.sample_id = '1.SKB8.640193'
         self.tester = Sample(self.sample_id, self.sample_template)
-        self.exp_categories = {'physical_location', 'has_physical_specimen',
-                               'has_extracted_data', 'sample_type',
-                               'required_sample_info_status',
+        self.exp_categories = {'physical_specimen_location',
+                               'physical_specimen_remaining',
+                               'dna_extracted', 'sample_type',
                                'collection_timestamp', 'host_subject_id',
                                'description', 'season_environment',
                                'assigned_from_geo', 'texture', 'taxon_id',
@@ -68,12 +68,12 @@ class TestSampleReadOnly(BaseTestSample):
         conn_handler.create_queue(queue)
 
         self.tester.add_setitem_queries(
-            'has_physical_specimen', True, conn_handler, queue)
+            'physical_specimen_remaining', True, conn_handler, queue)
 
         obs = conn_handler.queues[queue]
-        sql = """UPDATE qiita.required_sample_info
-                     SET has_physical_specimen=%s
-                     WHERE sample_id=%s"""
+        sql = """UPDATE qiita.sample_1
+                 SET physical_specimen_remaining=%s
+                 WHERE sample_id=%s"""
         exp = [(sql, (True, '1.SKB8.640193'))]
         self.assertEqual(obs, exp)
 
@@ -87,8 +87,8 @@ class TestSampleReadOnly(BaseTestSample):
 
         obs = conn_handler.queues[queue]
         sql = """UPDATE qiita.sample_1
-                         SET tot_nitro=%s
-                         WHERE sample_id=%s"""
+                 SET tot_nitro=%s
+                 WHERE sample_id=%s"""
         exp = [(sql, ('1234.5', '1.SKB8.640193'))]
         self.assertEqual(obs, exp)
 
@@ -144,27 +144,21 @@ class TestSampleReadOnly(BaseTestSample):
 
     def test_len(self):
         """Len returns the correct number of categories"""
-        self.assertEqual(len(self.tester), 30)
+        self.assertEqual(len(self.tester), 29)
 
     def test_getitem_required(self):
         """Get item returns the correct metadata value from the required table
         """
-        self.assertEqual(self.tester['physical_location'], 'ANL')
+        self.assertEqual(self.tester['physical_specimen_location'], 'ANL')
         self.assertEqual(self.tester['collection_timestamp'],
                          datetime(2011, 11, 11, 13, 00, 00))
-        self.assertTrue(self.tester['has_physical_specimen'])
+        self.assertTrue(self.tester['dna_extracted'])
 
     def test_getitem_dynamic(self):
         """Get item returns the correct metadata value from the dynamic table
         """
         self.assertEqual(self.tester['SEASON_ENVIRONMENT'], 'winter')
         self.assertEqual(self.tester['depth'], 0.15)
-
-    def test_getitem_id_column(self):
-        """Get item returns the correct metadata value from the changed column
-        """
-        self.assertEqual(self.tester['required_sample_info_status'],
-                         'completed')
 
     def test_getitem_error(self):
         """Get item raises an error if category does not exists"""
@@ -196,7 +190,7 @@ class TestSampleReadOnly(BaseTestSample):
         """values returns an iterator over the values"""
         obs = self.tester.values()
         self.assertTrue(isinstance(obs, Iterable))
-        exp = {'ANL', True, True, 'ENVO:soil', 'completed',
+        exp = {'ANL', True, True, 'ENVO:soil',
                datetime(2011, 11, 11, 13, 00, 00), '1001:M7',
                'Cannabis Soil Microbiome', 'winter', 'n',
                '64.6 sand, 17.6 silt, 17.8 clay', '1118232', 0.15, '3483',
@@ -211,9 +205,10 @@ class TestSampleReadOnly(BaseTestSample):
         """items returns an iterator over the (key, value) tuples"""
         obs = self.tester.items()
         self.assertTrue(isinstance(obs, Iterable))
-        exp = {('physical_location', 'ANL'), ('has_physical_specimen', True),
-               ('has_extracted_data', True), ('sample_type', 'ENVO:soil'),
-               ('required_sample_info_status', 'completed'),
+        exp = {('physical_specimen_location', 'ANL'),
+               ('physical_specimen_remaining', True),
+               ('dna_extracted', True),
+               ('sample_type', 'ENVO:soil'),
                ('collection_timestamp', datetime(2011, 11, 11, 13, 00, 00)),
                ('host_subject_id', '1001:M7'),
                ('description', 'Cannabis Soil Microbiome'),
