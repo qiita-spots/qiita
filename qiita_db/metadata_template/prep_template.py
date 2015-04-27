@@ -15,7 +15,7 @@ from qiita_db.exceptions import (QiitaDBColumnError, QiitaDBUnknownIDError,
                                  QiitaDBError, QiitaDBExecutionError)
 from qiita_db.sql_connection import SQLConnectionHandler
 from qiita_db.ontology import Ontology
-from qiita_db.util import (get_emp_status, convert_to_id,
+from qiita_db.util import (convert_to_id,
                            convert_from_id, get_mountpoint, infer_status)
 from .base_metadata_template import BaseSample, MetadataTemplate
 from .util import load_template_to_dataframe
@@ -31,7 +31,7 @@ class PrepSample(BaseSample):
     BaseSample
     Sample
     """
-    _table = "common_prep_info"
+    _table = "prep_template_sample"
     _table_prefix = "prep_"
     _column_table = "prep_columns"
     _id_column = "prep_template_id"
@@ -62,13 +62,11 @@ class PrepTemplate(MetadataTemplate):
     MetadataTemplate
     SampleTemplate
     """
-    _table = "common_prep_info"
+    _table = "prep_template_sample"
     _table_prefix = "prep_"
     _column_table = "prep_columns"
     _id_column = "prep_template_id"
     translate_cols_dict = {'emp_status_id': 'emp_status'}
-    id_cols_handlers = {'emp_status_id': get_emp_status()}
-    str_cols_handlers = {'emp_status_id': get_emp_status(key='emp_status_id')}
     _sample_cls = PrepSample
 
     @classmethod

@@ -31,7 +31,7 @@ class Sample(BaseSample):
     BaseSample
     PrepSample
     """
-    _table = "required_sample_info"
+    _table = "study_sample"
     _table_prefix = "sample_"
     _column_table = "study_sample_columns"
     _id_column = "study_id"
@@ -62,17 +62,12 @@ class SampleTemplate(MetadataTemplate):
     MetadataTemplate
     PrepTemplate
     """
-    _table = "required_sample_info"
+    _table = "study_sample"
     _table_prefix = "sample_"
     _column_table = "study_sample_columns"
     _id_column = "study_id"
     translate_cols_dict = {
         'required_sample_info_status_id': 'required_sample_info_status'}
-    id_cols_handlers = {
-        'required_sample_info_status_id': get_required_sample_info_status()}
-    str_cols_handlers = {
-        'required_sample_info_status_id': get_required_sample_info_status(
-            key='required_sample_info_status_id')}
     _sample_cls = Sample
 
     @staticmethod
