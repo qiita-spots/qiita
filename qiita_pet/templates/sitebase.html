@@ -54,6 +54,22 @@
           jumbotron.style.visibility = "hidden";
         }
       }
+
+      $(document).ready(function() {
+        $.getJSON("/analysis/dflt/sumary/", function(result) {
+            if(parseInt(result.studies) > 0) {
+                $('#dflt-sel-info').css('color', 'rgb(0, 160, 0)');
+            }
+        });
+        // Load default analysis summary data when displayed in menu
+        $("#dflt-sel-info").mouseover(function() {
+          $.getJSON("/analysis/dflt/sumary/", function(result) {
+            $("#dflt-study-count").text(result.studies);
+            $("#dflt-pd-count").text(result.processed_data);
+            $("#dflt-samp-count").text(result.samples);
+          });
+        });
+      });
       </script>
     {% block head %}{% end %}
   </head>
@@ -106,7 +122,7 @@
             <li class="dropdown">
               <a href="#" data-toggle="dropdown" class="dropdown-toggle">Meta Analysis<b class="caret"></b></a>
               <ul class="dropdown-menu">
-                <li><a data-toggle="modal" data-target="#create-analysis-modal-view">Create Meta Analysis</a></li>
+                <li><a href="/analysis/selected/">View Selected Samples</a></li>
                 <li><a href="/analysis/show/">See Previous Analyses</a></li>
               </ul>
             </li>
@@ -138,12 +154,20 @@
           </ul>
           <!-- show user name and logout button if there's a user logged in -->
           {% if user %}
-          <ul class="nav navbar-nav pull-right">
+          <ul class="nav navbar-nav navbar-right">
             <li>
               <a href="/profile/">Welcome {{user.id}}</a>
             </li>
-            <li class="pull-right">
+            <li>
               <a href="/auth/logout/">Log Out</a>
+            </li>
+            <li class="dropdown">
+              <a href="/analysis/selected/" id="dflt-sel-info"><span class="glyphicon glyphicon-list-alt"></span> Selected</a>
+              <ul class="dropdown-menu" style="padding: 5px">
+                <li> <span id="dflt-study-count"></span> Studies</li>
+                <li><span id="dflt-pd-count"></span> Processed Data</li>
+                <li><span id="dflt-samp-count"></span> Samples</li>
+              </ul>
             </li>
           </ul>
           <!-- otherwise show the login form -->
@@ -188,38 +212,8 @@
     </div> <!--/.main nav-bar -->
 
     <!-- all templates should override this portion to present their main content -->
-    <div id="template-content" class="container">
+    <div id="template-content" class="container" style="width:99%">
       {% block content %}{% end %}
-    </div>
-
-    <!-- modal view to enter analysis information -->
-    <div class="modal fade" id="create-analysis-modal-view" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-      <div class="modal-dialog">
-        <div class="modal-content">
-          <div class="modal-header">
-            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-            <h4 class="modal-title" id="myModalLabel">Create new meta-analysis</h4>
-          </div>
-          <form role="form" action="/analysis/2" method="post">
-          <input type="hidden" name="action" value="create">
-            <div class="modal-body">
-              <div>
-                <div class="form-group">
-                  <label for="name">Analysis name</label>
-                  <input type="text" class="form-control" id="name" name="name" placeholder="Analysis name">
-                </div>
-                <div class="form-group">
-                  <label for="description">Description</label>
-                  <input type="text" class="form-control" id="description" name="description" placeholder="Short description">
-                </div>
-              </div>
-            </div>
-            <div class="modal-footer">
-              <button type="submit" class="btn btn-primary">Create analysis</button>
-            </div>
-          </form>
-        </div>
-      </div>
     </div>
 
     <div id="footer">

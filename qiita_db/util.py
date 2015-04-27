@@ -905,9 +905,8 @@ def convert_to_id(value, table, conn_handler=None):
         The passed string has no associated id
     """
     conn_handler = conn_handler if conn_handler else SQLConnectionHandler()
-    _id = conn_handler.execute_fetchone(
-        "SELECT {0}_id FROM qiita.{0} WHERE {0} = %s".format(table),
-        (value, ))
+    sql = "SELECT {0}_id FROM qiita.{0} WHERE {0} = %s".format(table)
+    _id = conn_handler.execute_fetchone(sql, (value, ))
     if _id is None:
         raise IncompetentQiitaDeveloperError("%s not valid for table %s"
                                              % (value, table))

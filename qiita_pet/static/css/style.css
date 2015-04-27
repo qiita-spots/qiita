@@ -9,3 +9,7 @@
   padding-top: 6px;
   padding-bottom: 6px;
 }
+
+.dropdown:hover .dropdown-menu {
+    display: block;
+ }

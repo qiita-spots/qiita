@@ -18,6 +18,7 @@ Classes
 # -----------------------------------------------------------------------------
 from __future__ import division
 from collections import defaultdict
+from itertools import product
 from os.path import join
 
 from future.utils import viewitems
@@ -62,6 +63,7 @@ class Analysis(QiitaStatusObject):
     share
     unshare
     build_files
+    summary_data
     """
 
     _table = "analysis"
@@ -99,7 +101,7 @@ class Analysis(QiitaStatusObject):
         return {x[0] for x in conn_handler.execute_fetchall(sql, (status,))}
 
     @classmethod
-    def create(cls, owner, name, description, parent=None):
+    def create(cls, owner, name, description, parent=None, from_default=False):
         """Creates a new analysis on the database
 
         Parameters
@@ -112,23 +114,53 @@ class Analysis(QiitaStatusObject):
             Description of the analysis
         parent : Analysis object, optional
             The analysis this one was forked from
+        from_default : bool, optional
+            If True, use the default analysis to populate selected samples.
+            Default False.
         """
+        queue = "create_analysis"
         conn_handler = SQLConnectionHandler()
+        conn_handler.create_queue(queue)
         # TODO after demo: if exists()
-
-        # insert analysis information into table with "in construction" status
-        sql = ("INSERT INTO qiita.{0} (email, name, description, "
-               "analysis_status_id) VALUES (%s, %s, %s, 1) "
-               "RETURNING analysis_id".format(cls._table))
-        a_id = conn_handler.execute_fetchone(
-            sql, (owner.id, name, description))[0]
+        # Needed since issue #292 exists
+        status_id = conn_handler.execute_fetchone(
+            "SELECT analysis_status_id from qiita.analysis_status WHERE "
+            "status = 'in_construction'")[0]
+        if from_default:
+            # insert analysis and move samples into that new analysis
+            dflt_id = owner.default_analysis
+            sql = """INSERT INTO qiita.{0}
+                    (email, name, description, analysis_status_id)
+                    VALUES (%s, %s, %s, %s)
+                    RETURNING analysis_id""".format(cls._table)
+            conn_handler.add_to_queue(queue, sql, (owner.id, name,
+                                                   description, status_id))
+            # MAGIC NUMBER 3: command selection step
+            # needed so we skip the sample selection step
+            sql = """INSERT INTO qiita.analysis_workflow
+                    (analysis_id, step) VALUES (%s, %s)
+                    RETURNING %s"""
+            conn_handler.add_to_queue(queue, sql, ['{0}', 3, '{0}'])
+            sql = """UPDATE qiita.analysis_sample
+                     SET analysis_id = %s
+                     WHERE analysis_id = %s RETURNING %s"""
+            conn_handler.add_to_queue(queue, sql, ['{0}', dflt_id, '{0}'])
+        else:
+            # insert analysis information into table as "in construction"
+            sql = """INSERT INTO qiita.{0}
+                  (email, name, description, analysis_status_id)
+                  VALUES (%s, %s, %s, %s)
+                  RETURNING analysis_id""".format(cls._table)
+            conn_handler.add_to_queue(
+                queue, sql, (owner.id, name, description, status_id))
 
         # add parent if necessary
         if parent:
             sql = ("INSERT INTO qiita.analysis_chain (parent_id, child_id) "
-                   "VALUES (%s, %s)")
-            conn_handler.execute(sql, (parent.id, a_id))
+                   "VALUES (%s, %s) RETURNING child_id")
+            conn_handler.add_to_queue(queue, sql, [parent.id, '{0}'])
 
+        a_id = conn_handler.execute_queue(queue)[0]
         return cls(a_id)
 
     # ---- Properties ----
@@ -470,6 +502,23 @@ class Analysis(QiitaStatusObject):
         return self._id in Analysis.get_by_status('public') | \
             user.private_analyses | user.shared_analyses
 
+    def summary_data(self):
+        """Return number of studies, processed data, and samples selected
+
+        Returns
+        -------
+        dict
+            counts keyed to their relevant type
+        """
+        sql = """SELECT COUNT(DISTINCT study_id) as studies,
+                COUNT(DISTINCT processed_data_id) as processed_data,
+                COUNT(DISTINCT sample_id) as samples
+                FROM qiita.study_processed_data
+                JOIN qiita.analysis_sample USING (processed_data_id)
+                WHERE analysis_id = %s"""
+        conn_handler = SQLConnectionHandler()
+        return dict(conn_handler.execute_fetchone(sql, [self._id]))
+
     def share(self, user):
         """Share the analysis with another user
 
@@ -511,17 +560,26 @@ class Analysis(QiitaStatusObject):
 
         Parameters
         ----------
-        samples : list of tuples of (int, str)
+        samples : dictionary of lists
             samples and the processed data id they come from in form
-            [(processed_data_id, sample_id), ...]
+            {processed_data_id: [sample1, sample2, ...], ...}
         """
         conn_handler = SQLConnectionHandler()
         self._lock_check(conn_handler)
-        sql = ("INSERT INTO qiita.analysis_sample "
-               "(analysis_id, processed_data_id, sample_id) VALUES "
-               "(%s, %s, %s)")
-        conn_handler.executemany(sql, [(self._id, s[0], s[1])
-                                       for s in samples])
+
+        for pid, samps in viewitems(samples):
+            # get previously selected samples  for pid and filter them out
+            sql = """SELECT sample_id FROM qiita.analysis_sample
+                WHERE processed_data_id = %s and analysis_id = %s"""
+            prev_selected = [x[0] for x in
+                             conn_handler.execute_fetchall(sql,
+                                                           (pid, self._id))]
+
+            select = set(samps).difference(prev_selected)
+            sql = ("INSERT INTO qiita.analysis_sample "
+                   "(analysis_id, processed_data_id, sample_id) VALUES "
+                   "({}, %s, %s)".format(self._id))
+            conn_handler.executemany(sql, [x for x in product([pid], select)])
 
     def remove_samples(self, proc_data=None, samples=None):
         """Removes samples from the analysis
