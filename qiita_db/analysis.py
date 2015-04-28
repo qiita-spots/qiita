@@ -25,6 +25,7 @@ from future.utils import viewitems
 from biom import load_table
 from biom.util import biom_open
 import pandas as pd
+from skbio.util import find_duplicates
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from .sql_connection import SQLConnectionHandler
@@ -64,6 +65,7 @@ class Analysis(QiitaStatusObject):
     share
     unshare
     build_files
+    summary_data
     """
 
     _table = "analysis"
@@ -502,6 +504,23 @@ class Analysis(QiitaStatusObject):
         return self._id in Analysis.get_by_status('public') | \
             user.private_analyses | user.shared_analyses
 
+    def summary_data(self):
+        """Return number of studies, processed data, and samples selected
+
+        Returns
+        -------
+        dict
+            counts keyed to their relevant type
+        """
+        sql = """SELECT COUNT(DISTINCT study_id) as studies,
+                COUNT(DISTINCT processed_data_id) as processed_data,
+                COUNT(DISTINCT sample_id) as samples
+                FROM qiita.study_processed_data
+                JOIN qiita.analysis_sample USING (processed_data_id)
+                WHERE analysis_id = %s"""
+        conn_handler = SQLConnectionHandler()
+        return dict(conn_handler.execute_fetchone(sql, [self._id]))
+
     def share(self, user):
         """Share the analysis with another user
 
@@ -720,16 +739,16 @@ class Analysis(QiitaStatusObject):
 
         for pid, samples in viewitems(samples):
             if len(samples) != len(set(samples)):
-                duplicates = [s for s in samples if samples.count(s) > 1]
+                duplicates = find_duplicates(samples)
                 raise QiitaDBError("Duplicate sample ids found: %s"
                                    % ', '.join(duplicates))
             # Get the QIIME mapping file
             qiime_map_fp = conn_handler.execute_fetchall(sql, (pid,))[0][1]
             # Parse the mapping file
             qiime_map = pd.read_csv(
-                join(fp, qiime_map_fp), sep='\t', infer_datetime_format=True,
-                keep_default_na=False, na_values=['unknown'], parse_dates=True,
-                index_col=False)
+                join(fp, qiime_map_fp), sep='\t', keep_default_na=False,
+                na_values=['unknown'], index_col=False,
+                converters=defaultdict(lambda: str))
             qiime_map.set_index('#SampleID', inplace=True, drop=True)
             qiime_map = qiime_map.loc[samples]
 

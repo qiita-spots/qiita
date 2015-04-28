@@ -11,12 +11,14 @@ from future.utils import viewvalues
 from os.path import join
 from time import strftime
 from copy import deepcopy
+import warnings
 
 import pandas as pd
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_db.exceptions import (QiitaDBColumnError, QiitaDBUnknownIDError,
-                                 QiitaDBError, QiitaDBExecutionError)
+                                 QiitaDBError, QiitaDBExecutionError,
+                                 QiitaDBWarning)
 from qiita_db.sql_connection import SQLConnectionHandler
 from qiita_db.ontology import Ontology
 from qiita_db.util import (convert_to_id,
@@ -127,7 +129,7 @@ class PrepTemplate(MetadataTemplate):
             pt_cols.update(PREP_TEMPLATE_COLUMNS_TARGET_GENE)
 
         md_template = cls._clean_validate_template(md_template, study.id,
-                                                   PREP_TEMPLATE_COLUMNS)
+                                                   pt_cols)
 
         # Insert the metadata template
         # We need the prep_id for multiple calls below, which currently is not
@@ -402,12 +404,20 @@ class PrepTemplate(MetadataTemplate):
         ------
         ValueError
             If the prep template is not a subset of the sample template
+        QiitaDBWarning
+            If the QIIME-required columns are not present in the template
+
+        Notes
+        -----
+        We cannot ensure that the QIIME-required columns are present in the
+        metadata map. However, we have to generate a QIIME-compliant mapping
+        file. Since the user may need a QIIME mapping file, but not these
+        QIIME-required columns, we are going to create them and
+        populate them with the value XXQIITAXX.
         """
         rename_cols = {
             'barcode': 'BarcodeSequence',
-            'barcodesequence': 'BarcodeSequence',
             'primer': 'LinkerPrimerSequence',
-            'linkerprimersequence': 'LinkerPrimerSequence',
             'description': 'Description',
         }
 
@@ -434,22 +444,29 @@ class PrepTemplate(MetadataTemplate):
         if not pt_sample_names.issubset(st_sample_names):
             raise ValueError(
                 "Prep template is not a sub set of the sample template, files"
-                "%s - samples: %s" % (sample_template_fp,
-                                      str(pt_sample_names-st_sample_names)))
+                "%s - samples: %s"
+                % (sample_template_fp,
+                   ', '.join(pt_sample_names-st_sample_names)))
 
         mapping = pt.join(st, lsuffix="_prep")
         mapping.rename(columns=rename_cols, inplace=True)
 
-        # We cannot ensure that the QIIME-required columns are present in the
-        # metadata map. However, we have to generate a QIIME-compliant mapping
-        # file. Since the user may need a QIIME mapping file, but not these
-        # QIIME-required columns, we are going to create them here and
-        # populate them with the value XXQIITAXX
+        # Pre-populate the QIIME-required columns with the value XXQIITAXX
         index = mapping.index
         placeholder = ['XXQIITAXX'] * len(index)
+        missing = []
         for val in viewvalues(rename_cols):
             if val not in mapping:
+                missing.append(val)
                 mapping[val] = pd.Series(placeholder, index=index)
+
+        if missing:
+            warnings.warn(
+                "Some columns required to generate a QIIME-compliant mapping "
+                "file are not present in the template. A placeholder value "
+                "(XXQIITAXX) has been used to populate these columns. Missing "
+                "columns: %s" % ', '.join(missing),
+                QiitaDBWarning)
 
         # Gets the orginal mapping columns and readjust the order to comply
         # with QIIME requirements
@@ -472,7 +489,9 @@ class PrepTemplate(MetadataTemplate):
                        sep='\t')
 
         # adding the fp to the object
-        self.add_filepath(filepath)
+        self.add_filepath(
+            filepath, conn_handler=conn_handler,
+            fp_id=convert_to_id("qiime_map", "filepath_type"))
 
         return filepath
 

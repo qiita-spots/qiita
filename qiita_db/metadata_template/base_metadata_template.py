@@ -540,6 +540,13 @@ class MetadataTemplate(QiitaObject):
         -------
         md_template : DataFrame
             Cleaned copy of the input md_template
+
+        Raises
+        ------
+        QiitaDBColumnError
+            If the sample names in md_template contains invalid names
+        QiitaDBWarning
+            If there are missing columns required for some functionality
         """
         cls._check_subclass()
         invalid_ids = get_invalid_sample_names(md_template.index)
@@ -988,7 +995,8 @@ class MetadataTemplate(QiitaObject):
         if samples is not None:
             df = df.loc[samples]
 
-        # Apply some sorting to the dataframe
+        # Sorting the dataframe so multiple serializations of the metadata
+        # template are consistent.
         df.sort_index(axis=0, inplace=True)
         df.sort_index(axis=1, inplace=True)
 
@@ -1021,7 +1029,7 @@ class MetadataTemplate(QiitaObject):
 
         return df
 
-    def add_filepath(self, filepath, conn_handler=None):
+    def add_filepath(self, filepath, conn_handler=None, fp_id=None):
         r"""Populates the DB tables for storing the filepath and connects the
         `self` objects with this filepath"""
         # Check that this function has been called from a subclass
@@ -1030,6 +1038,7 @@ class MetadataTemplate(QiitaObject):
         # Check if the connection handler has been provided. Create a new
         # one if not.
         conn_handler = conn_handler if conn_handler else SQLConnectionHandler()
+        fp_id = self._fp_id if fp_id is None else fp_id
 
         try:
             fpp_id = insert_filepaths([(filepath, self._fp_id)], None,
