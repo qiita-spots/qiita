@@ -37,13 +37,15 @@ def _get_qiime_minimal_mapping(prep_template, out_dir):
         The paths to the qiime minimal mapping files
     """
     from functools import partial
+    from collections import defaultdict
     from os.path import join
     import pandas as pd
 
     # The prep templates has a QIIME mapping file, get it
     qiime_map = pd.read_csv(prep_template.qiime_map_fp, sep='\t',
                             keep_default_na=False, na_values=['unknown'],
-                            index_col=False)
+                            index_col=False,
+                            converters=defaultdict(lambda: str))
     qiime_map.set_index('#SampleID', inplace=True, drop=True)
 
     # We use our own description to avoid potential processing problems
