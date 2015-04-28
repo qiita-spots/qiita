@@ -54,10 +54,10 @@ class SetupTest(TestCase):
         self.assertEqual(get_count("qiita.study_raw_data"), 4)
 
     def test_required_sample_info(self):
-        self.assertEqual(get_count("qiita.required_sample_info"), 27)
+        self.assertEqual(get_count("qiita.study_sample"), 27)
 
     def test_study_sample_columns(self):
-        self.assertEqual(get_count("qiita.study_sample_columns"), 21)
+        self.assertEqual(get_count("qiita.study_sample_columns"), 30)
 
     def test_sample_1(self):
         self.assertEqual(get_count("qiita.sample_1"), 27)
@@ -66,10 +66,10 @@ class SetupTest(TestCase):
         self.assertEqual(get_count("qiita.prep_template"), 1)
 
     def test_common_prep_info(self):
-        self.assertEqual(get_count("qiita.common_prep_info"), 27)
+        self.assertEqual(get_count("qiita.prep_template_sample"), 27)
 
     def test_prep_columns(self):
-        self.assertEqual(get_count("qiita.prep_columns"), 19)
+        self.assertEqual(get_count("qiita.prep_columns"), 22)
 
     def test_prep_1(self):
         self.assertEqual(get_count("qiita.prep_1"), 27)

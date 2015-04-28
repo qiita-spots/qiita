@@ -212,62 +212,6 @@ def get_data_types(key='data_type'):
     return dict(con.execute_fetchall(sql))
 
 
-def get_required_sample_info_status(key='status'):
-    """Gets the list of possible required sample info status
-
-    Parameters
-    ----------
-    key : {'status', 'required_sample_info_status_id'}, optional
-        Defaults to 'status'. Determines the format of the returned dict.
-
-    Returns
-    -------
-    dict
-        - If `key` is "status", dict is of the form
-          {status: required_sample_info_status_id}
-        - If `key` is "required_sample_info_status_id", dict is of the form
-          {required_sample_info_status_id: status}
-    """
-    con = SQLConnectionHandler()
-    if key == 'status':
-        cols = 'status, required_sample_info_status_id'
-    elif key == 'required_sample_info_status_id':
-        cols = 'required_sample_info_status_id, status'
-    else:
-        raise QiitaDBColumnError("Unknown key. Pass either 'status' or "
-                                 "'required_sample_info_status_id'")
-    sql = 'select {} from qiita.required_sample_info_status'.format(cols)
-    return dict(con.execute_fetchall(sql))
-
-
-def get_emp_status(key='emp_status'):
-    """Gets the list of possible emp statuses
-
-    Parameters
-    ----------
-    key : {'emp_status', 'emp_status_id'}, optional
-        Defaults to 'status'. Determines the format of the returned dict.
-
-    Returns
-    -------
-    dict
-        - If `key` is "emp_status", dict is of the form
-          {emp_status: emp_status_id}
-        - If `key` is "emp_status_id", dict is of the form
-          {emp_status_id: emp_status}
-    """
-    con = SQLConnectionHandler()
-    if key == 'emp_status':
-        cols = 'emp_status, emp_status_id'
-    elif key == 'emp_status_id':
-        cols = 'emp_status_id, emp_status'
-    else:
-        raise QiitaDBColumnError("Unknown key. Pass either 'emp_status' or "
-                                 "'emp_status_id'")
-    sql = 'select {} from qiita.emp_status'.format(cols)
-    return dict(con.execute_fetchall(sql))
-
-
 def create_rand_string(length, punct=True):
     """Returns a string of random ascii characters
 
@@ -1007,10 +951,27 @@ def get_processed_params_tables():
 
 
 def get_lat_longs():
+    """Retrieve the latitude and longitude of all the samples in the DB
+
+    Returns
+    -------
+    list of [float, float]
+        The latitude and longitude for each sample in the database
+    """
     conn = SQLConnectionHandler()
-    sql = """select latitude, longitude
-             from qiita.required_sample_info"""
-    return conn.execute_fetchall(sql)
+    sql = """SELECT DISTINCT table_name
+             FROM information_schema.columns
+             WHERE SUBSTR(table_name, 1, 7) = 'sample_'
+                AND table_schema = 'qiita'
+                AND column_name IN ('latitude', 'longitude');"""
+    tables_gen = (t[0] for t in conn.execute_fetchall(sql))
+
+    sql = "SELECT latitude, longitude FROM qiita.{0}"
+    result = []
+    for table in tables_gen:
+        result.extend(conn.execute_fetchall(sql.format(table)))
+
+    return result
 
 
 def get_environmental_packages(conn_handler=None):
