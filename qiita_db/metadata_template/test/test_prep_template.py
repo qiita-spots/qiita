@@ -1293,6 +1293,12 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
         self.assertEqual(self.tester['1.SKB8.640193']['center_name'], 'FOO')
         self.assertEqual(self.tester['1.SKD8.640184']['center_name'], 'BAR')
 
+    def test_qiime_map_fp(self):
+        pt = PrepTemplate(1)
+        exp = join(get_mountpoint('templates')[0][1],
+                   '1_prep_1_qiime_19700101-000000.txt')
+        self.assertEqual(pt.qiime_map_fp, exp)
+
 
 EXP_PREP_TEMPLATE = (
     'sample_name\tbarcode\tcenter_name\tcenter_project_name\t'
