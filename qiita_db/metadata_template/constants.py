@@ -13,10 +13,12 @@ Restriction = namedtuple('Restriction', ['columns', 'error_msg'])
 
 # A dict containing the restrictions that apply to the sample templates
 SAMPLE_TEMPLATE_COLUMNS = {
+    # The following columns are required by EBI for submission
     'EBI': Restriction(columns={'collection_timestamp': 'timestamp',
                                 'physical_specimen_location': 'varchar'},
                        error_msg="EBI submission disabled"),
-    'Qiita_main': Restriction(columns={'sample_type': 'varchar',
+    # The following columns are required for the official main QIITA site
+    'qiita_main': Restriction(columns={'sample_type': 'varchar',
                                        'description': 'varchar',
                                        'physical_specimen_remaining': 'bool',
                                        'dna_extracted': 'bool',
@@ -26,8 +28,9 @@ SAMPLE_TEMPLATE_COLUMNS = {
                               error_msg="Processed data approval disabled")
 }
 
-# A dict containing the restrictions that apply to the sample templates
+# A dict containing the restrictions that apply to the prep templates
 PREP_TEMPLATE_COLUMNS = {
+    # The following columns are required by EBI for submission
     'EBI': Restriction(
         columns={'primer': 'varchar',
                  'center_name': 'varchar',
@@ -43,12 +46,15 @@ PREP_TEMPLATE_COLUMNS = {
 TARGET_GENE_DATA_TYPES = ['16S', '18S', 'ITS']
 
 PREP_TEMPLATE_COLUMNS_TARGET_GENE = {
-    'Demultiplex': Restriction(
+    # The following columns are required by QIIME to execute split libraries
+    'demultiplex': Restriction(
         columns={'barcode': 'varchar',
                  'primer': 'varchar'},
         error_msg="Demultiplexing disabled. You will not be able to "
                   "preprocess your raw data"),
-    'Demultiplex_multiple': Restriction(
+    # The following columns are required by Qiita to know how to execute split
+    # libraries using QIIME over a study with multiple illumina lanes
+    'demultiplex_multiple': Restriction(
         columns={'barcode': 'varchar',
                  'primer': 'varchar',
                  'run_prefix': 'varchar'},

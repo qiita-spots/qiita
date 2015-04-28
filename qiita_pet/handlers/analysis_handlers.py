@@ -13,6 +13,7 @@ from __future__ import division
 from future.utils import viewitems
 from collections import defaultdict
 from os.path import join, sep, commonprefix
+from json import dumps
 
 from tornado.web import authenticated, HTTPError, StaticFileHandler
 from moi import ctx_default, r_client
@@ -69,7 +70,10 @@ class SelectCommandsHandler(BaseHandler):
 
     @authenticated
     def post(self):
-        analysis = Analysis(int(self.get_argument('analysis-id')))
+        name = self.get_argument('name')
+        desc = self.get_argument('description')
+        analysis = Analysis.create(self.current_user, name, desc,
+                                   from_default=True)
         # set to third step since this page is third step in workflow
         analysis.step = SELECT_COMMANDS
         data_types = analysis.data_types
@@ -215,3 +219,10 @@ class SelectedSamplesHandler(BaseHandler):
             proc_data_info[pid]['data_type'] = proc_data.data_type()
         self.render("analysis_selected.html", sel_data=sel_data,
                     proc_info=proc_data_info)
+
+
+class AnalysisSummaryAJAX(BaseHandler):
+    @authenticated
+    def get(self):
+        info = Analysis(self.current_user.default_analysis).summary_data()
+        self.write(dumps(info))
