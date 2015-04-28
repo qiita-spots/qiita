@@ -91,7 +91,7 @@ Once libevent is installed, you can install pgbouncer. Source code is available 
 ```
 ./configure --prefix=/usr/local --with-libevent=/usr/local/libevent
 ```
-Then make and make install as usual. Configuration and usage instructions are at [pgbouncer's homepage](https://pgbouncer.github.io/).
+Then `make` and `make install` as usual. Note: the `make install` command may fail in OSX. In this case, move the pgbouncer executable from the base source folder to your bin file manually. Configuration and usage instructions are at [pgbouncer's homepage](https://pgbouncer.github.io/).
 
 ## Troubleshooting installation on non-Ubuntu operating systems
 
