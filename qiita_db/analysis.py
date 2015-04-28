@@ -64,6 +64,7 @@ class Analysis(QiitaStatusObject):
     share
     unshare
     build_files
+    summary_data
     """
 
     _table = "analysis"
@@ -501,6 +502,23 @@ class Analysis(QiitaStatusObject):
 
         return self._id in Analysis.get_by_status('public') | \
             user.private_analyses | user.shared_analyses
+
+    def summary_data(self):
+        """Return number of studies, processed data, and samples selected
+
+        Returns
+        -------
+        dict
+            counts keyed to their relevant type
+        """
+        sql = """SELECT COUNT(DISTINCT study_id) as studies,
+                COUNT(DISTINCT processed_data_id) as processed_data,
+                COUNT(DISTINCT sample_id) as samples
+                FROM qiita.study_processed_data
+                JOIN qiita.analysis_sample USING (processed_data_id)
+                WHERE analysis_id = %s"""
+        conn_handler = SQLConnectionHandler()
+        return dict(conn_handler.execute_fetchone(sql, [self._id]))
 
     def share(self, user):
         """Share the analysis with another user

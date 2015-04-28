@@ -116,8 +116,6 @@ class SearchNot(UnaryOperation):
 
 
 class SearchTerm(object):
-    # column names from study_sample table
-    required_cols = set(get_table_cols("study_sample"))
     # column names from study table
     study_cols = set(get_table_cols("study"))
 
@@ -140,9 +138,7 @@ class SearchTerm(object):
         if operator not in allowable_types[argument_type]:
             raise QiitaDBIncompatibleDatatypeError(operator, argument_type)
 
-        if column_name in self.required_cols:
-            column_name = "r.%s" % column_name.lower()
-        elif column_name in self.study_cols:
+        if column_name in self.study_cols:
             column_name = "st.%s" % column_name.lower()
         else:
             column_name = "sa.%s" % column_name.lower()
@@ -167,8 +163,6 @@ class SearchTerm(object):
 class QiitaStudySearch(object):
     """QiitaStudySearch object to parse and run searches on studies."""
 
-    # column names from study_sample table
-    required_cols = set(get_table_cols("study_sample"))
     # column names from study table
     study_cols = set(get_table_cols("study"))
 
@@ -310,9 +304,9 @@ class QiitaStudySearch(object):
                     meta_header_type_lookup[header] = 'varchar'
 
         # create the study finding SQL
-        # remove metadata headers that are in study_sample table
-        meta_headers = tuple(meta_headers.difference(
-            self.required_cols).difference(self.study_cols))
+        # remove metadata headers that are in study table
+        meta_headers.discard('sample_id')
+        meta_headers = tuple(meta_headers.difference(self.study_cols))
 
         # get all study ids that contain all metadata categories searched for
         sql = []
@@ -341,17 +335,17 @@ class QiitaStudySearch(object):
         # build the sql formatted list of metadata headers
         header_info = []
         for meta in meta_header_type_lookup:
-            if meta in self.required_cols:
-                header_info.append("r.%s" % meta)
-            elif meta in self.study_cols:
+            if meta in self.study_cols:
                 header_info.append("st.%s" % meta)
             else:
                 header_info.append("sa.%s" % meta)
         # build the SQL query
-        sample_sql = ("SELECT r.sample_id,%s FROM qiita.study_sample "
-                      "r JOIN qiita.sample_{0} sa ON sa.sample_id = "
-                      "r.sample_id JOIN qiita.study st ON st.study_id = "
-                      "r.study_id WHERE %s" %
+
+        sample_sql = ("SELECT ss.sample_id,%s "
+                      "FROM qiita.study_sample ss "
+                      "JOIN qiita.sample_{0} sa USING (sample_id) "
+                      "JOIN qiita.study st USING (study_id) "
+                      "WHERE %s" %
                       (','.join(header_info), sql_where))
         return study_sql, sample_sql, meta_header_type_lookup.keys()
 
