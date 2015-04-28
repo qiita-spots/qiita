@@ -41,9 +41,9 @@ class BaseTestPrepSample(TestCase):
         self.sample_id = '1.SKB8.640193'
         self.tester = PrepSample(self.sample_id, self.prep_template)
         self.exp_categories = {'center_name', 'center_project_name',
-                               'emp_status', 'barcodesequence',
+                               'emp_status', 'barcode',
                                'library_construction_protocol',
-                               'linkerprimersequence', 'target_subfragment',
+                               'primer', 'target_subfragment',
                                'target_gene', 'run_center', 'run_prefix',
                                'run_date', 'experiment_center',
                                'experiment_design_description',
@@ -83,11 +83,11 @@ class TestPrepSampleReadOnly(BaseTestPrepSample):
         conn_handler.create_queue(queue)
 
         self.tester.add_setitem_queries(
-            'barcodesequence', 'AAAAAAAAAAAA', conn_handler, queue)
+            'barcode', 'AAAAAAAAAAAA', conn_handler, queue)
 
         obs = conn_handler.queues[queue]
         sql = """UPDATE qiita.prep_1
-                 SET barcodesequence=%s
+                 SET barcode=%s
                  WHERE sample_id=%s"""
         exp = [(sql, ('AAAAAAAAAAAA', '1.SKB8.640193'))]
         self.assertEqual(obs, exp)
@@ -156,7 +156,7 @@ class TestPrepSampleReadOnly(BaseTestPrepSample):
         """
         self.assertEqual(self.tester['pcr_primers'],
                          'FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT')
-        self.assertEqual(self.tester['barcodesequence'], 'AGCGCTCACATC')
+        self.assertEqual(self.tester['barcode'], 'AGCGCTCACATC')
 
     def test_getitem_id_column(self):
         """Get item returns the correct metadata value from the changed column
@@ -176,8 +176,8 @@ class TestPrepSampleReadOnly(BaseTestPrepSample):
 
     def test_contains_true(self):
         """contains returns true if the category header exists"""
-        self.assertTrue('BarcodeSequence' in self.tester)
-        self.assertTrue('barcodesequence' in self.tester)
+        self.assertTrue('Barcode' in self.tester)
+        self.assertTrue('barcode' in self.tester)
 
     def test_contains_false(self):
         """contains returns false if the category header does not exists"""
@@ -218,7 +218,7 @@ class TestPrepSampleReadOnly(BaseTestPrepSample):
         obs = self.tester.items()
         self.assertTrue(isinstance(obs, Iterable))
         exp = {('center_name', 'ANL'), ('center_project_name', None),
-               ('emp_status', 'EMP'), ('barcodesequence', 'AGCGCTCACATC'),
+               ('emp_status', 'EMP'), ('barcode', 'AGCGCTCACATC'),
                ('library_construction_protocol',
                 'This analysis was done as in Caporaso et al 2011 Genome '
                 'research. The PCR primers (F515/R806) were developed against '
@@ -231,7 +231,7 @@ class TestPrepSampleReadOnly(BaseTestPrepSample):
                 'PCR primer is barcoded with a 12-base error-correcting Golay '
                 'code to facilitate multiplexing of up to 1,500 samples per '
                 'lane, and both PCR primers contain sequencer adapter '
-                'regions.'), ('linkerprimersequence', 'GTGCCAGCMGCCGCGGTAA'),
+                'regions.'), ('primer', 'GTGCCAGCMGCCGCGGTAA'),
                ('target_subfragment', 'V4'), ('target_gene', '16S rRNA'),
                ('run_center', 'ANL'), ('run_prefix', 's_G1_L001_sequences'),
                ('run_date', '8/1/12'), ('experiment_center', 'ANL'),
@@ -248,7 +248,7 @@ class TestPrepSampleReadOnly(BaseTestPrepSample):
 
     def test_get(self):
         """get returns the correct sample object"""
-        self.assertEqual(self.tester.get('barcodesequence'), 'AGCGCTCACATC')
+        self.assertEqual(self.tester.get('barcode'), 'AGCGCTCACATC')
 
     def test_get_none(self):
         """get returns none if the sample id is not present"""
@@ -280,8 +280,8 @@ class BaseTestPrepTemplate(TestCase):
                             'ebi_submission_accession': None,
                             'EMP_status': 'EMP',
                             'str_column': 'Value for sample 1',
-                            'linkerprimersequence': 'GTGCCAGCMGCCGCGGTAA',
-                            'barcodesequence': 'GTCCGCAAGTTA',
+                            'primer': 'GTGCCAGCMGCCGCGGTAA',
+                            'barcode': 'GTCCGCAAGTTA',
                             'run_prefix': "s_G1_L001_sequences",
                             'platform': 'ILLUMINA',
                             'library_construction_protocol': 'AAAA',
@@ -291,8 +291,8 @@ class BaseTestPrepTemplate(TestCase):
                             'ebi_submission_accession': None,
                             'EMP_status': 'EMP',
                             'str_column': 'Value for sample 2',
-                            'linkerprimersequence': 'GTGCCAGCMGCCGCGGTAA',
-                            'barcodesequence': 'CGTAGAGCTCTC',
+                            'primer': 'GTGCCAGCMGCCGCGGTAA',
+                            'barcode': 'CGTAGAGCTCTC',
                             'run_prefix': "s_G1_L001_sequences",
                             'platform': 'ILLUMINA',
                             'library_construction_protocol': 'AAAA',
@@ -302,8 +302,8 @@ class BaseTestPrepTemplate(TestCase):
                             'ebi_submission_accession': None,
                             'EMP_status': 'EMP',
                             'str_column': 'Value for sample 3',
-                            'linkerprimersequence': 'GTGCCAGCMGCCGCGGTAA',
-                            'barcodesequence': 'CCTCTGAGAGCT',
+                            'primer': 'GTGCCAGCMGCCGCGGTAA',
+                            'barcode': 'CCTCTGAGAGCT',
                             'run_prefix': "s_G1_L002_sequences",
                             'platform': 'ILLUMINA',
                             'library_construction_protocol': 'AAAA',
@@ -318,8 +318,8 @@ class BaseTestPrepTemplate(TestCase):
                               'ebi_submission_accession': None,
                               'EMP_status': 'EMP',
                               'str_column': 'Value for sample 1',
-                              'linkerprimersequence': 'GTGCCAGCMGCCGCGGTAA',
-                              'barcodesequence': 'GTCCGCAAGTTA',
+                              'primer': 'GTGCCAGCMGCCGCGGTAA',
+                              'barcode': 'GTCCGCAAGTTA',
                               'run_prefix': "s_G1_L001_sequences",
                               'platform': 'ILLUMINA',
                               'library_construction_protocol': 'AAAA',
@@ -329,8 +329,8 @@ class BaseTestPrepTemplate(TestCase):
                               'ebi_submission_accession': None,
                               'EMP_status': 'EMP',
                               'str_column': 'Value for sample 2',
-                              'linkerprimersequence': 'GTGCCAGCMGCCGCGGTAA',
-                              'barcodesequence': 'CGTAGAGCTCTC',
+                              'primer': 'GTGCCAGCMGCCGCGGTAA',
+                              'barcode': 'CGTAGAGCTCTC',
                               'run_prefix': "s_G1_L001_sequences",
                               'platform': 'ILLUMINA',
                               'library_construction_protocol': 'AAAA',
@@ -340,8 +340,8 @@ class BaseTestPrepTemplate(TestCase):
                               'ebi_submission_accession': None,
                               'EMP_status': 'EMP',
                               'str_column': 'Value for sample 3',
-                              'linkerprimersequence': 'GTGCCAGCMGCCGCGGTAA',
-                              'barcodesequence': 'CCTCTGAGAGCT',
+                              'primer': 'GTGCCAGCMGCCGCGGTAA',
+                              'barcode': 'CCTCTGAGAGCT',
                               'run_prefix': "s_G1_L002_sequences",
                               'platform': 'ILLUMINA',
                               'library_construction_protocol': 'AAAA',
@@ -567,8 +567,8 @@ class TestPrepTemplateReadOnly(BaseTestPrepTemplate):
 
         self.assertEqual(set(obs.columns), {
             u'center_name', u'center_project_name',
-            u'emp_status', u'barcodesequence',
-            u'library_construction_protocol', u'linkerprimersequence',
+            u'emp_status', u'barcode',
+            u'library_construction_protocol', u'primer',
             u'target_subfragment', u'target_gene', u'run_center',
             u'run_prefix', u'run_date', u'experiment_center',
             u'experiment_design_description', u'experiment_title', u'platform',
@@ -727,8 +727,8 @@ class TestPrepTemplateReadOnly(BaseTestPrepTemplate):
                               'ebi_submission_accession': None,
                               'emp_status': 'EMP',
                               'str_column': 'Value for sample 1',
-                              'linkerprimersequence': 'GTGCCAGCMGCCGCGGTAA',
-                              'barcodesequence': 'GTCCGCAAGTTA',
+                              'primer': 'GTGCCAGCMGCCGCGGTAA',
+                              'barcode': 'GTCCGCAAGTTA',
                               'run_prefix': "s_G1_L001_sequences",
                               'platform': 'ILLUMINA',
                               'library_construction_protocol': 'AAAA',
@@ -738,8 +738,8 @@ class TestPrepTemplateReadOnly(BaseTestPrepTemplate):
                               'ebi_submission_accession': None,
                               'emp_status': 'EMP',
                               'str_column': 'Value for sample 2',
-                              'linkerprimersequence': 'GTGCCAGCMGCCGCGGTAA',
-                              'barcodesequence': 'CGTAGAGCTCTC',
+                              'primer': 'GTGCCAGCMGCCGCGGTAA',
+                              'barcode': 'CGTAGAGCTCTC',
                               'run_prefix': "s_G1_L001_sequences",
                               'platform': 'ILLUMINA',
                               'library_construction_protocol': 'AAAA',
@@ -749,8 +749,8 @@ class TestPrepTemplateReadOnly(BaseTestPrepTemplate):
                               'ebi_submission_accession': None,
                               'emp_status': 'EMP',
                               'str_column': 'Value for sample 3',
-                              'linkerprimersequence': 'GTGCCAGCMGCCGCGGTAA',
-                              'barcodesequence': 'CCTCTGAGAGCT',
+                              'primer': 'GTGCCAGCMGCCGCGGTAA',
+                              'barcode': 'CCTCTGAGAGCT',
                               'run_prefix': "s_G1_L002_sequences",
                               'platform': 'ILLUMINA',
                               'library_construction_protocol': 'AAAA',
@@ -838,8 +838,8 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
                             'ebi_submission_accession': None,
                             'EMP_status': 'EMP',
                             'group': 2,
-                            'linkerprimersequence': 'GTGCCAGCMGCCGCGGTAA',
-                            'barcodesequence': 'GTCCGCAAGTTA',
+                            'primer': 'GTGCCAGCMGCCGCGGTAA',
+                            'barcode': 'GTCCGCAAGTTA',
                             'run_prefix': "s_G1_L001_sequences",
                             'platform': 'ILLUMINA',
                             'library_construction_protocol': 'AAAA',
@@ -849,8 +849,8 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
                             'ebi_submission_accession': None,
                             'EMP_status': 'EMP',
                             'group': 1,
-                            'linkerprimersequence': 'GTGCCAGCMGCCGCGGTAA',
-                            'barcodesequence': 'CGTAGAGCTCTC',
+                            'primer': 'GTGCCAGCMGCCGCGGTAA',
+                            'barcode': 'CGTAGAGCTCTC',
                             'run_prefix': "s_G1_L001_sequences",
                             'platform': 'ILLUMINA',
                             'library_construction_protocol': 'AAAA',
@@ -860,8 +860,8 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
                             'ebi_submission_accession': None,
                             'EMP_status': 'EMP',
                             'group': 'Value for sample 3',
-                            'linkerprimersequence': 'GTGCCAGCMGCCGCGGTAA',
-                            'barcodesequence': 'CCTCTGAGAGCT',
+                            'primer': 'GTGCCAGCMGCCGCGGTAA',
+                            'barcode': 'CCTCTGAGAGCT',
                             'run_prefix': "s_G1_L002_sequences",
                             'platform': 'ILLUMINA',
                             'library_construction_protocol': 'AAAA',
@@ -922,8 +922,8 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
         exp = [[new_id, 'str_column', 'varchar'],
                [new_id, 'ebi_submission_accession', 'varchar'],
                [new_id, 'run_prefix', 'varchar'],
-               [new_id, 'barcodesequence', 'varchar'],
-               [new_id, 'linkerprimersequence', 'varchar'],
+               [new_id, 'barcode', 'varchar'],
+               [new_id, 'primer', 'varchar'],
                [new_id, 'platform', 'varchar'],
                [new_id, 'experiment_design_description', 'varchar'],
                [new_id, 'library_construction_protocol', 'varchar'],
@@ -940,11 +940,11 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
             "SELECT * FROM qiita.prep_%s" % new_id)]
 
         exp = [{'sample_id': '1.SKB7.640196',
-                'barcodesequence': 'CCTCTGAGAGCT',
+                'barcode': 'CCTCTGAGAGCT',
                 'ebi_submission_accession': None,
                 'experiment_design_description': 'BBBB',
                 'library_construction_protocol': 'AAAA',
-                'linkerprimersequence': 'GTGCCAGCMGCCGCGGTAA',
+                'primer': 'GTGCCAGCMGCCGCGGTAA',
                 'platform': 'ILLUMINA',
                 'run_prefix': 's_G1_L002_sequences',
                 'str_column': 'Value for sample 3',
@@ -952,11 +952,11 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
                 'center_project_name': 'Test Project',
                 'emp_status': 'EMP'},
                {'sample_id': '1.SKB8.640193',
-                'barcodesequence': 'GTCCGCAAGTTA',
+                'barcode': 'GTCCGCAAGTTA',
                 'ebi_submission_accession': None,
                 'experiment_design_description': 'BBBB',
                 'library_construction_protocol': 'AAAA',
-                'linkerprimersequence': 'GTGCCAGCMGCCGCGGTAA',
+                'primer': 'GTGCCAGCMGCCGCGGTAA',
                 'platform': 'ILLUMINA',
                 'run_prefix': 's_G1_L001_sequences',
                 'str_column': 'Value for sample 1',
@@ -964,11 +964,11 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
                 'center_project_name': 'Test Project',
                 'emp_status': 'EMP'},
                {'sample_id': '1.SKD8.640184',
-                'barcodesequence': 'CGTAGAGCTCTC',
+                'barcode': 'CGTAGAGCTCTC',
                 'ebi_submission_accession': None,
                 'experiment_design_description': 'BBBB',
                 'library_construction_protocol': 'AAAA',
-                'linkerprimersequence': 'GTGCCAGCMGCCGCGGTAA',
+                'primer': 'GTGCCAGCMGCCGCGGTAA',
                 'platform': 'ILLUMINA',
                 'run_prefix': 's_G1_L001_sequences',
                 'str_column': 'Value for sample 2',
@@ -1034,7 +1034,7 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
         """Warns if a required columns is missing for a given functionality
         """
         new_id = get_count('qiita.prep_template') + 1
-        del self.metadata['barcodesequence']
+        del self.metadata['barcode']
         pt = npt.assert_warns(QiitaDBWarning, PrepTemplate.create,
                               self.metadata, self.new_raw_data,
                               self.test_study, self.data_type)
@@ -1068,7 +1068,7 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
         exp = [[new_id, 'str_column', 'varchar'],
                [new_id, 'ebi_submission_accession', 'varchar'],
                [new_id, 'run_prefix', 'varchar'],
-               [new_id, 'linkerprimersequence', 'varchar'],
+               [new_id, 'primer', 'varchar'],
                [new_id, 'platform', 'varchar'],
                [new_id, 'experiment_design_description', 'varchar'],
                [new_id, 'library_construction_protocol', 'varchar'],
@@ -1088,7 +1088,7 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
                 'ebi_submission_accession': None,
                 'experiment_design_description': 'BBBB',
                 'library_construction_protocol': 'AAAA',
-                'linkerprimersequence': 'GTGCCAGCMGCCGCGGTAA',
+                'primer': 'GTGCCAGCMGCCGCGGTAA',
                 'platform': 'ILLUMINA',
                 'run_prefix': 's_G1_L002_sequences',
                 'str_column': 'Value for sample 3',
@@ -1099,7 +1099,7 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
                 'ebi_submission_accession': None,
                 'experiment_design_description': 'BBBB',
                 'library_construction_protocol': 'AAAA',
-                'linkerprimersequence': 'GTGCCAGCMGCCGCGGTAA',
+                'primer': 'GTGCCAGCMGCCGCGGTAA',
                 'platform': 'ILLUMINA',
                 'run_prefix': 's_G1_L001_sequences',
                 'str_column': 'Value for sample 1',
@@ -1110,7 +1110,7 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
                 'ebi_submission_accession': None,
                 'experiment_design_description': 'BBBB',
                 'library_construction_protocol': 'AAAA',
-                'linkerprimersequence': 'GTGCCAGCMGCCGCGGTAA',
+                'primer': 'GTGCCAGCMGCCGCGGTAA',
                 'platform': 'ILLUMINA',
                 'run_prefix': 's_G1_L001_sequences',
                 'str_column': 'Value for sample 2',
@@ -1260,23 +1260,23 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
 
     def test_update_category(self):
         with self.assertRaises(QiitaDBUnknownIDError):
-            self.tester.update_category('barcodesequence', {"foo": "bar"})
+            self.tester.update_category('barcode', {"foo": "bar"})
 
         with self.assertRaises(QiitaDBColumnError):
             self.tester.update_category('missing column',
                                         {'1.SKB7.640196': 'bar'})
 
-        neg_test = self.tester['1.SKB7.640196']['barcodesequence']
+        neg_test = self.tester['1.SKB7.640196']['barcode']
         mapping = {'1.SKB8.640193': 'AAAAAAAAAAAA',
                    '1.SKD8.640184': 'CCCCCCCCCCCC'}
 
-        self.tester.update_category('barcodesequence', mapping)
+        self.tester.update_category('barcode', mapping)
 
-        self.assertEqual(self.tester['1.SKB7.640196']['barcodesequence'],
+        self.assertEqual(self.tester['1.SKB7.640196']['barcode'],
                          neg_test)
-        self.assertEqual(self.tester['1.SKB8.640193']['barcodesequence'],
+        self.assertEqual(self.tester['1.SKB8.640193']['barcode'],
                          'AAAAAAAAAAAA')
-        self.assertEqual(self.tester['1.SKD8.640184']['barcodesequence'],
+        self.assertEqual(self.tester['1.SKD8.640184']['barcode'],
                          'CCCCCCCCCCCC')
 
         neg_test = self.tester['1.SKB7.640196']['center_name']
@@ -1291,16 +1291,16 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
 
 
 EXP_PREP_TEMPLATE = (
-    'sample_name\tbarcodesequence\tcenter_name\tcenter_project_name\t'
+    'sample_name\tbarcode\tcenter_name\tcenter_project_name\t'
     'ebi_submission_accession\temp_status\texperiment_design_description\t'
-    'library_construction_protocol\tlinkerprimersequence\tplatform\t'
+    'library_construction_protocol\tplatform\tprimer\t'
     'run_prefix\tstr_column\n'
     '1.SKB7.640196\tCCTCTGAGAGCT\tANL\tTest Project\t\tEMP\tBBBB\tAAAA\t'
-    'GTGCCAGCMGCCGCGGTAA\tILLUMINA\ts_G1_L002_sequences\tValue for sample 3\n'
+    'ILLUMINA\tGTGCCAGCMGCCGCGGTAA\ts_G1_L002_sequences\tValue for sample 3\n'
     '1.SKB8.640193\tGTCCGCAAGTTA\tANL\tTest Project\t\tEMP\tBBBB\tAAAA\t'
-    'GTGCCAGCMGCCGCGGTAA\tILLUMINA\ts_G1_L001_sequences\tValue for sample 1\n'
+    'ILLUMINA\tGTGCCAGCMGCCGCGGTAA\ts_G1_L001_sequences\tValue for sample 1\n'
     '1.SKD8.640184\tCGTAGAGCTCTC\tANL\tTest Project\t\tEMP\tBBBB\tAAAA\t'
-    'GTGCCAGCMGCCGCGGTAA\tILLUMINA\ts_G1_L001_sequences\tValue for sample 2\n')
+    'ILLUMINA\tGTGCCAGCMGCCGCGGTAA\ts_G1_L001_sequences\tValue for sample 2\n')
 
 
 if __name__ == '__main__':

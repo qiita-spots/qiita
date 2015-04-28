@@ -1,69 +1,106 @@
 {% extends sitebase.html %}
 {% block head %}
+{% from future.utils import viewitems %}
+{% from itertools import chain %}
+<script src="/static/vendor/js/moi.js"></script>
 <script type="text/javascript">
+
+function error(evt) { $('#ws-error').html("<b>Server communication error. Sample removal will not be recorded. Please try again later.</b>"); };
+function check_color() {
+  if($('.row').length === 0) {
+    $('#dflt-sel-info').removeAttr('style');
+    $('#create-button').remove();
+    $('#clear-button').remove();
+  }
+}
+
+function clear() {
+  if(confirm('Are you sure you want to remove all samples?')) {
+    moi.send('clear', {'pids': {% raw [int(p) for p in chain.from_iterable(pid.keys() for sid, pid in viewitems(sel_data))] %} });
+  }
+}
+
+function clear_from_html(data) {
+  $.each($('.row'), function(index, value) { value.remove(); });
+  check_color();
+}
+
 function remove_proc_data(pid, sid) {
-	if(confirm('Are you sure you want to remove all samples for this processed data?')) { 
-		$('#proc' + pid).remove();
-		$('#proc' + pid + '-samples').remove();
-		// remove study if all proc data removed
-		if($('#study'+ sid + '-table tbody').children().length === 1) { $('#study'+sid).remove(); }
-	}
+  if(confirm('Are you sure you want to remove all samples for this processed data?')) {
+    moi.send('remove_pd', {'proc_data': pid, 'samples': [], 'sid': sid});
+  }
 }
 
-function remove_sample(sid, pid, sample) {
-		document.getElementById(pid + '@' + sample).remove();
-		//decriment sample count for pid
-		var count = $('#proc' + pid + '-sample-count');
-		count.text(parseInt(count.text(), 10) - 1);
-		// remove proc data if all samples removed
-		if($('#proc' + pid + '-samples-table tbody').children().length === 0) { $('#proc'+pid).remove(); $('#proc' + pid + '-samples').remove(); }
-		// remove study if all proc data removed
-		if($('#study'+ sid + '-table tbody').children().length === 1) { $('#study'+sid).remove(); }
+function remove_pd_from_html(data) {
+    pid = data.proc_data;
+    sid = data.sid;
+    $('#proc' + pid).remove();
+    $('#proc' + pid + '-samples').remove();
+    // remove study if all proc data removed
+    if($('#study'+ sid + '-table tbody').children().length === 1) { $('#study'+sid).remove(); }
+    check_color();
 }
 
+function remove_sample(sid, pid, sample) { moi.send('remove_sample', {'proc_data': pid, 'samples': [sample], 'sid': sid}); }
+
+function remove_sample_from_html(data) {
+    pid = data.proc_data;
+    sample = data.samples[0];
+    sid = data.sid;
+    document.getElementById(pid + '@' + sample).remove();
+    //decriment sample count for pid
+    var count = $('#proc' + pid + '-sample-count');
+    count.text(parseInt(count.text(), 10) - 1);
+    // remove proc data if all samples removed
+    if($('#proc' + pid + '-samples-table tbody').children().length === 0) { $('#proc'+pid).remove(); $('#proc' + pid + '-samples').remove(); }
+    // remove study if all proc data removed
+    if($('#study'+ sid + '-table tbody').children().length === 1) { $('#study'+sid).remove(); }
+    check_color();
+}
+$(document).ready(function() {
+      moi.init(window.location.host + '/analysis/selected/socket/', null, function(){}, error, error);
+      moi.add_callback('remove_pd', remove_pd_from_html);
+      moi.add_callback('remove_sample', remove_sample_from_html);
+      moi.add_callback('clear', clear_from_html);
+      $('#clear-button').on('click', clear);
+    });
 </script>
 {% end %}
 
 {% block content %}
 {% from qiita_db.study import Study %}
-{% from future.utils import viewitems %}
 {% set static_info = {'data_type', 'processed_date', 'algorithm', 'reference_name', 'reference_version', 'sequence_filepath', 'taxonomy_filepath', 'tree_filepath'}%}
 <h1>Selected Samples</h1>
+<span id="ws-error" style="color:red"></span>
 {% for sid, proc_datas in viewitems(sel_data) %}
   {% set study = Study(sid) %}
 <div class="row" id="study{{sid}}">
-	<div class="col-md-12" style="border:2px solid #a1a1a1; border-radius: 15px;">
-	  <h2><a href="/study/description/{{sid}}">{{study.title}}</a></h2>
-	  <h4>Processed Data</h4>
-	  <table class='table table-striped' id='study{{sid}}-table'>
-	  <tr>
-	  	<th class="col-sm-1">id</th><th class="col-sm-1">Datatype</th><th class="col-sm-2">Processed Date</th><th class="col-sm-2">Algorithm</th><th class="col-sm-2">Reference</th><th class="col-sm-1">Samples</th><th></th><th></th>
-	  </tr>
-	{% for pid, samples in viewitems(proc_datas) %}
-		<tr id="proc{{pid}}">
-	    <td>{{pid}} <a href="#" data-toggle="modal" data-target="#proc{{pid}}-settings-modal" onclick="return false;"><span class="glyphicon glyphicon-info-sign"></span></a></td>
-	    <td>{{proc_info[pid]["data_type"]}}</td>
-	    <td>{{proc_info[pid]["processed_date"]}}</td>
-	    <td>{{proc_info[pid]["algorithm"]}}</td>
-	    <td>{{proc_info[pid]["reference_name"]}} {{proc_info[pid]["reference_version"]}}</td>
-	    <td><span id="proc{{pid}}-sample-count">{% raw len(samples) %}</span></td>
-	    <td><a href="#" onclick="$('#proc{{pid}}-samples').toggle(); return false;">Show/Hide samples</a></td>
-	    <td><a href="#" onclick = 'remove_proc_data({{pid}}, {{sid}})'>Remove</a></td>
-		 </tr>
-		 <tr id="proc{{pid}}-samples" hidden><td colspan=7>
-		 <table class="table table-striped sample-table" id="proc{{pid}}-samples-table" style="width:50%">
-		{% for samp in samples %}
-		 	<tr id="{{pid}}@{{samp}}"><td>{{samp}}</td><td><a href="#" onclick="remove_sample('{{sid}}', '{{pid}}', '{{samp}}')">Remove</a></td></tr>
-		{% end %}
-		</table>
-		</td></tr>
-	{% end %}
-	</table>
-	</div>
-</div>
-{% end %}
-
-{% for pid in proc_datas%}
+  <div class="col-md-12" style="border:2px solid #a1a1a1; border-radius: 15px;">
+    <h2><a href="/study/description/{{sid}}">{{study.title}}</a></h2>
+    <h4>Processed Data</h4>
+    <table class='table table-striped' id='study{{sid}}-table'>
+    <tr>
+      <th class="col-sm-1">id</th><th class="col-sm-1">Datatype</th><th class="col-sm-2">Processed Date</th><th class="col-sm-2">Algorithm</th><th class="col-sm-2">Reference</th><th class="col-sm-1">Samples</th><th></th><th></th>
+    </tr>
+  {% for pid, samples in viewitems(proc_datas) %}
+    <tr id="proc{{pid}}">
+      <td>{{pid}} <a href="#" data-toggle="modal" data-target="#proc{{pid}}-settings-modal" onclick="return false;"><span class="glyphicon glyphicon-info-sign"></span></a></td>
+      <td>{{proc_info[pid]["data_type"]}}</td>
+      <td>{{proc_info[pid]["processed_date"]}}</td>
+      <td>{{proc_info[pid]["algorithm"]}}</td>
+      <td>{{proc_info[pid]["reference_name"]}} {{proc_info[pid]["reference_version"]}}</td>
+      <td><span id="proc{{pid}}-sample-count">{% raw len(samples) %}</span></td>
+      <td><a href="#" onclick="$('#proc{{pid}}-samples').toggle(); return false;">Show/Hide samples</a></td>
+      <td><a href="#" onclick = 'remove_proc_data({{pid}}, {{sid}})'>Remove</a></td>
+     </tr>
+     <tr id="proc{{pid}}-samples" hidden><td colspan=7>
+     <table class="table table-striped sample-table" id="proc{{pid}}-samples-table" style="width:50%">
+    {% for samp in samples %}
+      <tr id="{{pid}}@{{samp}}"><td>{{samp}}</td><td><a href="#" onclick="remove_sample('{{sid}}', '{{pid}}', '{{samp}}')">Remove</a></td></tr>
+    {% end %}
+    </table>
+    </td></tr>
+    {% for pid in proc_datas %}
 <!-- modal view to enter analysis information -->
     <div class="modal fade" id="proc{{pid}}-settings-modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
       <div class="modal-dialog">
@@ -72,24 +109,67 @@ function remove_sample(sid, pid, sample) {
             <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
             <h4 class="modal-title" id="myModalLabel">Processed Data {{pid}}</h4>
           </div>
-          <form role="form" action="/analysis/2" method="post">
+          <form role="form" action="/analysis/3" method="post">
           <input type="hidden" name="action" value="create">
             <div class="modal-body">
-							<b>Datatype</b>: {{proc_info[pid]["data_type"]}} <br/>
-							<b>Processed Date</b>: {{proc_info[pid]["processed_date"]}} <br/>
-							<b>Algorithm</b>: {{proc_info[pid]["algorithm"]}} <br/>
-							<b>Reference</b>: {{proc_info[pid]["reference_name"]}} {{proc_info[pid]["reference_version"]}}<br/>
-	{% for key, val in viewitems(proc_info[pid]) %}
-		{% if key not in static_info %}
-			<b>{{key}}</b>: {{val}} <br/>
-		{% end %}
-	{% end %}
+              <b>Datatype</b>: {{proc_info[pid]["data_type"]}} <br/>
+              <b>Processed Date</b>: {{proc_info[pid]["processed_date"]}} <br/>
+              <b>Algorithm</b>: {{proc_info[pid]["algorithm"]}} <br/>
+              <b>Reference</b>: {{proc_info[pid]["reference_name"]}} {{proc_info[pid]["reference_version"]}}<br/>
+  {% for key, val in viewitems(proc_info[pid]) %}
+    {% if key not in static_info %}
+      <b>{{key}}</b>: {{val}} <br/>
+    {% end %}
+  {% end %}
             </div>
             <div class="modal-footer">
+            </div>
+        </div>
+      </div>
+    </div>
+  {% end %}
+  {% end %}
+  </table>
+  </div>
+</div>
+{% end %}
+
+{% if sel_data %}
+<button type="button" class="btn btn-success btn-lg" id="create-button" name="create-button" data-toggle="modal" data-target="#create-analysis-modal-view">
+  Create Analysis
+</button>
+<button type="button" class="btn btn-danger btn-lg" id="clear-button" name="clear-button">
+  Clear Selected
+</button>
+{% end %}
+
+<!-- modal view to enter analysis information -->
+    <div class="modal fade" id="create-analysis-modal-view" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+            <h4 class="modal-title" id="myModalLabel">Create new meta-analysis</h4>
+          </div>
+          <form role="form" action="/analysis/3" method="post">
+          <input type="hidden" name="action" value="create">
+            <div class="modal-body">
+              <div>
+                <div class="form-group">
+                  <label for="name">Analysis name</label>
+                  <input type="text" class="form-control" id="name" name="name" placeholder="Analysis name">
+                </div>
+                <div class="form-group">
+                  <label for="description">Description</label>
+                  <input type="text" class="form-control" id="description" name="description" placeholder="Short description">
+                </div>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="submit" class="btn btn-primary">Create analysis</button>
             </div>
           </form>
         </div>
       </div>
     </div>
-  {% end %}
 {% end %}

@@ -238,9 +238,9 @@ INSERT INTO qiita.prep_template_sample (prep_template_id, sample_id) VALUES
 -- Add raw data prep columns
 INSERT INTO qiita.prep_columns (prep_template_id, column_name, column_type) VALUES
 	(1, 'sample_id', 'varchar'),
-	(1, 'BarcodeSequence', 'varchar'),
+	(1, 'barcode', 'varchar'),
 	(1, 'LIBRARY_CONSTRUCTION_PROTOCOL', 'varchar'),
-	(1, 'LinkerPrimerSequence', 'varchar'),
+	(1, 'primer', 'varchar'),
 	(1, 'TARGET_SUBFRAGMENT', 'varchar'),
 	(1, 'target_gene', 'varchar'),
 	(1, 'RUN_CENTER', 'varchar'),
@@ -263,9 +263,9 @@ INSERT INTO qiita.prep_columns (prep_template_id, column_name, column_type) VALU
 -- Crate the prep_1 dynamic table
 CREATE TABLE qiita.prep_1 (
 	sample_id						varchar,
-	BarcodeSequence					varchar,
+	barcode							varchar,
 	LIBRARY_CONSTRUCTION_PROTOCOL	varchar,
-	LinkerPrimerSequence			varchar,
+	primer							varchar,
 	TARGET_SUBFRAGMENT				varchar,
 	target_gene						varchar,
 	RUN_CENTER						varchar,
@@ -288,7 +288,7 @@ CREATE TABLE qiita.prep_1 (
 );
 
 -- Populates the prep_1 dynamic table
-INSERT INTO qiita.prep_1 (sample_id, BarcodeSequence, LIBRARY_CONSTRUCTION_PROTOCOL, LinkerPrimerSequence, TARGET_SUBFRAGMENT, target_gene, RUN_CENTER, RUN_PREFIX, RUN_DATE, EXPERIMENT_CENTER, EXPERIMENT_DESIGN_DESCRIPTION, EXPERIMENT_TITLE, PLATFORM, SAMP_SIZE, SEQUENCING_METH, illumina_technology, SAMPLE_CENTER, pcr_primers, STUDY_CENTER, center_name, center_project_name, emp_status) VALUES
+INSERT INTO qiita.prep_1 (sample_id, barcode, LIBRARY_CONSTRUCTION_PROTOCOL, primer, TARGET_SUBFRAGMENT, target_gene, RUN_CENTER, RUN_PREFIX, RUN_DATE, EXPERIMENT_CENTER, EXPERIMENT_DESIGN_DESCRIPTION, EXPERIMENT_TITLE, PLATFORM, SAMP_SIZE, SEQUENCING_METH, illumina_technology, SAMPLE_CENTER, pcr_primers, STUDY_CENTER, center_name, center_project_name, emp_status) VALUES
 	('1.SKB1.640202', 'GTCCGCAAGTTA', 'This analysis was done as in Caporaso et al 2011 Genome research. The PCR primers (F515/R806) were developed against the V4 region of the 16S rRNA (both bacteria and archaea), which we determined would yield optimal community clustering with reads of this length using a procedure similar to that of ref. 15. [For reference, this primer pair amplifies the region 533_786 in the Escherichia coli strain 83972 sequence (greengenes accession no. prokMSA_id:470367).] The reverse PCR primer is barcoded with a 12-base error-correcting Golay code to facilitate multiplexing of up to 1,500 samples per lane, and both PCR primers contain sequencer adapter regions.', 'GTGCCAGCMGCCGCGGTAA', 'V4', '16S rRNA', 'ANL', 's_G1_L001_sequences', '8/1/12', 'ANL', 'micro biome of soil and rhizosphere of cannabis plants from CA', 'Cannabis Soil Microbiome', 'Illumina', '.25,g', 'Sequencing by synthesis', 'MiSeq', 'ANL', 'FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT', 'CCME', 'ANL', NULL, 'EMP'),
 	('1.SKB2.640194', 'CGTAGAGCTCTC', 'This analysis was done as in Caporaso et al 2011 Genome research. The PCR primers (F515/R806) were developed against the V4 region of the 16S rRNA (both bacteria and archaea), which we determined would yield optimal community clustering with reads of this length using a procedure similar to that of ref. 15. [For reference, this primer pair amplifies the region 533_786 in the Escherichia coli strain 83972 sequence (greengenes accession no. prokMSA_id:470367).] The reverse PCR primer is barcoded with a 12-base error-correcting Golay code to facilitate multiplexing of up to 1,500 samples per lane, and both PCR primers contain sequencer adapter regions.', 'GTGCCAGCMGCCGCGGTAA', 'V4', '16S rRNA', 'ANL', 's_G1_L001_sequences', '8/1/12', 'ANL', 'micro biome of soil and rhizosphere of cannabis plants from CA', 'Cannabis Soil Microbiome', 'Illumina', '.25,g', 'Sequencing by synthesis', 'MiSeq', 'ANL', 'FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT', 'CCME', 'ANL', NULL, 'EMP'),
 	('1.SKB3.640195', 'CCTCTGAGAGCT', 'This analysis was done as in Caporaso et al 2011 Genome research. The PCR primers (F515/R806) were developed against the V4 region of the 16S rRNA (both bacteria and archaea), which we determined would yield optimal community clustering with reads of this length using a procedure similar to that of ref. 15. [For reference, this primer pair amplifies the region 533_786 in the Escherichia coli strain 83972 sequence (greengenes accession no. prokMSA_id:470367).] The reverse PCR primer is barcoded with a 12-base error-correcting Golay code to facilitate multiplexing of up to 1,500 samples per lane, and both PCR primers contain sequencer adapter regions.', 'GTGCCAGCMGCCGCGGTAA', 'V4', '16S rRNA', 'ANL', 's_G1_L001_sequences', '8/1/12', 'ANL', 'micro biome of soil and rhizosphere of cannabis plants from CA', 'Cannabis Soil Microbiome', 'Illumina', '.25,g', 'Sequencing by synthesis', 'MiSeq', 'ANL', 'FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT', 'CCME', 'ANL', NULL, 'EMP'),

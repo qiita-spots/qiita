@@ -1,5 +1,7 @@
 from unittest import main
 from qiita_pet.test.tornado_test_base import TestHandlerBase
+from qiita_db.analysis import Analysis
+from qiita_db.util import get_count
 
 
 class TestSelectCommandsHandler(TestHandlerBase):
@@ -11,9 +13,16 @@ class TestSelectCommandsHandler(TestHandlerBase):
         self.assertEqual(response.code, 200)
 
     def test_post(self):
-        response = self.post('/analysis/3', {'analysis-id': 1})
+        new_aid = get_count('qiita.analysis') + 1
+        post_args = {
+            'name': 'post-test',
+            'description': "test of posting"}
+        response = self.post('/analysis/3', post_args)
         # Make sure page response loaded sucessfully
         self.assertEqual(response.code, 200)
+        # make sure analysis created
+        analysis = Analysis(new_aid)
+        self.assertEqual(analysis.name, 'post-test')
 
 
 class TestAnalysisWaitHandler(TestHandlerBase):
