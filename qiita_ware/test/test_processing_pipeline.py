@@ -76,8 +76,8 @@ class ProcessingPipelineTests(TestCase):
                             'ebi_submission_accession': None,
                             'EMP_status': 'EMP',
                             'str_column': 'Value for sample 1',
-                            'linkerprimersequence': 'GTGCCAGCMGCCGCGGTAA',
-                            'barcodesequence': 'GTCCGCAAGTTA',
+                            'primer': 'GTGCCAGCMGCCGCGGTAA',
+                            'barcode': 'GTCCGCAAGTTA',
                             'run_prefix': "s_G1_L001_sequences",
                             'platform': 'ILLUMINA',
                             'library_construction_protocol': 'AAA',
@@ -87,8 +87,8 @@ class ProcessingPipelineTests(TestCase):
                             'ebi_submission_accession': None,
                             'EMP_status': 'EMP',
                             'str_column': 'Value for sample 2',
-                            'linkerprimersequence': 'GTGCCAGCMGCCGCGGTAA',
-                            'barcodesequence': 'CGTAGAGCTCTC',
+                            'primer': 'GTGCCAGCMGCCGCGGTAA',
+                            'barcode': 'CGTAGAGCTCTC',
                             'run_prefix': "s_G1_L001_sequences",
                             'platform': 'ILLUMINA',
                             'library_construction_protocol': 'AAA',
@@ -98,8 +98,8 @@ class ProcessingPipelineTests(TestCase):
                             'ebi_submission_accession': None,
                             'EMP_status': 'EMP',
                             'str_column': 'Value for sample 3',
-                            'linkerprimersequence': 'GTGCCAGCMGCCGCGGTAA',
-                            'barcodesequence': 'CCTCTGAGAGCT',
+                            'primer': 'GTGCCAGCMGCCGCGGTAA',
+                            'barcode': 'CCTCTGAGAGCT',
                             'run_prefix': "s_G1_L002_sequences",
                             'platform': 'ILLUMINA',
                             'library_construction_protocol': 'AAA',
@@ -217,6 +217,7 @@ class ProcessingPipelineTests(TestCase):
         raw_data = RawData(3)
         params = Preprocessed454Params(1)
         prep_template = PrepTemplate(1)
+        prep_template.generate_files()
 
         obs_cmd, obs_output_dir = _get_preprocess_fasta_cmd(
             raw_data, prep_template, params)
@@ -245,21 +246,21 @@ class ProcessingPipelineTests(TestCase):
         new_fp_id = get_count('qiita.filepath') + 1
         conn_handler = SQLConnectionHandler()
         sql = ("""
-            INSERT INTO qiita.filepath (filepath_id, filepath,
-                filepath_type_id, checksum, checksum_algorithm_id,
-                data_directory_id) VALUES (%s, '1_new.sff', 17, 852952723, 1,
-                5);
-            INSERT INTO qiita.raw_filepath (raw_data_id , filepath_id) VALUES
-                (3, %s);
+            INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum,
+                    checksum_algorithm_id, data_directory_id)
+                VALUES ('1_new.sff', 17, 852952723, 1, 5);
+            INSERT INTO qiita.raw_filepath (raw_data_id , filepath_id)
+                VALUES (3, %s);
             UPDATE qiita.prep_1 SET run_prefix='preprocess_test';
-            UPDATE qiita.prep_1 SET run_prefix='new' WHERE
-                sample_id = '1.SKB8.640193';
+            UPDATE qiita.prep_1 SET run_prefix='new'
+                WHERE sample_id = '1.SKB8.640193';
         """)
-        conn_handler.execute(sql, (new_fp_id, new_fp_id))
+        conn_handler.execute(sql, (new_fp_id,))
 
         raw_data = RawData(3)
         params = Preprocessed454Params(1)
         prep_template = PrepTemplate(1)
+        prep_template.generate_files()
 
         obs_cmd, obs_output_dir = _get_preprocess_fasta_cmd(
             raw_data, prep_template, params)
@@ -291,28 +292,27 @@ class ProcessingPipelineTests(TestCase):
         fp_count = get_count('qiita.filepath')
         conn_handler = SQLConnectionHandler()
         sql = ("""
-            INSERT INTO qiita.filepath (filepath_id, filepath,
-                filepath_type_id, checksum, checksum_algorithm_id,
-                data_directory_id) VALUES (%s, '1_new.sff', 17, 852952723, 1,
-                5);
-            INSERT INTO qiita.raw_filepath (raw_data_id , filepath_id) VALUES
-                (3, %s);
-            INSERT INTO qiita.filepath (filepath_id, filepath,
-                filepath_type_id, checksum, checksum_algorithm_id,
-                data_directory_id) VALUES (%s, '1_error.sff', 17, 852952723,
-                1, 5);
-            INSERT INTO qiita.raw_filepath (raw_data_id , filepath_id) VALUES
-                (3, %s);
+            INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum,
+                    checksum_algorithm_id, data_directory_id)
+                VALUES ('1_new.sff', 17, 852952723, 1, 5);
+            INSERT INTO qiita.raw_filepath (raw_data_id , filepath_id)
+                VALUES (3, %s);
+            INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum,
+                    checksum_algorithm_id, data_directory_id)
+                VALUES ('1_error.sff', 17, 852952723, 1, 5);
+            INSERT INTO qiita.raw_filepath (raw_data_id , filepath_id)
+                VALUES (3, %s);
             UPDATE qiita.prep_1 SET run_prefix='preprocess_test';
             UPDATE qiita.prep_1 SET run_prefix='new' WHERE
                 sample_id = '1.SKB8.640193';
         """)
         conn_handler.execute(
-            sql, (fp_count + 1, fp_count + 1, fp_count + 2, fp_count + 2))
+            sql, (fp_count + 1, fp_count + 2))
 
         raw_data = RawData(3)
         params = Preprocessed454Params(1)
         prep_template = PrepTemplate(1)
+        prep_template.generate_files()
 
         with self.assertRaises(ValueError):
             _get_preprocess_fasta_cmd(raw_data, prep_template, params)
@@ -332,6 +332,7 @@ class ProcessingPipelineTests(TestCase):
         raw_data = RawData(3)
         params = Preprocessed454Params(1)
         prep_template = PrepTemplate(1)
+        prep_template.generate_files()
 
         with self.assertRaises(ValueError):
             _get_preprocess_fasta_cmd(raw_data, prep_template, params)
