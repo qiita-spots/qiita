@@ -892,7 +892,7 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
 
         self.assertFalse(exists_table("prep_%d" % exp_id, self.conn_handler))
 
-    def _common_creation_checks(self, new_id, pt):
+    def _common_creation_checks(self, new_id, pt, fp_count):
         # The returned object has the correct id
         self.assertEqual(pt.id, new_id)
 
@@ -981,23 +981,25 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
         # prep and qiime files have been created
         filepaths = pt.get_filepaths()
         self.assertEqual(len(filepaths), 2)
-        self.assertEqual(filepaths[0][0], 22)
-        self.assertEqual(filepaths[1][0], 21)
+        self.assertEqual(filepaths[0][0], fp_count + 2)
+        self.assertEqual(filepaths[1][0], fp_count + 1)
 
     def test_create(self):
         """Creates a new PrepTemplate"""
+        fp_count = get_count('qiita.filepath')
         new_id = get_count('qiita.prep_template') + 1
         pt = PrepTemplate.create(self.metadata, self.new_raw_data,
                                  self.test_study, self.data_type)
-        self._common_creation_checks(new_id, pt)
+        self._common_creation_checks(new_id, pt, fp_count)
 
     def test_create_already_prefixed_samples(self):
         """Creates a new PrepTemplate"""
+        fp_count = get_count('qiita.filepath')
         new_id = get_count('qiita.prep_template') + 1
         pt = npt.assert_warns(QiitaDBWarning, PrepTemplate.create,
                               self.metadata_prefixed, self.new_raw_data,
                               self.test_study, self.data_type)
-        self._common_creation_checks(new_id, pt)
+        self._common_creation_checks(new_id, pt, fp_count)
 
     def test_generate_files(self):
         fp_count = get_count("qiita.filepath")
@@ -1025,14 +1027,16 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
 
     def test_create_data_type_id(self):
         """Creates a new PrepTemplate passing the data_type_id"""
+        fp_count = get_count('qiita.filepath')
         new_id = get_count('qiita.prep_template') + 1
         pt = PrepTemplate.create(self.metadata, self.new_raw_data,
                                  self.test_study, self.data_type_id)
-        self._common_creation_checks(new_id, pt)
+        self._common_creation_checks(new_id, pt, fp_count)
 
     def test_create_warning(self):
         """Warns if a required columns is missing for a given functionality
         """
+        fp_count = get_count("qiita.filepath")
         new_id = get_count('qiita.prep_template') + 1
         del self.metadata['barcode']
         pt = npt.assert_warns(QiitaDBWarning, PrepTemplate.create,
@@ -1123,8 +1127,8 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
         # prep and qiime files have been created
         filepaths = pt.get_filepaths()
         self.assertEqual(len(filepaths), 2)
-        self.assertEqual(filepaths[0][0], 22)
-        self.assertEqual(filepaths[1][0], 21)
+        self.assertEqual(filepaths[0][0], fp_count + 2)
+        self.assertEqual(filepaths[1][0], fp_count + 1)
 
     def test_create_investigation_type_error(self):
         """Create raises an error if the investigation_type does not exists"""

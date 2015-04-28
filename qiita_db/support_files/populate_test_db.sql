@@ -449,4 +449,9 @@ INSERT INTO qiita.collection_users (email, collection_id) VALUES ('shared@foo.ba
 INSERT INTO qiita.analysis (email, name, description, dflt, analysis_status_id) VALUES ('test@foo.bar', 'test@foo.bar-dflt', 'dflt', true, 1), ('admin@foo.bar', 'admin@foo.bar-dflt', 'dflt', true, 1), ('shared@foo.bar', 'shared@foo.bar-dflt', 'dflt', true, 1), ('demo@microbio.me', 'demo@microbio.me-dflt', 'dflt', true, 1);
 
 -- Attach samples to analysis
-INSERT INTO qiita.analysis_sample (analysis_id, processed_data_id, sample_id) VALUES (3,1,'1.SKD8.640184'), (3,1,'1.SKB7.640196'), (3,1,'1.SKM9.640192'), (3,1,'1.SKM4.640180')
+INSERT INTO qiita.analysis_sample (analysis_id, processed_data_id, sample_id) VALUES (3,1,'1.SKD8.640184'), (3,1,'1.SKB7.640196'), (3,1,'1.SKM9.640192'), (3,1,'1.SKM4.640180');
+
+-- Create the new prep_template_filepath
+INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum, checksum_algorithm_id, data_directory_id) VALUES ('1_prep_1_19700101-000000.txt', 15, '3703494589', 1, 9);
+INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum, checksum_algorithm_id, data_directory_id) VALUES ('1_prep_1_qiime_19700101-000000.txt', 16, '3703494589', 1, 9);
+INSERT INTO qiita.prep_template_filepath VALUES (1, 19), (1, 20);
