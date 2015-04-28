@@ -1041,7 +1041,7 @@ class MetadataTemplate(QiitaObject):
         fp_id = self._fp_id if fp_id is None else fp_id
 
         try:
-            fpp_id = insert_filepaths([(filepath, self._fp_id)], None,
+            fpp_id = insert_filepaths([(filepath, fp_id)], None,
                                       "templates", "filepath", conn_handler,
                                       move_files=False)[0]
             values = (self._id, fpp_id)
