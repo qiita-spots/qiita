@@ -746,9 +746,9 @@ class Analysis(QiitaStatusObject):
             qiime_map_fp = conn_handler.execute_fetchall(sql, (pid,))[0][1]
             # Parse the mapping file
             qiime_map = pd.read_csv(
-                join(fp, qiime_map_fp), sep='\t', infer_datetime_format=True,
-                keep_default_na=False, na_values=['unknown'], parse_dates=True,
-                index_col=False, converters=defaultdict(lambda: str))
+                join(fp, qiime_map_fp), sep='\t', keep_default_na=False,
+                na_values=['unknown'], index_col=False,
+                converters=defaultdict(lambda: str))
             qiime_map.set_index('#SampleID', inplace=True, drop=True)
             qiime_map = qiime_map.loc[samples]
 
