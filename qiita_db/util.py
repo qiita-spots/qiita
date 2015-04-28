@@ -951,6 +951,13 @@ def get_processed_params_tables():
 
 
 def get_lat_longs():
+    """Retrieve the latitude and longitude of all the samples in the DB
+
+    Returns
+    -------
+    list of [float, float]
+        The latitude and longitude for each sample in the database
+    """
     conn = SQLConnectionHandler()
     sql = """SELECT DISTINCT table_name
              FROM information_schema.columns
