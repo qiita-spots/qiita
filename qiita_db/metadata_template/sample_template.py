@@ -16,11 +16,12 @@ from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_db.exceptions import (QiitaDBDuplicateError, QiitaDBError,
                                  QiitaDBUnknownIDError)
 from qiita_db.sql_connection import SQLConnectionHandler
-from qiita_db.util import get_required_sample_info_status, get_mountpoint
+from qiita_db.util import get_mountpoint, convert_to_id
 from qiita_db.study import Study
 from qiita_db.data import RawData
 from .base_metadata_template import BaseSample, MetadataTemplate
 from .prep_template import PrepTemplate
+from .constants import SAMPLE_TEMPLATE_COLUMNS
 
 
 class Sample(BaseSample):
@@ -66,9 +67,9 @@ class SampleTemplate(MetadataTemplate):
     _table_prefix = "sample_"
     _column_table = "study_sample_columns"
     _id_column = "study_id"
-    translate_cols_dict = {
-        'required_sample_info_status_id': 'required_sample_info_status'}
     _sample_cls = Sample
+    _fp_id = convert_to_id("sample_template", "filepath_type")
+    _filepath_table = 'sample_template_filepath'
 
     @staticmethod
     def metadata_headers():
@@ -86,19 +87,6 @@ class SampleTemplate(MetadataTemplate):
                 "UNION SELECT column_name FROM information_schema.columns "
                 "WHERE table_name = 'required_sample_info' "
                 "ORDER BY column_name")]
-
-    @classmethod
-    def _check_template_special_columns(cls, md_template, study_id):
-        r"""Checks for special columns based on obj type
-
-        Parameters
-        ----------
-        md_template : DataFrame
-            The metadata template file contents indexed by sample ids
-        study_id : int
-            The study to which the sample template belongs to.
-        """
-        return set()
 
     @classmethod
     def create(cls, md_template, study):
@@ -123,7 +111,7 @@ class SampleTemplate(MetadataTemplate):
 
         # Clean and validate the metadata template given
         md_template = cls._clean_validate_template(md_template, study.id,
-                                                   study.id, conn_handler)
+                                                   SAMPLE_TEMPLATE_COLUMNS)
 
         cls._add_common_creation_steps_to_queue(md_template, study.id,
                                                 conn_handler, queue_name)
@@ -233,8 +221,7 @@ class SampleTemplate(MetadataTemplate):
         conn_handler.create_queue(queue_name)
 
         md_template = self._clean_validate_template(md_template, self.study_id,
-                                                    self.study_id,
-                                                    conn_handler)
+                                                    SAMPLE_TEMPLATE_COLUMNS)
 
         self._add_common_extend_steps_to_queue(md_template, conn_handler,
                                                queue_name)
@@ -260,7 +247,7 @@ class SampleTemplate(MetadataTemplate):
 
         # Clean and validate the metadata template given
         new_map = self._clean_validate_template(md_template, self.id,
-                                                conn_handler)
+                                                SAMPLE_TEMPLATE_COLUMNS)
         # Retrieving current metadata
         current_map = self._transform_to_dict(conn_handler.execute_fetchall(
             "SELECT * FROM qiita.{0} WHERE {1}=%s".format(self._table,

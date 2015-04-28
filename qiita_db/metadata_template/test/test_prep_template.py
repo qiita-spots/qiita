@@ -9,7 +9,6 @@
 from future.builtins import zip
 from unittest import TestCase, main
 from tempfile import mkstemp
-from time import strftime
 from os import close, remove
 from os.path import join, basename
 from collections import Iterable
@@ -33,6 +32,7 @@ from qiita_db.util import (exists_table, get_db_files_base_dir, get_mountpoint,
                            get_count)
 from qiita_db.metadata_template.prep_template import PrepTemplate, PrepSample
 from qiita_db.metadata_template.sample_template import SampleTemplate, Sample
+from qiita_db.metadata_template.constants import PREP_TEMPLATE_COLUMNS
 
 
 class BaseTestPrepSample(TestCase):
@@ -41,9 +41,9 @@ class BaseTestPrepSample(TestCase):
         self.sample_id = '1.SKB8.640193'
         self.tester = PrepSample(self.sample_id, self.prep_template)
         self.exp_categories = {'center_name', 'center_project_name',
-                               'emp_status', 'barcodesequence',
+                               'emp_status', 'barcode',
                                'library_construction_protocol',
-                               'linkerprimersequence', 'target_subfragment',
+                               'primer', 'target_subfragment',
                                'target_gene', 'run_center', 'run_prefix',
                                'run_date', 'experiment_center',
                                'experiment_design_description',
@@ -83,11 +83,11 @@ class TestPrepSampleReadOnly(BaseTestPrepSample):
         conn_handler.create_queue(queue)
 
         self.tester.add_setitem_queries(
-            'barcodesequence', 'AAAAAAAAAAAA', conn_handler, queue)
+            'barcode', 'AAAAAAAAAAAA', conn_handler, queue)
 
         obs = conn_handler.queues[queue]
         sql = """UPDATE qiita.prep_1
-                 SET barcodesequence=%s
+                 SET barcode=%s
                  WHERE sample_id=%s"""
         exp = [(sql, ('AAAAAAAAAAAA', '1.SKB8.640193'))]
         self.assertEqual(obs, exp)
@@ -156,7 +156,7 @@ class TestPrepSampleReadOnly(BaseTestPrepSample):
         """
         self.assertEqual(self.tester['pcr_primers'],
                          'FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT')
-        self.assertEqual(self.tester['barcodesequence'], 'AGCGCTCACATC')
+        self.assertEqual(self.tester['barcode'], 'AGCGCTCACATC')
 
     def test_getitem_id_column(self):
         """Get item returns the correct metadata value from the changed column
@@ -176,8 +176,8 @@ class TestPrepSampleReadOnly(BaseTestPrepSample):
 
     def test_contains_true(self):
         """contains returns true if the category header exists"""
-        self.assertTrue('BarcodeSequence' in self.tester)
-        self.assertTrue('barcodesequence' in self.tester)
+        self.assertTrue('Barcode' in self.tester)
+        self.assertTrue('barcode' in self.tester)
 
     def test_contains_false(self):
         """contains returns false if the category header does not exists"""
@@ -218,7 +218,7 @@ class TestPrepSampleReadOnly(BaseTestPrepSample):
         obs = self.tester.items()
         self.assertTrue(isinstance(obs, Iterable))
         exp = {('center_name', 'ANL'), ('center_project_name', None),
-               ('emp_status', 'EMP'), ('barcodesequence', 'AGCGCTCACATC'),
+               ('emp_status', 'EMP'), ('barcode', 'AGCGCTCACATC'),
                ('library_construction_protocol',
                 'This analysis was done as in Caporaso et al 2011 Genome '
                 'research. The PCR primers (F515/R806) were developed against '
@@ -231,7 +231,7 @@ class TestPrepSampleReadOnly(BaseTestPrepSample):
                 'PCR primer is barcoded with a 12-base error-correcting Golay '
                 'code to facilitate multiplexing of up to 1,500 samples per '
                 'lane, and both PCR primers contain sequencer adapter '
-                'regions.'), ('linkerprimersequence', 'GTGCCAGCMGCCGCGGTAA'),
+                'regions.'), ('primer', 'GTGCCAGCMGCCGCGGTAA'),
                ('target_subfragment', 'V4'), ('target_gene', '16S rRNA'),
                ('run_center', 'ANL'), ('run_prefix', 's_G1_L001_sequences'),
                ('run_date', '8/1/12'), ('experiment_center', 'ANL'),
@@ -248,7 +248,7 @@ class TestPrepSampleReadOnly(BaseTestPrepSample):
 
     def test_get(self):
         """get returns the correct sample object"""
-        self.assertEqual(self.tester.get('barcodesequence'), 'AGCGCTCACATC')
+        self.assertEqual(self.tester.get('barcode'), 'AGCGCTCACATC')
 
     def test_get_none(self):
         """get returns none if the sample id is not present"""
@@ -280,8 +280,8 @@ class BaseTestPrepTemplate(TestCase):
                             'ebi_submission_accession': None,
                             'EMP_status': 'EMP',
                             'str_column': 'Value for sample 1',
-                            'linkerprimersequence': 'GTGCCAGCMGCCGCGGTAA',
-                            'barcodesequence': 'GTCCGCAAGTTA',
+                            'primer': 'GTGCCAGCMGCCGCGGTAA',
+                            'barcode': 'GTCCGCAAGTTA',
                             'run_prefix': "s_G1_L001_sequences",
                             'platform': 'ILLUMINA',
                             'library_construction_protocol': 'AAAA',
@@ -291,8 +291,8 @@ class BaseTestPrepTemplate(TestCase):
                             'ebi_submission_accession': None,
                             'EMP_status': 'EMP',
                             'str_column': 'Value for sample 2',
-                            'linkerprimersequence': 'GTGCCAGCMGCCGCGGTAA',
-                            'barcodesequence': 'CGTAGAGCTCTC',
+                            'primer': 'GTGCCAGCMGCCGCGGTAA',
+                            'barcode': 'CGTAGAGCTCTC',
                             'run_prefix': "s_G1_L001_sequences",
                             'platform': 'ILLUMINA',
                             'library_construction_protocol': 'AAAA',
@@ -302,8 +302,8 @@ class BaseTestPrepTemplate(TestCase):
                             'ebi_submission_accession': None,
                             'EMP_status': 'EMP',
                             'str_column': 'Value for sample 3',
-                            'linkerprimersequence': 'GTGCCAGCMGCCGCGGTAA',
-                            'barcodesequence': 'CCTCTGAGAGCT',
+                            'primer': 'GTGCCAGCMGCCGCGGTAA',
+                            'barcode': 'CCTCTGAGAGCT',
                             'run_prefix': "s_G1_L002_sequences",
                             'platform': 'ILLUMINA',
                             'library_construction_protocol': 'AAAA',
@@ -318,8 +318,8 @@ class BaseTestPrepTemplate(TestCase):
                               'ebi_submission_accession': None,
                               'EMP_status': 'EMP',
                               'str_column': 'Value for sample 1',
-                              'linkerprimersequence': 'GTGCCAGCMGCCGCGGTAA',
-                              'barcodesequence': 'GTCCGCAAGTTA',
+                              'primer': 'GTGCCAGCMGCCGCGGTAA',
+                              'barcode': 'GTCCGCAAGTTA',
                               'run_prefix': "s_G1_L001_sequences",
                               'platform': 'ILLUMINA',
                               'library_construction_protocol': 'AAAA',
@@ -329,8 +329,8 @@ class BaseTestPrepTemplate(TestCase):
                               'ebi_submission_accession': None,
                               'EMP_status': 'EMP',
                               'str_column': 'Value for sample 2',
-                              'linkerprimersequence': 'GTGCCAGCMGCCGCGGTAA',
-                              'barcodesequence': 'CGTAGAGCTCTC',
+                              'primer': 'GTGCCAGCMGCCGCGGTAA',
+                              'barcode': 'CGTAGAGCTCTC',
                               'run_prefix': "s_G1_L001_sequences",
                               'platform': 'ILLUMINA',
                               'library_construction_protocol': 'AAAA',
@@ -340,8 +340,8 @@ class BaseTestPrepTemplate(TestCase):
                               'ebi_submission_accession': None,
                               'EMP_status': 'EMP',
                               'str_column': 'Value for sample 3',
-                              'linkerprimersequence': 'GTGCCAGCMGCCGCGGTAA',
-                              'barcodesequence': 'CCTCTGAGAGCT',
+                              'primer': 'GTGCCAGCMGCCGCGGTAA',
+                              'barcode': 'CCTCTGAGAGCT',
                               'run_prefix': "s_G1_L002_sequences",
                               'platform': 'ILLUMINA',
                               'library_construction_protocol': 'AAAA',
@@ -566,9 +566,9 @@ class TestPrepTemplateReadOnly(BaseTestPrepTemplate):
             u'1.SKM7.640188', u'1.SKM8.640201', u'1.SKM9.640192'})
 
         self.assertEqual(set(obs.columns), {
-            u'prep_template_id', u'center_name', u'center_project_name',
-            u'emp_status', u'barcodesequence',
-            u'library_construction_protocol', u'linkerprimersequence',
+            u'center_name', u'center_project_name',
+            u'emp_status', u'barcode',
+            u'library_construction_protocol', u'primer',
             u'target_subfragment', u'target_gene', u'run_center',
             u'run_prefix', u'run_date', u'experiment_center',
             u'experiment_design_description', u'experiment_title', u'platform',
@@ -581,7 +581,7 @@ class TestPrepTemplateReadOnly(BaseTestPrepTemplate):
         metadata_dict = {
             '2.SKB8.640193': {'center_name': 'ANL',
                               'center_project_name': 'Test Project',
-                              'emp_status_id': 1,
+                              'emp_status': 'EMP',
                               'str_column': 'Value for sample 1',
                               'linkerprimersequence': 'GTGCCAGCMGCCGCGGTAA',
                               'barcodesequence': 'GTCCGCAAGTTA',
@@ -591,7 +591,7 @@ class TestPrepTemplateReadOnly(BaseTestPrepTemplate):
                               'experiment_design_description': 'BBBB'},
             '2.SKD8.640184': {'center_name': 'ANL',
                               'center_project_name': 'Test Project',
-                              'emp_status_id': 1,
+                              'emp_status': 'EMP',
                               'str_column': 'Value for sample 2',
                               'linkerprimersequence': 'GTGCCAGCMGCCGCGGTAA',
                               'barcodesequence': 'CGTAGAGCTCTC',
@@ -609,14 +609,10 @@ class TestPrepTemplateReadOnly(BaseTestPrepTemplate):
             metadata, 2, conn_handler, queue_name)
 
         sql_insert_common = (
-            'INSERT INTO qiita.common_prep_info '
-            '(prep_template_id, sample_id, center_name, center_project_name, '
-            'emp_status_id) '
-            'VALUES (%s, %s, %s, %s, %s)')
-        sql_insert_common_params_1 = (2, '2.SKB8.640193', 'ANL',
-                                      'Test Project', 1)
-        sql_insert_common_params_2 = (2, '2.SKD8.640184', 'ANL',
-                                      'Test Project', 1)
+            'INSERT INTO qiita.prep_template_sample '
+            '(prep_template_id, sample_id) VALUES (%s, %s)')
+        sql_insert_common_params_1 = (2, '2.SKB8.640193')
+        sql_insert_common_params_2 = (2, '2.SKD8.640184')
 
         sql_insert_prep_columns = (
             'INSERT INTO qiita.prep_columns '
@@ -624,32 +620,38 @@ class TestPrepTemplateReadOnly(BaseTestPrepTemplate):
             'VALUES (%s, %s, %s)')
 
         sql_create_table = (
-            'CREATE TABLE qiita.prep_2 (sample_id varchar NOT NULL, '
-            'barcodesequence varchar, experiment_design_description varchar, '
+            'CREATE TABLE qiita.prep_2 '
+            '(sample_id varchar NOT NULL, barcodesequence varchar, '
+            'center_name varchar, center_project_name varchar, '
+            'emp_status varchar, experiment_design_description varchar, '
             'library_construction_protocol varchar, '
             'linkerprimersequence varchar, platform varchar, '
             'run_prefix varchar, str_column varchar)')
 
         sql_insert_dynamic = (
             'INSERT INTO qiita.prep_2 '
-            '(sample_id, barcodesequence, experiment_design_description, '
+            '(sample_id, barcodesequence, center_name, center_project_name, '
+            'emp_status, experiment_design_description, '
             'library_construction_protocol, linkerprimersequence, platform, '
             'run_prefix, str_column) '
-            'VALUES (%s, %s, %s, %s, %s, %s, %s, %s)')
+            'VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)')
 
         sql_insert_dynamic_params_1 = (
-            '2.SKB8.640193', 'GTCCGCAAGTTA', 'BBBB', 'AAAA',
-            'GTGCCAGCMGCCGCGGTAA', 'ILLUMINA', 's_G1_L001_sequences',
-            'Value for sample 1')
+            '2.SKB8.640193', 'GTCCGCAAGTTA', 'ANL', 'Test Project', 'EMP',
+            'BBBB', 'AAAA', 'GTGCCAGCMGCCGCGGTAA', 'ILLUMINA',
+            's_G1_L001_sequences', 'Value for sample 1')
         sql_insert_dynamic_params_2 = (
-            '2.SKD8.640184', 'CGTAGAGCTCTC', 'BBBB', 'AAAA',
-            'GTGCCAGCMGCCGCGGTAA', 'ILLUMINA', 's_G1_L001_sequences',
-            'Value for sample 2')
+            '2.SKD8.640184', 'CGTAGAGCTCTC', 'ANL', 'Test Project', 'EMP',
+            'BBBB', 'AAAA', 'GTGCCAGCMGCCGCGGTAA', 'ILLUMINA',
+            's_G1_L001_sequences', 'Value for sample 2')
 
         exp = [
             (sql_insert_common, sql_insert_common_params_1),
             (sql_insert_common, sql_insert_common_params_2),
             (sql_insert_prep_columns, (2, 'barcodesequence', 'varchar')),
+            (sql_insert_prep_columns, (2, 'center_name', 'varchar')),
+            (sql_insert_prep_columns, (2, 'center_project_name', 'varchar')),
+            (sql_insert_prep_columns, (2, 'emp_status', 'varchar')),
             (sql_insert_prep_columns,
                 (2, 'experiment_design_description', 'varchar')),
             (sql_insert_prep_columns,
@@ -667,24 +669,21 @@ class TestPrepTemplateReadOnly(BaseTestPrepTemplate):
     def test_clean_validate_template_error_bad_chars(self):
         """Raises an error if there are invalid characters in the sample names
         """
-        conn_handler = SQLConnectionHandler()
         self.metadata.index = ['o()xxxx[{::::::::>', 'sample.1', 'sample.3']
         with self.assertRaises(QiitaDBColumnError):
-            PrepTemplate._clean_validate_template(self.metadata, 2, "16S",
-                                                  conn_handler)
+            PrepTemplate._clean_validate_template(self.metadata, 2,
+                                                  PREP_TEMPLATE_COLUMNS)
 
     def test_clean_validate_template_error_duplicate_cols(self):
         """Raises an error if there are duplicated columns in the template"""
-        conn_handler = SQLConnectionHandler()
         self.metadata['STR_COLUMN'] = pd.Series(['', '', ''],
                                                 index=self.metadata.index)
         with self.assertRaises(QiitaDBDuplicateHeaderError):
-            PrepTemplate._clean_validate_template(self.metadata, 2, "16S",
-                                                  conn_handler)
+            PrepTemplate._clean_validate_template(self.metadata, 2,
+                                                  PREP_TEMPLATE_COLUMNS)
 
-    def test_clean_validate_template_error_missing(self):
+    def test_clean_validate_template_warning_missing(self):
         """Raises an error if the template is missing a required column"""
-        conn_handler = SQLConnectionHandler()
         metadata_dict = {
             'SKB8.640193': {'center_name': 'ANL',
                             'center_project_name': 'Test Project',
@@ -697,22 +696,39 @@ class TestPrepTemplateReadOnly(BaseTestPrepTemplate):
                             'experiment_design_description': 'BBBB'}
             }
         metadata = pd.DataFrame.from_dict(metadata_dict, orient='index')
-        with self.assertRaises(QiitaDBColumnError):
-            PrepTemplate._clean_validate_template(metadata, 2, "16S",
-                                                  conn_handler)
+        obs = npt.assert_warns(
+            QiitaDBWarning, PrepTemplate._clean_validate_template, metadata, 2,
+            PREP_TEMPLATE_COLUMNS)
 
-    def test_clean_validate_template(self):
-        conn_handler = SQLConnectionHandler()
-        obs = PrepTemplate._clean_validate_template(self.metadata, 2, "16S",
-                                                    conn_handler)
         metadata_dict = {
             '2.SKB8.640193': {'center_name': 'ANL',
                               'center_project_name': 'Test Project',
                               'ebi_submission_accession': None,
-                              'emp_status_id': 1,
-                              'str_column': 'Value for sample 1',
                               'linkerprimersequence': 'GTGCCAGCMGCCGCGGTAA',
                               'barcodesequence': 'GTCCGCAAGTTA',
+                              'run_prefix': "s_G1_L001_sequences",
+                              'platform': 'ILLUMINA',
+                              'library_construction_protocol': 'AAAA',
+                              'experiment_design_description': 'BBBB'}
+            }
+        exp = pd.DataFrame.from_dict(metadata_dict, orient='index')
+        obs.sort_index(axis=0, inplace=True)
+        obs.sort_index(axis=1, inplace=True)
+        exp.sort_index(axis=0, inplace=True)
+        exp.sort_index(axis=1, inplace=True)
+        assert_frame_equal(obs, exp)
+
+    def test_clean_validate_template(self):
+        obs = PrepTemplate._clean_validate_template(self.metadata, 2,
+                                                    PREP_TEMPLATE_COLUMNS)
+        metadata_dict = {
+            '2.SKB8.640193': {'center_name': 'ANL',
+                              'center_project_name': 'Test Project',
+                              'ebi_submission_accession': None,
+                              'emp_status': 'EMP',
+                              'str_column': 'Value for sample 1',
+                              'primer': 'GTGCCAGCMGCCGCGGTAA',
+                              'barcode': 'GTCCGCAAGTTA',
                               'run_prefix': "s_G1_L001_sequences",
                               'platform': 'ILLUMINA',
                               'library_construction_protocol': 'AAAA',
@@ -720,10 +736,10 @@ class TestPrepTemplateReadOnly(BaseTestPrepTemplate):
             '2.SKD8.640184': {'center_name': 'ANL',
                               'center_project_name': 'Test Project',
                               'ebi_submission_accession': None,
-                              'emp_status_id': 1,
+                              'emp_status': 'EMP',
                               'str_column': 'Value for sample 2',
-                              'linkerprimersequence': 'GTGCCAGCMGCCGCGGTAA',
-                              'barcodesequence': 'CGTAGAGCTCTC',
+                              'primer': 'GTGCCAGCMGCCGCGGTAA',
+                              'barcode': 'CGTAGAGCTCTC',
                               'run_prefix': "s_G1_L001_sequences",
                               'platform': 'ILLUMINA',
                               'library_construction_protocol': 'AAAA',
@@ -731,10 +747,10 @@ class TestPrepTemplateReadOnly(BaseTestPrepTemplate):
             '2.SKB7.640196': {'center_name': 'ANL',
                               'center_project_name': 'Test Project',
                               'ebi_submission_accession': None,
-                              'emp_status_id': 1,
+                              'emp_status': 'EMP',
                               'str_column': 'Value for sample 3',
-                              'linkerprimersequence': 'GTGCCAGCMGCCGCGGTAA',
-                              'barcodesequence': 'CCTCTGAGAGCT',
+                              'primer': 'GTGCCAGCMGCCGCGGTAA',
+                              'barcode': 'CCTCTGAGAGCT',
                               'run_prefix': "s_G1_L002_sequences",
                               'platform': 'ILLUMINA',
                               'library_construction_protocol': 'AAAA',
@@ -822,8 +838,8 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
                             'ebi_submission_accession': None,
                             'EMP_status': 'EMP',
                             'group': 2,
-                            'linkerprimersequence': 'GTGCCAGCMGCCGCGGTAA',
-                            'barcodesequence': 'GTCCGCAAGTTA',
+                            'primer': 'GTGCCAGCMGCCGCGGTAA',
+                            'barcode': 'GTCCGCAAGTTA',
                             'run_prefix': "s_G1_L001_sequences",
                             'platform': 'ILLUMINA',
                             'library_construction_protocol': 'AAAA',
@@ -833,8 +849,8 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
                             'ebi_submission_accession': None,
                             'EMP_status': 'EMP',
                             'group': 1,
-                            'linkerprimersequence': 'GTGCCAGCMGCCGCGGTAA',
-                            'barcodesequence': 'CGTAGAGCTCTC',
+                            'primer': 'GTGCCAGCMGCCGCGGTAA',
+                            'barcode': 'CGTAGAGCTCTC',
                             'run_prefix': "s_G1_L001_sequences",
                             'platform': 'ILLUMINA',
                             'library_construction_protocol': 'AAAA',
@@ -844,8 +860,8 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
                             'ebi_submission_accession': None,
                             'EMP_status': 'EMP',
                             'group': 'Value for sample 3',
-                            'linkerprimersequence': 'GTGCCAGCMGCCGCGGTAA',
-                            'barcodesequence': 'CCTCTGAGAGCT',
+                            'primer': 'GTGCCAGCMGCCGCGGTAA',
+                            'barcode': 'CCTCTGAGAGCT',
                             'run_prefix': "s_G1_L002_sequences",
                             'platform': 'ILLUMINA',
                             'library_construction_protocol': 'AAAA',
@@ -865,7 +881,7 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
         self.assertFalse(self.conn_handler.execute_fetchone(sql, (exp_id,))[0])
 
         sql = """SELECT EXISTS(
-                    SELECT * FROM qiita.common_prep_info
+                    SELECT * FROM qiita.prep_template_sample
                     WHERE prep_template_id=%s)"""
         self.assertFalse(self.conn_handler.execute_fetchone(sql, (exp_id,))[0])
 
@@ -876,136 +892,112 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
 
         self.assertFalse(exists_table("prep_%d" % exp_id, self.conn_handler))
 
-    def test_create(self):
-        """Creates a new PrepTemplate"""
-        pt = PrepTemplate.create(self.metadata, self.new_raw_data,
-                                 self.test_study, self.data_type)
+    def _common_creation_checks(self, new_id, pt):
         # The returned object has the correct id
-        self.assertEqual(pt.id, 2)
+        self.assertEqual(pt.id, new_id)
 
         # The row in the prep template table has been created
         obs = self.conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.prep_template WHERE prep_template_id=2")
+            "SELECT * FROM qiita.prep_template WHERE prep_template_id=%s",
+            (new_id,))
         # prep_template_id, data_type_id, raw_data_id, preprocessing_status,
         # investigation_type
-        self.assertEqual(obs, [[2, 2, 5, 'not_preprocessed', None]])
+        self.assertEqual(obs, [[new_id, 2, 5, 'not_preprocessed', None]])
 
-        # The relevant rows to common_prep_info have been added.
+        # The relevant rows to prep_template_sample have been added.
         obs = self.conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.common_prep_info WHERE prep_template_id=2")
-        # prep_template_id, sample_id, study_id, center_name,
+            "SELECT * FROM qiita.prep_template_sample "
+            "WHERE prep_template_id=%s", (new_id,))
+        # prep_template_id, sample_id, center_name,
         # center_project_name, emp_status_id
-        exp = [[2, '1.SKB8.640193', 'ANL', 'Test Project', 1],
-               [2, '1.SKD8.640184', 'ANL', 'Test Project', 1],
-               [2, '1.SKB7.640196', 'ANL', 'Test Project', 1]]
-        self.assertEqual(sorted(obs), sorted(exp))
+        exp = [[new_id, '1.SKB8.640193'],
+               [new_id, '1.SKD8.640184'],
+               [new_id, '1.SKB7.640196']]
+        self.assertItemsEqual(obs, exp)
 
         # The relevant rows have been added to the prep_columns table
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.prep_columns WHERE prep_template_id=2")
         # prep_template_id, column_name, column_type
-        exp = [[2, 'str_column', 'varchar'],
-               [2, 'ebi_submission_accession', 'varchar'],
-               [2, 'run_prefix', 'varchar'],
-               [2, 'barcodesequence', 'varchar'],
-               [2, 'linkerprimersequence', 'varchar'],
-               [2, 'platform', 'varchar'],
-               [2, 'experiment_design_description', 'varchar'],
-               [2, 'library_construction_protocol', 'varchar']]
-        self.assertEqual(sorted(obs), sorted(exp))
+        exp = [[new_id, 'str_column', 'varchar'],
+               [new_id, 'ebi_submission_accession', 'varchar'],
+               [new_id, 'run_prefix', 'varchar'],
+               [new_id, 'barcode', 'varchar'],
+               [new_id, 'primer', 'varchar'],
+               [new_id, 'platform', 'varchar'],
+               [new_id, 'experiment_design_description', 'varchar'],
+               [new_id, 'library_construction_protocol', 'varchar'],
+               [new_id, 'center_name', 'varchar'],
+               [new_id, 'center_project_name', 'varchar'],
+               [new_id, 'emp_status', 'varchar']]
+        self.assertItemsEqual(obs, exp)
 
         # The new table exists
-        self.assertTrue(exists_table("prep_2", self.conn_handler))
+        self.assertTrue(exists_table("prep_%s" % new_id, self.conn_handler))
 
         # The new table hosts the correct values
-        obs = self.conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.prep_2")
+        obs = [dict(o) for o in self.conn_handler.execute_fetchall(
+            "SELECT * FROM qiita.prep_%s" % new_id)]
 
-        # barcodesequence, ebi_submission_accession,
-        # experiment_design_description, library_construction_protocol,
-        # linkerprimersequence, platform, run_prefix, str_column
-        exp = [['1.SKB7.640196', 'CCTCTGAGAGCT', None, 'BBBB', 'AAAA',
-                'GTGCCAGCMGCCGCGGTAA', 'ILLUMINA', 's_G1_L002_sequences',
-                'Value for sample 3'],
-               ['1.SKB8.640193', 'GTCCGCAAGTTA', None, 'BBBB', 'AAAA',
-                'GTGCCAGCMGCCGCGGTAA', 'ILLUMINA', 's_G1_L001_sequences',
-                'Value for sample 1'],
-               ['1.SKD8.640184', 'CGTAGAGCTCTC', None, 'BBBB', 'AAAA',
-                'GTGCCAGCMGCCGCGGTAA', 'ILLUMINA', 's_G1_L001_sequences',
-                'Value for sample 2']]
+        exp = [{'sample_id': '1.SKB7.640196',
+                'barcode': 'CCTCTGAGAGCT',
+                'ebi_submission_accession': None,
+                'experiment_design_description': 'BBBB',
+                'library_construction_protocol': 'AAAA',
+                'primer': 'GTGCCAGCMGCCGCGGTAA',
+                'platform': 'ILLUMINA',
+                'run_prefix': 's_G1_L002_sequences',
+                'str_column': 'Value for sample 3',
+                'center_name': 'ANL',
+                'center_project_name': 'Test Project',
+                'emp_status': 'EMP'},
+               {'sample_id': '1.SKB8.640193',
+                'barcode': 'GTCCGCAAGTTA',
+                'ebi_submission_accession': None,
+                'experiment_design_description': 'BBBB',
+                'library_construction_protocol': 'AAAA',
+                'primer': 'GTGCCAGCMGCCGCGGTAA',
+                'platform': 'ILLUMINA',
+                'run_prefix': 's_G1_L001_sequences',
+                'str_column': 'Value for sample 1',
+                'center_name': 'ANL',
+                'center_project_name': 'Test Project',
+                'emp_status': 'EMP'},
+               {'sample_id': '1.SKD8.640184',
+                'barcode': 'CGTAGAGCTCTC',
+                'ebi_submission_accession': None,
+                'experiment_design_description': 'BBBB',
+                'library_construction_protocol': 'AAAA',
+                'primer': 'GTGCCAGCMGCCGCGGTAA',
+                'platform': 'ILLUMINA',
+                'run_prefix': 's_G1_L001_sequences',
+                'str_column': 'Value for sample 2',
+                'center_name': 'ANL',
+                'center_project_name': 'Test Project',
+                'emp_status': 'EMP'}]
 
-        self.assertEqual(sorted(obs), sorted(exp))
+        self.assertItemsEqual(obs, exp)
 
         # prep and qiime files have been created
         filepaths = pt.get_filepaths()
         self.assertEqual(len(filepaths), 2)
         self.assertEqual(filepaths[0][0], 22)
         self.assertEqual(filepaths[1][0], 21)
+
+    def test_create(self):
+        """Creates a new PrepTemplate"""
+        new_id = get_count('qiita.prep_template') + 1
+        pt = PrepTemplate.create(self.metadata, self.new_raw_data,
+                                 self.test_study, self.data_type)
+        self._common_creation_checks(new_id, pt)
 
     def test_create_already_prefixed_samples(self):
         """Creates a new PrepTemplate"""
+        new_id = get_count('qiita.prep_template') + 1
         pt = npt.assert_warns(QiitaDBWarning, PrepTemplate.create,
                               self.metadata_prefixed, self.new_raw_data,
                               self.test_study, self.data_type)
-        # The returned object has the correct id
-        self.assertEqual(pt.id, 2)
-
-        # The row in the prep template table has been created
-        obs = self.conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.prep_template WHERE prep_template_id=2")
-        # prep_template_id, data_type_id, raw_data_id, preprocessing_status,
-        # investigation_type
-        self.assertEqual(obs, [[2, 2, 5, 'not_preprocessed', None]])
-
-        # The relevant rows to common_prep_info have been added.
-        obs = self.conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.common_prep_info WHERE prep_template_id=2")
-        # prep_template_id, sample_id, study_id, center_name,
-        # center_project_name, emp_status_id
-        exp = [[2, '1.SKB8.640193', 'ANL', 'Test Project', 1],
-               [2, '1.SKD8.640184', 'ANL', 'Test Project', 1],
-               [2, '1.SKB7.640196', 'ANL', 'Test Project', 1]]
-        self.assertEqual(sorted(obs), sorted(exp))
-
-        # The relevant rows have been added to the prep_columns table
-        obs = self.conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.prep_columns WHERE prep_template_id=2")
-        # prep_template_id, column_name, column_type
-        exp = [[2, 'str_column', 'varchar'],
-               [2, 'ebi_submission_accession', 'varchar'],
-               [2, 'run_prefix', 'varchar'],
-               [2, 'barcodesequence', 'varchar'],
-               [2, 'linkerprimersequence', 'varchar'],
-               [2, 'platform', 'varchar'],
-               [2, 'experiment_design_description', 'varchar'],
-               [2, 'library_construction_protocol', 'varchar']]
-        self.assertEqual(sorted(obs), sorted(exp))
-
-        # The new table exists
-        self.assertTrue(exists_table("prep_2", self.conn_handler))
-
-        # The new table hosts the correct values
-        obs = self.conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.prep_2")
-        # barcodesequence, ebi_submission_accession,
-        # experiment_design_description, library_construction_protocol,
-        # linkerprimersequence, platform, run_prefix, str_column
-        exp = [['1.SKB7.640196', 'CCTCTGAGAGCT', None, 'BBBB', 'AAAA',
-                'GTGCCAGCMGCCGCGGTAA', 'ILLUMINA', 's_G1_L002_sequences',
-                'Value for sample 3'],
-               ['1.SKB8.640193', 'GTCCGCAAGTTA', None, 'BBBB', 'AAAA',
-                'GTGCCAGCMGCCGCGGTAA', 'ILLUMINA', 's_G1_L001_sequences',
-                'Value for sample 1'],
-               ['1.SKD8.640184', 'CGTAGAGCTCTC', None, 'BBBB', 'AAAA',
-                'GTGCCAGCMGCCGCGGTAA', 'ILLUMINA', 's_G1_L001_sequences',
-                'Value for sample 2']]
-        self.assertEqual(sorted(obs), sorted(exp))
-
-        # prep and qiime files have been created
-        filepaths = pt.get_filepaths()
-        self.assertEqual(len(filepaths), 2)
-        self.assertEqual(filepaths[0][0], 22)
-        self.assertEqual(filepaths[1][0], 21)
+        self._common_creation_checks(new_id, pt)
 
     def test_generate_files(self):
         fp_count = get_count("qiita.filepath")
@@ -1020,13 +1012,8 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
 
         # creating prep template file
         _id, fp = get_mountpoint('templates')[0]
-        fpp = join(fp, '%d_prep_%d_%s.txt' % (pt.study_id, pt.id,
-                   strftime("%Y%m%d-%H%M%S")))
-        pt.to_file(fpp)
-        pt.add_filepath(fpp)
 
-        _, filepath = pt.get_filepaths()[0]
-        obs_fp = pt.create_qiime_mapping_file(filepath)
+        obs_fp = pt.create_qiime_mapping_file()
         exp_fp = join(fp, '1_prep_1_qiime_19700101-000000.txt')
 
         obs = pd.read_csv(obs_fp, sep='\t', infer_datetime_format=True,
@@ -1036,132 +1023,108 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
 
         assert_frame_equal(obs, exp)
 
-        # testing failure, first lest remove some lines of the prep template
-        with open(filepath, 'r') as filepath_fh:
-            data = filepath_fh.read().splitlines()
-        with open(filepath, 'w') as filepath_fh:
-            for i, d in enumerate(data):
-                if i == 4:
-                    # adding fake sample
-                    line = d.split('\t')
-                    line[0] = 'fake_sample'
-                    line = '\t'.join(line)
-                    filepath_fh.write(line + '\n')
-                    break
-                filepath_fh.write(d + '\n')
-
-        with self.assertRaises(ValueError):
-            pt.create_qiime_mapping_file(filepath)
-
     def test_create_data_type_id(self):
         """Creates a new PrepTemplate passing the data_type_id"""
+        new_id = get_count('qiita.prep_template') + 1
         pt = PrepTemplate.create(self.metadata, self.new_raw_data,
                                  self.test_study, self.data_type_id)
-        # The returned object has the correct id
-        self.assertEqual(pt.id, 2)
+        self._common_creation_checks(new_id, pt)
 
-        # The row in the prep template table have been created
+    def test_create_warning(self):
+        """Warns if a required columns is missing for a given functionality
+        """
+        new_id = get_count('qiita.prep_template') + 1
+        del self.metadata['barcode']
+        pt = npt.assert_warns(QiitaDBWarning, PrepTemplate.create,
+                              self.metadata, self.new_raw_data,
+                              self.test_study, self.data_type)
+
+        # The returned object has the correct id
+        self.assertEqual(pt.id, new_id)
+
+        # The row in the prep template table has been created
         obs = self.conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.prep_template WHERE prep_template_id=2")
+            "SELECT * FROM qiita.prep_template WHERE prep_template_id=%s",
+            (new_id,))
         # prep_template_id, data_type_id, raw_data_id, preprocessing_status,
         # investigation_type
-        self.assertEqual(obs, [[2, 2, 5, 'not_preprocessed', None]])
+        self.assertEqual(obs, [[new_id, 2, 5, 'not_preprocessed', None]])
 
-        # The relevant rows to common_prep_info have been added.
+        # The relevant rows to prep_template_sample have been added.
         obs = self.conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.common_prep_info WHERE prep_template_id=2")
+            "SELECT * FROM qiita.prep_template_sample "
+            "WHERE prep_template_id=%s", (new_id,))
         # prep_template_id, sample_id, center_name,
         # center_project_name, emp_status_id
-        exp = [[2, '1.SKB8.640193', 'ANL', 'Test Project', 1],
-               [2, '1.SKD8.640184', 'ANL', 'Test Project', 1],
-               [2, '1.SKB7.640196', 'ANL', 'Test Project', 1]]
-        self.assertEqual(sorted(obs), sorted(exp))
+        exp = [[new_id, '1.SKB8.640193'],
+               [new_id, '1.SKD8.640184'],
+               [new_id, '1.SKB7.640196']]
+        self.assertItemsEqual(obs, exp)
 
         # The relevant rows have been added to the prep_columns table
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.prep_columns WHERE prep_template_id=2")
         # prep_template_id, column_name, column_type
-        exp = [[2, 'str_column', 'varchar'],
-               [2, 'ebi_submission_accession', 'varchar'],
-               [2, 'run_prefix', 'varchar'],
-               [2, 'barcodesequence', 'varchar'],
-               [2, 'linkerprimersequence', 'varchar'],
-               [2, 'platform', 'varchar'],
-               [2, 'experiment_design_description', 'varchar'],
-               [2, 'library_construction_protocol', 'varchar']]
-        self.assertEqual(sorted(obs), sorted(exp))
+        exp = [[new_id, 'str_column', 'varchar'],
+               [new_id, 'ebi_submission_accession', 'varchar'],
+               [new_id, 'run_prefix', 'varchar'],
+               [new_id, 'primer', 'varchar'],
+               [new_id, 'platform', 'varchar'],
+               [new_id, 'experiment_design_description', 'varchar'],
+               [new_id, 'library_construction_protocol', 'varchar'],
+               [new_id, 'center_name', 'varchar'],
+               [new_id, 'center_project_name', 'varchar'],
+               [new_id, 'emp_status', 'varchar']]
+        self.assertItemsEqual(obs, exp)
 
         # The new table exists
-        self.assertTrue(exists_table("prep_2", self.conn_handler))
+        self.assertTrue(exists_table("prep_%s" % new_id, self.conn_handler))
 
         # The new table hosts the correct values
-        obs = self.conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.prep_2")
-        # barcodesequence, ebi_submission_accession,
-        # experiment_design_description, library_construction_protocol,
-        # linkerprimersequence, platform, run_prefix, str_column
-        exp = [['1.SKB7.640196', 'CCTCTGAGAGCT', None, 'BBBB', 'AAAA',
-                'GTGCCAGCMGCCGCGGTAA', 'ILLUMINA', 's_G1_L002_sequences',
-                'Value for sample 3'],
-               ['1.SKB8.640193', 'GTCCGCAAGTTA', None, 'BBBB', 'AAAA',
-                'GTGCCAGCMGCCGCGGTAA', 'ILLUMINA', 's_G1_L001_sequences',
-                'Value for sample 1'],
-               ['1.SKD8.640184', 'CGTAGAGCTCTC', None, 'BBBB', 'AAAA',
-                'GTGCCAGCMGCCGCGGTAA', 'ILLUMINA', 's_G1_L001_sequences',
-                'Value for sample 2']]
-        self.assertEqual(sorted(obs), sorted(exp))
+        obs = [dict(o) for o in self.conn_handler.execute_fetchall(
+            "SELECT * FROM qiita.prep_%s" % new_id)]
 
-    def test_create_error(self):
-        """Create raises an error if any required columns are missing
-        """
-        metadata_dict = {
-            '1.SKB8.640193': {'center_name': 'ANL',
-                              'center_project_name': 'Test Project',
-                              'ebi_submission_accession': None,
-                              'EMP_status_id': 1,
-                              'str_column': 'Value for sample 1'},
-            '1.SKD8.640184': {'center_name': 'ANL',
-                              'center_project_name': 'Test Project',
-                              'ebi_submission_accession': None,
-                              'EMP_status_id': 1,
-                              'str_column': 'Value for sample 2'},
-            '1.SKB7.640196': {'center_name': 'ANL',
-                              'center_project_name': 'Test Project',
-                              'ebi_submission_accession': None,
-                              'EMP_status_id': 1,
-                              'str_column': 'Value for sample 3'}
-            }
-        metadata = pd.DataFrame.from_dict(metadata_dict, orient='index')
-        with self.assertRaises(QiitaDBColumnError):
-            PrepTemplate.create(metadata, self.new_raw_data, self.test_study,
-                                self.data_type)
+        exp = [{'sample_id': '1.SKB7.640196',
+                'ebi_submission_accession': None,
+                'experiment_design_description': 'BBBB',
+                'library_construction_protocol': 'AAAA',
+                'primer': 'GTGCCAGCMGCCGCGGTAA',
+                'platform': 'ILLUMINA',
+                'run_prefix': 's_G1_L002_sequences',
+                'str_column': 'Value for sample 3',
+                'center_name': 'ANL',
+                'center_project_name': 'Test Project',
+                'emp_status': 'EMP'},
+               {'sample_id': '1.SKB8.640193',
+                'ebi_submission_accession': None,
+                'experiment_design_description': 'BBBB',
+                'library_construction_protocol': 'AAAA',
+                'primer': 'GTGCCAGCMGCCGCGGTAA',
+                'platform': 'ILLUMINA',
+                'run_prefix': 's_G1_L001_sequences',
+                'str_column': 'Value for sample 1',
+                'center_name': 'ANL',
+                'center_project_name': 'Test Project',
+                'emp_status': 'EMP'},
+               {'sample_id': '1.SKD8.640184',
+                'ebi_submission_accession': None,
+                'experiment_design_description': 'BBBB',
+                'library_construction_protocol': 'AAAA',
+                'primer': 'GTGCCAGCMGCCGCGGTAA',
+                'platform': 'ILLUMINA',
+                'run_prefix': 's_G1_L001_sequences',
+                'str_column': 'Value for sample 2',
+                'center_name': 'ANL',
+                'center_project_name': 'Test Project',
+                'emp_status': 'EMP'}]
 
-    def test_create_error_template_special(self):
-        """Create raises an error if not all columns are on the template"""
-        metadata_dict = {
-            '1.SKB8.640193': {'center_name': 'ANL',
-                              'center_project_name': 'Test Project',
-                              'ebi_submission_accession': None,
-                              'EMP_status': 'EMP',
-                              'str_column': 'Value for sample 1',
-                              'barcodesequence': 'GTCCGCAAGTTA'},
-            '1.SKD8.640184': {'center_name': 'ANL',
-                              'center_project_name': 'Test Project',
-                              'ebi_submission_accession': None,
-                              'EMP_status': 'EMP',
-                              'str_column': 'Value for sample 2',
-                              'barcodesequence': 'CGTAGAGCTCTC'},
-            '1.SKB7.640196': {'center_name': 'ANL',
-                              'center_project_name': 'Test Project',
-                              'ebi_submission_accession': None,
-                              'EMP_status': 'EMP',
-                              'str_column': 'Value for sample 3',
-                              'barcodesequence': 'CCTCTGAGAGCT'}
-            }
-        metadata = pd.DataFrame.from_dict(metadata_dict, orient='index')
-        with self.assertRaises(QiitaDBColumnError):
-            PrepTemplate.create(metadata, self.new_raw_data, self.test_study,
-                                self.data_type)
+        self.assertItemsEqual(obs, exp)
+
+        # prep and qiime files have been created
+        filepaths = pt.get_filepaths()
+        self.assertEqual(len(filepaths), 2)
+        self.assertEqual(filepaths[0][0], 22)
+        self.assertEqual(filepaths[1][0], 21)
 
     def test_create_investigation_type_error(self):
         """Create raises an error if the investigation_type does not exists"""
@@ -1192,7 +1155,8 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
         self.assertEqual(obs, exp)
 
         obs = self.conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.common_prep_info WHERE prep_template_id=2")
+            "SELECT * FROM qiita.prep_template_sample "
+            "WHERE prep_template_id=2")
         exp = []
         self.assertEqual(obs, exp)
 
@@ -1296,23 +1260,23 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
 
     def test_update_category(self):
         with self.assertRaises(QiitaDBUnknownIDError):
-            self.tester.update_category('barcodesequence', {"foo": "bar"})
+            self.tester.update_category('barcode', {"foo": "bar"})
 
         with self.assertRaises(QiitaDBColumnError):
             self.tester.update_category('missing column',
                                         {'1.SKB7.640196': 'bar'})
 
-        neg_test = self.tester['1.SKB7.640196']['barcodesequence']
+        neg_test = self.tester['1.SKB7.640196']['barcode']
         mapping = {'1.SKB8.640193': 'AAAAAAAAAAAA',
                    '1.SKD8.640184': 'CCCCCCCCCCCC'}
 
-        self.tester.update_category('barcodesequence', mapping)
+        self.tester.update_category('barcode', mapping)
 
-        self.assertEqual(self.tester['1.SKB7.640196']['barcodesequence'],
+        self.assertEqual(self.tester['1.SKB7.640196']['barcode'],
                          neg_test)
-        self.assertEqual(self.tester['1.SKB8.640193']['barcodesequence'],
+        self.assertEqual(self.tester['1.SKB8.640193']['barcode'],
                          'AAAAAAAAAAAA')
-        self.assertEqual(self.tester['1.SKD8.640184']['barcodesequence'],
+        self.assertEqual(self.tester['1.SKD8.640184']['barcode'],
                          'CCCCCCCCCCCC')
 
         neg_test = self.tester['1.SKB7.640196']['center_name']
@@ -1327,16 +1291,16 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
 
 
 EXP_PREP_TEMPLATE = (
-    'sample_name\tbarcodesequence\tcenter_name\tcenter_project_name\t'
+    'sample_name\tbarcode\tcenter_name\tcenter_project_name\t'
     'ebi_submission_accession\temp_status\texperiment_design_description\t'
-    'library_construction_protocol\tlinkerprimersequence\tplatform\t'
+    'library_construction_protocol\tplatform\tprimer\t'
     'run_prefix\tstr_column\n'
-    '1.SKB7.640196\tCCTCTGAGAGCT\tANL\tTest Project\tNone\tEMP\tBBBB\tAAAA\t'
-    'GTGCCAGCMGCCGCGGTAA\tILLUMINA\ts_G1_L002_sequences\tValue for sample 3\n'
-    '1.SKB8.640193\tGTCCGCAAGTTA\tANL\tTest Project\tNone\tEMP\tBBBB\tAAAA\t'
-    'GTGCCAGCMGCCGCGGTAA\tILLUMINA\ts_G1_L001_sequences\tValue for sample 1\n'
-    '1.SKD8.640184\tCGTAGAGCTCTC\tANL\tTest Project\tNone\tEMP\tBBBB\tAAAA\t'
-    'GTGCCAGCMGCCGCGGTAA\tILLUMINA\ts_G1_L001_sequences\tValue for sample 2\n')
+    '1.SKB7.640196\tCCTCTGAGAGCT\tANL\tTest Project\t\tEMP\tBBBB\tAAAA\t'
+    'ILLUMINA\tGTGCCAGCMGCCGCGGTAA\ts_G1_L002_sequences\tValue for sample 3\n'
+    '1.SKB8.640193\tGTCCGCAAGTTA\tANL\tTest Project\t\tEMP\tBBBB\tAAAA\t'
+    'ILLUMINA\tGTGCCAGCMGCCGCGGTAA\ts_G1_L001_sequences\tValue for sample 1\n'
+    '1.SKD8.640184\tCGTAGAGCTCTC\tANL\tTest Project\t\tEMP\tBBBB\tAAAA\t'
+    'ILLUMINA\tGTGCCAGCMGCCGCGGTAA\ts_G1_L001_sequences\tValue for sample 2\n')
 
 
 if __name__ == '__main__':
