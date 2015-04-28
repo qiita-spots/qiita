@@ -41,9 +41,9 @@ class BaseTestPrepSample(TestCase):
         self.sample_id = '1.SKB8.640193'
         self.tester = PrepSample(self.sample_id, self.prep_template)
         self.exp_categories = {'center_name', 'center_project_name',
-                               'emp_status', 'barcodesequence',
+                               'emp_status', 'barcode',
                                'library_construction_protocol',
-                               'linkerprimersequence', 'target_subfragment',
+                               'primer', 'target_subfragment',
                                'target_gene', 'run_center', 'run_prefix',
                                'run_date', 'experiment_center',
                                'experiment_design_description',
@@ -83,11 +83,11 @@ class TestPrepSampleReadOnly(BaseTestPrepSample):
         conn_handler.create_queue(queue)
 
         self.tester.add_setitem_queries(
-            'barcodesequence', 'AAAAAAAAAAAA', conn_handler, queue)
+            'barcode', 'AAAAAAAAAAAA', conn_handler, queue)
 
         obs = conn_handler.queues[queue]
         sql = """UPDATE qiita.prep_1
-                 SET barcodesequence=%s
+                 SET barcode=%s
                  WHERE sample_id=%s"""
         exp = [(sql, ('AAAAAAAAAAAA', '1.SKB8.640193'))]
         self.assertEqual(obs, exp)
@@ -156,7 +156,7 @@ class TestPrepSampleReadOnly(BaseTestPrepSample):
         """
         self.assertEqual(self.tester['pcr_primers'],
                          'FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT')
-        self.assertEqual(self.tester['barcodesequence'], 'AGCGCTCACATC')
+        self.assertEqual(self.tester['barcode'], 'AGCGCTCACATC')
 
     def test_getitem_id_column(self):
         """Get item returns the correct metadata value from the changed column
@@ -176,8 +176,8 @@ class TestPrepSampleReadOnly(BaseTestPrepSample):
 
     def test_contains_true(self):
         """contains returns true if the category header exists"""
-        self.assertTrue('BarcodeSequence' in self.tester)
-        self.assertTrue('barcodesequence' in self.tester)
+        self.assertTrue('Barcode' in self.tester)
+        self.assertTrue('barcode' in self.tester)
 
     def test_contains_false(self):
         """contains returns false if the category header does not exists"""
@@ -218,7 +218,7 @@ class TestPrepSampleReadOnly(BaseTestPrepSample):
         obs = self.tester.items()
         self.assertTrue(isinstance(obs, Iterable))
         exp = {('center_name', 'ANL'), ('center_project_name', None),
-               ('emp_status', 'EMP'), ('barcodesequence', 'AGCGCTCACATC'),
+               ('emp_status', 'EMP'), ('barcode', 'AGCGCTCACATC'),
                ('library_construction_protocol',
                 'This analysis was done as in Caporaso et al 2011 Genome '
                 'research. The PCR primers (F515/R806) were developed against '
@@ -231,7 +231,7 @@ class TestPrepSampleReadOnly(BaseTestPrepSample):
                 'PCR primer is barcoded with a 12-base error-correcting Golay '
                 'code to facilitate multiplexing of up to 1,500 samples per '
                 'lane, and both PCR primers contain sequencer adapter '
-                'regions.'), ('linkerprimersequence', 'GTGCCAGCMGCCGCGGTAA'),
+                'regions.'), ('primer', 'GTGCCAGCMGCCGCGGTAA'),
                ('target_subfragment', 'V4'), ('target_gene', '16S rRNA'),
                ('run_center', 'ANL'), ('run_prefix', 's_G1_L001_sequences'),
                ('run_date', '8/1/12'), ('experiment_center', 'ANL'),
@@ -248,7 +248,7 @@ class TestPrepSampleReadOnly(BaseTestPrepSample):
 
     def test_get(self):
         """get returns the correct sample object"""
-        self.assertEqual(self.tester.get('barcodesequence'), 'AGCGCTCACATC')
+        self.assertEqual(self.tester.get('barcode'), 'AGCGCTCACATC')
 
     def test_get_none(self):
         """get returns none if the sample id is not present"""
@@ -567,8 +567,8 @@ class TestPrepTemplateReadOnly(BaseTestPrepTemplate):
 
         self.assertEqual(set(obs.columns), {
             u'center_name', u'center_project_name',
-            u'emp_status', u'barcodesequence',
-            u'library_construction_protocol', u'linkerprimersequence',
+            u'emp_status', u'barcode',
+            u'library_construction_protocol', u'primer',
             u'target_subfragment', u'target_gene', u'run_center',
             u'run_prefix', u'run_date', u'experiment_center',
             u'experiment_design_description', u'experiment_title', u'platform',
@@ -1260,23 +1260,23 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
 
     def test_update_category(self):
         with self.assertRaises(QiitaDBUnknownIDError):
-            self.tester.update_category('barcodesequence', {"foo": "bar"})
+            self.tester.update_category('barcode', {"foo": "bar"})
 
         with self.assertRaises(QiitaDBColumnError):
             self.tester.update_category('missing column',
                                         {'1.SKB7.640196': 'bar'})
 
-        neg_test = self.tester['1.SKB7.640196']['barcodesequence']
+        neg_test = self.tester['1.SKB7.640196']['barcode']
         mapping = {'1.SKB8.640193': 'AAAAAAAAAAAA',
                    '1.SKD8.640184': 'CCCCCCCCCCCC'}
 
-        self.tester.update_category('barcodesequence', mapping)
+        self.tester.update_category('barcode', mapping)
 
-        self.assertEqual(self.tester['1.SKB7.640196']['barcodesequence'],
+        self.assertEqual(self.tester['1.SKB7.640196']['barcode'],
                          neg_test)
-        self.assertEqual(self.tester['1.SKB8.640193']['barcodesequence'],
+        self.assertEqual(self.tester['1.SKB8.640193']['barcode'],
                          'AAAAAAAAAAAA')
-        self.assertEqual(self.tester['1.SKD8.640184']['barcodesequence'],
+        self.assertEqual(self.tester['1.SKD8.640184']['barcode'],
                          'CCCCCCCCCCCC')
 
         neg_test = self.tester['1.SKB7.640196']['center_name']

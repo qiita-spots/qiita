@@ -417,9 +417,7 @@ class PrepTemplate(MetadataTemplate):
         """
         rename_cols = {
             'barcode': 'BarcodeSequence',
-            'barcodesequence': 'BarcodeSequence',
             'primer': 'LinkerPrimerSequence',
-            'linkerprimersequence': 'LinkerPrimerSequence',
             'description': 'Description',
         }
 
