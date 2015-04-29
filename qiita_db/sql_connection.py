@@ -177,8 +177,8 @@ class SQLConnectionHandler(object):
 
         self._conn_attr = self._conn_map[self.admin]
         self._args_attr = self._args_map[self.admin]
-        self._conn_args = getattr(self, self._args_attr)
-        self._connection = getattr(self, self._conn_attr)
+        self._conn_args = getattr(SQLConnectionHandler, self._args_attr)
+        self._connection = getattr(SQLConnectionHandler, self._conn_attr)
         self._open_connection()
 
         # queues for transaction blocks. Format is {str: list} where the str
@@ -221,7 +221,7 @@ class SQLConnectionHandler(object):
                      ' in the Qiita installation base directory.')
             raise RuntimeError(ebase % (e.message, etext))
         else:
-            self._connection = getattr(self, self._conn_attr)
+            self._connection = getattr(SQLConnectionHandler, self._conn_attr)
 
     @contextmanager
     def get_postgres_cursor(self):
