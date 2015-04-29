@@ -29,8 +29,9 @@ class SearchTest(TestCase):
                       "in ('integer', 'float8')")
         exp_samp_sql = ("SELECT ss.sample_id,sa.altitude "
                         "FROM qiita.study_sample ss "
-                        "JOIN qiita.sample_{0} sa USING (sample_id) "
-                        "JOIN qiita.study st USING (study_id) "
+                        "JOIN qiita.sample_{0} sa "
+                        "ON ss.sample_id = sa.sample_id "
+                        "JOIN qiita.study st ON st.study_id = ss.study_id "
                         "WHERE sa.altitude > 0")
         self.assertEqual(st_sql, exp_st_sql)
         self.assertEqual(samp_sql, exp_samp_sql)
@@ -44,8 +45,9 @@ class SearchTest(TestCase):
                       "in ('integer', 'float8')")
         exp_samp_sql = ("SELECT ss.sample_id,sa.altitude "
                         "FROM qiita.study_sample ss "
-                        "JOIN qiita.sample_{0} sa USING (sample_id) "
-                        "JOIN qiita.study st USING (study_id) "
+                        "JOIN qiita.sample_{0} sa "
+                        "ON ss.sample_id = sa.sample_id "
+                        "JOIN qiita.study st ON st.study_id = ss.study_id "
                         "WHERE NOT sa.altitude > 0")
         self.assertEqual(st_sql, exp_st_sql)
         self.assertEqual(samp_sql, exp_samp_sql)
@@ -59,8 +61,9 @@ class SearchTest(TestCase):
                       "('integer', 'float8')")
         exp_samp_sql = ("SELECT ss.sample_id,sa.ph "
                         "FROM qiita.study_sample ss "
-                        "JOIN qiita.sample_{0} sa USING (sample_id) "
-                        "JOIN qiita.study st USING (study_id) "
+                        "JOIN qiita.sample_{0} sa "
+                        "ON ss.sample_id = sa.sample_id "
+                        "JOIN qiita.study st ON st.study_id = ss.study_id "
                         "WHERE (sa.ph > 7 AND sa.ph < 9)")
         self.assertEqual(st_sql, exp_st_sql)
         self.assertEqual(samp_sql, exp_samp_sql)
@@ -74,8 +77,9 @@ class SearchTest(TestCase):
                       "('integer', 'float8')")
         exp_samp_sql = ("SELECT ss.sample_id,sa.ph "
                         "FROM qiita.study_sample ss "
-                        "JOIN qiita.sample_{0} sa USING (sample_id) "
-                        "JOIN qiita.study st USING (study_id) "
+                        "JOIN qiita.sample_{0} sa "
+                        "ON ss.sample_id = sa.sample_id "
+                        "JOIN qiita.study st ON st.study_id = ss.study_id "
                         "WHERE (sa.ph > 7 OR sa.ph < 9)")
         self.assertEqual(st_sql, exp_st_sql)
         self.assertEqual(samp_sql, exp_samp_sql)
@@ -90,8 +94,9 @@ class SearchTest(TestCase):
                       "and column_type in ('varchar')")
         exp_samp_sql = ("SELECT ss.sample_id,sa.host_subject_id "
                         "FROM qiita.study_sample ss "
-                        "JOIN qiita.sample_{0} sa USING (sample_id) "
-                        "JOIN qiita.study st USING (study_id) "
+                        "JOIN qiita.sample_{0} sa "
+                        "ON ss.sample_id = sa.sample_id "
+                        "JOIN qiita.study st ON st.study_id = ss.study_id "
                         "WHERE LOWER(sa.host_subject_id) "
                         "LIKE '%chicken little%'")
         self.assertEqual(st_sql, exp_st_sql)
@@ -110,8 +115,9 @@ class SearchTest(TestCase):
         exp_samp_sql = (
             "SELECT ss.sample_id,sa.name "
             "FROM qiita.study_sample ss "
-            "JOIN qiita.sample_{0} sa USING (sample_id) "
-            "JOIN qiita.study st USING (study_id) "
+            "JOIN qiita.sample_{0} sa "
+            "ON ss.sample_id = sa.sample_id "
+            "JOIN qiita.study st ON st.study_id = ss.study_id "
             "WHERE (sa.name = 'Billy Bob' OR sa.name = 'Timmy' OR "
             "(sa.name = 'Jimbo' AND sa.name > 25) OR sa.name < 5)")
         self.assertEqual(st_sql, exp_st_sql)
@@ -131,8 +137,9 @@ class SearchTest(TestCase):
                       "lower('ph') and column_type in ('integer', 'float8')"]
         exp_samp_sql = ("SELECT ss.sample_id,sa.pH,sa.ph "
                         "FROM qiita.study_sample ss "
-                        "JOIN qiita.sample_{0} sa USING (sample_id) "
-                        "JOIN qiita.study st USING (study_id) "
+                        "JOIN qiita.sample_{0} sa "
+                        "ON ss.sample_id = sa.sample_id "
+                        "JOIN qiita.study st ON st.study_id = ss.study_id "
                         "WHERE (sa.ph > 7 OR sa.ph < 9)")
         # use the split list to make sure the SQL is properly formed
         self.assertEqual(len(st_sql), 2)
