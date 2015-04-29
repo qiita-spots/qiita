@@ -21,19 +21,14 @@ install:
   - source activate env_name
   - pip install coveralls ipython[all]==2.4.1
   - pip install https://github.com/biocore/mustached-octo-ironman/archive/master.zip
-  - pip install 'psycopg2' 'click >= 3.3' 'future==0.13.0' 'bcrypt'
-    'pandas >= 0.15' 'numpy >= 1.7' 'tornado==3.1.1' 'toredis' 'redis'
-    'ipython[all] < 2.5' 'pyparsing' 'h5py >= 2.3.1' 'biom-format'
-    'natsort' 'networkx' 'scikit-bio < 0.3.0' 'wtforms == 2.0.1'
-  - travis_retry pip install . --no-deps
+  - travis_retry pip install .
 script:
   - export MOI_CONFIG_FP=`pwd`/qiita_core/support_files/config_test.txt
   - ipython profile create qiita_general --parallel
   - qiita_env start_cluster qiita_general
   - qiita_env make --no-load-ontologies
   - if [ ${TEST_ADD_STUDIES} == "True" ]; then test_data_studies/commands.sh ; fi
-  # see https://github.com/biocore/qiita/pull/1076
-  #- if [ ${TEST_ADD_STUDIES} == "False" ]; then qiita_test_install ; fi
+  - if [ ${TEST_ADD_STUDIES} == "False" ]; then qiita_test_install ; fi
   - if [ ${TEST_ADD_STUDIES} == "False" ]; then nosetests --with-doctest --with-coverage ; fi
   - if [ ${TEST_ADD_STUDIES} == "False" ]; then flake8 qiita_* setup.py scripts/qiita scripts/qiita_env scripts/qiita_test_install ; fi
 services:
