@@ -67,6 +67,27 @@ class ProcessingPipelineTests(TestCase):
         with open(exp_fps[0], "U") as f:
             self.assertEqual(f.read(), EXP_PREP)
 
+    def test_get_qiime_minimal_mapping_single_no_run_prefix(self):
+        conn_handler = SQLConnectionHandler()
+        sql = """DELETE FROM qiita.prep_columns
+                 WHERE prep_template_id = 1 AND column_name = 'run_prefix';
+                 ALTER TABLE qiita.prep_1 DROP COLUMN run_prefix"""
+        conn_handler.execute(sql)
+        prep_template = PrepTemplate(1)
+        prep_template.generate_files()
+        out_dir = mkdtemp()
+
+        obs_fps = _get_qiime_minimal_mapping(prep_template, out_dir)
+        exp_fps = [join(out_dir, 'prep_1_MMF.txt')]
+
+        # Check that the returned list is as expected
+        self.assertEqual(obs_fps, exp_fps)
+        # Check that the file exists
+        self.assertTrue(exists(exp_fps[0]))
+        # Check the contents of the file
+        with open(exp_fps[0], "U") as f:
+            self.assertEqual(f.read(), EXP_PREP)
+
     def test_get_qiime_minimal_mapping_multiple(self):
         # We need to create a prep template in which we have different run
         # prefix values, so we can test this case

@@ -527,7 +527,7 @@ class PrepTemplate(MetadataTemplate):
 
     @property
     def qiime_map_fp(self):
-        """The QIIME mapping file path of the prep template
+        """The QIIME mapping filepath attached to the prep template
 
         Returns
         -------

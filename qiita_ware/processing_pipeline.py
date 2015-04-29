@@ -22,15 +22,18 @@ from qiita_db.reference import Reference
 
 def _get_qiime_minimal_mapping(prep_template, out_dir):
     """Generates a minimal QIIME-compliant mapping file for split libraries
+
     The columns of the generated file are, in order: SampleID, BarcodeSequence,
     LinkerPrimerSequence, Description. All values are taken from the prep
     template except for Description, which always receive the value "Qiita MMF"
+
     Parameters
     ----------
     prep_template : PrepTemplate
         The prep template from which we need to generate the minimal mapping
     out_dir : str
         Path to the output directory
+
     Returns
     -------
     list of str
@@ -58,12 +61,11 @@ def _get_qiime_minimal_mapping(prep_template, out_dir):
     path_builder = partial(join, out_dir)
     if 'run_prefix' in qiime_map:
         # The study potentially has more than 1 lane, so we should generate a
-        # qiita MMF for each of the lanes. We know how to split the prep
+        # qiime MMF for each of the lanes. We know how to split the prep
         # template based on the run_prefix column
         output_fps = []
         for prefix, df in qiime_map.groupby('run_prefix'):
             df = df[cols]
-            # Sorting for consistency between serialization
             out_fp = path_builder("%s_MMF.txt" % prefix)
             output_fps.append(out_fp)
             df.to_csv(out_fp, index_label="#SampleID", sep='\t')
