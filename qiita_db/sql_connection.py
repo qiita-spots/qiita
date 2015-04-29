@@ -185,21 +185,14 @@ class SQLConnectionHandler(object):
         # is the queue name and the list is the queue of SQL commands
         self.queues = {}
 
-    def __del__(self):
-        # make sure if connection close fails it doesn't raise error
-        # should only error if connection already closed
-        try:
-            self._connection.close()
-        except:
-            pass
-
     def _open_connection(self):
         # if the connection has been created and is not closed
-        if self._connection is not None and not self._connection.closed:
+        if self._connection is not None and self._connection.closed == 0:
             return
 
         try:
-            setattr(self, self._conn_attr, connect(**self._conn_args))
+            setattr(SQLConnectionHandler, self._conn_attr,
+                    connect(**self._conn_args))
         except OperationalError as e:
             # catch threee known common exceptions and raise runtime errors
             try:
