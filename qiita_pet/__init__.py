@@ -13,4 +13,4 @@ allowed_min_browser_versions = {
     'IE': 10
 }
 
-__version__ = "0.0.1-dev"
+__version__ = "0.1.0"

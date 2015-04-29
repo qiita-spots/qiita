@@ -10,11 +10,11 @@
 from setuptools import setup
 from glob import glob
 
-__version__ = "0.0.1-dev"
+__version__ = "0.1.0"
 
 
 classes = """
-    Development Status :: 2 - Pre-Alpha
+    Development Status :: 3 - Alpha
     License :: OSI Approved :: BSD License
     Topic :: Scientific/Engineering :: Bio-Informatics
     Topic :: Software Development :: Libraries :: Application Frameworks
