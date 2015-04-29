@@ -16,7 +16,7 @@ import warnings
 from skbio.io.util import open_file
 
 from qiita_db.exceptions import QiitaDBColumnError, QiitaDBWarning
-from qiita_db.util import get_table_cols
+from .constants import CONTROLLED_COLS
 
 if PY3:
     from string import ascii_letters as letters, digits
@@ -43,6 +43,10 @@ def get_datatypes(metadata_map):
             datatypes.append('integer')
         elif dtype in [np.float16, np.float32, np.float64]:
             datatypes.append('float8')
+        elif np.issubdtype(dtype, np.datetime64):
+            datatypes.append('timestamp')
+        elif dtype == np.bool:
+            datatypes.append('bool')
         else:
             datatypes.append('varchar')
     return datatypes
@@ -190,14 +194,11 @@ def load_template_to_dataframe(fn, strip_whitespace=True):
             holdfile[pos] = '\t'.join(d.strip(" \r\x0b\x0c")
                                       for d in line.split('\t'))
 
-    # get and clean the required columns
-    reqcols = set(get_table_cols("required_sample_info"))
-    reqcols.add('sample_name')
-    reqcols.add('required_sample_info_status')
-    reqcols.discard('required_sample_info_status_id')
-    # clean all the column names
+    # get and clean the controlled columns
     cols = holdfile[0].split('\t')
-    holdfile[0] = '\t'.join(c.lower() if c.lower() in reqcols else c
+    controlled_cols = {'sample_name'}
+    controlled_cols.update(CONTROLLED_COLS)
+    holdfile[0] = '\t'.join(c.lower() if c.lower() in controlled_cols else c
                             for c in cols)
     # index_col:
     #   is set as False, otherwise it is cast as a float and we want a string

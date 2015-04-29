@@ -26,8 +26,7 @@ from qiita_db.util import (exists_table, exists_dynamic_table, scrub_data,
                            check_count, get_processed_params_tables,
                            params_dict_to_json, insert_filepaths,
                            get_db_files_base_dir, get_data_types,
-                           get_required_sample_info_status,
-                           get_emp_status, purge_filepaths, get_filepath_id,
+                           purge_filepaths, get_filepath_id,
                            get_lat_longs, get_mountpoint,
                            get_mountpoint_path_by_id,
                            get_files_from_uploads_folders,
@@ -101,7 +100,7 @@ class DBUtilTests(TestCase):
             [38.2627021402, 3.48274264219]]
 
         obs = get_lat_longs()
-        self.assertEqual(obs, exp)
+        self.assertItemsEqual(obs, exp)
 
     def test_check_table_cols(self):
         # Doesn't do anything if correct info passed, only errors if wrong info
@@ -233,28 +232,6 @@ class DBUtilTests(TestCase):
         self.assertEqual(obs, exp)
 
         obs = get_data_types(key='data_type_id')
-        exp = {v: k for k, v in exp.items()}
-        self.assertEqual(obs, exp)
-
-    def test_get_required_sample_info_status(self):
-        """Tests that get_required_sample_info_status works"""
-        obs = get_required_sample_info_status()
-        exp = {'received': 1, 'in_preparation': 2, 'running': 3,
-               'completed': 4}
-        self.assertEqual(obs, exp)
-
-        obs = get_required_sample_info_status(
-            key='required_sample_info_status_id')
-        exp = {v: k for k, v in exp.items()}
-        self.assertEqual(obs, exp)
-
-    def test_get_emp_status(self):
-        """Tests that get_emp_status works"""
-        obs = get_emp_status()
-        exp = {'EMP': 1, 'EMP_Processed': 2, 'NOT_EMP': 3}
-        self.assertEqual(obs, exp)
-
-        obs = get_emp_status(key='emp_status_id')
         exp = {v: k for k, v in exp.items()}
         self.assertEqual(obs, exp)
 

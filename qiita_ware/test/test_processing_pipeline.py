@@ -67,6 +67,56 @@ class ProcessingPipelineTests(TestCase):
         with open(exp_fps[0], "U") as f:
             self.assertEqual(f.read(), EXP_PREP)
 
+    def test_get_qiime_minimal_mapping_single_no_run_prefix(self):
+        conn_handler = SQLConnectionHandler()
+        sql = """DELETE FROM qiita.prep_columns
+                 WHERE prep_template_id = 1 AND column_name = 'run_prefix';
+                 ALTER TABLE qiita.prep_1 DROP COLUMN run_prefix"""
+        conn_handler.execute(sql)
+        prep_template = PrepTemplate(1)
+        prep_template.generate_files()
+        out_dir = mkdtemp()
+
+        obs_fps = _get_qiime_minimal_mapping(prep_template, out_dir)
+        exp_fps = [join(out_dir, 'prep_1_MMF.txt')]
+
+        # Check that the returned list is as expected
+        self.assertEqual(obs_fps, exp_fps)
+        # Check that the file exists
+        self.assertTrue(exists(exp_fps[0]))
+        # Check the contents of the file
+        with open(exp_fps[0], "U") as f:
+            self.assertEqual(f.read(), EXP_PREP)
+
+    def test_get_qiime_minimal_mapping_single_reverse_primer(self):
+        conn_handler = SQLConnectionHandler()
+        conn_handler
+        sql = """INSERT INTO qiita.prep_columns
+                        (prep_template_id, column_name, column_type)
+                    VALUES (1, 'reverselinkerprimer', 'varchar');
+                 ALTER TABLE qiita.prep_1
+                    ADD COLUMN reverselinkerprimer varchar;
+                 DELETE FROM qiita.prep_columns
+                 WHERE prep_template_id = 1 AND column_name = 'run_prefix';
+                 ALTER TABLE qiita.prep_1 DROP COLUMN run_prefix;
+                 UPDATE qiita.prep_1 SET reverselinkerprimer = %s
+                 """
+        conn_handler.execute(sql, ('GTGCCAGCM',))
+        prep_template = PrepTemplate(1)
+        prep_template.generate_files()
+        out_dir = mkdtemp()
+
+        obs_fps = _get_qiime_minimal_mapping(prep_template, out_dir)
+        exp_fps = [join(out_dir, 'prep_1_MMF.txt')]
+
+        # Check that the returned list is as expected
+        self.assertEqual(obs_fps, exp_fps)
+        # Check that the file exists
+        self.assertTrue(exists(exp_fps[0]))
+        # Check the contents of the file
+        with open(exp_fps[0], "U") as f:
+            self.assertEqual(f.read(), EXP_PREP_RLP)
+
     def test_get_qiime_minimal_mapping_multiple(self):
         # We need to create a prep template in which we have different run
         # prefix values, so we can test this case
@@ -76,8 +126,8 @@ class ProcessingPipelineTests(TestCase):
                             'ebi_submission_accession': None,
                             'EMP_status': 'EMP',
                             'str_column': 'Value for sample 1',
-                            'linkerprimersequence': 'GTGCCAGCMGCCGCGGTAA',
-                            'barcodesequence': 'GTCCGCAAGTTA',
+                            'primer': 'GTGCCAGCMGCCGCGGTAA',
+                            'barcode': 'GTCCGCAAGTTA',
                             'run_prefix': "s_G1_L001_sequences",
                             'platform': 'ILLUMINA',
                             'library_construction_protocol': 'AAA',
@@ -87,8 +137,8 @@ class ProcessingPipelineTests(TestCase):
                             'ebi_submission_accession': None,
                             'EMP_status': 'EMP',
                             'str_column': 'Value for sample 2',
-                            'linkerprimersequence': 'GTGCCAGCMGCCGCGGTAA',
-                            'barcodesequence': 'CGTAGAGCTCTC',
+                            'primer': 'GTGCCAGCMGCCGCGGTAA',
+                            'barcode': 'CGTAGAGCTCTC',
                             'run_prefix': "s_G1_L001_sequences",
                             'platform': 'ILLUMINA',
                             'library_construction_protocol': 'AAA',
@@ -98,8 +148,8 @@ class ProcessingPipelineTests(TestCase):
                             'ebi_submission_accession': None,
                             'EMP_status': 'EMP',
                             'str_column': 'Value for sample 3',
-                            'linkerprimersequence': 'GTGCCAGCMGCCGCGGTAA',
-                            'barcodesequence': 'CCTCTGAGAGCT',
+                            'primer': 'GTGCCAGCMGCCGCGGTAA',
+                            'barcode': 'CCTCTGAGAGCT',
                             'run_prefix': "s_G1_L002_sequences",
                             'platform': 'ILLUMINA',
                             'library_construction_protocol': 'AAA',
@@ -217,6 +267,7 @@ class ProcessingPipelineTests(TestCase):
         raw_data = RawData(3)
         params = Preprocessed454Params(1)
         prep_template = PrepTemplate(1)
+        prep_template.generate_files()
 
         obs_cmd, obs_output_dir = _get_preprocess_fasta_cmd(
             raw_data, prep_template, params)
@@ -242,23 +293,24 @@ class ProcessingPipelineTests(TestCase):
     def test_get_preprocess_fasta_cmd_sff_run_prefix_match(self):
         # Test that the run prefixes in the prep_template and the file names
         # actually match and raise an error if not
+        new_fp_id = get_count('qiita.filepath') + 1
         conn_handler = SQLConnectionHandler()
         sql = ("""
-            INSERT INTO qiita.filepath (filepath_id, filepath,
-                filepath_type_id, checksum, checksum_algorithm_id,
-                data_directory_id) VALUES (19, '1_new.sff', 17, 852952723, 1,
-                5);
-            INSERT INTO qiita.raw_filepath (raw_data_id , filepath_id) VALUES
-                (3, 19);
+            INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum,
+                    checksum_algorithm_id, data_directory_id)
+                VALUES ('1_new.sff', 17, 852952723, 1, 5);
+            INSERT INTO qiita.raw_filepath (raw_data_id , filepath_id)
+                VALUES (3, %s);
             UPDATE qiita.prep_1 SET run_prefix='preprocess_test';
-            UPDATE qiita.prep_1 SET run_prefix='new' WHERE
-                sample_id = '1.SKB8.640193';
+            UPDATE qiita.prep_1 SET run_prefix='new'
+                WHERE sample_id = '1.SKB8.640193';
         """)
-        conn_handler.execute(sql)
+        conn_handler.execute(sql, (new_fp_id,))
 
         raw_data = RawData(3)
         params = Preprocessed454Params(1)
         prep_template = PrepTemplate(1)
+        prep_template.generate_files()
 
         obs_cmd, obs_output_dir = _get_preprocess_fasta_cmd(
             raw_data, prep_template, params)
@@ -287,29 +339,30 @@ class ProcessingPipelineTests(TestCase):
     def test_get_preprocess_fasta_cmd_sff_run_prefix_match_error_1(self):
         # Test that the run prefixes in the prep_template and the file names
         # actually match and raise an error if not
+        fp_count = get_count('qiita.filepath')
         conn_handler = SQLConnectionHandler()
         sql = ("""
-            INSERT INTO qiita.filepath (filepath_id, filepath,
-                filepath_type_id, checksum, checksum_algorithm_id,
-                data_directory_id) VALUES (19, '1_new.sff', 17, 852952723, 1,
-                5);
-            INSERT INTO qiita.raw_filepath (raw_data_id , filepath_id) VALUES
-                (3, 19);
-            INSERT INTO qiita.filepath (filepath_id, filepath,
-                filepath_type_id, checksum, checksum_algorithm_id,
-                data_directory_id) VALUES (20, '1_error.sff', 17, 852952723,
-                1, 5);
-            INSERT INTO qiita.raw_filepath (raw_data_id , filepath_id) VALUES
-                (3, 20);
+            INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum,
+                    checksum_algorithm_id, data_directory_id)
+                VALUES ('1_new.sff', 17, 852952723, 1, 5);
+            INSERT INTO qiita.raw_filepath (raw_data_id , filepath_id)
+                VALUES (3, %s);
+            INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum,
+                    checksum_algorithm_id, data_directory_id)
+                VALUES ('1_error.sff', 17, 852952723, 1, 5);
+            INSERT INTO qiita.raw_filepath (raw_data_id , filepath_id)
+                VALUES (3, %s);
             UPDATE qiita.prep_1 SET run_prefix='preprocess_test';
             UPDATE qiita.prep_1 SET run_prefix='new' WHERE
                 sample_id = '1.SKB8.640193';
         """)
-        conn_handler.execute(sql)
+        conn_handler.execute(
+            sql, (fp_count + 1, fp_count + 2))
 
         raw_data = RawData(3)
         params = Preprocessed454Params(1)
         prep_template = PrepTemplate(1)
+        prep_template.generate_files()
 
         with self.assertRaises(ValueError):
             _get_preprocess_fasta_cmd(raw_data, prep_template, params)
@@ -329,6 +382,7 @@ class ProcessingPipelineTests(TestCase):
         raw_data = RawData(3)
         params = Preprocessed454Params(1)
         prep_template = PrepTemplate(1)
+        prep_template.generate_files()
 
         with self.assertRaises(ValueError):
             _get_preprocess_fasta_cmd(raw_data, prep_template, params)
@@ -495,6 +549,37 @@ EXP_PREP = (
     "1.SKM7.640188\tCGCCGGTAATCT\tGTGCCAGCMGCCGCGGTAA\tQiita MMF\n"
     "1.SKM8.640201\tCCGATGCCTTGA\tGTGCCAGCMGCCGCGGTAA\tQiita MMF\n"
     "1.SKM9.640192\tAGCAGGCACGAA\tGTGCCAGCMGCCGCGGTAA\tQiita MMF\n")
+
+EXP_PREP_RLP = (
+    "#SampleID\tBarcodeSequence\tLinkerPrimerSequence\tReverseLinkerPrimer"
+    "\tDescription\n"
+    "1.SKB1.640202\tGTCCGCAAGTTA\tGTGCCAGCMGCCGCGGTAA\tGTGCCAGCM\tQiita MMF\n"
+    "1.SKB2.640194\tCGTAGAGCTCTC\tGTGCCAGCMGCCGCGGTAA\tGTGCCAGCM\tQiita MMF\n"
+    "1.SKB3.640195\tCCTCTGAGAGCT\tGTGCCAGCMGCCGCGGTAA\tGTGCCAGCM\tQiita MMF\n"
+    "1.SKB4.640189\tCCTCGATGCAGT\tGTGCCAGCMGCCGCGGTAA\tGTGCCAGCM\tQiita MMF\n"
+    "1.SKB5.640181\tGCGGACTATTCA\tGTGCCAGCMGCCGCGGTAA\tGTGCCAGCM\tQiita MMF\n"
+    "1.SKB6.640176\tCGTGCACAATTG\tGTGCCAGCMGCCGCGGTAA\tGTGCCAGCM\tQiita MMF\n"
+    "1.SKB7.640196\tCGGCCTAAGTTC\tGTGCCAGCMGCCGCGGTAA\tGTGCCAGCM\tQiita MMF\n"
+    "1.SKB8.640193\tAGCGCTCACATC\tGTGCCAGCMGCCGCGGTAA\tGTGCCAGCM\tQiita MMF\n"
+    "1.SKB9.640200\tTGGTTATGGCAC\tGTGCCAGCMGCCGCGGTAA\tGTGCCAGCM\tQiita MMF\n"
+    "1.SKD1.640179\tCGAGGTTCTGAT\tGTGCCAGCMGCCGCGGTAA\tGTGCCAGCM\tQiita MMF\n"
+    "1.SKD2.640178\tAACTCCTGTGGA\tGTGCCAGCMGCCGCGGTAA\tGTGCCAGCM\tQiita MMF\n"
+    "1.SKD3.640198\tTAATGGTCGTAG\tGTGCCAGCMGCCGCGGTAA\tGTGCCAGCM\tQiita MMF\n"
+    "1.SKD4.640185\tTTGCACCGTCGA\tGTGCCAGCMGCCGCGGTAA\tGTGCCAGCM\tQiita MMF\n"
+    "1.SKD5.640186\tTGCTACAGACGT\tGTGCCAGCMGCCGCGGTAA\tGTGCCAGCM\tQiita MMF\n"
+    "1.SKD6.640190\tATGGCCTGACTA\tGTGCCAGCMGCCGCGGTAA\tGTGCCAGCM\tQiita MMF\n"
+    "1.SKD7.640191\tACGCACATACAA\tGTGCCAGCMGCCGCGGTAA\tGTGCCAGCM\tQiita MMF\n"
+    "1.SKD8.640184\tTGAGTGGTCTGT\tGTGCCAGCMGCCGCGGTAA\tGTGCCAGCM\tQiita MMF\n"
+    "1.SKD9.640182\tGATAGCACTCGT\tGTGCCAGCMGCCGCGGTAA\tGTGCCAGCM\tQiita MMF\n"
+    "1.SKM1.640183\tTAGCGCGAACTT\tGTGCCAGCMGCCGCGGTAA\tGTGCCAGCM\tQiita MMF\n"
+    "1.SKM2.640199\tCATACACGCACC\tGTGCCAGCMGCCGCGGTAA\tGTGCCAGCM\tQiita MMF\n"
+    "1.SKM3.640197\tACCTCAGTCAAG\tGTGCCAGCMGCCGCGGTAA\tGTGCCAGCM\tQiita MMF\n"
+    "1.SKM4.640180\tTCGACCAAACAC\tGTGCCAGCMGCCGCGGTAA\tGTGCCAGCM\tQiita MMF\n"
+    "1.SKM5.640177\tCCACCCAGTAAC\tGTGCCAGCMGCCGCGGTAA\tGTGCCAGCM\tQiita MMF\n"
+    "1.SKM6.640187\tATATCGCGATGA\tGTGCCAGCMGCCGCGGTAA\tGTGCCAGCM\tQiita MMF\n"
+    "1.SKM7.640188\tCGCCGGTAATCT\tGTGCCAGCMGCCGCGGTAA\tGTGCCAGCM\tQiita MMF\n"
+    "1.SKM8.640201\tCCGATGCCTTGA\tGTGCCAGCMGCCGCGGTAA\tGTGCCAGCM\tQiita MMF\n"
+    "1.SKM9.640192\tAGCAGGCACGAA\tGTGCCAGCMGCCGCGGTAA\tGTGCCAGCM\tQiita MMF\n")
 
 EXP_PREP_1 = (
     "#SampleID\tBarcodeSequence\tLinkerPrimerSequence\tDescription\n"

@@ -55,7 +55,7 @@ from qiita_db.exceptions import (QiitaDBUnknownIDError, QiitaDBColumnError,
                                  QiitaDBDuplicateHeaderError)
 from qiita_db.base import QiitaObject
 from qiita_db.sql_connection import SQLConnectionHandler
-from qiita_db.util import (exists_table, get_table_cols, convert_to_id,
+from qiita_db.util import (exists_table, get_table_cols,
                            get_mountpoint, insert_filepaths)
 from qiita_db.logger import LogEntry
 from .util import (as_python_types, get_datatypes, get_invalid_sample_names,
@@ -194,30 +194,13 @@ class BaseSample(QiitaObject):
         set of str
             The set of all available metadata categories
         """
-        # Get all the required columns
-        required_cols = get_table_cols(self._table, conn_handler)
-        # Get all the the columns in the dynamic table
-        dynamic_cols = get_table_cols(self._dynamic_table, conn_handler)
-        # Get the union of the two previous lists
-        cols = set(required_cols).union(dynamic_cols)
-        # Remove the sample_id column and the study_id/raw_data_id columns,
-        # as this columns are used internally for data storage and they don't
-        # actually belong to the metadata
+        # Get all the columns
+        cols = get_table_cols(self._dynamic_table, conn_handler)
+        # Remove the sample_id column as this column is used internally for
+        # data storage and it doesn't actually belong to the metadata
         cols.remove('sample_id')
-        cols.remove(self._id_column)
-        try:
-            # study_id could be potentially removed by _id_column, so wrap
-            # in a try except
-            cols.remove('study_id')
-        except KeyError:
-            pass
-        # Change the *_id columns, as this is for convenience internally,
-        # and add the original categories
-        for key, value in viewitems(self._md_template.translate_cols_dict):
-            cols.remove(key)
-            cols.add(value)
 
-        return cols
+        return set(cols)
 
     def _to_dict(self):
         r"""Returns the categories and their values in a dictionary
@@ -229,22 +212,13 @@ class BaseSample(QiitaObject):
         """
         conn_handler = SQLConnectionHandler()
         d = dict(conn_handler.execute_fetchone(
-            "SELECT * FROM qiita.{0} WHERE {1}=%s AND "
-            "sample_id=%s".format(self._table, self._id_column),
-            (self._md_template.id, self._id)))
-        dynamic_d = dict(conn_handler.execute_fetchone(
             "SELECT * from qiita.{0} WHERE "
             "sample_id=%s".format(self._dynamic_table),
             (self._id, )))
-        d.update(dynamic_d)
-        del d['sample_id']
-        del d[self._id_column]
-        d.pop('study_id', None)
 
-        # Modify all the *_id columns to include the string instead of the id
-        for k, v in viewitems(self._md_template.translate_cols_dict):
-            d[v] = self._md_template.str_cols_handlers[k][d[k]]
-            del d[k]
+        # Remove the sample_id, is not part of the metadata
+        del d['sample_id']
+
         return d
 
     def __len__(self):
@@ -283,38 +257,16 @@ class BaseSample(QiitaObject):
         """
         conn_handler = SQLConnectionHandler()
         key = key.lower()
-        if key in self._get_categories(conn_handler):
-            # It's possible that the key is asking for one of the *_id columns
-            # that we have to do the translation
-            def handler(x):
-                return x
-
-            # prevent flake8 from complaining about the function not being
-            # used and a redefinition happening in the next few lines
-            handler(None)
-
-            if key in self._md_template.translate_cols_dict.values():
-                handler = (
-                    lambda x: self._md_template.str_cols_handlers[key][x])
-                key = "%s_id" % key
-            # Check if we have either to query the table with required columns
-            # or the dynamic table
-            if key in get_table_cols(self._table, conn_handler):
-                result = conn_handler.execute_fetchone(
-                    "SELECT {0} FROM qiita.{1} WHERE {2}=%s AND "
-                    "sample_id=%s".format(key, self._table, self._id_column),
-                    (self._md_template.id, self._id))[0]
-                return handler(result)
-            else:
-                return conn_handler.execute_fetchone(
-                    "SELECT {0} FROM qiita.{1} WHERE "
-                    "sample_id=%s".format(key, self._dynamic_table),
-                    (self._id, ))[0]
-        else:
+        if key not in self._get_categories(conn_handler):
             # The key is not available for the sample, so raise a KeyError
             raise KeyError("Metadata category %s does not exists for sample %s"
                            " in template %d" %
                            (key, self._id, self._md_template.id))
+
+        sql = """SELECT {0} FROM qiita.{1}
+                 WHERE sample_id=%s""".format(key, self._dynamic_table)
+
+        return conn_handler.execute_fetchone(sql, (self._id, ))[0]
 
     def add_setitem_queries(self, column, value, conn_handler, queue):
         """Adds the SQL queries needed to set a value to the provided queue
@@ -336,39 +288,14 @@ class BaseSample(QiitaObject):
         QiitaDBColumnError
             If the column does not exist in the table
         """
-        # try dynamic tables
-        sql = """SELECT EXISTS (
-                    SELECT column_name
-                    FROM information_schema.columns
-                    WHERE table_name=%s
-                        AND table_schema='qiita'
-                        AND column_name=%s)"""
-        exists_dynamic = conn_handler.execute_fetchone(
-            sql, (self._dynamic_table, column))[0]
-        # try required_sample_info
-        sql = """SELECT EXISTS (
-                    SELECT column_name
-                    FROM information_schema.columns
-                    WHERE table_name=%s
-                        AND table_schema='qiita'
-                        AND column_name=%s)"""
-        exists_required = conn_handler.execute_fetchone(
-            sql, (self._table, column))[0]
-
-        if exists_dynamic:
-                sql = """UPDATE qiita.{0}
-                         SET {1}=%s
-                         WHERE sample_id=%s""".format(self._dynamic_table,
-                                                      column)
-        elif exists_required:
-            # here is not required the type check as the required fields have
-            # an explicit type check
-            sql = """UPDATE qiita.{0}
-                     SET {1}=%s
-                     WHERE sample_id=%s""".format(self._table, column)
-        else:
+        # Check if the column exist in the table
+        if column not in self._get_categories(conn_handler):
             raise QiitaDBColumnError("Column %s does not exist in %s" %
                                      (column, self._dynamic_table))
+
+        sql = """UPDATE qiita.{0}
+                 SET {1}=%s
+                 WHERE sample_id=%s""".format(self._dynamic_table, column)
 
         conn_handler.add_to_queue(queue, sql, (value, self._id))
 
@@ -597,33 +524,7 @@ class MetadataTemplate(QiitaObject):
         return "%s%d" % (cls._table_prefix, obj_id)
 
     @classmethod
-    def _check_special_columns(cls, md_template, obj):
-        r"""Checks for special columns based on obj type
-
-        Parameters
-        ----------
-        md_template : DataFrame
-            The metadata template file contents indexed by sample ids
-        obj : object
-            Any extra object needed by the template to perform any extra check
-        """
-        # Check required columns
-        missing = set(cls.translate_cols_dict.values()).difference(md_template)
-        if not missing:
-            # Change any *_id column to its str column
-            for key, value in viewitems(cls.translate_cols_dict):
-                handler = cls.id_cols_handlers[key]
-                md_template[key] = pd.Series(
-                    [handler[i] for i in md_template[value]],
-                    index=md_template.index)
-                del md_template[value]
-
-        return missing.union(
-            cls._check_template_special_columns(md_template, obj))
-
-    @classmethod
-    def _clean_validate_template(cls, md_template, study_id, obj,
-                                 conn_handler=None):
+    def _clean_validate_template(cls, md_template, study_id, restriction_dict):
         """Takes care of all validation and cleaning of metadata templates
 
         Parameters
@@ -632,8 +533,8 @@ class MetadataTemplate(QiitaObject):
             The metadata template file contents indexed by sample ids
         study_id : int
             The study to which the metadata template belongs to.
-        obj : object
-            Any extra object needed by the template to perform any extra check
+        restriction_dict : dict of {str: Restriction}
+            A dictionary with the restrictions that apply to the metadata
 
         Returns
         -------
@@ -644,10 +545,8 @@ class MetadataTemplate(QiitaObject):
         ------
         QiitaDBColumnError
             If the sample names in md_template contains invalid names
-        QiitaDBDuplicateHeaderError
-            If md_template contains duplicate headers
-        QiitaDBColumnError
-            If md_template is missing a required column
+        QiitaDBWarning
+            If there are missing columns required for some functionality
         """
         cls._check_subclass()
         invalid_ids = get_invalid_sample_names(md_template.index)
@@ -657,6 +556,7 @@ class MetadataTemplate(QiitaObject):
                                      "(only alphanumeric characters or periods"
                                      " are allowed): %s." %
                                      ", ".join(invalid_ids))
+
         # We are going to modify the md_template. We create a copy so
         # we don't modify the user one
         md_template = deepcopy(md_template)
@@ -672,29 +572,23 @@ class MetadataTemplate(QiitaObject):
             raise QiitaDBDuplicateHeaderError(
                 find_duplicates(md_template.columns))
 
-        # We need to check for some special columns, that are not present on
-        # the database, but depending on the data type are required.
-        missing = cls._check_special_columns(md_template, obj)
+        # Check if we have the columns required for some functionality
+        warning_msg = []
+        for key, restriction in viewitems(restriction_dict):
+            missing = set(restriction.columns).difference(md_template)
 
-        conn_handler = conn_handler if conn_handler else SQLConnectionHandler()
+            if missing:
+                warning_msg.append(
+                    "%s: %s" % (restriction.error_msg, ', '.join(missing)))
 
-        # Get the required columns from the DB
-        db_cols = get_table_cols(cls._table, conn_handler)
+        if warning_msg:
+            warnings.warn(
+                "Some functionality will be disabled due to missing "
+                "columns:\n\t%s.\nCheck https://github.com/biocore/qiita/wiki"
+                "/Preparing-Qiita-template-files for a description of these "
+                "fields." % ";\n\t".join(warning_msg),
+                QiitaDBWarning)
 
-        # Remove the sample_id and study_id columns
-        db_cols.remove('sample_id')
-        db_cols.remove(cls._id_column)
-
-        # Retrieve the headers of the metadata template
-        headers = list(md_template.keys())
-
-        # Check that md_template has the required columns
-        remaining = set(db_cols).difference(headers)
-        missing = missing.union(remaining)
-        missing = missing.difference(cls.translate_cols_dict)
-        if missing:
-            raise QiitaDBColumnError("Missing columns: %s"
-                                     % ', '.join(missing))
         return md_template
 
     @classmethod
@@ -714,44 +608,27 @@ class MetadataTemplate(QiitaObject):
             The queue where the SQL statements will be added
         """
         cls._check_subclass()
+
         # Get some useful information from the metadata template
         sample_ids = md_template.index.tolist()
-        num_samples = len(sample_ids)
-        headers = list(md_template.keys())
+        headers = sorted(md_template.keys().tolist())
 
-        # Get the required columns from the DB
-        db_cols = sorted(get_table_cols(cls._table, conn_handler))
-        # Remove the sample_id and _id_column columns
-        db_cols.remove('sample_id')
-        db_cols.remove(cls._id_column)
-
-        # Insert values on required columns
-        values = as_python_types(md_template, db_cols)
-        values.insert(0, sample_ids)
-        values.insert(0, [obj_id] * num_samples)
-        values = [v for v in zip(*values)]
-        conn_handler.add_to_queue(
-            queue_name,
-            "INSERT INTO qiita.{0} ({1}, sample_id, {2}) "
-            "VALUES (%s, %s, {3})".format(cls._table, cls._id_column,
-                                          ', '.join(db_cols),
-                                          ', '.join(['%s'] * len(db_cols))),
-            values, many=True)
+        # Insert values on template_sample table
+        values = [(obj_id, s_id) for s_id in sample_ids]
+        sql = "INSERT INTO qiita.{0} ({1}, sample_id) VALUES (%s, %s)".format(
+            cls._table, cls._id_column)
+        conn_handler.add_to_queue(queue_name, sql, values, many=True)
 
         # Insert rows on *_columns table
-        headers = sorted(set(headers).difference(db_cols))
         datatypes = get_datatypes(md_template.ix[:, headers])
         # psycopg2 requires a list of tuples, in which each tuple is a set
         # of values to use in the string formatting of the query. We have all
         # the values in different lists (but in the same order) so use zip
         # to create the list of tuples that psycopg2 requires.
-        values = [
-            v for v in zip([obj_id] * len(headers), headers, datatypes)]
-        conn_handler.add_to_queue(
-            queue_name,
-            "INSERT INTO qiita.{0} ({1}, column_name, column_type) "
-            "VALUES (%s, %s, %s)".format(cls._column_table, cls._id_column),
-            values, many=True)
+        values = [(obj_id, h, d) for h, d in zip(headers, datatypes)]
+        sql = ("INSERT INTO qiita.{0} ({1}, column_name, column_type) "
+               "VALUES (%s, %s, %s)").format(cls._column_table, cls._id_column)
+        conn_handler.add_to_queue(queue_name, sql, values, many=True)
 
         # Create table with custom columns
         table_name = cls._table_name(obj_id)
@@ -797,17 +674,9 @@ class MetadataTemplate(QiitaObject):
         existing_samples = curr_samples.intersection(sample_ids)
         new_samples = set(sample_ids).difference(existing_samples)
 
-        # Check if we are adding new columns, by getting all the columns from
-        # the database
-        table_name = self._table_name(self._id)
-        db_cols = get_table_cols(self._table, conn_handler)
-        db_cols.remove('sample_id')
-        db_cols.remove(self._id_column)
-        curr_cols = set(
-            get_table_cols(table_name, conn_handler)).union(db_cols)
+        # Check if we are adding new columns
         headers = md_template.keys().tolist()
-        existing_cols = curr_cols.intersection(headers)
-        new_cols = set(headers).difference(existing_cols)
+        new_cols = set(headers).difference(self.categories())
 
         if not new_cols and not new_samples:
             raise QiitaDBError(
@@ -815,6 +684,7 @@ class MetadataTemplate(QiitaObject):
                 "want to update existing values, you should use the 'update' "
                 "functionality.")
 
+        table_name = self._table_name(self._id)
         if new_cols:
             # If we are adding new columns, add them first (simplifies code)
             # Sorting the new columns to enforce an order
@@ -861,27 +731,15 @@ class MetadataTemplate(QiitaObject):
                 QiitaDBWarning)
 
         if new_samples:
-            num_samples = len(new_samples)
             new_samples = sorted(new_samples)
             # At this point we only want the information from the new samples
             md_template = md_template.loc[new_samples]
 
             # Insert values on required columns
-            values = as_python_types(md_template, db_cols)
-            values.insert(0, new_samples)
-            values.insert(0, [self._id] * num_samples)
-            # psycopg2 requires a list of tuples, in which each tuple is a
-            # tuple of values to use in the string formatting of the query. We
-            # have all the values in different lists (but in the same order) so
-            # use zip to create the list of tuples that psycopg2 requires.
-            values = [v for v in zip(*values)]
-            sql = """INSERT INTO qiita.{0} ({1}, sample_id, {2})
-                     VALUES (%s, %s, {3})""".format(
-                self._table, self._id_column, ', '.join(db_cols),
-                ', '.join(['%s'] * len(db_cols)))
+            values = [(self._id, s_id) for s_id in new_samples]
+            sql = """INSERT INTO qiita.{0} ({1}, sample_id)
+                     VALUES (%s, %s)""".format(self._table, self._id_column)
             conn_handler.add_to_queue(queue_name, sql, values, many=True)
-
-            headers = sorted(set(headers).difference(db_cols))
 
             # Insert values on custom table
             values = as_python_types(md_template, headers)
@@ -1133,38 +991,17 @@ class MetadataTemplate(QiitaObject):
             If supplied, only the specified samples will be written to the
             file
         """
-        conn_handler = SQLConnectionHandler()
-        metadata_map = self._transform_to_dict(conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.{0} WHERE {1}=%s".format(self._table,
-                                                          self._id_column),
-            (self.id,)))
-        dyn_vals = self._transform_to_dict(conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.{0}".format(self._table_name(self.id))))
-
-        for k in metadata_map:
-            for key, value in viewitems(self.translate_cols_dict):
-                id_ = metadata_map[k][key]
-                metadata_map[k][value] = self.str_cols_handlers[key][id_]
-                del metadata_map[k][key]
-            metadata_map[k].update(dyn_vals[k])
-            metadata_map[k].pop('study_id', None)
-
-        # Remove samples that are not in the samples list, if it was supplied
+        df = self.to_dataframe()
         if samples is not None:
-            for sid, d in metadata_map.items():
-                if sid not in samples:
-                    metadata_map.pop(sid)
+            df = df.loc[samples]
 
-        # Write remaining samples to file
-        headers = sorted(list(metadata_map.values())[0].keys())
-        with open(fp, 'w') as f:
-            # First write the headers
-            f.write("sample_name\t%s\n" % '\t'.join(headers))
-            # Write the values for each sample id
-            for sid, d in sorted(metadata_map.items()):
-                values = [str(d[h]) for h in headers]
-                values.insert(0, sid)
-                f.write("%s\n" % '\t'.join(values))
+        # Sorting the dataframe so multiple serializations of the metadata
+        # template are consistent.
+        df.sort_index(axis=0, inplace=True)
+        df.sort_index(axis=1, inplace=True)
+
+        # Store the template in a file
+        df.to_csv(fp, index_label='sample_name', na_rep="", sep='\t')
 
     def to_dataframe(self):
         """Returns the metadata template as a dataframe
@@ -1175,33 +1012,19 @@ class MetadataTemplate(QiitaObject):
             The metadata in the template,indexed on sample id
         """
         conn_handler = SQLConnectionHandler()
-        cols = get_table_cols(self._table, conn_handler)
-        if 'study_id' in cols:
-            cols.remove('study_id')
-        dyncols = get_table_cols(self._table_name(self._id), conn_handler)
-        # remove sample_id from dyncols so not repeated
-        dyncols.remove('sample_id')
+        cols = sorted(get_table_cols(self._table_name(self._id), conn_handler))
         # Get all metadata for the template
-        sql = """SELECT {0}, {1} FROM qiita.{2} req
-            INNER JOIN qiita.{3} dyn on req.sample_id = dyn.sample_id
-            WHERE req.{4} = %s""".format(
-            ", ".join("req.%s" % c for c in cols),
-            ", ".join("dyn.%s" % d for d in dyncols),
-            self._table, self._table_name(self._id), self._id_column)
-        meta = conn_handler.execute_fetchall(sql, [self._id])
-        cols = cols + dyncols
+        sql = "SELECT {0} FROM qiita.{1}".format(", ".join(cols),
+                                                 self._table_name(self.id))
+        meta = conn_handler.execute_fetchall(sql, (self._id,))
 
         # Create the dataframe and clean it up a bit
         df = pd.DataFrame((list(x) for x in meta), columns=cols)
         df.set_index('sample_id', inplace=True, drop=True)
-        # Turn id cols to value cols
-        for col, value in viewitems(self.str_cols_handlers):
-            df[col].replace(value, inplace=True)
-        df.rename(columns=self.translate_cols_dict, inplace=True)
 
         return df
 
-    def add_filepath(self, filepath, conn_handler=None):
+    def add_filepath(self, filepath, conn_handler=None, fp_id=None):
         r"""Populates the DB tables for storing the filepath and connects the
         `self` objects with this filepath"""
         # Check that this function has been called from a subclass
@@ -1210,29 +1033,17 @@ class MetadataTemplate(QiitaObject):
         # Check if the connection handler has been provided. Create a new
         # one if not.
         conn_handler = conn_handler if conn_handler else SQLConnectionHandler()
-
-        if self._table == 'required_sample_info':
-            fp_id = convert_to_id("sample_template", "filepath_type",
-                                  conn_handler)
-            table = 'sample_template_filepath'
-            column = 'study_id'
-        elif self._table == 'common_prep_info':
-            fp_id = convert_to_id("prep_template", "filepath_type",
-                                  conn_handler)
-            table = 'prep_template_filepath'
-            column = 'prep_template_id'
-        else:
-            raise QiitaDBNotImplementedError(
-                'add_filepath for %s' % self._table)
+        fp_id = self._fp_id if fp_id is None else fp_id
 
         try:
-            fpp_id = insert_filepaths([(filepath, fp_id)], None, "templates",
-                                      "filepath", conn_handler,
+            fpp_id = insert_filepaths([(filepath, fp_id)], None,
+                                      "templates", "filepath", conn_handler,
                                       move_files=False)[0]
             values = (self._id, fpp_id)
             conn_handler.execute(
                 "INSERT INTO qiita.{0} ({1}, filepath_id) "
-                "VALUES (%s, %s)".format(table, column), values)
+                "VALUES (%s, %s)".format(
+                    self._filepath_table, self._id_column), values)
         except Exception as e:
             LogEntry.create('Runtime', str(e),
                             info={self.__class__.__name__: self.id})
@@ -1247,21 +1058,12 @@ class MetadataTemplate(QiitaObject):
         # one if not.
         conn_handler = conn_handler if conn_handler else SQLConnectionHandler()
 
-        if self._table == 'required_sample_info':
-            table = 'sample_template_filepath'
-            column = 'study_id'
-        elif self._table == 'common_prep_info':
-            table = 'prep_template_filepath'
-            column = 'prep_template_id'
-        else:
-            raise QiitaDBNotImplementedError(
-                'get_filepath for %s' % self._table)
-
         try:
             filepath_ids = conn_handler.execute_fetchall(
                 "SELECT filepath_id, filepath FROM qiita.filepath WHERE "
                 "filepath_id IN (SELECT filepath_id FROM qiita.{0} WHERE "
-                "{1}=%s) ORDER BY filepath_id DESC".format(table, column),
+                "{1}=%s) ORDER BY filepath_id DESC".format(
+                    self._filepath_table, self._id_column),
                 (self.id, ))
         except Exception as e:
             LogEntry.create('Runtime', str(e),
@@ -1283,11 +1085,7 @@ class MetadataTemplate(QiitaObject):
 
         """
         cols = get_table_cols(self._table_name(self._id))
-        cols.extend(get_table_cols(self._table)[1:])
-
-        for idx, c in enumerate(cols):
-            if c in self.translate_cols_dict:
-                cols[idx] = self.translate_cols_dict[c]
+        cols.remove("sample_id")
 
         return cols
 

@@ -723,8 +723,9 @@ vamps_id = vamps_id
 
 SAMPLE_TEMPLATE = (
     "sample_name\trequired_sample_info_status\tcollection_timestamp\t"
-    "sample_type\thas_physical_specimen\tphysical_location\thas_extracted_data"
-    "\thost_subject_id\tTreatment\tDOB\tlatitude\tlongitude\tDescription\n"
+    "sample_type\tphysical_specimen_remaining\tphysical_specimen_location\t"
+    "dna_extracted\thost_subject_id\tTreatment\tDOB\tlatitude\tlongitude"
+    "\tDescription\n"
     "PC.354\treceived\t2014-06-18 16:44\ttype_1\tTrue\tLocation_1\tTrue\t"
     "HS_ID_PC.354\tControl\t20061218\t1.88401499993\t56.0003871552\t"
     "Control_mouse_I.D._354\n"
@@ -739,8 +740,8 @@ SAMPLE_TEMPLATE = (
     "Fasting_mouse_I.D._636")
 
 PREP_TEMPLATE = (
-    'sample_name\tbarcodesequence\tcenter_name\tcenter_project_name\t'
-    'description\tebi_submission_accession\temp_status\tlinkerprimersequence\t'
+    'sample_name\tbarcode\tcenter_name\tcenter_project_name\t'
+    'description\tebi_submission_accession\temp_status\tprimer\t'
     'run_prefix\tstr_column\tplatform\tlibrary_construction_protocol\t'
     'experiment_design_description\n'
     'SKB7.640196\tCCTCTGAGAGCT\tANL\tTest Project\tskb7\tNone\tEMP\t'

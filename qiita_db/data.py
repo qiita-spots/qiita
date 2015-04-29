@@ -369,9 +369,9 @@ class RawData(BaseData):
             """
             SELECT EXISTS(
                 SELECT * FROM qiita.prep_template AS pt
-                    LEFT JOIN qiita.common_prep_info AS cpi ON
+                    LEFT JOIN qiita.prep_template_sample AS cpi ON
                     (pt.prep_template_id=cpi.prep_template_id)
-                    LEFT JOIN qiita.required_sample_info AS rsi ON
+                    LEFT JOIN qiita.study_sample AS rsi ON
                     (cpi.sample_id=rsi.sample_id)
                 WHERE raw_data_id = {0} and study_id = {1}
             )

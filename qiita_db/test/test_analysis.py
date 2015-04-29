@@ -6,12 +6,13 @@ from shutil import move
 
 from biom import load_table
 import pandas as pd
+from pandas.util.testing import assert_frame_equal
 
 from qiita_core.util import qiita_test_checker
 from qiita_db.analysis import Analysis, Collection
 from qiita_db.job import Job
 from qiita_db.user import User
-from qiita_db.exceptions import QiitaDBStatusError
+from qiita_db.exceptions import QiitaDBStatusError, QiitaDBError
 from qiita_db.util import get_mountpoint, get_count
 from qiita_db.study import Study, StudyPerson
 from qiita_db.data import ProcessedData
@@ -181,9 +182,9 @@ class TestAnalysis(TestCase):
             "lab_person_id": StudyPerson(1)
         }
         metadata_dict = {
-            'SKB8.640193': {'physical_location': 'location1',
-                            'has_physical_specimen': True,
-                            'has_extracted_data': True,
+            'SKB8.640193': {'physical_specimen_location': 'location1',
+                            'physical_specimen_remaining': True,
+                            'dna_extracted': True,
                             'sample_type': 'type1',
                             'required_sample_info_status': 'received',
                             'collection_timestamp':
@@ -193,9 +194,9 @@ class TestAnalysis(TestCase):
                             'str_column': 'Value for sample 1',
                             'latitude': 42.42,
                             'longitude': 41.41},
-            'SKD8.640184': {'physical_location': 'location1',
-                            'has_physical_specimen': True,
-                            'has_extracted_data': True,
+            'SKD8.640184': {'physical_specimen_location': 'location1',
+                            'physical_specimen_remaining': True,
+                            'dna_extracted': True,
                             'sample_type': 'type1',
                             'required_sample_info_status': 'received',
                             'collection_timestamp':
@@ -205,9 +206,9 @@ class TestAnalysis(TestCase):
                             'str_column': 'Value for sample 2',
                             'latitude': 4.2,
                             'longitude': 1.1},
-            'SKB7.640196': {'physical_location': 'location1',
-                            'has_physical_specimen': True,
-                            'has_extracted_data': True,
+            'SKB7.640196': {'physical_specimen_location': 'location1',
+                            'physical_specimen_remaining': True,
+                            'dna_extracted': True,
                             'sample_type': 'type1',
                             'required_sample_info_status': 'received',
                             'collection_timestamp':
@@ -385,50 +386,44 @@ class TestAnalysis(TestCase):
         self.assertEqual(obs, exp)
 
     def test_build_mapping_file(self):
+        new_id = get_count('qiita.filepath') + 1
         samples = {1: ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196']}
         self.analysis._build_mapping_file(samples,
                                           conn_handler=self.conn_handler)
         obs = self.analysis.mapping_file
         self.assertEqual(obs, self.map_fp)
 
-        with open(self.map_fp) as f:
-            mapdata = f.readlines()
-        # check some columns for correctness
-        obs = [line.split('\t')[0] for line in mapdata]
-        exp = ['#SampleID', '1.SKB8.640193', '1.SKD8.640184',
-               '1.SKB7.640196']
+        base_dir = get_mountpoint('analysis')[0][1]
+        obs = pd.read_csv(obs, sep='\t', infer_datetime_format=True,
+                          parse_dates=True, index_col=False, comment='\t')
+        exp = pd.read_csv(join(base_dir, '1_analysis_mapping_exp.txt'),
+                          sep='\t', infer_datetime_format=True,
+                          parse_dates=True, index_col=False, comment='\t')
+
+        assert_frame_equal(obs, exp)
+
+        sql = """SELECT * FROM qiita.filepath
+                 WHERE filepath=%s ORDER BY filepath_id"""
+        obs = self.conn_handler.execute_fetchall(
+            sql, ("%d_analysis_mapping.txt" % self.analysis.id,))
+
+        exp = [[15, '1_analysis_mapping.txt', 9, '852952723', 1, 1],
+               [new_id, '1_analysis_mapping.txt', 9, '2349935429', 1, 1]]
         self.assertEqual(obs, exp)
 
-        obs = [line.split('\t')[1] for line in mapdata]
-        exp = ['BarcodeSequence', 'AGCGCTCACATC', 'TGAGTGGTCTGT',
-               'CGGCCTAAGTTC']
-        self.assertEqual(obs, exp)
-
-        obs = [line.split('\t')[2] for line in mapdata]
-        exp = ['LinkerPrimerSequence', 'GTGCCAGCMGCCGCGGTAA',
-               'GTGCCAGCMGCCGCGGTAA', 'GTGCCAGCMGCCGCGGTAA']
-        self.assertEqual(obs, exp)
-
-        obs = [line.split('\t')[19] for line in mapdata]
-        exp = ['host_subject_id', '1001:M7', '1001:D9',
-               '1001:M8']
-        self.assertEqual(obs, exp)
-
-        obs = [line.split('\t')[47] for line in mapdata]
-        exp = ['tot_org_carb', '5.0', '4.32', '5.0']
-        self.assertEqual(obs, exp)
-
-        obs = [line.split('\t')[-1] for line in mapdata]
-        exp = ['Description\n'] + ['Cannabis Soil Microbiome\n'] * 3
-        self.assertEqual(obs, exp)
+        sql = """SELECT * FROM qiita.analysis_filepath
+                 WHERE analysis_id=%s ORDER BY filepath_id"""
+        obs = self.conn_handler.execute_fetchall(sql, (self.analysis.id,))
+        exp = [[1L, 14L, 2L], [1L, 15L, None], [1L, new_id, None]]
 
     def test_build_mapping_file_duplicate_samples(self):
         samples = {1: ['1.SKB8.640193', '1.SKB8.640193', '1.SKD8.640184']}
-        with self.assertRaises(ValueError):
+        with self.assertRaises(QiitaDBError):
             self.analysis._build_mapping_file(samples,
                                               conn_handler=self.conn_handler)
 
     def test_build_biom_tables(self):
+        new_id = get_count('qiita.filepath') + 1
         samples = {1: ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196']}
         self.analysis._build_biom_tables(samples, 100,
                                          conn_handler=self.conn_handler)
@@ -446,6 +441,17 @@ class TestAnalysis(TestCase):
                'Identification of the Microbiomes for Cannabis Soils',
                'Processed_id': 1}
         self.assertEqual(obs, exp)
+
+        sql = """SELECT EXISTS(SELECT * FROM qiita.filepath
+                 WHERE filepath_id=%s)"""
+        obs = self.conn_handler.execute_fetchone(sql, (new_id,))[0]
+
+        self.assertTrue(obs)
+
+        sql = """SELECT * FROM qiita.analysis_filepath
+                 WHERE analysis_id=%s ORDER BY filepath_id"""
+        obs = self.conn_handler.execute_fetchall(sql, (self.analysis.id,))
+        exp = [[1L, 14L, 2L], [1L, 15L, None], [1L, new_id, None]]
 
     def test_build_files(self):
         self.analysis.build_files()
@@ -465,19 +471,22 @@ class TestAnalysis(TestCase):
             self.analysis.build_files(-10)
 
     def test_add_file(self):
+        new_id = get_count('qiita.filepath') + 1
         fp = join(get_mountpoint('analysis')[0][1], 'testfile.txt')
         with open(fp, 'w') as f:
             f.write('testfile!')
         self.analysis._add_file('testfile.txt', 'plain_text', '18S')
 
         obs = self.conn_handler.execute_fetchall(
-            'SELECT * FROM qiita.filepath WHERE filepath_id = 19')
-        exp = [[19, 'testfile.txt', 9, '3675007573', 1, 1]]
+            'SELECT * FROM qiita.filepath WHERE filepath_id = %s',
+            (new_id,))
+        exp = [[new_id, 'testfile.txt', 9, '3675007573', 1, 1]]
         self.assertEqual(obs, exp)
 
         obs = self.conn_handler.execute_fetchall(
-            'SELECT * FROM qiita.analysis_filepath WHERE filepath_id = 19')
-        exp = [[1, 19, 2]]
+            'SELECT * FROM qiita.analysis_filepath WHERE filepath_id = %s',
+            (new_id,))
+        exp = [[1, new_id, 2]]
         self.assertEqual(obs, exp)
 
 

@@ -7,20 +7,26 @@
 # -----------------------------------------------------------------------------
 
 from __future__ import division
+from future.utils import viewvalues
 from os.path import join
 from time import strftime
+from copy import deepcopy
+import warnings
+
+import pandas as pd
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_db.exceptions import (QiitaDBColumnError, QiitaDBUnknownIDError,
-                                 QiitaDBError, QiitaDBExecutionError)
+                                 QiitaDBError, QiitaDBExecutionError,
+                                 QiitaDBWarning)
 from qiita_db.sql_connection import SQLConnectionHandler
 from qiita_db.ontology import Ontology
-from qiita_db.util import (get_emp_status, convert_to_id,
+from qiita_db.util import (convert_to_id,
                            convert_from_id, get_mountpoint, infer_status)
 from .base_metadata_template import BaseSample, MetadataTemplate
 from .util import load_template_to_dataframe
-from .constants import (TARGET_GENE_DATA_TYPES, RENAME_COLS_DICT,
-                        REQUIRED_TARGET_GENE_COLS)
+from .constants import (TARGET_GENE_DATA_TYPES, PREP_TEMPLATE_COLUMNS,
+                        PREP_TEMPLATE_COLUMNS_TARGET_GENE)
 
 
 class PrepSample(BaseSample):
@@ -31,7 +37,7 @@ class PrepSample(BaseSample):
     BaseSample
     Sample
     """
-    _table = "common_prep_info"
+    _table = "prep_template_sample"
     _table_prefix = "prep_"
     _column_table = "prep_columns"
     _id_column = "prep_template_id"
@@ -62,14 +68,13 @@ class PrepTemplate(MetadataTemplate):
     MetadataTemplate
     SampleTemplate
     """
-    _table = "common_prep_info"
+    _table = "prep_template_sample"
     _table_prefix = "prep_"
     _column_table = "prep_columns"
     _id_column = "prep_template_id"
-    translate_cols_dict = {'emp_status_id': 'emp_status'}
-    id_cols_handlers = {'emp_status_id': get_emp_status()}
-    str_cols_handlers = {'emp_status_id': get_emp_status(key='emp_status_id')}
     _sample_cls = PrepSample
+    _fp_id = convert_to_id("prep_template", "filepath_type")
+    _filepath_table = 'prep_template_filepath'
 
     @classmethod
     def create(cls, md_template, raw_data, study, data_type,
@@ -118,8 +123,13 @@ class PrepTemplate(MetadataTemplate):
             data_type_id = convert_to_id(data_type, "data_type", conn_handler)
             data_type_str = data_type
 
+        pt_cols = PREP_TEMPLATE_COLUMNS
+        if data_type_str in TARGET_GENE_DATA_TYPES:
+            pt_cols = deepcopy(PREP_TEMPLATE_COLUMNS)
+            pt_cols.update(PREP_TEMPLATE_COLUMNS_TARGET_GENE)
+
         md_template = cls._clean_validate_template(md_template, study.id,
-                                                   data_type_str, conn_handler)
+                                                   pt_cols)
 
         # Insert the metadata template
         # We need the prep_id for multiple calls below, which currently is not
@@ -142,7 +152,7 @@ class PrepTemplate(MetadataTemplate):
                 "{0} = %s".format(cls._id_column), (prep_id,))
 
             # Check if sample IDs present here but not in sample template
-            sql = ("SELECT sample_id from qiita.required_sample_info WHERE "
+            sql = ("SELECT sample_id from qiita.study_sample WHERE "
                    "study_id = %s")
             # Get list of study sample IDs, prep template study IDs,
             # and their intersection
@@ -182,40 +192,6 @@ class PrepTemplate(MetadataTemplate):
             raise QiitaDBColumnError("'%s' is Not a valid investigation_type. "
                                      "Choose from: %s" % (investigation_type,
                                                           ', '.join(terms)))
-
-    @classmethod
-    def _check_template_special_columns(cls, md_template, data_type):
-        r"""Checks for special columns based on obj type
-
-        Parameters
-        ----------
-        md_template : DataFrame
-            The metadata template file contents indexed by sample ids
-        data_type : str
-            The data_type of the template.
-
-        Returns
-        -------
-        set
-            The set of missing columns
-
-        Notes
-        -----
-        Sometimes people use different names for the same columns. We just
-        rename them to use the naming that we expect, so this is normalized
-        across studies.
-        """
-        # We only have column requirements if the data type of the raw data
-        # is one of the target gene types
-        missing_cols = set()
-        if data_type in TARGET_GENE_DATA_TYPES:
-            md_template.rename(columns=RENAME_COLS_DICT, inplace=True)
-
-            # Check for all required columns for target genes studies
-            missing_cols = REQUIRED_TARGET_GENE_COLS.difference(
-                md_template.columns)
-
-        return missing_cols
 
     @classmethod
     def delete(cls, id_):
@@ -414,16 +390,10 @@ class PrepTemplate(MetadataTemplate):
         self.add_filepath(fp)
 
         # creating QIIME mapping file
-        self.create_qiime_mapping_file(fp)
+        self.create_qiime_mapping_file()
 
-    def create_qiime_mapping_file(self, prep_template_fp):
+    def create_qiime_mapping_file(self):
         """This creates the QIIME mapping file and links it in the db.
-
-        Parameters
-        ----------
-        prep_template_fp : str
-            The prep template filepath that should be concatenated to the
-            sample template go used to generate a new  QIIME mapping file
 
         Returns
         -------
@@ -434,14 +404,29 @@ class PrepTemplate(MetadataTemplate):
         ------
         ValueError
             If the prep template is not a subset of the sample template
+        QiitaDBWarning
+            If the QIIME-required columns are not present in the template
+
+        Notes
+        -----
+        We cannot ensure that the QIIME-required columns are present in the
+        metadata map. However, we have to generate a QIIME-compliant mapping
+        file. Since the user may need a QIIME mapping file, but not these
+        QIIME-required columns, we are going to create them and
+        populate them with the value XXQIITAXX.
         """
         rename_cols = {
             'barcode': 'BarcodeSequence',
-            'barcodesequence': 'BarcodeSequence',
             'primer': 'LinkerPrimerSequence',
-            'linkerprimersequence': 'LinkerPrimerSequence',
             'description': 'Description',
         }
+
+        if 'reverselinkerprimer' in self.categories():
+            rename_cols['reverselinkerprimer'] = 'ReverseLinkerPrimer'
+            new_cols = ['BarcodeSequence', 'LinkerPrimerSequence',
+                        'ReverseLinkerPrimer']
+        else:
+            new_cols = ['BarcodeSequence', 'LinkerPrimerSequence']
 
         # getting the latest sample template
         conn_handler = SQLConnectionHandler()
@@ -458,18 +443,37 @@ class PrepTemplate(MetadataTemplate):
 
         # reading files via pandas
         st = load_template_to_dataframe(sample_template_fp)
-        pt = load_template_to_dataframe(prep_template_fp)
+        pt = self.to_dataframe()
+
         st_sample_names = set(st.index)
         pt_sample_names = set(pt.index)
 
         if not pt_sample_names.issubset(st_sample_names):
             raise ValueError(
-                "Prep template is not a sub set of the sample template, files:"
-                "%s %s - samples: %s" % (sample_template_fp, prep_template_fp,
-                                         str(pt_sample_names-st_sample_names)))
+                "Prep template is not a sub set of the sample template, files"
+                "%s - samples: %s"
+                % (sample_template_fp,
+                   ', '.join(pt_sample_names-st_sample_names)))
 
         mapping = pt.join(st, lsuffix="_prep")
         mapping.rename(columns=rename_cols, inplace=True)
+
+        # Pre-populate the QIIME-required columns with the value XXQIITAXX
+        index = mapping.index
+        placeholder = ['XXQIITAXX'] * len(index)
+        missing = []
+        for val in viewvalues(rename_cols):
+            if val not in mapping:
+                missing.append(val)
+                mapping[val] = pd.Series(placeholder, index=index)
+
+        if missing:
+            warnings.warn(
+                "Some columns required to generate a QIIME-compliant mapping "
+                "file are not present in the template. A placeholder value "
+                "(XXQIITAXX) has been used to populate these columns. Missing "
+                "columns: %s" % ', '.join(missing),
+                QiitaDBWarning)
 
         # Gets the orginal mapping columns and readjust the order to comply
         # with QIIME requirements
@@ -477,7 +481,6 @@ class PrepTemplate(MetadataTemplate):
         cols.remove('BarcodeSequence')
         cols.remove('LinkerPrimerSequence')
         cols.remove('Description')
-        new_cols = ['BarcodeSequence', 'LinkerPrimerSequence']
         new_cols.extend(cols)
         new_cols.append('Description')
         mapping = mapping[new_cols]
@@ -488,11 +491,13 @@ class PrepTemplate(MetadataTemplate):
                         self.id, strftime("%Y%m%d-%H%M%S")))
 
         # Save the mapping file
-        mapping.to_csv(filepath, index_label='#SampleID', na_rep='unknown',
+        mapping.to_csv(filepath, index_label='#SampleID', na_rep='',
                        sep='\t')
 
         # adding the fp to the object
-        self.add_filepath(filepath)
+        self.add_filepath(
+            filepath, conn_handler=conn_handler,
+            fp_id=convert_to_id("qiime_map", "filepath_type"))
 
         return filepath
 
@@ -525,3 +530,25 @@ class PrepTemplate(MetadataTemplate):
         pd_statuses = conn_handler.execute_fetchall(sql, (self._id,))
 
         return infer_status(pd_statuses)
+
+    @property
+    def qiime_map_fp(self):
+        """The QIIME mapping filepath attached to the prep template
+
+        Returns
+        -------
+        str
+            The filepath of the QIIME mapping file
+        """
+        conn_handler = SQLConnectionHandler()
+
+        sql = """SELECT filepath_id, filepath
+                 FROM qiita.filepath
+                    JOIN qiita.{0} USING (filepath_id)
+                    JOIN qiita.filepath_type USING (filepath_type_id)
+                 WHERE {1} = %s AND filepath_type = 'qiime_map'
+                 ORDER BY filepath_id DESC""".format(self._filepath_table,
+                                                     self._id_column)
+        fn = conn_handler.execute_fetchall(sql, (self._id,))[0][1]
+        base_dir = get_mountpoint('templates')[0][1]
+        return join(base_dir, fn)
