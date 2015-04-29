@@ -182,9 +182,9 @@ class TestAnalysis(TestCase):
             "lab_person_id": StudyPerson(1)
         }
         metadata_dict = {
-            'SKB8.640193': {'physical_location': 'location1',
-                            'has_physical_specimen': True,
-                            'has_extracted_data': True,
+            'SKB8.640193': {'physical_specimen_location': 'location1',
+                            'physical_specimen_remaining': True,
+                            'dna_extracted': True,
                             'sample_type': 'type1',
                             'required_sample_info_status': 'received',
                             'collection_timestamp':
@@ -194,9 +194,9 @@ class TestAnalysis(TestCase):
                             'str_column': 'Value for sample 1',
                             'latitude': 42.42,
                             'longitude': 41.41},
-            'SKD8.640184': {'physical_location': 'location1',
-                            'has_physical_specimen': True,
-                            'has_extracted_data': True,
+            'SKD8.640184': {'physical_specimen_location': 'location1',
+                            'physical_specimen_remaining': True,
+                            'dna_extracted': True,
                             'sample_type': 'type1',
                             'required_sample_info_status': 'received',
                             'collection_timestamp':
@@ -206,9 +206,9 @@ class TestAnalysis(TestCase):
                             'str_column': 'Value for sample 2',
                             'latitude': 4.2,
                             'longitude': 1.1},
-            'SKB7.640196': {'physical_location': 'location1',
-                            'has_physical_specimen': True,
-                            'has_extracted_data': True,
+            'SKB7.640196': {'physical_specimen_location': 'location1',
+                            'physical_specimen_remaining': True,
+                            'dna_extracted': True,
                             'sample_type': 'type1',
                             'required_sample_info_status': 'received',
                             'collection_timestamp':

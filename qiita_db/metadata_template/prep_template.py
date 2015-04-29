@@ -421,6 +421,13 @@ class PrepTemplate(MetadataTemplate):
             'description': 'Description',
         }
 
+        if 'reverselinkerprimer' in self.categories():
+            rename_cols['reverselinkerprimer'] = 'ReverseLinkerPrimer'
+            new_cols = ['BarcodeSequence', 'LinkerPrimerSequence',
+                        'ReverseLinkerPrimer']
+        else:
+            new_cols = ['BarcodeSequence', 'LinkerPrimerSequence']
+
         # getting the latest sample template
         conn_handler = SQLConnectionHandler()
         sql = """SELECT filepath_id, filepath
@@ -474,7 +481,6 @@ class PrepTemplate(MetadataTemplate):
         cols.remove('BarcodeSequence')
         cols.remove('LinkerPrimerSequence')
         cols.remove('Description')
-        new_cols = ['BarcodeSequence', 'LinkerPrimerSequence']
         new_cols.extend(cols)
         new_cols.append('Description')
         mapping = mapping[new_cols]
@@ -524,3 +530,25 @@ class PrepTemplate(MetadataTemplate):
         pd_statuses = conn_handler.execute_fetchall(sql, (self._id,))
 
         return infer_status(pd_statuses)
+
+    @property
+    def qiime_map_fp(self):
+        """The QIIME mapping filepath attached to the prep template
+
+        Returns
+        -------
+        str
+            The filepath of the QIIME mapping file
+        """
+        conn_handler = SQLConnectionHandler()
+
+        sql = """SELECT filepath_id, filepath
+                 FROM qiita.filepath
+                    JOIN qiita.{0} USING (filepath_id)
+                    JOIN qiita.filepath_type USING (filepath_type_id)
+                 WHERE {1} = %s AND filepath_type = 'qiime_map'
+                 ORDER BY filepath_id DESC""".format(self._filepath_table,
+                                                     self._id_column)
+        fn = conn_handler.execute_fetchall(sql, (self._id,))[0][1]
+        base_dir = get_mountpoint('templates')[0][1]
+        return join(base_dir, fn)
