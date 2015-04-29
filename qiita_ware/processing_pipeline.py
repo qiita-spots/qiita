@@ -56,7 +56,11 @@ def _get_qiime_minimal_mapping(prep_template, out_dir):
                                          index=qiime_map.index)
 
     # We ensure the order of the columns as QIIME is expecting
-    cols = ['BarcodeSequence', 'LinkerPrimerSequence', 'Description']
+    if 'ReverseLinkerPrimer' in qiime_map:
+        cols = ['BarcodeSequence', 'LinkerPrimerSequence',
+                'ReverseLinkerPrimer', 'Description']
+    else:
+        cols = ['BarcodeSequence', 'LinkerPrimerSequence', 'Description']
 
     path_builder = partial(join, out_dir)
     if 'run_prefix' in qiime_map:

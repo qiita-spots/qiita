@@ -140,7 +140,7 @@ class PrepTemplate(MetadataTemplate):
             "prep_template_id", (data_type_id, raw_data.id,
                                  investigation_type))[0]
 
-        cls._add_common_creation_steps_to_queue(md_template, prep_id,
+        cls._add_commoneation_steps_to_queue(md_template, prep_id,
                                                 conn_handler, queue_name)
 
         try:
@@ -418,6 +418,7 @@ class PrepTemplate(MetadataTemplate):
         rename_cols = {
             'barcode': 'BarcodeSequence',
             'primer': 'LinkerPrimerSequence',
+            'reverselinkerprimer': 'ReverseLinkerPrimer',
             'description': 'Description',
         }
 

@@ -88,6 +88,35 @@ class ProcessingPipelineTests(TestCase):
         with open(exp_fps[0], "U") as f:
             self.assertEqual(f.read(), EXP_PREP)
 
+    def test_get_qiime_minimal_mapping_single_reverse_primer(self):
+        conn_handler = SQLConnectionHandler()
+        conn_handler
+        sql = """INSERT INTO qiita.prep_columns
+                        (prep_template_id, column_name, column_type)
+                    VALUES (1, 'reverselinkerprimer', 'varchar');
+                 ALTER TABLE qiita.prep_1
+                    ADD COLUMN reverselinkerprimer varchar;
+                 DELETE FROM qiita.prep_columns
+                 WHERE prep_template_id = 1 AND column_name = 'run_prefix';
+                 ALTER TABLE qiita.prep_1 DROP COLUMN run_prefix;
+                 UPDATE qiita.prep_1 SET reverselinkerprimer = %s
+                 """
+        conn_handler.execute(sql, ('GTGCCAGCM',))
+        prep_template = PrepTemplate(1)
+        prep_template.generate_files()
+        out_dir = mkdtemp()
+
+        obs_fps = _get_qiime_minimal_mapping(prep_template, out_dir)
+        exp_fps = [join(out_dir, 'prep_1_MMF.txt')]
+
+        # Check that the returned list is as expected
+        self.assertEqual(obs_fps, exp_fps)
+        # Check that the file exists
+        self.assertTrue(exists(exp_fps[0]))
+        # Check the contents of the file
+        with open(exp_fps[0], "U") as f:
+            self.assertEqual(f.read(), EXP_PREP_RLP)
+
     def test_get_qiime_minimal_mapping_multiple(self):
         # We need to create a prep template in which we have different run
         # prefix values, so we can test this case
@@ -520,6 +549,37 @@ EXP_PREP = (
     "1.SKM7.640188\tCGCCGGTAATCT\tGTGCCAGCMGCCGCGGTAA\tQiita MMF\n"
     "1.SKM8.640201\tCCGATGCCTTGA\tGTGCCAGCMGCCGCGGTAA\tQiita MMF\n"
     "1.SKM9.640192\tAGCAGGCACGAA\tGTGCCAGCMGCCGCGGTAA\tQiita MMF\n")
+
+EXP_PREP_RLP = (
+    "#SampleID\tBarcodeSequence\tLinkerPrimerSequence\tReverseLinkerPrimer"
+    "\tDescription\n"
+    "1.SKB1.640202\tGTCCGCAAGTTA\tGTGCCAGCMGCCGCGGTAA\tGTGCCAGCM\tQiita MMF\n"
+    "1.SKB2.640194\tCGTAGAGCTCTC\tGTGCCAGCMGCCGCGGTAA\tGTGCCAGCM\tQiita MMF\n"
+    "1.SKB3.640195\tCCTCTGAGAGCT\tGTGCCAGCMGCCGCGGTAA\tGTGCCAGCM\tQiita MMF\n"
+    "1.SKB4.640189\tCCTCGATGCAGT\tGTGCCAGCMGCCGCGGTAA\tGTGCCAGCM\tQiita MMF\n"
+    "1.SKB5.640181\tGCGGACTATTCA\tGTGCCAGCMGCCGCGGTAA\tGTGCCAGCM\tQiita MMF\n"
+    "1.SKB6.640176\tCGTGCACAATTG\tGTGCCAGCMGCCGCGGTAA\tGTGCCAGCM\tQiita MMF\n"
+    "1.SKB7.640196\tCGGCCTAAGTTC\tGTGCCAGCMGCCGCGGTAA\tGTGCCAGCM\tQiita MMF\n"
+    "1.SKB8.640193\tAGCGCTCACATC\tGTGCCAGCMGCCGCGGTAA\tGTGCCAGCM\tQiita MMF\n"
+    "1.SKB9.640200\tTGGTTATGGCAC\tGTGCCAGCMGCCGCGGTAA\tGTGCCAGCM\tQiita MMF\n"
+    "1.SKD1.640179\tCGAGGTTCTGAT\tGTGCCAGCMGCCGCGGTAA\tGTGCCAGCM\tQiita MMF\n"
+    "1.SKD2.640178\tAACTCCTGTGGA\tGTGCCAGCMGCCGCGGTAA\tGTGCCAGCM\tQiita MMF\n"
+    "1.SKD3.640198\tTAATGGTCGTAG\tGTGCCAGCMGCCGCGGTAA\tGTGCCAGCM\tQiita MMF\n"
+    "1.SKD4.640185\tTTGCACCGTCGA\tGTGCCAGCMGCCGCGGTAA\tGTGCCAGCM\tQiita MMF\n"
+    "1.SKD5.640186\tTGCTACAGACGT\tGTGCCAGCMGCCGCGGTAA\tGTGCCAGCM\tQiita MMF\n"
+    "1.SKD6.640190\tATGGCCTGACTA\tGTGCCAGCMGCCGCGGTAA\tGTGCCAGCM\tQiita MMF\n"
+    "1.SKD7.640191\tACGCACATACAA\tGTGCCAGCMGCCGCGGTAA\tGTGCCAGCM\tQiita MMF\n"
+    "1.SKD8.640184\tTGAGTGGTCTGT\tGTGCCAGCMGCCGCGGTAA\tGTGCCAGCM\tQiita MMF\n"
+    "1.SKD9.640182\tGATAGCACTCGT\tGTGCCAGCMGCCGCGGTAA\tGTGCCAGCM\tQiita MMF\n"
+    "1.SKM1.640183\tTAGCGCGAACTT\tGTGCCAGCMGCCGCGGTAA\tGTGCCAGCM\tQiita MMF\n"
+    "1.SKM2.640199\tCATACACGCACC\tGTGCCAGCMGCCGCGGTAA\tGTGCCAGCM\tQiita MMF\n"
+    "1.SKM3.640197\tACCTCAGTCAAG\tGTGCCAGCMGCCGCGGTAA\tGTGCCAGCM\tQiita MMF\n"
+    "1.SKM4.640180\tTCGACCAAACAC\tGTGCCAGCMGCCGCGGTAA\tGTGCCAGCM\tQiita MMF\n"
+    "1.SKM5.640177\tCCACCCAGTAAC\tGTGCCAGCMGCCGCGGTAA\tGTGCCAGCM\tQiita MMF\n"
+    "1.SKM6.640187\tATATCGCGATGA\tGTGCCAGCMGCCGCGGTAA\tGTGCCAGCM\tQiita MMF\n"
+    "1.SKM7.640188\tCGCCGGTAATCT\tGTGCCAGCMGCCGCGGTAA\tGTGCCAGCM\tQiita MMF\n"
+    "1.SKM8.640201\tCCGATGCCTTGA\tGTGCCAGCMGCCGCGGTAA\tGTGCCAGCM\tQiita MMF\n"
+    "1.SKM9.640192\tAGCAGGCACGAA\tGTGCCAGCMGCCGCGGTAA\tGTGCCAGCM\tQiita MMF\n")
 
 EXP_PREP_1 = (
     "#SampleID\tBarcodeSequence\tLinkerPrimerSequence\tDescription\n"
