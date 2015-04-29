@@ -386,6 +386,7 @@ class TestAnalysis(TestCase):
         self.assertEqual(obs, exp)
 
     def test_build_mapping_file(self):
+        new_id = get_count('qiita.filepath') + 1
         samples = {1: ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196']}
         self.analysis._build_mapping_file(samples,
                                           conn_handler=self.conn_handler)
@@ -400,6 +401,20 @@ class TestAnalysis(TestCase):
                           parse_dates=True, index_col=False, comment='\t')
 
         assert_frame_equal(obs, exp)
+
+        sql = """SELECT * FROM qiita.filepath
+                 WHERE filepath=%s ORDER BY filepath_id"""
+        obs = self.conn_handler.execute_fetchall(
+            sql, ("%d_analysis_mapping.txt" % self.analysis.id,))
+
+        exp = [[15, '1_analysis_mapping.txt', 9, '852952723', 1, 1],
+               [new_id, '1_analysis_mapping.txt', 9, '2349935429', 1, 1]]
+        self.assertEqual(obs, exp)
+
+        sql = """SELECT * FROM qiita.analysis_filepath
+                 WHERE analysis_id=%s ORDER BY filepath_id"""
+        obs = self.conn_handler.execute_fetchall(sql, (self.analysis.id,))
+        exp = [[1L, 14L, 2L], [1L, 15L, None], [1L, new_id, None]]
 
     def test_build_mapping_file_duplicate_samples(self):
         samples = {1: ['1.SKB8.640193', '1.SKB8.640193', '1.SKD8.640184']}
