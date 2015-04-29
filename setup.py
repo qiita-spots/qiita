@@ -26,7 +26,8 @@ classes = """
     Operating System :: MacOS :: MacOS X
 """
 
-long_description = """Qiita: Spot Patterns"""
+with open('README.rst') as f:
+    long_description = f.read()
 
 classifiers = [s.strip() for s in classes.split('\n') if s]
 
