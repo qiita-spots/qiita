@@ -1015,12 +1015,12 @@ class MetadataTemplate(QiitaObject):
         cols = sorted(get_table_cols(self._table_name(self._id), conn_handler))
         # Get all metadata for the template
         sql = """SELECT {0}
-                 FROM qiita.{1}
-                 JOIN qiita.{2} USING (sample_id)
-                 WHERE {3} = %s""".format(", ".join(cols),
-                                          self._table,
-                                          self._table_name(self.id),
-                                          self._id_column)
+                 FROM qiita.{1} st
+                 JOIN qiita.{2} dt USING (sample_id)
+                 WHERE st.{3} = %s""".format(", ".join(cols),
+                                             self._table,
+                                             self._table_name(self.id),
+                                             self._id_column)
         meta = conn_handler.execute_fetchall(sql, (self._id,))
 
         # Create the dataframe and clean it up a bit
