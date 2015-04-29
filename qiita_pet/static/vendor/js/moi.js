@@ -66,15 +66,15 @@ var moi = new function () {
      * websocket. On construction, this method will send a message over the
      * socket to get all known job information associated with this client.
      *
-     * @param {host} The URL for the websocket, minus the ws:// header, or null
-     * to use the default moi-ws.
      * @param {group_id} A group ID to get initial data from, or null to fetch
      * all records associated with the user.
+     * @param {host} The URL for the websocket, minus the ws:// header, or null
+     * to use the default moi-ws.
      * @param {on_open} Optional function for action when websocket is opened.
      * @param {on_close} Optional function for action when websocket is closed.
      * @param {on_error} Optional function for action when websocket errors.
      */
-    this.init = function(host, group_id, on_open, on_close, on_error) {
+    this.init = function(group_id, host, on_open, on_close, on_error) {
         host = host || window.location.host + '/moi-ws/';
         if (!("WebSocket" in window)) {
             alert("Your browser does not appear to support websockets!");
