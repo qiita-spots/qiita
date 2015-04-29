@@ -55,7 +55,7 @@ function fillAbstract(table, row) {
 }
 
 $(document).ready(function() {
-        moi.init(window.location.host + '/study/list/socket/', null, function(){}, error, error);
+        moi.init(null, window.location.host + '/study/list/socket/', function(){}, error, error);
         moi.add_callback('sel', show_alert);
         function format ( d, row ) {
             // `d` is the original data object for the row

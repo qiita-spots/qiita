@@ -58,7 +58,7 @@ function remove_sample_from_html(data) {
     check_color();
 }
 $(document).ready(function() {
-      moi.init(window.location.host + '/analysis/selected/socket/', null, function(){}, error, error);
+      moi.init(null, window.location.host + '/analysis/selected/socket/', function(){}, error, error);
       moi.add_callback('remove_pd', remove_pd_from_html);
       moi.add_callback('remove_sample', remove_sample_from_html);
       moi.add_callback('clear', clear_from_html);
