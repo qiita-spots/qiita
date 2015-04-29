@@ -777,6 +777,9 @@ class Analysis(QiitaStatusObject):
         merged_map.to_csv(mapping_fp, index_label='#SampleID',
                           na_rep='unknown', sep='\t')
 
+        self._add_file("%d_analysis_mapping.txt" % self._id,
+                       "plain_text", conn_handler=conn_handler)
+
     def _add_file(self, filename, filetype, data_type=None, conn_handler=None):
         """adds analysis item to database
 
