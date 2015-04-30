@@ -11,6 +11,11 @@ class TestConnHandler(TestCase):
         self.conn_handler.create_queue("toy_queue")
         self.assertEqual(self.conn_handler.list_queues(), ["toy_queue"])
 
+    def test_close(self):
+        self.assertEqual(self.conn_handler._user_conn.closed, 0)
+        self.conn_handler.close()
+        self.assertNotEqual(self.conn_handler._user_conn.closed, 0)
+
     def test_run_queue(self):
         self.conn_handler.create_queue("toy_queue")
         self.conn_handler.add_to_queue(

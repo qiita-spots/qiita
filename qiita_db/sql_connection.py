@@ -122,6 +122,38 @@ class SQLConnectionHandler(object):
         2275: str,  # cstring
     }
 
+    _user_args = {
+        'user': qiita_config.user,
+        'password': qiita_config.password,
+        'database': qiita_config.database,
+        'host': qiita_config.host,
+        'port': qiita_config.port}
+
+    _admin_args = {
+        'user': qiita_config.admin_user,
+        'password': qiita_config.admin_password,
+        'database': qiita_config.database,
+        'host': qiita_config.host,
+        'port': qiita_config.port}
+
+    _admin_nodb_args = {
+        'user': qiita_config.admin_user,
+        'password': qiita_config.admin_password,
+        'host': qiita_config.host,
+        'port': qiita_config.port}
+
+    _user_conn = None
+    _admin_conn = None
+    _admin_nodb_conn = None
+
+    _conn_map = {'no_admin': '_user_conn',
+                 'admin_with_database': '_admin_conn',
+                 'admin_without_database': '_admin_nodb_conn'}
+
+    _args_map = {'no_admin': '_user_args',
+                 'admin_with_database': '_admin_args',
+                 'admin_without_database': '_admin_nodb_args'}
+
     """Encapsulates the DB connection with the Postgres DB
 
     Parameters
@@ -142,39 +174,25 @@ class SQLConnectionHandler(object):
                                "'admin_without_database'}")
 
         self.admin = admin
+
+        self._conn_attr = self._conn_map[self.admin]
+        self._args_attr = self._args_map[self.admin]
+        self._conn_args = getattr(SQLConnectionHandler, self._args_attr)
+        self._connection = getattr(SQLConnectionHandler, self._conn_attr)
         self._open_connection()
+
         # queues for transaction blocks. Format is {str: list} where the str
         # is the queue name and the list is the queue of SQL commands
         self.queues = {}
 
-    def __del__(self):
-        # make sure if connection close fails it doesn't raise error
-        # should only error if connection already closed
-        try:
-            self._connection.close()
-        except:
-            pass
-
     def _open_connection(self):
-        # connection string arguments for a normal user
-        args = {
-            'user': qiita_config.user,
-            'password': qiita_config.password,
-            'database': qiita_config.database,
-            'host': qiita_config.host,
-            'port': qiita_config.port}
-
-        # if this is an admin user, use the admin credentials
-        if self.admin != 'no_admin':
-            args['user'] = qiita_config.admin_user
-            args['password'] = qiita_config.admin_password
-
-        # Do not connect to a particular database unless requested
-        if self.admin == 'admin_without_database':
-            del args['database']
+        # if the connection has been created and is not closed
+        if self._connection is not None and self._connection.closed == 0:
+            return
 
         try:
-            self._connection = connect(**args)
+            setattr(SQLConnectionHandler, self._conn_attr,
+                    connect(**self._conn_args))
         except OperationalError as e:
             # catch threee known common exceptions and raise runtime errors
             try:
@@ -202,6 +220,19 @@ class SQLConnectionHandler(object):
                      '\n\n\t%s\n%s For more information, review `INSTALL.md`'
                      ' in the Qiita installation base directory.')
             raise RuntimeError(ebase % (e.message, etext))
+        else:
+            self._connection = getattr(SQLConnectionHandler, self._conn_attr)
+
+    @staticmethod
+    def close():
+        if SQLConnectionHandler._user_conn is not None:
+            SQLConnectionHandler._user_conn.close()
+
+        if SQLConnectionHandler._admin_conn is not None:
+            SQLConnectionHandler._admin_conn.close()
+
+        if SQLConnectionHandler._admin_nodb_conn is not None:
+            SQLConnectionHandler._admin_nodb_conn.close()
 
     @contextmanager
     def get_postgres_cursor(self):
@@ -213,9 +244,7 @@ class SQLConnectionHandler(object):
 
         Raises a QiitaDBConnectionError if the cursor cannot be created
         """
-        if self._connection.closed:
-            # Currently defaults to non-admin connection
-            self._open_connection()
+        self._open_connection()
 
         try:
             with self._connection.cursor(cursor_factory=DictCursor) as cur:
