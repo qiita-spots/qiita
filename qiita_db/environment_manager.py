@@ -231,6 +231,11 @@ def make_environment(load_ontologies, download_reference, add_demo_user):
             ('demo@microbio.me', 4,
              '$2a$12$gnUi8Qg.0tvW243v889BhOBhWLIHyIJjjgaG6dxuRJkUM8nXG9Efe',
              'Demo', 'Qitta Dev', '1345 Colorado Avenue', '303-492-1984')""")
+        conn.execute("""
+            INSERT INTO qiita.analysis (email, name, description, dflt,
+                                        analysis_status_id)
+            VALUES
+            ('demo@microbio.me', 'demo@microbio.me-dflt', 'dflt', 't', 1)""")
 
         print('Demo user successfully created')
 
