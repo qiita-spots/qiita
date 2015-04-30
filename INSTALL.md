@@ -104,3 +104,12 @@ If running on OS X you should make sure that the Xcode and the Xcode command lin
 ### postgres
 
 If you are using Postgres.app on OSX, a database user will be created with your system username. If you want to use this user account, change the `USER` and `ADMIN_USER` settings to your username under the `[postgres]` section of your Qiita config file.
+
+## Troubleshooting installation issues with Python
+
+As a general rule of thumb you will want to have an updated version of Python
+2.7 and an updated version of pip (`pip install -U pip` will do the trick).
+
+H5PY is known to cause a few problems, however their [installation
+instructions](http://docs.h5py.org/en/latest/build.html) are a great resource
+to troubleshoot your system in case any of the steps above fail.
