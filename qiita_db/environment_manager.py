@@ -270,6 +270,7 @@ def drop_environment(ask_for_confirmation):
             do_drop = True
 
     if do_drop:
+        SQLConnectionHandler.close()
         admin_conn = SQLConnectionHandler(admin='admin_without_database')
         admin_conn.set_autocommit('on')
         admin_conn.execute('DROP DATABASE %s' % qiita_config.database)

@@ -59,7 +59,9 @@ class BaseHandler(RequestHandler):
 class MainHandler(BaseHandler):
     '''Index page'''
     def get(self):
-        self.render("index.html", message='', level='')
+        msg = self.get_argument('message', '')
+        lvl = self.get_argument('level', '')
+        self.render("index.html", message=msg, level=lvl)
 
 
 class MockupHandler(BaseHandler):
