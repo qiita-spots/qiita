@@ -66,7 +66,7 @@ After these commands are executed, you will need to:
   qiita webserver start
   ```
 
-If all the above commands executed correctly, you should be able to go to http://localhost:21174 in your browser, to login use `demo@microbio.me` and `password` as the credentials. (In the future, we will have a *single user mode* that will allow you to use a local Qiita server without logging in. You can track progress on this on issue [#920](https://github.com/biocore/qiita/issues/920).)
+If all the above commands executed correctly, you should be able to go to http://localhost:21174 in your browser, to login use `test@foo.bar` and `password` as the credentials. (In the future, we will have a *single user mode* that will allow you to use a local Qiita server without logging in. You can track progress on this on issue [#920](https://github.com/biocore/qiita/issues/920).)
 
 ## Installation issues on Ubuntu 14.04
 
