@@ -223,6 +223,17 @@ class SQLConnectionHandler(object):
         else:
             self._connection = getattr(SQLConnectionHandler, self._conn_attr)
 
+    @staticmethod
+    def close():
+        if SQLConnectionHandler._user_conn is not None:
+            SQLConnectionHandler._user_conn.close()
+
+        if SQLConnectionHandler._admin_conn is not None:
+            SQLConnectionHandler._admin_conn.close()
+
+        if SQLConnectionHandler._admin_nodb_conn is not None:
+            SQLConnectionHandler._admin_nodb_conn.close()
+
     @contextmanager
     def get_postgres_cursor(self):
         """ Returns a Postgres cursor

@@ -80,14 +80,7 @@ def qiita_test_checker():
             @reset_test_database
             def tearDown(self):
                 super(DecoratedClass, self).tearDown()
-                if self.conn_handler._user_conn is not None:
-                    self.conn_handler._user_conn.close()
-
-                if self.conn_handler._admin_conn is not None:
-                    self.conn_handler._admin_conn.close()
-
-                if self.conn_handler._admin_nodb_conn is not None:
-                    self.conn_handler._admin_nodb_conn.close()
+                self.conn_handler.close()
 
         return DecoratedClass
     return class_modifier
