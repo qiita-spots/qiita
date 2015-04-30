@@ -9,7 +9,15 @@ Install the non-python dependencies
 * [PostgreSQL](http://www.postgresql.org/download/) (we have tested most extensively with 9.3)
 * [redis-server](http://redis.io) (we have tested most extensively with 2.8.17)
 
-Install both of these packages according to the instructions on their websites. You'll then need to ensure that the postgres binaries (for example, ``psql``) are in your executable search path (``$PATH`` environment variable).
+Install both of these packages according to the instructions on their websites.
+You'll then need to ensure that the postgres binaries (for example, ``psql``)
+are in your executable search path (``$PATH`` environment variable). For
+example if you are using Postgres.app on OS X, you can do this by addint
+the following line to your `.bash_profile`:
+
+```bash
+export PATH=$PATH:/Applications/Postgres.app/Contents/Versions/9.3/bin/
+```
 
 Install Qiita and its python dependencies
 -----------------------------------------
@@ -29,7 +37,7 @@ After these commands are executed, you will need to:
 
   ```bash
   cd
-  curl -O https://raw.githubusercontent.com/biocore/qiita/master/qiita_core/support_files/config_test.txt > config_test.txt
+  curl -O https://raw.githubusercontent.com/biocore/qiita/master/qiita_core/support_files/config_test.txt
   ```
 
 2. Set your `QIITA_CONFIG_FP` environment variable to point to that file:
@@ -46,10 +54,15 @@ After these commands are executed, you will need to:
   qiita_env make --no-load-ontologies
   ```
 
-4. Finally you can start the server:
+4. Start the redis server:
+  ```bash
+  redis-server
+  ```
+
+5. Finally you can start the server:
 
   ```bash
-  qiita_env start_cluster demo test reserved && sleep 30
+  qiita_env start_cluster qiita_general && sleep 30
   qiita webserver start
   ```
 
