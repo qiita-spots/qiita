@@ -10,11 +10,11 @@
 from setuptools import setup
 from glob import glob
 
-__version__ = "0.0.1-dev"
+__version__ = "0.1.0"
 
 
 classes = """
-    Development Status :: 2 - Pre-Alpha
+    Development Status :: 3 - Alpha
     License :: OSI Approved :: BSD License
     Topic :: Scientific/Engineering :: Bio-Informatics
     Topic :: Software Development :: Libraries :: Application Frameworks
@@ -26,7 +26,8 @@ classes = """
     Operating System :: MacOS :: MacOS X
 """
 
-long_description = """Qiita: Spot Patterns"""
+with open('README.rst') as f:
+    long_description = f.read()
 
 classifiers = [s.strip() for s in classes.split('\n') if s]
 
@@ -43,7 +44,9 @@ setup(name='qiita-spots',
                 'qiita_db',
                 'qiita_db/metadata_template/',
                 'qiita_pet',
+                'qiita_pet/uimodules',
                 'qiita_pet/handlers',
+                'qiita_pet/handlers/study_handlers',
                 'qiita_ware'
                 ],
       package_data={'qiita_core': ['support_files/config_test.txt'],

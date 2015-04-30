@@ -94,7 +94,7 @@ def _add_ontology_data(conn):
               "To download the file again, delete the existing file first."
               % fp)
     else:
-        url = 'ftp://thebeast.colorado.edu/pub/qiita/qiita_ontoandvocab.sql.gz'
+        url = 'ftp://ftp.microbio.me/pub/qiita/qiita_ontoandvocab.sql.gz'
         try:
             urlretrieve(url, fp)
         except:
@@ -121,13 +121,13 @@ def _download_reference_files(conn):
         mkdir(reference_base_dir)
 
     files = {'tree': (get_reference_fp('gg_13_8-97_otus.tree'),
-                      'ftp://thebeast.colorado.edu/greengenes_release/'
+                      'ftp://ftp.microbio.me/greengenes_release/'
                       'gg_13_8_otus/trees/97_otus.tree'),
              'taxonomy': (get_reference_fp('gg_13_8-97_otu_taxonomy.txt'),
-                          'ftp://thebeast.colorado.edu/greengenes_release/'
+                          'ftp://ftp.microbio.me/greengenes_release/'
                           'gg_13_8_otus/taxonomy/97_otu_taxonomy.txt'),
              'sequence': (get_reference_fp('gg_13_8-97_otus.fasta'),
-                          'ftp://thebeast.colorado.edu/greengenes_release/'
+                          'ftp://ftp.microbio.me/greengenes_release/'
                           'gg_13_8_otus/rep_set/97_otus.fasta')}
 
     for file_type, (local_fp, url) in viewitems(files):
@@ -231,6 +231,11 @@ def make_environment(load_ontologies, download_reference, add_demo_user):
             ('demo@microbio.me', 4,
              '$2a$12$gnUi8Qg.0tvW243v889BhOBhWLIHyIJjjgaG6dxuRJkUM8nXG9Efe',
              'Demo', 'Qitta Dev', '1345 Colorado Avenue', '303-492-1984')""")
+        conn.execute("""
+            INSERT INTO qiita.analysis (email, name, description, dflt,
+                                        analysis_status_id)
+            VALUES
+            ('demo@microbio.me', 'demo@microbio.me-dflt', 'dflt', 't', 1)""")
 
         print('Demo user successfully created')
 
