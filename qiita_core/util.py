@@ -80,7 +80,6 @@ def qiita_test_checker():
             @reset_test_database
             def tearDown(self):
                 super(DecoratedClass, self).tearDown()
-                self.conn_handler.close()
 
         return DecoratedClass
     return class_modifier
