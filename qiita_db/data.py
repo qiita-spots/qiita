@@ -139,7 +139,7 @@ class BaseData(QiitaObject):
             "VALUES (%s, %s)".format(self._data_filepath_table,
                                      self._data_filepath_column), values)
 
-    def add_filepaths(self, filepaths, conn_handler=None):
+    def add_filepaths(self, filepaths):
         r"""Populates the DB tables for storing the filepaths and connects the
         `self` objects with these filepaths"""
         # Check that this function has been called from a subclass
@@ -326,7 +326,7 @@ class RawData(BaseData):
 
         # If file paths have been provided, add them to the raw data object
         if filepaths:
-            rd.add_filepaths(filepaths, conn_handler)
+            rd.add_filepaths(filepaths)
 
         return rd
 
@@ -465,13 +465,8 @@ class RawData(BaseData):
                "WHERE raw_data_id = %s ORDER BY prep_template_id")
         return [x[0] for x in conn_handler.execute_fetchall(sql, (self._id,))]
 
-    def _is_preprocessed(self, conn_handler=None):
+    def _is_preprocessed(self):
         """Returns whether the RawData has been preprocessed or not
-
-        Parameters
-        ----------
-        conn_handler : SQLConnectionHandler
-            The connection handler object connected to the DB
 
         Returns
         -------
@@ -507,7 +502,7 @@ class RawData(BaseData):
         """
         # If the RawData has been already preprocessed, we cannot remove any
         # file - raise an error
-        if self._is_preprocessed(conn_handler):
+        if self._is_preprocessed():
             msg = ("Cannot clear all the filepaths from raw data %s, it has "
                    "been already preprocessed" % self._id)
             self._set_link_filepaths_status("failed: %s" % msg)
@@ -525,7 +520,7 @@ class RawData(BaseData):
             raise QiitaDBError(msg)
 
         # Get the filpeath id
-        fp_id = get_filepath_id(self._table, fp, conn_handler)
+        fp_id = get_filepath_id(self._table, fp)
         fp_is_mine = conn_handler.execute_fetchone(
             "SELECT EXISTS(SELECT * FROM qiita.{0} WHERE filepath_id=%s AND "
             "{1}=%s)".format(self._data_filepath_table,
@@ -803,7 +798,7 @@ class PreprocessedData(BaseData):
             conn_handler.execute_queue(q)
 
         # Add the filepaths to the database and connect them
-        ppd.add_filepaths(filepaths, conn_handler)
+        ppd.add_filepaths(filepaths)
         return ppd
 
     @classmethod
@@ -1320,7 +1315,7 @@ class ProcessedData(BaseData):
             "(%s, %s)".format(cls._study_processed_table),
             (study_id, pd_id))
 
-        pd.add_filepaths(filepaths, conn_handler)
+        pd.add_filepaths(filepaths)
         return cls(pd_id)
 
     @classmethod

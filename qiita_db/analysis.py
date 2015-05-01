@@ -655,11 +655,9 @@ class Analysis(QiitaStatusObject):
             if rarefaction_depth <= 0:
                 raise ValueError("rarefaction_depth must be greater than 0")
 
-        conn_handler = SQLConnectionHandler()
         samples = self._get_samples()
         self._build_mapping_file(samples)
-        self._build_biom_tables(samples, rarefaction_depth,
-                                conn_handler=conn_handler)
+        self._build_biom_tables(samples, rarefaction_depth)
 
     def _get_samples(self):
         """Retrieves dict of samples to proc_data_id for the analysis"""
@@ -669,8 +667,7 @@ class Analysis(QiitaStatusObject):
                "GROUP BY processed_data_id")
         return dict(conn_handler.execute_fetchall(sql, [self._id]))
 
-    def _build_biom_tables(self, samples, rarefaction_depth,
-                           conn_handler=None):
+    def _build_biom_tables(self, samples, rarefaction_depth):
         """Build tables and add them to the analysis"""
         # filter and combine all study BIOM tables needed for each data type
         new_tables = {dt: None for dt in self.data_types}
@@ -700,7 +697,6 @@ class Analysis(QiitaStatusObject):
                 new_tables[data_type] = new_tables[data_type].merge(table)
 
         # add the new tables to the analysis
-        conn_handler = SQLConnectionHandler()
         _, base_fp = get_mountpoint(self._table)[0]
         for dt, biom_table in viewitems(new_tables):
             # rarefy, if specified
@@ -712,7 +708,7 @@ class Analysis(QiitaStatusObject):
                 biom_table.to_hdf5(f, "Analysis %s Datatype %s" %
                                    (self._id, dt))
             self._add_file("%d_analysis_%s.biom" % (self._id, dt),
-                           "biom", data_type=dt, conn_handler=conn_handler)
+                           "biom", data_type=dt)
 
     def _build_mapping_file(self, samples):
         """Builds the combined mapping file for all samples
@@ -773,10 +769,9 @@ class Analysis(QiitaStatusObject):
         merged_map.to_csv(mapping_fp, index_label='#SampleID',
                           na_rep='unknown', sep='\t')
 
-        self._add_file("%d_analysis_mapping.txt" % self._id,
-                       "plain_text", conn_handler=conn_handler)
+        self._add_file("%d_analysis_mapping.txt" % self._id, "plain_text")
 
-    def _add_file(self, filename, filetype, data_type=None, conn_handler=None):
+    def _add_file(self, filename, filetype, data_type=None):
         """adds analysis item to database
 
         Parameters
@@ -785,7 +780,6 @@ class Analysis(QiitaStatusObject):
             filename to add to analysis
         filetype : {plain_text, biom}
         data_type : str, optional
-        conn_handler : SQLConnectionHandler object, optional
         """
         conn_handler = SQLConnectionHandler()
 

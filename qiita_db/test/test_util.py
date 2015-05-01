@@ -446,12 +446,12 @@ class DBUtilTests(TestCase):
     def test_get_filepath_id(self):
         _, base = get_mountpoint("raw_data")[0]
         fp = join(base, '1_s_G1_L001_sequences.fastq.gz')
-        obs = get_filepath_id("raw_data", fp, self.conn_handler)
+        obs = get_filepath_id("raw_data", fp)
         self.assertEqual(obs, 1)
 
     def test_get_filepath_id_error(self):
         with self.assertRaises(QiitaDBError):
-            get_filepath_id("raw_data", "Not_a_path", self.conn_handler)
+            get_filepath_id("raw_data", "Not_a_path")
 
     def test_get_mountpoint(self):
         exp = [(5, join(get_db_files_base_dir(), 'raw_data', ''))]

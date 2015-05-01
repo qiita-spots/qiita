@@ -740,7 +740,7 @@ def move_filepaths_to_upload_folder(study_id, filepaths):
         move(fp, destination)
 
 
-def get_filepath_id(table, fp, conn_handler):
+def get_filepath_id(table, fp):
     """Return the filepath_id of fp
 
     Parameters
@@ -749,14 +749,13 @@ def get_filepath_id(table, fp, conn_handler):
         The table type so we can search on this one
     fp : str
         The filepath
-    conn_handler : SQLConnectionHandler
-            The sql connection object
 
     Raises
     ------
     QiitaDBError
         If fp is not stored in the DB.
     """
+    conn_handler = SQLConnectionHandler()
     _, mp = get_mountpoint(table)[0]
     base_fp = join(get_db_files_base_dir(), mp)
 

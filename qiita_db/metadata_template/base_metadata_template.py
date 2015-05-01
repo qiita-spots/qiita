@@ -1025,7 +1025,7 @@ class MetadataTemplate(QiitaObject):
 
         return df
 
-    def add_filepath(self, filepath, conn_handler=None, fp_id=None):
+    def add_filepath(self, filepath, fp_id=None):
         r"""Populates the DB tables for storing the filepath and connects the
         `self` objects with this filepath"""
         # Check that this function has been called from a subclass
@@ -1050,7 +1050,7 @@ class MetadataTemplate(QiitaObject):
                             info={self.__class__.__name__: self.id})
             raise e
 
-    def get_filepaths(self, conn_handler=None):
+    def get_filepaths(self):
         r"""Retrieves the list of (filepath_id, filepath)"""
         # Check that this function has been called from a subclass
         self._check_subclass()

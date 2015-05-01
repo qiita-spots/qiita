@@ -237,8 +237,7 @@ class TestAnalysis(TestCase):
 
         samples = {1: ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196'],
                    2: ['2.SKB8.640193', '2.SKD8.640184']}
-        self.analysis._build_biom_tables(samples, 10000,
-                                         conn_handler=self.conn_handler)
+        self.analysis._build_biom_tables(samples, 10000)
         exp = {1: {'1.SKM4.640180', '1.SKM9.640192'},
                2: {'2.SKB7.640196'}}
         self.assertEqual(self.analysis.dropped_samples, exp)
@@ -423,8 +422,7 @@ class TestAnalysis(TestCase):
     def test_build_biom_tables(self):
         new_id = get_count('qiita.filepath') + 1
         samples = {1: ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196']}
-        self.analysis._build_biom_tables(samples, 100,
-                                         conn_handler=self.conn_handler)
+        self.analysis._build_biom_tables(samples, 100)
         obs = self.analysis.biom_tables
 
         self.assertEqual(obs, {'18S': self.biom_fp})

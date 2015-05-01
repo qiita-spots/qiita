@@ -415,7 +415,7 @@ class User(QiitaObject):
             "SELECT password FROM qiita.{0} WHERE email = %s".format(
                 self._table), (self._id, ))[0]
         if dbpass == hash_password(oldpass, dbpass):
-            self._change_pass(newpass, conn_handler=conn_handler)
+            self._change_pass(newpass)
             return True
         return False
 
@@ -448,7 +448,7 @@ class User(QiitaObject):
             return True
         return False
 
-    def _change_pass(self, newpass, conn_handler=None):
+    def _change_pass(self, newpass):
         if not validate_password(newpass):
             raise IncorrectPasswordError("Bad password given!")
 
