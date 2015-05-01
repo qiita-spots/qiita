@@ -32,7 +32,8 @@ from qiita_db.util import (exists_table, get_db_files_base_dir, get_mountpoint,
                            get_count)
 from qiita_db.metadata_template.prep_template import PrepTemplate, PrepSample
 from qiita_db.metadata_template.sample_template import SampleTemplate, Sample
-from qiita_db.metadata_template.constants import PREP_TEMPLATE_COLUMNS
+from qiita_db.metadata_template.constants import (
+    PREP_TEMPLATE_COLUMNS, PREP_TEMPLATE_COLUMNS_TARGET_GENE)
 
 
 class BaseTestPrepSample(TestCase):
@@ -1298,6 +1299,20 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
         exp = join(get_mountpoint('templates')[0][1],
                    '1_prep_1_qiime_19700101-000000.txt')
         self.assertEqual(pt.qiime_map_fp, exp)
+
+    def test_check_restrictions(self):
+        obs = self.tester.check_restrictions([PREP_TEMPLATE_COLUMNS['EBI']])
+        self.assertEqual(obs, set())
+
+        del self.metadata['primer']
+        pt = npt.assert_warns(QiitaDBWarning, PrepTemplate.create,
+                              self.metadata, self.new_raw_data,
+                              self.test_study, self.data_type)
+
+        obs = pt.check_restrictions(
+            [PREP_TEMPLATE_COLUMNS['EBI'],
+             PREP_TEMPLATE_COLUMNS_TARGET_GENE['demultiplex']])
+        self.assertEqual(obs, {'primer'})
 
 
 EXP_PREP_TEMPLATE = (

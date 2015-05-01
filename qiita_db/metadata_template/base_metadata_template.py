@@ -1157,3 +1157,24 @@ class MetadataTemplate(QiitaObject):
                     % (category, value_str, value_types_str, column_type))
 
             raise e
+
+    def check_restrictions(self, restrictions):
+        """Checks if the template fulfills the restrictions
+
+        Parameters
+        ----------
+        restrictions : list of Restriction
+            The restrictions to test if the template fulfills
+
+        Returns
+        -------
+        set of str
+            The missing columns
+        """
+        def _col_iter():
+            for restriction in restrictions:
+                for col in restriction.columns:
+                    yield col
+        categories = self.categories()
+        missing = {col for col in _col_iter() if col not in categories}
+        return missing
