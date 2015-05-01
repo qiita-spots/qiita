@@ -175,8 +175,7 @@ class TestStudy(TestCase):
     def _change_processed_data_status(self, new_status):
         # Change the status of the studies by changing the status of their
         # processed data
-        id_status = convert_to_id(new_status, 'processed_data_status',
-                                  self.conn_handler)
+        id_status = convert_to_id(new_status, 'processed_data_status')
         self.conn_handler.execute(
             "UPDATE qiita.processed_data SET processed_data_status_id = %s",
             (id_status,))

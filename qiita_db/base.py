@@ -113,15 +113,13 @@ class QiitaObject(object):
             raise IncompetentQiitaDeveloperError(
                 "Could not instantiate an object of the base class")
 
-    def _check_id(self, id_, conn_handler=None):
+    def _check_id(self, id_):
         r"""Check that the provided ID actually exists on the database
 
         Parameters
         ----------
         id_ : object
             The ID to test
-        conn_handler : SQLConnectionHandler
-            The connection handler object connected to the DB
 
         Notes
         -----
@@ -132,8 +130,7 @@ class QiitaObject(object):
         """
         self._check_subclass()
 
-        conn_handler = (conn_handler if conn_handler is not None
-                        else SQLConnectionHandler())
+        conn_handler = SQLConnectionHandler()
 
         return conn_handler.execute_fetchone(
             "SELECT EXISTS(SELECT * FROM qiita.{0} WHERE "
@@ -229,7 +226,7 @@ class QiitaStatusObject(QiitaObject):
             "(SELECT {0}_status_id FROM qiita.{0}_status WHERE status = %s) "
             "WHERE {0}_id = %s".format(self._table), (status, self._id))
 
-    def check_status(self, status, exclude=False, conn_handler=None):
+    def check_status(self, status, exclude=False):
         r"""Checks status of object.
 
         Parameters
@@ -239,8 +236,6 @@ class QiitaStatusObject(QiitaObject):
         exclude: bool, optional
             If True, will check that database status is NOT one of the statuses
             passed. Default False.
-        conn_handler: SQLConnectionHandler, optional
-            The connection handler object connected to the DB
 
         Returns
         -------
@@ -265,8 +260,8 @@ class QiitaStatusObject(QiitaObject):
         self._check_subclass()
 
         # Get all available statuses
-        conn_handler = (conn_handler if conn_handler is not None
-                        else SQLConnectionHandler())
+        conn_handler = SQLConnectionHandler()
+
         statuses = [x[0] for x in conn_handler.execute_fetchall(
             "SELECT DISTINCT status FROM qiita.{0}_status".format(self._table),
             (self._id, ))]

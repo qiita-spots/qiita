@@ -195,7 +195,7 @@ class BaseSample(QiitaObject):
             The set of all available metadata categories
         """
         # Get all the columns
-        cols = get_table_cols(self._dynamic_table, conn_handler)
+        cols = get_table_cols(self._dynamic_table)
         # Remove the sample_id column as this column is used internally for
         # data storage and it doesn't actually belong to the metadata
         cols.remove('sample_id')
@@ -489,11 +489,12 @@ class MetadataTemplate(QiitaObject):
     _id_column = None
     _sample_cls = None
 
-    def _check_id(self, id_, conn_handler=None):
+    def _check_id(self, id_):
         r"""Checks that the MetadataTemplate id_ exists on the database"""
         self._check_subclass()
-        conn_handler = (conn_handler if conn_handler is not None
-                        else SQLConnectionHandler())
+
+        conn_handler = SQLConnectionHandler()
+
         return conn_handler.execute_fetchone(
             "SELECT EXISTS(SELECT * FROM qiita.{0} WHERE "
             "{1}=%s)".format(self._table, self._id_column),
@@ -1012,7 +1013,7 @@ class MetadataTemplate(QiitaObject):
             The metadata in the template,indexed on sample id
         """
         conn_handler = SQLConnectionHandler()
-        cols = sorted(get_table_cols(self._table_name(self._id), conn_handler))
+        cols = sorted(get_table_cols(self._table_name(self._id)))
         # Get all metadata for the template
         sql = "SELECT {0} FROM qiita.{1}".format(", ".join(cols),
                                                  self._table_name(self.id))
@@ -1024,7 +1025,7 @@ class MetadataTemplate(QiitaObject):
 
         return df
 
-    def add_filepath(self, filepath, conn_handler=None, fp_id=None):
+    def add_filepath(self, filepath, fp_id=None):
         r"""Populates the DB tables for storing the filepath and connects the
         `self` objects with this filepath"""
         # Check that this function has been called from a subclass
@@ -1032,7 +1033,7 @@ class MetadataTemplate(QiitaObject):
 
         # Check if the connection handler has been provided. Create a new
         # one if not.
-        conn_handler = conn_handler if conn_handler else SQLConnectionHandler()
+        conn_handler = SQLConnectionHandler()
         fp_id = self._fp_id if fp_id is None else fp_id
 
         try:
@@ -1049,14 +1050,14 @@ class MetadataTemplate(QiitaObject):
                             info={self.__class__.__name__: self.id})
             raise e
 
-    def get_filepaths(self, conn_handler=None):
+    def get_filepaths(self):
         r"""Retrieves the list of (filepath_id, filepath)"""
         # Check that this function has been called from a subclass
         self._check_subclass()
 
         # Check if the connection handler has been provided. Create a new
         # one if not.
-        conn_handler = conn_handler if conn_handler else SQLConnectionHandler()
+        conn_handler = SQLConnectionHandler()
 
         try:
             filepath_ids = conn_handler.execute_fetchall(
@@ -1070,7 +1071,7 @@ class MetadataTemplate(QiitaObject):
                             info={self.__class__.__name__: self.id})
             raise e
 
-        _, fb = get_mountpoint('templates', conn_handler)[0]
+        _, fb = get_mountpoint('templates')[0]
         base_fp = partial(join, fb)
 
         return [(fpid, base_fp(fp)) for fpid, fp in filepath_ids]

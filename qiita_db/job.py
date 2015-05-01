@@ -110,7 +110,7 @@ class Job(QiitaStatusObject):
         """
         conn_handler = SQLConnectionHandler()
         # check passed arguments and grab analyses for matching jobs
-        datatype_id = convert_to_id(datatype, "data_type", conn_handler)
+        datatype_id = convert_to_id(datatype, "data_type")
         sql = "SELECT command_id FROM qiita.command WHERE name = %s"
         command_id = conn_handler.execute_fetchone(sql, (command, ))[0]
         opts_json = params_dict_to_json(options)
@@ -238,7 +238,7 @@ class Job(QiitaStatusObject):
                     "analysis: %s" % (datatype, command, options, analysis.id))
 
         # Get the datatype and command ids from the strings
-        datatype_id = convert_to_id(datatype, "data_type", conn_handler)
+        datatype_id = convert_to_id(datatype, "data_type")
         sql = "SELECT command_id FROM qiita.command WHERE name = %s"
         command_id = conn_handler.execute_fetchone(sql, (command, ))[0]
         opts_json = params_dict_to_json(options)
@@ -297,7 +297,7 @@ class Job(QiitaStatusObject):
                "job_id = %s)".format(self._table))
         db_comm = conn_handler.execute_fetchone(sql, (self._id, ))
         out_opt = loads(db_comm[1])
-        basedir = get_db_files_base_dir(conn_handler)
+        basedir = get_db_files_base_dir()
         join_f = partial(join, join(basedir, "job"))
         for k in out_opt:
             opts[k] = join_f("%s_%s_%s" % (self._id, db_comm[0], k.strip("-")))
@@ -422,7 +422,7 @@ class Job(QiitaStatusObject):
         conn_handler = SQLConnectionHandler()
         self._lock_job(conn_handler)
         # convert all file type text to file type ids
-        res_ids = [(fp, convert_to_id(fptype, "filepath_type", conn_handler))
+        res_ids = [(fp, convert_to_id(fptype, "filepath_type"))
                    for fp, fptype in results]
         file_ids = insert_filepaths(res_ids, self._id, self._table,
                                     "filepath", conn_handler, move_files=False)
@@ -485,7 +485,7 @@ class Command(object):
         conn_handler = SQLConnectionHandler()
         # get the ids of the datatypes to get commands for
         if datatypes is not None:
-            datatype_info = [(convert_to_id(dt, "data_type", conn_handler), dt)
+            datatype_info = [(convert_to_id(dt, "data_type"), dt)
                              for dt in datatypes]
         else:
             datatype_info = conn_handler.execute_fetchall(

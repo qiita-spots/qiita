@@ -14,7 +14,7 @@ filepaths = conn_handler.execute_fetchall(
 
 # retrieve relative filepaths as dictionary for matching
 mountpoints = {m[1].rstrip('/\\'): m[0] for m in get_mountpoint(
-    'analysis', conn_handler=conn_handler, retrieve_all=True)}
+    'analysis', retrieve_all=True)}
 
 for filepath in filepaths:
     filename = basename(filepath['filepath'])

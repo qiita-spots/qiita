@@ -116,15 +116,13 @@ class BaseParameters(QiitaObject):
         del result['param_set_name']
         return result
 
-    def _check_id(self, id_, conn_handler=None):
+    def _check_id(self, id_):
         r"""Check that the provided ID actually exists in the database
 
         Parameters
         ----------
         id_ : object
             The ID to test
-        conn_handler : SQLConnectionHandler
-            The connection handler object connected to the DB
 
         Notes
         -----
@@ -133,15 +131,16 @@ class BaseParameters(QiitaObject):
         """
         self._check_subclass()
 
-        conn_handler = (conn_handler if conn_handler is not None
-                        else SQLConnectionHandler())
+        conn_handler = SQLConnectionHandler()
+
         return conn_handler.execute_fetchone(
             "SELECT EXISTS(SELECT * FROM qiita.{0} WHERE {1} = %s)".format(
                 self._table, self._column_id),
             (id_, ))[0]
 
-    def _get_values_as_dict(self, conn_handler):
+    def _get_values_as_dict(self):
         r""""""
+        conn_handler = SQLConnectionHandler()
         return dict(conn_handler.execute_fetchone(
                     "SELECT * FROM qiita.{0} WHERE {1}=%s".format(
                         self._table, self._column_id), (self.id,)))
@@ -154,11 +153,10 @@ class BaseParameters(QiitaObject):
         str
             The string with all the parameters
         """
-        conn_handler = SQLConnectionHandler()
         table_cols = get_table_cols_w_type(self._table)
         table_cols.remove([self._column_id, 'bigint'])
 
-        values = self._get_values_as_dict(conn_handler=conn_handler)
+        values = self._get_values_as_dict()
 
         result = []
         for p_name, p_type in sorted(table_cols):
@@ -214,8 +212,7 @@ class ProcessedSortmernaParams(BaseParameters):
             File-like object to write the parameters. Should support the write
             operation
         """
-        conn_handler = SQLConnectionHandler()
-        values = self._get_values_as_dict(conn_handler)
+        values = self._get_values_as_dict()
 
         # Remove the id column
         del values[self._column_id]

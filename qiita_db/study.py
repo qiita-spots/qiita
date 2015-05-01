@@ -707,8 +707,7 @@ class Study(QiitaObject):
             raise TypeError('Environmental packages should be a list')
 
         # Get all the environmental packages
-        env_pkgs = [pkg[0] for pkg in get_environmental_packages(
-            conn_handler=conn_handler)]
+        env_pkgs = [pkg[0] for pkg in get_environmental_packages()]
 
         # Check that all the passed values are valid environmental packages
         missing = set(values).difference(env_pkgs)
