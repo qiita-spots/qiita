@@ -353,8 +353,6 @@ def get_table_cols_w_type(table):
     ----------
     table : str
         The table name
-    conn_handler : SQLConnectionHandler, optional
-        The connection handler object connected to the db
 
     Returns
     -------
@@ -663,13 +661,7 @@ def insert_filepaths(filepaths, obj_id, table, filepath_table, conn_handler,
 
 def purge_filepaths():
     r"""Goes over the filepath table and remove all the filepaths that are not
-    used in any place
-
-    Parameters
-    ----------
-    conn_handler : SQLConnectionHandler, optional
-        The connection handler object connected to the DB
-    """
+    used in any place"""
     conn_handler = SQLConnectionHandler()
 
     # Get all the (table, column) pairs that reference to the filepath table
@@ -855,8 +847,6 @@ def convert_from_id(value, table):
         The id value to convert
     table : str
         The table that has the conversion
-    conn_handler : SQLConnectionHandler, optional
-        The sql connection object
 
     Returns
     -------
@@ -980,11 +970,6 @@ def get_environmental_packages():
 
 def get_timeseries_types():
     """Get the list of available timeseries types
-
-    Parameters
-    ----------
-    conn_handler : SQLConnectionHandler, optional
-        The handler connected to the database
 
     Returns
     -------
