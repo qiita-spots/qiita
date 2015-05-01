@@ -133,8 +133,8 @@ class BaseParameters(QiitaObject):
         """
         self._check_subclass()
 
-        conn_handler = (conn_handler if conn_handler is not None
-                        else SQLConnectionHandler())
+        conn_handler = SQLConnectionHandler()
+
         return conn_handler.execute_fetchone(
             "SELECT EXISTS(SELECT * FROM qiita.{0} WHERE {1} = %s)".format(
                 self._table, self._column_id),

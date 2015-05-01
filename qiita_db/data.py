@@ -147,7 +147,7 @@ class BaseData(QiitaObject):
 
         # Check if the connection handler has been provided. Create a new
         # one if not.
-        conn_handler = conn_handler if conn_handler else SQLConnectionHandler()
+        conn_handler = SQLConnectionHandler()
 
         # Update the status of the current object
         self._set_link_filepaths_status("linking")
@@ -478,7 +478,7 @@ class RawData(BaseData):
         bool
             whether the RawData has been preprocessed or not
         """
-        conn_handler = conn_handler if conn_handler else SQLConnectionHandler()
+        conn_handler = SQLConnectionHandler()
         return conn_handler.execute_fetchone(
             "SELECT EXISTS(SELECT * FROM qiita.prep_template_preprocessed_data"
             " PTPD JOIN qiita.prep_template PT ON PT.prep_template_id = "

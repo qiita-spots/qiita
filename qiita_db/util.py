@@ -341,7 +341,7 @@ def get_table_cols(table, conn_handler=None):
     list of str
         The column headers of `table`
     """
-    conn_handler = conn_handler if conn_handler else SQLConnectionHandler()
+    conn_handler = SQLConnectionHandler()
     headers = conn_handler.execute_fetchall(
         "SELECT column_name FROM information_schema.columns WHERE "
         "table_name=%s AND table_schema='qiita'", (table, ))
@@ -363,7 +363,7 @@ def get_table_cols_w_type(table, conn_handler=None):
     list of tuples of (str, str)
         The column headers and data type of `table`
     """
-    conn_handler = conn_handler if conn_handler else SQLConnectionHandler()
+    conn_handler = SQLConnectionHandler()
     return conn_handler.execute_fetchall(
         "SELECT column_name, data_type FROM information_schema.columns WHERE "
         "table_name=%s", (table,))
@@ -412,8 +412,8 @@ def get_db_files_base_dir(conn_handler=None):
     str
         The path to the base directory of all db files
     """
-    conn_handler = (conn_handler if conn_handler is not None
-                    else SQLConnectionHandler())
+    conn_handler = SQLConnectionHandler()
+
     return conn_handler.execute_fetchone(
         "SELECT base_data_dir FROM settings")[0]
 
@@ -426,8 +426,8 @@ def get_work_base_dir(conn_handler=None):
     str
         The path to the base directory of all db files
     """
-    conn_handler = (conn_handler if conn_handler is not None
-                    else SQLConnectionHandler())
+    conn_handler = SQLConnectionHandler()
+
     return conn_handler.execute_fetchone(
         "SELECT base_work_dir FROM settings")[0]
 
@@ -555,8 +555,8 @@ def get_mountpoint(mount_type, conn_handler=None, retrieve_all=False):
     list
         List of tuple, where: [(id_mountpoint, filepath_of_mountpoint)]
     """
-    conn_handler = (conn_handler if conn_handler is not None
-                    else SQLConnectionHandler())
+    conn_handler = SQLConnectionHandler()
+
     if retrieve_all:
         result = conn_handler.execute_fetchall(
             "SELECT data_directory_id, mountpoint, subdirectory FROM "
@@ -586,7 +586,7 @@ def get_mountpoint_path_by_id(mount_id, conn_handler=None):
     str
         The mountpoint path
     """
-    conn_handler = conn_handler if conn_handler else SQLConnectionHandler()
+    conn_handler = SQLConnectionHandler()
     mountpoint, subdirectory = conn_handler.execute_fetchone(
         """SELECT mountpoint, subdirectory FROM qiita.data_directory
            WHERE data_directory_id=%s""", (mount_id,))
@@ -676,7 +676,7 @@ def purge_filepaths(conn_handler=None):
     conn_handler : SQLConnectionHandler, optional
         The connection handler object connected to the DB
     """
-    conn_handler = conn_handler if conn_handler else SQLConnectionHandler()
+    conn_handler = SQLConnectionHandler()
 
     # Get all the (table, column) pairs that reference to the filepath table
     # Code adapted from http://stackoverflow.com/q/5347050/3746629
@@ -733,7 +733,7 @@ def move_filepaths_to_upload_folder(study_id, filepaths, conn_handler=None):
     conn_handler : SQLConnectionHandler, optional
         The connection handler object connected to the DB
     """
-    conn_handler = conn_handler if conn_handler else SQLConnectionHandler()
+    conn_handler = SQLConnectionHandler()
     uploads_fp = join(get_mountpoint("uploads")[0][1], str(study_id))
 
     # We can now go over and remove all the filepaths
@@ -848,7 +848,7 @@ def convert_to_id(value, table, conn_handler=None):
     IncompetentQiitaDeveloperError
         The passed string has no associated id
     """
-    conn_handler = conn_handler if conn_handler else SQLConnectionHandler()
+    conn_handler = SQLConnectionHandler()
     sql = "SELECT {0}_id FROM qiita.{0} WHERE {0} = %s".format(table)
     _id = conn_handler.execute_fetchone(sql, (value, ))
     if _id is None:
@@ -879,7 +879,7 @@ def convert_from_id(value, table, conn_handler=None):
     ValueError
         The passed id has no associated string
     """
-    conn_handler = conn_handler if conn_handler else SQLConnectionHandler()
+    conn_handler = SQLConnectionHandler()
     string = conn_handler.execute_fetchone(
         "SELECT {0} FROM qiita.{0} WHERE {0}_id = %s".format(table),
         (value, ))
@@ -989,8 +989,9 @@ def get_environmental_packages(conn_handler=None):
         environmental package name and the second string is the table where
         the metadata for the environmental package is stored
     """
-    conn = conn_handler if conn_handler else SQLConnectionHandler()
-    return conn.execute_fetchall("SELECT * FROM qiita.environmental_package")
+    conn_handler = SQLConnectionHandler()
+    return conn_handler.execute_fetchall(
+        "SELECT * FROM qiita.environmental_package")
 
 
 def get_timeseries_types(conn_handler=None):
@@ -1007,8 +1008,8 @@ def get_timeseries_types(conn_handler=None):
         The available timeseries types. Each timeseries type is defined by the
         tuple (timeseries_id, timeseries_type, intervention_type)
     """
-    conn = conn_handler if conn_handler else SQLConnectionHandler()
-    return conn.execute_fetchall(
+    conn_handler = SQLConnectionHandler()
+    return conn_handler.execute_fetchall(
         "SELECT * FROM qiita.timeseries_type ORDER BY timeseries_type_id")
 
 

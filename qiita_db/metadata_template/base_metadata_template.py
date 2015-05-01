@@ -492,8 +492,9 @@ class MetadataTemplate(QiitaObject):
     def _check_id(self, id_, conn_handler=None):
         r"""Checks that the MetadataTemplate id_ exists on the database"""
         self._check_subclass()
-        conn_handler = (conn_handler if conn_handler is not None
-                        else SQLConnectionHandler())
+
+        conn_handler = SQLConnectionHandler()
+
         return conn_handler.execute_fetchone(
             "SELECT EXISTS(SELECT * FROM qiita.{0} WHERE "
             "{1}=%s)".format(self._table, self._id_column),
@@ -1032,7 +1033,7 @@ class MetadataTemplate(QiitaObject):
 
         # Check if the connection handler has been provided. Create a new
         # one if not.
-        conn_handler = conn_handler if conn_handler else SQLConnectionHandler()
+        conn_handler = SQLConnectionHandler()
         fp_id = self._fp_id if fp_id is None else fp_id
 
         try:
@@ -1056,7 +1057,7 @@ class MetadataTemplate(QiitaObject):
 
         # Check if the connection handler has been provided. Create a new
         # one if not.
-        conn_handler = conn_handler if conn_handler else SQLConnectionHandler()
+        conn_handler = SQLConnectionHandler()
 
         try:
             filepath_ids = conn_handler.execute_fetchall(

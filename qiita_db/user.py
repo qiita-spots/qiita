@@ -82,8 +82,8 @@ class User(QiitaObject):
         """
         self._check_subclass()
 
-        conn_handler = (conn_handler if conn_handler is not None
-                        else SQLConnectionHandler())
+        conn_handler = SQLConnectionHandler()
+
         return conn_handler.execute_fetchone(
             "SELECT EXISTS(SELECT * FROM qiita.qiita_user WHERE "
             "email = %s)", (id_, ))[0]
@@ -454,7 +454,7 @@ class User(QiitaObject):
 
         sql = ("UPDATE qiita.{0} SET password=%s, pass_reset_code=NULL WHERE "
                "email = %s".format(self._table))
-        conn_handler = conn_handler if conn_handler else SQLConnectionHandler()
+        conn_handler = SQLConnectionHandler()
         conn_handler.execute(sql, (hash_password(newpass), self._id))
 
 

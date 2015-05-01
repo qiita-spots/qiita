@@ -132,8 +132,7 @@ class QiitaObject(object):
         """
         self._check_subclass()
 
-        conn_handler = (conn_handler if conn_handler is not None
-                        else SQLConnectionHandler())
+        conn_handler = SQLConnectionHandler()
 
         return conn_handler.execute_fetchone(
             "SELECT EXISTS(SELECT * FROM qiita.{0} WHERE "
@@ -265,8 +264,8 @@ class QiitaStatusObject(QiitaObject):
         self._check_subclass()
 
         # Get all available statuses
-        conn_handler = (conn_handler if conn_handler is not None
-                        else SQLConnectionHandler())
+        conn_handler = SQLConnectionHandler()
+
         statuses = [x[0] for x in conn_handler.execute_fetchall(
             "SELECT DISTINCT status FROM qiita.{0}_status".format(self._table),
             (self._id, ))]

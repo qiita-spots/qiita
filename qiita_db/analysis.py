@@ -663,8 +663,7 @@ class Analysis(QiitaStatusObject):
 
     def _get_samples(self, conn_handler=None):
         """Retrieves dict of samples to proc_data_id for the analysis"""
-        conn_handler = conn_handler if conn_handler is not None \
-            else SQLConnectionHandler()
+        conn_handler = SQLConnectionHandler()
         sql = ("SELECT processed_data_id, array_agg(sample_id ORDER BY "
                "sample_id) FROM qiita.analysis_sample WHERE analysis_id = %s "
                "GROUP BY processed_data_id")
@@ -701,8 +700,7 @@ class Analysis(QiitaStatusObject):
                 new_tables[data_type] = new_tables[data_type].merge(table)
 
         # add the new tables to the analysis
-        conn_handler = conn_handler if conn_handler is not None \
-            else SQLConnectionHandler()
+        conn_handler = SQLConnectionHandler()
         _, base_fp = get_mountpoint(self._table)[0]
         for dt, biom_table in viewitems(new_tables):
             # rarefy, if specified
@@ -719,9 +717,7 @@ class Analysis(QiitaStatusObject):
     def _build_mapping_file(self, samples, conn_handler=None):
         """Builds the combined mapping file for all samples
            Code modified slightly from qiime.util.MetadataMap.__add__"""
-        conn_handler = conn_handler if conn_handler is not None \
-            else SQLConnectionHandler()
-
+        conn_handler = SQLConnectionHandler()
         all_sample_ids = set()
         sql = """SELECT filepath_id, filepath
                  FROM qiita.filepath
@@ -791,8 +787,8 @@ class Analysis(QiitaStatusObject):
         data_type : str, optional
         conn_handler : SQLConnectionHandler object, optional
         """
-        conn_handler = conn_handler if conn_handler is not None \
-            else SQLConnectionHandler()
+        conn_handler = SQLConnectionHandler() \
+
 
         filetype_id = convert_to_id(filetype, 'filepath_type', conn_handler)
         _, mp = get_mountpoint('analysis', conn_handler)[0]
