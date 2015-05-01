@@ -116,15 +116,13 @@ class BaseParameters(QiitaObject):
         del result['param_set_name']
         return result
 
-    def _check_id(self, id_, conn_handler=None):
+    def _check_id(self, id_):
         r"""Check that the provided ID actually exists in the database
 
         Parameters
         ----------
         id_ : object
             The ID to test
-        conn_handler : SQLConnectionHandler
-            The connection handler object connected to the DB
 
         Notes
         -----

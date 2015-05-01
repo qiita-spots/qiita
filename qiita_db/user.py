@@ -65,7 +65,7 @@ class User(QiitaObject):
     # The following columns are considered not part of the user info
     _non_info = {"email", "user_level_id", "password"}
 
-    def _check_id(self, id_, conn_handler=None):
+    def _check_id(self, id_):
         r"""Check that the provided ID actually exists in the database
 
         Parameters

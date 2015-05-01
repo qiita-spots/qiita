@@ -113,15 +113,13 @@ class QiitaObject(object):
             raise IncompetentQiitaDeveloperError(
                 "Could not instantiate an object of the base class")
 
-    def _check_id(self, id_, conn_handler=None):
+    def _check_id(self, id_):
         r"""Check that the provided ID actually exists on the database
 
         Parameters
         ----------
         id_ : object
             The ID to test
-        conn_handler : SQLConnectionHandler
-            The connection handler object connected to the DB
 
         Notes
         -----

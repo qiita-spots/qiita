@@ -70,24 +70,21 @@ class Reference(QiitaObject):
         conn_handler = SQLConnectionHandler()
 
         seq_id = insert_filepaths([(seqs_fp, convert_to_id("reference_seqs",
-                                                           "filepath_type",
-                                                           conn_handler))],
+                                                           "filepath_type"))],
                                   "%s_%s" % (name, version), "reference",
                                   "filepath", conn_handler)[0]
 
         # Check if the database has taxonomy file
         tax_id = None
         if tax_fp:
-            fps = [(tax_fp, convert_to_id("reference_tax", "filepath_type",
-                                          conn_handler))]
+            fps = [(tax_fp, convert_to_id("reference_tax", "filepath_type"))]
             tax_id = insert_filepaths(fps, "%s_%s" % (name, version),
                                       "reference", "filepath", conn_handler)[0]
 
         # Check if the database has tree file
         tree_id = None
         if tree_fp:
-            fps = [(tree_fp, convert_to_id("reference_tree", "filepath_type",
-                                           conn_handler))]
+            fps = [(tree_fp, convert_to_id("reference_tree", "filepath_type"))]
             tree_id = insert_filepaths(fps, "%s_%s" % (name, version),
                                        "reference", "filepath",
                                        conn_handler)[0]
@@ -129,7 +126,7 @@ class Reference(QiitaObject):
         return conn_handler.execute_fetchone(
             "SELECT reference_name FROM qiita.{0} WHERE "
             "reference_id = %s".format(self._table), (self._id,))[0]
-        _, basefp = get_mountpoint('reference', conn_handler=conn_handler)[0]
+        _, basefp = get_mountpoint('reference')[0]
 
     @property
     def version(self):
@@ -137,7 +134,7 @@ class Reference(QiitaObject):
         return conn_handler.execute_fetchone(
             "SELECT reference_version FROM qiita.{0} WHERE "
             "reference_id = %s".format(self._table), (self._id,))[0]
-        _, basefp = get_mountpoint('reference', conn_handler=conn_handler)[0]
+        _, basefp = get_mountpoint('reference')[0]
 
     @property
     def sequence_fp(self):
@@ -146,7 +143,7 @@ class Reference(QiitaObject):
             "SELECT f.filepath FROM qiita.filepath f JOIN qiita.{0} r ON "
             "r.sequence_filepath=f.filepath_id WHERE "
             "r.reference_id=%s".format(self._table), (self._id,))[0]
-        _, basefp = get_mountpoint('reference', conn_handler=conn_handler)[0]
+        _, basefp = get_mountpoint('reference')[0]
         return join(basefp, rel_path)
 
     @property
@@ -156,7 +153,7 @@ class Reference(QiitaObject):
             "SELECT f.filepath FROM qiita.filepath f JOIN qiita.{0} r ON "
             "r.taxonomy_filepath=f.filepath_id WHERE "
             "r.reference_id=%s".format(self._table), (self._id,))[0]
-        _, basefp = get_mountpoint('reference', conn_handler=conn_handler)[0]
+        _, basefp = get_mountpoint('reference')[0]
         return join(basefp, rel_path)
 
     @property
@@ -166,5 +163,5 @@ class Reference(QiitaObject):
             "SELECT f.filepath FROM qiita.filepath f JOIN qiita.{0} r ON "
             "r.tree_filepath=f.filepath_id WHERE "
             "r.reference_id=%s".format(self._table), (self._id,))[0]
-        _, basefp = get_mountpoint('reference', conn_handler=conn_handler)[0]
+        _, basefp = get_mountpoint('reference')[0]
         return join(basefp, rel_path)

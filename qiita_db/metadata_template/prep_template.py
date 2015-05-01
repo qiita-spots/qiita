@@ -117,10 +117,9 @@ class PrepTemplate(MetadataTemplate):
         # Check if the data_type is the id or the string
         if isinstance(data_type, (int, long)):
             data_type_id = data_type
-            data_type_str = convert_from_id(data_type, "data_type",
-                                            conn_handler)
+            data_type_str = convert_from_id(data_type, "data_type")
         else:
-            data_type_id = convert_to_id(data_type, "data_type", conn_handler)
+            data_type_id = convert_to_id(data_type, "data_type")
             data_type_str = data_type
 
         pt_cols = PREP_TEMPLATE_COLUMNS

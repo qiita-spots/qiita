@@ -193,11 +193,11 @@ class BaseData(QiitaObject):
                                  self._data_filepath_table,
                                  self._data_filepath_column), {'id': self.id})
 
-        _, fb = get_mountpoint(self._table, conn_handler)[0]
+        _, fb = get_mountpoint(self._table)[0]
         base_fp = partial(join, fb)
 
-        return [(fpid, base_fp(fp), convert_from_id(fid, "filepath_type",
-                conn_handler)) for fpid, fp, fid in db_paths]
+        return [(fpid, base_fp(fp), convert_from_id(fid, "filepath_type"))
+                for fpid, fp, fid in db_paths]
 
     def get_filepath_ids(self):
         self._check_subclass()
@@ -579,8 +579,7 @@ class RawData(BaseData):
 
         # Move the files, if they are not used, if you get to this point
         # self.studies should only have one element, thus self.studies[0]
-        move_filepaths_to_upload_folder(self.studies[0], filepaths,
-                                        conn_handler=conn_handler)
+        move_filepaths_to_upload_folder(self.studies[0], filepaths)
 
     def remove_filepath(self, fp):
         """Removes the filepath from the RawData
@@ -614,7 +613,7 @@ class RawData(BaseData):
         self._set_link_filepaths_status("idle")
 
         # Delete the files, if they are not used anywhere
-        purge_filepaths(conn_handler)
+        purge_filepaths()
 
     def status(self, study):
         """The status of the raw data within the given study
@@ -753,7 +752,7 @@ class PreprocessedData(BaseData):
             data_type = prep_template.data_type(ret_id=True)
         else:
             # only data_type, so need id from the text
-            data_type = convert_to_id(data_type, "data_type", conn_handler)
+            data_type = convert_to_id(data_type, "data_type")
 
         # Check that the preprocessed_params_table exists
         if not exists_dynamic_table(preprocessed_params_table, "preprocessed_",
@@ -1278,7 +1277,7 @@ class ProcessedData(BaseData):
                     "You must provide either a preprocessed_data, a "
                     "data_type, or both")
             else:
-                data_type = convert_to_id(data_type, "data_type", conn_handler)
+                data_type = convert_to_id(data_type, "data_type")
 
         # We first check that the processed_params_table exists
         if not exists_dynamic_table(processed_params_table,
@@ -1524,8 +1523,7 @@ class ProcessedData(BaseData):
 
         conn_handler = SQLConnectionHandler()
 
-        status_id = convert_to_id(status, 'processed_data_status',
-                                  conn_handler=conn_handler)
+        status_id = convert_to_id(status, 'processed_data_status')
 
         sql = """UPDATE qiita.{0} SET processed_data_status_id = %s
                  WHERE processed_data_id=%s""".format(self._table)

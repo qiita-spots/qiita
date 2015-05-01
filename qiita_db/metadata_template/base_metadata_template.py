@@ -195,7 +195,7 @@ class BaseSample(QiitaObject):
             The set of all available metadata categories
         """
         # Get all the columns
-        cols = get_table_cols(self._dynamic_table, conn_handler)
+        cols = get_table_cols(self._dynamic_table)
         # Remove the sample_id column as this column is used internally for
         # data storage and it doesn't actually belong to the metadata
         cols.remove('sample_id')
@@ -489,7 +489,7 @@ class MetadataTemplate(QiitaObject):
     _id_column = None
     _sample_cls = None
 
-    def _check_id(self, id_, conn_handler=None):
+    def _check_id(self, id_):
         r"""Checks that the MetadataTemplate id_ exists on the database"""
         self._check_subclass()
 
@@ -1013,7 +1013,7 @@ class MetadataTemplate(QiitaObject):
             The metadata in the template,indexed on sample id
         """
         conn_handler = SQLConnectionHandler()
-        cols = sorted(get_table_cols(self._table_name(self._id), conn_handler))
+        cols = sorted(get_table_cols(self._table_name(self._id)))
         # Get all metadata for the template
         sql = "SELECT {0} FROM qiita.{1}".format(", ".join(cols),
                                                  self._table_name(self.id))
@@ -1071,7 +1071,7 @@ class MetadataTemplate(QiitaObject):
                             info={self.__class__.__name__: self.id})
             raise e
 
-        _, fb = get_mountpoint('templates', conn_handler)[0]
+        _, fb = get_mountpoint('templates')[0]
         base_fp = partial(join, fb)
 
         return [(fpid, base_fp(fp)) for fpid, fp in filepath_ids]

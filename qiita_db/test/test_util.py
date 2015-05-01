@@ -113,15 +113,14 @@ class DBUtilTests(TestCase):
                              self.table)
 
     def test_get_table_cols(self):
-        obs = get_table_cols("qiita_user", self.conn_handler)
+        obs = get_table_cols("qiita_user")
         exp = {"email", "user_level_id", "password", "name", "affiliation",
                "address", "phone", "user_verify_code", "pass_reset_code",
                "pass_reset_timestamp"}
         self.assertEqual(set(obs), exp)
 
     def test_get_table_cols_w_type(self):
-        obs = get_table_cols_w_type("preprocessed_sequence_illumina_params",
-                                    self.conn_handler)
+        obs = get_table_cols_w_type("preprocessed_sequence_illumina_params")
         exp = [['param_set_name', 'character varying'],
                ['preprocessed_params_id', 'bigint'],
                ['max_bad_run_length', 'integer'],
@@ -378,7 +377,7 @@ class DBUtilTests(TestCase):
 
         exp_count = get_count("qiita.filepath") - 2
 
-        purge_filepaths(self.conn_handler)
+        purge_filepaths()
 
         obs_count = get_count("qiita.filepath")
 
@@ -433,7 +432,7 @@ class DBUtilTests(TestCase):
                 "DELETE FROM qiita.raw_filepath WHERE filepath_id=%s", (fid,))
 
         # moving filepaths
-        move_filepaths_to_upload_folder(study_id, filepaths, self.conn_handler)
+        move_filepaths_to_upload_folder(study_id, filepaths)
 
         # check that they do not exist in the old path but do in the new one
         path_for_removal = join(get_mountpoint("uploads")[0][1], str(study_id))

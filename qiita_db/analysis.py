@@ -656,12 +656,12 @@ class Analysis(QiitaStatusObject):
                 raise ValueError("rarefaction_depth must be greater than 0")
 
         conn_handler = SQLConnectionHandler()
-        samples = self._get_samples(conn_handler=conn_handler)
-        self._build_mapping_file(samples, conn_handler=conn_handler)
+        samples = self._get_samples()
+        self._build_mapping_file(samples)
         self._build_biom_tables(samples, rarefaction_depth,
                                 conn_handler=conn_handler)
 
-    def _get_samples(self, conn_handler=None):
+    def _get_samples(self):
         """Retrieves dict of samples to proc_data_id for the analysis"""
         conn_handler = SQLConnectionHandler()
         sql = ("SELECT processed_data_id, array_agg(sample_id ORDER BY "
@@ -714,7 +714,7 @@ class Analysis(QiitaStatusObject):
             self._add_file("%d_analysis_%s.biom" % (self._id, dt),
                            "biom", data_type=dt, conn_handler=conn_handler)
 
-    def _build_mapping_file(self, samples, conn_handler=None):
+    def _build_mapping_file(self, samples):
         """Builds the combined mapping file for all samples
            Code modified slightly from qiime.util.MetadataMap.__add__"""
         conn_handler = SQLConnectionHandler()
@@ -787,11 +787,10 @@ class Analysis(QiitaStatusObject):
         data_type : str, optional
         conn_handler : SQLConnectionHandler object, optional
         """
-        conn_handler = SQLConnectionHandler() \
+        conn_handler = SQLConnectionHandler()
 
-
-        filetype_id = convert_to_id(filetype, 'filepath_type', conn_handler)
-        _, mp = get_mountpoint('analysis', conn_handler)[0]
+        filetype_id = convert_to_id(filetype, 'filepath_type')
+        _, mp = get_mountpoint('analysis')[0]
         fpid = insert_filepaths([
             (join(mp, filename), filetype_id)], -1, 'analysis', 'filepath',
             conn_handler, move_files=False)[0]

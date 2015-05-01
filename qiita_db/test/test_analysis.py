@@ -388,8 +388,7 @@ class TestAnalysis(TestCase):
     def test_build_mapping_file(self):
         new_id = get_count('qiita.filepath') + 1
         samples = {1: ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196']}
-        self.analysis._build_mapping_file(samples,
-                                          conn_handler=self.conn_handler)
+        self.analysis._build_mapping_file(samples)
         obs = self.analysis.mapping_file
         self.assertEqual(obs, self.map_fp)
 
@@ -419,8 +418,7 @@ class TestAnalysis(TestCase):
     def test_build_mapping_file_duplicate_samples(self):
         samples = {1: ['1.SKB8.640193', '1.SKB8.640193', '1.SKD8.640184']}
         with self.assertRaises(QiitaDBError):
-            self.analysis._build_mapping_file(samples,
-                                              conn_handler=self.conn_handler)
+            self.analysis._build_mapping_file(samples)
 
     def test_build_biom_tables(self):
         new_id = get_count('qiita.filepath') + 1
