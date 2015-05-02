@@ -1175,6 +1175,5 @@ class MetadataTemplate(QiitaObject):
             for restriction in restrictions:
                 for col in restriction.columns:
                     yield col
-        categories = self.categories()
-        missing = {col for col in _col_iter() if col not in categories}
-        return missing
+
+        return set(_col_iter()).difference(self.categories())

@@ -7,7 +7,6 @@
 # -----------------------------------------------------------------------------
 
 from future.builtins import zip
-from future.utils import viewvalues
 from unittest import TestCase, main
 from datetime import datetime
 from tempfile import mkstemp
