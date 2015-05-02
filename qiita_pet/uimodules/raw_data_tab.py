@@ -16,7 +16,8 @@ from qiita_db.util import (get_filetypes, get_files_from_uploads_folders,
 from qiita_db.study import Study
 from qiita_db.data import RawData
 from qiita_db.ontology import Ontology
-from qiita_db.metadata_template import PrepTemplate
+from qiita_db.metadata_template import (PrepTemplate, TARGET_GENE_DATA_TYPES,
+                                        PREP_TEMPLATE_COLUMNS_TARGET_GENE)
 from qiita_db.parameters import (Preprocessed454Params,
                                  PreprocessedIlluminaParams)
 from qiita_pet.util import STATUS_STYLER
@@ -166,7 +167,7 @@ class RawDataEditorTab(BaseUIModule):
 
 class PrepTemplatePanel(BaseUIModule):
     def render(self, prep, study_id, is_editable, ena_terms,
-               study_status, user_defined_terms):
+               study_status, user_defined_terms, raw_data_files):
         # Check if the request came from a local source
         is_local_request = self._is_local()
 
@@ -203,6 +204,23 @@ class PrepTemplatePanel(BaseUIModule):
                     if 'qiime' in basename(fp) else "Prep template")
         filepaths = [(id_, fp, _fp_type(fp)) for id_, fp in filepaths]
 
+        # Check if the template have all the required columns for preprocessing
+        if prep.data_type() in TARGET_GENE_DATA_TYPES:
+            key = ('demultiplex_multiple' if len(raw_data_files) > 2
+                   else 'demultiplex')
+            missing_cols = prep.check_restrictions(
+                [PREP_TEMPLATE_COLUMNS_TARGET_GENE[key]])
+            show_preprocess_btn = len(missing_cols) == 0
+            if not show_preprocess_btn:
+                no_preprocess_msg = (
+                    "Preprocessing disabled due to missing columns in the "
+                    "prep template: %s" % ', '.join(missing_cols))
+            else:
+                no_preprocess_msg = None
+        else:
+            show_preprocess_btn = True
+            no_preprocess_msg = None
+
         return self.render_string(
             "study_description_templates/prep_template_panel.html",
             prep_id=prep_id,
@@ -220,7 +238,9 @@ class PrepTemplatePanel(BaseUIModule):
             ena_terms=ena_terms,
             study_status=study_status,
             user_defined_terms=user_defined_terms,
-            preprocess_options=preprocess_options)
+            preprocess_options=preprocess_options,
+            show_preprocess_btn=show_preprocess_btn,
+            no_preprocess_msg=no_preprocess_msg)
 
 
 class EditInvestigationType(BaseUIModule):

@@ -10,9 +10,10 @@ from .sample_template import SampleTemplate
 from .prep_template import PrepTemplate
 from .util import load_template_to_dataframe
 from .constants import (TARGET_GENE_DATA_TYPES, SAMPLE_TEMPLATE_COLUMNS,
-                        PREP_TEMPLATE_COLUMNS)
+                        PREP_TEMPLATE_COLUMNS,
+                        PREP_TEMPLATE_COLUMNS_TARGET_GENE)
 
 
 __all__ = ['SampleTemplate', 'PrepTemplate', 'load_template_to_dataframe',
            'TARGET_GENE_DATA_TYPES', 'SAMPLE_TEMPLATE_COLUMNS',
-           'PREP_TEMPLATE_COLUMNS']
+           'PREP_TEMPLATE_COLUMNS', 'PREP_TEMPLATE_COLUMNS_TARGET_GENE']
