@@ -11,44 +11,60 @@
 
 
 <div class="row">
-  <h1>Analysis {{aname}}</h1>
-
-  {% if dropped %}
-    <h3>Dropped Samples</h3>
-    These samples were dropped during processing due to rarefaction:
-    <table width="100%">
-    {% for study, samples in viewitems(dropped) %}
-      <tr>
-        <td width="5%">For {{study}}:</td>
-        <td width="80%"><small>{{', '.join(samples)}}</small></td>
-      </tr>
-    {% end %}
-    </table>
-    <br/>
-  {% end %}
+  <h1>Analysis: <u>{{aname}}</u></h1>
 </div>
 
 
 <div class="row" width='100%'>
+  <div class="col-md-12">
+    <div class="panel-group" id="accordion">
+      {% if dropped %}
+        <div class="panel panel-default">
+          <div class="panel-heading">
+            <h3 class="panel-title"><a data-toggle="collapse" data-parent="#accordion" href="#dropped-samples">Dropped Samples</a></h3>
+          </div>
+          <div id="dropped-samples" class="panel-collapse collapse">
+              <div class="panel-body">
+                  {% for data_type, studies in viewitems(dropped) %}
+                    <b><u>{{data_type}}</u></b>
+                    <br/><br/>
+                    {% for s in studies %}
+                      <b>{{s['study']}}:</b>
+                      <br/>
+                      Total dropped: {{len(s['samples'])}}
+                      <br/>
+                      {{', '.join(s['samples'])}}<br/>
+                    {% end %}
+                    <hr>
+                  {% end %}
+              </div>
+          </div>
+        </div>
+      {% end %}
+    </div>
+  </div>
+</div>
+
+<div class="row" width='100%'>
   <div class="col-md-2">
     <div class="panel-group" id="accordion">
-{% for data_type, jobs in jobres.items() %}
+      {% for data_type, jobs in jobres.items() %}
         <div class="panel panel-default">
           <div class="panel-heading">
             <h3 class="panel-title"><a data-toggle="collapse" data-parent="#accordion" href="#{{data_type}}">{{data_type}}</a></h3>
           </div>
           <div id="{{data_type}}" class="panel-collapse collapse">
-{% for job, results in jobs%}
+            {% for job, results in jobs%}
               <div class="panel-body">
                 {{job}}<br />
-  {% if len(results) == 0 %}
+                {% if len(results) == 0 %}
                   <h3 style="color:red">ERROR</h3>
-  {% end %}
-  {%for result in results%}
+                {% end %}
+                {%for result in results%}
                   <a href='{{"/results/%s" % result}}' target="resframe">{{basename(result)}}</a><br />
-  {% end %}
+                {% end %}
               </div>
-{% end %}
+            {% end %}
           </div>
         </div>
       {% end %}
