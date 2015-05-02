@@ -442,7 +442,11 @@ class TestStudy(TestCase):
 
     def test_delete(self):
         title = "Fried chicken microbiome"
-        study = Study.create(User('test@foo.bar'), title, [1], self.info)
+        # the study is assigned to investigation 1
+        study = Study.create(User('test@foo.bar'), title, [1], self.info,
+                             Investigation(1))
+        # sharing with other user
+        study.share(User("shared@foo.bar"))
         study.delete(study.id)
         self.assertFalse(study.exists(title))
 
