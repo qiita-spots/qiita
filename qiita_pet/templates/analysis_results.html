@@ -37,12 +37,12 @@
                   {% for data_type, studies in viewitems(dropped) %}
                     <b><u>{{data_type}}</u></b>
                     <br/><br/>
-                    {% for s in studies %}
-                      <b>{{s['study']}}:</b>
+                    {% for title, num_samples, samples in studies %}
+                      <b>{{title}}:</b>
                       <br/>
-                      Total dropped: {{len(s['samples'])}}
+                      Total dropped: {{num_samples}}
                       <br/>
-                      {{', '.join(s['samples'])}}<br/>
+                      {{samples}}<br/>
                     {% end %}
                     <hr>
                   {% end %}
