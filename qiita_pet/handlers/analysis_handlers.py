@@ -143,7 +143,7 @@ class AnalysisResultsHandler(BaseHandler):
                                              jobject.results))
 
         dropped_samples = analysis.dropped_samples
-        dropped = {}
+        dropped = defaultdict(list)
         if dropped_samples:
             for proc_data_id, samples in viewitems(analysis.dropped_samples):
                 if not samples:
@@ -151,10 +151,8 @@ class AnalysisResultsHandler(BaseHandler):
                 proc_data = ProcessedData(proc_data_id)
                 data_type = proc_data.data_type()
                 study = proc_data.study
-                if data_type not in dropped:
-                    dropped[data_type] = []
-                dropped[data_type].append({'study': Study(study).title,
-                                           'samples': samples})
+                dropped[data_type].append((Study(study).title, len(samples),
+                                           ', '.join(samples)))
 
         self.render("analysis_results.html",
                     jobres=jobres, aname=analysis.name, dropped=dropped,
