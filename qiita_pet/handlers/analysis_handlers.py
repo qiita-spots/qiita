@@ -156,21 +156,54 @@ class AnalysisResultsHandler(BaseHandler):
                 dropped[data_type].append({'study': Study(study).title,
                                            'samples': samples})
 
-        self.render("analysis_results.html",
+        self.render("analysis_results.html", analysis_id=analysis_id,
                     jobres=jobres, aname=analysis.name, dropped=dropped,
                     basefolder=get_db_files_base_dir())
+
+    @authenticated
+    def post(self, analysis_id):
+        analysis_id = int(analysis_id.split("/")[0])
+        analysis_id_sent = int(self.get_argument('analysis_id'))
+        action = self.get_argument('action')
+
+        if analysis_id != analysis_id_sent or action != 'delete_analysis':
+            raise QiitaPetAuthorizationError(
+                self.current_user.id,
+                'analysis/results/%d-delete' % analysis_id)
+
+        analysis = Analysis(analysis_id)
+        check_analysis_access(self.current_user, analysis)
+
+        try:
+            Analysis.delete(analysis_id)
+            msg = ("Analysis <b><i>%s</i></b> has been deleted." % (
+                analysis.title))
+            msg_level = "success"
+        except Exception as e:
+            print e
+            msg = ("Couldn't remove <b><i>%s</i></b> analysis: %s" % (
+                analysis.name, str(e)))
+            msg_level = "danger"
+
+        # redirecting to list of analysis but also passing messages and
+        # we need to change the request.method to GET
+        self.request.method = 'GET'
+        ShowAnalysesHandler(self.application, self.request)._execute(
+            [t(self.request) for t in self.application.transforms],
+            message=msg, msg_level=msg_level)
 
 
 class ShowAnalysesHandler(BaseHandler):
     """Shows the user's analyses"""
     @authenticated
-    def get(self):
+    def get(self, message='', msg_level=''):
         user = self.current_user
 
         analyses = [Analysis(a) for a in
                     user.shared_analyses | user.private_analyses]
 
-        self.render("show_analyses.html", analyses=analyses)
+        self.render("show_analyses.html", analyses=analyses, message=message,
+                    msg_level=msg_level)
 
 
 class ResultsHandler(StaticFileHandler, BaseHandler):
