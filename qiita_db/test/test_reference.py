@@ -7,9 +7,9 @@
 # -----------------------------------------------------------------------------
 
 from unittest import TestCase, main
-from os import close, remove
+from os import close, remove, listdir
 from os.path import basename, join
-from tempfile import mkstemp
+from tempfile import mkstemp, mkdtemp
 
 import numpy.testing as npt
 
@@ -22,7 +22,7 @@ from qiita_db.util import get_mountpoint, get_count
 @qiita_test_checker()
 class ReferenceTests(TestCase):
     def setUp(self):
-        self.name = "Fake Greengenes"
+        self.name = "Fake_Greengenes"
         self.version = "13_8"
 
         fd, self.seqs_fp = mkstemp(suffix="_seqs.fna")
@@ -44,6 +44,7 @@ class ReferenceTests(TestCase):
         """Correctly creates the rows in the DB for the reference"""
         fp_count = get_count('qiita.filepath')
         # Check that the returned object has the correct id
+        # It raises a warning because the SortMeRNA DB is not provided
         obs = npt.assert_warns(
             QiitaDBWarning, Reference.create, self.name, self.version,
             self.seqs_fp, self.tax_fp, self.tree_fp)
@@ -74,6 +75,60 @@ class ReferenceTests(TestCase):
         exp = [[seqs_id, exp_seq, 10, '0', 1, 6],
                [tax_id, exp_tax, 11, '0', 1, 6],
                [tree_id, exp_tree, 12, '0', 1, 6]]
+        self.assertEqual(obs, exp)
+
+    def test_create_with_smr_indexed_db(self):
+        fp_count = get_count('qiita.filepath')
+
+        # We need to create a sortmerna db
+        suffixes = ['.bursttrie_0.dat', '.kmer_0.dat', '.pos_0.dat', '.stats']
+        smr_dir = mkdtemp()
+        for suf in suffixes:
+            with open(join(smr_dir, "smr_db%s" % suf), 'w') as f:
+                f.write('\n')
+        smr_idx_db = join(smr_dir, "smr_db")
+
+        new_id = get_count('qiita.reference') + 1
+        obs = Reference.create(self.name, self.version, self.seqs_fp,
+                               self.tax_fp, self.tree_fp,
+                               sortmerna_indexed_db=smr_idx_db)
+
+        self.assertEqual(obs.id, new_id)
+
+        seqs_id = fp_count + 1
+        tax_id = fp_count + 2
+        tree_id = fp_count + 3
+        smr_db_id = fp_count + 4
+
+        # Check that the information on the DB is correct
+        obs = self.conn_handler.execute_fetchall(
+            "SELECT * FROM qiita.reference WHERE reference_id = %s", (new_id,))
+        exp = [[new_id, self.name, self.version, seqs_id, tax_id, tree_id,
+                smr_db_id]]
+        self.assertEqual(obs, exp)
+
+        # Check that the filepaths have been correctly added to the DB
+        obs = self.conn_handler.execute_fetchall(
+            "SELECT * FROM qiita.filepath "
+            "WHERE filepath_id IN (%s, %s, %s, %s) "
+            "ORDER BY filepath_id",
+            (seqs_id, tax_id, tree_id, smr_db_id))
+        exp_seq = "%s_%s_%s" % (self.name, self.version,
+                                basename(self.seqs_fp))
+        exp_tax = "%s_%s_%s" % (self.name, self.version,
+                                basename(self.tax_fp))
+        exp_tree = "%s_%s_%s" % (self.name, self.version,
+                                 basename(self.tree_fp))
+        exp_smr_db = "%s_%s_smr_idx_%s" % (self.name, self.version,
+                                           basename(smr_dir))
+        exp = [[seqs_id, exp_seq, 10, '0', 1, 6],
+               [tax_id, exp_tax, 11, '0', 1, 6],
+               [tree_id, exp_tree, 12, '0', 1, 6],
+               [smr_db_id, exp_smr_db, 8, '1498725178', 1, 6]]
+        self.assertEqual(obs, exp)
+
+        exp = {"%s_%s%s" % (self.name, self.version, suf) for suf in suffixes}
+        obs = set(listdir(join(self.db_dir, exp_smr_db)))
         self.assertEqual(obs, exp)
 
     def test_sequence_fp(self):
