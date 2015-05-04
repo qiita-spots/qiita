@@ -6,7 +6,7 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 from __future__ import division
-from os.path import join
+from os.path import join, dirname
 import warnings
 
 from .base import QiitaObject
@@ -100,8 +100,8 @@ class Reference(QiitaObject):
         if sortmerna_indexed_db:
             fps = [(dirname(sortmerna_indexed_db),
                     convert_to_id("directory", "filepath_type"))]
-            smr_id = insert_filepaths(fps, "%s_%s_smr_idx" (name, version),
-                                      "reference", "filepath", conn_handler)
+            smr_id = insert_filepaths(fps, "%s_%s_smr_idx" % (name, version),
+                                      "reference", "filepath", conn_handler)[0]
         else:
             warnings.warn(
                 "SortMeRNA indexed database not provided. Processing will be "
