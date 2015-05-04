@@ -11,7 +11,10 @@ from os import close, remove
 from os.path import basename, join
 from tempfile import mkstemp
 
+import numpy.testing as npt
+
 from qiita_core.util import qiita_test_checker
+from qiita_db.exceptions import QiitaDBWarning
 from qiita_db.reference import Reference
 from qiita_db.util import get_mountpoint, get_count
 
@@ -41,8 +44,11 @@ class ReferenceTests(TestCase):
         """Correctly creates the rows in the DB for the reference"""
         fp_count = get_count('qiita.filepath')
         # Check that the returned object has the correct id
-        obs = Reference.create(self.name, self.version, self.seqs_fp,
-                               self.tax_fp, self.tree_fp)
+        obs = npt.assert_warns(
+            QiitaDBWarning, Reference.create, self.name, self.version,
+            self.seqs_fp, self.tax_fp, self.tree_fp)
+        # obs = Reference.create(self.name, self.version, self.seqs_fp,
+        #                        self.tax_fp, self.tree_fp)
         self.assertEqual(obs.id, 2)
 
         seqs_id = fp_count + 1
@@ -52,7 +58,7 @@ class ReferenceTests(TestCase):
         # Check that the information on the database is correct
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.reference WHERE reference_id=2")
-        exp = [[2, self.name, self.version, seqs_id, tax_id, tree_id]]
+        exp = [[2, self.name, self.version, seqs_id, tax_id, tree_id, None]]
         self.assertEqual(obs, exp)
 
         # Check that the filepaths have been correctly added to the DB
