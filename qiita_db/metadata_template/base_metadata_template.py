@@ -1171,9 +1171,7 @@ class MetadataTemplate(QiitaObject):
         set of str
             The missing columns
         """
-        def _col_iter():
-            for restriction in restrictions:
-                for col in restriction.columns:
-                    yield col
+        cols = {col for restriction in restrictions
+                for col in restriction.columns}
 
-        return set(_col_iter()).difference(self.categories())
+        return cols.difference(self.categories())
