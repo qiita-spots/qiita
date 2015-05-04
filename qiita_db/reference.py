@@ -7,9 +7,10 @@
 # -----------------------------------------------------------------------------
 from __future__ import division
 from os.path import join
+import warnings
 
 from .base import QiitaObject
-from .exceptions import QiitaDBDuplicateError
+from .exceptions import QiitaDBDuplicateError, QiitaDBWarning
 from .util import (insert_filepaths, convert_to_id,
                    get_mountpoint)
 from .sql_connection import SQLConnectionHandler
@@ -23,6 +24,7 @@ class Reference(QiitaObject):
     sequence_fp
     taxonomy_fp
     tree_fp
+    sortmerna_indexed_db
 
     Methods
     -------
@@ -36,7 +38,8 @@ class Reference(QiitaObject):
     _table = "reference"
 
     @classmethod
-    def create(cls, name, version, seqs_fp, tax_fp=None, tree_fp=None):
+    def create(cls, name, version, seqs_fp, tax_fp=None, tree_fp=None,
+               sortmerna_indexed_db=None):
         r"""Creates a new reference object with a new id on the storage system
 
         Parameters
@@ -51,6 +54,8 @@ class Reference(QiitaObject):
             The path to the reference taxonomy file
         tree_fp : str, optional
             The path to the reference tree file
+        sortmerna_indexed_db : str, optional
+            The base path to the sortmerna_indexed_db
 
         Returns
         -------
@@ -61,6 +66,8 @@ class Reference(QiitaObject):
         QiitaDBDuplicateError
             If the reference database with name `name` and version `version`
             already exists on the system
+        QiitaDBWarning
+            If sortmerna_indexed_db is not passed
         """
         if cls.exists(name, version):
             raise QiitaDBDuplicateError("Reference",
@@ -89,12 +96,25 @@ class Reference(QiitaObject):
                                        "reference", "filepath",
                                        conn_handler)[0]
 
+        smr_id = None
+        if sortmerna_indexed_db:
+            fps = [(dirname(sortmerna_indexed_db),
+                    convert_to_id("directory", "filepath_type"))]
+            smr_id = insert_filepaths(fps, "%s_%s_smr_idx" (name, version),
+                                      "reference", "filepath", conn_handler)
+        else:
+            warnings.warn(
+                "SortMeRNA indexed database not provided. Processing will be "
+                "slower since the reference database will be indexed each "
+                "time.", QiitaDBWarning)
+
         # Insert the actual object to the db
         ref_id = conn_handler.execute_fetchone(
             "INSERT INTO qiita.{0} (reference_name, reference_version, "
-            "sequence_filepath, taxonomy_filepath, tree_filepath) VALUES "
-            "(%s, %s, %s, %s, %s) RETURNING reference_id".format(cls._table),
-            (name, version, seq_id, tax_id, tree_id))[0]
+            "sequence_filepath, taxonomy_filepath, tree_filepath, "
+            "sortmerna_indexed_db_filepath) VALUES (%s, %s, %s, %s, %s, %s) "
+            "RETURNING reference_id".format(cls._table),
+            (name, version, seq_id, tax_id, tree_id, smr_id))[0]
 
         return cls(ref_id)
 
