@@ -145,7 +145,7 @@ class AnalysisResultsHandler(BaseHandler):
         dropped_samples = analysis.dropped_samples
         dropped = defaultdict(list)
         if dropped_samples:
-            for proc_data_id, samples in viewitems(analysis.dropped_samples):
+            for proc_data_id, samples in viewitems(dropped_samples):
                 if not samples:
                     continue
                 proc_data = ProcessedData(proc_data_id)
