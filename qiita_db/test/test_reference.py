@@ -146,6 +146,31 @@ class ReferenceTests(TestCase):
         exp = join(self.db_dir, "GreenGenes_13_8_97_otus.tree")
         self.assertEqual(ref.tree_fp, exp)
 
+    def test_sortmerna_db_error(self):
+        ref = Reference(1)
+        with self.assertRaises(QiitaDBError):
+            ref.sortmerna_db
+
+    def test_sortmerna_db(self):
+        # We need to create a sortmerna db
+        suffixes = ['.bursttrie_0.dat', '.kmer_0.dat', '.pos_0.dat', '.stats']
+        smr_dir = mkdtemp()
+        for suf in suffixes:
+            with open(join(smr_dir, "smr_db%s" % suf), 'w') as f:
+                f.write('\n')
+        smr_idx_db = join(smr_dir, "smr_db")
+
+        new_id = get_count('qiita.reference') + 1
+        ref = Reference.create(self.name, self.version, self.seqs_fp,
+                               self.tax_fp, self.tree_fp,
+                               sortmerna_indexed_db=smr_idx_db)
+
+        exp = join(
+            self.db_dir,
+            "%s_%s_smr_idx_%s" % (self.name, self.version, basename(smr_dir)),
+            "%s_%s" % (self.name, self.version))
+        self.assertEqual(ref.sortmerna_db, exp)
+
     def test_rename_sortmerna_indexed_db_files(self):
         suffixes = ['.bursttrie_0.dat', '.kmer_0.dat', '.pos_0.dat',
                     '.bursttrie_10.dat', '.kmer_10.dat', '.pos_10.dat',

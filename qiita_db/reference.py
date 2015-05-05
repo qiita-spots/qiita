@@ -245,3 +245,21 @@ class Reference(QiitaObject):
             "r.reference_id=%s".format(self._table), (self._id,))[0]
         _, basefp = get_mountpoint('reference')[0]
         return join(basefp, rel_path)
+
+    @property
+    def sortmerna_db(self):
+        conn_handler = SQLConnectionHandler()
+        rel_path = conn_handler.execute_fetchone(
+            "SELECT f.filepath "
+            "FROM qiita.filepath f "
+            "JOIN qiita.{0} r ON r.sortmerna_indexed_db_filepath=f.filepath_id"
+            " WHERE r.reference_id=%s".format(self._table),
+            (self._id,))
+
+        if not rel_path:
+            raise QiitaDBError(
+                "The reference %s does not have a sortmerna indexed DB"
+                % self._id)
+
+        base_fp = get_mountpoint('reference')[0][1]
+        return join(base_fp, rel_path[0], "%s_%s" % (self.name, self.version))
