@@ -113,3 +113,7 @@ As a general rule of thumb you will want to have an updated version of Python
 H5PY is known to cause a few problems, however their [installation
 instructions](http://docs.h5py.org/en/latest/build.html) are a great resource
 to troubleshoot your system in case any of the steps above fail.
+
+## Troubleshooting installation issues with matplotlib
+
+In the event that you get `_tkinter.TclError: no display name and no $DISPLAY environment variable` error while trying to generate figures that rely on matplotlib, you should create a matplotlib rc file. This configuration file should have `backend : agg`. For more information you should visit the [matplotlib configuration](http://matplotlib.org/users/customizing.html) and [troubleshooting](http://matplotlib.org/faq/troubleshooting_faq.html#locating-matplotlib-config-dir) page.
