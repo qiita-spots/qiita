@@ -1955,6 +1955,16 @@ class TestSampleTemplateReadWrite(BaseTestSampleTemplate):
             'anonymized_name', 'tot_org_carb', 'description_duplicate',
             'env_feature'})
 
+    def test_check_restrictions(self):
+        obs = self.tester.check_restrictions([SAMPLE_TEMPLATE_COLUMNS['EBI']])
+        self.assertEqual(obs, set())
+
+        del self.metadata['collection_timestamp']
+        st = npt.assert_warns(QiitaDBWarning, SampleTemplate.create,
+                              self.metadata, self.new_study)
+        obs = st.check_restrictions([SAMPLE_TEMPLATE_COLUMNS['EBI']])
+        self.assertEqual(obs, {'collection_timestamp'})
+
 EXP_SAMPLE_TEMPLATE = (
     "sample_name\tcollection_timestamp\tdescription\tdna_extracted"
     "\thost_subject_id\tint_column\tlatitude\tlongitude"
