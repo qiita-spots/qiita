@@ -6,14 +6,70 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 from __future__ import division
-from os.path import join, dirname
+from os.path import join, dirname, basename, exists
+from shutil import move
+from glob import glob
 import warnings
+import re
 
 from .base import QiitaObject
-from .exceptions import QiitaDBDuplicateError, QiitaDBWarning
+from .exceptions import QiitaDBDuplicateError, QiitaDBWarning, QiitaDBError
 from .util import (insert_filepaths, convert_to_id,
                    get_mountpoint)
 from .sql_connection import SQLConnectionHandler
+
+
+def _rename_sortmerna_indexed_db_files(smr_db, db_name, db_version):
+    """Renames the SortMeRNA indexed db files to use a controlled name
+
+    Parameters
+    ----------
+    smr_db : str
+        The base path to the sortmerna_indexed_db
+    db_name : str
+        The name of the reference database
+    db_version : str
+        The version of the reference database
+
+    Raises
+    ------
+    QiitaDBError
+        If smr_db does not contain a correct SortMeRNA indexed db
+    """
+    smr_db_dir = dirname(smr_db)
+    smr_db_name = basename(smr_db)
+
+    # Rename the .stats file
+    old_fp = "%s.stats" % smr_db
+    if not exists(old_fp):
+        raise QiitaDBError(
+            "%s does not look like a correct SortMeRNA indexed database."
+            % smr_db)
+
+    new_fp = join(smr_db_dir, "%s_%s.stats" % (db_name, db_version))
+    move(old_fp, new_fp)
+
+    suff = ["pos", "bursttrie", "kmer"]
+
+    for s in suff:
+        g_re = "%s.%s_[0-9]*.dat" % (smr_db, s)
+        s_re = "(?<=%s_)[0-9]*(?=.dat)" % s
+
+        old_fps = glob(g_re)
+
+        if not old_fps:
+            raise QiitaDBError(
+                "%s does not look like a correct SortMeRNA indexed database."
+                % smr_db)
+
+        for old_fp in old_fps:
+            result = re.search(s_re, basename(old_fp))
+
+            if result:
+                idx = int(result.group(0))
+                new_fn = "%s_%s.%s_%d.dat" % (db_name, db_version, s, idx)
+                new_fp = join(smr_db_dir, new_fn)
+                move(old_fp, new_fp)
 
 
 class Reference(QiitaObject):
@@ -96,8 +152,12 @@ class Reference(QiitaObject):
                                        "reference", "filepath",
                                        conn_handler)[0]
 
+        # Check if the SortMeRNA indexed database have been provided
         smr_id = None
         if sortmerna_indexed_db:
+            _rename_sortmerna_indexed_db_files(sortmerna_indexed_db, name,
+                                               version)
+
             fps = [(dirname(sortmerna_indexed_db),
                     convert_to_id("directory", "filepath_type"))]
             smr_id = insert_filepaths(fps, "%s_%s_smr_idx" % (name, version),

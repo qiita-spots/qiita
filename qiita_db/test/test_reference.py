@@ -14,8 +14,8 @@ from tempfile import mkstemp, mkdtemp
 import numpy.testing as npt
 
 from qiita_core.util import qiita_test_checker
-from qiita_db.exceptions import QiitaDBWarning
-from qiita_db.reference import Reference
+from qiita_db.exceptions import QiitaDBWarning, QiitaDBError
+from qiita_db.reference import Reference, _rename_sortmerna_indexed_db_files
 from qiita_db.util import get_mountpoint, get_count
 
 
@@ -145,6 +145,50 @@ class ReferenceTests(TestCase):
         ref = Reference(1)
         exp = join(self.db_dir, "GreenGenes_13_8_97_otus.tree")
         self.assertEqual(ref.tree_fp, exp)
+
+    def test_rename_sortmerna_indexed_db_files(self):
+        suffixes = ['.bursttrie_0.dat', '.kmer_0.dat', '.pos_0.dat',
+                    '.bursttrie_10.dat', '.kmer_10.dat', '.pos_10.dat',
+                    '.stats']
+        smr_dir = mkdtemp()
+        for suf in suffixes:
+            with open(join(smr_dir, "smr_db%s" % suf), 'w') as f:
+                f.write('\n')
+        smr_idx_db = join(smr_dir, "smr_db")
+
+        # Add non-SortMeRNA db files to the folder to check that they're
+        # not renames
+        with open(join(smr_dir, "test.txt"), 'w') as f:
+            f.write('\n')
+
+        _rename_sortmerna_indexed_db_files(smr_idx_db, "test_db",  "v_0_1")
+
+        obs = set(listdir(join(self.db_dir, smr_dir)))
+        exp = {"test_db_v_0_1%s" % suf for suf in suffixes}
+        exp.add("test.txt")
+        self.assertEqual(obs, exp)
+
+    def test_rename_sortmerna_indexed_db_files_error_no_stats(self):
+        suffixes = ['.bursttrie_0.dat', '.kmer_0.dat', '.pos_0.dat']
+        smr_dir = mkdtemp()
+        for suf in suffixes:
+            with open(join(smr_dir, "smr_db%s" % suf), 'w') as f:
+                f.write('\n')
+        smr_idx_db = join(smr_dir, "smr_db")
+
+        with self.assertRaises(QiitaDBError):
+            _rename_sortmerna_indexed_db_files(smr_idx_db, "test_db",  "v_0_1")
+
+    def test_rename_sortmerna_indexed_db_files_error_no_dynamic(self):
+        suffixes = ['.bursttrie_0.dat', '.kmer_0.dat', '.stats']
+        smr_dir = mkdtemp()
+        for suf in suffixes:
+            with open(join(smr_dir, "smr_db%s" % suf), 'w') as f:
+                f.write('\n')
+        smr_idx_db = join(smr_dir, "smr_db")
+
+        with self.assertRaises(QiitaDBError):
+            _rename_sortmerna_indexed_db_files(smr_idx_db, "test_db",  "v_0_1")
 
 if __name__ == '__main__':
     main()
