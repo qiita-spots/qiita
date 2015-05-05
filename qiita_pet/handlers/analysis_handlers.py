@@ -30,6 +30,7 @@ from qiita_db.util import (get_db_files_base_dir,
                            check_access_to_analysis_result,
                            filepath_ids_to_rel_paths)
 from qiita_db.exceptions import QiitaDBUnknownIDError
+from qiita_db.study import Study
 
 SELECT_SAMPLES = 2
 SELECT_COMMANDS = 3
@@ -141,14 +142,17 @@ class AnalysisResultsHandler(BaseHandler):
             jobres[jobject.datatype].append((jobject.command[0],
                                              jobject.results))
 
-        dropped = {}
         dropped_samples = analysis.dropped_samples
+        dropped = defaultdict(list)
         if dropped_samples:
             for proc_data_id, samples in viewitems(dropped_samples):
+                if not samples:
+                    continue
                 proc_data = ProcessedData(proc_data_id)
-                key = "Data type %s, Study: %s" % (proc_data.data_type(),
-                                                   proc_data.study)
-                dropped[key] = samples
+                data_type = proc_data.data_type()
+                study = proc_data.study
+                dropped[data_type].append((Study(study).title, len(samples),
+                                           ', '.join(samples)))
 
         self.render("analysis_results.html",
                     jobres=jobres, aname=analysis.name, dropped=dropped,
