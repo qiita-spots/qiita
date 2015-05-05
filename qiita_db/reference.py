@@ -37,7 +37,6 @@ def _rename_sortmerna_indexed_db_files(smr_db, db_name, db_version):
         If smr_db does not contain a correct SortMeRNA indexed db
     """
     smr_db_dir = dirname(smr_db)
-    smr_db_name = basename(smr_db)
 
     # Rename the .stats file
     old_fp = "%s.stats" % smr_db

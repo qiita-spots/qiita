@@ -160,7 +160,6 @@ class ReferenceTests(TestCase):
                 f.write('\n')
         smr_idx_db = join(smr_dir, "smr_db")
 
-        new_id = get_count('qiita.reference') + 1
         ref = Reference.create(self.name, self.version, self.seqs_fp,
                                self.tax_fp, self.tree_fp,
                                sortmerna_indexed_db=smr_idx_db)
