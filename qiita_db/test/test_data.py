@@ -1005,7 +1005,8 @@ class ProcessedDataTests(TestCase):
             'reference_version': '13_8',
             'sequence_filepath': 'GreenGenes_13_8_97_otus.fasta',
             'taxonomy_filepath': 'GreenGenes_13_8_97_otu_taxonomy.txt',
-            'tree_filepath': 'GreenGenes_13_8_97_otus.tree'}
+            'tree_filepath': 'GreenGenes_13_8_97_otus.tree',
+            'sortmerna_indexed_db_filepath': None}
         self.assertEqual(pd.processing_info, exp)
 
     def test_samples(self):
