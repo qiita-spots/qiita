@@ -8,7 +8,8 @@
 
 from unittest import TestCase, main
 from os import close, remove, listdir
-from os.path import basename, join
+from os.path import basename, join, exists
+from shutil import rmtree
 from tempfile import mkstemp, mkdtemp
 
 from qiita_core.util import qiita_test_checker
@@ -32,11 +33,17 @@ class ReferenceTests(TestCase):
 
         _, self.db_dir = get_mountpoint('reference')[0]
 
-        self._clean_up_files = []
+        self._clean_up_files = [self.seqs_fp, self.tax_fp, self.tree_fp]
+        self._clean_up_dirs = []
 
     def tearDown(self):
         for f in self._clean_up_files:
-            remove(f)
+            if exists(f):
+                remove(f)
+
+        for d in self._clean_up_dirs:
+            if exists(d):
+                rmtree(d)
 
     def test_create(self):
         """Correctly creates the rows in the DB for the reference"""
@@ -61,12 +68,19 @@ class ReferenceTests(TestCase):
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.filepath WHERE filepath_id=%s or "
             "filepath_id=%s or filepath_id=%s", (seqs_id, tax_id, tree_id))
+
         exp_seq = "%s_%s_%s" % (self.name, self.version,
                                 basename(self.seqs_fp))
+        self._clean_up_files.append(join(self.db_dir, exp_seq))
+
         exp_tax = "%s_%s_%s" % (self.name, self.version,
                                 basename(self.tax_fp))
+        self._clean_up_files.append(join(self.db_dir, exp_tax))
+
         exp_tree = "%s_%s_%s" % (self.name, self.version,
                                  basename(self.tree_fp))
+        self._clean_up_files.append(join(self.db_dir, exp_tree))
+
         exp = [[seqs_id, exp_seq, 10, '0', 1, 6],
                [tax_id, exp_tax, 11, '0', 1, 6],
                [tree_id, exp_tree, 12, '0', 1, 6]]
@@ -78,6 +92,7 @@ class ReferenceTests(TestCase):
         # We need to create a sortmerna db
         suffixes = ['.bursttrie_0.dat', '.kmer_0.dat', '.pos_0.dat', '.stats']
         smr_dir = mkdtemp()
+        self._clean_up_dirs.append(smr_dir)
         for suf in suffixes:
             with open(join(smr_dir, "smr_db%s" % suf), 'w') as f:
                 f.write('\n')
@@ -108,14 +123,23 @@ class ReferenceTests(TestCase):
             "WHERE filepath_id IN (%s, %s, %s, %s) "
             "ORDER BY filepath_id",
             (seqs_id, tax_id, tree_id, smr_db_id))
+
         exp_seq = "%s_%s_%s" % (self.name, self.version,
                                 basename(self.seqs_fp))
+        self._clean_up_files.append(join(self.db_dir, exp_seq))
+
         exp_tax = "%s_%s_%s" % (self.name, self.version,
                                 basename(self.tax_fp))
+        self._clean_up_files.append(join(self.db_dir, exp_tax))
+
         exp_tree = "%s_%s_%s" % (self.name, self.version,
                                  basename(self.tree_fp))
+        self._clean_up_files.append(join(self.db_dir, exp_tree))
+
         exp_smr_db = "%s_%s_smr_idx_%s" % (self.name, self.version,
                                            basename(smr_dir))
+        self._clean_up_dirs.append(join(self.db_dir, exp_smr_db))
+
         exp = [[seqs_id, exp_seq, 10, '0', 1, 6],
                [tax_id, exp_tax, 11, '0', 1, 6],
                [tree_id, exp_tree, 12, '0', 1, 6],
@@ -139,6 +163,12 @@ class ReferenceTests(TestCase):
     def test_no_taxonomy_fp(self):
         ref = Reference.create(self.name, self.version, self.seqs_fp,
                                tree_fp=self.tree_fp)
+        exp_seq = "%s_%s_%s" % (self.name, self.version,
+                                basename(self.seqs_fp))
+        self._clean_up_files.append(join(self.db_dir, exp_seq))
+        exp_tree = "%s_%s_%s" % (self.name, self.version,
+                                 basename(self.tree_fp))
+        self._clean_up_files.append(join(self.db_dir, exp_tree))
         self.assertEqual(ref.taxonomy_fp, None)
 
     def test_tree_fp(self):
@@ -149,6 +179,12 @@ class ReferenceTests(TestCase):
     def test_no_tree_fp(self):
         ref = Reference.create(self.name, self.version, self.seqs_fp,
                                tax_fp=self.tax_fp)
+        exp_seq = "%s_%s_%s" % (self.name, self.version,
+                                basename(self.seqs_fp))
+        self._clean_up_files.append(join(self.db_dir, exp_seq))
+        exp_tax = "%s_%s_%s" % (self.name, self.version,
+                                basename(self.tax_fp))
+        self._clean_up_files.append(join(self.db_dir, exp_tax))
         self.assertEqual(ref.tree_fp, None)
 
     def test_no_sortmerna_db(self):
@@ -159,6 +195,7 @@ class ReferenceTests(TestCase):
         # We need to create a sortmerna db
         suffixes = ['.bursttrie_0.dat', '.kmer_0.dat', '.pos_0.dat', '.stats']
         smr_dir = mkdtemp()
+        self._clean_up_dirs.append(smr_dir)
         for suf in suffixes:
             with open(join(smr_dir, "smr_db%s" % suf), 'w') as f:
                 f.write('\n')
@@ -167,6 +204,22 @@ class ReferenceTests(TestCase):
         ref = Reference.create(self.name, self.version, self.seqs_fp,
                                self.tax_fp, self.tree_fp,
                                sortmerna_indexed_db=smr_idx_db)
+
+        exp_seq = "%s_%s_%s" % (self.name, self.version,
+                                basename(self.seqs_fp))
+        self._clean_up_files.append(join(self.db_dir, exp_seq))
+
+        exp_tax = "%s_%s_%s" % (self.name, self.version,
+                                basename(self.tax_fp))
+        self._clean_up_files.append(join(self.db_dir, exp_tax))
+
+        exp_tree = "%s_%s_%s" % (self.name, self.version,
+                                 basename(self.tree_fp))
+        self._clean_up_files.append(join(self.db_dir, exp_tree))
+
+        exp_smr_db = "%s_%s_smr_idx_%s" % (self.name, self.version,
+                                           basename(smr_dir))
+        self._clean_up_dirs.append(join(self.db_dir, exp_smr_db))
 
         exp = join(
             self.db_dir,
@@ -179,6 +232,7 @@ class ReferenceTests(TestCase):
                     '.bursttrie_10.dat', '.kmer_10.dat', '.pos_10.dat',
                     '.stats']
         smr_dir = mkdtemp()
+        self._clean_up_dirs.append(smr_dir)
         for suf in suffixes:
             with open(join(smr_dir, "smr_db%s" % suf), 'w') as f:
                 f.write('\n')
@@ -199,6 +253,7 @@ class ReferenceTests(TestCase):
     def test_rename_sortmerna_indexed_db_files_error_no_stats(self):
         suffixes = ['.bursttrie_0.dat', '.kmer_0.dat', '.pos_0.dat']
         smr_dir = mkdtemp()
+        self._clean_up_dirs.append(smr_dir)
         for suf in suffixes:
             with open(join(smr_dir, "smr_db%s" % suf), 'w') as f:
                 f.write('\n')
@@ -210,6 +265,7 @@ class ReferenceTests(TestCase):
     def test_rename_sortmerna_indexed_db_files_error_no_dynamic(self):
         suffixes = ['.bursttrie_0.dat', '.kmer_0.dat', '.stats']
         smr_dir = mkdtemp()
+        self._clean_up_dirs.append(smr_dir)
         for suf in suffixes:
             with open(join(smr_dir, "smr_db%s" % suf), 'w') as f:
                 f.write('\n')
