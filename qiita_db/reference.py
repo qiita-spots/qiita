@@ -9,11 +9,10 @@ from __future__ import division
 from os.path import join, dirname, basename, exists
 from shutil import move
 from glob import glob
-import warnings
 import re
 
 from .base import QiitaObject
-from .exceptions import QiitaDBDuplicateError, QiitaDBWarning, QiitaDBError
+from .exceptions import QiitaDBDuplicateError, QiitaDBError
 from .util import (insert_filepaths, convert_to_id,
                    get_mountpoint)
 from .sql_connection import SQLConnectionHandler
@@ -46,13 +45,14 @@ def _rename_sortmerna_indexed_db_files(smr_db, db_name, db_version):
             % smr_db)
 
     new_fp = join(smr_db_dir, "%s_%s.stats" % (db_name, db_version))
-    move(old_fp, new_fp)
+
+    fps_to_rename = [(old_fp, new_fp)]
 
     suff = ["pos", "bursttrie", "kmer"]
 
     for s in suff:
         g_re = "%s.%s_[0-9]*.dat" % (smr_db, s)
-        s_re = "(?<=%s_)[0-9]*(?=.dat)" % s
+        s_re = "\.%s_(\d+)\.dat" % s
 
         old_fps = glob(g_re)
 
@@ -65,10 +65,13 @@ def _rename_sortmerna_indexed_db_files(smr_db, db_name, db_version):
             result = re.search(s_re, basename(old_fp))
 
             if result:
-                idx = int(result.group(0))
+                idx = int(result.group(1))
                 new_fn = "%s_%s.%s_%d.dat" % (db_name, db_version, s, idx)
                 new_fp = join(smr_db_dir, new_fn)
-                move(old_fp, new_fp)
+                fps_to_rename.append((old_fp, new_fp))
+
+    for old_fp, new_fp in fps_to_rename:
+        move(old_fp, new_fp)
 
 
 class Reference(QiitaObject):
@@ -161,11 +164,6 @@ class Reference(QiitaObject):
                     convert_to_id("directory", "filepath_type"))]
             smr_id = insert_filepaths(fps, "%s_%s_smr_idx" % (name, version),
                                       "reference", "filepath", conn_handler)[0]
-        else:
-            warnings.warn(
-                "SortMeRNA indexed database not provided. Processing will be "
-                "slower since the reference database will be indexed each "
-                "time.", QiitaDBWarning)
 
         # Insert the actual object to the db
         ref_id = conn_handler.execute_fetchone(
@@ -231,9 +229,13 @@ class Reference(QiitaObject):
         rel_path = conn_handler.execute_fetchone(
             "SELECT f.filepath FROM qiita.filepath f JOIN qiita.{0} r ON "
             "r.taxonomy_filepath=f.filepath_id WHERE "
-            "r.reference_id=%s".format(self._table), (self._id,))[0]
+            "r.reference_id=%s".format(self._table), (self._id,))
+
+        if not rel_path:
+            return None
+
         _, basefp = get_mountpoint('reference')[0]
-        return join(basefp, rel_path)
+        return join(basefp, rel_path[0])
 
     @property
     def tree_fp(self):
@@ -241,9 +243,13 @@ class Reference(QiitaObject):
         rel_path = conn_handler.execute_fetchone(
             "SELECT f.filepath FROM qiita.filepath f JOIN qiita.{0} r ON "
             "r.tree_filepath=f.filepath_id WHERE "
-            "r.reference_id=%s".format(self._table), (self._id,))[0]
+            "r.reference_id=%s".format(self._table), (self._id,))
+
+        if not rel_path:
+            return None
+
         _, basefp = get_mountpoint('reference')[0]
-        return join(basefp, rel_path)
+        return join(basefp, rel_path[0])
 
     @property
     def sortmerna_db(self):
@@ -256,9 +262,7 @@ class Reference(QiitaObject):
             (self._id,))
 
         if not rel_path:
-            raise QiitaDBError(
-                "The reference %s does not have a sortmerna indexed DB"
-                % self._id)
+            return None
 
         base_fp = get_mountpoint('reference')[0][1]
         return join(base_fp, rel_path[0], "%s_%s" % (self.name, self.version))

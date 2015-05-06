@@ -11,10 +11,8 @@ from os import close, remove, listdir
 from os.path import basename, join
 from tempfile import mkstemp, mkdtemp
 
-import numpy.testing as npt
-
 from qiita_core.util import qiita_test_checker
-from qiita_db.exceptions import QiitaDBWarning, QiitaDBError
+from qiita_db.exceptions import QiitaDBError
 from qiita_db.reference import Reference, _rename_sortmerna_indexed_db_files
 from qiita_db.util import get_mountpoint, get_count
 
@@ -45,11 +43,8 @@ class ReferenceTests(TestCase):
         fp_count = get_count('qiita.filepath')
         # Check that the returned object has the correct id
         # It raises a warning because the SortMeRNA DB is not provided
-        obs = npt.assert_warns(
-            QiitaDBWarning, Reference.create, self.name, self.version,
-            self.seqs_fp, self.tax_fp, self.tree_fp)
-        # obs = Reference.create(self.name, self.version, self.seqs_fp,
-        #                        self.tax_fp, self.tree_fp)
+        obs = Reference.create(self.name, self.version, self.seqs_fp,
+                               self.tax_fp, self.tree_fp)
         self.assertEqual(obs.id, 2)
 
         seqs_id = fp_count + 1
@@ -141,15 +136,24 @@ class ReferenceTests(TestCase):
         exp = join(self.db_dir, "GreenGenes_13_8_97_otu_taxonomy.txt")
         self.assertEqual(ref.taxonomy_fp, exp)
 
+    def test_no_taxonomy_fp(self):
+        ref = Reference.create(self.name, self.version, self.seqs_fp,
+                               tree_fp=self.tree_fp)
+        self.assertEqual(ref.taxonomy_fp, None)
+
     def test_tree_fp(self):
         ref = Reference(1)
         exp = join(self.db_dir, "GreenGenes_13_8_97_otus.tree")
         self.assertEqual(ref.tree_fp, exp)
 
-    def test_sortmerna_db_error(self):
+    def test_no_tree_fp(self):
+        ref = Reference.create(self.name, self.version, self.seqs_fp,
+                               tax_fp=self.tax_fp)
+        self.assertEqual(ref.tree_fp, None)
+
+    def test_no_sortmerna_db(self):
         ref = Reference(1)
-        with self.assertRaises(QiitaDBError):
-            ref.sortmerna_db
+        self.assertEqual(ref.sortmerna_db, None)
 
     def test_sortmerna_db(self):
         # We need to create a sortmerna db
