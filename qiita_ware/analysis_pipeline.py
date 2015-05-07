@@ -28,6 +28,9 @@ def _build_analysis_files(analysis, r_depth=None, **kwargs):
     r_depth : int, optional
         Rarefaction depth for biom table creation. Default None
     """
+    if not analysis.jobs:
+        raise RuntimeError("Analysis %d has no jobs attached!" % analysis.id)
+
     # create the biom tables and add jobs to the analysis
     analysis.status = "running"
     analysis.build_files(r_depth)
