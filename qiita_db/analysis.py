@@ -432,7 +432,7 @@ class Analysis(QiitaStatusObject):
                "analysis_id = %s".format(self._table))
         job_ids = conn_handler.execute_fetchall(sql, (self._id, ))
         if job_ids == []:
-            return None
+            return []
         return [job_id[0] for job_id in job_ids]
 
     @property

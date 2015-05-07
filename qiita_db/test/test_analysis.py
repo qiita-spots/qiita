@@ -304,7 +304,7 @@ class TestAnalysis(TestCase):
     def test_retrieve_jobs_none(self):
         new = Analysis.create(User("admin@foo.bar"), "newAnalysis",
                               "A New Analysis", Analysis(1))
-        self.assertEqual(new.jobs, None)
+        self.assertEqual(new.jobs, [])
 
     def test_retrieve_pmid(self):
         self.assertEqual(self.analysis.pmid, "121112")
