@@ -425,14 +425,12 @@ class Analysis(QiitaStatusObject):
         Returns
         -------
         list of ints
-            Job ids for jobs in analysis
+            Job ids for jobs in analysis. Empty list if no jobs attached.
         """
         conn_handler = SQLConnectionHandler()
         sql = ("SELECT job_id FROM qiita.analysis_job WHERE "
                "analysis_id = %s".format(self._table))
         job_ids = conn_handler.execute_fetchall(sql, (self._id, ))
-        if job_ids == []:
-            return []
         return [job_id[0] for job_id in job_ids]
 
     @property
