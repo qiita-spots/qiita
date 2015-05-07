@@ -795,12 +795,14 @@ class TestSampleTemplateReadOnly(BaseTestSampleTemplate):
 
         sql_crate_table = (
             'CREATE TABLE qiita.sample_2 (sample_id varchar NOT NULL, '
-            'collection_timestamp timestamp, ''description varchar, '
+            'collection_timestamp timestamp, description varchar, '
             'dna_extracted bool, host_subject_id varchar, int_column integer, '
             'latitude float8, longitude float8, '
             'physical_specimen_location varchar, '
             'physical_specimen_remaining bool, sample_type varchar, '
-            'str_column varchar)')
+            'str_column varchar, '
+            'CONSTRAINT fk_sample_2 FOREIGN KEY (sample_id) REFERENCES '
+            'qiita.study_sample (sample_id) ON UPDATE CASCADE)')
 
         sql_insert_dynamic = (
             'INSERT INTO qiita.sample_2 '
