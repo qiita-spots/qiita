@@ -627,7 +627,9 @@ class TestPrepTemplateReadOnly(BaseTestPrepTemplate):
             'emp_status varchar, experiment_design_description varchar, '
             'library_construction_protocol varchar, '
             'linkerprimersequence varchar, platform varchar, '
-            'run_prefix varchar, str_column varchar)')
+            'run_prefix varchar, str_column varchar, '
+            'CONSTRAINT fk_prep_2 FOREIGN KEY (sample_id) REFERENCES '
+            'qiita.study_sample (sample_id) ON UPDATE CASCADE)')
 
         sql_insert_dynamic = (
             'INSERT INTO qiita.prep_2 '
