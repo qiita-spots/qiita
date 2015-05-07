@@ -268,9 +268,9 @@ table {
 <rect style='fill:url(#groupUnderTitleLine); stroke-width:2;' x='160' y='58' width='325' height='2' />
 
 <!-- ============= Group 'Group_study' ============= -->
-<rect class='grp' style='fill:#99ff99;stroke:#c5e0c5' x='1019' y='10' width='1442' height='1265' />
-<text x='1030' y='25'>Group_study</text>
-<rect style='fill:url(#groupUnderTitleLine); stroke-width:2;' x='1030' y='28' width='1420' height='2' />
+<rect class='grp' style='fill:#99ff99;stroke:#c5e0c5' x='1004' y='10' width='1457' height='1265' />
+<text x='1015' y='25'>Group_study</text>
+<rect style='fill:url(#groupUnderTitleLine); stroke-width:2;' x='1015' y='28' width='1435' height='2' />
 
 <!-- ============= Group 'Group_vocabularies' ============= -->
 <rect class='grp' style='fill:#00ffcc;stroke:#c5e0db' x='29' y='1300' width='452' height='545' />
@@ -362,7 +362,7 @@ table {
 	analysis_users references qiita_user ( email )</title>
 </path>
 <text x='19' y='730' transform='rotate(0 19,730)' title='Foreign Key fk_analysis_users_user
-	analysis_users references qiita_user ( email )' style='fill:#a1a0a0;'>email</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1695 735 L 1822,735 Q 1830,735 1830,727 L 1830,420' >
+	analysis_users references qiita_user ( email )' style='fill:#a1a0a0;'>email</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1695 735 L 1852,735 Q 1860,735 1860,727 L 1860,420' >
 	<title>Foreign Key fk_study_preprocessed_data
 	study_preprocessed_data references study ( study_id )</title>
 </path>
@@ -382,17 +382,7 @@ table {
 	study_users references qiita_user ( email )</title>
 </path>
 <text x='1024' y='100' transform='rotate(0 1024,100)' title='Foreign Key fk_study_users_user
-	study_users references qiita_user ( email )' style='fill:#a1a0a0;'>email</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1680 525 L 1852,525 Q 1860,525 1860,517 L 1860,420' >
-	<title>Foreign Key fk_study_raw_data_study
-	study_raw_data references study ( study_id )</title>
-</path>
-<text x='1687' y='520' transform='rotate(0 1687,520)' title='Foreign Key fk_study_raw_data_study
-	study_raw_data references study ( study_id )' style='fill:#a1a0a0;'>study_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1560 510 L 1425,510' >
-	<title>Foreign Key fk_study_raw_data_raw_data
-	study_raw_data references raw_data ( raw_data_id )</title>
-</path>
-<text x='1498' y='505' transform='rotate(0 1498,505)' title='Foreign Key fk_study_raw_data_raw_data
-	study_raw_data references raw_data ( raw_data_id )' style='fill:#a1a0a0;'>raw_data_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1200 975 L 1260,975' >
+	study_users references qiita_user ( email )' style='fill:#a1a0a0;'>email</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1200 975 L 1260,975' >
 	<title>Foreign Key fk_processed_data_filepath
 	processed_filepath references processed_data ( processed_data_id )</title>
 </path>
@@ -407,11 +397,11 @@ table {
 	logging references severity ( severity_id )</title>
 </path>
 <text x='1447' y='1300' transform='rotate(0 1447,1300)' title='Foreign Key fk_logging_severity
-	logging references severity ( severity_id )' style='fill:#a1a0a0;'>severity_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1530 930 L 1530,817 Q 1530,810 1522,810 L 1522,810 Q 1515,810 1515,802 L 1515,442 Q 1515,435 1522,435 L 1837,435 Q 1845,435 1845,427 L 1845,420' >
+	logging references severity ( severity_id )' style='fill:#a1a0a0;'>severity_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1650 960 L 1702,960 Q 1710,960 1710,952 L 1710,727 Q 1710,720 1717,720 L 1867,720 Q 1875,720 1875,712 L 1875,420' >
 	<title>Foreign Key fk_study_processed_data
 	study_processed_data references study ( study_id )</title>
 </path>
-<text x='1532' y='925' transform='rotate(270 1532,925)' title='Foreign Key fk_study_processed_data
+<text x='1657' y='955' transform='rotate(0 1657,955)' title='Foreign Key fk_study_processed_data
 	study_processed_data references study ( study_id )' style='fill:#a1a0a0;'>study_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1500 975 L 1455,975' >
 	<title>Foreign Key fk_study_processed_data_0
 	study_processed_data references processed_data ( processed_data_id )</title>
@@ -432,11 +422,11 @@ table {
 	preprocessed_filepath references preprocessed_data ( preprocessed_data_id )</title>
 </path>
 <text x='1207' y='715' transform='rotate(0 1207,715)' title='Foreign Key fk_preprocessed_filepath
-	preprocessed_filepath references preprocessed_data ( preprocessed_data_id )' style='fill:#a1a0a0;'>preprocessed_data_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1035 735 L 810,735' >
+	preprocessed_filepath references preprocessed_data ( preprocessed_data_id )' style='fill:#a1a0a0;'>preprocessed_data_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1035 720 L 810,720' >
 	<title>Foreign Key fk_preprocessed_filepath_0
 	preprocessed_filepath references filepath ( filepath_id )</title>
 </path>
-<text x='981' y='730' transform='rotate(0 981,730)' title='Foreign Key fk_preprocessed_filepath_0
+<text x='981' y='715' transform='rotate(0 981,715)' title='Foreign Key fk_preprocessed_filepath_0
 	preprocessed_filepath references filepath ( filepath_id )' style='fill:#a1a0a0;'>filepath_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 390 735 L 360,735' >
 	<title>Foreign Key fk_analysis_filepath
 	analysis_filepath references analysis ( analysis_id )</title>
@@ -482,37 +472,7 @@ table {
 	qiita_user references user_level ( user_level_id )</title>
 </path>
 <text x='247' y='85' transform='rotate(0 247,85)' title='Foreign Key fk_user_user_level
-	qiita_user references user_level ( user_level_id )' style='fill:#a1a0a0;'>user_level_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1260 375 L 1215,375' >
-	<title>Foreign Key fk_prep_columns_prep_template
-	prep_columns references prep_template ( prep_template_id )</title>
-</path>
-<text x='1169' y='370' transform='rotate(0 1169,370)' title='Foreign Key fk_prep_columns_prep_template
-	prep_columns references prep_template ( prep_template_id )' style='fill:#a1a0a0;'>prep_template_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1065 555 L 802,555 Q 795,555 795,562 L 795,660' >
-	<title>Foreign Key fk_raw_filepath
-	raw_filepath references filepath ( filepath_id )</title>
-</path>
-<text x='1011' y='550' transform='rotate(0 1011,550)' title='Foreign Key fk_raw_filepath
-	raw_filepath references filepath ( filepath_id )' style='fill:#a1a0a0;'>filepath_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1185 525 L 1260,525' >
-	<title>Foreign Key fk_raw_filepath_0
-	raw_filepath references raw_data ( raw_data_id )</title>
-</path>
-<text x='1192' y='520' transform='rotate(0 1192,520)' title='Foreign Key fk_raw_filepath_0
-	raw_filepath references raw_data ( raw_data_id )' style='fill:#a1a0a0;'>raw_data_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1050 420 L 622,420 Q 615,420 615,427 L 615,847 Q 615,855 622,855 L 952,855 Q 960,855 960,862 L 960,1027 Q 960,1035 952,1035 L 795,1035' >
-	<title>Foreign Key fk_prep_template_data_type
-	prep_template references data_type ( data_type_id )</title>
-</path>
-<text x='984' y='415' transform='rotate(0 984,415)' title='Foreign Key fk_prep_template_data_type
-	prep_template references data_type ( data_type_id )' style='fill:#a1a0a0;'>data_type_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1215 465 L 1282,465 Q 1290,465 1290,472 L 1290,480' >
-	<title>Foreign Key fk_prep_template_raw_data
-	prep_template references raw_data ( raw_data_id )</title>
-</path>
-<text x='1222' y='460' transform='rotate(0 1222,460)' title='Foreign Key fk_prep_template_raw_data
-	prep_template references raw_data ( raw_data_id )' style='fill:#a1a0a0;'>raw_data_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1425 570 L 1492,570 Q 1500,570 1500,577 L 1500,607 Q 1500,615 1507,615 L 1545,615' >
-	<title>Foreign Key fk_raw_data_filetype
-	raw_data references filetype ( filetype_id )</title>
-</path>
-<text x='1432' y='565' transform='rotate(0 1432,565)' title='Foreign Key fk_raw_data_filetype
-	raw_data references filetype ( filetype_id )' style='fill:#a1a0a0;'>filetype_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 390 1110 L 337,1110 Q 330,1110 330,1117 L 330,1117 Q 330,1125 322,1125 L 315,1125' >
+	qiita_user references user_level ( user_level_id )' style='fill:#a1a0a0;'>user_level_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 390 1110 L 337,1110 Q 330,1110 330,1117 L 330,1117 Q 330,1125 322,1125 L 315,1125' >
 	<title>Foreign Key fk_job_function
 	job references command ( command_id )</title>
 </path>
@@ -562,17 +522,7 @@ table {
 	study_environmental_package references environmental_package ( environmental_package_name )</title>
 </path>
 <text x='2278' y='120' transform='rotate(90 2278,120)' title='Foreign Key fk_study_environmental_package_0
-	study_environmental_package references environmental_package ( environmental_package_name )' style='fill:#a1a0a0;'>environmental_package_name</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1020 645 L 997,645 Q 990,645 990,652 L 990,712 Q 990,720 982,720 L 810,720' >
-	<title>Foreign Key fk_filepath_id
-	prep_template_filepath references filepath ( filepath_id )</title>
-</path>
-<text x='966' y='640' transform='rotate(0 966,640)' title='Foreign Key fk_filepath_id
-	prep_template_filepath references filepath ( filepath_id )' style='fill:#a1a0a0;'>filepath_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1170 615 L 1192,615 Q 1200,615 1200,607 L 1200,480' >
-	<title>Foreign Key fk_prep_template_id
-	prep_template_filepath references prep_template ( prep_template_id )</title>
-</path>
-<text x='1177' y='610' transform='rotate(0 1177,610)' title='Foreign Key fk_prep_template_id
-	prep_template_filepath references prep_template ( prep_template_id )' style='fill:#a1a0a0;'>prep_template_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1200 810 L 1207,810 Q 1215,810 1215,802 L 1215,607 Q 1215,600 1222,600 L 1522,600 Q 1530,600 1530,592 L 1530,397 Q 1530,390 1537,390 L 1800,390' >
+	study_environmental_package references environmental_package ( environmental_package_name )' style='fill:#a1a0a0;'>environmental_package_name</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1200 810 L 1222,810 Q 1230,810 1230,802 L 1230,517 Q 1230,510 1237,510 L 1822,510 Q 1830,510 1830,502 L 1830,420' >
 	<title>Foreign Key fk_study_id
 	sample_template_filepath references study ( study_id )</title>
 </path>
@@ -582,22 +532,22 @@ table {
 	sample_template_filepath references filepath ( filepath_id )</title>
 </path>
 <text x='981' y='820' transform='rotate(0 981,820)' title='Foreign Key fk_filepath_id
-	sample_template_filepath references filepath ( filepath_id )' style='fill:#a1a0a0;'>filepath_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 960 465 L 1027,465 Q 1035,465 1035,457 L 1035,457 Q 1035,450 1042,450 L 1050,450' >
-	<title>Foreign Key fk_prep_template_id
-	prep_template_preprocessed_data references prep_template ( prep_template_id )</title>
+	sample_template_filepath references filepath ( filepath_id )' style='fill:#a1a0a0;'>filepath_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1245 675 L 1027,675 Q 1020,675 1020,682 L 1020,1027 Q 1020,1035 1012,1035 L 795,1035' >
+	<title>Foreign Key fk_preprocessed_data
+	preprocessed_data references data_type ( data_type_id )</title>
 </path>
-<text x='967' y='460' transform='rotate(0 967,460)' title='Foreign Key fk_prep_template_id
-	prep_template_preprocessed_data references prep_template ( prep_template_id )' style='fill:#a1a0a0;'>prep_template_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 960 510 L 997,510 Q 1005,510 1005,517 L 1005,877 Q 1005,885 1012,885 L 1207,885 Q 1215,885 1215,877 L 1215,847 Q 1215,840 1222,840 L 1245,840' >
-	<title>Foreign Key fk_prep_template_preprocessed_data
-	prep_template_preprocessed_data references preprocessed_data ( preprocessed_data_id )</title>
-</path>
-<text x='967' y='505' transform='rotate(0 967,505)' title='Foreign Key fk_prep_template_preprocessed_data
-	prep_template_preprocessed_data references preprocessed_data ( preprocessed_data_id )' style='fill:#a1a0a0;'>preprocessed_data_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 2265 975 L 2182,975 Q 2175,975 2175,967 L 2175,787 Q 2175,780 2167,780 L 1717,780 Q 1710,780 1710,787 L 1710,907 Q 1710,915 1702,915 L 1477,915 Q 1470,915 1470,922 L 1470,1117 Q 1470,1125 1462,1125 L 952,1125 Q 945,1125 945,1117 L 945,772 Q 945,765 937,765 L 810,765' >
+<text x='1179' y='670' transform='rotate(0 1179,670)' title='Foreign Key fk_preprocessed_data
+	preprocessed_data references data_type ( data_type_id )' style='fill:#a1a0a0;'>data_type_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 2265 975 L 2182,975 Q 2175,975 2175,967 L 2175,787 Q 2175,780 2167,780 L 1732,780 Q 1725,780 1725,787 L 1725,907 Q 1725,915 1717,915 L 1477,915 Q 1470,915 1470,922 L 1470,1117 Q 1470,1125 1462,1125 L 952,1125 Q 945,1125 945,1117 L 945,772 Q 945,765 937,765 L 810,765' >
 	<title>Foreign Key fk_reference_sequence_filepath
 	reference references filepath ( sequence_filepath -> filepath_id )</title>
 </path>
 <text x='2170' y='970' transform='rotate(0 2170,970)' title='Foreign Key fk_reference_sequence_filepath
-	reference references filepath ( sequence_filepath -> filepath_id )' style='fill:#a1a0a0;'>sequence_filepath</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 2160 960 L 2265,960' >
+	reference references filepath ( sequence_filepath -> filepath_id )' style='fill:#a1a0a0;'>sequence_filepath</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'  style='stroke-dasharray:4,2;'  d='M 2400 945 L 2400,772 Q 2400,765 2392,765 L 1747,765 Q 1740,765 1740,772 L 1740,802 Q 1740,810 1732,810 L 1477,810 Q 1470,810 1470,802 L 1470,652 Q 1470,645 1462,645 L 1012,645 Q 1005,645 1005,652 L 1005,727 Q 1005,735 997,735 L 810,735' >
+	<title>Foreign Key fk_reference_taxonomy_filepath
+	reference references filepath ( taxonomy_filepath -> filepath_id )</title>
+</path>
+<text x='2402' y='940' transform='rotate(270 2402,940)' title='Foreign Key fk_reference_taxonomy_filepath
+	reference references filepath ( taxonomy_filepath -> filepath_id )' style='fill:#a1a0a0;'>taxonomy_filepath</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 2160 960 L 2265,960' >
 	<title>Foreign Key fk_processed_params_sortmerna
 	processed_params_sortmerna references reference ( reference_id )</title>
 </path>
@@ -667,7 +617,7 @@ table {
 	study_pmid references study ( study_id )</title>
 </path>
 <text x='2086' y='595' transform='rotate(0 2086,595)' title='Foreign Key fk_study_pmid_study
-	study_pmid references study ( study_id )' style='fill:#a1a0a0;'>study_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1800 60 L 1177,60 Q 1170,60 1170,52 L 1170,37 Q 1170,30 1162,30 L 472,30 Q 465,30 465,37 L 465,75' >
+	study_pmid references study ( study_id )' style='fill:#a1a0a0;'>study_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1800 60 L 1177,60 Q 1170,60 1170,67 L 1170,142 Q 1170,150 1162,150 L 480,150' >
 	<title>Foreign Key fk_study_user
 	study references qiita_user ( email )</title>
 </path>
@@ -687,11 +637,11 @@ table {
 	study references study_person ( principal_investigator_id -> study_person_id )</title>
 </path>
 <text x='2002' y='130' transform='rotate(0 2002,130)' title='Foreign Key fk_study_study_pi_person
-	study references study_person ( principal_investigator_id -> study_person_id )' style='fill:#a1a0a0;'>principal_investigator_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1875 420 L 1875,622 Q 1875,630 1867,630 L 1815,630' >
+	study references study_person ( principal_investigator_id -> study_person_id )' style='fill:#a1a0a0;'>principal_investigator_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1800 390 L 1792,390 Q 1785,390 1785,397 L 1785,600' >
 	<title>Foreign Key fk_study_timeseries_type
 	study references timeseries_type ( timeseries_type_id )</title>
 </path>
-<text x='1888' y='420' transform='rotate(90 1888,420)' title='Foreign Key fk_study_timeseries_type
+<text x='1702' y='385' transform='rotate(0 1702,385)' title='Foreign Key fk_study_timeseries_type
 	study references timeseries_type ( timeseries_type_id )' style='fill:#a1a0a0;'>timeseries_type_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1995 390 L 2002,390 Q 2010,390 2010,397 L 2010,645' >
 	<title>Foreign Key fk_study
 	study references portal_type ( portal_type_id )</title>
@@ -722,26 +672,81 @@ table {
 	analysis_sample references processed_data ( processed_data_id )</title>
 </path>
 <text x='178' y='1260' transform='rotate(90 178,1260)' title='Foreign Key fk_analysis_processed_data
-	analysis_sample references processed_data ( processed_data_id )' style='fill:#a1a0a0;'>processed_data_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 150 1260 L 150,1282 Q 150,1290 157,1290 L 1222,1290 Q 1230,1290 1230,1282 L 1230,307 Q 1230,300 1237,300 L 1417,300 Q 1425,300 1425,292 L 1425,195' >
+	analysis_sample references processed_data ( processed_data_id )' style='fill:#a1a0a0;'>processed_data_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 150 1260 L 150,1282 Q 150,1290 157,1290 L 982,1290 Q 990,1290 990,1282 L 990,37 Q 990,30 997,30 L 1522,30 Q 1530,30 1530,37 L 1530,90' >
 	<title>Foreign Key fk_analysis_sample
 	analysis_sample references study_sample ( sample_id )</title>
 </path>
 <text x='163' y='1260' transform='rotate(90 163,1260)' title='Foreign Key fk_analysis_sample
-	analysis_sample references study_sample ( sample_id )' style='fill:#a1a0a0;'>sample_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1500 135 L 1800,135' >
+	analysis_sample references study_sample ( sample_id )' style='fill:#a1a0a0;'>sample_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1605 120 L 1800,120' >
 	<title>Foreign Key fk_required_sample_info_study
 	study_sample references study ( study_id )</title>
 </path>
-<text x='1507' y='130' transform='rotate(0 1507,130)' title='Foreign Key fk_required_sample_info_study
-	study_sample references study ( study_id )' style='fill:#a1a0a0;'>study_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1185 180 L 1192,180 Q 1200,180 1200,172 L 1200,172 Q 1200,165 1207,165 L 1395,165' >
-	<title>Foreign Key fk_common_prep_info
-	prep_template_sample references study_sample ( sample_id )</title>
+<text x='1612' y='115' transform='rotate(0 1612,115)' title='Foreign Key fk_required_sample_info_study
+	study_sample references study ( study_id )' style='fill:#a1a0a0;'>study_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1050 285 L 1050,255' >
+	<title>Foreign Key fk_raw_data_filetype
+	raw_data references filetype ( filetype_id )</title>
 </path>
-<text x='1192' y='175' transform='rotate(0 1192,175)' title='Foreign Key fk_common_prep_info
-	prep_template_sample references study_sample ( sample_id )' style='fill:#a1a0a0;'>sample_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1080 240 L 1080,345' >
+<text x='1052' y='280' transform='rotate(270 1052,280)' title='Foreign Key fk_raw_data_filetype
+	raw_data references filetype ( filetype_id )' style='fill:#a1a0a0;'>filetype_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1320 540 L 1320,495' >
+	<title>Foreign Key fk_prep_template_id
+	prep_template_preprocessed_data references prep_template ( prep_template_id )</title>
+</path>
+<text x='1322' y='535' transform='rotate(270 1322,535)' title='Foreign Key fk_prep_template_id
+	prep_template_preprocessed_data references prep_template ( prep_template_id )' style='fill:#a1a0a0;'>prep_template_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1290 630 L 1290,660' >
+	<title>Foreign Key fk_prep_template_preprocessed_data
+	prep_template_preprocessed_data references preprocessed_data ( preprocessed_data_id )</title>
+</path>
+<text x='1303' y='630' transform='rotate(90 1303,630)' title='Foreign Key fk_prep_template_preprocessed_data
+	prep_template_preprocessed_data references preprocessed_data ( preprocessed_data_id )' style='fill:#a1a0a0;'>preprocessed_data_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1290 450 L 1222,450 Q 1215,450 1215,457 L 1215,1057 Q 1215,1065 1207,1065 L 795,1065' >
+	<title>Foreign Key fk_prep_template_data_type
+	prep_template references data_type ( data_type_id )</title>
+</path>
+<text x='1224' y='445' transform='rotate(0 1224,445)' title='Foreign Key fk_prep_template_data_type
+	prep_template references data_type ( data_type_id )' style='fill:#a1a0a0;'>data_type_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1290 375 L 1170,375' >
+	<title>Foreign Key fk_prep_template_raw_data
+	prep_template references raw_data ( raw_data_id )</title>
+</path>
+<text x='1228' y='370' transform='rotate(0 1228,370)' title='Foreign Key fk_prep_template_raw_data
+	prep_template references raw_data ( raw_data_id )' style='fill:#a1a0a0;'>raw_data_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1020 480 L 787,480 Q 780,480 780,487 L 780,660' >
+	<title>Foreign Key fk_raw_filepath
+	raw_filepath references filepath ( filepath_id )</title>
+</path>
+<text x='966' y='475' transform='rotate(0 966,475)' title='Foreign Key fk_raw_filepath
+	raw_filepath references filepath ( filepath_id )' style='fill:#a1a0a0;'>filepath_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1050 420 L 1050,390' >
+	<title>Foreign Key fk_raw_filepath_0
+	raw_filepath references raw_data ( raw_data_id )</title>
+</path>
+<text x='1052' y='415' transform='rotate(270 1052,415)' title='Foreign Key fk_raw_filepath_0
+	raw_filepath references raw_data ( raw_data_id )' style='fill:#a1a0a0;'>raw_data_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1020 555 L 802,555 Q 795,555 795,562 L 795,660' >
+	<title>Foreign Key fk_filepath_id
+	prep_template_filepath references filepath ( filepath_id )</title>
+</path>
+<text x='966' y='550' transform='rotate(0 966,550)' title='Foreign Key fk_filepath_id
+	prep_template_filepath references filepath ( filepath_id )' style='fill:#a1a0a0;'>filepath_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1170 540 L 1237,540 Q 1245,540 1245,532 L 1245,472 Q 1245,465 1252,465 L 1290,465' >
+	<title>Foreign Key fk_prep_template_id
+	prep_template_filepath references prep_template ( prep_template_id )</title>
+</path>
+<text x='1177' y='535' transform='rotate(0 1177,535)' title='Foreign Key fk_prep_template_id
+	prep_template_filepath references prep_template ( prep_template_id )' style='fill:#a1a0a0;'>prep_template_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1725 435 L 1837,435 Q 1845,435 1845,427 L 1845,420' >
+	<title>Foreign Key fk_study_prep_template_study
+	study_prep_template references study ( study_id )</title>
+</path>
+<text x='1732' y='430' transform='rotate(0 1732,430)' title='Foreign Key fk_study_prep_template_study
+	study_prep_template references study ( study_id )' style='fill:#a1a0a0;'>study_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1575 420 L 1455,420' >
+	<title>Foreign Key fk_study_prep_template_pt
+	study_prep_template references prep_template ( prep_template_id )</title>
+</path>
+<text x='1484' y='415' transform='rotate(0 1484,415)' title='Foreign Key fk_study_prep_template_pt
+	study_prep_template references prep_template ( prep_template_id )' style='fill:#a1a0a0;'>prep_template_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1455 345 L 1447,345 Q 1440,345 1440,352 L 1440,360' >
+	<title>Foreign Key fk_prep_columns_prep_template
+	prep_columns references prep_template ( prep_template_id )</title>
+</path>
+<text x='1364' y='340' transform='rotate(0 1364,340)' title='Foreign Key fk_prep_columns_prep_template
+	prep_columns references prep_template ( prep_template_id )' style='fill:#a1a0a0;'>prep_template_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1350 270 L 1350,360' >
 	<title>Foreign Key fk_prep_template
 	prep_template_sample references prep_template ( prep_template_id )</title>
 </path>
-<text x='1093' y='240' transform='rotate(90 1093,240)' title='Foreign Key fk_prep_template
+<text x='1363' y='270' transform='rotate(90 1363,270)' title='Foreign Key fk_prep_template
 	prep_template_sample references prep_template ( prep_template_id )' style='fill:#a1a0a0;'>prep_template_id</text><!-- ============= Table 'controlled_vocab_values' ============= -->
 <rect class='table' x='45' y='1538' width='150' height='120' rx='7' ry='7' />
 <path d='M 45.50 1564.50 L 45.50 1545.50 Q 45.50 1538.50 52.50 1538.50 L 187.50 1538.50 Q 194.50 1538.50 194.50 1545.50 L 194.50 1564.50 L45.50 1564.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
@@ -875,18 +880,6 @@ data for samples in study x &#040;sample template&#041;x is the study&#095;id fr
   <use id='nn' x='1637' y='207' xlink:href='#nn'/><a xlink:href='#sample_x.description'><text x='1653' y='217'>description</text><title>description varchar not null</title></a>
   <a xlink:href='#sample_x.other_mapping_columns'><text x='1653' y='232'>other_mapping_columns</text><title>other_mapping_columns varchar
 Represents whatever other columns go with this study</title></a>
-
-<!-- ============= Table 'study_raw_data' ============= -->
-<rect class='table' x='1575' y='503' width='105' height='75' rx='7' ry='7' />
-<path d='M 1575.50 529.50 L 1575.50 510.50 Q 1575.50 503.50 1582.50 503.50 L 1672.50 503.50 Q 1679.50 503.50 1679.50 510.50 L 1679.50 529.50 L1575.50 529.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
-<a xlink:href='#study_raw_data'><text x='1585' y='517' class='tableTitle'>study_raw_data</text><title>Table qiita.study_raw_data
-links study to its raw data</title></a>
-  <use id='nn' x='1577' y='537' xlink:href='#nn'/><a xlink:href='#study_raw_data.study_id'><use id='pk' x='1577' y='536' xlink:href='#pk'/><title>Index  ( study_id ) Primary Key  ( study_id, raw_data_id ) </title></a>
-<a xlink:href='#study_raw_data.study_id'><text x='1593' y='547'>study_id</text><title>study_id bigint not null</title></a>
-<a xlink:href='#study_raw_data.study_id'><use id='fk' x='1668' y='536' xlink:href='#fk'/><title>References study ( study_id ) </title></a>
-  <use id='nn' x='1577' y='552' xlink:href='#nn'/><a xlink:href='#study_raw_data.raw_data_id'><use id='pk' x='1577' y='551' xlink:href='#pk'/><title>Primary Key  ( study_id, raw_data_id ) </title></a>
-<a xlink:href='#study_raw_data.raw_data_id'><text x='1593' y='562'>raw_data_id</text><title>raw_data_id bigint not null</title></a>
-<a xlink:href='#study_raw_data.raw_data_id'><use id='fk' x='1668' y='551' xlink:href='#fk'/><title>References raw_data ( raw_data_id ) </title></a>
 
 <!-- ============= Table 'processed_filepath' ============= -->
 <rect class='table' x='1065' y='938' width='135' height='75' rx='7' ry='7' />
@@ -1129,40 +1122,6 @@ Information on how raw data y was prepared &#040;prep template&#041;Linked by y 
   <a xlink:href='#prep_y.data'><text x='1248' y='247'>data</text><title>data bigint
 STUFFFFF</title></a>
 
-<!-- ============= Table 'prep_columns' ============= -->
-<rect class='table' x='1275' y='338' width='135' height='90' rx='7' ry='7' />
-<path d='M 1275.50 364.50 L 1275.50 345.50 Q 1275.50 338.50 1282.50 338.50 L 1402.50 338.50 Q 1409.50 338.50 1409.50 345.50 L 1409.50 364.50 L1275.50 364.50 ' style='fill:url(#tableHeaderGradient2); stroke:none;' />
-<a xlink:href='#prep_columns'><text x='1304' y='352' class='tableTitle'>prep_columns</text><title>Table qiita.prep_columns</title></a>
-  <use id='nn' x='1277' y='372' xlink:href='#nn'/><a xlink:href='#prep_columns.prep_template_id'><use id='pk' x='1277' y='371' xlink:href='#pk'/><title>Primary Key  ( prep_template_id, column_name, column_type ) Index  ( prep_template_id ) </title></a>
-<a xlink:href='#prep_columns.prep_template_id'><text x='1293' y='382'>prep_template_id</text><title>prep_template_id bigint not null</title></a>
-<a xlink:href='#prep_columns.prep_template_id'><use id='fk' x='1398' y='371' xlink:href='#fk'/><title>References prep_template ( prep_template_id ) </title></a>
-  <use id='nn' x='1277' y='387' xlink:href='#nn'/><a xlink:href='#prep_columns.column_name'><use id='pk' x='1277' y='386' xlink:href='#pk'/><title>Primary Key  ( prep_template_id, column_name, column_type ) </title></a>
-<a xlink:href='#prep_columns.column_name'><text x='1293' y='397'>column_name</text><title>column_name varchar not null</title></a>
-  <use id='nn' x='1277' y='402' xlink:href='#nn'/><a xlink:href='#prep_columns.column_type'><use id='pk' x='1277' y='401' xlink:href='#pk'/><title>Primary Key  ( prep_template_id, column_name, column_type ) </title></a>
-<a xlink:href='#prep_columns.column_type'><text x='1293' y='412'>column_type</text><title>column_type varchar not null</title></a>
-
-<!-- ============= Table 'raw_filepath' ============= -->
-<rect class='table' x='1080' y='503' width='105' height='75' rx='7' ry='7' />
-<path d='M 1080.50 529.50 L 1080.50 510.50 Q 1080.50 503.50 1087.50 503.50 L 1177.50 503.50 Q 1184.50 503.50 1184.50 510.50 L 1184.50 529.50 L1080.50 529.50 ' style='fill:url(#tableHeaderGradient1); stroke:none;' />
-<a xlink:href='#raw_filepath'><text x='1100' y='517' class='tableTitle'>raw_filepath</text><title>Table qiita.raw_filepath</title></a>
-  <use id='nn' x='1082' y='537' xlink:href='#nn'/><a xlink:href='#raw_filepath.raw_data_id'><use id='pk' x='1082' y='536' xlink:href='#pk'/><title>Primary Key  ( raw_data_id, filepath_id ) Index  ( raw_data_id ) </title></a>
-<a xlink:href='#raw_filepath.raw_data_id'><text x='1098' y='547'>raw_data_id</text><title>raw_data_id bigint not null</title></a>
-<a xlink:href='#raw_filepath.raw_data_id'><use id='fk' x='1173' y='536' xlink:href='#fk'/><title>References raw_data ( raw_data_id ) </title></a>
-  <use id='nn' x='1082' y='552' xlink:href='#nn'/><a xlink:href='#raw_filepath.filepath_id'><use id='pk' x='1082' y='551' xlink:href='#pk'/><title>Primary Key  ( raw_data_id, filepath_id ) Index  ( filepath_id ) </title></a>
-<a xlink:href='#raw_filepath.filepath_id'><text x='1098' y='562'>filepath_id</text><title>filepath_id bigint not null</title></a>
-<a xlink:href='#raw_filepath.filepath_id'><use id='fk' x='1173' y='551' xlink:href='#fk'/><title>References filepath ( filepath_id ) </title></a>
-
-<!-- ============= Table 'filetype' ============= -->
-<rect class='table' x='1560' y='593' width='90' height='75' rx='7' ry='7' />
-<path d='M 1560.50 619.50 L 1560.50 600.50 Q 1560.50 593.50 1567.50 593.50 L 1642.50 593.50 Q 1649.50 593.50 1649.50 600.50 L 1649.50 619.50 L1560.50 619.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
-<a xlink:href='#filetype'><text x='1585' y='607' class='tableTitle'>filetype</text><title>Table qiita.filetype
-Type of file &#040;FASTA&#044; FASTQ&#044; SPECTRA&#044; etc&#041;</title></a>
-  <use id='nn' x='1562' y='627' xlink:href='#nn'/><a xlink:href='#filetype.filetype_id'><use id='pk' x='1562' y='626' xlink:href='#pk'/><title>Primary Key  ( filetype_id ) </title></a>
-<a xlink:href='#filetype.filetype_id'><text x='1578' y='637'>filetype_id</text><title>filetype_id bigserial not null</title></a>
-<a xlink:href='#filetype.filetype_id'><use id='ref' x='1638' y='626' xlink:href='#ref'/><title>Referred by raw_data ( filetype_id ) </title></a>
-  <use id='nn' x='1562' y='642' xlink:href='#nn'/><a xlink:href='#filetype.type'><use id='unq' x='1562' y='641' xlink:href='#unq'/><title>Unique Index  ( type ) </title></a>
-<a xlink:href='#filetype.type'><text x='1578' y='652'>type</text><title>type varchar not null</title></a>
-
 <!-- ============= Table 'filepath_type' ============= -->
 <rect class='table' x='585' y='878' width='120' height='75' rx='7' ry='7' />
 <path d='M 585.50 904.50 L 585.50 885.50 Q 585.50 878.50 592.50 878.50 L 697.50 878.50 Q 704.50 878.50 704.50 885.50 L 704.50 904.50 L585.50 904.50 ' style='fill:url(#tableHeaderGradient1); stroke:none;' />
@@ -1231,40 +1190,6 @@ One of the user levels &#040;admin&#044; user&#044; guest&#044; etc&#041;</title
 <a xlink:href='#severity.severity_id'><use id='ref' x='1548' y='1316' xlink:href='#ref'/><title>Referred by logging ( severity_id ) </title></a>
   <use id='nn' x='1472' y='1332' xlink:href='#nn'/><a xlink:href='#severity.severity'><use id='unq' x='1472' y='1331' xlink:href='#unq'/><title>Unique Index  ( severity ) </title></a>
 <a xlink:href='#severity.severity'><text x='1488' y='1342'>severity</text><title>severity varchar not null</title></a>
-
-<!-- ============= Table 'prep_template' ============= -->
-<rect class='table' x='1065' y='353' width='150' height='120' rx='7' ry='7' />
-<path d='M 1065.50 379.50 L 1065.50 360.50 Q 1065.50 353.50 1072.50 353.50 L 1207.50 353.50 Q 1214.50 353.50 1214.50 360.50 L 1214.50 379.50 L1065.50 379.50 ' style='fill:url(#tableHeaderGradient2); stroke:none;' />
-<a xlink:href='#prep_template'><text x='1101' y='367' class='tableTitle'>prep_template</text><title>Table qiita.prep_template</title></a>
-  <use id='nn' x='1067' y='387' xlink:href='#nn'/><a xlink:href='#prep_template.prep_template_id'><use id='pk' x='1067' y='386' xlink:href='#pk'/><title>Primary Key  ( prep_template_id ) </title></a>
-<a xlink:href='#prep_template.prep_template_id'><text x='1083' y='397'>prep_template_id</text><title>prep_template_id bigserial not null</title></a>
-<a xlink:href='#prep_template.prep_template_id'><use id='ref' x='1203' y='386' xlink:href='#ref'/><title>Referred by prep_template_sample ( prep_template_id ) 
-Referred by prep_columns ( prep_template_id ) 
-Referred by prep_template_filepath ( prep_template_id ) 
-Referred by prep_template_preprocessed_data ( prep_template_id ) </title></a>
-  <use id='nn' x='1067' y='402' xlink:href='#nn'/><a xlink:href='#prep_template.data_type_id'><use id='idx' x='1067' y='401' xlink:href='#idx'/><title>Index  ( data_type_id ) </title></a>
-<a xlink:href='#prep_template.data_type_id'><text x='1083' y='412'>data_type_id</text><title>data_type_id bigint not null</title></a>
-<a xlink:href='#prep_template.data_type_id'><use id='fk' x='1203' y='401' xlink:href='#fk'/><title>References data_type ( data_type_id ) </title></a>
-  <use id='nn' x='1067' y='417' xlink:href='#nn'/><a xlink:href='#prep_template.raw_data_id'><use id='idx' x='1067' y='416' xlink:href='#idx'/><title>Index  ( raw_data_id ) </title></a>
-<a xlink:href='#prep_template.raw_data_id'><text x='1083' y='427'>raw_data_id</text><title>raw_data_id bigint not null</title></a>
-<a xlink:href='#prep_template.raw_data_id'><use id='fk' x='1203' y='416' xlink:href='#fk'/><title>References raw_data ( raw_data_id ) </title></a>
-  <use id='nn' x='1067' y='432' xlink:href='#nn'/><a xlink:href='#prep_template.preprocessing_status'><text x='1083' y='442'>preprocessing_status</text><title>preprocessing_status varchar not null default &#039;not&#095;preprocessed&#039;</title></a>
-  <a xlink:href='#prep_template.investigation_type'><text x='1083' y='457'>investigation_type</text><title>investigation_type varchar
-The investigation type &#040;e&#046;g&#046;&#044; one of the values from EBI&#039;s set of known types&#041;</title></a>
-
-<!-- ============= Table 'raw_data' ============= -->
-<rect class='table' x='1275' y='488' width='150' height='90' rx='7' ry='7' />
-<path d='M 1275.50 514.50 L 1275.50 495.50 Q 1275.50 488.50 1282.50 488.50 L 1417.50 488.50 Q 1424.50 488.50 1424.50 495.50 L 1424.50 514.50 L1275.50 514.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
-<a xlink:href='#raw_data'><text x='1326' y='502' class='tableTitle'>raw_data</text><title>Table qiita.raw_data</title></a>
-  <use id='nn' x='1277' y='522' xlink:href='#nn'/><a xlink:href='#raw_data.raw_data_id'><use id='pk' x='1277' y='521' xlink:href='#pk'/><title>Unique Index  ( raw_data_id ) Primary Key  ( raw_data_id ) </title></a>
-<a xlink:href='#raw_data.raw_data_id'><text x='1293' y='532'>raw_data_id</text><title>raw_data_id bigserial not null</title></a>
-<a xlink:href='#raw_data.raw_data_id'><use id='ref' x='1413' y='521' xlink:href='#ref'/><title>Referred by prep_template ( raw_data_id ) 
-Referred by raw_filepath ( raw_data_id ) 
-Referred by study_raw_data ( raw_data_id ) </title></a>
-  <use id='nn' x='1277' y='537' xlink:href='#nn'/><a xlink:href='#raw_data.filetype_id'><use id='idx' x='1277' y='536' xlink:href='#idx'/><title>Index  ( filetype_id ) </title></a>
-<a xlink:href='#raw_data.filetype_id'><text x='1293' y='547'>filetype_id</text><title>filetype_id bigint not null</title></a>
-<a xlink:href='#raw_data.filetype_id'><use id='fk' x='1413' y='536' xlink:href='#fk'/><title>References filetype ( filetype_id ) </title></a>
-  <use id='nn' x='1277' y='552' xlink:href='#nn'/><a xlink:href='#raw_data.link_filepaths_status'><text x='1293' y='562'>link_filepaths_status</text><title>link_filepaths_status varchar not null default &#039;idle&#039;</title></a>
 
 <!-- ============= Table 'job' ============= -->
 <rect class='table' x='405' y='998' width='105' height='135' rx='7' ry='7' />
@@ -1389,17 +1314,6 @@ Holds the 1 to many relationship between the study and the environmental&#095;pa
   <use id='nn' x='1682' y='672' xlink:href='#nn'/><a xlink:href='#timeseries_type.intervention_type'><use id='unq' x='1682' y='671' xlink:href='#unq'/><title>Unique Index  ( timeseries_type, intervention_type ) </title></a>
 <a xlink:href='#timeseries_type.intervention_type'><text x='1698' y='682'>intervention_type</text><title>intervention_type varchar not null default &#039;None&#039;</title></a>
 
-<!-- ============= Table 'prep_template_filepath' ============= -->
-<rect class='table' x='1035' y='593' width='135' height='75' rx='7' ry='7' />
-<path d='M 1035.50 619.50 L 1035.50 600.50 Q 1035.50 593.50 1042.50 593.50 L 1162.50 593.50 Q 1169.50 593.50 1169.50 600.50 L 1169.50 619.50 L1035.50 619.50 ' style='fill:url(#tableHeaderGradient2); stroke:none;' />
-<a xlink:href='#prep_template_filepath'><text x='1041' y='607' class='tableTitle'>prep_template_filepath</text><title>Table qiita.prep_template_filepath</title></a>
-  <use id='nn' x='1037' y='627' xlink:href='#nn'/><a xlink:href='#prep_template_filepath.prep_template_id'><use id='pk' x='1037' y='626' xlink:href='#pk'/><title>Primary Key  ( prep_template_id, filepath_id ) Index  ( prep_template_id ) </title></a>
-<a xlink:href='#prep_template_filepath.prep_template_id'><text x='1053' y='637'>prep_template_id</text><title>prep_template_id bigint not null</title></a>
-<a xlink:href='#prep_template_filepath.prep_template_id'><use id='fk' x='1158' y='626' xlink:href='#fk'/><title>References prep_template ( prep_template_id ) </title></a>
-  <use id='nn' x='1037' y='642' xlink:href='#nn'/><a xlink:href='#prep_template_filepath.filepath_id'><use id='pk' x='1037' y='641' xlink:href='#pk'/><title>Primary Key  ( prep_template_id, filepath_id ) Index  ( filepath_id ) </title></a>
-<a xlink:href='#prep_template_filepath.filepath_id'><text x='1053' y='652'>filepath_id</text><title>filepath_id bigint not null</title></a>
-<a xlink:href='#prep_template_filepath.filepath_id'><use id='fk' x='1158' y='641' xlink:href='#fk'/><title>References filepath ( filepath_id ) </title></a>
-
 <!-- ============= Table 'sample_template_filepath' ============= -->
 <rect class='table' x='1050' y='788' width='150' height='75' rx='7' ry='7' />
 <path d='M 1050.50 814.50 L 1050.50 795.50 Q 1050.50 788.50 1057.50 788.50 L 1192.50 788.50 Q 1199.50 788.50 1199.50 795.50 L 1199.50 814.50 L1050.50 814.50 ' style='fill:url(#tableHeaderGradient2); stroke:none;' />
@@ -1410,17 +1324,6 @@ Holds the 1 to many relationship between the study and the environmental&#095;pa
   <use id='nn' x='1052' y='837' xlink:href='#nn'/><a xlink:href='#sample_template_filepath.filepath_id'><use id='pk' x='1052' y='836' xlink:href='#pk'/><title>Primary Key  ( study_id, filepath_id ) Index  ( filepath_id ) </title></a>
 <a xlink:href='#sample_template_filepath.filepath_id'><text x='1068' y='847'>filepath_id</text><title>filepath_id bigint not null</title></a>
 <a xlink:href='#sample_template_filepath.filepath_id'><use id='fk' x='1188' y='836' xlink:href='#fk'/><title>References filepath ( filepath_id ) </title></a>
-
-<!-- ============= Table 'prep_template_preprocessed_data' ============= -->
-<rect class='table' x='750' y='443' width='210' height='75' rx='7' ry='7' />
-<path d='M 750.50 469.50 L 750.50 450.50 Q 750.50 443.50 757.50 443.50 L 952.50 443.50 Q 959.50 443.50 959.50 450.50 L 959.50 469.50 L750.50 469.50 ' style='fill:url(#tableHeaderGradient2); stroke:none;' />
-<a xlink:href='#prep_template_preprocessed_data'><text x='762' y='457' class='tableTitle'>prep_template_preprocessed_data</text><title>Table qiita.prep_template_preprocessed_data</title></a>
-  <use id='nn' x='752' y='477' xlink:href='#nn'/><a xlink:href='#prep_template_preprocessed_data.prep_template_id'><use id='pk' x='752' y='476' xlink:href='#pk'/><title>Primary Key  ( prep_template_id, preprocessed_data_id ) Index  ( prep_template_id ) </title></a>
-<a xlink:href='#prep_template_preprocessed_data.prep_template_id'><text x='768' y='487'>prep_template_id</text><title>prep_template_id bigint not null</title></a>
-<a xlink:href='#prep_template_preprocessed_data.prep_template_id'><use id='fk' x='948' y='476' xlink:href='#fk'/><title>References prep_template ( prep_template_id ) </title></a>
-  <use id='nn' x='752' y='492' xlink:href='#nn'/><a xlink:href='#prep_template_preprocessed_data.preprocessed_data_id'><use id='pk' x='752' y='491' xlink:href='#pk'/><title>Primary Key  ( prep_template_id, preprocessed_data_id ) Index  ( preprocessed_data_id ) </title></a>
-<a xlink:href='#prep_template_preprocessed_data.preprocessed_data_id'><text x='768' y='502'>preprocessed_data_id</text><title>preprocessed_data_id bigint not null</title></a>
-<a xlink:href='#prep_template_preprocessed_data.preprocessed_data_id'><use id='fk' x='948' y='491' xlink:href='#fk'/><title>References preprocessed_data ( preprocessed_data_id ) </title></a>
 
 <!-- ============= Table 'preprocessed_data' ============= -->
 <rect class='table' x='1260' y='668' width='195' height='195' rx='7' ry='7' />
@@ -1691,16 +1594,17 @@ Links a study to all PMIDs for papers created from study</title></a>
 <a xlink:href='#study.study_id'><text x='1833' y='97'>study_id</text><title>study_id bigserial not null
 Unique name for study</title></a>
 <a xlink:href='#study.study_id'><use id='ref' x='1983' y='86' xlink:href='#ref'/><title>Referred by investigation_study ( study_id ) 
-Referred by study_sample ( study_id ) 
 Referred by sample_template_filepath ( study_id ) 
 Referred by study_environmental_package ( study_id ) 
 Referred by study_experimental_factor ( study_id ) 
 Referred by study_pmid ( study_id ) 
 Referred by study_preprocessed_data ( study_id ) 
 Referred by study_processed_data ( study_id ) 
-Referred by study_raw_data ( study_id ) 
+Referred by study_sample ( study_id ) 
 Referred by study_sample_columns ( study_id ) 
-Referred by study_users ( study_id ) </title></a>
+Referred by study_users ( study_id ) 
+Referred by study_prep_template ( study_id ) 
+Referred by study_prep_template ( study_id ) </title></a>
   <use id='nn' x='1817' y='102' xlink:href='#nn'/><a xlink:href='#study.email'><use id='idx' x='1817' y='101' xlink:href='#idx'/><title>Index  ( email ) </title></a>
 <a xlink:href='#study.email'><text x='1833' y='112'>email</text><title>email varchar not null
 Email of study owner</title></a>
@@ -1813,29 +1717,130 @@ What portals are available to show a study in</title></a>
 <a xlink:href='#analysis_sample.sample_id'><use id='fk' x='168' y='1226' xlink:href='#fk'/><title>References study_sample ( sample_id ) </title></a>
 
 <!-- ============= Table 'study_sample' ============= -->
-<rect class='table' x='1410' y='113' width='90' height='75' rx='7' ry='7' />
-<path d='M 1410.50 139.50 L 1410.50 120.50 Q 1410.50 113.50 1417.50 113.50 L 1492.50 113.50 Q 1499.50 113.50 1499.50 120.50 L 1499.50 139.50 L1410.50 139.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
-<a xlink:href='#study_sample'><text x='1418' y='127' class='tableTitle'>study_sample</text><title>Table qiita.study_sample
+<rect class='table' x='1515' y='98' width='90' height='75' rx='7' ry='7' />
+<path d='M 1515.50 124.50 L 1515.50 105.50 Q 1515.50 98.50 1522.50 98.50 L 1597.50 98.50 Q 1604.50 98.50 1604.50 105.50 L 1604.50 124.50 L1515.50 124.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
+<a xlink:href='#study_sample'><text x='1523' y='112' class='tableTitle'>study_sample</text><title>Table qiita.study_sample
 Required info for each sample&#046; One row is one sample&#046;</title></a>
-  <use id='nn' x='1412' y='147' xlink:href='#nn'/><a xlink:href='#study_sample.sample_id'><use id='pk' x='1412' y='146' xlink:href='#pk'/><title>Primary Key  ( sample_id ) </title></a>
-<a xlink:href='#study_sample.sample_id'><text x='1428' y='157'>sample_id</text><title>sample_id varchar not null</title></a>
-<a xlink:href='#study_sample.sample_id'><use id='ref' x='1488' y='146' xlink:href='#ref'/><title>Referred by analysis_sample ( sample_id ) 
-Referred by prep_template_sample ( sample_id ) </title></a>
-  <use id='nn' x='1412' y='162' xlink:href='#nn'/><a xlink:href='#study_sample.study_id'><use id='idx' x='1412' y='161' xlink:href='#idx'/><title>Index  ( study_id ) </title></a>
-<a xlink:href='#study_sample.study_id'><text x='1428' y='172'>study_id</text><title>study_id bigint not null</title></a>
-<a xlink:href='#study_sample.study_id'><use id='fk' x='1488' y='161' xlink:href='#fk'/><title>References study ( study_id ) </title></a>
+  <use id='nn' x='1517' y='132' xlink:href='#nn'/><a xlink:href='#study_sample.sample_id'><use id='pk' x='1517' y='131' xlink:href='#pk'/><title>Primary Key  ( sample_id ) </title></a>
+<a xlink:href='#study_sample.sample_id'><text x='1533' y='142'>sample_id</text><title>sample_id varchar not null</title></a>
+<a xlink:href='#study_sample.sample_id'><use id='ref' x='1593' y='131' xlink:href='#ref'/><title>Referred by analysis_sample ( sample_id ) </title></a>
+  <use id='nn' x='1517' y='147' xlink:href='#nn'/><a xlink:href='#study_sample.study_id'><use id='idx' x='1517' y='146' xlink:href='#idx'/><title>Index  ( study_id ) </title></a>
+<a xlink:href='#study_sample.study_id'><text x='1533' y='157'>study_id</text><title>study_id bigint not null</title></a>
+<a xlink:href='#study_sample.study_id'><use id='fk' x='1593' y='146' xlink:href='#fk'/><title>References study ( study_id ) </title></a>
+
+<!-- ============= Table 'raw_data' ============= -->
+<rect class='table' x='1020' y='293' width='150' height='90' rx='7' ry='7' />
+<path d='M 1020.50 319.50 L 1020.50 300.50 Q 1020.50 293.50 1027.50 293.50 L 1162.50 293.50 Q 1169.50 293.50 1169.50 300.50 L 1169.50 319.50 L1020.50 319.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
+<a xlink:href='#raw_data'><text x='1071' y='307' class='tableTitle'>raw_data</text><title>Table qiita.raw_data</title></a>
+  <use id='nn' x='1022' y='327' xlink:href='#nn'/><a xlink:href='#raw_data.raw_data_id'><use id='pk' x='1022' y='326' xlink:href='#pk'/><title>Unique Index  ( raw_data_id ) Primary Key  ( raw_data_id ) </title></a>
+<a xlink:href='#raw_data.raw_data_id'><text x='1038' y='337'>raw_data_id</text><title>raw_data_id bigserial not null</title></a>
+<a xlink:href='#raw_data.raw_data_id'><use id='ref' x='1158' y='326' xlink:href='#ref'/><title>Referred by prep_template ( raw_data_id ) 
+Referred by raw_filepath ( raw_data_id ) </title></a>
+  <use id='nn' x='1022' y='342' xlink:href='#nn'/><a xlink:href='#raw_data.filetype_id'><use id='idx' x='1022' y='341' xlink:href='#idx'/><title>Index  ( filetype_id ) </title></a>
+<a xlink:href='#raw_data.filetype_id'><text x='1038' y='352'>filetype_id</text><title>filetype_id bigint not null</title></a>
+<a xlink:href='#raw_data.filetype_id'><use id='fk' x='1158' y='341' xlink:href='#fk'/><title>References filetype ( filetype_id ) </title></a>
+  <use id='nn' x='1022' y='357' xlink:href='#nn'/><a xlink:href='#raw_data.link_filepaths_status'><text x='1038' y='367'>link_filepaths_status</text><title>link_filepaths_status varchar not null default &#039;idle&#039;</title></a>
+
+<!-- ============= Table 'filetype' ============= -->
+<rect class='table' x='1035' y='173' width='90' height='75' rx='7' ry='7' />
+<path d='M 1035.50 199.50 L 1035.50 180.50 Q 1035.50 173.50 1042.50 173.50 L 1117.50 173.50 Q 1124.50 173.50 1124.50 180.50 L 1124.50 199.50 L1035.50 199.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
+<a xlink:href='#filetype'><text x='1060' y='187' class='tableTitle'>filetype</text><title>Table qiita.filetype
+Type of file &#040;FASTA&#044; FASTQ&#044; SPECTRA&#044; etc&#041;</title></a>
+  <use id='nn' x='1037' y='207' xlink:href='#nn'/><a xlink:href='#filetype.filetype_id'><use id='pk' x='1037' y='206' xlink:href='#pk'/><title>Primary Key  ( filetype_id ) </title></a>
+<a xlink:href='#filetype.filetype_id'><text x='1053' y='217'>filetype_id</text><title>filetype_id bigserial not null</title></a>
+<a xlink:href='#filetype.filetype_id'><use id='ref' x='1113' y='206' xlink:href='#ref'/><title>Referred by raw_data ( filetype_id ) </title></a>
+  <use id='nn' x='1037' y='222' xlink:href='#nn'/><a xlink:href='#filetype.type'><use id='unq' x='1037' y='221' xlink:href='#unq'/><title>Unique Index  ( type ) </title></a>
+<a xlink:href='#filetype.type'><text x='1053' y='232'>type</text><title>type varchar not null</title></a>
+
+<!-- ============= Table 'prep_template_preprocessed_data' ============= -->
+<rect class='table' x='1275' y='548' width='210' height='75' rx='7' ry='7' />
+<path d='M 1275.50 574.50 L 1275.50 555.50 Q 1275.50 548.50 1282.50 548.50 L 1477.50 548.50 Q 1484.50 548.50 1484.50 555.50 L 1484.50 574.50 L1275.50 574.50 ' style='fill:url(#tableHeaderGradient2); stroke:none;' />
+<a xlink:href='#prep_template_preprocessed_data'><text x='1287' y='562' class='tableTitle'>prep_template_preprocessed_data</text><title>Table qiita.prep_template_preprocessed_data</title></a>
+  <use id='nn' x='1277' y='582' xlink:href='#nn'/><a xlink:href='#prep_template_preprocessed_data.prep_template_id'><use id='pk' x='1277' y='581' xlink:href='#pk'/><title>Primary Key  ( prep_template_id, preprocessed_data_id ) Index  ( prep_template_id ) </title></a>
+<a xlink:href='#prep_template_preprocessed_data.prep_template_id'><text x='1293' y='592'>prep_template_id</text><title>prep_template_id bigint not null</title></a>
+<a xlink:href='#prep_template_preprocessed_data.prep_template_id'><use id='fk' x='1473' y='581' xlink:href='#fk'/><title>References prep_template ( prep_template_id ) </title></a>
+  <use id='nn' x='1277' y='597' xlink:href='#nn'/><a xlink:href='#prep_template_preprocessed_data.preprocessed_data_id'><use id='pk' x='1277' y='596' xlink:href='#pk'/><title>Primary Key  ( prep_template_id, preprocessed_data_id ) Index  ( preprocessed_data_id ) </title></a>
+<a xlink:href='#prep_template_preprocessed_data.preprocessed_data_id'><text x='1293' y='607'>preprocessed_data_id</text><title>preprocessed_data_id bigint not null</title></a>
+<a xlink:href='#prep_template_preprocessed_data.preprocessed_data_id'><use id='fk' x='1473' y='596' xlink:href='#fk'/><title>References preprocessed_data ( preprocessed_data_id ) </title></a>
+
+<!-- ============= Table 'prep_template' ============= -->
+<rect class='table' x='1305' y='368' width='150' height='120' rx='7' ry='7' />
+<path d='M 1305.50 394.50 L 1305.50 375.50 Q 1305.50 368.50 1312.50 368.50 L 1447.50 368.50 Q 1454.50 368.50 1454.50 375.50 L 1454.50 394.50 L1305.50 394.50 ' style='fill:url(#tableHeaderGradient2); stroke:none;' />
+<a xlink:href='#prep_template'><text x='1341' y='382' class='tableTitle'>prep_template</text><title>Table qiita.prep_template</title></a>
+  <use id='nn' x='1307' y='402' xlink:href='#nn'/><a xlink:href='#prep_template.prep_template_id'><use id='pk' x='1307' y='401' xlink:href='#pk'/><title>Primary Key  ( prep_template_id ) </title></a>
+<a xlink:href='#prep_template.prep_template_id'><text x='1323' y='412'>prep_template_id</text><title>prep_template_id bigserial not null</title></a>
+<a xlink:href='#prep_template.prep_template_id'><use id='ref' x='1443' y='401' xlink:href='#ref'/><title>Referred by prep_columns ( prep_template_id ) 
+Referred by prep_template_filepath ( prep_template_id ) 
+Referred by prep_template_preprocessed_data ( prep_template_id ) 
+Referred by prep_template_sample ( prep_template_id ) 
+Referred by study_prep_template ( prep_template_id ) 
+Referred by study_prep_template ( prep_template_id ) </title></a>
+  <use id='nn' x='1307' y='417' xlink:href='#nn'/><a xlink:href='#prep_template.data_type_id'><use id='idx' x='1307' y='416' xlink:href='#idx'/><title>Index  ( data_type_id ) </title></a>
+<a xlink:href='#prep_template.data_type_id'><text x='1323' y='427'>data_type_id</text><title>data_type_id bigint not null</title></a>
+<a xlink:href='#prep_template.data_type_id'><use id='fk' x='1443' y='416' xlink:href='#fk'/><title>References data_type ( data_type_id ) </title></a>
+  <use id='nn' x='1307' y='432' xlink:href='#nn'/><a xlink:href='#prep_template.raw_data_id'><use id='idx' x='1307' y='431' xlink:href='#idx'/><title>Index  ( raw_data_id ) </title></a>
+<a xlink:href='#prep_template.raw_data_id'><text x='1323' y='442'>raw_data_id</text><title>raw_data_id bigint not null</title></a>
+<a xlink:href='#prep_template.raw_data_id'><use id='fk' x='1443' y='431' xlink:href='#fk'/><title>References raw_data ( raw_data_id ) </title></a>
+  <use id='nn' x='1307' y='447' xlink:href='#nn'/><a xlink:href='#prep_template.preprocessing_status'><text x='1323' y='457'>preprocessing_status</text><title>preprocessing_status varchar not null default &#039;not&#095;preprocessed&#039;</title></a>
+  <a xlink:href='#prep_template.investigation_type'><text x='1323' y='472'>investigation_type</text><title>investigation_type varchar
+The investigation type &#040;e&#046;g&#046;&#044; one of the values from EBI&#039;s set of known types&#041;</title></a>
+
+<!-- ============= Table 'raw_filepath' ============= -->
+<rect class='table' x='1035' y='428' width='105' height='75' rx='7' ry='7' />
+<path d='M 1035.50 454.50 L 1035.50 435.50 Q 1035.50 428.50 1042.50 428.50 L 1132.50 428.50 Q 1139.50 428.50 1139.50 435.50 L 1139.50 454.50 L1035.50 454.50 ' style='fill:url(#tableHeaderGradient1); stroke:none;' />
+<a xlink:href='#raw_filepath'><text x='1055' y='442' class='tableTitle'>raw_filepath</text><title>Table qiita.raw_filepath</title></a>
+  <use id='nn' x='1037' y='462' xlink:href='#nn'/><a xlink:href='#raw_filepath.raw_data_id'><use id='pk' x='1037' y='461' xlink:href='#pk'/><title>Primary Key  ( raw_data_id, filepath_id ) Index  ( raw_data_id ) </title></a>
+<a xlink:href='#raw_filepath.raw_data_id'><text x='1053' y='472'>raw_data_id</text><title>raw_data_id bigint not null</title></a>
+<a xlink:href='#raw_filepath.raw_data_id'><use id='fk' x='1128' y='461' xlink:href='#fk'/><title>References raw_data ( raw_data_id ) </title></a>
+  <use id='nn' x='1037' y='477' xlink:href='#nn'/><a xlink:href='#raw_filepath.filepath_id'><use id='pk' x='1037' y='476' xlink:href='#pk'/><title>Primary Key  ( raw_data_id, filepath_id ) Index  ( filepath_id ) </title></a>
+<a xlink:href='#raw_filepath.filepath_id'><text x='1053' y='487'>filepath_id</text><title>filepath_id bigint not null</title></a>
+<a xlink:href='#raw_filepath.filepath_id'><use id='fk' x='1128' y='476' xlink:href='#fk'/><title>References filepath ( filepath_id ) </title></a>
+
+<!-- ============= Table 'prep_template_filepath' ============= -->
+<rect class='table' x='1035' y='518' width='135' height='75' rx='7' ry='7' />
+<path d='M 1035.50 544.50 L 1035.50 525.50 Q 1035.50 518.50 1042.50 518.50 L 1162.50 518.50 Q 1169.50 518.50 1169.50 525.50 L 1169.50 544.50 L1035.50 544.50 ' style='fill:url(#tableHeaderGradient2); stroke:none;' />
+<a xlink:href='#prep_template_filepath'><text x='1041' y='532' class='tableTitle'>prep_template_filepath</text><title>Table qiita.prep_template_filepath</title></a>
+  <use id='nn' x='1037' y='552' xlink:href='#nn'/><a xlink:href='#prep_template_filepath.prep_template_id'><use id='pk' x='1037' y='551' xlink:href='#pk'/><title>Primary Key  ( prep_template_id, filepath_id ) Index  ( prep_template_id ) </title></a>
+<a xlink:href='#prep_template_filepath.prep_template_id'><text x='1053' y='562'>prep_template_id</text><title>prep_template_id bigint not null</title></a>
+<a xlink:href='#prep_template_filepath.prep_template_id'><use id='fk' x='1158' y='551' xlink:href='#fk'/><title>References prep_template ( prep_template_id ) </title></a>
+  <use id='nn' x='1037' y='567' xlink:href='#nn'/><a xlink:href='#prep_template_filepath.filepath_id'><use id='pk' x='1037' y='566' xlink:href='#pk'/><title>Primary Key  ( prep_template_id, filepath_id ) Index  ( filepath_id ) </title></a>
+<a xlink:href='#prep_template_filepath.filepath_id'><text x='1053' y='577'>filepath_id</text><title>filepath_id bigint not null</title></a>
+<a xlink:href='#prep_template_filepath.filepath_id'><use id='fk' x='1158' y='566' xlink:href='#fk'/><title>References filepath ( filepath_id ) </title></a>
+
+<!-- ============= Table 'study_prep_template' ============= -->
+<rect class='table' x='1590' y='413' width='135' height='75' rx='7' ry='7' />
+<path d='M 1590.50 439.50 L 1590.50 420.50 Q 1590.50 413.50 1597.50 413.50 L 1717.50 413.50 Q 1724.50 413.50 1724.50 420.50 L 1724.50 439.50 L1590.50 439.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
+<a xlink:href='#study_prep_template'><text x='1601' y='427' class='tableTitle'>study_prep_template</text><title>Table qiita.study_prep_template
+links study to its prep templates</title></a>
+  <use id='nn' x='1592' y='447' xlink:href='#nn'/><a xlink:href='#study_prep_template.study_id'><use id='pk' x='1592' y='446' xlink:href='#pk'/><title>Primary Key  ( study_id, prep_template_id ) Index  ( study_id ) </title></a>
+<a xlink:href='#study_prep_template.study_id'><text x='1608' y='457'>study_id</text><title>study_id bigint not null</title></a>
+<a xlink:href='#study_prep_template.study_id'><use id='fk' x='1713' y='446' xlink:href='#fk'/><title>References study ( study_id ) </title></a>
+  <use id='nn' x='1592' y='462' xlink:href='#nn'/><a xlink:href='#study_prep_template.prep_template_id'><use id='pk' x='1592' y='461' xlink:href='#pk'/><title>Primary Key  ( study_id, prep_template_id ) Index  ( prep_template_id ) </title></a>
+<a xlink:href='#study_prep_template.prep_template_id'><text x='1608' y='472'>prep_template_id</text><title>prep_template_id bigint not null</title></a>
+<a xlink:href='#study_prep_template.prep_template_id'><use id='fk' x='1713' y='461' xlink:href='#fk'/><title>References prep_template ( prep_template_id ) </title></a>
+
+<!-- ============= Table 'prep_columns' ============= -->
+<rect class='table' x='1470' y='278' width='135' height='90' rx='7' ry='7' />
+<path d='M 1470.50 304.50 L 1470.50 285.50 Q 1470.50 278.50 1477.50 278.50 L 1597.50 278.50 Q 1604.50 278.50 1604.50 285.50 L 1604.50 304.50 L1470.50 304.50 ' style='fill:url(#tableHeaderGradient2); stroke:none;' />
+<a xlink:href='#prep_columns'><text x='1499' y='292' class='tableTitle'>prep_columns</text><title>Table qiita.prep_columns</title></a>
+  <use id='nn' x='1472' y='312' xlink:href='#nn'/><a xlink:href='#prep_columns.prep_template_id'><use id='pk' x='1472' y='311' xlink:href='#pk'/><title>Primary Key  ( prep_template_id, column_name, column_type ) Index  ( prep_template_id ) </title></a>
+<a xlink:href='#prep_columns.prep_template_id'><text x='1488' y='322'>prep_template_id</text><title>prep_template_id bigint not null</title></a>
+<a xlink:href='#prep_columns.prep_template_id'><use id='fk' x='1593' y='311' xlink:href='#fk'/><title>References prep_template ( prep_template_id ) </title></a>
+  <use id='nn' x='1472' y='327' xlink:href='#nn'/><a xlink:href='#prep_columns.column_name'><use id='pk' x='1472' y='326' xlink:href='#pk'/><title>Primary Key  ( prep_template_id, column_name, column_type ) </title></a>
+<a xlink:href='#prep_columns.column_name'><text x='1488' y='337'>column_name</text><title>column_name varchar not null</title></a>
+  <use id='nn' x='1472' y='342' xlink:href='#nn'/><a xlink:href='#prep_columns.column_type'><use id='pk' x='1472' y='341' xlink:href='#pk'/><title>Primary Key  ( prep_template_id, column_name, column_type ) </title></a>
+<a xlink:href='#prep_columns.column_type'><text x='1488' y='352'>column_type</text><title>column_type varchar not null</title></a>
 
 <!-- ============= Table 'prep_template_sample' ============= -->
-<rect class='table' x='1050' y='158' width='135' height='75' rx='7' ry='7' />
-<path d='M 1050.50 184.50 L 1050.50 165.50 Q 1050.50 158.50 1057.50 158.50 L 1177.50 158.50 Q 1184.50 158.50 1184.50 165.50 L 1184.50 184.50 L1050.50 184.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
-<a xlink:href='#prep_template_sample'><text x='1057' y='172' class='tableTitle'>prep_template_sample</text><title>Table qiita.prep_template_sample</title></a>
-  <use id='nn' x='1052' y='192' xlink:href='#nn'/><a xlink:href='#prep_template_sample.prep_template_id'><use id='pk' x='1052' y='191' xlink:href='#pk'/><title>Primary Key  ( prep_template_id, sample_id ) Index  ( prep_template_id ) </title></a>
-<a xlink:href='#prep_template_sample.prep_template_id'><text x='1068' y='202'>prep_template_id</text><title>prep_template_id bigint not null
+<rect class='table' x='1335' y='188' width='135' height='75' rx='7' ry='7' />
+<path d='M 1335.50 214.50 L 1335.50 195.50 Q 1335.50 188.50 1342.50 188.50 L 1462.50 188.50 Q 1469.50 188.50 1469.50 195.50 L 1469.50 214.50 L1335.50 214.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
+<a xlink:href='#prep_template_sample'><text x='1342' y='202' class='tableTitle'>prep_template_sample</text><title>Table qiita.prep_template_sample</title></a>
+  <use id='nn' x='1337' y='222' xlink:href='#nn'/><a xlink:href='#prep_template_sample.prep_template_id'><use id='pk' x='1337' y='221' xlink:href='#pk'/><title>Primary Key  ( prep_template_id, sample_id ) Index  ( prep_template_id ) </title></a>
+<a xlink:href='#prep_template_sample.prep_template_id'><text x='1353' y='232'>prep_template_id</text><title>prep_template_id bigint not null
 The prep template identifier</title></a>
-<a xlink:href='#prep_template_sample.prep_template_id'><use id='fk' x='1173' y='191' xlink:href='#fk'/><title>References prep_template ( prep_template_id ) </title></a>
-  <use id='nn' x='1052' y='207' xlink:href='#nn'/><a xlink:href='#prep_template_sample.sample_id'><use id='pk' x='1052' y='206' xlink:href='#pk'/><title>Index  ( sample_id ) Index  ( sample_id ) Primary Key  ( prep_template_id, sample_id ) </title></a>
-<a xlink:href='#prep_template_sample.sample_id'><text x='1068' y='217'>sample_id</text><title>sample_id varchar not null</title></a>
-<a xlink:href='#prep_template_sample.sample_id'><use id='fk' x='1173' y='206' xlink:href='#fk'/><title>References study_sample ( sample_id ) </title></a>
+<a xlink:href='#prep_template_sample.prep_template_id'><use id='fk' x='1458' y='221' xlink:href='#fk'/><title>References prep_template ( prep_template_id ) </title></a>
+  <use id='nn' x='1337' y='237' xlink:href='#nn'/><a xlink:href='#prep_template_sample.sample_id'><use id='pk' x='1337' y='236' xlink:href='#pk'/><title>Index  ( sample_id ) Index  ( sample_id ) Primary Key  ( prep_template_id, sample_id ) </title></a>
+<a xlink:href='#prep_template_sample.sample_id'><text x='1353' y='247'>sample_id</text><title>sample_id varchar not null</title></a>
 
 </g></svg>
 
@@ -2307,46 +2312,6 @@ The prep template identifier</title></a>
 <tr><th colspan='3'><b>Indexes</b></th></tr>
 	<tr>		<td>pk&#095;study&#095;x&#095;y primary key</td>
 		<td> ON sample&#095;id</td>
-		<td>  </td>
-	</tr>
-</tbody>
-</table>
-
-<br/><br/>
-<table class='bordered'>
-<thead>
-<tr><th colspan='3'><a name='study_raw_data'>Table study_raw_data</a></th></tr>
-<tr><td colspan='3'>links study to its raw data </td></tr>
-</thead>
-<tbody>
-	<tr>
-		<td><a name='study_raw_data.study_id'>study&#095;id</a></td>
-		<td> bigint  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='study_raw_data.raw_data_id'>raw&#095;data&#095;id</a></td>
-		<td> bigint  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-<tr><th colspan='3'><b>Indexes</b></th></tr>
-	<tr>		<td>idx&#095;study&#095;raw&#095;data </td>
-		<td> ON study&#095;id</td>
-		<td>  </td>
-	</tr>
-	<tr>		<td>idx&#095;study&#095;raw&#095;data&#095;0 primary key</td>
-		<td> ON study&#095;id&#044; raw&#095;data&#095;id</td>
-		<td>  </td>
-	</tr>
-<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
-	<tr>
-		<td>fk_study_raw_data_study</td>
-		<td > ( study&#095;id ) ref <a href='#study'>study</a> (study&#095;id) </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>fk_study_raw_data_raw_data</td>
-		<td > ( raw&#095;data&#095;id ) ref <a href='#raw&#095;data'>raw&#095;data</a> (raw&#095;data&#095;id) </td>
 		<td>  </td>
 	</tr>
 </tbody>
@@ -3101,117 +3066,6 @@ The prep template identifier</title></a>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='3'><a name='prep_columns'>Table prep_columns</a></th></tr>
-</thead>
-<tbody>
-	<tr>
-		<td><a name='prep_columns.prep_template_id'>prep&#095;template&#095;id</a></td>
-		<td> bigint  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='prep_columns.column_name'>column&#095;name</a></td>
-		<td> varchar  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='prep_columns.column_type'>column&#095;type</a></td>
-		<td> varchar  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-<tr><th colspan='3'><b>Indexes</b></th></tr>
-	<tr>		<td>idx&#095;prep&#095;columns&#095;0 primary key</td>
-		<td> ON prep&#095;template&#095;id&#044; column&#095;name&#044; column&#095;type</td>
-		<td>  </td>
-	</tr>
-	<tr>		<td>idx&#095;prep&#095;columns&#095;1 </td>
-		<td> ON prep&#095;template&#095;id</td>
-		<td>  </td>
-	</tr>
-<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
-	<tr>
-		<td>fk_prep_columns_prep_template</td>
-		<td > ( prep&#095;template&#095;id ) ref <a href='#prep&#095;template'>prep&#095;template</a> (prep&#095;template&#095;id) </td>
-		<td>  </td>
-	</tr>
-</tbody>
-</table>
-
-<br/><br/>
-<table class='bordered'>
-<thead>
-<tr><th colspan='3'><a name='raw_filepath'>Table raw_filepath</a></th></tr>
-</thead>
-<tbody>
-	<tr>
-		<td><a name='raw_filepath.raw_data_id'>raw&#095;data&#095;id</a></td>
-		<td> bigint  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='raw_filepath.filepath_id'>filepath&#095;id</a></td>
-		<td> bigint  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-<tr><th colspan='3'><b>Indexes</b></th></tr>
-	<tr>		<td>idx&#095;raw&#095;filepath primary key</td>
-		<td> ON raw&#095;data&#095;id&#044; filepath&#095;id</td>
-		<td>  </td>
-	</tr>
-	<tr>		<td>idx&#095;raw&#095;filepath&#095;0 </td>
-		<td> ON filepath&#095;id</td>
-		<td>  </td>
-	</tr>
-	<tr>		<td>idx&#095;raw&#095;filepath&#095;1 </td>
-		<td> ON raw&#095;data&#095;id</td>
-		<td>  </td>
-	</tr>
-<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
-	<tr>
-		<td>fk_raw_filepath</td>
-		<td > ( filepath&#095;id ) ref <a href='#filepath'>filepath</a> (filepath&#095;id) </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>fk_raw_filepath_0</td>
-		<td > ( raw&#095;data&#095;id ) ref <a href='#raw&#095;data'>raw&#095;data</a> (raw&#095;data&#095;id) </td>
-		<td>  </td>
-	</tr>
-</tbody>
-</table>
-
-<br/><br/>
-<table class='bordered'>
-<thead>
-<tr><th colspan='3'><a name='filetype'>Table filetype</a></th></tr>
-<tr><td colspan='3'>Type of file &#040;FASTA&#044; FASTQ&#044; SPECTRA&#044; etc&#041; </td></tr>
-</thead>
-<tbody>
-	<tr>
-		<td><a name='filetype.filetype_id'>filetype&#095;id</a></td>
-		<td> bigserial  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='filetype.type'>type</a></td>
-		<td> varchar  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-<tr><th colspan='3'><b>Indexes</b></th></tr>
-	<tr>		<td>pk&#095;filetype primary key</td>
-		<td> ON filetype&#095;id</td>
-		<td>  </td>
-	</tr>
-	<tr>		<td>idx&#095;filetype unique</td>
-		<td> ON type</td>
-		<td>  </td>
-	</tr>
-</tbody>
-</table>
-
-<br/><br/>
-<table class='bordered'>
-<thead>
 <tr><th colspan='3'><a name='filepath_type'>Table filepath_type</a></th></tr>
 </thead>
 <tbody>
@@ -3378,107 +3232,6 @@ The prep template identifier</title></a>
 	</tr>
 	<tr>		<td>idx&#095;severity unique</td>
 		<td> ON severity</td>
-		<td>  </td>
-	</tr>
-</tbody>
-</table>
-
-<br/><br/>
-<table class='bordered'>
-<thead>
-<tr><th colspan='3'><a name='prep_template'>Table prep_template</a></th></tr>
-</thead>
-<tbody>
-	<tr>
-		<td><a name='prep_template.prep_template_id'>prep&#095;template&#095;id</a></td>
-		<td> bigserial  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='prep_template.data_type_id'>data&#095;type&#095;id</a></td>
-		<td> bigint  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='prep_template.raw_data_id'>raw&#095;data&#095;id</a></td>
-		<td> bigint  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='prep_template.preprocessing_status'>preprocessing&#095;status</a></td>
-		<td> varchar  NOT NULL  DEFO 'not_preprocessed' </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='prep_template.investigation_type'>investigation&#095;type</a></td>
-		<td> varchar   </td>
-		<td> The investigation type &#040;e&#046;g&#046;&#044; one of the values from EBI&#039;s set of known types&#041; </td>
-	</tr>
-<tr><th colspan='3'><b>Indexes</b></th></tr>
-	<tr>		<td>pk&#095;prep&#095;template primary key</td>
-		<td> ON prep&#095;template&#095;id</td>
-		<td>  </td>
-	</tr>
-	<tr>		<td>idx&#095;prep&#095;template </td>
-		<td> ON data&#095;type&#095;id</td>
-		<td>  </td>
-	</tr>
-	<tr>		<td>idx&#095;prep&#095;template&#095;0 </td>
-		<td> ON raw&#095;data&#095;id</td>
-		<td>  </td>
-	</tr>
-<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
-	<tr>
-		<td>fk_prep_template_data_type</td>
-		<td > ( data&#095;type&#095;id ) ref <a href='#data&#095;type'>data&#095;type</a> (data&#095;type&#095;id) </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>fk_prep_template_raw_data</td>
-		<td > ( raw&#095;data&#095;id ) ref <a href='#raw&#095;data'>raw&#095;data</a> (raw&#095;data&#095;id) </td>
-		<td>  </td>
-	</tr>
-</tbody>
-</table>
-
-<br/><br/>
-<table class='bordered'>
-<thead>
-<tr><th colspan='3'><a name='raw_data'>Table raw_data</a></th></tr>
-</thead>
-<tbody>
-	<tr>
-		<td><a name='raw_data.raw_data_id'>raw&#095;data&#095;id</a></td>
-		<td> bigserial  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='raw_data.filetype_id'>filetype&#095;id</a></td>
-		<td> bigint  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='raw_data.link_filepaths_status'>link&#095;filepaths&#095;status</a></td>
-		<td> varchar  NOT NULL  DEFO 'idle' </td>
-		<td>  </td>
-	</tr>
-<tr><th colspan='3'><b>Indexes</b></th></tr>
-	<tr>		<td>pk&#095;raw&#095;data unique</td>
-		<td> ON raw&#095;data&#095;id</td>
-		<td>  </td>
-	</tr>
-	<tr>		<td>idx&#095;raw&#095;data </td>
-		<td> ON filetype&#095;id</td>
-		<td>  </td>
-	</tr>
-	<tr>		<td>pk&#095;raw&#095;data&#095;0 primary key</td>
-		<td> ON raw&#095;data&#095;id</td>
-		<td>  </td>
-	</tr>
-<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
-	<tr>
-		<td>fk_raw_data_filetype</td>
-		<td > ( filetype&#095;id ) ref <a href='#filetype'>filetype</a> (filetype&#095;id) </td>
 		<td>  </td>
 	</tr>
 </tbody>
@@ -3855,49 +3608,6 @@ The prep template identifier</title></a>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='3'><a name='prep_template_filepath'>Table prep_template_filepath</a></th></tr>
-</thead>
-<tbody>
-	<tr>
-		<td><a name='prep_template_filepath.prep_template_id'>prep&#095;template&#095;id</a></td>
-		<td> bigint  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='prep_template_filepath.filepath_id'>filepath&#095;id</a></td>
-		<td> bigint  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-<tr><th colspan='3'><b>Indexes</b></th></tr>
-	<tr>		<td>idx&#095;prep&#095;template&#095;filepath primary key</td>
-		<td> ON prep&#095;template&#095;id&#044; filepath&#095;id</td>
-		<td>  </td>
-	</tr>
-	<tr>		<td>idx&#095;prep&#095;template&#095;filepath </td>
-		<td> ON filepath&#095;id</td>
-		<td>  </td>
-	</tr>
-	<tr>		<td>idx&#095;prep&#095;template&#095;filepath </td>
-		<td> ON prep&#095;template&#095;id</td>
-		<td>  </td>
-	</tr>
-<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
-	<tr>
-		<td>fk_filepath_id</td>
-		<td > ( filepath&#095;id ) ref <a href='#filepath'>filepath</a> (filepath&#095;id) </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>fk_prep_template_id</td>
-		<td > ( prep&#095;template&#095;id ) ref <a href='#prep&#095;template'>prep&#095;template</a> (prep&#095;template&#095;id) </td>
-		<td>  </td>
-	</tr>
-</tbody>
-</table>
-
-<br/><br/>
-<table class='bordered'>
-<thead>
 <tr><th colspan='3'><a name='sample_template_filepath'>Table sample_template_filepath</a></th></tr>
 </thead>
 <tbody>
@@ -3933,49 +3643,6 @@ The prep template identifier</title></a>
 	<tr>
 		<td>fk_filepath_id</td>
 		<td > ( filepath&#095;id ) ref <a href='#filepath'>filepath</a> (filepath&#095;id) </td>
-		<td>  </td>
-	</tr>
-</tbody>
-</table>
-
-<br/><br/>
-<table class='bordered'>
-<thead>
-<tr><th colspan='3'><a name='prep_template_preprocessed_data'>Table prep_template_preprocessed_data</a></th></tr>
-</thead>
-<tbody>
-	<tr>
-		<td><a name='prep_template_preprocessed_data.prep_template_id'>prep&#095;template&#095;id</a></td>
-		<td> bigint  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='prep_template_preprocessed_data.preprocessed_data_id'>preprocessed&#095;data&#095;id</a></td>
-		<td> bigint  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-<tr><th colspan='3'><b>Indexes</b></th></tr>
-	<tr>		<td>idx&#095;prep&#095;template&#095;preprocessed&#095;data primary key</td>
-		<td> ON prep&#095;template&#095;id&#044; preprocessed&#095;data&#095;id</td>
-		<td>  </td>
-	</tr>
-	<tr>		<td>idx&#095;prep&#095;template&#095;preprocessed&#095;data&#095;0 </td>
-		<td> ON prep&#095;template&#095;id</td>
-		<td>  </td>
-	</tr>
-	<tr>		<td>idx&#095;prep&#095;template&#095;preprocessed&#095;data&#095;1 </td>
-		<td> ON preprocessed&#095;data&#095;id</td>
-		<td>  </td>
-	</tr>
-<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
-	<tr>
-		<td>fk_prep_template_id</td>
-		<td > ( prep&#095;template&#095;id ) ref <a href='#prep&#095;template'>prep&#095;template</a> (prep&#095;template&#095;id) </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>fk_prep_template_preprocessed_data</td>
-		<td > ( preprocessed&#095;data&#095;id ) ref <a href='#preprocessed&#095;data'>preprocessed&#095;data</a> (preprocessed&#095;data&#095;id) </td>
 		<td>  </td>
 	</tr>
 </tbody>
@@ -5239,6 +4906,348 @@ Controlled Vocabulary </td>
 <br/><br/>
 <table class='bordered'>
 <thead>
+<tr><th colspan='3'><a name='raw_data'>Table raw_data</a></th></tr>
+</thead>
+<tbody>
+	<tr>
+		<td><a name='raw_data.raw_data_id'>raw&#095;data&#095;id</a></td>
+		<td> bigserial  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='raw_data.filetype_id'>filetype&#095;id</a></td>
+		<td> bigint  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='raw_data.link_filepaths_status'>link&#095;filepaths&#095;status</a></td>
+		<td> varchar  NOT NULL  DEFO 'idle' </td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;raw&#095;data unique</td>
+		<td> ON raw&#095;data&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>idx&#095;raw&#095;data </td>
+		<td> ON filetype&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>pk&#095;raw&#095;data&#095;0 primary key</td>
+		<td> ON raw&#095;data&#095;id</td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
+	<tr>
+		<td>fk_raw_data_filetype</td>
+		<td > ( filetype&#095;id ) ref <a href='#filetype'>filetype</a> (filetype&#095;id) </td>
+		<td>  </td>
+	</tr>
+</tbody>
+</table>
+
+<br/><br/>
+<table class='bordered'>
+<thead>
+<tr><th colspan='3'><a name='filetype'>Table filetype</a></th></tr>
+<tr><td colspan='3'>Type of file &#040;FASTA&#044; FASTQ&#044; SPECTRA&#044; etc&#041; </td></tr>
+</thead>
+<tbody>
+	<tr>
+		<td><a name='filetype.filetype_id'>filetype&#095;id</a></td>
+		<td> bigserial  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='filetype.type'>type</a></td>
+		<td> varchar  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;filetype primary key</td>
+		<td> ON filetype&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>idx&#095;filetype unique</td>
+		<td> ON type</td>
+		<td>  </td>
+	</tr>
+</tbody>
+</table>
+
+<br/><br/>
+<table class='bordered'>
+<thead>
+<tr><th colspan='3'><a name='prep_template_preprocessed_data'>Table prep_template_preprocessed_data</a></th></tr>
+</thead>
+<tbody>
+	<tr>
+		<td><a name='prep_template_preprocessed_data.prep_template_id'>prep&#095;template&#095;id</a></td>
+		<td> bigint  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='prep_template_preprocessed_data.preprocessed_data_id'>preprocessed&#095;data&#095;id</a></td>
+		<td> bigint  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>idx&#095;prep&#095;template&#095;preprocessed&#095;data primary key</td>
+		<td> ON prep&#095;template&#095;id&#044; preprocessed&#095;data&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>idx&#095;prep&#095;template&#095;preprocessed&#095;data&#095;0 </td>
+		<td> ON prep&#095;template&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>idx&#095;prep&#095;template&#095;preprocessed&#095;data&#095;1 </td>
+		<td> ON preprocessed&#095;data&#095;id</td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
+	<tr>
+		<td>fk_prep_template_id</td>
+		<td > ( prep&#095;template&#095;id ) ref <a href='#prep&#095;template'>prep&#095;template</a> (prep&#095;template&#095;id) </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>fk_prep_template_preprocessed_data</td>
+		<td > ( preprocessed&#095;data&#095;id ) ref <a href='#preprocessed&#095;data'>preprocessed&#095;data</a> (preprocessed&#095;data&#095;id) </td>
+		<td>  </td>
+	</tr>
+</tbody>
+</table>
+
+<br/><br/>
+<table class='bordered'>
+<thead>
+<tr><th colspan='3'><a name='prep_template'>Table prep_template</a></th></tr>
+</thead>
+<tbody>
+	<tr>
+		<td><a name='prep_template.prep_template_id'>prep&#095;template&#095;id</a></td>
+		<td> bigserial  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='prep_template.data_type_id'>data&#095;type&#095;id</a></td>
+		<td> bigint  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='prep_template.raw_data_id'>raw&#095;data&#095;id</a></td>
+		<td> bigint  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='prep_template.preprocessing_status'>preprocessing&#095;status</a></td>
+		<td> varchar  NOT NULL  DEFO 'not_preprocessed' </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='prep_template.investigation_type'>investigation&#095;type</a></td>
+		<td> varchar   </td>
+		<td> The investigation type &#040;e&#046;g&#046;&#044; one of the values from EBI&#039;s set of known types&#041; </td>
+	</tr>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;prep&#095;template primary key</td>
+		<td> ON prep&#095;template&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>idx&#095;prep&#095;template </td>
+		<td> ON data&#095;type&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>idx&#095;prep&#095;template&#095;0 </td>
+		<td> ON raw&#095;data&#095;id</td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
+	<tr>
+		<td>fk_prep_template_data_type</td>
+		<td > ( data&#095;type&#095;id ) ref <a href='#data&#095;type'>data&#095;type</a> (data&#095;type&#095;id) </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>fk_prep_template_raw_data</td>
+		<td > ( raw&#095;data&#095;id ) ref <a href='#raw&#095;data'>raw&#095;data</a> (raw&#095;data&#095;id) </td>
+		<td>  </td>
+	</tr>
+</tbody>
+</table>
+
+<br/><br/>
+<table class='bordered'>
+<thead>
+<tr><th colspan='3'><a name='raw_filepath'>Table raw_filepath</a></th></tr>
+</thead>
+<tbody>
+	<tr>
+		<td><a name='raw_filepath.raw_data_id'>raw&#095;data&#095;id</a></td>
+		<td> bigint  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='raw_filepath.filepath_id'>filepath&#095;id</a></td>
+		<td> bigint  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>idx&#095;raw&#095;filepath primary key</td>
+		<td> ON raw&#095;data&#095;id&#044; filepath&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>idx&#095;raw&#095;filepath&#095;0 </td>
+		<td> ON filepath&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>idx&#095;raw&#095;filepath&#095;1 </td>
+		<td> ON raw&#095;data&#095;id</td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
+	<tr>
+		<td>fk_raw_filepath</td>
+		<td > ( filepath&#095;id ) ref <a href='#filepath'>filepath</a> (filepath&#095;id) </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>fk_raw_filepath_0</td>
+		<td > ( raw&#095;data&#095;id ) ref <a href='#raw&#095;data'>raw&#095;data</a> (raw&#095;data&#095;id) </td>
+		<td>  </td>
+	</tr>
+</tbody>
+</table>
+
+<br/><br/>
+<table class='bordered'>
+<thead>
+<tr><th colspan='3'><a name='prep_template_filepath'>Table prep_template_filepath</a></th></tr>
+</thead>
+<tbody>
+	<tr>
+		<td><a name='prep_template_filepath.prep_template_id'>prep&#095;template&#095;id</a></td>
+		<td> bigint  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='prep_template_filepath.filepath_id'>filepath&#095;id</a></td>
+		<td> bigint  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>idx&#095;prep&#095;template&#095;filepath primary key</td>
+		<td> ON prep&#095;template&#095;id&#044; filepath&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>idx&#095;prep&#095;template&#095;filepath </td>
+		<td> ON filepath&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>idx&#095;prep&#095;template&#095;filepath </td>
+		<td> ON prep&#095;template&#095;id</td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
+	<tr>
+		<td>fk_filepath_id</td>
+		<td > ( filepath&#095;id ) ref <a href='#filepath'>filepath</a> (filepath&#095;id) </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>fk_prep_template_id</td>
+		<td > ( prep&#095;template&#095;id ) ref <a href='#prep&#095;template'>prep&#095;template</a> (prep&#095;template&#095;id) </td>
+		<td>  </td>
+	</tr>
+</tbody>
+</table>
+
+<br/><br/>
+<table class='bordered'>
+<thead>
+<tr><th colspan='3'><a name='study_prep_template'>Table study_prep_template</a></th></tr>
+<tr><td colspan='3'>links study to its prep templates </td></tr>
+</thead>
+<tbody>
+	<tr>
+		<td><a name='study_prep_template.study_id'>study&#095;id</a></td>
+		<td> bigint  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='study_prep_template.prep_template_id'>prep&#095;template&#095;id</a></td>
+		<td> bigint  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>idx&#095;study&#095;raw&#095;data primary key</td>
+		<td> ON study&#095;id&#044; prep&#095;template&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>idx&#095;study&#095;raw&#095;data&#095;0 </td>
+		<td> ON study&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>idx&#095;study&#095;raw&#095;data&#095;1 </td>
+		<td> ON prep&#095;template&#095;id</td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
+	<tr>
+		<td>fk_study_prep_template_study</td>
+		<td > ( study&#095;id ) ref <a href='#study'>study</a> (study&#095;id) </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>fk_study_prep_template_pt</td>
+		<td > ( prep&#095;template&#095;id ) ref <a href='#prep&#095;template'>prep&#095;template</a> (prep&#095;template&#095;id) </td>
+		<td>  </td>
+	</tr>
+</tbody>
+</table>
+
+<br/><br/>
+<table class='bordered'>
+<thead>
+<tr><th colspan='3'><a name='prep_columns'>Table prep_columns</a></th></tr>
+</thead>
+<tbody>
+	<tr>
+		<td><a name='prep_columns.prep_template_id'>prep&#095;template&#095;id</a></td>
+		<td> bigint  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='prep_columns.column_name'>column&#095;name</a></td>
+		<td> varchar  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='prep_columns.column_type'>column&#095;type</a></td>
+		<td> varchar  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>idx&#095;prep&#095;columns&#095;0 primary key</td>
+		<td> ON prep&#095;template&#095;id&#044; column&#095;name&#044; column&#095;type</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>idx&#095;prep&#095;columns&#095;1 </td>
+		<td> ON prep&#095;template&#095;id</td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
+	<tr>
+		<td>fk_prep_columns_prep_template</td>
+		<td > ( prep&#095;template&#095;id ) ref <a href='#prep&#095;template'>prep&#095;template</a> (prep&#095;template&#095;id) </td>
+		<td>  </td>
+	</tr>
+</tbody>
+</table>
+
+<br/><br/>
+<table class='bordered'>
+<thead>
 <tr><th colspan='3'><a name='prep_template_sample'>Table prep_template_sample</a></th></tr>
 </thead>
 <tbody>
@@ -5270,11 +5279,6 @@ Controlled Vocabulary </td>
 		<td>  </td>
 	</tr>
 <tr><th colspan='3'><b>Foreign Keys</b></th></tr>
-	<tr>
-		<td>fk_common_prep_info</td>
-		<td > ( sample&#095;id ) ref <a href='#study&#095;sample'>study&#095;sample</a> (sample&#095;id) </td>
-		<td>  </td>
-	</tr>
 	<tr>
 		<td>fk_prep_template</td>
 		<td > ( prep&#095;template&#095;id ) ref <a href='#prep&#095;template'>prep&#095;template</a> (prep&#095;template&#095;id) </td>
