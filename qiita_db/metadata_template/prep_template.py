@@ -232,7 +232,7 @@ class PrepTemplate(MetadataTemplate):
         conn_handler.execute(
             "DROP TABLE qiita.{0}".format(table_name))
 
-        # Remove the rows from common_prep_info
+        # Remove the rows from prep_template_samples
         conn_handler.execute(
             "DELETE FROM qiita.{0} where {1} = %s".format(cls._table,
                                                           cls._id_column),
