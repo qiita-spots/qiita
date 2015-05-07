@@ -6,6 +6,8 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
+# TODO: Modify DB to fix 1084
+
 from unittest import TestCase, main
 from datetime import datetime
 from os import close, remove
