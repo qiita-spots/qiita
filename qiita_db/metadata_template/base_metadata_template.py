@@ -637,7 +637,11 @@ class MetadataTemplate(QiitaObject):
                            for col, dtype in zip(headers, datatypes)]
         conn_handler.add_to_queue(
             queue_name,
-            "CREATE TABLE qiita.{0} (sample_id varchar NOT NULL, {1})".format(
+            "CREATE TABLE qiita.{0} ("
+            "sample_id varchar NOT NULL, {1}, "
+            "CONSTRAINT fk_{0} FOREIGN KEY (sample_id) "
+            "REFERENCES qiita.study_sample (sample_id) "
+            "ON UPDATE CASCADE)".format(
                 table_name, ', '.join(column_datatype)))
 
         # Insert values on custom table
