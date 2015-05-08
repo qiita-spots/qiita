@@ -26,7 +26,8 @@ from qiita_core.qiita_settings import qiita_config
 
 class TestEBISubmission(TestCase):
     def setUp(self):
-        self.path = path.dirname(path.abspath(__file__)) + '/test_data'
+        self.path = path.dirname(path.abspath(__file__)) + \
+            '/test_data/test_ebi'
         self.temp_dir = gettempdir()
         self.demux_output_dir = join(self.temp_dir, 'demux_output')
 
