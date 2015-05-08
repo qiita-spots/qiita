@@ -9,6 +9,8 @@ from __future__ import division
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
+import warnings
+
 from qiita_core.exceptions import QiitaError
 
 
@@ -40,3 +42,11 @@ class StudyDoesNotExistsError(QiitaWareError):
 class ComputeError(QiitaWareError):
     """A compute error happened"""
     pass
+
+
+class EmptyFileWarning(Warning):
+    """Warning that is raised when an empty file is encountered"""
+    pass
+
+
+warnings.simplefilter('always', EmptyFileWarning)

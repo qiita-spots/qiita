@@ -15,15 +15,10 @@ from future.utils import viewitems
 from skbio.util import safe_md5
 
 from qiita_core.qiita_settings import qiita_config
-
 from qiita_db.logger import LogEntry
 from qiita_db.ontology import Ontology
 from qiita_db.util import convert_to_id
-
-
-class EmptyFileWarning(Warning):
-    """Warning that is raised when an empty file is encountered"""
-    pass
+from .exceptions import EmptyFileWarning
 
 
 class InvalidMetadataError(Exception):
