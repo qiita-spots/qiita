@@ -4,20 +4,22 @@ from subprocess import call
 from shlex import split as shsplit
 from glob import glob
 from os.path import basename, exists, join, split
-from os import environ, close
+from os import environ, close, stat
+from os.path import exists
 from datetime import date, timedelta, datetime
 from xml.etree import ElementTree as ET
 from xml.dom import minidom
 from xml.sax.saxutils import escape
+from warnings import warn
 
 from future.utils import viewitems
 from skbio.util import safe_md5
 
 from qiita_core.qiita_settings import qiita_config
-
 from qiita_db.logger import LogEntry
 from qiita_db.ontology import Ontology
 from qiita_db.util import convert_to_id
+from .exceptions import EmptyFileWarning
 
 
 class InvalidMetadataError(Exception):
@@ -404,6 +406,15 @@ class EBISubmission(object):
                              "%s (case insensitive)" % (platform,
                                                         ', '.join(platforms)))
 
+        # Do not add empty files
+        if not exists(file_path) or stat(file_path).st_size == 0:
+            warn("filepath %s skipped; file does not exist "
+                 "or is empty" % file_path, EmptyFileWarning, stacklevel=2)
+            return
+
+        with open(file_path) as fp:
+            md5 = safe_md5(fp).hexdigest()
+
         self.sequence_files.append(file_path)
         prep_info = self._stringify_kwargs(kwargs)
         if prep_info is None:
@@ -411,6 +422,7 @@ class EBISubmission(object):
         prep_info['platform'] = platform
         prep_info['file_type'] = file_type
         prep_info['file_path'] = file_path
+        prep_info['md5'] = md5
         prep_info['experiment_design_description'] = \
             experiment_design_description
         prep_info['library_construction_protocol'] = \
@@ -549,9 +561,7 @@ class EBISubmission(object):
 
             file_type = sample_info['prep']['file_type']
             file_path = sample_info['prep']['file_path']
-
-            with open(file_path) as fp:
-                md5 = safe_md5(fp).hexdigest()
+            md5 = sample_info['prep']['md5']
 
             run = ET.SubElement(run_set, 'RUN', {
                 'alias': self._get_run_alias(basename(file_path)),
