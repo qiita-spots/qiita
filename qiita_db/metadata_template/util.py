@@ -221,13 +221,13 @@ def load_template_to_dataframe(fn, strip_whitespace=True):
                            parse_dates=True, index_col=False, comment='\t',
                            mangle_dupe_cols=False, converters={
                                'sample_name': lambda x: str(x).strip(),
-                               # required_sample_info
+                               # required sample template information
                                'physical_location': str,
                                'sample_type': str,
                                # collection_timestamp is not added here
                                'host_subject_id': str,
                                'description': str,
-                               # common_prep_info
+                               # common prep template information
                                'center_name': str,
                                'center_projct_name': str})
 
