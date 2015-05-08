@@ -4,7 +4,8 @@ from subprocess import call
 from shlex import split as shsplit
 from glob import glob
 from os.path import basename, exists, join, split
-from os import environ, close
+from os import environ, close, stat
+from os.path import exists
 from datetime import date, timedelta, datetime
 from xml.etree import ElementTree as ET
 from xml.dom import minidom
@@ -405,16 +406,14 @@ class EBISubmission(object):
                              "%s (case insensitive)" % (platform,
                                                         ', '.join(platforms)))
 
+        # Do not add empty files
+        if not exists(file_path) or stat(file_path).st_size == 0:
+            warn("filepath %s skipped; file does not exist "
+                 "or is empty" % file_path, EmptyFileWarning, stacklevel=2)
+            return
+
         with open(file_path) as fp:
             md5 = safe_md5(fp).hexdigest()
-
-        # Do not add empty files
-        if md5 in ('d41d8cd98f00b204e9800998ecf8427e',   # empty file
-                   '4a12329a258d79a941a3ac0a1e90afd3',   # empty gz
-                   'ca0921234f41f3aa00e99f99365ed336'):  # empty tgz
-            warn("filepath %s skipped; file is empty" % file_path,
-                 EmptyFileWarning, stacklevel=2)
-            return
 
         self.sequence_files.append(file_path)
         prep_info = self._stringify_kwargs(kwargs)
