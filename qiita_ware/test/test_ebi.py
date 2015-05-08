@@ -29,13 +29,6 @@ class TestEBISubmission(TestCase):
         self.path = path.dirname(path.abspath(__file__)) + \
             '/test_data/test_ebi'
         self.temp_dir = gettempdir()
-        self.demux_output_dir = join(self.temp_dir, 'demux_output')
-
-    def tearDown(self):
-        try:
-            rmtree(self.demux_output_dir)
-        except:
-            pass
 
     def test_init(self):
         e = EBISubmission('2', 'Study Title', 'Study Abstract',
