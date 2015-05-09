@@ -14,7 +14,6 @@ from StringIO import StringIO
 from os import close, remove, path
 from os.path import join
 from tempfile import mkstemp, gettempdir
-from shutil import rmtree
 from unittest import TestCase, main
 from xml.dom import minidom
 from xml.etree import ElementTree as ET
@@ -583,10 +582,6 @@ _PROTOCOL>
         <VALUE>library protocol</VALUE>
       </EXPERIMENT_ATTRIBUTE>
       <EXPERIMENT_ATTRIBUTE>
-        <TAG>md5</TAG>
-        <VALUE>506d31c82999a2cbcda138a369955e7d</VALUE>
-      </EXPERIMENT_ATTRIBUTE>
-      <EXPERIMENT_ATTRIBUTE>
         <TAG>platform</TAG>
         <VALUE>ILLUMINA</VALUE>
       </EXPERIMENT_ATTRIBUTE>
@@ -599,7 +594,8 @@ RUNXML = """
 <?xml version="1.0" encoding="UTF-8"?>
 <RUN_SET xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:no\
 NamespaceSchemaLocation="ftp://ftp.sra.ebi.ac.uk/meta/xsd/sra_1_3/SRA.run.xsd">
-  <RUN alias="%(study_alias)s_sample1.fastq.gz_run" center_name="CCME-COLORADO">
+  <RUN alias="%(study_alias)s_sample1.fastq.gz_run" \
+center_name="CCME-COLORADO">
     <EXPERIMENT_REF refname="%(organization_prefix)s_ppdid_001:test1"/>
     <DATA_BLOCK>
       <FILES>
