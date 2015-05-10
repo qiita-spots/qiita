@@ -65,15 +65,13 @@ class User(QiitaObject):
     # The following columns are considered not part of the user info
     _non_info = {"email", "user_level_id", "password"}
 
-    def _check_id(self, id_, conn_handler=None):
+    def _check_id(self, id_):
         r"""Check that the provided ID actually exists in the database
 
         Parameters
         ----------
         id_ : object
             The ID to test
-        conn_handler : SQLConnectionHandler
-            The connection handler object connected to the DB
 
         Notes
         -----
@@ -82,8 +80,8 @@ class User(QiitaObject):
         """
         self._check_subclass()
 
-        conn_handler = (conn_handler if conn_handler is not None
-                        else SQLConnectionHandler())
+        conn_handler = SQLConnectionHandler()
+
         return conn_handler.execute_fetchone(
             "SELECT EXISTS(SELECT * FROM qiita.qiita_user WHERE "
             "email = %s)", (id_, ))[0]
@@ -415,7 +413,7 @@ class User(QiitaObject):
             "SELECT password FROM qiita.{0} WHERE email = %s".format(
                 self._table), (self._id, ))[0]
         if dbpass == hash_password(oldpass, dbpass):
-            self._change_pass(newpass, conn_handler=conn_handler)
+            self._change_pass(newpass)
             return True
         return False
 
@@ -448,13 +446,13 @@ class User(QiitaObject):
             return True
         return False
 
-    def _change_pass(self, newpass, conn_handler=None):
+    def _change_pass(self, newpass):
         if not validate_password(newpass):
             raise IncorrectPasswordError("Bad password given!")
 
         sql = ("UPDATE qiita.{0} SET password=%s, pass_reset_code=NULL WHERE "
                "email = %s".format(self._table))
-        conn_handler = conn_handler if conn_handler else SQLConnectionHandler()
+        conn_handler = SQLConnectionHandler()
         conn_handler.execute(sql, (hash_password(newpass), self._id))
 
 

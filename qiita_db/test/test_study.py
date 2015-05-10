@@ -175,8 +175,7 @@ class TestStudy(TestCase):
     def _change_processed_data_status(self, new_status):
         # Change the status of the studies by changing the status of their
         # processed data
-        id_status = convert_to_id(new_status, 'processed_data_status',
-                                  self.conn_handler)
+        id_status = convert_to_id(new_status, 'processed_data_status')
         self.conn_handler.execute(
             "UPDATE qiita.processed_data SET processed_data_status_id = %s",
             (id_status,))
@@ -442,7 +441,11 @@ class TestStudy(TestCase):
 
     def test_delete(self):
         title = "Fried chicken microbiome"
-        study = Study.create(User('test@foo.bar'), title, [1], self.info)
+        # the study is assigned to investigation 1
+        study = Study.create(User('test@foo.bar'), title, [1], self.info,
+                             Investigation(1))
+        # sharing with other user
+        study.share(User("shared@foo.bar"))
         study.delete(study.id)
         self.assertFalse(study.exists(title))
 

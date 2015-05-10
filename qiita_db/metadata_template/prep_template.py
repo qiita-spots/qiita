@@ -117,10 +117,9 @@ class PrepTemplate(MetadataTemplate):
         # Check if the data_type is the id or the string
         if isinstance(data_type, (int, long)):
             data_type_id = data_type
-            data_type_str = convert_from_id(data_type, "data_type",
-                                            conn_handler)
+            data_type_str = convert_from_id(data_type, "data_type")
         else:
-            data_type_id = convert_to_id(data_type, "data_type", conn_handler)
+            data_type_id = convert_to_id(data_type, "data_type")
             data_type_str = data_type
 
         pt_cols = PREP_TEMPLATE_COLUMNS
@@ -233,7 +232,7 @@ class PrepTemplate(MetadataTemplate):
         conn_handler.execute(
             "DROP TABLE qiita.{0}".format(table_name))
 
-        # Remove the rows from common_prep_info
+        # Remove the rows from prep_template_samples
         conn_handler.execute(
             "DELETE FROM qiita.{0} where {1} = %s".format(cls._table,
                                                           cls._id_column),
@@ -496,7 +495,7 @@ class PrepTemplate(MetadataTemplate):
 
         # adding the fp to the object
         self.add_filepath(
-            filepath, conn_handler=conn_handler,
+            filepath,
             fp_id=convert_to_id("qiime_map", "filepath_type"))
 
         return filepath

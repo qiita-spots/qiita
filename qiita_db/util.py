@@ -326,44 +326,40 @@ def check_table_cols(conn_handler, keys, table):
                                  set(keys).difference(cols))
 
 
-def get_table_cols(table, conn_handler=None):
+def get_table_cols(table):
     """Returns the column headers of table
 
     Parameters
     ----------
     table : str
         The table name
-    conn_handler : SQLConnectionHandler, optional
-        The connection handler object connected to the DB
 
     Returns
     -------
     list of str
         The column headers of `table`
     """
-    conn_handler = conn_handler if conn_handler else SQLConnectionHandler()
+    conn_handler = SQLConnectionHandler()
     headers = conn_handler.execute_fetchall(
         "SELECT column_name FROM information_schema.columns WHERE "
         "table_name=%s AND table_schema='qiita'", (table, ))
     return [h[0] for h in headers]
 
 
-def get_table_cols_w_type(table, conn_handler=None):
+def get_table_cols_w_type(table):
     """Returns the column headers and its type
 
     Parameters
     ----------
     table : str
         The table name
-    conn_handler : SQLConnectionHandler, optional
-        The connection handler object connected to the db
 
     Returns
     -------
     list of tuples of (str, str)
         The column headers and data type of `table`
     """
-    conn_handler = conn_handler if conn_handler else SQLConnectionHandler()
+    conn_handler = SQLConnectionHandler()
     return conn_handler.execute_fetchall(
         "SELECT column_name, data_type FROM information_schema.columns WHERE "
         "table_name=%s", (table,))
@@ -404,7 +400,7 @@ def exists_dynamic_table(table, prefix, suffix, conn_handler):
             exists_table(table, conn_handler))
 
 
-def get_db_files_base_dir(conn_handler=None):
+def get_db_files_base_dir():
     r"""Returns the path to the base directory of all db files
 
     Returns
@@ -412,13 +408,13 @@ def get_db_files_base_dir(conn_handler=None):
     str
         The path to the base directory of all db files
     """
-    conn_handler = (conn_handler if conn_handler is not None
-                    else SQLConnectionHandler())
+    conn_handler = SQLConnectionHandler()
+
     return conn_handler.execute_fetchone(
         "SELECT base_data_dir FROM settings")[0]
 
 
-def get_work_base_dir(conn_handler=None):
+def get_work_base_dir():
     r"""Returns the path to the base directory of all db files
 
     Returns
@@ -426,8 +422,8 @@ def get_work_base_dir(conn_handler=None):
     str
         The path to the base directory of all db files
     """
-    conn_handler = (conn_handler if conn_handler is not None
-                    else SQLConnectionHandler())
+    conn_handler = SQLConnectionHandler()
+
     return conn_handler.execute_fetchone(
         "SELECT base_work_dir FROM settings")[0]
 
@@ -538,15 +534,13 @@ def move_upload_files_to_trash(study_id, files_to_move):
         rename(fullpath, new_fullpath)
 
 
-def get_mountpoint(mount_type, conn_handler=None, retrieve_all=False):
+def get_mountpoint(mount_type, retrieve_all=False):
     r""" Returns the most recent values from data directory for the given type
 
     Parameters
     ----------
     mount_type : str
         The data mount type
-    conn_handler : SQLConnectionHandler
-        The connection handler object connected to the DB
     retrieve_all : bool
         Retrieve all the available mount points or just the active one
 
@@ -555,8 +549,8 @@ def get_mountpoint(mount_type, conn_handler=None, retrieve_all=False):
     list
         List of tuple, where: [(id_mountpoint, filepath_of_mountpoint)]
     """
-    conn_handler = (conn_handler if conn_handler is not None
-                    else SQLConnectionHandler())
+    conn_handler = SQLConnectionHandler()
+
     if retrieve_all:
         result = conn_handler.execute_fetchall(
             "SELECT data_directory_id, mountpoint, subdirectory FROM "
@@ -571,22 +565,20 @@ def get_mountpoint(mount_type, conn_handler=None, retrieve_all=False):
     return [(d, join(basedir, m, s)) for d, m, s in result]
 
 
-def get_mountpoint_path_by_id(mount_id, conn_handler=None):
+def get_mountpoint_path_by_id(mount_id):
     r""" Returns the mountpoint path for the mountpoint with id = mount_id
 
     Parameters
     ----------
     mount_id : int
         The mountpoint id
-    conn_handler : SQLConnectionHandler
-        The connection handler object connected to the DB
 
     Returns
     -------
     str
         The mountpoint path
     """
-    conn_handler = conn_handler if conn_handler else SQLConnectionHandler()
+    conn_handler = SQLConnectionHandler()
     mountpoint, subdirectory = conn_handler.execute_fetchone(
         """SELECT mountpoint, subdirectory FROM qiita.data_directory
            WHERE data_directory_id=%s""", (mount_id,))
@@ -627,7 +619,7 @@ def insert_filepaths(filepaths, obj_id, table, filepath_table, conn_handler,
     """
     new_filepaths = filepaths
 
-    dd_id, mp = get_mountpoint(table, conn_handler)[0]
+    dd_id, mp = get_mountpoint(table)[0]
     base_fp = join(get_db_files_base_dir(), mp)
 
     if move_files:
@@ -644,7 +636,7 @@ def insert_filepaths(filepaths, obj_id, table, filepath_table, conn_handler,
 
     def str_to_id(x):
         return (x if isinstance(x, (int, long))
-                else convert_to_id(x, "filepath_type", conn_handler))
+                else convert_to_id(x, "filepath_type"))
     paths_w_checksum = [(relpath(path, base_fp), str_to_id(id),
                         compute_checksum(path))
                         for path, id in new_filepaths]
@@ -667,16 +659,10 @@ def insert_filepaths(filepaths, obj_id, table, filepath_table, conn_handler,
         return [id[0] for id in ids]
 
 
-def purge_filepaths(conn_handler=None):
+def purge_filepaths():
     r"""Goes over the filepath table and remove all the filepaths that are not
-    used in any place
-
-    Parameters
-    ----------
-    conn_handler : SQLConnectionHandler, optional
-        The connection handler object connected to the DB
-    """
-    conn_handler = conn_handler if conn_handler else SQLConnectionHandler()
+    used in any place"""
+    conn_handler = SQLConnectionHandler()
 
     # Get all the (table, column) pairs that reference to the filepath table
     # Code adapted from http://stackoverflow.com/q/5347050/3746629
@@ -720,7 +706,7 @@ def purge_filepaths(conn_handler=None):
                 remove(fp)
 
 
-def move_filepaths_to_upload_folder(study_id, filepaths, conn_handler=None):
+def move_filepaths_to_upload_folder(study_id, filepaths):
     r"""Goes over the filepaths list and moves all the filepaths that are not
     used in any place to the upload folder of the study
 
@@ -730,10 +716,8 @@ def move_filepaths_to_upload_folder(study_id, filepaths, conn_handler=None):
         The study id to where the files should be returned to
     filepaths : list
         List of filepaths to move to the upload folder
-    conn_handler : SQLConnectionHandler, optional
-        The connection handler object connected to the DB
     """
-    conn_handler = conn_handler if conn_handler else SQLConnectionHandler()
+    conn_handler = SQLConnectionHandler()
     uploads_fp = join(get_mountpoint("uploads")[0][1], str(study_id))
 
     # We can now go over and remove all the filepaths
@@ -748,7 +732,7 @@ def move_filepaths_to_upload_folder(study_id, filepaths, conn_handler=None):
         move(fp, destination)
 
 
-def get_filepath_id(table, fp, conn_handler):
+def get_filepath_id(table, fp):
     """Return the filepath_id of fp
 
     Parameters
@@ -757,15 +741,14 @@ def get_filepath_id(table, fp, conn_handler):
         The table type so we can search on this one
     fp : str
         The filepath
-    conn_handler : SQLConnectionHandler
-            The sql connection object
 
     Raises
     ------
     QiitaDBError
         If fp is not stored in the DB.
     """
-    _, mp = get_mountpoint(table, conn_handler)[0]
+    conn_handler = SQLConnectionHandler()
+    _, mp = get_mountpoint(table)[0]
     base_fp = join(get_db_files_base_dir(), mp)
 
     fp_id = conn_handler.execute_fetchone(
@@ -826,7 +809,7 @@ def filepath_ids_to_rel_paths(filepath_ids):
         return {}
 
 
-def convert_to_id(value, table, conn_handler=None):
+def convert_to_id(value, table):
     """Converts a string value to its corresponding table identifier
 
     Parameters
@@ -835,8 +818,6 @@ def convert_to_id(value, table, conn_handler=None):
         The string value to convert
     table : str
         The table that has the conversion
-    conn_handler : SQLConnectionHandler, optional
-        The sql connection object
 
     Returns
     -------
@@ -848,7 +829,7 @@ def convert_to_id(value, table, conn_handler=None):
     IncompetentQiitaDeveloperError
         The passed string has no associated id
     """
-    conn_handler = conn_handler if conn_handler else SQLConnectionHandler()
+    conn_handler = SQLConnectionHandler()
     sql = "SELECT {0}_id FROM qiita.{0} WHERE {0} = %s".format(table)
     _id = conn_handler.execute_fetchone(sql, (value, ))
     if _id is None:
@@ -857,7 +838,7 @@ def convert_to_id(value, table, conn_handler=None):
     return _id[0]
 
 
-def convert_from_id(value, table, conn_handler=None):
+def convert_from_id(value, table):
     """Converts an id value to its corresponding string value
 
     Parameters
@@ -866,8 +847,6 @@ def convert_from_id(value, table, conn_handler=None):
         The id value to convert
     table : str
         The table that has the conversion
-    conn_handler : SQLConnectionHandler, optional
-        The sql connection object
 
     Returns
     -------
@@ -879,7 +858,7 @@ def convert_from_id(value, table, conn_handler=None):
     ValueError
         The passed id has no associated string
     """
-    conn_handler = conn_handler if conn_handler else SQLConnectionHandler()
+    conn_handler = SQLConnectionHandler()
     string = conn_handler.execute_fetchone(
         "SELECT {0} FROM qiita.{0} WHERE {0}_id = %s".format(table),
         (value, ))
@@ -974,13 +953,8 @@ def get_lat_longs():
     return result
 
 
-def get_environmental_packages(conn_handler=None):
+def get_environmental_packages():
     """Get the list of available environmental packages
-
-    Parameters
-    ----------
-    conn_handler : SQLConnectionHandler, optional
-        The handler connected to the database
 
     Returns
     -------
@@ -989,17 +963,13 @@ def get_environmental_packages(conn_handler=None):
         environmental package name and the second string is the table where
         the metadata for the environmental package is stored
     """
-    conn = conn_handler if conn_handler else SQLConnectionHandler()
-    return conn.execute_fetchall("SELECT * FROM qiita.environmental_package")
+    conn_handler = SQLConnectionHandler()
+    return conn_handler.execute_fetchall(
+        "SELECT * FROM qiita.environmental_package")
 
 
-def get_timeseries_types(conn_handler=None):
+def get_timeseries_types():
     """Get the list of available timeseries types
-
-    Parameters
-    ----------
-    conn_handler : SQLConnectionHandler, optional
-        The handler connected to the database
 
     Returns
     -------
@@ -1007,8 +977,8 @@ def get_timeseries_types(conn_handler=None):
         The available timeseries types. Each timeseries type is defined by the
         tuple (timeseries_id, timeseries_type, intervention_type)
     """
-    conn = conn_handler if conn_handler else SQLConnectionHandler()
-    return conn.execute_fetchall(
+    conn_handler = SQLConnectionHandler()
+    return conn_handler.execute_fetchall(
         "SELECT * FROM qiita.timeseries_type ORDER BY timeseries_type_id")
 
 

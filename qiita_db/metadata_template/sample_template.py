@@ -84,8 +84,6 @@ class SampleTemplate(MetadataTemplate):
         return [x[0] for x in
                 conn_handler.execute_fetchall(
                 "SELECT DISTINCT column_name FROM qiita.study_sample_columns "
-                "UNION SELECT column_name FROM information_schema.columns "
-                "WHERE table_name = 'required_sample_info' "
                 "ORDER BY column_name")]
 
     @classmethod

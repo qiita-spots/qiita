@@ -87,46 +87,27 @@ class QiitaStatusObjectTest(TestCase):
     def test_check_status_single(self):
         """check_status works passing a single status"""
         self.assertTrue(self.tester.check_status(["in_construction"]))
-        self.assertTrue(self.tester.check_status(["in_construction"],
-                        conn_handler=self.conn_handler))
         self.assertFalse(self.tester.check_status(["queued"]))
-        self.assertFalse(self.tester.check_status(["queued"],
-                         conn_handler=self.conn_handler))
 
     def test_check_status_exclude_single(self):
         """check_status works passing a single status and the exclude flag"""
         self.assertTrue(self.tester.check_status(["public"], exclude=True))
-        self.assertTrue(self.tester.check_status(["public"], exclude=True,
-                        conn_handler=self.conn_handler))
         self.assertFalse(self.tester.check_status(["in_construction"],
                          exclude=True))
-        self.assertFalse(self.tester.check_status(["in_construction"],
-                         exclude=True, conn_handler=self.conn_handler))
 
     def test_check_status_list(self):
         """check_status work passing a list of status"""
         self.assertTrue(self.tester.check_status(
             ["in_construction", "queued"]))
-        self.assertTrue(self.tester.check_status(
-            ["in_construction", "queued"],
-            conn_handler=self.conn_handler))
         self.assertFalse(self.tester.check_status(
             ["public", "queued"]))
-        self.assertFalse(self.tester.check_status(
-            ["public", "queued"], conn_handler=self.conn_handler))
 
     def test_check_status_exclude_list(self):
         """check_status work passing a list of status and the exclude flag"""
         self.assertTrue(self.tester.check_status(
             ["public", "queued"], exclude=True))
-        self.assertTrue(self.tester.check_status(
-            ["public", "queued"], exclude=True,
-            conn_handler=self.conn_handler))
         self.assertFalse(self.tester.check_status(
             ["in_construction", "queued"], exclude=True))
-        self.assertFalse(self.tester.check_status(
-            ["in_construction", "queued"], exclude=True,
-            conn_handler=self.conn_handler))
 
     def test_check_status_unknown_status(self):
         """check_status raises an error if an invalid status is provided"""
@@ -136,13 +117,6 @@ class QiitaStatusObjectTest(TestCase):
         with self.assertRaises(ValueError):
             self.tester.check_status(["foo"], exclude=True)
 
-        with self.assertRaises(ValueError):
-            self.tester.check_status(["foo"], conn_handler=self.conn_handler)
-
-        with self.assertRaises(ValueError):
-            self.tester.check_status(["foo"], exclude=True,
-                                     conn_handler=self.conn_handler)
-
     def test_check_status_unknown_status_list(self):
         """check_status raises an error if an invalid status list is provided
         """
@@ -151,14 +125,6 @@ class QiitaStatusObjectTest(TestCase):
 
         with self.assertRaises(ValueError):
             self.tester.check_status(["foo", "bar"], exclude=True)
-
-        with self.assertRaises(ValueError):
-            self.tester.check_status(["foo", "bar"],
-                                     conn_handler=self.conn_handler)
-
-        with self.assertRaises(ValueError):
-            self.tester.check_status(["foo", "bar"], exclude=True,
-                                     conn_handler=self.conn_handler)
 
 if __name__ == '__main__':
     main()

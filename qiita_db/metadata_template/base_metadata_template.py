@@ -195,7 +195,7 @@ class BaseSample(QiitaObject):
             The set of all available metadata categories
         """
         # Get all the columns
-        cols = get_table_cols(self._dynamic_table, conn_handler)
+        cols = get_table_cols(self._dynamic_table)
         # Remove the sample_id column as this column is used internally for
         # data storage and it doesn't actually belong to the metadata
         cols.remove('sample_id')
@@ -489,11 +489,12 @@ class MetadataTemplate(QiitaObject):
     _id_column = None
     _sample_cls = None
 
-    def _check_id(self, id_, conn_handler=None):
+    def _check_id(self, id_):
         r"""Checks that the MetadataTemplate id_ exists on the database"""
         self._check_subclass()
-        conn_handler = (conn_handler if conn_handler is not None
-                        else SQLConnectionHandler())
+
+        conn_handler = SQLConnectionHandler()
+
         return conn_handler.execute_fetchone(
             "SELECT EXISTS(SELECT * FROM qiita.{0} WHERE "
             "{1}=%s)".format(self._table, self._id_column),
@@ -636,7 +637,11 @@ class MetadataTemplate(QiitaObject):
                            for col, dtype in zip(headers, datatypes)]
         conn_handler.add_to_queue(
             queue_name,
-            "CREATE TABLE qiita.{0} (sample_id varchar NOT NULL, {1})".format(
+            "CREATE TABLE qiita.{0} ("
+            "sample_id varchar NOT NULL, {1}, "
+            "CONSTRAINT fk_{0} FOREIGN KEY (sample_id) "
+            "REFERENCES qiita.study_sample (sample_id) "
+            "ON UPDATE CASCADE)".format(
                 table_name, ', '.join(column_datatype)))
 
         # Insert values on custom table
@@ -702,9 +707,9 @@ class MetadataTemplate(QiitaObject):
 
             if existing_samples:
                 warnings.warn(
-                    "No values have been modified for samples '%s'. However, "
-                    "the following columns have been added to them: '%s'"
-                    % (", ".join(existing_samples), ", ".join(new_cols)),
+                    "No values have been modified for existing samples (%s). "
+                    "However, the following columns have been added to them: "
+                    "'%s'" % (len(existing_samples), ", ".join(new_cols)),
                     QiitaDBWarning)
                 # The values for the new columns are the only ones that get
                 # added to the database. None of the existing values will be
@@ -726,8 +731,8 @@ class MetadataTemplate(QiitaObject):
                 conn_handler.add_to_queue(queue_name, sql, values, many=True)
         elif existing_samples:
             warnings.warn(
-                "The following samples already exist in the template and "
-                "will be ignored: %s" % ", ".join(existing_samples),
+                "%d samples already exist in the template and "
+                "their values won't be modified" % len(existing_samples),
                 QiitaDBWarning)
 
         if new_samples:
@@ -1012,7 +1017,7 @@ class MetadataTemplate(QiitaObject):
             The metadata in the template,indexed on sample id
         """
         conn_handler = SQLConnectionHandler()
-        cols = sorted(get_table_cols(self._table_name(self._id), conn_handler))
+        cols = sorted(get_table_cols(self._table_name(self._id)))
         # Get all metadata for the template
         sql = "SELECT {0} FROM qiita.{1}".format(", ".join(cols),
                                                  self._table_name(self.id))
@@ -1024,7 +1029,7 @@ class MetadataTemplate(QiitaObject):
 
         return df
 
-    def add_filepath(self, filepath, conn_handler=None, fp_id=None):
+    def add_filepath(self, filepath, fp_id=None):
         r"""Populates the DB tables for storing the filepath and connects the
         `self` objects with this filepath"""
         # Check that this function has been called from a subclass
@@ -1032,7 +1037,7 @@ class MetadataTemplate(QiitaObject):
 
         # Check if the connection handler has been provided. Create a new
         # one if not.
-        conn_handler = conn_handler if conn_handler else SQLConnectionHandler()
+        conn_handler = SQLConnectionHandler()
         fp_id = self._fp_id if fp_id is None else fp_id
 
         try:
@@ -1049,14 +1054,14 @@ class MetadataTemplate(QiitaObject):
                             info={self.__class__.__name__: self.id})
             raise e
 
-    def get_filepaths(self, conn_handler=None):
+    def get_filepaths(self):
         r"""Retrieves the list of (filepath_id, filepath)"""
         # Check that this function has been called from a subclass
         self._check_subclass()
 
         # Check if the connection handler has been provided. Create a new
         # one if not.
-        conn_handler = conn_handler if conn_handler else SQLConnectionHandler()
+        conn_handler = SQLConnectionHandler()
 
         try:
             filepath_ids = conn_handler.execute_fetchall(
@@ -1070,7 +1075,7 @@ class MetadataTemplate(QiitaObject):
                             info={self.__class__.__name__: self.id})
             raise e
 
-        _, fb = get_mountpoint('templates', conn_handler)[0]
+        _, fb = get_mountpoint('templates')[0]
         base_fp = partial(join, fb)
 
         return [(fpid, base_fp(fp)) for fpid, fp in filepath_ids]
@@ -1156,3 +1161,21 @@ class MetadataTemplate(QiitaObject):
                     % (category, value_str, value_types_str, column_type))
 
             raise e
+
+    def check_restrictions(self, restrictions):
+        """Checks if the template fulfills the restrictions
+
+        Parameters
+        ----------
+        restrictions : list of Restriction
+            The restrictions to test if the template fulfills
+
+        Returns
+        -------
+        set of str
+            The missing columns
+        """
+        cols = {col for restriction in restrictions
+                for col in restriction.columns}
+
+        return cols.difference(self.categories())
