@@ -12,7 +12,8 @@ from qiita_core.util import qiita_test_checker
 from qiita_db.analysis import Analysis, Collection
 from qiita_db.job import Job
 from qiita_db.user import User
-from qiita_db.exceptions import QiitaDBStatusError, QiitaDBError
+from qiita_db.exceptions import (QiitaDBStatusError, QiitaDBError,
+                                 QiitaDBUnknownIDError)
 from qiita_db.util import get_mountpoint, get_count
 from qiita_db.study import Study, StudyPerson
 from qiita_db.data import ProcessedData
@@ -144,6 +145,21 @@ class TestAnalysis(TestCase):
                [new_id, 1, '1.SKM9.640192'],
                [new_id, 1, '1.SKM4.640180']]
         self.assertEqual(obs, exp)
+
+    def test_exists(self):
+        self.assertTrue(Analysis.exists(1))
+        new_id = get_count("qiita.analysis") + 1
+        self.assertFalse(Analysis.exists(new_id))
+
+    def test_delete(self):
+        # successful delete
+        total_analyses = get_count("qiita.analysis")
+        Analysis.delete(1)
+        self.assertEqual(total_analyses - 1, get_count("qiita.analysis"))
+
+        # no possible to delete
+        with self.assertRaises(QiitaDBUnknownIDError):
+            Analysis.delete(total_analyses + 1)
 
     def test_retrieve_owner(self):
         self.assertEqual(self.analysis.owner, "test@foo.bar")
