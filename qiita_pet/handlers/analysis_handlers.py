@@ -170,17 +170,17 @@ class AnalysisResultsHandler(BaseHandler):
                 'analysis/results/%d-delete' % analysis_id)
 
         analysis = Analysis(analysis_id)
+        analysis_name = analysis.name
         check_analysis_access(self.current_user, analysis)
 
         try:
             Analysis.delete(analysis_id)
             msg = ("Analysis <b><i>%s</i></b> has been deleted." % (
-                analysis.title))
+                analysis_name))
             msg_level = "success"
         except Exception as e:
-            print e
             msg = ("Couldn't remove <b><i>%s</i></b> analysis: %s" % (
-                analysis.name, str(e)))
+                analysis_name, str(e)))
             msg_level = "danger"
 
         # redirecting to list of analysis but also passing messages and
