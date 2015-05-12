@@ -689,6 +689,23 @@
 				<fk_column name="raw_data_id" pk="raw_data_id" />
 			</fk>
 		</table>
+		<table name="prep_template_edit" >
+			<column name="prep_template_id" type="bigint" jt="-5" mandatory="y" />
+			<column name="change" type="varchar" jt="12" mandatory="y" />
+			<column name="timestamp" type="timestamp" jt="93" mandatory="y" >
+				<defo>current_timestamp</defo>
+			</column>
+			<index name="idx_prep_template_edit" unique="NORMAL" >
+				<column name="prep_template_id" />
+			</index>
+			<index name="idx_prep_template_edit_0" unique="PRIMARY_KEY" >
+				<column name="prep_template_id" />
+				<column name="change" />
+			</index>
+			<fk name="fk_prep_template_edit" to_schema="qiita" to_table="prep_template" >
+				<fk_column name="prep_template_id" pk="prep_template_id" />
+			</fk>
+		</table>
 		<table name="prep_template_filepath" >
 			<column name="prep_template_id" type="bigint" jt="-5" mandatory="y" />
 			<column name="filepath_id" type="bigint" jt="-5" mandatory="y" />
@@ -1156,6 +1173,24 @@
 				<fk_column name="tree_filepath" pk="filepath_id" />
 			</fk>
 		</table>
+		<table name="sample_template_edit" >
+			<comment>Holds information on edits made to sample templates</comment>
+			<column name="sample_template_id" type="bigint" jt="-5" mandatory="y" />
+			<column name="change" type="varchar" jt="12" mandatory="y" />
+			<column name="timestamp" type="timestamp" jt="93" mandatory="y" >
+				<defo>current_timestamp</defo>
+			</column>
+			<index name="idx_sample_template_edit" unique="PRIMARY_KEY" >
+				<column name="sample_template_id" />
+				<column name="change" />
+			</index>
+			<index name="idx_sample_template_edit_0" unique="NORMAL" >
+				<column name="sample_template_id" />
+			</index>
+			<fk name="fk_sample_template_edit" to_schema="qiita" to_table="study" >
+				<fk_column name="sample_template_id" pk="study_id" />
+			</fk>
+		</table>
 		<table name="sample_template_filepath" >
 			<column name="study_id" type="bigint" jt="-5" mandatory="y" />
 			<column name="filepath_id" type="bigint" jt="-5" mandatory="y" />
@@ -1525,7 +1560,7 @@ Controlled Vocabulary]]></comment>
 		<entity schema="qiita" name="study_raw_data" color="d0def5" x="1575" y="510" />
 		<entity schema="qiita" name="processed_filepath" color="c0d4f3" x="1065" y="945" />
 		<entity schema="qiita" name="command" color="d0def5" x="210" y="1110" />
-		<entity schema="qiita" name="logging" color="c0d4f3" x="1335" y="1290" />
+		<entity schema="qiita" name="logging" color="c0d4f3" x="1320" y="1335" />
 		<entity schema="qiita" name="study_processed_data" color="b2cdf7" x="1515" y="945" />
 		<entity schema="qiita" name="command_data_type" color="c0d4f3" x="390" y="1170" />
 		<entity schema="qiita" name="preprocessed_filepath" color="c0d4f3" x="1050" y="705" />
@@ -1548,7 +1583,6 @@ Controlled Vocabulary]]></comment>
 		<entity schema="qiita" name="data_type" color="d0def5" x="690" y="1020" />
 		<entity schema="qiita" name="user_level" color="d0def5" x="165" y="75" />
 		<entity schema="qiita" name="job_status" color="d0def5" x="210" y="1020" />
-		<entity schema="qiita" name="severity" color="c0d4f3" x="1470" y="1290" />
 		<entity schema="qiita" name="prep_template" color="b2cdf7" x="1065" y="360" />
 		<entity schema="qiita" name="raw_data" color="d0def5" x="1275" y="495" />
 		<entity schema="qiita" name="job" color="d0def5" x="405" y="1005" />
@@ -1584,6 +1618,9 @@ Controlled Vocabulary]]></comment>
 		<entity schema="qiita" name="analysis_sample" color="d0def5" x="45" y="1170" />
 		<entity schema="qiita" name="study_sample" color="d0def5" x="1410" y="120" />
 		<entity schema="qiita" name="prep_template_sample" color="d0def5" x="1050" y="165" />
+		<entity schema="qiita" name="severity" color="c0d4f3" x="1320" y="1470" />
+		<entity schema="qiita" name="sample_template_edit" color="a8c4ef" x="1470" y="1335" />
+		<entity schema="qiita" name="prep_template_edit" color="a8c4ef" x="1470" y="1440" />
 		<group name="Group_analyses" color="c4e0f9" >
 			<comment>analysis tables</comment>
 			<entity schema="qiita" name="analysis" />
@@ -1656,6 +1693,8 @@ Controlled Vocabulary]]></comment>
 		<group name="Group_logging" color="c4e0f9" >
 			<entity schema="qiita" name="logging" />
 			<entity schema="qiita" name="severity" />
+			<entity schema="qiita" name="sample_template_edit" />
+			<entity schema="qiita" name="prep_template_edit" />
 		</group>
 		<group name="Group_filepaths" color="c4e0f9" >
 			<entity schema="qiita" name="filepath" />
