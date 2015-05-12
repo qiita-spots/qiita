@@ -70,6 +70,7 @@ class SampleTemplate(MetadataTemplate):
     _sample_cls = Sample
     _fp_id = convert_to_id("sample_template", "filepath_type")
     _filepath_table = 'sample_template_filepath'
+    _log_table = "sample_template_edit"
 
     @staticmethod
     def metadata_headers():
@@ -239,11 +240,15 @@ class SampleTemplate(MetadataTemplate):
         md_template = self._clean_validate_template(md_template, self.study_id,
                                                     SAMPLE_TEMPLATE_COLUMNS)
 
-        self._add_common_extend_steps_to_queue(md_template, conn_handler,
-                                               queue_name)
+        new_cols, new_samples = self._add_common_extend_steps_to_queue(
+            md_template, conn_handler, queue_name)
 
         conn_handler.execute_queue(queue_name)
         self._update_analyses()
+        if new_cols:
+            self.log_change("Columns added: %s" % ','.join(new_cols))
+        if new_samples:
+            self.log_change("\nSamples Added: %s" % ','.join(new_samples))
 
         self.generate_files()
 
@@ -310,3 +315,4 @@ class SampleTemplate(MetadataTemplate):
 
         self.generate_files()
         self._update_analyses()
+        self.log_change("Columns updated: %s" % ','.join(changed_cols))

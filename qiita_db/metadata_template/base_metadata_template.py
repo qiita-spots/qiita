@@ -755,6 +755,7 @@ class MetadataTemplate(QiitaObject):
                 table_name, ", ".join(headers),
                 ', '.join(["%s"] * len(headers)))
             conn_handler.add_to_queue(queue_name, sql, values, many=True)
+        return new_cols, new_samples
 
     @classmethod
     def exists(cls, obj_id):
@@ -1179,3 +1180,9 @@ class MetadataTemplate(QiitaObject):
                 for col in restriction.columns}
 
         return cols.difference(self.categories())
+
+    def log_change(self, change):
+        conn_handler = SQLConnectionHandler()
+        sql = "INSERT INTO qiita.{0} ({1}, change) VALUES (%s, %s)".format(
+            self._log_table, self._id_column)
+        conn_handler.execute(sql, [self._id, change])

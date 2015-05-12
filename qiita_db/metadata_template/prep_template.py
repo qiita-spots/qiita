@@ -75,6 +75,7 @@ class PrepTemplate(MetadataTemplate):
     _sample_cls = PrepSample
     _fp_id = convert_to_id("prep_template", "filepath_type")
     _filepath_table = 'prep_template_filepath'
+    _log_table = "prep_template_edit"
 
     @classmethod
     def create(cls, md_template, raw_data, study, data_type,
