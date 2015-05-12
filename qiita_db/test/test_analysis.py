@@ -52,7 +52,7 @@ class TestAnalysis(TestCase):
 
     def test_lock_check(self):
         for status in ["queued", "running", "public", "completed",
-                       "error"]:
+                       "error", "altered_data"]:
             new = Analysis.create(User("admin@foo.bar"), "newAnalysis",
                                   "A New Analysis")
             new.status = status

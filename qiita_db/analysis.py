@@ -73,7 +73,7 @@ class Analysis(QiitaStatusObject):
     def _lock_check(self, conn_handler):
         """Raises QiitaDBStatusError if analysis is not in_progress"""
         if self.check_status({"queued", "running", "public", "completed",
-                              "error"}):
+                              "error", "altered_data"}):
             raise QiitaDBStatusError("Analysis is locked!")
 
     def _status_setter_checks(self, conn_handler):
