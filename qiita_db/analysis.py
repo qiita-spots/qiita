@@ -66,6 +66,7 @@ class Analysis(QiitaStatusObject):
     unshare
     build_files
     summary_data
+    get_changes
     """
 
     _table = "analysis"
@@ -1035,3 +1036,32 @@ class Collection(QiitaStatusObject):
                "email = %s AND collection_id = %s".format(self._share_table))
         conn_handler = SQLConnectionHandler()
         conn_handler.execute(sql, [user.id, self._id])
+
+    def get_changes(self):
+        """If the analysis has altered data, returns the changes list
+
+        Returns
+        -------
+        dict
+            Changes in the form {'prep_template':[change1,change2, ...]...}
+            Currently the keys are 'prep_template' and 'sample_template'
+        """
+        if self.status != "altered_data":
+            return {}
+        conn_handler = SQLConnectionHandler()
+        changes = {}
+        sql = """SELECT changes FROM qiita.prep_template_edit
+        JOIN qiita.prep_template_preprocessed_data USING (prep_template_id)
+        JOIN qiita.preprocessed_processed_data USING (processed_data_id)
+        JOIN qiita.analysis_sample USING (processed_data_id)
+        WHERE analysis_id = %s ORDER BY timestamp DESC"""
+        changes['prep_template'] = [
+            x[0] for x in conn_handler.execute_fetchall(sql, self.id_)]
+
+        sql = """SELECT changes FROM qiita.sample_template_edit ste
+        JOIN qiita.study_processed_data spd
+        ON ste.sample_template_id = spd.study_id
+        JOIN qiita.analysis_sample USING (processed_data_id)
+        WHERE analysis_id = %s ORDER BY timestamp DESC"""
+        changes['sample_template'] = [
+            x[0] for x in conn_handler.execute_fetchall(sql, self.id_)]
