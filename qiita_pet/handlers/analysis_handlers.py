@@ -177,31 +177,28 @@ class AnalysisResultsHandler(BaseHandler):
             Analysis.delete(analysis_id)
             msg = ("Analysis <b><i>%s</i></b> has been deleted." % (
                 analysis_name))
-            msg_level = "success"
+            level = "success"
         except Exception as e:
             msg = ("Couldn't remove <b><i>%s</i></b> analysis: %s" % (
                 analysis_name, str(e)))
-            msg_level = "danger"
+            level = "danger"
 
-        # redirecting to list of analysis but also passing messages and
-        # we need to change the request.method to GET
-        self.request.method = 'GET'
-        ShowAnalysesHandler(self.application, self.request)._execute(
-            [t(self.request) for t in self.application.transforms],
-            message=msg, msg_level=msg_level)
+        self.redirect(u"/analysis/show/?level=%s&message=%s" % (level, msg))
 
 
 class ShowAnalysesHandler(BaseHandler):
     """Shows the user's analyses"""
     @authenticated
-    def get(self, message='', msg_level=''):
+    def get(self):
+        message = self.get_argument('message', '')
+        level = self.get_argument('level', '')
         user = self.current_user
 
         analyses = [Analysis(a) for a in
                     user.shared_analyses | user.private_analyses]
 
         self.render("show_analyses.html", analyses=analyses, message=message,
-                    msg_level=msg_level)
+                    level=level)
 
 
 class ResultsHandler(StaticFileHandler, BaseHandler):
