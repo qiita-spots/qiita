@@ -1050,7 +1050,7 @@ class Collection(QiitaStatusObject):
             return {}
         conn_handler = SQLConnectionHandler()
         changes = {}
-        sql = """SELECT changes FROM qiita.prep_template_edit
+        sql = """SELECT change FROM qiita.prep_template_edit
         JOIN qiita.prep_template_preprocessed_data USING (prep_template_id)
         JOIN qiita.preprocessed_processed_data USING (processed_data_id)
         JOIN qiita.analysis_sample USING (processed_data_id)
@@ -1058,7 +1058,7 @@ class Collection(QiitaStatusObject):
         changes['prep_template'] = [
             x[0] for x in conn_handler.execute_fetchall(sql, self.id_)]
 
-        sql = """SELECT changes FROM qiita.sample_template_edit ste
+        sql = """SELECT change FROM qiita.sample_template_edit ste
         JOIN qiita.study_processed_data spd
         ON ste.sample_template_id = spd.study_id
         JOIN qiita.analysis_sample USING (processed_data_id)
