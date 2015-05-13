@@ -28,6 +28,7 @@ from qiita_db.exceptions import (QiitaDBUnknownIDError,
 from qiita_db.sql_connection import SQLConnectionHandler
 from qiita_db.study import Study
 from qiita_db.data import RawData, ProcessedData
+from qiita_db.analysis import Analysis
 from qiita_db.util import (exists_table, get_db_files_base_dir, get_mountpoint,
                            get_count)
 from qiita_db.metadata_template.prep_template import PrepTemplate, PrepSample
@@ -380,6 +381,10 @@ class TestPrepTemplateReadOnly(BaseTestPrepTemplate):
     def test_study_id(self):
         """Ensure that the correct study ID is returned"""
         self.assertEqual(self.tester.study_id, 1)
+
+    def test_update_analyses(self):
+        PrepTemplate._update_analyses(1)
+        self.assertEqual(Analysis(1).status, 'altered_data')
 
     def test_init_unknown_error(self):
         """Init raises an error if the id is not known"""
@@ -1175,6 +1180,8 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
         with self.assertRaises(QiitaDBExecutionError):
             self.conn_handler.execute_fetchall(
                 "SELECT * FROM qiita.prep_2")
+
+        self.assertEqual(Analysis(1).status, 'altered_data')
 
     def test_setitem(self):
         """setitem raises an error (currently not allowed)"""
