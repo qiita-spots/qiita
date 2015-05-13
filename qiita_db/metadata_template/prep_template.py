@@ -78,7 +78,7 @@ class PrepTemplate(MetadataTemplate):
     _log_table = "prep_template_edit"
 
     @staticmethod
-    def _update_analyses(self, sa_id):
+    def _update_analyses(self, pt_id):
         """update any analyses affected by changes to the prep template"""
         conn_handler = SQLConnectionHandler()
         # pull out affected analyses
@@ -88,7 +88,7 @@ class PrepTemplate(MetadataTemplate):
                 JOIN qiita.prep_template_preprocessed_data
                 USING (preprocessed_data_id) WHERE prep_template_id = %s"""
         changed = ','.join(str(x[0]) for x in
-                           conn_handler.execute_fetchall(sql, [sa_id]))
+                           conn_handler.execute_fetchall(sql, [pt_id]))
         # Change found analyses to altered_data status
         changed_status_id = convert_to_id("altered_data", "analysis_status")
         sql = """UPDATE qiita.analysis SET analysis_status_id = %s

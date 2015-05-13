@@ -62,6 +62,11 @@ class TestMetadataTemplateReadOnly(TestCase):
         with self.assertRaises(IncompetentQiitaDeveloperError):
             MetadataTemplate._clean_validate_template(None, 1, None)
 
+    def test_log_change(self):
+        """_clean_validate_template raises an error from base class"""
+        with self.assertRaises(IncompetentQiitaDeveloperError):
+            MetadataTemplate.log_change("FAIL")
+
 
 if __name__ == '__main__':
     main()

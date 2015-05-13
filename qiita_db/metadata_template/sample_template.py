@@ -73,7 +73,7 @@ class SampleTemplate(MetadataTemplate):
     _log_table = "sample_template_edit"
 
     @staticmethod
-    def _update_analyses(self, pt_id):
+    def _update_analyses(self, st_id):
         """update any analyses affected by changes to the sample template"""
         conn_handler = SQLConnectionHandler()
         # pull out affected analyses. Use study_id because sample template and
@@ -83,7 +83,7 @@ class SampleTemplate(MetadataTemplate):
                 USING (processed_data_id)
                 WHERE study_id = %s"""
         changed = ','.join(str(x[0]) for x in
-                           conn_handler.execute_fetchall(sql, [pt_id]))
+                           conn_handler.execute_fetchall(sql, [st_id]))
         # Change found analyses to altered_data status
         changed_status_id = convert_to_id("altered_data", "analysis_status")
         sql = """UPDATE qiita.analysis SET analysis_status_id = %s
