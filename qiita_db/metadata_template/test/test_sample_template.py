@@ -28,6 +28,7 @@ from qiita_db.exceptions import (QiitaDBDuplicateError, QiitaDBUnknownIDError,
 from qiita_db.sql_connection import SQLConnectionHandler
 from qiita_db.study import Study, StudyPerson
 from qiita_db.user import User
+from qiita_db.analysis import Analysis
 from qiita_db.util import exists_table, get_count
 from qiita_db.metadata_template.sample_template import SampleTemplate, Sample
 from qiita_db.metadata_template.prep_template import PrepTemplate, PrepSample
@@ -984,6 +985,10 @@ class TestSampleTemplateReadWrite(BaseTestSampleTemplate):
         self.new_study = Study.create(User('test@foo.bar'),
                                       "Fried Chicken Microbiome", [1], info)
 
+    def test_update_analyses(self):
+        SampleTemplate._update_analyses(1)
+        self.assertEqual(Analysis(1).status, 'altered_data')
+
     def test_create_duplicate(self):
         """Create raises an error when creating a duplicated SampleTemplate"""
         with self.assertRaises(QiitaDBDuplicateError):
@@ -1375,6 +1380,8 @@ class TestSampleTemplateReadWrite(BaseTestSampleTemplate):
         with self.assertRaises(QiitaDBError):
             SampleTemplate.delete(1)
 
+        self.assertEqual(Analysis(1).status, 'altered_data')
+
     def test_delete_unkonwn_id_error(self):
         """Try to delete a non existent prep template"""
         with self.assertRaises(QiitaDBUnknownIDError):
@@ -1445,6 +1452,8 @@ class TestSampleTemplateReadWrite(BaseTestSampleTemplate):
             st.update(self.metadata_dict_updated_sample_error)
         with self.assertRaises(QiitaDBError):
             st.update(self.metadata_dict_updated_column_error)
+
+        self.assertEqual(Analysis(1).status, 'altered_data')
 
     def test_generate_files(self):
         fp_count = get_count("qiita.filepath")
@@ -1528,6 +1537,8 @@ class TestSampleTemplateReadWrite(BaseTestSampleTemplate):
         md_ext = pd.DataFrame.from_dict(md_dict, orient='index')
 
         st.extend(md_ext)
+
+        self.assertEqual(Analysis(1).status, 'altered_data')
 
         # Test samples were appended successfully to the required sample info
         # table
