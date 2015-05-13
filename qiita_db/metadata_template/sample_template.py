@@ -73,6 +73,24 @@ class SampleTemplate(MetadataTemplate):
     _log_table = "sample_template_edit"
 
     @staticmethod
+    def _update_analyses(self, pt_id):
+        """update any analyses affected by changes to the sample template"""
+        conn_handler = SQLConnectionHandler()
+        # pull out affected analyses. Use study_id because sample template and
+        # study ids are both the same
+        sql = """SELECT analysis_id FROM qiita.analysis_sample
+                JOIN qiita.study_processed_data
+                USING (processed_data_id)
+                WHERE study_id = %s"""
+        changed = ','.join(str(x[0]) for x in
+                           conn_handler.execute_fetchall(sql, [pt_id]))
+        # Change found analyses to altered_data status
+        changed_status_id = convert_to_id("altered_data", "analysis_status")
+        sql = """UPDATE qiita.analysis SET analysis_status_id = %s
+                 WHERE analysis_id IN (%s)"""
+        conn_handler.execute(sql, [changed_status_id, changed])
+
+    @staticmethod
     def metadata_headers():
         """Returns metadata headers available
 
@@ -173,12 +191,18 @@ class SampleTemplate(MetadataTemplate):
 
         conn_handler.add_to_queue(
             queue,
+            "DELETE FROM qiita.{0} where {1} = %s".format(cls._log_table,
+                                                          cls._id_column),
+            (id_,))
+
+        conn_handler.add_to_queue(
+            queue,
             "DELETE FROM qiita.{0} where {1} = %s".format(cls._column_table,
                                                           cls._id_column),
             (id_,))
 
         conn_handler.execute_queue(queue)
-        self._update_analyses()
+        cls._update_analyses(id_)
 
     @property
     def study_id(self):
@@ -190,23 +214,6 @@ class SampleTemplate(MetadataTemplate):
             The ID of the study with which this sample template is associated
         """
         return self._id
-
-    def _update_analyses(self):
-        """update any analyses affected by changes to the sample template"""
-        conn_handler = SQLConnectionHandler()
-        # pull out affected analyses. Use study_id because sample template and
-        # study ids are both the same
-        sql = """SELECT analysis_id FROM qiita.analysis_sample
-                JOIN qiita.study_processed_data
-                USING (processed_data_id)
-                WHERE study_id = %s"""
-        changed = ','.join(str(x[0]) for x in
-                           conn_handler.execute_fetchall(sql, [self.id_]))
-        # Change found analyses to altered_data status
-        changed_status_id = convert_to_id("altered_data", "analysis_status")
-        sql = """UPDATE qiita.analysis SET analysis_status_id = %s
-                 WHERE analysis_id IN (%s)"""
-        conn_handler.execute(sql, [changed_status_id, changed])
 
     def generate_files(self):
         r"""Generates all the files that contain data from this template
@@ -244,7 +251,7 @@ class SampleTemplate(MetadataTemplate):
             md_template, conn_handler, queue_name)
 
         conn_handler.execute_queue(queue_name)
-        self._update_analyses()
+        self._update_analyses(self.id)
         if new_cols:
             self.log_change("Columns added: %s" % ','.join(new_cols))
         if new_samples:
@@ -314,5 +321,5 @@ class SampleTemplate(MetadataTemplate):
             self.update_category(col, new_map[col].to_dict())
 
         self.generate_files()
-        self._update_analyses()
+        self._update_analyses(self.id)
         self.log_change("Columns updated: %s" % ','.join(changed_cols))

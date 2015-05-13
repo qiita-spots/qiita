@@ -77,6 +77,24 @@ class PrepTemplate(MetadataTemplate):
     _filepath_table = 'prep_template_filepath'
     _log_table = "prep_template_edit"
 
+    @staticmethod
+    def _update_analyses(self, sa_id):
+        """update any analyses affected by changes to the prep template"""
+        conn_handler = SQLConnectionHandler()
+        # pull out affected analyses
+        sql = """SELECT analysis_id FROM qiita.analysis_sample
+                JOIN qiita.preprocessed_processed_data
+                USING (processed_data_id)
+                JOIN qiita.prep_template_preprocessed_data
+                USING (preprocessed_data_id) WHERE prep_template_id = %s"""
+        changed = ','.join(str(x[0]) for x in
+                           conn_handler.execute_fetchall(sql, [sa_id]))
+        # Change found analyses to altered_data status
+        changed_status_id = convert_to_id("altered_data", "analysis_status")
+        sql = """UPDATE qiita.analysis SET analysis_status_id = %s
+                 WHERE analysis_id IN (%s)"""
+        conn_handler.execute(sql, [changed_status_id, changed])
+
     @classmethod
     def create(cls, md_template, raw_data, study, data_type,
                investigation_type=None):
@@ -245,10 +263,18 @@ class PrepTemplate(MetadataTemplate):
                                                           cls._id_column),
             (id_,))
 
+        # Remove the rows from prep_template_edit
+        conn_handler.execute(
+            "DELETE FROM qiita.{0} where {1} = %s".format(cls._log_table,
+                                                          cls._id_column),
+            (id_,))
+
         # Remove the row from prep_template
         conn_handler.execute(
             "DELETE FROM qiita.prep_template where "
             "{0} = %s".format(cls._id_column), (id_,))
+
+        cls._update_analyses(id_)
 
     def data_type(self, ret_id=False):
         """Returns the data_type or the data_type id
@@ -375,23 +401,6 @@ class PrepTemplate(MetadataTemplate):
         else:
             raise QiitaDBError("No studies found associated with prep "
                                "template ID %d" % self._id)
-
-    def _update_analyses(self):
-        """update any analyses affected by changes to the prep template"""
-        conn_handler = SQLConnectionHandler()
-        # pull out affected analyses
-        sql = """SELECT analysis_id FROM qiita.analysis_sample
-                JOIN qiita.preprocessed_processed_data
-                USING (processed_data_id)
-                JOIN qiita.prep_template_preprocessed_data
-                USING (preprocessed_data_id) WHERE prep_template_id = %s"""
-        changed = ','.join(str(x[0]) for x in
-                           conn_handler.execute_fetchall(sql, [self.id_]))
-        # Change found analyses to altered_data status
-        changed_status_id = convert_to_id("altered_data", "analysis_status")
-        sql = """UPDATE qiita.analysis SET analysis_status_id = %s
-                 WHERE analysis_id IN (%s)"""
-        conn_handler.execute(sql, [changed_status_id, changed])
 
     def generate_files(self):
         r"""Generates all the files that contain data from this template
