@@ -488,6 +488,7 @@ class MetadataTemplate(QiitaObject):
     _column_table = None
     _id_column = None
     _sample_cls = None
+    _log_table = None
 
     def _check_id(self, id_):
         r"""Checks that the MetadataTemplate id_ exists on the database"""
@@ -1182,6 +1183,14 @@ class MetadataTemplate(QiitaObject):
         return cols.difference(self.categories())
 
     def log_change(self, change):
+        """log a change to the template
+
+        Parameters
+        ----------
+        change : str
+            Description of the change made
+        """
+        self._check_subclass()
         conn_handler = SQLConnectionHandler()
         sql = "INSERT INTO qiita.{0} ({1}, change) VALUES (%s, %s)".format(
             self._log_table, self._id_column)
