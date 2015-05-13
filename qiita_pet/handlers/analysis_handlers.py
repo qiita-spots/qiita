@@ -156,7 +156,8 @@ class AnalysisResultsHandler(BaseHandler):
 
         self.render("analysis_results.html",
                     jobres=jobres, aname=analysis.name, dropped=dropped,
-                    basefolder=get_db_files_base_dir(), status=analysis.status)
+                    basefolder=get_db_files_base_dir(),
+                    changes=analysis.get_changes())
 
 
 class ShowAnalysesHandler(BaseHandler):

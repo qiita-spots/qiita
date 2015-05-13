@@ -1042,26 +1042,28 @@ class Collection(QiitaStatusObject):
 
         Returns
         -------
-        dict
-            Changes in the form {'prep_template':[change1,change2, ...]...}
-            Currently the keys are 'prep_template' and 'sample_template'
+        dict of list
+            Changes in the form {study_title: [change1,change2, ...]...}
         """
         if self.status != "altered_data":
             return {}
         conn_handler = SQLConnectionHandler()
-        changes = {}
-        sql = """SELECT change FROM qiita.prep_template_edit
+        studydict = defaultdict(list)
+        sql = """SELECT study_title, change FROM qiita.prep_template_edit
         JOIN qiita.prep_template_preprocessed_data USING (prep_template_id)
         JOIN qiita.preprocessed_processed_data USING (processed_data_id)
+        JOIN qiita.study_processed_data USING (processed_data_id)
+        JOIN qiita.study (study_title) USING (study_id)
         JOIN qiita.analysis_sample USING (processed_data_id)
         WHERE analysis_id = %s ORDER BY timestamp DESC"""
-        changes['prep_template'] = [
-            x[0] for x in conn_handler.execute_fetchall(sql, self.id_)]
+        for title, change in conn_handler.execute_fetchall(sql, self.id_):
+            studydict[title].append(change)
 
-        sql = """SELECT change FROM qiita.sample_template_edit ste
+        sql = """SELECT study_title, change FROM qiita.sample_template_edit ste
         JOIN qiita.study_processed_data spd
         ON ste.sample_template_id = spd.study_id
+        JOIN qiita.study (study_title) USING (study_id)
         JOIN qiita.analysis_sample USING (processed_data_id)
         WHERE analysis_id = %s ORDER BY timestamp DESC"""
-        changes['sample_template'] = [
-            x[0] for x in conn_handler.execute_fetchall(sql, self.id_)]
+        for title, change in conn_handler.execute_fetchall(sql, self.id_):
+            studydict[title].append(change)

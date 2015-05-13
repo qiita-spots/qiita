@@ -12,8 +12,15 @@
 
 <div class="row">
   <h1>&nbsp;Analysis: <u>{{aname}}</u></h1>
-  {% if status == 'altered_data' %}
+  {% if changes %}
     <h2 style="color:red">UNDERLYING DATA FOR THIS ANALYSIS HAS CHANGED. CONSIDER RE-RUNNING THIS ANALYSIS.</h2>
+    {% for study, change in changes %}
+    <p><b>study</b><br/>
+      {% for c in change %}
+        {{c}}<br/>
+      {% end %}
+      </p>
+    {% end %}
   {% end %}
 </div>
 
