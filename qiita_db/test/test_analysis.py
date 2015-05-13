@@ -423,7 +423,7 @@ class TestAnalysis(TestCase):
 
         exp = [[15, '1_analysis_mapping.txt', 9, '852952723', 1, 1],
                [new_id, '1_analysis_mapping.txt', 9, '2349935429', 1, 1]]
-        self.assertEqual(obs, exp)
+        self.assertItemsEqual(obs, exp)
 
         sql = """SELECT * FROM qiita.analysis_filepath
                  WHERE analysis_id=%s ORDER BY filepath_id"""

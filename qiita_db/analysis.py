@@ -207,6 +207,8 @@ class Analysis(QiitaStatusObject):
                "{0} = {1}".format(cls._analysis_id_column, _id))
         conn_handler.add_to_queue(queue, sql)
 
+        # TODO: issue #1176
+
         sql = ("DELETE FROM qiita.{0} WHERE "
                "{1} = {2}".format(cls._table, cls._analysis_id_column, _id))
         conn_handler.add_to_queue(queue, sql)
