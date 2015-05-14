@@ -1009,6 +1009,13 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
                               self.test_study, self.data_type)
         self._common_creation_checks(new_id, pt, fp_count)
 
+    def test_log_change(self):
+        self.tester.log_change('test logging prep')
+        obs = self.conn_handler.execute_fetchall(
+            "SELECT prep_template_id, change from qiita.prep_template_edit")
+        exp = [[1, 'test logging prep']]
+        self.assertEqual(obs, exp)
+
     def test_generate_files(self):
         fp_count = get_count("qiita.filepath")
         self.tester.generate_files()
@@ -1180,8 +1187,6 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
         with self.assertRaises(QiitaDBExecutionError):
             self.conn_handler.execute_fetchall(
                 "SELECT * FROM qiita.prep_2")
-
-        self.assertEqual(Analysis(1).status, 'altered_data')
 
     def test_setitem(self):
         """setitem raises an error (currently not allowed)"""

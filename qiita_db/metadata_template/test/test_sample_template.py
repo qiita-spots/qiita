@@ -1380,8 +1380,6 @@ class TestSampleTemplateReadWrite(BaseTestSampleTemplate):
         with self.assertRaises(QiitaDBError):
             SampleTemplate.delete(1)
 
-        self.assertEqual(Analysis(1).status, 'altered_data')
-
     def test_delete_unkonwn_id_error(self):
         """Try to delete a non existent prep template"""
         with self.assertRaises(QiitaDBUnknownIDError):
@@ -1453,8 +1451,6 @@ class TestSampleTemplateReadWrite(BaseTestSampleTemplate):
         with self.assertRaises(QiitaDBError):
             st.update(self.metadata_dict_updated_column_error)
 
-        self.assertEqual(Analysis(1).status, 'altered_data')
-
     def test_generate_files(self):
         fp_count = get_count("qiita.filepath")
         self.tester.generate_files()
@@ -1499,6 +1495,13 @@ class TestSampleTemplateReadWrite(BaseTestSampleTemplate):
         st = SampleTemplate.create(self.metadata, self.new_study)
         self.assertEqual(st.get_filepaths()[0][0], exp_id)
 
+    def test_log_change(self):
+        self.tester.log_change('test logging')
+        obs = self.conn_handler.execute_fetchall(
+            "SELECT study_id, change from qiita.sample_template_edit")
+        exp = [[1, 'test logging']]
+        self.assertEqual(obs, exp)
+
     def test_extend_error(self):
         """extend raises an error if no new columns/samples are added"""
         st = SampleTemplate.create(self.metadata, self.new_study)
@@ -1537,8 +1540,29 @@ class TestSampleTemplateReadWrite(BaseTestSampleTemplate):
         md_ext = pd.DataFrame.from_dict(md_dict, orient='index')
 
         st.extend(md_ext)
+        analysis = Analysis(1)
+        self.assertEqual(analysis.status, 'in_construction')
 
-        self.assertEqual(Analysis(1).status, 'altered_data')
+        # make sure analysis status updated
+        metadata_dict_updated_dict = {
+            '1.SKB8.640000': {'physical_specimen_location': 'new location',
+                              'physical_specimen_remaining': True,
+                              'dna_extracted': True,
+                              'sample_type': '10',
+                              'collection_timestamp':
+                              datetime(2014, 5, 29, 12, 24, 51),
+                              'host_subject_id': 'NotIdentified',
+                              'Description': 'Test Sample 3',
+                              'str_column': 'Value for sample 3',
+                              'int_column': 3,
+                              'latitude': 4.8,
+                              'longitude': 4.41}
+            }
+        metadata_dict_updated = pd.DataFrame.from_dict(
+            metadata_dict_updated_dict, orient='index')
+
+        SampleTemplate(1).extend(metadata_dict_updated)
+        self.assertEqual(analysis.status, 'altered_data')
 
         # Test samples were appended successfully to the required sample info
         # table

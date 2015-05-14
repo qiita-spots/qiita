@@ -73,22 +73,25 @@ class SampleTemplate(MetadataTemplate):
     _log_table = "sample_template_edit"
 
     @staticmethod
-    def _update_analyses(self, st_id):
+    def _update_analyses(st_id):
         """update any analyses affected by changes to the sample template"""
         conn_handler = SQLConnectionHandler()
         # pull out affected analyses. Use study_id because sample template and
         # study ids are both the same
-        sql = """SELECT analysis_id FROM qiita.analysis_sample
+        sql = """SELECT DISTINCT analysis_id FROM qiita.analysis_sample
                 JOIN qiita.study_processed_data
                 USING (processed_data_id)
                 WHERE study_id = %s"""
-        changed = ','.join(str(x[0]) for x in
-                           conn_handler.execute_fetchall(sql, [st_id]))
+        changed = [x[0] for x in conn_handler.execute_fetchall(sql, [st_id])]
         # Change found analyses to altered_data status
-        changed_status_id = convert_to_id("altered_data", "analysis_status")
-        sql = """UPDATE qiita.analysis SET analysis_status_id = %s
-                 WHERE analysis_id IN (%s)"""
-        conn_handler.execute(sql, [changed_status_id, changed])
+        if changed:
+            # TODO: fix magic number since convert_to_id doesn't work on status
+            # issue #292
+            changed_status_id = 7
+            sql = """UPDATE qiita.analysis SET analysis_status_id = %s
+                     WHERE analysis_id IN ({})""".format(', '.join(
+                ['%s'] * len(changed)))
+            conn_handler.execute(sql, [changed_status_id] + changed)
 
     @staticmethod
     def metadata_headers():
@@ -253,9 +256,9 @@ class SampleTemplate(MetadataTemplate):
         conn_handler.execute_queue(queue_name)
         self._update_analyses(self.id)
         if new_cols:
-            self.log_change("Columns added: %s" % ','.join(new_cols))
+            self.log_change("Columns added: %s" % ', '.join(new_cols))
         if new_samples:
-            self.log_change("\nSamples Added: %s" % ','.join(new_samples))
+            self.log_change("Samples Added: %s" % ', '.join(new_samples))
 
         self.generate_files()
 
@@ -322,4 +325,4 @@ class SampleTemplate(MetadataTemplate):
 
         self.generate_files()
         self._update_analyses(self.id)
-        self.log_change("Columns updated: %s" % ','.join(changed_cols))
+        self.log_change("Columns updated: %s" % ', '.join(changed_cols))

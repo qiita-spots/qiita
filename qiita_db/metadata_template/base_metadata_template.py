@@ -1191,6 +1191,9 @@ class MetadataTemplate(QiitaObject):
             Description of the change made
         """
         self._check_subclass()
+        if not isinstance(change, str):
+            raise IncompetentQiitaDeveloperError("Can only pass string!")
+
         conn_handler = SQLConnectionHandler()
         sql = "INSERT INTO qiita.{0} ({1}, change) VALUES (%s, %s)".format(
             self._log_table, self._id_column)

@@ -78,22 +78,24 @@ class PrepTemplate(MetadataTemplate):
     _log_table = "prep_template_edit"
 
     @staticmethod
-    def _update_analyses(self, pt_id):
+    def _update_analyses(pt_id):
         """update any analyses affected by changes to the prep template"""
         conn_handler = SQLConnectionHandler()
         # pull out affected analyses
-        sql = """SELECT analysis_id FROM qiita.analysis_sample
+        sql = """SELECT DISTINCT analysis_id FROM qiita.analysis_sample
                 JOIN qiita.preprocessed_processed_data
                 USING (processed_data_id)
                 JOIN qiita.prep_template_preprocessed_data
                 USING (preprocessed_data_id) WHERE prep_template_id = %s"""
-        changed = ','.join(str(x[0]) for x in
-                           conn_handler.execute_fetchall(sql, [pt_id]))
-        # Change found analyses to altered_data status
-        changed_status_id = convert_to_id("altered_data", "analysis_status")
-        sql = """UPDATE qiita.analysis SET analysis_status_id = %s
-                 WHERE analysis_id IN (%s)"""
-        conn_handler.execute(sql, [changed_status_id, changed])
+        changed = [x[0] for x in conn_handler.execute_fetchall(sql, [pt_id])]
+        if changed:
+            # TODO: fix magic number since convert_to_id doesn't work on status
+            # issue #292
+            changed_status_id = 7
+            sql = """UPDATE qiita.analysis SET analysis_status_id = %s
+                     WHERE analysis_id IN ({})""".format(', '.join(
+                ['%s'] * len(changed)))
+            conn_handler.execute(sql, [changed_status_id] + changed)
 
     @classmethod
     def create(cls, md_template, raw_data, study, data_type,

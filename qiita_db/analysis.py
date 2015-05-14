@@ -629,6 +629,40 @@ class Analysis(QiitaStatusObject):
 
         conn_handler.executemany(sql, remove)
 
+    def get_changes(self):
+        """If the analysis has altered data, returns the changes list
+
+        Returns
+        -------
+        dict of list
+            Changes in the form {study_title: [change1,change2, ...]...}
+        """
+        if self.status != "altered_data":
+            return {}
+        conn_handler = SQLConnectionHandler()
+        studydict = defaultdict(list)
+        sql = """SELECT DISTINCT study_title, change, timestamp
+        FROM qiita.prep_template_edit
+        JOIN qiita.prep_template_preprocessed_data USING (prep_template_id)
+        JOIN qiita.preprocessed_processed_data USING (preprocessed_data_id)
+        JOIN qiita.study_processed_data USING (processed_data_id)
+        JOIN qiita.study study_title USING (study_id)
+        JOIN qiita.analysis_sample USING (processed_data_id)
+        WHERE analysis_id = %s ORDER BY timestamp DESC"""
+        for title, change in conn_handler.execute_fetchall(sql, [self._id]):
+            studydict[title].append(change)
+
+        sql = """SELECT DISTINCT study_title, change, timestamp
+        FROM qiita.sample_template_edit
+        JOIN qiita.study study_title USING (study_id)
+        JOIN qiita.study_processed_data USING (study_id)
+        JOIN qiita.analysis_sample USING (processed_data_id)
+        WHERE analysis_id = %s ORDER BY timestamp DESC"""
+        for title, change, _ in conn_handler.execute_fetchall(sql, [self._id]):
+            studydict[title].append(change)
+
+        return studydict
+
     def build_files(self, rarefaction_depth=None):
         """Builds biom and mapping files needed for analysis
 
@@ -1036,34 +1070,3 @@ class Collection(QiitaStatusObject):
                "email = %s AND collection_id = %s".format(self._share_table))
         conn_handler = SQLConnectionHandler()
         conn_handler.execute(sql, [user.id, self._id])
-
-    def get_changes(self):
-        """If the analysis has altered data, returns the changes list
-
-        Returns
-        -------
-        dict of list
-            Changes in the form {study_title: [change1,change2, ...]...}
-        """
-        if self.status != "altered_data":
-            return {}
-        conn_handler = SQLConnectionHandler()
-        studydict = defaultdict(list)
-        sql = """SELECT study_title, change FROM qiita.prep_template_edit
-        JOIN qiita.prep_template_preprocessed_data USING (prep_template_id)
-        JOIN qiita.preprocessed_processed_data USING (processed_data_id)
-        JOIN qiita.study_processed_data USING (processed_data_id)
-        JOIN qiita.study (study_title) USING (study_id)
-        JOIN qiita.analysis_sample USING (processed_data_id)
-        WHERE analysis_id = %s ORDER BY timestamp DESC"""
-        for title, change in conn_handler.execute_fetchall(sql, self.id_):
-            studydict[title].append(change)
-
-        sql = """SELECT study_title, change FROM qiita.sample_template_edit ste
-        JOIN qiita.study_processed_data spd
-        ON ste.sample_template_id = spd.study_id
-        JOIN qiita.study (study_title) USING (study_id)
-        JOIN qiita.analysis_sample USING (processed_data_id)
-        WHERE analysis_id = %s ORDER BY timestamp DESC"""
-        for title, change in conn_handler.execute_fetchall(sql, self.id_):
-            studydict[title].append(change)
