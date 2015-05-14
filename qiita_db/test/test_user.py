@@ -43,7 +43,7 @@ class SupportTests(TestCase):
         valid3 = 'w00t@123.456.789.com'
         invalid1 = '@stuff.com'
         invalid2 = 'asdasdásd@things.com'
-        invalid3 = 'asdas@com'
+        invalid3 = '.asdas@com'
 
         self.assertTrue(validate_email(valid1))
         self.assertTrue(validate_email(valid2))
@@ -182,7 +182,7 @@ class UserTest(TestCase):
 
     def test_exists_invaid_email(self):
         with self.assertRaises(IncorrectEmailError):
-            User.exists("notanemail@badformat")
+            User.exists("notanemail.@badformat")
 
     def test_get_email(self):
         self.assertEqual(self.user.email, 'admin@foo.bar')
