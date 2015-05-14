@@ -272,7 +272,15 @@ class User(QiitaObject):
         sql = ("SELECT {1} from qiita.{0} where email"
                " = %s".format(cls._table, column))
         conn_handler = SQLConnectionHandler()
-        db_code = conn_handler.execute_fetchone(sql, (email,))[0]
+        db_code = conn_handler.execute_fetchone(sql, (email,))
+
+        # If the query didn't return anything, then there's no way the code
+        # can match
+        if db_code is None:
+            return False
+
+        db_code = db_code[0]
+
         if db_code == code and code_type == "create":
             # verify the user
             level = conn_handler.execute_fetchone(
