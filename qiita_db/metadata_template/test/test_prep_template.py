@@ -12,6 +12,7 @@ from tempfile import mkstemp
 from os import close, remove
 from os.path import join, basename
 from collections import Iterable
+import warnings
 
 import numpy.testing as npt
 import pandas as pd
@@ -1307,9 +1308,20 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
         self.assertEqual(obs, set())
 
         del self.metadata['primer']
-        pt = npt.assert_warns(QiitaDBWarning, PrepTemplate.create,
-                              self.metadata, self.new_raw_data,
-                              self.test_study, self.data_type)
+
+        caught_QiitaDBWarning = False
+
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            pt = PrepTemplate.create(self.metadata, self.new_raw_data,
+                                     self.test_study, self.data_type)
+
+            # There might be several warnings raised. Make sure one of them
+            # is a QiitaDBWarning
+            if any([_w.category == QiitaDBWarning for _w in w]):
+                caught_QiitaDBWarning = True
+
+        self.assertTrue(caught_QiitaDBWarning)
 
         obs = pt.check_restrictions(
             [PREP_TEMPLATE_COLUMNS['EBI'],
