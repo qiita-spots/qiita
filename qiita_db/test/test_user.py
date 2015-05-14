@@ -180,7 +180,7 @@ class UserTest(TestCase):
     def test_exists_notindb(self):
         self.assertFalse(User.exists("notexist@foo.bar"))
 
-    def test_exists_invaid_email(self):
+    def test_exists_invalid_email(self):
         with self.assertRaises(IncorrectEmailError):
             User.exists("notanemail.@badformat")
 
