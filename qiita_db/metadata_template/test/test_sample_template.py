@@ -574,6 +574,19 @@ class TestSampleTemplateReadOnly(BaseTestSampleTemplate):
     def setUp(self):
         self._set_up()
 
+    def test_metadata_headers(self):
+        obs = SampleTemplate.metadata_headers()
+        exp = {'physical_specimen_location', 'physical_specimen_remaining',
+               'dna_extracted', 'sample_type', 'collection_timestamp',
+               'host_subject_id', 'description', 'season_environment',
+               'assigned_from_geo', 'texture', 'taxon_id', 'depth',
+               'host_taxid', 'common_name', 'water_content_soil', 'elevation',
+               'temp', 'tot_nitro', 'samp_salinity', 'altitude', 'env_biome',
+               'country', 'ph', 'anonymized_name', 'tot_org_carb',
+               'description_duplicate', 'env_feature', 'latitude', 'longitude',
+               'sample_id'}
+        self.assertEqual(set(obs), exp)
+
     def test_study_id(self):
         """Ensure that the correct study ID is returned"""
         self.assertEqual(self.tester.study_id, 1)
@@ -795,12 +808,14 @@ class TestSampleTemplateReadOnly(BaseTestSampleTemplate):
 
         sql_crate_table = (
             'CREATE TABLE qiita.sample_2 (sample_id varchar NOT NULL, '
-            'collection_timestamp timestamp, ''description varchar, '
+            'collection_timestamp timestamp, description varchar, '
             'dna_extracted bool, host_subject_id varchar, int_column integer, '
             'latitude float8, longitude float8, '
             'physical_specimen_location varchar, '
             'physical_specimen_remaining bool, sample_type varchar, '
-            'str_column varchar)')
+            'str_column varchar, '
+            'CONSTRAINT fk_sample_2 FOREIGN KEY (sample_id) REFERENCES '
+            'qiita.study_sample (sample_id) ON UPDATE CASCADE)')
 
         sql_insert_dynamic = (
             'INSERT INTO qiita.sample_2 '
@@ -1111,7 +1126,7 @@ class TestSampleTemplateReadWrite(BaseTestSampleTemplate):
         # The returned object has the correct id
         self.assertEqual(st.id, new_id)
 
-        # The relevant rows to required_sample_info have been added.
+        # The relevant rows to study_sample have been added.
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.study_sample WHERE study_id=%s", (new_id,))
         exp = [["%s.12.Sample1" % new_id, new_id],

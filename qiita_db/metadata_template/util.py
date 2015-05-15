@@ -113,7 +113,7 @@ def prefix_sample_names_with_id(md_template, study_id):
         # Create a new column on the metadata template that includes the
         # metadata template indexes prefixed with the study id
         md_template['sample_name_with_id'] = (study_ids + '.' +
-                                              md_template.index)
+                                              md_template.index.values)
         md_template.index = md_template.sample_name_with_id
         del md_template['sample_name_with_id']
         # The original metadata template had the index column unnamed - remove
@@ -221,13 +221,13 @@ def load_template_to_dataframe(fn, strip_whitespace=True):
                            parse_dates=True, index_col=False, comment='\t',
                            mangle_dupe_cols=False, converters={
                                'sample_name': lambda x: str(x).strip(),
-                               # required_sample_info
+                               # required sample template information
                                'physical_location': str,
                                'sample_type': str,
                                # collection_timestamp is not added here
                                'host_subject_id': str,
                                'description': str,
-                               # common_prep_info
+                               # common prep template information
                                'center_name': str,
                                'center_projct_name': str})
 

@@ -65,7 +65,7 @@ class SetupTest(TestCase):
     def test_prep_template(self):
         self.assertEqual(get_count("qiita.prep_template"), 1)
 
-    def test_common_prep_info(self):
+    def test_prep_template_sample(self):
         self.assertEqual(get_count("qiita.prep_template_sample"), 27)
 
     def test_prep_columns(self):

@@ -246,11 +246,9 @@ class DemuxTests(TestCase):
         with tempfile.NamedTemporaryFile('r+', suffix='.fna',
                                          delete=False) as f:
             f.write(seqdata)
-            f.flush()
-            f.close()
 
-            to_hdf5(f.name, self.hdf5_file)
-            self.to_remove.append(f.name)
+        self.to_remove.append(f.name)
+        to_hdf5(f.name, self.hdf5_file)
 
         npt.assert_equal(self.hdf5_file['a/sequence'][:], np.array(["x", "xy",
                                                                     "xyz"]))
@@ -283,14 +281,30 @@ class DemuxTests(TestCase):
         with tempfile.NamedTemporaryFile('r+', suffix='.fq',
                                          delete=False) as f:
             f.write(fqdata)
-            f.flush()
-            f.close()
-            to_hdf5(f.name, self.hdf5_file)
-            self.to_remove.append(f.name)
 
-        exp = [(b"@a_0 orig_bc=abc new_bc=abc bc_diffs=0\nxyz\n+\nABC\n"),
-               (b"@b_0 orig_bc=abw new_bc=wbc bc_diffs=4\nqwe\n+\nDFG\n"),
-               (b"@b_1 orig_bc=abw new_bc=wbc bc_diffs=4\nqwe\n+\nDEF\n")]
+        self.to_remove.append(f.name)
+        to_hdf5(f.name, self.hdf5_file)
+
+        exp = [b"@a_0 orig_bc=abc new_bc=abc bc_diffs=0\nxyz\n+\nABC\n",
+               b"@b_0 orig_bc=abw new_bc=wbc bc_diffs=4\nqwe\n+\nDFG\n",
+               b"@b_1 orig_bc=abw new_bc=wbc bc_diffs=4\nqwe\n+\nDEF\n"]
+
+        obs = list(to_ascii(self.hdf5_file, samples=['a', 'b']))
+        self.assertEqual(obs, exp)
+
+    def test_to_ascii_fasta(self):
+        with tempfile.NamedTemporaryFile('r+', suffix='.fna',
+                                         delete=False) as f:
+            f.write(seqdata)
+
+        self.to_remove.append(f.name)
+        to_hdf5(f.name, self.hdf5_file)
+
+        exp = [b">a_0 orig_bc=abc new_bc=abc bc_diffs=0\nx\n",
+               b">a_1 orig_bc=aby new_bc=ybc bc_diffs=2\nxy\n",
+               b">a_2 orig_bc=abz new_bc=zbc bc_diffs=3\nxyz\n",
+               b">b_0 orig_bc=abx new_bc=xbc bc_diffs=1\nxyz\n",
+               b">b_1 orig_bc=abw new_bc=wbc bc_diffs=4\nabcd\n"]
 
         obs = list(to_ascii(self.hdf5_file, samples=['a', 'b']))
         self.assertEqual(obs, exp)
@@ -299,10 +313,9 @@ class DemuxTests(TestCase):
         with tempfile.NamedTemporaryFile('r+', suffix='.fq',
                                          delete=False) as f:
             f.write(fqdata)
-            f.flush()
-            f.close()
-            to_hdf5(f.name, self.hdf5_file)
-            self.to_remove.append(f.name)
+
+        self.to_remove.append(f.name)
+        to_hdf5(f.name, self.hdf5_file)
 
         exp = [('a', [(b"@a_0 orig_bc=abc new_bc=abc bc_diffs=0\nxyz\n+\n"
                        "ABC\n")]),
