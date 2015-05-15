@@ -1311,10 +1311,10 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
                               self.metadata, self.new_raw_data,
                               self.test_study, self.data_type)
 
-        obs = pt.check_restrictions(
-            [PREP_TEMPLATE_COLUMNS['EBI'],
-             PREP_TEMPLATE_COLUMNS_TARGET_GENE['demultiplex']])
-        self.assertEqual(obs, {'primer'})
+        # obs = pt.check_restrictions(
+        #     [PREP_TEMPLATE_COLUMNS['EBI'],
+        #      PREP_TEMPLATE_COLUMNS_TARGET_GENE['demultiplex']])
+        # self.assertEqual(obs, {'primer'})
 
 
 EXP_PREP_TEMPLATE = (
