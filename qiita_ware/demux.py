@@ -438,7 +438,10 @@ def to_ascii(demux, samples=None):
     for samp, idx, seq, qual, bc_ori, bc_cor, bc_err in fetch(demux, samples):
         seq_id = id_fmt % {'sample': samp, 'idx': idx, 'bc_ori': bc_ori,
                            'bc_cor': bc_cor, 'bc_diff': bc_err}
-        yield formatter(seq_id, seq, qual.astype(np.uint8))
+        if qual is not None:
+            qual = qual.astype(np.uint8)
+
+        yield formatter(seq_id, seq, qual)
 
 
 def to_per_sample_ascii(demux, samples=None):
