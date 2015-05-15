@@ -113,7 +113,7 @@ def prefix_sample_names_with_id(md_template, study_id):
         # Create a new column on the metadata template that includes the
         # metadata template indexes prefixed with the study id
         md_template['sample_name_with_id'] = (study_ids + '.' +
-                                              md_template.index)
+                                              md_template.index.values)
         md_template.index = md_template.sample_name_with_id
         del md_template['sample_name_with_id']
         # The original metadata template had the index column unnamed - remove
