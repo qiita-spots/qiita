@@ -2,7 +2,17 @@
 {% autoescape None %}
 
 {%block head%}
+
 <script>
+  function check_selection(){
+    if($('.command:checkbox:checked').length > 0){
+       return true;
+   }else {
+        $('#error').text('Please select at least one command.');
+       return false;
+   }
+  }
+
   $(function () {
     $('#data-types-tabs a:first').tab('show')
   })
@@ -12,8 +22,8 @@
 {%block content %}
 
 <h1>Select Commands</h1>
-
-<form role="form" action="/analysis/wait/{{aid}}" method="post">
+<span id="error" style="color:red"></span>
+<form role="form" action="/analysis/wait/{{aid}}" method="post" onsubmit="return check_selection()">
 <div style="padding-bottom:25px;">
     Rarefaction Depth: <input type="number" min="10" id="rarefaction-depth" name="rarefaction-depth" class="form-control" style="width:10em;">
 </div>
@@ -35,7 +45,7 @@
           {% for command in commands[data_type] %}
             <tr>
               <td style="width:20px;">
-                <input id="{{data_type}}#{{command.name}}" type="checkbox" name="commands" value="{{data_type}}#{{command.name}}">
+                <input id="{{data_type}}#{{command.name}}" type="checkbox" name="commands" class="command" value="{{data_type}}#{{command.name}}">
               </td>
               <td>
                 <label style="font-weight:normal;" for="{{data_type}}#{{command.name}}">{{command.name}}</label>
