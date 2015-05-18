@@ -31,6 +31,7 @@ from qiita_db.util import (get_db_files_base_dir,
                            filepath_ids_to_rel_paths)
 from qiita_db.exceptions import QiitaDBUnknownIDError
 from qiita_db.study import Study
+from qiita_db.logger import LogEntry
 
 SELECT_SAMPLES = 2
 SELECT_COMMANDS = 3
@@ -178,9 +179,12 @@ class AnalysisResultsHandler(BaseHandler):
                 analysis_name))
             level = "success"
         except Exception as e:
+            e = str(e)
             msg = ("Couldn't remove <b><i>%s</i></b> analysis: %s" % (
-                analysis_name, str(e)))
+                analysis_name, e))
             level = "danger"
+            LogEntry.create('Runtime', "Couldn't remove analysis ID %d: %s" %
+                            (analysis_id, e))
 
         self.redirect(u"/analysis/show/?level=%s&message=%s" % (level, msg))
 
