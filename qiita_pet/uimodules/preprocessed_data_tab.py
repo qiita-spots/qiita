@@ -42,11 +42,12 @@ class PreprocessedDataInfoTab(BaseUIModule):
         is_local_request = self._is_local()
         show_ebi_btn = user.level == "admin"
         processing_status = preprocessed_data.processing_status
-        processed_data = [(id_,
-                           '<br/>'.join(['<b>%s:</b> %s' % (k, v) for k, v in
-                                        viewitems(
-                                        ProcessedData(id_).processing_info)]))
-                          for id_ in preprocessed_data.processed_data]
+        processed_data = []
+        fmt = '<b>%s:</b> %s'
+        for id_ in preprocessed_data.processed_data:
+            info = ProcessedData(id_).processing_info
+            processed_data.append((id_, '<br/>'.join([fmt % (k, v) for k, v in
+                                  viewitems(info)])))
 
         # Get all the ENA terms for the investigation type
         ontology = Ontology(convert_to_id('ENA', 'ontology'))
