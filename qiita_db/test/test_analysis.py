@@ -320,7 +320,7 @@ class TestAnalysis(TestCase):
     def test_retrieve_jobs_none(self):
         new = Analysis.create(User("admin@foo.bar"), "newAnalysis",
                               "A New Analysis", Analysis(1))
-        self.assertEqual(new.jobs, None)
+        self.assertEqual(new.jobs, [])
 
     def test_retrieve_pmid(self):
         self.assertEqual(self.analysis.pmid, "121112")
@@ -422,8 +422,8 @@ class TestAnalysis(TestCase):
             sql, ("%d_analysis_mapping.txt" % self.analysis.id,))
 
         exp = [[15, '1_analysis_mapping.txt', 9, '852952723', 1, 1],
-               [new_id, '1_analysis_mapping.txt', 9, '2349935429', 1, 1]]
-        self.assertItemsEqual(obs, exp)
+               [new_id, '1_analysis_mapping.txt', 9, '1606265094', 1, 1]]
+        self.assertEqual(obs, exp)
 
         sql = """SELECT * FROM qiita.analysis_filepath
                  WHERE analysis_id=%s ORDER BY filepath_id"""
