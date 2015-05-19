@@ -28,7 +28,7 @@ TODO
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 from __future__ import division
-from re import match
+from re import sub
 
 from qiita_core.exceptions import (IncorrectEmailError, IncorrectPasswordError,
                                    IncompetentQiitaDeveloperError)
@@ -272,7 +272,15 @@ class User(QiitaObject):
         sql = ("SELECT {1} from qiita.{0} where email"
                " = %s".format(cls._table, column))
         conn_handler = SQLConnectionHandler()
-        db_code = conn_handler.execute_fetchone(sql, (email,))[0]
+        db_code = conn_handler.execute_fetchone(sql, (email,))
+
+        # If the query didn't return anything, then there's no way the code
+        # can match
+        if db_code is None:
+            return False
+
+        db_code = db_code[0]
+
         if db_code == code and code_type == "create":
             # verify the user
             level = conn_handler.execute_fetchone(
@@ -461,10 +469,18 @@ def validate_email(email):
 
     Notes
     -----
-    A valid email must be of the form "string AT string" where the first string
-    must be not empty, and consists of [a-zA-Z0-9.+]. The AT is the '@' symbol.
-    The second string must be not empty, consist of [a-zA-Z0-9.], and is
-    required to have at least one '.'.
+    An email address is of the form local-part@domain_part
+    For our purposes:
+
+    - No quoted strings are allowed
+    - No unicode strings are allowed
+    - There must be exactly one @ symbol
+    - Neither local-part nor domain-part can be blank
+    - The local-part cannot start or end with a dot
+    - The local-part must be composed of the following characters:
+      a-zA-Z0-9#_~!$&'()*+,;=:.-
+    - The domain-part must be a valid hostname, composed of:
+      a-zA-Z0-9.
 
     Parameters
     ----------
@@ -476,15 +492,40 @@ def validate_email(email):
     bool
         Whether or not the email is valid
     """
-    valid_chars = "a-zA-Z0-9\.\+\-"
-    pattern = r"[%s]+@[%s]+\.[%s]+" % (valid_chars, valid_chars, valid_chars)
-
+    # Do not accept email addresses that have unicode characters
     try:
         email.encode('ascii')
     except UnicodeError:
         return False
 
-    return True if match(pattern, email) is not None else False
+    # we are not allowing quoted strings in the email address
+    if '"' in email:
+        return False
+
+    # Must have exactly 1 @ symbol
+    if email.count('@') != 1:
+        return False
+
+    local_part, domain_part = email.split('@')
+
+    # Neither part can be blank
+    if not (local_part and domain_part):
+        return False
+
+    # The local part cannot begin or end with a dot
+    if local_part.startswith('.') or local_part.endswith('.'):
+        return False
+
+    # This is the full set of allowable characters for the local part.
+    local_valid_chars = "[a-zA-Z0-9#_~!$&'()*+,;=:.-]"
+    if len(sub(local_valid_chars, '', local_part)):
+        return False
+
+    domain_valid_chars = "[a-zA-Z0-9.]"
+    if len(sub(domain_valid_chars, '', domain_part)):
+        return False
+
+    return True
 
 
 def validate_password(password):
