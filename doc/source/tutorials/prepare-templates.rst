@@ -2,6 +2,8 @@
 
 .. index:: prepare-templates
 
+Templates
+=========
 
 The set of required fields for the *sample template* and *prep template*
 files varies based on the functionality that you want to use from the
