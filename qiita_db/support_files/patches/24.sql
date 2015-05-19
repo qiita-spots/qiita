@@ -1,30 +1,57 @@
--- May 6, 2015
--- We attach the prep template directly to the study. The raw data is no longer
--- attached to the study directly, the prep template point to them. This will
--- make the RawData to be effectively just a container for the raw files,
--- which is how it was acting previously.
+-- May 7, 2015
+-- This patch adds the ON UPDATE CASCADE constraint to all the FK
+-- that are referencing the sample ids
 
-CREATE TABLE qiita.study_prep_template ( 
-    study_id             bigint  NOT NULL,
-    prep_template_id     bigint  NOT NULL,
-    CONSTRAINT idx_study_raw_data PRIMARY KEY ( study_id, prep_template_id )
- ) ;
+DO $do$
+DECLARE
+    dyn_t varchar;
+    fk_vals RECORD;
+BEGIN
 
-CREATE INDEX idx_study_prep_template_0 ON qiita.study_prep_template ( study_id ) ;
+-- The dynamic tables do not have a FK set on their sample ID
+-- We need to find the dynamic tables existing in the system and we add the
+-- FK constraint to them.
+FOR dyn_t IN
+    SELECT DISTINCT table_name
+    FROM information_schema.columns
+    WHERE (SUBSTR(table_name, 1, 7) = 'sample_'
+           OR SUBSTR(table_name, 1, 5) = 'prep_')
+        AND table_schema = 'qiita'
+        AND table_name NOT IN ('prep_template',
+                               'prep_template_preprocessed_data',
+                               'prep_template_filepath',
+                               'prep_columns',
+                               'sample_template_filepath',
+                               'prep_template_sample')
+LOOP
+    EXECUTE 'ALTER TABLE qiita.' || dyn_t || '
+                ADD CONSTRAINT fk_' || dyn_t || '
+                FOREIGN KEY (sample_id)'
+                'REFERENCES qiita.study_sample (sample_id);';
+END LOOP;
 
-CREATE INDEX idx_study_prep_template_1 ON qiita.study_prep_template ( prep_template_id ) ;
-
-COMMENT ON TABLE qiita.study_prep_template IS 'links study to its prep templates';
-
-ALTER TABLE qiita.study_prep_template ADD CONSTRAINT fk_study_prep_template_study FOREIGN KEY ( study_id ) REFERENCES qiita.study( study_id )    ;
-
-ALTER TABLE qiita.study_prep_template ADD CONSTRAINT fk_study_prep_template_pt FOREIGN KEY ( prep_template_id ) REFERENCES qiita.prep_template( prep_template_id )    ;
-
--- Connect the existing prep templates in the system with their studies
-WITH pt_st AS (SELECT prep_template_id, study_id
-               FROM qiita.prep_template
-                    JOIN qiita.study_raw_data USING (raw_data_id))
-
-
-DROP TABLE qiita.study_raw_data;
-
+-- Search for all the tables that are pointing to the sample_id
+-- and add the FK constraint with ON UPDATE CASCADE
+FOR fk_vals IN 
+    SELECT r.table_name, r.column_name, fk.constraint_name
+        FROM information_schema.constraint_column_usage u
+        INNER JOIN information_schema.referential_constraints fk
+            ON u.constraint_catalog = fk.unique_constraint_catalog
+            AND u.constraint_schema = fk.unique_constraint_schema
+            AND u.constraint_name = fk.unique_constraint_name
+        INNER JOIN information_schema.key_column_usage r
+            ON r.constraint_catalog = fk.constraint_catalog
+            AND r.constraint_schema = fk.constraint_schema
+            AND r.constraint_name = fk.constraint_name
+        WHERE u.column_name = 'sample_id'
+            AND u.table_schema = 'qiita'
+            AND u.table_name = 'study_sample'
+LOOP
+    EXECUTE 'ALTER TABLE qiita.' || fk_vals.table_name || '
+                DROP CONSTRAINT ' || fk_vals.constraint_name || ',
+                ADD CONSTRAINT ' || fk_vals.constraint_name ||'
+                    FOREIGN KEY (' || fk_vals.column_name ||')
+                    REFERENCES qiita.study_sample( sample_id )
+                    ON UPDATE CASCADE;';
+END LOOP;
+END $do$;

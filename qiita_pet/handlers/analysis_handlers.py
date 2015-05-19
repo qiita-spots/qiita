@@ -144,15 +144,14 @@ class AnalysisResultsHandler(BaseHandler):
 
         dropped_samples = analysis.dropped_samples
         dropped = defaultdict(list)
-        if dropped_samples:
-            for proc_data_id, samples in viewitems(dropped_samples):
-                if not samples:
-                    continue
-                proc_data = ProcessedData(proc_data_id)
-                data_type = proc_data.data_type()
-                study = proc_data.study
-                dropped[data_type].append((Study(study).title, len(samples),
-                                           ', '.join(samples)))
+        for proc_data_id, samples in viewitems(dropped_samples):
+            if not samples:
+                continue
+            proc_data = ProcessedData(proc_data_id)
+            data_type = proc_data.data_type()
+            study = proc_data.study
+            dropped[data_type].append((Study(study).title, len(samples),
+                                       ', '.join(samples)))
 
         self.render("analysis_results.html",
                     jobres=jobres, aname=analysis.name, dropped=dropped,
