@@ -44,33 +44,34 @@ and template information:
 1. All of the samples prepped for 16S and sequenced in two separate
    MiSeq runs
 
-#. 1 preparation (prep) template describing the two MiSeq runs (use a
-   run\_prefix column to differentiate between the two MiSeq runs, more
-   on metadata below) where the 100 samples are represented
-#. the 4-6 fastq raw data files without demultiplexing (i.e., the
-   forward, reverse (optional), and barcodes for each run)
+   a) 1 preparation (prep) template describing the two MiSeq runs (use a
+      run\_prefix column to differentiate between the two MiSeq runs, more
+      on metadata below) where the 100 samples are represented
+   b) the 4-6 fastq raw data files without demultiplexing (i.e., the
+      forward, reverse (optional), and barcodes for each run)
 
 2. 50 of the samples prepped for 18S and ITS, and sequenced in a single
    MiSeq run
 
-#. prep templates, one describing the 18S and the other describing the
-   ITS preparations
-#. the 2-3 fastq raw data files (forward, reverse (optional), and
-   barcodes)
+   a) prep templates, one describing the 18S and the other describing the
+      ITS preparations
+   b) the 2-3 fastq raw data files (forward, reverse (optional), and
+      barcodes)
 
 3. 50 of the samples prepped for WGS and sequenced on a single HiSeq run
 
-#. 1 prep template describing how the samples were multiplexed
-#. the 2-3 fastq raw data files (forward, reverse (optional), and
-   barcodes).
-#. NOTE: We currently do not have a processing pipeline for WGS but
-   should soon.
+   a) 1 prep template describing how the samples were multiplexed
+   b) the 2-3 fastq raw data files (forward, reverse (optional), and
+      barcodes).
+   c) NOTE: We currently do not have a processing pipeline for WGS but
+      should soon.
 
 4. 30 of the samples with metabolomic profiles
 
-#. 1 prep template. the raw data file(s) from the metabolomic characterization.
-#. NOTE: We currently do not have a processing pipeline for metabolomics
-   but should soon.
+   a) 1 prep template. the raw data file(s) from the metabolomic
+      characterization.
+   b) NOTE: We currently do not have a processing pipeline for metabolomics but
+      should soon.
 
 Creating a study
 ----------------
