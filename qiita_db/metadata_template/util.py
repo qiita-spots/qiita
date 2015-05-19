@@ -183,7 +183,7 @@ def load_template_to_dataframe(fn, strip_whitespace=True):
     """
     # Load in file lines
     holdfile = None
-    with open_file(fn) as f:
+    with open_file(fn, mode='U') as f:
         holdfile = f.readlines()
     if not holdfile:
         raise ValueError('Empty file passed!')
