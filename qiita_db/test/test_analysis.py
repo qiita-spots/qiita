@@ -209,7 +209,9 @@ class TestAnalysis(TestCase):
                             'Description': 'Test Sample 1',
                             'str_column': 'Value for sample 1',
                             'latitude': 42.42,
-                            'longitude': 41.41},
+                            'longitude': 41.41,
+                            'taxon_id': 9606,
+                            'scientific_name': 'homo sapiens'},
             'SKD8.640184': {'physical_specimen_location': 'location1',
                             'physical_specimen_remaining': True,
                             'dna_extracted': True,
@@ -221,7 +223,9 @@ class TestAnalysis(TestCase):
                             'Description': 'Test Sample 2',
                             'str_column': 'Value for sample 2',
                             'latitude': 4.2,
-                            'longitude': 1.1},
+                            'longitude': 1.1,
+                            'taxon_id': 9606,
+                            'scientific_name': 'homo sapiens'},
             'SKB7.640196': {'physical_specimen_location': 'location1',
                             'physical_specimen_remaining': True,
                             'dna_extracted': True,
@@ -233,7 +237,9 @@ class TestAnalysis(TestCase):
                             'Description': 'Test Sample 3',
                             'str_column': 'Value for sample 3',
                             'latitude': 4.8,
-                            'longitude': 4.41},
+                            'longitude': 4.41,
+                            'taxon_id': 9606,
+                            'scientific_name': 'homo sapiens'},
             }
         metadata = pd.DataFrame.from_dict(metadata_dict, orient='index')
 
