@@ -155,6 +155,8 @@ class SQLConnectionHandler(object):
                  'admin_with_database': '_admin_args',
                  'admin_without_database': '_admin_nodb_args'}
 
+    _regex = re.compile("{(\d+)}")
+
     """Encapsulates the DB connection with the Postgres DB
 
     Parameters
@@ -364,7 +366,7 @@ class SQLConnectionHandler(object):
                     for pos, arg in enumerate(sql_args):
                         # check if previous results needed and replace
                         if isinstance(arg, str):
-                            result = re.search("{(\d+)}", arg)
+                            result = self._regex.search(arg)
                             if result:
                                 result_pos = int(result.group(1))
                                 sql_args[pos] = results[result_pos]
