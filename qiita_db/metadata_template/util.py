@@ -9,7 +9,6 @@
 from __future__ import division
 from future.utils import PY3
 from future.utils.six import StringIO
-from csv import reader
 
 import pandas as pd
 import numpy as np
