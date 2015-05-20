@@ -21,6 +21,7 @@ from functools import partial
 
 from qiita_ware.ebi import (SampleAlreadyExistsError, NoXMLError,
                             EBISubmission)
+from qiita_ware.exceptions import EBISumbissionError
 from qiita_core.qiita_settings import qiita_config
 
 
@@ -385,6 +386,16 @@ class TestEBISubmission(TestCase):
         with self.assertRaises(KeyError):
             submission.samples['nothere']
 
+    def test_add_samples_from_templates_error(self):
+        sample_template = StringIO(SAMPLE_TEMPLATE_ERROR)
+        prep_template = StringIO(EXP_PREP_TEMPLATE)
+        submission = EBISubmission('001', 'teststudy', 'test asbstract',
+                                   investigation_type='Other',
+                                   new_investigation_type='metagenome')
+        self.assertRaises(
+            EBISumbissionError, submission.add_samples_from_templates,
+            sample_template, prep_template, self.path)
+
     def test_add_samples_from_templates_bad_directory(self):
         sample_template = StringIO(EXP_SAMPLE_TEMPLATE)
         prep_template = StringIO(EXP_PREP_TEMPLATE)
@@ -648,11 +659,30 @@ GENSPOTDESC = """<design foo="bar">
 </design>
 """
 
+SAMPLE_TEMPLATE_ERROR = (
+    "sample_name\tcollection_timestamp\tdescription\thas_extracted_data\t"
+    "has_physical_specimen\thost_subject_id\tlatitude\tlongitude\t"
+    "physical_location\trequired_sample_info_status_id\tsample_type\t"
+    "str_column\n"
+    "sample1\t2014-05-29 12:24:51\tTest Sample 1\tTrue\tTrue\tNotIdentified\t"
+    "42.42\t41.41\tlocation1\t1\ttype1\tValue for sample 1\n"
+    "sample2\t2014-05-29 12:24:51\tTest Sample 2\tTrue\tTrue\tNotIdentified\t"
+    "4.2\t1.1\tlocation1\t1\ttype1\tValue for sample 2\n"
+    "sample3\t2014-05-29 12:24:51\tTest Sample 3\tTrue\tTrue\tNotIdentified\t"
+    "4.8\t4.41\tlocation1\t1\ttype1\tValue for sample 3\n")
+
 EXP_SAMPLE_TEMPLATE = (
-    "sample_name\tcollection_timestamp\tdescription\thas_extracted_data\thas_physical_specimen\thost_subject_id\tlatitude\tlongitude\tphysical_location\trequired_sample_info_status_id\tsample_type\tstr_column\ttaxon_id\tscientific_name\n"
-    "sample1\t2014-05-29 12:24:51\tTest Sample 1\tTrue\tTrue\tNotIdentified\t42.42\t41.41\tlocation1\t1\ttype1\tValue for sample 1\t9606\thomo sapiens\n"
-    "sample2\t2014-05-29 12:24:51\tTest Sample 2\tTrue\tTrue\tNotIdentified\t4.2\t1.1\tlocation1\t1\ttype1\tValue for sample 2\t9606\thomo sapiens\n"
-    "sample3\t2014-05-29 12:24:51\tTest Sample 3\tTrue\tTrue\tNotIdentified\t4.8\t4.41\tlocation1\t1\ttype1\tValue for sample 3\t9606\thomo sapiens\n")
+    "sample_name\tcollection_timestamp\tdescription\thas_extracted_data\t"
+    "has_physical_specimen\thost_subject_id\tlatitude\tlongitude\t"
+    "physical_location\trequired_sample_info_status_id\tsample_type\t"
+    "str_column\ttaxon_id\tscientific_name\n"
+    "sample1\t2014-05-29 12:24:51\tTest Sample 1\tTrue\tTrue\tNotIdentified\t"
+    "42.42\t41.41\tlocation1\t1\ttype1\tValue for sample 1\t9606\t"
+    "homo sapiens\n"
+    "sample2\t2014-05-29 12:24:51\tTest Sample 2\tTrue\tTrue\tNotIdentified\t"
+    "4.2\t1.1\tlocation1\t1\ttype1\tValue for sample 2\t9606\thomo sapiens\n"
+    "sample3\t2014-05-29 12:24:51\tTest Sample 3\tTrue\tTrue\tNotIdentified\t"
+    "4.8\t4.41\tlocation1\t1\ttype1\tValue for sample 3\t9606\thomo sapiens\n")
 
 EXP_PREP_TEMPLATE = (
     "sample_name\tcenter_name\tcenter_project_name\tdata_type_id\t"
