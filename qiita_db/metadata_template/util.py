@@ -15,7 +15,8 @@ import numpy as np
 import warnings
 from skbio.io.util import open_file
 
-from qiita_db.exceptions import QiitaDBColumnError, QiitaDBWarning
+from qiita_db.exceptions import (QiitaDBColumnError, QiitaDBWarning,
+                                 QiitaDBError)
 from .constants import CONTROLLED_COLS
 
 if PY3:
@@ -147,6 +148,8 @@ def load_template_to_dataframe(fn, strip_whitespace=True):
         to the needed type.
     QiitaDBWarning
         When columns are dropped because they have no content for any sample.
+    QiitaDBError
+        When non UTF-8 characters are found in the file.
 
     Notes
     -----
@@ -215,21 +218,34 @@ def load_template_to_dataframe(fn, strip_whitespace=True):
     # comment:
     #   using the tab character as "comment" we remove rows that are
     #   constituted only by delimiters i. e. empty rows.
-    template = pd.read_csv(StringIO(''.join(holdfile)), sep='\t',
-                           infer_datetime_format=True,
-                           keep_default_na=False, na_values=[''],
-                           parse_dates=True, index_col=False, comment='\t',
-                           mangle_dupe_cols=False, converters={
-                               'sample_name': lambda x: str(x).strip(),
-                               # required sample template information
-                               'physical_location': str,
-                               'sample_type': str,
-                               # collection_timestamp is not added here
-                               'host_subject_id': str,
-                               'description': str,
-                               # common prep template information
-                               'center_name': str,
-                               'center_projct_name': str})
+    try:
+        template = pd.read_csv(StringIO(''.join(holdfile)), sep='\t',
+                               encoding='utf-8', infer_datetime_format=True,
+                               keep_default_na=False, na_values=[''],
+                               parse_dates=True, index_col=False, comment='\t',
+                               mangle_dupe_cols=False, converters={
+                                   'sample_name': lambda x: str(x).strip(),
+                                   # required sample template information
+                                   'physical_location': str,
+                                   'sample_type': str,
+                                   # collection_timestamp is not added here
+                                   'host_subject_id': str,
+                                   'description': str,
+                                   # common prep template information
+                                   'center_name': str,
+                                   'center_projct_name': str})
+    except UnicodeDecodeError:
+        # Find row number and col number for utf-8 encoding errors
+        headers = holdfile[0].strip().split('\t')
+        errors = []
+        for row, line in enumerate(holdfile, 1):
+            for col, cell in enumerate(line.split('\t')):
+                try:
+                    cell.encode('utf-8')
+                except UnicodeError:
+                    errors.append('row %d, header %s' % (row, headers[col]))
+        raise QiitaDBError('Non UTF-8 characters found at ' +
+                           '; '.join(errors))
 
     # let pandas infer the dtypes of these columns, if the inference is
     # not correct, then we have to raise an error
