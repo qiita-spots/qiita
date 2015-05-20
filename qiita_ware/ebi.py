@@ -14,7 +14,7 @@ from future.utils import viewitems
 from skbio.util import safe_md5
 
 from qiita_core.qiita_settings import qiita_config
-
+from qiita_ware.exceptions import EBISumbissionError
 from qiita_db.logger import LogEntry
 from qiita_db.ontology import Ontology
 from qiita_db.util import convert_to_id
@@ -288,7 +288,7 @@ class EBISubmission(object):
         ----------
         sample_name : str
             Unique identifier for the sample
-        taxon_id : int
+        taxon_id : str
             NCBI's taxon ID for the sample
         scientific_name : str
             NCBI's scientific name for the `taxon_id`
@@ -349,6 +349,10 @@ class EBISubmission(object):
             sample_name_element = ET.SubElement(sample, 'SAMPLE_NAME')
             taxon_id = ET.SubElement(sample_name_element, 'TAXON_ID')
             taxon_id.text = escape(clean_whitespace(sample_info['taxon_id']))
+
+            taxon_id = ET.SubElement(sample_name_element, 'SCIENTIFIC_NAME')
+            taxon_id.text = escape(
+                clean_whitespace(sample_info['scientific_name']))
 
             description = ET.SubElement(sample, 'DESCRIPTION')
             description.text = escape(clean_whitespace(
@@ -798,12 +802,20 @@ class EBISubmission(object):
 
         for sample in iter_file_via_list_of_dicts(sample_template):
             sample_name = sample.pop('sample_name')
-            taxon_id = sample.pop('taxon_id')
-            scientific_name = sample.pop('scientific_name')
+            taxon_id = sample.pop('taxon_id', None)
+            scientific_name = sample.pop('scientific_name', None)
             description = sample.pop('description', None)
 
+            if taxon_id is None or scientific_name is None or \
+                    description is None:
+                raise EBISumbissionError(
+                    "Sample '%s' is missing required EBI submission "
+                    "information. taxon_id: %s; scientific_name: %s; "
+                    "description: %s" % (sample_name, taxon_id,
+                                         scientific_name, description))
+
             self.add_sample(sample_name, taxon_id, scientific_name,
-                            description=description, **sample)
+                            description, **sample)
 
         prep_template_samples = []
         for prep in iter_file_via_list_of_dicts(prep_template):
