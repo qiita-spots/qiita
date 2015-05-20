@@ -386,6 +386,25 @@ class TestEBISubmission(TestCase):
         with self.assertRaises(KeyError):
             submission.samples['nothere']
 
+    def test_add_samples_from_templates_filter_samples(self):
+        sample_template = StringIO(EXP_SAMPLE_TEMPLATE)
+        prep_template = StringIO(EXP_PREP_TEMPLATE_FILTERED)
+        submission = EBISubmission('001', 'teststudy', 'test asbstract',
+                                   investigation_type='Other',
+                                   new_investigation_type='metagenome')
+        submission.add_samples_from_templates(sample_template, prep_template,
+                                              self.path)
+        self.assertTrue('sample1' in submission.samples)
+        self.assertTrue('sample2' in submission.samples)
+        self.assertFalse('sample3' in submission.samples)
+        self.assertEqual(submission.samples['sample2']['prep']['platform'],
+                         'ILLUMINA')
+        self.assertEqual(
+            submission.samples['sample2']['prep']['file_path'],
+            self.sample2_fp)
+        with self.assertRaises(KeyError):
+            submission.samples['nothere']
+
     def test_add_samples_from_templates_error(self):
         sample_template = StringIO(SAMPLE_TEMPLATE_ERROR)
         prep_template = StringIO(EXP_PREP_TEMPLATE)
@@ -693,6 +712,15 @@ EXP_PREP_TEMPLATE = (
     "sample2\tANL\tTest Project\t2\t1\tValue for sample 1"
     "\tILLUMINA\texp design\tlib protocol\n"
     "sample3\tANL\tTest Project\t2\t1\tValue for sample 2"
+    "\tILLUMINA\texp design\tlib protocol\n")
+
+EXP_PREP_TEMPLATE_FILTERED = (
+    "sample_name\tcenter_name\tcenter_project_name\tdata_type_id\t"
+    "temp_status_id\tstr_column\tplatform\texperiment_design_description"
+    "\tlibrary_construction_protocol"
+    "\nsample1\tANL\tTest Project\t2\t1\tValue for sample 3"
+    "\tILLUMINA\texp design\tlib protocol\n"
+    "sample2\tANL\tTest Project\t2\t1\tValue for sample 1"
     "\tILLUMINA\texp design\tlib protocol\n")
 
 if __name__ == "__main__":

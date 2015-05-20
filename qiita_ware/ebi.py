@@ -838,9 +838,9 @@ class EBISubmission(object):
                                  library_construction_protocol,
                                  **prep)
 
-        # to_remove = set(self.samples).difference(prep_template_samples)
-        # for sample in to_remove:
-        #     del self.samples[sample]
+        to_remove = set(self.samples).difference(prep_template_samples)
+        for sample in to_remove:
+            del self.samples[sample]
 
     @classmethod
     def from_templates_and_per_sample_fastqs(cls, preprocessed_data_id,
