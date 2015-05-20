@@ -15,7 +15,8 @@ import numpy as np
 import warnings
 from skbio.io.util import open_file
 
-from qiita_db.exceptions import QiitaDBColumnError, QiitaDBWarning
+from qiita_db.exceptions import (QiitaDBColumnError, QiitaDBWarning,
+                                 QiitaDBError)
 from .constants import CONTROLLED_COLS
 
 if PY3:
@@ -147,6 +148,8 @@ def load_template_to_dataframe(fn, strip_whitespace=True):
         to the needed type.
     QiitaDBWarning
         When columns are dropped because they have no content for any sample.
+    QiitaDBError
+        When non UTF-8 characters are found in the file.
 
     Notes
     -----
@@ -233,15 +236,16 @@ def load_template_to_dataframe(fn, strip_whitespace=True):
                                    'center_projct_name': str})
     except UnicodeDecodeError:
         # Find row number and col number for utf-8 encoding errors
+        headers = holdfile[0].strip().split('\t')
         errors = []
-        for row, line in enumerate(holdfile):
+        for row, line in enumerate(holdfile, 1):
             for col, cell in enumerate(line.split('\t')):
                 try:
                     cell.encode('utf-8')
                 except UnicodeError:
-                    errors.append('Non-unicode value in cell at '
-                                  'row %d col %d' % (row+1, col+1))
-        raise ValueError(', '.join(errors))
+                    errors.append('row %d, header %s' % (row, headers[col]))
+        raise QiitaDBError('Non UTF-8 characters found at ' +
+                           '; '.join(errors))
 
     # let pandas infer the dtypes of these columns, if the inference is
     # not correct, then we have to raise an error
