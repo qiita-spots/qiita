@@ -725,19 +725,19 @@ SAMPLE_TEMPLATE = (
     "sample_name\trequired_sample_info_status\tcollection_timestamp\t"
     "sample_type\tphysical_specimen_remaining\tphysical_specimen_location\t"
     "dna_extracted\thost_subject_id\tTreatment\tDOB\tlatitude\tlongitude"
-    "\tDescription\n"
+    "\ttaxon_id\tscientific_name\tDescription\n"
     "PC.354\treceived\t2014-06-18 16:44\ttype_1\tTrue\tLocation_1\tTrue\t"
     "HS_ID_PC.354\tControl\t20061218\t1.88401499993\t56.0003871552\t"
-    "Control_mouse_I.D._354\n"
+    "9606\thomo sapiens\tControl_mouse_I.D._354\n"
     "PC.593\treceived\t2014-06-18 16:44\ttype_1\tTrue\tLocation_1\tTrue\t"
     "HS_ID_PC.593\tControl\t20071210\t35.4079458313\t83.2595338611\t"
-    "Control_mouse_I.D._593\n"
+    "9606\thomo sapiens\tControl_mouse_I.D._593\n"
     "PC.607\treceived\t2014-06-18 16:44\ttype_1\tTrue\tLocation_1\tTrue\t"
     "HS_ID_PC.607\tFast\t20071112\t18.3175615444\t91.3713989729\t"
-    "Fasting_mouse_I.D._607\n"
+    "9606\thomo sapiens\tFasting_mouse_I.D._607\n"
     "PC.636\treceived\t2014-06-18 16:44\ttype_1\tTrue\tLocation_1\tTrue\t"
     "HS_ID_PC.636\tFast\t20080116\t31.0856060708\t4.16781143893\t"
-    "Fasting_mouse_I.D._636")
+    "9606\thomo sapiens\tFasting_mouse_I.D._636")
 
 PREP_TEMPLATE = (
     'sample_name\tbarcode\tcenter_name\tcenter_project_name\t'
