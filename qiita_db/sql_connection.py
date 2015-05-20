@@ -81,6 +81,7 @@ from contextlib import contextmanager
 from itertools import chain
 from tempfile import mktemp
 from datetime import date, time, datetime
+import re
 
 from psycopg2 import (connect, ProgrammingError, Error as PostgresError,
                       OperationalError)
@@ -362,11 +363,12 @@ class SQLConnectionHandler(object):
                 if sql_args is not None:
                     for pos, arg in enumerate(sql_args):
                         # check if previous results needed and replace
-                        if isinstance(arg, str) and \
-                                arg[0] == "{" and arg[-1] == "}":
-                            result_pos = int(arg[1:-1])
-                            sql_args[pos] = results[result_pos]
-                            clear_res = True
+                        if isinstance(arg, str):
+                            result = re.search("{(\d+)}", arg)
+                            if result:
+                                result_pos = int(result.group(1))
+                                sql_args[pos] = results[result_pos]
+                                clear_res = True
                 # wipe out results if needed and reset clear_res
                 if clear_res:
                     results = []
