@@ -14,10 +14,10 @@ from StringIO import StringIO
 from os import close, remove, path
 from os.path import join
 from tempfile import mkstemp, gettempdir
-from shutil import rmtree
 from unittest import TestCase, main
 from xml.dom import minidom
 from xml.etree import ElementTree as ET
+from functools import partial
 
 from qiita_ware.ebi import (SampleAlreadyExistsError, NoXMLError,
                             EBISubmission)
@@ -26,15 +26,16 @@ from qiita_core.qiita_settings import qiita_config
 
 class TestEBISubmission(TestCase):
     def setUp(self):
-        self.path = path.dirname(path.abspath(__file__)) + '/test_data'
-        self.temp_dir = gettempdir()
-        self.demux_output_dir = join(self.temp_dir, 'demux_output')
+        self.path = join(path.dirname(path.abspath(__file__)), 'test_data',
+                         'test_ebi')
 
-    def tearDown(self):
-        try:
-            rmtree(self.demux_output_dir)
-        except:
-            pass
+        ebi_test_file = partial(join, self.path)
+
+        self.sample1_fp = ebi_test_file('sample1.fastq.gz')
+        self.sample2_fp = ebi_test_file('sample2.fastq.gz')
+        self.sample3_fp = ebi_test_file('sample3.fastq.gz')
+
+        self.temp_dir = gettempdir()
 
     def test_init(self):
         e = EBISubmission('2', 'Study Title', 'Study Abstract',
@@ -199,15 +200,18 @@ class TestEBISubmission(TestCase):
                                    new_investigation_type='metagenome')
         submission.add_sample('test1')
         submission.add_sample('test2')
+
         submission.add_sample_prep('test1', 'ILLUMINA', 'fastq',
-                                   self.path, 'experiment description',
+                                   self.sample1_fp, 'experiment description',
                                    'library protocol')
+
         prep_info = submission.samples['test1']['prep']
         self.assertEqual(prep_info['platform'], 'ILLUMINA')
-        self.assertEqual(prep_info['file_path'], self.path)
+        self.assertEqual(prep_info['file_path'], self.sample1_fp)
         with self.assertRaises(KeyError):
             submission.add_sample_prep('test3', 'ILLUMINA', 'fastq',
-                                       self.path, 'experiment description',
+                                       self.sample3_fp,
+                                       'experiment description',
                                        'library protocol')
 
     def test_add_sample_prep_exception(self):
@@ -218,11 +222,13 @@ class TestEBISubmission(TestCase):
         submission.add_sample('test2')
         with self.assertRaises(ValueError):
             submission.add_sample_prep('test2', 'DOES-NOT-EXIST', 'fastq',
-                                       self.path, 'experiment description',
+                                       self.sample1_fp,
+                                       'experiment description',
                                        'library protocol')
         with self.assertRaises(KeyError):
             submission.add_sample_prep('test3', 'DOES-NOT-EXIST', 'fastq',
-                                       self.path, 'experiment description',
+                                       self.sample3_fp,
+                                       'experiment description',
                                        'library protocol')
 
     def test_generate_library_descriptor(self):
@@ -253,14 +259,17 @@ class TestEBISubmission(TestCase):
                                    new_investigation_type='metagenome')
         submission.add_sample('test1')
         submission.add_sample_prep('test1', 'ILLUMINA', 'fastq',
-                                   'fakepath',
+                                   self.sample1_fp,
                                    'experiment description',
                                    'library protocol')
         xmlelement = submission.generate_experiment_xml()
         xml = minidom.parseString(ET.tostring(xmlelement))
         xmlstring = xml.toprettyxml(indent='  ', encoding='UTF-8')
         obs_stripped = ''.join([l.strip() for l in xmlstring.splitlines()])
-        exp_stripped = ''.join([l.strip() for l in EXPERIMENTXML.splitlines()])
+        exp = EXPERIMENTXML % {
+            'path': self.sample1_fp,
+            'organization_prefix': qiita_config.ebi_organization_prefix}
+        exp_stripped = ''.join([l.strip() for l in exp.splitlines()])
         self.assertEqual(obs_stripped, exp_stripped)
 
     def test_generate_run_xml(self):
@@ -269,7 +278,7 @@ class TestEBISubmission(TestCase):
                                    new_investigation_type='metagenome')
         submission.add_sample('test1')
         submission.add_sample_prep('test1', 'ILLUMINA', 'fastq',
-                                   join(self.path, '__init__.py'),
+                                   self.sample1_fp,
                                    'experiment description',
                                    'library protocol')
         xmlelement = submission.generate_run_xml()
@@ -344,13 +353,16 @@ class TestEBISubmission(TestCase):
                                    new_investigation_type='metagenome')
         submission.add_sample('test1')
         submission.add_sample_prep('test1', 'ILLUMINA', 'fastq',
-                                   'fakepath', 'experiment description',
+                                   self.sample1_fp, 'experiment description',
                                    'library protocol')
         fh, output = mkstemp()
         close(fh)
         submission.write_experiment_xml(output)
         obs_stripped = ''.join([l.strip() for l in open(output)])
-        exp_stripped = ''.join([l.strip() for l in EXPERIMENTXML.splitlines()])
+        exp = EXPERIMENTXML % {
+            'path': self.sample1_fp,
+            'organization_prefix': qiita_config.ebi_organization_prefix}
+        exp_stripped = ''.join([l.strip() for l in exp.splitlines()])
         self.assertEqual(obs_stripped, exp_stripped)
         remove(output)
 
@@ -369,7 +381,7 @@ class TestEBISubmission(TestCase):
                          'ILLUMINA')
         self.assertEqual(
             submission.samples['sample2']['prep']['file_path'],
-            self.path + '/sample2.fastq.gz')
+            self.sample2_fp)
         with self.assertRaises(KeyError):
             submission.samples['nothere']
 
@@ -394,7 +406,7 @@ class TestEBISubmission(TestCase):
                          'ILLUMINA')
         self.assertEqual(
             submission.samples['sample2']['prep']['file_path'],
-            self.path + '/sample2.fastq.gz')
+            self.sample2_fp)
         with self.assertRaises(KeyError):
             submission.samples['nothere']
 
@@ -559,7 +571,7 @@ _PROTOCOL>
       </EXPERIMENT_ATTRIBUTE>
       <EXPERIMENT_ATTRIBUTE>
         <TAG>file_path</TAG>
-        <VALUE>fakepath</VALUE>
+        <VALUE>%(path)s</VALUE>
       </EXPERIMENT_ATTRIBUTE>
       <EXPERIMENT_ATTRIBUTE>
         <TAG>file_type</TAG>
@@ -576,18 +588,19 @@ _PROTOCOL>
     </EXPERIMENT_ATTRIBUTES>
   </EXPERIMENT>
 </EXPERIMENT_SET>
-""" % {'organization_prefix': qiita_config.ebi_organization_prefix}
+"""
 
 RUNXML = """
 <?xml version="1.0" encoding="UTF-8"?>
 <RUN_SET xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:no\
 NamespaceSchemaLocation="ftp://ftp.sra.ebi.ac.uk/meta/xsd/sra_1_3/SRA.run.xsd">
-  <RUN alias="%(study_alias)s___init__.py_run" center_name="CCME-COLORADO">
+  <RUN alias="%(study_alias)s_sample1.fastq.gz_run" \
+center_name="CCME-COLORADO">
     <EXPERIMENT_REF refname="%(organization_prefix)s_ppdid_001:test1"/>
     <DATA_BLOCK>
       <FILES>
-        <FILE checksum="612cbff13a4f0e236e5e62ac2e00329a" checksum_method=\
-"MD5" filename="%(ebi_dir)s/__init__.py" filetype="fastq" \
+        <FILE checksum="506d31c82999a2cbcda138a369955e7d" checksum_method=\
+"MD5" filename="%(ebi_dir)s/sample1.fastq.gz" filetype="fastq" \
 quality_scoring_system="phred"/>
       </FILES>
     </DATA_BLOCK>
