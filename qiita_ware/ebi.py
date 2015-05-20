@@ -280,18 +280,20 @@ class EBISubmission(object):
 
         return study_set
 
-    def add_sample(self, sample_name, taxon_id=None, description=None,
-                   **kwargs):
+    def add_sample(self, sample_name, taxon_id, scientific_name,
+                   description, **kwargs):
         """Adds sample information to the current submission
 
         Parameters
         ----------
         sample_name : str
             Unique identifier for the sample
-        taxon_id : str, optional
-            Defaults to ``None``. If not provided, the `empty_value` will be
-            used for the taxon ID
-        description : str, optional
+        taxon_id : int
+            NCBI's taxon ID for the sample
+        scientific_name : str
+            NCBI's scientific name for the `taxon_id`
+        description : str
+
             Defaults to ``None``. If not provided, the `empty_value` will be
             used for the description
 
@@ -308,15 +310,14 @@ class EBISubmission(object):
 
         self.samples[sample_name] = {}
 
-        self.samples[sample_name]['taxon_id'] = self.empty_value if \
-            taxon_id is None else taxon_id
-        self.samples[sample_name]['taxon_id'] = \
-            escape(clean_whitespace(self.samples[sample_name]['taxon_id']))
+        self.samples[sample_name]['taxon_id'] = escape(
+            clean_whitespace(taxon_id))
 
-        self.samples[sample_name]['description'] = self.empty_value if \
-            description is None else description
-        self.samples[sample_name]['description'] = \
-            escape(clean_whitespace(self.samples[sample_name]['description']))
+        self.samples[sample_name]['scientific_name'] = escape(
+            clean_whitespace(scientific_name))
+
+        self.samples[sample_name]['description'] = escape(
+            clean_whitespace(description))
 
         self.samples[sample_name]['attributes'] = self._stringify_kwargs(
             kwargs)
@@ -797,15 +798,17 @@ class EBISubmission(object):
 
         for sample in iter_file_via_list_of_dicts(sample_template):
             sample_name = sample.pop('sample_name')
-            taxon_id = sample.pop('taxon_id', None)
+            taxon_id = sample.pop('taxon_id')
+            scientific_name = sample.pop('scientific_name')
             description = sample.pop('description', None)
 
-            self.add_sample(sample_name, taxon_id=taxon_id,
-                            description=description,
-                            **sample)
+            self.add_sample(sample_name, taxon_id, scientific_name,
+                            description=description, **sample)
 
+        prep_template_samples = []
         for prep in iter_file_via_list_of_dicts(prep_template):
             sample_name = prep.pop('sample_name')
+            prep_template_samples.append(sample_name)
             platform = prep.pop('platform')
             experiment_design_description = prep.pop(
                 'experiment_design_description')
@@ -817,6 +820,10 @@ class EBISubmission(object):
                                  file_path, experiment_design_description,
                                  library_construction_protocol,
                                  **prep)
+
+        # to_remove = set(self.samples).difference(prep_template_samples)
+        # for sample in to_remove:
+        #     del self.samples[sample]
 
     @classmethod
     def from_templates_and_per_sample_fastqs(cls, preprocessed_data_id,
