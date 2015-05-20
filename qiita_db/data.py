@@ -288,21 +288,18 @@ class RawData(BaseData):
     _table = "raw_data"
     _data_filepath_table = "raw_filepath"
     _data_filepath_column = "raw_data_id"
-    # Define here the class name, so in case it changes in the database we
-    # only need to change it here
-    _study_raw_table = "study_raw_data"
 
     @classmethod
-    def create(cls, filetype, studies, filepaths=None):
+    def create(cls, filetype, prep_templates, filepaths):
         r"""Creates a new object with a new id on the storage system
 
         Parameters
         ----------
         filetype : int
             The filetype identifier
-        studies : list of Study
-            The list of Study objects to which the raw data belongs to
-        filepaths : iterable of tuples (str, int), optional
+        prep_templates : list of PrepTemplates
+            The list of PrepTemplate objects to which the raw data is attached
+        filepaths : iterable of tuples (str, int)
             The list of paths to the raw files and its filepath type identifier
 
         Returns
@@ -318,11 +315,11 @@ class RawData(BaseData):
         # Instantiate the object with the new id
         rd = cls(rd_id)
 
-        # Connect the raw data with its studies
-        values = [(study.id, rd_id) for study in studies]
-        conn_handler.executemany(
-            "INSERT INTO qiita.{0} (study_id, raw_data_id) VALUES "
-            "(%s, %s)".format(rd._study_raw_table), values)
+        # Connect the raw data with its prep templates
+        values = [(rd_id, pt.id) for pt in prep_templates]
+        sql = """UPDATE qiita.prep_template
+                 SET raw_data_id = %s WHERE prep_template_id = %s"""
+        conn_handler.executemany(sql, values)
 
         # If file paths have been provided, add them to the raw data object
         if filepaths:
