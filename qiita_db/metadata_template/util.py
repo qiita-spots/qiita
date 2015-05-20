@@ -141,15 +141,13 @@ def load_template_to_dataframe(fn, strip_whitespace=True):
     Raises
     ------
     ValueError
-        Empty file passed
+        Empty file passed, or non UTF-8 characters are found in the file.
     QiitaDBColumnError
         If the sample_name column is not present in the template.
         If there's a value in one of the reserved columns that cannot be cast
         to the needed type.
     QiitaDBWarning
         When columns are dropped because they have no content for any sample.
-    QiitaDBError
-        When non UTF-8 characters are found in the file.
 
     Notes
     -----
@@ -244,8 +242,8 @@ def load_template_to_dataframe(fn, strip_whitespace=True):
                     cell.encode('utf-8')
                 except UnicodeError:
                     errors.append('row %d, header %s' % (row, headers[col]))
-        raise QiitaDBError('Non UTF-8 characters found at ' +
-                           '; '.join(errors))
+        raise ValueError('Non UTF-8 characters found at ' +
+                         '; '.join(errors))
 
     # let pandas infer the dtypes of these columns, if the inference is
     # not correct, then we have to raise an error
