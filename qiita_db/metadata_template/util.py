@@ -9,6 +9,7 @@
 from __future__ import division
 from future.utils import PY3
 from future.utils.six import StringIO
+from csv import reader
 
 import pandas as pd
 import numpy as np
@@ -215,21 +216,33 @@ def load_template_to_dataframe(fn, strip_whitespace=True):
     # comment:
     #   using the tab character as "comment" we remove rows that are
     #   constituted only by delimiters i. e. empty rows.
-    template = pd.read_csv(StringIO(''.join(holdfile)), sep='\t',
-                           infer_datetime_format=True,
-                           keep_default_na=False, na_values=[''],
-                           parse_dates=True, index_col=False, comment='\t',
-                           mangle_dupe_cols=False, converters={
-                               'sample_name': lambda x: str(x).strip(),
-                               # required sample template information
-                               'physical_location': str,
-                               'sample_type': str,
-                               # collection_timestamp is not added here
-                               'host_subject_id': str,
-                               'description': str,
-                               # common prep template information
-                               'center_name': str,
-                               'center_projct_name': str})
+    try:
+        template = pd.read_csv(StringIO(''.join(holdfile)), sep='\t',
+                               encoding='utf-8', infer_datetime_format=True,
+                               keep_default_na=False, na_values=[''],
+                               parse_dates=True, index_col=False, comment='\t',
+                               mangle_dupe_cols=False, converters={
+                                   'sample_name': lambda x: str(x).strip(),
+                                   # required sample template information
+                                   'physical_location': str,
+                                   'sample_type': str,
+                                   # collection_timestamp is not added here
+                                   'host_subject_id': str,
+                                   'description': str,
+                                   # common prep template information
+                                   'center_name': str,
+                                   'center_projct_name': str})
+    except UnicodeDecodeError:
+        # Find row number and col number for utf-8 encoding errors
+        errors = []
+        for row, line in enumerate(holdfile):
+            for col, cell in enumerate(line.split('\t')):
+                try:
+                    cell.encode('utf-8')
+                except UnicodeError:
+                    errors.append('Non-unicode value in cell at '
+                                  'row %d col %d' % (row+1, col+1))
+        raise ValueError(', '.join(errors))
 
     # let pandas infer the dtypes of these columns, if the inference is
     # not correct, then we have to raise an error
