@@ -305,9 +305,30 @@ class RawData(BaseData):
         Returns
         -------
         A new instance of `cls` to access to the RawData stored in the DB
+
+        Raises
+        ------
+        IncompetentQiitaDeveloperError
+            If any of the passed prep templates already have a raw data id
         """
-        # Add the raw data to the database, and get the raw data id back
         conn_handler = SQLConnectionHandler()
+        # We first need to check if the passed prep templates doesn't have
+        # a raw data already attached to them
+        sql = """SELECT EXISTS(
+                    SELECT raw_data_id
+                    FROM qiita.prep_template
+                    WHERE prep_template_id IN ({})
+                        AND raw_data_id IS NOT NULL)""".format(
+            ', '.join(['%s'] * len(prep_templates)))
+        exists = conn_handler.execute_fetchone(
+            sql, [pt.id for pt in prep_templates])[0]
+        if exists:
+            raise IncompetentQiitaDeveloperError(
+                "Cannot create raw data because on the passed prep templates "
+                "already has a raw data associated with it. Prep templates: %s"
+                % ', '.join([pt.id for pt in prep_templates]))
+
+        # Add the raw data to the database, and get the raw data id back
         rd_id = conn_handler.execute_fetchone(
             "INSERT INTO qiita.{0} (filetype_id) VALUES (%s) "
             "RETURNING raw_data_id".format(cls._table), (filetype,))[0]
