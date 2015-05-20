@@ -20,7 +20,7 @@ from qiita_db.exceptions import (QiitaDBError, QiitaDBUnknownIDError,
                                  QiitaDBStatusError)
 from qiita_db.study import Study, StudyPerson
 from qiita_db.user import User
-from qiita_db.util import get_mountpoint
+from qiita_db.util import get_mountpoint, get_count
 from qiita_db.data import BaseData, RawData, PreprocessedData, ProcessedData
 from qiita_db.metadata_template import PrepTemplate
 
@@ -46,7 +46,6 @@ class RawDataTests(TestCase):
         close(fd)
         self.filetype = 2
         self.filepaths = [(self.seqs_fp, 1), (self.barcodes_fp, 2)]
-        self.studies = [Study(1)]
         _, self.db_test_raw_dir = get_mountpoint('raw_data')[0]
 
         with open(self.seqs_fp, "w") as f:
@@ -54,6 +53,10 @@ class RawDataTests(TestCase):
         with open(self.barcodes_fp, "w") as f:
             f.write("\n")
         self._clean_up_files = []
+
+        # Create some new PrepTemplates
+
+
 
         # Create a new study
         info = {
@@ -81,9 +84,9 @@ class RawDataTests(TestCase):
     def test_create(self):
         """Correctly creates all the rows in the DB for the raw data"""
         # Check that the returned object has the correct id
-        exp_id = 1 + self.conn_handler.execute_fetchone(
-            "SELECT count(1) from qiita.raw_data")[0]
-        obs = RawData.create(self.filetype, self.studies, self.filepaths)
+        exp_id = get_count("qiita.raw_data") + 1
+        obs = RawData.create(self.filetype, self.prep_templates,
+                             self.filepaths)
         self.assertEqual(obs.id, exp_id)
 
         # Check that the raw data have been correctly added to the DB
@@ -92,10 +95,12 @@ class RawDataTests(TestCase):
         # raw_data_id, filetype, link_filepaths_status
         self.assertEqual(obs, [[exp_id, 2, 'idle']])
 
-        # Check that the raw data have been correctly linked with the study
-        obs = self.conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.study_raw_data WHERE raw_data_id=%d" % exp_id)
+        # Check that the raw data has been correctly linked with the prep
+        # template
+        sql = "SELECT raw_data_id FROM qiita.prep_template WHERE prep_template_id=%s"
+        obs = self.conn_handler.execute_fetchall(sql, (exp_id,))
         # study_id , raw_data_id
+        self.assertEqual(obs, [[self.pt.id]])
         self.assertEqual(obs, [[1, exp_id]])
 
         # Check that the files have been copied to right location
