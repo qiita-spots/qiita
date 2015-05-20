@@ -796,6 +796,11 @@ class EBISubmission(object):
             Path to the directory containing per-sample FASTQ files where
             the sequence labels should be:
             ``SampleID_SequenceNumber And Additional Notes if Applicable``
+
+        Raises
+        ------
+        EBISumbissionError
+            If a sample doesn't have the required EBI submission information
         """
         if not exists(per_sample_fastq_dir):
             raise IOError('The directory with the FASTQ file does not exist.')
