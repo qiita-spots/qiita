@@ -93,6 +93,10 @@ END $do$;
 
 --- Drop the study_raw__data table as it's not longer used
 DROP TABLE qiita.study_raw_data;
+
+-- The raw_data_id column now can be nullable
+ALTER TABLE qiita.prep_template
+    ALTER COLUMN raw_data_id DROP NOT NULL;
 """
 conn_handler.add_to_queue(queue, sql)
 conn_handler.execute_queue(queue)
