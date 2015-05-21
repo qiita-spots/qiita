@@ -315,7 +315,7 @@ class RawData(BaseData):
         # We first need to check if the passed prep templates doesn't have
         # a raw data already attached to them
         sql = """SELECT EXISTS(
-                    SELECT raw_data_id
+                    SELECT *
                     FROM qiita.prep_template
                     WHERE prep_template_id IN ({})
                         AND raw_data_id IS NOT NULL)""".format(
@@ -324,8 +324,9 @@ class RawData(BaseData):
             sql, [pt.id for pt in prep_templates])[0]
         if exists:
             raise IncompetentQiitaDeveloperError(
-                "Cannot create raw data because on the passed prep templates "
-                "already has a raw data associated with it. Prep templates: %s"
+                "Cannot create raw data because the passed prep templates "
+                "already have a raw data associated with it. "
+                "Prep templates: %s"
                 % ', '.join([pt.id for pt in prep_templates]))
 
         # Add the raw data to the database, and get the raw data id back
@@ -349,23 +350,23 @@ class RawData(BaseData):
         return rd
 
     @classmethod
-    def delete(cls, raw_data_id, study_id):
+    def delete(cls, raw_data_id, prep_template_id):
         """Removes the raw data with id raw_data_id
 
         Parameters
         ----------
         raw_data_id : int
             The raw data id
-        study_id : int
-            The study id
+        prep_template_id : int
+            The prep_template_id
 
         Raises
         ------
         QiitaDBUnknownIDError
             If the raw data id doesn't exist
         QiitaDBError
-            If the raw data is not linked to that study_id
-            If the raw data has prep templates associated
+            If the raw data is not linked to that prep_template_id
+            If the raw data has files linked
         """
         conn_handler = SQLConnectionHandler()
 
