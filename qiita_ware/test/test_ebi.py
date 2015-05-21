@@ -14,27 +14,29 @@ from StringIO import StringIO
 from os import close, remove, path
 from os.path import join
 from tempfile import mkstemp, gettempdir
-from shutil import rmtree
 from unittest import TestCase, main
 from xml.dom import minidom
 from xml.etree import ElementTree as ET
+from functools import partial
 
 from qiita_ware.ebi import (SampleAlreadyExistsError, NoXMLError,
                             EBISubmission)
+from qiita_ware.exceptions import EBISumbissionError
 from qiita_core.qiita_settings import qiita_config
 
 
 class TestEBISubmission(TestCase):
     def setUp(self):
-        self.path = path.dirname(path.abspath(__file__)) + '/test_data'
-        self.temp_dir = gettempdir()
-        self.demux_output_dir = join(self.temp_dir, 'demux_output')
+        self.path = join(path.dirname(path.abspath(__file__)), 'test_data',
+                         'test_ebi')
 
-    def tearDown(self):
-        try:
-            rmtree(self.demux_output_dir)
-        except:
-            pass
+        ebi_test_file = partial(join, self.path)
+
+        self.sample1_fp = ebi_test_file('sample1.fastq.gz')
+        self.sample2_fp = ebi_test_file('sample2.fastq.gz')
+        self.sample3_fp = ebi_test_file('sample3.fastq.gz')
+
+        self.temp_dir = gettempdir()
 
     def test_init(self):
         e = EBISubmission('2', 'Study Title', 'Study Abstract',
@@ -107,7 +109,7 @@ class TestEBISubmission(TestCase):
         e = EBISubmission('2', 'Study Title', 'Study Abstract',
                           investigation_type='Other',
                           new_investigation_type='metagenome')
-        e.add_sample('foo')
+        e.add_sample('foo', '9606', 'homo sapiens', 'desc1')
         exp = '%s_ppdid_2:foo' % qiita_config.ebi_organization_prefix
         self.assertEqual(e._get_sample_alias('foo'), exp)
 
@@ -115,7 +117,7 @@ class TestEBISubmission(TestCase):
         e = EBISubmission('2', 'Study Title', 'Study Abstract',
                           investigation_type='Other',
                           new_investigation_type='metagenome')
-        e.add_sample('foo')
+        e.add_sample('foo', '9606', 'homo sapiens', 'desc1')
         exp = '%s_ppdid_2:foo' % qiita_config.ebi_organization_prefix
         self.assertEqual(e._get_experiment_alias('foo'), exp)
 
@@ -173,19 +175,19 @@ class TestEBISubmission(TestCase):
         submission = EBISubmission('001', 'teststudy', 'test asbstract',
                                    investigation_type='Other',
                                    new_investigation_type='metagenome')
-        submission.add_sample('test1')
-        submission.add_sample('test2')
+        submission.add_sample('test1', '9606', 'homo sapiens', 'desc1')
+        submission.add_sample('test2', '9606', 'homo sapiens', 'desc2')
         samples = submission.samples
         self.assertTrue('test1' in samples and 'test2' in samples)
         with self.assertRaises(SampleAlreadyExistsError):
-            submission.add_sample('test1')
+            submission.add_sample('test1', '9606', 'homo sapiens', 'desc1')
 
     def test_generate_sample_xml(self):
         submission = EBISubmission('001', 'teststudy', 'test asbstract',
                                    investigation_type='Other',
                                    new_investigation_type='metagenome')
-        submission.add_sample('test1')
-        submission.add_sample('test2')
+        submission.add_sample('test1', '9606', 'homo sapiens', 'desc1')
+        submission.add_sample('test2', '9606', 'homo sapiens', 'desc2')
         xmlelement = submission.generate_sample_xml()
         xml = minidom.parseString(ET.tostring(xmlelement))
         xmlstring = xml.toprettyxml(indent='  ', encoding='UTF-8')
@@ -197,32 +199,37 @@ class TestEBISubmission(TestCase):
         submission = EBISubmission('001', 'teststudy', 'test asbstract',
                                    investigation_type='Other',
                                    new_investigation_type='metagenome')
-        submission.add_sample('test1')
-        submission.add_sample('test2')
+        submission.add_sample('test1', '9606', 'homo sapiens', 'desc1')
+        submission.add_sample('test2', '9606', 'homo sapiens', 'desc1')
+
         submission.add_sample_prep('test1', 'ILLUMINA', 'fastq',
-                                   self.path, 'experiment description',
+                                   self.sample1_fp, 'experiment description',
                                    'library protocol')
+
         prep_info = submission.samples['test1']['prep']
         self.assertEqual(prep_info['platform'], 'ILLUMINA')
-        self.assertEqual(prep_info['file_path'], self.path)
+        self.assertEqual(prep_info['file_path'], self.sample1_fp)
         with self.assertRaises(KeyError):
             submission.add_sample_prep('test3', 'ILLUMINA', 'fastq',
-                                       self.path, 'experiment description',
+                                       self.sample3_fp,
+                                       'experiment description',
                                        'library protocol')
 
     def test_add_sample_prep_exception(self):
         submission = EBISubmission('001', 'teststudy', 'test asbstract',
                                    investigation_type='Other',
                                    new_investigation_type='metagenome')
-        submission.add_sample('test1')
-        submission.add_sample('test2')
+        submission.add_sample('test1', '9606', 'homo sapiens', 'desc1')
+        submission.add_sample('test2', '9606', 'homo sapiens', 'desc1')
         with self.assertRaises(ValueError):
             submission.add_sample_prep('test2', 'DOES-NOT-EXIST', 'fastq',
-                                       self.path, 'experiment description',
+                                       self.sample1_fp,
+                                       'experiment description',
                                        'library protocol')
         with self.assertRaises(KeyError):
             submission.add_sample_prep('test3', 'DOES-NOT-EXIST', 'fastq',
-                                       self.path, 'experiment description',
+                                       self.sample3_fp,
+                                       'experiment description',
                                        'library protocol')
 
     def test_generate_library_descriptor(self):
@@ -251,25 +258,28 @@ class TestEBISubmission(TestCase):
         submission = EBISubmission('001', 'teststudy', 'test asbstract',
                                    investigation_type='Other',
                                    new_investigation_type='metagenome')
-        submission.add_sample('test1')
+        submission.add_sample('test1', '9606', 'homo sapiens', 'desc1')
         submission.add_sample_prep('test1', 'ILLUMINA', 'fastq',
-                                   'fakepath',
+                                   self.sample1_fp,
                                    'experiment description',
                                    'library protocol')
         xmlelement = submission.generate_experiment_xml()
         xml = minidom.parseString(ET.tostring(xmlelement))
         xmlstring = xml.toprettyxml(indent='  ', encoding='UTF-8')
         obs_stripped = ''.join([l.strip() for l in xmlstring.splitlines()])
-        exp_stripped = ''.join([l.strip() for l in EXPERIMENTXML.splitlines()])
+        exp = EXPERIMENTXML % {
+            'path': self.sample1_fp,
+            'organization_prefix': qiita_config.ebi_organization_prefix}
+        exp_stripped = ''.join([l.strip() for l in exp.splitlines()])
         self.assertEqual(obs_stripped, exp_stripped)
 
     def test_generate_run_xml(self):
         submission = EBISubmission('001', 'teststudy', 'test asbstract',
                                    investigation_type='Other',
                                    new_investigation_type='metagenome')
-        submission.add_sample('test1')
+        submission.add_sample('test1', '9606', 'homo sapiens', 'desc1')
         submission.add_sample_prep('test1', 'ILLUMINA', 'fastq',
-                                   join(self.path, '__init__.py'),
+                                   self.sample1_fp,
                                    'experiment description',
                                    'library protocol')
         xmlelement = submission.generate_run_xml()
@@ -290,7 +300,7 @@ class TestEBISubmission(TestCase):
         submission = EBISubmission('001', 'teststudy', 'test asbstract',
                                    investigation_type='Other',
                                    new_investigation_type='metagenome')
-        submission.add_sample('test1')
+        submission.add_sample('test1', '9606', 'homo sapiens', 'desc1')
         submission.add_sample_prep('test1', 'ILLUMINA', 'fastq',
                                    '__init__.py', 'experiment description',
                                    'library protocol')
@@ -327,8 +337,8 @@ class TestEBISubmission(TestCase):
         submission = EBISubmission('001', 'teststudy', 'test asbstract',
                                    investigation_type='Other',
                                    new_investigation_type='metagenome')
-        submission.add_sample('test1')
-        submission.add_sample('test2')
+        submission.add_sample('test1', '9606', 'homo sapiens', 'desc1')
+        submission.add_sample('test2', '9606', 'homo sapiens', 'desc2')
         fh, output = mkstemp()
         close(fh)
         submission.write_sample_xml(output)
@@ -342,15 +352,18 @@ class TestEBISubmission(TestCase):
         submission = EBISubmission('001', 'teststudy', 'test asbstract',
                                    investigation_type='Other',
                                    new_investigation_type='metagenome')
-        submission.add_sample('test1')
+        submission.add_sample('test1', '9606', 'homo sapiens', 'desc1')
         submission.add_sample_prep('test1', 'ILLUMINA', 'fastq',
-                                   'fakepath', 'experiment description',
+                                   self.sample1_fp, 'experiment description',
                                    'library protocol')
         fh, output = mkstemp()
         close(fh)
         submission.write_experiment_xml(output)
         obs_stripped = ''.join([l.strip() for l in open(output)])
-        exp_stripped = ''.join([l.strip() for l in EXPERIMENTXML.splitlines()])
+        exp = EXPERIMENTXML % {
+            'path': self.sample1_fp,
+            'organization_prefix': qiita_config.ebi_organization_prefix}
+        exp_stripped = ''.join([l.strip() for l in exp.splitlines()])
         self.assertEqual(obs_stripped, exp_stripped)
         remove(output)
 
@@ -369,9 +382,38 @@ class TestEBISubmission(TestCase):
                          'ILLUMINA')
         self.assertEqual(
             submission.samples['sample2']['prep']['file_path'],
-            self.path + '/sample2.fastq.gz')
+            self.sample2_fp)
         with self.assertRaises(KeyError):
             submission.samples['nothere']
+
+    def test_add_samples_from_templates_filter_samples(self):
+        sample_template = StringIO(EXP_SAMPLE_TEMPLATE)
+        prep_template = StringIO(EXP_PREP_TEMPLATE_FILTERED)
+        submission = EBISubmission('001', 'teststudy', 'test asbstract',
+                                   investigation_type='Other',
+                                   new_investigation_type='metagenome')
+        submission.add_samples_from_templates(sample_template, prep_template,
+                                              self.path)
+        self.assertTrue('sample1' in submission.samples)
+        self.assertTrue('sample2' in submission.samples)
+        self.assertFalse('sample3' in submission.samples)
+        self.assertEqual(submission.samples['sample2']['prep']['platform'],
+                         'ILLUMINA')
+        self.assertEqual(
+            submission.samples['sample2']['prep']['file_path'],
+            self.sample2_fp)
+        with self.assertRaises(KeyError):
+            submission.samples['nothere']
+
+    def test_add_samples_from_templates_error(self):
+        sample_template = StringIO(SAMPLE_TEMPLATE_ERROR)
+        prep_template = StringIO(EXP_PREP_TEMPLATE)
+        submission = EBISubmission('001', 'teststudy', 'test asbstract',
+                                   investigation_type='Other',
+                                   new_investigation_type='metagenome')
+        self.assertRaises(
+            EBISumbissionError, submission.add_samples_from_templates,
+            sample_template, prep_template, self.path)
 
     def test_add_samples_from_templates_bad_directory(self):
         sample_template = StringIO(EXP_SAMPLE_TEMPLATE)
@@ -394,7 +436,7 @@ class TestEBISubmission(TestCase):
                          'ILLUMINA')
         self.assertEqual(
             submission.samples['sample2']['prep']['file_path'],
-            self.path + '/sample2.fastq.gz')
+            self.sample2_fp)
         with self.assertRaises(KeyError):
             submission.samples['nothere']
 
@@ -459,17 +501,19 @@ spaceSchemaLocation="ftp://ftp.sra.ebi.ac.uk/meta/xsd/sra_1_3/SRA.sample.xsd">
 COLORADO">
     <TITLE>test1</TITLE>
     <SAMPLE_NAME>
-      <TAXON_ID>no_data</TAXON_ID>
+      <TAXON_ID>9606</TAXON_ID>
+      <SCIENTIFIC_NAME>homo sapiens</SCIENTIFIC_NAME>
     </SAMPLE_NAME>
-    <DESCRIPTION>no_data</DESCRIPTION>
+    <DESCRIPTION>desc1</DESCRIPTION>
   </SAMPLE>
   <SAMPLE alias="%(organization_prefix)s_ppdid_001:test2" center_name="CCME-\
 COLORADO">
     <TITLE>test2</TITLE>
     <SAMPLE_NAME>
-      <TAXON_ID>no_data</TAXON_ID>
+      <TAXON_ID>9606</TAXON_ID>
+      <SCIENTIFIC_NAME>homo sapiens</SCIENTIFIC_NAME>
     </SAMPLE_NAME>
-    <DESCRIPTION>no_data</DESCRIPTION>
+    <DESCRIPTION>desc2</DESCRIPTION>
   </SAMPLE>
 </SAMPLE_SET>
 """ % {'organization_prefix': qiita_config.ebi_organization_prefix}
@@ -559,7 +603,7 @@ _PROTOCOL>
       </EXPERIMENT_ATTRIBUTE>
       <EXPERIMENT_ATTRIBUTE>
         <TAG>file_path</TAG>
-        <VALUE>fakepath</VALUE>
+        <VALUE>%(path)s</VALUE>
       </EXPERIMENT_ATTRIBUTE>
       <EXPERIMENT_ATTRIBUTE>
         <TAG>file_type</TAG>
@@ -576,18 +620,19 @@ _PROTOCOL>
     </EXPERIMENT_ATTRIBUTES>
   </EXPERIMENT>
 </EXPERIMENT_SET>
-""" % {'organization_prefix': qiita_config.ebi_organization_prefix}
+"""
 
 RUNXML = """
 <?xml version="1.0" encoding="UTF-8"?>
 <RUN_SET xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:no\
 NamespaceSchemaLocation="ftp://ftp.sra.ebi.ac.uk/meta/xsd/sra_1_3/SRA.run.xsd">
-  <RUN alias="%(study_alias)s___init__.py_run" center_name="CCME-COLORADO">
+  <RUN alias="%(study_alias)s_sample1.fastq.gz_run" \
+center_name="CCME-COLORADO">
     <EXPERIMENT_REF refname="%(organization_prefix)s_ppdid_001:test1"/>
     <DATA_BLOCK>
       <FILES>
-        <FILE checksum="612cbff13a4f0e236e5e62ac2e00329a" checksum_method=\
-"MD5" filename="%(ebi_dir)s/__init__.py" filetype="fastq" \
+        <FILE checksum="506d31c82999a2cbcda138a369955e7d" checksum_method=\
+"MD5" filename="%(ebi_dir)s/sample1.fastq.gz" filetype="fastq" \
 quality_scoring_system="phred"/>
       </FILES>
     </DATA_BLOCK>
@@ -633,19 +678,30 @@ GENSPOTDESC = """<design foo="bar">
 </design>
 """
 
-EXP_SAMPLE_TEMPLATE = (
+SAMPLE_TEMPLATE_ERROR = (
     "sample_name\tcollection_timestamp\tdescription\thas_extracted_data\t"
     "has_physical_specimen\thost_subject_id\tlatitude\tlongitude\t"
     "physical_location\trequired_sample_info_status_id\tsample_type\t"
     "str_column\n"
     "sample1\t2014-05-29 12:24:51\tTest Sample 1\tTrue\tTrue\tNotIdentified\t"
     "42.42\t41.41\tlocation1\t1\ttype1\tValue for sample 1\n"
-    "sample2\t2014-05-29 12:24:51\t"
-    "Test Sample 2\tTrue\tTrue\tNotIdentified\t4.2\t1.1\tlocation1\t1\t"
-    "type1\tValue for sample 2\n"
-    "sample3\t2014-05-29 12:24:51\tTest Sample 3\tTrue\t"
-    "True\tNotIdentified\t4.8\t4.41\tlocation1\t1\ttype1\t"
-    "Value for sample 3\n")
+    "sample2\t2014-05-29 12:24:51\tTest Sample 2\tTrue\tTrue\tNotIdentified\t"
+    "4.2\t1.1\tlocation1\t1\ttype1\tValue for sample 2\n"
+    "sample3\t2014-05-29 12:24:51\tTest Sample 3\tTrue\tTrue\tNotIdentified\t"
+    "4.8\t4.41\tlocation1\t1\ttype1\tValue for sample 3\n")
+
+EXP_SAMPLE_TEMPLATE = (
+    "sample_name\tcollection_timestamp\tdescription\thas_extracted_data\t"
+    "has_physical_specimen\thost_subject_id\tlatitude\tlongitude\t"
+    "physical_location\trequired_sample_info_status_id\tsample_type\t"
+    "str_column\ttaxon_id\tscientific_name\n"
+    "sample1\t2014-05-29 12:24:51\tTest Sample 1\tTrue\tTrue\tNotIdentified\t"
+    "42.42\t41.41\tlocation1\t1\ttype1\tValue for sample 1\t9606\t"
+    "homo sapiens\n"
+    "sample2\t2014-05-29 12:24:51\tTest Sample 2\tTrue\tTrue\tNotIdentified\t"
+    "4.2\t1.1\tlocation1\t1\ttype1\tValue for sample 2\t9606\thomo sapiens\n"
+    "sample3\t2014-05-29 12:24:51\tTest Sample 3\tTrue\tTrue\tNotIdentified\t"
+    "4.8\t4.41\tlocation1\t1\ttype1\tValue for sample 3\t9606\thomo sapiens\n")
 
 EXP_PREP_TEMPLATE = (
     "sample_name\tcenter_name\tcenter_project_name\tdata_type_id\t"
@@ -656,6 +712,15 @@ EXP_PREP_TEMPLATE = (
     "sample2\tANL\tTest Project\t2\t1\tValue for sample 1"
     "\tILLUMINA\texp design\tlib protocol\n"
     "sample3\tANL\tTest Project\t2\t1\tValue for sample 2"
+    "\tILLUMINA\texp design\tlib protocol\n")
+
+EXP_PREP_TEMPLATE_FILTERED = (
+    "sample_name\tcenter_name\tcenter_project_name\tdata_type_id\t"
+    "temp_status_id\tstr_column\tplatform\texperiment_design_description"
+    "\tlibrary_construction_protocol"
+    "\nsample1\tANL\tTest Project\t2\t1\tValue for sample 3"
+    "\tILLUMINA\texp design\tlib protocol\n"
+    "sample2\tANL\tTest Project\t2\t1\tValue for sample 1"
     "\tILLUMINA\texp design\tlib protocol\n")
 
 if __name__ == "__main__":
