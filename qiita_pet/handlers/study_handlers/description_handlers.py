@@ -190,7 +190,7 @@ class StudyDescriptionHandler(BaseHandler):
 
         except (TypeError, QiitaDBColumnError, QiitaDBExecutionError,
                 QiitaDBDuplicateError, IOError, ValueError, KeyError,
-                CParserError, QiitaDBDuplicateHeaderError) as e:
+                CParserError, QiitaDBDuplicateHeaderError, QiitaDBError) as e:
             # Some error occurred while processing the sample template
             # Show the error to the user so they can fix the template
             msg = html_error_message % ('parsing the sample template:',
@@ -422,9 +422,9 @@ class StudyDescriptionHandler(BaseHandler):
                 if warns:
                     msg = '; '.join([str(w.message) for w in warns])
                     msg_level = 'warning'
-        except (TypeError, QiitaDBColumnError, QiitaDBExecutionError,
-                QiitaDBDuplicateError, IOError, ValueError,
-                CParserError) as e:
+        except (TypeError, QiitaDBError, QiitaDBColumnError,
+                QiitaDBExecutionError, QiitaDBDuplicateError, IOError,
+                ValueError, CParserError) as e:
             pt_id = None
             # Some error occurred while processing the prep template
             # Show the error to the user so he can fix the template
