@@ -14,6 +14,8 @@ from os import close, remove
 from os.path import join, basename, exists
 from tempfile import mkstemp
 
+import pandas as pd
+
 from qiita_core.util import qiita_test_checker
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_db.exceptions import (QiitaDBError, QiitaDBUnknownIDError,
@@ -55,27 +57,18 @@ class RawDataTests(TestCase):
         self._clean_up_files = []
 
         # Create some new PrepTemplates
-
-
-
-        # Create a new study
-        info = {
-            "timeseries_type_id": 1,
-            "metadata_complete": True,
-            "mixs_compliant": True,
-            "number_samples_collected": 25,
-            "number_samples_promised": 28,
-            "portal_type_id": 3,
-            "study_alias": "FCM",
-            "study_description": "Microbiome of people who eat nothing but "
-                                 "fried chicken",
-            "study_abstract": "Exploring how a high fat diet changes the "
-                              "gut microbiome",
-            "emp_person_id": StudyPerson(2),
-            "principal_investigator_id": StudyPerson(3),
-            "lab_person_id": StudyPerson(1)
-        }
-        Study.create(User("test@foo.bar"), "Test study 2", [1], info)
+        metadata_dict = {
+            'SKB8.640193': {'center_name': 'ANL',
+                            'primer': 'GTGCCAGCMGCCGCGGTAA',
+                            'barcode': 'GTCCGCAAGTTA',
+                            'run_prefix': "s_G1_L001_sequences",
+                            'platform': 'ILLUMINA',
+                            'library_construction_protocol': 'AAAA',
+                            'experiment_design_description': 'BBBB'}}
+        metadata = pd.DataFrame.from_dict(metadata_dict, orient='index')
+        self.pt1 = PrepTemplate.create(metadata, Study(1), "16S")
+        self.pt2 = PrepTemplate.create(metadata, Study(1), "18S")
+        self.prep_templates = [self.pt1, self.pt2]
 
     def tearDown(self):
         for f in self._clean_up_files:
@@ -96,12 +89,13 @@ class RawDataTests(TestCase):
         self.assertEqual(obs, [[exp_id, 2, 'idle']])
 
         # Check that the raw data has been correctly linked with the prep
-        # template
-        sql = "SELECT raw_data_id FROM qiita.prep_template WHERE prep_template_id=%s"
+        # templates
+        sql = """SELECT prep_template_id
+                 FROM qiita.prep_template
+                 WHERE raw_data_id = %s
+                 ORDER BY prep_template_id"""
         obs = self.conn_handler.execute_fetchall(sql, (exp_id,))
-        # study_id , raw_data_id
-        self.assertEqual(obs, [[self.pt.id]])
-        self.assertEqual(obs, [[1, exp_id]])
+        self.assertEqual(obs, [[self.pt1.id], [self.pt2.id]])
 
         # Check that the files have been copied to right location
         exp_seqs_fp = join(self.db_test_raw_dir,
@@ -132,31 +126,6 @@ class RawDataTests(TestCase):
             "SELECT * FROM qiita.raw_filepath WHERE raw_data_id=%d" % exp_id)
         # raw_data_id, filepath_id
         self.assertEqual(obs, [[exp_id, top_id - 1], [exp_id, top_id]])
-
-    def test_create_no_filepaths(self):
-        """Correctly creates a raw data object with no filepaths attached"""
-        # Check that the returned object has the correct id
-        exp_id = 1 + self.conn_handler.execute_fetchone(
-            "SELECT count(1) from qiita.raw_data")[0]
-        obs = RawData.create(self.filetype, self.studies)
-        self.assertEqual(obs.id, exp_id)
-
-        # Check that the raw data have been correctly added to the DB
-        obs = self.conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.raw_data WHERE raw_data_id=%d" % exp_id)
-        # raw_data_id, filetype, link_filepaths_status
-        self.assertEqual(obs, [[exp_id, 2, 'idle']])
-
-        # Check that the raw data have been correctly linked with the study
-        obs = self.conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.study_raw_data WHERE raw_data_id=%d" % exp_id)
-        # study_id , raw_data_id
-        self.assertEqual(obs, [[1, exp_id]])
-
-        # Check that no files have been linked with the filepaths
-        obs = self.conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.raw_filepath WHERE raw_data_id=%d" % exp_id)
-        self.assertEqual(obs, [])
 
     def test_get_filepaths(self):
         """Correctly returns the filepaths to the raw files"""
