@@ -40,3 +40,8 @@ class StudyDoesNotExistsError(QiitaWareError):
 class ComputeError(QiitaWareError):
     """A compute error happened"""
     pass
+
+
+class EBISumbissionError(QiitaWareError):
+    """Error used when EBI cannot be submitted"""
+    pass

@@ -13,7 +13,8 @@ import numpy.testing as npt
 import pandas as pd
 from pandas.util.testing import assert_frame_equal
 
-from qiita_db.exceptions import QiitaDBColumnError, QiitaDBWarning
+from qiita_db.exceptions import (QiitaDBColumnError, QiitaDBWarning,
+                                 QiitaDBError)
 from qiita_db.metadata_template.util import (
     get_datatypes, as_python_types, prefix_sample_names_with_id,
     load_template_to_dataframe, get_invalid_sample_names)
@@ -152,6 +153,11 @@ class TestUtil(TestCase):
         exp.index.name = 'sample_name'
         exp.rename(columns={"str_column": "str_CoLumn"}, inplace=True)
         assert_frame_equal(obs, exp)
+
+    def test_load_template_to_dataframe_non_utf8(self):
+        bad = EXP_SAMPLE_TEMPLATE.replace('Test Sample 2', 'Test Sample\x962')
+        with self.assertRaises(QiitaDBError):
+            load_template_to_dataframe(StringIO(bad))
 
     def test_load_template_to_dataframe_typechecking(self):
         obs = load_template_to_dataframe(

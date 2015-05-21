@@ -7,7 +7,7 @@
 # -----------------------------------------------------------------------------
 
 from os.path import join, isdir
-from os import makedirs
+from os import makedirs, remove
 from functools import partial
 from tempfile import mkdtemp
 from gzip import open as gzopen
@@ -43,6 +43,11 @@ def submit_EBI(preprocessed_data_id, action, send, fastq_dir_fp=None):
         True to actually send the files
     fastq_dir_fp : str, optional
         The fastq filepath
+
+    Notes
+    -----
+    If fastq_dir_fp is passed, it must not contain any empty files, or
+    gzipped empty files
     """
     preprocessed_data = PreprocessedData(preprocessed_data_id)
     preprocessed_data_id_str = str(preprocessed_data_id)
@@ -99,9 +104,14 @@ def submit_EBI(preprocessed_data_id, action, send, fastq_dir_fp=None):
                                                       list(sample_template)):
                 demux_samples.add(samp)
                 sample_fp = join(fastq_dir_fp, "%s.fastq.gz" % samp)
+                wrote_sequences = False
                 with gzopen(sample_fp, 'w') as fh:
                     for record in iterator:
                         fh.write(record)
+                        wrote_sequences = True
+
+                if not wrote_sequences:
+                    remove(sample_fp)
 
     output_dir = fastq_dir_fp + '_submission'
 

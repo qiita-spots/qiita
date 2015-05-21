@@ -31,6 +31,7 @@ from qiita_db.util import (get_db_files_base_dir,
                            filepath_ids_to_rel_paths)
 from qiita_db.exceptions import QiitaDBUnknownIDError
 from qiita_db.study import Study
+from qiita_db.logger import LogEntry
 
 SELECT_SAMPLES = 2
 SELECT_COMMANDS = 3
@@ -153,21 +154,54 @@ class AnalysisResultsHandler(BaseHandler):
             dropped[data_type].append((Study(study).title, len(samples),
                                        ', '.join(samples)))
 
-        self.render("analysis_results.html",
+        self.render("analysis_results.html", analysis_id=analysis_id,
                     jobres=jobres, aname=analysis.name, dropped=dropped,
                     basefolder=get_db_files_base_dir())
+
+    @authenticated
+    def post(self, analysis_id):
+        analysis_id = int(analysis_id.split("/")[0])
+        analysis_id_sent = int(self.get_argument('analysis_id'))
+        action = self.get_argument('action')
+
+        if analysis_id != analysis_id_sent or action != 'delete_analysis':
+            raise QiitaPetAuthorizationError(
+                self.current_user.id,
+                'analysis/results/%d-delete' % analysis_id)
+
+        analysis = Analysis(analysis_id)
+        analysis_name = analysis.name
+        check_analysis_access(self.current_user, analysis)
+
+        try:
+            Analysis.delete(analysis_id)
+            msg = ("Analysis <b><i>%s</i></b> has been deleted." % (
+                analysis_name))
+            level = "success"
+        except Exception as e:
+            e = str(e)
+            msg = ("Couldn't remove <b><i>%s</i></b> analysis: %s" % (
+                analysis_name, e))
+            level = "danger"
+            LogEntry.create('Runtime', "Couldn't remove analysis ID %d: %s" %
+                            (analysis_id, e))
+
+        self.redirect(u"/analysis/show/?level=%s&message=%s" % (level, msg))
 
 
 class ShowAnalysesHandler(BaseHandler):
     """Shows the user's analyses"""
     @authenticated
     def get(self):
+        message = self.get_argument('message', '')
+        level = self.get_argument('level', '')
         user = self.current_user
 
         analyses = [Analysis(a) for a in
                     user.shared_analyses | user.private_analyses]
 
-        self.render("show_analyses.html", analyses=analyses)
+        self.render("show_analyses.html", analyses=analyses, message=message,
+                    level=level)
 
 
 class ResultsHandler(StaticFileHandler, BaseHandler):

@@ -93,6 +93,25 @@ class TestConnHandler(TestCase):
                 None, None, None]]
         self.assertEqual(obs, exp)
 
+    def test_run_queue_placeholders_regex(self):
+        self.conn_handler.create_queue("toy_queue")
+        self.conn_handler.add_to_queue(
+            "toy_queue", "INSERT INTO qiita.qiita_user (email, name, password,"
+            "phone) VALUES (%s, %s, %s, %s) RETURNING email",
+            ['insert@foo.bar', '', 'pass', '111-111-11112'])
+        self.conn_handler.add_to_queue(
+            "toy_queue", "UPDATE qiita.qiita_user SET user_level_id = 1, "
+            "phone = '222-222-2221' WHERE email = %s AND name = %s",
+            ['{0}', ''])
+        obs = self.conn_handler.execute_queue("toy_queue")
+        self.assertEqual(obs, [])
+        obs = self.conn_handler.execute_fetchall(
+            "SELECT * from qiita.qiita_user WHERE email = %s",
+            ['insert@foo.bar'])
+        exp = [['insert@foo.bar', 1, 'pass', '', None, None, '222-222-2221',
+                None, None, None]]
+        self.assertEqual(obs, exp)
+
     def test_queue_fail(self):
         """Fail if no results data exists for substitution"""
         self.conn_handler = SQLConnectionHandler()
