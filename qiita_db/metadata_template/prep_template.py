@@ -279,9 +279,30 @@ class PrepTemplate(MetadataTemplate):
     @property
     def raw_data(self):
         conn_handler = SQLConnectionHandler()
-        return conn_handler.execute_fetchone(
+        result = conn_handler.execute_fetchone(
             "SELECT raw_data_id FROM qiita.prep_template "
-            "WHERE prep_template_id=%s", (self.id,))[0]
+            "WHERE prep_template_id=%s", (self.id,))
+        if result:
+            return result[0]
+        return None
+
+    @raw_data.setter
+    def raw_data(self, raw_data):
+        conn_handler = SQLConnectionHandler()
+        sql = """SELECT (
+                    SELECT raw_data_id
+                    FROM qiita.prep_template
+                    WHERE prep_template_id=%s)
+                IS NOT NULL"""
+        exists = conn_handler.execute_fetchone(sql, (self.id,))[0]
+        if exists:
+            raise QiitaDBError(
+                "Prep template %d already has a raw data associated"
+                % self.id)
+        sql = """UPDATE qiita.prep_template
+                 SET raw_data_id = %s
+                 WHERE prep_template_id = %s"""
+        conn_handler.execute(sql, (raw_data.id, self.id))
 
     @property
     def preprocessed_data(self):

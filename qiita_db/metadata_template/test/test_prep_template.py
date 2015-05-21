@@ -24,7 +24,8 @@ from qiita_db.exceptions import (QiitaDBUnknownIDError,
                                  QiitaDBDuplicateHeaderError,
                                  QiitaDBExecutionError,
                                  QiitaDBColumnError,
-                                 QiitaDBWarning)
+                                 QiitaDBWarning,
+                                 QiitaDBError)
 from qiita_db.sql_connection import SQLConnectionHandler
 from qiita_db.study import Study
 from qiita_db.data import RawData, ProcessedData
@@ -534,10 +535,6 @@ class TestPrepTemplateReadOnly(BaseTestPrepTemplate):
     def test_data_type_id(self):
         """data_type returns the int with the data_type_id"""
         self.assertTrue(self.tester.data_type(ret_id=True), 2)
-
-    def test_raw_data(self):
-        """Returns the raw_data associated with the prep template"""
-        self.assertEqual(self.tester.raw_data, 1)
 
     def test_preprocessed_data(self):
         """Returns the preprocessed data list generated from this template"""
@@ -1317,6 +1314,27 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
             [PREP_TEMPLATE_COLUMNS['EBI'],
              PREP_TEMPLATE_COLUMNS_TARGET_GENE['demultiplex']])
         self.assertEqual(obs, {'primer'})
+
+    def test_raw_data(self):
+        """Returns the raw_data associated with the prep template"""
+        self.assertEqual(self.tester.raw_data, 1)
+
+        pt = PrepTemplate.create(self.metadata, self.test_study,
+                                 self.data_type_id)
+        self.assertEqual(pt.raw_data, None)
+
+    def test_raw_data_setter_error(self):
+        rd = RawData(1)
+        with self.assertRaises(QiitaDBError):
+            self.tester.raw_data = rd
+
+    def test_raw_data_setter(self):
+        rd = RawData(1)
+        pt = PrepTemplate.create(self.metadata, self.test_study,
+                                 self.data_type_id)
+        self.assertEqual(pt.raw_data, None)
+        pt.raw_data = rd
+        self.assertEqual(pt.raw_data, 1)
 
 
 EXP_PREP_TEMPLATE = (
