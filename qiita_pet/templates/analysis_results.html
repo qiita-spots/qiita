@@ -11,7 +11,16 @@
 
 
 <div class="row">
-  <h1>&nbsp;Analysis: <u>{{aname}}</u></h1>
+  <table border="0">
+    <tr>
+      <td><h1>&nbsp;Analysis: <u>{{aname}}</u></h1></td>
+      <td width="20px"></td>
+      <td>
+        <h1><a class="btn btn-danger glyphicon glyphicon-trash" onclick="delete_analysis();"></a></h1>
+      </td>
+    </tr>
+  </table>
+
   {% if status == "altered_data" %}
     <h2 style="color:red">UNDERLYING DATA FOR THIS ANALYSIS HAS CHANGED. CONSIDER RE-RUNNING THIS ANALYSIS.</h2>
     {% for study, change in changes %}
@@ -87,4 +96,27 @@
       <iframe id="resframe" name="resframe" width="100%" height="900" frameBorder=0></iframe>
   </div>
 </div>
+
+
+<script>
+
+function delete_analysis() {
+  if (confirm('Are you sure you want to delete analysis: {{aname}}?')) {
+    var form = $("<form>")
+    .attr("action", window.location.href)
+    .attr("method", "post")
+    .append($("<input>")
+    .attr("type", "hidden")
+    .attr("name", "analysis_id")
+    .attr("value", {{analysis_id}}))
+    .append($("<input>")
+    .attr("type", "hidden")
+    .attr("name", "action")
+    .attr("value", "delete_analysis"));
+    $("body").append(form);
+    form.submit();
+  }
+}
+
+</script>
 {%end%}
