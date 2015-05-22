@@ -327,7 +327,7 @@ class RawData(BaseData):
                 "Cannot create raw data because the passed prep templates "
                 "already have a raw data associated with it. "
                 "Prep templates: %s"
-                % ', '.join([pt.id for pt in prep_templates]))
+                % ', '.join([str(pt.id) for pt in prep_templates]))
 
         # Add the raw data to the database, and get the raw data id back
         rd_id = conn_handler.execute_fetchone(
