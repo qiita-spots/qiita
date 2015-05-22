@@ -379,10 +379,9 @@ class StudyDescriptionHandler(BaseHandler):
         msg = "Your prep template was added"
         msg_level = "success"
 
-        # If we are on this function, the arguments "raw_data_id",
-        # "prep_template" and "data_type_id" must be defined. If not,
+        # If we are on this function, the arguments "prep_template" and
+        # "data_type_id" must be defined. If not,
         # let tornado raise its error
-        raw_data_id = self.get_argument('raw_data_id')
         prep_template = self.get_argument('prep_template')
         data_type_id = self.get_argument('data_type_id')
 
@@ -397,8 +396,6 @@ class StudyDescriptionHandler(BaseHandler):
             investigation_type, user_defined_investigation_type,
             new_investigation_type)
 
-        # Make sure that the id is an integer
-        raw_data_id = _to_int(raw_data_id)
         # Get the upload base directory
         _, base_path = get_mountpoint("uploads")[0]
         # Get the path to the prep template
@@ -413,8 +410,8 @@ class StudyDescriptionHandler(BaseHandler):
                 warnings.simplefilter("always")
 
                 # deleting previous uploads and inserting new one
-                pt_id = self.remove_add_prep_template(fp_rpt, raw_data_id,
-                                                      study, data_type_id,
+                pt_id = self.remove_add_prep_template(fp_rpt, study,
+                                                      data_type_id,
                                                       investigation_type)
 
                 # join all the warning messages into one. Note that this info
@@ -432,7 +429,7 @@ class StudyDescriptionHandler(BaseHandler):
                                         basename(fp_rpt), str(e))
             msg_level = "danger"
 
-        callback((msg, msg_level, 'raw_data_tab', raw_data_id, pt_id))
+        callback((msg, msg_level, 'prep_template_tab', pt_id, None))
 
     def make_public(self, study, user, callback):
         """Makes the current study public
@@ -603,12 +600,11 @@ class StudyDescriptionHandler(BaseHandler):
                               Study(study_id))
         remove(fp_rsp)
 
-    def remove_add_prep_template(self, fp_rpt, raw_data_id, study,
-                                 data_type_id, investigation_type):
+    def remove_add_prep_template(self, fp_rpt, study, data_type_id,
+                                 investigation_type):
         """add prep templates"""
         pt_id = PrepTemplate.create(load_template_to_dataframe(fp_rpt),
-                                    RawData(raw_data_id), study,
-                                    _to_int(data_type_id),
+                                    study, _to_int(data_type_id),
                                     investigation_type=investigation_type).id
         remove(fp_rpt)
         return pt_id

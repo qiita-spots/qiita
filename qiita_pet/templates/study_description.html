@@ -148,34 +148,30 @@ function create_raw_data() {
   }
 }
 
-function add_prep_template(raw_data_id) {
+function add_prep_template() {
   var form = $("<form>")
     .attr("action", window.location.href)
     .attr("method", "post")
     .append($("<input>")
       .attr("type", "hidden")
-      .attr("name", "raw_data_id")
-      .attr("value", raw_data_id))
-    .append($("<input>")
-      .attr("type", "hidden")
       .attr("name", "prep_template")
-      .attr("value", $("#add_prep_template_" + raw_data_id).val()))
+      .attr("value", $("#add_prep_template").val()))
     .append($("<input>")
       .attr("type", "hidden")
       .attr("name", "investigation-type")
-      .attr("value", $("#investigation-type-" + raw_data_id).val()))
+      .attr("value", $("#investigation-type-new").val()))
     .append($("<input>")
       .attr("type", "hidden")
       .attr("name", "user-defined-investigation-type")
-      .attr("value", $("#user-defined-investigation-type-" + raw_data_id).val()))
+      .attr("value", $("#user-defined-investigation-type-new").val()))
     .append($("<input>")
       .attr("type", "hidden")
       .attr("name", "new-investigation-type")
-      .attr("value", $("#new-investigation-type-" + raw_data_id).val()))
+      .attr("value", $("#new-investigation-type-new").val()))
     .append($("<input>")
       .attr("type", "hidden")
       .attr("name", "data_type_id")
-      .attr("value", $("#data_type_" + raw_data_id).val()))
+      .attr("value", $("#data_type").val()))
     .append($("<input>")
           .attr("type", "hidden")
           .attr("name", "action")
@@ -529,9 +525,9 @@ function submit_preprocess(id) {
 
 function display_tab(top_tab, sub_tab, prep_tab){
   $('#myTab a[href="#'+top_tab+'"]').tab('show');
-  if (top_tab == "raw_data_tab"){
+  if (top_tab == "prep_template_tab"){
     if (sub_tab !== undefined){
-      $('#raw_data_nav_tabs a[href="#raw_data_info_'+sub_tab+'"]').tab('show')
+      $('#prep_template_nav_tabs a[href="#prep_template_info_'+sub_tab+'"]').tab('show')
     }
   }
   else if (top_tab == "preprocessed_data_tab"){
@@ -591,7 +587,7 @@ $(document).ready(function() {
       <a href="#study_information_tab" role="tab" data-toggle="tab">Study information</a>
     </li>
   {% if show_data_tabs %}
-    <li><a href="#raw_data_tab" role="tab" data-toggle="tab">Raw data</a></li>
+    <li><a href="#prep_template_tab" role="tab" data-toggle="tab">Prep templates</a></li>
     <li><a href="#preprocessed_data_tab" role="tab" data-toggle="tab">Preprocessed data</a></li>
     <li><a href="#processed_data_tab" role="tab" data-toggle="tab">Processed data</a></li>
   {% end %}
@@ -603,7 +599,7 @@ $(document).ready(function() {
   {% module StudyInformationTab(study) %}
   {% if show_data_tabs %}
     <!-- Show the raw data tab -->
-    {% module RawDataTab(study, full_access) %}
+    {% module PrepTemplateTab(study, full_access) %}
     <!-- Show the preprocessed data tab -->
     {% module PreprocessedDataTab(study, full_access) %}
     <!-- Show the processed data tab -->

@@ -41,24 +41,49 @@ def get_raw_data(rdis):
     return [RawData(rdi) for rdi in rdis]
 
 
-class RawDataTab(BaseUIModule):
+def get_prep_templates(pt_ids):
+    """Get all the prep template objects from a list of ids
+
+    Parameters
+    ----------
+    pt_ids : list of int
+        The prep template ids
+
+    Returns
+    -------
+    list of PrepTemplate
+    """
+    return [PrepTemplate(pt_id) for pt_id in pt_ids]
+
+
+class PrepTemplateTab(BaseUIModule):
     def render(self, study, full_access):
         user = self.current_user
+        files = [f for _, f in get_files_from_uploads_folders(str(study.id))]
+        data_types = sorted(viewitems(get_data_types()), key=itemgetter(1))
+        prep_templates_info = [
+            (pt.id, pt.data_type(), pt, STATUS_STYLER[pt.status])
+            for pt in get_prep_templates(study.prep_templates())
+            if full_access or pt.status() == 'public']
+        # Get all the ENA terms for the investigation type
+        ontology = Ontology(convert_to_id('ENA', 'ontology'))
+        # make "Other" show at the bottom of the drop down menu
+        ena_terms = []
+        for v in sorted(ontology.terms):
+            if v != 'Other':
+                ena_terms.append('<option value="%s">%s</option>' % (v, v))
+        ena_terms.append('<option value="Other">Other</option>')
 
-        filetypes = sorted(viewitems(get_filetypes()), key=itemgetter(1))
-        other_studies_rd = sorted(viewitems(
-            get_raw_data_from_other_studies(user, study)))
-
-        raw_data_info = [
-            (rd.id, rd.filetype, rd, STATUS_STYLER[rd.status(study)])
-            for rd in get_raw_data(study.raw_data())
-            if full_access or rd.status(study) == 'public']
+        # New Type is for users to add a new user-defined investigation type
+        user_defined_terms = ontology.user_defined_terms + ['New Type']
 
         return self.render_string(
-            "study_description_templates/raw_data_tab.html",
-            filetypes=filetypes,
-            other_studies_rd=other_studies_rd,
-            available_raw_data=raw_data_info,
+            "study_description_templates/prep_template_tab.html",
+            files=files,
+            data_types=data_types,
+            available_prep_templates=prep_templates_info,
+            ena_terms=ena_terms,
+            user_defined_terms=user_defined_terms,
             study=study,
             full_access=full_access)
 
