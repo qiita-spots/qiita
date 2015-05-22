@@ -583,40 +583,6 @@ class RawData(BaseData):
         # self.studies should only have one element, thus self.studies[0]
         move_filepaths_to_upload_folder(self.studies[0], filepaths)
 
-    def remove_filepath(self, fp):
-        """Removes the filepath from the RawData
-
-        Parameters
-        ----------
-        fp : str
-            The filepath to remove
-        """
-        conn_handler = SQLConnectionHandler()
-        queue = "remove_fp_%s" % self.id
-        conn_handler.create_queue(queue)
-
-        # Set the current status to unlinking
-        self._set_link_filepaths_status("unlinking")
-
-        self._remove_filepath(fp, conn_handler, queue)
-
-        try:
-            # Execute the queue
-            conn_handler.execute_queue(queue)
-        except Exception as e:
-            self._set_link_filepaths_status("failed: %s" % e)
-            LogEntry.create('Runtime', str(e),
-                            info={self.__class__.__name__: self.id})
-            raise e
-
-        # We can already update the status to done, as the files have been
-        # unlinked, the move_filepaths_to_upload_folder call will not change
-        # the status of the raw data object
-        self._set_link_filepaths_status("idle")
-
-        # Delete the files, if they are not used anywhere
-        purge_filepaths()
-
     def status(self, study):
         """The status of the raw data within the given study
 

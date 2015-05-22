@@ -208,37 +208,6 @@ class RawDataTests(TestCase):
         with self.assertRaises(QiitaDBError):
             RawData(1).clear_filepaths()
 
-    def test_remove_filepath(self):
-        top_id = self.conn_handler.execute_fetchone(
-            "SELECT count(1) FROM qiita.raw_filepath")[0]
-        raw_id = self.conn_handler.execute_fetchone(
-            "SELECT count(1) FROM qiita.raw_data")[0]
-        rd = RawData.create(self.filetype, self.studies, self.filepaths)
-        fp = join(self.db_test_raw_dir, "%d_%s" % (raw_id + 1,
-                                                   basename(self.seqs_fp)))
-        rd.remove_filepath(fp)
-        self.assertFalse(self.conn_handler.execute_fetchone(
-            "SELECT EXISTS(SELECT * FROM qiita.raw_filepath "
-            "WHERE filepath_id=%d)" % (top_id - 1))[0])
-        self.assertTrue(self.conn_handler.execute_fetchone(
-            "SELECT EXISTS(SELECT * FROM qiita.raw_filepath "
-            "WHERE filepath_id=%d)" % (top_id - 2))[0])
-
-    def test_remove_filepath_errors(self):
-        fp = join(self.db_test_raw_dir, '1_s_G1_L001_sequences.fastq.gz')
-        with self.assertRaises(QiitaDBError):
-            RawData(1).remove_filepath(fp)
-
-        # filepath doesn't belong to that raw data
-        with self.assertRaises(ValueError):
-            RawData(2).remove_filepath(fp)
-
-        # the raw data has been linked to more than 1 study so it can't be
-        # unliked
-        Study(2).add_raw_data([RawData(2)])
-        with self.assertRaises(QiitaDBError):
-            RawData(2).remove_filepath(fp)
-
     def test_exists(self):
         self.assertTrue(RawData.exists(1))
         self.assertFalse(RawData.exists(1000))
