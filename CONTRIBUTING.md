@@ -63,6 +63,11 @@ During test creation make sure the test class is decorated with `@qiita_test_che
 
 Coverage testing is in effect, so run tests using `nosetests --with-coverage [test_file.py]` to check what lines of new code in your pull request are not tested.
 
+###Documentation
+
+The documentation for Qiita is maintained as part of this repository, under the
+`doc` folder, for more information, see the README.md file in `doc/README.md`.
+
 ###Scripts
 
 Scripts in Qiita are located inside the scripts directory, their actions will rely on the settings described in the Qiita config file, for example if you are dropping a database, the database that will be dropped is the one described by the `DATABASE` setting. The following is a list of the most commonly used commands during development:
