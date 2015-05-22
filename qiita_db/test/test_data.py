@@ -242,31 +242,67 @@ class RawDataTests(TestCase):
         self.assertTrue(RawData.exists(1))
         self.assertFalse(RawData.exists(1000))
 
-    def test_delete(self):
+    def test_delete_error_no_exists(self):
         # the raw data doesn't exist
         with self.assertRaises(QiitaDBUnknownIDError):
-            RawData.delete(1000, 1)
+            RawData.delete(1000, 0)
 
+    def test_delete_error_raw_data_not_linked(self):
         # the raw data and the prep template id are not linked
         with self.assertRaises(QiitaDBError):
             RawData.delete(1, self.pt2)
 
+    def test_delete_error_prep_template_no_exists(self):
         # the prep template does not exist
         with self.assertRaises(QiitaDBError):
             RawData.delete(1, 1000)
 
+    def test_delete_error_linked_files(self):
         # the raw data has linked files
         with self.assertRaises(QiitaDBError):
-            RawData.delete(3, 1)
+            RawData.delete(1, 1)
 
-        # # the raw data is linked to a study that has not prep templates
-        # Study(2).add_raw_data([RawData(1)])
-        # RawData.delete(1, 2)
+    def test_delete(self):
+        rd = RawData.create(self.filetype, self.prep_templates,
+                            self.filepaths)
 
-        # # delete raw data
-        # self.assertTrue(RawData.exists(2))
-        # RawData.delete(2, 1)
-        # self.assertFalse(RawData.exists(2))
+        sql_pt = """SELECT prep_template_id
+                    FROM qiita.prep_template
+                    WHERE raw_data_id = %s
+                    ORDER BY prep_template_id"""
+        obs = self.conn_handler.execute_fetchall(sql_pt, (rd.id,))
+        self.assertEqual(obs, [[self.pt1.id], [self.pt2.id]])
+
+        # This delete call will only unlink the raw data from the prep template
+        RawData.delete(rd.id, self.pt2.id)
+
+        # Check that it successfully unlink the raw data from pt2
+        obs = self.conn_handler.execute_fetchall(sql_pt, (rd.id,))
+        self.assertEqual(obs, [[self.pt1.id]])
+        self.assertEqual(self.pt2.raw_data, None)
+
+        # If we try to remove the RawData now, it should raise an error
+        # because it still has files attached to it
+        with self.assertRaises(QiitaDBError):
+            RawData.delete(rd.id, self.pt1.id)
+
+        # Clear the files so we can actually remove the RawData
+        rd.clear_filepaths()
+
+        RawData.delete(rd.id, self.pt1.id)
+        obs = self.conn_handler.execute_fetchall(sql_pt, (rd.id,))
+        self.assertEqual(obs, [])
+
+        # Check that all expected rows have been deleted
+        sql = """SELECT EXISTS(
+                    SELECT * FROM qiita.raw_filepath
+                    WHERE raw_data_id = %s"""
+        self.assertFalse(conn_handler.execute_fetchone(sql, (rd.id,))[0])
+
+        sql = """SELECT EXISTS(
+                    SELECT * FROM qiita.raw_data
+                    WHERE raw_data_id=%s)"""
+        self.assertFalse(conn_handler.execute_fetchone(sql, (rd.id,))[0])
 
     def test_status(self):
         rd = RawData(1)
