@@ -27,7 +27,7 @@ from qiita_db.commands import (load_study_from_cmd, load_raw_data_cmd,
 from qiita_db.environment_manager import patch
 from qiita_db.study import Study, StudyPerson
 from qiita_db.user import User
-from qiita_db.data import RawData, PreprocessedData
+from qiita_db.data import PreprocessedData
 from qiita_db.util import (get_count, check_count, get_db_files_base_dir,
                            get_mountpoint)
 from qiita_db.metadata_template import PrepTemplate

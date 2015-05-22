@@ -2,7 +2,6 @@ from unittest import TestCase, main
 from datetime import datetime
 
 from future.utils import viewitems
-import pandas as pd
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_core.util import qiita_test_checker
@@ -10,9 +9,7 @@ from qiita_db.base import QiitaObject
 from qiita_db.study import Study, StudyPerson
 from qiita_db.investigation import Investigation
 from qiita_db.user import User
-from qiita_db.data import RawData
 from qiita_db.util import convert_to_id
-from qiita_db.metadata_template import PrepTemplate
 from qiita_db.exceptions import (
     QiitaDBColumnError, QiitaDBStatusError, QiitaDBError,
     QiitaDBUnknownIDError)

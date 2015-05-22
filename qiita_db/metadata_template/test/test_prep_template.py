@@ -10,7 +10,7 @@ from future.builtins import zip
 from unittest import TestCase, main
 from tempfile import mkstemp
 from os import close, remove
-from os.path import join, basename
+from os.path import join
 from collections import Iterable
 
 import numpy.testing as npt
@@ -29,8 +29,7 @@ from qiita_db.exceptions import (QiitaDBUnknownIDError,
 from qiita_db.sql_connection import SQLConnectionHandler
 from qiita_db.study import Study
 from qiita_db.data import RawData, ProcessedData
-from qiita_db.util import (exists_table, get_db_files_base_dir, get_mountpoint,
-                           get_count)
+from qiita_db.util import exists_table, get_mountpoint, get_count
 from qiita_db.metadata_template.prep_template import PrepTemplate, PrepSample
 from qiita_db.metadata_template.sample_template import SampleTemplate, Sample
 from qiita_db.metadata_template.constants import (
