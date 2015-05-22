@@ -751,8 +751,12 @@ class Study(QiitaObject):
             spec_data = " AND data_type_id = %d" % convert_to_id(data_type,
                                                                  "data_type")
         conn_handler = SQLConnectionHandler()
-        sql = ("SELECT raw_data_id FROM qiita.study_raw_data WHERE "
-               "study_id = %s{0}".format(spec_data))
+        sql = """SELECT raw_data_id
+                 FROM qiita.study_prep_template
+                    JOIN qiita.prep_template USING (prep_template_id)
+                    JOIN qiita.raw_data USING (raw_data_id)
+                 WHERE study_id = %s{0}""".format(spec_data)
+
         return [x[0] for x in conn_handler.execute_fetchall(sql, (self._id,))]
 
     def add_raw_data(self, raw_data):

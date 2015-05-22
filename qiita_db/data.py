@@ -626,8 +626,6 @@ class RawData(BaseData):
                     USING (preprocessed_data_id)
                   JOIN qiita.prep_template pt
                     USING (prep_template_id)
-                  JOIN qiita.raw_data rd
-                    USING (raw_data_id)
                   JOIN qiita.study_processed_data spd
                     USING (processed_data_id)
                 WHERE pt.raw_data_id=%s AND spd.study_id=%s"""

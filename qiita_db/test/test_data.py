@@ -288,7 +288,7 @@ class RawDataTests(TestCase):
 
         # Check that new raw data has sandbox as status since no
         # processed data exists for them
-        rd = RawData.create(self.filetype, self.studies, self.filepaths)
+        rd = RawData.create(self.filetype, self.prep_templates, self.filepaths)
         self.assertEqual(rd.status(s), 'sandbox')
 
     def test_status_error(self):
