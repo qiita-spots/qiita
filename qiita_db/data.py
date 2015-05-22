@@ -401,7 +401,7 @@ class RawData(BaseData):
         sql = """UPDATE qiita.prep_template
                  SET raw_data_id = %s
                  WHERE prep_template_id = %s"""
-        conn_handler.add_to_queue(sql, (None, prep_template_id))
+        conn_handler.add_to_queue(queue, sql, (None, prep_template_id))
 
         # If there is no other prep template pointing to the raw data, it can
         # be removed
