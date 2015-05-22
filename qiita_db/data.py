@@ -421,10 +421,11 @@ class RawData(BaseData):
             The list of study ids to which the raw data belongs to
         """
         conn_handler = SQLConnectionHandler()
-        ids = conn_handler.execute_fetchall(
-            "SELECT study_id FROM qiita.{0} WHERE "
-            "raw_data_id=%s".format(self._study_raw_table),
-            [self._id])
+        sql = """SELECT study_id
+                 FROM qiita.study_prep_template
+                    JOIN qiita.prep_template USING (prep_template_id)
+                 WHERE raw_data_id = %s"""
+        ids = conn_handler.execute_fetchall(sql, (self.id,))
         return [id[0] for id in ids]
 
     @property

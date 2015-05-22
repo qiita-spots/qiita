@@ -296,13 +296,13 @@ class RawDataTests(TestCase):
         # Check that all expected rows have been deleted
         sql = """SELECT EXISTS(
                     SELECT * FROM qiita.raw_filepath
-                    WHERE raw_data_id = %s"""
-        self.assertFalse(conn_handler.execute_fetchone(sql, (rd.id,))[0])
+                    WHERE raw_data_id = %s)"""
+        self.assertFalse(self.conn_handler.execute_fetchone(sql, (rd.id,))[0])
 
         sql = """SELECT EXISTS(
                     SELECT * FROM qiita.raw_data
                     WHERE raw_data_id=%s)"""
-        self.assertFalse(conn_handler.execute_fetchone(sql, (rd.id,))[0])
+        self.assertFalse(self.conn_handler.execute_fetchone(sql, (rd.id,))[0])
 
     def test_status(self):
         rd = RawData(1)
