@@ -185,7 +185,7 @@ class RawDataTests(TestCase):
         self.assertFalse(RawData(2)._is_preprocessed())
 
     def test_clear_filepaths(self):
-        rd = RawData.create(self.filetype, self.studies, self.filepaths)
+        rd = RawData.create(self.filetype, [self.pt1], self.filepaths)
         self.assertTrue(self.conn_handler.execute_fetchone(
             "SELECT EXISTS(SELECT * FROM qiita.raw_filepath "
             "WHERE raw_data_id=%s)", (rd.id,))[0])
