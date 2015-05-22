@@ -311,13 +311,12 @@ INSERT INTO qiita.raw_data (filetype_id) VALUES (3);
 -- Insert the raw data filepaths for study 1
 INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum, checksum_algorithm_id, data_directory_id) VALUES
 ('1_s_G1_L001_sequences.fastq.gz', 1, '852952723', 1, 5),
-('1_s_G1_L001_sequences_barcodes.fastq.gz', 3, '852952723', 1, 5),
-('2_sequences.fastq.gz', 1, '852952723', 1, 5),
-('2_sequences_barcodes.fastq.gz', 3, '852952723', 1, 5);
+('1_s_G1_L001_sequences_barcodes.fastq.gz', 3, '852952723', 1, 5);
+-- ('2_sequences.fastq.gz', 1, '852952723', 1, 5),
+-- ('2_sequences_barcodes.fastq.gz', 3, '852952723', 1, 5);
 
 -- Insert (link) the raw data with the raw filepaths
--- INSERT INTO qiita.raw_filepath (raw_data_id, filepath_id) VALUES (1, 1), (1, 2);
-INSERT INTO qiita.raw_filepath (raw_data_id, filepath_id) VALUES (1, 1);
+INSERT INTO qiita.raw_filepath (raw_data_id, filepath_id) VALUES (1, 1), (1, 2);
 
 -- Insert (link) the study with the raw data
 UPDATE qiita.prep_template SET raw_data_id = 1 WHERE prep_template_id = 1;
