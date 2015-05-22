@@ -535,11 +535,11 @@ class PreprocessedDataTests(TestCase):
         """Correctly returns the filepaths to the preprocessed files"""
         ppd = PreprocessedData(1)
         obs = ppd.get_filepaths()
-        exp = [(5, join(self.db_test_ppd_dir, '1_seqs.fna'),
+        exp = [(3, join(self.db_test_ppd_dir, '1_seqs.fna'),
                 "preprocessed_fasta"),
-               (6, join(self.db_test_ppd_dir, '1_seqs.qual'),
+               (4, join(self.db_test_ppd_dir, '1_seqs.qual'),
                 "preprocessed_fastq"),
-               (7, join(self.db_test_ppd_dir, '1_seqs.demux'),
+               (5, join(self.db_test_ppd_dir, '1_seqs.demux'),
                 "preprocessed_demux")]
         self.assertEqual(obs, exp)
 
