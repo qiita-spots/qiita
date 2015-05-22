@@ -41,8 +41,73 @@ from qiita_ware.processing_pipeline import (_get_preprocess_fastq_cmd,
 class ProcessingPipelineTests(TestCase):
     def setUp(self):
         self.db_dir = get_db_files_base_dir()
-        self.files_to_remove = []
-        self.dirs_to_remove = []
+
+        # Create a SFF dataset: add prep template and a RawData
+        study = Study(1)
+        md_dict = {
+            'SKB8.640193': {'center_name': 'ANL',
+                            'primer': 'GTGCCAGCMGCCGCGGTAA',
+                            'barcode': 'GTCCGCAAGTTA',
+                            'run_prefix': "preprocess_test",
+                            'platform': 'ILLUMINA',
+                            'library_construction_protocol': 'AAAA',
+                            'experiment_design_description': 'BBBB'},
+            'SKD8.640184': {'center_name': 'ANL',
+                            'primer': 'GTGCCAGCMGCCGCGGTAA',
+                            'barcode': 'CGTAGAGCTCTC',
+                            'run_prefix': "preprocess_test",
+                            'platform': 'ILLUMINA',
+                            'library_construction_protocol': 'AAAA',
+                            'experiment_design_description': 'BBBB'},
+            'SKB7.640196': {'center_name': 'ANL',
+                            'primer': 'GTGCCAGCMGCCGCGGTAA',
+                            'barcode': 'CCTCTGAGAGCT',
+                            'run_prefix': "preprocess_test",
+                            'platform': 'ILLUMINA',
+                            'library_construction_protocol': 'AAAA',
+                            'experiment_design_description': 'BBBB'}
+        }
+        md = pd.DataFrame.from_dict(md_dict, orient='index')
+        self.sff_prep_template = PrepTemplate.create(md, study, "16S")
+
+        tmp_dir = mkdtemp()
+        path_builder = partial(join, tmp_dir)
+        fp1 = path_builder('preprocess_test1.sff')
+        with open(fp1, 'w') as f:
+            f.write('\n')
+        fp2 = path_builder('preprocess_test2.sff')
+        with open(fp2, 'w') as f:
+            f.write('\n')
+        fps = [(fp1, 17), (fp2, 17)]
+
+        # Magic number 1: is the filetype id
+        self.raw_data = RawData.create(1, [self.sff_prep_template], fps)
+
+        # Create a SFF dataset with multiple run prefix:
+        # add prep template and a RawData
+        md_dict['SKD8.640184']['run_prefix'] = "new"
+        md_rp = pd.DataFrame.from_dict(md_dict, orient='index')
+        self.sff_prep_template_rp = PrepTemplate.create(md_rp, study, "16S")
+
+        path_builder = partial(join, tmp_dir)
+        rp_fp1 = path_builder('preprocess_test1.sff')
+        with open(rp_fp1, 'w') as f:
+            f.write('\n')
+        rp_fp2 = path_builder('preprocess_test2.sff')
+        with open(rp_fp2, 'w') as f:
+            f.write('\n')
+        fps = [(rp_fp1, 17), (rp_fp2, 17)]
+
+        # Magic number 1: is the filetype id
+        self.raw_data_rp = RawData.create(1, [self.sff_prep_template_rp], fps)
+
+        # Make sure that we clean up all created files
+        self.files_to_remove = [fp1, fp2, rp_fp1, rp_fp2]
+        self.dirs_to_remove = [tmp_dir]
+
+        for pt in [self.sff_prep_template, self.sff_prep_template_rp]:
+            for _, fp in pt.get_filepaths():
+                self.files_to_remove.append(fp)
 
     def tearDown(self):
         for fp in self.files_to_remove:
@@ -156,8 +221,9 @@ class ProcessingPipelineTests(TestCase):
                             'experiment_design_description': 'BBB'}
             }
         md_template = pd.DataFrame.from_dict(metadata_dict, orient='index')
-        prep_template = PrepTemplate.create(md_template, RawData(2), Study(1),
-                                            '16S')
+        prep_template = PrepTemplate.create(md_template, Study(1), '16S')
+        for _, fp in prep_template.get_filepaths():
+            self.files_to_remove.append(fp)
 
         out_dir = mkdtemp()
 
@@ -206,15 +272,13 @@ class ProcessingPipelineTests(TestCase):
         self.assertEqual(obs_cmd_2, exp_cmd_2)
 
     def test_get_preprocess_fasta_cmd_sff_no_run_prefix(self):
-        raw_data = RawData(3)
         params = Preprocessed454Params(1)
-        prep_template = PrepTemplate(1)
         obs_cmd, obs_output_dir = _get_preprocess_fasta_cmd(
-            raw_data, prep_template, params)
+            self.raw_data, self.sff_prep_template, params)
 
         get_raw_path = partial(join, self.db_dir, 'raw_data')
-        seqs_fp = [get_raw_path('1_preprocess_test1.sff'),
-                   get_raw_path('1_preprocess_test2.sff')]
+        seqs_fp = [get_raw_path('%d_preprocess_test1.sff' % self.raw_data.id),
+                   get_raw_path('%d_preprocess_test2.sff' % self.raw_data.id)]
 
         exp_cmd_1 = ' '.join(["process_sff.py",
                               "-i %s" % seqs_fp[0],
@@ -224,11 +288,14 @@ class ProcessingPipelineTests(TestCase):
                               "-o %s" % obs_output_dir])
 
         fasta_files = ','.join([
-            join(obs_output_dir, "1_preprocess_test1.fna"),
-            join(obs_output_dir, "1_preprocess_test2.fna")])
+            join(obs_output_dir, "%s_preprocess_test1.fna" % self.raw_data.id),
+            join(obs_output_dir, "%s_preprocess_test2.fna" % self.raw_data.id)]
+            )
         qual_files = ','.join([
-            join(obs_output_dir, "1_preprocess_test1.qual"),
-            join(obs_output_dir, "1_preprocess_test2.qual")])
+            join(obs_output_dir,
+                 "%s_preprocess_test1.qual" % self.raw_data.id),
+            join(obs_output_dir,
+                 "%s_preprocess_test2.qual" % self.raw_data.id)])
         exp_cmd_3a = ' '.join(["split_libraries.py",
                                "-f %s" % fasta_files])
 
@@ -257,20 +324,9 @@ class ProcessingPipelineTests(TestCase):
         self.assertEqual(obs_cmds[3], exp_cmd_4)
 
     def test_get_preprocess_fasta_cmd_sff_run_prefix(self):
-        # Need to alter the run_prefix of one sample so we can test the
-        # multiple values
-        conn_handler = SQLConnectionHandler()
-        sql = ("UPDATE qiita.prep_1 SET run_prefix='test1' WHERE "
-               "sample_id = '1.SKM9.640192'")
-        conn_handler.execute(sql)
-
-        raw_data = RawData(3)
         params = Preprocessed454Params(1)
-        prep_template = PrepTemplate(1)
-        prep_template.generate_files()
-
         obs_cmd, obs_output_dir = _get_preprocess_fasta_cmd(
-            raw_data, prep_template, params)
+            self.raw_data_rp, self.sff_prep_template_rp, params)
 
         obs_cmds = obs_cmd.split('; ')
         # assumming that test_get_preprocess_fasta_cmd_sff_no_run_prefix is
@@ -293,27 +349,17 @@ class ProcessingPipelineTests(TestCase):
     def test_get_preprocess_fasta_cmd_sff_run_prefix_match(self):
         # Test that the run prefixes in the prep_template and the file names
         # actually match and raise an error if not
-        new_fp_id = get_count('qiita.filepath') + 1
-        conn_handler = SQLConnectionHandler()
-        sql = ("""
-            INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum,
-                    checksum_algorithm_id, data_directory_id)
-                VALUES ('1_new.sff', 17, 852952723, 1, 5);
-            INSERT INTO qiita.raw_filepath (raw_data_id , filepath_id)
-                VALUES (3, %s);
-            UPDATE qiita.prep_1 SET run_prefix='preprocess_test';
-            UPDATE qiita.prep_1 SET run_prefix='new'
-                WHERE sample_id = '1.SKB8.640193';
-        """)
-        conn_handler.execute(sql, (new_fp_id,))
-
-        raw_data = RawData(3)
+        tmp_dir = mkdtemp()
+        fp = join(tmp_dir, 'new.sff')
+        with open(fp, 'w') as f:
+            f.write('\n')
+        self.files_to_remove.append(fp)
+        self.dirs_to_remove.append(tmp_dir)
+        self.raw_data_rp.add_filepaths([(fp, 17)])
         params = Preprocessed454Params(1)
-        prep_template = PrepTemplate(1)
-        prep_template.generate_files()
 
         obs_cmd, obs_output_dir = _get_preprocess_fasta_cmd(
-            raw_data, prep_template, params)
+            self.raw_data_rp, self.sff_prep_template_rp, params)
 
         obs_cmds = obs_cmd.split('; ')
         # assumming that test_get_preprocess_fasta_cmd_sff_no_run_prefix is
@@ -339,53 +385,35 @@ class ProcessingPipelineTests(TestCase):
     def test_get_preprocess_fasta_cmd_sff_run_prefix_match_error_1(self):
         # Test that the run prefixes in the prep_template and the file names
         # actually match and raise an error if not
-        fp_count = get_count('qiita.filepath')
-        conn_handler = SQLConnectionHandler()
-        sql = ("""
-            INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum,
-                    checksum_algorithm_id, data_directory_id)
-                VALUES ('1_new.sff', 17, 852952723, 1, 5);
-            INSERT INTO qiita.raw_filepath (raw_data_id , filepath_id)
-                VALUES (3, %s);
-            INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum,
-                    checksum_algorithm_id, data_directory_id)
-                VALUES ('1_error.sff', 17, 852952723, 1, 5);
-            INSERT INTO qiita.raw_filepath (raw_data_id , filepath_id)
-                VALUES (3, %s);
-            UPDATE qiita.prep_1 SET run_prefix='preprocess_test';
-            UPDATE qiita.prep_1 SET run_prefix='new' WHERE
-                sample_id = '1.SKB8.640193';
-        """)
-        conn_handler.execute(
-            sql, (fp_count + 1, fp_count + 2))
-
-        raw_data = RawData(3)
+        tmp_dir = mkdtemp()
+        fp = join(tmp_dir, 'new.sff')
+        with open(fp, 'w') as f:
+            f.write('\n')
+        self.files_to_remove.append(fp)
+        fp_error = join(tmp_dir, 'error.sff')
+        with open(fp_error, 'w') as f:
+            f.write('\n')
+        self.files_to_remove.append(fp_error)
+        self.dirs_to_remove.append(tmp_dir)
+        self.raw_data_rp.add_filepaths([(fp, 17), (fp_error, 17)])
         params = Preprocessed454Params(1)
-        prep_template = PrepTemplate(1)
-        prep_template.generate_files()
-
         with self.assertRaises(ValueError):
-            _get_preprocess_fasta_cmd(raw_data, prep_template, params)
+            _get_preprocess_fasta_cmd(
+                self.raw_data_rp, self.sff_prep_template_rp, params)
 
     def test_get_preprocess_fasta_cmd_sff_run_prefix_match_error_2(self):
         # Should raise error
-        conn_handler = SQLConnectionHandler()
-        sql = ("""
-            UPDATE qiita.prep_1 SET run_prefix='test1';
-            UPDATE qiita.prep_1 SET run_prefix='test2' WHERE
-                sample_id = '1.SKB2.640194';
-            UPDATE qiita.prep_1 SET run_prefix='error' WHERE
-                sample_id = '1.SKB8.640193';
-        """)
-        conn_handler.execute(sql)
+        self.sff_prep_template_rp['1.SKB8.640193']['run_prefix'] = 'test1'
+        self.sff_prep_template_rp['1.SKD8.640184']['run_prefix'] = 'test2'
+        self.sff_prep_template_rp['1.SKB7.640196']['run_prefix'] = 'error'
+        self.sff_prep_template_rp.generate_files()
+        for _, fp in self.sff_prep_template_rp.get_filepaths():
+            self.files_to_remove.append(fp)
 
-        raw_data = RawData(3)
         params = Preprocessed454Params(1)
-        prep_template = PrepTemplate(1)
-        prep_template.generate_files()
-
         with self.assertRaises(ValueError):
-            _get_preprocess_fasta_cmd(raw_data, prep_template, params)
+            _get_preprocess_fasta_cmd(
+                self.raw_data_rp, self.sff_prep_template_rp, params)
 
     def test_insert_preprocessed_data(self):
         study = Study(1)
