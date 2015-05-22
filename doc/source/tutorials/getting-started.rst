@@ -335,8 +335,8 @@ Study status
 Metadata
 ========
 
-Analysis and Meta-Analysis
-==========================
+Analyses
+========
 
 TODO!
 
