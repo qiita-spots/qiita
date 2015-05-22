@@ -182,7 +182,8 @@ class RawDataTests(TestCase):
 
     def test_is_preprocessed(self):
         self.assertTrue(RawData(1)._is_preprocessed())
-        self.assertFalse(RawData(2)._is_preprocessed())
+        rd = RawData.create(self.filetype, self.prep_templates, self.filepaths)
+        self.assertFalse(rd._is_preprocessed())
 
     def test_clear_filepaths(self):
         rd = RawData.create(self.filetype, [self.pt1], self.filepaths)
