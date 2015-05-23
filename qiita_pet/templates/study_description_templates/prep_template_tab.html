@@ -75,7 +75,7 @@
 
     <!-- Show Prep template info tabs -->
     {% for _, _, pt, _ in available_prep_templates %}
-      {{pt.id}}
+      {% module PrepTemplateInfoTab(study, pt, full_access) %}
     {% end %}
 
   </div>

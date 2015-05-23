@@ -111,7 +111,89 @@ function extend_sample_template() {
   form.submit();
 }
 
-function create_raw_data() {
+function create_raw_data(prep_id, filetype){
+  var barcodes = [];
+  var forward = [];
+  var reverse = [];
+  var sff = [];
+  var fasta = [];
+  var qual = [];
+
+  var all_files = document.getElementsByName("upload_file_" + prep_id + "_" + filetype);
+
+  for (var i = 0; i < all_files.length; i++){
+    ele = all_files[i]
+    switch (ele.options[ele.selectedIndex].value) {
+      case "barcodes":
+        barcodes.push(ele.id);
+        break;
+      case "forward seqs":
+        forward.push(ele.id);
+        break;
+      case "reverse seqs":
+        reverse.push(ele.id);
+        break;
+      case "sff":
+        sff.push(ele.id);
+        break;
+      case "fasta":
+        fasta.push(ele.id);
+        break;
+      case "qual":
+        qual.push(ele.id);
+        break;
+    }
+  }
+  if (sff.length === 0 && barcodes.length === 0 && forward.length === 0 && fasta.length === 0) {
+    bootstrapAlert("You need to select at least: one barcode and one forward file, one sff file or one fasta file.");
+  } else if (sff.length === 0 && barcodes.length != forward.length) {
+    bootstrapAlert("You must select the same number of barcode and forward seq files.");
+  } else if (sff.length === 0 && (reverse.length !== 0 && reverse.length != forward.length)) {
+    bootstrapAlert("If you select reverse seqs, they should have the same number than barcodes and forward files.");
+  } else if (sff.length === 0 && (qual.length !== 0 && fasta.length != qual.length)) {
+    bootstrapAlert("If you select qual, you must have the same number of fasta and qual files.");
+  } else {
+    var form = $("<form>")
+      .attr("action", "/study/create_raw_data")
+      .attr("method", "post")
+      .append($("<input>")
+        .attr("type", "hidden")
+        .attr("name", "prep_template_id")
+        .attr("value", prep_id))
+      .append($("<input>")
+        .attr("type", "hidden")
+        .attr("name", "filetype")
+        .attr("value", filetype))
+      .append($("<input>")
+        .attr("type", "hidden")
+        .attr("name", "barcodes")
+        .attr("value", barcodes.join()))
+      .append($("<input>")
+        .attr("type", "hidden")
+        .attr("name", "forward")
+        .attr("value", forward.join()))
+      .append($("<input>")
+        .attr("type", "hidden")
+        .attr("name", "sff")
+        .attr("value", sff.join()))
+      .append($("<input>")
+        .attr("type", "hidden")
+        .attr("name", "fasta")
+        .attr("value", fasta.join()))
+      .append($("<input>")
+        .attr("type", "hidden")
+        .attr("name", "qual")
+        .attr("value", qual.join()))
+      .append($("<input>")
+        .attr("type", "hidden")
+        .attr("name", "reverse")
+        .attr("value", reverse.join()));
+    $("body").append(form);
+    form.submit();
+  }
+}
+
+function create_raw_data_old() {
   if ($("#previous_raw_data").val() === null && $("#filetype").val() === "") {
     bootstrapAlert("You need to select either a new file type or a raw data used in a previous study.");
   } else if ((typeof $("#previous_raw_data").val() != 'undefined' && $("#previous_raw_data").val() !== null) && $("#filetype").val() !== "") {
@@ -551,6 +633,7 @@ $(document).ready(function() {
                  , "{{prep_tab}}"
                 {% end %}
               {% end %})
+  $('.filesgroup').hide();
 });
 
 </script>

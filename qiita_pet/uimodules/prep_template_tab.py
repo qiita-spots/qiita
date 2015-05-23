@@ -8,6 +8,7 @@
 
 from operator import itemgetter
 from os.path import basename
+from collections import defaultdict
 
 from future.utils import viewitems
 
@@ -20,6 +21,7 @@ from qiita_db.metadata_template import PrepTemplate
 from qiita_db.parameters import (Preprocessed454Params,
                                  PreprocessedIlluminaParams)
 from qiita_pet.util import STATUS_STYLER
+from qiita_pet.handlers.util import download_link_or_path
 from .base_uimodule import BaseUIModule
 
 
@@ -53,12 +55,11 @@ def get_prep_templates(pt_ids):
     -------
     list of PrepTemplate
     """
-    return [PrepTemplate(pt_id) for pt_id in pt_ids]
+    return [PrepTemplate(pt_id) for pt_id in sorted(pt_ids)]
 
 
 class PrepTemplateTab(BaseUIModule):
     def render(self, study, full_access):
-        user = self.current_user
         files = [f for _, f in get_files_from_uploads_folders(str(study.id))]
         data_types = sorted(viewitems(get_data_types()), key=itemgetter(1))
         prep_templates_info = [
@@ -86,6 +87,72 @@ class PrepTemplateTab(BaseUIModule):
             user_defined_terms=user_defined_terms,
             study=study,
             full_access=full_access)
+
+
+class PrepTemplateInfoTab(BaseUIModule):
+    def render(self, study, prep_template, full_access):
+        is_local_request = self._is_local()
+
+        template_fps = []
+        qiime_fps = []
+        # Unfortunately, both the prep template and the qiime mapping files
+        # have the sample type. The way to differentiate them is if we have
+        # the substring 'qiime' in the basename
+        for id_, fp in prep_template.get_filepaths():
+            if 'qiime' in basename(fp):
+                qiime_fps.append(
+                    download_link_or_path(
+                        is_local_request, fp, id_, 'Qiime mapping'))
+            else:
+                template_fps.append(
+                    download_link_or_path(
+                        is_local_request, fp, id_, 'Prep template'))
+
+        # Since get_filepaths returns the paths sorted from newest to oldest,
+        # the first in both list is the latest one
+        current_template_fp = template_fps[0]
+        current_qiime_fp = qiime_fps[0]
+
+        if len(template_fps) > 1:
+            show_old_templates = True
+            old_templates = template_fps[1:]
+        else:
+            show_old_templates = False
+            old_templates = None
+
+        if len(qiime_fps) > 1:
+            show_old_qiime_fps = True
+            old_qiime_fps = qiime_fps[1:]
+        else:
+            show_old_qiime_fps = False
+            old_qiime_fps = None
+
+        filepath_types = [k.split('_', 1)[1].replace('_', ' ')
+                          for k in get_filepath_types()
+                          if k.startswith('raw_')]
+        fp_type_by_ft = defaultdict(
+            lambda: filepath_types, SFF=['sff'], FASTA=['fasta', 'qual'],
+            FASTQ=['barcodes', 'forward seqs', 'reverse seqs'])
+
+        filetypes = sorted(
+            ((ft, ft_id, fp_type_by_ft[ft])
+             for ft, ft_id in viewitems(get_filetypes())),
+            key=itemgetter(1))
+        files = [f for _, f in get_files_from_uploads_folders(str(study.id))]
+
+        return self.render_string(
+            "study_description_templates/prep_template_info_tab.html",
+            pt_id=prep_template.id,
+            study_id=study.id,
+            raw_data=prep_template.raw_data,
+            current_template_fp=current_template_fp,
+            current_qiime_fp=current_qiime_fp,
+            show_old_templates=show_old_templates,
+            old_templates=old_templates,
+            show_old_qiime_fps=show_old_qiime_fps,
+            old_qiime_fps=old_qiime_fps,
+            filetypes=filetypes,
+            files=files)
 
 
 class RawDataEditorTab(BaseUIModule):

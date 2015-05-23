@@ -1,0 +1,94 @@
+<div class="tab-pane" id="prep_template_info_{{pt_id}}" style="padding: 10px;">
+  <table border="0">
+    <tr>
+      <td>
+        <a class="btn btn-primary" href="/metadata_summary/?study_id={{study_id}}&prep_template={{pt_id}}">
+          Show prep template summary
+        </a>
+      </td>
+    </tr>
+    <tr><td>{% raw current_template_fp %}</td></tr>
+    <tr><td>{% raw current_qiime_fp %}</td></tr>
+    {% if raw_data %}
+      <tr>
+        <td><b>Raw data: {{raw_data}}</b></td>
+      </tr>
+    {% else %}
+      <tr>
+        <td>
+          <button class="btn btn-primary glyphicon glyphicon-plus" type="button" data-toggle="collapse" data-target="#add-raw-data-{{pt_id}}" aria-expanded="false" aria-controls="add-raw-data-{{pt_id}}" style="word-spacing: -10px;">Add raw data</button>
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <div class="collapse" id="add-raw-data-{{pt_id}}">
+            <div class="panel-group" id="accordion-add-raw-{{pt_id}}" role="tablist" aria-multiselectable="true">
+              <div class="panel panel-default">
+                <div class="panel-heading" role="tab" id="create-raw-{{pt_id}}">
+                  <h4 class="panel-title">
+                    <a class="collapsed" data-toggle="collapse" data-parent="#accordion-add-raw-{{pt_id}}" href="#collapse-new-{{pt_id}}" aria-expanded="false" aria-controls="collapse-new-{{pt_id}}">
+                      Add new raw data
+                    </a>
+                  </h4>
+                </div>
+                <div id="collapse-new-{{pt_id}}" class="panel-collapse collapse" role="tabpanel" aria-labelledby="create-raw-{{pt_id}}">
+                  <div class="panel-body">
+                    What file type is your raw data?
+                    <select id="filetype-{{pt_id}}" onchange="$('.filesgroup').hide(); $('#files-{{pt_id}}-'+$('#filetype-{{pt_id}}').val()).show();">
+                      <option value="0">Not selected...</option>
+                      {% for name, value, _ in filetypes %}
+                        <option value="{{value}}">{{name}}</option>
+                      {% end %}
+                    </select>
+                    <div id="files-{{pt_id}}-0" class="filesgroup"></div>
+                    {% for _, value, filepath_types in filetypes %}
+                      <div id="files-{{pt_id}}-{{value}}" class="filesgroup">
+                        <table border="0">
+                          <tr><td><b>Choose the files to link to the raw data</b></td></tr>
+                          <tr>
+                            <th>File</th>
+                            <th>&nbsp;&nbsp;&nbsp;</th>
+                            <th>File type</th>
+                          </tr>
+                          {% for f in files %}
+                            <tr>
+                              <td>{{f}}</td>
+                              <td>&nbsp;</td>
+                              <td>
+                                <select id="{{f}}" name="upload_file_{{pt_id}}_{{value}}">
+                                  <option value="">Ignore ...</option>
+                                  {% for fp_type in filepath_types %}
+                                    <option value="{{fp_type}}">{{fp_type}}</option>
+                                  {% end %}
+                                </select>
+                              </td>
+                            </tr>
+                          {% end %}
+                          <tr><td><a class="btn btn-primary" onclick="create_raw_data({{pt_id}}, {{value}});">Add</a></td></tr>
+                        </table>
+                      </div>
+                    {% end %}
+                  </div>
+                </div>
+              </div>
+              <div class="panel panel-default">
+                <div class="panel-heading" role="tab" id="use-existing-{{pt_id}}">
+                  <h4 class="panel-title">
+                    <a class="collapsed" data-toggle="collapse" data-parent="#accordion-add-raw-{{pt_id}}" href="#collapse-existing-{{pt_id}}" aria-expanded="false" aria-controls="collapse-existing-{{pt_id}}">
+                      Use existing raw data
+                    </a>
+                  </h4>
+                </div>
+                <div id="collapse-existing-{{pt_id}}" class="panel-collapse collapse" role="tabpanel" aria-labelledby="use-existing-{{pt_id}}">
+                  <div class="panel-body">
+                    Use existing one!
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </td>
+      </tr>
+      {% end %}
+  </table>
+</div>

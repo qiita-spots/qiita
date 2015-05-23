@@ -7,12 +7,12 @@
 # -----------------------------------------------------------------------------
 
 from .study_information_tab import StudyInformationTab
-from .prep_template_tab import (PrepTemplateTab, RawDataEditorTab,
-                                PrepTemplatePanel, EditInvestigationType)
+from .prep_template_tab import (PrepTemplateTab, PrepTemplateInfoTab,
+                                EditInvestigationType)
 from .preprocessed_data_tab import PreprocessedDataTab, PreprocessedDataInfoTab
 from .processed_data_tab import ProcessedDataTab, ProcessedDataInfoTab
 
-__all__ = ['StudyInformationTab', 'PrepTemplateTab', 'RawDataEditorTab',
-           'PrepTemplatePanel', 'EditInvestigationType', 'PreprocessedDataTab',
+__all__ = ['StudyInformationTab', 'PrepTemplateTab', 'PrepTemplateInfoTab',
+           'EditInvestigationType', 'PreprocessedDataTab',
            'PreprocessedDataInfoTab', 'ProcessedDataTab',
            'ProcessedDataInfoTab']
