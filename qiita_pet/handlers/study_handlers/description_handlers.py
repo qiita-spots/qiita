@@ -311,6 +311,37 @@ class StudyDescriptionHandler(BaseHandler):
 
         callback((msg, msg_level, None, None, None))
 
+    def add_raw_data(self, study, user, callback):
+        """Adds an existing raw data to the study
+
+        Parameters
+        ----------
+        study : Study
+            The current study object
+        user : User
+            The current user object
+        callback : function
+            The callback function to call with the results once the processing
+            is done
+        """
+        msg = "Raw data successfully added"
+        msg_level = "success"
+
+        # Get the arguments to add the raw data
+        pt_id = self.get_argument('prep_template_id')
+        raw_data_id = self.get_argument('raw_data_id')
+
+        prep_template = PrepTemplate(pt_id)
+        raw_data = RawData(raw_data_id)
+
+        try:
+            prep_template.raw_data = raw_data
+        except QiitaDBError as e:
+            msg = html_error_message % ("adding the raw data",
+                                        str(raw_data_id), str(e))
+
+        callback((msg, msg_level, 'prep_template_tab', pt_id, None))
+
     def create_raw_data(self, study, user, callback):
         """Adds a (new) raw data to the study
 
@@ -829,6 +860,7 @@ class StudyDescriptionHandler(BaseHandler):
             update_sample_template=self.update_sample_template,
             extend_sample_template=self.add_to_sample_template,
             create_raw_data=self.create_raw_data,
+            add_raw_data=self.add_raw_data,
             add_prep_template=self.add_prep_template,
             make_public=self.make_public,
             approve_study=self.approve_study,

@@ -81,7 +81,19 @@
                 </div>
                 <div id="collapse-existing-{{pt_id}}" class="panel-collapse collapse" role="tabpanel" aria-labelledby="use-existing-{{pt_id}}">
                   <div class="panel-body">
-                    Use existing one!
+                    {% if other_studies_rd %}
+                      Choose raw data from studies that you have access to:
+                      <br/>
+                      <select class="chosen-select" id="previous-raw-data-{{pt_id}}" data-placeholder=" ">
+                        {% for rd_id, study_name in other_studies_rd %}
+                          <option value="{{rd_id}}">id: {{rd_id}}, study: {{study_name}}</option>
+                        {% end %}
+                      </select>
+                      <br/>
+                      <a class="btn btn-primary" onclick="add_raw_data({{pt_id}});">Add</a>
+                    {% else %}
+                      There is no existent raw data available.
+                    {% end %}
                   </div>
                 </div>
               </div>

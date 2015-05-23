@@ -193,6 +193,31 @@ function create_raw_data(prep_id, filetype){
   }
 }
 
+function add_raw_data(prep_id) {
+  raw_data_id = $("#previous-raw-data-" + prep_id).val()
+  if (raw_data_id === null){
+    bootstrapAlert("You need to select a raw data used in a previous study");
+  } else {
+    var form = $("<form>")
+      .attr("action", window.location.href)
+      .attr("method", "post")
+      .append($("<input>")
+        .attr("type", "hidden")
+        .attr("name", "raw_data_id")
+        .attr("value", raw_data_id))
+      .append($("<input>")
+        .attr("type", "hidden")
+        .attr("name", "prep_template_id")
+        .attr("value", prep_id))
+      .append($("<input>")
+        .attr("type", "hidden")
+        .attr("name", "action")
+        .attr("value", "add_raw_data"));
+    $("body").append(form);
+    form.submit();
+  }
+}
+
 function create_raw_data_old() {
   if ($("#previous_raw_data").val() === null && $("#filetype").val() === "") {
     bootstrapAlert("You need to select either a new file type or a raw data used in a previous study.");

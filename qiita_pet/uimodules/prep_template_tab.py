@@ -25,14 +25,12 @@ from qiita_pet.handlers.util import download_link_or_path
 from .base_uimodule import BaseUIModule
 
 
-def get_raw_data_from_other_studies(user, study):
+def get_accessible_raw_data(user):
     """Retrieves a tuple of raw_data_id and the last study title for that
     raw_data
     """
     d = {}
     for sid in user.user_studies:
-        if sid == study.id:
-            continue
         for rdid in Study(sid).raw_data():
             d[int(rdid)] = Study(RawData(rdid).studies[-1]).title
     return d
@@ -91,6 +89,7 @@ class PrepTemplateTab(BaseUIModule):
 
 class PrepTemplateInfoTab(BaseUIModule):
     def render(self, study, prep_template, full_access):
+        user = self.current_user
         is_local_request = self._is_local()
 
         template_fps = []
@@ -140,6 +139,9 @@ class PrepTemplateInfoTab(BaseUIModule):
             key=itemgetter(1))
         files = [f for _, f in get_files_from_uploads_folders(str(study.id))]
 
+        other_studies_rd = sorted(viewitems(
+            get_accessible_raw_data(user)))
+
         return self.render_string(
             "study_description_templates/prep_template_info_tab.html",
             pt_id=prep_template.id,
@@ -153,6 +155,7 @@ class PrepTemplateInfoTab(BaseUIModule):
             old_qiime_fps=old_qiime_fps,
             filetypes=filetypes,
             files=files,
+            other_studies_rd=other_studies_rd,
             prep_template=prep_template,
             study=study)
 
