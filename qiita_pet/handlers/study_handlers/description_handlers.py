@@ -711,21 +711,18 @@ class StudyDescriptionHandler(BaseHandler):
             is done
         """
         raw_data_id = int(self.get_argument('raw_data_id'))
+        prep_template_id = int(self.get_argument('prep_template_id'))
 
         try:
-            RawData.delete(raw_data_id, study.id)
-            msg = ("Raw data %d has been deleted from study: "
-                   "<b><i>%s</i></b>" % (raw_data_id, study.title))
+            RawData.delete(raw_data_id, prep_template_id)
+            msg = ("Raw data %d has been deleted from prep_template %d"
+                   % (raw_data_id, prep_template_id))
             msg_level = "success"
-            tab = 'study_information_tab'
-            tab_id = None
         except Exception as e:
             msg = "Couldn't remove %d raw data: %s" % (raw_data_id, str(e))
             msg_level = "danger"
-            tab = 'raw_data_tab'
-            tab_id = raw_data_id
 
-        callback((msg, msg_level, tab, tab_id, None))
+        callback((msg, msg_level, "prep_template_tab", prep_template_id, None))
 
     def delete_prep_template(self, study, user, callback):
         """Delete the selected prep template

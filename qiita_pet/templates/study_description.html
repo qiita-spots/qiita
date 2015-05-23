@@ -311,7 +311,7 @@ function delete_sample_template() {
   }
 }
 
-function delete_raw_data(raw_data_filetype, raw_data_id) {
+function delete_raw_data(raw_data_filetype, raw_data_id, prep_template_id) {
   if (confirm('Are you sure you want to delete raw data: ' + raw_data_filetype + ' (ID: ' + raw_data_id + ')?')) {
     var form = $("<form>")
     .attr("action", window.location.href)
@@ -320,6 +320,10 @@ function delete_raw_data(raw_data_filetype, raw_data_id) {
     .attr("type", "hidden")
     .attr("name", "raw_data_id")
     .attr("value", raw_data_id))
+    .append($("<input>")
+    .attr("type", "hidden")
+    .attr("name", "prep_template_id")
+    .attr("value", prep_template_id))
     .append($("<input>")
     .attr("type", "hidden")
     .attr("name", "action")
@@ -580,7 +584,7 @@ function link_files_to_raw_data(raw_data_id) {
 }
 
 function unlink_all_files(raw_data_id) {
-  if (confirm("Are you sure you want to unlink all files? They will be removed from the system")){
+  if (confirm("Are you sure you want to unlink all files?")){
     var form = $("<form>")
       .attr("action", "/study/unlink_all_files")
       .attr("method", "post")

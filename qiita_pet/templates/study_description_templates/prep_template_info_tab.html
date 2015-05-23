@@ -1,26 +1,26 @@
 <div class="tab-pane" id="prep_template_info_{{pt_id}}" style="padding: 10px;">
   <table border="0">
     <tr>
-      <td>
+      <td style="padding: 5px;">
         <a class="btn btn-primary" href="/metadata_summary/?study_id={{study_id}}&prep_template={{pt_id}}">
           Show prep template summary
         </a>
       </td>
     </tr>
-    <tr><td>{% raw current_template_fp %}</td></tr>
-    <tr><td>{% raw current_qiime_fp %}</td></tr>
+    <tr><td style="padding: 5px;">{% raw current_template_fp %}</td></tr>
+    <tr><td style="padding: 5px;">{% raw current_qiime_fp %}</td></tr>
     {% if raw_data %}
       <tr>
-        <td><b>Raw data: {{raw_data}}</b></td>
+        <td style="padding: 5px;">{% module RawDataInfoDiv(raw_data, prep_template, study) %}</td>
       </tr>
     {% else %}
       <tr>
-        <td>
+        <td style="padding: 5px;">
           <button class="btn btn-primary glyphicon glyphicon-plus" type="button" data-toggle="collapse" data-target="#add-raw-data-{{pt_id}}" aria-expanded="false" aria-controls="add-raw-data-{{pt_id}}" style="word-spacing: -10px;">Add raw data</button>
         </td>
       </tr>
       <tr>
-        <td>
+        <td style="padding: 5px;">
           <div class="collapse" id="add-raw-data-{{pt_id}}">
             <div class="panel-group" id="accordion-add-raw-{{pt_id}}" role="tablist" aria-multiselectable="true">
               <div class="panel panel-default">
