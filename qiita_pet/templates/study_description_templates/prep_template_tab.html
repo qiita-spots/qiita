@@ -75,7 +75,7 @@
 
     <!-- Show Prep template info tabs -->
     {% for _, _, pt, _ in available_prep_templates %}
-      {% module PrepTemplateInfoTab(study, pt, full_access) %}
+      {% module PrepTemplateInfoTab(study, pt, full_access, ena_terms, user_defined_terms) %}
     {% end %}
 
   </div>

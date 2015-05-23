@@ -88,7 +88,8 @@ class PrepTemplateTab(BaseUIModule):
 
 
 class PrepTemplateInfoTab(BaseUIModule):
-    def render(self, study, prep_template, full_access):
+    def render(self, study, prep_template, full_access, ena_terms,
+               user_defined_terms):
         user = self.current_user
         is_local_request = self._is_local()
 
@@ -157,7 +158,10 @@ class PrepTemplateInfoTab(BaseUIModule):
             files=files,
             other_studies_rd=other_studies_rd,
             prep_template=prep_template,
-            study=study)
+            study=study,
+            ena_terms=ena_terms,
+            user_defined_terms=user_defined_terms,
+            investigation_type=prep_template.investigation_type)
 
 
 class RawDataInfoDiv(BaseUIModule):

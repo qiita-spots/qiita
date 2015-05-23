@@ -1,6 +1,11 @@
 <div class="tab-pane" id="prep_template_info_{{pt_id}}" style="padding: 10px;">
   <table border="0">
     <tr>
+      <td>
+        {% module EditInvestigationType(ena_terms, user_defined_terms, pt_id, investigation_type, 0) %}
+      </td>
+    </tr>
+    <tr>
       <td style="padding: 5px;">
         <a class="btn btn-primary" href="/metadata_summary/?study_id={{study_id}}&prep_template={{pt_id}}">
           Show prep template summary
