@@ -143,11 +143,43 @@ class PrepTemplateInfoTab(BaseUIModule):
         other_studies_rd = sorted(viewitems(
             get_accessible_raw_data(user)))
 
+        # A prep template can be modified if it's status is sanbdox
+        is_editable = prep_template.status == 'sanbdox'
+
+        raw_data = prep_template.raw_data
+        if raw_data:
+
+            rd_ft = RawData(raw_data).filetype
+            # If the prep template has a raw data associated, it can be
+            # preprocessed. Retrieve the pre-processing parameters
+            if rd_ft in ('SFF', 'FASTA'):
+                param_iter = Preprocessed454Params.iter()
+            elif rd_ft == 'FASTQ':
+                param_iter = PreprocessedIlluminaParams.iter()
+            else:
+                raise NotImplementedError(
+                    "Pre-processing of %s files currently not supported."
+                    % rd_ft)
+
+            preprocess_options = []
+            for param in param_iter:
+                text = ("<b>%s:</b> %s" % (k, v)
+                        for k, v in viewitems(param.values))
+                preprocess_options.append((param.id,
+                                           param.name,
+                                           '<br>'.join(text)))
+            preprocessed_data = prep_template.preprocessed_data
+        else:
+            preprocess_options = []
+            preprocessed_data = None
+
+        preprocessing_status = prep_template.preprocessing_status
+
         return self.render_string(
             "study_description_templates/prep_template_info_tab.html",
             pt_id=prep_template.id,
             study_id=study.id,
-            raw_data=prep_template.raw_data,
+            raw_data=raw_data,
             current_template_fp=current_template_fp,
             current_qiime_fp=current_qiime_fp,
             show_old_templates=show_old_templates,
@@ -161,7 +193,11 @@ class PrepTemplateInfoTab(BaseUIModule):
             study=study,
             ena_terms=ena_terms,
             user_defined_terms=user_defined_terms,
-            investigation_type=prep_template.investigation_type)
+            investigation_type=prep_template.investigation_type,
+            is_editable=is_editable,
+            preprocess_options=preprocess_options,
+            preprocessed_data=preprocessed_data,
+            preprocessing_status=preprocessing_status)
 
 
 class RawDataInfoDiv(BaseUIModule):
