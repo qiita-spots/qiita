@@ -69,8 +69,8 @@ class CreateRawData(BaseHandler):
         self.render('compute_wait.html',
                     job_id=job_id, title='Adding raw data',
                     completion_redirect=(
-                        '/study/description/%s?top_tab=raw_data_tab&sub_tab=%s'
-                        % (study_id, pt_id)))
+                        '/study/description/%s?top_tab=prep_template_tab'
+                        '&sub_tab=%s' % (study_id, pt_id)))
 
 
 class AddFilesToRawData(BaseHandler):
@@ -120,8 +120,8 @@ class AddFilesToRawData(BaseHandler):
         self.render('compute_wait.html',
                     job_id=job_id, title='Adding files to your raw data',
                     completion_redirect=(
-                        '/study/description/%s?top_tab=raw_data_tab&sub_tab=%s'
-                        % (study_id, raw_data_id)))
+                        '/study/description/%s?top_tab=prep_template_tab'
+                        '&sub_tab=%s' % (study_id, raw_data_id)))
 
 
 class UnlinkAllFiles(BaseHandler):
@@ -146,5 +146,5 @@ class UnlinkAllFiles(BaseHandler):
         self.render('compute_wait.html', job_id=job_id,
                     title='Removing files from your raw data',
                     completion_redirect=(
-                        '/study/description/%s?top_tab=raw_data_tab&sub_tab=%s'
-                        % (study_id, raw_data_id)))
+                        '/study/description/%s?top_tab=prep_template_tab&'
+                        'sub_tab=%s' % (study_id, raw_data_id)))

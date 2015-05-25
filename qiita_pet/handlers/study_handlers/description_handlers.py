@@ -342,58 +342,6 @@ class StudyDescriptionHandler(BaseHandler):
 
         callback((msg, msg_level, 'prep_template_tab', pt_id, None))
 
-    def create_raw_data(self, study, user, callback):
-        """Adds a (new) raw data to the study
-
-        Parameters
-        ----------
-        study : Study
-            The current study object
-        user : User
-            The current user object
-        callback : function
-            The callback function to call with the results once the processing
-            is done
-        """
-        msg = "Raw data successfully added"
-        msg_level = "success"
-
-        # Get the arguments needed to create a raw data object
-        filetype = self.get_argument('filetype', None)
-        previous_raw_data = self.get_argument('previous_raw_data', None)
-
-        if filetype and previous_raw_data:
-            # The user selected a filetype and an existing raw data
-            msg = ("You can not specify both a new raw data and a previously "
-                   "used one")
-            msg_level = "danger"
-        elif filetype:
-            # We are creating a new raw data object
-            try:
-                rd_id = RawData.create(filetype, [study]).id
-            except (TypeError, QiitaDBColumnError, QiitaDBExecutionError,
-                    QiitaDBDuplicateError, IOError, ValueError, KeyError,
-                    CParserError) as e:
-                msg = html_error_message % (
-                    "creating a new raw data object for study:",
-                    str(study.id), str(e))
-                msg_level = "danger"
-        elif previous_raw_data:
-            previous_raw_data = previous_raw_data.split(',')
-            raw_data = [RawData(rd) for rd in previous_raw_data]
-            study.add_raw_data(raw_data)
-            rd_id = raw_data[0].id
-        else:
-            # The user did not provide a filetype neither an existing raw data
-            # If using the interface, we should never reach this if, but
-            # better be safe than sorry
-            msg = ("You should choose a filetype for a new raw data or "
-                   "choose a raw data previously used")
-            msg_level = "danger"
-            rd_id = None
-
-        callback((msg, msg_level, 'raw_data_tab', rd_id, None))
-
     def add_prep_template(self, study, user, callback):
         """Adds a prep template to the system
 
@@ -588,9 +536,9 @@ class StudyDescriptionHandler(BaseHandler):
             msg_level = "danger"
 
         if ppd_id == 0:
-            top_tab = "raw_data_tab"
-            sub_tab = rd_id
-            prep_tab = prep_id
+            top_tab = "prep_template_tab"
+            sub_tab = prep_id
+            prep_tab = None
         else:
             top_tab = "preprocessed_data_tab"
             sub_tab = ppd_id
@@ -780,7 +728,7 @@ class StudyDescriptionHandler(BaseHandler):
             msg = ("Couldn't remove prep template: %s" % str(e))
             msg_level = "danger"
 
-        callback((msg, msg_level, 'raw_data_tab', prep_id, None))
+        callback((msg, msg_level, 'prep_template_tab', None, None))
 
     def delete_preprocessed_data(self, study, user, callback):
         """Delete the selected preprocessed data
