@@ -56,7 +56,7 @@ class TestHelpers(TestHandlerBase):
             'metadata_complete': True,
             'study_title':
                 'Identification of the Microbiomes for Cannabis Soils',
-            'num_raw_data': 4,
+            'num_raw_data': 1,
             'number_samples_collected': 27,
             'shared':
                 '<a target="_blank" href="mailto:shared@foo.bar">Shared</a>',
@@ -201,31 +201,6 @@ class TestStudyDescriptionHandler(TestHandlerBase):
         response = self.post('/study/description/1', post_args)
         self.assertEqual(response.code, 200)
 
-    def test_create_raw_data(self):
-        # testing adding new raw data
-        post_args = {
-            'filetype': '1',
-            'action': 'create_raw_data'
-        }
-        response = self.post('/study/description/1', post_args)
-        self.assertEqual(response.code, 200)
-
-        # testing an error due to previous raw data already added
-        post_args = {
-            'previous_raw_data': '1',
-            'action': 'create_raw_data'
-        }
-        response = self.post('/study/description/1', post_args)
-        self.assertEqual(response.code, 500)
-
-        # testing an error due to previous_raw_data not existing
-        post_args = {
-            'previous_raw_data': '5',
-            'action': 'create_raw_data'
-        }
-        response = self.post('/study/description/1', post_args)
-        self.assertEqual(response.code, 500)
-
 
 class TestStudyEditHandler(TestHandlerBase):
     database = True
@@ -360,7 +335,7 @@ class TestSearchStudiesAJAX(TestHandlerBase):
             'pmid': '<a target="_blank" href="http://www.ncbi.nlm.nih.gov/'
             'pubmed/123456">123456</a>, <a target="_blank" href="http://www.'
             'ncbi.nlm.nih.gov/pubmed/7891011">7891011</a>',
-            'num_raw_data': 4,
+            'num_raw_data': 1,
             'proc_data_info': [{
                 'pid': 1,
                 'processed_date': '2012-10-01 09:30:27',
@@ -484,12 +459,13 @@ class TestDelete(TestHandlerBase):
     def test_delete_raw_data(self):
         response = self.post('/study/description/1',
                              {'raw_data_id': 1,
+                              'prep_template_id': 1,
                               'action': 'delete_raw_data'})
         self.assertEqual(response.code, 200)
 
         # checking that the action was sent
-        self.assertIn("Raw data 1 has prep template(s) associated so it can't "
-                      "be erased", response.body)
+        self.assertIn("Couldn't remove raw data 1: Raw data (1) can't be "
+                      "remove because it has linked files", response.body)
 
     def test_delete_prep_template(self):
         response = self.post('/study/description/1',
