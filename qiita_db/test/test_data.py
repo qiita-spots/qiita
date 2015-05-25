@@ -261,6 +261,11 @@ class RawDataTests(TestCase):
             RawData.delete(rd.id, self.pt1.id)
 
         # Clear the files so we can actually remove the RawData
+        study_id = rd.studies[0]
+        path_for_removal = join(get_mountpoint("uploads")[0][1], str(study_id))
+        self._clean_up_files = [join(path_for_removal,
+                                     basename(f).split('_', 1)[1])
+                                for _, f, _ in rd.get_filepaths()]
         rd.clear_filepaths()
 
         RawData.delete(rd.id, self.pt1.id)
