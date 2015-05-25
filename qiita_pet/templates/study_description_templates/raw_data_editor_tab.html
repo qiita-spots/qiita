@@ -73,7 +73,7 @@
         <h4>Prep templates uploaded</h4>
         <div class="panel-group" id="prep-accordion-{{raw_data_id}}">
           {% for prep in available_prep_templates %}
-            {% module PrepTemplatePanel(prep, study_id, is_editable, ena_terms, study_status, user_defined_terms) %}
+            {% module PrepTemplatePanel(prep, study_id, is_editable, ena_terms, study_status, user_defined_terms, raw_data_files) %}
           {% end %}
         </div>
       </td>
