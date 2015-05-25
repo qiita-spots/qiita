@@ -1,6 +1,6 @@
 # May 19, 2015
 # We attach the prep template directly to the study. The raw data is no longer
-# attached to the study directly, the prep template point to them. This will
+# attached to the study directly, the prep template points to them. This will
 # make the RawData to be effectively just a container for the raw files,
 # which is how it was acting previously.
 
