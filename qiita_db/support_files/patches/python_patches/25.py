@@ -47,7 +47,7 @@ for rd_id in rd_ids:
 
     conn_handler.add_to_queue(queue, sql_delete, (rd_id,))
 
-# We can now perform all changes in the DB. Although this changes can be
+# We can now perform all changes in the DB. Although these changes can be
 # done in an SQL patch, they are done here because we need to execute the
 # previous clean up in the database before we can actually execute the SQL
 # patch.
