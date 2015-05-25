@@ -807,7 +807,6 @@ class StudyDescriptionHandler(BaseHandler):
             process_sample_template=self.process_sample_template,
             update_sample_template=self.update_sample_template,
             extend_sample_template=self.add_to_sample_template,
-            create_raw_data=self.create_raw_data,
             add_raw_data=self.add_raw_data,
             add_prep_template=self.add_prep_template,
             make_public=self.make_public,
