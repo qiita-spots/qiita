@@ -79,7 +79,11 @@
         <td>
           {% if not preprocessed_data or preprocessing_status.startswith('failed') %}
             {% if preprocessing_status == 'not_preprocessed' or preprocessing_status.startswith('failed')%}
-              <a class="btn btn-primary glyphicon glyphicon-play" data-toggle="modal" data-target="#preprocess-modal-view-{{pt_id}}" style="word-spacing: -10px;"> Preprocess</a>
+              {% if show_preprocess_btn %}
+                <a class="btn btn-primary glyphicon glyphicon-play" data-toggle="modal" data-target="#preprocess-modal-view-{{pt_id}}" style="word-spacing: -10px;"> Preprocess</a>
+              {% else %}
+                <b>{{ no_preprocess_msg }}</b>
+              {% end %}
             {% end %}
             <br>
             <i>Status:</i> {{preprocessing_status}}

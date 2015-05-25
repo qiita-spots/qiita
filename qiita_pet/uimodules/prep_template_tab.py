@@ -17,7 +17,8 @@ from qiita_db.util import (get_filetypes, get_files_from_uploads_folders,
 from qiita_db.study import Study
 from qiita_db.data import RawData
 from qiita_db.ontology import Ontology
-from qiita_db.metadata_template import PrepTemplate
+from qiita_db.metadata_template import (PrepTemplate, TARGET_GENE_DATA_TYPES,
+                                        PREP_TEMPLATE_COLUMNS_TARGET_GENE)
 from qiita_db.parameters import (Preprocessed454Params,
                                  PreprocessedIlluminaParams)
 from qiita_pet.util import STATUS_STYLER
@@ -147,10 +148,14 @@ class PrepTemplateInfoTab(BaseUIModule):
         # A prep template can be modified if it's status is sanbdox
         is_editable = prep_template.status == 'sanbdox'
 
-        raw_data = prep_template.raw_data
-        if raw_data:
-
-            rd_ft = RawData(raw_data).filetype
+        raw_data_id = prep_template.raw_data
+        preprocess_options = []
+        preprocessed_data = None
+        show_preprocess_btn = True
+        no_preprocess_msg = None
+        if raw_data_id:
+            rd = RawData(raw_data_id)
+            rd_ft = rd.filetype
             # If the prep template has a raw data associated, it can be
             # preprocessed. Retrieve the pre-processing parameters
             if rd_ft in ('SFF', 'FASTA'):
@@ -170,9 +175,28 @@ class PrepTemplateInfoTab(BaseUIModule):
                                            param.name,
                                            '<br>'.join(text)))
             preprocessed_data = prep_template.preprocessed_data
-        else:
-            preprocess_options = []
-            preprocessed_data = None
+
+            # Check if the template have all the required columns for
+            # preprocessing
+            raw_data_files = rd.get_filepaths()
+            if len(raw_data_files) == 0:
+                show_preprocess_btn = False
+                no_preprocess_msg = (
+                    "Preprocessing disabled because there are no files "
+                    "linked with the Raw Data")
+            else:
+                if prep_template.data_type() in TARGET_GENE_DATA_TYPES:
+                    key = ('demultiplex_multiple' if len(raw_data_files) > 2
+                           else 'demultiplex')
+                    missing_cols = prep_template.check_restrictions(
+                        [PREP_TEMPLATE_COLUMNS_TARGET_GENE[key]])
+                    show_preprocess_btn = len(missing_cols) == 0
+                    if not show_preprocess_btn:
+                        no_preprocess_msg = (
+                            "Preprocessing disabled due to missing columns in "
+                            "the prep template: %s" % ', '.join(missing_cols))
+                    else:
+                        no_preprocess_msg = None
 
         preprocessing_status = prep_template.preprocessing_status
 
@@ -180,7 +204,7 @@ class PrepTemplateInfoTab(BaseUIModule):
             "study_description_templates/prep_template_info_tab.html",
             pt_id=prep_template.id,
             study_id=study.id,
-            raw_data=raw_data,
+            raw_data=raw_data_id,
             current_template_fp=current_template_fp,
             current_qiime_fp=current_qiime_fp,
             show_old_templates=show_old_templates,
@@ -198,7 +222,9 @@ class PrepTemplateInfoTab(BaseUIModule):
             is_editable=is_editable,
             preprocess_options=preprocess_options,
             preprocessed_data=preprocessed_data,
-            preprocessing_status=preprocessing_status)
+            preprocessing_status=preprocessing_status,
+            show_preprocess_btn=show_preprocess_btn,
+            no_preprocess_msg=no_preprocess_msg)
 
 
 class RawDataInfoDiv(BaseUIModule):
@@ -232,7 +258,7 @@ class RawDataInfoDiv(BaseUIModule):
             files=files,
             filepath_types=fp_types,
             filetype=filetype,
-            link_msg="",
+            link_msg=link_msg,
             show_buttons=show_buttons)
 
 
