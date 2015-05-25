@@ -514,14 +514,14 @@ class RawData(BaseData):
             self._set_link_filepaths_status("failed: %s" % msg)
             raise QiitaDBError(msg)
 
-        # The filepath belongs to one or more studies
-        studies_linked = self.studies
-        if len(studies_linked) > 1:
+        # The filepath belongs to one or more prep templates
+        prep_templates = self.prep_templates
+        if len(prep_templates) > 1:
             msg = ("Can't clear all the filepaths from raw data %s because "
-                   "it has been shared with other studies: %s. If you want to "
-                   "remove it, first remove the raw data from the other "
-                   "studies." % (self._id,
-                                 ', '.join(map(str, studies_linked))))
+                   "it has been used with other prep templates: %s. If you "
+                   "want to remove it, first remove the raw data from the "
+                   "other prep templates."
+                   % (self._id, ', '.join(map(str, prep_templates))))
             self._set_link_filepaths_status("failed: %s" % msg)
             raise QiitaDBError(msg)
 
