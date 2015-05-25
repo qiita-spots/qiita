@@ -207,6 +207,7 @@ class PrepTemplate(MetadataTemplate):
         ------
         QiitaDBExecutionError
             If the prep template already has a preprocessed data
+            If the prep template has a raw data attached
         QiitaDBUnknownIDError
             If no prep template with id = id_ exists
         """
@@ -224,6 +225,17 @@ class PrepTemplate(MetadataTemplate):
             raise QiitaDBExecutionError("Cannot remove prep template %d "
                                         "because a preprocessed data has been"
                                         " already generated using it." % id_)
+
+        sql = """SELECT (
+                    SELECT raw_data_id
+                    FROM qiita.prep_template
+                    WHERE prep_template_id=%s)
+                IS NOT NULL"""
+        raw_data_attached = conn_handler.execute_fetchone(sql, (id_,))[0]
+        if raw_data_attached:
+            raise QiitaDBExecutionError(
+                "Cannot remove prep template %d because it has raw data "
+                "associated with it" % id_)
 
         # Delete the prep template filepaths
         conn_handler.execute(

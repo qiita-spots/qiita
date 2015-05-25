@@ -1143,6 +1143,14 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
         with self.assertRaises(QiitaDBUnknownIDError):
             PrepTemplate.delete(5)
 
+    def test_delete_error_raw_data(self):
+        """Try to delete a prep template with a raw data attached to id"""
+        pt = PrepTemplate.create(self.metadata, self.test_study,
+                                 self.data_type_id)
+        pt.raw_data = RawData(1)
+        with self.assertRaises(QiitaDBExecutionError):
+            PrepTemplate.delete(pt.id)
+
     def test_delete(self):
         """Deletes prep template 2"""
         pt = PrepTemplate.create(self.metadata, self.test_study,
