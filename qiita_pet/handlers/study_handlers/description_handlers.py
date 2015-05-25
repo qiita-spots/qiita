@@ -523,7 +523,6 @@ class StudyDescriptionHandler(BaseHandler):
             'edit-new-investigation-type', None)
 
         pt = PrepTemplate(prep_id)
-        rd_id = pt.raw_data
 
         investigation_type = self._process_investigation_type(
             edit_investigation_type, edit_user_defined_investigation_type,
@@ -743,7 +742,7 @@ class StudyDescriptionHandler(BaseHandler):
             msg = ("Couldn't remove prep template: %s" % str(e))
             msg_level = "danger"
 
-        callback((msg, msg_level, 'prep_template_tab', None, None))
+        callback((msg, msg_level, 'prep_template_tab', prep_id, None))
 
     def delete_preprocessed_data(self, study, user, callback):
         """Delete the selected preprocessed data
