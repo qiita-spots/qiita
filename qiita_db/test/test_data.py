@@ -550,7 +550,7 @@ class PreprocessedDataTests(TestCase):
                 "preprocessed_fastq"),
                (5, join(self.db_test_ppd_dir, '1_seqs.demux'),
                 "preprocessed_demux")]
-        self.assertEqual(obs, exp)
+        self.assertEqual(sorted(obs), sorted(exp))
 
     def test_processed_data(self):
         """Correctly returns the processed data id"""
