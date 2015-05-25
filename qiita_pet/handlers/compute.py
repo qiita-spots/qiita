@@ -63,10 +63,6 @@ class CreateRawData(BaseHandler):
                     if exists(ft):
                         filepaths.append((ft, filetype))
 
-        print raw_data_filetype
-        print pt
-        print filepaths
-
         job_id = submit(self.current_user.id, create_raw_data,
                         raw_data_filetype, pt, filepaths)
 
