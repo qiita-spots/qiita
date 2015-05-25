@@ -80,6 +80,7 @@ class AddFilesToRawData(BaseHandler):
         # vars to add files to raw data
         study_id = self.get_argument('study_id')
         raw_data_id = self.get_argument('raw_data_id')
+        prep_template_id = self.get_argument('prep_template_id')
         barcodes_str = self.get_argument('barcodes')
         forward_reads_str = self.get_argument('forward')
         sff_str = self.get_argument('sff')
@@ -121,7 +122,7 @@ class AddFilesToRawData(BaseHandler):
                     job_id=job_id, title='Adding files to your raw data',
                     completion_redirect=(
                         '/study/description/%s?top_tab=prep_template_tab'
-                        '&sub_tab=%s' % (study_id, raw_data_id)))
+                        '&sub_tab=%s' % (study_id, prep_template_id)))
 
 
 class UnlinkAllFiles(BaseHandler):
@@ -130,6 +131,7 @@ class UnlinkAllFiles(BaseHandler):
         # vars to remove all files from a raw data
         study_id = self.get_argument('study_id', None)
         raw_data_id = self.get_argument('raw_data_id', None)
+        prep_template_id = self.get_argument('prep_template_id', None)
 
         study_id = int(study_id) if study_id else None
 
@@ -147,4 +149,4 @@ class UnlinkAllFiles(BaseHandler):
                     title='Removing files from your raw data',
                     completion_redirect=(
                         '/study/description/%s?top_tab=prep_template_tab&'
-                        'sub_tab=%s' % (study_id, raw_data_id)))
+                        'sub_tab=%s' % (study_id, prep_template_id)))

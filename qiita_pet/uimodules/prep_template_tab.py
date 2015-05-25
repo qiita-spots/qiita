@@ -25,6 +25,14 @@ from qiita_pet.handlers.util import download_link_or_path
 from .base_uimodule import BaseUIModule
 
 
+filepath_types = [k.split('_', 1)[1].replace('_', ' ')
+                  for k in get_filepath_types()
+                  if k.startswith('raw_')]
+fp_type_by_ft = defaultdict(
+    lambda: filepath_types, SFF=['sff'], FASTA=['fasta', 'qual'],
+    FASTQ=['barcodes', 'forward seqs', 'reverse seqs'])
+
+
 def get_accessible_raw_data(user):
     """Retrieves a tuple of raw_data_id and the last study title for that
     raw_data
@@ -127,13 +135,6 @@ class PrepTemplateInfoTab(BaseUIModule):
             show_old_qiime_fps = False
             old_qiime_fps = None
 
-        filepath_types = [k.split('_', 1)[1].replace('_', ' ')
-                          for k in get_filepath_types()
-                          if k.startswith('raw_')]
-        fp_type_by_ft = defaultdict(
-            lambda: filepath_types, SFF=['sff'], FASTA=['fasta', 'qual'],
-            FASTQ=['barcodes', 'forward seqs', 'reverse seqs'])
-
         filetypes = sorted(
             ((ft, ft_id, fp_type_by_ft[ft])
              for ft, ft_id in viewitems(get_filetypes())),
@@ -201,19 +202,38 @@ class PrepTemplateInfoTab(BaseUIModule):
 
 
 class RawDataInfoDiv(BaseUIModule):
-    def render(self, raw_data_id, prep_template, study):
+    def render(self, raw_data_id, prep_template, study, files):
         rd = RawData(raw_data_id)
         raw_data_files = [(basename(fp), fp_type[4:])
                           for _, fp, fp_type in rd.get_filepaths()]
-        show_unlink_btn = (rd.status(study) == 'sandbox' and
-                           raw_data_files)
+        filetype = rd.filetype
+        fp_types = fp_type_by_ft[filetype]
+        raw_data_link_status = rd.link_filepaths_status
+
+        show_buttons = rd.status(study) == 'sandbox'
+        link_msg = ""
+        if show_buttons:
+            # Define the message for the link status
+            if raw_data_link_status == 'linking':
+                link_msg = "Linking files..."
+                show_buttons = False
+            elif raw_data_link_status == 'unlinking':
+                link_msg = "Unlinking files..."
+                show_buttons = False
+            elif raw_data_link_status.startswith('failed'):
+                link_msg = "Error (un)linking files: %s" % raw_data_link_status
+
         return self.render_string(
             "study_description_templates/raw_data_info.html",
             rd_id=raw_data_id,
             rd_filetype=rd.filetype,
             raw_data_files=raw_data_files,
             prep_template_id=prep_template.id,
-            show_unlink_btn=show_unlink_btn)
+            files=files,
+            filepath_types=fp_types,
+            filetype=filetype,
+            link_msg="",
+            show_buttons=show_buttons)
 
 
 class EditInvestigationType(BaseUIModule):

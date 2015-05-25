@@ -111,7 +111,7 @@ function extend_sample_template() {
   form.submit();
 }
 
-function create_raw_data(prep_id, filetype){
+function get_and_check_raw_data_files(prep_id, filetype){
   var barcodes = [];
   var forward = [];
   var reverse = [];
@@ -144,50 +144,71 @@ function create_raw_data(prep_id, filetype){
         break;
     }
   }
+
   if (sff.length === 0 && barcodes.length === 0 && forward.length === 0 && fasta.length === 0) {
     bootstrapAlert("You need to select at least: one barcode and one forward file, one sff file or one fasta file.");
+    return [false];
   } else if (sff.length === 0 && barcodes.length != forward.length) {
     bootstrapAlert("You must select the same number of barcode and forward seq files.");
+    return [false];
   } else if (sff.length === 0 && (reverse.length !== 0 && reverse.length != forward.length)) {
     bootstrapAlert("If you select reverse seqs, they should have the same number than barcodes and forward files.");
+    return [false];
   } else if (sff.length === 0 && (qual.length !== 0 && fasta.length != qual.length)) {
     bootstrapAlert("If you select qual, you must have the same number of fasta and qual files.");
+    return [false];
   } else {
+    return [true, barcodes, forward, reverse, sff, fasta, qual];
+  }
+};
+
+function create_raw_data(prep_id, filetype){
+  var result = get_and_check_raw_data_files(prep_id, filetype);
+  var success = result[0];
+
+  if (success){
+    var barcodes = result[1];
+    var forward = result[2];
+    var reverse = result[3];
+    var sff = result[4];
+    var fasta = result[5];
+    var qual = result[6];
+
     var form = $("<form>")
-      .attr("action", "/study/create_raw_data")
-      .attr("method", "post")
-      .append($("<input>")
-        .attr("type", "hidden")
-        .attr("name", "prep_template_id")
-        .attr("value", prep_id))
-      .append($("<input>")
-        .attr("type", "hidden")
-        .attr("name", "filetype")
-        .attr("value", filetype))
-      .append($("<input>")
-        .attr("type", "hidden")
-        .attr("name", "barcodes")
-        .attr("value", barcodes.join()))
-      .append($("<input>")
-        .attr("type", "hidden")
-        .attr("name", "forward")
-        .attr("value", forward.join()))
-      .append($("<input>")
-        .attr("type", "hidden")
-        .attr("name", "sff")
-        .attr("value", sff.join()))
-      .append($("<input>")
-        .attr("type", "hidden")
-        .attr("name", "fasta")
-        .attr("value", fasta.join()))
-      .append($("<input>")
-        .attr("type", "hidden")
-        .attr("name", "qual")
-        .attr("value", qual.join()))
-      .append($("<input>")
-        .attr("type", "hidden")
-        .attr("name", "reverse")
-        .attr("value", reverse.join()));
+    .attr("action", "/study/create_raw_data")
+    .attr("method", "post")
+    .append($("<input>")
+      .attr("type", "hidden")
+      .attr("name", "prep_template_id")
+      .attr("value", prep_id))
+    .append($("<input>")
+      .attr("type", "hidden")
+      .attr("name", "filetype")
+      .attr("value", filetype))
+    .append($("<input>")
+      .attr("type", "hidden")
+      .attr("name", "barcodes")
+      .attr("value", barcodes.join()))
+    .append($("<input>")
+      .attr("type", "hidden")
+      .attr("name", "forward")
+      .attr("value", forward.join()))
+    .append($("<input>")
+      .attr("type", "hidden")
+      .attr("name", "sff")
+      .attr("value", sff.join()))
+    .append($("<input>")
+      .attr("type", "hidden")
+      .attr("name", "fasta")
+      .attr("value", fasta.join()))
+    .append($("<input>")
+      .attr("type", "hidden")
+      .attr("name", "qual")
+      .attr("value", qual.join()))
+    .append($("<input>")
+      .attr("type", "hidden")
+      .attr("name", "reverse")
+      .attr("value", reverse.join()));
     $("body").append(form);
     form.submit();
   }
@@ -215,43 +236,6 @@ function add_raw_data(prep_id) {
         .attr("value", "add_raw_data"));
     $("body").append(form);
     form.submit();
-  }
-}
-
-function create_raw_data_old() {
-  if ($("#previous_raw_data").val() === null && $("#filetype").val() === "") {
-    bootstrapAlert("You need to select either a new file type or a raw data used in a previous study.");
-  } else if ((typeof $("#previous_raw_data").val() != 'undefined' && $("#previous_raw_data").val() !== null) && $("#filetype").val() !== "") {
-    bootstrapAlert("You can only select a new file type or one used in a previous study but not both.");
-  } else {
-    if ($("#filetype").val() !== "") {
-      var form = $("<form>")
-        .attr("action", window.location.href)
-        .attr("method", "post")
-        .append($("<input>")
-          .attr("type", "hidden")
-          .attr("name", "filetype")
-          .attr("value", $("#filetype").val()))
-        .append($("<input>")
-          .attr("type", "hidden")
-          .attr("name", "action")
-          .attr("value", "create_raw_data"));
-    } else {
-      var form = $("<form>")
-        .attr("action", window.location.href)
-        .attr("method", "post")
-        .append($("<input>")
-          .attr("type", "hidden")
-          .attr("name", "previous_raw_data")
-          .attr("value", $("#previous_raw_data option:selected").map(function(){ return this.value }).get().join(",")))
-        .append($("<input>")
-          .attr("type", "hidden")
-          .attr("name", "action")
-          .attr("value", "create_raw_data"));
-    }
-    $("body").append(form);
-    form.submit();
-
   }
 }
 
@@ -526,89 +510,63 @@ function update_investigation_type(old_value, prep_template_id, ppd_id) {
   }
 }
 
-function link_files_to_raw_data(raw_data_id) {
-  var barcodes = [];
-  var forward = [];
-  var reverse = [];
-  var sff = [];
-  var fasta = [];
-  var qual = [];
+function link_files_to_raw_data(raw_data_id, prep_template_id, filetype) {
+  var result = get_and_check_raw_data_files(prep_template_id, filetype);
+  var success = result[0];
 
-  var all_files = document.getElementsByName("upload_file_" + raw_data_id);
+  if (success){
+    var barcodes = result[1];
+    var forward = result[2];
+    var reverse = result[3];
+    var sff = result[4];
+    var fasta = result[5];
+    var qual = result[6];
 
-  for (var i = 0; i<all_files.length; i++) {
-    ele = all_files[i];
-    switch (ele.options[ele.selectedIndex].value) {
-      case "barcodes":
-        barcodes.push(ele.id);
-        break;
-      case "forward seqs":
-        forward.push(ele.id);
-        break;
-      case "reverse seqs":
-        reverse.push(ele.id);
-        break;
-      case "sff":
-        sff.push(ele.id);
-        break;
-      case "fasta":
-        fasta.push(ele.id);
-        break;
-      case "qual":
-        qual.push(ele.id);
-        break;
-    }
-  }
-  if (sff.length === 0 && barcodes.length === 0 && forward.length === 0 && fasta.length === 0) {
-    bootstrapAlert("You need to select at least: one barcode and one forward file, one sff file or one fasta file.");
-  } else if (sff.length === 0 && barcodes.length != forward.length) {
-    bootstrapAlert("You must select the same number of barcode and forward seq files.");
-  } else if (sff.length === 0 && (reverse.length !== 0 && reverse.length != forward.length)) {
-    bootstrapAlert("If you select reverse seqs, they should have the same number than barcodes and forward files.");
-  } else if (sff.length === 0 && (qual.length !== 0 && fasta.length != qual.length)) {
-    bootstrapAlert("If you select qual, you must have the same number of fasta and qual files.");
-  } else {
     var form = $("<form>")
-      .attr("action", "/study/add_files_to_raw_data")
-      .attr("method", "post")
-      .append($("<input>")
-        .attr("type", "hidden")
-        .attr("name", "raw_data_id")
-        .attr("value", raw_data_id))
-      .append($("<input>")
-        .attr("type", "hidden")
-        .attr("name", "study_id")
-        .attr("value", {{study.id}}))
-      .append($("<input>")
-        .attr("type", "hidden")
-        .attr("name", "barcodes")
-        .attr("value", barcodes.join()))
-      .append($("<input>")
-        .attr("type", "hidden")
-        .attr("name", "forward")
-        .attr("value", forward.join()))
-      .append($("<input>")
-        .attr("type", "hidden")
-        .attr("name", "sff")
-        .attr("value", sff.join()))
-      .append($("<input>")
-        .attr("type", "hidden")
-        .attr("name", "fasta")
-        .attr("value", fasta.join()))
-      .append($("<input>")
-        .attr("type", "hidden")
-        .attr("name", "qual")
-        .attr("value", qual.join()))
-      .append($("<input>")
-        .attr("type", "hidden")
-        .attr("name", "reverse")
-        .attr("value", reverse.join()));
+    .attr("action", "/study/add_files_to_raw_data")
+    .attr("method", "post")
+    .append($("<input>")
+      .attr("type", "hidden")
+      .attr("name", "raw_data_id")
+      .attr("value", raw_data_id))
+    .append($("<input>")
+      .attr("type", "hidden")
+      .attr("name", "prep_template_id")
+      .attr("value", prep_template_id))
+    .append($("<input>")
+      .attr("type", "hidden")
+      .attr("name", "study_id")
+      .attr("value", {{study.id}}))
+    .append($("<input>")
+      .attr("type", "hidden")
+      .attr("name", "barcodes")
+      .attr("value", barcodes.join()))
+    .append($("<input>")
+      .attr("type", "hidden")
+      .attr("name", "forward")
+      .attr("value", forward.join()))
+    .append($("<input>")
+      .attr("type", "hidden")
+      .attr("name", "sff")
+      .attr("value", sff.join()))
+    .append($("<input>")
+      .attr("type", "hidden")
+      .attr("name", "fasta")
+      .attr("value", fasta.join()))
+    .append($("<input>")
+      .attr("type", "hidden")
+      .attr("name", "qual")
+      .attr("value", qual.join()))
+    .append($("<input>")
+      .attr("type", "hidden")
+      .attr("name", "reverse")
+      .attr("value", reverse.join()));
     $("body").append(form);
     form.submit();
   }
 }
 
-function unlink_all_files(raw_data_id) {
+function unlink_all_files(raw_data_id, prep_template_id) {
   if (confirm("Are you sure you want to unlink all files?")){
     var form = $("<form>")
       .attr("action", "/study/unlink_all_files")
@@ -621,6 +579,10 @@ function unlink_all_files(raw_data_id) {
         .attr("type", "hidden")
         .attr("name", "raw_data_id")
         .attr("value", raw_data_id))
+      .append($("<input>")
+        .attr("type", "hidden")
+        .attr("name", "prep_template_id")
+        .attr("value", prep_template_id))
     $("body").append(form);
     form.submit();
   }
