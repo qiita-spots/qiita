@@ -28,14 +28,18 @@
     <br/><br/>
     {% if investigation_type %}
       {% if level != 'danger' and maintenance is None %}
-        <br/>
-        What kind of submission do you want to do?
-        <select name="submission_type">
-          <option value="ADD">ADD</option>
-          <option value="MODIFY">MODIFY</option>
-        </select>
-        <br/><br/>
-        <input type="submit" class="btn btn-primary" value="Submit to EBI">
+        {% if allow_submission %}
+            <br/>
+            What kind of submission do you want to do?
+            <select name="submission_type">
+                <option value="ADD">ADD</option>
+                <option value="MODIFY">MODIFY</option>
+            </select>
+            <br/><br/>
+            <input type="submit" class="btn btn-primary" value="Submit to EBI">
+        {% else %}
+            <b>{% raw ebi_disabled_msg %}
+        {% end %}
       {% end %}
     {% else %}
       <b>You need to set an investigation type to continue!</b>
