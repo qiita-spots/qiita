@@ -16,7 +16,7 @@ from glob import glob
 
 from future import standard_library
 from future.utils import viewitems
-from moi import r_client
+from redis import Redis
 
 from qiita_core.exceptions import QiitaEnvironmentError
 from qiita_core.qiita_settings import qiita_config
@@ -297,6 +297,9 @@ def drop_and_rebuild_tst_database(conn_handler):
     # Populate the database
     with open(POPULATE_FP, 'U') as f:
         conn_handler.execute(f.read())
+
+    r_client = Redis(qiita_config.redis_host, qiita_config.redis_port,
+                     qiita_config.redis_password, qiita_config.redis_db)
     r_client.flushdb()
 
 
