@@ -33,8 +33,8 @@ from qiita_db.util import (exists_table, get_db_files_base_dir, get_mountpoint,
                            get_count)
 from qiita_db.metadata_template.prep_template import PrepTemplate, PrepSample
 from qiita_db.metadata_template.sample_template import SampleTemplate, Sample
-from qiita_db.metadata_template.constants import (
-    PREP_TEMPLATE_COLUMNS, PREP_TEMPLATE_COLUMNS_TARGET_GENE)
+from qiita_db.metadata_template import (PREP_TEMPLATE_COLUMNS,
+                                        PREP_TEMPLATE_COLUMNS_TARGET_GENE)
 
 
 class BaseTestPrepSample(TestCase):
