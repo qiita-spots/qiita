@@ -198,8 +198,8 @@ class StudyEditHandler(BaseHandler):
         if study:
             # Check study and user access
             the_study = self._check_study_exists_and_user_access(study)
-            # If the study is public or private, we use the short version
-            if the_study.status in {'public', 'private'}:
+            # If the study is not sandbox, we use the short version
+            if study.status != 'sandbox':
                 form_factory = StudyEditorForm
 
         # Get the form data from the request arguments
