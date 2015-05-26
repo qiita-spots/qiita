@@ -65,6 +65,17 @@ class TestUtil(TestCase):
         exp.index.name = 'sample_name'
         assert_frame_equal(obs, exp)
 
+    def test_load_template_to_dataframe_qiime_map(self):
+        obs = load_template_to_dataframe(StringIO(QIIME_TUTORIAL_MAP_SUBSET),
+                                         index='#SampleID')
+        exp = pd.DataFrame.from_dict(QIIME_TUTORIAL_MAP_DICT_FORM)
+        exp.index.name = '#SampleID'
+        obs.sort_index(axis=0, inplace=True)
+        obs.sort_index(axis=1, inplace=True)
+        exp.sort_index(axis=0, inplace=True)
+        exp.sort_index(axis=1, inplace=True)
+        assert_frame_equal(obs, exp)
+
     def test_load_template_to_dataframe_duplicate_cols(self):
         obs = load_template_to_dataframe(
             StringIO(EXP_SAMPLE_TEMPLATE_DUPE_COLS))
@@ -225,7 +236,7 @@ class TestUtil(TestCase):
         self.assertFalse(obs)
 
         obs = looks_like_qiime_mapping_file(
-            StringIO(QIIME_TUTORIAL_MAP))
+            StringIO(QIIME_TUTORIAL_MAP_SUBSET))
         self.assertTrue(obs)
 
     def test_looks_like_qiime_mmapping_file_error(self):
@@ -233,30 +244,13 @@ class TestUtil(TestCase):
             looks_like_qiime_mapping_file(StringIO())
 
 
-QIIME_TUTORIAL_MAP = (
+QIIME_TUTORIAL_MAP_SUBSET = (
     "#SampleID\tBarcodeSequence\tLinkerPrimerSequence\tTreatment\tDOB\t"
     "Description\n"
-    "#Example mapping file for the QIIME analysis package.  These 9 samples "
-    "are from a study of the effects of exercise and diet on mouse cardiac "
-    "physiology (Crawford, et al, PNAS, 2009).\n"
     "PC.354\tAGCACGAGCCTA\tYATGCTGCCTCCCGTAGGAGT\tControl\t20061218\t"
     "Control_mouse_I.D._354\n"
-    "PC.355\tAACTCGTCGATG\tYATGCTGCCTCCCGTAGGAGT\tControl\t20061218\t"
-    "Control_mouse_I.D._355\n"
-    "PC.356\tACAGACCACTCA\tYATGCTGCCTCCCGTAGGAGT\tControl\t20061126\t"
-    "Control_mouse_I.D._356\n"
-    "PC.481\tACCAGCGACTAG\tYATGCTGCCTCCCGTAGGAGT\tControl\t20070314\t"
-    "Control_mouse_I.D._481\n"
-    "PC.593\tAGCAGCACTTGT\tYATGCTGCCTCCCGTAGGAGT\tControl\t20071210\t"
-    "Control_mouse_I.D._593\n"
     "PC.607\tAACTGTGCGTAC\tYATGCTGCCTCCCGTAGGAGT\tFast\t20071112\t"
     "Fasting_mouse_I.D._607\n"
-    "PC.634\tACAGAGTCGGCT\tYATGCTGCCTCCCGTAGGAGT\tFast\t20080116\t"
-    "Fasting_mouse_I.D._634\n"
-    "PC.635\tACCGCAGAGTCA\tYATGCTGCCTCCCGTAGGAGT\tFast\t20080116\t"
-    "Fasting_mouse_I.D._635\n"
-    "PC.636\tACGGTGAGTGTC\tYATGCTGCCTCCCGTAGGAGT\tFast\t20080116\t"
-    "Fasting_mouse_I.D._636\n"
 )
 
 EXP_SAMPLE_TEMPLATE = (
@@ -724,6 +718,19 @@ ST_COLUMN_WITH_NAS_DICT_FORM = \
                      '2.Sample2': 'type1',
                      '2.Sample3': 'type1'},
      'str_column': {'2.Sample1': 'NA', '2.Sample2': 'NA', '2.Sample3': 'NA'}}
+
+QIIME_TUTORIAL_MAP_DICT_FORM = {
+    'BarcodeSequence': {'PC.354': 'AGCACGAGCCTA',
+                        'PC.607': 'AACTGTGCGTAC'},
+    'LinkerPrimerSequence': {'PC.354': 'YATGCTGCCTCCCGTAGGAGT',
+                             'PC.607': 'YATGCTGCCTCCCGTAGGAGT'},
+    'Treatment': {'PC.354': 'Control',
+                  'PC.607': 'Fast'},
+    'DOB': {'PC.354': 20061218,
+            'PC.607': 20071112},
+    'Description': {'PC.354': 'Control_mouse_I.D._354',
+                    'PC.607': 'Fasting_mouse_I.D._607'}
+}
 
 EXP_PREP_TEMPLATE = (
     'sample_name\tbarcodesequence\tcenter_name\tcenter_project_name\t'
