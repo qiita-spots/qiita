@@ -25,6 +25,10 @@
       <tr class="danger">
         <td>
           <a href="/analysis/results/{{analysis.id}}">{{analysis.name}}</a>
+    {% elif status == "altered_data" %}
+      <tr class="warning">
+        <td>
+          <a href="/analysis/results/{{analysis.id}}">{{analysis.name}}</a>
     {% else %}
       <tr class="active">
         <td>

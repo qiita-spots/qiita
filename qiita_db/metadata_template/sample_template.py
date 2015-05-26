@@ -231,7 +231,6 @@ class SampleTemplate(MetadataTemplate):
             md_template, conn_handler, queue_name)
 
         conn_handler.execute_queue(queue_name)
-        self._update_analyses(self.id)
         if new_cols:
             self.log_change("Columns added: %s" % ', '.join(new_cols))
         if new_samples:

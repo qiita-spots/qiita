@@ -16,6 +16,7 @@ from glob import glob
 
 from future import standard_library
 from future.utils import viewitems
+from moi import r_client
 
 from qiita_core.exceptions import QiitaEnvironmentError
 from qiita_core.qiita_settings import qiita_config
@@ -280,7 +281,7 @@ def drop_environment(ask_for_confirmation):
 
 
 def drop_and_rebuild_tst_database(conn_handler):
-    """Drops the qiita schema and rebuilds the test database
+    """Drops the qiita schema and redis keys and rebuilds the test database
 
     Parameters
     ----------
@@ -296,11 +297,12 @@ def drop_and_rebuild_tst_database(conn_handler):
     # Populate the database
     with open(POPULATE_FP, 'U') as f:
         conn_handler.execute(f.read())
+    r_client.flushdb()
 
 
 def reset_test_database(wrapped_fn):
     """Decorator that drops the qiita schema, rebuilds and repopulates the
-    schema with test data, then executes wrapped_fn
+    schema with test data, flushes the redis db, then executes wrapped_fn
     """
     conn_handler = SQLConnectionHandler()
 

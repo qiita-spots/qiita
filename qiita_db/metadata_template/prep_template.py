@@ -578,4 +578,3 @@ class PrepTemplate(MetadataTemplate):
         # Change found analyses to altered_data status
         if analyses:
             self._update_analyses(analyses, change)
-

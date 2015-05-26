@@ -1203,10 +1203,10 @@ class MetadataTemplate(QiitaObject):
         conn_handler.execute(sql, [changed_status_id] + analyses)
 
         sql = "SELECT study_title FROM qiita.study WHERE study_id = %s"
-        study = conn_handler.execute_fetchone(sql, [self.study_id])
+        study = conn_handler.execute_fetchone(sql, [self.study_id])[0]
 
         message = ("%s template for study '%s' changed: %s" %
-                   (self._table_prefix[:-2], study, changes))
+                   (self._table_prefix[:-1], study, changes))
         for a_id in analyses:
             # add to change list and reset expire time to 3 months
             key = "analysis_%d" % a_id

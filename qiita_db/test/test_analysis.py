@@ -528,8 +528,9 @@ class TestAnalysis(TestCase):
         SampleTemplate(1).extend(metadata_dict_updated)
         self.assertEqual(self.analysis.status, 'altered_data')
         obs = self.analysis.get_changes()
-        exp = {'Identification of the Microbiomes for Cannabis Soils':
-               ['Columns added: int_column, str_column']}
+        exp = ["sample template for study 'Identification of the Microbiomes "
+               "for Cannabis Soils' changed: Columns added: int_column, "
+               "str_column"]
         self.assertEqual(obs, exp)
 
 

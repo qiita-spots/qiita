@@ -26,6 +26,7 @@ from biom import load_table
 from biom.util import biom_open
 import pandas as pd
 from skbio.util import find_duplicates
+from moi import r_client
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from .sql_connection import SQLConnectionHandler
@@ -703,34 +704,12 @@ class Analysis(QiitaStatusObject):
 
         Returns
         -------
-        dict of list
-            Changes in the form {study_title: [change1,change2, ...]...}
+        list : changes made to the data in the analysis
         """
         if self.status != "altered_data":
             return {}
-        conn_handler = SQLConnectionHandler()
-        studydict = defaultdict(list)
-        sql = """SELECT DISTINCT study_title, change, timestamp
-        FROM qiita.prep_template_edit
-        JOIN qiita.prep_template_preprocessed_data USING (prep_template_id)
-        JOIN qiita.preprocessed_processed_data USING (preprocessed_data_id)
-        JOIN qiita.study_processed_data USING (processed_data_id)
-        JOIN qiita.study study_title USING (study_id)
-        JOIN qiita.analysis_sample USING (processed_data_id)
-        WHERE analysis_id = %s ORDER BY timestamp DESC"""
-        for title, change, _ in conn_handler.execute_fetchall(sql, [self._id]):
-            studydict[title].append(change)
+        return r_client.lrange('analysis_%d' % self._id, 0, -1)
 
-        sql = """SELECT DISTINCT study_title, change, timestamp
-        FROM qiita.sample_template_edit
-        JOIN qiita.study study_title USING (study_id)
-        JOIN qiita.study_processed_data USING (study_id)
-        JOIN qiita.analysis_sample USING (processed_data_id)
-        WHERE analysis_id = %s ORDER BY timestamp DESC"""
-        for title, change, _ in conn_handler.execute_fetchall(sql, [self._id]):
-            studydict[title].append(change)
-
-        return studydict
 
     def build_files(self, rarefaction_depth=None):
         """Builds biom and mapping files needed for analysis
