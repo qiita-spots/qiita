@@ -718,7 +718,7 @@ class Analysis(QiitaStatusObject):
         JOIN qiita.study study_title USING (study_id)
         JOIN qiita.analysis_sample USING (processed_data_id)
         WHERE analysis_id = %s ORDER BY timestamp DESC"""
-        for title, change in conn_handler.execute_fetchall(sql, [self._id]):
+        for title, change, _ in conn_handler.execute_fetchall(sql, [self._id]):
             studydict[title].append(change)
 
         sql = """SELECT DISTINCT study_title, change, timestamp

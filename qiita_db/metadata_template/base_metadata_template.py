@@ -46,6 +46,7 @@ from copy import deepcopy
 import pandas as pd
 from skbio.util import find_duplicates
 import warnings
+from moi import r_client
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 
@@ -669,6 +670,14 @@ class MetadataTemplate(QiitaObject):
         queue_name : str
             The queue where the SQL statements will be added
 
+        Returns
+        -------
+        new_cols : set
+            All added columns
+
+        new_samples : set
+            All added samples
+
         Raises
         ------
         QiitaDBError
@@ -1182,19 +1191,27 @@ class MetadataTemplate(QiitaObject):
 
         return cols.difference(self.categories())
 
-    def log_change(self, change):
-        """log a change to the template
-
-        Parameters
-        ----------
-        change : str
-            Description of the change made
-        """
-        self._check_subclass()
-        if not isinstance(change, str):
-            raise IncompetentQiitaDeveloperError("Can only pass string!")
-
+    def _update_analyses(self, analyses, changes):
+        """update any analyses affected by changes to the prep template"""
         conn_handler = SQLConnectionHandler()
-        sql = "INSERT INTO qiita.{0} ({1}, change) VALUES (%s, %s)".format(
-            self._log_table, self._id_column)
-        conn_handler.execute(sql, [self._id, change])
+        # TODO: fix magic number since convert_to_id doesn't work on status
+        # issue #292
+        changed_status_id = 7
+        sql = """UPDATE qiita.analysis SET analysis_status_id = %s
+                 WHERE analysis_id IN ({})""".format(', '.join(
+            ['%s'] * len(analyses)))
+        conn_handler.execute(sql, [changed_status_id] + analyses)
+
+        sql = "SELECT study_title FROM qiita.study WHERE study_id = %s"
+        study = conn_handler.execute_fetchone(sql, [self.study_id])
+
+        message = ("%s template for study '%s' changed: %s" %
+                   (self._table_prefix[:-2], study, changes))
+        for a_id in analyses:
+            # add to change list and reset expire time to 3 months
+            key = "analysis_%d" % a_id
+            r_client.rpush(key, message)
+            r_client.expire(key, 7889231)
+
+    def log_change(changes):
+        raise NotImplementedError("Must be defined in sublcass")

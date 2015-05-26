@@ -75,27 +75,6 @@ class PrepTemplate(MetadataTemplate):
     _sample_cls = PrepSample
     _fp_id = convert_to_id("prep_template", "filepath_type")
     _filepath_table = 'prep_template_filepath'
-    _log_table = "prep_template_edit"
-
-    @staticmethod
-    def _update_analyses(pt_id):
-        """update any analyses affected by changes to the prep template"""
-        conn_handler = SQLConnectionHandler()
-        # pull out affected analyses
-        sql = """SELECT DISTINCT analysis_id FROM qiita.analysis_sample
-                JOIN qiita.preprocessed_processed_data
-                USING (processed_data_id)
-                JOIN qiita.prep_template_preprocessed_data
-                USING (preprocessed_data_id) WHERE prep_template_id = %s"""
-        changed = [x[0] for x in conn_handler.execute_fetchall(sql, [pt_id])]
-        if changed:
-            # TODO: fix magic number since convert_to_id doesn't work on status
-            # issue #292
-            changed_status_id = 7
-            sql = """UPDATE qiita.analysis SET analysis_status_id = %s
-                     WHERE analysis_id IN ({})""".format(', '.join(
-                ['%s'] * len(changed)))
-            conn_handler.execute(sql, [changed_status_id] + changed)
 
     @classmethod
     def create(cls, md_template, raw_data, study, data_type,
@@ -275,8 +254,6 @@ class PrepTemplate(MetadataTemplate):
         conn_handler.execute(
             "DELETE FROM qiita.prep_template where "
             "{0} = %s".format(cls._id_column), (id_,))
-
-        cls._update_analyses(id_)
 
     def data_type(self, ret_id=False):
         """Returns the data_type or the data_type id
@@ -580,3 +557,25 @@ class PrepTemplate(MetadataTemplate):
         fn = conn_handler.execute_fetchall(sql, (self._id,))[0][1]
         base_dir = get_mountpoint('templates')[0][1]
         return join(base_dir, fn)
+
+    def log_change(self, change):
+        """update analyses and shared users affected by template change
+
+        Parameters
+        ----------
+        change : str
+            Description of change done to template
+        """
+        conn_handler = SQLConnectionHandler()
+        # pull out affected analyses
+        sql = """SELECT DISTINCT analysis_id FROM qiita.analysis_sample
+                JOIN qiita.preprocessed_processed_data
+                USING (processed_data_id)
+                JOIN qiita.prep_template_preprocessed_data
+                USING (preprocessed_data_id) WHERE prep_template_id = %s"""
+        analyses = [x[0] for x in conn_handler.execute_fetchall(sql,
+                                                                [self._id])]
+        # Change found analyses to altered_data status
+        if analyses:
+            self._update_analyses(analyses, change)
+
