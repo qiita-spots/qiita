@@ -20,18 +20,29 @@
       </td>
     </tr>
   </table>
-
-  {% if status == "altered_data" %}
-    <h2 style="color:red">UNDERLYING DATA FOR THIS ANALYSIS HAS CHANGED. CONSIDER RE-RUNNING THIS ANALYSIS.</h2>
-    {% for change in changes %}
-        <p>{{change}}</p>
-      {% end %}
-    {% if changes == {} %}
-      <b> One or more sample/prep templates were deleted. Consider re-creating this analysis completely.</b>
-    {% end %}
-  {% end %}
 </div>
-
+{% if status == "altered_data" %}
+<div class="row" width='100%'>
+  <div class="col-md-12">
+    <div class="panel-group" id="accordion">
+      {% if  status == "altered_data" %}
+        <div class="panel panel-default">
+          <div class="panel-heading">
+            <h3 style="color:red" class="panel-title"><a data-toggle="collapse" data-parent="#accordion" href="#analysis-changes">UNDERLYING DATA FOR THIS ANALYSIS HAS CHANGED. CONSIDER RE-RUNNING THIS ANALYSIS.</a></h3>
+          </div>
+          <div id="analysis-changes" class="panel-collapse collapse">
+              <div class="panel-body">
+                {% for change in changes %}
+                    <p>{{change}}</p>
+                {% end %}
+              </div>
+          </div>
+        </div>
+      {% end %}
+    </div>
+  </div>
+</div>
+{% end %}
 
 <div class="row" width='100%'>
   <div class="col-md-12">
@@ -55,6 +66,20 @@
                     {% end %}
                     <hr>
                   {% end %}
+              </div>
+          </div>
+        </div>
+      {% end %}
+      {% if  status == "altered_data" %}
+        <div class="panel panel-default">
+          <div class="panel-heading">
+            <h3 style="color:red" class="panel-title"><a data-toggle="collapse" data-parent="#accordion" href="#analysis-changes">UNDERLYING DATA FOR THIS ANALYSIS HAS CHANGED. CONSIDER RE-RUNNING THIS ANALYSIS.</a></h3>
+          </div>
+          <div id="analysis-changes" class="panel-collapse collapse">
+              <div class="panel-body">
+                {% for change in changes %}
+                    <p>{{change}}</p>
+                {% end %}
               </div>
           </div>
         </div>
