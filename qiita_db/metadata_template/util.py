@@ -122,8 +122,8 @@ def prefix_sample_names_with_id(md_template, study_id):
         md_template.index.name = None
 
 
-def load_template_to_dataframe(fn, strip_whitespace=True):
-    """Load a sample or a prep template into a data frame
+def load_template_to_dataframe(fn, strip_whitespace=True, index='sample_name'):
+    """Load a sample/prep template or a QIIME mapping file into a data frame
 
     Parameters
     ----------
@@ -132,6 +132,8 @@ def load_template_to_dataframe(fn, strip_whitespace=True):
     strip_whitespace : bool, optional
         Defaults to True. Whether or not to strip whitespace from values in the
         input file
+    index : str, optional
+        Defaults to 'sample_name'. The index to use in the loaded information
 
     Returns
     -------
@@ -166,6 +168,8 @@ def load_template_to_dataframe(fn, strip_whitespace=True):
     |      Column Name      |  Python Type |
     +=======================+==============+
     |           sample_name |          str |
+    +-----------------------+--------------+
+    |             #SampleID |          str |
     +-----------------------+--------------+
     |     physical_location |          str |
     +-----------------------+--------------+
@@ -224,7 +228,7 @@ def load_template_to_dataframe(fn, strip_whitespace=True):
                                keep_default_na=False, na_values=[''],
                                parse_dates=True, index_col=False, comment='\t',
                                mangle_dupe_cols=False, converters={
-                                   'sample_name': lambda x: str(x).strip(),
+                                   index: lambda x: str(x).strip(),
                                    # required sample template information
                                    'physical_location': str,
                                    'sample_type': str,
@@ -263,21 +267,22 @@ def load_template_to_dataframe(fn, strip_whitespace=True):
 
     initial_columns = set(template.columns)
 
-    if 'sample_name' not in template.columns:
-        raise QiitaDBColumnError("The 'sample_name' column is missing from "
-                                 "your template, this file cannot be parsed.")
+    if index not in template.columns:
+        raise QiitaDBColumnError("The '%s' column is missing from "
+                                 "your template, this file cannot be parsed."
+                                 % index)
 
     # remove rows that have no sample identifier but that may have other data
     # in the rest of the columns
-    template.dropna(subset=['sample_name'], how='all', inplace=True)
+    template.dropna(subset=[index], how='all', inplace=True)
 
     # set the sample name as the index
-    template.set_index('sample_name', inplace=True)
+    template.set_index(index, inplace=True)
 
     # it is not uncommon to find templates that have empty columns
     template.dropna(how='all', axis=1, inplace=True)
 
-    initial_columns.remove('sample_name')
+    initial_columns.remove(index)
     dropped_cols = initial_columns - set(template.columns)
     if dropped_cols:
         warnings.warn('The following column(s) were removed from the template '
@@ -322,7 +327,7 @@ def looks_like_qiime_mapping_file(fp):
 
     Parameters
     ----------
-    fp : str
+    fp : str or file-like object
         filepath to check if it looks like a QIIME mapping file
 
     Returns
