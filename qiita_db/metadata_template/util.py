@@ -315,3 +315,38 @@ def get_invalid_sample_names(sample_names):
             inv.append(s)
 
     return inv
+
+
+def looks_like_qiime_mapping_file(fp):
+    """Checks if the file looks like a QIIME mapping file
+
+    Parameters
+    ----------
+    fp : str
+        filepath to check if it looks like a QIIME mapping file
+
+    Returns
+    -------
+    bool
+        True if fp looks like a QIIME mapping file, false otherwise.
+
+    Raises
+    ------
+    QiitaDBError
+        If an empty file is passed
+
+    Notes
+    -----
+    This is not doing a validation of the QIIME mapping file. It simply checks
+    the first line in the file and it returns true if the line starts with
+    '#SampleID', since a sample/prep template will start with 'sample_name' or
+    some other different column.
+    """
+    line = None
+    with open_file(fp, mode='U') as f:
+        first_line = f.readline()
+    if not first_line:
+        raise QiitaDBError('Empty file passed!')
+
+    first_col = first_line.split()[0]
+    return first_col == '#SampleID'
