@@ -17,7 +17,8 @@ from qiita_db.exceptions import (QiitaDBColumnError, QiitaDBWarning,
                                  QiitaDBError)
 from qiita_db.metadata_template.util import (
     get_datatypes, as_python_types, prefix_sample_names_with_id,
-    load_template_to_dataframe, get_invalid_sample_names)
+    load_template_to_dataframe, get_invalid_sample_names,
+    looks_like_qiime_mapping_file)
 
 
 class TestUtil(TestCase):
@@ -218,6 +219,45 @@ class TestUtil(TestCase):
             # prevent flake8 from complaining
             str(obs)
 
+    def test_looks_like_qiime_mapping_file(self):
+        obs = looks_like_qiime_mapping_file(
+            StringIO(EXP_SAMPLE_TEMPLATE))
+        self.assertFalse(obs)
+
+        obs = looks_like_qiime_mapping_file(
+            StringIO(QIIME_TUTORIAL_MAP))
+        self.assertTrue(obs)
+
+    def test_looks_like_qiime_mmapping_file_error(self):
+        with self.assertRaises(QiitaDBError):
+            looks_like_qiime_mapping_file(StringIO())
+
+
+QIIME_TUTORIAL_MAP = (
+    "#SampleID\tBarcodeSequence\tLinkerPrimerSequence\tTreatment\tDOB\t"
+    "Description\n"
+    "#Example mapping file for the QIIME analysis package.  These 9 samples "
+    "are from a study of the effects of exercise and diet on mouse cardiac "
+    "physiology (Crawford, et al, PNAS, 2009).\n"
+    "PC.354\tAGCACGAGCCTA\tYATGCTGCCTCCCGTAGGAGT\tControl\t20061218\t"
+    "Control_mouse_I.D._354\n"
+    "PC.355\tAACTCGTCGATG\tYATGCTGCCTCCCGTAGGAGT\tControl\t20061218\t"
+    "Control_mouse_I.D._355\n"
+    "PC.356\tACAGACCACTCA\tYATGCTGCCTCCCGTAGGAGT\tControl\t20061126\t"
+    "Control_mouse_I.D._356\n"
+    "PC.481\tACCAGCGACTAG\tYATGCTGCCTCCCGTAGGAGT\tControl\t20070314\t"
+    "Control_mouse_I.D._481\n"
+    "PC.593\tAGCAGCACTTGT\tYATGCTGCCTCCCGTAGGAGT\tControl\t20071210\t"
+    "Control_mouse_I.D._593\n"
+    "PC.607\tAACTGTGCGTAC\tYATGCTGCCTCCCGTAGGAGT\tFast\t20071112\t"
+    "Fasting_mouse_I.D._607\n"
+    "PC.634\tACAGAGTCGGCT\tYATGCTGCCTCCCGTAGGAGT\tFast\t20080116\t"
+    "Fasting_mouse_I.D._634\n"
+    "PC.635\tACCGCAGAGTCA\tYATGCTGCCTCCCGTAGGAGT\tFast\t20080116\t"
+    "Fasting_mouse_I.D._635\n"
+    "PC.636\tACGGTGAGTGTC\tYATGCTGCCTCCCGTAGGAGT\tFast\t20080116\t"
+    "Fasting_mouse_I.D._636\n"
+)
 
 EXP_SAMPLE_TEMPLATE = (
     "sample_name\tcollection_timestamp\tdescription\thas_extracted_data\t"
