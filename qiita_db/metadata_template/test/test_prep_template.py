@@ -1342,7 +1342,7 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
                                  self.data_type_id)
         self.assertEqual(pt.raw_data, None)
         pt.raw_data = rd
-        self.assertEqual(pt.raw_data, 1)
+        self.assertEqual(pt.raw_data, rd.id)
 
 
 EXP_PREP_TEMPLATE = (
