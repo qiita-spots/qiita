@@ -331,6 +331,25 @@ class DemuxTests(TestCase):
         # implicitly tested with test_to_ascii
         pass
 
+    def test_fetch_qual_length_bug(self):
+        # fetch was not trimming qual to the length of the sequence resulting
+        # in qual scores for positions beyond the length of the sequence.
+        with tempfile.NamedTemporaryFile('r+', suffix='.fq',
+                                         delete=False) as f:
+            f.write(fqdata_variable_length)
+
+        self.to_remove.append(f.name)
+        to_hdf5(f.name, self.hdf5_file)
+
+        exp = [('a', [(b"@a_0 orig_bc=abc new_bc=abc bc_diffs=0\nxyz\n+\n"
+                       "ABC\n")]),
+               ('b', [(b"@b_0 orig_bc=abw new_bc=wbc bc_diffs=4\nqwe\n+\n"
+                       "DFG\n"),
+                      (b"@b_1 orig_bc=abw new_bc=wbc bc_diffs=4\nqwexx\n+\n"
+                       "DEF#G\n")])]
+
+        obs = [(s[0], list(s[1])) for s in to_per_sample_ascii(self.hdf5_file)]
+        self.assertEqual(obs, exp)
 
 seqdata = """>a_1 orig_bc=abc new_bc=abc bc_diffs=0
 x
@@ -368,6 +387,20 @@ DFG
 qwe
 +
 DEF
+"""
+
+fqdata_variable_length = """@a_1 orig_bc=abc new_bc=abc bc_diffs=0
+xyz
++
+ABC
+@b_1 orig_bc=abw new_bc=wbc bc_diffs=4
+qwe
++
+DFG
+@b_2 orig_bc=abw new_bc=wbc bc_diffs=4
+qwexx
++
+DEF#G
 """
 
 if __name__ == '__main__':
