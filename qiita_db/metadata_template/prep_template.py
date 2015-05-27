@@ -244,12 +244,6 @@ class PrepTemplate(MetadataTemplate):
                                                           cls._id_column),
             (id_,))
 
-        # Remove the rows from prep_template_edit
-        conn_handler.execute(
-            "DELETE FROM qiita.{0} where {1} = %s".format(cls._log_table,
-                                                          cls._id_column),
-            (id_,))
-
         # Remove the row from prep_template
         conn_handler.execute(
             "DELETE FROM qiita.prep_template where "

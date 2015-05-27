@@ -927,10 +927,6 @@ class TestSampleTemplateReadWrite(BaseTestSampleTemplate):
         self.new_study = Study.create(User('test@foo.bar'),
                                       "Fried Chicken Microbiome", [1], info)
 
-    def test_update_analyses(self):
-        SampleTemplate._update_analyses(1)
-        self.assertEqual(Analysis(1).status, 'altered_data')
-
     def test_create_duplicate(self):
         """Create raises an error when creating a duplicated SampleTemplate"""
         with self.assertRaises(QiitaDBDuplicateError):
@@ -1484,11 +1480,14 @@ class TestSampleTemplateReadWrite(BaseTestSampleTemplate):
         self.assertEqual(st.get_filepaths()[0][0], exp_id)
 
     def test_log_change(self):
-        self.tester.log_change('test logging')
-        obs = self.conn_handler.execute_fetchall(
-            "SELECT study_id, change from qiita.sample_template_edit")
-        exp = [[1, 'test logging']]
-        self.assertEqual(obs, exp)
+        self.tester.log_change('test logging sample')
+        analysis = Analysis(1)
+        self.assertEqual(analysis.status, 'altered_data')
+        self.assertEqual(
+            analysis.get_changes(), ["sample template for study "
+                                     "'Identification of the Microbiomes for "
+                                     "Cannabis Soils' changed: test logging "
+                                     "sample"])
 
     def test_extend_error(self):
         """extend raises an error if no new columns/samples are added"""

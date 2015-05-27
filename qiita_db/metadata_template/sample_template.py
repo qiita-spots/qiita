@@ -172,12 +172,6 @@ class SampleTemplate(MetadataTemplate):
 
         conn_handler.add_to_queue(
             queue,
-            "DELETE FROM qiita.{0} where {1} = %s".format(cls._log_table,
-                                                          cls._id_column),
-            (id_,))
-
-        conn_handler.add_to_queue(
-            queue,
             "DELETE FROM qiita.{0} where {1} = %s".format(cls._column_table,
                                                           cls._id_column),
             (id_,))
@@ -300,7 +294,6 @@ class SampleTemplate(MetadataTemplate):
             self.update_category(col, new_map[col].to_dict())
 
         self.generate_files()
-        self._update_analyses(self.id)
         self.log_change("Columns updated: %s" % ', '.join(changed_cols))
 
     def log_change(self, change):

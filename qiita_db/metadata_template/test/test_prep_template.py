@@ -16,6 +16,7 @@ from collections import Iterable
 import numpy.testing as npt
 import pandas as pd
 from pandas.util.testing import assert_frame_equal
+from moi import r_client
 
 from qiita_core.util import qiita_test_checker
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
@@ -381,10 +382,6 @@ class TestPrepTemplateReadOnly(BaseTestPrepTemplate):
     def test_study_id(self):
         """Ensure that the correct study ID is returned"""
         self.assertEqual(self.tester.study_id, 1)
-
-    def test_update_analyses(self):
-        PrepTemplate._update_analyses(1)
-        self.assertEqual(Analysis(1).status, 'altered_data')
 
     def test_init_unknown_error(self):
         """Init raises an error if the id is not known"""
@@ -1011,10 +1008,12 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
 
     def test_log_change(self):
         self.tester.log_change('test logging prep')
-        obs = self.conn_handler.execute_fetchall(
-            "SELECT prep_template_id, change from qiita.prep_template_edit")
-        exp = [[1, 'test logging prep']]
-        self.assertEqual(obs, exp)
+        analysis = Analysis(1)
+        self.assertEqual(analysis.status, 'altered_data')
+        self.assertEqual(
+            analysis.get_changes(), ["prep template for study 'Identification "
+                                     "of the Microbiomes for Cannabis Soils' "
+                                     "changed: test logging prep"])
 
     def test_generate_files(self):
         fp_count = get_count("qiita.filepath")
