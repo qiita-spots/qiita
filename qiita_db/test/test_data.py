@@ -14,13 +14,15 @@ from os import close, remove
 from os.path import join, basename, exists
 from tempfile import mkstemp
 
+import pandas as pd
+
 from qiita_core.util import qiita_test_checker
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_db.exceptions import (QiitaDBError, QiitaDBUnknownIDError,
                                  QiitaDBStatusError)
 from qiita_db.study import Study, StudyPerson
 from qiita_db.user import User
-from qiita_db.util import get_mountpoint
+from qiita_db.util import get_mountpoint, get_count
 from qiita_db.data import BaseData, RawData, PreprocessedData, ProcessedData
 from qiita_db.metadata_template import PrepTemplate
 
@@ -46,7 +48,6 @@ class RawDataTests(TestCase):
         close(fd)
         self.filetype = 2
         self.filepaths = [(self.seqs_fp, 1), (self.barcodes_fp, 2)]
-        self.studies = [Study(1)]
         _, self.db_test_raw_dir = get_mountpoint('raw_data')[0]
 
         with open(self.seqs_fp, "w") as f:
@@ -55,24 +56,19 @@ class RawDataTests(TestCase):
             f.write("\n")
         self._clean_up_files = []
 
-        # Create a new study
-        info = {
-            "timeseries_type_id": 1,
-            "metadata_complete": True,
-            "mixs_compliant": True,
-            "number_samples_collected": 25,
-            "number_samples_promised": 28,
-            "portal_type_id": 3,
-            "study_alias": "FCM",
-            "study_description": "Microbiome of people who eat nothing but "
-                                 "fried chicken",
-            "study_abstract": "Exploring how a high fat diet changes the "
-                              "gut microbiome",
-            "emp_person_id": StudyPerson(2),
-            "principal_investigator_id": StudyPerson(3),
-            "lab_person_id": StudyPerson(1)
-        }
-        Study.create(User("test@foo.bar"), "Test study 2", [1], info)
+        # Create some new PrepTemplates
+        metadata_dict = {
+            'SKB8.640193': {'center_name': 'ANL',
+                            'primer': 'GTGCCAGCMGCCGCGGTAA',
+                            'barcode': 'GTCCGCAAGTTA',
+                            'run_prefix': "s_G1_L001_sequences",
+                            'platform': 'ILLUMINA',
+                            'library_construction_protocol': 'AAAA',
+                            'experiment_design_description': 'BBBB'}}
+        metadata = pd.DataFrame.from_dict(metadata_dict, orient='index')
+        self.pt1 = PrepTemplate.create(metadata, Study(1), "16S")
+        self.pt2 = PrepTemplate.create(metadata, Study(1), "18S")
+        self.prep_templates = [self.pt1, self.pt2]
 
     def tearDown(self):
         for f in self._clean_up_files:
@@ -81,9 +77,9 @@ class RawDataTests(TestCase):
     def test_create(self):
         """Correctly creates all the rows in the DB for the raw data"""
         # Check that the returned object has the correct id
-        exp_id = 1 + self.conn_handler.execute_fetchone(
-            "SELECT count(1) from qiita.raw_data")[0]
-        obs = RawData.create(self.filetype, self.studies, self.filepaths)
+        exp_id = get_count("qiita.raw_data") + 1
+        obs = RawData.create(self.filetype, self.prep_templates,
+                             self.filepaths)
         self.assertEqual(obs.id, exp_id)
 
         # Check that the raw data have been correctly added to the DB
@@ -92,11 +88,14 @@ class RawDataTests(TestCase):
         # raw_data_id, filetype, link_filepaths_status
         self.assertEqual(obs, [[exp_id, 2, 'idle']])
 
-        # Check that the raw data have been correctly linked with the study
-        obs = self.conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.study_raw_data WHERE raw_data_id=%d" % exp_id)
-        # study_id , raw_data_id
-        self.assertEqual(obs, [[1, exp_id]])
+        # Check that the raw data has been correctly linked with the prep
+        # templates
+        sql = """SELECT prep_template_id
+                 FROM qiita.prep_template
+                 WHERE raw_data_id = %s
+                 ORDER BY prep_template_id"""
+        obs = self.conn_handler.execute_fetchall(sql, (exp_id,))
+        self.assertEqual(obs, [[self.pt1.id], [self.pt2.id]])
 
         # Check that the files have been copied to right location
         exp_seqs_fp = join(self.db_test_raw_dir,
@@ -128,30 +127,9 @@ class RawDataTests(TestCase):
         # raw_data_id, filepath_id
         self.assertEqual(obs, [[exp_id, top_id - 1], [exp_id, top_id]])
 
-    def test_create_no_filepaths(self):
-        """Correctly creates a raw data object with no filepaths attached"""
-        # Check that the returned object has the correct id
-        exp_id = 1 + self.conn_handler.execute_fetchone(
-            "SELECT count(1) from qiita.raw_data")[0]
-        obs = RawData.create(self.filetype, self.studies)
-        self.assertEqual(obs.id, exp_id)
-
-        # Check that the raw data have been correctly added to the DB
-        obs = self.conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.raw_data WHERE raw_data_id=%d" % exp_id)
-        # raw_data_id, filetype, link_filepaths_status
-        self.assertEqual(obs, [[exp_id, 2, 'idle']])
-
-        # Check that the raw data have been correctly linked with the study
-        obs = self.conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.study_raw_data WHERE raw_data_id=%d" % exp_id)
-        # study_id , raw_data_id
-        self.assertEqual(obs, [[1, exp_id]])
-
-        # Check that no files have been linked with the filepaths
-        obs = self.conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.raw_filepath WHERE raw_data_id=%d" % exp_id)
-        self.assertEqual(obs, [])
+    def test_create_error(self):
+        with self.assertRaises(QiitaDBError):
+            RawData.create(self.filetype, [PrepTemplate(1)], self.filepaths)
 
     def test_get_filepaths(self):
         """Correctly returns the filepaths to the raw files"""
@@ -208,10 +186,11 @@ class RawDataTests(TestCase):
 
     def test_is_preprocessed(self):
         self.assertTrue(RawData(1)._is_preprocessed())
-        self.assertFalse(RawData(2)._is_preprocessed())
+        rd = RawData.create(self.filetype, self.prep_templates, self.filepaths)
+        self.assertFalse(rd._is_preprocessed())
 
     def test_clear_filepaths(self):
-        rd = RawData.create(self.filetype, self.studies, self.filepaths)
+        rd = RawData.create(self.filetype, [self.pt1], self.filepaths)
         self.assertTrue(self.conn_handler.execute_fetchone(
             "SELECT EXISTS(SELECT * FROM qiita.raw_filepath "
             "WHERE raw_data_id=%s)", (rd.id,))[0])
@@ -233,67 +212,71 @@ class RawDataTests(TestCase):
         with self.assertRaises(QiitaDBError):
             RawData(1).clear_filepaths()
 
-    def test_remove_filepath(self):
-        top_id = self.conn_handler.execute_fetchone(
-            "SELECT count(1) FROM qiita.raw_filepath")[0]
-        raw_id = self.conn_handler.execute_fetchone(
-            "SELECT count(1) FROM qiita.raw_data")[0]
-        rd = RawData.create(self.filetype, self.studies, self.filepaths)
-        fp = join(self.db_test_raw_dir, "%d_%s" % (raw_id + 1,
-                                                   basename(self.seqs_fp)))
-        rd.remove_filepath(fp)
-        self.assertFalse(self.conn_handler.execute_fetchone(
-            "SELECT EXISTS(SELECT * FROM qiita.raw_filepath "
-            "WHERE filepath_id=%d)" % (top_id - 1))[0])
-        self.assertTrue(self.conn_handler.execute_fetchone(
-            "SELECT EXISTS(SELECT * FROM qiita.raw_filepath "
-            "WHERE filepath_id=%d)" % (top_id - 2))[0])
-
-    def test_remove_filepath_errors(self):
-        fp = join(self.db_test_raw_dir, '1_s_G1_L001_sequences.fastq.gz')
-        with self.assertRaises(QiitaDBError):
-            RawData(1).remove_filepath(fp)
-
-        # filepath doesn't belong to that raw data
-        with self.assertRaises(ValueError):
-            RawData(2).remove_filepath(fp)
-
-        # the raw data has been linked to more than 1 study so it can't be
-        # unliked
-        Study(2).add_raw_data([RawData(2)])
-        with self.assertRaises(QiitaDBError):
-            RawData(2).remove_filepath(fp)
-
     def test_exists(self):
         self.assertTrue(RawData.exists(1))
         self.assertFalse(RawData.exists(1000))
 
-    def test_delete(self):
+    def test_delete_error_no_exists(self):
         # the raw data doesn't exist
         with self.assertRaises(QiitaDBUnknownIDError):
-            RawData.delete(1000, 1)
+            RawData.delete(1000, 0)
 
-        # the raw data and the study id are not linked or
-        # the study doesn't exits
+    def test_delete_error_raw_data_not_linked(self):
+        # the raw data and the prep template id are not linked
+        with self.assertRaises(QiitaDBError):
+            RawData.delete(1, self.pt2)
+
+    def test_delete_error_prep_template_no_exists(self):
+        # the prep template does not exist
         with self.assertRaises(QiitaDBError):
             RawData.delete(1, 1000)
 
-        # the raw data has prep templates
+    def test_delete_error_linked_files(self):
+        # the raw data has linked files
         with self.assertRaises(QiitaDBError):
             RawData.delete(1, 1)
 
-        # the raw data has linked files
+    def test_delete(self):
+        rd = RawData.create(self.filetype, self.prep_templates,
+                            self.filepaths)
+
+        sql_pt = """SELECT prep_template_id
+                    FROM qiita.prep_template
+                    WHERE raw_data_id = %s
+                    ORDER BY prep_template_id"""
+        obs = self.conn_handler.execute_fetchall(sql_pt, (rd.id,))
+        self.assertEqual(obs, [[self.pt1.id], [self.pt2.id]])
+
+        # This delete call will only unlink the raw data from the prep template
+        RawData.delete(rd.id, self.pt2.id)
+
+        # Check that it successfully unlink the raw data from pt2
+        obs = self.conn_handler.execute_fetchall(sql_pt, (rd.id,))
+        self.assertEqual(obs, [[self.pt1.id]])
+        self.assertEqual(self.pt2.raw_data, None)
+
+        # If we try to remove the RawData now, it should raise an error
+        # because it still has files attached to it
         with self.assertRaises(QiitaDBError):
-            RawData.delete(3, 1)
+            RawData.delete(rd.id, self.pt1.id)
 
-        # the raw data is linked to a study that has not prep templates
-        Study(2).add_raw_data([RawData(1)])
-        RawData.delete(1, 2)
+        # Clear the files so we can actually remove the RawData
+        rd.clear_filepaths()
 
-        # delete raw data
-        self.assertTrue(RawData.exists(2))
-        RawData.delete(2, 1)
-        self.assertFalse(RawData.exists(2))
+        RawData.delete(rd.id, self.pt1.id)
+        obs = self.conn_handler.execute_fetchall(sql_pt, (rd.id,))
+        self.assertEqual(obs, [])
+
+        # Check that all expected rows have been deleted
+        sql = """SELECT EXISTS(
+                    SELECT * FROM qiita.raw_filepath
+                    WHERE raw_data_id = %s)"""
+        self.assertFalse(self.conn_handler.execute_fetchone(sql, (rd.id,))[0])
+
+        sql = """SELECT EXISTS(
+                    SELECT * FROM qiita.raw_data
+                    WHERE raw_data_id=%s)"""
+        self.assertFalse(self.conn_handler.execute_fetchone(sql, (rd.id,))[0])
 
     def test_status(self):
         rd = RawData(1)
@@ -309,7 +292,7 @@ class RawDataTests(TestCase):
 
         # Check that new raw data has sandbox as status since no
         # processed data exists for them
-        rd = RawData.create(self.filetype, self.studies, self.filepaths)
+        rd = RawData.create(self.filetype, self.prep_templates, self.filepaths)
         self.assertEqual(rd.status(s), 'sandbox')
 
     def test_status_error(self):
@@ -556,11 +539,11 @@ class PreprocessedDataTests(TestCase):
         """Correctly returns the filepaths to the preprocessed files"""
         ppd = PreprocessedData(1)
         obs = ppd.get_filepaths()
-        exp = [(5, join(self.db_test_ppd_dir, '1_seqs.fna'),
+        exp = [(3, join(self.db_test_ppd_dir, '1_seqs.fna'),
                 "preprocessed_fasta"),
-               (6, join(self.db_test_ppd_dir, '1_seqs.qual'),
+               (4, join(self.db_test_ppd_dir, '1_seqs.qual'),
                 "preprocessed_fastq"),
-               (7, join(self.db_test_ppd_dir, '1_seqs.demux'),
+               (5, join(self.db_test_ppd_dir, '1_seqs.demux'),
                 "preprocessed_demux")]
         self.assertEqual(obs, exp)
 
@@ -960,13 +943,13 @@ class ProcessedDataTests(TestCase):
         # check the test data
         pd = ProcessedData(1)
         obs = pd.get_filepaths()
-        exp = [(11, join(self.db_test_pd_dir,
+        exp = [(9, join(self.db_test_pd_dir,
                 '1_study_1001_closed_reference_otu_table.biom'), "biom")]
         self.assertEqual(obs, exp)
 
     def test_get_filepath_ids(self):
         pd = ProcessedData(1)
-        self.assertEqual(pd.get_filepath_ids(), [11])
+        self.assertEqual(pd.get_filepath_ids(), [9])
 
     def test_preprocessed_data(self):
         """Correctly returns the preprocessed_data"""

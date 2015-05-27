@@ -288,29 +288,48 @@ class RawData(BaseData):
     _table = "raw_data"
     _data_filepath_table = "raw_filepath"
     _data_filepath_column = "raw_data_id"
-    # Define here the class name, so in case it changes in the database we
-    # only need to change it here
-    _study_raw_table = "study_raw_data"
 
     @classmethod
-    def create(cls, filetype, studies, filepaths=None):
+    def create(cls, filetype, prep_templates, filepaths):
         r"""Creates a new object with a new id on the storage system
 
         Parameters
         ----------
         filetype : int
             The filetype identifier
-        studies : list of Study
-            The list of Study objects to which the raw data belongs to
-        filepaths : iterable of tuples (str, int), optional
+        prep_templates : list of PrepTemplates
+            The list of PrepTemplate objects to which the raw data is attached
+        filepaths : iterable of tuples (str, int)
             The list of paths to the raw files and its filepath type identifier
 
         Returns
         -------
         A new instance of `cls` to access to the RawData stored in the DB
+
+        Raises
+        ------
+        QiitaDBError
+            If any of the passed prep templates already have a raw data id
         """
-        # Add the raw data to the database, and get the raw data id back
         conn_handler = SQLConnectionHandler()
+        # We first need to check if the passed prep templates don't have
+        # a raw data already attached to them
+        sql = """SELECT EXISTS(
+                    SELECT *
+                    FROM qiita.prep_template
+                    WHERE prep_template_id IN ({})
+                        AND raw_data_id IS NOT NULL)""".format(
+            ', '.join(['%s'] * len(prep_templates)))
+        exists = conn_handler.execute_fetchone(
+            sql, [pt.id for pt in prep_templates])[0]
+        if exists:
+            raise QiitaDBError(
+                "Cannot create raw data because the passed prep templates "
+                "already have a raw data associated with it. "
+                "Prep templates: %s"
+                % ', '.join([str(pt.id) for pt in prep_templates]))
+
+        # Add the raw data to the database, and get the raw data id back
         rd_id = conn_handler.execute_fetchone(
             "INSERT INTO qiita.{0} (filetype_id) VALUES (%s) "
             "RETURNING raw_data_id".format(cls._table), (filetype,))[0]
@@ -318,11 +337,11 @@ class RawData(BaseData):
         # Instantiate the object with the new id
         rd = cls(rd_id)
 
-        # Connect the raw data with its studies
-        values = [(study.id, rd_id) for study in studies]
-        conn_handler.executemany(
-            "INSERT INTO qiita.{0} (study_id, raw_data_id) VALUES "
-            "(%s, %s)".format(rd._study_raw_table), values)
+        # Connect the raw data with its prep templates
+        values = [(rd_id, pt.id) for pt in prep_templates]
+        sql = """UPDATE qiita.prep_template
+                 SET raw_data_id = %s WHERE prep_template_id = %s"""
+        conn_handler.executemany(sql, values)
 
         # If file paths have been provided, add them to the raw data object
         if filepaths:
@@ -331,23 +350,23 @@ class RawData(BaseData):
         return rd
 
     @classmethod
-    def delete(cls, raw_data_id, study_id):
+    def delete(cls, raw_data_id, prep_template_id):
         """Removes the raw data with id raw_data_id
 
         Parameters
         ----------
         raw_data_id : int
             The raw data id
-        study_id : int
-            The study id
+        prep_template_id : int
+            The prep_template_id
 
         Raises
         ------
         QiitaDBUnknownIDError
             If the raw data id doesn't exist
         QiitaDBError
-            If the raw data is not linked to that study_id
-            If the raw data has prep templates associated
+            If the raw data is not linked to that prep_template_id
+            If the raw data has files linked
         """
         conn_handler = SQLConnectionHandler()
 
@@ -355,55 +374,42 @@ class RawData(BaseData):
         if not cls.exists(raw_data_id):
             raise QiitaDBUnknownIDError(raw_data_id, "raw data")
 
-        study_raw_data_exists = conn_handler.execute_fetchone(
-            "SELECT EXISTS(SELECT * FROM qiita.study_raw_data WHERE "
-            "study_id = {0} AND raw_data_id = {1})".format(study_id,
-                                                           raw_data_id))[0]
-        if not study_raw_data_exists:
+        # Check if the raw data is linked to the prep template
+        sql = """SELECT EXISTS(
+                    SELECT * FROM qiita.prep_template
+                    WHERE prep_template_id = %s AND raw_data_id = %s)"""
+        pt_rd_exists = conn_handler.execute_fetchone(
+            sql, (prep_template_id, raw_data_id))
+        if not pt_rd_exists:
             raise QiitaDBError(
-                "Raw data %d is not linked to study %d or the study "
-                "doesn't exist" % (raw_data_id, study_id))
+                "Raw data %d is not linked to prep template %d or the prep "
+                "template doesn't exist" % (raw_data_id, prep_template_id))
 
-        # check if there are any prep templates for this study
-        prep_template_exists = conn_handler.execute_fetchone(
-            """
-            SELECT EXISTS(
-                SELECT * FROM qiita.prep_template AS pt
-                    LEFT JOIN qiita.prep_template_sample AS cpi ON
-                    (pt.prep_template_id=cpi.prep_template_id)
-                    LEFT JOIN qiita.study_sample AS rsi ON
-                    (cpi.sample_id=rsi.sample_id)
-                WHERE raw_data_id = {0} and study_id = {1}
-            )
-            """.format(raw_data_id, study_id))[0]
-        if prep_template_exists:
-            raise QiitaDBError(
-                "Raw data %d has prep template(s) associated so it can't be "
-                "erased." % raw_data_id)
-
-        # check how many raw data are left, if last one, check that there
-        # are no linked files
+        # Check to how many prep templates the raw data is still linked.
+        # If last one, check that are no linked files
         raw_data_count = conn_handler.execute_fetchone(
-            "SELECT COUNT(*) FROM qiita.study_raw_data WHERE "
-            "raw_data_id = {0}".format(raw_data_id))[0]
+            "SELECT COUNT(*) FROM qiita.prep_template WHERE "
+            "raw_data_id = %s", (raw_data_id,))[0]
         if raw_data_count == 1 and RawData(raw_data_id).get_filepath_ids():
             raise QiitaDBError(
                 "Raw data (%d) can't be remove because it has linked files. "
                 "To remove it, first unlink files." % raw_data_id)
 
         # delete
-        conn_handler.execute("DELETE FROM qiita.study_raw_data WHERE "
-                             "raw_data_id = {0} AND "
-                             "study_id = {1}".format(raw_data_id, study_id))
+        queue = "DELETE_%d_%d" % (raw_data_id, prep_template_id)
+        conn_handler.create_queue(queue)
+        sql = """UPDATE qiita.prep_template
+                 SET raw_data_id = %s
+                 WHERE prep_template_id = %s"""
+        conn_handler.add_to_queue(queue, sql, (None, prep_template_id))
 
-        # delete the connecting tables if there is no other study linked to
-        # the raw data
-        study_raw_data_count = conn_handler.execute_fetchone(
-            "SELECT COUNT(*) FROM qiita.study_raw_data WHERE "
-            "raw_data_id = {0}".format(raw_data_id))[0]
-        if study_raw_data_count == 0:
-            conn_handler.execute("DELETE FROM qiita.raw_data WHERE "
-                                 "raw_data_id = {0}".format(raw_data_id))
+        # If there is no other prep template pointing to the raw data, it can
+        # be removed
+        if raw_data_count == 1:
+            sql = "DELETE FROM qiita.raw_data WHERE raw_data_id = %s"
+            conn_handler.add_to_queue(queue, sql, (raw_data_id,))
+
+        conn_handler.execute_queue(queue)
 
     @property
     def studies(self):
@@ -415,10 +421,11 @@ class RawData(BaseData):
             The list of study ids to which the raw data belongs to
         """
         conn_handler = SQLConnectionHandler()
-        ids = conn_handler.execute_fetchall(
-            "SELECT study_id FROM qiita.{0} WHERE "
-            "raw_data_id=%s".format(self._study_raw_table),
-            [self._id])
+        sql = """SELECT study_id
+                 FROM qiita.study_prep_template
+                    JOIN qiita.prep_template USING (prep_template_id)
+                 WHERE raw_data_id = %s"""
+        ids = conn_handler.execute_fetchall(sql, (self.id,))
         return [id[0] for id in ids]
 
     @property
@@ -508,14 +515,14 @@ class RawData(BaseData):
             self._set_link_filepaths_status("failed: %s" % msg)
             raise QiitaDBError(msg)
 
-        # The filepath belongs to one or more studies
-        studies_linked = self.studies
-        if len(studies_linked) > 1:
+        # The filepath belongs to one or more prep templates
+        prep_templates = self.prep_templates
+        if len(prep_templates) > 1:
             msg = ("Can't clear all the filepaths from raw data %s because "
-                   "it has been shared with other studies: %s. If you want to "
-                   "remove it, first remove the raw data from the other "
-                   "studies." % (self._id,
-                                 ', '.join(map(str, studies_linked))))
+                   "it has been used with other prep templates: %s. If you "
+                   "want to remove it, first remove the raw data from the "
+                   "other prep templates."
+                   % (self._id, ', '.join(map(str, prep_templates))))
             self._set_link_filepaths_status("failed: %s" % msg)
             raise QiitaDBError(msg)
 
@@ -576,40 +583,6 @@ class RawData(BaseData):
         # self.studies should only have one element, thus self.studies[0]
         move_filepaths_to_upload_folder(self.studies[0], filepaths)
 
-    def remove_filepath(self, fp):
-        """Removes the filepath from the RawData
-
-        Parameters
-        ----------
-        fp : str
-            The filepath to remove
-        """
-        conn_handler = SQLConnectionHandler()
-        queue = "remove_fp_%s" % self.id
-        conn_handler.create_queue(queue)
-
-        # Set the current status to unlinking
-        self._set_link_filepaths_status("unlinking")
-
-        self._remove_filepath(fp, conn_handler, queue)
-
-        try:
-            # Execute the queue
-            conn_handler.execute_queue(queue)
-        except Exception as e:
-            self._set_link_filepaths_status("failed: %s" % e)
-            LogEntry.create('Runtime', str(e),
-                            info={self.__class__.__name__: self.id})
-            raise e
-
-        # We can already update the status to done, as the files have been
-        # unlinked, the move_filepaths_to_upload_folder call will not change
-        # the status of the raw data object
-        self._set_link_filepaths_status("idle")
-
-        # Delete the files, if they are not used anywhere
-        purge_filepaths()
-
     def status(self, study):
         """The status of the raw data within the given study
 
@@ -653,8 +626,6 @@ class RawData(BaseData):
                     USING (preprocessed_data_id)
                   JOIN qiita.prep_template pt
                     USING (prep_template_id)
-                  JOIN qiita.raw_data rd
-                    USING (raw_data_id)
                   JOIN qiita.study_processed_data spd
                     USING (processed_data_id)
                 WHERE pt.raw_data_id=%s AND spd.study_id=%s"""
