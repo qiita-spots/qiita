@@ -27,7 +27,6 @@ from natsort import natsorted
 with standard_library.hooks():
     from urllib.request import urlretrieve
 
-
 get_support_file = partial(join, join(dirname(abspath(__file__)),
                                       'support_files'))
 reference_base_dir = join(qiita_config.base_data_dir, "reference")
@@ -298,9 +297,11 @@ def drop_and_rebuild_tst_database(conn_handler):
     with open(POPULATE_FP, 'U') as f:
         conn_handler.execute(f.read())
 
-    r_client = Redis(qiita_config.redis_host, qiita_config.redis_port,
-                     qiita_config.redis_password, qiita_config.redis_db)
-    r_client.flushdb()
+    r_test_client = Redis(host=qiita_config.redis_host,
+                          port=qiita_config.redis_port,
+                          password=qiita_config.redis_password,
+                          db=qiita_config.redis_db)
+    r_test_client.flushdb()
 
 
 def reset_test_database(wrapped_fn):
