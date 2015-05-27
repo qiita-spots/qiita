@@ -16,7 +16,6 @@ from collections import Iterable
 import numpy.testing as npt
 import pandas as pd
 from pandas.util.testing import assert_frame_equal
-from moi import r_client
 
 from qiita_core.util import qiita_test_checker
 from qiita_core.exceptions import IncompetentQiitaDeveloperError

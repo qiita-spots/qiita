@@ -710,7 +710,6 @@ class Analysis(QiitaStatusObject):
             return {}
         return r_client.lrange('analysis_%d' % self._id, 0, -1)
 
-
     def build_files(self, rarefaction_depth=None):
         """Builds biom and mapping files needed for analysis
 
