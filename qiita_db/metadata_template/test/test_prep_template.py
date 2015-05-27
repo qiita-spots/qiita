@@ -28,6 +28,7 @@ from qiita_db.exceptions import (QiitaDBUnknownIDError,
 from qiita_db.sql_connection import SQLConnectionHandler
 from qiita_db.study import Study
 from qiita_db.data import RawData, ProcessedData
+from qiita_db.analysis import Analysis
 from qiita_db.util import (exists_table, get_db_files_base_dir, get_mountpoint,
                            get_count)
 from qiita_db.metadata_template.prep_template import PrepTemplate, PrepSample
@@ -1003,6 +1004,15 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
                               self.metadata_prefixed, self.new_raw_data,
                               self.test_study, self.data_type)
         self._common_creation_checks(new_id, pt, fp_count)
+
+    def test_log_change(self):
+        self.tester.log_change('test logging prep')
+        analysis = Analysis(1)
+        self.assertEqual(analysis.status, 'altered_data')
+        self.assertEqual(
+            analysis.get_changes(), ["prep template for study 'Identification "
+                                     "of the Microbiomes for Cannabis Soils' "
+                                     "changed: test logging prep"])
 
     def test_generate_files(self):
         fp_count = get_count("qiita.filepath")

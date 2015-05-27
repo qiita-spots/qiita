@@ -11,18 +11,16 @@
 
 
 <div class="row">
-    <table border="0">
-      <tr>
-        <td><h1>&nbsp;Analysis: <u>{{aname}}</u></h1></td>
-        <td width="20px"></td>
-        <td>
-          <h1><a class="btn btn-danger glyphicon glyphicon-trash" onclick="delete_analysis();"></a></h1>
-        </td>
-      </tr>
-    </table>
-  </h1>
+  <table border="0">
+    <tr>
+      <td><h1>&nbsp;Analysis: <u>{{aname}}</u></h1></td>
+      <td width="20px"></td>
+      <td>
+        <h1><a class="btn btn-danger glyphicon glyphicon-trash" onclick="delete_analysis();"></a></h1>
+      </td>
+    </tr>
+  </table>
 </div>
-
 
 <div class="row" width='100%'>
   <div class="col-md-12">
@@ -46,6 +44,20 @@
                     {% end %}
                     <hr>
                   {% end %}
+              </div>
+          </div>
+        </div>
+      {% end %}
+      {% if  status == "altered_data" %}
+        <div class="panel panel-default">
+          <div class="panel-heading">
+            <h3 style="color:red" class="panel-title"><a data-toggle="collapse" data-parent="#accordion" href="#analysis-changes">UNDERLYING DATA FOR THIS ANALYSIS HAS CHANGED. CONSIDER RE-RUNNING THIS ANALYSIS.</a></h3>
+          </div>
+          <div id="analysis-changes" class="panel-collapse collapse">
+              <div class="panel-body">
+                {% for change in changes %}
+                    <p>{{change}}</p>
+                {% end %}
               </div>
           </div>
         </div>

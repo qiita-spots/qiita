@@ -221,9 +221,14 @@ class SampleTemplate(MetadataTemplate):
         md_template = self._clean_validate_template(md_template, self.study_id,
                                                     SAMPLE_TEMPLATE_COLUMNS)
 
-        self._add_common_extend_steps_to_queue(md_template, conn_handler,
-                                               queue_name)
+        new_cols, new_samples = self._add_common_extend_steps_to_queue(
+            md_template, conn_handler, queue_name)
+
         conn_handler.execute_queue(queue_name)
+        if new_cols:
+            self.log_change("Columns added: %s" % ', '.join(new_cols))
+        if new_samples:
+            self.log_change("Samples Added: %s" % ', '.join(new_samples))
 
         self.generate_files()
 
@@ -289,3 +294,25 @@ class SampleTemplate(MetadataTemplate):
             self.update_category(col, new_map[col].to_dict())
 
         self.generate_files()
+        self.log_change("Columns updated: %s" % ', '.join(changed_cols))
+
+    def log_change(self, change):
+        """update analyses and shared users affected by template change
+
+        Parameters
+        ----------
+        change : str
+            Description of change done to template
+        """
+        conn_handler = SQLConnectionHandler()
+        # pull out affected analyses. Use study_id because sample template and
+        # study ids are both the same
+        sql = """SELECT DISTINCT analysis_id FROM qiita.analysis_sample
+                JOIN qiita.study_processed_data
+                USING (processed_data_id)
+                WHERE study_id = %s"""
+        analyses = [x[0] for x in conn_handler.execute_fetchall(sql,
+                                                                [self._id])]
+        # Change found analyses to altered_data status
+        if analyses:
+            self._update_analyses(analyses, change)

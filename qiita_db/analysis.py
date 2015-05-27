@@ -26,6 +26,7 @@ from biom import load_table
 from biom.util import biom_open
 import pandas as pd
 from skbio.util import find_duplicates
+from moi import r_client
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from .sql_connection import SQLConnectionHandler
@@ -66,6 +67,7 @@ class Analysis(QiitaStatusObject):
     unshare
     build_files
     summary_data
+    get_changes
     exists
     create
     delete
@@ -77,7 +79,7 @@ class Analysis(QiitaStatusObject):
     def _lock_check(self, conn_handler):
         """Raises QiitaDBStatusError if analysis is not in_progress"""
         if self.check_status({"queued", "running", "public", "completed",
-                              "error"}):
+                              "error", "altered_data"}):
             raise QiitaDBStatusError("Analysis is locked!")
 
     def _status_setter_checks(self, conn_handler):
@@ -696,6 +698,17 @@ class Analysis(QiitaStatusObject):
                 "Must provide list of samples and/or proc_data for removal!")
 
         conn_handler.executemany(sql, remove)
+
+    def get_changes(self):
+        """If the analysis has altered data, returns the changes list
+
+        Returns
+        -------
+        list : changes made to the data in the analysis
+        """
+        if self.status != "altered_data":
+            return {}
+        return r_client.lrange('analysis_%d' % self._id, 0, -1)
 
     def build_files(self, rarefaction_depth=None):
         """Builds biom and mapping files needed for analysis

@@ -53,7 +53,7 @@ class TestAnalysis(TestCase):
 
     def test_lock_check(self):
         for status in ["queued", "running", "public", "completed",
-                       "error"]:
+                       "error", "altered_data"]:
             new = Analysis.create(User("admin@foo.bar"), "newAnalysis",
                                   "A New Analysis")
             new.status = status
@@ -505,6 +505,32 @@ class TestAnalysis(TestCase):
             'SELECT * FROM qiita.analysis_filepath WHERE filepath_id = %s',
             (new_id,))
         exp = [[1, new_id, 2]]
+        self.assertEqual(obs, exp)
+
+    def test_get_changes(self):
+        metadata_dict_updated_dict = {
+            'SKB8.640193': {'physical_specimen_location': 'new location',
+                            'physical_specimen_remaining': True,
+                            'dna_extracted': True,
+                            'sample_type': '10',
+                            'collection_timestamp':
+                            datetime(2014, 5, 29, 12, 24, 51),
+                            'host_subject_id': 'NotIdentified',
+                            'Description': 'Test Sample 3',
+                            'str_column': 'Value for sample 3',
+                            'int_column': 3,
+                            'latitude': 4.8,
+                            'longitude': 4.41}
+            }
+        metadata_dict_updated = pd.DataFrame.from_dict(
+            metadata_dict_updated_dict, orient='index')
+
+        SampleTemplate(1).extend(metadata_dict_updated)
+        self.assertEqual(self.analysis.status, 'altered_data')
+        obs = self.analysis.get_changes()
+        exp = ["sample template for study 'Identification of the Microbiomes "
+               "for Cannabis Soils' changed: Columns added: int_column, "
+               "str_column"]
         self.assertEqual(obs, exp)
 
 

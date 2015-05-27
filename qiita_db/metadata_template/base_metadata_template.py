@@ -46,6 +46,7 @@ from copy import deepcopy
 import pandas as pd
 from skbio.util import find_duplicates
 import warnings
+from moi import r_client
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 
@@ -488,6 +489,7 @@ class MetadataTemplate(QiitaObject):
     _column_table = None
     _id_column = None
     _sample_cls = None
+    _log_table = None
 
     def _check_id(self, id_):
         r"""Checks that the MetadataTemplate id_ exists on the database"""
@@ -668,6 +670,14 @@ class MetadataTemplate(QiitaObject):
         queue_name : str
             The queue where the SQL statements will be added
 
+        Returns
+        -------
+        new_cols : set
+            All added columns
+
+        new_samples : set
+            All added samples
+
         Raises
         ------
         QiitaDBError
@@ -755,6 +765,7 @@ class MetadataTemplate(QiitaObject):
                 table_name, ", ".join(headers),
                 ', '.join(["%s"] * len(headers)))
             conn_handler.add_to_queue(queue_name, sql, values, many=True)
+        return new_cols, new_samples
 
     @classmethod
     def exists(cls, obj_id):
@@ -1179,3 +1190,28 @@ class MetadataTemplate(QiitaObject):
                 for col in restriction.columns}
 
         return cols.difference(self.categories())
+
+    def _update_analyses(self, analyses, changes):
+        """update any analyses affected by changes to the prep template"""
+        conn_handler = SQLConnectionHandler()
+        # TODO: fix magic number since convert_to_id doesn't work on status
+        # issue #292
+        changed_status_id = 7
+        sql = """UPDATE qiita.analysis SET analysis_status_id = %s
+                 WHERE analysis_id IN ({})""".format(', '.join(
+            ['%s'] * len(analyses)))
+        conn_handler.execute(sql, [changed_status_id] + analyses)
+
+        sql = "SELECT study_title FROM qiita.study WHERE study_id = %s"
+        study = conn_handler.execute_fetchone(sql, [self.study_id])[0]
+
+        message = ("%s template for study '%s' changed: %s" %
+                   (self._table_prefix[:-1], study, changes))
+        for a_id in analyses:
+            # add to change list and reset expire time to 3 months
+            key = "analysis_%d" % a_id
+            r_client.rpush(key, message)
+            r_client.expire(key, 7889231)
+
+    def log_change(changes):
+        raise NotImplementedError("Must be defined in sublcass")

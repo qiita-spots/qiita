@@ -156,7 +156,8 @@ class AnalysisResultsHandler(BaseHandler):
 
         self.render("analysis_results.html", analysis_id=analysis_id,
                     jobres=jobres, aname=analysis.name, dropped=dropped,
-                    basefolder=get_db_files_base_dir())
+                    basefolder=get_db_files_base_dir(), status=analysis.status,
+                    changes=analysis.get_changes())
 
     @authenticated
     def post(self, analysis_id):

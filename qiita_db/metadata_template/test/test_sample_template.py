@@ -28,6 +28,7 @@ from qiita_db.exceptions import (QiitaDBDuplicateError, QiitaDBUnknownIDError,
 from qiita_db.sql_connection import SQLConnectionHandler
 from qiita_db.study import Study, StudyPerson
 from qiita_db.user import User
+from qiita_db.analysis import Analysis
 from qiita_db.util import exists_table, get_count
 from qiita_db.metadata_template.sample_template import SampleTemplate, Sample
 from qiita_db.metadata_template.prep_template import PrepTemplate, PrepSample
@@ -1478,6 +1479,16 @@ class TestSampleTemplateReadWrite(BaseTestSampleTemplate):
         st = SampleTemplate.create(self.metadata, self.new_study)
         self.assertEqual(st.get_filepaths()[0][0], exp_id)
 
+    def test_log_change(self):
+        self.tester.log_change('test logging sample')
+        analysis = Analysis(1)
+        self.assertEqual(analysis.status, 'altered_data')
+        self.assertEqual(
+            analysis.get_changes(), ["sample template for study "
+                                     "'Identification of the Microbiomes for "
+                                     "Cannabis Soils' changed: test logging "
+                                     "sample"])
+
     def test_extend_error(self):
         """extend raises an error if no new columns/samples are added"""
         st = SampleTemplate.create(self.metadata, self.new_study)
@@ -1520,6 +1531,24 @@ class TestSampleTemplateReadWrite(BaseTestSampleTemplate):
         md_ext = pd.DataFrame.from_dict(md_dict, orient='index')
 
         st.extend(md_ext)
+        metadata_dict_updated_dict = {
+            '1.SKB8.640000': {'physical_specimen_location': 'new location',
+                              'physical_specimen_remaining': True,
+                              'dna_extracted': True,
+                              'sample_type': '10',
+                              'collection_timestamp':
+                              datetime(2014, 5, 29, 12, 24, 51),
+                              'host_subject_id': 'NotIdentified',
+                              'Description': 'Test Sample 3',
+                              'str_column': 'Value for sample 3',
+                              'int_column': 3,
+                              'latitude': 4.8,
+                              'longitude': 4.41}
+            }
+        metadata_dict_updated = pd.DataFrame.from_dict(
+            metadata_dict_updated_dict, orient='index')
+
+        SampleTemplate(1).extend(metadata_dict_updated)
 
         # Test samples were appended successfully to the required sample info
         # table
@@ -1615,6 +1644,32 @@ class TestSampleTemplateReadWrite(BaseTestSampleTemplate):
                 'taxon_id': 9606,
                 'scientific_name': 'homo sapiens'}]
         self.assertItemsEqual(obs, exp)
+
+    def test_extend_update_analysis(self):
+        """Make sure analyses updated when template changed"""
+        analysis = Analysis(1)
+        self.assertEqual(analysis.status, 'in_construction')
+
+        # make sure analysis status updated
+        metadata_dict_updated_dict = {
+            '1.SKB8.640000': {'physical_specimen_location': 'new location',
+                              'physical_specimen_remaining': True,
+                              'dna_extracted': True,
+                              'sample_type': '10',
+                              'collection_timestamp':
+                              datetime(2014, 5, 29, 12, 24, 51),
+                              'host_subject_id': 'NotIdentified',
+                              'Description': 'Test Sample 3',
+                              'str_column': 'Value for sample 3',
+                              'int_column': 3,
+                              'latitude': 4.8,
+                              'longitude': 4.41}
+            }
+        metadata_dict_updated = pd.DataFrame.from_dict(
+            metadata_dict_updated_dict, orient='index')
+
+        SampleTemplate(1).extend(metadata_dict_updated)
+        self.assertEqual(analysis.status, 'altered_data')
 
     def test_extend_add_duplicate_samples(self):
         """extend correctly works adding new samples and warns for duplicates

@@ -551,3 +551,24 @@ class PrepTemplate(MetadataTemplate):
         fn = conn_handler.execute_fetchall(sql, (self._id,))[0][1]
         base_dir = get_mountpoint('templates')[0][1]
         return join(base_dir, fn)
+
+    def log_change(self, change):
+        """update analyses and shared users affected by template change
+
+        Parameters
+        ----------
+        change : str
+            Description of change done to template
+        """
+        conn_handler = SQLConnectionHandler()
+        # pull out affected analyses
+        sql = """SELECT DISTINCT analysis_id FROM qiita.analysis_sample
+                JOIN qiita.preprocessed_processed_data
+                USING (processed_data_id)
+                JOIN qiita.prep_template_preprocessed_data
+                USING (preprocessed_data_id) WHERE prep_template_id = %s"""
+        analyses = [x[0] for x in conn_handler.execute_fetchall(sql,
+                                                                [self._id])]
+        # Change found analyses to altered_data status
+        if analyses:
+            self._update_analyses(analyses, change)
