@@ -87,9 +87,8 @@ from .logger import LogEntry
 from .sql_connection import SQLConnectionHandler
 from .exceptions import QiitaDBError, QiitaDBUnknownIDError, QiitaDBStatusError
 from .util import (exists_dynamic_table, insert_filepaths, convert_to_id,
-                   convert_from_id, purge_filepaths, get_filepath_id,
-                   get_mountpoint, move_filepaths_to_upload_folder,
-                   infer_status)
+                   convert_from_id, get_filepath_id, get_mountpoint,
+                   move_filepaths_to_upload_folder, infer_status)
 
 
 class BaseData(QiitaObject):

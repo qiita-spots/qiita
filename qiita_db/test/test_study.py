@@ -9,7 +9,6 @@ from qiita_db.base import QiitaObject
 from qiita_db.study import Study, StudyPerson
 from qiita_db.investigation import Investigation
 from qiita_db.user import User
-from qiita_db.data import RawData
 from qiita_db.util import convert_to_id
 from qiita_db.exceptions import (
     QiitaDBColumnError, QiitaDBStatusError, QiitaDBError,
@@ -586,26 +585,20 @@ class TestStudy(TestCase):
         self.assertEqual(new.data_types, [])
 
     def test_retrieve_raw_data(self):
-        self.assertEqual(self.study.raw_data(), [1, 2, 3, 4])
+        self.assertEqual(self.study.raw_data(), [1])
 
     def test_retrieve_raw_data_none(self):
         new = Study.create(User('test@foo.bar'), 'NOT Identification of the '
                            'Microbiomes for Cannabis Soils', [1], self.info)
         self.assertEqual(new.raw_data(), [])
 
-    def test_add_raw_data(self):
-        self._change_processed_data_status('awaiting_approval')
+    def test_retrieve_prep_templates(self):
+        self.assertEqual(self.study.prep_templates(), [1])
+
+    def test_retrieve_prep_templates_none(self):
         new = Study.create(User('test@foo.bar'), 'NOT Identification of the '
                            'Microbiomes for Cannabis Soils', [1], self.info)
-        new.add_raw_data([RawData(1), RawData(2)])
-        obs = self.conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.study_raw_data WHERE study_id=%s",
-            (new.id,))
-        self.assertEqual(obs, [[new.id, 1], [new.id, 2]])
-
-    def test_add_raw_data_private(self):
-        with self.assertRaises(QiitaDBStatusError):
-            self.study.add_raw_data([RawData(2)])
+        self.assertEqual(new.prep_templates(), [])
 
     def test_retrieve_preprocessed_data(self):
         self.assertEqual(self.study.preprocessed_data(), [1, 2])

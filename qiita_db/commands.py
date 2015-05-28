@@ -153,27 +153,23 @@ def load_sample_template_from_cmd(sample_temp_path, study_id):
     return SampleTemplate.create(sample_temp, Study(study_id))
 
 
-def load_prep_template_from_cmd(prep_temp_path, raw_data_id, study_id,
-                                data_type):
+def load_prep_template_from_cmd(prep_temp_path, study_id, data_type):
     r"""Adds a prep template to the database
 
     Parameters
     ----------
     prep_temp_path : str
         Path to the prep template file
-    raw_data_id : int
-        The raw data id to which the prep template belongs
     study_id : int
         The study id to which the prep template belongs
     data_type : str
         The data type of the prep template
     """
     prep_temp = load_template_to_dataframe(prep_temp_path)
-    return PrepTemplate.create(prep_temp, RawData(raw_data_id),
-                               Study(study_id), data_type)
+    return PrepTemplate.create(prep_temp, Study(study_id), data_type)
 
 
-def load_raw_data_cmd(filepaths, filepath_types, filetype, study_ids):
+def load_raw_data_cmd(filepaths, filepath_types, filetype, prep_template_ids):
     """Add new raw data by populating the relevant tables
 
     Parameters
@@ -184,8 +180,8 @@ def load_raw_data_cmd(filepaths, filepath_types, filetype, study_ids):
         Describes the contents of the files.
     filetype : str
         The type of file being loaded
-    study_ids : iterable of int
-        The IDs of the studies with which to associate this raw data
+    prep_template_ids : iterable of int
+        The IDs of the prep templates with which to associate this raw data
 
     Returns
     -------
@@ -202,9 +198,9 @@ def load_raw_data_cmd(filepaths, filepath_types, filetype, study_ids):
     filepath_types_dict = get_filepath_types()
     filepath_types = [filepath_types_dict[x] for x in filepath_types]
 
-    studies = [Study(x) for x in study_ids]
+    prep_templates = [PrepTemplate(x) for x in prep_template_ids]
 
-    return RawData.create(filetype_id, studies,
+    return RawData.create(filetype_id, prep_templates,
                           filepaths=list(zip(filepaths, filepath_types)))
 
 

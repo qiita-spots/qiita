@@ -13,7 +13,7 @@ from qiita_core.util import qiita_test_checker
 from qiita_db.base import QiitaObject, QiitaStatusObject
 from qiita_db.exceptions import QiitaDBUnknownIDError
 from qiita_db.data import RawData
-from qiita_db.study import Study
+from qiita_db.study import Study, StudyPerson
 from qiita_db.analysis import Analysis
 
 
@@ -63,8 +63,9 @@ class QiitaBaseTest(TestCase):
 
     def test_not_equal(self):
         """Not equals works with object of the same type"""
-        new = RawData(2)
-        self.assertNotEqual(self.tester, new)
+        sp1 = StudyPerson(1)
+        sp2 = StudyPerson(2)
+        self.assertNotEqual(sp1, sp2)
 
     def test_not_equal_type(self):
         """Not equals works with object of different type"""
