@@ -12,13 +12,25 @@
   <hr>
 
   {% if show_select_sample %}
-    Select your sample template <br/>
+    Select your sample template or, alternatively, a QIIME mapping file <br/>
     (only files with the "txt" and "tsv" file extensions will be displayed here):
     <select id="sample_template">
       {% for f in files %}
         <option value="{{f}}">{{f}}</option>
       {% end %}
     </select>
+
+    <br/>
+
+    {% if not sample_templates %}
+      If you are uploading a QIIME mapping file, please choose a data type:
+      <select id="qiime_data_type">
+        <option value="">Select an option...</option>
+        {% for name, value in data_types %}
+          <option value="{{value}}">{{name}}</option>
+        {% end %}
+      </select>
+    {% end %}
   {% end %}
 
   <br/>

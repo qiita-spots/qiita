@@ -8,7 +8,7 @@
 
 from .sample_template import SampleTemplate
 from .prep_template import PrepTemplate
-from .util import load_template_to_dataframe
+from .util import load_template_to_dataframe, looks_like_qiime_mapping_file
 from .constants import (TARGET_GENE_DATA_TYPES, SAMPLE_TEMPLATE_COLUMNS,
                         PREP_TEMPLATE_COLUMNS,
                         PREP_TEMPLATE_COLUMNS_TARGET_GENE, CONTROLLED_COLS)
@@ -17,4 +17,4 @@ from .constants import (TARGET_GENE_DATA_TYPES, SAMPLE_TEMPLATE_COLUMNS,
 __all__ = ['SampleTemplate', 'PrepTemplate', 'load_template_to_dataframe',
            'TARGET_GENE_DATA_TYPES', 'SAMPLE_TEMPLATE_COLUMNS',
            'PREP_TEMPLATE_COLUMNS', 'PREP_TEMPLATE_COLUMNS_TARGET_GENE',
-           'CONTROLLED_COLS']
+           'CONTROLLED_COLS', 'looks_like_qiime_mapping_file']

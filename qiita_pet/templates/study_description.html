@@ -69,6 +69,10 @@ function process_sample_template() {
         .attr("value", $("#sample_template").val()))
       .append($("<input>")
         .attr("type", "hidden")
+        .attr("name", "data_type")
+        .attr("value", $("#qiime_data_type").val()))
+      .append($("<input>")
+        .attr("type", "hidden")
         .attr("name", "action")
         .attr("value", "process_sample_template"));
     $("body").append(form);

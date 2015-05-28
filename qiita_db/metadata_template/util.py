@@ -347,7 +347,7 @@ def looks_like_qiime_mapping_file(fp):
     '#SampleID', since a sample/prep template will start with 'sample_name' or
     some other different column.
     """
-    line = None
+    first_line = None
     with open_file(fp, mode='U') as f:
         first_line = f.readline()
     if not first_line:

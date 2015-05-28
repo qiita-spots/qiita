@@ -14,7 +14,7 @@ from qiita_db.metadata_template import (load_template_to_dataframe,
                                         PREP_TEMPLATE_COLUMNS_TARGET_GENE,
                                         CONTROLLED_COLS,
                                         TARGET_GENE_DATA_TYPES)
-from qiita_db.util import convert_to_id
+from qiita_db.util import convert_from_id
 
 
 def create_templates_from_qiime_mapping_file(fp, study, data_type):
