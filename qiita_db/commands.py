@@ -153,8 +153,7 @@ def load_sample_template_from_cmd(sample_temp_path, study_id):
     return SampleTemplate.create(sample_temp, Study(study_id))
 
 
-def load_prep_template_from_cmd(prep_temp_path, study_id,
-                                data_type):
+def load_prep_template_from_cmd(prep_temp_path, study_id, data_type):
     r"""Adds a prep template to the database
 
     Parameters

@@ -108,7 +108,7 @@ class PrepTemplate(MetadataTemplate):
 
         # Get a connection handler
         conn_handler = SQLConnectionHandler()
-        queue_name = "CREATE_PREP_TEMPLATE_%d" % study.id
+        queue_name = "CREATE_PREP_TEMPLATE_%d_%d" % (study.id, id(md_template))
         conn_handler.create_queue(queue_name)
 
         # Check if the data_type is the id or the string
