@@ -128,7 +128,7 @@ class RawDataTests(TestCase):
         self.assertEqual(obs, [[exp_id, top_id - 1], [exp_id, top_id]])
 
     def test_create_error(self):
-        with self.assertRaises(IncompetentQiitaDeveloperError):
+        with self.assertRaises(QiitaDBError):
             RawData.create(self.filetype, [PrepTemplate(1)], self.filepaths)
 
     def test_get_filepaths(self):

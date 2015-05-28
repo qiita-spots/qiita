@@ -307,11 +307,11 @@ class RawData(BaseData):
 
         Raises
         ------
-        IncompetentQiitaDeveloperError
+        QiitaDBError
             If any of the passed prep templates already have a raw data id
         """
         conn_handler = SQLConnectionHandler()
-        # We first need to check if the passed prep templates doesn't have
+        # We first need to check if the passed prep templates don't have
         # a raw data already attached to them
         sql = """SELECT EXISTS(
                     SELECT *
@@ -322,7 +322,7 @@ class RawData(BaseData):
         exists = conn_handler.execute_fetchone(
             sql, [pt.id for pt in prep_templates])[0]
         if exists:
-            raise IncompetentQiitaDeveloperError(
+            raise QiitaDBError(
                 "Cannot create raw data because the passed prep templates "
                 "already have a raw data associated with it. "
                 "Prep templates: %s"
