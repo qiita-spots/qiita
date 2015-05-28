@@ -12,7 +12,8 @@ from qiita_db.metadata_template import (load_template_to_dataframe,
                                         SampleTemplate, PrepTemplate,
                                         PREP_TEMPLATE_COLUMNS,
                                         PREP_TEMPLATE_COLUMNS_TARGET_GENE,
-                                        CONTROLLED_COLS)
+                                        CONTROLLED_COLS,
+                                        TARGET_GENE_DATA_TYPES)
 from qiita_db.util import convert_to_id
 
 
@@ -33,7 +34,17 @@ def create_templates_from_qiime_mapping_file(fp, study, data_type):
     (SampleTemplate, PrepTemplate)
         The templates created from the QIIME mapping file
     """
-    qiime_map = load_template_to_dataframe(fp)
+    qiime_map = load_template_to_dataframe(fp, index='#SampleID')
+
+    # There are a few columns in the QIIME mapping file that are special and
+    # we know how to deal with them
+    rename_cols = {
+        'BarcodeSequence': 'barcode',
+        'LinkerPrimerSequence': 'primer',
+        'ReverseLinkerPrimer': 'reverselinkerprimer',
+        'Description': 'description',
+    }
+    qiime_map.rename(columns=rename_cols, inplace=True)
 
     # Fix the casing in the columns that we control
     qiime_map.columns = [c.lower() if c.lower() in CONTROLLED_COLS else c
@@ -54,7 +65,12 @@ def create_templates_from_qiime_mapping_file(fp, study, data_type):
         pt_cols.update(
             col for col in _col_iterator(PREP_TEMPLATE_COLUMNS_TARGET_GENE))
 
-    st_md = TODO
-    pt_md = TODO
+    qiime_cols = set(qiime_map.columns)
+    pt_cols = qiime_cols.intersection(pt_cols)
+    st_cols = qiime_cols.difference(pt_cols)
 
-    return SampleTemplate(st_md, study), PrepTemplate(pt_md, data_type)
+    st_md = qiime_map.ix[:, st_cols]
+    pt_md = qiime_map.ix[:, pt_cols]
+
+    return (SampleTemplate.create(st_md, study),
+            PrepTemplate.create(pt_md, data_type))
