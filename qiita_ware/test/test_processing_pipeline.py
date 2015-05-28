@@ -71,14 +71,15 @@ class ProcessingPipelineTests(TestCase):
         self.sff_prep_template = PrepTemplate.create(md, study, "16S")
 
         tmp_dir = mkdtemp()
-        path_builder = partial(join, tmp_dir)
-        fp1 = path_builder('preprocess_test1.sff')
+        self.path_builder = partial(join, tmp_dir)
+        fp1 = self.path_builder('preprocess_test1.sff')
         with open(fp1, 'w') as f:
             f.write('\n')
-        fp2 = path_builder('preprocess_test2.sff')
+        fp2 = self.path_builder('preprocess_test2.sff')
         with open(fp2, 'w') as f:
             f.write('\n')
-        fps = [(fp1, 17), (fp2, 17)]
+        self.raw_sff_id = convert_to_id('raw_sff', 'filepath_type')
+        fps = [(fp1, self.raw_sff_id), (fp2, self.raw_sff_id)]
 
         # Magic number 1: is the filetype id
         self.raw_data = RawData.create(1, [self.sff_prep_template], fps)
@@ -89,14 +90,13 @@ class ProcessingPipelineTests(TestCase):
         md_rp = pd.DataFrame.from_dict(md_dict, orient='index')
         self.sff_prep_template_rp = PrepTemplate.create(md_rp, study, "16S")
 
-        path_builder = partial(join, tmp_dir)
-        rp_fp1 = path_builder('preprocess_test1.sff')
+        rp_fp1 = self.path_builder('preprocess_test1.sff')
         with open(rp_fp1, 'w') as f:
             f.write('\n')
-        rp_fp2 = path_builder('preprocess_test2.sff')
+        rp_fp2 = self.path_builder('preprocess_test2.sff')
         with open(rp_fp2, 'w') as f:
             f.write('\n')
-        fps = [(rp_fp1, 17), (rp_fp2, 17)]
+        fps = [(rp_fp1, self.raw_sff_id), (rp_fp2, self.raw_sff_id)]
 
         # Magic number 1: is the filetype id
         self.raw_data_rp = RawData.create(1, [self.sff_prep_template_rp], fps)
@@ -355,7 +355,7 @@ class ProcessingPipelineTests(TestCase):
             f.write('\n')
         self.files_to_remove.append(fp)
         self.dirs_to_remove.append(tmp_dir)
-        self.raw_data_rp.add_filepaths([(fp, 17)])
+        self.raw_data_rp.add_filepaths([(fp, self.raw_sff_id)])
         params = Preprocessed454Params(1)
 
         obs_cmd, obs_output_dir = _get_preprocess_fasta_cmd(
@@ -385,17 +385,16 @@ class ProcessingPipelineTests(TestCase):
     def test_get_preprocess_fasta_cmd_sff_run_prefix_match_error_1(self):
         # Test that the run prefixes in the prep_template and the file names
         # actually match and raise an error if not
-        tmp_dir = mkdtemp()
-        fp = join(tmp_dir, 'new.sff')
+        fp = self.path_builder('new.sff')
         with open(fp, 'w') as f:
             f.write('\n')
         self.files_to_remove.append(fp)
-        fp_error = join(tmp_dir, 'error.sff')
+        fp_error = self.path_builder('error.sff')
         with open(fp_error, 'w') as f:
             f.write('\n')
         self.files_to_remove.append(fp_error)
-        self.dirs_to_remove.append(tmp_dir)
-        self.raw_data_rp.add_filepaths([(fp, 17), (fp_error, 17)])
+        self.raw_data_rp.add_filepaths(
+            [(fp, self.raw_sff_id), (fp_error, self.raw_sff_id)])
         params = Preprocessed454Params(1)
         with self.assertRaises(ValueError):
             _get_preprocess_fasta_cmd(
