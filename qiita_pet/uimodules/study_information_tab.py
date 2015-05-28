@@ -37,7 +37,8 @@ class StudyInformationTab(BaseUIModule):
 
         # Retrieve the files from the uploads folder, so the user can choose
         # the sample template of the study
-        files = [f for _, f in get_files_from_uploads_folders(str(study.id))]
+        files = [f for _, f in get_files_from_uploads_folders(str(study.id))
+                 if f.endswith(('txt', 'tsv'))]
 
         # If the sample template exists, retrieve all its filepaths
         if SampleTemplate.exists(study.id):
