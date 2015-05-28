@@ -73,4 +73,4 @@ def create_templates_from_qiime_mapping_file(fp, study, data_type):
     pt_md = qiime_map.ix[:, pt_cols]
 
     return (SampleTemplate.create(st_md, study),
-            PrepTemplate.create(pt_md, data_type))
+            PrepTemplate.create(pt_md, study, data_type))
