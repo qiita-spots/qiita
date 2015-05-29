@@ -635,6 +635,9 @@ class StudyDescriptionHandler(BaseHandler):
         # modify the information of the study
         show_edit_btn = study_status != 'public' or user_level == 'admin'
 
+        # Make the error message suitable for html
+        msg = msg.replace('\n', "<br/>")
+
         self.render('study_description.html',
                     message=msg,
                     level=msg_level,
