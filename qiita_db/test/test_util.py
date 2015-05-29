@@ -576,7 +576,8 @@ class DBUtilTests(TestCase):
         # create file to move to trash
         fid, folder = get_mountpoint("uploads")[0]
         test_fp = join(folder, '1', test_filename)
-        open(test_fp, 'w').write('test')
+        with open(test_fp, 'w') as f:
+            f.write('test')
 
         self.files_to_remove.append(test_fp)
 

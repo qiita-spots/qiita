@@ -55,6 +55,10 @@ class CreateRawData(BaseHandler):
         fps.append((_split(reverse_reads_str), 'raw_reverse_seqs'))
         fps.append((_split(sff_str), 'raw_sff'))
 
+        # We need to retrieve the full path for all the files, as the
+        # arguments only contain the file name. Since we don't know in which
+        # mountpoint the data lives, we retrieve all of them and we loop
+        # through all the files checking if they exist or not.
         for _, f in get_mountpoint("uploads", retrieve_all=True):
             f = join(f, str(study_id))
             for fp_set, filetype in fps:
