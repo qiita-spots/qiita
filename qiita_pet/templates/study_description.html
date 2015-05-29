@@ -219,7 +219,7 @@ function create_raw_data(prep_id, filetype){
 }
 
 function add_raw_data(prep_id) {
-  raw_data_id = $("#previous-raw-data-" + prep_id).val()
+  raw_data_id = $("#previous-raw-data-" + prep_id).val();
   if (raw_data_id === null){
     bootstrapAlert("You need to select a raw data used in a previous study");
   } else {

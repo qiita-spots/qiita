@@ -34,7 +34,7 @@ fp_type_by_ft = defaultdict(
     FASTQ=['barcodes', 'forward seqs', 'reverse seqs'])
 
 
-def get_accessible_raw_data(user):
+def _get_accessible_raw_data(user):
     """Retrieves a tuple of raw_data_id and the last study title for that
     raw_data
     """
@@ -45,24 +45,27 @@ def get_accessible_raw_data(user):
     return d
 
 
-def get_raw_data(rdis):
-    """Get all raw data objects from a list of raw_data_ids"""
-    return [RawData(rdi) for rdi in rdis]
-
-
-def get_prep_templates(pt_ids):
-    """Get all the prep template objects from a list of ids
+def _template_generator(study, full_access):
+    """Generates tuples of prep template information
 
     Parameters
     ----------
-    pt_ids : list of int
-        The prep template ids
+    study : Study
+        The study to get all the prep templates
+    full_access : boolean
+        A boolean that indicates if the user has full access to the study
 
     Returns
     -------
-    list of PrepTemplate
+    Generator of tuples of (int, str, PrepTemplate, (str, str, str))
+        Each tuple contains the prep template id, the prep template data_type
+        the PrepTemplate object and a tuple with 3 strings for the style of
+        the prep template status icons
     """
-    return [PrepTemplate(pt_id) for pt_id in sorted(pt_ids)]
+    for pt_id in study.prep_templates():
+        pt = PrepTemplate(pt_id)
+        if full_access or pt.status() == 'public':
+            yield (pt.id, pt.data_type(), pt, STATUS_STYLER[pt.status])
 
 
 class PrepTemplateTab(BaseUIModule):
@@ -70,9 +73,7 @@ class PrepTemplateTab(BaseUIModule):
         files = [f for _, f in get_files_from_uploads_folders(str(study.id))]
         data_types = sorted(viewitems(get_data_types()), key=itemgetter(1))
         prep_templates_info = [
-            (pt.id, pt.data_type(), pt, STATUS_STYLER[pt.status])
-            for pt in get_prep_templates(study.prep_templates())
-            if full_access or pt.status() == 'public']
+            res for res in _template_generator(study, full_access)]
         # Get all the ENA terms for the investigation type
         ontology = Ontology(convert_to_id('ENA', 'ontology'))
         # make "Other" show at the bottom of the drop down menu
@@ -143,9 +144,9 @@ class PrepTemplateInfoTab(BaseUIModule):
         files = [f for _, f in get_files_from_uploads_folders(str(study.id))]
 
         other_studies_rd = sorted(viewitems(
-            get_accessible_raw_data(user)))
+            _get_accessible_raw_data(user)))
 
-        # A prep template can be modified if it's status is sanbdox
+        # A prep template can be modified if its status is sanbdox
         is_editable = prep_template.status == 'sanbdox'
 
         raw_data_id = prep_template.raw_data
