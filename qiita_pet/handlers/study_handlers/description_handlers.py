@@ -179,6 +179,8 @@ class StudyDescriptionHandler(BaseHandler):
             raise HTTPError(404, "This file doesn't exist: %s" % fp_rsp)
 
         # Define here the message and message level in case of success
+        msg = "The sample template '%s' has been added" % sample_template
+        msg_level = "success"
         is_mapping_file = looks_like_qiime_mapping_file(fp_rsp)
 
         try:

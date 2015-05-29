@@ -15,6 +15,7 @@ from qiita_db.metadata_template import (load_template_to_dataframe,
                                         CONTROLLED_COLS,
                                         TARGET_GENE_DATA_TYPES)
 from qiita_db.util import convert_from_id
+from qiita_ware.exceptions import QiitaWareError
 
 
 def create_templates_from_qiime_mapping_file(fp, study, data_type):
@@ -41,9 +42,18 @@ def create_templates_from_qiime_mapping_file(fp, study, data_type):
     rename_cols = {
         'BarcodeSequence': 'barcode',
         'LinkerPrimerSequence': 'primer',
-        'ReverseLinkerPrimer': 'reverselinkerprimer',
         'Description': 'description',
     }
+
+    if 'ReverseLinkerPrimer' in qiime_map:
+        rename_cols['ReverseLinkerPrimer'] = 'reverselinkerprimer'
+
+    missing = set(rename_cols).difference(qiime_map.columns)
+    if missing:
+        raise QiitaWareError(
+            "Error generating the templates from the QIIME mapping file. "
+            "Missing QIIME mapping file columns: %s" % ', '.join(missing))
+
     qiime_map.rename(columns=rename_cols, inplace=True)
 
     # Fix the casing in the columns that we control
@@ -64,6 +74,7 @@ def create_templates_from_qiime_mapping_file(fp, study, data_type):
     if data_type_str in TARGET_GENE_DATA_TYPES:
         pt_cols.update(
             col for col in _col_iterator(PREP_TEMPLATE_COLUMNS_TARGET_GENE))
+        pt_cols.add('reverselinkerprimer')
 
     qiime_cols = set(qiime_map.columns)
     pt_cols = qiime_cols.intersection(pt_cols)
