@@ -159,9 +159,10 @@ $(document).ready(function() {
         event.preventDefault();
         $("#submit-button").prop("disabled",true);
         $("#search-error").text('');
+        $("#search-waiting").prop('hidden', false);
         var query = $("#searchbox").val();
         var table = $('#studies-table').DataTable();
-        table.ajax.url(ajaxURL + "&query=" + query).load(function() {$("#submit-button").prop("disabled",false);}, true);
+        table.ajax.url(ajaxURL + "&query=" + query).load(function() {$("#submit-button").prop("disabled",false); $("#search-waiting").prop('hidden', true);}, true);
         table.search( '' ).columns().search( '' ).draw();
 
         return false;
@@ -203,6 +204,11 @@ function add_metacat(metacat) {
     <span id="search-error" style="color:red"></span>
   </div>
   <div class="col-sm-12" id="searchmsg" name="searchmsg"></div>
+</div>
+<div class="row">
+  <div class="col-sm-12" id="search-waiting" hidden=true>
+  <p><img src="/static/img/waiting.gif" style="float: left;"> <h2>Searching</h2></p>
+  </div>
 </div>
 <!--User Studies-->
 <div class="row">
