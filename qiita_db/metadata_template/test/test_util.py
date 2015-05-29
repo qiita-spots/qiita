@@ -239,9 +239,8 @@ class TestUtil(TestCase):
             StringIO(QIIME_TUTORIAL_MAP_SUBSET))
         self.assertTrue(obs)
 
-    def test_looks_like_qiime_mmapping_file_error(self):
-        with self.assertRaises(QiitaDBError):
-            looks_like_qiime_mapping_file(StringIO())
+        obs = looks_like_qiime_mapping_file(StringIO())
+        self.assertFalse(obs)
 
     def test_parse_mapping_file(self):
         # Tests ported over from QIIME

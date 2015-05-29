@@ -346,10 +346,6 @@ def looks_like_qiime_mapping_file(fp):
     bool
         True if fp looks like a QIIME mapping file, false otherwise.
 
-    Raises
-    ------
-    QiitaDBError
-        If an empty file is passed
 
     Notes
     -----
@@ -362,7 +358,7 @@ def looks_like_qiime_mapping_file(fp):
     with open_file(fp, mode='U') as f:
         first_line = f.readline()
     if not first_line:
-        raise QiitaDBError('Empty file passed!')
+        return False
 
     first_col = first_line.split()[0]
     return first_col == '#SampleID'
