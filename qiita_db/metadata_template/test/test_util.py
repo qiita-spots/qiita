@@ -18,7 +18,7 @@ from qiita_db.exceptions import (QiitaDBColumnError, QiitaDBWarning,
 from qiita_db.metadata_template.util import (
     get_datatypes, as_python_types, prefix_sample_names_with_id,
     load_template_to_dataframe, get_invalid_sample_names,
-    looks_like_qiime_mapping_file)
+    looks_like_qiime_mapping_file, _parse_mapping_file)
 
 
 class TestUtil(TestCase):
@@ -69,7 +69,7 @@ class TestUtil(TestCase):
         obs = load_template_to_dataframe(StringIO(QIIME_TUTORIAL_MAP_SUBSET),
                                          index='#SampleID')
         exp = pd.DataFrame.from_dict(QIIME_TUTORIAL_MAP_DICT_FORM)
-        exp.index.name = '#SampleID'
+        exp.index.name = 'SampleID'
         obs.sort_index(axis=0, inplace=True)
         obs.sort_index(axis=1, inplace=True)
         exp.sort_index(axis=0, inplace=True)
@@ -242,6 +242,22 @@ class TestUtil(TestCase):
     def test_looks_like_qiime_mmapping_file_error(self):
         with self.assertRaises(QiitaDBError):
             looks_like_qiime_mapping_file(StringIO())
+
+    def test_parse_mapping_file(self):
+        # Tests ported over from QIIME
+        s1 = ['#sample\ta\tb', '#comment line to skip',
+              'x \t y \t z ', ' ', '#more skip', 'i\tj\tk']
+        exp = ([['x', 'y', 'z'], ['i', 'j', 'k']],
+               ['sample', 'a', 'b'],
+               ['comment line to skip', 'more skip'])
+        obs = _parse_mapping_file(s1)
+        self.assertEqual(obs, exp)
+
+        # check that we strip double quotes by default
+        s2 = ['#sample\ta\tb', '#comment line to skip',
+              '"x "\t" y "\t z ', ' ', '"#more skip"', 'i\t"j"\tk']
+        obs = _parse_mapping_file(s2)
+        self.assertEqual(obs, exp)
 
 
 QIIME_TUTORIAL_MAP_SUBSET = (

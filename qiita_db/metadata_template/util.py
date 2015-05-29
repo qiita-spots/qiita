@@ -207,6 +207,17 @@ def load_template_to_dataframe(fn, strip_whitespace=True, index='sample_name'):
     controlled_cols.update(CONTROLLED_COLS)
     holdfile[0] = '\t'.join(c.lower() if c.lower() in controlled_cols else c
                             for c in cols)
+
+    if index == "#SampleID":
+        # We're going to parse a QIIME mapping file. We are going to first
+        # parse it with the QIIME function so we can remove the comments
+        # easily and make sure that QIIME will accept this as a mapping file
+        data, headers, comments = _parse_mapping_file(holdfile)
+        holdfile = ["%s\n" % '\t'.join(d) for d in data]
+        holdfile.insert(0, "%s\n" % '\t'.join(headers))
+        # The QIIME parser fixes the index and removes the #
+        index = 'SampleID'
+
     # index_col:
     #   is set as False, otherwise it is cast as a float and we want a string
     # keep_default:
@@ -355,3 +366,80 @@ def looks_like_qiime_mapping_file(fp):
 
     first_col = first_line.split()[0]
     return first_col == '#SampleID'
+
+
+def _parse_mapping_file(lines, strip_quotes=True, suppress_stripping=False):
+    """Parser for map file that relates samples to metadata.
+
+    Format: header line with fields
+            optionally other comment lines starting with #
+            tab-delimited fields
+
+    Parameters
+    ----------
+    lines : iterable of str
+        The contents of the QIIME mapping file
+    strip_quotes : bool, optional
+        Defaults to true. If true, quotes are removed from the data
+    suppress_stripping : bool, optional
+        Defaults to false. If true, spaces are not stripped
+
+    Returns
+    -------
+    list of lists, list of str, list of str
+        The data in the mapping file, the headers and the comments
+
+    Raises
+    ------
+    QiitaDBError
+        If there is any error parsing the mapping file
+
+    Notes
+    -----
+    This code has been ported from QIIME.
+    """
+    if strip_quotes:
+        if suppress_stripping:
+            # remove quotes but not spaces
+            strip_f = lambda x: x.replace('"', '')
+        else:
+            # remove quotes and spaces
+            strip_f = lambda x: x.replace('"', '').strip()
+    else:
+        if suppress_stripping:
+            # don't remove quotes or spaces
+            strip_f = lambda x: x
+        else:
+            # remove spaces but not quotes
+            strip_f = lambda x: x.strip()
+
+    # Create lists to store the results
+    mapping_data = []
+    header = []
+    comments = []
+
+    # Begin iterating over lines
+    for line in lines:
+        line = strip_f(line)
+        if not line or (suppress_stripping and not line.strip()):
+            # skip blank lines when not stripping lines
+            continue
+
+        if line.startswith('#'):
+            line = line[1:]
+            if not header:
+                header = line.strip().split('\t')
+            else:
+                comments.append(line)
+        else:
+            # Will add empty string to empty fields
+            tmp_line = map(strip_f, line.split('\t'))
+            if len(tmp_line) < len(header):
+                tmp_line.extend([''] * (len(header) - len(tmp_line)))
+            mapping_data.append(tmp_line)
+    if not header:
+        raise QiitaDBError("No header line was found in mapping file.")
+    if not mapping_data:
+        raise QiitaDBError("No data found in mapping file.")
+
+    return mapping_data, header, comments
