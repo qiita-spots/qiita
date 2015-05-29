@@ -55,6 +55,7 @@ function fillAbstract(table, row) {
 }
 
 $(document).ready(function() {
+        $("#search-waiting").hide();
         moi.init(null, window.location.host + '/study/list/socket/', function(){}, error, error);
         moi.add_callback('sel', show_alert);
         function format ( d, row ) {
@@ -159,10 +160,10 @@ $(document).ready(function() {
         event.preventDefault();
         $("#submit-button").prop("disabled",true);
         $("#search-error").text('');
-        $("#search-waiting").prop('hidden', false);
+        $("#search-waiting").show();
         var query = $("#searchbox").val();
         var table = $('#studies-table').DataTable();
-        table.ajax.url(ajaxURL + "&query=" + query).load(function() {$("#submit-button").prop("disabled",false); $("#search-waiting").prop('hidden', true);}, true);
+        table.ajax.url(ajaxURL + "&query=" + query).load(function() {$("#submit-button").prop("disabled",false); $("#search-waiting").hide(); $("#search-msg").html('Search Completed: <b>' + query + "</b>"); }, true);
         table.search( '' ).columns().search( '' ).draw();
 
         return false;
@@ -201,12 +202,12 @@ function add_metacat(metacat) {
         <input type="textbox" id="searchbox" name="searchbox" class="form-control" style="width:80%;white-space:nowrap;" />
       <button type="submit" id="submit-button" class="btn btn-default">Submit</button>
     </form>
-    <span id="search-error" style="color:red"></span>
+    <span id="search-error" style="color:red"></span><span id="search-msg"></span>
   </div>
   <div class="col-sm-12" id="searchmsg" name="searchmsg"></div>
 </div>
-<div class="row">
-  <div class="col-sm-12" id="search-waiting" hidden=true>
+<div class="row" id="search-waiting">
+  <div class="col-sm-12">
   <p><img src="/static/img/waiting.gif" style="float: left;"> <h2>Searching</h2></p>
   </div>
 </div>
