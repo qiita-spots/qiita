@@ -45,7 +45,7 @@ function sel_proc_data(row, pid) {
 }
 
 function show_alert(data) {
-  bootstrapAlert(data + ' samples selected.', "success", 2000);
+  bootstrapAlert(data + ' samples selected.', "success", 1000);
    $('#dflt-sel-info').css('color', 'rgb(0, 160, 0)');
 }
 
@@ -71,6 +71,7 @@ $(document).ready(function() {
         }
 
         $('#studies-table').dataTable({
+            "deferRender": true,
             "columns": [
               {"className": 'details-control', "orderable": false, "data": null, "defaultContent": '<span class="glyphicon glyphicon-chevron-down"></span>'},
               { "orderable": false},
@@ -120,6 +121,7 @@ $(document).ready(function() {
             },
             "ajax": {
                 "url": ajaxURL + "&query=",
+                "deferRender": true,
                 "error": function(jqXHR, textStatus, ex) {
                     $("#submit-button").prop("disabled",false);
                     if(jqXHR.status === 500) { $("#search-error").text("Internal Server Error, please try again later"); }
@@ -160,10 +162,18 @@ $(document).ready(function() {
         event.preventDefault();
         $("#submit-button").prop("disabled",true);
         $("#search-error").text('');
+        $("#search-msg").text('');
+        $('.gray-msg').css('color','#F2F2F2');
         $("#search-waiting").show();
         var query = $("#searchbox").val();
         var table = $('#studies-table').DataTable();
-        table.ajax.url(ajaxURL + "&query=" + query).load(function() {$("#submit-button").prop("disabled",false); $("#search-waiting").hide(); $("#search-msg").html('Search Completed: <b>' + query + "</b>"); }, true);
+        table.ajax.url(ajaxURL + "&query=" + query).load(function() {
+          $("#submit-button").prop("disabled",false);
+          $("#search-waiting").hide();
+          $("#search-msg").html('Search Completed: <b>' + query + "</b>");
+          setTimeout(function() { $('.gray-msg').css('color','black'); },400);
+        },
+        true);
         table.search( '' ).columns().search( '' ).draw();
 
         return false;
@@ -202,7 +212,8 @@ function add_metacat(metacat) {
         <input type="textbox" id="searchbox" name="searchbox" class="form-control" style="width:80%;white-space:nowrap;" />
       <button type="submit" id="submit-button" class="btn btn-default">Submit</button>
     </form>
-    <span id="search-error" style="color:red"></span><span id="search-msg"></span>
+    <span id="search-msg" class='gray-msg'></span><br />
+    <span id="search-error" style="color:red"></span>
   </div>
   <div class="col-sm-12" id="searchmsg" name="searchmsg"></div>
 </div>
@@ -214,8 +225,8 @@ function add_metacat(metacat) {
 <!--User Studies-->
 <div class="row">
   <div class="col-sm-12" id="user-studies-div">
-    <h1>Available Studies</h1>
-    <table id="studies-table" class="table table-bordered">
+    <h1 class="gray-msg">Available Studies</h1>
+    <table id="studies-table" class="table table-bordered gray-msg">
         <thead>
             <tr>
                 <th>Expand</th>
