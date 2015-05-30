@@ -26,11 +26,14 @@ sql_detach = """DELETE FROM qiita.study_raw_data
                 WHERE raw_data_id = %s AND study_id = %s"""
 sql_unlink = "DELETE FROM qiita.raw_filepath WHERE raw_data_id = %s"
 sql_delete = "DELETE FROM qiita.raw_data WHERE raw_data_id = %s"
+sql_studies = """SELECT study_id FROM qiita.study_raw_data
+                 WHERE raw_data_id = %s"""
 move_files = []
 for rd_id in rd_ids:
     rd = RawData(rd_id)
     filepaths = rd.get_filepaths()
-    studies = sorted(rd.studies)
+    studies = [s[0] for s in conn_handler.execute_fetchall(sql_studies,
+                                                           (rd_id,))]
     if filepaths:
         # we need to move the files to a study. We chose the one with lower
         # study id. Currently there is no case in the live database in which a

@@ -72,6 +72,14 @@ def run_analysis(analysis_id, commands, comm_opts=None,
     return ar(analysis, commands, comm_opts, rarefaction_depth)
 
 
+def create_raw_data(filetype, prep_template, filepaths):
+    """Creates a new raw data
+
+    Needs to be dispachable because it moves large files
+    """
+    RawData.create(filetype, [prep_template], filepaths)
+
+
 def add_files_to_raw_data(raw_data_id, filepaths):
     """Add files to raw data
 

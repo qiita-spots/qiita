@@ -563,7 +563,7 @@ class TestUpdatePreprocessedDataFromCmd(TestCase):
         # We need to sort the list returned from the db because the ordering
         # on that list is based on db modification time, rather than id
         obs_fps = sorted(ppd.get_filepaths())
-        self.assertEqual(obs_fps, exp_fps)
+        self.assertEqual(obs_fps, sorted(exp_fps))
 
         # Check that the checksums have been updated
         sql = "SELECT checksum FROM qiita.filepath WHERE filepath_id=%s"

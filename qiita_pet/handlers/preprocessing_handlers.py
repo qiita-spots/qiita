@@ -31,6 +31,5 @@ class PreprocessHandler(BaseHandler):
         self.render('compute_wait.html',
                     job_id=job_id, title='Preprocessing',
                     completion_redirect='/study/description/%d?top_tab='
-                                        'raw_data_tab&sub_tab=%s&prep_tab=%s'
-                                        % (study_id, raw_data.id,
-                                           prep_template_id))
+                                        'prep_template_tab&sub_tab=%s'
+                                        % (study_id, prep_template_id))
