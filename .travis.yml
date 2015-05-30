@@ -24,8 +24,8 @@ install:
   - travis_retry pip install .
 script:
   - export MOI_CONFIG_FP=`pwd`/qiita_core/support_files/config_test.txt
-  - ipython profile create qiita_general --parallel
-  - qiita-env start_cluster qiita_general
+  - ipython profile create qiita-general --parallel
+  - qiita-env start_cluster qiita-general
   - qiita-env make --no-load-ontologies
   - if [ ${TEST_ADD_STUDIES} == "True" ]; then test_data_studies/commands.sh ; fi
   - if [ ${TEST_ADD_STUDIES} == "False" ]; then qiita_test_install ; fi
