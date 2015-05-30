@@ -55,12 +55,17 @@ def qiita():
 
 
 @qiita.group()
-def db():
+def pet():
+    pass
+
+
+@pet.group()
+def webserver():
     pass
 
 
 @qiita.group()
-def ebi():
+def db():
     pass
 
 
@@ -70,12 +75,12 @@ def maintenance():
 
 
 @qiita.group()
-def webserver():
+def ware():
     pass
 
 
-@qiita.group()
-def ware():
+@ware.group()
+def ebi():
     pass
 
 
@@ -341,7 +346,7 @@ def status():
         click.echo(r_client.ttl('sysmessage'), "seconds remaining")
 
 
-@qiita.command()
+@maintenance.command()
 @click.option('--n', required=False, type=click.IntRange(0, None), default=10,
               help="Number of most recent log entries to retrieve.",
               show_default=True)
