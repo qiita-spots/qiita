@@ -31,6 +31,7 @@ from qiita_db.exceptions import (QiitaDBUnknownIDError, QiitaDBColumnError,
                                  QiitaDBDuplicateHeaderError, QiitaDBError)
 from qiita_ware.metadata_pipeline import (
     create_templates_from_qiime_mapping_file)
+from qiita_ware.exceptions import QiitaWareError
 from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_pet.handlers.util import check_access
 from qiita_pet.handlers.study_handlers.listing_handlers import (
@@ -179,6 +180,8 @@ class StudyDescriptionHandler(BaseHandler):
             raise HTTPError(404, "This file doesn't exist: %s" % fp_rsp)
 
         # Define here the message and message level in case of success
+        msg = "The sample template '%s' has been added" % sample_template
+        msg_level = "success"
         is_mapping_file = looks_like_qiime_mapping_file(fp_rsp)
 
         try:
@@ -197,7 +200,7 @@ class StudyDescriptionHandler(BaseHandler):
         except (TypeError, QiitaDBColumnError, QiitaDBExecutionError,
                 QiitaDBDuplicateError, IOError, ValueError, KeyError,
                 CParserError, QiitaDBDuplicateHeaderError,
-                QiitaDBError) as e:
+                QiitaDBError, QiitaWareError) as e:
             # Some error occurred while processing the sample template
             # Show the error to the user so they can fix the template
             error_msg = ('parsing the QIIME mapping file'
@@ -634,6 +637,9 @@ class StudyDescriptionHandler(BaseHandler):
         # not public or if the user is an admin, in which case they can always
         # modify the information of the study
         show_edit_btn = study_status != 'public' or user_level == 'admin'
+
+        # Make the error message suitable for html
+        msg = msg.replace('\n', "<br/>")
 
         self.render('study_description.html',
                     message=msg,
