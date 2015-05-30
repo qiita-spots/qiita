@@ -31,6 +31,7 @@ from qiita_db.exceptions import (QiitaDBUnknownIDError, QiitaDBColumnError,
                                  QiitaDBDuplicateHeaderError, QiitaDBError)
 from qiita_ware.metadata_pipeline import (
     create_templates_from_qiime_mapping_file)
+from qiita_ware.exceptions import QiitaWareError
 from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_pet.handlers.util import check_access
 from qiita_pet.handlers.study_handlers.listing_handlers import (
@@ -199,7 +200,7 @@ class StudyDescriptionHandler(BaseHandler):
         except (TypeError, QiitaDBColumnError, QiitaDBExecutionError,
                 QiitaDBDuplicateError, IOError, ValueError, KeyError,
                 CParserError, QiitaDBDuplicateHeaderError,
-                QiitaDBError) as e:
+                QiitaDBError, QiitaWareError) as e:
             # Some error occurred while processing the sample template
             # Show the error to the user so they can fix the template
             error_msg = ('parsing the QIIME mapping file'

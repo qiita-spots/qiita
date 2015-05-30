@@ -397,17 +397,25 @@ def _parse_mapping_file(lines, strip_quotes=True, suppress_stripping=False):
     if strip_quotes:
         if suppress_stripping:
             # remove quotes but not spaces
-            strip_f = lambda x: x.replace('"', '')
+
+            def strip_f(x):
+                return x.replace('"', '')
         else:
             # remove quotes and spaces
-            strip_f = lambda x: x.replace('"', '').strip()
+
+            def strip_f(x):
+                return x.replace('"', '').strip()
     else:
         if suppress_stripping:
             # don't remove quotes or spaces
-            strip_f = lambda x: x
+
+            def strip_f(x):
+                return x
         else:
             # remove spaces but not quotes
-            strip_f = lambda x: x.strip()
+
+            def strip_f(x):
+                return x.strip()
 
     # Create lists to store the results
     mapping_data = []
