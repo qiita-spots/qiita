@@ -5,11 +5,11 @@ export PGDATESTYLE="ISO, MDY"
 studies=`ls test_data_studies/studies`
 
 echo "DROPPING ENV... "
-qiita_env drop --no-ask-for-confirmation
+qiita-env drop --no-ask-for-confirmation
 echo "Ok"
 
 echo "MAKING ENV... "
-qiita_env make --add-demo-user --no-load-ontologies
+qiita-env make --add-demo-user --no-load-ontologies
 echo "Ok"
 
 # Inserting all the information for each study

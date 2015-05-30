@@ -43,7 +43,7 @@ _CONFIG = ConfigurationManager()
 try:
     conn = SQLConnectionHandler()
 except OperationalError:
-    raise QiitaDBConnectionError("Database does not exist. See qiita_env "
+    raise QiitaDBConnectionError("Database does not exist. See qiita-env "
                                  "make --help for more information")
 else:
     del conn
