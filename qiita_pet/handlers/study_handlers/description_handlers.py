@@ -23,11 +23,15 @@ from qiita_db.data import RawData, PreprocessedData, ProcessedData
 from qiita_db.ontology import Ontology
 from qiita_db.metadata_template import (PrepTemplate, SampleTemplate,
                                         load_template_to_dataframe,
-                                        SAMPLE_TEMPLATE_COLUMNS)
+                                        SAMPLE_TEMPLATE_COLUMNS,
+                                        looks_like_qiime_mapping_file)
 from qiita_db.util import convert_to_id, get_mountpoint
 from qiita_db.exceptions import (QiitaDBUnknownIDError, QiitaDBColumnError,
                                  QiitaDBExecutionError, QiitaDBDuplicateError,
                                  QiitaDBDuplicateHeaderError, QiitaDBError)
+from qiita_ware.metadata_pipeline import (
+    create_templates_from_qiime_mapping_file)
+from qiita_ware.exceptions import QiitaWareError
 from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_pet.handlers.util import check_access
 from qiita_pet.handlers.study_handlers.listing_handlers import (
@@ -161,13 +165,11 @@ class StudyDescriptionHandler(BaseHandler):
         HTTPError
             If the sample template file does not exists
         """
-        # If we are on this function, the argument "sample_template" must
-        # defined. If not, let tornado raise its error
+        # If we are on this function, the arguments "sample_template" and
+        # "data_type" must be defined. If not, let tornado raise its error
         sample_template = self.get_argument('sample_template')
+        data_type = self.get_argument('data_type')
 
-        # Define here the message and message level in case of success
-        msg = "The sample template '%s' has been added" % sample_template
-        msg_level = "success"
         # Get the uploads folder
         _, base_fp = get_mountpoint("uploads")[0]
         # Get the path of the sample template in the uploads folder
@@ -177,25 +179,35 @@ class StudyDescriptionHandler(BaseHandler):
             # The file does not exist, fail nicely
             raise HTTPError(404, "This file doesn't exist: %s" % fp_rsp)
 
+        # Define here the message and message level in case of success
+        msg = "The sample template '%s' has been added" % sample_template
+        msg_level = "success"
+        is_mapping_file = looks_like_qiime_mapping_file(fp_rsp)
+
         try:
             with warnings.catch_warnings(record=True) as warns:
                 # deleting previous uploads and inserting new one
                 self.remove_add_study_template(study.raw_data, study.id,
-                                               fp_rsp)
+                                               fp_rsp, data_type,
+                                               is_mapping_file)
 
-                # join all the warning messages into one. Note that this info
-                # will be ignored if an exception is raised
+                # join all the warning messages into one. Note that this
+                # info will be ignored if an exception is raised
                 if warns:
                     msg = '; '.join([str(w.message) for w in warns])
                     msg_level = 'warning'
 
         except (TypeError, QiitaDBColumnError, QiitaDBExecutionError,
                 QiitaDBDuplicateError, IOError, ValueError, KeyError,
-                CParserError, QiitaDBDuplicateHeaderError, QiitaDBError) as e:
+                CParserError, QiitaDBDuplicateHeaderError,
+                QiitaDBError, QiitaWareError) as e:
             # Some error occurred while processing the sample template
             # Show the error to the user so they can fix the template
-            msg = html_error_message % ('parsing the sample template:',
-                                        basename(fp_rsp), str(e))
+            error_msg = ('parsing the QIIME mapping file'
+                         if is_mapping_file
+                         else 'parsing the sample template')
+            msg = html_error_message % (error_msg, basename(fp_rsp),
+                                        str(e))
             msg_level = "danger"
 
         callback((msg, msg_level, None, None, None))
@@ -564,9 +576,14 @@ class StudyDescriptionHandler(BaseHandler):
         msg_level = 'danger'
         callback((msg, msg_level, 'study_information_tab', None, None))
 
-    def remove_add_study_template(self, raw_data, study_id, fp_rsp):
+    def remove_add_study_template(self, raw_data, study_id, fp_rsp, data_type,
+                                  is_mapping_file):
         """Replace prep templates, raw data, and sample template with a new one
         """
+        if is_mapping_file and data_type == "":
+            raise ValueError("Please, choose a data type if uploading a QIIME "
+                             "mapping file")
+
         for rd in raw_data():
             rd = RawData(rd)
             for pt in rd.prep_templates:
@@ -575,8 +592,13 @@ class StudyDescriptionHandler(BaseHandler):
         if SampleTemplate.exists(study_id):
             SampleTemplate.delete(study_id)
 
-        SampleTemplate.create(load_template_to_dataframe(fp_rsp),
-                              Study(study_id))
+        if is_mapping_file:
+            create_templates_from_qiime_mapping_file(fp_rsp, Study(study_id),
+                                                     int(data_type))
+        else:
+            SampleTemplate.create(load_template_to_dataframe(fp_rsp),
+                                  Study(study_id))
+
         remove(fp_rsp)
 
     def remove_add_prep_template(self, fp_rpt, study, data_type_id,
@@ -615,6 +637,9 @@ class StudyDescriptionHandler(BaseHandler):
         # not public or if the user is an admin, in which case they can always
         # modify the information of the study
         show_edit_btn = study_status != 'public' or user_level == 'admin'
+
+        # Make the error message suitable for html
+        msg = msg.replace('\n', "<br/>")
 
         self.render('study_description.html',
                     message=msg,
