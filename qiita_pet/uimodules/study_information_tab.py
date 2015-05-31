@@ -7,8 +7,11 @@
 # -----------------------------------------------------------------------------
 
 from functools import partial
+from operator import itemgetter
 
-from qiita_db.util import get_files_from_uploads_folders
+from future.utils import viewitems
+
+from qiita_db.util import get_files_from_uploads_folders, get_data_types
 from qiita_db.study import StudyPerson
 from qiita_db.metadata_template import SampleTemplate
 from qiita_pet.util import linkify
@@ -34,10 +37,13 @@ class StudyInformationTab(BaseUIModule):
         number_samples_promised = study_info['number_samples_promised']
         number_samples_collected = study_info['number_samples_collected']
         metadata_complete = study_info['metadata_complete']
+        data_types = sorted(viewitems(get_data_types()), key=itemgetter(1))
 
         # Retrieve the files from the uploads folder, so the user can choose
-        # the sample template of the study
-        files = [f for _, f in get_files_from_uploads_folders(str(study.id))]
+        # the sample template of the study. Filter them to only include the
+        # ones that ends with 'txt' or 'tsv'.
+        files = [f for _, f in get_files_from_uploads_folders(str(study.id))
+                 if f.endswith(('txt', 'tsv'))]
 
         # If the sample template exists, retrieve all its filepaths
         if SampleTemplate.exists(study.id):
@@ -68,4 +74,5 @@ class StudyInformationTab(BaseUIModule):
             files=files,
             study_id=study.id,
             sample_templates=sample_templates,
-            is_local_request=is_local_request)
+            is_local_request=is_local_request,
+            data_types=data_types)

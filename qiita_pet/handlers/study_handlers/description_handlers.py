@@ -23,11 +23,15 @@ from qiita_db.data import RawData, PreprocessedData, ProcessedData
 from qiita_db.ontology import Ontology
 from qiita_db.metadata_template import (PrepTemplate, SampleTemplate,
                                         load_template_to_dataframe,
-                                        SAMPLE_TEMPLATE_COLUMNS)
+                                        SAMPLE_TEMPLATE_COLUMNS,
+                                        looks_like_qiime_mapping_file)
 from qiita_db.util import convert_to_id, get_mountpoint
 from qiita_db.exceptions import (QiitaDBUnknownIDError, QiitaDBColumnError,
                                  QiitaDBExecutionError, QiitaDBDuplicateError,
                                  QiitaDBDuplicateHeaderError, QiitaDBError)
+from qiita_ware.metadata_pipeline import (
+    create_templates_from_qiime_mapping_file)
+from qiita_ware.exceptions import QiitaWareError
 from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_pet.handlers.util import check_access
 from qiita_pet.handlers.study_handlers.listing_handlers import (
@@ -161,13 +165,11 @@ class StudyDescriptionHandler(BaseHandler):
         HTTPError
             If the sample template file does not exists
         """
-        # If we are on this function, the argument "sample_template" must
-        # defined. If not, let tornado raise its error
+        # If we are on this function, the arguments "sample_template" and
+        # "data_type" must be defined. If not, let tornado raise its error
         sample_template = self.get_argument('sample_template')
+        data_type = self.get_argument('data_type')
 
-        # Define here the message and message level in case of success
-        msg = "The sample template '%s' has been added" % sample_template
-        msg_level = "success"
         # Get the uploads folder
         _, base_fp = get_mountpoint("uploads")[0]
         # Get the path of the sample template in the uploads folder
@@ -177,25 +179,35 @@ class StudyDescriptionHandler(BaseHandler):
             # The file does not exist, fail nicely
             raise HTTPError(404, "This file doesn't exist: %s" % fp_rsp)
 
+        # Define here the message and message level in case of success
+        msg = "The sample template '%s' has been added" % sample_template
+        msg_level = "success"
+        is_mapping_file = looks_like_qiime_mapping_file(fp_rsp)
+
         try:
             with warnings.catch_warnings(record=True) as warns:
                 # deleting previous uploads and inserting new one
                 self.remove_add_study_template(study.raw_data, study.id,
-                                               fp_rsp)
+                                               fp_rsp, data_type,
+                                               is_mapping_file)
 
-                # join all the warning messages into one. Note that this info
-                # will be ignored if an exception is raised
+                # join all the warning messages into one. Note that this
+                # info will be ignored if an exception is raised
                 if warns:
                     msg = '; '.join([str(w.message) for w in warns])
                     msg_level = 'warning'
 
         except (TypeError, QiitaDBColumnError, QiitaDBExecutionError,
                 QiitaDBDuplicateError, IOError, ValueError, KeyError,
-                CParserError, QiitaDBDuplicateHeaderError, QiitaDBError) as e:
+                CParserError, QiitaDBDuplicateHeaderError,
+                QiitaDBError, QiitaWareError) as e:
             # Some error occurred while processing the sample template
             # Show the error to the user so they can fix the template
-            msg = html_error_message % ('parsing the sample template:',
-                                        basename(fp_rsp), str(e))
+            error_msg = ('parsing the QIIME mapping file'
+                         if is_mapping_file
+                         else 'parsing the sample template')
+            msg = html_error_message % (error_msg, basename(fp_rsp),
+                                        str(e))
             msg_level = "danger"
 
         callback((msg, msg_level, None, None, None))
@@ -312,8 +324,8 @@ class StudyDescriptionHandler(BaseHandler):
 
         callback((msg, msg_level, None, None, None))
 
-    def create_raw_data(self, study, user, callback):
-        """Adds a (new) raw data to the study
+    def add_raw_data(self, study, user, callback):
+        """Adds an existing raw data to the study
 
         Parameters
         ----------
@@ -328,41 +340,20 @@ class StudyDescriptionHandler(BaseHandler):
         msg = "Raw data successfully added"
         msg_level = "success"
 
-        # Get the arguments needed to create a raw data object
-        filetype = self.get_argument('filetype', None)
-        previous_raw_data = self.get_argument('previous_raw_data', None)
+        # Get the arguments to add the raw data
+        pt_id = self.get_argument('prep_template_id')
+        raw_data_id = self.get_argument('raw_data_id')
 
-        if filetype and previous_raw_data:
-            # The user selected a filetype and an existing raw data
-            msg = ("You can not specify both a new raw data and a previously "
-                   "used one")
-            msg_level = "danger"
-        elif filetype:
-            # We are creating a new raw data object
-            try:
-                rd_id = RawData.create(filetype, [study]).id
-            except (TypeError, QiitaDBColumnError, QiitaDBExecutionError,
-                    QiitaDBDuplicateError, IOError, ValueError, KeyError,
-                    CParserError) as e:
-                msg = html_error_message % (
-                    "creating a new raw data object for study:",
-                    str(study.id), str(e))
-                msg_level = "danger"
-        elif previous_raw_data:
-            previous_raw_data = previous_raw_data.split(',')
-            raw_data = [RawData(rd) for rd in previous_raw_data]
-            study.add_raw_data(raw_data)
-            rd_id = raw_data[0].id
-        else:
-            # The user did not provide a filetype neither an existing raw data
-            # If using the interface, we should never reach this if, but
-            # better be safe than sorry
-            msg = ("You should choose a filetype for a new raw data or "
-                   "choose a raw data previously used")
-            msg_level = "danger"
-            rd_id = None
+        prep_template = PrepTemplate(pt_id)
+        raw_data = RawData(raw_data_id)
 
-        callback((msg, msg_level, 'raw_data_tab', rd_id, None))
+        try:
+            prep_template.raw_data = raw_data
+        except QiitaDBError as e:
+            msg = html_error_message % ("adding the raw data",
+                                        str(raw_data_id), str(e))
+
+        callback((msg, msg_level, 'prep_template_tab', pt_id, None))
 
     def add_prep_template(self, study, user, callback):
         """Adds a prep template to the system
@@ -380,10 +371,9 @@ class StudyDescriptionHandler(BaseHandler):
         msg = "Your prep template was added"
         msg_level = "success"
 
-        # If we are on this function, the arguments "raw_data_id",
-        # "prep_template" and "data_type_id" must be defined. If not,
+        # If we are on this function, the arguments "prep_template" and
+        # "data_type_id" must be defined. If not,
         # let tornado raise its error
-        raw_data_id = self.get_argument('raw_data_id')
         prep_template = self.get_argument('prep_template')
         data_type_id = self.get_argument('data_type_id')
 
@@ -398,8 +388,6 @@ class StudyDescriptionHandler(BaseHandler):
             investigation_type, user_defined_investigation_type,
             new_investigation_type)
 
-        # Make sure that the id is an integer
-        raw_data_id = _to_int(raw_data_id)
         # Get the upload base directory
         _, base_path = get_mountpoint("uploads")[0]
         # Get the path to the prep template
@@ -414,8 +402,8 @@ class StudyDescriptionHandler(BaseHandler):
                 warnings.simplefilter("always")
 
                 # deleting previous uploads and inserting new one
-                pt_id = self.remove_add_prep_template(fp_rpt, raw_data_id,
-                                                      study, data_type_id,
+                pt_id = self.remove_add_prep_template(fp_rpt, study,
+                                                      data_type_id,
                                                       investigation_type)
 
                 # join all the warning messages into one. Note that this info
@@ -433,7 +421,7 @@ class StudyDescriptionHandler(BaseHandler):
                                         basename(fp_rpt), str(e))
             msg_level = "danger"
 
-        callback((msg, msg_level, 'raw_data_tab', raw_data_id, pt_id))
+        callback((msg, msg_level, 'prep_template_tab', pt_id, None))
 
     def make_public(self, study, user, callback):
         """Makes the current study public
@@ -547,7 +535,6 @@ class StudyDescriptionHandler(BaseHandler):
             'edit-new-investigation-type', None)
 
         pt = PrepTemplate(prep_id)
-        rd_id = pt.raw_data
 
         investigation_type = self._process_investigation_type(
             edit_investigation_type, edit_user_defined_investigation_type,
@@ -561,9 +548,9 @@ class StudyDescriptionHandler(BaseHandler):
             msg_level = "danger"
 
         if ppd_id == 0:
-            top_tab = "raw_data_tab"
-            sub_tab = rd_id
-            prep_tab = prep_id
+            top_tab = "prep_template_tab"
+            sub_tab = prep_id
+            prep_tab = None
         else:
             top_tab = "preprocessed_data_tab"
             sub_tab = ppd_id
@@ -589,9 +576,14 @@ class StudyDescriptionHandler(BaseHandler):
         msg_level = 'danger'
         callback((msg, msg_level, 'study_information_tab', None, None))
 
-    def remove_add_study_template(self, raw_data, study_id, fp_rsp):
+    def remove_add_study_template(self, raw_data, study_id, fp_rsp, data_type,
+                                  is_mapping_file):
         """Replace prep templates, raw data, and sample template with a new one
         """
+        if is_mapping_file and data_type == "":
+            raise ValueError("Please, choose a data type if uploading a QIIME "
+                             "mapping file")
+
         for rd in raw_data():
             rd = RawData(rd)
             for pt in rd.prep_templates:
@@ -600,16 +592,20 @@ class StudyDescriptionHandler(BaseHandler):
         if SampleTemplate.exists(study_id):
             SampleTemplate.delete(study_id)
 
-        SampleTemplate.create(load_template_to_dataframe(fp_rsp),
-                              Study(study_id))
+        if is_mapping_file:
+            create_templates_from_qiime_mapping_file(fp_rsp, Study(study_id),
+                                                     int(data_type))
+        else:
+            SampleTemplate.create(load_template_to_dataframe(fp_rsp),
+                                  Study(study_id))
+
         remove(fp_rsp)
 
-    def remove_add_prep_template(self, fp_rpt, raw_data_id, study,
-                                 data_type_id, investigation_type):
+    def remove_add_prep_template(self, fp_rpt, study, data_type_id,
+                                 investigation_type):
         """add prep templates"""
         pt_id = PrepTemplate.create(load_template_to_dataframe(fp_rpt),
-                                    RawData(raw_data_id), study,
-                                    _to_int(data_type_id),
+                                    study, _to_int(data_type_id),
                                     investigation_type=investigation_type).id
         remove(fp_rpt)
         return pt_id
@@ -641,6 +637,9 @@ class StudyDescriptionHandler(BaseHandler):
         # not public or if the user is an admin, in which case they can always
         # modify the information of the study
         show_edit_btn = study_status != 'public' or user_level == 'admin'
+
+        # Make the error message suitable for html
+        msg = msg.replace('\n', "<br/>")
 
         self.render('study_description.html',
                     message=msg,
@@ -730,21 +729,18 @@ class StudyDescriptionHandler(BaseHandler):
             is done
         """
         raw_data_id = int(self.get_argument('raw_data_id'))
+        prep_template_id = int(self.get_argument('prep_template_id'))
 
         try:
-            RawData.delete(raw_data_id, study.id)
-            msg = ("Raw data %d has been deleted from study: "
-                   "<b><i>%s</i></b>" % (raw_data_id, study.title))
+            RawData.delete(raw_data_id, prep_template_id)
+            msg = ("Raw data %d has been deleted from prep_template %d"
+                   % (raw_data_id, prep_template_id))
             msg_level = "success"
-            tab = 'study_information_tab'
-            tab_id = None
         except Exception as e:
-            msg = "Couldn't remove %d raw data: %s" % (raw_data_id, str(e))
+            msg = "Couldn't remove raw data %d: %s" % (raw_data_id, str(e))
             msg_level = "danger"
-            tab = 'raw_data_tab'
-            tab_id = raw_data_id
 
-        callback((msg, msg_level, tab, tab_id, None))
+        callback((msg, msg_level, "prep_template_tab", prep_template_id, None))
 
     def delete_prep_template(self, study, user, callback):
         """Delete the selected prep template
@@ -771,7 +767,7 @@ class StudyDescriptionHandler(BaseHandler):
             msg = ("Couldn't remove prep template: %s" % str(e))
             msg_level = "danger"
 
-        callback((msg, msg_level, 'raw_data_tab', prep_id, None))
+        callback((msg, msg_level, 'prep_template_tab', prep_id, None))
 
     def delete_preprocessed_data(self, study, user, callback):
         """Delete the selected preprocessed data
@@ -850,7 +846,7 @@ class StudyDescriptionHandler(BaseHandler):
             process_sample_template=self.process_sample_template,
             update_sample_template=self.update_sample_template,
             extend_sample_template=self.add_to_sample_template,
-            create_raw_data=self.create_raw_data,
+            add_raw_data=self.add_raw_data,
             add_prep_template=self.add_prep_template,
             make_public=self.make_public,
             approve_study=self.approve_study,

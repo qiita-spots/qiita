@@ -10,7 +10,7 @@ from future.builtins import zip
 from unittest import TestCase, main
 from tempfile import mkstemp
 from os import close, remove
-from os.path import join, basename
+from os.path import join
 from collections import Iterable
 
 import numpy.testing as npt
@@ -24,12 +24,12 @@ from qiita_db.exceptions import (QiitaDBUnknownIDError,
                                  QiitaDBDuplicateHeaderError,
                                  QiitaDBExecutionError,
                                  QiitaDBColumnError,
-                                 QiitaDBWarning)
+                                 QiitaDBWarning,
+                                 QiitaDBError)
 from qiita_db.sql_connection import SQLConnectionHandler
 from qiita_db.study import Study
 from qiita_db.data import RawData, ProcessedData
-from qiita_db.util import (exists_table, get_db_files_base_dir, get_mountpoint,
-                           get_count)
+from qiita_db.util import exists_table, get_mountpoint, get_count
 from qiita_db.metadata_template.prep_template import PrepTemplate, PrepSample
 from qiita_db.metadata_template.sample_template import SampleTemplate, Sample
 from qiita_db.metadata_template import (PREP_TEMPLATE_COLUMNS,
@@ -351,7 +351,6 @@ class BaseTestPrepTemplate(TestCase):
         self.metadata_prefixed = pd.DataFrame.from_dict(metadata_prefixed_dict,
                                                         orient='index')
 
-        self.test_raw_data = RawData(1)
         self.test_study = Study(1)
         self.data_type = "18S"
         self.data_type_id = 2
@@ -535,10 +534,6 @@ class TestPrepTemplateReadOnly(BaseTestPrepTemplate):
     def test_data_type_id(self):
         """data_type returns the int with the data_type_id"""
         self.assertTrue(self.tester.data_type(ret_id=True), 2)
-
-    def test_raw_data(self):
-        """Returns the raw_data associated with the prep template"""
-        self.assertEqual(self.tester.raw_data, 1)
 
     def test_preprocessed_data(self):
         """Returns the preprocessed data list generated from this template"""
@@ -773,36 +768,20 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
 
     def setUp(self):
         self._set_up()
-        fd, seqs_fp = mkstemp(suffix='_seqs.fastq')
-        close(fd)
-        fd, barcodes_fp = mkstemp(suffix='_barcodes.fastq')
-        close(fd)
-        filepaths = [(seqs_fp, 1), (barcodes_fp, 2)]
-        with open(seqs_fp, "w") as f:
-            f.write("\n")
-        with open(barcodes_fp, "w") as f:
-            f.write("\n")
-        self.new_raw_data = RawData.create(2, [Study(1)], filepaths=filepaths)
-
-        db_test_raw_dir = join(get_db_files_base_dir(), 'raw_data')
-        db_seqs_fp = join(db_test_raw_dir, "5_%s" % basename(seqs_fp))
-        db_barcodes_fp = join(db_test_raw_dir, "5_%s" % basename(barcodes_fp))
-        self._clean_up_files = [db_seqs_fp, db_barcodes_fp]
+        self._clean_up_files = []
 
     def test_create_duplicate_header(self):
         """Create raises an error when duplicate headers are present"""
         self.metadata['STR_COLUMN'] = pd.Series(['', '', ''],
                                                 index=self.metadata.index)
         with self.assertRaises(QiitaDBDuplicateHeaderError):
-            PrepTemplate.create(self.metadata, self.new_raw_data,
-                                self.test_study, self.data_type)
+            PrepTemplate.create(self.metadata, self.test_study, self.data_type)
 
     def test_create_bad_sample_names(self):
         # set a horrible list of sample names
         self.metadata.index = ['o()xxxx[{::::::::>', 'sample.1', 'sample.3']
         with self.assertRaises(QiitaDBColumnError):
-            PrepTemplate.create(self.metadata, self.new_raw_data,
-                                self.test_study, self.data_type)
+            PrepTemplate.create(self.metadata, self.test_study, self.data_type)
 
     def test_create_unknown_sample_names(self):
         # set two real and one fake sample name
@@ -812,19 +791,19 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
                                                orient='index')
         # Test error raised and correct error given
         with self.assertRaises(QiitaDBExecutionError) as err:
-            PrepTemplate.create(self.metadata, self.new_raw_data,
-                                self.test_study, self.data_type)
+            PrepTemplate.create(self.metadata, self.test_study, self.data_type)
         self.assertEqual(
-            str(err.exception), 'Samples found in prep template but not sample'
-            ' template: 1.NOTREAL')
+            str(err.exception),
+            'Samples found in prep template but not sample template: 1.NOTREAL'
+            )
 
     def test_create_shorter_prep_template(self):
         # remove one sample so not all samples in the prep template
         del self.metadata_dict['SKB7.640196']
         self.metadata = pd.DataFrame.from_dict(self.metadata_dict,
                                                orient='index')
-        pt = PrepTemplate.create(self.metadata, self.new_raw_data,
-                                 self.test_study, self.data_type)
+        pt = PrepTemplate.create(self.metadata, self.test_study,
+                                 self.data_type)
 
         # make sure the two samples were added correctly
         self.assertEqual(pt.id, 2)
@@ -875,8 +854,7 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
         exp_id = get_count("qiita.prep_template") + 1
 
         with self.assertRaises(QiitaDBExecutionError):
-            PrepTemplate.create(metadata, self.new_raw_data,
-                                self.test_study, self.data_type)
+            PrepTemplate.create(metadata, self.test_study, self.data_type)
 
         sql = """SELECT EXISTS(
                     SELECT * FROM qiita.prep_template
@@ -893,6 +871,11 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
                     WHERE prep_template_id=%s)"""
         self.assertFalse(self.conn_handler.execute_fetchone(sql, (exp_id,))[0])
 
+        sql = """SELECT EXISTS(
+                    SELECT * FROM qiita.study_prep_template
+                    WHERE prep_template_id=%s)"""
+        self.assertFalse(self.conn_handler.execute_fetchone(sql, (exp_id,))[0])
+
         self.assertFalse(exists_table("prep_%d" % exp_id, self.conn_handler))
 
     def _common_creation_checks(self, new_id, pt, fp_count):
@@ -905,7 +888,13 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
             (new_id,))
         # prep_template_id, data_type_id, raw_data_id, preprocessing_status,
         # investigation_type
-        self.assertEqual(obs, [[new_id, 2, 5, 'not_preprocessed', None]])
+        self.assertEqual(obs, [[new_id, 2, None, 'not_preprocessed', None]])
+
+        # The prep template has been linked to the study
+        obs = self.conn_handler.execute_fetchall(
+            "SELECT * FROM qiita.study_prep_template "
+            "WHERE prep_template_id=%s", (new_id,))
+        self.assertEqual(obs, [[self.test_study.id, new_id]])
 
         # The relevant rows to prep_template_sample have been added.
         obs = self.conn_handler.execute_fetchall(
@@ -991,8 +980,8 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
         """Creates a new PrepTemplate"""
         fp_count = get_count('qiita.filepath')
         new_id = get_count('qiita.prep_template') + 1
-        pt = PrepTemplate.create(self.metadata, self.new_raw_data,
-                                 self.test_study, self.data_type)
+        pt = PrepTemplate.create(self.metadata, self.test_study,
+                                 self.data_type)
         self._common_creation_checks(new_id, pt, fp_count)
 
     def test_create_already_prefixed_samples(self):
@@ -1000,8 +989,8 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
         fp_count = get_count('qiita.filepath')
         new_id = get_count('qiita.prep_template') + 1
         pt = npt.assert_warns(QiitaDBWarning, PrepTemplate.create,
-                              self.metadata_prefixed, self.new_raw_data,
-                              self.test_study, self.data_type)
+                              self.metadata_prefixed, self.test_study,
+                              self.data_type)
         self._common_creation_checks(new_id, pt, fp_count)
 
     def test_generate_files(self):
@@ -1032,8 +1021,8 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
         """Creates a new PrepTemplate passing the data_type_id"""
         fp_count = get_count('qiita.filepath')
         new_id = get_count('qiita.prep_template') + 1
-        pt = PrepTemplate.create(self.metadata, self.new_raw_data,
-                                 self.test_study, self.data_type_id)
+        pt = PrepTemplate.create(self.metadata, self.test_study,
+                                 self.data_type_id)
         self._common_creation_checks(new_id, pt, fp_count)
 
     def test_create_warning(self):
@@ -1043,8 +1032,7 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
         new_id = get_count('qiita.prep_template') + 1
         del self.metadata['barcode']
         pt = npt.assert_warns(QiitaDBWarning, PrepTemplate.create,
-                              self.metadata, self.new_raw_data,
-                              self.test_study, self.data_type)
+                              self.metadata, self.test_study, self.data_type)
 
         # The returned object has the correct id
         self.assertEqual(pt.id, new_id)
@@ -1055,7 +1043,13 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
             (new_id,))
         # prep_template_id, data_type_id, raw_data_id, preprocessing_status,
         # investigation_type
-        self.assertEqual(obs, [[new_id, 2, 5, 'not_preprocessed', None]])
+        self.assertEqual(obs, [[new_id, 2, None, 'not_preprocessed', None]])
+
+        # The prep template has been linked to the study
+        obs = self.conn_handler.execute_fetchall(
+            "SELECT * FROM qiita.study_prep_template "
+            "WHERE prep_template_id=%s", (new_id,))
+        self.assertEqual(obs, [[self.test_study.id, new_id]])
 
         # The relevant rows to prep_template_sample have been added.
         obs = self.conn_handler.execute_fetchall(
@@ -1136,9 +1130,8 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
     def test_create_investigation_type_error(self):
         """Create raises an error if the investigation_type does not exists"""
         with self.assertRaises(QiitaDBColumnError):
-            PrepTemplate.create(self.metadata, self.new_raw_data,
-                                self.test_study, self.data_type_id,
-                                'Not a term')
+            PrepTemplate.create(self.metadata, self.test_study,
+                                self.data_type_id, 'Not a term')
 
     def test_delete_error(self):
         """Try to delete a prep template that already has preprocessed data"""
@@ -1150,31 +1143,45 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
         with self.assertRaises(QiitaDBUnknownIDError):
             PrepTemplate.delete(5)
 
+    def test_delete_error_raw_data(self):
+        """Try to delete a prep template with a raw data attached to id"""
+        pt = PrepTemplate.create(self.metadata, self.test_study,
+                                 self.data_type_id)
+        pt.raw_data = RawData(1)
+        with self.assertRaises(QiitaDBExecutionError):
+            PrepTemplate.delete(pt.id)
+
     def test_delete(self):
         """Deletes prep template 2"""
-        pt = PrepTemplate.create(self.metadata, self.new_raw_data,
-                                 self.test_study, self.data_type_id)
+        pt = PrepTemplate.create(self.metadata, self.test_study,
+                                 self.data_type_id)
         PrepTemplate.delete(pt.id)
 
         obs = self.conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.prep_template WHERE prep_template_id=2")
+            "SELECT * FROM qiita.prep_template WHERE prep_template_id=%s",
+            (pt.id,))
         exp = []
         self.assertEqual(obs, exp)
+
+        obs = self.conn_handler.execute_fetchall(
+            "SELECT * FROM qiita.study_prep_template "
+            "WHERE prep_template_id=%s", (pt.id,))
 
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.prep_template_sample "
-            "WHERE prep_template_id=2")
+            "WHERE prep_template_id=%s", (pt.id,))
         exp = []
         self.assertEqual(obs, exp)
 
         obs = self.conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.prep_columns WHERE prep_template_id=2")
+            "SELECT * FROM qiita.prep_columns WHERE prep_template_id=%s",
+            (pt.id,))
         exp = []
         self.assertEqual(obs, exp)
 
         with self.assertRaises(QiitaDBExecutionError):
             self.conn_handler.execute_fetchall(
-                "SELECT * FROM qiita.prep_2")
+                "SELECT * FROM qiita.prep_%d" % pt.id)
 
     def test_setitem(self):
         """setitem raises an error (currently not allowed)"""
@@ -1191,8 +1198,8 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
         """to file writes a tab delimited file with all the metadata"""
         fd, fp = mkstemp()
         close(fd)
-        pt = PrepTemplate.create(self.metadata, self.new_raw_data,
-                                 self.test_study, self.data_type)
+        pt = PrepTemplate.create(self.metadata, self.test_study,
+                                 self.data_type)
         pt.to_file(fp)
         self._clean_up_files.append(fp)
         with open(fp, 'U') as f:
@@ -1206,14 +1213,14 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
         self.assertEqual(pt.preprocessing_status, 'success')
 
         # not preprocessed case
-        pt = PrepTemplate.create(self.metadata, self.new_raw_data,
-                                 self.test_study, self.data_type_id)
+        pt = PrepTemplate.create(self.metadata, self.test_study,
+                                 self.data_type_id)
         self.assertEqual(pt.preprocessing_status, 'not_preprocessed')
 
     def test_preprocessing_status_setter(self):
         """Able to update the preprocessing status"""
-        pt = PrepTemplate.create(self.metadata, self.new_raw_data,
-                                 self.test_study, self.data_type_id)
+        pt = PrepTemplate.create(self.metadata, self.test_study,
+                                 self.data_type_id)
         self.assertEqual(pt.preprocessing_status, 'not_preprocessed')
         pt.preprocessing_status = 'preprocessing'
         self.assertEqual(pt.preprocessing_status, 'preprocessing')
@@ -1222,8 +1229,8 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
 
     def test_preprocessing_status_setter_failed(self):
         """Able to update preprocessing_status with a failure message"""
-        pt = PrepTemplate.create(self.metadata, self.new_raw_data,
-                                 self.test_study, self.data_type_id)
+        pt = PrepTemplate.create(self.metadata, self.test_study,
+                                 self.data_type_id)
         state = 'failed: some error message'
         self.assertEqual(pt.preprocessing_status, 'not_preprocessed')
         pt.preprocessing_status = state
@@ -1236,8 +1243,8 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
 
     def test_investigation_type_setter(self):
         """Able to update the investigation type"""
-        pt = PrepTemplate.create(self.metadata, self.new_raw_data,
-                                 self.test_study, self.data_type_id)
+        pt = PrepTemplate.create(self.metadata, self.test_study,
+                                 self.data_type_id)
         self.assertEqual(pt.investigation_type, None)
         pt.investigation_type = "Other"
         self.assertEqual(pt.investigation_type, 'Other')
@@ -1261,8 +1268,8 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
 
         # New prep templates have the status to sandbox because there is no
         # processed data associated with them
-        pt = PrepTemplate.create(self.metadata, self.new_raw_data,
-                                 self.test_study, self.data_type_id)
+        pt = PrepTemplate.create(self.metadata, self.test_study,
+                                 self.data_type_id)
         self.assertEqual(pt.status, 'sandbox')
 
     def test_update_category(self):
@@ -1308,13 +1315,33 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
 
         del self.metadata['primer']
         pt = npt.assert_warns(QiitaDBWarning, PrepTemplate.create,
-                              self.metadata, self.new_raw_data,
-                              self.test_study, self.data_type)
+                              self.metadata, self.test_study, self.data_type)
 
         obs = pt.check_restrictions(
             [PREP_TEMPLATE_COLUMNS['EBI'],
              PREP_TEMPLATE_COLUMNS_TARGET_GENE['demultiplex']])
         self.assertEqual(obs, {'primer'})
+
+    def test_raw_data(self):
+        """Returns the raw_data associated with the prep template"""
+        self.assertEqual(self.tester.raw_data, 1)
+
+        pt = PrepTemplate.create(self.metadata, self.test_study,
+                                 self.data_type_id)
+        self.assertEqual(pt.raw_data, None)
+
+    def test_raw_data_setter_error(self):
+        rd = RawData(1)
+        with self.assertRaises(QiitaDBError):
+            self.tester.raw_data = rd
+
+    def test_raw_data_setter(self):
+        rd = RawData(1)
+        pt = PrepTemplate.create(self.metadata, self.test_study,
+                                 self.data_type_id)
+        self.assertEqual(pt.raw_data, None)
+        pt.raw_data = rd
+        self.assertEqual(pt.raw_data, rd.id)
 
 
 EXP_PREP_TEMPLATE = (
