@@ -12,12 +12,15 @@ from os import close, remove
 from os.path import join, exists, basename
 from shutil import rmtree
 
+import pandas as pd
+
 from qiita_core.util import qiita_test_checker
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_db.exceptions import QiitaDBColumnError, QiitaDBError
 from qiita_db.data import RawData
 from qiita_db.study import Study
 from qiita_db.reference import Reference
+from qiita_db.metadata_template import PrepTemplate
 from qiita_db.util import (exists_table, exists_dynamic_table, scrub_data,
                            compute_checksum, check_table_cols,
                            check_required_columns, convert_to_id,
@@ -367,6 +370,18 @@ class DBUtilTests(TestCase):
             join(raw_data_mp, '2_sequences_barcodes.fastq.gz'),
             join(raw_data_mp, '2_sequences.fastq.gz')]
 
+        for fp in removed_fps:
+            with open(fp, 'w') as f:
+                f.write('\n')
+
+        sql = """INSERT INTO qiita.filepath
+                    (filepath, filepath_type_id, checksum,
+                     checksum_algorithm_id, data_directory_id)
+                VALUES ('2_sequences_barcodes.fastq.gz', 3, '852952723', 1, 5),
+                       ('2_sequences.fastq.gz', 1, '852952723', 1, 5)
+                RETURNING filepath_id"""
+        fp_ids = self.conn_handler.execute_fetchall(sql)
+
         fps = set(fps).difference(removed_fps)
 
         # Check that the files exist
@@ -387,9 +402,9 @@ class DBUtilTests(TestCase):
         # Check that the 2 rows that have been removed are the correct ones
         sql = """SELECT EXISTS(
                     SELECT * FROM qiita.filepath WHERE filepath_id = %s)"""
-        obs = self.conn_handler.execute_fetchone(sql, (3,))[0]
+        obs = self.conn_handler.execute_fetchone(sql, (fp_ids[0][0],))[0]
         self.assertFalse(obs)
-        obs = self.conn_handler.execute_fetchone(sql, (4,))[0]
+        obs = self.conn_handler.execute_fetchone(sql, (fp_ids[1][0],))[0]
         self.assertFalse(obs)
 
         # Check that the files have been successfully removed
@@ -421,9 +436,19 @@ class DBUtilTests(TestCase):
         # files
         fd, seqs_fp = mkstemp(suffix='_seqs.fastq')
         close(fd)
-        study_id = 1
+        st = Study(1)
+        metadata_dict = {
+            'SKB8.640193': {'center_name': 'ANL',
+                            'primer': 'GTGCCAGCMGCCGCGGTAA',
+                            'barcode': 'GTCCGCAAGTTA',
+                            'run_prefix': "s_G1_L001_sequences",
+                            'platform': 'ILLUMINA',
+                            'library_construction_protocol': 'AAAA',
+                            'experiment_design_description': 'BBBB'}}
+        metadata = pd.DataFrame.from_dict(metadata_dict, orient='index')
+        pt = PrepTemplate.create(metadata, Study(1), "16S")
 
-        rd = RawData.create(2, [Study(study_id)], [(seqs_fp, 1)])
+        rd = RawData.create(2, [pt], [(seqs_fp, 1)])
         filepaths = rd.get_filepaths()
         # deleting reference so we can directly call
         # move_filepaths_to_upload_folder
@@ -432,10 +457,10 @@ class DBUtilTests(TestCase):
                 "DELETE FROM qiita.raw_filepath WHERE filepath_id=%s", (fid,))
 
         # moving filepaths
-        move_filepaths_to_upload_folder(study_id, filepaths)
+        move_filepaths_to_upload_folder(st.id, filepaths)
 
         # check that they do not exist in the old path but do in the new one
-        path_for_removal = join(get_mountpoint("uploads")[0][1], str(study_id))
+        path_for_removal = join(get_mountpoint("uploads")[0][1], str(st.id))
         for _, fp, _ in filepaths:
             self.assertFalse(exists(fp))
             new_fp = join(path_for_removal, basename(fp).split('_', 1)[1])
@@ -550,7 +575,11 @@ class DBUtilTests(TestCase):
 
         # create file to move to trash
         fid, folder = get_mountpoint("uploads")[0]
-        open(join(folder, '1', test_filename), 'w').write('test')
+        test_fp = join(folder, '1', test_filename)
+        with open(test_fp, 'w') as f:
+            f.write('test')
+
+        self.files_to_remove.append(test_fp)
 
         exp = [(fid, 'this_is_a_test_file.txt'), (fid, 'uploaded_file.txt')]
         obs = get_files_from_uploads_folders("1")
@@ -615,21 +644,21 @@ class DBUtilTests(TestCase):
         exp = 'raw_data/1_s_G1_L001_sequences.fastq.gz'
         self.assertEqual(obs, exp)
 
-        obs = filepath_id_to_rel_path(5)
+        obs = filepath_id_to_rel_path(3)
         exp = 'preprocessed_data/1_seqs.fna'
         self.assertEqual(obs, exp)
 
     def test_filepath_ids_to_rel_paths(self):
         obs = filepath_ids_to_rel_paths([1, 3])
         exp = {1: 'raw_data/1_s_G1_L001_sequences.fastq.gz',
-               3: 'raw_data/2_sequences.fastq.gz'}
+               3: 'preprocessed_data/1_seqs.fna'}
 
         self.assertEqual(obs, exp)
 
     def test_check_access_to_analysis_result(self):
         obs = check_access_to_analysis_result('test@foo.bar',
                                               '1_job_result.txt')
-        exp = [12]
+        exp = [10]
 
         self.assertEqual(obs, exp)
 

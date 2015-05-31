@@ -40,17 +40,17 @@ for i in ${studies[@]}; do
     qiita db load_sample_template $sample_file --study $study_id
     echo "Ok"
 
+    # Loading prep template
+    echo "\tloading prep template... "
+    output=`qiita db load_prep_template $prep_file --study $study_id --data_type "16S"`
+    pt_id=`echo -e "${output}" | cut -d " " -f 10`
+    echo "Ok"
+
     # Loading raw data
     echo "\tloading raw data... "
     echo -e ">seq\nAAAA" > seqs.fna
-    output="`qiita db load_raw --fp seqs.fna --fp_type raw_forward_seqs --filetype FASTQ --study $i`"
+    output="`qiita db load_raw --fp seqs.fna --fp_type raw_forward_seqs --filetype FASTQ --prep_template $pt_id`"
     raw_id=`echo -e "${output}" | cut -d " " -f 10`
-    echo "Ok"
-
-    # Loading prep template
-    echo "\tloading prep template... "
-    output=`qiita db load_prep_template $prep_file --raw_data $raw_id --study $study_id --data_type "16S"`
-    pt_id=`echo -e "${output}" | cut -d " " -f 10`
     echo "Ok"
 
     # Loading preprocessed data
