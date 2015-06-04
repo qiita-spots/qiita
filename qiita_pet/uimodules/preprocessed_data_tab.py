@@ -6,13 +6,15 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
-from qiita_db.data import PreprocessedData
+from qiita_db.data import PreprocessedData, ProcessedData
 from qiita_db.metadata_template import PrepTemplate
 from qiita_db.ontology import Ontology
 from qiita_db.util import convert_to_id
 from qiita_db.parameters import ProcessedSortmernaParams
 from .base_uimodule import BaseUIModule
 from qiita_pet.util import generate_param_str, STATUS_STYLER
+
+from future.utils import viewitems
 
 
 class PreprocessedDataTab(BaseUIModule):
@@ -40,7 +42,12 @@ class PreprocessedDataInfoTab(BaseUIModule):
         is_local_request = self._is_local()
         show_ebi_btn = user.level == "admin"
         processing_status = preprocessed_data.processing_status
-        processed_data = preprocessed_data.processed_data
+        processed_data = []
+        fmt = '<b>%s:</b> %s'
+        for id_ in preprocessed_data.processed_data:
+            info = ProcessedData(id_).processing_info
+            processed_data.append((id_, '<br/>'.join([fmt % (k, v) for k, v in
+                                  viewitems(info)])))
 
         # Get all the ENA terms for the investigation type
         ontology = Ontology(convert_to_id('ENA', 'ontology'))
