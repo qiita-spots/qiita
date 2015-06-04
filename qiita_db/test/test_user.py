@@ -41,16 +41,20 @@ class SupportTests(TestCase):
         valid1 = 'foo@bar.com'
         valid2 = 'asdasd.asdasd.asd123asd@stuff.edu'
         valid3 = 'w00t@123.456.789.com'
+        valid4 = 'name@a.b-c.d'
         invalid1 = '@stuff.com'
         invalid2 = 'asdasdásd@things.com'
         invalid3 = '.asdas@com'
+        invalid4 = 'name@a.b-c.d-'
 
         self.assertTrue(validate_email(valid1))
         self.assertTrue(validate_email(valid2))
         self.assertTrue(validate_email(valid3))
+        self.assertTrue(validate_email(valid4))
         self.assertFalse(validate_email(invalid1))
         self.assertFalse(validate_email(invalid2))
         self.assertFalse(validate_email(invalid3))
+        self.assertFalse(validate_email(invalid4))
 
 
 @qiita_test_checker()
