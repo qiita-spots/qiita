@@ -183,7 +183,7 @@ def make_environment(load_ontologies, download_reference, add_demo_user):
     if _check_db_exists(qiita_config.database, admin_conn):
         raise QiitaEnvironmentError(
             "Database {0} already present on the system. You can drop it "
-            "by running 'qiita_env drop'".format(qiita_config.database))
+            "by running 'qiita-env drop'".format(qiita_config.database))
 
     # Create the database
     print('Creating database')
