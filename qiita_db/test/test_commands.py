@@ -15,6 +15,8 @@ from future.utils.six import StringIO
 from future import standard_library
 from functools import partial
 
+import pandas as pd
+
 from qiita_db.commands import (load_study_from_cmd, load_raw_data_cmd,
                                load_sample_template_from_cmd,
                                load_prep_template_from_cmd,
@@ -25,9 +27,10 @@ from qiita_db.commands import (load_study_from_cmd, load_raw_data_cmd,
 from qiita_db.environment_manager import patch
 from qiita_db.study import Study, StudyPerson
 from qiita_db.user import User
-from qiita_db.data import RawData, PreprocessedData
+from qiita_db.data import PreprocessedData
 from qiita_db.util import (get_count, check_count, get_db_files_base_dir,
                            get_mountpoint)
+from qiita_db.metadata_template import PrepTemplate
 from qiita_core.util import qiita_test_checker
 from qiita_ware.processing_pipeline import generate_demux_file
 
@@ -154,36 +157,12 @@ class TestLoadSampleTemplateFromCmd(TestCase):
 @qiita_test_checker()
 class TestLoadPrepTemplateFromCmd(TestCase):
     def setUp(self):
-        # Create a sample template file
-        fd, seqs_fp = mkstemp(suffix='_seqs.fastq')
-        close(fd)
-        fd, barcodes_fp = mkstemp(suffix='_barcodes.fastq')
-        close(fd)
-
-        with open(seqs_fp, "w") as f:
-            f.write("\n")
-        with open(barcodes_fp, "w") as f:
-            f.write("\n")
-
         self.pt_contents = PREP_TEMPLATE
-
-        self.raw_data = RawData.create(
-            2, [Study(1)], filepaths=[(seqs_fp, 1), (barcodes_fp, 2)])
-
-        join_f = partial(join, join(get_db_files_base_dir(), 'raw_data'))
-        self.files_to_remove = [
-            join_f("%s_%s" % (self.raw_data.id, basename(seqs_fp))),
-            join_f("%s_%s" % (self.raw_data.id, basename(barcodes_fp)))]
-
-    def tearDown(self):
-        for fp in self.files_to_remove:
-            if exists(fp):
-                remove(fp)
 
     def test_load_prep_template_from_cmd(self):
         """Correctly adds a prep template to the DB"""
         fh = StringIO(self.pt_contents)
-        st = load_prep_template_from_cmd(fh, self.raw_data.id, 1, '18S')
+        st = load_prep_template_from_cmd(fh, 1, '18S')
         self.assertEqual(st.id, 2)
 
 
@@ -222,14 +201,24 @@ class TestLoadRawDataFromCmd(TestCase):
                           'raw_barcodes']
 
         filetype = 'FASTQ'
-        study_ids = [1]
+        metadata_dict = {
+            'SKB8.640193': {'center_name': 'ANL',
+                            'primer': 'GTGCCAGCMGCCGCGGTAA',
+                            'barcode': 'GTCCGCAAGTTA',
+                            'run_prefix': "s_G1_L001_sequences",
+                            'platform': 'ILLUMINA',
+                            'library_construction_protocol': 'AAAA',
+                            'experiment_design_description': 'BBBB'}}
+        metadata = pd.DataFrame.from_dict(metadata_dict, orient='index')
+        pt1 = PrepTemplate.create(metadata, Study(1), "16S")
+        prep_templates = [pt1.id]
 
         initial_raw_count = get_count('qiita.raw_data')
         initial_fp_count = get_count('qiita.filepath')
         initial_raw_fp_count = get_count('qiita.raw_filepath')
 
         new = load_raw_data_cmd(filepaths, filepath_types, filetype,
-                                study_ids)
+                                prep_templates)
         raw_data_id = new.id
         self.files_to_remove.append(
             join(self.db_test_raw_dir,
@@ -246,14 +235,12 @@ class TestLoadRawDataFromCmd(TestCase):
                                     initial_fp_count + 3))
         self.assertTrue(check_count('qiita.raw_filepath',
                                     initial_raw_fp_count + 3))
-        self.assertTrue(check_count('qiita.study_raw_data',
-                                    initial_raw_count + 1))
 
         # Ensure that the ValueError is raised when a filepath_type is not
         # provided for each and every filepath
         with self.assertRaises(ValueError):
             load_raw_data_cmd(filepaths, filepath_types[:-1], filetype,
-                              study_ids)
+                              prep_templates)
 
 
 @qiita_test_checker()
@@ -576,7 +563,7 @@ class TestUpdatePreprocessedDataFromCmd(TestCase):
         # We need to sort the list returned from the db because the ordering
         # on that list is based on db modification time, rather than id
         obs_fps = sorted(ppd.get_filepaths())
-        self.assertEqual(obs_fps, exp_fps)
+        self.assertEqual(obs_fps, sorted(exp_fps))
 
         # Check that the checksums have been updated
         sql = "SELECT checksum FROM qiita.filepath WHERE filepath_id=%s"

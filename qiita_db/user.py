@@ -516,12 +516,16 @@ def validate_email(email):
     if local_part.startswith('.') or local_part.endswith('.'):
         return False
 
+    # The domain part cannot begin or end with a hyphen
+    if domain_part.startswith('-') or domain_part.endswith('-'):
+        return False
+
     # This is the full set of allowable characters for the local part.
     local_valid_chars = "[a-zA-Z0-9#_~!$&'()*+,;=:.-]"
     if len(sub(local_valid_chars, '', local_part)):
         return False
 
-    domain_valid_chars = "[a-zA-Z0-9.]"
+    domain_valid_chars = "[a-zA-Z0-9.-]"
     if len(sub(domain_valid_chars, '', domain_part)):
         return False
 

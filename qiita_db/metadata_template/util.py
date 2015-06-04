@@ -122,8 +122,8 @@ def prefix_sample_names_with_id(md_template, study_id):
         md_template.index.name = None
 
 
-def load_template_to_dataframe(fn, strip_whitespace=True):
-    """Load a sample or a prep template into a data frame
+def load_template_to_dataframe(fn, strip_whitespace=True, index='sample_name'):
+    """Load a sample/prep template or a QIIME mapping file into a data frame
 
     Parameters
     ----------
@@ -132,6 +132,8 @@ def load_template_to_dataframe(fn, strip_whitespace=True):
     strip_whitespace : bool, optional
         Defaults to True. Whether or not to strip whitespace from values in the
         input file
+    index : str, optional
+        Defaults to 'sample_name'. The index to use in the loaded information
 
     Returns
     -------
@@ -166,6 +168,8 @@ def load_template_to_dataframe(fn, strip_whitespace=True):
     |      Column Name      |  Python Type |
     +=======================+==============+
     |           sample_name |          str |
+    +-----------------------+--------------+
+    |             #SampleID |          str |
     +-----------------------+--------------+
     |     physical_location |          str |
     +-----------------------+--------------+
@@ -203,6 +207,17 @@ def load_template_to_dataframe(fn, strip_whitespace=True):
     controlled_cols.update(CONTROLLED_COLS)
     holdfile[0] = '\t'.join(c.lower() if c.lower() in controlled_cols else c
                             for c in cols)
+
+    if index == "#SampleID":
+        # We're going to parse a QIIME mapping file. We are going to first
+        # parse it with the QIIME function so we can remove the comments
+        # easily and make sure that QIIME will accept this as a mapping file
+        data, headers, comments = _parse_mapping_file(holdfile)
+        holdfile = ["%s\n" % '\t'.join(d) for d in data]
+        holdfile.insert(0, "%s\n" % '\t'.join(headers))
+        # The QIIME parser fixes the index and removes the #
+        index = 'SampleID'
+
     # index_col:
     #   is set as False, otherwise it is cast as a float and we want a string
     # keep_default:
@@ -224,7 +239,7 @@ def load_template_to_dataframe(fn, strip_whitespace=True):
                                keep_default_na=False, na_values=[''],
                                parse_dates=True, index_col=False, comment='\t',
                                mangle_dupe_cols=False, converters={
-                                   'sample_name': lambda x: str(x).strip(),
+                                   index: lambda x: str(x).strip(),
                                    # required sample template information
                                    'physical_location': str,
                                    'sample_type': str,
@@ -263,21 +278,22 @@ def load_template_to_dataframe(fn, strip_whitespace=True):
 
     initial_columns = set(template.columns)
 
-    if 'sample_name' not in template.columns:
-        raise QiitaDBColumnError("The 'sample_name' column is missing from "
-                                 "your template, this file cannot be parsed.")
+    if index not in template.columns:
+        raise QiitaDBColumnError("The '%s' column is missing from "
+                                 "your template, this file cannot be parsed."
+                                 % index)
 
     # remove rows that have no sample identifier but that may have other data
     # in the rest of the columns
-    template.dropna(subset=['sample_name'], how='all', inplace=True)
+    template.dropna(subset=[index], how='all', inplace=True)
 
     # set the sample name as the index
-    template.set_index('sample_name', inplace=True)
+    template.set_index(index, inplace=True)
 
     # it is not uncommon to find templates that have empty columns
     template.dropna(how='all', axis=1, inplace=True)
 
-    initial_columns.remove('sample_name')
+    initial_columns.remove(index)
     dropped_cols = initial_columns - set(template.columns)
     if dropped_cols:
         warnings.warn('The following column(s) were removed from the template '
@@ -315,3 +331,119 @@ def get_invalid_sample_names(sample_names):
             inv.append(s)
 
     return inv
+
+
+def looks_like_qiime_mapping_file(fp):
+    """Checks if the file looks like a QIIME mapping file
+
+    Parameters
+    ----------
+    fp : str or file-like object
+        filepath to check if it looks like a QIIME mapping file
+
+    Returns
+    -------
+    bool
+        True if fp looks like a QIIME mapping file, false otherwise.
+
+
+    Notes
+    -----
+    This is not doing a validation of the QIIME mapping file. It simply checks
+    the first line in the file and it returns true if the line starts with
+    '#SampleID', since a sample/prep template will start with 'sample_name' or
+    some other different column.
+    """
+    first_line = None
+    with open_file(fp, mode='U') as f:
+        first_line = f.readline()
+    if not first_line:
+        return False
+
+    first_col = first_line.split()[0]
+    return first_col == '#SampleID'
+
+
+def _parse_mapping_file(lines, strip_quotes=True, suppress_stripping=False):
+    """Parser for map file that relates samples to metadata.
+
+    Format: header line with fields
+            optionally other comment lines starting with #
+            tab-delimited fields
+
+    Parameters
+    ----------
+    lines : iterable of str
+        The contents of the QIIME mapping file
+    strip_quotes : bool, optional
+        Defaults to true. If true, quotes are removed from the data
+    suppress_stripping : bool, optional
+        Defaults to false. If true, spaces are not stripped
+
+    Returns
+    -------
+    list of lists, list of str, list of str
+        The data in the mapping file, the headers and the comments
+
+    Raises
+    ------
+    QiitaDBError
+        If there is any error parsing the mapping file
+
+    Notes
+    -----
+    This code has been ported from QIIME.
+    """
+    if strip_quotes:
+        if suppress_stripping:
+            # remove quotes but not spaces
+
+            def strip_f(x):
+                return x.replace('"', '')
+        else:
+            # remove quotes and spaces
+
+            def strip_f(x):
+                return x.replace('"', '').strip()
+    else:
+        if suppress_stripping:
+            # don't remove quotes or spaces
+
+            def strip_f(x):
+                return x
+        else:
+            # remove spaces but not quotes
+
+            def strip_f(x):
+                return x.strip()
+
+    # Create lists to store the results
+    mapping_data = []
+    header = []
+    comments = []
+
+    # Begin iterating over lines
+    for line in lines:
+        line = strip_f(line)
+        if not line or (suppress_stripping and not line.strip()):
+            # skip blank lines when not stripping lines
+            continue
+
+        if line.startswith('#'):
+            line = line[1:]
+            if not header:
+                header = line.strip().split('\t')
+            else:
+                comments.append(line)
+        else:
+            # Will add empty string to empty fields
+            tmp_line = map(strip_f, line.split('\t'))
+            if len(tmp_line) < len(header):
+                tmp_line.extend([''] * (len(header) - len(tmp_line)))
+            mapping_data.append(tmp_line)
+    if not header:
+        raise QiitaDBError("No header line was found in mapping file.")
+    if not mapping_data:
+        raise QiitaDBError("No data found in mapping file.")
+
+    return mapping_data, header, comments

@@ -43,7 +43,7 @@ _CONFIG = ConfigurationManager()
 try:
     conn = SQLConnectionHandler()
 except OperationalError:
-    raise QiitaDBConnectionError("Database does not exist. See qiita_env "
+    raise QiitaDBConnectionError("Database does not exist. See qiita-env "
                                  "make --help for more information")
 else:
     del conn
@@ -55,12 +55,17 @@ def qiita():
 
 
 @qiita.group()
-def db():
+def pet():
+    pass
+
+
+@pet.group()
+def webserver():
     pass
 
 
 @qiita.group()
-def ebi():
+def db():
     pass
 
 
@@ -70,12 +75,12 @@ def maintenance():
 
 
 @qiita.group()
-def webserver():
+def ware():
     pass
 
 
-@qiita.group()
-def ware():
+@ware.group()
+def ebi():
     pass
 
 
@@ -109,13 +114,13 @@ def load_study(owner, title, info):
 @click.option('--filetype', required=True,
               type=click.Choice(get_filetypes().keys()),
               help='The type of data')
-@click.option('--study', multiple=True, help='Associate the data with this '
-              'study. This option can be used multiple times if the data '
-              'should be associated with multiple studies', type=int,
-              required=True)
-def load_raw(fp, fp_type, filetype, study):
+@click.option('--prep_template', multiple=True, help='Associate the data with '
+              'this prep template. This option can be used multiple times if '
+              'the data should be associated with multiple prep templates',
+              type=int, required=True)
+def load_raw(fp, fp_type, filetype, prep_template):
     """Loads a raw data to the database"""
-    raw_data = load_raw_data_cmd(fp, fp_type, filetype, study)
+    raw_data = load_raw_data_cmd(fp, fp_type, filetype, prep_template)
     click.echo("Raw data successfully added to the database with id %s"
                % raw_data.id)
 
@@ -202,16 +207,14 @@ def load_sample_template(fp, study):
 @db.command()
 @click.argument('fp', required=True,
                 type=click.Path(resolve_path=True, readable=True, exists=True))
-@click.option('--raw_data', required=True, type=int,
-              help='Associate the prep template with this raw data')
 @click.option('--study', required=True, type=int,
               help='Associate the prep template with this study')
 @click.option('--data_type', required=True,
               type=click.Choice(get_data_types()),
               help="The data type of data")
-def load_prep_template(fp, raw_data, study, data_type):
+def load_prep_template(fp, study, data_type):
     """Loads a sample template to the database"""
-    prep_template = load_prep_template_from_cmd(fp, raw_data, study, data_type)
+    prep_template = load_prep_template_from_cmd(fp, study, data_type)
     click.echo("Prep template successfully added to the database with id %s"
                % prep_template.id)
 
@@ -341,7 +344,7 @@ def status():
         click.echo(r_client.ttl('sysmessage'), "seconds remaining")
 
 
-@qiita.command()
+@maintenance.command()
 @click.option('--n', required=False, type=click.IntRange(0, None), default=10,
               help="Number of most recent log entries to retrieve.",
               show_default=True)

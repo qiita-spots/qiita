@@ -276,7 +276,7 @@ class TestAnalysis(TestCase):
         self.assertEqual(self.analysis.biom_tables, exp)
 
     def test_all_associated_filepaths(self):
-        exp = {12, 13, 14, 15}
+        exp = {10, 11, 12, 13}
         self.assertEqual(self.analysis.all_associated_filepath_ids, exp)
 
     def test_retrieve_biom_tables_none(self):
@@ -427,7 +427,7 @@ class TestAnalysis(TestCase):
         obs = self.conn_handler.execute_fetchall(
             sql, ("%d_analysis_mapping.txt" % self.analysis.id,))
 
-        exp = [[15, '1_analysis_mapping.txt', 9, '852952723', 1, 1],
+        exp = [[13, '1_analysis_mapping.txt', 9, '852952723', 1, 1],
                [new_id, '1_analysis_mapping.txt', 9, '1606265094', 1, 1]]
         self.assertEqual(obs, exp)
 

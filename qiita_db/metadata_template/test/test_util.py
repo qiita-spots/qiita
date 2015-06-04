@@ -17,7 +17,8 @@ from qiita_db.exceptions import (QiitaDBColumnError, QiitaDBWarning,
                                  QiitaDBError)
 from qiita_db.metadata_template.util import (
     get_datatypes, as_python_types, prefix_sample_names_with_id,
-    load_template_to_dataframe, get_invalid_sample_names)
+    load_template_to_dataframe, get_invalid_sample_names,
+    looks_like_qiime_mapping_file, _parse_mapping_file)
 
 
 class TestUtil(TestCase):
@@ -62,6 +63,17 @@ class TestUtil(TestCase):
         obs = load_template_to_dataframe(StringIO(EXP_SAMPLE_TEMPLATE))
         exp = pd.DataFrame.from_dict(SAMPLE_TEMPLATE_DICT_FORM)
         exp.index.name = 'sample_name'
+        assert_frame_equal(obs, exp)
+
+    def test_load_template_to_dataframe_qiime_map(self):
+        obs = load_template_to_dataframe(StringIO(QIIME_TUTORIAL_MAP_SUBSET),
+                                         index='#SampleID')
+        exp = pd.DataFrame.from_dict(QIIME_TUTORIAL_MAP_DICT_FORM)
+        exp.index.name = 'SampleID'
+        obs.sort_index(axis=0, inplace=True)
+        obs.sort_index(axis=1, inplace=True)
+        exp.sort_index(axis=0, inplace=True)
+        exp.sort_index(axis=1, inplace=True)
         assert_frame_equal(obs, exp)
 
     def test_load_template_to_dataframe_duplicate_cols(self):
@@ -218,6 +230,43 @@ class TestUtil(TestCase):
             # prevent flake8 from complaining
             str(obs)
 
+    def test_looks_like_qiime_mapping_file(self):
+        obs = looks_like_qiime_mapping_file(
+            StringIO(EXP_SAMPLE_TEMPLATE))
+        self.assertFalse(obs)
+
+        obs = looks_like_qiime_mapping_file(
+            StringIO(QIIME_TUTORIAL_MAP_SUBSET))
+        self.assertTrue(obs)
+
+        obs = looks_like_qiime_mapping_file(StringIO())
+        self.assertFalse(obs)
+
+    def test_parse_mapping_file(self):
+        # Tests ported over from QIIME
+        s1 = ['#sample\ta\tb', '#comment line to skip',
+              'x \t y \t z ', ' ', '#more skip', 'i\tj\tk']
+        exp = ([['x', 'y', 'z'], ['i', 'j', 'k']],
+               ['sample', 'a', 'b'],
+               ['comment line to skip', 'more skip'])
+        obs = _parse_mapping_file(s1)
+        self.assertEqual(obs, exp)
+
+        # check that we strip double quotes by default
+        s2 = ['#sample\ta\tb', '#comment line to skip',
+              '"x "\t" y "\t z ', ' ', '"#more skip"', 'i\t"j"\tk']
+        obs = _parse_mapping_file(s2)
+        self.assertEqual(obs, exp)
+
+
+QIIME_TUTORIAL_MAP_SUBSET = (
+    "#SampleID\tBarcodeSequence\tLinkerPrimerSequence\tTreatment\tDOB\t"
+    "Description\n"
+    "PC.354\tAGCACGAGCCTA\tYATGCTGCCTCCCGTAGGAGT\tControl\t20061218\t"
+    "Control_mouse_I.D._354\n"
+    "PC.607\tAACTGTGCGTAC\tYATGCTGCCTCCCGTAGGAGT\tFast\t20071112\t"
+    "Fasting_mouse_I.D._607\n"
+)
 
 EXP_SAMPLE_TEMPLATE = (
     "sample_name\tcollection_timestamp\tdescription\thas_extracted_data\t"
@@ -684,6 +733,19 @@ ST_COLUMN_WITH_NAS_DICT_FORM = \
                      '2.Sample2': 'type1',
                      '2.Sample3': 'type1'},
      'str_column': {'2.Sample1': 'NA', '2.Sample2': 'NA', '2.Sample3': 'NA'}}
+
+QIIME_TUTORIAL_MAP_DICT_FORM = {
+    'BarcodeSequence': {'PC.354': 'AGCACGAGCCTA',
+                        'PC.607': 'AACTGTGCGTAC'},
+    'LinkerPrimerSequence': {'PC.354': 'YATGCTGCCTCCCGTAGGAGT',
+                             'PC.607': 'YATGCTGCCTCCCGTAGGAGT'},
+    'Treatment': {'PC.354': 'Control',
+                  'PC.607': 'Fast'},
+    'DOB': {'PC.354': 20061218,
+            'PC.607': 20071112},
+    'Description': {'PC.354': 'Control_mouse_I.D._354',
+                    'PC.607': 'Fasting_mouse_I.D._607'}
+}
 
 EXP_PREP_TEMPLATE = (
     'sample_name\tbarcodesequence\tcenter_name\tcenter_project_name\t'

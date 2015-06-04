@@ -30,22 +30,24 @@ def env():
 
 
 @env.command()
-@click.argument('clusters', required=True,
-                type=click.Choice(_CONFIG.ipython_contexts),
+@click.argument('clusters', type=click.Choice(_CONFIG.ipython_contexts),
                 nargs=-1)
 def start_cluster(clusters):
     """Start a compute environment"""
+    if not clusters:
+        clusters = ('qiita-general',)
     for cluster in clusters:
         print "Starting cluster", cluster
         _start_cluster(cluster)
 
 
 @env.command()
-@click.argument('clusters', required=True,
-                type=click.Choice(_CONFIG.ipython_contexts),
+@click.argument('clusters', type=click.Choice(_CONFIG.ipython_contexts),
                 nargs=-1)
 def stop_cluster(clusters):
     """Stop a compute environment"""
+    if not clusters:
+        clusters = ('qiita-general',)
     for cluster in clusters:
         print "Stopping cluster", cluster
         _stop_cluster(cluster)

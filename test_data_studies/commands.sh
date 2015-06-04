@@ -5,11 +5,11 @@ export PGDATESTYLE="ISO, MDY"
 studies=`ls test_data_studies/studies`
 
 echo "DROPPING ENV... "
-qiita_env drop --no-ask-for-confirmation
+qiita-env drop --no-ask-for-confirmation
 echo "Ok"
 
 echo "MAKING ENV... "
-qiita_env make --add-demo-user --no-load-ontologies
+qiita-env make --add-demo-user --no-load-ontologies
 echo "Ok"
 
 # Inserting all the information for each study
@@ -40,17 +40,17 @@ for i in ${studies[@]}; do
     qiita db load_sample_template $sample_file --study $study_id
     echo "Ok"
 
+    # Loading prep template
+    echo "\tloading prep template... "
+    output=`qiita db load_prep_template $prep_file --study $study_id --data_type "16S"`
+    pt_id=`echo -e "${output}" | cut -d " " -f 10`
+    echo "Ok"
+
     # Loading raw data
     echo "\tloading raw data... "
     echo -e ">seq\nAAAA" > seqs.fna
-    output="`qiita db load_raw --fp seqs.fna --fp_type raw_forward_seqs --filetype FASTQ --study $i`"
+    output="`qiita db load_raw --fp seqs.fna --fp_type raw_forward_seqs --filetype FASTQ --prep_template $pt_id`"
     raw_id=`echo -e "${output}" | cut -d " " -f 10`
-    echo "Ok"
-
-    # Loading prep template
-    echo "\tloading prep template... "
-    output=`qiita db load_prep_template $prep_file --raw_data $raw_id --study $study_id --data_type "16S"`
-    pt_id=`echo -e "${output}" | cut -d " " -f 10`
     echo "Ok"
 
     # Loading preprocessed data
