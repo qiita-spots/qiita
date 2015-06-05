@@ -482,7 +482,7 @@ class User(QiitaObject):
             # only store 100 messages, so pop oldest
             r_client.rpop()
 
-    def messages(count=100, as_html=False):
+    def messages(self, count=100, as_html=False):
         """Return messages in user's queue
 
         Parameters
@@ -502,7 +502,7 @@ class User(QiitaObject):
         if count > 100:
             raise IncompetentQiitaDeveloperError("Only 100 messages available")
 
-        msgs = r_client.lrange(0, count-1)
+        msgs = r_client.lrange("%s:messages" % self._id, 0, count-1)
         if as_html:
             msgs = ['<p>%s</p>' % x.replace('\n', '<br />') for x in msgs]
         return msgs
