@@ -477,7 +477,7 @@ class User(QiitaObject):
         message : str
             Message to add to queue
         """
-        count = r_client.lpush("%s:messages" % self._id,
+        count = r_client.lpush("%s:qiita-sysmsgs" % self._id,
                                dumps([message, datetime.now()]))
         if count > 100:
             # only store 100 messages, so pop oldest
@@ -501,7 +501,7 @@ class User(QiitaObject):
             raise IncompetentQiitaDeveloperError("Only 100 messages available")
 
         # turn JSON messages back into tuple and return them
-        return [loads(m) for m in r_client.lrange("%s:messages" % self._id,
+        return [loads(m) for m in r_client.lrange("%s:qiita-sysmsgs" % self._id,
                                                   0, count-1)]
 
 
