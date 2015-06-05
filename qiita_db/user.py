@@ -30,6 +30,7 @@ TODO
 from __future__ import division
 from re import sub
 from datetime import datetime
+from json import loads, dumps
 
 from moi import r_client
 
@@ -476,13 +477,14 @@ class User(QiitaObject):
         message : str
             Message to add to queue
         """
-        count = r_client.lpush("%s:messages" % self._id, '%s\n%s' %
-                               (message, datetime.now()))
+        #
+        count = r_client.lpush("%s:messages" % self._id,
+                               dumps([message, datetime.now()]))
         if count > 100:
             # only store 100 messages, so pop oldest
             r_client.rpop()
 
-    def messages(self, count=100, as_html=False):
+    def messages(self, count=100):
         """Return messages in user's queue
 
         Parameters
@@ -490,22 +492,18 @@ class User(QiitaObject):
         count : int, optional
             Number of messages to return, starting with newest. Default 100.
             Queue will never have more than 100 messages in it.
-        as_html : bool, optional
-            Whether to replace newlines with HTML adn format each message in
-            a paragraph block. Default False.
 
         Returns
         -------
-        list
-            Messages in the queue
+        list of tuples
+            Messages in the queue, in the form [(msg, timestamp), ...]
         """
         if count > 100:
             raise IncompetentQiitaDeveloperError("Only 100 messages available")
 
-        msgs = r_client.lrange("%s:messages" % self._id, 0, count-1)
-        if as_html:
-            msgs = ['<p>%s</p>' % x.replace('\n', '<br />') for x in msgs]
-        return msgs
+        # turn JSON messages back into tuple and return them
+        return [loads(m) for m in r_client.lrange("%s:messages" % self._id,
+                                                  0, count-1)]
 
 
 def validate_email(email):
