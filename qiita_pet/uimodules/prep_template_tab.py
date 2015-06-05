@@ -147,8 +147,8 @@ class PrepTemplateInfoTab(BaseUIModule):
         other_studies_rd = sorted(viewitems(
             _get_accessible_raw_data(user)))
 
-        # A prep template can be modified if its status is sanbdox
-        is_editable = prep_template.status == 'sanbdox'
+        # A prep template can be modified if its status is sandbox
+        is_editable = prep_template.status == 'sandbox'
 
         raw_data_id = prep_template.raw_data
         preprocess_options = []
