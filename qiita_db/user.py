@@ -477,7 +477,6 @@ class User(QiitaObject):
         message : str
             Message to add to queue
         """
-        #
         count = r_client.lpush("%s:messages" % self._id,
                                dumps([message, datetime.now()]))
         if count > 100:
