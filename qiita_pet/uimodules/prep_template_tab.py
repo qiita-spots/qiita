@@ -71,7 +71,8 @@ def _template_generator(study, full_access):
 
 class PrepTemplateTab(BaseUIModule):
     def render(self, study, full_access):
-        files = [f for _, f in get_files_from_uploads_folders(str(study.id))]
+        files = [f for _, f in get_files_from_uploads_folders(str(study.id))
+                 if f.endswith(('txt', 'tsv'))]
         data_types = sorted(viewitems(get_data_types()), key=itemgetter(1))
         prep_templates_info = [
             res for res in _template_generator(study, full_access)]
@@ -148,7 +149,7 @@ class PrepTemplateInfoTab(BaseUIModule):
             _get_accessible_raw_data(user)))
 
         # A prep template can be modified if its status is sanbdox
-        is_editable = prep_template.status == 'sanbdox'
+        is_editable = prep_template.status == 'sandbox'
 
         raw_data_id = prep_template.raw_data
         preprocess_options = []
