@@ -39,9 +39,11 @@ def _get_accessible_raw_data(user):
     raw_data
     """
     d = {}
-    for sid in user.user_studies:
+    accessible_studies = user.user_studies.union(user.shared_studies)
+    for sid in accessible_studies:
         for rdid in Study(sid).raw_data():
-            d[int(rdid)] = Study(RawData(rdid).studies[-1]).title
+            if rdid not in d:
+                d[int(rdid)] = Study(RawData(rdid).studies[-1]).title
     return d
 
 
