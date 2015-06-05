@@ -285,10 +285,10 @@ class TestAnalysis(TestCase):
         exp = {10, 11, 12, 13}
         self.assertEqual(self.analysis.all_associated_filepath_ids, exp)
 
-    def test_retrieve_biom_tables_none(self):
+    def test_retrieve_biom_tables_empty_array(self):
         new = Analysis.create(User("admin@foo.bar"), "newAnalysis",
                               "A New Analysis", Analysis(1))
-        self.assertEqual(new.biom_tables, None)
+        self.assertEqual(new.biom_tables, [])
 
     def test_set_step(self):
         new_id = get_count("qiita.analysis") + 1
