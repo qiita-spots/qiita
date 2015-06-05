@@ -150,4 +150,4 @@ class UserMessagesHander(BaseHandler):
     @authenticated
     def get(self):
         self.render("user_messages.html",
-                    messages=self.current_user.messages(as_html=True))
+                    messages=self.current_user.messages())

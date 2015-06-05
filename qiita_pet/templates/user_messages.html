@@ -1,10 +1,9 @@
 {% extends sitebase.html %}
-{% autoescape None %}
 {% block content%}
 <h2 style="text-decoration: underline;">System Messages</h2>
 <ul>
-	{% for msg in messages %}
-    <li>{{msg}}</li>
-	{% end %}
+  {% for msg, timestamp in messages %}
+  <li>{% raw msg %}<br /><span style="font-size:60%;color:gray;">{{ timestamp }}</span></li>
+  {% end %}
 </ul>
 {% end %}

@@ -62,16 +62,4 @@
           <li><a target=_blank href="http://www.postgresql.org">PostgreSQL</a></li>
       </ul>
 </div>
-{% if current_user is not None %}
-  <div id="messages" class="msg-bar">
-    <p><span style="float: left;text-decoration: underline;font-weight:bold">System Messages</span>
-    <span style="float: right;"><a href="#" onclick="toggleMessages(); return false;"><span id="msg-chevron" class="glyphicon glyphicon-chevron-down" aria-hidden="true" ></span></a></span></p>
-    <div id="sys-messages">
-    &nbsp;<br/>
-    {% for msg in messages %}
-      {% raw msg %}
-    {% end %}
-    </div>
-  </div>
-{% end %}
 {% end %}

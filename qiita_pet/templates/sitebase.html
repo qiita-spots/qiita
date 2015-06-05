@@ -135,6 +135,11 @@
             </li>
             <li class="dropdown">
               <a href="/user/messages/">Messages</a>
+              <ul class="dropdown-menu">
+              {% for msg, timestamp in current_user.messages(5) %}
+                <li>&nbsp;{{msg}}<br /><span style="font-size:60%;color:gray;">&nbsp;{{timestamp}}</span></li>
+              {% end %}
+              </ul>
             </li>
               {% set user_level = user.level %}
               {% if user_level == 'admin' %}
