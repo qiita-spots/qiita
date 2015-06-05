@@ -29,6 +29,9 @@ TODO
 # -----------------------------------------------------------------------------
 from __future__ import division
 from re import sub
+from datetime import datetime
+
+from moi import r_client
 
 from qiita_core.exceptions import (IncorrectEmailError, IncorrectPasswordError,
                                    IncompetentQiitaDeveloperError)
@@ -59,6 +62,8 @@ class User(QiitaObject):
     generate_reset_code
     change_forgot_password
     iter
+    add_message
+    messages
     """
 
     _table = "qiita_user"
@@ -462,6 +467,45 @@ class User(QiitaObject):
                "email = %s".format(self._table))
         conn_handler = SQLConnectionHandler()
         conn_handler.execute(sql, (hash_password(newpass), self._id))
+
+    def add_message(self, message):
+        """Add a message to the user's message queue
+
+        Parameters
+        ----------
+        message : str
+            Message to add to queue
+        """
+        count = r_client.lpush("%s:messages" % self._id, '%s\n%s' %
+                               (message, datetime.now()))
+        if count > 100:
+            # only store 100 messages, so pop oldest
+            r_client.rpop()
+
+    def messages(count=100, as_html=False):
+        """Return messages in user's queue
+
+        Parameters
+        ----------
+        count : int, optional
+            Number of messages to return, starting with newest. Default 100.
+            Queue will never have more than 100 messages in it.
+        as_html : bool, optional
+            Whether to replace newlines with HTML adn format each message in
+            a paragraph block. Default False.
+
+        Returns
+        -------
+        list
+            Messages in the queue
+        """
+        if count > 100:
+            raise IncompetentQiitaDeveloperError("Only 100 messages available")
+
+        msgs = r_client.lrange(0, count-1)
+        if as_html:
+            msgs = ['<p>%s</p>' % x.replace('\n', '<br />') for x in msgs]
+        return msgs
 
 
 def validate_email(email):
