@@ -1,37 +1,5 @@
 {% extends sitebase.html %}
 {% block head %}
-<style>
-  .msg-bar {
-    position: fixed;
-    bottom:5px;
-    right:15px;
-    padding: 5px;
-    z-index:100;
-    width:25%;
-    border-radius: 10px;
-    border: 1px solid black;
-    background-color:white;
-  }
-  #template-content
-  {
-    position:relative;
-  }
-</style>
-
-<script type="text/javascript">
-  function toggleMessages() {
-    status = $("#sys-messages").is(':hidden');
-    if(status == 'true') {
-      $("#sys-messages").show()
-      $("#msg-chevron").removeClass("glyphicon-chevron-up");
-      $("#msg-chevron").addClass("glyphicon-chevron-down");
-    } else {
-      $("#sys-messages").hide();
-      $("#msg-chevron").removeClass("glyphicon-chevron-down");
-      $("#msg-chevron").addClass("glyphicon-chevron-up");
-    }
-  }
-</script>
 {% end %}
 
 {%block content %}
