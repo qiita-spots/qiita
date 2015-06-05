@@ -164,8 +164,8 @@
             <li class="dropdown">
               <a href="/user/messages/"><span class="glyphicon glyphicon-envelope"></span></a>
               <ul class="dropdown-menu">
-              {% for msg, timestamp in current_user.messages(5) %}
-                <li>&nbsp;{{msg}}<br /><span style="font-size:60%;color:gray;">&nbsp;{{timestamp}}</span></li>
+              {% for um, ts in current_user.messages(5) %}
+                <li>&nbsp;{{um}}<br /><span style="font-size:60%;color:gray;">&nbsp;{{ts}}</span></li>
               {% end %}
               </ul>
             </li>
