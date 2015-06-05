@@ -478,7 +478,8 @@ class User(QiitaObject):
             Message to add to queue
         """
         count = r_client.lpush("%s:qiita-sysmsgs" % self._id,
-                               dumps([message, datetime.now()]))
+                               dumps([message, datetime.now().strftime(
+                                     '%b %d, %Y %H:%M')]))
         if count > 100:
             # only store 100 messages, so pop oldest
             r_client.rpop()
